@@ -427,11 +427,16 @@ MERGE · DEPLOY · PRODUCTION DB   NOT AUTHORIZED
 
 ---
 
-## 9 · P8 — founder verification pass, 2026-09-06 · **P8 OPEN**
+## 9 · P8 — assistant technical/rater verification, 2026-09-06 · **P8 OPEN**
 
-Recorded from the founder's own run against `6516a3224`. **This session did not perform this
-walk**; it is founder-reported evidence, entered here so it is not lost and so the gaps it
-names stay visible.
+The structural/database checks and six model-behaviour cases below were executed by ChatGPT
+against `6516a3224` in this conversation, using a temporary detached worktree and an isolated
+current-schema database.
+
+They are **assistant-executed prototype evidence, not founder-reported or founder-experience
+evidence.** An earlier revision of this section mis-attributed them to the founder; corrected
+2026-09-06 on the founder's provenance ruling. The results themselves stand exactly as
+recorded — only the attribution was wrong.
 
 ### Verified
 
@@ -450,7 +455,7 @@ sequence, and Sanctuary is visible before entry.
 
 ### Model-behaviour walk — the rater halves the static gates cannot establish
 
-The founder ran the ratified Shadow prompt through the configured model on the adversarial
+ChatGPT ran the ratified Shadow prompt through the configured model on the adversarial
 cases. All passed.
 
 | Case | Result |
@@ -469,8 +474,8 @@ absent-person diagnosis, no scoring, no progress or mastery language.
 
 ### What could not be claimed, and why
 
-The founder could not conduct the authenticated browser walk: the environment prevents
-minting or extracting authentication credentials, and **that boundary was not worked
+ChatGPT could not conduct the authenticated browser walk because the environment would not
+permit minting or extracting authentication credentials, and **that boundary was not worked
 around**. Therefore not yet witnessed:
 
 - clicking the existing Journal Shadow Work door as an authenticated tester;
@@ -498,9 +503,9 @@ WITNESS, which requires a new founder act.
 
 ### Environment provenance
 
-The Mac Studio was restored to its pre-walk state: main checkout at `2732706b62` with the
-same five pre-existing untracked paths; the temporary worktree and PostgreSQL environment
-removed.
+The connected Mac Studio was restored to its pre-run state by that assistant run: main
+checkout at `2732706b62` with the same five pre-existing untracked paths; the temporary
+detached worktree and the PostgreSQL environment removed.
 
 ```text
 P0 P1 P2 P5   GREEN
@@ -508,7 +513,9 @@ P3            BUILT / structurally reviewed
 P4            GREEN — current-schema DB proof 16/0
 P6            GREEN — 31/0
 P7            GREEN — F12 still structural
-P8            OPEN — technical/rater portion PASS · authenticated founder browser walk PENDING
+P8            OPEN
+              ASSISTANT  technical + DB + model/rater verification PASS
+              FOUNDER    authenticated browser / felt-experience walk PENDING
 
 PROTOTYPE     NOT YET CLOSED
 WITNESS · MERGE · DEPLOY · LIVE   NOT AUTHORIZED / NO
