@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { sendEmail } from '@/lib/email/sendEmail';
-import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
+import { addMemberToTeam, canInviteToTeam, isTeamMember } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +27,45 @@ export async function POST(request: NextRequest) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
+  /* COLAB-BETA-01 — the invitation names its Co-Lab, or says it is inferring.
+     `resolveTeamIdForInviter()` falls back to the OLDEST studio_team, so an
+     invite meant for a new cohort could quietly land someone in the original
+     shared workspace. An explicit teamId removes the guess.
+
+     AUTHORIZATION: naming a team is not permission to add people to it. The
+     inviter must already be a member of the team they are inviting into,
+     otherwise any signed-in member could inject people into any Co-Lab. */
+  const requestedTeamId = typeof (body as { teamId?: unknown })?.teamId === 'string'
+    ? ((body as { teamId: string }).teamId).trim()
+    : null;
+
+  /* B · A NEW invitation must name its destination. Inference survives only for
+     pre-migration rows already in the table, never for anything created here:
+     resolveTeamIdForInviter() falls back to the OLDEST studio_team, so silently
+     inferring is how a Beta Co-Lab invite becomes a Team Soullab membership. */
+  if (!requestedTeamId) {
+    return NextResponse.json(
+      { error: 'teamId is required — an invitation must name the Co-Lab it is for' },
+      { status: 400 }
+    );
+  }
+
+  /* C · Membership is not permission. The caller chooses the invited role, so a
+     plain member — or a viewer — could otherwise invite someone in as an admin.
+     The team-management contract already requires admin+ to invite; enforce it
+     where invitations are actually created. */
+  if (!(await canInviteToTeam(requestedTeamId, memberId))) {
+    return NextResponse.json(
+      { error: 'Only a Co-Lab owner or admin can invite people' },
+      { status: 403 }
+    );
+  }
+
+  const invitedRole: 'owner' | 'admin' | 'member' | 'viewer' =
+    (body as { role?: unknown })?.role === 'admin' ? 'admin'
+    : (body as { role?: unknown })?.role === 'viewer' ? 'viewer'
+    : 'member';
+
   // Inviter display name — used in both the new-invite and existing-member emails.
   const inviterRes = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,
@@ -46,8 +85,17 @@ export async function POST(request: NextRequest) {
   );
   if (existing.rows.length > 0) {
     const existingMemberId = existing.rows[0].id;
-    const teamId = await resolveTeamIdForInviter(memberId);
-    const addedToTeam = teamId ? await addMemberToTeam(teamId, existingMemberId) : false;
+    /* F · membership is OBSERVED, not inferred from the insert's return value:
+       addMemberToTeam() returns false for both a swallowed failure and an
+       already-existing membership. */
+    await addMemberToTeam(requestedTeamId, existingMemberId, invitedRole);
+    const addedToTeam = await isTeamMember(requestedTeamId, existingMemberId);
+    if (!addedToTeam) {
+      return NextResponse.json(
+        { error: 'Could not add that member to the Co-Lab — nothing was sent' },
+        { status: 500 }
+      );
+    }
 
     const signinUrl = `${appUrl}/signin`;
     const existingSend = await sendEmail({
@@ -88,11 +136,18 @@ export async function POST(request: NextRequest) {
 
   // ── New person ─────────────────────────────────────────────────────
   // Check for an existing pending invite for this email.
+  /* D · A pending invite is identified by (email, destination), not email alone.
+     Matching on email alone recycled ANY live token for that person — including
+     a legacy row with no team_id, or one for a different Co-Lab — and refreshed
+     only its expiry, so the returned link still pointed at the old destination.
+     A pending invite to a DIFFERENT team is left untouched and a new one is
+     created for this team. */
   const pendingInvite = await query<{ id: string; token: string }>(
     `SELECT id, token FROM team_invites
      WHERE LOWER(email) = $1 AND accepted_at IS NULL AND expires_at > NOW()
+       AND team_id = $2
      LIMIT 1`,
-    [normalizedEmail]
+    [normalizedEmail, requestedTeamId]
   );
 
   let inviteId: string;
@@ -102,17 +157,19 @@ export async function POST(request: NextRequest) {
     // Refresh expiry on existing pending invite
     const row = pendingInvite.rows[0];
     await query(
-      `UPDATE team_invites SET expires_at = NOW() + INTERVAL '7 days' WHERE id = $1`,
-      [row.id]
+      `UPDATE team_invites
+          SET expires_at = NOW() + INTERVAL '7 days', role = $2
+        WHERE id = $1`,
+      [row.id, invitedRole]
     );
     inviteId = row.id;
     token = row.token;
   } else {
     // Create new invite
     const insert = await query<{ id: string; token: string }>(
-      `INSERT INTO team_invites (email, invited_by, message)
-       VALUES ($1, $2, $3) RETURNING id, token`,
-      [normalizedEmail, memberId, message ?? null]
+      `INSERT INTO team_invites (email, invited_by, message, team_id, role)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, token`,
+      [normalizedEmail, memberId, message ?? null, requestedTeamId, invitedRole]
     );
     inviteId = insert.rows[0].id;
     token = insert.rows[0].token;

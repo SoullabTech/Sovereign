@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
-import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
+import { resolveTeamIdForInviter, addMemberToTeam, isTeamMember } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,9 +34,12 @@ export async function POST(
     email: string;
     invited_by: string | null;
     accepted_at: string | null;
+    team_id: string | null;
+    role: string | null;
     expires_at: string;
   }>(
-    `SELECT id, email, invited_by, accepted_at, expires_at FROM team_invites WHERE token = $1`,
+    `SELECT id, email, invited_by, accepted_at, expires_at, team_id, role
+       FROM team_invites WHERE token = $1`,
     [token]
   );
 
@@ -64,15 +67,45 @@ export async function POST(
 
   const memberId = memberResult.rows[0].id;
 
-  // Accept the invite
+  /* G · Account + membership + accepted invite are ONE successful operation.
+     Join the Co-Lab the INVITE names, not one inferred from the inviter:
+     resolveTeamIdForInviter() falls back to the oldest studio_team, so a tester
+     invited to a new cohort could land in the original shared workspace.
+     Inference survives only for legacy invites (team_id NULL) so old links do
+     not dead-end.
+
+     Membership is no longer best-effort. It is what the invitation promised, and
+     an account in no workspace is the dead end this lane exists to remove. It is
+     also established BEFORE the invite is consumed, so a failure leaves the link
+     usable rather than spending it on a half-finished join.
+
+     The account itself is deliberately NOT rolled back on failure — the person
+     has a working Soullab account either way, and destroying it would be a worse
+     outcome than an unspent invite. The response says what actually happened. */
+  const teamId = invite.team_id ?? (await resolveTeamIdForInviter(invite.invited_by));
+  const invitedRole = (['owner', 'admin', 'member', 'viewer'] as const)
+    .find((r) => r === invite.role) ?? 'member';
+  if (!teamId) {
+    return NextResponse.json(
+      { error: 'This invitation names no Co-Lab — your account was created; ask for a new invite' },
+      { status: 409 }
+    );
+  }
+  await addMemberToTeam(teamId, memberId, invitedRole);
+  if (!(await isTeamMember(teamId, memberId))) {
+    return NextResponse.json(
+      { error: 'Your account was created, but joining the Co-Lab failed — your invite is still valid' },
+      { status: 500 }
+    );
+  }
+
+  /* Consumed LAST — only once membership is observed. Stamping first would burn
+     the token on a failed join and leave the person with an account, no Co-Lab,
+     and a link that no longer works. */
   await query(
     `UPDATE team_invites SET accepted_at = NOW(), accepted_by = $1 WHERE id = $2`,
     [memberId, invite.id]
   );
-
-  // Add the new member to the inviter's team workspace (best-effort, non-fatal)
-  const teamId = await resolveTeamIdForInviter(invite.invited_by);
-  if (teamId) await addMemberToTeam(teamId, memberId);
 
   // Create session
   const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
