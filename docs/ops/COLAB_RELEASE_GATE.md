@@ -66,7 +66,7 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 >
 > Two checks can legitimately emit `WARN` rather than `PASS` (`checkNoMemberAccessToOthersTeam` in §3, `checkAdminWorkspace` in §9), so an all-green run is not automatic — any WARN blocks until reviewed.
 >
-> `scripts/pre-deploy-gate.sh` enforces `MIN_COLAB_CHECKS=31` as a **floor**, not an equality. The floor is deliberately below 33: it catches a verifier that silently drops checks, while the exact expected count lives here. When a new check ships, raise the floor and this count together.
+> `scripts/pre-deploy-gate.sh` enforces `MIN_COLAB_CHECKS=31` as a **floor**, not an equality. The floor is currently **below** the witnessed 33, so the verifier could lose two assertions and still clear the numerical floor. **Whether that gap is intentional is unadjudicated (2026-09-06).** The script's own comment reads *"floor on passing checks (raise when new checks ship)"*, which suggests the 31 is stale from before section 12 rather than a deliberate compatibility minimum, but no ruling has been made and this document does not change enforcement. Open question for a separate unit: should the gate assert the exact expected contract, or keep a lower floor? Do not raise `31 → 33` on the strength of this note alone.
 
 ---
 
