@@ -43,6 +43,9 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                    W2               PASS 2026-09-06 — both planes (see SUBJECT READING below)
                    W3               FAIL on the ORIGINAL wording · PASS on the CORRECTED
                                     criterion (see W3 INSTRUMENT CORRECTION below)
+                   W4               PASS 2026-09-06 — survived a genuine hard reload
+                   W5               PASS 2026-09-06 — the first act is unchanged, the second
+                                    appended (see W4/W5 EVIDENCE below)
                  W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
 
@@ -136,6 +139,37 @@ W3 INSTRUMENT CORRECTION — founder ruling, 2026-09-06. THE ORIGINAL FAILURE IS
                  is tested harder: o1 and o7 must both render verbatim and unfaded, in place, with
                  their "Rests on" and "Does not establish" lists intact and no standing history,
                  count or timestamp exposed anywhere.
+
+W4 / W5 EVIDENCE — production, subject 50302f5d9, 2026-09-06
+
+W4  IT SURVIVES THE RELOAD — PASS
+    A genuine hard reload was performed, not a re-read of live DOM. Confirmed by a fresh
+    page-load block in the console preceding the read ([apiFetch] GET …/manuscripts, MAIA
+    Aetheric core activation, [Identity] explorerId ce284751…), and by a new execution
+    context. The standing therefore came back FROM THE SERVER, not from React state.
+      1 o1 taken "You marked this keep."      ← survived
+      2 o2 unset "No standing taken."
+      3 o3 unset "No standing taken."
+      4 o4 unset "No standing taken."
+      5 o5 unset "No standing taken."
+      6 o6 unset "No standing taken."
+      7 o7 taken "You marked this keep."      ← the incidental act, also durable
+    Absence still renders as "No standing taken." on the five untouched observations, which is
+    what W4 requires; o7 reading `taken` is correct and expected, not a regression.
+
+W5  CHANGING A STANDING DOES NOT REWRITE THE FIRST ACT — PASS
+    A BASELINE was captured BEFORE the second gesture, so "unchanged" is provable rather than
+    asserted after the fact:
+      baseline   id cdcf9631-c99b-4d91-96a3-322822a304e2 · index 0 · keep
+                 recorded_at 2026-09-06 17:21:42.823886+00
+    The member then chose Dismiss on the same o1. Result on the pinned o1 stream:
+      0  keep     cdcf9631-c99b-4d91-96a3-322822a304e2  17:21:42.823886+00   IDENTICAL to baseline
+      1  dismiss  51026b48-73a8-4f3f-bf4d-6ca05fd8c9f4  17:44:23.724811+00   APPENDED
+    Row 0 is unchanged in id, index, standing and timestamp — not edited, not replaced.
+    Current standing is the greatest index. dose_no_update_check is what makes an in-place
+    rewrite impossible; W5 proves it on the deployed database rather than assuming it.
+    THE PROPERTY THIS ESTABLISHES: a member changed their mind and their first act survived
+    intact. That is what 07F exists to protect, and it is now witnessed on production.
 ```
 
 **The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
