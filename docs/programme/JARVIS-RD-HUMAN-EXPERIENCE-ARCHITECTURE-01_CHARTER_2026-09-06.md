@@ -954,3 +954,53 @@ blocks the architecture from being stated publicly at the level it has earned. *
 tell exactly what Soullab knows, what it believes, what it is testing, and what remains unknown.*
 
 **Reconciliation record:** `docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CLAIM_RECONCILIATION_2026-09-06.md`.
+
+---
+
+## 24 · Master run promoted · Phase 1 opened · manifesto frozen (founder acts, 2026-09-06)
+
+**Act 1 — promotion.** The Jarvis integration-flow proposal is promoted to the canonical
+executable run: `docs/programme/JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1.md`. It carries the whole
+Soul Lab inquiry — research → MAIA development → human witness → collective learning → brand and
+public work — in one cockpit (state · current phase · input authorities · tasks · founder stops ·
+exit gate · outputs · next phase), with the standing law that binds every phase (the Human
+Question governs; direction of authority; P4′; the external-witness gate as a real gate; AP1–AP17
+in force as constraints; claim discipline; consent and Sanctuary; one mind; capacity not
+engagement; the fork), the experiment register inherited under the R10–R12 rulings (E1
+correction/re-attunement, not human-sense repair; E8 the full brain-training qualifying design;
+E9 the refined R12 memory rules), the distributed Soul Lab placed behind Phase 4, and the
+permanent Jarvis loop with its fork (*does this increase the human's capacity beyond MAIA? YES →
+retain · NO → refine/reject · HARM → prohibit*). The integration flow is superseded and kept as
+history. Per-phase detail is Jarvis-drafted under this act and corrected by ruling.
+
+**Act 2 — the pivot.** *"The Human Experience Architecture exists to change MAIA and AIN, not
+merely to describe them."* Research, manifesto refinement and new foundational theory **stop**.
+**Phase 1 — whole-organism mapping — opens now**, without waiting on the Phase 0.5 merge ruling
+(which remains a founder stop, in parallel). The founder's overriding instruction is recorded
+verbatim in the master run §5. The subsystem table is founder-extended to thirteen (canonical
+turn · Elemental/Corpus Callosum · memory · Conductor · Voice · Relationships · Now What? ·
+Practice Fields · Field Intelligence · developmental intelligence · Soul Corpus · House/onboarding
+· return/farewell), each with the founder's question; the R11 design audit (agreement drift ·
+validation loops · memory-amplified sycophancy · hidden shaping objectives · approval
+optimization · emotional capture · excessive reassurance · historical pattern becoming identity ·
+"you said before" becoming leverage · MAIA becoming more central) runs as a code/prompt/UX
+checklist on every subsystem; the R12 memory implementation criteria and the Elemental
+engineering question (CURRENT vs NEXT MAIA) are stated for the census, not decided. **Output: one
+ranked map for founder adjudication** — embodies / contradicts / unknown / smallest
+evidence-producing intervention; top-10 gaps ranked by human impact × architectural leverage ×
+risk (Jarvis proposes the ranking; the founder ranks). **Do not repair during the census.**
+
+**Act 3 — freeze.** Substantive manifesto expansion on `/accounted-for` is **FROZEN**. The page did
+its three jobs (stated the philosophy; forced claim discipline; exposed contradictions) and is now
+secondary. It is revised only at phase boundaries or when a label's warrant changes.
+
+**Founder's assessment, preserved.** *We did not waste time going as deep as we did. … But we
+have reached the point where further theory without application would become drift. The next
+frontier is MAIA herself.* The governing question of Phase 1: *if this is what Soullab now
+understands about humans, relationship and intelligence — what must MAIA become differently
+because we know it?*
+
+**State after §24:** Phase 0 CLOSED · Phase 0.5 residual (merge ruling pending) · **Phase 1
+CURRENT** (census running read-only; outputs to `docs/programme/MAIA_WHOLE_ORGANISM_MAP/`) ·
+manifesto FROZEN · PR #1239 DRAFT · merge / deploy / MAIA runtime change NOT AUTHORIZED · member
+research NOT AUTHORIZED · collective laboratory NOT BUILT.

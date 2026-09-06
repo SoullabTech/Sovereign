@@ -23,3 +23,4 @@ ADJUDICATED · CODIFIED. One row per inquiry. No secondary bureaucracy.
 | Interpretive layer (McGilchrist · Jung · contemplative) | QUESTION | 2026-09-06 | founder-designated; not carded |
 | Stage 5 ConsumerAppStudio card-by-card reading | QUESTION | 2026-09-06 | after paraphrase checks; answered against ANTI_PATTERNS + ledger |
 | Elemental Parallel Processing hypothesis (founder ruling, charter §11) | QUESTION | 2026-09-06 | H1 descriptive · H2 relational · H3 developmental; machine-facing model; not operationalized; after R8–R12 / v0.2 |
+| **Phase 1 — Whole-organism map** (master run §5) | **PROTOTYPING → census RUNNING (read-only)** | 2026-09-06 | founder pivot: manifesto frozen; thirteen subsystems; R11 audit + R12 criteria per subsystem; output `docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md` for founder adjudication; no repair during census |

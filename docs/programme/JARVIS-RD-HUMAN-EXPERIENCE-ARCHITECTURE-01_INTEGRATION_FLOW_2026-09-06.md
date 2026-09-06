@@ -1,5 +1,9 @@
 # Jarvis integration flow — carrying the Human Experience Architecture into MAIA and AIN
 
+> **SUPERSEDED 2026-09-06** by `JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1.md` (founder act, charter §24).
+> Kept as history. Its Phase 0 status line is stale (R8–R12 adjudicated; v0.2 accepted); its
+> experiment rows predate the R10–R12 rulings. Read the master run for current state.
+
 ```text
 STATUS      PROPOSAL by Jarvis, 2026-09-06. Nothing below is authorized. Each phase opens by
             founder act. Sequence follows the founder's own (charter §5): research → v0.2 →
