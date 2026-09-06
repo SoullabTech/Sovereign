@@ -218,3 +218,54 @@ unauthorized ambient handle (done — see Ruling 2).
 pattern, and canonical conversational continuity is not yet demonstrated as part
 of any shared invariant. No extraction. Walk Journal first, then compare two
 completed specimens.
+
+
+---
+
+## 9. Walk in progress — partial observations, 2026-09-06
+
+Live on `66da58b4c`. **Not a closed witness.** Recorded now because these two
+findings are durable regardless of how the walk finishes.
+
+### Candidate language for whatever survives both rooms
+
+> **MAIA can be present without becoming the place.**
+
+Founder, on seeing Journal's reflection state beside Reflections' sheet. This is
+a better handle than "contained presence" for a diagnosable reason: it names a
+*relationship*, not a *container*. The two specimens solved it with different
+geometry — a bounded sheet in one room, a subordinate block in the other — so
+any name derived from the shape was always going to be Reflections-specific.
+Still not canonized; recorded as the leading candidate for the comparison.
+
+### Observed so far
+
+```text
+A  kept entry remains the subject      STRONG — entry visually dominant, MAIA
+                                       beneath and secondary, labelled
+                                       statements not a thread
+C  MAIA enters from the object         consistent with intent; not yet tested
+                                       by attempting to reach MAIA elsewhere
+D  Let it go restores prior place      NOT YET WALKED
+E  exit carries no penalty             NOT YET WALKED
+   no ambient House handle in /journal NOT YET CONFIRMED across states
+```
+
+The observed frame is the reflection state on a **kept** entry, which is the
+harder half of the handle ruling (the "after Keep" case). No floating handle is
+present in it. That is one state, not "anywhere" — the ruling is not closed by it.
+
+### FINDING (parked, not a walk property): MAIA quoted the member inexactly
+
+The member wrote *"…a white breasted nuthatch sitting n the middle of the
+street"*. MAIA's noticing rendered it as: `right after "sitting in the street"`.
+The quoted string is a compression, not a verbatim substring of the entry.
+
+Small, but it lands on this room's load-bearing law — *the member's OWN words are
+the meaning layer* (INHABITABLE_ARCHITECTURE visual-grammar law). Quotation marks
+assert verbatim. A paraphrase inside quotes attributes to the member words they
+did not write, in the one room whose whole premise is that their words are the
+meaning. Either quote exactly or drop the quotes and describe.
+
+Parked as its own item. It is not property A/C/D/E and must not be folded into
+the walk's verdict.
