@@ -12,8 +12,9 @@ REVIEW 1         founder, 2026-09-06 — HOLD on dc48528d7: R1 delete path ·
 REVIEW 2         founder, 2026-09-06 — HOLD on b3e3ff7c8: R1 PASS · R2 success
                  path PASS · R3 PASS · conflict copy PASS; two blockers remain —
                  R2 LATE CONFLICT and the D5/D6 RAW-SQL BYPASS (§6)
-INTEGRATION      merged forward to canonical 2732706b6 (§7); overlapping
-                 DevelopRoom change reviewed, gates rerun on the merged program
+SOURCE           ACCEPTED (founder, 2026-09-06) on 96db26f62
+INTEGRATION      merged forward to canonical 2732706b6 (§7), then to
+                 df9594592 (§7.1) — head 238c9dd47, gates bound to that head
 BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 CENSUS           WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md       (canonical)
 ADJUDICATION     WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md          (canonical)
@@ -352,6 +353,38 @@ An earlier attempt at that last comparison was invalid — the baseline checkout
 unresolved merge index and both sides were measured from the same tree. It was rerun in a detached
 worktree at `2732706b6`. Recorded because a comparison that silently measures itself is worse than
 none.
+
+### 7.1 Freshness bring-forward to `df9594592`
+
+Canonical moved again after source acceptance. The intervening delta is one unrelated file:
+
+```text
+2732706b6 → df9594592   app/accounted-for/page.tsx   +5 / −5
+```
+
+No 07F file, migration, standing module, Develop room or database code is touched, so this is
+custody rather than review: merged forward (never rebased — the evidence history is the record of
+what was falsified and when), and verified on the resulting head.
+
+```text
+GATED TREE        238c9dd47                        (the merge commit itself)
+PARENTS           96db26f62  ·  df9594592          (exact, both)
+BRANCH HEAD       one further commit — THIS record and the board line, two
+                  markdown files, no source or schema byte. A commit cannot
+                  name its own SHA; the diff from the gated tree to the head is
+                  exactly those two documents, and that is checkable.
+07F NET DIFF      16 files against df9594592        (the intended set, unchanged)
+NEWLY INCORPORATED app/accounted-for/page.tsx only  (96db26f62 → HEAD)
+
+persistence falsification    15 checks · 0 failures
+write-boundary falsification 14 checks · 0 failures
+standing gates + surface + evidence gate   254 checks · 0 failures
+npm run typecheck            no regressions (230 vs 239 baseline)
+npm run check:no-supabase    clean
+lib/ + app/ jest             failure set identical to the canonical baseline
+                             (measured at 2732706b6; the one-file delta since
+                             touches no suite in that set)
+```
 
 ---
 
