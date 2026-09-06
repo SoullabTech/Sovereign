@@ -121,10 +121,11 @@ const OBSERVATION = (key: string) => ({
 });
 
 async function seedWorld(c: Client): Promise<World> {
-  await c.query(`TRUNCATE developmental_observation_standing_events`);
-  await c.query(`DELETE FROM developmental_readings`);
-  await c.query(`DELETE FROM member_manuscripts`);
-  await c.query(`DELETE FROM members`);
+  /* TRUNCATE, not DELETE: the 07F migration now refuses the deletion of a
+     reading while its Work exists (R1), and a fixture must not be the thing
+     that exercises — or is blocked by — a guard under test. */
+  await c.query(`TRUNCATE developmental_observation_standing_events, developmental_readings,
+                          member_manuscripts, members`);
   const m = await c.query(`INSERT INTO members DEFAULT VALUES RETURNING id`);
   const m2 = await c.query(`INSERT INTO members DEFAULT VALUES RETURNING id`);
   const ms = await c.query(`INSERT INTO member_manuscripts DEFAULT VALUES RETURNING id`);

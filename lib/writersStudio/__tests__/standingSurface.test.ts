@@ -15,9 +15,24 @@ const ROOM = strip(readFileSync(join(ROOT, 'app/writers-studio/develop/DevelopRo
 const CLIENT = strip(readFileSync(join(ROOT, 'lib/writersStudio/standingClient.ts'), 'utf8'));
 
 describe('the room can tell unknown from unset', () => {
-  it('a failed lookup becomes `unavailable`, never an empty list', () => {
-    expect(ROOM).toMatch(/r\.ok \? \{ state: 'available', standings: r\.standings \} : \{ state: 'unavailable' \}/);
+  it('every lookup completion is settled through the reading-addressed transition', () => {
+    /* R2. The room must not merge a result into whatever state it happens to
+       hold; `settleLookup` discards one belonging to a reading it has left. */
+    const settles = [...ROOM.matchAll(/setStandings\(/g)]
+      .map((m) => ROOM.slice(m.index ?? 0, (m.index ?? 0) + 120));
+    expect(settles.length).toBeGreaterThan(0);
+    for (const s of settles) expect(s).toMatch(/settleLookup|adoptInto|beginLookup/);
+    expect(ROOM).not.toMatch(/state: 'available'/);
     expect(ROOM).not.toMatch(/standings: \[\]/);
+  });
+
+  it('a recorded event is adopted into the reading it belongs to', () => {
+    expect(ROOM).toMatch(/onStanding\(readingId, r\.standing\)/);
+    expect(ROOM).toMatch(/adoptInto\(prev, readingId, next\)/);
+  });
+
+  it('the view names the reading as well as the observation', () => {
+    expect(ROOM).toMatch(/standingView\(standings, readingId, observationKey\)/);
   });
 
   it('the client never degrades a failure into an empty result', () => {
@@ -27,6 +42,11 @@ describe('the room can tell unknown from unset', () => {
 
   it('the controls are disabled unless the expectation says the room may act', () => {
     expect(ROOM).toMatch(/disabled=\{!expectation\.canAct \|\| sending\}/);
+  });
+
+  it('the row sentence is decided by the one function that weighs unknown against a refusal', () => {
+    expect(ROOM).toMatch(/standingRowSentence\(view, refusal\)/);
+    expect(ROOM).not.toMatch(/as it now stands/);
   });
 
   it('the token sent is the one the expectation produced, never invented', () => {

@@ -6,11 +6,15 @@
 > adjudication and design are canonical and accepted; **implementation authorized 2026-09-06 bound
 > to canonical `d8fc2082d`**, falsification-first. A branch candidate now exists on
 > `claude/writer-author-studios-roadmap-b2tqf5` — **NOT CLOSED, no PR, nothing deployed**. Its
-> evidence: `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (six deficient
+> evidence: `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (eight deficient
 > persistence variants and six deficient write-boundary variants each observed RED on its named
-> guard before the repair was accepted; `12 checks · 0 failures` and `14 checks · 0 failures` on the
-> code as written; D5/D6 module-graph gates falsified over an in-memory overlay). **BUILD-07G and
-> 07H remain unopened.**
+> guard before the repair was accepted; `15 checks · 0 failures` and `14 checks · 0 failures` on the
+> code as written; D5/D6 module-graph gates falsified over an in-memory overlay across every
+> module-loading form). **Founder review 2026-09-06 returned HOLD on `dc48528d7` — two blockers (the
+> D3 delete path through a directly deleted reading; a late async completion able to carry reading
+> A's standing into reading B), one gate-coverage defect and one copy repair; all four repaired,
+> §5 of the witness records what each invalidated. SOURCE ACCEPTANCE STILL PENDING; PR NOT
+> AUTHORIZED.** **BUILD-07G and 07H remain unopened.**
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >

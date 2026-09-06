@@ -65,8 +65,25 @@ const realReader: Reader = (rel) => {
 const overlayReader = (overlay: Record<string, string>): Reader =>
   (rel) => (rel in overlay ? stripComments(overlay[rel]) : realReader(rel));
 
+/**
+ * EVERY MODULE-LOADING FORM THIS REPOSITORY PERMITS, not merely the common one.
+ *
+ * R3: a walker that recognised only `from '…'` proved that ONE syntax could not
+ * reach standing — a convention, not the structural claim D5 and D6 were
+ * accepted as. A dynamic `import()`, a `require()` (this repo uses one in
+ * `lib/db/postgres`), a side-effect `import '…'` or a re-export would each have
+ * walked straight past it. Each form below is falsified in its own test.
+ */
+const IMPORT_FORMS: readonly { readonly name: string; readonly pattern: RegExp }[] = [
+  { name: "from '…'", pattern: /from\s+['"]([^'"]+)['"]/g },
+  { name: "import('…')", pattern: /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g },
+  { name: "require('…')", pattern: /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g },
+  { name: "import '…' (side effect)", pattern: /\bimport\s+['"]([^'"]+)['"]/g },
+];
+
 const importsOf = (code: string): string[] =>
-  [...code.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]);
+  IMPORT_FORMS.flatMap(({ pattern }) =>
+    [...code.matchAll(new RegExp(pattern.source, 'g'))].map((m) => m[1]));
 
 /** Resolve an import specifier to a repo-relative source path, or null when it
  *  leaves the repo (a package, or a file this walk does not own). */
@@ -150,6 +167,21 @@ describe('D5 · standing never reaches MAIA cognition', () => {
     expect(paths[0][paths[0].length - 1]).toContain('standing/store');
   });
 
+  /* THE FORMS, ONE FALSIFIER EACH. The claim is not "a static import cannot
+     reach standing"; it is that standing is unreachable. A form the walker
+     cannot see is a form the gate does not cover, so each is proved visible. */
+  it.each([
+    ["dynamic import", "const { currentStandings } = await import('@/lib/manuscript/standing/store');"],
+    ["require", "const { recordStanding } = require('@/lib/manuscript/standing/store');"],
+    ["side-effect import", "import '@/lib/manuscript/standing/store';"],
+    ["re-export", "export * from '@/lib/manuscript/standing/store';"],
+  ])('FALSIFIER · reports a %s of the standing store', (_form, line) => {
+    const target = 'lib/manuscript/ask/developmentalContext.ts';
+    const doctored = `${line}\n${readFileSync(join(ROOT, target), 'utf8')}`;
+    expect(pathsToStanding(target, overlayReader({ [target]: doctored })).length)
+      .toBeGreaterThan(0);
+  });
+
   it('FALSIFIER · reports a violation reached transitively, not only directly', () => {
     const root = 'app/api/sovereign/manuscripts/[id]/ask/route.ts';
     const via = 'lib/manuscript/ask/developmentalAskReader.ts';
@@ -189,6 +221,15 @@ describe('D6 · only the authenticated member route can reach the standing write
         expect(`${f} :: ${m[0].split('\n')[0]}`).toMatch(/import\s+type/);
       }
     }
+  });
+
+  it.each([
+    ["dynamic import", "export const revert = async () => (await import('@/lib/manuscript/standing/store')).recordStanding;"],
+    ["require", "export const revert = () => require('@/lib/manuscript/standing/store').recordStanding;"],
+  ])('FALSIFIER · reports a system-side %s of the writer', (_form, body) => {
+    const intruder = 'lib/maia/standingHousekeeping.ts';
+    expect(directImporters(overlayReader({ [intruder]: body }), isStore, [intruder]))
+      .toContain(intruder);
   });
 
   /* THE GATE, FALSIFIED — the other direction. A background module that could

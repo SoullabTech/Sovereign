@@ -36,13 +36,26 @@ const MIGRATION = join(
   'database/migrations/20260906000001_developmental_observation_standing.sql',
 );
 
-/** The minimum scaffold a standing event needs to exist at all: an owner and a
- *  frozen reading to be about. Deliberately NOT the real tables — this lane
- *  falsifies the standing stream, not its neighbours. */
+/**
+ * The scaffold carries the REAL parent relationship, and this matters.
+ *
+ * An earlier version of this harness stubbed `developmental_readings` as a bare
+ * id table with no manuscript above it — and then called a DIRECT delete of a
+ * reading the "Work deletion" witness. That labelled the exact hole R1 found as
+ * the proof that the hole was closed. The chain under test is two hops:
+ *
+ *   member_manuscripts → developmental_readings → standing events
+ *
+ * so the middle table is the canonical 07C migration, applied verbatim, and the
+ * positive D3 witness deletes the MANUSCRIPT.
+ */
 const SCAFFOLD = `
   CREATE TABLE members (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
-  CREATE TABLE developmental_readings (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
+  CREATE TABLE member_manuscripts (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
 `;
+
+const READINGS_MIGRATION = join(
+  process.cwd(), 'database/migrations/20260904000001_developmental_readings.sql');
 
 type Excision = { readonly name: string; readonly apply: (sql: string) => string };
 
@@ -76,13 +89,46 @@ CREATE TRIGGER dose_no_single_delete_check
     // member's own deletion of their Work. Without this variant, a guard that
     // over-refuses would look identical to a guard that is correct.
     name: 'D3-DELETE-GUARD-UNCONDITIONAL',
-    apply: (s) => {
-      const withoutIf = cut(
+    apply: (s) =>
+      replace(
         s,
-        `  IF EXISTS (SELECT 1 FROM developmental_readings WHERE id = OLD.reading_id) THEN\n`,
-      );
-      return cut(withoutIf, `  END IF;\n`);
-    },
+        `  IF EXISTS (SELECT 1 FROM developmental_readings WHERE id = OLD.reading_id) THEN
+    RAISE EXCEPTION
+      'standing event % cannot be deleted while its Work exists: a standing is withdrawn by taking another standing, and history is not erased piecemeal',
+      OLD.id;
+  END IF;`,
+        `  RAISE EXCEPTION 'refused unconditionally: %', OLD.id;`,
+      ),
+  },
+  {
+    // R1. The middle link of the cascade path: without this trigger a reading
+    // can be deleted while its Work stands, and the standing stream goes with
+    // it through the very CASCADE that was supposed to mean "the member
+    // deleted their Work".
+    name: 'D3-NO-READING-DELETE-GUARD',
+    apply: (s) =>
+      cut(
+        s,
+        `DROP TRIGGER IF EXISTS developmental_readings_no_orphan_delete_check ON developmental_readings;
+CREATE TRIGGER developmental_readings_no_orphan_delete_check
+  BEFORE DELETE ON developmental_readings
+  FOR EACH ROW EXECUTE FUNCTION developmental_readings_no_orphan_delete();`,
+      ),
+  },
+  {
+    // And its other side: a middle-link guard that refuses unconditionally
+    // would block the member's own deletion of their Work two levels down.
+    name: 'D3-READING-DELETE-GUARD-UNCONDITIONAL',
+    apply: (s) =>
+      replace(
+        s,
+        `  IF EXISTS (SELECT 1 FROM member_manuscripts WHERE id = OLD.manuscript_id) THEN
+    RAISE EXCEPTION
+      'developmental reading % cannot be deleted while its Work exists: a reading is superseded by a later reading, and the record it anchors is not erased beneath it',
+      OLD.id;
+  END IF;`,
+        `  RAISE EXCEPTION 'refused unconditionally: %', OLD.id;`,
+      ),
   },
   {
     name: 'D7-NO-UNIQUE',
@@ -123,22 +169,25 @@ const EXPECTED_RED: Record<string, readonly string[]> = {
   'D3-NO-UPDATE-GUARD': ['update-refused'],
   'D3-NO-DELETE-GUARD': ['single-delete-refused'],
   'D3-DELETE-GUARD-UNCONDITIONAL': ['work-cascade-permitted'],
+  'D3-NO-READING-DELETE-GUARD': ['reading-delete-refused'],
+  'D3-READING-DELETE-GUARD-UNCONDITIONAL': ['work-cascade-permitted'],
   'D7-NO-UNIQUE': ['simultaneous-write-refused'],
   'D2-UNSET-VALUE-WRITABLE': ['standing-values-closed'],
   'D2-NULL-STANDING-WRITABLE': ['null-standing-refused'],
 };
 
-function cut(sql: string, fragment: string): string {
-  if (!sql.includes(fragment)) {
-    throw new Error(`excision fragment not found in the migration:\n${fragment}`);
-  }
-  return sql.replace(fragment, '');
-}
-
+/** Every excision anchor must occur EXACTLY ONCE. Two delete guards now live in
+ *  this migration and share phrasing; an anchor that matched either would make
+ *  the variant — and therefore the red — ambiguous. */
 function replace(sql: string, from: string, to: string): string {
-  if (!sql.includes(from)) throw new Error(`excision anchor not found: ${from}`);
+  const count = sql.split(from).length - 1;
+  if (count !== 1) {
+    throw new Error(`excision anchor occurs ${count} times, expected exactly once:\n${from}`);
+  }
   return sql.replace(from, to);
 }
+
+const cut = (sql: string, fragment: string): string => replace(sql, fragment, '');
 
 // ---------------------------------------------------------------- probes ----
 
@@ -178,12 +227,35 @@ const PROBES: readonly Probe[] = [
     },
   },
   {
-    key: 'work-cascade-permitted',
-    claim: "deleting the Work still takes its standing history with it",
+    key: 'reading-delete-refused',
+    claim: 'a reading cannot be deleted out from under the Work it belongs to',
     run: async (c) => {
+      /* R1's hole. If this passes only because no route issues the statement,
+         the standing guard's inference — "the reading is gone, so the member
+         deleted their Work" — is false, and the whole stream is erasable while
+         the Work stands. */
       const { member, reading } = await seed(c);
       await insertEvent(c, member, reading, 'o1', 0, 'keep');
-      await c.query(`DELETE FROM developmental_readings WHERE id = $1`, [reading]);
+      await mustFail(
+        c,
+        `DELETE FROM developmental_readings WHERE id = '${reading}'`,
+        'a reading was deleted while its Work existed',
+      );
+      await expectCount(c, 1, 'the standing stream did not survive the refused delete');
+    },
+  },
+  {
+    key: 'work-cascade-permitted',
+    claim: "deleting the Work still takes the reading and its standing history with it",
+    run: async (c) => {
+      /* THE ACTUAL TWO-HOP PATH: manuscript → reading → standing events. The
+         earlier version of this probe deleted the READING directly and called
+         that the Work deletion; that is the hole, not the witness. */
+      const { member, manuscript, reading } = await seed(c);
+      await insertEvent(c, member, reading, 'o1', 0, 'keep');
+      await c.query(`DELETE FROM member_manuscripts WHERE id = $1`, [manuscript]);
+      const readings = await c.query(`SELECT count(*)::int AS n FROM developmental_readings`);
+      if (readings.rows[0].n !== 0) throw new Error('the reading survived its Work');
       await expectCount(c, 0, 'the cascade did not remove the stream');
     },
   },
@@ -286,13 +358,33 @@ const PROBES: readonly Probe[] = [
 
 // ------------------------------------------------------------- machinery ----
 
-async function seed(c: Client): Promise<{ member: string; reading: string }> {
-  await c.query(`TRUNCATE developmental_observation_standing_events`);
-  await c.query(`DELETE FROM developmental_readings`);
-  await c.query(`DELETE FROM members`);
+const OBSERVATION = {
+  key: 'o1', lens: 'development', phenomenon: 'recurrence',
+  evidenceRefs: [{ kind: 'section', sectionId: '00000000-0000-4000-8000-000000000001' }],
+  observation: 'A thing recurs.',
+  doesNotEstablish: ['that the recurrence is a flaw'],
+  structureDependency: { kind: 'independent' },
+};
+
+/** A Work, a frozen reading of it, and the member who owns both. The teardown
+ *  uses TRUNCATE, which does not fire row triggers — the guards under test are
+ *  exercised by the probes, never by the fixture. */
+async function seed(c: Client): Promise<{ member: string; manuscript: string; reading: string }> {
+  await c.query(`TRUNCATE developmental_observation_standing_events, developmental_readings,
+                          member_manuscripts, members`);
   const m = await c.query(`INSERT INTO members DEFAULT VALUES RETURNING id`);
-  const r = await c.query(`INSERT INTO developmental_readings DEFAULT VALUES RETURNING id`);
-  return { member: m.rows[0].id, reading: r.rows[0].id };
+  const w = await c.query(`INSERT INTO member_manuscripts DEFAULT VALUES RETURNING id`);
+  const r = await c.query(
+    `INSERT INTO developmental_readings
+       (manuscript_id, member_id, draft_id, revision_number, commissioned_lens,
+        scope, read_state, coverage, input_fingerprint, outcome, observations,
+        reader_provenance, classifier_provenance)
+     VALUES ($1, $2, gen_random_uuid(), 1, 'development',
+             '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, 'fp', 'reading', $3::jsonb,
+             '{"model":"lab"}'::jsonb, '{"model":"lab"}'::jsonb)
+     RETURNING id`,
+    [w.rows[0].id, m.rows[0].id, JSON.stringify([OBSERVATION])]);
+  return { member: m.rows[0].id, manuscript: w.rows[0].id, reading: r.rows[0].id };
 }
 
 async function insertEvent(
@@ -349,6 +441,7 @@ async function withDatabase<T>(
   await c.connect();
   try {
     await c.query(SCAFFOLD);
+    await c.query(readFileSync(READINGS_MIGRATION, 'utf8'));
     await c.query(schema);
     return await fn(c, url);
   } finally {

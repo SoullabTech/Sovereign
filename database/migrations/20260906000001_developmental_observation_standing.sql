@@ -47,8 +47,15 @@ CREATE TABLE IF NOT EXISTS developmental_observation_standing_events (
   --
   -- CASCADE is the deletion ruling's second side: standing history is immutable
   -- WHILE THE WORK EXISTS, and deleting the Work deletes the history with it.
-  -- Readings already cascade from member_manuscripts, so the path is
-  --   manuscript → reading → standing events.
+  -- The path is  manuscript → reading → standing events.
+  --
+  -- THAT PATH IS ONLY SOUND IF ITS MIDDLE LINK CANNOT BE CUT. Canonical
+  -- `developmental_readings` cascades from `member_manuscripts` and refuses
+  -- UPDATE, but nothing refused a DIRECT delete of a reading — so a reading
+  -- could be removed while its Work stood, taking the standing stream with it
+  -- through this very CASCADE. The trigger at the foot of this file closes
+  -- that, because a guard on the child alone cannot see which parent act
+  -- removed its parent.
   reading_id uuid NOT NULL REFERENCES developmental_readings(id) ON DELETE CASCADE,
 
   -- `observation_key` CANNOT be foreign-keyed: observations live inside the
@@ -134,6 +141,43 @@ CREATE TRIGGER dose_no_single_delete_check
   BEFORE DELETE ON developmental_observation_standing_events
   FOR EACH ROW EXECUTE FUNCTION dose_no_single_delete();
 
+-- D3, THE MIDDLE LINK — a reading may not be deleted out from under its Work.
+--
+-- `dose_no_single_delete()` above permits a standing deletion exactly when its
+-- reading is already gone, reading that absence as "the member deleted their
+-- Work". That inference is only true if a reading itself cannot be deleted
+-- while the Work exists. Canonical 07C never enforced that: its record says
+-- rows go only with their manuscript, but structurally it refused UPDATE only.
+--
+-- So the same discriminator is applied one level up, and the ruling becomes a
+-- property of the program rather than of two records agreeing:
+--
+--   reading deleted · manuscript still exists   REFUSED
+--   manuscript deleted                          reading cascade permitted
+--                                               → standing cascade permitted
+--
+-- This touches a 07C table because the hole is in the path 07F depends on, and
+-- because a guard on the standing stream alone cannot tell which parent act
+-- removed its parent. It adds no column, changes no row and takes nothing away
+-- from 07C: the INSERT-only reading and its retention are unchanged.
+CREATE OR REPLACE FUNCTION developmental_readings_no_orphan_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM member_manuscripts WHERE id = OLD.manuscript_id) THEN
+    RAISE EXCEPTION
+      'developmental reading % cannot be deleted while its Work exists: a reading is superseded by a later reading, and the record it anchors is not erased beneath it',
+      OLD.id;
+  END IF;
+  -- The manuscript is gone: a cascade from the member's deletion of the Work.
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS developmental_readings_no_orphan_delete_check ON developmental_readings;
+CREATE TRIGGER developmental_readings_no_orphan_delete_check
+  BEFORE DELETE ON developmental_readings
+  FOR EACH ROW EXECUTE FUNCTION developmental_readings_no_orphan_delete();
+
 COMMENT ON TABLE developmental_observation_standing_events IS
   'BUILD-07F. Append-only stream of a member''s standing toward one frozen developmental observation. Current standing = greatest event_index per (member_id, reading_id, observation_key). UNSET = zero events. Never updated; never deleted individually while the Work exists; cascades away with the Work.';
 
@@ -144,6 +188,8 @@ COMMIT;
 --   member's recorded act, and dropping the table would erase acts the member
 --   took. A destructive DROP is not promised as rollback.
 --
+--   DROP TRIGGER IF EXISTS developmental_readings_no_orphan_delete_check ON developmental_readings;
+--   DROP FUNCTION IF EXISTS developmental_readings_no_orphan_delete();
 --   DROP TRIGGER IF EXISTS dose_no_single_delete_check ON developmental_observation_standing_events;
 --   DROP TRIGGER IF EXISTS dose_no_update_check ON developmental_observation_standing_events;
 --   DROP FUNCTION IF EXISTS dose_no_single_delete();

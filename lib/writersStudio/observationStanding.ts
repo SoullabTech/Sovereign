@@ -30,23 +30,80 @@ export interface StandingWire {
   readonly recordedAt: string;
 }
 
-/** What the room knows about this reading's standings, including not knowing. */
+/**
+ * What the room knows about ONE reading's standings, including not knowing.
+ *
+ * THE READING ID IS PART OF THE STATE, not context around it. This state lives
+ * in the room, ABOVE the keyed `Reading` subtree, so React's remount cannot
+ * protect it: an asynchronous completion belonging to reading A could otherwise
+ * land in the state the room now holds for reading B, and — because a
+ * `StandingWire` names an observation key but no reading — the room could not
+ * even detect the mismatch. Every transition below therefore takes the reading
+ * the result belongs to and refuses to apply it to a different one.
+ *
+ * This is 07E's remount lesson one level higher: a keyed child cannot protect
+ * state owned by an unkeyed parent.
+ */
 export type StandingLookup =
-  | { readonly state: 'loading' }
-  | { readonly state: 'unavailable' }
-  | { readonly state: 'available'; readonly standings: readonly StandingWire[] };
+  | { readonly state: 'loading'; readonly readingId: string }
+  | { readonly state: 'unavailable'; readonly readingId: string }
+  | {
+      readonly state: 'available';
+      readonly readingId: string;
+      readonly standings: readonly StandingWire[];
+    };
 
 export type StandingView =
-  | { readonly state: 'unknown'; readonly reason: 'loading' | 'unavailable' }
+  | { readonly state: 'unknown'; readonly reason: 'loading' | 'unavailable' | 'other-reading' }
   | { readonly state: 'unset' }
   | { readonly state: 'taken'; readonly standing: Standing; readonly currentEventId: string };
 
-/** The three-state read for ONE observation. */
-export function standingView(lookup: StandingLookup, observationKey: string): StandingView {
+/** The lookup a reading starts from. */
+export const beginLookup = (readingId: string): StandingLookup =>
+  ({ state: 'loading', readingId });
+
+/**
+ * The three-state read for ONE observation of ONE reading.
+ *
+ * A lookup held for a DIFFERENT reading is UNKNOWN — never UNSET, and never
+ * that other reading's value. It says nothing about this one.
+ */
+export function standingView(
+  lookup: StandingLookup, readingId: string, observationKey: string,
+): StandingView {
+  if (lookup.readingId !== readingId) return { state: 'unknown', reason: 'other-reading' };
   if (lookup.state !== 'available') return { state: 'unknown', reason: lookup.state };
   const found = lookup.standings.find((s) => s.observationKey === observationKey);
   if (!found) return { state: 'unset' };
   return { state: 'taken', standing: found.standing, currentEventId: found.currentEventId };
+}
+
+/**
+ * A completed lookup, applied only to the reading it was asked about. A result
+ * arriving after the room moved on is DISCARDED, not merged: it is evidence
+ * about a reading nobody is looking at.
+ */
+export function settleLookup(
+  prev: StandingLookup, readingId: string,
+  result: { ok: true; standings: readonly StandingWire[] } | { ok: false },
+): StandingLookup {
+  if (prev.readingId !== readingId) return prev;
+  return result.ok
+    ? { state: 'available', readingId, standings: result.standings }
+    : { state: 'unavailable', readingId };
+}
+
+/**
+ * One recorded event, adopted into the reading it belongs to. An event from a
+ * reading the room has left cannot mutate the reading it now holds — the
+ * failure R2 names, made unrepresentable rather than remembered.
+ */
+export function adoptInto(
+  prev: StandingLookup, readingId: string, next: StandingWire,
+): StandingLookup {
+  if (prev.readingId !== readingId || prev.state !== 'available') return prev;
+  const others = prev.standings.filter((s) => s.observationKey !== next.observationKey);
+  return { state: 'available', readingId, standings: [...others, next] };
 }
 
 /**
@@ -75,12 +132,50 @@ export function expectationFor(
 export function standingSentence(view: StandingView): string {
   switch (view.state) {
     case 'unknown':
-      return view.reason === 'loading'
-        ? 'Reading your standing…'
-        : 'Your standing could not be reached. Nothing has been changed.';
+      return view.reason === 'unavailable'
+        ? 'Your standing could not be reached. Nothing has been changed.'
+        : 'Reading your standing…';
     case 'unset': return 'No standing taken.';
     case 'taken': return `You marked this ${LABEL[view.standing].toLowerCase()}.`;
   }
+}
+
+/**
+ * What the row says after a refusal — and, when the refusal triggered a refresh
+ * that has not landed, what it may NOT say.
+ *
+ * The earlier copy told the writer "here it is as it now stands" the moment a
+ * conflict came back, and only then began refetching. If that refetch failed,
+ * the row went UNAVAILABLE while still claiming to be showing current state.
+ * The ordinary unknown truth wins over any refusal message: a conflict explains
+ * what did not happen, it does not establish what is.
+ */
+export function standingRowSentence(view: StandingView, refusal: string | null): string {
+  if (!refusal) return standingSentence(view);
+
+  const conflict = refusal === 'stale_expectation' || refusal === 'simultaneous_write';
+
+  if (view.state === 'unknown') {
+    /* Could not be reached — say so, whatever else just happened. Nothing was
+       overwritten either way, so the writer is told both facts and neither is
+       dressed up as the other. */
+    if (view.reason === 'unavailable') {
+      return conflict
+        ? 'Nothing was overwritten. Your standing could not be reached.'
+        : standingSentence(view);
+    }
+    return conflict
+      ? 'Nothing was overwritten. Reading your standing…'
+      : standingSentence(view);
+  }
+
+  if (refusal === 'stale_expectation') {
+    return 'This standing changed elsewhere while you were looking. Nothing was overwritten — here it is as it now stands.';
+  }
+  if (refusal === 'simultaneous_write') {
+    return 'Another act reached this observation first. Nothing was overwritten — here it is as it now stands.';
+  }
+  return 'That could not be recorded. Nothing has been changed.';
 }
 
 export const LABEL: Record<Standing, string> = {
