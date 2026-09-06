@@ -40,8 +40,46 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                                     FKs: reading_id → developmental_readings ON DELETE CASCADE
                                     (paired with no_orphan_delete_check — the integrity path §4
                                     forbids "cleaning up"); member_id → members ON DELETE RESTRICT.
-                 W3 is the first irreversible step. W1 no longer gates it; the founder's own
+                   W2               PASS 2026-09-06 — both planes (see SUBJECT READING below)
+                 W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
+
+SUBJECT READING  R = cb589ab0-3532-433b-b52d-916d155382c8   — FIXED for W2–W12
+                 manuscript   0186cd37-4124-44ce-a6d3-37286bbe816b
+                              "WS2 Private Beta Smoke Manuscript 2026-09-05"
+                 outcome      reading · lens structure · 7 observations (o1…o7)
+                 frozen_at    2026-09-05 14:31:29.082311+00
+                 reader       DEVELOPMENTAL-READER-04 · claude-opus-5
+                 classifier   DEVELOPMENTAL-PHENOMENON-04
+                 coverage     4 of 4 sections read in full · draft version 2
+                 ⚠ SUPERSEDED AT WALK TIME — the room shows "This is what MAIA noticed then. The
+                   work has moved since: the text of Section 1 · 'Arrival' has changed." This is
+                   07A's three-state locate behaving correctly, NOT a defect found mid-walk, and it
+                   does NOT disqualify R: expectation.canAct derives only from view.state
+                   (unknown | unset | taken) and never from supersession. It STRENGTHENS W10 — a
+                   superseded, standing-bearing observation must still render verbatim with its
+                   "Rests on" and "Does not establish" lists intact.
+                 The second existing reading d527997e-bb8a-499e-bc1c-248bcec6ee2b (6 observations)
+                 is NOT W9's subject: W9 requires a reading COMMISSIONED during the walk, which
+                 needs the model seam live. W1–W8 are walkable with the seam refusing.
+
+W2 EVIDENCE      UI plane, read-only DOM inspection on the authenticated room at
+                 /writers-studio/develop?m=0186cd37…&r=cb589ab0… — seven entries, each
+                 data-standing-state="unset", sentence "No standing taken.", and all three
+                 controls (Keep · Dismiss · Unresolved) enabled:
+                   1 o1 unset "No standing taken." true,true,true
+                   2 o2 unset "No standing taken." true,true,true
+                   3 o3 unset "No standing taken." true,true,true
+                   4 o4 unset "No standing taken." true,true,true
+                   5 o5 unset "No standing taken." true,true,true
+                   6 o6 unset "No standing taken." true,true,true
+                   7 o7 unset "No standing taken." true,true,true
+                 DB plane, read-only:
+                   SELECT count(*) … WHERE reading_id = 'cb589ab0-…' → 0
+                 The two planes agree, which is what W2 requires. Recorded separately because a
+                 sentence reading "No standing taken." while the controls are disabled is the W2
+                 contradiction; disabled controls with state="unknown" would be honest lookup
+                 uncertainty and NOT a failure.
 ```
 
 **The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
