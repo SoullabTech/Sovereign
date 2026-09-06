@@ -13,6 +13,7 @@ jest.mock('@/lib/db/postgres', () => ({ transaction: jest.fn(), query: jest.fn()
 import { transaction } from '@/lib/db/postgres';
 import { draftStateDigest } from '../draftStateDigest';
 import { convertDraftToSections } from '../convertDraft';
+import { composeDraftSlices } from '@/lib/manuscript/draftSections';
 
 const mockTransaction = transaction as jest.Mock;
 const MEMBER = '11111111-1111-1111-1111-111111111111';
@@ -53,16 +54,21 @@ function harness(
   /** The partition an already-converted draft holds, when it holds one. */
   existing: string[] = [],
 ) {
-  const writes: string[] = [];
+  /* Params are recorded, not only SQL: the defect this file now guards was a
+     MISSING COLUMN in an INSERT that otherwise looked correct. */
+  const writes: { sql: string; params: unknown[] }[] = [];
+  /* The sections the conversion mints, as the read-back would return them. */
+  const minted = composeDraftSlices(source).slices.map((sl, i) => ({ id: `ds${i + 1}`, text: sl.text }));
   mockTransaction.mockImplementation(async (fn: (tx: { query: (sql: string, p?: unknown[]) => Promise<{ rows: unknown[] }> }) => unknown) =>
     fn({
-      query: async (sql: string) => {
+      query: async (sql: string, p?: unknown[]) => {
         if (/FROM manuscript_working_drafts/.test(sql) && /FOR UPDATE/.test(sql)) {
           return { rows: [{ id: 'd1', content: draft.content, version: String(draft.version), section_addressable_at: draft.addressable ? new Date() : null }] };
         }
         if (/FROM manuscript_sections/.test(sql)) return { rows: source };
         if (/SELECT text FROM manuscript_draft_sections/.test(sql)) return { rows: existing.map((text) => ({ text })) };
-        writes.push(sql);
+        if (/SELECT id, text FROM manuscript_draft_sections/.test(sql)) return { rows: minted };
+        writes.push({ sql, params: p ?? [] });
         return { rows: [] };
       },
     }));
@@ -139,5 +145,60 @@ describe('convertDraftToSections — the permission it was given', () => {
     const r = await convertDraftToSections(MS, MEMBER);
     expect(r.refusal).toBeUndefined();
     expect(r.status).toBe('already_converted');
+  });
+});
+
+
+/**
+ * ⛔ THE SECOND WALL (production, 2026-09-06).
+ *
+ * `captureEvidence` freezes from the LATEST revision and refuses
+ * `partition_not_recorded` when that revision carries no boundaries. The
+ * conversion's own revision INSERT named no `section_partition`, so the newest
+ * revision after EVERY conversion was partition-less: a Work would convert
+ * successfully, report `ready`, offer its lenses — and still be unreadable.
+ * Preparation closed reachability and left a second wall one step behind it.
+ *
+ * Found on book-print-kdp-final immediately after a successful preparation.
+ */
+describe('convertDraftToSections — the revision it leaves behind', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const revisionWrite = (writes: { sql: string; params: unknown[] }[]) =>
+    writes.find((w) => /INSERT INTO working_draft_revisions/.test(w.sql));
+
+  it('records the partition on the revision it writes', async () => {
+    const writes = harness({ content: CONTENT, version: 4, addressable: false }, SOURCE);
+    const r = await convertDraftToSections(MS, MEMBER, { authority: 'mechanical', stateDigest: digestOf(4) });
+    expect(r.status).toBe('converted');
+
+    const rev = revisionWrite(writes);
+    expect(rev).toBeDefined();
+    expect(rev!.sql).toMatch(/section_partition/);
+
+    /* Not merely present — a real partition over the real sections. An empty
+       array satisfies the column and refuses at capture exactly as NULL does. */
+    const partition = JSON.parse(rev!.params[4] as string) as { sectionId: string; start: number; end: number }[];
+    expect(partition).toHaveLength(SOURCE.length);
+    expect(partition[0].start).toBe(0);
+    expect(partition.map((p) => p.sectionId)).toEqual(['ds1', 'ds2']);
+    /* Contiguous, and covering the whole draft. */
+    expect(partition[1].start).toBe(partition[0].end);
+    expect(partition[partition.length - 1].end).toBe([...CONTENT].length);
+  });
+
+  /* The note names what the row is. It is written over the bytes the draft
+     holds NOW, whose sections were just minted — so calling it the state
+     "before" conversion while carrying that partition would be false. */
+  it('names the conversion rather than claiming to precede it', async () => {
+    const writes = harness({ content: CONTENT, version: 4, addressable: false }, SOURCE);
+    await convertDraftToSections(MS, MEMBER, { authority: 'mechanical', stateDigest: digestOf(4) });
+    expect(revisionWrite(writes)!.params[3]).toBe('Section conversion');
+  });
+
+  it('writes no revision at all when the conversion is refused', async () => {
+    const writes = harness({ content: CONTENT, version: 4, addressable: false }, SOURCE);
+    await convertDraftToSections(MS, MEMBER, { authority: 'mechanical', stateDigest: digestOf(3) });
+    expect(revisionWrite(writes)).toBeUndefined();
   });
 });
