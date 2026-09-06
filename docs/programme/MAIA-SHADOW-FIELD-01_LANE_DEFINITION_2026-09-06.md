@@ -10,8 +10,8 @@ OPENED      2026-09-06 (founder, in-session; split out of the whole-organism cen
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
 STATUS      SHADOW-01 · DISCOVER CLOSED/ACCEPTED · FALSIFY CLOSED/ACCEPTED (Acceptance Instrument v1:
-            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTE CLOSED / RATIFIED (Constitution v0.2, 2026-09-06) · DESIGN OPEN — design
-            drafted, awaiting founder acceptance · HARD STOP before PROTOTYPE stands · NO CODE · RUNTIME UNCHANGED
+            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTE CLOSED / RATIFIED (Constitution v0.2, 2026-09-06) · DESIGN ACCEPTED SUBJECT TO
+            DG-C1–DG-C4 (applied); awaiting founder closure · HARD STOP before PROTOTYPE stands · NO CODE · RUNTIME UNCHANGED
             (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE · …_CONSTITUTION_v0.2 · …_DESIGN_2026-09-06.md ·
             docs/design/contracts/shadow-field.md)
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
@@ -364,8 +364,8 @@ DONE      DISCOVER — CLOSED / ACCEPTED; founder dispositions in census §12
 DONE      FALSIFY — CLOSED / ACCEPTED; Acceptance Instrument v1 in FALSIFY §7 (F1–F16)
 DONE      CONSTITUTE decisions D1–D6 — RULED (CONSTITUTE record §9)
 DONE      CONSTITUTE — CLOSED / RATIFIED (v0.2; C1, C2; naming; F12 PASS)
-NOW       DESIGN — drafted (MAIA-SHADOW-FIELD-01_DESIGN_2026-09-06.md + docs/design/contracts/shadow-field.md); awaiting founder
-          acceptance → the Field is *Designed* → ▌HARD STOP▐ → PROTOTYPE only on an explicit founder act
+NOW       DESIGN — accepted subject to DG-C1–C4, all applied; awaiting founder closure → the Field is *Designed / Accepted · Not Live*
+          → ▌HARD STOP▐ → PROTOTYPE (first = Dedicated room; Invoked deferred) only on an explicit founder act
 THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
 NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
