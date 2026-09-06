@@ -6,7 +6,7 @@ OPENED BY founder, 2026-09-06
 GOAL      A tester receives one invite, creates or signs into their Soullab
           account, lands in the exact Beta Co-Lab, and can interact with the
           group without seeing any other Co-Lab's material.
-STATUS    FIRST CUT BUILT (steps 1–4) · steps 5–8 are founder acts
+STATUS    R2 BUILT (steps 1–4 + review repairs) · steps 5–8 are founder acts
 ```
 
 ## 0 · What was already true
@@ -64,6 +64,52 @@ migration  20260906000002_team_invites_team_bound.sql
 ```
 
 Inference survives only for `team_id IS NULL` rows, so existing links do not dead-end.
+
+## 2a · R2 — four holes found in review of the first cut
+
+The first cut made the API team-bound but left the promise breakable at four points. All four were
+found by founder review of `561035861`, and all four are repaired here.
+
+```text
+A  the live Invite button never sent teamId
+   InviteModal was instantiated without it while the sidebar held it one line away,
+   so the UI still took the inference path — the original leak, alive in the exact
+   flow this lane exists to repair. Modal is now team-bound; role fixed to 'member'.
+
+B  a NEW invite now REQUIRES an explicit teamId (400 otherwise)
+   inference survives only for pre-migration rows already in the table
+
+C  membership was not permission
+   the caller chooses the invited role, so a member — or a viewer — could invite
+   someone in as an admin. Now owner/admin of THAT team, via canInviteToTeam().
+
+D  a pending invite was matched on email alone
+   any live token for that person could be recycled — a legacy row with no
+   destination, or one for a different Co-Lab — refreshing only its expiry, so the
+   returned link still pointed elsewhere. Identity is now (email, team_id), and the
+   reused row's role is refreshed too.
+
+E  the token was the only credential
+   possession of a forwarded link plus ANY authenticated account consumed the
+   invite. Acceptance now requires the signed-in member's email to match.
+
+F  acceptance could report success without membership
+   `joined: Boolean(destination)` proved only that a team id resolved, and
+   addMemberToTeam() returns false for both a swallowed failure and an existing
+   membership — so neither could answer the question. Membership is now OBSERVED
+   via isTeamMember(), fail-closed, and established BEFORE the invite is consumed:
+   a failure leaves the link usable instead of spending it on a half-finished join.
+
+G  the new-account path had the same ordering defect
+   it stamped accepted_at, then best-effort joined. Now: account → membership
+   observed → invite consumed. The account is deliberately NOT rolled back on a
+   join failure — a working account with an unspent invite beats destroying it.
+```
+
+Focused tests cover exactly these invariants — `app/api/team/invite/__tests__/teamBoundInvite.test.ts`,
+7 passing: destination required and no row written without it; admin+ enforced against the named
+team; the pending lookup scoped by `team_id = $2`; fail-closed on unobserved membership; and the
+named team used rather than an inferred one. Not an invite-suite rewrite.
 
 ## 3 · Not done, and why
 
