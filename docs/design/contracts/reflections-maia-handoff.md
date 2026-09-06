@@ -123,8 +123,13 @@ refused on 2026-09-04 — *the first specimen is not the generic architecture*.
 
 **Sequence (founder, 2026-09-06).** Reflections closes first. Desktop walk PASS;
 mobile walk PASS (390x844 true emulation, real response, no spill); the console
-errors observed during the first desktop pass remain unclassified and are the
-last item against the founder's own three-item gate. Only when that settles does
+item is OPEN and weaker than first recorded — a red count of 2 was *visible* on a
+Reflections page in production, but `Preserve log` was checked, so those entries
+may have survived earlier navigation and are not attributable to the Reflections
+turn. Neither their text nor their provenance is established, so they can be
+neither dismissed nor counted as reproduced. Settling it takes one causally clean
+pass: uncheck `Preserve log`, clear, reload, one MAIA turn, filter to Errors only,
+capture whatever remains. That is the last item on the gate. Only when it settles does
 **Journal** open as specimen two. Nothing is named or extracted before the two
 rooms can be compared.
 
