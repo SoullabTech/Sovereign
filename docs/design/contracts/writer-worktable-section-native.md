@@ -2,11 +2,12 @@
 room: Writer Canvas — the Worktable, and the Press manuscript page it hands off to
 human_activity: writing — the writer working on their book, at the page
 
-# Two surfaces, one change: the Worktable becomes section-native, and the older
-# Press editor stops pretending it can write a draft it cannot.
+# One writing contract across the Canvas surfaces and the Press handoff: section-native
+# writing owns section-addressable drafts; the older Press editor does not.
 surfaces:
   - app/writers-studio/canvas/Worktable.tsx
   - app/writers-studio/canvas/WritingSurface.tsx
+  - app/writers-studio/canvas/SectionWritingSurface.tsx
   - app/press/manuscript/WorkingDraftEditor.tsx
 change_class: experiential
 principles:

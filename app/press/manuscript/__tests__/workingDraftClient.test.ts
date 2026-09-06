@@ -16,6 +16,7 @@ import {
   createDraftSaver,
   pageEstimate,
   putDraftSections,
+  checkpointServerDraft,
   applySectionEdit,
   flattenDraftSections,
   sectionOffsets,
@@ -146,6 +147,31 @@ describe('putDraft — autosave vs checkpoint', () => {
     expect(
       await putDraft(jest.fn(async () => resp(401)), ID, { content: 'x', ...GUARD })
     ).toEqual({ kind: 'unauthorized' });
+  });
+});
+
+describe('checkpointServerDraft — bodyless server-truth checkpoint', () => {
+  it('sends the guard as headers and NO request body', async () => {
+    const http = jest.fn(async () => resp(200, {
+      revisionCount: 4, revisionId: 8, updatedAt: 't', checkpointed: true,
+    }));
+    const r = await checkpointServerDraft(http, ID, GUARD);
+    expect(r).toEqual({ kind: 'ok', revisionCount: 4, revisionId: 8, updatedAt: 't' });
+    const [path, init] = http.mock.calls[0] as [string, RequestInit];
+    expect(path).toBe(`${DRAFT}/checkpoint`);
+    expect(init.method).toBe('POST');
+    expect(init.body).toBeUndefined();
+    const headers = init.headers as Record<string, string>;
+    expect(headers['x-draft-base-revision']).toBe('4');
+    expect(headers['idempotency-key']).toBe('k-1');
+  });
+
+  it('preserves conflict semantics without retrying', async () => {
+    const http = jest.fn(async () => resp(409, { reason: 'stale_base', currentRevisionId: 9 }));
+    expect(await checkpointServerDraft(http, ID, GUARD)).toEqual({
+      kind: 'conflict', reason: 'stale_base', currentRevisionId: 9,
+    });
+    expect(http).toHaveBeenCalledTimes(1);
   });
 });
 

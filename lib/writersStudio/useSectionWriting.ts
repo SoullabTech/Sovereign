@@ -58,6 +58,8 @@ export interface SectionWriting {
   /** Leave for another section. Captures, enqueues, then switches. */
   goToSection: (nextId: string) => void;
   hasUnsavedWork: () => boolean;
+  /** The draft version last acknowledged by the serialized server save lane. */
+  currentRevisionId: () => number;
   /**
    * Send the active section's staged text NOW, without waiting out the
    * autosave delay.
@@ -339,6 +341,11 @@ export function useSectionWriting(
     [queue, queueVersion, stagedTick],
   );
 
+  /* Read only after Keep a version has settled the queue. The queue advances
+     this number only from successful server responses, so it is the latest
+     server-acknowledged base this writing session is entitled to assert. */
+  const currentRevisionId = useCallback(() => queue.state().version, [queue]);
+
   /**
    * THE PUBLISHED SESSION MUST BE REFERENTIALLY STABLE.
    *
@@ -365,8 +372,9 @@ export function useSectionWriting(
       edit,
       goToSection,
       hasUnsavedWork,
+      currentRevisionId,
       flushPending,
     }),
-    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork, flushPending],
+    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
   );
 }

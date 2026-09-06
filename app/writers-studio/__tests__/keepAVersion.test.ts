@@ -27,53 +27,49 @@ describe('the section-native writer can keep a version', () => {
     expect(surface).toContain('onClick={keep}');
   });
 
-  it('checkpoints SERVER TRUTH, never a client-held snapshot of the Work', () => {
-    /* The 2026-09-05 defect: the payload was built from writing.sections —
-       the MOUNT-TIME bodies — so keeping a version rewrote the draft from a
-       client snapshot (496 -> 485 bytes, headings gone, leading space added).
-       The sections handed to the checkpoint must be the ones the server just
-       returned, and nothing else. */
-    expect(surface).toContain('const before = await loadDraft(');
-    expect(surface).toContain('sections: before.sections');
-    expect(surface).toContain('baseRevisionId: before.revisionId');
-    /* No reconstruction of any kind reaches the checkpoint. */
+  it('checkpoints SERVER TRUTH without sending manuscript bytes', () => {
+    /* The 2026-09-06 production defect: handing 185 server-returned sections
+       back through PUT /draft produced a ~381 KB JSON body. Next middleware
+       sometimes consumed/locked that stream before the route could run.
+       Keep now carries only the server-acknowledged version + idempotency key;
+       the checkpoint endpoint reads the sections from the database itself. */
+    expect(surface).toContain('checkpointServerDraft');
+    expect(surface).toContain('baseRevisionId: writing.currentRevisionId()');
+    expect(surface).not.toContain('const before = await loadDraft(');
+    expect(surface).not.toContain('sections: before.sections');
     expect(surface).not.toMatch(/sections:\s*writing\.sections/);
-    expect(surface).not.toMatch(/sections:\s*writing\.sections\.map/);
     expect(surface).not.toContain('flattenDraftSections');
-    expect(surface).toContain('before.sectionAddressable');
   });
 
   it('refuses rather than keeps a half-saved state', () => {
     expect(surface).toContain("setPhase('unsettled')");
     expect(surface).toContain('writing.hasUnsavedWork()');
-    /* Settle comes before the read, or the read captures pre-flush text. */
-    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('const before = await loadDraft('));
+    /* Settle comes before the version guard is read. */
+    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('writing.currentRevisionId()'));
   });
 
-  it('reuses the existing checkpoint rather than inventing a second one', () => {
-    expect(surface).toContain('putDraftSections');
-    expect(surface).toContain('checkpoint: true');
-    /* The append-only revision store is written one way, by one call. */
+  it('uses the dedicated bodyless checkpoint endpoint, not an alternate revision store', () => {
+    expect(surface).toContain('checkpointServerDraft');
+    expect(surface).not.toContain('putDraftSections');
     expect(surface).not.toMatch(/fetch\(\s*['"`]\/api\/sovereign\/manuscripts\/\$\{[^}]*\}\/draft/);
   });
 
   it('sends the pending keystroke before keeping, so a version cannot omit it', () => {
     expect(surface).toContain('writing.flushPending()');
-    /* Order in the CALL, not in the prose above it: the doc comment names
-       `checkpoint: true` before either appears in code. */
-    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('putDraftSections('));
-    /* The base is the server's, never one the client remembered. (makeSectionSave
-       legitimately takes a baseVersion for a SECTION save; the checkpoint may
-       not hold one of its own.) */
+    /* Order in the executable path, not merely in the contract prose. */
+    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('checkpointServerDraft('));
+    /* The base comes from the serialized save queue after settling, never from
+       a second manuscript snapshot and never from a private checkpoint ref. */
     expect(surface).not.toMatch(/useRef\(baseVersion\)/);
-    expect(surface).not.toMatch(/baseRevisionId:\s*base\b/);
-    expect(lib('useSectionWriting.ts')).toContain('flushPending');
+    expect(surface).toContain('writing.currentRevisionId()');
+    expect(lib('useSectionWriting.ts')).toContain('currentRevisionId');
+    expect(lib('useSectionWriting.ts')).toContain('queue.state().version');
   });
 
   it('does not retry a conflict — a moved Work is reported, never overwritten', () => {
     /* Exactly one checkpoint call site: a retry would re-send this session's
        snapshot over whatever moved the draft. */
-    expect(surface.match(/putDraftSections\(/g) ?? []).toHaveLength(1);
+    expect(surface.match(/checkpointServerDraft\(/g) ?? []).toHaveLength(1);
     expect(surface).toContain("res.kind === 'conflict'");
     expect(surface).toContain('Nothing was changed. Reload, then keep a version.');
   });
@@ -84,6 +80,7 @@ describe('the authority stays where it belongs', () => {
     const develop = src('develop', 'DevelopRoom.tsx');
     expect(develop).not.toContain('checkpoint');
     expect(develop).not.toContain('putDraftSections');
+    expect(develop).not.toContain('checkpointServerDraft');
     /* It may only NAME the act and point at where it lives. */
     expect(develop).toContain('Keep a version in the Writer Canvas');
   });
