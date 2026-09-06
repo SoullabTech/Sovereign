@@ -2,7 +2,7 @@
 
 > **Docs-only. Authorized by founder act 2026-09-06 (Path B). No runtime, schema, migration or
 > implementation change. `F6b = FAIL · R5` is permanent and is NOT reclassified by this record.
-> BUILD-08B remains closed until 08A is lawfully closed.**
+> BUILD-08B remains HOLD · UNOPENED until 08A is lawfully closed.**
 >
 > **The criterion in §4 is written in frozen form — fixed before any F1–F3 evidence exists — but it
 > becomes binding only on founder acceptance of this record. F1–F3 do not resume before that.**
@@ -11,7 +11,8 @@
 UNIT        WS2-08A  HIERARCHICAL MANUSCRIPT STRUCTURE (substrate cut)
 CANONICAL   50302f5d97dc4d0abb85955aedbb8f796ae6835e
 DECIDE      docs/programme/WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
-STATE       08A CANNOT CLOSE under the frozen contract · successor criterion DRAFT
+STATE       08A CANNOT CLOSE under the frozen contract · SC-1 DRAFT, NOT FROZEN
+AMENDED     2026-09-06 — SC-1 anchor corrected after founder review (§4.2)
 ```
 
 ---
@@ -98,100 +99,163 @@ F6b's blind spot was precise: end-state equality cannot distinguish a row that w
 from one deleted and reinserted with identical values. PostgreSQL carries the missing witness in
 each tuple's system column `xmin` — the transaction that created **that row version**. An UPDATE
 writes a new tuple with a new `xmin`; a delete-and-reinsert likewise. A row untouched since before
-the migration retains an `xmin` older than the migration's own transaction.
+the migration retains an `xmin` older than the migration's transaction.
 
-The migration's transaction is itself addressable: its `schema_migrations` row was written inside
-it, so that row's `xmin` bounds it.
+#### The anchor — and a false proxy this record rejected
+
+An earlier draft of SC-1 anchored on the `schema_migrations` row for the migration, asserting it was
+written inside the migration's transaction. **It is not.** `scripts/run-sql-migrations.sh` applies
+the file in one `psql` invocation and then records the ledger row in a **separate** `psql`
+invocation — a different transaction, necessarily later. Observed on production (PostgreSQL 16.13):
+
+```text
+catalog objects created by the migration      xmin 324271
+schema_migrations row for the migration       xmin 324272
+```
+
+The failure direction is what makes this disqualifying rather than merely imprecise: a row rewritten
+*by the migration itself* carries 324271, which is older than the ledger row at 324272, so the proxy
+would have returned **PASS for the exact event SC-1 exists to detect.** The ledger row is therefore
+named here as explicitly NOT the anchor.
+
+#### MIG_XID — the migration transaction, identified by what it created
+
+```text
+MIG_XID = the single common normal xmin of the five catalog objects the migration
+          writes inside its own transaction:
+
+  pg_attribute     manuscript_sections.heading_depth
+  pg_attribute     manuscript_sections.heading_signal
+  pg_constraint    manuscript_sections_depth_requires_heading
+  pg_description   comment on heading_depth
+  pg_description   comment on heading_signal
+```
+
+Five independent objects converging on one xid is what makes the identification defensible: a single
+object could be coincidental, five cannot. If they do not agree, MIG_XID is not established and SC-1
+is unavailable — not approximated.
 
 ```text
 SC-1 PASSES when, for every one of the 810 baseline ids:
 
-  age(s.xmin) > age(m.xmin)
+        age(section.xmin) > age(MIG_XID)
 
-    where m is the schema_migrations row for
-      20260906000001_manuscript_section_heading_depth.sql
+    i.e. every baseline row version is OLDER than the migration's transaction.
 
-  i.e. every baseline row version is OLDER than the migration's transaction.
-
-SC-1 FAILS on any row whose version is not older, and on any of the preconditions below.
+SC-1 FAILS on any row same-age or newer than MIG_XID, and on any precondition below.
 ```
-
-`age()` is used rather than raw xid comparison so wraparound cannot invert the ordering.
 
 ### 4.3 Preconditions — checked BEFORE the reading is admissible
 
 ```text
-P1  no baseline row's xmin is frozen (xmin <> 2), and none reads as frozen under
-    age() — VACUUM FREEZE erases the distinction SC-1 depends on, and a frozen row
-    can no longer testify about its own age
-P2  the schema_migrations row for the migration is present and its xmin readable
-P3  the 810 baseline ids are still all present and still byte-identical in projection
-    (re-established at reading time, not carried from the F6b run)
+P1  every baseline tuple and every migration-reference tuple exposes a NORMAL
+    transaction xid (>= 3). A special xid — notably FrozenTransactionId (2) —
+    makes that tuple inadmissible, because its original xid is unavailable.
+
+    Ordinary PostgreSQL 16 VACUUM freezing is NOT disqualifying: since 9.4 freezing
+    sets an internal flag and PRESERVES the tuple's original xmin. xmin = 2 is the
+    older representation and may still appear in databases upgraded from very old
+    releases. An earlier draft of this criterion had the freeze semantics backwards
+    and would have disqualified admissible evidence.
+
+P2  all five catalog objects in 4.2 exist and their xmin values are IDENTICAL;
+    that common value is MIG_XID. The schema_migrations row must exist but is
+    NOT used as MIG_XID.
+
+P3  the 810 baseline ids are all present and still byte-identical in projection,
+    re-established at reading time and not carried from the F6b run
+
 P4  the reading is taken in ONE snapshot (REPEATABLE READ, READ ONLY)
+
+P5  every compared normal xid lies within the unambiguous half-range
+    (< 2^31 transactions of distance). `age()` returns a distance over the
+    wrapping 32-bit xid space and does not abolish wraparound; it is admissible
+    only inside that bound. Observed production ages are under 61,000, so the
+    bound holds with an enormous margin — but the criterion states the bound
+    rather than relying on the margin.
 ```
 
-**If P1 fails, SC-1 is unavailable and cannot be replaced by a weaker reading.** A frozen tuple has
-lost the evidence; that is a stop, not a reason to substitute end-state equality again.
+**If P1 or P2 fails, SC-1 is unavailable and cannot be replaced by a weaker reading.** A frozen
+tuple has lost the evidence and an unidentified migration transaction has no substitute; either is a
+stop, not a reason to fall back to end-state equality.
 
 ### 4.4 What SC-1 cannot claim, written into the criterion itself
 
 ```text
 SC-1 says nothing about the twelve inserts and twelve deletes
 SC-1 says nothing about non-baseline rows
-SC-1 is not lineage across the whole interval — only relative to the migration's transaction
+SC-1 is not lineage across the whole interval — only relative to MIG_XID
 SC-1 is retrospective evidence about tuples that exist NOW; it is not a re-run of F6
-a SC-1 PASS never licenses the sentence "the migration did not rewrite rows AND nothing else did"
+a SC-1 PASS never licenses "the migration did not rewrite rows AND nothing else did"
 ```
 
-### 4.5 Feasibility, unverified
+### 4.5 Independent support from PostgreSQL semantics
 
-SC-1 has **not** been probed against production. Two read-only checks decide whether it is available
-at all, and they must be run before this criterion is frozen — if P1 already fails, SC-1 is
-stillborn and the choice returns to Path A:
-
-```sql
--- (i) is the migration's transaction still addressable, and how old are baseline tuples?
-SELECT age(xmin) FROM schema_migrations
- WHERE filename = '20260906000001_manuscript_section_heading_depth.sql';
--- (ii) is any manuscript_sections tuple frozen?
-SELECT count(*) FILTER (WHERE xmin::text::bigint = 2) AS frozen,
-       count(*) AS total FROM manuscript_sections;
-```
-
-A stronger variant exists if `track_commit_timestamp` is enabled — `pg_xact_commit_timestamp(xmin)`
-would date each row version directly against the 12:20:35Z baseline capture. It is **off** by default
-in PostgreSQL and enabling it requires a restart and applies only to transactions after it, so it
-cannot help retrospectively here. It is named only so it is not mistaken for an available option.
+`ADD COLUMN` without a rewriting default does not require a table rewrite, and `ADD CONSTRAINT`
+scans existing rows without rewriting them. The migration body contains no `INSERT`, `UPDATE` or
+`DELETE`. This is corroboration of the migration's *intended* posture; SC-1 exists because intent is
+not observation.
 
 ---
 
 ## 5 · A defect this failure exposed, outside 08A's scope
 
 `scripts/run-sql-migrations.sh` adds a `checksum` column to `schema_migrations` but records only the
-filename — the checksum is never populated. So the ledger proves *a file with that name* was applied,
+filename — the checksum is never populated. The same script is also why the ledger row is not the
+migration's transaction (§4.2): it commits the migration, then records the ledger row in a separate
+`psql` invocation. So the ledger proves *a file with that name* was applied,
 not *which bytes*. With two migrations sharing the `20260906000001` prefix now in production, that is
 a second-order ambiguity worth closing. **Not authorized here, not repaired here** — recorded so the
 finding is not lost with this document.
 
 ---
 
-## 6 · Sequence, and what remains unauthorized
+## 6 · Disclosure — a pre-freeze review observation, inadmissible for closure
+
+While reviewing the repair above, the founder measured the **corrected** predicate against
+production. That reading is disclosed here rather than omitted:
 
 ```text
-1  founder review of THIS record
-2  run §4.5's two feasibility probes
-3  founder FREEZES SC-1 (or returns to Path A if P1 fails)
-4  only then F1, F2, F3 — the frozen wording, unchanged
-5  SC-1 reading, if frozen
-6  founder adjudication of 08A closure
-7  a SEPARATE founder act opens 08B
+baseline present               810 / 810
+normalized projection diffs    0
+new columns non-null           0
+special xmin                   0
+MIG_XID                        324271
+baseline older than MIG_XID    810 / 810   ·  same xid 0  ·  newer xid 0
+```
+
+**This is pre-freeze review evidence and is INADMISSIBLE as SC-1 acceptance evidence.** It was taken
+before the criterion was frozen, and a criterion is only prospective if no result under it exists
+when it is fixed.
+
+The mitigating fact, stated without leaning on it: the *semantic* rule — every baseline version
+predates the migration transaction — was written before this read, and the repair replaced a false
+proxy for "the migration transaction" with the transaction itself rather than changing what is
+claimed. That is why the criterion is amendable rather than void. It does not make the reading
+admissible.
+
+**The acceptance witness must be taken fresh, after freezing.** If it disagrees with the reading
+above, the fresh reading governs and the disagreement is itself a finding.
+
+---
+
+## 7 · Sequence, and what remains unauthorized
+
+```text
+1  founder review of THIS amended record
+2  founder FREEZES SC-1 — or returns to Path A if any precondition is unmeetable
+3  only then F1, F2, F3 — the frozen wording, unchanged
+4  SC-1 acceptance reading, taken FRESH after the freeze (§6)
+5  founder adjudication of 08A closure
+6  a SEPARATE founder act opens 08B
 ```
 
 ```text
 F6b                 FAIL · R5 · permanent
-SC-1                DRAFT · not frozen · not probed
+SC-1                DRAFT · NOT FROZEN · instrument repaired, anchor corrected
+pre-freeze read     OBSERVED · INADMISSIBLE FOR CLOSURE
 F1–F3               NOT RUN
 08A                 CANNOT CLOSE
-08B                 CLOSED
+08B                 HOLD · UNOPENED
 no runtime · no schema · no migration · no implementation change in this act
 ```
