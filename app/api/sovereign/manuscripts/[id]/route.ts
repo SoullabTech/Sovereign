@@ -39,9 +39,11 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       id: string;
       position: number;
       heading: string | null;
+      heading_depth: number | null;
+      heading_signal: string | null;
       chars: string;
     }>(
-      `SELECT id, position, heading, length(body) AS chars
+      `SELECT id, position, heading, heading_depth, heading_signal, length(body) AS chars
          FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
       [id],
     );
@@ -81,6 +83,9 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
         id: s.id,
         position: s.position,
         heading: s.heading,
+        /* WS2-08A — the depth the document itself gave the heading; null = unclassified. */
+        headingDepth: s.heading_depth,
+        headingSignal: s.heading_signal,
         chars: Number(s.chars),
       })),
       keeps: keeps.rows.map((k) => ({
