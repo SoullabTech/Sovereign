@@ -120,9 +120,28 @@ disk gate refusal                      free space first
 pre-swap image verify failure          nothing swapped; investigate the build
 post-swap provenance failure           the script aborts and points at `rollback` — take it
 running GIT_COMMIT ≠ cb557b8f          rollback, then diagnose
-any ERROR in the migration output      §7 rollback posture; the table may be half-created
+any ERROR in the migration output      DATABASE STATE IS UNADJUDICATED — see below
 smoke failures naming maia-sovereign   investigate before declaring the deploy good
 ```
+
+**After a migration ERROR, the database state is UNADJUDICATED. Do not retry and do not clean up
+until it has been inspected.** Each file is applied with `ON_ERROR_STOP=1` inside a transaction, so
+an ordinary failure *within* the file rolls back rather than leaving a half-created table. The real
+asymmetry is elsewhere: the migration's own transaction can COMMIT and the **separate**
+`INSERT INTO schema_migrations` that follows it can fail. The objects would then exist while the
+ledger says they do not — and a blind re-run would re-execute a migration that has already applied.
+So inspect BOTH sides before deciding what happened:
+
+```bash
+# what the ledger believes
+… psql -c "SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 5;"
+# what the schema actually holds
+… psql -c "\d developmental_observation_standing_events"
+… psql -c "SELECT tgname FROM pg_trigger WHERE tgrelid = 'developmental_readings'::regclass AND NOT tgisinternal;"
+```
+
+Only once those two agree — or the disagreement is understood — is a retry or a rollback a decision
+rather than a guess.
 
 **Expected benign output, so it is not misread as failure.** `run-sql-migrations.sh` wraps each file
 as `-c "BEGIN;" -f "$f" -c "COMMIT;"`, and 07F's migration carries its own `BEGIN;`/`COMMIT;` (the
@@ -143,9 +162,20 @@ transaction is what commits. An `ERROR:` line is a different matter and is a STO
 Run all of these. The first four are the standing post-deploy checks; the rest are specific to this
 unit and are what actually establishes that 07F is present.
 
+**Record the OLD container before deploying**, so freshness is proved by comparison rather than by
+a stopwatch:
+
 ```bash
-# 1 · container freshness (expect a timestamp under a minute old)
-ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
+# BEFORE the deploy — keep this output
+ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Id}} {{.Created}}"'
+```
+
+```bash
+# 1 · container freshness — the id MUST differ from the pre-deploy id, and Created must belong to
+#     this deployment window. NOT "under a minute": the deploy waits for startup, runs migrations,
+#     then runs the full constitutional smoke suite before returning, which legitimately exceeds
+#     a minute. A stopwatch threshold would fail a correct deploy and pass a stale one.
+ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Id}} {{.Created}}"'
 
 # 2 · LAN IP sanity (expect 192.168.0.104 — see the drift trap in CLAUDE.md)
 ssh soullab@minisforum 'hostname -I'
@@ -207,13 +237,30 @@ No destructive rollback of member standing history is promised, in this runbook 
 
 Recorded because the runbook should not repeat a claim it cannot verify:
 
-1. **The Co-Lab release gate is not invoked by any deploy script.** `verify-colab-boundaries.ts`
-   appears in no `scripts/*.sh`; `CLAUDE.md`'s statement that it "runs automatically as part of
-   `scripts/deploy-production.sh` smoke tests" does not match the code as of `cb557b8fb`. Separately,
-   **07F does not trigger that gate** — it touches no Co-Lab table, no studio people, DMs, sessions,
-   files, memory atoms, onboarding or invitations. If the founder wants it run, it is manual:
-   `docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'`.
-   Correcting `CLAUDE.md` is outside this act's scope and is left as a finding.
+1. **The Co-Lab boundary verifier IS run automatically by the full deploy.** `run_smoke_tests`
+   executes `scripts/constitutional-verification.sh` inside the container, and that orchestrator
+   registers Co-Lab as a **required** verifier — a failure blocks the release gate:
+
+   ```text
+   scripts/verify-constitution-colab.ts | Co-Lab Boundaries | true
+   ```
+
+   The legacy filename `verify-colab-boundaries.ts` is **not** the current entry point; the boundary
+   matrix lives in `verify-constitution-colab.ts`. On success the deploy reports the constitutional
+   gate as PASS and does **not** echo the verifier's detailed per-check output — it captures the
+   output and prints it only on failure. Run the verifier manually only if a retained per-check
+   Co-Lab witness is wanted:
+
+   ```bash
+   ssh soullab@minisforum 'docker exec maia-sovereign sh -c \
+     "DATABASE_URL=\$DATABASE_URL bash scripts/constitutional-verification.sh"'
+   ```
+
+   Note for reading that output: in the same registry, **Development** is `required=false`, so a
+   failure in the development-lane verifier — the lane 07F belongs to — warns rather than blocks.
+   That is a property of the registry, not of this deploy, and is stated so a PASS line is not read
+   as more than it is.
+
 2. **`deploy` continues past a failed migration** (§5). This is the single largest hazard in
    promoting a schema-bearing commit through this path, which is why §6 verifies the migration
    independently rather than trusting the deploy's own success message.

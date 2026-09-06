@@ -161,13 +161,32 @@ it. Then ask her directly what the writer decided about it.
 **Fails if:** any answer reflects the standing. *(D5 is structural — the module-graph and table-name
 gates in `M`/`L` — and this witness is corroboration of the running system, not the primary proof.)*
 
-### W12 · ownership `[D]`
+### W12a · ownership, in the rows `[D]`
 
 `SELECT DISTINCT member_id FROM developmental_observation_standing_events` → exactly the founder's
-id. If, and only if, a second real member account already exists, that member's session shows no
-standing on this reading.
+member id, and every row for reading R carries it.
 
-**Fails if:** any row carries an unexpected member, or a second member can see these standings.
+**Fails if:** any row carries an unexpected member.
+
+### W12b · another member cannot address this resource `[B]` · CONDITIONAL
+
+Run **only if a second real member account already exists** — this walk does not manufacture one.
+
+Signed in as that member, request reading R's standing resource. The correct outcome is the
+existing **not-found / unauthorized** posture: a reading that is not yours is indistinguishable from
+one that does not exist, and the room never renders R's observations for them at all.
+
+> **What would be a FAILURE, not a pass:** that member being shown reading R with *"No standing
+> taken."* Not-addressable and UNSET are different claims — one says *you may not ask about this*,
+> the other says *you have never ruled on this* — and collapsing them is the precise confusion 07F
+> exists to prevent. A second member seeing UNSET here would mean the resource answered a question
+> it should have refused.
+
+**Fails if:** any standing of the founder's is visible, **or** the refusal is rendered as UNSET.
+
+**If no second account exists:** record W12b as NOT RUN with that reason. Member scope is carried
+meanwhile by `L` (`read-is-member-scoped`, `write-is-member-scoped`, each observed RED against its
+deficient variant) and by W12a. An unrun witness is recorded as unrun, never as a pass.
 
 ---
 

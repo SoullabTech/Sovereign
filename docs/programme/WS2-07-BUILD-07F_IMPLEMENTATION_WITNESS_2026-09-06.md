@@ -482,8 +482,11 @@ deliberate act at deploy time, not by the merge.
 
 ## 9 · What this record does not do
 
+The merge is now part of the record (§8) and is not undone by this footer. What THIS RECORD does
+not do:
+
 ```text
-no PR · no merge · no deploy · no production migration · no promotion
+no deploy · no production migration · no promotion
 no closure of BUILD-07F — the founder closes a unit, not a session
 no opening of BUILD-07G or 07H
 nothing absorbed from the parked ledger
