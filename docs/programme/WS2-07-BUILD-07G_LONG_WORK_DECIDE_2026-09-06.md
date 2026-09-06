@@ -1,3 +1,49 @@
+> ## ⛔ RECORD DEFECT — 2026-09-06 · THIS DOCUMENT'S RATIFICATION STATE IS UNSUBSTANTIATED
+>
+> **Nothing below marked RATIFIED, IN FORCE, or DONE may be relied on as authority.** The
+> controlling state is **§11 step 1 — awaiting founder ratification of §4 + A1–A7.**
+>
+> **The original text is preserved verbatim and nothing is erased.** A record that overstated its
+> own authority is evidence about how that happened; deleting it would destroy the only trace.
+> What follows is a correction of *status*, not of content.
+>
+> **Why, on the document's own terms — this needs no one's memory.** §11 contradicts itself:
+>
+> ```text
+> step 3  falsifiers filed against the ratified boundary   ← current work
+> step 4  BUILD opened by a dated founder act              DONE
+>         quoting "…on the ratified F1–F26 falsifier set"
+> ```
+>
+> A BUILD cannot already be open **against a falsifier set that step 3 says is still being
+> derived**. Whichever line is right, they cannot both be, so the sequence block cannot be read as
+> a record of completed acts.
+>
+> Separately, the founder-authority holder states the §4 / A1–A7 ratification act cannot be
+> substantiated from the recoverable session record, and that the F1–F26 set the step-4 quotation
+> relies on was named in error.
+>
+> **Consequences, all of them:**
+>
+> ```text
+> §4 + A1–A7        NOT ratified · Acceptance Instrument v1 NOT in force
+> falsifiers        NOT authorized to derive or file
+> BUILD-07G         NOT OPEN
+> implementation    NONE — an attempt at a planner, job table and resume rule was
+>                   made on 2026-09-06 and WITHDRAWN unbuilt; nothing reached canonical
+> §6 objects        remain PROPOSED, not decided, exactly as §6 says
+> ```
+>
+> **One ruling from that withdrawn attempt is worth keeping, and is recorded here as direction, not
+> as authority:** its resume rule ("revision changed → refuse continuation, begin a new reading")
+> **conflicts with A2 and A2 governs.** A run whose Work advances becomes STALE and continues
+> against its ORIGINAL frozen Work-state; it never rebases, never mixes revisions, and its lawful
+> completed passes are never discarded merely because the author kept writing. A new reading is
+> required only when the member wants a reading of the *current* Work. Whoever eventually drafts
+> §13 should write it that way.
+>
+> This banner is removed only by the ratification act it is waiting for.
+
 # WS2-07 · BUILD-07G — LONG-WORK SCOPED DEVELOPMENTAL READING · DECIDE
 
 > **Opened by founder act, 2026-09-06, inside the existing Stage 7 developmental-intelligence lane
@@ -12,7 +58,9 @@ UNIT             BUILD-07G  WHOLE-WORK DEVELOPMENT  (lane registry: "Cross-divis
                  manuscript-scale intelligence") — this unit's working name is
                  LONG-WORK SCOPED DEVELOPMENTAL READING
 STATE            OPEN · DECIDE ONLY · no implementation authority
-§4 / A1–A7       RATIFIED 2026-09-06 (founder act) · Acceptance Instrument v1 · IN FORCE
+§4 / A1–A7       ⛔ UNSUBSTANTIATED — see the RECORD DEFECT banner above.
+                 Original line, preserved: "RATIFIED 2026-09-06 (founder act) ·
+                 Acceptance Instrument v1 · IN FORCE"
 NEXT             falsifier design ONLY — WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
 PRECONDITION     MET — docs/programme/WS2-DEVELOP-PREPARATION_TERMINAL_WITNESS_2026-09-06.md
                  (subject 50302f5d9 · ceiling_exceeded · 13 checks · 0 failures)
@@ -101,7 +149,10 @@ hierarchy preservation beyond what WS2-08 BUILD-08A already landed — all stay 
 
 ## 4 · Acceptance boundary — thirteen points (AMENDED 2026-09-06)
 
-> **RATIFIED — Acceptance Instrument v1 · IN FORCE from 2026-09-06.**
+> **⛔ UNSUBSTANTIATED — the quoted act below cannot be substantiated; see the RECORD DEFECT
+> banner. Preserved verbatim, relied on for nothing.**
+>
+> ~~**RATIFIED — Acceptance Instrument v1 · IN FORCE from 2026-09-06.**~~
 >
 > Founder act, recorded verbatim:
 >
@@ -439,11 +490,14 @@ that is ignored.
 0  founder AMENDED §4 (points 1/3/5/6/8/12) and RULED A1–A7      DONE 2026-09-06
 1  consistency pass — A2 freshness wording · §9 ontology ·        DONE 2026-09-06
    coverage-complete defined operationally
-2  founder RATIFICATION ACT — §4 = Acceptance Instrument v1,      DONE 2026-09-06
+2  founder RATIFICATION ACT — §4 = Acceptance Instrument v1,      ⛔ NOT DONE
+                                                                  (recorded DONE in error)
    A1–A7 in force; falsifier design authorized, nothing more
 3  falsifiers filed against the ratified boundary                 ← current work
    docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
-4  BUILD opened by a dated founder act in the lane                DONE 2026-09-06
+4  BUILD opened by a dated founder act in the lane                ⛔ NOT OPEN
+                                                                  (recorded DONE in error;
+                                                                   contradicts step 3)
    "I authorize BUILD-07G implementation on the ratified F1–F26
     falsifier set." — IMPLEMENTATION AUTHORIZED against
     docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
