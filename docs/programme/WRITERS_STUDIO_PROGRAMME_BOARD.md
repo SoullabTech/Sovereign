@@ -125,7 +125,14 @@ NEXT EXECUTABLE    WS2-08 HIERARCHICAL MANUSCRIPT STRUCTURE — opened by founde
                    a separate founder act. 08C–08E UNAUTHORIZED.
                    record: WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
                    parked (not a lane): PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_RESPONSE_BODY_2026-09-06.md
-                   BUILD-07F implementation still requires a separate founder act.
+                   BUILD-07F PARKED — re-frozen 2026-09-06 by an authorized agent-doable
+                   docs act, NOT a founder act;
+                   BOUND WALK SUBJECT ca5fdff445526562ce11f68c01e20db9bf64548f
+                   (retarget, NOT a custody equivalence and NOT a source acceptance —
+                   walk spec §2.1.1). Fresh W1 NOT RUN / NOT BOUND; the earlier W1
+                   custody halt stays historical; standing_events = 0; a standing
+                   event write is FORBIDDEN until a subject-bound §2.2 act carrying
+                   its three markers exists (runbook §2.2). §2.2 NOT GIVEN.
                    07G–H remain unopened.
                    ⛔ Acceptance of the design is not implementation authority.
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
@@ -134,7 +141,10 @@ CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
 LAST UPDATED       2026-09-06 (BUILD-08A CLOSED / ACCEPTED by founder act; F6b stays
                    FAIL · R5 permanent; SC-1 narrower successor claim only; 08B remains
-                   HOLD · UNOPENED; 07F parked; #1228 sequencing unchanged)
+                   HOLD · UNOPENED; 07F re-frozen to ca5fdff44 from prior anchor 66da58b4c
+                   (agent-doable docs act, not a founder act) with §2.1 instrument
+                   hardenings and §2.2 consent markers, §2.2 still NOT GIVEN;
+                   #1228 sequencing unchanged)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

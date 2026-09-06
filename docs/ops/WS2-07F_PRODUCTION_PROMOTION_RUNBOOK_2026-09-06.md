@@ -8,9 +8,9 @@
 
 ```text
 SUBJECT               BUILD-07F (PR #1229) + PR #1228, integrated
-FROZEN ANCHOR         66da58b4c4a4979240db460c045dd9daf1cd47d3 — the walk's executable subject
-DEPLOYED RUNTIME      1116f7813 as of the docs-only #1232 merge; bound at W1 under the
-                      custody-equivalence rule (walk spec §2.1), never assumed
+BOUND WALK SUBJECT    ca5fdff445526562ce11f68c01e20db9bf64548f — re-frozen, walk spec §2.1.1
+PRIOR FROZEN ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3 — superseded, not a fallback
+OBSERVED RUNTIME SHA  NONE BOUND — read fresh at W1 after §2.2, then fixed for the walk
 07F MIGRATION         APPLIED IN PRODUCTION 2026-09-06 11:36:34+00
 DELETE GUARD          LIVE
 PRIOR §2 CONSENT      NOT GIVEN — the checkpoint was crossed by deployment
@@ -26,7 +26,7 @@ Established by read-only queries run from the founder's connected Mac Studio on 
 inferred:
 
 ```text
-CURRENT CANONICAL      66da58b4c4a4979240db460c045dd9daf1cd47d3
+CANONICAL AT OBSERVATION  66da58b4c4a4979240db460c045dd9daf1cd47d3
 RUNNING GIT_COMMIT     66da58b4c
 DEPLOY_LANE            deploy-lane
 CONTAINER CREATED      2026-09-06T11:36:04.283455028Z
@@ -79,8 +79,9 @@ It is a note about the design, **not** a mitigation of the governance fact above
 
 **There is no deploy or migrate command in this document any more.** The acts it once instructed —
 `deploy ccd1c50ce`, and the migrations-only fallback — have been overtaken by reality: production is
-already at `66da58b4c` with the migration applied. Naming a target SHA here now would be an
-instruction to redo something that is done.
+already at `66da58b4c` with the migration applied **at that observation window**. Naming a deploy
+target SHA here now would be an instruction to redo something that is done; the later re-freeze
+changes the acceptance subject, not the historical deployment fact.
 
 What is worth keeping from that path, because a future promotion in this lane will need it:
 
@@ -140,11 +141,42 @@ Prospective, not retroactive, and the founder's alone:
 > behaviour to remain in production and authorize the production acceptance walk to create standing
 > events.**
 
+#### The act must carry its markers — added 2026-09-06, ordered after the re-freeze
+
+A sentence of that shape has already been pasted into a session once and read as the act. It was
+not one, and the ruling stands: it never occurred. The markers exist so that mistake is structural
+rather than a matter of attention. A valid §2.2 act carries all three, and the third is why this
+requirement is ordered **after** the re-freeze — before it, there was no subject to bind to:
+
+```text
+FOUNDER ACT: §2.2
+FOUNDING AUTHORITY: <name of the authority holder>
+BOUND WALK SUBJECT: ca5fdff445526562ce11f68c01e20db9bf64548f
+```
+
+— plus the authority holder's actual authorization, in their own words.
+
+```text
+a pasted template                             NOT the act
+an assistant utterance, quoted or drafted     NOT the act
+the markers without the authorization         NOT the act
+the authorization naming a DIFFERENT subject  NOT the act for THIS walk
+```
+
+An agent may draft the wording of the authorization; the authority comes from the holder's explicit
+adoption and issuance, never from authorship of the wording. If the bound subject changes after this
+is given, the act does not travel with it — a new subject needs its own act.
+
 - [ ] **Given.**
 
-**This gates the WALK, not a deploy.** Until it is given, W1 (read-only provenance and schema) may be
-run; **W3 must not** — it creates the first durable member standing act, and `standing_events = 0`
-is the boundary that keeps every option open (§0).
+**This gates the WALK, not a deploy.** Until it is given, **no walk step runs — W1 included.**
+
+*Amended 2026-09-06.* This line previously read that W1 may be run while W3 must not. The re-freeze
+fixed the order as **re-freeze → §2.2 → W1**: W1 binds the observed runtime as the walk's subject,
+and binding a subject is not a neutral read — it is the walk starting. W3 remains the sharper
+boundary within the walk, because it creates the first durable member standing act and
+`standing_events = 0` is what keeps every option open (§0); but W3 is no longer the first thing this
+act gates.
 
 If it is not given, stop. The table is empty, so reversal destroys no member act — but reversal
 needs its own plan against current canonical, and "drop the table" is not that plan: it would leave
@@ -290,8 +322,8 @@ Recorded because the runbook should not repeat a claim it cannot verify:
 
 ### 6.1 Bounded integration check, rerun on the DEPLOYED program (read-only, 2026-09-06)
 
-The acceptance subject is now `66da58b4c` — the program actually running in production — so the set
-was rerun there rather than carried over from `ccd1c50ce`. #1228's only overlap with 07F is in
+At the time this integration check was run, the acceptance subject was `66da58b4c` — the program
+then running in production — so the set was rerun there rather than carried over from `ccd1c50ce`. #1228's only overlap with 07F is in
 `app/writers-studio/develop/DevelopRoom.tsx`: one early return added inside `refusalSentence`, a
 pure function over commission outcomes, handling `partition_not_recorded`. It touches no standing
 state, no `YourStanding`, and none of 07F's reading-addressed transitions (`beginRefresh`,
@@ -314,7 +346,8 @@ own gates when run here; it says nothing about the running container, which is w
 
 ### 6.2 #1228's acceptance — a SEPARATE sequence, run FIRST
 
-Not folded into W1–W12b. Its own lane's post-merge witness, run on the shared `66da58b4c` runtime — **if it has not already been completed in its own lane**:
+Not folded into W1–W12b. Its own lane's post-merge witness was specified against the shared
+`66da58b4c` runtime at that time — **if it has not already been completed in its own lane**:
 
 ```text
 1  Keep a version on the affected Work (the one that reproduced the defect)
@@ -329,7 +362,7 @@ does not close #1228.**
 ### 6.3 Attribution
 
 ```text
-DEPLOY / PROVENANCE   shared evidence: exact 66da58b4c runtime
+DEPLOY / PROVENANCE   historical shared evidence: exact 66da58b4c runtime
         │
         ├── #1228 ACCEPTANCE   the three steps above
         └── 07F ACCEPTANCE     W1–W12a/b exactly as frozen in the walk spec
@@ -344,8 +377,10 @@ by separate acceptance records, not by forcing production to run an older progra
 program was actively worse for 07F's own walk, since without #1228 a Work converted before
 2026-09-06 can report `ready` and still refuse `partition_not_recorded` in the path W9 needs.
 
-It is now moot in fact as well as in principle: production runs `66da58b4c`, and there is no
-deployment left for this lane to authorize.
+It was moot in fact as well as in principle at that observation window: production ran
+`66da58b4c`, and there was no deployment left for this lane to authorize. That runtime observation
+is historical; the current acceptance subject is the later re-freeze, and W1 must read the runtime
+fresh after §2.2 rather than inherit this paragraph.
 
 ---
 
