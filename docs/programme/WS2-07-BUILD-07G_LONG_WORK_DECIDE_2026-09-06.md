@@ -443,12 +443,15 @@ that is ignored.
    A1–A7 in force; falsifier design authorized, nothing more
 3  falsifiers filed against the ratified boundary                 ← current work
    docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
-4  BUILD opened by a dated founder act in the lane
+4  BUILD opened by a dated founder act in the lane                DONE 2026-09-06
+   "I authorize BUILD-07G implementation on the ratified F1–F26
+    falsifier set." — IMPLEMENTATION AUTHORIZED against
+    docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
 5  Gate A structural · Gate B founder-run live
 6  production acceptance bound to an exact GIT_COMMIT, as this chain has established
 ```
 
-⛔ Steps 4 onward do not begin because step 3 is filed. Each opens by its own act.
+⛔ Steps 5 onward do not begin because step 4 is done. Each opens by its own act.
 
 ⛔ **AUTHORITY STATE.** §4 Acceptance Instrument v1 and A1–A7 are **RATIFIED and IN FORCE** from
 2026-09-06. The act authorizes **falsifier design only**. Implementation — schema, migration, route,
@@ -558,3 +561,64 @@ operational sequence      DEVELOP is outside tomorrow's cohort surface (#1244), 
                           operationally — but it is core to Writer's Studio being a manuscript
                           environment rather than a section editor
 ```
+
+---
+
+## 13 · RESUME — ratified 2026-09-06, WITH A CONFLICT AGAINST A2 THAT NEEDS ONE RULING
+
+**Founder act, verbatim:**
+
+> *I ratify resume as a BUILD-07G acceptance requirement: an interrupted whole-work reading may
+> resume only against the same frozen revision; if that revision has changed, it must refuse
+> continuation and begin a new reading rather than mix manuscript states.*
+
+**Both halves of the intent are already law and are not in question:**
+
+```text
+resume only against the same frozen revision   ✓ agrees with P1 and A2
+never mix manuscript states                    ✓ agrees with A2
+```
+
+⚠️ **The conflict is what happens to the in-flight run when the revision HAS changed.**
+
+```text
+A2 (RATIFIED, IN FORCE)        the run's freshness resolves to STALE and EXECUTION CONTINUES
+                               against the original frozen state. Never rebase, never mix.
+                               Readings already produced were lawful and remain lawful.
+
+§13 (this act)                 REFUSE CONTINUATION and begin a NEW reading.
+```
+
+Both forbid mixing. They disagree on whether a stale run **finishes** or is **abandoned**:
+
+- Under A2, a whole-work run interrupted at pass 5 of 7 completes passes 6 and 7 against the pin and
+  yields one complete reading of a historical Work-state, correctly labelled stale.
+- Under §13, it stops at pass 5 and the member re-commissions from scratch — paying for all 7 passes
+  again and losing 5 lawful readings.
+
+⛔ **The founder identified this exact inconsistency one message before ratifying it** ("my wording
+saying 'if the revision changed, refuse continuation' was inconsistent with the existing ruling. Do
+not ratify that wording as-is"). It is recorded here rather than silently reconciled, because
+absorbing a contradiction into a ratified instrument is the failure this whole chain exists to
+prevent — and because a builder reading §13 and A2 together cannot tell which governs.
+
+**Status: §13 is RECORDED AS RATIFIED and its resume-only-against-the-same-revision half is IN
+FORCE. The refuse-continuation clause is HELD pending one ruling:**
+
+```text
+(a) A2 GOVERNS       a stale interrupted run RESUMES and COMPLETES against its pin,
+                     presented as stale. §13's refusal clause is withdrawn.
+                     (Recommended — it preserves lawful work and matches A2 verbatim.)
+
+(b) §13 GOVERNS      a stale interrupted run is ABANDONED; the member commissions anew.
+                     A2 must then be AMENDED, since it currently says the opposite.
+
+(c) BOTH, SPLIT      A2 governs a run still executing; §13 governs a run resumed after
+                     an interruption. Coherent, but the distinction must be defined —
+                     what makes a run "interrupted" rather than "executing" — or it
+                     becomes a second undefined boundary.
+```
+
+Nothing in the falsifier set is amended by §13 until this is ruled. F1, F3 and F10 already test the
+pin, derivation and non-rebasing; none of them tests abandonment, and none should be written to
+until the ruling names which behaviour is correct.
