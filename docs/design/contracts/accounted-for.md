@@ -52,6 +52,28 @@ experience_verification: >
   interaction, auth, memory, prompt, cognition or runtime path changes. Gates
   at commit: design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
   no-regression PASS (230 vs 239 baseline, TypeScript 5.9.3 from lockfile).
+
+  Walked again 2026-09-06 (eighth walk; publication lane
+  JARVIS-PUBLIC-ACCOUNTED-FOR-01, custody per PR #1241 / split record §7b)
+  at the publication-lane head 18dfc0a2 — canonical 2b4ec96a freshness-merged
+  into the branch, both CLAUDE.md anchor bullets kept, page content unchanged
+  since cf6d9ebf — in headless Chromium (Puppeteer, /opt/pw-browsers/chromium)
+  against a local `next dev` render at 1280×900 and 390×844 after a warm-up
+  request, from a clean lockfile install (`npm ci`). Observed: HTTP 200 at
+  both widths; exactly one H1; 21 H2; five part-markers "I · If · Fire" …
+  "V · Who · Aether" in elemental order, each once; the seven eyebrows each
+  exactly once; "memory and re-attunement" 2, "memory and repair" 0; "found no
+  trial" 1 and "found no experiment" 1; "gain on the practiced task" 3;
+  "Thirteen provisional" 1; "Soul Lab includes Soullab among the things being
+  examined" 1; "memory informs, it does not bind" 1; canon count 79 present;
+  label words Live 17 · Partly live 2 · Designed 5 · Vision 3 (unchanged).
+  Mobile document width 390px at 390px. Desktop 1597px at 1280px — the same
+  pre-existing shared Table wrapper overflow, no regression beyond the
+  recorded baseline. The two screenshots re-captured at this head are
+  byte-identical to the committed seventh-revision screenshots (md5 equal),
+  so they are retained as they are. Gates at this head: design-canon PASS,
+  no-supabase PASS, diff --check PASS, typecheck no-regression PASS (230
+  errors vs 239 baseline; 4228 program files vs 3965; 9 fixed, 0 new).
 ---
 
 # Accounted For — Experience Contract
