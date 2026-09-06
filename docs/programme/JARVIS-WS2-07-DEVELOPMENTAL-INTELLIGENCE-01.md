@@ -6,8 +6,12 @@
 > adjudication and design are canonical and accepted; implementation was authorized falsification-first
 > and passed two founder source reviews (four repairs, then two blockers: the late-conflict refresh
 > path and a raw-SQL bypass of the D5/D6 import gate). **PR #1229 (Class B) merged as `cb557b8fb`
-> with exact-head CI 8/8 on `54776ed5d`; canonical has since moved through `ccd1c50ce` to
-> `66da58b4c`, which is what production runs.** Records:
+> with exact-head CI 8/8 on `54776ed5d`; canonical moved through `ccd1c50ce` to `66da58b4c`,
+> which production ran at the time of that integration.** ⚠️ **`66da58b4c` and earlier are
+> HISTORICAL EVIDENCE, not the current subject** — production has since advanced through
+> `1116f7813`, `03e9d89a9`, `d07f20a0` to **`50302f5d9`**, which is what production runs now and
+> what the terminal witness and the 07G opening are bound to. 07F's runtime remains
+> inherited/live across those deploys; its witness records are not restated. Records:
 > `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (§8 post-merge state),
 > `docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md` — now a promotion RECORD, since the
 > promotion happened — and `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md`,
@@ -17,12 +21,16 @@
 > SOURCE / CI            ACCEPTED · MERGED as cb557b8fb · CI 8/8
 > MIGRATION DESIGN       ACCEPTED
 > INTEGRATION            ACCEPTED on ccd1c50ce, rerun on 66da58b4c (254 · 15 · 14 · typecheck)
-> 07F RUNTIME            LIVE in production at 66da58b4c
+> 07F WITNESS/INTEGRATION 66da58b4c and earlier — HISTORICAL EVIDENCE (not the live subject)
+> 07F RUNTIME            INHERITED / LIVE — carried forward by every deploy since
 > 07F MIGRATION          APPLIED 2026-09-06 11:36:34+00
+> CURRENT PRODUCTION     50302f5d9  (terminal witness + 07G opening bound here)
+> standing_events        0
 > PRIOR CONSENT          NOT GIVEN — the checkpoint was CROSSED BY DEPLOYMENT, not sanitized
 > STANDING ACTS          0 — the boundary before acceptance
 > PRODUCTION ACCEPTANCE  W1 ATTEMPTED AND HALTED on custody — production had advanced from the
->                        walk's frozen anchor by the docs-only #1232 merge. W2–W12 NOT STARTED,
+>                        walk's frozen anchor by the docs-only #1232 merge, and has advanced
+>                        further since (now 50302f5d9); the walk must rebind. W2–W12 NOT STARTED,
 >                        and W3 onward remains gated on a PROSPECTIVE founder act (runbook §2.2)
 > BUILD-07F              NOT CLOSED
 > BUILD-07G              OPENED 2026-09-06 · DECIDE ONLY (no implementation authority)
@@ -621,6 +629,43 @@ NOT AUTHORIZED    BUILD-07H · mid-section cutting · automatic or background lo
                   any unparking beyond the one crossing constraint
 RECORD            docs/programme/WS2-07-BUILD-07G_LONG_WORK_DECIDE_2026-09-06.md
 STATE             BUILD-07G OPEN · DECIDE ONLY · no implementation authority
+```
+
+```text
+2026-09-06 · BUILD-07G — §4 AMENDED + A1–A7 RULED (founder) · RECORDED, NOT YET IN FORCE
+AMENDED §4        thirteen points held at thirteen; six rewritten in place:
+                  1  ONE FROZEN WORK-STATE PER RUN — freeze one DevelopmentalReadState ONCE at
+                     commission (draftId · revisionNumber · revisionDigest · sectionTopology ·
+                     structureContext/structureFingerprint when present). No pass re-freezes
+                     current. The weaker (draftId, revisionNumber) pin is superseded.
+                  3  partition must be COMPLETE BEFORE INFERENCE; one over-ceiling section refuses
+                     PLAN FORMATION; no partial plan is silently substituted
+                  5  PROGRESS AND FRESHNESS ARE ORTHOGONAL — scope_status ∈ planned|reading|
+                     complete|failed; `stale` is NOT a scope_status; run freshness is a separate
+                     axis; a complete scope can belong to a stale run
+                  6  stale IS STRUCTURAL, NOT INVALIDATION — never rebases, never rewrites; a stale
+                     run stays valid evidence about its pinned historical Work-state
+                  8  each pass's read_state DERIVES from the run's one frozen state
+                 12  meaning belongs to structure AUTHORED OR RATIFIED by the member (confirmed
+                     imported structure carries the same authority without claiming the member
+                     typed it)
+RULED             A1  separate orchestration substrate; persisted object is a RUN, not a plan —
+                      before commission a plan is a pure preview, after the member acts it is a run
+                  A2  continue against the pin; mark stale immediately; never rebase or mix
+                  A3  partial runs presentable; aggregation speaks only of the completed subset;
+                      whole-Work synthesis unavailable until coverage is complete
+                  A4  member chooses the SEMANTIC target; system cuts only MECHANICALLY for the
+                      ceiling. A system-proposed semantic division is a separate sovereignty
+                      threshold and is NOT authorized
+                  A5  zero standing events while 07F is unclosed (TEMPORARY GATE) + the permanent
+                      rule: synthesis never becomes standing authority by laundering
+                  A6  document order only for v1; no parallel/reordered execution
+                  A7  cost disclosure, not a Work-size ceiling; any future resource cap is a named
+                      typed operational refusal, never "your Work is too long"
+AUTHORITY STATE   RECORDED, NOT IN FORCE. No "founder ratified" mark is written into the repository
+                  on the founder's behalf. One act remains: ratification. Until then BUILD-07G holds
+                  DECIDE-only authority.
+RECORD            docs/programme/WS2-07-BUILD-07G_LONG_WORK_DECIDE_2026-09-06.md §4 · §5 · §6 · §7
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
