@@ -385,8 +385,10 @@ parents         1116f7813 (clean-main-no-secrets tip)  ·  41e86e2b (08A head, r
 
 **Migration-prefix collision, bounded.** The base merged into the candidate carried
 `20260906000001_developmental_observation_standing.sql`, which shares 08A's numeric prefix and
-was applied on production by the `1116f7813` full deploy, i.e. **after F6a and before 08A's
-migration**. The production runner (`scripts/apply-migrations.sh`) keys the ledger on the full
+was applied on production at **11:36:34Z by the `66da58b4c` full deploy — before F6a was
+captured at 12:20:35Z**, so that ledger row is *inside* F6a's 517-row baseline. (An earlier
+revision of this paragraph placed it after F6a, with the `1116f7813` deploy; the ledger's
+`applied_at` corrects that — chronology below.) The production runner (`scripts/apply-migrations.sh`) keys the ledger on the full
 filename (`schema_migrations.filename` PRIMARY KEY), skips only exact filename matches, and
 records the exact filename after application; ordering is a plain lexical glob, so the
 developmental file runs first and `20260906000001_manuscript_section_heading_depth.sql` second.
@@ -415,20 +417,99 @@ PASS = exactly one row. Zero rows or more than one row = FAIL, and 08A does not 
 F6b's equality checks and the DML counters / `stats_reset` epoch now do real work across. The
 claim F6b can make is unchanged: no *detected* intervening mutation.
 
-**Standing after merge:**
+**Standing after merge** (superseded the same day by the deploy record below):
 
 ```text
 PR #1230              MERGED · 03e9d89a
 F6a                   PASS · retained (bound to 66da58b4c)
-migration             NOT RUN — runs on the next supported full deploy of 03e9d89a
-                      (`scripts/deploy-production.sh deploy 03e9d89a`)
-F1 · F2 · F3          PENDING — production, after that deploy
-F6b                   PENDING — `bash ~/ws2-08a-f6b-compare.sh ~/ws2-08a-witness/f6a-20260906T122035Z`
-                      before member writes resume
-R6 supplement         PENDING — exact-filename ledger query above, output preserved
-08A                   NOT CLOSED — closes only on F1 + F2 + F3 + F6b + R6 supplement all PASS,
-                      founder-adjudicated
+migration             NOT RUN at the time of this standing
 08B                   HOLD
+```
+
+### Deploy of 03e9d89a — ESTABLISHED BY STATE EVIDENCE (2026-09-06, founder ruling)
+
+Three deploy attempts of `03e9d89a` are known. The first ran on the **Mac Studio** by mistake
+(lock at `/Users/soullab/…`, macOS temp dir) and exited at the dependency-audit step before
+building anything: corepack's `pnpm` refused to run in an npm-pinned project and the script
+reported the non-zero exit as "vulnerable packages detected" (pre-existing script defect, not a
+vulnerability finding; `command -v pnpm` on minisforum → absent, so the step skips there). The
+second, over ssh, was **refused by the deploy-lane lock** (holder: `pre-deploy-gate.sh
+deploy-maia 50302f5d9`, started 13:58:56Z). The third — the one that actually ran, at ~13:34Z on
+minisforum — has **no recovered transcript**: neither the founder nor this session can name the
+terminal or session that ran it, and no provenance is manufactured for it.
+
+Founder ruling: **state evidence is sufficient.** The transcript's purpose was to establish
+facts; the durable post-state establishes them independently and, for migration identity, more
+strongly than console prose:
+
+```text
+image          maia-sovereign:03e9d89a9 = 811a1b484ce3   built 13:34:08Z
+container      Created 13:35:32Z from that image · DEPLOY_LANE=deploy-lane · GIT_COMMIT=03e9d89a9
+ledger         20260906000001_manuscript_section_heading_depth.sql   applied_at 13:36:01.629937+00
+               (29 s after the swap — the full-deploy ordering swap → verify → migrate)
+schema         manuscript_sections.heading_depth · manuscript_sections.heading_signal   PRESENT
+migrate-only   ruled out as the path: the shared checkout sat at 2d7873c86 (#1182), which does
+               not carry the 08A migration file; only `deploy <SHA>` runs migrations from the snapshot
+```
+
+```text
+03e9d89a DEPLOY        ESTABLISHED BY STATE EVIDENCE
+migration              APPLIED · exact filename established by the ledger's own key
+historical transcript  NOT RECOVERED · desirable · NON-BLOCKING
+```
+
+**Not preserved, stated explicitly** (the four log-level observations the transcript gate asked
+for): the `DEPLOY TARGET (immutable): 03e9d89a` line; the per-file exact-filename verdicts
+(`↪︎ Skipping` for the developmental file, `➡️ Applying… ✅ Applied` for 08A's); the dual
+post-swap provenance verify (printenv == Config.Env == asserted); the historical smoke result.
+The record does not claim that gate passed. It claims what the state shows.
+
+**Migration chronology (from `schema_migrations.applied_at`, corrected):**
+
+```text
+11:36:34Z   20260906000001_developmental_observation_standing.sql   applied (66da58b4c deploy)
+12:20:35Z   F6a baseline captured — the row above is INSIDE the 517-row ledger baseline
+13:36:01Z   20260906000001_manuscript_section_heading_depth.sql     applied (03e9d89a deploy)
+```
+
+R6's prefix-only comparison therefore could never distinguish the two migrations; the
+exact-filename ledger query is what closes that evidentiary weakness.
+
+**Column gap that did not open.** The in-flight `deploy-maia 50302f5d` (image built 14:03:56Z)
+swaps the app without running migrations. 08A's routes read and write the two columns
+unconditionally, so had 08A reached production first by that path, manuscript reads and imports
+would have failed until the migration ran. The migration was already in at 13:36:01Z; the
+window never existed.
+
+**Witness subject is now the current runtime, `50302f5d`.** Acceptance runs against whatever
+container is live when the witnesses run. 08A's relation to it is inherited from `03e9d89a`:
+the six blobs the witnesses depend on are identical at both commits and must remain so —
+
+```text
+473a6482a044  lib/manuscript/ingest/segment.ts
+a3e7f8869ddc  lib/manuscript/structure/importedStructure.ts
+de99485a007f  app/api/sovereign/manuscripts/route.ts
+2b948e697d63  app/api/sovereign/manuscripts/[id]/route.ts
+a06938c3ee4b  app/press/manuscript/page.tsx
+f6d1dedc1f6e  database/migrations/20260906000001_manuscript_section_heading_depth.sql
+```
+
+(`git rev-parse <sha>:<path>` at `03e9d89a` and `50302f5d`.) Canonical still records WS2-08 as
+not closed and names the 08A migration and fields.
+
+**Witness order (founder-approved, reordered from the PR body):** F6b precedes anything that can
+create cleanup deletes or updates, because its R5 compares the update / delete / hot-update
+counters against F6a and an avoidable delete would fail it for a reason unrelated to the
+migration. F1–F3 import manuscripts (inserts, informational under R4) and may clean up (deletes).
+
+```text
+1  current-runtime provenance + smoke on 50302f5d     ADMISSIBILITY of the subject
+2  F6b                                                 PENDING
+3  exact-filename ledger query (R6 supplement)         PENDING (output preserved)
+4  F1                                                  PENDING
+5  F2                                                  PENDING
+6  F3                                                  PENDING
+all PASS → BUILD-08A CLOSED → 08B still does not begin without a founder act
 ```
 
 **Unrelated defect parked, not investigated.** While reading production logs during the
