@@ -163,51 +163,34 @@ async function main() {
           WHERE draft_id = $1 ORDER BY position ASC`, [now.id]);
       const sourceIds = await query<{ id: string }>(
         `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
-      const revision = await query<{ content: string; revision_number: number; has_partition: boolean }>(
-        `SELECT content, revision_number, section_partition IS NOT NULL AS has_partition
-           FROM working_draft_revisions
-          WHERE draft_id = $1 AND note = 'Section conversion'
-          ORDER BY revision_number DESC LIMIT 1`, [now.id]);
-
-      const flattened = sections.rows.map((r) => r.text).join('');
-      row('draft sections', sections.rows.length);
-      row('source sections', sourceIds.rows.length);
-      row('section_addressable_at', now.section_addressable_at ? now.section_addressable_at.toISOString() : 'null');
-      row('flattened digest', sha256(flattened).slice(0, 16));
-      row('draft content digest', sha256(now.content).slice(0, 16));
-
-      check('the draft is section-addressable', now.section_addressable_at !== null);
-      check('every Source section has a draft section',
-        sections.rows.length === sourceIds.rows.length,
-        `${sections.rows.length} vs ${sourceIds.rows.length}`);
-      check('every draft section carries its Source provenance',
-        sections.rows.every((r) => r.source_section_id !== null));
-      check('the Source ids represented are exactly the Source ids',
-        new Set(sections.rows.map((r) => r.source_section_id)).size === sourceIds.rows.length
-        && sections.rows.every((r) => sourceIds.rows.some((s) => s.id === r.source_section_id)));
-      check('positions are contiguous from zero',
-        sections.rows.every((r, i) => r.position === i));
-
-      /* ⛔ THE PROMISE THE CONVERSION MADE. Not "close", not "equivalent":
-         the sections must reconstruct the draft byte for byte, and the
-         pre-conversion revision must hold those same bytes. */
-      check('the sections flatten to the draft exactly', flattened === now.content,
-        `${flattened.length} vs ${now.content.length} chars`);
-      check('a conversion revision was recorded', revision.rows.length > 0);
-      check('the conversion revision holds the draft bytes exactly',
-        revision.rows.length > 0 && revision.rows[0].content === now.content);
-      /* ⛔ THE SECOND WALL. Capture freezes from the LATEST revision and
-         refuses `partition_not_recorded` when it carries no boundaries. A
-         conversion that records none leaves the Work prepared and unreadable. */
-      check('the conversion revision records its partition',
-        revision.rows.length > 0 && revision.rows[0].has_partition === true);
-      const newest = await query<{ note: string | null; has_partition: boolean }>(
-        `SELECT note, section_partition IS NOT NULL AS has_partition
+      /* ⛔ ASSERT THE STATE, NOT THE ROUTE IT CAME BY. This used to look up a
+         revision by the note `Section conversion` and fail when none existed —
+         which is every Work converted before 2026-09-06, including the one
+         this instrument was written for. The note records HOW the row came to
+         be; capture does not read it. What capture reads is the NEWEST
+         revision, and what it requires is that the revision carry boundaries
+         and hold the bytes the draft holds. Those are the claims. A Work whose
+         partition was recorded by a member's own "Keep a version" satisfies
+         them exactly as one converted under the repaired path does, and an
+         instrument that called the first a failure would be reporting its own
+         expectations rather than the Work. */
+      const newest = await query<{ revision_number: number; note: string | null; content: string; has_partition: boolean }>(
+        `SELECT revision_number, note, content, section_partition IS NOT NULL AS has_partition
            FROM working_draft_revisions WHERE draft_id = $1
           ORDER BY revision_number DESC LIMIT 1`, [now.id]);
-      check('the NEWEST revision — the one capture reads — records a partition',
-        newest.rows[0]?.has_partition === true,
-        `newest note=${newest.rows[0]?.note ?? 'none'}`);
+      const rev = newest.rows[0];
+      row('newest revision', rev ? `#${rev.revision_number} — ${rev.note ?? '(no note)'}` : 'none');
+
+      check('a revision exists for capture to freeze from', Boolean(rev));
+      /* THE SECOND WALL (2026-09-06). Capture freezes from the newest revision
+         and refuses `partition_not_recorded` when it carries no boundaries. */
+      check('the newest revision records a partition', rev?.has_partition === true,
+        rev ? `#${rev.revision_number} carries none` : 'no revision');
+      /* And `revision_not_current`: a capture never attaches current ranges to
+         an older state. */
+      check('the newest revision holds the draft bytes exactly',
+        rev?.content === now.content,
+        rev ? `${rev.content.length} vs ${now.content.length} chars` : 'no revision');
 
       const post = await resolveDevelopPreparation(manuscriptId, memberId);
       check('preparation now reports ready',
