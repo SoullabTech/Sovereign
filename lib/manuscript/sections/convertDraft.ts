@@ -41,6 +41,7 @@
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { classifyDraft } from './draftProof';
+import { partitionFromSections } from '@/lib/manuscript/draftSections';
 import { assertRoundTrip, type DraftSection } from './seedInvariant';
 import { draftStateDigest } from './draftStateDigest';
 
@@ -333,14 +334,39 @@ export async function convertDraftToSections(
       );
     }
 
-    /* Preserve the exact pre-conversion draft through the EXISTING revision
-       lineage, so the prior state stays reachable by the member's own history
-       rather than through a mechanism only this feature understands. */
+    /* Record the converted draft through the EXISTING revision lineage, so the
+       state stays reachable by the member's own history rather than through a
+       mechanism only this feature understands.
+     *
+     * ⛔ THE PARTITION IS RECORDED, AND OMITTING IT WAS A DEFECT. `captureEvidence`
+     * freezes from the LATEST revision and refuses `partition_not_recorded` when
+     * that revision carries no boundaries. This INSERT used to name no partition,
+     * so the newest revision after every conversion was partition-less and
+     * DEVELOP refused — a Work would convert successfully, report `ready`, offer
+     * its lenses, and still be unreadable. Preparation closed reachability and
+     * left a second wall one step behind it. Found in production on
+     * book-print-kdp-final, 2026-09-06.
+     *
+     * ⛔ AND THIS IS NOT A BACKFILL. The prohibition in `convertExistingDraft`
+     * governs revisions written BEFORE the boundaries existed: their partition
+     * was never observed and NULL says so. This row is written now, over the
+     * bytes the draft holds now, whose sections are the sections just minted and
+     * read back below. Its partition is observed, not inferred — which is why
+     * the note names the conversion rather than claiming to be the state before
+     * it. The pre-conversion state is already recorded by the revisions that
+     * preceded this one, byte-identical and correctly partition-less. */
+    const minted = await tx.query<{ id: string; text: string }>(
+      `SELECT id, text FROM manuscript_draft_sections
+        WHERE draft_id = $1 ORDER BY position ASC`,
+      [draft.id],
+    );
     await tx.query(
-      `INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note)
-       SELECT $1, COALESCE(MAX(revision_number), 0) + 1, $2, $3, $4
+      `INSERT INTO working_draft_revisions
+         (draft_id, revision_number, content, saved_by, note, section_partition)
+       SELECT $1, COALESCE(MAX(revision_number), 0) + 1, $2, $3, $4, $5::jsonb
          FROM working_draft_revisions WHERE draft_id = $1`,
-      [draft.id, draft.content, memberId, 'before section conversion'],
+      [draft.id, draft.content, memberId, 'Section conversion',
+       JSON.stringify(partitionFromSections(minted.rows))],
     );
 
     await tx.query(
