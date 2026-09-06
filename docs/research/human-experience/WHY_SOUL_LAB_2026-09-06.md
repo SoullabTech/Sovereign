@@ -140,3 +140,96 @@ conducting, and here is exactly what we actually know.*
 Books, Substack, talks, practitioner training, research papers, MAIA product philosophy, the
 Oath, Elemental Consciousness — different expressions of one inquiry. Each expression is still
 governed by the claim ladder; the trunk does not license the branches to claim beyond their rung.
+
+---
+
+## Addendum (founder, same day) — the distributed laboratory
+
+**The correspondence with SETI is not extraterrestrial intelligence; it is distributed
+participation in a question too large for any one observer.** SETI@home distributed computation
+across personal computers. Soullab distributes **experience, observation, reflection, relationship
+and learning** across human lives. Each person is a **sovereign node** in a collective inquiry into
+human consciousness and human–AI relationship.
+
+### The individual node (the personal Soul Lab)
+
+```text
+MY LIFE → MY EXPERIENCE → MY RELATIONSHIP WITH MAIA → OBSERVATION → REFLECTION
+→ GREATER SELF-PERCEPTION → ACTION IN LIFE → NEW EXPERIENCE ↺
+```
+
+MAIA is not collecting answers. She may help the person notice processes normally operating in
+parallel and partly outside explicit awareness — what I think · what I feel · what my body is doing
+· what I want · what I fear · what is happening relationally · what patterns persist · what is
+changing. **The human remains the authority on what those observations ultimately mean.**
+
+### Consented contribution — bounded observations, not data
+
+With explicit consent, de-identified and appropriately aggregated, participants might donate
+**bounded observations** rather than CPU cycles: *Did this interaction increase your clarity? Did
+you feel understood? Did MAIA misread you? Were you able to correct her? Did something become
+visible in your body / emotions / thought you hadn't recognized? Did the encounter make a difficult
+human conversation easier afterward? Did you become more dependent on MAIA or more capable without
+her? Did you spend more time in nature, relationships, creativity or meaningful activity afterward?*
+
+These are the Stage 12/13 witness questions and the paired measures, now framed as the member's
+contribution rather than the system's instrument. **Status: not built. No consent act exists. No
+member conversation serves research today.**
+
+### The cycle must be non-extractive
+
+```text
+PERSONAL EXPERIENCE → CONSENTED CONTRIBUTION → COLLECTIVE PATTERN → RESEARCH
+→ BETTER HUMAN–AI DESIGN → MAIA → PERSONAL EXPERIENCE
+```
+
+The member does not become data for Soullab. Soullab becomes wiser because members chose to
+participate in a shared inquiry whose benefits return to the community. Field intelligence then
+has a concrete gradient — **individual field → relational field → collective field** — each with
+different consent and epistemic boundaries.
+
+**Hypothetical examples of what the collective laboratory might one day find — explicitly not
+claims:** that cognitive clarity commonly precedes embodied readiness by days in major decisions;
+that Water–Fire conflict resolves through embodied differentiation rather than more analysis; that
+people who learn to recognize inner contradiction become better at difficult conversations; that
+some kinds of memory increase recognition while others decrease sovereignty; that repair with MAIA
+increases willingness to repair with humans. Each is a hypothesis the collective laboratory could
+investigate, and none is asserted.
+
+### The destination is nature-centric, not optimization
+
+Not smarter, more efficient, or higher-performing humans. The aspiration: **more differentiated
+internally, more integrated as a whole, more capable relationally, more participatory in the living
+world.** A "higher-functioning" human in this conception becomes more embodied, not less · more
+capable of ambiguity · more relational, not more autonomous in isolation · more discerning, not
+merely better informed · more aware of implicit processes · more capable of tolerating
+contradiction · more connected to nature · more capable of meaningful action · **less capturable by
+technology.** If MAIA succeeds, technological sophistication helps the human become less imprisoned
+by technology.
+
+### The criterion
+
+Most AI development asks *how capable is the AI?* Soullab asks *what capabilities emerge in the
+human–AI system?* — and then: **which of those capabilities remain with the human when the AI is
+absent?** Capacity transfer. The highest form of MAIA's intelligence may not be what MAIA can do; it
+may be what the human becomes able to do because of the relationship.
+
+### The mirror hypothesis (held, not claimed)
+
+Not "MAIA will cause humans to exponentially evolve." The serious hypothesis: **artificial
+intelligence may become an unprecedented mirror through which humans can perceive dimensions of
+themselves that have historically been difficult to observe in real time** — if the mirror is
+relationally intelligent, non-reductive, sovereignty-preserving, longitudinal, elementally
+differentiated, capable of memory, capable of repair, grounded in life and nature. Testable. Rung 1.
+
+### The central proposition (founder)
+
+> **Soullab is a distributed laboratory for the emerging relationship between human and artificial
+> intelligence. Each member participates first in the most intimate experiment — the inquiry into
+> their own consciousness — and, when they choose, contributes to a larger collective inquiry into
+> how relationship with intelligence can help humans become more aware, integrated, relationally
+> capable and deeply participatory in the living world.**
+
+> *SETI distributed the search for intelligence across millions of computers. Soullab distributes
+> the inquiry into intelligence across human lives. This time, we are not merely searching for the
+> intelligence. We are inside the encounter with it.*
