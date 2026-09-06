@@ -176,12 +176,20 @@ first mutations historically ambiguous.
 
 ```text
 → PR containing 08A only        SoullabTech/Sovereign#1230 (opened 2026-09-06)
-→ gates / merge
-→ migration runs
-→ production witness F1–F3 + F6 exactly as written (§5)
-→ close 08A if they pass
-→ then begin 08B
+→ CI green
+→ F6a production pre-state captured        ← BEFORE merge; cannot be recovered after
+→ merge
+→ migration executes
+→ F1  DOCX H1/H2 + decisive signal
+  F2  mixed caps/chapter precedence fixture
+  F3  member cut → member / NULL
+  F6b compare against frozen F6a
+→ all PASS → 08A CLOSED → founder act opens 08B
 ```
+
+**Branch freeze (founder, 2026-09-06): no further branch changes unless CI or review produces
+evidence requiring one.** The commit carrying this sequence is docs-only; see the SHA binding
+in §5.
 
 08A carries an additive migration with its own production falsifiers; adding 08B before the
 migration is witnessed would prove the combined system rather than this substrate cut.
@@ -225,10 +233,22 @@ F4  deriveImportedStructure on F1 validates under validateReviewed with no refus
 F5  deriveImportedStructure on a caps-only manuscript (no chapter wording) yields zero
     units — no chapter is invented; on the F2 fixture it yields exactly two units
     (CHAPTER ONE, CHAPTER TWO), PART ONE unplaced, THE HOUSE AT NIGHT inside CHAPTER ONE
-F6  pre-existing rows are NOT REWRITTEN by the migration and read as unclassified. Proved
-    by before/after row identity — ids, positions, headings, body digests and updated
-    counts equal across the migration — not merely by observing NULL afterwards. "Old
-    rows are NULL" and "the migration did not rewrite old rows" are different claims.
+F6  pre-existing rows are NOT REWRITTEN by the migration and read as unclassified. "Old
+    rows are NULL" and "the migration did not rewrite old rows" are different claims, and
+    the second cannot be established after the fact — so F6 is two acts:
+
+    F6a PRE-MIGRATION BASELINE (captured on production BEFORE merge/migration)
+        the whole manuscript_sections population, projected as
+          row count · id · manuscript_id · position · heading · sha256(body)
+        bound to: production host · capture timestamp · running GIT_COMMIT ·
+        migration ledger state (last applied migration)
+        stored where the witness can read it back unchanged (a file with its own digest)
+
+    F6b POST-MIGRATION COMPARISON (same projection, after the migration ran)
+        same row count · same ids · same positions · same headings · same body digests
+        AND heading_depth IS NULL and heading_signal IS NULL on every F6a row
+        Any difference in the projection is a FAIL; a NULL-only observation without
+        F6a is not F6.
 F7  segment() output for any text is unchanged in position · heading · body (omission
     control still lossless)
 ```
@@ -249,6 +269,18 @@ Both pass. The 52 are the tests this cut adds or directly exercises; the 88 are 
 before push. (Earlier reports said 85/50 then 86/50: one test was added for the caps
 `CHAPTER ONE` ruling, then two for the corrected F2 fixture.) `npm run typecheck`: no
 regressions against baseline.
+
+**SHA binding.** These counts and the typecheck result were taken on **`685e205b`**, the last
+commit on the branch that touches code or tests. Every later commit on the branch is
+docs-only, verifiable as an empty diff:
+
+```bash
+git diff --stat 685e205b..<head> -- . ':!docs' ':!CLAUDE.md'   # must print nothing
+```
+
+The production witness (F1, F2, F3, F6a/F6b) binds to the merged code tree of `685e205b`
+likewise. An intervening push that makes that diff non-empty inherits nothing from this
+standing; it re-runs both scopes and re-records.
 
 ---
 
