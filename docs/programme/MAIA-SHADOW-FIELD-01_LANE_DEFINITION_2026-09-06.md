@@ -9,9 +9,10 @@ FLOW        SHADOW-01  DISCOVER → FALSIFY → CONSTITUTE → founder ratificat
 OPENED      2026-09-06 (founder, in-session; split out of the whole-organism census lane by founder ruling)
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
-STATUS      SHADOW-01 · DISCOVER CLOSED/ACCEPTED 2026-09-06 (15 dispositions, census §12) ·
-            FALSIFY WORKED, awaiting founder ratification of F1–F14 · NO CODE · RUNTIME UNCHANGED
-            (records: …_DISCOVER_2026-09-06.md · …_FALSIFY_2026-09-06.md)
+STATUS      SHADOW-01 · DISCOVER CLOSED/ACCEPTED · FALSIFY CLOSED/ACCEPTED (Acceptance Instrument v1:
+            F1–F14 ratified with amendments, F15–F16 added, 0 struck) · CONSTITUTE OPEN — six decision
+            packets D1–D6 prepared, awaiting founder rulings; law text not drafted · NO CODE · RUNTIME UNCHANGED
+            (records: …_DISCOVER · …_FALSIFY · …_CONSTITUTE_2026-09-06.md)
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
             this lane is NOT a Phase-2 register row and does not edit that programme's cockpit)
 AUTHORITY   docs/canon/MAIA_OATH.md · MAIA_CANON_v1.1 · MAIA_SOVEREIGNTY_INVARIANTS (5, 6, 14, 16) ·
@@ -359,8 +360,9 @@ own session to place in its register:
 
 ```text
 DONE      DISCOVER — CLOSED / ACCEPTED; founder dispositions in census §12
-NOW       FALSIFY — worked (MAIA-SHADOW-FIELD-01_FALSIFY_2026-09-06.md); awaiting founder ratification of F1–F14
-          finding: L1–L7 as worded are satisfiable by a reworded Shadow Guardian → two structural laws + L8′ proposed as candidates
+DONE      FALSIFY — CLOSED / ACCEPTED; Acceptance Instrument v1 in FALSIFY §7 (F1–F16)
+NOW       CONSTITUTE — decision packets D1–D6 (MAIA-SHADOW-FIELD-01_CONSTITUTE_2026-09-06.md); awaiting founder rulings;
+          then T1–T10 drafting → F12 run → ratification → DESIGN
 THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
 NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
