@@ -139,9 +139,15 @@ arbitrary prefix → ordinary member, invite bypassed    CONFIRMED — admission
 prefix does not bypass registration as suspected       DISPROVED — it does bypass it
 ```
 
-**If tomorrow's pilot is meant to be invite-gated, this is a repair-before-launch item.** It is not
-a privilege escalation and not a hard security blocker in the escalation sense, but it means the
-invitation is decorative: anyone who learns the prefix convention can self-admit, and the pilot's
-"invited testers only" boundary would not hold. The repair is small — require a valid pending invite
+**If tomorrow's pilot is meant to be invite-gated, this is a repair-before-launch item.**
+
+⚠️ **Phrasing corrected (founder, 2026-09-06).** An earlier draft of this section called the finding
+"not a hard security blocker in the escalation sense" — that reads as mitigation and understates it.
+**The confirmed admission bypass is an access-control defect on its own terms.** What Verdict 1
+retires is the *privilege-escalation hypothesis*; it does not soften Verdict 2. That the resulting
+account is an ordinary member bounds the BLAST RADIUS, not the CATEGORY.
+
+The invitation is currently decorative: anyone who learns the prefix convention can self-admit, and
+the pilot's "invited testers only" boundary would not hold. The repair is small — require a valid pending invite
 unless an explicit, narrow bootstrap allowlist applies — but it is a code change and is NOT
 authorized by this trace.
