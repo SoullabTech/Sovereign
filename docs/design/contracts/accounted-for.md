@@ -1,6 +1,6 @@
 ---
 room: Accounted For
-human_activity: understanding what MAIA is, what is live, what is research, and what Soullab refuses to claim
+human_activity: understanding why Soul Lab exists, what MAIA is, what is live, what is research, what remains unknown, and what Soullab refuses to claim
 
 surfaces:
   - app/accounted-for/page.tsx
@@ -18,6 +18,7 @@ reference_surfaces:
   - app/accounted-for/page.tsx — the existing shipped accounting surface whose visual language this change preserves
   - docs/pitch/MAIA_PLATFORM_ACCOUNTING_2026-09-03.md — source of record for the page copy and evidence boundary
   - docs/research/human-experience/CLAIM_LADDER.md — separates empirical, theoretical, phenomenological, ethical and philosophical claims
+  - docs/research/human-experience/WHY_SOUL_LAB_2026-09-06.md — founder foundational statement: the human question is primary; Self, Relationship, World; AI as emergent participant; three nested inquiries; collective laboratory unbuilt
 
 shared_with_house: the House's restrained field hierarchy, Spectral/IBM Plex typography, provenance voice, and refusal to make the system more important than the member
 distinct_to_room: a public evidence room rather than a member practice room; it is dense by design because the activity is inspection, with claim boundaries and withheld claims visible rather than simplified into marketing
@@ -25,21 +26,28 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 from this branch at desktop and mobile widths after the
-  Human Experience R&D copy was added. Verified that the new sections preserve
-  the existing page hierarchy and reading rhythm; that Live parallel epistemic
-  emission remains visibly distinct from the Elemental parallel-processing
-  research hypothesis; that "centrifugal in consequence, not in posture" is
-  explicitly named as research direction rather than measured effect; that the
-  Soul Lab paragraph reads as philosophical framing rather than neuroscience;
-  and that the withheld-claims section states the two corresponding non-claims.
-  No navigation, interaction, auth, memory, prompt, cognition or runtime path
-  changes. Desktop and mobile screenshots are from the branch itself. The
-  desktop walk also records a pre-existing horizontal-overflow defect in the
-  shared Table wrapper (1597px document width at a 1280px viewport); this change
-  does not touch Table composition or width classes, so it is recorded rather
-  than repaired in this content lane. Mobile document width remains 390px at a
-  390px viewport.
+  Walked 2026-09-06 (second revision, this branch) in headless Chromium against
+  a local `next dev` render at 1280×900 and 390×844, from a clean lockfile
+  install. Observed: HTTP 200 at both widths; exactly one H1 ("MAIA, Accounted
+  For"); the first H2 after the header is "The human question, with a new
+  participant in it" under the eyebrow "Why Soul Lab"; the eyebrows "Why Soul
+  Lab", "What we are testing", "What we do not know", "Withheld" and "Beyond
+  the conversation" each appear exactly once; 18 H2 and 21 H3 on the page.
+  Read on the render: the human question is placed above the capabilities; the
+  three nested inquiries carry their status (personal = what MAIA is for today;
+  World/collective = not built, no member conversation serves research, no
+  consent act exists, Sanctuary excluded; relational = the programme); the
+  Live parallel-emission substrate stays visibly distinct from the Elemental
+  hypothesis; the three new withheld claims are present. Mobile document width
+  is 390px at a 390px viewport. Desktop document width is 1597px at a 1280px
+  viewport — the pre-existing shared Table wrapper overflow recorded by the
+  previous revision; this change does not touch Table composition or width
+  classes, so it is recorded rather than repaired. Screenshots are the top
+  3000px (desktop) / 3600px (mobile) of the branch render, cropped so the new
+  section is visible; they are not full-page. No navigation, interaction,
+  auth, memory, prompt, cognition or runtime path changes. Gates at commit:
+  design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
+  no-regression PASS (230 vs 239 baseline) with the lockfile's TypeScript 5.9.3.
 ---
 
 # Accounted For — Experience Contract
@@ -56,8 +64,11 @@ not claim. Density is permitted because the human activity is accounting.
 > **MAIA, Accounted For**
 
 The arrival answers four things immediately: this is Soullab's accounting, the
-subject is MAIA, the page distinguishes present from future, and evidence rather
-than enthusiasm governs the claims.
+subject is a person's own inquiry with MAIA as a participant in it, the page
+distinguishes present from future, and evidence rather than enthusiasm governs
+the claims. The first section after the header is *Why Soul Lab*: the human
+question placed above the capabilities, and the accounting named in four kinds
+(what exists · what we believe · what we are testing · what we do not know).
 
 ## Gestures
 
@@ -66,6 +77,9 @@ than enthusiasm governs the claims.
 | inspect maturity | Live · Partly live · Designed · Vision | names operational state without translating it into sales language |
 | inspect limits | Claims this page withholds | makes non-claims part of the product surface rather than footnotes |
 | inspect direction | research direction / hypothesis | keeps active R&D visible without promoting it to a capability |
+| inspect the frame | Why Soul Lab · three nested inquiries | places the human question above MAIA; names the collective laboratory as unbuilt so the frame cannot read as a data claim |
+| inspect the programme | What we are testing, by rung | each inquiry and principle shown at the claim-ladder rung its evidence licenses |
+| inspect ignorance | What we do not know | open questions listed so the reader sees the shape of our uncertainty rather than infers it |
 
 ## Forbidden here
 
@@ -75,6 +89,8 @@ than enthusiasm governs the claims.
 - using the human–AI relationship programme as attachment or retention marketing
 - replacing evidence-bearing prose with a dashboard of green checks
 - simplifying away unresolved or contradictory evidence because it weakens the pitch
+- describing members as research subjects, or implying any member conversation serves research today
+- letting the human–AI relationship read as the destination; the human question is primary and MAIA is a participant in it
 
 ## The two brand tests
 
