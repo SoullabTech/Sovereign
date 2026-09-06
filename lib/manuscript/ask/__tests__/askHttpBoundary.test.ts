@@ -15,6 +15,7 @@ import { join } from 'path';
 import {
   __parseAnchorForTest as parseAnchor,
   __supportedAnchorsForTest as SUPPORTED,
+  __parseDevelopmentalAnchorForTest as parseDevelopmentalAnchor,
 } from '../../../../app/api/sovereign/manuscripts/[id]/ask/route';
 
 describe('the boundary accepts only what 02c-2 proved', () => {
@@ -87,6 +88,31 @@ describe('refusal happens before any thread is written', () => {
   });
 
   it('ownership is proved before the anchor is even parsed', () => {
-    expect(ROUTE.indexOf('memberOwnsWork')).toBeLessThan(ROUTE.indexOf('parseAnchor(body.anchor)'));
+    /* BUILD-07E: the POST parses through `parseAnyAnchor`, which tries the
+       structure boundary and then the developmental one. The property is
+       unchanged — ownership first, for every anchor of either lane — and the
+       assertion names the call the route actually makes so it cannot pass by
+       matching a symbol the route no longer reaches. */
+    expect(ROUTE.indexOf('memberOwnsWork'))
+      .toBeLessThan(ROUTE.indexOf('parseAnyAnchor(body.anchor)'));
+  });
+
+  it('a developmental anchor is never admitted by the structure boundary', () => {
+    /* The two parsers are separate on purpose. `observation` must not appear in
+       SUPPORTED_ANCHORS, or a developmental anchor could be approved by the
+       structure path and then resolved against a proposal. */
+    expect([...SUPPORTED] as string[]).not.toContain('observation');
+    expect(parseAnchor({ on: 'observation', readingId: 'r', observationKey: 'o1' }))
+      .toBeNull();
+  });
+
+  it('the developmental boundary is closed: unknown keys and empty ids refuse', () => {
+    const ok = { on: 'observation', readingId: 'r1', observationKey: 'o1' };
+    expect(parseDevelopmentalAnchor(ok)).toEqual(ok);
+    expect(parseDevelopmentalAnchor({ ...ok, extra: 1 })).toBeNull();
+    expect(parseDevelopmentalAnchor({ ...ok, readingId: '' })).toBeNull();
+    expect(parseDevelopmentalAnchor({ ...ok, observationKey: '' })).toBeNull();
+    expect(parseDevelopmentalAnchor({ on: 'reading', readingId: 'r1' })).toBeNull();
+    expect(parseDevelopmentalAnchor(null)).toBeNull();
   });
 });
