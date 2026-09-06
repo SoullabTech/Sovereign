@@ -762,3 +762,28 @@ R =       cb589ab0-3532-433b-b52d-916d155382c8
 ```
 
 and no irreversible click until BOTH windows have shown it. Close every Develop window first.
+
+### Entry point for the next session — founder framing, 2026-09-06
+
+**Do NOT restart from W7.** Restart from the launch question:
+
+> *Can 3–5 trusted writers safely Arrive → Write → Structure → Develop → dialogue → leave/return,
+> with the standing/decision surface explicitly out of bounds?*
+
+```text
+07F runtime            50302f5d9
+W1–W6                  PASS
+W7                     NOT CLEANLY EXERCISED
+concurrency guard      UNPROVEN
+F-CTX                  OPEN product finding
+BUILD-07F              NOT CLOSED
+
+standing / decisions   EXCLUDED from pilot
+remaining Studio       ELIGIBLE for bounded pilot preflight
+database               PRESERVE AS-IS
+standing-table census  bookkeeping / evidence recovery — NOT a prerequisite to having stopped safely
+```
+
+This keeps tonight's finding from swallowing the whole Writer's Studio beta while still respecting
+what it actually told us: one surface has a demonstrated human-factors hazard; the rest of the room
+was not implicated and its guarantees held on production.
