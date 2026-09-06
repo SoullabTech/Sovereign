@@ -1,6 +1,6 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F source is MERGED but NOT CLOSED (block below); BUILD-07G–H unauthorized.**
+> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F source is MERGED but NOT CLOSED (block below). BUILD-07G LONG-WORK SCOPED DEVELOPMENTAL READING — OPENED 2026-09-06 by founder act, DECIDE ONLY, on the terminal witness of the Develop preparation chain (`docs/programme/WS2-DEVELOP-PREPARATION_TERMINAL_WITNESS_2026-09-06.md`, subject `50302f5d9`, verdict `ceiling_exceeded`). BUILD-07H unauthorized.**
 >
 > **BUILD-07F DEVELOPMENTAL DECISIONS — SOURCE MERGED (2026-09-06), NOT CLOSED.** Census,
 > adjudication and design are canonical and accepted; implementation was authorized falsification-first
@@ -25,7 +25,8 @@
 >                        walk's frozen anchor by the docs-only #1232 merge. W2–W12 NOT STARTED,
 >                        and W3 onward remains gated on a PROSPECTIVE founder act (runbook §2.2)
 > BUILD-07F              NOT CLOSED
-> BUILD-07G / 07H        UNOPENED
+> BUILD-07G              OPENED 2026-09-06 · DECIDE ONLY (no implementation authority)
+> BUILD-07H              UNOPENED
 > ```
 >
 > **Cross-lane boundary, resolved 2026-09-06.** `ccd1c50ce` is #1228 merged onto 07F's own merge, so
@@ -564,6 +565,62 @@ NOT AUTHORIZED    ninth phenomenon · structural-uniformity · partial freeze ·
                   unclassifiable claim · retry/fallback · prompt tuning for pass rate · weakening
                   refuse-whole · giving the reader the phenomenon taxonomy · 07D changes · 07E
 STATE             WS2-07C-F1 CLOSED · WS2-07-F1 OPEN, act 1 awaiting founder adjudication
+```
+
+```text
+2026-09-06 · DEVELOP PREPARATION CHAIN — TERMINAL WITNESS · BUILD-07G PRECONDITION MET
+SUBJECT           50302f5d9 (production GIT_COMMIT, read before and after; bound by exact string)
+WORK              book-print-kdp-final
+RESULT            13 checks · 0 failures · witness wrote nothing
+                  pre digest ddb2536fd3bdcf48 == post digest ddb2536fd3bdcf48 — MEMBER TEXT UNMOVED
+                  draft version 3 → 4 · revision #4 freezes 381077 == current draft bytes
+                  partition 185/185 in exact draft order
+CLOSED            partition_not_recorded · revision_not_current
+VERDICT           ceiling_exceeded — the reader refused one pass over a Work larger than one pass,
+                  with every preparatory obstruction gone from in front of it
+CHAIN             not_readable (preparation resolver + split conversion authority) →
+                  partition_not_recorded (#1228) → Keep a version 500 (#1233, bodyless checkpoint)
+MEMBER ACT        performed by the member in an authenticated browser, once. No SQL, no route
+                  impersonation, no backfill, no second Prepare, by any party.
+CLAIM STATE       zero-body checkpoint = contract-established + transport-observed;
+                  NOT payload-pane-witnessed
+NEGATIVE CONTROL  a DOM .click() in that observed browser state produced no request and no state
+                  change; one focused keyboard activation produced the sole revision transition.
+                  NOT canonized as a universal property of browser automation.
+RECORD            docs/programme/WS2-DEVELOP-PREPARATION_TERMINAL_WITNESS_2026-09-06.md
+```
+
+```text
+2026-09-06 · BUILD-07G LONG-WORK SCOPED DEVELOPMENTAL READING — OPENED (founder act) · DECIDE ONLY
+PROBLEM           How does MAIA developmentally read a Work whose total length exceeds the per-pass
+                  ceiling, without pretending one pass saw the whole Work, mixing revisions or
+                  topologies, or losing evidence provenance?
+                  381,077 code points (the Work) vs 60,000 (DEVELOPMENTAL_READ_CEILING_CODE_POINTS)
+LANE              inside this lane — NOT a new Jarvis lane
+AUTHORIZES        DECIDE / design only. No branch, schema, migration, route, prompt or client change.
+CEILING           NOT RAISED — it is a per-pass bound, not a maximum acceptable Work size
+CROSSES IN        exactly one constraint from the PARKED topology programme:
+                  scope_target = structure_unit | section_range | whole_work — unit-capable from
+                  inception. Nothing else unparks.
+SYNTHESIS         observational only — recurrence · distribution · co-occurrence · continuity ·
+                  discontinuity · location · coverage · provenance.
+                  NOT: evaluation, "main weakness", confidence, rank, severity, score.
+                  NO new observation envelope (structural_strength / developmental_tension forbidden
+                  by name and by kind). The 07C observation stays the atomic record; a run adds
+                  orchestration metadata only.
+RESOLVER          topology-blind. Its whole contract is "resolve this selected structure unit into
+                  its ordered leaf sections." It does not know what a chapter is.
+ACCEPTANCE        thirteen points filed in the DECIDE record §4 — RECONSTRUCTED from the founder's
+                  2026-09-06 ruling, filed as Acceptance Instrument v1, AWAITING RATIFICATION
+                  (BUILD-07A precedent: authority begins at the ruling; no provenance claimed for
+                  the reconstruction)
+OPEN RULINGS      A1–A7 in the DECIDE record §7 — required before BUILD opens
+CONSTRAINT        must not create standing events while BUILD-07F's acceptance walk is pending
+                  (standing_events = 0 is what keeps that decision clean)
+NOT AUTHORIZED    BUILD-07H · mid-section cutting · automatic or background long-work reading ·
+                  any unparking beyond the one crossing constraint
+RECORD            docs/programme/WS2-07-BUILD-07G_LONG_WORK_DECIDE_2026-09-06.md
+STATE             BUILD-07G OPEN · DECIDE ONLY · no implementation authority
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS
@@ -1117,6 +1174,7 @@ BUILD-07D  DEVELOP SURFACE          Member explicitly invokes the reading.
 BUILD-07E  DEVELOPMENTAL DIALOGUE   Talk with MAIA about observations.
 BUILD-07F  DEVELOPMENTAL DECISIONS  Keep / dismiss / unresolved / investigate.
 BUILD-07G  WHOLE-WORK DEVELOPMENT   Cross-division patterns, manuscript-scale intelligence.
+           (OPEN 2026-09-06 as LONG-WORK SCOPED DEVELOPMENTAL READING — DECIDE ONLY)
 BUILD-07H  REVISION BRIDGE          Author deliberately takes an insight into revision.
 ```
 
