@@ -170,7 +170,16 @@ This note does not reorder the sequence in `CLAUDE.md` (fork → toggle → clar
 ## Record
 
 - `925336d4` — note + `CLAUDE.md` entry. Docs-only. **Hook execution NOT WITNESSED** (committed with hooks bypassed in a remote sandbox; the skipped instrument produced no evidence either way). Normal remote checks close that gap if this enters a PR.
-- `16df97ae` — authority/projection wording correction (Decision 1–2), plus `scripts/witness/temporal-memory-audit.sql` (read-only, §1 fallback precondition, §2 decay counterfactual). The script was executed against a scratch PostgreSQL 16 cluster with synthetic rows (no production data, no member data) to witness that it parses, that §1.b isolates only a member with expired-embedded rows and zero open rows, and that §2 reports set-membership changes with entered / left / displacement / type / age / confirmation. That verifies the instrument, not production. **Hook execution NOT WITNESSED** on this commit as well: the remote clone has no `core.hooksPath` set, so `.githooks/pre-commit` did not run. Audit output is to be pasted below verbatim when run on minisforum; until then both audit questions remain **open**.
+- `16df97ae` — authority/projection wording correction (Decision 1–2), plus `scripts/witness/temporal-memory-audit.sql` (§1 fallback precondition, §2 decay counterfactual). **Write surface: no persistent writes.** It creates and drops two session-local temporary tables and mutates no persistent production relation; the temp objects disappear with the `psql` session. "Read-only" is therefore imprecise and is not the claim. Identity of the blob to run: `a62244f0`. The script was executed against a scratch PostgreSQL 16 cluster with synthetic rows (no production data, no member data) to witness that it parses, that §1.b isolates only a member with expired-embedded rows and zero open rows, and that §2 reports set-membership changes with entered / left / displacement / type / age / confirmation. That verifies the instrument, not production. **Hook execution NOT WITNESSED** on this commit as well: the remote clone has no `core.hooksPath` set, so `.githooks/pre-commit` did not run. Audit output is to be pasted below verbatim when run on minisforum; until then both audit questions remain **open**.
+
+Adjudication table, fixed before the run so the result cannot reshape the question:
+
+| Result | Reading |
+|---|---|
+| §1.b empty | Expired-memory vector traversal through that fallback condition is **ruled out under current data**. Not "no evidence". |
+| §1.b non-empty | Traversal data precondition exists. Still not proof of runtime traversal (needs a non-empty embedding at request time). |
+| §2 `members_set_changed = 0` | Decay changes scores and ranks but not what enters MAIA's top-12. |
+| §2 `members_set_changed > 0` | The hidden decay mechanism materially changes what MAIA gets to think with; §2.c / §2.d say exactly how. |
 
 ### Audit results
 
