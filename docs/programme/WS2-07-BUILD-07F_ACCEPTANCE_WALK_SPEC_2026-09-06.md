@@ -225,6 +225,47 @@ Custody equivalence did not carry the walk from `66da58b4c` to current canonical
 
 ---
 
+## 2.1.0 · BLOCKED — the zero-row precondition is gone (2026-09-06)
+
+**Production read, runtime `ca5fdff44`** — read-only, executed in-session via the founder's
+connected host, not a manual founder execution:
+
+```text
+STANDING_EVENTS  8
+LATEST           2026-09-06 18:03:38.138045+00
+IDENTITY         all eight rows under the founder member identity,
+                 across the two existing developmental readings
+                 no evidence of tester contamination
+```
+
+This walk's preconditions require `standing_events` to be re-read immediately before starting and
+the stop rule requires halting on a nonzero pre-walk count. That count is now 8.
+
+```text
+FROZEN WALK      BLOCKED
+§2.2             NOT GIVEN
+W1               NOT RUN / NOT BOUND
+```
+
+**The eight rows are not evidence.** They cannot be read as W3–W7 outcomes, because the walk never
+legally began — no §2.2 act, no bound subject, no W1. They are legitimate member history produced
+by a live surface, and that is all they are.
+
+**They must not be deleted.** Deleting them would manufacture the precondition rather than satisfy
+it, and would destroy real member acts to make a document's arithmetic work. The prohibition is
+absolute and does not expire with inconvenience.
+
+**A re-freeze is therefore no longer sufficient.** Retargeting the bound subject answers *which
+program* the walk runs against; it says nothing about *how to witness standing when legitimate
+history already exists*. 07F needs a successor adjudication for that question before any walk step
+runs. Whether the answer is a per-reading zero-row scope, a delta-based witness over a recorded
+baseline, or something else is not decided here — and is not an assistant's to decide.
+
+*Consequence for sequencing: the re-freeze is no longer urgent. It was the next step only while the
+walk was otherwise ready to run; it is not.*
+
+---
+
 ## 2.1.1 · The re-freeze — a RETARGET, not a custody equivalence and not a source acceptance
 
 **AUTHORIZED in-session, 2026-09-06 · agent-doable docs act.** This is **not** a founder act, and

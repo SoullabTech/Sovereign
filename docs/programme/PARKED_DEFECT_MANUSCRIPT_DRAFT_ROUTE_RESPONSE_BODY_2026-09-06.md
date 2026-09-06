@@ -1,7 +1,7 @@
 # PARKED DEFECT — manuscript draft route: "Response body object should not be disturbed or locked"
 
 ```text
-status        UNTRIAGED · PARKED UNTIL 08A CLOSES
+status        TRIAGED 2026-09-06 · MECHANISM IDENTIFIED · NOT FIXED
 recorded      2026-09-06 (founder instruction: record separately now, do not investigate yet)
 lane          none — this is a defect record, not an execution lane, and not part of WS2-08 / 08A
 ```
@@ -63,3 +63,37 @@ production SHA   66da58b4c — GIT_COMMIT of the running container at the time o
 Triage opens only after WS2-08 BUILD-08A is CLOSED (F1–F3, F6b and the exact-filename ledger
 witness all PASS, founder-adjudicated) and only by a founder act. First step then: reproduce
 against the current production SHA and read the route source at that SHA.
+
+
+---
+
+## Triage — 2026-09-06 (mechanism identified, no fix applied)
+
+**The same failure is already documented in `middleware.ts`**, for a different route. Because the
+middleware matcher matched the path, Next buffered the request body so middleware could run, then
+rebuilt a Request for the route handler from the same Node stream; when that stream was already
+consumed, construction threw before any application code ran. That is why the route's own logging
+never appears in the observed occurrences. Precedent and full measurement:
+`middleware.ts` (matcher note) and `docs/ops/TRANSCRIBE_BODY_DISTURBED_2026-08-27.md`.
+
+**Ruled out as the cause:** a double body read inside one handler. `POST` reads `request.text()`
+(line ~117) and `PUT` reads `request.json()` (line ~373); they are different handlers, and
+`getMemberIdFromRequest()` does not touch the body.
+
+**The precedent's fix does NOT transfer.** `/api/voice/transcribe-simple` was removed from the
+middleware matcher, and that was safe only because no rule in `config/accessMatrix.ts` matched it,
+so middleware was already waving it through. This route is covered by
+`{ prefix: '/api/sovereign', minTier: 'free' }`. Excluding it from the matcher would remove
+access-matrix enforcement from a member-data write path in order to fix a request-parsing bug.
+
+```text
+DO NOT      copy the matcher exclusion to this path
+NEEDS       a fix that keeps middleware enforcement — e.g. avoiding body
+            consumption in the middleware path for this route, or a matcher
+            exclusion paired with an equivalent server-side access check
+STATUS      still unfixed · a real fix needs its own authorization and review
+```
+
+**Beta relevance:** this is on the working-draft save path. Occurrences were intermittent (four in
+one window); the analogous voice route failed on roughly half of requests. Frequency here is
+unmeasured.
