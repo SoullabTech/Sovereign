@@ -128,6 +128,23 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   if (o.refusal === 'revision_not_current') {
     return 'This work has changed since the last version you kept. Keep a version in the Writer Canvas, then ask MAIA to read again. Nothing has changed.';
   }
+  /* PREPARED, AND STILL NOT READABLE — and the member is owed the difference.
+   *
+   * `partition_not_recorded` arrives at the CAPTURE stage, so it used to fall
+   * to the sentence below and tell a member whose Work IS prepared to prepare
+   * it again. That gesture then answers `already_converted`: a loop with no
+   * exit, over a Work one ordinary act away from readable. Found in production
+   * on book-print-kdp-final, 2026-09-06, immediately after a successful
+   * preparation.
+   *
+   * What it actually means: MAIA reads a KEPT version, and the newest kept
+   * version predates the sections. Conversions from 2026-09-06 record their
+   * own partition, so this reaches only Works converted before that — and for
+   * those the act that clears it already exists and belongs to the member, in
+   * the Writer Canvas. This room does not perform it. */
+  if (o.refusal === 'partition_not_recorded') {
+    return 'This work is prepared, but the most recent version you kept predates its sections, so MAIA has nothing bounded to read. Keep a version in the Writer Canvas, then ask again. Nothing has changed.';
+  }
   switch (o.stage) {
     /* CAPTURE READS THE WORKING DRAFT'S PARTITION, not the outline the writer
        sees in Write — those are two tables in two namespaces, and a Work can
