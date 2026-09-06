@@ -390,16 +390,22 @@ See: `docs/bridge-d-verification.md` for full verification guide.
 
 ## Co-Lab Release Gate (MANDATORY before tester invites)
 
-**No invite unless `verify-colab-boundaries.ts` passes 31/31 in production.**
+**No invite unless `scripts/verify-constitution-colab.ts` passes 33/33 in production.**
 
-Run inside the container on minisforum:
+Run from the Mac Studio (executes on minisforum). Preferred: the gate wrapper, which enforces the invariant — `passed >= 31` (`MIN_COLAB_CHECKS` floor) AND `0 failed` AND `0 warned` AND verifier exit 0 — so a verifier that silently drops checks blocks too:
 ```bash
-docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && scripts/pre-deploy-gate.sh colab'
+```
+The verifier alone, if you want to read the full matrix (prints only; enforces nothing):
+```bash
+ssh soullab@minisforum 'docker exec maia-sovereign sh -c "DATABASE_URL=\$DATABASE_URL npx tsx scripts/verify-constitution-colab.ts"'
 ```
 
-Pass condition: `31 passed · 0 failed · 0 warned`
+Pass condition: `33 passed · 0 failed · 0 warned` — 33 assertions across 12 sections. **Witnessed in production 2026-09-06** against container `GIT_COMMIT=50302f5d9` (the gate wrapper printed `33 passed · 0 failed · 0 warned (floor 31)`; the verifier printed `Results: 33 passed · 0 failed · 0 warned (33 total)`). Earlier production witnesses of 33: deploy of `293d454cf` on 2026-09-04, and the CMT-01 M2 deploy on 2026-09-03. When a new check ships, raise `MIN_COLAB_CHECKS` in `scripts/pre-deploy-gate.sh` and the count here and in the gate doc.
 
-This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
+⚠️ **Name history.** The script was `scripts/verify-colab-boundaries.ts` (added `de88c8e9d`) until commit `b806fa49c` renamed it to `scripts/verify-constitution-colab.ts` (git `R100`, byte-identical at rename) to join the `verify-constitution-*` family. The old path does not exist and fails with `ERR_MODULE_NOT_FOUND`. `pre-deploy-gate.sh` and `constitutional-verification.sh` always used the new name, so the deploy-path gate was real throughout — only this documented manual command was stale. The old `31` was the count until section 12 (`8bb66c6d6`, 2026-07-30) added 2 assertions.
+
+**Automatic runs.** The gate runs in two deploy paths, neither of which invokes the verifier file directly: (1) `scripts/pre-deploy-gate.sh` runs `gate_colab` **before** every `deploy-maia` build and in `all`, and blocks the deploy on failure; (2) `scripts/deploy-production.sh` `run_smoke_tests` runs the five-subsystem orchestrator `scripts/constitutional-verification.sh` inside the container **after** swap, where Co-Lab is a `required=true` verifier. The post-deploy summary prints one aggregate line, `PASS  Constitutional verification (Co-Lab + Memory + Relationships + Development + MAIA)`, and echoes per-check output only on failure — it never prints Co-Lab's 33 on a passing run. It must also be run manually (command above) before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
 
 Triggers: Co-Lab changes · Studio people · DMs · sessions/encounters · files · memory atoms · onboarding · invitations/roles · any migration touching those tables.
 
