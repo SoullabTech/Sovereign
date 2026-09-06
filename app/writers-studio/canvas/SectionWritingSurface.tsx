@@ -32,7 +32,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
-import { loadDraft, newIdempotencyKey, putDraftSections } from '@/app/press/manuscript/workingDraftClient';
+import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { StudioText } from '../studio/StudioType';
 
 export interface SectionWritingSurfaceProps {
@@ -65,30 +65,30 @@ export interface SectionWritingSurfaceProps {
  *
  * ── THE CONTRACT NOW ──────────────────────────────────────────────────────
  * Keep a version checkpoints SERVER TRUTH. It never reconstructs the
- * manuscript from anything the client holds.
+ * manuscript from anything the client holds, and it sends NO manuscript body.
  *
  *   1  settle the pending autosave, or refuse
- *   2  GET the persisted draft
- *   3  require sectionAddressable, with sections and a revision
- *   4  PUT those EXACT server-returned sections with checkpoint: true
+ *   2  read the save queue's latest server-acknowledged draft version
+ *   3  POST that guard to /draft/checkpoint with NO request body
+ *   4  the server freezes the section rows it already owns
  *   5  a moved revision is a refusal, never a retry
  *
- * Step 4 is the whole repair. `GET /draft` says the sections are the writable
- * truth once a draft is section-addressable and that `content` is a derived
- * projection the client must not send back; the server re-derives content from
- * the sections it is given. Handing it back exactly what it just gave us is
- * what makes the checkpoint a no-op on the Work.
+ * The first section-native checkpoint round-tripped all sections through the
+ * browser. That was textually safe but transport-unsafe for a real book: the
+ * 381 KB JSON body passed through Next middleware and could die in
+ * fromNodeNextRequest before this route ran. The bodyless checkpoint makes the
+ * stronger rule structural: a Keep gesture cannot send manuscript prose at all.
  *
  * Step 1 matters for the opposite reason: a version that silently omits the
  * sentence typed two seconds ago is worse than no version, because the member
  * has been told their work is held. If the queue will not settle we refuse
  * rather than keep a partial state.
  *
- * NOT A NEW VERSIONING SYSTEM. Same call as the Worktable — PUT /draft with
- * `checkpoint: true` — against the same append-only revision store, the path
- * Gate B(a) F5c proved. Nothing decides when to keep except the member: no
- * autosave-as-version, no silent checkpoint. A version the writer did not set
- * down is not a version they chose.
+ * NOT A NEW VERSIONING SYSTEM. The transport command is now a dedicated
+ * bodyless POST, but it writes the SAME append-only revision store and advances
+ * the SAME draft version/revision counters. Nothing decides when to keep except
+ * the member: no autosave-as-version, no silent checkpoint. A version the
+ * writer did not set down is not a version they chose.
  */
 /**
  * Build the save call for a manuscript.
@@ -146,22 +146,16 @@ function KeepAVersion({
       await new Promise((r) => setTimeout(r, SETTLE_POLL_MS));
     }
 
-    /* 2, 3 — server truth, or nothing. */
-    const before = await loadDraft(apiFetch, manuscriptId);
-    if (before.kind !== 'ok') { setPhase('error'); return; }
-    if (!before.sectionAddressable || before.sections === null) { setPhase('error'); return; }
-
-    /* 4 — hand back EXACTLY what the server gave us. Not writing.sections,
-       not a flattening, not a reconstruction. */
-    const res = await putDraftSections(apiFetch, manuscriptId, {
-      sections: before.sections,
-      checkpoint: true,
-      baseRevisionId: before.revisionId,
+    /* 2, 3, 4 — the queue knows the last server-acknowledged version. The
+       checkpoint request carries that guard and NO manuscript body; the server
+       freezes the sections it already holds. */
+    const res = await checkpointServerDraft(apiFetch, manuscriptId, {
+      baseRevisionId: writing.currentRevisionId(),
       idempotencyKey: newIdempotencyKey(),
     });
 
-    /* 5 — a moved revision means someone else wrote between our read and our
-       write. Retrying would put our snapshot over theirs. */
+    /* 5 — a moved revision means someone else wrote after our last acknowledged
+       save. Retrying against a newer base would cross an authorship boundary. */
     if (res.kind === 'ok') { setPhase('kept'); onCheckpointed?.(); return; }
     setPhase(res.kind === 'conflict' ? 'moved' : 'error');
   };
