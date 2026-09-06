@@ -45,6 +45,11 @@ import {
 } from '@/lib/writersStudio/developPresentation';
 import ObservationDialogue from './ObservationDialogue';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
+import {
+  LABEL as STANDING_LABEL, expectationFor, standingSentence, standingSurfaceKey, standingView,
+  type StandingLookup, type StandingWire,
+} from '@/lib/writersStudio/observationStanding';
+import { fetchStandings, postStanding } from '@/lib/writersStudio/standingClient';
 
 type ListPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type ReadingPhase = 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
@@ -140,6 +145,10 @@ export default function DevelopRoom({
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
   >({ phase: 'idle' });
+  /* BUILD-07F — the member's own axis, read separately from the reading. It is
+     a SIBLING resource, and keeping the two reads apart here is what keeps a
+     failure of one from being reported as a state of the other. */
+  const [standings, setStandings] = useState<StandingLookup>({ state: 'loading' });
 
   // The Work's name, for the head of the room. Member-scoped server-side.
   useEffect(() => {
@@ -196,6 +205,36 @@ export default function DevelopRoom({
     })();
     return () => { cancelled = true; };
   }, [manuscriptId, selectedId]);
+
+  /* The member's standings for the selected reading. A FAILURE IS `unavailable`,
+     never an empty list: the room must be able to say "could not be reached"
+     rather than "no standing taken". */
+  const loadStandings = useCallback(async (readingId: string) => {
+    setStandings({ state: 'loading' });
+    const r = await fetchStandings(manuscriptId, readingId);
+    setStandings(r.ok ? { state: 'available', standings: r.standings } : { state: 'unavailable' });
+  }, [manuscriptId]);
+
+  useEffect(() => {
+    if (!selectedId) { setStandings({ state: 'loading' }); return; }
+    let cancelled = false;
+    (async () => {
+      const r = await fetchStandings(manuscriptId, selectedId);
+      if (cancelled) return;
+      setStandings(r.ok ? { state: 'available', standings: r.standings } : { state: 'unavailable' });
+    })();
+    return () => { cancelled = true; };
+  }, [manuscriptId, selectedId]);
+
+  /* One event, adopted in place. The server's returned standing IS the new
+     current, token and all — the room never computes the next state itself. */
+  const adoptStanding = useCallback((next: StandingWire) => {
+    setStandings((prev) => {
+      if (prev.state !== 'available') return prev;
+      const others = prev.standings.filter((s) => s.observationKey !== next.observationKey);
+      return { state: 'available', standings: [...others, next] };
+    });
+  }, []);
 
   /* The reading's identity lives in the URL, so it survives this room. */
   useEffect(() => {
@@ -403,7 +442,14 @@ export default function DevelopRoom({
                its own anchor.
                A reset effect would NOT be equivalent: effects run after render,
                so there is a frame in which B is displayed with A's state. */
-            <Reading key={view.id} view={view} manuscriptId={manuscriptId} />
+            <Reading
+              key={view.id}
+              view={view}
+              manuscriptId={manuscriptId}
+              standings={standings}
+              onStanding={adoptStanding}
+              onRefresh={() => loadStandings(view.id)}
+            />
           )}
         </main>
       </div>
@@ -414,7 +460,12 @@ export default function DevelopRoom({
 
 /* ── the reading ─────────────────────────────────────────────────────── */
 
-function Reading({ view, manuscriptId }: { view: ReadingView; manuscriptId: string }) {
+function Reading({
+  view, manuscriptId, standings, onStanding, onRefresh,
+}: {
+  view: ReadingView; manuscriptId: string; standings: StandingLookup;
+  onStanding: (next: StandingWire) => void; onRefresh: () => void;
+}) {
   return (
     <article data-reading-id={view.id} data-reading-state={view.state} className="max-w-[70ch]">
       <header className="mb-7">
@@ -451,6 +502,9 @@ function Reading({ view, manuscriptId }: { view: ReadingView; manuscriptId: stri
               o={o}
               manuscriptId={manuscriptId}
               readingId={view.id}
+              standings={standings}
+              onStanding={onStanding}
+              onRefresh={onRefresh}
             />
           ))}
         </ol>
@@ -472,8 +526,11 @@ function Reading({ view, manuscriptId }: { view: ReadingView; manuscriptId: stri
  * is what a writer comparing them would do.
  */
 function Observation({
-  o, manuscriptId, readingId,
-}: { o: ObservationView; manuscriptId: string; readingId: string }) {
+  o, manuscriptId, readingId, standings, onStanding, onRefresh,
+}: {
+  o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
+  onStanding: (next: StandingWire) => void; onRefresh: () => void;
+}) {
   const [talking, setTalking] = useState(false);
   return (
     <li
@@ -521,6 +578,16 @@ function Observation({
         <StateLine state={o.state} label={o.stateLabel} sentence={o.stateSentence} moved={o.moved} />
       )}
 
+      <YourStanding
+        key={standingSurfaceKey(readingId, o.key)}
+        manuscriptId={manuscriptId}
+        readingId={readingId}
+        observationKey={o.key}
+        standings={standings}
+        onStanding={onStanding}
+        onRefresh={onRefresh}
+      />
+
       {talking ? (
         <ObservationDialogue
           manuscriptId={manuscriptId}
@@ -544,6 +611,88 @@ function Observation({
         </button>
       )}
     </li>
+  );
+}
+
+/* ── your standing ───────────────────────────────────────────────────── */
+
+/**
+ * BUILD-07F — the member's own axis, beneath what MAIA observed.
+ *
+ * IT CHANGES NOTHING ABOUT THE OBSERVATION. No hiding, fading, reordering,
+ * strike-through or suppression: a dismissal changes this row and nothing else.
+ * What MAIA noticed is a record of what she noticed, and a writer disagreeing
+ * with it does not unmake it.
+ *
+ * UNKNOWN IS NOT UNSET. While the lookup is loading or failed, `expectationFor`
+ * returns no token and the controls are disabled — the room cannot write from a
+ * state it never saw, and says so in the member's language.
+ *
+ * NOTHING IS DESELECTABLE. A taken standing is not a toggle: a writer who no
+ * longer wishes to rule chooses `Unresolved`, which is an act of its own.
+ */
+function YourStanding({
+  manuscriptId, readingId, observationKey, standings, onStanding, onRefresh,
+}: {
+  manuscriptId: string; readingId: string; observationKey: string;
+  standings: StandingLookup; onStanding: (next: StandingWire) => void; onRefresh: () => void;
+}) {
+  const [sending, setSending] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
+  const view = standingView(standings, observationKey);
+  const expectation = expectationFor(view);
+
+  const take = async (standing: StandingWire['standing']) => {
+    if (!expectation.canAct || sending) return;
+    setSending(true);
+    setRefusal(null);
+    const r = await postStanding(manuscriptId, readingId, {
+      observationKey, standing, expectedCurrentEventId: expectation.expectedCurrentEventId,
+    });
+    setSending(false);
+    if (r.ok) { onStanding(r.standing); return; }
+    /* A conflict is not retried. The writer is told what happened and shown the
+       standing as it now is, and may act again — deliberately. */
+    setRefusal(r.refusal);
+    if (r.refusal === 'stale_expectation' || r.refusal === 'simultaneous_write') onRefresh();
+  };
+
+  return (
+    <div className="mt-4" data-standing-for={observationKey} data-standing-state={view.state}>
+      <p className="text-[10.5px] uppercase tracking-[0.15em] opacity-45 mb-1.5">Your standing</p>
+      <div className="flex flex-wrap items-center gap-2">
+        {(['keep', 'dismiss', 'unresolved'] as const).map((s) => {
+          const chosen = view.state === 'taken' && view.standing === s;
+          return (
+            <button
+              key={s}
+              type="button"
+              aria-pressed={chosen}
+              disabled={!expectation.canAct || sending}
+              onClick={() => take(s)}
+              data-standing-choice={s}
+              className="border px-2.5 py-[3px] rounded-sm text-[12px]"
+              style={{
+                borderColor: chosen ? PRESS.accent : PRESS.rule,
+                opacity: !expectation.canAct ? 0.35 : chosen ? 1 : 0.7,
+                cursor: expectation.canAct && !sending ? 'pointer' : 'default',
+              }}
+            >
+              {STANDING_LABEL[s]}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[12px] opacity-55 mt-1.5" data-standing-sentence>
+        {refusal === 'stale_expectation'
+          ? 'This standing changed elsewhere while you were looking. Nothing was overwritten — here it is as it now stands.'
+          : refusal === 'simultaneous_write'
+            ? 'Another act reached this observation first. Nothing was overwritten.'
+            : refusal
+              ? 'That could not be recorded. Nothing has been changed.'
+              : standingSentence(view)}
+      </p>
+    </div>
   );
 }
 

@@ -1,6 +1,16 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F–H unauthorized; 07F opens only by its own act.**
+> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F opened by its own act (block below); BUILD-07G–H unauthorized.**
+>
+> **BUILD-07F DEVELOPMENTAL DECISIONS — OPEN (founder acts, 2026-09-05 / 2026-09-06).** Census,
+> adjudication and design are canonical and accepted; **implementation authorized 2026-09-06 bound
+> to canonical `d8fc2082d`**, falsification-first. A branch candidate now exists on
+> `claude/writer-author-studios-roadmap-b2tqf5` — **NOT CLOSED, no PR, nothing deployed**. Its
+> evidence: `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (six deficient
+> persistence variants and six deficient write-boundary variants each observed RED on its named
+> guard before the repair was accepted; `12 checks · 0 failures` and `14 checks · 0 failures` on the
+> code as written; D5/D6 module-graph gates falsified over an in-memory overlay). **BUILD-07G and
+> 07H remain unopened.**
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >
