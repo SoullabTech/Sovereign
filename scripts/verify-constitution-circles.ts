@@ -77,7 +77,7 @@ function src(rel: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function groupC() {
-  section('GROUP C · source assertions (B-01, FR-04, FR-05, FR-06, FR-08)');
+  section('GROUP C · source assertions (B-01, FR-04, FR-06, FR-08)');
 
   const circleService = src('lib/circles/circleService.ts');
   const inquiryService = src('lib/circles/inquiryService.ts');
@@ -161,31 +161,6 @@ async function groupC() {
     /response_count/.test(inquiryService)
       ? fail('C6 FR-08.7 response_count is returned to the client', 'inquiryService.listInquiries')
       : pass('C6 FR-08.7 no participation counts returned');
-  }
-
-  // C7 — FR-05: an ordinary member cannot remove another member.
-  {
-    const files = ['lib/circles/membershipService.ts', 'lib/circles/circleService.ts', 'lib/circles/consentService.ts'];
-    const writesRemoved = files.some((f) => {
-      const b = src(f);
-      return !!b && /status\s*=\s*'removed'|'removed'\s*,?\s*updated_at/.test(b);
-    });
-    if (!writesRemoved) {
-      fail('C7 FR-05 removal is unimplemented', "no code path writes status='removed'");
-    } else {
-      const b = src('lib/circles/membershipService.ts') || '';
-      /role\s*!==\s*'facilitator'|ROLE_INSUFFICIENT/.test(b)
-        ? pass('C7 FR-05 removal exists and is role-gated')
-        : fail('C7 FR-05 removal exists but is not role-gated');
-    }
-  }
-
-  // C8 — FR-05: removal must record grounds.
-  {
-    const mig = src('database/migrations/20260213000004_circles_commons.sql') || '';
-    /removed_reason|removal_grounds|removed_by/.test(mig)
-      ? pass('C8 FR-05 removal grounds are recordable')
-      : fail('C8 FR-05 no column records removal grounds or actor');
   }
 
   // C9 — FR-06: discovery reads declared interests only.
@@ -401,7 +376,7 @@ async function groupS() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function groupT(tx: PoolClient) {
-  section('GROUP T · data invariants, rolled-back fixtures (FR-01, FR-05, FR-08)');
+  section('GROUP T · live semantics on rolled-back fixtures (FR-01, FR-05, FR-08)');
 
   const mk = async (name: string) =>
     (
@@ -458,29 +433,138 @@ async function groupT(tx: PoolClient) {
     ? pass('T2 FR-01 source reference intact after revocation')
     : fail('T2 FR-01 revocation mutated the source reference');
 
-  // T3 — FR-05: removal must cascade revocation exactly as leaving does.
-  const art2 = (
+  // ── FR-05 removal contract (CIRCLE-04 R2) ────────────────────────────────
+  //
+  // C7 and C8 moved into this group deliberately. As source-token checks they
+  // could only report that some string existed; here they interrogate the live
+  // schema. T3 then drives the REAL removal path — removeMemberWithClient() on
+  // this rolled-back client — so the assertions test semantics, not spelling.
+
+  // C7 — the append-only removal record exists with the fields FR-05 requires.
+  const removalCols = (
+    await tx.query<{ column_name: string; is_nullable: string }>(
+      `SELECT column_name, is_nullable FROM information_schema.columns
+       WHERE table_name = 'circle_membership_removals'`
+    )
+  ).rows;
+  const colNames = new Set(removalCols.map((r) => r.column_name));
+  const required = ['circle_id', 'removed_member_id', 'removed_by', 'grounds', 'resulting_status', 'created_at'];
+  const missing = required.filter((c) => !colNames.has(c));
+  if (removalCols.length === 0) {
+    fail('C7 FR-05 no removal record table', 'circle_membership_removals does not exist');
+  } else if (missing.length) {
+    fail('C7 FR-05 removal record incomplete', `missing: ${missing.join(', ')}`);
+  } else {
+    pass('C7 FR-05 removal record exists with circle, member, actor, grounds, state, time');
+  }
+
+  // C8 — the record is append-only and grounds cannot be empty.
+  {
+    const groundsNullable = removalCols.find((r) => r.column_name === 'grounds')?.is_nullable;
+    const hasUpdatedAt = colNames.has('updated_at');
+    const checks = (
+      await tx.query<{ conname: string }>(
+        `SELECT conname FROM pg_constraint
+         WHERE conrelid = to_regclass('circle_membership_removals') AND contype = 'c'`
+      )
+    ).rows.map((r) => r.conname);
+    const hasBlankGuard = checks.some((c) => c.includes('grounds_not_blank'));
+    const hasSelfGuard = checks.some((c) => c.includes('not_self'));
+    if (removalCols.length === 0) {
+      fail('C8 FR-05 removal grounds/actor cannot be recorded', 'no removal record table');
+    } else if (groundsNullable !== 'NO' || !hasBlankGuard) {
+      fail('C8 FR-05 grounds are not required', 'an unexplained removal would be recordable');
+    } else if (!hasSelfGuard) {
+      fail('C8 FR-05 self-removal is recordable as a removal', 'missing not_self constraint');
+    } else if (hasUpdatedAt) {
+      fail('C8 FR-05 removal record is not append-only', 'updated_at present');
+    } else {
+      pass('C8 FR-05 removal record is append-only with required, non-blank grounds');
+    }
+  }
+
+  // Fixtures for the semantic family: a facilitator, an ordinary member, a
+  // second ordinary member, and a SECOND Circle to prove scoping.
+  const mC = await mk('c');
+  await tx.query(
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [circle, mC]
+  );
+  const otherCircle = (
     await tx.query<{ id: string }>(
-      `INSERT INTO shared_artifacts (circle_id, shared_by, artifact_type, artifact_ref, content_mode)
-       VALUES ($1, $2, 'note', 'src-2', 'summary_only') RETURNING id`,
-      [circle, mB]
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier other') RETURNING id`,
+      [mC]
     )
   ).rows[0].id;
   await tx.query(
-    `UPDATE circle_memberships SET status = 'removed' WHERE circle_id = $1 AND member_id = $2`,
-    [circle, mB]
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [otherCircle, mB]
   );
-  const orphan = (
-    await tx.query(`SELECT 1 FROM shared_artifacts WHERE id = $1 AND revoked_at IS NULL`, [art2])
-  ).rowCount;
-  orphan === 0
-    ? pass('T3 FR-05 removal cascades revocation')
-    : fail(
-        'T3 FR-05 removal leaves the removed member\'s material in the field',
-        'no trigger or code path cascades on removal'
-      );
+  const shareB = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO shared_artifacts (circle_id, shared_by, artifact_type, artifact_ref, content_mode)
+       VALUES ($1, $2, 'note', 'src-removal', 'summary_only') RETURNING id`,
+      [circle, mB]
+    )
+  ).rows[0].id;
 
-  // T4 — FR-05: removal cuts access.
+  const { removeMemberWithClient } = await import('../lib/circles/removalService');
+  const attempt = async (input: Parameters<typeof removeMemberWithClient>[1]) => {
+    try {
+      await removeMemberWithClient(tx as any, input);
+      return null;
+    } catch (e: any) {
+      return e?.message ?? 'UNKNOWN';
+    }
+  };
+
+  // T3a — an ordinary member cannot remove another member.
+  const asOrdinary = await attempt({
+    circleId: circle, actingMemberId: mC, targetMemberId: mB, grounds: 'probe',
+  });
+  asOrdinary === 'ROLE_INSUFFICIENT'
+    ? pass('T3a FR-05 an ordinary member cannot remove another member')
+    : fail('T3a FR-05 ordinary-member removal was not refused', String(asOrdinary));
+
+  // T3b — a facilitator cannot remove themselves; that is leaving.
+  const asSelf = await attempt({
+    circleId: circle, actingMemberId: mA, targetMemberId: mA, grounds: 'probe',
+  });
+  asSelf === 'SELF_REMOVAL'
+    ? pass('T3b FR-05 self-removal is refused; leaving is a different act')
+    : fail('T3b FR-05 self-removal was not refused', String(asSelf));
+
+  // T3c — grounds are required. An unexplained removal is the interpretive
+  //       judgment FR-05 forbids.
+  const noGrounds = await attempt({
+    circleId: circle, actingMemberId: mA, targetMemberId: mB, grounds: '   ',
+  });
+  noGrounds === 'GROUNDS_REQUIRED'
+    ? pass('T3c FR-05 removal without grounds is refused')
+    : fail('T3c FR-05 groundless removal was not refused', String(noGrounds));
+
+  // T3d — an authorized facilitator can enact removal.
+  let record: any = null;
+  try {
+    record = await removeMemberWithClient(tx as any, {
+      circleId: circle,
+      actingMemberId: mA,
+      targetMemberId: mB,
+      grounds: 'explicit boundary breach, verifier fixture',
+    });
+    pass('T3d FR-05 an authorized facilitator can enact removal');
+  } catch (e: any) {
+    fail('T3d FR-05 facilitator removal failed', e?.message);
+  }
+
+  // T3e — the act records WHO and WHY.
+  record && record.removed_by === mA && record.grounds.includes('boundary breach')
+    ? pass('T3e FR-05 removal records the acting facilitator and the grounds')
+    : fail('T3e FR-05 removal did not record actor and grounds');
+
+  // T3f — removal cuts access.
   const stillActive = (
     await tx.query(
       `SELECT 1 FROM circle_memberships WHERE circle_id = $1 AND member_id = $2 AND status = 'active'`,
@@ -488,8 +572,39 @@ async function groupT(tx: PoolClient) {
     )
   ).rowCount;
   stillActive === 0
-    ? pass('T4 FR-05 removal cuts active membership')
-    : fail('T4 FR-05 removal did not cut membership');
+    ? pass('T3f FR-05 removal cuts active membership')
+    : fail('T3f FR-05 removal did not cut membership');
+
+  // T3g — removal revokes the removed member's shares, exactly as leaving does.
+  const liveShare = (
+    await tx.query(`SELECT 1 FROM shared_artifacts WHERE id = $1 AND revoked_at IS NULL`, [shareB])
+  ).rowCount;
+  liveShare === 0
+    ? pass('T3g FR-05 removal revokes the removed member\'s Circle shares')
+    : fail('T3g FR-05 removed member\'s material is still in the field');
+
+  // T3h — the source is untouched. Only the Circle-side representation is revoked.
+  const srcRef = (
+    await tx.query<{ artifact_ref: string }>(
+      `SELECT artifact_ref FROM shared_artifacts WHERE id = $1`,
+      [shareB]
+    )
+  ).rows[0];
+  srcRef?.artifact_ref === 'src-removal'
+    ? pass('T3h FR-05 removal leaves the original source material untouched')
+    : fail('T3h FR-05 removal mutated the source reference');
+
+  // T3i — removal is scoped to one field. Other Circles are not affected.
+  const elsewhere = (
+    await tx.query(
+      `SELECT 1 FROM circle_memberships
+       WHERE circle_id = $1 AND member_id = $2 AND status = 'active'`,
+      [otherCircle, mB]
+    )
+  ).rowCount;
+  elsewhere === 1
+    ? pass('T3i FR-05 removal does not affect memberships in any other Circle')
+    : fail('T3i FR-05 removal leaked across Circles');
 
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (
