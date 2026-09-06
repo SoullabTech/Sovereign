@@ -5,10 +5,14 @@ LANE        WS2-08-HIERARCHICAL-MANUSCRIPT-STRUCTURE-01
 OPENED BY   founder message, 2026-09-06 (verbatim requirement carried in §1)
 POSITION    after #1228 (merge / deploy / Keep a version / partition witness /
             ceiling_exceeded witness) — #1228 is NOT touched by this lane
-STATUS      BUILD-08A ACCEPTED AS CANDIDATE CUT (founder, 2026-09-06) on branch
-            claude/manuscript-chapter-segmentation-jlwnlj — FROZEN for its isolated
-            PR / gates / merge / migration / production-witness cycle. NOT CLOSED.
-            08B code HOLD · 08C code HOLD · 08D, 08E unbuilt.
+STATUS      BUILD-08A CLOSED / ACCEPTED (founder act, 2026-09-06).
+            Acceptance basis F1 · F2 · F3 · SC-1 PASS, all class R.
+            F6b remains FAIL · R5 permanently; SC-1 is a narrower successor
+            claim (migration nonmutation of the 810 baseline rows), does not
+            repair F6b, and is not outcome-blind.
+            Closure authorizes nothing downstream.
+            08B HOLD · UNOPENED · 08C code HOLD · 08D, 08E unauthorized.
+            record: WS2-08-BUILD-08A_HEADING_DEPTH_CLOSURE_2026-09-06.md §1
 FOLLOWS     WS2-05A structure tree · WS2-06A AuthorStructureCommand ·
             WS2-07 BUILD-07A frozen readState (structureContext inline)
 PRECEDES    LONG-WORK SCOPED DEVELOPMENTAL READING (scope planner respects
@@ -524,6 +528,16 @@ and the real script's own header repeats the wrong name — a documentation defe
 separate task card, not this lane's. `pre-deploy-gate.sh` and the deploy smoke call the real
 file.
 
+> **POST-FAILURE CORRECTION — current authority.** The section below preserves the earlier
+> 13:46 F6b interpretation as historical evidence; it is **not** the current F6b verdict.
+> After the later R5 failure was adjudicated, `F6b = FAIL · R5` was fixed as a permanent
+> historical result. SC-1 is a separately frozen, narrower successor criterion proving only
+> migration nonmutation of the 810 baseline rows; it does not repair, supersede or reclassify
+> F6b, and it is not outcome-blind. See
+> `WS2-08A_POST_FAILURE_ADJUDICATION_2026-09-06.md` and the BUILD-08A closure record.
+
+**Historical earlier ruling — overtaken:**
+
 **Step 2 — F6b PASS, run of record `f6b-20260906T134621Z`.** Three F6b runs exist; the sealed
 instrument's verdicts are kept exactly as each run printed them, never relabelled:
 
@@ -572,7 +586,7 @@ at 14:38 via `r6-exact-filename-*.txt`).
 DEPLOY / MIGRATION     ESTABLISHED
 runtime 50302f5d       ADMISSIBLE · health PASS · Co-Lab PASS 33/0/0
 F6a                    PASS
-F6b                    PASS · sealed 13:46 artifact · later reruns FAIL retained as contamination
+F6b                    HISTORICAL 13:46 PASS INTERPRETATION · OVERTAKEN; current verdict FAIL · R5 permanent
 exact ledger           PASS
 F1 · F2 · F3           still need an ACCEPTED production result
 08A                    OPEN
@@ -625,14 +639,16 @@ f6b-20260906T141001Z   FAIL · R5 (cleanup)        manifest.sha256 49d159dfafd50
 f6b-20260906T143816Z   FAIL · R5 (cleanup)        manifest in directory (14:38 listing above)
 ```
 
-**Closure ruling (founder, 2026-09-06):**
+**Historical closure basis recorded before the post-failure adjudication — overtaken in its
+F6b interpretation. BUILD-08A closure itself remains in force under the later founder act and
+the F1 · F2 · F3 · SC-1 basis recorded at the top of this lane.**
 
 ```text
 migration       PASS        F1              PASS · real DOCX production path
 provenance      PASS        F2              PASS
 health          PASS        F3              PASS
 Co-Lab          PASS 33/0/0 F6a             PASS
-                            F6b             PASS · sealed 13:46 run of record
+                            F6b             HISTORICAL 13:46 PASS INTERPRETATION · OVERTAKEN
                             exact ledger    PASS
 
 BUILD-08A       CLOSED / ACCEPTED
