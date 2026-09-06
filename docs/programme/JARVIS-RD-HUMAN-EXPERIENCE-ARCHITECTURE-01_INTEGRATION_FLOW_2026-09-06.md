@@ -72,6 +72,8 @@ Constraint that shapes every design: **Anti-Features forbids A/B testing on emot
 | E6 | Elemental H2 relational validity — shadow | conversation | H2 · P11 | parallel Elemental readings emitted as `[MAIA/elemental-shadow]` with zero response diff; later Baseline vs Elemental with blind raters on Field Lab testers |
 | E7 | Present overrides history | memory | R7b · P8 | Temporal Memory direction's detect → ask → record; Episodic Phase 2 spec step |
 | E8 | Practice-with-feedback transfer | Practice Fields / Now What? | R8 §6.4 · capacity transfer | witness at return-after-absence: "what can you now do that you couldn't as readily" |
+| E9 *(added after R12 ruling)* | Memory participation varied (none · verbatim · derived · derived-with-corrections) on the same relational task | memory, offline model-side first | P8 sub-rules · AP15 · AP16 · U29–U31 | outcomes: excessive agreement · repetition of the member's framing · useful difference · unwarranted certainty · persuasive effectiveness · perceived autonomy; consented dyad only after model-side |
+| E10 *(added after R12 ruling; U7)* | Centrifugal vs neutral design | product-level | P7 · "Relationship beyond the AI" | the largest design; last; no engagement metric as outcome |
 
 Each: hypothesis in the Stage 10 form → prototype → witness (charter Stage 12 questions) → measure (paired) → one Stage 14 outcome (ADOPT / REFINE / PARK / REJECT / PROHIBIT).
 

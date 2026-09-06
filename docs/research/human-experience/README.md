@@ -21,22 +21,22 @@ EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETAT
 |---|---|---|
 | Evidence | `evidence/SOURCE_LEDGER.md` (25 sources, tiered, classed, verification status) · `evidence/TEMPLATE.md` | ledger built; verification in progress |
 | Contested questions | `CONTESTED_QUESTIONS.md` | built from synthesis §"What remains genuinely unknown" + founder's assumptions-to-challenge list |
-| Supported phenomena | `SYNTHESIS_v0.1_R1-R7_2026-09-06.md` §R1–R7 "Evidence" + closing confidence table | founder synthesis v0.1 |
-| Soullab interpretation | synthesis §R1–R7 "Interpretation" / "Soullab hypothesis" · `frameworks/` | founder synthesis v0.1 |
-| Design principles | `principles/PROVISIONAL_PRINCIPLES_v0.1.md` | 10 CANDIDATE — none ratified |
-| Ethical boundaries | `anti-patterns/ANTI_PATTERNS_v0.1.md` | 12 rows, PROHIBIT / REJECT |
+| Supported phenomena | `SYNTHESIS_v0.2_2026-09-06.md` §1 (rewrite of v0.1 in light of R8–R12) · v0.1 retained as history | **v0.2 DRAFT authored 2026-09-06 — awaiting founder review**; v0.1 provisional authority until v0.2 is ratified |
+| Soullab interpretation | v0.2 §2 · `frameworks/` (encounter · elemental · **memory/AUTHORITY_X_TIME**) | v0.2 DRAFT |
+| Design principles | `principles/PROVISIONAL_PRINCIPLES_v0.1.md` · v0.2 §3 | P1–P13 CANDIDATE (P3 split, P4 fails → P4′ external-witness, P7 refined, P8 refined) — none ratified |
+| Ethical boundaries | `anti-patterns/ANTI_PATTERNS_v0.1.md` · v0.2 §4 | AP1–AP17 (AP13–AP15 founder-ruled; AP16–AP17 derived from the R12 ruling) |
 | Testable hypotheses | `experiments/` | empty — none authorized |
 | MAIA experiments | `experiments/<surface>/` | empty — none authorized |
 
 Measurement vocabulary: `measurements/MEASUREMENT_VOCABULARY_v0.1.md`. Board: `BOARD.md`.
 Claim ladder (the second threshold, internal hypothesis → public Soullab claim): `CLAIM_LADDER.md`.
-Inquiry findings: `inquiries/R<n>_*.md` — R8 ADJUDICATED 2026-09-06 (founder rulings in §8). R9 ADJUDICATED same day (founder rulings in §8). R10 ADJUDICATED same day. R11 ADJUDICATED same day at the level of direction. R12 run same day (proposed adjudication, awaiting ruling) — the foundational challenge pass R8–R12 is fully run.
+Inquiry findings: `inquiries/R<n>_*.md` — R8 · R9 · R10 · R11 · R12 all ADJUDICATED 2026-09-06 (founder rulings in each record's §8). **The foundational challenge pass R8–R12 is CLOSED / COMPLETE (founder act).** R7 / R7a / R7b adjudicated via R12. Closed means the pass did its job; it does not mean sources are verified, claims established, unknowns resolved or the architecture ratified — the verification backlog still constrains public empirical claims.
 Encounter and projection (Class D interpretive foundation): `frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md`.
 Foundational statement: `WHY_SOUL_LAB_2026-09-06.md` (founder; candidate canon; governing frame for /accounted-for and Soullab writing).
 Elemental Parallel Processing hypothesis (founder ruling, charter §11): `frameworks/elemental-experience/ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` — the authoritative Elemental record; the two earlier Elemental files are history.
 Ledgers: `evidence/SOURCE_LEDGER.md` (v0.1) · `SOURCE_LEDGER_R8.md` · `SOURCE_LEDGER_R9.md` · `SOURCE_LEDGER_R10.md` · `SOURCE_LEDGER_R11.md` · `SOURCE_LEDGER_R12.md` · `SOURCE_LEDGER_ELEMENTAL.md`.
 
-**Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation.
+**Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation. **After R12:** Synthesis v0.2 OPEN / AUTHORIZED — its job is to rewrite v0.1 in light of what survived being attacked, in six separated layers (supported phenomena → Soullab interpretation → candidate principles → prohibitions → open questions → experimental hypotheses), with a change record and external-witness markers. Claim reconciliation and the final `/accounted-for` render are HELD until v0.2. Memory decomposition: `frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`.
 
 ## Inquiry numbering — read this before citing an R-number
 

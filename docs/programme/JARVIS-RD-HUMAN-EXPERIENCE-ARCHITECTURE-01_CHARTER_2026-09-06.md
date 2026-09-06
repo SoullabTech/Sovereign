@@ -833,3 +833,73 @@ practiced task is never evidence of a gain in life; no public transfer claim bef
 named transfer distance, active comparison, expectancy measured, response shift modeled, and the
 construct split by observability. U29–U33. Seven decisions in R12 §6.9, the last of which is to
 **close the foundational challenge pass and open Synthesis v0.2 as a founder act.**
+
+---
+
+## 22 · R12 adjudicated · foundational challenge pass CLOSED · Synthesis v0.2 OPEN (founder rulings, 2026-09-06)
+
+**Founder act.** R12 is ADJUDICATED at the level of programme direction (seven rulings, recorded
+in `docs/research/human-experience/inquiries/R12_MEMORY_IDENTITY_TRANSFER_2026-09-06.md` §8).
+The foundational adversarial pass **R8–R12 is CLOSED / COMPLETE**. **Synthesis v0.2 is AUTHORIZED
+TO OPEN.** No ruling authorizes MAIA runtime changes, production changes, memory-schema changes,
+experiments with members, or deployment.
+
+**The seven rulings, in one line each.**
+
+1. **P8 accepted, refined** — memory serves the person's present life and *self-authored* becoming; a historical model may inform, never govern; recurrence does not create identity; the open future is a design requirement; selective ≠ forgetful.
+2. **Four-type typology withdrawn** as a supported decomposition (cite only as attributed to [22]); **Authority × Time** adopted as the working decomposition, verbatim beneath derived — `docs/research/human-experience/frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`.
+3. **R7b accepted, precise** — member statement overrides as present self-report, does not rewrite history; MAIA impression asks: detect → ask → record, never infer → overwrite.
+4. **Five memory design directions accepted as spec inputs** to Episodic Phase 2 and the memory review: preserve qualification · change-sensitive retrieval outranks similarity under temporal conflict (refined — similarity kept) · implicit contradiction detected as a question · self-record authorship protected (derived stays visibly derived) · memory is never leverage.
+5. **Brain-training rule ratified as programme doctrine** — *a gain on the practiced task is never, by itself, evidence of a gain in life*; Capacity Transfer = measurement programme (what capacity · from what · to what (near/far/life) · how observable); Self and World capacity stay separate; engagement is diagnostic, not success.
+6. **Source [22] correction accepted** — restored as conceptual, vendor-authored, unvalidated, risk-gated; the stronger claim is not restored; no public copy says the source is missing or uses it as validation.
+7. **R8–R12 CLOSED / COMPLETE** — the pass did its job; it does not mean sources verified, claims established, unknowns resolved, architecture ratified, hypotheses true. The verification backlog stays open and constrains public empirical claims.
+
+**Synthesis v0.2 — mandate (founder).** Not a concatenation of R8–R12. A rewrite of v0.1 in light
+of what survived being attacked, separating six layers — **supported human phenomena → Soullab
+interpretation → candidate design principles → prohibitions → open questions → experimental
+hypotheses** — with an explicit change record from v0.1 (understanding · relationship · presence ·
+personhood · repair · influence · memory · capacity · Elemental Consciousness · Self/Relationship/
+World) and the **external-witness requirement** carried from R11: any principle whose central
+claim concerns the legitimacy of Soullab's own influence cannot graduate to canon through internal
+reasoning alone; v0.2 marks where external scholarly review, member-side adversarial witness,
+independent ethics critique, or empirical testing would be required (P4′ above all).
+
+**Draft authored this session:** `docs/research/human-experience/SYNTHESIS_v0.2_2026-09-06.md` —
+status DRAFT, awaiting founder review. Until ratified, v0.1 remains provisional authority and v0.2
+is a candidate.
+
+**Programme state after R12 (founder).**
+
+```text
+FOUNDATIONAL RESEARCH R1–R7      COMPLETE v0.1
+CRITICAL CHALLENGE R8–R12        CLOSED / COMPLETE
+
+SYNTHESIS v0.2                   OPEN / AUTHORIZED  (draft authored, awaiting review)
+
+CLAIM RECONCILIATION             HELD until v0.2
+FINAL /accounted-for RENDER      HELD
+PR #1239                         DRAFT
+MERGE                            NOT AUTHORIZED
+DEPLOY                           NOT AUTHORIZED
+
+MAIA RUNTIME                     UNCHANGED
+MEMORY RUNTIME                   UNCHANGED
+MEMBER RESEARCH                  NOT AUTHORIZED
+COLLECTIVE LAB                   NOT BUILT
+```
+
+**Governing sentences (founder, preserved).** Memory: *Memory should allow a relationship to have a
+history without requiring a person to remain who they were when that history was made.*
+Developmental: *The measure is not what MAIA becomes capable of doing for the person. The deeper
+measure is what the person becomes capable of perceiving, choosing, relating to and participating
+in beyond MAIA.*
+
+**Method note preserved (founder).** Locating the missing source did not vindicate the old claim;
+it showed the synthesis had generalized beyond what the source proposed. *When better evidence
+arrives, the architecture changes rather than recruiting the evidence to defend itself.*
+
+**Register updates this section:** R12 §8 · `frameworks/memory/AUTHORITY_X_TIME` (new) ·
+principles addendum P8-refined + doctrine row · AP16 Memory as Leverage, AP17 Recurrence as
+Identity (derived from ruling text, not founder-named — flagged) · measurement vocabulary Success
+row → programme · CONTESTED L1 resolved, U29–U33 open · v0.1 ledger row 22 ruling note · BOARD
+(R7/R7a/R7b/R12 ADJUDICATED; Synthesis v0.2 row) · README · session anchor bullet.

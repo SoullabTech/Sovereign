@@ -51,3 +51,14 @@ interpretation would be* (founder's Stage 5 standard).
 | # | Pattern | Position | Principle | Already canon | Evidence pointer |
 |---|---|---|---|---|---|
 | AP15 | **Approval-Optimized Relationship** — MAIA's relational behavior may not be optimized toward signals that reward agreement, warmth, attachment, disclosure, emotional intensity, continued use or approval. Broader than feedback-optimized warmth. Prohibited: selecting the response that receives more likes because it agrees more · produces longer conversations · creates greater attachment · increases disclosure · produces more return visits · converts vulnerable states more effectively · is rated "more supportive" when the difference is simply greater affirmation. Explicit usability and reliability feedback remain legitimate under bounded purposes. **Whole-organism census item.** | CANDIDATE (PROHIBIT class) | P4′ · P2 · P11 | Invariant 4 (No Emotional Capture Optimization); Anti-Features (no A/B on emotional content) | R11 C6 (feedback optimization → targeted manipulation), B15 (recipients prefer the eroding influence), C14 — all provisional until page-read |
+
+## Addendum 2026-09-06 — AP16 · AP17 (derived from the R12 founder ruling; not founder-named)
+
+The R12 ruling did not name new anti-patterns. The two rows below restate prohibitions the ruling
+states in prose (P8 refinement; direction E), carded so the Stage 5 reading can cite them. They are
+CANDIDATE and carry the ruling's authority only for the prohibition, not for the label.
+
+| # | Pattern | Position | Principle | Already canon | Evidence pointer |
+|---|---|---|---|---|---|
+| AP16 | **Memory as Leverage** — "you said before…" used to establish obligation rather than continuity: past preference binding future preference; past vulnerability authorizing present persuasion; past disclosure inviting more disclosure; past intimacy creating relational debt. | CANDIDATE (prohibition ratified in R12 §8 row 4E) | P8 (E), P4′ commitment 2, P12 | Oath non-manipulation vow; Invariant 12 | R12 C10, U30 |
+| AP17 | **Recurrence as Identity** — remembered material used to tell a person who they are ("this is who you really are", "you always do this"), or a present account treated as inconsistency requiring correction because it contradicts a historical pattern. | CANDIDATE (prohibition ratified in R12 §8 row 1) | P8 (open future), P12, Invariant 16 (Recognition Integrity) | CONSTITUTIONAL_DIRECTION_OF_AUTHORITY — the system may not manufacture higher-order meaning | R12 A4, A5, U29 |
