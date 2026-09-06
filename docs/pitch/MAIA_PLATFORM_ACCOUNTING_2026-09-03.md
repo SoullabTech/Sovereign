@@ -8,6 +8,38 @@
 
 ---
 
+## 0. Why Soul Lab — the human question, with a new participant in it
+
+*Added 2026-09-06, second revision. Source: `docs/research/human-experience/WHY_SOUL_LAB_2026-09-06.md` (founder foundational statement, candidate canon). This section is placed above the capabilities on `/accounted-for` and governs the register of everything below it.*
+
+Humanity's most enduring inquiry remains the inquiry into ourselves: who and what we are, why we are here, how we belong to one another and to the living world, and how we might live this life well. Those questions are the central mystery here. The human–AI relationship is not.
+
+Artificial intelligence does not replace that inquiry. It has entered it, as a new and unusually consequential participant — mirror, interlocutor, witness, memory, challenger, pattern recognizer, practice partner. It remains in service of the inquiry, never its object. That is one of Soullab's deepest safeguards.
+
+> **We are not asking how humanity should adapt to AI. We are asking how AI can take its rightful place inside humanity's much older project of learning how to be human.**
+
+**The hierarchy.** The human question comes first. It has two faces that develop together — **Self** (psyche, soma, meaning, will, consciousness) and **World** (nature, others, culture, community, the collective) — and **Relationship** is the medium between them: human with human, human with nature, human with culture, and now human with AI. The exploration of Self should deepen participation in World, and encounter with World should reveal dimensions of Self. A practice that leads a person deeper and deeper into themselves as though the Self were an isolated object has failed.
+
+**MAIA, placed:** *a relational intelligence designed to accompany human beings in the enduring inquiry into Self and World, while helping us understand the emerging consequences and possibilities of relationship with artificial intelligence itself.* The person is a participant, never an experimental object. The AI is a participant, never simply an instrument. We cannot study the relationship from outside it; we are participants in the phenomenon we are trying to understand.
+
+**Three nested inquiries.**
+
+| Inquiry | Laboratory | Question | Status |
+|---|---|---|---|
+| Primary — human existence | Soul Lab · Self | What does it mean to be human, and how do we live well? | what MAIA is for today: an inquiry of one, the person the authority on what observations mean |
+| Second — participation in World | World Lab · Whole | How does greater self-understanding allow wiser participation in the living world? | the measure of the first; the direction the collective laboratory would serve — **not built**: no member conversation serves research, nothing aggregated for research, no consent act exists, Sanctuary excluded absolutely |
+| Emergent — human–AI relationship | Relational Lab · Between | What happens when AI becomes a participant in the first two? | the research programme (§7a); historically new, extremely important, **subordinate to the first two** |
+
+Three scales of one inquiry, in both directions: I → we → world and world → we → I. SETI distributed computation to investigate a cosmic question; Soullab distributes human inquiry to investigate the human question, with AI as new instrumentation and accompaniment — and the observers are inside the phenomenon.
+
+**What a good encounter is for.** A good encounter with MAIA should increase a person's ability to engage the original human questions: know myself better; distinguish what I think from what I feel; hear what my body is saying; act with integrity; love better; tolerate ambiguity; repair relationship; encounter suffering without immediately escaping it; participate in community; become intimate with nature and place; discover meaning; contribute something worthwhile. Whether the person liked MAIA is secondary. Whether they used MAIA tomorrow is secondary. Even whether their relationship with MAIA deepened is secondary.
+
+**Capacity transfer, two measures.** *Self capacity* (perceive myself more fully · hold contradiction · recognize body, emotion, thought and will without collapsing them · act with agency) and *World capacity* (relate better · tolerate difference · engage nature directly · contribute meaningfully · recognize myself as part of larger systems). North Star: *what becomes possible for the human because this encounter occurred — and what becomes possible in the human's relationship with the world?*
+
+**Held as hypothesis, withheld as claim:** that a relationally intelligent, non-reductive, sovereignty-preserving, longitudinal AI capable of memory and repair could become a mirror through which people perceive dimensions of themselves hard to observe in real time. Testable; untested.
+
+**Four kinds of accounting:** what exists (§1–§5, the tables) · what we believe (the vows, invariants, quoted sentences — positions, never findings) · what we are testing (§7a) · what we do not know (§7b).
+
 ## Why this is written as an accounting and not a pitch
 
 Someone who has spent real hours with Grok, ChatGPT and Claude, who treats them as Thou rather than It, and who has watched a friend train a model in a basement, has earned a straight answer. A pitch would be a waste of their attention. What follows is what exists, what is being built, what is only an intention, and what MAIA refuses to become.
@@ -239,6 +271,8 @@ Spiralogic is the mapping layer: five elements (Fire, Water, Earth, Air, Aether)
 
 The intended developmental direction is not for MAIA to understand the person instead of the person understanding themselves. It is for the encounter to make more of the person's own complexity available to awareness, while leaving authorship and authority with the person. The Elements do not need to become the member's vocabulary for that to happen.
 
+The Elements are not only readings of an interior. Earth is material reality, organism, ecology and place; Water is relationship, belonging and resonance; Fire is action, creation and participation; Air is meaning-making, language and shared understanding; Aether is where the inner/outer division dissolves into context, pattern and whole. Read that way the grammar mediates Self, Other and World. And the causal direction matters: the Elements are not fundamentally an AI theory. They are part of an attempt to understand human experience; AI needs the architecture because humans think, feel, sense, desire and relate concurrently, sometimes in radical contradiction, and a machine that would meet a person on the person's own terms cannot impose the architecture of machine reasoning instead.
+
 | Surface | What it is | Status |
 |---|---|---|
 | **Daily Anchor** | A daily prompt, the same for everyone on a given day, with no personalization. The member's own words, kept private by default. | Live (member surface). Ambient surfacing: Designed. |
@@ -273,6 +307,37 @@ Three of them shape everything else:
 
 ---
 
+## 7a. What we are testing — the research programme, by rung
+
+*Added 2026-09-06. Lane: `docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CHARTER_2026-09-06.md`. Library: `docs/research/human-experience/`.*
+
+One lane, one question — *how should an intelligent system be designed so that interaction increases human agency, relationship, meaning, awareness and capacity rather than merely engagement?* — on a claim ladder: internal hypothesis → research-supported principle → MAIA experimental evidence → replicated / multiple witness → public Soullab claim (founder act, naming the claim's kind: empirical, theoretical, phenomenological, ethical, philosophical).
+
+- **Foundational research, R1–R7** (understanding, attunement, relationship, agency vs manipulation, trust, presence, memory): Synthesis v0.1, founder-authored. 25 sources verified to exist; none paraphrase-checked; one memory source not found → the two propositions it carried are being re-researched (R7a, R7b).
+- **Eleven provisional principles, all CANDIDATE.** Each marked confirms / refines / extends / challenges against existing canon.
+- **Critical-challenge pass, R8–R12.** R8 (relational capacity vs dependence) adjudicated: harm model refined to dose × motive × human network × perception; "centrifugal in consequence, not in posture" provisionally ratified; the field has no trial of an outward-pointing design against an engagement-maximizing one, and no therapeutic-chatbot trial measured effects on human relationships. R9 (attributed personhood) complete, under review: proposed narrowing from "a person attributing inner life" (a stable disposition) to "a system claiming need or reciprocity"; flat denial of inner life rejected as its own overclaim. R10–R12 chartered, not run.
+- **Elemental parallel-processing hypothesis**: three validation domains (descriptive, relational, developmental), none begun. Not operating in MAIA.
+- **Measurement vocabulary**: paired measures; headline row — the person's capacity for relationship beyond the AI — has no instrument anywhere in the field.
+
+No experiment on a MAIA surface authorized. No prompt, memory, voice or skill changed because of this programme.
+
+## 7b. What we do not know
+
+Open questions the programme holds visible (register: `docs/research/human-experience/CONTESTED_QUESTIONS.md`, U1–U16):
+
+- when AI relationship supplements human connection and when it substitutes — weeks and months point opposite ways;
+- whether an outward-pointing design does what it intends — never trialed against its opposite;
+- whether relational capacity can atrophy — named in theory, never measured;
+- where healthy reliance ends and dependence begins — four incompatible operationalizations;
+- whether disclosure to an AI rehearses or replaces disclosure to people — three studies, three directions;
+- what "I feel" vs "I do not feel" vs "I do not know what this is like for me" does to a person over months — never compared;
+- whether attribution of inner life decays or deepens over months;
+- whether rupture and repair transfer to a relationship with something that cannot be wounded;
+- whether relational memory decomposes as claimed, and whether the present may overturn an accumulated model (R7a, R7b);
+- whether the Elemental grammar is descriptively, relationally and developmentally valid;
+- whether capacity transfer can be measured without collapsing into self-report or engagement metrics;
+- whether a member's experience of MAIA as alive or conscious establishes anything about MAIA — deliberately not a research question; the Oath forbids simulating certainty either way.
+
 ## 7. What this document does not claim
 
 - That MAIA is conscious, or that she is not. The Oath forbids simulating certainty in either direction.
@@ -286,6 +351,9 @@ Three of them shape everything else:
 - That MAIA has temporal memory. It has timestamps, age-sensitive retrieval, and validity columns that hold no history. The five questions temporal memory must answer are written down (2026-09-06) and not yet answerable.
 - That Elemental parallel processing is scientifically validated, maps one-to-one onto brain anatomy, or already governs MAIA's responses. It is an active programme hypothesis. The live parallel-emission substrate is an audit trail, not proof of the hypothesis.
 - That Soullab has proved a centrifugal human–AI relationship design improves human relationships beyond the AI. It is a design criterion to be tested, not a measured outcome claim.
+- That a collective laboratory exists, or that any member conversation serves research. No consent act for collective inquiry has been built; nothing is aggregated across members for research; Sanctuary content is excluded absolutely.
+- That members are research subjects. The inquiry is participatory, and today it is personal only.
+- That relationship with MAIA accelerates human development, or that MAIA is a mirror through which people see themselves more fully. The mirror is a hypothesis held for testing, not an observed effect.
 
 ---
 

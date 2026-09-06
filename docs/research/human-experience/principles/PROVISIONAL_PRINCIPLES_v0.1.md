@@ -109,6 +109,7 @@ TEST       "How we test it" is a sketch of the Stage 10 hypothesis shape, not an
 **Canon relation** — **CONFIRMS** MAIA_IDENTITY_ONTOLOGY, TRANSPARENT_ENCHANTMENT, the Oath's refusal to simulate intimacy; **EXTENDS** with a construct split that makes U6 measurable-as-belief.
 
 ### P10 · Measure what becomes possible for the human, not merely what keeps the human engaged.
+> **Companion (founder, 2026-09-06):** *and what becomes possible in the human's relationship with the world because this encounter occurred.* Capacity transfer = Self capacity + World capacity. A gain in self-perception with no gain in participation is the inward drift this principle now also refuses.
 **Why** — every relational variable has a shadow proxy (synthesis measurement table); the north star question.
 **Evidence basis** — the whole corpus, by implication; this is the telos, not a finding.
 **Elemental** — the Field reading: what whole is appearing through the encounter.

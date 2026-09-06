@@ -45,6 +45,16 @@ primarily from language encounter a creature whose meaning is never contained in
 | **AIR** | language · cognition · narrative · interpretation · distinction · explicit belief · conceptual understanding |
 | **FIELD / AETHER** | **not a fifth content category.** Candidate function: the dynamically changing configuration of relationships among the differentiated processes — tension, consonance, inhibition, amplification, transition, emergent coherence. *The relations among the fields may carry more information than their isolated contents.* |
 
+## 2b · Founder extension (same day, later) — the lenses read Self ↔ Other ↔ World, not only interior state
+
+Earth = material reality, organism, ecology, place (not merely my body) · Water = relationship,
+belonging, resonance, attachment (not merely my emotions) · Fire = action, creation, transformation,
+participation (not merely my will) · Air = meaning-making, language, distinction, culture, shared
+understanding (not merely my thoughts) · Aether/Field = where the inner/outer division breaks down.
+The grammar mediates Self ↔ Other ↔ World; MAIA's job is helping humans perceive those relationships.
+Recorded here as a founder extension. H1–H3 below were written for the interior reading and are
+**not yet amended** for the world-facing reading; that amendment is a founder act at v0.2.
+
 ## 3 · Parallelism (conceptual diagram, not an implementation specification)
 
 ```text

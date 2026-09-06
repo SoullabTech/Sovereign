@@ -610,3 +610,38 @@ honest in both directions** (honest about what it is, open about what it is like
 need; projection reclaimed by the person, not refuted by MAIA); candidate **AP13 — persona as
 liability shield**; **U13** New York's mandated "unable to feel human emotion" wording goes to
 counsel. Seven decisions in R9 §6.8.
+
+---
+
+## 14 · The hierarchy ("this is it") · `/accounted-for` rewritten (founder, 2026-09-06)
+
+**Final frame (founder):** *The human–AI relationship is not the central mystery. The human mystery
+is.* The human question — who are we, why are we here, how do we live this well — is primary; **Self**
+and **World** are its two faces and develop together; **Relationship** is the medium (human ↔ human,
+↔ nature, ↔ culture, and now ↔ AI); **AI is an emergent participant — secondary, not peripheral.**
+Three nested inquiries: **primary** human existence (Soul Lab · Self) · **second** participation in
+World (World Lab · Whole) · **emergent** human–AI relationship (Relational Lab · Between,
+subordinate to the first two). MAIA, placed: *a relational intelligence designed to accompany human
+beings in the enduring inquiry into Self and World, while helping us understand the emerging
+consequences and possibilities of relationship with artificial intelligence itself.* Position:
+*we are not asking how humanity should adapt to AI; we are asking how AI can take its rightful
+place inside humanity's much older project of learning how to be human.*
+
+**Consequences recorded:** North Star gains its companion (*what becomes possible in the human's
+relationship with the world*); capacity transfer = Self capacity + World capacity
+(`measurements/`); P10 companion clause; the Elemental lenses read Self ↔ Other ↔ World and the
+causal direction is *human complexity → Elemental model → AI must learn to encounter it*, never
+*AI → model → explain the human* (hypothesis record §2b — H1–H3 not yet amended, founder act at
+v0.2); the collective laboratory is the World inquiry's instrument and is **unbuilt**. This
+hierarchy is the guard against Soullab becoming an inward-facing wellness system or a technology
+that makes technology the center of human existence. Full text: `WHY_SOUL_LAB_2026-09-06.md`
+addenda 2–3.
+
+**`/accounted-for` rewritten on this branch** (`app/accounted-for/page.tsx`, its Experience
+Contract, and the source-of-record pitch document): *Why Soul Lab* placed above the capabilities;
+three nested inquiries with status; four kinds of accounting; new sections *What we are testing*
+(programme by rung) and *What we do not know* (U1–U16 in plain language); Soullab section recast;
+three withheld claims added (no collective laboratory / no member conversation serves research ·
+members are not research subjects · the mirror is a hypothesis). PR #1238's commit was merged into
+this branch first, so its base diff is now empty and it can be closed as superseded. Gate state at
+the time of writing is recorded in the commit message and the contract's verification block.

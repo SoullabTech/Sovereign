@@ -21,7 +21,7 @@ STATUS   Vocabulary only. No instrument exists. No member-facing survey is autho
 | Continuity | appropriate, relevant memory ("felt appropriately remembered" + relevance rating) | volume remembered | partly measurable now (`selectionTrace`, atoms surfacing) for the *system* half; member half needs instrument |
 | Presence | felt interactional presence, tracked **separately** from consciousness-belief item | anthropomorphism | needs construct work (U4) before instrument |
 | Insight | meaningful new perception with later usefulness | emotional intensity | needs consent design |
-| Success | increased life capacity (**capacity transfer**) | session length / DAU | needs consent design |
+| Success | increased life capacity (**capacity transfer**) — now **two measures** (founder 2026-09-06): **Self capacity** (perceive myself more fully · hold contradiction · recognize body/emotion/thought/will without collapse · greater agency) and **World capacity** (relate better · participate more fully · tolerate difference · engage nature directly · contribute meaningfully · recognize myself as part of larger systems) | session length / DAU · *and* self-analysis depth without world participation | needs consent design; World capacity has no instrument anywhere |
 
 **Human Experience metrics (charter list, mapped):** felt understood → Understanding · felt
 oriented → *(Orientation — no pair yet; Earth/Air gap, see CONTESTED L3)* · felt free → Agency ·
