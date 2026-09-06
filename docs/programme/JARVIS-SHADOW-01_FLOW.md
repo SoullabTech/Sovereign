@@ -17,8 +17,8 @@ falsify: CLOSED / ACCEPTED
 constitute: CLOSED / RATIFIED
 design_stage: CLOSED / ACCEPTED
 claim_state: DESIGNED · NOT LIVE
-hard_stop: ACTIVE
-prototype: NOT AUTHORIZED
+hard_stop: CROSSED   # explicit founder act 2026-09-06
+prototype: OPEN — P0·P1·P2·P3·P5·P6·P7 built/green; P4 STOPPED (memory carrier); P8 not started
 witness: HOLD
 promote: HOLD
 runtime: UNCHANGED
@@ -28,9 +28,9 @@ invoked_entrance: DESIGNED · DEFERRED until activation-turn isolation is struct
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
-current_node: HARD STOP
-next_possible_act: PROTOTYPE   # founder only
-last_state_change: 2026-09-06 (DESIGN closed; flow instantiated; runway prepared, not crossed)
+current_node: PROTOTYPE / P4 STOP
+next_possible_act: founder ruling on the P4 memory carrier, then the room surface, then P8
+last_state_change: 2026-09-06 (PROTOTYPE authorized and entered; v1 assembly + prompt law + 3 falsifiers green; P4 stopped on provenance-through-retrieval)
 ```
 
 ```text
@@ -41,8 +41,8 @@ FALSIFY        CLOSED / ACCEPTED
 CONSTITUTE     CLOSED / RATIFIED
 DESIGN         CLOSED / ACCEPTED
 CLAIM STATE    DESIGNED · NOT LIVE
-HARD STOP      ACTIVE
-PROTOTYPE      NOT AUTHORIZED
+HARD STOP      CROSSED
+PROTOTYPE      OPEN · P4 STOPPED · P8 pending
 WITNESS        HOLD
 PROMOTE        HOLD
 RUNTIME        UNCHANGED
