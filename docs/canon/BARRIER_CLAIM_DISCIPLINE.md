@@ -46,10 +46,26 @@ Each was corrected by the founder. The drift ran one direction only —
 inflation feels like rigor while it is happening, which is why it needs a rule
 rather than care.
 
-Row 4 is the reason this document is canon rather than a note. The candidate
-text committed the exact inflation it was written to prevent, and did so in the
-sentence carrying its argument. A rule that catches its own author in use has
-been tested in the only way that counts.
+Row 4 is the strongest evidence that this is more than a retrospective
+taxonomy. The rule identified a fresh instance of the drift in the very text
+written to prevent it, and that finding changed the document before
+ratification — use produced a decision, not merely a distinction.
+
+```text
+rows 1-3     recurrence
+             the drift is real and repeated
+
+row 4        self-application
+             the rule catches a fresh instance,
+             not merely one catalogued afterward
+
+correction   decision produced, before ratification
+
+together     warrant for canon
+```
+
+Rows 1–3 established recurrence; row 4 demonstrated the rule could operate
+beyond the examples from which it was derived. Neither alone is the warrant.
 
 ## Why the distinction is load-bearing
 
