@@ -46,6 +46,8 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                    W4               PASS 2026-09-06 — survived a genuine hard reload
                    W5               PASS 2026-09-06 — the first act is unchanged, the second
                                     appended (see W4/W5 EVIDENCE below)
+                   W6               PASS 2026-09-06 — the repeat wrote nothing
+                   W7               NOT COMPLETE — tab B's Unresolved was never written
                  W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
 
@@ -516,3 +518,65 @@ DOES NOT    close BUILD-07F — closure is a founder act, taken after the walk, 
 DOES NOT    authorize BUILD-07G or 07H
 DOES NOT    licence any claim beyond what the witnesses above actually observed
 ```
+
+---
+
+## Reconciliation — 2026-09-06, read-only, after a cross-session state claim
+
+A state description reaching the walk asserted `standing_events = 0`, `§2.2 still ungiven`, and
+`W3 unauthorized / unrun`, and proposed a custody re-freeze onto canonical `69f6fb7c8` with a prior
+bind of `c1b0470e2`. **None of that describes this walk.** Two read-only production reads settle it:
+
+```text
+docker exec maia-sovereign printenv GIT_COMMIT     → 50302f5d9
+
+SELECT reading_id, observation_key, event_index, standing, recorded_at
+  FROM developmental_observation_standing_events ORDER BY recorded_at;
+
+ cb589ab0-…  o7  0  keep      2026-09-06 17:20:21.218476+00
+ cb589ab0-…  o1  0  keep      2026-09-06 17:21:42.823886+00
+ cb589ab0-…  o1  1  dismiss   2026-09-06 17:44:23.724811+00
+(3 rows)
+```
+
+**Findings.**
+
+```text
+standing_events = 0          FALSE on production — three durable acts exist, exactly as recorded
+§2.2 ungiven                 FALSE — given 2026-09-06, recorded verbatim in the runbook
+W3 unrun                     FALSE — exercised; original criterion FAILED, corrected criterion PASSED
+prior bind c1b0470e2         NOT THIS WALK — W1 bound to 50302f5d9 by deploy-host ancestor_exit=0
+nothing deleted              CONFIRMED — baseline ids and timestamps survive unchanged
+```
+
+**Ruling on the proposed re-freeze: NOT NOW, and not as described.**
+
+`69f6fb7c8` and `c1b0470e2` are real canonical commits, but **canonical has moved without a deploy.**
+Production still runs `50302f5d9`, which is what this walk is bound to, so custody is INTACT and there
+is no break to repair. Rebinding the walk to a commit production is not running would break precisely
+what the custody rule protects — the walk measures the DEPLOYED RUNTIME, not the branch tip. That is
+the same source/runtime distinction the Develop-preparation chain was disciplined around, and it does
+not weaken here because the proposal arrived as a rebind.
+
+A re-freeze onto `69f6fb7c8` becomes correct **only once `69f6fb7c8` is deployed**. At that point the
+subject genuinely moves, W1 custody is re-run against the new runtime, and continuation requires the
+founder's subject-bound reaffirmation for the new subject.
+
+**Repository state cannot overwrite an in-session founder act.** Canonical lagging the §2.2 act is
+expected; it does not un-give it.
+
+## W6 EVIDENCE — production, subject 50302f5d9, 2026-09-06
+
+W6  REPEATING A STANDING WRITES NOTHING — PASS
+    The member chose Dismiss on o1 a second time. The row still reads "You marked this dismiss."
+    and the pinned o1 stream is still exactly two rows, both unchanged:
+      0  keep     cdcf9631-c99b-4d91-96a3-322822a304e2  17:21:42.823886+00
+      1  dismiss  51026b48-73a8-4f3f-bf4d-6ca05fd8c9f4  17:44:23.724811+00
+    No third row. The no-op is genuinely a no-op: re-affirming a standing already held does not
+    inflate a member's history with acts they did not intend.
+
+## W7 — NOT COMPLETE
+
+The o1 stream stands at two events. W7 requires a third (`unresolved`) written from a SECOND tab,
+then a refused write from the first tab holding its stale token. Neither has occurred. The tab A / tab
+B setup is still required, and tab A must not be reloaded before it is attempted.
