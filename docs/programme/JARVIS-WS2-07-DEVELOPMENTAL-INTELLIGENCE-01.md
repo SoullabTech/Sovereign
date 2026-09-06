@@ -18,7 +18,7 @@
 > bypass of the D5/D6 import gate — both repaired (§6), and the branch is now the INTEGRATION
 > CANDIDATE brought forward to canonical `2732706b6` with its overlapping DevelopRoom change
 > reviewed and gates rerun on the merged program (§7). **07F SOURCE ACCEPTED (founder, 2026-09-06) on
-> `96db26f62`; brought forward to canonical `df9594592` — head `238c9dd47`, 16-file net diff, gates
+> `96db26f62`; brought forward to canonical `df9594592` and then `c84bf2d93` — head `238c9dd47`, 16-file net diff, gates
 > bound to that head (§7.1). PR AWAITS THE FOUNDER'S OPENING ACT; deploy not authorized.** **BUILD-07G and 07H remain unopened.**
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**

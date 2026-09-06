@@ -13,8 +13,8 @@ REVIEW 2         founder, 2026-09-06 — HOLD on b3e3ff7c8: R1 PASS · R2 succes
                  path PASS · R3 PASS · conflict copy PASS; two blockers remain —
                  R2 LATE CONFLICT and the D5/D6 RAW-SQL BYPASS (§6)
 SOURCE           ACCEPTED (founder, 2026-09-06) on 96db26f62
-INTEGRATION      merged forward to canonical 2732706b6 (§7), then to
-                 df9594592 (§7.1) — head 238c9dd47, gates bound to that head
+INTEGRATION      merged forward to canonical 2732706b6 (§7), then df9594592
+                 (§7.1), then c84bf2d93 (§7.2) — gates bound to each head
 BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 CENSUS           WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md       (canonical)
 ADJUDICATION     WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md          (canonical)
@@ -385,6 +385,29 @@ lib/ + app/ jest             failure set identical to the canonical baseline
                              (measured at 2732706b6; the one-file delta since
                              touches no suite in that set)
 ```
+
+### 7.2 Freshness bring-forward to `c84bf2d93`
+
+Canonical moved once more. The incoming content is one unrelated document — the fonts sovereignty
+acceptance, a lane this unit has never touched and does not import:
+
+```text
+df9594592 → c84bf2d93   docs/ops/MAIA_LOCAL_FONTS_SOVEREIGNTY_ACCEPTANCE_2026-09-05.md   +147 / −1
+```
+
+No 07F source, schema, Develop surface, database code or programme record moved. Merged forward,
+never rebased, and — unlike §7.1 — **this record's own update is inside the merge commit**, so the
+gated tree and the branch head are the same object rather than one commit apart.
+
+```text
+PARENTS           the §7.1 head  ·  c84bf2d936468bba7fe8f4a1e961f9b1b67c6c07  (exact)
+07F NET DIFF      16 files against c84bf2d93        (the intended set, unchanged)
+07F SOURCE/SCHEMA untouched by the bring-forward — the merge's only content
+                  change is the fonts document above, plus these lines
+```
+
+Gates on that head are recorded in the merge commit; the 07F falsifiers and the standing gates were
+rerun rather than assumed to carry over from §7.1.
 
 ---
 
