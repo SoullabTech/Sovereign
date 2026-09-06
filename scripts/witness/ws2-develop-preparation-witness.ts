@@ -158,18 +158,12 @@ async function main() {
     console.log('\nAFTER');
     if (!now) { check('a working draft exists', false); }
     else {
-      const sections = await query<{ text: string; source_section_id: string | null; position: number }>(
-        `SELECT text, source_section_id, position FROM manuscript_draft_sections
+      const sections = await query<{ id: string; text: string; source_section_id: string | null; position: number }>(
+        `SELECT id, text, source_section_id, position FROM manuscript_draft_sections
           WHERE draft_id = $1 ORDER BY position ASC`, [now.id]);
       const sourceIds = await query<{ id: string }>(
         `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
-      const revision = await query<{ content: string; revision_number: number }>(
-        `SELECT content, revision_number FROM working_draft_revisions
-          WHERE draft_id = $1 AND note = 'before section conversion'
-          ORDER BY revision_number DESC LIMIT 1`, [now.id]);
-
       const flattened = sections.rows.map((r) => r.text).join('');
-      row('draft sections', sections.rows.length);
       row('source sections', sourceIds.rows.length);
       row('section_addressable_at', now.section_addressable_at ? now.section_addressable_at.toISOString() : 'null');
       row('flattened digest', sha256(flattened).slice(0, 16));
@@ -183,18 +177,69 @@ async function main() {
         sections.rows.every((r) => r.source_section_id !== null));
       check('the Source ids represented are exactly the Source ids',
         new Set(sections.rows.map((r) => r.source_section_id)).size === sourceIds.rows.length
-        && sections.rows.every((r) => sourceIds.rows.some((s) => s.id === r.source_section_id)));
+        && sections.rows.every((r) => sourceIds.rows.some((sr) => sr.id === r.source_section_id)));
       check('positions are contiguous from zero',
         sections.rows.every((r, i) => r.position === i));
 
       /* ⛔ THE PROMISE THE CONVERSION MADE. Not "close", not "equivalent":
-         the sections must reconstruct the draft byte for byte, and the
-         pre-conversion revision must hold those same bytes. */
+         the sections must reconstruct the draft byte for byte.
+         `assertRoundTrip` enforces it inside the transaction; this proves it
+         survived. */
       check('the sections flatten to the draft exactly', flattened === now.content,
         `${flattened.length} vs ${now.content.length} chars`);
-      check('a pre-conversion revision was kept', revision.rows.length > 0);
-      check('the kept revision holds the pre-conversion bytes exactly',
-        revision.rows.length > 0 && revision.rows[0].content === now.content);
+
+      /* ⛔ ASSERT THE STATE, NOT THE ROUTE IT CAME BY. This used to look up a
+         revision by the note `Section conversion` and fail when none existed —
+         which is every Work converted before 2026-09-06, including the one
+         this instrument was written for. The note records HOW the row came to
+         be; capture does not read it. What capture reads is the NEWEST
+         revision, and what it requires is that the revision carry boundaries
+         and hold the bytes the draft holds. Those are the claims. A Work whose
+         partition was recorded by a member's own "Keep a version" satisfies
+         them exactly as one converted under the repaired path does, and an
+         instrument that called the first a failure would be reporting its own
+         expectations rather than the Work. */
+      const newest = await query<{
+        revision_number: number; note: string | null; content: string;
+        has_partition: boolean; section_partition: { sectionId: string }[] | null;
+      }>(
+        `SELECT revision_number, note, content, section_partition,
+                section_partition IS NOT NULL AS has_partition
+           FROM working_draft_revisions WHERE draft_id = $1
+          ORDER BY revision_number DESC LIMIT 1`, [now.id]);
+      const rev = newest.rows[0];
+      row('newest revision', rev ? `#${rev.revision_number} — ${rev.note ?? '(no note)'}` : 'none');
+
+      check('a revision exists for capture to freeze from', Boolean(rev));
+      /* THE SECOND WALL (2026-09-06). Capture freezes from the newest revision
+         and refuses `partition_not_recorded` when it carries no boundaries. */
+      check('the newest revision records a partition', rev?.has_partition === true,
+        rev ? `#${rev.revision_number} carries none` : 'no revision');
+      /* And `revision_not_current`: a capture never attaches current ranges to
+         an older state. */
+      check('the newest revision holds the draft bytes exactly',
+        rev?.content === now.content,
+        rev ? `${rev.content.length} vs ${now.content.length} chars` : 'no revision');
+
+      /* ⛔ PRESENT IS NOT THE SAME AS CORRECT. `freezeReadState` proves the
+         partition names the draft's sections in the draft's order, so reaching
+         the validator implies this — but implied is weaker than asserted, and
+         a witness that only checked presence would pass an empty array and a
+         partition over some other topology alike. Named here so the record
+         carries the claim rather than a consequence of it. */
+      const partition = rev?.section_partition ?? [];
+      /* Both counts, side by side. Set equality and order already prove the
+         match; printing the pair keeps the production record auditable by eye
+         rather than reconstructed from three separate lines. */
+      row('draft sections', sections.rows.length);
+      row('partition entries', partition.length);
+      check('the partition names every draft section',
+        partition.length === sections.rows.length,
+        `${partition.length} entries over ${sections.rows.length} sections`);
+      check('the partition names them in the draft\'s own order',
+        partition.length === sections.rows.length
+        && partition.every((e, i) => e.sectionId === sections.rows[i].id),
+        'partition section ids diverge from the draft topology');
 
       const post = await resolveDevelopPreparation(manuscriptId, memberId);
       check('preparation now reports ready',

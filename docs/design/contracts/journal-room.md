@@ -89,19 +89,45 @@ the rest of Soullab. Nothing in it was copied from a neighbouring room's aesthet
 field beneath it, and no other surface makes writing the destination rather than a
 control surface. A member would know this is the Journal without the label.
 
-## ⚠️ Known deviation from the room's own contract — reported, not resolved
+## Ambient MAIA handle — RULED, 2026-09-06 (was: known deviation)
 
-The golden screenshots show the room **without** the House's floating MAIA handle
-(`components/maia/presence/MaiaPresence.tsx`) and bug-report button
-(`app/layout.tsx`), because the headless capture session did not resolve a member.
-**A signed-in member sees both.** The arrival state's specification says MAIA
-presence: none.
+The golden screenshots showed the room **without** the House's floating MAIA
+handle (`components/maia/presence/MaiaPresence.tsx`) because the headless capture
+session resolved no member; a signed-in member saw it, contradicting the arrival
+state's *MAIA presence: none*. This was left for a founder ruling. It is now ruled.
 
-This is a **House vs Room boundary question, not a Journal bug**: is the ambient MAIA
-handle House furniture that legitimately appears in every room, or does the Journal
-reference's *"MAIA appears only on a kept entry"* require its absence here? The only
-sanctioned suppression list (`FULL_CONVERSATION_ROUTES`) means *"the page IS the
-conversation"*, which the Journal is not. Building a new suppression mechanism would
-refactor shared House infrastructure, which Work Unit §10 forbids.
+**Ruling.** *House MAIA availability does not imply an ambient MAIA affordance in
+every room.* Journal suppresses the floating handle. Its sole MAIA affordance is
+the room-owned `Reflect with MAIA` gesture on a kept entry.
 
-Left for a founder ruling. Not silently suppressed, and not silently accepted.
+**Scope: throughout `/journal`, not merely on arrival.** The handle broke the room
+in both directions:
+
+```text
+before Keep  → MAIA appears without the member crossing Journal's threshold
+after Keep   → an always-available canonical conversation competes with
+               Journal's deliberately transient "Reflect with MAIA"
+```
+
+Once a kept entry exists Journal already has its legitimate MAIA gesture; showing
+the House handle there would introduce a second relationship grammar in one room.
+
+**This is not a rejection of MAIA as House infrastructure.** It is the distinction
+the presence layer already carries:
+
+```text
+Journal may be MAIA-capable  ≠  Journal must advertise the House MAIA handle
+```
+
+The room controls the threshold. Journal remains a **governed room** — place facts
+still resolve and still travel on a message the member intentionally sends; only
+the unprompted advertisement is gone.
+
+**Implementation.** No new suppression mechanism was built, and the concern that
+one would refactor shared House infrastructure does not apply. `place.ts` already
+separated eligibility from affordance via `handleVisibility`; this ruling added
+the value `'none'` to that existing closed vocabulary and set Journal to it.
+`FULL_CONVERSATION_ROUTES` was deliberately **not** reused — it means *the page IS
+the conversation*, which Journal is not, and overloading it would have made the
+registry say something false about this room. Pinned by
+`lib/maia/presence/__tests__/place.test.ts`.

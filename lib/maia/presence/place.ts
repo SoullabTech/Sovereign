@@ -42,6 +42,13 @@ export interface GoverendRoom {
    *   - handleVisibility       → MAIA is offered unprompted here (experience)
    *
    * 'room'   — the whole room advertises the handle (default).
+   * 'none'   — the room NEVER advertises the House handle, in any state. It
+   *            remains a governed room: MAIA may be hosted, and place facts
+   *            still travel on a message the member intentionally sends. This
+   *            is for rooms that own their own MAIA threshold, where a second,
+   *            always-available relationship grammar would compete with it.
+   *            Founder ruling 2026-09-06 (Journal): *House MAIA availability
+   *            does not imply an ambient MAIA affordance in every room.*
    * 'object' — only while the member has a specific object open. A room-level
    *            surface (an index or feed) has no particular referent, so an
    *            unprompted handle there would say "MAIA is generally present
@@ -50,7 +57,7 @@ export interface GoverendRoom {
    *            explicit in-room gesture (openMaiaWith) — this governs only
    *            what the room offers on its own.
    */
-  handleVisibility?: 'room' | 'object';
+  handleVisibility?: 'room' | 'none' | 'object';
 }
 
 /**
@@ -68,7 +75,14 @@ export interface GoverendRoom {
  */
 export const GOVERNED_ROOMS: readonly GoverendRoom[] = [
   { placeId: 'maia', placeName: 'MAIA', routePrefix: '/maia', purpose: 'The main conversation — the hallway of the house.' },
-  { placeId: 'journal', placeName: 'Journal', routePrefix: '/journal', purpose: 'A private room for writing and reflection.' },
+  // Journal owns its own MAIA threshold: `Reflect with MAIA` is offered only
+  // on a KEPT entry, and that reflection is transient by law (never a thread —
+  // components/journal/room/Reflection.tsx). The ambient House handle broke
+  // that in both directions — before Keep it offered MAIA without the member
+  // crossing the room's threshold; after Keep it put an always-available
+  // canonical conversation beside a deliberately transient one. Suppressed
+  // throughout /journal, not merely on arrival (founder ruling 2026-09-06).
+  { placeId: 'journal', placeName: 'Journal', routePrefix: '/journal', purpose: 'A private room for writing and reflection.', handleVisibility: 'none' },
   { placeId: 'ideas', placeName: 'Ideas', routePrefix: '/maia/ideas', purpose: 'A room for capturing and developing emerging thoughts.' },
   { placeId: 'moments', placeName: 'Marked Moments', routePrefix: '/maia/moments', purpose: 'The moments this member chose to keep from conversation.' },
   { placeId: 'anchor-history', placeName: 'Daily Anchors', routePrefix: '/maia/anchor', purpose: 'The member\'s daily anchors and their history.' },
@@ -121,6 +135,7 @@ export function isMaiaHandleVisible(pathname: string, place: MaiaPlaceContext | 
   const room = resolveGovernedRoom(pathname);
   if (!room) return false;
   if (isFullConversationRoute(pathname)) return false;
+  if (room.handleVisibility === 'none') return false;
   if (room.handleVisibility === 'object') {
     return Boolean(place?.objectType && place?.objectId);
   }
