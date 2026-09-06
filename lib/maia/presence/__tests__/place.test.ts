@@ -185,9 +185,27 @@ describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
   });
 
   it('room-scoped rooms are unchanged — they advertise across the room', () => {
-    expect(isMaiaHandleVisible('/journal', placeFromPathname('/journal'))).toBe(true);
     expect(isMaiaHandleVisible('/studio/decisions', placeFromPathname('/studio/decisions'))).toBe(true);
     expect(isMaiaHandleVisible('/home', placeFromPathname('/home'))).toBe(true);
+  });
+
+  it("Journal never advertises the House handle — the room owns its threshold", () => {
+    // Founder ruling 2026-09-06. Not "hidden on arrival": hidden throughout,
+    // because after Keep the room already has its own MAIA gesture and a second
+    // relationship grammar would compete with it.
+    expect(isMaiaHandleVisible('/journal', placeFromPathname('/journal'))).toBe(false);
+    expect(isMaiaHandleVisible('/journal/room', placeFromPathname('/journal/room'))).toBe(false);
+    // An open object does not buy a handle here, unlike an 'object' room.
+    expect(isMaiaHandleVisible('/journal', {
+      ...placeFromPathname('/journal')!, objectType: 'journal_entry', objectId: 'entry-1',
+    })).toBe(false);
+  });
+
+  it('suppressing the handle does not un-govern the room (eligibility != affordance)', () => {
+    // Journal stays a governed room: place facts still resolve and may travel on
+    // a message the member intentionally sends. Only the advertisement is gone.
+    expect(resolveGovernedRoom('/journal')?.placeId).toBe('journal');
+    expect(placeFromPathname('/journal')?.placeName).toBe('Journal');
   });
 
   it('never widens eligibility: ungoverned routes and full surfaces stay false', () => {
@@ -203,7 +221,7 @@ describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
   it('handleVisibility is a closed vocabulary', () => {
     for (const room of GOVERNED_ROOMS) {
       if (room.handleVisibility !== undefined) {
-        expect(['room', 'object']).toContain(room.handleVisibility);
+        expect(['room', 'none', 'object']).toContain(room.handleVisibility);
       }
     }
   });

@@ -95,6 +95,9 @@ interface PreviewSection {
   position: number;
   heading: string | null;
   body: string;
+  /** WS2-08A — the depth the document gave this heading (1..3), or null = unclassified. */
+  headingDepth?: 1 | 2 | 3 | null;
+  headingSignal?: 'markdown' | 'chapter' | 'caps' | 'member' | null;
 }
 
 type Tab = 'manuscript' | 'draft' | 'keeps' | 'collections' | 'emerging' | 'export' | 'book';
@@ -203,7 +206,13 @@ function PressManuscriptRoom() {
       const after = lines.slice(lineIdx + 1).join('\n');
       if (!headingLine || before.trim().length === 0 || after.trim().length === 0) return p;
       const next = [...p];
-      next.splice(i, 1, { ...p[i], body: before }, { position: 0, heading: headingLine, body: after });
+      // A member-drawn cut: the boundary is theirs, its depth unassigned (WS2-08A).
+      next.splice(
+        i,
+        1,
+        { ...p[i], body: before },
+        { position: 0, heading: headingLine, body: after, headingDepth: null, headingSignal: 'member' },
+      );
       return next.map((x, j) => ({ ...x, position: j }));
     });
     setSplitOpen(null);
@@ -736,8 +745,20 @@ function PressManuscriptRoom() {
               <div className="space-y-3 mb-10">
                 {preview.map((s, i) => (
                   <div key={i} className="border-b border-[#3a322b] pb-2">
-                    <div className="flex items-center gap-3">
+                    {/* WS2-08A — the depth the document itself gave the heading is
+                        shown as it arrived: indented, and named only when explicit.
+                        An ALL-CAPS or member cut is a boundary with no depth, and is
+                        shown as exactly that — nothing is promoted to a chapter here. */}
+                    <div
+                      className="flex items-center gap-3"
+                      style={{ paddingLeft: s.headingDepth ? (s.headingDepth - 1) * 16 : 0 }}
+                    >
                       <span className="text-[12px] opacity-40 w-8">{i + 1}</span>
+                      {s.headingDepth && (
+                        <span className="text-[11px] opacity-40 tracking-wide" title="Heading depth as it arrived in your document">
+                          {s.headingDepth === 1 ? 'H1' : s.headingDepth === 2 ? 'H2' : 'H3'}
+                        </span>
+                      )}
                       <input
                         value={s.heading ?? ''}
                         placeholder="(untitled section)"
