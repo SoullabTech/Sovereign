@@ -15,6 +15,7 @@ import { getMemberActiveRelationalContext } from '@/lib/relationships/relationsh
 import { formatRelationalContextForPrompt } from '@/lib/relationships/formatRelationalContextForPrompt';
 import { emitSignal } from '@/lib/observation/observationService';
 import { computeInterruptionMetadata } from '@/lib/consciousness/interruptionLedger';
+import { classifyCorrectionCandidate, CORRECTION_SHADOW_MARKER } from '@/lib/maia/canonical-turn/correctionShadow';
 import { validatePlaceContext, buildPlaceAddendum } from '@/lib/maia/presence/place';
 import { logAgentRun } from '@/lib/services/corpusCallosumService';
 
@@ -1649,6 +1650,39 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         }
       } catch (ledgerErr: any) {
         console.warn('[MAIA] interruption-ledger failed (non-blocking):', ledgerErr?.message);
+      }
+    }
+
+    // 🔎 E1 — CORRECTION-CANDIDATE SHADOW (log-only, zero response diff). Phase 2 of
+    // JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1, founder-authorized 2026-09-06 as the first shadow
+    // instrument: classify the MEMBER'S turn — after MAIA has already answered it — as a
+    // candidate correction / not-it / disagreement of MAIA's previous response. Counts only:
+    // no member text, no persistence, nothing on the response path reads it. Sanctuary refused
+    // here AND inside the module. Kill-switch MAIA_CORRECTION_SHADOW=0. Falsifier: refusal R32.
+    // Spec: docs/programme/E1_CORRECTION_SHADOW_SPEC_2026-09-06.md.
+    if (!isSanctuary && process.env.MAIA_CORRECTION_SHADOW !== '0') {
+      try {
+        const _priorAssistant = (Array.isArray(_convHistory) ? _convHistory : [])
+          .map((h: any) => h?.maiaResponse ?? (h?.role === 'assistant' ? h?.content : null))
+          .filter((t: any): t is string => typeof t === 'string' && t.length > 0)
+          .slice(-1)[0] ?? null;
+        const _candidate = classifyCorrectionCandidate({
+          memberMessage: message as string,
+          priorAssistantResponse: _priorAssistant,
+          sanctuary: isSanctuary,
+        });
+        if (_candidate) {
+          console.log(CORRECTION_SHADOW_MARKER, {
+            memberRef: effectiveUserId ? memberRef(effectiveUserId) : null,
+            candidate: _candidate.candidate,
+            markers: _candidate.markers,
+            classes: _candidate.classes,
+            hasPriorResponse: _candidate.hasPriorResponse,
+            turnIndex: _historyLen,
+          });
+        }
+      } catch (correctionShadowErr: any) {
+        console.warn('[MAIA/shadow] correction-candidate failed (non-blocking):', correctionShadowErr?.message);
       }
     }
 
