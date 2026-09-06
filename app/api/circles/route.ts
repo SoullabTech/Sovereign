@@ -1,16 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { requireCircleAccess } from '@/lib/circles/circleAccess';
 import { createCircleSchema } from '@/lib/circles/types';
 import { listMyCircles, createCircle } from '@/lib/circles/circleService';
 
 export async function GET(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const circles = await listMyCircles(memberId);
     return NextResponse.json({ circles });
@@ -22,10 +23,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const body = createCircleSchema.parse(await request.json());
     const circle = await createCircle(memberId, body.name, body.description ?? null);

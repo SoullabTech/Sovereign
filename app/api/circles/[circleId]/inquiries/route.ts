@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { requireCircleAccess } from '@/lib/circles/circleAccess';
 import { createInquiry, listInquiries } from '@/lib/circles/inquiryService';
 import { createInquirySchema } from '@/lib/circles/types';
 import type { InquiryStatus } from '@/lib/circles/types';
@@ -11,10 +11,11 @@ export async function GET(
   { params }: { params: Promise<{ circleId: string }> }
 ) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const { circleId } = await params;
     const url = new URL(request.url);
@@ -35,10 +36,11 @@ export async function POST(
   { params }: { params: Promise<{ circleId: string }> }
 ) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const { circleId } = await params;
     const body = await request.json();

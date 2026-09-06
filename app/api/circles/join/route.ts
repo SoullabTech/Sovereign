@@ -1,16 +1,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { requireCircleAccess } from '@/lib/circles/circleAccess';
 import { joinCircleSchema } from '@/lib/circles/types';
 import { joinWithInvite } from '@/lib/circles/inviteService';
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const body = joinCircleSchema.parse(await request.json());
     const circleId = await joinWithInvite(body.token, memberId, body.consentMode);

@@ -31,7 +31,7 @@
  */
 
 import { Pool, PoolClient } from 'pg';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 const DATABASE_URL =
@@ -77,7 +77,7 @@ function src(rel: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function groupC() {
-  section('GROUP C · source assertions (FR-04, FR-05, FR-06, FR-08)');
+  section('GROUP C · source assertions (B-01, FR-04, FR-05, FR-06, FR-08)');
 
   const circleService = src('lib/circles/circleService.ts');
   const inquiryService = src('lib/circles/inquiryService.ts');
@@ -216,6 +216,39 @@ async function groupC() {
     /JOIN\s+(?!members)/i.test(scope)
       ? fail('C11 FR-08.8 feed dereferences the source object', 'live pointer')
       : pass('C11 FR-08.8 feed serves the stored representation only');
+  }
+
+  // C13 — B-01 / CIRCLE-04 R1: the declared release posture must be the ENFORCED
+  //       one. A Next.js layout does not run for route handlers, so the page
+  //       gate in app/commons/circles/layout.tsx cannot close the API. Every
+  //       /api/circles route must go through requireCircleAccess(), and none may
+  //       resolve identity directly — a direct getMemberIdFromRequest() call is
+  //       exactly how the gap existed before R1.
+  {
+    const walk = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const e of readdirSync(dir)) {
+        const full = join(dir, e);
+        out.push(...(statSync(full).isDirectory() ? walk(full) : full.endsWith('.ts') ? [full] : []));
+      }
+      return out;
+    };
+    const apiDir = join(ROOT, 'app/api/circles');
+    const routes = existsSync(apiDir) ? walk(apiDir) : [];
+    const ungated = routes.filter((f) => {
+      const body = readFileSync(f, 'utf8');
+      return body.includes('getMemberIdFromRequest') || !body.includes('requireCircleAccess');
+    });
+    if (routes.length === 0) {
+      fail('C13 B-01 no Circle API routes found to check');
+    } else if (ungated.length === 0) {
+      pass('C13 B-01 every Circle API route is gated by requireCircleAccess', `${routes.length} routes`);
+    } else {
+      fail(
+        'C13 B-01 Circle API route bypasses the release-posture gate',
+        ungated.map((f) => f.replace(ROOT + '/', '')).join(', ')
+      );
+    }
   }
 
   // C12 — FR-05/FR-01: revocation must never touch the source item.
