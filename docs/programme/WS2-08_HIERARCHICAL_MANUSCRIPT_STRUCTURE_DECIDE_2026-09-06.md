@@ -326,6 +326,122 @@ before push. (Earlier reports said 85/50 then 86/50: one test was added for the 
 `CHAPTER ONE` ruling, then two for the corrected F2 fixture.) `npm run typecheck`: no
 regressions against baseline.
 
+**SHA binding — historical transition (amended once, 2026-09-06, founder ruling).**
+
+```text
+685e205b   original tested 08A code head. 52 / 88 suites + typecheck gate first taken here.
+           Commits after it up to 167dc002 were docs-only (empty non-docs diff, verified).
+66da58b4c  production / base parent — the running GIT_COMMIT witnessed by F6a.
+4cd79e947  INTEGRATION CANDIDATE = merge of 66da58b4c into 167dc002, made after F6a capture.
+           parents: 167dc002330ee9597b82e96f688320497bdac049 · 66da58b4c4a4979240db460c045dd9daf1cd47d3
+```
+
+Verified on `4cd79e947`:
+
+- PR diff against `clean-main-no-secrets` is exactly the 08A surface (eight code/test/migration
+  files + the docs, board and session anchor). No unrelated base work entered the diff.
+- All eight 08A files are **blob-identical** to their `685e205b` versions (`git rev-parse
+  685e205b:<f>` equals `4cd79e947:<f>` for each).
+- Re-run on the merged tree: targeted subset **52 / 52**, touched-suite gate **88 / 88**,
+  `npm run typecheck` no regressions, `check:no-supabase` clean. Lockfile unchanged since
+  `685e205b`, so the installed dependency set is the same.
+- CI on `4cd79e947`: sovereignty, check-diagrams, TypeScript no-regression gate, covenant-gates,
+  Empty database reconstruction, Axis 1 adjudication, auto-label green; Docker build in
+  progress at the time of this record.
+
+The relationship F6a → candidate is therefore clean: the baseline is bound to the production
+parent of the candidate, and F6a is **not** recaptured.
+
+```text
+production baseline witnessed   66da58b4c
+                                 |
+                                 +---- 08A line (685e205b … 167dc002)
+                                          |
+                                     4cd79e947   candidate
+```
+
+Any commit after `4cd79e947` on this branch must show an empty non-docs diff against it:
+
+```bash
+git diff --stat 4cd79e947..<head> -- . ':!docs' ':!CLAUDE.md'   # must print nothing
+```
+
+A push that makes that diff non-empty inherits nothing from this standing; it re-runs both
+scopes and re-records.
+
+### F6a — production baseline RECORDED (2026-09-06)
+
+Captured on minisforum by the founder, from the exact scripts delivered on custody branch
+`claude/ws2-08a-witness-custody-01` @ `cd6da64a02271cce14ea52502c054f7aa16e3cc8`
+(`scripts/witness/ws2-08a-f6a-baseline.sh`, `scripts/witness/ws2-08a-f6b-compare.sh`), hashes
+verified on the Mac Studio and again after transfer to minisforum. Read-only against production;
+no database write; merge and migration untouched.
+
+```text
+directory            /home/soullab/ws2-08a-witness/f6a-20260906T122035Z
+host / captured UTC  minisforum · 2026-09-06T12:20:35Z
+running GIT_COMMIT   66da58b4c
+snapshot             324263:324263:        (single REPEATABLE READ READ ONLY transaction)
+server_encoding      UTF8
+
+population           manuscript_sections · 810 rows (811 physical CSV lines incl. header)
+  csv sha256         fc98b19a2584cd878ca64c7d9f1300cc5227f82cbae45d8c0042db7b7f9d884d
+migration ledger     schema_migrations · 517 rows, whole ledger as JSON lines
+  ledger sha256      5db847c6ed7221f4f69da6ad11e9bdfa4daa976a24b7eb24dd86d2aa2aa9aec8
+manifest sha256      db85c5cb721f2a2011df04130ff3649133fb250b5cadee8462e5c40c8a827e5b
+instrument           F6a script sha256 fd2d6a3f0d8115d7b132233435c2f56ae0b853707f9ac6dec7c0e8ed40c79eeb
+                     F6b script sha256 f74abf0c1cb721514cc20a8be037283dc8058ebbb2f43204d2ca7dcb4d48759f
+
+write-boundary counters at baseline (pg_stat_user_tables · manuscript_sections)
+  n_tup_ins 812 · n_tup_upd 0 · n_tup_del 2 · n_tup_hot_upd 0 · stats_reset never
+  (baseline values only — not a claim about history; F6b requires upd / del / hot_upd and
+   the stats_reset epoch unchanged across the interval)
+```
+
+Founder adjudication of the capture: script custody PASS · pre-migration guard PASS ·
+single-snapshot F6a PASS · raw baseline retained PASS · artifact custody PASS (manifest sidecar
+equals the manifest digest; CSV and ledger digests equal the values embedded in the manifest,
+independently rehashed after capture).
+
+**Evidentiary ceiling of the write-boundary evidence (founder ruling, 2026-09-06).** The DML
+counters OBSERVE updates and deletes; they do not prevent them. The claim F6b can make is:
+
+```text
+baseline equality + unchanged DML counters + unchanged stats-reset epoch
+    = NO DETECTED INTERVENING MUTATION
+```
+
+not that the database was physically incapable of receiving one. An actual maintenance /
+write freeze across the interval would upgrade this to the stronger claim. The F6a script's
+own comments still say "positive guarantee"; the script bytes are custody-bound and are not
+edited — this paragraph is the governing wording, and the manifest records the actual
+counters and the comparison rule.
+
+Standing after F6a:
+
+```text
+PR #1230 merge     HOLD — released only after this record is adjudicated
+migration          NOT RUN
+08B                HOLD
+```
+
+F2's wording was corrected 2026-09-06 (founder): the earlier "NULL depth on every row" contradicted
+the ruling that `CHAPTER ONE` in caps is chapter wording. F2's fixture and F5's second half are
+also pinned as unit tests on this branch. F4–F5, F7 are unit-tested; **F1–F3, F6 need a production
+witness after migration**, run exactly as written above.
+
+### Test counts on this branch (one truth, two scopes)
+
+| scope | suites | tests |
+|---|---|---|
+| targeted subset — segment · parseUpload · sourceCustody · importedStructure | 4 | 52 |
+| touched-suite gate — the subset **plus** `review.test.ts`, the validator the fold must satisfy | 5 | 88 |
+
+Both pass. The 52 are the tests this cut adds or directly exercises; the 88 are the gate run
+before push. (Earlier reports said 85/50 then 86/50: one test was added for the caps
+`CHAPTER ONE` ruling, then two for the corrected F2 fixture.) `npm run typecheck`: no
+regressions against baseline.
+
 **SHA binding.** These counts and the typecheck result were taken on **`685e205b`**, the last
 commit on the branch that touches code or tests. Every later commit on the branch is
 docs-only, verifiable as an empty diff:
