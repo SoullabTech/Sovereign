@@ -747,3 +747,8 @@ gates → merge decision. v0.1 does not become public doctrine before the critic
 completes; R11 and R12 are allowed to alter the manifesto before it becomes the live center.
 Once the draft PR is confirmed open against `clean-main-no-secrets`, **PR #1238 is closed as
 superseded** and is not merged separately.
+
+**Executed 2026-09-06:** draft PR
+[#1239](https://github.com/SoullabTech/Sovereign/pull/1239) opened against `clean-main-no-secrets`
+(16 commits, 31 files; only application file touched is `app/accounted-for/page.tsx`); PR #1238
+closed as superseded with one comment. Merge and deploy remain unauthorized per the sequence above.
