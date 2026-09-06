@@ -67,9 +67,8 @@ consciousness, sovereignty, relationship and participation in life.
 
 > **The laboratory is not MAIA. The laboratory is the relationship.**
 
-(The founder attributed an earlier informal phrasing — "we are the subject and object and we are
-part of the subject and object" — to Jarvis. It did not originate in this session; the mature
-versions above are the founder's and are the ones preserved.)
+(Earlier informal phrasing, founder: *"we are the subject and object and we are part of the
+subject and object."* The two sentences above are its mature form.)
 
 ## The observer belongs to the system observed
 
