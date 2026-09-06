@@ -10,7 +10,12 @@ SCOPE         constitution Part VI: both entrances · the arc with prompt law pe
               Field contract (docs/design/contracts/shadow-field.md) · what is handed to
               PROTOTYPE. Astrology excluded (D4).
 NOT           code · schema · prompt files · runtime. The HARD STOP before PROTOTYPE stands.
-STATUS        DRAFT — designed, not accepted. Founder acceptance marks the Field *Designed*.
+STATUS        DRAFT — pending founder acceptance · Not Live. Founder ruling 2026-09-06: ACCEPTED
+              SUBJECT TO DG-C1–DG-C4 (claim state · reading-free offer · exit/re-entry ·
+              producer exclusion narrowed to interpretive/frame-bearing); all four applied in
+              this revision; no architectural reopening. Prototype sequencing accepted: first
+              prototype = the Dedicated Field room; Invoked entry deferred until activation-turn
+              isolation is structurally demonstrated (sequencing, not a reduction of the Field).
 ```
 
 ## 0 · What this design is, and the claim state it may occupy
@@ -69,9 +74,8 @@ already a Field turn (assembly sovereignty from that turn onward).
 **Lawful offers** — ordinary utterances of the turn; visible; name the Field; reading-free;
 optional; refer only to what the member actually said or to a visible observation:
 
-> "There may be more underneath this than the events themselves. If you want, we could look at
-> it in the Shadow Field — a slower, more deliberate way of working with what's hard to admit.
-> Or we stay here. Either is fine."
+> "If you want, we could keep talking here, or move into the Shadow Field — a slower way of
+> exploring this from several angles, without deciding what it means for you. Either is fine."
 
 > "You've said twice now that your reaction feels bigger than what happened. That's something
 > the Shadow Field is for, if you'd like to go there. No need to."
@@ -87,6 +91,8 @@ optional; refer only to what the member actually said or to a visible observatio
 > ✗ "Are you sure you don't want to look at this more deeply?" *(renewed after decline)*
 > ✗ "Your pattern of avoiding this suggests the Shadow Field would help." *(classification as
 > evidence)*
+> ✗ "There may be more underneath this than the events themselves — we could look at it in the
+> Shadow Field." *(hidden-depth reading before entry; struck from the lawful set by DG-C2)*
 
 **Member-initiated forms** that are activation acts as spoken: "Can we look at the shadow in
 this?" · "Take me into shadow work." · "Let's do the Shadow Field." · "Yes" to a lawful offer.
@@ -263,13 +269,14 @@ A persistent, visible **Leave** affordance exists on every screen and in every t
 Invoked Field (a spoken "stop" or "let's leave this" is the same gesture). Leaving:
 
 - is immediate, needs no reason, and is never met with a question;
-- deactivates all Field intelligence for the rest of the conversation;
+- deactivates all Field intelligence immediately; it remains inactive unless and until the
+  member performs a new activation act;
 - triggers no closing interpretation, no Return, no keep-act menu, no "before you go";
 - writes nothing.
 
 MAIA's only utterance on exit is acknowledgement and availability without pull: *"Okay. We've
-left it. I'm here whenever."* — no reference to what was in the room. Re-entry needs a new
-activation act.
+left it. I'm here whenever."* — no reference to what was in the room. Nothing but a new
+activation act re-enters.
 
 ---
 
@@ -305,7 +312,7 @@ activation act.
 |---|---|---|
 | Surface | a Field room separate from ordinary conversation for the first prototype; Invoked entrance may wait for a second prototype if isolation on the activation turn cannot be demonstrated structurally first | Part III; lane §8 |
 | Assembly sovereignty | the Field's turn assembly imports none of `maia-path-revelation`, `WisdomRouter`, `ElementalOracleBridge`, `processingProfiles`, `panconsciousFieldRouter`, `relationalObserver`; it keeps `enforceFieldSafety` / failure boundaries, identity, transport; it reads member-authored atoms only through the existing loader | L8, D6 |
-| Producer | one registered producer `shadow-field` in the closed canonical-turn registry; no other producer may run on a Field turn; log marker `[MAIA/shadow-field]` content-free | naming §9; CMT-01 |
+| Producer | one registered producer `shadow-field` in the closed canonical-turn registry — the **only Field interpretive producer**; while the Field is active no other ordinary-path psychological or frame-bearing producer participates; canonical safety / failure-boundary mechanisms, identity, transport, and permitted member-authored or adopted context are not excluded (D6); log marker `[MAIA/shadow-field]` content-free | naming §9; CMT-01; D6 |
 | Activation | a typed event with `member · placed · situate` provenance; no string match anywhere sets it | L1, F1, F2 |
 | Offer | produced by turn cognition under the §3 contract; no offer component | D2, F3 |
 | Memory | the keep gesture is the only writer; a member-authored atom with Field provenance; schema choice (`source_type` vs `spontaneous` + provenance) made in PROTOTYPE; return preference default member-pulled; no `agent_runs` shadow rows from Field turns | L3, §4, F8 |
@@ -363,8 +370,12 @@ DESIGN         DRAFTED — two entrances · arc with prompt law per movement · 
 CONTRACT       docs/design/contracts/shadow-field.md (house form: what for · arrival · gestures ·
                forbidden here · two brand tests)
 CLAIM STATE    Designed on founder acceptance; not Live; nothing witnessed
-NEXT           founder acceptance of the design → ▌HARD STOP▐ → PROTOTYPE only on an explicit
-               founder act
+DG-C1–C4       APPLIED — contract status DRAFT pending acceptance; hidden-depth offer struck and
+               listed as forbidden; exit deactivates immediately and stays inactive until a new
+               activation act; `shadow-field` is the only Field *interpretive* producer, safety /
+               failure-boundary / infrastructure not excluded
+NEXT           founder closes DESIGN (no further substantive review if DG-C1–C4 hold) →
+               ▌HARD STOP▐ → PROTOTYPE only on an explicit founder act
 RUNTIME        UNCHANGED · S1 Guardian preserved
 NOT            any code
 ```
