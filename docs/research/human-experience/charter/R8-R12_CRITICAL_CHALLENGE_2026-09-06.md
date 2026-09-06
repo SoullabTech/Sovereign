@@ -112,10 +112,28 @@ CLAIMS AT STAKE   P3 · dimension "Repair" · measurement "Attunement" pair
 OUTCOME           [open]
 ```
 
-## R11 — Persuasive technology and relational-AI critiques
+## R11 — Can Soullab distinguish sovereignty-supporting influence from manipulation?  ← OPENED (founder, 2026-09-06, after R10)
 
 ```text
-QUESTION          What do the strongest critics of persuasive technology and relational
+QUESTION [founder] Can Soullab actually distinguish sovereignty-supporting influence from
+                  manipulation, or has it merely constructed a morally attractive vocabulary
+                  for the kinds of influence it prefers?
+STRONGEST POINT   P4's "serving ends the person recognizes as their own" may be CIRCULAR if
+OF ATTACK         relationship with MAIA itself changes what the person recognizes as their
+                  own ends.
+RESEARCH [founder] persuasive technology · autonomy formation · preference construction ·
+                  asymmetric influence · relational power · therapeutic influence · nudging ·
+                  dark patterns · motivational interviewing · self-determination theory ·
+                  adaptive systems · vulnerability · consent under longitudinal relationship
+CENTRAL COUNTER   Actively seek the case that no sufficiently relational AI can ever be neutral
+                  enough for the supportive / persuasive / manipulative taxonomy to hold cleanly.
+WHY NOW           R8 challenged whether AI relationship helps or displaces; R9 our assumptions
+                  about personhood; R10 whether human relational concepts transfer. R11 turns
+                  the challenge on Soullab itself: even with good intentions, are we shaping
+                  people — and if we are, as every meaningful relationship does, what makes
+                  that influence legitimate?
+FINDINGS          inquiries/R11_INFLUENCE_LEGITIMACY_2026-09-06.md
+PRIOR QUESTION    What do the strongest critics of persuasive technology and relational
                   agents say that v0.1's three-class taxonomy (supportive / persuasion /
                   manipulation) cannot answer?
 TARGETS [founder] persuasive technology · relational AI

@@ -723,3 +723,27 @@ embodiment and uncertainty — Soullab points the opposite way. *Mortality chang
 The participatory-inquiry invitation (SETI analogy; personal Soul Lab today; collective Soul Lab by
 explicit choice, unbuilt) is on the page. Any outreach to a specific prospective partner is the
 founder's own act and is not recorded in this repository.
+
+
+---
+
+## 18 · R10 adjudicated · R11 opened · publication and PR sequence (founder rulings, 2026-09-06)
+
+Full rulings: `docs/research/human-experience/inquiries/R10_RUPTURE_REPAIR_TRANSFER_2026-09-06.md` §8.
+**P3 split** (fit · correction · re-attunement · adaptation; Repair retained as a research dimension;
+felt understanding belongs to the member, trust to the relationship). **P13 — Accountable
+Relationship** CANDIDATE. **AP14 — Validation Spiral** CANDIDATE. Re-attunement grammar as design
+direction (ending in RETURN AUTHORITY; no simulated remorse; never ask forgiveness; no forced
+forward move). E1/E8: structured feedback · human-facing outcome · agent-native construct · no
+covert emotional A/B. **No R10 statistic is public until paraphrase-checked.** **R11 opened**;
+R12 held next.
+
+**PR ruling:** open the PR **now, as DRAFT** — the integration vessel for the Human Question
+hierarchy, the Elemental manifesto structure, the R8–R10 record, the participatory Soul Lab
+proposition and the `/accounted-for` rewrite. Opening implies neither acceptance nor publication.
+**Merge NOT authorized. Deploy NOT authorized.** Before merge: R11 → R12 → foundational challenge
+pass closed → Synthesis v0.2 → `/accounted-for` claim-discipline reconciliation → final render /
+gates → merge decision. v0.1 does not become public doctrine before the critical-challenge pass
+completes; R11 and R12 are allowed to alter the manifesto before it becomes the live center.
+Once the draft PR is confirmed open against `clean-main-no-secrets`, **PR #1238 is closed as
+superseded** and is not merged separately.

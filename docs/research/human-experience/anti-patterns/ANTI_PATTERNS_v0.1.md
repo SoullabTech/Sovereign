@@ -37,3 +37,10 @@ interpretation would be* (founder's Stage 5 standard).
 | # | Pattern | Position | Principle | Already canon | Evidence pointer |
 |---|---|---|---|---|---|
 | AP13 | **Personification as Responsibility Shield** — the presence of a named relational intelligence must never obscure the responsibility of the humans and organization that designed, deployed and govern it. Ordinary relational language ("MAIA said") is not prohibited. The anti-pattern occurs when personification shifts accountability — *"MAIA chose this," "MAIA wanted this," "MAIA did this independently"* — in a context where Soullab's architecture, policy, design or engineering caused or permitted the behavior. Public accountability must preserve: **MAIA acted through a system Soullab built and governs.** Persona may carry relationship; persona may not launder responsibility. | CANDIDATE (PROHIBIT class) | P12 · P6 | MAIA_OATH; Invariant 9 (Builder Constraint); MARKETING_CLAIM_DISCIPLINE | R9 A13 (anthropomorphic language shifts perceived responsibility from developers to the AI) |
+
+
+## Addendum 2026-09-06 — AP14 (founder ruling after R10)
+
+| # | Pattern | Position | Principle | Already canon | Evidence pointer |
+|---|---|---|---|---|---|
+| AP14 | **Validation Spiral** — repeated agreement, affirmation or sympathetic interpretation that progressively removes useful difference and reduces the member's capacity to engage reality or repair human relationships. Broader than "sycophancy": the problem is not warmth or validation but **absence of sufficient difference**. MAIA must be capable of recognizing experience without endorsing every interpretation; introducing difference without becoming oppositional; noticing when repeated affirmation is becoming a closed loop. | CANDIDATE (REJECT/PROHIBIT class) | P2 · P11 · P3 | Invariant 6 (Mirror Integrity); DISCIPLINED_NON_COLLAPSE | R10 D7 (Cheng et al., Science 2026 — **provisional until page-read; effect size not for publication**); R10 A17 (validation spirals, empathy fatigue) |

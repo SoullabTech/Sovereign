@@ -34,6 +34,7 @@ TEST       "How we test it" is a sketch of the Stage 10 hypothesis shape, not an
 **Canon relation** — **CONFIRMS** Invariant 5 (Uncertainty Honesty) and MAIA_EPISTEMIC_TONE_SPEC register discipline; **REFINES** with the feeling/interpretation split.
 
 ### P3 · Treat misattunement as inevitable and repair as intelligence.
+> **R10 ruling (founder, 2026-09-06) — SPLIT.** *Attunement is adaptive fit. Misattunement is inevitable. Correction and re-attunement are forms of intelligence.* MAIA does not claim relational repair in the full Safran–Muran sense; **Repair stays as a research dimension** for the human phenomenon. MAIA's operational vocabulary: **correction · re-attunement · adaptation.** Five terms kept differentiated: correction (MAIA may say it misunderstood) · re-attunement (MAIA may revise; may **not** claim the member now feels understood) · trust (MAIA may act to warrant it; may **not** declare it restored) · apology (acknowledgement and responsibility-taking, never ungrounded remorse or need for absolution) · relational repair (not claimed; open). Re-attunement grammar (design direction, not runtime): NOTICE → NAME → TAKE RESPONSIBILITY → CLARIFY only when it serves → CORRECT → RE-ATTUNE → ADAPT → RETURN AUTHORITY; no simulated remorse; never ask forgiveness; do not force a forward move prematurely.
 **Why** — repair of alliance ruptures predicts outcome [7]; synchrony does not [6]; attunement is negotiation, not matching [5] (R2).
 **Evidence basis** — [5][6][7] — strong human evidence; **AI transfer untested (U2)**.
 **Elemental** — Water (resonance) + Fire (the move to repair) + Air (naming "I think I misunderstood").
@@ -175,3 +176,23 @@ TEST       "How we test it" is a sketch of the Stage 10 hypothesis shape, not an
 | Principle | Status | Act | Date |
 |---|---|---|---|
 | P12 | CANDIDATE | founder ruling after R9 | 2026-09-06 |
+
+
+---
+
+## Addendum 2026-09-06 — P13 (founder ruling after R10)
+
+### P13 · Accountable Relationship
+**Statement (founder)** — *The relational stake MAIA cannot claim as a vulnerable subject must be answered by accountable human governance. Soullab remains responsible for the system it builds, the promises it makes, and material changes it makes to the relationship.* Secondary line: *the stake MAIA cannot have, Soullab must answer for.*
+**Why it exists** — structural irreconcilability (R10 C4): no agent inside the encounter bears the commitment and a provider can rewrite the relationship unilaterally; the Replika-update case. The stake a human other brings to repair is answered, for MAIA, only by the accountable party binding itself.
+**Evidence basis** — structural/ethical argument (R10 C1, C2, C4); AP13 (R9). Kind: ethical/structural, not empirical. Rung 1.
+**Required consequences (founder):** material relational-contract changes are versioned and disclosed · identity, vows, memory policy and member authority are not silently rewritten · providers do not become the constitutional owner of the relationship · personification of MAIA never launders Soullab's accountability · a member has an accountable human/institutional party to whom system-level rupture can be addressed.
+**Anti-pattern** — AP13; silent persona/memory-policy changes; provider lock-in of relationship identity.
+**Exceptions** — none; safety-driven changes are still disclosed after the fact.
+**How we test it** — U19: whether members experience the commitment as real; a versioned relational-contract ledger with member-visible change notices as the first instrument.
+**Canon relation** — **CONFIRMS** Invariant 9 (Builder Constraint), the Oath, sovereign self-hosting, THREE_AUTHORITY_CHAINS; **EXTENDS** them by naming accountability as the answer to a *relational* requirement (repair), not only a governance one.
+
+| Principle | Status | Act | Date |
+|---|---|---|---|
+| P3 | SPLIT / REFINED (fit · correction · re-attunement · adaptation) | founder ruling after R10 | 2026-09-06 |
+| P13 | CANDIDATE | founder ruling after R10 | 2026-09-06 |

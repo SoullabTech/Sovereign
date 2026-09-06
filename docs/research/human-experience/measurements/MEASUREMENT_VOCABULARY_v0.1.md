@@ -13,7 +13,7 @@ STATUS   Vocabulary only. No instrument exists. No member-facing survey is autho
 |---|---|---|---|
 | **Relationship beyond the AI** (RATIFIED programme criterion, founder 2026-09-06, after R8) | change in the member's capacity for relationship *outside* MAIA — human contact, difficult conversations attempted, reciprocity tolerated — paired with in-encounter presence (felt heard) | attachment intensity · return rate · "MAIA gets me" | **no instrument anywhere in the field** (R8: no therapeutic RCT measured it); needs consent design + longitudinal; R12 |
 | Understanding | felt understanding **and** correction rate / accuracy of reflection | "MAIA gets me" | needs instrument |
-| Attunement | adaptation and repair after mismatch | emotional mirroring | needs instrument + seeded-mismatch design |
+| Attunement | adaptation, correction and re-attunement after mismatch **and after drift** (R10) | emotional mirroring · WAI-SR scores read as "AI alliance" | **agent-native construct required (founder ruling after R10)** differentiating at minimum: felt understanding · correction · re-attunement · warranted trust · freedom to disagree · ability to leave · useful difference · transfer beyond MAIA. Do not adopt WAI-SR. Experiments: structured feedback + human-facing outcome; explicit consented research only |
 | Agency | goal ownership, refusal, correction, optionality | completion | partly measurable now (correction / refusal events exist in logs) — provenance check first |
 | Competence | transfer into action without MAIA | repeated use | needs consent design (member-reported) |
 | Trust | belief about MAIA capability **vs** actual capability (calibration gap) | "how much do you trust MAIA?" | needs instrument |
