@@ -1,6 +1,6 @@
 # Phase 2 read-only production census — specification
 
-**Authorized:** founder, 2026-09-06 (ranked map §9). **Runs on:** minisforum, by ops, against the
+**Authorized:** founder, 2026-09-06 (ranked map §9); **RUN AUTHORIZED 2026-09-06 for C1–C18** (C3 as a navigation/read-only walk only; **C19 NOT AUTHORIZED** — it needs a logging code change and cannot inherit read-only authorization; **run C5 early**). Runnable script: `scripts/witness/phase2-readonly-census.sql` + `scripts/witness/phase2-readonly-census-logs.sh`. **Runs on:** minisforum, by ops, against the
 production database and container logs. **This session has no production access; nothing here has
 been run.** Each item is a read-only count or distribution; the SQL is authored at run time against
 the live schema (column names cited from the census pages are READ from migrations, not verified
@@ -44,7 +44,7 @@ selected; member identifiers are prefixes only.
 | C16 | `consciousness_journey_stage` writer | 10 D9 | DB | null-count | — |
 | C17 | Practice cycles | rank 4 / 07, 08 | DB | `member_field_note_threads` with `responds_to_thread_id`; `practice_sessions` count; occupancy ratings; `about_practice` row for `now-what` | — |
 | C18 | Voice feedback-prevention rejects | 05 V4 | logs | `🔇 [Voice Feedback Prevention] Rejecting transcript` per session | — |
-| C19 | Relational observer write rate | A3 | logs (needs the one log marker — a code change, founder act) | `[MAIA/relational-observer] wrote {kind, confidence}` | not runnable until the marker exists |
+| C19 | Relational observer write rate | A3 | logs (needs the one log marker — a code change) | `[MAIA/relational-observer] wrote {kind, confidence}` | **NOT AUTHORIZED** (founder 2026-09-06): separate code-change act |
 
 Items C3 and C19 are not pure queries: C3 is a walk; C19 needs a log line first. Both are flagged
 rather than folded in.

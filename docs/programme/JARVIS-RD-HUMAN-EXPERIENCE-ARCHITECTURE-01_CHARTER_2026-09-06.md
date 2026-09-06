@@ -1118,3 +1118,29 @@ observational; block after cognition; no member-text key in the log). Spec and w
 is a founder act through the deploy lane; nothing is live.** A candidate is a marker, not a
 finding; the instrument produces prevalence counts only; whether MAIA *notices* a correction
 remains the E1 witness under Phase 4 consent.
+
+---
+
+## 29 · Five founder stops closed (2026-09-06)
+
+```text
+E1                    DEPLOY AUTHORIZED — isolated E1 commit (7d894b72 code) only, never the Phase-2 head
+                      witness: candidate diff = E1 only · production GIT_COMMIT recorded ·
+                      MAIA_CORRECTION_SHADOW != 0 · no response-path consumer · no Sanctuary emission ·
+                      no member text in logs · 14-day window · counts/distributions only ·
+                      memberRef stays, no new persistence/sink
+C1–C18                RUN AUTHORIZED (C3 navigation/read-only walk only; C5 early)
+C19                   HOLD — separate code-change act
+R30                   PP-2 AUTHORIZED — pp-1 preserved; four cells adjudicated (see register)
+E5 synthetic          RUN AUTHORIZED (calibration only; adversarial corpus; version on manual change)
+E5 member sample      HOLD for Phase-4 consent; external rater outside Soullab and the framework
+#1239                 publication lane only — no act from this lane
+Shadow Field          separate Jarvis lane; not folded into the Phase-2 register
+```
+
+Execution by this session: deploy candidate branch cut from canonical with E1's code
+cherry-picked (the Phase-2 head carries the publication lane's page revisions and cannot be the
+deploy subject); read-only census script authored for ops (nothing run here — no production
+access); pp-2 opened in `lib/maia/canonical-turn/policy.ts`; E5 coding manual, synthetic corpus and
+scoring tool authored (raters are a founder appointment). Records: register (second ruling set),
+`E1_CORRECTION_SHADOW_SPEC_2026-09-06.md` §7, `PHASE2_READONLY_CENSUS_SPEC_2026-09-06.md`.
