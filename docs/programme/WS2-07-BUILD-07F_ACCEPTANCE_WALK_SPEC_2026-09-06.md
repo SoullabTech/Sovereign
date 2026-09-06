@@ -3,12 +3,13 @@
 > **The W1–W12 claims were fixed BEFORE deployment, and that is the point of the document: a walk
 > whose claims are written while it is being walked can only confirm what it finds. This revision
 > does not restate them — it retargets custody and evidence after a promotion that has already
-> occurred (runbook §0). The walk itself has NOT started, and W3 onward is gated on the founder's
-> prospective act (runbook §2.2).**
+> occurred (runbook §0). The walk itself has NOT started, and the entire walk — W1 included — is
+> gated on the founder's prospective act (runbook §2.2).**
 
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
-FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
+FROZEN EXECUTABLE ANCHOR   ca5fdff445526562ce11f68c01e20db9bf64548f   (re-frozen §2.1.1)
+PRIOR FROZEN ANCHOR        66da58b4c4a4979240db460c045dd9daf1cd47d3   (superseded, not a fallback)
 OBSERVED RUNTIME SHA       read at W1, then FIXED for the walk's duration (§2.1)
 07F MIGRATION    APPLIED 2026-09-06 11:36:34+00 — before its consent checkpoint (runbook §0)
 STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
@@ -17,18 +18,16 @@ RUNS AFTER       #1228's own witness (runbook §6.2) — a separate record, not 
 STATE            PRODUCTION ACCEPTANCE NOT STARTED
 ```
 
-**The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
-promotion, then to `66da58b4c`, which is what production actually runs. The claims below are
-unchanged by either move: they were fixed before any of those SHAs was the subject. #1228's only
-overlap with this unit is refusal copy for a different refusal, and the intervening
-Journal/Reflections delta touches no 07F file. What changed is which runtime they will be walked
-against.
+**The executable subject moved before the walk began** — `cb557b8fb` → `ccd1c50ce` → `66da58b4c`,
+then was re-frozen by the authorized agent-doable docs act to `ca5fdff44` under §2.1.1. The claims
+below are unchanged: they were fixed before any of those SHAs was the subject. #1228's only overlap
+with this unit is refusal copy for a different refusal. What changed is which program the frozen
+claims will be walked against.
 
-> ⛔ **W3 MAY NOT BE RUN BEFORE THE §2.2 ACT.** W1 is read-only and may be run to establish state.
-> W3 creates the first durable member standing act in production, and `standing_events = 0` is the
-> boundary that keeps reversal available without destroying a member act. That boundary is the
-> founder's to cross, and crossing it is the walk's first irreversible step — not a formality
-> inside it.
+> ⛔ **NO WALK STEP MAY RUN BEFORE THE §2.2 ACT — W1 INCLUDED.** W1 is read-only, but it binds the
+> observed runtime as the walk's subject, and that binding is the walk starting. W3 remains the first
+> durable member standing act in production; `standing_events = 0` is still the boundary that keeps
+> reversal available without destroying a member act. The founder's §2.2 act must precede both.
 
 ---
 
@@ -67,11 +66,13 @@ proof that the member was shown the truth. Where both matter, the claim names bo
 
 ```text
 the runbook's §0 is established — migration applied, guard live, consent checkpoint crossed
+the founder's §2.2 act GIVEN, carrying the three consent markers and naming THIS bound subject
+  (runbook §2.2) — without it, NO walk step runs, W1 included
 the runbook's §3 reads pass on the CURRENT container — its GIT_COMMIT satisfies the §2.1
-  subject-identity rule against the frozen anchor 66da58b4c, and the migration is recorded with
+  subject-identity rule against the frozen anchor ca5fdff44 (re-frozen 2026-09-06, §2.1.1), and
+  the migration is recorded with
   the table and all three developmental_readings triggers present
 standing_events re-read immediately before starting, and its value recorded whatever it is
-the founder's §2.2 act GIVEN — without it, W1 only
 #1228's own witness (runbook §6.2) has been run and recorded SEPARATELY, if it was not already
   completed in its own lane — it clears an obstruction this walk needs for W9, and its result is
   never counted as a 07F witness
@@ -99,8 +100,9 @@ never admit a runtime change, because **any non-document byte difference halts t
 ### The rule
 
 ```text
-FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
-OBSERVED RUNTIME SHA       whatever the container reports at W1
+FROZEN EXECUTABLE ANCHOR   ca5fdff445526562ce11f68c01e20db9bf64548f   (re-frozen §2.1.1)
+PRIOR ANCHOR               66da58b4c4a4979240db460c045dd9daf1cd47d3   (superseded, not a fallback)
+OBSERVED RUNTIME SHA       whatever the container reports at W1, self-discovered
 
 PASS subject identity when:
   1. runtime SHA == frozen anchor
@@ -112,29 +114,93 @@ PASS subject identity when:
 otherwise: HALT
 ```
 
-### The proof — executable, and retained with the walk's evidence
+### The proof — executable, hardened, and retained with the walk's evidence
+
+Eleven instrument defects were observed across earlier runs of this proof and are closed here. The
+governing distinction: **an instrument that could not look is not a subject that failed.** The two
+outcomes have different exit codes and different words, and neither is silence.
 
 ```bash
-RUNTIME_SHA=<what the container reported at W1>
+# Clean, non-interactive shell — nothing sourced, no profile, no rc, no aliases.
+# Fed by a QUOTED heredoc: nothing inside is expanded or re-quoted by the pasting shell,
+# so the single quotes in the SQL survive verbatim. Do not switch this to `zsh -f -c '...'`
+# — the nested quoting silently mangles the ledger predicate.
+zsh -f -s <<'WS207F_SUBJECT_IDENTITY'
+set -euo pipefail                      # -e stop on error · -u unset var is an error · pipefail
+(                                      # subshell: no state leaks into the operator shell
 
-git merge-base --is-ancestor 66da58b4c4a4979240db460c045dd9daf1cd47d3 "$RUNTIME_SHA"
-#   exit 0 required — a runtime that does not descend from the anchor is not this subject
+  ANCHOR=ca5fdff445526562ce11f68c01e20db9bf64548f
+  REPO=${WS207F_REPO:-/Users/soullab/MAIA-SOVEREIGN}
+  SQL='SELECT count(*) FROM schema_migrations WHERE filename = '\''20260906000001_developmental_observation_standing.sql'\'';'
 
-git diff --name-only 66da58b4c4a4979240db460c045dd9daf1cd47d3 "$RUNTIME_SHA" -- . ':(exclude)docs/**'
-#   MUST print nothing
+  halt_instrument() { printf "SUBJECT-IDENTITY: INSTRUMENT-FAILURE — %s\n" "$1"; exit 3; }
+  halt_subject()    { printf "SUBJECT-IDENTITY: HALT — %s\n"               "$1"; exit 1; }
+
+  # 1 · explicit repo context — never inherit the operator's cwd
+  cd "$REPO" 2>/dev/null || halt_instrument "cannot enter $REPO"
+  ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || halt_instrument "not a git repository: $REPO"
+  printf "REPO_ROOT=%s\n" "$ROOT"
+
+  # 2 · self-discover the runtime — a pasted SHA proves the paste, not the container
+  RAW=$(ssh soullab@minisforum "docker exec maia-sovereign printenv GIT_COMMIT" 2>/dev/null) \
+    || halt_instrument "could not reach the container to read GIT_COMMIT"
+  [ -n "$RAW" ]           || halt_instrument "container reported an empty GIT_COMMIT"
+  [ "$RAW" != "unknown" ] || halt_instrument "GIT_COMMIT=unknown — a provenance defect, not a subject verdict"
+  printf "RUNTIME_GIT_COMMIT_RAW=%s\n" "$RAW"
+
+  # 3 · short → full; an object this clone has never seen is an INSTRUMENT failure, not a HALT
+  git cat-file -e "${RAW}^{commit}" 2>/dev/null || git fetch --quiet origin 2>/dev/null \
+    || halt_instrument "fetch failed while resolving $RAW"
+  git cat-file -e "${RAW}^{commit}" 2>/dev/null \
+    || halt_instrument "commit $RAW unknown locally — this clone cannot judge the subject"
+  git cat-file -e "${ANCHOR}^{commit}" 2>/dev/null \
+    || halt_instrument "anchor $ANCHOR unknown locally"
+  RUNTIME_SHA=$(git rev-parse --verify "${RAW}^{commit}") || halt_instrument "cannot resolve $RAW"
+
+  halt_w1_state()   { printf "W1-STATE: HALT — %s\n"                     "$1"; exit 2; }
+
+  # 4 · the only two questions that may HALT the SUBJECT — both are about the PROGRAM
+  git merge-base --is-ancestor "$ANCHOR" "$RUNTIME_SHA" \
+    || halt_subject "runtime $RUNTIME_SHA does not descend from the anchor"
+  DRIFT=$(git diff --name-only "$ANCHOR" "$RUNTIME_SHA" -- . ":(exclude)docs/**")
+  [ -z "$DRIFT" ] || halt_subject "non-doc drift:
+$DRIFT"
+
+  # 5 · production STATE, not subject identity. A wrong ledger count is a real W1 halt, but it
+  #     says nothing about whether the executable subject changed — a database is not a program.
+  #     EXACT filename equality: LIKE would let _ match any character, and two 20260906000001_*
+  #     migrations exist. The ledger stores no checksum, so this proves a filename, never bytes.
+  LEDGER=$(ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -Atc \"$SQL\"" 2>/dev/null) \
+    || halt_instrument "could not read the migration ledger"
+  [ "$LEDGER" = "1" ] || halt_w1_state "ledger rows = ${LEDGER:-<none>}, expected exactly 1"
+
+  # 6 · explicit success — full SHAs printed, and retained as the binding evidence
+  printf "ANCHOR_FULL=%s\n"           "$ANCHOR"
+  printf "RUNTIME_FULL=%s\n"          "$RUNTIME_SHA"
+  printf "NON_DOC_DRIFT=none\n"
+  printf "MIGRATION_LEDGER_ROWS=%s (exact filename equality)\n" "$LEDGER"
+  printf "SUBJECT-IDENTITY: PASS\n"
+)
+WS207F_SUBJECT_IDENTITY
 ```
 
-Both commands and their output are pasted into the walk's record. A rule whose satisfaction is
-asserted rather than shown is not a rule.
+**Reading the result.**
 
-**There is no allowlist beyond `docs/**`.** A single byte under `app/`, `lib/`, `database/`,
-`scripts/`, configuration, package metadata, compose files, workflows, or anywhere else is a
-different program and stops the walk. "It was only a comment" and "it was only a test" are not
-exceptions — the filter is the path, not a judgment about the change.
+```text
+exit 0 · SUBJECT-IDENTITY: PASS                 subject bound AND W1 state read · proceed
+exit 1 · SUBJECT-IDENTITY: HALT                 the program changed · the walk stops
+exit 2 · W1-STATE: HALT                         the program is the right one; production state is
+                                                wrong · a real W1 halt, and NOT evidence that the
+                                                executable subject moved
+exit 3 · SUBJECT-IDENTITY: INSTRUMENT-FAILURE   we could not look · fix the instrument and re-run
+                                                NOT a verdict on subject or state, in either direction
+no line at all                                  INSTRUMENT-FAILURE by default
+```
 
-*A consequence worth naming: this amendment is itself docs-only for exactly this reason. Adding even
-a helper script under `scripts/` to run the proof would put a non-doc byte between the anchor and any
-runtime built from it, and would halt the very walk it was meant to serve. The proof stays inline.*
+**Silence is not evidence.** A run that prints no verdict line established nothing — not a pass, not
+a failure. The absence of output has been read as absence of a problem before in this lane; it is
+read here as an instrument that did not run. Both commands, their output, and the verdict line are
+pasted into the walk's record. A rule whose satisfaction is asserted rather than shown is not a rule.
 
 ### Safeguard — the subject is bound ONCE, at W1
 
@@ -147,15 +213,97 @@ Any later deployment — **including a documentation-only one** — halts the ac
 being absorbed midstream. The equivalence rule binds a subject; it does not license a moving one. A
 walk whose runtime changed between W5 and W9 witnessed two programs and can speak for neither.
 
-### The already-observed transition
+### The already-observed transitions
 
 ```text
-66da58b4c → 1116f7813        non-doc diff: EMPTY (4 files, all under docs/)
+66da58b4c → 1116f7813        non-doc diff: EMPTY (4 files, all under docs/)   — historical
+66da58b4c → ca5fdff44        non-doc diff: 19 paths                           — see §2.1.1
 ```
 
-So `1116f7813` is **eligible** to become the observed runtime subject at W1. That is not W1 passing:
-the provenance, schema and count reads still have to be run against the live container at the time,
-and eligibility of a commit says nothing about the state of a database.
+Custody equivalence did not carry the walk from `66da58b4c` to current canonical, and no reading of
+§2.1 makes it. The walk was re-frozen instead, which is a different act with a different basis.
+
+---
+
+## 2.1.1 · The re-freeze — a RETARGET, not a custody equivalence and not a source acceptance
+
+**AUTHORIZED in-session, 2026-09-06 · agent-doable docs act.** This is **not** a founder act, and
+nothing here is one: no founder-authority act occurred for the re-freeze, and §2.2 remains the only
+open act reserved to the authority holder. The distinction is the one corrected in the WS2-08A
+closure — an agent may perform authorized work and draft wording; it may not hold authority.
+
+**Prior frozen executable anchor** `66da58b4c4a4979240db460c045dd9daf1cd47d3`.
+
+*Correction, 2026-09-06:* an earlier draft of this section named `c1b0470e2` as the old bound
+subject. It never was. `c1b0470e2` is the later canonical commit that introduced the §2.1
+custody-equivalence rule; the frozen executable anchor throughout was `66da58b4c`. Every measurement
+below is taken from `66da58b4c`.
+
+*Freshness corrections, 2026-09-06:* PR #1242 was retargeted twice while exact-head checks were
+running. First canonical advanced `69f6fb7c8 → 2b4ec96a8` via PR #1241, including non-`docs/**`
+`CLAUDE.md`. Then, after that retarget's checks completed, canonical advanced again
+`2b4ec96a8 → ca5fdff44` via PR #1239, including non-doc `CLAUDE.md` and
+`app/accounted-for/page.tsx`. Neither provisional target was carried forward. After each move, and
+again for the final tip, the ten-path endpoint blob check was rerun directly from the true prior
+anchor. Final result `66da58b4c → ca5fdff44`: **10 identical · 0 differing**. The broader non-doc
+drift count remains **19 paths**. The bound subject below is the fresh tip.
+
+```text
+BOUND WALK SUBJECT
+ca5fdff445526562ce11f68c01e20db9bf64548f
+```
+
+**What was verified.** Endpoint comparison `66da58b4c → ca5fdff44`. The seven 07F subject files are
+byte-identical across the two commits — blob identity, not a diff summary:
+
+```text
+IDENTICAL  app/api/sovereign/manuscripts/[id]/readings/[readingId]/standings/route.ts  10a1a14357ca…
+IDENTICAL  lib/manuscript/standing/contract.ts                                         1b7bf7a68265…
+IDENTICAL  lib/manuscript/standing/store.ts                                            2549bc216329…
+IDENTICAL  lib/manuscript/standing/__tests__/standingContract.test.ts                  afc4c59f45cc…
+IDENTICAL  lib/manuscript/standing/__tests__/standingOutsideCognition.test.ts          468513c37987…
+IDENTICAL  lib/writersStudio/observationStanding.ts                                    e34a5bc51450…
+IDENTICAL  lib/writersStudio/__tests__/observationStanding.test.ts                     90764795502d…
+                                                    7 files · 7 identical · 0 differing
+                                                    (10 identical · 0 differing with the three below)
+```
+
+Checked beyond the seven, and also identical — the migration is subject, not instrument, and the
+falsifiers are the instruments the earlier reviews ran:
+
+```text
+IDENTICAL  database/migrations/20260906000001_developmental_observation_standing.sql   c12d809901a7…
+IDENTICAL  scripts/ws2-07f/falsify-standing-persistence.ts                             bfdded4338a4…
+IDENTICAL  scripts/ws2-07f/falsify-standing-store.ts                                   5e07e1587ee2…
+```
+
+**What this establishes.** 07F's own executable subject did not move between the old anchor and the
+new one. The three source-review rounds, their repairs, and the falsifier runs were performed
+against these exact bytes, so they still speak to the re-frozen subject without re-review.
+
+**What this does NOT establish — and the distinction matters.** This is a *narrower* basis than the
+§2.1 custody rule. §2.1 asks whether **every** non-doc path is unchanged; that question is answered
+NO between `66da58b4c` and `ca5fdff44` — **19** non-doc paths moved, none of them 07F's. The
+re-freeze does not claim the program is unchanged. It discards the old anchor and adopts the current
+program wholesale, and everything outside the seven-plus-three is newly bound and unwitnessed by
+anything 07F has done.
+
+*This is the same shape as SC-1 in the WS2-08A closure: a narrower successor claim standing where a
+broader one failed. It is recorded as narrower here for the same reason — so that a later reader
+cannot mistake it for the broader claim.*
+
+**What it is not:** not a new source acceptance, not a W1 pass, not a §2.2 act.
+
+```text
+earlier W1 custody halt     remains HISTORICAL · the re-freeze does not convert it to a pass
+walk order                  re-freeze → §2.2 → W1 · NO walk step runs before §2.2
+fresh W1                    NOT RUN / NOT BOUND until a valid subject-bound §2.2 act exists
+standing_events             0 · a standing event write remains FORBIDDEN
+```
+
+**Freshness applies again, to this too.** If canonical moves before the §2.2 act, re-check the seven
+subject files against the new tip before binding anything. `ca5fdff44` is not carried forward by
+having been named here.
 
 ---
 
@@ -167,7 +315,7 @@ The runbook's §3 production-state reads, re-stated here as the walk's first wit
 stands alone. Two parts, in this order:
 
 **a · Subject identity.** Read the container's `GIT_COMMIT`, then satisfy §2.1's rule against the
-frozen anchor `66da58b4c` and retain both commands' output. Record the observed runtime SHA; it is
+frozen anchor `ca5fdff44` and retain both commands' output. Record the observed runtime SHA; it is
 the walk's subject from here on.
 
 **b · Schema.** `schema_migrations` carries the 07F filename; the events table exists with its UNIQUE
