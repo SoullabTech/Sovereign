@@ -562,6 +562,33 @@ A re-freeze onto `69f6fb7c8` becomes correct **only once `69f6fb7c8` is deployed
 subject genuinely moves, W1 custody is re-run against the new runtime, and continuation requires the
 founder's subject-bound reaffirmation for the new subject.
 
+**WITHDRAWN by the founder, 2026-09-06.** The re-freeze instruction was for this session and is
+withdrawn: it rested on the false premise that 07F was parked with `standing_events = 0` and had
+never been exercised, which the production reconciliation above disproves.
+
+```text
+production runtime    50302f5d9
+walk subject          50302f5d9
+custody               INTACT
+canonical             69f6fb7c8
+canonical deployed?   NO
+re-freeze             NOT APPLICABLE
+```
+
+**Canonical advancing without production advancing does not move the acceptance subject.** The walk
+follows the deployed runtime. A new freeze/rebind becomes appropriate only when production itself
+changes runtime, and it then binds to the SHA ACTUALLY DEPLOYED — never prospectively to whichever
+commit happens to be canonical.
+
+No second active 07F walk is known against `c1b0470e2` or this production database, and the
+withdrawn authorization is not an instruction to any other session. Should one exist, it must stop
+writing standing events: this walk is in progress here, and concurrent writers would corrupt both
+records' arithmetic the same way the incidental `o7` act did.
+
+**A note on reversibility, corrected.** Every standing act in this walk — including the `unresolved`
+W7 requires — is a PERMANENT member event. Lawful and intended, but not reversible. No event is to
+be created merely to make a witness look cleaner.
+
 **Repository state cannot overwrite an in-session founder act.** Canonical lagging the §2.2 act is
 expected; it does not un-give it.
 
