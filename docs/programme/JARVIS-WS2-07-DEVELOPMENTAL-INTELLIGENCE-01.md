@@ -33,7 +33,8 @@
 >                        further since (now 50302f5d9); the walk must rebind. W2–W12 NOT STARTED,
 >                        and W3 onward remains gated on a PROSPECTIVE founder act (runbook §2.2)
 > BUILD-07F              NOT CLOSED
-> BUILD-07G              OPENED 2026-09-06 · DECIDE ONLY (no implementation authority)
+> BUILD-07G              INSTRUMENT v1 RATIFIED 2026-09-06 · FALSIFIERS FILED ·
+>                        IMPLEMENTATION UNAUTHORIZED
 > BUILD-07H              UNOPENED
 > ```
 >
@@ -680,6 +681,41 @@ AUTHORITY STATE   RECORDED, NOT IN FORCE. No "founder ratified" mark is written 
                   DECIDE-only authority. Next legitimate work after ratification is FILING
                   FALSIFIERS against the ratified boundary — not implementation.
 RECORD            docs/programme/WS2-07-BUILD-07G_LONG_WORK_DECIDE_2026-09-06.md §4 · §5 · §6 · §7
+```
+
+```text
+2026-09-06 · BUILD-07G ACCEPTANCE INSTRUMENT v1 — RATIFIED (founder act) · FALSIFIERS FILED
+ACT               founder, verbatim: "I ratify BUILD-07G Acceptance Instrument v1, consisting of
+                  the thirteen points in §4 as amended through commit 116df717, together with
+                  rulings A1–A7 as recorded there. Authority begins with this ratification act; no
+                  claim is made that the reconstructed instrument is a verbatim historical
+                  transcript. BUILD-07G may proceed to falsifier design only. Implementation
+                  remains unauthorized until separately opened by founder act."
+ESTABLISHES       §4 Acceptance Instrument v1   RATIFIED prospectively · IN FORCE
+                  A1–A7                          IN FORCE
+                  falsifier design               AUTHORIZED
+                  implementation                 STILL NOT AUTHORIZED
+                  BUILD-07H                      UNAUTHORIZED
+                  topology programme             PARKED except the §3 crossing constraint
+                  07F standing-event gate        STILL ACTIVE
+FALSIFIERS        F1–F26 filed against the ratified boundary, adjudicated by seven outcomes
+                  O1 pin integrity · O2 plan discipline · O3 honesty of coverage ·
+                  O4 freshness discipline · O5 observation integrity · O6 authorship boundary ·
+                  O7 containment
+                  No falsifier requires a live model to PASS — the boundary is provable with the
+                  seam refusing. UNABLE TO EXERCISE is never promoted to PASS.
+                  Load-bearing among them: F5 (over-ceiling section refuses PLAN FORMATION with a
+                  zero-invocation seam assertion) · F9 (no persisted staleness field anywhere) ·
+                  F21 (plan preview performs zero writes, refusal path included) · F22 (whole-Work
+                  synthesis iff all scopes complete AND each references a 07C reading AND coverage
+                  = 100% — one failed scope means incomplete though the run has finished) ·
+                  F24 (standing_events unchanged, hard condition while 07F is open)
+BOUNDARY          the set proves the BOUNDARY, not the reading. All 26 can pass while MAIA reads
+                  the book badly; usefulness is a Gate B question on a founder-run live commission.
+RECORD            docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
+STATE             BUILD-07G OPEN · INSTRUMENT RATIFIED · FALSIFIERS FILED ·
+                  IMPLEMENTATION UNAUTHORIZED (opens only by a separate dated founder act taken on
+                  the falsifier document)
 ```
 
 ## Prerequisite — SECTION-ADDRESSABLE DRAFT LIVENESS

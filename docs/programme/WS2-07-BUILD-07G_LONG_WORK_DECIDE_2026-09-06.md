@@ -12,8 +12,8 @@ UNIT             BUILD-07G  WHOLE-WORK DEVELOPMENT  (lane registry: "Cross-divis
                  manuscript-scale intelligence") — this unit's working name is
                  LONG-WORK SCOPED DEVELOPMENTAL READING
 STATE            OPEN · DECIDE ONLY · no implementation authority
-§4 / A1–A7       AMENDED + RULED 2026-09-06 · RECORDED, NOT YET IN FORCE ·
-                 awaiting the founder ratification act
+§4 / A1–A7       RATIFIED 2026-09-06 (founder act) · Acceptance Instrument v1 · IN FORCE
+NEXT             falsifier design ONLY — WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
 PRECONDITION     MET — docs/programme/WS2-DEVELOP-PREPARATION_TERMINAL_WITNESS_2026-09-06.md
                  (subject 50302f5d9 · ceiling_exceeded · 13 checks · 0 failures)
 INHERITS         BUILD-07A evidence · 07B reader · 07C reading · 07D surface · 07E dialogue
@@ -101,14 +101,23 @@ hierarchy preservation beyond what WS2-08 BUILD-08A already landed — all stay 
 
 ## 4 · Acceptance boundary — thirteen points (AMENDED 2026-09-06)
 
-> **PROVENANCE NOTICE.** These thirteen are **reconstructed** from the founder's 2026-09-06 ruling as
+> **RATIFIED — Acceptance Instrument v1 · IN FORCE from 2026-09-06.**
+>
+> Founder act, recorded verbatim:
+>
+> > *I ratify BUILD-07G Acceptance Instrument v1, consisting of the thirteen points in §4 as amended
+> > through commit `116df717`, together with rulings A1–A7 as recorded there. Authority begins with
+> > this ratification act; no claim is made that the reconstructed instrument is a verbatim
+> > historical transcript. BUILD-07G may proceed to falsifier design only. Implementation remains
+> > unauthorized until separately opened by founder act.*
+>
+> **PROVENANCE.** These thirteen were **reconstructed** from the founder's 2026-09-06 ruling as
 > recorded in session, not transcribed from a prior canonical document — the ruling predates any
-> canonical record of it. **AMENDED 2026-09-06** by the founder before ratification: points 1, 3, 5,
-> 6, 8 and 12 were rewritten in place, the count held at thirteen. They are filed as the unit's
-> proposed Acceptance Instrument v1 and **still require the founder's ratification act before they
-> carry authority.** This follows the BUILD-07A precedent: authority begins at the ruling, and no
-> provenance is claimed for the reconstruction itself. **No "founder ratified" mark is written into
-> this repository until that act is performed.**
+> canonical record of it. **AMENDED 2026-09-06** before ratification: points 1, 3, 5, 6, 8 and 12
+> rewritten in place, the count held at thirteen; a further coherence pass followed (A2 wording, §9
+> ontology, coverage-complete). Per the BUILD-07A precedent and the act's own words: **authority
+> begins at the ratification act, and no claim is made that the reconstruction is a verbatim
+> historical transcript.**
 
 ```text
  1  ONE FROZEN WORK-STATE PER RUN                                            [AMENDED]
@@ -430,17 +439,19 @@ that is ignored.
 0  founder AMENDED §4 (points 1/3/5/6/8/12) and RULED A1–A7      DONE 2026-09-06
 1  consistency pass — A2 freshness wording · §9 ontology ·        DONE 2026-09-06
    coverage-complete defined operationally
-2  founder RATIFICATION ACT — §4 becomes Acceptance Instrument    ← the one remaining act
-   v1 (prospectively ratified) and A1–A7 come into force
-3  falsifiers filed against the ratified boundary
+2  founder RATIFICATION ACT — §4 = Acceptance Instrument v1,      DONE 2026-09-06
+   A1–A7 in force; falsifier design authorized, nothing more
+3  falsifiers filed against the ratified boundary                 ← current work
+   docs/programme/WS2-07-BUILD-07G_FALSIFIERS_2026-09-06.md
 4  BUILD opened by a dated founder act in the lane
 5  Gate A structural · Gate B founder-run live
 6  production acceptance bound to an exact GIT_COMMIT, as this chain has established
 ```
 
-⛔ Steps 3 onward do not begin because step 2 looks settled. Each opens by its own act.
+⛔ Steps 4 onward do not begin because step 3 is filed. Each opens by its own act.
 
-⛔ **AUTHORITY STATE.** The amended instrument and the A1–A7 rulings are RECORDED, not yet IN
-FORCE. No "founder ratified" mark is written into this repository on the founder's behalf; the
-ratification act is theirs to perform. Until it is performed, BUILD-07G holds DECIDE-only
-authority and no implementation may begin.
+⛔ **AUTHORITY STATE.** §4 Acceptance Instrument v1 and A1–A7 are **RATIFIED and IN FORCE** from
+2026-09-06. The act authorizes **falsifier design only**. Implementation — schema, migration, route,
+orchestration code, UI — remains unauthorized until separately opened by a founder act, and step 4
+below is that act. BUILD-07H remains unauthorized; the topology programme remains PARKED except the
+§3 crossing constraint; the 07F standing-event gate remains ACTIVE.
