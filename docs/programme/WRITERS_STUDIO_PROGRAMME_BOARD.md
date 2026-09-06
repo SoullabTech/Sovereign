@@ -109,15 +109,21 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
-NEXT EXECUTABLE    none currently authorised. BUILD-07F implementation requires a
-                   separate founder act. 07G–H remain unopened.
+NEXT EXECUTABLE    WS2-08 HIERARCHICAL MANUSCRIPT STRUCTURE — opened by founder message
+                   2026-09-06, sequenced AFTER #1228 (untouched). BUILD-08A (preserve
+                   explicit heading depth at ingest) candidate on branch
+                   claude/manuscript-chapter-segmentation-jlwnlj — NOT CLOSED.
+                   08B–08E each require a separate founder act.
+                   record: WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
+                   BUILD-07F implementation still requires a separate founder act.
+                   07G–H remain unopened.
                    ⛔ Acceptance of the design is not implementation authority.
 WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-05 (BUILD-07F design accepted and recorded; census and
-                   adjudication canonical; implementation NOT authorised)
+LAST UPDATED       2026-09-06 (WS2-08 lane opened; BUILD-08A candidate on branch, not
+                   canonical; #1228 sequencing unchanged)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

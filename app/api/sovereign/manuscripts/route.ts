@@ -26,7 +26,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { segment, MAX_SECTIONS, type SectionInput } from '@/lib/manuscript/ingest/segment';
+import {
+  segment,
+  MAX_SECTIONS,
+  type SectionInput,
+  type HeadingDepth,
+  type HeadingSignal,
+} from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
@@ -109,6 +115,21 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const HEADING_SIGNALS: ReadonlySet<string> = new Set(['markdown', 'chapter', 'caps', 'member']);
+
+/** WS2-08A — coerce a confirmed section's depth fields; never throw. */
+function classifyDepth(
+  depth: unknown,
+  signal: unknown,
+): { depth: HeadingDepth | null; signal: HeadingSignal | null } {
+  const d = depth === 1 || depth === 2 || depth === 3 ? depth : null;
+  const sig = typeof signal === 'string' && HEADING_SIGNALS.has(signal) ? (signal as HeadingSignal) : null;
+  // An explicit depth always names its cause; a caps/member boundary never carries one.
+  if (d !== null && (sig === null || sig === 'caps')) return { depth: null, signal: sig };
+  if (d === null && (sig === 'markdown' || sig === 'chapter')) return { depth: null, signal: null };
+  return { depth: d, signal: sig };
+}
+
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
@@ -175,12 +196,26 @@ export async function POST(request: NextRequest) {
     }
     const clean: SectionInput[] = [];
     for (let i = 0; i < sections.length; i++) {
-      const s = sections[i] as { heading?: unknown; body?: unknown };
+      const s = sections[i] as {
+        heading?: unknown;
+        body?: unknown;
+        headingDepth?: unknown;
+        headingSignal?: unknown;
+      };
       if (typeof s?.body !== 'string' || s.body.trim().length === 0) continue;
+      const heading = typeof s.heading === 'string' && s.heading.trim().length > 0 ? s.heading : null;
+      /* WS2-08A — the depth the preview carried survives the member's
+       * confirmation. Anything malformed reads as unclassified rather than
+       * refusing the save: these fields describe the heading, they are not
+       * custody of text, and a member must never lose a book to them. A
+       * section with no heading has nothing to classify. */
+      const { depth, signal } = heading ? classifyDepth(s.headingDepth, s.headingSignal) : { depth: null, signal: null };
       clean.push({
         position: clean.length,
-        heading: typeof s.heading === 'string' && s.heading.trim().length > 0 ? s.heading : null,
+        heading,
         body: s.body,
+        headingDepth: depth,
+        headingSignal: signal,
       });
     }
     if (clean.length === 0) {
@@ -194,9 +229,9 @@ export async function POST(request: NextRequest) {
     const manuscriptId = ms.rows[0].id;
     for (const s of clean) {
       await query(
-        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body)
-         VALUES ($1, $2, $3, $4)`,
-        [manuscriptId, s.position, s.heading, s.body],
+        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
       );
     }
 
