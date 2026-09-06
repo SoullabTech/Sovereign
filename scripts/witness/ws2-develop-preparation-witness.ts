@@ -100,6 +100,23 @@ async function main() {
     row('source sections', state.sourceSections);
     row('authority', state.kind === 'exact' ? 'mechanical (PRISTINE)'
       : state.kind === 'diverged' ? 'member confirmation' : 'none — not offered');
+    /* ⛔ THE DISTINCTION SURVIVES INTO THE RECORD, not only into the code.
+       Founder ruling (2026-09-06). A witness that printed "mechanical" and
+       nothing else would leave the reader to supply the meaning, and the
+       meaning most readers supply is consent — the exact reading the ruling
+       removes. On an exact Work the member's gesture INITIATES a structural
+       preparation whose truth is already established; it is not their
+       agreement to a transformation anyone disputes. Said here so a run
+       filed as evidence cannot be read the other way. */
+    if (state.kind === 'exact') {
+      console.log('    ⓘ The member INITIATES this preparation. It is not consent to a disputed');
+      console.log('      transformation: the draft is byte-identical to what its Source composes,');
+      console.log('      and the round trip proves the partition rather than asking them to.');
+    }
+    if (state.kind === 'diverged') {
+      console.log('    ⓘ The member CONFIRMS this conversion. Their agreement to the divergence');
+      console.log('      shown above is the authority; nothing here is mechanically established.');
+    }
   }
   if (state.kind === 'ready') row('draft sections', state.draftSections);
 
