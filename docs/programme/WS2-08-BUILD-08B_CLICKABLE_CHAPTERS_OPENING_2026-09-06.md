@@ -222,15 +222,90 @@ Six questions, so implementation receives a packet rather than an investigation:
 6  the minimum test files to extend
 ```
 
+## 8b · Design sharpened — founder, 2026-09-06
+
+### 8b.1 Recognition surfaces EVERY coherent run — it never chooses
+
+```text
+· detect ALL coherent explicit numbered chapter runs
+· two coherent runs → surface BOTH
+· do NOT rank by position
+· do NOT silently choose the "best"
+· do NOT merge runs
+· ALL-CAPS alone remains non-authoritative
+```
+
+Choosing between plausible runs is authoring. It belongs to the member.
+
+### 8b.2 Confirmation shows CONSEQUENCE, not just candidates
+
+```text
+candidate A     chapters 1–10
+                sections that WOULD become grouped
+                sections that WOULD remain ungrouped
+
+candidate B     chapters 1–10
+                the same consequence disclosure
+
+member chooses one → only then author / persist
+```
+
+⛔ *"~50 chapter-labelled sections will remain Ungrouped"* must be visible **before** the act. Shown
+afterwards it reads as lost structure; shown before, it is an informed choice.
+
+### 8b.3 Rendering authority — the component never reinterprets origin
+
+```text
+structure query boundary
+  INCLUDE   origin = 'member'
+  INCLUDE   accepted / authoritative imported structure
+  EXCLUDE   origin = 'proposed'
+
+component
+  receives ONLY renderable authored structure
+  does NOT reinterpret origin
+```
+
+The filter lives in the query. A component that can see `proposed` rows is a component that can be
+made to render them.
+
+### 8b.4 No dead clickable rows
+
+```text
+unit with ≥ 1 contained section
+  expandable
+  title click → first contained section
+
+unit with 0 contained sections
+  still rendered as authored structure
+  NOT a navigation target
+  NO click affordance
+  may expand only if it has child units
+```
+
+### 8b.5 Acceptance, stated exactly
+
+> **Every draft section appears exactly once — beneath an authored structure unit, or visibly
+> Ungrouped.**
+
+⛔ NOT *"everything must belong to a chapter."* A book has front matter, back matter and material
+its author never chaptered; the outline must show that honestly rather than force it into a
+hierarchy.
+
+WRITE and DEVELOP consume the SAME persisted authority. Neither independently recognizes anything.
+
 ## 9 · Authority state
 
 ```text
-08B OPEN                      YES
-design bounded                YES (§7)
-census packet                 SPECIFIED, not yet gathered (§8)
-founder acceptance            NOT SUPPLIED
+08B opening                   RECORDED
+08B census                    COMPLETE (§2)
+08B design                    SHARPENED (§7 + §8b) — READY FOR FOUNDER ACT
 implementation authority      NOT SUPPLIED
 ```
+
+**Sequencing (founder, 2026-09-06):** 08B implementation does not begin while the two open branches
+are unmerged and undeployed. *A witnessed cohort surface is worth more tomorrow than a third branch
+containing unwitnessed chapter UI.*
 
 The founder act that would move this is one sentence: *I accept the bounded 08B design as stated and
 authorize implementation.* Until then §7 is a proposal, not a contract.
