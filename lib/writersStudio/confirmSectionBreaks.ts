@@ -42,17 +42,72 @@ export async function confirmSectionBreaks(
 
   if (res.ok) return { ok: true };
 
-  /* Prefer the server's own words — it knows why it refused, and a refusal that
-     names its reason is worth more than a generic apology. */
   try {
     const body = (await res.json()) as { error?: unknown; refusal?: unknown };
-    const named =
-      typeof body?.error === 'string' ? body.error
-      : typeof body?.refusal === 'string' ? body.refusal
-      : null;
-    return { ok: false, message: named ?? GENERIC };
+    /* A `refusal` is a CLASSIFICATION, never display text. Codes like
+       `boundary_confirmation_required` are instrumentation words, and showing
+       one would leak the measuring apparatus into the room and describe a
+       member's manuscript in a vocabulary invented for auditing it. The same
+       boundary sectionNavigationCopy() draws for navigation reasons is drawn
+       here for conversion refusals: the mapping is the only path from a code to
+       a screen, and an unrecognised code falls back rather than escaping.
+
+       `error` is different — those are already member-directed sentences from
+       the route ('Invalid JSON body', 'Not found'), not classifications. */
+    if (typeof body?.refusal === 'string') {
+      return { ok: false, message: conversionRefusalCopy(body.refusal) };
+    }
+    if (typeof body?.error === 'string' && body.error.trim().length > 0) {
+      return { ok: false, message: body.error };
+    }
+    return { ok: false, message: GENERIC };
   } catch {
     return { ok: false, message: GENERIC };
+  }
+}
+
+/**
+ * Conversion refusals in the member's language.
+ *
+ * Every branch says the same thing in substance, because it is the thing that
+ * matters most and is always true: their writing is unchanged. What differs is
+ * WHOSE TASK the refusal names — the member's, or ours.
+ */
+export function conversionRefusalCopy(refusal: string): string {
+  switch (refusal) {
+    /* The member's draft and the detected breaks no longer agree. Only they can
+       say where a break now falls, so this must not read like a system error. */
+    case 'boundary_moved':
+    case 'boundary_confirmation_required':
+    case 'not_pristine_under_lock':
+    case 'heading_not_in_historical_form':
+    case 'heading_prefix_not_found':
+    case 'leading_text_before_first_boundary':
+      return 'Your draft has moved since those section breaks were detected, so they no longer '
+        + 'describe it. Your writing is unchanged. The breaks will need to be found again from '
+        + 'the draft as it stands now.';
+
+    /* Nothing to convert from. An authorship task, not a failure. */
+    case 'no_source_sections':
+    case 'draft_not_found':
+      return 'There are no detected section breaks to confirm for this Work yet. '
+        + 'Your writing is unchanged.';
+
+    /* Already done — say so plainly rather than as a refusal. */
+    case 'already_normalized':
+      return 'This Work already has its sections. Your writing is unchanged.';
+
+    /* Ours, not theirs. It should not read like something they did. */
+    case 'already_converted_inconsistently':
+    case 'withheld_instruments_disagree':
+    case 'inverse_proof_failed':
+    case 'result_not_current_composer_output':
+    case 'boundary_offsets_incomplete':
+      return 'We could not confirm those section breaks safely, so nothing was changed. '
+        + 'This one is ours to look at — your writing is untouched and you can keep working.';
+
+    default:
+      return GENERIC;
   }
 }
 
@@ -65,4 +120,10 @@ export const SECTION_BREAKS_COPY = {
     + 'durable, so what you write and what MAIA notices can both point at the same places.',
   action: 'Confirm section breaks',
   working: 'Confirming…',
+  /* Shown when the outline is unconverted but conversion is NOT available —
+     `no_draft`, or a draft whose breaks can no longer be proved. It must not
+     imply an act that is not on offer. */
+  bodyNotConvertible:
+    'Section navigation is not available for this Work yet. Your writing is unchanged, '
+    + 'and you can keep working here.',
 } as const;

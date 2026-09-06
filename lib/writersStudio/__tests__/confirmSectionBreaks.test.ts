@@ -57,3 +57,45 @@ describe('the copy tells the member what the act does', () => {
     expect(SECTION_BREAKS_COPY.title).toMatch(/not yet navigable/i);
   });
 });
+
+describe('R2 — a refusal classification never reaches the member', () => {
+  const refuse = (refusal: string) =>
+    confirmSectionBreaks('m-1', async () =>
+      new Response(JSON.stringify({ refusal }), { status: 409 }));
+
+  const CODES = [
+    'boundary_confirmation_required', 'boundary_moved', 'not_pristine_under_lock',
+    'heading_not_in_historical_form', 'heading_prefix_not_found',
+    'leading_text_before_first_boundary', 'no_source_sections', 'draft_not_found',
+    'already_normalized', 'already_converted_inconsistently',
+    'withheld_instruments_disagree', 'inverse_proof_failed',
+    'result_not_current_composer_output', 'boundary_offsets_incomplete',
+    'stale_base', 'not_section_addressable', 'some_code_invented_later',
+  ];
+
+  it.each(CODES)('%s is never shown verbatim', async (code) => {
+    const out = await refuse(code);
+    expect(out.ok).toBe(false);
+    if (out.ok) return;
+    expect(out.message).not.toContain(code);
+    expect(out.message).not.toMatch(/_/); // no snake_case instrumentation leaks
+  });
+
+  it.each(CODES)('%s still tells the member their writing is unchanged', async (code) => {
+    const out = await refuse(code);
+    if (out.ok) return;
+    expect(out.message).toMatch(/unchanged|untouched/i);
+  });
+
+  it('an unrecognised code falls back rather than escaping', async () => {
+    const out = await refuse('a_code_that_does_not_exist');
+    if (out.ok) return;
+    expect(out.message).toMatch(/unchanged/i);
+  });
+
+  it('a prose `error` from the route is still passed through — it is not a classification', async () => {
+    const out = await confirmSectionBreaks('m-1', async () =>
+      new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }));
+    expect(out).toEqual({ ok: false, message: 'Not found' });
+  });
+});

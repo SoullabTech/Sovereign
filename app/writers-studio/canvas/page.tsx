@@ -685,6 +685,12 @@ function CanvasRoom() {
                   phase={sectionsPhase}
                   sections={sections}
                 />
+                {/* R1 — `worktable` collapses THREE server states, and only one of
+                    them can convert. planConversion() refuses unless the draft is
+                    byte-identical to the source-derived partition, so offering the
+                    act on `continuous_unprovable` would show a button structurally
+                    incapable of succeeding, and `no_draft` has nothing to convert.
+                    The gate is therefore the WRITE STATE, not the mount. */}
                 {writeMount.mount === 'worktable' && (
                   <div
                     style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}
@@ -696,8 +702,12 @@ function CanvasRoom() {
                       {writeMount.notice?.title ?? SECTION_BREAKS_COPY.title}
                     </StudioText>
                     <StudioText role="quiet">
-                      {writeMount.notice?.body ?? SECTION_BREAKS_COPY.body}
+                      {writeMount.notice?.body
+                        ?? (writeState?.mode === 'continuous'
+                              ? SECTION_BREAKS_COPY.body
+                              : SECTION_BREAKS_COPY.bodyNotConvertible)}
                     </StudioText>
+                    {writeState?.mode === 'continuous' && (
                     <button
                       type="button"
                       onClick={onConfirmSectionBreaks}
@@ -717,6 +727,7 @@ function CanvasRoom() {
                     >
                       {confirming ? SECTION_BREAKS_COPY.working : SECTION_BREAKS_COPY.action}
                     </button>
+                    )}
                     {confirmError && (
                       <StudioText role="quiet" style={{ marginTop: SPACE.tight }}>
                         {confirmError}

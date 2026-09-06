@@ -108,3 +108,34 @@ describe('the unconverted outline explains itself instead of sitting inert', () 
     expect(page).toMatch(/writeMount\.notice\?\.title \?\? SECTION_BREAKS_COPY\.title/);
   });
 });
+
+describe('R1 — the act is offered only where conversion can succeed', () => {
+  const page = read('app/writers-studio/canvas/page.tsx');
+
+  it('gates the button on the WRITE STATE, not on the mount', () => {
+    expect(page).toMatch(/writeState\?\.mode === 'continuous' && \(\s*<button/);
+  });
+
+  it('does not gate the button on mount alone', () => {
+    // the mount still gates the explanatory block; the button needs more
+    expect(page).toMatch(/writeMount\.mount === 'worktable' && \(/);
+    const buttonIdx = page.indexOf('data-action="confirm-section-breaks"');
+    const gateIdx = page.lastIndexOf("writeState?.mode === 'continuous'", buttonIdx);
+    expect(gateIdx).toBeGreaterThan(-1);
+  });
+
+  it('continuous_unprovable and no_draft still mount worktable — so the mount cannot be the gate', () => {
+    const unprovable: WriteState = {
+      mode: 'continuous_unprovable', version: 1, content: 'x',
+      notice: { title: 't', body: 'b' },
+    };
+    expect(chooseMount('ready', unprovable).mount).toBe('worktable');
+    expect(chooseMount('ready', { mode: 'no_draft' }).mount).toBe('worktable');
+  });
+
+  it('copy for the non-convertible state does not promise an act', () => {
+    const copy = read('lib/writersStudio/confirmSectionBreaks.ts');
+    expect(copy).toMatch(/bodyNotConvertible/);
+    expect(page).toMatch(/SECTION_BREAKS_COPY\.bodyNotConvertible/);
+  });
+});
