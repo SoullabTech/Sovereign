@@ -383,12 +383,22 @@ licenses; it does not itself edit the public record.
 
 ### Process note
 
-The instrument reached v2.4 across four revisions, each closing a defect found before
-it produced evidence — a witness that could pass on a warm cache, one that read a
-system font as a third-party failure, one that observed two pages and generalised to an
-origin, one that turned a Git error into "zero findings", and one whose subject
-comparison could never be true. Only the last was found after the instrument had been
-accepted for a run.
+```text
+v1 produced the historical FAIL. Its run subsequently exposed defects in
+reasoning and scope. The production-closure instrument was then revised
+through v2.1-v2.4; v2.1-v2.3 produced no acceptance evidence. v2.4 was the
+instrument that produced the production PASS.
+```
+
+Stated that way deliberately. v1 was not a draft that was corrected before speaking —
+it ran, returned FAIL against `8369594f3`, and only afterwards was its reasoning found
+wrong (it read origin-served Inter as a system fallback) and its scope found too narrow
+(it observed two pages and generalised to an origin). Its verdict was right for a reason
+it had not tested. The later defects — a sweep that could pass on a warm cache, one that
+turned a Git error into "zero findings", one whose subject comparison could never be
+true — were caught before those revisions produced evidence. Compressing all of it into
+"defects found before producing evidence" would quietly rewrite v1's chronology in this
+record's favour.
 
 v2.4 was written before its author was authorized to write it — a process-boundary
 deviation, recorded here rather than smoothed over. It did not touch evidence
