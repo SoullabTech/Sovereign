@@ -460,11 +460,21 @@ here for the same reason the earlier apparatus defects are.
 ```text
 SOURCE / CI            ACCEPTED · MERGED
 MIGRATION DESIGN       ACCEPTED
-PRODUCTION DEPLOY      NOT AUTHORISED
+INTEGRATION            ACCEPTED on ccd1c50ce — one combined promotion with PR #1228
+PRODUCTION DEPLOY      APPROVED IN PRINCIPLE · FOUNDER CONSENT NOT GIVEN
 PRODUCTION ACCEPTANCE  NOT STARTED
 07F CLOSURE            NOT AUTHORISED
 BUILD-07G / 07H        UNOPENED
 ```
+
+**The promotion subject moved** from `cb557b8fb` to `ccd1c50ce` after #1228 merged onto it. The
+integrated program was measured read-only and passes this unit's own gates (254 · 15 · 14 ·
+typecheck), and #1228's only overlap is refusal copy for a different refusal. One deploy will carry
+both units; each keeps its own acceptance record.
+
+**Also observed and not yet resolved:** production already reports `GIT_COMMIT = ccd1c50ce`,
+promoted outside this lane. Whether 07F's migration ran with it is unestablished — the runbook's §0
+settles it with three read-only queries before anything else is run.
 
 The migration has not run against production; no standing event exists anywhere but the ephemeral
 laboratory. Promotion and the acceptance walk are prepared, not performed:

@@ -12,13 +12,25 @@
 > `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md` — both PREPARED, NOT RUN.
 >
 > ```text
-> SOURCE / CI            ACCEPTED · MERGED · canonical cb557b8fb · CI 8/8
+> SOURCE / CI            ACCEPTED · MERGED as cb557b8fb · CI 8/8
 > MIGRATION DESIGN       ACCEPTED
-> PRODUCTION PROMOTION   PENDING FOUNDER AUTHORITY
+> INTEGRATION            ACCEPTED on ccd1c50ce (one combined promotion with PR #1228)
+> PRODUCTION PROMOTION   APPROVED IN PRINCIPLE · FOUNDER CONSENT (runbook §2) NOT GIVEN
 > PRODUCTION ACCEPTANCE  NOT STARTED
 > BUILD-07F              NOT CLOSED
 > BUILD-07G / 07H        UNOPENED
 > ```
+>
+> **Cross-lane boundary, resolved 2026-09-06.** `ccd1c50ce` is #1228 merged onto 07F's own merge, so
+> the integrated program contains both and no lawful deploy separates them. The founder adjudicated
+> #1228 independently fit for promotion rather than let 07F carry it in silently; the older ancestor
+> `cb557b8f` is explicitly NOT the target. **One deploy, two acceptance records** — #1228's witness
+> runs first (it clears an obstruction 07F's walk needs), and neither result counts as the other's.
+> Bounded integration check on `ccd1c50ce`: 254 standing/surface · 15 persistence falsifiers · 14
+> write-boundary falsifiers · typecheck no regressions.
+>
+> **Observed, unresolved:** production already reports `GIT_COMMIT = ccd1c50ce` — promoted outside
+> this lane's runbook. Whether 07F's migration ran with it is not yet established (runbook §0).
 >
 > The promotion runbook carries an unchecked founder consent item: 07F's migration adds a
 > `BEFORE DELETE` trigger to the existing `developmental_readings` table (direct reading deletion

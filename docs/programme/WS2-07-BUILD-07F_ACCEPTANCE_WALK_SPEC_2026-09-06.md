@@ -6,10 +6,16 @@
 
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
-CANONICAL        cb557b8fb057a8c5944abd1e1e9b479aa66091ef
+CANONICAL        ccd1c50ce822128d9b784c657e21929ca8095379
 PROMOTION        docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md
+RUNS AFTER       #1228's own witness (runbook §9.2) — a separate record, not a step of this walk
 STATE            PRODUCTION ACCEPTANCE NOT STARTED
 ```
+
+**The subject moved from `cb557b8fb` to `ccd1c50ce`** when the founder adjudicated one combined
+promotion carrying 07F and #1228. The claims below are unchanged by that: they were fixed before
+either SHA was the target, and #1228's only overlap with this unit is refusal copy for a different
+refusal (runbook §9.1). What changed is which runtime they will be walked against.
 
 ---
 
@@ -43,7 +49,10 @@ proof that the member was shown the truth. Where both matter, the claim names bo
 ## 2 · Preconditions
 
 ```text
-the runbook's §6 verification passed — GIT_COMMIT = cb557b8f, migration recorded, objects present
+the runbook's §0 question is settled — whether the migration has already run, and by which path
+the runbook's §6 verification passed — GIT_COMMIT = ccd1c50ce, migration recorded, objects present
+#1228's own witness (runbook §9.2) has been run and recorded SEPARATELY — it clears an
+  obstruction this walk needs for W9, and its result is never counted as a 07F witness
 one authenticated founder member session in a browser
 at least one existing frozen developmental reading with ≥ 2 observations
   (or one commissioned during W0 — a commissioning act, not a standing act)
@@ -58,7 +67,7 @@ No credential is handled by the agent. Every authenticated act is performed by t
 ### W1 · provenance and schema `[D]`
 
 The runbook's §6 checks, re-stated here as the walk's first witness so the walk stands alone:
-`GIT_COMMIT = cb557b8f`; `schema_migrations` carries the 07F filename; the events table exists with
+`GIT_COMMIT = ccd1c50ce`; `schema_migrations` carries the 07F filename; the events table exists with
 its UNIQUE quad and two triggers; `developmental_readings` carries **both**
 `developmental_readings_immutable_check` and `developmental_readings_no_orphan_delete_check`.
 
