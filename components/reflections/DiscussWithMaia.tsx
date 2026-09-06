@@ -94,6 +94,13 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
   const context = useMemo(() => reflectionContext(capsule), [capsule]);
   const [opening, setOpening] = useState<string | null>(null);
   const [message, setMessage] = useState(context);
+  // 🪞 reflection_opening_v1 — the FIRST canonical turn now happens here, on the
+  // reflection, not inside the sheet. `noticing` holds the structured fields the
+  // SERVER returned; it is never derived by splitting `message` prose.
+  const [sending, setSending] = useState(false);
+  const [noticing, setNoticing] = useState<{ noticed: string; asked: string } | null>(null);
+  const [sent, setSent] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const chooseOpening = (key: string, line: string) => {
     // Selecting an opening replaces the previous one, never stacks them.
@@ -101,15 +108,49 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
     setMessage(`${context}\n\n${line}`);
   };
 
-  const discuss = () => {
+  const discuss = async () => {
     const prompt = message.trim();
     if (!prompt) return;
 
-    // The conversation comes to the reflection, not the other way around: the
-    // presence sheet opens over this page with the member's message sent into
-    // the conversation they already have.
+    // The conversation comes to the reflection, not the other way around. The
+    // member's turn is sent from HERE, as ONE canonical POST, and MAIA's first
+    // reply appears quietly beneath the reflection. `Continue with MAIA` later
+    // opens the sheet onto that same exchange — one exchange, two
+    // presentations. The sheet is no longer where the first turn happens, so
+    // openMaiaWith (which injects and would generate) is not used on this path.
     if (presence?.canHost) {
-      presence.openMaiaWith(prompt);
+      setSending(true);
+      setFailed(null);
+      try {
+        const res = await fetch('/api/sovereign/app/maia/list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: prompt,
+            // A SIGNAL that this is the Reflections handoff seam — never the
+            // form instruction itself. The server authors reflection_opening_v1
+            // and places it beyond a caller's reach (PBR-001).
+            reflectionOpening: true,
+          }),
+        });
+        const data = res.ok ? await res.json() : null;
+        const opening = data?.reflectionOpening;
+        // Labels render ONLY when the server returned both fields. Never
+        // reconstructed from data.message: a UI that split prose into
+        // "noticed" and "asked" would assert a structure the cognition did not
+        // produce. No structured form -> no labels, and we say so.
+        if (opening?.noticed && opening?.asked) {
+          setNoticing({ noticed: opening.noticed, asked: opening.asked });
+        } else {
+          setNoticing(null);
+          setFailed('MAIA answered, but not in this form. Continue to read the reply in full.');
+        }
+        setSent(true);
+      } catch {
+        setFailed('That did not send. Nothing was written.');
+      } finally {
+        setSending(false);
+      }
       return;
     }
 
@@ -180,12 +221,38 @@ export default function DiscussWithMaia({ capsule }: DiscussWithMaiaProps) {
 
       <button
         onClick={discuss}
-        disabled={!message.trim()}
+        disabled={!message.trim() || sending || sent}
         className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-[#5a7a6f] hover:bg-[#4a6a5f] disabled:bg-stone-300 disabled:cursor-not-allowed text-white rounded-xl text-[13px] tracking-wide transition-colors"
       >
-        Discuss with MAIA
+        {sending ? 'Sending…' : 'Discuss with MAIA'}
         <ArrowRight className="w-4 h-4" />
       </button>
+
+      {/* MAIA's first canonical response, quietly, beneath the member's words.
+          Rendered from SERVER-RETURNED fields only. */}
+      {noticing && (
+        <div className="mt-8">
+          <div className="text-[11px] uppercase tracking-wide text-stone-400 mb-2">MAIA noticed</div>
+          <p className="text-stone-700 text-[15px] leading-relaxed">{noticing.noticed}</p>
+          <div className="text-[11px] uppercase tracking-wide text-stone-400 mt-5 mb-2">MAIA asked</div>
+          <p className="text-stone-700 text-[15px] leading-relaxed">{noticing.asked}</p>
+        </div>
+      )}
+
+      {failed && <p className="mt-6 text-[13px] text-stone-500 leading-relaxed">{failed}</p>}
+
+      {/* Continue opens the sheet onto the exchange that ALREADY exists. No
+          injection, so nothing is sent and nothing is generated a second time;
+          OracleConversation restores the canonical thread it is already part of. */}
+      {sent && presence?.canHost && (
+        <button
+          onClick={() => presence.openMaia()}
+          className="mt-8 flex items-center gap-2 text-[13px] tracking-wide text-[#5a7a6f] hover:text-[#4a6a5f] transition-colors"
+        >
+          Continue with MAIA
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      )}
     </section>
   );
 }

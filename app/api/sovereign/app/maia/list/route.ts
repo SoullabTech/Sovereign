@@ -87,6 +87,12 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import {
+  REFLECTION_OPENING_V1,
+  buildReflectionOpeningAddendum,
+  parseReflectionOpening,
+  composeReflectionOpeningText,
+} from '@/lib/maia/reflections/reflectionOpening';
 // F1 durable turn acceptance (audit 2026-08-10): this route is the serving
 // boundary that ACCEPTS a member utterance, so it is where the utterance must
 // become durable — not the browser, later, once a pair exists.
@@ -773,6 +779,25 @@ export async function POST(req: NextRequest) {
     // present-tense orientation block that explicitly forbids inferring why
     // the member is there. Invalid/absent place → no block, never an error.
     const placeContextValidated = validatePlaceContext((body as any)?.place);
+    // 🪞 REFLECTIONS OPENING SEAM (reflection_opening_v1, 2026-09-06)
+    //
+    // The caller may SIGNAL that this turn is the Reflections handoff. It may
+    // never supply, alter, or override the response-form instruction: the
+    // instruction is built here, server-side, from a constant. The signal is a
+    // request to be recognised, not an authority claim.
+    //
+    // Recognition requires the validated place to be the reflections room with
+    // an object open — the same facts-only place context MAIA already receives.
+    // A caller asserting the flag from anywhere else is simply not the seam.
+    const reflectionOpeningRequested = (meta as any)?.reflectionOpening === true;
+    const isReflectionOpeningSeam =
+      reflectionOpeningRequested &&
+      placeContextValidated?.placeId === 'reflections' &&
+      !!placeContextValidated?.objectId;
+    const reflectionOpeningAddendum = isReflectionOpeningSeam
+      ? buildReflectionOpeningAddendum()
+      : undefined;
+
     const placeAddendum = placeContextValidated ? buildPlaceAddendum(placeContextValidated) : undefined;
     if (placeAddendum) {
       console.log(`🚪 [Route] place context applied: ${placeContextValidated!.placeId} (${placeContextValidated!.route})`);
@@ -1432,6 +1457,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           relationalContextAddendum, // 🔗 Relational Context Bridge — member-handed-off relationship (explicit act)
           relationalContextId, // 🔭 context-inventory: which relationship was handed off
           placeAddendum, // 🚪 House Presence — facts-only current-room orientation
+          // 🪞 reflection_opening_v1 — server-authored response FORM for the
+          // Reflections first-turn threshold. Placed AFTER ...meta so a caller
+          // cannot supply or overwrite it (PROMPT-AUTHORITY INVARIANT, PBR-001).
+          reflectionOpeningAddendum,
           // 🧱 CANONICAL EXCHANGE IDENTITY (F1 / U1 identity unification)
           //
           // ONE LOGICAL USER SEND = ONE CANONICAL EXCHANGE ID.
@@ -1534,6 +1563,24 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
     // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
+
+    // 🪞 reflection_opening_v1 — structured form, or nothing.
+    //
+    // The model is asked to produce `noticed` + `asked`. If it did, the durable
+    // assistant text becomes the composed form so the transcript the member
+    // re-reads in the sheet carries the same content the page displayed, with
+    // no machine markers leaking into it — ONE EXCHANGE, TWO PRESENTATIONS.
+    //
+    // If it did NOT, this stays null and the client renders no labels. There is
+    // deliberately no prose fallback: labelling unstructured prose as
+    // `MAIA noticed` / `MAIA asked` would recreate the attribution defect the
+    // form exists to prevent. Failing truthfully is the required behaviour.
+    const reflectionOpening = isReflectionOpeningSeam
+      ? parseReflectionOpening(sovereignText)
+      : null;
+    if (reflectionOpening) {
+      sovereignText = composeReflectionOpeningText(reflectionOpening);
+    }
 
     // 🧱 MAIA TURN DURABLE (F1 — second half of durable turn acceptance)
     //
@@ -1722,6 +1769,12 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: sovereignText,  // Uses closing-anchored text for counsel mode turns
+      // 🪞 reflection_opening_v1 — structured fields the UI may label, or null.
+      // Null means the model did not produce the form; the client must render
+      // no labels rather than deriving them from `message`.
+      reflectionOpening: reflectionOpening
+        ? { form: REFLECTION_OPENING_V1, noticed: reflectionOpening.noticed, asked: reflectionOpening.asked }
+        : null,
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing

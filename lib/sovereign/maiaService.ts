@@ -1366,6 +1366,10 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
   // 🚪 PLACE (House Presence): facts-only current-room orientation, built by
   // the route from a validated body.place. Present-tense facts only — the
   // block itself forbids inferring why the member is there.
+  // 🪞 reflection_opening_v1 — server-authored response FORM (composition, not
+  // cognition). Never client-supplied: the serving route places it after the
+  // client rest-spread per PBR-001.
+  const reflectionOpeningAddendum = (meta as any)?.reflectionOpeningAddendum as string | undefined;
   const placeAddendum = (meta as any)?.placeAddendum as string | undefined;
   if (placeAddendum) {
     console.log(`🚪 [FAST] Place addendum applied`);
@@ -1461,7 +1465,7 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${PLATFORM_KNOWLEDGE_ADDENDUM}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${placeAddendum ? '\n\n' + placeAddendum : ''}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${practiceFieldAddendum ? '\n\n' + practiceFieldAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${conversationalRecallAddendum ? '\n\n' + conversationalRecallAddendum : ''}${episodicRecallAddendum ? '\n\n' + episodicRecallAddendum : ''}${atomsAddendum ? '\n\n' + atomsAddendum : ''}${divinationIntentAddendum ? '\n\n' + divinationIntentAddendum : ''}${divinationCastAddendum ? '\n\n' + divinationCastAddendum : ''}${divinationInterpretationAddendum ? '\n\n' + divinationInterpretationAddendum : ''}${relationalContextAddendum ? '\n\n' + relationalContextAddendum : ''}${memoryInfluenceAddendum ? '\n\n' + memoryInfluenceAddendum : ''}${forwardReadinessAddendum ? '\n\n' + forwardReadinessAddendum : ''}${reflectionOpeningAddendum ? '\n\n' + reflectionOpeningAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1783,6 +1787,7 @@ async function corePathResponse(
     // 🚪 PLACE (House Presence): facts-only current-room orientation. Injected
     // via appendAllContextAddenda (first in ADDENDA_SPECS order).
     placeAddendum: (meta as any)?.placeAddendum as string | undefined,
+    reflectionOpeningAddendum: (meta as any)?.reflectionOpeningAddendum as string | undefined,
     // 💬 CONVERSATIONAL RECALL (Phase 2): Prior cross-session exchanges. Injected
     // inside buildMaiaWisePrompt via safeAddendum iteration. See spec §IX.
     conversationalRecallAddendum: (meta as any)?.conversationalRecallAddendum as string | undefined,

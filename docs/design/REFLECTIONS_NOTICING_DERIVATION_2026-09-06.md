@@ -315,13 +315,32 @@ finish CMT-01 M2 live shadow witness
 > instrument before we can ship it. That is an architectural dependency, not a
 > rejection of the design.
 
-The implementation is held in the working tree, uncommitted, on
-`claude/reflections-discuss-uiux-iu892z`:
+### Where the frozen code lives — and why it is committed
+
+The ruling froze the implementation in an uncommitted working tree. That tree
+lived in an ephemeral remote container which is reclaimed on inactivity, so
+holding it there would have destroyed it rather than preserved it. It is
+therefore committed to `claude/reflections-discuss-uiux-iu892z` — **not merged,
+no PR, and structurally unmergeable.**
+
+**The freeze is enforced by the gate, not by the absence of a commit.**
+`npm run typecheck` fails on `maiaService.ts:1790` and will keep failing until
+CMT-01 rules on how response form is canonically represented. Making it green is
+the crossing this document forbids, so the commit cannot become a merge without
+first satisfying the dependency.
 
 ```text
- M app/api/sovereign/app/maia/list/route.ts
- M components/reflections/DiscussWithMaia.tsx
- M lib/maia/presence/__tests__/injection.test.ts
- M lib/sovereign/maiaService.ts
-?? lib/maia/reflections/
+frozen commit   reflection_opening_v1 implementation (DO NOT MERGE)
+ship gate       RED — TS2561, MaiaContext has no reflectionOpeningAddendum
+unblocked by    CMT-01 ruling, not by editing MaiaContext
+```
+
+Files carried in that commit:
+
+```text
+app/api/sovereign/app/maia/list/route.ts
+components/reflections/DiscussWithMaia.tsx
+lib/maia/presence/__tests__/injection.test.ts
+lib/sovereign/maiaService.ts
+lib/maia/reflections/            (new)
 ```

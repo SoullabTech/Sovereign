@@ -115,14 +115,26 @@ describe('ACCEPTANCE 1: injection appends — prior turns survive', () => {
 
 describe('ACCEPTANCE 3: the member is not moved', () => {
   it('the presence path in DiscussWithMaia returns before any navigation', () => {
+    // AMENDED 2026-09-06 (reflection_opening_v1). The property guarded here is
+    // unchanged — a hosted member is never moved — but the mechanism is. The
+    // first turn is now sent FROM this page as one canonical POST; the sheet is
+    // no longer where it happens, so `openMaiaWith` (which injects, and would
+    // therefore generate) is deliberately absent from this component.
     const discussCode = code(discussSource);
-    const openIdx = discussCode.indexOf('presence.openMaiaWith(prompt)');
+    const postIdx = discussCode.indexOf("fetch('/api/sovereign/app/maia/list'");
     const pushIdx = discussCode.indexOf("router.push('/maia')");
-    expect(openIdx).toBeGreaterThan(-1);
-    expect(pushIdx).toBeGreaterThan(openIdx);
+    expect(postIdx).toBeGreaterThan(-1);
+    expect(pushIdx).toBeGreaterThan(postIdx);
     // Everything between the in-place send and the fallback navigation must be
     // the early return — no navigation on the path a hosted member takes.
-    expect(discussCode.slice(openIdx, pushIdx)).toMatch(/return;/);
+    expect(discussCode.slice(postIdx, pushIdx)).toMatch(/return;/);
+  });
+
+  it('the first turn is no longer injected into the sheet', () => {
+    // The regression this now guards: reintroducing openMaiaWith here would
+    // send the handoff a SECOND time from inside the sheet — two generations,
+    // two exchange identities, for one member act.
+    expect(code(discussSource)).not.toMatch(/openMaiaWith/);
   });
 
   it('the fallback navigation is reached only when presence cannot host', () => {
