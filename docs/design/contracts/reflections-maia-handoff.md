@@ -164,6 +164,51 @@ and never as "the previous errors were stale." Absence in a new run is evidence
 about the new run only. That is enough to close the gate; it is not enough to
 convert an unattributed count into a finding.
 
+### Console gate — RESULT, 2026-09-06 · PASS
+
+Clean witness run per the predeclared procedure. The Reflections → Discuss with
+MAIA walk produced two successful MAIA request/response cycles and no error-level
+entry.
+
+```text
+console witness       PASS
+observed errors       0
+prior visible count   UNATTRIBUTED — provenance never established
+```
+
+The prior count is **terminal at UNATTRIBUTED**. It was not found stale, not
+found benign, and not found app-owned; it was seen under a cumulative log and its
+provenance is unrecoverable. This result closes the gate without diagnosing it.
+
+One warning-level entry was present and is **not** a gate failure — the criterion
+was app-owned *error*-level entries:
+
+```text
+⚠️ [GLOBAL] Audio play failed:
+NotSupportedError Failed to load because no supported source was found.
+```
+
+It occurred on the global audio-unlock path. Parked as its own item, outside this
+seam; note that it plausibly shares a root with the global first-interaction
+"Audio enabled" toast recorded in `experience_verification` — both sit on the
+app-wide unlock in `app/layout.tsx`, neither is sheet-governed, and neither is
+touched by `voiceEnabled`. If either is ever examined, examine them together.
+
+### Reflections — CLOSED, 2026-09-06
+
+```text
+experience / render   PASS
+containment           PASS   1280x800 + 390x844
+close / reopen        PASS   no second conversation identity
+console               PASS   0 observed errors
+prior 2-error count   UNATTRIBUTED — terminal
+```
+
+The Reflections → MAIA containment repair is closed. Under the sequencing ruled
+above, **Journal may now open as specimen two.** No generic abstraction, no
+extraction, and no name for the pattern until the two rooms can be compared
+against the five behavioral properties.
+
 **Why Journal and not Co-Lab or Writer's Studio.** Journal shares the load-bearing
 condition — the member already owns an object underneath, MAIA can enter in
 relation to it, leaving must restore precisely that object — and there is already
