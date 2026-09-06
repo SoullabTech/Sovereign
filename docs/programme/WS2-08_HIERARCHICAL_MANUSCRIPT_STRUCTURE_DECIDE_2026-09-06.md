@@ -175,7 +175,7 @@ first mutations historically ambiguous.
 ### 08A isolation (founder act)
 
 ```text
-→ PR containing 08A only
+→ PR containing 08A only        SoullabTech/Sovereign#1230 (opened 2026-09-06)
 → gates / merge
 → migration runs
 → production witness F1–F3 + F6 exactly as written (§5)
