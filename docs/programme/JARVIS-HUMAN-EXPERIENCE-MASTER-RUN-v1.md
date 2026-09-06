@@ -26,7 +26,7 @@ foundational_research_R1_R7: COMPLETE (v0.1, historical)
 challenge_pass_R8_R12: CLOSED / COMPLETE (all five ADJUDICATED)
 synthesis_v0_2: ACCEPTED — current programme synthesis; P1–P13 CANDIDATE; empirical postures provisional
 current_phase: "1 — Whole-organism map"   # opened by founder act 2026-09-06 (pivot: "The next frontier is MAIA herself")
-current_act: READ-ONLY CENSUS of every MAIA/AIN subsystem against v0.2 → one ranked map for founder adjudication
+current_act: FOUNDER RANKING of docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md   # census COMPLETE 13/13 · acceptance gate PASS · containment diff PASS · map COMPILED 2026-09-06 · Phase 1 exit gate met on Jarvis's check; phase does not advance until the founder ranking is recorded (§13)
 phase_0_5_residual: MERGE RULING on PR #1239 still a founder stop; no longer sequenced before Phase 1
 manifesto_expansion: FROZEN (founder, 2026-09-06) — /accounted-for is secondary; revised only at phase boundaries or when a label's warrant changes
 publication_lane: JARVIS-PUBLIC-ACCOUNTED-FOR-01   # owns /accounted-for, its source of record, reconciliation record, contract, screenshots, PR #1239 (split 2026-09-06)
@@ -39,7 +39,7 @@ maia_runtime_change: NOT AUTHORIZED
 member_research: NOT AUTHORIZED
 collective_laboratory: NOT BUILT
 next_phase_on_exit: "2 — Gap analysis (founder ranks the map; Jarvis proposes)"
-last_state_change: 2026-09-06 (founder pivot — Phase 1 opened; manifesto frozen; master run promoted)
+last_state_change: 2026-09-06 (Phase 1 census complete; ranked map compiled; awaiting founder ranking — no phase advance)
 ```
 
 ```text
@@ -48,7 +48,7 @@ PURPOSE                Understand the Human Question: Self · Relationship · Wo
 AI POSITION            Emergent participant — important, secondary, not center
 CURRENT AUTHORITY      Synthesis v0.2
 FOUNDATIONAL CHALLENGE CLOSED
-CURRENT ACT            Phase 1 — whole-organism census (read-only); merge ruling on #1239 pending in parallel
+CURRENT ACT            Phase 1 — census complete, ranked map compiled; FOUNDER RANKING pending; merge ruling on #1239 with the publication lane
 CURRENT PUBLIC ARTIFACT /accounted-for — delegated to JARVIS-PUBLIC-ACCOUNTED-FOR-01
 CURRENT PR             #1239 · DRAFT — publication-lane custody; R&D branch = claude/maia-human-experience-phase1-census
 MERGE                  NOT AUTHORIZED

@@ -1035,3 +1035,43 @@ FURTHER R&D WRITES TO #1239   NONE — from a7b42f29 the publication lane is sol
 Every commit up to `a7b42f29` on the #1239 branch is preserved as history under the founder's
 no-rewrite ruling. Census pages written after the stop (03, 09, 12 and all later pages, the
 ranked map, master-run revisions) land only on the Phase-1 branch.
+
+---
+
+## 26 · Phase 1 census complete · acceptance gate PASS · ranked map delivered (2026-09-06)
+
+**What ran.** Six read-only census agents, thirteen subsystem pages under
+`docs/programme/MAIA_WHOLE_ORGANISM_MAP/` (01–13, 2,808–3,811 words each), TEMPLATE.md format.
+Custody: pages 01, 02, 04–08 landed on the #1239 branch before the stop (preserved there at
+`a7b42f29`, carried forward); pages 03, 09–13 and all revisions exist only on
+`claude/maia-human-experience-phase1-census`.
+
+**Acceptance gate (founder instrument, run once as a batch after all six agents completed):**
+13/13 present · confined to the map directory · containment diff clean on both ranges
+(`75303b3d..a7b42f29`, `a7b42f29..HEAD` — outside the map directory only this session's own
+governance commits; zero code files) · founder question first ×13 · nine questions ×13 · R11
+itemized with paths ×13 · embodies / contradicts / unknown ×13 · unknowns instrumented ×13 · gap
+tables with smallest intervention, evidence state, confidence, risk 1–5 ×13. **ALL PASS.**
+Admissibility only; correctness of interventions was compared in the R11 matrix, not inherited.
+
+**Compiled:** `docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md` — §1 thirteen
+founder-question answers · §2 embodiments · §3 seventeen deduplicated contradiction clusters
+X1–X17, each classed CONTRADICTION / GOVERNANCE / CLAIM per the founder's compilation rules · §4
+unknowns by instrument type · §5 R11 cross-subsystem matrix · §6 top-10 by impact × leverage ÷ risk
+with evidence state and confidence, plus the governance decisions ranked by significance and not
+against experiments · §7 seven candidate answers to *what must MAIA become differently* · §8 six
+founder stops.
+
+**The matrix's reading, in one sentence:** memory-as-leverage is absent on every live surface and
+approval optimization is met by absence almost everywhere; the organism's characteristic failure
+is **undisclosed calibration of depth, intensity, framing and intimacy from inferred state, with
+explicit instructions to keep the framing invisible** — on ten of thirteen subsystems. No class C
+evidence exists for any subsystem.
+
+**Governance items surfaced (decision, not experiment):** voice egress via OpenAI TTS outside the
+R15 funnel (production-witnessed 2026-08-27; ADR-012 open); silent system-authored records about
+the member; write-side consent bypass; Sanctuary unreachable in conversation (WALKED defect
+2026-08-28) and corpus framing inside Sanctuary; public copy and records above their rung.
+
+**State:** Phase 1 exit gate met on Jarvis's check. Per master run §13 the phase does not advance
+until the founder ranking is recorded. **Nothing repaired. Nothing in MAIA changed.**
