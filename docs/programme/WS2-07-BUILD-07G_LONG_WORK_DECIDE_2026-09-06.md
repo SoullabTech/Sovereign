@@ -233,6 +233,22 @@ while a run is incomplete. Aggregation may speak **only about the completed subs
 synthesis is unavailable until coverage is complete. *"Four of twelve scopes"* can be useful; it may
 never become *"the Work shows …"*.
 
+**Coverage complete is defined operationally, not by the run having stopped:**
+
+```text
+WHOLE-WORK SYNTHESIS ELIGIBLE
+  iff  every planned RunScope is scope_status = complete
+  AND  every such scope references an ordinary 07C reading
+  AND  computed target coverage = 100%
+
+Any failed scope means Whole-Work coverage is INCOMPLETE,
+even if the run itself has finished executing.
+```
+
+⛔ **`run finished` and `Work fully read` are different facts.** A run in which every scope has
+reached a terminal state has finished; a run in which one scope is `failed` has not read the Work.
+"All scopes terminal" must never be read as coverage complete.
+
 The distinction in one line: **synthesis may say where MAIA looked and what recurred; it may not say
 what it means that something recurred.** The latter is the author's, and 07E is where they can ask
 MAIA about it under the anchored-ask discipline that already exists.
@@ -294,10 +310,19 @@ A1  SEPARATE ORCHESTRATION SUBSTRATE — YES
     after the member acts it is a run. The rename is the safeguard, not cosmetics.
 
 A2  CONTINUE AGAINST THE PIN — YES
-    If the Work changes mid-run, mark the run stale IMMEDIATELY but continue only against the
-    original frozen state. Never rebase, never mix states, never automatically commission the
-    new state. Readings already produced were lawful when produced and remain lawful historical
-    readings of the pinned Work-state.
+    If the Work changes mid-run, the run's FRESHNESS RELATION RESOLVES TO STALE IMMEDIATELY, and
+    execution continues only against the original frozen state.
+
+      Work changes
+      → freshness relation becomes stale   (derived; nothing is written)
+      → NO ReadingRun rewrite
+      → execution continues against the frozen Work-state
+
+    Never rebase, never mix states, never automatically commission the new state. Readings already
+    produced were lawful when produced and remain lawful historical readings of the pinned
+    Work-state.
+    ⛔ A persisted run carries NO mutable stale flag. Freshness is resolved against the Work, per
+       point 5; writing it would collapse the two axes that point 5 separates.
 
 A3  PARTIAL RUNS ARE PRESENTABLE — WITH A BOUNDARY
     Constituent readings and exact coverage may be shown while incomplete. Aggregation may speak
@@ -365,17 +390,18 @@ passed.
 **What uncertainty does this introduce, and how is that uncertainty preserved?**
 Reading a Work in parts introduces an uncertainty that single-pass reading does not have: *MAIA did
 not hold the whole Work in mind at once, and a pattern spanning the seam between two passes may be
-invisible to both.* This is preserved structurally rather than hedged in prose — the plan records
-its scopes and their order, coverage is reported as a computed fact, and no synthesized statement may
-claim more reach than the passes that produced it. A run says where it looked. It never implies it
-looked everywhere.
+invisible to both.* This is preserved structurally rather than hedged in prose — the ReadingRun
+records its scopes and their order, coverage is reported as a computed fact, and no synthesized
+statement may claim more reach than the passes that produced it. A run says where it looked. It never
+implies it looked everywhere.
 
 **What provenance and ownership boundaries does this require?**
-One pinned revision per run, so every observation in a run is about the same Work-state. Every
-synthesized statement walks back to constituent observations and through them to 07A evidence refs.
-The plan is MAIA's record of how she read; the divisions are the member's, authored in
-`manuscript_structure_units`; the Work is untouched throughout, as the terminal witness demonstrates
-for the preparation act.
+One frozen Work-state (`DevelopmentalReadState`) per run, so every observation in a run is about the
+same Work-state. Every synthesized statement walks back to constituent observations and through them
+to 07A evidence refs. The **ReadingRun** is MAIA's record of how she read — the pre-commission plan is
+an unpersisted preview and holds no record authority; the semantic divisions are the member's,
+**authored or ratified** in `manuscript_structure_units`; the Work is untouched throughout, as the
+terminal witness demonstrates for the preparation act.
 
 **What new responsibility does this capability create?**
 The responsibility not to let scale read as authority. A reading assembled from seven passes over a
@@ -394,7 +420,7 @@ that is ignored.
 | Does this increase user agency? | Yes — the author can commission a reading of a real manuscript at the scale they actually work at, and reject it in full. |
 | Does this push life outward into the world? | Yes — toward a finished Work that leaves the system. |
 | Does this reduce the system's psychological centrality over time? | Conditionally — only while synthesis stays observational. §5 is where this could invert, which is why the line is drawn by enumeration and not by judgement. |
-| Cultural sovereignty (Invariant 14) | The Work is its own reference. Divisions are the member's authored structure units, never inferred genre conventions. No chapter is judged against what a chapter ought to be. |
+| Cultural sovereignty (Invariant 14) | The Work is its own reference. Semantic divisions are the member's structure units, **authored or ratified** by them, never inferred genre conventions. No chapter is judged against what a chapter ought to be. |
 
 ---
 
@@ -402,7 +428,9 @@ that is ignored.
 
 ```text
 0  founder AMENDED §4 (points 1/3/5/6/8/12) and RULED A1–A7      DONE 2026-09-06
-1  founder RATIFICATION ACT — §4 becomes Acceptance Instrument   ← the one remaining act
+1  consistency pass — A2 freshness wording · §9 ontology ·        DONE 2026-09-06
+   coverage-complete defined operationally
+2  founder RATIFICATION ACT — §4 becomes Acceptance Instrument    ← the one remaining act
    v1 (prospectively ratified) and A1–A7 come into force
 3  falsifiers filed against the ratified boundary
 4  BUILD opened by a dated founder act in the lane
@@ -410,7 +438,7 @@ that is ignored.
 6  production acceptance bound to an exact GIT_COMMIT, as this chain has established
 ```
 
-⛔ Steps 3 onward do not begin because step 1 looks settled. Each opens by its own act.
+⛔ Steps 3 onward do not begin because step 2 looks settled. Each opens by its own act.
 
 ⛔ **AUTHORITY STATE.** The amended instrument and the A1–A7 rulings are RECORDED, not yet IN
 FORCE. No "founder ratified" mark is written into this repository on the founder's behalf; the

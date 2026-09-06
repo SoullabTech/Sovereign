@@ -662,9 +662,23 @@ RULED             A1  separate orchestration substrate; persisted object is a RU
                   A6  document order only for v1; no parallel/reordered execution
                   A7  cost disclosure, not a Work-size ceiling; any future resource cap is a named
                       typed operational refusal, never "your Work is too long"
+CONSISTENCY       three pre-amendment remnants cleaned (founder review of 593e9a5d), docs-only:
+                  A2 "mark the run stale" → the run's FRESHNESS RELATION RESOLVES TO STALE; a
+                     persisted run carries no mutable stale flag (writing one would collapse the
+                     two axes point 5 separates)
+                  §9 growth-obligation prose carried the superseded ontology (a durable "plan",
+                     one pinned REVISION, member-authored-only divisions) → ReadingRun records the
+                     scopes; one frozen Work-state per run; the pre-commission plan is an
+                     unpersisted preview with no record authority; divisions authored OR RATIFIED.
+                     Invariant-14 row likewise.
+                  A3 coverage-complete DEFINED OPERATIONALLY: whole-Work synthesis eligible iff
+                     every planned RunScope is complete AND each references a 07C reading AND
+                     computed target coverage = 100%. Any failed scope means coverage incomplete
+                     even if the run has finished executing. `run finished` ≠ `Work fully read`.
 AUTHORITY STATE   RECORDED, NOT IN FORCE. No "founder ratified" mark is written into the repository
                   on the founder's behalf. One act remains: ratification. Until then BUILD-07G holds
-                  DECIDE-only authority.
+                  DECIDE-only authority. Next legitimate work after ratification is FILING
+                  FALSIFIERS against the ratified boundary — not implementation.
 RECORD            docs/programme/WS2-07-BUILD-07G_LONG_WORK_DECIDE_2026-09-06.md §4 · §5 · §6 · §7
 ```
 
