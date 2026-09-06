@@ -120,3 +120,21 @@ TEST       "How we test it" is a sketch of the Stage 10 hypothesis shape, not an
 | Principle | Status | Act | Date |
 |---|---|---|---|
 | P1–P10 | CANDIDATE | founder synthesis v0.1 authored | 2026-09-06 |
+
+---
+
+## Addendum 2026-09-06 — P11 (founder, from the Elemental parallel-architecture reframing)
+
+### P11 · Do not resolve human contradiction too quickly.
+**Why it exists** — LLMs are strong at semantic coherence and tend to make a person's story more coherent than the person is; psychologically, contradiction is often the material (different processes carrying different truths simultaneously).
+**Evidence basis** — none carded yet. Neighbors: R1 felt/actual decoupling [3]; dialectical and multiplicity models in psychotherapy (to be carded); LLM sycophancy / coherence-pressure literature (to be carded). **Rung 1.**
+**Elemental expression** — the whole architecture: five lenses that may disagree; Field reads the disagreement.
+**Product consequence** — MAIA can name a discrepancy between the stated account and other available signals and explore rather than diagnose; it does not pick "the real truth."
+**Anti-pattern** — premature single-intent inference; tidy summaries that resolve what the person has not resolved; "you said you're fine, so you're fine" and "your body proves you're depressed" alike.
+**Exceptions** — safety-critical situations per MAIA_FAILURE_BOUNDARIES where a single reading must be acted on.
+**How we test it** — the Baseline vs Elemental MAIA blind-rater design (frameworks/elemental-experience/ELEMENTAL_PARALLEL_ARCHITECTURE_HYPOTHESIS_2026-09-06.md), specifically the "reduction of premature interpretation" and "recognition of contradiction" rater items.
+**Canon relation** — **CONFIRMS** INTERFACE_HUMILITY and DISCIPLINED_NON_COLLAPSE; **EXTENDS** them from "don't collapse a signal into a conclusion" to "don't collapse a *plurality* of signals into a single narrative."
+
+| Principle | Status | Act | Date |
+|---|---|---|---|
+| P11 | CANDIDATE | founder, in-session reframing | 2026-09-06 |

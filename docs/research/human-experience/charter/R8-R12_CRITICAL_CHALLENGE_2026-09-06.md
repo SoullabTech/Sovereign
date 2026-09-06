@@ -17,13 +17,24 @@ POSTURE    Steelman the opposition. A challenge that is answered by restating v0
 
 ---
 
-## R8 — Companionship, dependence, displacement
+## R8 — Relational capacity vs dependence, displacement, atrophy  ← OPENED FIRST (founder, 2026-09-06)
 
 ```text
-QUESTION          What is the strongest evidence that sustained AI relationship harms human
-                  relational capacity — through dependence, displacement, or substitution —
-                  and does the "centrifugal" hypothesis (P7) survive it?
-TARGETS [founder] AI companionship counterarguments · dependence
+QUESTION [founder] When does relationship with AI increase human relational capacity, and
+                  when does it produce dependence, displacement, or relational atrophy?
+ATTACKS           P7 — "MAIA's relationship should be centrifugal rather than centripetal."
+TARGETS [founder] AI companionship and loneliness · attachment to conversational agents ·
+                  social substitution vs supplementation · dependence and problematic use ·
+                  emotional disclosure · loneliness as cause vs consequence · vulnerable
+                  populations · effects on human-to-human relationship · commercial
+                  incentives · long-duration use · whether AI relationship can actually
+                  train human relational capacity
+IF IT SURVIVES    "The health of a human–AI relationship should partly be judged by what
+                  happens to the human's capacity for relationship beyond the AI." — a
+                  Soullab position on the future of human–AI relationship, not only a MAIA rule
+METHOD            evidence → counterevidence → adjudication, here, before R9 opens.
+                  Actively seek evidence against the preferred conclusion.
+FINDINGS          inquiries/R8_RELATIONAL_CAPACITY_2026-09-06.md
 SURFACE           MAIA conversation · Memory · Return after absence · Relationships
 HUMAN PHENOMENON  attachment · loneliness · substitution vs supplement · healthy dependence
                   vs unhealthy dependency (founder's own phrase — the line is undefined)

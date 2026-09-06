@@ -29,6 +29,10 @@ EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETAT
 | MAIA experiments | `experiments/<surface>/` | empty — none authorized |
 
 Measurement vocabulary: `measurements/MEASUREMENT_VOCABULARY_v0.1.md`. Board: `BOARD.md`.
+Claim ladder (the second threshold, internal hypothesis → public Soullab claim): `CLAIM_LADDER.md`.
+Inquiry findings: `inquiries/R<n>_*.md`.
+
+**Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation.
 
 ## Inquiry numbering — read this before citing an R-number
 

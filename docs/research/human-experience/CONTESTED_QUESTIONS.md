@@ -29,7 +29,7 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | U2 | Whether rupture-and-repair transfers from psychotherapy to human–AI relationship | [7] human only | a MAIA experiment on recognized misattunement + repair (first candidate for `experiments/voice/`) |
 | U3 | Optimal amount, salience, presentation of relational memory | [22 — NOT_FOUND][23][24] | locate/replace [22]; then Episodic Phase 2 witness data |
 | U4 | A validated construct of *interactional vitality* | [19][20][21] adjacent | construct work before any measurement instrument |
-| U5 | Whether the Elemental model yields measurable design advantage | none | the synthesis's own test: do designers using the grammar catch failures earlier / describe states more consistently |
+| U5 | Whether the Elemental model yields measurable design advantage | none | **Revised 2026-09-06 (founder):** the stronger, testable form is *can an Elemental parallel-processing architecture help an AI hold multiple simultaneous dimensions of experience, recognize their contradictions, and respond more appropriately than a semantic representation alone?* Test: Baseline vs Elemental MAIA, blind raters. See frameworks/elemental-experience/ELEMENTAL_PARALLEL_ARCHITECTURE_HYPOTHESIS_2026-09-06.md |
 | U6 | Whether a member's experience of MAIA as alive / conscious / sacred establishes anything ontological about MAIA | none, by construction | **Not a research question for this lane.** Founder stop (charter §3: claims about consciousness). Measured only as *belief about MAIA*, kept separate from felt presence |
 
 ## 3 · Interpretive layer — designated by the founder, not yet in the corpus
@@ -48,6 +48,6 @@ research → contested → supported → **interpretation** → principles.
 
 | # | Contest | Why it matters |
 |---|---|---|
-| L1 | R7's memory typology rests solely on [22], which cannot be found | Principle 8's "selective, temporal, revisable" half is currently interpretation dressed as evidence. Either locate [22] or move the typology to the interpretation level explicitly. Its convergence with Soullab's own Temporal Memory direction is not external support. |
+| L1 | R7's memory typology rests solely on [22], which cannot be found | **Founder ruling 2026-09-06 — sharpened: do not "find it or strike it"; re-research the propositions, not the citation.** R7 splits into two independent sub-inquiries: **R7a** — does useful relational-AI memory decompose into something like episodic / semantic / pattern / state-responsive forms? **R7b** — should present-state evidence have authority to contradict or override accumulated historical models? Sources to search: memory science, longitudinal personalization, psychotherapy case formulation, temporal reasoning, current AI-memory literature. *If the evidence produces a different taxonomy, ours changes.* Convergence with Soullab's Temporal Memory direction is not external support. Board: R7 stays RESEARCHING with R7a/R7b rows. |
 | L2 | No paraphrase in the synthesis has yet been checked against source text | Quoted figures ([2] 82/6,000; [19] 140/40,000; [6] null) are the first checks. |
 | L3 | Domain coverage: F has one source, H none, classical HCI (B) none | The corpus is relational-psych + HAI. Orientation, cognitive load, progressive disclosure, error recovery — the *Earth/Air* territory — is unsourced. |
