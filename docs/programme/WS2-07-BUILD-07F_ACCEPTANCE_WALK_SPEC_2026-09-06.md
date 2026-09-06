@@ -765,10 +765,24 @@ and no irreversible click until BOTH windows have shown it. Close every Develop 
 
 ### Entry point for the next session — founder framing, 2026-09-06
 
-**Do NOT restart from W7.** Restart from the launch question:
+**Do NOT restart from W7.** Restart from the launch question — SHARPENED by the founder in the same
+exchange, and it is the sharpened form that governs:
 
-> *Can 3–5 trusted writers safely Arrive → Write → Structure → Develop → dialogue → leave/return,
-> with the standing/decision surface explicitly out of bounds?*
+> *Can a NON-FOUNDER writer safely complete the bounded pilot journey on production?*
+
+```text
+signup → identity → Work → Write → save → return → Structure → Develop → dialogue
+                                                              standing UNAVAILABLE
+```
+
+⛔ **"Non-founder" is the load-bearing word.** The founder can complete the journey with an account
+that already exists, a passkey they know, and browser state warm for months. A tester starts at
+`/begin` with none of that. The onboarding chain
+(`/begin → /intro-maia → /intro-daimon → /test-elemental → /faq → /onboarding → /maia`) has never
+been walked on `50302f5d9` by anyone else, and it is the leg where a failure ends the pilot before
+Writer's Studio is reached at all.
+
+A clean pass gives a credible go/no-go decision rather than another development loop.
 
 ```text
 07F runtime            50302f5d9
