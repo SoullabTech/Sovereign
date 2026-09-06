@@ -14,8 +14,9 @@ docker exec maia-sovereign sh -c \
   'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
-**Pass condition:** `0 failed`. Last observed production run, founder-run 2026-09-06 on runtime
-`ca5fdff44`: `33 passed · 0 failed · 0 warned`.
+**Pass condition:** `0 failed`. Observed in production 2026-09-06, runtime `ca5fdff44`:
+`33 passed · 0 failed · 0 warned` — a read-only run executed in-session via the founder's
+connected host, not a manual founder execution.
 
 Any failure or warning blocks the release unless explicitly reviewed and signed off.
 
@@ -52,8 +53,9 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 11. **Switching changes context** — Co-Lab switching changes people, DMs, sessions, encounters, files, and memory
 12. **Practitioner client notes** — every `practitioner_client_notes` row's `practitioner_id` matches its client's owner (no note hangs off another practitioner's client), and every note is stored encrypted (`content_enc` + `content_enc_meta` non-NULL). Note: `practitioner_clients` has **no `team_id`** — only `studio_people` does — so containment here is owner agreement, not team scope.
 
-> **Observed 2026-09-06.** Section 12's 2 assertions are included: a founder-run production gate on
+> **Observed 2026-09-06.** Section 12's 2 assertions are included: a production run of the gate on
 > runtime `ca5fdff44` printed `33 passed · 0 failed · 0 warned`. 33 is now measured, not derived.
+> The run was read-only and executed in-session via the founder's connected host.
 >
 > The gate remains the `failed` column, never the total. A total that changes because checks were
 > added is not a failure; a total quoted without a run behind it is a claim, not evidence.

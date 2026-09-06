@@ -400,7 +400,8 @@ docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/v
 ```
 
 Pass condition: `0 failed` (the script exits non-zero on any failure).
-Last observed production run — founder-run 2026-09-06 on runtime `ca5fdff44`: `33 passed · 0 failed · 0 warned`.
+Last observed in production 2026-09-06 on runtime `ca5fdff44`: `33 passed · 0 failed · 0 warned`
+(read-only run executed in-session via the founder's connected host — not a manual founder execution).
 
 ⚠️ The filename `verify-colab-boundaries.ts` in earlier copies of this file **never existed on any
 branch**, so the mandatory pre-invite gate could not be run as written. The gate is the `failed`

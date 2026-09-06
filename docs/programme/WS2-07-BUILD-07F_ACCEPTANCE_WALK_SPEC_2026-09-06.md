@@ -227,7 +227,8 @@ Custody equivalence did not carry the walk from `66da58b4c` to current canonical
 
 ## 2.1.0 · BLOCKED — the zero-row precondition is gone (2026-09-06)
 
-**Production read, founder-run, runtime `ca5fdff44`:**
+**Production read, runtime `ca5fdff44`** — read-only, executed in-session via the founder's
+connected host, not a manual founder execution:
 
 ```text
 STANDING_EVENTS  8
