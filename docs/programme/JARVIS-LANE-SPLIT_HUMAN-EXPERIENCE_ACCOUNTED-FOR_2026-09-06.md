@@ -104,6 +104,36 @@ Neither commit mentions this split or `JARVIS-PUBLIC-ACCOUNTED-FOR-01`. Three po
 
 **Delivery status — NOT DELIVERED.** A cross-session message carrying the §4 text plus the branch-topology consequence (marked *pending founder confirmation*) was attempted from this session at ~17:45Z and refused: the original session is not reachable from this one (no peer listing; the send tool reported no such agent). The message therefore reaches the R&D lane by one of: (a) the founder pasting §4 into that session, or (b) that session reading this record and the CLAUDE.md bullet once this branch merges. Until one of those happens, assume the R&D lane's census agents continue to write to the PR #1239 branch.
 
+## 7a · Founder ruling on the collision (2026-09-06, ~17:48Z) — ACCEPTED with one custody correction
+
+```text
+INTENDED CUSTODY TRANSFER     c36d82ec
+COLLISION CONTAINMENT SHA     6ce59f82   (founder-named; see drift note below)
+
+#1239 WRITER AFTER 6ce59f82   ACCOUNTED-FOR LANE ONLY
+
+75303b3d + 6ce59f82           PRESERVE · DO NOT REWRITE · DO NOT REVERT
+                              R&D-owned content carried historically
+
+FURTHER R&D WRITES TO #1239   NOT AUTHORIZED
+```
+
+Founder: *keeping those two commits is preferable to surgically undoing them. The important thing now is that the collision stops at a named bound.* The rule for late arrivals is part of the ruling: *if another agent commit sneaks in first, do not erase it — record the new final containment SHA and branch there.*
+
+**Containment drift observed by this session at 17:49Z.** Three further docs-only census commits had already landed after `6ce59f82`: `5c46e3f5` (17:47:29Z) · `b22ca001` (17:47:46Z) · `f7705937` (17:49:15Z), all under `docs/programme/`. Under the late-arrival rule the **effective containment SHA is the last commit on the branch at the moment the R&D session stops**, to be reported by that session; `f7705937` is the last one this session observed. All are preserved under the same terms as `75303b3d` and `6ce59f82`.
+
+**Sequence ruled by the founder:**
+
+1. Stop the original R&D session writing to #1239 — the transfer instruction relayed into it (see delivery status below).
+2. R&D lane cuts the Phase-1 continuation branch from the final contained head; a late commit is recorded, not erased.
+3. R&D continuation owns census, ranked map and master-run changes from then on.
+4. On that branch, the master run is revised so `/accounted-for`, reconciliation, renders, gates and #1239 maintenance are explicitly delegated to `JARVIS-PUBLIC-ACCOUNTED-FOR-01`.
+5. **This governance branch merges first.** Then #1239 absorbs current canonical (`69f6fb7c`, via PR #1240), keeps both CLAUDE.md bullets, updates its title/body to publication custody (its metadata still names it the R&D integration vessel — stale), reruns the final custody check and gates, and only then may return `READY FOR FOUNDER MERGE RULING`.
+
+CI at `6ce59f82` per founder: Covenant · Epistemic Guard · diagrams · sovereignty · auto-label green; Docker Build · Canonical PR Quality Gate still running. **No merge ruling is due yet.**
+
+**Delivery status — DELIVERED (second attempt).** Peer messaging could not reach the session; a poke-only Routine bound to `session_01A9AeaBFtEQRaQqjAaep6no` (`trig_01GpBz6zR8XtKLhSHyGxovsN`) was created and fired at 17:50Z carrying the founder's stop instruction verbatim plus the observed head `f7705937`; the fire returned run `cse_01WdfehBCtjB2gS5VuNYtgeR`. Acknowledgement by the R&D session is not assumed; its report of the final containment SHA is the record of it.
+
 ## 8 · Governing sentence
 
 *Accounted For does not decide what Soullab is. It makes Soullab answer publicly for what it says it is.*
