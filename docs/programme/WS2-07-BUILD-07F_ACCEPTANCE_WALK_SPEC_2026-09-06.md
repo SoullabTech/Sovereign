@@ -20,10 +20,21 @@ CUSTODY (§2.1)             NOT YET EVIDENCED FOR THE WALK. merge-base --is-ance
 STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
 GATED ON         the founder's prospective act, runbook §2.2 — GIVEN 2026-09-06
 RUNS AFTER       #1228's own witness (runbook §6.2) — a separate record, not a step of this walk
-STATE            W1 NOT CLOSED. §2.2 act GIVEN, so W2 onward is unblocked by authority — but
-                 W1 itself has two open parts: (a) custody, awaiting the minisforum-side ancestry
-                 run; (b) schema witness, unrun. The one part evidenced is the pre-walk count:
-                 developmental_observation_standing_events = 0, read on production 2026-09-06.
+STATE            W1 NOT CLOSED — one part open. §2.2 act GIVEN, so W2 onward is unblocked by
+                 authority. Evidenced on production 2026-09-06:
+                   pre-walk count   developmental_observation_standing_events = 0
+                   W1(b) schema     PASS — migration filename present; events table with its
+                                    UNIQUE quad (member_id, reading_id, observation_key,
+                                    event_index) and both triggers (dose_no_update_check,
+                                    dose_no_single_delete_check); developmental_readings carrying
+                                    BOTH developmental_readings_immutable_check AND
+                                    developmental_readings_no_orphan_delete_check (a third,
+                                    developmental_readings_observations, is 07C's observation
+                                    validator — expected, not a finding).
+                                    FKs: reading_id → developmental_readings ON DELETE CASCADE
+                                    (paired with no_orphan_delete_check — the integrity path §4
+                                    forbids "cleaning up"); member_id → members ON DELETE RESTRICT.
+                   W1(a) custody    OPEN — awaiting the minisforum-side ancestry run
                  W3 is the first irreversible step and does not run before W1 closes.
 ```
 
