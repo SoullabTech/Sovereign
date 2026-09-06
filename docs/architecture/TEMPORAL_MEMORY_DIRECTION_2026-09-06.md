@@ -52,42 +52,53 @@ What does not exist: a distinct assertion layer with its own validity interval, 
 An episode answers *what happened when*. It wants an occurrence time. A proposition discovered inside an episode ("I am working at X", "I prefer Z") answers *during what period was this true*. It wants a validity interval. These are different objects and must not share a row.
 
 ```text
-EPISODE
+EPISODE — authoritative
   occurred_at        when the thing happened
   recorded_at        when MAIA recorded it
   content, provenance
 
-TEMPORAL ASSERTION (memory claim)
+TEMPORAL ASSERTION (memory claim) — authoritative
   valid_from         when the proposition became true
-  valid_to           when it ceased being true (NULL = still true)
   recorded_at        when MAIA learned it
-  closed_at          when MAIA learned it ceased
   supersedes         see Decision 2
   source_episode(s)  provenance back to the episode(s)
+
+TRANSITION — authoritative
+  assertion_id
+  disposition        opened | replaced | ended | confirmed_still_true
+  effective_at       when the change was true in the world
+  recorded_at        when MAIA learned of it
+  member_authority   the ratifying member act
+
+READ MODEL — derived
+  valid_to           projected from the ratified transition / successor boundary
+  closed_at          projected from the transition's recorded_at
+  superseded_by      inverse of the successor's supersedes
+  current            valid_to IS NULL
 ```
 
-An episode from March stays an episode from March forever. Its `valid_from`/`valid_to` fields do not exist. The open question for the Phase 2 spec is **where the assertion layer lives**: a new table, an extension of `developmental_memories` (which already carries `valid_from`/`valid_to`), or a typed register on atoms. That is a spec question, not a decision this note makes.
+**`valid_to` is part of the temporal read model, not an authoritative mutable field on the assertion record.** For supersession its value is derived from the ratified succession transition and the successor's effective boundary. An implementation may materialize it as a projection or cache, but its authority remains the append-only transition and the successor. Any implementation that closes an assertion by mutating a `valid_to` column on the predecessor has re-opened the escape hatch Decision 2 closes.
+
+An episode from March stays an episode from March forever. It has no validity interval. The open question for the Phase 2 spec is **where the assertion layer lives**: a new table, an extension of `developmental_memories` (which already carries `valid_from`/`valid_to`), or a typed register on atoms. That is a spec question, not a decision this note makes.
 
 Four things can happen to an assertion, and nothing else: it is **born** (interval opens), **replaced** (closed exactly where a successor opens), **ends** (closed, no successor), or **ages** (open, but past its review horizon). "Replaced" and "ends" must stay distinguishable: a replaced fact hands you the next value, an ended one honestly has none.
 
 ## Decision 2 — Succession is carried by the successor, not the predecessor
 
-The custody rule: the actor with authority to declare succession is the successor. So the schema is
+The custody rule: the actor with authority to declare succession is the successor. So the only succession field that is stored authoritatively is
 
 ```text
-valid_from
-valid_to
-supersedes        → the assertion this one replaces
+supersedes        → the assertion this one replaces (on the successor)
 ```
 
-and **`superseded_by` is a derived inverse**, never a stored authoritative field. A closed historical assertion is never reopened and amended because something later became true.
+and **`superseded_by` and the predecessor's `valid_to` are derived**, never stored authoritative fields. A closed historical assertion is never reopened and amended because something later became true.
 
 ```text
 A: "I live in Connecticut"      valid_from 2024-05-01   valid_to 2026-03-14
 B: "I live in New Orleans"      valid_from 2026-03-15   valid_to NULL   supersedes A
 ```
 
-Writes are append-oriented: assertion, transition (member ratifies; `effective_at` vs `recorded_at` preserved separately), successor assertion. The read model derives `A.valid_to`, `A.superseded_by`, `B.valid_from`, and "current". This is the single-writer invariant from the tutorial, translated into a **single authority boundary** that never rewrites the predecessor row.
+Writes are append-oriented: assertion, transition (member ratifies; `effective_at` vs `recorded_at` preserved separately), successor assertion. The read model derives `A.valid_to`, `A.superseded_by`, and "current"; `B.valid_from` is authoritative on B and, for supersession, coincides with the transition's `effective_at`. This is the single-writer invariant from the tutorial, translated into a **single authority boundary** that never rewrites the predecessor row.
 
 **Custody, not archival.** Two operations must stay distinct:
 
@@ -129,11 +140,11 @@ Truth, currentness, age, and relevance are not one axis. `confidenceDecay` curre
 
 Observation stays ahead of classification. Before anything in Decision 3 is built, and before `confidenceDecay` is touched:
 
-1. **Measure whether decay changes what reaches the prompt.** Using the `memory_transition_records` observability already in place, determine how often the 0.40 decay term changes the top-12 set versus a decay-free ranking for the same members. If it does, evaluate accompanying or replacing invisible weighting with member-legible age information (the atoms renderer already does this for atoms). If it does not, the transparency concern is moot at present and is recorded as such.
+1. **Measure whether decay changes what reaches the prompt.** The non-vector query has no dependence on the turn's text, so the top-12 is a per-member set that can be computed directly. Compare the current ranking against the same candidates with the 0.40 decay contribution removed, and report not merely that scores differ but: members whose selected set changes, which memory entered, which left, rank displacement, memory type, age, and confirmation state. Witness: `scripts/witness/temporal-memory-audit.sql` §2. If it does, evaluate accompanying or replacing invisible weighting with member-legible age information (the atoms renderer already does this for atoms). If it does not, the transparency concern is moot at present and is recorded as such.
 
-2. **Test `valid_to` parity between retrieval paths.** The non-vector path (`MemoryBundle.ts:276`) excludes expired developmental memories; the vector fallback (`MemoryBundle.ts:321-325`) does not. Question: *can an expired or superseded developmental memory become retrievable through the vector fallback after being excluded from the ordinary path?* This is not yet a proven production defect. The fallback fires only when the non-vector query returns zero rows and an embedding exists. It is structurally the kind of defect a temporal model exists to prevent, and it should be either confirmed or ruled out before Decision 1 chooses where the assertion layer lives.
+2. **Test `valid_to` parity between retrieval paths.** The non-vector path (`MemoryBundle.ts:276`) excludes expired developmental memories; the vector fallback (`MemoryBundle.ts:321-325`) does not. Question: *can an expired or superseded developmental memory become retrievable through the vector fallback after being excluded from the ordinary path?* This is not yet a proven production defect. The fallback fires only when the non-vector query returns zero rows and an embedding exists. It is structurally the kind of defect a temporal model exists to prevent, and it should be either confirmed or ruled out before Decision 1 chooses where the assertion layer lives. Establish first whether production currently contains the traversal conditions at all (a member with zero open `content_text` rows and at least one expired row carrying an embedding); if impossible with current data, record that. If possible, establish it with a positive witness before calling it a defect. Witness: `scripts/witness/temporal-memory-audit.sql` §1.
 
-3. **Note the unwired ask.** `shouldPromptForConfirmation` is the designed "is this still true?" gesture with no callers. Whether it is the right shape for the sweep candidate is a Phase 2 question; that it was designed and dropped is a fact worth carrying forward.
+3. **Note the unwired ask.** `shouldPromptForConfirmation` is the designed "is this still true?" gesture with no callers. Its zero-call status is evidence about an abandoned design possibility, not evidence that it is the right mechanism. It is not wired during either audit.
 
 ---
 
@@ -153,3 +164,14 @@ This note does not reorder the sequence in `CLAUDE.md` (fork → toggle → clar
 - Rasmussen et al., *Zep: A Temporal Knowledge Graph Architecture for Agent Memory* (arXiv 2501.13956): episode/fact separation, `valid_at`/`invalid_at` on derived facts. Its automatic contradiction resolution is explicitly **not** adopted; the temporal shape is.
 - Wu et al., *LongMemEval* (ICLR 2025): temporal reasoning and knowledge-update failures over long histories.
 - The originating tutorial (datasciencebrain, 2026-09-05): the four-operation table and the clock-driven second path.
+
+---
+
+## Record
+
+- `925336d4` — note + `CLAUDE.md` entry. Docs-only. **Hook execution NOT WITNESSED** (committed with hooks bypassed in a remote sandbox; the skipped instrument produced no evidence either way). Normal remote checks close that gap if this enters a PR.
+- Follow-up commit — authority/projection wording correction (Decision 1–2), plus `scripts/witness/temporal-memory-audit.sql` (read-only, §1 fallback precondition, §2 decay counterfactual). The script was executed against a scratch PostgreSQL 16 cluster with synthetic rows (no production data, no member data) to witness that it parses, that §1.b isolates only a member with expired-embedded rows and zero open rows, and that §2 reports set-membership changes with entered / left / displacement / type / age / confirmation. That verifies the instrument, not production. Audit output is to be pasted below verbatim when run on minisforum; until then both audit questions remain **open**.
+
+### Audit results
+
+_Not yet run. This section is empty by design._
