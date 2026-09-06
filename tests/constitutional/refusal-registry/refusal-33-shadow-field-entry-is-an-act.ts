@@ -18,6 +18,8 @@ import type { RefusalCheck } from './harness';
  */
 
 const ROUTE = 'app/api/maia/shadow-field/route.ts';
+const HOUSE = 'lib/navigation/houseDestinations.ts';
+const PLACE = 'app/maia/shadow-field/page.tsx';
 
 export const check: RefusalCheck = {
   id: 'R33',
@@ -92,6 +94,29 @@ export const check: RefusalCheck = {
       io.pass('exit closes only the member\'s own verified sitting');
     } else {
       io.fail('exit can close a sitting without verifying ownership');
+    }
+
+    // P3-R1 (founder, 2026-09-06): the entrance must actually be REACHABLE, and arriving
+    // must not be entering. The gates previously proved the activation act was required
+    // while the door itself was unreachable from current navigation — a Field nobody can
+    // reach passes every other check in this file.
+    const house = io.read(HOUSE);
+    if (/id: 'shadow-field'/.test(house) && /route: '\/maia\/shadow-field'/.test(house)) {
+      io.pass('the Shadow Field is a member-chosen place in the House');
+    } else {
+      io.fail('the Field has no reachable entrance in the House navigation');
+    }
+
+    if (io.exists(PLACE)) {
+      const place = io.read(PLACE);
+      // Arriving renders Arrival; it must not perform the activation act for the member.
+      if (!/shadow-field\/enter|member_entered_shadow_field|openFieldSession/.test(place)) {
+        io.pass('arriving at the place does not enter the Field — Enter remains the member act');
+      } else {
+        io.fail('the place activates the Field on arrival');
+      }
+    } else {
+      io.fail('the Shadow Field place does not exist', PLACE);
     }
 
     // Exit: immediate, fixed text, before any model call, nothing written.

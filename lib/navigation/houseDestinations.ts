@@ -42,6 +42,7 @@ import {
   DoorOpen,
   BookMarked,
   Sparkles,
+  Moon,
   Settings as SettingsIcon,
 } from 'lucide-react';
 
@@ -221,6 +222,35 @@ export const HOUSE_DESTINATIONS: HouseDestination[] = [
     audience: 'all',
     nativePolicy: 'native',
     nativeReady: false, // PR 2
+    returnBehavior: 'back-to-maia',
+    group: 'life',
+  },
+
+  /**
+   * Shadow Field — PROTOTYPE v1 door (MAIA-SHADOW-FIELD-01 · P3-R1, 2026-09-06).
+   *
+   * Reachability repair. The Field's surface was wired into the legacy in-shell
+   * JournalPanel, which the House no longer opens: the House navigates to Journal as a
+   * place, so the prototype's entrance was unreachable from current navigation. The old
+   * rail is not resurrected to fix that — the Field becomes what it always was in the
+   * design, its own voluntarily entered place, not a Journal sub-feature.
+   *
+   * Opening this place does NOT enter the Field. It renders Arrival; the member's
+   * explicit "Enter the Shadow Field" gesture remains the constitutional activation act
+   * (L1, F2). founder-only and interim while the prototype is walked; native-hidden
+   * because the route is not in the Capacitor bundle.
+   */
+  {
+    id: 'shadow-field',
+    label: 'Shadow Field',
+    icon: Moon,
+    tooltip: 'Voluntary encounter with what has not yet been included',
+    kind: 'route',
+    route: '/maia/shadow-field',
+    audience: 'founder',
+    nativePolicy: 'native',
+    nativeReady: false, // prototype; not in the native bundle keep-list
+    interim: true, // PROTOTYPE v1 door — walked, not ratified
     returnBehavior: 'back-to-maia',
     group: 'life',
   },

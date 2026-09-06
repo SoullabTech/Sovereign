@@ -520,3 +520,73 @@ P8            OPEN
 PROTOTYPE     NOT YET CLOSED
 WITNESS · MERGE · DEPLOY · LIVE   NOT AUTHORIZED / NO
 ```
+
+---
+
+## 10 · P3-R1 — reachability repair, 2026-09-06 · **P3 REOPENED → repaired**
+
+### The defect
+
+The Field's surface existed and every gate was green, but **the entrance was unreachable
+from current MAIA navigation**. The prototype door was wired into the legacy in-shell
+`JournalPanel`. The old world rail was retired; the House is now the navigation authority,
+and the House navigates to Journal as a *place* (`/journal`, the standalone surface) rather
+than opening that legacy right panel. So the Journal route contains no Shadow Field, and the
+button that opens it is not on any screen a member can reach.
+
+My earlier instruction to walk "the same Journal door you already had" was wrong, and the
+founder was not in the wrong place. **A Field nobody can reach passes every other check in
+the registry** — which is precisely what happened.
+
+### The repair, and what it deliberately does not do
+
+The retired rail and the legacy Journal panel are **not** resurrected. Repairing a prototype
+by violating the newer House architecture would trade one defect for a worse one. Instead the
+Field becomes what the design always said it was: **its own voluntarily entered place, not a
+Journal sub-feature.**
+
+| Change | File |
+|---|---|
+| Shadow Field added as a member-chosen place in the House — `id: 'shadow-field'`, route `/maia/shadow-field`, label *Shadow Field*, tooltip *"Voluntary encounter with what has not yet been included"* | `lib/navigation/houseDestinations.ts` |
+| The place itself: renders Arrival and nothing more | `app/maia/shadow-field/page.tsx` |
+
+**Arriving is not entering.** The page renders the existing `ShadowFieldSheet` at Arrival.
+It does not call `/enter`, does not construct an activation act, and does not open a sitting.
+The member's explicit **Enter the Shadow Field** gesture remains the constitutional
+activation act (L1, F2) and is still what opens the server-held sitting (P4-C1). R33 now
+asserts both facts.
+
+**Bounded to the prototype.** `audience: 'founder'` so no member sees a door to a
+tester-gated room; `interim: true`, since the placement is walked and not ratified;
+`nativeReady: false`, because the route is not in the Capacitor bundle keep-list — which is
+honest and carries no drift-guard obligation, as that guard binds only native-ready routes.
+Nothing changed in prompts, memory, the Guardian, the producer registry, or ordinary MAIA
+conversation.
+
+### The gate that missed it, strengthened
+
+R33 previously proved the activation act was required while the door was unreachable. It now
+also asserts that the Field has a member-chosen entrance in the House and that the place does
+not activate the Field on arrival.
+
+```
+shadow-01-gates.ts   R32 · R33 · R34 ALL GREEN — 33 passed · 0 failed · 0 warned
+npm run typecheck    RED on the same two tsconfig.ship.json:3 toolchain deprecations only;
+                     the new destination and place add no diagnostics. NOT rebaselined.
+```
+
+### Not verified here
+
+The House navigation tests (`lib/navigation/__tests__/houseDestinations.test.ts`,
+`houseNavDrift.test.ts`) **were not run** — this container has no `node_modules`, so vitest is
+unavailable. The new entry is founder-audience and `nativeReady: false`, which should not
+disturb the member/founder list assertions or the drift guard, but that is reasoning, not a
+test result. Run them before the walk.
+
+`/maia/labtools` still mounts `ShadowWorkGuide`, the retired astrological guided flow,
+directly. It is not the Field and should not be walked.
+
+```text
+P3   REPAIRED — Shadow Field reachable as a House place; arriving ≠ entering
+P8   PAUSED → the founder walk can begin once the House tests are run
+```
