@@ -181,8 +181,8 @@ This is the differentiating ambition. Building another community platform is not
 |---|---|---|
 | CIRCLE-00 | Existing-truth census (READ ONLY) | ✅ **COMPLETE** — `…_EXISTING_SUBSTRATE_CENSUS_2026-09-06.md` |
 | CIRCLE-01 | Research synthesis + **scale falsification** | ✅ **CLOSED** — `…_RESEARCH_SYNTHESIS…`, `CIRCLE_SCALE_FALSIFICATION.md`, `…_RESEARCH_SUPPLEMENT…` (R1–R11, founder continuation) |
-| CIRCLE-02 | Product constitution | 🟡 **OPEN — v0.1 DRAFT PRODUCED, HALTED BEFORE RATIFICATION** (`CIRCLE_PRODUCT_CONSTITUTION_v0.1_DRAFT.md`, §02A–02P) |
-| CIRCLE-03 | Boundary gate (verifier) | ⛔ **spec drafted, writing NOT authorized** — blocked on 8 Class-A rulings |
+| CIRCLE-02 | Product constitution | ✅ **CONSTITUTIONAL MINIMUM RATIFIED 2026-09-06** — FR-01…FR-10 (`…_FOUNDER_RULINGS_2026-09-06.md`); CA-01…CA-13 open, none blocking |
+| CIRCLE-03 | Boundary gate (verifier) | 🟡 **OPEN — implemented, NOT RUN** (`scripts/verify-constitution-circles.ts`, 22 assertions). No DB access this session |
 | CIRCLE-04 | Invocation system | ⛔ blocked on CIRCLE-03 |
 | CIRCLE-05 | Living Circle, 2–20 | ⛔ |
 | CIRCLE-06 | **Fission · birth · morphology** (was: scale to 200) | ⛔ |
@@ -285,3 +285,45 @@ DISCOVER ✅ → CONSTITUTE ← here → VERIFY → REPAIR → INVOKE → LIVE C
 fission · do not write the verifier · do not modify `CIRCLE_FIELD_DOCTRINE.md` · do not build
 discovery, Constellations, or MAIA-in-Circle · do not repair any Class-B defect · do not touch
 production.
+
+
+---
+
+## 11. Founder adjudication · CONSTITUTE ratified · VERIFY opened (2026-09-06)
+
+**Identifier correction first.** The v0.1 draft carried `A-xx` collisions (A-01 and A-11 each named
+two different questions) and docket v2 marked **A-12 a VERIFY blocker while the verifier spec's own
+blocker list excluded it.** Both were Jarvis's errors. Canonical scheme from here: **`FR-nn`**
+ratified, **`CA-nn`** open. Historical labels stay valid inside their own documents.
+
+**Ratified:** FR-01 consent law · FR-02 six-field ontology · FR-03 Dyadic Field distinct, Circle
+begins at three · FR-04 witnessing vs structured inquiry · FR-05 facilitator + removal authority ·
+FR-06 discovery privacy · FR-07 release authority · FR-08 never-crosses **with correction** ·
+FR-10 multiplication law. **FR-09 (MAIA roles) is direction recorded, NOT a VERIFY blocker.**
+
+**Two corrections to Jarvis's draft, both founder-caught:**
+
+1. **FR-08 clause 3 was overbroad.** *"Private MAIA conversation content into any shared field, by
+   any path, including summary"* would have prohibited the Personal → Circle membrane the
+   programme was built around. **Privacy forbids ambient appropriation, not a person's sovereign
+   act of sharing their own material.** A member outside Sanctuary may explicitly author a
+   representation of their own MAIA exchange and Offer it.
+2. **A-12 was never a VERIFY blocker.** The verifier needs no MAIA ruling.
+
+**VERIFY implemented, not run.** `scripts/verify-constitution-circles.ts` — 22 assertions in three
+groups (C source · S service-vs-real-principals · T rolled-back fixtures). The three-group shape is
+forced by the architecture: **there is no RLS, so the boundary lives in TypeScript** — SQL-only
+would prove nothing, and service-only cannot see rolled-back fixtures.
+
+⛔ **No `DATABASE_URL` and no `node_modules` in this session.** Predicted `17 passed · 5 failed` is
+**static analysis, not evidence.**
+
+**Predicted failures — three of five are one defect.** C7 + C8 + T3 are all **FR-05 removal**,
+ratified today and implemented nowhere. C6 is `response_count`. **S4 is a question, not a defect:**
+FR-03's "three or more persons" fails against four one-member production Circles — but a Circle
+must be able to form, so a literal reading makes every Circle unconstitutional at creation.
+**The first place the unratified lifecycle blocks a ratified rule.** Jarvis did not soften the
+assertion to make it pass.
+
+**Standing:** cohorts NOT authorized · founder gate untouched · no Class-B repair made ·
+**B-01 does not close because the verifier exists.**
