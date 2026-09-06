@@ -133,6 +133,37 @@ capture whatever remains. That is the last item on the gate. Only when it settle
 **Journal** open as specimen two. Nothing is named or extracted before the two
 rooms can be compared.
 
+### Console gate — ruling predeclared before the observation (2026-09-06)
+
+Written down *before* the pass so the outcome cannot be rationalized after it
+arrives. The witness is narrow and re-verifies nothing already held: clean Chrome
+profile with extensions absent, DevTools console, `Preserve log` OFF, reload
+`/reflections`, clear once settled, then exactly one ordinary act — open one
+Reflection, Discuss with MAIA, let the contained conversation open, close/reopen
+only if that is part of the subject. Stop. Capture every red entry with full text
+and source URL.
+
+| Observation | Ruling |
+|---|---|
+| zero red entries | CONSOLE PASS · Reflections may close · Journal may open |
+| `chrome-extension://`, favicon/resource, unrelated bare CORS | dismiss as external noise **with the source recorded** · CONSOLE PASS |
+| `[SCRIBE]` `[TTS]` `[iOS]` `[StreamingVoice]` `[localStorage]` `[PostgreSQL]` `[OracleConversation]` `[Capsule]` `[LabAction]`, or reflections-owned failure text | APP-OWNED · Reflections stays OPEN · preserve the exact error and diagnose only that error |
+
+**A zero-error clean run does not retroactively diagnose the earlier count.** The
+red count of 2 seen under `Preserve log` is unattributable and stays that way —
+provenance cannot be recovered after the fact. A clean pass is therefore recorded
+as:
+
+```text
+console witness       PASS
+observed errors       0
+prior visible count   UNATTRIBUTED — provenance never established
+```
+
+and never as "the previous errors were stale." Absence in a new run is evidence
+about the new run only. That is enough to close the gate; it is not enough to
+convert an unattributed count into a finding.
+
 **Why Journal and not Co-Lab or Writer's Studio.** Journal shares the load-bearing
 condition — the member already owns an object underneath, MAIA can enter in
 relation to it, leaving must restore precisely that object — and there is already
