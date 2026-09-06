@@ -1,25 +1,29 @@
 # JARVIS-WS2-07-DEVELOPMENTAL-INTELLIGENCE-01
 
-> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F opened by its own act (block below); BUILD-07G–H unauthorized.**
+> **Lane active. BUILD-07E DEVELOPMENTAL DIALOGUE — CLOSED / ACCEPTED (founder act, 2026-09-05) at canonical `6ff0beafc`, LIVE. BUILD-07A, 07B, 07C, 07D and 07E are CLOSED / ACCEPTED and canonical — Stage 7.1 complete and BUILD-07E with it. BUILD-07F source is MERGED but NOT CLOSED (block below); BUILD-07G–H unauthorized.**
 >
-> **BUILD-07F DEVELOPMENTAL DECISIONS — OPEN (founder acts, 2026-09-05 / 2026-09-06).** Census,
-> adjudication and design are canonical and accepted; **implementation authorized 2026-09-06 bound
-> to canonical `d8fc2082d`**, falsification-first. A branch candidate now exists on
-> `claude/writer-author-studios-roadmap-b2tqf5` — **NOT CLOSED, no PR, nothing deployed**. Its
-> evidence: `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (eight deficient
-> persistence variants and six deficient write-boundary variants each observed RED on its named
-> guard before the repair was accepted; `15 checks · 0 failures` and `14 checks · 0 failures` on the
-> code as written; D5/D6 module-graph gates falsified over an in-memory overlay across every
-> module-loading form). **Founder review 2026-09-06 returned HOLD on `dc48528d7` — two blockers (the
-> D3 delete path through a directly deleted reading; a late async completion able to carry reading
-> A's standing into reading B), one gate-coverage defect and one copy repair; all four repaired,
-> §5 of the witness records what each invalidated. A second review returned HOLD on `b3e3ff7c8`
-> with R1/R3/copy PASS and two remaining blockers — the late-conflict refresh path and a raw-SQL
-> bypass of the D5/D6 import gate — both repaired (§6), and the branch is now the INTEGRATION
-> CANDIDATE brought forward to canonical `2732706b6` with its overlapping DevelopRoom change
-> reviewed and gates rerun on the merged program (§7). **07F SOURCE ACCEPTED (founder, 2026-09-06) on
-> `96db26f62`; brought forward to canonical `df9594592` and then `c84bf2d93` — head `238c9dd47`, 16-file net diff, gates
-> bound to that head (§7.1). PR AWAITS THE FOUNDER'S OPENING ACT; deploy not authorized.** **BUILD-07G and 07H remain unopened.**
+> **BUILD-07F DEVELOPMENTAL DECISIONS — SOURCE MERGED (2026-09-06), NOT CLOSED.** Census,
+> adjudication and design are canonical and accepted; implementation was authorized falsification-first
+> and passed two founder source reviews (four repairs, then two blockers: the late-conflict refresh
+> path and a raw-SQL bypass of the D5/D6 import gate). **PR #1229 (Class B) merged as `cb557b8fb`
+> with exact-head CI 8/8 on `54776ed5d`; canonical is now `cb557b8fb`.** Records:
+> `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (§8 post-merge state),
+> `docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md` and
+> `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md` — both PREPARED, NOT RUN.
+>
+> ```text
+> SOURCE / CI            ACCEPTED · MERGED · canonical cb557b8fb · CI 8/8
+> MIGRATION DESIGN       ACCEPTED
+> PRODUCTION PROMOTION   PENDING FOUNDER AUTHORITY
+> PRODUCTION ACCEPTANCE  NOT STARTED
+> BUILD-07F              NOT CLOSED
+> BUILD-07G / 07H        UNOPENED
+> ```
+>
+> The promotion runbook carries an unchecked founder consent item: 07F's migration adds a
+> `BEFORE DELETE` trigger to the existing `developmental_readings` table (direct reading deletion
+> refused while its Work exists; whole-Work cascade preserved). That behaviour change is authorized
+> at deploy time, not by the merge.
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >

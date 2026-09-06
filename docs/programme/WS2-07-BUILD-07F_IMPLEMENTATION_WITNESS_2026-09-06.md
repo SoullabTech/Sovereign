@@ -19,7 +19,8 @@ BRANCH           claude/writer-author-studios-roadmap-b2tqf5
 CENSUS           WS2-07-BUILD-07F_STANDING_CENSUS_2026-09-05.md       (canonical)
 ADJUDICATION     WS2-07-BUILD-07F_ADJUDICATION_2026-09-05.md          (canonical)
 DESIGN           WS2-07-BUILD-07F_DESIGN_2026-09-05.md                (canonical, accepted)
-STATE            IMPLEMENTED ON BRANCH · FALSIFIED · NOT CLOSED · NO PR · NO DEPLOY
+STATE            SOURCE MERGED · NOT CLOSED · NOT DEPLOYED
+MERGED           PR #1229 · merge commit cb557b8fb · exact-head CI 8/8 (§8)
 ```
 
 The lane's sequence: **census → adjudication → design → falsification → build.** This record is the
@@ -411,7 +412,75 @@ rerun rather than assumed to carry over from §7.1.
 
 ---
 
-## 8 · What this record does not do
+## 8 · Post-merge state — what is settled and what is not
+
+PR #1229 (Class B) merged 2026-09-06 01:45:06Z by the founder.
+
+```text
+MERGE COMMIT     cb557b8fb057a8c5944abd1e1e9b479aa66091ef
+PARENTS          c84bf2d93  ·  54776ed5d      (the adjudicated head, unmoved)
+NET DIFF         16 files — exactly the accepted set
+CANONICAL NOW    cb557b8fb
+```
+
+### 8.1 Exact-head CI — the full set, green before the merge
+
+```text
+auto-label                          PASS
+Axis 1 — authoritative adjudication PASS
+covenant-gates                      PASS   (repaired metadata-only; see 8.2)
+sovereignty                         PASS
+check-diagrams                      PASS
+Empty database reconstruction       PASS
+TypeScript no-regression gate       PASS
+build (Docker Build Check)          PASS   01:44:49Z, 16s before the merge commit
+```
+
+All eight on head `54776ed5d`. No CI deficit is carried forward.
+
+### 8.2 Two record corrections from the merge window
+
+**The covenant-gates failure was a PR-format defect, not a code defect.** The Class B gate requires
+one of four literal checkbox strings in the PR body; the body carried a fuller `## Rollback plan`
+in prose, which matched none of them. The founder ruled `- [x] Revert commit is sufficient` as the
+truthful option and declined `Migration rollback script provided`, which would overstate the
+post-event rollback contract. The body edit re-ran the gate on the **unchanged head** — PR metadata
+only, no commit. The failed first run remains visible as history; its successor is the conclusion.
+
+**An agent reading error, recorded rather than dropped.** After the merge, this session reported
+that `build` had never reported a conclusion on `54776ed5d`. That was wrong: the check was read via
+the legacy **commit-statuses** API (`get_status`, which returned `total_count: 0`) rather than the
+**check-runs** API that every other check in this lane was read from. The founder corrected it and
+the check-runs API confirms `conclusion: success` at 01:44:49Z. The error is the lane's own recurring
+shape — absence of evidence from the wrong instrument read as evidence of absence — and is recorded
+here for the same reason the earlier apparatus defects are.
+
+### 8.3 What merging did NOT settle
+
+```text
+SOURCE / CI            ACCEPTED · MERGED
+MIGRATION DESIGN       ACCEPTED
+PRODUCTION DEPLOY      NOT AUTHORISED
+PRODUCTION ACCEPTANCE  NOT STARTED
+07F CLOSURE            NOT AUTHORISED
+BUILD-07G / 07H        UNOPENED
+```
+
+The migration has not run against production; no standing event exists anywhere but the ephemeral
+laboratory. Promotion and the acceptance walk are prepared, not performed:
+
+```text
+docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md
+docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md
+```
+
+The runbook carries an **unchecked founder consent item**: the migration adds a `BEFORE DELETE`
+trigger to the existing `developmental_readings` table. That behaviour change is authorized by a
+deliberate act at deploy time, not by the merge.
+
+---
+
+## 9 · What this record does not do
 
 ```text
 no PR · no merge · no deploy · no production migration · no promotion
@@ -421,4 +490,4 @@ nothing absorbed from the parked ledger
 no re-adjudication of Shape B, values, identity, CAS semantics, deletion semantics or D1–D7
 ```
 
-**The next act is founder review of the integration candidate. PR remains unauthorized until that act.**
+**The next act is the founder's: authorize production promotion of `cb557b8fb`, or not. Closure follows the walk; it is not granted by the merge.**
