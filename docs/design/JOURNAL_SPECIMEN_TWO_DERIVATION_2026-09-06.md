@@ -269,3 +269,77 @@ meaning. Either quote exactly or drop the quotes and describe.
 
 Parked as its own item. It is not property A/C/D/E and must not be folded into
 the walk's verdict.
+
+
+---
+
+## 10. Closure witness — predeclared before the observation, 2026-09-06
+
+Four observations, not three. Written down first so the verdict cannot be
+rationalized after the fact.
+
+**Correction to an earlier framing:** the arrival/Browse handle checks test
+whether the *House* advertises MAIA. They say nothing about whether *Journal's
+own* `Reflect with MAIA` gesture is correctly gated on Keep. Those are different
+questions and only step 4 touches C.
+
+```text
+1. Let it go
+   -> same kept entry
+   -> same place / materially same scroll
+   -> no confirmation
+   -> no loss-pressure copy
+   ESTABLISHES D + E
+
+2. Journal arrival
+   -> no floating House MAIA handle
+
+3. Browse
+   -> no floating House MAIA handle
+
+4. Start a fresh entry, DO NOT Keep
+   -> no Reflect with MAIA
+   -> no floating House handle
+   then Keep it
+   -> Reflect with MAIA appears
+   -> floating House handle still absent
+   ESTABLISHES C + completes the handle ruling
+```
+
+**No further MAIA reflection is required.** A is already observed from the
+kept-entry reflection state: the member's words remain primary, MAIA renders
+subordinate beneath them, no thread and no composer. Asking for another
+reflection would add nothing and would risk treating repetition as rigor.
+
+### Verdict shape, predeclared
+
+If all four pass, specimen two closes as:
+
+```text
+A            PASS
+B            NOT TESTED — specimen result, not a defect
+C            PASS
+D            PASS
+E            PASS
+HANDLE RULE  PASS
+```
+
+If any observation fails, that is the finding and the room stays open. A failure
+here is cheaper than a false close, and is the reason for running the walk at all.
+
+### The quotation defect does NOT enter this verdict
+
+Precisely stated: **quotation marks assert identity of wording. If MAIA
+compresses, it must paraphrase without quotation marks.** That is a fidelity
+repair, scheduled after this walk, in its own change. It does not turn A/C/D/E
+red and must not be reported as though it did.
+
+### What the comparison is expected to yield
+
+> **MAIA can be present without becoming the place.**
+
+Reflections achieved it through contained conversation. Journal achieved it
+through transient subordinate reflection. **The geometry differs; the relationship
+invariant survives.** That is precisely why the eventual name must describe the
+relationship and not the container — and why nothing is named until both
+specimens are closed.
