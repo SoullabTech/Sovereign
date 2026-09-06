@@ -20,6 +20,13 @@ import type { ReactNode } from 'react';
  * The partition itself is shadow-only: it corrects whose authority a block
  * carries in the record, and changes nothing MAIA receives or says.
  *
+ * 2026-09-06 addition, traced to a production measurement and a frozen
+ * direction note (docs/architecture/TEMPORAL_MEMORY_DIRECTION_2026-09-06.md):
+ *   - age-based decay on developmental retrieval named as live and measured
+ *     (scripts/witness/temporal-memory-audit.sql, run against production)
+ *   - temporal memory added under Vision, and "MAIA has temporal memory"
+ *     added to the withheld claims. No schema, no runtime, no lane.
+ *
  * Server component on purpose: outward claims and nothing else — no client
  * state, no auth, no member data. Register rule (2026-07-10 landings audit):
  * a sentence leads with what a thing is; negation lands after the positive.
@@ -390,7 +397,7 @@ const CONTINUITY_STACK: Row[] = [
   {
     name: '7 · Developmental memory',
     layer: 'live',
-    what: 'Ongoing themes and arcs. Live as a per-turn signal that shapes how MAIA orients; surfacing developmental content back to the member in conversation is not yet live.',
+    what: 'Ongoing themes and arcs. Live as a per-turn signal that shapes how MAIA orients; surfacing developmental content back to the member in conversation is not yet live. Age-based decay shapes which developmental rows retrieval keeps: measured on 2026-09-06 to change that set for a minority of members, with the effect on what MAIA says unmeasured.',
     third: 'Recognized member, outside Sanctuary.',
   },
   {
@@ -658,6 +665,9 @@ export default function AccountedForPage() {
 
             <P>On 2026-09-04 a second production observation ran the other way. A member asked a neutral question &mdash; nothing about memory, nothing about what MAIA was holding. An I Ching reading cast in an earlier session returned on its own, with its changing lines, joined to the member&apos;s own earlier words, and was used in the answer. The chain ran end to end inside one ordinary turn: kept, retrievable, available, admitted, used, and experienced as continuity. The defect that opened this work was the opposite case &mdash; a reading shown once and never stored, so it could not return at all.</P>
             <Quote>The question has moved. It is no longer whether MAIA can remember. It is whether MAIA remembers truthfully, with the right human and epistemic authority attached to what it holds.</Quote>
+            <P>On 2026-09-06 a third measurement asked a narrower question: what does age do to what MAIA retrieves? An instrument with no persistent writes was run against the production database across 36 recognized members and 2,018 developmental memories. Age-based decay is live on that retrieval path, and it changes the outcome for a minority. Of the 14 members whose pool exceeds the twelve-row cut, two get a different set when decay is removed, and for one of them five of the twelve rows swap on roughly a month&apos;s difference in age. The effect is upstream. Whether those swaps reach the words MAIA actually says was not measured, and this page does not say that they do.</P>
+            <P>Two further facts came out of the same run. No developmental memory in production has ever expired: the columns that would say &ldquo;this was true until then&rdquo; exist in the schema and hold no history. And decay has two definitions in the codebase, one in the database and one in the application, which disagree about what a member&apos;s confirmation is worth; the live path uses the database one. Neither is a defect a member would notice. Both are the kind of thing this page exists to say out loud.</P>
+            <Quote>A memory getting older does not make it less true. Age is information MAIA may show; it is not a verdict MAIA may pass.</Quote>
 
             <H3>What is designed, not yet live</H3>
             <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
@@ -674,6 +684,7 @@ export default function AccountedForPage() {
             <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
               <li><Chip layer="vision" /> Somatic memory. Would require an explicit body-input source; MAIA will not infer it from text.</li>
               <li><Chip layer="vision" /> Cross-member pattern memory. Would require a consent boundary and aggregation-only views that do not exist.</li>
+              <li><Chip layer="vision" /> <strong className="text-soullab-text-primary">Temporal memory.</strong> Memory that keeps three clocks apart: when something happened, when it was true, and when MAIA came to believe it. The test is five questions a member could ask &mdash; where do I live now; where was I living in March; when did I tell you I moved; when did MAIA record it; what did MAIA believe before I corrected it &mdash; each answered without rewriting the earlier record. The direction is fixed and the production baseline is measured (2026-09-06). Under it a later fact declares that an earlier one has changed, and MAIA never closes an old truth on a timer; where a memory may be out of date, MAIA asks and the member answers. No schema and no runtime exist yet. Today MAIA has timestamps and age-sensitive retrieval, which is a different thing, and this page calls it that.</li>
               <li><Chip layer="vision" /> <strong className="text-soullab-text-primary">Longitudinal unified intelligence.</strong> The constituent intelligences and memory layers increasingly exist, and a shared convergence architecture is now being built around them. A unified intelligence of the member&apos;s life is not a live claim. The work proceeds through shared participation, truthful provenance, discernment and lived continuity rather than premature synthesis; cross-layer synthesis remains deliberately frozen.</li>
             </ul>
             <Quote>MAIA may remember in service of continuity, but may not form identity around a member faster than the member participates in that formation.</Quote>
@@ -894,6 +905,7 @@ export default function AccountedForPage() {
                 'That OpenAI is absent from the codebase.',
                 'That the application is offline-capable. Cognition is external on every ordinary turn, and a build still reaches a third party for typefaces.',
                 'That a green gate means a clean program. The type gate measures regression against a baseline, and this page quotes it only that far.',
+                'That MAIA has temporal memory. It has timestamps, age-sensitive retrieval, and validity columns that hold no history. The five questions temporal memory must answer are written down and not yet answerable.',
               ].map((v) => (
                 <li key={v} className="border-l border-soullab-border-strong py-2 pl-4">{v}</li>
               ))}
@@ -914,7 +926,7 @@ export default function AccountedForPage() {
           </Section>
 
           <footer className="mt-12 border-t border-soullab-border-subtle pt-6 text-[0.88rem] italic text-soullab-text-muted">
-            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested. Every Live label above is answerable to a code path, a migration, or a dated production report. If a label turns out to be wrong, the label changes, not the story.
+            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for the temporal-memory measurement and the claim it withholds. Every Live label above is answerable to a code path, a migration, or a dated production report. If a label turns out to be wrong, the label changes, not the story.
           </footer>
         </div>
       </div>
