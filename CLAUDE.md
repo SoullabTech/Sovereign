@@ -399,12 +399,13 @@ Run inside the container on minisforum:
 docker exec maia-sovereign sh -c 'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
-Pass condition: `0 failed` (the script exits non-zero on any failure)
+Pass condition: `0 failed` (the script exits non-zero on any failure).
+Last observed production run — founder-run 2026-09-06 on runtime `ca5fdff44`: `33 passed · 0 failed · 0 warned`.
 
 ⚠️ The filename `verify-colab-boundaries.ts` in earlier copies of this file **never existed on any
-branch**, so the mandatory pre-invite gate could not be run as written. The total check count is
-derived from the script, not observed from a production run — do not quote a total until a run
-prints one. The gate is the `failed` column, never the total.
+branch**, so the mandatory pre-invite gate could not be run as written. The gate is the `failed`
+column, never the total — a total moves whenever checks are added, and a total quoted without a run
+behind it is a claim, not evidence.
 
 This gate runs automatically as part of `scripts/deploy-production.sh` smoke tests. It must also be run manually before any tester wave. See `docs/ops/COLAB_RELEASE_GATE.md` for the full gate specification — what it checks, which surfaces trigger it, and how to add new checks when new scoped surfaces ship.
 

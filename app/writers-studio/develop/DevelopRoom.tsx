@@ -833,19 +833,36 @@ function YourStanding({
     if (r.refusal === 'stale_expectation' || r.refusal === 'simultaneous_write') onRefresh();
   };
 
-  /* KILL-SWITCH — default OFF until the 07F acceptance walk has run.
-     The surface is live in production but its acceptance walk has never been
-     performed, and `standing_events = 0` is the boundary that keeps the walk's
-     options open. A member taking a standing here would both leave their first
-     durable standing act on an unwitnessed surface and end that boundary
-     permanently. Set NEXT_PUBLIC_WS_STANDING_ENABLED=1 to restore it.
+  /* KILL-SWITCH — default OFF until the 07F acceptance walk is resolved.
+     Set NEXT_PUBLIC_WS_STANDING_ENABLED=1 to restore it.
+
+     CONTAINMENT, NOT PRESERVATION OF ZERO. This gate was first written to keep
+     `standing_events` at 0, the precondition the frozen walk depends on. A
+     production read on 2026-09-06 (runtime ca5fdff44) found 8 rows, all under
+     the founder identity, latest 18:03:38Z. The zero-row boundary is already
+     crossed, so this flag no longer preserves it and must not be described as
+     doing so.
+
+     What it still does: stop FURTHER unwitnessed standing acts accumulating on
+     a surface whose acceptance walk has never legally begun. The eight existing
+     rows are legitimate member history — they are not W3–W7 evidence, because
+     the walk never started, and they must not be deleted to manufacture the old
+     precondition. 07F now needs a successor adjudication for witnessing standing
+     against pre-existing history; tester rows would only make that harder.
 
      ⚠️ THIS IS NOT A WRITE BARRIER. It stops the controls from rendering, which
-     stops accidental member acts; it does not stop a POST to the standings
-     route. A server-side refusal is the real barrier, and it belongs in that
-     route — which is inside the walk's bound subject, so adding it there
-     re-stales the binding and requires a re-freeze before §2.2. That is a
-     founder decision, not a hotfix. */
+     stops accidental member acts; a stale client or a direct POST still writes.
+     The real barrier is a server-side refusal in the standings route, behind
+     this same flag.
+
+     Why that is not here: the earlier objection — that the route is inside the
+     walk's bound subject — no longer holds, since this branch already changes
+     executable bytes and the zero-row precondition is already gone. The reason
+     now is scope. DEVELOP is OUT of the beta tester surface (COLAB-BETA-01 §5),
+     so no tester reaches these controls at all, and a same-night write barrier
+     on the route 07F's three review rounds are bound to buys containment that
+     scoping already provides. If DEVELOP is ever brought into a tester surface,
+     the server-side refusal lands FIRST. */
   if (process.env.NEXT_PUBLIC_WS_STANDING_ENABLED !== '1') return null;
 
   return (

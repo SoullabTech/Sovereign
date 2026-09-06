@@ -14,7 +14,8 @@ docker exec maia-sovereign sh -c \
   'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
-**Pass condition:** `31 passed · 0 failed · 0 warned`
+**Pass condition:** `0 failed`. Last observed production run, founder-run 2026-09-06 on runtime
+`ca5fdff44`: `33 passed · 0 failed · 0 warned`.
 
 Any failure or warning blocks the release unless explicitly reviewed and signed off.
 
@@ -36,7 +37,7 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 
 ---
 
-## What the matrix verifies (31 checks)
+## What the matrix verifies (33 checks)
 
 1. **Ownership** — each principal (Kelly, Jondi, Nathan) owns exactly their own Co-Lab
 2. **No accidental cross-ownership** — no one is owner of another principal's workspace
@@ -51,7 +52,11 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 11. **Switching changes context** — Co-Lab switching changes people, DMs, sessions, encounters, files, and memory
 12. **Practitioner client notes** — every `practitioner_client_notes` row's `practitioner_id` matches its client's owner (no note hangs off another practitioner's client), and every note is stored encrypted (`content_enc` + `content_enc_meta` non-NULL). Note: `practitioner_clients` has **no `team_id`** — only `studio_people` does — so containment here is owner agreement, not team scope.
 
-> ⚠️ **Pass count not yet re-observed.** Section 12 adds 2 assertions, so the expected condition becomes `33 passed`. That number is derived, not measured — the pass line below still records the last *observed* run. Update both after the next production run of the gate; do not treat 33 as verified until a run prints it.
+> **Observed 2026-09-06.** Section 12's 2 assertions are included: a founder-run production gate on
+> runtime `ca5fdff44` printed `33 passed · 0 failed · 0 warned`. 33 is now measured, not derived.
+>
+> The gate remains the `failed` column, never the total. A total that changes because checks were
+> added is not a failure; a total quoted without a run behind it is a claim, not evidence.
 
 ---
 
@@ -60,7 +65,7 @@ Any failure or warning blocks the release unless explicitly reviewed and signed 
 `scripts/deploy-production.sh` runs the Co-Lab boundary gate as part of post-deploy smoke tests. The gate runs inside `maia-sovereign` where `pg` is available. A non-zero exit from the verification script fails the smoke test report.
 
 The deploy script will emit:
-- `PASS  Co-Lab boundary gate (31 passed · 0 failed · 0 warned)` — release is safe
+- `PASS  Co-Lab boundary gate (33 passed · 0 failed · 0 warned)` — release is safe
 - `FAIL  Co-Lab boundary gate` — do not send invites; diagnose before proceeding
 - `SKIP  Co-Lab boundary script not found` — image may be mid-deploy; re-run after deploy completes
 
