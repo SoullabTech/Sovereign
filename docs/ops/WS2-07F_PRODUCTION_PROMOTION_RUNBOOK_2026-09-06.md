@@ -8,7 +8,9 @@
 
 ```text
 SUBJECT               BUILD-07F (PR #1229) + PR #1228, integrated
-DEPLOYED RUNTIME      66da58b4c4a4979240db460c045dd9daf1cd47d3
+FROZEN ANCHOR         66da58b4c4a4979240db460c045dd9daf1cd47d3 — the walk's executable subject
+DEPLOYED RUNTIME      1116f7813 as of the docs-only #1232 merge; bound at W1 under the
+                      custody-equivalence rule (walk spec §2.1), never assumed
 07F MIGRATION         APPLIED IN PRODUCTION 2026-09-06 11:36:34+00
 DELETE GUARD          LIVE
 PRIOR §2 CONSENT      NOT GIVEN — the checkpoint was crossed by deployment
@@ -167,9 +169,15 @@ ssh soullab@minisforum 'hostname -I'
 # 3 · public reachability
 curl -k https://soullab.life/api/health
 
-# 4 · provenance and lane (observed: 66da58b4c · deploy-lane)
+# 4 · provenance and lane (observed 66da58b4c · deploy-lane; later 1116f7813 after #1232)
 ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT; \
   docker exec maia-sovereign printenv DEPLOY_LANE'
+
+#     THE SHA ALONE DOES NOT SETTLE THE WALK'S SUBJECT. A documentation-only merge advances the
+#     commit without changing the program, and an earlier W1 attempt halted on exactly that. The
+#     walk spec's §2.1 custody-equivalence rule decides it: the frozen anchor must be an ancestor
+#     of the runtime SHA AND `git diff --name-only <anchor> <runtime> -- . ':(exclude)docs/**'`
+#     must print nothing. Any non-document byte is a different program and halts the walk.
 
 # 5 · the migration is RECORDED (observed applied 2026-09-06 11:36:34.367017+00)
 ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c \

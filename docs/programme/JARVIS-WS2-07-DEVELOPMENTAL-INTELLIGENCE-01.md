@@ -21,7 +21,9 @@
 > 07F MIGRATION          APPLIED 2026-09-06 11:36:34+00
 > PRIOR CONSENT          NOT GIVEN — the checkpoint was CROSSED BY DEPLOYMENT, not sanitized
 > STANDING ACTS          0 — the boundary before acceptance
-> PRODUCTION ACCEPTANCE  NOT STARTED · gated on a PROSPECTIVE founder act (runbook §2.2)
+> PRODUCTION ACCEPTANCE  W1 ATTEMPTED AND HALTED on custody — production had advanced from the
+>                        walk's frozen anchor by the docs-only #1232 merge. W2–W12 NOT STARTED,
+>                        and W3 onward remains gated on a PROSPECTIVE founder act (runbook §2.2)
 > BUILD-07F              NOT CLOSED
 > BUILD-07G / 07H        UNOPENED
 > ```
