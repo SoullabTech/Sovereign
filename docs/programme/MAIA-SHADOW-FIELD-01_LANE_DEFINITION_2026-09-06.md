@@ -4,11 +4,12 @@
 LANE        MAIA-SHADOW-FIELD-01
 TITLE       MAIA SHADOW FIELD — Voluntary Encounter with the Unowned Self
 KIND        practice/design lane — constitution → design → falsifiers → (HARD STOP) → prototype → witness → promote
-FLOW        SHADOW-01  DISCOVER → CONSTITUTE → DESIGN → FALSIFY → ▌HARD STOP▐ → PROTOTYPE → WITNESS → PROMOTE
+FLOW        SHADOW-01  DISCOVER → FALSIFY → CONSTITUTE → founder ratification → DESIGN → ▌HARD STOP▐ → PROTOTYPE → WITNESS → PROMOTE
+            (re-sequenced by founder 2026-09-06 at DISCOVER go — see §8 note)
 OPENED      2026-09-06 (founder, in-session; split out of the whole-organism census lane by founder ruling)
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
-STATUS      DEFINED · SHADOW-01 at stage 0 · DISCOVER not started · NO CODE
+STATUS      SHADOW-01 · DISCOVER OPEN (founder go 2026-09-06) · read-only · NO CODE
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
             this lane is NOT a Phase-2 register row and does not edit that programme's cockpit)
 AUTHORITY   docs/canon/MAIA_OATH.md · MAIA_CANON_v1.1 · MAIA_SOVEREIGNTY_INVARIANTS (5, 6, 14, 16) ·
@@ -258,13 +259,25 @@ is kept out of the Field's write path structurally, not by instruction.
 One persistent conductor (Jarvis), bounded stages, explicit gates. Each stage exits on a founder
 act. **No code before the hard stop.**
 
+**Re-sequencing (founder, 2026-09-06, at DISCOVER go).** The founder restated the sequence as
+**DISCOVER → FALSIFY → CONSTITUTE → founder ratification → only then prototype**, with the
+reason that DISCOVER must not decide its own conclusion before FALSIFY has done its job: the seven
+laws stay a *candidate* constitution, prior art is recorded as *potential conflict with the
+candidate laws*, and the failure tests are authored before the laws are ratified so the
+constitution is disciplined by what would break it. FALSIFY therefore precedes CONSTITUTE; the
+table below is read in that order. DESIGN was not placed in the restatement; this record assumes it
+follows ratification and precedes the hard stop (design needs a ratified constitution; the stop
+guards the prototype). If the founder intended DESIGN elsewhere, that is a one-line amendment.
+The founder's opening constraint stands unchanged: **no "small harmless implementation" crosses the
+hard stop.**
+
 | Stage | Question | Outputs | Exit gate (founder act) |
 |---|---|---|---|
-| **DISCOVER** | What does MAIA already have that could participate, and what existing "shadow" code contradicts the laws? | read-only census of the prior-art register (§9): what is live / designed / dormant, what each asserts about the member, which laws each would violate as-is. Same discipline as the whole-organism map: paths, observation status, no repair. | founder accepts the census; names what is inherited, what is retired, what is quarantined from the Field |
+| **DISCOVER** | What does MAIA already have that could participate, and what existing "shadow" code contradicts the laws? | read-only census of the prior-art register (§9): what is live / designed / dormant, what each asserts about the member, which candidate laws each appears to challenge (potential conflicts, not adjudicated — the laws are candidates until CONSTITUTE). Same discipline as the whole-organism map: paths, observation status, no repair. | founder accepts the census; names what is inherited, what is retired, what is quarantined from the Field |
 | **CONSTITUTE** | What are the laws, and what must MAIA never do? | ratified law text (§2); operable negative form; epistemic-grammar reconciliation (§4); naming ruling (§1); memory-class and Sanctuary rulings (§7); which Sovereignty Invariants and principles the Field binds to | founder ratifies the constitution; any unresolved law → lane HOLDS |
 | **DESIGN** | What is the member's journey? | both entrances; the arc with prompts per movement; elemental perspectives as questions; the close and its memory choice; Invoked-entry offer copy and its forbidden counterparts; a Field contract in the form of `docs/design/contracts/*` (arrival · gestures · forbidden here) | founder accepts the design as *designed*, not live |
 | **FALSIFY** | How would we know MAIA broke a law? | pre-implementation failure tests, one per law at minimum: imposed interpretation · identity reinforcement · deepened dependence · manufactured trauma narrative · silent persistence of inferred material · autonomous entry · absent-person modeling · scalar collapse. Each names the detector (offline rater item, log marker, refusal test) and the refusal-registry entry it will become | founder ratifies the falsifiers as the acceptance instrument |
-| **▌HARD STOP▐** | — | No prototype exists until CONSTITUTE and FALSIFY are both ratified. This is a stop, not a checkpoint. | explicit founder act to open PROTOTYPE |
+| **▌HARD STOP▐** | — | No prototype exists until FALSIFY, CONSTITUTE and DESIGN have each exited on a founder act. This is a stop, not a checkpoint. | explicit founder act to open PROTOTYPE |
 | **PROTOTYPE** | Does a bounded surface obey the constitution? | a separate practice surface, **not** wired into ordinary MAIA conversation initially; falsifiers wired as tests; memory covenant enforced structurally; zero effect on `/list` cognition | falsifiers green; founder walk |
 | **WITNESS** | What did a consenting person experience? | class C evidence under the Field Study ethics section and a consent design of its own: did it open perception · feel imposed · increase agency · transfer into life (Return is the site). Paired measures per `MEASUREMENT_VOCABULARY_v0.1` — never engagement | founder reads the witness; the witness is evidence, not truth about mechanism |
 | **PROMOTE** | Should Shadow become a permanent Field / House capability? | decision record; only after evidence; whether the Field pattern (purpose · epistemology · boundaries · practices · memory rules · exit) becomes the template for Grief, Dream, Relationship, Creativity, Threshold, Purpose, Conflict | founder decides; promotion is a new act, not the end of this one |
@@ -343,7 +356,7 @@ own session to place in its register:
 ## 13 · Next act
 
 ```text
-NEXT      DISCOVER — read-only census of §9, opens on founder go
-HOLDS     everything after CONSTITUTE until its exit; PROTOTYPE until the HARD STOP is lifted
-NOT       any code
+NOW       DISCOVER — read-only census of §9 (founder go 2026-09-06); record: MAIA-SHADOW-FIELD-01_DISCOVER_2026-09-06.md
+THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
+NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
