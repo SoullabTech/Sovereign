@@ -134,6 +134,54 @@ CI at `6ce59f82` per founder: Covenant · Epistemic Guard · diagrams · soverei
 
 **Delivery status — DELIVERED (second attempt).** Peer messaging could not reach the session; a poke-only Routine bound to `session_01A9AeaBFtEQRaQqjAaep6no` (`trig_01GpBz6zR8XtKLhSHyGxovsN`) was created and fired at 17:50Z carrying the founder's stop instruction verbatim plus the observed head `f7705937`; the fire returned run `cse_01WdfehBCtjB2gS5VuNYtgeR`. Acknowledgement by the R&D session is not assumed; its report of the final containment SHA is the record of it.
 
+## 7b · Governance transfer vs operational transfer — the closure test, and its result (founder, 2026-09-06 ~17:55Z; observed ~17:58Z)
+
+Two things must not be conflated:
+
+| Transfer | Represented by | Closes when |
+|---|---|---|
+| **Governance** | PR #1241 (this branch) | #1241 merges on green — a founder act |
+| **Operational** | The R&D session actually ceasing to write to #1239 | the test below |
+
+**Test (founder wording):** *Custody transfer becomes operational at the first observed #1239 head after the R&D session acknowledges the stop and before it switches to its dedicated Phase-1 branch. Earlier intended-transfer and containment SHAs remain provenance, not rewritten boundaries.*
+
+```text
+OLD SESSION ACKNOWLEDGES STOP
+        ↓
+RE-PROBE #1239 HEAD
+        ↓
+FINAL CONTAINMENT SHA
+        ↓
+CUT R&D PHASE-1 BRANCH THERE
+        ↓
+NO FURTHER R&D WRITES TO #1239
+```
+
+**Drift ledger (all preserved, none rewritten):**
+
+```text
+INTENDED TRANSFER        c36d82ec
+EARLIER CONTAINMENT      6ce59f82   (founder-named)
+OBSERVED DRIFT           f7705937
+PROVISIONAL CONTAINMENT  a7b42f29   (founder-observed; 33 commits / 49 files; +Voice, Now What?, Practice Fields, master-run update)
+```
+
+**Result of the test — observed by this session at ~17:58Z:**
+
+- #1239 head: **`a7b42f29`** (last commit 17:52:45Z, docs-only; page / pitch / contract last touched at `cf6d9ebf`, untouched throughout the collision).
+- R&D session: `SESSION_STATUS_RUNNING`, current branch **`claude/maia-human-experience-phase1-census`** — the switch happened after the last #1239 commit.
+- `git merge-base` of the Phase-1 branch and #1239 = **`a7b42f29`** exactly: the Phase-1 branch was cut at the containment SHA, not before or after.
+- On the Phase-1 branch (`efb79258`, 17:56:18Z): R&D charter **§25** transfer section landed; master run `publication_lane: JARVIS-PUBLIC-ACCOUNTED-FOR-01`, §4 Phase 0.5 **DELEGATED**, `/accounted-for` marked delegated in the state block. Census pages 03 · 09 · 10 · 11 · 12 · 13 continue there.
+
+```text
+FINAL CONTAINMENT SHA     a7b42f29
+OPERATIONAL TRANSFER      CLOSED (test satisfied)
+GOVERNANCE TRANSFER       OPEN — PR #1241 awaiting founder merge act
+#1239 WRITER              ACCOUNTED-FOR LANE ONLY
+```
+
+The bound advances again only if a commit later appears on #1239 that is not the publication lane's; that would be a new incident, recorded here, never rewritten.
+
 ## 8 · Governing sentence
 
 *Accounted For does not decide what Soullab is. It makes Soullab answer publicly for what it says it is.*
