@@ -91,6 +91,33 @@
  *   MEMBER   A member surface is navigated alongside /accounted-for. A
  *            redirect to sign-in means it was not reached: INVALID.
  *
+ * ── WHY v2.3 ─────────────────────────────────────────────────────────────
+ * v2.2 was never run either. Three more ENFORCEMENT defects were found in it,
+ * all the same shape: a failure path that could look like a clean result.
+ *
+ *   1. Both sweeps ended in `... 2>/dev/null || true`, collapsing three
+ *      different worlds into one empty string — a valid no-match, an
+ *      unreadable path, and a genuine tool failure. Now every read reports its
+ *      exit status: 0 = matches, 1 = valid zero matches, anything else =
+ *      INVALID. `cat-file -e <sha>^{commit}` proves the COMMIT object exists;
+ *      it does not prove every tree and blob under it is readable, which is
+ *      exactly the partial-clone case this instrument names.
+ *
+ *   2. W4a accepted results from served roots without establishing they exist.
+ *      A missing /app/.next/static would have swept to "no matches". The roots
+ *      are now probed first, and an absent one is INVALID.
+ *
+ *   3. Instrument identity was printed, not enforced: a null blob id rendered
+ *      "UNCOMPUTABLE" and still reached exit 0, contradicting the two-identity
+ *      contract. It is now computed during preflight and INVALID if absent or
+ *      malformed — a run that cannot name its own instrument is not
+ *      reconstructible and must not be able to PASS.
+ *
+ * Also: classification now reads FULL blob / FULL file content rather than
+ * grep excerpts, and local Git runs via execFileSync('git', [...]) with no
+ * `sh -c` — shell quoting and glob expansion have no business deciding what an
+ * evidence instrument sweeps.
+ *
  * ── WHY v2.2 ─────────────────────────────────────────────────────────────
  * v2.1 was never run. Two defects were found in it before it produced any
  * evidence, both the same shape as the ones it had itself fixed in v2: the
@@ -147,7 +174,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
-const INSTRUMENT_VERSION = '2.2';
+const INSTRUMENT_VERSION = '2.3';
 
 const ORIGIN = process.env.WITNESS_ORIGIN ?? 'https://soullab.life';
 const SSH_HOST = process.env.WITNESS_SSH_HOST ?? 'soullab@minisforum';
@@ -253,6 +280,9 @@ const MARKUP_RE = /(url\(|href\s*=|src\s*=)[^)\n>]{0,200}?fonts\.(googleapis|gst
 // be printed as a non-gating "prose mention" — exactly the defect class W4b
 // exists to catch. This also applies to compiled browser JS in W4a, where a
 // delivered bundle can construct the URL with no markup reference anywhere.
+const GOOGLE_HOST_RE_SRC = 'fonts\\.(googleapis|gstatic)\\.com';
+const GOOGLE_HOST_RE_G = /fonts\.(googleapis|gstatic)\.com/g;
+const countMatches = (text) => ((text ?? '').match(GOOGLE_HOST_RE_G) ?? []).length;
 const CONSTRUCTED_RE = /["'`]https?:\/\/fonts\.(googleapis|gstatic)\.com/;
 const isFetchable = (text) => MARKUP_RE.test(text) || CONSTRUCTED_RE.test(text);
 /** Display helper. Prefers a line that actually gates, so the sample shown is
@@ -304,6 +334,46 @@ function ssh(cmd, label, { allowEmpty = false } = {}) {
   return out;
 }
 
+/**
+ * Remote command that reports its EXIT STATUS, not just its output.
+ *
+ * `cmd 2>/dev/null || true` collapses three different worlds into one empty
+ * string: a valid no-match, an unreadable path, and a genuine tool failure.
+ * An instrument that cannot tell those apart can turn an error into "zero
+ * findings" and then into PASS. Every remote read here is fail-closed.
+ */
+function sshStatus(cmd, label) {
+  let out;
+  try {
+    out = execFileSync('ssh', [SSH_HOST, `${cmd}; printf '\\n__EXIT:%d\\n' "$?"`],
+      { encoding: 'utf8', timeout: 90_000, maxBuffer: 32 * 1024 * 1024 });
+  } catch (err) {
+    throw new Error(`${label}: ssh transport failed: ${err.message}`);
+  }
+  const m = out.match(/\n__EXIT:(\d+)\n\s*$/);
+  if (!m) throw new Error(`${label}: could not read remote exit status`);
+  return { out: out.slice(0, m.index), code: Number(m[1]) };
+}
+
+/**
+ * Local git, invoked directly — no `sh -c`. Shell quoting and path expansion
+ * have no business inside an evidence instrument: a path with a space or a
+ * glob character must not be able to change what gets swept.
+ */
+function git(args, { maxBuffer = 32 * 1024 * 1024 } = {}) {
+  try {
+    const out = execFileSync('git', ['-C', REPO_ROOT, ...args],
+      { encoding: 'utf8', timeout: 90_000, maxBuffer });
+    return { out, code: 0 };
+  } catch (err) {
+    return {
+      out: typeof err.stdout === 'string' ? err.stdout : '',
+      code: typeof err.status === 'number' ? err.status : -1,
+      message: err.message,
+    };
+  }
+}
+
 function readProductionSha(label) {
   try {
     return ssh(`docker exec ${CONTAINER} printenv GIT_COMMIT`, label);
@@ -324,26 +394,53 @@ function readProductionSha(label) {
  */
 function sweepServed() {
   const roots = SERVED_ROOTS.join(' ');
-  const raw = ssh(
-    `docker exec ${CONTAINER} sh -c "grep -rlE 'fonts\\.(googleapis|gstatic)\\.com' ${roots} 2>/dev/null || true"`,
-    'served sweep', { allowEmpty: true },
+
+  // Establish the roots EXIST and are readable before accepting any result
+  // from them. A missing /app/.next/static would otherwise yield "no matches".
+  const probe = sshStatus(
+    `docker exec ${CONTAINER} sh -c "for d in ${roots}; do if [ -d \\"\\$d\\" ]; then echo OK:\\$d; else echo MISSING:\\$d; fi; done"`,
+    'served root probe',
   );
-  const files = raw ? raw.split('\n').map((s) => s.trim()).filter(Boolean) : [];
+  if (probe.code !== 0) {
+    throw new Error(`served root probe exited ${probe.code} — roots unverifiable`);
+  }
+  const missing = probe.out.split('\n').filter((l) => l.startsWith('MISSING:'));
+  if (missing.length) {
+    throw new Error(
+      `served root(s) absent in ${CONTAINER}: ${missing.map((l) => l.slice(8)).join(', ')} ` +
+      '— a sweep of a path that is not there is not a clean result',
+    );
+  }
+
+  // grep exit 0 = matches · 1 = valid no-match · anything else = failure.
+  const found = sshStatus(
+    `docker exec ${CONTAINER} sh -c "grep -rlE 'fonts\\.(googleapis|gstatic)\\.com' ${roots}"`,
+    'served sweep',
+  );
+  if (found.code > 1) {
+    throw new Error(`served sweep grep exited ${found.code} — not a no-match result`);
+  }
+  const files = found.code === 0
+    ? found.out.split('\n').map((x) => x.trim()).filter(Boolean)
+    : [];
+
   const classified = [];
   for (const file of files) {
-    // FULL matching content — never truncated before classification. A file
-    // whose first five matches are prose and whose sixth is a real
-    // `<link href="https://fonts.googleapis.com/...">` must not be classified
-    // as prose. Truncation is for the console only.
-    const body = ssh(
-      `docker exec ${CONTAINER} sh -c "grep -nE 'fonts\\.(googleapis|gstatic)\\.com' '${file}' 2>/dev/null || true"`,
-      'served line', { allowEmpty: true },
+    // FULL file content, fail-closed. Truncation is for the console only: a
+    // file whose first five matches are prose and whose sixth is a real
+    // <link href="https://fonts.googleapis.com/..."> must not read as prose.
+    const read = sshStatus(
+      `docker exec ${CONTAINER} cat ${JSON.stringify(file)}`,
+      `served read ${file}`,
     );
+    if (read.code !== 0) {
+      throw new Error(`could not read served file ${file} (exit ${read.code}) — classification impossible`);
+    }
     classified.push({
       file,
-      fetchable: isFetchable(body),
-      matches: body ? body.split('\n').filter(Boolean).length : 0,
-      sample: firstFetchableLine(body),
+      fetchable: isFetchable(read.out),
+      matches: countMatches(read.out),
+      sample: firstFetchableLine(read.out),
     });
   }
   return classified;
@@ -352,46 +449,42 @@ function sweepServed() {
 /* ── W4b — re-entry ratchet ──────────────────────────────────────────── */
 
 function sweepSource() {
-  const roots = SOURCE_ROOTS.map((r) => `'${r}'`).join(' ');
   // Reads the COMMIT, not a checkout. Stronger than "HEAD == EXPECT_SHA and the
   // worktree is clean": that pair is only a proxy for "the source I swept is the
   // subject's source". A sparse checkout, an excluded path, a partial clone or a
-  // stray ignore rule can all leave a worktree clean, at the right HEAD, and
-  // still hide source from a filesystem grep. Asking Git for the commit's tree
-  // is the thing itself, so the source inspected IS the subject by construction.
-  let raw = '';
-  try {
-    raw = execFileSync(
-      'sh',
-      ['-c',
-       `git -C '${REPO_ROOT}' grep -lE 'fonts\\.(googleapis|gstatic)\\.com' ` +
-       `'${EXPECT_SHA}' -- ${roots} 2>/dev/null || true`],
-      { encoding: 'utf8', timeout: 60_000 },
-    ).trim();
-  } catch {
-    return null; // unreadable object store — reported, never silently passed
+  // stray ignore rule can all satisfy the proxy while hiding source from a
+  // filesystem grep. Asking Git for the commit's tree is the thing itself.
+  //
+  // git grep exit 0 = matches · 1 = valid zero matches · anything else = a real
+  // Git failure, which must never be reported as "no findings". cat-file -e on
+  // the commit proves the commit object exists; it does NOT prove every tree and
+  // blob under it is readable — exactly the partial-clone case this instrument
+  // names. So every read below is fail-closed.
+  const found = git(['grep', '-lE', GOOGLE_HOST_RE_SRC, EXPECT_SHA, '--', ...SOURCE_ROOTS]);
+  if (found.code > 1) {
+    return { error: `git grep exited ${found.code} in ${REPO_ROOT}: ${found.message ?? 'unknown'}` };
   }
-  // `git grep <rev>` prefixes every row with `<rev>:`; strip it to get the path.
-  const files = raw
-    ? raw.split('\n').filter(Boolean).map((row) => row.replace(/^[^:]*:/, ''))
+  const files = found.code === 0
+    ? found.out.split('\n').filter(Boolean).map((row) => row.replace(/^[^:]*:/, ''))
     : [];
-  return files.map((file) => {
-    let body = '';
-    try {
-      // Again FULL matching content, from the object — no head, no worktree.
-      body = execFileSync('sh',
-        ['-c', `git -C '${REPO_ROOT}' grep -nE 'fonts\\.(googleapis|gstatic)\\.com' ` +
-               `'${EXPECT_SHA}' -- '${file}'`],
-        { encoding: 'utf8', timeout: 20_000 }).trim();
-    } catch { /* empty */ }
-    return {
+
+  const entries = [];
+  for (const file of files) {
+    // Read the whole blob from the object store and classify THAT — not a
+    // grep excerpt. A blob that cannot be read is INVALID, never "no match".
+    const blob = git(['show', `${EXPECT_SHA}:${file}`]);
+    if (blob.code !== 0) {
+      return { error: `could not read blob ${EXPECT_SHA}:${file} (exit ${blob.code}) — classification impossible` };
+    }
+    entries.push({
       file,
       plane: planeOf(file),
-      fetchable: isFetchable(body),
-      matches: body ? body.split('\n').filter(Boolean).length : 0,
-      sample: firstFetchableLine(body),
-    };
-  });
+      fetchable: isFetchable(blob.out),
+      matches: countMatches(blob.out),
+      sample: firstFetchableLine(blob.out),
+    });
+  }
+  return { entries };
 }
 
 /** Non-gating hygiene: what state the object store's checkout happens to be in. */
@@ -527,9 +620,19 @@ async function run() {
     invalid.push(`WITNESS_EXPECT_SHA must be a full 40-character commit SHA, got "${EXPECT_SHA}"`);
   }
   if (!REPO_ROOT) {
-    invalid.push('WITNESS_REPO_ROOT is required — v2.2 lives outside the subject, so ' +
+    invalid.push('WITNESS_REPO_ROOT is required — the instrument lives outside the subject, so ' +
       'its own location says nothing about where the subject\'s objects are');
   }
+  // Instrument identity is a validity condition, not a decoration. The
+  // acceptance record binds TWO identities; if we cannot name this one, the
+  // run is not reconstructible and must not be able to reach PASS.
+  const instrumentBlob = instrumentBlobId();
+  if (!instrumentBlob || !SHA40.test(instrumentBlob)) {
+    invalid.push('could not compute this instrument\'s own blob id — the acceptance ' +
+      'record binds SUBJECT and INSTRUMENT, and a run that cannot name its ' +
+      'instrument is not reconstructible');
+  }
+
   let objectPresent = false;
   if (EXPECT_SHA && SHA40.test(EXPECT_SHA) && REPO_ROOT) {
     try {
@@ -582,10 +685,9 @@ async function run() {
   let served = null;
   try { served = sweepServed(); }
   catch (err) { invalid.push(`served sweep failed: ${err.message}`); }
-  const source = sweepSource();
-  if (source === null) {
-    invalid.push(`could not read subject objects at ${REPO_ROOT} for the re-entry ratchet`);
-  }
+  const sourceResult = sweepSource();
+  if (sourceResult.error) invalid.push(`W4b: ${sourceResult.error}`);
+  const source = sourceResult.entries ?? null;
   const hygiene = repoHygiene();
 
   /* W0b */
@@ -611,7 +713,7 @@ async function run() {
 
   console.log('INSTRUMENT');
   console.log(`  version              v${INSTRUMENT_VERSION}`);
-  console.log(`  blob id              ${instrumentBlobId() ?? 'UNCOMPUTABLE'}`);
+  console.log(`  blob id              ${instrumentBlob}`);
   console.log('  external to subject  YES — v2.2 is not part of the deployed commit');
   console.log('  browser profile      FRESH (no carried-over font cache)');
   console.log('  browser cache        DISABLED before first navigation');
@@ -736,8 +838,7 @@ async function run() {
   /* W4a */
   console.log('W4a SERVED PRODUCTION            ← claim evidence');
   if (served === null) {
-    console.log('  (not swept — SHA reading skipped)');
-    invalid.push('served sweep not performed; W4a is unestablished');
+    console.log('  NOT ESTABLISHED — the sweep did not complete (see INVALID below)');
   } else {
     const fetchable = served.filter((f) => f.fetchable);
     const prose = served.filter((f) => !f.fetchable);
@@ -805,7 +906,7 @@ async function run() {
     console.log(`   removed and witnessed."`);
     console.log('');
     console.log(`  SUBJECT     ${EXPECT_SHA}`);
-    console.log(`  INSTRUMENT  ${instrumentBlobId() ?? 'UNCOMPUTABLE'}  (v${INSTRUMENT_VERSION} blob)`);
+    console.log(`  INSTRUMENT  ${instrumentBlob}  (v${INSTRUMENT_VERSION} blob)`);
     console.log('');
     console.log('  Bind BOTH to the acceptance record. Reconstruct with:');
     console.log('    git cat-file blob <INSTRUMENT>   ·   git checkout <SUBJECT>');
