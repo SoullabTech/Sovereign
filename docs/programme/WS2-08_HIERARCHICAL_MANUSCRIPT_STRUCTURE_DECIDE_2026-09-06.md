@@ -530,7 +530,7 @@ instrument's verdicts are kept exactly as each run printed them, never relabelle
 ```text
 run                        runtime     R1 R2 R3   R4    R5                   digest      verdict
 f6b-20260906T134621Z       03e9d89a9    0  0  0   12    OK (ins 824 del 2)   == F6a      PASS   ← of record
-f6b-20260906T1410xxZ       —            0  0  0    0    del 2→14             == F6a      FAIL
+f6b-20260906T141001Z       —            0  0  0    0    del 2→14             == F6a      FAIL
 f6b-20260906T143816Z       50302f5d9    0  0  0    0    del 2→14             == F6a      FAIL
 ```
 
@@ -578,6 +578,78 @@ F1 · F2 · F3           still need an ACCEPTED production result
 08A                    OPEN
 08B                    HOLD
 ```
+
+### F1 · F2 · F3 — PASS on production (2026-09-06T15:05:57Z) · BUILD-08A CLOSED / ACCEPTED
+
+Run by the founder under an authenticated member against runtime `50302f5d9`, through the
+ordinary ingest path (`/api/sovereign/manuscripts/ingest` → preview → confirm → Source). F1 took
+the **stronger path**: a real generated `.docx` was uploaded, so the witness covers Word Heading
+extraction and downstream classification, not only the classifier on pre-marked text. The
+verification rows were sealed by an independent SQL read before any cleanup.
+
+```text
+instrument     /tmp/ws2-08a-f123-witness-v2.ts   (bytes not in git — digest is the custody)
+sha256         8453343a997fda9ea9d32495929b753428527fda0a28c5eedbf7b763b42638d6
+exit 0 · verdict PASS · failures=0
+
+artifacts      /home/soullab/ws2-08a-witness/f123-20260906T150557Z
+run.log                 af52438efbebc8274c0589ed9ba668e141cf5c23d7342d132c837af1e8586227
+verification-rows.txt   6445356493421630dfb165ba520344ae20289e51d845cd24fae361152fe3f9ee
+```
+
+```text
+F1  PASS   member_manuscripts ee2cd894-15e7-4c6c-a3bf-04b6b05a6c82   (real .docx, Heading 1 / Heading 2)
+           0  F1 CHAPTER    1     markdown
+           1  F1 SECTION    2     markdown
+           run also witnessed: upload status · DOCX extraction preserved H1/H2 markers ·
+           preview lossless · preview classified H1/H2 · confirmed save · Source persistence
+
+F2  PASS   member_manuscripts a783d01a-f60f-4f5e-8b02-b743e8765b8a   (frozen fixture)
+           0  PART ONE             NULL  caps
+           1  CHAPTER ONE          1     chapter
+           2  THE HOUSE AT NIGHT   NULL  caps
+           3  CHAPTER TWO          1     chapter
+           — exactly the precedence rule: caps never manufactures hierarchy; chapter wording,
+             uppercase included, is depth 1
+
+F3  PASS   member_manuscripts 367debc2-d7e1-4eea-be30-9f5f84daa077   (member-drawn cut)
+           0  MEMBER CUT           NULL  member
+```
+
+**F6 artifacts, bound:**
+
+```text
+f6b-20260906T134621Z   run of record · PASS       manifest.sha256 5ef6b105156f4f1cc2d2eb07c49d0b357ce67114831fb43a16ada32fce1f7545
+f6b-20260906T134621Z.exact-ledger.txt   paired     sha256          4c3ac12b731a554712c4586237366a0ee8032e6d0caec51b199e996ddfd3a6fb
+f6b-20260906T141001Z   FAIL · R5 (cleanup)        manifest.sha256 49d159dfafd5076be888f146cd0d18c81ef33910bc3e95b66dce821e1cf21398
+f6b-20260906T143816Z   FAIL · R5 (cleanup)        manifest in directory (14:38 listing above)
+```
+
+**Closure ruling (founder, 2026-09-06):**
+
+```text
+migration       PASS        F1              PASS · real DOCX production path
+provenance      PASS        F2              PASS
+health          PASS        F3              PASS
+Co-Lab          PASS 33/0/0 F6a             PASS
+                            F6b             PASS · sealed 13:46 run of record
+                            exact ledger    PASS
+
+BUILD-08A       CLOSED / ACCEPTED
+WS2-08          STILL OPEN — 08A closing clears the way for 08B; it does not close the lane
+08B             HOLD — awaits an explicit founder act
+08C             not before a minimum structure revision / digest binding
+#1228           untouched throughout
+```
+
+The three test manuscripts remain on production under the ids above until the founder removes
+them; their removal after this record is ordinary member data hygiene, not witness contamination
+(the F6b of record is sealed).
+
+**Parked, unchanged:** the draft-route `Response body … disturbed or locked` defect
+(`PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_RESPONSE_BODY_2026-09-06.md`). #1233 added a sibling
+`draft/checkpoint/route.ts` and did not modify `draft/route.ts`, so it neither fixes nor explains
+it. Triage still opens only by founder act.
 
 **Unrelated defect parked, not investigated.** While reading production logs during the
 `66da58b4c` window the founder observed

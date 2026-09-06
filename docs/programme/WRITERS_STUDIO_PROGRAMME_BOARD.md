@@ -113,13 +113,13 @@ NEXT EXECUTABLE    WS2-08 HIERARCHICAL MANUSCRIPT STRUCTURE — opened by founde
                    2026-09-06, sequenced AFTER #1228 (untouched). BUILD-08A (preserve
                    explicit heading depth at ingest) ACCEPTED AS CANDIDATE CUT, frozen
                    for an isolated PR → merge → migration → witness F1–F3+F6 cycle.
-                   PR #1230 MERGED 2026-09-06 → 03e9d89a (F6a PASS retained, bound to
-                   66da58b4c). Migration NOT RUN until the full deploy of 03e9d89a.
-                   PENDING on production: F1 · F2 · F3 · F6b (byte-identical script)
-                   · exact-filename ledger query (R6 supplement; prefix 20260906000001
-                   is shared with an unrelated migration already applied).
-                   NOT CLOSED. 08B code HOLD until 08A closes; revision/digest binding
-                   must precede 08C; 08B–08E each require a separate founder act.
+                   PR #1230 MERGED 2026-09-06 → 03e9d89a; migration applied 13:36:01Z;
+                   production witness on runtime 50302f5d: F1 (real DOCX) · F2 · F3 ·
+                   F6a · F6b (13:46 run of record) · exact-filename ledger — ALL PASS.
+                   BUILD-08A CLOSED / ACCEPTED (founder, 2026-09-06).
+                   WS2-08 lane STILL OPEN. 08B HOLD — awaits explicit founder act;
+                   revision/digest binding must precede 08C; 08B–08E each require a
+                   separate founder act.
                    record: WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
                    parked (not a lane): PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_RESPONSE_BODY_2026-09-06.md
                    BUILD-07F implementation still requires a separate founder act.
@@ -129,8 +129,8 @@ WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-06 (WS2-08 BUILD-08A merged as 03e9d89a; production witness
-                   F1–F3 + F6b + ledger query PENDING; 08B HOLD; #1228 sequencing unchanged)
+LAST UPDATED       2026-09-06 (WS2-08 BUILD-08A CLOSED / ACCEPTED on production witness;
+                   lane open; 08B HOLD; #1228 sequencing unchanged)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

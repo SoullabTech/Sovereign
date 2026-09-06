@@ -50,6 +50,14 @@ production SHA   66da58b4c — GIT_COMMIT of the running container at the time o
   logs.
 - Whether it reproduces on `1116f7813` or later.
 
+## Since recording
+
+- 2026-09-06: #1233 (`fix/ws2-bodyless-checkpoint`, merged as `d07f20a0`) added a sibling route
+  `app/api/sovereign/manuscripts/[id]/draft/checkpoint/route.ts`. It did not modify
+  `draft/route.ts`, where this error originates. Not a fix, not an explanation. Status unchanged.
+- 2026-09-06: WS2-08 BUILD-08A CLOSED / ACCEPTED. The reopening condition below is now met on
+  the 08A side; triage still requires a founder act.
+
 ## Reopening
 
 Triage opens only after WS2-08 BUILD-08A is CLOSED (F1–F3, F6b and the exact-filename ledger
