@@ -1004,3 +1004,34 @@ because we know it?*
 CURRENT** (census running read-only; outputs to `docs/programme/MAIA_WHOLE_ORGANISM_MAP/`) ·
 manifesto FROZEN · PR #1239 DRAFT · merge / deploy / MAIA runtime change NOT AUTHORIZED · member
 research NOT AUTHORIZED · collective laboratory NOT BUILT.
+
+---
+
+## 25 · Lane split — `/accounted-for` and PR #1239 transferred out (founder ruling, 2026-09-06)
+
+**Founder act.** `/accounted-for`, its source of record, the claim-reconciliation record, the page
+contract and screenshots, and PR #1239 transfer to `JARVIS-PUBLIC-ACCOUNTED-FOR-01`
+(`docs/programme/JARVIS-PUBLIC-ACCOUNTED-FOR-01_CHARTER_2026-09-06.md`). This lane no longer
+edits or governs that surface. Authority over the Human Experience Architecture — Synthesis v0.2,
+P1–P13, AP1–AP17, U1–U33, R8–R12, the frameworks, the master run — stays here; the
+publication lane translates accepted outputs and may not alter them. Split record:
+`docs/programme/JARVIS-LANE-SPLIT_HUMAN-EXPERIENCE_ACCOUNTED-FOR_2026-09-06.md`.
+
+**Next act:** Phase 1 — Whole-Organism MAIA/AIN Mapping (master run §5; read-only; Field Study
+method). Governing question from here: *how must MAIA/AIN change because of what we now understand?*
+
+**Custody record (this session, the original R&D session, acknowledging the stop).**
+
+```text
+INTENDED TRANSFER          c36d82ec
+EARLIER CONTAINMENT        6ce59f82
+OBSERVED DRIFT             f7705937
+STOP ACKNOWLEDGED AT       a7b42f29   (local HEAD == origin head at acknowledgement; re-probed)
+FINAL CONTAINMENT SHA      a7b42f29
+PHASE-1 BRANCH             claude/maia-human-experience-phase1-census   (cut at a7b42f29)
+FURTHER R&D WRITES TO #1239   NONE — from a7b42f29 the publication lane is sole writer
+```
+
+Every commit up to `a7b42f29` on the #1239 branch is preserved as history under the founder's
+no-rewrite ruling. Census pages written after the stop (03, 09, 12 and all later pages, the
+ranked map, master-run revisions) land only on the Phase-1 branch.
