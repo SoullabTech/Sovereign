@@ -303,9 +303,30 @@ WRITE and DEVELOP consume the SAME persisted authority. Neither independently re
 implementation authority      NOT SUPPLIED
 ```
 
-**Sequencing (founder, 2026-09-06):** 08B implementation does not begin while the two open branches
-are unmerged and undeployed. *A witnessed cohort surface is worth more tomorrow than a third branch
-containing unwitnessed chapter UI.*
+**Sequencing (founder, 2026-09-06 — CORRECTED).** An earlier draft of this line said "the two open
+branches" on a mistaken assumption about which PRs were open. The real pre-cohort stack is THREE
+executable changes, ordered by the LITERAL TESTER ROUTE rather than by PR number:
+
+```text
+1  #1244      chore/writers-studio-beta-readiness — containment + gate corrections
+2  198bbf44   passkey admission + /api/invites authorization (branch, NO PR)
+              → ahead of #1245 because /begin → /test-elemental IS the first leg:
+                it governs WHO CAN BECOME A MEMBER
+3  #1245      chore/colab-beta-01-team-bound-invites — Co-Lab destination binding,
+              which applies only AFTER membership exists
+4  08B        this unit — design custody only, stood down
+```
+
+⚠️ **Operational prerequisite for (2).** The admission repair makes registration require a real
+pending invite, and production holds ZERO invite rows. Real invites must be issued before or
+immediately after that deploy, or no tester can register at all.
+
+*A witnessed cohort surface is worth more tomorrow than a fourth branch containing unwitnessed
+chapter UI.*
+
+**Note on surface.** #1244 places DEVELOP outside the beta tester surface (WRITE + canvas +
+Keep-a-version + Co-Lab). The chapter outline is WRITE — so 08B is INSIDE the tester surface, not
+deferred scenery.
 
 The founder act that would move this is one sentence: *I accept the bounded 08B design as stated and
 authorize implementation.* Until then §7 is a proposal, not a contract.
