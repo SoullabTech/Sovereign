@@ -182,8 +182,8 @@ This is the differentiating ambition. Building another community platform is not
 | CIRCLE-00 | Existing-truth census (READ ONLY) | ✅ **COMPLETE** — `…_EXISTING_SUBSTRATE_CENSUS_2026-09-06.md` |
 | CIRCLE-01 | Research synthesis + **scale falsification** | ✅ **CLOSED** — `…_RESEARCH_SYNTHESIS…`, `CIRCLE_SCALE_FALSIFICATION.md`, `…_RESEARCH_SUPPLEMENT…` (R1–R11, founder continuation) |
 | CIRCLE-02 | Product constitution | ✅ **CONSTITUTIONAL MINIMUM RATIFIED 2026-09-06** — FR-01…FR-10 (`…_FOUNDER_RULINGS_2026-09-06.md`); CA-01…CA-13 open, none blocking |
-| CIRCLE-03 | Boundary gate (verifier) | 🟡 **OPEN — implemented, NOT RUN** (`scripts/verify-constitution-circles.ts`, 22 assertions). No DB access this session |
-| CIRCLE-04 | Invocation system | ⛔ blocked on CIRCLE-03 |
+| CIRCLE-03 | Boundary gate (verifier) | 🔴 **RUN — FAIL, 5 failures** (`17 passed · 5 failed`, founder-executed on runtime `bcc371094`). Evidence: `…_VERIFY_RUN_2026-09-06.md` |
+| CIRCLE-04 | **REPAIR** (renumbered — invocation moves later) | 🟡 **OPEN** — R1…R5, `…_REPAIR_ORDER_2026-09-06.md` |
 | CIRCLE-05 | Living Circle, 2–20 | ⛔ |
 | CIRCLE-06 | **Fission · birth · morphology** (was: scale to 200) | ⛔ |
 | CIRCLE-07 | Circle ↔ Co-Lab bridge | ⛔ |
@@ -327,3 +327,46 @@ assertion to make it pass.
 
 **Standing:** cohorts NOT authorized · founder gate untouched · no Class-B repair made ·
 **B-01 does not close because the verifier exists.**
+
+
+---
+
+## 12. VERIFY run · FR-11 · REPAIR opened (2026-09-06)
+
+**First production run, founder-executed on runtime `bcc371094`:**
+
+```text
+17 passed · 5 failed · 0 warned · 0 skipped   →   exit 1
+```
+
+**OBSERVED runtime evidence**, superseding the static prediction (which called the same 17/5 and
+the same five failures — recorded for calibration only; a correct prediction licenses nothing).
+
+**Failures:** C6 `response_count` · C7 removal unimplemented · C8 removal grounds/actor not
+recordable · S4 lifecycle boundary · T3 removal does not cascade revocation.
+
+**Passing membrane — the load-bearing result:** member A cannot read Circle B, its feed, or share
+into it; inquiry contribute-before-see; ordinary witnessing without posting; inferred-theme and
+ambient-MAIA-memory exclusion; representational crossing; source survives revocation; revoked
+material leaves the field; membership never transfers implicitly.
+⛔ **These do not add up to "the Circle system is verified." VERIFY status is FAIL.**
+
+**Containment confirmed:** rolled-back fixtures left **no** production rows; runtime unchanged;
+counts still 4 circles · 4 memberships · 0 artifacts · 0 inquiries · 0 responses.
+
+**FR-11 ratified — the ruling S4 provoked:**
+
+> **FR-03 describes an ACTIVE Circle, not every instant of Circle formation.**
+> `FORMING` 1–2 persons · `ACTIVE` 3+ persons.
+> **Creation is not constitution. You can create a Circle alone; you cannot constitute one alone.**
+
+S4 was a real gap **named wrongly**: not *"four illegal Circles exist"* but *"the substrate cannot
+distinguish FORMING from ACTIVE."* The verifier has been corrected to test **representability**
+first, and was **not** softened to PASS. **CA-04 is no longer wholly optional** — the minimum
+`FORMING | ACTIVE` distinction is required; the rest of the lifecycle stays experimental.
+
+**CIRCLE-04 · REPAIR opened**, order R1 B-01 access containment → R2 FR-05 removal (C7+C8+T3 as
+**one** repair family) → R3 FORMING/ACTIVE → R4 count leak → R5 re-census.
+Per-repair protocol: smallest repair → targeted tests → **full verifier** → record evidence →
+proceed only if no passing boundary weakened. ⚠️ **Step 3 needs a founder-run** — no DB in remote
+sessions, so each repair ends at a verification before the next begins.

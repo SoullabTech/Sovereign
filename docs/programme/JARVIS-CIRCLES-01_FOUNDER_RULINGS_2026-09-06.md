@@ -243,6 +243,25 @@ collective scale without requiring one relational field to absorb unlimited comp
 
 ⛔ **No numerical threshold attaches to this law.**
 
+## FR-11 · FR-03 lifecycle clarification — **RATIFIED** *(added after the first VERIFY run)*
+
+> **FR-03 describes an ACTIVE Circle, not every instant of Circle formation.**
+
+```text
+FORMING   Circle intentionally initiated but not yet a plural relational field   (1–2 persons)
+ACTIVE    at least three active members; may exercise active-Circle semantics    (3+ persons)
+```
+
+- A **one-person Circle record is not intrinsically unconstitutional.**
+- A **two-person forming Circle is not yet an active Circle**; its geometry is dyadic (FR-03).
+- The Constitution distinguishes **administrative existence** from **relational constitution**.
+- ⛔ **Never** encode as `CHECK(member_count >= 3)`. ⛔ No maximum is ratified.
+
+> **Creation is not constitution. You can create a Circle alone; you cannot constitute one alone.**
+
+**Consequence:** CA-04 is no longer wholly optional — the minimum `FORMING | ACTIVE` distinction is
+required before REPAIR can close S4. The rest of the lifecycle stays experimental.
+
 ---
 
 ## Remaining canonical open questions (CA)
@@ -252,7 +271,7 @@ collective scale without requiring one relational field to absorb unlimited comp
 | CA-01 | Is survive-one-departure definitional or characteristic of Circle? | nothing |
 | CA-02 | Are the eight relational capacities *definitional* or *characteristic*? | nothing |
 | CA-03 | May a member withdraw an inquiry response? | B-05 |
-| CA-04 | Ratify the Circle lifecycle | CIRCLE-05 |
+| CA-04 | Ratify the **full** Circle lifecycle (maturation · rest · birth · completion). ⚠️ The minimum `FORMING \| ACTIVE` distinction is **RATIFIED as FR-11** and is required now | CIRCLE-05 |
 | CA-05 | Ratify birth-vs-schism as distinct mechanisms | CIRCLE-06 |
 | CA-06 | Authority to initiate birth / separation | CIRCLE-06 |
 | CA-07 | Repair / boundary action / moderation / safety — authority for each | CIRCLE-05 |

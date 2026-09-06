@@ -2,7 +2,7 @@
  * Circle Boundary Verification Matrix
  *
  * Proves that the Circle constitutional boundaries ratified on 2026-09-06
- * (FR-01 … FR-10, docs/programme/JARVIS-CIRCLES-01_FOUNDER_RULINGS_2026-09-06.md)
+ * (FR-01 … FR-11, docs/programme/JARVIS-CIRCLES-01_FOUNDER_RULINGS_2026-09-06.md)
  * are STRUCTURALLY enforced — not merely intended.
  *
  * Usage:
@@ -234,7 +234,7 @@ async function groupC() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function groupS() {
-  section('GROUP S · service layer vs real principals (FR-01, FR-02, FR-03)');
+  section('GROUP S · service layer vs real principals (FR-01, FR-03, FR-11)');
 
   const rows = (
     await pool.query<{ member_id: string; circle_id: string }>(
@@ -306,19 +306,61 @@ async function groupS() {
     }
   }
 
-  // S4 — FR-02/FR-03: a Circle is a field among three or more persons.
-  const small = (
-    await pool.query<{ circle_id: string; n: string }>(
-      `SELECT circle_id, COUNT(*)::text AS n FROM circle_memberships
-       WHERE status = 'active' GROUP BY circle_id HAVING COUNT(*) < 3`
+  // S4 — FR-03 + FR-11: plurality is a property of an ACTIVE Circle, not of every
+  //      stored Circle row. A Circle may exist administratively before it is
+  //      relationally constituted:
+  //
+  //        FORMING   1–2 persons, not yet a plural relational field
+  //        ACTIVE    3+ persons, may exercise active-Circle semantics
+  //
+  //      "Creation is not constitution." So this assertion does NOT test
+  //      `every circle has >= 3 members`. It tests whether the substrate can
+  //      REPRESENT the boundary at all — because an unrepresentable boundary is
+  //      unenforceable, and an unenforceable constitutional rule is a description.
+  //
+  //      ⛔ Never repair this with CHECK(member_count >= 3). Membership count is
+  //      dynamic; relational state is not a row constraint.
+  const lifecycleCol = (
+    await pool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_name = 'circles' AND column_name IN ('lifecycle', 'lifecycle_state', 'state')`
     )
   ).rows;
-  small.length === 0
-    ? pass('S4 FR-03 every Circle has three or more active members')
-    : fail(
-        'S4 FR-03 sub-plural Circles exist',
-        `${small.length} circle(s) with <3 active members; nothing in the substrate enforces plurality`
-      );
+
+  if (lifecycleCol.length === 0) {
+    fail(
+      'S4 FR-03/FR-11 lifecycle/plurality boundary is not representable',
+      'circles has no FORMING|ACTIVE lifecycle column, so FR-03 cannot be enforced at the lifecycle boundary'
+    );
+  } else {
+    const col = lifecycleCol[0].column_name;
+
+    // S4a — an ACTIVE Circle must have plurality.
+    const activeSubPlural = (
+      await pool.query<{ id: string }>(
+        `SELECT c.id FROM circles c
+         WHERE c."${col}" = 'active'
+           AND (SELECT COUNT(*) FROM circle_memberships m
+                WHERE m.circle_id = c.id AND m.status = 'active') < 3`
+      )
+    ).rows;
+    activeSubPlural.length === 0
+      ? pass('S4a FR-03 every ACTIVE Circle has three or more active members')
+      : fail('S4a FR-03 ACTIVE Circle without plurality', `${activeSubPlural.length} circle(s)`);
+
+    // S4b — a sub-plural Circle must not present itself as ACTIVE.
+    const misrepresented = (
+      await pool.query<{ n: string }>(
+        `SELECT COUNT(*)::text AS n FROM circles c
+         WHERE (SELECT COUNT(*) FROM circle_memberships m
+                WHERE m.circle_id = c.id AND m.status = 'active') < 3
+           AND c."${col}" <> 'forming'`
+      )
+    ).rows[0];
+    misrepresented?.n === '0'
+      ? pass('S4b FR-11 sub-plural Circles are represented as FORMING, never ACTIVE')
+      : fail('S4b FR-11 sub-plural Circle not represented as FORMING', `${misrepresented?.n} circle(s)`);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
