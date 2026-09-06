@@ -124,6 +124,7 @@ NEXT EXECUTABLE    WS2-08 HIERARCHICAL MANUSCRIPT STRUCTURE — opened by founde
                    revision/digest binding must precede 08C; 08B–08E each require
                    a separate founder act. 08C–08E UNAUTHORIZED.
                    record: WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
+                   parked (not a lane): PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_RESPONSE_BODY_2026-09-06.md
                    BUILD-07F implementation still requires a separate founder act.
                    07G–H remain unopened.
                    ⛔ Acceptance of the design is not implementation authority.

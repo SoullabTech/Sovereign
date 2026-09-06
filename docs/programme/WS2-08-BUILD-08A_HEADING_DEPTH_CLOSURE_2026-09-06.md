@@ -4,7 +4,7 @@
 UNIT        BUILD-08A · preserve explicit heading depth at ingest
 LANE        WS2-08-HIERARCHICAL-MANUSCRIPT-STRUCTURE-01
 CANDIDATE   branch claude/manuscript-chapter-segmentation-jlwnlj · PR #1230
-            migration 20260906000001_manuscript_sections_heading_depth
+            migration 20260906000001_manuscript_section_heading_depth.sql
 SC-1 FROZEN a75f4543227ff82ecbfec3c80bd9e9490a26576a
 STATUS      CLOSED / ACCEPTED (founder, 2026-09-06) — §1
 ```
@@ -19,8 +19,10 @@ STATUS      CLOSED / ACCEPTED (founder, 2026-09-06) — §1
 > SC-1 is a narrower successor claim and does not repair F6b, and it is not outcome-blind.
 > This closure authorizes nothing downstream. 08B remains HOLD · UNOPENED.
 
-The slot stood empty in draft until this sentence existed. No agent wrote it, and the record
-was not placed in the repository before it did.
+The slot stood empty in draft until the founder adopted and issued this sentence. Its wording
+was supplied in-session by the assistant; the authority comes from the founder’s explicit
+adoption and closure act, not from authorship of the wording. The record was not placed in
+the repository before that act.
 
 Not added: a `Verified by Mentor:` line. No Mentor verification occurred. The prior closure
 pattern distinguishes the founder act from the evidence record rather than manufacturing an
