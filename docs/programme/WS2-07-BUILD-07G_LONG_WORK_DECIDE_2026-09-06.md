@@ -455,3 +455,106 @@ that is ignored.
 orchestration code, UI — remains unauthorized until separately opened by a founder act, and step 4
 below is that act. BUILD-07H remains unauthorized; the topology programme remains PARKED except the
 §3 crossing constraint; the 07F standing-event gate remains ACTIVE.
+
+---
+
+## 12 · Founder reframing, 2026-09-06 — INTERNALLY RESUMABLE, EXTERNALLY WHOLE
+
+> **MAIA must be able to manage and developmentally read an ENTIRE manuscript.** The 60,000
+> code-point rule is a **per-pass safety boundary, not a product ceiling.**
+
+```text
+AUTHOR ASKS      "Read my manuscript developmentally."
+MAIA             pins one exact revision → plans as many bounded passes as required →
+                 covers the whole manuscript → tracks what each pass read → composes →
+                 returns ONE whole-manuscript developmental reading
+AUTHOR SEES      one coherent reading of the Work
+OPTIONALLY       drills into chapters / sections / evidence / individual passes
+```
+
+⛔ **The author must not be made to choose between "one reading" and "a sequence they walk."** That
+is an implementation detail; pushing it onto the author is the architecture declining to do its job.
+
+### 12.1 08B is NOT a prerequisite — correction to an earlier reading
+
+```text
+no chapters yet   → 07G packs CONTIGUOUS SECTION RANGES → the whole manuscript is still readable
+chapters exist    → 07G PREFERS those authored boundaries → better organization and drill-down
+
+08B improves the MAP.
+07G provides manuscript-scale COGNITION.
+Neither masquerades as the other.
+```
+
+Boundary preference, in order: **authored structure units where available → otherwise contiguous
+section ranges → never require chapters merely to read the Work.**
+
+### 12.2 Consistency with the ratified instrument — NO AMENDMENT REQUIRED, WITH ONE EXCEPTION
+
+Most of this reframing was already ratified and needs no change:
+
+```text
+A4   member commissions whole_work | structure_unit | section_range; the system creates
+     MECHANICAL pass boundaries solely to obey the ceiling      → §12.1 is A4, restated
+A7   resolve + partition + disclose cost, then the Start gesture IS the commission
+                                                                → "the author asks once"
+A3   whole-Work synthesis gated on complete coverage            → "every section accounted for"
+P4   no silent truncation                                        → invariant 3
+P11  provenance survives aggregation                             → invariant 5
+P1   one frozen Work-state per run                               → invariant 1
+A2   continue against the pin; freshness derived                 → supports resume
+```
+
+⚠️ **ONE GENUINELY NEW REQUIREMENT: RESUME.** *"Interrupted work can resume without rereading a
+different revision"* (invariant 6) and idempotence are **not among the thirteen ratified points.**
+A2 makes resume *possible* (execution continues against the pin) but never *required*. If resume is
+to BIND, it is an amendment to Acceptance Instrument v1 and needs its own founder act. Recorded here
+as a founder requirement, NOT silently absorbed into the ratified thirteen.
+
+### 12.3 ⛔ Composition does not reopen §5
+
+*"Composes the passes → returns ONE whole-manuscript developmental reading"* is orchestration plus
+**observational** aggregation. The ratified §5 line is unchanged and still governs:
+
+```text
+ALLOWED      recurrence · distribution · co-occurrence · continuity · discontinuity ·
+             location · coverage · provenance
+NOT ALLOWED  "the book's main weakness" · confidence · rank · severity · score ·
+             any judgement no constituent observation makes
+```
+
+"One coherent reading" means **one assembled, attributable record of what MAIA noticed across the
+whole Work** — not a new interpretive layer that reads the assembly. A composition that says more
+than its constituents is the failure §5 exists to prevent, and scale makes it more tempting, not
+less.
+
+### 12.4 The decisive acceptance witness — the founder's own Work
+
+```text
+Elemental Alchemy
+  ~62,933 words · 386,470 code points · 262 sections · > 6× the one-pass ceiling
+
+commission whole_work
+→ planner produces multiple bounded passes
+→ every one of the 262 sections covered
+→ every pass ≤ 60,000 code points
+→ all passes bound to ONE draft revision
+→ no truncation
+→ composition completes
+→ ONE whole-manuscript reading appears
+→ its evidence traces back into the book
+```
+
+⛔ Not a six-section fixture. The witness is the real book or it proves nothing about manuscripts.
+
+### 12.5 Standing
+
+```text
+07G instrument            RATIFIED (§4 + A1–A7) — unchanged by this reframing
+resume requirement        RECORDED, NOT RATIFIED — needs its own founder act to bind
+08B                       NOT a prerequisite
+implementation            STILL NOT AUTHORIZED
+operational sequence      DEVELOP is outside tomorrow's cohort surface (#1244), so 07G can wait
+                          operationally — but it is core to Writer's Studio being a manuscript
+                          environment rather than a section editor
+```
