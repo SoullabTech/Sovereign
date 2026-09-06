@@ -36,6 +36,6 @@ identity · "you said before" becoming leverage · MAIA becoming more central ra
 ## 6 · Unknown (what cannot be known from reading; what instrument would answer it)
 
 ## 7 · Smallest evidence-producing intervention per gap
-| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5, higher = riskier) | Smallest intervention | Experiment it feeds (E1–E10 or new) |
+| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5, never 0; higher = riskier) | Evidence state (observed / inferred / unknown) | Confidence (high / medium / low) | Smallest intervention | Experiment it feeds (E1–E10 or new) |
 
 ## 8 · Provenance — files read, records cited, commit

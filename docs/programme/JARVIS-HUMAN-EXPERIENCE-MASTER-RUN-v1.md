@@ -216,6 +216,32 @@ recognition or surveillance; does history make MAIA more nuanced or more sycopha
 Conversation — does MAIA preserve contradiction long enough for something new to emerge, or does
 the model's coherence instinct tidy the human up too quickly?
 
+**Phase-1 census acceptance gate (founder, 2026-09-06) — runs between "agents finished" and any
+edit to `00_RANKED_MAP.md`; every row REQUIRED; a failed row sends the page back, never forward:**
+
+```text
+PHASE-1 CENSUS ACCEPTANCE
+13 / 13 subsystem pages present                  REQUIRED
+all pages confined to MAIA_WHOLE_ORGANISM_MAP/   REQUIRED
+no product/code/repair changes                   REQUIRED   ← containment diff: git status + git diff --stat outside the map dir must be empty
+founder question answered first                  REQUIRED
+nine questions answered                          REQUIRED
+R11 checklist itemized with paths                REQUIRED
+embodies / contradicts / unknown distinguished   REQUIRED
+unknowns carry an evidence-producing instrument  REQUIRED
+gap table names smallest intervention            REQUIRED
+```
+
+**Scoring rule (founder):** composite = impact × leverage ÷ risk with **risk on a bounded nonzero
+scale 1–5** — never 0, so no "zero-risk" candidate becomes infinite by artifact. Every gap row also
+carries **evidence state** (observed | inferred | unknown) and **confidence** (high | medium |
+low). A high-impact unknown may rank highly *as an inquiry*; it must not quietly become a finding.
+
+**Remaining sequence for this phase:** agents complete → 13-page acceptance gate → cross-subsystem
+deduplication → R11 matrix → score gaps → top ten → candidate answer to the governing question →
+commit + push → **FOUNDER RANKING.** The ranked map authorizes no repair; its output is epistemic
+and prioritizing. The founder ranking is the boundary where inquiry may later become intervention.
+
 This map is the next-generation MAIA roadmap's source. **No parallel roadmap is authored.**
 
 ---

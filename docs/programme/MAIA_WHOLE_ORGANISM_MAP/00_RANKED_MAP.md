@@ -13,7 +13,18 @@ Gaps are scored 1–5 on **human impact** (how much the gap touches Self capacit
 or the person's authorship of themselves), **architectural leverage** (how much closing it
 changes downstream subsystems or unblocks experiments), and **risk** (higher = riskier to
 intervene; includes canon exposure, runtime exposure, consent exposure). Composite =
-impact × leverage ÷ risk, reported with the raw scores so the founder can re-weight.
+impact × leverage ÷ risk, with risk bounded 1–5 and never 0 (founder rule), reported with the raw
+scores so the founder can re-weight. Every gap also carries **evidence state** (observed |
+inferred | unknown) and **confidence** (high | medium | low): a high-impact unknown may rank
+highly as an inquiry; it must not quietly become a finding.
+
+**Acceptance gate.** This file is not edited past this header until the Phase-1 census acceptance
+gate in the master run §5 passes on all thirteen pages (presence · confinement · containment diff
+· founder question first · nine questions · R11 itemized with paths · embodies/contradicts/unknown
+· unknowns instrumented · smallest intervention named). Gate result is recorded in §0 below.
+
+## 0 · Acceptance gate result
+_(pending — agents running)_
 
 **What this map is not.** Not a roadmap by itself — the roadmap is cut from the Phase 2 register
 that the founder's ranking produces. Not evidence that any human experiences any effect — class C
