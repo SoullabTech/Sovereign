@@ -61,3 +61,28 @@ founder decision). E1 adds no producer to the registry and does not touch pp-1.
 
 `MAIA_CORRECTION_SHADOW=0` silences the instrument without redeploy. Revert of the single commit
 is sufficient. No schema, no migration, no flag file.
+
+## 7 · Deploy runbook (founder ruling 2026-09-06: isolated E1 commit only)
+
+Candidate: branch `claude/e1-correction-shadow-deploy` at `0780f368` — the six E1 code paths of
+`7d894b72` on canonical `ca5fdff4`; diff against canonical = E1 only (jest 79/79 · registry 113/0/0
+with R32 · typecheck no regression). Never the Phase-2 head.
+
+```bash
+# from the Mac Studio; runs on minisforum through the deploy lane
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin claude/e1-correction-shadow-deploy \
+  && scripts/pre-deploy-gate.sh deploy-maia "$(git rev-parse --short origin/claude/e1-correction-shadow-deploy)"'
+
+# witness, immediately after swap
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'            # → 0780f368
+ssh soullab@minisforum 'docker exec maia-sovereign printenv MAIA_CORRECTION_SHADOW' # → empty (instrument on)
+
+# 14-day window, counts only
+ssh soullab@minisforum 'docker logs maia-sovereign --since 336h 2>&1 | grep -c "\[MAIA/shadow\] correction-candidate"'
+ssh soullab@minisforum 'docker logs maia-sovereign --since 336h 2>&1 | grep "\[MAIA/shadow\] correction-candidate" | grep -o "candidate: .[a-z-]*" | sort | uniq -c'
+```
+
+Witness record fields (founder): candidate diff = E1 only · production `GIT_COMMIT` · kill-switch
+unset · no response-path consumer (R32) · no Sanctuary emission (module + route gate) · no member
+text in logs (R32) · window · counts/distributions only. `memberRef` stays, with no new
+persistence or sink.
