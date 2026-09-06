@@ -90,7 +90,11 @@ describe('the developmental-evidence substrate cannot act', () => {
        reading store's validation function so a declined phenomenon may be
        omitted. It is the READING store again, not an evidence table, so the
        claim below is unchanged: the EVIDENCE substrate still has no schema. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$/;
+    /* BUILD-07F (2026-09-06) stores the WRITER'S STANDING toward a frozen
+       observation — a member's own act, addressed to the reading. It is not an
+       evidence table either, so naming it here keeps this claim exact rather
+       than weakening it. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
