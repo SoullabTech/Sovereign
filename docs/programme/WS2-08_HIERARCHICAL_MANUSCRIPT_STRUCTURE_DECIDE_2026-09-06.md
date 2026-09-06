@@ -5,8 +5,10 @@ LANE        WS2-08-HIERARCHICAL-MANUSCRIPT-STRUCTURE-01
 OPENED BY   founder message, 2026-09-06 (verbatim requirement carried in §1)
 POSITION    after #1228 (merge / deploy / Keep a version / partition witness /
             ceiling_exceeded witness) — #1228 is NOT touched by this lane
-STATUS      BUILD-08A candidate on branch claude/manuscript-chapter-segmentation-jlwnlj
-            (preserve explicit heading depth at ingest). NOT CLOSED. 08B–08E unbuilt.
+STATUS      BUILD-08A ACCEPTED AS CANDIDATE CUT (founder, 2026-09-06) on branch
+            claude/manuscript-chapter-segmentation-jlwnlj — FROZEN for its isolated
+            PR / gates / merge / migration / production-witness cycle. NOT CLOSED.
+            08B code HOLD · 08C code HOLD · 08D, 08E unbuilt.
 FOLLOWS     WS2-05A structure tree · WS2-06A AuthorStructureCommand ·
             WS2-07 BUILD-07A frozen readState (structureContext inline)
 PRECEDES    LONG-WORK SCOPED DEVELOPMENTAL READING (scope planner respects
@@ -99,6 +101,17 @@ ALL CAPS           → boundary,   caps      depth NULL — never a chapter by d
 member cut         → boundary,   member    depth NULL until the member assigns one
 ```
 
+**`heading_signal` is one value by precedence, not exhaustive provenance** (founder precision,
+2026-09-06). `# CHAPTER ONE` carries markdown, chapter wording and caps at once; the field
+records the classifier that decided the depth, in the fixed order markdown > chapter > caps.
+It never claims the other signals were absent; they are re-derivable from the verbatim heading.
+
+**`heading_depth`, not `structure_level`** (founder ruling). It records what the source supplied
+or explicitly signalled, never the eventual canonical depth of a structure unit.
+
+**`CHAPTER ONE` is a chapter signal in any case** (founder ruling). Explicit lexical authorship
+outranks the generic caps heuristic: the author named the unit a chapter.
+
 **Source remains untouched by WRITE.** Source records the arrival; the working draft's
 structure is the WS2-05A tree over draft sections. A member reorganising in WRITE never
 rewrites `heading_depth`.
@@ -128,6 +141,50 @@ BUILD-08E  structure revision binding (see §6)
 
 08A is the founder's first named sub-step and the only one built here. **08B–08E open on a
 separate founder act each**; nothing in this record is implementation authority for them.
+
+### Sequencing correction (founder act, 2026-09-06)
+
+08B precedes 08C, **and no mutating topology command may exist before a minimum structure
+revision/digest binding does.** Either 08B creates the first structure digest/revision binding
+when it writes imported units, or the thin part of 08E that establishes it lands before 08C.
+Otherwise the first split/merge/reorder acts against a tree whose prior state cannot later be
+identified precisely, and a ledger added afterwards documents the future while leaving the
+first mutations historically ambiguous.
+
+```text
+08A  preserve arrived hierarchy evidence                       ← this branch
+ ↓
+08B  explicit member confirmation → imported canonical structure
+ ↓
+     minimum structure revision / digest binding
+ ↓
+08C  split / merge / rename / reorder
+ ↓
+08D  nested WRITE gestures
+ ↓
+08E  complete revision-ledger machinery
+```
+
+### 08B boundary, fixed now so the hold is not a vacuum
+
+- The folded imported tree is a **proposal until the member's explicit confirm act**. No
+  `origin = 'imported'` canonical unit exists merely because the system can derive one.
+- Confirmation is **replay-safe**: a second confirm must not duplicate the tree. (06A's
+  refusal into a non-empty canonical structure is the existing shape of that guarantee.)
+
+### 08A isolation (founder act)
+
+```text
+→ PR containing 08A only
+→ gates / merge
+→ migration runs
+→ production witness F1–F3 + F6 exactly as written (§5)
+→ close 08A if they pass
+→ then begin 08B
+```
+
+08A carries an additive migration with its own production falsifiers; adding 08B before the
+migration is witnessed would prove the combined system rather than this substrate cut.
 
 ---
 
@@ -160,6 +217,17 @@ F7  segment() output for any text is unchanged in position · heading · body (o
 ```
 
 F4–F5, F7 are unit-tested on this branch. F1–F3, F6 need a production witness after migration.
+
+### Test counts on this branch (one truth, two scopes)
+
+| scope | suites | tests |
+|---|---|---|
+| targeted subset — segment · parseUpload · sourceCustody · importedStructure | 4 | 50 |
+| touched-suite gate — the subset **plus** `review.test.ts`, the validator the fold must satisfy | 5 | 86 |
+
+Both pass. The 50 are the tests this cut adds or directly exercises; the 86 are the gate run
+before push. (An earlier report said 85: one test was added afterwards, the caps `CHAPTER ONE`
+case.) `npm run typecheck`: no regressions against baseline.
 
 ---
 

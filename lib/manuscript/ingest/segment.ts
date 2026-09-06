@@ -26,13 +26,21 @@
 export type HeadingDepth = 1 | 2 | 3;
 
 /**
- * Which mechanical rule produced the heading boundary. A custody fact about the
+ * Which mechanical rule DECIDED the heading's depth. A custody fact about the
  * arriving characters, recorded so the depth can always be traced to its cause.
  *
  *   markdown  `#{1,3} `          → depth = number of `#`
  *   chapter   "Chapter N …"      → depth 1, from the document's own wording
  *   caps      ALL-CAPS line      → boundary only; depth null
  *   member    the member cut here at confirm; depth null until they assign one
+ *
+ * ONE VALUE, BY PRECEDENCE — NOT EXHAUSTIVE PROVENANCE (founder ruling,
+ * 2026-09-06). A line may carry more than one signal: `# CHAPTER ONE` is
+ * markdown AND chapter wording AND caps. The field names the classifier that
+ * won, in the fixed order markdown > chapter > caps, which is also the order
+ * `classifyHeading` tests them. It does not claim the other signals were
+ * absent. A reader needing every signal present re-derives it from the
+ * heading text, which is kept verbatim.
  */
 export type HeadingSignal = 'markdown' | 'chapter' | 'caps' | 'member';
 

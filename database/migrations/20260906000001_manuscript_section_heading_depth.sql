@@ -54,7 +54,7 @@ ALTER TABLE manuscript_sections
 COMMENT ON COLUMN manuscript_sections.heading_depth IS
   'WS2-08A. Depth the document itself gave this heading: 1..3 from `#` marks / Word Heading 1-3 / "Chapter N" wording. NULL = unclassified (ALL-CAPS boundary, member cut, or pre-migration row). Never guessed.';
 COMMENT ON COLUMN manuscript_sections.heading_signal IS
-  'WS2-08A. Which mechanical rule produced the boundary: markdown | chapter | caps | member. Custody fact, so a depth can always be traced to its cause.';
+  'WS2-08A. The DECISIVE classifier for heading_depth, by fixed precedence markdown > chapter > caps (member = a cut the member drew at confirm). One value, not exhaustive provenance: "# CHAPTER ONE" carries all three signals and records markdown. Other signals present are re-derivable from the verbatim heading.';
 
 COMMIT;
 
