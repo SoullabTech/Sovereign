@@ -21,7 +21,31 @@ shared_with_house: the canonical MAIA session and transcript, one relationship v
 distinct_to_room: the Reflection remains visibly present as the member's object; Discuss with MAIA opens a contained text conversation over it rather than turning the page into the full Conversation Room
 screenshot_desktop: docs/design/contracts/screenshots/reflections-discuss-maia-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/reflections-discuss-maia-mobile.png
-experience_verification: 2026-09-05 — founder production witness showed the defect directly: the MAIA sheet opened on the right, but OracleConversation's fixed transcript and holoflower resolved against the viewport and painted across the Reflection while the sheet itself had no composer. After repair, a focused local evidence route mounted the exact OracleConversation inside the exact MaiaPresence sheet geometry and seeded canonical local transcript state. At 1280x800 the 448x640 sheet bounded both the MAIA message and textarea; at 390x844 the 390x717 sheet bounded both; body scroll width equaled viewport width in both captures. Headless persistence/agent requests returned 401 because the evidence route had no authenticated member, so this is a geometry/presentation witness, not a production conversation-response witness. Production deployment still requires its own signed-in walk.
+experience_verification: |
+  2026-09-05 — founder production witness showed the defect directly: the MAIA sheet opened on the right, but
+  OracleConversation's fixed transcript and holoflower resolved against the viewport and painted across the
+  Reflection while the sheet itself had no composer. After repair, a focused local evidence route mounted the exact
+  OracleConversation inside the exact MaiaPresence sheet geometry and seeded canonical local transcript state. At
+  1280x800 the 448x640 sheet bounded both the MAIA message and textarea; at 390x844 the 390x717 sheet bounded both;
+  body scroll width equaled viewport width in both captures. Headless persistence/agent requests returned 401
+  because the evidence route had no authenticated member, so that pass was a geometry/presentation witness, not a
+  production conversation-response witness.
+
+  2026-09-06 — PRODUCTION CONVERSATION WITNESS (closes the 401 gap above). Deployed `2732706b6` to minisforum
+  through the immutable-SHA lane; running-container provenance verified on both channels (printenv == Config.Env ==
+  asserted SHA), Co-Lab boundaries 33 passed / 0 failed / 0 warned. Founder then walked the room signed in on
+  desktop Chrome at `soullab.life/reflections/<id>` (authenticated member confirmed by the anamnesis recollection
+  greeting). Observed: the MAIA sheet bounded on the right with a real MAIA response painted INSIDE it — the
+  original defect state (blank sheet while response text paints across the page) did not recur; the Reflection
+  remained legible as the place beneath it, with SOURCE EXCERPT, the Discuss gesture, and the WHAT MAIA WILL RECEIVE
+  panel all still rendered; the text composer present in the sheet with no microphone affordance under
+  voiceEnabled={false}; and canonical thread continuity — the handoff POSTed to /api/sovereign/app/maia/list and the
+  client restored 18 existing messages, so the conversation was appended to rather than forked into a second
+  identity.
+
+  NOT established by the 2026-09-06 pass, and still open: no signed-in walk on a production MOBILE viewport (the
+  390x844 containment evidence remains local-geometry only); and the page carried 2 console errors / 6 warnings that
+  were not classified during the walk — unrelated to the containment claim, but not cleared either.
 ---
 
 # Reflections — MAIA Handoff Experience Contract
