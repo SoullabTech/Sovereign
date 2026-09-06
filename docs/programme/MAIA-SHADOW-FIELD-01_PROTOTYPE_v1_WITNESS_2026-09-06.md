@@ -599,3 +599,45 @@ directly. It is not the Field and should not be walked.
 P3   GREEN — Shadow Field reachable as a House place; arriving ≠ entering; House tests PASS
 P8   OPEN — founder walk may resume from The House → Shadow Field
 ```
+
+---
+
+## 11 · Walk environment — provenance, and one hazard worth naming
+
+Recorded so that any walk evidence can be tied to what was actually being looked at.
+
+```text
+PID    73718
+cwd    /private/tmp/maia-shadow-walk
+Next   15.5.11
+HEAD   8b0605f64
+port   3011
+```
+
+### The hazard: port 3011 resolves to two different systems
+
+An old SSH port-forward is bound specifically to **`127.0.0.1:3011`** and points at
+**minisforum**. The local Next prototype server also listens on 3011. So the address decides
+which machine answers:
+
+```text
+http://127.0.0.1:3011   → SSH forward → minisforum          ✗ NOT the prototype
+http://[::1]:3011       → local Next server at 8b0605f64    ✓ the prototype
+```
+
+**Walk the Shadow Field only at `http://[::1]:3011`.** Anyone using the IPv4 address would be
+looking at a remote machine while believing they were looking at the prototype — and could
+record walk evidence against a system that has never contained the Shadow Field. That is a
+provenance failure of exactly the kind this record exists to prevent, and it would be
+invisible: the page would simply not have the door, and the natural conclusion would be that
+the repair failed.
+
+It is named here rather than left in conversation because the same trap will be waiting the
+next time anyone walks a local prototype on a forwarded port.
+
+### Standing instruction for the walk environment
+
+Do not restart the server, do not kill the SSH tunnel, and do not start a second
+`npm run dev` — the running server is already at the right commit. A second `npm run dev`
+collides with it and fails on `EADDRINUSE`, which is a symptom of the correct server already
+running, not of a defect.
