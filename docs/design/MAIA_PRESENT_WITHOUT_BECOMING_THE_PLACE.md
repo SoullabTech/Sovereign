@@ -120,3 +120,49 @@ convergence would have been guaranteed and meaningless.
 first **consumer and test** of this invariant, not another instrument for
 discovering it. If a third room cannot satisfy A/C/D/E on its own terms, that is
 evidence against the invariant and is to be recorded as such — not designed around.
+
+
+---
+
+## A separate layer: cross-field familiarity
+
+Deliberately **not** folded into A/C/D/E. Those four are invariants demonstrated
+by two walked rooms. This is a design and brand principle, stated at its own
+altitude:
+
+> **MAIA should remain recognizably the same relational presence across rooms,
+> while each room retains authority over how that presence is expressed.**
+
+Same presence, different posture. A member should not have to relearn what *being
+with MAIA* means each time they cross a field boundary.
+
+```text
+BRAND CONSTANTS              ROOM VARIABLES
+  MAIA's voice                 geometry
+  MAIA's relational posture    persistence
+  typography / presence cues   depth
+  noticing + asking grammar    available actions
+  gesture language             degree of conversation
+  exit behavior                placement relative to the member's object
+  sense of restraint
+```
+
+This is a stronger system than *use the same component everywhere*, and it names
+the two failure modes precisely:
+
+```text
+same widget everywhere      -> product-suite sameness; rooms flattened
+different MAIA everywhere   -> fragmented identity; relearning at every boundary
+```
+
+One house with distinct rooms. **Continuity of relationship without uniformity of
+form.**
+
+The recognizable manner of arrival, first observed in Journal:
+
+> When MAIA enters something that belongs to you, she first meets it quietly.
+> Then the room decides what happens next.
+
+Journal gives one transient noticing. Reflections may give that same noticing and
+then allow continuation. Writer's Studio may take a more developmental or
+editorial posture. Unmistakably MAIA in all three.
