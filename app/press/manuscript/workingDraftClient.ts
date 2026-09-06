@@ -416,7 +416,35 @@ export async function putDraftSections(
 }
 
 /**
- * One reader for both save shapes, so a refusal can never be understood by one
+ * Keep a version of a SECTION-ADDRESSABLE draft from SERVER TRUTH.
+ *
+ * No manuscript bytes cross the request boundary. The concurrency guard rides
+ * in headers and the request has no body at all; the server freezes the
+ * section rows it already owns. This avoids a large body passing through
+ * Next middleware and also makes it impossible for the checkpoint gesture to
+ * rewrite prose from a client snapshot.
+ */
+export async function checkpointServerDraft(
+  http: Http,
+  manuscriptId: string,
+  guard: { baseRevisionId: number; idempotencyKey: string },
+): Promise<SaveResult> {
+  try {
+    const res = await http(`${draftBase(manuscriptId)}/checkpoint`, {
+      method: 'POST',
+      headers: {
+        'x-draft-base-revision': String(guard.baseRevisionId),
+        'idempotency-key': guard.idempotencyKey,
+      },
+    });
+    return readSaveResponse(res);
+  } catch {
+    return { kind: 'error' };
+  }
+}
+
+/**
+ * One reader for every save/checkpoint shape, so a refusal can never be understood by one
  * path and swallowed as a generic error by the other.
  */
 async function readSaveResponse(res: HttpResponse): Promise<SaveResult> {
