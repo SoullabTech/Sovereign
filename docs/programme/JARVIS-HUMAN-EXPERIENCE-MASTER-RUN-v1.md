@@ -232,6 +232,11 @@ unknowns carry an evidence-producing instrument  REQUIRED
 gap table names smallest intervention            REQUIRED
 ```
 
+**Admissibility is not correctness (founder).** Passing the census gate establishes that a page is
+admissible, not that its proposed interventions are correct. The R11 matrix and the scoring pass
+are where surviving claims are compared rather than inherited; checkpointed-but-ungated pages
+carry no ranked-map authority and their findings are evidence candidates only.
+
 **Scoring rule (founder):** composite = impact × leverage ÷ risk with **risk on a bounded nonzero
 scale 1–5** — never 0, so no "zero-risk" candidate becomes infinite by artifact. Every gap row also
 carries **evidence state** (observed | inferred | unknown) and **confidence** (high | medium |
