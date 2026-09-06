@@ -343,3 +343,70 @@ through transient subordinate reflection. **The geometry differs; the relationsh
 invariant survives.** That is precisely why the eventual name must describe the
 relationship and not the container — and why nothing is named until both
 specimens are closed.
+
+
+---
+
+## 11. Specimen two — CLOSED, 2026-09-06
+
+Walked by the founder on live `66da58b4c`. Results against the criteria
+predeclared in §10, with the evidence form named for each.
+
+```text
+1  Let it go                    PASS   founder-attested
+2  Journal arrival              PASS   frame
+3  Browse                       PASS   frame
+4  before Keep / after Keep     PASS   two frames
+```
+
+**1 — Let it go.** Attested by the observer as working. The four sub-conditions
+(same entry, same place/scroll, no confirmation, no loss-pressure copy) were
+attested collectively rather than itemized against a frame. Recorded as
+attestation, which is what it is; every other observation carries a capture.
+
+**2 — Arrival.** *What would you like to Journal?* with `Begin writing`,
+`Or note something`, one earliest entry with `Why this?`, and `Browse`. No
+floating House MAIA handle.
+
+**3 — Browse.** Search and filters (Everything · Journal · Captures · Sessions ·
+Changes · Decisions) over the entry list. No floating House MAIA handle. Search
+and filters are correct here and not a contract violation: the room forbids
+listing-*as-arrival*, and Browse is the deliberate destination for it.
+
+**4 — The observation that establishes C.** Fresh writing before Keep offered
+`Keep this` · `day` · `dream` and **no `Reflect with MAIA`**. After Keep, the
+kept entry showed **`Reflect with MAIA`**, with the House handle still absent.
+Journal's own gesture is gated on the member's threshold act, which is what C
+asserts and what no handle check could have shown.
+
+### Verdict
+
+```text
+A            PASS   entry primary, MAIA subordinate beneath, no thread/composer
+B            NOT TESTED — specimen result, not a defect
+C            PASS   gesture appears only after Keep
+D            PASS   founder-attested
+E            PASS   founder-attested
+HANDLE RULE  PASS   absent at arrival, in Browse, before Keep, and after Keep
+```
+
+**Specimen two is closed.** Both rooms now have completed witnesses.
+
+### Uncovered by the predeclared criterion — needs its own ruling
+
+Journal arrival carries a header back-link reading **`← MAIA`**. It is *not* the
+floating `MaiaPresence` handle, so it does not fail observation 2 as written, and
+it is not folded into the verdict above.
+
+But it is an unprompted MAIA affordance visible in Journal before any Keep, and
+the ruling's language was *"its sole MAIA affordance is the room-owned `Reflect
+with MAIA` gesture on a kept entry."* Two readings, both defensible:
+
+- **Navigation, not affordance.** A back-arrow to where the member came from
+  offers *return to MAIA*, not *bring MAIA here*. It advertises nothing about
+  this room.
+- **Affordance.** It puts MAIA in the member's eye at arrival, which the room's
+  own spec says should read *MAIA presence: none*.
+
+Recorded, not decided. It does not reopen specimen two and does not block the
+comparison.
