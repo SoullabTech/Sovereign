@@ -1,0 +1,66 @@
+# Human Experience Architecture — research library
+
+```text
+LANE       JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01
+           (docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CHARTER_2026-09-06.md)
+AUTHORITY  SYNTHESIS_v0.1_R1-R7_2026-09-06.md — founder-authored research synthesis.
+           Everything else in this directory is derived from it and says so.
+JARVIS ROLE Preserve the knowledge · maintain the corpus · operationalize the framework.
+           Jarvis does not discover Soullab's philosophy. The founder does the research and
+           synthesis here; Jarvis carries, tests and evolves what was earned.
+```
+
+## The spine (founder, 2026-09-06)
+
+```text
+EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETATION
+→ DESIGN PRINCIPLES → ETHICAL BOUNDARIES → TESTABLE HYPOTHESES → MAIA EXPERIMENTS
+```
+
+| Spine stage | Where it lives | Status 2026-09-06 |
+|---|---|---|
+| Evidence | `evidence/SOURCE_LEDGER.md` (25 sources, tiered, classed, verification status) · `evidence/TEMPLATE.md` | ledger built; verification in progress |
+| Contested questions | `CONTESTED_QUESTIONS.md` | built from synthesis §"What remains genuinely unknown" + founder's assumptions-to-challenge list |
+| Supported phenomena | `SYNTHESIS_v0.1_R1-R7_2026-09-06.md` §R1–R7 "Evidence" + closing confidence table | founder synthesis v0.1 |
+| Soullab interpretation | synthesis §R1–R7 "Interpretation" / "Soullab hypothesis" · `frameworks/` | founder synthesis v0.1 |
+| Design principles | `principles/PROVISIONAL_PRINCIPLES_v0.1.md` | 10 CANDIDATE — none ratified |
+| Ethical boundaries | `anti-patterns/ANTI_PATTERNS_v0.1.md` | 12 rows, PROHIBIT / REJECT |
+| Testable hypotheses | `experiments/` | empty — none authorized |
+| MAIA experiments | `experiments/<surface>/` | empty — none authorized |
+
+Measurement vocabulary: `measurements/MEASUREMENT_VOCABULARY_v0.1.md`. Board: `BOARD.md`.
+
+## Inquiry numbering — read this before citing an R-number
+
+The programme charter's first wave listed six inquiries (R1 understood · R2 trust · R3 agency ·
+R4 attunement · R5 continuity · R6 alive). The founder's synthesis renumbered to seven:
+
+| Synthesis (authoritative) | Charter first-wave equivalent |
+|---|---|
+| R1 Understanding | R1 |
+| R2 Attunement | R4 |
+| R3 Relationship (healthy human–AI relationship) | *(new — split out of R2/R5)* |
+| R4 Agency vs manipulation | R3 |
+| R5 Appropriate trust | R2 |
+| R6 Alive / present | R6 |
+| R7 Memory and continuity | R5 |
+
+**The synthesis numbering is canonical from 2026-09-06.** Cite `R<n>` per the synthesis.
+
+## Three epistemic levels — permanent
+
+| Level | Meaning |
+|---|---|
+| **Evidence** | What empirical research actually supports |
+| **Interpretation** | What researchers reasonably infer from those findings |
+| **Soullab hypothesis** | What we believe may follow for MAIA and therefore needs testing |
+
+Every document here labels which level a statement belongs to. Contemplative, phenomenological
+and depth-psychological sources (McGilchrist, Jung, enactivism) live in the **interpretive
+layer**: they shape what we look for and are never counted as evidence that we found it.
+
+## Interaction with the codebase
+
+None at present. Nothing in this directory authorizes a change to any MAIA surface, prompt, or
+route. A hypothesis reaches the codebase only through `experiments/` with a founder act and the
+Stage 11 prototype hierarchy (copy → timing → UI → prompt → flag → limited production → architecture).
