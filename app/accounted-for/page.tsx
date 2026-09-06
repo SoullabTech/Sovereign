@@ -531,12 +531,12 @@ const SOVEREIGNTY_PLANES: Row[] = [
   },
   {
     name: 'Typefaces',
-    what: 'Production currently depends on Google-hosted typeface resources at runtime. A repair serving the exact faces, weights, italics and subsets from this host is built and gated, but has not shipped.',
+    what: 'Production serves its runtime typefaces from this host. The runtime Google Fonts dependency has been removed and witnessed in production. The build still uses next/font/google, which contacts Google at build time; build-plane independence has not been established.',
     third: (
       <>
-        External today
+        <span className="text-soullab-text-muted">Runtime:</span> Local
         <br />
-        <span className="text-soullab-text-muted">Local repair:</span> <Chip layer="designed" />
+        <span className="text-soullab-text-muted">Build acquisition:</span> Google
       </>
     ),
   },
@@ -820,7 +820,7 @@ export default function AccountedForPage() {
           <Section eyebrow="The harder accounting" heading="Where sovereignty holds, and where it does not yet">
             <P>Sovereignty is usually argued at the model layer, because that is where the argument is most flattering. The harder accounting is everything else, and it has to be done by plane &mdash; because the planes are not interchangeable. A dependency on an ordinary conversational turn is a different fact from one that only a rebuild touches, and collapsing them produces either false alarm or false comfort.</P>
             <Table headers={['Layer', 'What it is', 'Plane']} rows={SOVEREIGNTY_PLANES} />
-            <P>The typeface row is the one worth dwelling on, because nobody thinks of a font as a dependency. Until this repair ships, the production site depends at runtime on typeface resources hosted by Google &mdash; <em>including this page</em>, which argues the sovereignty case in letterforms supplied through a third party. When a browser must fetch those resources from the network rather than use a cached copy, Google receives the request, including the requesting address, from a member who never chose that.</P>
+            <P>The typeface row is the one worth dwelling on, because nobody thinks of a font as a dependency. Until September 2026 the production site depended at runtime on typeface resources hosted by Google &mdash; <em>including this page</em>, which argued the sovereignty case in letterforms supplied through a third party. When a browser had to fetch those resources from the network rather than use a cached copy, Google received the request, including the requesting address, from a member who never chose that. The faces are now served from this host. That is stated here because a witness established it against the deployed commit, not because the change was shipped and assumed to have worked; the build-time dependency named below is untouched.</P>
             <P>The repair vendors the exact faces, weights, italics and subsets into this host and serves them locally. It is built and gated: a browser network witness shows every font request coming from the local origin and none reaching Google, and with both Google hosts blocked the browser still reports the intended faces rendering the text. One gate remains provisional and it has not shipped, so the row above stays <em>external today</em>, and the Designed label beside it describes the repair rather than the present state of production. The repair does not lend its maturity to a plane it has not reached.</P>
             <Quote>The dependencies that survive an audit are the ones that do not look like dependencies.</Quote>
             <P>Two boundaries this accounting does not cross. Removing a runtime dependency is not the same as removing a build-time one: this application still contacts Google when it is <em>built</em>, for typefaces requested through the framework rather than through a stylesheet, and that is a deployment-plane fact left standing rather than quietly folded into the row above. And none of this amounts to offline operation. Cognition remains external on every ordinary turn. What the planes give is a map of where dependence actually sits &mdash; which is more useful, and more honest, than the binary claim.</P>
