@@ -94,3 +94,39 @@ describe('what the repair did not touch', () => {
     expect(room).not.toMatch(/retry|retries|attempt\s*\+\+/i);
   });
 });
+
+/**
+ * PREPARED, AND STILL NOT READABLE (2026-09-06).
+ *
+ * `partition_not_recorded` arrives at the CAPTURE stage. Answered by stage, it
+ * told a member whose Work IS prepared to prepare it again — and that gesture
+ * answers `already_converted`. A loop with no exit, over a Work one ordinary
+ * act away from readable. Keyed on refusal identity, like every other repair
+ * in this file.
+ */
+describe('a prepared Work is never told it is unprepared', () => {
+  const branch = branchFor('partition_not_recorded');
+
+  it('has its own sentence, not the capture-stage one', () => {
+    expect(branch).toBeTruthy();
+    expect(branch).not.toContain('not prepared for Develop yet');
+  });
+
+  it('says the Work IS prepared', () => {
+    expect(branch).toMatch(/is prepared/);
+  });
+
+  it('names the act that clears it, which belongs to the member', () => {
+    expect(branch).toContain('Keep a version in the Writer Canvas');
+  });
+
+  it('confirms the work is untouched', () => {
+    expect(branch).toMatch(/Nothing has changed/);
+  });
+
+  /* The room's only act is asking for a reading. It must not offer to keep a
+     version on the member's behalf, here or anywhere. */
+  it('does not perform the act itself', () => {
+    expect(room).not.toMatch(/checkpoint\s*:\s*true/);
+  });
+});

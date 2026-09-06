@@ -163,9 +163,10 @@ async function main() {
           WHERE draft_id = $1 ORDER BY position ASC`, [now.id]);
       const sourceIds = await query<{ id: string }>(
         `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
-      const revision = await query<{ content: string; revision_number: number }>(
-        `SELECT content, revision_number FROM working_draft_revisions
-          WHERE draft_id = $1 AND note = 'before section conversion'
+      const revision = await query<{ content: string; revision_number: number; has_partition: boolean }>(
+        `SELECT content, revision_number, section_partition IS NOT NULL AS has_partition
+           FROM working_draft_revisions
+          WHERE draft_id = $1 AND note = 'Section conversion'
           ORDER BY revision_number DESC LIMIT 1`, [now.id]);
 
       const flattened = sections.rows.map((r) => r.text).join('');
@@ -192,9 +193,21 @@ async function main() {
          pre-conversion revision must hold those same bytes. */
       check('the sections flatten to the draft exactly', flattened === now.content,
         `${flattened.length} vs ${now.content.length} chars`);
-      check('a pre-conversion revision was kept', revision.rows.length > 0);
-      check('the kept revision holds the pre-conversion bytes exactly',
+      check('a conversion revision was recorded', revision.rows.length > 0);
+      check('the conversion revision holds the draft bytes exactly',
         revision.rows.length > 0 && revision.rows[0].content === now.content);
+      /* ⛔ THE SECOND WALL. Capture freezes from the LATEST revision and
+         refuses `partition_not_recorded` when it carries no boundaries. A
+         conversion that records none leaves the Work prepared and unreadable. */
+      check('the conversion revision records its partition',
+        revision.rows.length > 0 && revision.rows[0].has_partition === true);
+      const newest = await query<{ note: string | null; has_partition: boolean }>(
+        `SELECT note, section_partition IS NOT NULL AS has_partition
+           FROM working_draft_revisions WHERE draft_id = $1
+          ORDER BY revision_number DESC LIMIT 1`, [now.id]);
+      check('the NEWEST revision — the one capture reads — records a partition',
+        newest.rows[0]?.has_partition === true,
+        `newest note=${newest.rows[0]?.note ?? 'none'}`);
 
       const post = await resolveDevelopPreparation(manuscriptId, memberId);
       check('preparation now reports ready',
