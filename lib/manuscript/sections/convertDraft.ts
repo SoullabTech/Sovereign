@@ -42,7 +42,7 @@
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { classifyDraft } from './draftProof';
 import { assertRoundTrip, type DraftSection } from './seedInvariant';
-import { disclosureDigest } from './conversionDisclosure';
+import { draftStateDigest } from './draftStateDigest';
 
 export type ConversionRefusal =
   | 'draft_not_found'
@@ -52,8 +52,12 @@ export type ConversionRefusal =
   | 'boundary_offsets_incomplete'
   | 'leading_text_before_first_boundary'
   | 'already_converted_inconsistently'
-  /** The draft moved between the disclosure the member saw and this call. */
-  | 'disclosure_stale';
+  /** The draft moved between the exact state the member was told and this call. */
+  | 'preparation_stale'
+  /** The draft moved between the divergence the member was shown and this call. */
+  | 'disclosure_stale'
+  /** Mechanical authority was claimed over a draft that is not PRISTINE. */
+  | 'not_pristine_under_lock';
 
 export interface ConversionResult {
   status: 'converted' | 'already_converted' | 'refused';
@@ -166,20 +170,41 @@ export function planConversion(
  * reports the conversion that already happened, or stops on inconsistency
  * rather than silently repairing it.
  */
+/**
+ * Under WHAT PERMISSION a conversion is being run, and over which state.
+ *
+ * Founder ruling (2026-09-06). The two are not interchangeable and the
+ * service will not infer one from the other:
+ *
+ *   mechanical           the draft is PRISTINE, so the upgrade is lossless and
+ *                        mechanically established. The member INITIATED it and
+ *                        was told the fact; they were not asked to agree to it.
+ *                        ⛔ Re-proved under the lock, because `planConversion`
+ *                        also admits an EDITED draft whose boundaries are all
+ *                        still locatable — without this check a save landing
+ *                        after the panel was shown would move the draft into
+ *                        that class and the mechanical permission would travel
+ *                        silently with it.
+ *   member_confirmation  the member was SHOWN a divergence and confirmed THAT
+ *                        one. No PRISTINE claim is made or required.
+ */
+export type ConversionAuthority =
+  | { authority: 'mechanical'; stateDigest: string }
+  | { authority: 'member_confirmation'; disclosureDigest: string };
+
 export async function convertDraftToSections(
   manuscriptId: string,
   memberId: string,
   /**
-   * The digest of the state a member was SHOWN, when this conversion is a
-   * member confirmation rather than a mechanically-authorised upgrade.
+   * The permission this call carries, and the state it was granted over.
    *
-   * Checked AFTER the row lock, which is the only place it can be checked
-   * truthfully: computing it in the route before this transaction leaves a
-   * window in which a save lands and the conversion proceeds against a state
-   * nobody disclosed. Omitted for the 2026-08-30 tell-rather-than-ask path,
-   * where no disclosure was made and none is being verified.
+   * Verified AFTER the row lock, which is the only place it can be verified
+   * truthfully: checking in the route before this transaction leaves a window
+   * in which a save lands and the conversion proceeds against a state nobody
+   * was told about. Omitted for the bare 2026-08-30 path, where no state was
+   * told and none is being verified.
    */
-  expectDisclosure?: string,
+  expect?: ConversionAuthority,
 ): Promise<ConversionResult> {
   return transaction(async (tx: TransactionClient) => {
     /* Lock the draft for the whole transaction. Everything below is proven
@@ -205,27 +230,49 @@ export async function convertDraftToSections(
     }
     const draft = draftRes.rows[0];
 
-    /* ── The disclosure, re-derived under the lock. A member-confirmed
-       conversion is only as honest as the state the member was shown, and
-       that state is proven HERE or not at all. Checked before idempotency so
-       a stale confirmation is never answered with `already_converted` — that
-       would report success for a conversion the member did not authorise. */
-    if (expectDisclosure !== undefined) {
-      const sourceCount = await tx.query<{ n: string }>(
-        `SELECT count(*)::text AS n FROM manuscript_sections WHERE manuscript_id = $1`,
+    /* ── The permission, verified under the lock. A conversion is only as
+       honest as the state the member was told about, and that state is proven
+       HERE or not at all. Checked before idempotency so a stale act is never
+       answered with `already_converted` — that would report success for a
+       conversion the member did not authorise. */
+    if (expect !== undefined) {
+      const told = expect.authority === 'mechanical' ? expect.stateDigest : expect.disclosureDigest;
+      const sourceRows = await tx.query<{ id: string; heading: string | null; body: string }>(
+        `SELECT id, heading, body FROM manuscript_sections
+          WHERE manuscript_id = $1 ORDER BY position ASC`,
         [manuscriptId],
       );
-      const actual = disclosureDigest({
+      const actual = draftStateDigest({
         version: Number(draft.version),
         content: draft.content,
-        sourceSections: Number(sourceCount.rows[0]?.n ?? 0),
+        sourceSections: sourceRows.rows.length,
       });
-      if (actual !== expectDisclosure) {
+      if (actual !== told) {
         return {
           status: 'refused',
-          refusal: 'disclosure_stale',
-          detail: 'the draft changed after the divergence was shown',
+          refusal: expect.authority === 'mechanical' ? 'preparation_stale' : 'disclosure_stale',
+          detail: expect.authority === 'mechanical'
+            ? 'the draft changed after its state was shown'
+            : 'the draft changed after the divergence was shown',
         } as ConversionResult;
+      }
+
+      /* ⛔ MECHANICAL AUTHORITY REQUIRES PRISTINE, PROVED HERE. The digest
+         above covers the draft's bytes and the Source's COUNT — not the
+         Source's text. A Source edited at equal count leaves the digest
+         matching while the draft is no longer what the Source composes, and
+         `planConversion` would still admit it as resolvable. Then a permission
+         granted over "nothing has changed" would convert a draft that had.
+         The claim is re-proved from the locked rows instead of inferred. */
+      if (expect.authority === 'mechanical') {
+        const { classification } = classifyDraft(sourceRows.rows, draft.content);
+        if (classification !== 'PRISTINE') {
+          return {
+            status: 'refused',
+            refusal: 'not_pristine_under_lock',
+            detail: `mechanical authority requires PRISTINE; this draft is ${classification}`,
+          } as ConversionResult;
+        }
       }
     }
 

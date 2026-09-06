@@ -42,19 +42,24 @@ export type ConvertOutcome =
   | { ok: false; refusal: string; detail?: string };
 
 /**
- * The member's confirmation. `disclosure` names the state they were shown; the
- * server re-derives it under the row lock and refuses if the draft has moved.
+ * The member's act. `act` names which permission it carries — `prepare` for a
+ * draft that is unchanged (mechanical; the member initiates, they do not
+ * agree to a fact) and `confirm_conversion` for one they have written in
+ * (their confirmation of a divergence they were shown). `stateDigest` names
+ * the state they were told about; the server re-derives it under the row lock
+ * and refuses if the draft has moved.
  */
-export async function confirmPreparation(
+export async function actOnPreparation(
   manuscriptId: string,
-  disclosure: string,
+  act: 'prepare' | 'confirm_conversion',
+  stateDigest: string,
 ): Promise<ConvertOutcome> {
   try {
     const res = await apiFetch(
       `/api/sovereign/manuscripts/${manuscriptId}/develop/preparation`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ confirm: 'convert', disclosure }),
+        body: JSON.stringify({ act, stateDigest }),
       });
     const body = await res.json().catch(() => ({}));
     if (res.status === 401) return { ok: false, refusal: 'unauthorized' };
@@ -76,7 +81,7 @@ export interface PreparationCopy {
   /** The label of the act, when there is one to offer. */
   action: string | null;
   /** Which act the gesture performs, for the room to dispatch on. */
-  act: 'begin_draft' | 'convert' | null;
+  act: 'begin_draft' | 'prepare' | 'confirm_conversion' | null;
 }
 
 /** The sentence a state owes the writer. PURE. */
@@ -105,37 +110,48 @@ export function preparationCopy(state: DevelopPreparation): PreparationCopy | nu
         act: 'begin_draft',
       };
 
-    case 'convertible':
+    /* THE EXACT CASE. Nothing has moved: every boundary is where the import
+       put it, and the draft is byte-identical to what the Source composed.
+       There is no divergence to disclose, so none is invented — a warning
+       about a change that did not happen is as false as silence about one
+       that did.
+
+       ⛔ AND NO QUESTION IS ASKED. Founder ruling (2026-09-06): a lossless
+       upgrade whose truth is mechanically established tells rather than asks.
+       These sentences state a fact and name an act. There is no "confirm",
+       no "do you agree", nothing that invites the member to ratify something
+       the system already knows and can prove. */
+    case 'exact':
       return {
         title: 'Prepare this draft for Develop',
-        body: state.diverged
-          ? [
-              `This Work was created before section-based development existed, so its draft was never divided into sections. Your source holds ${state.sourceSections} of them.`,
-              /* THE DISCLOSURE. Named as change, counted, and attributed to
-                 the member — never described as damage or drift. */
-              `Your draft has changed since it was imported: ${describeChange(state.divergence)}. Soullab will not guess where your sections now begin, so each boundary has been located in the text you actually wrote — all ${state.divergence.resolved} of ${state.divergence.boundaries}.`,
-              'Preparing divides your current draft at those boundaries. Not one character moves, and your versions stay where they are. Confirm to continue.',
-            ]
-          /* THE EXACT CASE, and the one this book is in. Nothing has moved:
-             every boundary is where the import put it, and the draft is
-             byte-identical to what the Source composed. There is no
-             divergence to disclose, so none is invented — a warning about a
-             change that did not happen is as false as silence about one that
-             did. What the member is owed here is the plain fact and the
-             promise the conversion actually keeps. */
-          : [
-              `This book was created before Develop stored section-addressable drafts. Its current text matches its ${state.sourceSections} source sections exactly.`,
-              'Prepare it for Develop without changing your writing. Not one character moves, and your versions stay where they are.',
-            ],
+        body: [
+          `This book was created before Develop stored section-addressable drafts. Its current text matches its ${state.sourceSections} source sections exactly.`,
+          'Prepare it for Develop without changing your writing. Not one character moves, and your versions stay where they are.',
+        ],
         action: 'Prepare this draft for Develop',
-        act: 'convert',
+        act: 'prepare',
+      };
+
+    /* THE CHANGED CASE, where the member's agreement IS the authority. */
+    case 'diverged':
+      return {
+        title: 'Prepare this draft for Develop',
+        body: [
+          `This Work was created before Develop stored section-addressable drafts, so its draft was never divided into sections. Your source holds ${state.sourceSections} of them.`,
+          /* THE DISCLOSURE. Named as change, counted, and attributed to the
+             member — never described as damage or drift. */
+          `Your draft has changed since it was imported: ${describeChange(state.divergence)}. Soullab will not guess where your sections now begin, so each boundary has been located in the text you actually wrote — all ${state.divergence.resolved} of ${state.divergence.boundaries}.`,
+          'Preparing divides your current draft at those boundaries. Not one character moves, and your versions stay where they are. Confirm to continue.',
+        ],
+        action: 'Review and confirm',
+        act: 'confirm_conversion',
       };
 
     case 'unresolvable':
       return {
         title: 'This draft cannot be prepared automatically',
         body: [
-          'This Work was created before section-based development existed, and its draft has changed too much for Soullab to say where its sections now begin.',
+          'This Work was created before Develop stored section-addressable drafts, and its draft has changed too much for Soullab to say where its sections now begin.',
           /* ⛔ NO OFFER. There is nothing here a member could confirm: the
              system does not know where the boundaries went, and asking them
              to approve a partition it cannot locate would be asking them to

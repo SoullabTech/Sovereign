@@ -59,31 +59,34 @@ it('a Work with Source and no draft is NO_DRAFT, and says how many sections it h
   expect(await resolveDevelopPreparation(MS, MEMBER)).toEqual({ kind: 'no_draft', sourceSections: 2 });
 });
 
-it('an unedited legacy draft is CONVERTIBLE and not diverged', async () => {
+it('an unedited legacy draft is EXACT — mechanical authority, no disclosure to confirm', async () => {
   db({ source: SOURCE, draft: { content: composeCurrent(SOURCE), version: 1, addressable: false, draftSections: 0 } });
   const state = await resolveDevelopPreparation(MS, MEMBER);
-  expect(state.kind).toBe('convertible');
-  if (state.kind !== 'convertible') throw new Error('unreachable');
-  expect(state.diverged).toBe(false);
+  expect(state.kind).toBe('exact');
+  if (state.kind !== 'exact') throw new Error('unreachable');
+  expect(state.divergence.classification).toBe('PRISTINE');
   expect(state.divergence.resolved).toBe(state.divergence.boundaries);
-  expect(state.disclosure).toMatch(/^[0-9a-f]{64}$/);
+  expect(state.stateDigest).toMatch(/^[0-9a-f]{64}$/);
+  /* The exact state carries no disclosure, because nothing was disclosed. */
+  expect(state).not.toHaveProperty('disclosureDigest');
 });
 
 /**
- * THE PRODUCTION CASE. A body edit inside a section leaves every boundary
- * exactly where it was — so the draft is convertible, AND the member is owed
- * the disclosure that their words have changed since import.
+ * ⛔ THE STATE THE SPLIT EXISTS FOR. A body edit inside a section leaves every
+ * boundary exactly where it was — resolvable, but NOT unchanged. Collapsing it
+ * into the exact case would hand mechanical authority to a draft the member
+ * has written in, and they would never be shown what moved.
  */
-it('a legacy draft edited in the body is CONVERTIBLE and diverged, with boundaries all located', async () => {
+it('a legacy draft edited in the body is DIVERGED — resolvable, and still owed a disclosure', async () => {
   const edited = composeCurrent(SOURCE).replace('Second line.', 'Second line, rewritten by the author.');
   db({ source: SOURCE, draft: { content: edited, version: 9, addressable: false, draftSections: 0 } });
   const state = await resolveDevelopPreparation(MS, MEMBER);
-  expect(state.kind).toBe('convertible');
-  if (state.kind !== 'convertible') throw new Error('unreachable');
-  expect(state.diverged).toBe(true);
+  expect(state.kind).toBe('diverged');
+  if (state.kind !== 'diverged') throw new Error('unreachable');
   expect(state.divergence.classification).toBe('EDITED');
   expect(state.divergence.resolved).toBe(state.divergence.boundaries);
   expect(state.divergence.bodyLinesChanged).toBeGreaterThan(0);
+  expect(state).not.toHaveProperty('stateDigest');
 });
 
 /** ⛔ A MOVED BOUNDARY IS NEVER OFFERED. Nobody can confirm a guess. */
@@ -93,7 +96,8 @@ it('a legacy draft whose heading was rewritten is UNRESOLVABLE, with no offer', 
   const state = await resolveDevelopPreparation(MS, MEMBER);
   expect(state.kind).toBe('unresolvable');
   if (state.kind !== 'unresolvable') throw new Error('unreachable');
-  expect(state).not.toHaveProperty('disclosure');
+  expect(state).not.toHaveProperty('stateDigest');
+  expect(state).not.toHaveProperty('disclosureDigest');
 });
 
 it('an addressable draft holding no sections is INDETERMINATE, never ready', async () => {
@@ -106,12 +110,12 @@ it('a Work with no Source sections is NO_SOURCE', async () => {
   expect(await resolveDevelopPreparation(MS, MEMBER)).toEqual({ kind: 'no_source' });
 });
 
-/** The digest names the state that was shown: a save changes it. */
-it('the disclosure changes when the draft changes', async () => {
+/** The digest names the state that was told: a save changes it. */
+it('the state digest changes when the draft changes', async () => {
   db({ source: SOURCE, draft: { content: composeCurrent(SOURCE), version: 1, addressable: false, draftSections: 0 } });
   const a = await resolveDevelopPreparation(MS, MEMBER);
   db({ source: SOURCE, draft: { content: composeCurrent(SOURCE), version: 2, addressable: false, draftSections: 0 } });
   const b = await resolveDevelopPreparation(MS, MEMBER);
-  if (a.kind !== 'convertible' || b.kind !== 'convertible') throw new Error('unreachable');
-  expect(a.disclosure).not.toBe(b.disclosure);
+  if (a.kind !== 'exact' || b.kind !== 'exact') throw new Error('unreachable');
+  expect(a.stateDigest).not.toBe(b.stateDigest);
 });

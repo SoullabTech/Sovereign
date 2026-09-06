@@ -44,7 +44,7 @@ import {
   LENS_MEANING, LENS_ORDER, readingView, type ObservationView, type ReadingView, type StateName,
 } from '@/lib/writersStudio/developPresentation';
 import {
-  confirmPreparation, fetchPreparation, preparationCopy,
+  actOnPreparation, fetchPreparation, preparationCopy,
   type DevelopPreparation,
 } from '@/lib/writersStudio/developPreparationClient';
 import { beginDraft } from '../../press/manuscript/workingDraftClient';
@@ -262,11 +262,12 @@ export default function DevelopRoom({
   };
 
   /**
-   * ONE GESTURE, TWO CANONICAL PATHS. A Work with no draft is prepared by the
-   * SAME draft-creation call Write has always made — `beginDraft`, unchanged
-   * and unwrapped. A legacy draft is prepared by the conversion boundary,
-   * carrying the digest of the divergence the member was just shown. Neither
-   * path is reimplemented here, and this room mints no lifecycle of its own.
+   * ONE GESTURE, THREE CANONICAL PATHS. A Work with no draft is prepared by
+   * the SAME draft-creation call Write has always made — `beginDraft`,
+   * unchanged and unwrapped. A legacy draft goes to the conversion boundary
+   * under the permission its state actually carries: mechanical for an
+   * unchanged draft, the member's confirmation for one they have written in.
+   * Neither path is reimplemented here, and this room mints no lifecycle.
    */
   const prepare = async () => {
     if (prep.phase !== 'ready') return;
@@ -282,17 +283,22 @@ export default function DevelopRoom({
         return;
       }
     } else {
-      /* The disclosure travels with the confirmation. `convertible` is the
-         only state that carries one, and the only state whose copy offers
-         `convert` — so this narrowing cannot be wrong without the resolver
-         being wrong first. */
-      if (prep.state.kind !== 'convertible') { setPreparing({ phase: 'idle' }); return; }
-      const done = await confirmPreparation(manuscriptId, prep.state.disclosure);
+      /* The digest travels with the act, and each state carries exactly one —
+         so this narrowing cannot be wrong without the resolver being wrong
+         first. The server re-decides both anyway; nothing here is trusted. */
+      const digest = prep.state.kind === 'exact' ? prep.state.stateDigest
+        : prep.state.kind === 'diverged' ? prep.state.disclosureDigest : null;
+      if (!digest) { setPreparing({ phase: 'idle' }); return; }
+      const done = await actOnPreparation(manuscriptId, copy.act, digest);
       if (!done.ok) {
         setPreparing({ phase: 'refused', refusal: done.refusal, detail: done.detail });
-        /* A stale disclosure is not an error to sit in: re-read so the member
-           sees the state that actually holds and confirms THAT one. */
-        if (done.refusal === 'disclosure_stale') await loadPrep();
+        /* A stale act is not an error to sit in: re-read so the member sees
+           the state that actually holds — which may no longer be the one they
+           were told about — and acts on THAT one. */
+        if (done.refusal === 'preparation_stale' || done.refusal === 'disclosure_stale'
+            || done.refusal === 'not_pristine_under_lock' || done.refusal === 'wrong_authority') {
+          await loadPrep();
+        }
         return;
       }
     }
@@ -428,8 +434,11 @@ export default function DevelopRoom({
                 {preparing.phase === 'refused' && (
                   <div className="mt-3" role="status" data-develop-prepare-refused={preparing.refusal}>
                     <p className="text-[12.5px] leading-relaxed opacity-75">
-                      {preparing.refusal === 'disclosure_stale'
-                        ? 'This draft changed while you were reading this, so nothing was prepared. What it says now is up to date — confirm again to continue.'
+                      {preparing.refusal === 'preparation_stale'
+                        || preparing.refusal === 'disclosure_stale'
+                        || preparing.refusal === 'not_pristine_under_lock'
+                        || preparing.refusal === 'wrong_authority'
+                        ? 'This draft changed while you were reading this, so nothing was prepared. What it says now is up to date — act on that.'
                         : 'This Work could not be prepared, and nothing has changed.'}
                     </p>
                     <p className="text-[11px] opacity-40 mt-1">refused: {preparing.refusal}</p>

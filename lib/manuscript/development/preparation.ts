@@ -37,7 +37,7 @@
 import { query } from '@/lib/db/postgres';
 import { classifyDraft, type Classification } from '@/lib/manuscript/sections/draftProof';
 import { planConversion, type ConversionRefusal } from '@/lib/manuscript/sections/convertDraft';
-import { disclosureDigest } from '@/lib/manuscript/sections/conversionDisclosure';
+import { draftStateDigest } from '@/lib/manuscript/sections/draftStateDigest';
 
 /**
  * What changed since the draft was initialized from Source, as counts.
@@ -65,17 +65,33 @@ export type DevelopPreparation =
   /** The Work has never been opened in WRITE, so no draft was ever begun. */
   | { kind: 'no_draft'; sourceSections: number }
   /**
-   * A draft that predates section addressing, whose boundaries ARE located
-   * in its current text. `diverged` says whether the member's words have
-   * moved since import — the disclosure they are owed before confirming.
+   * A legacy draft that is byte-identical to what its Source composes.
+   *
+   * AUTHORITY IS MECHANICAL, not consent. The 2026-08-30 ruling holds: a
+   * lossless structural upgrade whose truth is mechanically established TELLS
+   * rather than asks, and `assertRoundTrip` is that establishment. The member
+   * INITIATES the act; they are not asked to agree that an unchanged draft is
+   * unchanged. `stateDigest` names the state they were told about and guards
+   * the race — it is not a record of consent.
    */
   | {
-      kind: 'convertible';
+      kind: 'exact';
       sourceSections: number;
-      diverged: boolean;
       divergence: Divergence;
-      /** Names the state this disclosure describes; carried back on confirm. */
-      disclosure: string;
+      stateDigest: string;
+    }
+  /**
+   * A legacy draft the member has written in since import, whose boundaries
+   * are nonetheless all still located in the text they actually wrote.
+   *
+   * AUTHORITY IS THEIR CONFIRMATION of a divergence they were shown, and
+   * `disclosureDigest` names that disclosure.
+   */
+  | {
+      kind: 'diverged';
+      sourceSections: number;
+      divergence: Divergence;
+      disclosureDigest: string;
     }
   /**
    * A legacy draft whose boundaries cannot be located. Not an offer — there
@@ -180,19 +196,18 @@ export async function resolveDevelopPreparation(
     };
   }
 
-  return {
-    kind: 'convertible',
+  const digest = draftStateDigest({
+    version: Number(d.version),
+    content: d.content,
     sourceSections: sources.rows.length,
-    /* PRISTINE means the draft is byte-identical to what the Source composed:
-       nothing has moved, and the conversion changes representation only. Any
-       other admitted class means the member has written since import, and the
-       disclosure is what earns their confirmation. */
-    diverged: verdict.classification !== 'PRISTINE',
-    divergence,
-    disclosure: disclosureDigest({
-      version: Number(d.version),
-      content: d.content,
-      sourceSections: sources.rows.length,
-    }),
-  };
+  });
+
+  /* ⛔ THE SPLIT IS ON PRISTINE AND ONLY ON PRISTINE. `planConversion` admits
+     an EDITED draft whose boundaries all remain locatable — resolvable, but
+     not unchanged. Treating "convertible" as one state would hand mechanical
+     authority to a draft the member has written in, and they would never be
+     shown what moved. Two states, two permissions, decided here. */
+  return verdict.classification === 'PRISTINE'
+    ? { kind: 'exact', sourceSections: sources.rows.length, divergence, stateDigest: digest }
+    : { kind: 'diverged', sourceSections: sources.rows.length, divergence, disclosureDigest: digest };
 }

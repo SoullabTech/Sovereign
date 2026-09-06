@@ -29,7 +29,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDevelopPreparation } from '@/lib/manuscript/development/preparation';
-import { convertDraftToSections } from '@/lib/manuscript/sections/convertDraft';
+import { convertDraftToSections, type ConversionAuthority } from '@/lib/manuscript/sections/convertDraft';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,11 +47,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 /** A conversion refusal, in HTTP. None of them are retryable as-is. */
 function statusFor(refusal: string): number {
   if (refusal === 'draft_not_found') return 404;
-  /* The draft moved after the disclosure. The member re-reads and confirms
-     the state that actually holds — a conflict, not a failure. */
-  if (refusal === 'disclosure_stale') return 409;
+  /* The draft moved after the member was told. They re-read and act on the
+     state that actually holds — a conflict, not a failure. */
   return 409;
 }
+
+/**
+ * THE TWO ACTS, AND WHY NEITHER MAY STAND FOR THE OTHER.
+ *
+ * Founder ruling (2026-09-06): an exact draft is prepared under MECHANICAL
+ * authority — the member initiates, and is not asked to agree to a fact that
+ * is mechanically established. A diverged draft is converted under the
+ * member's CONFIRMATION of a divergence they were shown.
+ *
+ * So the act names itself. Accepting `prepare` over a diverged Work would
+ * convert a draft the member has written in without ever showing them what
+ * moved; accepting `confirm_conversion` over an exact one would record a
+ * consent that was never required and was therefore never given meaning. The
+ * server decides which state holds and refuses the act that does not fit it.
+ */
+const ACT_FOR = { exact: 'prepare', diverged: 'confirm_conversion' } as const;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -68,37 +83,49 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
 
-  /* The body may carry the confirmation and the disclosure it stands on, and
-     nothing else. A client that could send boundaries, offsets or section
-     text could place a cut the member never saw and the Source never had. */
+  /* The body may carry the act and the digest of the state it was granted
+     over, and nothing else. A client that could send boundaries, offsets or
+     section text could place a cut the member never saw and the Source never
+     had. */
   const keys = Object.keys((body as object) ?? {});
-  const foreign = keys.filter((k) => k !== 'confirm' && k !== 'disclosure');
+  const foreign = keys.filter((k) => k !== 'act' && k !== 'stateDigest');
   if (foreign.length > 0) {
     return NextResponse.json({ refusal: 'foreign_field', detail: foreign.join(', ') }, { status: 400 });
   }
 
-  const { confirm, disclosure } = (body ?? {}) as { confirm?: unknown; disclosure?: unknown };
-  if (confirm !== 'convert') {
-    return NextResponse.json({ refusal: 'confirmation_required' }, { status: 400 });
+  const { act, stateDigest } = (body ?? {}) as { act?: unknown; stateDigest?: unknown };
+  if (act !== 'prepare' && act !== 'confirm_conversion') {
+    return NextResponse.json({ refusal: 'act_required' }, { status: 400 });
   }
-  /* ⛔ THE DISCLOSURE IS MANDATORY, not merely accepted when offered. Founder
-     ruling: source boundaries may be OFFERED and may not be silently imposed
-     on a changed draft. A confirmation that names no disclosed state is
-     indistinguishable from a conversion nobody was shown, so it is refused
-     here rather than converted with the check skipped. */
-  if (typeof disclosure !== 'string' || disclosure.length === 0) {
-    return NextResponse.json({ refusal: 'disclosure_required' }, { status: 400 });
+  /* ⛔ THE DIGEST IS MANDATORY ON BOTH PATHS, for different reasons that both
+     end here. On the diverged path it names the divergence the member was
+     shown — source boundaries may be offered and may not be silently imposed
+     on a changed draft. On the exact path it names the unchanged state they
+     were told about, so a save landing after the panel cannot be prepared
+     under a permission granted over something else. An act naming no state is
+     refused rather than run with the check skipped. */
+  if (typeof stateDigest !== 'string' || stateDigest.length === 0) {
+    return NextResponse.json({ refusal: 'state_digest_required' }, { status: 400 });
   }
 
   /* Re-resolve rather than trusting the client's account of the state. A
      surface that believed a Work convertible does not make it so, and
-     `unresolvable` must never reach the conversion service as a confirmation. */
+     `unresolvable` must never reach the conversion service at all. */
   const state = await resolveDevelopPreparation(id, memberId);
-  if (state.kind !== 'convertible') {
+  if (state.kind !== 'exact' && state.kind !== 'diverged') {
     return NextResponse.json({ refusal: 'not_convertible', state: state.kind }, { status: 409 });
   }
+  if (act !== ACT_FOR[state.kind]) {
+    return NextResponse.json(
+      { refusal: 'wrong_authority', state: state.kind, expected: ACT_FOR[state.kind] },
+      { status: 409 });
+  }
 
-  const result = await convertDraftToSections(id, memberId, disclosure);
+  const authority: ConversionAuthority = state.kind === 'exact'
+    ? { authority: 'mechanical', stateDigest }
+    : { authority: 'member_confirmation', disclosureDigest: stateDigest };
+
+  const result = await convertDraftToSections(id, memberId, authority);
   if (result.status === 'refused') {
     return NextResponse.json(
       { refusal: result.refusal, detail: result.detail },
