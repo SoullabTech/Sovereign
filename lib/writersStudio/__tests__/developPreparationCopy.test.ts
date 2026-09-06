@@ -56,7 +56,9 @@ it('discloses the change before offering to convert a draft that has moved', () 
 it('does not claim the draft changed when it has not', () => {
   const text = preparationCopy({ ...CONVERTIBLE, diverged: false, divergence: divergence({ classification: 'PRISTINE', bodyLinesChanged: 0 }) })!.body.join(' ');
   expect(text).not.toMatch(/changed since it was imported/);
-  expect(text).toMatch(/still matches it exactly/);
+  expect(text).toMatch(/matches its 185 source sections exactly/);
+  /* The promise is kept in both branches, changed or unchanged. */
+  expect(text).toMatch(/Not one character moves/);
 });
 
 /* ⛔ NO GUESS IS EVER OFFERED FOR RATIFICATION. */

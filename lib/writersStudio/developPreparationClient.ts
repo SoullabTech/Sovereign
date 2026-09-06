@@ -116,9 +116,16 @@ export function preparationCopy(state: DevelopPreparation): PreparationCopy | nu
               `Your draft has changed since it was imported: ${describeChange(state.divergence)}. Soullab will not guess where your sections now begin, so each boundary has been located in the text you actually wrote — all ${state.divergence.resolved} of ${state.divergence.boundaries}.`,
               'Preparing divides your current draft at those boundaries. Not one character moves, and your versions stay where they are. Confirm to continue.',
             ]
+          /* THE EXACT CASE, and the one this book is in. Nothing has moved:
+             every boundary is where the import put it, and the draft is
+             byte-identical to what the Source composed. There is no
+             divergence to disclose, so none is invented — a warning about a
+             change that did not happen is as false as silence about one that
+             did. What the member is owed here is the plain fact and the
+             promise the conversion actually keeps. */
           : [
-              `This Work was created before section-based development existed, so its draft was never divided into sections. Your source holds ${state.sourceSections} of them, and your draft still matches it exactly.`,
-              'Preparing divides your draft at those boundaries. Not one character moves, and your versions stay where they are.',
+              `This book was created before Develop stored section-addressable drafts. Its current text matches its ${state.sourceSections} source sections exactly.`,
+              'Prepare it for Develop without changing your writing. Not one character moves, and your versions stay where they are.',
             ],
         action: 'Prepare this draft for Develop',
         act: 'convert',
