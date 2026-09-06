@@ -107,6 +107,27 @@ export function adjudicateParticipation(input: AdjudicationInput): Participation
       }
     }
 
+    // pp-2 restraint — continuity (founder ruling 2026-09-06): divination material participates
+    // only when continuity is enabled; ephemeral turns hold it.
+    if (RESTRAINT_RULES.requireContinuity.includes(id) && sovereignty.memoryMode === 'ephemeral') {
+      held.push({ producerId: id, ...axesOf(spec), disposition: 'HELD', reason: 'restraint:pp2_continuity_off' });
+      continue;
+    }
+    // pp-2 restraint — ambient hold: held by default; lifted only by a member act this turn.
+    const hold = RESTRAINT_RULES.ambientHold[id];
+    let memberInvoked = false;
+    if (hold) {
+      const lifted =
+        hold.liftsWhen === 'member_invocation' &&
+        hold.domain !== undefined &&
+        (sovereignty.memberInvocations ?? []).includes(hold.domain);
+      if (!lifted) {
+        held.push({ producerId: id, ...axesOf(spec), disposition: 'HELD', reason: `restraint:${hold.rule}` });
+        continue;
+      }
+      memberInvoked = true;
+    }
+
     const candidate = byId.get(id);
     if (!candidate || candidate.text.trim().length === 0) {
       held.push({ producerId: id, ...axesOf(spec), disposition: 'HELD', reason: 'no_material' });
@@ -120,8 +141,9 @@ export function adjudicateParticipation(input: AdjudicationInput): Participation
     if (spec.authority === 'infer') inferAdmitted += 1;
 
     // pdc-1: ADMITTED carries its own basis. member-placed material is admitted BECAUSE the
-    // member placed it; everything else on pp-1 is admitted as eligible. `member_invoked` is W1's.
-    const admittedReason: AdmittedReason = spec.participationClass === 'placed' ? 'member_placed' : 'eligible';
+    // member placed it; everything else is admitted as eligible; `member_invoked` marks a pp-2 ambient hold lifted by the member this turn.
+    const admittedReason: AdmittedReason =
+      spec.participationClass === 'placed' ? 'member_placed' : memberInvoked ? 'member_invoked' : 'eligible';
     admitted.push({
       producerId: id,
       ...axesOf(spec),

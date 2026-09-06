@@ -19,19 +19,63 @@
 import { PRODUCER_REGISTRY, type ProducerId } from './producerRegistry';
 import type { RoomKind } from './types';
 
-export const PARTICIPATION_POLICY_VERSION = 'pp-1' as const;
+/**
+ * pp-2 (founder ruling 2026-09-06, JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 Phase 2, R30 → pp-2).
+ *
+ * pp-1 is PRESERVED as the historical seed (fixtures/cmt-01-pp-1-admission.json is untouched).
+ * R30 detected that four producers with real provenance had entered the registry after the
+ * seed was adjudicated — the transition is history, not an error, and is not rewritten. pp-2
+ * adjudicates those four cells as RESTRAINT rules (HELD with `restraint:<rule>`), never by
+ * editing the seed:
+ *
+ *   member.divination_intent          ADMIT   when continuity is enabled and not Sanctuary
+ *   computed.divination_cast          ADMIT   same boundary; authority stays `compute`
+ *   practitioner.atoms_observations   HOLD    from ambient participation by default, until an
+ *                                             explicit member-visible acceptance/handoff basis
+ *                                             exists (no such basis exists in pp-2 → never lifts)
+ *   house.divination_interpretation   HOLD    from ambient recall by default; admitted only when
+ *                                             the member invokes/requests the divination context
+ *                                             this turn (sovereignty.memberInvocations), with its
+ *                                             house provenance intact
+ *
+ * Consequence for the M2 shadow: on turns where legacy still carries the practitioner block or
+ * the house interpretation, [MAIA/shadow] will report them as missingInCanonical. That is the
+ * policy divergence the ruling created — evidence for M3, classified, never normalized.
+ */
+export const PARTICIPATION_POLICY_VERSION = 'pp-2' as const;
 
-export interface RestraintRules {
-  /** Max `authority: 'infer'` participants admitted per turn; null = uncapped (pp-1). */
-  readonly inferenceCap: number | null;
+export interface AmbientHoldRule {
+  /** Structured rule name; surfaces in the manifest as `restraint:<rule>`. */
+  readonly rule: string;
+  /** What would lift the hold. `member_acceptance_basis` has no mechanism in pp-2 (never lifts). */
+  readonly liftsWhen: 'member_invocation' | 'member_acceptance_basis';
+  /** For `member_invocation`: the domain the member must have invoked this turn. */
+  readonly domain?: string;
 }
 
-export const RESTRAINT_RULES: RestraintRules = { inferenceCap: null };
+export interface RestraintRules {
+  /** Max `authority: 'infer'` participants admitted per turn; null = uncapped (pp-1, pp-2). */
+  readonly inferenceCap: number | null;
+  /** Producers HELD `restraint:pp2_continuity_off` when the turn's memory mode is ephemeral. */
+  readonly requireContinuity: readonly ProducerId[];
+  /** Producers HELD from ambient participation by default (pp-2 cells). */
+  readonly ambientHold: Partial<Record<ProducerId, AmbientHoldRule>>;
+}
+
+export const RESTRAINT_RULES: RestraintRules = {
+  inferenceCap: null,
+  requireContinuity: ['member.divination_intent', 'computed.divination_cast', 'house.divination_interpretation'],
+  ambientHold: {
+    'practitioner.atoms_observations': { rule: 'pp2_no_member_acceptance_basis', liftsWhen: 'member_acceptance_basis' },
+    'house.divination_interpretation': { rule: 'pp2_awaiting_member_invocation', liftsWhen: 'member_invocation', domain: 'divination' },
+  },
+};
 
 /**
  * Admission table. A producer is admitted in a room iff the room is in its registry
- * `rooms` list — the registry is the seed, and pp-1 adds no overrides. Overrides live
- * here explicitly so that a future cell change is a visible diff against this file.
+ * `rooms` list — the registry is the seed; neither pp-1 nor pp-2 adds room overrides
+ * (pp-2's cells are restraint rules above, not room cells). Overrides live here
+ * explicitly so that a future cell change is a visible diff against this file.
  */
 export const POLICY_OVERRIDES: Partial<Record<ProducerId, Partial<Record<RoomKind, 'admit' | 'exclude'>>>> = {};
 
@@ -41,7 +85,7 @@ export function policyDecision(producerId: ProducerId, room: RoomKind): 'admit' 
   return (PRODUCER_REGISTRY[producerId].rooms as readonly RoomKind[]).includes(room) ? 'admit' : 'exclude';
 }
 
-/** Producers eligible for a room under pp-1 — the manifest's `producersConsidered`. */
+/** Producers eligible for a room under the current policy version — the manifest's `producersConsidered`. */
 export function producersForRoom(room: RoomKind): ProducerId[] {
   return (Object.keys(PRODUCER_REGISTRY) as ProducerId[]).filter((id) => policyDecision(id, room) === 'admit');
 }

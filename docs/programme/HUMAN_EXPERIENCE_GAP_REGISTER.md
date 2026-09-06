@@ -68,7 +68,7 @@ import/reachability census.
 
 | Item | Finding | Endpoint |
 |---|---|---|
-| CMT-01 R30 RED at baseline | pp-1 admission has expanded beyond the adjudicated seed by four producers (practitioner.atoms_observations; divination intent / cast / interpretation) landed by earlier lanes; the falsifier expects GREEN | CMT-01 owner: policy-version bump (pp-2) with the cells adjudicated, or seed reconciliation — founder decision |
+| CMT-01 R30 RED at baseline | pp-1 admission had expanded beyond the adjudicated seed by four producers landed by earlier lanes | **RESOLVED 2026-09-06 — pp-2 opened by founder ruling** (`lib/maia/canonical-turn/policy.ts`; fixture `cmt-01-pp-2-admission.json`; pp-1 seed untouched). Cells: intent + cast ADMIT under continuity, not Sanctuary; practitioner observations HELD `restraint:pp2_no_member_acceptance_basis` (never lifts in pp-2); house interpretation HELD `restraint:pp2_awaiting_member_invocation`, ADMITTED `member_invoked` only when `sovereignty.memberInvocations` carries `divination` (the M2 route passes nothing → held). R30 GREEN. **Shadow consequence:** on turns where legacy still carries those blocks, `[MAIA/shadow]` reports them as `missingInCanonical` — classified policy divergence, evidence for M3, never normalized. |
 
 ## Founder rulings 2026-09-06 (second set) — five stops closed
 

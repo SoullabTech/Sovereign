@@ -1,0 +1,193 @@
+{
+  "policyVersion": "pp-2",
+  "adjudicated": "2026-09-06",
+  "source": "founder ruling 2026-09-06 (JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 Phase 2, R30 \u2192 pp-2); pp-1 seed preserved in cmt-01-pp-1-admission.json",
+  "supersedes": "pp-1",
+  "admission": {
+    "floor.runtime_prompt": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio",
+      "living_field",
+      "relational_navigation"
+    ],
+    "floor.speech_act_boundary": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio",
+      "living_field",
+      "relational_navigation"
+    ],
+    "floor.platform_boundary": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio",
+      "living_field",
+      "relational_navigation"
+    ],
+    "floor.interface_humility": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio",
+      "living_field",
+      "relational_navigation"
+    ],
+    "house.platform_knowledge": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio",
+      "living_field",
+      "relational_navigation"
+    ],
+    "house.place": [
+      "sovereign_chat"
+    ],
+    "member.atoms": [
+      "sovereign_chat",
+      "now_what",
+      "vision_studio"
+    ],
+    "member.relational_context": [
+      "sovereign_chat"
+    ],
+    "member.episodic_recall": [
+      "sovereign_chat"
+    ],
+    "retrieved.conversational_recall": [
+      "sovereign_chat",
+      "now_what",
+      "vision_studio"
+    ],
+    "retrieved.member_web": [
+      "sovereign_chat"
+    ],
+    "computed.astrology": [
+      "sovereign_chat",
+      "between"
+    ],
+    "computed.wuxing_snapshot": [
+      "sovereign_chat",
+      "between"
+    ],
+    "computed.forward_readiness": [
+      "sovereign_chat",
+      "between"
+    ],
+    "inferred.memory_influence": [
+      "sovereign_chat",
+      "between",
+      "now_what",
+      "vision_studio"
+    ],
+    "practitioner.practice_field": [
+      "sovereign_chat",
+      "now_what",
+      "vision_studio"
+    ],
+    "practitioner.studio": [
+      "sovereign_chat"
+    ],
+    "collective.knowledge_gate": [
+      "sovereign_chat",
+      "between"
+    ],
+    "member.journal_context": [
+      "between"
+    ],
+    "member.capture_context": [
+      "between"
+    ],
+    "retrieved.significant_moments": [
+      "between"
+    ],
+    "computed.spiral_snapshot": [
+      "between"
+    ],
+    "computed.bridge_snapshot": [
+      "between"
+    ],
+    "computed.governor": [
+      "between"
+    ],
+    "computed.relationship_mode": [
+      "between"
+    ],
+    "declared.epistemic_path": [
+      "between"
+    ],
+    "declared.therapeutic_framework": [
+      "sovereign_chat",
+      "between"
+    ],
+    "declared.reflection_lens": [
+      "sovereign_chat",
+      "between"
+    ],
+    "inferred.field_wisdom": [
+      "sovereign_chat",
+      "between"
+    ],
+    "declared.maia_mode": [
+      "sovereign_chat",
+      "between"
+    ],
+    "declared.scribe_session_discussion": [
+      "sovereign_chat"
+    ],
+    "inferred.cognitive_scaffolding": [
+      "sovereign_chat"
+    ],
+    "inferred.wisdom_routing": [
+      "sovereign_chat"
+    ],
+    "inferred.selflet": [
+      "sovereign_chat",
+      "between"
+    ],
+    "retrieved.relationship_memory": [
+      "sovereign_chat",
+      "between"
+    ],
+    "collective.knowledge_field": [
+      "sovereign_chat",
+      "between"
+    ],
+    "computed.consultation": [
+      "sovereign_chat"
+    ],
+    "house.youth_support": [
+      "sovereign_chat"
+    ],
+    "member.divination_intent": [
+      "sovereign_chat"
+    ],
+    "computed.divination_cast": [
+      "sovereign_chat"
+    ],
+    "house.divination_interpretation": [
+      "sovereign_chat"
+    ],
+    "practitioner.atoms_observations": [
+      "sovereign_chat",
+      "now_what",
+      "vision_studio"
+    ]
+  },
+  "restraints": {
+    "requireContinuity": [
+      "member.divination_intent",
+      "computed.divination_cast",
+      "house.divination_interpretation"
+    ],
+    "ambientHold": {
+      "practitioner.atoms_observations": "pp2_no_member_acceptance_basis",
+      "house.divination_interpretation": "pp2_awaiting_member_invocation"
+    }
+  },
+  "overrides": {}
+}

@@ -39,7 +39,7 @@ maia_runtime_change: NOT AUTHORIZED
 member_research: NOT AUTHORIZED
 collective_laboratory: NOT BUILT
 next_phase_on_exit: "3 — Experimental programme (each experiment its own founder act; E1 shadow, E5 offline, E7 shadow already sequenced)"
-last_state_change: 2026-09-06 (E1 correction-candidate shadow built and gated; undeployed)
+last_state_change: 2026-09-06 (second ruling set executed: E1 isolated candidate pushed; pp-2 opened, R30 GREEN; census script + E5 materials authored)
 ```
 
 ```text

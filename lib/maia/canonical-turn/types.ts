@@ -90,6 +90,12 @@ export interface SovereigntyState {
    * serving route applied the preference upstream and the block is simply absent).
    */
   readonly recallPrefs?: { readonly conversational?: boolean; readonly episodic?: boolean };
+  /**
+   * pp-2: domains the member explicitly invoked/requested THIS turn (e.g. 'divination').
+   * `undefined` = none resolved at this seam — the M2 shadow route passes nothing, so
+   * invocation-gated producers stay HELD. Lifting is a member act, never an inference.
+   */
+  readonly memberInvocations?: readonly string[];
 }
 
 // ── Cognition request (spec §4.5) — route may request depth; may not set tier ─

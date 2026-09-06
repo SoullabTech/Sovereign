@@ -137,34 +137,63 @@ describe('(4) registry — three axes from the write path, not one scalar', () =
 });
 
 describe('(5)(7) admission — the material reaches the composed turn with evidence', () => {
-  it('a verified member in continuity gets all three ADMITTED as eligible, with text', async () => {
+  it('pp-2: a verified member in continuity gets intent + cast ADMITTED eligible; house interpretation HELD until invoked', async () => {
     const legacy = legacyFromFormatter();
     const turn = constructCanonicalTurn(inputs(await verified(), legacy));
     const admitted = turn.participation.admitted.filter((p) => (DIV_PRODUCERS as readonly string[]).includes(p.producerId));
-    expect(admitted.map((p) => p.producerId).sort()).toEqual([...DIV_PRODUCERS].sort());
+    expect(admitted.map((p) => p.producerId).sort()).toEqual(['computed.divination_cast', 'member.divination_intent']);
     for (const p of admitted) {
       expect(p.disposition).toBe('ADMITTED');
       expect(p.reason).toBe('eligible');
       expect(p.text.length).toBeGreaterThan(0);
     }
-    expect(turn.participation.held.map((h) => h.producerId)).not.toEqual(expect.arrayContaining([...DIV_PRODUCERS]));
+    const held = turn.participation.held.find((h) => h.producerId === 'house.divination_interpretation');
+    expect(held).toEqual(expect.objectContaining({ disposition: 'HELD', reason: 'restraint:pp2_awaiting_member_invocation' }));
   });
 
-  it('(5) the rendered prompt carries the cast, the member question, and the corpus framing', async () => {
+  it('pp-2: when the member invokes the divination context this turn, the house interpretation is ADMITTED member_invoked with house provenance', async () => {
     const legacy = legacyFromFormatter();
-    const turn = constructCanonicalTurn(inputs(await verified(), legacy));
-    const prompt = renderTurnForCognition(turn, { tier: 'FAST' }).systemPrompt;
-    expect(prompt).toContain('Hexagram 61 Inner Truth');
-    expect(prompt).toContain('relating hexagram 40 Deliverance');
-    expect(prompt).toContain('Should I take the studio offer or stay independent?');
-    expect(prompt).toContain('Soullab corpus');
+    const turn = constructCanonicalTurn(inputs(await verified(), legacy, {
+      sovereignty: { sanctuary: false, memoryMode: 'continuity', allowCrossSessionMemory: true, memberInvocations: ['divination'] },
+    }));
+    const house = turn.participation.admitted.find((p) => p.producerId === 'house.divination_interpretation');
+    expect(house).toEqual(expect.objectContaining({ disposition: 'ADMITTED', reason: 'member_invoked', authoredBy: 'house' }));
+    expect(turn.participation.admitted.map((p) => p.producerId).sort()).toEqual(expect.arrayContaining([...DIV_PRODUCERS].sort()));
+  });
+
+  it('pp-2: an ephemeral turn HOLDs all three restraint:pp2_continuity_off — memory-mode continuity is the boundary', async () => {
+    const legacy = legacyFromFormatter();
+    const turn = constructCanonicalTurn(inputs(await verified(), legacy, {
+      sovereignty: { sanctuary: false, memoryMode: 'ephemeral', allowCrossSessionMemory: false, memberInvocations: ['divination'] },
+    }));
+    for (const id of DIV_PRODUCERS) {
+      expect(turn.participation.held).toEqual(expect.arrayContaining([expect.objectContaining({ producerId: id, disposition: 'HELD', reason: 'restraint:pp2_continuity_off' })]));
+      expect(turn.participation.admitted.map((p) => p.producerId)).not.toContain(id);
+    }
+  });
+
+  it('(5) the rendered prompt carries the cast and the member question; the corpus framing only when invoked (pp-2)', async () => {
+    const legacy = legacyFromFormatter();
+    const ambient = constructCanonicalTurn(inputs(await verified(), legacy));
+    const ambientPrompt = renderTurnForCognition(ambient, { tier: 'FAST' }).systemPrompt;
+    expect(ambientPrompt).toContain('Hexagram 61 Inner Truth');
+    expect(ambientPrompt).toContain('relating hexagram 40 Deliverance');
+    expect(ambientPrompt).toContain('Should I take the studio offer or stay independent?');
+    expect(ambientPrompt).not.toContain('Soullab corpus');
+
+    const invoked = constructCanonicalTurn(inputs(await verified(), legacy, {
+      sovereignty: { sanctuary: false, memoryMode: 'continuity', allowCrossSessionMemory: true, memberInvocations: ['divination'] },
+    }));
+    expect(renderTurnForCognition(invoked, { tier: 'FAST' }).systemPrompt).toContain('Soullab corpus');
   });
 
   it('(7) manifest rows: provider + disposition + reason + chars + digest — and no body', async () => {
     const legacy = legacyFromFormatter();
     const turn = constructCanonicalTurn(inputs(await verified(), legacy));
     const rows = turn.manifest.admitted.filter((r) => (DIV_PRODUCERS as readonly string[]).includes(r.producerId));
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(2); // pp-2: house interpretation is HELD until invoked
+    const heldRow = turn.manifest.held.find((r) => r.producerId === 'house.divination_interpretation');
+    expect(heldRow).toEqual(expect.objectContaining({ disposition: 'HELD', reason: 'restraint:pp2_awaiting_member_invocation' }));
     for (const r of rows) {
       expect(() => assertManifestEntry(r)).not.toThrow();
       expect(r.disposition).toBe('ADMITTED');
@@ -186,7 +215,8 @@ describe('(5)(7) admission — the material reaches the composed turn with evide
     const turn = constructCanonicalTurn(inputs(await verified(), legacy));
     const held = turn.participation.held.find((h) => h.producerId === 'member.divination_intent');
     expect(held).toEqual(expect.objectContaining({ disposition: 'HELD', reason: 'no_material' }));
-    expect(turn.participation.admitted.map((p) => p.producerId)).toEqual(expect.arrayContaining(['computed.divination_cast', 'house.divination_interpretation']));
+    expect(turn.participation.admitted.map((p) => p.producerId)).toEqual(expect.arrayContaining(['computed.divination_cast']));
+    expect(turn.participation.admitted.map((p) => p.producerId)).not.toContain('house.divination_interpretation'); // pp-2 hold
   });
 });
 
@@ -231,18 +261,33 @@ describe('(3) sanctuary and (1) identity — no bypass through the canonical lin
 });
 
 describe('(8) legacy path and canonical candidate see the same material', () => {
-  it('zero-diff through the three new meta keys', async () => {
+  it('pp-2 policy divergence: ambient turn — legacy carries the house block, canonical holds it → missingInCanonical names it (evidence for M3, not a defect)', async () => {
     const legacy = legacyFromFormatter();
     const turn = constructCanonicalTurn(inputs(await verified(), legacy));
+    const diff = compareLegacyToCanonical(legacy, turn);
+    expect(diff.zeroDiff).toBe(false);
+    expect(diff.missingInCanonical).toEqual(['house.divination_interpretation']);
+    expect(diff.missingInLegacy).toEqual([]);
+    expect(diff.legacyCount).toBe(3);
+    expect(diff.canonicalCount).toBe(2);
+  });
+
+  it('zero-diff through the three new meta keys when the member invoked the divination context', async () => {
+    const legacy = legacyFromFormatter();
+    const turn = constructCanonicalTurn(inputs(await verified(), legacy, {
+      sovereignty: { sanctuary: false, memoryMode: 'continuity', allowCrossSessionMemory: true, memberInvocations: ['divination'] },
+    }));
     const diff = compareLegacyToCanonical(legacy, turn);
     expect(diff.zeroDiff).toBe(true);
     expect(diff.legacyCount).toBe(3);
     expect(diff.canonicalCount).toBe(3);
   });
 
-  it('hostile mutation: legacy drops the house block → missingInLegacy names it', async () => {
+  it('hostile mutation: legacy drops the house block on an invoked turn → missingInLegacy names it', async () => {
     const legacy = legacyFromFormatter();
-    const turn = constructCanonicalTurn(inputs(await verified(), legacy));
+    const turn = constructCanonicalTurn(inputs(await verified(), legacy, {
+      sovereignty: { sanctuary: false, memoryMode: 'continuity', allowCrossSessionMemory: true, memberInvocations: ['divination'] },
+    }));
     const mutated: LegacyAddenda = { ...legacy, divinationInterpretationAddendum: undefined };
     const diff = compareLegacyToCanonical(mutated, turn);
     expect(diff.zeroDiff).toBe(false);

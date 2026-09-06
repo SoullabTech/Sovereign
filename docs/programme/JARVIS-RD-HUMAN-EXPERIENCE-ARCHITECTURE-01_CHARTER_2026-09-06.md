@@ -1144,3 +1144,34 @@ deploy subject); read-only census script authored for ops (nothing run here — 
 access); pp-2 opened in `lib/maia/canonical-turn/policy.ts`; E5 coding manual, synthetic corpus and
 scoring tool authored (raters are a founder appointment). Records: register (second ruling set),
 `E1_CORRECTION_SHADOW_SPEC_2026-09-06.md` §7, `PHASE2_READONLY_CENSUS_SPEC_2026-09-06.md`.
+
+---
+
+## 30 · pp-2 opened — R30 GREEN; E1 isolated deploy candidate pushed (2026-09-06)
+
+**pp-2** (`lib/maia/canonical-turn/policy.ts`, `PARTICIPATION_POLICY_VERSION = 'pp-2'`): pp-1
+preserved as the historical seed; the four cells adjudicated as restraint rules, not seed edits
+— `member.divination_intent` and `computed.divination_cast` ADMIT under memory-mode continuity
+and not Sanctuary (ephemeral → HELD `restraint:pp2_continuity_off`); `practitioner.atoms_observations`
+HELD `restraint:pp2_no_member_acceptance_basis` from ambient participation (no lifting mechanism
+exists in pp-2); `house.divination_interpretation` HELD `restraint:pp2_awaiting_member_invocation`
+and ADMITTED `member_invoked` only when the turn's sovereignty state carries a member invocation of
+the divination domain (new optional `SovereigntyState.memberInvocations`; the M2 shadow route passes
+nothing, so it stays held). Fixture `cmt-01-pp-2-admission.json` (42 producers + restraints);
+**R30 rewritten version-aware** and GREEN; R25/R26 RED as expected until M3; unit suite 82/82 with
+the six divination expectations rewritten to the ruling; registry 113/0/0; typecheck no regression.
+The shadow will now report `missingInCanonical` for the held producers on turns where legacy still
+carries them — recorded as classified policy divergence (M3 evidence), never normalized.
+
+**E1 isolated deploy candidate:** branch `claude/e1-correction-shadow-deploy` at `0780f368`, cut
+from canonical `ca5fdff4` (the #1239 merge) with exactly the six E1 code paths of `7d894b72`
+(classifier · route block · unit test · R32 + index · spec). Diff against canonical = E1 only;
+jest 79/79, registry 113/0/0 with R32, typecheck no regression. Deploy command (founder/ops, from
+the Mac Studio):
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin claude/e1-correction-shadow-deploy \
+  && scripts/pre-deploy-gate.sh deploy-maia "$(git rev-parse --short origin/claude/e1-correction-shadow-deploy)"'
+# verify: docker exec maia-sovereign printenv GIT_COMMIT → 0780f368 ; MAIA_CORRECTION_SHADOW unset
+# witness: docker logs maia-sovereign --since 336h | grep -c "\[MAIA/shadow\] correction-candidate"
+```
