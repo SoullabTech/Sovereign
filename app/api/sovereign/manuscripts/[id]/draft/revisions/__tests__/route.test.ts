@@ -4,7 +4,22 @@
  * DELETEs an existing one.
  */
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({ getMemberIdFromRequest: jest.fn() }));
-jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
+/* `transaction()` must be mocked, not omitted. The routes import it alongside
+   query(); a mock that supplies only query() makes every transactional write
+   throw "(0, postgres_1.transaction) is not a function", which the handler
+   catches and answers 500 — so the suite reported a broken write path when the
+   real defect was the mock's shape. The callback is run against the SAME query
+   mock so existing assertions over query calls still see statements issued
+   inside a transaction. Rejection propagates, matching rollback-on-throw. */
+jest.mock('@/lib/db/postgres', () => {
+  const query = jest.fn();
+  return {
+    query,
+    transaction: jest.fn(async (callback: (tx: { query: unknown }) => unknown) =>
+      callback({ query })
+    ),
+  };
+});
 
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';

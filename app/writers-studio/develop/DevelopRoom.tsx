@@ -833,6 +833,21 @@ function YourStanding({
     if (r.refusal === 'stale_expectation' || r.refusal === 'simultaneous_write') onRefresh();
   };
 
+  /* KILL-SWITCH — default OFF until the 07F acceptance walk has run.
+     The surface is live in production but its acceptance walk has never been
+     performed, and `standing_events = 0` is the boundary that keeps the walk's
+     options open. A member taking a standing here would both leave their first
+     durable standing act on an unwitnessed surface and end that boundary
+     permanently. Set NEXT_PUBLIC_WS_STANDING_ENABLED=1 to restore it.
+
+     ⚠️ THIS IS NOT A WRITE BARRIER. It stops the controls from rendering, which
+     stops accidental member acts; it does not stop a POST to the standings
+     route. A server-side refusal is the real barrier, and it belongs in that
+     route — which is inside the walk's bound subject, so adding it there
+     re-stales the binding and requires a re-freeze before §2.2. That is a
+     founder decision, not a hotfix. */
+  if (process.env.NEXT_PUBLIC_WS_STANDING_ENABLED !== '1') return null;
+
   return (
     <div className="mt-4" data-standing-for={observationKey} data-standing-state={view.state}>
       <p className="text-[10.5px] uppercase tracking-[0.15em] opacity-45 mb-1.5">Your standing</p>

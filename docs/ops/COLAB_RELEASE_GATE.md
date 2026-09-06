@@ -11,7 +11,7 @@ Before inviting testers or deploying changes to any of the surfaces below, the b
 ```bash
 # Run on minisforum (inside the container — pg is available there)
 docker exec maia-sovereign sh -c \
-  'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-colab-boundaries.ts'
+  'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
 ```
 
 **Pass condition:** `31 passed · 0 failed · 0 warned`
@@ -70,7 +70,7 @@ The deploy script will emit:
 
 Before sending tester invitations:
 
-- [ ] `verify-colab-boundaries.ts` passes 31/31 in production
+- [ ] `scripts/verify-constitution-colab.ts` passes with 0 failed in production
 - [ ] New tester has been provisioned an owned Co-Lab (check section 10 output)
 - [ ] If any WARN appears: reviewed and explicitly signed off
 - [ ] If any schema migration was applied: re-run the gate against the migrated database
@@ -87,7 +87,7 @@ Before sending tester invitations:
 
 ## Adding checks to the matrix
 
-When a new Co-Lab-scoped surface ships, add a corresponding check to `scripts/verify-colab-boundaries.ts`. The pattern:
+When a new Co-Lab-scoped surface ships, add a corresponding check to `scripts/verify-constitution-colab.ts`. The pattern:
 
 1. Identify the table and its scope column (`team_id`, `memory_scope`, `file_scope`, etc.)
 2. Write a `check*` function that queries across principal boundaries and asserts zero cross-bleed
