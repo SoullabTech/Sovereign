@@ -9,15 +9,22 @@
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
 FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
-OBSERVED RUNTIME SHA       50302f5d9 — read 2026-09-06, FIXED for the walk's duration (§2.1)
-                           custody: git merge-base --is-ancestor 66da58b4c 50302f5d9 → exit 0
-                           (five merges: 1116f7813 · 03e9d89a9 · c1b0470e · d07f20a0 · 50302f5d9)
+OBSERVED RUNTIME SHA       50302f5d9 — read from the deployed container 2026-09-06, FIXED for
+                           the walk's duration (§2.1)
+CUSTODY (§2.1)             NOT YET EVIDENCED FOR THE WALK. merge-base --is-ancestor
+                           66da58b4c 50302f5d9 returned exit 0 when computed in the assistant's
+                           session clone — a true statement about the commit graph, but NOT the
+                           deploy-host run the walk requires. The minisforum-side command and its
+                           retained output are the founder's to produce.
 07F MIGRATION    APPLIED 2026-09-06 11:36:34+00 — before its consent checkpoint (runbook §0)
 STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
 GATED ON         the founder's prospective act, runbook §2.2 — GIVEN 2026-09-06
 RUNS AFTER       #1228's own witness (runbook §6.2) — a separate record, not a step of this walk
-STATE            W1 PASS — custody exit 0 · pre-walk standing_events = 0 · W1(b) schema PENDING
-                 W2 onward UNBLOCKED by the §2.2 act; W3 is the first irreversible step
+STATE            W1 NOT CLOSED. §2.2 act GIVEN, so W2 onward is unblocked by authority — but
+                 W1 itself has two open parts: (a) custody, awaiting the minisforum-side ancestry
+                 run; (b) schema witness, unrun. The one part evidenced is the pre-walk count:
+                 developmental_observation_standing_events = 0, read on production 2026-09-06.
+                 W3 is the first irreversible step and does not run before W1 closes.
 ```
 
 **The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
