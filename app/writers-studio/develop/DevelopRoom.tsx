@@ -43,11 +43,31 @@ import {
 import {
   LENS_MEANING, LENS_ORDER, readingView, type ObservationView, type ReadingView, type StateName,
 } from '@/lib/writersStudio/developPresentation';
+import {
+  confirmPreparation, fetchPreparation, preparationCopy,
+  type DevelopPreparation,
+} from '@/lib/writersStudio/developPreparationClient';
+import { beginDraft } from '../../press/manuscript/workingDraftClient';
 import ObservationDialogue from './ObservationDialogue';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 
 type ListPhase = 'loading' | 'ready' | 'unauthorized' | 'error';
 type ReadingPhase = 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
+
+/**
+ * Whether this Work can be read at all, resolved BEFORE the invitation to ask.
+ *
+ * The room used to offer "Ask MAIA to read this developmentally" to every
+ * Work and let capture refuse. That put the member's only account of an
+ * unreadable Work inside a refusal — after an act that could never have
+ * succeeded — and the sentence it produced ("it needs a draft with sections")
+ * contradicted the outline they had just been looking at in Write. The state
+ * is knowable before the ask, so it is read before the ask.
+ */
+type PrepPhase =
+  | { phase: 'loading' }
+  | { phase: 'ready'; state: DevelopPreparation }
+  | { phase: 'error' };
 
 const INVOCATION_SENTENCE =
   'MAIA will look at how this work is developing and bring back what she noticed. Nothing changes unless you change it.';
@@ -103,9 +123,19 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
     return 'This work has changed since the last version you kept. Keep a version in the Writer Canvas, then ask MAIA to read again. Nothing has changed.';
   }
   switch (o.stage) {
+    /* CAPTURE READS THE WORKING DRAFT'S PARTITION, not the outline the writer
+       sees in Write — those are two tables in two namespaces, and a Work can
+       hold a full outline while its draft holds no sections at all. The old
+       sentence here ("it needs a draft with sections") described the second
+       fact in words that denied the first, and members read it beside an
+       outline of their own chapters. The room now resolves preparation BEFORE
+       offering the ask, so this branch is reached only when the state changed
+       underneath the member — and it points at the act rather than at a
+       contradiction. */
     case 'capture':
+      return 'This work is not prepared for Develop yet. Prepare it here, then ask again. Nothing has changed.';
     case 'recover':
-      return 'This work is not ready to be read yet — it needs a draft with sections. Nothing has changed.';
+      return 'The kept version this reading needs could not be recovered, so nothing was read. Your work has not changed.';
     case 'read':
       return o.refusal === 'ceiling_exceeded'
         ? 'This work is longer than MAIA reads in one sitting, so she did not read it. Nothing has changed.'
@@ -139,6 +169,10 @@ export default function DevelopRoom({
   const [lens, setLens] = useState<DevelopmentalLens>('development');
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
+  >({ phase: 'idle' });
+  const [prep, setPrep] = useState<PrepPhase>({ phase: 'loading' });
+  const [preparing, setPreparing] = useState<
+    { phase: 'idle' } | { phase: 'working' } | { phase: 'refused'; refusal: string; detail?: string }
   >({ phase: 'idle' });
 
   // The Work's name, for the head of the room. Member-scoped server-side.
@@ -178,6 +212,15 @@ export default function DevelopRoom({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadList]);
 
+  /* Preparation state — read when the room opens and again only after the
+     writer's own preparation gesture. Reading it never prepares anything. */
+  const loadPrep = useCallback(async () => {
+    const r = await fetchPreparation(manuscriptId);
+    setPrep(r.ok ? { phase: 'ready', state: r.state } : { phase: 'error' });
+  }, [manuscriptId]);
+
+  useEffect(() => { loadPrep(); }, [loadPrep]);
+
   /* The selected reading — read on selection, never on a timer. */
   useEffect(() => {
     if (!selectedId) { setPayload(null); setReadingPhase('idle'); return; }
@@ -216,6 +259,46 @@ export default function DevelopRoom({
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
     await loadList(outcome.readingId);
+  };
+
+  /**
+   * ONE GESTURE, TWO CANONICAL PATHS. A Work with no draft is prepared by the
+   * SAME draft-creation call Write has always made — `beginDraft`, unchanged
+   * and unwrapped. A legacy draft is prepared by the conversion boundary,
+   * carrying the digest of the divergence the member was just shown. Neither
+   * path is reimplemented here, and this room mints no lifecycle of its own.
+   */
+  const prepare = async () => {
+    if (prep.phase !== 'ready') return;
+    const copy = preparationCopy(prep.state);
+    if (!copy?.act) return;
+
+    setPreparing({ phase: 'working' });
+
+    if (copy.act === 'begin_draft') {
+      const begun = await beginDraft(apiFetch, manuscriptId);
+      if (begun.kind !== 'ok' && begun.kind !== 'exists') {
+        setPreparing({ phase: 'refused', refusal: begun.kind });
+        return;
+      }
+    } else {
+      /* The disclosure travels with the confirmation. `convertible` is the
+         only state that carries one, and the only state whose copy offers
+         `convert` — so this narrowing cannot be wrong without the resolver
+         being wrong first. */
+      if (prep.state.kind !== 'convertible') { setPreparing({ phase: 'idle' }); return; }
+      const done = await confirmPreparation(manuscriptId, prep.state.disclosure);
+      if (!done.ok) {
+        setPreparing({ phase: 'refused', refusal: done.refusal, detail: done.detail });
+        /* A stale disclosure is not an error to sit in: re-read so the member
+           sees the state that actually holds and confirms THAT one. */
+        if (done.refusal === 'disclosure_stale') await loadPrep();
+        return;
+      }
+    }
+
+    setPreparing({ phase: 'idle' });
+    await loadPrep();
   };
 
   // ---- Signed out ---------------------------------------------------------
@@ -314,9 +397,62 @@ export default function DevelopRoom({
             </ul>
           )}
 
+          {/* ── PREPARATION. What state this Work is in, said before the ask
+              rather than discovered through a refusal, and the one act that
+              moves it. Three states, three sentences — never one sentence
+              that contradicts the outline in Write. ── */}
+          {listPhase === 'ready' && prep.phase === 'ready' && prep.state.kind !== 'ready' && (() => {
+            const copy = preparationCopy(prep.state);
+            if (!copy) return null;
+            return (
+              <div
+                className="mt-7 pt-5 border-t"
+                style={{ borderColor: PRESS.ruleSoft }}
+                data-develop-preparation={prep.state.kind}
+              >
+                <p className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-3">{copy.title}</p>
+                {copy.body.map((para, i) => (
+                  <p key={i} className="text-[12.5px] leading-relaxed opacity-65 mb-2.5">{para}</p>
+                ))}
+                {copy.action && (
+                  <button
+                    onClick={prepare}
+                    disabled={preparing.phase === 'working'}
+                    aria-busy={preparing.phase === 'working'}
+                    data-develop-prepare={copy.act ?? undefined}
+                    className="text-[13px] underline underline-offset-4 opacity-80 hover:opacity-100 disabled:opacity-40 disabled:no-underline"
+                  >
+                    {preparing.phase === 'working' ? 'preparing…' : copy.action}
+                  </button>
+                )}
+                {preparing.phase === 'refused' && (
+                  <div className="mt-3" role="status" data-develop-prepare-refused={preparing.refusal}>
+                    <p className="text-[12.5px] leading-relaxed opacity-75">
+                      {preparing.refusal === 'disclosure_stale'
+                        ? 'This draft changed while you were reading this, so nothing was prepared. What it says now is up to date — confirm again to continue.'
+                        : 'This Work could not be prepared, and nothing has changed.'}
+                    </p>
+                    <p className="text-[11px] opacity-40 mt-1">refused: {preparing.refusal}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {prep.phase === 'error' && listPhase === 'ready' && (
+            <div className="mt-7 pt-5 border-t" style={{ borderColor: PRESS.ruleSoft }} role="status">
+              <p className="text-[12.5px] leading-relaxed opacity-65">
+                Whether this Work is ready to be read could not be established just now. Nothing has
+                changed, and your work is unaffected.
+              </p>
+            </div>
+          )}
+
           {/* ── THE INVOCATION. The lens and the member's identity go up the
-              wire; nothing about the Work does. ── */}
-          {listPhase === 'ready' && (
+              wire; nothing about the Work does. Offered only where a reading
+              can actually happen: an invitation to an act that is certain to
+              refuse is not an invitation. ── */}
+          {listPhase === 'ready' && prep.phase === 'ready' && prep.state.kind === 'ready' && (
             <div className="mt-7 pt-5 border-t" style={{ borderColor: PRESS.ruleSoft }}>
               <p className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-3">Ask for a reading</p>
               <fieldset disabled={commission.phase === 'reading'} className="space-y-1.5 mb-4">

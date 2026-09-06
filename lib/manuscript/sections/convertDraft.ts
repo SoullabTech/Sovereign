@@ -42,6 +42,7 @@
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { classifyDraft } from './draftProof';
 import { assertRoundTrip, type DraftSection } from './seedInvariant';
+import { disclosureDigest } from './conversionDisclosure';
 
 export type ConversionRefusal =
   | 'draft_not_found'
@@ -50,7 +51,9 @@ export type ConversionRefusal =
   | 'boundary_moved'
   | 'boundary_offsets_incomplete'
   | 'leading_text_before_first_boundary'
-  | 'already_converted_inconsistently';
+  | 'already_converted_inconsistently'
+  /** The draft moved between the disclosure the member saw and this call. */
+  | 'disclosure_stale';
 
 export interface ConversionResult {
   status: 'converted' | 'already_converted' | 'refused';
@@ -166,6 +169,17 @@ export function planConversion(
 export async function convertDraftToSections(
   manuscriptId: string,
   memberId: string,
+  /**
+   * The digest of the state a member was SHOWN, when this conversion is a
+   * member confirmation rather than a mechanically-authorised upgrade.
+   *
+   * Checked AFTER the row lock, which is the only place it can be checked
+   * truthfully: computing it in the route before this transaction leaves a
+   * window in which a save lands and the conversion proceeds against a state
+   * nobody disclosed. Omitted for the 2026-08-30 tell-rather-than-ask path,
+   * where no disclosure was made and none is being verified.
+   */
+  expectDisclosure?: string,
 ): Promise<ConversionResult> {
   return transaction(async (tx: TransactionClient) => {
     /* Lock the draft for the whole transaction. Everything below is proven
@@ -190,6 +204,30 @@ export async function convertDraftToSections(
       } as ConversionResult;
     }
     const draft = draftRes.rows[0];
+
+    /* ── The disclosure, re-derived under the lock. A member-confirmed
+       conversion is only as honest as the state the member was shown, and
+       that state is proven HERE or not at all. Checked before idempotency so
+       a stale confirmation is never answered with `already_converted` — that
+       would report success for a conversion the member did not authorise. */
+    if (expectDisclosure !== undefined) {
+      const sourceCount = await tx.query<{ n: string }>(
+        `SELECT count(*)::text AS n FROM manuscript_sections WHERE manuscript_id = $1`,
+        [manuscriptId],
+      );
+      const actual = disclosureDigest({
+        version: Number(draft.version),
+        content: draft.content,
+        sourceSections: Number(sourceCount.rows[0]?.n ?? 0),
+      });
+      if (actual !== expectDisclosure) {
+        return {
+          status: 'refused',
+          refusal: 'disclosure_stale',
+          detail: 'the draft changed after the divergence was shown',
+        } as ConversionResult;
+      }
+    }
 
     /* ── Idempotency. Re-running must be safe, and must not paper over a
        disagreement it finds. */
