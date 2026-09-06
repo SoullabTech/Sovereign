@@ -100,6 +100,92 @@
 }
 
 # Local development - no TLS
+# ── Security: refuse client-asserted authorization headers ────────────────────
+# middleware.ts derived roles/tier from these headers, which any caller can set.
+# Defence in depth only — the authoritative fix is server-side session derivation.
+# ── Containment: route disabled at the edge (2026-07-28) ──────────────────────
+# /api/members/migrate-data accepts caller-chosen source AND destination member
+# ids with no session resolution, and is absent from ACCESS_RULES (so the
+# permissive unmapped-route default exposes it). Denied here pending application
+# remediation. This BREAKS server-to-server onboarding linkage from
+# /api/members/register-local — an accepted, deliberate containment consequence.
+#
+# WARNING: removing this snippet RE-EXPOSES an unauthenticated cross-account
+# data-transfer primitive. Do not restore a Caddyfile backup older than
+# 2026-07-28 18:39Z without re-adding it.
+(deny_disabled_routes) {
+    @disabled_routes path /api/members/migrate-data /api/members/migrate-data/
+    handle @disabled_routes {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    # Commons contribution MUTATION surface (2026-07-28). These routes authorize
+    # on a caller-supplied memberId/curatorId rather than a verified session
+    # actor: PUT/DELETE compare `created_by !== memberId` where memberId comes
+    # from the body or query string. The family is currently unpopulated
+    # (commons_contributions = 0 rows), so denying mutation disrupts no live use
+    # — but the first contribution would be vulnerable with no new deployment.
+    # Reads stay open: the public browse surface is unaffected.
+    #
+    # This DISABLES contribution mutation. It does not fix the defect.
+    # Practitioner client DELETE (2026-07-28). Authorizes on a ?practitionerId=
+    # query parameter with no session resolution, then permanently deletes a
+    # client record belonging to a practitioner (third-party PII; 13 rows in
+    # production). No in-repo UI invokes deletion -- the Clients page only lists
+    # and creates -- so denying it disrupts no live workflow.
+    # This DISABLES client deletion. It does not fix the defect.
+    @stellium_client_delete {
+        path /api/stellium/clients/*
+        method DELETE
+    }
+    handle @stellium_client_delete {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    @commons_mutation {
+        path /api/commons/contributions /api/commons/contributions/*
+        method POST PUT PATCH DELETE
+    }
+    handle @commons_mutation {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+    # Conversation export (2026-08-14). TEMPORARY CONTAINMENT — retirement in flight.
+    # GET/POST /api/conversations/export take the subject identity from caller input
+    # (?userId= on GET, body.userId on POST) and query on it directly, with no session
+    # resolution: zero getCurrentSession/requireAuth/verifySession in the route, and no
+    # middleware gate on /api/conversations/*. Any caller could name any member.
+    #
+    # Currently non-disclosing ONLY because it reads `conversation_messages`, a table
+    # absent from production, so it 500s. That is accidental containment, not a boundary.
+    # It DOES presently leak internal schema error text in the `details` field.
+    # Repointing it at the live store (conversation_turns, 39,956 rows) would make it an
+    # unauthenticated cross-member conversation dump with no new control removed.
+    #
+    # The route is DELETED in the retirement lane; this deny exists only because the
+    # serving artifact (8ca322891) still contains it.
+    #
+    # REMOVAL CONDITION: the deployed artifact independently proves
+    # /api/conversations/export absent. Do NOT remove this on the strength of the
+    # source-side deletion alone.
+    #
+    # This DISABLES the endpoint. It does not fix the defect.
+    @conversations_export path /api/conversations/export /api/conversations/export/
+    handle @conversations_export {
+        respond "Endpoint disabled" 403 {
+            close
+        }
+    }
+
+}
+
+
 :80 {
     import deny_disabled_routes
     @streaming {
