@@ -27,6 +27,14 @@ import type { ReactNode } from 'react';
  *   - temporal memory added under Vision, and "MAIA has temporal memory"
  *     added to the withheld claims. No schema, no runtime, no lane.
  *
+ * 2026-09-06 research framing addition, traced to the active
+ * JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01 programme:
+ *   - Elemental Consciousness named as an AI-facing parallel-processing
+ *     hypothesis rather than a personality taxonomy or neurological mapping
+ *   - differentiation-before-synthesis and Field-as-relationship made explicit
+ *   - the centrifugal relationship criterion named as direction, not effect claim
+ * No runtime authority is added here.
+ *
  * Server component on purpose: outward claims and nothing else — no client
  * state, no auth, no member data. Register rule (2026-07-10 landings audit):
  * a sentence leads with what a thing is; negation lands after the positive.
@@ -774,6 +782,11 @@ export default function AccountedForPage() {
             </ul>
             <P>From the <strong className="text-soullab-text-primary">Anti-Features</strong> register, which holds permanent exclusions rather than a backlog: no &ldquo;MAIA knows you best&rdquo; messaging, no relationship replacement, no A/B testing on emotional content, no streaks or pull-back notifications.</P>
 
+            <H3>A relationship that points beyond itself</H3>
+            <P>Soullab&apos;s active Human Experience R&amp;D programme is testing a stricter criterion for human&ndash;AI relationship: MAIA should be fully present in the encounter, while the health of the relationship is judged partly by what becomes possible for the person beyond MAIA. The current phrase is <em>centrifugal in consequence, not in posture</em>. Presence is not the problem; capture is.</P>
+            <Quote>Fully present in the encounter; judged by what the encounter makes possible after.</Quote>
+            <P>This is a research direction, not a Live effect claim. The first adversarial inquiry sharpened it rather than proving it: short-term support, long-term dependence, human-network thickness, motive for use, and perceived personhood cannot be collapsed into one story about &ldquo;AI companionship.&rdquo; For someone with little human field to return to, the design question is different again: bridge, practice and accompaniment may matter more than redirection. That boundary is still open and is not smoothed over here.</P>
+
             <H3>How that is enforced rather than promised</H3>
             <P>All relational tone passes through one component, the Conductor, whose rule is <em>&ldquo;all layers may suggest; only the Conductor decides.&rdquo;</em> It carries hysteresis so MAIA&apos;s register does not twitch turn to turn in response to the member&apos;s intensity. Sovereignty-return logic lives there, rather than in a system prompt that can be talked around.</P>
             <P>MAIA also carries a public Promise with a companion audit document that expands each commitment into checkable terms. A repository verifier prints each constitutional check as LIVE or PENDING, and it is honest enough to mark the purely behavioral claims as PENDING.</P>
@@ -856,6 +869,12 @@ export default function AccountedForPage() {
             <P>All of these intelligences may contribute; none owns the answer. The task of cognition is to discern what belongs in this particular encounter. Memory is one movement inside that sequence, not the whole of it.</P>
             <P>The charter&apos;s own summary of where this stands: <em>every box already exists in some form; almost none of the arrows have been established.</em> The boxes are the Live and Designed rows on this page. The arrows are the work. That is why the first unit of the program is a read-only census of the organism, with a written stop rule that finding a defect during the census does not create permission to repair it.</P>
 
+            <H3>Differentiation before synthesis</H3>
+            <P>Human experience is not a single transparent stream. A person may think one thing, feel another, describe a bodily response that points somewhere else, and want something that conflicts with all three. The active Human Experience R&amp;D programme is testing whether MAIA can preserve these concurrent processes long enough to understand their relationship, rather than reducing the person to the clearest sentence they happened to say.</P>
+            <P>The Elemental hypothesis is therefore being investigated as machine-facing architecture rather than as a personality system: Fire as provisional signals of will, desire and movement; Water as affect, attachment and relational resonance; Earth as embodied and material reality; Air as language, narrative and explicit cognition. Field / Aether is not treated here as a fifth content bucket, but as the changing relationship among the differentiated streams &mdash; tension, consonance, inhibition, amplification, transition and emerging coherence.</P>
+            <Quote>Differentiation before synthesis: contradiction may be information, not an error to eliminate.</Quote>
+            <P>This is research, not a claim that MAIA has privileged access to an unconscious truth, and not a neurological mapping of the Elements. Whole Brain, hemispheric and corpus-callosal models, embodied cognition and related traditions are comparative heuristics for the inquiry, not proof of Spiralogic. MAIA may eventually notice discrepancies and inquire into them; it may not declare that an Element or hidden process knows the &ldquo;real&rdquo; answer. The live parallel-emission substrate named above proves only that differentiated contributors can be recorded on a turn. Whether an Elemental parallel-process architecture improves human understanding, attunement or development remains to be tested.</P>
+
             <H3>What this changes about the center</H3>
             <P>The language model participates primarily in cognition; it does not constitute the cycle. Memory may inform the encounter without owning it. Spiralogic may reveal a dimension of experience without imposing a diagnosis. Relational intelligence may sense something important without demanding it be spoken. Symbolic material may remain completely silent. The essential intelligence lies increasingly in discernment: what this particular moment with this particular person can bear, and what form of participation, if any, actually serves.</P>
             <P>This is what decentralizing MAIA means, and it is worth stating precisely. MAIA is the intelligence. The model, memory, Spiralogic, the corpus, relationship modeling, and the voice are the systems that support her intelligence; each participates when the encounter calls for it and stays latent when it does not. None of those systems is the sovereign center, and neither is MAIA&apos;s own conversational presence, because the member is the organizing reality to which the intelligence must continually answer. MAIA is the presence through whom that intelligence meets a person; she is not the container into which a life must be moved.</P>
@@ -867,7 +886,9 @@ export default function AccountedForPage() {
           </Section>
 
           <Section eyebrow="Beyond the conversation" heading="What Soullab is, around MAIA">
-            <P>MAIA is the relational presence; Soullab is the developmental environment she lives in. Spiralogic is the mapping layer: five elements (Fire, Water, Earth, Air, Aether), twelve phases, a spiral rather than a ladder. Operationally today, Spiralogic is a prompt anchor plus a small state vector (element, phase, motion, intensity) that the Conductor smooths across turns. The full orchestrator is partially active. It is a map the member can consult, rather than an engine that diagnoses where you are.</P>
+            <P>MAIA is the relational presence; Soullab is the developmental environment she lives in. <strong className="text-soullab-text-primary">That is why the name is Soul Lab.</strong> The laboratory is the inquiry into what happens when human interiority meets intelligence: thought, feeling, body, will, symbol, relationship, memory and context can all be active at once, often without forming one immediately coherent story. &ldquo;Soul&rdquo; here names the irreducible human whole the architecture is trying not to flatten; it is not offered as a neuroscientific variable.</P>
+            <P>Spiralogic is the mapping layer: five elements (Fire, Water, Earth, Air, Aether), twelve phases, a spiral rather than a ladder. Operationally today, Spiralogic is a prompt anchor plus a small state vector (element, phase, motion, intensity) that the Conductor smooths across turns. The full orchestrator is partially active. The next research question is stronger than the current implementation: whether the Elements can function as differentiated, concurrent interpretive fields for AI &mdash; preserving cognitive, affective, somatic, volitional and relational signals without turning them into permanent traits or pretending that one stream contains the hidden truth of the person.</P>
+            <P>The intended developmental direction is not for MAIA to understand the person instead of the person understanding themselves. It is for the encounter to make more of the person&apos;s own complexity available to awareness, while leaving authorship and authority with the person. The Elements do not need to become the member&apos;s vocabulary for that to happen.</P>
             <Table headers={['Surface', 'What it is', 'Status']} rows={SURFACES} />
           </Section>
 
@@ -906,6 +927,8 @@ export default function AccountedForPage() {
                 'That the application is offline-capable. Cognition is external on every ordinary turn, and a build still reaches a third party for typefaces.',
                 'That a green gate means a clean program. The type gate measures regression against a baseline, and this page quotes it only that far.',
                 'That MAIA has temporal memory. It has timestamps, age-sensitive retrieval, and validity columns that hold no history. The five questions temporal memory must answer are written down and not yet answerable.',
+                'That Elemental parallel processing is scientifically validated, maps one-to-one onto brain anatomy, or already governs MAIA’s responses. It is an active programme hypothesis. The live parallel-emission substrate is an audit trail, not proof of the hypothesis.',
+                'That Soullab has proved a centrifugal human–AI relationship design improves human relationships beyond the AI. It is a design criterion to be tested, not a measured outcome claim.',
               ].map((v) => (
                 <li key={v} className="border-l border-soullab-border-strong py-2 pl-4">{v}</li>
               ))}
@@ -926,7 +949,7 @@ export default function AccountedForPage() {
           </Section>
 
           <footer className="mt-12 border-t border-soullab-border-subtle pt-6 text-[0.88rem] italic text-soullab-text-muted">
-            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for the temporal-memory measurement and the claim it withholds. Every Live label above is answerable to a code path, a migration, or a dated production report. If a label turns out to be wrong, the label changes, not the story.
+            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for temporal memory, the Human Experience R&amp;D framing, the centrifugal relationship criterion, and the Elemental parallel-processing hypothesis. Every Live label above is answerable to a code path, a migration, or a dated production report. Research direction is named as research. If a label turns out to be wrong, the label changes, not the story.
           </footer>
         </div>
       </div>
