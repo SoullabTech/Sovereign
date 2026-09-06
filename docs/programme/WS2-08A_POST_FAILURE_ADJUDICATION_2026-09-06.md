@@ -4,8 +4,10 @@
 > implementation change. `F6b = FAIL · R5` is permanent and is NOT reclassified by this record.
 > BUILD-08B remains HOLD · UNOPENED until 08A is lawfully closed.**
 >
-> **The criterion in §4 is written in frozen form — fixed before any F1–F3 evidence exists — but it
-> becomes binding only on founder acceptance of this record. F1–F3 do not resume before that.**
+> **The criterion in §4 is written in frozen form and becomes binding only on founder acceptance of
+> this record; F1–F3 do not resume before that. It is NOT outcome-blind — §6 discloses that its
+> corrected predicate was observed during review, and states exactly what freezing does and does not
+> repair.**
 
 ```text
 UNIT        WS2-08A  HIERARCHICAL MANUSCRIPT STRUCTURE (substrate cut)
@@ -131,9 +133,11 @@ MIG_XID = the single common normal xmin of the five catalog objects the migratio
   pg_description   comment on heading_signal
 ```
 
-Five independent objects converging on one xid is what makes the identification defensible: a single
-object could be coincidental, five cannot. If they do not agree, MIG_XID is not established and SC-1
-is unavailable — not approximated.
+The five equal `xmin`s establish that these five catalog objects were written by ONE transaction;
+their chronology relative to the separately written ledger row identifies that transaction as the
+migration's. Equal `xmin`s alone would prove common authorship without naming which transaction in
+history it was — the ledger row, necessarily later (§4.2 above), supplies that. If the five do not
+agree, MIG_XID is not established and SC-1 is unavailable — not approximated.
 
 ```text
 SC-1 PASSES when, for every one of the 810 baseline ids:
@@ -158,9 +162,15 @@ P1  every baseline tuple and every migration-reference tuple exposes a NORMAL
     releases. An earlier draft of this criterion had the freeze semantics backwards
     and would have disqualified admissible evidence.
 
-P2  all five catalog objects in 4.2 exist and their xmin values are IDENTICAL;
-    that common value is MIG_XID. The schema_migrations row must exist but is
-    NOT used as MIG_XID.
+P2  all five migration-reference catalog tuples exist and expose the same normal
+    xid = MIG_XID;
+
+    the schema_migrations row exists, exposes a normal xid, and is strictly
+    YOUNGER than MIG_XID within the P5 half-range.
+
+    The ledger xid is CHRONOLOGY CORROBORATION ONLY; it is never MIG_XID.
+    (Observed on production: MIG_XID 324271, ledger xmin 324272 — the expected
+    relation, from the runner's separate invocation.)
 
 P3  the 810 baseline ids are all present and still byte-identical in projection,
     re-established at reading time and not carried from the F6b run
@@ -224,18 +234,27 @@ MIG_XID                        324271
 baseline older than MIG_XID    810 / 810   ·  same xid 0  ·  newer xid 0
 ```
 
-**This is pre-freeze review evidence and is INADMISSIBLE as SC-1 acceptance evidence.** It was taken
-before the criterion was frozen, and a criterion is only prospective if no result under it exists
-when it is fixed.
+**SC-1 is NOT outcome-blind.** Its corrected predicate was observed during review, before freeze.
+That has to be said plainly, because the alternative is a record that claims a standard it does not
+meet:
 
-The mitigating fact, stated without leaning on it: the *semantic* rule — every baseline version
-predates the migration transaction — was written before this read, and the repair replaced a false
-proxy for "the migration transaction" with the transaction itself rather than changing what is
-claimed. That is why the criterion is amendable rather than void. It does not make the reading
-admissible.
+```text
+SC-1 is not outcome-blind: its corrected predicate was observed during review
+before freeze.
 
-**The acceptance witness must be taken fresh, after freezing.** If it disagrees with the reading
-above, the fresh reading governs and the disagreement is itself a finding.
+That observation is inadmissible as the acceptance witness.
+
+The semantic criterion predates that observation, and the instrument correction
+was required by a discovered false-PASS defect rather than selected from the
+observed outcome.
+
+Freezing now makes the criterion binding; it does not make the prior observation
+unseen or prospective.
+```
+
+So the fresh post-freeze reading is the **acceptance** reading — it is **not** an independent blind
+replication, and must never be described as one. If it disagrees with the observation above, the
+fresh reading governs and the disagreement is itself a finding.
 
 ---
 
