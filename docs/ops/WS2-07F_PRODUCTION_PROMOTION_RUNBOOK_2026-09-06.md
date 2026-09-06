@@ -87,7 +87,7 @@ FULL vs QUICK      pre-deploy-gate.sh deploy-maia rebuilds only the maia service
                    snapshot.
 MIGRATION FAILURE  cmd_deploy does NOT abort on it. It warns, prints "Deployment complete!" and runs
                    smoke anyway — so a migration is never evidenced by the deploy's own success
-                   message. Verify it independently (§3).
+                   message. Verify it independently — the reads are in §3.
 UNADJUDICATED      after any migration ERROR the database state is unadjudicated: each file runs
                    transactionally with ON_ERROR_STOP=1, so a failure inside the file rolls back, but
                    the migration's own COMMIT can succeed and the SEPARATE schema_migrations INSERT
@@ -267,9 +267,11 @@ Recorded because the runbook should not repeat a claim it cannot verify:
    gates and its own production walk**, and a PASS or a WARN on that line says nothing about this
    unit either way.
 
-2. **`deploy` continues past a failed migration** (§5). This is the single largest hazard in
-   promoting a schema-bearing commit through this path, which is why §6 verifies the migration
-   independently rather than trusting the deploy's own success message.
+2. **`deploy` continues past a failed migration** — retained in §1, where the rest of that path is.
+   It is the single largest hazard in promoting a schema-bearing commit this way, which is why §3
+   verifies the migration independently rather than trusting the deploy's own success message. It is
+   also why §0's ledger read matters: `schema_migrations` carrying the 07F filename is what
+   establishes the migration applied, not the fact that a deploy reported success.
 
 ---
 
@@ -340,7 +342,8 @@ deployment left for this lane to authorize.
 
 ```text
 no retroactive authorization of the deployment that crossed §2
-no execution · no production database contact · no minisforum action
+no production MUTATION · no further production action
+  (§0 IS grounded in production database contact — read-only queries, run by the founder)
 no deploy or migrate instruction — those acts are done (§1)
 no migration edit · no implementation edit
 no 07F closure — the acceptance walk (its own spec) comes first, then a founder act

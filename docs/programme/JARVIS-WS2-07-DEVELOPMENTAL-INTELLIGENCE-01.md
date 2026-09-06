@@ -6,10 +6,12 @@
 > adjudication and design are canonical and accepted; implementation was authorized falsification-first
 > and passed two founder source reviews (four repairs, then two blockers: the late-conflict refresh
 > path and a raw-SQL bypass of the D5/D6 import gate). **PR #1229 (Class B) merged as `cb557b8fb`
-> with exact-head CI 8/8 on `54776ed5d`; canonical is now `cb557b8fb`.** Records:
+> with exact-head CI 8/8 on `54776ed5d`; canonical has since moved through `ccd1c50ce` to
+> `66da58b4c`, which is what production runs.** Records:
 > `docs/programme/WS2-07-BUILD-07F_IMPLEMENTATION_WITNESS_2026-09-06.md` (§8 post-merge state),
-> `docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md` and
-> `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md` — both PREPARED, NOT RUN.
+> `docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md` — now a promotion RECORD, since the
+> promotion happened — and `docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md`,
+> retargeted to the deployed runtime and NOT STARTED.
 >
 > ```text
 > SOURCE / CI            ACCEPTED · MERGED as cb557b8fb · CI 8/8
@@ -40,10 +42,11 @@
 > the walk to create events. **`standing_events = 0`** is what keeps that decision clean; W3 ends it.
 > There is no deployment left for this lane to authorize.
 >
-> The promotion runbook carries an unchecked founder consent item: 07F's migration adds a
-> `BEFORE DELETE` trigger to the existing `developmental_readings` table (direct reading deletion
-> refused while its Work exists; whole-Work cascade preserved). That behaviour change is authorized
-> at deploy time, not by the merge.
+> The behaviour change that consent item reserved — a `BEFORE DELETE` trigger on the existing
+> `developmental_readings` table, refusing direct reading deletion while its Work exists and
+> preserving whole-Work cascade — is now LIVE, applied before the act. Runbook **§2.1** holds that
+> never-given checkpoint, permanently unchecked as the record of the sequence; runbook **§2.2** holds
+> the live authority, which is prospective and gates the WALK rather than a deploy.
 >
 > **07E's closure evidence: `docs/programme/WS2-07-BUILD-07E_DIALOGUE_CLOSURE_2026-09-05.md` (the walk W1–W9, bound to `6ff0beafc`, with two retained production artifacts named in §3). Its boundary and build records sit beside it. The lesson worth carrying into 07F: the anchored-ask spine already existed in canonical, and reading canonical before designing is why 07E was an extension rather than a second conversation model.**
 >

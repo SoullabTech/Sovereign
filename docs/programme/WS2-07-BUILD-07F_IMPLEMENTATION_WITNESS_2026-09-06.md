@@ -481,22 +481,31 @@ the box stays unchecked as the record of the sequence. The act now open is prosp
 §2.2). Nothing in this unit's evidence changes; what changes is that promotion is no longer this
 lane's to authorize, only its acceptance is.
 
-One thing the interval demonstrated, stated as a design note and not as mitigation: during the
-window when it was unknown whether the table existed, the surface's failure mode was
-*"Your standing could not be reached"* with controls disabled — never a false "No standing taken."
-The unknown-vs-UNSET repair held under a condition no one designed for.
+A design note, and no stronger than this. **Source inspection establishes the counterfactual failure
+posture: if the standing resource were unavailable, the client would render UNKNOWN with disabled
+controls rather than UNSET. This was NOT exercised by the observed production interval, because the
+table was present.** The earlier phrasing here said the interval demonstrated it and that the repair
+held; it did neither. That would have laundered a code inference into runtime evidence — the exact
+move this lane spent three reviews refusing — and W8 remains the witness that would actually
+establish it.
 
-The migration has not run against production; no standing event exists anywhere but the ephemeral
-laboratory. Promotion and the acceptance walk are prepared, not performed:
+The migration HAS run against production, and no standing event exists anywhere but the ephemeral
+laboratory: `standing_events = 0` at last read. The two records now serve different purposes than
+when they were written:
 
 ```text
 docs/ops/WS2-07F_PRODUCTION_PROMOTION_RUNBOOK_2026-09-06.md
+    a promotion RECORD, not an instruction — §2.1 holds the never-given checkpoint,
+    §2.2 holds the live prospective authority
+
 docs/programme/WS2-07-BUILD-07F_ACCEPTANCE_WALK_SPEC_2026-09-06.md
+    retargeted to the deployed runtime 66da58b4c; NOT STARTED; W3 onward gated on §2.2
 ```
 
-The runbook carries an **unchecked founder consent item**: the migration adds a `BEFORE DELETE`
-trigger to the existing `developmental_readings` table. That behaviour change is authorized by a
-deliberate act at deploy time, not by the merge.
+**There is no deployment left for this lane to authorize.** The act now open is §2.2: acknowledge
+that the migration was applied before its consent checkpoint, decline to authorize that deployment
+retroactively, and authorize the standing behaviour to remain in production and the walk to create
+standing events. Until that act, W1 (read-only) may be run and W3 may not.
 
 ---
 
@@ -513,4 +522,6 @@ nothing absorbed from the parked ledger
 no re-adjudication of Shape B, values, identity, CAS semantics, deletion semantics or D1–D7
 ```
 
-**The next act is the founder's: authorize production promotion of `cb557b8fb`, or not. Closure follows the walk; it is not granted by the merge.**
+**The next act is the founder's §2.2 decision. After it: #1228's retained production witness, if its
+own lane has not already completed it, then the frozen W1–W12b. Closure follows the walk; it was not
+granted by the merge, and it is not granted by the deployment that overtook it.**

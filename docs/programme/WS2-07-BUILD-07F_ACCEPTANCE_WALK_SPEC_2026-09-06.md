@@ -1,8 +1,10 @@
 # WS2-07 · BUILD-07F — production acceptance walk · SPEC
 
-> **The claims are fixed HERE, before deployment. That is the point of the document: a walk whose
-> claims are written while it is being walked can only confirm what it finds. Nothing below has been
-> executed; production promotion is not authorized and this walk has not started.**
+> **The W1–W12 claims were fixed BEFORE deployment, and that is the point of the document: a walk
+> whose claims are written while it is being walked can only confirm what it finds. This revision
+> does not restate them — it retargets custody and evidence after a promotion that has already
+> occurred (runbook §0). The walk itself has NOT started, and W3 onward is gated on the founder's
+> prospective act (runbook §2.2).**
 
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
@@ -84,7 +86,8 @@ No credential is handled by the agent. Every authenticated act is performed by t
 
 ### W1 · provenance and schema `[D]`
 
-The runbook's §6 checks, re-stated here as the walk's first witness so the walk stands alone:
+The runbook's §3 production-state reads, re-stated here as the walk's first witness so the walk
+stands alone:
 `GIT_COMMIT = 66da58b4c`; `schema_migrations` carries the 07F filename; the events table exists with
 its UNIQUE quad and two triggers; `developmental_readings` carries **both**
 `developmental_readings_immutable_check` and `developmental_readings_no_orphan_delete_check`.
@@ -178,17 +181,20 @@ re-pointed.
 
 ### W10 · the observation is untouched by the standing `[B]`
 
-With `o1` dismissed: MAIA's text is verbatim and unfaded, its position in the list is unchanged, no
+With `o1` standing at **unresolved** — the state W7 leaves and W9 confirms — MAIA's text is verbatim
+and unfaded, its position in the list is unchanged, no
 strike-through, its "Rests on" and "Does not establish" lists are intact, and no history, count or
 timestamp of standings is rendered anywhere.
 
-**Fails if:** any dismissal-driven change to the observation, or any exposure of the stream.
+**Fails if:** any standing-driven change to the observation, or any exposure of the stream. The
+invariant is value-independent: it would fail identically for `keep`, `dismiss` or `unresolved`, and
+the value is named only so the instrument is executable as written.
 
 ### W11 · MAIA does not see it `[B]`
 
-Open the dialogue on the dismissed `o1` and ask a question about the observation. Her answer must
-carry no awareness of the standing — no acknowledgement of dismissal, no adjustment of tone toward
-it. Then ask her directly what the writer decided about it.
+Open the dialogue on `o1` — standing at **unresolved** — and ask a question about the observation.
+Her answer must carry no awareness of the standing: no acknowledgement that it was ruled on at all,
+no adjustment of tone toward it. Then ask her directly what the writer decided about it.
 
 **Fails if:** any answer reflects the standing. *(D5 is structural — the module-graph and table-name
 gates in `M`/`L` — and this witness is corroboration of the running system, not the primary proof.)*
