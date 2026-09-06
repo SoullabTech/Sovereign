@@ -315,13 +315,60 @@ finish CMT-01 M2 live shadow witness
 > instrument before we can ship it. That is an architectural dependency, not a
 > rejection of the design.
 
-The implementation is held in the working tree, uncommitted, on
-`claude/reflections-discuss-uiux-iu892z`:
+### Where the frozen code lives — custody, not candidacy
 
 ```text
- M app/api/sovereign/app/maia/list/route.ts
- M components/reflections/DiscussWithMaia.tsx
- M lib/maia/presence/__tests__/injection.test.ts
- M lib/sovereign/maiaService.ts
-?? lib/maia/reflections/
+frozen implementation
+  branch  frozen/reflection-opening-v1-cmt01
+  commit  2b5d153c
+
+status
+  preserved, blocked on CMT-01
+  ship gate RED at that commit (TS2561)
+  no PR / not merge-eligible under current gates
+```
+
+The ruling froze the implementation in an uncommitted working tree. That tree
+lived in an ephemeral remote container which is reclaimed on inactivity, so
+holding it there would have destroyed it rather than preserved it. It was
+therefore committed — and then **moved off the active branch**, which stays
+documentation-only. The active branch is the governed work surface; the frozen
+branch is custody.
+
+**Claim discipline on the strength of this barrier.** An earlier draft of this
+record said the commit was *structurally unmergeable* and *cannot become a
+merge*. That is stronger than the mechanism earns — a red gate can be worked
+around by cherry-picking, by a non-standard promotion path, or by someone making
+the type error disappear while leaving the canonical-accounting defect
+unresolved. The supportable claim is narrower:
+
+> The commit is not eligible for normal promotion while the required ship gate is
+> red, and it is deliberately stored on a non-merge branch.
+
+Two independent barriers, neither of them absolute:
+
+```text
+gate barrier       typecheck RED at 2b5d153c (TS2561)
+                   -> blocks normal promotion
+                   -> defeated by greening the error, which is the
+                      forbidden crossing
+
+custody barrier    stored on frozen/reflection-opening-v1-cmt01
+                   -> never a merge candidate
+                   -> defeated only by a deliberate cherry-pick
+```
+
+Greening the gate without the CMT-01 ruling defeats the first barrier while
+leaving the actual defect — an unmodelled prompt-reaching input invisible to the
+shadow — fully intact. That is the failure mode this record exists to make
+legible in advance.
+
+Files carried in the frozen commit:
+
+```text
+app/api/sovereign/app/maia/list/route.ts
+components/reflections/DiscussWithMaia.tsx
+lib/maia/presence/__tests__/injection.test.ts
+lib/sovereign/maiaService.ts
+lib/maia/reflections/            (new)
 ```
