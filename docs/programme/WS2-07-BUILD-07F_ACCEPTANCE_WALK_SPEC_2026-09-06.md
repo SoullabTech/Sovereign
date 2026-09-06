@@ -47,7 +47,8 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                    W5               PASS 2026-09-06 — the first act is unchanged, the second
                                     appended (see W4/W5 EVIDENCE below)
                    W6               PASS 2026-09-06 — the repeat wrote nothing
-                   W7               NOT COMPLETE — tab B's Unresolved was never written
+                   W7               ATTEMPT 1 INCONCLUSIVE — browser-context custody could not
+                                    be reconstructed; one-event re-attempt AUTHORIZED
                  W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
 
@@ -602,8 +603,68 @@ W6  REPEATING A STANDING WRITES NOTHING — PASS
     No third row. The no-op is genuinely a no-op: re-affirming a standing already held does not
     inflate a member's history with acts they did not intend.
 
-## W7 — NOT COMPLETE
+## W7 — ATTEMPT 1 INCONCLUSIVE · one-event re-attempt authorized
 
-The o1 stream stands at two events. W7 requires a third (`unresolved`) written from a SECOND tab,
-then a refused write from the first tab holding its stale token. Neither has occurred. The tab A / tab
-B setup is still required, and tab A must not be reloaded before it is attempted.
+```text
+W7 ATTEMPT 1     INCONCLUSIVE
+product defect   NOT ESTABLISHED
+product pass     NOT ESTABLISHED
+reason           browser-context custody cannot be reconstructed
+```
+
+**What happened.** A second context wrote `unresolved` at index 2 (17:55:04), and 44 seconds later a
+`keep` was ACCEPTED at index 3 (17:55:48) on the same reading and the same observation. W7's stated
+failure conditions read literally on that (write accepted, count reached four), but the finding
+cannot be attributed, because two incompatible explanations fit the same evidence:
+
+```text
+(a) the keep came from a second, UNTOUCHED window   → the guard failed. A real concurrency defect.
+(b) it came from the same context (or one that had
+    already adopted event 2)                        → its token was current, the write was lawful,
+                                                      and W7 was never actually exercised.
+```
+
+**Why it cannot be settled from the record.** The server guard is correct BY INSPECTION —
+`lib/manuscript/standing/store.ts:167-192` makes the INSERT conditional on
+`(SELECT id FROM cur) IS NOT DISTINCT FROM $4::uuid`, so a stale token writes zero rows and returns
+`stale_expectation`. The client cannot refresh passively: the standings lookup effect depends only on
+`[manuscriptId, selectedId]` — no focus listener, no visibilitychange, no polling. But NOTHING LOGS
+THE TOKEN: neither the standings route nor the store emits any `console.*`, so `expectedCurrentEventId`
+was never recorded anywhere. The row's existence proves only that the write was accepted, and the UI
+showed acceptance rather than the conflict sentence — which is true under BOTH branches.
+
+A cross-reading explanation was raised and ELIMINATED by the timeline: the `d527997e / o1 / keep`
+event is at 17:58:48, three minutes AFTER the disputed write, and is a separate incidental member act
+(like `o7`) that stays outside W7 entirely.
+
+**RULING (founder, 2026-09-06): not certain → run the one-event re-attempt.** Neither a product
+defect nor a product pass is established by attempt 1.
+
+**RE-ATTEMPT — arithmetic amended, invariant unchanged.**
+
+The original concrete arithmetic `keep → dismiss → unresolved` at indices 0,1,2 became UNUSABLE
+because attempt 1 added legitimate history. That history is not removable and is not to be removed.
+**The invariant under test has not changed:** *a writer holding an old event token may not append
+over a newer standing.* Only the concrete standings differ.
+
+```text
+R / o1 at re-attempt        0 keep · 1 dismiss · 2 unresolved · 3 keep  ← current
+
+window 1   open R, select o1, verify it reads keep, then LEAVE IT UNTOUCHED (token = event 3)
+window 2   a separate NORMAL window (not a tab; NOT Incognito — different auth context),
+           same R / o1, click Dismiss once → writes index 4. ONE permanent event.
+window 1   without reload, navigation or any intervening interaction, click Unresolved once
+           → MUST BE REFUSED, then show dismiss as current
+
+CLASSIFICATION
+  index 4 dismiss + stale Unresolved refused   → W7 PASS
+  index 5 unresolved appears                   → W7 FAIL · real concurrency defect
+```
+
+Refusals write nothing, so the whole test costs exactly ONE permanent event. Starting fresh on `o2`
+would have cost three before the test began, and would have moved off the pinned observation.
+
+**Consequence if (a) proves true.** 07F is not closed with a known stale-writer acceptance defect.
+The standing/decision feature would need fixing first or would sit outside any pilot boundary: the
+defect would live exactly where two browser contexts can silently disagree about a writer's explicit
+decision, which is the one thing this unit exists to prevent.
