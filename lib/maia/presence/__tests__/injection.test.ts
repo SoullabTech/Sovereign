@@ -14,6 +14,9 @@ import { decideInjection } from '../injection';
  * test and should be replaced by one if a renderer is ever configured.
  */
 
+// ACCEPTANCE NUMBERING: shared with place.test.ts — see the note there. Grep
+// BOTH files for the next free number before adding a case.
+
 const oracleSource = fs.readFileSync(
   path.join(__dirname, '../../../../components/OracleConversation.tsx'),
   'utf8',
