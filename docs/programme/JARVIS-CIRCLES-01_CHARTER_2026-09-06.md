@@ -180,9 +180,9 @@ This is the differentiating ambition. Building another community platform is not
 | Stage | Name | State |
 |---|---|---|
 | CIRCLE-00 | Existing-truth census (READ ONLY) | ✅ **COMPLETE** — `…_EXISTING_SUBSTRATE_CENSUS_2026-09-06.md` |
-| CIRCLE-01 | Research synthesis + **scale falsification** | ✅ **RETRIEVAL PASS RUN** — `…_RESEARCH_SYNTHESIS_2026-09-06.md`, `CIRCLE_SCALE_FALSIFICATION.md` |
-| CIRCLE-02 | Product constitution | ⛔ founder act required |
-| CIRCLE-03 | Boundary gate (verifier) | ⛔ blocked on CIRCLE-02 |
+| CIRCLE-01 | Research synthesis + **scale falsification** | ✅ **CLOSED** — `…_RESEARCH_SYNTHESIS…`, `CIRCLE_SCALE_FALSIFICATION.md`, `…_RESEARCH_SUPPLEMENT…` (R1–R11, founder continuation) |
+| CIRCLE-02 | Product constitution | 🟡 **OPEN — v0.1 DRAFT PRODUCED, HALTED BEFORE RATIFICATION** (`CIRCLE_PRODUCT_CONSTITUTION_v0.1_DRAFT.md`, §02A–02P) |
+| CIRCLE-03 | Boundary gate (verifier) | ⛔ **spec drafted, writing NOT authorized** — blocked on 8 Class-A rulings |
 | CIRCLE-04 | Invocation system | ⛔ blocked on CIRCLE-03 |
 | CIRCLE-05 | Living Circle, 2–20 | ⛔ |
 | CIRCLE-06 | **Fission · birth · morphology** (was: scale to 200) | ⛔ |
@@ -240,3 +240,48 @@ Master test (inherited from `CIRCLE_FIELD_DOCTRINE.md`, unchanged):
 
 DISCOVER outputs are delivered for **founder adjudication**. The lane halts at the
 Founder Decision Docket. It does not proceed to DECIDE or BUILD without an explicit founder act.
+
+
+---
+
+## 10. DISCOVER closed · CONSTITUTE opened (founder continuation, 2026-09-06)
+
+**DISCOVER research pass CLOSED.** Desk-research debt is closed for internal constitutional work
+(Supplement R10); full primary-source verification is still owed before any outward claim.
+⛔ **DISCOVER does not stay open to accumulate more papers.**
+
+**Amendment C — the research supplement.** `…_RESEARCH_SUPPLEMENT_2026-09-06.md`, R1–R11. Three
+findings change the programme:
+
+1. **R4 — D-06 corrected.** Contribute-before-see belongs to **structured inquiry**, not to ordinary
+   witnessing. Peripheral participation is a legitimate posture. The DISCOVER-v1 recommendation to
+   extend it to the shared feed is **withdrawn**; G-02 drops from 🔴 defect to a doctrine-wording
+   reconciliation. **The implementation was closer to correct than the doctrine wording.**
+2. **R7 — MAIA role differentiation.** AI mediation is **not** inherently corrupting (Habermas
+   Machine, 5,734 participants). Two roles carried forward without collapsing: **Field Witness**
+   (default) and **Common-Ground Mediator** (invoked only). Silent drift between them is the
+   failure mode.
+3. **R8 — production witness closes D-19.** 4 Circles · 4 memberships · 3 members · 0 shared
+   artifacts · 0 inquiries · 0 responses. **Every current Circle has exactly one active member.**
+   No multi-member relational activity exists to design from. Nothing in the substrate is Cat 6.
+
+**Strategic finding (R9):** *"helping people find relevant people"* is no longer differentiating —
+Circle.so and Mighty Networks already make AI-assisted member discovery first-class.
+**Soullab's distinct object is the deliberately bounded sovereign relational field.** Nobody in the
+comparison set makes that their primary object.
+
+**Stage sequence, as ruled:**
+
+```text
+DISCOVER ✅ → CONSTITUTE ← here → VERIFY → REPAIR → INVOKE → LIVE CIRCLE
+   → OBSERVE → CONSTELLATE → COMMONS → BRIDGE → COLLECTIVE MAIA
+```
+
+> We do not finish the philosophy before humans inhabit it. We constitute enough to make the field
+> safe and coherent, verify its boundaries, then use actual Circles as Soullab's research
+> laboratory for the questions scholarship cannot answer.
+
+**Standing prohibitions extended:** ratify no numerical size threshold · no headcount-triggered
+fission · do not write the verifier · do not modify `CIRCLE_FIELD_DOCTRINE.md` · do not build
+discovery, Constellations, or MAIA-in-Circle · do not repair any Class-B defect · do not touch
+production.
