@@ -201,3 +201,127 @@ Reflections  noticing -> canonical + continuable
 
 Same presence, different posture — the cross-field familiarity layer doing
 exactly the work it was separated out to do.
+
+---
+
+## Implementation FROZEN — architectural dependency on CMT-01 (2026-09-06)
+
+The build was carried out under the authorized scope above and stopped at a
+governance boundary before commit. **The design is not rejected. It is blocked
+on an instrument that cannot yet see it.**
+
+### State reached
+
+```text
+COMPLETE + GREEN   lib/maia/reflections/reflectionOpening.ts
+                   9 required tests + HARD STOP import test (64/64 in the suite)
+                   route seam detection (place=reflections + objectId + signal)
+                   server-authored instruction (client sends a signal, never text)
+                   truthful failure when noticed/asked cannot be parsed
+                   Continue with MAIA -> openMaia() with NO injection
+                   openMaiaWith removed (a second send was structurally possible)
+                   no file under lib/maia/canonical-turn/** modified
+```
+
+### Ship gate — one NEW diagnostic
+
+```text
+lib/sovereign/maiaService.ts:1790
+TS2561: Object literal may only specify known properties,
+        but 'reflectionOpeningAddendum' does not exist in type 'MaiaContext'.
+```
+
+Every other diagnostic on the touched routes is pre-existing baselined debt.
+
+### Why the one-line fix was NOT applied
+
+Adding `reflectionOpeningAddendum?: string` beside `placeAddendum?: string` in
+`MaiaContext` would make the gate green in seconds. It was refused because the
+compiler error is standing in for a constraint the compiler cannot express:
+
+```text
+reflection_opening_v1 reaches the FAST prompt as a new addendum.
+The canonical shadow does not model it — no producer, no mapping.
+
+lib/maia/canonical-turn/shadow.ts
+  LEGACY_META_KEY_TO_PRODUCER = { ... } as const satisfies Record<string, ProducerId>
+
+`satisfies` proves every listed key maps to a real producer.
+It does NOT prove the list covers MaiaContext.
+
+=> the allowlist is not exhaustive
+=> TypeScript would accept an unmodelled prompt-reaching input
+=> the live M2 shadow would keep reporting zeroDiff
+   while a real input to the turn sat outside the construction it witnesses
+```
+
+That is not a lint failure. It is the witness silently going partially blind
+during the exact window it is being trusted to be complete.
+
+### Founder ruling — WAIT
+
+Option 2. Explicitly declined:
+
+- **Option 3** (declare it out of scope of canonical accounting) — *"once it
+  enters the prompt and changes what the model is asked to produce, it is still
+  an input to the canonical turn."*
+- **Option 1** (decree the representation here) — deciding it outside CMT would
+  itself be the crossing this document forbids.
+
+> Do not add the one-line `MaiaContext` field merely to make TypeScript green.
+> The compiler error is currently doing us a favor: it keeps the unsound state
+> from becoming easy to ship.
+
+### The open question CMT must answer
+
+Is **response form**:
+
+```text
+(A) content participating in the turn
+    -> it needs a ProducerId and must pass through MIPA adjudication
+
+(B) a parameter of the cognition request
+    -> it sits alongside mode / requestedDepth / voiceProfile
+    -> it shapes what is asked, it is not one of the voices asking
+```
+
+Working instinct is **B** — the form of the answer is not itself a claimant on
+the answer. But instinct is not authority: CMT-01 owns this, and the ruling
+belongs to that lane.
+
+### Unfreeze sequence
+
+```text
+finish CMT-01 M2 live shadow witness
+  -> unfreeze the CMT lane (currently single-writer)
+  -> CMT rules: CognitionRequest parameter OR registered producer
+  -> represent response form canonically
+  -> resume reflection_opening_v1 against that representation
+  -> typecheck + 64 tests + new CMT parity tests
+```
+
+### Prohibitions in force until then
+
+1. **Do not widen the open `meta` channel** to slip the addendum through.
+2. **Do not invent a producer** outside CMT-01's registry authority.
+3. **Do not exempt response form from canonical accounting** because it is
+   inconvenient to model.
+
+### Preserved, not lost
+
+> Nothing we learned invalidates the Reflections design — noticing added,
+> continuation kept, one exchange, two presentations. We have discovered that
+> the requested form itself needs to become visible to the canonical-turn
+> instrument before we can ship it. That is an architectural dependency, not a
+> rejection of the design.
+
+The implementation is held in the working tree, uncommitted, on
+`claude/reflections-discuss-uiux-iu892z`:
+
+```text
+ M app/api/sovereign/app/maia/list/route.ts
+ M components/reflections/DiscussWithMaia.tsx
+ M lib/maia/presence/__tests__/injection.test.ts
+ M lib/sovereign/maiaService.ts
+?? lib/maia/reflections/
+```
