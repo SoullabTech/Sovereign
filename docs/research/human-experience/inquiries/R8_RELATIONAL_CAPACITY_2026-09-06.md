@@ -229,3 +229,23 @@ Every therapeutic RCT measured benefit and none measured this (D8–D10). The cr
 - Sweeps were instructed to seek evidence against the thesis. Three of four reported the AGAINST case as weaker on horizon, not on existence. That is Jarvis's reading of their reports, not a founder finding.
 - **Unitary-model check (charter §11, founder consequence 5):** R8 was run before the Elemental clarification landed. Its outcome constructs (loneliness, wellbeing, socialization, dependence) are relational-outcome measures and do not presuppose a unitary cognitive model. Two places where sources do: "perceiving the AI as a friend" (C6) and "companionship as primary use" (A4) treat motive as a single stated variable; a parallel-process reading would ask what else was moving in those users. Noted, not re-analysed.
 - Nothing in this document changes any MAIA behavior. §6 is proposed adjudication, awaiting ruling.
+
+---
+
+## 8 · Founder rulings (2026-09-06) — R8 ADJUDICATED
+
+| # | Decision (§6.7) | Ruling |
+|---|---|---|
+| 1 | P7-harm restatement | **ACCEPTED.** Refined harm model: **dose × motive × human network × perception.** Do not claim AI companionship simply "causes loneliness." |
+| 2 | "Centrifugal in consequence, not in posture" | **RATIFIED PROVISIONALLY.** MAIA does not need to be emotionally remote to protect sovereignty; she can be extraordinarily present. What she should not do is make herself the destination of that presence. |
+| 3 | Isolated members | **Different stance required:** not withdrawal from MAIA, but potentially **bridge + practice + accompaniment while preserving non-exclusivity.** (Stance ruling; design unauthorized.) |
+| 4 | P7 ↔ P9 | **COUPLED, NOT MERGED.** Relational displacement and counterfeit personhood interact but remain distinct phenomena. |
+| 5 | First experimental surface | **VOICE STAYS FIRST.** The transfer finding does not demote Voice; it suggests Voice may become a powerful relational-practice environment. |
+| 6 | R9 | **OPENED.** |
+
+**Criterion ratified as a programme criterion (founder):** *The health of a human–AI relationship
+should partly be judged by what happens to the human's capacity for relationship beyond the AI.*
+The field is not measuring this. Soullab will. (→ `measurements/`, headline row.)
+
+Outcome per charter Stage 14: **REFINE** (P7 harm model) · **ADOPT-provisional** (P7 design
+formulation) · **ADOPT** (criterion). Exit condition met; R9 opens.

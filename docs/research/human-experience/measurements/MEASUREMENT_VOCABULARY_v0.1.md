@@ -11,6 +11,7 @@ STATUS   Vocabulary only. No instrument exists. No member-facing survey is autho
 
 | Phenomenon | Measure (pair) | Dangerous proxy | Readiness |
 |---|---|---|---|
+| **Relationship beyond the AI** (RATIFIED programme criterion, founder 2026-09-06, after R8) | change in the member's capacity for relationship *outside* MAIA — human contact, difficult conversations attempted, reciprocity tolerated — paired with in-encounter presence (felt heard) | attachment intensity · return rate · "MAIA gets me" | **no instrument anywhere in the field** (R8: no therapeutic RCT measured it); needs consent design + longitudinal; R12 |
 | Understanding | felt understanding **and** correction rate / accuracy of reflection | "MAIA gets me" | needs instrument |
 | Attunement | adaptation and repair after mismatch | emotional mirroring | needs instrument + seeded-mismatch design |
 | Agency | goal ownership, refusal, correction, optionality | completion | partly measurable now (correction / refusal events exist in logs) — provenance check first |

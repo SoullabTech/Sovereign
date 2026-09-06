@@ -499,3 +499,75 @@ continuation; human complexity may require engineering something deliberately di
 an architectural proposition, not prompt language. **Recorded as Cat 1 held direction.** Its
 relation to the Deep-Intelligence Gate (one mind, convergence before cognition) and to CMT-01
 (canonical turn, single renderer) is a reconciliation question for whenever it is taken up, not now.
+
+---
+
+## 12 · R8 adjudicated · R9 opened · programme architecture named (founder, 2026-09-06)
+
+**R8 rulings** (full text: `docs/research/human-experience/inquiries/R8_RELATIONAL_CAPACITY_2026-09-06.md` §8):
+harm model **dose × motive × human network × perception** · "**centrifugal in consequence, not in
+posture**" provisionally ratified · isolated members: **bridge + practice + accompaniment**,
+non-exclusivity preserved · P7 ↔ P9 coupled, not merged · Voice stays the first experimental
+surface (as a relational-practice environment) · **R9 open**. Criterion ratified: *the health of a
+human–AI relationship should partly be judged by what happens to the human's capacity for
+relationship beyond the AI.* The field does not measure it; Soullab will.
+
+**Second governing sentence (founder — preserve alongside the Elemental sentence in §11):**
+
+> **MAIA may perceive multiplicity the human hasn't yet perceived, while remaining less
+> authoritative about its meaning than the human whose life it is.**
+> Conventional AI: *I detected X → therefore X.* MAIA: *I notice X, Y and Z moving differently →
+> perhaps something here deserves attention.*
+
+**Programme architecture (founder; Cat 1 — a map of alignment, not a claim of liveness):**
+
+```text
+                    SOUL LAB
+                       │
+       study of human ↔ intelligence
+                       │
+     ┌─────────────────┼─────────────────┐
+     │                 │                 │
+ HUMAN COMPLEXITY   RELATIONSHIP      DEVELOPMENT
+     │                 │                 │
+ Elemental          recognition       capacity
+ parallelism        attunement        transfer
+     │               repair             │
+ differentiation      trust             │
+ before synthesis     agency            │
+     └─────────────────┼─────────────────┘
+                       │
+                      MAIA
+                       │
+               RELATIONAL INTELLIGENCE
+                       │
+        not replacing human relationship
+                       │
+                       ↓
+                     LIFE
+```
+
+Subsystem readings under it (founder): Spiralogic = grammar for human multiplicity · Field
+Intelligence = sensitivity to relationships among simultaneous processes and between participants ·
+Memory = temporal continuity without yesterday's interpretation becoming today's identity ·
+Developmental Intelligence = how configurations change through time · Voice = timing, silence,
+interruption, rhythm, embodied expression · Relational Intelligence = how MAIA participates ·
+Sovereignty = who retains authority · Soullab = the laboratory in which the whole relationship is
+investigated.
+
+**Named territory (founder; Cat 1, names not things):** *The Soullab Science of Human–AI
+Relationship*, with Elemental Consciousness as one distinctive architecture within it. Candidate
+public vocabulary: human–AI relational intelligence · Elemental parallel processing ·
+differentiation before synthesis · relational sovereignty · calibrated trust · rupture and repair
+with AI · longitudinal relational memory · interactional presence · counterfeit personhood ·
+centrifugal relationship design · capacity transfer · human development through AI encounter.
+Each term earns its place by the claim ladder, not by being listed here.
+
+**First public text under the claim ladder:** PR
+[#1238](https://github.com/SoullabTech/Sovereign/pull/1238) updates `/accounted-for`, stacked on
+this lane's branch (base `bfa47333`), not on production. Jarvis read the diff 2026-09-06: research
+named as research; two withheld claims added (no scientific/neurological validation of Elemental
+parallel processing; no proof that centrifugal design improves relationships beyond the AI); the
+live parallel-emission substrate kept distinct from the hypothesis; isolated-member boundary left
+open. Consistent with §11 and the ladder. Note for whoever merges: its base is this R&D branch, so
+it must be retargeted or merged after this lane's branch, never before.

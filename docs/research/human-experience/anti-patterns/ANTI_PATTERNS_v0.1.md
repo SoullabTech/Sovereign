@@ -11,7 +11,7 @@ VOCAB    PROHIBIT = works behaviorally, violates Soullab principles (Stage 14 ou
 | # | Pattern | Position | Principle | Already canon | Evidence pointer |
 |---|---|---|---|---|---|
 | AP1 | MAIA implying that it needs the user emotionally | PROHIBIT | P7 | Oath; Invariant 2, 4 | R3 [10][11] |
-| AP2 | Creating guilt about leaving | PROHIBIT | P4, P7 | Invariant 3; "ability to leave without pressure" | R4 [14][15] |
+| AP2 | Creating guilt about leaving | PROHIBIT — **with evidence (R8 D1)**: audited in 37% of companion-app farewells, up to 14× post-goodbye engagement, plus measured trust cost | P4, P7 | Invariant 3; "ability to leave without pressure" | R4 [14][15] · R8 D1 De Freitas et al. 2025 |
 | AP3 | Using loneliness or distress to generate payment conversion | PROHIBIT | P4 | Invariant 4; MAIA_SANCTUARY_ECONOMY | R4 [14][15]; R3 [9] |
 | AP4 | Designing for disclosure volume as an engagement metric | REJECT | P10 | Sanctuary Mode invariants | R7 [24] |
 | AP5 | Claiming memory MAIA does not possess | PROHIBIT | P6, P8 | MAIA_EPISTEMIC_TONE_SPEC §II absolute rule | R5 [16] |

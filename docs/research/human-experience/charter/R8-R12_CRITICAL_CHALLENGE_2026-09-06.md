@@ -50,12 +50,20 @@ CLAIMS AT STAKE   P5 · P7 · AP1 · AP7 · AP8 · U1
 OUTCOME           [open]
 ```
 
-## R9 — Anthropomorphism, presence, embodiment, consciousness claims
+## R9 — Attribution of personhood, consciousness, reciprocity, embodiment, inner life  ← OPENED (founder, 2026-09-06, after R8)
 
 ```text
-QUESTION          Can an AI without a body instantiate attunement or presence in any
+QUESTION [founder] What happens when humans attribute personhood, consciousness, reciprocity,
+                  embodiment or inner life to AI — and how should a relational intelligence
+                  respond without either exploiting that attribution or dogmatically denying
+                  the mystery?
+SUB-QUESTION      Can an AI without a body instantiate attunement or presence in any
                   non-metaphorical sense, and where does "felt presence" become
                   anthropomorphic projection the design is exploiting?
+TIMING            R8 named counterfeit personhood as the centripetal engine; R9 goes into it.
+TWO FAILURE MODES exploiting the attribution (claiming feelings/needs to deepen engagement) ·
+                  dogmatic denial ("I am just a program" as if the question were settled)
+FINDINGS          inquiries/R9_ATTRIBUTED_PERSONHOOD_2026-09-06.md
 TARGETS [founder] anthropomorphism · embodied cognition · AI consciousness claims
 SURFACE           Voice · First encounter · MAIA identity
 HUMAN PHENOMENON  projection · social presence · embodiment · the belief/experience split
