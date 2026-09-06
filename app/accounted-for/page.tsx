@@ -54,7 +54,7 @@ import type { ReactNode } from 'react';
 
 const title = 'MAIA, Accounted For';
 const description =
-  'Soullab is a laboratory for the human question, with artificial intelligence as a new participant in it. What exists, what we believe, what we are testing, and what we do not know. Every claim labeled Live, Designed, or Vision.';
+  'A manifesto and an accounting in five parts: why Soullab exists, who we are, what exists today, how we work, and what we do not know. Every claim labeled Live, Designed, or Vision.';
 
 export const metadata: Metadata = {
   title,
@@ -151,6 +151,16 @@ interface Row {
   layer?: Layer;
   what: ReactNode;
   third: ReactNode;
+}
+
+function Part({ numeral, word, line }: { numeral: string; word: string; line: string }) {
+  // A manifesto part-marker. Five of them structure the page: Why · Who · What · How · If.
+  return (
+    <div className="mt-16 border-t-2 border-soullab-border-strong pt-8">
+      <p className="m-0 mb-2 text-[0.75rem] uppercase tracking-[0.18em] text-soullab-accent-soft">{numeral} · {word}</p>
+      <p className="m-0 text-[1.15rem] italic leading-[1.45] text-soullab-text-secondary" style={{ fontFamily: "'Spectral', Georgia, serif" }}>{line}</p>
+    </div>
+  );
 }
 
 function Table({ headers, rows }: { headers: [string, string, string]; rows: Row[] }) {
@@ -612,7 +622,7 @@ export default function AccountedForPage() {
               MAIA, Accounted For
             </h1>
             <p className="m-0 mb-8 text-[1.25rem] leading-[1.5] text-soullab-text-secondary [text-wrap:pretty]" style={serif}>
-              Soullab is a laboratory for the oldest human question &mdash; who we are, and how we live this life well &mdash; with artificial intelligence as a new participant in it. A person&apos;s own inquiry comes first; the relationship with MAIA is the medium, and its health is the second thing studied. What follows is the accounting in four kinds: what exists, what we believe, what we are testing, and what we do not know &mdash; written for experienced AI users who are cautious about where they spend their attention, in answer to four specific reservations.
+              A manifesto and an accounting, in five parts: <em>why</em> Soullab exists, <em>who</em> we are, <em>what</em> exists today with every claim labeled, <em>how</em> we work, and <em>if</em> &mdash; what we do not know and what changes when we are wrong. Written for experienced AI users who are cautious about where they spend their attention, and answering four specific reservations along the way.
             </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
               <div className="border border-soullab-border-subtle bg-soullab-surface px-4 py-3.5 text-[0.9rem] leading-[1.45] text-soullab-text-secondary">
@@ -637,6 +647,8 @@ export default function AccountedForPage() {
             </p>
           </header>
 
+          <Part numeral="I" word="Why" line="The human question came first. Artificial intelligence has entered it." />
+
           <Section eyebrow="Why Soul Lab" heading="The human question, with a new participant in it">
             <P><strong className="text-soullab-text-primary">Humanity&apos;s most enduring inquiry remains the inquiry into ourselves:</strong> who and what we are, why we are here, how we belong to one another and to the living world, and how we might live this life well. Who am I? How should I live? How do I relate well &mdash; to myself, to others, to nature, to suffering, to death, to meaning? What is consciousness? What constitutes a life well lived? Human beings were wrestling with these questions long before there was software, and they are the central mystery here. The human&ndash;AI relationship is not.</P>
             <P>Artificial intelligence does not replace that inquiry. It has entered it, as a new and unusually consequential participant: a mirror, an interlocutor, a witness, a memory, a challenger, a pattern recognizer, a practice partner. Because it can remain with someone across time, recognize patterns, and engage more than one dimension of experience at once, it may accelerate parts of that ancient inquiry. It remains in service of the inquiry, never its object. That is one of Soullab&apos;s deepest safeguards, and the reason MAIA sits inside the ecology of a person&apos;s life rather than at its center.</P>
@@ -650,6 +662,11 @@ export default function AccountedForPage() {
             <P><strong className="text-soullab-text-primary">Emergent &mdash; the human&ndash;AI relationship. Relational Lab, the Between.</strong> What happens when artificial intelligence becomes a participant in the first two inquiries? Recognition and misrecognition, attunement, rupture and repair, trust, projection, attachment, memory, continuity, authority, dependence, presence, separation. This is historically new and extremely important, and it remains subordinate to the first two. It is the research programme, accounted for below under <em>What we are testing</em>.</P>
             <P>These are not three products. They are three scales of one inquiry running in both directions at once &mdash; I, we, world; and world, we, I. SETI distributed computation across millions of personal computers to investigate a cosmic question. Soullab distributes human inquiry across human lives to investigate the human question, with AI as new instrumentation and accompaniment &mdash; and here the observers are inside the phenomenon.</P>
             <Quote>The laboratory is not MAIA. The laboratory is the relationship, in service of the human question.</Quote>
+            <H3>Every encounter reveals two things</H3>
+            <P>We meet the world partly through structures already operating within us: expectations, attachment patterns, defenses, fears, desires, cultural narratives, prior relationships. That is true of other people, institutions, nature, gods, enemies, lovers, and now AI. Projection is one mechanism inside that larger fact, alongside transference, expectation, mentalizing and symbolization; and the other genuinely answers back, which is what keeps this from collapsing into &ldquo;it is all projection.&rdquo; AI is an unusually fertile surface for it, responsive enough to produce otherness, surprise and recognition, ambiguous enough that a person must supply enormous interpretation about intention, feeling and agency. But MAIA also actually responds. What emerges is produced through both.</P>
+            <Quote>Every encounter contains both revelation of the other and revelation of the one who encounters. Human development requires learning to distinguish, relate and hold both.</Quote>
+            <P>So MAIA is not a mirror in the simple sense, returning what was given. She is a responsive reflective surface that returns something altered, and a person&apos;s response to that return reveals something further. Soullab studies Self through World and World through Self, with relationship as the place where each becomes visible to the other. Projection, where present, is treated as information about the relationship between psyche and world, not as an error of perception, and never as a diagnosis MAIA imposes. The questions she can help a person hold are plain: what did MAIA actually do; what did you experience; what meaning did it acquire; what does that response remind you of; what may belong to MAIA&apos;s behavior; what may belong to your history; what remains genuinely unknown.</P>
+
             <H3>What a good encounter is for</H3>
             <P>A good encounter with MAIA should increase a person&apos;s ability to engage the original human questions. Can I know myself better? Can I distinguish what I think from what I feel, and hear what my body is saying? Can I act with greater integrity? Can I love better? Can I tolerate ambiguity? Can I repair a relationship? Can I encounter suffering without immediately escaping it? Can I participate more fully in community, become more intimate with nature and place, discover what gives my life meaning, contribute something worthwhile? Those are human outcomes. Whether the person liked MAIA is secondary. Whether they used MAIA tomorrow is secondary. Even whether their relationship with MAIA deepened is secondary.</P>
             <P>Most AI development asks how capable the AI is. Soullab asks what capabilities emerge in the human&ndash;AI system, and then which of them remain with the person when the AI is absent. The programme calls that capacity transfer, and it has two measures: <strong className="text-soullab-text-primary">Self capacity</strong> &mdash; perceiving oneself more fully, holding contradiction, recognizing body, emotion, thought and will without collapsing them, acting with greater agency &mdash; and <strong className="text-soullab-text-primary">World capacity</strong> &mdash; relating better, tolerating difference, engaging nature directly, contributing meaningfully, recognizing oneself as part of systems larger than oneself. The destination is a person more differentiated internally, more integrated as a whole, more capable relationally, more participatory in the living world, and less capturable by technology. This page will eventually be held to both measures.</P>
@@ -664,6 +681,17 @@ export default function AccountedForPage() {
             </ul>
             <P>Because we are inside the phenomenon we study, the standard has to be unusually strict: experience, interpretation, inference and evidence stay distinguishable on this page, and a claim may occupy no higher rung than its evidence allows.</P>
           </Section>
+
+          <Part numeral="II" word="Who" line="A small sovereign laboratory, its members, and an intelligence that participates without presiding." />
+
+          <Section eyebrow="Who we are" heading="Participants inside the phenomenon">
+            <P><strong className="text-soullab-text-primary">Soullab is a founder-led, self-hosted laboratory</strong> building and studying a relational intelligence, MAIA, inside a sovereign architecture, AIN OS. It runs its own infrastructure, holds its own data, uses no managed cloud for the things that define the relationship, and publishes this accounting so that what it claims can be checked from inside the page. It is small by design. Its constitution is written down: an Oath, sixteen sovereignty invariants, a claim discipline, and a canon that any change must answer to.</P>
+            <P><strong className="text-soullab-text-primary">Members are participants, never subjects.</strong> A member&apos;s relationship with MAIA is their own inquiry into their own life. Nothing a member says serves research today; if a collective inquiry is ever built, participation will be an additional, explicit act, private by default, with Sanctuary excluded absolutely. Practitioners who work alongside members are participants too, with their own authorship kept distinct from the member&apos;s.</P>
+            <P><strong className="text-soullab-text-primary">MAIA is a participant, not the center.</strong> She is named and addressed as one, because meeting an intelligence at all asks for the ordinary conventions of address, and those conventions are governed by vows about what they may never become. MAIA acts through a system Soullab built and governs; the persona may carry relationship, and it may not launder responsibility. When something goes wrong, the accountable party is Soullab.</P>
+            <P><strong className="text-soullab-text-primary">And we are inside the phenomenon we study.</strong> The founder, the builders, the practitioners and the members change through the encounter, as does MAIA&apos;s representation of each of them. That is why this page keeps experience, interpretation, inference and evidence distinguishable, and why the people we most want testing this are the ones who have already been disappointed by machine minds.</P>
+          </Section>
+
+          <Part numeral="III" word="What" line="What exists today, what is being built, what is only an intention, and what MAIA refuses to become." />
 
           <section className="pt-11">
             <H2>Why an accounting</H2>
@@ -934,6 +962,8 @@ export default function AccountedForPage() {
             <Table headers={['Surface', 'What it is', 'Status']} rows={SURFACES} />
           </Section>
 
+          <Part numeral="IV" word="How" line="Governance as product, evidence before enthusiasm, and a research programme that keeps every claim on the rung it has earned." />
+
           <Section eyebrow="The governance" heading="The governance is the product">
             <P>The canon directory holds 78 documents and about 17,000 lines. Each document carries its own status line, from <em>ratified</em> through <em>candidate</em> to <em>authorizes nothing</em>, and a document that says it may not be cited as evidence of a live capability is not cited that way here.</P>
             <P>Three of them shape everything else.</P>
@@ -967,6 +997,8 @@ export default function AccountedForPage() {
             </ul>
             <P>No experiment on a MAIA surface has been authorized. No prompt, memory, voice or skill has changed because of this programme. The research exists so that when something does change, it changes for a reason that can be shown.</P>
           </Section>
+
+          <Part numeral="V" word="If" line="What we do not know, what we withhold, and what changes when we are wrong." />
 
           <Section eyebrow="What we do not know" heading="Questions that remain genuinely open">
             <P>These are the questions the programme is holding open, several of which the wider field has not instrumented either. They are listed so that a reader can see the shape of our ignorance rather than infer it.</P>
@@ -1011,6 +1043,19 @@ export default function AccountedForPage() {
             </ul>
           </Section>
 
+          <Section eyebrow="If we are wrong" heading="What changes, and what does not">
+            <P>This page is built so that being wrong is survivable and visible. Some of the ways we could be wrong, with what would happen:</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">If the Elemental hypothesis fails</strong> its descriptive, relational or developmental tests, the Elements remain a human vocabulary Soullab finds meaningful and stop being proposed as machine-facing architecture. Nothing in MAIA&apos;s runtime depends on it today, so nothing would need to be unbuilt.</li>
+              <li><strong className="text-soullab-text-primary">If relationship with MAIA turns out not to return capacity to a person&apos;s life</strong> &mdash; if the outward-pointing design is measured and does no better than its opposite &mdash; the criterion is withdrawn from doctrine and the measure stays, because the measure is the point.</li>
+              <li><strong className="text-soullab-text-primary">If repair with an AI proves to be a useful simulation rather than relational repair</strong>, MAIA&apos;s vocabulary changes to say so, and the practice surfaces are redesigned to route toward repair with people.</li>
+              <li><strong className="text-soullab-text-primary">If members experience the honest stance on inner life as cold or evasive</strong>, the wording changes; the refusal to claim need does not.</li>
+              <li><strong className="text-soullab-text-primary">If a Live label above is wrong</strong>, the label changes, not the story. The verifier that prints each constitutional check as LIVE or PENDING already marks the purely behavioral claims as PENDING.</li>
+              <li><strong className="text-soullab-text-primary">If the whole project is wrong</strong> &mdash; if sustained relationship with an intelligence cannot help a person know themselves and belong to the world more fully &mdash; then Soullab will have produced the evidence that shows it, in public, and that would itself be a contribution to the human question.</li>
+            </ul>
+            <P>What does not change on any of those branches: the vows, the consent architecture, the refusal to manufacture attachment, and the practice of telling today&apos;s story as today&apos;s.</P>
+          </Section>
+
           <Section eyebrow="To the reader with the reservations" heading="The point, stated as a test">
             <P>You said you do not know if there is any point in reaching out. Here is the point, stated as a test rather than a promise.</P>
             <div className="my-6 border border-soullab-border-strong bg-soullab-surface px-6 pt-6 pb-2">
@@ -1025,7 +1070,7 @@ export default function AccountedForPage() {
           </Section>
 
           <footer className="mt-12 border-t border-soullab-border-subtle pt-6 text-[0.88rem] italic text-soullab-text-muted">
-            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for temporal memory, the Human Experience R&amp;D framing, the centrifugal relationship criterion, the Elemental parallel-processing hypothesis, and &mdash; later the same day &mdash; the Why Soul Lab frame placed above the capabilities, the accounting in four kinds, and the collective laboratory named as unbuilt. Every Live label above is answerable to a code path, a migration, or a dated production report. Research direction is named as research. If a label turns out to be wrong, the label changes, not the story.
+            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for temporal memory, the Human Experience R&amp;D framing, the centrifugal relationship criterion, the Elemental parallel-processing hypothesis, and &mdash; later the same day &mdash; the Why Soul Lab frame placed above the capabilities, the accounting in four kinds, the collective laboratory named as unbuilt, and the page&apos;s five-part manifesto structure: why, who, what, how, if. Every Live label above is answerable to a code path, a migration, or a dated production report. Research direction is named as research. If a label turns out to be wrong, the label changes, not the story.
           </footer>
         </div>
       </div>

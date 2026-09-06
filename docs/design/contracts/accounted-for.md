@@ -1,6 +1,6 @@
 ---
 room: Accounted For
-human_activity: understanding why Soul Lab exists, what MAIA is, what is live, what is research, what remains unknown, and what Soullab refuses to claim
+human_activity: reading Soullab's manifesto-and-accounting in five parts — why it exists, who we are, what exists with every claim labeled, how we work, and what we do not know or refuse to claim
 
 surfaces:
   - app/accounted-for/page.tsx
@@ -26,28 +26,29 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 (second revision, this branch) in headless Chromium against
-  a local `next dev` render at 1280×900 and 390×844, from a clean lockfile
-  install. Observed: HTTP 200 at both widths; exactly one H1 ("MAIA, Accounted
-  For"); the first H2 after the header is "The human question, with a new
-  participant in it" under the eyebrow "Why Soul Lab"; the eyebrows "Why Soul
-  Lab", "What we are testing", "What we do not know", "Withheld" and "Beyond
-  the conversation" each appear exactly once; 18 H2 and 21 H3 on the page.
-  Read on the render: the human question is placed above the capabilities; the
-  three nested inquiries carry their status (personal = what MAIA is for today;
-  World/collective = not built, no member conversation serves research, no
-  consent act exists, Sanctuary excluded; relational = the programme); the
-  Live parallel-emission substrate stays visibly distinct from the Elemental
-  hypothesis; the three new withheld claims are present. Mobile document width
-  is 390px at a 390px viewport. Desktop document width is 1597px at a 1280px
-  viewport — the pre-existing shared Table wrapper overflow recorded by the
-  previous revision; this change does not touch Table composition or width
-  classes, so it is recorded rather than repaired. Screenshots are the top
-  3000px (desktop) / 3600px (mobile) of the branch render, cropped so the new
-  section is visible; they are not full-page. No navigation, interaction,
-  auth, memory, prompt, cognition or runtime path changes. Gates at commit:
-  design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
-  no-regression PASS (230 vs 239 baseline) with the lockfile's TypeScript 5.9.3.
+  Walked 2026-09-06 (third revision, this branch — the five-part manifesto
+  structure) in headless Chromium against a local `next dev` render at
+  1280×900 and 390×844, from a clean lockfile install. Observed: HTTP 200 at
+  both widths; exactly one H1 ("MAIA, Accounted For"); five part-markers in
+  order — "I · Why", "II · Who", "III · What", "IV · How", "V · If" — each
+  present exactly once; the eyebrows "Why Soul Lab", "Who we are", "What we
+  are testing", "What we do not know", "If we are wrong" and "Withheld" each
+  appear exactly once; 20 H2 on the page. Read on the render: the human
+  question sits above the capabilities under Part I; the encounter foundation
+  (both revelations; responsive reflective surface) is inside Why Soul Lab;
+  Part II names members as participants not subjects, MAIA as participant not
+  center, and Soullab as the accountable party; the existing Live / Partly live
+  / Designed / Vision accounting is preserved under Part III; the programme by
+  rung and the method sit under Part IV; open questions, withheld claims, and
+  "If we are wrong" sit under Part V. Mobile document width is 390px at a 390px
+  viewport. Desktop document width is 1597px at a 1280px viewport — the
+  pre-existing shared Table wrapper overflow recorded by earlier revisions;
+  this change does not touch Table composition or width classes, so it is
+  recorded rather than repaired. Screenshots are the top 3000px (desktop) /
+  3600px (mobile) of the branch render, not full-page. No navigation,
+  interaction, auth, memory, prompt, cognition or runtime path changes. Gates
+  at commit: design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
+  no-regression PASS (230 vs 239 baseline, TypeScript 5.9.3 from lockfile).
 ---
 
 # Accounted For — Experience Contract
@@ -61,7 +62,7 @@ not claim. Density is permitted because the human activity is accounting.
 
 ## Arrival
 
-> **MAIA, Accounted For**
+> **MAIA, Accounted For** — a manifesto and an accounting in five parts: why · who · what · how · if.
 
 The arrival answers four things immediately: this is Soullab's accounting, the
 subject is a person's own inquiry with MAIA as a participant in it, the page

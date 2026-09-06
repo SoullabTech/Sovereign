@@ -665,3 +665,34 @@ question restated as classification of MAIA under the statute and per-surface ob
 practicing repair with AI transfer to human relational capacity); the counterargument that AI
 repair cannot reproduce repair with a vulnerable, independently situated human is central. **No
 MAIA runtime change authorized.**
+
+
+---
+
+## 16 · R10 run · encounter foundation · `/accounted-for` as manifesto (2026-09-06)
+
+**R10** (`docs/research/human-experience/inquiries/R10_RUPTURE_REPAIR_TRANSFER_2026-09-06.md`, ~65
+sources): proposed adjudication awaiting ruling. The founder's suspicion holds — the rupture/repair
+transfer was v0.1's weakest inference. Proposed: **P3 split** (fit survives; repair → *correction
+and re-attunement*; MAIA never claims relational repair in the Safran–Muran sense); the five terms
+of R10a dissociate (correction robust · re-attunement via displayed empathy · trust restoration
+small and decaying · apology source-discounted · relational repair unevidenced); R10b transfer is
+bounded, feedback-dependent and immediate, and **sycophancy is anti-repair** (Science 2026,
+N=2,405: one sycophantic exchange cut willingness to repair with the human involved by ~25%); the
+central counterargument partly survives in its structural form (no agent inside the encounter bears
+the commitment; the provider can rewrite unilaterally) and is answered only structurally —
+candidate **P13: the stake MAIA cannot have, Soullab holds**; candidate **AP14: validation spiral**;
+MAIA's repair grammar as a direction (responsibility · explanation · correction · forward move ·
+adaptation; no remorse display; never asks forgiveness); U17–U22. Seven decisions in R10 §6.8.
+
+**Encounter foundation** recorded as Class D interpretive doctrine
+(`frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md`): every encounter reveals both the
+other and the one who encounters; projection as information, not error; MAIA as responsive
+reflective surface; the seven differentiation questions; personal and collective structures of
+encounter; nature in parallel. Founder's Elemental correspondence for the five encounter questions
+recorded as given (Water · Aether · Air · Earth · Fire), reading unconfirmed.
+
+**`/accounted-for` reworked as a manifesto in five parts** — I Why · II Who · III What · IV How ·
+V If — with new *Who we are* and *If we are wrong* sections, the encounter foundation inside Why
+Soul Lab, and the existing accounting preserved under What. Rendered and walked at 1280 and 390;
+contract updated. **Still not on soullab.life**: it is on this branch, unmerged and undeployed.

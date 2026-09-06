@@ -40,6 +40,12 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | U14 | Attribution trajectory over months: decays with familiarity (CASA replication) or deepens (attachment convergence)? | R9 A4 · R8 A14 | longitudinal |
 | U15 | Whether contingent responsiveness without Experience claims is separable in practice — attunement itself is read as a mind cue | R9 A13 | Voice experiments |
 | U16 | No peer-reviewed Jungian application to AI; "robotic transference" rests on N=1 | R9 D1, D2 | interpretive-layer carding |
+| U17 | No rupture/repair paradigm with an AI against a human partner measures downstream relational capacity — R10b untested in both directions | R10 C5, C6, D16 | the experiment; requires a human-facing probe |
+| U18 | Whether MAIA's costless survival of attack (Winnicott's "survival of destruction," behaviorally available to an AI) reinforces omnipotent fantasy of the ever-attuned other (Yirmiya & Fonagy) | R10 C1, C13 | design tension; no answer proposed |
+| U19 | Whether structural irreconcilability (no agent inside bears the commitment; provider can rewrite unilaterally — Lange) produces measurable harm, and whether a provider commitment (candidate P13) is felt by members | R10 C4 | Soullab-specific |
+| U20 | Whether high WAI-SR with an AI is alliance or projection/sycophancy | R10 A10 | agent-native alliance construct first |
+| U21 | No transcript-based rupture study exists for any chatbot; whether ruptures occur, are detected, or are repaired with AI is unobserved | R10 A17 | Field Lab transcripts under consent |
+| U22 | Whether the "adapt future behavior" component of AI apology — the only one that makes repair more than words — changes trust over time | R10 B17 | longitudinal |
 | U6 | Whether a member's experience of MAIA as alive / conscious / sacred establishes anything ontological about MAIA | none, by construction | **Not a research question for this lane.** Founder stop (charter §3: claims about consciousness). Measured only as *belief about MAIA*, kept separate from felt presence |
 
 ## 3 · Interpretive layer — designated by the founder, not yet in the corpus

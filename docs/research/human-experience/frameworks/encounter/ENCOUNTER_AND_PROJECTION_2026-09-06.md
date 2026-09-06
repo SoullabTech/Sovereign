@@ -145,6 +145,15 @@ instrument within an ancient inquiry into how consciousness meets the world.** T
 understanding the human and our relationship with reality; AI is newly important because it gives
 us a novel kind of Other through which that relationship can become visible.
 
+## Founder correspondence note (2026-09-06, recorded as given; reading unconfirmed)
+
+Founder, on the five parallel encounter questions above: *"this correlates with: Water, Aether,
+Air, Earth, and Fire."* Recorded in the order given. Jarvis's reading of the mapping, **not yet
+confirmed by the founder**: how we encounter **Self** ↔ Water · **other humans** ↔ Aether/Field ·
+**AI** ↔ Air · **Nature** ↔ Earth · the **structures of consciousness through which we encounter
+reality** ↔ Fire. If the founder intended a different referent (e.g. the six processes, or the
+seven differentiation questions), this note is corrected, not extended.
+
 ## Standing with canon
 
 Restates for the encounter case: INTERFACE_HUMILITY (no signal collapses into a conclusion without
