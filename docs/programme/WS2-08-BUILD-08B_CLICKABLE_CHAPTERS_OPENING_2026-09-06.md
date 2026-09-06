@@ -122,3 +122,115 @@ source sections
 07G's ratified `scope_target` is already `structure_unit | section_range | whole_work`. **08B is what
 makes `structure_unit` selectable by a member.** The two units meet exactly there and nowhere else —
 08B does not read, and 07G does not author structure.
+
+---
+
+## 7 · Bounded design — founder-stated 2026-09-06 · ACCEPTANCE NOT YET SUPPLIED
+
+### 7.1 Recognition, narrowed by the census
+
+The 185-section census gives a cleaner target than "infer likely ALL-CAPS boundaries." The Work
+contains a coherent authored run of explicit numbered chapter labels:
+
+```text
+Chapter 1  pos 8     Chapter 6   pos 75
+Chapter 2  pos 12    Chapter 7   pos 89
+Chapter 3  pos 25    Chapter 8   pos 104
+Chapter 4  pos 38    Chapter 9   pos 118
+Chapter 5  pos 46    Chapter 10  pos 132
+```
+
+Duplicate / reset chapter headings also exist elsewhere in the source — **which is exactly why
+confirmation remains necessary.** 08B needs no general-purpose semantic chapter inference.
+
+```text
+explicit numbered chapter labels
+→ detect coherent ordered runs
+→ if more than one plausible run, or duplicate labels, exist
+→ present candidate hierarchy
+→ MEMBER CONFIRMS
+→ only then persist / render as authored structure
+```
+
+⛔ ALL-CAPS remains irrelevant as authority.
+
+### 7.2 The load-bearing separation
+
+> **The outline reads persisted structure. It never runs chapter recognition itself.**
+
+```text
+recognition    PROPOSES
+member         AUTHORS (confirmation)
+persistence    RECORDS
+WRITE + DEVELOP  RENDER
+```
+
+This keeps the sovereignty boundary clean and stops two UI surfaces from independently deciding what
+the book is.
+
+### 7.3 Scope
+
+```text
+IN
+  explicit numbered chapter-run recognition
+  existing proposal / confirmation path
+  existing structure persistence
+  outline reads the persisted authored tree
+  chapter parent rows
+  expand / collapse
+  chapter click → first contained section
+  section click → existing navigation
+  ungrouped sections remain visible
+  the SAME persisted hierarchy in WRITE + DEVELOP
+
+OUT
+  fuzzy semantic chapter inference
+  ALL-CAPS-as-chapter
+  schema changes
+  08C / 08D / 08E
+  07G reading implementation
+  any manuscript text change
+```
+
+### 7.4 Acceptance target — Elemental Alchemy
+
+```text
+proposal              Chapter 1 → Chapter 10 candidate shown
+before confirmation   NOT represented as the member's authored hierarchy
+after confirmation    10 clickable chapter parents
+                      chapter expands to contained sections
+                      chapter collapses
+                      chapter click opens the first section
+                      child click opens that section
+                      front / back / unassigned material remains visible
+                      reload preserves the hierarchy
+                      WRITE and DEVELOP agree
+                      every section accounted for EXACTLY ONCE
+                      manuscript characters unchanged
+```
+
+## 8 · Census packet — to be established BEFORE implementation
+
+Six questions, so implementation receives a packet rather than an investigation:
+
+```text
+1  every ManuscriptOutline caller
+2  the exact GET /structure response shape
+3  how draft-section ids map to existing outline rows
+4  where DEVELOP gets its navigation
+5  the existing proposal / adopt invocation path
+6  the minimum test files to extend
+```
+
+## 9 · Authority state
+
+```text
+08B OPEN                      YES
+design bounded                YES (§7)
+census packet                 SPECIFIED, not yet gathered (§8)
+founder acceptance            NOT SUPPLIED
+implementation authority      NOT SUPPLIED
+```
+
+The founder act that would move this is one sentence: *I accept the bounded 08B design as stated and
+authorize implementation.* Until then §7 is a proposal, not a contract.
