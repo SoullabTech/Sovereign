@@ -109,13 +109,20 @@ PRIOR UNIT         BUILD-07B Developmental Reader — CLOSED / ACCEPTED (founder
 PRIOR UNIT         BUILD-07A Developmental Evidence — CLOSED / ACCEPTED (founder,
                    2026-09-04); canonical @ 27ec9f895
                    record: WS2-07-BUILD-07A_EVIDENCE_WITNESS_2026-09-03.md §9
+CURRENT UNIT       BUILD-08A Heading Depth — CLOSED / ACCEPTED (founder act, 2026-09-06)
+                   acceptance basis F1 · F2 · F3 · SC-1 PASS, all class R
+                   F6b FAIL · R5 PERMANENT — SC-1 is a narrower successor claim
+                   (migration nonmutation of the 810 baseline rows), does not
+                   repair F6b, and is not outcome-blind
+                   closure authorizes nothing downstream
+                   record: WS2-08-BUILD-08A_HEADING_DEPTH_CLOSURE_2026-09-06.md §1
+                   adjudication: WS2-08A_POST_FAILURE_ADJUDICATION_2026-09-06.md
+                   SC-1 frozen @ a75f4543227ff82ecbfec3c80bd9e9490a26576a
 NEXT EXECUTABLE    WS2-08 HIERARCHICAL MANUSCRIPT STRUCTURE — opened by founder message
-                   2026-09-06, sequenced AFTER #1228 (untouched). BUILD-08A (preserve
-                   explicit heading depth at ingest) ACCEPTED AS CANDIDATE CUT, frozen
-                   for an isolated PR → merge → migration → witness F1–F3+F6 cycle
-                   (PR #1230, opened 2026-09-06).
-                   NOT CLOSED. 08B code HOLD until 08A closes; revision/digest binding
-                   must precede 08C; 08B–08E each require a separate founder act.
+                   2026-09-06, sequenced AFTER #1228 (untouched).
+                   BUILD-08B HOLD · UNOPENED — 08A closing does not open it;
+                   revision/digest binding must precede 08C; 08B–08E each require
+                   a separate founder act. 08C–08E UNAUTHORIZED.
                    record: WS2-08_HIERARCHICAL_MANUSCRIPT_STRUCTURE_DECIDE_2026-09-06.md
                    BUILD-07F implementation still requires a separate founder act.
                    07G–H remain unopened.
@@ -124,8 +131,9 @@ WS-01              CLOSED — OVERTAKEN / SUPERSEDED (not accepted; see
                    Reconciliation record below)
 CANVAS FREEZE      RETIRED FROM LIVE STATE (never released by an act; see
                    Reconciliation record below)
-LAST UPDATED       2026-09-06 (WS2-08 lane opened; BUILD-08A accepted as candidate and
-                   frozen for isolated witness; 08B HOLD; #1228 sequencing unchanged)
+LAST UPDATED       2026-09-06 (BUILD-08A CLOSED / ACCEPTED by founder act; F6b stays
+                   FAIL · R5 permanent; SC-1 narrower successor claim only; 08B remains
+                   HOLD · UNOPENED; 07F parked; #1228 sequencing unchanged)
 ```
 
 ## Reconciliation record — 2026-09-03 (founder adjudication of programme history)

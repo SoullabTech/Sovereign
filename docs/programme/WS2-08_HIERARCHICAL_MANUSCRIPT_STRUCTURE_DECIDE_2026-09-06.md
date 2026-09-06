@@ -5,10 +5,14 @@ LANE        WS2-08-HIERARCHICAL-MANUSCRIPT-STRUCTURE-01
 OPENED BY   founder message, 2026-09-06 (verbatim requirement carried in §1)
 POSITION    after #1228 (merge / deploy / Keep a version / partition witness /
             ceiling_exceeded witness) — #1228 is NOT touched by this lane
-STATUS      BUILD-08A ACCEPTED AS CANDIDATE CUT (founder, 2026-09-06) on branch
-            claude/manuscript-chapter-segmentation-jlwnlj — FROZEN for its isolated
-            PR / gates / merge / migration / production-witness cycle. NOT CLOSED.
-            08B code HOLD · 08C code HOLD · 08D, 08E unbuilt.
+STATUS      BUILD-08A CLOSED / ACCEPTED (founder act, 2026-09-06).
+            Acceptance basis F1 · F2 · F3 · SC-1 PASS, all class R.
+            F6b remains FAIL · R5 permanently; SC-1 is a narrower successor
+            claim (migration nonmutation of the 810 baseline rows), does not
+            repair F6b, and is not outcome-blind.
+            Closure authorizes nothing downstream.
+            08B HOLD · UNOPENED · 08C code HOLD · 08D, 08E unauthorized.
+            record: WS2-08-BUILD-08A_HEADING_DEPTH_CLOSURE_2026-09-06.md §1
 FOLLOWS     WS2-05A structure tree · WS2-06A AuthorStructureCommand ·
             WS2-07 BUILD-07A frozen readState (structureContext inline)
 PRECEDES    LONG-WORK SCOPED DEVELOPMENTAL READING (scope planner respects
