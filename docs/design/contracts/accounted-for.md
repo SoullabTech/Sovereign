@@ -26,27 +26,28 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 (sixth revision, this branch — the two memory lines revised
-  after the fifth inquiry: the memory-typology bullet under What we do not
-  know, and the memory-source sentence under What we are testing, now that the
-  synthesis's unlocatable source has been found and read as narrower than
-  claimed) in headless Chromium against a local `next dev` render at 1280×900
-  and 390×844 after a warm-up request, from a clean lockfile install.
-  Observed: HTTP 200 at both widths; exactly one H1; five part-markers in
-  elemental order, each once; the eyebrows The wager · Why Soul Lab · Who we
-  are · What we are testing · What we do not know · If we are wrong · Withheld
-  each exactly once; 21 H2. Text presence checked on the render: the typology
-  withdrawal proposal with the override rule ("what the person says now
-  overrides; what MAIA infers about now does not, it asks") under If; the
-  located-source sentence ("a conceptual paper by the maker of the product it
-  describes, whose central claim turned out narrower than the synthesis had
-  made it") under How; the fifth-revision items (two safeguards under Who, four
-  kinds of truth under How, "The Elements are not domains of life" under What,
-  the founder-worded withheld claim, the closing proposition) still present
-  once each. Mobile document width 390px at 390px. Desktop 1623px at 1280px —
-  the pre-existing shared Table wrapper overflow (was 1597px on the fifth
-  revision; the wrapper's width follows its content), untouched here and
-  recorded rather than repaired. Screenshots are the top 3000px (desktop) /
+  Walked 2026-09-06 (seventh revision, this branch — the claim-discipline
+  reconciliation of the page to Synthesis v0.2, authorized by founder ruling
+  after v0.2 acceptance; record in
+  docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CLAIM_RECONCILIATION_2026-09-06.md)
+  in headless Chromium against a local `next dev` render at 1280×900 and
+  390×844 after a warm-up request, from a clean lockfile install. Observed:
+  HTTP 200 at both widths; exactly one H1; five part-markers in elemental
+  order, each once; the eyebrows The wager · Why Soul Lab · Who we are · What
+  we are testing · What we do not know · If we are wrong · Withheld each
+  exactly once; 21 H2. Text presence checked on the render: "memory and
+  re-attunement" replaces "memory and repair" (zero occurrences of the old
+  phrase); the rescoped absence claims ("we found no trial", "we found no
+  experiment"); the withdrawn typology bullet ("one vendor's proposal, not a
+  finding"); the brain-training rule ("a gain on the practiced task") three
+  times (unknowns, capacity transfer, withheld); "Thirteen provisional
+  principles"; the closed challenge pass with the preserved R11 self-suspicion
+  ("Soul Lab includes Soullab among the things being examined"); the three
+  added withheld claims including "memory informs, it does not bind"; the
+  canon count 79. Every Live / Partly live / Designed / Vision label
+  unchanged. Mobile document width 390px at 390px. Desktop 1597px at 1280px —
+  the pre-existing shared Table wrapper overflow, content-following, untouched
+  and recorded rather than repaired. Screenshots are the top 3000px (desktop) /
   3600px (mobile) of the branch render, not full-page. No navigation,
   interaction, auth, memory, prompt, cognition or runtime path changes. Gates
   at commit: design-canon PASS, no-supabase PASS, diff --check PASS, typecheck

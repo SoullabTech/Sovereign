@@ -903,3 +903,54 @@ principles addendum P8-refined + doctrine row · AP16 Memory as Leverage, AP17 R
 Identity (derived from ruling text, not founder-named — flagged) · measurement vocabulary Success
 row → programme · CONTESTED L1 resolved, U29–U33 open · v0.1 ledger row 22 ruling note · BOARD
 (R7/R7a/R7b/R12 ADJUDICATED; Synthesis v0.2 row) · README · session anchor bullet.
+
+---
+
+## 23 · Synthesis v0.2 ACCEPTED — current programme synthesis (founder ruling, 2026-09-06)
+
+**Founder act.** With the edits below recorded, **Synthesis v0.2 is ACCEPTED AS CURRENT PROGRAMME
+SYNTHESIS** and supersedes v0.1 as the current synthesis. This does not ratify P1–P13 as canon and
+does not convert unverified empirical claims into established facts. It authorizes exactly one
+next step: **claim-discipline reconciliation of `/accounted-for` against v0.2.** Merge and deploy
+remain unauthorized until that reconciliation, the final render and the gates are complete and
+the founder rules on merge.
+
+**The rulings that resolved the three author calls and the two derived labels.**
+
+1. **§1 strength ratings — function accepted, register changed.** "Established" is not used while the corpus is search-confirmed and not page-read. Column renamed **Evidence posture**: MATURE · EMERGING · CONTESTED · EVIDENCE GAP, plus ATTRIBUTED FRAMEWORK for non-empirical items (source [22]). Binding header (founder wording): *Evidence posture describes the apparent maturity of the literature represented in the ledger. Because the current corpus is search-confirmed and not yet fully page-read or paraphrase-checked, these postures are provisional research judgments, not public evidence grades.* The claim ladder remains sovereign over public claims; the table is not a second ladder.
+2. **§8 witness levels — distinction accepted, "advisable" retired.** REQUIRED BEFORE RATIFICATION (constitutionally blocking; no founder act or internal review may waive) and RECOMMENDED BEFORE RATIFICATION (absence permitted only if the ratification record states why it was not obtained, what uncertainty remains, what future event reopens the question). Assignments: **P4′** scholarly + member-side + ethics all REQUIRED; **P12** member-side REQUIRED, scholarly and ethics RECOMMENDED unless later evidence changes their status; **P13** ethics REQUIRED, scholarly RECOMMENDED; **P7** qualifying empirical test REQUIRED before empirical ratification of the design claim, scholarly/member-side RECOMMENDED. *Required means constitutionally blocking. Recommended means its absence must remain visible.*
+3. **v0.1 source [22] correction — accepted exactly.** v0.1 is not rewritten; the overstatement is part of the history of the inquiry. v0.2 §7 records: *v0.1 treated the four-type model and present-state authority more strongly than the located source warranted. The source is now identified as an attributed conceptual framework, vendor-authored and unvalidated as a universal taxonomy; its override rule is risk-gated rather than general.* Record shape preserved: WHAT WE BELIEVED → WHAT WE FOUND → WHAT CHANGED. v0.1 becomes a historical record, not retroactively made correct.
+4. **AP16 Memory as Leverage — ADOPTED as CANDIDATE**, refined: *a remembered statement, preference, disclosure, vulnerability or commitment may establish continuity; it may never be used to establish present obligation, compliance or relational debt.* Memory informs; memory does not bind. (Memory as pressure.)
+5. **AP17 Recurrence as Identity — ADOPTED as CANDIDATE**, refined: *repeated or remembered patterns must not be promoted into identity, essence or destiny merely because they recur.* Recurrence is evidence of recurrence, not of identity, permanence, diagnosis, inevitability or hidden essence; a present contradiction of a recurring pattern is not an error to correct. (Memory as ontology.) Both labels kept.
+6. **P9 wording corrected.** *MAIA does not deliberately cultivate unwarranted certainty about feelings, consciousness, need, obligation or reciprocity, and never claims relational need or obligation its substrate cannot warrant.* Spontaneous human attribution is not a system failure; the open ontological question is preserved.
+7. **Acceptance.** v0.2 records what changed under adversarial inquiry (twelve items, founder list): felt ≠ actual understanding · centrifugal in consequence not posture · presence separated from manufactured reciprocity · ontology open, claimed need closed · repair → correction and re-attunement · Soullab concedes MAIA shapes · legitimacy not self-certified · memory = continuity without identity foreclosure · Authority × Time replaces the imported taxonomy · capacity transfer = falsifiable programme · Elemental Consciousness = experimental architecture · Self / Relationship / World primary, AI participant not center. *A materially stronger architecture than v0.1.*
+
+**Founder's preservation instruction.** The R11 turn stays in the public story as it gets cleaner:
+*Soullab's own vocabulary can become a flattering name for the influences it prefers.* Soul Lab
+includes Soullab itself among the things being examined. Not to be edited out.
+
+**Programme state after the v0.2 ruling (founder).**
+
+```text
+SYNTHESIS v0.1        HISTORICAL / SUPERSEDED AS CURRENT SYNTHESIS
+SYNTHESIS v0.2        ACCEPTED / CURRENT PROGRAMME SYNTHESIS
+                      NOT DOCTRINE · EMPIRICAL POSTURES PROVISIONAL
+P1–P13                CANDIDATE unless separately ruled otherwise
+AP16 · AP17           CANDIDATE — ADOPTED
+
+CLAIM RECONCILIATION  AUTHORIZED NEXT
+/accounted-for        MAY NOW BE RECONCILED TO v0.2
+
+PR #1239              DRAFT
+MERGE                 NOT AUTHORIZED
+DEPLOY                NOT AUTHORIZED
+MAIA RUNTIME          UNCHANGED
+```
+
+**Next act (founder):** v0.2 ACCEPTED → CLAIM-DISCIPLINE RECONCILIATION → `/accounted-for` FINAL
+COPY → VERIFY EVERY PUBLIC EMPIRICAL CLAIM → FINAL RENDER → GATES → FOUNDER MERGE RULING. No
+further foundational research inquiry is opened. The research backlog continues but no longer
+blocks the architecture from being stated publicly at the level it has earned. *The page should
+tell exactly what Soullab knows, what it believes, what it is testing, and what remains unknown.*
+
+**Reconciliation record:** `docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CLAIM_RECONCILIATION_2026-09-06.md`.

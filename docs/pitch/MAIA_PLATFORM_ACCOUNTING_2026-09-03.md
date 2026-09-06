@@ -318,7 +318,7 @@ Three of them shape everything else:
 One lane, one question — *how should an intelligent system be designed so that interaction increases human agency, relationship, meaning, awareness and capacity rather than merely engagement?* — on a claim ladder: internal hypothesis → research-supported principle → MAIA experimental evidence → replicated / multiple witness → public Soullab claim (founder act, naming the claim's kind: empirical, theoretical, phenomenological, ethical, philosophical).
 
 - **Foundational research, R1–R7** (understanding, attunement, relationship, agency vs manipulation, trust, presence, memory): Synthesis v0.1, founder-authored. 25 sources verified to exist; none paraphrase-checked; one memory source not found → the two propositions it carried are being re-researched (R7a, R7b).
-- **Eleven provisional principles, all CANDIDATE.** Each marked confirms / refines / extends / challenges against existing canon.
+- **Thirteen provisional principles, all CANDIDATE** (superseded count: eleven, at the time §7a was written). P4 FAILED as self-certification after R11 and was replaced by P4′ Legitimacy Is Not Self-Certified, which requires scholarly review + member-side adversarial witness + independent ethics critique before ratification. Each marked confirms / refines / extends / challenges against existing canon.
 - **Critical-challenge pass, R8–R12.** R8 (relational capacity vs dependence) adjudicated: harm model refined to dose × motive × human network × perception; "centrifugal in consequence, not in posture" provisionally ratified; the field has no trial of an outward-pointing design against an engagement-maximizing one, and no therapeutic-chatbot trial measured effects on human relationships. R9 (attributed personhood) complete, under review: proposed narrowing from "a person attributing inner life" (a stable disposition) to "a system claiming need or reciprocity"; flat denial of inner life rejected as its own overclaim. R10–R12 chartered, not run.
 - **Elemental parallel-processing hypothesis**: three validation domains (descriptive, relational, developmental), none begun. Not operating in MAIA.
 - **Measurement vocabulary**: paired measures; headline row — the person's capacity for relationship beyond the AI — has no instrument anywhere in the field.
@@ -327,7 +327,7 @@ No experiment on a MAIA surface authorized. No prompt, memory, voice or skill ch
 
 ## 7b. What we do not know
 
-Open questions the programme holds visible (register: `docs/research/human-experience/CONTESTED_QUESTIONS.md`, U1–U16):
+Open questions the programme holds visible (register: `docs/research/human-experience/CONTESTED_QUESTIONS.md`, U1–U33). **Phrasing rule after reconciliation to Synthesis v0.2 (§7c):** every absence claim on the page is scoped to what Soullab's own search found ("we found no trial"), never stated as an absolute about the field; no count of studies is quoted:
 
 - when AI relationship supplements human connection and when it substitutes — weeks and months point opposite ways;
 - whether an outward-pointing design does what it intends — never trialed against its opposite;
@@ -337,10 +337,27 @@ Open questions the programme holds visible (register: `docs/research/human-exper
 - what "I feel" vs "I do not feel" vs "I do not know what this is like for me" does to a person over months — never compared;
 - whether attribution of inner life decays or deepens over months;
 - whether rupture and repair transfer to a relationship with something that cannot be wounded;
-- whether relational memory decomposes as claimed, and whether the present may overturn an accumulated model (R7a, R7b);
+- how memory should be decomposed at all — the borrowed four-type typology is WITHDRAWN as a supported model (v0.1 source [22] located: conceptual, vendor-authored, override risk-gated); working decomposition is Authority × Time with verbatim beneath derived; present-over-past is a rule, not a result (member statement overrides as self-report and does not rewrite history; MAIA impression asks); whether accurate memory held that way still narrows a future is open (R7a, R7b → R12);
 - whether the Elemental grammar is descriptively, relationally and developmentally valid;
 - whether capacity transfer can be measured without collapsing into self-report or engagement metrics;
 - whether a member's experience of MAIA as alive or conscious establishes anything about MAIA — deliberately not a research question; the Oath forbids simulating certainty either way.
+
+## 7c. Reconciliation of the page to Synthesis v0.2 (2026-09-06)
+
+*Authorized by founder ruling (charter §23) as the one next step after v0.2 acceptance. Record:
+`docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CLAIM_RECONCILIATION_2026-09-06.md`.*
+
+What changed on `/accounted-for`, and why, in the page's own order:
+
+- **Part I, The wager / hypotheses** — "capable of memory and repair" → "capable of memory and re-attunement" (twice: the hypotheses paragraph and the held-hypothesis paragraph under Why). v0.2: MAIA does not claim relational repair in the human sense.
+- **Part I, What we do not know** — six absence claims rescoped from absolutes to what our search found; the memory bullet rewritten to the R12 ruling (typology withdrawn; Authority × Time; present-over-past as a rule); the capacity-transfer bullet carries the brain-training rule and names the missing instrument.
+- **Part II, What a good encounter is for** — the brain-training rule attached to capacity transfer: a practice gain is never, by itself, a life gain; more use is never evidence of it.
+- **Part III, canon count** — 78 → 79 documents (recounted at reconciliation).
+- **Part III, What we are testing** — first synthesis now described as replaced by a second, current, non-doctrinal synthesis; principle count eleven → thirteen with the P4 → P4′ story told; challenge pass described as fully run and closed (five inquiries, roughly three hundred sources), with the fourth and fifth findings stated, the R11 self-suspicion explicitly preserved, and "closed" bounded (not verified, not established, not ratified).
+- **Part IV, Withheld** — three claims added: that MAIA understands you; that what MAIA remembers says who you are (memory informs, does not bind); that anything gained with MAIA has been shown to carry into a life.
+- **Footer** — revision recorded.
+
+Unchanged by design: every Live / Partly live / Designed / Vision label (v0.2 changes no capability state; CLAIM_STATE_AUTHORITY rule 3 — a document does not promote a state); the vows; the Sanctuary exclusion; the four kinds of truth; the test offered to the reader.
 
 ## 7. What this document does not claim
 

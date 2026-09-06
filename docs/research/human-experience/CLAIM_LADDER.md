@@ -61,3 +61,21 @@ A principle whose content is that legitimacy cannot be self-certified (P4′) ca
 ratified by internal adjudication. Ratification of P4′ requires at least one meaningful **external
 or participant-side adversarial witness**. More generally: any principle that constrains Soullab's
 own influence should carry the same condition when it reaches the ladder's fifth rung.
+
+## Where v0.2 sits (2026-09-06, after acceptance as current programme synthesis)
+
+| Item | Rung | Kind |
+|---|---|---|
+| P1–P13 (P4 failed; P4′ replaces it) | 1 (INTERNAL HYPOTHESIS); several with rung-2 *posture* pending paraphrase check — no principle is SUPPORTED yet | named in v0.2 §3: P1, P2, P6 empirical-instrumented; P3, P7, P8, P9 ethical/structural with empirical instruments; P4′, P12, P13 ethical/structural (external witness REQUIRED); P5, P10 measurement doctrine; P11 theoretical/phenomenological |
+| Authority × Time working decomposition | 1 | theoretical (working model; maps to what the repository already does) |
+| Brain-training rule | programme doctrine (not a rung — governs how empirical capacity claims may be made) | ethical/methodological |
+| "Centrifugal in consequence, not posture" | 1 — E10 REQUIRED before empirical ratification | theoretical → aspiring empirical |
+| Capacity Transfer measurement programme | 1 — no public transfer claim before a qualifying design | empirical aspiration, now specified (what · from · to · how observable) |
+| Elemental H1–H3 | 1 — E5 before E6 | theoretical/phenomenological hypothesis |
+| Anti-patterns AP1–AP17 | ethical (canon-backed for 10 of 12 originals; AP13–AP17 CANDIDATE by founder ruling) | ethical |
+| Non-neutrality concession ("MAIA shapes") | public — founder act, kind **ethical/philosophical**, stated as position not finding | on `/accounted-for` |
+| Absence-of-evidence statements on `/accounted-for` | public — scoped to "what our search found"; kind **empirical about the literature**, licensed by the ledgers as search records, not by paraphrase check | rung 5 by founder act, worded to the warrant |
+
+**Evidence posture (v0.2 §1) is not a rung.** MATURE / EMERGING / CONTESTED / EVIDENCE GAP /
+ATTRIBUTED FRAMEWORK describe the apparent maturity of the ledger's literature and are
+provisional research judgments. Ascent on this ladder still requires paraphrase-checked sources.

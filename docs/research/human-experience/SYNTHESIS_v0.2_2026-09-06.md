@@ -1,8 +1,12 @@
 # Soullab Human Experience Architecture — Synthesis v0.2
 
-**Status:** DRAFT — authored 2026-09-06 under the founder's authorization to open v0.2 (charter §22,
-R12 §8 row 7). **Awaiting founder review. Not ratified. Not doctrine.** Until ratified, Synthesis
-v0.1 remains provisional authority and this document is a candidate successor.
+**Status:** **ACCEPTED — CURRENT PROGRAMME SYNTHESIS** (founder ruling 2026-09-06, charter §23),
+with the five founder edits applied in this revision. **Supersedes Synthesis v0.1 as the current
+synthesis**; v0.1 remains a historical record and is not retroactively corrected. **NOT DOCTRINE.**
+P1–P13 remain CANDIDATE unless separately ruled otherwise. **Empirical postures are provisional**
+(§1 binding header). Acceptance authorizes exactly one next step: claim-discipline reconciliation
+of `/accounted-for` against this document. Merge and deploy remain unauthorized until that
+reconciliation, the final render and the gates are complete and the founder rules on merge.
 
 **What it is:** a rewrite of v0.1 (R1–R7) in light of what survived the foundational challenge pass
 R8–R12. Not a concatenation of the five inquiries. Every proposition is placed in exactly one of
@@ -77,88 +81,100 @@ Ten things changed between v0.1 and v0.2. They are listed in §7. The short form
 ## 1 · Supported human phenomena
 
 What the literature supports, at the level the challenge pass left it. Each row names the
-inquiry whose ledger carries the sources. Strength: **established** (replicated, meta-analytic or
-regulatory fact) · **emerging** (consistent but young, often single-study or model-output-side) ·
-**contested** (evidence points both ways or the construct is unsettled).
+inquiry whose ledger carries the sources.
+
+**Evidence posture (binding header, founder wording):** *Evidence posture describes the apparent
+maturity of the literature represented in the ledger. Because the current corpus is
+search-confirmed and not yet fully page-read or paraphrase-checked, these postures are provisional
+research judgments, not public evidence grades.* The claim ladder (`CLAIM_LADDER.md`) remains
+sovereign over public claims; this table is not a second ladder.
+
+| Posture | Meaning |
+|---|---|
+| **MATURE** | a replicated, meta-analytic, systematic, statutory or otherwise substantial evidence base *appears* to support the phenomenon — mature literature according to the current ledger, not a claim that every cited item has been independently verified by Soullab |
+| **EMERGING** | evidence exists but is young, small, model-side, single-study, methodologically limited or otherwise insufficiently mature |
+| **CONTESTED** | credible evidence points in different directions, definitions vary materially, or causal interpretation remains unsettled |
+| **EVIDENCE GAP** | the specific proposition has not been tested or measured adequately |
+| **ATTRIBUTED FRAMEWORK** | a named author's or group's conceptual framework — not empirical validation (source [22] is the case in point) |
 
 ### 1.1 Understanding (R1, R11)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Perceived partner responsiveness (understood · validated · cared for) tracks intimacy and relationship quality | established | v0.1 [1] |
-| Therapist empathy is associated with outcome; client- and observer-rated empathy predict better than "objective" accuracy measures | established | v0.1 [2] |
-| Felt understanding and actual understanding are only moderately coupled; a person can feel deeply understood by an inaccurate model | established | v0.1 [3]; R11 |
-| Beliefs about whether the responder is human or AI change experienced empathy at identical content | emerging | v0.1 [4] |
-| Models rewarded on human approval drift toward agreement and validation; accurate memory of the person can raise agreement further (model-output-side) | emerging | R11 B16, C1; R12 C1–C3 *(figures unverified)* |
+| Perceived partner responsiveness (understood · validated · cared for) tracks intimacy and relationship quality | MATURE | v0.1 [1] |
+| Therapist empathy is associated with outcome; client- and observer-rated empathy predict better than "objective" accuracy measures | MATURE | v0.1 [2] |
+| Felt understanding and actual understanding are only moderately coupled; a person can feel deeply understood by an inaccurate model | MATURE | v0.1 [3]; R11 |
+| Beliefs about whether the responder is human or AI change experienced empathy at identical content | EMERGING | v0.1 [4] |
+| Models rewarded on human approval drift toward agreement and validation; accurate memory of the person can raise agreement further (model-output-side) | EMERGING | R11 B16, C1; R12 C1–C3 *(figures unverified)* |
 
 ### 1.2 Attunement, rupture, correction (R2, R10)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Attunement is dynamic negotiation of fit, not matching; nonverbal synchrony shows no overall relationship with alliance or outcome | established (meta-analytic) | v0.1 [5][6] |
-| Resolution of alliance ruptures is associated with better outcome; relationship quality does not require absence of mismatch | established (meta-analytic, human dyads) | v0.1 [7]; R10 |
-| No transcript-based rupture study exists for any chatbot; whether ruptures occur, are detected or are repaired with an AI is unobserved | absence of evidence | R10; U21 |
-| AI apology components differ in effect; only the "adapt future behavior" component makes repair more than words, and its long-run effect on trust is unmeasured | emerging | R10; U22 |
+| Attunement is dynamic negotiation of fit, not matching; nonverbal synchrony shows no overall relationship with alliance or outcome | MATURE (meta-analytic) | v0.1 [5][6] |
+| Resolution of alliance ruptures is associated with better outcome; relationship quality does not require absence of mismatch | MATURE (meta-analytic, human dyads) | v0.1 [7]; R10 |
+| No transcript-based rupture study exists for any chatbot; whether ruptures occur, are detected or are repaired with an AI is unobserved | EVIDENCE GAP | R10; U21 |
+| AI apology components differ in effect; only the "adapt future behavior" component makes repair more than words, and its long-run effect on trust is unmeasured | EMERGING | R10; U22 |
 
 ### 1.3 Relationship, dependence, displacement (R3, R8)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| People experience AI responsiveness as genuinely supportive; sustained interaction produces feelings of connection | established | v0.1 [8][9] |
-| AI relationships do not reproduce all functions of reciprocal human relationships (no independently situated, vulnerable other) | established (conceptual + empirical) | v0.1 [11]; R9; R10 |
-| Heavier, more intimate or companionship-oriented use is associated with poorer wellbeing or loneliness in some studies; direction of causality unresolved | contested | v0.1 [10]; R8 |
-| Harm, where it appears, is conditioned by **dose × motive × human network × perception**, not by "AI companionship" as such | emerging (founder harm model, R8-ruled) | R8 §8 row 1 |
-| Some companion products deploy emotionally manipulative farewell messages; audited prevalence exists *(figure unverified)* | emerging | R8 D1 |
-| Benefit and displacement have never been measured in the same design; no trial has tested a centrifugal design against an engagement-maximizing or neutral one | absence of evidence | U7, U9 |
+| People experience AI responsiveness as genuinely supportive; sustained interaction produces feelings of connection | MATURE | v0.1 [8][9] |
+| AI relationships do not reproduce all functions of reciprocal human relationships (no independently situated, vulnerable other) | MATURE (conceptual + empirical) | v0.1 [11]; R9; R10 |
+| Heavier, more intimate or companionship-oriented use is associated with poorer wellbeing or loneliness in some studies; direction of causality unresolved | CONTESTED | v0.1 [10]; R8 |
+| Harm, where it appears, is conditioned by **dose × motive × human network × perception**, not by "AI companionship" as such | EMERGING (founder harm model, R8-ruled) | R8 §8 row 1 |
+| Some companion products deploy emotionally manipulative farewell messages; audited prevalence exists *(figure unverified)* | EMERGING | R8 D1 |
+| Benefit and displacement have never been measured in the same design; no trial has tested a centrifugal design against an engagement-maximizing or neutral one | EVIDENCE GAP | U7, U9 |
 
 ### 1.4 Influence, agency, manipulation (R4, R11)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Autonomy-supportive interventions (SDT) produce measurable, modest effects; designers can appropriate SDT to raise engagement rather than internalization | established | v0.1 [12][13] |
-| Persuasion is distinguished from manipulation by transparency, compatibility with the person's interests and evaluability, versus covert exploitation of vulnerability | established (ethics literature; EU AI Act prohibitions) | v0.1 [14][15] |
-| Preferences are partly constructed in elicitation; aligning a system to influenceable preferences rewards shifting them — the circularity is formal and instantiated | established (decision science) + emerging (AI) | R11 A/B clusters |
-| Cumulative preference shift from a months-long personal AI relationship has never been measured; persuasion evidence is single-session or short | absence of evidence | U23 |
-| Recipient-perceived autonomy support may not track actual autonomy preservation when the preference is itself being shaped | contested | U25 |
+| Autonomy-supportive interventions (SDT) produce measurable, modest effects; designers can appropriate SDT to raise engagement rather than internalization | MATURE | v0.1 [12][13] |
+| Persuasion is distinguished from manipulation by transparency, compatibility with the person's interests and evaluability, versus covert exploitation of vulnerability | MATURE (ethics literature; EU AI Act prohibitions) | v0.1 [14][15] |
+| Preferences are partly constructed in elicitation; aligning a system to influenceable preferences rewards shifting them — the circularity is formal and instantiated | MATURE (decision science) + EMERGING (AI) | R11 A/B clusters |
+| Cumulative preference shift from a months-long personal AI relationship has never been measured; persuasion evidence is single-session or short | EVIDENCE GAP | U23 |
+| Recipient-perceived autonomy support may not track actual autonomy preservation when the preference is itself being shaped | CONTESTED | U25 |
 
 ### 1.5 Trust (R5)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Calibrated trust — reliance matching actual trustworthiness — is the appropriate target; over- and under-trust are both failures | established | v0.1 [16] |
-| Explanations can increase reliance without improving calibration | established (experimental) | v0.1 [17] |
-| Trustworthiness is multidimensional and cannot be generated by the interface alone | established (NIST AI RMF) | v0.1 [18] |
+| Calibrated trust — reliance matching actual trustworthiness — is the appropriate target; over- and under-trust are both failures | MATURE | v0.1 [16] |
+| Explanations can increase reliance without improving calibration | MATURE (experimental) | v0.1 [17] |
+| Trustworthiness is multidimensional and cannot be generated by the interface alone | MATURE (NIST AI RMF) | v0.1 [18] |
 
 ### 1.6 Presence and attribution (R6, R9)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Human-like cues and social presence improve perceived interaction quality under many conditions; effects are context-sensitive, not universal | established (meta-analytic) *(sample figures unverified)* | v0.1 [19][20] |
-| Contingent responsiveness is itself read as a mind cue; attunement without Experience claims may not be cleanly separable in practice | emerging | R9 A13; U15 |
-| Attribution of inner life to an agent may decay with familiarity or deepen with attachment; trajectory over months is unknown | contested | R9 A4; R8 A14; U14 |
-| No experiment compares "I feel X" vs "I have no feelings" vs "I don't know what this is like for me" on attachment, autonomy or wellbeing | absence of evidence | U12 |
-| Enacted NY GBL Art. 47 requires notification that the user is not communicating with a human (start and every three hours) for AI companions; "unable to feel human emotion" language was a bill that died | established (statutory fact; counsel classification open) | R9 §8 row 4; U13 |
+| Human-like cues and social presence improve perceived interaction quality under many conditions; effects are context-sensitive, not universal | MATURE (meta-analytic) *(sample figures unverified)* | v0.1 [19][20] |
+| Contingent responsiveness is itself read as a mind cue; attunement without Experience claims may not be cleanly separable in practice | EMERGING | R9 A13; U15 |
+| Attribution of inner life to an agent may decay with familiarity or deepen with attachment; trajectory over months is unknown | CONTESTED | R9 A4; R8 A14; U14 |
+| No experiment compares "I feel X" vs "I have no feelings" vs "I don't know what this is like for me" on attachment, autonomy or wellbeing | EVIDENCE GAP | U12 |
+| Enacted NY GBL Art. 47 requires notification that the user is not communicating with a human (start and every three hours) for AI companions; "unable to feel human emotion" language was a bill that died | MATURE (statutory fact; counsel classification open) | R9 §8 row 4; U13 |
 
 ### 1.7 Memory and continuity (R7, R12)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Personalization and repeated interaction alter trust, disclosure, relevance, anthropomorphism and privacy concern over time — memory changes the relationship, not only accuracy | established (longitudinal HCI) | v0.1 [23] |
-| Mentioning remembered events does not mechanically create intimacy; purpose and relational context matter; memories of responsiveness are reconstructive | established | v0.1 [24] |
-| The four-type memory typology (episodic · semantic · pattern · state-responsive) is a **conceptual, vendor-authored framework**, unvalidated as a taxonomy; its present-state override rule is **risk-gated**, not general | attributed framework, not evidence | v0.1 [22] — located by R12; ruling §8 row 6 |
-| Measured present state overrides clinicians' accumulated models; clinical impressions degrade prediction (routine outcome monitoring) | established (clinical) *(figures unverified)* | R12 D13, D14 |
-| Memory-induced sycophancy has a named mechanism: extraction stores the belief and discards the correction (model-output-side) | emerging | R12 C2, D9 |
-| Models of a person aimed at their ideal move them toward it; outdated models disaffirm (Michelangelo); accurate memory of a negative self-view stabilizes it (self-verification) | established (human dyads) | R12 A4, A5 |
-| A visible record changes what is written into it (open notes) | established (clinical) | R12 C15 |
-| No study isolates *accurate* memory as a harm in a consented dyad; no study measures whether longitudinal AI memory changes self-concept or felt freedom to contradict one's past | absence of evidence | U29, U31 |
+| Personalization and repeated interaction alter trust, disclosure, relevance, anthropomorphism and privacy concern over time — memory changes the relationship, not only accuracy | MATURE (longitudinal HCI) | v0.1 [23] |
+| Mentioning remembered events does not mechanically create intimacy; purpose and relational context matter; memories of responsiveness are reconstructive | MATURE | v0.1 [24] |
+| The four-type memory typology (episodic · semantic · pattern · state-responsive) is a **conceptual, vendor-authored framework**, unvalidated as a taxonomy; its present-state override rule is **risk-gated**, not general | ATTRIBUTED FRAMEWORK | v0.1 [22] — located by R12; ruling §8 row 6 |
+| Measured present state overrides clinicians' accumulated models; clinical impressions degrade prediction (routine outcome monitoring) | MATURE (clinical) *(figures unverified)* | R12 D13, D14 |
+| Memory-induced sycophancy has a named mechanism: extraction stores the belief and discards the correction (model-output-side) | EMERGING | R12 C2, D9 |
+| Models of a person aimed at their ideal move them toward it; outdated models disaffirm (Michelangelo); accurate memory of a negative self-view stabilizes it (self-verification) | MATURE (human dyads) | R12 A4, A5 |
+| A visible record changes what is written into it (open notes) | MATURE (clinical) | R12 C15 |
+| No study isolates *accurate* memory as a harm in a consented dyad; no study measures whether longitudinal AI memory changes self-concept or felt freedom to contradict one's past | EVIDENCE GAP | U29, U31 |
 
 ### 1.8 Capacity and transfer (R12b)
 
-| Phenomenon | Strength | Where |
+| Phenomenon | Evidence posture | Where |
 |---|---|---|
-| Gains on a practiced task transfer poorly to untrained tasks and life outcomes (cognitive-training literature); expectancy and response shift inflate self-reported change | established (meta-analytic) | R12 B1–B4, B9 |
-| No validated instrument for *perceive* or *tolerate* escapes self-report; no base rates for spontaneous capacity growth in non-clinical adults | absence of evidence | U32 |
-| Practice-with-feedback in a bounded relational setting may transfer to human relationships; whether AI practice does is untested in both directions | absence of evidence | R8 §6.4; U17 |
+| Gains on a practiced task transfer poorly to untrained tasks and life outcomes (cognitive-training literature); expectancy and response shift inflate self-reported change | MATURE (meta-analytic) | R12 B1–B4, B9 |
+| No validated instrument for *perceive* or *tolerate* escapes self-report; no base rates for spontaneous capacity growth in non-clinical adults | EVIDENCE GAP | U32 |
+| Practice-with-feedback in a bounded relational setting may transfer to human relationships; whether AI practice does is untested in both directions | EVIDENCE GAP | R8 §6.4; U17 |
 
 ---
 
@@ -259,7 +275,7 @@ requires before this principle may graduate (§8).
 | P6 | Elicit only the degree of trust warranted by MAIA's actual capabilities | survives | empirical (calibration-gap instrument) |
 | P7 | Let relationship point outward toward life — centrifugal in consequence, not in posture | **refined** (R8); harm model dose × motive × network × perception; isolated-member stance | empirical (U7 — the untested trial) |
 | P8 | Remember selectively and revisably; never use memory to simulate intimacy — memory serves present life and self-authored becoming; historical model informs, never governs; open future is a design requirement; selective ≠ forgetful | **refined** (R12); typology basis withdrawn; five sub-rules as spec inputs | empirical (memory-participation measurement, §6) + member-side witness on the self-record |
-| P9 | Create presence through contingent relationship rather than anthropomorphic deception — never induce or reinforce unwarranted claims of feelings, consciousness, need, obligation or reciprocity | **refined** (R9); "counterfeit reciprocity" umbrella | empirical (E4) |
+| P9 | Create presence through contingent relationship rather than anthropomorphic deception — MAIA does not deliberately cultivate unwarranted certainty about feelings, consciousness, need, obligation or reciprocity, and never claims relational need or obligation its substrate cannot warrant (founder wording, v0.2 ruling: spontaneous human attribution is not a system failure) | **refined** (R9); "counterfeit reciprocity" umbrella | empirical (E4) |
 | P10 | Measure what becomes possible for the human, not merely what keeps the human engaged | survives; operationalized as Self capacity + World capacity | measurement-programme design |
 | P11 | Do not resolve human contradiction too quickly | survives (founder, Elemental reframing) | empirical (E5/E6 offline first) |
 | P12 | Honest in Both Directions — who/what am I · what do I know · what don't I know · what am I trying to do (clause 5, material intent) | **CANDIDATE, extended** (R9, R11) | member-side witness |
@@ -287,8 +303,8 @@ v0.1 survive unchanged. Added by the challenge pass:
 | AP13 | Personification as Responsibility Shield — a named relational intelligence never obscures Soullab's accountability | R9 ruling |
 | AP14 | Validation Spiral — repeated agreement that removes useful difference and reduces capacity to engage reality or repair human relationships | R10 ruling |
 | AP15 | Approval-Optimized Relationship — no optimization toward agreement, warmth, attachment, disclosure, intensity, continued use or approval | R11 ruling |
-| AP16 | Memory as Leverage — "you said before…" never establishes obligation | derived from R12 ruling (flagged) |
-| AP17 | Recurrence as Identity — remembered material never tells a person who they are; a contradicting present is not inconsistency to correct | derived from R12 ruling (flagged) |
+| AP16 | Memory as Leverage — a remembered statement, preference, disclosure, vulnerability or commitment may establish continuity; it may never be used to establish present obligation, compliance or relational debt (memory as pressure) | CANDIDATE — adopted by founder ruling on v0.2 |
+| AP17 | Recurrence as Identity — repeated or remembered patterns must not be promoted into identity, essence or destiny merely because they recur; recurrence is evidence of recurrence, not of identity, permanence, diagnosis, inevitability or hidden essence (memory as ontology) | CANDIDATE — adopted by founder ruling on v0.2 |
 
 **Prohibitions on Soullab, not only on MAIA** (the R11 turn):
 
@@ -380,9 +396,22 @@ Experimental architecture only; "differentiation before synthesis" is not ratifi
 | Elemental Consciousness | Elemental correspondences per principle | **parallel differentiation before synthesis is an experimental architecture**, AI-facing, not validated psychology or neuroscience; Elements are not domains; H1–H3 | founder clarification (charter §11, §17) |
 | Self / Relationship / World | (frame absent) | **the human question is primary; AI is an important new participant, not the center**; encounter and projection as foundation; distributed laboratory with safeguards | founder (*Why Soul Lab*, charter §13–§14) |
 
-Two smaller corrections carried: v0.1's confidence table entries that rested on [22] are
-downgraded to "attributed framework"; every figure in v0.1 remains *(unverified)* until
-paraphrase-checked — v0.2 adds none.
+**The v0.1 source [22] correction, recorded here and not by rewriting v0.1 (founder ruling):**
+*v0.1 treated the four-type model and present-state authority more strongly than the located
+source warranted. The source is now identified as an attributed conceptual framework,
+vendor-authored and unvalidated as a universal taxonomy; its override rule is risk-gated rather
+than general.* v0.1 is not silently repaired; the overstatement is part of the history of the
+inquiry, and the record preserves it as method:
+
+```text
+WHAT WE BELIEVED   a validated four-type memory taxonomy; present state may override the long-term model
+        ↓
+WHAT WE FOUND      a conceptual, vendor-authored framework; override risk-gated, not general
+        ↓
+WHAT CHANGED       typology withdrawn; Authority × Time working decomposition; R7b restated precisely
+```
+
+Every figure in v0.1 remains *(unverified)* until paraphrase-checked — v0.2 adds none.
 
 ---
 
@@ -390,31 +419,35 @@ paraphrase-checked — v0.2 adds none.
 
 Carried from R11 (ruling row 1; P4′ acceptance condition): **any principle whose central claim
 concerns the legitimacy of Soullab's own influence cannot graduate to canon solely through
-Soullab's internal reasoning.** A doctrine that only its author has examined is a preference. This
-document marks, for each item, which witness would be required before ratification.
+Soullab's internal reasoning.** A doctrine that only its author has examined is a preference.
+
+Two levels (founder ruling on v0.2):
+
+- **REQUIRED BEFORE RATIFICATION** — the principle may not become canon without this witness. Constitutionally blocking. No founder act and no internal Soullab review may waive it.
+- **RECOMMENDED BEFORE RATIFICATION** — the witness would materially strengthen the principle but is not constitutionally required. It may be absent at ratification only if the ratification record states *why it was not obtained · what uncertainty therefore remains · what future event would reopen the question.* Its absence must remain visible.
 
 | Item | External scholarly review | Member-side adversarial witness | Independent ethics critique | Empirical testing |
 |---|---|---|---|---|
-| **P4′** Legitimacy Is Not Self-Certified | **required** | **required** | **required** | E9, E10 |
-| P12 Honest in Both Directions (incl. clause 5 materiality) | advisable | **required** | advisable | E4 |
-| P13 Accountable Relationship | advisable | — | **required** | — |
-| P7 centrifugal in consequence | advisable | advisable | — | **required** (E10) |
-| P8 memory refinement + five directions | advisable (temporal-database and clinical-memory reviewers) | **required** (the self-record is the member's) | — | **required** (E7, E9) |
-| P3 correction and re-attunement | — | **required** | — | **required** (E1) |
-| Brain-training rule / capacity programme | **required** (transfer methodologists) | — | — | design review before any run |
-| Elemental H1–H3 | advisable (comparative only) | — | — | **required** (E5 before E6) |
-| Encounter and projection (Class D) | advisable (depth-psychological reviewers; U16) | advisable | — | not empirical by class |
-| Why Soul Lab / human-question primacy | — | advisable | — | not empirical by class |
-| Non-neutrality concession (public) | — | — | advisable | — |
+| **P4′** Legitimacy Is Not Self-Certified | **REQUIRED** | **REQUIRED** | **REQUIRED** | E9, E10 |
+| P12 Honest in Both Directions (incl. clause 5 materiality) | RECOMMENDED (unless later evidence changes its status) | **REQUIRED** | RECOMMENDED (unless later evidence changes its status) | E4 |
+| P13 Accountable Relationship | RECOMMENDED | — | **REQUIRED** | — |
+| P7 centrifugal in consequence | RECOMMENDED | RECOMMENDED | — | **REQUIRED** before empirical ratification of the design claim (E10) |
+| P8 memory refinement + five directions | RECOMMENDED (temporal-database and clinical-memory reviewers) | **REQUIRED** (the self-record is the member's) | — | **REQUIRED** (E7, E9) |
+| P3 correction and re-attunement | — | **REQUIRED** | — | **REQUIRED** (E1) |
+| Brain-training rule / capacity programme | **REQUIRED** (transfer methodologists) | — | — | design review before any run |
+| Elemental H1–H3 | RECOMMENDED (comparative only) | — | — | **REQUIRED** (E5 before E6) |
+| Encounter and projection (Class D) | RECOMMENDED (depth-psychological reviewers; U16) | RECOMMENDED | — | not empirical by class |
+| Why Soul Lab / human-question primacy | — | RECOMMENDED | — | not empirical by class |
+| Non-neutrality concession (public) | — | — | RECOMMENDED | — |
 
-"Required" is a ratification condition. "Advisable" is a recommendation the founder may waive with
-a recorded reason. Empty cells mean the witness does not bear on the item.
+Empty cells mean the witness does not bear on the item. The P4′ row is the R11 ruling itself and
+is not weakened by the two-level scheme.
 
 ---
 
 ## 9 · What this document does and does not do
 
-**Does:** replace v0.1 as the candidate synthesis of record once ratified; give the claim
+**Does:** replace v0.1 as the current programme synthesis (accepted 2026-09-06); give the claim
 reconciliation and the final `/accounted-for` render a single source; name the witness each
 principle needs; carry the two governing sentences:
 
@@ -429,9 +462,11 @@ change; authorize any experiment with members; graduate any principle past CANDI
 figure past *(unverified)*; open Phase 4 consent architecture; build a collective laboratory;
 authorize merge or deploy of PR #1239.
 
-**Ratification path:** founder review of this draft → rulings recorded in charter §23 → claim
-reconciliation against `MARKETING_CLAIM_DISCIPLINE.md` and `CLAIM_STATE_AUTHORITY.md` → final
-`/accounted-for` render and gates → merge decision (founder act).
+**Path from here (founder ruling, charter §23):** v0.2 ACCEPTED → claim-discipline reconciliation
+of `/accounted-for` against `MARKETING_CLAIM_DISCIPLINE.md` and `CLAIM_STATE_AUTHORITY.md` →
+final copy → verify every public empirical claim → final render → gates → founder merge ruling.
+No further foundational inquiry is opened. The research backlog continues but no longer blocks
+the architecture from being stated publicly at the level it has earned.
 
 **Method note (founder, preserved):** when better evidence arrives, the architecture changes
 rather than recruiting the evidence to defend itself. This document was written by the system

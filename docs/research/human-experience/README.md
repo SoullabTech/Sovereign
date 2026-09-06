@@ -21,10 +21,10 @@ EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETAT
 |---|---|---|
 | Evidence | `evidence/SOURCE_LEDGER.md` (25 sources, tiered, classed, verification status) · `evidence/TEMPLATE.md` | ledger built; verification in progress |
 | Contested questions | `CONTESTED_QUESTIONS.md` | built from synthesis §"What remains genuinely unknown" + founder's assumptions-to-challenge list |
-| Supported phenomena | `SYNTHESIS_v0.2_2026-09-06.md` §1 (rewrite of v0.1 in light of R8–R12) · v0.1 retained as history | **v0.2 DRAFT authored 2026-09-06 — awaiting founder review**; v0.1 provisional authority until v0.2 is ratified |
-| Soullab interpretation | v0.2 §2 · `frameworks/` (encounter · elemental · **memory/AUTHORITY_X_TIME**) | v0.2 DRAFT |
+| Supported phenomena | `SYNTHESIS_v0.2_2026-09-06.md` §1 (rewrite of v0.1 in light of R8–R12) · v0.1 retained as history | **v0.2 ACCEPTED 2026-09-06 — CURRENT PROGRAMME SYNTHESIS, not doctrine, empirical postures provisional**; v0.1 HISTORICAL |
+| Soullab interpretation | v0.2 §2 · `frameworks/` (encounter · elemental · **memory/AUTHORITY_X_TIME**) | v0.2 current |
 | Design principles | `principles/PROVISIONAL_PRINCIPLES_v0.1.md` · v0.2 §3 | P1–P13 CANDIDATE (P3 split, P4 fails → P4′ external-witness, P7 refined, P8 refined) — none ratified |
-| Ethical boundaries | `anti-patterns/ANTI_PATTERNS_v0.1.md` · v0.2 §4 | AP1–AP17 (AP13–AP15 founder-ruled; AP16–AP17 derived from the R12 ruling) |
+| Ethical boundaries | `anti-patterns/ANTI_PATTERNS_v0.1.md` · v0.2 §4 | AP1–AP17 (AP13–AP17 founder-ruled; all CANDIDATE) |
 | Testable hypotheses | `experiments/` | empty — none authorized |
 | MAIA experiments | `experiments/<surface>/` | empty — none authorized |
 
@@ -36,7 +36,7 @@ Foundational statement: `WHY_SOUL_LAB_2026-09-06.md` (founder; candidate canon; 
 Elemental Parallel Processing hypothesis (founder ruling, charter §11): `frameworks/elemental-experience/ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` — the authoritative Elemental record; the two earlier Elemental files are history.
 Ledgers: `evidence/SOURCE_LEDGER.md` (v0.1) · `SOURCE_LEDGER_R8.md` · `SOURCE_LEDGER_R9.md` · `SOURCE_LEDGER_R10.md` · `SOURCE_LEDGER_R11.md` · `SOURCE_LEDGER_R12.md` · `SOURCE_LEDGER_ELEMENTAL.md`.
 
-**Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation. **After R12:** Synthesis v0.2 OPEN / AUTHORIZED — its job is to rewrite v0.1 in light of what survived being attacked, in six separated layers (supported phenomena → Soullab interpretation → candidate principles → prohibitions → open questions → experimental hypotheses), with a change record and external-witness markers. Claim reconciliation and the final `/accounted-for` render are HELD until v0.2. Memory decomposition: `frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`.
+**Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation. **After R12:** Synthesis v0.2 authored and **ACCEPTED as the current programme synthesis** (founder ruling, charter §23) — six separated layers, change record, REQUIRED/RECOMMENDED witness table; not doctrine; empirical postures provisional; v0.1 historical. **Next act authorized: claim-discipline reconciliation of `/accounted-for` against v0.2 → final copy → verify every public empirical claim → final render → gates → founder merge ruling.** No further foundational inquiry is opened. Memory decomposition: `frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`.
 
 ## Inquiry numbering — read this before citing an R-number
 
