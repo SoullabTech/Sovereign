@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  * Respects cooling periods and invite limits.
  */
 
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import {
@@ -17,12 +18,17 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId, intendedName, intendedEmail, personalNote } = body;
+    const { intendedName, intendedEmail, personalNote } = body;
 
+    /* IDENTITY IS SERVER-DERIVED. This route previously read `memberId` from
+       the request body and used it to spend that member's invite allowance —
+       with no session check, on a route the access matrix never mapped. A bare
+       member id is a CLAIM, not authority, and member UUIDs reach clients. */
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 

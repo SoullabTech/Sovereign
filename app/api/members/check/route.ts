@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -59,12 +60,6 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 
-// Check if passkey is an admin passkey (always allowed even without invites table)
-function isAdminPasskey(passkey: string): boolean {
-  const adminPrefixes = ['SOULLAB-', 'MAIA-', 'PIONEER-', 'FOUNDING-'];
-  return adminPrefixes.some(prefix => passkey.toUpperCase().startsWith(prefix));
-}
-
 // Safe query that returns empty result on table/column errors
 async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
   try {
@@ -97,14 +92,13 @@ export async function POST(request: NextRequest) {
     const normalizedPasskey = passkey.toUpperCase().trim();
     console.log(`[MEMBERS] Check passkey: ${normalizedPasskey}`);
 
-    // Check if passkey exists in members table (returning user)
-    const memberResult = await safeQuery(
-      'SELECT id, username, name, onboarded, onboarding_step FROM members WHERE passkey = $1',
-      [normalizedPasskey]
-    );
+    /* ONE admission predicate, shared with /api/members/register. This route
+       must never answer "valid invite" for something register would refuse:
+       that divergence is exactly what let a format-only match through. */
+    const admission = await resolveAdmission(normalizedPasskey);
 
-    if (memberResult.rows.length > 0) {
-      const member = memberResult.rows[0];
+    if (admission.kind === 'existing_member') {
+      const member = admission.member as Record<string, unknown>;
       console.log(`[MEMBERS] Found existing member: ${member.username}`);
       return NextResponse.json({
         exists: true,
@@ -112,72 +106,33 @@ export async function POST(request: NextRequest) {
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         username: member.username,
-        name: member.name
+        name: member.name,
       }, { headers: corsHeaders });
     }
 
-    // Check if this is a valid invite passkey (new user with invite)
-    // This query is optional - might fail if invites table doesn't exist
-    const inviteResult = await safeQuery(
-      `SELECT i.id, i.status, i.expires_at, m.username as inviter_username, m.name as inviter_name
-       FROM invites i
-       LEFT JOIN members m ON i.created_by = m.id
-       WHERE i.passkey = $1`,
-      [normalizedPasskey]
-    );
-
-    if (!inviteResult.error && inviteResult.rows.length > 0) {
-      const invite = inviteResult.rows[0];
-
-      // Check if invite is valid
-      if (invite.status !== 'pending') {
-        return NextResponse.json({
-          exists: false,
-          isInvite: true,
-          inviteStatus: invite.status,
-          error: `This invite has already been ${invite.status}`
-        }, { headers: corsHeaders });
-      }
-
-      // Check if expired
-      if (invite.expires_at && new Date(invite.expires_at as string) < new Date()) {
-        return NextResponse.json({
-          exists: false,
-          isInvite: true,
-          inviteStatus: 'expired',
-          error: 'This invite has expired'
-        }, { headers: corsHeaders });
-      }
-
-      // Valid invite - user can register with this passkey
+    if (admission.kind === 'admit') {
       console.log(`[MEMBERS] Valid invite found for: ${normalizedPasskey}`);
       return NextResponse.json({
         exists: false,
         isInvite: true,
         inviteStatus: 'valid',
-        inviterName: invite.inviter_name,
-        inviterUsername: invite.inviter_username,
+        inviterName: admission.inviterName,
+        inviterUsername: admission.inviterUsername,
       }, { headers: corsHeaders });
     }
 
-    // If invites table is missing OR no invite found, check if it's an admin passkey
-    // Admin passkeys are always allowed for registration
-    if (isAdminPasskey(normalizedPasskey)) {
-      console.log(`[MEMBERS] Admin passkey allowed: ${normalizedPasskey}`);
-      return NextResponse.json({
-        exists: false,
-        isInvite: true,  // Treat as valid invite
-        inviteStatus: 'valid',
-        isAdminPasskey: true,
-      }, { headers: corsHeaders });
-    }
-
-    // Unknown passkey
-    console.log(`[MEMBERS] Unknown passkey: ${normalizedPasskey}`);
+    /* Refused. `isInvite` reports whether an invite record was FOUND, so a
+       used or expired invite can still be explained to the person holding it —
+       but nothing here reports `inviteStatus: 'valid'`. */
+    const foundAnInvite =
+      admission.reason === 'invite_not_pending' || admission.reason === 'invite_expired';
+    console.log(`[MEMBERS] Passkey refused (${admission.reason}): ${normalizedPasskey}`);
     return NextResponse.json({
       exists: false,
-      isInvite: false,
-      error: 'Invalid passkey. Contact support for a valid passkey.'
+      isInvite: foundAnInvite,
+      ...(admission.reason === 'invite_not_pending' ? { inviteStatus: admission.status } : {}),
+      ...(admission.reason === 'invite_expired' ? { inviteStatus: 'expired' } : {}),
+      error: admissionRefusalMessage(admission.reason),
     }, { headers: corsHeaders });
 
   } catch (error) {

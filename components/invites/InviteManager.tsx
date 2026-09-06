@@ -63,7 +63,10 @@ export function InviteManager({ memberId }: InviteManagerProps) {
 
   const fetchInvites = useCallback(async () => {
     try {
-      const response = await fetch(`/api/invites/list?memberId=${memberId}`);
+      /* The server derives WHOSE invites these are from the session. Sending
+         a member id here would be transmitting an authorization input the
+         server must not trust — and must not appear to accept. */
+      const response = await fetch('/api/invites/list');
       const data = await response.json();
 
       if (response.ok) {
@@ -93,7 +96,6 @@ export function InviteManager({ memberId }: InviteManagerProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          memberId,
           intendedName: newInviteName.trim() || undefined,
           intendedEmail: newInviteEmail.trim() || undefined,
           personalNote: newInviteNote.trim() || undefined,
@@ -123,7 +125,7 @@ export function InviteManager({ memberId }: InviteManagerProps) {
       const response = await fetch('/api/invites/revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId, inviteId }),
+        body: JSON.stringify({ inviteId }),
       });
 
       if (response.ok) {
