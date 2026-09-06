@@ -9,7 +9,8 @@ FLOW        SHADOW-01  DISCOVER → FALSIFY → CONSTITUTE → founder ratificat
 OPENED      2026-09-06 (founder, in-session; split out of the whole-organism census lane by founder ruling)
 BASE        clean-main-no-secrets @ 69f6fb7c
 BRANCH      claude/maia-shadow-practice-3pvlms
-STATUS      SHADOW-01 · DISCOVER OPEN (founder go 2026-09-06) · read-only · NO CODE
+STATUS      SHADOW-01 · DISCOVER COMPLETE 2026-09-06 · awaiting founder acceptance · NO CODE
+            (census: MAIA-SHADOW-FIELD-01_DISCOVER_2026-09-06.md)
 PARENT      JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1 (Phase 1 census is the source of this lane's constraints;
             this lane is NOT a Phase-2 register row and does not edit that programme's cockpit)
 AUTHORITY   docs/canon/MAIA_OATH.md · MAIA_CANON_v1.1 · MAIA_SOVEREIGNTY_INVARIANTS (5, 6, 14, 16) ·
@@ -303,7 +304,7 @@ Pointers only. Presence of a path is not a claim about its state.
 | Canonical turn + provenance | `lib/maia/canonical-turn/` (closed producer registry; practice-field/draft ALLOWLIST ruling; `[MAIA/shadow]` = CMT-01 construction, unrelated to this lane) | a Field prototype must not add an unregistered producer or reopen M3; a separate surface is the Invoked-entry question's hard part |
 | Refusal registry | `tests/constitutional/refusal-registry/` (36 files; last numbered refusal-31) | FALSIFY outputs land here, numbered after the current tail at that time |
 | Dreams / symbols | `lib/knowledge/DreamConversationWisdom.ts`; symbolic intelligence rows in the whole-organism census §14 (SOURCE-SHADOW = post-generation only) | the Dream/Image door; nothing here currently reaches cognition |
-| Field Lab | `lib/maia/fieldLab/experiments.ts` (relational-navigation · legacy-field · project-field), tester gate | the existing bounded-surface + tester-gate pattern PROTOTYPE would most likely reuse |
+| Field Lab | `lib/maia/fieldLab/{experiments,shelf,governance}.ts` (relational-navigation · legacy-field · project-field) | the existing bounded-surface pattern PROTOTYPE would most likely reuse. **DISCOVER correction:** there is no tester flag, allowlist, or admission table — the bound is editorial (shelf membership + a validated `governingUncertainty` per room), not per-member |
 | Epistemic tone spec | `docs/canon/MAIA_EPISTEMIC_TONE_SPEC_v1.0.md` | the four canonical registers §4 must reconcile with |
 | Human-experience research corpus | `docs/research/human-experience/` on branch `claude/maia-human-experience-phase1-census`: `PROVISIONAL_PRINCIPLES_v0.1.md` (P1–P13, P4′), `ANTI_PATTERNS_v0.1.md`, `frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md`, `frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`, `frameworks/elemental-experience/ELEMENTAL_PARALLEL_ARCHITECTURE_HYPOTHESIS_2026-09-06.md`, `measurements/MEASUREMENT_VOCABULARY_v0.1.md` | not yet on the default branch at lane opening; CONSTITUTE cites it by path and date, and retargets after that lane merges |
 
@@ -356,7 +357,7 @@ own session to place in its register:
 ## 13 · Next act
 
 ```text
-NOW       DISCOVER — read-only census of §9 (founder go 2026-09-06); record: MAIA-SHADOW-FIELD-01_DISCOVER_2026-09-06.md
+DONE      DISCOVER — read-only census (record: MAIA-SHADOW-FIELD-01_DISCOVER_2026-09-06.md); awaiting founder acceptance
 THEN      FALSIFY → CONSTITUTE → founder ratification → DESIGN → HARD STOP
 NOT       any code, repair, migration, rename, prototype, or retirement decision
 ```
