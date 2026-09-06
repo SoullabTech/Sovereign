@@ -41,6 +41,8 @@ STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2
                                     (paired with no_orphan_delete_check — the integrity path §4
                                     forbids "cleaning up"); member_id → members ON DELETE RESTRICT.
                    W2               PASS 2026-09-06 — both planes (see SUBJECT READING below)
+                   W3               FAIL on the ORIGINAL wording · PASS on the CORRECTED
+                                    criterion (see W3 INSTRUMENT CORRECTION below)
                  W3 is the first irreversible step. W1 and W2 no longer gate it; the founder's own
                  gesture in an authenticated browser is what performs it.
 
@@ -80,6 +82,60 @@ W2 EVIDENCE      UI plane, read-only DOM inspection on the authenticated room at
                  sentence reading "No standing taken." while the controls are disabled is the W2
                  contradiction; disabled controls with state="unknown" would be honest lookup
                  uncertainty and NOT a failure.
+
+W3 INSTRUMENT CORRECTION — founder ruling, 2026-09-06. THE ORIGINAL FAILURE IS NOT ERASED.
+
+                 WHAT HAPPENED. Two events existed for R when W3 was checked:
+                   17:20:21+00   o7   keep   event_index 0
+                   17:21:42+00   o1   keep   event_index 0
+                 The o7 act was an incidental member click on a different observation's control
+                 before the walk's o1 gesture. It is VALID, DURABLE and PRESERVED.
+
+                 ADJUDICATION
+                   PRODUCT BEHAVIOUR        PASS
+                   o7 act                   VALID · DURABLE · PRESERVED
+                   o1 act                   VALID · DURABLE · PRESERVED
+                   W3 · original wording    FAIL — two rows exist for R
+                   INSTRUMENT DEFECT        CONFIRMED — the reading-wide row count was an invalid
+                                            proxy for one observation's event stream
+                   CORRECTION               RATIFIED — W3/W5/W6/W7 arithmetic is scoped to
+                                            reading_id = R AND observation_key = 'o1'
+                   W3 · corrected criterion PASS — o1 has exactly one event:
+                                            index 0 · keep · authenticated member · server stamp
+
+                 WHY THIS IS A CORRECTION, NOT A RELAXATION. The storage model already names the
+                 unit of history: the UNIQUE key is (member_id, reading_id, observation_key,
+                 event_index), and each observation owns an independent sequence beginning at 0.
+                 So `keep → dismiss → unresolved` at indices 0,1,2 can only coherently describe ONE
+                 observation's stream. Counting every event for the whole reading was using R as a
+                 proxy for that stream; the stray o7 act revealed the proxy assumption. The product
+                 requirement is unchanged and unweakened.
+
+                 OPERATIVE PREDICATE for W3/W5/W6/W7:
+                   WHERE reading_id = 'cb589ab0-3532-433b-b52d-916d155382c8'
+                     AND observation_key = 'o1'
+
+                 NOT DONE, AND RULED OUT
+                   ✗ deleting the o7 row — dose_no_single_delete_check refuses single-row deletes
+                     by design, and the runbook forbids dropping recorded member acts to tidy up.
+                     o7 is now part of the witness.
+                   ✗ restarting on a fresh reading to manufacture the original arithmetic — the
+                     production-wide zero-event state was legitimately spent and cannot be
+                     recreated without destroying real member history, which would violate the very
+                     property 07F tests. A cleaner-looking walk at the cost of a falsified history.
+
+                 STANDING STATE AFTER W3
+                   R total events    2
+                   o1 stream         1 event — index 0 · keep     ← the W3 subject
+                   o7 stream         1 event — index 0 · keep     ← valid incidental member act
+                   member            ce284751-e457-42f6-89b6-bc07d0876682 on both rows, matching
+                                     the session's [Identity] explorerId — not a client-supplied id
+
+                 CARRIED FORWARD TO W10. The walk now has TWO independently standing-bearing
+                 observations. W10's claim — that the observation is untouched by the standing —
+                 is tested harder: o1 and o7 must both render verbatim and unfaded, in place, with
+                 their "Rests on" and "Does not establish" lists intact and no standing history,
+                 count or timestamp exposed anywhere.
 ```
 
 **The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
