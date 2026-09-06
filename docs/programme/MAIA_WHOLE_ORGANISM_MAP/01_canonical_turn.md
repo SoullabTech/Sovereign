@@ -137,16 +137,16 @@ resolved, and two of them (Bloom pull, CARE-mode "name the pattern" `:1158`) pus
 
 ## 7 · Smallest evidence-producing intervention per gap
 
-| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5, higher = riskier) | Smallest intervention | Experiment it feeds (E1–E10 or new) |
-|---|---|---|---|---|---|---|
-| G1 Serial scalar collapse before cognition (profile · facet · element · level · voice) | P11, AP17 | 4 | 5 | 2 | Shadow-only `[MAIA/interpretation-shadow]` line per turn: counts/digests of the alternatives *already computed* (Atlas `alternatives`, element score vector, router `reasoning`, both element inferences) — zero response diff, no new producer | E5 → E6 |
-| G2 Hidden shaping objectives (Bloom pull; bypassing down-regulation) | P4′ c1, P12 c5, AP15 | 4 | 3 | 1 | Read-only production count of `[Dialectical Scaffold]` and `[Router] DOWN-REGULATED` markers over a window; then a disclosure-text audit (copy only) | E4 (self-disclosure stance) · new |
-| G3 FAST tier lacks the constitutional floor | P6, P12 | 4 | 5 | 3 | Run the existing CMT-01 falsifiers (`tests/constitutional/refusal-registry/cmt-01-gates.ts`, R25/R26 expected RED) and record; repair = M3 (founder stop) | E4 · E9 |
-| G4 Alternatives discarded; Atlas absent → `EARTH-1` default enters memory | P11, P8, R12 | 3 | 3 | 1 | Read-only census: frequency of `shouldDeliberate` and of default-facet memory integrations | E5 · E7 |
-| G5 Two independent elemental inferences, one scalar each, both reach CORE prompt | P11, H1 | 3 | 3 | 1 | Shadow digest per turn of the element strings that reached the prompt vs. the score vector; agreement rate between (a) and (b) | E6 |
-| G6 No instrument for interpretation collapse in output | P11 | 4 | 2 | 1 | Offline blind-rater protocol on consented transcripts (after Phase 4 consent act) | E5 · E1 |
-| G7 Derived `summary` without evidence | R12, P8 | 2 | 2 | 1 | Shadow digest of `summary` vs its inputs; no prompt change | E9 |
-| G8 Open `meta` channel | P13 | 2 | 5 | 2 | None new — CMT-01 M3 is the intervention and is a founder stop | CMT-01 |
+| Gap | Principle/AP | Human impact (1–5) | Architectural leverage (1–5) | Risk (1–5, never 0; higher = riskier) | Evidence state (observed / inferred / unknown) | Confidence (high / medium / low) | Smallest intervention | Experiment it feeds (E1–E10 or new) |
+|---|---|---|---|---|---|---|---|---|
+| G1 Serial scalar collapse before cognition (profile · facet · element · level · voice) | P11, AP17 | 4 | 5 | 2 | observed (code, §1 table) — human effect inferred | high (mechanism) / low (effect) | Shadow-only `[MAIA/interpretation-shadow]` line per turn: counts/digests of the alternatives *already computed* (Atlas `alternatives`, element score vector, router `reasoning`, both element inferences) — zero response diff, no new producer | E5 → E6 |
+| G2 Hidden shaping objectives (Bloom pull; bypassing down-regulation) | P4′ c1, P12 c5, AP15 | 4 | 3 | 1 | observed (prompt text `:1224–1228`; router `:246–252`) — firing rate unknown | high (mechanism) / unknown (rate) | Read-only production count of `[Dialectical Scaffold]` and `[Router] DOWN-REGULATED` markers over a window; then a disclosure-text audit (copy only) | E4 (self-disclosure stance) · new |
+| G3 FAST tier lacks the constitutional floor | P6, P12 | 4 | 5 | 3 | observed on `a4305f4` [census §4.1]; inferred unchanged on `cf6d9ebf` (slot list `:1464`) | high | Run the existing CMT-01 falsifiers (`tests/constitutional/refusal-registry/cmt-01-gates.ts`, R25/R26 expected RED) and record; repair = M3 (founder stop) | E4 · E9 |
+| G4 Alternatives discarded; Atlas absent → `EARTH-1` default enters memory | P11, P8, R12 | 3 | 3 | 1 | observed (code `:3067–3079`, `:3570`) — production frequency unknown | high (code) / unknown (rate) | Read-only census: frequency of `shouldDeliberate` and of default-facet memory integrations | E5 · E7 |
+| G5 Two independent elemental inferences, one scalar each, both reach CORE prompt | P11, H1 | 3 | 3 | 1 | observed (`:1914`, `:1741`, `maiaVoice.ts:739`); field-addendum rendering inferred | medium | Shadow digest per turn of the element strings that reached the prompt vs. the score vector; agreement rate between (a) and (b) | E6 |
+| G6 No instrument for interpretation collapse in output | P11 | 4 | 2 | 1 | unknown (no class C) | high that it is absent | Offline blind-rater protocol on consented transcripts (after Phase 4 consent act) | E5 · E1 |
+| G7 Derived `summary` without evidence | R12, P8 | 2 | 2 | 1 | observed (`:1738`) | high | Shadow digest of `summary` vs its inputs; no prompt change | E9 |
+| G8 Open `meta` channel | P13 | 2 | 5 | 2 | observed (212 casts; `:597`) | high | None new — CMT-01 M3 is the intervention and is a founder stop | CMT-01 |
 
 ## 8 · Provenance — files read, records cited, commit
 
