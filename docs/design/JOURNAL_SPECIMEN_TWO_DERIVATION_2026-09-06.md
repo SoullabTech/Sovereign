@@ -161,3 +161,60 @@ consent boundary, load-bearing: entering continuation must **not retroactively
 persist** the transient reflection that preceded it. Content the member was told
 would be discarded cannot become durable because they later chose to continue —
 that is a consent violation wearing a convenience.
+
+
+---
+
+## 7. Founder rulings, 2026-09-06
+
+### Ruling 1 — Journal transience stands · B1 RATIFIED
+
+```text
+Journal's MAIA reflection remains transient.
+No canonical conversation thread is introduced.
+No follow-up turns. No persisted reflection history.
+
+Property B is NOT TESTED by Journal.
+That is the specimen result, not a defect.
+```
+
+B2 and B3 are **not authorized** — not because they are impossible, but because
+there is no Journal-native reason to amend the transience law. Introducing
+continuation to make the comparison converge would invalidate the experiment.
+
+The B3 consent boundary (§6) **remains recorded as a safeguard** against any
+future reconsideration: later choosing continuation could never retroactively
+persist content the member was told would disappear. It is not promoted into
+current design.
+
+### Ruling 2 — the ambient MAIA handle does not belong in Journal
+
+Suppressed throughout `/journal`. Recorded in full in
+`docs/design/contracts/journal-room.md`, which closes the deviation that room had
+been carrying unresolved.
+
+## 8. What specimen two now tests
+
+```text
+A  kept entry remains the subject               TEST
+B  canonical thread continuity                  NOT TESTED
+C  MAIA enters only from kept object            TEST
+D  Let it go restores exact prior place/state   TEST
+E  exit carries no penalty                      TEST
+```
+
+Step 3 does **not** design a contained `MaiaPresence` sheet. Journal's gesture is
+already substantially determined by the room:
+
+```text
+kept entry → Reflect with MAIA → one transient reflection beneath the
+member's words → Let it go → same entry, same place, no durable thread
+```
+
+The work is to test that existing path against A/C/D/E and to remove the
+unauthorized ambient handle (done — see Ruling 2).
+
+**The information specimen two has already produced:** the sheet is not the
+pattern, and canonical conversational continuity is not yet demonstrated as part
+of any shared invariant. No extraction. Walk Journal first, then compare two
+completed specimens.
