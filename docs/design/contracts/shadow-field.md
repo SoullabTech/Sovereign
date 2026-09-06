@@ -1,6 +1,6 @@
 # Shadow Field — Experience Contract
 
-**Status:** DRAFT — pending founder acceptance · Not Live (MAIA-SHADOW-FIELD-01 · DESIGN). Governed by the Shadow Field
+**Status:** Designed / Accepted · Not Live (MAIA-SHADOW-FIELD-01 · DESIGN closed 2026-09-06). Governed by the Shadow Field
 Constitution v0.2 (`docs/programme/MAIA-SHADOW-FIELD-01_CONSTITUTION_v0.2_2026-09-06.md`).
 
 ## What this room is for

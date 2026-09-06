@@ -10,7 +10,7 @@ SCOPE         constitution Part VI: both entrances · the arc with prompt law pe
               Field contract (docs/design/contracts/shadow-field.md) · what is handed to
               PROTOTYPE. Astrology excluded (D4).
 NOT           code · schema · prompt files · runtime. The HARD STOP before PROTOTYPE stands.
-STATUS        DRAFT — pending founder acceptance · Not Live. Founder ruling 2026-09-06: ACCEPTED
+STATUS        CLOSED / ACCEPTED 2026-09-06 · claim state DESIGNED · NOT LIVE. Founder ruling: ACCEPTED
               SUBJECT TO DG-C1–DG-C4 (claim state · reading-free offer · exit/re-entry ·
               producer exclusion narrowed to interpretive/frame-bearing); all four applied in
               this revision; no architectural reopening. Prototype sequencing accepted: first
@@ -378,4 +378,20 @@ NEXT           founder closes DESIGN (no further substantive review if DG-C1–C
                ▌HARD STOP▐ → PROTOTYPE only on an explicit founder act
 RUNTIME        UNCHANGED · S1 Guardian preserved
 NOT            any code
+```
+
+---
+
+## 10 · Closure (2026-09-06) — DESIGN CLOSED / ACCEPTED · claim state DESIGNED · NOT LIVE
+
+DG-C1–DG-C4 applied (commit `872eff00a`) and held; the founder recorded the flow state as
+`DESIGN CLOSED / ACCEPTED · CLAIM STATE DESIGNED · NOT LIVE · HARD STOP ACTIVE · PROTOTYPE NOT
+AUTHORIZED`. The experience contract's status is now *Designed / Accepted · Not Live*.
+SHADOW-01 is instantiated as a named Jarvis Flow: `docs/programme/JARVIS-SHADOW-01_FLOW.md`.
+
+```text
+DESIGN         CLOSED / ACCEPTED
+CLAIM STATE    DESIGNED · NOT LIVE
+HARD STOP      ACTIVE — explicit founder act required to open PROTOTYPE
+RUNTIME        UNCHANGED · S1 Guardian preserved
 ```
