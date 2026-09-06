@@ -433,6 +433,14 @@ interface OracleConversationProps {
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
   initialShowChatInterface?: boolean; // Control voice/text mode from parent
+  /**
+   * Layout contract for hosts that embed the canonical conversation in a
+   * bounded surface (for example MaiaPresence's reflection sheet). `viewport`
+   * preserves the full MAIA room geometry. `contained` deliberately establishes
+   * a containing block so fixed descendants stay inside the host instead of
+   * painting across the page behind it.
+   */
+  presentationMode?: 'viewport' | 'contained';
   onShowChatInterfaceChange?: (show: boolean) => void; // Notify parent of voice/text changes
   showSessionSelector?: boolean; // Control session selector from parent (header button)
   onCloseSessionSelector?: () => void; // Notify parent to close session selector
@@ -648,6 +656,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   initialMode = 'normal',
   onModeChange,
   initialShowChatInterface = false,
+  presentationMode = 'viewport',
   onShowChatInterfaceChange,
   showSessionSelector = false,
   onCloseSessionSelector,
@@ -674,6 +683,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // instance) survives the move. Full-document loads are the teardown the
   // House Presence correction removes.
   const router = useRouter();
+  const isContainedPresentation = presentationMode === 'contained';
   // Build telemetry — observability without ambient claim.
   // Console log always runs (inspectable). Visible strip only on explicit opt-in:
   //   ?debug=build (or ?debug=1) | localStorage.maia_debug_build='1' | window.__maiaShowBuildStamp()
@@ -3637,6 +3647,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // position in.
   const TRANSCRIPT_COMPOSER_GAP_PX = 12;
   const [composerClearancePx, setComposerClearancePx] = useState<number | null>(null);
+  const conversationRootRef = useRef<HTMLDivElement>(null);
   const chatComposerRef = useRef<HTMLDivElement>(null);
   const voiceBarWrapRef = useRef<HTMLDivElement>(null);
 
@@ -3655,13 +3666,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const measure = () => {
       const rect = el.getBoundingClientRect();
       if (rect.height === 0) return; // not laid out yet
+
+      // Full-room fixed geometry resolves against the viewport. A contained
+      // presence sheet deliberately gives fixed descendants a local containing
+      // block, so its clearance must be measured in THAT coordinate space too.
+      // Using window.innerHeight here for the sheet is what would leave a large
+      // false bottom band even after the visual leak itself was contained.
+      const rootRect = isContainedPresentation
+        ? conversationRootRef.current?.getBoundingClientRect()
+        : null;
+      const layoutBottom = rootRect?.bottom ?? window.innerHeight;
+      const layoutHeight = rootRect?.height ?? window.innerHeight;
       const clearance =
-        Math.round(window.innerHeight - rect.top) + TRANSCRIPT_COMPOSER_GAP_PX;
+        Math.round(layoutBottom - rect.top) + TRANSCRIPT_COMPOSER_GAP_PX;
       // Sanity band: a keyboard-displaced or mid-transition composer must
       // not collapse the transcript to nothing (clearance approaching the
-      // viewport height) or go negative — outside the band, keep the last
+      // layout height) or go negative — outside the band, keep the last
       // good value rather than adopt a transient one.
-      if (clearance <= 0 || clearance > window.innerHeight * 0.6) return;
+      if (clearance <= 0 || clearance > layoutHeight * 0.6) return;
       setComposerClearancePx(prev => (prev === clearance ? prev : clearance));
     };
     measure();
@@ -3675,7 +3697,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
     // The composer subtrees these refs point at mount/unmount with each of
     // these flags, so each must re-run the attach.
-  }, [showChatInterface, isMounted, voiceEnabled, shouldRenderArrival]);
+  }, [showChatInterface, isMounted, voiceEnabled, shouldRenderArrival, isContainedPresentation]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -5984,7 +6006,35 @@ I'm not sure what I'm feeling yet.`;
 
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
-        responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+        const rawMaiaText = normalized?.text || responseData.response || responseData.message || '';
+        const cleanedMaiaText = rawMaiaText ? cleanMessage(rawMaiaText) : '';
+
+        // 🧱 F1 — AN EMPTY 200 IS A PROTOCOL FAILURE, NOT A SENTENCE.
+        //
+        // This used to end `|| "I'm here. What wants your attention?"`, which
+        // rendered a MAIA turn for a response that carried none. That fabricates
+        // precisely the turn the server refuses to write: the route persists the
+        // assistant half only `if (memberTurnDurable && sovereignText)`, so a
+        // generation that produced nothing leaves the member's utterance standing
+        // ALONE by design (app/api/sovereign/app/maia/list/route.ts, F1). A
+        // placeholder here put words in the record's mouth — visible to the
+        // member, absent from conversation_turns, and indistinguishable from a
+        // real reply.
+        //
+        // The member turn is NOT marked failed: it was delivered (200 received,
+        // and durable at acceptance before generation). What is missing is the
+        // response, and that is what the banner says. Deliberately narrow — the
+        // network-mode presence fallback below is a separate, ruled design and
+        // is left untouched.
+        if (!cleanedMaiaText.trim()) {
+          console.warn('[OracleConversation] 200 with no MAIA text — leaving the member turn to stand alone');
+          setInputSubmitError('Your message was received, but no response came back. You can ask again.');
+          setIsProcessing(false);
+          setIsResponding(false);
+          return;
+        }
+
+        responseText = cleanedMaiaText;
 
         // MAIA Central: extract CI-shaped spoken text and vocal intent (if oracle/conversation route)
         spokenTextForVoice = responseData.spokenText || responseText;
@@ -7722,18 +7772,26 @@ I'm not sure what I'm feeling yet.`;
   // DIAGNOSTIC LOGGING - Removed to reduce console noise and improve performance
 
   return (
-    // GEOMETRY INVARIANT (#703): this shell must NOT be the containing block for
-    // its position:fixed descendants. `bg-soul-background` animates `filter`
-    // (hearthlight), and a non-`none` filter makes an element the containing
-    // block for every fixed descendant — same rule as `transform`. The shell is
-    // min-h-screen (100vh) but starts 48px below the viewport top, so its box
-    // overhangs the bottom by 48px; "fixed" children then resolved against
-    // 48…100vh+48 instead of the viewport. Measured: composer `bottom: 44px`
-    // landed at 100vh + 4, i.e. 4px below the visible bottom, on every device.
-    // The breathing moves to a background layer that owns nothing positioned.
-    // `relative` is safe here: position:relative does not establish a containing
-    // block for fixed descendants — only transform/filter/perspective/contain do.
-    <div className="oracle-conversation relative min-h-screen overflow-hidden">
+    // GEOMETRY INVARIANT (#703): in the normal full-room presentation this shell
+    // must NOT be the containing block for its position:fixed descendants.
+    // `bg-soul-background` animates `filter` (hearthlight), and a non-`none`
+    // filter makes an element the containing block for every fixed descendant —
+    // same rule as `transform`. The full-room shell is min-h-screen (100vh) but
+    // can start below the viewport top, so making it a containing block shifts
+    // fixed composer/transcript geometry off the real viewport.
+    //
+    // The contained presentation is the deliberate inverse: MaiaPresence hosts
+    // this same canonical conversation inside a bounded sheet. There the fixed
+    // descendants MUST resolve against the sheet, not the page behind it. The
+    // translateZ(0) is therefore intentional ONLY for contained mode, and h-full
+    // makes that local containing block exactly the host's available height.
+    <div
+      ref={conversationRootRef}
+      className={`oracle-conversation relative overflow-hidden ${
+        isContainedPresentation ? 'h-full min-h-0' : 'min-h-screen'
+      }`}
+      style={isContainedPresentation ? { transform: 'translateZ(0)' } : undefined}
+    >
       <div className="bg-soul-background absolute inset-0 pointer-events-none" aria-hidden="true" />
       {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
       {needsIOSAudioPermission && (
@@ -8187,7 +8245,7 @@ I'm not sure what I'm feeling yet.`;
           welcome state (legacy greeting, hasActivated=false,
           shouldRenderArrival=false) has NO Keep anywhere, by design — nothing
           exists to capture yet (the capture flow itself requires ≥2 messages). */}
-      {!isSanctuary &&
+      {!isContainedPresentation && !isSanctuary &&
         !(shouldRenderArrival || (!hasActivated && !isProcessing && !isResponding)) && (
         <div
           className="fixed left-4 md:left-20 z-below-nav"
@@ -8208,7 +8266,7 @@ I'm not sure what I'm feeling yet.`;
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
-      <div className="fixed top-16 sm:top-14 left-1/2 -translate-x-1/2 z-[25]">
+      <div className={isContainedPresentation ? 'hidden' : 'fixed top-16 sm:top-14 left-1/2 -translate-x-1/2 z-[25]'}>
         <TransformationalPresence
           currentState={realtimeMode as PresenceState}
           onStateChange={(newState, transition) => {
@@ -9154,10 +9212,14 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Message flow - Star Wars crawl: text flows from beneath holoflower */}
       {(showChatInterface || (!showChatInterface && showVoiceText)) && messages.length > 0 && (
-        <div className={`fixed top-44 sm:top-52 md:top-60 lg:top-64 z-30 transition-all duration-500 left-[60px] right-1 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
-          showChatInterface
-            ? 'sm:w-[calc(100%-1.5rem)] md:w-[720px] lg:w-[820px] xl:w-[880px] opacity-100'
-            : 'sm:w-[calc(100%-1.5rem)] md:w-[640px] lg:w-[700px] opacity-70'
+        <div className={`fixed z-30 transition-all duration-500 ${
+          isContainedPresentation
+            ? 'top-2 left-0 right-0 w-full opacity-100'
+            : `top-44 sm:top-52 md:top-60 lg:top-64 left-[60px] right-1 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
+                showChatInterface
+                  ? 'sm:w-[calc(100%-1.5rem)] md:w-[720px] lg:w-[820px] xl:w-[880px] opacity-100'
+                  : 'sm:w-[calc(100%-1.5rem)] md:w-[640px] lg:w-[700px] opacity-70'
+              }`
         }`}
              style={{
                // GEOMETRY INVARIANT (#703): this box is defined by its CLEARANCES,
@@ -9250,7 +9312,11 @@ I'm not sure what I'm feeling yet.`;
                   resting position of the transcript changes. */}
               {messages.length > 0 && (
                 <div
-                  className="pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end md:block md:min-h-0"
+                  className={
+                    isContainedPresentation
+                      ? 'pt-2 min-h-full flex flex-col justify-end'
+                      : 'pt-[10.5rem] md:pt-[12rem] min-h-full flex flex-col justify-end md:block md:min-h-0'
+                  }
                   /* MOBILE BOTTOM-ANCHOR (Issue 1, second mechanism — independent of
                      the scroll-resettle guard fix). Even a perfectly-working
                      scroll-to-bottom cannot move content down when
@@ -9473,7 +9539,14 @@ I'm not sure what I'm feeling yet.`;
                           </div>
                         </div>
                       </div>
-                      <div className="text-lg sm:text-xl md:text-2xl leading-relaxed whitespace-pre-wrap break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                      <div
+                        className={`${
+                          isContainedPresentation
+                            ? 'text-[17px] leading-7'
+                            : 'text-lg sm:text-xl md:text-2xl leading-relaxed'
+                        } whitespace-pre-wrap break-words text-dune-amber`}
+                        style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                      >
                         {message.role === 'oracle' ? (
                           <FormattedMessage
                             text={message.text}
@@ -9723,11 +9796,14 @@ I'm not sure what I'm feeling yet.`;
                      leaving the measured dead-space void beneath every reply.
                      WebKit harness (scratchpad replica, iPhone 17 Pro):
                      newest-line clearance 192px -> 24px, visible lines ~3 ->
-                     ~11. Mobile now always uses the small reserve; desktop
-                     (md:h-60, both branches identical before and after) is
-                     untouched. The contentOverflows machinery stays: the
+                     ~11. The full-room presentation keeps that established
+                     mobile/desktop reserve unchanged. A contained presence
+                     sheet deliberately uses only h-4: Tailwind breakpoints are
+                     viewport-width based, so md:h-60 would otherwise reserve
+                     240px inside a narrow sheet merely because the page outside
+                     it is wide. The contentOverflows machinery stays; the
                      measurement still guards scroll re-settles elsewhere. */
-                  className="h-6 md:h-60 shrink-0"
+                  className={isContainedPresentation ? 'h-4 shrink-0' : 'h-6 md:h-60 shrink-0'}
                 />
                 </div>
               )}
@@ -9737,12 +9813,12 @@ I'm not sure what I'm feeling yet.`;
       )}
 
       {/* Chat Interface or Voice Mic */}
-      {voiceEnabled && (
+      {(voiceEnabled || showChatInterface) && (
         <>
           {/* Old Mode Toggle removed - Now using ModeSwitcher at top-left */}
 
           {/* Text Display Toggle for Voice Mode - uses safe-area for iOS notch/Dynamic Island */}
-          {!showChatInterface && (
+          {!showChatInterface && voiceEnabled && (
             <div
               className="fixed right-4 md:right-8 z-50"
               style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
@@ -9808,7 +9884,7 @@ I'm not sure what I'm feeling yet.`;
               </div>
 
               {/* Voice toggle for chat mode - HIDDEN on mobile, visible on desktop */}
-              <div className="hidden md:block fixed right-4 md:right-20 z-below-nav" style={{top: 'max(env(safe-area-inset-top, 0px) + 2rem, 7rem)'}}>
+              <div className={voiceEnabled ? 'hidden md:block fixed right-4 md:right-20 z-below-nav' : 'hidden'} style={{top: 'max(env(safe-area-inset-top, 0px) + 2rem, 7rem)'}}>
                 <button
                   onClick={() => {
                     const newValue = !enableVoiceInChat;
@@ -9855,12 +9931,21 @@ I'm not sure what I'm feeling yet.`;
                   the member starts typing. Do NOT fix by raising z-index —
                   Arrival owns the threshold; two live composers is the bug. */}
               {showChatInterface && (
-              <div ref={chatComposerRef} className={`fixed left-14 right-0 sm:inset-x-0 z-below-nav ${shouldRenderArrival ? 'invisible' : ''}`} /* 4rem, not 2.5rem: the composer used to end ~8px above the SOULLAB
-                   lockup, close enough that the eye grouped the signature with the
-                   input controls. The extra ~24px lets the composer close as one
-                   complete object and leaves SOULLAB reading as the page's quiet
-                   footer rather than another button in the row. */
-                style={{ bottom: 'calc(2.75rem + env(safe-area-inset-bottom, 0px) + var(--composer-keyboard-inset, 0px))' }}>
+              <div
+                ref={chatComposerRef}
+                className={`fixed z-below-nav ${
+                  isContainedPresentation ? 'inset-x-0' : 'left-14 right-0 sm:inset-x-0'
+                } ${shouldRenderArrival ? 'invisible' : ''}`}
+                /* 4rem, not 2.5rem in the full room: the composer used to end
+                   ~8px above the SOULLAB lockup, so the signature visually joined
+                   the input controls. The contained sheet has no footer lockup;
+                   its composer belongs flush to the bottom of its own host. */
+                style={{
+                  bottom: isContainedPresentation
+                    ? '0px'
+                    : 'calc(2.75rem + env(safe-area-inset-bottom, 0px) + var(--composer-keyboard-inset, 0px))'
+                }}
+              >
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* The composer row no longer carries an "Ask MAIA" chip.
@@ -9892,7 +9977,7 @@ I'm not sure what I'm feeling yet.`;
                       askMode plumbing is left intact and inert on purpose: it
                       documents the capability and keeps restoration a one-file
                       change. It is not dead code by accident. */}
-                  <div className="flex items-center gap-2 px-2 pb-2">
+                  <div className={voiceEnabled ? 'flex items-center gap-2 px-2 pb-2' : 'hidden'}>
                     {/* Input-mode switch — relocated from the top bar (founder
                         ruling, 2026-07-23). It is contextual to input, not global
                         identity, so it belongs beside the composer it governs and
@@ -10040,17 +10125,18 @@ I'm not sure what I'm feeling yet.`;
                     externalValue={composerDraft}
                     disabled={isProcessing}
                     isProcessing={isProcessing}
-                    enableVoiceInChat={enableVoiceInChat}
+                    enableVoiceInChat={voiceEnabled && enableVoiceInChat}
+                    showVoiceInputButton={voiceEnabled}
                     onSubmit={(msg, files) => {
                       handleTextMessage(msg, files);
                       setDraftMessage(''); // Clear draft after sending
                     }}
-                    onVoiceResponseToggle={() => {
+                    onVoiceResponseToggle={voiceEnabled ? () => {
                       const newValue = !enableVoiceInChat;
                       setEnableVoiceInChat(newValue);
                       localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
                       console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
-                    }}
+                    } : undefined}
                     onFileUpload={(files) => {
                       const fileNames = files.map(f => f.name).join(', ');
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);

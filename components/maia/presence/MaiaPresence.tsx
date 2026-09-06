@@ -285,6 +285,7 @@ export function MaiaPresence({ children }: { children: React.ReactNode }) {
                     consciousnessType="maia"
                     voiceEnabled={false}
                     initialShowChatInterface={true}
+                    presentationMode="contained"
                     placeContext={place ?? undefined}
                     injectedMessage={injectedMessage}
                   />

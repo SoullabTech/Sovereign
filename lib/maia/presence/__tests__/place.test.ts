@@ -150,6 +150,12 @@ describe('buildPlaceAddendum (facts-only prompt block)', () => {
 // a room may be fully MAIA-capable without every surface in it advertising
 // MAIA. These pin that they cannot collapse back into one boolean.
 
+// ACCEPTANCE NUMBERING: the presence programme numbers its acceptance cases in
+// ONE space shared with injection.test.ts — not per file. This case was authored
+// as 4 when injection.test.ts held 1-3; it is 6 now that injection.test.ts holds
+// 1-5. Before adding a case here or there, grep both files for the next free
+// number. (A second ACCEPTANCE 4 landed in injection.test.ts on 2026-09-05
+// precisely because the shared space is invisible from inside one file.)
 describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
   const reflection = {
     placeId: 'reflections',
@@ -159,7 +165,7 @@ describe('isMaiaHandleVisible (affordance, not eligibility)', () => {
     objectId: 'dc5720b0-dff0-4111-a85d-b91503410c6f',
   };
 
-  it('ACCEPTANCE 4: the reflections feed offers no handle; one open reflection does', () => {
+  it('ACCEPTANCE 6: the reflections feed offers no handle; one open reflection does', () => {
     // Feed — governed (MAIA may be hosted) but nothing particular in view, so
     // an unprompted handle would claim general presence rather than "discuss
     // THIS". No object registered, and none derivable from the route.
