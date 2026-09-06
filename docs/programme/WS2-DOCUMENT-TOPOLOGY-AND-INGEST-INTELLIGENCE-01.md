@@ -202,6 +202,154 @@ undecided here.
 
 ---
 
+## 1c. Work Models — accommodation without conformance
+
+Ruled 2026-09-06. §1b establishes that the member declares what kind of Work
+this is. A **Work Model** is what that declaration selects.
+
+> Writer Studio accommodates different kinds of authored Works through
+> selectable Work Models. Models provide structural expectations, relevant
+> tools, integrity checks and mode-specific affordances; they do not constrain
+> the vocabulary or topology of the Work. Uploaded Works are recognized and
+> confirmed; new Works may optionally begin from a member-chosen template.
+
+A model provides four things, and prescribes no content:
+
+```text
+WORK MODEL
+├── expected structural grammar
+├── import / extraction rules
+├── Writer Studio affordances
+└── integrity checks
+```
+
+### ⛔ The constitutional distinction, in one field name
+
+```ts
+WorkModel {
+  expectedKinds[]      // "here are things that may help with this kind of Work"
+}
+
+// NEVER
+WorkModel {
+  allowedKinds[]       // "these are the only structures this Work may contain"
+}
+```
+
+A model is a set of expectations and affordances. **It is never a validity
+test.** A Work that does not match its model is not malformed — it is a Work.
+This is the same prohibition as §1b's *lens, never a template*, expressed in
+the type rather than in prose, and it is the single thing most likely to be
+lost in implementation: `expectedKinds` and `allowedKinds` differ by one word
+and by the whole constitution.
+
+Sketch of the rest, not a schema:
+
+```ts
+WorkModel {
+  id · label
+  expectedKinds[] · structuralSignals[]
+  importChecks[] · integrityChecks[]
+  availableViews[] · developScopes[] · publishCapabilities[]
+}
+```
+
+### Hybrid Works are ordinary, not exceptions
+
+Real writing does not sort cleanly. A Training Manual containing an essay, a
+case study and an appendix; a dissertation whose Chapter Five is a portfolio; a
+Book whose divisions are Movements containing Meditations containing Passages.
+
+```text
+Book
+  Movement
+    Meditation
+      Passage
+```
+
+Writer Studio accommodates all of it, because `kind` is free text and the model
+never gates what may be written. A model that rejected a hybrid would be the
+project telling a writer what their Work is allowed to be.
+
+### Two varieties, two different authorities
+
+```text
+UPLOAD          model helps RECOGNIZE
+NEW WORK        template may CREATE
+```
+
+**Import Models** apply to an existing document. *"This is a dissertation"* →
+Writer Studio looks for `Abstract · Chapter 1 · 1.1 · 1.1.1 · References ·
+Appendix A` and records only what is actually there. It creates none of them.
+
+**Starting Templates** apply to a Work being begun. Here the member is
+deliberately choosing a scaffold, so Writer Studio *may create it* — a New
+Dissertation with empty Title Page, Abstract, Chapters, References, Appendices.
+
+The two must never be collapsed. Creating structure is legitimate when the
+member asked for a scaffold and forbidden when they handed over a finished
+document. The same table of expectations serves both; only the authority
+differs.
+
+### Models shape the Studio, not the Work
+
+Rather than one Studio carrying every possible control:
+
+```text
+CORE WRITER STUDIO
+        +
+WORK MODEL
+        ↓
+relevant affordances appear
+```
+
+A Dissertation surfaces citation and reference inventory, figures and tables,
+numbered-heading navigation, appendix navigation, cross-reference checking. A
+Manual surfaces a procedure navigator, steps, warnings, prerequisites,
+troubleshooting relationships, version applicability. A Novel emphasises
+chapters, scenes, chronology, narrative threads. A Workbook distinguishes
+instructional text, exercises, prompts, facilitator notes.
+
+None of these changes a character of the member's text. They are views and
+checks over a topology the member authored.
+
+### What this means for the long-work reader — reinforces §3
+
+```text
+Dissertation   Develop this subsection · this chapter · Chapters 2–4 ·
+               the literature review · the whole dissertation
+Manual         Develop this procedure · this module · troubleshooting ·
+               the whole manual
+Novel          Develop this scene · this chapter · this Part · the whole novel
+```
+
+Every one of those resolves through the same substrate. **The long-work reader
+must not know what a "chapter" is.** Its entire contract is:
+
+> resolve this selected structure unit into its ordered leaf sections.
+
+The vocabulary lives in `kind`, the shape lives in `parent_id`, and the reader
+stays general. This is why §3's `scope_target` must accept a `unitId` from the
+first design: it is not an accommodation for hierarchy, it is what keeps genre
+out of the engine entirely.
+
+### Product language, recorded as intent
+
+> **What are you bringing into Writer Studio?**
+>
+> Book · Novel / Memoir · Dissertation / Thesis · Academic Paper · Manual /
+> Guide · Article / Essay · Blog / Series · Workbook / Course · Report ·
+> Script · Research / Notes · Other…
+>
+> *This helps Writer Studio understand how your Work is organized. It won't
+> change your writing, and you'll review the structure before anything is
+> accepted.*
+
+The second sentence is the promise the whole lane must keep, so it is recorded
+here as a constraint rather than as copy.
+
+---
+
 ## 2. The first defect to repair
 
 Word heading styles reach us intact and are discarded one function later.
@@ -297,6 +445,7 @@ Parked as separate units, roughly in dependency order. None is authorized.
 ```text
 A  member-declared Work type at arrival                  (§1b — foundational,
                                                           precedes hierarchy)
+A2 Work Model registry — expectations, not constraints   (§1c)
 B  preserve imported hierarchy through ingest            (§2)
 C  Import Review / member ratification surface
 D  nested WRITE outline + promote / demote / split / merge
@@ -309,6 +458,8 @@ J  machine-PROPOSED document identity                    (never `imported`)
 K  document-specific integrity checks
 L  richer format-specific extraction
 M  DEVELOP / REVIEW / PUBLISH topology-aware affordances
+N  model-shaped Studio affordances
+O  Starting Templates for new Works        (may CREATE — see §1c)
 ```
 
 A precedes B deliberately: the declaration tells every later unit what to look
