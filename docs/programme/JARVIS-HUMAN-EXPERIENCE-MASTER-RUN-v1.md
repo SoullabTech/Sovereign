@@ -242,6 +242,16 @@ scale 1–5** — never 0, so no "zero-risk" candidate becomes infinite by artif
 carries **evidence state** (observed | inferred | unknown) and **confidence** (high | medium |
 low). A high-impact unknown may rank highly *as an inquiry*; it must not quietly become a finding.
 
+**Two classification rules for compilation (founder, 2026-09-06).** (1) A finding that touches an
+existing sovereignty invariant or an open ADR (e.g. the reported OpenAI TTS egress outside the
+allow-list) is classed **GOVERNANCE DECISION**, not an experimental gap: the map may establish and
+rank its significance, but its endpoint is a founder/governance decision, never "run an experiment
+and see." (2) A contradiction survives as a **contradiction** — a question about where interpretive
+authority currently resides (e.g. inferred-profile depth shaping; undisclosed pattern
+interruption/reframing; regeneration when the response conflicts with the system's elemental
+frame) — and is never silently normalized into a feature gap. Both classes carry through the R11
+matrix and the top ten with their class named.
+
 **Remaining sequence for this phase:** agents complete → 13-page acceptance gate → cross-subsystem
 deduplication → R11 matrix → score gaps → top ten → candidate answer to the governing question →
 commit + push → **FOUNDER RANKING.** The ranked map authorizes no repair; its output is epistemic
