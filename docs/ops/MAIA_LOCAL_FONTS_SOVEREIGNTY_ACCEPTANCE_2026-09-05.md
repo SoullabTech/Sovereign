@@ -4,7 +4,8 @@
 BRANCH      claude/local-fonts-sovereignty
 BASE        e854ecc49 (canonical at the time of branching)
 SUBJECT     49be729b1e50f49682e9ea35ab6331ef0612a370
-STATE       RUNTIME GATES WITNESSED · G1a G1b G2 G3 G4a PASS · G4b DEFERRED
+STATE       CLOSED · PRODUCTION WITNESSED 2026-09-06 · W1 W2 W3 W4a W4b PASS
+            (development-host gates G1a G1b G2 G3 G4a PASS · G4b DEFERRED — §5, superseded by §10)
 DATE        2026-09-05
 ```
 
@@ -261,3 +262,138 @@ intelligence ones. A typeface, a telemetry call, a CDN asset, a recovery service
 certificate issuer, a package fetch or a DNS dependency can cross a boundary while
 everyone is looking at the model. The dependencies that survive an audit are the ones
 that do not look like dependencies.
+
+---
+
+## 10. Production closure — WITNESSED 2026-09-06
+
+§6 held that the development-host gates *"do not establish the state of the deployed
+member path"*, that *"production earns its own witness after this branch merges and
+deploys"*, and that the `/accounted-for` typeface row *"stays `External today` until
+that witness exists."*
+
+**That condition is now satisfied.** This section supersedes §6's not-yet-production-
+witnessed state. §§1–9 are left exactly as written: they record what was true when
+they were written, and a record that edits its own history to match a later result is
+not a record.
+
+```text
+RESULT      PASS · subject-stable · exit 0
+RUN         2026-09-06T00:20:27.113Z
+```
+
+### Subject
+
+```text
+SUBJECT              d8fc2082db5aaaa804b6d287743c186ef3e3a16a
+production stamp     d8fc2082d
+resolution           through the object store, independently before first
+                     navigation and after last observation; both resolved to
+                     SUBJECT exactly
+```
+
+The deploy lane bakes `rev-parse --short` into `GIT_COMMIT` by design, so the live
+stamp is abbreviated. The witness resolves it rather than prefix-matching, which is the
+stronger check: it proves the deploy lane's asserted short identity **uniquely names**
+this subject, and an ambiguous abbreviation fails instead of silently matching.
+
+### Instrument
+
+```text
+INSTRUMENT   v2.4
+commit       3d572b948912965e58140aba718523809f14c8e5
+blob         9225c9f4f13d220ea3a6c7b418926617392ff4bb
+```
+
+The instrument is deliberately **external to the subject** — v2.4 is not part of the
+deployed commit it measures — so the record binds two identities. Neither alone makes
+the run reproducible. Reconstruct with `git cat-file blob <INSTRUMENT>` and
+`git checkout <SUBJECT>`.
+
+### Criteria
+
+```text
+W1   every network-fetched font same-origin                          PASS
+W2   zero fonts.googleapis.com / fonts.gstatic.com requests          PASS
+W3   per-surface render expectations met                             PASS
+W4a  served production: 0 fetchable Google references                PASS
+W4b  subject source: 0 client-plane re-entry vectors                 PASS
+```
+
+Surfaces observed, under a fresh browser profile with cache disabled and service
+workers bypassed before first navigation:
+
+```text
+/accounted-for          Spectral + IBM Plex Sans rasterized as custom faces
+/maia/privacy           Inter rasterized (next/font, same-origin /_next/static/media)
+/now-what/preview.html  system faces — intended; repaired to Georgia / OS sans
+```
+
+W4a's one hit is `public/fonts/LICENSES.md`, a prose mention naming the hosts to say
+they are no longer called; non-fetchable, non-gating. W4b's non-client hits are the
+server plane (`app/api/_backend/**`, `lib/manuscript/render/print*.css` — the
+pandoc → Paged.js → Puppeteer PDF path), documentation, and prose. All reported, none
+gating. The `lib/manuscript/render/**` exclusion is a **current call-path
+classification, not a property of the pathname**: if one of those stylesheets becomes
+client-imported, it moves in scope.
+
+### Instrument hygiene at run time — recorded because it is load-bearing
+
+```text
+object-store checkout HEAD   61ec49b4884e7d55de112945064800ba71fa5df1  · NOT SUBJECT
+worktree                     dirty
+disposition                  informational; W4b read SUBJECT's Git objects directly
+```
+
+This is not an incidental detail. Under an earlier instrument revision W4b swept the
+**working tree**, and this run would have inspected the wrong source at the wrong
+commit and reported it as evidence. v2.3 moved the sweep to
+`git grep <SUBJECT> -- …` plus full-blob reads, so what was inspected is the subject by
+construction and the checkout's state cannot affect the finding. The dirty, wrong-HEAD
+checkout is the case that would have defeated the older design; it is recorded here as
+the demonstration, not as an anomaly.
+
+### Ceiling — what this PASS does NOT establish
+
+```text
+build-plane independence          NOT ESTABLISHED
+hermeticity                       NOT ESTABLISHED
+offline operation                 NOT ESTABLISHED
+server-generation independence    NOT ESTABLISHED
+cognition locality                NOT ESTABLISHED
+```
+
+`next/font/google` still contacts Google at **build** time and self-hosts the result;
+those faces are served same-origin from `/_next/static/media/`, which is runtime
+evidence but is **not** evidence of the `/fonts/` vendoring this repair performed. The
+witness counts the two separately for exactly that reason. Server-side PDF generation
+retains its own Google font imports on a different plane. None of that vanished.
+
+### Licensed claim
+
+```text
+"The production site's runtime Google Fonts dependency has been removed
+ and witnessed."
+```
+
+That claim and no wider. Per `docs/canon/CLAIM_STATE_AUTHORITY.md`, this PASS
+establishes what state is **warranted**; the change to the `/accounted-for` typeface row
+is a separate authorized representational act, made in its own commit. Evidence
+licenses; it does not itself edit the public record.
+
+### Process note
+
+The instrument reached v2.4 across four revisions, each closing a defect found before
+it produced evidence — a witness that could pass on a warm cache, one that read a
+system font as a third-party failure, one that observed two pages and generalised to an
+origin, one that turned a Git error into "zero findings", and one whose subject
+comparison could never be true. Only the last was found after the instrument had been
+accepted for a run.
+
+v2.4 was written before its author was authorized to write it — a process-boundary
+deviation, recorded here rather than smoothed over. It did not touch evidence
+integrity: the instrument existed with a definite blob identity at 00:19:46Z, before
+the 00:20:27Z observation, and no criterion was altered after seeing a result. A stale
+`v2.2` display string in v2.4's output is left uncorrected on purpose — editing an
+instrument after it has spoken, so its record reads better, is the inversion this canon
+exists to prevent. It is parked for v2.5.
