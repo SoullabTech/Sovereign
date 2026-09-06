@@ -6,10 +6,9 @@ whole point of a ledger.
 
 ```
 AUTH-BIOMETRIC-01B
-  MERGED to canonical at df4029aec (PR #1131, 2026-08-28T10:47:26Z)
-  head 988572daf · base 284ea4ace · 5 files · CI all green
-  DEPLOYED             no
-  VERIFIED IN PROD     no
+  MERGED               YES — df4029aec (PR #1131, 2026-08-28T10:47:26Z)
+  DEPLOYED BY LINEAGE  YES — df4029aec is an ancestor of production-stamped 9865799e1
+  PRODUCTION BEHAVIOR  NOT inferred from lineage alone
 
 lookup-email minimization
   MERGED in the same PR
@@ -38,13 +37,38 @@ SESSION CENSUS
   CLOSED — no usable non-browser credentials outside the founder's own account
 ```
 
-## Deployment status
+## Deployment status — corrected 2026-08-28
 
-**B is merged and not deployed.** Production runs the image live on minisforum,
-which predates the merge. Until a deploy, a member with `has_webauthn = true`
-and no credential is still offered a ceremony that cannot succeed — and see the
-§6.1 census: B would not help those eight in any case, because B reads the flag
-and the flag is what is wrong for them.
+The earlier entry read "merged, not deployed". That was true when written and is
+now stale. **B's code reached production by lineage**, and the ledger has to say
+so — but only that.
+
+Evidence, restated for the record:
+
+```
+production M      9865799e1
+B merge SHA       df4029aec
+ancestry          df4029aec → ancestor of 9865799e1   (verified)
+runtime witness   GIT_COMMIT=9865799e1
+                  DEPLOY_LANE=deploy-lane
+```
+
+**Lineage is not behaviour.** That the commit is contained in the deployed tree
+establishes that the code is present. It does not establish that B's specific
+behaviour — the biometric offer gated on enrollment rather than capability — has
+been witnessed at runtime. No such witness was taken. Do not generalize this
+into "production behavior verified"; that is a separate observation nobody has
+made.
+
+What has not changed: the eight members with `has_webauthn = true` and zero
+credential rows are still offered a ceremony that cannot succeed. B reads the
+flag, and the flag is what is wrong for them (§6.1 census). Deployment of B does
+not reach that case; only A's derivation repair does.
+
+**Standing hazard this correction demonstrates.** A status file in version
+control goes stale silently — the deploy that made this entry wrong emitted no
+signal to the document asserting otherwise. Anything written here as a
+point-in-time claim needs a named re-check, or it becomes confident and wrong.
 
 ## Why this file exists
 
