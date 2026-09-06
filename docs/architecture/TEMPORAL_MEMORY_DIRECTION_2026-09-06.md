@@ -1,6 +1,6 @@
 # Temporal Memory Direction
 
-**Status**: Directional architecture document. **Not canon. Not a lane.**
+**Status**: Directional architecture document. **Not canon. Not a lane. FROZEN 2026-09-06** after the production audit and two evidence corrections (F2 scope, F3 dual-implementation). Further edits append; they do not revise the findings.
 **Date**: 2026-09-06
 **Altitude**: three decisions and one audit, recorded so Episodic Phase 2 does not bake in a temporal model that later has to be torn apart.
 **Category** (six-category typology): Cat 1 — preserved direction. Held, not authorized.
@@ -171,7 +171,8 @@ This note does not reorder the sequence in `CLAUDE.md` (fork → toggle → clar
 
 - `925336d4` — note + `CLAUDE.md` entry. Docs-only. **Hook execution NOT WITNESSED** (committed with hooks bypassed in a remote sandbox; the skipped instrument produced no evidence either way). Normal remote checks close that gap if this enters a PR.
 - `2ae28486` — write-surface precision ("no persistent writes") and pre-fixed adjudication table. Script blob unchanged.
-- Audit-record commit — output recorded verbatim above; adjudication; script header corrected from "READ-ONLY" to "no persistent writes" (blob hash moves here, once, after the run). **Hook execution NOT WITNESSED** (same clone, no `core.hooksPath`).
+- Freeze commit — F2 rescoped to the retrieval stage (prompt impact unmeasured; open question carried); F3 sharpened to name the SQL/TypeScript decay divergence and the 0.0225 confirmation ceiling. **Hook execution NOT WITNESSED** (same clone).
+- `88961fe1` — output recorded verbatim above; adjudication; script header corrected from "READ-ONLY" to "no persistent writes" (blob hash moves here, once, after the run). **Hook execution NOT WITNESSED** (same clone, no `core.hooksPath`).
 - `16df97ae` — authority/projection wording correction (Decision 1–2), plus `scripts/witness/temporal-memory-audit.sql` (§1 fallback precondition, §2 decay counterfactual). **Write surface: no persistent writes.** It creates and drops two session-local temporary tables and mutates no persistent production relation; the temp objects disappear with the `psql` session. "Read-only" is therefore imprecise and is not the claim. Identity of the blob to run: `a62244f0`. The script was executed against a scratch PostgreSQL 16 cluster with synthetic rows (no production data, no member data) to witness that it parses, that §1.b isolates only a member with expired-embedded rows and zero open rows, and that §2 reports set-membership changes with entered / left / displacement / type / age / confirmation. That verifies the instrument, not production. **Hook execution NOT WITNESSED** on this commit as well: the remote clone has no `core.hooksPath` set, so `.githooks/pre-commit` did not run. Audit output is to be pasted below verbatim when run on minisforum; until then both audit questions remain **open**.
 
 Adjudication table, fixed before the run so the result cannot reshape the question:
@@ -273,7 +274,7 @@ Done. Read-only; temp tables dropped; nothing written.
 
 **§1 — RULED OUT under current data.** §1.b is empty. Stronger than the table anticipated: §1.a shows **zero** developmental memories with a past `valid_to` at all, across every member. The `valid_to` filter on the non-vector path has never excluded a row in production. The fallback discrepancy is therefore a latent structural inconsistency with no live exposure, not a defect. Corollary for the current-state table: `developmental_memories` is temporally aware **in schema only**. Its validity columns carry no production data, so the earlier "already has partial temporal semantics" claim is downgraded to "has the columns". Future-dated `valid_to` was not measured.
 
-**§2 — `members_set_changed = 2`, so the hidden decay mechanism materially changes what MAIA gets to think with, for a minority.** Read with the population in view:
+**§2 — `members_set_changed = 2`, so the hidden decay mechanism materially changes which developmental-memory rows survive the upstream retrieval cut, for a minority.** Read with the population in view:
 
 | Measure | Value |
 |---|---|
@@ -292,12 +293,19 @@ Done. Read-only; temp tables dropped; nothing written.
 Two facts narrow what §2 means:
 
 1. **Only one memory type exists in production.** Every one of the 2018 rows is `pattern` (half-life 180 days). The per-type half-life table, and the four-dimension conflation it embodies (an `event` decaying at 90 days, a `dream` at 60), is **latent, not live**. The conflation concern in Decision 3 is correct in design and currently exercised for exactly one type.
-2. **No flipped row is member-confirmed.** The confirmation bonus and the 1.5× half-life for confirmed memories are inert on the rows that actually move. Whether `pattern` rows are system-inferred or member-marked is a provenance question this witness did not measure; the `memory_type` label alone does not settle it.
+2. **No flipped row is member-confirmed.** The SQL confirmation term (max 0.0225) is inert on the rows that actually move; the TypeScript 1.5× confirmed half-life is not on the live SQL path at all (see F3). Whether `pattern` rows are system-inferred or member-marked is a provenance question this witness did not measure; the `memory_type` label alone does not settle it.
 
 **Findings, stated for the record:**
 
 - F1. The vector-fallback `valid_to` gap is real in code and **unreachable with current data**. It stays on the list as a parity defect to close whenever the assertion layer is chosen (Decision 1), not as an incident.
-- F2. Invisible decay changes the top-12 for 2 of the 14 members for whom selection is a cut, and for one of them it changes almost half the set. Age is currently deciding what MAIA thinks with, silently, for that member. That is the transparency concern of Decision 3 confirmed as **live for a minority**, and it is measured, not inferred.
-- F3. `confidenceDecay`'s per-type model is exercised for one type only. Any change to decay should be scoped to what is live (`pattern`, 180-day half-life) and should not be argued from the other half-lives, which have no production rows behind them.
+- F2. Invisible decay changes which developmental-memory rows survive the non-vector top-12 retrieval cut for 2 of the 14 members whose developmental pool exceeds 12. For member `17a14614`, five of the twelve retrieved developmental candidates change on roughly a one-month age difference. This establishes a **material upstream selection effect**. It does **not** yet establish that the final prompt-injected `memoryBullets` change: those candidates are subsequently merged with recent turns and breakthroughs, reranked, deduplicated, and cut to `maxBullets` (default 5) in `MemoryBundle.build()` (`lib/memory/MemoryBundle.ts:108-169`), and `selectionTrace` is derived only after that final cutoff. The witness observed the retrieval stage, not the prompt.
+  **Open question carried into Phase 2:** *does the measured upstream decay effect propagate through final `selectionTrace` into prompt-injected memory?* Answerable from the existing trace once it is captured for the two affected members. No new lane required.
+- F3. Production currently exercises decay only for `pattern` (180-day half-life). The live non-vector retrieval uses the PostgreSQL function `calculate_decayed_confidence(base_confidence, memory_type, last_confirmed, formed_at)`, whose confirmation semantics differ from the TypeScript helper in `lib/memory/confidenceDecay.ts`: the SQL function has no `confirmed_by_user` argument and does **not** implement the helper's 1.5× confirmed half-life. A separate SQL confirmation term, `0.15 * CASE WHEN confirmed_by_user THEN 0.15 ELSE 0 END`, contributes at most **0.0225** to the score, not 0.15. None of the twelve membership-flipped rows are confirmed, so that separate bonus did not affect the measured flips. `MemoryBundle.ts` imports the TypeScript helper and calls the SQL function; **there is no single authoritative definition of decay today.** The existence of two divergent decay implementations is itself a Phase 2 normalization question, and is architecturally weightier than the unused memory types. Any change to decay should be scoped to what is live and should not be argued from the other half-lives, which have no production rows behind them.
 
-No implementation follows from this record. The findings are inputs to the Episodic Phase 2 spec and to any future ruling on decay legibility.
+**Bounded summary, frozen 2026-09-06:**
+
+- F1: temporal validity exists in schema, not in live historical data.
+- F2: hidden age decay demonstrably changes the developmental candidate pool for a minority; final prompt impact remains unmeasured.
+- F3: only `pattern` is live, and decay semantics themselves are split between SQL and TypeScript.
+
+No implementation follows from this record. Do not alter decay, wire `shouldPromptForConfirmation`, or fix the vector fallback on the strength of it. The findings, and the explicit statement of what the evidence did not establish, are the inputs to the Episodic Phase 2 spec. Auditing stops here.
