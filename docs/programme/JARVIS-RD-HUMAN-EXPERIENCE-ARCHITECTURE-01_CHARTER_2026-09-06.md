@@ -767,8 +767,9 @@ psychotherapy (value convergence correlates only with the therapist's own rating
 manipulation is cleanly self-applicable; the hidden/visible axis fails (identity disclosure changes
 nothing; **intent disclosure halves persuasion**); the vocabulary-is-power critique lands on
 Soullab's own words. Neutrality is structurally impossible for a relational system with memory —
-and **memory is the strongest single sycophancy lever**; **optimizing on member approval teaches
-targeted manipulation**.
+and — recorded per founder ruling as a *candidate risk, not a fact, until page-read* — remembered
+personal context may amplify agreement drift; optimizing on member approval teaches targeted
+manipulation (also provisional).
 
 What survives is stronger because it gives up self-certification: candidate **P4′ — Legitimacy is
 not self-certified** (intent disclosure · no exploitation of detectable susceptibility · no feedback
@@ -779,3 +780,30 @@ we withhold. Candidate **AP15 — feedback-optimized warmth**. P12 gains a propo
 (what she is trying to do). U23–U28. **R12 held next.** Method note preserved in the record: R11 was
 written by the system it is about, for the organization it is about; its remedy — external witness,
 member-side instruments, an accountable party — applies to the record itself.
+
+
+---
+
+## 20 · R11 adjudicated · R12 opened (founder rulings, 2026-09-06)
+
+Full rulings: `docs/research/human-experience/inquiries/R11_INFLUENCE_LEGITIMACY_2026-09-06.md` §8.
+Adjudicated **at the level of programme direction**; empirical claims provisional until page-read.
+**P4 fails as self-certification**; taxonomy retired as certification, kept as description. **P4′ —
+Legitimacy Is Not Self-Certified** CANDIDATE with nine refined commitments (intent transparency
+tracking materiality · no exploitation of susceptibility · no relational feedback optimization,
+usability feedback exempt · inspectable induced shifts · bounded meta-preferences · process
+endorsement · dispensability · corrective friction without contrarianism · hermeneutical expansion,
+strongly, esp. for the Elements) and **an external-witness condition on ratification**. Public
+concession added to `/accounted-for` in the founder's wording. **P12 clause 5** (material intent).
+**AP15 — Approval-Optimized Relationship** CANDIDATE, census item. Memory-as-amplifier **routed as
+hypothesis with a required measurement**, not canonized. **Influence Covenant** as the bounded,
+member-authored construct for Phase 4, one input among several — no single layer owns legitimacy.
+**R12 opened** with R12c (memory as preference-shaping infrastructure), tested against *the present
+human retains authority to contradict the historical model.*
+
+**Governing sentence from R11 (founder):** *MAIA shapes. The ethical question is not whether
+influence exists, but whether the conditions of that influence preserve the human's capacity to see
+it, contest it, revise it, and remain the author of their life.* The laboratory must remain capable
+of observing — and questioning — how Soullab itself participates in the shaping.
+
+PR #1239 remains draft · merge NOT authorized · deploy NOT authorized · MAIA runtime NO CHANGE.

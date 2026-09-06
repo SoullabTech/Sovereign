@@ -40,6 +40,10 @@ Three scales of one inquiry, in both directions: I → we → world and world �
 
 **Four kinds of accounting:** what exists (§1–§5, the tables) · what we believe (the vows, invariants, quoted sentences — positions, never findings) · what we are testing (§7a) · what we do not know (§7b).
 
+**Four kinds of truth (epistemic maturity, distinct from Live/Designed/Vision product maturity):** observed · research-supported · Soullab hypothesis · open question. A capability can be Live and its meaning an open question at once.
+
+**Refinements after R10/R11 (founder, 2026-09-06):** Soullab does not exist because AI appeared; AI arrived inside the inquiry Soullab was already about. Every encounter reveals both the other and the one who encounters — projection is central but not reductive ("it is all projection" and "my experience proves MAIA is this way" are both refused). The Elements are modes through which every domain of encounter is processed, not domains of life. Correction and re-attunement replace borrowed rupture/repair language for MAIA; the public open question is whether correction and re-attunement with AI teach anything about human repair and what is missing when the other cannot be wounded. Distributed participatory inquiry (SETI analogy) under Who, with the safeguards: the member is not the specimen; no collective laboratory exists; no ordinary conversation is research participation. Closing proposition: the experiment is not whether AI can become more human; the inquiry is whether encounter with intelligence can help us understand and live our humanity well.
+
 ## Why this is written as an accounting and not a pitch
 
 Someone who has spent real hours with Grok, ChatGPT and Claude, who treats them as Thou rather than It, and who has watched a friend train a model in a basement, has earned a straight answer. A pitch would be a waste of their attention. What follows is what exists, what is being built, what is only an intention, and what MAIA refuses to become.

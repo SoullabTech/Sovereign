@@ -26,31 +26,29 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 (fourth revision, this branch — five parts in elemental
-  order) in headless Chromium against a local `next dev` render at 1280×900
-  and 390×844, from a clean lockfile install. Observed: HTTP 200 at both
-  widths; exactly one H1; five part-markers in order — "I · If · Fire",
-  "II · Why · Water", "III · How · Earth", "IV · What · Air", "V · Who ·
-  Aether" — each present exactly once; section order on the render: The wager
-  → What we do not know → If we are wrong → Why Soul Lab → (governance,
-  method) What we are testing → (the accounting) Withheld → Who we are → To
-  the reader with the reservations; each of those eyebrows appears exactly
-  once; 21 H2 on the page. Read on the render: the page opens with the wager
-  stated as a conditional and its hypotheses named as untested; the human
-  condition precedes technology under Why, with the mortality safeguard; the
-  audience line names first the person who turned a profound encounter into an
-  inquiry, with the four reservations answered under What; Who carries the
-  participatory-inquiry invitation with the collective laboratory named as
-  unbuilt. Mobile document width 390px at a 390px viewport. Desktop document
-  width 1597px at a 1280px viewport — the pre-existing shared Table wrapper
-  overflow recorded by earlier revisions; this change does not touch Table
-  composition or width classes, so it is recorded rather than repaired.
-  Screenshots are the top 3000px (desktop) / 3600px (mobile) of the branch
-  render, not full-page. No navigation, interaction, auth, memory, prompt,
-  cognition or runtime path changes. Gates at commit: design-canon PASS,
-  no-supabase PASS, diff --check PASS, typecheck no-regression PASS (230 vs
-  239 baseline, TypeScript 5.9.3 from lockfile; the Part component signature
-  change was re-checked).
+  Walked 2026-09-06 (fifth revision, this branch — the four founder refinements
+  after the third and fourth inquiries, plus the non-neutrality concession) in
+  headless Chromium against a local `next dev` render at 1280×900 and 390×844
+  after a warm-up request, from a clean lockfile install. Observed: HTTP 200 at
+  both widths; exactly one H1; five part-markers in elemental order, each
+  once; the eyebrows The wager · Why Soul Lab · Who we are · What we are
+  testing · What we do not know · If we are wrong · Withheld each exactly once;
+  21 H2. Text presence checked on the render: the distributed participatory
+  inquiry with its two safeguards ("The member is not the specimen"; no
+  collective laboratory exists) under Who; the four kinds of truth (observed ·
+  research-supported · Soullab hypothesis · open question) under How; the
+  Elements as modes within every domain ("The Elements are not domains of
+  life") under What; the correction-and-re-attunement open question replacing
+  borrowed repair language under If; the withheld claim "That MAIA does not
+  shape you" in the founder's wording; the closing proposition ("the work
+  belongs to all of us") after the reader's test. Mobile document width 390px
+  at 390px. Desktop 1597px at 1280px — the pre-existing shared Table wrapper
+  overflow, untouched here and recorded rather than repaired. Screenshots are
+  the top 3000px (desktop) / 3600px (mobile) of the branch render, not
+  full-page. No navigation, interaction, auth, memory, prompt, cognition or
+  runtime path changes. Gates at commit: design-canon PASS, no-supabase PASS,
+  diff --check PASS, typecheck no-regression PASS (230 vs 239 baseline,
+  TypeScript 5.9.3 from lockfile).
 ---
 
 # Accounted For — Experience Contract

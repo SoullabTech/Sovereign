@@ -30,7 +30,7 @@ EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETAT
 
 Measurement vocabulary: `measurements/MEASUREMENT_VOCABULARY_v0.1.md`. Board: `BOARD.md`.
 Claim ladder (the second threshold, internal hypothesis → public Soullab claim): `CLAIM_LADDER.md`.
-Inquiry findings: `inquiries/R<n>_*.md` — R8 ADJUDICATED 2026-09-06 (founder rulings in §8). R9 ADJUDICATED same day (founder rulings in §8). R10 ADJUDICATED same day. R11 run same day (proposed adjudication, awaiting ruling).
+Inquiry findings: `inquiries/R<n>_*.md` — R8 ADJUDICATED 2026-09-06 (founder rulings in §8). R9 ADJUDICATED same day (founder rulings in §8). R10 ADJUDICATED same day. R11 ADJUDICATED same day at the level of direction. R12 opened.
 Encounter and projection (Class D interpretive foundation): `frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md`.
 Foundational statement: `WHY_SOUL_LAB_2026-09-06.md` (founder; candidate canon; governing frame for /accounted-for and Soullab writing).
 Elemental Parallel Processing hypothesis (founder ruling, charter §11): `frameworks/elemental-experience/ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` — the authoritative Elemental record; the two earlier Elemental files are history.

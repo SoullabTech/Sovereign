@@ -53,3 +53,11 @@ enormous claims, that is the credibility.
 | Anti-patterns AP1–AP12 | ethical (canon-backed for 10 of 12) | ethical |
 | "Centrifugal" thesis | 1, under R8 challenge | theoretical → aspiring empirical |
 | Capacity transfer metric | 1, under R12 | empirical aspiration; unmeasurable until R12 answers |
+
+
+## Addendum 2026-09-06 — external witness as a ratification condition (founder, after R11)
+
+A principle whose content is that legitimacy cannot be self-certified (P4′) cannot itself be
+ratified by internal adjudication. Ratification of P4′ requires at least one meaningful **external
+or participant-side adversarial witness**. More generally: any principle that constrains Soullab's
+own influence should carry the same condition when it reaches the ladder's fifth rung.

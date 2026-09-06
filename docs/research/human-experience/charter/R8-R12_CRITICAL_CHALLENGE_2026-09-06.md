@@ -153,7 +153,21 @@ CLAIMS AT STAKE   P4 · AP2 · AP3 · AP10 · the Stage 5 ConsumerAppStudio read
 OUTCOME           [open]
 ```
 
-## R12 — Memory, identity, and whether capacity transfer is measurable
+## R12 — Memory, identity, and whether capacity transfer is measurable  ← OPENED (founder, 2026-09-06, after R11)
+
+```text
+R12c [founder]    Memory as preference-shaping infrastructure. How does longitudinal memory change
+                  what MAIA can influence, what the member comes to regard as self-consistent, and
+                  the probability that historical interpretation becomes identity pressure?
+                  Seek: even accurate memory may narrow future possibility · stabilize outdated
+                  self-concepts · privilege continuity over emergence · amplify
+                  personalization-based influence · make MAIA's interpretation more persuasive
+                  because it appears longitudinally informed.
+TESTED AGAINST    "The present human retains authority to contradict the historical model."
+BRIDGE FROM R11   memory as influence amplifier — routed as a candidate risk, not a fact.
+FINDINGS          inquiries/R12_MEMORY_IDENTITY_TRANSFER_2026-09-06.md
+```
+
 
 ```text
 QUESTION          (a) What does persistent memory do to a person's experience of their own
