@@ -369,90 +369,79 @@ git diff --stat 4cd79e947..<head> -- . ':!docs' ':!CLAUDE.md'   # must print not
 A push that makes that diff non-empty inherits nothing from this standing; it re-runs both
 scopes and re-records.
 
-### F6a — production baseline RECORDED (2026-09-06)
+### Merge, ledger-presence supplement, and closure standing (2026-09-06, after F6a)
 
-Captured on minisforum by the founder, from the exact scripts delivered on custody branch
-`claude/ws2-08a-witness-custody-01` @ `cd6da64a02271cce14ea52502c054f7aa16e3cc8`
-(`scripts/witness/ws2-08a-f6a-baseline.sh`, `scripts/witness/ws2-08a-f6b-compare.sh`), hashes
-verified on the Mac Studio and again after transfer to minisforum. Read-only against production;
-no database write; merge and migration untouched.
-
-```text
-directory            /home/soullab/ws2-08a-witness/f6a-20260906T122035Z
-host / captured UTC  minisforum · 2026-09-06T12:20:35Z
-running GIT_COMMIT   66da58b4c
-snapshot             324263:324263:        (single REPEATABLE READ READ ONLY transaction)
-server_encoding      UTF8
-
-population           manuscript_sections · 810 rows (811 physical CSV lines incl. header)
-  csv sha256         fc98b19a2584cd878ca64c7d9f1300cc5227f82cbae45d8c0042db7b7f9d884d
-migration ledger     schema_migrations · 517 rows, whole ledger as JSON lines
-  ledger sha256      5db847c6ed7221f4f69da6ad11e9bdfa4daa976a24b7eb24dd86d2aa2aa9aec8
-manifest sha256      db85c5cb721f2a2011df04130ff3649133fb250b5cadee8462e5c40c8a827e5b
-instrument           F6a script sha256 fd2d6a3f0d8115d7b132233435c2f56ae0b853707f9ac6dec7c0e8ed40c79eeb
-                     F6b script sha256 f74abf0c1cb721514cc20a8be037283dc8058ebbb2f43204d2ca7dcb4d48759f
-
-write-boundary counters at baseline (pg_stat_user_tables · manuscript_sections)
-  n_tup_ins 812 · n_tup_upd 0 · n_tup_del 2 · n_tup_hot_upd 0 · stats_reset never
-  (baseline values only — not a claim about history; F6b requires upd / del / hot_upd and
-   the stats_reset epoch unchanged across the interval)
-```
-
-Founder adjudication of the capture: script custody PASS · pre-migration guard PASS ·
-single-snapshot F6a PASS · raw baseline retained PASS · artifact custody PASS (manifest sidecar
-equals the manifest digest; CSV and ledger digests equal the values embedded in the manifest,
-independently rehashed after capture).
-
-**Evidentiary ceiling of the write-boundary evidence (founder ruling, 2026-09-06).** The DML
-counters OBSERVE updates and deletes; they do not prevent them. The claim F6b can make is:
+**Merge RELEASED and executed.** Founder ruling: all current-head checks on `41e86e2b` completed
+green, the Docker Build Check and the Canonical PR Quality Gate included; the base having moved
+to `1116f7813` does not revoke the release and does not justify a freshness refresh. GitHub
+accepted the merge without an up-to-date requirement, so no branch update was needed.
 
 ```text
-baseline equality + unchanged DML counters + unchanged stats-reset epoch
-    = NO DETECTED INTERVENING MUTATION
+PR #1230        MERGED 2026-09-06 (merge commit, not squash, not rebase)
+merge commit    03e9d89a9aae9025b35bc59756be28cc44c00e6b
+parents         1116f7813 (clean-main-no-secrets tip)  ·  41e86e2b (08A head, released)
+08A code        blob-identical to 685e205b through the merge (no non-docs commit after 4cd79e947)
 ```
 
-not that the database was physically incapable of receiving one. An actual maintenance /
-write freeze across the interval would upgrade this to the stronger claim. The F6a script's
-own comments still say "positive guarantee"; the script bytes are custody-bound and are not
-edited — this paragraph is the governing wording, and the manifest records the actual
-counters and the comparison rule.
+**Migration-prefix collision, bounded.** The base merged into the candidate carried
+`20260906000001_developmental_observation_standing.sql`, which shares 08A's numeric prefix and
+was applied on production by the `1116f7813` full deploy, i.e. **after F6a and before 08A's
+migration**. The production runner (`scripts/apply-migrations.sh`) keys the ledger on the full
+filename (`schema_migrations.filename` PRIMARY KEY), skips only exact filename matches, and
+records the exact filename after application; ordering is a plain lexical glob, so the
+developmental file runs first and `20260906000001_manuscript_section_heading_depth.sql` second.
+The two touch different tables. The migration itself is unaffected. The checksum column exists
+but this runner does not populate it.
 
-Standing after F6a:
-
-```text
-PR #1230 merge     HOLD — released only after this record is adjudicated
-migration          NOT RUN
-08B                HOLD
-```
-
-F2's wording was corrected 2026-09-06 (founder): the earlier "NULL depth on every row" contradicted
-the ruling that `CHAPTER ONE` in caps is chapter wording. F2's fixture and F5's second half are
-also pinned as unit tests on this branch. F4–F5, F7 are unit-tested; **F1–F3, F6 need a production
-witness after migration**, run exactly as written above.
-
-### Test counts on this branch (one truth, two scopes)
-
-| scope | suites | tests |
-|---|---|---|
-| targeted subset — segment · parseUpload · sourceCustody · importedStructure | 4 | 52 |
-| touched-suite gate — the subset **plus** `review.test.ts`, the validator the fold must satisfy | 5 | 88 |
-
-Both pass. The 52 are the tests this cut adds or directly exercises; the 88 are the gate run
-before push. (Earlier reports said 85/50 then 86/50: one test was added for the caps
-`CHAPTER ONE` ruling, then two for the corrected F2 fixture.) `npm run typecheck`: no
-regressions against baseline.
-
-**SHA binding.** These counts and the typecheck result were taken on **`685e205b`**, the last
-commit on the branch that touches code or tests. Every later commit on the branch is
-docs-only, verifiable as an empty diff:
+What the collision does affect is F6b's **R6 presence test**, which matches the ledger on the
+prefix substring (`LIKE '%20260906000001%'`): the developmental row already satisfies it, so
+R6-present can read `>= 1` whether or not 08A's migration ran. Ruling (founder, 2026-09-06):
+**F6b stays byte-identical** (custody digest `f74abf0c…8759f` unchanged); its R6 prefix test is
+historically imperfect but bounded here; R6's other half (every F6a ledger row still present)
+and R1–R5 are unaffected. The **decisive presence witness** is an exact-filename query run and
+preserved after the deploy, because `filename` is the ledger identity:
 
 ```bash
-git diff --stat 685e205b..<head> -- . ':!docs' ':!CLAUDE.md'   # must print nothing
+docker exec maia-postgres psql -U soullab -d maia_consciousness -X -v ON_ERROR_STOP=1 -c \
+"SELECT filename, applied_at
+ FROM schema_migrations
+ WHERE filename = '20260906000001_manuscript_section_heading_depth.sql';"
 ```
 
-The production witness (F1, F2, F3, F6a/F6b) binds to the merged code tree of `685e205b`
-likewise. An intervening push that makes that diff non-empty inherits nothing from this
-standing; it re-runs both scopes and re-records.
+PASS = exactly one row. Zero rows or more than one row = FAIL, and 08A does not close.
+
+**F6a stands.** Production moved from `66da58b4c` (F6a's witnessed commit) to `1116f7813` before
+08A's migration. F6a is not recaptured (founder ruling); the wider interval is exactly what
+F6b's equality checks and the DML counters / `stats_reset` epoch now do real work across. The
+claim F6b can make is unchanged: no *detected* intervening mutation.
+
+**Standing after merge:**
+
+```text
+PR #1230              MERGED · 03e9d89a
+F6a                   PASS · retained (bound to 66da58b4c)
+migration             NOT RUN — runs on the next supported full deploy of 03e9d89a
+                      (`scripts/deploy-production.sh deploy 03e9d89a`)
+F1 · F2 · F3          PENDING — production, after that deploy
+F6b                   PENDING — `bash ~/ws2-08a-f6b-compare.sh ~/ws2-08a-witness/f6a-20260906T122035Z`
+                      before member writes resume
+R6 supplement         PENDING — exact-filename ledger query above, output preserved
+08A                   NOT CLOSED — closes only on F1 + F2 + F3 + F6b + R6 supplement all PASS,
+                      founder-adjudicated
+08B                   HOLD
+```
+
+**Unrelated defect parked, not investigated.** While reading production logs during the
+`66da58b4c` window the founder observed
+`TypeError: Response body object should not be disturbed or locked` from
+`app/api/sovereign/manuscripts/[id]/draft/route`. It predates 08A's migration and touches no
+08A file. Recorded separately as
+`docs/programme/PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_RESPONSE_BODY_2026-09-06.md`, status
+UNTRIAGED · PARKED UNTIL 08A CLOSES. It is not a lane and is not part of 08A.
+
+**Record hygiene.** An earlier revision of this file carried a second, stale copy of the F6a and
+test-count sections (pre-amendment `685e205b`-only binding) below the amended one. That copy was
+removed in this revision; the amended binding above is the only one that stands.
 
 ---
 
