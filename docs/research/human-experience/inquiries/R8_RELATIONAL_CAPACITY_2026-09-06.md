@@ -249,3 +249,9 @@ The field is not measuring this. Soullab will. (→ `measurements/`, headline ro
 
 Outcome per charter Stage 14: **REFINE** (P7 harm model) · **ADOPT-provisional** (P7 design
 formulation) · **ADOPT** (criterion). Exit condition met; R9 opens.
+
+**Amendment after R9 (founder ruling 2026-09-06):** §6.2(c)'s "counterfeit personhood is the
+centripetal engine" is **downgraded**. Ruled wording: *unwarranted Experience attribution and
+friend-framing are possible markers or contributors to centripetal relationship dynamics;
+causality remains unresolved.* "Counterfeit personhood" is retired; the hazard is **counterfeit
+reciprocity**. P7 and P9 remain coupled, not merged.

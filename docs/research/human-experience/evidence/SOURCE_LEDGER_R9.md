@@ -39,7 +39,8 @@ the v0.1 or R8 ledgers are listed by cross-reference only.
 | B15 | Bengio & Elmoznino, *Illusions of AI consciousness* — PMID 40934310 | Science · 2025 | 4 | D |
 | B16 | Seth, *The mythology of conscious AI* (Noema 2025); BBS target article | 2025 | 4 | D |
 | B17 | OpenAI Model Spec 2025-02/04; Jang, *Some thoughts on human-AI relationships* | vendor · 2025 | 9 | E |
-| B18/D11/D12 | EU AI Act Art. 50 · California SB 243 · **New York GBL Art. 47 §§1700–1704** · *Garcia v. Character Technologies*, 785 F. Supp. 3d 1157 (M.D. Fla. 2025) · Garante | statute / ruling | 3 | E |
+| B18/D11/D12 | EU AI Act Art. 50 · California SB 243 · **New York GBL Art. 47 §§1700–1704** (enacted: notify users they are not communicating with a human, start + every 3 h — https://www.nysenate.gov/legislation/laws/GBS/1701) · *Garcia v. Character Technologies*, 785 F. Supp. 3d 1157 (M.D. Fla. 2025) · Garante | statute / ruling | 3 | E |
+| — | **STRUCK 2026-09-06 (founder correction):** the sweep attributed to NY law the wording "unable to feel human emotion." That language was **A6767**, which died in the NY Senate on 2026-01-07 and is not law. Any reading of the R9 record that relies on "NY mandates a denial of feeling" is void. | — | — | — |
 | C1 | Bender & Koller, *Climbing towards NLU* | ACL · 2020 | 4 | D |
 | C2 | Dreyfus, *What Computers Still Can't Do* | MIT Press · 1992 | 4 | D |
 | C3 | Birhane & McGann, *Large models of what?* — S0388000124000615 | Language Sciences · 2024 | 4 | D |
@@ -67,5 +68,5 @@ the v0.1 or R8 ledgers are listed by cross-reference only.
 | D15 | Birch, *The Edge of Sentience* | OUP · 2024 | 4 | E |
 
 **Paraphrase-check priority:** A7 (direction), A13 (full mediation), A16 (58%), A3 (n=885 null),
-B5 (79.7%), D12 (NY statutory wording — check the statute, not summaries), C12/C13 (recipient vs
+B5 (79.7%), D12 (NY statute — corrected 2026-09-06; classification question to counsel), C12/C13 (recipient vs
 third-party designs).

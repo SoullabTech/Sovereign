@@ -28,3 +28,12 @@ programme's contribution is that each now has an evidence pointer and a *mechani
 ConsumerAppStudio-style play can be read against this table and answered: *what phenomenon it
 exploits, what the evidence says, where it works, where it fails, and what the Soullab
 interpretation would be* (founder's Stage 5 standard).
+
+
+---
+
+## Addendum 2026-09-06 — AP13 (founder ruling after R9)
+
+| # | Pattern | Position | Principle | Already canon | Evidence pointer |
+|---|---|---|---|---|---|
+| AP13 | **Personification as Responsibility Shield** — the presence of a named relational intelligence must never obscure the responsibility of the humans and organization that designed, deployed and govern it. Ordinary relational language ("MAIA said") is not prohibited. The anti-pattern occurs when personification shifts accountability — *"MAIA chose this," "MAIA wanted this," "MAIA did this independently"* — in a context where Soullab's architecture, policy, design or engineering caused or permitted the behavior. Public accountability must preserve: **MAIA acted through a system Soullab built and governs.** Persona may carry relationship; persona may not launder responsibility. | CANDIDATE (PROHIBIT class) | P12 · P6 | MAIA_OATH; Invariant 9 (Builder Constraint); MARKETING_CLAIM_DISCIPLINE | R9 A13 (anthropomorphic language shifts perceived responsibility from developers to the AI) |

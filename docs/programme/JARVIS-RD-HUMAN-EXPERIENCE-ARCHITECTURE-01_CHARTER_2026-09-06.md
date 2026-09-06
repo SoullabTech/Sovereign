@@ -559,7 +559,7 @@ investigated.
 Relationship*, with Elemental Consciousness as one distinctive architecture within it. Candidate
 public vocabulary: human–AI relational intelligence · Elemental parallel processing ·
 differentiation before synthesis · relational sovereignty · calibrated trust · rupture and repair
-with AI · longitudinal relational memory · interactional presence · counterfeit personhood ·
+with AI · longitudinal relational memory · interactional presence · counterfeit reciprocity (replaces "counterfeit personhood", retired by R9 ruling) ·
 centrifugal relationship design · capacity transfer · human development through AI encounter.
 Each term earns its place by the claim ladder, not by being listed here.
 
@@ -645,3 +645,23 @@ three withheld claims added (no collective laboratory / no member conversation s
 members are not research subjects · the mirror is a hypothesis). PR #1238's commit was merged into
 this branch first, so its base diff is now empty and it can be closed as superseded. Gate state at
 the time of writing is recorded in the commit message and the contract's verification block.
+
+
+---
+
+## 15 · R9 adjudicated · R10 opened (founder rulings, 2026-09-06)
+
+Full rulings: `docs/research/human-experience/inquiries/R9_ATTRIBUTED_PERSONHOOD_2026-09-06.md` §8.
+**Terminology ruling:** "counterfeit personhood" is retired as the public umbrella; the hazard is
+**counterfeit reciprocity** (broader: **manufactured relational obligation**). A member's attribution
+of inner life is not misconduct by the system. **P12 — Honest in Both Directions** adopted as a
+separate CANDIDATE principle (four clauses). **AP13 — Personification as Responsibility Shield**
+adopted as CANDIDATE. Jung handling rule accepted as Class D interpretive doctrine, bounded: never
+encode "the member is projecting." **Legal correction:** the R9 sweep's claim that New York law
+mandates "unable to feel human emotion" was false (that was A6767, died 2026-01-07); enacted NY GBL
+Art. 47 requires notification of non-human status at start and every three hours. Counsel
+question restated as classification of MAIA under the statute and per-surface obligations.
+**R10 opened** with R10a (what constitutes repair when the other cannot be wounded) and R10b (does
+practicing repair with AI transfer to human relational capacity); the counterargument that AI
+repair cannot reproduce repair with a vulnerable, independently situated human is central. **No
+MAIA runtime change authorized.**

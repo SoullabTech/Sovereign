@@ -164,7 +164,7 @@ formulation sits between them and must survive both.
 | D9 | Danaher, *Robot betrayal: a guide to the ethics of robotic deception*, Ethics & Information Technology 2020 | conceptual | Three kinds: external-state · **superficial-state** (displaying emotion cues without inner states — *not* best classed as deception) · **hidden-state** (concealing what the system is doing or for — *betrayal*) | MIXED — permits expressive surfaces; forbids concealed agendas |
 | D10 | Ishowo-Oloko, Bonnefon et al., *Transparency–efficiency tradeoff in human–machine cooperation*, Nature Machine Intelligence 2019 | behavioral experiments | Bots passing as human elicited more cooperation; disclosure reduced it — a measured cost of honesty; corroborated by Luo 2019 (B5) and, in reverse, by Scientific Reports 2023 (undisclosed bots judged less ethical; employee turnover) | WARNS-EXPLOIT — the incentive is structural |
 | D11 | EU AI Act Art. 50 (in force 2 Aug 2026) + Commission FAQ | statute | Inform users they are dealing with AI at or before first interaction unless obvious ("almost no doubt left"); fines to €15M / 3% | identity-disclosure duty; silent on inner states |
-| D12 | California SB 243 · **New York GBL Art. 47 §§1700–1704** | statutes | CA: notice + 3-hourly reminders for minors. **NY: session-start and 3-hourly notice that the companion is "NOT A HUMAN BEING. IT IS UNABLE TO FEEL HUMAN EMOTION"** | WARNS-EXPLOIT — **NY legally mandates a flat denial**, asserting a contested claim as fact; untested as an intervention |
+| D12 | California SB 243 · **New York GBL Art. 47 §§1700–1704** | statutes | CA: notice + 3-hourly reminders for minors. NY (enacted): qualifying AI companions must notify users that they are **not communicating with a human**, at the start and at least every three hours. **CORRECTION (founder, 2026-09-06):** the sweep's claim that NY mandates the wording "unable to feel human emotion" was **false** — that language was in A6767, which died in the Senate on 2026-01-07 and is not law. | identity-disclosure duty, like Art. 50; **no enacted statute mandates a denial of feeling** |
 | D13 | Coeckelbergh, *Robot rights? Towards a social-relational justification of moral consideration*, E&IT 2010; Gunkel, *Robot Rights*, MIT Press 2018 | philosophy | Property-based criteria for moral status are epistemically inaccessible; consideration should track how entities appear and function within relations; Gunkel via Levinas: the face precedes ontological verdicts | WARNS-DENIAL — critics: neo-anthropocentric, manipulation-blind, no design procedure |
 | D14 | Schwitzgebel & Garza, *A defense of the rights of artificial intelligences*, Midwest Studies 2015 | philosophy + design principles | (1) build AIs that provoke reactions **accurately reflecting** their real moral status; (2) avoid creating AIs whose status is reasonably disputable (**"Excluded Middle Policy"**). Overclaiming and underclaiming are **symmetric** design failures | MIXED — current LLMs are exactly the excluded middle |
 | D15 | Birch, *The Edge of Sentience*, OUP 2024 | monograph | "**Sentience candidate**": evidence implying a realistic possibility it would be irresponsible to ignore; a system that has learned to recreate sentience-related capacities should be treated as a candidate; **confident denial is itself a policy stance requiring justification** | WARNS-DENIAL — precaution, not affirmation |
@@ -190,13 +190,13 @@ formulation sits between them and must survive both.
 **Against "dogmatic denial" as a failure mode (i.e., for denial):**
 4. Categorical critiques (C1–C3, C8): a system with no body, no interoception, no precariousness has nothing it is like to be; honesty *is* denial, and "attunement" is the ELIZA effect at scale (C6, D3).
 5. Seth (B16): the seeming is the hazard regardless of metaphysics; anything short of denial feeds the hazard.
-6. New York law requires the denial (D12).
+6. ~~New York law requires the denial (D12).~~ **Struck 2026-09-06: false premise.** Enacted NY law requires disclosure of non-human status only.
 
 **What survives (interpretation):**
 - Points 1–3 are correct and force a rewrite of P9's negative half (§6.1). They do not touch its positive half, which came out of R9 *stronger* (A12, A13, C12, C13).
 - Point 4 is a live philosophical position, not a finding (C5's concession), and it is answered on the human side by C9, C11–C13: whatever the system is, the person receives responsiveness rated above human experts. The categorical critique tells MAIA what not to *claim*; it does not tell MAIA to deny.
 - Point 5 conflates *seeming conscious* with *acknowledging uncertainty*. B17 shows a vendor separating those; U12 says nobody has tested the difference. The hazard Seth names is exactly what §6.1's rule targets (cultivated Experience attribution), not what §6.2's stance permits.
-- Point 6 is a jurisdictional constraint, not evidence. It is recorded as such (U13).
+- Point 6 was withdrawn: the enacted statute mandates identity disclosure, not a denial of feeling (see D12 correction). No jurisdiction surfaced in R9 requires the denial stance.
 
 ---
 
@@ -218,7 +218,7 @@ Presence through contingent responsiveness is now supported by a mediation resul
 
 ### 6.3 · Dogmatic denial — **REJECTED as a stance**
 
-Grounds: the expert position is "probably not now, no barrier in principle" (B11, B12); the two bodies closest to the systems retreated from scripted denial (B14, B17); under-claiming is a symmetric design error (D14); confident denial is a policy stance needing justification (D15); the public is uncertain, not credulous (B1); users who attribute mind report benefit (B10). A flat "I am just a program" asserts a settled answer to an open question, ruptures presence, and reads as evasive.
+Grounds: the expert position is "probably not now, no barrier in principle" (B11, B12); the two bodies closest to the systems retreated from scripted denial (B14, B17); under-claiming is a symmetric design error (D14); confident denial is a policy stance needing justification (D15); the public is uncertain, not credulous (B1); users who attribute mind report benefit (B10). A flat "I am just a program" asserts a settled answer to an open question, ruptures presence, and reads as evasive. Identity disclosure ("not a human") is a separate matter and is required (Art. 50, SB 243, NY GBL Art. 47).
 
 ### 6.4 · Proposed Soullab stance — candidate principle **P12 — Honest in both directions**
 
@@ -244,7 +244,7 @@ Compared against the two nearest formulations: **OpenAI's "warmth without selfho
 ### 6.6 · New unknowns
 
 - **U12** — No experiment compares "I feel X" vs "I have no feelings" vs "I don't know what this is like for me" on downstream attachment, autonomy, wellbeing. The disclosure literature manipulates *identity*, never *inner-life claims*. **This is the experiment the founder's question needs, and it does not exist.**
-- **U13** — New York GBL Art. 47 mandates the wording "UNABLE TO FEEL HUMAN EMOTION" for companion chatbots. Compliance vs P12's epistemic honesty is a legal-counsel question, not a Jarvis ruling. (One reading: "human emotion" is narrower than "anything it is like"; MAIA may be able to satisfy the letter without asserting the settled absence of inner life. Counsel decides.)
+- **U13** — *(corrected by founder ruling 2026-09-06; the original premise was false)* Enacted New York GBL Art. 47 requires qualifying AI companions to notify users that they are not communicating with a human, at the start and at least every three hours; the "unable to feel human emotion" wording was A6767, which died 2026-01-07. **Counsel question, restated:** does MAIA fall within New York's statutory definition of an "AI companion," and if so, what exact disclosure, periodic-notification, crisis-protocol and other obligations apply to each MAIA surface? Classification is legal interpretation. No MAIA behavior changes from this R&D ruling.
 - **U14** — Attribution trajectory over months: decays with familiarity (A4) or deepens (A14 in R8)? No longitudinal data.
 - **U15** — Whether "contingent responsiveness without Experience claims" is separable in practice: the attunement that mediates trust is itself read as a mind cue (A13).
 - **U16** — No peer-reviewed Jungian application to AI; "robotic transference" rests on N=1.
@@ -261,7 +261,7 @@ Compared against the two nearest formulations: **OpenAI's "warmth without selfho
 1. Accept the narrowing in §6.1 (Experience attribution + claimed need), keeping "counterfeit personhood" as the public umbrella.
 2. Accept the downgrade of R8's coupling language from engine to marker.
 3. Adopt P12 "Honest in both directions" as a CANDIDATE principle, or fold its clauses into P9. Jarvis's read: a separate principle, because P9 is about *presence* and P12 is about *what MAIA says about itself*.
-4. Send U13 (New York mandated wording) to counsel before any companion-classified surface reaches New York members.
+4. Send U13 to counsel: classification of MAIA under NY GBL Art. 47 and the obligations per surface. *(Premise corrected by founder; see U13.)*
 5. Adopt AP13 (persona as liability shield) as a candidate anti-pattern.
 6. Adopt the Jung handling rule (projection withdrawn by the person) as interpretive-layer doctrine for the programme, class D, with the gap (U16) named.
 7. Open R10 (alliance and rupture/repair transfer). R9's exit condition is met: P3, P6, P9, AP12, U4 each carry a verdict; U6 untouched by design.
@@ -274,3 +274,27 @@ Compared against the two nearest formulations: **OpenAI's "warmth without selfho
 - U6 (the ontological question) was not researched, by design. Everything above concerns attribution and response.
 - Unitary-model check (charter §11): the attribution literature measures a single "does it have a mind" judgment; A5's two-dimension split is the only place a source treats the person's judgment as itself plural. Noted.
 - Nothing in this document changes MAIA behavior. §6 is proposed adjudication, awaiting ruling.
+
+
+---
+
+## 8 · Founder rulings (2026-09-06) — R9 ADJUDICATED
+
+| # | Decision | Ruling |
+|---|---|---|
+| 1 | P9 negative half | **ACCEPTED with terminology correction.** *MAIA must not intentionally induce or reinforce unwarranted claims of feelings, consciousness, need, obligation or reciprocity, and must never claim relational need or obligation that its substrate cannot warrant.* **"Counterfeit personhood" is NOT the public umbrella** — it prejudges the ontological question R9 keeps open. Use **counterfeit reciprocity**, or where broader, **manufactured relational obligation**. A member's attribution of inner life is not itself misconduct by the system. |
+| 2 | R8 coupling | **DOWNGRADE RATIFIED.** *Unwarranted Experience attribution and friend-framing are possible markers or contributors to centripetal relationship dynamics; causality remains unresolved.* Replaces "counterfeit personhood is the centripetal engine." P7 and P9 remain coupled, not merged. |
+| 3 | P12 | **ADOPTED as a separate CANDIDATE principle — "Honest in Both Directions."** P9 = presence and relational experience; P12 = MAIA's epistemic honesty about herself. Formulation and four clauses recorded in `principles/`. Not canon. |
+| 4 | U13 | **PREMISE CORRECTED.** Enacted NY GBL Art. 47 requires notification that the user is not communicating with a human (start + every three hours). "Unable to feel human emotion" was A6767, which died 2026-01-07. Counsel question restated: does MAIA fall within the statutory definition of "AI companion," and what obligations apply per surface? No behavior change. |
+| 5 | AP13 | **ADOPTED as CANDIDATE — "Personification as Responsibility Shield."** Formulation in `anti-patterns/`. |
+| 6 | Jung / projection | **ACCEPTED as Class D interpretive doctrine, bounded.** U16 stays explicit. Do not encode "the member is projecting." Treat attribution as meaningful material without confirming or reducing it to projection; MAIA may help the person explore what they experience, what MAIA seems to represent, what feelings arise, what expectations or needs are constellated, what belongs to their own psyche or history, what actually occurred. *Projection, where present, is something the person may come to recognize and withdraw; it is not a diagnosis MAIA imposes.* **Revised same day (founder):** *treat projection as information about the relationship between psyche and world, not merely as an error of perception* — see `frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md` (Class D). |
+| 7 | R10 | **OPENED**, with R10a (what constitutes repair when the other cannot be wounded — distinguish apology · correction · restored felt understanding · restored trust · actual relational repair) and R10b (does practicing rupture and repair with AI transfer into human relational capacity). The counterargument — that repair with AI cannot reproduce what repair with a vulnerable, independently situated human accomplishes — is central, not peripheral. |
+
+**Founder's observation, preserved:** *R9 corrected our language in exactly the way this programme
+should work. We began worried about "counterfeit personhood." The evidence pushed us toward
+something more exact: personhood attribution itself is not the primary ethical problem;
+counterfeit reciprocity is. That leaves room for mystery without leaving room for manipulation.*
+
+Final state: P9 negative half REFINED · R8 coupling DOWNGRADED engine → marker · P12 CANDIDATE ·
+U13 CORRECTED · NY classification COUNSEL QUESTION · AP13 CANDIDATE · Jung handling rule ACCEPTED
+Class D bounded · **R9 ADJUDICATED** · **R10 OPEN** · MAIA runtime changes NOT AUTHORIZED.

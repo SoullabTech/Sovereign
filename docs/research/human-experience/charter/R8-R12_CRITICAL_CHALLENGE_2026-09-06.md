@@ -81,12 +81,23 @@ CLAIMS AT STAKE   P3 · P9 · AP12 · U4 · the vocabulary shift aliveness → f
 OUTCOME           [open]
 ```
 
-## R10 — Therapeutic alliance and rupture/repair transfer
+## R10 — Therapeutic alliance and rupture/repair transfer  ← OPENED (founder, 2026-09-06, after R9)
 
 ```text
 QUESTION          Does the psychotherapy evidence on alliance, empathy and rupture/repair
                   transfer to a non-human, non-reciprocal, always-available interlocutor —
                   or is the transfer the synthesis's weakest inference?
+R10a [founder]    What constitutes repair when the other cannot be wounded in the ordinary human
+                  sense? Distinguish: apology · correction · restored felt understanding ·
+                  restoration of trust · actual relational repair. Do not assume these are identical.
+R10b [founder]    Does practicing rupture and repair with AI transfer into human relational
+                  capacity? The measure is not "did the member feel closer to MAIA afterward" but
+                  "did learning to identify, tolerate and repair misattunement with MAIA improve
+                  the person's capacity to recognize and repair rupture with human beings?"
+CENTRAL COUNTER   Actively seek evidence that repair with AI cannot reproduce what repair with
+                  another vulnerable, independently situated human accomplishes. Central, not
+                  peripheral. This goes to the boundary between Self, Other, MAIA and World.
+FINDINGS          inquiries/R10_RUPTURE_REPAIR_TRANSFER_2026-09-06.md
 TARGETS [founder] therapeutic alliance transfer
 SURFACE           Voice · Conversation · Practitioner Studio
 HUMAN PHENOMENON  alliance · rupture · repair · the role of the other's independent stake
