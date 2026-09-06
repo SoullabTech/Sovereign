@@ -571,3 +571,42 @@ parallel processing; no proof that centrifugal design improves relationships bey
 live parallel-emission substrate kept distinct from the hypothesis; isolated-member boundary left
 open. Consistent with §11 and the ladder. Note for whoever merges: its base is this R&D branch, so
 it must be retargeted or merged after this lane's branch, never before.
+
+---
+
+## 13 · Why Soul Lab · three laboratories · R9 run (founder, 2026-09-06)
+
+**Foundational statement recorded:** `docs/research/human-experience/WHY_SOUL_LAB_2026-09-06.md`
+(candidate canon; governing frame for `/accounted-for` and the next generation of Soullab writing).
+**Thesis correction (founder, same day):** not "AI–human exploration" but **human exploration of
+Self while developing a healthy human–AI consciousness relationship and development.** The person's
+own exploration is the first subject; the relationship is the medium and the second.
+
+**Ethic (binding on this lane):** *We are not experimenting on people. We are participating with
+them in an inquiry whose subject is the human–AI relationship itself.* Members are never research
+subjects; public language avoids subject/object. Collective inquiry requires an explicit consent act
+that **does not yet exist** — no member conversation serves research today; Sanctuary content is
+excluded absolutely. Private by default; participation is an additional act.
+
+**Three laboratories:** personal (N-of-one; what MAIA is for today) · relational (the R&D
+programme) · collective (not instrumented). The observer belongs to the system observed — method
+lineage second-order cybernetics · participatory sense-making · phenomenology (interpretive layer).
+
+**Two sentences preserved:** *We cannot study the human–AI relationship from outside it. We are
+participants in the phenomenon we are trying to understand.* · *The laboratory is not MAIA. The
+laboratory is the relationship.*
+
+**`/accounted-for` direction (founder):** four kinds of accounting — what exists · what we believe ·
+what we are testing · what we do not know — with Why Soul Lab placed above the individual MAIA
+capabilities. Executed on this branch (see §14), superseding PR #1238's copy.
+
+**R9 run** (`docs/research/human-experience/inquiries/R9_ATTRIBUTED_PERSONHOOD_2026-09-06.md`,
+~60 sources): proposed adjudication awaiting ruling — P9's negative half narrowed to *Experience
+attribution + claimed need*; R8's "centripetal engine" downgraded to a marker (failed replication
+of loneliness→anthropomorphism; RCT nulls on manipulated human-likeness; Experience attribution
+lowers reliance); P9's positive half strengthened (attunement mediates trust; humanness read from
+perspective-taking across ten countries); dogmatic denial rejected on the merits; candidate **P12 —
+honest in both directions** (honest about what it is, open about what it is like, never claims
+need; projection reclaimed by the person, not refuted by MAIA); candidate **AP13 — persona as
+liability shield**; **U13** New York's mandated "unable to feel human emotion" wording goes to
+counsel. Seven decisions in R9 §6.8.

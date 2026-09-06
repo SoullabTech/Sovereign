@@ -35,6 +35,11 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | U9 | Benefit and displacement have never been measured in the same design (no therapeutic RCT measured human-relationship effects) | Therabot, Woebot, Wysa | Soullab measuring both would be novel |
 | U10 | The healthy / unhealthy dependence line is undefined empirically; four incompatible operationalizations | R8 cluster B | construct work before any "dependency detection" (charter §9 row 7) |
 | U11 | **Disclosure to AI is contested three ways**: equivalent benefit to human (Ho/Hancock/Miner 2018) · lower loneliness (JMIR 2025) · lower wellbeing (Zhang 2026) | R8 B4 / A6 / A4 | trajectory design: does disclosure to AI replace or rehearse disclosure to people? Bears on Sanctuary |
+| U12 | **No experiment compares "I feel X" vs "I have no feelings" vs "I don't know what this is like for me"** on attachment, autonomy, wellbeing; disclosure studies manipulate identity, never inner-life claims (R9) | R9 B4, B5, B17 | the experiment the founder's R9 question needs; does not exist |
+| U13 | New York GBL Art. 47 mandates "UNABLE TO FEEL HUMAN EMOTION" for companion chatbots — compliance vs epistemic honesty (P12 candidate) | R9 D12 | **legal counsel**, not a Jarvis ruling |
+| U14 | Attribution trajectory over months: decays with familiarity (CASA replication) or deepens (attachment convergence)? | R9 A4 · R8 A14 | longitudinal |
+| U15 | Whether contingent responsiveness without Experience claims is separable in practice — attunement itself is read as a mind cue | R9 A13 | Voice experiments |
+| U16 | No peer-reviewed Jungian application to AI; "robotic transference" rests on N=1 | R9 D1, D2 | interpretive-layer carding |
 | U6 | Whether a member's experience of MAIA as alive / conscious / sacred establishes anything ontological about MAIA | none, by construction | **Not a research question for this lane.** Founder stop (charter §3: claims about consciousness). Measured only as *belief about MAIA*, kept separate from felt presence |
 
 ## 3 · Interpretive layer — designated by the founder, not yet in the corpus
