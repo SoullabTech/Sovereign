@@ -11,17 +11,23 @@ UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
 FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
 OBSERVED RUNTIME SHA       50302f5d9 — read from the deployed container 2026-09-06, FIXED for
                            the walk's duration (§2.1)
-CUSTODY (§2.1)             NOT YET EVIDENCED FOR THE WALK. merge-base --is-ancestor
-                           66da58b4c 50302f5d9 returned exit 0 when computed in the assistant's
-                           session clone — a true statement about the commit graph, but NOT the
-                           deploy-host run the walk requires. The minisforum-side command and its
-                           retained output are the founder's to produce.
+CUSTODY (§2.1)             SATISFIED 2026-09-06, founder-run ON THE DEPLOY HOST:
+                             ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN &&
+                               git merge-base --is-ancestor 66da58b4c 50302f5d9;
+                               printf "ancestor_exit=%s\n" "$?"'
+                             → ancestor_exit=0
+                           The host-side run is what the rule requires: merge-base resolved both
+                           commits in minisforum's OWN checkout, so the frozen anchor and the
+                           observed runtime lie in one lineage on the machine that runs the
+                           program. An equivalent exit 0 computed elsewhere is a true statement
+                           about the commit graph and was NOT accepted as closing this part.
 07F MIGRATION    APPLIED 2026-09-06 11:36:34+00 — before its consent checkpoint (runbook §0)
 STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
 GATED ON         the founder's prospective act, runbook §2.2 — GIVEN 2026-09-06
 RUNS AFTER       #1228's own witness (runbook §6.2) — a separate record, not a step of this walk
-STATE            W1 NOT CLOSED — one part open. §2.2 act GIVEN, so W2 onward is unblocked by
-                 authority. Evidenced on production 2026-09-06:
+STATE            W1 CLOSED — all parts evidenced on production 2026-09-06. §2.2 act GIVEN.
+                 W2 is the next step; W3 is the first irreversible one.
+                   W1(a) custody    PASS — deploy-host ancestor_exit=0 (see CUSTODY above)
                    pre-walk count   developmental_observation_standing_events = 0
                    W1(b) schema     PASS — migration filename present; events table with its
                                     UNIQUE quad (member_id, reading_id, observation_key,
@@ -34,8 +40,8 @@ STATE            W1 NOT CLOSED — one part open. §2.2 act GIVEN, so W2 onward 
                                     FKs: reading_id → developmental_readings ON DELETE CASCADE
                                     (paired with no_orphan_delete_check — the integrity path §4
                                     forbids "cleaning up"); member_id → members ON DELETE RESTRICT.
-                   W1(a) custody    OPEN — awaiting the minisforum-side ancestry run
-                 W3 is the first irreversible step and does not run before W1 closes.
+                 W3 is the first irreversible step. W1 no longer gates it; the founder's own
+                 gesture in an authenticated browser is what performs it.
 ```
 
 **The subject moved twice** — `cb557b8fb` → `ccd1c50ce` when the founder adjudicated one combined
