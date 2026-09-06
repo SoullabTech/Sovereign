@@ -575,18 +575,27 @@ npm run typecheck    RED on the same two tsconfig.ship.json:3 toolchain deprecat
                      the new destination and place add no diagnostics. NOT rebaselined.
 ```
 
-### Not verified here
+### The House tests — now run, and passing
 
-The House navigation tests (`lib/navigation/__tests__/houseDestinations.test.ts`,
-`houseNavDrift.test.ts`) **were not run** — this container has no `node_modules`, so vitest is
-unavailable. The new entry is founder-audience and `nativeReady: false`, which should not
-disturb the member/founder list assertions or the drift guard, but that is reasoning, not a
-test result. Run them before the walk.
+The gap this section previously recorded is closed. The founder ran both on `a7e0aeee5`:
+
+```
+houseDestinations.test.ts   PASS
+houseNavDrift.test.ts       PASS
+45 tests passed · 0 failed
+
+shadow-01-gates.ts          33 passed · 0 failed · 0 warned
+```
+
+So the House placement and the native-drift reasoning are **tested, not inferred**. The
+founder-audience entry does not disturb the member/founder list assertions, and
+`nativeReady: false` carries no drift obligation — both now established by the guards
+themselves rather than by argument.
 
 `/maia/labtools` still mounts `ShadowWorkGuide`, the retired astrological guided flow,
 directly. It is not the Field and should not be walked.
 
 ```text
-P3   REPAIRED — Shadow Field reachable as a House place; arriving ≠ entering
-P8   PAUSED → the founder walk can begin once the House tests are run
+P3   GREEN — Shadow Field reachable as a House place; arriving ≠ entering; House tests PASS
+P8   OPEN — founder walk may resume from The House → Shadow Field
 ```

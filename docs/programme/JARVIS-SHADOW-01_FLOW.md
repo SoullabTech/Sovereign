@@ -28,9 +28,9 @@ invoked_entrance: DESIGNED · DEFERRED until activation-turn isolation is struct
 merge: NOT AUTHORIZED
 deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
-current_node: PROTOTYPE / P8 paused → P3-R1 repaired
-next_possible_act: run the House navigation tests, then the founder's authenticated browser walk from the new House door — seven paths plus the F16 probe
-last_state_change: 2026-09-06 (P3-R1 reachability repair: Shadow Field is now a member-chosen House place at /maia/shadow-field, founder-audience and interim; arriving does not enter; gates 33/0. Earlier: assistant-executed P8 technical/rater verification recorded — six adversarial model-behaviour cases PASS, first evidence for the rater halves of F4/F7/F13/F15/F16; attribution corrected from founder to assistant; five browser-walk items remain founder-pending)
+current_node: PROTOTYPE / P8 open — founder walk may resume
+next_possible_act: the founder's authenticated browser walk from The House → Shadow Field — seven paths plus the F16 probe
+last_state_change: 2026-09-06 (House navigation tests run and PASS on a7e0aeee5 — 45 tests, 0 failed; P3 GREEN. Earlier: P3-R1 reachability repair: Shadow Field is now a member-chosen House place at /maia/shadow-field, founder-audience and interim; arriving does not enter; gates 33/0. Earlier: assistant-executed P8 technical/rater verification recorded — six adversarial model-behaviour cases PASS, first evidence for the rater halves of F4/F7/F13/F15/F16; attribution corrected from founder to assistant; five browser-walk items remain founder-pending)
 ```
 
 ```text
