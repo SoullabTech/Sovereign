@@ -128,3 +128,25 @@ describe('deriveImportedStructure', () => {
     expect(a.units[0].children[0].kind).toBeNull();
   });
 });
+
+/* WS2-08A F5, second half — the F2 fixture folds to exactly the chapters the
+   author named, and nothing more. */
+describe('deriveImportedStructure (F2 fixture)', () => {
+  it('yields CHAPTER ONE and CHAPTER TWO only; PART ONE unplaced; THE HOUSE AT NIGHT inside CHAPTER ONE', () => {
+    const sections = [
+      sec(0, 'PART ONE', null),
+      sec(1, 'CHAPTER ONE', 1),
+      sec(2, 'THE HOUSE AT NIGHT', null),
+      sec(3, 'CHAPTER TWO', 1),
+    ];
+    const out = deriveImportedStructure(sections);
+    expect(out.unplacedSectionIds).toEqual(['s0']);
+    expect(out.units.map(shape)).toEqual([
+      { title: 'CHAPTER ONE', from: 's1', to: 's2', children: [] },
+      { title: 'CHAPTER TWO', from: 's3', to: 's3', children: [] },
+    ]);
+    expect(out.explicitCount).toBe(2);
+    expect(out.unclassifiedCount).toBe(2);
+    expect(validateImportedStructure(out, sections)).toBeNull();
+  });
+});

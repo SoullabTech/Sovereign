@@ -156,3 +156,21 @@ describe('segment (WS2-08A heading depth)', () => {
     ]);
   });
 });
+
+/* WS2-08A F2 — the production fixture, witnessed in code first. Generic caps do
+   not manufacture hierarchy; explicit chapter wording in caps still does. */
+describe('segment (WS2-08A F2 fixture — precedence, not one side of it)', () => {
+  it('PART ONE → caps/NULL · CHAPTER ONE → chapter/1 · THE HOUSE AT NIGHT → caps/NULL · CHAPTER TWO → chapter/1', () => {
+    const text = [
+      'PART ONE', 'opening lines', 'CHAPTER ONE', 'the first chapter',
+      'THE HOUSE AT NIGHT', 'a scene', 'CHAPTER TWO', 'the second chapter',
+    ].join('\n');
+    const out = segment(text);
+    expect(out.map((s) => [s.heading, s.headingSignal, s.headingDepth])).toEqual([
+      ['PART ONE', 'caps', null],
+      ['CHAPTER ONE', 'chapter', 1],
+      ['THE HOUSE AT NIGHT', 'caps', null],
+      ['CHAPTER TWO', 'chapter', 1],
+    ]);
+  });
+});

@@ -207,27 +207,48 @@ on the arrival; the fold holds sections by reference.
 ### Falsifiers for 08A closure (prospective)
 
 ```text
-F1  a DOCX with Heading 1 / Heading 2 ingests with heading_depth 1 / 2 on Source
-F2  a print manuscript whose boundaries are ALL-CAPS ingests with heading_depth NULL on every row
-F3  a member cut at confirm persists heading_signal = 'member', heading_depth NULL
+F1  DOCX Heading 1 / Heading 2 arrive on Source as heading_depth 1 / 2, each with the
+    corresponding decisive signal (markdown — DOCX extraction renders them as #/##)
+F2  GENERIC CAPS DO NOT MANUFACTURE HIERARCHY. An ALL-CAPS manuscript whose boundary
+    headings carry no markdown depth and no recognised chapter wording persists them as
+    heading_signal = 'caps', heading_depth = NULL. Explicit chapter wording, INCLUDING
+    when uppercase, is classified 'chapter' at depth 1. The production fixture holds
+    both cases so the precedence rule itself is witnessed, not one side of it:
+        PART ONE             → caps    / NULL
+        CHAPTER ONE          → chapter / 1
+        THE HOUSE AT NIGHT   → caps    / NULL
+        CHAPTER TWO          → chapter / 1
+F3  a member-drawn cut at confirm persists heading_signal = 'member', heading_depth = NULL —
+    unless the member explicitly assigns hierarchy through a later confirmation act
+    (not designed here)
 F4  deriveImportedStructure on F1 validates under validateReviewed with no refusal
-F5  deriveImportedStructure on F2 yields zero units — no chapter is invented
-F6  existing production rows (pre-migration) read as unclassified; no row rewritten
-F7  segment() output for any text is unchanged in position · heading · body (omission control still lossless)
+F5  deriveImportedStructure on a caps-only manuscript (no chapter wording) yields zero
+    units — no chapter is invented; on the F2 fixture it yields exactly two units
+    (CHAPTER ONE, CHAPTER TWO), PART ONE unplaced, THE HOUSE AT NIGHT inside CHAPTER ONE
+F6  pre-existing rows are NOT REWRITTEN by the migration and read as unclassified. Proved
+    by before/after row identity — ids, positions, headings, body digests and updated
+    counts equal across the migration — not merely by observing NULL afterwards. "Old
+    rows are NULL" and "the migration did not rewrite old rows" are different claims.
+F7  segment() output for any text is unchanged in position · heading · body (omission
+    control still lossless)
 ```
 
-F4–F5, F7 are unit-tested on this branch. F1–F3, F6 need a production witness after migration.
+F2's wording was corrected 2026-09-06 (founder): the earlier "NULL depth on every row" contradicted
+the ruling that `CHAPTER ONE` in caps is chapter wording. F2's fixture and F5's second half are
+also pinned as unit tests on this branch. F4–F5, F7 are unit-tested; **F1–F3, F6 need a production
+witness after migration**, run exactly as written above.
 
 ### Test counts on this branch (one truth, two scopes)
 
 | scope | suites | tests |
 |---|---|---|
-| targeted subset — segment · parseUpload · sourceCustody · importedStructure | 4 | 50 |
-| touched-suite gate — the subset **plus** `review.test.ts`, the validator the fold must satisfy | 5 | 86 |
+| targeted subset — segment · parseUpload · sourceCustody · importedStructure | 4 | 52 |
+| touched-suite gate — the subset **plus** `review.test.ts`, the validator the fold must satisfy | 5 | 88 |
 
-Both pass. The 50 are the tests this cut adds or directly exercises; the 86 are the gate run
-before push. (An earlier report said 85: one test was added afterwards, the caps `CHAPTER ONE`
-case.) `npm run typecheck`: no regressions against baseline.
+Both pass. The 52 are the tests this cut adds or directly exercises; the 88 are the gate run
+before push. (Earlier reports said 85/50 then 86/50: one test was added for the caps
+`CHAPTER ONE` ruling, then two for the corrected F2 fixture.) `npm run typecheck`: no
+regressions against baseline.
 
 ---
 
