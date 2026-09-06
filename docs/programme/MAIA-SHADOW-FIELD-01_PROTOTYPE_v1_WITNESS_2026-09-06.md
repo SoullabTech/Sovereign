@@ -207,3 +207,115 @@ P6 P7            RERUN GREEN after P4 — 25 passed · 0 failed
 P8               HOLD — needs the walkable Dedicated-room surface
 RUNTIME          UNCHANGED · migration unapplied · not merged · not deployed
 ```
+
+---
+
+## 7 · P4-C1 and P3 — founder correction 2026-09-06
+
+### The correction was right, and my claim had been wrong
+
+The keep route derived Sanctuary from `body.sanctuary`. `shouldPersistKeep()` is only a
+boolean guard with no independent knowledge of the sitting, so a forged request could send
+`sanctuary: false` during a Sanctuary session and reach the insert. The earlier statement
+that "a forged or direct request under Sanctuary creates zero rows" was **not true**. It
+protected an honest client and nothing more.
+
+### What now holds the authority
+
+```text
+member act at entry  →  server records the Field sitting  →  keep reads the SERVER
+```
+
+`lib/maia/shadowField/fieldSession.ts` holds the sitting server-side: who opened the Field,
+when, and whether it was opened as Sanctuary. `POST /api/maia/shadow-field/enter` mints it
+at the activation act. The keep route resolves it with `verifyFieldSession` and passes it to
+a pure decision. **The keep route no longer reads a client Sanctuary field at all**, so a
+forged request has nothing to assert with.
+
+It **fails closed**: an unknown, expired, foreign or closed token is a refusal, not an
+assumption of non-Sanctuary. A process restart or a second instance therefore causes a
+refused keep, never an unauthorized write — which is why in-memory state is honest here.
+Leaving now closes the sitting server-side, so deactivation is not merely a client state
+change.
+
+`lib/maia/shadowField/keepDecision.ts` is a **pure function** so the refusals are proven on
+the same code the route runs, not on a copy of its reasoning. Sanctuary enters it only as
+`serverSession`; there is no client-sanctuary parameter to pass.
+
+### P4 acceptance — run against an isolated prototype database
+
+An isolated PostgreSQL 16 cluster (UTF8, port 5433, throwaway) was created in this
+container, the migration chain applied including `20260906000002`, and:
+
+```
+node --experimental-strip-types scripts/witness/shadow-field-p4-acceptance.ts
+  1.  normal explicit keep → exactly one shadow_field row                      PASS
+  2.  round-trips as shadow_field with member body intact                      PASS
+  3.  return_preference is member_pulled (not ambiently retrieved)             PASS
+  4.  a MAIA possibility is refused, zero rows                                 PASS
+  5.  proposed wording without an acceptance act is refused                    PASS
+  5b. proposed wording IS keepable once explicitly accepted                    PASS
+  6.  Sanctuary refuses the keep at the persistence boundary                   PASS
+  7.  forged non-Sanctuary claim refused, zero rows (P4-C1)                    PASS
+  7b. unknown/expired/closed sitting fails closed                              PASS
+  7.  schema refuses practitioner/system authority on a shadow_field atom      PASS
+  8.  spontaneous and sourced atoms are unaffected by the change               PASS
+  11 passed · 0 failed
+```
+
+**Fidelity discipline.** The decision is made by importing the same `decideKeep` the route
+calls, and the write executes the route's own `INSERT` statement, extracted from the route
+source at runtime rather than retyped — so the proof cannot drift from the code it claims to
+test. The round-trip reads exactly the loader's `SELECT_COLUMNS`, also lifted from source.
+
+**What it does not exercise, and must not be read as covering:** HTTP, cookies,
+`getCurrentSession`, and the tester gate. A forged request at the *transport* layer is the
+founder walk's to establish; this proves the decision and the write cannot be fooled.
+
+**The prototype database is ephemeral** — it lives in this container and is gone with it.
+The script recreates it from the migration chain; it has never touched production, which
+remains unauthorized.
+
+### P3 — the walkable Dedicated room
+
+`components/maia/shadowField/ShadowFieldSheet.tsx`: Arrival → explicit **Enter the Shadow
+Field** → Doors → the six movements → Keep or Leave, with **Leave present in every stage**.
+Arrival states what MAIA is and is not here, that nothing is kept unless chosen, and how to
+leave. Differentiate is not reachable until the member has said something, so the projection
+inquiry cannot precede the disturbance (F7). The keep menu appears only at a voluntary close,
+offers four member-worded options and never MAIA's conclusion, and is not shown under
+Sanctuary — where the server refuses regardless.
+
+The inherited Journal "Shadow Work" door is re-pointed to it at both mount sites
+(`app/maia/page.tsx`, `components/maia/MaiaModalManager.tsx`). No Invoked entrance, no
+astrology, no practitioner path, no ordinary-path integration.
+
+### Gates after P3 / P4-C1
+
+```
+shadow-01-gates.ts        R32 · R33 · R34 ALL GREEN — 28 passed · 0 failed · 0 warned
+p4-acceptance             11 passed · 0 failed
+npm run typecheck         RED on the same two tsconfig.ship.json:3 toolchain deprecations
+                          and nothing else; the program grew by this change's files and the
+                          new-diagnostic list did not. These files typecheck clean.
+                          NOT rebaselined.
+```
+
+**Two checks were stale before they were right, again.** R32 still asserted the MAIA-possibility
+and acceptance refusals against the route after that logic moved into the pure decision. Both
+refusals were live the whole time — the acceptance run proves them — but the check was reading
+the wrong file. Re-pointed at the decision module.
+
+### Follow-up for whoever ships this to iOS
+
+All three Field routes declare `export const dynamic = 'force-dynamic'`. Per the session
+anchor's Capacitor trap, such routes must be listed in `EXCLUDED_DYNAMIC_ROUTES` for the
+static export build. Not done here — it is build configuration, outside this authorization.
+
+```text
+P0 P1 P2 P3 P4 P5   BUILT / GREEN
+P6 P7               RERUN GREEN — 28 passed · 0 failed
+P8                  READY — awaits the founder walk
+MIGRATION           applied to the isolated prototype DB only; production NOT authorized
+MERGE · DEPLOY      NOT AUTHORIZED
+```

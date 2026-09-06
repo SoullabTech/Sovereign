@@ -35,6 +35,7 @@ import {
   SHADOW_FIELD_EXIT_TEXT,
 } from '@/lib/maia/shadowField/prompts';
 import { MOVEMENT_ORDER } from '@/lib/maia/shadowField/types';
+import { verifyFieldSession, closeFieldSession } from '@/lib/maia/shadowField/fieldSession';
 import type {
   ShadowActivation,
   ShadowMovement,
@@ -87,6 +88,9 @@ export async function POST(request: NextRequest) {
   // EXIT (L6, F14). One gesture. Immediate. No closing interpretation, no keep prompt,
   // no question, nothing written, and no reference to what was in the room.
   if (body.exit === true) {
+    // Deactivation is server-side, not merely a client state change (P4-C1). After this
+    // the token is dead: further turns and any keep attempt refuse.
+    closeFieldSession((body as Record<string, unknown>).fieldToken);
     return NextResponse.json({ text: SHADOW_FIELD_EXIT_TEXT, fieldActive: false });
   }
 
@@ -104,7 +108,12 @@ export async function POST(request: NextRequest) {
   }
 
   const movement: ShadowMovement = isMovement(body.movement) ? body.movement : 'encounter';
-  const sanctuary = body.sanctuary === true;
+
+  // Sanctuary posture for the prompt comes from the server-held sitting when there is one.
+  // The client's assertion is a fallback for the prompt only, and can never permit a write
+  // — persistence is decided in keep/route.ts from server state alone (P4-C1).
+  const field = verifyFieldSession((body as Record<string, unknown>).fieldToken, session.memberId);
+  const sanctuary = field ? field.sanctuary : body.sanctuary === true;
   const message = typeof body.message === 'string' ? body.message.trim() : '';
   if (!message) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

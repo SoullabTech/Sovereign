@@ -12,7 +12,7 @@ import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
-import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
+import { ShadowFieldSheet } from '@/components/maia/shadowField/ShadowFieldSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 
@@ -135,7 +135,7 @@ export function MaiaModalManager({
         onSaved={() => {}}
         onAskMaia={onJournalAskMaia ? (content, type) => onJournalAskMaia(content, type) : undefined}
       />
-      <ShadowWorkSheet
+      <ShadowFieldSheet
         isOpen={showShadowWork}
         onClose={onCloseShadowWork}
         userId={explorerId}

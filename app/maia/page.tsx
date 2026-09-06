@@ -29,7 +29,7 @@ import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { shouldOpenJournalCapture, urlWithoutJournalParam } from '@/lib/navigation/journalDeepLink';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
-import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
+import { ShadowFieldSheet } from '@/components/maia/shadowField/ShadowFieldSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
@@ -1776,7 +1776,7 @@ function MAIAPageContent() {
         />
 
         {/* Shadow Work Sheet */}
-        <ShadowWorkSheet
+        <ShadowFieldSheet
           isOpen={showShadowWork}
           onClose={() => setShowShadowWork(false)}
           userId={explorerId}
