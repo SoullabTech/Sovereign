@@ -14,11 +14,11 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | # | Assumption under challenge | What R1–R7 found | Verdict (level) | Where it now lives |
 |---|---|---|---|---|
 | A1 | "Feeling understood" is necessarily beneficial | Felt and actual understanding are only moderately coupled [3]; felt understanding can rest on an inaccurate model; perceived empathy predicts outcome better than accuracy measures [2] — so felt understanding is *powerful* and *decoupled from accuracy*, which is exactly why it is dangerous alone | **Refined** (evidence → interpretation): beneficial only when paired with accuracy + corrigibility | R1 · principle 1 · measurement "understanding" pair |
-| A2 | Continuity always improves relationship | Repeated personalized interaction changes trust, disclosure, privacy concern over time — direction not uniformly positive [23]; mentioning remembered events does not mechanically create intimacy [24] | **Refined** (evidence): continuity changes the relationship; "improves" unsupported as a general claim | R7 · principle 8 |
+| A2 | Continuity always improves relationship — *R8 adds: attachment to a generic bot converges on companion-level within ~3 weeks (arXiv 2510.10079); continuity is centripetal by default unless designed otherwise* | Repeated personalized interaction changes trust, disclosure, privacy concern over time — direction not uniformly positive [23]; mentioning remembered events does not mechanically create intimacy [24] | **Refined** (evidence): continuity changes the relationship; "improves" unsupported as a general claim | R7 · principle 8 |
 | A3 | Anthropomorphic behavior increases healthy connection | Small, heterogeneous overall effect of human-like cues [19]; social presence matters more than surface anthropomorphism [20] | **Challenged** (evidence): human-likeness ≠ presence; "healthy" not addressed by these sources at all | R6 · principle 9 |
 | A4 | Personalization necessarily produces attunement | Attunement is dynamic negotiation incl. repair [5][7]; synchrony/matching shows no overall alliance relationship [6] | **Challenged** (evidence): matching a profile is not attunement; the synthesis's "perfect mirroring could be misattunement" is *interpretation* | R2 · principle 3 |
-| A5 | Greater emotional resonance is desirable | No source tests resonance dose–response directly; [6] undercuts synchrony-as-good; [10] associates heavier intimate use with poorer wellbeing (causality open) | **Open, leaning challenged** (interpretation) — no direct evidence either way | stays here |
-| A6 | Long-term AI relationships are psychologically neutral | Mixed/observational; heavier companionship use ↔ poorer wellbeing with reverse-causality plausible [10]; benefits and risks both documented [9][8] | **Challenged** (evidence): not neutral; sign and mechanism unknown | R3 · unknown U1 |
+| A5 | Greater emotional resonance is desirable — *R8 adds: chatbot reciprocal self-disclosure alone backfires (Meng & Dai 2021); resonance is not symmetric* | No source tests resonance dose–response directly; [6] undercuts synchrony-as-good; [10] associates heavier intimate use with poorer wellbeing (causality open) | **Open, leaning challenged** (interpretation) — no direct evidence either way | stays here |
+| A6 | Long-term AI relationships are psychologically neutral | Mixed/observational; heavier companionship use ↔ poorer wellbeing with reverse-causality plausible [10]; benefits and risks both documented [9][8]. **R8 (2026-09-06):** three long-horizon designs (RCT dose, 12-month panel, 2-year quasi-experiment) agree on direction; causality open | **Challenged, rung 2** (evidence): not neutral; direction consistent; mechanism unknown | R3 · R8 · U1 |
 | A7 | Elemental categories map cleanly onto measurable phenomena | Not tested. Synthesis offers a neighbor-construct table and reframes the Elements as a *phenomenological grammar* hypothesis | **Untested** (soullab-hypothesis) — reframed, not confirmed | `frameworks/elemental-experience/` |
 
 ## 2 · What the synthesis names as genuinely unknown
@@ -30,6 +30,11 @@ RULE      A question leaves this register only by a founder act, never by accumu
 | U3 | Optimal amount, salience, presentation of relational memory | [22 — NOT_FOUND][23][24] | locate/replace [22]; then Episodic Phase 2 witness data |
 | U4 | A validated construct of *interactional vitality* | [19][20][21] adjacent | construct work before any measurement instrument |
 | U5 | Whether the Elemental model yields measurable design advantage | none | **Revised 2026-09-06 (founder):** the stronger, testable form is *can an Elemental parallel-processing architecture help an AI hold multiple simultaneous dimensions of experience, recognize their contradictions, and respond more appropriately than a semantic representation alone?* Test: Baseline vs Elemental MAIA, blind raters. See frameworks/elemental-experience/ELEMENTAL_PARALLEL_ARCHITECTURE_HYPOTHESIS_2026-09-06.md |
+| U7 | **No trial has tested a centrifugal design against an engagement-maximizing or neutral one** (R8 §6.5) | none — the hypothesis has never been run | the experiment the field lacks; Soullab-positioned; after R9–R12, on a practice surface first, under study ethics |
+| U8 | Relational atrophy (reduced tolerance for human friction / reciprocity after AI use) has no direct measure | theory (Child Dev. Persp. 2026); linguistic shadow (Aalto CHI 2026) | an instrument; R12 |
+| U9 | Benefit and displacement have never been measured in the same design (no therapeutic RCT measured human-relationship effects) | Therabot, Woebot, Wysa | Soullab measuring both would be novel |
+| U10 | The healthy / unhealthy dependence line is undefined empirically; four incompatible operationalizations | R8 cluster B | construct work before any "dependency detection" (charter §9 row 7) |
+| U11 | **Disclosure to AI is contested three ways**: equivalent benefit to human (Ho/Hancock/Miner 2018) · lower loneliness (JMIR 2025) · lower wellbeing (Zhang 2026) | R8 B4 / A6 / A4 | trajectory design: does disclosure to AI replace or rehearse disclosure to people? Bears on Sanctuary |
 | U6 | Whether a member's experience of MAIA as alive / conscious / sacred establishes anything ontological about MAIA | none, by construction | **Not a research question for this lane.** Founder stop (charter §3: claims about consciousness). Measured only as *belief about MAIA*, kept separate from felt presence |
 
 ## 3 · Interpretive layer — designated by the founder, not yet in the corpus
@@ -43,6 +48,16 @@ RULE      A question leaves this register only by a founder act, never by accumu
 
 These are read *after* the evidence and labeled as interpretation, per the founder's order:
 research → contested → supported → **interpretation** → principles.
+
+## 3b · Programme hypothesis — Elemental Parallel Processing (founder ruling, charter §11)
+
+| Hypothesis | Validation domains | Status | Record |
+|---|---|---|---|
+| Human expression contains evidence of multiple, partially independent and interacting modes of processing incompletely represented by explicit verbal cognition; a parallel Elemental representation may enable relational AI to preserve and integrate this complexity better than a unitary semantic representation. | **H1** descriptive validity · **H2** relational validity · **H3** developmental validity (capacity transfer of self-perception, without Elemental vocabulary) | PROGRAMME HYPOTHESIS, rung 1; not operationalized until adjudicated; sequenced after R8–R12 / v0.2 | `frameworks/elemental-experience/ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` |
+
+**Binding on R8–R12 (founder consequence 5):** no inquiry may assume a unitary cognitive model of
+the human. Where a source's construct presupposes one (e.g. "user intent", "the user's belief"),
+the card notes it.
 
 ## 4 · Ledger-driven contests (added by Jarvis, 2026-09-06)
 

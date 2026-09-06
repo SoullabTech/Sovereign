@@ -415,3 +415,87 @@ Run R8–R12 here, with the founder, against the five charters. In parallel and 
 the founder's time: locate or strike source [22]; paraphrase-check [2], [6], [10], [17], [19]
 against source text; card the interpretive-layer sources the founder named (McGilchrist, Jung)
 as class D. Nothing downstream opens on its own.
+
+---
+
+## 11 · FOUNDER CLARIFICATION — ELEMENTAL CONSCIOUSNESS (ruling, 2026-09-06)
+
+```text
+KIND        Programme-level conceptual correction. Founder ruling.
+AUTHORIZES  Nothing in MAIA prompts, runtime cognition, memory, surfaces, skills or production.
+SCOPE       Inside this lane. No new lane. R8–R12 not renumbered, not interrupted.
+RECORD      Full hypothesis record: docs/research/human-experience/frameworks/elemental-experience/
+            ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md (supersedes the two earlier
+            Elemental files, which remain as history)
+```
+
+### The ruling
+
+Elemental Consciousness is **not primarily** a personality taxonomy, a symbolic overlay, a metaphor
+applied after interpretation, or a claim that Fire/Water/Earth/Air correspond literally to
+anatomical regions of the brain.
+
+Its intended function in MAIA is: **an AI-facing architecture for representing the multiple,
+simultaneous, partially independent and interacting processes present in human experience,
+including processes of which the human may themselves be only partially aware.**
+
+Human experience is rarely a single coherent cognitive stream. A person may simultaneously think
+one thing, feel another, sense something different somatically, desire or resist something
+incompatible with the conscious narrative, and respond to relational/contextual conditions they
+cannot yet articulate. What appears irrational from a unitary cognitive model may be intelligible
+as the simultaneous activity of differentiated processes. The Elemental architecture is intended
+to help MAIA **preserve these differences rather than collapsing them prematurely into one
+semantic interpretation.**
+
+### Why now (founder)
+
+It changes the research target. Previously: *does the Elemental model organize human experience
+usefully?* Now: **can an AI reason relationally across multiple concurrent modes of human
+processing without collapsing them into the explicit cognitive narrative?** That affects how we
+read McGilchrist, Whole Brain, embodied cognition, implicit processing, affective neuroscience,
+predictive processing, psychotherapy, parts models, interoception and split-brain/callosal research.
+
+### Governing sentence (preserve as the current programme-level formulation)
+
+> **The Elements are not intended to explain humans away. They are intended to help artificial
+> intelligence encounter a living human as a dynamically organized multiplicity — cognitive,
+> affective, somatic, volitional and relational — without reducing the whole person to the part
+> most easily represented in language.**
+
+### Required epistemic boundary
+
+MAIA may form provisional observations about discrepant signals. **It may not present an inferred
+Elemental process as hidden truth about the person.** Preferred: *"I notice these two parts of what
+you're describing seem to be moving differently."* Prohibited: *"Your Earth knows the real answer."*
+The architecture exists to expand inquiry, not manufacture psychological authority. (Restates
+INTERFACE_HUMILITY, Invariant 16, CONSTITUTIONAL_DIRECTION_OF_AUTHORITY for this case.)
+
+### Non-goals (founder)
+
+Do not: build an Elemental personality score · assign permanent Elemental identities · treat
+historical Elemental patterns as current truth · create numeric Fire/Water/Earth/Air rankings ·
+infer psychopathology from Elemental states · claim direct access to unconscious material · imply
+neuroscientific validation that does not exist · turn the framework into a deterministic
+classifier. Prefer dynamic transitions and relationships over static traits.
+
+### Consequences for the programme (founder, executed 2026-09-06)
+
+1. Ruling added to this charter — this section.
+2. Elemental hypothesis section in the library amended — the hypothesis record above.
+3. Whole Brain and McGilchrist recorded as **heuristic / comparative** sources with evidence level
+   distinguished from empirical validation — hypothesis record §5 and ledger.
+4. Elemental Parallel Processing hypothesis added to the contested-questions register with three
+   validation domains H1 descriptive · H2 relational · H3 developmental.
+5. R8–R12 posture amended: **no inquiry may assume a unitary cognitive model of the human.**
+6. To be carried explicitly into Synthesis v0.2.
+7. Not operationalized in MAIA until the research and experimental design are adjudicated.
+
+### Flagged, not ratified (founder)
+
+*The future MAIA cognition architecture may need differentiation before synthesis:* independent
+observations → preserved disagreement → interaction among observations → synthesis only when
+warranted. An LLM's natural tendency is to absorb all context and generate a coherent
+continuation; human complexity may require engineering something deliberately different. This is
+an architectural proposition, not prompt language. **Recorded as Cat 1 held direction.** Its
+relation to the Deep-Intelligence Gate (one mind, convergence before cognition) and to CMT-01
+(canonical turn, single renderer) is a reconciliation question for whenever it is taken up, not now.

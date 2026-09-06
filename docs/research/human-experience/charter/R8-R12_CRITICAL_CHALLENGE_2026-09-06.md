@@ -11,7 +11,8 @@ GROUPING   The founder named ten targets. Jarvis grouped them into five inquirie
            The grouping is a proposal for founder correction; the targets are verbatim.
 STATE      All five: QUESTION (BOARD.md). Stage 0 fields marked [founder] are filled from the
            founder's words; fields marked [open] are deliberately left for the research.
-POSTURE    Steelman the opposition. A challenge that is answered by restating v0.1 has not
+POSTURE    NO INQUIRY MAY ASSUME A UNITARY COGNITIVE MODEL OF THE HUMAN (founder, charter §11).
+           Steelman the opposition. A challenge that is answered by restating v0.1 has not
            been run. Each inquiry ends with one of: v0.1 claim SURVIVES · REFINED · WITHDRAWN.
 ```
 

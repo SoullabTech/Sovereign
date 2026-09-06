@@ -1,5 +1,7 @@
 # Elemental parallel-processing architecture — the revised hypothesis
 
+> **SUPERSEDED same day** by `ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md`, which carries the founder's ruling form (H1–H3, epistemic boundary, non-goals, comparative sources). This file is the first in-session draft and is kept as history.
+
 ```text
 AUTHOR     founder, 2026-09-06 (in-session; carried closely, structure preserved)
 SUPERSEDES the weak form in ELEMENTAL_READING_v0.1.md ("do the five elements organize human

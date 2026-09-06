@@ -1,5 +1,7 @@
 # Elemental reading v0.1 — status: Soullab hypothesis requiring validation
 
+> **SUPERSEDED 2026-09-06** by `ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` (founder ruling, charter §11). Kept as the v0.1 neighbor-construct table. Do not cite as the current Elemental hypothesis.
+
 Source: SYNTHESIS_v0.1 §"Elemental Alchemy: what the research does and does not establish".
 
 **What the research does not establish:** Fire, Water, Earth, Air, Aether as validated
