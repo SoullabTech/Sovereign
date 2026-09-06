@@ -51,6 +51,7 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
+import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
@@ -263,6 +264,37 @@ function CanvasRoom() {
     })();
     return () => { cancelled = true; };
   }, [manuscript?.id]);
+
+  /* WS2-NAV-01 — the member act that makes a Work navigable.
+
+     Conversion is NEVER automatic: not on import, not on save. The boundaries
+     were detected at ingest and are only offered; this is the act that turns
+     them into the Work's durable sections. Success is taken from the server
+     alone — on failure the continuous draft is untouched and stays that way on
+     screen, because an optimistic remount would claim an identity assignment
+     that never happened. */
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  const onConfirmSectionBreaks = useCallback(async () => {
+    const id = manuscript?.id;
+    if (!id || confirming) return;
+    setConfirming(true);
+    setConfirmError(null);
+    const outcome = await confirmSectionBreaks(id, (url, init) => apiFetch(url, init));
+    if (!outcome.ok) {
+      setConfirmError(outcome.message);
+      setConfirming(false);
+      return;
+    }
+    /* Re-read the authority rather than assuming it. The draft is section-
+       addressable because the server says so, and the outline remounts through
+       the existing 'sections' branch — no second navigation path is created. */
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url));
+    setWritePhase(refreshed.phase);
+    setWriteState(refreshed.state);
+    setConfirming(false);
+  }, [manuscript?.id, confirming]);
 
   const writeMount = chooseMount(writePhase, writeState);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
@@ -644,18 +676,51 @@ function CanvasRoom() {
               />
             ) : (
               <>
+                {/* WS2-NAV-01 — rows here are NOT clickable, because this draft is
+                    not section-addressable yet. Previously that was silent: the
+                    outline rendered as an ordinary list that simply did nothing.
+                    It now says what it is and offers the act that changes it. */}
                 <ManuscriptOutline
                   manuscriptId={manuscript?.id ?? null}
                   phase={sectionsPhase}
                   sections={sections}
                 />
-                {writeMount.mount === 'worktable' && writeMount.notice && (
-                  <div style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}>
+                {writeMount.mount === 'worktable' && (
+                  <div
+                    style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}
+                    data-outline-state="unconverted"
+                  >
+                    {/* The server's own reason, when it has one, comes first —
+                        it is more specific than anything written here. */}
                     <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
-                      {writeMount.notice.title}
+                      {writeMount.notice?.title ?? SECTION_BREAKS_COPY.title}
                     </StudioText>
-                    {writeMount.notice.body && (
-                      <StudioText role="quiet">{writeMount.notice.body}</StudioText>
+                    <StudioText role="quiet">
+                      {writeMount.notice?.body ?? SECTION_BREAKS_COPY.body}
+                    </StudioText>
+                    <button
+                      type="button"
+                      onClick={onConfirmSectionBreaks}
+                      disabled={confirming || !manuscript?.id}
+                      data-action="confirm-section-breaks"
+                      style={{
+                        marginTop: SPACE.tight,
+                        padding: '8px 14px',
+                        background: 'transparent',
+                        border: `1px solid ${RULE.soft}`,
+                        borderRadius: 6,
+                        color: 'inherit',
+                        font: 'inherit',
+                        cursor: confirming ? 'default' : 'pointer',
+                        opacity: confirming ? 0.6 : 1,
+                      }}
+                    >
+                      {confirming ? SECTION_BREAKS_COPY.working : SECTION_BREAKS_COPY.action}
+                    </button>
+                    {confirmError && (
+                      <StudioText role="quiet" style={{ marginTop: SPACE.tight }}>
+                        {confirmError}
+                      </StudioText>
                     )}
                   </div>
                 )}
