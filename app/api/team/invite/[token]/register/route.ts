@@ -34,9 +34,12 @@ export async function POST(
     email: string;
     invited_by: string | null;
     accepted_at: string | null;
+    team_id: string | null;
+    role: string | null;
     expires_at: string;
   }>(
-    `SELECT id, email, invited_by, accepted_at, expires_at FROM team_invites WHERE token = $1`,
+    `SELECT id, email, invited_by, accepted_at, expires_at, team_id, role
+       FROM team_invites WHERE token = $1`,
     [token]
   );
 
@@ -70,9 +73,16 @@ export async function POST(
     [memberId, invite.id]
   );
 
-  // Add the new member to the inviter's team workspace (best-effort, non-fatal)
-  const teamId = await resolveTeamIdForInviter(invite.invited_by);
-  if (teamId) await addMemberToTeam(teamId, memberId);
+  /* COLAB-BETA-01 — join the Co-Lab the INVITE names, not one inferred from
+     the inviter. resolveTeamIdForInviter() falls back to the oldest studio_team,
+     so a tester invited to a new cohort could land in the original shared
+     workspace. Inference is kept only for legacy invites (team_id NULL) so old
+     links do not dead-end. Still best-effort and non-fatal: a failure here must
+     not cost the member the account they just created. */
+  const teamId = invite.team_id ?? (await resolveTeamIdForInviter(invite.invited_by));
+  const invitedRole = (['owner', 'admin', 'member', 'viewer'] as const)
+    .find((r) => r === invite.role) ?? 'member';
+  if (teamId) await addMemberToTeam(teamId, memberId, invitedRole);
 
   // Create session
   const clientIP = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';

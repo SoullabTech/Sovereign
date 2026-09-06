@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
+import { resolveTeamIdForInviter, addMemberToTeam } from '@/lib/team/teamMembership';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,8 +83,12 @@ export async function POST(
   const memberId = await getMemberIdFromRequest(request);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const invite = await query<{ id: string; accepted_at: string | null; expires_at: string }>(
-    `SELECT id, accepted_at, expires_at FROM team_invites WHERE token = $1`,
+  const invite = await query<{
+    id: string; accepted_at: string | null; expires_at: string;
+    team_id: string | null; role: string | null; invited_by: string | null;
+  }>(
+    `SELECT id, accepted_at, expires_at, team_id, role, invited_by
+       FROM team_invites WHERE token = $1`,
     [token]
   );
 
@@ -101,10 +106,24 @@ export async function POST(
     return NextResponse.json({ error: 'This invite has expired' }, { status: 410 });
   }
 
+  /* COLAB-BETA-01 — accepting an invitation is how a person JOINS a Co-Lab.
+     Before this, acceptance only stamped accepted_at: the invite was consumed
+     and the member belonged to nothing, so a tester who followed their link
+     landed in an account with no workspace. Membership is added here, to the
+     team the invite names and with the role it carries.
+
+     Legacy invites (team_id NULL, created before this migration) fall back to
+     the inviter's team so old links do not dead-end. A row that resolves to no
+     team is reported, not silently swallowed — an accepted invite that joined
+     nothing is exactly the failure this replaces. */
+  const destination = row.team_id ?? (await resolveTeamIdForInviter(row.invited_by));
+  const role = (['owner', 'admin', 'member', 'viewer'] as const).find((r) => r === row.role) ?? 'member';
+  if (destination) await addMemberToTeam(destination, memberId, role);
+
   await query(
     `UPDATE team_invites SET accepted_at = NOW(), accepted_by = $1 WHERE id = $2`,
     [memberId, row.id]
   );
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, teamId: destination ?? null, joined: Boolean(destination) });
 }

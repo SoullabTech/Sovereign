@@ -27,6 +27,36 @@ export async function POST(request: NextRequest) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
+  /* COLAB-BETA-01 — the invitation names its Co-Lab, or says it is inferring.
+     `resolveTeamIdForInviter()` falls back to the OLDEST studio_team, so an
+     invite meant for a new cohort could quietly land someone in the original
+     shared workspace. An explicit teamId removes the guess.
+
+     AUTHORIZATION: naming a team is not permission to add people to it. The
+     inviter must already be a member of the team they are inviting into,
+     otherwise any signed-in member could inject people into any Co-Lab. */
+  const requestedTeamId = typeof (body as { teamId?: unknown })?.teamId === 'string'
+    ? ((body as { teamId: string }).teamId).trim()
+    : null;
+
+  if (requestedTeamId) {
+    const authorized = await query<{ team_id: string }>(
+      `SELECT team_id FROM studio_team_members WHERE team_id = $1 AND member_id = $2`,
+      [requestedTeamId, memberId]
+    );
+    if (authorized.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'You are not a member of that Co-Lab' },
+        { status: 403 }
+      );
+    }
+  }
+
+  const invitedRole: 'owner' | 'admin' | 'member' | 'viewer' =
+    (body as { role?: unknown })?.role === 'admin' ? 'admin'
+    : (body as { role?: unknown })?.role === 'viewer' ? 'viewer'
+    : 'member';
+
   // Inviter display name — used in both the new-invite and existing-member emails.
   const inviterRes = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,
@@ -46,8 +76,10 @@ export async function POST(request: NextRequest) {
   );
   if (existing.rows.length > 0) {
     const existingMemberId = existing.rows[0].id;
-    const teamId = await resolveTeamIdForInviter(memberId);
-    const addedToTeam = teamId ? await addMemberToTeam(teamId, existingMemberId) : false;
+    const teamId = requestedTeamId ?? (await resolveTeamIdForInviter(memberId));
+    const addedToTeam = teamId
+      ? await addMemberToTeam(teamId, existingMemberId, invitedRole)
+      : false;
 
     const signinUrl = `${appUrl}/signin`;
     const existingSend = await sendEmail({
@@ -110,9 +142,9 @@ export async function POST(request: NextRequest) {
   } else {
     // Create new invite
     const insert = await query<{ id: string; token: string }>(
-      `INSERT INTO team_invites (email, invited_by, message)
-       VALUES ($1, $2, $3) RETURNING id, token`,
-      [normalizedEmail, memberId, message ?? null]
+      `INSERT INTO team_invites (email, invited_by, message, team_id, role)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, token`,
+      [normalizedEmail, memberId, message ?? null, requestedTeamId, invitedRole]
     );
     inviteId = insert.rows[0].id;
     token = insert.rows[0].token;
