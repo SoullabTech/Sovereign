@@ -8,7 +8,8 @@
 
 ```text
 UNIT             BUILD-07F  DEVELOPMENTAL DECISIONS
-DEPLOYED RUNTIME ccd1c50ce → **66da58b4c4a4979240db460c045dd9daf1cd47d3** (live in production)
+FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
+OBSERVED RUNTIME SHA       read at W1, then FIXED for the walk's duration (§2.1)
 07F MIGRATION    APPLIED 2026-09-06 11:36:34+00 — before its consent checkpoint (runbook §0)
 STANDING EVENTS  0 at the time of writing — the boundary this walk crosses at W3
 GATED ON         the founder's prospective act, runbook §2.2 — NOT YET GIVEN
@@ -66,8 +67,9 @@ proof that the member was shown the truth. Where both matter, the claim names bo
 
 ```text
 the runbook's §0 is established — migration applied, guard live, consent checkpoint crossed
-the runbook's §3 reads pass on the CURRENT container — GIT_COMMIT = 66da58b4c, migration
-  recorded, table and all three developmental_readings triggers present
+the runbook's §3 reads pass on the CURRENT container — its GIT_COMMIT satisfies the §2.1
+  subject-identity rule against the frozen anchor 66da58b4c, and the migration is recorded with
+  the table and all three developmental_readings triggers present
 standing_events re-read immediately before starting, and its value recorded whatever it is
 the founder's §2.2 act GIVEN — without it, W1 only
 #1228's own witness (runbook §6.2) has been run and recorded SEPARATELY, if it was not already
@@ -82,17 +84,99 @@ No credential is handled by the agent. Every authenticated act is performed by t
 
 ---
 
+## 2.1 · Subject identity — a CUSTODY rule, not acceptance logic
+
+**Why this exists.** The walk was frozen against `66da58b4c`. A documentation-only merge then became
+canonical and was deployed, so the container reports a different commit while running the same
+program. W1 halted on that, correctly: it could not tell "the subject moved" from "the program
+changed". This section gives it a way to tell — and only that.
+
+**What it does NOT do.** The W1–W12 claims and their pass/fail criteria are unchanged by this
+amendment. Nothing here makes a witness easier to pass, admits a runtime difference, or adds a
+condition to any claim. It defines executable-program equivalence for **custody** only, and it can
+never admit a runtime change, because **any non-document byte difference halts the walk.**
+
+### The rule
+
+```text
+FROZEN EXECUTABLE ANCHOR   66da58b4c4a4979240db460c045dd9daf1cd47d3
+OBSERVED RUNTIME SHA       whatever the container reports at W1
+
+PASS subject identity when:
+  1. runtime SHA == frozen anchor
+       OR
+  2. frozen anchor is an ANCESTOR of runtime SHA
+       AND
+     the diff across every NON-doc path is EMPTY
+
+otherwise: HALT
+```
+
+### The proof — executable, and retained with the walk's evidence
+
+```bash
+RUNTIME_SHA=<what the container reported at W1>
+
+git merge-base --is-ancestor 66da58b4c4a4979240db460c045dd9daf1cd47d3 "$RUNTIME_SHA"
+#   exit 0 required — a runtime that does not descend from the anchor is not this subject
+
+git diff --name-only 66da58b4c4a4979240db460c045dd9daf1cd47d3 "$RUNTIME_SHA" -- . ':(exclude)docs/**'
+#   MUST print nothing
+```
+
+Both commands and their output are pasted into the walk's record. A rule whose satisfaction is
+asserted rather than shown is not a rule.
+
+**There is no allowlist beyond `docs/**`.** A single byte under `app/`, `lib/`, `database/`,
+`scripts/`, configuration, package metadata, compose files, workflows, or anywhere else is a
+different program and stops the walk. "It was only a comment" and "it was only a test" are not
+exceptions — the filter is the path, not a judgment about the change.
+
+*A consequence worth naming: this amendment is itself docs-only for exactly this reason. Adding even
+a helper script under `scripts/` to run the proof would put a non-doc byte between the anchor and any
+runtime built from it, and would halt the very walk it was meant to serve. The proof stays inline.*
+
+### Safeguard — the subject is bound ONCE, at W1
+
+```text
+W1 passes  →  record the OBSERVED RUNTIME SHA in the walk's record
+              from that point it is FIXED for the walk's duration
+```
+
+Any later deployment — **including a documentation-only one** — halts the active walk rather than
+being absorbed midstream. The equivalence rule binds a subject; it does not license a moving one. A
+walk whose runtime changed between W5 and W9 witnessed two programs and can speak for neither.
+
+### The already-observed transition
+
+```text
+66da58b4c → 1116f7813        non-doc diff: EMPTY (4 files, all under docs/)
+```
+
+So `1116f7813` is **eligible** to become the observed runtime subject at W1. That is not W1 passing:
+the provenance, schema and count reads still have to be run against the live container at the time,
+and eligibility of a commit says nothing about the state of a database.
+
+---
+
 ## 3 · The walk
 
 ### W1 · provenance and schema `[D]`
 
 The runbook's §3 production-state reads, re-stated here as the walk's first witness so the walk
-stands alone:
-`GIT_COMMIT = 66da58b4c`; `schema_migrations` carries the 07F filename; the events table exists with
-its UNIQUE quad and two triggers; `developmental_readings` carries **both**
+stands alone. Two parts, in this order:
+
+**a · Subject identity.** Read the container's `GIT_COMMIT`, then satisfy §2.1's rule against the
+frozen anchor `66da58b4c` and retain both commands' output. Record the observed runtime SHA; it is
+the walk's subject from here on.
+
+**b · Schema.** `schema_migrations` carries the 07F filename; the events table exists with its UNIQUE
+quad and two triggers; `developmental_readings` carries **both**
 `developmental_readings_immutable_check` and `developmental_readings_no_orphan_delete_check`.
 
-**Fails if:** any object missing, or 07C's immutability trigger gone.
+**Fails if:** §2.1's rule is not satisfied, or any object is missing, or 07C's immutability trigger
+is gone. A failure of (a) is a CUSTODY halt — the walk is retargeted or the program is different,
+and which one it is has been made decidable. A failure of (b) is a finding about production.
 
 **W1 also records the pre-walk count.** `SELECT count(*) FROM developmental_observation_standing_events`
 was **0** when this spec was retargeted. If it is non-zero when the walk begins, STOP and classify
