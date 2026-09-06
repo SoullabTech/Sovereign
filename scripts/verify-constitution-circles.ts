@@ -226,6 +226,24 @@ async function groupC() {
     }
   }
 
+  // C14 — FR-11 vs FieldPhase: two different questions that share string values.
+  //       CircleConstitutionState is structurally assignable to FieldPhase, so
+  //       TypeScript cannot catch a mix-up. The separation is a discipline, and
+  //       this is the only thing that can falsify a drift back together.
+  {
+    const cs = src('lib/circles/constitutionState.ts');
+    const pulse2 = src('lib/circles/fieldPulseService.ts');
+    if (!cs) {
+      fail('C14 FR-11 constitution state module missing');
+    } else if (/from '\.\/fieldPulseService'|FieldPhase/.test(cs.replace(/\/\*[\s\S]*?\*\//g, ''))) {
+      fail('C14 FR-11 constitution state depends on FieldPhase', 'the two concepts must stay separate');
+    } else if (pulse2 && /constitutionState|CircleConstitutionState/.test(pulse2)) {
+      fail('C14 FR-11 field pulse depends on constitution state', 'activity heuristic must not carry plurality');
+    } else {
+      pass('C14 FR-11 constitution state and FieldPhase remain independent');
+    }
+  }
+
   // C12 — FR-05/FR-01: revocation must never touch the source item.
   if (sharingService && membership && consent) {
     const deletesSource = [sharingService, membership, consent].some((b) =>
@@ -242,7 +260,7 @@ async function groupC() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function groupS() {
-  section('GROUP S · service layer vs real principals (FR-01, FR-03, FR-11)');
+  section('GROUP S · service layer vs real principals (FR-01)');
 
   const rows = (
     await pool.query<{ member_id: string; circle_id: string }>(
@@ -314,61 +332,6 @@ async function groupS() {
     }
   }
 
-  // S4 — FR-03 + FR-11: plurality is a property of an ACTIVE Circle, not of every
-  //      stored Circle row. A Circle may exist administratively before it is
-  //      relationally constituted:
-  //
-  //        FORMING   1–2 persons, not yet a plural relational field
-  //        ACTIVE    3+ persons, may exercise active-Circle semantics
-  //
-  //      "Creation is not constitution." So this assertion does NOT test
-  //      `every circle has >= 3 members`. It tests whether the substrate can
-  //      REPRESENT the boundary at all — because an unrepresentable boundary is
-  //      unenforceable, and an unenforceable constitutional rule is a description.
-  //
-  //      ⛔ Never repair this with CHECK(member_count >= 3). Membership count is
-  //      dynamic; relational state is not a row constraint.
-  const lifecycleCol = (
-    await pool.query<{ column_name: string }>(
-      `SELECT column_name FROM information_schema.columns
-       WHERE table_name = 'circles' AND column_name IN ('lifecycle', 'lifecycle_state', 'state')`
-    )
-  ).rows;
-
-  if (lifecycleCol.length === 0) {
-    fail(
-      'S4 FR-03/FR-11 lifecycle/plurality boundary is not representable',
-      'circles has no FORMING|ACTIVE lifecycle column, so FR-03 cannot be enforced at the lifecycle boundary'
-    );
-  } else {
-    const col = lifecycleCol[0].column_name;
-
-    // S4a — an ACTIVE Circle must have plurality.
-    const activeSubPlural = (
-      await pool.query<{ id: string }>(
-        `SELECT c.id FROM circles c
-         WHERE c."${col}" = 'active'
-           AND (SELECT COUNT(*) FROM circle_memberships m
-                WHERE m.circle_id = c.id AND m.status = 'active') < 3`
-      )
-    ).rows;
-    activeSubPlural.length === 0
-      ? pass('S4a FR-03 every ACTIVE Circle has three or more active members')
-      : fail('S4a FR-03 ACTIVE Circle without plurality', `${activeSubPlural.length} circle(s)`);
-
-    // S4b — a sub-plural Circle must not present itself as ACTIVE.
-    const misrepresented = (
-      await pool.query<{ n: string }>(
-        `SELECT COUNT(*)::text AS n FROM circles c
-         WHERE (SELECT COUNT(*) FROM circle_memberships m
-                WHERE m.circle_id = c.id AND m.status = 'active') < 3
-           AND c."${col}" <> 'forming'`
-      )
-    ).rows[0];
-    misrepresented?.n === '0'
-      ? pass('S4b FR-11 sub-plural Circles are represented as FORMING, never ACTIVE')
-      : fail('S4b FR-11 sub-plural Circle not represented as FORMING', `${misrepresented?.n} circle(s)`);
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -605,6 +568,66 @@ async function groupT(tx: PoolClient) {
   elsewhere === 1
     ? pass('T3i FR-05 removal does not affect memberships in any other Circle')
     : fail('T3i FR-05 removal leaked across Circles');
+
+  // ── FR-03 / FR-11 constitution state (CIRCLE-04 R3) ──────────────────────
+  //
+  // Derived, never stored. These walk ONE fixture Circle through the
+  // transitions and assert the canonical derivation each time — deliberately
+  // NOT reading the four historical production Circles, which could only
+  // manufacture a pass. The derivation itself is what is under test.
+
+  const { getCircleConstitutionState } = await import('../lib/circles/constitutionState');
+  const csCircle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier constitution') RETURNING id`,
+      [mA]
+    )
+  ).rows[0].id;
+  const join = async (member: string) =>
+    tx.query(
+      `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+       VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+      [csCircle, member]
+    );
+  const stateNow = () => getCircleConstitutionState(csCircle, tx as any);
+
+  // S4a — one active member. Intention, not yet plurality.
+  await join(mA);
+  (await stateNow()) === 'forming'
+    ? pass('S4a FR-11 one active member derives FORMING')
+    : fail('S4a FR-11 one active member did not derive FORMING');
+
+  // S4b — two. Relationship, but dyadic geometry (FR-03). Still not a Circle.
+  await join(mB);
+  (await stateNow()) === 'forming'
+    ? pass('S4b FR-11 two active members derive FORMING')
+    : fail('S4b FR-11 two active members did not derive FORMING');
+
+  // S4c — three. Plurality exists; the field is constituted.
+  await join(mC);
+  (await stateNow()) === 'active'
+    ? pass('S4c FR-03 three active members derive ACTIVE')
+    : fail('S4c FR-03 three active members did not derive ACTIVE');
+
+  // S4d — re-formation. A Circle that falls below plurality is not a failure
+  //       and has not returned to its beginning; it is simply not presently
+  //       constituted as a plural field.
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'left' WHERE circle_id = $1 AND member_id = $2`,
+    [csCircle, mC]
+  );
+  (await stateNow()) === 'forming'
+    ? pass('S4d FR-11 falling below plurality derives FORMING')
+    : fail('S4d FR-11 an ACTIVE Circle below plurality still derived ACTIVE');
+
+  // S4e — and back, with no administrator act and no timer.
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'active' WHERE circle_id = $1 AND member_id = $2`,
+    [csCircle, mC]
+  );
+  (await stateNow()) === 'active'
+    ? pass('S4e FR-11 regaining plurality derives ACTIVE')
+    : fail('S4e FR-11 regaining plurality did not derive ACTIVE');
 
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (

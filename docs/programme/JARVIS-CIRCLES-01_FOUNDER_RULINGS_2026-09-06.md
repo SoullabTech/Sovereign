@@ -262,6 +262,60 @@ ACTIVE    at least three active members; may exercise active-Circle semantics   
 **Consequence:** CA-04 is no longer wholly optional — the minimum `FORMING | ACTIVE` distinction is
 required before REPAIR can close S4. The rest of the lifecycle stays experimental.
 
+## FR-12 · Facilitator authority is not widened — **RATIFIED** *(after the R2 run)*
+
+- ⛔ **Do not widen FR-05 removal authority from `facilitator` to `helper`.**
+- ⛔ **Do not automatically promote a Circle creator from `helper` to `facilitator`.**
+- `helper`, `facilitator` and `member` remain **distinct roles.**
+
+The substrate already draws this line intentionally: structured inquiries permit **helper or
+facilitator**; **removal is a materially stronger power.**
+
+> **Helper is not facilitator. Facilitation must be conferred by an explicit later governance act.**
+
+**The absence of any facilitator-assignment pathway is an INVOKE / governance gap — not a reason to
+corrupt R2.** The removal contract can be correctly built before anyone holds that authority in a
+live Circle. **Keep the HTTP route** (a service with no reachable contract is the built≠wired
+ambiguity); it stays founder-gated with every other Circle route, so its existence opens nothing.
+**Facilitator appointment is not built.**
+
+## FR-13 · Constitution state is derived, never stored — **RATIFIED**
+
+FR-03/FR-11 are implemented as a **derived constitutional state**, not a stored lifecycle status.
+
+```text
+CircleConstitutionState = 'forming' | 'active'
+
+active membership count  < 3   →  FORMING
+active membership count >= 3   →  ACTIVE
+```
+
+- **FORMING** — the Circle has been intentionally initiated but is **not presently constituted as a
+  plural relational field.** Covers **both** initial formation **and re-formation** after an active
+  Circle falls below plurality.
+- **ACTIVE** — three or more active members are presently participating, so the field satisfies the
+  minimum plurality condition. **No maximum attaches.**
+
+⛔ **Do not add a `circles.lifecycle_status` column merely to make S4 pass.** It would duplicate
+membership truth and create a drift the system could not adjudicate — *stored = ACTIVE while
+membership count = 2.* Membership rows already hold the authoritative fact. If a persistent
+**historical** fact proves genuinely necessary, **return it for founder adjudication** rather than
+adding a mutable lifecycle column.
+
+**Transitions are facts, not discretionary system acts.** No timer, no administrator act, no
+subjective inference. ⛔ On falling below three: **do not delete the Circle · do not recruit · do
+not split · do not interpret the cause · do not describe it as failure.** It simply does not
+presently satisfy active-Circle plurality.
+
+**One canonical derivation path** — `getCircleConstitutionState()`. ⛔ No `COUNT(*) >= 3` reproduced
+around the codebase · no database `CHECK(member_count >= 3)` · no cached member count as
+constitutional authority.
+
+> **FORMING and ACTIVE are not stages the software declares. They are constitutional facts derived
+> from whether plurality is presently there.** The richer lifecycle — maturation · rest ·
+> completion · birth · separation — is where human interpretation and member acts return, and stays
+> separate (CA-04).
+
 ---
 
 ## Remaining canonical open questions (CA)
@@ -281,5 +335,7 @@ required before REPAIR can close S4. The rest of the lifecycle stays experimenta
 | CA-11 | Interest-declaration reuse across Commons | INVOKE |
 | CA-12 | Collective-release mechanism | CONSTELLATE |
 | CA-13 | Circle-level assent for Common-Ground Mediation | CIRCLE-09 |
+| **CA-14** | **`FieldPhase` semantic collision** — `'forming' \| 'active' \| 'integrating' \| 'quiet'` in `types.ts` is an **activity/inquiry heuristic** (`derivePhase()` calls a Circle `'active'` when an inquiry is open), **not** FR-11 constitution state. Two of its four values are the same strings meaning something else, in the same module. ⛔ FieldPhase is **not** repaired or renamed (founder ruling); recorded for later reconciliation | later |
+| **CA-15** | **Facilitator assignment pathway** — no code path assigns `'facilitator'`. Recorded as an INVOKE/governance gap by FR-12 | INVOKE |
 
 **None of these blocks VERIFY.**

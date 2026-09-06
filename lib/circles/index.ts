@@ -5,3 +5,4 @@ export * from './inviteService';
 export * from './sharingService';
 export * from './membershipService';
 export * from './removalService';
+export * from './constitutionState';

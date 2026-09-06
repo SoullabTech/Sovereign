@@ -27,9 +27,12 @@
 -- circle · removed member · acting facilitator · grounds · timestamp · resulting
 -- membership state.
 --
--- APPEND-ONLY. Nothing updates or deletes these rows. There is deliberately no
--- updated_at column and no updated_at trigger — a row that can be updated is not
--- a record of what happened.
+-- APPEND-ONLY BY APPLICATION CONTRACT — and no stronger claim than that.
+-- No code path updates or deletes these rows, and there is deliberately no
+-- updated_at column and no updated_at trigger. That is enough for what FR-05
+-- needs: ordinary product actions, rejoining included, cannot overwrite removal
+-- history. It is NOT cryptographic immutability and NOT protection from a
+-- database administrator. Do not describe it as either.
 --
 -- NO FOREIGN KEYS, following the reasoning already established for audit_logs
 -- (20260828000001): a record must survive deletion of whatever it describes, and

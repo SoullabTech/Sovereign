@@ -183,7 +183,7 @@ This is the differentiating ambition. Building another community platform is not
 | CIRCLE-01 | Research synthesis + **scale falsification** | ✅ **CLOSED** — `…_RESEARCH_SYNTHESIS…`, `CIRCLE_SCALE_FALSIFICATION.md`, `…_RESEARCH_SUPPLEMENT…` (R1–R11, founder continuation) |
 | CIRCLE-02 | Product constitution | ✅ **CONSTITUTIONAL MINIMUM RATIFIED 2026-09-06** — FR-01…FR-10 (`…_FOUNDER_RULINGS_2026-09-06.md`); CA-01…CA-13 open, none blocking |
 | CIRCLE-03 | Boundary gate (verifier) | 🔴 **RUN — FAIL, 5 failures** (`17 passed · 5 failed`, founder-executed on runtime `bcc371094`). Evidence: `…_VERIFY_RUN_2026-09-06.md` |
-| CIRCLE-04 | **REPAIR** (renumbered — invocation moves later) | 🟡 **OPEN** — R1 **VERIFIED ON CANDIDATE** (`ca1c4736`, `18 passed · 5 failed`); R2 **IMPLEMENTED, NOT VERIFIED**; R3–R5 not started |
+| CIRCLE-04 | **REPAIR** (renumbered — invocation moves later) | 🟡 **OPEN** — R1 **VERIFIED** (`ca1c4736`, 18/5); R2 **VERIFIED** (`8f31abc8`, 28/2, shadow DB); R3 **IMPLEMENTED, NOT VERIFIED**; R4–R5 not started |
 | CIRCLE-05 | Living Circle, 2–20 | ⛔ |
 | CIRCLE-06 | **Fission · birth · morphology** (was: scale to 200) | ⛔ |
 | CIRCLE-07 | Circle ↔ Co-Lab bridge | ⛔ |

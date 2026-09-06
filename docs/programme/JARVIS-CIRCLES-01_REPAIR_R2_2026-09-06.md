@@ -28,8 +28,8 @@ the single migration to the target database before running the verifier.
 the founder-named fallback: the smallest representation preserving *circle · removed member ·
 acting facilitator · grounds · timestamp · resulting membership state.*
 
-`circle_membership_removals` — append-only, six required fields, **no `updated_at` column and no
-trigger** (a row that can be updated is not a record of what happened), and **no foreign keys**,
+`circle_membership_removals` — six required fields, **append-only by application contract**, with
+no `updated_at` column and no trigger, and **no foreign keys**,
 following the reasoning already established for `audit_logs`: a record must survive deletion of what
 it describes. Every other `circles_commons` table cascades from `circles(id)`; a removal record that
 cascaded away with the Circle would destroy the review evidence at the moment it might be needed.
@@ -110,6 +110,15 @@ included).
 
 ⛔ No target total is manufactured. `0 failed` remains the eventual gate, and it is not reachable
 until R3 and R4 land.
+
+## 5b. Precision on the immutability claim (founder correction)
+
+**Append-only here means by application contract — no stronger.** No code path updates or deletes
+these rows. That is sufficient for FR-05: **ordinary product actions, rejoining included, cannot
+overwrite removal history**, which is exactly what the separate table buys.
+
+⛔ It is **not** cryptographic immutability and **not** protection from a database administrator.
+Do not describe it as either.
 
 ## 6. What R2 does not do
 
