@@ -140,7 +140,18 @@ Prospective, not retroactive, and the founder's alone:
 > behaviour to remain in production and authorize the production acceptance walk to create standing
 > events.**
 
-- [ ] **Given.**
+- [x] **GIVEN — founder, 2026-09-06.** Recorded verbatim:
+>
+> > *I acknowledge that the 07F migration was applied before its explicit consent checkpoint was
+> > given. I do not retroactively authorize that deployment. I now authorize the 07F standing
+> > behaviour to remain in production and authorize the production acceptance walk to create
+> > standing events.*
+>
+> **Scope of the act, exactly:** it authorizes the standing behaviour to REMAIN and the walk to
+> CREATE standing events. It does NOT retroactively authorize the deployment that crossed §2.1's
+> checkpoint. §2.1 stays permanently unchecked as the record of the sequence — this act does not
+> fill it in. The walk is unblocked from W2 onward; W3 remains the first irreversible step and is
+> the founder's own gesture in an authenticated browser.
 
 **This gates the WALK, not a deploy.** Until it is given, W1 (read-only provenance and schema) may be
 run; **W3 must not** — it creates the first durable member standing act, and `standing_events = 0`
