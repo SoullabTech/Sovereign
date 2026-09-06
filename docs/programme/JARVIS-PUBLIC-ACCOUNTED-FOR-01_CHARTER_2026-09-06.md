@@ -232,15 +232,15 @@ MERGE                     NOT AUTHORIZED
 DEPLOY                    NOT AUTHORIZED
 ```
 
-### Custody check performed at the split (observed 2026-09-06, this session)
+### Custody check performed at the split (observed 2026-09-06, re-run at 17:43Z)
 
-| Check | Observed |
-|---|---|
-| PR head | `cf6d9ebf` on `claude/maia-human-experience-arch-12g5r6` |
-| PR base | `clean-main-no-secrets` at `b6f10a2f` — equals the current remote tip; the PR head already contains it (no conflict, no stale base) |
-| Files changed | 39 (1 app file: `app/accounted-for/page.tsx`; 1 `CLAUDE.md` bullet; contract + 2 screenshots; pitch doc; 3 programme records; 30 research-spine files) |
-| GitHub checks on `cf6d9ebf` | covenant-gates ×2 · Empty database reconstruction · TypeScript no-regression gate · auto-label · check-diagrams · Axis 1 adjudication · sovereignty — all **success**; `build` **in progress** at the time of the check (re-read before the final report) |
-| `mergeable_state` | `blocked` — draft status / branch protection, not a conflict |
+| Check | 17:27Z (first read) | 17:43Z (re-run) |
+|---|---|---|
+| PR head | `cf6d9ebf` | **`c36d82ec`** — two commits pushed by the R&D lane's session at 17:36Z (`210fa74f` master run + pivot; `c36d82ec` ranked-map skeleton); docs only; 514 lines; page, pitch, contract, screenshots **untouched** (last change to each = `cf6d9ebf`) |
+| Base | `clean-main-no-secrets` `b6f10a2f`, contained in head | base moved to **`69f6fb7c`** (PR #1240 merged); PR now `mergeable_state: behind`; `git merge-tree` base→head **clean** — a freshness merge, no conflict |
+| Unrelated changes after reconciliation | none | **YES — item 1 below reads FAIL** until the founder rules on the collision (split record §7) |
+| Research statistics on the page | none found (`%`, study/participant counts, `n=` — one CSS width only) | unchanged |
+| GitHub checks | 8/9 success, `build` in progress | on `c36d82ec`: sovereignty · check-diagrams · Empty database reconstruction · covenant-gates · TypeScript no-regression gate · auto-label · Axis 1 — all **success**; `build` **in progress** (started 17:37:00Z) |
 
 ### Before asking for merge
 
@@ -296,3 +296,4 @@ The first lane does not block the second except where a public claim or governan
 | Date | Event |
 |---|---|
 | 2026-09-06 | Lane opened by founder ruling (split). Custody of `/accounted-for`, PR #1239, source of record, contract, screenshots and reconciliation record transferred in. Custody check §9 performed. No page, pitch or PR-branch edit made by this lane yet. State: awaiting founder merge ruling. |
+| 2026-09-06 17:43Z | **Collision.** The R&D lane's session pushed the pivot act (master run, Phase 1 open, manifesto FROZEN, its charter §24) and a census skeleton onto the PR branch without recording the split; master run §4/§11 still assign `/accounted-for` tasks to the R&D cockpit. Custody item 1 = FAIL until ruled. Freeze inherited as a constraint. Transfer message to that session attempted and refused (session unreachable from here); founder relay needed. Founder ruling requested on branch topology (split record §7). `READY FOR FOUNDER MERGE RULING` **withheld** until the collision is ruled and the freshness merge from `69f6fb7c` is made. |

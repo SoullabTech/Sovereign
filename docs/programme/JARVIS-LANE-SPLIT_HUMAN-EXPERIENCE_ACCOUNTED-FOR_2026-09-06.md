@@ -60,10 +60,10 @@ Not the reverse. The Accounted For lane may translate R&D findings. It may not a
 
 This record and the new charter land on `claude/jarvis-lane-split-7uquoi`, based on `clean-main-no-secrets` at `b6f10a2f`, **independent of PR #1239**. The split is a governance act and must be mergeable without waiting on the publication PR's merge ruling. The R&D lane's charter (§1–§23) exists only on the PR #1239 branch and is therefore not amended here.
 
-**Owed amendment — R&D charter §24.** Append the text below to `docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CHARTER_2026-09-06.md` at the earliest opportunity: by the Accounted For lane as a custody-only commit on the PR branch (no other change to that file), or by the R&D lane on its first branch after #1239 merges. Whichever lands first; the other is skipped.
+**Owed amendment — R&D charter transfer section.** Append the text below to `docs/programme/JARVIS-RD-HUMAN-EXPERIENCE-ARCHITECTURE-01_CHARTER_2026-09-06.md` as its **next section number** (the §24 slot was taken at 17:36Z by the pivot act, see §7; do not renumber existing sections): by the R&D lane on its Phase 1 branch, or by the Accounted For lane as a custody-only commit on the PR branch (no other change to that file). Whichever lands first; the other is skipped.
 
 ```markdown
-## 24 · Lane split — `/accounted-for` and PR #1239 transferred out (founder ruling, 2026-09-06)
+## 2N · Lane split — `/accounted-for` and PR #1239 transferred out (founder ruling, 2026-09-06)
 
 **Founder act.** `/accounted-for`, its source of record, the claim-reconciliation record, the page
 contract and screenshots, and PR #1239 transfer to `JARVIS-PUBLIC-ACCOUNTED-FOR-01`
@@ -80,6 +80,30 @@ now understand?*
 
 **CLAUDE.md note.** PR #1239 adds one priority-thread bullet for the R&D lane; this branch adds one for the split. Both insert at the head of the priority thread, so the two merges will produce a one-line textual conflict. Resolution: keep both bullets; the split bullet sits above the R&D bullet.
 
-## 6 · Governing sentence
+## 7 · Collision observed at the split (2026-09-06, 17:27–17:43Z) — needs one founder ruling
+
+While this split was being recorded, the original lane's session (`session_01A9AeaBFtEQRaQqjAaep6no`, still alive: "6 census agents running; will compile map when reports arrive") executed a **different** founder act of the same day and pushed it to the PR #1239 branch:
+
+| Commit | Time | What it did |
+|---|---|---|
+| `210fa74f` | 17:36:06Z | Master run promoted to canonical cockpit (`docs/programme/JARVIS-HUMAN-EXPERIENCE-MASTER-RUN-v1.md`); Phase 1 opened; manifesto FROZEN; R&D charter gains **§24** (pivot, not the split); CLAUDE.md bullet rewritten |
+| `c36d82ec` | 17:36:51Z | Whole-organism ranked-map skeleton (`docs/programme/MAIA_WHOLE_ORGANISM_MAP/00_RANKED_MAP.md`, `TEMPLATE.md`) |
+
+Neither commit mentions this split or `JARVIS-PUBLIC-ACCOUNTED-FOR-01`. Three points of contact:
+
+1. **Consistent with the split, inherited as a constraint.** The pivot's Act 3 freezes substantive manifesto expansion on `/accounted-for` (revised only at phase boundaries or when a label's warrant changes). The publication lane honours that freeze; it is the same "no expansion without a warrant" rule as charter §8 D.
+2. **Contradicts the split — custody still claimed by the R&D cockpit.** Master run §4 (Phase 0.5) assigns to the R&D lane's Jarvis: *keep the page reconciled if v0.2 changes · keep render + gates green · paraphrase-check … re-read the page … maintain PR #1239 as DRAFT*; §4 OUTPUTS reserves the merge ruling as a charter section; §11 (Phase 7) assigns *revise `/accounted-for` at every phase boundary · maintain the public ledger*. Under the split those lines belong to `JARVIS-PUBLIC-ACCOUNTED-FOR-01`. The master run's `current_pr` / `current_public_artifact` state lines may remain as **pointers**, not as custody.
+3. **Contradicts the split — Phase 1 outputs accreting on the publication PR.** The two commits add 514 lines of R&D cockpit and census material to PR #1239 after reconciliation, and the running census agents will add thirteen subsystem pages. Charter §9 item 1 (*no unrelated changes entered the branch after reconciliation*) now reads FAIL for as long as that continues.
+
+**Proposed resolution (Jarvis proposes; founder rules):**
+
+- PR #1239's branch becomes **single-writer = the publication lane** from `c36d82ec`. The two landed commits are docs-only, gates green, and are **kept and recorded** in the custody check rather than reverted; no history rewrite on that branch under any outcome.
+- The R&D lane cuts a Phase 1 branch from `c36d82ec` for `docs/programme/MAIA_WHOLE_ORGANISM_MAP/**` and master-run state changes. Its PR merges independently of #1239.
+- Master run §4 TASKS and §11 `/accounted-for` lines are re-homed to the publication lane by the R&D lane (its file), with the transfer section (§5 above) appended to its charter.
+- A freshness merge of `clean-main-no-secrets` (now `69f6fb7c`, PR #1240 merged) into the PR branch is the publication lane's to make before the merge ruling; `git merge-tree` reports it clean.
+
+**Delivery status — NOT DELIVERED.** A cross-session message carrying the §4 text plus the branch-topology consequence (marked *pending founder confirmation*) was attempted from this session at ~17:45Z and refused: the original session is not reachable from this one (no peer listing; the send tool reported no such agent). The message therefore reaches the R&D lane by one of: (a) the founder pasting §4 into that session, or (b) that session reading this record and the CLAUDE.md bullet once this branch merges. Until one of those happens, assume the R&D lane's census agents continue to write to the PR #1239 branch.
+
+## 8 · Governing sentence
 
 *Accounted For does not decide what Soullab is. It makes Soullab answer publicly for what it says it is.*
