@@ -30,11 +30,11 @@ The tutorial's loop is **detect → propose → repair**, with a human gate only
 
 ## Current state (verified 2026-09-06)
 
-MAIA is **temporally aware but not temporally normalized**. The earlier claim that "valid time does not exist anywhere" was too strong.
+MAIA is **temporally aware in schema but not in data, and not temporally normalized**. The earlier claim that "valid time does not exist anywhere" was too strong as a statement about the schema and, per the audit below, accurate as a statement about production rows.
 
 | Substrate | What exists | Where |
 |---|---|---|
-| `developmental_memories` | `valid_from` / `valid_to` columns; non-vector retrieval excludes rows whose `valid_to` has passed | migration `20251231_memory_architecture_enhancements.sql:155-170`; `lib/memory/MemoryBundle.ts:276` |
+| `developmental_memories` | `valid_from` / `valid_to` columns; non-vector retrieval excludes rows whose `valid_to` has passed. **Audit 2026-09-06: zero rows carry a past `valid_to` in production; the filter has never excluded anything.** | migration `20251231_memory_architecture_enhancements.sql:155-170`; `lib/memory/MemoryBundle.ts:276` |
 | `developmental_memories` | Decayed confidence carries **0.40** of the non-vector ranking score; recency 0.35; confirmation 0.15; recall count 0.10; top 12 | `lib/memory/MemoryBundle.ts:264-278` (SQL function `calculate_decayed_confidence`) |
 | `developmental_memories` | Vector fallback ranks on similarity 0.50 / significance 0.30 / recency 0.20, top 8, **no `valid_to` condition** | `lib/memory/MemoryBundle.ts:311-325` |
 | `member_memory_atoms` | `kept_at` (formation moment) distinct from `created_at` and from source creation time; status is member gesture only; `archived` = out of recall, still preserved; `return_preference`, `last_surfaced_at`, `surface_count` for governed return | `database/migrations/20260521000001_member_memory_atoms.sql` |
@@ -170,6 +170,8 @@ This note does not reorder the sequence in `CLAUDE.md` (fork → toggle → clar
 ## Record
 
 - `925336d4` — note + `CLAUDE.md` entry. Docs-only. **Hook execution NOT WITNESSED** (committed with hooks bypassed in a remote sandbox; the skipped instrument produced no evidence either way). Normal remote checks close that gap if this enters a PR.
+- `2ae28486` — write-surface precision ("no persistent writes") and pre-fixed adjudication table. Script blob unchanged.
+- Audit-record commit — output recorded verbatim above; adjudication; script header corrected from "READ-ONLY" to "no persistent writes" (blob hash moves here, once, after the run). **Hook execution NOT WITNESSED** (same clone, no `core.hooksPath`).
 - `16df97ae` — authority/projection wording correction (Decision 1–2), plus `scripts/witness/temporal-memory-audit.sql` (§1 fallback precondition, §2 decay counterfactual). **Write surface: no persistent writes.** It creates and drops two session-local temporary tables and mutates no persistent production relation; the temp objects disappear with the `psql` session. "Read-only" is therefore imprecise and is not the claim. Identity of the blob to run: `a62244f0`. The script was executed against a scratch PostgreSQL 16 cluster with synthetic rows (no production data, no member data) to witness that it parses, that §1.b isolates only a member with expired-embedded rows and zero open rows, and that §2 reports set-membership changes with entered / left / displacement / type / age / confirmation. That verifies the instrument, not production. **Hook execution NOT WITNESSED** on this commit as well: the remote clone has no `core.hooksPath` set, so `.githooks/pre-commit` did not run. Audit output is to be pasted below verbatim when run on minisforum; until then both audit questions remain **open**.
 
 Adjudication table, fixed before the run so the result cannot reshape the question:
@@ -183,4 +185,119 @@ Adjudication table, fixed before the run so the result cannot reshape the questi
 
 ### Audit results
 
-_Not yet run. This section is empty by design._
+**Run 2026-09-06** from the Mac Studio main checkout against production `maia-postgres` on minisforum. Identity check passed (`a62244f0`). Instrument piped from `git show origin/claude/agents-stale-memory-detection-b1kgdu:…` over SSH; working tree untouched. Output below is unchanged.
+
+```text
+════════════════════════════════════════════════════════════════
+ §1  valid_to FALLBACK WITNESS
+════════════════════════════════════════════════════════════════
+
+§1.a  Expired developmental memories exist at all?
+ expired_rows | expired_rows_with_embedding | members_with_expired_rows 
+--------------+-----------------------------+---------------------------
+            0 |                           0 |                         0
+
+
+§1.b  TRAVERSAL PRECONDITION: members for whom the non-vector query returns
+      ZERO rows (no open row with content_text) AND who hold at least one
+      expired row carrying an embedding. Empty result = impossible with
+      current data. Non-empty = data precondition present (not yet a defect).
+ member_prefix | expired_embedded_rows | earliest_expiry | latest_expiry | open_content_rows 
+---------------+-----------------------+-----------------+---------------+-------------------
+
+
+§1.c  Softer form: members with ANY expired embedded row, regardless of
+      open-row count (would traverse only if open rows were later archived).
+ members_with_expired_embedded_rows 
+------------------------------------
+                                  0
+
+
+════════════════════════════════════════════════════════════════
+ §2  DECAY COUNTERFACTUAL — does the 0.40 term change the top-12 set?
+════════════════════════════════════════════════════════════════
+
+  score_with    = exactly MemoryBundle.ts non-vector score
+  score_without = same, with the 0.40 decay term replaced by 0.40 * significance
+                  (i.e. decay factor forced to 1: no time penalty, same weight)
+  A memory is IN if its rank <= 12 under that scoring.
+SELECT 2018
+SELECT 2018
+
+§2.a  Population
+ members_with_candidates | candidate_rows | members_where_top12_is_a_cut 
+-------------------------+----------------+------------------------------
+                      36 |           2018 |                           14
+
+
+§2.b  HEADLINE: members whose selected top-12 SET changes when decay is removed
+ members_total | members_set_changed | pct_changed 
+---------------+---------------------+-------------
+            36 |                   2 |         5.6
+
+
+§2.c  Which memories ENTER the top-12 when decay is removed (were excluded by decay)
+ member_prefix | memory_prefix | memory_type | age_days_ref | confirmed_by_user | rank_with | rank_without | displacement 
+---------------+---------------+-------------+--------------+-------------------+-----------+--------------+--------------
+ 17a14614      | 934e37c0      | pattern     |          117 | f                 |        18 |            4 |           14
+ 17a14614      | b6a9c877      | pattern     |          117 | f                 |        19 |            5 |           14
+ 17a14614      | 17b7cd20      | pattern     |          111 | f                 |        21 |            9 |           12
+ 17a14614      | ffeecf91      | pattern     |          117 | f                 |        25 |           10 |           15
+ 17a14614      | bf9d56ba      | pattern     |          117 | f                 |        26 |           11 |           15
+ 2cea65b7      | 7e7eb492      | pattern     |           26 | f                 |        13 |           12 |            1
+
+
+§2.d  Which memories LEAVE the top-12 when decay is removed (were held in by decay)
+ member_prefix | memory_prefix | memory_type | age_days_ref | confirmed_by_user | rank_with | rank_without | displacement 
+---------------+---------------+-------------+--------------+-------------------+-----------+--------------+--------------
+ 17a14614      | bda6f42e      | pattern     |           87 | f                 |         8 |           13 |            5
+ 17a14614      | ef159505      | pattern     |           87 | f                 |         9 |           14 |            5
+ 17a14614      | e6439594      | pattern     |           87 | f                 |        10 |           15 |            5
+ 17a14614      | a804d97b      | pattern     |           87 | f                 |        11 |           16 |            5
+ 17a14614      | e06e61cb      | pattern     |           87 | f                 |        12 |           17 |            5
+ 2cea65b7      | e6495005      | pattern     |           15 | f                 |        12 |           13 |            1
+
+
+§2.e  Displacement by memory_type (all candidates, not only the cut)
+ memory_type | rows | avg_age_days | avg_abs_rank_shift | max_abs_rank_shift | membership_flips 
+-------------+------+--------------+--------------------+--------------------+------------------
+ pattern     | 2018 |           73 |              22.80 |                396 |               12
+
+DROP TABLE
+DROP TABLE
+
+Done. Read-only; temp tables dropped; nothing written.
+```
+
+### Adjudication (against the table above, written before the run)
+
+**§1 — RULED OUT under current data.** §1.b is empty. Stronger than the table anticipated: §1.a shows **zero** developmental memories with a past `valid_to` at all, across every member. The `valid_to` filter on the non-vector path has never excluded a row in production. The fallback discrepancy is therefore a latent structural inconsistency with no live exposure, not a defect. Corollary for the current-state table: `developmental_memories` is temporally aware **in schema only**. Its validity columns carry no production data, so the earlier "already has partial temporal semantics" claim is downgraded to "has the columns". Future-dated `valid_to` was not measured.
+
+**§2 — `members_set_changed = 2`, so the hidden decay mechanism materially changes what MAIA gets to think with, for a minority.** Read with the population in view:
+
+| Measure | Value |
+|---|---|
+| members with candidates | 36 |
+| members where top-12 is an actual cut (more than 12 candidates) | 14 |
+| members whose selected set changes when decay is removed | 2 |
+| as a share of members where the cut exists | 2 / 14 |
+| candidate rows | 2018 |
+| distinct `memory_type` values in production | 1 (`pattern`) |
+| `confirmed_by_user = true` among the twelve flipped rows | 0 |
+
+- **Member `17a14614`**: a wholesale five-row swap. Decay holds in five `pattern` rows aged 87 days at ranks 8–12 and excludes five `pattern` rows aged 111–117 days that would otherwise rank 4–11. Rank displacement 12–15 on the excluded rows. Age difference is about one month; the ranking is sensitive enough that this month decides nearly half the set.
+- **Member `2cea65b7`**: a single boundary swap at rank 12/13, ages 15 vs 26 days, displacement 1.
+- **§2.e**: across all 2018 candidates the mean absolute rank shift is 22.8 and the maximum 396, so decay reorders the pool heavily everywhere. Membership stays stable for 22 of 36 members only because they have twelve or fewer candidates and everything enters regardless of order.
+
+Two facts narrow what §2 means:
+
+1. **Only one memory type exists in production.** Every one of the 2018 rows is `pattern` (half-life 180 days). The per-type half-life table, and the four-dimension conflation it embodies (an `event` decaying at 90 days, a `dream` at 60), is **latent, not live**. The conflation concern in Decision 3 is correct in design and currently exercised for exactly one type.
+2. **No flipped row is member-confirmed.** The confirmation bonus and the 1.5× half-life for confirmed memories are inert on the rows that actually move. Whether `pattern` rows are system-inferred or member-marked is a provenance question this witness did not measure; the `memory_type` label alone does not settle it.
+
+**Findings, stated for the record:**
+
+- F1. The vector-fallback `valid_to` gap is real in code and **unreachable with current data**. It stays on the list as a parity defect to close whenever the assertion layer is chosen (Decision 1), not as an incident.
+- F2. Invisible decay changes the top-12 for 2 of the 14 members for whom selection is a cut, and for one of them it changes almost half the set. Age is currently deciding what MAIA thinks with, silently, for that member. That is the transparency concern of Decision 3 confirmed as **live for a minority**, and it is measured, not inferred.
+- F3. `confidenceDecay`'s per-type model is exercised for one type only. Any change to decay should be scoped to what is live (`pattern`, 180-day half-life) and should not be argued from the other half-lives, which have no production rows behind them.
+
+No implementation follows from this record. The findings are inputs to the Episodic Phase 2 spec and to any future ruling on decay legibility.

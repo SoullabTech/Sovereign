@@ -1,8 +1,13 @@
--- Temporal Memory Audit — two READ-ONLY witnesses.
+-- Temporal Memory Audit — two witnesses with NO PERSISTENT WRITES.
 --
 -- Authority: docs/architecture/TEMPORAL_MEMORY_DIRECTION_2026-09-06.md §"The audit
 -- that precedes any change". This script converts two uncertainties into facts.
--- It changes nothing. It opens no lane. It does not wire shouldPromptForConfirmation.
+-- It mutates no persistent relation. It creates and drops two session-local temp
+-- tables, which vanish with the psql session. It opens no lane. It does not wire
+-- shouldPromptForConfirmation.
+--
+-- RUN RECORD: executed against production 2026-09-06; output and adjudication in
+-- docs/architecture/TEMPORAL_MEMORY_DIRECTION_2026-09-06.md §"Audit results".
 --
 -- WHAT THIS WITNESSES
 --   §1  Whether production currently contains the conditions under which an
@@ -201,4 +206,4 @@ DROP TABLE _tm_ranked;
 DROP TABLE _tm_scored;
 
 \echo
-\echo 'Done. Read-only; temp tables dropped; nothing written.'
+\echo 'Done. No persistent writes; session temp tables dropped.'
