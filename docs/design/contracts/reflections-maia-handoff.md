@@ -22,30 +22,32 @@ distinct_to_room: the Reflection remains visibly present as the member's object;
 screenshot_desktop: docs/design/contracts/screenshots/reflections-discuss-maia-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/reflections-discuss-maia-mobile.png
 experience_verification: |
-  2026-09-05 — founder production witness showed the defect directly: the MAIA sheet opened on the right, but
-  OracleConversation's fixed transcript and holoflower resolved against the viewport and painted across the
-  Reflection while the sheet itself had no composer. After repair, a focused local evidence route mounted the exact
-  OracleConversation inside the exact MaiaPresence sheet geometry and seeded canonical local transcript state. At
-  1280x800 the 448x640 sheet bounded both the MAIA message and textarea; at 390x844 the 390x717 sheet bounded both;
-  body scroll width equaled viewport width in both captures. Headless persistence/agent requests returned 401
-  because the evidence route had no authenticated member, so that pass was a geometry/presentation witness, not a
-  production conversation-response witness.
+  2026-09-05 — GEOMETRY WITNESS ONLY. Founder production witness showed the defect directly: the MAIA sheet opened
+  on the right, but OracleConversation's fixed transcript and holoflower resolved against the viewport and painted
+  across the Reflection while the sheet itself had no composer. After repair, a local evidence route mounted the
+  exact OracleConversation inside the exact MaiaPresence sheet geometry with seeded transcript state; 448x640 and
+  390x717 both bounded message and textarea. Persistence/agent calls returned 401 for want of an authenticated
+  member, so that pass proved layout, not a real MAIA turn.
 
-  2026-09-06 — PRODUCTION CONVERSATION WITNESS (closes the 401 gap above). Deployed `2732706b6` to minisforum
-  through the immutable-SHA lane; running-container provenance verified on both channels (printenv == Config.Env ==
-  asserted SHA), Co-Lab boundaries 33 passed / 0 failed / 0 warned. Founder then walked the room signed in on
-  desktop Chrome at `soullab.life/reflections/<id>` (authenticated member confirmed by the anamnesis recollection
-  greeting). Observed: the MAIA sheet bounded on the right with a real MAIA response painted INSIDE it — the
-  original defect state (blank sheet while response text paints across the page) did not recur; the Reflection
-  remained legible as the place beneath it, with SOURCE EXCERPT, the Discuss gesture, and the WHAT MAIA WILL RECEIVE
-  panel all still rendered; the text composer present in the sheet with no microphone affordance under
-  voiceEnabled={false}; and canonical thread continuity — the handoff POSTed to /api/sovereign/app/maia/list and the
-  client restored 18 existing messages, so the conversation was appended to rather than forked into a second
-  identity.
-
-  NOT established by the 2026-09-06 pass, and still open: no signed-in walk on a production MOBILE viewport (the
-  390x844 containment evidence remains local-geometry only); and the page carried 2 console errors / 6 warnings that
-  were not classified during the walk — unrelated to the containment claim, but not cleared either.
+  2026-09-06 — AUTHENTICATED PRODUCTION CONVERSATION + RENDER WITNESS. PASS. Closes the 401 gap above.
+  Bound before and after to production 2732706b6 (subject stable; /api/members/me 200). A real Reflection was
+  opened, the WHAT MAIA WILL RECEIVE preview confirmed present and editable, and exactly the visible preview sent
+  unchanged (373 chars, hashed rather than transcribed into evidence). The turn exercised production, not a
+  fixture: POST /api/sovereign/app/maia/list 200 and POST /api/conversation/turns 200, thread 11+11 -> 12+12 on
+  the same canonical session identity that existed before the handoff.
+  Desktop 1280x800: sheet x=801 y=144 448x640, textarea inside, page width == viewport 1280, no overflow,
+  Reflection mounted beneath a 40% scrim. Mobile 390x844 (true emulation): sheet 390x717.39, MAIA response and
+  textarea fully inside, body scrollWidth 390, no horizontal spill. Close/reopen held 12+12 with the canonical
+  session unchanged and the composer present; the same history survived a mobile reload/reopen. No second
+  conversation was minted. Steady-state sheet: text composer present and enabled, zero microphone, zero Speak,
+  zero voice controls.
+  Separate pre-existing finding, deliberately NOT folded into this seam: on first interaction after a browser
+  reload, root app/layout.tsx briefly emits a global "Audio enabled" toast (~2s). That is the app-wide
+  first-interaction audio unlock, not a sheet control and not governed by voiceEnabled. Under the stated
+  criterion (composer intact, no stray microphone control) this is PASS; the toast is tracked as its own UI
+  finding elsewhere.
+  Witness profile, screenshots, and browser process removed afterward; debug port 9333 closed; no repository
+  files changed by the walk.
 ---
 
 # Reflections — MAIA Handoff Experience Contract
@@ -80,6 +82,16 @@ OracleConversation's fixed descendants resolve against the sheet's own containin
 block. Transcript, scrim, and composer may not paint into the Reflection behind it.
 Full-room `/maia` geometry remains viewport-native and unchanged.
 
+**Measurement note — a naive bounding-rect check will report a false failure.**
+When the transcript has auto-scrolled, the last MAIA message's *layout box* can
+begin a few pixels above the sheet (5 px, observed 2026-09-06), so
+`getBoundingClientRect()` alone reports "not entirely inside" while nothing is
+leaking. Both the transcript and the sheet clip overflow. Containment must be
+decided by what is painted and hit-testable, not by layout geometry: hit-test
+just above the sheet edge and confirm no message element is there, and confirm
+body `scrollWidth` equals viewport width. Any automated containment test written
+against rects alone will fail on a correctly contained sheet.
+
 The contained handoff is text-only for now. `voiceEnabled={false}` must not suppress
 the text composer, and it must not leave stray microphone or response-voice
 affordances in the sheet.
@@ -109,10 +121,12 @@ is not yet evidence that a general contained-presence pattern exists. Extracting
 one now would repeat the move the COACHING-TEMPLATE-EXTRACTION-01 naming ruling
 refused on 2026-09-04 — *the first specimen is not the generic architecture*.
 
-**Sequence (founder, 2026-09-06).** Reflections closes first: desktop walk PASS,
-mobile walk outstanding, console errors outstanding. Only when all three settle
-does **Journal** open as specimen two. Nothing is named or extracted before the
-two rooms can be compared.
+**Sequence (founder, 2026-09-06).** Reflections closes first. Desktop walk PASS;
+mobile walk PASS (390x844 true emulation, real response, no spill); the console
+errors observed during the first desktop pass remain unclassified and are the
+last item against the founder's own three-item gate. Only when that settles does
+**Journal** open as specimen two. Nothing is named or extracted before the two
+rooms can be compared.
 
 **Why Journal and not Co-Lab or Writer's Studio.** Journal shares the load-bearing
 condition — the member already owns an object underneath, MAIA can enter in
