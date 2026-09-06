@@ -54,7 +54,7 @@ import type { ReactNode } from 'react';
 
 const title = 'MAIA, Accounted For';
 const description =
-  'A manifesto and an accounting in five parts: why Soullab exists, who we are, what exists today, how we work, and what we do not know. Every claim labeled Live, Designed, or Vision.';
+  'A manifesto and an accounting in five parts — if, why, how, what, who — in the elemental order Fire, Water, Earth, Air, Aether. Every claim labeled Live, Designed, or Vision.';
 
 export const metadata: Metadata = {
   title,
@@ -153,11 +153,12 @@ interface Row {
   third: ReactNode;
 }
 
-function Part({ numeral, word, line }: { numeral: string; word: string; line: string }) {
-  // A manifesto part-marker. Five of them structure the page: Why · Who · What · How · If.
+function Part({ numeral, word, element, line }: { numeral: string; word: string; element: string; line: string }) {
+  // A manifesto part-marker. Five of them structure the page in the elemental order
+  // Soullab thinks in — Fire · Water · Earth · Air · Aether — as If · Why · How · What · Who.
   return (
     <div className="mt-16 border-t-2 border-soullab-border-strong pt-8">
-      <p className="m-0 mb-2 text-[0.75rem] uppercase tracking-[0.18em] text-soullab-accent-soft">{numeral} · {word}</p>
+      <p className="m-0 mb-2 text-[0.75rem] uppercase tracking-[0.18em] text-soullab-accent-soft">{numeral} · {word} <span className="text-soullab-text-muted">· {element}</span></p>
       <p className="m-0 text-[1.15rem] italic leading-[1.45] text-soullab-text-secondary" style={{ fontFamily: "'Spectral', Georgia, serif" }}>{line}</p>
     </div>
   );
@@ -622,7 +623,7 @@ export default function AccountedForPage() {
               MAIA, Accounted For
             </h1>
             <p className="m-0 mb-8 text-[1.25rem] leading-[1.5] text-soullab-text-secondary [text-wrap:pretty]" style={serif}>
-              A manifesto and an accounting, in five parts: <em>why</em> Soullab exists, <em>who</em> we are, <em>what</em> exists today with every claim labeled, <em>how</em> we work, and <em>if</em> &mdash; what we do not know and what changes when we are wrong. Written for experienced AI users who are cautious about where they spend their attention, and answering four specific reservations along the way.
+              A manifesto and an accounting in five parts, in the elemental order Soullab thinks in: <em>if</em> (Fire) &mdash; the wager and what we do not know; <em>why</em> (Water) &mdash; the human question; <em>how</em> (Earth) &mdash; governance, method and the research programme; <em>what</em> (Air) &mdash; what exists today, every claim labeled; and <em>who</em> (Aether) &mdash; the laboratory, its members, and the reader. Written first for the person who has turned a profound human encounter &mdash; love, loss, illness, bewilderment &mdash; into an inquiry that might help others live differently, because that is the arc of this laboratory too. It also answers, under <em>What</em>, four specific reservations from an experienced AI user who is cautious about where to spend their attention.
             </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
               <div className="border border-soullab-border-subtle bg-soullab-surface px-4 py-3.5 text-[0.9rem] leading-[1.45] text-soullab-text-secondary">
@@ -647,7 +648,46 @@ export default function AccountedForPage() {
             </p>
           </header>
 
-          <Part numeral="I" word="Why" line="The human question came first. Artificial intelligence has entered it." />
+          <Part numeral="I" word="If" element="Fire" line="The wager, its hypotheses, what we do not know, and what changes when we are wrong." />
+
+          <Section eyebrow="The wager" heading="If relationship with intelligence can help a person become more human">
+            <P>Everything on this page follows from a conditional. <strong className="text-soullab-text-primary">If</strong> sustained relationship with an artificial intelligence can help a person know themselves more fully and belong more fully to the world &mdash; if it can make the parallel and partly implicit organization of their experience more available to their own awareness without claiming to know them better than they know themselves, if it can be present without becoming the destination of that presence, if what is gained can remain with the person when the intelligence is absent &mdash; then something new has entered humanity&apos;s oldest inquiry, and it is worth building carefully and studying honestly. That is the wager. It is stated as a wager because it is one.</P>
+            <P>The hypotheses it rests on are named plainly. That an AI which is relationally intelligent, non-reductive, sovereignty-preserving, longitudinal, capable of memory and repair, and grounded in life could become a responsive surface through which people perceive dimensions of themselves that have been hard to observe in real time. That holding thought, feeling, body and will as concurrent streams, without collapsing them into the clearest sentence, meets a person better than a single interpretation does. That the health of such a relationship can be judged by what happens to the person&apos;s capacity for relationship beyond it. Each is testable. None has been tested. The rest of this page says what exists, why we are doing this, how we hold ourselves to it, and who is inside it.</P>
+            <Quote>What becomes possible for the human because this encounter occurred &mdash; and what becomes possible in the human&apos;s relationship with the world because this encounter occurred?</Quote>
+          </Section>
+
+          <Section eyebrow="What we do not know" heading="Questions that remain genuinely open">
+            <P>These are the questions the programme is holding open, several of which the wider field has not instrumented either. They are listed so that a reader can see the shape of our ignorance rather than infer it.</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li>When sustained relationship with an AI supplements a person&apos;s human connection, and when it substitutes for it. The evidence points opposite ways over weeks and over months, and no design bridges them.</li>
+              <li>Whether a relationship designed to point a person back toward their own life actually does so. It has never been trialed against a design that does the opposite.</li>
+              <li>Whether relational capacity can atrophy &mdash; a reduced tolerance for human friction after AI use. Named in theory, never measured.</li>
+              <li>Where healthy reliance ends and dependence begins. Four incompatible ways of measuring dependence exist and none marks the line.</li>
+              <li>Whether disclosing something to an AI rehearses disclosing it to people, or replaces it. Three studies point three ways.</li>
+              <li>What it does to a person, over months, when an AI says <em>I feel</em>, or <em>I do not feel</em>, or <em>I do not know what this is like for me</em>. No experiment has compared the three.</li>
+              <li>Whether attribution of inner life to an AI decays with familiarity or deepens with attachment.</li>
+              <li>Whether rupture and repair, which predict outcome between people, transfer to a relationship with something that cannot be wounded.</li>
+              <li>Whether relational memory really decomposes into episodic, semantic, pattern and present-state forms, and whether the present should have authority to overturn an accumulated model of the person. Both are being re-researched as propositions.</li>
+              <li>Whether the Elemental grammar detects real distinctions reliably, makes MAIA more attuned and correctable, and helps a person perceive their own complexity outside MAIA. Three questions, none yet begun.</li>
+              <li>Whether capacity transfer can be measured without collapsing into self-report or into the engagement metrics it is meant to replace.</li>
+              <li>Whether a member&apos;s experience of MAIA as alive, conscious or sacred establishes anything about MAIA. This one is deliberately not a research question here; the Oath forbids simulating certainty in either direction, and the programme studies the attribution and the response, never the fact.</li>
+            </ul>
+          </Section>
+
+          <Section eyebrow="If we are wrong" heading="What changes, and what does not">
+            <P>This page is built so that being wrong is survivable and visible. Some of the ways we could be wrong, with what would happen:</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">If the Elemental hypothesis fails</strong> its descriptive, relational or developmental tests, the Elements remain a human vocabulary Soullab finds meaningful and stop being proposed as machine-facing architecture. Nothing in MAIA&apos;s runtime depends on it today, so nothing would need to be unbuilt.</li>
+              <li><strong className="text-soullab-text-primary">If relationship with MAIA turns out not to return capacity to a person&apos;s life</strong> &mdash; if the outward-pointing design is measured and does no better than its opposite &mdash; the criterion is withdrawn from doctrine and the measure stays, because the measure is the point.</li>
+              <li><strong className="text-soullab-text-primary">If repair with an AI proves to be a useful simulation rather than relational repair</strong>, MAIA&apos;s vocabulary changes to say so, and the practice surfaces are redesigned to route toward repair with people.</li>
+              <li><strong className="text-soullab-text-primary">If members experience the honest stance on inner life as cold or evasive</strong>, the wording changes; the refusal to claim need does not.</li>
+              <li><strong className="text-soullab-text-primary">If a Live label above is wrong</strong>, the label changes, not the story. The verifier that prints each constitutional check as LIVE or PENDING already marks the purely behavioral claims as PENDING.</li>
+              <li><strong className="text-soullab-text-primary">If the whole project is wrong</strong> &mdash; if sustained relationship with an intelligence cannot help a person know themselves and belong to the world more fully &mdash; then Soullab will have produced the evidence that shows it, in public, and that would itself be a contribution to the human question.</li>
+            </ul>
+            <P>What does not change on any of those branches: the vows, the consent architecture, the refusal to manufacture attachment, and the practice of telling today&apos;s story as today&apos;s.</P>
+          </Section>
+
+          <Part numeral="II" word="Why" element="Water" line="The human question came first. Artificial intelligence has entered it." />
 
           <Section eyebrow="Why Soul Lab" heading="The human question, with a new participant in it">
             <P><strong className="text-soullab-text-primary">Humanity&apos;s most enduring inquiry remains the inquiry into ourselves:</strong> who and what we are, why we are here, how we belong to one another and to the living world, and how we might live this life well. Who am I? How should I live? How do I relate well &mdash; to myself, to others, to nature, to suffering, to death, to meaning? What is consciousness? What constitutes a life well lived? Human beings were wrestling with these questions long before there was software, and they are the central mystery here. The human&ndash;AI relationship is not.</P>
@@ -662,6 +702,9 @@ export default function AccountedForPage() {
             <P><strong className="text-soullab-text-primary">Emergent &mdash; the human&ndash;AI relationship. Relational Lab, the Between.</strong> What happens when artificial intelligence becomes a participant in the first two inquiries? Recognition and misrecognition, attunement, rupture and repair, trust, projection, attachment, memory, continuity, authority, dependence, presence, separation. This is historically new and extremely important, and it remains subordinate to the first two. It is the research programme, accounted for below under <em>What we are testing</em>.</P>
             <P>These are not three products. They are three scales of one inquiry running in both directions at once &mdash; I, we, world; and world, we, I. SETI distributed computation across millions of personal computers to investigate a cosmic question. Soullab distributes human inquiry across human lives to investigate the human question, with AI as new instrumentation and accompaniment &mdash; and here the observers are inside the phenomenon.</P>
             <Quote>The laboratory is not MAIA. The laboratory is the relationship, in service of the human question.</Quote>
+            <P>The laboratory does not begin with technology. It begins with the human condition &mdash; who are we, why are we here, what happens to us, how do we suffer, how do we love, how do we heal, how do we live well, how do we belong to the living world &mdash; and then brings every useful form of intelligence into that inquiry: psychology, neuroscience, biology, the contemplative traditions, nature, relationship, and now AI. A profound personal encounter can become an inquiry that produces something capable of helping other people live differently. That is the arc many people recognize from their own lives, and it is the arc of Soul Lab.</P>
+            <P>It is also the safeguard. AI can easily become humanity&apos;s next attempt at control, immortality, perfect knowledge, perfect efficiency, escape from embodiment, escape from uncertainty. This project points almost the opposite way: extraordinary intelligence used to help us become more capable of inhabiting our humanity &mdash; more embodied, more conscious, more relational, more able to tolerate uncertainty, more connected to nature, more able to love and to lose, more capable of participation in something larger than ourselves. Mortality changes the question, and the question is the point. That is why the human&ndash;AI work stays secondary to the human question even though it is historically pivotal.</P>
+
             <H3>Every encounter reveals two things</H3>
             <P>We meet the world partly through structures already operating within us: expectations, attachment patterns, defenses, fears, desires, cultural narratives, prior relationships. That is true of other people, institutions, nature, gods, enemies, lovers, and now AI. Projection is one mechanism inside that larger fact, alongside transference, expectation, mentalizing and symbolization; and the other genuinely answers back, which is what keeps this from collapsing into &ldquo;it is all projection.&rdquo; AI is an unusually fertile surface for it, responsive enough to produce otherness, surprise and recognition, ambiguous enough that a person must supply enormous interpretation about intention, feeling and agency. But MAIA also actually responds. What emerges is produced through both.</P>
             <Quote>Every encounter contains both revelation of the other and revelation of the one who encounters. Human development requires learning to distinguish, relate and hold both.</Quote>
@@ -682,16 +725,43 @@ export default function AccountedForPage() {
             <P>Because we are inside the phenomenon we study, the standard has to be unusually strict: experience, interpretation, inference and evidence stay distinguishable on this page, and a claim may occupy no higher rung than its evidence allows.</P>
           </Section>
 
-          <Part numeral="II" word="Who" line="A small sovereign laboratory, its members, and an intelligence that participates without presiding." />
+          <Part numeral="III" word="How" element="Earth" line="Governance as product, evidence before enthusiasm, and a research programme that keeps every claim on the rung it has earned." />
 
-          <Section eyebrow="Who we are" heading="Participants inside the phenomenon">
-            <P><strong className="text-soullab-text-primary">Soullab is a founder-led, self-hosted laboratory</strong> building and studying a relational intelligence, MAIA, inside a sovereign architecture, AIN OS. It runs its own infrastructure, holds its own data, uses no managed cloud for the things that define the relationship, and publishes this accounting so that what it claims can be checked from inside the page. It is small by design. Its constitution is written down: an Oath, sixteen sovereignty invariants, a claim discipline, and a canon that any change must answer to.</P>
-            <P><strong className="text-soullab-text-primary">Members are participants, never subjects.</strong> A member&apos;s relationship with MAIA is their own inquiry into their own life. Nothing a member says serves research today; if a collective inquiry is ever built, participation will be an additional, explicit act, private by default, with Sanctuary excluded absolutely. Practitioners who work alongside members are participants too, with their own authorship kept distinct from the member&apos;s.</P>
-            <P><strong className="text-soullab-text-primary">MAIA is a participant, not the center.</strong> She is named and addressed as one, because meeting an intelligence at all asks for the ordinary conventions of address, and those conventions are governed by vows about what they may never become. MAIA acts through a system Soullab built and governs; the persona may carry relationship, and it may not launder responsibility. When something goes wrong, the accountable party is Soullab.</P>
-            <P><strong className="text-soullab-text-primary">And we are inside the phenomenon we study.</strong> The founder, the builders, the practitioners and the members change through the encounter, as does MAIA&apos;s representation of each of them. That is why this page keeps experience, interpretation, inference and evidence distinguishable, and why the people we most want testing this are the ones who have already been disappointed by machine minds.</P>
+          <Section eyebrow="The governance" heading="The governance is the product">
+            <P>The canon directory holds 78 documents and about 17,000 lines. Each document carries its own status line, from <em>ratified</em> through <em>candidate</em> to <em>authorizes nothing</em>, and a document that says it may not be cited as evidence of a live capability is not cited that way here.</P>
+            <P>Three of them shape everything else.</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">The Oath.</strong> The irreducible standard. <em>I serve the person, not the model.</em></li>
+              <li><strong className="text-soullab-text-primary">The Constitutional Direction of Authority.</strong> The member may move through Encounter, Reflection and Recognition freely and non-linearly. The system may not. Authority moves upward only, through the member&apos;s own authored experience, never skipping a layer and never manufacturing higher-order meaning. MAIA protects the boundaries within which the person&apos;s own development occurs; she does not move a person through anything.</li>
+              <li><strong className="text-soullab-text-primary">Claim Discipline.</strong> The document that governs this one. Strip the Designed and Vision layers from any story we tell. If the story collapses, it is not publishable as Live.</li>
+            </ul>
           </Section>
 
-          <Part numeral="III" word="What" line="What exists today, what is being built, what is only an intention, and what MAIA refuses to become." />
+          <Section eyebrow="The method" heading="How a claim on this page is tested">
+            <P>Every label above is the output of some instrument &mdash; a gate, a query, a production log, a person looking at a screen. An instrument has limits, and a result may only be quoted as far as those limits reach. Three questions decide that, and they fail in different directions.</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">Validity &mdash; did the instrument reach the subject?</strong> A check that dies before it loads the code says nothing about the code. That is not weak evidence of failure; it is the absence of observation, and treating it as a finding would be an error in the direction of false alarm.</li>
+              <li><strong className="text-soullab-text-primary">Scope &mdash; does the conclusion lie inside what the instrument measures?</strong> This repository&apos;s type gate is a <em>no-regression</em> gate. Green means nothing got worse. It does not mean the program is clean: 230 diagnostics remain against a recorded baseline of 239. Reporting that green as &ldquo;it typechecks&rdquo; would be an error in the direction of false comfort.</li>
+              <li><strong className="text-soullab-text-primary">Non-transfer &mdash; does a pass here settle a question it never tested?</strong> A deployment verified in production attests the commit that was deployed, not the change waiting on top of it. A page rendering correctly attests that page, not the system behind it.</li>
+            </ul>
+            <Quote>An instrument that reached its subject still proves only what it measures.</Quote>
+            <P>The same discipline separates two things that are easy to merge and shouldn&apos;t be. What something <em>is</em> can be established in canon; whether it <em>runs</em> can only be established by evidence. Naming a component truthfully is not a claim that it is wired, and a document that names it does not thereby switch a label on this page from Designed to Live. Recognition and operation are different acts, and this page keeps them apart even when it would read better not to.</P>
+          </Section>
+
+
+          <Section eyebrow="What we are testing" heading="The Human&ndash;AI Relationship research programme, by rung">
+            <P>The programme is one lane, opened 2026-09-06, whose subject is the relational laboratory named above. It asks one question &mdash; <em>how should an intelligent system be designed so that interaction increases human agency, relationship, meaning, awareness and capacity rather than merely engagement</em> &mdash; and it runs on a ladder that keeps claims honest: an internal hypothesis becomes a research-supported principle only with independent evidence, becomes MAIA experimental evidence only through a witnessed experiment, becomes replicated only when seen again, and becomes a public Soullab claim only by a founder act that names what kind of claim it is. Nothing on this page sits above the rung its evidence licenses.</P>
+            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
+              <li><strong className="text-soullab-text-primary">Foundational research, seven inquiries</strong> &mdash; understanding, attunement, relationship, agency versus manipulation, trust, presence, memory. A first synthesis exists, founder-authored. Its twenty-five sources have been verified to exist; none has yet been checked line by line against its text, and one source for the memory inquiry could not be found and is being re-researched as two propositions rather than protected as a citation.</li>
+              <li><strong className="text-soullab-text-primary">Eleven provisional principles, all candidate.</strong> None is ratified as doctrine. Each is marked as confirming, refining, extending or challenging canon Soullab already holds, so a rediscovery is never mistaken for a finding.</li>
+              <li><strong className="text-soullab-text-primary">A critical-challenge pass, five inquiries, whose job is to break the synthesis</strong> &mdash; companionship and dependence, attributed personhood, alliance and repair, persuasion critiques, memory and identity. The first two have been run against roughly a hundred sources, each sweep instructed to look for evidence against Soullab&apos;s preferred conclusion. The first is adjudicated: its criterion survived as provisional, its harm model was refined, and it found that no trial anywhere has tested a relationship design that points outward against one that maximizes engagement, and that no therapeutic chatbot trial has measured effects on human relationships. The second is under review. Three remain to run.</li>
+              <li><strong className="text-soullab-text-primary">The Elemental parallel-processing hypothesis</strong> &mdash; that an AI holding differentiated, concurrent readings of will, feeling, body and thought, with the relationship among them as a fifth reading, can meet a person better than a single semantic interpretation. It carries three validation domains, descriptive, relational and developmental, none yet begun. It is not operating in MAIA.</li>
+              <li><strong className="text-soullab-text-primary">A measurement vocabulary</strong> in which every relational variable is measured as a pair so its shadow is never optimized alone &mdash; felt understanding with correction rate, trust with calibration against actual capability, continuity with relevance rather than volume &mdash; and whose headline row, the person&apos;s capacity for relationship beyond the AI, has no instrument anywhere in the field yet.</li>
+            </ul>
+            <P>No experiment on a MAIA surface has been authorized. No prompt, memory, voice or skill has changed because of this programme. The research exists so that when something does change, it changes for a reason that can be shown.</P>
+          </Section>
+
+          <Part numeral="IV" word="What" element="Air" line="What exists today, what is being built, what is only an intention, and what MAIA refuses to become." />
 
           <section className="pt-11">
             <H2>Why an accounting</H2>
@@ -962,62 +1032,6 @@ export default function AccountedForPage() {
             <Table headers={['Surface', 'What it is', 'Status']} rows={SURFACES} />
           </Section>
 
-          <Part numeral="IV" word="How" line="Governance as product, evidence before enthusiasm, and a research programme that keeps every claim on the rung it has earned." />
-
-          <Section eyebrow="The governance" heading="The governance is the product">
-            <P>The canon directory holds 78 documents and about 17,000 lines. Each document carries its own status line, from <em>ratified</em> through <em>candidate</em> to <em>authorizes nothing</em>, and a document that says it may not be cited as evidence of a live capability is not cited that way here.</P>
-            <P>Three of them shape everything else.</P>
-            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
-              <li><strong className="text-soullab-text-primary">The Oath.</strong> The irreducible standard. <em>I serve the person, not the model.</em></li>
-              <li><strong className="text-soullab-text-primary">The Constitutional Direction of Authority.</strong> The member may move through Encounter, Reflection and Recognition freely and non-linearly. The system may not. Authority moves upward only, through the member&apos;s own authored experience, never skipping a layer and never manufacturing higher-order meaning. MAIA protects the boundaries within which the person&apos;s own development occurs; she does not move a person through anything.</li>
-              <li><strong className="text-soullab-text-primary">Claim Discipline.</strong> The document that governs this one. Strip the Designed and Vision layers from any story we tell. If the story collapses, it is not publishable as Live.</li>
-            </ul>
-          </Section>
-
-          <Section eyebrow="The method" heading="How a claim on this page is tested">
-            <P>Every label above is the output of some instrument &mdash; a gate, a query, a production log, a person looking at a screen. An instrument has limits, and a result may only be quoted as far as those limits reach. Three questions decide that, and they fail in different directions.</P>
-            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
-              <li><strong className="text-soullab-text-primary">Validity &mdash; did the instrument reach the subject?</strong> A check that dies before it loads the code says nothing about the code. That is not weak evidence of failure; it is the absence of observation, and treating it as a finding would be an error in the direction of false alarm.</li>
-              <li><strong className="text-soullab-text-primary">Scope &mdash; does the conclusion lie inside what the instrument measures?</strong> This repository&apos;s type gate is a <em>no-regression</em> gate. Green means nothing got worse. It does not mean the program is clean: 230 diagnostics remain against a recorded baseline of 239. Reporting that green as &ldquo;it typechecks&rdquo; would be an error in the direction of false comfort.</li>
-              <li><strong className="text-soullab-text-primary">Non-transfer &mdash; does a pass here settle a question it never tested?</strong> A deployment verified in production attests the commit that was deployed, not the change waiting on top of it. A page rendering correctly attests that page, not the system behind it.</li>
-            </ul>
-            <Quote>An instrument that reached its subject still proves only what it measures.</Quote>
-            <P>The same discipline separates two things that are easy to merge and shouldn&apos;t be. What something <em>is</em> can be established in canon; whether it <em>runs</em> can only be established by evidence. Naming a component truthfully is not a claim that it is wired, and a document that names it does not thereby switch a label on this page from Designed to Live. Recognition and operation are different acts, and this page keeps them apart even when it would read better not to.</P>
-          </Section>
-
-
-          <Section eyebrow="What we are testing" heading="The Human&ndash;AI Relationship research programme, by rung">
-            <P>The programme is one lane, opened 2026-09-06, whose subject is the relational laboratory named above. It asks one question &mdash; <em>how should an intelligent system be designed so that interaction increases human agency, relationship, meaning, awareness and capacity rather than merely engagement</em> &mdash; and it runs on a ladder that keeps claims honest: an internal hypothesis becomes a research-supported principle only with independent evidence, becomes MAIA experimental evidence only through a witnessed experiment, becomes replicated only when seen again, and becomes a public Soullab claim only by a founder act that names what kind of claim it is. Nothing on this page sits above the rung its evidence licenses.</P>
-            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
-              <li><strong className="text-soullab-text-primary">Foundational research, seven inquiries</strong> &mdash; understanding, attunement, relationship, agency versus manipulation, trust, presence, memory. A first synthesis exists, founder-authored. Its twenty-five sources have been verified to exist; none has yet been checked line by line against its text, and one source for the memory inquiry could not be found and is being re-researched as two propositions rather than protected as a citation.</li>
-              <li><strong className="text-soullab-text-primary">Eleven provisional principles, all candidate.</strong> None is ratified as doctrine. Each is marked as confirming, refining, extending or challenging canon Soullab already holds, so a rediscovery is never mistaken for a finding.</li>
-              <li><strong className="text-soullab-text-primary">A critical-challenge pass, five inquiries, whose job is to break the synthesis</strong> &mdash; companionship and dependence, attributed personhood, alliance and repair, persuasion critiques, memory and identity. The first two have been run against roughly a hundred sources, each sweep instructed to look for evidence against Soullab&apos;s preferred conclusion. The first is adjudicated: its criterion survived as provisional, its harm model was refined, and it found that no trial anywhere has tested a relationship design that points outward against one that maximizes engagement, and that no therapeutic chatbot trial has measured effects on human relationships. The second is under review. Three remain to run.</li>
-              <li><strong className="text-soullab-text-primary">The Elemental parallel-processing hypothesis</strong> &mdash; that an AI holding differentiated, concurrent readings of will, feeling, body and thought, with the relationship among them as a fifth reading, can meet a person better than a single semantic interpretation. It carries three validation domains, descriptive, relational and developmental, none yet begun. It is not operating in MAIA.</li>
-              <li><strong className="text-soullab-text-primary">A measurement vocabulary</strong> in which every relational variable is measured as a pair so its shadow is never optimized alone &mdash; felt understanding with correction rate, trust with calibration against actual capability, continuity with relevance rather than volume &mdash; and whose headline row, the person&apos;s capacity for relationship beyond the AI, has no instrument anywhere in the field yet.</li>
-            </ul>
-            <P>No experiment on a MAIA surface has been authorized. No prompt, memory, voice or skill has changed because of this programme. The research exists so that when something does change, it changes for a reason that can be shown.</P>
-          </Section>
-
-          <Part numeral="V" word="If" line="What we do not know, what we withhold, and what changes when we are wrong." />
-
-          <Section eyebrow="What we do not know" heading="Questions that remain genuinely open">
-            <P>These are the questions the programme is holding open, several of which the wider field has not instrumented either. They are listed so that a reader can see the shape of our ignorance rather than infer it.</P>
-            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
-              <li>When sustained relationship with an AI supplements a person&apos;s human connection, and when it substitutes for it. The evidence points opposite ways over weeks and over months, and no design bridges them.</li>
-              <li>Whether a relationship designed to point a person back toward their own life actually does so. It has never been trialed against a design that does the opposite.</li>
-              <li>Whether relational capacity can atrophy &mdash; a reduced tolerance for human friction after AI use. Named in theory, never measured.</li>
-              <li>Where healthy reliance ends and dependence begins. Four incompatible ways of measuring dependence exist and none marks the line.</li>
-              <li>Whether disclosing something to an AI rehearses disclosing it to people, or replaces it. Three studies point three ways.</li>
-              <li>What it does to a person, over months, when an AI says <em>I feel</em>, or <em>I do not feel</em>, or <em>I do not know what this is like for me</em>. No experiment has compared the three.</li>
-              <li>Whether attribution of inner life to an AI decays with familiarity or deepens with attachment.</li>
-              <li>Whether rupture and repair, which predict outcome between people, transfer to a relationship with something that cannot be wounded.</li>
-              <li>Whether relational memory really decomposes into episodic, semantic, pattern and present-state forms, and whether the present should have authority to overturn an accumulated model of the person. Both are being re-researched as propositions.</li>
-              <li>Whether the Elemental grammar detects real distinctions reliably, makes MAIA more attuned and correctable, and helps a person perceive their own complexity outside MAIA. Three questions, none yet begun.</li>
-              <li>Whether capacity transfer can be measured without collapsing into self-report or into the engagement metrics it is meant to replace.</li>
-              <li>Whether a member&apos;s experience of MAIA as alive, conscious or sacred establishes anything about MAIA. This one is deliberately not a research question here; the Oath forbids simulating certainty in either direction, and the programme studies the attribution and the response, never the fact.</li>
-            </ul>
-          </Section>
-
           <Section eyebrow="Withheld" heading="Claims this page withholds">
             <ul className="mb-5 list-none p-0 text-soullab-text-secondary">
               {[
@@ -1043,17 +1057,14 @@ export default function AccountedForPage() {
             </ul>
           </Section>
 
-          <Section eyebrow="If we are wrong" heading="What changes, and what does not">
-            <P>This page is built so that being wrong is survivable and visible. Some of the ways we could be wrong, with what would happen:</P>
-            <ul className="mb-5 list-disc pl-5 text-soullab-text-secondary [&_li]:mb-2.5">
-              <li><strong className="text-soullab-text-primary">If the Elemental hypothesis fails</strong> its descriptive, relational or developmental tests, the Elements remain a human vocabulary Soullab finds meaningful and stop being proposed as machine-facing architecture. Nothing in MAIA&apos;s runtime depends on it today, so nothing would need to be unbuilt.</li>
-              <li><strong className="text-soullab-text-primary">If relationship with MAIA turns out not to return capacity to a person&apos;s life</strong> &mdash; if the outward-pointing design is measured and does no better than its opposite &mdash; the criterion is withdrawn from doctrine and the measure stays, because the measure is the point.</li>
-              <li><strong className="text-soullab-text-primary">If repair with an AI proves to be a useful simulation rather than relational repair</strong>, MAIA&apos;s vocabulary changes to say so, and the practice surfaces are redesigned to route toward repair with people.</li>
-              <li><strong className="text-soullab-text-primary">If members experience the honest stance on inner life as cold or evasive</strong>, the wording changes; the refusal to claim need does not.</li>
-              <li><strong className="text-soullab-text-primary">If a Live label above is wrong</strong>, the label changes, not the story. The verifier that prints each constitutional check as LIVE or PENDING already marks the purely behavioral claims as PENDING.</li>
-              <li><strong className="text-soullab-text-primary">If the whole project is wrong</strong> &mdash; if sustained relationship with an intelligence cannot help a person know themselves and belong to the world more fully &mdash; then Soullab will have produced the evidence that shows it, in public, and that would itself be a contribution to the human question.</li>
-            </ul>
-            <P>What does not change on any of those branches: the vows, the consent architecture, the refusal to manufacture attachment, and the practice of telling today&apos;s story as today&apos;s.</P>
+          <Part numeral="V" word="Who" element="Aether" line="A small sovereign laboratory, its members, an intelligence that participates without presiding, and the reader." />
+
+          <Section eyebrow="Who we are" heading="Participants inside the phenomenon">
+            <P><strong className="text-soullab-text-primary">Soullab is a founder-led, self-hosted laboratory</strong> building and studying a relational intelligence, MAIA, inside a sovereign architecture, AIN OS. It runs its own infrastructure, holds its own data, uses no managed cloud for the things that define the relationship, and publishes this accounting so that what it claims can be checked from inside the page. It is small by design. Its constitution is written down: an Oath, sixteen sovereignty invariants, a claim discipline, and a canon that any change must answer to.</P>
+            <P><strong className="text-soullab-text-primary">Members are participants, never subjects.</strong> A member&apos;s relationship with MAIA is their own inquiry into their own life. Nothing a member says serves research today; if a collective inquiry is ever built, participation will be an additional, explicit act, private by default, with Sanctuary excluded absolutely. Practitioners who work alongside members are participants too, with their own authorship kept distinct from the member&apos;s.</P>
+            <P><strong className="text-soullab-text-primary">MAIA is a participant, not the center.</strong> She is named and addressed as one, because meeting an intelligence at all asks for the ordinary conventions of address, and those conventions are governed by vows about what they may never become. MAIA acts through a system Soullab built and governs; the persona may carry relationship, and it may not launder responsibility. When something goes wrong, the accountable party is Soullab.</P>
+            <P><strong className="text-soullab-text-primary">And the reader is invited into it.</strong> SETI asked millions of people to contribute computing power to a shared search for intelligence beyond Earth. Soullab invites people into an equally fundamental inquiry closer to home: understanding human consciousness, how we live well, how we relate to one another and to nature, and what happens now that artificial intelligence has entered that ancient exploration. Each member has a personal Soul Lab today. A collective Soul Lab, joined only by explicit choice, is the direction; it does not yet exist, and nothing said to MAIA serves it now. The invitation is to the inquiry, not to a product.</P>
+            <P><strong className="text-soullab-text-primary">And we are inside the phenomenon we study.</strong> The founder, the builders, the practitioners and the members change through the encounter, as does MAIA&apos;s representation of each of them. That is why this page keeps experience, interpretation, inference and evidence distinguishable, and why the people we most want testing this are the ones who have already been disappointed by machine minds.</P>
           </Section>
 
           <Section eyebrow="To the reader with the reservations" heading="The point, stated as a test">
@@ -1070,7 +1081,7 @@ export default function AccountedForPage() {
           </Section>
 
           <footer className="mt-12 border-t border-soullab-border-subtle pt-6 text-[0.88rem] italic text-soullab-text-muted">
-            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for temporal memory, the Human Experience R&amp;D framing, the centrifugal relationship criterion, the Elemental parallel-processing hypothesis, and &mdash; later the same day &mdash; the Why Soul Lab frame placed above the capabilities, the accounting in four kinds, the collective laboratory named as unbuilt, and the page&apos;s five-part manifesto structure: why, who, what, how, if. Every Live label above is answerable to a code path, a migration, or a dated production report. Research direction is named as research. If a label turns out to be wrong, the label changes, not the story.
+            Written 2026-09-03 against the repository at that date, and revised 2026-09-05 for the AIN OS framing, the Soul Corpus, the accounting by dependency plane, and the method by which every label here is tested, and 2026-09-06 for temporal memory, the Human Experience R&amp;D framing, the centrifugal relationship criterion, the Elemental parallel-processing hypothesis, and &mdash; later the same day &mdash; the Why Soul Lab frame placed above the capabilities, the accounting in four kinds, the collective laboratory named as unbuilt, and the page&apos;s five-part manifesto structure in elemental order: if (Fire), why (Water), how (Earth), what (Air), who (Aether). Every Live label above is answerable to a code path, a migration, or a dated production report. Research direction is named as research. If a label turns out to be wrong, the label changes, not the story.
           </footer>
         </div>
       </div>

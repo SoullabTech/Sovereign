@@ -145,14 +145,29 @@ instrument within an ancient inquiry into how consciousness meets the world.** T
 understanding the human and our relationship with reality; AI is newly important because it gives
 us a novel kind of Other through which that relationship can become visible.
 
-## Founder correspondence note (2026-09-06, recorded as given; reading unconfirmed)
+## Correction (founder ruling, 2026-09-06) — the Elements are not domains
 
-Founder, on the five parallel encounter questions above: *"this correlates with: Water, Aether,
-Air, Earth, and Fire."* Recorded in the order given. Jarvis's reading of the mapping, **not yet
-confirmed by the founder**: how we encounter **Self** ↔ Water · **other humans** ↔ Aether/Field ·
-**AI** ↔ Air · **Nature** ↔ Earth · the **structures of consciousness through which we encounter
-reality** ↔ Fire. If the founder intended a different referent (e.g. the six processes, or the
-seven differentiation questions), this note is corrected, not extended.
+Jarvis had guessed that the founder's "Water, Aether, Air, Earth, Fire" mapped the five encounter
+questions one-to-one (Self ↔ Water, other humans ↔ Aether, AI ↔ Air, nature ↔ Earth, structures of
+consciousness ↔ Fire). **That reading is rejected by the founder and retracted.** It would violate
+the insight this document establishes. The founder's elemental order referred to the manifesto's
+five parts on `/accounted-for` (If · Why · How · What · Who ↔ Fire · Water · Earth · Air · Aether) —
+a structural sequence, not a categorical assignment.
+
+> **Do not map Self, Human, AI, Nature or World one-to-one onto Elements. Each is a domain of
+> encounter in which all Elemental modes may operate simultaneously. The Elemental hypothesis
+> concerns differentiated parallel processing within and across encounters, not categorical
+> assignment of domains to Elements. Field/Aether concerns their changing relations and emergent
+> whole.**
+
+Self contains all five (Fire what wants to move · Water what I feel · Earth what my body registers ·
+Air what I narrate · Field how these configure). Human relationship contains all five (agency
+between us · resonance and attachment · embodied presence and circumstance · communication and
+interpretation · the emergent relationship itself). Nature contains all five (a forest: soil and
+sensory actuality · resonance, belonging, grief · action, protection, desire · understanding and
+naming · participation in the living whole). AI contains all five (language and cognition ·
+attachment and felt understanding · agency and action · embodied consequences in the human · the
+evolving relational configuration).
 
 ## Standing with canon
 

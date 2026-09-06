@@ -696,3 +696,30 @@ recorded as given (Water · Aether · Air · Earth · Fire), reading unconfirmed
 V If — with new *Who we are* and *If we are wrong* sections, the encounter foundation inside Why
 Soul Lab, and the existing accounting preserved under What. Rendered and walked at 1280 and 390;
 contract updated. **Still not on soullab.life**: it is on this branch, unmerged and undeployed.
+
+
+---
+
+## 17 · FOUNDER RULING — the Elements are not domains (2026-09-06)
+
+> **Do not map Self, Human, AI, Nature or World one-to-one onto Elements. Each is a domain of
+> encounter in which all Elemental modes may operate simultaneously. The Elemental hypothesis
+> concerns differentiated parallel processing within and across encounters, not categorical
+> assignment of domains to Elements. Field/Aether concerns their changing relations and emergent
+> whole.**
+
+Jarvis's guessed domain mapping (encounter note, same day) is **retracted**. The elemental order the
+founder gave — Fire · Water · Earth · Air · Aether — structures the `/accounted-for` manifesto as
+**If · Why · How · What · Who** (a sequence, not a categorization), and the page now carries it.
+
+**Register ruling for the manifesto (founder):** the page should reach first the person who has
+turned a profound human encounter — love, loss, illness, mortality, bewilderment — into an inquiry
+that might help others live differently, because that is the arc of Soul Lab; the four reservations
+of the cautious AI user stay answered under *What* but no longer frame the page. The laboratory
+begins with the human condition and brings every useful intelligence into it (psychology,
+neuroscience, biology, contemplative traditions, nature, relationship, now AI). Safeguard named on
+the page: AI as humanity's next attempt at control, immortality, perfect knowledge, escape from
+embodiment and uncertainty — Soullab points the opposite way. *Mortality changes the question.*
+The participatory-inquiry invitation (SETI analogy; personal Soul Lab today; collective Soul Lab by
+explicit choice, unbuilt) is on the page. Any outreach to a specific prospective partner is the
+founder's own act and is not recorded in this repository.

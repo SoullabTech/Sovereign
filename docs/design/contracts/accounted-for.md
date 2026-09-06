@@ -1,6 +1,6 @@
 ---
 room: Accounted For
-human_activity: reading Soullab's manifesto-and-accounting in five parts — why it exists, who we are, what exists with every claim labeled, how we work, and what we do not know or refuse to claim
+human_activity: reading Soullab's manifesto-and-accounting in five parts in elemental order — if (Fire), why (Water), how (Earth), what (Air), who (Aether)
 
 surfaces:
   - app/accounted-for/page.tsx
@@ -26,29 +26,31 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 (third revision, this branch — the five-part manifesto
-  structure) in headless Chromium against a local `next dev` render at
-  1280×900 and 390×844, from a clean lockfile install. Observed: HTTP 200 at
-  both widths; exactly one H1 ("MAIA, Accounted For"); five part-markers in
-  order — "I · Why", "II · Who", "III · What", "IV · How", "V · If" — each
-  present exactly once; the eyebrows "Why Soul Lab", "Who we are", "What we
-  are testing", "What we do not know", "If we are wrong" and "Withheld" each
-  appear exactly once; 20 H2 on the page. Read on the render: the human
-  question sits above the capabilities under Part I; the encounter foundation
-  (both revelations; responsive reflective surface) is inside Why Soul Lab;
-  Part II names members as participants not subjects, MAIA as participant not
-  center, and Soullab as the accountable party; the existing Live / Partly live
-  / Designed / Vision accounting is preserved under Part III; the programme by
-  rung and the method sit under Part IV; open questions, withheld claims, and
-  "If we are wrong" sit under Part V. Mobile document width is 390px at a 390px
-  viewport. Desktop document width is 1597px at a 1280px viewport — the
-  pre-existing shared Table wrapper overflow recorded by earlier revisions;
-  this change does not touch Table composition or width classes, so it is
-  recorded rather than repaired. Screenshots are the top 3000px (desktop) /
-  3600px (mobile) of the branch render, not full-page. No navigation,
-  interaction, auth, memory, prompt, cognition or runtime path changes. Gates
-  at commit: design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
-  no-regression PASS (230 vs 239 baseline, TypeScript 5.9.3 from lockfile).
+  Walked 2026-09-06 (fourth revision, this branch — five parts in elemental
+  order) in headless Chromium against a local `next dev` render at 1280×900
+  and 390×844, from a clean lockfile install. Observed: HTTP 200 at both
+  widths; exactly one H1; five part-markers in order — "I · If · Fire",
+  "II · Why · Water", "III · How · Earth", "IV · What · Air", "V · Who ·
+  Aether" — each present exactly once; section order on the render: The wager
+  → What we do not know → If we are wrong → Why Soul Lab → (governance,
+  method) What we are testing → (the accounting) Withheld → Who we are → To
+  the reader with the reservations; each of those eyebrows appears exactly
+  once; 21 H2 on the page. Read on the render: the page opens with the wager
+  stated as a conditional and its hypotheses named as untested; the human
+  condition precedes technology under Why, with the mortality safeguard; the
+  audience line names first the person who turned a profound encounter into an
+  inquiry, with the four reservations answered under What; Who carries the
+  participatory-inquiry invitation with the collective laboratory named as
+  unbuilt. Mobile document width 390px at a 390px viewport. Desktop document
+  width 1597px at a 1280px viewport — the pre-existing shared Table wrapper
+  overflow recorded by earlier revisions; this change does not touch Table
+  composition or width classes, so it is recorded rather than repaired.
+  Screenshots are the top 3000px (desktop) / 3600px (mobile) of the branch
+  render, not full-page. No navigation, interaction, auth, memory, prompt,
+  cognition or runtime path changes. Gates at commit: design-canon PASS,
+  no-supabase PASS, diff --check PASS, typecheck no-regression PASS (230 vs
+  239 baseline, TypeScript 5.9.3 from lockfile; the Part component signature
+  change was re-checked).
 ---
 
 # Accounted For — Experience Contract
@@ -62,7 +64,7 @@ not claim. Density is permitted because the human activity is accounting.
 
 ## Arrival
 
-> **MAIA, Accounted For** — a manifesto and an accounting in five parts: why · who · what · how · if.
+> **MAIA, Accounted For** — a manifesto and an accounting in five parts, elemental order: if (Fire) · why (Water) · how (Earth) · what (Air) · who (Aether).
 
 The arrival answers four things immediately: this is Soullab's accounting, the
 subject is a person's own inquiry with MAIA as a participant in it, the page
