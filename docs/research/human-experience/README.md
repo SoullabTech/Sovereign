@@ -30,11 +30,11 @@ EVIDENCE → CONTESTED QUESTIONS → SUPPORTED PHENOMENA → SOULLAB INTERPRETAT
 
 Measurement vocabulary: `measurements/MEASUREMENT_VOCABULARY_v0.1.md`. Board: `BOARD.md`.
 Claim ladder (the second threshold, internal hypothesis → public Soullab claim): `CLAIM_LADDER.md`.
-Inquiry findings: `inquiries/R<n>_*.md` — R8 ADJUDICATED 2026-09-06 (founder rulings in §8). R9 ADJUDICATED same day (founder rulings in §8). R10 ADJUDICATED same day. R11 ADJUDICATED same day at the level of direction. R12 opened.
+Inquiry findings: `inquiries/R<n>_*.md` — R8 ADJUDICATED 2026-09-06 (founder rulings in §8). R9 ADJUDICATED same day (founder rulings in §8). R10 ADJUDICATED same day. R11 ADJUDICATED same day at the level of direction. R12 run same day (proposed adjudication, awaiting ruling) — the foundational challenge pass R8–R12 is fully run.
 Encounter and projection (Class D interpretive foundation): `frameworks/encounter/ENCOUNTER_AND_PROJECTION_2026-09-06.md`.
 Foundational statement: `WHY_SOUL_LAB_2026-09-06.md` (founder; candidate canon; governing frame for /accounted-for and Soullab writing).
 Elemental Parallel Processing hypothesis (founder ruling, charter §11): `frameworks/elemental-experience/ELEMENTAL_PARALLEL_PROCESSING_HYPOTHESIS_2026-09-06.md` — the authoritative Elemental record; the two earlier Elemental files are history.
-Ledgers: `evidence/SOURCE_LEDGER.md` (v0.1) · `SOURCE_LEDGER_R8.md` · `SOURCE_LEDGER_R9.md` · `SOURCE_LEDGER_R10.md` · `SOURCE_LEDGER_R11.md` · `SOURCE_LEDGER_ELEMENTAL.md`.
+Ledgers: `evidence/SOURCE_LEDGER.md` (v0.1) · `SOURCE_LEDGER_R8.md` · `SOURCE_LEDGER_R9.md` · `SOURCE_LEDGER_R10.md` · `SOURCE_LEDGER_R11.md` · `SOURCE_LEDGER_R12.md` · `SOURCE_LEDGER_ELEMENTAL.md`.
 
 **Founder rulings 2026-09-06:** Synthesis v0.1 is *provisional authority, not doctrine*. P1–P10 stay CANDIDATE. The Elemental model stays hypothesis-level. No MAIA surface/prompt/skill change. R8–R12 grouping kept unless the research forces separation.
 

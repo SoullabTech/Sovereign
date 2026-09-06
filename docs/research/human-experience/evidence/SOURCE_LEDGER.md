@@ -43,15 +43,18 @@ CLASS       Field Study evidence class of what the source can carry for us:
 | 19 | Klein, *Human-like social cues on social responses towards text-based CAs — meta-analysis* | Humanities & Social Sciences Communications 12 · 2025 | 2 | A | R6 | small, heterogeneous effect of human-like cues | VERIFIED | no |
 | 20 | *Perceived anthropomorphism and social presence on AI interface UX: SR* | Int. J. HCI 42(12) · 2025/26 | 2 | A | R6 | social presence > superficial anthropomorphism | VERIFIED | no |
 | 21 | De Jaegher & Di Paolo, *Participatory sense-making: an enactive approach to social cognition* | Phenomenology & Cognitive Sciences 6(4) · 2007 | 4 (theory) | D | R6, "deeper architecture" | meaning arises in interaction dynamics | VERIFIED | no |
-| 22 | *From personalization to therapeutic continuity: framework for memory in AI-powered mental health systems* | JMIR AI (claimed) · 2026 (claimed) | — | — | **R7** | **episodic/semantic/pattern/state-responsive memory; current state may override long-term model** | **NOT_FOUND** — exact title and article id `e99950` return nothing | n/a |
+| 22 | **Jewell, McAlister, Deliberto, Wallis, Winns, Huberty**, *From personalization to therapeutic continuity: framework for memory in AI-powered mental health systems* — doi 10.2196/99950 · PMC13524310 | JMIR AI · 2026 | 7 (framework by the vendor of the illustrated product, Yuna / Fit Minded Inc) | B | R7 | proposes episodic/semantic/pattern/state-responsive; **override is risk-gated** (expressed hopelessness, intent, validated acute-risk indicators), narrower than v0.1's generalization | **LOCATED 2026-09-06 (R12 sweep D)** — earlier NOT_FOUND was a search miss | no |
 | 23 | Araujo & Bol, *From speaking like a person to being personal* | Computers in Human Behavior: Artificial Humans · 2024 (corrigendum 2025) | 1 | A | R7 | repeated personalized interaction changes trust/disclosure over time | VERIFIED | no |
 | 24 | Beike, Brandon, Cole, *Is sharing specific autobiographical memories a distinct form of self-disclosure?* | J. Exp. Psych.: General · 2016 | 1 | A | R7 | mentioning memories ≠ intimacy; context matters | VERIFIED | no |
 | 25 | Consumer App Studio — *Playbook* | consumerapp.studio (commercial) | 9 | — | Stage 5 comparative object | mechanism inventory only | VERIFIED (exists) | n/a — not evidence |
 
 ## Consequences for the synthesis (Jarvis reading, not founder ruling)
 
-1. **R7 is under-sourced.** Its four-memory-type distinction and the "current state may
-   override the long-term model" claim rest on [22] alone, and [22] cannot be found. [23] and
+1. **R7 is under-sourced — updated 2026-09-06.** [22] was located by R12 (Jewell et al., JMIR
+   AI 2026). It is a conceptual, vendor-authored framework, and its override clause is risk-gated
+   rather than general. R12 withdraws the four-type typology as a supported claim and restates
+   R7b in its precise form (member statement overrides; MAIA impression asks). See
+   `inquiries/R12_MEMORY_IDENTITY_TRANSFER_2026-09-06.md` §4, §6. [23] and
    [24] carry the *relational* claims (memory changes the relationship; mentioning ≠ intimacy)
    but not the *typology*. Until [22] is located by hand or replaced, the typology in R7 and the
    corresponding half of principle 8 are **Soullab interpretation**, not evidence. Note that the

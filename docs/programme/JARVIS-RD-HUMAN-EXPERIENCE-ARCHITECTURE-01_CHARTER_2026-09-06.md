@@ -807,3 +807,29 @@ it, contest it, revise it, and remain the author of their life.* The laboratory 
 of observing — and questioning — how Soullab itself participates in the shaping.
 
 PR #1239 remains draft · merge NOT authorized · deploy NOT authorized · MAIA runtime NO CHANGE.
+
+
+---
+
+## 21 · R12 run — the foundational challenge pass is fully run (2026-09-06)
+
+`docs/research/human-experience/inquiries/R12_MEMORY_IDENTITY_TRANSFER_2026-09-06.md`, ~70 sources.
+Proposed adjudication awaiting ruling. **v0.1 source [22] located** (Jewell et al., JMIR AI 2026,
+doi 10.2196/99950): a conceptual, vendor-authored framework whose override clause is **risk-gated**,
+narrower than v0.1 generalized it. Proposed: **P8 refined** (memory toward the person's named
+becoming, never verifying a negative self-view; selective ≠ forgetful); **R7a: the four-type
+typology withdrawn as a claim** — cognitive science treats episodic/semantic as a continuum,
+"state" as a retrieval modulator, "pattern" appears nowhere else, and typing memory at write-time
+loses accuracy to verbatim — with **authority × time, verbatim beneath derived memory** adopted as
+the working model (what the repository already does); **R7b supported in its precise form** — *the
+member's present statement overrides the historical model; MAIA's present impression does not, it
+asks* — because measured present state overrides clinicians' accumulated models while impressions
+degrade prediction; this is detect → ask → record with an evidence basis. **R12c:** the memory-as-
+amplifier risk has independent model-side support with a named mechanism (extraction stores the
+belief and discards the correction) and the required measurement is now specified; five memory
+design directions proposed as Episodic Phase 2 inputs, none authorized at runtime. **R12b: capacity
+transfer is a measurement programme, not a metric** — the brain-training rule: a gain on the
+practiced task is never evidence of a gain in life; no public transfer claim before a design with
+named transfer distance, active comparison, expectancy measured, response shift modeled, and the
+construct split by observability. U29–U33. Seven decisions in R12 §6.9, the last of which is to
+**close the foundational challenge pass and open Synthesis v0.2 as a founder act.**

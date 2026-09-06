@@ -26,29 +26,31 @@ distinct_to_room: a public evidence room rather than a member practice room; it 
 screenshot_desktop: docs/design/contracts/screenshots/accounted-for-desktop.png
 screenshot_mobile: docs/design/contracts/screenshots/accounted-for-mobile.png
 experience_verification: >
-  Walked 2026-09-06 (fifth revision, this branch — the four founder refinements
-  after the third and fourth inquiries, plus the non-neutrality concession) in
-  headless Chromium against a local `next dev` render at 1280×900 and 390×844
-  after a warm-up request, from a clean lockfile install. Observed: HTTP 200 at
-  both widths; exactly one H1; five part-markers in elemental order, each
-  once; the eyebrows The wager · Why Soul Lab · Who we are · What we are
-  testing · What we do not know · If we are wrong · Withheld each exactly once;
-  21 H2. Text presence checked on the render: the distributed participatory
-  inquiry with its two safeguards ("The member is not the specimen"; no
-  collective laboratory exists) under Who; the four kinds of truth (observed ·
-  research-supported · Soullab hypothesis · open question) under How; the
-  Elements as modes within every domain ("The Elements are not domains of
-  life") under What; the correction-and-re-attunement open question replacing
-  borrowed repair language under If; the withheld claim "That MAIA does not
-  shape you" in the founder's wording; the closing proposition ("the work
-  belongs to all of us") after the reader's test. Mobile document width 390px
-  at 390px. Desktop 1597px at 1280px — the pre-existing shared Table wrapper
-  overflow, untouched here and recorded rather than repaired. Screenshots are
-  the top 3000px (desktop) / 3600px (mobile) of the branch render, not
-  full-page. No navigation, interaction, auth, memory, prompt, cognition or
-  runtime path changes. Gates at commit: design-canon PASS, no-supabase PASS,
-  diff --check PASS, typecheck no-regression PASS (230 vs 239 baseline,
-  TypeScript 5.9.3 from lockfile).
+  Walked 2026-09-06 (sixth revision, this branch — the two memory lines revised
+  after the fifth inquiry: the memory-typology bullet under What we do not
+  know, and the memory-source sentence under What we are testing, now that the
+  synthesis's unlocatable source has been found and read as narrower than
+  claimed) in headless Chromium against a local `next dev` render at 1280×900
+  and 390×844 after a warm-up request, from a clean lockfile install.
+  Observed: HTTP 200 at both widths; exactly one H1; five part-markers in
+  elemental order, each once; the eyebrows The wager · Why Soul Lab · Who we
+  are · What we are testing · What we do not know · If we are wrong · Withheld
+  each exactly once; 21 H2. Text presence checked on the render: the typology
+  withdrawal proposal with the override rule ("what the person says now
+  overrides; what MAIA infers about now does not, it asks") under If; the
+  located-source sentence ("a conceptual paper by the maker of the product it
+  describes, whose central claim turned out narrower than the synthesis had
+  made it") under How; the fifth-revision items (two safeguards under Who, four
+  kinds of truth under How, "The Elements are not domains of life" under What,
+  the founder-worded withheld claim, the closing proposition) still present
+  once each. Mobile document width 390px at 390px. Desktop 1623px at 1280px —
+  the pre-existing shared Table wrapper overflow (was 1597px on the fifth
+  revision; the wrapper's width follows its content), untouched here and
+  recorded rather than repaired. Screenshots are the top 3000px (desktop) /
+  3600px (mobile) of the branch render, not full-page. No navigation,
+  interaction, auth, memory, prompt, cognition or runtime path changes. Gates
+  at commit: design-canon PASS, no-supabase PASS, diff --check PASS, typecheck
+  no-regression PASS (230 vs 239 baseline, TypeScript 5.9.3 from lockfile).
 ---
 
 # Accounted For — Experience Contract
