@@ -180,7 +180,12 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId, teamId }: {
   );
 }
 
-function InviteModal({ onClose }: { onClose: () => void }) {
+/* COLAB-BETA-01 R2 — the invite carries the Co-Lab the sidebar is showing.
+   Without it the API falls back to inference, whose fallback is the OLDEST
+   team: inviting a tester from the Beta Co-Lab would have placed them in the
+   original shared workspace. Role is fixed to 'member' here; promoting someone
+   is a separate, deliberate act in the team admin UI. */
+function InviteModal({ onClose, teamId }: { onClose: () => void; teamId: string | null }) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -195,7 +200,12 @@ function InviteModal({ onClose }: { onClose: () => void }) {
       const res = await fetch('/api/team/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), message: message.trim() || undefined }),
+        body: JSON.stringify({
+          email: email.trim(),
+          message: message.trim() || undefined,
+          teamId,
+          role: 'member',
+        }),
       });
       if (res.ok) {
         const d = await res.json();
@@ -392,7 +402,7 @@ export function TeamSidebar({ currentMemberId, currentTeamId: initialTeamId }: T
   return (
     <>
       {showInvite && (
-        <InviteModal onClose={() => setShowInvite(false)} />
+        <InviteModal onClose={() => setShowInvite(false)} teamId={teamId} />
       )}
 
       {showCreateChannel && (

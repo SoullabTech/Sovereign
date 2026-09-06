@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { resolveAdmission, admissionRefusalMessage } from '@/lib/auth/passkeyAdmission';
 import { createSession } from '@/lib/auth/serverSessions';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import {
@@ -68,12 +69,6 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 
-// Check if passkey is an admin passkey (always allowed)
-function isAdminPasskey(passkey: string): boolean {
-  const adminPrefixes = ['SOULLAB-', 'MAIA-', 'PIONEER-', 'FOUNDING-'];
-  return adminPrefixes.some(prefix => passkey.toUpperCase().startsWith(prefix));
-}
-
 // Safe query that returns empty result on table/column errors
 async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null; error?: string }> {
   try {
@@ -123,28 +118,36 @@ export async function POST(request: NextRequest) {
     // Preserve user's chosen casing for display, trim whitespace only
     const cleanUsername = username.trim();
 
-    // Validate passkey format for admin passkeys
-    if (!isAdminPasskey(normalizedPasskey)) {
-      console.log(`[MEMBERS] Invalid passkey format: ${normalizedPasskey}`);
-      return NextResponse.json(
-        { error: 'Invalid passkey format. Contact support for a valid passkey.' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
+    /* ADMISSION. ONE predicate, shared with /api/members/check.
 
-    // Check if passkey already registered
-    const existing = await safeQuery(
-      'SELECT id FROM members WHERE passkey = $1',
-      [normalizedPasskey]
-    );
+       Before this repair the gate here was `isAdminPasskey()` — a FORMAT check
+       standing in for authorization — and the invite lookup that followed was
+       advisory, with a comment saying an absent invite was "fine". Any string
+       beginning SOULLAB-/MAIA-/PIONEER-/FOUNDING- therefore registered with no
+       invitation at all. A real pending invite is now REQUIRED. */
+    const admission = await resolveAdmission(normalizedPasskey);
 
-    if (existing.rows.length > 0) {
+    if (admission.kind === 'existing_member') {
       console.log(`[MEMBERS] Passkey already registered: ${normalizedPasskey}`);
       return NextResponse.json(
         { error: 'This passkey has already been used. If this is you, try signing in instead.' },
         { status: 409, headers: corsHeaders }
       );
     }
+
+    if (admission.kind === 'refused') {
+      console.log(`[MEMBERS] Registration refused (${admission.reason}): ${normalizedPasskey}`);
+      /* An unreadable invite table is an outage on our side, not the caller's
+         error — everything else is a bad or spent credential. */
+      const status = admission.reason === 'invite_lookup_unavailable' ? 503 : 400;
+      return NextResponse.json(
+        { error: admissionRefusalMessage(admission.reason) },
+        { status, headers: corsHeaders }
+      );
+    }
+
+    /* The invite that admits this member; redeemed below, exactly once. */
+    const inviteId: string = admission.inviteId;
 
     // Check if username already taken (case-insensitive)
     const existingUsername = await safeQuery(
@@ -159,39 +162,6 @@ export async function POST(request: NextRequest) {
         { status: 409, headers: corsHeaders }
       );
     }
-
-    // Check invites table (optional - might not exist)
-    let inviterId: string | null = null;
-    let inviteId: string | null = null;
-
-    const inviteResult = await safeQuery(
-      `SELECT id, created_by, status, expires_at FROM invites WHERE passkey = $1`,
-      [normalizedPasskey]
-    );
-
-    if (!inviteResult.error && inviteResult.rows.length > 0) {
-      const invite = inviteResult.rows[0];
-
-      if (invite.status !== 'pending') {
-        return NextResponse.json(
-          { error: `This invite has already been ${invite.status}` },
-          { status: 400, headers: corsHeaders }
-        );
-      }
-
-      if (invite.expires_at && new Date(invite.expires_at as string) < new Date()) {
-        // Conditional guard: only expire if still pending (defensive, matches list route pattern)
-        await safeQuery('UPDATE invites SET status = $1 WHERE id = $2 AND status = $3', ['expired', invite.id, 'pending']);
-        return NextResponse.json(
-          { error: 'This invite has expired. Please request a new one.' },
-          { status: 400, headers: corsHeaders }
-        );
-      }
-
-      inviterId = invite.created_by as string | null;
-      inviteId = invite.id as string;
-    }
-    // If no invite found but it's an admin passkey, that's fine - continue
 
     // Hash password with bcrypt
     const passwordHash = await hashPassword(password);
@@ -227,9 +197,10 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
     console.log(`[MEMBERS] Successfully registered: ${cleanUsername} (${member.id})`);
 
-    // Try to update invite status (optional - might fail if table missing)
-    // Conditional WHERE prevents double-redemption race condition
-    if (inviteId) {
+    /* Redeem the invite that admitted this member. `inviteId` is no longer
+       optional: registration cannot reach here without one. The conditional
+       WHERE still prevents double redemption under a race. */
+    {
       const updateResult = await safeQuery(
         `UPDATE invites
          SET status = 'redeemed', redeemed_by = $1, redeemed_at = NOW()

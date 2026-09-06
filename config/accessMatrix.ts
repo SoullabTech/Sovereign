@@ -520,6 +520,18 @@ export const ACCESS_RULES: AccessRule[] = [
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
+  /* Invite API — the issuing side of member admission. Declared EXPLICITLY
+     rather than inheriting the permissive unmapped-route default (#717), which
+     had left create/list/revoke reachable with no session at all while each
+     took `memberId` from the request body or query string. `minTier: 'free'` is
+     the authentication boundary only: WHO may issue an invite stays with the
+     existing invites_remaining / cooling-period checks in the route, which are
+     ELIGIBILITY, not authentication. Do NOT infer `pro` from /maia/invites
+     being a pro page — production holds personal-tier members with invite
+     allowances, and changing who may invite is product policy, not this
+     boundary. */
+  { prefix: '/api/invites/', minTier: 'free', notes: 'Invite issuance API (create · list · revoke) — authenticated member required; the route derives identity from the session and never from a supplied member id. Eligibility (invites_remaining, cooling period) is enforced separately in the route.' },
+
   // MAIA trajectory substrate - AUTH-01-D4B edge containment.
   // These five handlers take member identity from caller-supplied `?memberId=` /
   // `body.memberId` and carried NO accessMatrix rule, so permissive mode admitted

@@ -58,12 +58,36 @@ function memberRow() {
   };
 }
 
+/**
+ * A pending, unexpired invite. Registration REQUIRES one since the 2026-09-06
+ * admission repair: a passkey's prefix decides its FORMAT, never its
+ * authorization. These fixtures previously supplied "invite lookup (none)" and
+ * still expected a 200 — that was the bypass, and it is now closed.
+ */
+const PENDING_INVITE = {
+  id: 'inv-1', status: 'pending', expires_at: null, created_by: 'inviter-1',
+  inviter_username: 'inviter', inviter_name: 'Inviter',
+};
+
+/**
+ * Dispatch on the SQL rather than on call order. The admission repair moved the
+ * invite lookup ahead of the username check, and positional fixtures broke on
+ * an ordering change that altered no behaviour they were asserting.
+ */
+function mockSql(opts: { member?: unknown[]; invite?: unknown[]; usernameTaken?: boolean } = {}) {
+  const { member = [], invite = [PENDING_INVITE], usernameTaken = false } = opts;
+  mockQuery.mockImplementation((sql: string) => {
+    if (/FROM members WHERE passkey/i.test(sql)) return Promise.resolve({ rows: member, rowCount: member.length });
+    if (/LOWER\(username\)/i.test(sql)) return Promise.resolve({ rows: usernameTaken ? [{ id: 'taken' }] : [], rowCount: usernameTaken ? 1 : 0 });
+    if (/FROM invites/i.test(sql)) return Promise.resolve({ rows: invite, rowCount: invite.length });
+    if (/INSERT INTO members/i.test(sql)) return Promise.resolve({ rows: [memberRow()], rowCount: 1 });
+    if (/UPDATE invites/i.test(sql)) return Promise.resolve({ rows: [], rowCount: 1 });
+    return Promise.resolve({ rows: [], rowCount: 0 });
+  });
+}
+
 function mockHappyPath() {
-  mockQuery
-    .mockResolvedValueOnce({ rows: [], rowCount: 0 })                  // passkey existence
-    .mockResolvedValueOnce({ rows: [], rowCount: 0 })                  // username existence
-    .mockResolvedValueOnce({ rows: [], rowCount: 0 })                  // invite lookup (none)
-    .mockResolvedValueOnce({ rows: [memberRow()], rowCount: 1 });      // INSERT ... RETURNING
+  mockSql();
   mockCreateSession.mockResolvedValue({ sessionToken: REAL_TOKEN, expiresAt: EXPIRES });
 }
 
@@ -96,12 +120,7 @@ describe('POST /api/members/register — session mint', () => {
   });
 
   it('preserves invite redemption (mint runs after the UPDATE invites)', async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })                                                              // passkey
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 })                                                              // username
-      .mockResolvedValueOnce({ rows: [{ id: 'inv-1', created_by: 'inviter-1', status: 'pending', expires_at: null }], rowCount: 1 }) // invite
-      .mockResolvedValueOnce({ rows: [memberRow()], rowCount: 1 })                                                   // INSERT
-      .mockResolvedValueOnce({ rows: [], rowCount: 1 });                                                             // UPDATE invites (redeem)
+    mockSql();
     mockCreateSession.mockResolvedValue({ sessionToken: REAL_TOKEN, expiresAt: EXPIRES });
 
     const res = await POST(req(NEW_BODY));
@@ -127,7 +146,7 @@ describe('POST /api/members/register — session mint', () => {
   });
 
   it('duplicate passkey still returns 409 and mints nothing (no enumeration change)', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [{ id: 'existing' }], rowCount: 1 }); // passkey already exists
+    mockSql({ member: [{ id: 'existing', username: 'testsoul', name: 'Test Soul', onboarded: false, onboarding_step: 'test-elemental' }] }); // passkey already registered
     const res = await POST(req(NEW_BODY));
     expect(res.status).toBe(409);
     expect(mockCreateSession).not.toHaveBeenCalled();
