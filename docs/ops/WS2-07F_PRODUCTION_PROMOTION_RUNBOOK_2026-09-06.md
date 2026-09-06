@@ -60,13 +60,16 @@ is still available without destroying a member act, because there is no member a
 boundary this record marks, and it closes the moment W3 of the acceptance walk creates the first
 event.
 
-### What the interval showed about the design
+### A design note about the interval — and its exact epistemic status
 
-Between the deploy and these reads, the state was unknown to us. Had the migration NOT run, the live
-surface would have degraded to *"Your standing could not be reached. Nothing has been changed."*
-with its controls disabled — never to a false "No standing taken." The unknown-vs-UNSET repair
-forced through source review did exactly what it was built to do in a situation nobody planned for.
-That is a note about the design, **not** a mitigation of the governance fact above.
+Between the deploy and these reads, the state was unknown to us. **Source inspection establishes the
+counterfactual failure posture: if the standing resource were unavailable, the client would render
+UNKNOWN with disabled controls rather than UNSET. This was NOT exercised by the observed production
+interval, because the table was present.**
+
+So this is a code inference, not runtime evidence, and it is written that way here as it is in the
+implementation witness. W8 of the acceptance walk is the witness that would actually establish it.
+It is a note about the design, **not** a mitigation of the governance fact above.
 
 ---
 
