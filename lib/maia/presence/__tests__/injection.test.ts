@@ -14,12 +14,19 @@ import { decideInjection } from '../injection';
  * test and should be replaced by one if a renderer is ever configured.
  */
 
+// ACCEPTANCE NUMBERING: shared with place.test.ts — see the note there. Grep
+// BOTH files for the next free number before adding a case.
+
 const oracleSource = fs.readFileSync(
   path.join(__dirname, '../../../../components/OracleConversation.tsx'),
   'utf8',
 );
 const discussSource = fs.readFileSync(
   path.join(__dirname, '../../../../components/reflections/DiscussWithMaia.tsx'),
+  'utf8',
+);
+const presenceSource = fs.readFileSync(
+  path.join(__dirname, '../../../../components/maia/presence/MaiaPresence.tsx'),
   'utf8',
 );
 
@@ -120,5 +127,70 @@ describe('ACCEPTANCE 3: the member is not moved', () => {
 
   it('the fallback navigation is reached only when presence cannot host', () => {
     expect(code(discussSource)).toMatch(/if \(presence\?\.canHost\)/);
+  });
+});
+
+describe('ACCEPTANCE 4: hosted reflection conversation stays inside its sheet', () => {
+  it('the presence host explicitly requests contained, text-only presentation', () => {
+    const presenceCode = code(presenceSource);
+    expect(presenceCode).toMatch(/voiceEnabled=\{false\}/);
+    expect(presenceCode).toMatch(/initialShowChatInterface=\{true\}/);
+    expect(presenceCode).toMatch(/presentationMode="contained"/);
+  });
+
+  it('text chat remains renderable when voice is disabled', () => {
+    expect(code(oracleSource)).toMatch(/\(voiceEnabled \|\| showChatInterface\)/);
+  });
+
+  it('contained mode establishes a local fixed-position containing block', () => {
+    const oracleCode = code(oracleSource);
+    expect(oracleCode).toMatch(/isContainedPresentation \? 'h-full min-h-0' : 'min-h-screen'/);
+    expect(oracleCode).toMatch(/transform: 'translateZ\(0\)'/);
+  });
+
+  it('contained transcript and composer use host-relative widths', () => {
+    const oracleCode = code(oracleSource);
+    expect(oracleCode).toMatch(/\? 'top-2 left-0 right-0 w-full opacity-100'/);
+    expect(oracleCode).toMatch(/\? 'inset-x-0' : 'left-14 right-0 sm:inset-x-0'/);
+  });
+});
+
+describe('ACCEPTANCE 5: an empty 200 is a protocol failure, not a MAIA sentence (F1)', () => {
+  const oracleCode = code(oracleSource);
+
+  it('no placeholder stands in for a response that never came', () => {
+    // The route persists the assistant half only when sovereignText exists, so
+    // a generation that produced nothing leaves the member's utterance standing
+    // ALONE by design. The old `|| "I'm here. What wants your attention?"` tail
+    // fabricated exactly that turn: shown to the member, absent from
+    // conversation_turns, indistinguishable from a real reply.
+    expect(oracleCode).not.toMatch(/What wants your attention\?'\)/);
+    expect(oracleCode).toMatch(/responseData\.message \|\| ''/);
+  });
+
+  it('the empty case bails instead of rendering an oracle message', () => {
+    const bail = oracleCode.slice(oracleCode.indexOf('if (!cleanedMaiaText.trim())'));
+    expect(bail.slice(0, 400)).toMatch(/setInputSubmitError/);
+    expect(bail.slice(0, 400)).toMatch(/return;/);
+  });
+
+  it('the member turn is not mislabelled as undelivered', () => {
+    // It WAS delivered: a 200 came back, and the route makes the member turn
+    // durable at acceptance, before generation. Only the response is missing —
+    // so no markFailed here, and the banner says exactly that.
+    const bail = oracleCode.slice(
+      oracleCode.indexOf('if (!cleanedMaiaText.trim())'),
+      oracleCode.indexOf('responseText = cleanedMaiaText;'),
+    );
+    expect(bail).not.toMatch(/markFailed/);
+    expect(oracleSource).toMatch(/Your message was received, but no response came back/);
+  });
+
+  it('the ruled network-mode presence fallback is left untouched', () => {
+    // Narrowness guard: generatePresenceFallback is a separate, documented,
+    // banner-mitigated design (it flags isFallback). This repair must not have
+    // quietly removed it while removing the unflagged placeholder.
+    expect(oracleCode).toMatch(/generatePresenceFallback\(/);
+    expect(oracleCode).toMatch(/isFallback: true/);
   });
 });
