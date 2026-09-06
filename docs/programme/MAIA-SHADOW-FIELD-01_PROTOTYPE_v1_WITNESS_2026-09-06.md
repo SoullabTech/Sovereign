@@ -614,23 +614,26 @@ HEAD   8b0605f64
 port   3011
 ```
 
-### The hazard: port 3011 resolves to two different systems
+### The hazard: three addresses, one of which is the prototype
 
 An old SSH port-forward is bound specifically to **`127.0.0.1:3011`** and points at
-**minisforum**. The local Next prototype server also listens on 3011. So the address decides
-which machine answers:
+**minisforum**. The local Next prototype server also listens on 3011. And `soullab.life` is
+minisforum's public face. So the address alone decides which system answers:
 
 ```text
-http://127.0.0.1:3011   → SSH forward → minisforum          ✗ NOT the prototype
-http://[::1]:3011       → local Next server at 8b0605f64    ✓ the prototype
+soullab.life            production minisforum        ✗ Shadow Field absent / 404
+http://127.0.0.1:3011   SSH forward to minisforum    ✗ production masquerading as localhost
+http://[::1]:3011       local Shadow worktree        ✓ correct P8 subject (8b0605f64)
 ```
 
-**Walk the Shadow Field only at `http://[::1]:3011`.** Anyone using the IPv4 address would be
-looking at a remote machine while believing they were looking at the prototype — and could
-record walk evidence against a system that has never contained the Shadow Field. That is a
-provenance failure of exactly the kind this record exists to prevent, and it would be
-invisible: the page would simply not have the door, and the natural conclusion would be that
-the repair failed.
+**Walk the Shadow Field only at `http://[::1]:3011`.** The two wrong targets are both
+minisforum, which has never contained the Shadow Field: the branch is unmerged, undeployed,
+and migration `20260906000002` is unapplied there. A walk against either would record evidence
+against the wrong system — and the failure would be invisible in the worst way, because the
+page would simply not have the door and the natural conclusion would be that the repair
+failed. `soullab.life/maia/shadow-field` returning *Path Not Found* is that host answering
+correctly, not a defect. (Observed 2026-09-06, before the founder walk; no code, state, or
+gate change followed.)
 
 It is named here rather than left in conversation because the same trap will be waiting the
 next time anyone walks a local prototype on a forwarded port.
