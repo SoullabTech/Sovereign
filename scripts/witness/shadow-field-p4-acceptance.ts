@@ -17,6 +17,9 @@
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { decideKeep } from '../../lib/maia/shadowField/keepDecision.ts';
+import {
+  openFieldSession, verifyFieldSession, closeFieldSession, __resetFieldSessionsForTest,
+} from '../../lib/maia/shadowField/fieldSession.ts';
 
 /**
  * The database is driven through psql rather than a client library — this container has no
@@ -165,16 +168,46 @@ async function main() {
   else bad('7b. a missing Field session did not fail closed', JSON.stringify(d7b));
 
   // ── 8. existing atom types render identically ────────────────────────────
-  const spont = sql(`INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body, return_preference)
-     VALUES (${lit(member.id)},'spontaneous',NULL,'A kept line','member text','member_pulled') RETURNING id`)[0];
-  const idea = sql(`INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body)
-     VALUES (${lit(member.id)},'idea',${lit(member.id)},'An idea','ignored body') RETURNING id`)[0];
+  // Fixtures must satisfy the same S5 atom mint gate the Field writer does — any real
+  // writer of a new atom must attest posture and how it was generated.
+  const spont = sql(`INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body, return_preference, posture_at_creation, generated_by)
+     VALUES (${lit(member.id)},'spontaneous',NULL,'A kept line','member text','member_pulled','normal','member-gesture') RETURNING id`)[0];
+  const idea = sql(`INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body, posture_at_creation, generated_by)
+     VALUES (${lit(member.id)},'idea',${lit(member.id)},'An idea','ignored body','normal','member-gesture') RETURNING id`)[0];
+
+  // The gate itself: an unattested atom is refused. This is what P4-C2 was missing.
+  try {
+    sql(`INSERT INTO member_memory_atoms (member_id, source_type, source_id, title, body, return_preference)
+         VALUES (${lit(member.id)},'shadow_field',NULL,'unattested','x','member_pulled') RETURNING id`);
+    bad('0. the S5 atom mint gate did NOT refuse an unattested atom');
+  } catch {
+    ok('0. S5 mint gate refuses an unattested atom — the contract the Field writer must satisfy');
+  }
   const back8 = sql(`SELECT ${loaderColumns()} FROM member_memory_atoms
      WHERE id IN (${lit(spont.id)}, ${lit(idea.id)})`);
   const s = back8.find((r: any) => r.source_type === 'spontaneous');
   const i = back8.find((r: any) => r.source_type === 'idea');
   if (s?.body === 'member text' && i && i.source_type === 'idea') ok('8. spontaneous and sourced atoms are unaffected by the change');
   else bad('8. an existing atom type changed shape');
+
+  // ── P5-C1. Leaving actually ends Field conversation authority ────────────
+  __resetFieldSessionsForTest();
+  const sitting = openFieldSession(member.id, false);
+  if (verifyFieldSession(sitting.token, member.id)) ok('9. after Enter, the sitting verifies — a turn may proceed');
+  else bad('9. a fresh sitting did not verify');
+
+  closeFieldSession(sitting.token);
+  if (!verifyFieldSession(sitting.token, member.id)) ok('10. after Leave, the SAME token no longer verifies — the turn refuses (P5-C1)');
+  else bad('10. a closed sitting still verifies — Leave would not be real');
+
+  const other = openFieldSession(member.id, true);
+  if (!verifyFieldSession(other.token, 'a0000000-0000-4000-8000-000000000000')) ok("11. another member cannot use this member's sitting");
+  else bad('11. a foreign member could verify the sitting');
+
+  // A closed sitting also refuses the keep — the same wall, one decision.
+  const dClosed = decideKeep(claim, verifyFieldSession(sitting.token, member.id));
+  if (!dClosed.allow && dClosed.reason === 'no_field_session') ok('12. a keep after Leave is refused');
+  else bad('12. a keep after Leave was allowed', JSON.stringify(dClosed));
 
   exec(`DELETE FROM member_memory_atoms WHERE member_id=${lit(member.id)}`);
   exec(`DELETE FROM members WHERE id=${lit(member.id)}`);

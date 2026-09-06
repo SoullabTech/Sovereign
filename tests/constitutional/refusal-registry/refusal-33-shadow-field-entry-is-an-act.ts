@@ -8,6 +8,13 @@ import type { RefusalCheck } from './harness';
  * may activate the Field or admit a shadow frame. The route requires an explicit
  * member-authored activation act and never inspects `message` to decide that the Field
  * is open. Leaving is one gesture that produces no closing interpretation and no keep prompt.
+ *
+ * P5-C1 (founder, 2026-09-06). An earlier version of this check was too weak: it proved
+ * that exit short-circuits before the model and that an activation act is required, but
+ * never that a CLOSED sitting makes a subsequent turn impossible. It did not, and replaying
+ * an old activation object with a dead token still reached the model. Leaving must end
+ * Field conversation authority, so a live server-held sitting is now required for every
+ * non-exit turn, with no client Sanctuary fallback.
  */
 
 const ROUTE = 'app/api/maia/shadow-field/route.ts';
@@ -60,6 +67,31 @@ export const check: RefusalCheck = {
       io.pass('a turn without a member activation act is refused');
     } else {
       io.fail('the route does not require a member activation act');
+    }
+
+    // P5-C1: a live server-held sitting is required to reach the model at all.
+    const gateIdx = route.indexOf('verifyFieldSession');
+    const refuseIdx = route.indexOf('no_field_session');
+    const modelCall = route.indexOf('anthropic.messages.create');
+    if (gateIdx > 0 && refuseIdx > 0 && refuseIdx < modelCall) {
+      io.pass('a turn without a live server-held sitting refuses before the model call');
+    } else {
+      io.fail('a closed or missing sitting can still reach the model — Leave is not real');
+    }
+
+    // No client Sanctuary fallback on the turn path.
+    if (/const sanctuary = field\.sanctuary/.test(route) && !/body\.sanctuary/.test(route)) {
+      io.pass('turn Sanctuary comes from the server sitting, with no client fallback');
+    } else {
+      io.fail('the turn route still falls back to a client-asserted Sanctuary');
+    }
+
+    // Exit is ownership-bound: only a member's own verified sitting is closed.
+    const exitBlock = route.slice(route.indexOf('body.exit === true'), route.indexOf('isMemberActivation(body.activation)'));
+    if (/verifyFieldSession/.test(exitBlock) && /if \(leaving\)/.test(exitBlock)) {
+      io.pass('exit closes only the member\'s own verified sitting');
+    } else {
+      io.fail('exit can close a sitting without verifying ownership');
     }
 
     // Exit: immediate, fixed text, before any model call, nothing written.

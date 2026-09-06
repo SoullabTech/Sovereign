@@ -19,6 +19,12 @@ export const dynamic = 'force-dynamic';
  *   return_preference  'member_pulled'  — not ambiently retrieved by the prompt loader
  *   provenance / facilitator_id / epistemological_status  untouched (NULL)
  *
+ * S5 atom attestation (P4-C2). `member_memory_atoms` carries a mint gate
+ * (`s5_require_atom_attestation`, migration 20260718000001): a new atom must be
+ * posture 'normal' and must say how it was generated. A Shadow Field atom is exactly what
+ * `member-gesture` names — the member performed a keep act — so it mints with the same
+ * attestation as the canonical member Keep writer. No new provenance semantics.
+ *
  * Withdrawal never reaches this route: leaving is handled in the turn route, which closes
  * the Field session and returns before any keep is offered (L6, F14).
  */
@@ -57,8 +63,10 @@ export async function POST(request: NextRequest) {
 
   const result = await query<{ id: string; source_type: string }>(
     `INSERT INTO member_memory_atoms
-       (member_id, source_type, source_id, title, body, return_preference)
-     VALUES ($1, 'shadow_field', NULL, $2, $3, 'member_pulled')
+       (member_id, source_type, source_id, title, body, return_preference,
+        posture_at_creation, generated_by)
+     VALUES ($1, 'shadow_field', NULL, $2, $3, 'member_pulled',
+             'normal', 'member-gesture')
      RETURNING id, source_type`,
     [session.memberId, decision.title, decision.body],
   );

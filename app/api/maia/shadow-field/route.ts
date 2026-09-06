@@ -16,6 +16,11 @@ export const dynamic = 'force-dynamic';
  * participate in it. The exclusion is an import-graph fact, not a runtime discipline.
  * Safety, identity and transport are NOT excluded (D6 amendment).
  *
+ * LEAVING ACTUALLY ENDS IT (L6, F14 — P5-C1). Every non-exit turn requires a LIVE
+ * server-held sitting. Closing the sitting therefore ends Field conversation authority:
+ * replaying an old activation object with a closed token cannot reach the model. The
+ * activation act alone is not sufficient — it never was meant to be a bearer token.
+ *
  * ENTRY IS AN ACT, NOT A MATCH (L1, F1, F2). This route requires an explicit
  * member-authored activation act on every turn. It never inspects message text to decide
  * whether the Field is active, which movement applies, or what to say about the member.
@@ -90,7 +95,12 @@ export async function POST(request: NextRequest) {
   if (body.exit === true) {
     // Deactivation is server-side, not merely a client state change (P4-C1). After this
     // the token is dead: further turns and any keep attempt refuse.
-    closeFieldSession((body as Record<string, unknown>).fieldToken);
+    //
+    // Ownership-bound: a member may close only their own verified sitting. An unverified
+    // token closes nothing — and the acknowledgement is identical either way, so this
+    // endpoint cannot be used to probe whether someone else's sitting exists.
+    const leaving = verifyFieldSession((body as Record<string, unknown>).fieldToken, session.memberId);
+    if (leaving) closeFieldSession(leaving.token);
     return NextResponse.json({ text: SHADOW_FIELD_EXIT_TEXT, fieldActive: false });
   }
 
@@ -107,13 +117,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // A LIVE server-held sitting is required to think in the Field at all (P5-C1). No
+  // fallback: an unknown, expired, foreign or closed token refuses. This is what makes
+  // Leave real — after it, this branch is the wall.
+  const field = verifyFieldSession((body as Record<string, unknown>).fieldToken, session.memberId);
+  if (!field) {
+    return NextResponse.json(
+      {
+        refused: true,
+        reason: 'no_field_session',
+        text: 'The Shadow Field opens only when you choose to enter it.',
+      },
+      { status: 409 },
+    );
+  }
+
   const movement: ShadowMovement = isMovement(body.movement) ? body.movement : 'encounter';
 
-  // Sanctuary posture for the prompt comes from the server-held sitting when there is one.
-  // The client's assertion is a fallback for the prompt only, and can never permit a write
-  // — persistence is decided in keep/route.ts from server state alone (P4-C1).
-  const field = verifyFieldSession((body as Record<string, unknown>).fieldToken, session.memberId);
-  const sanctuary = field ? field.sanctuary : body.sanctuary === true;
+  // Sanctuary comes from the server sitting. There is no client fallback (P5-C1).
+  const sanctuary = field.sanctuary;
   const message = typeof body.message === 'string' ? body.message.trim() : '';
   if (!message) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

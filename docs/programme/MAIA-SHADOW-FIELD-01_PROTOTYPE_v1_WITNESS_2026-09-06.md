@@ -319,3 +319,108 @@ P8                  READY — awaits the founder walk
 MIGRATION           applied to the isolated prototype DB only; production NOT authorized
 MERGE · DEPLOY      NOT AUTHORIZED
 ```
+
+---
+
+## 8 · P5-C1 and P4-C2 — founder stop before the walk, 2026-09-06
+
+Both defects were real, both were mine, and the green gates did not detect either. The room
+looked ready; the substrate caught two authority failures before a founder experience could
+have been mistaken for acceptance.
+
+### P5-C1 — Leave did not end Field conversation authority
+
+The turn route closed the server sitting on `exit`, but non-exit turns did not *require* one.
+It called `verifyFieldSession`, and on failure fell back to `body.sanctuary` and continued to
+the model. So replaying an old client activation object with a closed token still reached
+MAIA. The activation act was doing work it was never meant to do — acting as a bearer token.
+
+**Fixed.** Every non-exit turn now requires a live server-held sitting and refuses with
+`no_field_session` **before** the model call. There is no client Sanctuary fallback: turn
+posture is `field.sanctuary` and nothing else. Exit is ownership-bound — a member closes only
+their own verified sitting, and the acknowledgement is identical either way, so the endpoint
+cannot be used to probe whether someone else's sitting exists.
+
+**R33 was too weak, exactly as ruled.** It proved exit short-circuits before the model and
+that an activation act is present, but never that a *closed* sitting makes a subsequent turn
+impossible. It now asserts the live-sitting gate before the model call, the absence of a
+client Sanctuary fallback, and ownership-bound exit — and the acceptance run proves the
+lifecycle behaviourally (checks 9–12).
+
+### P4-C2 — the keep INSERT violated the atom mint contract
+
+`member_memory_atoms` carries an S5 mint gate (`s5_require_atom_attestation`, migration
+`20260718000001`): a new atom must be `posture_at_creation = 'normal'` and must state a
+mintable `generated_by`. The Field writer supplied neither, so the exact route INSERT is
+**refused** by the current schema.
+
+**Fixed.** The Field atom now mints with the same attestation as the canonical member Keep
+writer — `posture_at_creation = 'normal'`, `generated_by = 'member-gesture'` — which is
+precisely what a keep act is. No new provenance semantics; `shadow_field_member_placed`
+stands unchanged.
+
+### Correction to the earlier 11/11 claim
+
+That run proved the new source-type behaviour against **the schema it built**, and that
+schema did not include the S5 atom-attestation contract. It was a partial migration
+substrate, and the claim should have been scoped to it. The current run applies the S5
+substrate and the gate is armed — check 0 below proves the gate refuses an unattested atom,
+which is the contract the Field writer must satisfy and previously did not.
+
+### Acceptance, rerun against the current atom contract
+
+Prototype database rebuilt from: `20260103000001_members` · `015_conversation_turns` ·
+`20260521000001_member_memory_atoms` · `20260523000001` · `20260524000002` ·
+`20260624000001` · `20260624000002` · `20260115000010_episodic_memories` ·
+`20260316000001_participatory_reality_themes` · **`20260718000001_s5_provenance_substrate`** ·
+`20260802000002_capsule_field_declaration` · `20260906000002_shadow_field_atom_source_type`.
+Confirmed armed: `s5_require_atom_attestation_trigger` on `member_memory_atoms`.
+
+```
+node --experimental-strip-types scripts/witness/shadow-field-p4-acceptance.ts
+  0.  S5 mint gate refuses an unattested atom                                  PASS
+  1.  normal explicit keep → exactly one shadow_field row                      PASS
+  2.  round-trips as shadow_field with member body intact                      PASS
+  3.  return_preference is member_pulled                                       PASS
+  4.  a MAIA possibility is refused, zero rows                                 PASS
+  5.  proposed wording without an acceptance act is refused                    PASS
+  5b. proposed wording IS keepable once explicitly accepted                    PASS
+  6.  Sanctuary refuses the keep at the persistence boundary                   PASS
+  7.  forged non-Sanctuary claim refused, zero rows (P4-C1)                    PASS
+  7b. unknown/expired/closed sitting fails closed                              PASS
+  7.  schema refuses practitioner/system authority on a shadow_field atom      PASS
+  8.  spontaneous and sourced atoms are unaffected by the change               PASS
+  9.  after Enter, the sitting verifies — a turn may proceed          (P5-C1)  PASS
+  10. after Leave, the SAME token no longer verifies — the turn refuses        PASS
+  11. another member cannot use this member's sitting                          PASS
+  12. a keep after Leave is refused                                            PASS
+  16 passed · 0 failed
+```
+
+The prototype cluster is disposable and lives only in this container. The chain above
+rebuilds it; production was never touched and remains unauthorized.
+
+### Gates after the corrections
+
+```
+shadow-01-gates.ts   R32 · R33 · R34 ALL GREEN — 31 passed · 0 failed · 0 warned
+p4-acceptance        16 passed · 0 failed (current atom contract, mint gate armed)
+npm run typecheck    RED on the same two tsconfig.ship.json:3 toolchain deprecations only.
+                     NOT rebaselined.
+```
+
+### What this says about the method
+
+Three times now a check has been wrong before it was right, and twice a claim of mine has
+been stronger than the evidence — the client-trusted Sanctuary, and an acceptance run scoped
+to a substrate that did not carry the contract it was implicitly claiming to satisfy. The
+gates are worth what they test, and the founder stop is the instrument that has caught what
+they did not.
+
+```text
+P0 P1 P2 P3 P5   GREEN
+P4               GREEN (P4-C2 minted; 16/16 against the current contract)
+P6 P7            RERUN GREEN — 31 passed · 0 failed
+P8               READY — awaits the founder walk
+MERGE · DEPLOY · PRODUCTION DB   NOT AUTHORIZED
+```

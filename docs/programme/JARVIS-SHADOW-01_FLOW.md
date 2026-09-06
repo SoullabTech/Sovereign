@@ -18,7 +18,7 @@ constitute: CLOSED / RATIFIED
 design_stage: CLOSED / ACCEPTED
 claim_state: DESIGNED · NOT LIVE
 hard_stop: CROSSED   # explicit founder act 2026-09-06
-prototype: OPEN — P0–P7 ALL GREEN (P4-C1 server-authoritative Sanctuary; room surface built; 28 gate checks + 11 DB acceptance checks green); P8 ready for the founder walk
+prototype: OPEN — P0–P7 ALL GREEN after P5-C1 (Leave ends turn authority) and P4-C2 (S5 atom attestation); 31 gate checks + 16 DB acceptance checks against the current atom contract; P8 ready for the founder walk
 witness: HOLD
 promote: HOLD
 runtime: UNCHANGED
@@ -30,7 +30,7 @@ deploy: NOT AUTHORIZED
 maia_runtime_change: NOT AUTHORIZED
 current_node: PROTOTYPE / P8 ready
 next_possible_act: the founder prototype walk (P8), including the F16 adversarial specimen
-last_state_change: 2026-09-06 (P4-C1 server-authoritative Sanctuary + walkable room; gates 28/0, DB acceptance 11/0)
+last_state_change: 2026-09-06 (P5-C1 + P4-C2 corrections; gates 31/0, acceptance 16/0 with the S5 mint gate armed)
 ```
 
 ```text
