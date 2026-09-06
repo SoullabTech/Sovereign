@@ -449,7 +449,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/practitioners/', minTier: 'pro', notes: 'Practitioner onboarding/signup' },
 
   // Partner program
-  { prefix: '/partners/', minTier: 'pro', rolesAnyOf: ['partner'], notes: 'Partner onboarding' },
+  // The '/partners/' rule was removed when the only route beneath it — the
+  // orphaned Partners Prelude surface — was retired. Partner portals live under
+  // the separate '/partner/' (singular) rule above; nothing else is affected.
 
   // Supervision
   { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
