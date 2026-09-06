@@ -287,3 +287,45 @@ DISCOVER   COMPLETE · READ · nothing WALKED · nothing repaired
 NEXT       founder acceptance → FALSIFY
 NOT        any code
 ```
+
+---
+
+## 12 · Founder acceptance and dispositions (2026-09-06) — CLOSED / ACCEPTED
+
+> "DISCOVER accepted. The evidence is sufficient to close that stage and open FALSIFY."
+
+The dispositions below are **governance rulings about what may travel forward into the Field**,
+not instructions to alter runtime. Runtime is unchanged. The live Shadow Guardian is
+**preserved intact as the strongest falsification specimen**; any production-safety
+containment of it would be a separate, narrowly bounded act outside SHADOW-01, never blended
+into this inquiry.
+
+| Prior art / behavior | Ruling | Reason (founder) |
+|---|---|---|
+| Member-chosen Journal **Shadow Work** surface | **INHERIT** | Correct topology for the Dedicated entrance: member initiates; no covert inference; no persistence. Its lack of intelligence is an implementation gap, not a conceptual defect. |
+| Open-ended, non-scored questioning inside `shadowWorkFlows.ts` | **INHERIT** | Compatible with accompaniment and member interpretive authority. Inherit the conversational form, not the surrounding selection machinery. |
+| System-selection mechanisms in `shadowWorkFlows.ts` | **QUARANTINE** | Whether MAIA may ever infer that shadow inquiry could be useful is precisely a FALSIFY question. Do not inherit automatic selection as-is. |
+| Astrological-house "pathological expressions" | **QUARANTINE** | Astrology may remain a symbolic lens, but pathology-language and typological declaration require adjudication before reuse. |
+| Live keyword-triggered Shadow Guardian escalation | **QUARANTINE** | The central adverse specimen: intelligence invoking a psychological frame without member consent or visibility. No new Shadow Field may depend on it. |
+| Guardian statement that the member "is encountering shadow material" | **RETIRE** | That declarative epistemic move does not enter the new Field. MAIA may eventually *wonder, offer, ask or hypothesize*; it does not secretly establish the interpretation as fact. |
+| "Projection … reveals disowned parts of self" as injected doctrine | **RETIRE** | A potentially useful depth-psychological hypothesis converted into an invisible universal assertion. The doctrine may be discussable; the hidden certainty is not inheritable. |
+| Trigger vocabulary as sufficient evidence of shadow state | **RETIRE** | "Avoid", "pattern", "dark" cannot function as psychological classification. Signals may someday support an invitation, not a diagnosis or state assignment. |
+| `shadow-integration-space` nonexistent offered tool | **RETIRE** | A dangling capability claim with no constitutional value. A future surface arises from the new architecture, not from this ghost reference. |
+| `ShadowIntegrationTracker` progress/achievement model | **RETIRE** | The assumption that shadow integration is a scalar developmental achievement conflicts with the accompaniment architecture at a deeper level than implementation. |
+| Tracker statuses, integration flag, rates and trends | **QUARANTINE** | Do not reuse or expand. Do not delete tables or data during this inquiry; disposition follows constitution and migration review. |
+| `shadow-insight.ts` design principle ("Never exposed to user, shapes agent's intuitive responses") | **RETIRE as a design principle** | Exactly the epistemic structure the new inquiry has to replace. |
+| `shadow-insight.ts` code itself | **QUARANTINE** | Dead code need not be touched during FALSIFY; delete/repurpose follows CONSTITUTE. |
+| Always-running shadow elemental voice | **QUARANTINE** | Produces a hidden representation even though it does not influence the prompt today. Whether transient private cognition of this sort is permissible is unresolved. |
+| Existing `agent_runs` shadow labels/data | **QUARANTINE** | Preserve as evidence; do not elevate into member truth, memory, scoring, or future Shadow Field state. |
+
+**The distinction the rulings turn on (founder):** *we are not banning MAIA from having
+hypotheses. We are rejecting the architecture in which an invisible psychological hypothesis
+silently becomes an operative fact about the person.* That distinction is what FALSIFY tests.
+
+```text
+DISCOVER     CLOSED / ACCEPTED 2026-09-06
+FALSIFY      OPEN — record: MAIA-SHADOW-FIELD-01_FALSIFY_2026-09-06.md
+CONSTITUTE   HOLD
+PROTOTYPE    HOLD
+RUNTIME      UNCHANGED
+```
