@@ -55,6 +55,11 @@
 -- (record format: spec §"Record format per item").
 
 \set ON_ERROR_STOP off
+-- Acceptance condition (founder 2026-09-06): read-only ENFORCED, not merely intended. Every
+-- statement below runs in its own read-only transaction; a write would fail here even if one
+-- were present. Verified on acceptance: 59 SELECT · 1 WITH · 1 SHOW · 0 DDL/DML.
+SET default_transaction_read_only = on;
+SHOW default_transaction_read_only;
 \set QUIET on
 \pset footer off
 \set QUIET off
