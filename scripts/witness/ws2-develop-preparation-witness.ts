@@ -163,6 +163,31 @@ async function main() {
           WHERE draft_id = $1 ORDER BY position ASC`, [now.id]);
       const sourceIds = await query<{ id: string }>(
         `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
+      const flattened = sections.rows.map((r) => r.text).join('');
+      row('source sections', sourceIds.rows.length);
+      row('section_addressable_at', now.section_addressable_at ? now.section_addressable_at.toISOString() : 'null');
+      row('flattened digest', sha256(flattened).slice(0, 16));
+      row('draft content digest', sha256(now.content).slice(0, 16));
+
+      check('the draft is section-addressable', now.section_addressable_at !== null);
+      check('every Source section has a draft section',
+        sections.rows.length === sourceIds.rows.length,
+        `${sections.rows.length} vs ${sourceIds.rows.length}`);
+      check('every draft section carries its Source provenance',
+        sections.rows.every((r) => r.source_section_id !== null));
+      check('the Source ids represented are exactly the Source ids',
+        new Set(sections.rows.map((r) => r.source_section_id)).size === sourceIds.rows.length
+        && sections.rows.every((r) => sourceIds.rows.some((sr) => sr.id === r.source_section_id)));
+      check('positions are contiguous from zero',
+        sections.rows.every((r, i) => r.position === i));
+
+      /* ⛔ THE PROMISE THE CONVERSION MADE. Not "close", not "equivalent":
+         the sections must reconstruct the draft byte for byte.
+         `assertRoundTrip` enforces it inside the transaction; this proves it
+         survived. */
+      check('the sections flatten to the draft exactly', flattened === now.content,
+        `${flattened.length} vs ${now.content.length} chars`);
+
       /* ⛔ ASSERT THE STATE, NOT THE ROUTE IT CAME BY. This used to look up a
          revision by the note `Section conversion` and fail when none existed —
          which is every Work converted before 2026-09-06, including the one
@@ -203,6 +228,10 @@ async function main() {
          partition over some other topology alike. Named here so the record
          carries the claim rather than a consequence of it. */
       const partition = rev?.section_partition ?? [];
+      /* Both counts, side by side. Set equality and order already prove the
+         match; printing the pair keeps the production record auditable by eye
+         rather than reconstructed from three separate lines. */
+      row('draft sections', sections.rows.length);
       row('partition entries', partition.length);
       check('the partition names every draft section',
         partition.length === sections.rows.length,
