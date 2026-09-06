@@ -245,3 +245,73 @@ describe('D6 · only the authenticated member route can reach the standing write
     expect(importers).toContain(intruder);
   });
 });
+
+/**
+ * THE TABLE ITSELF HAS ONE DOOR.
+ *
+ * The import allowlist above proves who may reach `standing/store.ts`. It does
+ * NOT prove that standing is unreachable, because nothing stopped any module
+ * from importing the generic `query` and naming the table directly:
+ *
+ * ```text
+ * D5  a MAIA helper      → generic query → SELECT … FROM the standing table
+ * D6  a background job   → generic query → INSERT INTO the standing table
+ * ```
+ *
+ * Neither needs the store. So the companion invariant is stated over the TABLE
+ * NAME in executable source: in `app/` and `lib/`, only the standing store may
+ * name it. Tests are excluded — they are not the running program, and the gates
+ * themselves must be able to say the name.
+ *
+ * Comments are stripped first: this lane's modules discuss the table at length,
+ * and a check that counted prose would fail for the wrong reason.
+ */
+describe('D5/D6 · the standing table is nameable in exactly one runtime module', () => {
+  const TABLE = 'developmental_observation_standing_events';
+
+  /** Every executable file under lib/ and app/, tests excluded. */
+  function runtimeFiles(read: Reader, extra: string[] = []): string[] {
+    const files: string[] = [...extra];
+    const walkDir = (rel: string): void => {
+      const abs = join(ROOT, rel);
+      if (!existsSync(abs)) return;
+      for (const entry of readdirSync(abs)) {
+        const child = `${rel}/${entry}`;
+        if (statSync(join(ROOT, child)).isDirectory()) { if (entry !== '__tests__') walkDir(child); }
+        else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) files.push(child);
+      }
+    };
+    walkDir('lib');
+    walkDir('app');
+    return files.filter((rel) => (read(rel) ?? '').includes(TABLE));
+  }
+
+  it('no runtime module outside the store names the standing table', () => {
+    expect(runtimeFiles(realReader)).toEqual([join(STANDING_DIR, 'store.ts')]);
+  });
+
+  /* THE GATE, FALSIFIED — both directions, and neither imports the store. */
+  it('FALSIFIER · reports a raw SELECT of the standing table from a cognition module', () => {
+    const intruder = 'lib/manuscript/ask/standingPeek.ts';
+    const read = overlayReader({
+      [intruder]: `import { query } from '@/lib/db/postgres';
+        export const peek = (m: string) =>
+          query(\`SELECT standing FROM ${TABLE} WHERE member_id = $1\`, [m]);`,
+    });
+    expect(runtimeFiles(read, [intruder])).toContain(intruder);
+    /* And the import gate alone would NOT have seen it — which is the point. */
+    expect(directImporters(read, isStore, [intruder])).not.toContain(intruder);
+  });
+
+  it('FALSIFIER · reports a raw INSERT into the standing table from a background module', () => {
+    const intruder = 'lib/maia/standingSweeper.ts';
+    const read = overlayReader({
+      [intruder]: `import { query } from '@/lib/db/postgres';
+        export const sweep = () =>
+          query(\`INSERT INTO ${TABLE} (member_id, reading_id, observation_key, event_index, standing)
+                  VALUES ($1, $2, $3, 0, 'unresolved')\`, []);`,
+    });
+    expect(runtimeFiles(read, [intruder])).toContain(intruder);
+    expect(directImporters(read, isStore, [intruder])).not.toContain(intruder);
+  });
+});

@@ -21,9 +21,23 @@ describe('the room can tell unknown from unset', () => {
     const settles = [...ROOM.matchAll(/setStandings\(/g)]
       .map((m) => ROOM.slice(m.index ?? 0, (m.index ?? 0) + 120));
     expect(settles.length).toBeGreaterThan(0);
-    for (const s of settles) expect(s).toMatch(/settleLookup|adoptInto|beginLookup/);
+    for (const s of settles) expect(s).toMatch(/settleLookup|adoptInto|beginLookup|beginRefresh/);
     expect(ROOM).not.toMatch(/state: 'available'/);
     expect(ROOM).not.toMatch(/standings: \[\]/);
+  });
+
+  it('a refresh STARTS through the reading-addressed transition too', () => {
+    /* Not only its completion: a stale conflict must not put the room into
+       loading(otherReading). */
+    /* `beginLookup` is right for a DELIBERATE change of reading — the room is
+       the one changing it there. It is wrong for a refresh asked for by a
+       component that may already be unmounted, so the refresh callback must not
+       reach for it. */
+    const from = ROOM.indexOf('const loadStandings');
+    const refresh = ROOM.slice(from, ROOM.indexOf('useEffect', from));
+    expect(refresh.length).toBeGreaterThan(0);
+    expect(refresh).toMatch(/beginRefresh\(prev, readingId\)/);
+    expect(refresh).not.toMatch(/beginLookup/);
   });
 
   it('a recorded event is adopted into the reading it belongs to', () => {

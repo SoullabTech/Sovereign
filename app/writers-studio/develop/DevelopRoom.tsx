@@ -46,7 +46,7 @@ import {
 import ObservationDialogue from './ObservationDialogue';
 import { dialogueSurfaceKey } from '@/lib/writersStudio/observationDialogueResume';
 import {
-  LABEL as STANDING_LABEL, adoptInto, beginLookup, expectationFor, settleLookup,
+  LABEL as STANDING_LABEL, adoptInto, beginLookup, beginRefresh, expectationFor, settleLookup,
   standingRowSentence, standingSurfaceKey, standingView,
   type StandingLookup, type StandingWire,
 } from '@/lib/writersStudio/observationStanding';
@@ -212,7 +212,11 @@ export default function DevelopRoom({
      never an empty list: the room must be able to say "could not be reached"
      rather than "no standing taken". */
   const loadStandings = useCallback(async (readingId: string) => {
-    setStandings(beginLookup(readingId));
+    /* A refresh is asked for by an observation that may already be unmounted —
+       a conflict on the reading the writer just left. `beginRefresh` refuses to
+       start over a different reading, so a stale refusal cannot take the
+       current reading's state away. */
+    setStandings((prev) => beginRefresh(prev, readingId));
     const r = await fetchStandings(manuscriptId, readingId);
     /* EVERY completion names the reading it belongs to. `settleLookup` discards
        a result the room has moved past instead of merging it into whatever is

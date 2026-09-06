@@ -79,6 +79,31 @@ export function standingView(
 }
 
 /**
+ * The START of a refresh, addressed to a reading — and the reason it is not
+ * simply `beginLookup`.
+ *
+ * A refresh is triggered by an OBSERVATION component, which may already be
+ * unmounted: a conflict on reading A can return after the writer has moved to
+ * reading B and B has finished loading. `beginLookup(A)` would then displace
+ * B's state with `loading(A)` — B reads UNKNOWN, B's own in-flight completion is
+ * discarded, and A settles into the room. That is the same R2 failure arriving
+ * through the refusal path instead of the success path: A no longer injects its
+ * VALUE into B, but it can still take B's state away.
+ *
+ * So the beginning of a refresh is reading-addressed exactly as its completion
+ * is. A stale refresh leaves the room untouched; its fetch still runs and is
+ * then discarded by `settleLookup`, which costs one request and cannot corrupt
+ * a state.
+ *
+ * `beginLookup` remains the transition for a DELIBERATE change of reading —
+ * there the readingId is meant to change, and the room is the one changing it.
+ */
+export function beginRefresh(prev: StandingLookup, readingId: string): StandingLookup {
+  if (prev.readingId !== readingId) return prev;
+  return { state: 'loading', readingId };
+}
+
+/**
  * A completed lookup, applied only to the reading it was asked about. A result
  * arriving after the room moved on is DISCARDED, not merged: it is evidence
  * about a reading nobody is looking at.

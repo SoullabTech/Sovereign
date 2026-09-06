@@ -13,7 +13,7 @@
  */
 
 import {
-  adoptInto, beginLookup, expectationFor, settleLookup, standingRowSentence,
+  adoptInto, beginLookup, beginRefresh, expectationFor, settleLookup, standingRowSentence,
   standingSentence, standingSurfaceKey, standingView,
 } from '../observationStanding';
 import type { StandingLookup, StandingWire } from '../observationStanding';
@@ -103,6 +103,32 @@ describe('R2 · a completion cannot land in a reading it does not belong to', ()
     /* 6. B/o1 must still be UNSET — A's standing never appears under B. */
     expect(standingView(held, B, 'o1')).toEqual({ state: 'unset' });
     expect(held).toEqual({ state: 'available', readingId: B, standings: [] });
+  });
+
+  it('a stale REFRESH cannot take the current reading\'s state away', () => {
+    /* The refusal path of the same failure. A conflict on A returns after the
+       writer moved to B; its captured onRefresh asks to reload A. Starting that
+       refresh unconditionally would leave the room in loading(A): B would read
+       UNKNOWN, B's own completion would be discarded, and A would settle in. */
+    const heldB: StandingLookup = { state: 'available', readingId: B, standings: [wire('o1', EVENT_B, 'keep')] };
+    expect(beginRefresh(heldB, A)).toBe(heldB);
+    expect(standingView(beginRefresh(heldB, A), B, 'o1')).toEqual({
+      state: 'taken', standing: 'keep', currentEventId: EVENT_B,
+    });
+  });
+
+  it('THE SEQUENCE — a late A conflict, after B has loaded, leaves B intact', () => {
+    let held: StandingLookup = { state: 'available', readingId: B, standings: [wire('o1', EVENT_B, 'keep')] };
+    held = beginRefresh(held, A);                                  // A's conflict asks for a refresh
+    held = settleLookup(held, A, { ok: true, standings: [wire('o1', EVENT_A, 'dismiss')] });
+    expect(standingView(held, B, 'o1')).toEqual({
+      state: 'taken', standing: 'keep', currentEventId: EVENT_B,
+    });
+  });
+
+  it('a refresh of the CURRENT reading still starts', () => {
+    const heldB: StandingLookup = { state: 'available', readingId: B, standings: [wire('o1', EVENT_B)] };
+    expect(beginRefresh(heldB, B)).toEqual({ state: 'loading', readingId: B });
   });
 
   it("B's own event still applies", () => {
