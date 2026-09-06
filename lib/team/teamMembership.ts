@@ -49,3 +49,49 @@ export async function addMemberToTeam(
     return false;
   }
 }
+
+/**
+ * COLAB-BETA-01 R2 — did this member actually end up in this team?
+ *
+ * `addMemberToTeam()` returns false for BOTH a swallowed database failure and an
+ * already-existing membership, so its return value cannot answer "is this person
+ * in the team". For an invitation, membership is the thing being promised, so the
+ * promise is checked by observation rather than inferred from a write's return.
+ *
+ * Throws nothing and swallows nothing: a failure here returns false, and callers
+ * that must be fail-closed treat false as "did not join".
+ */
+export async function isTeamMember(teamId: string, memberId: string): Promise<boolean> {
+  try {
+    const res = await query<{ member_id: string }>(
+      `SELECT member_id FROM studio_team_members WHERE team_id = $1 AND member_id = $2`,
+      [teamId, memberId]
+    );
+    return res.rows.length > 0;
+  } catch (err) {
+    console.error('[teamMembership] isTeamMember failed:', err);
+    return false;
+  }
+}
+
+/**
+ * COLAB-BETA-01 R2 — may this member invite people INTO this team?
+ *
+ * Membership alone is not enough. The route lets a caller choose the invited
+ * role, so a plain member (or a viewer) could otherwise invite someone as an
+ * admin. The existing team-management contract already requires admin+ to
+ * invite; this states that rule where the invite path can enforce it.
+ */
+export async function canInviteToTeam(teamId: string, memberId: string): Promise<boolean> {
+  try {
+    const res = await query<{ role: string }>(
+      `SELECT role FROM studio_team_members WHERE team_id = $1 AND member_id = $2`,
+      [teamId, memberId]
+    );
+    const role = res.rows[0]?.role;
+    return role === 'owner' || role === 'admin';
+  } catch (err) {
+    console.error('[teamMembership] canInviteToTeam failed:', err);
+    return false;
+  }
+}
