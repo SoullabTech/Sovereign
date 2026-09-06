@@ -91,6 +91,32 @@
  *   MEMBER   A member surface is navigated alongside /accounted-for. A
  *            redirect to sign-in means it was not reached: INVALID.
  *
+ * ── WHY v2.4 ─────────────────────────────────────────────────────────────
+ * v2.3 was accepted for an acceptance run and then found to be UNABLE TO PASS.
+ *
+ * Production reports GIT_COMMIT as an ABBREVIATED sha — observed `6ff0beafc`,
+ * `8369594f3`; the deploy lane stamps `target_sha=d8fc2082d`. v2.2 made
+ * EXPECT_SHA a required full 40 characters, and v2.2/v2.3 compared the two with
+ * `===`. A 9-character string never equals a 40-character one, so subject
+ * binding reported INVALID on every run regardless of what production was
+ * actually serving, and PASS was unreachable.
+ *
+ * That is the same defect class this instrument keeps finding in itself: the
+ * written contract and the channel it reads did not agree, and the mismatch
+ * failed in the direction that looks like rigour rather than the direction that
+ * looks like a bug — which is why three review passes did not catch it.
+ *
+ * The repair resolves rather than prefix-matches. `git rev-parse --verify
+ * <short>^{commit}` against REPO_ROOT yields the FULL id, so the comparison
+ * stays exact and an ambiguous abbreviation fails instead of silently matching.
+ * A production sha that cannot be resolved there is INVALID: production is
+ * running a commit this object store does not have, so nothing observed could
+ * describe it.
+ *
+ * Also folded in, since the file was being touched anyway: the last two `sh -c`
+ * call sites (the cat-file probe and repoHygiene) now use direct git. All local
+ * Git in this instrument is execFileSync('git', [...]) with no shell.
+ *
  * ── WHY v2.3 ─────────────────────────────────────────────────────────────
  * v2.2 was never run either. Three more ENFORCEMENT defects were found in it,
  * all the same shape: a failure path that could look like a clean result.
@@ -174,7 +200,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
-const INSTRUMENT_VERSION = '2.3';
+const INSTRUMENT_VERSION = '2.4';
 
 const ORIGIN = process.env.WITNESS_ORIGIN ?? 'https://soullab.life';
 const SSH_HOST = process.env.WITNESS_SSH_HOST ?? 'soullab@minisforum';
@@ -374,6 +400,26 @@ function git(args, { maxBuffer = 32 * 1024 * 1024 } = {}) {
   }
 }
 
+/**
+ * Production reports GIT_COMMIT as an ABBREVIATED sha (observed: `6ff0beafc`,
+ * `8369594f3`; the deploy lane stamps `target_sha=d8fc2082d`). EXPECT_SHA is
+ * required to be the full 40 characters. Comparing them with `===` — which
+ * v2.2 and v2.3 did — can never be true, so every run reported INVALID on
+ * subject binding no matter what production was serving. PASS was unreachable.
+ *
+ * Resolving through the object store is the right repair, not prefix-matching:
+ * `git rev-parse --verify <short>^{commit}` yields the FULL id, so the
+ * comparison stays exact, and an ambiguous abbreviation fails instead of
+ * silently matching. A production sha that cannot be resolved in REPO_ROOT is
+ * INVALID — production is running a commit this object store does not have, so
+ * nothing here could describe it.
+ */
+function resolveCommit(rev) {
+  const r = git(['rev-parse', '--verify', '--quiet', `${rev}^{commit}`]);
+  const full = (r.out ?? '').trim();
+  return r.code === 0 && SHA40.test(full) ? full : null;
+}
+
 function readProductionSha(label) {
   try {
     return ssh(`docker exec ${CONTAINER} printenv GIT_COMMIT`, label);
@@ -489,13 +535,11 @@ function sweepSource() {
 
 /** Non-gating hygiene: what state the object store's checkout happens to be in. */
 function repoHygiene() {
-  const q = (cmd) => {
-    try {
-      return execFileSync('sh', ['-c', `git -C '${REPO_ROOT}' ${cmd} 2>/dev/null`],
-        { encoding: 'utf8', timeout: 20_000 }).trim();
-    } catch { return null; }
+  const q = (args) => {
+    const r = git(args);
+    return r.code === 0 ? r.out.trim() : null;
   };
-  return { head: q('rev-parse HEAD'), dirty: q('status --porcelain') };
+  return { head: q(['rev-parse', 'HEAD']), dirty: q(['status', '--porcelain']) };
 }
 
 /* ── observation ─────────────────────────────────────────────────────── */
@@ -635,11 +679,9 @@ async function run() {
 
   let objectPresent = false;
   if (EXPECT_SHA && SHA40.test(EXPECT_SHA) && REPO_ROOT) {
-    try {
-      execFileSync('sh', ['-c', `git -C '${REPO_ROOT}' cat-file -e '${EXPECT_SHA}^{commit}'`],
-        { encoding: 'utf8', timeout: 20_000 });
+    if (git(['cat-file', '-e', `${EXPECT_SHA}^{commit}`]).code === 0) {
       objectPresent = true;
-    } catch {
+    } else {
       invalid.push(`commit ${EXPECT_SHA} is not present in the object store at ${REPO_ROOT} ` +
         '— W4b cannot read the subject\'s source, so no sweep of it is possible');
     }
@@ -657,8 +699,16 @@ async function run() {
   let preSha = null;
   try { preSha = readProductionSha('before'); }
   catch (err) { invalid.push(err.message); }
-  if (preSha && preSha !== EXPECT_SHA) {
-    invalid.push(`deployed SHA ${preSha} != expected subject ${EXPECT_SHA}`);
+  let preFull = null;
+  if (preSha) {
+    preFull = resolveCommit(preSha);
+    if (!preFull) {
+      invalid.push(`production reports GIT_COMMIT=${preSha}, which cannot be resolved to a ` +
+        `commit in ${REPO_ROOT} (absent, or an ambiguous abbreviation) — the running ` +
+        'code cannot be identified, so nothing observed here could describe it');
+    } else if (preFull !== EXPECT_SHA) {
+      invalid.push(`deployed commit ${preFull} (reported as ${preSha}) != expected subject ${EXPECT_SHA}`);
+    }
   }
 
   const userDataDir = mkdtempSync(join(tmpdir(), 'maia-fonts-witness-'));
@@ -694,19 +744,27 @@ async function run() {
   let postSha = null;
   try { postSha = readProductionSha('after'); }
   catch (err) { invalid.push(err.message); }
-  if (postSha && postSha !== EXPECT_SHA) {
-    invalid.push(`post-observation SHA ${postSha} != expected subject ${EXPECT_SHA}`);
+  let postFull = null;
+  if (postSha) {
+    postFull = resolveCommit(postSha);
+    if (!postFull) {
+      invalid.push(`post-observation GIT_COMMIT=${postSha} cannot be resolved to a commit ` +
+        `in ${REPO_ROOT}`);
+    } else if (postFull !== EXPECT_SHA) {
+      invalid.push(`post-observation commit ${postFull} (reported as ${postSha}) != expected subject ${EXPECT_SHA}`);
+    }
   }
-  if (preSha && postSha && preSha !== postSha) {
-    invalid.push(`subject changed mid-witness: ${preSha} → ${postSha}. ` +
+  if (preFull && postFull && preFull !== postFull) {
+    invalid.push(`subject changed mid-witness: ${preFull} → ${postFull}. ` +
       'A concurrent deploy replaced what was being measured.');
   }
 
   console.log('SUBJECT');
   console.log(`  expected             ${EXPECT_SHA}`);
-  console.log(`  pre-navigation sha   ${preSha ?? 'UNREADABLE'}`);
-  console.log(`  post-observation sha ${postSha ?? 'UNREADABLE'}`);
-  console.log(`  subject stable       ${mark(Boolean(preSha) && preSha === postSha && preSha === EXPECT_SHA)}`);
+  console.log(`  pre-navigation       ${preSha ?? 'UNREADABLE'}${preFull ? `  → ${preFull}` : '  → UNRESOLVABLE'}`);
+  console.log(`  post-observation     ${postSha ?? 'UNREADABLE'}${postFull ? `  → ${postFull}` : '  → UNRESOLVABLE'}`);
+  console.log('  (production reports an abbreviated sha; resolved through the object store)');
+  console.log(`  subject stable       ${mark(Boolean(preFull) && preFull === postFull && preFull === EXPECT_SHA)}`);
   console.log(`  object store         ${REPO_ROOT}`);
   console.log(`  commit present       ${mark(objectPresent)}`);
   console.log('');
@@ -906,6 +964,7 @@ async function run() {
     console.log(`   removed and witnessed."`);
     console.log('');
     console.log(`  SUBJECT     ${EXPECT_SHA}`);
+    console.log(`              reported by production as ${preSha}`);
     console.log(`  INSTRUMENT  ${instrumentBlob}  (v${INSTRUMENT_VERSION} blob)`);
     console.log('');
     console.log('  Bind BOTH to the acceptance record. Reconstruct with:');
