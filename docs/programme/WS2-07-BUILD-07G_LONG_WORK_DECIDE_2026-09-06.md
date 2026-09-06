@@ -602,23 +602,51 @@ not ratify that wording as-is"). It is recorded here rather than silently reconc
 absorbing a contradiction into a ratified instrument is the failure this whole chain exists to
 prevent — and because a builder reading §13 and A2 together cannot tell which governs.
 
-**Status: §13 is RECORDED AS RATIFIED and its resume-only-against-the-same-revision half is IN
-FORCE. The refuse-continuation clause is HELD pending one ruling:**
+### 13.1 RULING — (a) A2 GOVERNS. §13 corrected, A2 unchanged.
+
+**Founder ruling, 2026-09-06, verbatim:**
+
+> *A2 governs. An interrupted BUILD-07G run may resume and complete against its original frozen
+> Work-state even if the current Work has changed. The run is immediately and permanently marked
+> stale relative to the current Work; it never rebases, never mixes revisions, and its completed
+> reading is presented only as evidence about the pinned historical Work-state. A Work change does
+> not require abandoning or restarting lawful completed passes.*
 
 ```text
-(a) A2 GOVERNS       a stale interrupted run RESUMES and COMPLETES against its pin,
-                     presented as stale. §13's refusal clause is withdrawn.
-                     (Recommended — it preserves lawful work and matches A2 verbatim.)
-
-(b) §13 GOVERNS      a stale interrupted run is ABANDONED; the member commissions anew.
-                     A2 must then be AMENDED, since it currently says the opposite.
-
-(c) BOTH, SPLIT      A2 governs a run still executing; §13 governs a run resumed after
-                     an interruption. Coherent, but the distinction must be defined —
-                     what makes a run "interrupted" rather than "executing" — or it
-                     becomes a second undefined boundary.
+same frozen revision      YES
+mixed manuscript states   NEVER
+lawful completed passes   PRESERVED
 ```
 
-Nothing in the falsifier set is amended by §13 until this is ruled. F1, F3 and F10 already test the
-pin, derivation and non-rebasing; none of them tests abandonment, and none should be written to
-until the ruling names which behaviour is correct.
+**The clause that is withdrawn:** *"revision changed → refuse continuation / begin new reading."*
+
+⛔ **A new reading is required only if the member wants a reading of the NEW CURRENT Work. It is
+never required merely because the old run became stale.** Staleness is a fact about which Work-state
+a reading describes — not a verdict that the reading is void.
+
+### 13.2 The resume requirement, as it now binds
+
+```text
+RESUME          an interrupted run resumes against its ORIGINAL frozen Work-state and completes
+FRESHNESS       resolved against the current Work, DERIVED not stored (P5, P6) —
+                a resumed run is stale from the moment the Work moved, permanently
+NEVER           rebase · mix revisions · abandon lawful completed passes
+PRESENTATION    the completed reading is evidence about the PINNED HISTORICAL Work-state,
+                and may never be presented as current (P6, P11)
+NEW READING     required only when the member wants a reading of the new current Work —
+                which is an ordinary new commission, not a recovery step
+```
+
+Consistent with A2, P1, P5, P6 and F1 / F3 / F10 as filed. **No falsifier is amended.** F10 already
+tests that moving the Work mid-run changes zero bytes of the run, its scopes and its frozen readings
+while execution continues against the pin — which is exactly this ruling.
+
+### 13.3 Standing
+
+```text
+BUILD-07G        OPEN · implementation AUTHORIZED against F1–F26
+resume           RATIFIED and RESOLVED — A2 governs, §13's refusal clause withdrawn
+A2               UNCHANGED
+falsifiers       UNAMENDED
+implementation   UNBLOCKED
+```
