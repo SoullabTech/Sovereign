@@ -278,6 +278,32 @@ jargon at the door.
 constitutional concept only — never a second name in code, UI, or logs. Two names for one thing is
 how drift begins; the mapping is recorded here once and the identifiers stay frozen.
 
+## §E′ · No split — Shadow already includes the Gold
+
+**Founder ruling 2026-09-07.** The Field is **not** to be divided into a dark "Shadow" function and
+a separate "Light" function, and no companion surface is to be constituted for the luminous
+material.
+
+```text
+ONE FIELD    Shadow Field
+TERRITORY    the whole projective field — darkness, light, fascination, aversion,
+             longing, meaning, and unlived possibility
+```
+
+A split would restore the binary v0.3 exists to dissolve. It would also teach the member, before
+they arrive, that idealisation and fascination belong somewhere else — when Inner Gold is the
+**pinnacle** of projective work, not a side feature. *Shadows and light* remains the **visual**
+doctrine (light entering darkness), never a division of function.
+
+The name remains **Shadow Field**. Its territory is larger than its name, which is a property the
+name must carry rather than a problem to solve by adding a second room.
+
+### The shortest statement of the doctrine
+
+> **Shadow Field is not where MAIA finds out what is wrong with you. It is where you become more
+> conscious of your participation in the world you experience — including the gold you have placed
+> outside yourself.**
+
 ## §F · Vocabulary
 
 Remove **"dark side"** from the product vocabulary entirely. The metaphor stays *light entering
