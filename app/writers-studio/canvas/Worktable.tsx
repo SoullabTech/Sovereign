@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { countDraftWords } from '@/lib/writersStudio/draftWords';
 import { StudioHint } from '../studio/StudioHint';
+import { CanvasAppearance, useCanvasMaterial } from './CanvasAppearance';
+import { CANVAS_MATERIALS, CANVAS_TYPE } from '@/lib/writersStudio/canvasMaterial';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
@@ -108,6 +110,11 @@ interface WorktableProps {
 }
 
 export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWriteAuthorityChanged }: WorktableProps) {
+  /* THE PAGE, NOT THE ROOM. `manuscriptId` is passed for the one-time legacy
+     migration only — the preference itself belongs to the writer, never to the
+     Work. See lib/writersStudio/canvasMaterial.ts. */
+  const { material, choose: chooseMaterial } = useCanvasMaterial(manuscriptId);
+  const page = CANVAS_MATERIALS[material];
   const [phase, setPhase] = useState<Phase>('loading');
   const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
   const [saveState, setSaveState] = useState<SaverState>('idle');
@@ -560,6 +567,10 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
           Marks the draft as it stands now, so you can come back to it.
           MAIA reads a kept version, so Develop needs one.
         </StudioHint>
+        {/* C2 — the ONE appearance control, mounted here and in the sectioned
+            surface. Last on the line: it is the least consequential thing in
+            the room and must not compete with the save state. */}
+        <CanvasAppearance material={material} onChoose={chooseMaterial} />
       </div>
       {/* THE WORKTABLE IS ONE PAGE. On a section-addressable draft the writer's
           characters live in one node per section — real client state carrying
@@ -579,6 +590,24 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
 
           The nodes size to their own content and the COLUMN scrolls, so the
           page grows continuously instead of each section owning a scrollbar. */}
+      {/* THE WRITING PLANE — the only thing the material paints.
+          The plane is the page; everything outside it is the room, and the
+          room is espresso by frozen design rule (`assertGroundIsWarm`). A
+          light Canvas must survive inside a dark Studio, so the material stops
+          exactly at this boundary.
+
+          ⚠️ TYPE IS DERIVED, NEVER ASKED. `CANVAS_TYPE.size` is a clamp, so the
+          writing answers the viewport on its own — one fewer decision put to a
+          writer who came here to write, not to configure. The fixed `17px`
+          this replaces was wrong at both ends of the range. */}
+      <div
+        className="flex-1 flex flex-col min-h-0 rounded-[2px] transition-colors duration-300"
+        style={{
+          background: page.bg,
+          color: page.ink,
+          padding: 'clamp(16px, 3vw, 40px)',
+        }}
+      >
       {editable.addressable ? (
         <div className="flex-1 w-full overflow-y-auto">
           {editable.sections.map((sec, i) => (
@@ -589,8 +618,14 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
               onChange={(e) => { edit(sec.id, e.target.value); autosize(i); }}
               aria-label={i === 0 ? 'Working draft' : undefined}
               rows={1}
-              className="block w-full bg-transparent outline-none resize-none overflow-hidden text-[17px] leading-[1.8] p-0 m-0 border-0"
-              style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
+              className="block w-full bg-transparent outline-none resize-none overflow-hidden p-0 m-0 border-0"
+              style={{
+                fontFamily: SERIF,
+                fontSize: CANVAS_TYPE.size,
+                lineHeight: CANVAS_TYPE.leading,
+                color: page.ink,
+                caretColor: page.caret,
+              }}
             />
           ))}
         </div>
@@ -600,10 +635,17 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
           value={editable.content}
           onChange={(e) => edit(null, e.target.value)}
           aria-label="Working draft"
-          className="flex-1 w-full bg-transparent outline-none resize-none text-[17px] leading-[1.8]"
-          style={{ fontFamily: SERIF, color: PRESS.text, caretColor: PRESS.accent }}
+          className="flex-1 w-full bg-transparent outline-none resize-none"
+          style={{
+            fontFamily: SERIF,
+            fontSize: CANVAS_TYPE.size,
+            lineHeight: CANVAS_TYPE.leading,
+            color: page.ink,
+            caretColor: page.caret,
+          }}
         />
       )}
+      </div>
     </div>
   );
 }

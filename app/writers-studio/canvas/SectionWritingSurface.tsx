@@ -31,10 +31,12 @@ import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
-import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
+import { INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { StudioHint } from '../studio/StudioHint';
 import { StudioText } from '../studio/StudioType';
+import { CanvasAppearance, useCanvasMaterial } from './CanvasAppearance';
+import { CANVAS_MATERIALS, CANVAS_TYPE } from '@/lib/writersStudio/canvasMaterial';
 
 export interface SectionWritingSurfaceProps {
   /** The shared writing session — see the header. */
@@ -211,6 +213,12 @@ function KeepAVersion({
 export default function SectionWritingSurface({
   writing, manuscriptId, onCheckpointed,
 }: SectionWritingSurfaceProps) {
+  /* C2 — THIS is the surface the defect was about. A long book renders
+     section-addressable, so the writer most likely to sit with a Canvas for
+     hours was the one writer who could not reach the material at all. Same
+     hook, same control, same stored preference as the continuous surface. */
+  const { material, choose: chooseMaterial } = useCanvasMaterial(manuscriptId);
+  const page = CANVAS_MATERIALS[material];
   const fieldRef = useRef<HTMLTextAreaElement | null>(null);
   const activeId = writing.activeId;
 
@@ -263,13 +271,29 @@ export default function SectionWritingSurface({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.base }}>
-      <KeepAVersion
-        writing={writing}
-        manuscriptId={manuscriptId}
-        onCheckpointed={onCheckpointed}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: SPACE.base }}>
+        <KeepAVersion
+          writing={writing}
+          manuscriptId={manuscriptId}
+          onCheckpointed={onCheckpointed}
+        />
+        <span style={{ flex: 1 }} />
+        <CanvasAppearance material={material} onChoose={chooseMaterial} />
+      </div>
+      {/* THE WRITING PLANE — see Worktable for the boundary rule. The heading
+          sits ON the page with the prose, because it is the writer's own text;
+          the room's chrome stays outside. */}
+      <div
+        style={{
+          background: page.bg,
+          color: page.ink,
+          borderRadius: RADIUS.sm,
+          padding: 'clamp(16px, 3vw, 40px)',
+          transition: 'background-color 300ms, color 300ms',
+        }}
+      >
       {active.heading !== null && (
-        <StudioText role="chapterTitle" as="h2">
+        <StudioText role="chapterTitle" as="h2" style={{ color: page.ink }}>
           {active.heading}
         </StudioText>
       )}
@@ -279,7 +303,10 @@ export default function SectionWritingSurface({
           style={{
             padding: SPACE.base,
             borderRadius: RADIUS.sm,
-            background: GROUND.raised,
+            /* On the page, not in the room: a Studio ground token here would
+               paint an espresso block onto Ivory Paper. A soft veil of the
+               writer's own ink reads as "held aside" on every material. */
+            background: 'color-mix(in srgb, currentColor 7%, transparent)',
           }}
         >
           {/* A section whose shape this cut cannot split is shown whole and
@@ -307,12 +334,18 @@ export default function SectionWritingSurface({
             border: 'none',
             outline: 'none',
             background: 'transparent',
-            font: 'inherit',
-            lineHeight: 1.7,
-            color: 'inherit',
+            fontFamily: 'inherit',
+            /* DERIVED, never asked — the clamp answers the viewport so the
+               writer is not made responsible for legibility on their own
+               screen. */
+            fontSize: CANVAS_TYPE.size,
+            lineHeight: CANVAS_TYPE.leading,
+            color: page.ink,
+            caretColor: page.caret,
           }}
         />
       )}
+      </div>
     </div>
   );
 }

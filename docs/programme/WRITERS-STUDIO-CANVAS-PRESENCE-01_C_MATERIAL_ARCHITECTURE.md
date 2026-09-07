@@ -308,3 +308,100 @@ MATERIALS harvest existing implementation
           ⛔ do not invent a second material engine
 STUDIO ATMOSPHERE   HOLD · separate design-contract question
 ```
+
+---
+
+# BUILD RECORD — 2026-09-07
+
+## ⭐ CORRECTION TO THE PREMISE: the rendering path is not wrong, it is ABSENT
+
+The ruling was taken on the premise — the founder's own words — that the
+materials were *"capabilities trapped behind the wrong rendering path and stored
+at the wrong ownership level."* Ownership was diagnosed exactly right. The
+rendering path was diagnosed **too gently**, and the correct fact is stronger:
+
+> **`app/writers-studio/canvas/WritingSurface.tsx` is imported by nothing.**
+
+Verified by whole-repo import search: the only `WritingSurface` import anywhere
+is `components/journal/room/JournalRoom.tsx`, which imports a **different,
+unrelated** component of the same name from its own directory. The Writer's
+Studio component is orphaned — last touched at `ba00815f`, while `Worktable.tsx`
+(a sibling that carries the same draft machinery **without any material system**)
+continued to be developed through `227e4e63`.
+
+**Consequence for the record:** no member has been able to reach the material
+chooser at all. Not "only continuous-draft writers could" — *nobody could.* The
+four materials have been dead code for as long as `Worktable` has been the
+mounted continuous surface.
+
+⚠️ This is the same shape as the Journey Truth **C-3** error, and it is the
+second time in this lane that a component's *existence* was read as a member's
+*reach*. The standing correction holds: **a component that renders nowhere is
+not a capability a member has.** Reachability is a claim about the mount graph,
+and it must be checked in the mount graph, never inferred from the source.
+
+This does not invalidate the authorization — it **simplifies** it. C2 said "one
+control reachable from both surfaces." The live surfaces are `Worktable`
+(continuous) and `SectionWritingSurface` (sectioned), so those are where the
+control was built.
+
+## WHAT LANDED
+
+| | |
+|---|---|
+| `lib/writersStudio/canvasMaterial.ts` | The one materials table, harvested verbatim. `resolveMaterial()` is pure, so the C1 migration is testable without a browser. One storage key, and it names no manuscript. |
+| `app/writers-studio/canvas/CanvasAppearance.tsx` | **One** control + `useCanvasMaterial()`. Mounted twice, never copied. |
+| `canvas/Worktable.tsx` | Control mounted; writing plane painted in the material. |
+| `canvas/SectionWritingSurface.tsx` | Same — **the surface a long book actually renders as**, and the one that could not reach this before. |
+| `canvas/WritingSurface.tsx` (orphan) | Re-pointed at the shared module so exactly one materials table exists in the repo. ⛔ Its **disposition is not decided here** — deleting an orphan is its own act. |
+
+## FOUNDER DIRECTION FOLDED IN (2026-09-07, mid-build)
+
+> *"it needs to be responsive font"*
+> *"there's only a few options to make but it needs to be able to do so intelligently"*
+
+Read as one constraint with two halves, and **both halves are obligations**:
+
+- **FEW** — the writer is offered four materials and **nothing else**. A
+  preference panel is the failure mode, not the goal.
+- **DERIVED** — everything else answers the viewport by construction.
+  `CANVAS_TYPE.size` is a `clamp()`, replacing a fixed `17px` that was wrong at
+  both ends of the range. ⛔ **No member-facing size control was added**, and a
+  test forbids one from appearing in this component without a ruling.
+
+> ***A question not asked is the intelligent version of a question answered well.***
+
+## THE BOUNDARY THAT MAKES THIS SAFE
+
+The material paints the **writing plane only**. Everything outside it is the
+room, and the room is espresso by frozen design rule (`assertGroundIsWarm`,
+untouched). A light Canvas must survive inside a dark Studio.
+
+One real defect this exposed: `SectionWritingSurface` painted its read-only
+section panel with `GROUND.raised` — a **Studio** token — which would have put an
+espresso block onto Ivory Paper. Replaced with a veil of the page's own ink. The
+`GROUND` import is now gone from that file, and a test asserts it stays gone.
+
+## EVIDENCE
+
+- `app/writers-studio/__tests__/canvasMaterial.test.ts` — **16 obligations, all
+  passing**: C1 migration order · the stored key names no manuscript · no write
+  is ever derived from a manuscript id · **both** surfaces mount the control ·
+  both read the same hook · exactly one materials table repo-wide · no Studio
+  ground token on the page · appearance never touches the work · four options
+  and no fifth axis · type is a clamp, and no size control was smuggled in.
+- Studio suites: **43 suites · 679 tests · 0 failed.**
+- `npm run typecheck`: **230 errors vs baseline 239, 13 fixed, 0 regressions
+  from this change.** ⛔ **The gate nonetheless reports FAILED**, on four
+  diagnostics in `app/wisdom-keepers/sacred-texts/page.tsx` and
+  `components/focus/{AvoidanceBreaker,InboxTriage,NextStepBuilder}.tsx`.
+  **Verified pre-existing**: stashing this entire change and re-running the gate
+  at HEAD produces the *same four*. They are branch debt this lane did not
+  create and is not authorized to absorb. **This build is not being claimed as
+  green — it is claimed as introducing nothing.**
+
+## ⛔ NOT CLAIMED
+
+Not deployed · not observed in a running Canvas · no production witness. The
+step the founder named — *"look at one materially changed Canvas"* — has **not**
+been performed.

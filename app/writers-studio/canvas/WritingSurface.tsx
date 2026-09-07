@@ -12,6 +12,15 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { countDraftWords } from '@/lib/writersStudio/draftWords';
 import { PRESS, SERIF } from '../pressTheme';
 import {
+  CANVAS_MATERIALS,
+  CANVAS_TYPE,
+  DEFAULT_MATERIAL,
+  MATERIAL_ORDER,
+  loadCanvasMaterial,
+  saveCanvasMaterial,
+  type CanvasMaterial,
+} from '@/lib/writersStudio/canvasMaterial';
+import {
   AUTOSAVE_DELAY_MS,
   applySectionEdit,
   beginDraft,
@@ -85,22 +94,11 @@ function editableFrom(r: DraftRepresentation): Editable {
     : { addressable: false, content: r.content };
 }
 
-/** The writer's papers. The sheet and its ink change; the room never repaints. */
-const WRITING_SURFACES = {
-  warm: { label: 'Warm Canvas', bg: '#221B17', ink: PRESS.text, caret: PRESS.accent },
-  ivory: { label: 'Ivory Paper', bg: '#f3eddd', ink: '#2a2418', caret: '#8a6d1f' },
-  white: { label: 'White Paper', bg: '#FAFAF7', ink: '#141414', caret: '#8a6d1f' },
-  midnight: { label: 'Midnight', bg: '#0E1114', ink: '#C9CCD1', caret: PRESS.accent },
-} as const;
-type SurfaceId = keyof typeof WRITING_SURFACES;
-
-const surfaceKey = (manuscriptId: string) => `writing_surface:${manuscriptId}`;
-function loadSurfaceChoice(manuscriptId: string): SurfaceId {
-  if (typeof window === 'undefined') return 'warm';
-  const v =
-    localStorage.getItem(surfaceKey(manuscriptId)) ?? localStorage.getItem('writing_surface');
-  return v && v in WRITING_SURFACES ? (v as SurfaceId) : 'warm';
-}
+/* The writer's papers used to be declared here, and stored per manuscript.
+   Both moved to lib/writersStudio/canvasMaterial.ts — the values are unchanged,
+   the OWNERSHIP is not: a material belongs to the writer's eye, never to the
+   Work. See that module for why (C1) and for the migration. This surface now
+   reads the same preference the sectioned surface reads. */
 
 export interface Heading {
   text: string;
@@ -173,7 +171,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
     const [updatedAt, setUpdatedAt] = useState<string | null>(null);
     const [keeping, setKeeping] = useState(false);
     const [kept, setKept] = useState(false);
-    const [surface, setSurface] = useState<SurfaceId>('warm');
+    const [surface, setSurface] = useState<CanvasMaterial>(DEFAULT_MATERIAL);
 
     const saverRef = useRef<DraftSaver<DraftSection[] | string> | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -236,7 +234,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
     }, [editable, phase]);
 
     useEffect(() => {
-      setSurface(loadSurfaceChoice(manuscriptId));
+      setSurface(loadCanvasMaterial(manuscriptId));
     }, [manuscriptId]);
 
     useImperativeHandle(ref, () => ({
@@ -271,15 +269,13 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       },
     }));
 
-    const chooseSurface = (s: SurfaceId) => {
+    /* C1 — the write goes to the Canvas-level key ONLY. The legacy per-Work
+       and global keys are read once for migration and never written again;
+       they are left in place rather than deleted, so the ownership change
+       stays reversible. */
+    const chooseSurface = (s: CanvasMaterial) => {
       setSurface(s);
-      try {
-        // Member-authored preference: this manuscript, and the new default.
-        localStorage.setItem(surfaceKey(manuscriptId), s);
-        localStorage.setItem('writing_surface', s);
-      } catch {
-        /* a comfort, never a failure */
-      }
+      saveCanvasMaterial(s);
     };
 
     useEffect(() => {
@@ -542,7 +538,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
       );
     }
 
-    const s = WRITING_SURFACES[surface];
+    const s = CANVAS_MATERIALS[surface];
     const status =
       saveState === 'saving'
         ? 'saving…'
@@ -627,19 +623,16 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
             {keeping ? 'keeping…' : 'Keep a version'}
           </button>
           <span className="flex items-center gap-1.5 ml-2" aria-label="Writing surface">
-            {(Object.keys(WRITING_SURFACES) as SurfaceId[]).map((id) => (
+            {MATERIAL_ORDER.map((id) => (
               <button
                 key={id}
-                title={WRITING_SURFACES[id].label}
-                aria-label={WRITING_SURFACES[id].label}
+                title={CANVAS_MATERIALS[id].label}
+                aria-label={CANVAS_MATERIALS[id].label}
                 aria-pressed={surface === id}
                 onClick={() => chooseSurface(id)}
                 className="w-3 h-3 rounded-full border transition-opacity"
                 style={{
-                  background:
-                    id === 'warm'
-                      ? 'linear-gradient(135deg,#221B17,#3a2f28)'
-                      : WRITING_SURFACES[id].bg,
+                  background: CANVAS_MATERIALS[id].bg,
                   borderColor: surface === id ? PRESS.accent : 'currentColor',
                   opacity: surface === id ? 1 : 0.5,
                 }}
@@ -685,7 +678,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
                 aria-label={i === 0 ? 'Working draft' : undefined}
                 rows={1}
                 className="block w-full bg-transparent outline-none resize-none overflow-hidden text-[16.5px] leading-[1.9] p-0 m-0 border-0"
-                style={{ fontFamily: SERIF, color: s.ink, caretColor: s.caret }}
+                style={{ fontFamily: SERIF, fontSize: CANVAS_TYPE.size, lineHeight: CANVAS_TYPE.leading, color: s.ink, caretColor: s.caret }}
               />
             ))
           ) : (
@@ -696,7 +689,7 @@ const WritingSurface = forwardRef<WritingSurfaceHandle, WritingSurfaceProps>(
               aria-label="Working draft"
               rows={1}
               className="w-full bg-transparent outline-none resize-none overflow-hidden text-[16.5px] leading-[1.9]"
-              style={{ fontFamily: SERIF, color: s.ink, caretColor: s.caret }}
+              style={{ fontFamily: SERIF, fontSize: CANVAS_TYPE.size, lineHeight: CANVAS_TYPE.leading, color: s.ink, caretColor: s.caret }}
             />
           )}
         </div>
