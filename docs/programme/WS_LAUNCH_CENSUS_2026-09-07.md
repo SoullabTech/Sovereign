@@ -88,3 +88,72 @@ all other C affordances ship as-is; they claim nothing
 
 Develop-room internals beyond reachability; Explore/Review/Publish; runtime
 confirmation of D-01. This is a source census at one SHA.
+
+---
+
+# Extension — Develop room internals (DISCOVER, read-only)
+
+**Correction to this document's own headline.** *Rail actionability* cannot lie by
+construction; **rail metadata still can.** `Versions 0` travels a channel with no
+honesty guarantee. The rail's `<span>` discipline governs links, not numbers.
+
+## Classification
+
+```text
+AFFORDANCE                     CLASS  BASIS
+Develop entry (route)          A      DEVELOP_HREF · mode bar only, no Home door
+list load                      A      ListPhase loading|ready|unauthorized|error
+preparation                    A      prep loading|ready|error; act = working|refused
+lens selection                 A/B    B while commission.phase === 'reading' (fieldset disabled)
+lens meaning (LENS_MEANING)    A      rendered in the selector, ordinary state
+commission ("Ask MAIA…")       A      idle|reading|refused
+invocation sentence            A      rendered unconditionally, not failure-gated
+refusal copy                   A      refusalSentence(), inside the refused branch only
+reading payload                A      payload=null ALWAYS paired with not_found|error
+coverage                       A      view.coverage.sentence
+observations                   A      view.observations
+RESTS ON (evidence)            A      o.evidence via describeRef against frozen readState
+"rests on your structure"      A      conditional on dependsOnStructure
+dialogue                       A      ObservationDialogue, keyed by dialogueSurfaceKey
+return path                    A      "Keep a version" link on revision_not_current
+title                          A      THREE-state: undefined | null | string
+standing (Keep/Dismiss/…)      C      dark behind NEXT_PUBLIC_WS_STANDING_ENABLED
+```
+
+**No D-class finding in Develop.**
+
+## The load-bearing result
+
+Develop already implements the exact pattern the Canvas room lacks.
+
+```ts
+// DevelopRoom.tsx:260-263 — failure is NEVER silent
+if (!r.ok) { setPayload(null); setReadingPhase(r.refusal === 'not_found' ? 'not_found' : 'error'); return; }
+
+// DevelopRoom.tsx:389 — three states, not two
+const headline = title === undefined ? '' : (title ?? UNTITLED_EXPRESSION);
+```
+
+versus
+
+```ts
+// canvas/page.tsx:329 — failure and loading collapse to one value
+setRevisions(r.kind === 'ok' ? r.revisions : null);
+```
+
+**D-01 is a local defect in Canvas, not a systemic pattern.** The repair has an
+in-repo precedent to copy rather than a design to invent: pair the null with an
+explicit phase, and never derive a count from an unknown.
+
+## Not located
+
+An explicit **DOES NOT ESTABLISH** limits surface. `developPresentation.ts` carries
+`describeRef` and a currency sentence ("The parts of the work this rests on are as
+they were when MAIA read them"), which states evidence *currency*, not epistemic
+*limits*. Either the surface does not exist (C) or it is named differently. Not
+resolved here; recorded rather than guessed.
+
+## Scope
+
+Source census at `3027ceaff`. Not covered: Explore / Review / Publish, dialogue
+internals, and any runtime observation.
