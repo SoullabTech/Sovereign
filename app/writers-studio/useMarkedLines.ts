@@ -26,15 +26,21 @@ import { apiFetch } from '@/lib/http/apiBase';
  * nothing".
  */
 
+/**
+ * The same object the Manuscript Room calls a Keep (see ManuscriptKeep in
+ * useManuscriptKeeps), read across every manuscript instead of one. Field
+ * names match that contract on purpose: two readers are fine, two vocabularies
+ * for one object are not.
+ */
 export interface MarkedLine {
   id: string;
   /** The member's characters, verbatim and un-trimmed. Never edited here. */
-  text: string;
-  markedAt: string;
+  verbatimText: string;
+  createdAt: string;
   manuscriptId: string;
   /** Where it came from — provenance travels WITH the line, never separately. */
   manuscriptTitle: string | null;
-  heading: string | null;
+  sectionHeading: string | null;
 }
 
 export type MarkedLinesPhase = 'loading' | 'ready' | 'unauthorized' | 'error';

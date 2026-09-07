@@ -62,7 +62,7 @@ describe('keeps read route — doctrine', () => {
   it('returns the kept characters unaltered', () => {
     /* The member's text is not the Studio's to tidy: no trim, no normalize,
        no ellipsis, no case change on the way out. */
-    expect(CODE).toMatch(/text:\s*r\.verbatim_text/);
+    expect(CODE).toMatch(/verbatimText:\s*r\.verbatim_text/);
     expect(CODE).not.toMatch(/verbatim_text\s*\.\s*(trim|slice|substring|normalize|toLowerCase)/);
   });
 

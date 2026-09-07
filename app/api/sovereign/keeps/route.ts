@@ -83,16 +83,23 @@ export async function GET(request: NextRequest) {
       keeps: result.rows.map((r) => ({
         id: r.id,
         /* Verbatim, un-trimmed, exactly as stored — the member's characters
-           are not the Studio's to tidy. */
-        text: r.verbatim_text,
-        markedAt: r.created_at,
+           are not the Studio's to tidy.
+
+           Field NAMES deliberately match the Manuscript Room's existing
+           ManuscriptKeep contract (useManuscriptKeeps). Two readers of the
+           same object is defensible — the Room wants one manuscript's keeps
+           alongside sections it already loaded, Home wants them across every
+           manuscript without N requests — but two VOCABULARIES for one object
+           is not. A Keep is a Keep in both rooms. */
+        verbatimText: r.verbatim_text,
+        createdAt: r.created_at,
         manuscriptId: r.manuscript_id,
         /* Where it came from travels WITH it. A line shown without its source
            becomes an anonymous aphorism, and a member's own sentence read back
            without provenance is indistinguishable from something a system
            wrote for them. */
         manuscriptTitle: r.manuscript_title,
-        heading: r.heading,
+        sectionHeading: r.heading,
       })),
     });
   } catch (error) {

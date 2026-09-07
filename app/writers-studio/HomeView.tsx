@@ -717,10 +717,10 @@ export default function HomeView({
                       overflow: 'hidden',
                     }}
                   >
-                    {markedLines[0].text}
+                    {markedLines[0].verbatimText}
                   </p>
                   <footer className="text-[12.5px] opacity-40 mt-4">
-                    {[markedLines[0].manuscriptTitle, markedLines[0].heading]
+                    {[markedLines[0].manuscriptTitle, markedLines[0].sectionHeading]
                       .filter(Boolean)
                       .join(' · ')}
                   </footer>
@@ -741,14 +741,14 @@ export default function HomeView({
                               overflow: 'hidden',
                             }}
                           >
-                            {line.text}
+                            {line.verbatimText}
                           </p>
                           {/* Provenance travels WITH the line. A member's own
                               sentence read back without its source is
                               indistinguishable from something written for
                               them. */}
                           <p className="text-[12px] opacity-35 mt-1.5">
-                            {[line.manuscriptTitle, line.heading].filter(Boolean).join(' · ')}
+                            {[line.manuscriptTitle, line.sectionHeading].filter(Boolean).join(' · ')}
                           </p>
                         </li>
                       ))}
