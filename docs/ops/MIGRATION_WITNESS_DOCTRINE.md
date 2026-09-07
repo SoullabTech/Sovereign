@@ -63,8 +63,47 @@ runner own them. Merged as `891b33ee0`.
 
 ---
 
-## Promotion note
+## Promotion — AUTHORIZED, TIMING HELD
 
-⛔ These rules are **not yet in `CLAUDE.md`'s "Before Making Changes"** section. Promoting them into the
-project invariants is a **founder act**, since that section is global. Until then this file is the
-authoritative statement and lanes should cite it.
+```
+GLOBAL PROMOTION TO CLAUDE.md     AUTHORIZED (founder, 2026-09-08)
+
+TIMING                            after the cohort witness releases
+                                  AND I0.5 production closure
+
+UNTIL THEN                        this file is the authoritative cited doctrine
+
+CURRENT CANONICAL                 891b33ee0 remains UNTOUCHED
+```
+
+⭐ **Why the timing hold, and it is not caution for its own sake.** Canonical currently holds a clean,
+**already-qualified release target** — `891b33ee0`. Moving canonical now for a documentation promotion
+would change the SHA the next full deployment should target, turning
+
+```
+verified release → deploy 891b33ee0
+```
+
+into
+
+```
+verified release → canonical moves for unrelated docs → new deploy target → provenance explanation
+```
+
+⛔ **Nothing is gained by introducing that churn while another production witness already owns the
+deploy lane.** The lesson becomes global **and** the qualified artifact stops moving underneath us.
+
+⚠️ **Recording this ruling does not move canonical.** It lands on the doctrine lane
+(`claude/jarvis-circles-programme-reouzc`), which is not canonical and is not the release path.
+
+### The promotion text, pinned verbatim
+
+So the future act is a paste, not a re-drafting:
+
+> **Migration witness law:** A migration must be verified both against an upgrade-shaped database and
+> through canonical empty-database reconstruction. Neither witness substitutes for the other.
+>
+> **Migration reconcile law:** Reconciliation must inspect the migration and its executor/ledger
+> semantics; checking only migration/data deltas is insufficient.
+>
+> Canon and rationale: `docs/ops/MIGRATION_WITNESS_DOCTRINE.md`.
