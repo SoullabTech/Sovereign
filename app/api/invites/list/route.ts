@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
  * Returns all invites created by a member with their status.
  */
 
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
@@ -15,12 +16,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ invites: [], inviteTree: [], stats: {}, member: {} });
   }
   try {
-    const memberId = request.nextUrl.searchParams.get('memberId');
+    /* IDENTITY IS SERVER-DERIVED. `?memberId=` previously selected WHOSE
+       invites — passkeys, intended names and emails, personal notes, and the
+       invite tree — were returned. It no longer carries authority. */
+    const memberId = await getMemberIdFromRequest(request);
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID is required' },
-        { status: 400 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 

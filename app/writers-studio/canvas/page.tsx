@@ -51,6 +51,7 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
+import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
@@ -263,6 +264,46 @@ function CanvasRoom() {
     })();
     return () => { cancelled = true; };
   }, [manuscript?.id]);
+
+  /* WS2-NAV-01 — the member act that makes a Work navigable.
+
+     Conversion is NEVER automatic: not on import, not on save. The boundaries
+     were detected at ingest and are only offered; this is the act that turns
+     them into the Work's durable sections. Success is taken from the server
+     alone — on failure the continuous draft is untouched and stays that way on
+     screen, because an optimistic remount would claim an identity assignment
+     that never happened. */
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+
+  /* NAV-03 — the single way this page re-reads write authority. Conversion and
+     first-draft creation both change what the server would answer; neither may
+     invent its own remount. */
+  const refreshWriteState = useCallback(async () => {
+    const id = manuscript?.id;
+    if (!id) return;
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url));
+    setWritePhase(refreshed.phase);
+    setWriteState(refreshed.state);
+  }, [manuscript?.id]);
+
+  const onConfirmSectionBreaks = useCallback(async () => {
+    const id = manuscript?.id;
+    if (!id || confirming) return;
+    setConfirming(true);
+    setConfirmError(null);
+    const outcome = await confirmSectionBreaks(id, (url, init) => apiFetch(url, init));
+    if (!outcome.ok) {
+      setConfirmError(outcome.message);
+      setConfirming(false);
+      return;
+    }
+    /* Re-read the authority rather than assuming it. The draft is section-
+       addressable because the server says so, and the outline remounts through
+       the existing 'sections' branch — no second navigation path is created. */
+    await refreshWriteState();
+    setConfirming(false);
+  }, [manuscript?.id, confirming, refreshWriteState]);
 
   const writeMount = chooseMount(writePhase, writeState);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
@@ -644,18 +685,62 @@ function CanvasRoom() {
               />
             ) : (
               <>
+                {/* WS2-NAV-01 — rows here are NOT clickable, because this draft is
+                    not section-addressable yet. Previously that was silent: the
+                    outline rendered as an ordinary list that simply did nothing.
+                    It now says what it is and offers the act that changes it. */}
                 <ManuscriptOutline
                   manuscriptId={manuscript?.id ?? null}
                   phase={sectionsPhase}
                   sections={sections}
                 />
-                {writeMount.mount === 'worktable' && writeMount.notice && (
-                  <div style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}>
+                {/* R1 — `worktable` collapses THREE server states, and only one of
+                    them can convert. planConversion() refuses unless the draft is
+                    byte-identical to the source-derived partition, so offering the
+                    act on `continuous_unprovable` would show a button structurally
+                    incapable of succeeding, and `no_draft` has nothing to convert.
+                    The gate is therefore the WRITE STATE, not the mount. */}
+                {writeMount.mount === 'worktable' && (
+                  <div
+                    style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}
+                    data-outline-state="unconverted"
+                  >
+                    {/* The server's own reason, when it has one, comes first —
+                        it is more specific than anything written here. */}
                     <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
-                      {writeMount.notice.title}
+                      {writeMount.notice?.title ?? SECTION_BREAKS_COPY.title}
                     </StudioText>
-                    {writeMount.notice.body && (
-                      <StudioText role="quiet">{writeMount.notice.body}</StudioText>
+                    <StudioText role="quiet">
+                      {writeMount.notice?.body
+                        ?? (writeState?.mode === 'continuous'
+                              ? SECTION_BREAKS_COPY.body
+                              : SECTION_BREAKS_COPY.bodyNotConvertible)}
+                    </StudioText>
+                    {writeState?.mode === 'continuous' && (
+                    <button
+                      type="button"
+                      onClick={onConfirmSectionBreaks}
+                      disabled={confirming || !manuscript?.id}
+                      data-action="confirm-section-breaks"
+                      style={{
+                        marginTop: SPACE.tight,
+                        padding: '8px 14px',
+                        background: 'transparent',
+                        border: `1px solid ${RULE.soft}`,
+                        borderRadius: 6,
+                        color: 'inherit',
+                        font: 'inherit',
+                        cursor: confirming ? 'default' : 'pointer',
+                        opacity: confirming ? 0.6 : 1,
+                      }}
+                    >
+                      {confirming ? SECTION_BREAKS_COPY.working : SECTION_BREAKS_COPY.action}
+                    </button>
+                    )}
+                    {confirmError && (
+                      <StudioText role="quiet" style={{ marginTop: SPACE.tight }}>
+                        {confirmError}
+                      </StudioText>
                     )}
                   </div>
                 )}
@@ -707,6 +792,7 @@ function CanvasRoom() {
               onPick={(id) => setRequested(id)}
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
+              onWriteAuthorityChanged={refreshWriteState}
             />
           </div>
         </main>
@@ -776,6 +862,7 @@ function FieldBody({
   onPick,
   onMeta,
   onCheckpointed,
+  onWriteAuthorityChanged,
   writeMount,
   witnessDelayMs,
   onWriting,
@@ -786,6 +873,8 @@ function FieldBody({
   onPick: (id: string) => void;
   onMeta: (m: { updatedAt: string | null; revisionCount: number | null; words: number }) => void;
   onCheckpointed: () => void;
+  /** NAV-03 — the write authority moved; re-read what the server now says. */
+  onWriteAuthorityChanged: () => void;
   /** What the server said to mount. Resolved above; never guessed here. */
   writeMount: WriteMount;
   witnessDelayMs?: number;
@@ -946,6 +1035,7 @@ function FieldBody({
       manuscriptId={manuscript.id}
       onMeta={onMeta}
       onCheckpointed={onCheckpointed}
+      onWriteAuthorityChanged={onWriteAuthorityChanged}
     />
   );
 }

@@ -482,8 +482,9 @@ export const config = {
      * - _next/image (image optimization)
      * - favicon.ico (favicon file)
      * - api/voice/transcribe-simple (see below)
+     * - api/sovereign/manuscripts/ingest (see below)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple|api/sovereign/manuscripts/ingest$).*)',
   ],
 };
 
@@ -515,4 +516,65 @@ export const config = {
  * future routes from the matcher as they are added. If a rule for this path is
  * ever added to the access matrix, this exclusion must be revisited — the
  * regression test asserts the premise, so it will fail rather than rot.
+ */
+
+/*
+ * ── WHY /api/sovereign/manuscripts/ingest IS EXCLUDED ───────────────────────
+ *
+ * The same mechanism as the voice route above, on the only other multipart
+ * upload a member makes. Because the matcher matched it, Next buffered the
+ * request body so middleware could run, then rebuilt a Request for the route
+ * handler from the same Node stream; when that stream was already consumed,
+ * construction threw:
+ *
+ *   TypeError: Response body object should not be disturbed or locked
+ *       at ...fromNodeNextRequest(...)
+ *       at .../manuscripts/ingest/route.js
+ *
+ * Observed in production 2026-09-06 on a 15.8 MB PDF. The throw happens BEFORE
+ * any application code, so the route's own logging never appears — a six-hour
+ * log window across a failed upload was empty, and that emptiness is the
+ * signature, not an absence of evidence. The member was told "We could not read
+ * that file. Try a .docx, .pdf, .txt, or .md", which is the route's 422 copy
+ * reached through the client's identical fallback string: the message named the
+ * format when the format was never the problem.
+ *
+ * ⛔ THIS EXCLUSION IS NOT THE VOICE PRECEDENT. That route was safe to drop
+ * because NO rule in config/accessMatrix.ts matched it, so middleware was
+ * already waving it through and nothing was lost. This path IS covered, by
+ * `{ prefix: '/api/sovereign', minTier: 'free' }`. Two things had to be
+ * reproduced in-route before the exclusion was admissible, and both are — see
+ * the boundary block at the top of that route file:
+ *
+ *   1. AUTHORITY. The route calls deriveVerifiedAccess() and then
+ *      checkAccess('/api/sovereign/manuscripts/ingest', ...) — the MATRIX, not
+ *      a restatement of what the matrix says today. `minTier: 'free'` is
+ *      TIER_RANK 0 and the rule carries no rolesAnyOf, so its only present
+ *      effect is "authenticated"; hardcoding that answer would freeze today's
+ *      semantics into the exception, and a rule that later acquires a role or a
+ *      higher tier would be enforced everywhere EXCEPT here. Calling the matrix
+ *      means the rule change reaches the excluded path too. Denials reproduce
+ *      this file's API semantics: 401 unauthenticated, 403 missing-role, the
+ *      role check that survives the development tier waiver, 404 unmapped.
+ *
+ *   2. SANITISATION. Every matched request is forwarded through
+ *      stripClientIdentityAssertions(), whose guarantee is that "a handler
+ *      reading x-access-roles reads our answer or nothing at all — never the
+ *      caller's." An exclusion silently revokes that for this route. So the
+ *      route deletes every CLIENT_ASSERTABLE_IDENTITY_HEADERS entry from the
+ *      request IN PLACE — after authority has inspected them, because
+ *      deriveVerifiedAccess must still see an x-member-id claim to catch one
+ *      that disagrees with the session, and before formData(). In place, on the
+ *      same request: constructing a second Request to carry sanitized headers
+ *      would consume the body, which is the very failure this exclusion exists
+ *      to avoid. x-session-token is outside that list, so the credential
+ *      survives. The invariant: untrusted assertions may be inspected by the
+ *      authority boundary; they may not survive beyond it as ambient request
+ *      context.
+ *
+ * ⛔ SCOPE: this one path only, anchored with `$` so it cannot become a prefix.
+ * A prefix-shaped exclusion would silently remove future
+ * /api/sovereign/manuscripts/* routes from the matcher as they are added. The
+ * regression test asserts a sibling route is still matched, so this fails
+ * rather than rots.
  */

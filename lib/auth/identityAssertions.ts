@@ -47,6 +47,43 @@ export const CLIENT_ASSERTABLE_IDENTITY_HEADERS: readonly string[] = [
 ];
 
 /**
+ * The ONE client-assertable name a real client actually sends.
+ *
+ * `apiFetch()` sets `x-member-id` deliberately (lib/http/apiBase.ts), because
+ * iOS WebView cannot carry a SameSite cookie cross-origin. It is an identity
+ * CLAIM, not authority: the resolvers verify the session first and reject a
+ * claim that disagrees with it.
+ *
+ * The list is a list because the exemption has to be argued per name, with a
+ * real sender behind it. Nothing else has one.
+ */
+export const CLIENT_SENT_IDENTITY_CLAIM_HEADERS: readonly string[] = ['x-member-id'];
+
+/**
+ * The subset a legitimate client NEVER sends — derived, so it cannot drift.
+ *
+ * Everything else in `CLIENT_ASSERTABLE_IDENTITY_HEADERS` is either middleware's
+ * own derived answer ("an inbound copy is always a forgery attempt", above) or a
+ * role/tier claim no client has any business making. A route reached WITHOUT
+ * middleware sanitisation can refuse these outright rather than merely ignoring
+ * them: there is no honest sender to break.
+ *
+ * `x-maia-member-id` is HERE, not exempt. It is an alias `getMemberIdFromRequest`
+ * does not even inspect, and no client in this repo sends it — so exempting it
+ * would leave an unverified identity assertion ambient in a handler, which is
+ * exactly the boundary this list exists to hold.
+ */
+export const NEVER_CLIENT_SENT_IDENTITY_HEADERS: readonly string[] =
+  CLIENT_ASSERTABLE_IDENTITY_HEADERS.filter(
+    (h) => !CLIENT_SENT_IDENTITY_CLAIM_HEADERS.includes(h),
+  );
+
+/** Which of those a request is carrying. Empty for every honest request. */
+export function forgedIdentityHeaders(inbound: Headers): string[] {
+  return NEVER_CLIENT_SENT_IDENTITY_HEADERS.filter((h) => inbound.has(h));
+}
+
+/**
  * Read the session credential a request presents, in priority order.
  *
  * 1. `maia_session` cookie    — web, sent automatically (incl. by EventSource)

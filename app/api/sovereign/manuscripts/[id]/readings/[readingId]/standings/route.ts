@@ -31,6 +31,34 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * SERVER-SIDE STANDING CONTAINMENT — Founder Pilot, 2026-09-06.
+ *
+ * DEVELOP moved INTO the pilot tester surface, and the UI-only kill switch that
+ * containment previously relied on (`NEXT_PUBLIC_WS_STANDING_ENABLED` in
+ * DevelopRoom) is not containment once a tester can reach the room. A hidden
+ * button is a convention; this is the refusal.
+ *
+ * ⛔ THE SERVER VARIABLE IS THE AUTHORITY. `NEXT_PUBLIC_*` is inlined into the
+ * client bundle, so letting it decide whether the server accepts a write would
+ * put a client-visible value in charge of a server boundary. `WS_STANDING_ENABLED`
+ * is server-only and decides alone.
+ *
+ * Both default to disabled, so the misconfiguration that can occur is the SAFE
+ * one: public set without server = the controls render and every write is
+ * refused (visible, harmless). The unsafe inverse — server open while the UI
+ * hides it — cannot arise from setting the public flag alone.
+ *
+ * ⛔ CONTAINMENT ONLY. This does not resume BUILD-07F, does not repair FINDING
+ * F-CTX, and does not touch recorded standing history: reads are unaffected and
+ * every existing event stays exactly where it is. It removes the ability to
+ * CREATE a new standing act while the feature is disabled — which is what makes
+ * F-CTX unreachable for the cohort rather than merely unlikely.
+ */
+function standingWritesEnabled(): boolean {
+  return process.env.WS_STANDING_ENABLED === '1';
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The wire shape. `currentEventId` is named for what it is: the token a later
@@ -85,6 +113,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string; readingId: string }> },
 ) {
   const { id: manuscriptId, readingId } = await params;
+
+  /* Refused BEFORE identity, body parsing and any store call: a disabled
+     feature must not be probeable for whether a reading exists or who owns it. */
+  if (!standingWritesEnabled()) {
+    return NextResponse.json({ refusal: 'standing_unavailable' }, { status: 403 });
+  }
+
   const gate = await addressed(req, manuscriptId, readingId);
   if (gate instanceof NextResponse) return gate;
 

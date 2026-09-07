@@ -7,15 +7,27 @@ export const dynamic = 'force-dynamic';
  * Returns the invite slot back to the member.
  */
 
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId, inviteId } = body;
+    const { inviteId } = body;
 
-    if (!memberId || !inviteId) {
+    /* IDENTITY IS SERVER-DERIVED. Ownership below is `invite.created_by ===
+       memberId`; while `memberId` came from the body, that comparison proved
+       only that the caller could name the owner. */
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    if (!inviteId) {
       return NextResponse.json(
         { ok: false, code: 'MISSING_PARAMS', error: 'Member ID and Invite ID are required' },
         { status: 400 }
