@@ -16,9 +16,9 @@ intervention, without a shortcut, and without anything being repaired mid-walk.
 **Subject discipline.** The witness binds to the *deployed runtime* `4be87975b`,
 not to canonical. Nothing here transfers to a later runtime without a fresh walk.
 
-> **SUBJECT DRIFT — production moved after the walk.** Production is now
-> `e4ac1bcac` (#1251, NAV-03). Acts 1 and 2 were re-witnessed on it; acts 3–7
-> were not. See §8 before citing this record.
+> **TWO SUBJECTS.** Production moved after the walk and is now `e4ac1bcac`
+> (#1251, NAV-03). P0 and acts 1, 2, 6a and 6b were re-witnessed on it. Acts 3–5
+> and 7 remain bound to `4be87975b`. See §7 before citing any act.
 
 ---
 
@@ -258,7 +258,15 @@ Not repaired tonight. Recorded for its own lane.
 2. Invite delivery
    hand-deliver links
    Resend transactional email is unavailable
+
+3. Manuscript upload has a known intermittent failure.
+   If an upload errors before the manuscript opens, try it again.
+   The failure occurs before the upload is processed, so the failed attempt
+   does not create a partial Work. If it fails repeatedly, stop and report it.
 ```
+
+Instruction 3 is worded to the evidence: a retry **can** succeed, not that a retry
+**will**. See the ingest defect in §6.
 
 On (2): production logs the refusal truthfully and does not swallow it —
 
@@ -286,13 +294,74 @@ Resend quota              OPERATIONAL CONDITION, not an architectural defect
                           all transactional mail down, incl. account recovery
 TRANSPORT_DOWN / quota_exceeded pages nobody                OPEN
 duplicate member row      two "Kelly" rows in the Writer's Studio roster
-legacy inert outline      founder's 262-section manuscript
 maia_member_id trust      parked security inquiry — both getSessionMemberId helpers
                           accept the cookie after a bare existence check
 F-CTX                     OPEN · contained, not repaired
 BUILD-07F                 OPEN · not resumed
 BUILD-07G                 OPEN · whole-work DEVELOP orchestration
 ```
+
+### Ingest response-body defect — status changed
+
+```text
+previous status     PARKED   (draft route only)
+                    docs/programme/PARKED_DEFECT_MANUSCRIPT_DRAFT_ROUTE_
+                    RESPONSE_BODY_2026-09-06.md
+new evidence        reproduces on manuscript ingest
+behavior            INTERMITTENT
+failure point       before application ingest code executes
+security shortcut   NOT ACCEPTABLE
+pilot impact        REAL / NON-BLOCKING WITH INSTRUCTION
+repair tonight      NO
+```
+
+```text
+⨯ TypeError: Response body object should not be disturbed or locked
+    at l.fromNodeNextRequest
+    at M (…/app/api/sovereign/manuscripts/ingest/route.js)
+```
+
+Mechanism, per the #1244 triage: the middleware matcher matches, Next buffers the
+body for middleware and rebuilds the Request from an already-consumed stream — so
+it throws **before any application code runs**. Same shape as
+`/api/voice/transcribe-simple`, documented in `middleware.ts`.
+
+This is materially different from yesterday's parking. It is no longer a curiosity
+because it sits directly in the cohort's first meaningful Writer's Studio act.
+Observed three times on one founder import, then succeeded on the same file with
+nothing changed. **Zero** throws during the `tester4writer` walk.
+
+**The obvious fix is not acceptable.** Dropping the path from the middleware
+matcher worked for `transcribe-simple` because no `accessMatrix` rule covered it.
+`/api/sovereign` **is** covered (`minTier: 'free'`), so the same exclusion would
+strip access enforcement from a member-data write path to fix a parsing bug. An
+intermittent retryable upload error is a far better failure mode than a weakened
+authorization boundary. No emergency middleware change.
+
+### Provenance-neutrality gap — deploy tooling
+
+An environment or key rotation must not be able to select a different application
+image merely because the `:prod` tag moved. Tonight it did (§7). That is a gap in
+the deploy tooling, distinct from the operator error that exposed it, and it
+belongs to its own lane.
+
+### Observed, not adjudicated
+
+```text
+daa70150-c07e-4bd6-9004-03ac97b8d8f0   120 sections   additional Work
+```
+
+Recorded as observed. **No cleanup belongs inside this acceptance lane**, and it is
+not deleted, because it has not been positively identified as accidental.
+
+### Closed by re-import, not by repair
+
+The founder's 262-section manuscript — filed earlier in this record as a "legacy
+inert outline" — was re-imported as `.md` on `e4ac1bcac` and is navigable:
+`manuscriptId 55742458-…`, 262 sections, 62,933 words, section 110 clicked and the
+editor moved to it with its prose. The inert outline was a property of the **old
+import**, not of the Work or of Writer's Studio. Remedy: re-import. No code repair
+was required and none was made.
 
 ### Email delivery residuals
 
@@ -326,21 +395,36 @@ the codebase, after the pilot is safely underway.
 
 ---
 
-## 8 · Subject drift — production moved after the walk
+## 7 · Two subjects — the walk, the drift, and the live re-witness
 
-**Production is no longer the witnessed runtime.** At the close of the session
-`docker exec maia-sovereign printenv GIT_COMMIT` reported `e4ac1bcac`, not
-`4be87975b`.
+```text
+ORIGINAL GATE-0 WALK
+runtime        4be87975b
+Acts 1–7       observed
+result         PASS / GO
 
-### How it happened
+SUBSEQUENT UNPLANNED RUNTIME ADVANCE
+runtime        e4ac1bcac
+cause          container recreate adopted newer prod-tagged image
+relationship   strict descendant of 4be87975b
 
-A Resend API key rotation required the containers reading `.env.production` to be
-recreated. The recreate was issued as a plain compose
+LIVE-RUNTIME RE-WITNESS
+P0             re-witnessed
+Acts 1–2       re-witnessed
+Acts 6a–6b     re-witnessed, because NAV-03 changes the relevant behaviour
+
+Acts 3–5, 7    not re-run; original observations remain bound to 4be87975b
+```
+
+### How the drift happened
+
+A Resend API key rotation required recreating the containers reading
+`.env.production`. The recreate was issued as a plain compose
 `up -d --no-build --force-recreate`, **outside the deploy lane**. That command
 adopts whatever image currently carries the `maia-sovereign:prod` tag. Between the
-Gate-0 walk and the rotation, that tag had been rebuilt at `e4ac1bca` — #1251,
-NAV-03 — by a parallel session. The recreate therefore moved production forward a
-commit silently, with no asserted SHA and no provenance verify.
+walk and the rotation that tag had been rebuilt at `e4ac1bca` — #1251, NAV-03 — by
+a parallel session. Production therefore moved forward a commit silently, with no
+asserted SHA and no provenance verify.
 
 Two secondary faults in the same command, recorded so they are not repeated:
 
@@ -348,13 +432,14 @@ Two secondary faults in the same command, recorded so they are not repeated:
   the production database. Data lives in a volume; nothing was lost; it returned
   healthy before the app containers started. It was still an unnecessary restart
   of the most consequential container on the host.
-- An env-file rotation should be provenance-neutral. This one was not, and the
-  deploy lane exists precisely to make that impossible. It was worked around.
+- An env-file rotation should be provenance-neutral. This one was not. The deploy
+  lane exists to make that impossible, and it was worked around.
 
-**This is an assistant error, not a founder act.** No deploy was authorized; the
-one deploy that *was* attempted that night was correctly refused by the
-immutable-SHA validator (`'e4ac1bcacssh' does not resolve to a commit — refusing`)
-after two commands ran together on one line.
+**This is an assistant error, not a founder act.** No deploy was authorized. The
+one deploy attempted that evening was correctly refused by the immutable-SHA
+validator (`'e4ac1bcacssh' does not resolve to a commit — refusing`) after two
+commands ran together on one line. The tooling gap it exposed is filed separately
+in §6.
 
 ### What the live runtime contains
 
@@ -363,63 +448,91 @@ e4ac1bca   #1251 NAV-03
 37337761   NAV-03 R2 — initial-load race
 87cd311e   NAV-03 R1 — exists race
 3da109e6   NAV-03 — tell the Canvas when Worktable creates the draft
-4be87975   ← the witnessed runtime, contained
+4be87975   ← the original walk's runtime, contained
 ```
 
 `4be87975` (this witness), `37cb209e` (#1250 invite repair) and `bcc37109` (P0
 containment) are all ancestors of `e4ac1bca`. The running system is a strict
-superset of the witnessed one. Nothing was lost. `WS_STANDING_ENABLED` remains
-`unset` on the recreated container.
-
-The defect is evidentiary, not functional.
+superset. `WS_STANDING_ENABLED` remains `unset` on the recreated container.
 
 ### Re-witnessed on `e4ac1bcac`
 
-```text
-runtime   e4ac1bcac
-invite    200            no redirect
-team      307 → /signin  reason=no_session_cookie
-```
+**Provenance and containment**
 
 ```text
-ACT 1  invite reachable unauthenticated   PASS on e4ac1bcac
-ACT 2  /team/general still guarded        PASS on e4ac1bcac
+GIT_COMMIT             e4ac1bcac
+WS_STANDING_ENABLED    unset
 ```
 
-### NOT re-witnessed on `e4ac1bcac`
+**Acts 1–2 — the door, unauthenticated**
 
 ```text
-ACT 3  create account
-ACT 4  membership in the invited Co-Lab
-ACT 5  Writer's Studio reachable
-ACT 6  Work created · section navigation
-ACT 7  DEVELOP returns a reading
+invite   200            no redirect
+team     307 → /signin  reason=no_session_cookie
 ```
 
-These remain witnessed on `4be87975b` and are **inherited by ancestry, not
-re-observed**. Inheritance is a weaker claim than observation and is recorded as
-such.
+**Acts 6a–6b — as `tester4writer`, an ordinary cohort member**
 
-**Act 6 is the weakest inheritance and should be treated as the one to distrust.**
-NAV-03 changes draft-creation refresh behaviour — Worktable notifying the Canvas,
-and two staleness races — which is exactly act 6's territory. A reader citing act
-6 against the live runtime is citing an inference, not a witness.
+Scoped deliberately to NAV-03's blast radius: draft creation and section
+navigation. No DEVELOP, no membership retest, no account creation.
+
+```text
+6a  ingest attempts   1
+    confirm-cuts      PASS   "3 sections detected" — First / Middle / Last
+    Canvas opens      PASS   opened on First
+    section count     3
+
+6b  first row         exact
+    middle row        exact
+    last row          exact
+```
+
+Each row moved the editor to the matching heading **and** the matching section
+text.
+
+**Store-side corroboration**, so the section count is not a screenshot claim:
+
+```text
+b606009f-827d-4efa-af18-cd1a91280a75   "Act 6 Live Runtime RewitnessI"
+                                        3 sections · 2026-09-07 01:55:28Z
+[MAIA/press] manuscript saved  memberRef 23ee389a38b5 · sections: 3
+                               custody: source_custodied
+ingest throws in the walk's window     0
+```
+
+The `memberRef` differs from the founder's (`88099bb1977c`), confirming the Work
+was created by the cohort subject and not by the founder account. Zero server-side
+throws corroborates "attempts: 1" independently of what the browser showed.
+
+The original walk's Work is visible in the same query at `00:35:11Z`
+(`b39f7de6…`, 4 sections) — the two subjects separated in the data itself.
+
+### Why act 6 was re-observed rather than inherited
+
+NAV-03 changes exactly the draft-creation and refresh behaviour act 6 exercises.
+Inheriting it by ancestry would have said "an ancestor passed" where this lane has
+been careful to distinguish **code inclusion** from **observed behaviour**. A
+founder-account import on the same runtime was available and was deliberately
+**not** accepted as sufficient: the live re-witness was scoped to an ordinary
+cohort member, and switching subjects at the exact point a new intermittent ingest
+failure had appeared would have weakened the record where it most needed
+precision.
 
 ### Ruling on the drift
 
-The cohort gate is **not** reopened. The invited-member door is proved on the live
-build, the repair commits are all present, and the running system is a superset of
-the witnessed one. But this record's subject is `4be87975b`, and any claim made
-about `e4ac1bcac` beyond acts 1 and 2 is an inference drawn here deliberately and
-labelled.
+The cohort gate is **not** reopened. Acts 3–5 and 7 remain bound to `4be87975b`
+and are **not** relabelled as witnessed on `e4ac1bcac`; their results remain
+useful evidence, and the record says exactly where they were observed. Everything
+NAV-03 could plausibly have disturbed was re-observed on the live runtime.
 
 ---
 
-## 7 · Ruling
+## 8 · Ruling
 
 ```text
 GATE 0                  PASS
-production              4be87975b
+walk runtime            4be87975b   acts 1–7 observed
+live runtime            e4ac1bcac   P0 + acts 1, 2, 6a, 6b re-observed
 witness                 tester4writer
 cohort release          GO
 
@@ -431,5 +544,10 @@ founder intervention    NONE
 P0 containment          observed absent under an ordinary member
 ```
 
-The cohort gate has passed. The remaining issues already have names and places to
-go. Tonight does not become another repair cycle.
+The cohort gate has passed on `4be87975b` and everything NAV-03 could have
+disturbed has been re-observed on `e4ac1bcac` by an ordinary cohort member. The
+remaining issues already have names and places to go. This does not become another
+repair cycle.
+
+Three cohort instructions (§5) go out with the invitations. Nothing else is owed
+before the pilot.
