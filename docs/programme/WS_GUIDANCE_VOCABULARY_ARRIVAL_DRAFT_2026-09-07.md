@@ -131,9 +131,18 @@ sections while its draft holds a different count: two namespaces, not one.
 > Source, while Source stays as the record of what arrived.
 
 > **Full** — The Working Draft is the living version of your manuscript — the text
-> you edit and develop. It begins from Source but then has its own history. That
-> separation lets the Studio distinguish what arrived from what you later changed
-> without treating organization changes as changes to your words.
+> you edit and develop. It begins from Source and then changes independently
+> while Source remains fixed. That separation lets the Studio distinguish what
+> arrived from what you later changed without treating organization changes as
+> changes to your words.
+
+*Corrected from "then has its own history". History is created by the writer's
+explicit **Keep a version** act — the Studio autosaves the draft but never
+checkpoints on the writer's behalf (`keepAVersion.test.ts:10`: "the gesture is
+the member's… Develop does not acquire the authority instead";
+`capture.ts:7-10`: it "does not checkpoint", and who performs one is deliberately
+not the system's call). The draft **changes**; the writer **makes history**.
+The word belongs to **Keep a version**, where it is earned.*
 
 *"Living **version**" over "living text": it sets up **Keep a version** later
 without implying a mystical category.*
@@ -195,6 +204,18 @@ the project the writer named. It does not alter the writing or decide anything
 about it.*
 
 ## Method ruling
+
+### Standing
+
+```text
+Work           READY   register + consequence approved as design-review baseline
+Source         READY
+Working Draft  READY   after the "own history" correction above
+Section        READY
+
+CANONIZING ACT still Kelly's — the contract requires founder-ratified register,
+and a design-review approval is not that act.
+```
 
 ```text
 ARRIVAL METHOD             ACCEPTED
