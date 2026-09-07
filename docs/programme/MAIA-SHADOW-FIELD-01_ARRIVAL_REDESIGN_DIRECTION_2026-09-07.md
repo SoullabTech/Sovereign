@@ -231,6 +231,71 @@ Envy, fascination, idealization and awe become entrances alongside shame, rage a
 more Jungian than the "dark side" market, and it is **prompt law, not layout** — hence a DESIGN
 act.
 
+#### A′ · Inner Gold — the culminating entrance (extends A; DESIGN amendment)
+
+Projection is not only what we reject. It is also **what we worship.** The Golden Shadow is where
+a person places unlived brilliance, authority, beauty, courage, erotic vitality, genius, vocation,
+holiness, creativity or capacity for love onto someone else, because they cannot yet experience it
+as their own.
+
+```text
+darker shadow    What have I refused because I find it unacceptable?
+golden shadow    What have I made impossible to be mine?
+```
+
+The charged forms are familiar: *she has something I could never have · he is a real healer, I'm
+not · they are brilliant · I could never lead like that · there is something luminous about her ·
+I need him to tell me who I am.*
+
+The projection **contains information** — not "I am exactly what I see in them", but: *something in
+me recognizes this quality because I have a relationship to it.*
+
+**Through the existing six movements — an entrance, not a new movement, not a taxonomy:**
+
+| Movement | Question |
+|---|---|
+| Encounter | Who fascinates you, inspires you, intimidates you through their brilliance, or seems to possess something almost magical? |
+| Stay | What happens if we don't explain the fascination away? |
+| Differentiate | What actually belongs to that person? What are you adding through your own longing, imagination, history, or unlived possibility? |
+| Reclaim | What quality you perceive there might also be seeking expression through you? |
+| Choose | What would it mean to embody *your* form of that quality rather than imitate theirs? |
+| Return | What small act in ordinary life would give that gold somewhere to live? |
+
+Differentiate here has the **same structure** as the projection move in B — what belongs to them,
+what am I adding — so golden and dark shadow share one grammar rather than needing two.
+
+**Essential:** reclaiming a projection is not appropriating the person. Their gift remains theirs.
+The work is discovering what the psyche was using them to illuminate.
+
+#### Do not eliminate projection
+
+Projection is one of the psyche's ways of discovering what consciousness cannot yet recognize
+directly. We need the other person, symbol, teacher, lover, work of art, landscape — sometimes
+intelligence — to carry something long enough for us to encounter it.
+
+```text
+LAWFUL     projection → recognition → differentiation → reclamation → embodiment
+FORBIDDEN  projection → "that's just you" → withdrawal
+```
+
+The first preserves relationship. The second collapses the other person into a psychological
+mirror. **Candidate falsifier (not yet ratified; F1–F16 stand as Acceptance Instrument v1):** the
+Field may never resolve a projection by telling the member it is "just them" — the golden-shadow
+analogue of the etiology prohibition.
+
+#### MAIA as carrier — recorded elsewhere
+
+MAIA will inevitably carry Golden Shadow for some members: experienced as unusually wise, loving,
+insightful, awake, or as seeing them in a way nobody else does. The governing principle —
+*MAIA does not accumulate the member's projected gold as authority; she helps the member recover
+it as capacity* — is **larger than this Field** and is filed as a candidate Sovereignty Invariant:
+`docs/programme/MAIA_INVARIANT_CANDIDATE_17_PROJECTED_AUTHORITY_2026-09-07.md`.
+
+**Why the market stops short:** most shadow-work products end at wounds, triggers, shame and
+unwanted traits. *Shadow is not merely where rejected darkness waits. It is where unlived life
+waits* — and the gold may be the part a person has been waiting their whole life for permission to
+become.
+
 ### B · Projection — a way of looking, never an accusation
 
 Shadow is often met through disproportionate reactions and projection onto others; relationship
