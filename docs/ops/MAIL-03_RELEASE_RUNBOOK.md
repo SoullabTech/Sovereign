@@ -72,22 +72,56 @@ own SHA. That is fine, but it must be PROVEN to contain the containment commit
 rather than assumed:
 
 ```bash
-cd /Users/soullab/MAIA-SOVEREIGN          # MUST be inside the repo
-git fetch origin claude/resend-security-inhouse-email-f1utcu
-git cat-file -e ee612602 || echo 'STOP: commit not present locally — fetch it first'
+cd /Users/soullab/MAIA-SOVEREIGN || exit 1
+git fetch origin
 
 RUNNING=$(ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT')
-echo "running: $RUNNING"
-git merge-base --is-ancestor ee612602 "$RUNNING" \
-  && echo "OK: running artifact contains ee612602" \
-  || echo "STOP: ee612602 is NOT in the running artifact's history"
+echo "running: ${RUNNING:-<empty>}"
+
+# Guard the input before it is used as a revision.
+case "$RUNNING" in
+  '')        echo "STOP: could not read GIT_COMMIT — no verdict"; exit 1;;
+  unknown)   echo "STOP: container reports 'unknown' — deploy bypassed the provenance chain"; exit 1;;
+esac
+
+git cat-file -e 'ee612602^{commit}' 2>/dev/null \
+  || { echo "STOP: ee612602 not known locally — fetch the branch"; exit 1; }
+
+git cat-file -e "${RUNNING}^{commit}" 2>/dev/null \
+  || { echo "STOP: running commit $RUNNING not known locally — fetch it"; exit 1; }
+
+if git merge-base --is-ancestor ee612602 "$RUNNING"; then
+  echo "OK: running production contains ee612602"
+else
+  rc=$?
+  if [ "$rc" -eq 1 ]; then
+    echo "STOP: ee612602 genuinely NOT in running history"
+  else
+    echo "STOP: ancestry check errored (exit $rc) — NO VERDICT"
+  fi
+fi
 ```
 
-Run it from the repo. Outside one, `git` exits with `fatal: not a git
-repository`, the `&&` falls through, and the `||` branch prints STOP — a
-missing-repo error wearing the costume of an ancestry verdict. Same class of
-false signal as the placeholder run: check the echoed `running:` line and the
-absence of a `fatal:` before believing either outcome.
+Three states are preserved deliberately, because collapsing them is how the
+2026-09-07 attempt produced a STOP that had evaluated nothing:
+
+```text
+OBJECT UNKNOWN           ≠ ancestry failure
+CHECK ERROR (exit >1)    ≠ ancestry failure
+EXIT 1 FROM MERGE-BASE   = genuine "not an ancestor"
+```
+
+`merge-base --is-ancestor` returns 0 for yes, **1 for no, and >1 for could not
+determine**. Only exit 1 is a verdict. Run it from inside the repo: outside one,
+git exits `fatal: not a git repository`, the `&&` falls through, and a plain
+`||` branch prints STOP — a missing-repo error impersonating an ancestry
+verdict. The revision is fully quoted because `^` is a glob operator in zsh
+under `extendedglob`.
+
+If artifact inspection says containment is present while ancestry says it is
+not, neither signal is privileged by intuition — investigate the provenance of
+both. That contradiction is precisely what a production witness exists to
+expose.
 
 Confirm containment is in the RUNNING artifact. Grep for a runtime string, not
 a comment: minification strips comments, so a check against the explanatory
