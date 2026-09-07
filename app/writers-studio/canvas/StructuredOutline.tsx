@@ -98,6 +98,24 @@ const CHROME: React.CSSProperties = {
   paddingTop: SPACE.comfortable,
 };
 
+/**
+ * The nearest ancestor that actually scrolls, or null.
+ *
+ * Deliberately excludes the document: a reveal inside a column may move that
+ * column and nothing else. `scrollIntoView` cannot express that constraint,
+ * which is why it is not used here.
+ */
+function scrollportOf(el: HTMLElement): HTMLElement | null {
+  let node = el.parentElement;
+  while (node) {
+    const style = getComputedStyle(node);
+    const scrolls = /(auto|scroll|overlay)/.test(style.overflowY);
+    if (scrolls && node.scrollHeight > node.clientHeight) return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
 export default function StructuredOutline({
   manuscriptId,
   sections,
@@ -166,7 +184,22 @@ export default function StructuredOutline({
     const el = activeRow.current;
     if (!el) return;
     revealed.current = true;
-    el.scrollIntoView({ block: 'center' });
+    /* ⚠️ SCOPED TO THIS PANEL, NEVER THE DOCUMENT.
+       `scrollIntoView` scrolls EVERY scrollable ancestor, not merely the
+       nearest — so revealing a row in this column could also scroll the page,
+       moving the writing field the member is about to work in. The reveal is
+       about this map; it has no business moving the room.
+       Centring is computed against the panel's own scrollport and applied to
+       that element alone. If no scrollable ancestor exists there is nothing to
+       reveal within, and nothing happens — which is correct, not a fallback to
+       scrolling the document. */
+    const scroller = scrollportOf(el);
+    if (!scroller) return;
+    const top =
+      el.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+    scroller.scrollTop = Math.max(0, top - (scroller.clientHeight - el.offsetHeight) / 2);
   }, [activeId, ordered]);
 
   const row = (s: ManuscriptSection, depth: number) => {

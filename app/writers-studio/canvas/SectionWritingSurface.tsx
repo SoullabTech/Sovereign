@@ -215,9 +215,18 @@ export default function SectionWritingSurface({
   const activeId = writing.activeId;
 
   /* Focus follows the writer, so keyboard navigation lands in the prose rather
-     than leaving them somewhere they have to hunt for. */
+     than leaving them somewhere they have to hunt for.
+     ⚠️ preventScroll IS THE WHOLE POINT OF THE OPTION HERE. A bare focus() asks
+     the browser to bring the focused element into view, and this field is the
+     tallest thing in the room — so selecting an outline row moved the entire
+     page under the writer, who then had to reload to get it back. Founder
+     report, 2026-09-07: "when I click something in Manuscript row the whole
+     field shifts upward unless I reset."
+     The intent of the effect is unchanged: the caret still lands in the prose,
+     and typing still goes where the writer is looking. What is removed is the
+     browser scrolling the document to prove it. */
   useEffect(() => {
-    if (activeId) fieldRef.current?.focus();
+    if (activeId) fieldRef.current?.focus({ preventScroll: true });
   }, [activeId]);
 
   /* GROW TO CONTENT, exactly as the continuous field does.
@@ -230,8 +239,21 @@ export default function SectionWritingSurface({
   useEffect(() => {
     const el = fieldRef.current;
     if (!el) return;
+    /* ⚠️ THE MEASUREMENT MUST NOT MOVE THE PAGE.
+       `height: auto` collapses this field to a couple of rows so scrollHeight
+       can be read. Reading scrollHeight forces synchronous layout, and while
+       the field is collapsed the document is briefly far shorter — long enough
+       for the browser to clamp a scroll position that is now past the end. The
+       height is restored immediately, but the clamped scroll is not.
+       This is the second half of the same founder-reported jump: the first is
+       focus() scrolling to the field, this is the field's own remeasurement
+       pulling the page with it. Both fire on `activeId`.
+       Restoring only when it actually moved keeps a legitimate scroll — the
+       writer's own — untouched. */
+    const y = window.scrollY;
     el.style.height = 'auto';
     el.style.height = `${el.scrollHeight}px`;
+    if (window.scrollY !== y) window.scrollTo({ top: y });
   }, [body, activeId]);
 
   const active = writing.active;
