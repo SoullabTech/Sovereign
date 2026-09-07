@@ -543,22 +543,34 @@ export const config = {
  * because NO rule in config/accessMatrix.ts matched it, so middleware was
  * already waving it through and nothing was lost. This path IS covered, by
  * `{ prefix: '/api/sovereign', minTier: 'free' }`. Two things had to be
- * reproduced in-route before the exclusion was admissible, and both are:
+ * reproduced in-route before the exclusion was admissible, and both are — see
+ * the boundary block at the top of that route file:
  *
- *   1. ACCESS. `minTier: 'free'` is TIER_RANK 0 — the lowest — and the rule
- *      carries no rolesAnyOf, so its only real effect on this path is
- *      "authenticated". The route already enforces that itself, and more
- *      strictly: getMemberIdFromRequest() verifies the session and REJECTS a
- *      mismatched x-member-id as impersonation rather than trusting it.
+ *   1. AUTHORITY. The route calls deriveVerifiedAccess() and then
+ *      checkAccess('/api/sovereign/manuscripts/ingest', ...) — the MATRIX, not
+ *      a restatement of what the matrix says today. `minTier: 'free'` is
+ *      TIER_RANK 0 and the rule carries no rolesAnyOf, so its only present
+ *      effect is "authenticated"; hardcoding that answer would freeze today's
+ *      semantics into the exception, and a rule that later acquires a role or a
+ *      higher tier would be enforced everywhere EXCEPT here. Calling the matrix
+ *      means the rule change reaches the excluded path too. Denials reproduce
+ *      this file's API semantics: 401 unauthenticated, 403 missing-role, the
+ *      role check that survives the development tier waiver, 404 unmapped.
  *
  *   2. SANITISATION. Every matched request is forwarded through
  *      stripClientIdentityAssertions(), whose guarantee is that "a handler
  *      reading x-access-roles reads our answer or nothing at all — never the
  *      caller's." An exclusion silently revokes that for this route. So the
- *      route now REFUSES any request carrying middleware-derived identity
- *      headers (forgedIdentityHeaders); a legitimate client never sends them,
- *      and x-member-id is deliberately NOT among them because apiFetch sends it
- *      on iOS and the auth layer already treats it as a claim to verify.
+ *      route deletes every CLIENT_ASSERTABLE_IDENTITY_HEADERS entry from the
+ *      request IN PLACE — after authority has inspected them, because
+ *      deriveVerifiedAccess must still see an x-member-id claim to catch one
+ *      that disagrees with the session, and before formData(). In place, on the
+ *      same request: constructing a second Request to carry sanitized headers
+ *      would consume the body, which is the very failure this exclusion exists
+ *      to avoid. x-session-token is outside that list, so the credential
+ *      survives. The invariant: untrusted assertions may be inspected by the
+ *      authority boundary; they may not survive beyond it as ambient request
+ *      context.
  *
  * ⛔ SCOPE: this one path only, anchored with `$` so it cannot become a prefix.
  * A prefix-shaped exclusion would silently remove future

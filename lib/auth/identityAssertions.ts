@@ -47,38 +47,6 @@ export const CLIENT_ASSERTABLE_IDENTITY_HEADERS: readonly string[] = [
 ];
 
 /**
- * The subset that a legitimate client NEVER sends.
- *
- * `x-member-id` and `x-maia-member-id` are different in kind: `apiFetch()` sends
- * them on purpose, because iOS WebView cannot carry a SameSite cookie
- * cross-origin. They are identity CLAIMS, and `getMemberIdFromRequest()` already
- * treats them as such — it verifies the session first and rejects a claim that
- * disagrees with it.
- *
- * The headers below are middleware's own derived answer. This file already says
- * it: "These are OURS to set on the forwarded request; an inbound copy is always
- * a forgery attempt." So a route reached WITHOUT middleware sanitisation can
- * refuse them outright rather than merely ignoring them — there is no honest
- * sender to break.
- */
-export const NEVER_CLIENT_SENT_IDENTITY_HEADERS: readonly string[] = [
-  'x-maia-roles',
-  'x-maia-tier',
-  'x-access-authed',
-  'x-access-tier',
-  'x-access-roles',
-  'x-access-member-id',
-  'x-access-rule',
-  'x-access-unmapped',
-  'x-access-capacitor-bypass',
-];
-
-/** Which of those a request is carrying. Empty for every honest request. */
-export function forgedIdentityHeaders(inbound: Headers): string[] {
-  return NEVER_CLIENT_SENT_IDENTITY_HEADERS.filter((h) => inbound.has(h));
-}
-
-/**
  * Read the session credential a request presents, in priority order.
  *
  * 1. `maia_session` cookie    — web, sent automatically (incl. by EventSource)

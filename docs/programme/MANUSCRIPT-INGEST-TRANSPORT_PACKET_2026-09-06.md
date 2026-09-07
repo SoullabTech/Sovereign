@@ -39,11 +39,30 @@ DO NOT HAVE  a reproduction. The defect is inferred from signature and
 ## Candidate repair — AMENDED 2026-09-07
 
 ```text
-exclude this exact multipart route from the body-disturbing matcher
-  + reproduce the equivalent access enforcement INSIDE the route
-  + reproduce the HEADER SANITISATION inside the route      ← ADDED
-  + prove no authorization regression
+1  MATCHER   exclude exactly /api/sovereign/manuscripts/ingest
+2  AUTHORITY — ORIGINAL REQUEST
+   deriveVerifiedAccess(request)
+   → checkAccess('/api/sovereign/manuscripts/ingest', verified.tier,
+                 verified.roles, verified.authenticated)
+   → reproduce API denial semantics in-route
+3  SANITIZE — SAME REQUEST
+   only AFTER authority has inspected the caller's claims,
+   delete every CLIENT_ASSERTABLE_IDENTITY_HEADERS entry
+   from request.headers IN PLACE
+   DO NOT construct a second Request / NextRequest
+4  INGEST    request.formData() on that same request → parse → custody
 ```
+
+The order is the contract, and it is not interchangeable. Authority must read
+the caller's claims — `deriveVerifiedAccess` compares `x-member-id` against the
+session and denies a mismatch as impersonation, so sanitising first would blind
+the impersonation check. Nothing downstream of authority may read them.
+Sanitisation is IN PLACE because a second `Request` carrying sanitized headers
+would consume the body, which is the exact failure the exclusion exists to
+avoid. `x-session-token` is outside the strip list, so the credential survives.
+
+**Invariant.** *Untrusted assertions may be inspected by the authority boundary;
+they may not survive beyond it as ambient request context.*
 
 ### Amendment · the packet named the wrong half as the hard one
 
@@ -53,9 +72,9 @@ thing it does for a matched request, and is close to the *easier* half:
 **Access turned out to be nearly vacuous here.** `{ prefix: '/api/sovereign',
 minTier: 'free' }` carries no `rolesAnyOf`, and `TIER_RANK.free` is `0` — the
 lowest — so `tierSatisfies` admits every tier. The rule's only real effect on
-this path is *authenticated*, which the route already enforces itself via
-`getMemberIdFromRequest()`, and enforces more strictly: it verifies the session
-and REJECTS a mismatched `x-member-id` as impersonation rather than trusting it.
+this path is *authenticated*. That is a statement about today, not a licence to
+encode it: the route calls `checkAccess` with the path so the rule's future
+shape reaches the excluded path too.
 
 **Sanitisation is the half that mattered, and the packet did not name it.** Every
 matched request is forwarded through `stripClientIdentityAssertions()`, whose
@@ -65,12 +84,19 @@ that for this route. Nothing on this path trusts those headers today; after the
 exclusion, this becomes the one route where `x-access-tier` is attacker-controlled
 with no signpost for whoever adds the next helper.
 
-**Refused, not ignored.** Ignoring protects only the code that exists now. The
-route refuses any request carrying middleware-derived identity headers
-(`forgedIdentityHeaders`). No honest sender breaks: those are middleware's own
-derived values, and this repo already records that "an inbound copy is always a
-forgery attempt." `x-member-id` is deliberately excluded from that refusal —
-`apiFetch()` sends it on iOS, where a SameSite cookie cannot cross origins.
+**Removed, not refused — and not hardcoded.** A first pass refused any request
+carrying middleware-derived headers and read identity via
+`getMemberIdFromRequest()` alone. Both halves were wrong in the same way: they
+encoded *today's* answer. Refusal is a rule about which names are currently
+middleware-only, and it would go on protecting nothing the day one of them
+becomes legitimate; resolving identity without `checkAccess` freezes today's
+matrix semantics into the exception, so a `/api/sovereign` rule that later
+acquires a role or a higher tier would be enforced everywhere EXCEPT here. The
+route therefore calls the MATRIX for authority and DELETES the whole
+`CLIENT_ASSERTABLE_IDENTITY_HEADERS` list from the request afterwards. Deletion
+breaks no honest sender either: `x-member-id`, which `apiFetch()` does send on
+iOS where a SameSite cookie cannot cross origins, is read by authority first and
+removed only once it has been checked against the session.
 
 **Why the voice precedent does not transfer unmodified.** That route was safe to
 drop from the matcher because *no rule in `config/accessMatrix.ts` matched it*, so
@@ -84,7 +110,9 @@ paired with the in-route check.**
 
 ```text
 F1  an unauthenticated upload is REFUSED
-F2  a member cannot write to another member's Work through this route
+F2  a valid member cannot cause artifact custody to be attributed to another
+    member by supplying x-member-id / x-maia-member-id or forged x-access-*
+    context
 F3  a valid member upload SUCCEEDS
 F4  the multipart body reaches the route intact (the defect is actually fixed,
     not merely made quieter)
@@ -92,7 +120,13 @@ F5  .docx / .md / .txt / .pdf all cross the SAME authorization boundary —
     no format is privileged by the repair
 F6  the matcher exclusion does not widen /api/sovereign generally:
     a sibling sovereign route remains matched and enforced
-F7  client-asserted identity headers cannot reach the handler on this route
+F7  client assertions cannot survive the excluded boundary: given a valid
+    session plus forged x-access-tier: pro, x-access-roles: admin,
+    x-access-member-id: <other>, x-member-id: <claim> — authority derives from
+    the validated session; a mismatched identity claim is refused before
+    sanitisation; after access succeeds every name in
+    CLIENT_ASSERTABLE_IDENTITY_HEADERS is absent from the SAME NextRequest
+    before formData / parsing / custody; x-session-token remains available
     (ADDED by the amendment — the falsifier for the half the packet missed)
 ```
 
@@ -123,17 +157,31 @@ lanes.
 
 ```text
 middleware.ts                      matcher excludes the path, ANCHORED with $
-lib/auth/identityAssertions.ts     NEVER_CLIENT_SENT_IDENTITY_HEADERS +
-                                   forgedIdentityHeaders(), beside the list they
-                                   subset, so the two cannot drift
-ingest/route.ts                    refuses forged identity headers before auth
-transportBoundary.test.ts          F1–F7, 25 assertions
+                                   + the rationale block records both halves
+ingest/route.ts                    deriveVerifiedAccess → checkAccess(path) →
+                                   middleware's API denial semantics → in-place
+                                   deletion of CLIENT_ASSERTABLE_IDENTITY_HEADERS
+                                   → formData on the same request
+transportBoundary.test.ts          F1–F7, 23 assertions
 ```
 
-Full suite, like-for-like against clean canonical: 37 failing suites / 96 failing
-tests BEFORE, 36 / 87 AFTER — no regression introduced. `checkAccess.test.ts`
-fails to RUN in both states and is pre-existing. The voice precedent's own guard,
-`middleware-transcribe-exclusion.test.ts`, still passes.
+`NEVER_CLIENT_SENT_IDENTITY_HEADERS` / `forgedIdentityHeaders()` were introduced
+by the superseded first pass and are removed with it — the tightened shape has no
+caller for them, and a named security helper with no caller is a false signpost.
+
+**Class L — the mechanism, exercised.** A real `NextRequest` carrying a multipart
+body: every `CLIENT_ASSERTABLE_IDENTITY_HEADERS` name deletes in place and reads
+back absent, `x-session-token` survives, `bodyUsed` stays `false`, and
+`formData()` then yields the file with its bytes intact. The order property —
+authority before sanitisation before body — is asserted against the route source,
+because it is a property of this file rather than of the runtime.
+
+Gates on this head: `typecheck` — no regressions (230 errors vs 239 baseline);
+`check:no-supabase` clean; `lib/auth` + `middleware-transcribe-exclusion` — 13
+suites / 240 tests pass; transport boundary — 23 pass.
+
+**Not yet class R.** Nothing here is a production witness. The defect was observed
+in production; the repair has not been.
 
 ## Interim guidance, until repaired
 
