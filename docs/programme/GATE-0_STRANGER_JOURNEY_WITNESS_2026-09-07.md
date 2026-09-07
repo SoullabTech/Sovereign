@@ -280,8 +280,8 @@ Named, placed, and deliberately not repaired tonight.
 
 ```text
 default-team resolution   ensureOwnCoLab / resolveCurrentTeamId prefers owned team
-Resend quota              all transactional mail down, incl. account recovery
-invite modal reports sent when the provider refused        OPEN
+Resend quota              OPERATIONAL CONDITION, not an architectural defect
+                          all transactional mail down, incl. account recovery
 TRANSPORT_DOWN / quota_exceeded pages nobody                OPEN
 duplicate member row      two "Kelly" rows in the Writer's Studio roster
 legacy inert outline      founder's 262-section manuscript
@@ -291,6 +291,36 @@ F-CTX                     OPEN · contained, not repaired
 BUILD-07F                 OPEN · not resumed
 BUILD-07G                 OPEN · whole-work DEVELOP orchestration
 ```
+
+### Email delivery residuals
+
+Two residuals here must survive the pilot, and they are not the same kind of
+thing as the quota itself.
+
+**1 · Delivery state must be explicit**
+
+```text
+invite_created
+email_delivered
+email_refused
+```
+
+The current defect is that the member-facing surface can report **"sent"** after
+the invite exists even when the transport provider has refused delivery. The
+server logged the refusal truthfully; the UI did not carry it. That is an
+observability defect, and it converted a straightforward quota exhaustion into an
+hour-long diagnosis on the night before a cohort.
+
+**2 · Transport resilience remains an architectural question**
+
+If fallback delivery is adopted, it should live behind the shared mail
+abstraction with declared transport and failure semantics — **not** as an
+invite-specific alternate path. A second transport wired into one route buys
+delivery at the cost of two possible causes for every future failure.
+
+The Resend quota itself is the current **operational condition**, not the
+architectural defect. It is fixed on the provider account; these two are fixed in
+the codebase, after the pilot is safely underway.
 
 ---
 
