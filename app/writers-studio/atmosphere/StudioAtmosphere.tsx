@@ -44,25 +44,23 @@ const STORAGE_KEY = 'ws_atmosphere';
 const CANVAS_STORAGE_KEY = 'ws_canvas_surface';
 
 /**
- * ⛔ ONE CHOICE IN THIS RELEASE — the page, not the room.
+ * TWO INDEPENDENT AXES:
  *
- * The five-room Studio atmosphere axis was built and then WITHDRAWN by founder
- * ruling 2026-09-07. The Studio's ground is a sampled, frozen design contract
- * guarded by assertGroundIsWarm(); making it selectable is a separate design
- * act that has not been ruled, and it must not enter production on the back of
- * a Canvas feature.
+ *   id             the ROOM — header, rails, panels, dock, shell
+ *   canvasSurface  the PAGE — the manuscript plane, and nothing else
  *
- * The machinery stays because the Canvas material is built on it — a material
- * IS a room, scoped to the writing plane — but `id` is fixed at the default
- * and there is no `choose`. Restoring the axis is adding a control and a
- * writer, not rebuilding a system.
+ * Composable, not alternatives. Carried, stored and written separately so one
+ * can never silently reset the other.
  *
- *   id             the ROOM — fixed at Atelier, the Studio's own ground
- *   canvasSurface  the PAGE — the manuscript plane, and the writer's choice
+ * The room axis was withdrawn on 2026-09-07 as unratified and restored the
+ * same day by founder act on their own witness of the rendered rooms. The
+ * machinery never left, because a Canvas material IS a room scoped to the
+ * writing plane — restoring the axis was adding back a control and a writer.
  */
 interface AtmosphereContext {
-  /** The room. NOT a member choice in this release — see the note above. */
+  /** The room. */
   id: AtmosphereId;
+  choose: (id: AtmosphereId) => void;
   /** The page. The one appearance choice a writer makes. */
   canvasSurface: CanvasSurfaceId;
   chooseCanvas: (id: CanvasSurfaceId) => void;
@@ -73,6 +71,7 @@ interface AtmosphereContext {
 const Ctx = createContext<AtmosphereContext>({
   id: DEFAULT_ATMOSPHERE,
   canvasSurface: DEFAULT_CANVAS_SURFACE,
+  choose: () => {},
   chooseCanvas: () => {},
   settled: false,
 });
@@ -150,12 +149,12 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
   /* Starts at the default on both server and first client render so the markup
      matches; the remembered choice is applied in an effect. A hydration
      mismatch here would be a visible flicker, not a warning. */
-  /* Fixed. Kept as state-shaped only so restoring the axis is a small act. */
-  const id = DEFAULT_ATMOSPHERE;
+  const [id, setId] = useState<AtmosphereId>(DEFAULT_ATMOSPHERE);
   const [canvasSurface, setCanvasSurface] = useState<CanvasSurfaceId>(DEFAULT_CANVAS_SURFACE);
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
+    setId(remembered());
     setCanvasSurface(rememberedCanvas());
   }, []);
 
@@ -166,7 +165,9 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
         const res = await apiFetch('/api/sovereign/studio/atmosphere', { method: 'GET' });
         if (!live || !res.ok) return;
         const data = await res.json();
-        /* The server is the authority, including when it says "no choice". */
+        /* The server is the authority, including when it says "no choice".
+           Read separately: a writer may have chosen a room and never a page. */
+        if (isAtmosphereId(data?.atmosphere)) setId(data.atmosphere);
         if (isCanvasSurfaceId(data?.canvasSurface) && data.canvasSurface !== DEFAULT_CANVAS_SURFACE) {
           setCanvasSurface(data.canvasSurface);
           return;
@@ -197,6 +198,18 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const choose = useCallback((next: AtmosphereId) => {
+    setId(next); // the room changes now; the network is not in the way
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* Not being able to remember is not a reason to refuse the change. */
+    }
+    /* Only the room is sent. The page is not mentioned, so it cannot be
+       overwritten by a choice that was never about it. */
+    persist({ atmosphere: next });
+  }, []);
+
   const chooseCanvas = useCallback((next: CanvasSurfaceId) => {
     setCanvasSurface(next);
     try {
@@ -213,7 +226,7 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
   const vars = atmosphereVariables(ATMOSPHERES[id]);
 
   return (
-    <Ctx.Provider value={{ id, canvasSurface, chooseCanvas, settled }}>
+    <Ctx.Provider value={{ id, canvasSurface, choose, chooseCanvas, settled }}>
       <div style={vars as React.CSSProperties} data-ws-atmosphere={id}>
         {children}
       </div>

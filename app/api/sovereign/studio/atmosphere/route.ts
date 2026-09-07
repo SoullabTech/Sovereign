@@ -89,21 +89,15 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Nothing to change' }, { status: 400 });
     }
 
-    /* ⛔ THE ROOM IS NOT A CHOICE IN THIS RELEASE. The five-room atmosphere
-       axis was withdrawn by founder ruling 2026-09-07 — the Studio's ground is
-       a sampled, frozen design contract, and making it selectable is a separate
-       design act that has not been ruled.
+    /* Validated against the authored rooms and materials, not against the
+       columns. A member cannot store one that does not exist — but an id
+       retired later still reads back as the default rather than breaking their
+       Studio.
 
-       Refused here rather than silently ignored. A write path that accepts a
-       value nothing can send and nothing will honour is the mirror image of
-       the defect this room keeps producing — a door with no command behind it —
-       and it would let the axis return without anyone deciding to return it.
-       The column stays; only the writer is closed. */
-    if (setsRoom) {
-      return NextResponse.json(
-        { error: 'The Studio atmosphere is not a member choice in this release.' },
-        { status: 400 },
-      );
+       The room axis was closed here on 2026-09-07 as unratified and reopened
+       the same day by founder act. */
+    if (setsRoom && !isAtmosphereId(atmosphere)) {
+      return NextResponse.json({ error: 'Unknown atmosphere' }, { status: 400 });
     }
     if (setsPage && !isCanvasSurfaceId(canvasSurface)) {
       return NextResponse.json({ error: 'Unknown canvas material' }, { status: 400 });

@@ -13,6 +13,7 @@ import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
 import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
 import { WorkVisualChooser, CardVisual, HeroVisual } from './WorkVisual';
+import { AppearanceMenu } from './atmosphere/AppearanceMenu';
 
 /**
  * Writer's Studio — Home.
@@ -481,6 +482,17 @@ export default function HomeView({
       {!loading ? <Hero /> : null}
 
       <div className="max-w-4xl mx-auto">
+        {/* The same control the Canvas carries, not a second one: one component,
+            one preference, two doors. A writer changes the room from wherever
+            they happen to be standing. Available in the empty Studio too —
+            someone arriving with nothing written should still get to decide
+            what room they are arriving into. */}
+        {!loading ? (
+          <div className="flex justify-end -mt-4 mb-6">
+            <AppearanceMenu />
+          </div>
+        ) : null}
+
         {loading ? (
           <p className="text-[15px] opacity-40">Opening your studio…</p>
         ) : kind === 'begin' ? (

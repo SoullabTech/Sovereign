@@ -204,44 +204,51 @@ describe('a writer preference, never a property of the Work', () => {
 });
 
 
-describe('WITHDRAWN — the Studio atmosphere is not a member choice', () => {
-  /* Founder ruling 2026-09-07. The five-room axis was built and withdrawn: the
-     Studio's ground is a sampled, frozen design contract, and making it
-     selectable is a separate design act. It must not reach production on the
-     back of a Canvas feature. The machinery stays — a material IS a room
-     scoped to the writing plane — but nothing a member touches offers it. */
+describe('RESTORED — the Studio axis, by founder act', () => {
+  /* Withdrawn 2026-09-07 as unratified: a selectable Studio ground relaxes a
+     sampled, frozen design contract, and that needed a founder act rather than
+     a Canvas feature carrying it in. Restored the same day by that act, on the
+     founder's own witness of the rendered rooms.
 
-  const studioFiles = readdirSync(join(__dirname, '..'), { recursive: true } as never) as string[];
+     Both facts are kept. The withdrawal was correct and so is the restoration;
+     what changed is that the decision got made, in the open, by the person
+     entitled to make it. These obligations exist so the axis can never return
+     — or vanish — without someone deciding it. */
 
-  it('⛔ no control for it exists anywhere a member can reach', () => {
-    expect(studioFiles.some((f) => String(f).includes('AtmosphereSwitch'))).toBe(false);
-  });
-
-  it('⛔ the Appearance menu offers the page and not the room', () => {
+  it('the Appearance menu offers BOTH the room and the page', () => {
     const menu = readFileSync(join(__dirname, '..', 'atmosphere', 'AppearanceMenu.tsx'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(menu).toContain('ATMOSPHERE_LIST');
     expect(menu).toContain('CANVAS_SURFACE_LIST');
-    expect(menu).not.toContain('ATMOSPHERE_LIST');
-    expect(menu).not.toMatch(/\bchoose\(/);
   });
 
-  it('⛔ the write path REFUSES a room, rather than quietly ignoring it', () => {
-    /* A write path that accepts a value nothing sends and nothing honours is
-       the mirror of the defect this room keeps producing, and would let the
-       axis return without anyone deciding to return it. */
+  it('the write path accepts a room and refuses one that does not exist', () => {
     const route = readFileSync(
       join(REPO_ROOT, 'app/api/sovereign/studio/atmosphere/route.ts'),
       'utf8',
     ).replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(route).toMatch(/if \(setsRoom\)[\s\S]{0,200}400/);
+    expect(route).toMatch(/setsRoom && !isAtmosphereId\(atmosphere\)/);
+    expect(route).not.toMatch(/not a member choice in this release/);
   });
 
-  it('the Studio ground guard keeps its full meaning', () => {
-    /* Not narrowed to "the default ground", because the ground is no longer
-       selectable — checking the fallback IS checking the ground. */
+  it('⛔ the ground guard is narrowed to the DEFAULT, not deleted', () => {
+    /* The contract it defends is unchanged: a DESIGNER may not cool the
+       Studio's own ground toward the generic charcoal every writing tool
+       drifts into. A MEMBER choosing Forest is not that. Relaxing it further,
+       or removing it, would be another design act. */
     const theme = readFileSync(join(__dirname, '..', 'studioTheme.ts'), 'utf8');
-    expect(theme).toContain('The Studio ground is espresso');
-    expect(theme).not.toContain("DEFAULT ground is espresso");
+    expect(theme).toContain("DEFAULT ground is espresso");
+    expect(theme).toContain('assertGroundIsWarm');
+  });
+
+  it('the axes stay independent — a room is not a page', () => {
+    /* The whole reason both can exist: the Studio's variables are set on the
+       shell, the material's on the writing field, and neither emits the
+       other's. --ws-bg is the shell gradient and a material never touches it. */
+    for (const surface of CANVAS_SURFACE_LIST) {
+      expect(Object.keys(canvasSurfaceVariables(surface))).not.toContain('--ws-bg');
+    }
+    expect(Object.keys(atmosphereVariables(ATMOSPHERES.atelier))).toContain('--ws-bg');
   });
 });
 

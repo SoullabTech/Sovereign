@@ -745,30 +745,33 @@ export function fallbackOf(token: string): string {
 }
 
 /**
- * The Studio ground is espresso, never charcoal.
+ * The DEFAULT Studio ground is espresso, never charcoal.
  *
- * ⚠️ Reads the token's FALLBACK, and its full meaning is intact.
+ * ⚠️ Narrowed to the DEFAULT, by founder act, and the narrowing is the point.
  *
- * A selectable Studio atmosphere would have narrowed this guard to "the
- * default ground is warm" — Forest is green and Cloud is light by choice. That
- * axis was WITHDRAWN by founder ruling 2026-09-07 precisely because relaxing
- * this contract is a design act nobody had performed. So the Studio ground is
- * not selectable, these tokens resolve to their fallbacks everywhere in the
- * room, and checking the fallback IS checking the ground.
+ * This guard read "the Studio ground is warm" — true when there was one
+ * palette, and contradicted by a selectable atmosphere that makes Forest green
+ * and Cloud light BY MEMBER CHOICE. The axis was withdrawn on 2026-09-07 as
+ * unratified precisely because relaxing this contract needed a founder act
+ * rather than a feature carrying it in, and restored the same day when that
+ * act was performed on the founder's own witness of the rendered rooms.
  *
- * The fallback is read rather than the literal only because the tokens became
- * `var(--x, #RRGGBB)` so a CANVAS MATERIAL can repaint the writing plane
- * beneath them. That plane is not the Studio ground and is not this guard's
- * subject — it has its own contrast gate.
+ * What the guard actually defended was never in question: that a DESIGNER does
+ * not quietly cool the Studio's own ground toward the generic charcoal every
+ * writing tool drifts into. It said "the ground" only because, at the time,
+ * there was one. It now checks the fallback — the room a member gets having
+ * chosen nothing — and says nothing about the rooms they may choose.
  *
- *   The Studio ground is espresso. The page is the writer's to choose.
+ *   The system may not cool the default. The member may choose any light.
  */
 export function assertGroundIsWarm(): void {
   for (const [name, token] of Object.entries(GROUND)) {
     const hex = fallbackOf(token);
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
     if (!(r > g && g >= b)) {
-      throw new Error(`GROUND.${name} (${hex}) is not warm. The Studio ground is espresso.`);
+      throw new Error(
+        `GROUND.${name} default (${hex}) is not warm. The Studio's DEFAULT ground is espresso.`,
+      );
     }
   }
 }
