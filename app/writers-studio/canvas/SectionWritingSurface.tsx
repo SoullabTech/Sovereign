@@ -36,6 +36,7 @@ import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript
 import { StudioHint } from '../studio/StudioHint';
 import { StudioText } from '../studio/StudioType';
 import { CanvasAppearance, useCanvasMaterial } from './CanvasAppearance';
+import { preservingScroll } from './scrollport';
 import { CANVAS_MATERIALS, CANVAS_TYPE } from '@/lib/writersStudio/canvasMaterial';
 
 export interface SectionWritingSurfaceProps {
@@ -256,12 +257,16 @@ export default function SectionWritingSurface({
        This is the second half of the same founder-reported jump: the first is
        focus() scrolling to the field, this is the field's own remeasurement
        pulling the page with it. Both fire on `activeId`.
+       ⚠️ THE FIRST REPAIR GUARDED THE WRONG AXIS. It captured `window.scrollY`,
+       but this room scrolls `<main>` (`overflow: auto`), so that value is 0 for
+       the whole session — the guard restored a number that never changed and
+       the jump survived, unchanged, looking fixed. See ./scrollport.ts.
        Restoring only when it actually moved keeps a legitimate scroll — the
        writer's own — untouched. */
-    const y = window.scrollY;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-    if (window.scrollY !== y) window.scrollTo({ top: y });
+    preservingScroll(el, () => {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    });
   }, [body, activeId]);
 
   const active = writing.active;

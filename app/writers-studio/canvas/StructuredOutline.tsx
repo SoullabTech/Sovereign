@@ -53,6 +53,7 @@ import {
 } from '@/lib/writersStudio/structureClient';
 import { orderOutline, type OutlineEntry } from '@/lib/writersStudio/outlineOrder';
 import type { ManuscriptSection, OutlineSectionStatus } from './ManuscriptOutline';
+import { scrollportOf } from './scrollport';
 
 const STATUS_MARK: Record<OutlineSectionStatus, { glyph: string; label: string } | null> = {
   clean: null,
@@ -97,24 +98,6 @@ const CHROME: React.CSSProperties = {
   paddingRight: SPACE.comfortable,
   paddingTop: SPACE.comfortable,
 };
-
-/**
- * The nearest ancestor that actually scrolls, or null.
- *
- * Deliberately excludes the document: a reveal inside a column may move that
- * column and nothing else. `scrollIntoView` cannot express that constraint,
- * which is why it is not used here.
- */
-function scrollportOf(el: HTMLElement): HTMLElement | null {
-  let node = el.parentElement;
-  while (node) {
-    const style = getComputedStyle(node);
-    const scrolls = /(auto|scroll|overlay)/.test(style.overflowY);
-    if (scrolls && node.scrollHeight > node.clientHeight) return node;
-    node = node.parentElement;
-  }
-  return null;
-}
 
 export default function StructuredOutline({
   manuscriptId,
