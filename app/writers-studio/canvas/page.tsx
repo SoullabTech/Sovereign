@@ -792,7 +792,7 @@ function CanvasRoom() {
               onPick={(id) => setRequested(id)}
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
-              onDraftBegun={refreshWriteState}
+              onWriteAuthorityChanged={refreshWriteState}
             />
           </div>
         </main>
@@ -862,7 +862,7 @@ function FieldBody({
   onPick,
   onMeta,
   onCheckpointed,
-  onDraftBegun,
+  onWriteAuthorityChanged,
   writeMount,
   witnessDelayMs,
   onWriting,
@@ -873,8 +873,8 @@ function FieldBody({
   onPick: (id: string) => void;
   onMeta: (m: { updatedAt: string | null; revisionCount: number | null; words: number }) => void;
   onCheckpointed: () => void;
-  /** NAV-03 — Worktable created a draft; re-read what the server now says. */
-  onDraftBegun: () => void;
+  /** NAV-03 — the write authority moved; re-read what the server now says. */
+  onWriteAuthorityChanged: () => void;
   /** What the server said to mount. Resolved above; never guessed here. */
   writeMount: WriteMount;
   witnessDelayMs?: number;
@@ -1035,7 +1035,7 @@ function FieldBody({
       manuscriptId={manuscript.id}
       onMeta={onMeta}
       onCheckpointed={onCheckpointed}
-      onDraftBegun={onDraftBegun}
+      onWriteAuthorityChanged={onWriteAuthorityChanged}
     />
   );
 }

@@ -82,25 +82,31 @@ interface WorktableProps {
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
   /**
-   * NAV-03 — a draft was CREATED here, so the server's write authority for this
-   * Work has changed since the parent last read it.
+   * NAV-03 — the parent's write authority for this Work is out of date.
    *
-   * Carries nothing. The draft this room just created is section-addressable
-   * (`section_addressable_at` is stamped at creation), which means the parent
-   * should now be mounting a different engine than the one it mounted — but
-   * deciding that is the parent's job, not this room's. Passing the draft up
-   * would let Worktable adjudicate which surface wins, and the whole point of
-   * the write-state resolver is that the SERVER decides and the parent obeys.
-   * So this says only: read again.
+   * The name is the meaning: NOT "a draft was created here", but "read again".
+   * An earlier draft of this said the callback fires only on a creation, on the
+   * reasoning that `exists` means someone else got there first and the parent
+   * "is not stale on our account". That was wrong. Staleness is not a question
+   * of authorship — the parent read `no_draft`, a draft now exists, and its
+   * answer is obsolete no matter which tab created it. A second tab reaching
+   * `exists` and then loading the draft successfully is PROOF the parent's
+   * earlier answer is stale, not evidence against it.
    *
-   * Without it, the first session after an import renders "not yet navigable"
-   * over a Work the server already calls section_aware, and only a manual
-   * reload fixes it — observed in production 2026-09-06.
+   * Carries nothing. The draft is section-addressable (`section_addressable_at`
+   * is stamped at creation), so the parent should now mount a different engine
+   * — but deciding that is the parent's job. Passing the draft up would let
+   * this room adjudicate which surface wins, and the point of the write-state
+   * resolver is that the SERVER decides and the parent obeys.
+   *
+   * Without it, a session renders "not yet navigable" over a Work the server
+   * already calls section_aware, and only a manual reload fixes it — observed
+   * in production 2026-09-06.
    */
-  onDraftBegun?: () => void;
+  onWriteAuthorityChanged?: () => void;
 }
 
-export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onDraftBegun }: WorktableProps) {
+export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWriteAuthorityChanged }: WorktableProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
   const [saveState, setSaveState] = useState<SaverState>('idle');
@@ -253,20 +259,27 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onDraf
       // Source, verbatim. (A blank page creates its draft at birth.)
       const begun = await beginDraft(apiFetch, manuscriptId);
       if (cancelled) return;
+      /* Both paths below end with a draft the parent has not seen. Notified
+         after settle() so this room is coherent even if the parent unmounts it
+         on the next tick. No loop is possible: this initialisation runs once
+         per mount, and the parent's response is a read. */
       if (begun.kind === 'ok') {
         settle(begun);
-        /* Only on 'ok' — a true creation. `exists` means someone else got
-           there first and the parent's state is not stale on our account; a
-           notification there could ping-pong two rooms re-reading each other's
-           work. Fired after settle so this room is coherent even if the parent
-           unmounts it on the next tick. */
-        onDraftBegun?.();
+        onWriteAuthorityChanged?.();
         return;
       }
       if (begun.kind === 'exists') {
+        /* Another session created it between the parent's read and ours. The
+           parent is stale for exactly the same reason it would be had we
+           created it, so this must notify too — otherwise the second tab
+           reproduces the very defect NAV-03 repairs. */
         const again = await loadDraft(apiFetch, manuscriptId);
         if (cancelled) return;
-        if (again.kind === 'ok') return settle(again);
+        if (again.kind === 'ok') {
+          settle(again);
+          onWriteAuthorityChanged?.();
+          return;
+        }
         if (again.kind === 'unreadable') return setPhase('unreadable');
         return setPhase('error');
       }
