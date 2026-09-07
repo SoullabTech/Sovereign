@@ -12,6 +12,7 @@ import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
 import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
+import { AtmosphereSwitch } from './atmosphere/AtmosphereSwitch';
 
 /**
  * Writer's Studio — Home.
@@ -466,6 +467,17 @@ export default function HomeView({
       {!loading ? <Hero /> : null}
 
       <div className="max-w-4xl mx-auto">
+        {/* The writer chooses the light. Sits at the top edge of the room,
+            quiet and out of the way of the writing — offered, never presented
+            as something that needs attending to. Available in the empty Studio
+            too: a member arriving with nothing written should still be able to
+            decide what room they are arriving into. */}
+        {!loading ? (
+          <div className="flex justify-end -mt-4 mb-6">
+            <AtmosphereSwitch />
+          </div>
+        ) : null}
+
         {loading ? (
           <p className="text-[15px] opacity-40">Opening your studio…</p>
         ) : kind === 'begin' ? (

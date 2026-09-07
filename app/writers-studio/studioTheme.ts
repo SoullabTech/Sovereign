@@ -150,15 +150,15 @@ export const PROVENANCE: Record<string, { level: Provenance; note: string }> = {
 
 export const GROUND = {
   /** Recessed wells — the panel behind panels. Sampled #15120D. */
-  deepest: '#15120D',
+  deepest: 'var(--ws-ground-deepest, #15120D)',
   /** Page edge / shell ground. PRESS.ink, confirmed against sampled #1C1711. */
-  base: '#1A1513',
+  base: 'var(--ws-ground-base, #1A1513)',
   /** The writing field itself — the largest, quietest surface. Sampled #1D1812. */
-  field: '#1D1812',
+  field: 'var(--ws-ground-field, #1D1812)',
   /** Rails and bands sitting on the field. Sampled #221B12. */
-  raised: '#221B12',
+  raised: 'var(--ws-ground-raised, #221B12)',
   /** Hover / selected row. Sampled #342715 on the active section row in 04. */
-  active: '#342715',
+  active: 'var(--ws-ground-active, #342715)',
 } as const;
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -236,11 +236,11 @@ export const INK = {
   /** Manuscript prose and titles. PRESS.text. */
   primary: PRESS.text,
   /** Chrome text that is not prose. */
-  secondary: '#CFC5B6',
+  secondary: 'var(--ws-ink-secondary, #CFC5B6)',
   /** Metadata, counts, timestamps. */
-  muted: '#9A8F80',
+  muted: 'var(--ws-ink-muted, #9A8F80)',
   /** Present but deliberately receding — an inactive rail item. */
-  quiet: '#7A7065',
+  quiet: 'var(--ws-ink-quiet, #7A7065)',
   /** On a gold fill. Dark, because gold is a light surface here. */
   onAccent: PRESS.ink,
 } as const;
@@ -264,11 +264,11 @@ export const GOLD = {
   /** PRESS.accent. The one true accent. */
   DEFAULT: PRESS.accent,
   /** Fills at rest — sampled #734F1A on the New Work button in 04. */
-  fill: '#734F1A',
+  fill: 'var(--ws-gold-fill, #734F1A)',
   /** Epigraph / emphasis text — sampled #A7783A in 04. */
-  text: '#A7783A',
+  text: 'var(--ws-gold-text, #A7783A)',
   /** Hairline emphasis on a border. */
-  edge: '#5A431C',
+  edge: 'var(--ws-gold-edge, #5A431C)',
 } as const;
 
 export const GOLD_PERMITTED = [
@@ -687,12 +687,29 @@ export const PRESENT_AT_COMPACT: readonly PanelRole[] = [
    11 · EXECUTABLE INVARIANTS
    ══════════════════════════════════════════════════════════════════════════ */
 
-function luminance(hex: string): number {
+function luminance(token: string): number {
+  const hex = fallbackOf(token);
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
   return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
 }
 
-function hueOf(hex: string): number {
+/**
+ * ⚠️ Both this and `luminance` resolve the token's DEFAULT before parsing.
+ *
+ * When the colour tokens became `var(--x, #RRGGBB)` for WS-ATMOSPHERE-01,
+ * these two functions kept slicing from index 1 — parsing "ar" as hex, getting
+ * NaN, and comparing NaN, which is never true and therefore never throws. Two
+ * guards stopped detecting anything and both still reported green:
+ * assertMaiaIsVisuallyDistinctFromTheWork and assertGroundRampOrdered. Caught
+ * only because one test deliberately introduces a violation and expects a
+ * throw.
+ *
+ * An instrument that cannot look is worse than no instrument, because it
+ * reports a pass. The guard tests below now include a falsification case for
+ * exactly this.
+ */
+function hueOf(token: string): number {
+  const hex = fallbackOf(token);
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -717,11 +734,41 @@ export function assertGroundRampOrdered(): void {
 }
 
 /** Espresso, not charcoal. Every ground tone is warm: red > green > blue. */
+/**
+ * The colour a token resolves to when no atmosphere is set — the literal
+ * written inside `var(--x, <fallback>)`. Tokens that are already literals
+ * return themselves, so this is safe across both forms.
+ */
+export function fallbackOf(token: string): string {
+  const m = /^var\(--[a-z0-9-]+,\s*(.+)\)$/i.exec(token.trim());
+  return (m ? m[1] : token).trim();
+}
+
+/**
+ * The DEFAULT ground is espresso, never charcoal.
+ *
+ * ⚠️ Narrowed 2026-09-07 (WS-ATMOSPHERE-01), and the narrowing is the point.
+ * This guard read "the Studio ground is warm" — true when there was one
+ * palette, and directly contradicted by the founder's atmosphere ruling, which
+ * makes Forest green and Cloud light BY MEMBER CHOICE.
+ *
+ * What the guard was actually defending was never in question: that a
+ * DESIGNER does not quietly cool the Studio's own ground toward the generic
+ * charcoal every writing tool drifts into. It said "the ground" only because,
+ * at the time, there was one. So it now checks the fallback — the room a
+ * member gets when they have chosen nothing — and says nothing whatsoever
+ * about the rooms they may choose.
+ *
+ *   The system may not cool the default. The member may choose any light.
+ */
 export function assertGroundIsWarm(): void {
-  for (const [name, hex] of Object.entries(GROUND)) {
+  for (const [name, token] of Object.entries(GROUND)) {
+    const hex = fallbackOf(token);
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
     if (!(r > g && g >= b)) {
-      throw new Error(`GROUND.${name} (${hex}) is not warm. The Studio ground is espresso.`);
+      throw new Error(
+        `GROUND.${name} default (${hex}) is not warm. The Studio's DEFAULT ground is espresso.`,
+      );
     }
   }
 }
