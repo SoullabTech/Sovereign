@@ -109,3 +109,55 @@ STUDIO REGRESSIONS        ZERO     44 suites · 686 tests
 GLOBAL TYPECHECK          RED      pre-existing · truthfully recorded, not relabelled
 DEPLOY                    ELIGIBLE under the no-new-regressions policy
 ```
+
+
+---
+
+# ⛔ WITHDRAWN — WRONG SUBJECT. And a correction this session owes.
+
+**2026-09-07, on reading the founder's actual checkout.**
+
+```text
+FOUNDER CHECKOUT   build/ws-home-redesign-slice-a @ f7028f5d5
+CONTAINS 717cef35  NO
+CONTAINS 77f72055  NO
+```
+
+The witness recorded above as `PASS on 717cef35` **was not performed on
+`717cef35`**. It was performed on a branch containing neither of this session's
+commits. The verdict stands as a fact about the founder's screen; ⛔ **the
+subject attribution does not, and is withdrawn.** *A witness is a reading of a
+subject, and naming the wrong subject voids the binding even when the observation
+is sound.*
+
+## ⭐ THE CORRECTION THIS SESSION OWES
+
+This session wrote, in a commit message and in this file, that the first repair
+*"shipped, threw no error, and the jump survived"* — offered as demonstrated
+proof that it had guarded the wrong axis.
+
+**That premise was false.** The founder's *"screen still jumps"* report came from
+a build that **never contained the first repair**. The repair did not fail; it
+was never run. So:
+
+> ⛔ **The claim was reasoned, not witnessed.** It read a founder report as
+> evidence about code the founder was not running — the exact error class this
+> lane has now hit three times, committed here by the session that had been
+> naming it in others.
+
+The technical observation may still be true — the surviving branch fixes this
+with `preventScroll` alone (`f8d772f7`), and its remeasure at
+`SectionWritingSurface.tsx:234` collapses `height:auto` **with no scroll guard**,
+which is the second cause this session identified. But it is now **a hypothesis
+with no supporting observation**, and the founder's PASS on that very branch is
+evidence *against* its reproducibility. ⛔ It must not be carried forward as
+established.
+
+## STANDING, CORRECTED
+
+```text
+GATE 1                  ⛔ NOT WITNESSED for this branch
+CANVAS MATERIAL 77f72055 ⛔ SUPERSEDED by founder convergence ruling 3246996a
+SCROLL FIX 717cef35      unwitnessed · possibly redundant · not established
+DEPLOY ELIGIBILITY       ⛔ WITHDRAWN — it was stated of the wrong subject
+```
