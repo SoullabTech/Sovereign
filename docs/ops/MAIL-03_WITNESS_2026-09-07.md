@@ -9,8 +9,11 @@ DEPLOY        e535e6246   (contains ee612602)
 MEMBER        4fdbb023-4fca-42f3-9810-8f4da88b21fc
 ```
 
-**Status: machine checks PASS. Acceptance PENDING three mailbox confirmations
-(§4). Closure is a separate founder act and is NOT implied by this record.**
+**Status: ACCEPTANCE ESTABLISHED 2026-09-07.** All machine checks pass and both
+observable positive-delivery confirmations are recorded (§4).
+
+**Closure is a separate founder act. It is NOT performed by this record, and
+acceptance does not imply it.**
 
 ## 1 · Provenance — three independent confirmations
 
@@ -117,11 +120,36 @@ observable properties, it does not manufacture an outage.
 
 ## 4 · Operator confirmations still required
 
-A script cannot see a mailbox. Acceptance requires two POSITIVE deliveries to a
-mailbox under observation:
+A script cannot see a mailbox. Acceptance required two POSITIVE deliveries to a
+mailbox under observation. Both are now CONFIRMED in the observed Gmail inbox:
 
-- [ ] **W1** — verification email from the 12:35 signup arrived
-- [ ] **W3** — ~4 recovery messages arrived at the member address
+- [x] **W1 · PASS** — verification email received at
+      `soullab1+mail03-20260907123522@gmail.com`, **12:37:24Z**
+- [x] **W3 · PASS** — exactly **four** recovery emails received at the same
+      alias, all **16:06:17Z**
+
+### The three-layer correlation
+
+The confirmations do more than tick boxes: they complete an end-to-end
+correspondence across three layers that are instrumented independently of one
+another.
+
+W3/W4:
+
+```
+4 admitted (HTTP 200)  ↔  4 accepted ledger rows  ↔  4 delivered messages
+5 refused  (HTTP 429)  ↔  0 ledger rows           ↔  0 delivered messages
+```
+
+Ledger rows at 16:06:16.729 / .942 / 17.061 / 17.192Z; mail observed at
+16:06:17Z. W1 likewise: ledger `auth:verification` at 12:37:24Z, message
+observed at 12:37:24Z.
+
+The limiter decides admission, the ledger records attempts, and the mailbox
+receives delivery — three different parts of the path, agreeing exactly. The
+metering claim is therefore not "the endpoint returned the expected status
+code"; it is that admission through the ceiling corresponded one-to-one with
+recorded sends AND with actual deliveries, while every refusal produced neither.
 
 ### W2 needs no mailbox confirmation — and could not have one
 
@@ -151,7 +179,9 @@ MAIL-03
 CODE          ee612602
 BUILD         PASS
 DEPLOY        e535e6246
-VERIFY        PASS (machine) · PENDING (mailbox)
+VERIFY        PASS (machine) · PASS (mailbox: W1, W3)
+ACCEPTANCE    ESTABLISHED 2026-09-07
+CLOSURE       NOT PERFORMED — founder act
 RELAY         CLOSED IN PRODUCTION
 RECOVERY      METERED IN PRODUCTION
 CAUSATION     UNPROVEN
