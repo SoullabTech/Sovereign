@@ -16,9 +16,10 @@ intervention, without a shortcut, and without anything being repaired mid-walk.
 **Subject discipline.** The witness binds to the *deployed runtime* `4be87975b`,
 not to canonical. Nothing here transfers to a later runtime without a fresh walk.
 
-> **TWO SUBJECTS.** Production moved after the walk and is now `e4ac1bcac`
-> (#1251, NAV-03). P0 and acts 1, 2, 6a and 6b were re-witnessed on it. Acts 3–5
-> and 7 remain bound to `4be87975b`. See §7 before citing any act.
+> **THREE SUBJECTS.** Production moved twice more. The runtime the cohort
+> actually met is `e535e6246` (#1256, PDF-CLEAN), where P0 and acts 1, 2, 6a and
+> 6b were re-witnessed under a bracketed walk. Acts 3–5 and 7 remain bound to
+> `4be87975b`. See §7 and §9 before citing any act.
 
 ---
 
@@ -532,7 +533,8 @@ NAV-03 could plausibly have disturbed was re-observed on the live runtime.
 ```text
 GATE 0                  PASS
 walk runtime            4be87975b   acts 1–7 observed
-live runtime            e4ac1bcac   P0 + acts 1, 2, 6a, 6b re-observed
+second runtime          e4ac1bcac   P0 + acts 1, 2, 6a, 6b re-observed
+COHORT RUNTIME          e535e6246   P0 + acts 1, 2, 6a, 6b re-observed, bracketed
 witness                 tester4writer
 cohort release          GO
 
@@ -551,3 +553,141 @@ repair cycle.
 
 Three cohort instructions (§5) go out with the invitations. Nothing else is owed
 before the pilot.
+
+---
+
+## 9 · Addendum — the runtime the cohort met
+
+Written the morning of the pilot. The record above was merged naming `e4ac1bcac`
+as the live subject. Production moved twice more before the cohort arrived, and
+the last move changed code that act 6 exercises. This section names what was
+actually witnessed on the runtime the four testers met.
+
+### Production moved four times between the merge and the cohort
+
+```text
+e4ac1bcac   #1251 NAV-03                     the subject §7 names
+cca4568bd   #1253 ingest transport multipart middleware + ingest route
+4a5bf8ff9   #1254 mail abuse containment     rate limiter, recover, send-verification
+e535e6246   #1256 PDF-CLEAN                  parseUpload PDF branch  ← COHORT RUNTIME
+```
+
+**None of the four was announced to this lane.** Each was discovered by running
+the provenance check the founder's own morning rule prescribes. The rule earned
+its keep: without it the cohort would have walked an unwitnessed subject twice
+over.
+
+`#1254` is the one legitimate exception — abuse containment, which overrides a
+freeze. Its fault was not the deploy; it was that no notification accompanied it.
+That distinction is the residual, not the deploy.
+
+### The bracket, not the hold
+
+A production hold was drafted for every deployment-capable lane. It could not be
+broadcast from either assistant's context, and — more to the point — **a hold
+cannot be verified**. Every one of the four moves would have been made by someone
+who would have agreed to it.
+
+What made this witness valid is therefore not a promise beforehand but a **SHA
+read on both sides of the walk**:
+
+```text
+opening bracket   e535e6246
+   ... act 6a · act 6b · custody query ...
+closing bracket   e535e6246
+```
+
+Both reads match, so the walk is bound to one subject and no drift occurred
+inside it. Had they differed, the walk would have been invalidated whole rather
+than salvaged. This is the durable lesson: *a hold is coordination; a bracket is
+evidence.*
+
+### Re-witnessed on `e535e6246`
+
+```text
+provenance             GIT_COMMIT = e535e6246
+containment            WS_STANDING_ENABLED = unset
+ACT 1  invite          200, no redirect
+ACT 2  /team/general   307 → /signin
+```
+
+**Acts 6a / 6b**, as `tester4writer`, an ordinary cohort member:
+
+```text
+6a  ingest attempts   1
+    confirm-cuts      "3 sections detected" — Chapter First / Middle / Last
+    Canvas opens      after Save manuscript
+    section count     3
+
+6b  first             exact
+    middle            exact
+    last              exact
+```
+
+The subject was deliberately a **PDF**, not markdown or pasted text, because
+#1256 changes only the PDF extraction branch. A markdown import would have
+satisfied the rule while exercising unchanged code.
+
+### PDF-CLEAN is production-proved, not merely merged
+
+The witness PDF was built adversarially: three pages, with the author's own
+literal `-- 2 of 3 --` written on page 2 — the same shape pdf-parse synthesises.
+Verified as appearing exactly once in the source before import.
+
+```text
+ original_filename                  | extraction_method | extractor_version | m1 | m2 | m3
+------------------------------------+-------------------+-------------------+----+----+----
+ WS-e535e6246-PDF-CLEAN-WITNESS.pdf | pdf-parse-getText | pdf-parse@2.4.5   |  0 |  1 |  0
+```
+
+```text
+m1 = 0   pdf-parse's synthetic "-- 1 of 3 --" never entered custody
+m3 = 0   nor "-- 3 of 3 --"
+m2 = 1   the AUTHOR'S line survived, exactly once
+```
+
+`m2 = 1` is the harder half and the reason the per-marker form was used instead of
+an aggregate count. A total of `1` cannot distinguish *"synthetics gone, author's
+line kept"* from *"author's line destroyed, one synthetic survived"* — and a fix
+that stripped too much would be a worse defect than the one it replaced, silently
+editing an author's text while appearing to succeed. The commit's own invariant —
+**never remove page-marker-looking text after extraction** — exists to prevent
+exactly that, and these three numbers are the proof it held in production.
+
+The middle section's rendered body carried the same line, so the display layer and
+the custody record agree independently.
+
+`extraction_method = pdf-parse-getText` confirms the PDF path ran; a `.md` import
+with a coincidental line would have read `utf8-decode` and been discarded.
+
+### Chain of custody for this addendum
+
+Stated because it is weaker than §7's and should not be read as equal.
+
+The browser walk was driven by a separate assistant lane; the brackets and the
+psql row were **relayed** to the adjudicating lane rather than executed by it.
+The founder performed the password rotation and every keyboard act. The two lanes
+were deliberately kept apart: the lane driving the browser did not adjudicate its
+own result, and reported observations without pass/fail labels.
+
+```text
+observed by     a separate lane, relayed as raw output
+ruled by        this lane, on that relayed output
+NOT             read directly by the adjudicating lane's own tools
+```
+
+### Ruling
+
+```text
+COHORT RUNTIME     e535e6246
+brackets           HELD
+P0 containment     PASS
+Acts 1, 2, 6a, 6b  RE-OBSERVED on the cohort runtime
+Acts 3–5, 7        remain bound to 4be87975b
+PDF-CLEAN          PRODUCTION-PROVED
+GATE 0             PASS · GO
+```
+
+Canonical has since advanced beyond `e535e6246`. That is expected and permitted:
+**canonical may move; production must not** — until the founder releases the
+cohort freeze.
