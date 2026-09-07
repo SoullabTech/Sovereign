@@ -141,6 +141,23 @@ Two vocabularies would drift, so the mapping is fixed here:
 
 Spatial grammar is presentation. It never renames, reorders, or merges a movement.
 
+**And it never becomes executable.** There must be no second enum — no
+`threshold | descent | encounter | return` — competing with the ratified movements in code. The
+implementation carries two distinct things:
+
+```text
+PRESENTATION STATE          RATIFIED FIELD MOVEMENT
+arrival                     Encounter
+active                      Stay
+returning / return          Differentiate
+                            Reclaim
+                            Choose
+                            Return
+```
+
+Threshold/Descent/Encounter/Return stays design language in this document, under the mapping
+above. It acquires no authority, no type, and no branch.
+
 ## 9 · Explicitly rejected directions
 
 No gothic/occult UI · no therapy dashboard · no purple-gradient wellness · no "dark mode =
@@ -149,13 +166,38 @@ progress over psychological depth.
 
 **The visual metaphor is light entering darkness — not darkness as decoration.**
 
-## Open question this direction does not settle
+## Likely architecture — one core, two containers
 
-Whether `ShadowFieldSheet` should remain as the overlay form for the deferred **Invoked**
-entrance, with a separate route-level container for the Dedicated room. The sheet is the right
-primitive when the Field is invoked *over* another MAIA context; it is the wrong one when the
-Field *is* the place. Two components with one prompt/session core is the likely shape, but that is
-a PROTOTYPE v2 decision and is not taken here.
+The emerging answer to "is the sheet bad code?" is no: it is being asked to perform the wrong job
+on the standalone route.
+
+```text
+                    shared Shadow Field core
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+     Standalone Field             Invoked Field
+     full-route container         overlay/sheet container
+              │                         │
+      Shadow Field is              Shadow Field enters
+         the place                 an existing context
+```
+
+Shared underneath: session lifecycle · the six ratified movements · prompt/cognition machinery ·
+Sanctuary semantics · memory and provenance rules · refusal handling · constitutional exit
+behaviour. **Different only at the container/presentation boundary.**
+
+This is the likely shape, not a taken decision — the Invoked entrance remains deferred until
+activation-turn isolation is structurally shown, and the split is a PROTOTYPE v2 act.
+
+## The guardrail test
+
+> **If a UX improvement requires law to move, it is no longer UX repair.**
+
+A designer may change measure, composition, motion, hierarchy, affordances, responsive behaviour,
+containers, and error presentation. The moment the work requires changing **exit, memory,
+provenance, authority, or movement semantics**, it stops being prototype-surface repair and
+returns to CONSTITUTE.
 
 ## Sequence
 
