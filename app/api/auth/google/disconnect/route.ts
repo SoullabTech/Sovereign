@@ -2,6 +2,11 @@
  * GOOGLE DISCONNECT
  *
  * Remove a user's Google connection (revoke tokens).
+ *
+ * MAIL-04c: the subject is the SESSION's member. This route previously took
+ * `userId` from the body and deleted that row, so an unauthenticated caller
+ * could destroy ANY member's Google connection by naming them. A destructive
+ * act on another actor's credential, with no proof of anything.
  */
 
 
@@ -11,15 +16,16 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { upsertConnector } from '@/lib/connectors/connectorDb';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json();
-
+    // A member may disconnect their OWN Google account and no one else's.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Sign in to disconnect a Google account' },
+        { status: 401 }
       );
     }
 

@@ -16,21 +16,28 @@
  *      reports success and never leaves, which is the exact class of bug this
  *      subsystem exists to make impossible.
  *
- * SES and Postmark are not registered here. Adding them is an adapter file plus
- * one line below; ACTIVATING one is a separate operational act requiring
- * credentials, domain authentication and DNS, and is not authorised by this
- * change. See §29/§30 of the readiness notes in docs/ops/SOULLAB_MAIL.md.
+ * `smtp` speaks a PROTOCOL rather than a vendor API, so one adapter covers both
+ * a commodity relay and Soullab's own MTA — moving between them is
+ * configuration, not code. That is the MAIL-10 exit: an account can be
+ * suspended, a protocol cannot.
+ *
+ * REGISTERING A PROVIDER IS NOT ACTIVATING ONE. Selecting `smtp` still requires
+ * credentials, domain authentication and DNS (SPF/DKIM/DMARC), and switching P0
+ * identity mail onto an unwarmed path is its own decision with its own witness.
+ * The code landing here authorises none of that.
  */
 
 import type { EmailProvider } from './types';
 import { ResendProvider } from './ResendProvider';
 import { MemoryProvider } from './MemoryProvider';
+import { SmtpProvider } from './SmtpProvider';
 
 export type { EmailProvider, ProviderEmailMessage, ProviderSendResult } from './types';
 export { ResendProvider } from './ResendProvider';
 export { MemoryProvider } from './MemoryProvider';
+export { SmtpProvider } from './SmtpProvider';
 
-export const SUPPORTED_PROVIDERS = ['resend', 'memory'] as const;
+export const SUPPORTED_PROVIDERS = ['resend', 'smtp', 'memory'] as const;
 export type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
 
 function isProduction(): boolean {
@@ -66,6 +73,8 @@ function construct(name: SupportedProvider): EmailProvider {
   switch (name) {
     case 'resend':
       return new ResendProvider();
+    case 'smtp':
+      return new SmtpProvider();
     case 'memory':
       return new MemoryProvider();
   }

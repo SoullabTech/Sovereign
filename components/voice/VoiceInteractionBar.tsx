@@ -145,7 +145,18 @@ export function VoiceInteractionBar({
   const [showTextInput, setShowTextInput] = useState(false);
   const [textValue, setTextValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const transcriptTapeRef = useRef<HTMLDivElement>(null);
   const keyboardInset = useKeyboardBottomInset();
+
+  // Keep the live transcript tape pinned to its tail. Speech recognition
+  // rewrites the interim string wholesale on nearly every result, so this runs
+  // on each update and simply re-anchors to the bottom — no diffing, no
+  // "was the member scrolled up" heuristic. This row is a liveness indicator,
+  // not a document; the member reads the transcript proper above it.
+  useEffect(() => {
+    const el = transcriptTapeRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [interimTranscript]);
 
   const handleKeyboardToggle = useCallback(() => {
     setShowTextInput((v) => {
@@ -195,7 +206,19 @@ export function VoiceInteractionBar({
         pointerEvents: 'auto',
       }}
     >
-      {/* Transcript row — fades in while listening */}
+      {/* Transcript row — fades in while listening.
+
+          It used to be a single `truncate` line: overflow hidden, nowrap,
+          ellipsis. Everything past the first line's width built up OFF SCREEN
+          to the right, so during a long spoken passage the member saw a frozen
+          opening clause and a trailing "…" that never moved. The one thing this
+          row exists to tell them — *she is still hearing me* — was the one
+          thing it stopped showing. Stillness read as deafness.
+
+          Now it wraps and scrolls: a bounded tape (about three lines) pinned to
+          its own tail, so the newest words are always the visible ones and the
+          motion itself is the liveness signal. Bounded, because this bar sits
+          above the composer and must not grow without limit. */}
       <AnimatePresence>
         {voiceState === 'listening' && interimTranscript.length > 0 && (
           <motion.div
@@ -206,9 +229,17 @@ export function VoiceInteractionBar({
             transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <p className="px-5 pt-2 text-sm italic text-stone-300/75 truncate">
-              {interimTranscript}
-            </p>
+            <div
+              ref={transcriptTapeRef}
+              className="max-h-[4.2rem] overflow-y-auto overscroll-contain scrollbar-hide"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              aria-live="polite"
+              aria-atomic="false"
+            >
+              <p className="px-5 pt-2 text-sm italic text-stone-300/75 whitespace-pre-wrap break-words">
+                {interimTranscript}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

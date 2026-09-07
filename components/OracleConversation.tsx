@@ -333,6 +333,12 @@ function pickLastConversationTheme(opts: {
 
 // Performance: Cap conversation history to prevent UI lag and API bloat
 const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
+
+// Upper bound on how long MAIA's words may be withheld from the transcript
+// while waiting on TTS. Speech ordering is a preference; arrival is not.
+// Long enough that a healthy TTS turn still lands text after the audio starts,
+// short enough that a stalled one is never mistaken for MAIA having nothing to say.
+const VOICE_TRANSCRIPT_WATCHDOG_MS = 6000;
 const MAX_API_HISTORY = 100; // Send last 100 messages (~50 exchanges) to API. Raised from 30 to extend depth before MAIA hits the wall and confabulates about her own architecture. Paired with the "Memory Posture" instruction in buildSacredAttendingPrompt — when the gap is hit, she asks rather than fabricates.
 
 // Helper to cap messages array when adding new messages
@@ -6330,13 +6336,68 @@ I'm not sure what I'm feeling yet.`;
       lastMaiaResponseRef.current = responseText;
 
       // In Chat mode, add message immediately
-      // In Voice mode, delay text until after speaking
+      // In Voice mode, text follows speech — but ONLY as an ordering preference.
       const isInVoiceMode = !showChatInterface;
+
+      // ⛔ MAIA'S TURN IS NOT A SIDE EFFECT OF TTS.
+      //
+      // Every voice-mode path into the transcript used to run through the TTS
+      // call: the only non-streaming append lived inside `await maiaSpeak(...)`'s
+      // success branch, gated additionally on `showVoiceText`. Three consequences,
+      // all observed as "MAIA stopped answering" (2026-09-07, voice mode only):
+      //
+      //   1. `shouldSpeak === false` (member turned MAIA's voice off, the 4th cell
+      //      of the 2026-08-13 modality-independence ruling) → the `else` branch
+      //      only logged. Cognition completed and the member saw NOTHING. The
+      //      ruling said speak+silent must be real; it was silent in both channels.
+      //   2. `maiaSpeak` stalling rather than throwing (audio unlock, iOS autoplay
+      //      gate, a TTS fetch that never settles) → no audio AND no words, with
+      //      no error to surface. Intermittent by nature, which is exactly how it
+      //      presented.
+      //   3. `showVoiceText === false` → MAIA's turn never entered `messages` at
+      //      all, so it was absent from the transcript the member could later
+      //      reveal AND absent from `conversationHistory` on the next turn. A
+      //      render preference was deciding what MAIA is able to remember saying.
+      //
+      // The convergence work (VOICE-CANONICAL-CONVERGENCE-02) made this reachable
+      // by design: with the streaming exit removed, voice turns are non-streaming,
+      // so `usedStreamingAudio` is false and the streaming append never runs.
+      // Voice may have a different capture path; it may not have a different mind
+      // — and it may not have a different record of that mind's words.
+      //
+      // One commit seam, idempotent, called from every terminal path. Speech
+      // ordering is preserved where speech works, bounded by a watchdog where it
+      // doesn't, and independent of both `showVoiceText` and TTS outcome.
+      let oracleTurnCommitted = false;
+      const commitOracleTurn = (reason: string) => {
+        if (oracleTurnCommitted) return;
+        oracleTurnCommitted = true;
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
+        onMessageAddedRef.current?.(oracleMessage);
+        console.log('📝 [Turn] MAIA turn committed to transcript', { reason, isInVoiceMode });
+
+        // Voice-mode long-term memory save rides the same seam so it happens
+        // exactly once regardless of which path committed the turn.
+        if (isInVoiceMode && oracleAgentId) {
+          saveConversationMemory({
+            oracleAgentId,
+            content: responseText,
+            memoryType: 'conversation',
+            sourceType: 'voice',
+            emotionalTone: responseData.metadata?.emotionalResonance,
+            wisdomThemes: responseData.metadata?.themes,
+            elementalResonance: element,
+            sessionId,
+            userId,
+            role: 'assistant',
+            conversationMode: realtimeMode
+          }).catch(err => console.error('Failed to save voice response:', err));
+        }
+      };
 
       if (!isInVoiceMode) {
         // Chat mode - show text immediately
-        setMessages(prev => appendMessageCapped(prev, oracleMessage));
-        onMessageAddedRef.current?.(oracleMessage);
+        commitOracleTurn('chat');
 
         // 📚 ASK MAIA: Single-turn reset — return to relational default after response
         if (askMode) {
@@ -6397,8 +6458,7 @@ I'm not sure what I'm feeling yet.`;
 
       // If we used streaming audio, add message to history now (will show if "Show Text" is enabled)
       if (usedStreamingAudio && isInVoiceMode) {
-        setMessages(prev => appendMessageCapped(prev, oracleMessage));
-        onMessageAddedRef.current?.(oracleMessage);
+        commitOracleTurn('voice_streaming_audio');
         console.log('📝 [STREAM] Added message to history (voice mode with streaming audio)');
       }
 
@@ -6431,6 +6491,16 @@ I'm not sure what I'm feeling yet.`;
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
         const cooldownMs = 0; // Instant - demo mode with headphones
 
+        // ⏱️ TRANSCRIPT WATCHDOG. Preserves the intended "text follows speech"
+        // ordering when speech behaves, and guarantees the words arrive when it
+        // does not. A hung `maiaSpeak` neither resolves nor rejects, so neither
+        // the success branch nor the catch below can be relied on to commit the
+        // turn. Bounded wait, then MAIA's words land regardless.
+        const transcriptWatchdog = setTimeout(
+          () => commitOracleTurn('voice_tts_watchdog'),
+          VOICE_TRANSCRIPT_WATCHDOG_MS
+        );
+
         try {
           // Start speaking immediately
           const startSpeakTime = Date.now();
@@ -6450,36 +6520,22 @@ I'm not sure what I'm feeling yet.`;
           setEchoSuppressUntil(Date.now() + cooldownMs);
           console.log(`🛡️ Echo suppression active for ${cooldownMs}ms`);
 
-          // In Voice mode, show text after speaking completes
-          if (isInVoiceMode && showVoiceText) {
-            setMessages(prev => appendMessageCapped(prev, oracleMessage));
-            onMessageAddedRef.current?.(oracleMessage);
-
-            // Save voice response to long-term memory (dual-save to memories + Akashic Records)
-            if (oracleAgentId) {
-              saveConversationMemory({
-                oracleAgentId,
-                content: responseText,
-                memoryType: 'conversation',
-                sourceType: 'voice',
-                emotionalTone: responseData.metadata?.emotionalResonance,
-                wisdomThemes: responseData.metadata?.themes,
-                elementalResonance: element,
-                sessionId,
-                userId,
-                role: 'assistant',
-                conversationMode: realtimeMode
-              }).catch(err => console.error('Failed to save voice response:', err));
-            }
+          // In Voice mode, show text after speaking completes.
+          // NOT gated on `showVoiceText` — that flag governs RENDERING, never
+          // whether the turn exists. A hidden transcript that is later revealed
+          // must contain MAIA's words, and the next turn's conversationHistory
+          // must carry them.
+          if (isInVoiceMode) {
+            commitOracleTurn('voice_after_speech');
           }
         } catch (error) {
           console.error('❌ Speech error or timeout:', error);
           // Show text even if speech fails in Voice mode
           if (isInVoiceMode) {
-            setMessages(prev => appendMessageCapped(prev, oracleMessage));
-            onMessageAddedRef.current?.(oracleMessage);
+            commitOracleTurn('voice_speech_error');
           }
         } finally {
+          clearTimeout(transcriptWatchdog);
           // Non-streaming path: Audio ended, update states appropriately
           console.log('🧹 Voice response (non-streaming) complete - scheduling cooldown...');
           setIsResponding(false);
@@ -6571,6 +6627,12 @@ I'm not sure what I'm feeling yet.`;
           hasMaiaSpeak: !!maiaSpeak,
           showChatInterface
         });
+        // 🔇 SPEAK + SILENT is a real cell, not a dead end. MAIA answered; the
+        // member chose not to hear it. They still get to read it.
+        if (isInVoiceMode) {
+          setMaiaResponseText(responseText);
+          commitOracleTurn('voice_no_tts');
+        }
       }
 
       // Update context

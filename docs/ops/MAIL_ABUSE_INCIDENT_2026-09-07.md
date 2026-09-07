@@ -200,6 +200,35 @@ The consequence that makes this worth the discipline: switching transports never
 loses the history of WHY an address is suppressed. A suppression list that lives
 in the provider is a suppression list you forfeit when you leave the provider.
 
+##### Reconciliation — settled as doctrine (founder, 2026-09-07)
+
+"Provider enforcement replica" hides an authority ambiguity. Resolved by
+direction of conflict:
+
+| Canonical | Replica | Outcome |
+|-----------|---------|---------|
+| SUPPRESSED | ALLOW | **Do not send.** Canonical wins. |
+| ALLOW | SUPPRESSED | **Refuse or hold**, surface the divergence, reconcile from canonical. The replica must not silently create durable suppression authority. |
+
+The third case is not a replica conflict at all. When Postal refuses transport
+for a provider-native compliance or safety condition — bounce policy, complaint
+handling, abuse control — that is **not** replica state and must not be
+overwritten as though it were. Record the transport refusal and bring the
+relevant fact upstream for canonical adjudication.
+
+The law:
+
+> **Replicas may enforce canonical state; they may not constitute it.**
+> Provider-native transport refusals remain sovereign within transport, but
+> become EVIDENCE upstream rather than silently becoming Soullab policy.
+
+This preserves MAIL-10's transport sovereignty without letting the transport
+layer become a hidden source of member-state truth. Note the shape is the same
+as §2's ingress rule — a provider event is an assertion, not permission to
+mutate — and the same as MAIL-02's founding rule that the ledger observes
+without authorizing. Three instances of one principle: the layer that OBSERVES
+is never the layer that DECIDES.
+
 #### 2. MAIL-04 governs ingress as well as egress
 
 The constitutional question broadens from
