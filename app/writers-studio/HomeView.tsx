@@ -11,6 +11,7 @@ import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
+import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
 
 /**
  * Writer's Studio — Home.
@@ -95,6 +96,8 @@ export interface HomeViewProps {
   manuscripts: CurrentManuscript[];
   /** Passages the member marked in their own writing. May be empty; empty is quiet. */
   markedLines: MarkedLine[];
+  /** Recorded acts, newest first. Never derived from current state. */
+  historyActs: StudioAct[];
   onBegin: (title: string) => Promise<void>;
   onMakeWork: (manuscriptId: string, title: string | null) => Promise<void>;
   onAddToWork: (manuscriptId: string, workId: string) => Promise<void>;
@@ -107,6 +110,7 @@ export default function HomeView({
   works,
   manuscripts,
   markedLines,
+  historyActs,
   onBegin,
   onMakeWork,
   onAddToWork,
@@ -447,6 +451,10 @@ export default function HomeView({
     </>
   );
 
+  /* A bound, not a summary: the room shows recent acts and the rest live with
+     the Work. Raising this number cannot make the section interpret more. */
+  const HISTORY_ACTS = 14;
+
   const VISIBLE = 4;
   const shelfCards = showAll ? shelf : shelf.slice(0, VISIBLE);
 
@@ -747,6 +755,54 @@ export default function HomeView({
                     </ul>
                   </>
                 ) : null}
+              </section>
+            ) : null}
+
+            {/* ── HISTORY ──────────────────────────────────────────────
+                What the writer actually did, when they did it.
+
+                Every entry is an immutable record: a declaration, an arrival,
+                a checkpoint, a mark. Nothing here is derived from current
+                state — ⛔ notably NOT `updated_at`, which would give one
+                "returned to" per manuscript that silently RELOCATES to a new
+                date every time the member writes. A history entry that moves
+                is not a history.
+
+                ⛔ A date gathers acts. It never explains them. There is no
+                daily headline, no count, no "a productive day revising Fire",
+                and no field in `HistoryDay` one could be added to without
+                editing the type — which is where the argument would have to
+                happen, in the open. Grouping is presentation. Summarizing is
+                interpretation. (Founder ruling 2026-09-07.) */}
+            {historyActs.length > 0 ? (
+              <section className="mb-14 md:mb-20">
+                <Eyebrow>History</Eyebrow>
+                <div className="mt-6 space-y-9 max-w-2xl">
+                  {byDay(historyActs.slice(0, HISTORY_ACTS)).map((day) => (
+                    <div key={day.key}>
+                      <h3 className="text-[10.5px] tracking-[0.28em] uppercase opacity-35 mb-4">
+                        {day.label}
+                      </h3>
+                      <ul className="space-y-4">
+                        {day.acts.map((act) => {
+                          const said = sentenceFor(act);
+                          /* An act the Studio cannot state without guessing is
+                             omitted rather than approximated. */
+                          if (!said) return null;
+                          const under = beneath(act);
+                          return (
+                            <li key={`${act.kind}-${act.id}`}>
+                              <p className="text-[15.5px] leading-[1.45] opacity-80">{said}</p>
+                              {under ? (
+                                <p className="text-[13px] opacity-45 mt-1">{under}</p>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
               </section>
             ) : null}
 

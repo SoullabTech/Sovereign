@@ -8,6 +8,7 @@ import { canvasForManuscript } from './canvasIdentity';
 import { useCurrentManuscript } from './useCurrentManuscript';
 import { useLivingWorks } from './useLivingWorks';
 import { useMarkedLines } from './useMarkedLines';
+import { useStudioHistory } from './useStudioHistory';
 import HomeView from './HomeView';
 
 /**
@@ -36,6 +37,9 @@ export default function WritersStudioHome() {
      in a beat later is correct. Their words arriving late is not the room
      failing to open. */
   const { lines: markedLines } = useMarkedLines();
+  /* Also outside `loading`, for the same reason: the writer's history filling
+     in a beat after the room opens is correct; the room waiting on it is not. */
+  const { acts: historyActs } = useStudioHistory();
 
   const post = async (url: string, body?: unknown) => {
     const res = await apiFetch(url, {
@@ -121,6 +125,7 @@ export default function WritersStudioHome() {
       works={works}
       manuscripts={manuscripts}
       markedLines={markedLines}
+      historyActs={historyActs}
       onBegin={onBegin}
       onMakeWork={onMakeWork}
       onAddToWork={onAddToWork}
