@@ -16,7 +16,23 @@ WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_CORRECTION_2026-09-07.md
   before it is a product-design problem.
 
 CORRECTED FLOW   RECOVER → RECONCILE → PRESENT → FOUNDER ACT → BUILD
-CURRENT ACT      RECOVER
+CURRENT ACT      RECONCILE
+
+RECOVER complete. Governing v2 R&D record + reference pack imported to this
+branch by FR-04. Founder Rulings II (FR-01…FR-04) OPERATIVE:
+docs/programme/
+WRITERS-STUDIO-CAPABILITY-COMPLETION-01_FOUNDER_RULINGS_II_2026-09-07.md
+
+GOVERNING-RECORD RULE — binding on every act in this lane
+
+  If source or documentation names another artifact or branch as governing:
+    1. FOLLOW the pointer.
+    2. READ the governing material.
+    3. RECONCILE it with implementation reality.
+    4. Only then classify product intent.
+
+  Failure to retrieve governing R&D is not evidence that the intent
+  does not exist.
 
 SUPERSEDED STATUS LINE, kept:
 RULED · 2026-09-07 (founder)
