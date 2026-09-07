@@ -304,6 +304,73 @@ name must carry rather than a problem to solve by adding a second room.
 > conscious of your participation in the world you experience — including the gold you have placed
 > outside yourself.**
 
+## §I · Member-facing label — **Shadow & Gold**
+
+**Founder ruling 2026-09-07.** The member-facing label changes; nothing else does.
+
+```text
+HOUSE / MEMBER NAME     Shadow & Gold
+CONSTITUTIONAL DOMAIN   the projective field
+PURPOSE                 Voluntary reflection on how the world within participates
+                        in the world we experience around us.
+CORE DOCTRINE           The world within we project onto the world around us.
+GOLD                    The unlived capacity, beauty, authority, creativity, love
+                        or possibility we encounter first through another.
+```
+
+House tile, preferred form — it leaves room and does not pre-classify the experience:
+
+> **Shadow & Gold**
+> *Explore what the world around you may be revealing about the world within.*
+
+Public identity: **Shadow & Gold — the world within, encountered through the world around us.**
+
+### Why not the alternatives
+
+| Label | Problem |
+|---|---|
+| Shadow Field | Still culturally reads as darkness, wounds, triggers, "bad parts" |
+| Shadow & Light | Too easily becomes good/bad dualism |
+| Projection Field | Technically useful but clinical; *"you're projecting"* already carries accusation |
+| Mirror Field | Beautiful, but implies the outside world is merely a reflection of the self |
+| Inner World | Too broad; this Field is specifically about inner-world participation in outer experience |
+| Golden Shadow | Too narrow; gold is a pinnacle of the work, not all of it |
+
+*Shadow & Gold* preserves the tension: **what we cannot bear to own, and what we cannot yet bear to
+become.**
+
+### The pairing is in the name only — §E′ still holds
+
+The ampersand names two things that must never become two doors. **Shadow and Gold are not two
+buttons, two modes, or a first-screen question.** A member must never be asked *am I doing dark
+shadow or golden shadow today?* — they bring a charged experience, and **MAIA does not know in
+advance what it contains.**
+
+```text
+"I cannot stand this woman."       → may open into Gold
+"I worship this teacher."          → may open into fear, dependency, envy,
+                                     grief and Gold at once
+```
+
+Neither could survive a mode selector. That complexity **is** the Field. This mitigation is
+recorded with the name permanently, because the name itself invites the fork it forbids.
+
+### Identifiers do not move
+
+§9 of v0.2 is ratified and stands. A label is not an identifier:
+
+```text
+UNCHANGED   shadowField · [MAIA/shadow-field] · producer shadow-field
+            route /maia/shadow-field · House destination id shadow-field
+            source_type 'shadow_field' (unapplied P4 migration + CHECK constraint)
+CHANGED     the words a member reads
+```
+
+### Implementation custody
+
+The label change is **not** implemented tonight. It lands with the Arrival redesign repair, after
+the P8 datum and witness closure. Subject frozen, repair on HOLD.
+
 ## §F · Vocabulary
 
 Remove **"dark side"** from the product vocabulary entirely. The metaphor stays *light entering
