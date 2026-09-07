@@ -1,5 +1,8 @@
 # CIRCLE INTERIOR FUNCTION MODEL — v0.1
 
+> ⛔ **SUPERSEDED by v0.2 (2026-09-07 evening).** Retained unchanged as the record of what was
+> proposed before founder rulings FR-22 · FR-23 · FR-24. Where this file and v0.2 differ, **v0.2 governs**.
+
 **Lane** `JARVIS-CIRCLES-01` · interior design record
 **Date** 2026-09-07
 **Status** ⛔ **DESIGN ONLY.** No implementation, no migration, no schema, no API, no UI change, no

@@ -552,3 +552,226 @@ of the doctrine's four panes still have no column**. Carried to I4/I6, not resol
 The two orthogonal authority axes found by I0 (`created_by` provenance ⟂ `facilitator` role, neither
 assignable after creation) are **carried to I4 and I6** for design. ⛔ No facilitator is assigned and
 no assignment pathway is built at I0.5. **CA-15 remains open.**
+
+---
+
+# ADDENDUM II · 2026-09-07 (evening) — INVOKE relational architecture
+
+Founder rulings made **before the design proliferates further**, on the two design records at
+`7cd37bf04`. Appended, not woven in: records are amended, never rewritten.
+
+## The ecology
+
+```
+INTEREST
+   ↓
+INTEREST COMMONS
+   ├── SALON     encounter
+   ├── CIRCLE    ongoing relationship
+   └── CO-LAB    shared work
+```
+
+Relational movement happens **only by explicit acts**: Salon encounter → Connect → Dyadic Field ·
+Salon encounter → "we want to continue" → new Circle · Circle → explicit outward invitation → Salon ·
+Circle → shared work chosen → Co-Lab.
+
+## FR-19 · An interest declaration grants routing eligibility. It does not publish an identity claim about the member.
+
+**Interests are routing signals, not social profiles.** A declaration is private to the member and the
+routing system. Nobody sees *Kelly is interested in Jung · Maria is interested in Jung · David is
+interested in Jung*. The declaration lets the system show **Kelly** the Jung/Depth Psychology Commons —
+its Salons, its Circles accepting invitation, its Commons-level offerings. **Participation then creates
+human visibility.**
+
+**Expressive interest text is private to the author by default and has no discovery authority.** To use
+that language in a Salon invitation or a Circle introduction, the member **authors that crossing
+separately**.
+
+A future *"show this interest on my profile"* act may exist. **It is not the declaration**, and it is
+not built. **Closes D-J2 and D-J3.**
+
+## FR-20 · A roster is a consequence of co-presence, not a directory. Co-presence ends; the inferred relationship ends with it.
+
+| | |
+|---|---|
+| **before** | attendees receive **no attendee directory**. The **host** may see who registered — operationally necessary to tend the gathering. That access **creates no reusable contact list.** |
+| **during** | attending is an explicit act of co-presence, so the identities a person chooses to use in the Salon are visible **to the people actually present**. A roster is allowed as an **ephemeral room function** — *who is here right now* — never *everyone who has ever attended this kind of thing*. |
+| **after** | **no attendee directory remains.** ⛔ No "people you met" · no "people you've gathered with" · no "others interested in the same things" · no automatic network · no follower relationship · no persistent co-attendance graph. |
+
+**Closes D-L2.**
+
+⚠️ **Honest limit, recorded rather than glossed:** the enforceable half is that **the system builds no
+list, offers no export, and performs no cross-Salon aggregation.** It cannot stop a human from writing
+names down. The ruling governs what Soullab constructs, not what a person remembers.
+
+## FR-21 · Connect is its own act, and it is not friendship.
+
+Its meaning: **"I am open to continuing relationship with you beyond this gathering."**
+
+Working direction (⚠️ **the seam itself is later design, not ratified here**): `request connection →
+accept → a Dyadic threshold becomes available` — **rather than** every accepted connection
+automatically instantiating a whole Dyadic environment.
+
+## FR-22 · A native Circle offering is not a representation crossing into the Circle. It is authored in the Circle, so the Circle copy is the source object.
+
+Two species, and they do **not** have identical revocation semantics:
+
+```
+OFFER FROM MY FIELD    source exists privately elsewhere → Circle receives a representation
+OFFER HERE             authored directly in Circle       → the Circle object IS the source
+```
+
+**A member always retains authority over their authored payload.**
+
+**Author withdrawal.** The payload leaves the Circle. If nothing depends on it, the offering **may
+disappear completely**. If other members have already authored responses, the system preserves **only
+the minimal structural fact necessary to preserve their authorship**:
+
+```
+[Offering withdrawn]
+
+Maria:
+"This helped me see something about my own anger."
+```
+
+⛔ No original text · no summary · no embedding · no reconstruction · **no hidden preserved payload.**
+The **original author's identity is removed from the visible tombstone** unless an independent
+integrity requirement proves it necessary.
+
+Responses remain, because **the responder owns their response**:
+
+> ⭐ **The author can surrender their meaning. They cannot retroactively surrender Maria's meaning for
+> her.**
+
+**Leaving** withdraws the member's live Circle-native offerings under the same rule. **Removal** does
+the same — **a boundary cascade, not facilitator proxy-authorship**, exactly the distinction already
+established for inquiry responses (FR-16).
+
+> **Ending Circle membership ends eligibility of the departing member's live Circle-native authored
+> material to remain in the field. Dependent material authored by others survives independently.**
+
+One coherent principle across imported representations, inquiry responses and native offerings —
+**without pretending their storage mechanics are identical.** **Closes D-K2.**
+
+⚠️ **Honest limit:** in a Circle of six, an unattributed tombstone above attributed responses leaves the
+author trivially re-identifiable from context. Identity removal here is a **stance** — the system does
+not name them — **not a guarantee of anonymity**. Do not describe it to members as one.
+
+## FR-23 · A response is speech, not a metric-bearing object.
+
+```
+Offering
+   ↳ Response
+   ↳ Response
+   ↳ Response
+```
+
+**A response cannot itself become the parent of another response.** The Circle is the context; it does
+not need `post → reply → counterreply → branch → nested argument`. That is the architecture of a forum.
+
+⛔ No likes · no reactions · no "helpful" ranking · no response counts as status · no sorting by
+engagement.
+
+## FR-24 · Request Attention is a process request, not an accusation object.
+
+The primary act carries **`circle_id` · `requested_by` · `requested_at` · `state`**.
+
+> ⛔ **`target_member_id` DOES NOT EXIST.**
+
+The member is saying *something in this relationship needs attention* — not *Maria committed
+infraction X*. An optional private note to the person tending the process is **ephemeral intake**:
+**not Circle memory, not a member record.**
+
+```
+Request Attention → human contact / orientation → possible Repair process
+```
+
+Three pathways, **never collapsed**: `REPAIR` (relationship needs attention) · `BOUNDARY / SAFETY` (a
+specific condition may require protection, different evidentiary requirements) · `REMOVAL` (authorized
+boundary consequence, full FR-05 contract).
+
+⛔ **The software never declares `Repaired ✅`. Repair ends through a human act.** **Closes D-K5.**
+
+⚠️ **The residual question this creates → D-M1.** The person tending has to know whom to contact, so a
+name will be in the intake. "Ephemeral" must therefore have a **defined destruction point** — and that
+point cannot be *"when the process closes"* if closing is indefinite, or the intake **is** the dossier
+in a different table.
+
+## FR-25 · A Salon's default afterlife is nothing.
+
+⛔ No automatic transcript · recording · MAIA memory · summary · "key insights" · attendee graph ·
+relationship graph · sentiment profile. Online transports must not record by default.
+
+Anything that remains requires **a new, independently consented act** — *"I'd like to Offer this
+reflection to the Jung Commons" · "I'd like to keep talking with Kelly" · "We'd like to form a Circle."*
+
+> This is where the no-stealth-memory principle becomes **visibly different from normal AI meeting
+> products.**
+
+## FR-26 · A gathering is allowed to complete.
+
+The closing threshold offers *continue by a new act* — or **nothing**:
+
+```
+Nothing — this gathering was enough.
+Connect with someone
+Propose another Salon
+Continue this inquiry in a Circle
+Bring something into my Personal Field
+```
+
+⛔ Absent: join mailing list · follow host · add all attendees · subscribe to group.
+
+> **A Salon is allowed to complete. That may be one of its best qualities.**
+
+## FR-27 · A Circle-hosted Salon requires explicit Circle-side authorization to create the outward invitation.
+
+When a Circle hosts, **the Circle is making an outward representation of itself** — not merely a
+facilitator creating an event. The assent mechanism is **not decided** (Circle governance is
+incomplete):
+
+```
+member-hosted Salon    designable
+Soullab-hosted Salon   designable
+Circle-hosted Salon    concept valid, AUTHORITY STILL OPEN
+```
+
+⛔ **Do not let `created_by` become that authority by accident.** **D-L4 stays open, now constrained.**
+
+## FR-28 · Discovery surfaces places of encounter, never people.
+
+```
+"this matters to me" → Interest Commons → things I may enter
+                                          (Salons · Circles with an outer invitation
+                                           · perhaps Commons-level material)
+```
+
+**Not** *"people who match me."* ⛔ **No people-discovery surface in the first release.**
+
+> **People discover places of encounter. Then they discover people by encountering them.**
+
+This removes a large amount of privacy risk and product ugliness at once, and materially narrows I1.
+
+## The Soullab relational grammar — FROZEN v1
+
+> **Interest** helps you find a place.
+> **Salon** helps you encounter people.
+> **Circle** lets relationship deepen.
+> **Dyadic Field** lets two people continue deliberately.
+> **Co-Lab** lets people work together.
+> **Constellation** lets Circles relate without becoming one field.
+
+## Docket movement
+
+| closed | by |
+|---|---|
+| **D-J2** declaration visibility | FR-19 |
+| **D-J3** expressive-text visibility | FR-19 |
+| **D-K2** native offering semantics | FR-22 |
+| **D-K5** repair record | FR-24 |
+| **D-L2** attendance disclosure | FR-20 |
+
+**Constrained, still open:** D-L4 (FR-27). **New:** D-M1 (intake destruction point, FR-24) · D-M2 and
+D-M3 (from the journey walks — see `SALON_TO_CIRCLE_JOURNEYS_v0.1.md`).
+**Still open:** D-J1 · D-J5 · D-J6 · D-J7 · D-K1 · D-K3 · D-K4 · D-K6 · D-K7 · D-L1 · D-L3 · D-L5 ·
+D-L6 · D-L7.

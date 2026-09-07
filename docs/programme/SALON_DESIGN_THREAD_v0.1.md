@@ -1,5 +1,8 @@
 # SALON — INVOKE DESIGN THREAD v0.1
 
+> ⛔ **SUPERSEDED by v0.2 (2026-09-07 evening).** Retained unchanged as the record of what was
+> proposed before founder rulings FR-19 · FR-20 · FR-21 · FR-25 · FR-26 · FR-27 · FR-28. Where this file and v0.2 differ, **v0.2 governs**.
+
 **Lane** `JARVIS-CIRCLES-01` · `CIRCLE-05 · INVOKE`
 **Date** 2026-09-07
 **Opened by** founder act, same day, explicitly **before Circle discovery is finished** — because
