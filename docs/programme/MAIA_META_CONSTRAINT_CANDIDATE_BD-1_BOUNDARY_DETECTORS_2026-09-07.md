@@ -34,7 +34,29 @@ LAWFUL SEPARATION
 
 Consent alone does not distinguish the two, because an escalation can be consented to. The test:
 
-> **Declining the separate activity must leave the protected thing intact.**
+> **A separately constituted activity is genuinely separate only if a person may refuse it without
+> losing access to, quality of, or standing within the protected activity.**
+
+```text
+LAWFUL SEPARATION
+  decline research
+  → Shadow Field remains fully available
+  → no degraded mode
+  → no delay or additional friction
+  → no loss of features or standing
+  → refusal itself does not become Shadow data
+
+NOT SEPARATE
+  "optional" research
+  → required for access
+  → materially improves access or quality
+  → refusal creates penalty or inferior service
+  → consent becomes the price of participation
+```
+
+The penultimate line of the lawful column matters as much as the rest: **refusal itself must not
+become data about the member.** A record of who declined is a relational trace the protected
+activity was constituted not to hold.
 
 If a member who refuses the study loses access to the Field, or receives a degraded version of it,
 the study was never separately constituted — it is an enlarged detector wearing consent.
