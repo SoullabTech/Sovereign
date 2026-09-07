@@ -51,6 +51,8 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
 import NotesDrawer from './NotesDrawer';
+import GoalsDrawer from './GoalsDrawer';
+import { useManuscriptGoals, type Measurable } from '@/lib/writersStudio/goalsClient';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
@@ -125,7 +127,7 @@ import StudioLowerBand from './StudioLowerBand';
  */
 
 /** Panels that can stand in the row beside the field. */
-type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation' | 'notes';
+type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation' | 'notes' | 'goals';
 
 /**
  * Rail destinations this room HOSTS in place rather than by navigation.
@@ -147,6 +149,12 @@ const SATISFIED_IN_ROOM = [
   'versions',
   'conversations',
   'statistics',
+  /* GOALS v1. Q-D: EXPLORE OWNS Goals and EXPLORE is unbuilt — "ownership is
+     not reachability". This room is a DOOR, not the owner; when EXPLORE ships
+     it takes a third door onto the same object with no migration. The named
+     mistake is a temporary second Goals system in WRITE, so the rail panel and
+     the lower band read ONE list (useManuscriptGoals) rather than two. */
+  'goals',
   /* NOTES v1. FUNCTION-PLACEMENT puts Notes inside WRITE — "each surfaces
      inside the mode where it is needed; none becomes a sixth mode" — so it is
      a panel in this room, never a route. */
@@ -404,6 +412,11 @@ function CanvasRoom() {
   const notesOpen = summoned.notes === true && Boolean(manuscript);
   const [noteCount, setNoteCount] = useState<number | null>(null);
 
+  /* GOALS. One reading for the whole room — the panel and the band are doors
+     onto it, never two systems. Not gated on a Work (FR-11 reuses FR-07). */
+  const goalsOpen = summoned.goals === true && Boolean(manuscript);
+  const { goals, reload: reloadGoals } = useManuscriptGoals(manuscript?.id ?? null);
+
   /* Minted once per page life, when the panel first opens — never discovered.
      Dismissing and reopening the panel continues the SAME exchange; a reload
      starts a new one, because asking "which conversation was this Work's?" is
@@ -433,9 +446,9 @@ function CanvasRoom() {
        Opening a conversation must never shrink the manuscript — that is the
        whole point of speaking with MAIA beside the Work rather than instead
        of it. */
-    if ((materialsOpen || conversationOpen || notesOpen) && !compact) cols.push('materialsPanel');
+    if ((materialsOpen || conversationOpen || notesOpen || goalsOpen) && !compact) cols.push('materialsPanel');
     return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
-  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, notesOpen, compact]);
+  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, notesOpen, goalsOpen, compact]);
 
   /* Resolved at a large notional width and expressed as percentages, so the
      MEASURED ratio holds at every viewport and nothing reads `window` during
@@ -492,7 +505,29 @@ function CanvasRoom() {
        the boundary and stays stripped until a real figure exists — which, once
        the panel has read them, it does. */
     if (noteCount !== null) railCounts.notes = noteCount;
+    /* Open goals only. A count of what the writer is currently aiming at — not
+       a tally of everything they ever declared, which would read as a score. */
+    if (goals !== null) railCounts.goals = goals.filter((g) => g.standing === 'open').length;
   }
+
+  /* What the room can honestly count, handed to Goals rather than Goals opening
+     a second reading of the writer's material. */
+  const goalCounts: Measurable = {
+    /* NOT `?? 0`. A missing count is not a count of zero: it would report the
+       writer's unread draft as a blank page, next to a target they set
+       themselves. The meta contract forbids that guard for Statistics (R2) and
+       it matters more here. */
+    manuscriptWords: draftMeta?.words ?? null,
+    sectionCount: sections.length,
+    /* EMPTY, DELIBERATELY. The outline carries per-section CHARACTER counts,
+       not word counts, and deriving words from characters would be an invented
+       measurement of the writer's work — the thing StudioLowerBand already
+       refuses to do with 04's progress bars. A section-scoped word goal
+       therefore reads "not counted here" rather than "0 / 3,000", which would
+       report our own unread material as the writer's blank page. It becomes
+       countable the moment the room reads sections, with no change of meaning. */
+    wordsBySection: {},
+  };
 
   /* The header's right-hand controls are Write's own, so the shell takes them
      as a slot rather than knowing about them. */
@@ -553,6 +588,9 @@ function CanvasRoom() {
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
       {bandOpen && manuscript && (
         <StudioLowerBand
+          goals={goals}
+          goalCounts={goalCounts}
+          onOpenGoals={() => { summon('goals'); dismiss('materials'); dismiss('notes'); }}
           revisions={revisions}
           wordCount={draftMeta?.words ?? null}
           sectionCount={
@@ -599,6 +637,7 @@ function CanvasRoom() {
             ...(bandOpen ? ['versions', 'statistics'] : []),
             ...(conversationOpen ? ['conversations'] : []),
             ...(notesOpen ? ['notes'] : []),
+            ...(goalsOpen ? ['goals'] : []),
           ]}
           onSelect={(d) => {
             if (d.id === 'materials') summon('materials');
@@ -610,8 +649,9 @@ function CanvasRoom() {
             if (d.id === 'statistics') setBandOpen(true);
             /* Notes and Materials share the right-hand column, so summoning one
                stands the other down rather than leaving a hidden winner. */
-            if (d.id === 'notes') { summon('notes'); dismiss('materials'); }
-            if (d.id === 'materials') dismiss('notes');
+            if (d.id === 'notes') { summon('notes'); dismiss('materials'); dismiss('goals'); }
+            if (d.id === 'goals') { summon('goals'); dismiss('materials'); dismiss('notes'); }
+            if (d.id === 'materials') { dismiss('notes'); dismiss('goals'); }
             if (d.id === 'conversations') {
               summon('conversation');
               summon('maia');
@@ -879,7 +919,25 @@ function CanvasRoom() {
           </StudioPanel>
         )}
 
-        {notesOpen && !conversationOpen && !compact && manuscript && (
+        {goalsOpen && !conversationOpen && !compact && manuscript && (
+          <StudioPanel
+            role="materials"
+            label="Goals"
+            onDismiss={() => dismiss('goals')}
+            style={{ width: pct(L.materialsPanel), flexShrink: 0 }}
+          >
+            <GoalsDrawer
+              manuscriptId={manuscript.id}
+              goals={goals}
+              counts={goalCounts}
+              sections={sections}
+              currentSectionId={sections[0]?.id ?? null}
+              onChanged={reloadGoals}
+            />
+          </StudioPanel>
+        )}
+
+        {notesOpen && !goalsOpen && !conversationOpen && !compact && manuscript && (
           <StudioPanel
             role="materials"
             label="Notes"
@@ -896,7 +954,7 @@ function CanvasRoom() {
           </StudioPanel>
         )}
 
-        {materialsOpen && !conversationOpen && !notesOpen && !compact && (
+        {materialsOpen && !conversationOpen && !notesOpen && !goalsOpen && !compact && (
           <StudioPanel
             role="materials"
             label="Materials"

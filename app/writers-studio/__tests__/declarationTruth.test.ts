@@ -34,7 +34,7 @@ const CANVAS_SOURCE = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 
 const WORK_DRAWER_SOURCE = readFileSync(join(__dirname, '..', 'canvas', 'WorkDrawer.tsx'), 'utf8');
 
 describe('D1 · declaration truth — built capability is never declared unavailable', () => {
-  it.each(['materials', 'structure', 'versions', 'statistics', 'conversations', 'notes'])(
+  it.each(['materials', 'structure', 'versions', 'statistics', 'conversations', 'notes', 'goals'])(
     '%s is declared BUILT, because a member opens it today',
     (id) => {
       const capability = capabilityOf(id);
@@ -103,9 +103,9 @@ describe('FR-C · an unavailable destination must SAY its state, not merely dim'
        have one. */
     const withoutBook = shellDestinations(false).flatMap((g) => g.destinations);
     const manuscript = withoutBook.find((d) => d.id === 'manuscript');
-    const goals = withoutBook.find((d) => d.id === 'goals');
+    const discover = withoutBook.find((d) => d.id === 'discover');
     expect(manuscript?.unavailableBecause).toBe('needs-manuscript');
-    expect(goals?.unavailableBecause).toBe('unbuilt');
+    expect(discover?.unavailableBecause).toBe('unbuilt');
   });
 
   it('says where a ratified function is already served instead of calling it absent', () => {
@@ -133,7 +133,7 @@ describe('FR-C · an unavailable destination must SAY its state, not merely dim'
 describe('D3 · capability truth has one authority; placement may have many', () => {
   it('a room may not promote a destination the map declares unbuilt', () => {
     expect(() => assertRoomClaimsNothingUnbuilt(['materials'])).not.toThrow();
-    expect(() => assertRoomClaimsNothingUnbuilt(['goals'])).toThrow(/Capability truth lives in the map/);
+    expect(() => assertRoomClaimsNothingUnbuilt(['discover'])).toThrow(/Capability truth lives in the map/);
     expect(() => assertRoomClaimsNothingUnbuilt(['nonesuch'])).toThrow(/does not name/);
   });
 
@@ -142,10 +142,10 @@ describe('D3 · capability truth has one authority; placement may have many', ()
        projection itself refuses. Before this repair, satisfiedInRoom could
        promote any id at all. */
     const groups = shellDestinations(true, undefined, {
-      satisfiedInRoom: ['goals', 'discover', 'word-web'],
+      satisfiedInRoom: ['discover', 'suggestions', 'word-web'],
       manuscriptId: 'm1',
     });
-    for (const id of ['goals', 'discover', 'word-web']) {
+    for (const id of ['discover', 'suggestions', 'word-web']) {
       const d = groups.flatMap((g) => g.destinations).find((x) => x.id === id);
       expect(d?.actionable).toBe(false);
       expect(d?.satisfiedInRoom).toBe(false);

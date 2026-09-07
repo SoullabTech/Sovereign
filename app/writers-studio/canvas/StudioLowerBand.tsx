@@ -16,13 +16,19 @@
  *               04 draws these as TABS. A tab that cannot switch anything is
  *               a control that does nothing, so they are not tabs here.
  *
- *   GOALS       NO SUBSTRATE. There is no way for a member to declare a goal
- *               and nothing stores one, so the region says exactly that and
- *               draws no bars. 04's three gold progress bars were the single
- *               most tempting thing in the reference to fake: they are
- *               beautiful, they are trivial to hard-code, and they would have
- *               invented a measurement of a member's writing — the precise
- *               failure maiaOffering.ts exists to prevent.
+ *   GOALS       REAL as of Goals v1 — and STILL NO BARS. The member can now
+ *               declare a goal and the system counts against it, which D-003
+ *               authorized ("goal progress against a writer-declared target").
+ *               What has not changed is the refusal underneath the original
+ *               note: 04's three gold progress bars stay unbuilt. A bar is a
+ *               shape that says how full you are; "2,140 / 3,000 words" says
+ *               what was counted. The figure is arithmetic about the work; the
+ *               bar is a feeling about the writer.
+ *
+ *               This region is a DOOR, not the owner (Q-D — ownership is not
+ *               reachability). It renders the same list the rail panel does,
+ *               read once by the room. A second Goals system here is the
+ *               named mistake.
  *
  *   STATISTICS  REAL, and only the figures that are counted rather than
  *               judged: words in the draft, sections in the manuscript,
@@ -48,6 +54,7 @@
 
 import { GOLD, GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { capabilityOf, isBuilt } from '../studioMap';
+import { progressFor, progressLabel, type Measurable, type WriterGoal } from '@/lib/writersStudio/goalsClient';
 import { StudioText } from '../studio/StudioType';
 import { formatWhen, pageEstimate, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 
@@ -87,6 +94,11 @@ export const STRUCTURE_SURFACES = STRUCTURE_BAND.map((s) => {
 });
 
 export interface StudioLowerBandProps {
+  /** The room's ONE reading of the writer's goals. Never fetched here. */
+  goals: WriterGoal[] | null;
+  goalCounts: Measurable;
+  /** Opens the Goals panel — this band shows, the panel is where they are made. */
+  onOpenGoals: () => void;
   revisions: RevisionSummary[] | null;
   /** Words in the draft on the table right now. Counted, not estimated. */
   wordCount: number | null;
@@ -98,6 +110,9 @@ export interface StudioLowerBandProps {
 }
 
 export default function StudioLowerBand({
+  goals,
+  goalCounts,
+  onOpenGoals,
   revisions,
   wordCount,
   sectionCount,
@@ -105,6 +120,10 @@ export default function StudioLowerBand({
   onShowOutline,
   onDismiss,
 }: StudioLowerBandProps) {
+  /* Open goals only: a tally of everything ever declared would read as a score
+     of the writer rather than a picture of what they are working toward. */
+  const openGoals = (goals ?? []).filter((g) => g.standing === 'open');
+
   return (
     <footer
       data-band="studio-lower"
@@ -211,14 +230,56 @@ export default function StudioLowerBand({
       </section>
 
       {/* ── Goals ─────────────────────────────────────────────────────── */}
-      <section style={{ minWidth: 220 }} data-region="goals" data-state="unavailable">
-        <StudioText role="panelLabel" tone="quiet" style={{ marginBottom: SPACE.base }}>
+      <section
+        style={{ minWidth: 220 }}
+        data-region="goals"
+        data-state={goals === null ? 'unavailable' : 'available'}
+      >
+        <StudioText role="panelLabel" style={{ marginBottom: SPACE.base }}>
           Goals
         </StudioText>
-        <StudioText role="metadata" style={{ maxWidth: '22ch', opacity: 0.7 }}>
-          A goal is yours to set. There is no way to declare one here yet, so
-          nothing is measured.
-        </StudioText>
+        {goals === null ? (
+          <StudioText role="metadata" style={{ maxWidth: '22ch', opacity: 0.7 }}>
+            reading…
+          </StudioText>
+        ) : openGoals.length === 0 ? (
+          <StudioText role="metadata" style={{ maxWidth: '22ch', opacity: 0.7 }}>
+            A goal is yours to set.{' '}
+            <button
+              type="button"
+              onClick={onOpenGoals}
+              style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer',
+                       color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 4 }}
+            >
+              Declare one
+            </button>
+            , or don't — nothing here needs one.
+          </StudioText>
+        ) : (
+          <>
+            {openGoals.slice(0, 3).map((g) => {
+              const figure = progressLabel(progressFor(g, goalCounts));
+              return (
+                <div key={g.id} style={{ marginBottom: SPACE.snug }} data-goal-row={g.kind}>
+                  <StudioText role="metadata" style={{ maxWidth: '24ch', opacity: 0.8 }}>
+                    {g.statement}
+                  </StudioText>
+                  {/* The counted figure, never a bar and never a rate (FR-10). */}
+                  {figure && (
+                    <StudioText role="metadata" style={{ opacity: 0.5 }} data-goal-figure>
+                      {figure}
+                    </StudioText>
+                  )}
+                </div>
+              );
+            })}
+            {openGoals.length > 3 && (
+              <StudioText role="metadata" style={{ opacity: 0.4 }}>
+                {openGoals.length - 3} more
+              </StudioText>
+            )}
+          </>
+        )}
       </section>
 
       {/* ── Statistics ────────────────────────────────────────────────── */}

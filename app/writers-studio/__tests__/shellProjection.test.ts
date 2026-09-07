@@ -454,7 +454,7 @@ describe('the handoff contract carries identity both ways', () => {
   it('keeps the manuscript at its measured width while conversing', () => {
     /* The whole point of speaking beside the Work: MAIA takes the Materials
        share, the writing field does not give up a pixel. */
-    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen \|\| notesOpen\) && !compact/);
+    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen \|\| notesOpen \|\| goalsOpen\) && !compact/);
     expect(page).toContain('pct(L.maiaPanel + L.materialsPanel + L.gutter)');
     const L = writingFieldLayout(100000);
     const conversing = L.maiaPanel + L.materialsPanel + L.gutter;
@@ -492,9 +492,22 @@ describe('every visible region is real or plainly unavailable', () => {
     }
   });
 
-  it('draws no goal and no progress bar, because no goal can be declared', () => {
+  it('draws the counted figure, and STILL no progress bar', () => {
+    /* PREMISE CHANGED BY FOUNDER RULING, PROHIBITION UNCHANGED. This test read
+       "because no goal can be declared" and pinned the empty-state copy
+       ("nothing is measured"). Goals v1 makes that premise false — D-003
+       authorized goal progress against a writer-declared target — so the copy
+       pin is retired and the teeth are kept and sharpened.
+
+       A bar is a shape that says how full you are; "2,140 / 3,000 words" says
+       what was counted. 04's three gold bars stay unbuilt. */
     expect(band).not.toMatch(/pct|percent|%`/);
-    expect(band).toContain('nothing is measured');
+    /* The figure comes from the shared client, never from arithmetic invented
+       in the band — and nothing in that client takes a date (FR-10). */
+    expect(band).toContain('progressLabel(progressFor(');
+    for (const derived of ['behind', 'ahead', 'onTrack', 'projected', 'perDay', 'streak', 'remaining']) {
+      expect(band).not.toMatch(new RegExp(`\\b${derived}\\b`, 'i'));
+    }
   });
 
   it('publishes no invented statistic', () => {
@@ -543,7 +556,7 @@ describe('Materials does not become furniture', () => {
     /* NOTES v1 added a THIRD yield term. The rule is unchanged and the pin is
        updated rather than loosened: chrome collapses before the writing field
        is crushed, and the field is still in no yield condition below. */
-    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !compact');
+    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !goalsOpen && !compact');
     expect(page).not.toMatch(/outlineOpen && !compact/);
   });
 
@@ -552,7 +565,7 @@ describe('Materials does not become furniture', () => {
        Both are the same rule in different circumstances — chrome collapses
        before the writing field is crushed. The field is in neither list.
        NOTES v1 makes it three; the field is still in none of them. */
-    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !compact');
+    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !goalsOpen && !compact');
     expect(page).not.toMatch(/conversationOpen && !compact\s*&&[\s\S]{0,40}<main/);
   });
 });

@@ -254,7 +254,16 @@ export const STUDIO_MAP: StudioGroup[] = [
          member's own notes. */
       { id: 'notes', label: 'Notes', availability: 'in-room', count: 12 },
       { id: 'versions', label: 'Versions', availability: 'in-room' },
-      { id: 'goals', label: 'Goals', availability: 'later' },
+      /* GOALS v1 — BUILT. Ratified in six places (FIELD-MAP §1 "Goals strip",
+         §5 "active goals", D-003's showable-measurement list, D-019's band,
+         FUNCTION-PLACEMENT, maiaOffering.ts) and now implemented.
+
+         Q-D — OWNERSHIP IS NOT REACHABILITY. FUNCTION-PLACEMENT gives Goals to
+         EXPLORE, whose room does not exist. That stays true and unamended: this
+         room is a DOOR. When EXPLORE ships it becomes the primary room by taking
+         another door onto the same object — no data migration, no second
+         semantics, and no temporary Goals system to unbuild. */
+      { id: 'goals', label: 'Goals', availability: 'in-room' },
     ],
   },
   {
