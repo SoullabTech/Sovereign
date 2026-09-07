@@ -440,3 +440,130 @@ FR-F   after FR-D
 FR-E   to WS2-07 capability sequencing, not this lane
 BUILD  NOT AUTHORIZED
 ```
+
+---
+
+## 12 · FR-D — RULED (founder, 2026-09-07)
+
+### Governing sentence
+
+> **Studio help should live as close as possible to the unfamiliar act, appear
+> when meaning is sought, and answer only what the writer needs to know before
+> choosing that act.**
+
+### Founder intent behind it
+
+> *"This is about quality, an emotional connection to the work, and the field
+> UI/UX."*
+
+Recorded because it is the standard the implementation answers to. FR-D is not a
+documentation requirement; it is a quality-of-presence requirement.
+
+```text
+FR-D — HELP FORM
+
+RULE
+Help is contextual, object-local, and progressively disclosed.
+
+PURPOSE
+Before committing to an unfamiliar act, a writer should be able to answer:
+  1. What is this?
+  2. Why would I use it?
+  3. What will it enable or change?
+  4. Where consequential: what happens if I do?
+
+FORM
+The smallest surface capable of answering the question wins.
+
+DEFAULT ORDER
+  1. clear label
+  2. brief inline descriptor where meaning must remain visible
+  3. hover / keyboard-focus / touch-accessible explanation
+  4. contextual help affordance when more explanation is genuinely required
+  5. larger guidance surface only when the smaller forms cannot carry it
+
+NOT
+  ⛔ a manual before writing
+  ⛔ a mandatory product tour
+  ⛔ permanent explanatory clutter
+  ⛔ tooltips on everything
+  ⛔ documentation as compensation for unclear controls
+```
+
+### ⭐ Input independence — required, not optional
+
+The founder's first unaided gesture was hover-for-meaning. That is evidence for
+**object-local explanation**, and it must NOT become hover-only help.
+
+```text
+pointer    hover / intentional click
+keyboard   focus
+touch      tap / accessible contextual affordance
+```
+
+> A writer on iPhone must be able to obtain the same meaning without a hover
+> state.
+
+### ⭐ HELP ≠ STATE — the exception FR-C creates
+
+```text
+HELP    may be progressively disclosed
+STATE   must be directly perceptible where the writer needs it to
+        interpret the control correctly
+```
+
+Example: `Notes — Not available yet`. That belongs on the surface, because
+without it the member cannot correctly interpret the control.
+
+⛔ Consent, refusal, unavailability, destructive consequences, and other
+constitutionally important facts are **never** hidden behind hover or help UI.
+
+### ⭐ ORIENTATION ≠ INSTRUCTION
+
+Studio orients before it instructs. Before entry, answer only *what is this* and
+*why might I want it*. After the writer chooses a destination, local guidance may
+explain the acts available there.
+
+```text
+Develop
+Work with structure, questions, and possibilities around your draft.
+```
+
+⛔ Do not teach the whole workflow at the House / rail / mode-choice layer.
+**The writer came to write, not to learn software.**
+
+### What this ruling does and does not authorize
+
+```text
+✅ AUTHORIZED   the census (flow §5) and the decision-ready FR-D proposal (§7)
+⛔ NOT BUILD    FR-D's recording is NOT build authorization.
+
+Build is gated behind the §7 proposal ruling — a concrete, per-control
+application that must be capable of FAILING against the founder walk.
+Jarvis does not authorize itself to build from its own proposal.
+```
+
+### Answering the FR-D evidence document's four decisions
+
+```text
+1  which forms      RULED — progressive disclosure, smallest adequate surface,
+                    the five-step default order above
+2  `note` slot      NOT YET DECIDED. The census (§5) must place it: it becomes
+                    the inline-descriptor vehicle (order step 2) or it is
+                    removed. It cannot stay declared, 2/16 filled, unrendered.
+3  help surface     RULED AS LAST RESORT (order step 5). If it exists, Lane B
+                    must be able to name it truthfully — otherwise R-2 inherits
+                    a second fabrication.
+4  the ceiling      RULED — the NOT list, the anti-overbuild test (flow §10),
+                    and orientation ≠ instruction are the stated ceiling.
+```
+
+### Standing
+
+```text
+FR-C   RULED · C
+FR-D   RULED — census + proposal authorized, BUILD GATED at §7
+FR-F   next after the FR-D proposal is ruled
+FR-E   to WS2-07 capability sequencing, not this lane
+BUILD  NOT AUTHORIZED
+```
