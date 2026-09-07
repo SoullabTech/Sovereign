@@ -242,3 +242,121 @@ optionally reconcile the doctrine lane with canonical
 ```
 
 > ⛔ **Nothing moves until that first arrow actually occurs.**
+
+---
+
+# ADDENDUM — THE I0.5 PRODUCTION WITNESS IS BEHAVIORAL AND STRUCTURAL, NEVER VISUAL
+**Founder ruling · 2026-09-08 · occasioned by a live look at `soullab.life/commons/circles`**
+
+## The correction
+
+⭐ **A screenshot of an unchanged `/commons/circles` is NOT evidence that I0.5 failed to deploy.**
+Even after `891b33ee0` deploys, that page is **expected to remain visually unchanged**.
+
+> **I0.5 has no acceptance criterion of "the page looks different."**
+
+## Three programme states, to be kept explicitly separated
+
+```text
+SALON
+design exists
+code = 0
+implementation = NOT AUTHORIZED
+
+I1 INTEREST COMMONS
+design open
+code = 0
+implementation = NOT AUTHORIZED
+
+I0.5
+code exists
+merged = 891b33ee0
+deployed = NO
+production = e535e6246
+member-visible Circles redesign = NONE
+```
+
+⛔ **No design authority may be inferred from the I0.5 merge, and no visual change may be expected
+from its deployment.** Otherwise someone looking at the merged work concludes *"Circles are being
+built now."* **They are not.** I0.5 repairs **entry and state integrity around the existing
+substrate**; Salon, discovery, collective formation and procedural constitution remain
+**prospective design**.
+
+## The production witness contract (supersedes any visual expectation)
+
+```text
+running GIT_COMMIT = 891b33ee0
+
+three migrations present + correct
+  circle_membership_removals
+  withdrawn_at
+  integrating retired
+
+existing Circle data preserved
+
+FR-18 boundary actually works
+  removed member + generic invite -> refusal
+
+/commons/join closed-state behavior works
+
+no unintended Circle/relationship mutations
+```
+
+> ⭐ *`/commons/circles` may look exactly the same before and after and still be a successful
+> I0.5 release.*
+
+## The substrate, described precisely (pre-positive-design)
+
+> **A Circle can currently contain people, but it does not yet possess the constitutional machinery
+> that makes those people a functioning collective.**
+
+- `helper` is **not procedural authority** (CA-15 — no code path writes `facilitator`);
+- `Quiet` is **activity-derived, not relational** (`derivePhase()` has no notion of people);
+- `listMyCircles` is **possession/access, not discovery**;
+- the latent `visibility` / `invite_enabled` columns **do not constitute a Commons**.
+
+## Sequence, preserved
+
+```text
+COHORT WITNESS
+    |  legitimate lock release
+I0.5 DEPLOY 891b33ee0
+    |
+SHA + MIGRATION + BEHAVIOR WITNESS
+    |
+I0.5 CLOSED
+    |
+founder act required before:
+    I1 Interest Commons
+    Salon
+    positive Circle constitutional implementation
+```
+
+## ⚠️ Two execution notes — JARVIS ANALYSIS, NOT RULINGS
+
+**N1 · ⭐ FR-18 cannot be witnessed in production without manufacturing a removal.**
+Production holds 4 circles / 4 active memberships / **0 removals**, and the removal table is ABSENT
+until the migration runs. To exercise `removed member + generic invite -> refusal` against
+production, a removal of a **real person's real membership** would have to exist. The committed
+verifier does this safely only because it builds fixtures **inside `BEGIN … ROLLBACK`**. So the
+production witness has two honest shapes and they are **not equivalent**:
+
+- **(a)** run the committed verifier against production, accepting **fixture writes inside a
+  rolled-back transaction on the production database** — behavioral proof, at the cost of writing
+  (and rolling back) on production;
+- **(b)** accept the **candidate witness** (`63/63` on `891b33ee0`) as the behavioral proof of
+  FR-18, and scope the production witness to *the code carrying it is the code running* + schema +
+  state + `/commons/join` closed-state + no unintended mutations.
+
+⛔ Not decided here. ⚠️ **What must not happen is (b) being performed and then described as if it
+were (a)** — *"FR-18 works in production"* is a different claim from *"the commit whose FR-18
+behavior was witnessed is the commit now running."*
+
+**N2 · The ledger check is the direct test of the `321cb1536` repair.**
+`schema_migrations` should carry **exactly one row per migration filename**, written by
+`scripts/run-sql-migrations.sh` and **not** by the migrations themselves. Per
+`docs/ops/MIGRATION_WITNESS_DOCTRINE.md`, this is the production-side counterpart to the
+empty-database reconstruction — and production is an **upgrade-shaped** database, so it exercises
+the other half of the dual witness. ⚠️ It will pass under `ON CONFLICT DO NOTHING` either way, so
+**presence of one row is necessary, not sufficient**; the empty-bootstrap witness already discharged
+the sufficient half on canonical.
