@@ -343,3 +343,44 @@ partition, developmental readings, standing, and heading depth were all missing
 and applied during setup. That was environment drift, not product state, and it
 cost the first two attempts at this walk. The verdict above was given only after
 the schema was current and the Canvas loaded normally.
+
+### ⭐ Addendum — the state lines do positive work
+
+Founder, on the Develop room's rail, where nearly every destination is
+unavailable (Materials · Structure · Notes · Versions · Goals · the entire MAIA
+band · four of five Tools):
+
+> *"these would all help to ground the work ahead"*
+
+This goes beyond FR-C's requirement. The ruling asked only that intentional
+incompleteness be distinguishable from malfunction — that the rail stop reading
+as broken. What the witness reports is that the named-and-stated rooms now
+function as **a legible map of the Studio the work is heading toward**, useful
+for orientation rather than merely inoffensive.
+
+⛔ Recorded as a witnessed reaction, not promoted into a design principle. It is
+one walk, by the architect, on one runtime.
+
+Also confirmed in the same view: `note` renders for available destinations —
+Export shows *"Take your writing out."* — so the orientation channel and the
+state channel are both live and visibly distinct.
+
+### ⚠️ One observation for a later look — NOT acted on
+
+The same destination says different things in different rooms. In the Canvas,
+Materials, Structure and Versions are actionable panels; in Develop they render
+*"Not available yet"* — because they are genuinely not reachable from that room.
+
+Under FR-C's own logic this is correct: state is per-room reachability, and
+`shellDestinations` derives it from the room's actual options. But a writer who
+sees `Versions 1` in one room and `Versions — Not available yet` in the next may
+read the product as contradicting itself rather than as describing two rooms.
+
+```text
+STATUS   observation only · no defect claimed · nothing changed
+NEEDS    a look during a later walk, in both rooms in sequence,
+         to see whether it reads as precision or as inconsistency
+```
+
+⛔ Not to be repaired in anticipation. The same discipline that governed the
+aggregate-weight hypothesis governs this: the walk decides, not the reasoning.
