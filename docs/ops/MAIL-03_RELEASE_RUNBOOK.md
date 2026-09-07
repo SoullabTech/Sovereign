@@ -144,6 +144,17 @@ limiter.
 
 ## 3. Production witness — controlled test member
 
+> **Run the script, not the snippets.**
+> ```bash
+> cd /Users/soullab/MAIA-SOVEREIGN && git pull
+> scripts/witness/mail-03-witness.sh <MEMBER_ID> <MEMBER_EMAIL>
+> ```
+> It performs §§1–4 in order, decides every machine-checkable result, and
+> ABORTS on the first failure. Two witness attempts failed by running past a
+> guard that had already printed REFUSE; a guard an operator can walk past is
+> not a guard. The manual steps below remain as the reference for what the
+> script checks and why.
+
 ### 3.0 Bind the variables FIRST, and let the shell refuse placeholders
 
 A witness run on 2026-09-07 sent `<MEMBER_ID>` and `<MEMBER_EMAIL>` to
