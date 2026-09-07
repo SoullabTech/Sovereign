@@ -1,12 +1,14 @@
 /**
  * Membership Service — Join/leave circles
  *
- * Enforces the revocation cascade:
- * Leaving a circle revokes all member's shared artifacts in that circle.
+ * Enforces the revocation cascade: leaving a Circle revokes ALL of that
+ * member's live Circle-side representations there — shared artifacts AND
+ * structured-inquiry responses — atomically, before membership standing changes.
  */
 
 import { transaction } from '@/lib/db/postgres';
 import { getCircleWithMembership } from './circleService';
+import { tombstoneMemberResponsesInCircle } from './inquiryService';
 
 /**
  * Leave a circle.
@@ -26,6 +28,13 @@ export async function leaveCircle(circleId: string, memberId: string) {
        WHERE circle_id = $1 AND shared_by = $2 AND revoked_at IS NULL`,
       [circleId, memberId]
     );
+
+    // Then tombstone live inquiry responses (founder ruling C, 2026-09-07).
+    // Ending membership ends the eligibility of that member's Circle-side
+    // representations to remain in the field. Without this the response stays
+    // visible and the former member cannot withdraw it — withdrawResponse()
+    // requires an active membership, so nobody could remove it.
+    await tombstoneMemberResponsesInCircle(tx as any, circleId, memberId);
 
     // Then mark membership as left
     await tx.query(
