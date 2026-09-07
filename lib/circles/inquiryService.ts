@@ -100,14 +100,15 @@ export async function closeInquiry(
   if (inquiry.status !== 'open') throw new Error('INQUIRY_NOT_OPEN');
   if (inquiry.opened_by !== memberId) throw new Error('NOT_OPENER');
 
-  const nextStatus: InquiryStatus = fieldSynthesis ? 'integrating' : 'closed';
-
+  // Always 'closed' (B-09, founder ruling E). A synthesis is an optional
+  // property of a closed inquiry, never a second status — encoding it as one
+  // duplicated `field_synthesis IS NOT NULL` and could drift from it.
   const result = await queryOne<CircleInquiryRow>(
     `UPDATE circle_inquiries
-     SET status = $1, closed_at = NOW(), field_synthesis = $2
-     WHERE id = $3
+     SET status = 'closed', closed_at = NOW(), field_synthesis = $1
+     WHERE id = $2
      RETURNING *`,
-    [nextStatus, fieldSynthesis ?? null, inquiryId]
+    [fieldSynthesis ?? null, inquiryId]
   );
 
   return result!;
@@ -178,7 +179,7 @@ export async function getInquiryWithResponses(
   const hasResponded = !!ownResponse;
 
   // Sovereignty of thought: only show responses after contributing
-  // Exception: closed/integrating inquiries show all (the inquiry is complete)
+  // Exception: a closed inquiry shows all (the inquiry is complete)
   let responses: (CircleInquiryResponseRow & { responder_name: string | null })[] = [];
 
   if (hasResponded || inquiry.status !== 'open') {
@@ -240,12 +241,47 @@ export async function withdrawResponseWithClient(
 
   await client.query(
     `UPDATE circle_inquiry_responses
-     SET withdrawn_at = NOW()
+     SET withdrawn_at = NOW(), response_text = NULL, response_type = NULL
      WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
     [inquiryId, memberId]
   );
 
   return true;
+}
+
+/**
+ * BOUNDARY CASCADE — tombstone every live response this member holds in this
+ * Circle. Used by leaveCircle() and removeMemberWithClient(), inside their
+ * existing atomic transactions.
+ *
+ * ⛔ This is NOT proxy author withdrawal, and the distinction is load-bearing:
+ *
+ *   AUTHOR WITHDRAWAL   the member actively exercises continuing consent
+ *   BOUNDARY CASCADE    the representation loses field eligibility because
+ *                       the Circle relationship ended
+ *
+ * Without it the membrane leaks in a way the member cannot fix: their response
+ * stays visible after they leave, and withdrawResponse() is closed to them
+ * because it requires an active membership. Nobody could remove it.
+ *
+ * Scoped to one Circle. Responses in any other Circle are untouched.
+ */
+export async function tombstoneMemberResponsesInCircle(
+  client: InquiryClient,
+  circleId: string,
+  memberId: string
+): Promise<number> {
+  const result = await client.query(
+    `UPDATE circle_inquiry_responses cir
+     SET withdrawn_at = NOW(), response_text = NULL, response_type = NULL
+     FROM circle_inquiries ci
+     WHERE ci.id = cir.inquiry_id
+       AND ci.circle_id = $1
+       AND cir.member_id = $2
+       AND cir.withdrawn_at IS NULL`,
+    [circleId, memberId]
+  );
+  return result.rowCount ?? 0;
 }
 
 /**

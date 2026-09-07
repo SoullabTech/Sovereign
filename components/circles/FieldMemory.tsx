@@ -26,20 +26,14 @@ export function FieldMemory({ circleId }: FieldMemoryProps) {
     let cancelled = false;
     (async () => {
       try {
-        // Fetch closed and integrating inquiries
-        const [closedRes, integratingRes] = await Promise.all([
-          apiFetch(`/api/circles/${circleId}/inquiries?status=closed`),
-          apiFetch(`/api/circles/${circleId}/inquiries?status=integrating`),
-        ]);
-
-        const closedJson = closedRes.ok ? await closedRes.json() : { inquiries: [] };
-        const integratingJson = integratingRes.ok ? await integratingRes.json() : { inquiries: [] };
+        // One fetch. `integrating` was retired as a status (B-09) — a closed
+        // inquiry either carries a synthesis or it does not, and that fact is
+        // read from field_synthesis rather than from a duplicated status.
+        const res = await apiFetch(`/api/circles/${circleId}/inquiries?status=closed`);
+        const json = res.ok ? await res.json() : { inquiries: [] };
 
         if (!cancelled) {
-          const all = [
-            ...(integratingJson.inquiries || []),
-            ...(closedJson.inquiries || []),
-          ].sort((a: any, b: any) =>
+          const all = [...(json.inquiries || [])].sort((a: any, b: any) =>
             new Date(b.opened_at).getTime() - new Date(a.opened_at).getTime()
           );
           setInquiries(all);
@@ -97,14 +91,16 @@ export function FieldMemory({ circleId }: FieldMemoryProps) {
               <div className="mt-2 flex items-center gap-3 text-xs text-maia-ink-20">
                 <span>{formatDate(inquiry.opened_at)}</span>
                 {inquiry.opener_name && <span>{inquiry.opener_name}</span>}
+                {/* Derived from the synthesis itself, not from a status that
+                    encoded the same fact twice. */}
                 <span
                   className={`rounded-md px-1.5 py-0.5 ${
-                    inquiry.status === 'integrating'
+                    inquiry.field_synthesis
                       ? 'bg-teal-900/20 text-teal-400/60'
                       : 'bg-maia-navy-800 text-maia-ink-30'
                   }`}
                 >
-                  {inquiry.status}
+                  {inquiry.field_synthesis ? 'integrating' : inquiry.status}
                 </span>
               </div>
             </div>

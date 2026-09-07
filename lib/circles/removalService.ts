@@ -33,6 +33,7 @@
  */
 
 import { transaction } from '@/lib/db/postgres';
+import { tombstoneMemberResponsesInCircle } from './inquiryService';
 
 /**
  * The minimal shape shared by a pg PoolClient and the `transaction()` handle.
@@ -132,6 +133,12 @@ export async function removeMemberWithClient(
      WHERE circle_id = $1 AND shared_by = $2 AND revoked_at IS NULL`,
     [circleId, targetMemberId]
   );
+
+  // Tombstone live inquiry responses — the same boundary cascade as leaving
+  // (founder ruling C). FR-05 already said removal revokes the member's Circle
+  // shares "exactly as leaving does"; responses are Circle-side representations
+  // too, and were the half that had no mechanism until CA-03 landed.
+  await tombstoneMemberResponsesInCircle(client, circleId, targetMemberId);
 
   // Cut access. Scoped to this Circle; memberships elsewhere are untouched.
   await client.query(

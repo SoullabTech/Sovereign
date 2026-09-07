@@ -316,6 +316,83 @@ constitutional authority.
 > completion · birth · separation — is where human interpretation and member acts return, and stays
 > separate (CA-04).
 
+## FR-15 · Withdrawal is a tombstone — **RATIFIED** *(2026-09-07)*
+
+> **Withdrawal preserves the historical fact that a response occurred, but does not preserve the
+> withdrawn authored payload.**
+
+```text
+LIVE       withdrawn_at IS NULL      response_text NOT NULL   response_type NOT NULL
+WITHDRAWN  withdrawn_at IS NOT NULL  response_text NULL       response_type NULL
+```
+
+**Why not the `shared_artifacts` soft-revoke it resembles.** A shared artifact points at something
+that still exists elsewhere; keeping its text preserves a Circle-visible object's integrity. **An
+inquiry response IS the Circle-side authored representation** — there is no other object whose
+integrity requires the actual words.
+
+The **row** must survive: `UNIQUE(inquiry_id, member_id)` is what prevents
+*respond → see everyone else's answers → withdraw → answer again better informed.*
+**That constraint is load-bearing. The payload is not.**
+
+⛔ `response_type` is nulled too — *reflection / witness / offering* is still authored semantic
+information about what the person contributed.
+⛔ **No hash, digest, length or other recoverable or fingerprintable substitute** is retained.
+
+Enforced as a schema invariant so the halves cannot drift. Amended into the **pending** migration
+rather than layered over it: it had reached no durable database, so there is no window in which
+payloads were retained.
+
+> **Keep the fact that an act occurred when the system needs that fact for integrity; do not keep
+> the person's surrendered meaning merely because storage makes it easy.**
+
+## FR-16 · Membership termination cascades — **RATIFIED** *(2026-09-07)*
+
+> **Ending Circle membership ends the eligibility of that member's live Circle-side representations
+> to remain in the field.**
+
+`leaveCircle()` and `removeMemberWithClient()` must, **inside their existing atomic transactions**:
+revoke active `shared_artifacts` → tombstone that member's live inquiry responses (FR-15) → change
+membership standing → (removal) preserve the append-only removal evidence.
+
+**The gap this closes.** Responses had no revocation mechanism until CA-03, so leaving left them
+visible — and the former member could not withdraw them, because `withdrawResponse()` requires an
+active membership. **Nobody could remove it.**
+
+**Two distinct authorities, never conflated:**
+
+| **AUTHOR WITHDRAWAL** | the member actively exercises continuing consent |
+|---|---|
+| **BOUNDARY CASCADE** | the representation loses field eligibility because the relationship ended |
+
+The second is **not** a facilitator withdrawing on someone's behalf. ⛔ No other Circle is affected.
+
+## FR-17 · Stored inquiry `integrating` retired — **RATIFIED** *(2026-09-07)*
+
+`InquiryStatus.integrating` had no distinct operational semantics. `closeInquiry()` chose it purely
+by whether a synthesis was supplied, while every downstream site treated it identically to `closed`.
+It was a stored duplicate of `status='closed' AND field_synthesis IS NOT NULL` — **the FR-13
+anti-pattern** — could already drift from it, and had no exit.
+
+```text
+InquiryStatus = 'open' | 'closed'
+closeInquiry() always sets 'closed'
+field_synthesis stays an optional property of a closed inquiry
+display is derived from field_synthesis != null
+```
+
+⛔ **Not an exit ceremony** — there was no durable meaning to exit from.
+
+### ⛔ HARD SCOPE BOUNDARY
+
+**`FieldPhase` is a different concept and is NOT touched**: `FieldPhase.integrating` answers *what
+appears to be happening in this Circle's activity*. Untouched: `FieldPhase` · `derivePhase()` ·
+`FieldPresence` · the Circles-page phase labels. ⛔ Do not equate *closed + synthesis* with
+Common-Ground Mediation or Circle integration/maturation.
+
+**This reduces the CA-14 collision rather than widening it** — one fewer `integrating` meaning
+something else.
+
 ## FR-14 · Verifier coverage law — **RATIFIED** *(2026-09-07)*
 
 > **A verifier passes only when every executed assertion passes AND every required constitutional
@@ -384,6 +461,7 @@ birth · separation) has to stay separate from it.
 | CA-12 | Collective-release mechanism | CONSTELLATE |
 | CA-13 | Circle-level assent for Common-Ground Mediation | CIRCLE-09 |
 | **CA-14** | **`FieldPhase` semantic collision** — `'forming' \| 'active' \| 'integrating' \| 'quiet'` in `types.ts` is an **activity/inquiry heuristic** (`derivePhase()` calls a Circle `'active'` when an inquiry is open), **not** FR-11 constitution state. Two of its four values are the same strings meaning something else, in the same module. ⛔ FieldPhase is **not** repaired or renamed (founder ruling); recorded for later reconciliation | later |
+| **CA-16** | ⛔ **TRANSFERRED OUT OF THIS LANE — custody follow-up.** `docs/ops/PRESERVATION_AUDIT_2026-08-01.md` lists `CIRCLES_FIELD_PULSE_CONTAINMENT_PLAN_2026-07-17.md` among 281 documents "stranded on the branch" — **it is not on that branch.** Before any branch deletion is authorized: falsify the audit's complete 281-entry inventory against the actual preserved branch tree and identify every mismatch. **A governance-integrity question, not Circle work.** ⛔ Do not edit that audit from the Circle lane. **Does not block this lane.** | separate |
 | **CA-15** | **Facilitator assignment pathway** — no code path assigns `'facilitator'`. Recorded as an INVOKE/governance gap by FR-12 | INVOKE |
 
 **None of these blocks VERIFY.**

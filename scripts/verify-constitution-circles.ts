@@ -83,6 +83,8 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   'C9', 'C10', 'C11', 'C12', 'C13', 'C14',
   // C15 pulse contract (B-08) · C16 withdrawal visibility (CA-03)
   'C15', 'C16',
+  // C17/C18 B-09 retirement + CA-14 scope boundary · C19 ruling-C leave cascade
+  'C17', 'C18', 'C19',
   // Group S — service layer against real principals
   'S1', 'S2', 'S3', 'S5',
   // FR-03 / FR-11 constitution state
@@ -91,7 +93,9 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   'T1', 'T2',
   'T3a', 'T3b', 'T3c', 'T3d', 'T3e', 'T3f', 'T3g', 'T3h', 'T3i',
   // CA-03 response withdrawal
-  'T7a', 'T7b', 'T7c', 'T7d', 'T7e', 'T7f',
+  'T7a', 'T7b', 'T7c', 'T7d', 'T7e', 'T7f', 'T7g', 'T7h',
+  // ruling C boundary cascade · B-09 retired status
+  'T8a', 'T8b', 'T8c', 'T9a', 'T9b',
   'T5', 'T6',
 ]);
 
@@ -423,6 +427,42 @@ async function groupC() {
     }
   }
 
+  // C17 — B-09: the retired status is gone from the type and from the writer.
+  {
+    const types = src('lib/circles/types.ts');
+    const inq = src('lib/circles/inquiryService.ts');
+    const typeOk = !!types && /export type InquiryStatus = 'open' \| 'closed';/.test(types);
+    const i = inq ? inq.indexOf('export async function closeInquiry') : -1;
+    const closeBody = i >= 0 ? inq!.slice(i, inq!.indexOf('\nexport ', i + 1)) : '';
+    const writerOk = !!closeBody && !/'integrating'/.test(closeBody.replace(/\/\/.*$/gm, ''));
+    typeOk && writerOk
+      ? pass('C17 B-09 InquiryStatus is open|closed and closeInquiry never writes the retired status')
+      : fail('C17 B-09 the retired inquiry status survives', typeOk ? 'closeInquiry still writes it' : 'still in the type');
+  }
+
+  // C18 — CA-14 scope boundary: FieldPhase is a DIFFERENT concept and must not
+  //       have been swept up in the InquiryStatus retirement. Its 'integrating'
+  //       answers "what appears to be happening in this Circle's activity".
+  {
+    const types = src('lib/circles/types.ts');
+    const pulse3 = src('lib/circles/fieldPulseService.ts');
+    const phaseIntact = !!types && /export type FieldPhase = 'forming' \| 'active' \| 'integrating' \| 'quiet';/.test(types);
+    const deriveIntact = !!pulse3 && /return 'integrating';/.test(pulse3);
+    phaseIntact && deriveIntact
+      ? pass('C18 CA-14 FieldPhase is untouched by the InquiryStatus retirement')
+      : fail('C18 CA-14 FieldPhase was altered', 'the two integrating concepts must stay separate');
+  }
+
+  // C19 — ruling C: leaving wires the boundary cascade. leaveCircle() runs its
+  //       own transaction, so the semantics are proven at T8a; this proves the
+  //       wire exists at all.
+  {
+    const body = src('lib/circles/membershipService.ts');
+    body && /tombstoneMemberResponsesInCircle/.test(body)
+      ? pass('C19 ruling-C leaveCircle cascades to inquiry responses')
+      : fail('C19 ruling-C leaveCircle does not cascade to inquiry responses');
+  }
+
   // C12 — FR-05/FR-01: revocation must never touch the source item.
   if (sharingService && membership && consent) {
     const deletesSource = [sharingService, membership, consent].some((b) =>
@@ -526,6 +566,38 @@ async function groupS() {
 // ─────────────────────────────────────────────────────────────────────────────
 // GROUP T · Data invariants on rolled-back fixtures
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Probe an expected constraint violation without poisoning the shared
+ * transaction.
+ *
+ * PostgreSQL aborts the whole transaction on any error, so catching a UNIQUE
+ * violation in TypeScript and continuing leaves every later statement failing
+ * with 25P02. That is exactly how T5 and T6 silently stopped executing on the
+ * 2026-09-07 run — and FR-14 caught it, because they never discharged.
+ *
+ * It also requires the EXACT SQLSTATE. Catching any error and calling it proof
+ * that an invariant held is too permissive: a typo, a missing column or a
+ * poisoned transaction would all "pass".
+ */
+async function expectViolation(
+  tx: PoolClient,
+  savepoint: string,
+  sqlstate: string,
+  sql: string,
+  params: unknown[] = []
+): Promise<'violated' | 'succeeded' | string> {
+  await tx.query(`SAVEPOINT ${savepoint}`);
+  try {
+    await tx.query(sql, params);
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`);
+    return 'succeeded';
+  } catch (e: any) {
+    await tx.query(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`);
+    return e?.code === sqlstate ? 'violated' : `sqlstate ${e?.code ?? 'unknown'}`;
+  }
+}
 
 async function groupT(tx: PoolClient) {
   section('GROUP T · live semantics on rolled-back fixtures (FR-01, FR-05, FR-08)');
@@ -893,18 +965,167 @@ async function groupT(tx: PoolClient) {
 
   // T7f — the row is retained, so FR-04 still holds: withdrawing does not buy a
   //       second answer informed by having seen the others.
-  let secondAnswer = false;
-  try {
-    await tx.query(
-      `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
-       VALUES ($1, $2, 'second attempt')`,
-      [wInq, mA]
-    );
-    secondAnswer = true;
-  } catch { /* UNIQUE violation — expected */ }
-  !secondAnswer
+  const second = await expectViolation(
+    tx, 'sp_t7f', '23505',
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'second attempt')`,
+    [wInq, mA]
+  );
+  second === 'violated'
     ? pass('T7f FR-04 withdrawal does not permit a second, better-informed answer')
-    : fail('T7f FR-04 a withdrawn member answered twice');
+    : fail('T7f FR-04 a withdrawn member could answer again', String(second));
+
+  // T7g — the tombstone: the fact survives, the authored payload does not.
+  const tomb = (
+    await tx.query<{ response_text: string | null; response_type: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, response_type, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [wInq, mA]
+    )
+  ).rows[0];
+  tomb && tomb.withdrawn_at && tomb.response_text === null && tomb.response_type === null
+    ? pass('T7g CA-03 withdrawal tombstones the payload; only the fact remains')
+    : fail('T7g CA-03 withdrawal retained authored content', JSON.stringify(tomb));
+
+  // T7h — the two halves cannot drift: a withdrawn row with a payload is not
+  //       representable, and neither is a live row without one.
+  const drift = await expectViolation(
+    tx, 'sp_t7h', '23514',
+    `UPDATE circle_inquiry_responses SET response_text = 'restored'
+     WHERE inquiry_id = $1 AND member_id = $2`,
+    [wInq, mA]
+  );
+  drift === 'violated'
+    ? pass('T7h CA-03 a withdrawn response cannot regain a payload')
+    : fail('T7h CA-03 the tombstone invariant did not hold', String(drift));
+
+  // ── Boundary cascade (founder ruling C) ──────────────────────────────────
+  //
+  // Ending membership ends the eligibility of that member's Circle-side
+  // representations to remain in the field. Not proxy withdrawal — the
+  // relationship ended.
+
+  const { tombstoneMemberResponsesInCircle } = await import('../lib/circles/inquiryService');
+  const cascadeCircle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier cascade') RETURNING id`,
+      [mA]
+    )
+  ).rows[0].id;
+  for (const [m, role] of [[mA, 'facilitator'], [mC, 'member']] as const) {
+    await tx.query(
+      `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+       VALUES ($1, $2, $3, 'active', 'manual', NOW())`,
+      [cascadeCircle, m, role]
+    );
+  }
+  const cInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier cascade fixture question') RETURNING id`,
+      [cascadeCircle, mA]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'cascade answer')`,
+    [cInq, mC]
+  );
+  // mC also holds a LIVE response in another Circle (wInq) — it must survive.
+  const otherCircleLiveBefore = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+
+  // T8a — the cascade tombstones live responses in the Circle being left.
+  await tombstoneMemberResponsesInCircle(tx as any, cascadeCircle, mC);
+  const cascaded = (
+    await tx.query<{ response_text: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [cInq, mC]
+    )
+  ).rows[0];
+  cascaded?.withdrawn_at && cascaded.response_text === null
+    ? pass('T8a ruling-C leaving/removal tombstones the member\'s live responses')
+    : fail('T8a ruling-C a response survived the boundary cascade', JSON.stringify(cascaded));
+
+  // T8b — a removal carries the same cascade, atomically with the removal.
+  const rInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier removal cascade question') RETURNING id`,
+      [cascadeCircle, mA]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'active' WHERE circle_id = $1 AND member_id = $2`,
+    [cascadeCircle, mC]
+  );
+  await tx.query(
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'removal cascade answer')`,
+    [rInq, mC]
+  );
+  try {
+    await removeMemberWithClient(tx as any, {
+      circleId: cascadeCircle, actingMemberId: mA, targetMemberId: mC,
+      grounds: 'verifier cascade fixture',
+    });
+  } catch { /* asserted below */ }
+  const removedResp = (
+    await tx.query<{ response_text: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [rInq, mC]
+    )
+  ).rows[0];
+  removedResp?.withdrawn_at && removedResp.response_text === null
+    ? pass('T8b ruling-C removal tombstones the removed member\'s live responses')
+    : fail('T8b ruling-C a response survived removal', JSON.stringify(removedResp));
+
+  // T8c — no other Circle is affected. The cascade is scoped to one field.
+  const otherCircleLiveAfter = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+  otherCircleLiveBefore === 1 && otherCircleLiveAfter === 1
+    ? pass('T8c ruling-C the cascade never reaches another Circle')
+    : fail('T8c ruling-C the cascade leaked across Circles');
+
+  // ── B-09: the retired inquiry status ─────────────────────────────────────
+
+  // T9a — the vocabulary no longer admits it.
+  const retired = await expectViolation(
+    tx, 'sp_t9a', '23514',
+    `UPDATE circle_inquiries SET status = 'integrating' WHERE id = $1`,
+    [cInq]
+  );
+  retired === 'violated'
+    ? pass('T9a B-09 the database rejects the retired inquiry status')
+    : fail('T9a B-09 status=integrating is still storable', String(retired));
+
+  // T9b — a closed inquiry may legitimately carry a synthesis. That was always
+  //       the underlying fact; it just is not a second status.
+  await tx.query(
+    `UPDATE circle_inquiries SET status = 'closed', closed_at = NOW(), field_synthesis = $1 WHERE id = $2`,
+    ['verifier synthesis', cInq]
+  );
+  const closedWithSynthesis = (
+    await tx.query<{ status: string; field_synthesis: string | null }>(
+      `SELECT status, field_synthesis FROM circle_inquiries WHERE id = $1`,
+      [cInq]
+    )
+  ).rows[0];
+  closedWithSynthesis?.status === 'closed' && !!closedWithSynthesis.field_synthesis
+    ? pass('T9b B-09 a closed inquiry carries its synthesis as a property, not a status')
+    : fail('T9b B-09 closed + synthesis is not representable');
 
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (
@@ -934,15 +1155,14 @@ async function groupT(tx: PoolClient) {
     `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text) VALUES ($1, $2, 'first')`,
     [inq, mA]
   );
-  try {
-    await tx.query(
-      `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text) VALUES ($1, $2, 'second')`,
-      [inq, mA]
-    );
-    fail('T6 FR-04 a member responded twice to one inquiry');
-  } catch {
-    pass('T6 FR-04 one response per member per inquiry is enforced by the database');
-  }
+  const dup = await expectViolation(
+    tx, 'sp_t6', '23505',
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text) VALUES ($1, $2, 'second')`,
+    [inq, mA]
+  );
+  dup === 'violated'
+    ? pass('T6 FR-04 one response per member per inquiry is enforced by the database')
+    : fail('T6 FR-04 uniqueness did not hold', String(dup));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
