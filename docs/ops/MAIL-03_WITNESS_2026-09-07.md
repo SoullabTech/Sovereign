@@ -57,9 +57,24 @@ POST /api/members/send-verification
 
 - `members.email` before: `soullab1+mail03-20260907123522@gmail.com`
 - `members.email` after:   unchanged — the account-takeover primitive is gone
-- **No ledger row for `notyourdomain.example`** — the route refused BEFORE
-  reaching the provider. This is what distinguishes *we refused* from *we tried
-  and the provider refused*, and it is the sharpest single fact in this record.
+- **No ledger row for `notyourdomain.example`**
+
+W2 is proven MACHINE-SIDE and needs no mailbox evidence. The ledger row is
+opened BEFORE the provider is contacted — `lib/email/sendEmail.ts:439`, whose
+comment states the reason: *"opened BEFORE the provider call so a crash mid-send
+leaves evidence rather than nothing"*:
+
+```
+openAttempt(...)      ← row written here
+provider.send(...)    ← provider contacted after
+```
+
+So zero rows for that domain proves the request never reached `sendEmail` at
+all, which is stronger than proving the provider refused. `openAttempt` is
+best-effort and swallows its own failures, so in principle a send could occur
+with no row — but the 4↔4 correlation in W3/W4 shows it writing successfully
+throughout this same window, which excludes a silent ledger failure confined to
+the W2 request.
 
 ### W3/W4 — recovery delivers, then throttles · PASS
 
@@ -102,15 +117,32 @@ observable properties, it does not manufacture an outage.
 
 ## 4 · Operator confirmations still required
 
-A script cannot see a mailbox. Acceptance additionally requires:
+A script cannot see a mailbox. Acceptance requires two POSITIVE deliveries to a
+mailbox under observation:
 
 - [ ] **W1** — verification email from the 12:35 signup arrived
 - [ ] **W3** — ~4 recovery messages arrived at the member address
-- [ ] **W2** — **nothing** arrived at `attacker@notyourdomain.example`
 
-W2's confirmation carries the most weight: the ledger shows no attempt, so a
-message appearing there would mean mail leaving by a path the ledger does not
-observe.
+### W2 needs no mailbox confirmation — and could not have one
+
+An earlier draft of this record listed *"nothing arrived at
+attacker@notyourdomain.example"* as a third required confirmation and called it
+the weightiest. That was wrong twice over.
+
+It is **not observable**. `.example` is a reserved TLD and the address is not
+under our observation, so there is no mailbox to inspect. A confirmation that
+cannot be obtained is not a pending item; listing it as one would leave
+acceptance permanently and falsely incomplete.
+
+It is also **not needed**. Non-arrival at an external destination is proving a
+negative at a location we cannot see. The machine evidence above — refusal
+before the outbound-mail boundary, with the ledger opened ahead of the provider
+call — is the stronger claim, and it is complete on its own.
+
+The general rule: **acceptance may depend on positive evidence at locations we
+observe; it must not depend on proving a negative at locations we do not.**
+Corroboration from an observed mailbox is welcome where available. Here it is
+not available, and the machine evidence does not need it.
 
 ## 5 · Record
 
