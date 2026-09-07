@@ -182,3 +182,69 @@ PACKET 3  COHORT 01 RECON      blocked on D-7 / FR-F
 PACKET 4  DECISIONS            open — FR-A … FR-F above
 PACKET 5  BUILD                NOT AUTHORIZED
 ```
+
+---
+
+## 7 · Addendum 2026-09-07 — three findings kept separate (founder classification)
+
+⛔ **These are three distinct things and must not be merged.** The founder ruled
+the separation explicitly; the record enforces it.
+
+### W-05b · the `This work` CONTROL — Lane A
+
+```text
+first person   "I dont see this work"  →  clarified: "the Words This Work"
+means          could not find or see the `This work` CONTROL in the Canvas
+belongs with   W-03 / W-05 evidence
+```
+
+⛔ **This does NOT mean Elemental Alchemy was absent from Studio Home.** The walk
+record settles it: at Studio Home the founder said *"I'm choosing Elemental
+Alchemy"*, so the book was visible and selectable at that point. The confusion
+arose **after** entering the Canvas, where `This work` was not visible in the
+clipped first view and later became the unblock boundary.
+
+```text
+DISCRIMINATOR — OPEN, awaiting first-person answer
+  AFFORDANCE  saw the words; they did not register as clickable
+  NAMING      knew it was clickable; "This work" gave no reason to press it,
+              no link to declaring the manuscript or reaching MAIA
+  BOTH
+```
+
+Observation, not an answer: in the screenshots `This work` is enclosed in a
+bordered rounded rectangle, so it does carry some button-like affordance. That
+says nothing about what was perceived at the moment of being stuck, which is the
+only thing that decides this.
+
+### W-16 · arrival state quality — Lane E, new
+
+```text
+observed 2026-09-07, AFTER the walk
+  CONTINUE hero   "WS2 Beta Smoke — de0f35434"  ·  1 page · written yesterday
+  visible cards   WS208AF3MEMBERCUT20260906.txt · WS2-08A-F1-DOCX-20260906
+                  WS2 Private Beta Smoke 2026-09-05 · Test 2
+  Elemental Alchemy   not among them — behind "View all 7 →"
+```
+
+Engineering debris is dominating the arrival state of the founder's own Studio.
+Sits under **W-07** (data hygiene) and extends it: the debris is not merely
+present in the declaration list, it is the first thing the Studio says.
+
+⛔ **NOT retrofitted into the earlier sentence.** Whether the arrival state
+differed at walk time is **not established** — the walk record shows the book was
+found and selectable, not *where* on the surface it appeared, and it also records
+that the founder did not pause at Studio Home but scanned and proceeded. Both are
+consistent with the book having been in the shelf rather than the hero at walk
+time. This is recorded as an observation of the present state, not as a change.
+
+### R-4 · a way back to MAIA — founder requirement, distinct
+
+```text
+"we need a back to maia button on writer studio"
+```
+
+A distinct founder requirement, kept separate from both findings above. Joins
+R-1 (Help section), R-2 (MAIA understands the Studio), R-3 (hover explanations).
+
+⛔ Still held. No repair, no copy, no navigation change authorized.
