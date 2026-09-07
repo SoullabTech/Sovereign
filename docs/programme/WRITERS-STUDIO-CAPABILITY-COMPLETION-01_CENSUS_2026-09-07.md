@@ -93,6 +93,25 @@ never said.** No text, no note, no `title`, no screen-reader state.
 FR-C as stated ("must be said, not merely dimmed") is therefore *asserted PASS
 in the flow and observably FAIL in the render*. Recorded, not repaired.
 
+
+**Finding X-6 · REACHABILITY DEAD END IN THE WORK DECLARATION GESTURE.**
+`canvas/page.tsx:622` passes `unitedWork={currentWork(context)}`, which is
+`null` when the context is `ambiguous`. `WorkDrawer` then takes its `if (!work)`
+branch (`WorkDrawer.tsx:136`) and renders only the ShapeGesture — an offer to
+declare the manuscript into a *further* Work. The withdraw control
+(`no longer a form of this work`, `WorkDrawer.tsx:290`) renders only inside the
+united work's expression list.
+
+So a manuscript declared in two Works loses the only gesture that could undo
+the second declaration, and Conversations stays shut. The state is unreachable
+from inside the room; the only exit is deleting a whole Work
+(`living_work_expressions` is `ON DELETE CASCADE`, `20260801000001:67`).
+
+Bears on this census because `conversations` is marked LIVE-as-panel in §1 on
+the strength of `SATISFIED_IN_ROOM` — that liveness is conditional on a work
+context the member may be unable to reach. **Recorded, not repaired. Belongs to
+WS2-03C/D, not to this lane.**
+
 ---
 
 ## 2 · PACKET A — MEMBER-AUTHORED
