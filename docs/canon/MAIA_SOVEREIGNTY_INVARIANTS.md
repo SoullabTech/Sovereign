@@ -328,6 +328,35 @@ If not, it does not align with mission.
 
 ---
 
+## Invariant 17 — Epistemic Scope Integrity
+
+> ⚠️ **PENDING SEAL — proposed 2026-09-07, NOT YET RATIFIED.** Placed here in the position it
+> would occupy so the founder can inspect it in context. It does **not** yet govern, and no
+> surface may be gated on it or claimed compliant with it until the seal. Full candidate canon:
+> `EPISTEMIC_SCOPE_TRANSPARENCY_CANDIDATE_2026-09-07.md`.
+
+**Rule:** An intelligence-bearing act must not operate under a materially surprising retrieval scope that the member cannot know. Any represented scope must be true of the actual retrieval boundary. A change in retrieval authority is a change in the member-facing epistemic contract.
+
+**The distinction that matters:**
+- **Epistemic scope** = the runtime evidence and context an act is authorized to retrieve, receive, or call in — the current object, memory, prior sessions, other people's material, private fields, runtime corpora, files, connectors, tools, sub-agent retrieval. **Not** the model's general pretrained knowledge, unless the product claims otherwise ("answers only from this corpus").
+- **Materially surprising** = the actual scope diverges — in *either* direction — from what a reasonable member would infer from the visible context, a standing scope declaration, active consent or settings, or an explicit product promise, such that the difference could alter their understanding of privacy, authority, provenance, the context available to the intelligence, or whether they would authorize the act. **Under-reach counts:** a narrow scope inside a memory-bearing environment is also surprising.
+
+**Constraints:**
+- Where scope and those anchors agree, silence is honest — this law does not license microcopy under every button, and clutter degrades the notices that matter
+- The internal **manifest** is exhaustive; the member-facing **representation** may compress implementation detail but never a material boundary
+- A declaration lives co-located with the retrieval path it describes, single-sourced, so it breaks when the boundary moves
+- Scope must be knowable **before invocation** for a member-invoked act, and at the **enabling boundary** — remaining inspectable while the authority stands — for an ongoing or system-initiated one
+- Disclosure never discharges consent; where new authority is required, the consent act shows the scope it grants
+- Where invoker and data subject are different people, the two chains stay distinct: *the invoker must know the scope; the person whose material enters it must have granted the authority*
+
+**Review discipline:** Before shipping anything that adds or widens a runtime data read, connector, tool call, memory loader, or sub-agent source inside an intelligence path, ask: *before the member invokes this — or authorizes it to run — do they know what it is allowed to know for this act, and is that representation true?* Static binding of a declaration to a surface is checkable; **`static binding PASS ≠ scope truth verified`** — a full claim requires the retrieval path traced and witnessed.
+
+**Principle:** *A member should know what an intelligence is allowed to know before they invoke it.*
+
+**Relation:** The member-facing counterpart to `INTELLIGENCE_FIELD_ACCESS_MAP.md`, which audits the same boundary system-facing — that map can be perfectly accurate while this invariant is wholly unmet. Extends Invariant 5 (Uncertainty Honesty) and Invariant 11 (Declared Significance) from *what the system claims about its output* to *what it may consult to produce it*. Full canon: `EPISTEMIC_SCOPE_TRANSPARENCY_CANDIDATE_2026-09-07.md`. Occasioned by the Studio Council truth-in-UI correction, recorded there as Specimen 01.
+
+---
+
 ## The Constitutional Sentence
 
 To sit alongside the Oath:
