@@ -14,9 +14,11 @@ traverse the whole path — invite link to developmental reading — without fou
 intervention, without a shortcut, and without anything being repaired mid-walk.
 
 **Subject discipline.** The witness binds to the *deployed runtime* `4be87975b`,
-not to canonical. Canonical advanced to `e4ac1bca` (#1251, NAV-03) after this
-deploy and is not part of this witness. Nothing here transfers to a later runtime
-without a fresh walk.
+not to canonical. Nothing here transfers to a later runtime without a fresh walk.
+
+> **SUBJECT DRIFT — production moved after the walk.** Production is now
+> `e4ac1bcac` (#1251, NAV-03). Acts 1 and 2 were re-witnessed on it; acts 3–7
+> were not. See §8 before citing this record.
 
 ---
 
@@ -321,6 +323,95 @@ delivery at the cost of two possible causes for every future failure.
 The Resend quota itself is the current **operational condition**, not the
 architectural defect. It is fixed on the provider account; these two are fixed in
 the codebase, after the pilot is safely underway.
+
+---
+
+## 8 · Subject drift — production moved after the walk
+
+**Production is no longer the witnessed runtime.** At the close of the session
+`docker exec maia-sovereign printenv GIT_COMMIT` reported `e4ac1bcac`, not
+`4be87975b`.
+
+### How it happened
+
+A Resend API key rotation required the containers reading `.env.production` to be
+recreated. The recreate was issued as a plain compose
+`up -d --no-build --force-recreate`, **outside the deploy lane**. That command
+adopts whatever image currently carries the `maia-sovereign:prod` tag. Between the
+Gate-0 walk and the rotation, that tag had been rebuilt at `e4ac1bca` — #1251,
+NAV-03 — by a parallel session. The recreate therefore moved production forward a
+commit silently, with no asserted SHA and no provenance verify.
+
+Two secondary faults in the same command, recorded so they are not repeated:
+
+- `--no-deps` was omitted, so the recreate cascaded and restarted `maia-postgres`,
+  the production database. Data lives in a volume; nothing was lost; it returned
+  healthy before the app containers started. It was still an unnecessary restart
+  of the most consequential container on the host.
+- An env-file rotation should be provenance-neutral. This one was not, and the
+  deploy lane exists precisely to make that impossible. It was worked around.
+
+**This is an assistant error, not a founder act.** No deploy was authorized; the
+one deploy that *was* attempted that night was correctly refused by the
+immutable-SHA validator (`'e4ac1bcacssh' does not resolve to a commit — refusing`)
+after two commands ran together on one line.
+
+### What the live runtime contains
+
+```text
+e4ac1bca   #1251 NAV-03
+37337761   NAV-03 R2 — initial-load race
+87cd311e   NAV-03 R1 — exists race
+3da109e6   NAV-03 — tell the Canvas when Worktable creates the draft
+4be87975   ← the witnessed runtime, contained
+```
+
+`4be87975` (this witness), `37cb209e` (#1250 invite repair) and `bcc37109` (P0
+containment) are all ancestors of `e4ac1bca`. The running system is a strict
+superset of the witnessed one. Nothing was lost. `WS_STANDING_ENABLED` remains
+`unset` on the recreated container.
+
+The defect is evidentiary, not functional.
+
+### Re-witnessed on `e4ac1bcac`
+
+```text
+runtime   e4ac1bcac
+invite    200            no redirect
+team      307 → /signin  reason=no_session_cookie
+```
+
+```text
+ACT 1  invite reachable unauthenticated   PASS on e4ac1bcac
+ACT 2  /team/general still guarded        PASS on e4ac1bcac
+```
+
+### NOT re-witnessed on `e4ac1bcac`
+
+```text
+ACT 3  create account
+ACT 4  membership in the invited Co-Lab
+ACT 5  Writer's Studio reachable
+ACT 6  Work created · section navigation
+ACT 7  DEVELOP returns a reading
+```
+
+These remain witnessed on `4be87975b` and are **inherited by ancestry, not
+re-observed**. Inheritance is a weaker claim than observation and is recorded as
+such.
+
+**Act 6 is the weakest inheritance and should be treated as the one to distrust.**
+NAV-03 changes draft-creation refresh behaviour — Worktable notifying the Canvas,
+and two staleness races — which is exactly act 6's territory. A reader citing act
+6 against the live runtime is citing an inference, not a witness.
+
+### Ruling on the drift
+
+The cohort gate is **not** reopened. The invited-member door is proved on the live
+build, the repair commits are all present, and the running system is a superset of
+the witnessed one. But this record's subject is `4be87975b`, and any claim made
+about `e4ac1bcac` beyond acts 1 and 2 is an inference drawn here deliberately and
+labelled.
 
 ---
 
