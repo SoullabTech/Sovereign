@@ -1,7 +1,8 @@
 # PARKED — TOC entries may be promoted into manuscript structure
 
-**Status:** PARKED · characterization required **before cohort expansion**
-**Not:** a someday note, and not a defect — the hypothesis below is unestablished
+**Status:** PARKED · characterization RUN 2026-09-07 · hypothesis LARGELY FALSIFIED
+**Not:** a someday note, and not a defect — see the result section, which
+disconfirms most of what this note originally proposed
 **Recorded:** 2026-09-07, observed during the PDF-CLEAN production witness
 **Repair authorized:** none
 
@@ -83,4 +84,82 @@ Then decide by magnitude, which is the point of characterizing before repairing:
 40-100 false structural sections  → open the lane immediately
 a handful of TOC echoes           → a much smaller intervention
 no duplicates                     → the hypothesis is wrong; close this note
+```
+
+
+---
+
+# Characterization RESULT — 2026-09-07
+
+The query above was run against production. **The hypothesis is largely
+falsified**, and this section is kept rather than the note being deleted,
+because a tested-and-disconfirmed hypothesis is the useful record.
+
+```text
+4 duplicated headings out of 175
+
+heading                              n   first   last    reading
+─────────────────────────────────────────────────────────────────────────
+Chapter Summaries by Elemental Type  2       4    151    wide gap · echo-shaped
+INTRODUCTION                         2      48    163    wide gap · echo-shaped
+INTEGRATING THE ELEMENTS             2      27     39    12 apart · NOT echo
+INTELLIGENCE                         2     157    158    adjacent · NOT echo
+```
+
+## What this disconfirms
+
+The note predicted that TOC promotion would show up as many duplicated
+headings — "40-100 false structural sections opens the lane immediately".
+There are **four**, and only two carry the wide first/last gap that a contents
+listing plus its real chapter would produce. By this note's own decision rule
+that is the "a handful of TOC echoes" branch: no lane.
+
+## What it does NOT explain, and what the residual actually is
+
+The observation that opened this note was the ORDERING:
+
+```text
+2  Chapter 7 Earth — The Element of Stability and Groundedness
+3  BACK MATTER
+8  Chapter 1: The Journey Begins
+```
+
+None of those three is in the duplicate list. Each appears exactly ONCE. So
+they are not echoes of anything, and duplication cannot be the mechanism. The
+proposed explanation was wrong.
+
+The residual question is therefore narrower and different in kind:
+
+```text
+WAS   are TOC lines being duplicated into structure?      → answered: barely
+IS    does extraction order follow the book's reading      → unanswered
+      order, or does front matter place single-occurrence
+      chapter references early?
+```
+
+Two candidate explanations, neither established:
+
+1. The PDF's text layer genuinely presents this material early — a contents
+   page whose entries are the ONLY occurrence of those exact strings, with the
+   real chapter headings worded differently enough not to collide.
+2. Extraction order does not follow reading order for this document.
+
+These are distinguishable by reading the first ~15 headings by position
+against the book's actual front matter. That is a read-only check and still
+requires no repair.
+
+## Separate, smaller observation
+
+`INTELLIGENCE` duplicated at adjacent positions 157 and 158 looks like a
+heading split across two printed lines (e.g. `EMOTIONAL` / `INTELLIGENCE`)
+rather than anything to do with contents pages. Noted, not chased.
+
+## Standing conclusion
+
+```text
+TOC duplication        NOT a material problem — 4 of 175
+175 sections           no evidence they are mostly false
+ordering anomaly       real, unexplained, narrower than proposed
+repair                 still not authorized, and now less likely to be needed
+cohort risk            LOWER than this note originally implied
 ```
