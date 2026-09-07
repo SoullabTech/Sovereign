@@ -46,7 +46,26 @@ INSERT INTO schema_migrations (filename, applied_at)
 VALUES ('…sql', NOW()) ON CONFLICT (filename) DO NOTHING;
 ```
 
-while `scripts/run-sql-migrations.sh` **already owned** ledger insertion and checksum.
+while `scripts/run-sql-migrations.sh` **already owned** ledger insertion.
+
+> ⚠️ **CORRECTION (2026-09-08, I0.5 production closure).** An earlier form of this sentence read
+> *"ledger insertion **and checksum**"*. **That was wrong.** The runner creates the `checksum`
+> column (`ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum TEXT` — commented
+> *"for future compatibility"*) but its recording statement is
+> `INSERT INTO schema_migrations (filename) VALUES ('$filename') ON CONFLICT (filename) DO NOTHING;`
+> — **filename only. No checksum is ever computed or stored.** The repair itself stands
+> (migrations must not self-register); only its stated justification over-claimed.
+>
+> ⭐ **Consequence for any witness contract:** a production-side ledger check may require
+> **filename rows exactly once**, and must NOT require checksums — the canonical executor cannot
+> supply them. A contract demanding a checksum pass would be unsatisfiable, and would push a
+> future lane toward either faking it or being blocked by its own instrument.
+>
+> ⚠️ *This is the doctrine's own lesson recurring against itself: **the doctrine described a
+> ledger its executor does not produce.** A migration and its runner are not independent
+> artifacts — and neither are a witness contract and the runner it audits.*
+>
+> **Populating checksums is deploy-tooling debt, not a failed migration.** ⛔ Not opened as a lane.
 
 - ⚠️ **The runner did not change during the reconcile window.** `git diff 39daacae5 e535e6246` touches
   no runner file. **The double-write was latent from authorship** — not introduced by base drift.

@@ -220,6 +220,26 @@ curl -k https://soullab.life/api/health
 - Never add `@supabase/*` imports, RLS policies, or Supabase migrations
 - Enforcement: `npm run check:no-supabase` blocks violations (runs in pre-commit hook)
 
+## Migration & Deploy Laws (project-wide)
+
+**Migration witness law:** A migration must be verified both against an upgrade-shaped database and
+through canonical empty-database reconstruction. Neither witness substitutes for the other.
+
+**Migration reconcile law:** Reconciliation must inspect the migration and its executor/ledger
+semantics; checking only migration/data deltas is insufficient.
+
+Canon and rationale: `docs/ops/MIGRATION_WITNESS_DOCTRINE.md`.
+
+**Release advance law:** Release qualification is necessary but not sufficient for deployment.
+Immediately before deployment, the target must also be proven to advance the actual running
+production SHA. A qualified ancestor of newer production must never be deployed as a regression.
+
+**Deploy-lane custody law:** A live holder plus a named protected act is sufficient custody.
+Inability to identify the session holding the deploy lane is not evidence of abandonment — never
+terminate a live holder, and never delete `.deploy.lock` to force entry.
+
+Canon and rationale: `docs/ops/DEPLOY_SEQUENCING_LAWS.md`.
+
 ## MAIA Sovereignty
 
 - Primary AI: Claude (Anthropic) via `ANTHROPIC_API_KEY`
