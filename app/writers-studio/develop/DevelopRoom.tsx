@@ -34,7 +34,7 @@ import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
-import { fetchStructure, type StructureNodeDTO } from '@/lib/writersStudio/structureClient';
+import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
@@ -194,8 +194,9 @@ export default function DevelopRoom({
   const [lens, setLens] = useState<DevelopmentalLens>('development');
   /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
      default because it is what this room has always meant by "read this". */
-  const [scopeUnitId, setScopeUnitId] = useState<string | null>(null);
-  const [divisions, setDivisions] = useState<StructureNodeDTO[] | null>(null);
+  const [sections, setSections] = useState<WriteStateSection[] | null>(null);
+  const [fromIndex, setFromIndex] = useState(0);
+  const [toIndex, setToIndex] = useState(-1); // -1 = the end, whatever it is
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
   >({ phase: 'idle' });
@@ -323,44 +324,50 @@ export default function DevelopRoom({
     [payload],
   );
 
-  /* The member's own divisions, loaded once. Only the ones that actually hold
-     sections can be read, so only those are offered — an option that is
-     certain to refuse is not an option. */
+  /* The draft's own sections — ids, positions and the member's headings.
+     
+     ⛔ These MUST be the DRAFT sections, not the source ones. The reading scope
+     speaks in `manuscript_draft_sections` ids; the outline elsewhere in the
+     Studio reads `manuscript_sections`. They are different rows with different
+     ids, and using the outline's would refuse every scope as
+     `unknown_scope_target` — a feature that appears to work and never does. */
   useEffect(() => {
     let live = true;
-    void fetchStructure(manuscriptId).then((r) => {
+    void fetchWriteState(manuscriptId, (url) => apiFetch(url)).then((r) => {
       if (!live) return;
-      if (!r.ok) {
-        setDivisions([]);
-        return;
-      }
-      /* Flattened in the member's own order, parents before their children, so
-         a Part and the chapters inside it are both choosable. `derivedSectionIds`
-         is what a division actually resolves to — a Part usually holds no
-         sections directly, only its chapters do. */
-      const flat: StructureNodeDTO[] = [];
-      const walk = (nodes: StructureNodeDTO[]) => {
-        for (const n of nodes) {
-          flat.push(n);
-          walk(n.children);
-        }
-      };
-      walk(r.tree.roots);
-      setDivisions(flat.filter((n) => n.derivedSectionIds.length > 0));
+      setSections(r.state?.mode === 'section_aware' ? r.state.sections : []);
     });
     return () => {
       live = false;
     };
   }, [manuscriptId]);
 
+  /* ── WHAT THE TWO ENDS MEAN ──────────────────────────────────────────
+     One idea, and one the writer already has: read from here to here. Both
+     ends at the extremes IS the whole work — not a special mode, just the
+     range that happens to be all of it — so a member who never touches this
+     gets exactly the reading this room always gave.
+
+     ⛔ Nothing preselects, recommends, or ranks a starting point. */
+  const last = sections && sections.length > 0 ? sections.length - 1 : 0;
+  const to = toIndex === -1 ? last : toIndex;
+  const chosenScope: ReadingScope | undefined = (() => {
+    if (!sections || sections.length === 0) return undefined;
+    if (fromIndex === 0 && to === last) return undefined; // the whole work
+    return {
+      kind: 'range',
+      fromSectionId: sections[fromIndex].id,
+      toSectionId: sections[to].id,
+    };
+  })();
+  const chosenCount = sections ? Math.max(0, to - fromIndex + 1) : 0;
+
   const ask = async () => {
     setCommission({ phase: 'reading' });
     /* The scope is a structural identifier or it is absent. Nothing about the
        Work's prose goes up the wire — the invocation carries the lens, the
        member's identity, and at most the name of a division they authored. */
-    const scope: ReadingScope | undefined = scopeUnitId
-      ? { kind: 'unit', unitId: scopeUnitId }
-      : undefined;
+    const scope = chosenScope;
     const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
@@ -576,46 +583,65 @@ export default function DevelopRoom({
                   and stopped there — the capability could not succeed on its
                   own subject.
 
-                  The ceiling is unchanged and refusing the whole work is still
-                  right: a reading that quietly read a fifth of a book and
-                  reported on "the work" is the worse failure. What changes is
-                  that refusal is no longer the only outcome.
+                  ⚠️ The first attempt offered the member's authored DIVISIONS.
+                  On a Work with none it rendered nothing at all, so the founder
+                  opened the room and found no control where they had been told
+                  one would be. A surface that appears only when an internal
+                  concept happens to exist is a riddle, not an offer.
 
-                  ⛔ Nothing here ranks, recommends or preselects a division.
-                  The order is the member's own, and the reading is of exactly
-                  what they named. */}
-              {divisions && divisions.length > 0 && (
-                <fieldset disabled={commission.phase === 'reading'} className="space-y-1.5 mb-4">
-                  <legend className="text-[12.5px] opacity-60 mb-2">Reading:</legend>
-                  <label className="flex items-baseline gap-2 text-[13px] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="reading-scope"
-                      checked={scopeUnitId === null}
-                      onChange={() => setScopeUnitId(null)}
-                      className="translate-y-[1px]"
-                    />
-                    <span>The whole work</span>
-                  </label>
-                  {divisions.map((d) => (
-                    <label key={d.id} className="flex items-baseline gap-2 text-[13px] cursor-pointer">
-                      <input
-                        type="radio"
-                        name="reading-scope"
-                        checked={scopeUnitId === d.id}
-                        onChange={() => setScopeUnitId(d.id)}
-                        className="translate-y-[1px]"
-                      />
-                      <span>
-                        {d.title ?? d.kind ?? 'Untitled division'}
-                        <span className="opacity-55">
-                          {' '}
-                          — {d.derivedSectionIds.length} section
-                          {d.derivedSectionIds.length === 1 ? '' : 's'}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
+                  So: two ends of a range, which is an idea a writer already
+                  has. Both ends at the extremes is the whole work — not a mode,
+                  just the range that is all of it — so a member who never
+                  touches this gets what this room always gave.
+
+                  ⛔ Nothing preselects, recommends or ranks a section. */}
+              {sections && sections.length > 1 && (
+                <fieldset disabled={commission.phase === 'reading'} className="mb-4">
+                  <legend className="text-[12.5px] opacity-60 mb-2">Read:</legend>
+                  <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                    <span className="opacity-55">from</span>
+                    <select
+                      value={fromIndex}
+                      onChange={(e) => {
+                        const next = Number(e.target.value);
+                        setFromIndex(next);
+                        /* The end never falls behind the beginning. Corrected
+                           as they choose rather than refused after they ask. */
+                        if (next > to) setToIndex(next);
+                      }}
+                      className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[15rem]"
+                      style={{ borderColor: PRESS.rule, color: PRESS.text }}
+                    >
+                      {sections.map((sec, i) => (
+                        <option key={sec.id} value={i} style={{ color: PRESS.ink }}>
+                          {i + 1}. {sec.heading ?? 'Untitled section'}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="opacity-55">to</span>
+                    <select
+                      value={to}
+                      onChange={(e) => setToIndex(Number(e.target.value))}
+                      className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[15rem]"
+                      style={{ borderColor: PRESS.rule, color: PRESS.text }}
+                    >
+                      {sections.map((sec, i) => (
+                        <option
+                          key={sec.id}
+                          value={i}
+                          disabled={i < fromIndex}
+                          style={{ color: PRESS.ink }}
+                        >
+                          {i + 1}. {sec.heading ?? 'Untitled section'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-[12px] opacity-45 mt-2">
+                    {chosenScope
+                      ? `${chosenCount} of ${sections.length} sections.`
+                      : `All ${sections.length} sections. MAIA reads a bounded amount in one sitting — if that is refused, narrow the range here and ask again.`}
+                  </p>
                 </fieldset>
               )}
 

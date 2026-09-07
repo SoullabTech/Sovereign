@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import type { LivingWork } from '../useLivingWorks';
+import { declarationState, worksDeclaring } from '@/lib/writersStudio/workDeclarations';
 
 /**
  * The Work drawer — the anchor of the Study Wall (Work Continuity Layer,
@@ -130,6 +131,54 @@ export default function WorkDrawer({
         </Link>{' '}
         is where a work begins.
       </p>
+    );
+  }
+
+  /* ── AMBIGUOUS ─────────────────────────────────────────────────────────
+     WS-WORKDRAWER-01, founder ruling 2026-09-07.
+
+     A manuscript may be declared in more than one Work by design (D-018), and
+     the Studio correctly refuses to guess which is "the" Work. But this branch
+     also caught that case and offered the same single gesture as the unclaimed
+     one: "Which one is this a form of?" — an offer to make a THIRD declaration.
+
+     The gesture that resolves it, `undeclare`, already existed and the member
+     always had the authority. It simply rendered in the single-Work branch,
+     which an ambiguous manuscript never reaches. So the only remedy on screen
+     made the ambiguity worse, and the real one was unreachable.
+
+       A state created by a reversible member act must not hide the gesture
+       required to reverse that act.
+
+     ⛔ NO NEW POWER. The Works are shown in the member's own order and the
+     drawer names no preference between them — it shows the member their own
+     acts and lets them withdraw one. */
+  const declaringWorks = worksDeclaring(manuscript?.id ?? null, works);
+  const state = declarationState(declaringWorks);
+
+  if (!work && state === 'ambiguous') {
+    return (
+      <div>
+        <p className="text-[13px] leading-relaxed opacity-60 mb-3">
+          This is a form of {declaringWorks.length} works, so no single Work
+          carries it. Withdraw it from one and the other stands.
+        </p>
+        <ul className="space-y-1.5 mb-3">
+          {declaringWorks.map((w) => (
+            <li key={w.id} className="text-[13px] opacity-75">
+              ✓ {w.title ?? 'Untitled work'}
+              <button
+                disabled={busy}
+                onClick={() => void undeclare(w.id)}
+                className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
+              >
+                no longer a form of this work
+              </button>
+            </li>
+          ))}
+        </ul>
+        {failed && <p className="text-[12px] opacity-60 mt-3">{failed}</p>}
+      </div>
     );
   }
 

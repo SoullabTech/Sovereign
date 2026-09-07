@@ -33,8 +33,13 @@ const valueImportsOf = (code: string) =>
 const READING_UNIT = /manuscript\/developmentalReading\/([a-zA-Z]+)/;
 
 describe('develop surface — what it may reach', () => {
-  it('reaches the reading unit on its durable side only: contract · store · assess · commission', () => {
-    const allowed = new Set(['contract', 'store', 'assess', 'commission']);
+  it('reaches the reading unit on its durable side only: contract · store · assess · commission · scope', () => {
+    /* `scope` joined this set for WS-DEV-SCOPE-01 (founder ruling 2026-09-07),
+       and it is the safest possible addition to it: the module is PURE and
+       declares an empty import allow-list of its own, so reaching it cannot
+       reach anything else. It carries the four shapes a reading scope may
+       take and no behaviour at all. */
+    const allowed = new Set(['contract', 'store', 'assess', 'commission', 'scope']);
     for (const [name, rel] of Object.entries(FILES)) {
       for (const spec of importsOf(read(rel))) {
         const m = READING_UNIT.exec(spec);
@@ -69,8 +74,17 @@ describe('develop surface — what it may not do', () => {
     for (const rel of [FILES.listRoute, FILES.oneRoute]) {
       const code = read(rel);
       expect(`${rel}: ${/\b(INSERT\s+INTO|UPDATE\s+[a-z_]+\s+SET|DELETE\s+FROM|TRUNCATE|ALTER\s+TABLE|DROP\s+TABLE)\b/i.test(code)}`).toBe(`${rel}: false`);
-      const tables = [...code.matchAll(/\b(?:FROM|JOIN)\s+([a-z_]+)/gi)].map((m) => m[1]);
-      for (const t of tables) expect(['manuscript_draft_sections', 'manuscript_working_drafts', 'member_manuscripts', 'manuscript_sections', 'manuscript_structure_units']).toContain(t);
+      /* `subtree` is a CTE defined inside the same statement, not a table this
+         surface reaches — a division resolves by SUBTREE because a Part holds
+         no sections of its own, only its chapters do. It is named here so the
+         allow-list stays a list of TABLES and the recursion stays legible.
+         `manuscript_structure_members` is a real table and a real widening:
+         read-only, and only to learn which sections a division names. */
+      const CTES = new Set(['subtree']);
+      const tables = [...code.matchAll(/\b(?:FROM|JOIN)\s+([a-z_]+)/gi)]
+        .map((m) => m[1])
+        .filter((t) => !CTES.has(t));
+      for (const t of tables) expect(['manuscript_draft_sections', 'manuscript_working_drafts', 'member_manuscripts', 'manuscript_sections', 'manuscript_structure_units', 'manuscript_structure_members']).toContain(t);
     }
     expect(read(FILES.oneRoute)).not.toMatch(/export async function (POST|PUT|PATCH|DELETE)/);
   });
@@ -86,10 +100,24 @@ describe('develop surface — what it may not do', () => {
     }
   });
 
-  it('the client sends the lens and nothing else on a commission', () => {
+  it('the client sends the lens and at most a STRUCTURAL scope on a commission', () => {
+    /* ⚠️ WIDENED by founder ruling 2026-09-07, and only this far. The body
+       previously carried the lens alone; it now carries the lens and, when the
+       writer bounded the reading, a scope of structural identifiers.
+
+       The guard that matters is unchanged and is asserted below: nothing about
+       the Work's PROSE goes up the wire. A scope names sections; it cannot
+       carry text, an observation, or anything the reader could mistake for
+       the member's writing. */
     const c = read(FILES.client);
-    expect(c).toMatch(/body:\s*JSON\.stringify\(\{\s*lens\s*\}\)/);
+    expect(c).toMatch(/body:\s*JSON\.stringify\(scope \? \{ lens, scope \} : \{ lens \}\)/);
     expect(c).not.toMatch(/method:\s*'(PUT|PATCH|DELETE)'/);
+    for (const forbidden of ['content', 'text:', 'body:', 'observation', 'sections:']) {
+      const inPayload = new RegExp(`JSON\\.stringify\\([^)]*${forbidden}`);
+      expect(`client payload names ${forbidden}: ${inPayload.test(c)}`).toBe(
+        `client payload names ${forbidden}: false`,
+      );
+    }
   });
 
   it('no automatic refresh: no timer, no interval, no refetch on focus or visibility, no revalidation', () => {
