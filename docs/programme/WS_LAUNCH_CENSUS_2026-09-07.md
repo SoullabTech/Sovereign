@@ -157,3 +157,78 @@ resolved here; recorded rather than guessed.
 
 Source census at `3027ceaff`. Not covered: Explore / Review / Publish, dialogue
 internals, and any runtime observation.
+
+---
+
+# Extension — ObservationDialogue (DISCOVER, read-only)
+
+Six questions, answered against code rather than against the file's own header.
+
+```text
+QUESTION                                   ANSWER   BASIS
+what the dialogue claims MAIA knows        BOUNDED  bounds line, rendered ONCE at
+                                                    the top, before the composer
+                                                    (data-dialogue-bounds)
+observation/evidence context stays         YES      about · readingId · observationKey
+attached                                            are props; server keeps anchor+reading
+leaving/reopening changes the subject      NO       resume is from the SERVER store
+                                                    (threadsOn → loadThread), never
+                                                    React state
+failure/loading/empty collapse like        NO       explicitly refused — see below
+Canvas Versions
+dialogue implies it changed the work       NO       the bounds line says the opposite
+or the standing                                     before the writer speaks
+member can tell persisted vs present       MOSTLY   one ambiguity — see D-02
+```
+
+## The inverse of D-01, with the hazard named
+
+`lib/writersStudio/observationDialogueResume.ts` separates four states where a
+lazier design would use two:
+
+```text
+fresh        discovery SUCCEEDED and found nothing
+resume       exactly one thread
+choose       more than one — the writer picks, the room does not
+unavailable  discovery FAILED — the room does not know, and must not write
+```
+
+Its own comment names the defect it refuses:
+
+> *"THE ROUNDING THIS FUNCTION EXISTS TO REFUSE. `fresh` here would be a transient
+> GET failure silently authoring a duplicate thread."*
+
+That is the D-01 shape — unknown rounded to a confident value — recognised and
+refused here. `sendMode()` then returns `blocked` with a `why` for every
+non-sendable state, and permission and payload come from ONE call, so they
+cannot disagree.
+
+**Two rooms, same hazard, opposite outcomes.** The repair precedent for D-01 now
+exists twice in-repo.
+
+## Superseded disclosure
+
+`ObservationDialogue.tsx:186` falls back, before the first turn, to *"This
+observation was made against an earlier state of the work… she has not reread
+the work."* Presented as the READING's claim, not as a measurement this room
+made — the room computes no epistemic state; `location` arrives from the server.
+
+## D-02 — MINOR · refusal copy claims a preservation it does not provide
+
+`REFUSAL_SAYS.unreachable`:
+
+> *"MAIA could not be reached. Nothing was lost — your question is held here."*
+
+The draft is `useState('')` only — no localStorage, no sessionStorage, no server
+write — and it is cleared solely on success. So the sentence is TRUE in the
+narrow reading ("still in this box, right now") and FALSE across a close, which
+this same file documents: *"Closing unmounts this component and everything it
+held."*
+
+Classified **D-candidate, not confirmed D**: the ambiguity is in what "held here"
+means to a reader, not in a flat false statement. Severity low — the loss is one
+unsent question after a failed send. Recorded rather than repaired; a founder eye
+should decide whether the copy or the persistence is the thing to change.
+
+**Scope:** source census at `3027ceaff`. Explore / Review / Publish deliberately
+not covered.
