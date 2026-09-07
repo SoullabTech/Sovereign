@@ -12,12 +12,31 @@ v0.1 solved   epistemic safety — the Home stopped lying
 v0.2 must solve   PRESENCE — a writing field receiving the writer back
 ```
 
-## Two laws now govern, not one
+## Three laws now govern
 
 ```text
 HOME TRUTH LAW        may we say this?
 FOREGROUNDING LAW     does this deserve the writer's attention right now?
+PRESENCE LAW          whose voice arrives first?
 ```
+
+> **The Home foregrounds the Work's presence before the system's accounting of
+> it.**
+
+### The emotional hierarchy this produces
+
+```text
+1  THE WORK          title · visual identity · the writer's own meaning
+2  ITS VOICE         their actual words · marked lines · fragments · questions
+3  THEIR CONTINUITY  where they last were · what they left themselves · dates
+4  ORIENTATION       facts that genuinely help return
+5  MAIA              nearby · clearly herself · optional
+
+NOT:  title → metadata → counts → timestamps → AI
+```
+
+The Home should not merely tell a writer *about* the Work. It should let the
+Work **be present** — the manuscript quietly remembering itself around them.
 
 > **A fact being true is not a reason to foreground it.** Home foregrounds
 > whatever helps the writer recognize the Work, recover their own continuity,
@@ -81,11 +100,20 @@ is not.
 
   FROM YOUR WORK
 
-     "…a line you marked."                       WRITER · marked
-     "…a question you left yourself."            WRITER · left
-     "MAIA noticed —— · you kept it."            MAIA · kept
+     THE WORK IN ITS OWN WORDS
+     "The soul does not move in straight lines…"      verbatim · marked
+     "…a question you left yourself."                 WRITER · left
 
+     A SENSE OF THE WHOLE
+     <the writer's own synopsis>                      WRITER      ⚠gap
+     or, if MAIA composed it: "MAIA's brief —"        MAIA
+     never presented as the Work's own self-description
+
+     OPTIONAL SPARK
                                     ✦ an invitation, if you want one    MAIA
+
+     ─ passages may arrive quietly, one yielding to another, so the room
+       feels inhabited by the writing rather than static
 
 
   ┌ Begin something ┐            ┌ Bring writing in ┐
@@ -105,12 +133,30 @@ counts → actual material  "4 kept versions across 2 works" is administration.
 "never opened" cut        mechanically true, reads as reproach. If it does not
                           help re-entry, omit it.
 elapsed → dates           v0.1's "3 days · 2 wks" scored dormancy (UNHURRIED).
-                          Durations accumulate; dates sit still.
+                          **Dates remember. Durations judge.** — the language
+                          of continuity, not of task software.
 card shape                composes around what exists. v0.1's mock rendered
                           "—" for absent fields while its own prose said omit.
                           The prose was right.
 form filters removed      premature — the form question is unruled
 ```
+
+## ⚠ Naming is a third authority
+
+Content origin and writer standing are not enough. **The label itself makes a
+claim**, and the same passage under three names asserts three different things:
+
+```text
+"Gold Lines"        ONLY for passages the WRITER marked. If an algorithm or
+                    MAIA chose them, this name quietly asserts evaluation —
+                    "these are your best lines" — which nothing established.
+"From your work"    mechanically selected excerpts. Honest about being a rule.
+"MAIA noticed"      MAIA selected. Visibly hers.
+
+MAIA selected this passage  ≠  this is one of your best lines
+```
+
+Same words, different authority. The name must match the hand that chose.
 
 ## Selection must be mechanically honest
 
@@ -143,6 +189,11 @@ column exists  ≠  column means what the redesign needs
 
 Reusing it because it is available would be the data equivalent of *artifact
 exists ≠ artifact has authority*. **Settle the semantics before the card.**
+
+**A synopsis field does not exist.** `work.purpose` is the Becoming — a
+different object. A SENSE OF THE WHOLE therefore needs either a writer act, or
+MAIA's brief clearly labelled as hers. It may not be derived and presented as
+the Work speaking about itself.
 
 Still open: whether the empty Home offers orientation without instruction —
 *what a Work can be · permission to begin small · MAIA nearby* — which v0.1 got
