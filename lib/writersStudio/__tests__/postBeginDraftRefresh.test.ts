@@ -83,10 +83,39 @@ describe('Worktable reports the change and interprets nothing', () => {
     expect(src).not.toMatch(/onWriteAuthorityChanged\?\.\([^)]+\)/);
   });
 
-  it('settles its own room before notifying, so an unmount cannot strand it', () => {
+  /* R2 — the fourth path. The parent read no_draft (or continuous) and mounted
+     this room; by the time it loaded, another tab had already created or
+     converted the draft. loadDraft returns ok and addressable, and the room
+     settles correctly — but the parent is stale for the same reason as the
+     other two paths, and stays inert until a reload. */
+  it('notifies when the INITIAL load finds an already-addressable draft', () => {
     const src = worktable();
-    const i = src.indexOf('settle(begun);');
-    const j = src.indexOf('onWriteAuthorityChanged?.()');
+    const ok = src.slice(src.indexOf("if (loaded.kind === 'ok')"), src.indexOf("if (loaded.kind === 'unauthorized')"));
+    expect(ok).toMatch(/settle\(loaded\);/);
+    expect(ok).toMatch(/loaded\.sectionAddressable\)\s*onWriteAuthorityChanged\?\.\(\)/);
+  });
+
+  it('stays SILENT for an ordinary continuous draft — the normal reason to be here', () => {
+    const src = worktable();
+    const ok = src.slice(src.indexOf("if (loaded.kind === 'ok')"), src.indexOf("if (loaded.kind === 'unauthorized')"));
+    // the notification is guarded, never unconditional on this path
+    expect(ok).not.toMatch(/^\s*onWriteAuthorityChanged\?\.\(\);\s*$/m);
+    expect(ok).toMatch(/if \(loaded\.sectionAddressable\)/);
+  });
+
+  /* Per-branch, not whole-file. An earlier version compared indexOf() across
+     the whole source, which silently became meaningless the moment a third
+     notifying branch was added ahead of the others — it was asserting file
+     order, not the property. Each branch must settle its own room first. */
+  it.each([
+    ['initial load',   "if (loaded.kind === 'ok')", "if (loaded.kind === 'unauthorized')", 'settle(loaded);'],
+    ['creation',       "if (begun.kind === 'ok')",  "if (begun.kind === 'exists')",        'settle(begun);'],
+    ['exists → loaded',"if (begun.kind === 'exists')", "if (begun.kind === 'unreadable')", 'settle(again);'],
+  ])('%s settles before notifying, so an unmount cannot strand it', (_label, from, to, settleCall) => {
+    const src = worktable();
+    const branch = src.slice(src.indexOf(from), src.indexOf(to));
+    const i = branch.indexOf(settleCall);
+    const j = branch.indexOf('onWriteAuthorityChanged?.()');
     expect(i).toBeGreaterThan(-1);
     expect(j).toBeGreaterThan(i);
   });

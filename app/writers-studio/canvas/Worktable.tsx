@@ -247,7 +247,22 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
     (async () => {
       const loaded = await loadDraft(apiFetch, manuscriptId);
       if (cancelled) return;
-      if (loaded.kind === 'ok') return settle(loaded);
+      if (loaded.kind === 'ok') {
+        settle(loaded);
+        /* R2 — the initial-load race. The parent mounted this room, and the
+           draft it found is section-addressable. Those two facts cannot both
+           be current: an addressable draft is one the parent should be showing
+           through the sections engine, not here. So THIS ROOM BEING MOUNTED
+           OVER AN ADDRESSABLE DRAFT IS ITSELF PROOF THE PARENT IS STALE —
+           whether its last read said no_draft (another tab created it) or
+           continuous (another tab converted it). Either way: read again.
+
+           An ordinary continuous draft stays silent. That is the normal
+           reason to be here, and notifying would re-read on every session for
+           no change. */
+        if (loaded.sectionAddressable) onWriteAuthorityChanged?.();
+        return;
+      }
       if (loaded.kind === 'unauthorized') return setPhase('unauthorized');
       if (loaded.kind === 'error') return setPhase('error');
       /* ⛔ NOT a fall-through to beginDraft. The server claims section
