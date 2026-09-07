@@ -298,3 +298,99 @@ PASS`, per FR-14.
 | **CA-15** | facilitator assignment pathway — still no code path writes `facilitator` |
 | **D-I3** | cohort mechanism at I8; identities only at cohort authorization. ⛔ `FOUNDER_MEMBER_IDS` untouched |
 | **I8 obligation** | converge the `/commons/join` page gate with Circle-access authority when `CIRCLE_ACCESS_MEMBER_IDS` is constituted (§2.5) |
+
+---
+
+## 6 · Founder-run verification of `ae0fadd54`, and the instrument repair it produced
+
+### 6.1 Canonical run — `62 passed · 1 failed · exit 1`
+
+Disposable shadow, three pending migrations applied to the shadow only.
+
+```
+62 passed · 1 failed · 0 warned · 0 skipped
+coverage 62/63
+exit 1
+```
+
+**Every behavioral obligation passed**, the whole T10 family included:
+
+```
+T10a PASS   T10b PASS   T10c PASS
+T10d PASS   T10e PASS   T10f PASS
+```
+
+⭐ **T10f passing is the substantive result of this stage.** It establishes that a removal landing
+*after* invitation evaluation and *before* membership mutation still defeats the generic invitation —
+exactly the race `093379e8d` could not survive. The guarded upsert is the single authority at the
+mutation boundary, as intended.
+
+### 6.2 The one failure was the instrument reading its own documentation
+
+```
+FAIL C21   closed join surface inspects the token
+```
+
+The page inspects no token. C21 scanned the **raw** contents of
+`app/commons/join/layout.tsx`, which contains the sentence
+
+> nothing here reads `circle_invites`
+
+— written to explain the absence, and matched as evidence of the presence. **A prose ban read as the
+banned behavior returning.**
+
+Founder proved the diagnosis on a disposable verifier copy in which **only C21** was changed to strip
+comments before applying its regex. No product code touched:
+
+```
+63 passed · 0 failed · 0 warned · 0 skipped
+coverage 63/63
+exit 0
+```
+
+Rollback residue after that run: `removal records 0 · shares 0 · inquiries 0 · responses 0`.
+
+### 6.3 The repair — instrument only
+
+C21 now strips block and line comments before scanning, the same discipline **C6** has used since R4
+(and for the same reason: that site documents *why* a count was removed, and the prose must not read
+as the defect returning). The token set is **not weakened**; nothing else moved.
+
+⛔ Unchanged by this repair: `app/commons/join/layout.tsx` · `joinWithInviteWithClient()` · FR-18 ·
+T10a–T10f · the required-assertion floor · all Circle product behavior.
+
+**This class of defect is worth naming: an instrument that scans prose can fail on a file precisely
+because that file documents its own compliance.** C6 solved it once; C21 was written without it.
+
+### 6.4 Typecheck at `ae0fadd54` (founder-run)
+
+```
+errors 230 · baseline 239 · 9 fixed since baseline · 0 regressions · exit 0
+```
+
+### 6.5 Production witness — untouched
+
+```
+PRODUCTION SHA      e4ac1bcac
+circles 4 · active memberships 4 · shares 0 · inquiries 0 · responses 0
+removal table       ABSENT
+withdrawn_at        ABSENT
+integrating allowed YES
+```
+
+No Circle migration and no I0.5 candidate has reached production.
+
+### 6.6 Standing
+
+| | |
+|---|---|
+| I0.5 **product** | ⭐ **VERIFIED ON CANDIDATE** — every behavioral obligation passed on `ae0fadd54` |
+| I0.5 **instrument** | repaired here; **the canonical rerun has not happened** |
+| **CANONICAL VERIFY** | ⛔ **NOT YET ACCEPTED.** The 63/63 evidence is from a *disposable probe*, not a run of a committed SHA. A probe is not the record. |
+| Typecheck | PASS |
+| Production | UNCHANGED · UNMIGRATED · UNDEPLOYED |
+| **I1 DESIGN** | ⛔ **NOT OPEN.** It opens on a canonical run of the committed SHA reporting `0 failed` **and** `63/63 discharged by PASS`. Jarvis does not open a stage on a run it has not seen. |
+
+Required for acceptance: full verifier from the new committed SHA against a disposable shadow with
+`20260906000003` → `20260907000001` → `20260907000002` applied to the shadow only; `63/63 · 0 failed ·
+0 warned · 0 skipped · exit 0`; rollback residue zero; production untouched.

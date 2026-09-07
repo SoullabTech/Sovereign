@@ -501,8 +501,17 @@ async function groupC() {
     if (!joinLayout) {
       fail('C21 I-03 no closed-state gate to inspect');
     } else {
-      const solicits = /consentMode|consent_mode|<input|<form/.test(joinLayout);
-      const validates = /circle_invites|joinWithInvite|getInvite|validateToken/.test(joinLayout);
+      // Strip comments before scanning — the same discipline C6 already uses.
+      // The layout documents WHY it reads no invite, and on the first canonical
+      // run of ae0fadd54 that sentence ("nothing here reads circle_invites") was
+      // itself matched: 62 passed · 1 failed. The instrument took its own
+      // documentation as evidence of the defect it documents the absence of.
+      // A prose ban must never read as the banned behavior returning.
+      const code = joinLayout
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      const solicits = /consentMode|consent_mode|<input|<form/.test(code);
+      const validates = /circle_invites|joinWithInvite|getInvite|validateToken/.test(code);
       if (solicits) {
         fail('C21 I-02 the closed join surface still solicits', 'a form, an input, or a consent mode');
       } else if (validates) {

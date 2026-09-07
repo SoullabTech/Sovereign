@@ -398,7 +398,12 @@ discharged by PASS · exit 0.** ⛔ Production unchanged.
   interleaving witness. `/commons/join` closed on the page so that surface and API tell the same
   truth, with I-03 preserved (a valid and an invalid token stay indistinguishable before
   authorization); converging that page gate with Circle-access authority is an **I8 obligation**.
-  Verifier floor **54 → 63** (C20–C22, T10a–T10f).
+  Verifier floor **54 → 63** (C20–C22, T10a–T10f). **Founder-run canonical verification of
+  `ae0fadd54`: `62 passed · 1 failed · exit 1` — every behavioral obligation PASS, T10f included;
+  the single failure was C21 matching the layout's own sentence saying it reads no invite.** C21 now
+  strips comments before scanning (the discipline C6 has used since R4). **Canonical rerun of the
+  committed SHA is REQUIRED and has not happened** — the 63/63 evidence is from a disposable probe,
+  and a probe is not the record.
   Record: `JARVIS-CIRCLES-01_I0.5_ENTRY_SAFETY_2026-09-07.md`.
   ⛔ **IMPLEMENTED, NOT VERIFIED** — no `DATABASE_URL` and no `node_modules` in remote sessions.
 
