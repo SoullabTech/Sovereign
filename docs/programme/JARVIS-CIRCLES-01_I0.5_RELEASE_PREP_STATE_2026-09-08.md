@@ -360,3 +360,223 @@ empty-database reconstruction — and production is an **upgrade-shaped** databa
 the other half of the dual witness. ⚠️ It will pass under `ON CONFLICT DO NOTHING` either way, so
 **presence of one row is necessary, not sufficient**; the empty-bootstrap witness already discharged
 the sufficient half on canonical.
+
+---
+
+# ADDENDUM II — N1 DECIDED (SHAPE b) · RELEASE ORDER RULED (SHAPE i) · N2 PRECISED
+**Founder rulings · 2026-09-08**
+
+## N1 — DECIDED: production witness shape **(b)**
+
+⛔ **Do not manufacture production fixtures to re-prove FR-18** after the exact candidate has already
+discharged that behavioral obligation under rollback.
+
+> *Production is where we establish that the qualified artifact actually arrived intact, not where we
+> create otherwise-nonexistent member-removal history solely for ceremony.*
+
+The production claim is therefore **deliberately weaker and exact**:
+
+> **FR-18 was behaviorally witnessed on the qualified release candidate; the production witness
+> establishes that the exact code carrying that witnessed behavior is running. FR-18 is NOT
+> independently exercised against production member state.**
+
+## THE I0.5 PRODUCTION WITNESS (supersedes prior contract)
+
+```text
+1. RUNTIME IDENTITY
+   running GIT_COMMIT = 891b33ee0
+
+2. MIGRATION / UPGRADE WITNESS
+   all three migrations recorded
+   expected checksums match
+   expected schema effects present
+   integrating rejected
+
+3. STATE PRESERVATION
+   4 Circles preserved
+   4 memberships preserved
+   no unintended removals
+   no unintended shares/inquiries/responses
+
+4. FR-18 PROVENANCE BINDING
+   candidate behavioral witness = 63/63 PASS
+   deployed SHA carries that exact witnessed implementation
+   FR-18 NOT independently exercised on production data
+
+5. CLOSED-STATE WITNESS
+   exercise non-destructively on production if possible
+   no fabricated member history merely to make the test possible
+
+6. HEALTH / SMOKE
+   production healthy
+   relevant Circle paths operate normally
+```
+
+⭐ *Candidate behavioral evidence and production deployment evidence stay distinct, rather than
+pretending deployment itself re-ran every behavioral obligation.*
+
+## RELEASE ORDER — SHAPE (i) RULED
+
+> **I0.5 deploys first. Writer's Studio does not deploy its later descendant until the I0.5
+> production witness is closed.**
+
+```text
+PRODUCTION NOW
+e535e6246
+        |  first production movement after cohort hold releases
+I0.5
+891b33ee0
+deploy exact qualified SHA
+complete production witness
+close I0.5
+        |  only then
+WRITER'S STUDIO
+deploy its separately qualified descendant
+(which must contain 891b33ee0)
+```
+
+The Writer's Studio lane owns the lock **because it is measuring `e535e6246`**. On completion it
+should **release normally, without using that release as an opportunity to deploy its newer work.**
+
+Preserves the custody chain `e535e6246 -> 891b33ee0 -> later Writer's Studio descendant`, and
+prevents:
+
+```text
+e535e6246 -> b4831d2ab -> 891b33ee0
+                          ^ REGRESSION
+```
+
+⛔ Silently removing Writer's Studio governed-erasure work is **not an acceptable incidental
+consequence of preserving an old release target.**
+
+## I0.5 RELEASE ORDER — R1…R4
+
+```text
+R1  First deploy after COHORT PRE-WITNESS HOLD:
+    891b33ee0
+
+R2  Writer's Studio must not deploy its post-891 work
+    before I0.5 production witness closes.
+
+R3  Immediately before deploy:
+    production must still be e535e6246
+    AND e535e6246 must be a proven ancestor of 891b33ee0.
+    exit 1 or >1 = STOP.
+
+R4  After I0.5 closes, Writer's Studio may deploy only
+    a separately qualified target that contains 891b33ee0.
+
+I0.5 DEPLOY RANGE
+    e535e6246..891b33ee0
+    22 Circle-programme commits
+    no PDF-CLEAN delta
+```
+
+### R3 — the hard pre-deploy ancestry gate
+
+⛔ Do **not** merely ask whether the lock is gone. **Re-read production.**
+
+```bash
+RUNNING=e535e6246   # re-read from the running container, never assumed
+TARGET=891b33ee0
+git merge-base --is-ancestor "$RUNNING" "$TARGET"
+```
+
+```text
+0   PASS — target advances production
+1   STOP — target is not a descendant of running production
+>1  STOP — ancestry could not be established
+```
+
+If production is **anything other than `e535e6246`** when our turn arrives, I0.5 does **not** blindly
+deploy `891b33ee0`. **Stop and reassess.** *This prevents the sequencing ruling from becoming stale
+while we wait.*
+
+## ⭐ GENERAL RELEASE LAW (project-wide in principle)
+
+> **A qualified SHA is not permission to deploy an ancestor over newer production. Qualification
+> establishes the artifact; ancestry at execution time establishes that deploying it is still an
+> advance.**
+
+## ⚠️ JARVIS NOTE — R2 IS A COORDINATION RULING WITH NO STRUCTURAL ENFORCEMENT
+
+The deploy-lane `flock` **serializes, it does not queue or reserve.** Nothing reserves the *next*
+acquisition for I0.5; when the cohort hold releases, the lane is open to whoever asks first. So:
+
+- **R2 is a promise between lanes**, and it is only in force if it is **relayed to the Writer's
+  Studio lane** (the programme precedent is a stop instruction relayed into the other session,
+  acknowledged there — see the 2026-09-06 lane split, §7a).
+- ⭐ **R3 is what makes the ruling structurally safe even if the coordination fails.** If Writer's
+  Studio deploys first, R3's ancestry check returns **exit 1** and I0.5 **stops** — converting a
+  silent regression into an explicit halt, at which point we are in the scope-widening world and the
+  target must be re-decided by founder act, never substituted at deploy time.
+
+⛔ **Do not treat R2 as satisfied by having written it down here.**
+
+## N2 — PRECISED: the repair proof is COMPOSITE, not ledger-only
+
+⚠️ The final ledger state **alone does not prove the runner wrote the rows.** Because of
+`ON CONFLICT DO NOTHING`, `one row per migration` cannot distinguish:
+
+```text
+migration self-wrote + runner collision absorbed
+```
+
+from:
+
+```text
+runner alone wrote
+```
+
+The repair is established by the **combined evidence chain**:
+
+```text
+SOURCE              321cb1536 migrations contain zero schema_migrations writes
+EMPTY BOOTSTRAP     canonical runner + repaired migrations succeed from nothing
+PRODUCTION UPGRADE  same runner/migrations successfully advance upgrade-shaped production
+FINAL LEDGER        expected filename + checksum rows exist exactly once
+FINAL SCHEMA        expected migration effects exist
+```
+
+The production ledger check is therefore described as:
+
+> **Production-side confirmation that the repaired migration/runner pair completed the upgrade path
+> and left the expected canonical ledger state.**
+
+⛔ **Not, by itself, proof of who issued the INSERT.**
+
+⭐ **Preserve the deployment output** if it explicitly shows the canonical runner applying and
+recording each migration. Together with deployed migration sources containing zero ledger writes,
+that makes **runner ownership directly attributable rather than inferred from the table afterward.**
+
+## Release target precision
+
+`891b33ee0` remains untouched and qualified, **but it is no longer canonical tip** — canonical has
+advanced to `b4831d2ab`. That does not change the bounded release decision:
+
+```text
+qualified I0.5 artifact    891b33ee0
+current canonical tip      b4831d2ab (later)
+production                 e535e6246
+authorized I0.5 target     891b33ee0
+deploy                     HELD
+```
+
+## Ratified witness amendment
+
+```text
+N1   DECIDED -> production witness shape (b)
+
+FR-18
+candidate behavior         PROVEN
+production behavior        NOT independently exercised
+production provenance      TO BE PROVEN by exact SHA binding
+
+N2
+upgrade-path ledger/schema witness REQUIRED
+repair proof               COMPOSITE, not ledger-only
+```
+
+> ⭐ *A production witness that is strong without becoming performative: prove the things production
+> uniquely can prove, and preserve the behavioral evidence already established where it could be
+> exercised safely.*
