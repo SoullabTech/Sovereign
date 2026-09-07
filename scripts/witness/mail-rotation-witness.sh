@@ -95,6 +95,10 @@ case "$PROBE" in
   401|403) grn 'PASS · old key is rejected — revoked';;
   200)     die 'OLD KEY IS STILL LIVE. Revoke it in the Resend dashboard, then re-run.';;
   000)     die 'no response — network/proxy problem, NO VERDICT';;
+  400)     die 'HTTP 400 — the key was empty or malformed, so nothing was tested.
+       This is NOT evidence the key is dead. Re-run and paste the full key
+       (it starts with re_). Read it from production BEFORE revoking:
+         ssh soullab@minisforum '"'"'docker exec maia-sovereign printenv RESEND_API_KEY'"'"'';;
   *)       die "unexpected HTTP $PROBE from Resend — NO VERDICT";;
 esac
 
