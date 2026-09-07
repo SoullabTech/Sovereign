@@ -298,96 +298,94 @@ doctrine (light entering darkness), never a division of function.
 > **Its territory is larger than its name; that is a property the name must carry, not a problem to
 > solve by adding another room.**
 
+### Implementation discriminator — shadow and gold are not modes
+
+```text
+one entrance
+one Field
+one session architecture
+one set of six movements
+
+The member never selects:   Shadow · Gold · Light · Dark
+
+The system never routes, labels, scores, or persists an encounter
+according to those distinctions.
+```
+
+```text
+"I cannot stand this woman."   → may reveal Gold.
+"I worship this teacher."      → may reveal fear, dependency, envy,
+                                 grief and Gold together.
+```
+
+> **The character of the material is discovered through encounter, not declared at entry.**
+
+**This is L1 applied one level down.** L1 holds that the Field is entered by an act, never by a
+classifier matching the member. This holds that the *material* is not classified either — not by
+the system, and not by the member at the door. Entry law and material law, same shape; the
+no-modes rule is not a new constraint but L1 held consistently.
+
 ### The shortest statement of the doctrine
 
 > **Shadow Field is not where MAIA finds out what is wrong with you. It is where you become more
 > conscious of your participation in the world you experience — including the gold you have placed
 > outside yourself.**
 
-## §I · Member-facing label — **Shadow & Gold**
+## §I · Member-facing label — **Shadow Field** (singular, meaning expanded)
 
-**Founder ruling 2026-09-07.** The member-facing label changes; nothing else does.
+**Founder ruling 2026-09-07, superseding the same day's *Shadow & Gold* proposal.**
 
-```text
-HOUSE / MEMBER NAME     Shadow & Gold
-CONSTITUTIONAL DOMAIN   the projective field
-PURPOSE                 Voluntary reflection on how the world within participates
-                        in the world we experience around us.
-CORE DOCTRINE           The world within we project onto the world around us.
-GOLD                    The unlived capacity, beauty, authority, creativity, love
-                        or possibility we encounter first through another.
-```
+> # Shadow Field
+> ### *Ourselves Reflected*
+>
+> **The world within, revealed through the world around us.**
 
-House tile, preferred form — it leaves room and does not pre-classify the experience:
+The subtitle is evocative; the line beneath it carries the doctrine's precision. **Arrival copy**
+expands what *Shadow* means, so the label never has to:
 
-> **Shadow & Gold**
-> *Explore what the world around you may be revealing about the world within.*
+> Shadow is not only what we reject or fear. It also includes what fascinates us, calls to us, and
+> carries the gold we have not yet recognised in ourselves.
 
-Public identity: **Shadow & Gold — the world within, encountered through the world around us.**
+**"Ourselves Reflected" must not be read as solipsism.** What we meet in the world is not *only*
+ourselves — §B stands unchanged. The Field explores **what of ourselves becomes visible through the
+encounter**, while the other person, event, or harm keeps its independent reality.
 
-### Why not the alternatives
+### Why *Shadow & Gold* was withdrawn
 
-| Label | Problem |
+It was the better description of the territory, and it was withdrawn because **the ampersand itself
+generates a false binary in implementation** — a second noun quietly invites a second architecture,
+against a doctrine holding that there is one phenomenon, one entrance, one field, and no
+classification before encounter. The cultural-darkness problem is solved **through meaning**, not
+through a name that must then be defended against the fork it suggests.
+
+Recorded so the proposal is not simply re-made: **the objection is architectural, not aesthetic.**
+
+| Considered | Problem |
 |---|---|
-| Shadow Field | Still culturally reads as darkness, wounds, triggers, "bad parts" |
+| Shadow & Gold | The ampersand invites two modes, destinations, or pipelines |
 | Shadow & Light | Too easily becomes good/bad dualism |
-| Projection Field | Technically useful but clinical; *"you're projecting"* already carries accusation |
-| Mirror Field | Beautiful, but implies the outside world is merely a reflection of the self |
+| Projection Field | Technically useful but clinical; *"you're projecting"* carries accusation |
+| Mirror Field | Implies the outside world is merely a reflection of the self |
 | Inner World | Too broad; this Field is specifically about inner-world participation in outer experience |
 | Golden Shadow | Too narrow; gold is a pinnacle of the work, not all of it |
 
-*Shadow & Gold* preserves the tension: **what we cannot bear to own, and what we cannot yet bear to
-become.**
-
-### The pairing is in the name only — §E′ still holds
-
-> **Shadow and Gold are not two domains. They are two ways the same projective phenomenon becomes
-> visible.**
-
-Aversion and fascination may both reveal something the person has placed outside themselves.
-Splitting them into separate rooms would **force a distinction before the encounter has shown what
-the material actually is.**
-
-```text
-ONE FIELD    Shadow & Gold
-
-NOT          Shadow Field + Light Field
-             Shadow mode  + Gold mode
-             two destinations · two pipelines
-
-REASON       the material is not classified at entry
-             and may reveal both shadow and gold in the same encounter
-```
-
-The ampersand names two things that must never become two doors. **Shadow and Gold are not two
-buttons, two modes, two destinations, two pipelines, or a first-screen question.** A member must never be asked *am I doing dark
-shadow or golden shadow today?* — they bring a charged experience, and **MAIA does not know in
-advance what it contains.**
-
-```text
-"I cannot stand this woman."       → may open into Gold
-"I worship this teacher."          → may open into fear, dependency, envy,
-                                     grief and Gold at once
-```
-
-Neither could survive a mode selector. That complexity **is** the Field. This mitigation is
-recorded with the name permanently, because the name itself invites the fork it forbids.
+**Inner Gold remains one of the profound discoveries possible within Shadow — not a second
+destination advertised at the door.**
 
 ### Identifiers do not move
 
-§9 of v0.2 is ratified and stands. A label is not an identifier:
-
 ```text
-UNCHANGED   shadowField · [MAIA/shadow-field] · producer shadow-field
-            route /maia/shadow-field · House destination id shadow-field
-            source_type 'shadow_field' (unapplied P4 migration + CHECK constraint)
-CHANGED     the words a member reads
+DISPLAY LABEL      Shadow Field · Ourselves Reflected
+FROZEN             shadowField · [MAIA/shadow-field] · shadow-field
+                   /maia/shadow-field · source_type = 'shadow_field'
 ```
+
+> **A change in what the member is taught "Shadow" means is not an identifier migration.**
 
 ### Implementation custody
 
-The label change is **not** implemented tonight. It lands with the Arrival redesign repair, after
-the P8 datum and witness closure. Subject frozen, repair on HOLD.
+Not implemented tonight. The label and Arrival copy land with the redesign repair, after the P8
+datum and witness closure. Subject frozen, repair on HOLD.
 
 ## §F · Vocabulary
 
