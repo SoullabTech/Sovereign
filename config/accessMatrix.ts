@@ -286,7 +286,17 @@ export const ACCESS_RULES: AccessRule[] = [
   // not correspond to would be a second fiction. Same shape as the
   // /book-studio/* entries above.
   { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons — DECLARED free; ENFORCED founder-only by app/commons/circles/layout.tsx' },
-  { exact: '/commons/join', public: true, notes: 'Join circle via invite — public landing; the submit target /api/circles/join is founder-gated while Circles are closed for v1' },
+  //
+  // /commons/join stays `public: true` because the address must remain
+  // reachable — an invite link that 404s tells a visitor nothing true. What it
+  // may no longer do is SOLICIT. Before I0.5 this page asked an unauthorized
+  // visitor for an invite token and a consent mode, then POSTed both to an
+  // endpoint that was already going to refuse (I-02, a contradiction R1 created
+  // by closing the API without bringing the surface along).
+  // app/commons/join/layout.tsx now renders a closed state instead, so the page
+  // and the API say the same thing. Nothing there reads circle_invites: a valid
+  // and an invalid token stay indistinguishable before authorization (I-03).
+  { exact: '/commons/join', public: true, notes: 'Join circle via invite — DECLARED public (the address stays reachable); ENFORCED closed by app/commons/join/layout.tsx, which solicits no token and no consent while Circles are closed for v1. Submit target /api/circles/join is gated by requireCircleAccess().' },
 
   // Elemental Alchemy — depth
   { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },

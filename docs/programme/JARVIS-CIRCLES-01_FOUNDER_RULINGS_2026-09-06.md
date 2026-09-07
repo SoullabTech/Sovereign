@@ -465,3 +465,69 @@ birth · separation) has to stay separate from it.
 | **CA-15** | **Facilitator assignment pathway** — no code path assigns `'facilitator'`. Recorded as an INVOKE/governance gap by FR-12 | INVOKE |
 
 **None of these blocks VERIFY.**
+
+---
+
+# ADDENDUM · 2026-09-07 — INVOKE rulings (I0 docket → I0.5)
+
+Founder acts on the I0 census docket. Recorded here as an addendum rather than woven into the
+sections above: **records are amended, never rewritten.** The FR numbering continues; the D-I
+identifiers are the I0 docket's own.
+
+## FR-18 · A generic Circle invitation may not reinstate a removed member
+
+> **Standing outranks invitation.** An invitation is permission to approach a threshold. It is not
+> authority to erase prior relational history.
+
+**Ratified 2026-09-07.** A member whose standing in a Circle is `removed` is refused when presenting
+a valid, live invite. The **invitation itself is untouched** and remains usable by everyone else.
+
+⚠️ **This ruling corrected Jarvis.** The I0 docket recommended that removal **revoke the invite
+token**. That was refused: a Circle invite token is **Circle-wide**, so revoking it would withdraw
+the invitation from *everyone* in order to answer *one* person's standing. The defect was never that
+the token survived — it was that **a generic bearer credential had enough authority to overwrite a
+recorded relational act**.
+
+⛔ `left` is **not** `removed`. A member who left of their own accord is outside this ruling.
+**CA-08 remains open and is not decided by FR-18.**
+
+⛔ **Not authorized by this ruling:** per-invitee tokens · invite expiry · a reinstatement workflow ·
+a facilitator review UI. Founder: *do not add yet.*
+
+Implemented and asserted at I0.5 (C22, T10a–T10e). See
+`JARVIS-CIRCLES-01_I0.5_ENTRY_SAFETY_2026-09-07.md`.
+
+## I-02 · CLOSED JOIN SURFACE — ruling: STATE CLOSURE ON PAGE
+
+> Do not delete the `/commons/join` route. While Circle release access remains closed, an
+> unauthorized visitor must not be asked to: enter or confirm an invite token; choose a Circle
+> consent mode; submit a join action that is guaranteed to return 403. **The page and the API must
+> tell the same truth.**
+
+⛔ **I-03 preserved deliberately:** before Circle access is authorized, a valid token and an invalid
+token remain **indistinguishable** to an unauthorized visitor. The closed surface reads no invite.
+
+⛔ The API gate is **not weakened** and the route is **not deleted**. A layout does not run for a
+route handler; `requireCircleAccess()` remains the authorization.
+
+## D-I dispositions
+
+| # | Question | Ruling |
+|---|---|---|
+| **D-I1** | How does a member declare an interest? | **HYBRID.** Only **explicit selection** drives matching. Free text is **expressive only** and is **never inferred into taxonomy.** This is the operative form of FR-06: `living_field_affinities` (system-created from private memory atoms) and `recurring_interests` (session-inferred) remain **barred absolutely** as discovery substrate. |
+| **D-I2** | Reuse or build the Commons substrate? | **BUILD FRESH.** Implementation term: **"Interest Commons"**. The three existing "Commons" — the `community_*` forum, the `commons_contributions` library, the Circles migration filename — are **not** the FR-02 Commons. Two are built on the exact mechanics FR-08.7 forbids (`community_user_stats` contribution points/tiers · `contribution_levels` · `community_territories.min_contribution_tier` and `min_cognitive_level` gating access on a measured attribute of a person). ⛔ Reusing them would import a status economy on day one. |
+| **D-I3** | Cohort authorization mechanism | **Mechanism at I8. Identities only at cohort authorization.** ⛔ **Do not touch `FOUNDER_MEMBER_IDS`.** `labAccess.ts` is the reusable precedent (union with founder · fails closed · confers nothing beyond its door) → a `CIRCLE_ACCESS_MEMBER_IDS` when a cohort is authorized, **not before**. |
+| **D-I5** | Is member count an outer fact? | **INTERIOR.** Member count is interior **and** the derived `FORMING`/`ACTIVE` constitution state is interior. FR-11 state is not an advertisement. |
+| **D-I6** | What is `created_by`? | **PROVENANCE, not permanent ownership.** It records who opened the field. It is not a standing claim on it. (I0 found `created_by` unchangeable and `facilitator` unassignable, with the two axes orthogonal — an implementation fact, not a ratified doctrine of permanent founder-ownership.) |
+
+## Outer-membrane correction
+
+The I0 membrane reading is corrected: **member count is interior** (D-I5), narrowing the outer
+membrane further. Only `name`, `description` and `created_at` are safe outer facts today, and **three
+of the doctrine's four panes still have no column**. Carried to I4/I6, not resolved here.
+
+## Authority axes — carried forward
+
+The two orthogonal authority axes found by I0 (`created_by` provenance ⟂ `facilitator` role, neither
+assignable after creation) are **carried to I4 and I6** for design. ⛔ No facilitator is assigned and
+no assignment pathway is built at I0.5. **CA-15 remains open.**

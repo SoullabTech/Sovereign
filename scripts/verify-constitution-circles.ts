@@ -85,6 +85,8 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   'C15', 'C16',
   // C17/C18 B-09 retirement + CA-14 scope boundary · C19 ruling-C leave cascade
   'C17', 'C18', 'C19',
+  // I0.5 · I-02 closed join surface · I-01 join door
+  'C20', 'C21', 'C22',
   // Group S — service layer against real principals
   'S1', 'S2', 'S3', 'S5',
   // FR-03 / FR-11 constitution state
@@ -96,6 +98,8 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   'T7a', 'T7b', 'T7c', 'T7d', 'T7e', 'T7f', 'T7g', 'T7h',
   // ruling C boundary cascade · B-09 retired status
   'T8a', 'T8b', 'T8c', 'T9a', 'T9b',
+  // I0.5 · I-01 entry safety: a generic invitation cannot reinstate
+  'T10a', 'T10b', 'T10c', 'T10d', 'T10e',
   'T5', 'T6',
 ]);
 
@@ -461,6 +465,69 @@ async function groupC() {
     body && /tombstoneMemberResponsesInCircle/.test(body)
       ? pass('C19 ruling-C leaveCircle cascades to inquiry responses')
       : fail('C19 ruling-C leaveCircle does not cascade to inquiry responses');
+  }
+
+  // ── I0.5 · ENTRY SAFETY (I-01, I-02, I-03) ───────────────────────────────
+  //
+  // R1 closed the Circle API and left the member-facing surface behind. The
+  // page then asked an unauthorized visitor for an invite token AND a consent
+  // mode, and POSTed both to a door already committed to refusing. These three
+  // assert that the surface and the door now say the same thing.
+
+  // C20 — I-02: /commons/join refuses before it renders. A page gate is not the
+  //       authorization (C13 holds that line for the API); it is the surface
+  //       telling the truth the API already tells.
+  {
+    const joinLayout = src('app/commons/join/layout.tsx');
+    if (!joinLayout) {
+      fail('C20 I-02 no closed-state gate on /commons/join', 'app/commons/join/layout.tsx missing');
+    } else if (!/requireFounder\s*\(/.test(joinLayout)) {
+      fail('C20 I-02 the join surface does not check authorization');
+    } else if (!/!auth\.ok/.test(joinLayout)) {
+      fail('C20 I-02 the join surface checks authorization without acting on it');
+    } else {
+      pass('C20 I-02 /commons/join states its closure before rendering a join surface');
+    }
+  }
+
+  // C21 — I-02/I-03: the closed state SOLICITS NOTHING and VALIDATES NOTHING.
+  //       Two distinct wrongs. Asking for a consent mode collects a sovereign
+  //       act the system has no standing to receive; reading circle_invites
+  //       would let a refused visitor learn whether their token is real, which
+  //       is exactly the disclosure I-03 preserves against.
+  {
+    const joinLayout = src('app/commons/join/layout.tsx');
+    if (!joinLayout) {
+      fail('C21 I-03 no closed-state gate to inspect');
+    } else {
+      const solicits = /consentMode|consent_mode|<input|<form/.test(joinLayout);
+      const validates = /circle_invites|joinWithInvite|getInvite|validateToken/.test(joinLayout);
+      if (solicits) {
+        fail('C21 I-02 the closed join surface still solicits', 'a form, an input, or a consent mode');
+      } else if (validates) {
+        fail('C21 I-03 the closed join surface inspects the token', 'valid and invalid become distinguishable');
+      } else {
+        pass('C21 I-02/I-03 the closed surface asks for nothing and reads no invite');
+      }
+    }
+  }
+
+  // C22 — I-01: the join door itself. C13 sweeps every /api/circles route; this
+  //       names the one that can change standing, because a regression there is
+  //       not a scoping bug — it is entry into a Circle somebody was removed from.
+  {
+    const joinRoute = src('app/api/circles/join/route.ts');
+    if (!joinRoute) {
+      fail('C22 I-01 the join route is missing');
+    } else if (!/requireCircleAccess\s*\(/.test(joinRoute)) {
+      fail('C22 I-01 the join route does not go through requireCircleAccess()');
+    } else if (/getMemberIdFromRequest\s*\(/.test(joinRoute)) {
+      fail('C22 I-01 the join route resolves identity directly', 'this is how B-01 existed');
+    } else if (!/REINSTATEMENT_REQUIRED/.test(joinRoute)) {
+      fail('C22 I-01 the join route cannot express a reinstatement refusal');
+    } else {
+      pass('C22 I-01 the join door is gated and can refuse a reinstatement');
+    }
   }
 
   // C12 — FR-05/FR-01: revocation must never touch the source item.
@@ -1126,6 +1193,105 @@ async function groupT(tx: PoolClient) {
   closedWithSynthesis?.status === 'closed' && !!closedWithSynthesis.field_synthesis
     ? pass('T9b B-09 a closed inquiry carries its synthesis as a property, not a status')
     : fail('T9b B-09 closed + synthesis is not representable');
+
+  // ── I0.5 · I-01: an invitation cannot reinstate a removed member ─────────
+  //
+  // THE DEFECT THIS CLOSES. A Circle invite token is CIRCLE-WIDE and never
+  // expires, and joinWithInvite() upserted membership — so a member removed
+  // under the FR-05 contract (grounds, authority, an append-only record) was
+  // restored to `active` by the same link everyone else holds. FR-05 requires
+  // removal to cut access; it cut access only until the next join request.
+  //
+  // The repair is NOT revoking the token. Revocation is Circle-wide: it would
+  // withdraw the invitation from every person who holds it in order to answer
+  // one person's standing. An invitation is permission to approach a threshold.
+  // It was never authority to erase relational history.
+  //
+  // mB was removed from `circle` by T3d above and remains active in
+  // `otherCircle`. The invite below is real, live, and unrevoked throughout.
+  const { joinWithInviteWithClient } = await import('../lib/circles/inviteService');
+  const liveToken = (
+    await tx.query<{ token: string }>(
+      `INSERT INTO circle_invites (circle_id, created_by, token)
+       VALUES ($1, $2, $3) RETURNING token`,
+      [circle, mA, `verifier-invite-${Date.now()}`]
+    )
+  ).rows[0].token;
+
+  const tryJoin = async (memberId: string) => {
+    try {
+      return { ok: true as const, circleId: await joinWithInviteWithClient(tx as any, liveToken, memberId, 'manual') };
+    } catch (e: any) {
+      return { ok: false as const, error: e?.message ?? 'UNKNOWN' };
+    }
+  };
+
+  const removalsBefore = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0].n;
+
+  // T10a — the refusal itself. Standing outranks invitation.
+  const reinstate = await tryJoin(mB);
+  !reinstate.ok && reinstate.error === 'REINSTATEMENT_REQUIRED'
+    ? pass('T10a I-01 a valid live invite does not reinstate a removed member')
+    : fail('T10a I-01 a removed member rejoined on a generic invite', JSON.stringify(reinstate));
+
+  // T10b — and no write happened. A refusal that still upserted would satisfy
+  //        the error message and defeat the boundary.
+  const standing = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0]?.status;
+  standing === 'removed'
+    ? pass('T10b I-01 the removed standing survives the join attempt')
+    : fail('T10b I-01 the join attempt altered standing', String(standing));
+
+  // T10c — the evidence of the removal act is untouched. FR-05's record is the
+  //        thing that makes later independent review possible.
+  const removalsAfter = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0].n;
+  removalsBefore > 0 && removalsAfter === removalsBefore
+    ? pass('T10c I-01 the removal record is intact after the refusal')
+    : fail('T10c I-01 the removal record changed', `${removalsBefore} → ${removalsAfter}`);
+
+  // T10d — THE COUNTERPART, and the reason revocation was the wrong repair: the
+  //        same invitation still works for anyone whose standing does not
+  //        forbid it. One person's boundary did not close the door.
+  const mD = await mk('d');
+  const eligible = await tryJoin(mD);
+  const dStatus = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mD]
+    )
+  ).rows[0]?.status;
+  eligible.ok && eligible.circleId === circle && dStatus === 'active'
+    ? pass('T10d I-01 the same live invite still admits an independently eligible member')
+    : fail('T10d I-01 the invitation was collateral damage', JSON.stringify({ eligible, dStatus }));
+
+  // T10e — the refusal is scoped to one field. mB's standing elsewhere is not a
+  //        consequence of being removed here (AUTHOR WITHDRAWAL ≠ BOUNDARY
+  //        CASCADE, FR-16 — and neither cascades across Circles).
+  const elsewhereAfterRefusal = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [otherCircle, mB]
+    )
+  ).rows[0]?.status;
+  elsewhereAfterRefusal === 'active'
+    ? pass('T10e I-01 the refusal did not reach another Circle')
+    : fail('T10e I-01 standing in another Circle changed', String(elsewhereAfterRefusal));
 
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (

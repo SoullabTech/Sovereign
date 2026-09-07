@@ -370,3 +370,35 @@ first, and was **not** softened to PASS. **CA-04 is no longer wholly optional** 
 Per-repair protocol: smallest repair → targeted tests → **full verifier** → record evidence →
 proceed only if no passing boundary weakened. ⚠️ **Step 3 needs a founder-run** — no DB in remote
 sessions, so each repair ends at a verification before the next begins.
+
+---
+
+## Stage log addendum — 2026-09-07
+
+**CIRCLE-04 · REPAIR CLOSED.** R1–R5 plus post-R5 cleanup P1–P5 and adjudication A–F. FR-14
+(verifier coverage law) · FR-15 (withdrawal is a tombstone) · FR-16 (membership termination cascades)
+· FR-17 (stored inquiry `integrating` retired) ratified during REPAIR. Founder-run disposable-shadow
+gate on `26508109b`: **54 passed · 0 failed · 0 warned · 0 skipped · 54/54 required obligations
+discharged by PASS · exit 0.** ⛔ Production unchanged.
+
+**CIRCLE-05 · INVOKE opened.**
+
+- **I0 — existing invocation census, READ ONLY. COMPLETE.**
+  `CIRCLES_INVOCATION_SUBSTRATE_CENSUS.md` + `..._I0_FOUNDER_DOCKET_2026-09-07.md`.
+  Three findings dominate: **no explicit member-authored interest declaration exists anywhere**
+  (all inferred, FR-06-barred — I1 builds it from zero); **"Commons" denotes three different existing
+  substrates and none matches FR-02**, two of them built on FR-08.7-forbidden status mechanics; and
+  two defects against ratified law, **I-01** and **I-02**.
+
+- **I0.5 — ENTRY SAFETY CLOSURE.** Opened by founder act on those two defects.
+  **FR-18 ratified**: *a generic Circle invitation may not reinstate a removed member — standing
+  outranks invitation.* `/commons/join` closed on the page so that surface and API tell the same
+  truth, with I-03 preserved (a valid and an invalid token stay indistinguishable before
+  authorization). Verifier floor **54 → 62** (C20–C22, T10a–T10e).
+  Record: `JARVIS-CIRCLES-01_I0.5_ENTRY_SAFETY_2026-09-07.md`.
+  ⛔ **IMPLEMENTED, NOT VERIFIED** — no `DATABASE_URL` and no `node_modules` in remote sessions.
+
+**I1 DESIGN is NOT OPEN.** The founder conditioned it on a **full verifier pass**, which has not been
+observed. ⛔ No deploy · no migration · no cohort authorized · no invitation sent · no facilitator
+assigned · no discovery built · founder UI gate untouched · doctrine byte-identical · no number
+ratified.
