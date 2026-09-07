@@ -41,7 +41,7 @@
 
 import { randomUUID, createHash } from 'crypto';
 import { writeFile, mkdir, stat, rmdir } from 'fs/promises';
-import { spawnSync } from 'child_process';
+import { spawnSync, spawn } from 'child_process';
 import path from 'path';
 import { query, closePool } from '../../lib/db/postgres';
 import { resolveVaultRoot } from '../../lib/storage/fileVault';
@@ -164,8 +164,43 @@ const absent = async (p: string) => {
   }
 };
 
+/**
+ * Fail closed unless the operator has named the exact target (founder condition,
+ * 2026-09-07). This is destructive read-write evidence, not a harmless
+ * diagnostic: it creates and erases real rows and real bytes.
+ *
+ * Naming the target has to be a separate, deliberate act from supplying a
+ * connection string, because the dangerous case is not a hostile operator — it is
+ * a correct command run against a shell that still had production exported.
+ */
+function assertIntendedTarget() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL is required');
+
+  let target: string;
+  try {
+    const u = new URL(url);
+    target = `${u.hostname}/${u.pathname.replace(/^\//, '')}`;
+  } catch {
+    throw new Error('DATABASE_URL could not be parsed');
+  }
+
+  const declared = process.env.WS_DELETE_01_WITNESS_TARGET;
+  if (declared !== target) {
+    throw new Error(
+      `Refusing to run. This witness creates and destroys real rows and real bytes.\n`
+        + `  DATABASE_URL points at : ${target}\n`
+        + `  you declared           : ${declared ?? '(nothing)'}\n`
+        + `Re-run naming the target explicitly:\n`
+        + `  WS_DELETE_01_WITNESS_TARGET='${target}' …`,
+    );
+  }
+  console.log(`target confirmed: ${target}`);
+}
+
 async function main() {
   console.log(`WS-DELETE-01 erasure witness — run ${RUN}\n`);
+  assertIntendedTarget();
 
   const memberId = (
     await query<{ id: string }>(
@@ -224,6 +259,88 @@ async function main() {
   await sweepVaultErasureQueue();
 
   await witnessAbandonedErasureCompletes(memberId);
+  await witnessWorkerInvokesSweepUnaided(memberId);
+}
+
+/**
+ * Autonomous invocation (founder condition, 2026-09-07).
+ *
+ * The previous scenario proves an abandoned obligation CAN be cleared by an
+ * independent consumer. It does not prove one WILL be, because a consumer nobody
+ * runs is a consumer that never returns. This proves the production trigger:
+ * `maia-media-worker` picks the obligation up on its own poll loop, with nothing
+ * invoking the sweep by hand.
+ *
+ * The worker is spawned exactly as production runs it — same entrypoint, no test
+ * hook, no injected sweep call. The only concession is the loop cadence, lowered
+ * by env so this takes seconds rather than a minute and a half.
+ */
+async function witnessWorkerInvokesSweepUnaided(memberId: string) {
+  console.log('\n── the production worker collects an obligation unaided ──');
+
+  const marker = `WSDELETE01WORKER${RUN}`;
+  const seeded = await seedManuscript(memberId, marker);
+
+  /* Block destruction so the inline sweep leaves an obligation behind. */
+  const rel = path.join('ws-delete-01', `worker-${RUN.slice(0, 12)}`);
+  await mkdir(path.join(resolveVaultRoot(), rel), { recursive: true });
+  await query(
+    `UPDATE manuscript_source_arrivals SET artifact_ref = $2 WHERE manuscript_id = $1`,
+    [seeded.manuscriptId, rel],
+  );
+  await eraseManuscript(seeded.manuscriptId, memberId);
+
+  const owed = await query<{ n: number }>(`SELECT count(*)::int AS n FROM vault_erasure_queue`);
+  check('an obligation is outstanding before the worker starts', owed.rows[0].n === 1);
+
+  /* Unblock, then let the worker find it on its own. */
+  await rmdir(path.join(resolveVaultRoot(), rel));
+  await writeFile(path.join(resolveVaultRoot(), rel), `${marker} bytes awaiting the worker`);
+
+  const worker = spawn(
+    'npx',
+    ['tsx', path.join(__dirname, '..', 'run-media-worker.ts')],
+    {
+      env: { ...process.env, VAULT_ERASURE_EVERY_N_LOOPS: '1' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  );
+  let sawErasureLog = false;
+  worker.stdout.on('data', (b) => {
+    if (String(b).includes('[MediaWorker/erasure]')) sawErasureLog = true;
+  });
+
+  try {
+    const cleared = await waitFor(async () => {
+      const n = await query<{ n: number }>(`SELECT count(*)::int AS n FROM vault_erasure_queue`);
+      return n.rows[0].n === 0;
+    }, 25_000);
+
+    check('the worker cleared the obligation with no manual sweep', cleared);
+    check('the worker destroyed the bytes', await absent(path.join(resolveVaultRoot(), rel)));
+
+    /* Telemetry is one of the required properties, so it is asserted — but the
+       worker's stdout is a pipe, and Node block-buffers a pipe. SIGKILL discards
+       that buffer unflushed, so an earlier version of this check was testing the
+       signal rather than the logging. Shut down gracefully and wait for exit. */
+    worker.kill('SIGTERM');
+    await new Promise<void>((resolve) => {
+      worker.once('exit', () => resolve());
+      setTimeout(resolve, 10_000);
+    });
+    check('the worker reported the erasure in its own logs', sawErasureLog);
+  } finally {
+    worker.kill('SIGKILL');
+  }
+}
+
+async function waitFor(cond: () => Promise<boolean>, timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await cond()) return true;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return false;
 }
 
 /**

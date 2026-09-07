@@ -220,6 +220,59 @@ the later pass run as a **separate process** — the independence is the claim:
   ok  the obligation DISAPPEARS once it is honoured — 0 still owed
 ```
 
+### Autonomous invocation — host adjudicated, binding proven
+
+**Trigger found; no new subsystem built.** Production already runs four long-lived
+poll-loop workers off the same image with different commands (embed, comms,
+summary, media): `while (running) { …work…; await sleep(POLL_INTERVAL_MS) }`.
+
+**Host: `maia-media-worker` (founder ruling, 2026-09-07).** Not the comms worker —
+vault erasure is a storage/artifact lifecycle concern, and putting destructive
+file custody inside communications processing creates a misleading dependency:
+someone could reasonably disable or replace comms processing one day and
+unknowingly disable erasure reconciliation with it. The media worker is not
+conceptually perfect either, but of the existing triggers its failure domain is
+closest — durable work concerning stored bytes.
+
+**Shape, as required — `media work · vault-erasure obligations · sleep`.** The
+erasure step is in a `finally`, because the media block both `continue`s (idle
+poll) and throws (job failure), and **both** paths must still reach it. A
+media-job failure never prevents the sweep from being attempted on that cycle.
+
+Required properties, each held:
+
+| Property | How |
+|---|---|
+| queue remains canonical obligation | worker never writes to it except to clear an honoured row |
+| worker is only a consumer | it cannot decide anything should be erased; only a committed transaction can |
+| one failed erasure does not kill the worker | own try/catch, never touches the media error budget |
+| remaining obligation → surfaced | `console.error` naming the count, every cycle it persists |
+| successful erasure → obligation removed | row deleted only after destruction is verified |
+| no manuscript/member content in worker logs | counts only; queue holds a content-free path plus an errno |
+
+Cadence: every 60 loops (~90s at a 1500ms poll). Erasure is owed, not urgent, and
+the obligation is durable. Overridable by env **only** so the witness can prove
+this in seconds; the production default is the constant.
+
+**Proven, not asserted:** the witness spawns the worker exactly as production runs
+it — same entrypoint, no test hook, no injected sweep call — and watches an
+outstanding obligation disappear with nothing invoking the sweep by hand:
+
+```text
+  ok  an obligation is outstanding before the worker starts
+  ok  the worker cleared the obligation with no manual sweep
+  ok  the worker destroyed the bytes
+  ok  the worker reported the erasure in its own logs
+```
+
+21/21, three consecutive runs, zero residue.
+
+*An earlier version of that last check failed 3/3 and looked like a binding
+defect. It was the test: the witness `SIGKILL`ed the worker, and Node
+block-buffers a piped stdout, so the log line was discarded unflushed. The worker
+had been logging correctly the whole time. Fixed by shutting down gracefully and
+awaiting exit — the check now tests the logging rather than the signal.*
+
 ### The queued path carries nothing member-authored — with one defect found
 
 `artifact_ref` is built as `{namespace}/{timestamp36}-{hash16}.{ext}`
@@ -405,7 +458,9 @@ INDEPENDENT RECOVERY CONSUMER   PROVEN
 ABANDONED OBLIGATION SURVIVES   PROVEN
 LATER INDEPENDENT SWEEP CLEARS  PROVEN
 MEMBER RETRY NOT REQUIRED       PROVEN
-AUTONOMOUS INVOCATION           OWED
+AUTONOMOUS INVOCATION           PROVEN LOCALLY — maia-media-worker,
+                                unaided, production entrypoint
+                                (production proof still owed)
 
 LOCAL PROVENANCE WITNESS   PASS
 developmental_readings     PRODUCTION PROOF OWED
@@ -422,22 +477,20 @@ CLOSE                      NOT YET
 
 **Remaining, and nothing else. No redesign.**
 
-1. **Bind the consumer to an operational trigger**, then prove one abandoned
-   obligation is picked up *without manually launching the sweep*. Small, but
-   constitutionally real — see below.
+1. ~~**Bind the consumer to an operational trigger**~~ — **DONE, host adjudicated
+   by the founder: `maia-media-worker`.** See "Autonomous invocation" below.
 
-   **Constraint on how (founder, 2026-09-07).** Before introducing any new
-   scheduling infrastructure, identify the smallest **existing** production
-   lifecycle or operational trigger capable of consuming owed vault erasures
-   without member action or manual operator invocation.
-
-   If no such existing trigger exists, treat creation of a bounded trigger as an
-   **explicit implementation decision**; do not introduce a scheduler or new
-   operational subsystem implicitly in order to satisfy this closure condition.
-
-   This is recorded because the repository has no cron/scheduler substrate at
-   all, which makes "add one" the path of least resistance — and would solve a
-   narrow, correct problem with an unnecessarily large subsystem.
+   *The constraint that governed this choice, kept for the record:* before
+   introducing any new scheduling infrastructure, identify the smallest
+   **existing** production lifecycle or operational trigger capable of consuming
+   owed vault erasures without member action or manual operator invocation. If
+   none exists, treat creation of a bounded trigger as an **explicit
+   implementation decision**; do not introduce a scheduler or new operational
+   subsystem implicitly to satisfy this closure condition. Recorded because the
+   repository has no cron/scheduler substrate, which makes "add one" the path of
+   least resistance — and would solve a narrow, correct problem with an
+   unnecessarily large subsystem. **An existing trigger was found, so no new
+   subsystem was built.**
 2. Run the erasure witness against production — including the fourteenth
    substrate, `developmental_readings` — with the census re-established there:
 

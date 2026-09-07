@@ -15,6 +15,7 @@ import os from 'node:os';
 import { query, queryOne, closePool } from '../lib/db/postgres';
 import { PROCESSORS } from '../lib/media/processors';
 import type { MediaJobRow } from '../lib/media/types';
+import { sweepVaultErasureQueue } from '../lib/manuscript/source/eraseManuscript';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURATION
@@ -25,6 +26,16 @@ const MAX_CONSECUTIVE_ERRORS = 10;
 const WORKER_ID = `media:${os.hostname()}:${process.pid}`;
 const REAPER_EVERY_N_LOOPS = 60;
 const STALE_AFTER = '10 minutes';
+
+/* WS-DELETE-01: ~every 90s at a 1500ms poll. Erasure is owed, not urgent — the
+   obligation is durable, so a slow cadence costs nothing and keeps an idle
+   worker from querying the queue every poll. Overridable ONLY so the erasure
+   witness can prove autonomous invocation in seconds instead of minutes; the
+   production default is the constant. */
+const VAULT_ERASURE_EVERY_N_LOOPS = Math.max(
+  1,
+  Number(process.env.VAULT_ERASURE_EVERY_N_LOOPS) || 60,
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JOB PROCESSING
@@ -180,6 +191,61 @@ async function processJob(job: MediaJobRow): Promise<void> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// VAULT ERASURE OBLIGATIONS  (WS-DELETE-01)
+//
+// A SECOND, INDEPENDENT CONCERN sharing this worker's poll loop — not part of
+// media processing, and deliberately not entangled with it.
+//
+// Why here (founder ruling, 2026-09-07): a member's Delete commits its rows and
+// then owes the destruction of vault bytes. If that destruction fails, the
+// obligation is durable but inert unless something returns for it. The inline
+// sweep in the originating request cannot be that something — if it failed, it
+// has already returned. Without an independent consumer that runs on its own,
+// bytes stay retained behind a queue row that is permanently truthful and
+// permanently unread.
+//
+// Why THIS worker: vault erasure is a storage/artifact lifecycle concern, and of
+// the existing production triggers this one has the closest failure domain —
+// durable work concerning stored bytes. It is hosted here rather than in a new
+// scheduler because no new scheduling subsystem was warranted to solve a problem
+// this narrow. It is NOT in the comms worker: someone could reasonably disable or
+// replace communications processing some day and unknowingly disable erasure
+// reconciliation along with it.
+//
+// The queue remains the canonical obligation. This worker is ONLY a consumer: it
+// cannot decide that something should be erased, only carry out what a committed
+// transaction already decided. Running it more often is never more destructive.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Attempt the owed erasures. Never throws, and never touches the media error
+ * budget — a vault that cannot be cleared is an operator problem, not a reason
+ * to stop draining media jobs.
+ *
+ * Logs counts only. The queue holds a vault path and an errno by construction —
+ * no member id, manuscript id, title, filename, or text — so no member content
+ * can reach these logs through this path.
+ */
+async function runVaultErasureStep(): Promise<void> {
+  try {
+    const { destroyed, remaining } = await sweepVaultErasureQueue();
+    if (destroyed > 0) {
+      console.log(`[MediaWorker/erasure] destroyed ${destroyed} owed vault artifact(s)`);
+    }
+    if (remaining > 0) {
+      /* Surfaced, every cycle it persists. An obligation that cannot be honoured
+         must be visible rather than retried forever in the dark. */
+      console.error(
+        `[MediaWorker/erasure] ${remaining} vault erasure obligation(s) STILL OWED — `
+          + `member deletions are not fully honoured; see vault_erasure_queue.last_error`,
+      );
+    }
+  } catch (error) {
+    console.error('[MediaWorker/erasure] sweep failed (non-fatal, will retry):', error);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN LOOP
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -195,6 +261,12 @@ async function runWorkerLoop(): Promise<void> {
   console.log('[MediaWorker] Press Ctrl+C to stop\n');
 
   while (running) {
+    /* ── media work · vault-erasure obligations · sleep ──────────────────
+       The erasure step sits in a `finally` because the media block both
+       `continue`s (idle poll) and throws (job failure), and BOTH paths must
+       still reach it. A media-job failure must never prevent the sweep from
+       being attempted on that cycle — that is the whole point of hosting it
+       beside media work rather than inside it. */
     try {
       loopCount++;
 
@@ -231,10 +303,15 @@ async function runWorkerLoop(): Promise<void> {
       if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
         console.error('[MediaWorker] Too many consecutive errors, shutting down');
         running = false;
-        break;
+      } else {
+        await sleep(POLL_INTERVAL_MS * 2);
       }
-
-      await sleep(POLL_INTERVAL_MS * 2);
+    } finally {
+      /* Reached on every path out of the media block — idle `continue`, a
+         processed job, or a thrown one. Independent of media outcome. */
+      if (loopCount % VAULT_ERASURE_EVERY_N_LOOPS === 0) {
+        await runVaultErasureStep();
+      }
     }
   }
 
