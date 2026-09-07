@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import type { LivingWork } from '../useLivingWorks';
+import { declarationState, worksDeclaring } from '@/lib/writersStudio/workDeclarations';
 
 /**
  * The Work drawer — the anchor of the Study Wall (Work Continuity Layer,
@@ -130,6 +131,63 @@ export default function WorkDrawer({
         </Link>{' '}
         is where a work begins.
       </p>
+    );
+  }
+
+  /* ── AMBIGUOUS ─────────────────────────────────────────────────────────
+     WS-WORKDRAWER-01, founder ruling 2026-09-07.
+
+     A manuscript may be declared in more than one Work by design (D-018), and
+     the Studio correctly refuses to guess which is "the" Work. But this branch
+     also caught that case and offered the same single gesture as the unclaimed
+     one: "Which one is this a form of?" — an offer to make a THIRD declaration.
+
+     The gesture that resolves it, `undeclare`, already existed and the member
+     always had the authority. It simply rendered in the single-Work branch,
+     which an ambiguous manuscript never reaches. So the only remedy on screen
+     made the ambiguity worse, and the real one was unreachable.
+
+       A state created by a reversible member act must not hide the gesture
+       required to reverse that act.
+
+     ⛔ NO NEW POWER. The Works are shown in the member's own order and the
+     drawer names no preference between them — it shows the member their own
+     acts and lets them withdraw one. */
+  const declaringWorks = worksDeclaring(manuscript?.id ?? null, works);
+  const state = declarationState(declaringWorks);
+
+  if (!work && state === 'ambiguous') {
+    return (
+      <div>
+        {/* Founder ruling 2026-09-07: the domain model keeps `expression`,
+            `declare` and `form`; the writer does not have to perform ontology
+            to undo an act. The operation underneath is still `undeclare`. */}
+        <p className="text-[13px] leading-relaxed opacity-60 mb-3">
+          This writing is currently part of {declaringWorks.length} Works.
+        </p>
+        <ul className="space-y-1.5 mb-3">
+          {declaringWorks.map((w) => (
+            <li key={w.id} className="text-[13px] opacity-75">
+              ✓ {w.title ?? 'Untitled work'}
+              <button
+                disabled={busy}
+                onClick={() => void undeclare(w.id)}
+                className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
+              >
+                Remove from this Work
+              </button>
+            </li>
+          ))}
+        </ul>
+        {/* FIELD ≠ LESSONS, and its one exception: the consequential act
+            explains its consequence THERE, and only there. A writer about to
+            remove their book from a Work should not have to wonder whether
+            they are about to lose the book. */}
+        <p className="text-[12px] opacity-45">
+          Removing it from a Work does not delete the writing.
+        </p>
+        {failed && <p className="text-[12px] opacity-60 mt-3">{failed}</p>}
+      </div>
     );
   }
 
@@ -283,14 +341,14 @@ export default function WorkDrawer({
             {work.expressions.map((e) => (
               <li key={`${e.expressionType}:${e.expressionId}`} className="text-[13px] opacity-75">
                 ✓ {manuscript && e.expressionId === manuscript.id ? manuscriptLabel : 'a manuscript'}
-                <span className="opacity-55"> — declared by you, {formatWhen(e.declaredAt)}</span>
+                <span className="opacity-55"> — added by you, {formatWhen(e.declaredAt)}</span>
                 {manuscript && e.expressionId === manuscript.id && (
                   <button
                     disabled={busy}
                     onClick={() => void undeclare(work.id)}
                     className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
                   >
-                    no longer a form of this work
+                    Remove from this Work
                   </button>
                 )}
               </li>

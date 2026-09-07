@@ -27,6 +27,12 @@ const ALLOWED: Record<string, RegExp[]> = {
   'assess.ts': [/^\.\/contract$/, /^\.\.\/development\/resolve$/],
   'classify.ts': [/^\.\/contract$/, /^crypto$/, /^\.\.\/\.\.\/ai\/structured\/(router|types)$/, /^\.\.\/developmentalReader\/contract$/],
   'store.ts': [/^\.\/contract$/, /^\.\.\/\.\.\/db\/postgres$/, /^\.\.\/development\/evidenceRef$/],
+  /* WS-DEV-SCOPE-01. The scope law is PURE: it decides which sections a
+     reading covers from a topology its caller supplies, and imports nothing at
+     all. No database, no contract, no reader — an empty allow-list is the
+     strongest statement this file can make about it, and it is the reason the
+     law can be falsified without a browser or a book. */
+  'scope.ts': [],
   'commission.ts': [/^\.\/(classify|contract|freeze|store)$/, /^\.\.\/development\/(capture|resolve)$/, /^\.\.\/developmentalReader\/(contract|read)$/],
 };
 

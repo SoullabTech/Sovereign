@@ -159,17 +159,37 @@ async function removeDeclaration(
     [workId, manuscriptId],
   );
 
+  /* Read BEFORE the Work is deleted, because ON DELETE CASCADE will take this
+     row with it and then nothing in the database will know the file was ever
+     ours. A cascade removes the record; it cannot remove bytes — that gap is
+     exactly the *unreferenced but retained* state WS-DELETE-01 forbids by name,
+     and the founder restated it for Work visuals on 2026-09-07: a database
+     cascade alone is not enough if the blob survives elsewhere. */
+  const visual = await tx.query<{ storage_path: string }>(
+    `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2`,
+    [workId, memberId],
+  );
+
   /* Now that its expression is gone: if nothing else was ever declared into this
      Work, the declaration has no referent left and would render as an ordinary,
      openable, empty Work — the detached state by another name. */
-  await tx.query(
+  const workGone = await tx.query<{ id: string }>(
     `DELETE FROM living_works w
       WHERE w.id = $1 AND w.member_id = $2
         AND NOT EXISTS (
           SELECT 1 FROM living_work_expressions e WHERE e.living_work_id = w.id
-        )`,
+        )
+    RETURNING w.id`,
     [workId, memberId],
   );
+
+  /* Enqueued only if the Work ACTUALLY went. A Work that survived because it
+     still has other expressions keeps its image, and owing destruction of bytes
+     a live Work is still displaying would be worse than not owing it at all. */
+  const path = visual.rows[0]?.storage_path;
+  if (workGone.rows.length > 0 && path) {
+    await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
+  }
 }
 
 /**

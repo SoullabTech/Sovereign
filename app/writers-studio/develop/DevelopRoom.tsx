@@ -34,6 +34,9 @@ import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
+import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
+import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
+import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import {
@@ -41,7 +44,7 @@ import {
   type CommissionOutcome, type ReadingPayload, type ReadingSummary,
 } from '@/lib/writersStudio/developClient';
 import {
-  LENS_MEANING, LENS_ORDER, readingView, type ObservationView, type ReadingView, type StateName,
+  LENS_MEANING, LENS_ORDER, LENS_QUESTION, readingView, type ObservationView, type ReadingView, type StateName,
 } from '@/lib/writersStudio/developPresentation';
 import {
   actOnPreparation, fetchPreparation, preparationCopy,
@@ -176,6 +179,33 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   }
 }
 
+/**
+ * How much writing a set of sections is, in the unit the reading is actually
+ * bounded in.
+ *
+ * Code points, not string length. UTF-16 length counts an emoji or a rare
+ * glyph twice, which would make a work look too large when it is not — and
+ * the writer would be told to narrow a reading that would have fit.
+ */
+function codePointsOf(sections: readonly WriteStateSection[]): number {
+  let n = 0;
+  for (const s of sections) n += [...s.body].length;
+  return n;
+}
+
+/**
+ * What a writer calls this part of their book.
+ *
+ * Their own heading, because the point of this control is that they recognise
+ * their writing rather than understand how the Studio represents it. The
+ * number is a fallback for a section they never titled, not a label — nobody
+ * thinks of their book as section 47.
+ */
+function sectionLabel(section: WriteStateSection, index: number): string {
+  const heading = section.heading?.trim();
+  return heading && heading.length > 0 ? heading : `Untitled — ${index + 1}`;
+}
+
 export default function DevelopRoom({
   manuscriptId,
   requestedReadingId,
@@ -190,6 +220,16 @@ export default function DevelopRoom({
   const [readingPhase, setReadingPhase] = useState<ReadingPhase>('idle');
   const [payload, setPayload] = useState<ReadingPayload | null>(null);
   const [lens, setLens] = useState<DevelopmentalLens>('development');
+  /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
+     default because it is what this room has always meant by "read this". */
+  const [sections, setSections] = useState<WriteStateSection[] | null>(null);
+  /* 'whole' until the writer says otherwise, or until the work is too large to
+     read at once — in which case the choice is opened FOR them, with the
+     reason said in a sentence, rather than left to be discovered by pressing a
+     button that cannot succeed. */
+  const [readMode, setReadMode] = useState<'whole' | 'part'>('whole');
+  const [fromIndex, setFromIndex] = useState(0);
+  const [toIndex, setToIndex] = useState(-1); // -1 = the end, whatever it is
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
   >({ phase: 'idle' });
@@ -317,9 +357,59 @@ export default function DevelopRoom({
     [payload],
   );
 
+  /* The draft's own sections — ids, positions and the member's headings.
+     
+     ⛔ These MUST be the DRAFT sections, not the source ones. The reading scope
+     speaks in `manuscript_draft_sections` ids; the outline elsewhere in the
+     Studio reads `manuscript_sections`. They are different rows with different
+     ids, and using the outline's would refuse every scope as
+     `unknown_scope_target` — a feature that appears to work and never does. */
+  useEffect(() => {
+    let live = true;
+    void fetchWriteState(manuscriptId, (url) => apiFetch(url)).then((r) => {
+      if (!live) return;
+      const secs = r.state?.mode === 'section_aware' ? r.state.sections : [];
+      setSections(secs);
+      /* Measured here, before anything is asked. A work larger than one
+         sitting opens the choice itself — the writer meets a sentence about
+         their book, not a refusal about a ceiling. */
+      if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) setReadMode('part');
+    });
+    return () => {
+      live = false;
+    };
+  }, [manuscriptId]);
+
+  /* ── WHERE MAIA READS ────────────────────────────────────────────────
+     One idea, and one the writer already has: read from here to here. Whole
+     work is not a mode — it is the range that happens to be all of it — so a
+     member who never opens this gets exactly the reading this room always
+     gave.
+
+     ⛔ Nothing preselects, recommends, or ranks a place to start. */
+  const last = sections && sections.length > 0 ? sections.length - 1 : 0;
+  const to = toIndex === -1 ? last : toIndex;
+  const chosenScope: ReadingScope | undefined = (() => {
+    if (!sections || sections.length === 0) return undefined;
+    if (readMode === 'whole') return undefined;
+    if (fromIndex === 0 && to === last) return undefined;
+    return {
+      kind: 'range',
+      fromSectionId: sections[fromIndex].id,
+      toSectionId: sections[to].id,
+    };
+  })();
+  const chosenSections = sections ? sections.slice(fromIndex, to + 1) : [];
+  const chosenSize = codePointsOf(readMode === 'whole' ? (sections ?? []) : chosenSections);
+  const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS;
+
   const ask = async () => {
     setCommission({ phase: 'reading' });
-    const outcome = await requestDevelopmentalReading(manuscriptId, lens);
+    /* The scope is a structural identifier or it is absent. Nothing about the
+       Work's prose goes up the wire — the invocation carries the lens, the
+       member's identity, and at most the name of a division they authored. */
+    const scope = chosenScope;
+    const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
     await loadList(outcome.readingId);
@@ -505,7 +595,8 @@ export default function DevelopRoom({
                         ? 'This draft changed while you were reading this, so nothing was prepared. What it says now is up to date — act on that.'
                         : 'This Work could not be prepared, and nothing has changed.'}
                     </p>
-                    <p className="text-[11px] opacity-40 mt-1">refused: {preparing.refusal}</p>
+                    {/* Reason code removed from the field; carried by the
+                        surrounding data attribute for instrumentation. */}
                   </div>
                 )}
               </div>
@@ -528,8 +619,122 @@ export default function DevelopRoom({
           {listPhase === 'ready' && prep.phase === 'ready' && prep.state.kind === 'ready' && (
             <div className="mt-7 pt-5 border-t" style={{ borderColor: PRESS.ruleSoft }}>
               <p className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-3">Ask for a reading</p>
+              {/* ── WHERE MAIA READS ────────────────────────────────────
+                  Founder UX ruling 2026-09-07:
+
+                    Complexity belongs behind the interface, not in front of
+                    the writer.
+
+                    The writer chooses where MAIA reads by recognising their
+                    own writing — not by understanding how Writer's Studio
+                    represents it.
+
+                  So this asks one human question and nothing else. Two earlier
+                  attempts failed it: the first offered the member's authored
+                  DIVISIONS and rendered nothing at all on a Work with none, so
+                  the founder found no control where they had been told one
+                  would be. The second listed sections as numbers. Neither is a
+                  question a writer has.
+
+                  Behind it the contract is unchanged and exact — draft section
+                  ids, coverage per section, no silent trimming, the 60,000
+                  ceiling untouched. None of that appears here. */}
+              {sections && sections.length > 1 && (
+                <fieldset disabled={commission.phase === 'reading'} className="mb-4">
+                  <legend className="text-[12.5px] opacity-60 mb-2">Read</legend>
+
+                  {/* Too large is said BEFORE the act, in a sentence about the
+                      book. A writer should never press a button that cannot
+                      succeed and receive an engineering refusal for it. */}
+                  {readMode === 'part' && codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS && (
+                    <p className="text-[12.5px] leading-relaxed opacity-70 mb-2.5">
+                      This work is too large to read all at once. Choose where
+                      you&rsquo;d like MAIA to read.
+                    </p>
+                  )}
+
+                  <select
+                    value={readMode}
+                    onChange={(e) => setReadMode(e.target.value as 'whole' | 'part')}
+                    disabled={codePointsOf(sections) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS}
+                    className="bg-transparent border px-2 py-1.5 rounded-[2px] text-[13px] disabled:opacity-45"
+                    style={{ borderColor: PRESS.rule, color: PRESS.text }}
+                  >
+                    <option value="whole" style={{ color: PRESS.ink }}>Whole work</option>
+                    <option value="part" style={{ color: PRESS.ink }}>Part of it</option>
+                  </select>
+
+                  {readMode === 'part' && (
+                    <div className="mt-2.5 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                        <span className="opacity-55 w-8">From</span>
+                        <select
+                          value={fromIndex}
+                          onChange={(e) => {
+                            const next = Number(e.target.value);
+                            setFromIndex(next);
+                            /* The end never falls behind the beginning —
+                               corrected as they choose, not refused after. */
+                            if (toIndex !== -1 && next > toIndex) setToIndex(next);
+                          }}
+                          className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
+                        >
+                          {sections.map((sec, i) => (
+                            <option key={sec.id} value={i} style={{ color: PRESS.ink }}>
+                              {sectionLabel(sec, i)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                        <span className="opacity-55 w-8">to</span>
+                        <select
+                          value={toIndex}
+                          onChange={(e) => setToIndex(Number(e.target.value))}
+                          className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
+                          style={{ borderColor: PRESS.rule, color: PRESS.text }}
+                        >
+                          {/* The ordinary thing a writer means, said the
+                              ordinary way — and it stays true as the book
+                              grows, because -1 resolves to whatever the end is
+                              rather than pinning today's last section. */}
+                          <option value={-1} style={{ color: PRESS.ink }}>To the end</option>
+                          {sections.map((sec, i) => (
+                            <option
+                              key={sec.id}
+                              value={i}
+                              disabled={i < fromIndex}
+                              style={{ color: PRESS.ink }}
+                            >
+                              {sectionLabel(sec, i)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* Still too much, said while they can still change it. */}
+                      {tooLarge && (
+                        <p className="text-[12.5px] leading-relaxed opacity-70">
+                          That is still more than MAIA reads in one sitting.
+                          Choose a smaller stretch.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </fieldset>
+              )}
+
               <fieldset disabled={commission.phase === 'reading'} className="space-y-1.5 mb-4">
-                <legend className="text-[12.5px] opacity-60 mb-2">Under one lens:</legend>
+                {/* ── Plain question primary, ratified name secondary ─────
+                    Founder ruling 2026-09-07. The lenses are unchanged as
+                    capabilities and the stored identifier is unchanged; what
+                    the writer meets is the question they already have. The
+                    canonical word stays beside it so it is learned rather than
+                    hidden — a writer who reads the canon later should recognise
+                    the name they have been choosing all along. */}
+                <legend className="text-[12.5px] opacity-60 mb-2">
+                  What would you like MAIA to notice?
+                </legend>
                 {LENS_ORDER.map((l) => (
                   <label key={l} className="flex items-baseline gap-2 text-[13px] cursor-pointer">
                     <input
@@ -540,16 +745,16 @@ export default function DevelopRoom({
                       onChange={() => setLens(l)}
                       className="translate-y-[1px]"
                     />
-                    <span>
-                      <span className="capitalize">{l}</span>
-                      <span className="opacity-55"> — {LENS_MEANING[l]}</span>
+                    <span className="flex-1 flex items-baseline justify-between gap-3">
+                      <span>{LENS_QUESTION[l]}</span>
+                      <span className="capitalize opacity-40 text-[12px] shrink-0">{l}</span>
                     </span>
                   </label>
                 ))}
               </fieldset>
               <button
                 onClick={ask}
-                disabled={commission.phase === 'reading'}
+                disabled={commission.phase === 'reading' || tooLarge}
                 aria-busy={commission.phase === 'reading'}
                 data-develop-ask
                 className="text-[13px] underline underline-offset-4 opacity-80 hover:opacity-100 disabled:opacity-40 disabled:no-underline"
@@ -569,9 +774,11 @@ export default function DevelopRoom({
                       Go to the Writer Canvas
                     </Link>
                   )}
-                  <p className="text-[11px] opacity-40 mt-1">
-                    refused{commission.outcome.stage ? ` at ${commission.outcome.stage}` : ''}: {commission.outcome.refusal}
-                  </p>
+                  {/* ⛔ The reason code is GONE from the field, by founder
+                      ruling 2026-09-07: reason codes belong to
+                      instrumentation, not to a writer's room. It survives on
+                      `data-develop-refused` above, so a bug report still
+                      carries it and nothing loses its diagnostic. */}
                 </div>
               )}
             </div>

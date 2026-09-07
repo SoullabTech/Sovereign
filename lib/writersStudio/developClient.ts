@@ -7,6 +7,7 @@
  * and when the writer acts, and at no other time (07D: no automatic refresh).
  */
 
+import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import type { DevelopmentalReading } from '@/lib/manuscript/developmentalReading/contract';
@@ -67,12 +68,19 @@ export type CommissionOutcome =
 export async function requestDevelopmentalReading(
   manuscriptId: string,
   lens: DevelopmentalLens,
+  /**
+   * WS-DEV-SCOPE-01 — what the writer asked MAIA to read. Omitted means the
+   * whole work, which is what every caller before this asked for and still
+   * gets. Structural identifiers only; there is no shape here that can carry
+   * prose or an observation, and the route refuses one that tries.
+   */
+  scope?: ReadingScope,
 ): Promise<CommissionOutcome> {
   try {
     const res = await apiFetch(`/api/sovereign/manuscripts/${manuscriptId}/readings`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ lens }),
+      body: JSON.stringify(scope ? { lens, scope } : { lens }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {

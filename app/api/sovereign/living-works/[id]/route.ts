@@ -34,7 +34,8 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
+import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
 
@@ -204,14 +205,35 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const removed = await query<{ id: string }>(
-      `DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,
-      [id, memberId]
-    );
-    if (removed.rows.length === 0) {
+    /* One transaction, because a withdrawn Work's image must not outlive it.
+       ON DELETE CASCADE takes the living_work_visuals ROW; it cannot take the
+       bytes. Reading the path first and enqueueing it in the same transaction
+       is what keeps the vault from accumulating images nothing can name — the
+       *unreferenced but retained* state WS-DELETE-01 forbids, restated by the
+       founder for Work visuals on 2026-09-07. */
+    const removed = await transaction(async (tx) => {
+      const visual = await tx.query<{ storage_path: string }>(
+        `SELECT storage_path FROM living_work_visuals WHERE living_work_id = $1 AND member_id = $2`,
+        [id, memberId],
+      );
+      const gone = await tx.query<{ id: string }>(
+        `DELETE FROM living_works WHERE id = $1 AND member_id = $2 RETURNING id`,
+        [id, memberId],
+      );
+      if (gone.rows.length === 0) return null;
+
+      const path = visual.rows[0]?.storage_path;
+      if (path) {
+        await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
+      }
+      return { id: gone.rows[0].id, hadVisual: Boolean(path) };
+    });
+
+    if (!removed) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-    return NextResponse.json({ withdrawn: removed.rows[0].id });
+    if (removed.hadVisual) await sweepVaultErasureQueue();
+    return NextResponse.json({ withdrawn: removed.id });
   } catch (error) {
     console.error('[living-works] withdraw failed', error);
     return NextResponse.json({ error: 'Could not withdraw that declaration' }, { status: 500 });

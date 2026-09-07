@@ -18,6 +18,7 @@ import {
   PANELS,
   PRESENT_AT_COMPACT,
   PRESS,
+  fallbackOf,
   PROVENANCE,
   RULE,
   TYPE,
@@ -52,7 +53,15 @@ describe('ground — a warm ramp, not a flat colour', () => {
   it('does not fork the palette: base is the existing PRESS ground', () => {
     // pressTheme.ts is duplicated into app/press/manuscript while #825 is open.
     // If these drift apart the member feels they changed products mid-session.
-    expect(GROUND.base).toBe(PRESS.ink);
+    //
+    // ⚠️ Compared by RESOLVED DEFAULT rather than by token string since
+    // WS-ATMOSPHERE-01. PRESS.ink and GROUND.base were one value doing two
+    // jobs — the page ground, and the ink that sits on a gold fill. They are
+    // the same colour in Atelier and must be free to differ in a light
+    // atmosphere, where text on gold cannot also be the page. The split is
+    // deliberate; the equality that mattered (nobody forked the palette) is
+    // what this still asserts.
+    expect(fallbackOf(GROUND.base)).toBe(fallbackOf(PRESS.ink));
     expect(RULE.DEFAULT).toBe(PRESS.rule);
     expect(GOLD.DEFAULT).toBe(PRESS.accent);
   });
@@ -78,6 +87,25 @@ describe('gold — accent and emphasis, never decoration', () => {
 describe('MAIA is visually distinct from the member’s work (screen 04; D-019 is why)', () => {
   it('does not speak in gold', () => {
     expect(() => assertMaiaIsVisuallyDistinctFromTheWork()).not.toThrow();
+  });
+
+  it('⛔ the guard can still SEE through the atmosphere token form', () => {
+    /* The failure this pins actually happened, on 2026-09-07. When colour
+       tokens became `var(--x, #RRGGBB)`, hueOf and luminance kept slicing from
+       index 1 — parsing "ar" as hex, getting NaN, and comparing NaN, which is
+       never true and so never throws. Two guards stopped detecting anything
+       and both reported green.
+
+       An instrument that cannot look is worse than no instrument, because it
+       reports a pass. So the violation is introduced in the ATMOSPHERE form,
+       not as a bare hex: a guard that only sees bare hex would pass this. */
+    const original = MAIA_ACCENT.voice;
+    try {
+      (MAIA_ACCENT as Record<string, string>).voice = 'var(--ws-maia-voice, #A7783A)';
+      expect(() => assertMaiaIsVisuallyDistinctFromTheWork()).toThrow(/Screen 04/);
+    } finally {
+      (MAIA_ACCENT as Record<string, string>).voice = original;
+    }
   });
 
   it('refuses MAIA being recoloured into the work’s accent', () => {

@@ -48,11 +48,17 @@ const SERIF = 'Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif';
 
 // Soullab Press canonical palette (matches the public Press landing):
 // espresso ground, warm cream text, deep-amber accent (#C9A227 from ogCard).
+/* Duplicated from app/writers-studio/pressTheme.ts rather than imported (see
+   that file's header). The VALUES are now the same CSS variables, with the
+   same literals as fallbacks — so an atmosphere chosen in the Studio is the
+   same light here, and the two copies can no longer drift apart in colour even
+   while they remain two copies. Reconciling the duplication itself is still
+   owed; making a member feel they changed products mid-session is not. */
 const PRESS = {
-  bg: 'linear-gradient(135deg,#1A1513 0%,#241C18 60%,#1A1513 100%)',
-  text: '#F3EDE4',
-  accent: '#C9A227',
-  ink: '#1A1513',
+  bg: 'var(--ws-bg, linear-gradient(135deg,#1A1513 0%,#241C18 60%,#1A1513 100%))',
+  text: 'var(--ws-ink-primary, #F3EDE4)',
+  accent: 'var(--ws-gold, #C9A227)',
+  ink: 'var(--ws-on-accent, #1A1513)',
 } as const;
 
 interface ManuscriptSummary {

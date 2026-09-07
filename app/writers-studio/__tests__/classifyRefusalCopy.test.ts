@@ -81,8 +81,21 @@ describe('the legacy decline refusal inherits no explanation', () => {
 });
 
 describe('what the repair did not touch', () => {
-  it('the technical refusal code is still shown beneath the sentence', () => {
-    expect(roomSource).toMatch(/refused\{commission\.outcome\.stage[\s\S]*?commission\.outcome\.refusal\}/);
+  it('⛔ the technical refusal code is NO LONGER shown beneath the sentence', () => {
+    /* ⚠️ REVERSED, and deliberately kept as a reversal rather than deleted.
+       This obligation once pinned the code as VISIBLE — a decision made when
+       this room was read mostly by the people building it.
+
+       Founder ruling 2026-09-07, on witnessing `refused at read:
+       ceiling_exceeded` in a writer's room:
+
+         Reason codes belong to instrumentation, not the field.
+
+       The code is not lost. `data-develop-refused` still carries it on the
+       surrounding element, so a bug report and every test below still reach
+       it — what changed is that a writer no longer reads it. */
+    expect(roomSource).not.toMatch(/refused\{commission\.outcome\.stage[\s\S]*?commission\.outcome\.refusal\}/);
+    expect(roomSource).toContain('data-develop-refused');
   });
 
   it('revision_not_current keeps its own sentence and its Keep a version link', () => {
