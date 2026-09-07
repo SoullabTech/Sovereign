@@ -103,6 +103,23 @@ google_oauth_state ABSENT   → C · an unwitnessed MAIL-04c schema act rides th
 This deploy performs **no schema act at all** — the migrate phase is a verified
 no-op, which removes the exact ambiguity this gate was raised to guard.
 
+⭐ **FOUNDER PRECISION, adopted verbatim — three separate statements, never one:**
+
+```text
+MAIL-04c PRODUCTION STATE
+APPLIED · 20:35:59Z
+
+AUTHORIZATION / PROVENANCE
+not established by this query
+
+DEPLOY CONSEQUENCE
+no new MAIL-04c schema act would occur now
+```
+
+*A query establishes state. It does not establish standing, and it does not
+confer it.* The three collapse into "MAIL-04c is fine" only if nobody keeps them
+apart — which is precisely how the 18:24Z Circle act became invisible for hours.
+
 ⚠️ **A is still not authorization.** MAIL-04c's own record (`docs/ops/MAIL-04c_
 CONTAINMENT_RECORD.md`) reads *"Not yet deployed. Not yet witnessed. Not
 accepted."* with an **unticked** witness checklist — including *"all three
