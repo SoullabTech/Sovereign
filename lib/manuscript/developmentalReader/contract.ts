@@ -125,8 +125,44 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * A3 — recovered body prose per invocation, in Unicode CODE POINTS. Never
  * bytes, never UTF-16 units. Freshly ratified for BUILD-07B; not inherited
  * from the structure reader's regime. Changing it is a ruling, not an edit.
+ *
+ * ── RAISED 60_000 → 650_000 · founder ruling 2026-09-07 ───────────────────
+ *
+ *   "It's a Writer's Studio."
+ *
+ * The old number refused a 214-page book at roughly one sixth of itself. It
+ * was not wrong when it was set; it was set against a smaller context and
+ * never revisited, so it had quietly become a rule that a writing studio
+ * cannot read a book.
+ *
+ * The new one is derived, not chosen. `read.ts` runs `claude-opus-5` with
+ * DEFAULT_MAX_TOKENS = 16_000:
+ *
+ *     200,000   context window
+ *     − 16,000  output budget
+ *     − 20,000  system prompt · structure context · thread history
+ *     ─────────
+ *     164,000   tokens of prose  ≈  650,000 code points at ~4 chars/token
+ *
+ * ⛔ THE BOUND IS NOT REMOVED, and the reason is unchanged: "refused whole,
+ * nothing trimmed". A reading that silently read part of a book and reported
+ * on "the work" is a worse failure than a refusal, and no ceiling can be so
+ * large that no manuscript exceeds it — a writer with an 800-page book still
+ * meets it. What changed is that meeting it is now rare, and where it happens
+ * the room offers a range that works rather than a wall.
+ *
+ * ⚠️ THE HEADROOM IS LOAD-BEARING. The 20,000 is not padding: without it a
+ * manuscript near the limit fails at the MODEL's boundary rather than ours —
+ * after the writer has waited, with a worse error, and outside our ability to
+ * say anything useful about it. Raising this further means measuring the
+ * actual prompt overhead, not shrinking the margin.
+ *
+ * ⚠️ AND IT IS TIED TO A MODEL. If MAIA_DEVELOPMENTAL_READER_MODEL names a
+ * model with a smaller context, this number is wrong in the dangerous
+ * direction. It is a constant here because the reader has one default model;
+ * the day that stops being true, this becomes a function of the model.
  */
-export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 60_000;
+export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 650_000;
 
 /* ── request ─────────────────────────────────────────────────────────────── */
 
