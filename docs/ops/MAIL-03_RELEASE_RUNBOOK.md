@@ -8,6 +8,22 @@ critical-file validation, internal-import check and `next build` all clean, no
 errors in the log. Both containment routes are present in `.next/server` with
 their runtime markers compiled in.
 
+Current state:
+
+```text
+MAIL-03
+CODE          COMPLETE
+TESTS         PASS      18 pinned (11 containment + 7 emergency ceiling)
+BUILD         PASS
+PRODUCTION    NOT YET WITNESSED
+CLOSE         NOT YET
+MAIL-04       HOLD
+POSTAL        DESIGN DECISION ONLY
+```
+
+MAIL-03 is release-ready. It is **not CLOSED** until the production witness in
+§3 exists. Code passing its own tests is not evidence about production.
+
 **Run from the Mac Studio.** Deploys execute on minisforum over SSH. The remote
 Claude session that wrote this patch has no `ssh` binary, cannot resolve
 `minisforum`, and has GitHub-only egress — it can build, but it cannot deploy or
