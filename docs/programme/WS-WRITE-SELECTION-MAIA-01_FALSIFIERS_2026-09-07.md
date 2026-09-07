@@ -99,11 +99,19 @@ speaks plainly rather than saying "section-addressable". The module also carries
 of diagnostic words banned from member copy, with `copyIsFreeOfDiagnostics` guarding it — the same
 discipline as the reason-code ruling, already enforced here.
 
-Proposed, for BUILD:
+**RULED (founder, 2026-09-07).** The notice becomes:
 
-> MAIA can work with an exact selection once this writing has been shaped into sections.
+> Section navigation isn't active for this draft yet.
+> Once this draft has sections, you can select a passage and ask MAIA about it.
 
-⛔ Not written. It is copy, and copy is the founder's.
+My proposal said *"once this writing has been shaped into sections"*, and the founder cut *shaped*:
+it risks reading as another Studio operation the writer has to decipher — the exact failure the
+UX ruling exists to prevent, reappearing in the sentence written to comply with it.
+
+The ruled copy says three things and stops: what is unavailable now, what will become available,
+and nothing about passage anchors, draft-section identity, or why the substrate requires either.
+
+⛔ Still not written into the code — BUILD is held. `NAVIGATION_NOT_ACTIVE.body` is where it goes.
 
 ---
 
