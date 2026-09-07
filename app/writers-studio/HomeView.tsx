@@ -10,6 +10,7 @@ import { DELETE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteW
 import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
+import type { MarkedLine } from './useMarkedLines';
 
 /**
  * Writer's Studio — Home.
@@ -92,6 +93,8 @@ export interface HomeViewProps {
   loading: boolean;
   works: LivingWork[];
   manuscripts: CurrentManuscript[];
+  /** Passages the member marked in their own writing. May be empty; empty is quiet. */
+  markedLines: MarkedLine[];
   onBegin: (title: string) => Promise<void>;
   onMakeWork: (manuscriptId: string, title: string | null) => Promise<void>;
   onAddToWork: (manuscriptId: string, workId: string) => Promise<void>;
@@ -103,6 +106,7 @@ export default function HomeView({
   loading,
   works,
   manuscripts,
+  markedLines,
   onBegin,
   onMakeWork,
   onAddToWork,
@@ -665,6 +669,83 @@ export default function HomeView({
                       target={{ workId: null, manuscriptId: feature.id }}
                     />
                   </div>
+                ) : null}
+              </section>
+            ) : null}
+
+            {/* ── FROM YOUR WORK ───────────────────────────────────────
+                The writer's own sentences, back in the room with them.
+
+                Every line here was written by the member AND marked by the
+                member — a keep is re-verified verbatim against their own
+                section before it is ever stored, so the Studio cannot have
+                authored, altered, or chosen one. That is the whole license
+                for this section. Without a gesture underneath each line, a
+                surface like this becomes the system deciding what is
+                beautiful in someone else's book.
+
+                ⛔ No line is selected for quality, relevance, or mood. The
+                order is when the member marked it, which is the same
+                non-judgmental ordering the rest of this Home uses. Rotating
+                through them belongs with the motion preference, not here.
+
+                ⛔ Empty is CORRECT and stays silent. A member who has marked
+                nothing is not shown an invitation to mark something; the
+                gesture lives in the Manuscript Room, where the words are. */}
+            {markedLines.length > 0 ? (
+              <section className="mb-14 md:mb-20">
+                {/* The line that carries the room. Set as the writing it is,
+                    not as a pull-quote about the writing. */}
+                <blockquote className="max-w-2xl mb-10">
+                  <p
+                    className="text-[22px] md:text-[27px] leading-[1.45] italic opacity-90"
+                    /* Clamped, never truncated: a member's own sentence is not
+                       the Studio's to cut with an ellipsis. Long passages are
+                       bounded visually and remain whole in the Work. */
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 4,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {markedLines[0].text}
+                  </p>
+                  <footer className="text-[12.5px] opacity-40 mt-4">
+                    {[markedLines[0].manuscriptTitle, markedLines[0].heading]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </footer>
+                </blockquote>
+
+                {markedLines.length > 1 ? (
+                  <>
+                    <Eyebrow>From your work</Eyebrow>
+                    <ul className="mt-5 space-y-6 max-w-2xl">
+                      {markedLines.slice(1, 5).map((line) => (
+                        <li key={line.id}>
+                          <p
+                            className="text-[16px] leading-[1.55] opacity-75"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitBoxOrient: 'vertical',
+                              WebkitLineClamp: 3,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {line.text}
+                          </p>
+                          {/* Provenance travels WITH the line. A member's own
+                              sentence read back without its source is
+                              indistinguishable from something written for
+                              them. */}
+                          <p className="text-[12px] opacity-35 mt-1.5">
+                            {[line.manuscriptTitle, line.heading].filter(Boolean).join(' · ')}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 ) : null}
               </section>
             ) : null}
