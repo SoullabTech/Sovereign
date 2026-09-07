@@ -177,3 +177,68 @@ bootstrap failure. Fixed by merging canonical (`891b33ee0`) into the lane whenev
 1. **cohort witness completes** → deploy lane releases (another lane's act)
 2. **deploy `891b33ee0`** → production witness bound to the **actual deployed SHA**
 3. **release local shadows** and clean up `maia_i05_shadow_d58488db`
+
+
+---
+
+# UPDATE · 2026-09-08 10:15 EDT — lane still held. Two rules ratified.
+
+## Two rules ratified as project-wide doctrine → `docs/ops/MIGRATION_WITNESS_DOCTRINE.md`
+
+1. **A migration must be verified both against an upgrade-shaped database and against the canonical
+   empty-bootstrap executor path. Neither witness subsumes the other.**
+2. **A reconcile checks migration + executor + ledger semantics — not merely migration-file
+   commutation.**
+
+⭐ **These are not Circle rules.** They were learned here and apply to every lane that authors a
+migration, so the authoritative statement lives in `docs/ops/`, not only in the Circle rulings file.
+⛔ Promoting them into `CLAUDE.md`'s **Before Making Changes** section is a **founder act** — that
+section is global project invariants — and has not been done.
+
+## Lane check, 10:15 EDT — still legitimately held
+
+```
+COHORT PRE-WITNESS HOLD
+target        e535e6246
+local holder  ACTIVE
+remote lock   HELD
+production    e535e6246
+```
+
+The Writer's Studio cohort witness is **still actively working** — most recent machine activity is in
+the PDF import / file-selection flow. ⛔ Nothing was deployed; the lock was not released; its owner was
+not killed; production was not changed.
+
+## The stale-migration cleanup is deferred, and the reason is better than "convenient"
+
+Jarvis noted the doctrine lane still carries the pre-repair self-registering migrations and suggested
+merging canonical in *"whenever convenient."* **Founder ruling: not now.** It is **harmless,
+non-release-path drift**, and
+
+> ⛔ **touching another lane while its production witness is still active buys us nothing.**
+
+Reconcile after the production act, not before.
+
+## The sequence, unchanged
+
+```
+cohort witness finishes
+        ↓
+owning lane releases deploy lock
+        ↓
+deploy 891b33ee0 via the FULL deploy path
+        ↓
+verify running SHA = 891b33ee0
+        ↓
+verify all 3 production migrations + schema effects
+        ↓
+run the Circle production witness
+        ↓
+close I0.5
+        ↓
+drop disposable I0.5 shadows / stray empty DB
+        ↓
+optionally reconcile the doctrine lane with canonical
+```
+
+> ⛔ **Nothing moves until that first arrow actually occurs.**
