@@ -187,11 +187,17 @@ async function main() {
     `warnings=${scanned.warnings.length}`,
   );
   check(
-    'P5b · and the marker no longer inflates its text past the threshold',
-    // Before this repair a text-free PDF still carried ~14 chars per page of
-    // marker, which is a real fraction of the 20-char/page scanned threshold.
-    markerLines(scanned.text).length === 0,
-    `${scanned.text.trim().length} chars of text across ${3} pages`,
+    'P5b · a PDF with no text layer remains text-empty after extraction',
+    // The behavioural form, and the only one that proves what matters: a PDF
+    // with nothing to extract must not ACQUIRE parser-authored text.
+    //
+    // Stated carefully, because the weaker version was tempting and wrong:
+    // the default markers did not push this subject ACROSS the scanned
+    // threshold — 44 chars over 3 pages is ~14.7/page, still under the 20
+    // required to warn. What they did was pollute and bias the heuristic with
+    // text no author wrote. Emptiness is the claim that holds.
+    scanned.text.trim().length === 0,
+    `${scanned.text.trim().length} chars after extraction (default emits 44)`,
   );
 
   console.log(`\n${checks} checks · ${failures} failures`);

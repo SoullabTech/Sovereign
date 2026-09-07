@@ -113,12 +113,24 @@ async function extractPdfText(
        removes ours removes theirs.
 
        So the marker is not emitted rather than deleted. The library documents
-       an empty joiner as "no page boundary marker is added", and no separator
-       of ours replaces it — every character in the text then came from the
-       PDF, and nothing between the pages was authored by Soullab. That last
-       clause is why this is the repair and reconstructing from `result.pages`
-       is not: joining pages ourselves would make us the author of whatever
-       went between them.
+       an empty joiner as "no page boundary marker is added", and the claim
+       this earns is precise and no larger:
+
+           No page-boundary label or replacement separator is authored by
+           Soullab. pdf-parse may retain its own aggregate whitespace
+           formatting.
+
+       It would be easy to write "every character then came from the PDF", and
+       it would be false: the characterization shows blank lines still standing
+       between pages in the aggregate. They are pdf-parse's, not ours, and they
+       are harmless — but harmless is not the same as absent, and this file's
+       whole subject is the difference between what we authored and what we
+       did not.
+
+       That is also why this is the repair and reconstructing from
+       `result.pages` is not: joining pages ourselves would make Soullab the
+       author of whatever went between them, and even '\n\n' would then be
+       our editorial act rather than the library's.
 
        This is the doctrine at the top of this file applied to a case where it
        had quietly lapsed: the author's words, unchanged — and nothing added. */
