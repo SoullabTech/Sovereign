@@ -108,3 +108,35 @@ rater / witness     transcripts a member has chosen to share, scored by a human
 
 *"We could not measure it"* and *"measuring it would violate the thing it protects"* are very
 different findings. This is the second.
+
+
+## Non-observability by design is not unaccountability
+
+Inside the Field, the inability to compute longitudinal dependency is **the covenant doing its
+job.** The absence of telemetry is part of the protection. **Invariant 17 must therefore never
+create an obligation for the runtime to know enough to evaluate it.** Accountability sits outside
+the protected interaction.
+
+```text
+FIELD              does not retain the relational trace required to measure capture
+ACCOUNTABILITY     may examine evidence voluntarily brought outside the Field
+
+PERMITTED          member self-report
+                   explicitly consented cohort study
+                   member-shared transcripts / witness study
+
+NOT PERMITTED      adding longitudinal Shadow telemetry so dependency can be measured
+```
+
+### Runtime invariant vs institutional obligation
+
+This gives a constitutional distinction the lane has not needed until now:
+
+| | Binds | Constrains |
+|---|---|---|
+| F1–F16 | MAIA, at runtime | what may be done **in a turn** |
+| Candidate Inv 17 | **Soullab, as an institution** | what must remain **discoverable** about the relationship created by many turns — without MAIA surveilling it |
+
+**Structural consequence for drafting:** once a constitution binds two different parties, every
+clause must say which one it binds. Otherwise an institutional duty gets implemented as a runtime
+feature — exactly the failure this invariant exists to prevent.
