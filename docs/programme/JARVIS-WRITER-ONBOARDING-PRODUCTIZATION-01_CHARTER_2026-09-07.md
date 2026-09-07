@@ -141,3 +141,44 @@ without a walk behind it.
 - Do not describe an unbuilt capability in onboarding copy. The Studio's own
   honesty invariant (`assertStudioMapHonest`, `visibleDestinations`) applies to
   words as strictly as to links.
+
+---
+
+## NEXT ROUND — DEFERRED BY FOUNDER ACT (2026-09-07)
+
+> *"We need to develop out Notes, Goals, Discover, Insights, Suggestions as well
+> as tools"* → *"we are deploying existing upgrades and this will be for the next
+> round."*
+
+**Recorded, NOT opened.** No lane, no census, no build. This is a placeholder so
+the direction is not lost between rounds, and it decides nothing.
+
+The thirteen destinations the Studio map currently carries as `later` — now
+*saying* "Not available yet" rather than implying it (FR-C):
+
+| Group | Destinations |
+|---|---|
+| Work space | `materials` (count 24) · `structure` · `notes` (count 12) · `versions` · `goals` |
+| MAIA | `conversations` · `discover` · `insights` · `suggestions` |
+| Tools | `find-replace` · `statistics` · `timeline` · `word-web` |
+
+⚠️ **These are not one build, and the next round must not treat them as one.**
+They sit on three different sides of the constitutional direction of authority:
+
+1. **Member-authored objects** — Notes, Goals. The member is the author; the
+   system holds what they wrote.
+2. **MAIA-derived output** — Discover, Insights, Suggestions. Nobody authored
+   these; they are derived, and must stay *visibly* derived.
+3. **Mechanical instruments** — Find/Replace, Statistics, Timeline, Word Web.
+   No authority claim at all; they operate on text.
+
+⛔ **The failure mode is specific**: building them in one pass lets MAIA-derived
+material inherit the standing of member-authored material — a Suggestion sitting
+in the same drawer, with the same weight, as a Note the writer wrote. That is
+authority moving sideways into a layer it did not earn. **The grouping in the map
+is spatial, not constitutional**, and the next round opens on that distinction or
+it does not open.
+
+⛔ The counts already rendered (`materials` 24, `notes` 12) are **map fixtures,
+not member data** — they must be reconciled against real objects before any of
+these surfaces claims a number.
