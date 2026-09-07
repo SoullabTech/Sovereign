@@ -92,3 +92,88 @@ is now superseded for release purposes; it remains the record. **Do not deploy t
 
 ⛔ No doctrine folded in. ⛔ Steps 2–5 need a connected machine; this session has neither `DATABASE_URL`
 nor `node_modules`.
+
+---
+
+# UPDATE · 2026-09-08 — MERGED. DEPLOY HELD.
+
+```
+CANDIDATE       321cb1536      "fix(circles): let canonical migration runner own ledger writes"
+PR              #1258 MERGED
+CANONICAL       891b33ee0      ← now the canonical tip
+
+63/63           PASS · 0 failed · 0 warned · 0 skipped · exit 0
+BOOTSTRAP       empty-database reconstruction PASS · exit 0
+RESIDUE         removals 0 · shares 0 · inquiries 0 · responses 0
+CI              Docker build · TS no-regression · empty-DB reconstruction ·
+                Covenant · Sovereignty · JARVIS adjudication · diagrams — ALL PASS
+BACKUP          /home/soullab/MAIA-SOVEREIGN/backups/maia_backup_20260907_140424.sql
+
+DEPLOY          HELD — serialized by an active cohort witness
+PRODUCTION      e535e6246 UNCHANGED · 4 circles · 4 memberships · 0 shares/inquiries/responses
+                removal_table ABSENT · withdrawn_at ABSENT · integrating rows 0
+PROD WITNESS    PENDING DEPLOY
+LOCAL SHADOWS   RETAINED UNTIL PROD WITNESS
+```
+
+**Verified independently from the artifacts** (not taken on assertion): `891b33ee0` is the canonical
+tip and carries the #1258 merge · `321cb1536` exists with that message · **on canonical all three
+Circle migrations contain zero `schema_migrations` references**, while the pre-repair versions on the
+lane branch contain one each.
+
+## ⭐ The defect was NOT base drift. It was a witness-method coverage gap.
+
+The three migrations each ended with:
+
+```sql
+INSERT INTO schema_migrations (filename, applied_at)
+VALUES ('…sql', NOW()) ON CONFLICT (filename) DO NOTHING;
+```
+
+while `scripts/run-sql-migrations.sh` **already owned** ledger insertion and checksum.
+
+⚠️ **I checked, and the runner did not change during the reconcile window.** `git diff 39daacae5
+e535e6246` touches **no migration-runner file**. The double-write was therefore **latent from the
+moment those migrations were authored** — it was never introduced by canonical moving.
+
+So why did it survive **three** prior `63/63` passes and fail only now? Because of **how the shadow was
+built**. Every earlier witness restored a **production schema dump** and applied the migrations on top:
+`schema_migrations` already existed, already held rows, and `ON CONFLICT DO NOTHING` absorbed the
+redundant write silently. **Empty-database reconstruction builds from nothing** — a different path,
+which is exactly where the conflict surfaces.
+
+> ⭐ **Shadow-from-production-dump cannot see bootstrap defects. Empty-database reconstruction is a
+> DIFFERENT obligation, not a redundant one.**
+
+**My reconcile check was scoped to data, not to the executor.** It asked *did canonical add
+migrations?* (no) and *does canonical touch circle files?* (no) — both true, both insufficient. **A
+migration and its runner are not independent artifacts.** Recorded as a standing rule:
+
+> **A reconcile that checks migrations for commutation must also check whether the thing that RUNS
+> them has changed hands, changed contract, or already does what the migration does.**
+
+## Deploy hold is legitimate, not an obstacle
+
+The full deploy of `891b33ee0` was attempted and **correctly refused before changing anything** — the
+single deploy lane is held by `COHORT PRE-WITNESS HOLD · target e535e6246 · remote PID 2455108 · local
+PID 44567`. **The holder is live, not stale**: another lane is conducting the Writer's Studio cohort
+production witness against `e535e6246`, including current-runtime PDF import/custody/navigation checks.
+
+⛔ **Production cannot move without invalidating that witness.** The holder was not killed and the lock
+was not deleted — which is exactly the rule the deploy-lane doctrine exists to enforce.
+
+> Nothing remains wrong with I0.5 itself. The remaining blocker is **legitimate cross-lane production
+> custody**, and overriding it would destroy evidence another lane is presently establishing.
+
+## ⚠️ The lane branch is now stale on those three migrations
+
+`claude/jarvis-circles-programme-reouzc` still carries the **pre-repair** migrations with the
+self-registering `INSERT`. Harmless while the lane is a doctrine record and not a release path — but
+anyone running the verifier from the lane branch against an **empty** database would hit the same
+bootstrap failure. Fixed by merging canonical (`891b33ee0`) into the lane whenever convenient.
+
+## Remaining sequence
+
+1. **cohort witness completes** → deploy lane releases (another lane's act)
+2. **deploy `891b33ee0`** → production witness bound to the **actual deployed SHA**
+3. **release local shadows** and clean up `maia_i05_shadow_d58488db`
