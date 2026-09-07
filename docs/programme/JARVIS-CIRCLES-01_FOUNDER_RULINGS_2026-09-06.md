@@ -1052,3 +1052,132 @@ D-L4                 SHAPED, still open
 SCHEMA               UNCHANGED
 IMPLEMENTATION       NOT AUTHORIZED
 ```
+
+---
+
+# ADDENDUM V · 2026-09-08 — FR-32 AMENDED · FR-33 · FR-34 · FR-35 · the shared primitive
+
+⚠️ **CUSTODY NOTE.** ADDENDUM IV recorded an **FR-32** earlier the same morning. This addendum
+**amends FR-32 in place** — same number, sharper content — and adds FR-33…FR-35. ⛔ ADDENDUM IV's text
+is **retained unaltered** as the superseded first form; records are amended, never erased. **Where the
+two differ, ADDENDUM V governs.**
+
+**What actually changed, stated plainly:** ADDENDUM IV listed *named · shared · rotating · bounded* as
+**modes of facilitation**, which left a standing bundled role available. FR-32 as amended **rejects the
+bundle outright.** *Named · shared · rotating* survive only as descriptions of **who holds a given
+mandate** — never as a standing role that carries all procedural powers at once.
+
+## FR-32 (amended) · Procedural authority is an act-scoped mandate, never a rank.
+
+⛔ A Circle **does not have a privileged `facilitator` role.** Procedural authority exists **only** as
+authority conferred by the Circle for a **defined procedural act or bounded class of acts**.
+
+Rejected — because **even if revocable, the bundle itself creates a rank**:
+
+```
+member  role = facilitator  →  may inquire · tend · repair · host · keep · …
+```
+
+The shape instead — authority as a **relation between Circle, person(s), and act**:
+
+```
+Circle ├── confers → Maria · hold Inquiry A
+       ├── confers → Jonah · tend Gathering B
+       ├── confers → Maria + Lee · steward Repair C
+       └── confers → Lee · host Salon D on the Circle's behalf
+```
+
+> A person may hold more than one mandate, but **each must be separately conferred. Holding one creates
+> no presumption of eligibility or authority for another.**
+
+## FR-33 · A mandate may be exercised, relinquished, expire, or be withdrawn. It may never be transferred by its holder.
+
+```
+⛔ Maria → Jonah                is not a valid authority operation
+
+✅ Maria relinquishes → Circle re-confers → Jonah receives
+```
+
+Maria may **nominate** or suggest Jonah; **nomination carries zero authority.** The Circle is always
+the source.
+
+## FR-34 · Authority over process is not authority over meaning.
+
+**May authorize:** opening or sequencing an inquiry · tending participation and process · carrying an
+authorized repair process · convening or hosting a Salon on the Circle's behalf · executing the
+**procedural side** of a collective Keep.
+
+⛔ **Does not authorize:** determining the Circle's substantive meaning · speaking for the Circle ·
+deciding membership · converting collective authorship into personal authorship · **conferring further
+procedural authority** · **preventing reconsideration of their own mandate.**
+
+> ⭐ **No mandate includes authority over whether that mandate may be reconsidered.** Otherwise
+> revocability exists constitutionally and is blocked procedurally **by the person being reviewed.**
+
+## FR-35 · `facilitation_constituted` is a ratified procedural constitution, not the presence of a facilitator.
+
+⛔ It does **not** mean `facilitator_id != null`. It means:
+
+> **The Circle has collectively ratified HOW procedural mandates will be conferred, bounded,
+> reconsidered, and ended.**
+
+```
+ACTIVE = active_members >= 3 AND facilitation_constituted
+```
+
+unchanged — but the second term is a property of the Circle's **procedural constitution**, not of an
+appointed person. **A Circle is fully constituted even when nobody currently holds any mandate.**
+
+⭐ **This repairs a real defect in the ADDENDUM IV form**, where `facilitation_constituted` could be
+read as *a facilitator exists* — under which **every expired mandate would throw the Circle back out of
+ACTIVE.** Constitution is stable; mandates come and go beneath it.
+
+## Architectural ruling · one primitive beneath FR-31 and D-K3
+
+Formation (*"we constitute this Circle"*) and conferral (*"Maria may hold Inquiry X"*) are **different
+acts of structurally the same kind**: a **multi-party ratified collective act**. One conceptual
+primitive, with semantic types layered above — ⛔ **not separate ad hoc ratification mechanisms.**
+
+```
+CollectiveRatifiedAct { circle · type · subject · proposed_at · ratifiers · state · ratified_at }
+
+types: FORMATION · PROCEDURAL_CONSTITUTION · PROCEDURAL_MANDATE
+       MANDATE_WITHDRAWAL · COLLECTIVE_KEEP · …
+```
+
+⛔ **Architectural ruling, NOT schema authorization.**
+
+### ⚠️ Jarvis warning on the primitive — recorded, not a ruling
+
+A single act object with a **type** is exactly where a future session will add a type that **is not a
+collective act**. The nearest hazard is concrete: **FR-05 removal** is *facilitator-authority-with-
+grounds and an append-only record* — ⛔ **it is NOT a collective ratification**, and adding
+`REMOVAL` as a type by convenience would silently merge two authority models in one table.
+
+> **The type set must be closed, and each type must carry its own stated authority rule** — otherwise
+> the primitive becomes the place where authority models quietly converge. This is the `FieldPhase` /
+> `CircleConstitutionState` collision (CA-14) waiting to happen one layer up.
+
+## Docket
+
+| | |
+|---|---|
+| **D-K3 / CA-15** | ✅ **CLOSED** |
+| **K3-a** | closed — act-scoped, never a bundle (FR-32 amended) |
+| **K3-b** | closed — bound is per-act or per-bounded-class |
+| **K3-d** | closed — relinquish · expire · withdraw are distinct from transfer (FR-33) |
+| **K3-e** | closed — re-conferral only (FR-33) |
+| **K3-f** | ⭐ **now closed structurally, not merely expressible** — the repair steward is a *separately conferred* mandate, so a holder party to the rupture simply is not conferred **this** one. No heavy reconsideration needed. |
+| **K3-h** | closed — one multi-party ratified-act architecture |
+| **K3-c** | ⛔ **still deferred** — ratification threshold (unanimity · consent-minus-objection · quorum). No existing collective-decision doctrine supplies it. |
+| **K3-g** | ⛔ **still open** — may the system *prompt* a Circle to constitute facilitation? A prompt would coerce governance. |
+| **D-L4** | narrowed to a **Salon-host mandate on the Circle's behalf** |
+| **D-K4** | narrowed — Keep stays **collectively authored**; the procedural carrier is separately mandated |
+
+```
+FR-32 (amended) · FR-33 · FR-34 · FR-35   RATIFIED
+D-K3 / CA-15                              CLOSED
+SHARED PRIMITIVE                          ARCHITECTURAL RULING
+SCHEMA                                    UNCHANGED
+IMPLEMENTATION                            NOT AUTHORIZED
+```
