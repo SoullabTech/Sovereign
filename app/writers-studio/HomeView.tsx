@@ -888,6 +888,33 @@ export default function HomeView({
                     />
                   ))}
                 </Cards>
+
+                {/* ⛔ WITNESSED DEFECT, 2026-09-07. The chooser lived ONLY on
+                    the RETURN hero, so a member whose Home is in the ORIENT
+                    state — writing exists but no Work has continuable activity
+                    — had no way to give any Work an image. The capability was
+                    built and unreachable: the seventh instance in this room of
+                    "the command exists, the door doesn't."
+
+                    The image belongs to the WORK, so its door belongs wherever
+                    the Work is, not wherever the room happens to have put a
+                    hero. Rendered as a direct child here rather than inside
+                    `Card`: Card is declared in this component's body, so its
+                    subtree remounts on every render, and a remount would wipe
+                    the half-finished "what is this image to you?" choice out
+                    from under the writer's hand. */}
+                <div className="mt-8 space-y-5">
+                  {shelfCards.map((w) => (
+                    <div key={`visual:${w.id}`}>
+                      <p className="text-[12.5px] opacity-35 mb-2">{w.title ?? 'Untitled work'}</p>
+                      <WorkVisualChooser
+                        workId={w.id}
+                        workTitle={w.title ?? 'this work'}
+                        onChanged={() => setVisualEpoch((n) => n + 1)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </section>
             ) : null}
 
