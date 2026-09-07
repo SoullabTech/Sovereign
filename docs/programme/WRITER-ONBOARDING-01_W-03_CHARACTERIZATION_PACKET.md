@@ -46,97 +46,129 @@ cause-established.**
 > Determine whether the Writer's Studio first load fails to present the
 > `This work` / declaration affordance that a writer needs to proceed.
 
-## 2 · ⭐ The discrimination that decides the whole packet
+## 2 · ⭐ Observation first. Mechanism only if earned.
 
-Two mechanisms produce the same screenshot and demand **different repairs and
-different conclusions**:
-
-```text
-H1 · NOT RENDERED     the control is absent from the page at first paint
-                      → a render / data-loading defect
-                      → observation: control absent from the DOM
-
-H2 · RENDERED, OFF-SCREEN
-                      the control exists but the page is scrolled past it
-                      → a scroll / anchor defect
-                      → observation: control present in DOM, outside viewport,
-                        page scroll position non-zero at first paint
-```
-
-**H2 is the stronger candidate on the walk's own evidence.** In the clipped
-screenshot the rail was cut at `Structure 262`, the outline began mid-list at
-item 3, and the writing pane began at *Chapter 2* — the whole page was scrolled
-down, not partly drawn. `app/writers-studio/canvas/StructuredOutline.tsx:169`
-calls `el.scrollIntoView({ block: 'center' })` on the active section, which
-scrolls the nearest scrollable ancestor; if that resolves to the document, the
-rail head leaves the viewport. The walk URL carried a section parameter
-(`&s=1f80f706-…`), so a section was active at load.
-
-⛔ **This is a hypothesis for the walk to discriminate, not a diagnosis.** It is
-recorded because it changes the required observation: under H2 the question
-*"is the control present?"* answers **yes** and would wrongly clear W-03. The
-observation must therefore be **presence AND position**, not presence alone.
-
-## 3 · DO
+The characterization establishes **what state the screen is in**, and nothing
+about why. Three phenotypes, mutually exclusive:
 
 ```text
-1  capture the production runtime SHA BEFORE anything else
-     ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
-   (custody: the founder walk did not capture a SHA. This packet must.)
+H1  NOT PRESENT        the control is not present on first load
+H2  PRESENT · OFF-SCREEN
+                       the control exists, but the initial viewport opens
+                       below it
 
-2  enter Writer's Studio from the House, normally — no direct URL
-
-3  open the same Work, on a CLEAN first load
-     no reload before the first observation
-     note whether the URL carries a section parameter (&s=…)
-
-4  at first paint, record ALL of:
-     [ ] is "This work" VISIBLE in the viewport?          yes / no
-     [ ] is it PRESENT in the page at all?                yes / no
-         (scroll up without reloading — if it appears, that is H2)
-     [ ] page scroll position at first paint               top / not top
-     [ ] does the outline start at item 0, or mid-list?
-     [ ] does the writing pane start at the work's head, or mid-body?
-
-5  reload ONCE. Record the same five.
-
-6  if reproducible, characterize which of H1 / H2 it is.
+    (and the third real outcome, which is not a hypothesis)
+NR  NOT REPRODUCED     the control is visible, the viewport opens at top
 ```
+
+⛔ **H2 is an observation, not a cause. `PRESENT + OFF-SCREEN` does not establish
+why the viewport moved.** Only once H2 is established does the mechanism
+question open, and it opens with four live candidates and no favourite:
+
+```text
+H2a  StructuredOutline scrollIntoView moves the document
+H2b  browser / history scroll restoration
+H2c  another focus or anchor restoration
+H2d  an interaction between the section parameter and layout
+```
+
+⚠️ **Second correction of record.** An earlier revision of this packet named
+`StructuredOutline.tsx:169` — `el.scrollIntoView({ block: 'center' })`, called
+on the section restored from the URL — as the leading mechanism for H2. Source
+makes it plausible and it remains H2a. It was not entitled to lead. This
+document had already ruled that plausible-first is not cause-established and
+then, one section later, converted an observed scroll state into an assumed
+scroll mechanism. **Observed state → assumed mechanism is the same inflation as
+plausible → causal, one layer down.**
+
+Why the distinction is load-bearing rather than pedantic: under **H1** the repair
+is to render the control; under **H2** the repair depends entirely on which of
+H2a–H2d holds, and three of the four are not in the outline component at all.
+A repair chosen from the observation alone would be a guess with a commit behind it.
+
+## 3 · The founder test — no developer tools required
+
+The first discrimination needs nothing but eyes, in this order:
+
+```text
+1  enter Writer's Studio from the House, normally — no direct URL
+2  open the Work. DO NOT RELOAD.
+3  BEFORE scrolling: record whether the URL contains &s=…
+     (not to prove the parameter caused anything — to preserve the
+      condition needed to test H2a afterward)
+4  look at where the page opens
+5  if "This work" is not visible, SCROLL UPWARD MANUALLY — do not reload
+6  if it appears, record exactly:
+       "The control was already present. The page opened below it."
+     → H1 FALSIFIED · H2 CONFIRMED
+   if scrolling up does NOT reveal it → H1 remains live
+7  now reload ONCE. Does the page return to the top?
+```
+
+If first load is displaced and reload is at top, **the phenomenon is reproduced
+without any claim about its mechanism.** That is the whole of this packet's
+required result.
+
+Also worth recording at step 4, since it costs nothing and sharpens H2:
+
+```text
+[ ] does the outline start at item 0, or mid-list?
+[ ] does the writing pane start at the work's head, or mid-body?
+```
+
+Under the walk's screenshots all three — rail, outline, pane — were displaced
+together. Whether that holds on reproduction is evidence about scope, not cause.
+
+Capture first, before any of the above:
+
+```text
+ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
+```
+
+Custody: the founder walk captured no runtime SHA. This packet must.
 
 ## 4 · DO NOT
 
 ```text
 ⛔ change onboarding          ⛔ add Help
 ⛔ add hover copy             ⛔ alter navigation
-⛔ repair before reproduction establishes the defect
-⛔ treat "control is present" as clearing W-03 — see §2
+⛔ repair before the observation is established
+⛔ name a mechanism before H2 is confirmed
+⛔ treat "control is present" as clearing W-03 — under C it is present
+   and the gate is still shut
 ```
 
-## 5 · If confirmed
+## 5 · What each outcome licenses
 
 ```text
-open the smallest defect repair
-→ deploy
+H1  NOT PRESENT
+    → W-03 confirmed as a presence defect. Smallest repair, then rewalk.
+
+H2  PRESENT · OFF-SCREEN
+    → phenomenon reproduced, mechanism UNKNOWN.
+    → open the mechanism question across H2a–H2d. Only then a repair.
+    ⛔ Nothing here licenses naming scrollIntoView.
+
+NR  NOT REPRODUCED
+    → preserve the walk evidence and investigate conditions
+      (viewport, device, cold cache, which Work, whether &s= was present).
+    ⛔ Do NOT design around an assumed cause. Do NOT conclude the walk was
+      mistaken — it is a first observed outcome and stands as one.
+```
+
+## 6 · After any repair
+
+```text
+deploy
 → repeat Kelly's UNAIDED declaration threshold, from the House
 
-QUESTION AFTER REPAIR
+QUESTION
    Can Kelly now pass the gate without help?
-```
 
-## 6 · The three outcomes, and what each licenses
-
-```text
-W-03 fixed · W-05 disappears
-   → much of the navigation problem at this gate was defect-induced
-   → R-1 / R-3 scope shrinks, and shrinks honestly
-
-W-03 fixed · W-05 remains
-   → a genuine guidance and vocabulary problem, now isolated from defect
-   → FR-C … FR-F open with a clean subject
-
-W-03 not reproducible
-   → preserve the walk evidence; investigate conditions
-   → ⛔ do NOT design around an assumed cause
+   gate passes   → much of the navigation problem here was defect-induced;
+                   R-1 / R-3 scope shrinks, and shrinks honestly
+   gate holds    → a genuine guidance and vocabulary problem, now isolated
+                   from defect. FR-C … FR-F open with a clean subject
 ```
 
 ## 7 · Custody
