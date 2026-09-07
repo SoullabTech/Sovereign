@@ -131,3 +131,92 @@ context, on the screen, not in this document.
 
 ⛔ No code until the witness runs. A draft PR may eventually carry the clean
 automated gates; it may not carry §9.
+
+---
+
+## 5 · ⛔ CORRECTION OF RECORD — the 2026-09-07 founder view was NOT an FR-D failure
+
+```text
+PRIOR FOUNDER VIEW
+Not an FR-D failure.
+The viewed environment did not contain the implementation.
+
+No acceptance inference may be drawn from that view.
+```
+
+The founder reported, walking the Studio:
+
+> *"I see no difference from what I've been looking at for days."*
+
+**That report is valid, and it is not evidence about FR-C or FR-D**, because the
+served subject could not contain them.
+
+```text
+implementation   761d5ec9 + 227e4e63
+branch           origin/claude/writers-studio-onboarding-ek7p06 — the ONLY ref
+                 containing 227e4e63; not on clean-main-no-secrets, never deployed
+production       e535e6246
+walked subject   did NOT contain FR-C / FR-D
+
+FOUNDER WITNESS  INVALID FOR FR-C / FR-D ACCEPTANCE · reason: wrong subject
+PRODUCT RESULT   UNKNOWN
+```
+
+⚠️ **This correction exists so that "no difference" can never later be quoted as
+evidence against a build the founder had literally never seen.** Classified as an
+environment/subject mismatch, not a failed product witness.
+
+### What the render-path proof eliminated
+
+A second ambiguity is closed: this is **not** a case where the branch carries the
+code but the UI never consumes it. The path
+`StudioShellRail → StudioRailChrome → StudioBand → StudioRailItem` was traced,
+and `StudioBand` is where state is passed.
+
+Running the shipped logic for the exact screen walked — Canvas, Work declared —
+produces **eleven** state lines and two orientation lines:
+
+```text
+Notes · Versions · Goals · Conversations · Discover · Insights ·
+Suggestions · Find/Replace · Statistics · Timeline · Word Web
+                                              → "Not available yet"
+Manuscript  → "The room where your work develops."
+Export      → "Take your writing out."
+```
+
+If the correct subject is served, the difference is plainly visible. It is not
+something a founder should have to hunt for.
+
+### ⭐ HYPOTHESIS to test in the witness — do not act on it now
+
+> Eleven repetitions of *"Not available yet"* may satisfy FR-C semantically while
+> creating a new visual problem: the rail could become dominated by everything
+> the Studio cannot yet do.
+
+⛔ **Hypothesis, not a finding.** This is precisely what the rendered witness is
+for — whether explicit state produces clarity, or whether its aggregate weight
+starts competing with the useful rooms. **Do not change it in anticipation.**
+
+### Witness pre-condition
+
+⛔ Before beginning the walk, verify ONE obvious marker — `Notes → Not available
+yet` — to prove the intended subject is finally being served. A walk that begins
+without that check can repeat this same mismatch.
+
+⚠️ `DEVELOP → "Open a work first"` cannot be witnessed on a Canvas that has a
+Work. It needs the no-Work condition, and its absence on the wrong screen must
+not be read as a failure.
+
+## 6 · Sequence, restated
+
+```text
+1  clean-worktree typecheck finishes · record the ACTUAL result
+2  serve 227e4e63 from the correct worktree, clean tree
+3  verify the marker: Notes → "Not available yet"
+4  run the founder walk (§3 sheet)
+5  test the no-Work DEVELOP condition separately
+6  judge the FR-D question:
+     did Studio become more intelligible without becoming more instructional?
+```
+
+⛔ No code changes.
