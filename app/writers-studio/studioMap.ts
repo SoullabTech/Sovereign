@@ -33,7 +33,40 @@
 
 import { CANVAS_MANUSCRIPT_PARAM, canvasForManuscript } from './canvasIdentity';
 
-export type StudioAvailability = 'available' | 'later';
+/**
+ * D3 · CAPABILITY TRUTH HAS ONE AUTHORITY — this file.
+ *
+ * The old two-state field conflated two different questions, and that
+ * conflation is what made the Studio lie about itself. Materials, Structure and
+ * Versions are BUILT — a member opens them every day — but they are panels, not
+ * routes, so the only honest thing the old type could say about them was
+ * `later`. The rail then drew a working capability as unavailable, and the room
+ * had to contradict the map (`satisfiedInRoom`) to make it usable again.
+ *
+ * Three states, because there are three real situations:
+ *
+ *   available   built, and reached by NAVIGATION. Carries an href.
+ *   in-room     built, and reached as a PANEL inside the room that owns it.
+ *               Carries no href by construction — there is nowhere to go, only
+ *               something to open.
+ *   later       ratified intent, not built. Carries nothing.
+ *
+ * The founder rule this encodes (Rulings III, D1):
+ *
+ *     Implementation may lag ratified intent.
+ *     Declaration may not lag known implementation.
+ *
+ * PLACEMENT may still have several projections — the rail, the mode bar, the
+ * lower band each decide where a thing appears. CAPABILITY TRUTH may not: a
+ * projection reads this file, and none of them may promote a destination this
+ * file says is unbuilt (`assertRoomClaimsNothingUnbuilt`).
+ */
+export type StudioAvailability = 'available' | 'in-room' | 'later';
+
+/** Built, whether it is reached by a route or opened as a panel. */
+export function isBuilt(a: StudioAvailability): boolean {
+  return a === 'available' || a === 'in-room';
+}
 
 /**
  * WS2-02 — the three regions of the Studio, and why they are three.
@@ -86,10 +119,23 @@ export interface StudioDestination {
   note?: string;
   availability: StudioAvailability;
   /**
-   * Present if and only if availability === 'available'. A 'later' destination
-   * is rendered as plainly unavailable, never as a dead or hopeful link.
+   * Present if and only if availability === 'available'. An `in-room`
+   * destination is opened, not navigated to, and a `later` destination is
+   * rendered as plainly unavailable — never as a dead or hopeful link.
    */
   href?: string;
+  /**
+   * D1 — where a ratified function is ALREADY SERVED, under another name.
+   *
+   * Insights is the case this exists for. The function is ratified
+   * (`FIELD-MAP §5`, FR-03) and it is implemented — as the Develop mode, with
+   * frozen readings, evidence and member standing. Marking Insights
+   * `available` would invent a second MAIA authority beside a constituted one;
+   * leaving it a bare `later` tells the member a capability they already have
+   * does not exist. So the map records the relationship instead, and the rail
+   * says it.
+   */
+  servedBy?: { mode: string; label: string };
   /**
    * TRUE when this destination only makes sense once the member has a
    * manuscript. Hidden (not disabled) before then — an empty Studio should
@@ -184,14 +230,24 @@ export const STUDIO_MAP: StudioGroup[] = [
         href: CANVAS_HREF,
         requiresManuscript: true,
       },
-      /* Not built as destinations. Materials and Structure exist only as
-         drawers inside the Canvas; Versions has revision substrate with no
-         member surface; Notes and Goals have none. See visibleDestinations —
-         a `later` destination never reaches a member. */
-      { id: 'materials', label: 'Materials', availability: 'later', count: 24 },
-      { id: 'structure', label: 'Structure', availability: 'later' },
+      /* CORRECTED under Founder Rulings III · D1. These three were declared
+         `later` while a member was opening them every day: Materials is the
+         MaterialsDrawer over /living-works/[id]/materials, Structure is the
+         outline column over manuscript_sections, Versions is the revision list
+         in the lower band. They are panels rather than routes, which is what
+         `in-room` says and what the old two-state field could not.
+
+         Notes and Goals stay `later` — both are RATIFIED and neither is built.
+         Goals is named twice in the recovered record (FIELD-MAP §1 "Goals
+         strip", §5 "active goals") and §7 already grants it the one permission
+         it needs: progress against a WRITER-DECLARED target may be quantified.
+         Notes is bound by FR-02 as the writer's mutable thinking beside the
+         Work — distinct from a Keep (a preserved state of the writing) and from
+         a material of kind `note` (source brought into the Work). */
+      { id: 'materials', label: 'Materials', availability: 'in-room', count: 24 },
+      { id: 'structure', label: 'Structure', availability: 'in-room' },
       { id: 'notes', label: 'Notes', availability: 'later', count: 12 },
-      { id: 'versions', label: 'Versions', availability: 'later' },
+      { id: 'versions', label: 'Versions', availability: 'in-room' },
       { id: 'goals', label: 'Goals', availability: 'later' },
     ],
   },
@@ -211,9 +267,24 @@ export const STUDIO_MAP: StudioGroup[] = [
        Conversations becomes available when the handoff preserves Work context.
        That seam is WS2-03's; WS2-09 owns the deeper situated behaviour. */
     destinations: [
-      { id: 'conversations', label: 'Conversations', availability: 'later' },
+      /* Built: StudioConversation, situated through workSituation.ts. A panel
+         beside the manuscript, not a route — `in-room`. */
+      { id: 'conversations', label: 'Conversations', availability: 'in-room' },
+      /* FR-03. Three different relationships with possibility, none of them a
+         duplicate of another:
+             Discover      what might be worth noticing?
+             Insights      what reading has emerged?
+             Suggestions   what might you choose to do?
+         Discover and Suggestions are ratified and unbuilt. Insights is ratified
+         AND implemented — as Develop — so the map records that rather than
+         inventing a second MAIA authority (D1). */
       { id: 'discover', label: 'Discover', availability: 'later' },
-      { id: 'insights', label: 'Insights', availability: 'later' },
+      {
+        id: 'insights',
+        label: 'Insights',
+        availability: 'later',
+        servedBy: { mode: 'develop', label: 'Develop' },
+      },
       { id: 'suggestions', label: 'Suggestions', availability: 'later' },
     ],
   },
@@ -225,8 +296,27 @@ export const STUDIO_MAP: StudioGroup[] = [
        Only Export is real — /press/manuscript carries an export tab. */
     destinations: [
       { id: 'find-replace', label: 'Find/Replace', availability: 'later' },
-      { id: 'statistics', label: 'Statistics', availability: 'later' },
+      /* CORRECTED · D1. Statistics is BUILT and always was: StudioLowerBand
+         computes words, sections and versions kept — counted, never judged,
+         exactly the figures FIELD-MAP §7 permits. The rail drew it unavailable
+         while the same screen displayed it. */
+      { id: 'statistics', label: 'Statistics', availability: 'in-room' },
+      /* Ratified STRUCTURE VIEWS, unbuilt. Timeline and Threads are named
+         together in FIELD-MAP §3 ("Timeline · Threads · Flow · Table views"),
+         and §4 is explicit that Threads is a Structure concept in the target.
+
+         Threads is NOT in this map, and deliberately so — see
+         RATIFIED_UNPLACED below. D-019 settles the rail grammar at exactly
+         sixteen (7 · 4 · 5), and adding a seventeenth destination to carry a
+         capability truth would repair one ratified ruling by breaking another.
+
+         That the Studio represents ORDER and not time is a design constraint on
+         how Timeline gets built. It is not grounds to retire it. */
       { id: 'timeline', label: 'Timeline', availability: 'later' },
+      /* FR-01 — a mechanical instrument. It may show recurring words and
+         phrases, frequency, co-occurrence and where a term appears. It may not
+         infer themes, meanings or significance; a semantic constellation would
+         be a different capability needing its own authority ruling. */
       { id: 'word-web', label: 'Word Web', availability: 'later' },
       {
         id: 'export',
@@ -239,6 +329,56 @@ export const STUDIO_MAP: StudioGroup[] = [
     ],
   },
 ];
+
+/**
+ * D3 — ratified capability that has no place in the rail grammar YET.
+ *
+ * Threads is the case this exists for, and it is a genuinely awkward one.
+ *
+ *   It is RATIFIED. `FIELD-MAP §3` names it twice — in the structural views
+ *   row ("Timeline · Threads · Flow · Table views") and again as the "Themes &
+ *   Threads ribbon" — and §4 is explicit that Threads is a Structure concept in
+ *   the target. Founder Rulings III: RATIFIED STRUCTURE CONCEPT, not retired.
+ *
+ *   It has NO PLACE in STUDIO_MAP. D-019 settles the rail at exactly sixteen
+ *   destinations in three bands, and that ruling is not this lane's to amend.
+ *
+ * Before this register, the only trace of Threads anywhere in the product was a
+ * boolean in StudioLowerBand's array — which is how a lower band became the
+ * sole authority on whether a ratified capability existed, and how a census
+ * came to read it as an orphan and propose deleting it.
+ *
+ * So capability truth moves here and placement stays unanswered, because
+ * unanswered is the truth. A projection may read this register to learn that a
+ * capability is ratified and unbuilt. Nothing here reaches the rail, and nothing
+ * here may carry an href: this is a record, not a destination.
+ *
+ * When Threads is placed, it moves into STUDIO_MAP by a founder act and leaves
+ * this register. The register existing is not an argument for keeping it.
+ */
+export interface UnplacedCapability {
+  id: string;
+  label: string;
+  /** Where the ratified intent is recorded, so the claim is checkable. */
+  ratifiedIn: string;
+  availability: Extract<StudioAvailability, 'later'>;
+}
+
+export const RATIFIED_UNPLACED: readonly UnplacedCapability[] = [
+  {
+    id: 'threads',
+    label: 'Threads',
+    ratifiedIn: 'docs/programmes/writers-studio-v2/FIELD-MAP.md §3, §4',
+    availability: 'later',
+  },
+];
+
+/** Capability truth for any id, wherever this file records it. */
+export function capabilityOf(id: string, map: StudioGroup[] = STUDIO_MAP): StudioAvailability | null {
+  const placed = map.flatMap((g) => g.destinations).find((d) => d.id === id);
+  if (placed) return placed.availability;
+  return RATIFIED_UNPLACED.find((u) => u.id === id)?.availability ?? null;
+}
 
 /**
  * The honesty invariant, executable.
@@ -255,6 +395,18 @@ export function assertStudioMapHonest(map: StudioGroup[] = STUDIO_MAP): void {
       }
       if (d.availability === 'available' && !d.href) {
         throw new Error(`Studio map: "${d.label}" is available but has nowhere to go.`);
+      }
+      /* A panel is not a route. An in-room destination with an href would be
+         claiming both, and the rail would render a link to a place that does
+         not exist. */
+      if (d.availability === 'in-room' && d.href !== undefined) {
+        throw new Error(`Studio map: "${d.label}" is opened in a room but carries an href.`);
+      }
+      /* `servedBy` records that a ratified function is met elsewhere. On a
+         destination that is itself built it would be two answers to one
+         question. */
+      if (d.servedBy && isBuilt(d.availability)) {
+        throw new Error(`Studio map: "${d.label}" is built and also claims to be served elsewhere.`);
       }
     }
   }
@@ -294,6 +446,11 @@ export function visibleDestinations(
       ...g,
       destinations: g.destinations.filter(
         (d) =>
+          /* ROUTE-REACHABLE ONLY, and that is unchanged by the three-state
+             correction. Home is an arrival surface: it offers doors. An
+             `in-room` capability is real but it has no door — it opens inside
+             the room that owns it — so Home still shows exactly what it showed
+             before, and still shows nothing unbuilt. */
           d.availability === 'available' && (!d.requiresManuscript || hasManuscript),
       ),
     }))
@@ -345,6 +502,18 @@ export interface ShellDestination extends StudioDestination {
   actionable: boolean;
   /** Actionable as a panel in the current room rather than as a route. */
   satisfiedInRoom: boolean;
+  /**
+   * FR-C, made renderable — WHY this destination cannot be taken right now.
+   *
+   * The ruling is that an unavailable capability must SAY its state, not merely
+   * become dim, and the reasons are genuinely different things to say. A
+   * capability that does not exist yet, one that is waiting for a manuscript,
+   * and one the member already has under another name are three different
+   * sentences, and a single grey row says none of them.
+   *
+   * Undefined exactly when the destination IS actionable.
+   */
+  unavailableBecause?: 'unbuilt' | 'needs-manuscript' | 'served-elsewhere';
 }
 
 export interface ShellGroup extends StudioGroup {
@@ -423,21 +592,36 @@ export function shellDestinations(
   return map.map((g) => ({
     ...g,
     destinations: g.destinations.map((d) => {
-      const inRoom = satisfiedInRoom.includes(d.id);
+      /* D3 — the room says WHERE an in-room capability is hosted. It does not
+         say WHETHER the capability exists: a room naming a destination this map
+         calls `later` is claiming a capability the authority does not grant, and
+         `assertRoomClaimsNothingUnbuilt` refuses it. Before this correction any
+         room could promote any id, which is precisely how three declaration
+         sites came to make contradictory claims about product reality. */
+      const inRoom = d.availability === 'in-room' && satisfiedInRoom.includes(d.id);
       /* Situated only where the map says `later` — this is a context gate, not
          a back door for promoting a destination that has no room behind it. */
       const situated =
         d.availability === 'later' && !inRoom
           ? (situatedHrefs[d.id] || undefined)
           : undefined;
-      const actionable =
-        (d.availability === 'available' || inRoom || Boolean(situated)) &&
-        (!d.requiresManuscript || hasManuscript);
+      const manuscriptOk = !d.requiresManuscript || hasManuscript;
+      const reachable = d.availability === 'available' || inRoom || Boolean(situated);
+      const actionable = reachable && manuscriptOk;
+      /* FR-C — one reason, and the order matters. A destination that is not
+         built is not "waiting for a manuscript"; saying so would promise it
+         arrives when one exists. */
+      const unavailableBecause: ShellDestination['unavailableBecause'] = actionable
+        ? undefined
+        : !reachable
+          ? (d.servedBy ? 'served-elsewhere' : 'unbuilt')
+          : 'needs-manuscript';
       const { count: _mapCount, ...rest } = d;
       return {
         ...rest,
         actionable,
         satisfiedInRoom: inRoom,
+        ...(unavailableBecause ? { unavailableBecause } : {}),
         // No href unless it can actually be taken. A destination satisfied in
         // place has no href either — there is nowhere to go, only something
         // to open — which is why the shell rail renders it as a button.
@@ -491,6 +675,17 @@ export function assertShellPromisesNothing(groups: ShellGroup[]): void {
       if (d.satisfiedInRoom && d.href !== undefined) {
         throw new Error(`Shell: "${d.label}" is a panel here and must not also be a link.`);
       }
+      /* FR-C, executable. The ruling survives its lost implementation: a
+         destination that cannot be taken must say why, and a render that only
+         dims it is a regression against the ruling, not evidence the ruling
+         changed. Enforced here so no future rail can quietly drop the state
+         line and still pass. */
+      if (!d.actionable && d.unavailableBecause === undefined) {
+        throw new Error(`Shell: "${d.label}" is unavailable but does not say why.`);
+      }
+      if (d.actionable && d.unavailableBecause !== undefined) {
+        throw new Error(`Shell: "${d.label}" is actionable but claims a reason it is not.`);
+      }
     }
   }
 }
@@ -528,6 +723,37 @@ export function assertModesHonest(modes: StudioMode[] = STUDIO_MODES): void {
     }
     if (m.availability === 'available' && !m.href) {
       throw new Error(`Studio modes: "${m.label}" is available but has nowhere to go.`);
+    }
+  }
+}
+
+/**
+ * D3 — a room may not invent a capability.
+ *
+ * `satisfiedInRoom` is a claim about HOSTING: "the destination the map calls
+ * `in-room` is open in this room." It is not a claim about EXISTENCE. This
+ * refuses the second reading directly, so the defect cannot return as a room
+ * quietly adding an id and a member seeing a capability the authority never
+ * granted.
+ *
+ * Call it where the room declares its list, not deep in a render: the point is
+ * to fail at the seam where the two authorities meet.
+ */
+export function assertRoomClaimsNothingUnbuilt(
+  satisfiedInRoom: readonly string[],
+  map: StudioGroup[] = STUDIO_MAP,
+): void {
+  const byId = new Map(map.flatMap((g) => g.destinations).map((d) => [d.id, d]));
+  for (const id of satisfiedInRoom) {
+    const d = byId.get(id);
+    if (!d) {
+      throw new Error(`Shell: this room claims to satisfy "${id}", which the Studio map does not name.`);
+    }
+    if (d.availability !== 'in-room') {
+      throw new Error(
+        `Shell: this room claims to satisfy "${d.label}", which the Studio map declares `
+        + `"${d.availability}". Capability truth lives in the map, not in a room.`,
+      );
     }
   }
 }

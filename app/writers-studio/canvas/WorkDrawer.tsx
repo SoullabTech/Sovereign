@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import type { LivingWork } from '../useLivingWorks';
+import { declaringWorks } from '../workContext';
 
 /**
  * The Work drawer — the anchor of the Study Wall (Work Continuity Layer,
@@ -133,7 +134,64 @@ export default function WorkDrawer({
     );
   }
 
-  // Several works, none united with the table: the drawer does not guess.
+  /* D4 — THE DEAD END, AND WHY IT WAS ONE.
+   *
+   * `unitedWork` is null in two completely different situations, and this
+   * branch used to treat them as one:
+   *
+   *   NONE      no Work declares this manuscript. Asking which Work it is a
+   *             form of is exactly the right question.
+   *   SEVERAL   the member declared it in two or more Works — which D-018 says
+   *             is CORRECT BY DESIGN, an expression may belong to several Works.
+   *
+   * In the second case the drawer asked the first case's question. The member
+   * had already answered it, twice, and the only gesture that could undo either
+   * answer — "no longer a form of this work" — lives in the united-work view
+   * they could no longer reach. So the room offered declaring into a THIRD Work
+   * as the only way out of having declared into two, while Conversations stayed
+   * shut because MAIA will not choose between Works.
+   *
+   * The founder rule this repairs:
+   *
+   *     A reversible member act must not hide the gesture required to reverse it.
+   *
+   * Nothing here chooses for the member and nothing is withdrawn on their
+   * behalf. The room shows the declarations they made and hands back the
+   * gesture that was always theirs.
+   */
+  const declaring = manuscript ? declaringWorks(works, manuscript.id) : [];
+
+  if (!work && declaring.length > 1) {
+    return (
+      <div data-state="ambiguous-declaration">
+        <p className="text-[13px] leading-relaxed opacity-60 mb-1">
+          You have declared {manuscriptLabel} in {declaring.length} works.
+        </p>
+        <p className="text-[12.5px] leading-relaxed opacity-45 mb-4">
+          That is allowed — a piece of writing can be a form of more than one
+          work. While it is, the Studio carries no single work context, so MAIA
+          has none to speak into. You can leave it as it is, or withdraw one.
+        </p>
+        <ul className="space-y-2">
+          {declaring.map((w) => (
+            <li key={w.id} className="text-[13px] opacity-75">
+              ✓ {w.title ?? 'Your work'}
+              <button
+                disabled={busy}
+                onClick={() => void undeclare(w.id)}
+                className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
+              >
+                no longer a form of this work
+              </button>
+            </li>
+          ))}
+        </ul>
+        {failed && <p className="text-[12px] opacity-60 mt-3">{failed}</p>}
+      </div>
+    );
+  }
+
+  // No work declares this manuscript: the drawer does not guess.
   // The Shape gesture below is how the member says which one this belongs to.
   if (!work) {
     return (

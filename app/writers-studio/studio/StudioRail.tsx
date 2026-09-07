@@ -82,6 +82,20 @@ export function StudioRailItem({
      honesty: there is nothing here to take. */
   const unavailable = state === 'unavailable';
   const Tag = inert || unavailable ? 'span' : onSelect ? 'button' : 'a';
+  /* The sentence the row owes the member, from the reason the shell resolved.
+     Three states, three different things to say — "not built yet" and "needs a
+     manuscript" are not interchangeable, and a capability the member already
+     has under another name must not read as one they do not have at all. */
+  const shellState = (destination as Partial<ShellDestination>).unavailableBecause;
+  const stateNote = !unavailable
+    ? null
+    : shellState === 'needs-manuscript'
+      ? 'needs a manuscript'
+      : shellState === 'served-elsewhere'
+        ? `in ${destination.servedBy?.label ?? 'another room'}`
+        : shellState === 'unbuilt'
+          ? 'not built yet'
+          : null;
   return (
     <Tag
       {...(inert || unavailable
@@ -132,6 +146,24 @@ export function StudioRailItem({
           <span style={{ flex: 1 }} />
           <StudioText role="metadata" as="span">
             {destination.count}
+          </StudioText>
+        </>
+      )}
+      {/* FR-C, restored.
+          "Visible but unavailable capability must SAY its state, not merely
+          become dim." This row used to be a dimmed span with aria-disabled and
+          nothing else — the state was expressed only as 55% opacity, which a
+          screen reader cannot read, a low-vision member cannot distinguish from
+          quiet ink, and nobody can act on. Dimness is a mood, not a statement.
+          The ruling never changed; the implementation was lost on another
+          branch and the render regressed to it.
+          A count and a state line are mutually exclusive by construction:
+          `assertShellPromisesNothing` refuses a count on anything unavailable. */}
+      {stateNote && (
+        <>
+          <span style={{ flex: 1 }} />
+          <StudioText role="metadata" as="span" tone="quiet">
+            {stateNote}
           </StudioText>
         </>
       )}

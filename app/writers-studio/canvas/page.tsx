@@ -24,7 +24,7 @@ import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioModeBar } from '../studio/StudioModeBar';
 import { StudioScrollbars } from '../studio/StudioScrollbars';
 import { StudioText } from '../studio/StudioType';
-import { IMPORT_HREF } from '../studioMap';
+import { assertRoomClaimsNothingUnbuilt, IMPORT_HREF } from '../studioMap';
 import {
   adoptRouteIdentity,
   canvasForManuscript,
@@ -126,8 +126,29 @@ import StudioLowerBand from './StudioLowerBand';
 /** Panels that can stand in the row beside the field. */
 type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
 
-/** Rail destinations this room satisfies in place rather than by navigation. */
-const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
+/**
+ * Rail destinations this room HOSTS in place rather than by navigation.
+ *
+ * A hosting claim, not an existence claim (D3): every id here must be declared
+ * `in-room` by STUDIO_MAP, which is the single authority on whether a
+ * capability exists. `assertRoomClaimsNothingUnbuilt` refuses the other reading
+ * at module load, so a room can never again promote a destination the map calls
+ * unbuilt and show a member a capability nobody granted.
+ *
+ * `statistics` joins them under D1. It was always built — the lower band counts
+ * words, sections and versions kept — and the rail drew it unavailable on the
+ * same screen that displayed the figures. That was the sharpest declaration
+ * defect in the Studio: not a missing capability, a Studio lying about one.
+ */
+const SATISFIED_IN_ROOM = [
+  'materials',
+  'structure',
+  'versions',
+  'conversations',
+  'statistics',
+] as const;
+
+assertRoomClaimsNothingUnbuilt(SATISFIED_IN_ROOM);
 
 /* Named, and no longer the default export: `useSearchParams()` reads route
    state, so this room renders under a Suspense boundary (the default export
@@ -559,13 +580,17 @@ function CanvasRoom() {
           openPanels={[
             ...(materialsOpen ? ['materials'] : []),
             ...(outlineOpen ? ['structure'] : []),
-            ...(bandOpen ? ['versions'] : []),
+            ...(bandOpen ? ['versions', 'statistics'] : []),
             ...(conversationOpen ? ['conversations'] : []),
           ]}
           onSelect={(d) => {
             if (d.id === 'materials') summon('materials');
             if (d.id === 'structure') summon('outline');
             if (d.id === 'versions') setBandOpen(true);
+            /* Same band. Versions and Statistics are two regions of the lower
+               band, so both open it — the rail names the capability, the band
+               is where it lives. */
+            if (d.id === 'statistics') setBandOpen(true);
             if (d.id === 'conversations') {
               summon('conversation');
               summon('maia');

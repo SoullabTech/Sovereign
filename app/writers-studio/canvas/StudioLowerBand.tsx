@@ -47,16 +47,44 @@
 'use client';
 
 import { GOLD, GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
+import { capabilityOf, isBuilt } from '../studioMap';
 import { StudioText } from '../studio/StudioType';
 import { formatWhen, pageEstimate, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 
-/** The structural surfaces 04 bands together. Only Outline exists. */
-export const STRUCTURE_SURFACES = [
-  { id: 'outline', label: 'Outline', available: true },
-  { id: 'threads', label: 'Threads', available: false },
-  { id: 'timeline', label: 'Timeline', available: false },
-  { id: 'word-web', label: 'Word Web', available: false },
-] as const;
+/**
+ * The structural surfaces 04 bands together — now a PROJECTION, not a claim.
+ *
+ * D3. This array used to carry its own `available` flags, which made a lower
+ * band one of three places that could independently decide whether a capability
+ * existed. Worse, `threads` was declared ONLY here: a ratified Structure concept
+ * (FIELD-MAP §3, §4) whose sole trace in the product was a boolean in a band,
+ * which is how the census came to read it as an orphan and propose removing it.
+ *
+ * Availability is now read from studioMap.ts, the single authority — through
+ * `capabilityOf`, which answers for placed destinations and for ratified ones
+ * that have no place in the rail grammar yet (Threads). This file
+ * keeps what it legitimately owns — that these four surfaces are banded
+ * together, and in what order — and asks the map whether each one exists.
+ *
+ * `outline` is the band's name for the destination the map calls `structure`;
+ * the two are the same capability seen from two rooms.
+ */
+const STRUCTURE_BAND: readonly { id: string; label: string; destinationId: string }[] = [
+  { id: 'outline', label: 'Outline', destinationId: 'structure' },
+  { id: 'threads', label: 'Threads', destinationId: 'threads' },
+  { id: 'timeline', label: 'Timeline', destinationId: 'timeline' },
+  { id: 'word-web', label: 'Word Web', destinationId: 'word-web' },
+];
+
+export const STRUCTURE_SURFACES = STRUCTURE_BAND.map((s) => {
+  const capability = capabilityOf(s.destinationId);
+  if (capability === null) {
+    throw new Error(
+      `Lower band: "${s.label}" names capability "${s.destinationId}", which studioMap.ts does not record.`,
+    );
+  }
+  return { id: s.id, label: s.label, available: isBuilt(capability) };
+});
 
 export interface StudioLowerBandProps {
   revisions: RevisionSummary[] | null;
