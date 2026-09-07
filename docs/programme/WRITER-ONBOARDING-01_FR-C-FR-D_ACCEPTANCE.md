@@ -22,10 +22,9 @@ NEW EDITS  NONE
 ```text
 TESTS               91 suites · 1546 tests · PASS
 LOCAL SCOPE         app/writers-studio · 0 TypeScript diagnostics
-PROJECT TYPECHECK   NOT ESTABLISHED
-                    environment changed from empty node_modules →
-                    installed dependency tree mid-session
-                    prior "clean" result WITHDRAWN
+PROJECT TYPECHECK   ✅ ESTABLISHED — see §2 result (clean worktree, npm ci)
+                    the mid-session result stays WITHDRAWN and is NOT the
+                    basis for this; it was replaced, not explained away
 RENDERED ACCEPTANCE NOT YET RUN
 ```
 
@@ -62,6 +61,36 @@ METHOD
   ⛔ if unrelated canonical failures remain, establish the baseline cleanly
      and compare against that
 ```
+
+### RESULT — 2026-09-07 · PASS
+
+```text
+subject          227e4e63 · working tree clean · fresh git worktree
+install          npm ci · exit 0 · no --no-save, no ad-hoc packages
+typescript       5.9.3, resolved from the lockfile (not npx)
+program files    4237
+errors           230   (baseline 239)
+fixed            9 since baseline (7 identities gone, 0 reduced)
+regressions      NONE
+exit             0
+```
+
+**Answer to the question, and only that question:** `761d5ec9 + 227e4e63`
+introduce **no project-level typecheck regression** under the project's actual
+toolchain. No repairs were mixed into the verification.
+
+⭐ **The four diagnostics that appeared mid-session are absent from this run
+entirely** — zero occurrences of `wisdom-keepers` or `components/focus` in the
+output. They were artifacts of a partial dependency tree assembled by ad-hoc
+`npm i --no-save`, not latent findings. This is what a clean toolchain was for:
+the earlier result is REPLACED by a reproducible run, not rescued by an
+argument.
+
+⚠️ Note for anyone repeating this: `npx tsc` in a container with empty
+`node_modules` fetches whatever is current (6.0.2 at the time), which hard-errors
+on this project's `downlevelIteration` and `moduleResolution: node10` before
+checking a single file — and the gate then reports a nonsense "239 fixed". Always
+run the lockfile-resolved compiler.
 
 ---
 
