@@ -88,3 +88,30 @@ it named the session, it would have bound the wrong lane.
 
 A sequencing hold is **not** lock contention. When the lock releases, a sequencing restriction on
 another lane **survives intact**. ⛔ Do not read an empty deploy lane as permission.
+
+---
+
+## Promotion inventory (for PR scope — verified 2026-09-08)
+
+⚠️ **"Three promoted laws" was ambiguous.** The promotion contains **four law statements** across
+**three doctrines** in **two canon files**. Both counts are correct at different levels; the PR scope
+is the file list.
+
+```text
+LAW STATEMENTS (4)                        DOCTRINE (3)        CANON FILE (2)
+1. Migration witness law            \____ migration doctrine  MIGRATION_WITNESS_DOCTRINE.md
+2. Migration reconcile law          /
+3. Release advance law              ----- release advance     DEPLOY_SEQUENCING_LAWS.md
+4. Deploy-lane custody law          ----- deploy custody      DEPLOY_SEQUENCING_LAWS.md
+
+FILES CHANGED (3)
+  CLAUDE.md                              new "Migration & Deploy Laws" section, 4 statements
+  docs/ops/MIGRATION_WITNESS_DOCTRINE.md carries the 2026-09-08 checksum correction
+  docs/ops/DEPLOY_SEQUENCING_LAWS.md     new file
+```
+
+⭐ **Count by DOCTRINE when speaking; count by FILE when scoping a PR.** The two migration laws are
+one doctrine and were ratified as a pair — ⛔ do not split them.
+
+⛔ **No re-drafting during promotion.** The text is already fixed on the lane; the PR moves it
+unchanged.
