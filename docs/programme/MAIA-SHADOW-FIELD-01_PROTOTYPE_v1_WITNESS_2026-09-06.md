@@ -804,7 +804,7 @@ REPAIR        NONE — diagnose only.
 ```
 
 Also witnessed: **the Shadow Field tile was absent from The House**, so the founder reached
-Arrival by direct route.
+Arrival by direct route. **This is not presently a Shadow Field defect** — see the ruling below.
 
 ### Read-only source diagnosis (assistant, no code changed)
 
@@ -843,6 +843,41 @@ a conversation-overlay component a standalone place. Design finding, not a styli
 route that is a full navigation away from ~70% of the viewport, unwarned. Lawful in outcome
 (leaving keeps nothing) but not a threshold's behaviour.
 
+### Founder ruling — what the House absence does and does not establish
+
+The broader phrasing *"a member cannot discover Shadow Field from the House"* is **withdrawn as
+too broad.** The accurate statement:
+
+> Shadow Field is intentionally founder-gated in the House. On this localhost session the
+> founder-only destination was not rendered, indicating the session did not resolve
+> `isFounder = true`.
+
+That may reveal a test-environment/session problem. **The absent tile itself is behaving
+according to the design.** Whether route-level discoverability should widen beyond `founder` is
+a separate roadmap question the walk has not yet earned evidence to inform.
+
+### Epistemic boundary held until the Network row exists
+
+```text
+HYPOTHESIS
+localhost:3012 session is not resolving as founder/admin/practitioner
+
+PREDICTS
+1. House hides Shadow Field because audience:'founder' fails
+2. /api/maia/shadow-field/enter returns 401 because no valid session
+3. client silently swallows that 401
+
+CONFIRMED FROM SOURCE
+- founder audience gate exists
+- House filtering uses isFounder
+- isFounder derives from admin/practitioner
+- /enter requires session
+- non-2xx entry responses are silently discarded
+
+NOT YET CONFIRMED AT RUNTIME
+- this particular click returned 401
+```
+
 ### Two findings, not one — do not conflate them
 
 **1 · Trust architecture — ESTABLISHED from the frozen source.** The client has no visible
@@ -861,6 +896,29 @@ request → 2xx        → transition/state/render failure after successful entr
 
 The audience-gate hypothesis (session not founder-resolved → 401) predicts the middle row. It
 is a hypothesis until that row exists. **No repair before the capture.**
+
+### Architectural finding — Arrival composition
+
+The source evidence strengthens rather than replaces the experiential observation. It did not
+merely *resemble* a drawer: it **is a bottom sheet transplanted onto a standalone route.**
+
+```text
+ARRIVAL COMPOSITION
+The standalone Shadow Field route presents an overlay component as the room.
+
+Consequences witnessed:
+- ~70% viewport becomes scrim
+- threshold content is compressed into a bottom strip
+- the large black region is active dismissal territory
+- clicking most of the visible "room" invokes leave()
+- entry and exit architecture belong to an overlay interaction model,
+  not to a dedicated contemplative field
+```
+
+This is **not** answered by narrowing the measure or moving the button. The open question is
+whether a route-level Shadow Field needs its own spatial container, while `ShadowFieldSheet`
+remains right when the Field is invoked *over* another MAIA context — which is the shape the
+deferred Invoked entrance would need anyway.
 
 ### Founder Arrival observations — recorded as evidence, not repaired
 
