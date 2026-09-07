@@ -36,6 +36,7 @@ import {
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
+import { WritingFieldVisual } from '../WorkVisual';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
@@ -572,6 +573,19 @@ function CanvasRoom() {
             }
           }}
           lead={
+            <>
+              {/* WS-WORK-VISUAL-01 — the Work's own image, present while the
+                  writer is actually writing.
+
+                  It sits in the RAIL, which is the surrounding field: beside
+                  the manuscript column, never behind or beneath editable
+                  prose, where it would trade the writer's legibility for the
+                  room's atmosphere. The manuscript stays exactly as stable as
+                  it was; the image belongs to what is around it.
+
+                  Nothing appears when no image was chosen — a Work without one
+                  is complete, and the rail simply begins at "This work". */}
+              <WritingFieldVisual workId={work?.id ?? null} title={work?.title ?? null} />
             <button
               type="button"
               onClick={() => setWorkOpen((v) => !v)}
@@ -592,6 +606,7 @@ function CanvasRoom() {
                 This work
               </StudioText>
             </button>
+            </>
           }
           style={{
             width: compact ? '100%' : pct(L.rail),

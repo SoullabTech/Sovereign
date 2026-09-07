@@ -13,6 +13,8 @@ import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
 import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
 import { AtmosphereSwitch } from './atmosphere/AtmosphereSwitch';
+import { WorkVisualChooser, WorkVisualImage } from './WorkVisual';
+import { useWorkVisual } from './useWorkVisual';
 
 /**
  * Writer's Studio — Home.
@@ -129,6 +131,8 @@ export default function HomeView({
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const [query, setQuery] = useState('');
+  /* Changing a Work's image must be visible everywhere it appears at once. */
+  const [visualEpoch, setVisualEpoch] = useState(0);
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, alsoWritten, shelf, feature, imported } = arrivalFor(works, manuscripts);
@@ -337,6 +341,7 @@ export default function HomeView({
     untitled,
     itemKey,
     target,
+    visualWorkId,
   }: {
     href: string;
     title: string;
@@ -344,6 +349,8 @@ export default function HomeView({
     untitled?: boolean;
     itemKey: string;
     target: DeleteTarget;
+    /** Set only for a declared Work — unclaimed writing has no visual custody. */
+    visualWorkId?: string;
   }) => {
     /* The confirmation REPLACES the card. A destructive question floating over a
        still-clickable card is a question the member can walk past by accident. */
@@ -371,23 +378,63 @@ export default function HomeView({
           />
           {/* Identity comes from the writing's own facts — how long the title
               runs, what form it took, how much of it there is, when it was last
-              written. Never decoration invented to make cards look different. */}
-          <span
-            className="block leading-[1.24] mb-2.5 pr-10"
-            style={{
-              fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
-              opacity: untitled ? 0.72 : 1,
-            }}
-          >
-            {title}
+              written — and, when the writer chose one, their own image. Never
+              decoration invented to make cards look different, and never an
+              image the Studio picked. */}
+          <span className="flex items-start gap-4">
+            {visualWorkId ? (
+              <CardVisual key={visualEpoch} workId={visualWorkId} title={title} />
+            ) : null}
+            <span className="block min-w-0">
+              <span
+                className="block leading-[1.24] mb-2.5 pr-10"
+                style={{
+                  fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
+                  opacity: untitled ? 0.72 : 1,
+                }}
+              >
+                {title}
+              </span>
+              <span className="block text-[13px] opacity-50">{meta}</span>
+            </span>
           </span>
-          <span className="block text-[13px] opacity-50">{meta}</span>
         </Link>
         {/* A sibling of the Link, never a child of it — a button inside an
             anchor is invalid, and would make Delete a way to open the work. */}
         <div className="absolute top-2 right-2">
           <DeleteButton itemKey={itemKey} label={`Delete ${title}`} />
         </div>
+      </div>
+    );
+  };
+
+  /* Bumped whenever the writer changes a Work's image, and threaded into the
+     visual components as a key. Without it, replacing a cover would update the
+     chooser and leave the hero and the card showing the previous image until a
+     reload — the room disagreeing with the act the writer just performed. */
+  const ResumeVisual = ({ work }: { work: LivingWork }) => {
+    const { src } = useWorkVisual(work.id);
+    if (!src) return null;
+    return (
+      <div className="w-[104px] md:w-[132px] shrink-0 overflow-hidden rounded-[3px]">
+        <WorkVisualImage
+          src={src}
+          alt={`The image chosen for ${work.title ?? 'this work'}`}
+          className="w-full h-auto"
+        />
+      </div>
+    );
+  };
+
+  /* A Work's own image on its card. Reads its own bytes because the Home's
+     list endpoints carry no image — and shows NOTHING when the writer has
+     chosen none, rather than a placeholder pretending to be the Work. */
+  const CardVisual = ({ workId, title }: { workId: string; title: string }) => {
+    const { src } = useWorkVisual(workId);
+    if (!src) return null;
+    return (
+      <div className="w-[52px] h-[68px] shrink-0 overflow-hidden rounded-[2px]">
+        <WorkVisualImage src={src} alt={`The image chosen for ${title}`} className="w-full h-full" />
       </div>
     );
   };
@@ -558,6 +605,7 @@ export default function HomeView({
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
+                          visualWorkId={w.id}
                         />
                       ))}
                       {foundWriting.map((m) => (
@@ -590,13 +638,23 @@ export default function HomeView({
             {kind === 'continue' && resume ? (
               <section className="mb-14 md:mb-20">
                 <Eyebrow>Return</Eyebrow>
-                <h1
-                  className="leading-[1.08] mb-3 mt-5 max-w-2xl"
-                  style={{ fontSize: 'clamp(2.375rem, 4.6vw, 3.375rem)' }}
-                >
-                  {resume.title ?? 'Your untitled work'}
-                </h1>
-                <p className="text-[14.5px] opacity-50 mb-8">{workMeta(resume)}</p>
+                {/* The Work's own image and its name, together. This is where
+                    recognition happens — a writer knows their book by its face
+                    before they read its title. When they have chosen no image
+                    the row simply has one column and nothing pretends to be
+                    the Work's visual identity. */}
+                <div className="flex items-start gap-6 md:gap-8 mt-5">
+                  <ResumeVisual key={visualEpoch} work={resume} />
+                  <div className="min-w-0">
+                    <h1
+                      className="leading-[1.08] mb-3 max-w-2xl"
+                      style={{ fontSize: 'clamp(2.375rem, 4.6vw, 3.375rem)' }}
+                    >
+                      {resume.title ?? 'Your untitled work'}
+                    </h1>
+                    <p className="text-[14.5px] opacity-50 mb-8">{workMeta(resume)}</p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <Link
                     href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume))}
@@ -624,6 +682,17 @@ export default function HomeView({
                   </div>
                 ) : null}
 
+                {/* Offered beside the Work, never demanded of it. A Work with
+                    no image is complete; this is an invitation, not a gap the
+                    room is asking the writer to fill. */}
+                <div className="mt-6">
+                  <WorkVisualChooser
+                    workId={resume.id}
+                    workTitle={resume.title ?? 'this work'}
+                    onChanged={() => setVisualEpoch((n) => n + 1)}
+                  />
+                </div>
+
                 {/* The other live work, offered in the SAME breath as the hero.
                     The hero leads because it is where the writer last was —
                     not because the Studio has decided it matters most. These
@@ -649,6 +718,7 @@ export default function HomeView({
                           title={w.title ?? 'Untitled work'}
                           untitled={!w.title}
                           meta={workMeta(w)}
+                          visualWorkId={w.id}
                         />
                       ))}
                     </Cards>
@@ -842,6 +912,7 @@ export default function HomeView({
                       title={w.title ?? 'Untitled work'}
                       untitled={!w.title}
                       meta={workMeta(w)}
+                      visualWorkId={w.id}
                     />
                   ))}
                 </Cards>
