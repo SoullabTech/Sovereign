@@ -316,6 +316,35 @@ constitutional authority.
 > completion · birth · separation — is where human interpretation and member acts return, and stays
 > separate (CA-04).
 
+## FR-14 · Verifier coverage law — **RATIFIED** *(2026-09-07)*
+
+> **A verifier passes only when every executed assertion passes AND every required constitutional
+> assertion is still present.**
+
+```text
+PASS = 0 failed  AND  no required assertion missing
+```
+
+`0 failed` is **necessary but not sufficient.** Demonstrated: deleting four assertions left the
+remainder passing and the verifier reported `0 failed`.
+
+> **An instrument can satisfy all of its remaining questions by forgetting to ask the difficult
+> ones.**
+
+⛔ **Not a frozen numeric total** — brittle, since legitimate new assertions raise it. A **named
+coverage floor**:
+
+```text
+required assertion missing  →  FAIL
+required assertion failed   →  FAIL
+new assertion added         →  allowed
+all required + new pass     →  PASS
+```
+
+⛔ The verifier **must not be able to become greener by forgetting what it used to verify.**
+⛔ The total is never authoritative. ⛔ An ID leaves the floor only by a founder act retiring the
+obligation itself — never to make a run green.
+
 ## Principle · Fact derivation vs meaning declaration *(founder, cross-lane)*
 
 ⚠️ **Not ratified as Circle law.** Articulated by the founder as a general architectural principle

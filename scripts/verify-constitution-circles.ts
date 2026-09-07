@@ -9,6 +9,31 @@
  *   npx tsx scripts/verify-constitution-circles.ts
  *   DATABASE_URL=postgres://... npx tsx scripts/verify-constitution-circles.ts
  *
+ * PASS CONDITION — two parts, both required:
+ *
+ *     0 failed   AND   every required assertion still present
+ *
+ * `0 failed` alone is NOT sufficient. On 2026-09-07 an edit to C6 accidentally
+ * deleted C9, C10, C11 and C13; the remaining assertions all passed and the
+ * verifier reported `31 passed · 0 failed · exit 0`. It had become greener by
+ * forgetting what it used to ask.
+ *
+ *     An instrument can satisfy all of its remaining questions by forgetting to
+ *     ask the difficult ones.
+ *
+ * So REQUIRED_ASSERTIONS below is a NAMED COVERAGE FLOOR, not a frozen total.
+ * A numeric total would be brittle — legitimate new assertions raise it. The
+ * floor is deliberately by name:
+ *
+ *     required assertion missing  →  FAIL
+ *     required assertion failed   →  FAIL
+ *     new assertion added         →  allowed
+ *     all required + new pass     →  PASS
+ *
+ * ⛔ Do not make the total authoritative. ⛔ Do not remove an ID from the floor
+ * to make a run green — that is the exact failure this exists to catch. An ID
+ * leaves the floor only by a founder act that retires the obligation itself.
+ *
  * Consequence contract:
  *   - Read-only in consequence. Every fixture is created inside a transaction
  *     that is ALWAYS rolled back, including on throw.
@@ -46,19 +71,49 @@ let failed = 0;
 let warned = 0;
 let skipped = 0;
 
+/**
+ * The coverage floor — every constitutional obligation this verifier is
+ * required to still be asking. Named, never counted.
+ */
+const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
+  // Group C — source and schema
+  'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8',
+  'C9', 'C10', 'C11', 'C12', 'C13', 'C14',
+  // Group S — service layer against real principals
+  'S1', 'S2', 'S3',
+  // FR-03 / FR-11 constitution state
+  'S4a', 'S4b', 'S4c', 'S4d', 'S4e',
+  // Group T — data invariants and live semantics
+  'T1', 'T2',
+  'T3a', 'T3b', 'T3c', 'T3d', 'T3e', 'T3f', 'T3g', 'T3h', 'T3i',
+  'T5', 'T6',
+]);
+
+/** Assertion IDs that actually executed this run, in any outcome. */
+const executed = new Set<string>();
+
+function note(label: string) {
+  const id = label.split(/\s+/)[0];
+  if (id) executed.add(id);
+}
+
 function pass(label: string, detail?: string) {
+  note(label);
   console.log(`  ✅ PASS  ${label}${detail ? `  (${detail})` : ''}`);
   passed++;
 }
 function fail(label: string, detail?: string) {
+  note(label);
   console.log(`  ❌ FAIL  ${label}${detail ? `  → ${detail}` : ''}`);
   failed++;
 }
 function warn(label: string, detail?: string) {
+  note(label);
   console.log(`  ⚠️  WARN  ${label}${detail ? `  (${detail})` : ''}`);
   warned++;
 }
 function skip(label: string, detail?: string) {
+  note(label);
   console.log(`  ⏭️  SKIP  ${label}${detail ? `  (${detail})` : ''}`);
   skipped++;
 }
@@ -201,6 +256,87 @@ async function groupC() {
     offenders.length === 0
       ? pass('C6 FR-08.7 no participation quantity reaches a member-facing Circle surface')
       : fail('C6 FR-08.7 participation exposed as a member-facing signal', offenders.join(', '));
+  }
+
+  // C9 — FR-06: discovery reads declared interests only.
+  {
+    const hasDiscovery = ['listAllCircles', 'discoverCircles', 'searchCircles'].some((fn) =>
+      (src('lib/circles/circleService.ts') || '').includes(fn)
+    );
+    hasDiscovery
+      ? warn('C9 FR-06 a discovery path exists — assert its inputs explicitly')
+      : pass('C9 FR-06 no discovery surface exists yet; nothing can read forbidden sources');
+  }
+
+  // C10 — FR-07: collective release must not exist before its mechanism does.
+  {
+    const anyRelease = ['lib/circles', 'app/api/circles'].some((d) => {
+      const b = src(join(d, 'sharingService.ts')) || '';
+      return /constellation|releaseToCommons|commons_release/i.test(b);
+    });
+    anyRelease
+      ? fail('C10 FR-07 a Circle→Constellation/Commons release path exists without a ratified mechanism')
+      : pass('C10 FR-07 no collective release path exists; collective material does not cross');
+  }
+
+  // C11 — FR-01/FR-08.8: a crossing is representational, not a live pointer.
+  if (sharingService) {
+    const i = sharingService.indexOf('export async function listFeed');
+    const scope = i >= 0 ? sharingService.slice(i) : '';
+    /JOIN\s+(?!members)/i.test(scope)
+      ? fail('C11 FR-08.8 feed dereferences the source object', 'live pointer')
+      : pass('C11 FR-08.8 feed serves the stored representation only');
+  }
+
+  // C13 — B-01 / CIRCLE-04 R1: the declared release posture must be the ENFORCED
+  //       one. A Next.js layout does not run for route handlers, so the page
+  //       gate in app/commons/circles/layout.tsx cannot close the API. Every
+  //       /api/circles route must go through requireCircleAccess(), and none may
+  //       resolve identity directly — a direct getMemberIdFromRequest() call is
+  //       exactly how the gap existed before R1.
+  {
+    const walk = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const e of readdirSync(dir)) {
+        const full = join(dir, e);
+        out.push(...(statSync(full).isDirectory() ? walk(full) : full.endsWith('.ts') ? [full] : []));
+      }
+      return out;
+    };
+    const apiDir = join(ROOT, 'app/api/circles');
+    const routes = existsSync(apiDir) ? walk(apiDir) : [];
+    const ungated = routes.filter((f) => {
+      const body = readFileSync(f, 'utf8');
+      return body.includes('getMemberIdFromRequest') || !body.includes('requireCircleAccess');
+    });
+    if (routes.length === 0) {
+      fail('C13 B-01 no Circle API routes found to check');
+    } else if (ungated.length === 0) {
+      pass('C13 B-01 every Circle API route is gated by requireCircleAccess', `${routes.length} routes`);
+    } else {
+      fail(
+        'C13 B-01 Circle API route bypasses the release-posture gate',
+        ungated.map((f) => f.replace(ROOT + '/', '')).join(', ')
+      );
+    }
+  }
+
+  // C14 — FR-11 vs FieldPhase: two different questions that share string values.
+  //       CircleConstitutionState is structurally assignable to FieldPhase, so
+  //       TypeScript cannot catch a mix-up. The separation is a discipline, and
+  //       this is the only thing that can falsify a drift back together.
+  {
+    const cs = src('lib/circles/constitutionState.ts');
+    const pulse2 = src('lib/circles/fieldPulseService.ts');
+    if (!cs) {
+      fail('C14 FR-11 constitution state module missing');
+    } else if (/from '\.\/fieldPulseService'|FieldPhase/.test(cs.replace(/\/\*[\s\S]*?\*\//g, ''))) {
+      fail('C14 FR-11 constitution state depends on FieldPhase', 'the two concepts must stay separate');
+    } else if (pulse2 && /constitutionState|CircleConstitutionState/.test(pulse2)) {
+      fail('C14 FR-11 field pulse depends on constitution state', 'activity heuristic must not carry plurality');
+    } else {
+      pass('C14 FR-11 constitution state and FieldPhase remain independent');
+    }
   }
 
   // C14 — FR-11 vs FieldPhase: two different questions that share string values.
@@ -671,9 +807,25 @@ async function main() {
     tx.release();
   }
 
+  // ── Coverage floor ────────────────────────────────────────────────────────
+  // Checked last, so a group that aborted mid-way still reports which
+  // obligations went unasked rather than hiding behind the assertions that ran.
+  section('COVERAGE');
+  const missing = [...REQUIRED_ASSERTIONS].filter((id) => !executed.has(id));
+  if (missing.length === 0) {
+    console.log(`  ✅ all ${REQUIRED_ASSERTIONS.size} required assertions executed`);
+  } else {
+    for (const id of missing) {
+      // Counts as a failure: a missing obligation is not a smaller test suite,
+      // it is an unverified boundary.
+      fail(`COVERAGE required assertion ${id} did not execute`, 'obligation unasked');
+    }
+  }
+
   section('RESULT');
   console.log(`  ${passed} passed · ${failed} failed · ${warned} warned · ${skipped} skipped`);
-  console.log(`  pass condition is "0 failed", never the total.\n`);
+  console.log(`  coverage: ${REQUIRED_ASSERTIONS.size - missing.length}/${REQUIRED_ASSERTIONS.size} required assertions executed`);
+  console.log(`  PASS = 0 failed AND no required assertion missing. The total is never the gate.\n`);
 
   await pool.end();
   process.exit(failed > 0 ? 1 : 0);
