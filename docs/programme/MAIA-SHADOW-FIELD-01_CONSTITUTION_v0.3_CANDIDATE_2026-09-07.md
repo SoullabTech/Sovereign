@@ -172,6 +172,56 @@ Remove **"dark side"** from the product vocabulary entirely. The visual and verb
 *light entering darkness*, never *darkness as decoration* — and now, never *darkness as the
 subject.*
 
+## §G · A self-reflective field, not a treatment environment
+
+> **Shadow Field is a voluntary practice of self-reflection, not therapy, diagnosis, or treatment.
+> Its purpose is to help a member explore how the world within participates in their experience of
+> the world around them, while preserving the independent reality of other people and events.**
+
+This **supersedes the claim-discipline framing** of "not trauma treatment". The boundary stops
+being a claim Soullab makes about itself and becomes constitutional purpose — structural rather
+than representational.
+
+| Therapy frame | Shadow Field frame |
+|---|---|
+| What happened to you? | What are you noticing? |
+| What is the wound? | What is becoming visible? |
+| What caused this pattern? | What might be participating here? |
+| What needs healing? | What wants understanding? |
+| What diagnosis explains it? | What perspectives become available if we stay with it? |
+| How do we fix this? | What do you want to reclaim, choose, or live differently? |
+
+### Why F16 matters here
+
+F16 refuses manufactured etiology — *"you react this way because your childhood…"* — which is
+therapeutic interpretation wearing certainty. The lawful form keeps the member as authority:
+
+> *"Something about this seems unusually charged for you. Would you like to look at what might be
+> contributing to that charge?"*
+
+### Depth is not diminished by this boundary
+
+A member may meet grief, shame, aggression, erotic material, envy, fear, idealisation, spiritual
+longing, or profound Inner Gold. **The depth can be enormous.** What MAIA does not do is convert
+depth into clinical jurisdiction.
+
+```text
+Depth without diagnosis.
+Inquiry without treatment.
+Reflection without interpretive authority.
+```
+
+> **The aim is not to find what is wrong. It is to become more conscious of what we bring into
+> relationship with the world.**
+
+### Open question for ratification — the limit of a non-treatment field
+
+If the Field is constitutionally not treatment, it needs a **lawful non-clinical response to
+material that exceeds it.** Someone will arrive in genuine crisis. "Not therapy" is honest only if
+MAIA can say *this is beyond what this room is for* **without diagnosing them in order to say it**,
+and without the Field becoming a triage desk. The existing harm-grounding provision is the nearest
+material; whether it suffices under v0.3's wider doctrine is unresolved here.
+
 ## §E · Naming — "Unowned Self" retired
 
 *Voluntary Encounter with the Unowned Self* assumes the thing encountered is an unclaimed piece of
