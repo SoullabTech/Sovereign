@@ -745,3 +745,50 @@ IMPLEMENTATION     NOT AUTHORIZED
 ⛔ **D-S3 does not turn the fork green for FRESH.** It removes the last reason the fork had to treat
 *preserve useful legacy thinking* and *adopt legacy implementation* as one choice. ⭐ **They are now
 formally separate acts.**
+
+---
+
+# ADDENDUM VI — CONSTITUTIONAL WORK COMPLETE · THE FORK TEST, PINNED
+**Founder, 2026-09-08 · ⛔ not an adjudication; the criteria the adjudication will run against**
+
+D-S1…D-S4 **no longer travel with the fork as unresolved questions.** The fork now asks only:
+
+> **Does any existing legacy machinery reduce implementation cost without importing rejected
+> semantics, hidden assumptions, or unnecessary coupling?**
+
+```text
+LEGACY machinery may be ADAPTED only if:
+  1. its mechanics are independently useful,
+  2. its rejected psychological stance can be cleanly removed,
+  3. adaptation is cheaper/safer than a fresh implementation,
+  4. it does not acquire authority merely because source ideas were preserved,
+  5. it satisfies D-S1 / D-S2 / D-S3 after adaptation.
+
+Otherwise:
+  FRESH wins by ECONOMY, not IDEOLOGY.
+```
+
+⭐ **The inverse matters equally: *"legacy is bad" is not yet a ruling.*** Unreachable code carrying a
+rejected stance can still contain a useful **generic mechanism**. ⛔ D-S3 deliberately prevented the
+constitutional findings from **prejudging the engineering question** — criterion 4 is the guard in
+the other direction, and *"FRESH wins by economy, not ideology"* is the guard in this one.
+
+## Standing
+
+```text
+D-S1  RATIFIED    D-S3  CLOSED
+D-S2  RATIFIED    D-S4  CLOSED
+
+CONSTITUTIONAL WORK   COMPLETE
+
+FRESH vs LEGACY       READY FOR ADJUDICATION · HOLD
+HOUSE UI              HOLD
+SCHEMA                UNCHANGED
+IMPLEMENTATION        NOT AUTHORIZED
+
+production            891b33ee0
+I0.5                  CLOSED
+canonical PR          OWED for the three promoted laws
+```
+
+⛔ **Nothing moves until the fork adjudication or the canonical-landing act is opened.**
