@@ -229,7 +229,11 @@ export default function DevelopRoom({
      button that cannot succeed. */
   const [readMode, setReadMode] = useState<'whole' | 'part'>('whole');
   const [fromIndex, setFromIndex] = useState(0);
-  const [toIndex, setToIndex] = useState(-1); // -1 = the end, whatever it is
+  /* THREE states, and the third is the point: null = the writer has not
+     chosen an end yet. -1 = to the end, whatever it is. 0..n = a section.
+     Without the third, opening "Part of it" has to guess an ending, and a
+     guessed ending is the system making an editorial choice. */
+  const [toIndex, setToIndex] = useState<number | null>(-1);
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
   >({ phase: 'idle' });
@@ -388,7 +392,15 @@ export default function DevelopRoom({
          important", is the ranking this room refuses. */
       if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) {
         setReadMode('part');
-        setToIndex(0);
+        /* ⛔ NOT a range chosen for them. An earlier attempt opened at the
+           first section alone — which fits, and which the founder refused:
+           "no automatic first N sections that fit; that would quietly turn
+           the system's capacity into the writer's editorial choice."
+
+           So the end is left UNCHOSEN and the room asks. It does not open in
+           a state that fails (the defect this replaced), and it does not open
+           in a state someone else decided. */
+        setToIndex(null);
       }
     });
     return () => {
@@ -404,10 +416,12 @@ export default function DevelopRoom({
 
      ⛔ Nothing preselects, recommends, or ranks a place to start. */
   const last = sections && sections.length > 0 ? sections.length - 1 : 0;
-  const to = toIndex === -1 ? last : toIndex;
+  const endChosen = toIndex !== null;
+  const to = toIndex === null ? last : toIndex === -1 ? last : toIndex;
   const chosenScope: ReadingScope | undefined = (() => {
     if (!sections || sections.length === 0) return undefined;
     if (readMode === 'whole') return undefined;
+    if (!endChosen) return undefined;
     if (fromIndex === 0 && to === last) return undefined;
     return {
       kind: 'range',
@@ -417,7 +431,10 @@ export default function DevelopRoom({
   })();
   const chosenSections = sections ? sections.slice(fromIndex, to + 1) : [];
   const chosenSize = codePointsOf(readMode === 'whole' ? (sections ?? []) : chosenSections);
-  const tooLarge = chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS;
+  /* Nothing may be asked while the end is unchosen — not because it would
+     fail, but because no range has been named yet. */
+  const tooLarge =
+    chosenSize > DEVELOPMENTAL_READ_CEILING_CODE_POINTS || (readMode === 'part' && !endChosen);
 
   const ask = async () => {
     setCommission({ phase: 'reading' });
@@ -691,7 +708,7 @@ export default function DevelopRoom({
                             setFromIndex(next);
                             /* The end never falls behind the beginning —
                                corrected as they choose, not refused after. */
-                            if (toIndex !== -1 && next > toIndex) setToIndex(next);
+                            if (toIndex !== null && toIndex !== -1 && next > toIndex) setToIndex(next);
                           }}
                           className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
                           style={{ borderColor: PRESS.rule, color: PRESS.text }}
@@ -706,7 +723,7 @@ export default function DevelopRoom({
                       <div className="flex flex-wrap items-center gap-2 text-[13px]">
                         <span className="opacity-55 w-8">to</span>
                         <select
-                          value={toIndex}
+                          value={toIndex ?? ''}
                           onChange={(e) => setToIndex(Number(e.target.value))}
                           className="bg-transparent border px-2 py-1.5 rounded-[2px] max-w-[18rem] flex-1"
                           style={{ borderColor: PRESS.rule, color: PRESS.text }}
@@ -715,6 +732,14 @@ export default function DevelopRoom({
                               ordinary way — and it stays true as the book
                               grows, because -1 resolves to whatever the end is
                               rather than pinning today's last section. */}
+                          {/* Present only while unchosen, and never selectable
+                              back into — an "unchosen" a writer can re-pick is
+                              a state, not a prompt. */}
+                          {!endChosen && (
+                            <option value="" disabled style={{ color: PRESS.ink }}>
+                              Choose where to stop
+                            </option>
+                          )}
                           <option value={-1} style={{ color: PRESS.ink }}>To the end</option>
                           {sections.map((sec, i) => (
                             <option
@@ -729,7 +754,7 @@ export default function DevelopRoom({
                         </select>
                       </div>
                       {/* Still too much, said while they can still change it. */}
-                      {tooLarge && (
+                      {endChosen && tooLarge && (
                         <p className="text-[12.5px] leading-relaxed opacity-70">
                           That is still more than MAIA reads in one sitting.
                           Choose a smaller stretch.

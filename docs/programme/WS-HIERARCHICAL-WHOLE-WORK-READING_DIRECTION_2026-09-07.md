@@ -13,13 +13,14 @@ question and the real one starts.
 The question was *what should `DEVELOPMENTAL_READ_CEILING_CODE_POINTS` be?* It is now *what is the
 maximum size of one bounded reading UNIT, and how does MAIA compose complete coverage from many?*
 
-⚠️ **`b223dadd0` raised that constant 60,000 → 650,000, and under this architecture that is the
-wrong shape.** The founder ruling is explicit: *do not solve long manuscripts with an ever-larger
+⚠️ **The constant is now 500,000** (raised from 60,000; 650,000 was proposed and refused as too
+close to the window's edge — ~198,500 of 200,000, with no tolerance for tokenizer variation. The
+margin is the ruling, not the ceiling). **Under this architecture even that is the wrong shape.** The founder ruling is explicit: *do not solve long manuscripts with an ever-larger
 ceiling.* The raise is a **bridge** and must be recorded as one — it lets an ordinary book be read
 at all today, when no composition exists. When units arrive, the constant becomes a **unit** ceiling
 and **650,000 is far too large for a unit**: a chapter is the bounded thing.
 
-⛔ Do not cite 650,000 later as a settled reading budget. It is the size of the gap this
+⛔ Do not cite 500,000 later as a settled reading budget. It is the size of the gap this
 architecture closes.
 
 ## 1 · The parts, and what already exists for each

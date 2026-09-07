@@ -126,7 +126,7 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * bytes, never UTF-16 units. Freshly ratified for BUILD-07B; not inherited
  * from the structure reader's regime. Changing it is a ruling, not an edit.
  *
- * ── RAISED 60_000 → 650_000 · founder ruling 2026-09-07 ───────────────────
+ * ── RAISED 60_000 → 500_000 · founder ruling 2026-09-07 ───────────────────
  *
  *   "It's a Writer's Studio."
  *
@@ -138,11 +138,19 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * The new one is derived, not chosen. `read.ts` runs `claude-opus-5` with
  * DEFAULT_MAX_TOKENS = 16_000:
  *
- *     200,000   context window
- *     − 16,000  output budget
- *     − 20,000  system prompt · structure context · thread history
+ *     500,000 code points  ≈  125,000 tokens at ~4 chars/token
+ *     + 16,000 output budget
+ *     + 20,000 system prompt · structure context · thread history
  *     ─────────
- *     164,000   tokens of prose  ≈  650,000 code points at ~4 chars/token
+ *     161,000 of a 200,000 window  →  ~39,000 tokens of margin
+ *
+ * ⚠️ 650,000 was proposed first and REFUSED as too close to the edge: it
+ * computes to ~198,500 of 200,000, leaving essentially nothing for tokenizer
+ * variation or overhead growth. The margin is the ruling, not the ceiling —
+ * a number that fits in theory and fails in practice is worse than a smaller
+ * one, because it fails after the writer has waited.
+ *
+ * Elemental Alchemy (~385,000 code points) sits comfortably inside 500,000.
  *
  * ⛔ THE BOUND IS NOT REMOVED, and the reason is unchanged: "refused whole,
  * nothing trimmed". A reading that silently read part of a book and reported
@@ -162,7 +170,7 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * direction. It is a constant here because the reader has one default model;
  * the day that stops being true, this becomes a function of the model.
  */
-export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 650_000;
+export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 500_000;
 
 /* ── request ─────────────────────────────────────────────────────────────── */
 
