@@ -89,12 +89,48 @@ async function extractPdfText(
   const { PDFParse } = await import('pdf-parse');
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
-    const result = await parser.getText();
+    /* PDF-CLEAN — pdf-parse appends a synthetic page marker to every page.
+       Its default `pageJoiner` is '\n-- page_number of total_number --', so a
+       ten-page manuscript arrives carrying ten lines the author never wrote.
+       What that costs, stated no higher than it is: the marker canNOT become a
+       heading — `segment.ts` needs `#`, "Chapter", or a leading capital, and a
+       line starting `--` matches none of them. The harm is fidelity, not
+       structure. The member reads invented lines in their own manuscript, the
+       lines persist verbatim into section bodies and into the `source_text`
+       held as custody of what arrived, and they count toward the word count
+       the member is shown. That is Soullab's text recorded as the author's.
+
+       THE INVARIANT, and the whole lesson of the characterization:
+
+           Never remove page-marker-looking text AFTER extraction. By then
+           author text and parser text may be indistinguishable.
+
+       Not a stylistic preference — a provenance fact. Characterized against
+       pdf-parse 2.4.5 on a three-page subject whose page 2 carried an
+       author-written `-- 2 of 3 --`. In `result.text` the author's line and
+       the synthetic one landed two lines apart, byte for byte identical. Once
+       flattened into that string, provenance is gone, and any filter that
+       removes ours removes theirs.
+
+       So the marker is not emitted rather than deleted. The library documents
+       an empty joiner as "no page boundary marker is added", and no separator
+       of ours replaces it — every character in the text then came from the
+       PDF, and nothing between the pages was authored by Soullab. That last
+       clause is why this is the repair and reconstructing from `result.pages`
+       is not: joining pages ourselves would make us the author of whatever
+       went between them.
+
+       This is the doctrine at the top of this file applied to a case where it
+       had quietly lapsed: the author's words, unchanged — and nothing added. */
+    const result = await parser.getText({ pageJoiner: '' });
     const text = result.text ?? '';
     const pageCount = result.pages?.length ?? 0;
     const avgPerPage = pageCount > 0 ? text.trim().length / pageCount : 0;
     const warnings: string[] = [];
     // Heuristic: near-empty text over the page count means an image/scanned PDF.
+    // More reliable now that the synthetic markers are gone: they used to add
+    // ~14 characters per page to a document with no text layer at all, which
+    // is a real fraction of this 20-character threshold.
     if (text.trim().length === 0 || avgPerPage < 20) {
       warnings.push(
         'This PDF looks like scanned images — we can read text from typed PDFs, but not from scans yet. If you have the original Word (.docx) or a text version, that will bring your words in.',
