@@ -50,6 +50,7 @@ import {
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import NotesDrawer from './NotesDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
@@ -124,7 +125,7 @@ import StudioLowerBand from './StudioLowerBand';
  */
 
 /** Panels that can stand in the row beside the field. */
-type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
+type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation' | 'notes';
 
 /**
  * Rail destinations this room HOSTS in place rather than by navigation.
@@ -146,6 +147,10 @@ const SATISFIED_IN_ROOM = [
   'versions',
   'conversations',
   'statistics',
+  /* NOTES v1. FUNCTION-PLACEMENT puts Notes inside WRITE — "each surfaces
+     inside the mode where it is needed; none becomes a sixth mode" — so it is
+     a panel in this room, never a route. */
+  'notes',
 ] as const;
 
 assertRoomClaimsNothingUnbuilt(SATISFIED_IN_ROOM);
@@ -392,6 +397,13 @@ function CanvasRoom() {
      there is nothing to situate, and the room does not choose between several. */
   const conversationOpen = summoned.conversation === true && Boolean(work);
 
+  /* NOTES. Summoned only — a writer's notes are not furniture that appears
+     because the room decided they were relevant. Gated on a manuscript and
+     NOT on a Work: FR-07 rules that a note is takeable in every Work-context
+     state, including none and ambiguous. */
+  const notesOpen = summoned.notes === true && Boolean(manuscript);
+  const [noteCount, setNoteCount] = useState<number | null>(null);
+
   /* Minted once per page life, when the panel first opens — never discovered.
      Dismissing and reopening the panel continues the SAME exchange; a reload
      starts a new one, because asking "which conversation was this Work's?" is
@@ -421,9 +433,9 @@ function CanvasRoom() {
        Opening a conversation must never shrink the manuscript — that is the
        whole point of speaking with MAIA beside the Work rather than instead
        of it. */
-    if ((materialsOpen || conversationOpen) && !compact) cols.push('materialsPanel');
+    if ((materialsOpen || conversationOpen || notesOpen) && !compact) cols.push('materialsPanel');
     return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
-  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, compact]);
+  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, notesOpen, compact]);
 
   /* Resolved at a large notional width and expressed as percentages, so the
      MEASURED ratio holds at every viewport and nothing reads `window` during
@@ -476,6 +488,10 @@ function CanvasRoom() {
     railCounts.structure = sections.length;
     railCounts.versions = revisions?.length ?? 0;
     if (work) railCounts.materials = declaredMaterials;
+    /* A count the shell actually counted. The map's reference 12 is stripped at
+       the boundary and stays stripped until a real figure exists — which, once
+       the panel has read them, it does. */
+    if (noteCount !== null) railCounts.notes = noteCount;
   }
 
   /* The header's right-hand controls are Write's own, so the shell takes them
@@ -582,6 +598,7 @@ function CanvasRoom() {
             ...(outlineOpen ? ['structure'] : []),
             ...(bandOpen ? ['versions', 'statistics'] : []),
             ...(conversationOpen ? ['conversations'] : []),
+            ...(notesOpen ? ['notes'] : []),
           ]}
           onSelect={(d) => {
             if (d.id === 'materials') summon('materials');
@@ -591,6 +608,10 @@ function CanvasRoom() {
                band, so both open it — the rail names the capability, the band
                is where it lives. */
             if (d.id === 'statistics') setBandOpen(true);
+            /* Notes and Materials share the right-hand column, so summoning one
+               stands the other down rather than leaving a hidden winner. */
+            if (d.id === 'notes') { summon('notes'); dismiss('materials'); }
+            if (d.id === 'materials') dismiss('notes');
             if (d.id === 'conversations') {
               summon('conversation');
               summon('maia');
@@ -858,7 +879,24 @@ function CanvasRoom() {
           </StudioPanel>
         )}
 
-        {materialsOpen && !conversationOpen && !compact && (
+        {notesOpen && !conversationOpen && !compact && manuscript && (
+          <StudioPanel
+            role="materials"
+            label="Notes"
+            count={noteCount || undefined}
+            onDismiss={() => dismiss('notes')}
+            style={{ width: pct(L.materialsPanel), flexShrink: 0 }}
+          >
+            <NotesDrawer
+              manuscriptId={manuscript.id}
+              sections={sections}
+              currentSectionId={sections[0]?.id ?? null}
+              onCountChange={setNoteCount}
+            />
+          </StudioPanel>
+        )}
+
+        {materialsOpen && !conversationOpen && !notesOpen && !compact && (
           <StudioPanel
             role="materials"
             label="Materials"

@@ -246,7 +246,13 @@ export const STUDIO_MAP: StudioGroup[] = [
          a material of kind `note` (source brought into the Work). */
       { id: 'materials', label: 'Materials', availability: 'in-room', count: 24 },
       { id: 'structure', label: 'Structure', availability: 'in-room' },
-      { id: 'notes', label: 'Notes', availability: 'later', count: 12 },
+      /* NOTES v1 — BUILT. The writer's mutable thinking beside the writing
+         (FR-02, refined by FR-07). A panel in WRITE, per FUNCTION-PLACEMENT:
+         "each surfaces inside the mode where it is needed — none becomes a
+         sixth mode". The map's reference count of 12 is 04's, and the shell
+         strips it; the rail shows a figure only once the room has counted the
+         member's own notes. */
+      { id: 'notes', label: 'Notes', availability: 'in-room', count: 12 },
       { id: 'versions', label: 'Versions', availability: 'in-room' },
       { id: 'goals', label: 'Goals', availability: 'later' },
     ],

@@ -454,7 +454,7 @@ describe('the handoff contract carries identity both ways', () => {
   it('keeps the manuscript at its measured width while conversing', () => {
     /* The whole point of speaking beside the Work: MAIA takes the Materials
        share, the writing field does not give up a pixel. */
-    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen\) && !compact/);
+    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen \|\| notesOpen\) && !compact/);
     expect(page).toContain('pct(L.maiaPanel + L.materialsPanel + L.gutter)');
     const L = writingFieldLayout(100000);
     const conversing = L.maiaPanel + L.materialsPanel + L.gutter;
@@ -540,15 +540,19 @@ describe('Materials does not become furniture', () => {
   });
 
   it('yields its column before the field gives up its measure', () => {
-    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
+    /* NOTES v1 added a THIRD yield term. The rule is unchanged and the pin is
+       updated rather than loosened: chrome collapses before the writing field
+       is crushed, and the field is still in no yield condition below. */
+    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !compact');
     expect(page).not.toMatch(/outlineOpen && !compact/);
   });
 
   it('also yields to the conversation, and the field still does not', () => {
     /* WS2-03D. Materials had one yield condition (compact); it now has two.
        Both are the same rule in different circumstances — chrome collapses
-       before the writing field is crushed. The field is in neither list. */
-    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
+       before the writing field is crushed. The field is in neither list.
+       NOTES v1 makes it three; the field is still in none of them. */
+    expect(page).toContain('materialsOpen && !conversationOpen && !notesOpen && !compact');
     expect(page).not.toMatch(/conversationOpen && !compact\s*&&[\s\S]{0,40}<main/);
   });
 });
