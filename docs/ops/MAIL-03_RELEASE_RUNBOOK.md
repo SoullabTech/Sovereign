@@ -11,18 +11,22 @@ their runtime markers compiled in.
 Current state:
 
 ```text
-MAIL-03
-CODE          COMPLETE
-TESTS         PASS      18 pinned (11 containment + 7 emergency ceiling)
-BUILD         PASS
-PRODUCTION    NOT YET WITNESSED
-CLOSE         NOT YET
-MAIL-04       HOLD
-POSTAL        DESIGN DECISION ONLY
+MAIL-03 IMPLEMENTATION   COMPLETE            ee612602 · 18 pinned tests · build PASS
+MAIL-03 ACCEPTANCE       NOT COMPLETE        production not witnessed
+MAIL-03 CLOSURE          NOT AUTHORIZED YET  founder act
+
+MAIL-04                  HOLD
+POSTAL                   DESIGN ONLY
 ```
 
-MAIL-03 is release-ready. It is **not CLOSED** until the production witness in
-§3 exists. Code passing its own tests is not evidence about production.
+Three states, not two, and they are not the same thing:
+
+- **Implementation** is code and its own tests. Done.
+- **Acceptance** is production evidence — W1–W5 and the running SHA. Code
+  passing its own tests is not evidence about production.
+- **Closure** is a founder act. A green witness LICENSES closure; it does not
+  perform it. Do not read "W1–W5 passed" as "MAIL-03 is closed" — the same
+  discipline the deploy lane applies to gates-green ≠ merge.
 
 **Run from the Mac Studio.** Deploys execute on minisforum over SSH. The remote
 Claude session that wrote this patch has no `ssh` binary, cannot resolve
@@ -202,9 +206,12 @@ MAIL-04       HOLD
 correlated across the incident window. Containment closes a real surface; it does
 not establish that this surface was the vector.
 
-**Closure condition, and nothing more than this:** the production SHA carries
-`ee612602`, and W1–W5 pass. On both, MAIL-03 is CLOSED. MAIL-04 stays HOLD and
-Postal stays untouched.
+**Acceptance condition, and nothing more than this:** the production SHA carries
+`ee612602`, and W1–W5 pass.
+
+On both, MAIL-03 is ACCEPTED and closure is licensed — **CLOSED is then a
+founder act, not an inference from the evidence.** MAIL-04 stays HOLD and Postal
+stays untouched across that act.
 
 ## Rollback
 
