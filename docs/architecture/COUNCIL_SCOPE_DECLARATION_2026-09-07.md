@@ -138,3 +138,9 @@ exists in the codebase.
 
 Other surfaces that invoke an intelligence on a member's behalf have not been audited
 against this law. That the law generalizes is not a claim that it has been applied.
+
+**Lifted (2026-09-07, draft only):** the principle extracted here is drafted as a candidate
+reusable instrument in
+[`docs/canon/EPISTEMIC_SCOPE_TRANSPARENCY_CANDIDATE_2026-09-07.md`](../canon/EPISTEMIC_SCOPE_TRANSPARENCY_CANDIDATE_2026-09-07.md),
+where this correction is **Specimen 01**. That document is **NOT RATIFIED** and governs nothing;
+it awaits founder ruling. This record remains the account of the Council fix, not of the law.
