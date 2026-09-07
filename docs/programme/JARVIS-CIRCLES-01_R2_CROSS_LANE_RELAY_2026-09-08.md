@@ -95,13 +95,81 @@ minisforum (`fuser -v ~/MAIA-SOVEREIGN/.deploy.lock`), which requires SSH this l
 ⛔ If the holder turns out to be a different session, the relay goes there instead — the ruling binds
 **whoever holds the lock**, not a particular session id.
 
+## ⭐ HOLDER VERIFIED AT OS LEVEL — SESSION IDENTITY NOT PROVABLE
+**Founder verification, 2026-09-08. Neither process was altered.**
+
+```text
+remote lock PID   2455108
+command           COHORT PRE-WITNESS HOLD
+target            e535e6246
+started           2026-09-07 13:13:14Z
+
+local SSH holder  44567
+started           2026-09-07 09:13:14 EDT   (= 13:13:14Z, same moment)
+
+production        e535e6246
+```
+
+`fuser` confirms PID `2455108` holds the lock file open, its sleep child inheriting the descriptor.
+**The hold is live and genuine, not stale.**
+
+⚠️ **What the OS cannot prove.** Local process lineage runs through the shared Desktop Commander
+service, not a session-specific Claude process:
+
+```text
+44567  ssh hold
+  |
+34457  Desktop Commander
+  |
+shared remote MCP process
+```
+
+So filesystem and process evidence **cannot map the lock to `session_01NTmBZGP2sAHS1TtJKBYK3T`.**
+That session remains the strongest **session-level inference** — its live activity matches the
+cohort witness — but it stays **INFERRED, NOT PROVEN**.
+
+### The rule this sharpens
+
+> ⭐ **R2 binds the holder of `COHORT PRE-WITNESS HOLD`, regardless of which chat or session happens
+> to own that process.**
+
+### ⚠️ CONSEQUENCE — THE ACKNOWLEDGMENT MUST BE SELF-IDENTIFYING
+
+Because holder identity is not provable from outside, an acknowledgment from *a* Writer's Studio lane
+does not establish that the **holding** lane acknowledged. A wrong-session acknowledgment would be a
+false green — the exact shape of failure this programme refuses elsewhere.
+
+⛔ **"Acknowledged" alone does not discharge R2.** A discharging acknowledgment must **assert
+holdership**, e.g.:
+
+```text
+This lane holds COHORT PRE-WITNESS HOLD, remote PID 2455108, target e535e6246.
+Sequencing constraint acknowledged: on witness completion I will release the lock
+without deploying Writer's Studio work, and will not deploy a post-891 descendant
+until I0.5 production closure.
+```
+
+⭐ *An acknowledgment that names the PID is falsifiable against the live lock; one that does not is
+ceremony.* If no lane will assert holdership, R2 is **undelivered**, not satisfied — and R3 carries
+it.
+
 ## Delivery status
 
 ```text
 R2 doctrine recorded     YES  (ADDENDUM II, 261e0af4a)
 R2 relay authorized      YES  (founder, 2026-09-08)
+R2 relay artifact        YES  (4f84e70fb)
 R2 relay DELIVERED       NO
 R2 acknowledgment        NOT RECEIVED — REQUIRED BEFORE HOLD RELEASE
+                         and must ASSERT HOLDERSHIP (PID 2455108), not merely acknowledge
+
+lock holder              VERIFIED LIVE AT OS LEVEL
+holder session id        NOT PROVABLE from process lineage
+
+production               e535e6246
+I0.5 target              891b33ee0
+deploy                   HELD
+
 R3 ancestry fail-safe    MANDATORY, unaffected by delivery status
 ```
 
