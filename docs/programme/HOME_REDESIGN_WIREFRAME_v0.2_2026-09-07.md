@@ -51,6 +51,114 @@ Anchor `surface_preference`, atoms `return_preference`: **eligibility originates
 from a member act, not a deploy flag.** A Studio that arrives with movement
 already running has decided something about the writer's state on their behalf.
 
+## THE ATMOSPHERE CONTRACT (founder, 2026-09-07)
+
+> **Atmosphere is member-chosen, reversible, accessible, and non-semantic. It
+> may shape the conditions of writing, but it may not interpret the writer or
+> the Work.**
+
+> **The atmosphere may move around the writing. The writing itself remains
+> stable.**
+
+### Three layers, deliberately separate
+
+```text
+APPEARANCE    system · light · dark          FUNCTIONAL — legibility and
+                                             accessibility, not mood.
+                                             Respects OS preference incl.
+                                             prefers-reduced-motion and
+                                             increased contrast.
+ATMOSPHERE    Atelier · Night Study ·        EXPERIENTIAL — 4-6 authored rooms,
+              Forest · Cloud · Midnight      not twenty themes, not CSS presets
+WORK IDENTITY a Work may carry its own       WRITER-CHOSEN, always. MAIA never
+              atmosphere and soundtrack      infers atmosphere from a manuscript
+```
+
+Accessibility floor: WCAG AA — 4.5:1 normal text, 3:1 large text and
+meaning-bearing controls. **Never colour alone to communicate state.**
+
+### Scope, and the ⚠ hazard in it
+
+```text
+WRITER DEFAULT     Atelier
+   ↓ overridden by
+WORK ATMOSPHERE    Elemental Alchemy → Atelier
+   ↓ temporarily overridden by
+THIS SESSION       Night Study        → "return to Work atmosphere"
+```
+
+**A session override must never silently become the Work's identity.** *"Tonight
+I want it dark"* is a passing act; if it persists into the Work it has quietly
+rewritten what the Work **is** — the same laundering shape as an inference
+becoming the writer's own material. The session choice must expire, and the
+return must be one visible act.
+
+### ⚠ Atmosphere choice is not evidence about the writer
+
+A writer choosing Night Study has said something about the room, not about
+themselves. That choice may be **remembered as a preference** and must not
+become an input to any inference about their state, mood, or creative
+condition — including for CREATIVE-STEWARDSHIP research.
+
+```text
+WRITER chooses atmosphere     SYSTEM remembers preference
+MAIA does not diagnose mood
+```
+
+And the question is never *"what mood are you in?"* — which is therapeutic and
+inferential — but *"what atmosphere would you like to write in?"*
+
+### Semantic colour sits OUTSIDE the theme
+
+```text
+error · warning · success · focus · disabled
+```
+
+**A red warning may not become brown in Atelier and green in Forest.** Atmosphere
+sits underneath meaning-bearing state, never replacing it.
+
+### Curated, token-based — not a colour picker
+
+Raw hex fields sound empowering and produce ugly, inaccessible results quickly.
+Each atmosphere supplies one coordinated set:
+
+```text
+--studio-background  --studio-surface  --studio-paper  --studio-ink
+--studio-muted  --studio-accent  --studio-focus  --studio-border
++ selection · subtle texture · shadow · motion character
+```
+
+New atmospheres can then be authored later without redesigning the application.
+
+### Atmosphere is more than palette
+
+Serif/sans emphasis · paper tone · edge softness · spacing · background texture ·
+quote treatment · animation tempo · depth · visual quietness. Atelier might carry
+a faint paper fibre; Night Study almost no texture and tighter luminance.
+
+**Manuscript text stays highly stable and readable across all of them.**
+Atmosphere surrounds writing; it does not interfere with it.
+
+### Motion is its own control
+
+```text
+AMBIENT MOTION   still · gentle · alive
+```
+
+Honours `prefers-reduced-motion` automatically. **Even at *alive*, nothing moves
+while someone is composing.** The field may breathe; the manuscript sits still.
+
+### Which makes the floating passages atmospheric rather than generic
+
+```text
+Atelier       ink settling on warm paper
+Night Study   emerging faintly from darkness
+Cloud         arriving with space around it
+```
+
+Same content, same provenance, different atmosphere — emotional richness without
+MAIA manufacturing emotional content.
+
 ## Atmosphere, as an optional field
 
 ```text
