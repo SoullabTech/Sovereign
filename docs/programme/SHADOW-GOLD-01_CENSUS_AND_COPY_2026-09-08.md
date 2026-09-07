@@ -669,3 +669,79 @@ D-S2  RATIFIED   D-S4  CLOSED — Outcome C
 FRESH vs LEGACY  HOLD      SCHEMA          UNCHANGED
 HOUSE UI         HOLD      IMPLEMENTATION  NOT AUTHORIZED
 ```
+
+---
+
+# ADDENDUM V — D-S3 CLOSED · SOURCE WITHOUT ANCESTRY
+**Founder ruling, 2026-09-08 · reading bound to exact ref `4111f72ec`**
+
+## ⭐ THE RULING
+
+> **MAIA remains the sole member-facing host voice in Shadow & Gold. No legacy `ShadowAgent`
+> receives a member-facing persona, voice claim, or implementation authority.**
+>
+> **Legacy `ShadowAgent` material may be preserved as SOURCE MATERIAL without creating ANCESTRY.
+> What survives must first pass D-S1 and D-S2.**
+
+**PRESERVED:** non-shaming hospitality toward disowned material · member-initiated inquiry into one's
+own participation · respect for protective defenses · timing and safety before interpretation ·
+golden-shadow inquiry as an **optional** lens · mirroring without judgment.
+
+**REJECTED:** automatic projection detection · projection-as-invalidation · third-party psychological
+knowledge · "victim consciousness" · system-assigned awareness rank · defense circumvention · hidden
+inward routing · a separate Shadow persona · unsupported energetic/frequency claims · any claim to
+know unspoken material.
+
+> ⭐⭐ **Preservation does not create implementation ancestry. A rejected substrate may contain
+> worthwhile authored material; harvesting that material does not rehabilitate its authority.**
+
+## ⚠️ CUSTODY CORRECTION
+
+An earlier description of `lib/maia/complete-agent-field-system.ts` as a larger trauma/autonomic
+`ShadowAgent` was **stale or misattributed**. At the D-S3 subject ref, that path holds the **thin
+Telesphorus `ShadowAgent`**: a keyword detector (`ashamed|hide|secret|can't say|denied`), a random
+intensity, and terse phrases. ⭐ **The exact-file reading governs; the stale description does not.**
+
+⚠️ *Record-accuracy note, not a challenge:* the reject list names "174 Hz mythology"; the file at this
+ref carries `frequency = 288`. The rejection of **frequency mythology** is unaffected — noted only so
+a future reader is not confused by the number.
+
+## The two substrates, disposed
+
+**`_backend/.../ShadowAgent.ts` — STANCE REJECTED, selected source retained.** It treats grievance
+language (`they always/never` · `toxic/narcissist` · `they made me feel` · `hate`) as **evidence for
+projection**, assigns an awareness stage, and turns the inquiry inward. ⛔ **Exactly what D-S2
+forbids.** Its formulations — *own the shadow rather than project it* · *not out there, in here* —
+make the incompatibility **structural, not cosmetic**. ⛔ Not repairable by changing prompts.
+
+**`lib/maia/complete-agent-field-system.ts` — HOSPITALITY RETAINED, PERSONA REJECTED.** Its real
+contribution is tone, not analysis. The seed worth keeping:
+
+> **Nothing the member brings has to pass a goodness test before it can be met.**
+
+⚠️ Even its better phrases need translation: *"Your darkness belongs here too"* **essentializes** a
+person as having darkness; *"I hear what you can't say"* **claims access to material never
+communicated**. The safe inheritance is the **hospitality, not the literal voice** —
+*what you're reluctant to show can be brought here too, if you want to.*
+
+## Standing
+
+```text
+D-S1               RATIFIED
+D-S2               RATIFIED
+D-S3               CLOSED — SOURCE WITHOUT ANCESTRY
+D-S4               CLOSED — Outcome C
+
+legacy code        NO AUTHORITY GRANTED
+legacy stance      NOT ADOPTED
+legacy source      BOUNDED MATERIAL PRESERVED
+
+FRESH vs LEGACY    READY FOR ADJUDICATION · STILL HOLD
+HOUSE UI           HOLD
+SCHEMA             UNCHANGED
+IMPLEMENTATION     NOT AUTHORIZED
+```
+
+⛔ **D-S3 does not turn the fork green for FRESH.** It removes the last reason the fork had to treat
+*preserve useful legacy thinking* and *adopt legacy implementation* as one choice. ⭐ **They are now
+formally separate acts.**
