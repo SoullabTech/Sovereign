@@ -34,7 +34,11 @@ describe('the section-native writer can keep a version', () => {
        Keep now carries only the server-acknowledged version + idempotency key;
        the checkpoint endpoint reads the sections from the database itself. */
     expect(surface).toContain('checkpointServerDraft');
-    expect(surface).toContain('baseRevisionId: writing.currentRevisionId()');
+    /* The guard is the SETTLED version — the value settling returned, never a
+       fresh read taken beside it. `settleDraft` is now shared with Export
+       precisely so two gestures cannot grow two ideas of when a draft is
+       settled; its mechanics are pinned in lib/writersStudio/__tests__. */
+    expect(surface).toContain('baseRevisionId: settled.version');
     expect(surface).not.toContain('const before = await loadDraft(');
     expect(surface).not.toContain('sections: before.sections');
     expect(surface).not.toMatch(/sections:\s*writing\.sections/);
@@ -43,9 +47,10 @@ describe('the section-native writer can keep a version', () => {
 
   it('refuses rather than keeps a half-saved state', () => {
     expect(surface).toContain("setPhase('unsettled')");
-    expect(surface).toContain('writing.hasUnsavedWork()');
-    /* Settle comes before the version guard is read. */
-    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('writing.currentRevisionId()'));
+    expect(surface).toMatch(/if \(!settled\.ok\)[\s\S]{0,60}unsettled/);
+    /* And the refusal returns — a settle that reports failure and then keeps
+       anyway is the exact defect, so the early return is the assertion. */
+    expect(surface).toMatch(/if \(!settled\.ok\) \{[^}]*return; \}/);
   });
 
   it('uses the dedicated bodyless checkpoint endpoint, not an alternate revision store', () => {
@@ -55,15 +60,31 @@ describe('the section-native writer can keep a version', () => {
   });
 
   it('sends the pending keystroke before keeping, so a version cannot omit it', () => {
-    expect(surface).toContain('writing.flushPending()');
     /* Order in the executable path, not merely in the contract prose. */
-    expect(surface.indexOf('writing.flushPending()')).toBeLessThan(surface.indexOf('checkpointServerDraft('));
+    expect(surface.indexOf('await settleDraft(writing)')).toBeGreaterThan(-1);
+    expect(surface.indexOf('await settleDraft(writing)')).toBeLessThan(
+      surface.indexOf('checkpointServerDraft('),
+    );
     /* The base comes from the serialized save queue after settling, never from
        a second manuscript snapshot and never from a private checkpoint ref. */
     expect(surface).not.toMatch(/useRef\(baseVersion\)/);
-    expect(surface).toContain('writing.currentRevisionId()');
+    /* ⛔ And never a version read beside the settle. `settleDraft` returns the
+       version it settled to; reading the queue again here would reintroduce
+       the window the settle exists to close. */
+    expect(surface).not.toContain('writing.currentRevisionId()');
+    expect(lib('settleDraft.ts')).toContain('currentRevisionId');
     expect(lib('useSectionWriting.ts')).toContain('currentRevisionId');
     expect(lib('useSectionWriting.ts')).toContain('queue.state().version');
+  });
+
+  it('⛔ Keep and Export settle through ONE helper, not two look-alikes', () => {
+    /* Two gestures now name a draft state to the server. If they each carried
+       their own flush/poll/read they would drift, and the drift would be
+       invisible: both would still "settle", just not the same way. */
+    expect(surface.match(/settleDraft\(/g) ?? []).toHaveLength(1);
+    expect(surface).toContain('exportCurrentDraft');
+    expect(surface).not.toContain('SETTLE_TIMEOUT_MS = ');
+    expect(surface).not.toContain('SETTLE_POLL_MS = ');
   });
 
   it('does not retry a conflict — a moved Work is reported, never overwritten', () => {

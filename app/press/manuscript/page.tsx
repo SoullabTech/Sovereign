@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { loadLastTab, saveLastTab } from './returningState';
 import { apiFetch } from '@/lib/http/apiBase';
+import { exportWithoutSettling } from '@/lib/writersStudio/exportDraft';
 import { CANVAS_HREF } from '../../writers-studio/studioMap';
 import WorkingDraftEditor from './WorkingDraftEditor';
 
@@ -259,7 +260,9 @@ function PressManuscriptRoom() {
   }, []);
 
   const [rendering, setRendering] = useState<'pdf' | 'epub' | null>(null);
-  const [renderError, setRenderError] = useState(false);
+  const [renderError, setRenderError] = useState<
+    'moved' | 'unsettled' | 'empty' | 'error' | null
+  >(null);
 
   /**
    * W-2 — a failed load must never look like an empty shelf.
@@ -554,30 +557,33 @@ function PressManuscriptRoom() {
     URL.revokeObjectURL(a.href);
   };
 
-  // ---- Your Book: render the whole manuscript into a PDF / EPUB ----------
+  /* ---- Your Book: render the whole manuscript into a PDF / EPUB ----------
+     This posted a bare `{ format }`, which is how the export settle guard came
+     to be unreachable: the server offered to refuse a draft that had moved and
+     no caller ever gave it the version to compare. It now names the version the
+     server acknowledges.
+     ⚠️ Named, NOT settled — and `exportWithoutSettling` says so at the call
+     site. This room holds no writing queue, so it has no pending save to flush;
+     what it buys is movement detection. Settling is only possible where the
+     writing is, which is why the writing room has its own Export. */
   const renderBook = async (format: 'pdf' | 'epub') => {
     if (!active) return;
-    setRenderError(false);
+    setRenderError(null);
     setRendering(format);
     try {
-      const res = await apiFetch(`/api/sovereign/manuscripts/${active}/render`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format }),
-      });
-      if (!res.ok) {
-        setRenderError(true);
+      const out = await exportWithoutSettling(apiFetch, active, format);
+      if (out.kind !== 'ok') {
+        setRenderError(out.kind);
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(out.blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${title || 'manuscript'}.${format}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setRenderError(true);
+      setRenderError('error');
     } finally {
       setRendering(null);
     }
@@ -1228,7 +1234,13 @@ function PressManuscriptRoom() {
             </div>
             {renderError && (
               <p className="text-[13px] opacity-70 mt-6">
-                Could not make your book just now. Please try again in a moment.
+                {/* A refusal names what happened. "Try again in a moment" for a
+                    draft that MOVED would be advice to overwrite the reason. */}
+                {renderError === 'moved' || renderError === 'unsettled'
+                  ? 'Your writing moved while the book was being made. Nothing was made and nothing was changed — open it in the writing room, then take it out from there.'
+                  : renderError === 'empty'
+                    ? 'There is nothing written here yet to make into a book.'
+                    : 'Could not make your book just now. Please try again in a moment.'}
               </p>
             )}
           </div>

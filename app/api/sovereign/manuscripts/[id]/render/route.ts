@@ -58,12 +58,15 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   if (format !== 'pdf' && format !== 'epub') {
     return NextResponse.json({ error: "format must be 'pdf' or 'epub'" }, { status: 400 });
   }
-  /* The draft version the caller believes is current, after settling its own
-     pending saves. Optional, and enforced when present: a caller that names a
-     version is refused if the draft has moved under it, rather than exporting a
-     state nobody was looking at.
-     ⚠️ A caller that omits it gets no settle guarantee — the server cannot
-     flush a client's autosave, only decline to disagree with it. */
+  /* THE SETTLE CLAIM. The exact draft version the caller acknowledges having
+     settled its own pending saves to.
+     ⛔ REQUIRED whenever a draft exists — see the refusal below. An earlier cut
+     of this made it optional and "enforced when present", which read as
+     defensive and was not: the only caller posted `{ format }`, so the guard
+     was unreachable and the export it protected shipped unprotected. A guard
+     nothing is obliged to reach is not a weaker guard, it is an absent one.
+     The server still cannot flush a client's autosave — so it declines to
+     export at all for a caller that will not say what it settled. */
   const claimedVersion = (body as { draftVersion?: unknown })?.draftVersion;
   if (claimedVersion !== undefined && typeof claimedVersion !== 'number') {
     return NextResponse.json({ error: 'draftVersion must be a number' }, { status: 400 });
@@ -125,14 +128,56 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
        that line exports as prose. A visible limitation — and the alternative,
        stripping a matched prefix, silently eats a chapter's first line when the
        match is wrong. Structural headings are a separate question. */
-    const draft = await query<{ id: string; version: number; content: string; addressable: boolean }>(
-      `SELECT id, version, content, (section_addressable_at IS NOT NULL) AS addressable
-         FROM manuscript_working_drafts WHERE manuscript_id = $1 AND member_id = $2`,
+    /* ── ONE STATEMENT, ONE DRAFT STATE ──────────────────────────────────
+       ⛔ The version and the text MUST come from the same read, and this is
+       the whole reason the section texts are aggregated in here rather than
+       fetched next. Two statements — `SELECT version` then `SELECT text` —
+       make the guard a PRECHECK, with a window between "the version is the one
+       you settled" and "these are the characters", and a save landing in that
+       window exports text the caller never acknowledged while the version
+       check says it did. The same shape the Circles FR-18 repair removed: the
+       authority is the READ, not something asked before it.
+
+       PostgreSQL evaluates one statement against one snapshot, so `version`
+       and `section_texts` below describe one coherent draft or the statement
+       does not return. */
+    const draft = await query<{
+      id: string;
+      version: number;
+      content: string;
+      addressable: boolean;
+      section_texts: string[];
+    }>(
+      `SELECT wd.id,
+              wd.version,
+              wd.content,
+              (wd.section_addressable_at IS NOT NULL) AS addressable,
+              COALESCE(
+                (SELECT json_agg(ds.text ORDER BY ds.position ASC)
+                   FROM manuscript_draft_sections ds
+                  WHERE ds.draft_id = wd.id),
+                '[]'::json
+              ) AS section_texts
+         FROM manuscript_working_drafts wd
+        WHERE wd.manuscript_id = $1 AND wd.member_id = $2`,
       [id, memberId],
     );
     const live = draft.rows[0];
 
-    if (live && claimedVersion !== undefined && claimedVersion !== live.version) {
+    if (live && claimedVersion === undefined) {
+      /* ⛔ The caller did not say what it settled, so nothing here can know
+         whether the writer's last sentence is in this text. Refusing is the
+         only answer that cannot silently hand over a book missing a paragraph
+         the writer had already typed. */
+      return NextResponse.json(
+        {
+          error: 'settle_required',
+          detail: 'Your writing has to finish saving before it can be made into a book.',
+        },
+        { status: 409 },
+      );
+    }
+    if (live && claimedVersion !== live.version) {
       /* The draft moved under a caller that told us what it had settled. Refuse
          rather than export a state nobody was looking at. */
       return NextResponse.json(
@@ -140,16 +185,23 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         { status: 409 },
       );
     }
+    if (!live && claimedVersion !== undefined) {
+      /* A settled version for a draft that does not exist. The caller and the
+         server disagree about what this manuscript IS; exporting the Source
+         under that claim would answer a question nobody asked. */
+      return NextResponse.json(
+        { error: 'unsettled_draft', detail: 'This draft changed while preparing the export. Try again.' },
+        { status: 409 },
+      );
+    }
 
     if (live?.addressable) {
-      const rows = await query<{ text: string }>(
-        `SELECT text FROM manuscript_draft_sections WHERE draft_id = $1 ORDER BY position ASC`,
-        [live.id],
-      );
-      sections = rows.rows.map((r) => ({ heading: null, body: r.text }));
+      sections = live.section_texts.map((text) => ({ heading: null, body: text }));
     } else if (live) {
       /* A continuous draft is one span of the member's characters and has no
-         section identity at all. It exports as itself rather than being cut. */
+         section identity at all. It exports as itself rather than being cut.
+         It settles by exactly the same rule — the refusals above ran before
+         this branch was chosen, not inside it. */
       sections = [{ heading: null, body: live.content }];
     } else {
       /* No draft has ever been created, so the Source IS the current state —

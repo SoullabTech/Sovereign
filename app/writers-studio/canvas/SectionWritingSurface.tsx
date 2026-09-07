@@ -33,6 +33,8 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
+import { settleDraft } from '@/lib/writersStudio/settleDraft';
+import { exportCurrentDraft, type ExportFormat } from '@/lib/writersStudio/exportDraft';
 import { StudioText } from '../studio/StudioType';
 
 export interface SectionWritingSurfaceProps {
@@ -40,6 +42,8 @@ export interface SectionWritingSurfaceProps {
   writing: SectionWriting;
   /** The Work being written. Required to keep a version of it. */
   manuscriptId: string;
+  /** The Work's name, used only for the downloaded file. */
+  title?: string | null;
   /** Told after a version is kept, so the room's version list can refresh. */
   onCheckpointed?: () => void;
 }
@@ -120,8 +124,6 @@ export function makeSectionSave(manuscriptId: string, witnessDelayMs?: number): 
   };
 }
 
-const SETTLE_TIMEOUT_MS = 4000;
-const SETTLE_POLL_MS = 50;
 
 function KeepAVersion({
   writing, manuscriptId, onCheckpointed,
@@ -138,19 +140,16 @@ function KeepAVersion({
     if (phase === 'keeping') return;
     setPhase('keeping');
 
-    /* 1 — the writer's last keystroke belongs in the version they are keeping. */
-    writing.flushPending();
-    const deadline = Date.now() + SETTLE_TIMEOUT_MS;
-    while (writing.hasUnsavedWork()) {
-      if (Date.now() > deadline) { setPhase('unsettled'); return; }
-      await new Promise((r) => setTimeout(r, SETTLE_POLL_MS));
-    }
+    /* 1, 2 — the writer's last keystroke belongs in the version they are
+       keeping. Shared with Export: two gestures that name a draft state must
+       not each grow their own idea of when the draft is settled. */
+    const settled = await settleDraft(writing);
+    if (!settled.ok) { setPhase('unsettled'); return; }
 
-    /* 2, 3, 4 — the queue knows the last server-acknowledged version. The
-       checkpoint request carries that guard and NO manuscript body; the server
-       freezes the sections it already holds. */
+    /* 3, 4 — the settled version is the guard. The checkpoint request carries
+       it and NO manuscript body; the server freezes the sections it holds. */
     const res = await checkpointServerDraft(apiFetch, manuscriptId, {
-      baseRevisionId: writing.currentRevisionId(),
+      baseRevisionId: settled.version,
       idempotencyKey: newIdempotencyKey(),
     });
 
@@ -196,8 +195,99 @@ function KeepAVersion({
   );
 }
 
+/**
+ * TAKE IT OUT — export the draft the writer is looking at, or refuse.
+ *
+ * ⛔ WHY THE GESTURE IS HERE and not only in the Press room. The Press room
+ * has always had the Download buttons, and it cannot honour the ruling: it
+ * does not own this queue, so it cannot settle a save that is still in flight
+ * in the writing room. Asked to export at that moment it would read a version
+ * the server agrees with, the pending sentence would land a moment later, and
+ * the writer would receive a book missing the paragraph they had just typed —
+ * successfully, with nothing raised.
+ *
+ * Only the surface holding the pending edit can settle it. So the settle and
+ * the export are one act, at the one place capable of performing it.
+ *
+ *   BEFORE EXPORT   settle pending writer saves OR refuse
+ *   CALLER SENDS    format + the exact server-acknowledged draftVersion
+ *   NEVER           silently checkpoint · mint a kept version · export a
+ *                   different state than the one the writer settled
+ *
+ * Export is not keeping: nothing here checkpoints. The version named is the
+ * one the save lane already had acknowledged, never one this gesture creates.
+ */
+function TakeItOut({
+  writing, manuscriptId, title,
+}: {
+  writing: SectionWriting;
+  manuscriptId: string;
+  title: string | null;
+}) {
+  const [phase, setPhase] = useState<
+    'idle' | 'making' | 'unsettled' | 'moved' | 'empty' | 'error'
+  >('idle');
+
+  const take = async (format: ExportFormat) => {
+    if (phase === 'making') return;
+    setPhase('making');
+
+    /* `writing` is the settle target: this call flushes the pending autosave,
+       waits for the lane to go quiet, and names the version the server
+       acknowledged — or refuses without requesting anything. */
+    const out = await exportCurrentDraft(apiFetch, manuscriptId, format, writing);
+    if (out.kind !== 'ok') { setPhase(out.kind); return; }
+
+    const url = URL.createObjectURL(out.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title || 'manuscript'}.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setPhase('idle');
+  };
+
+  const note =
+    phase === 'unsettled'
+      ? 'Your last edits are still saving. Nothing was made, so nothing is missing from a book. Try again in a moment.'
+      : phase === 'moved'
+        ? 'This work moved while the book was being made. Nothing was made and nothing was changed. Reload, then try again.'
+        : phase === 'empty'
+          ? 'There is nothing written here yet to make into a book.'
+          : phase === 'error'
+            ? 'The book could not be made just now. Your writing is unchanged.'
+            : null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.base, justifyContent: 'flex-end' }}>
+      {note && <StudioText role="metadata" tone="quiet">{note}</StudioText>}
+      {(['pdf', 'epub'] as const).map((format) => (
+        <button
+          key={format}
+          type="button"
+          onClick={() => void take(format)}
+          disabled={phase === 'making'}
+          data-take-it-out={format}
+          style={{
+            background: 'transparent',
+            border: `1px solid ${RULE.quiet}`,
+            borderRadius: RADIUS.pill,
+            padding: `${SPACE.tight}px ${SPACE.base}px`,
+            color: INK.secondary,
+            cursor: phase === 'making' ? 'default' : 'pointer',
+          }}
+        >
+          <StudioText role="metadata" as="span">
+            {phase === 'making' ? 'making…' : format === 'pdf' ? 'Download PDF' : 'Download EPUB'}
+          </StudioText>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function SectionWritingSurface({
-  writing, manuscriptId, onCheckpointed,
+  writing, manuscriptId, title, onCheckpointed,
 }: SectionWritingSurfaceProps) {
   const fieldRef = useRef<HTMLTextAreaElement | null>(null);
   const activeId = writing.activeId;
@@ -242,11 +332,14 @@ export default function SectionWritingSurface({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.base }}>
-      <KeepAVersion
-        writing={writing}
-        manuscriptId={manuscriptId}
-        onCheckpointed={onCheckpointed}
-      />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: SPACE.base, justifyContent: 'flex-end' }}>
+        <TakeItOut writing={writing} manuscriptId={manuscriptId} title={title ?? null} />
+        <KeepAVersion
+          writing={writing}
+          manuscriptId={manuscriptId}
+          onCheckpointed={onCheckpointed}
+        />
+      </div>
       {active.heading !== null && (
         <StudioText role="chapterTitle" as="h2">
           {active.heading}
