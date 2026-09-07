@@ -153,3 +153,200 @@ HOUSE REGISTRY     UNTOUCHED
 ```
 
 ⛔ Nothing built · no registry entry · no route · no component · no schema.
+
+---
+
+# ADDENDUM I — FOUNDER RULING TEXT (D-S1, D-S2) · D-S3 OPENED · AUDIT FRAME
+**2026-09-08 · authored by founder act · ⚠️ D-S1 and D-S2 stand as READY FOR RATIFICATION, NOT RATIFIED.**
+
+⛔ Jarvis does not promote a ruling to ratified. The founder's standing block names both as
+`READY FOR RATIFICATION`; the text below is recorded as authored so that ratification, when it
+occurs, is an act against a fixed text rather than a re-drafting.
+
+## D-S1 · Third-party containment — READY FOR RATIFICATION
+
+> **Shadow & Gold may contain a member's reflections about another person, but it may not convert
+> those reflections into knowledge about that person.**
+
+```text
+member says:
+"I think my brother is terrified of intimacy"
+
+VALID RECORD
+Kelly reflected that he experiences his brother as withdrawing around intimacy.
+
+INVALID DERIVATION
+Brother -> afraid of intimacy
+Brother -> attachment style X
+Brother -> shadow pattern Y
+```
+
+The third party may exist as a **referent inside the member's authored experience**. They do not
+thereby become a **subject of MAIA's knowledge**.
+
+Consequences:
+- ⛔ no third-party psychological profile created from Shadow & Gold;
+- ⛔ no inferred traits, diagnoses, motives, archetypes, shadow material, or memory atoms about them;
+- ⛔ no later retrieval that silently converts attribution into fact;
+- ✅ MAIA may explore the member's reaction, meaning, attraction, anger, fear, projection, or history;
+- ✅ MAIA should resist invitations to explain the unconsenting person's hidden psychology.
+
+An explicit **Keep** of a Shadow & Gold reflection may preserve what the member said or discovered
+about **their own experience**. ⛔ That does not authorize extracting claims about the other person
+into general memory.
+
+**Core law:** *Reflection about another person remains knowledge of the member's experience, not
+knowledge of the other person.*
+
+⭐ This closes the most dangerous storage path **without pretending members can never talk about
+people in their lives.**
+
+## D-S2 · Grievance outranks projection — READY FOR RATIFICATION
+
+Stronger than a tone guideline:
+
+> **A projection hypothesis may never be used to reduce the standing of a reported external harm,
+> violation, or grievance.**
+
+Where a member describes concrete harm — coercion, abuse, betrayal, intimidation, exploitation,
+boundary violation, violence, manipulation, stalking, or similar conduct — MAIA **first treats that
+as an account of something that happened between people.**
+
+⛔ It does not answer `"Perhaps this is really your shadow."` or `"What are you projecting onto
+them?"` as a **reinterpretation of the event**.
+
+Inside Shadow & Gold the inward question is **parallel, never corrective**:
+
+```text
+OUTWARD
+What happened?
+What did they actually do?
+What boundary or response is needed?
+
+INWARD - only if the member wants this lens
+What is this encounter stirring in you?
+What of yourself becomes visible through it?
+```
+
+**One does not cancel the other.** This preserves the line already in the member paper:
+*what we meet is not only ourselves.*
+
+⭐ Closed with an **anti-invalidation rule**, ⛔ **not** a taxonomy of situations in which projection
+is permitted.
+
+## D-S3 · Voice custody — OPEN, AND CARRIED **BEFORE** THE FORK
+
+The standing MAIA invariant:
+
+```text
+MAIA                  = member-facing host voice
+specialists/agents    = internal consultation
+```
+
+⛔ Shadow & Gold must not become:
+
+```text
+Member
+  |- MAIA
+  \- Shadow Agent
+```
+
+✅ It must remain:
+
+```text
+Member
+   ^
+   v
+ MAIA
+   ^
+   v
+internal Shadow & Gold consultation
+```
+
+*The member may enter a distinct Field; the host does not fragment into personas.*
+⭐ Carried **before** the fork because it materially changes what "adopt existing substrate" means.
+
+### Source findings bearing on D-S3 (read-only, this session)
+
+**S3-F1 · `ShadowAgent` denotes TWO different implementations.**
+`app/api/_backend/src/agents/ShadowAgent.ts` (registered in `voiceProfiles.ts:51` as
+`ShadowAgent: "shadow_agent"`, mapped `AgentRole.ELEMENTAL` in `agentRoleMapping.ts:47`) **and** a
+separate class `ShadowAgent` in `lib/maia/complete-agent-field-system.ts:298` (`name = "Shadow"`,
+`frequency = 288`, keyword detector over `ashamed | hide | secret | can't say | denied`),
+instantiated at `:604`. ⚠️ A fourth same-string collision in this lane.
+
+**S3-F2 · ⭐ THE SUBSTRATE ALREADY DETECTS PROJECTION SILENTLY, AND EMITS CONTENT.**
+`app/api/_backend/src/services/agentOrchestrator-shadow-integration.ts` calls
+`processExtendedQuery()`, branches on `response.metadata?.shadowActivated`, carries a
+`reasoning: 'No projection detected'` default, and on activation returns
+`{ content: response.content, response: response.content, metadata }` (`:56-79`).
+⛔ **This is the behaviour the founder's placement direction excludes** — *MAIA offers to enter the
+Field on explicit request rather than silently interpreting the conversation through it.* The
+existing path interprets first and decides afterwards whether to speak. ⚠️ Whether that content
+reaches a member today is **NOT established here**; what is established is that the **mechanism is
+built and wired into the orchestrator**, so "adopt" would inherit it.
+
+**S3-F3 · A per-agent voice profile exists for `shadow`.**
+`voiceProfiles.ts:116` gives `shadow` its own TTS entry with distinct settings
+(`stability 0.7 / similarity_boost 0.9`). ⚠️ **Precisely:** the `voiceId` is currently *identical*
+to `narrator` and the transcendent profile (`LcfcDJNUP1GQjkzn1xUU`), so the divergence today is
+**settings-level, not a different speaker**. The hazard is structural rather than currently audible:
+**a populated per-agent voice slot is the mechanism by which an internal consultation acquires a
+member-facing voice**, and a different voice in the member's ear is attribution whether or not a
+name is rendered.
+
+**S3-F4 · `member` is already overloaded.**
+`lib/services/decisionPersistenceService.ts:34` declares `member: string; // "shadow_agent",
+"cbt_agent", "dream_agent"` — in the deliberation record a *"member"* is an **agent**, not a person
+(weights at `:510` and `deliberationPersistenceService.ts:295`). ⛔ Do not let Shadow & Gold
+architecture inherit this word in that sense.
+
+**Open, unanswered by these findings:** *does `ShadowAgent` output ever reach the member attributed
+as `ShadowAgent`?* Settling it requires tracing the orchestrator's response assembly to a
+member-facing surface, which was not done here. ⛔ Not asserted either way.
+
+## Audit frame for the fork (replaces all-or-nothing)
+
+After D-S1, D-S2 and D-S3, the existing substrate is audited **against them** and split:
+
+```text
+REUSE               generic mechanics that already obey the new laws
+ADAPT               useful machinery currently bound to astrology
+RETAIN SEPARATELY   astrological-house shadow work that is genuinely astrology-specific
+RETIRE / CONTAIN    interpretive or voice behavior incompatible with Shadow & Gold
+BUILD FRESH         the member-facing Field / House doorway where no safe substrate exists
+```
+
+⭐ Better than an all-or-nothing "reuse the shadow system" decision.
+
+## Naming discipline (founder direction)
+
+```text
+MAIA House        navigation / member doorway
+Astrology House   houses 1-12
+```
+
+⛔ **No generic `House`** in new Shadow & Gold architecture where the distinction matters.
+
+## Standing
+
+```text
+SHADOW-GOLD-01
+
+CENSUS                 COMPLETE
+D-S1                   READY FOR RATIFICATION
+                       third-party reflection != third-party knowledge
+D-S2                   READY FOR RATIFICATION
+                       grievance/harm cannot be invalidated by projection
+D-S3                   OPEN
+                       ShadowAgent member-facing voice custody
+FRESH vs ADOPT         HOLD
+HOUSE CARD / ROUTING   HOLD
+SCHEMA                 UNCHANGED
+IMPLEMENTATION         NOT AUTHORIZED
+
+I0.5                   UNCHANGED / DEPLOY LANE HELD
+```
+
+> ⭐ *Shadow & Gold becomes a field for self-inquiry without becoming a machine for psychoanalyzing
+> absent people — or explaining away what actually happened to someone.*
