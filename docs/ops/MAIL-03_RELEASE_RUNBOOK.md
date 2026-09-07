@@ -11,23 +11,27 @@ their runtime markers compiled in.
 Current state:
 
 ```text
-MAIL-03
-CODE          COMPLETE
-TESTS         PASS      18 pinned (11 containment + 7 emergency ceiling)
-BUILD         PASS
-PRODUCTION    NOT YET WITNESSED
-CLOSE         NOT YET
-MAIL-04       HOLD
-POSTAL        DESIGN DECISION ONLY
+MAIL-03 IMPLEMENTATION   COMPLETE            ee612602 · 18 pinned tests · build PASS
+MAIL-03 ACCEPTANCE       NOT COMPLETE        production not witnessed
+MAIL-03 CLOSURE          NOT AUTHORIZED YET  founder act
+
+MAIL-04                  HOLD
+POSTAL                   DESIGN ONLY
 ```
 
-MAIL-03 is release-ready. It is **not CLOSED** until the production witness in
-§3 exists. Code passing its own tests is not evidence about production.
+Three states, not two, and they are not the same thing:
+
+- **Implementation** is code and its own tests. Done.
+- **Acceptance** is production evidence — W1–W5 and the running SHA. Code
+  passing its own tests is not evidence about production.
+- **Closure** is a founder act. A green witness LICENSES closure; it does not
+  perform it. Do not read "W1–W5 passed" as "MAIL-03 is closed" — the same
+  discipline the deploy lane applies to gates-green ≠ merge.
 
 **Run from the Mac Studio.** Deploys execute on minisforum over SSH. The remote
 Claude session that wrote this patch has no `ssh` binary, cannot resolve
 `minisforum`, and has GitHub-only egress — it can build, but it cannot deploy or
-witness production. Steps 2–5 are founder-executed.
+witness production. Everything below is founder-executed.
 
 **Do NOT break the production rate-limit database to exercise the emergency
 fallback.** That failure mode is evidenced by the 7 pinned tests in
@@ -60,9 +64,64 @@ ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
 curl -k https://soullab.life/api/health
 ```
 
-`GIT_COMMIT` must be the deployed short SHA and must contain `ee612602`'s
-changes. `unknown` means the deploy bypassed the provenance chain — do not
-proceed to witness.
+`GIT_COMMIT` must be the deployed short SHA. `unknown` means the deploy bypassed
+the provenance chain — do not proceed.
+
+It will often NOT read `ee612602` — a merge into `clean-main-no-secrets` gets its
+own SHA. That is fine, but it must be PROVEN to contain the containment commit
+rather than assumed:
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN || exit 1
+git fetch origin
+
+RUNNING=$(ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT')
+echo "running: ${RUNNING:-<empty>}"
+
+# Guard the input before it is used as a revision.
+case "$RUNNING" in
+  '')        echo "STOP: could not read GIT_COMMIT — no verdict"; exit 1;;
+  unknown)   echo "STOP: container reports 'unknown' — deploy bypassed the provenance chain"; exit 1;;
+esac
+
+git cat-file -e 'ee612602^{commit}' 2>/dev/null \
+  || { echo "STOP: ee612602 not known locally — fetch the branch"; exit 1; }
+
+git cat-file -e "${RUNNING}^{commit}" 2>/dev/null \
+  || { echo "STOP: running commit $RUNNING not known locally — fetch it"; exit 1; }
+
+if git merge-base --is-ancestor ee612602 "$RUNNING"; then
+  echo "OK: running production contains ee612602"
+else
+  rc=$?
+  if [ "$rc" -eq 1 ]; then
+    echo "STOP: ee612602 genuinely NOT in running history"
+  else
+    echo "STOP: ancestry check errored (exit $rc) — NO VERDICT"
+  fi
+fi
+```
+
+Three states are preserved deliberately, because collapsing them is how the
+2026-09-07 attempt produced a STOP that had evaluated nothing:
+
+```text
+OBJECT UNKNOWN           ≠ ancestry failure
+CHECK ERROR (exit >1)    ≠ ancestry failure
+EXIT 1 FROM MERGE-BASE   = genuine "not an ancestor"
+```
+
+`merge-base --is-ancestor` returns 0 for yes, **1 for no, and >1 for could not
+determine**. Only exit 1 is a verdict. Run it from inside the repo: outside one,
+git exits `fatal: not a git repository`, the `&&` falls through, and a plain
+`||` branch prints STOP — a missing-repo error impersonating an ancestry
+verdict. The revision is fully quoted because `^` is a glob operator in zsh
+under `extendedglob`.
+
+If artifact inspection says containment is present while ancestry says it is
+not, neither signal is privileged by intuition — investigate the provenance of
+both. That contradiction is precisely what a production witness exists to
+expose.
 
 Confirm containment is in the RUNNING artifact. Grep for a runtime string, not
 a comment: minification strips comments, so a check against the explanatory
@@ -85,47 +144,146 @@ limiter.
 
 ## 3. Production witness — controlled test member
 
-Use a member you own, on a domain you control. Record `MEMBER_ID` and
-`MEMBER_EMAIL`. Note the UTC start time; the ledger query in §4 is scoped to it.
+> **Run the script, not the snippets.**
+> ```bash
+> cd /Users/soullab/MAIA-SOVEREIGN && git pull
+> scripts/witness/mail-03-witness.sh <MEMBER_ID> <MEMBER_EMAIL>
+> ```
+> It performs §§1–4 in order, decides every machine-checkable result, and
+> ABORTS on the first failure. Two witness attempts failed by running past a
+> guard that had already printed REFUSE; a guard an operator can walk past is
+> not a guard. The manual steps below remain as the reference for what the
+> script checks and why.
+
+### 3.0 Bind the variables FIRST, and let the shell refuse placeholders
+
+A witness run on 2026-09-07 sent `<MEMBER_ID>` and `<MEMBER_EMAIL>` to
+production as literal strings. Every behavioural case silently tested nothing —
+the send-verification call 500'd on an invalid UUID instead of exercising the
+409 path, and the recovery loop ran against an address no member owns, so its
+200s were the enumeration-safe no-send response. The run LOOKED plausible. That
+is the failure mode to design against: a witness that cannot tell you it did not
+happen is worse than no witness.
+
+So bind real values and make the shell fail loudly if they are unset:
 
 ```bash
-WITNESS_START=$(date -u +%Y-%m-%dT%H:%M:%SZ); echo "$WITNESS_START"
+MEMBER_ID='<paste real uuid>'
+MEMBER_EMAIL='<paste real address>'
+ATTACKER='attacker@notyourdomain.example'
+
+# Prints READY or REFUSE. Never calls exit — this is pasted into an
+# INTERACTIVE shell, and `exit` there closes the operator's terminal.
+witness_ready() {
+  case "$MEMBER_ID$MEMBER_EMAIL" in
+    *'<'*|'') echo 'REFUSE: placeholders not substituted'; return 1;;
+  esac
+  case "$MEMBER_ID" in
+    [0-9a-fA-F]*-*-*-*-*) ;;
+    *) echo 'REFUSE: MEMBER_ID is not a uuid'; return 1;;
+  esac
+  case "$MEMBER_EMAIL" in
+    *@*.*) ;;
+    *) echo 'REFUSE: MEMBER_EMAIL is not an address'; return 1;;
+  esac
+  echo 'READY'
+}
+witness_ready
+
+WITNESS_START=$(date -u +%Y-%m-%dT%H:%M:%SZ); echo "witness start: $WITNESS_START"
 ```
+
+Do not continue unless that printed `READY`.
+
+Confirm the member exists and note its address BEFORE the run — W2 compares
+against this:
+
+```bash
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT id, email, email_verified FROM members WHERE id = '$MEMBER_ID';\""
+```
+
+One row, and `email` equal to `$MEMBER_EMAIL`. No row means the witness cannot
+proceed.
+
+### 3.0b Clearing stale limiter state — narrowly
+
+A failed witness leaves rate-limit rows behind, and the operator's own IP may be
+blocked with exponential backoff (15m → 30m → 1h → 2h → 4h). Clear only what the
+bad run produced. `auth_rate_limits` is shared with real member traffic, so
+deleting every row for an endpoint also resets legitimate members' counters:
+
+```bash
+# Inspect first.
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT identifier_type, attempts, blocked_until, blocked_until > NOW() AS still_blocked
+      FROM auth_rate_limits WHERE endpoint = 'members/recover'
+     ORDER BY blocked_until DESC NULLS LAST;\""
+
+# Clear ONLY the operator IP block, not the whole endpoint.
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"DELETE FROM auth_rate_limits
+      WHERE endpoint = 'members/recover' AND identifier_type = 'ip'
+        AND blocked_until > NOW();\""
+```
+
+Clear before `WITNESS_START`, so the clean run is what the §4 ledger window sees.
+Leave `members/send-verification` alone — W2 needs its metering intact.
+
+### 3.1 Ledger control — prove the ledger records at all
+
+An empty ledger after the run is only meaningful if the ledger is known to be
+recording. Establish that first:
+
+```bash
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT count(*), max(created_at) FROM email_delivery_attempts
+       WHERE created_at > NOW() - INTERVAL '7 days';\""
+```
+
+A zero count here means the ledger is not recording, and §4 proves nothing
+either way. Resolve that before continuing.
 
 ### W1 — normal signup/verification delivers
 
 Register a fresh test member through the normal flow. Expect: verification email
-arrives at the persisted address.
+arrives at the persisted address. *(Proves containment did not break sign-up.)*
 
 ### W2 — mismatching body address is refused (THE RELAY TEST)
 
 ```bash
-curl -s -o /tmp/w2.json -w '%{http_code}\n' -X POST https://soullab.life/api/members/send-verification \
+curl -s -w '\n%{http_code}\n' -X POST https://soullab.life/api/members/send-verification \
   -H 'Content-Type: application/json' \
-  -d '{"memberId":"<MEMBER_ID>","email":"attacker@notyourdomain.example"}'
-cat /tmp/w2.json
+  -d "{\"memberId\":\"$MEMBER_ID\",\"email\":\"$ATTACKER\"}"
 ```
 
 PASS requires **all three**:
-- HTTP **409**, body `reason: "destination_mismatch"`
+- HTTP **409** with `reason: "destination_mismatch"`
 - **no email** at the attacker address
-- `members.email` **unchanged**:
+- `members.email` unchanged:
 
 ```bash
 ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
-  \"SELECT email, email_verified FROM members WHERE id = '<MEMBER_ID>';\""
+  \"SELECT email, email_verified FROM members WHERE id = '$MEMBER_ID';\""
 ```
 
-Any 200, any delivery, or any change to that row = **RELAY OPEN**, stop and roll back.
+Any 200, any delivery, or any change to that row = **RELAY OPEN**, stop and roll
+back.
+
+**A 500 is not a pass.** It means the request died before reaching the refusal —
+most often an invalid UUID. Re-check §3.0 and re-run; do not record a 500 as
+evidence of containment.
 
 ### W3 — normal recovery delivers
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://soullab.life/api/members/recover \
-  -H 'Content-Type: application/json' -d '{"email":"<MEMBER_EMAIL>"}'
+  -H 'Content-Type: application/json' -d "{\"email\":\"$MEMBER_EMAIL\"}"
 ```
 
-Expect 200 and one email.
+Expect 200 **and one email actually arriving**. Recovery returns 200 for unknown
+addresses too — by design, for enumeration safety — so the status code alone
+does not establish delivery. The arriving message is the evidence.
 
 ### W4 — repeated recovery is throttled
 
@@ -133,14 +291,12 @@ Expect 200 and one email.
 for i in $(seq 1 9); do
   printf 'attempt %s -> ' "$i"
   curl -s -o /dev/null -w '%{http_code}\n' -X POST https://soullab.life/api/members/recover \
-    -H 'Content-Type: application/json' -d '{"email":"<MEMBER_EMAIL>"}'
+    -H 'Content-Type: application/json' -d "{\"email\":\"$MEMBER_EMAIL\"}"
 done
 ```
 
-Expect: a finite run of 200s (~5 in the 15-minute window, W3 counts toward it),
-then **429**. Count delivered messages — there must be no send beyond the
-ceiling. The 429 body must be the same non-committal sentence as the
-unknown-address response; a differing body is an enumeration oracle.
+Expect a finite run of 200s (~5 in the 15-minute window, W3 counts toward it),
+then **429**. Count delivered messages — no send beyond the ceiling.
 
 ### W5 — enumeration parity
 
@@ -166,15 +322,23 @@ PASS: rows only for W1/W3/W4's allowed attempts. **No row whose
 would mean the route reached the provider before refusing, which the 409 path
 must never do.
 
-## 5. Rotate the Resend credential
+## 5. NOT part of the closure act
 
-Do this even if W1–W5 all pass. The endpoint fix and credential rotation defend
-against two different possible causes, and the ledger cannot rule out the second.
+Founder ruling 2026-09-07: the cleanest closure is exactly *the code we accepted
+is demonstrably the code running, and production behaviour satisfies W1–W5*.
 
-1. Issue a new key in Resend; revoke every key that existed during the incident.
-2. Update `RESEND_API_KEY` in the production environment; restart `maia-sovereign`.
-3. Confirm sending still works (repeat W3 with a fresh window).
-4. Confirm the old key is dead — a send with it must fail.
+Do **not** fold any of these into the MAIL-03 closure act:
+
+- **Resend credential rotation.** Still required — the endpoint fix and rotation
+  defend against two different possible causes, and the ledger cannot rule the
+  second one out. But it is its own act, performed after closure, with its own
+  verification that sending still works and that the old key is dead.
+- Postal / transport work (MAIL-09/10)
+- The Dependabot supply-chain census
+- MAIL-04 admission work
+
+Each has its own blast radius. Combining any of them with closure makes the
+witness ambiguous about what it actually witnessed.
 
 ## 6. Record
 
@@ -193,6 +357,13 @@ MAIL-04       HOLD
 `CAUSATION UNPROVEN` stays until the ledger and Resend's own history are
 correlated across the incident window. Containment closes a real surface; it does
 not establish that this surface was the vector.
+
+**Acceptance condition, and nothing more than this:** the production SHA carries
+`ee612602`, and W1–W5 pass.
+
+On both, MAIL-03 is ACCEPTED and closure is licensed — **CLOSED is then a
+founder act, not an inference from the evidence.** MAIL-04 stays HOLD and Postal
+stays untouched across that act.
 
 ## Rollback
 

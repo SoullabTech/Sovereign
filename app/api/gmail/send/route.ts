@@ -8,33 +8,63 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { GmailService } from '@/lib/gmail/GmailService';
 import { logAction, checkThreshold } from '@/lib/focus/weightTracking';
 
 export const dynamic = 'force-dynamic';
 
 interface SendEmailRequest {
-  userId: string;
   to: string;
   subject: string;
   body: string;
   cc?: string;
   bcc?: string;
-  memberId?: string; // For weight tracking
+  // `userId` and `memberId` are deliberately ABSENT. Both are resolved from
+  // the session; accepting either would restore the defect this route had.
 }
 
+/**
+ * MAIL-04c (2026-09-07) — MEMBER-DELEGATED MAIL
+ * =============================================
+ * This route sends from a member's OWN connected Google account. That makes it
+ * a different plane from platform mail, and the difference matters:
+ *
+ *   PLATFORM MAIL          Soullab sends its own messages. The destination is
+ *                          constrained (MAIL-04a): a caller may not aim it.
+ *
+ *   MEMBER-DELEGATED MAIL  a member composes from their own account. Choosing
+ *                          the recipient is the ENTIRE FEATURE, not a defect.
+ *
+ * So the invariant is not "the caller may never choose a destination". It is:
+ *
+ *   a caller may choose a destination only when they hold verified authority
+ *   for the sending act — and may NEVER choose another actor's sending identity
+ *
+ * The defect was the second clause. `userId` came from the request body and was
+ * used verbatim to look up OAuth credentials
+ * (google_calendar_credentials WHERE user_id = <caller-supplied>), so a caller
+ * who knew any connected id could choose BOTH whose Google token to spend AND
+ * where the mail went. The 401 below used to gate on whether Gmail was
+ * *connected* — a configuration check wearing the costume of an admission check.
+ */
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json();
-    const { userId, to, subject, body: emailBody, cc, bcc, memberId } = body;
+    const { to, subject, body: emailBody, cc, bcc } = body;
 
-    // Validate required fields
+    // The sending identity is the session's member. A `userId` or `memberId` in
+    // the body is ignored — both previously constituted authority.
+    const userId = await getMemberIdFromRequest(request);
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Sign in to send from your connected Google account' },
+        { status: 401 }
       );
     }
+    // Weight tracking follows the actor, so it can no longer be aimed at
+    // another member's budget either.
+    const memberId = userId;
 
     if (!to) {
       return NextResponse.json(
@@ -135,12 +165,15 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
-  const userId = request.nextUrl.searchParams.get('userId');
+  // MAIL-04c: the subject is the session's member. `?userId=` previously let
+  // any caller read whether an arbitrary account had Gmail connected, and its
+  // address — an enumeration surface over connected accounts.
+  const userId = await getMemberIdFromRequest(request);
 
   if (!userId) {
     return NextResponse.json(
-      { error: 'userId is required' },
-      { status: 400 }
+      { error: 'Sign in to view Gmail connection status' },
+      { status: 401 }
     );
   }
 

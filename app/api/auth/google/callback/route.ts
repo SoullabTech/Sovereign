@@ -10,6 +10,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { consumeOAuthState } from '@/lib/auth/googleOAuthState';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 import { upsertConnector } from '@/lib/connectors/connectorDb';
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const code = searchParams.get('code');
-    const state = searchParams.get('state'); // userId
+    const state = searchParams.get('state');
     const error = searchParams.get('error');
 
     const baseUrl = getBaseUrl(request);
@@ -56,7 +57,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/account/settings?error=missing_params', baseUrl));
     }
 
-    const userId = state;
+    // MAIL-04c — `state` is a TRANSACTION, not an identity.
+    //
+    // This previously read `const userId = state`, so whoever reached the
+    // callback named the account that received the tokens: complete a consent
+    // for your own Google account, put someone else's id in state, and their
+    // row holds your credential. Redemption is atomic and single-use, so a
+    // replayed callback cannot store tokens a second time.
+    const resolved = await consumeOAuthState(state);
+    if (!resolved.ok) {
+      console.error(`[GoogleCallback] REFUSED state reason=${resolved.reason}`);
+      return NextResponse.redirect(
+        new URL(`/studio/settings?google=error&reason=${resolved.reason}`, request.url)
+      );
+    }
+    const userId = resolved.memberId;
 
     // Exchange code for tokens
     const tokens = await GoogleCalendarService.exchangeCodeForTokens(code);

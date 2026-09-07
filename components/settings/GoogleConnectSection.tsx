@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/http/apiBase';
+
 import { useState, useEffect } from 'react';
 import { Mail, Calendar, CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 
@@ -30,7 +32,10 @@ export function GoogleConnectSection({ userId }: GoogleConnectSectionProps) {
       setError(null);
 
       // Check Gmail/Calendar connection
-      const response = await fetch(`/api/auth/google/status?userId=${encodeURIComponent(userId)}`);
+      // MAIL-04c: the subject is the session's member; `?userId=` is no longer
+      // read by the route. apiFetch carries the session token, which raw fetch
+      // does not do inside the iOS WebView.
+      const response = await apiFetch('/api/auth/google/status');
       const data = await response.json();
 
       setStatus({
@@ -51,7 +56,7 @@ export function GoogleConnectSection({ userId }: GoogleConnectSectionProps) {
       setConnecting(true);
       setError(null);
 
-      const response = await fetch('/api/auth/google/connect', {
+      const response = await apiFetch('/api/auth/google/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),

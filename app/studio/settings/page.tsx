@@ -150,7 +150,7 @@ function SettingsContent() {
           return;
         }
 
-        const response = await apiFetch(`/api/auth/google/status?userId=${memberId}`);
+        const response = await apiFetch('/api/auth/google/status');
         const data = await response.json();
         setGoogleStatus(data);
       } catch (error) {
