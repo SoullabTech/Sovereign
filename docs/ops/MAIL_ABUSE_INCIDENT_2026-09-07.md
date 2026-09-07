@@ -171,34 +171,136 @@ Postal supplies layers 5-6 and nothing above them, which is exactly the seam
 
 Reputation is the hard part and cannot be downloaded — hence 09B→09E.
 
-### Three seams to settle before 09A, not during it
+### The three seams — SETTLED (founder, 2026-09-07)
 
-1. **Suppression authority.** Postal keeps its own suppression list and MAIL-08
-   defines ours. Two suppression stores with no stated precedence is a silent
-   divergence. Policy lives above the provider boundary, so Soullab's is
-   authoritative and Postal's is a delivery-layer backstop — which means bounce
-   and complaint events must flow UP into our model rather than terminating in
-   Postal's.
+These were raised as open questions and are now decided. They are design
+decisions only: nothing here is authorised to be built. MAIL-04 is on HOLD.
 
-2. **The bounce webhook is a new inbound surface.** Postal delivers async events
-   by webhook, so MAIL-08 adds an internet-facing ingress that accepts
-   attacker-reachable POSTs. That is the same class of endpoint as the one this
-   incident is about. It needs signature verification and admission control from
-   its first commit — MAIL-04's rule applies to ingress, not only to send routes.
+#### 1. Soullab owns suppression authority
 
-3. **P0 has no failover on a single IP.** If a dedicated sending IP is blocked,
-   sign-in mail stops — a sovereignty loss, not a gain. So MAIL-10's "destroy
-   Resend keys" needs deciding as a question rather than assumed: removing Resend
-   as PRIMARY is not the same as removing every high-reputation standby path for
-   P0. The lane model already permits keeping a different provider for P0 than
-   for P3, and that may be the correct permanent end state rather than a
-   transitional one.
+Postal's suppression list must not become a second source of truth.
 
-Item 3 is a founder decision about what sovereignty means here, and it is not
-settled by this note.
+```
+recipient server
+      ↓
+Postal observes bounce / complaint
+      ↓
+authenticated event
+      ↓
+Soullab Mail
+      ↓
+canonical suppression state
+      ↓
+provider enforcement replicas
+```
 
-MAIL-03 is **not** combined with MAIL-05: security containment stays tiny,
-auditable and independently deployable.
+Postal may keep a local suppression cache — it needs one to protect its own
+transport — but Soullab Mail is authoritative over the member/mail relationship.
+The consequence that makes this worth the discipline: switching transports never
+loses the history of WHY an address is suppressed. A suppression list that lives
+in the provider is a suppression list you forfeit when you leave the provider.
+
+#### 2. MAIL-04 governs ingress as well as egress
+
+The constitutional question broadens from
+
+> who may cause Soullab to send mail?
+
+to
+
+> who may cause a change in Soullab Mail?
+
+which covers application send requests, delivery webhooks, bounces, complaints,
+unsubscribe actions, administrative actions, and provider status callbacks.
+
+A Postal webhook therefore arrives through an admission boundary with
+cryptographic authentication, replay protection, bounded volume, event
+idempotency, and explicit event authority.
+
+The load-bearing distinction:
+
+> An incoming provider event is an ASSERTION ABOUT DELIVERY. It is not
+> permission to mutate arbitrary mail or member state.
+
+That is what stops another externally reachable endpoint from quietly acquiring
+more authority than it was given — the failure this incident is a case of.
+
+#### 3. An independent P0 standby is PERMANENT, not transitional
+
+Sovereignty does not require a single physical delivery path, and insisting on
+one manufactures fragility:
+
+```
+Soullab MTA unavailable  ==  members cannot authenticate
+```
+
+That coupling is unacceptable for identity mail. The architecture is:
+
+```
+                         P0 AUTH
+                            │
+                    Soullab Mail policy
+                            │
+                 ┌──────────┴──────────┐
+                 ▼                     ▼
+          SOULLAB MTA              INDEPENDENT
+            primary                P0 STANDBY
+```
+
+Sovereignty is located in what the provider does NOT own: authentication policy,
+recipient authority, throttling, budgets, templates, ledger, suppression truth,
+routing decisions. It delivers an envelope when Soullab says so. That is still
+sovereign architecture.
+
+Two propositions are separated deliberately:
+
+- *Soullab should retain an independent high-reputation P0 delivery path* —
+  **accepted**.
+- *That path should be Resend* — **not accepted, and not architecturally
+  required.**
+
+##### Failover must not mint a second identity
+
+Failover operates on the SAME LOGICAL P0 MESSAGE. It does not generate a second
+authentication event. If primary delivery becomes uncertain and the standby is
+invoked, the same sign-in credential travels through the second transport —
+provider failover must never produce competing authentication codes.
+
+The implementation trap this names: if the code or token is generated inside the
+send path, a retry through a second transport generates a second valid code. So
+the credential is minted ONCE, before transport selection, and persisted once;
+transport choice happens strictly downstream of identity.
+
+The ledger already has the right shape for this and needs no schema change.
+`email_delivery_attempts` is one row per ATTEMPT, and `idempotency_key` is
+recorded on each. One logical message failing over is therefore two attempt rows
+sharing an idempotency key with different `provider` values — which is exactly
+what "did this member get one code or two?" needs to be answerable from
+evidence. Note this is a READER of `idempotency_key`, not a suppressor: MAIL-02's
+rule that repeats are visible rather than blocked is unaffected.
+
+### MAIL-10 revised — transport sovereignty, not provider elimination
+
+Not:
+
+```
+MAIL-10   destroy Resend; single Soullab transport
+```
+
+but:
+
+```
+MAIL-10   TRANSPORT SOVEREIGNTY
+          Soullab MTA qualified as primary
+          Resend removed as dependency
+          external provider optional as isolated P0 standby
+          no provider owns policy or state
+          no shared P0/P1/P2/P3 budget
+          provider can be replaced without application changes
+```
+
+Stronger sovereignty than removing every external service, because it survives
+the failure of any single transport without surrendering authority to any of them.
 
 ### Correction to §3's implied guidance — P0 does not fail open
 
@@ -242,3 +344,17 @@ Rotate and revoke **every** Resend API key that existed during the incident,
 regardless of whether V1/V2 is confirmed as the vector. An exposed endpoint and
 a compromised credential are not mutually exclusive, and the ledger cannot rule
 the second one out.
+
+## 7. Dependabot (688 findings) — not this lane
+
+Flagged by GitHub on push. **No action in MAIL-03.**
+
+A raw Dependabot count is not 688 exploitable production vulnerabilities. It
+mixes transitive packages, development-only dependencies, duplicated advisory
+paths, code that is never reached, and genuinely serious production exposure.
+
+After MAIL-03 closes: a separate supply-chain census, classified by
+severity × runtime reachability × direct/transitive × production/dev. **No mass
+dependency upgrade** — that would create enormous unrelated blast radius, and it
+is the opposite of the bounded, auditable change discipline this lane is being
+run under.
