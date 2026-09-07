@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
+import { deleteWork, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
 import { CANVAS_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { useCurrentManuscript } from './useCurrentManuscript';
@@ -96,6 +97,18 @@ export default function WritersStudioHome() {
     }
   };
 
+  /**
+   * Ends custody (WS-DELETE-01). Refreshes either way: if part of the act
+   * succeeded, Home must show what is actually left rather than what the member
+   * asked for. The rejection carries the server's member-facing sentence, so
+   * HomeView never has to invent one from a status code.
+   */
+  const onDelete = async (target: DeleteTarget) => {
+    const outcome = await deleteWork(target, apiFetch);
+    await refresh();
+    if (!outcome.ok) throw new Error(outcome.message);
+  };
+
   return (
     <HomeView
       loading={worksPhase === 'loading' || msPhase === 'loading'}
@@ -104,6 +117,7 @@ export default function WritersStudioHome() {
       onBegin={onBegin}
       onMakeWork={onMakeWork}
       onAddToWork={onAddToWork}
+      onDelete={onDelete}
     />
   );
 }
