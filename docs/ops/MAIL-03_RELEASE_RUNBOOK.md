@@ -64,9 +64,19 @@ ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
 curl -k https://soullab.life/api/health
 ```
 
-`GIT_COMMIT` must be the deployed short SHA and must contain `ee612602`'s
-changes. `unknown` means the deploy bypassed the provenance chain — do not
-proceed to witness.
+`GIT_COMMIT` must be the deployed short SHA. `unknown` means the deploy bypassed
+the provenance chain — do not proceed.
+
+It will often NOT read `ee612602` — a merge into `clean-main-no-secrets` gets its
+own SHA. That is fine, but it must be PROVEN to contain the containment commit
+rather than assumed:
+
+```bash
+RUNNING=$(ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT')
+git merge-base --is-ancestor ee612602 "$RUNNING" \
+  && echo "OK: running artifact contains ee612602" \
+  || echo "STOP: ee612602 is NOT in the running artifact's history"
+```
 
 Confirm containment is in the RUNNING artifact. Grep for a runtime string, not
 a comment: minification strips comments, so a check against the explanatory
@@ -89,47 +99,96 @@ limiter.
 
 ## 3. Production witness — controlled test member
 
-Use a member you own, on a domain you control. Record `MEMBER_ID` and
-`MEMBER_EMAIL`. Note the UTC start time; the ledger query in §4 is scoped to it.
+### 3.0 Bind the variables FIRST, and let the shell refuse placeholders
+
+A witness run on 2026-09-07 sent `<MEMBER_ID>` and `<MEMBER_EMAIL>` to
+production as literal strings. Every behavioural case silently tested nothing —
+the send-verification call 500'd on an invalid UUID instead of exercising the
+409 path, and the recovery loop ran against an address no member owns, so its
+200s were the enumeration-safe no-send response. The run LOOKED plausible. That
+is the failure mode to design against: a witness that cannot tell you it did not
+happen is worse than no witness.
+
+So bind real values and make the shell fail loudly if they are unset:
 
 ```bash
-WITNESS_START=$(date -u +%Y-%m-%dT%H:%M:%SZ); echo "$WITNESS_START"
+MEMBER_ID='<paste real uuid>'
+MEMBER_EMAIL='<paste real address>'
+ATTACKER='attacker@notyourdomain.example'
+
+case "$MEMBER_ID$MEMBER_EMAIL" in
+  *'<'*|'') echo 'REFUSING: placeholders not substituted'; return 2>/dev/null || exit 1;;
+esac
+[[ "$MEMBER_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || { echo "REFUSING: MEMBER_ID is not a uuid"; }
+
+WITNESS_START=$(date -u +%Y-%m-%dT%H:%M:%SZ); echo "witness start: $WITNESS_START"
 ```
+
+Confirm the member exists and note its address BEFORE the run — W2 compares
+against this:
+
+```bash
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT id, email, email_verified FROM members WHERE id = '$MEMBER_ID';\""
+```
+
+One row, and `email` equal to `$MEMBER_EMAIL`. No row means the witness cannot
+proceed.
+
+### 3.1 Ledger control — prove the ledger records at all
+
+An empty ledger after the run is only meaningful if the ledger is known to be
+recording. Establish that first:
+
+```bash
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT count(*), max(created_at) FROM email_delivery_attempts
+       WHERE created_at > NOW() - INTERVAL '7 days';\""
+```
+
+A zero count here means the ledger is not recording, and §4 proves nothing
+either way. Resolve that before continuing.
 
 ### W1 — normal signup/verification delivers
 
 Register a fresh test member through the normal flow. Expect: verification email
-arrives at the persisted address.
+arrives at the persisted address. *(Proves containment did not break sign-up.)*
 
 ### W2 — mismatching body address is refused (THE RELAY TEST)
 
 ```bash
-curl -s -o /tmp/w2.json -w '%{http_code}\n' -X POST https://soullab.life/api/members/send-verification \
+curl -s -w '\n%{http_code}\n' -X POST https://soullab.life/api/members/send-verification \
   -H 'Content-Type: application/json' \
-  -d '{"memberId":"<MEMBER_ID>","email":"attacker@notyourdomain.example"}'
-cat /tmp/w2.json
+  -d "{\"memberId\":\"$MEMBER_ID\",\"email\":\"$ATTACKER\"}"
 ```
 
 PASS requires **all three**:
-- HTTP **409**, body `reason: "destination_mismatch"`
+- HTTP **409** with `reason: "destination_mismatch"`
 - **no email** at the attacker address
-- `members.email` **unchanged**:
+- `members.email` unchanged:
 
 ```bash
 ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
-  \"SELECT email, email_verified FROM members WHERE id = '<MEMBER_ID>';\""
+  \"SELECT email, email_verified FROM members WHERE id = '$MEMBER_ID';\""
 ```
 
-Any 200, any delivery, or any change to that row = **RELAY OPEN**, stop and roll back.
+Any 200, any delivery, or any change to that row = **RELAY OPEN**, stop and roll
+back.
+
+**A 500 is not a pass.** It means the request died before reaching the refusal —
+most often an invalid UUID. Re-check §3.0 and re-run; do not record a 500 as
+evidence of containment.
 
 ### W3 — normal recovery delivers
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://soullab.life/api/members/recover \
-  -H 'Content-Type: application/json' -d '{"email":"<MEMBER_EMAIL>"}'
+  -H 'Content-Type: application/json' -d "{\"email\":\"$MEMBER_EMAIL\"}"
 ```
 
-Expect 200 and one email.
+Expect 200 **and one email actually arriving**. Recovery returns 200 for unknown
+addresses too — by design, for enumeration safety — so the status code alone
+does not establish delivery. The arriving message is the evidence.
 
 ### W4 — repeated recovery is throttled
 
@@ -137,14 +196,12 @@ Expect 200 and one email.
 for i in $(seq 1 9); do
   printf 'attempt %s -> ' "$i"
   curl -s -o /dev/null -w '%{http_code}\n' -X POST https://soullab.life/api/members/recover \
-    -H 'Content-Type: application/json' -d '{"email":"<MEMBER_EMAIL>"}'
+    -H 'Content-Type: application/json' -d "{\"email\":\"$MEMBER_EMAIL\"}"
 done
 ```
 
-Expect: a finite run of 200s (~5 in the 15-minute window, W3 counts toward it),
-then **429**. Count delivered messages — there must be no send beyond the
-ceiling. The 429 body must be the same non-committal sentence as the
-unknown-address response; a differing body is an enumeration oracle.
+Expect a finite run of 200s (~5 in the 15-minute window, W3 counts toward it),
+then **429**. Count delivered messages — no send beyond the ceiling.
 
 ### W5 — enumeration parity
 
