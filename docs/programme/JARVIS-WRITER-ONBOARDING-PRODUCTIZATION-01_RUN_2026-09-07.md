@@ -359,3 +359,84 @@ rule is relying on — dimness alone is ambiguous between *not available to you*
 
 ⛔ Recorded as evidence for the ruling. No option recommended in this artifact;
 the ruling is the founder's.
+
+---
+
+## 11 · FR-C — RULED (founder, 2026-09-07) · C · KEEP THE RULE, CARRY THE SENTENCE
+
+The evidence does not show a policy collision. It shows a **legibility failure in
+an otherwise consistent policy.**
+
+```text
+FR-C — RULED
+
+RULE
+Unbuilt Studio destinations may remain visible and disabled.
+
+FAILURE
+Disabled styling alone does not communicate why a destination cannot be used.
+Dimness is ambiguous: unavailable to me / empty / broken / not built.
+
+REQUIREMENT
+The surface must explicitly carry the state the architecture intends the
+member to understand.
+
+Therefore:
+  visible + unavailable  → state is SAID, not merely implied
+  disabled styling       → supplementary, NEVER sufficient by itself
+
+⛔ Do not hide destinations merely to resolve the ambiguity.
+⛔ Do not imply a delivery date or "coming soon" unless one actually exists.
+```
+
+### The deeper ruling
+
+> **A Studio may reveal its larger architecture before every room is usable, but
+> it must distinguish intentional incompleteness from malfunction or lack of
+> access.**
+
+This preserves the reason for showing the larger Studio at all: a writer can
+perceive that Notes, Canvas, Develop and the rest belong to one environment
+without being forced to guess whether a dim control is broken.
+
+⭐ **And it settles how the walk observation is read.** *"Very few options are
+present and useful"* was the **correct reading of the rendering**, because the
+surface supplied no other reading. It is not evidence that the destinations
+should disappear, and it is not a misperception by the walker.
+
+### Language — CANDIDATES, not ratified copy
+
+```text
+candidate    "Not available yet"
+candidate    "Planned — not available yet"        where there is room
+⛔ rejected  "Coming soon"   — quietly creates a schedule promise
+```
+
+⛔ Build is not authorized; these are recorded as candidates under the ruling's
+constraint, not as approved strings.
+
+### ⚠️ Reconciliation this ruling creates
+
+`app/writers-studio/studioMap.ts`, in the `visibleDestinations` doctrine block,
+carries the **NO ROADMAP LEAKAGE** rationale:
+
+> *"a product reveals capability, not construction status. An author arriving to
+> write must not read a list of things the room cannot do before reaching the one
+> it can."*
+
+FR-C requires the surface to say *"not available yet"* — which that block reads
+as construction status. **There is no live behavioural conflict**: that rationale
+governs `visibleDestinations`, which is rendered nowhere, while FR-C governs the
+shell rail, which already departed from it. But the file text will read as
+instructing the opposite of the ruling.
+
+⛔ Not repaired now. Flagged so that whoever implements FR-C reconciles the
+comment in the same change rather than discovering a contradiction mid-build.
+
+```text
+FR-C   RULED · C
+FR-D   NEXT
+FR-F   after FR-D
+FR-E   to WS2-07 capability sequencing, not this lane
+BUILD  NOT AUTHORIZED
+```
