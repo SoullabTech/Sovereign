@@ -391,10 +391,14 @@ discharged by PASS · exit 0.** ⛔ Production unchanged.
   two defects against ratified law, **I-01** and **I-02**.
 
 - **I0.5 — ENTRY SAFETY CLOSURE.** Opened by founder act on those two defects.
-  **FR-18 ratified**: *a generic Circle invitation may not reinstate a removed member — standing
-  outranks invitation.* `/commons/join` closed on the page so that surface and API tell the same
+  **FR-18 ratified**: *a generic Circle invitation may not reinstate a removed member — a recorded
+  removal standing outranks a generic invitation.* The first candidate was **rejected on founder
+  source review before any verifier run**: FR-18 was prechecked but not authoritative at the mutation
+  boundary. The guard now lives inside the upsert, and **T10f** was added as a deterministic
+  interleaving witness. `/commons/join` closed on the page so that surface and API tell the same
   truth, with I-03 preserved (a valid and an invalid token stay indistinguishable before
-  authorization). Verifier floor **54 → 62** (C20–C22, T10a–T10e).
+  authorization); converging that page gate with Circle-access authority is an **I8 obligation**.
+  Verifier floor **54 → 63** (C20–C22, T10a–T10f).
   Record: `JARVIS-CIRCLES-01_I0.5_ENTRY_SAFETY_2026-09-07.md`.
   ⛔ **IMPLEMENTED, NOT VERIFIED** — no `DATABASE_URL` and no `node_modules` in remote sessions.
 

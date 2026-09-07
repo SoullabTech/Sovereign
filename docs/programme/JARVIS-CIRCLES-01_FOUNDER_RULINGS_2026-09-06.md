@@ -476,7 +476,7 @@ identifiers are the I0 docket's own.
 
 ## FR-18 · A generic Circle invitation may not reinstate a removed member
 
-> **Standing outranks invitation.** An invitation is permission to approach a threshold. It is not
+> **A recorded removal standing outranks a generic invitation.** An invitation is permission to approach a threshold. It is not
 > authority to erase prior relational history.
 
 **Ratified 2026-09-07.** A member whose standing in a Circle is `removed` is refused when presenting
@@ -494,7 +494,22 @@ recorded relational act**.
 ⛔ **Not authorized by this ruling:** per-invitee tokens · invite expiry · a reinstatement workflow ·
 a facilitator review UI. Founder: *do not add yet.*
 
-Implemented and asserted at I0.5 (C22, T10a–T10e). See
+⭐ **Precision on the shorthand (founder, same day).** The canonical form is *"a recorded removal
+standing outranks a generic invitation"*, **not** the broader *"standing outranks invitation"* — taken
+literally the broad form could later be read as deciding CA-08. This is precision only; it is not a
+new ruling and it decides nothing about voluntary rejoin.
+
+⭐ **The first candidate was REJECTED on source review, before any verifier run.** It read the
+standing, refused if `removed`, then upserted `status='active'` unconditionally. `transaction()` is an
+ordinary BEGIN with no row lock, so a removal committing between the read and the write let the
+generic invitation overwrite it. **FR-18 was prechecked but not authoritative at the mutation
+boundary** — and T10a–T10e could not tell the two apart, because all five evaluate a standing that
+was already `removed` before the join began. The rule now lives in the upsert itself
+(`ON CONFLICT ... DO UPDATE ... WHERE circle_memberships.status <> 'removed' RETURNING`), and the
+preliminary SELECT was removed so there is exactly one authority. Required obligation **T10f** was
+added as a deterministic interleaving witness.
+
+Implemented and asserted at I0.5 (C22, T10a–T10f; floor 63). See
 `JARVIS-CIRCLES-01_I0.5_ENTRY_SAFETY_2026-09-07.md`.
 
 ## I-02 · CLOSED JOIN SURFACE — ruling: STATE CLOSURE ON PAGE
@@ -509,6 +524,12 @@ token remain **indistinguishable** to an unauthorized visitor. The closed surfac
 
 ⛔ The API gate is **not weakened** and the route is **not deleted**. A layout does not run for a
 route handler; `requireCircleAccess()` remains the authorization.
+
+⛔ **I8 obligation, not an I0.5 defect.** The page checks `requireFounder()` and the API checks
+`requireCircleAccess()`; these agree today only because Circle API authority is itself founder-only
+while the cohort is unauthorized. When `CIRCLE_ACCESS_MEMBER_IDS` is constituted at I8,
+`/commons/join` **must migrate to the same Circle-access authority** or page and API disagree again —
+the shape of I-02, one posture later. **Do not change it now.**
 
 ## D-I dispositions
 

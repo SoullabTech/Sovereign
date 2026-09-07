@@ -56,8 +56,9 @@ export interface InviteClient {
 /**
  * Join a circle using an invite token, against an existing client.
  *
- * ⭐ AN INVITATION IS PERMISSION TO APPROACH A THRESHOLD. IT IS NOT AUTHORITY TO
- * ERASE PRIOR RELATIONAL HISTORY. (I-01, founder ruling 2026-09-07.)
+ * ⭐ A RECORDED REMOVAL STANDING OUTRANKS A GENERIC INVITATION. An invitation is
+ * permission to approach a threshold. It is not authority to erase prior
+ * relational history. (FR-18, founder ruling 2026-09-07.)
  *
  * The defect this closes: a generic Circle invitation had enough authority to
  * overwrite a recorded removal. The upsert below used to set `status='active'`
@@ -102,26 +103,47 @@ export async function joinWithInviteWithClient(
     throw new Error('INVALID_INVITE');
   }
 
-  // Standing outranks invitation. Checked before any write, so a refused join
-  // leaves the membership row and the removal record exactly as they were.
-  const standing = (
-    await client.query(
-      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
-      [invite.circle_id, memberId]
-    )
-  ).rows[0] as { status: string } | undefined;
-
-  if (standing?.status === 'removed') {
-    throw new Error('REINSTATEMENT_REQUIRED');
-  }
-
-  await client.query(
+  // ⭐ THE AUTHORITY IS THE MUTATION, NOT A PRECHECK.
+  //
+  // An earlier candidate read the standing first and refused if it was
+  // `removed`, then upserted `status='active'` unconditionally. That is a
+  // time-of-check/time-of-use gap, and the founder rejected it before the
+  // verifier was ever run: `transaction()` is an ordinary BEGIN with no row
+  // lock and no stronger isolation, so a removal committing between the read
+  // and the write left the invitation free to overwrite it —
+  //
+  //     JOIN reads standing = active
+  //                                REMOVAL commits: status = removed, record written
+  //     JOIN writes  status = active          ← the generic invitation wins
+  //
+  // A precheck establishes only *this person was not removed a moment ago*.
+  // FR-18 requires the stronger statement: **a generic invitation may not
+  // overwrite a removal standing at the membership mutation boundary.**
+  //
+  // So the rule lives in the upsert itself. `ON CONFLICT ... DO UPDATE` takes a
+  // row lock and re-evaluates its WHERE against the latest committed version of
+  // the conflicting row, which is exactly the boundary the rule belongs at.
+  //
+  // ⛔ Do not reintroduce a standing SELECT as the refusal path. If a cheap
+  // early exit is ever wanted, it may only ever be advisory — the guarded
+  // mutation must remain the authority.
+  //
+  // Zero rows returned ⟺ a membership row exists whose status is `removed`:
+  // the insert path always returns, and the update path returns unless the
+  // guard excluded it.
+  const admitted = await client.query(
     `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
      VALUES ($1, $2, 'member', 'active', $3, NOW())
      ON CONFLICT (circle_id, member_id)
-     DO UPDATE SET status = 'active', consent_mode = $3, consented_at = NOW()`,
+     DO UPDATE SET status = 'active', consent_mode = $3, consented_at = NOW()
+     WHERE circle_memberships.status <> 'removed'
+     RETURNING circle_id`,
     [invite.circle_id, memberId, consentMode]
   );
+
+  if (admitted.rows.length === 0) {
+    throw new Error('REINSTATEMENT_REQUIRED');
+  }
 
   return invite.circle_id as string;
 }

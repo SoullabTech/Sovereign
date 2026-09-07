@@ -99,7 +99,8 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   // ruling C boundary cascade · B-09 retired status
   'T8a', 'T8b', 'T8c', 'T9a', 'T9b',
   // I0.5 · I-01 entry safety: a generic invitation cannot reinstate
-  'T10a', 'T10b', 'T10c', 'T10d', 'T10e',
+  // T10f is the interleaving witness — the mutation boundary, not a precheck
+  'T10a', 'T10b', 'T10c', 'T10d', 'T10e', 'T10f',
   'T5', 'T6',
 ]);
 
@@ -1234,14 +1235,16 @@ async function groupT(tx: PoolClient) {
     )
   ).rows[0].n;
 
-  // T10a — the refusal itself. Standing outranks invitation.
+  // T10a — the refusal itself. A recorded removal standing outranks a generic
+  //        invitation. (Precheck-satisfiable on its own — see T10f.)
   const reinstate = await tryJoin(mB);
   !reinstate.ok && reinstate.error === 'REINSTATEMENT_REQUIRED'
     ? pass('T10a I-01 a valid live invite does not reinstate a removed member')
     : fail('T10a I-01 a removed member rejoined on a generic invite', JSON.stringify(reinstate));
 
   // T10b — and no write happened. A refusal that still upserted would satisfy
-  //        the error message and defeat the boundary.
+  //        the error message and defeat the boundary. With the guard inside the
+  //        upsert, "refused" and "not written" are the same event.
   const standing = (
     await tx.query<{ status: string }>(
       `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
@@ -1292,6 +1295,94 @@ async function groupT(tx: PoolClient) {
   elsewhereAfterRefusal === 'active'
     ? pass('T10e I-01 the refusal did not reach another Circle')
     : fail('T10e I-01 standing in another Circle changed', String(elsewhereAfterRefusal));
+
+  // ⭐ T10f — THE INTERLEAVING WITNESS. T10a–T10e all evaluate a standing that
+  //        was already `removed` before the join began. That is satisfiable by a
+  //        precheck, and a precheck is not the rule: `transaction()` is an
+  //        ordinary BEGIN with no row lock, so a removal committing between a
+  //        standing SELECT and the membership write would let a generic
+  //        invitation overwrite it. FR-18 is a claim about the MUTATION
+  //        BOUNDARY, so something has to test that boundary specifically.
+  //
+  //        Constructed deterministically rather than concurrently. A second
+  //        connection would need committed fixtures, which would break this
+  //        verifier's rollback-only consequence contract — the property being
+  //        tested does not require real parallelism, only that a REAL removal
+  //        land after the invitation has been evaluated and before membership is
+  //        written. So an InviteClient wrapper delegates every statement to this
+  //        same rolled-back transaction, and on the membership INSERT — the
+  //        moment before the mutation — it runs the REAL removeMemberWithClient()
+  //        first:
+  //
+  //            join crosses the invitation threshold
+  //              ↓
+  //            real FR-05 removal is enacted
+  //              ↓
+  //            join reaches the membership mutation
+  //              ↓
+  //            the generic invitation MUST lose
+  //
+  //        A candidate that refuses via a precheck passes T10a–T10e and FAILS
+  //        HERE. That is the point of the obligation.
+  const mE = await mk('e');
+  await tx.query(
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [circle, mE]
+  );
+
+  let interleaved = false;
+  const racingClient = {
+    query: async (sql: string, params?: unknown[]) => {
+      // Fires once, on the membership mutation only. `circle_membership_removals`
+      // does not match, and the flag guards the removal service's own writes.
+      if (!interleaved && /INSERT INTO circle_memberships\b/i.test(sql)) {
+        interleaved = true;
+        await removeMemberWithClient(tx as any, {
+          circleId: circle,
+          actingMemberId: mA,
+          targetMemberId: mE,
+          grounds: 'verifier interleaving witness: removal lands mid-join',
+        });
+      }
+      return tx.query(sql, params as any);
+    },
+  };
+
+  let raced: { ok: true; circleId: string } | { ok: false; error: string };
+  try {
+    raced = { ok: true, circleId: await joinWithInviteWithClient(racingClient as any, liveToken, mE, 'manual') };
+  } catch (e: any) {
+    raced = { ok: false, error: e?.message ?? 'UNKNOWN' };
+  }
+
+  const racedStanding = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mE]
+    )
+  ).rows[0]?.status;
+  const racedRemovals = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mE]
+    )
+  ).rows[0].n;
+
+  if (!interleaved) {
+    fail('T10f I-01 the interleaving witness never fired', 'the membership mutation was not observed');
+  } else if (raced.ok) {
+    fail('T10f I-01 a removal mid-join was overwritten by the invitation', 'FR-18 is a precheck, not the boundary');
+  } else if (raced.error !== 'REINSTATEMENT_REQUIRED') {
+    fail('T10f I-01 the mid-join removal produced the wrong refusal', raced.error);
+  } else if (racedStanding !== 'removed') {
+    fail('T10f I-01 the mid-join removal did not survive the mutation', String(racedStanding));
+  } else if (racedRemovals !== 1) {
+    fail('T10f I-01 the mid-join removal record is not intact', `count=${racedRemovals}`);
+  } else {
+    pass('T10f I-01 a removal landing at the mutation boundary defeats the invitation');
+  }
 
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (

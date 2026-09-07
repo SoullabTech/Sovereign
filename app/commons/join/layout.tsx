@@ -30,6 +30,13 @@ import GateScreen from '@/components/access/FounderGateScreen';
  * not run for a route handler; this closes the surface, never the door. Do not
  * relax the API on the strength of this file.
  *
+ * ⛔ I8 OBLIGATION, recorded here because this is where it will be missed. This
+ * gate checks requireFounder(); the API checks requireCircleAccess(). They agree
+ * TODAY only because Circle API authority is itself founder-only while the
+ * cohort is unauthorized. When CIRCLE_ACCESS_MEMBER_IDS is constituted at I8,
+ * THIS FILE MUST MIGRATE to the same Circle-access authority — otherwise the
+ * page and the API disagree again, which is I-02 one posture later.
+ *
  * The 401 case is NOT redirected to /signin. A redirect would imply that signing
  * in leads to joining, which is untrue while the cohort is unauthorized. The
  * closed state is stated once, and sign-in is offered as an exit rather than
