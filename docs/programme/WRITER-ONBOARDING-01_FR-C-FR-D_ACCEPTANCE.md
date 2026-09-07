@@ -384,3 +384,88 @@ NEEDS    a look during a later walk, in both rooms in sequence,
 
 ⛔ Not to be repaired in anticipation. The same discipline that governed the
 aggregate-weight hypothesis governs this: the walk decides, not the reasoning.
+
+---
+
+## 8 · ACCEPTANCE STATE — recorded precisely (founder, 2026-09-07)
+
+```text
+FR-C
+WITNESSED · PASS
+
+Finding:
+Explicit unavailable-state language converts ambiguous absence
+into intelligible future structure.
+
+FR-D
+WITNESSED · PASS
+scope: rail + governing experiential question
+
+Founder result:
+Studio became more intelligible without becoming more instructional.
+
+Important success characteristic:
+The help was not experienced as "Help."
+Meaning became perceptible through the surface itself.
+
+UNWITNESSED
+object-local ? affordances
+keyboard equivalence
+touch equivalence
+writing-primary witness
+Develop-specific witness
+no-Work DEVELOP state
+cross-room Versions continuity
+
+CODE
+HOLD
+```
+
+### The result, in one line
+
+> **Telling the truth about incompleteness made Writer's Studio feel more
+> complete.**
+
+Nothing became more capable. The unavailable rooms stopped reading as absence
+and started reading as architecture.
+
+### Why "somehow" is strong evidence, not weak
+
+FR-D was designed to succeed **beneath conscious attention**. Had the founder
+said *"yes, I can really see all the new explanatory text,"* that would be
+**weaker** evidence — it would mean the explanation had become an object in the
+room. What was reported instead is closer to: *the place makes more sense now.*
+
+## 9 · NEXT WITNESS PASS — small, and only this
+
+⛔ No new design. No repair until one of these produces an actual finding.
+
+```text
+1  "This work ?"        pointer, then keyboard
+2  "Keep a version ?"   does it genuinely answer the threshold question
+3  Canvas → Develop     specifically to witness Versions
+4  writing surface      does everything recede appropriately
+5  no-Work DEVELOP      separately
+6  touch                later, on iPhone
+```
+
+### On item 3 — the test that must not be reasoned away
+
+⛔ The `Versions` observation must NOT be dismissed as *"technically correct
+because reachability differs."* The product has to survive the writer moving:
+
+```text
+Canvas  →  Develop  →  Canvas
+
+Versions 1
+Versions — Not available yet
+Versions 1
+```
+
+```text
+if it reads as CONTEXTUAL TRUTH   → fine, nothing to do
+if it reads as SELF-CONTRADICTION → FR-C has uncovered a second-order
+                                    orientation problem
+```
+
+**No need to anticipate which.** `648d4a13` stays untouched until the walk says.
