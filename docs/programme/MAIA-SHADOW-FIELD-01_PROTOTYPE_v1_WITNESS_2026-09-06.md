@@ -843,6 +843,25 @@ a conversation-overlay component a standalone place. Design finding, not a styli
 route that is a full navigation away from ~70% of the viewport, unwarned. Lawful in outcome
 (leaving keeps nothing) but not a threshold's behaviour.
 
+### Two findings, not one — do not conflate them
+
+**1 · Trust architecture — ESTABLISHED from the frozen source.** The client has no visible
+error path for a non-2xx entry response, so any server refusal at the threshold is silently
+concealed from the member. This holds regardless of what blocked the walk tonight.
+
+**2 · Blocker classification — NOT YET PROVEN.** Source wiring establishes *intent*, not
+*runtime delivery*. Reading `onClick={enterField}` does not prove the click reaches the
+handler. One captured Network attempt discriminates:
+
+```text
+no request           → interaction never reaches the handler
+request → 4xx/5xx    → server refusal + confirmed silent-failure defect
+request → 2xx        → transition/state/render failure after successful entry
+```
+
+The audience-gate hypothesis (session not founder-resolved → 401) predicts the middle row. It
+is a hypothesis until that row exists. **No repair before the capture.**
+
 ### Founder Arrival observations — recorded as evidence, not repaired
 
 ```text
