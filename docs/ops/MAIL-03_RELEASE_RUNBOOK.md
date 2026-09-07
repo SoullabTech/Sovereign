@@ -12,8 +12,8 @@ Current state:
 
 ```text
 MAIL-03 IMPLEMENTATION   COMPLETE            ee612602 · 18 pinned tests · build PASS
-MAIL-03 ACCEPTANCE       NOT COMPLETE        production not witnessed
-MAIL-03 CLOSURE          NOT AUTHORIZED YET  founder act
+MAIL-03 ACCEPTANCE       ESTABLISHED         production witness recorded 2026-09-07
+MAIL-03 CLOSURE          CLOSED              founder act 2026-09-07
 
 MAIL-04                  HOLD
 POSTAL                   DESIGN ONLY

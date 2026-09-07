@@ -9,11 +9,12 @@ DEPLOY        e535e6246   (contains ee612602)
 MEMBER        4fdbb023-4fca-42f3-9810-8f4da88b21fc
 ```
 
-**Status: ACCEPTANCE ESTABLISHED 2026-09-07.** All machine checks pass and both
-observable positive-delivery confirmations are recorded (§4).
+**Status: ACCEPTANCE ESTABLISHED · MAIL-03 CLOSED 2026-09-07.** All machine
+checks pass and both observable positive-delivery confirmations are recorded
+(§4). Founder closure was performed only after acceptance was established.
 
-**Closure is a separate founder act. It is NOT performed by this record, and
-acceptance does not imply it.**
+**Closure is a separate founder act. Acceptance licensed it; acceptance did not
+perform it. The founder act is recorded in §7.**
 
 ## 1 · Provenance — three independent confirmations
 
@@ -181,7 +182,7 @@ BUILD         PASS
 DEPLOY        e535e6246
 VERIFY        PASS (machine) · PASS (mailbox: W1, W3)
 ACCEPTANCE    ESTABLISHED 2026-09-07
-CLOSURE       NOT PERFORMED — founder act
+CLOSURE       CLOSED 2026-09-07 — founder act
 RELAY         CLOSED IN PRODUCTION
 RECOVERY      METERED IN PRODUCTION
 CAUSATION     UNPROVEN
@@ -199,3 +200,22 @@ begins 2026-08-25; earlier traffic may exist only in the provider's own history.
 Credential rotation · Postal/transport · Dependabot census · MAIL-04. Each has
 its own blast radius; combining any of them would make this witness ambiguous
 about what it witnessed.
+
+## 7 · Founder closure act — 2026-09-07
+
+Founder closure is **PERFORMED** on the acceptance evidence recorded above.
+This act changes no code, deployment, witness result, provider credential, or
+transport state. It records the founder decision that the accepted MAIL-03
+containment is closed.
+
+```text
+MAIL-03       CLOSED
+ACCEPTANCE    ESTABLISHED
+CAUSATION     UNPROVEN
+ROTATION      REQUIRED — separate next act with its own witness
+MAIL-04       HOLD — opens only after rotation
+```
+
+W5 remains recorded as partial/non-blocking; closure does not rewrite that
+limitation into a stronger production claim. Credential rotation, Postal,
+Dependabot, and MAIL-04 remain outside this act.

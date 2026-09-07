@@ -387,3 +387,24 @@ severity × runtime reachability × direct/transitive × production/dev. **No ma
 dependency upgrade** — that would create enormous unrelated blast radius, and it
 is the opposite of the bounded, auditable change discipline this lane is being
 run under.
+
+## 8. MAIL-03 founder closure — 2026-09-07
+
+MAIL-03 acceptance is established by
+`docs/ops/MAIL-03_WITNESS_2026-09-07.md`. The founder closure act is now
+**PERFORMED**. No code, deploy, credential, transport, dependency, or MAIL-04
+change is bundled into this act.
+
+```text
+MAIL-03       CLOSED
+RELAY         CLOSED IN PRODUCTION
+RECOVERY      METERED IN PRODUCTION
+CAUSATION     UNPROVEN
+ROTATION      REQUIRED — separate act, next
+MAIL-04       HOLD
+```
+
+Closure does not establish the cause of the August Resend overage. Credential
+rotation remains required because it addresses a distinct candidate cause and
+must carry its own evidence: the new key sends successfully, the old key is
+dead, and the ledger records the new provider identity.
