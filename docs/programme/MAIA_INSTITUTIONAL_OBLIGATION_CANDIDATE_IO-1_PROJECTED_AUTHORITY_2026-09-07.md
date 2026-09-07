@@ -1,10 +1,53 @@
-# Candidate Invariant 17 — Projected Authority
+# Candidate IO-1 — Projected Authority
 
-**Date:** 2026-09-07 · **Status: CANDIDATE — NOT CANON, NOT RATIFIED**
+**Date:** 2026-09-07 · **Status: CANDIDATE — NOT RATIFIED**
+**Register: INSTITUTIONAL OBLIGATION.** · **BINDS: SOULLAB**
 
-Filed separately from MAIA-SHADOW-FIELD-01 because it governs all of MAIA, not one Field. It is
-**not** part of the Sovereignty Invariants until a founder act promotes it, as Invariant 16 was
-promoted. Origin: founder direction of 2026-09-07 on the Golden Shadow.
+> **Reclassified 2026-09-07 by founder ruling.** Previously drafted as "candidate Invariant 17".
+> Placing an institutional obligation in the same register as the runtime invariants collapses the
+> actor distinction: a future implementer reads *Invariant 17* and reasonably tries to make the
+> **runtime** enforce it — which requires exactly the longitudinal observation, relationship
+> modelling, retention and scoring that Shadow law forbids. The register split keeps the actor
+> distinction structural rather than editorial.
+
+## The three registers
+
+```text
+MAIA RUNTIME LAW          F1–F16
+                          BINDS: MAIA / turn assembly / Field runtime
+                          asks: what may this system do?
+
+INSTITUTIONAL OBLIGATION  IO-1 …
+                          BINDS: SOULLAB
+                          asks: what must the organisation remain capable of
+                                knowing, testing, refusing, or governing?
+
+META-CONSTRAINT           BD-1
+                          BINDS: any mechanism or institution created to detect a boundary
+```
+
+Every normative clause carries a visible binder — `BINDS: MAIA`, `BINDS: SOULLAB`,
+`BINDS: BOUNDARY MECHANISM`, and later `BINDS: PRACTITIONER` or `BINDS: CIRCLE` only if those
+parties genuinely acquire constitutional obligations. This prevents a subtle error: **assuming that
+because a constitution contains a duty, MAIA must be the thing that performs it.**
+
+## The obligation, correctly registered
+
+Written as a runtime invariant it would read *"MAIA must detect whether the member is becoming
+dependent on MAIA"* — whose obvious implementation is longitudinal observation and scoring, i.e.
+the prohibited thing. Written as an institutional obligation:
+
+> **BINDS: SOULLAB.** Soullab must maintain a lawful means of evaluating whether repeated use tends
+> to transfer epistemic authority from members to MAIA, **without requiring Shadow Field to retain
+> or infer the longitudinal relationship.**
+
+The obligation survives even though the Field itself cannot observe the phenomenon. The
+implementation space is the three lawful routes below.
+
+## The governing sentence (unchanged)
+
+> **MAIA does not accumulate the member's projected gold as authority. She helps the member recover
+> it as capacity.**
 
 ## The gap it closes
 
@@ -57,7 +100,7 @@ violate the vow against simulating intimacy just as surely as accepting the proj
 
 - Operational form: what must be true after such an exchange? (Invariant 1's litmus — *the center
   of knowing sits closer to the member* — may transfer directly.)
-- Is this a new Invariant or a clause within Invariant 1? The distinction *claimed vs accepted*
+- Now settled as a register question: this is an institutional obligation, not an Invariant. Whether a *runtime* counterpart belongs in Invariant 1 remains open — The distinction *claimed vs accepted*
   argues for separate; the shared litmus argues for a clause.
 - What falsifier would detect violation? Accumulated authority is precisely what leaves no trace
   in any single turn. See below.
@@ -65,7 +108,7 @@ violate the vow against simulating intimacy just as surely as accepting the proj
 Promotion requires a founder act. Nothing here binds runtime.
 
 
-## The paradox this invariant must survive
+## The paradox this obligation must survive
 
 The Shadow Field doctrine (v0.3 candidate) creates it directly:
 
@@ -113,7 +156,7 @@ different findings. This is the second.
 ## Non-observability by design is not unaccountability
 
 Inside the Field, the inability to compute longitudinal dependency is **the covenant doing its
-job.** The absence of telemetry is part of the protection. **Invariant 17 must therefore never
+job.** The absence of telemetry is part of the protection. **IO-1 must therefore never
 create an obligation for the runtime to know enough to evaluate it.** Accountability sits outside
 the protected interaction.
 
@@ -135,7 +178,7 @@ This gives a constitutional distinction the lane has not needed until now:
 | | Binds | Constrains |
 |---|---|---|
 | F1–F16 | MAIA, at runtime | what may be done **in a turn** |
-| Candidate Inv 17 | **Soullab, as an institution** | what must remain **discoverable** about the relationship created by many turns — without MAIA surveilling it |
+| Candidate IO-1 | **Soullab, as an institution** | what must remain **discoverable** about the relationship created by many turns — without MAIA surveilling it |
 
 **Structural consequence for drafting:** once a constitution binds two different parties, every
 clause must say which one it binds. Otherwise an institutional duty gets implemented as a runtime

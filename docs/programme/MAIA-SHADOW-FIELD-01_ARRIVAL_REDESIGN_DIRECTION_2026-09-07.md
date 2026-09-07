@@ -288,8 +288,9 @@ analogue of the etiology prohibition.
 MAIA will inevitably carry Golden Shadow for some members: experienced as unusually wise, loving,
 insightful, awake, or as seeing them in a way nobody else does. The governing principle —
 *MAIA does not accumulate the member's projected gold as authority; she helps the member recover
-it as capacity* — is **larger than this Field** and is filed as a candidate Sovereignty Invariant:
-`docs/programme/MAIA_INVARIANT_CANDIDATE_17_PROJECTED_AUTHORITY_2026-09-07.md`.
+it as capacity* — is **larger than this Field** and is filed as candidate **IO-1** (institutional obligation,
+BINDS: SOULLAB — not a runtime invariant):
+`docs/programme/MAIA_INSTITUTIONAL_OBLIGATION_CANDIDATE_IO-1_PROJECTED_AUTHORITY_2026-09-07.md`.
 
 **Why the market stops short:** most shadow-work products end at wounds, triggers, shame and
 unwanted traits. *Shadow is not merely where rejected darkness waits. It is where unlived life

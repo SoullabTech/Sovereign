@@ -331,6 +331,12 @@ Generalised, and worth carrying to any future safety layer:
 
 > **A boundary detector may not exceed the constitution of the thing it bounds.**
 
+Filed as candidate **BD-1**
+(`docs/programme/MAIA_META_CONSTRAINT_CANDIDATE_BD-1_BOUNDARY_DETECTORS_2026-09-07.md`), with the
+accumulated-authority obligation as candidate **IO-1**. Three registers, each with a visible
+binder: **MAIA RUNTIME LAW** (F1–F16, BINDS: MAIA) · **INSTITUTIONAL OBLIGATION** (IO-*, BINDS:
+SOULLAB) · **META-CONSTRAINT** (BD-*, BINDS: any boundary mechanism).
+
 ### The consequence for the doctrine
 
 > **The Field is allowed to be deep without claiming jurisdiction over depth.**
