@@ -1,5 +1,43 @@
 # Google Workspace SMTP — Qualification Runbook
 
+> ## VERDICT 2026-09-07 · DISQUALIFIED AT PHASE 0
+>
+> ```
+> MX     10 mail.protonmail.ch. / 20 mailsec.protonmail.ch.
+> SPF    v=spf1 include:_spf.protonmail.ch include:send.resend.com mx ~all
+> DMARC  <no record>
+> ```
+>
+> | Gate | Result |
+> |---|---|
+> | Workspace-hosted | ❌ mail is hosted by **Proton Mail** |
+> | Google in SPF | ❌ Google is not authorised to send for the domain |
+> | Existing SPF | ✅ Proton + Resend authorised |
+> | DMARC | ❌ absent |
+>
+> The DNS gate did its job: the mismatch surfaced **before** any credential was
+> provisioned and without production being touched. Resend remains the live
+> transport, unchanged.
+>
+> Kept rather than deleted — the phases below apply unchanged if `soullab.life`
+> is ever Workspace-hosted, and the negative result is itself the record of why
+> this path was not taken.
+>
+> **Two findings preserved, neither remediated here:**
+>
+> 1. **No DMARC policy on `soullab.life`.** With `~all` softfail and no DMARC,
+>    the domain has weak spoofing protection and produces no failure reports.
+>    A real mail-authentication finding; its remediation is not smuggled into a
+>    transport qualification act.
+> 2. **Proton is already the domain's mail authority.** Whether Proton offers an
+>    application SMTP submission path is the natural next transport inquiry —
+>    it would add independence without adding a vendor. A separate inquiry, and
+>    explicitly **not** a reason to hold MAIL-04.
+>
+> Note also the SPF record already carries two `include:` mechanisms. Any future
+> transport adds a third, and SPF permits at most 10 DNS lookups in total.
+
+
 **Goal: transport plurality, not transport migration.** At the end of this,
 Resend remains live primary and Workspace SMTP is a *proven* standby. Resend
 stops being the only way MAIA can deliver an identity email.
