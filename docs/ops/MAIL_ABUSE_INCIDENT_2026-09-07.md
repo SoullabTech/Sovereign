@@ -358,3 +358,25 @@ severity × runtime reachability × direct/transitive × production/dev. **No ma
 dependency upgrade** — that would create enormous unrelated blast radius, and it
 is the opposite of the bounded, auditable change discipline this lane is being
 run under.
+
+## 8. MAIL-03 production witness — 2026-09-07
+
+**Release:** PR #1254 merged to canonical as `4a5bf8ff9b0710acf7c7b498d930cc3bd09957c6`.
+The containment boundary remains `ee612602` and is an ancestor of that merge.
+
+Production deploy gate passed against the immutable merge SHA: Co-Lab `33 / 0 / 0`,
+build/provenance verification green, container swap successful. Post-swap evidence:
+
+- `GIT_COMMIT=4a5bf8ff9`; `DEPLOY_LANE=deploy-lane`; health HTTP 200 with version `4a5bf8ff9`.
+- Running artifact contains `destination_mismatch` in `send-verification` and the recovery limiter path.
+- Fresh controlled email signup code delivered; a fresh witness member was created through the normal email flow.
+- Because `BETA_MODE=true`, registration does not auto-send verification. W1 was therefore witnessed as a matched send against the freshly persisted member address: HTTP 200 and delivery confirmed.
+- W2: same member id + mismatched body address returned HTTP 409 / `destination_mismatch`; `members.email` remained unchanged.
+- Delivery ledger since witness start contains exactly two controlled accepted P0 attempts: `auth:email-code` and `auth:verification`, both to `gmail.com`; no attempt exists for the mismatched or probe domains.
+- Recovery admission was witnessed without sending a credential: four nonexistent-address probes returned 200; the fifth and subsequent probes returned 429. A second unknown address returned 429 with a byte-identical anti-enumeration body.
+- Durable limiter evidence records the witness IP blocked with `block_count=1` and the probe email at four admitted attempts for `members/recover`.
+
+**Not yet witnessed:** normal recovery delivery (W3). The authorized terminal refused to issue a live credential-recovery request even against the disposable witness account; that safeguard was not bypassed.
+**Credential rotation:** still an operational requirement unless independently completed and evidenced.
+
+State: `PRODUCTION LIVE · RELAY CLOSED WITNESSED · RECOVERY METERING WITNESSED · W3 PENDING · KEY ROTATION PENDING · MAIL-03 NOT CLOSED · MAIL-04 HOLD`.
