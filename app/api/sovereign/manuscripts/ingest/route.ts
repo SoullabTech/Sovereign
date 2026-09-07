@@ -36,7 +36,11 @@ import {
   type Role,
 } from '@/config/accessMatrix';
 import { deriveVerifiedAccess } from '@/lib/auth/verifiedAccess';
-import { CLIENT_ASSERTABLE_IDENTITY_HEADERS } from '@/lib/auth/identityAssertions';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {
+  CLIENT_ASSERTABLE_IDENTITY_HEADERS,
+  forgedIdentityHeaders,
+} from '@/lib/auth/identityAssertions';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
@@ -64,13 +68,25 @@ const MAX_TEXT_CHARS = 2_000_000; // mirrors the save path's cap in ../route.ts
  *
  * The order matters and is not interchangeable:
  *
- *   1. AUTHORITY inspects the ORIGINAL request — `deriveVerifiedAccess` must
+ *   1. REFUSE the names no real client sends. `x-member-id` is the only
+ *      client-assertable header with a real sender behind it (`apiFetch` on
+ *      iOS); every other name in the list — `x-maia-member-id` included — is
+ *      middleware's own derived answer or a role/tier claim, and an inbound
+ *      copy is always a forgery.
+ *   2. AUTHORITY inspects the ORIGINAL request — `deriveVerifiedAccess` must
  *      still see `x-member-id` to catch a claim that disagrees with the
  *      session. Sanitising first would blind the impersonation check.
- *   2. SANITISATION happens after, IN PLACE on the same request — the caller's
- *      assertions may be inspected by the authority boundary, but they may not
- *      survive beyond it as ambient request context.
- *   3. INGEST reads `formData()` from that same request. No second Request is
+ *   3. IDENTITY through the ordinary gate. `getMemberIdFromRequest` accepts a
+ *      NARROWER credential set than `deriveVerifiedAccess` — cookie and
+ *      `x-session-token`, but not the `?_t=` query token. Custody is written
+ *      under its answer, so this route cannot become the one upload path where
+ *      a URL parameter authenticates a write.
+ *   4. SANITISATION happens after all of that, IN PLACE on the same request —
+ *      the caller's assertions may be inspected by the authority boundary, but
+ *      they may not survive beyond it as ambient request context. A verified
+ *      claim is still a claim: verification is a reason to admit it, never a
+ *      reason to leave it standing.
+ *   5. INGEST reads `formData()` from that same request. No second Request is
  *      constructed anywhere in this file: a copy is exactly the body-consuming
  *      move that made the exclusion necessary.
  */
@@ -161,7 +177,23 @@ export async function POST(request: NextRequest) {
   try {
     const rid = requestId();
 
-    // ── 1. AUTHORITY — on the ORIGINAL request ─────────────────────────────
+    // ── 1. REFUSE what no real client sends ────────────────────────────────
+    // Refused rather than merely stripped, because these names carry
+    // information: their presence is an attempt, and an attempt is worth a log
+    // line and a closed door. The list is derived from the sanitisation list
+    // minus the one name with a real sender, so it cannot drift from it.
+    const forged = forgedIdentityHeaders(request.headers);
+    if (forged.length > 0) {
+      console.error(
+        `[press/manuscripts/ingest] refused client-asserted identity headers: ${forged.join(', ')} rid=${rid}`,
+      );
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required.', rid },
+        { status: 401 },
+      );
+    }
+
+    // ── 2. AUTHORITY — on the ORIGINAL request ─────────────────────────────
     // `deriveVerifiedAccess` validates the session token against
     // `auth_sessions` and reads tier/roles from the `members` row it names.
     // It also compares any `x-member-id` / `x-maia-member-id` claim against
@@ -189,9 +221,13 @@ export async function POST(request: NextRequest) {
       if (denial) return denial;
     }
 
-    // Only `unauthenticated` reaches an unauthenticated caller here, and that
-    // branch always returns. This is the belt on the braces, not a live path.
-    const memberId = verified.memberId;
+    // ── 3. IDENTITY — the ordinary member gate, unchanged ──────────────────
+    // The access matrix answers "may this caller in"; this answers "who is
+    // this", and it is deliberately the SAME resolver every other member-scoped
+    // route uses. Not `verified.memberId`: `deriveVerifiedAccess` also accepts
+    // a `?_t=` query token, and adopting it here would quietly widen what
+    // counts as a credential on an upload path. Narrower wins.
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required.', rid },
@@ -199,7 +235,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 2. SANITISE — the SAME request, in place ───────────────────────────
+    // Two resolvers, one predicate — they cannot honestly disagree. If they
+    // ever do, something is wrong that no upload should proceed through.
+    if (verified.memberId && verified.memberId !== memberId) {
+      console.error(
+        `[press/manuscripts/ingest] identity resolvers disagree — refusing rid=${rid}`,
+      );
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required.', rid },
+        { status: 401 },
+      );
+    }
+
+    // ── 4. SANITISE — the SAME request, in place ───────────────────────────
     // Authority has finished inspecting the caller's claims, so nothing
     // downstream may see them. Deleting from `request.headers` mutates the
     // request Next.js already holds; it does not touch, read, or replace the
@@ -211,7 +259,8 @@ export async function POST(request: NextRequest) {
     // deletions become no-ops and this route would go on serving with
     // attacker-controlled context in scope. So the absence is checked, and a
     // survivor is refused. An honest request carries none of these names
-    // except `x-member-id` (apiFetch sends it on iOS), which deletes cleanly.
+    // except `x-member-id` (apiFetch sends it on iOS), which has now been
+    // checked against the session and deletes cleanly.
     for (const header of CLIENT_ASSERTABLE_IDENTITY_HEADERS) {
       try {
         request.headers.delete(header);
@@ -232,7 +281,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 3. INGEST — the same request, body untouched until now ─────────────
+    // ── 5. INGEST — the same request, body untouched until now ─────────────
     let form: FormData;
     try {
       form = await request.formData();

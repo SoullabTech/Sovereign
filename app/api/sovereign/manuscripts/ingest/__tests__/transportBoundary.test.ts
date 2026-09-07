@@ -16,7 +16,12 @@
 import fs from 'fs';
 import path from 'path';
 import { NextRequest } from 'next/server';
-import { CLIENT_ASSERTABLE_IDENTITY_HEADERS } from '@/lib/auth/identityAssertions';
+import {
+  CLIENT_ASSERTABLE_IDENTITY_HEADERS,
+  CLIENT_SENT_IDENTITY_CLAIM_HEADERS,
+  NEVER_CLIENT_SENT_IDENTITY_HEADERS,
+  forgedIdentityHeaders,
+} from '@/lib/auth/identityAssertions';
 import { ACCESS_RULES, TIER_RANK, tierSatisfies } from '@/config/accessMatrix';
 
 const REPO = path.resolve(__dirname, '../../../../../..');
@@ -78,9 +83,14 @@ describe('F1 · an unauthenticated upload is refused', () => {
 });
 
 describe("F2 · a valid member cannot cause custody to be attributed to another member", () => {
-  it('the member custody is written under is the session-derived one', () => {
+  it('the member custody is written under comes from the ordinary gate', () => {
     const src = route();
-    expect(src).toMatch(/const memberId = verified\.memberId;/);
+    expect(src).toMatch(/const memberId = await getMemberIdFromRequest\(request\)/);
+    // NOT verified.memberId: deriveVerifiedAccess also accepts a `?_t=` query
+    // token, and adopting it here would widen what counts as a credential on
+    // an upload path.
+    expect(src).not.toMatch(/const memberId = verified\.memberId/);
+    expect(src).toMatch(/verified\.memberId !== memberId/);
     // and nothing in the route reads an identity header to decide who this is
     const decision = src.slice(src.indexOf('export async function POST'));
     expect(decision).not.toMatch(/headers\.get\('x-(member-id|maia-member-id|access-)/);
@@ -111,13 +121,13 @@ describe('F3 · a valid member upload succeeds — nothing new gates it', () => 
   it('the admission block adds no gate beyond authority and sanitisation', () => {
     const src = route();
     const admission = src.slice(
-      src.indexOf('const verified = await deriveVerifiedAccess'),
+      src.indexOf('const forged = forgedIdentityHeaders'),
       src.indexOf('await request.formData()'),
     );
     expect(admission.length).toBeGreaterThan(0);
-    // Three refusals only: the denial reproduction, the belt-and-braces null
-    // member, and a survivor of sanitisation.
-    expect(admission.match(/status: 401/g) ?? []).toHaveLength(2);
+    // Four refusals only: forged names, no member, resolvers disagreeing, and
+    // a survivor of sanitisation. (The matrix denials live in a helper.)
+    expect(admission.match(/status: 401/g) ?? []).toHaveLength(4);
     expect(admission).not.toMatch(/process\.env\./);
   });
 });
@@ -145,7 +155,7 @@ describe('F5 · every format crosses the same boundary', () => {
        further down, which is correct there and would make a whole-file search
        meaningless. */
     const admission = src.slice(
-      src.indexOf('const verified = await deriveVerifiedAccess'),
+      src.indexOf('const forged = forgedIdentityHeaders'),
       src.indexOf('await request.formData()'),
     );
     expect(admission.length).toBeGreaterThan(0);
@@ -181,18 +191,43 @@ describe('F6 · the exclusion does not widen /api/sovereign', () => {
 });
 
 describe('F7 · client assertions cannot survive the excluded boundary', () => {
-  it('sanitisation happens AFTER authority and BEFORE the body is read', () => {
+  it('the five steps stand in the only order that makes this a boundary', () => {
     const src = route();
+    const refuse = src.indexOf('const forged = forgedIdentityHeaders');
     const authority = src.indexOf('const verified = await deriveVerifiedAccess');
+    const identity = src.indexOf('await getMemberIdFromRequest(request)');
     const strip = src.indexOf('request.headers.delete(header)');
     const body = src.indexOf('await request.formData()');
-    expect(authority).toBeGreaterThan(-1);
-    expect(strip).toBeGreaterThan(-1);
-    expect(body).toBeGreaterThan(-1);
-    // Order, not proximity: authority must still see the caller's claims, and
-    // nothing downstream of sanitisation may.
-    expect(authority).toBeLessThan(strip);
+    for (const i of [refuse, authority, identity, strip, body]) {
+      expect(i).toBeGreaterThan(-1);
+    }
+    // Authority and identity must still SEE the caller's claims; nothing
+    // downstream of sanitisation may.
+    expect(refuse).toBeLessThan(authority);
+    expect(authority).toBeLessThan(identity);
+    expect(identity).toBeLessThan(strip);
     expect(strip).toBeLessThan(body);
+  });
+
+  it('x-maia-member-id is REFUSED — no client sends it, and no gate checks it', () => {
+    // getMemberIdFromRequest verifies x-member-id against the session; it does
+    // not inspect the alias at all. Exempting it would leave an unverified
+    // identity assertion ambient in the handler.
+    expect(NEVER_CLIENT_SENT_IDENTITY_HEADERS).toContain('x-maia-member-id');
+    expect(forgedIdentityHeaders(new Headers({ 'x-maia-member-id': 'other' })))
+      .toEqual(['x-maia-member-id']);
+    expect(read('lib/auth/getMemberFromRequest.ts')).not.toMatch(/x-maia-member-id/);
+  });
+
+  it('x-member-id is the ONLY exemption, and it has a real sender', () => {
+    expect(CLIENT_SENT_IDENTITY_CLAIM_HEADERS).toEqual(['x-member-id']);
+    expect(read('lib/http/apiBase.ts')).toMatch(/headers\.set\('x-member-id'/);
+    expect(forgedIdentityHeaders(new Headers({ 'x-member-id': 'm' }))).toEqual([]);
+  });
+
+  it('the refused set is derived from the stripped set, so it cannot drift', () => {
+    expect(new Set([...NEVER_CLIENT_SENT_IDENTITY_HEADERS, ...CLIENT_SENT_IDENTITY_CLAIM_HEADERS]))
+      .toEqual(new Set(CLIENT_ASSERTABLE_IDENTITY_HEADERS));
   });
 
   it('every client-assertable name is deleted, in place, from the same request', () => {
@@ -246,5 +281,134 @@ describe('F7 · client assertions cannot survive the excluded boundary', () => {
       expect(file.name).toBe('a.md');
       expect(await file.text()).toBe('hello');
     });
+  });
+});
+
+/**
+ * F7 — behavioural.
+ *
+ * The assertions above establish the ORDER from the source, which is where that
+ * property lives. This block establishes the CONSEQUENCE by running the handler:
+ * `formData()` is intercepted and, at the moment it is invoked, reads back the
+ * request's own headers. Whatever is present there is what the rest of the route
+ * — parsing, custody, and anything added later — would be able to see.
+ */
+jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));
+jest.mock('next/headers', () => ({ cookies: jest.fn() }));
+jest.mock('@/lib/manuscript/ingest/parseUpload', () => ({
+  parseUpload: jest.fn(),
+  UnsupportedUploadError: class UnsupportedUploadError extends Error {},
+}));
+jest.mock('@/lib/manuscript/source/arrivals', () => ({ recordArtifactArrival: jest.fn() }));
+
+describe('F7 · behavioural — what the handler can still see when it reads the body', () => {
+  const MEMBER = '11111111-1111-1111-1111-111111111111';
+  const OTHER = '22222222-2222-2222-2222-222222222222';
+
+  /* eslint-disable @typescript-eslint/no-var-requires */
+  const { query } = require('@/lib/db/postgres');
+  const { cookies } = require('next/headers');
+  const { parseUpload } = require('@/lib/manuscript/ingest/parseUpload');
+  const { recordArtifactArrival } = require('@/lib/manuscript/source/arrivals');
+  const { POST } = require('../route');
+  /* eslint-enable @typescript-eslint/no-var-requires */
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // A valid, unrevoked session naming MEMBER — both resolvers run the same
+    // predicate against auth_sessions, so both are answered here.
+    query.mockImplementation(async (sql: string) => {
+      if (sql.includes('m.tier')) {
+        return { rows: [{ member_id: MEMBER, tier: 'free', roles: ['member'] }] };
+      }
+      if (sql.includes('auth_sessions')) return { rows: [{ member_id: MEMBER }] };
+      return { rows: [] };
+    });
+    cookies.mockResolvedValue({ get: () => undefined });
+    parseUpload.mockResolvedValue({ text: 'hello', warnings: [], format: 'md' });
+    recordArtifactArrival.mockResolvedValue({ id: 'arrival-1' });
+  });
+
+  /** Run the handler, capturing the request's headers at the body boundary. */
+  const runCapturingHeaders = async (headers: Record<string, string>) => {
+    const req = multipartRequest(headers);
+    const realFormData = req.formData.bind(req);
+    let atBody: string[] | null = null;
+    jest.spyOn(req, 'formData').mockImplementation(async () => {
+      atBody = [...req.headers.keys()];
+      return realFormData();
+    });
+    const res = await POST(req);
+    return { res, atBody };
+  };
+
+  it('a matching x-member-id is accepted through auth — the upload succeeds', async () => {
+    const { res } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-member-id': MEMBER,
+    });
+    expect(res.status).toBe(200);
+    expect(recordArtifactArrival).toHaveBeenCalledWith(
+      expect.objectContaining({ memberId: MEMBER }),
+    );
+  });
+
+  it('and NO client-assertable header remains when the body is read', async () => {
+    const { res, atBody } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-member-id': MEMBER,
+    });
+    expect(res.status).toBe(200);
+    expect(atBody).not.toBeNull();
+    for (const header of CLIENT_ASSERTABLE_IDENTITY_HEADERS) {
+      expect(atBody).not.toContain(header);
+    }
+  });
+
+  it('while x-session-token IS still there — a credential, not an assertion', async () => {
+    const { atBody } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-member-id': MEMBER,
+    });
+    expect(atBody).toContain('x-session-token');
+  });
+
+  it('a mismatched x-member-id is refused — the body is never reached', async () => {
+    const { res, atBody } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-member-id': OTHER,
+    });
+    expect(res.status).toBe(401);
+    expect(atBody).toBeNull();
+    expect(recordArtifactArrival).not.toHaveBeenCalled();
+  });
+
+  it('x-maia-member-id is refused even when it names the session member', async () => {
+    // No client sends it and no gate inspects it, so there is no reading under
+    // which its presence is honest.
+    const { res, atBody } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-maia-member-id': MEMBER,
+    });
+    expect(res.status).toBe(401);
+    expect(atBody).toBeNull();
+  });
+
+  it('forged x-access-* context is refused, not merely ignored', async () => {
+    const { res, atBody } = await runCapturingHeaders({
+      'x-session-token': 'tok',
+      'x-access-tier': 'pro',
+      'x-access-roles': 'admin',
+      'x-access-member-id': OTHER,
+    });
+    expect(res.status).toBe(401);
+    expect(atBody).toBeNull();
+  });
+
+  it('no credential at all is refused by the matrix, before the body', async () => {
+    const { res, atBody } = await runCapturingHeaders({});
+    expect(res.status).toBe(401);
+    expect(atBody).toBeNull();
+    expect(await res.json()).toMatchObject({ error: 'Unauthorized' });
   });
 });

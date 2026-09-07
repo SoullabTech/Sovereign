@@ -40,21 +40,31 @@ DO NOT HAVE  a reproduction. The defect is inferred from signature and
 
 ```text
 1  MATCHER   exclude exactly /api/sovereign/manuscripts/ingest
-2  AUTHORITY — ORIGINAL REQUEST
+2  REFUSE    forgedIdentityHeaders(request.headers) → 401
+             every client-assertable name EXCEPT x-member-id, which is the
+             only one with a real sender (apiFetch, iOS). x-maia-member-id is
+             refused: no client sends it and no gate inspects it.
+3  AUTHORITY — ORIGINAL REQUEST
    deriveVerifiedAccess(request)
    → checkAccess('/api/sovereign/manuscripts/ingest', verified.tier,
                  verified.roles, verified.authenticated)
    → reproduce API denial semantics in-route
-3  SANITIZE — SAME REQUEST
-   only AFTER authority has inspected the caller's claims,
+4  IDENTITY  getMemberIdFromRequest(request) → 401
+             the ordinary member gate, RETAINED. Not verified.memberId:
+             deriveVerifiedAccess also accepts a ?_t= query token, and
+             adopting it here would widen what counts as a credential on an
+             upload path. Narrower wins; a disagreement between the two
+             resolvers refuses.
+5  SANITIZE — SAME REQUEST
+   only AFTER authority and identity have inspected the caller's claims,
    delete every CLIENT_ASSERTABLE_IDENTITY_HEADERS entry
    from request.headers IN PLACE
    DO NOT construct a second Request / NextRequest
-4  INGEST    request.formData() on that same request → parse → custody
+6  INGEST    request.formData() on that same request → parse → custody
 ```
 
-The order is the contract, and it is not interchangeable. Authority must read
-the caller's claims — `deriveVerifiedAccess` compares `x-member-id` against the
+The order is the contract, and it is not interchangeable. Authority and identity
+must read the caller's claims — `deriveVerifiedAccess` compares `x-member-id` against the
 session and denies a mismatch as impersonation, so sanitising first would blind
 the impersonation check. Nothing downstream of authority may read them.
 Sanitisation is IN PLACE because a second `Request` carrying sanitized headers
@@ -62,7 +72,9 @@ would consume the body, which is the exact failure the exclusion exists to
 avoid. `x-session-token` is outside the strip list, so the credential survives.
 
 **Invariant.** *Untrusted assertions may be inspected by the authority boundary;
-they may not survive beyond it as ambient request context.*
+they may not survive beyond it as ambient request context.* Verification is a
+reason to admit a claim, never a reason to leave it standing: `x-member-id` is
+checked against the session and then deleted like every other name.
 
 ### Amendment · the packet named the wrong half as the hard one
 
@@ -158,27 +170,59 @@ lanes.
 ```text
 middleware.ts                      matcher excludes the path, ANCHORED with $
                                    + the rationale block records both halves
-ingest/route.ts                    deriveVerifiedAccess → checkAccess(path) →
-                                   middleware's API denial semantics → in-place
-                                   deletion of CLIENT_ASSERTABLE_IDENTITY_HEADERS
-                                   → formData on the same request
-transportBoundary.test.ts          F1–F7, 23 assertions
+lib/auth/identityAssertions.ts     CLIENT_SENT_IDENTITY_CLAIM_HEADERS =
+                                   ['x-member-id'] — the one exemption, argued
+                                   NEVER_CLIENT_SENT_IDENTITY_HEADERS = the rest,
+                                   DERIVED from the stripped list so the two
+                                   cannot drift
+ingest/route.ts                    refuse forged → deriveVerifiedAccess →
+                                   checkAccess(path) → middleware's API denial
+                                   semantics → getMemberIdFromRequest →
+                                   in-place deletion → formData on the same
+                                   request
+transportBoundary.test.ts          F1–F7, 33 assertions
 ```
 
-`NEVER_CLIENT_SENT_IDENTITY_HEADERS` / `forgedIdentityHeaders()` were introduced
-by the superseded first pass and are removed with it — the tightened shape has no
-caller for them, and a named security helper with no caller is a false signpost.
+**Two corrections the first two passes needed.**
+
+*Access.* The first pass encoded today's matrix answer ("free + no roles,
+therefore auth-only"). A test asserting that is a tripwire, not enforcement, and
+it makes this route a fork of the central policy authority. The route now calls
+`checkAccess` with the path, so a rule that later acquires a role or a higher
+tier reaches the excluded path too. The extra indexed lookup is the right price
+on a low-frequency upload route.
+
+*`x-maia-member-id`.* The second pass exempted it alongside `x-member-id` on the
+assumption that both were client-sent claims. They are not the same:
+`getMemberIdFromRequest()` verifies `x-member-id` against the session and does
+not inspect the alias at all, and `grep` finds no sender for it anywhere in this
+repo — every occurrence is a server-side reader or a test. Exempting it left a
+valid session plus `x-maia-member-id: someone-else` passing the forged check and
+sitting ambient in the handler. It is refused. The exemption list is now one name
+long, with `lib/http/apiBase.ts` cited as its sender.
 
 **Class L — the mechanism, exercised.** A real `NextRequest` carrying a multipart
 body: every `CLIENT_ASSERTABLE_IDENTITY_HEADERS` name deletes in place and reads
 back absent, `x-session-token` survives, `bodyUsed` stays `false`, and
-`formData()` then yields the file with its bytes intact. The order property —
-authority before sanitisation before body — is asserted against the route source,
-because it is a property of this file rather than of the runtime.
+`formData()` then yields the file with its bytes intact.
+
+**Class L — the consequence, behavioural.** F7 runs the handler with `formData()`
+intercepted, reading back the request's own headers at the moment the body is
+reached — whatever is present there is what parsing, custody, and any future
+helper could see. A matching `x-member-id` is accepted and the upload returns 200
+with custody under the session member; no client-assertable name is present at
+that boundary; `x-session-token` still is; a mismatched `x-member-id`, an
+`x-maia-member-id`, forged `x-access-*`, and no credential at all each return 401
+without the body being reached.
+
+*Falsified, not merely passing.* With the deletion loop disabled, five assertions
+fail — including the header-absence check and the 200 itself, because the
+survivor guard is fail-closed.
 
 Gates on this head: `typecheck` — no regressions (230 errors vs 239 baseline);
 `check:no-supabase` clean; `lib/auth` + `middleware-transcribe-exclusion` — 13
-suites / 240 tests pass; transport boundary — 23 pass.
+suites / 240 tests pass; `manuscript` — 2 failed suites / 14 failed tests,
+identical before and after (pre-existing).
 
 **Not yet class R.** Nothing here is a production witness. The defect was observed
 in production; the repair has not been.
