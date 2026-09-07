@@ -5,6 +5,72 @@
 **Founder review of v0.1:** *"the truth architecture is excellent; the emotional
 architecture is not there yet."*
 
+## Four constitutional qualities
+
+```text
+TRUTH         do not invent the writer's state
+SOVEREIGNTY   do not prescribe the writer's direction
+PRESENCE      let the Work itself occupy the field
+ATMOSPHERE    help create conditions for writing without manipulating mood
+```
+
+> **Atmosphere may support the writer's state; it must never manipulate it.**
+
+Alongside the two laws already carried forward:
+
+> The system may not launder its inferences into the writer's own material.
+
+> Inspiration can open possibility; it cannot quietly become *what your work
+> needs*.
+
+Emotionally embracing is not cheerful copy and rounded cards. It is creating the
+conditions in which someone enters and feels: *ah — I'm back in my writing
+world.*
+
+```text
+WRITER'S STUDIO = Work + Memory + Atmosphere + Companion Presence
+```
+
+## ⚠ The hazard inside ATMOSPHERE
+
+Quiet movement — a passage appearing, receding, another arriving elsewhere — is
+what makes the room feel inhabited. **It is also mechanically identical to
+attention capture**, the standard engagement mechanism. Intent is not checkable;
+behaviour is. Three rules make the difference observable:
+
+```text
+STILLS WHEN WRITING     movement stops when the writer is working. A field that
+                        moves while they write is competing with the work.
+NEVER RE-TRIGGERS       movement never restarts to recover a wandering eye.
+                        Recapture is the engagement pattern by definition.
+OFF IS THE DEFAULT      atmosphere is opted INTO, never out of.
+```
+
+That last one inherits a ruling this project has already made twice — Daily
+Anchor `surface_preference`, atoms `return_preference`: **eligibility originates
+from a member act, not a deploy flag.** A Studio that arrives with movement
+already running has decided something about the writer's state on their behalf.
+
+## Atmosphere, as an optional field
+
+```text
+SOUND     ○ none  ○ continue what I'm already playing
+          ○ my writing playlist  ○ ambient
+VISUAL    ○ still  ○ gentle movement
+FOCUS     ○ studio  ○ manuscript only  ○ deep writing
+```
+
+**The Studio never starts audio on its own.** Respecting music the writer already
+has playing is participation; seizing the audio channel is not. *The browser must
+never begin playing Mahler because MAIA inferred someone needed inspiration.*
+
+Later, and only if appropriate: a writer might attach a soundtrack to a Work, so
+the association itself becomes part of returning to it —
+
+```text
+ELEMENTAL ALCHEMY · writing soundtrack — <the writer's own choice>   WRITER
+```
+
 ## The correction v0.2 exists to make
 
 ```text
