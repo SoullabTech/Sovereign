@@ -26,6 +26,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { DecisionRecord } from '@/lib/studio/leadership/types';
 import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 import MentorPanel from '@/components/studio/MentorPanel';
+import { COUNCIL_SCOPE_NOTICE } from '@/lib/studio/leadership/councilScope';
 
 interface DecisionCouncilViewProps {
   decisionId: string;
@@ -278,6 +279,10 @@ export default function DecisionCouncilView({ decisionId, onBack }: DecisionCoun
             <Sparkles className="w-4 h-4" />
             Consult Council
           </button>
+          {/* Council scope — declared before the member invokes it */}
+          <p className="text-stone-500 text-xs leading-relaxed max-w-xs mx-auto">
+            {COUNCIL_SCOPE_NOTICE}
+          </p>
         </div>
       )}
 
@@ -361,6 +366,10 @@ export default function DecisionCouncilView({ decisionId, onBack }: DecisionCoun
                       Cancel
                     </button>
                   </div>
+                  {/* Council scope — declared before the member invokes it */}
+                  <p className="text-stone-500 text-xs leading-relaxed">
+                    {COUNCIL_SCOPE_NOTICE}
+                  </p>
                 </motion.div>
               )}
             </>

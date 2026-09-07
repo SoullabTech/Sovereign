@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Save, User, Users, Building, Crown, Eye, Loader2 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { COUNCIL_SCOPE_NOTICE } from '@/lib/studio/leadership/councilScope';
 import {
   SITUATION_TYPE_LIST,
   SITUATION_CONFIGS,
@@ -226,6 +227,11 @@ export default function DecisionCreate({ onCreated, onBack }: DecisionCreateProp
             <><Save className="w-4 h-4" /> Save Draft</>
           )}
         </button>
+
+        {/* Council scope — declared before the member invokes it */}
+        <p className="text-stone-500 text-xs leading-relaxed pt-1">
+          {COUNCIL_SCOPE_NOTICE}
+        </p>
       </div>
     </motion.div>
   );
