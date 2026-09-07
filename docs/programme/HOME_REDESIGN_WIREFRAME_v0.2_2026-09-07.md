@@ -108,6 +108,56 @@ MAIA does not diagnose mood
 And the question is never *"what mood are you in?"* — which is therapeutic and
 inferential — but *"what atmosphere would you like to write in?"*
 
+### Sensory anchors (founder, 2026-09-07)
+
+> **A Work may carry writer-chosen sensory anchors — image, sound, atmosphere —
+> that help the writer re-enter its world.**
+
+The cover sits in the field like an object on the desk: **visible enough to evoke
+the whole Work, quiet enough never to compete with the manuscript.**
+
+```text
+WORK VISUAL   Elemental Alchemy → [ book cover ]
+              New manuscript    → [ writer-chosen inspiration image ]
+
+PLACEMENT     Home           recognizable identity among the writer's Works
+              Writing field  larger, subdued — a side field or ambient region
+              Deep writing   optional · dimmable · hideable
+
+IMAGE PRESENCE  ○ off  ○ subtle  ○ present
+SOURCE          ○ work cover  ○ inspiration image  ○ choose another
+```
+
+A small collection per Work may rotate gently **when ambient motion is enabled**.
+
+### ⚠ Four constraints the anchors inherit
+
+```text
+NEVER SYSTEM-CHOSEN   the Studio does not analyse a manuscript to decide what
+                      image represents it — AND MAIA DOES NOT GENERATE ONE.
+                      A machine-supplied face for a Work the writer is still
+                      making is authorship capture in visual form.
+ROTATION IS MOTION    a rotating collection obeys the motion rules already
+                      stated: stills while composing, never re-triggers to
+                      recover attention, off by default.
+CONTRAST HOLDS        "present" may not push text below the WCAG AA floor.
+                      An image behind writing is atmosphere only while the
+                      writing stays legible.
+SOURCE UNRESOLVED     an inspiration image may be someone else's work. Private
+                      display is one thing; export or a shared surface is
+                      another, and the Studio has no provenance machinery for
+                      images. OPEN — not a blocker for a private field.
+```
+
+The composite this produces, which is the point:
+
+```text
+your cover nearby · music you already had playing · your own sentences
+drifting through the field · warm Atelier · MAIA available and quiet
+```
+
+Less an editor. **More the room in which this particular Work lives.**
+
 ### Semantic colour sits OUTSIDE the theme
 
 ```text
