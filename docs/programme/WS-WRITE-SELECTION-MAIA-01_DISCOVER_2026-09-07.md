@@ -118,18 +118,28 @@ a second MAIA" holds: no new object, no new store.
 ```text
 DISCOVER            ✅ this document
 CONSTITUTE RULINGS  ✅ §7
-RECONCILE           HOLD — blocked only by 50f5531c9 deploy verification
+RECONCILE           OPEN — deploy verified 2026-09-07T22:35Z
 BUILD               HOLD — additionally blocked by the five-point founder witness
 PR                  none
 ```
 
 ⛔ Nothing built. Falsifiers 1–10 not yet pinned as tests.
 
-**The deploy proof needs both halves; a green deploy command is neither.**
+**Deploy verified — both halves, 2026-09-07.** A green deploy command was never the proof:
 `deploy-production.sh` runs migrate AFTER the swap and only `log_warn`s on failure, so it reports
-success over a schema that never changed.
+success over a schema that never changed. Both were read directly.
 
 ```text
-PRODUCTION PROVENANCE   running GIT_COMMIT = 50f5531c9
-SCHEMA WITNESS          20260907000003 · 000004 · 000005 · 000006 actually applied
+PRODUCTION PROVENANCE   GIT_COMMIT = 50f5531c9                         ✅
+SCHEMA WITNESS          20260907000003_studio_atmosphere      22:35:37.875Z
+                        20260907000004_living_work_visual     22:35:37.942Z
+                        20260907000005_canvas_surface         22:35:38.004Z
+                        20260907000006_..._comment_correction 22:35:38.069Z
 ```
+
+Applied in order, 63ms apart — the migrate phase of the deploy that took the lane at 22:28:44Z.
+Nothing else rode along: `google_oauth_state` (20:35Z) and `vault_erasure_queue` (19:31Z) belong to
+earlier deploys.
+
+⛔ **Deployed is not witnessed.** The five-point Writer's Studio witness has no recorded result, and
+BUILD stays held on it.
