@@ -2,6 +2,11 @@
  * GOOGLE CONNECTION STATUS
  *
  * Check if a user has connected their Google account (Calendar + Gmail).
+ *
+ * MAIL-04c: the subject is the SESSION's member. A `?userId=` query parameter
+ * previously let any caller read whether an arbitrary account had a connected
+ * Google identity, and its address — an enumeration surface over connected
+ * accounts. It is now ignored.
  */
 
 
@@ -11,6 +16,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 import { GmailService } from '@/lib/gmail/GmailService';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -20,7 +26,8 @@ export async function GET(request: NextRequest) {
   // Handle static generation gracefully
   let userId: string | null = null;
   try {
-    userId = request.nextUrl.searchParams.get('userId');
+    // Subject from the session. `?userId=` is deliberately not read.
+    userId = await getMemberIdFromRequest(request);
   } catch {
     // During static export, return default response
     return NextResponse.json({
@@ -35,8 +42,8 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+        { error: 'Sign in to view Google connection status' },
+        { status: 401 }
       );
     }
 
