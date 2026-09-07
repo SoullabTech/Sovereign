@@ -161,13 +161,28 @@ MEMBER_ID='<paste real uuid>'
 MEMBER_EMAIL='<paste real address>'
 ATTACKER='attacker@notyourdomain.example'
 
-case "$MEMBER_ID$MEMBER_EMAIL" in
-  *'<'*|'') echo 'REFUSING: placeholders not substituted'; return 2>/dev/null || exit 1;;
-esac
-[[ "$MEMBER_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || { echo "REFUSING: MEMBER_ID is not a uuid"; }
+# Prints READY or REFUSE. Never calls exit — this is pasted into an
+# INTERACTIVE shell, and `exit` there closes the operator's terminal.
+witness_ready() {
+  case "$MEMBER_ID$MEMBER_EMAIL" in
+    *'<'*|'') echo 'REFUSE: placeholders not substituted'; return 1;;
+  esac
+  case "$MEMBER_ID" in
+    [0-9a-fA-F]*-*-*-*-*) ;;
+    *) echo 'REFUSE: MEMBER_ID is not a uuid'; return 1;;
+  esac
+  case "$MEMBER_EMAIL" in
+    *@*.*) ;;
+    *) echo 'REFUSE: MEMBER_EMAIL is not an address'; return 1;;
+  esac
+  echo 'READY'
+}
+witness_ready
 
 WITNESS_START=$(date -u +%Y-%m-%dT%H:%M:%SZ); echo "witness start: $WITNESS_START"
 ```
+
+Do not continue unless that printed `READY`.
 
 Confirm the member exists and note its address BEFORE the run — W2 compares
 against this:
@@ -179,6 +194,30 @@ ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_conscious
 
 One row, and `email` equal to `$MEMBER_EMAIL`. No row means the witness cannot
 proceed.
+
+### 3.0b Clearing stale limiter state — narrowly
+
+A failed witness leaves rate-limit rows behind, and the operator's own IP may be
+blocked with exponential backoff (15m → 30m → 1h → 2h → 4h). Clear only what the
+bad run produced. `auth_rate_limits` is shared with real member traffic, so
+deleting every row for an endpoint also resets legitimate members' counters:
+
+```bash
+# Inspect first.
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"SELECT identifier_type, attempts, blocked_until, blocked_until > NOW() AS still_blocked
+      FROM auth_rate_limits WHERE endpoint = 'members/recover'
+     ORDER BY blocked_until DESC NULLS LAST;\""
+
+# Clear ONLY the operator IP block, not the whole endpoint.
+ssh soullab@minisforum "docker exec maia-postgres psql -U soullab maia_consciousness -c \
+  \"DELETE FROM auth_rate_limits
+      WHERE endpoint = 'members/recover' AND identifier_type = 'ip'
+        AND blocked_until > NOW();\""
+```
+
+Clear before `WITNESS_START`, so the clean run is what the §4 ledger window sees.
+Leave `members/send-verification` alone — W2 needs its metering intact.
 
 ### 3.1 Ledger control — prove the ledger records at all
 
