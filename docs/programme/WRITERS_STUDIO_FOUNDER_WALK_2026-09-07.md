@@ -263,3 +263,75 @@ capability did not.
   proceed, which is stronger, not weaker — but it is not a stranger's walk.
 - No runtime SHA was captured at walk time. Findings bind to production on
   2026-09-07, not to a named commit.
+
+---
+
+## Custody reconciliation — added after the walk (2026-09-07)
+
+⛔ **This is a later reconciliation, not a contemporaneous capture.** The line
+above — *"No runtime SHA was captured at walk time"* — **stands unaltered**. It
+correctly recorded the evidence state at the time of the walk, and overwriting
+it would misrepresent when the binding was obtained. Everything below was
+established afterward, from different evidence.
+
+```text
+FOUNDER WALK RUNTIME    e535e6246
+BINDING                 retroactively ESTABLISHED
+BASIS                   production health GIT_COMMIT
+                      + uninterrupted process uptime
+                      + founder-machine EDT timestamp
+                      + single production serving target
+```
+
+### The chain
+
+```text
+HEALTH READ          2026-09-07T15:54:23Z   version "e535e6246"
+UPTIME               10,617 s
+PROCESS START        ≈ 2026-09-07T12:57:26Z, uninterrupted since
+
+MAC STUDIO TIMEZONE  EDT · −0400
+WALK TIME            11:25 AM EDT = 15:25Z
+
+15:25Z lies inside the uninterrupted runtime beginning 12:57Z.
+```
+
+### Why each link is load-bearing
+
+- **`version` IS the SHA.** `app/api/health/route.ts:242` —
+  `version: process.env.GIT_COMMIT || 'unknown'`. Not a separate app version.
+- **Uptime rules out a redeploy.** A deploy restarts the container and resets
+  uptime. Continuous uptime across 15:25Z means the process serving the walk is
+  the process that reported `e535e6246`.
+- **Topology rules out a second instance** (founder check). `soullab.life`
+  routes through Caddy to a single production target, `maia-sovereign:3000` —
+  not a load-balanced pool; staging is a separate container. Without this,
+  continuous uptime on *one* container would not establish that *that* container
+  served the walk. Uptime alone was insufficient and was not treated as
+  sufficient.
+- **Timezone is forced, not assumed.** Pacific would place 11:25 AM at 18:25Z —
+  after the 15:54Z health read, i.e. in the future. EDT is the only reading that
+  fits the observation.
+- **The timestamp is an act, not a display.** §3d records the declaration being
+  performed during the walk, and the sibling FORMS entry rendered
+  *"a manuscript — declared by you, Aug 25, 9:48 PM"*, showing the surface
+  displays older stored times distinctly. The 11:25 AM entry is contemporaneous
+  with the walk.
+
+### Method note for the W-03 packet
+
+The SHA is obtainable from **`GET /api/health` → `version`**, with no SSH and no
+shell on the production host. The packet's `docker exec … printenv GIT_COMMIT`
+remains valid and is the more direct read; the health endpoint is the path
+available to a walker without host access.
+
+### Production witness
+
+```text
+PRIOR (CLAUDE.md)   e4ac1bcac
+NOW                 e535e6246   (observed 2026-09-07T15:54:23Z)
+```
+
+⚠️ This reconciliation changes **nothing** about the W-03 experiment. Stronger
+custody does not alter what must be observed; the five remaining fields are
+unchanged.
