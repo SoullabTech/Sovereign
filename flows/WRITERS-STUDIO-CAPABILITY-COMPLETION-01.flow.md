@@ -16,7 +16,17 @@ WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_CORRECTION_2026-09-07.md
   before it is a product-design problem.
 
 CORRECTED FLOW   RECOVER → RECONCILE → PRESENT → FOUNDER ACT → BUILD
-CURRENT ACT      RECONCILE
+CURRENT ACT      REPAIR TRUTH (D1-D4 authorized, Founder Rulings III)
+
+  Writer's Studio does not have an "unbuilt-half" problem. It has a truth
+  problem, a bounded-perception problem, and then a set of already-ratified
+  capabilities waiting for deliberate implementation.
+
+  The covenant was not architected away.
+  The Studio lost truth about what had already been built.
+
+  Implementation may lag ratified intent.
+  Declaration may not lag known implementation.
 
 RECOVER complete. Governing v2 R&D record + reference pack imported to this
 branch by FR-04. Founder Rulings II (FR-01…FR-04) OPERATIVE:
