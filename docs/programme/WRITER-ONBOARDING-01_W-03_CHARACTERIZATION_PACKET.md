@@ -290,3 +290,90 @@ walk and the rewalk are the founder's acts. This document is the instrument.
 ```text
 NO OTHER PRODUCTIZATION UNTIL THE QUESTION IN §5 HAS AN ANSWER.
 ```
+
+---
+
+# RESULTS — 2026-09-07 · runtime `e535e6246`
+
+Protocol pre-registered at `96f416b5`, before any of this data existed.
+
+```text
+PASS 1 · HEAD SECTION
+  URL HAS &s=…?          YES   f9998f60…  row 0 "Untitled section"
+  FIRST VIEW             TOP
+  "This work" visible?   YES
+  SCROLL UP RESULT       UNNECESSARY
+  AFTER ONE RELOAD       TOP   (&s= unchanged by reload)
+  → NR, under a HEAD-SECTION condition. Does not clear W-03.
+
+DEEP-URL RELOAD CONTROL   (taken early; deep &s= was in hand)
+  DEEP &s= CONFIRMED     YES   1f80f706-b557-4649-b18…
+  BEFORE RELOAD VIEW     TOP
+  AFTER RELOAD VIEW      TOP
+  → A mount carrying a guaranteed deep &s= did NOT displace the viewport.
+     Evidence AGAINST H2a — bounded to this runtime and this state.
+
+PASS 2 · FRESH RE-ENTRY, DEEP SECTION
+  1  row 8 "Part One — The Ground" selected → &s=1f80f706-b557-4649-b18…
+  2  left to the House, re-entered, opened the same Work
+  3  URL HAS &s=…?       YES
+     WHICH SECTION       row 0 "Untitled section"  ·  &s=f9998f60…
+  → ⛔ PASS 2 · CONDITION NOT ESTABLISHED
+     Fresh re-entry did NOT preserve or restore the deep section.
+     Per the pre-registered validity rule this is NOT an NR / H1 / H2
+     result. It is evidence about RE-ENTRY STATE.
+```
+
+## What the experiment establishes
+
+```text
+W-03 NOT REPRODUCED under any condition reachable today.
+  head section, fresh entry     → top
+  head section, reload          → top
+  deep section, reload mount    → top
+  deep section, fresh re-entry  → could not be created
+
+⛔ W-03 IS NOT CLEARED. It is UNREPRODUCED, which is a different state.
+   No repair is authorized. The walk evidence stands as a first observed
+   outcome and is not retired by a failure to reproduce it.
+```
+
+## ⭐ The finding the experiment did not set out to make
+
+The walk's entry from Studio Home restored **row 8** (`&s=1f80f706…`).
+Today's entry restores **row 0** (`&s=f9998f60…`), even immediately after row 8
+was selected and the URL carried it.
+
+```text
+RESTORATION PATH   UNIDENTIFIED
+  lib/writersStudio/writeStateClient.ts carries rows and sections,
+  no cursor. Something restores a section on entry; what, and from where,
+  is not established.
+  Reload PRESERVES &s=. Re-entry DOES NOT.
+```
+
+⛔ **Preserved, not solved inside this packet** (founder ruling). It is the most
+likely place a future explanation of the walk's displaced first view lives, and
+it is not this packet's object.
+
+## Conditions that differ from the walk, recorded rather than pretended away
+
+```text
+WALK                          TODAY
+Work UNDECLARED               Work DECLARED as a form of "Test"
+MAIA column: "No work is      MAIA column: "Open Conversations to speak
+declared…"                    with MAIA here, beside your manuscript."
+Versions 1                    Versions 2 (Version 2 · Sep 7, 11:21 AM)
+entry restored row 8          entry restores row 0
+```
+
+Any of these may be load-bearing. None was isolated. **H2a is not eliminated for
+the walk's state — only for the states reachable today.**
+
+## Incidental observation
+
+With the outline panel scrolled to its end (rows 251–261), the rail and writing
+pane **did not move**. The outline panel is its own scroll container. Consistent
+with the control's result — a `scrollIntoView` inside that panel cannot displace
+the document — but recorded as an observation, not as a mechanism finding, and
+it does not close H2a.
