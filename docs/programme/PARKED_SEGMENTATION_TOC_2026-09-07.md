@@ -1,6 +1,6 @@
 # PARKED — TOC entries may be promoted into manuscript structure
 
-**Status:** PARKED · characterization RUN 2026-09-07 · hypothesis LARGELY FALSIFIED
+**Status:** CHARACTERIZED 2026-09-07 · resolved · no lane · no repair needed
 **Not:** a someday note, and not a defect — see the result section, which
 disconfirms most of what this note originally proposed
 **Recorded:** 2026-09-07, observed during the PDF-CLEAN production witness
@@ -163,3 +163,90 @@ ordering anomaly       real, unexplained, narrower than proposed
 repair                 still not authorized, and now less likely to be needed
 cohort risk            LOWER than this note originally implied
 ```
+
+
+---
+
+# RESOLUTION — 2026-09-07
+
+The ordering question is answered. Reading the first fifteen headings by
+position settles both candidates from the section above.
+
+```text
+ 0  (none — preamble: title page, copyright, dedication)
+ 1  PART ONE — THE GROUND
+ 2  Chapter 7 Earth — The Element of Stability and Groundedness
+ 3  BACK MATTER
+ 4  Chapter Summaries by Elemental Type
+ 5  A VIVID DREAM AND A NEW UNDERSTANDING
+ 6  REFLECTION AND INTERACTION
+ 7  CALL TO ADVENTURE
+ 8  Chapter 1: The Journey Begins
+ 9  THE CRYSTAL OF SELF-KNOWLEDGE
+10  THE OPPORTUNITY OF A LIFETIME
+11  AN INFINITE EMBRACE
+12  Chapter 2: The Torus of Change
+13  THE DANCE OF TRANSFORMATION
+14  THE NATURE OF CHANGE
+```
+
+## Candidate 2 is FALSIFIED — extraction order is correct
+
+Positions 8-14 are Chapter 1, its three subheads, Chapter 2, its subheads.
+That is the book's own structure in the book's own order. Extraction order
+follows reading order; nothing is scrambled.
+
+## Candidate 1 is CONFIRMED, and it is small
+
+The anomaly is confined to positions 1-4: contents-page entries admitted by the
+heading heuristics. Position 4 proves the mechanism — `Chapter Summaries by
+Elemental Type` is one of the four duplicates, recurring at position **151**,
+which is where the real section lives. Positions 1-3 are the same phenomenon
+without a duplicate flag, because contents wording rarely matches body wording:
+a contents line reading `Chapter 7 Earth — The Element of Stability and
+Groundedness` never collides with a body heading reading `EARTH` or
+`Chapter 7`.
+
+**That is also why the duplicate test under-detected this.** Duplication was the
+wrong signature to look for. Recorded because the next person to investigate a
+segmentation question will be tempted by the same query.
+
+## Final sizing
+
+```text
+position 0       preamble                    correct
+positions 1-4    contents entries promoted   ~4 spurious sections
+positions 5+     genuine body structure      correct, in order
+
+4 spurious sections out of 175, all in front matter
+real structure intact behind them
+```
+
+## Conclusion
+
+```text
+material problem       NO
+cohort risk            NO — a member sees four odd early entries,
+                       then their book, correctly ordered
+repair                 NOT needed; not authorized; none proposed
+this note              CLOSED as characterized
+```
+
+If a future lane ever does want front-matter suppression, the finding it
+inherits is: contents entries are single-occurrence and worded unlike their
+body counterparts, so they cannot be detected by duplication — only by
+position (clustered before the first real chapter) or by recognizing a
+contents page as a page.
+
+## Corrections this note absorbed
+
+Three claims made while investigating, all withdrawn:
+
+1. *"the difference between a usable outline and an unusable one"* — a
+   conclusion stated as an observation, withdrawn before it was tested.
+2. *"40-100 false structural sections"* — the actual figure is four.
+3. *"TOC entries being duplicated into structure"* — duplication is not the
+   mechanism; single-occurrence promotion is.
+
+The direction of the original instinct was right. Every quantity attached to
+it was wrong. That is the reason the characterization ran before any repair.
