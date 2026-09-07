@@ -133,7 +133,23 @@ Salon to Circle without a fresh authored act.
 | **D-M2** | ⭐ **Does the attendance record survive the gathering?** FR-25's *nothing retained* and FR-20's *the host may see registrations* diverge after the fact. Destroyed = literally nothing retained, host loses their record. Persisted-unsurfaced = a co-attendance graph exists, one query from surfaced. | Journey A |
 | **D-M3** | ⭐⭐ **There is no collective formation act.** Four people who decided together become one founder and three joiners. Accept it · a co-formation moment · or an interstitial forming-intent object? (Compounded by CA-15/D-K3: the new Circle has nobody who can hold procedural authority.) | Journey B |
 
-⛔ None answered. ⛔ No schema. ⛔ No implementation authorized.
+> ⭐ **ALL THREE CLOSED SAME DAY — founder rulings FR-29 · FR-30 · FR-31 (rulings ADDENDUM III).**
+> **D-M1** → intake destroyed at **terminal disposition** (`resolved | declined | withdrawn | lapsed`),
+> with a **hard maximum lifetime** for the unresolved case; only non-reconstructive aggregates survive.
+> **D-M2** → the **stronger branch**: identified co-attendance is **destroyed, not hidden** —
+> *persisted-but-unsurfaced is rejected, because retaining the edges IS constructing the graph.*
+> ⚠️ Consequence: **the member's own attendance history goes too**; a *"your gatherings"* list is still a
+> person↔Salon edge. **A Salon is remembered by the people who were there.**
+> **D-M3** → ⭐ **creation is not formation.** `initiated_by` is provenance only; a Circle comes into
+> being through a **collective formation act** (`constituted_by = {A,B,C,D}`), and **ACTIVE requires
+> separately constituted facilitation** — CA-15 must not be repaired by making the initiator facilitator
+> by default. Until then `FORMING` is valid and `ACTIVE` is not.
+> ⚠️ Forward implication recorded: **FR-11's derivation gains a second term**, so **S4c** becomes
+> *three AND facilitation constituted*; ⛔ not changed now — the current assertions are correct for the
+> current substrate, and the verified 63/63 must not later be mistaken for coverage of a rule that had
+> not yet been made.
+
+⛔ No schema. ⛔ No implementation authorized.
 
 ---
 

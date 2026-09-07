@@ -775,3 +775,121 @@ This removes a large amount of privacy risk and product ugliness at once, and ma
 D-M3 (from the journey walks — see `SALON_TO_CIRCLE_JOURNEYS_v0.1.md`).
 **Still open:** D-J1 · D-J5 · D-J6 · D-J7 · D-K1 · D-K3 · D-K4 · D-K6 · D-K7 · D-L1 · D-L3 · D-L5 ·
 D-L6 · D-L7.
+
+---
+
+# ADDENDUM III · 2026-09-07 — the three journey-walk gaps, settled
+
+D-M1, D-M2 and D-M3 were surfaced by walking Journeys A and B. All three are **constitutional gaps,
+not implementation details**, and all three are ruled here.
+
+## FR-29 · An identity-bearing repair intake is purpose-bound and ephemeral.
+
+It may exist **only while someone must know whom to contact to conduct the repair**. Its destruction
+point is **terminal disposition** — never an indefinitely defined "process close":
+
+```
+repair requested → repair live → resolved | declined | withdrawn | lapsed
+                                          ↓
+                        identity-bearing intake DESTROYED
+```
+
+- ⛔ No repair narrative and no participant identity may migrate into a **durable member dossier**.
+- ⛔ An unresolved intake **may not live forever because nobody formally closed it** → a **hard maximum
+  lifetime** is required; the duration is an operational parameter set later.
+
+What may survive is only evidence that **cannot reconstruct the interpersonal case** — e.g. aggregate
+repair-system counts. **The intake never becomes institutional memory.** **D-M1 CLOSED in principle;
+TTL is a parameter, not an architectural ambiguity.**
+
+## FR-30 · Identified co-attendance is operational, and is destroyed — not hidden.
+
+⛔ **"Persisted but unsurfaced" is REJECTED.** If Soullab retains `A → Salon 17 · B → Salon 17 · C →
+Salon 17`, **Soullab has constructed the co-attendance graph** whether or not any interface exposes it.
+FR-20 would otherwise be cosmetic.
+
+> **Identified registration/attendance exists only for the operational life of the gathering. After its
+> defined reconciliation window, the person↔Salon relation is destroyed.**
+
+The host's sight of registrations is **temporary operational visibility, not ownership of a permanent
+participant ledger.** Retainable: **non-reconstructive facts** — *Salon 17 occurred · attendance = 23* —
+⛔ never centrally queryable identity edges from which the 23 can be recovered. Any legally required
+payment/accounting record belongs to a **separate legal purpose** and ⛔ **must not become a
+social-history exception by stealth.**
+
+This gives FR-25 a technically meaningful definition: **nothing relationally identifying remains from
+which co-attendance can be reconstructed.** **D-M2 CLOSED.**
+
+⚠️ **Consequence to state plainly, so nobody "helpfully" restores it later: the member's OWN attendance
+history is destroyed too.** A self-visible *"gatherings you've attended"* list is still a person↔Salon
+edge in the database. There is no *your gatherings* surface. **A Salon is remembered by the people who
+were there.**
+
+## FR-31 · Creation is not formation. A Circle is constituted collectively.
+
+⛔ A Circle formed by four people **may not ontologically begin** as *Alice creates · Bob joins · Carol
+joins · David joins* when the human act was *Alice + Bob + Carol + David constitute this Circle
+together*. **The data model must not rewrite equality into founder and followers.**
+
+```
+PROPOSED CIRCLE  initiated_by = Alice          ← provenance only
+        ↓ founding invitation
+Alice · Bob · Carol · David  each ratify
+        ↓ FORMATION EVENT   constituted_by = {A,B,C,D} · shared inquiry/intention · formed_at
+CIRCLE FORMED
+```
+
+`created_by` / `initiated_by` stays useful provenance and **grants zero additional authority**,
+preserving the doctrine that origin, facilitation and invitation administration are **separate axes**
+(D-I6).
+
+### Formation solves procedural authority separately
+
+⛔ **CA-15 must not be repaired by silently making the initiator the facilitator** — that recreates
+founder power through another field.
+
+> **A newly formed Circle cannot become procedurally ACTIVE until its facilitation mode has itself been
+> constituted.**
+
+```
+WHO FORMED US?      → collective formation act
+HOW DO WE HOLD PROCESS?  → facilitation constitution
+```
+
+Facilitation modes (named facilitator · shared · rotating) are later design; ⛔ **none may derive
+automatically from `created_by`.** Until that act exists: `FORMING` valid · `ACTIVE` **not yet valid** —
+better than pretending the Circle has procedural capacity it does not possess. **D-M3 CLOSED.**
+
+### ⚠️ Three consequences Jarvis records as implications, not rulings
+
+1. **FR-11's derivation gains a second term.** `deriveConstitutionState(count)` returns ACTIVE at 3+.
+   Under FR-31, ACTIVE **also** requires constituted facilitation. The live derivation is therefore
+   **no longer the whole rule** — and **S4c** ("three active members derive ACTIVE") will need to become
+   *three AND facilitation constituted*. ⛔ Do not change it now: the current assertions remain correct
+   for the current substrate, and the amendment lands with FR-31's implementation. Recorded so the
+   verified 63/63 is not later mistaken for coverage of a rule that had not yet been made.
+2. **Three retention clocks now exist** — repair intake TTL (FR-29), Salon reconciliation window
+   (FR-30), and the lapse of an unratified proposed Circle (FR-31). Same class: **purpose-bound
+   retention**. Leaving the durations unset is architecturally fine; ⛔ **they must not become "forever"
+   by absence.**
+3. **FR-30 and FR-31 are not in tension.** A Salon destroys its group edge; a Circle **preserves**
+   `constituted_by` — because the four people **chose an ongoing relationship** and that set *is* the
+   Circle's constitution. Co-presence ends and its inference ends with it; **constitution is authored
+   and stays.**
+
+⚠️ No retroactive problem: production holds 4 Circles with 4 memberships (one each, all FORMING), so
+nothing existing was constituted under the superseded model.
+
+## Docket
+
+| | |
+|---|---|
+| **D-M1** | **CLOSED by FR-29** — intake destroyed at terminal disposition; unresolved intake needs a hard maximum lifetime |
+| **D-M2** | **CLOSED by FR-30** — identified co-attendance is operational and destroyed; persisted-but-unsurfaced rejected |
+| **D-M3** | **CLOSED by FR-31** — formation is collective; initiation is provenance only; ACTIVE requires independently constituted procedural authority |
+
+**C33–C36 / T30–T33 remain RESERVED, NOT REGISTERED.** These rulings say what the eventual system must
+**mean**. ⛔ They authorize **no schema and no implementation.**
+
+> The journey walks moved the Circle from *a collection of equal members* to *an equality-preserving act
+> of constitution*. That distinction is structural, not poetic.
