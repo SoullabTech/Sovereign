@@ -141,9 +141,61 @@ MAIL-05  GUARDS            guards.ts — per IP/member/recipient/purpose/lane,
 MAIL-06  QUEUES            physical P0-P3 separation, P0 reserve
 MAIL-07  ABUSE INTELLIGENCE baselines, anomaly events, alerting, breakers
 MAIL-08  SUPPRESSION       bounces, complaints, lane-aware idempotency
-MAIL-09  SOVEREIGN TRANSPORT Soullab MTA, DKIM/SPF/DMARC, reputation
-MAIL-10  RESEND EXIT       shadow, P2/P3, P1, P0, credentials destroyed
+MAIL-09A POSTAL LABORATORY self-host Postal, dedicated clean IP,
+                           PostalProvider adapter, DNS + DKIM/SPF/DMARC
+MAIL-09B P3 MIGRATION      broadcast / newsletter
+MAIL-09C P2 MIGRATION      notifications / transactional
+MAIL-09D P1 MIGRATION      invitations / access
+MAIL-09E P0 QUALIFICATION  auth delivery measured against Gmail/Apple/Outlook
+MAIL-10  RESEND REMOVAL    keys destroyed, ResendProvider removed
 ```
+
+The lane order is the point: new infrastructure proves itself on expendable
+mail before member authentication is entrusted to it.
+
+### Transport decision (founder, 2026-09-07)
+
+Keep Soullab Mail as the control plane. Adopt **Postal** as the delivery engine.
+
+There is no self-hostable Resend distribution — Resend open-sources SDKs and
+tooling, not the delivery platform. Of the Resend-shaped alternatives, Plunk and
+Unsend still require AWS SES underneath, so they replace the interface without
+removing the external dependency; Selfsend is explicitly incomplete. Postal is an
+actual MTA (SMTP, IP pools, DKIM, SPF, return paths, suppression, retries,
+delivery telemetry), actively maintained, and forkable.
+
+Adopting a Resend clone would duplicate the control plane we already own.
+Postal supplies layers 5-6 and nothing above them, which is exactly the seam
+`EmailProvider` was drawn at: `PostalProvider.ts` plus one line in
+`providers/index.ts`, and `EMAIL_PROVIDER=postal`. The rest of MAIA is unaffected.
+
+Reputation is the hard part and cannot be downloaded — hence 09B→09E.
+
+### Three seams to settle before 09A, not during it
+
+1. **Suppression authority.** Postal keeps its own suppression list and MAIL-08
+   defines ours. Two suppression stores with no stated precedence is a silent
+   divergence. Policy lives above the provider boundary, so Soullab's is
+   authoritative and Postal's is a delivery-layer backstop — which means bounce
+   and complaint events must flow UP into our model rather than terminating in
+   Postal's.
+
+2. **The bounce webhook is a new inbound surface.** Postal delivers async events
+   by webhook, so MAIL-08 adds an internet-facing ingress that accepts
+   attacker-reachable POSTs. That is the same class of endpoint as the one this
+   incident is about. It needs signature verification and admission control from
+   its first commit — MAIL-04's rule applies to ingress, not only to send routes.
+
+3. **P0 has no failover on a single IP.** If a dedicated sending IP is blocked,
+   sign-in mail stops — a sovereignty loss, not a gain. So MAIL-10's "destroy
+   Resend keys" needs deciding as a question rather than assumed: removing Resend
+   as PRIMARY is not the same as removing every high-reputation standby path for
+   P0. The lane model already permits keeping a different provider for P0 than
+   for P3, and that may be the correct permanent end state rather than a
+   transitional one.
+
+Item 3 is a founder decision about what sovereignty means here, and it is not
+settled by this note.
 
 MAIL-03 is **not** combined with MAIL-05: security containment stays tiny,
 auditable and independently deployable.
