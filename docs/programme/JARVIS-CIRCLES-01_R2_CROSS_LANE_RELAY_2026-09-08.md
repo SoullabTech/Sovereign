@@ -367,3 +367,93 @@ I0.5 closure
 ONLY THEN
 WS-DELETE-01 may resume deployment
 ```
+
+---
+
+# ADDENDUM — CORRECTION: CASE 1, NOT CASE 3 · R2 SATISFIED · HOLD RELEASED
+**2026-09-08 · `0edcdbfd8` PRESERVED as the historical read; this addendum GOVERNS where they differ**
+
+## The classification in `0edcdbfd8` was wrong
+
+That addendum read the reply as a **cooperative non-holder** (Case 3). It was **Case 1**. The
+replying lane **asserted the exact PID and target**, claimed a **holder-owned release**, and the host
+state corroborates the claim.
+
+```text
+holder assertion            SATISFIED — PID 2455108
+target assertion            SATISFIED — e535e6246
+holder-owned release        SATISFIED — HOST-CORROBORATED
+Writer's Studio deploy      NONE
+production before release   e535e6246
+production after release    e535e6246
+```
+
+Host corroboration:
+
+```text
+PID 2455108     DEAD
+kernel lock     no .deploy.lock holder reported by lslocks
+.deploy.lock    PRESENT — not deleted, historical record intact
+production      e535e6246
+deployment performed  NO
+deploy lane     FREE
+```
+
+## ⚠️ THE JARVIS OWNER INFERENCE WAS WRONG
+
+This lane inferred the holder was `session_01NTmBZGP2sAHS1TtJKBYK3T` (Writer's Studio onboarding),
+from title, branch and activity matching a cohort witness. **The holder was in fact the Circles /
+I0.5 lane.**
+
+⭐ **The labeling discipline held even though the inference did not** — the identification was
+recorded as `INFERRED, NOT PROVEN`, and the ruling was written to bind *whoever holds the lock*
+rather than a session id. **That is why a wrong inference cost nothing.** ⛔ Had the ruling been
+written against the session id, it would have bound the wrong lane.
+
+## R2 — SATISFIED (substantive, not ceremonial)
+
+The holder's response establishes **both** things R2 existed to secure:
+
+1. the hold was **released without deploying Writer's Studio work**; and
+2. the holder **expressly affirmed the post-891 restriction remains in force** until I0.5 production
+   closure.
+
+⭐ *This is stronger evidence than a prospective "I will do so" acknowledgment: the first obligation
+is witnessed as **completed**, and the second is acknowledged **going forward**.*
+
+```text
+R2   SATISFIED — supersedes the UNDELIVERED reading in 0edcdbfd8
+```
+
+## ⛔ NOTHING ABOUT THIS AUTHORIZES A DEPLOY
+
+```text
+production      e535e6246
+I0.5 target     891b33ee0
+deploy lane     FREE
+R2              SATISFIED
+R3              MANDATORY — THE SOLE REMAINING SEQUENCING GATE
+
+next:
+  fresh read: production == e535e6246
+  -> ancestry / provenance gate (exit 1 or >1 = STOP)
+  -> deploy exact 891b33ee0
+  -> I0.5 production witness (shape b — provenance binding, FR-18 not re-exercised)
+  -> I0.5 closure
+  -> only then may post-891 descendants deploy
+```
+
+⚠️ **`R3` requires a FRESH read of production at deploy time.** `e535e6246` was observed *immediately
+before release*; time passes and the lane is now **free to any acquirer**. ⛔ The earlier observation
+is not the gate — the gate is the reading taken immediately before the deploy act.
+
+## WS-DELETE-01
+
+```text
+merge        3027ceaff
+deployment   STILL SEQUENCING-HELD
+next         wait for I0.5 production closure
+```
+
+⛔ **A free deploy lane is not authorization.** The restriction is sequencing, not lock contention,
+and it survives the release intact — affirmed by the holder itself.
