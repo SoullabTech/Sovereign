@@ -184,7 +184,7 @@ This is the differentiating ambition. Building another community platform is not
 | CIRCLE-02 | Product constitution | ✅ **CONSTITUTIONAL MINIMUM RATIFIED 2026-09-06** — FR-01…FR-10 (`…_FOUNDER_RULINGS_2026-09-06.md`); CA-01…CA-13 open, none blocking |
 | CIRCLE-03 | Boundary gate (verifier) | 🔴 **RUN — FAIL, 5 failures** (`17 passed · 5 failed`, founder-executed on runtime `bcc371094`). Evidence: `…_VERIFY_RUN_2026-09-06.md` |
 | CIRCLE-04 | **REPAIR** (renumbered — invocation moves later) | 🟡 **OPEN** — R1 **VERIFIED** (`ca1c4736`, 18/5); R2 **VERIFIED** (`8f31abc8`, 28/2); R3 **VERIFIED** (`d1742472`, 34/1); R4 **IMPLEMENTED, NOT VERIFIED**; R5 not started |
-| CIRCLE-05 | Living Circle, 2–20 | ⛔ |
+| CIRCLE-05 | **INVOKE** — I0 census COMPLETE (`CIRCLES_INVOCATION_SUBSTRATE_CENSUS.md`); I1–I9 NOT STARTED | 🟡 **OPEN** |
 | CIRCLE-06 | **Fission · birth · morphology** (was: scale to 200) | ⛔ |
 | CIRCLE-07 | Circle ↔ Co-Lab bridge | ⛔ |
 | CIRCLE-08 | **Constellations — relationship among sovereign Circles** (restored as its own stage by Amendment B; Constellation is a distinct field, not a large Circle) | ⛔ |
