@@ -570,9 +570,21 @@ checksum column               created "for future compatibility", never written
 agent_name                    a caller-supplied string, not an execution record
 ```
 
-> ***A ledger records what its writer chose to record. It is evidence of the write, never of the
-> thing the write describes.*** Established independently in three places today: migration
-> registration, migration checksums, and agent attribution.
+⚠️ **REFINED BY FOUNDER RULING, 2026-09-08.** An earlier Jarvis form read *"evidence of the write,
+**never** of the thing the write describes."* ⛔ **"Never" goes too far** — a ledger *can* be evidence
+of an underlying event when its writer is **structurally bound to observing** that event.
+
+**The ratified law:**
+
+> ***A ledger is evidence only for facts its writer actually observes or is structurally constrained
+> to encode. A field's name does not grant it provenance its write path does not establish.***
+
+```text
+migration filename   -> proves the runner recorded that filename
+checksum = NULL      -> proves no checksum was recorded
+agent_name           -> proves a caller supplied that name
+                        NOT that a class with that name executed
+```
 
 ## D-S4 standing
 
@@ -598,4 +610,62 @@ FRESH vs LEGACY     HOLD — ⭐ the legacy case is now weakest it has been:
 HOUSE UI / ROUTING  HOLD
 SCHEMA              UNCHANGED
 IMPLEMENTATION      NOT AUTHORIZED
+```
+
+
+---
+
+# ADDENDUM IV — D-S4 CLOSED · CLAUDE.md CORRECTED · D-S3 REFRAMED
+**Founder rulings, 2026-09-08**
+
+## D-S4 — CLOSED
+
+**Outcome C, sharpened:** ⭐ **stale documentation / label-to-class conflation.**
+
+> *We did not find a mysterious third `ShadowAgent`. We found that **the premise of the attribution
+> question was invalid**.*
+
+```text
+silent-projection path      CAT 3 / NOT LIVE
+complete-agent-field class  NOT ON LIVE PATH
+agent_runs                  NOT IMPLEMENTATION PROVENANCE
+Outcome                     C — STALE DOC / LABEL CONFLATION
+production query required   NO
+status                      CLOSED
+```
+
+⛔ The optional `SELECT DISTINCT agent_name, element` could inventory current **labels**, but cannot
+improve the implementation-attribution proof — **not a closure condition.**
+
+## `CLAUDE.md` Cat 6 correction — MADE (lane branch)
+
+⛔ **Attribution only.** The Corpus Callosum substrate is **NOT downgraded from Cat 6**; production
+frequency observations and preserved unknowns are untouched. ⛔ Not a redesign.
+Canonical landing remains its own PR/merge act.
+
+## Jarvis correction carried
+
+⚠️ The earlier `zsh`-error attribution was **Jarvis's and was wrong** — those shell errors were not
+produced by this lane. ⛔ **That claim must not be carried into any record.** Nothing in
+SHADOW-GOLD-01 touched production.
+
+## D-S3 — REFRAMED, and now the last question before the fork
+
+D-S4's closure changes what D-S3 must answer. It is **no longer a liveness question** — neither
+implementation is member-facing, because neither is on the live path at all. It is a
+**custody/content question**:
+
+> **Is there anything in either legacy `ShadowAgent`'s authored logic, language, or psychological
+> stance that deserves preservation as SOURCE MATERIAL for Shadow & Gold — independent of adopting
+> its code?**
+
+⭐ *Adopting a stance is a different act from adopting a substrate.* Whatever survives that reading
+must still satisfy **D-S1** and **D-S2**, which are now ratified constraints, not candidates.
+
+```text
+D-S1  RATIFIED   D-S3  OPEN — the remaining pre-fork question
+D-S2  RATIFIED   D-S4  CLOSED — Outcome C
+
+FRESH vs LEGACY  HOLD      SCHEMA          UNCHANGED
+HOUSE UI         HOLD      IMPLEMENTATION  NOT AUTHORIZED
 ```
