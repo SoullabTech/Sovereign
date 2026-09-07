@@ -27,7 +27,7 @@ MAIL-03 is release-ready. It is **not CLOSED** until the production witness in
 **Run from the Mac Studio.** Deploys execute on minisforum over SSH. The remote
 Claude session that wrote this patch has no `ssh` binary, cannot resolve
 `minisforum`, and has GitHub-only egress — it can build, but it cannot deploy or
-witness production. Steps 2–5 are founder-executed.
+witness production. Everything below is founder-executed.
 
 **Do NOT break the production rate-limit database to exercise the emergency
 fallback.** That failure mode is evidenced by the 7 pinned tests in
@@ -166,15 +166,23 @@ PASS: rows only for W1/W3/W4's allowed attempts. **No row whose
 would mean the route reached the provider before refusing, which the 409 path
 must never do.
 
-## 5. Rotate the Resend credential
+## 5. NOT part of the closure act
 
-Do this even if W1–W5 all pass. The endpoint fix and credential rotation defend
-against two different possible causes, and the ledger cannot rule out the second.
+Founder ruling 2026-09-07: the cleanest closure is exactly *the code we accepted
+is demonstrably the code running, and production behaviour satisfies W1–W5*.
 
-1. Issue a new key in Resend; revoke every key that existed during the incident.
-2. Update `RESEND_API_KEY` in the production environment; restart `maia-sovereign`.
-3. Confirm sending still works (repeat W3 with a fresh window).
-4. Confirm the old key is dead — a send with it must fail.
+Do **not** fold any of these into the MAIL-03 closure act:
+
+- **Resend credential rotation.** Still required — the endpoint fix and rotation
+  defend against two different possible causes, and the ledger cannot rule the
+  second one out. But it is its own act, performed after closure, with its own
+  verification that sending still works and that the old key is dead.
+- Postal / transport work (MAIL-09/10)
+- The Dependabot supply-chain census
+- MAIL-04 admission work
+
+Each has its own blast radius. Combining any of them with closure makes the
+witness ambiguous about what it actually witnessed.
 
 ## 6. Record
 
@@ -193,6 +201,10 @@ MAIL-04       HOLD
 `CAUSATION UNPROVEN` stays until the ledger and Resend's own history are
 correlated across the incident window. Containment closes a real surface; it does
 not establish that this surface was the vector.
+
+**Closure condition, and nothing more than this:** the production SHA carries
+`ee612602`, and W1–W5 pass. On both, MAIL-03 is CLOSED. MAIL-04 stays HOLD and
+Postal stays untouched.
 
 ## Rollback
 
