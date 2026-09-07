@@ -119,15 +119,74 @@ the MTA, rent only the last mile for P0, and make sure a compromised bulk lane
 can never consume identity capacity. `EMAIL_PURPOSE_LANES` was built for exactly
 this and is currently unused by any enforcement.
 
-## 6. Recommended sequence
+## 6. Roadmap (founder ruling, 2026-09-07)
 
-1. **Contain** — auth + rate limit on V1/V2; stop `send-verification` accepting
-   an arbitrary destination; separate email-change from verification-send.
-2. **Meter** — write the missing `lib/email/guards.ts`: per-lane ceilings, P0
-   reserved, anomaly alert on `security:alert`. Fail *open* for P0 (a guard that
-   locks members out is worse than the abuse it prevents).
-3. **Rotate** — new Resend key, old one revoked, and confirm the key is not
-   present in any image layer or CI log.
-4. **Then** choose transport, from evidence rather than from the incident.
+The subsystem is named **Soullab Mail**. Six layers, and **transport comes last**:
 
-Steps 1–3 are required regardless of what transport we end up on.
+| Layer | Function | State |
+|-------|----------|-------|
+| 1 Admission | is this caller allowed to cause this email? | MAIL-04 |
+| 2 Guard | IP/member/address/purpose limits, anomaly detection | MAIL-05 |
+| 3 Scheduler | independent P0/P1/P2/P3 queues | MAIL-06 |
+| 4 Ledger | requested / accepted / refused / bounced | built (MAIL-02) |
+| 5 Transport | Resend now, Soullab SMTP later | MAIL-09/10 |
+| 6 Reputation | DKIM/SPF/DMARC, bounces, complaints | MAIL-09 |
+
+```
+MAIL-03  CONTAINMENT       close arbitrary-destination verification;
+                           protect recovery; rotate provider credentials
+MAIL-04  ADMISSION         every email-causing route has an authority rule
+MAIL-05  GUARDS            guards.ts — per IP/member/recipient/purpose/lane,
+                           global anomaly ceiling
+MAIL-06  QUEUES            physical P0-P3 separation, P0 reserve
+MAIL-07  ABUSE INTELLIGENCE baselines, anomaly events, alerting, breakers
+MAIL-08  SUPPRESSION       bounces, complaints, lane-aware idempotency
+MAIL-09  SOVEREIGN TRANSPORT Soullab MTA, DKIM/SPF/DMARC, reputation
+MAIL-10  RESEND EXIT       shadow, P2/P3, P1, P0, credentials destroyed
+```
+
+MAIL-03 is **not** combined with MAIL-05: security containment stays tiny,
+auditable and independently deployable.
+
+### Correction to §3's implied guidance — P0 does not fail open
+
+An earlier draft of this note proposed that guards "fail open" for P0, on the
+grounds that locking members out is worse than the abuse. That is half right and
+the missing half is decisive: if the limiter infrastructure dies, failing open
+turns the endpoint back into unlimited email issuance — the exact state this
+lane exists to end.
+
+Neither open nor closed. A bounded emergency path:
+
+```
+limiter available
+       ├─ legitimate → SEND
+       └─ excessive  → BLOCK
+limiter unavailable
+       └─ emergency local ceiling
+              ├─ small legitimate allowance → SEND
+              └─ everything else            → BLOCK
+```
+
+Availability and abuse resistance both survive. Implemented in
+`lib/auth/rateLimiter.ts`; pinned by `lib/auth/__tests__/emergency-ceiling.test.ts`.
+
+### What the incident actually exposed
+
+```
+SEE what email is doing       ✓  MAIL-01
+CLASSIFY what email is doing  ✓  MAIL-01
+ABSTRACT the vendor           ✓  provider boundary
+RECORD what happened          ✓  MAIL-02
+CONTROL what email may do     ←  missing
+```
+
+The architecture was right; it stopped one layer short of the part that governs
+who may spend the system's sending power.
+
+### Credential rotation (operational, not code)
+
+Rotate and revoke **every** Resend API key that existed during the incident,
+regardless of whether V1/V2 is confirmed as the vector. An exposed endpoint and
+a compromised credential are not mutually exclusive, and the ledger cannot rule
+the second one out.
