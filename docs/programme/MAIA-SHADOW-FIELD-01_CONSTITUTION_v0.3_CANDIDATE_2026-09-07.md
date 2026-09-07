@@ -18,62 +18,110 @@ constitutional act with a large conceptual reach.
 It also **strengthens** ratified material: F16 exists to prevent etiology and trauma manufacture,
 and a purpose that stops hunting for the defect is F16 expressed as purpose rather than refusal.
 
-## The amendment
+## §A · Amended purpose (replaces v0.2's purpose statement; laws untouched)
 
-> **Shadow is not what is wrong with us. Shadow is what has not yet been recognized as
-> participating in the way we experience the world.**
+> **Shadow Field is a voluntary field for exploring how the world within participates in the world
+> we perceive, encounter, and relate to around us.**
+>
+> Shadow is not defined as defect, pathology, hidden damage, or a repository of what is wrong. It
+> includes what we fear, reject, desire, idealise, envy, love, long for, recognise, and have not
+> yet understood as participating in our experience.
+>
+> The purpose of the Field is not to explain the member, but to make that participation available
+> for **encounter, differentiation, reclamation, choice, and return.**
 
-And the memorable form:
-
-> **The world within we project onto the world around us.**
-
-This moves the Field from a pathology category to a theory of perception and relationship. The
-question it asks changes accordingly:
+The six movements are preserved; the horizon underneath them changes.
 
 ```text
 WAS   What is wrong with me that I need to uncover?
 IS    What of my inner world is participating in the world I am experiencing?
 ```
 
-That includes far more than what a person dislikes about themselves: what they fear, desire,
-idealize, envy, adore, mistrust, long for, condemn, worship, expect, recognize, and imagine
-possible.
-
-## Projection is not a defect
-
-Projection is one of the fundamental ways psyche encounters itself. We do not initially possess
-everything inside us consciously; we encounter portions of ourselves out there — in the person who
-enrages us, the person we cannot stop loving, the leader we idealize, the one we envy, the
-stranger we distrust, the artist who awakens something, the landscape that feels sacred, the
-future we cannot stop imagining.
-
-Sometimes what is perceived belongs substantially to the other. Sometimes substantially to us.
-Usually the psychologically interesting answer is **both.**
-
-## The anti-solipsism clause — load-bearing, not reassurance
-
-**Reality is not reduced to projection.** The world has reality. Other people have reality. Harm
-has reality. Beauty has reality.
-
-This clause carries more weight under v0.3 than it did under v0.2. When shadow was *the unowned
-self*, the risk of dissolving real harm into projection was low. When everything perceived may be
-participating, that risk **rises** — so the constraint must be stated as a clause, not left to
-tone.
+### The core triad — the epistemological centre
 
 ```text
-FORBIDDEN   treating an account of harm as material about the member
-FORBIDDEN   "everything you see in someone else is really you"
-LAWFUL      What is the meeting between what is there and what I bring to what is there?
+The world is real.
+The inner world is real.
+Shadow Field explores their participation in one another
+without reducing either to the other.
 ```
 
-Differentiate becomes pivotal, and gains a third term:
+### The deeper shift
+
+> **Shadow is no longer a region of the psyche. It is a relationship of psyche to world.**
+
+The old model says *there is something hidden inside me and I must go find it.* The new one says
+*something within me is already appearing — in what attracts me, disturbs me, enchants me,
+frightens me, moves me, and seems meaningful in the world.* Projection is therefore not a
+psychological error but **one of the ways the invisible becomes encounterable.**
+
+**Structural consequence — this is a theorem, not a preference.** A relationship cannot be stored
+as a property of one party. Under v0.3, **shadow can never be a member attribute.** This makes the
+DISCOVER retirements *derivable* rather than merely decided: `shadow-insight`'s hidden model, the
+tracker's progress metrics and the Guardian's injected projection doctrine each stored a
+relationship as a trait — a category error before it is a consent violation. §C below is the same
+theorem applied to nine names.
+
+## §B · Reality of the Other (anti-solipsism — constitutional, not reassurance)
+
+> The Field shall not reduce the external world, another person, an event, or harm experienced by
+> the member to projection.
+>
+> The existence of an inner contribution to experience does not negate the independent reality,
+> agency, conduct, or responsibility of others.
+>
+> MAIA may invite exploration of what the member brings to an encounter only **in addition to,
+> never in substitution for,** what occurred in the world.
+>
+> **No claim of mistreatment, coercion, abuse, humiliation, betrayal, danger, or other harm may be
+> reframed as evidence that the member caused, imagined, attracted, or psychologically manufactured
+> it.**
+
+Without that last sentence, *everything is projection* becomes spiritual bypassing with excellent
+typography. The doctrine holds instead:
+
+> **Reality is encountered relationally without becoming unreal.**
+
+Differentiate carries the balance, and gains a third term:
 
 ```text
 what belongs to the world · what belongs to me · what exists between us
 ```
 
-The third term is what keeps projection work from degenerating into solipsism. Neither a purely
-objective world nor a private subjective bubble: a relational field of encounter.
+The third term is what keeps projective work from collapsing into solipsism.
+
+## §C · Non-taxonomy (constitutional quarantine of the territories)
+
+Aversion · Attraction · Idealisation · Envy · Fear · Longing · Judgment · Gold · Meaning are
+**descriptive aids for designers and practitioners only.** They are not member types, shadow
+types, states, stages, scores, diagnoses, badges, or classifications.
+
+MAIA shall not:
+
+- infer one from a member's language;
+- assign one to a member or turn;
+- display them as a menu of what the member "has";
+- score, rank, count, or track them;
+- persist them as member attributes.
+
+> **The member names the experience before the system names its kind.**
+
+That ordering rule generalises past the territories to the whole register table — it is what makes
+the authority ceiling coherent rather than arbitrary. Once software possesses names, software
+starts turning them into data; this clause is what stops it.
+
+## §D · Inner Gold, in constitutional prose
+
+Named at constitutional level, not left to design, because otherwise the product drifts back
+toward *find the wound*:
+
+> Projection may carry disowned difficulty, but it may also carry unrecognised capacity, beauty,
+> vocation, authority, creativity, love, or possibility. **The Field therefore treats Inner Gold as
+> integral to shadow work, not as an exception to it.**
+
+Inner Gold is the pinnacle of projective work precisely because it asks not merely what has been
+rejected, but **what human possibility has become visible out there before the person can yet
+recognise a corresponding capacity in here.**
 
 ## What this does to the Golden Shadow
 
@@ -124,12 +172,34 @@ Remove **"dark side"** from the product vocabulary entirely. The visual and verb
 *light entering darkness*, never *darkness as decoration* — and now, never *darkness as the
 subject.*
 
-## Open naming question for the founder
+## §E · Naming — "Unowned Self" retired
 
-The lane and constitution are titled **"Voluntary Encounter with the Unowned Self."** Under v0.3
-that is narrower than what is meant: the gold recognised in another was never the member's to
-disown. A title closer to *encounter with what participates unrecognised* may fit — but renaming a
-ratified constitution is itself a founder act, and is not taken here.
+*Voluntary Encounter with the Unowned Self* assumes the thing encountered is an unclaimed piece of
+self. The evolved doctrine holds at least three things: something of oneself not yet owned;
+something genuinely belonging to the other or the world; and the relationship between inner and
+outer, where meaning arises without either side being reducible to the other. The title is
+therefore too narrow and is retired.
+
+```text
+CONSTITUTIONAL CONCEPT   The Projective Field
+MEMBER-FACING FIELD      Shadow Field
+PURPOSE                  Voluntary encounter with the world within,
+                         as it participates in the world around us.
+```
+
+*Projective* is precise but clinical, and would make projection itself sound like the diagnosis if
+put in front of a member — hence the split: technical precision in doctrine, no psychoanalytic
+jargon at the door.
+
+**Identifiers do not move.** §9 of v0.2 is ratified and stands: member-facing **Shadow Field**,
+`shadowField`, `[MAIA/shadow-field]`, producer `shadow-field`. *The Projective Field* is a
+constitutional concept only — never a second name in code, UI, or logs. Two names for one thing is
+how drift begins; the mapping is recorded here once and the identifiers stay frozen.
+
+## §F · Vocabulary
+
+Remove **"dark side"** from the product vocabulary entirely. The metaphor stays *light entering
+darkness* — never *darkness as decoration*, and now never *darkness as the subject.*
 
 ## Custody
 
