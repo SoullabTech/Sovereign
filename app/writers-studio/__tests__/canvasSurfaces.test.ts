@@ -9,6 +9,8 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
+
+const REPO_ROOT = join(__dirname, '..', '..', '..');
 import {
   CANVAS_SURFACES,
   CANVAS_SURFACE_IDS,
@@ -18,6 +20,8 @@ import {
   isCanvasSurfaceId,
 } from '../atmosphere/canvasSurfaces';
 import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
+import { LEGACY_SURFACE_MAP, mapLegacySurface } from '../atmosphere/legacyCanvasSurface';
+import { readdirSync } from 'fs';
 import { afterOpacity, contrast, luminance } from '../atmosphere/palette';
 
 describe('three materials — clean page, warm page, dark page', () => {
@@ -196,5 +200,110 @@ describe('a writer preference, never a property of the Work', () => {
     expect(migration).toMatch(/ADD COLUMN IF NOT EXISTS canvas_surface TEXT;/);
     expect(migration).not.toMatch(/canvas_surface TEXT NOT NULL/);
     expect(migration).not.toMatch(/canvas_surface TEXT DEFAULT/);
+  });
+});
+
+
+describe('WITHDRAWN — the Studio atmosphere is not a member choice', () => {
+  /* Founder ruling 2026-09-07. The five-room axis was built and withdrawn: the
+     Studio's ground is a sampled, frozen design contract, and making it
+     selectable is a separate design act. It must not reach production on the
+     back of a Canvas feature. The machinery stays — a material IS a room
+     scoped to the writing plane — but nothing a member touches offers it. */
+
+  const studioFiles = readdirSync(join(__dirname, '..'), { recursive: true } as never) as string[];
+
+  it('⛔ no control for it exists anywhere a member can reach', () => {
+    expect(studioFiles.some((f) => String(f).includes('AtmosphereSwitch'))).toBe(false);
+  });
+
+  it('⛔ the Appearance menu offers the page and not the room', () => {
+    const menu = readFileSync(join(__dirname, '..', 'atmosphere', 'AppearanceMenu.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(menu).toContain('CANVAS_SURFACE_LIST');
+    expect(menu).not.toContain('ATMOSPHERE_LIST');
+    expect(menu).not.toMatch(/\bchoose\(/);
+  });
+
+  it('⛔ the write path REFUSES a room, rather than quietly ignoring it', () => {
+    /* A write path that accepts a value nothing sends and nothing honours is
+       the mirror of the defect this room keeps producing, and would let the
+       axis return without anyone deciding to return it. */
+    const route = readFileSync(
+      join(REPO_ROOT, 'app/api/sovereign/studio/atmosphere/route.ts'),
+      'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(route).toMatch(/if \(setsRoom\)[\s\S]{0,200}400/);
+  });
+
+  it('the Studio ground guard keeps its full meaning', () => {
+    /* Not narrowed to "the default ground", because the ground is no longer
+       selectable — checking the fallback IS checking the ground. */
+    const theme = readFileSync(join(__dirname, '..', 'studioTheme.ts'), 'utf8');
+    expect(theme).toContain('The Studio ground is espresso');
+    expect(theme).not.toContain("DEFAULT ground is espresso");
+  });
+});
+
+describe('LEGACY SEED — a choice nobody could reach, honoured once', () => {
+  it('maps every historical value onto a ruled material', () => {
+    expect(LEGACY_SURFACE_MAP).toEqual({
+      warm: 'dark',
+      midnight: 'dark',
+      ivory: 'parchment',
+      white: 'paper',
+    });
+    for (const target of Object.values(LEGACY_SURFACE_MAP)) {
+      expect(CANVAS_SURFACE_IDS).toContain(target);
+    }
+  });
+
+  it('⛔ never reintroduces a fourth material through the migration', () => {
+    /* A harvested value does not acquire product authority because code exists
+       for it. midnight collapsing into dark is a real loss of distinction, and
+       is recorded as one rather than answered by inventing a near-black page. */
+    const mapped = new Set(Object.values(LEGACY_SURFACE_MAP));
+    expect([...mapped].sort()).toEqual(['dark', 'parchment', 'paper'].sort());
+    expect(mapped.size).toBeLessThanOrEqual(3);
+  });
+
+  it('an unknown or absent legacy value seeds nothing', () => {
+    expect(mapLegacySurface('sepia')).toBeNull();
+    expect(mapLegacySurface(null)).toBeNull();
+    expect(mapLegacySurface('')).toBeNull();
+  });
+
+  it('⛔ reads the legacy key and never writes or deletes it', () => {
+    const legacy = readFileSync(
+      join(__dirname, '..', 'atmosphere', 'legacyCanvasSurface.ts'),
+      'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(legacy).toContain('getItem');
+    expect(legacy).not.toContain('setItem');
+    expect(legacy).not.toContain('removeItem');
+  });
+});
+
+describe('REACHABILITY — component existence is not capability existence', () => {
+  /* The finding that made this convergence necessary: canvas/WritingSurface
+     carried four beautiful materials and is imported by nothing, so they were
+     reachable by no member on any live path. A live member path is the proof. */
+
+  it('the dead component is not resurrected', () => {
+    const importers = readdirSync(join(__dirname, '..', 'canvas'))
+      .filter((f) => f.endsWith('.tsx') && f !== 'WritingSurface.tsx')
+      .filter((f) =>
+        readFileSync(join(__dirname, '..', 'canvas', f), 'utf8').includes("from './WritingSurface'"),
+      );
+    expect(importers).toEqual([]);
+  });
+
+  it('the LIVE writing paths carry the material', () => {
+    /* Not by wiring each one: the material is set on the writing-field element
+       that contains them, so a surface nobody has audited yet inherits it. */
+    const page = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8');
+    expect(page).toMatch(/data-panel-role="writing-field"[\s\S]{0,600}\.\.\.canvasSurfaceVars/);
+    expect(page).toContain('SectionWritingSurface');
+    expect(page).toContain('FieldBody');
   });
 });

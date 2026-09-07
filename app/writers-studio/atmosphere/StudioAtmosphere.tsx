@@ -16,6 +16,8 @@ import {
   isCanvasSurfaceId,
   type CanvasSurfaceId,
 } from './canvasSurfaces';
+import { legacySeed } from './legacyCanvasSurface';
+import { CANVAS_MANUSCRIPT_PARAM } from '../canvasIdentity';
 
 /**
  * Carries the chosen atmosphere through the whole Studio.
@@ -42,21 +44,27 @@ const STORAGE_KEY = 'ws_atmosphere';
 const CANVAS_STORAGE_KEY = 'ws_canvas_surface';
 
 /**
- * TWO INDEPENDENT AXES (founder clarification 2026-09-07):
+ * ⛔ ONE CHOICE IN THIS RELEASE — the page, not the room.
  *
- *   id             the ROOM — header, rails, panels, dock, shell
- *   canvasSurface  the PAGE — the manuscript plane, and nothing else
+ * The five-room Studio atmosphere axis was built and then WITHDRAWN by founder
+ * ruling 2026-09-07. The Studio's ground is a sampled, frozen design contract
+ * guarded by assertGroundIsWarm(); making it selectable is a separate design
+ * act that has not been ruled, and it must not enter production on the back of
+ * a Canvas feature.
  *
- * Composable, not alternatives: charcoal Studio with a Paper Canvas, espresso
- * with Parchment, dark on dark. Neither choice constrains the other, and they
- * are carried, stored and written separately so one can never silently reset
- * the other.
+ * The machinery stays because the Canvas material is built on it — a material
+ * IS a room, scoped to the writing plane — but `id` is fixed at the default
+ * and there is no `choose`. Restoring the axis is adding a control and a
+ * writer, not rebuilding a system.
+ *
+ *   id             the ROOM — fixed at Atelier, the Studio's own ground
+ *   canvasSurface  the PAGE — the manuscript plane, and the writer's choice
  */
 interface AtmosphereContext {
+  /** The room. NOT a member choice in this release — see the note above. */
   id: AtmosphereId;
+  /** The page. The one appearance choice a writer makes. */
   canvasSurface: CanvasSurfaceId;
-  /** A member act. Applies immediately; persists in the background. */
-  choose: (id: AtmosphereId) => void;
   chooseCanvas: (id: CanvasSurfaceId) => void;
   /** True once the server has answered — never gates rendering. */
   settled: boolean;
@@ -65,7 +73,6 @@ interface AtmosphereContext {
 const Ctx = createContext<AtmosphereContext>({
   id: DEFAULT_ATMOSPHERE,
   canvasSurface: DEFAULT_CANVAS_SURFACE,
-  choose: () => {},
   chooseCanvas: () => {},
   settled: false,
 });
@@ -120,16 +127,35 @@ function persist(patch: { atmosphere?: AtmosphereId; canvasSurface?: CanvasSurfa
   });
 }
 
+/**
+ * The manuscript the writer is looking at, read from the URL.
+ *
+ * The legacy key was written PER MANUSCRIPT, and this provider mounts in a
+ * layout that knows nothing about one. Taking it from the address — where the
+ * Canvas already pins it so a reload resolves the same work — is what keeps the
+ * seed from being half-built: a migration that can only ever read the
+ * browser-wide fallback would silently miss every per-manuscript choice, which
+ * is most of them.
+ */
+function manuscriptFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return new URLSearchParams(window.location.search).get(CANVAS_MANUSCRIPT_PARAM);
+  } catch {
+    return null;
+  }
+}
+
 export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
   /* Starts at the default on both server and first client render so the markup
      matches; the remembered choice is applied in an effect. A hydration
      mismatch here would be a visible flicker, not a warning. */
-  const [id, setId] = useState<AtmosphereId>(DEFAULT_ATMOSPHERE);
+  /* Fixed. Kept as state-shaped only so restoring the axis is a small act. */
+  const id = DEFAULT_ATMOSPHERE;
   const [canvasSurface, setCanvasSurface] = useState<CanvasSurfaceId>(DEFAULT_CANVAS_SURFACE);
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
-    setId(remembered());
     setCanvasSurface(rememberedCanvas());
   }, []);
 
@@ -140,10 +166,26 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
         const res = await apiFetch('/api/sovereign/studio/atmosphere', { method: 'GET' });
         if (!live || !res.ok) return;
         const data = await res.json();
-        /* The server is the authority, including when it says "no choice".
-           Read separately: a writer may have chosen a room and never a page. */
-        if (isAtmosphereId(data?.atmosphere)) setId(data.atmosphere);
-        if (isCanvasSurfaceId(data?.canvasSurface)) setCanvasSurface(data.canvasSurface);
+        /* The server is the authority, including when it says "no choice". */
+        if (isCanvasSurfaceId(data?.canvasSurface) && data.canvasSurface !== DEFAULT_CANVAS_SURFACE) {
+          setCanvasSurface(data.canvasSurface);
+          return;
+        }
+
+        /* ── ONE-TIME LEGACY SEED ────────────────────────────────────────
+           No stored preference. An older room wrote a per-manuscript
+           `writing_surface:<id>` choice that no live path could reach; where
+           one exists it seeds this preference ONCE, mapped onto a ruled
+           material, and the DB is authoritative from then on.
+
+           ⛔ Read only. The legacy key is left untouched and inert — this pass
+           deletes nothing — and it is never consulted again once the DB holds
+           a value. It is a migration input, not a second persistence system. */
+        const seeded = legacySeed(manuscriptFromUrl());
+        if (seeded) {
+          setCanvasSurface(seeded);
+          persist({ canvasSurface: seeded });
+        }
       } catch {
         /* Offline keeps the remembered room rather than snapping to default. */
       } finally {
@@ -153,18 +195,6 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
     return () => {
       live = false;
     };
-  }, []);
-
-  const choose = useCallback((next: AtmosphereId) => {
-    setId(next); // the room changes now; the network is not in the way
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* Not being able to remember is not a reason to refuse the change. */
-    }
-    /* Only the room is sent. The page is not mentioned, so it cannot be
-       overwritten by a choice that was never about it. */
-    persist({ atmosphere: next });
   }, []);
 
   const chooseCanvas = useCallback((next: CanvasSurfaceId) => {
@@ -183,7 +213,7 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
   const vars = atmosphereVariables(ATMOSPHERES[id]);
 
   return (
-    <Ctx.Provider value={{ id, canvasSurface, choose, chooseCanvas, settled }}>
+    <Ctx.Provider value={{ id, canvasSurface, chooseCanvas, settled }}>
       <div style={vars as React.CSSProperties} data-ws-atmosphere={id}>
         {children}
       </div>

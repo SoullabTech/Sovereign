@@ -1,22 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { ATMOSPHERE_LIST } from './atmospheres';
 import { CANVAS_SURFACE_LIST } from './canvasSurfaces';
 import { useAtmosphere } from './StudioAtmosphere';
 
 /**
- * One control, two axes — reachable from inside the editor.
+ * The writer chooses the page — reachable from inside the editor.
  *
- * Founder ruling clarification 2026-09-07:
+ * ⛔ ONE AXIS, and the narrowing is a founder ruling (2026-09-07), not a
+ * simplification. An earlier build offered a second list here for the Studio
+ * itself. That axis was withdrawn from this deploy: the Studio's ground is a
+ * sampled, frozen design contract and making it selectable is a separate act
+ * that has not been ruled. A Canvas feature must not carry it in.
  *
- *   Choose the room. Choose the page.
+ *   The Studio is the room. The Canvas is the surface you choose to write upon.
  *
- * STUDIO changes the room around the writing — header, rails, panels, dock,
- * shell. CANVAS changes only the manuscript plane. They are composable, not
- * alternatives, so they are two lists in one menu rather than one list of
- * combinations: a writer picks charcoal and parchment as two decisions,
- * because they are two decisions.
+ * The room is not currently a choice. The page is.
  *
  * ⛔ A writer must never have to leave their manuscript to change either. This
  * is the editor's door onto the SAME preference the Home control writes; it is
@@ -27,7 +26,7 @@ import { useAtmosphere } from './StudioAtmosphere';
  * the ORIENT state was the same shape, and cost a founder witness to find.
  */
 export function AppearanceMenu() {
-  const { id, canvasSurface, choose, chooseCanvas } = useAtmosphere();
+  const { canvasSurface, chooseCanvas } = useAtmosphere();
   const [open, setOpen] = useState(false);
 
   const Row = ({
@@ -98,21 +97,11 @@ export function AppearanceMenu() {
             color: 'var(--ws-ink-primary, #F3EDE4)',
           }}
         >
-          <h3 className="text-[10px] tracking-[0.28em] uppercase opacity-35 px-3 mb-1.5">
-            Studio
-          </h3>
-          <ul className="flex flex-col mb-3">
-            {ATMOSPHERE_LIST.map((atm) => (
-              <Row
-                key={atm.id}
-                label={atm.name}
-                selected={atm.id === id}
-                onClick={() => choose(atm.id)}
-                swatch={{ background: atm.ground.field, borderColor: atm.gold.base }}
-              />
-            ))}
-          </ul>
-
+          {/* ⛔ NO STUDIO AXIS HERE. Founder ruling 2026-09-07: a selectable
+              Studio atmosphere touches the frozen, sampled ground contract and
+              is a separate design act. It may not ride into this deploy on the
+              back of a Canvas feature. The Studio stays the dark room it is;
+              only the page is the writer's to choose. */}
           <h3 className="text-[10px] tracking-[0.28em] uppercase opacity-35 px-3 mb-1.5">
             Canvas
           </h3>
