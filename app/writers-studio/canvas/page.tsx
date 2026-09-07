@@ -37,6 +37,8 @@ import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
 import { WritingFieldVisual } from '../WorkVisual';
+import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
+import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
@@ -460,8 +462,18 @@ function CanvasRoom() {
 
   /* The header's right-hand controls are Write's own, so the shell takes them
      as a slot rather than knowing about them. */
+  /* The page's variables. Applied to the writing field alone — see the
+     comment at that element for why this is the whole containment mechanism. */
+  const canvasSurfaceVars = useCanvasSurfaceVariables();
+
   const headerRight = (
     <>
+        {/* ── APPEARANCE — both axes, reachable from inside the editor ────
+            Founder ruling 2026-09-07: a writer must never have to leave their
+            manuscript to change the room OR the page. This is the editor's
+            door onto the SAME preference the Home control writes — not a
+            second setting that could disagree with it. */}
+        <AppearanceMenu />
         {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
             Her panel was dismissible with no route home. Every other panel is
             re-opened from the rail, but her whole rail band is unavailable and
@@ -764,10 +776,28 @@ function CanvasRoom() {
           </StudioPanel>
         )}
 
-        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════ */}
+        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════
+
+            WS-CANVAS-MATERIAL-01. The Studio is the room; this is the page.
+
+            The chosen material is applied HERE, as CSS custom properties on
+            this one element. A custom property set on an element reaches that
+            element and its descendants and nothing else, so Paper repaints the
+            prose, its hairlines and its insets together — and cannot reach the
+            rails, MAIA, the outline, the dock, the header or the shell. Not by
+            convention; by the cascade. No component inside the field knows
+            this exists, because they all already read these token names.
+
+            Dark emits {} — it is the absence of an override, so the field
+            inherits whatever room the writer chose. `--ws-bg` is deliberately
+            never among these: that is the page gradient behind the whole
+            Studio, and a writing surface able to repaint the room would be
+            exactly the leak this design exists to prevent. */}
         <main
           data-panel-role="writing-field"
+          data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
           style={{
+            ...canvasSurfaceVars,
             width: compact ? '100%' : pct(L.writingField),
             flexShrink: 0,
             minWidth: compact ? 0 : MEASURE.fieldMinWidth,

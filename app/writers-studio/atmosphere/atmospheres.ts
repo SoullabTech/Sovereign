@@ -53,7 +53,7 @@ export interface Atmosphere {
 }
 
 /** Anchors → a whole room. The relations are the design; the anchors are the choice. */
-function compose(
+export function compose(
   id: AtmosphereId,
   name: string,
   anchors: { ground: string; ink: string; accent: string; toward: 'light' | 'shadow' },

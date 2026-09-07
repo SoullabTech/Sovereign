@@ -9,6 +9,13 @@ import {
   isAtmosphereId,
   type AtmosphereId,
 } from './atmospheres';
+import {
+  CANVAS_SURFACES,
+  DEFAULT_CANVAS_SURFACE,
+  canvasSurfaceVariables,
+  isCanvasSurfaceId,
+  type CanvasSurfaceId,
+} from './canvasSurfaces';
 
 /**
  * Carries the chosen atmosphere through the whole Studio.
@@ -32,20 +39,48 @@ import {
  */
 
 const STORAGE_KEY = 'ws_atmosphere';
+const CANVAS_STORAGE_KEY = 'ws_canvas_surface';
 
+/**
+ * TWO INDEPENDENT AXES (founder clarification 2026-09-07):
+ *
+ *   id             the ROOM — header, rails, panels, dock, shell
+ *   canvasSurface  the PAGE — the manuscript plane, and nothing else
+ *
+ * Composable, not alternatives: charcoal Studio with a Paper Canvas, espresso
+ * with Parchment, dark on dark. Neither choice constrains the other, and they
+ * are carried, stored and written separately so one can never silently reset
+ * the other.
+ */
 interface AtmosphereContext {
   id: AtmosphereId;
+  canvasSurface: CanvasSurfaceId;
   /** A member act. Applies immediately; persists in the background. */
   choose: (id: AtmosphereId) => void;
+  chooseCanvas: (id: CanvasSurfaceId) => void;
   /** True once the server has answered — never gates rendering. */
   settled: boolean;
 }
 
 const Ctx = createContext<AtmosphereContext>({
   id: DEFAULT_ATMOSPHERE,
+  canvasSurface: DEFAULT_CANVAS_SURFACE,
   choose: () => {},
+  chooseCanvas: () => {},
   settled: false,
 });
+
+/**
+ * The variables for the writing plane, to be set ON THE WRITING-FIELD ELEMENT.
+ *
+ * Exported so the Canvas can apply them exactly where they belong. Returns {}
+ * for Dark, which is not a fourth colour scheme but the absence of an override
+ * — the field then inherits whatever room the writer chose.
+ */
+export function useCanvasSurfaceVariables(): Record<string, string> {
+  const { canvasSurface } = useAtmosphere();
+  return canvasSurfaceVariables(CANVAS_SURFACES[canvasSurface]);
+}
 
 export function useAtmosphere(): AtmosphereContext {
   return useContext(Ctx);
@@ -63,15 +98,39 @@ function remembered(): AtmosphereId {
   }
 }
 
+function rememberedCanvas(): CanvasSurfaceId {
+  if (typeof window === 'undefined') return DEFAULT_CANVAS_SURFACE;
+  try {
+    const raw = window.localStorage.getItem(CANVAS_STORAGE_KEY);
+    return isCanvasSurfaceId(raw) ? raw : DEFAULT_CANVAS_SURFACE;
+  } catch {
+    return DEFAULT_CANVAS_SURFACE;
+  }
+}
+
+/** One writer, one preference row, two fields. Written independently. */
+function persist(patch: { atmosphere?: AtmosphereId; canvasSurface?: CanvasSurfaceId }) {
+  void apiFetch('/api/sovereign/studio/atmosphere', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  }).catch(() => {
+    /* The choice held for this session. Saying "could not save your
+       atmosphere" over the writing would cost more than it is worth. */
+  });
+}
+
 export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
   /* Starts at the default on both server and first client render so the markup
      matches; the remembered choice is applied in an effect. A hydration
      mismatch here would be a visible flicker, not a warning. */
   const [id, setId] = useState<AtmosphereId>(DEFAULT_ATMOSPHERE);
+  const [canvasSurface, setCanvasSurface] = useState<CanvasSurfaceId>(DEFAULT_CANVAS_SURFACE);
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
     setId(remembered());
+    setCanvasSurface(rememberedCanvas());
   }, []);
 
   useEffect(() => {
@@ -81,8 +140,10 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
         const res = await apiFetch('/api/sovereign/studio/atmosphere', { method: 'GET' });
         if (!live || !res.ok) return;
         const data = await res.json();
-        /* The server is the authority, including when it says "no choice". */
+        /* The server is the authority, including when it says "no choice".
+           Read separately: a writer may have chosen a room and never a page. */
         if (isAtmosphereId(data?.atmosphere)) setId(data.atmosphere);
+        if (isCanvasSurfaceId(data?.canvasSurface)) setCanvasSurface(data.canvasSurface);
       } catch {
         /* Offline keeps the remembered room rather than snapping to default. */
       } finally {
@@ -101,20 +162,28 @@ export function StudioAtmosphere({ children }: { children: React.ReactNode }) {
     } catch {
       /* Not being able to remember is not a reason to refuse the change. */
     }
-    void apiFetch('/api/sovereign/studio/atmosphere', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ atmosphere: next }),
-    }).catch(() => {
-      /* The choice held for this session. Saying "could not save your
-         atmosphere" over the writing would cost more than it is worth. */
-    });
+    /* Only the room is sent. The page is not mentioned, so it cannot be
+       overwritten by a choice that was never about it. */
+    persist({ atmosphere: next });
   }, []);
 
+  const chooseCanvas = useCallback((next: CanvasSurfaceId) => {
+    setCanvasSurface(next);
+    try {
+      window.localStorage.setItem(CANVAS_STORAGE_KEY, next);
+    } catch {
+      /* As above. */
+    }
+    persist({ canvasSurface: next });
+  }, []);
+
+  /* Only the ROOM's variables are set here. The page's are applied by the
+     Canvas onto the writing-field element itself, which is what keeps a
+     writing surface from ever being able to repaint the Studio. */
   const vars = atmosphereVariables(ATMOSPHERES[id]);
 
   return (
-    <Ctx.Provider value={{ id, choose, settled }}>
+    <Ctx.Provider value={{ id, canvasSurface, choose, chooseCanvas, settled }}>
       <div style={vars as React.CSSProperties} data-ws-atmosphere={id}>
         {children}
       </div>

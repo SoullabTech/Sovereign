@@ -25,6 +25,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { DEFAULT_ATMOSPHERE, isAtmosphereId } from '@/app/writers-studio/atmosphere/atmospheres';
+import {
+  DEFAULT_CANVAS_SURFACE,
+  isCanvasSurfaceId,
+} from '@/app/writers-studio/atmosphere/canvasSurfaces';
 
 export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
@@ -34,16 +38,22 @@ export async function GET(request: NextRequest) {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const result = await query<{ atmosphere: string }>(
-      `SELECT atmosphere FROM member_studio_atmosphere WHERE member_id = $1`,
+    const result = await query<{ atmosphere: string; canvas_surface: string | null }>(
+      `SELECT atmosphere, canvas_surface FROM member_studio_atmosphere WHERE member_id = $1`,
       [memberId],
     );
-    const stored = result.rows[0]?.atmosphere;
+    const stored = result.rows[0];
     /* No row means "has not chosen", which is not the same as having chosen
        the default — but it renders identically, and the difference is not the
-       Studio's business to record. */
+       Studio's business to record.
+
+       Two axes, read and returned independently: a writer may have chosen a
+       room and never a page, or a page and never a room. */
     return NextResponse.json({
-      atmosphere: isAtmosphereId(stored) ? stored : DEFAULT_ATMOSPHERE,
+      atmosphere: isAtmosphereId(stored?.atmosphere) ? stored.atmosphere : DEFAULT_ATMOSPHERE,
+      canvasSurface: isCanvasSurfaceId(stored?.canvas_surface)
+        ? stored.canvas_surface
+        : DEFAULT_CANVAS_SURFACE,
     });
   } catch (error) {
     console.error('[sovereign/studio/atmosphere] read failed', error);
@@ -65,24 +75,57 @@ export async function PUT(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { atmosphere } = (body ?? {}) as { atmosphere?: unknown };
+    const { atmosphere, canvasSurface } = (body ?? {}) as {
+      atmosphere?: unknown;
+      canvasSurface?: unknown;
+    };
 
-    /* Validated against the authored rooms, not against the column. A member
-       cannot store a room that does not exist — but an id retired later still
-       reads back as the default rather than breaking their Studio. */
-    if (!isAtmosphereId(atmosphere)) {
-      return NextResponse.json({ error: 'Unknown atmosphere' }, { status: 400 });
+    /* The two axes are independent, so a write may carry either, or both. A
+       request naming neither is a mistake worth refusing rather than a no-op
+       worth reporting as success. */
+    const setsRoom = atmosphere !== undefined;
+    const setsPage = canvasSurface !== undefined;
+    if (!setsRoom && !setsPage) {
+      return NextResponse.json({ error: 'Nothing to change' }, { status: 400 });
     }
 
-    await query(
-      `INSERT INTO member_studio_atmosphere (member_id, atmosphere, updated_at)
-       VALUES ($1, $2, now())
+    /* Validated against the authored rooms and materials, not against the
+       columns. A member cannot store one that does not exist — but an id
+       retired later still reads back as the default rather than breaking their
+       Studio. */
+    if (setsRoom && !isAtmosphereId(atmosphere)) {
+      return NextResponse.json({ error: 'Unknown atmosphere' }, { status: 400 });
+    }
+    if (setsPage && !isCanvasSurfaceId(canvasSurface)) {
+      return NextResponse.json({ error: 'Unknown canvas material' }, { status: 400 });
+    }
+
+    /* COALESCE on the update so choosing a page never silently resets the
+       room, and vice versa — the axes must not be able to overwrite each
+       other through a partial write. */
+    const saved = await query<{ atmosphere: string; canvas_surface: string | null }>(
+      `INSERT INTO member_studio_atmosphere (member_id, atmosphere, canvas_surface, updated_at)
+       VALUES ($1, COALESCE($2, $4), $3, now())
        ON CONFLICT (member_id) DO UPDATE
-         SET atmosphere = EXCLUDED.atmosphere, updated_at = now()`,
-      [memberId, atmosphere],
+         SET atmosphere    = COALESCE($2, member_studio_atmosphere.atmosphere),
+             canvas_surface = COALESCE($3, member_studio_atmosphere.canvas_surface),
+             updated_at    = now()
+     RETURNING atmosphere, canvas_surface`,
+      [
+        memberId,
+        setsRoom ? (atmosphere as string) : null,
+        setsPage ? (canvasSurface as string) : null,
+        DEFAULT_ATMOSPHERE,
+      ],
     );
 
-    return NextResponse.json({ atmosphere });
+    const row = saved.rows[0];
+    return NextResponse.json({
+      atmosphere: isAtmosphereId(row?.atmosphere) ? row.atmosphere : DEFAULT_ATMOSPHERE,
+      canvasSurface: isCanvasSurfaceId(row?.canvas_surface)
+        ? row.canvas_surface
+        : DEFAULT_CANVAS_SURFACE,
+    });
   } catch (error) {
     console.error('[sovereign/studio/atmosphere] write failed', error);
     return NextResponse.json({ error: 'Failed to save atmosphere' }, { status: 500 });

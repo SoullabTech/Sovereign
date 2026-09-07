@@ -1,0 +1,143 @@
+/**
+ * CANVAS MATERIAL — choose the room, choose the page.
+ *
+ * Founder ruling 2026-09-07. Two independent, composable appearance axes. The
+ * failure this guards against is the one that makes the whole design pointless:
+ * a "canvas material" that reaches past the manuscript plane and repaints the
+ * Studio is just a second theme system competing with the first.
+ */
+
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import {
+  CANVAS_SURFACES,
+  CANVAS_SURFACE_IDS,
+  CANVAS_SURFACE_LIST,
+  DEFAULT_CANVAS_SURFACE,
+  canvasSurfaceVariables,
+  isCanvasSurfaceId,
+} from '../atmosphere/canvasSurfaces';
+import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
+import { contrast, luminance } from '../atmosphere/palette';
+
+describe('three materials — clean page, warm page, dark page', () => {
+  it('⛔ is exactly three, and not a skin marketplace', () => {
+    /* Sepia, Solarized, Ocean, Rose and friends answer a different and worse
+       need. Asserted so adding a fourth is a decision someone has to make in
+       the open rather than a line that slips into a list. */
+    expect(CANVAS_SURFACE_IDS).toEqual(['dark', 'paper', 'parchment']);
+  });
+
+  it('defaults to dark — the writing experience nobody asked to change', () => {
+    expect(DEFAULT_CANVAS_SURFACE).toBe('dark');
+  });
+
+  it('an unknown material is not a material', () => {
+    expect(isCanvasSurfaceId('parchment')).toBe(true);
+    expect(isCanvasSurfaceId('sepia')).toBe(false);
+    expect(isCanvasSurfaceId(undefined)).toBe(false);
+  });
+});
+
+describe('CONTAINMENT — the page may never repaint the room', () => {
+  it('⛔ never emits the page gradient behind the whole Studio', () => {
+    /* --ws-bg is the shell's own background. A writing surface able to set it
+       could repaint the entire Studio from inside the manuscript. */
+    for (const surface of CANVAS_SURFACE_LIST) {
+      expect(Object.keys(canvasSurfaceVariables(surface))).not.toContain('--ws-bg');
+    }
+  });
+
+  it('dark emits NOTHING — it is an absence, not a fourth scheme', () => {
+    /* Which is what "preserves the current dark writing experience" has to
+       mean once atmospheres exist: dark under Night Study is Night Study's
+       field, dark under Atelier is Atelier's. */
+    expect(canvasSurfaceVariables(CANVAS_SURFACES.dark)).toEqual({});
+  });
+
+  it('a material emits the same token names the Studio uses, minus the shell', () => {
+    /* Same names on purpose: every component inside the field already reads
+       them, so the material repaints prose, hairlines and insets together with
+       no component edits and no second vocabulary. */
+    const room = Object.keys(atmosphereVariables(ATMOSPHERES.atelier)).filter(
+      (n) => n !== '--ws-bg',
+    );
+    expect(Object.keys(canvasSurfaceVariables(CANVAS_SURFACES.paper)).sort()).toEqual(room.sort());
+  });
+
+  it('⛔ the Studio and the page do not constrain each other', () => {
+    /* Composability, asserted rather than asserted-about: the material's
+       values are the same whichever room is chosen, because they are not
+       derived from it. */
+    const a = canvasSurfaceVariables(CANVAS_SURFACES.parchment);
+    const b = canvasSurfaceVariables(CANVAS_SURFACES.parchment);
+    expect(a).toEqual(b);
+    expect(a['--ws-ground-field']).not.toBe(
+      atmosphereVariables(ATMOSPHERES.atelier)['--ws-ground-field'],
+    );
+  });
+
+  it('applied to the writing field element and nowhere else', () => {
+    const canvas = readFileSync(
+      join(__dirname, '..', 'canvas', 'page.tsx'),
+      'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, '');
+    /* Spread into the style of the element carrying data-panel-role, not onto
+       the shell, a wrapper, or :root. */
+    expect(canvas).toMatch(/data-panel-role="writing-field"[\s\S]{0,400}\.\.\.canvasSurfaceVars/);
+    expect(canvas).not.toMatch(/documentElement[\s\S]{0,80}canvasSurface/);
+  });
+});
+
+describe('ACCESSIBLE — a page you cannot read is not a page', () => {
+  const BODY_FLOOR = 4.5;
+
+  for (const surface of CANVAS_SURFACE_LIST) {
+    if (!surface.room) continue;
+    describe(surface.name, () => {
+      it('prose reads on every surface of the page', () => {
+        for (const [where, colour] of Object.entries(surface.room!.ground)) {
+          expect({ where, ok: contrast(surface.room!.ink.primary, colour) >= BODY_FLOOR }).toEqual({
+            where,
+            ok: true,
+          });
+        }
+      });
+
+      it('quiet marks recede without disappearing', () => {
+        expect(contrast(surface.room!.ink.quiet, surface.room!.ground.field)).toBeGreaterThanOrEqual(3);
+      });
+
+      it('the accent reads on the page it sits on', () => {
+        /* Gold on espresso and gold on paper are different problems, and the
+           second is the one a dark-only palette never had to solve. */
+        expect(contrast(surface.room!.gold.text, surface.room!.ground.field)).toBeGreaterThanOrEqual(3);
+        expect(contrast(surface.room!.gold.on, surface.room!.gold.base)).toBeGreaterThanOrEqual(BODY_FLOOR);
+      });
+
+      it('is genuinely a light page, not a paler dark one', () => {
+        expect(luminance(surface.room!.ground.field)).toBeGreaterThan(0.5);
+      });
+    });
+  }
+});
+
+describe('a writer preference, never a property of the Work', () => {
+  const migration = readFileSync(
+    join(__dirname, '..', '..', '..', 'database', 'migrations', '20260907000005_canvas_surface.sql'),
+    'utf8',
+  );
+
+  it('is stored against the member, not a Work, manuscript or revision', () => {
+    expect(migration).toContain('ALTER TABLE member_studio_atmosphere');
+    for (const banned of ['living_work', 'manuscript', 'revision', 'section']) {
+      expect(migration.toLowerCase().split('--').slice(0, 1).join()).not.toContain(banned);
+    }
+  });
+
+  it('an unchosen page is NULL, not a recorded choice of the default', () => {
+    expect(migration).toMatch(/ADD COLUMN IF NOT EXISTS canvas_surface TEXT;/);
+    expect(migration).not.toMatch(/canvas_surface TEXT NOT NULL/);
+    expect(migration).not.toMatch(/canvas_surface TEXT DEFAULT/);
+  });
+});
