@@ -275,3 +275,95 @@ acknowledgment condition    must assert PID 2455108
 ⚠️ Cross-session send from this lane was attempted for the primary target and **refused** — the
 Writer's Studio lanes run in separate cloud containers and are not addressable from here. ⛔ No
 workaround attempted. **Delivery of both blocks is a founder act.**
+
+---
+
+# ADDENDUM — DELIVERY OUTCOME · WS-DELETE-01 ACCEPTED · R2 STILL UNDELIVERED
+**2026-09-08**
+
+## Non-termination relay — DELIVERED AND ACCEPTED
+
+Delivered by founder act into the Writer's Studio delete lane, which returned its standing:
+
+```text
+WS-DELETE-01
+
+merge              3027ceaff
+deployment         HELD
+
+PID 2455108        PROTECTED LIVE HOLDER
+named act          COHORT PRE-WITNESS HOLD
+terminate holder   NOT AUTHORIZED
+delete lockfile    NEVER
+infer abandonment  NOT PERMITTED
+
+next movement      only after holder-owned release + R3 gate
+```
+
+⭐ **The custody law is accepted in that lane**, in its own words: *a live holder plus a named
+protected act is sufficient custody; inability to identify the session is not evidence of
+abandonment.* **The present hazard is closed** — no lane is now positioned to read the hold as
+orphaned.
+
+## ⛔ R2 ORDERING RELAY REMAINS UNDELIVERED
+
+The reply **does not assert holdership of PID `2455108`** — it treats that PID as **another lane's**
+protected holder, and says so explicitly (*"R2 ordering relay still belongs with I0.5"*).
+
+Under the acknowledgment condition this is the **clean third case**: a correct, cooperative reply
+from a **non-holder**. ⛔ It does **not** discharge R2. The holder has still not acknowledged.
+
+```text
+non-termination relay    DELIVERED · ACCEPTED · present hazard CLOSED
+R2 ordering relay        UNDELIVERED · holder acknowledgment NOT RECEIVED
+acknowledgment condition must assert PID 2455108 — unchanged
+R3 ancestry fail-safe    MANDATORY — carries R2 if the relay never lands
+```
+
+⭐ *The condition did the work it was built for: a wrong-recipient acknowledgment was recognized as
+one, not banked as a green.*
+
+## ⚠️ CORRECTION CARRIED — "CANONICAL IS FROZEN" WAS WRONG
+
+An earlier Jarvis phrasing in this lane said canonical *stays frozen at `891b33ee0`*. **That is
+incorrect and materially so** — it would imply other lanes may not merge. Canonical has already
+advanced to `b4831d2ab` and **contains WS-DELETE-01**.
+
+**The correct durable wording:**
+
+> **The I0.5 production target remains frozen at `891b33ee0` until I0.5 production closure. Canonical
+> may advance; no post-891 descendant may be deployed before that closure.**
+
+⭐ *This preserves the actual invariant without pretending repository history stopped.* The freeze is
+on the **deploy target**, never on the **branch**. ⛔ Merging is not deploying.
+
+## ⚠️ CONSEQUENCE — THE PROMOTION HOLD'S STATED RATIONALE IS NOW STALE
+
+The `docs/ops/` promotions (migration witness doctrine · release law · custody law) were held with
+the rationale *"moving canonical for a documentation promotion would turn a verified release target
+into churn."* **Canonical has since moved anyway**, for WS-DELETE-01 and for docs lanes — so that
+rationale no longer holds on its own terms.
+
+⛔ **Not a recommendation to promote now.** A different and still-valid reason may govern: keeping
+each doctrine tied to the closure that produced its evidence, and not adding acts during a held
+release. **Recorded so a stale rationale is not carried forward as if current** — the timing decision
+is the founder's, on whichever reason actually applies.
+
+## Priority ordering (accepted both sides)
+
+```text
+PRESENT HAZARD
+non-termination ruling      RECEIVED AND ACCEPTED
+
+FUTURE SEQUENCE
+R2 ordering relay           still owed to the PID 2455108 holder
+holder-qualified ack        must assert PID 2455108
+holder-owned release
+R3 ancestry gate
+deploy 891b33ee0
+production witness
+I0.5 closure
+
+ONLY THEN
+WS-DELETE-01 may resume deployment
+```
