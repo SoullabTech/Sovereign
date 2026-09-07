@@ -9,6 +9,7 @@ import ChangeLandscape from '@/components/studio/changes/ChangeLandscape';
 import HexagramCaster from '@/components/studio/changes/HexagramCaster';
 import type { ChangeTypeName } from '@/lib/studio/changes/changeTypes';
 import { getChangeTypeConfig } from '@/lib/studio/changes/changeTypes';
+import { councilScopeNotice } from '@/lib/studio/leadership/councilScope';
 
 interface ClientOption {
   id: string;
@@ -314,6 +315,11 @@ export default function NewChangePage() {
                   I Ching (Book of Changes)
                 </button>
               </div>
+
+              {/* Council scope — declared before the council is invoked */}
+              <p className="text-xs text-slate-500 leading-relaxed pt-3">
+                {councilScopeNotice('change')}
+              </p>
             </>
           )}
 
@@ -362,6 +368,11 @@ export default function NewChangePage() {
                   {consulting ? 'Consulting...' : 'Consult Council'}
                 </button>
               </div>
+
+              {/* Council scope — declared before the council is invoked */}
+              <p className="text-xs text-slate-500 leading-relaxed pt-3">
+                {councilScopeNotice('change')}
+              </p>
             </>
           )}
         </div>

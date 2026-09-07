@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
-import { COUNCIL_SCOPE_NOTICE } from '@/lib/studio/leadership/councilScope';
+import { councilScopeNotice } from '@/lib/studio/leadership/councilScope';
 import { GitBranch } from 'lucide-react';
 import {
   SITUATION_TYPE_LIST,
@@ -330,7 +330,7 @@ export default function NewDecisionPage() {
 
           {/* Council scope — declared before the council is invoked */}
           <p className="text-xs text-slate-500 leading-relaxed pt-3">
-            {COUNCIL_SCOPE_NOTICE}
+            {councilScopeNotice('decision')}
           </p>
         </div>
       </div>

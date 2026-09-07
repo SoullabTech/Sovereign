@@ -47,6 +47,7 @@ import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRat
 import ChangeExperimentPanel from '@/components/studio/practitioner/ChangeExperimentPanel';
 import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
 import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
+import { councilScopeNotice } from '@/lib/studio/leadership/councilScope';
 
 const CHANGE_TYPE_ICONS: Record<string, typeof Wind> = {
   dissolution: Droplets,
@@ -445,6 +446,10 @@ function ContinueChangeForm({
           Cancel
         </button>
       </div>
+      {/* Council scope — declared before the council is invoked */}
+      <p className="text-xs text-slate-500 leading-relaxed">
+        {councilScopeNotice('change')}
+      </p>
     </motion.div>
   );
 }
@@ -694,6 +699,13 @@ export default function ChangeDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Council scope — declared before the first consultation */}
+        {!council && change.status === 'naming' && (
+          <p className="text-xs text-slate-500 leading-relaxed mb-4">
+            {councilScopeNotice('change')}
+          </p>
+        )}
 
         {/* Practitioner Loop Indicator */}
         <div className="mb-4">

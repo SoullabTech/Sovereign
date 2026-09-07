@@ -44,7 +44,7 @@ import ClientInquiryPanel from '@/components/studio/practitioner/ClientInquiryPa
 import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRatingWidget';
 import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
 import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
-import { COUNCIL_SCOPE_NOTICE } from '@/lib/studio/leadership/councilScope';
+import { councilScopeNotice } from '@/lib/studio/leadership/councilScope';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -487,7 +487,7 @@ function ContinueDecisionForm({
       </div>
       {/* Council scope — declared before the council is invoked */}
       <p className="text-xs text-slate-500 leading-relaxed">
-        {COUNCIL_SCOPE_NOTICE}
+        {councilScopeNotice('decision')}
       </p>
     </motion.div>
   );
@@ -718,7 +718,7 @@ export default function DecisionDetailPage() {
         {/* Council scope — declared before the first consultation */}
         {!council && decision.status === 'draft' && (
           <p className="text-xs text-slate-500 leading-relaxed mb-4">
-            {COUNCIL_SCOPE_NOTICE}
+            {councilScopeNotice('decision')}
           </p>
         )}
 

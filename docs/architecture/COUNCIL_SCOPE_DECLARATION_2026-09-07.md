@@ -4,8 +4,9 @@
 **Status**: Truth-in-UI correction. Shipped as copy only. No behavioral change.
 **Occasion**: A beta tester in the decision portal asked whether the Council takes
 into consideration all conversations with MAIA.
+**Extension (same day)**: `/studio/changes` holds the same boundary and is covered here.
 
-## Finding
+## Finding — DECISION-SCOPED INPUT
 
 It does not — and did not before this change. Verified against the live path:
 
@@ -34,38 +35,89 @@ existed because no bridge was ever wired, not because a boundary was declared. A
 had no way to know whether a deliberative surface was quietly reading their private
 history — so every member has to ask, and the honest answer arrives only if they do.
 
-> **Isolation by implementation should become isolation declared at the boundary.**
+> **Isolation by implementation must be declared at the invocation boundary.**
 
-A boundary a member cannot see is not yet a boundary they can rely on.
+A boundary a member cannot see is not yet a boundary they can rely on. Stated more
+broadly — and the form that outlives Council:
+
+> **A member should know what an intelligence is allowed to know before they invoke it.**
+
+## Finding — CHANGE-SCOPED INPUT
+
+`/studio/changes` holds the same consent boundary, by the same construction.
+Verified path:
+
+```
+POST /api/studio/changes/[id]/consult
+  → consultChangeCouncil()
+  → buildChangeQuestion()
+  → AIN consult()
+```
+
+Inputs are limited to the current Change and explicitly attached, Change-scoped
+material:
+
+| Input | Scope |
+|---|---|
+| title · description · change type · urgency · emotional state | fields authored into that change |
+| optional I Ching context (hexagram, relating hexagram, changing lines) | cast against that change |
+| client inquiry · field signals · practitioner observations | `WHERE change_id = $1` |
+| prior iterations · session notes · existing notes | earlier rounds of the same change |
+| optional protocol council bias | explicitly selected |
+| static AIN framing material | files on disk |
+
+`lib/studio/changes/changeCouncil.ts` imports only the AIN consult layer, its own
+types, change-type config, and the I Ching hexagram lookup — no conversational
+memory, memory atom, semantic memory, or ambient MAIA session loader appears
+anywhere in the path, including the shared `lib/ain/consultation.ts` beneath both
+councils.
 
 ## Change
 
-`lib/studio/leadership/councilScope.ts` — single source, `COUNCIL_SCOPE_NOTICE`:
+`lib/studio/leadership/councilScope.ts` — one source, subject-aware:
 
-> The Council reads only this decision and what you add to it. It does not access your MAIA conversations.
+```ts
+councilScopeNotice('decision')
+councilScopeNotice('change')
+```
 
-Rendered adjacent to every `Consult Council` invocation point, visible **before** the
-council is invoked:
+> The Council reads only this **decision** and material explicitly attached to it. It does not access your MAIA conversations.
 
-- `components/maia/decisions/DecisionCreate.tsx` (member sheet, create + consult)
-- `components/maia/decisions/DecisionCouncilView.tsx` (first consultation; continue form)
-- `app/studio/decisions/new/page.tsx`
-- `app/studio/decisions/[id]/page.tsx` (first consultation; continue form)
+> The Council reads only this **change** and material explicitly attached to it. It does not access your MAIA conversations.
 
-Single source so the declaration cannot drift between surfaces. **If the council's
-inputs ever change, this string must change with them — a stale notice here is a false
-statement made to a member.**
+Single source so the semantic rule stays centralized; subject-aware so the central
+source is never semantically tied to one Studio object and never states of a Change
+something true only of a Decision. **If either council's inputs ever change, this
+sentence must change with them — a stale notice here is a false statement made to a
+member.**
 
-The wording is deliberately "this decision and what you add to it" rather than "this
-decision only": it correctly includes notes, signals, observations, inquiry responses,
-and prior rounds without implying anything broader.
+The phrase is *"material explicitly attached to it"*, not *"what you add to it"*: a
+client inquiry response can be Council input on either object without the practitioner
+having authored it. The wider phrase is the exact one, and still excludes everything
+outside the object.
+
+Rendered adjacent to every user-visible `Consult Council` invocation, visible **before**
+the council is invoked.
+
+**Decision invocation points (4 sites, 6 buttons):**
+
+- `components/maia/decisions/DecisionCreate.tsx` — member sheet, create + consult
+- `components/maia/decisions/DecisionCouncilView.tsx` — first consultation; continue round
+- `app/studio/decisions/new/page.tsx` — create + consult
+- `app/studio/decisions/[id]/page.tsx` — first consultation (draft only); continue round
+
+**Change invocation points (2 files, 4 sites):**
+
+- `app/studio/changes/new/page.tsx` — create + consult from Context; create + consult from I Ching
+- `app/studio/changes/[id]/page.tsx` — first consultation (`status === 'naming'`); continue round
 
 ## Explicitly not done
 
-- MAIA memory is **not** wired into the council
+- MAIA memory is **not** wired into either council
 - no context-import mechanism
 - no preference, toggle, or setting
-- consultation inputs unchanged
+- consultation inputs unchanged (Decision and Change alike)
+- evidence bundle unchanged
 - no schema change
 - no copy implying future cross-surface access
 
@@ -78,8 +130,11 @@ separate**. Its only sovereign shape would be a member act, per decision, with v
 provenance on each surfaced item — never a default-on loader. Ambient recall into a
 deliberation surface is exactly where memory becomes leverage. Nothing here authorizes it.
 
-## Out of scope
+## Remaining open
 
-The change council (`/studio/changes`, `lib/studio/changes/changeCouncil.ts`) has its own
-`Consult Council` surfaces and was **not** audited or altered by this pass. Whether the
-same declaration is owed there is an open question, not a finding.
+The change council's open question from the first pass is now closed: it was audited,
+found to hold the same boundary, and now declares it. No other `Consult Council` surface
+exists in the codebase.
+
+Other surfaces that invoke an intelligence on a member's behalf have not been audited
+against this law. That the law generalizes is not a claim that it has been applied.

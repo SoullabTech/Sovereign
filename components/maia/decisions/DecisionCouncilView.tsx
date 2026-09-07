@@ -26,7 +26,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import type { DecisionRecord } from '@/lib/studio/leadership/types';
 import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 import MentorPanel from '@/components/studio/MentorPanel';
-import { COUNCIL_SCOPE_NOTICE } from '@/lib/studio/leadership/councilScope';
+import { councilScopeNotice } from '@/lib/studio/leadership/councilScope';
 
 interface DecisionCouncilViewProps {
   decisionId: string;
@@ -281,7 +281,7 @@ export default function DecisionCouncilView({ decisionId, onBack }: DecisionCoun
           </button>
           {/* Council scope — declared before the member invokes it */}
           <p className="text-stone-500 text-xs leading-relaxed max-w-xs mx-auto">
-            {COUNCIL_SCOPE_NOTICE}
+            {councilScopeNotice('decision')}
           </p>
         </div>
       )}
@@ -368,7 +368,7 @@ export default function DecisionCouncilView({ decisionId, onBack }: DecisionCoun
                   </div>
                   {/* Council scope — declared before the member invokes it */}
                   <p className="text-stone-500 text-xs leading-relaxed">
-                    {COUNCIL_SCOPE_NOTICE}
+                    {councilScopeNotice('decision')}
                   </p>
                 </motion.div>
               )}
