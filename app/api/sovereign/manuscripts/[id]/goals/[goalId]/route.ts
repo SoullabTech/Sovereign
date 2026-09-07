@@ -25,10 +25,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import type { WriterGoalRow } from '../route';
-
-const COLUMNS = `id, statement, kind, metric, target, section_id, anchor_heading,
-                 living_work_id, by_when, standing, created_at, updated_at`;
+import { GOAL_COLUMNS, type WriterGoalRow } from '../route';
 
 export async function PATCH(
   request: NextRequest,
@@ -59,7 +56,7 @@ export async function PATCH(
          FROM member_manuscripts m
         WHERE g.id = $1 AND g.manuscript_id = $2
           AND m.id = g.manuscript_id AND m.member_id = $3
-      RETURNING ${COLUMNS.replace(/(\w+)(,|$)/g, 'g.$1$2')}`,
+      RETURNING ${GOAL_COLUMNS}`,
       [goalId, manuscriptId, memberId, standing],
     );
     if (updated.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });

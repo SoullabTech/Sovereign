@@ -46,8 +46,18 @@ export interface WriterGoalRow {
   updated_at: string;
 }
 
-const COLUMNS = `id, statement, kind, metric, target, section_id, anchor_heading,
-                 living_work_id, by_when, standing, created_at, updated_at`;
+/**
+ * Two forms, because they are read in two different places and the difference
+ * is not cosmetic: every SELECT here joins `member_manuscripts`, which also has
+ * an `id`, so an unqualified list makes `id` ambiguous and Postgres refuses the
+ * whole query at runtime. A unit test cannot see this — it is only true when
+ * the statement meets a real database.
+ */
+const GOAL_COLUMNS_UNQUALIFIED = `id, statement, kind, metric, target, section_id,
+  anchor_heading, living_work_id, by_when, standing, created_at, updated_at`;
+
+export const GOAL_COLUMNS = `g.id, g.statement, g.kind, g.metric, g.target, g.section_id,
+  g.anchor_heading, g.living_work_id, g.by_when, g.standing, g.created_at, g.updated_at`;
 
 /** The one Work that declares this manuscript, or null. Never a guess. */
 async function soleDeclaringWork(memberId: string, manuscriptId: string): Promise<string | null> {
@@ -72,7 +82,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     const { id: manuscriptId } = await ctx.params;
 
     const res = await query<WriterGoalRow>(
-      `SELECT ${COLUMNS}
+      `SELECT ${GOAL_COLUMNS}
          FROM writer_goals g
          JOIN member_manuscripts m ON m.id = g.manuscript_id
         WHERE g.manuscript_id = $1 AND m.member_id = $2
@@ -171,7 +181,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
          (member_id, manuscript_id, living_work_id, section_id, anchor_heading,
           kind, metric, target, statement, by_when)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING ${COLUMNS}`,
+       RETURNING ${GOAL_COLUMNS_UNQUALIFIED}`,
       [
         memberId, manuscriptId, livingWorkId, sectionId ?? null, anchorHeading,
         kind,
