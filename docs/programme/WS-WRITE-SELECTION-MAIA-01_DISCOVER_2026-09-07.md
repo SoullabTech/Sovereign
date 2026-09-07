@@ -76,17 +76,60 @@ correct for a Work-level question, and **the wrong gate for local passage help**
 Nothing in the ask route requires a resolved Work; the block is in the surface, not the substrate.
 So the crucial context rule is implementable without touching Work resolution at all.
 
-## 7 · Open before CONSTITUTE
+## 7 · CONSTITUTE rulings — founder, 2026-09-07
 
-1. **Which id does a passage anchor name** — draft section (what WRITE edits) or source section
-   (what keeps verify)? §5.
-2. **Range or text or both?** The keeps precedent verifies text; BUILD-07A verifies a digested
-   range. A selection that survives an edit needs the second; a selection that survives a
-   *re-segmentation* needs the first.
-3. **Where does a proposed revision live** before adoption — ask-thread turn, or its own object? It
-   must not be manuscript text (falsifier 6), and a turn may be enough.
+The three questions this census raised are ruled. They are recorded here rather than left as
+open items, because a census that still asks a settled question misstates the lane.
+
+```text
+PASSAGE ANCHOR     → DRAFT section
+ANCHOR EVIDENCE    → range + server-verified text snapshot + digest
+REVISION PROPOSAL  → structured MAIA Ask-thread turn until explicit adoption
+```
+
+**Draft section** resolves §5's trap in the only direction that can work: WRITE edits the draft, so
+an anchor naming a source section would point at rows the writer is not editing.
+
+**All three evidences, not one.** This is stronger than either precedent alone and it is what makes
+falsifier 8 *decidable* rather than merely detectable. With range + text + digest the system can
+tell apart the two ways a selection goes stale:
+
+| what happened | range | digest | what the system must do |
+|---|---|---|---|
+| the writer edited those words | valid | mismatch | refuse — the words are not the ones MAIA read |
+| the section was re-segmented | invalid | — | refuse; the text snapshot says what was pointed at |
+| nothing moved | valid | matches | adoption may proceed |
+
+A range alone cannot see the first; a text snapshot alone cannot see the second. ⛔ Neither may be
+dropped as redundant.
+
+**A proposal is a thread turn.** It satisfies falsifier 6 by construction — a turn is not manuscript
+text, and no adoption path exists that does not pass through the writer. RECONCILE's "do not invent
+a second MAIA" holds: no new object, no new store.
+
+### Governing behaviour, fixed
+
+- A passage selection is **sufficient authority** for passage-local help.
+- **Work ambiguity may not block it** — the block is in the surface, not the substrate (§6).
+- **MAIA may propose; only the writer may alter the manuscript.**
 
 ## Standing
 
-⛔ Nothing built. Falsifiers 1–10 not yet pinned as tests. Steps 2 (RECONCILE) and 3 (CONSTITUTE)
-not begun. No branch opened.
+```text
+DISCOVER            ✅ this document
+CONSTITUTE RULINGS  ✅ §7
+RECONCILE           HOLD — blocked only by 50f5531c9 deploy verification
+BUILD               HOLD — additionally blocked by the five-point founder witness
+PR                  none
+```
+
+⛔ Nothing built. Falsifiers 1–10 not yet pinned as tests.
+
+**The deploy proof needs both halves; a green deploy command is neither.**
+`deploy-production.sh` runs migrate AFTER the swap and only `log_warn`s on failure, so it reports
+success over a schema that never changed.
+
+```text
+PRODUCTION PROVENANCE   running GIT_COMMIT = 50f5531c9
+SCHEMA WITNESS          20260907000003 · 000004 · 000005 · 000006 actually applied
+```
