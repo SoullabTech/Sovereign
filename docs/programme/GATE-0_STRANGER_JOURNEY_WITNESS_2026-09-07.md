@@ -5,7 +5,7 @@
 ```text
 production subject     4be87975b   (Merge pull request #1250)
 witness account        tester4writer
-walked                 2026-09-06 evening PDT / 2026-09-07 UTC
+walked                 2026-09-06 evening EDT / 2026-09-07 UTC
 founder intervention   NONE
 ```
 
