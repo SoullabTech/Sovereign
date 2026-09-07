@@ -295,8 +295,8 @@ they arrive, that idealisation and fascination belong somewhere else — when In
 **pinnacle** of projective work, not a side feature. *Shadows and light* remains the **visual**
 doctrine (light entering darkness), never a division of function.
 
-The name remains **Shadow Field**. Its territory is larger than its name, which is a property the
-name must carry rather than a problem to solve by adding a second room.
+> **Its territory is larger than its name; that is a property the name must carry, not a problem to
+> solve by adding another room.**
 
 ### The shortest statement of the doctrine
 
@@ -341,8 +341,26 @@ become.**
 
 ### The pairing is in the name only — §E′ still holds
 
+> **Shadow and Gold are not two domains. They are two ways the same projective phenomenon becomes
+> visible.**
+
+Aversion and fascination may both reveal something the person has placed outside themselves.
+Splitting them into separate rooms would **force a distinction before the encounter has shown what
+the material actually is.**
+
+```text
+ONE FIELD    Shadow & Gold
+
+NOT          Shadow Field + Light Field
+             Shadow mode  + Gold mode
+             two destinations · two pipelines
+
+REASON       the material is not classified at entry
+             and may reveal both shadow and gold in the same encounter
+```
+
 The ampersand names two things that must never become two doors. **Shadow and Gold are not two
-buttons, two modes, or a first-screen question.** A member must never be asked *am I doing dark
+buttons, two modes, two destinations, two pipelines, or a first-screen question.** A member must never be asked *am I doing dark
 shadow or golden shadow today?* — they bring a charged experience, and **MAIA does not know in
 advance what it contains.**
 
