@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FilePlus2, FolderInput, Loader2 } from 'lucide-react';
+import { FilePlus2, FolderInput, Loader2, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
+import { DELETE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
 import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
@@ -36,6 +37,10 @@ import type { LivingWork } from './useLivingWorks';
  *   under a newer ontology before being allowed to use it. The architecture
  *   catches up to the writer, not the reverse. "Make this a work" sits beside
  *   it as an offer, never as a toll.
+ * · A member can REMOVE what is theirs. A room you can only add to is not a
+ *   studio; it is an attic. Delete is quiet — it never competes with the
+ *   writing — but it is always reachable, and it always confirms by name
+ *   before it acts (WS-DELETE-01, founder ruling 2026-09-07).
  */
 
 const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
@@ -57,6 +62,9 @@ function whenWritten(iso: string | null | undefined): string | null {
   return `written ${new Date(iso).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
 }
 
+const DELETE_FAILED =
+  'That work could not be deleted just now. Nothing was removed — please try again.';
+
 const FILLED =
   'inline-flex items-center justify-center px-8 py-3.5 text-[15px] min-h-[48px] rounded-[2px] transition-opacity hover:opacity-90';
 const QUIET =
@@ -69,6 +77,8 @@ export interface HomeViewProps {
   onBegin: (title: string) => Promise<void>;
   onMakeWork: (manuscriptId: string, title: string | null) => Promise<void>;
   onAddToWork: (manuscriptId: string, workId: string) => Promise<void>;
+  /** Ends custody of a work or a piece of writing. Rejects with member copy. */
+  onDelete: (target: DeleteTarget) => Promise<void>;
 }
 
 export default function HomeView({
@@ -78,6 +88,7 @@ export default function HomeView({
   onBegin,
   onMakeWork,
   onAddToWork,
+  onDelete,
 }: HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -85,6 +96,10 @@ export default function HomeView({
   const [error, setError] = useState<string | null>(null);
   const [placing, setPlacing] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  /* Which card is asking. Never more than one: a confirmation the member has
+     lost track of is a confirmation that has stopped confirming anything. */
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const { kind, resume, shelf, feature, imported } = arrivalFor(works, manuscripts);
@@ -99,6 +114,88 @@ export default function HomeView({
       setBusy(false);
     }
   };
+
+  /* The delete act. The message on failure is the server's own member-facing
+     copy — never a status code, and never a cheerful recovery that hides a
+     custody failure the member should know about. */
+  const runDelete = async (key: string, target: DeleteTarget) => {
+    setDeleting(key);
+    setError(null);
+    try {
+      await onDelete(target);
+      setConfirming(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : DELETE_FAILED);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  /* Quiet, and always reachable. Faint by default so it never competes with the
+     member's title, brighter under a pointer — but never hidden behind hover,
+     which would put the only exit from this room out of reach on a phone. */
+  const DeleteButton = ({
+    itemKey,
+    label,
+  }: {
+    itemKey: string;
+    label: string;
+  }) => (
+    <button
+      type="button"
+      onClick={() => {
+        setError(null);
+        setConfirming(itemKey);
+      }}
+      disabled={busy || deleting !== null}
+      aria-label={label}
+      className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[2px] opacity-30 hover:opacity-90 focus-visible:opacity-90 transition-opacity disabled:opacity-20"
+    >
+      <Trash2 size={15} aria-hidden="true" />
+    </button>
+  );
+
+  /* Confirmation names the work, and names what deletion reaches — the original
+     file included. It replaces the card rather than floating over it, so the
+     member cannot open the thing they are being asked about. */
+  const ConfirmPanel = ({
+    itemKey,
+    title,
+    target,
+  }: {
+    itemKey: string;
+    title: string;
+    target: DeleteTarget;
+  }) => (
+    <div
+      className="rounded-[3px] border p-6 min-h-[136px] flex flex-col justify-between"
+      style={{ borderColor: PRESS.rule, background: 'rgba(0,0,0,0.22)' }}
+    >
+      <div>
+        <p className="text-[16.5px] leading-[1.3] mb-2">{DELETE_WORK_COPY.question(title)}</p>
+        <p className="text-[13px] opacity-55 leading-relaxed">{DELETE_WORK_COPY.body}</p>
+      </div>
+      <div className="flex items-center gap-3 mt-4">
+        <button
+          type="button"
+          onClick={() => void runDelete(itemKey, target)}
+          disabled={deleting !== null}
+          className="px-4 min-h-[44px] text-[13.5px] rounded-[2px] border transition-opacity disabled:opacity-40"
+          style={{ borderColor: '#8C4A4A', color: '#E0A0A0' }}
+        >
+          {deleting === itemKey ? DELETE_WORK_COPY.working : DELETE_WORK_COPY.confirm}
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirming(null)}
+          disabled={deleting !== null}
+          className="px-4 min-h-[44px] text-[13.5px] opacity-60 hover:opacity-100 transition-opacity"
+        >
+          {DELETE_WORK_COPY.cancel}
+        </button>
+      </div>
+    </div>
+  );
 
   const workMeta = (work: LivingWork): string => {
     const id = manuscriptIdOf(work);
@@ -176,44 +273,62 @@ export default function HomeView({
     title,
     meta,
     untitled,
+    itemKey,
+    target,
   }: {
     href: string;
     title: string;
     meta: string;
     untitled?: boolean;
-  }) => (
-    <Link
-      href={href}
-      className="group relative block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
-      style={{
-        borderColor: PRESS.ruleSoft,
-        background:
-          'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
-        boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
-      }}
-    >
-      {/* Always faintly lit, brighter under a pointer — a touch device is
-          never shown less than a mouse. */}
-      <span
-        aria-hidden="true"
-        className="absolute left-0 top-0 h-full w-[2px] opacity-25 group-hover:opacity-100 transition-opacity"
-        style={{ background: PRESS.accent }}
-      />
-      {/* Identity comes from the writing's own facts — how long the title
-          runs, what form it took, how much of it there is, when it was last
-          written. Never decoration invented to make cards look different. */}
-      <span
-        className="block leading-[1.24] mb-2.5"
-        style={{
-          fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
-          opacity: untitled ? 0.72 : 1,
-        }}
-      >
-        {title}
-      </span>
-      <span className="block text-[13px] opacity-50">{meta}</span>
-    </Link>
-  );
+    itemKey: string;
+    target: DeleteTarget;
+  }) => {
+    /* The confirmation REPLACES the card. A destructive question floating over a
+       still-clickable card is a question the member can walk past by accident. */
+    if (confirming === itemKey) {
+      return <ConfirmPanel itemKey={itemKey} title={title} target={target} />;
+    }
+    return (
+      <div className="group relative">
+        <Link
+          href={href}
+          className="block rounded-[3px] border p-6 min-h-[136px] overflow-hidden transition-all duration-200 [@media(hover:hover)]:hover:-translate-y-[2px]"
+          style={{
+            borderColor: PRESS.ruleSoft,
+            background:
+              'linear-gradient(158deg, rgba(255,243,222,0.062) 0%, rgba(255,243,222,0.022) 46%, rgba(0,0,0,0.16) 100%)',
+            boxShadow: '0 1px 0 rgba(255,240,214,0.05) inset, 0 12px 26px -18px rgba(0,0,0,0.9)',
+          }}
+        >
+          {/* Always faintly lit, brighter under a pointer — a touch device is
+              never shown less than a mouse. */}
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-0 h-full w-[2px] opacity-25 group-hover:opacity-100 transition-opacity"
+            style={{ background: PRESS.accent }}
+          />
+          {/* Identity comes from the writing's own facts — how long the title
+              runs, what form it took, how much of it there is, when it was last
+              written. Never decoration invented to make cards look different. */}
+          <span
+            className="block leading-[1.24] mb-2.5 pr-10"
+            style={{
+              fontSize: title.length > 34 ? '18.5px' : title.length > 22 ? '20px' : '22px',
+              opacity: untitled ? 0.72 : 1,
+            }}
+          >
+            {title}
+          </span>
+          <span className="block text-[13px] opacity-50">{meta}</span>
+        </Link>
+        {/* A sibling of the Link, never a child of it — a button inside an
+            anchor is invalid, and would make Delete a way to open the work. */}
+        <div className="absolute top-2 right-2">
+          <DeleteButton itemKey={itemKey} label={`Delete ${title}`} />
+        </div>
+      </div>
+    );
+  };
 
   const Cards = ({ children }: { children: React.ReactNode }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">{children}</div>
@@ -324,13 +439,32 @@ export default function HomeView({
                   {resume.title ?? 'Your untitled work'}
                 </h1>
                 <p className="text-[14.5px] opacity-50 mb-8">{workMeta(resume)}</p>
-                <Link
-                  href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume))}
-                  className={`${FILLED} w-full sm:w-auto`}
-                  style={{ background: PRESS.accent, color: PRESS.ink }}
-                >
-                  Continue writing
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(resume))}
+                    className={`${FILLED} w-full sm:w-auto`}
+                    style={{ background: PRESS.accent, color: PRESS.ink }}
+                  >
+                    Continue writing
+                  </Link>
+                  {/* The work in the hero is excluded from the shelf below, so
+                      without this the most prominent thing in the room — often
+                      the very test import that prompted all this — would be the
+                      one thing a member could not remove. */}
+                  <DeleteButton
+                    itemKey={`work:${resume.id}`}
+                    label={`Delete ${resume.title ?? 'this work'}`}
+                  />
+                </div>
+                {confirming === `work:${resume.id}` ? (
+                  <div className="mt-5 max-w-lg">
+                    <ConfirmPanel
+                      itemKey={`work:${resume.id}`}
+                      title={resume.title ?? 'Your untitled work'}
+                      target={{ workId: resume.id, manuscriptId: manuscriptIdOf(resume) }}
+                    />
+                  </div>
+                ) : null}
               </section>
             ) : feature ? (
               /* Writing exists that no Work has claimed. It is NOT recast as a
@@ -353,7 +487,20 @@ export default function HomeView({
                     Open writing
                   </Link>
                   {makeWork(feature)}
+                  <DeleteButton
+                    itemKey={`writing:${feature.id}`}
+                    label={`Delete ${feature.title ?? 'this writing'}`}
+                  />
                 </div>
+                {confirming === `writing:${feature.id}` ? (
+                  <div className="mt-5 max-w-lg">
+                    <ConfirmPanel
+                      itemKey={`writing:${feature.id}`}
+                      title={feature.title ?? 'Untitled writing'}
+                      target={{ workId: null, manuscriptId: feature.id }}
+                    />
+                  </div>
+                ) : null}
               </section>
             ) : null}
 
@@ -375,6 +522,8 @@ export default function HomeView({
                   {shelfCards.map((w) => (
                     <Card
                       key={w.id}
+                      itemKey={`work:${w.id}`}
+                      target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
                       href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
                       title={w.title ?? 'Untitled work'}
                       untitled={!w.title}
@@ -395,6 +544,8 @@ export default function HomeView({
                   {imported.map((m) => (
                     <Card
                       key={m.id}
+                      itemKey={`writing:${m.id}`}
+                      target={{ workId: null, manuscriptId: m.id }}
                       href={canvasForManuscript(CANVAS_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}

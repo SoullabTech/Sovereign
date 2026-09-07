@@ -9,7 +9,7 @@
 //
 // Default root matches the studio vault: /app/data/vault (override via FILE_STORAGE_PATH).
 
-import { mkdir, writeFile, readFile, unlink } from 'fs/promises';
+import { mkdir, writeFile, readFile, unlink, stat } from 'fs/promises';
 import path from 'path';
 
 export function resolveVaultRoot(): string {
@@ -82,4 +82,43 @@ export async function deleteVaultBytes(storagePath: string): Promise<void> {
   } catch {
     /* already gone / never written */
   }
+}
+
+/**
+ * Destroy bytes, and prove it. Throws unless the path is gone afterwards.
+ *
+ * WS-DELETE-01 (founder ruling 2026-09-07). `deleteVaultBytes` is best-effort by
+ * design, which is right for cleanup and wrong for custody: a permission error,
+ * a read-only mount, or a path the traversal guard declines all return normally,
+ * so a caller relying on it can report "deleted" over bytes that are still on
+ * disk. That is precisely the failure the ruling names — *unreferenced but
+ * retained*. When erasure is a promise made to a member, absence must be
+ * observed rather than attempted.
+ *
+ * A path that was never written counts as destroyed. A path outside the vault
+ * root does not — it is refused, loudly, rather than reported as success.
+ */
+export async function destroyVaultBytes(storagePath: string): Promise<void> {
+  const root = path.resolve(resolveVaultRoot());
+  const full = path.resolve(root, storagePath);
+  if (full !== root && !full.startsWith(root + path.sep)) {
+    throw new Error('Refusing to destroy a path outside the vault root');
+  }
+
+  try {
+    await unlink(full);
+  } catch (err) {
+    /* Already absent is the outcome we wanted. Anything else stands. */
+    if ((err as NodeJS.ErrnoException)?.code !== 'ENOENT') throw err;
+  }
+
+  /* The unlink may have been a no-op on a filesystem that reports success it did
+     not deliver. Confirm rather than trust. */
+  try {
+    await stat(full);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException)?.code === 'ENOENT') return;
+    throw err;
+  }
+  throw new Error('Vault bytes still present after delete');
 }
