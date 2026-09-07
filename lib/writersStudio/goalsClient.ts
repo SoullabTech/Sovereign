@@ -24,6 +24,24 @@ import { apiFetch } from '@/lib/http/apiBase';
  * the same rule as a biconditional CHECK; this is the same law where the code
  * can see it.
  */
+/**
+ * FR-13 — the three legitimate relationships a writer may want to their own aim.
+ *
+ *   track_only   "Just show me 2,140 / 3,000. Don't coach me."
+ *   encourage    "Help me stay connected to why I'm writing this."
+ *   work_with    "I'm stuck. Inspire me."
+ *
+ * `track_only` is the default and a REAL CHOICE, not an absence: an
+ * unasked-for encouragement is the first move of a supervisor.
+ */
+export type GoalSupport = 'track_only' | 'encourage' | 'work_with';
+
+export const GOAL_SUPPORT_LABEL: Readonly<Record<GoalSupport, string>> = {
+  track_only: 'just track it',
+  encourage: 'encourage me',
+  work_with: 'help me work with it',
+};
+
 export type WriterGoal = {
   id: string;
   statement: string;
@@ -33,6 +51,18 @@ export type WriterGoal = {
   /** FR-10 — a date the writer named. Nothing here derives a rate from it. */
   byWhen: string | null;
   standing: 'open' | 'met' | 'set_aside';
+  /**
+   * FR-13 — what the writer invited, per goal.
+   *
+   * "Encouragement is invited. Pressure is imposed." The grant is DATA because
+   * a grant that lives only in guidance is one refactor from being assumed —
+   * and that refactor never looks like a decision to start coaching someone, it
+   * looks like passing an extra field into a prompt.
+   *
+   * On the goal rather than the member: a writer can want company with the book
+   * and silence about the essay.
+   */
+  support: GoalSupport;
   createdAt: string;
   updatedAt: string;
 } & (
@@ -155,6 +185,7 @@ interface WireGoal {
   living_work_id: string | null;
   by_when: string | null;
   standing: 'open' | 'met' | 'set_aside';
+  support: GoalSupport;
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +199,11 @@ export function fromWire(g: WireGoal): WriterGoal {
     livingWorkId: g.living_work_id,
     byWhen: g.by_when,
     standing: g.standing,
+    /* An unrecognised or absent grant reads as the quiet one. Failing open
+       here would mean a row we cannot interpret invites MAIA to speak. */
+    support: (['track_only', 'encourage', 'work_with'] as const).includes(g.support)
+      ? g.support
+      : 'track_only',
     createdAt: g.created_at,
     updatedAt: g.updated_at,
   };
@@ -218,6 +254,38 @@ export async function setGoalStanding(
   if (!res.ok) throw new Error('goal-not-changed');
   const json = (await res.json()) as { goal: WireGoal };
   return fromWire(json.goal);
+}
+
+/** The writer's grant, changed only by the writer. */
+export async function setGoalSupport(
+  manuscriptId: string,
+  goalId: string,
+  support: GoalSupport,
+): Promise<WriterGoal> {
+  const res = await apiFetch(`${base(manuscriptId)}/${goalId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ support }),
+  });
+  if (!res.ok) throw new Error('goal-not-changed');
+  const json = (await res.json()) as { goal: WireGoal };
+  return fromWire(json.goal);
+}
+
+/**
+ * FR-13, as the gate every future MAIA path must pass through.
+ *
+ * There is no MAIA path to Goals today and this function commissions none. It
+ * exists so that when one is designed it cannot be written without answering
+ * the question the founder made structural: **did the writer ask for this?**
+ *
+ * Deliberately narrow: it answers only whether MAIA may SPEAK ABOUT this goal
+ * unbidden. It grants nothing about what she may say — FR-10 still forbids any
+ * figure derived from the clock even when support was invited, and FR-12 still
+ * forbids creating, altering, or completing a goal at any grant level.
+ */
+export function maiaMaySupport(goal: Pick<WriterGoal, 'support'>): boolean {
+  return goal.support !== 'track_only';
 }
 
 export async function releaseGoal(manuscriptId: string, goalId: string): Promise<void> {

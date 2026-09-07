@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { progressFor, progressLabel, fromWire, type Measurable, type WriterGoal } from '../goalsClient';
+import { progressFor, progressLabel, fromWire, maiaMaySupport, type Measurable, type WriterGoal } from '../goalsClient';
 
 /**
  * GOALS v1 — FR-09 · FR-10 · FR-11, made falsifiable.
@@ -27,6 +27,7 @@ const base = {
   livingWorkId: null,
   byWhen: null as string | null,
   standing: 'open' as const,
+  support: 'track_only' as const,
   createdAt: 'x',
   updatedAt: 'x',
 };
@@ -141,5 +142,57 @@ describe('the schema carries the rulings', () => {
     for (const banned of ['pace', 'streak', 'projected', 'per_day', 'started_at', 'progress']) {
       expect(sql).not.toMatch(new RegExp(`\\n\\s+${banned}\\s`, 'i'));
     }
+  });
+});
+
+describe('FR-13 · encouragement is invited; pressure is imposed', () => {
+  const g = (support: 'track_only' | 'encourage' | 'work_with'): WriterGoal =>
+    ({ ...base, kind: 'intention', support } as unknown as WriterGoal);
+
+  it('quiet is the default, and it is a real choice rather than an absence', () => {
+    const wire = fromWire({
+      id: 'g', statement: 's', kind: 'intention', metric: null, target: null,
+      section_id: null, anchor_heading: null, living_work_id: null, by_when: null,
+      standing: 'open', support: 'track_only', created_at: 'x', updated_at: 'x',
+    } as never);
+    expect(wire.support).toBe('track_only');
+    expect(maiaMaySupport(wire)).toBe(false);
+  });
+
+  it('MAIA may speak unbidden only where the writer invited it', () => {
+    expect(maiaMaySupport(g('track_only'))).toBe(false);
+    expect(maiaMaySupport(g('encourage'))).toBe(true);
+    expect(maiaMaySupport(g('work_with'))).toBe(true);
+  });
+
+  it('an unreadable grant fails QUIET, not open', () => {
+    /* A row we cannot interpret must not be read as an invitation. Failing open
+       here would let a bad migration or a future enum value start coaching
+       someone who never asked. */
+    const wire = fromWire({
+      id: 'g', statement: 's', kind: 'intention', metric: null, target: null,
+      section_id: null, anchor_heading: null, living_work_id: null, by_when: null,
+      standing: 'open', support: 'something_new', created_at: 'x', updated_at: 'x',
+    } as never);
+    expect(wire.support).toBe('track_only');
+    expect(maiaMaySupport(wire)).toBe(false);
+  });
+
+  it('the grant permits company, never clock arithmetic (FR-10 survives FR-13)', () => {
+    /* Inviting support does not unlock a different vocabulary. "That's a lot of
+       movement" is companionship; "215 words a day" is supervision, at every
+       grant level. */
+    const src = readFileSync(join(process.cwd(), 'lib', 'writersStudio', 'goalsClient.ts'), 'utf8');
+    expect(src).not.toMatch(/Date\.now\(\)|new Date\(/);
+    for (const banned of ['pace', 'onTrack', 'projected', 'perDay', 'behind']) {
+      expect(src).not.toMatch(new RegExp(`(function|const)\\s+${banned}`, 'i'));
+    }
+  });
+
+  it('no MAIA path reaches Goals yet, and the gate exists before one does', () => {
+    /* FR-13 says what MAIA may do when invited; it does not commission the
+       doing. The guard is written first so the path cannot later be built
+       without consulting it. */
+    expect(typeof maiaMaySupport).toBe('function');
   });
 });

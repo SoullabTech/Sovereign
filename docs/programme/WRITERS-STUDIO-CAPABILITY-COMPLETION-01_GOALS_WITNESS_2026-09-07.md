@@ -112,14 +112,42 @@ say so.
 
 ## STANDING
 
+## ADDENDUM · FR-13 · THE SUPPORT GRANT — WITNESSED
+
+Landed after the ruling arrived mid-witness, and witnessed on the same cluster:
+
+```text
+control on each open goal   "just track it" · "encourage me" · "help me work with it"
+default                     track_only, on all four existing goals
+writer invites encourage    persisted and rendered  ✅
+pressure language anywhere  none  ✅
+```
+
+The grant is per GOAL, not per member — a writer can want company with the book
+and silence about the essay. `maiaMaySupport()` is the gate, written **before**
+any MAIA path exists so one cannot later be built without consulting it, and an
+unreadable grant **fails quiet, not open**: a row we cannot interpret must never
+be read as an invitation.
+
+⚠️ **The instrument raced the reload a third time.** A probe read the grant
+attribute before the refetch settled and reported `track_only` after a
+successful `PATCH`; the database already held `encourage`. Re-read with an
+auto-waiting locator keyed to the expected value. **The INSTRUMENT READ rule is
+now three-for-three at catching me rather than the code.**
+
+## STANDING
+
 ```text
 GOALS v1
-build             ✅ 6d644ae37 (+ the ambiguous-column repair)
+build             ✅ 6d644ae37 (+ the ambiguous-column repair, + FR-13 grant)
 cases 1–5         ✅ PASS
 case 6            ✅ PASS on the quiet half · ⛔ INCOMPLETE on the invited half
 migration         ✅ local witness cluster only — NOT production
 deploy            HOLD
 production        untouched
 
-OWED (FR-13)      the support grant, structurally — see the FR-13 record
+FR-13 grant       ✅ data + gate + control, witnessed
+OWED              the supportive behaviours themselves. FR-13 says what MAIA
+                  may do when invited; it does not commission the doing, and
+                  no MAIA path to Goals exists or was opened here.
 ```

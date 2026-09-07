@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 /**
  * Writer's Studio — one Goal.
  *
- * PATCH  { standing } — the writer's own account of where it stands.
+ * PATCH  { standing?, support? } — the writer's own account of where it stands,
+ *          and what relationship to it they have invited (FR-13).
  * DELETE — the writer releases it.
  *
  * ONLY THE STANDING MOVES, AND ONLY BECAUSE THE WRITER SAID SO (FR-12).
@@ -45,19 +46,35 @@ export async function PATCH(
     } catch {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { standing } = (payload ?? {}) as { standing?: unknown };
-    if (standing !== 'open' && standing !== 'met' && standing !== 'set_aside') {
+    const { standing, support } = (payload ?? {}) as { standing?: unknown; support?: unknown };
+    const editsStanding = standing !== undefined;
+    const editsSupport = support !== undefined;
+    if (!editsStanding && !editsSupport) {
+      return NextResponse.json({ error: 'Nothing to change' }, { status: 400 });
+    }
+    if (editsStanding && standing !== 'open' && standing !== 'met' && standing !== 'set_aside') {
       return NextResponse.json({ error: 'standing must be open, met or set_aside' }, { status: 400 });
+    }
+    /* FR-13 — the grant moves only because the writer moved it. Nothing
+       computes a support level, and no caller but the writer's own gesture
+       reaches this. */
+    if (editsSupport && support !== 'track_only' && support !== 'encourage' && support !== 'work_with') {
+      return NextResponse.json(
+        { error: 'support must be track_only, encourage or work_with' }, { status: 400 });
     }
 
     const updated = await query<WriterGoalRow>(
       `UPDATE writer_goals g
-          SET standing = $4, updated_at = now()
+          SET standing = COALESCE($4, g.standing),
+              support  = COALESCE($5, g.support),
+              updated_at = now()
          FROM member_manuscripts m
         WHERE g.id = $1 AND g.manuscript_id = $2
           AND m.id = g.manuscript_id AND m.member_id = $3
       RETURNING ${GOAL_COLUMNS}`,
-      [goalId, manuscriptId, memberId, standing],
+      [goalId, manuscriptId, memberId,
+       editsStanding ? (standing as string) : null,
+       editsSupport ? (support as string) : null],
     );
     if (updated.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ goal: updated.rows[0] });

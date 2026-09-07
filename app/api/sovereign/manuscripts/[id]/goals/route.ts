@@ -42,6 +42,7 @@ export interface WriterGoalRow {
   living_work_id: string | null;
   by_when: string | null;
   standing: 'open' | 'met' | 'set_aside';
+  support: 'track_only' | 'encourage' | 'work_with';
   created_at: string;
   updated_at: string;
 }
@@ -54,10 +55,10 @@ export interface WriterGoalRow {
  * the statement meets a real database.
  */
 const GOAL_COLUMNS_UNQUALIFIED = `id, statement, kind, metric, target, section_id,
-  anchor_heading, living_work_id, by_when, standing, created_at, updated_at`;
+  anchor_heading, living_work_id, by_when, standing, support, created_at, updated_at`;
 
 export const GOAL_COLUMNS = `g.id, g.statement, g.kind, g.metric, g.target, g.section_id,
-  g.anchor_heading, g.living_work_id, g.by_when, g.standing, g.created_at, g.updated_at`;
+  g.anchor_heading, g.living_work_id, g.by_when, g.standing, g.support, g.created_at, g.updated_at`;
 
 /** The one Work that declares this manuscript, or null. Never a guess. */
 async function soleDeclaringWork(memberId: string, manuscriptId: string): Promise<string | null> {

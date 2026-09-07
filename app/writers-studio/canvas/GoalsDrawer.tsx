@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { PRESS, SERIF } from '../pressTheme';
 import {
+  GOAL_SUPPORT_LABEL,
   declareGoal,
   progressFor,
   progressLabel,
   releaseGoal,
   setGoalStanding,
+  setGoalSupport,
+  type GoalSupport,
   type Measurable,
   type WriterGoal,
 } from '@/lib/writersStudio/goalsClient';
@@ -102,6 +105,20 @@ export default function GoalsDrawer({
     setFailed(null);
     try {
       await setGoalStanding(manuscriptId, id, standing);
+      onChanged();
+    } catch {
+      setFailed('Could not change that just now.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* FR-13 — the grant moves only because the writer moved it. */
+  const invite = async (id: string, support: GoalSupport) => {
+    setBusy(true);
+    setFailed(null);
+    try {
+      await setGoalSupport(manuscriptId, id, support);
       onChanged();
     } catch {
       setFailed('Could not change that just now.');
@@ -247,6 +264,27 @@ export default function GoalsDrawer({
                       <p className="text-[12px] opacity-55 mt-1" data-goal-figure>
                         {figure}
                       </p>
+                    )}
+                    {/* FR-13 — what the writer has invited, per goal. Quiet by
+                        default: an unasked-for encouragement is the first move
+                        of a supervisor. Nothing acts on this yet — no MAIA path
+                        to Goals exists — so it states the writer's choice and
+                        waits for one to be designed that must consult it. */}
+                    {g.standing === 'open' && (
+                      <div className="flex items-baseline gap-2 mt-1.5 flex-wrap" data-goal-support={g.support}>
+                        {(Object.keys(GOAL_SUPPORT_LABEL) as GoalSupport[]).map((s) => (
+                          <button
+                            key={s}
+                            disabled={busy}
+                            onClick={() => void invite(g.id, s)}
+                            data-goal-support-choice={s}
+                            className="text-[11px] underline underline-offset-4"
+                            style={{ opacity: g.support === s ? 0.75 : 0.28 }}
+                          >
+                            {GOAL_SUPPORT_LABEL[s]}
+                          </button>
+                        ))}
+                      </div>
                     )}
                     <div className="flex items-baseline gap-2 mt-1.5 flex-wrap">
                       {g.anchorHeading && g.sectionId === null && (
