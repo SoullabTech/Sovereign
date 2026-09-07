@@ -190,6 +190,123 @@ behaviour. **Different only at the container/presentation boundary.**
 This is the likely shape, not a taken decision — the Invoked entrance remains deferred until
 activation-turn isolation is structurally shown, and the split is a PROTOTYPE v2 act.
 
+## Founder additions of 2026-09-07 — and their governance class
+
+Six further directions, sorted by the guardrail test below. **Only one is prototype-surface
+repair.** The rest are recorded here for continuity but require their own act; they may not ride
+into the codebase on a UX repair.
+
+| Addition | Class |
+|---|---|
+| A · Golden shadow | **DESIGN amendment** — changes prompt law (what MAIA may ask per movement) |
+| B · Projection as a way of looking | **DESIGN amendment** — sharpens Differentiate's prompt law |
+| C · Multiple entrances | **DESIGN amendment** — changes the door set |
+| D · MAIA does not interpret | **Already ratified** — v0.2 §1 register ceiling; no movement needed |
+| E · Ends in relationship to life | **DESIGN amendment** — Return prompt law |
+| F · Not trauma treatment | **Claim discipline** — `MARKETING_CLAIM_DISCIPLINE.md` + Field contract |
+| G · Return/Sanctuary legibility | **Presentation** — belongs to this document |
+| H · Collective shadow | **Separate CONSTITUTE** — changes who the subject is |
+
+### The premise under all of them
+
+**MAIA must not become a shadow oracle.** The market is drifting there — archetype quizzes, AI
+"readings", pattern scores, systems that tell the person what their shadow is and infer patterns
+from accumulated entries. The Field's distinctive claim is the opposite:
+
+> Not *"tell MAIA something dark and let AI explain your unconscious."*
+> But *"bring something you cannot quite include; MAIA helps you remain in relationship with it
+> long enough to see it from several directions, without claiming ownership of its meaning."*
+
+### A · Positive / golden shadow — DESIGN amendment
+
+What falls into shadow can be positive or negative. Talent, generosity, vocation, strength,
+sexuality, aggression, creativity — anything the developing personality learned it could not
+safely include. Reclaiming the gold can be harder than confronting what we call bad.
+
+The Field must be able to ask, in the movements where questions are lawful:
+
+> *"Is there something admirable here that you have difficulty allowing yourself to possess?"*
+
+Envy, fascination, idealization and awe become entrances alongside shame, rage and fear. This is
+more Jungian than the "dark side" market, and it is **prompt law, not layout** — hence a DESIGN
+act.
+
+### B · Projection — a way of looking, never an accusation
+
+Shadow is often met through disproportionate reactions and projection onto others; relationship
+is a primary site. But **MAIA never announces "you're projecting."** The lawful move keeps
+reality testing intact:
+
+> *"What belongs clearly to them? What might this reaction also be showing you about yourself?"*
+
+The other person may genuinely have behaved badly *and* the encounter may activate something
+disowned. Shadow work fails when "projection" becomes a way of invalidating the external world.
+
+### C · Multiple entrances to the same six movements — DESIGN amendment
+
+Jungian work meets shadow through dreams, fantasies, bodily reactions, relationships, imagery,
+art and spontaneous affect — not only through answering prompts. The same six movements should
+accept different **forms of material**:
+
+```text
+something someone did · a dream · an image that won't leave me · a body sensation
+someone I can't stand · someone I can't stop idealizing · I don't know, but something feels off
+```
+
+**These are entrances, not new movements.** And they need **no new register**: a dream, an image
+or a sensation, in the member's own account, renders as OBSERVED or FELT. The ratified grammar
+already carries them.
+
+This eventually fits the elemental architecture — emotion, sensation, thought, image, impulse and
+relationship staying differentiated instead of being flattened immediately into explanation.
+
+### D · MAIA does not interpret the unconscious for the member — already ratified
+
+The Jungian attitude meets emerging material on something closer to equal footing rather than
+having consciousness dominate and interpret it; active imagination is receptivity and dialogue,
+not technique. This is the governing UX principle, and it is **already law** (v0.2 §1: system-
+authored content may render only as MAIA POSSIBILITY, ARCHETYPAL/SYMBOLIC, or UNKNOWN).
+
+MAIA may ask the image what it wants, notice a contradiction, offer another perspective, help the
+member stay with something. MAIA may **not** decode the symbol. *"A snake means sexuality"* is
+precisely the symbolic colonization the architecture prohibits.
+
+*MAIA holds the lantern; you name what is in the room* is the whole design in one line.
+
+### E · Ends in relationship to life, not merely insight — DESIGN amendment
+
+Encountering unconscious material entails ethical responsibility; insight that changes nothing in
+one's relationship to self, others or choices is incomplete. The transcendent function concerns
+holding opposing attitudes until a genuinely new position emerges — not picking a side or
+explaining the conflict away. This gives Reclaim → Choose → Return real depth:
+
+> Less *"What did you learn?"* — more *"If you took this part of yourself seriously without
+> letting it run your life, what might you do differently?"*
+
+### F · Not trauma treatment — claim discipline
+
+The shadow-app market claims trauma healing, depression, anxiety, CBT/DBT and unconscious pattern
+work, often in one product description. The expressive-writing literature is far more modest and
+mixed — small or null effects with substantial heterogeneity. **Shadow Field is a structured
+practice of reflection, encounter and integration; it is not a treatment and does not heal
+trauma.** When material becomes overwhelming, safety, transparency, autonomy and voice/choice
+govern the design. Governed by `MARKETING_CLAIM_DISCIPLINE.md`, not by this document.
+
+### G · Make existing powers perceptible — presentation (in scope here)
+
+Two competitor ideas worth borrowing *as legibility, not as new machinery*: an always-available
+"too deep tonight?" return to solid ground, and a shadow surface isolated from the rest of stored
+practice. **The Field already has stronger versions of both** — Return serves the first, Sanctuary
+the second. Add no movement and no safety wizard; make the existing powers far more perceptible in
+the UI. This is the only addition that belongs to the redesign.
+
+### H · Collective shadow — deliberately out of v1
+
+Shadow extends into families, groups, cultures, scapegoating and collective projection, and will
+eventually matter enormously for Circles and relational work. It carries a specific risk — MAIA
+telling a group who their scapegoats, prejudices or unconscious enemies are — and it changes *who
+the subject is*. **Constitute it separately; never smuggle it into personal Shadow Field.**
+
 ## The guardrail test
 
 > **If a UX improvement requires law to move, it is no longer UX repair.**
