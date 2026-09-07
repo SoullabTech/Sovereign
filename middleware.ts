@@ -482,8 +482,9 @@ export const config = {
      * - _next/image (image optimization)
      * - favicon.ico (favicon file)
      * - api/voice/transcribe-simple (see below)
+     * - api/sovereign/manuscripts/ingest (see below)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/voice/transcribe-simple|api/sovereign/manuscripts/ingest$).*)',
   ],
 };
 
@@ -515,4 +516,53 @@ export const config = {
  * future routes from the matcher as they are added. If a rule for this path is
  * ever added to the access matrix, this exclusion must be revisited — the
  * regression test asserts the premise, so it will fail rather than rot.
+ */
+
+/*
+ * ── WHY /api/sovereign/manuscripts/ingest IS EXCLUDED ───────────────────────
+ *
+ * The same mechanism as the voice route above, on the only other multipart
+ * upload a member makes. Because the matcher matched it, Next buffered the
+ * request body so middleware could run, then rebuilt a Request for the route
+ * handler from the same Node stream; when that stream was already consumed,
+ * construction threw:
+ *
+ *   TypeError: Response body object should not be disturbed or locked
+ *       at ...fromNodeNextRequest(...)
+ *       at .../manuscripts/ingest/route.js
+ *
+ * Observed in production 2026-09-06 on a 15.8 MB PDF. The throw happens BEFORE
+ * any application code, so the route's own logging never appears — a six-hour
+ * log window across a failed upload was empty, and that emptiness is the
+ * signature, not an absence of evidence. The member was told "We could not read
+ * that file. Try a .docx, .pdf, .txt, or .md", which is the route's 422 copy
+ * reached through the client's identical fallback string: the message named the
+ * format when the format was never the problem.
+ *
+ * ⛔ THIS EXCLUSION IS NOT THE VOICE PRECEDENT. That route was safe to drop
+ * because NO rule in config/accessMatrix.ts matched it, so middleware was
+ * already waving it through and nothing was lost. This path IS covered, by
+ * `{ prefix: '/api/sovereign', minTier: 'free' }`. Two things had to be
+ * reproduced in-route before the exclusion was admissible, and both are:
+ *
+ *   1. ACCESS. `minTier: 'free'` is TIER_RANK 0 — the lowest — and the rule
+ *      carries no rolesAnyOf, so its only real effect on this path is
+ *      "authenticated". The route already enforces that itself, and more
+ *      strictly: getMemberIdFromRequest() verifies the session and REJECTS a
+ *      mismatched x-member-id as impersonation rather than trusting it.
+ *
+ *   2. SANITISATION. Every matched request is forwarded through
+ *      stripClientIdentityAssertions(), whose guarantee is that "a handler
+ *      reading x-access-roles reads our answer or nothing at all — never the
+ *      caller's." An exclusion silently revokes that for this route. So the
+ *      route now REFUSES any request carrying middleware-derived identity
+ *      headers (forgedIdentityHeaders); a legitimate client never sends them,
+ *      and x-member-id is deliberately NOT among them because apiFetch sends it
+ *      on iOS and the auth layer already treats it as a claim to verify.
+ *
+ * ⛔ SCOPE: this one path only, anchored with `$` so it cannot become a prefix.
+ * A prefix-shaped exclusion would silently remove future
+ * /api/sovereign/manuscripts/* routes from the matcher as they are added. The
+ * regression test asserts a sibling route is still matched, so this fails
+ * rather than rots.
  */

@@ -30,6 +30,7 @@ export const maxDuration = 120; // large .docx/.pdf extraction can take a moment
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { forgedIdentityHeaders } from '@/lib/auth/identityAssertions';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
@@ -46,6 +47,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
   }
   try {
+    /* INGEST-TRANSPORT — this route is EXCLUDED from the middleware matcher, so
+       Next does not buffer and rebuild its multipart body (middleware.ts, end of
+       file). Middleware therefore never strips client-asserted identity headers
+       here, and the guarantee it provides everywhere else — "a handler reading
+       x-access-roles reads our answer or nothing at all, never the caller's" —
+       has to be reproduced at this boundary or it is simply gone for this path.
+
+       Refused rather than ignored. Ignoring protects only the code that exists
+       today; the next helper added to this route would read attacker-controlled
+       values with nothing to warn it. No honest sender is broken: these are
+       middleware's own derived headers, and an inbound copy is always a forgery.
+       x-member-id is deliberately NOT among them — apiFetch sends it on iOS, and
+       getMemberIdFromRequest already treats it as a claim to verify, rejecting
+       one that disagrees with the session. */
+    const forged = forgedIdentityHeaders(request.headers);
+    if (forged.length > 0) {
+      console.error(
+        `[press/manuscripts/ingest] refused client-asserted identity headers: ${forged.join(', ')}`,
+      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
