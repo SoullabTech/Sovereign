@@ -72,11 +72,22 @@ own SHA. That is fine, but it must be PROVEN to contain the containment commit
 rather than assumed:
 
 ```bash
+cd /Users/soullab/MAIA-SOVEREIGN          # MUST be inside the repo
+git fetch origin claude/resend-security-inhouse-email-f1utcu
+git cat-file -e ee612602 || echo 'STOP: commit not present locally — fetch it first'
+
 RUNNING=$(ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT')
+echo "running: $RUNNING"
 git merge-base --is-ancestor ee612602 "$RUNNING" \
   && echo "OK: running artifact contains ee612602" \
   || echo "STOP: ee612602 is NOT in the running artifact's history"
 ```
+
+Run it from the repo. Outside one, `git` exits with `fatal: not a git
+repository`, the `&&` falls through, and the `||` branch prints STOP — a
+missing-repo error wearing the costume of an ancestry verdict. Same class of
+false signal as the placeholder run: check the echoed `running:` line and the
+absence of a `fatal:` before believing either outcome.
 
 Confirm containment is in the RUNNING artifact. Grep for a runtime string, not
 a comment: minification strips comments, so a check against the explanatory
