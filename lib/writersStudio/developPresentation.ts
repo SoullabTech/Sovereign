@@ -31,6 +31,32 @@ import type { ReadingAssessment } from '../manuscript/developmentalReading/asses
 /* ── the closed vocabularies, in member language ─────────────────────── */
 
 /** One line per lens, for the commission choice. The lens is 07B's; the gloss is the room's. */
+/**
+ * The plain question each lens answers, for the member-facing surface.
+ *
+ * Founder ruling 2026-09-07: the seven lenses are unchanged as canonical
+ * capabilities; only their PRESENTATION leads with a question. The stored
+ * value and the API identifier remain `development | structure | continuity |
+ * arc | voice | coherence | reader`, and LENS_MEANING below is still the
+ * ratified wording.
+ *
+ *   Canonical vocabulary may govern the system without requiring the writer
+ *   to speak system vocabulary.
+ *
+ * ⛔ These are not definitions and must not drift into being them. Each is the
+ * question a writer already has; the lens name stays beside it so the word
+ * they will meet in the canon is learned rather than hidden.
+ */
+export const LENS_QUESTION: Record<DevelopmentalLens, string> = {
+  development: 'How is it developing?',
+  structure: 'How is it shaped?',
+  continuity: 'What carries through?',
+  arc: 'How does the work move?',
+  voice: 'How does the voice hold?',
+  coherence: 'Does it hold together?',
+  reader: 'What does the reader meet?',
+};
+
 export const LENS_MEANING: Readonly<Record<DevelopmentalLens, string>> = {
   structure: 'how the parts are arranged',
   development: 'how the work develops across what was read',

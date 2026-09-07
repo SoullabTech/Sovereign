@@ -96,6 +96,12 @@ describe('4 · the ambiguous state offers the remedy, not another declaration', 
     expect(ambiguous).toContain('undeclare');
     expect(ambiguous).not.toContain('ShapeGesture');
     expect(ambiguous).not.toContain('Which one is this a form of');
+    /* Founder ruling 2026-09-07 — the interface softens, the ontology does
+       not. The operation underneath is still `undeclare`; what the writer
+       reads is a sentence about their writing. */
+    expect(ambiguous).toContain('Remove from this Work');
+    expect(ambiguous).toContain('does not delete the writing');
+    expect(ambiguous).not.toContain('no longer a form of');
   });
 
   it('the unclaimed state still offers the declaration gesture', () => {

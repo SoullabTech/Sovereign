@@ -159,9 +159,11 @@ export default function WorkDrawer({
   if (!work && state === 'ambiguous') {
     return (
       <div>
+        {/* Founder ruling 2026-09-07: the domain model keeps `expression`,
+            `declare` and `form`; the writer does not have to perform ontology
+            to undo an act. The operation underneath is still `undeclare`. */}
         <p className="text-[13px] leading-relaxed opacity-60 mb-3">
-          This is a form of {declaringWorks.length} works, so no single Work
-          carries it. Withdraw it from one and the other stands.
+          This writing is currently part of {declaringWorks.length} Works.
         </p>
         <ul className="space-y-1.5 mb-3">
           {declaringWorks.map((w) => (
@@ -172,11 +174,18 @@ export default function WorkDrawer({
                 onClick={() => void undeclare(w.id)}
                 className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
               >
-                no longer a form of this work
+                Remove from this Work
               </button>
             </li>
           ))}
         </ul>
+        {/* FIELD ≠ LESSONS, and its one exception: the consequential act
+            explains its consequence THERE, and only there. A writer about to
+            remove their book from a Work should not have to wonder whether
+            they are about to lose the book. */}
+        <p className="text-[12px] opacity-45">
+          Removing it from a Work does not delete the writing.
+        </p>
         {failed && <p className="text-[12px] opacity-60 mt-3">{failed}</p>}
       </div>
     );
@@ -332,14 +341,14 @@ export default function WorkDrawer({
             {work.expressions.map((e) => (
               <li key={`${e.expressionType}:${e.expressionId}`} className="text-[13px] opacity-75">
                 ✓ {manuscript && e.expressionId === manuscript.id ? manuscriptLabel : 'a manuscript'}
-                <span className="opacity-55"> — declared by you, {formatWhen(e.declaredAt)}</span>
+                <span className="opacity-55"> — added by you, {formatWhen(e.declaredAt)}</span>
                 {manuscript && e.expressionId === manuscript.id && (
                   <button
                     disabled={busy}
                     onClick={() => void undeclare(work.id)}
                     className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
                   >
-                    no longer a form of this work
+                    Remove from this Work
                   </button>
                 )}
               </li>
