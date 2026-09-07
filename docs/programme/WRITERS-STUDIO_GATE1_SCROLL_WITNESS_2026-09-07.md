@@ -61,10 +61,51 @@ how the second one happened. A fail reopens observation: which element moved
 (rail · header · writing plane), on which click, and whether the outline moved
 with it. Perception first, mechanism second.
 
+## RESULT — ✅ PASS · founder witness, 2026-09-07
+
+> **"glitch is fixed"** — Kelly, walking the subject.
+
+```text
+SUBJECT           717cef35 on localhost:3100
+OBSERVER          founder · first-person
+CRITERION         founder-authored BEFORE the walk, unchanged after it
+VERDICT           PASS
+```
+
+⚠️ **On the force of the pre-registration, precisely.** The criterion was
+authored by the **walker**, in the message preceding the walk, and is recorded
+here **verbatim and unaltered**. That is what makes it pre-registered. This
+session's *commit* of it may or may not have landed before the click — that is
+immaterial and is **not** claimed either way, because the recorder did not write
+the criterion. ⛔ Recording someone else's fixed criterion is not the same as
+having set it, and the file must not be read as if this session had.
+
+## WHAT IS AND IS NOT CLOSED
+
+```text
+✅ CLOSED   the behavioural defect — the page stays where the founder puts it
+            across repeated Manuscript/outline selections, on the axis that
+            actually moves
+```
+
+⛔ **NOT closed, and not claimed:**
+
+- **Keyboard navigation** was not exercised. The outline row is
+  `role="button" tabIndex={0}`; arrow-key traversal is a different focus path
+  from a pointer click and no observation covers it.
+- **Other rooms** were not walked. `preservingScroll` guards the sectioned
+  writing surface only; a continuous draft mounts `Worktable`, which was not
+  the subject.
+- **Production** was not observed. This is a `localhost:3100` witness on a
+  local build. *Witnessed ≠ deployed*, and the same discipline that kept
+  "verified" apart from "deployed" for Circles applies here.
+
 ## STANDING
 
 ```text
-GATE 2 · SCHEMA CUSTODY   ✅ CLEAR
-GATE 1 · SCROLL WITNESS   ⏳ OWED — founder act, not performable here
-DEPLOY                    HOLD on Gate 1 alone
+GATE 1 · SCROLL WITNESS   ✅ PASS   founder-witnessed on 717cef35
+GATE 2 · SCHEMA CUSTODY   ✅ CLEAR  all five migrations already applied
+STUDIO REGRESSIONS        ZERO     44 suites · 686 tests
+GLOBAL TYPECHECK          RED      pre-existing · truthfully recorded, not relabelled
+DEPLOY                    ELIGIBLE under the no-new-regressions policy
 ```
