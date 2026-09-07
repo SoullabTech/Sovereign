@@ -85,7 +85,19 @@ export const shareArtifactSchema = z.object({
 
 // ── Living Circles — Field Intelligence ────────────────────
 
-export type InquiryStatus = 'open' | 'closed' | 'integrating';
+/**
+ * open | closed. There is no third state.
+ *
+ * `integrating` was retired (B-09, founder ruling E 2026-09-07): it was a
+ * stored duplicate of `closed AND field_synthesis IS NOT NULL`, read by
+ * nothing, and had no exit.
+ *
+ * ⛔ Not to be confused with `FieldPhase` below, which also has an
+ * 'integrating' value meaning something entirely different — what appears to
+ * be happening in a Circle's current activity. FieldPhase is deliberately
+ * untouched (CA-14).
+ */
+export type InquiryStatus = 'open' | 'closed';
 export type ResponseType = 'reflection' | 'witness' | 'offering';
 export type FieldPhase = 'forming' | 'active' | 'integrating' | 'quiet';
 
@@ -102,12 +114,19 @@ export interface CircleInquiryRow {
   updated_at: string;
 }
 
+/**
+ * The stored row. `response_text` and `response_type` are NULL exactly when
+ * `withdrawn_at` is set — the tombstone invariant (CA-03, founder ruling B).
+ * Member-facing reads never surface withdrawn rows, so surfaces that read only
+ * live responses may narrow these to non-null.
+ */
 export interface CircleInquiryResponseRow {
   id: string;
   inquiry_id: string;
   member_id: string;
-  response_text: string;
-  response_type: ResponseType;
+  response_text: string | null;
+  response_type: ResponseType | null;
+  withdrawn_at: string | null;
   created_at: string;
   updated_at: string;
 }

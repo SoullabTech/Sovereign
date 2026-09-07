@@ -268,8 +268,35 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/community/reality-check', minTier: 'free', notes: 'Reality check' },
 
   // Circles Commons (Phase 1)
-  { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons - all authenticated members' },
-  { exact: '/commons/join', public: true, notes: 'Join circle via invite — public landing, auth required at submit' },
+  // ── Circles — DECLARED here, ENFORCED closed (CIRCLE-04 · R1, 2026-09-06) ──
+  //
+  // Both the page tree and the API are gated to the founder allowlist while
+  // Circles are closed for v1. The matrix has no founder concept (see the Role
+  // union above), so the gate lives where it can: requireFounder() in
+  // app/commons/circles/layout.tsx for pages, and requireCircleAccess() in
+  // lib/circles/circleAccess.ts for every /api/circles route.
+  //
+  // Before R1, only the page tree was gated — a layout does not run for route
+  // handlers, so the API below was reachable by any authenticated free-tier
+  // member while the UI said Circles were closed. That mismatch is B-01, closed
+  // by R1. Membership scoping was never the gap and is unchanged.
+  //
+  // These entries stay at minTier 'free' deliberately: the tier system is not
+  // the authority here, and declaring a tier that the founder allowlist does
+  // not correspond to would be a second fiction. Same shape as the
+  // /book-studio/* entries above.
+  { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons — DECLARED free; ENFORCED founder-only by app/commons/circles/layout.tsx' },
+  //
+  // /commons/join stays `public: true` because the address must remain
+  // reachable — an invite link that 404s tells a visitor nothing true. What it
+  // may no longer do is SOLICIT. Before I0.5 this page asked an unauthorized
+  // visitor for an invite token and a consent mode, then POSTed both to an
+  // endpoint that was already going to refuse (I-02, a contradiction R1 created
+  // by closing the API without bringing the surface along).
+  // app/commons/join/layout.tsx now renders a closed state instead, so the page
+  // and the API say the same thing. Nothing there reads circle_invites: a valid
+  // and an invalid token stay indistinguishable before authorization (I-03).
+  { exact: '/commons/join', public: true, notes: 'Join circle via invite — DECLARED public (the address stays reachable); ENFORCED closed by app/commons/join/layout.tsx, which solicits no token and no consent while Circles are closed for v1. Submit target /api/circles/join is gated by requireCircleAccess().' },
 
   // Elemental Alchemy — depth
   { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },
@@ -501,7 +528,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/stripe/membership/checkout', minTier: 'free', notes: 'Create checkout' },
 
   // Circles API (Phase 1)
-  { prefix: '/api/circles', minTier: 'free', notes: 'Circles API - all authenticated members' },
+  { prefix: '/api/circles', minTier: 'free', notes: 'Circles API — DECLARED free; ENFORCED founder-only by requireCircleAccess() in lib/circles/circleAccess.ts (CIRCLE-04 R1). Layouts do not run for route handlers, so the gate is in the routes.' },
 
   // Pro API
   { exact: '/api/practitioners/create', minTier: 'pro', notes: 'Create practitioner' },

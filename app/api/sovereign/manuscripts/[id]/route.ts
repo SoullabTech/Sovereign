@@ -11,12 +11,53 @@ export const dynamic = 'force-dynamic';
  * DELETE — removal is the member's, total, and hard (CASCADE takes sections,
  *          keeps, collections, placements). Mirrors the Moments-room posture:
  *          "the words are gone, not archived."
+ *
+ * ── WS-DELETE-01 — total erasure (founder ruling 2026-09-07) ──────────────
+ * That posture was written in July, before the Source layer existed. From
+ * 2026-08-24 a manuscript also has custody: an arrival row naming bytes held
+ * in the file vault. The CASCADE took the arrival ROW and left the BYTES —
+ * unreferenced, unattributable, and permanent, because nothing in the repo
+ * called deleteVaultBytes(). The system said "deleted" while retaining the
+ * thing itself.
+ *
+ * The ruling:
+ *
+ *   member-visible promise   The Work is gone.
+ *   must remove              source text · uploaded source bytes · manuscript,
+ *                            sections and drafts · renders and derived writing
+ *                            artifacts · the source-custody record · any
+ *                            reconstructive provenance capable of restoring it
+ *   must not mean            hidden · archived · detached · unreferenced but
+ *                            retained
+ *
+ * If the system wants to keep the original material, the act must be called
+ * Withdraw or Remove from Studio — not Delete. (Withdrawal already exists and
+ * is already named honestly: DELETE /living-works/:id returns `withdrawn`.)
+ *
+ * Two consequences are structural here:
+ *
+ * 1. Vault paths are read BEFORE the cascade, because the cascade destroys the
+ *    only rows that name them. Rows first, then bytes: the reverse would leave
+ *    a custody row whose bytes are gone, and this migration's own comment holds
+ *    that "a hash without recoverable bytes is not custody."
+ *
+ * 2. A manuscript MAY be an expression of more than one Living Work — the
+ *    living_works migration preserves that on purpose, calling exclusivity an
+ *    unruled constitutional question. Erasing shared material out from under a
+ *    Work the member did not delete is not sovereignty, so this refuses instead.
+ *    A future ruling may narrow it; until then the refusal never destroys.
+ *
+ * The act itself is lib/manuscript/source/eraseManuscript.ts — one transaction
+ * covering the material AND the declaration that names it, so a detached Work
+ * has no interval to exist in, plus a sweep that finishes the vault. This route
+ * is the door: credential, member scope, and the member's own words back.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
@@ -118,16 +159,33 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await ctx.params;
 
-    const result = await query(
-      `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
-      [id, memberId],
-    );
-    if ((result.rowCount ?? 0) === 0) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const outcome = await eraseManuscript(id, memberId);
+
+    if (!outcome.ok) {
+      if (outcome.refusal === 'not_found') {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      return NextResponse.json(
+        { refusal: outcome.refusal, works: outcome.works },
+        { status: 409 },
+      );
     }
+
     console.log(
-      `[MAIA/press] manuscript removed { memberRef: ${memberRef(memberId)}, manuscriptId: ${id} }`,
+      `[MAIA/press] manuscript erased { memberRef: ${memberRef(memberId)}, manuscriptId: ${id}, `
+        + `artifactsQueued: ${outcome.artifactsQueued}, sweptAll: ${outcome.sweptAll} }`,
     );
+
+    /* The Work is gone either way — the rows committed. But bytes still owed
+       destruction are not "gone", and the member is told so rather than handed
+       a success that would make the promise false. The queue guarantees we can
+       finish; it does not entitle us to say we already did. */
+    if (!outcome.sweptAll) {
+      return NextResponse.json(
+        { removed: true, refusal: 'custody_incomplete' },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ removed: true });
   } catch (err) {
     console.error('[press/manuscripts/:id] DELETE error:', err);

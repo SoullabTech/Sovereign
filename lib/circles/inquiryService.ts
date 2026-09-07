@@ -100,14 +100,15 @@ export async function closeInquiry(
   if (inquiry.status !== 'open') throw new Error('INQUIRY_NOT_OPEN');
   if (inquiry.opened_by !== memberId) throw new Error('NOT_OPENER');
 
-  const nextStatus: InquiryStatus = fieldSynthesis ? 'integrating' : 'closed';
-
+  // Always 'closed' (B-09, founder ruling E). A synthesis is an optional
+  // property of a closed inquiry, never a second status — encoding it as one
+  // duplicated `field_synthesis IS NOT NULL` and could drift from it.
   const result = await queryOne<CircleInquiryRow>(
     `UPDATE circle_inquiries
-     SET status = $1, closed_at = NOW(), field_synthesis = $2
-     WHERE id = $3
+     SET status = 'closed', closed_at = NOW(), field_synthesis = $1
+     WHERE id = $2
      RETURNING *`,
-    [nextStatus, fieldSynthesis ?? null, inquiryId]
+    [fieldSynthesis ?? null, inquiryId]
   );
 
   return result!;
@@ -119,7 +120,7 @@ export async function listInquiries(
   circleId: string,
   memberId: string,
   status?: InquiryStatus
-): Promise<(CircleInquiryRow & { opener_name: string | null; response_count: number })[]> {
+): Promise<(CircleInquiryRow & { opener_name: string | null })[]> {
   await getCircleWithMembership(circleId, memberId);
 
   const statusClause = status ? `AND ci.status = $3` : '';
@@ -128,8 +129,7 @@ export async function listInquiries(
 
   const result = await query(
     `SELECT ci.*,
-       m.name AS opener_name,
-       (SELECT COUNT(*)::int FROM circle_inquiry_responses WHERE inquiry_id = ci.id) AS response_count
+       m.name AS opener_name
      FROM circle_inquiries ci
      LEFT JOIN members m ON m.id = ci.opened_by
      WHERE ci.circle_id = $1
@@ -171,10 +171,15 @@ export async function getInquiryWithResponses(
     `SELECT id FROM circle_inquiry_responses WHERE inquiry_id = $1 AND member_id = $2`,
     [inquiryId, memberId]
   );
+  // Deliberately row-existence, not withdrawal-aware. Withdrawing returns
+  // consent over one's own contribution; it does not un-see what one has
+  // already seen, and must not re-hide the field or permit a second answer
+  // informed by the first viewing. FR-04 protects independent perception
+  // BEFORE exposure — a boundary that cannot be re-crossed backwards.
   const hasResponded = !!ownResponse;
 
   // Sovereignty of thought: only show responses after contributing
-  // Exception: closed/integrating inquiries show all (the inquiry is complete)
+  // Exception: a closed inquiry shows all (the inquiry is complete)
   let responses: (CircleInquiryResponseRow & { responder_name: string | null })[] = [];
 
   if (hasResponded || inquiry.status !== 'open') {
@@ -182,7 +187,7 @@ export async function getInquiryWithResponses(
       `SELECT cir.*, m.name AS responder_name
        FROM circle_inquiry_responses cir
        LEFT JOIN members m ON m.id = cir.member_id
-       WHERE cir.inquiry_id = $1
+       WHERE cir.inquiry_id = $1 AND cir.withdrawn_at IS NULL
        ORDER BY cir.created_at ASC`,
       [inquiryId]
     );
@@ -190,4 +195,116 @@ export async function getInquiryWithResponses(
   }
 
   return { inquiry, responses, hasResponded };
+}
+
+
+// ── Withdraw Response (CA-03) ────────────────────────────────────────────────
+//
+// "A member may withdraw their own structured-inquiry response. Withdrawal is
+// the member exercising continuing consent over a Personal→Circle crossing."
+// (founder ruling, 2026-09-07)
+//
+// ⛔ Only the author. No facilitator, no other member, no system act. Withdrawal
+// is the same authority that made the crossing in the first place — which is
+// why it cannot be delegated or overridden.
+
+/** The minimal shape shared by a pg client and the `transaction()` handle. */
+export interface InquiryClient {
+  query(sql: string, params?: unknown[]): Promise<{ rows: any[]; rowCount: number | null }>;
+}
+
+/**
+ * Withdraw one's own response, against an existing client.
+ *
+ * Returns nothing about the inquiry beyond success: a withdrawal must not
+ * reveal whether or how other members responded. Counting or reporting the
+ * remaining responses here would turn an act of consent into a disclosure.
+ *
+ * Throws:
+ *   NOT_FOUND        no live response by this member on this inquiry
+ *   ALREADY_WITHDRAWN already withdrawn
+ */
+export async function withdrawResponseWithClient(
+  client: InquiryClient,
+  inquiryId: string,
+  memberId: string
+): Promise<true> {
+  // Scoped to the author by the WHERE clause itself, so there is no branch in
+  // which another member's id could reach the UPDATE.
+  const existing = await client.query(
+    `SELECT withdrawn_at FROM circle_inquiry_responses
+     WHERE inquiry_id = $1 AND member_id = $2`,
+    [inquiryId, memberId]
+  );
+  if (!existing.rows[0]) throw new Error('NOT_FOUND');
+  if (existing.rows[0].withdrawn_at) throw new Error('ALREADY_WITHDRAWN');
+
+  await client.query(
+    `UPDATE circle_inquiry_responses
+     SET withdrawn_at = NOW(), response_text = NULL, response_type = NULL
+     WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+    [inquiryId, memberId]
+  );
+
+  return true;
+}
+
+/**
+ * BOUNDARY CASCADE — tombstone every live response this member holds in this
+ * Circle. Used by leaveCircle() and removeMemberWithClient(), inside their
+ * existing atomic transactions.
+ *
+ * ⛔ This is NOT proxy author withdrawal, and the distinction is load-bearing:
+ *
+ *   AUTHOR WITHDRAWAL   the member actively exercises continuing consent
+ *   BOUNDARY CASCADE    the representation loses field eligibility because
+ *                       the Circle relationship ended
+ *
+ * Without it the membrane leaks in a way the member cannot fix: their response
+ * stays visible after they leave, and withdrawResponse() is closed to them
+ * because it requires an active membership. Nobody could remove it.
+ *
+ * Scoped to one Circle. Responses in any other Circle are untouched.
+ */
+export async function tombstoneMemberResponsesInCircle(
+  client: InquiryClient,
+  circleId: string,
+  memberId: string
+): Promise<number> {
+  const result = await client.query(
+    `UPDATE circle_inquiry_responses cir
+     SET withdrawn_at = NOW(), response_text = NULL, response_type = NULL
+     FROM circle_inquiries ci
+     WHERE ci.id = cir.inquiry_id
+       AND ci.circle_id = $1
+       AND cir.member_id = $2
+       AND cir.withdrawn_at IS NULL`,
+    [circleId, memberId]
+  );
+  return result.rowCount ?? 0;
+}
+
+/**
+ * Withdraw one's own response.
+ *
+ * Membership is verified first, then authorship is enforced by the query scope.
+ * Nothing private is touched: the response is the Circle-side representation a
+ * member authored for this crossing, never the source it came from.
+ */
+export async function withdrawResponse(
+  inquiryId: string,
+  memberId: string
+): Promise<true> {
+  const inquiry = await queryOne<CircleInquiryRow>(
+    `SELECT * FROM circle_inquiries WHERE id = $1`,
+    [inquiryId]
+  );
+  if (!inquiry) throw new Error('NOT_FOUND');
+
+  await getCircleWithMembership(inquiry.circle_id, memberId);
+
+  const { transaction } = await import('@/lib/db/postgres');
+  return transaction(async (tx) =>
+    withdrawResponseWithClient(tx as InquiryClient, inquiryId, memberId)
+  );
 }
