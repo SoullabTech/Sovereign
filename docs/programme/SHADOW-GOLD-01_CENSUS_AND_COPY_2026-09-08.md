@@ -350,3 +350,134 @@ I0.5                   UNCHANGED / DEPLOY LANE HELD
 
 > ⭐ *Shadow & Gold becomes a field for self-inquiry without becoming a machine for psychoanalyzing
 > absent people — or explaining away what actually happened to someone.*
+
+---
+
+# ADDENDUM II — D-S1 AND D-S2 RATIFIED · D-S4 OPENED AND CENSUSED
+**Founder ratification act · 2026-09-08**
+
+⭐ **D-S1 and D-S2 are no longer candidate language.** They are **constraints that any future
+Shadow & Gold design — memory, retrieval, prompts, consultation, and Keep semantics — must satisfy.**
+The ruling text recorded in ADDENDUM I is promoted **unchanged** from `READY FOR RATIFICATION` to
+`RATIFIED`; ⛔ nothing in it was re-drafted at ratification.
+
+## D-S1 · Third-party containment — **RATIFIED**
+
+> **Reflection about another person remains knowledge of the member's experience, not knowledge of
+> the other person.**
+
+```text
+PERMITTED
+member-authored experience
+member's interpretation
+member's reaction
+member's remembered encounter
+member's own insight arising from that encounter
+
+NOT PERMITTED
+third-party psychological profile
+third-party diagnosis
+inferred motives stored as fact
+third-party archetype/shadow attribution
+memory atoms asserting inferred traits about the other person
+later retrieval laundering member attribution into system knowledge
+```
+
+*A third party may remain a **referent** inside the member's experience without thereby becoming a
+**subject** of MAIA's knowledge.*
+
+## D-S2 · Anti-invalidation — **RATIFIED**
+
+> **A projection hypothesis may never be used to reduce the standing of a reported external harm,
+> violation, or grievance.**
+
+Where a member reports coercion, abuse, betrayal, intimidation, exploitation, manipulation, boundary
+violation, violence, stalking or comparable harm, MAIA **first preserves the reality-status of the
+reported encounter.** The inward lens is **parallel, never corrective**; neither inquiry cancels the
+other.
+
+> *What we meet is not only ourselves.*
+
+⛔ **Shadow & Gold must never become a mechanism for explaining away harm by telling a member the
+problem is "really their projection."**
+
+---
+
+# D-S4 · LEGACY SILENT-PROJECTION REACHABILITY CENSUS
+**Opened by founder 2026-09-08 · read-only census run same day · ⛔ nothing modified**
+
+**Question:** is the pre-existing silent projection-detection path (S3-F2) reachable in production?
+
+## ⭐ FINDING — IT IS NOT REACHABLE. IT IS CAT 3, NOT CAT 6.
+
+`agentOrchestrator-shadow-integration.ts` lives under `app/api/_backend/`. Two independent facts
+place it outside every deployed surface:
+
+```text
+NEXT APP ROUTER
+  find app/api/_backend -name route.ts   ->  0 files
+  it exposes no Next route at all
+
+maia-api CONTAINER  (docker-compose.production.yml, dockerfile apps/api/Dockerfile)
+  COPY apps/api/ ./          <- only apps/api is copied
+  CMD ["node", "dist/index.js"]
+  no reference to _backend or server-minimal anywhere under apps/api/
+```
+
+The module is mounted only by `app/api/_backend/src/server-minimal.ts` (`app.use('/api/orchestrator',
+orchestratorRoutes)`) and `src/routes/index.ts` — an **Express application that no production compose
+service builds.**
+
+> ⭐ **The silent projection detector is built, wired to an orchestrator, and served by nothing.**
+> **Cat 3 — built substrate, zero live callers.** It cannot be reached by a member today; it would
+> become reachable the moment "adopt the existing substrate" wired it to a live route. **That is
+> exactly the fork's hidden cost, now measured rather than assumed.**
+
+## ⚠️ FIFTH COLLISION — `ShadowConversationOrchestrator` IS NOT SHADOW WORK
+
+`lib/consciousness/ShadowConversationOrchestrator.ts` is **agent backchanneling** — its own header:
+*"Explicit orchestration layer for sophisticated agent backchanneling… Shadow layer communication
+between agents during member interactions."* Marked `@ts-nocheck - Prototype file`.
+
+⚠️ **It IS imported by a live App Router route** — `app/api/empowerment/orchestrate/route.ts`. So a
+naive D-S4 sweep on the string `shadow` would have reported *"shadow work is reachable from a live
+route"* — **a false positive that would have inverted the fork decision.** ⛔ Record this: the word
+`shadow` now denotes **five** distinct things in this codebase (shadow work · the AUTH-01-D3 variable
+shadowing defect · the astrological-house shadow flow · agent backchanneling · disposable shadow
+databases).
+
+## Not established — stated as unresolved, not as absence
+
+- `lib/maia/complete-agent-field-system.ts` (the **second** `ShadowAgent` class) has importers, but
+  all are themselves `lib/` orchestrators, demos and phase controllers
+  (`MaiaOrchestrator`, `resonance-field-shadow-runner`, `phase3-sunset-controller`,
+  `phase4-field-dominance`, `telesphorus-demo`, `self-auditing-orchestrator`,
+  `ResonanceFieldOrchestrator`). ⛔ **Reachability from a live member route was NOT established.**
+- ⚠️ `CLAUDE.md` records `ShadowAgent` as one of eight **live** Corpus Callosum voices producing
+  `agent_runs` rows under production traffic. **Which `ShadowAgent` produces those rows is
+  unresolved** — it is neither of the two paths ruled out above by these checks. ⛔ **Do not read
+  this census as "the shadow substrate is dormant."** It establishes precisely one thing: **the
+  silent projection-detection path is not reachable in production.**
+
+## D-S4 standing
+
+```text
+D-S4  CENSUSED, NOT CLOSED
+      silent projection path        NOT REACHABLE (Cat 3)
+      lib/maia ShadowAgent          reachability NOT ESTABLISHED
+      live Corpus Callosum voice    identity UNRESOLVED
+```
+
+## SHADOW-GOLD-01 standing
+
+```text
+D-S1    RATIFIED    third-party reflection != third-party knowledge
+D-S2    RATIFIED    projection may not invalidate reported harm/grievance
+D-S3    OPEN        voice-custody findings established, disposition pending
+D-S4    OPEN        censused above; two questions remain
+
+FRESH vs LEGACY     HOLD
+HOUSE UI / ROUTING  HOLD
+SCHEMA              UNCHANGED
+IMPLEMENTATION      NOT AUTHORIZED
+```
