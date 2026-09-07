@@ -462,7 +462,7 @@ birth · separation) has to stay separate from it.
 | CA-13 | Circle-level assent for Common-Ground Mediation | CIRCLE-09 |
 | **CA-14** | **`FieldPhase` semantic collision** — `'forming' \| 'active' \| 'integrating' \| 'quiet'` in `types.ts` is an **activity/inquiry heuristic** (`derivePhase()` calls a Circle `'active'` when an inquiry is open), **not** FR-11 constitution state. Two of its four values are the same strings meaning something else, in the same module. ⛔ FieldPhase is **not** repaired or renamed (founder ruling); recorded for later reconciliation | later |
 | **CA-16** | ⛔ **TRANSFERRED OUT OF THIS LANE — custody follow-up.** `docs/ops/PRESERVATION_AUDIT_2026-08-01.md` lists `CIRCLES_FIELD_PULSE_CONTAINMENT_PLAN_2026-07-17.md` among 281 documents "stranded on the branch" — **it is not on that branch.** Before any branch deletion is authorized: falsify the audit's complete 281-entry inventory against the actual preserved branch tree and identify every mismatch. **A governance-integrity question, not Circle work.** ⛔ Do not edit that audit from the Circle lane. **Does not block this lane.** | separate |
-| **CA-15** | **Facilitator assignment pathway** — no code path assigns `'facilitator'`. Recorded as an INVOKE/governance gap by FR-12 | INVOKE |
+| **CA-15** | **Facilitator assignment pathway** — no code path assigns `'facilitator'`. Recorded as an INVOKE/governance gap by FR-12 | ✅ **CLOSED 2026-09-08 by FR-32** (ADDENDUM IV) |
 
 **None of these blocks VERIFY.**
 
@@ -964,3 +964,91 @@ IMPLEMENTATION          NOT AUTHORIZED
 > The architecture now distinguishes cleanly among **co-presence · membership · constitution** — and
 > that distinction does real work: **a Salon can vanish relationally after it occurs, while a Circle
 > can legitimately retain the authored fact of who brought that continuing relationship into being.**
+
+---
+
+# ADDENDUM IV · 2026-09-08 — FR-32 · Procedural authority. **CA-15 CLOSED.**
+
+## FR-32 · Procedural authority belongs to the Circle and is conferred by the Circle.
+
+> ⛔ **It is never inherited from creation, founding, seniority, invitation authority, or prior
+> facilitation.**
+
+**Modes.** A Circle may constitute facilitation as **named · shared · rotating · bounded to a
+particular inquiry or act**.
+
+**At formation.** The constitutors **must explicitly ratify a facilitation mode**. Without that act the
+Circle remains **`FORMING`**.
+
+**The mandate is strictly procedural.** It may authorize someone to open and sequence inquiry · tend
+process · steward an authorized repair process · carry out **another explicitly delegated procedural
+function**. ⛔ It does **not** authorize that person to decide the Circle's meaning · speak
+substantively for the Circle · change membership · acquire ownership · convert a collective Keep into
+their own act.
+
+**⭐ The holder of procedural authority cannot control whether their own authority may be
+reconsidered.** Any active member has standing to call for reconsideration, transfer, or withdrawal of
+facilitation. **The Circle itself remains the source of the mandate.**
+
+```
+Circle → collective constituting act → facilitation mandate
+                                       ├─ named
+                                       ├─ shared
+                                       ├─ rotating
+                                       └─ bounded / specific
+                                       ↓
+                                  procedural capacity
+```
+
+The ACTIVE rule is unchanged:
+
+```
+ACTIVE = active_members >= 3 AND facilitation_constituted
+```
+
+**What this settles:** `created_by` stays provenance only · FR-31 gains a real activation path · Tend
+operates through constituted authority · Repair gets a procedurally authorized steward **without making
+that person sovereign over the repair** · a Circle can later authorize someone to host a Salon on its
+behalf · collective Keep stays **collective authorship** even when one person procedurally carries the
+act.
+
+**Deliberately not adjudicated:** the voting/consent **threshold** for changing a mandate after
+formation. ⚠️ Jarvis note: the deferral was conditioned on *"unless an existing Circle decision rule
+already supplies it"* — **I0 established there is no such rule anywhere in the substrate**, so the
+deferral is unconditional in practice. *The source and limits of authority are settled here without
+smuggling in a governance constitution.*
+
+## Docket disposition · D-K3 · K3-a…K3-h
+
+| | |
+|---|---|
+| **K3-a** one or several | ⭐ **Answered by making it the Circle's choice, not the system's.** "Bounded to a particular inquiry or act" is an available mode, so act-scoped authority is **expressible** without being imposed. The system does not decide whether a Circle's authority is unified or decomposed — the Circle does. |
+| **K3-b** bound | **Answered**: all three shapes available (named/shared/rotating are standing forms; bounded is act- or scope-shaped). |
+| **K3-c** conferral threshold | **DEFERRED** — no existing Circle decision rule exists to supply it. |
+| **K3-d** withdrawal vs resignation | **Partly**: any active member may call for withdrawal. Resignation as the holder's own act is not separately addressed. |
+| **K3-e** transfer | ⭐ **Answered in substance**: transfer is called for *through the Circle*, and the Circle is the source of the mandate — so it is **re-conferral, never handoff by the holder.** |
+| **K3-f** repair recusal | ⚠️ **Expressible, not yet designed.** If a rupture involves the standing holder, the remedy is reconsideration of the whole mandate — a heavy instrument for what should be light. A Circle *could* constitute a repair-specific bounded mandate instead. Carried to Repair design. |
+| **K3-g** zero state | **Answered**: no facilitation act → `FORMING`, and that is a legitimate resting state. ⚠️ Whether the system may **prompt** a Circle to constitute one is **not** addressed — a prompt would coerce governance. Carried. |
+| **K3-h** shared primitive | **Still open.** ⚠️ And now sharper: at initial formation the constitutors ratify **two things in one moment** — the Circle *and* its facilitation mode. FR-31's formation event therefore carries a facilitation clause, which makes *"build the multi-party ratified act once"* more likely to be right, not less. |
+
+## Consequence for D-L4 (Circle-hosted Salons)
+
+FR-27 holds that a Circle hosting a Salon **is the Circle making an outward representation of itself**.
+FR-32 forbids a mandate holder from **speaking substantively for the Circle**, while permitting *another
+explicitly delegated procedural function*. Read together:
+
+> ⭐ **Salon-hosting authority is a SPECIFIC delegation. It is never implied by a general facilitation
+> mandate.**
+
+D-L4 is not closed, but its shape is now fixed.
+
+## Standing
+
+```
+FR-32                RATIFIED
+CA-15 · D-K3         CLOSED
+K3-c · K3-f · K3-g · K3-h   CARRIED, NOT ADJUDICATED
+D-L4                 SHAPED, still open
+SCHEMA               UNCHANGED
+IMPLEMENTATION       NOT AUTHORIZED
+```
