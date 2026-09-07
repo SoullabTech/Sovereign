@@ -26,6 +26,28 @@ async function getSessionMemberId(): Promise<string | null> {
   return null;
 }
 
+/**
+ * ROUTE GROUP `(shell)` — WHY THIS LAYOUT LIVES ONE LEVEL DOWN.
+ *
+ * This layout redirects every unauthenticated visitor to sign-in. It used to sit
+ * at `app/team/layout.tsx`, where it also wrapped `app/team/invite/[token]` —
+ * the ONE `/team` route that must work BEFORE a visitor has an account.
+ * `config/accessMatrix.ts` already declares that route public
+ * (`{ prefix: '/team/invite/', public: true }`), so middleware let strangers
+ * through and this layout redirected them anyway: two authorities disagreeing,
+ * with the silent one winning. A stranger holding a valid invitation was sent
+ * to `/signin?next=/team/general` and could never register.
+ *
+ * `(shell)` is a route group, so it contributes NOTHING to any URL: `/team`,
+ * `/team/general`, `/team/admin` and the rest resolve exactly as before. What
+ * changed is only which files this layout wraps — `invite/[token]` now sits
+ * outside it, matching the access matrix instead of contradicting it.
+ *
+ * ⛔ DO NOT move `invite/[token]` into this group, and do not add an auth
+ * exception inside this layout to compensate. The separation IS the boundary:
+ * everything under `(shell)` is authenticated, without exception, and the one
+ * public page is public by position rather than by conditional.
+ */
 export default async function TeamLayout({
   children,
 }: {
