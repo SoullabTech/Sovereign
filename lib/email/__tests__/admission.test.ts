@@ -126,3 +126,38 @@ describe('helpers', () => {
     expect(describeAuthority(system)).toBe('system:cron:reminders');
   });
 });
+
+describe('identity claim — the one case where aiming IS the mechanism', () => {
+  it('ADMITS a sign-in code to a caller-typed address', () => {
+    // A new member has no record to read from. Mailing the typed address is
+    // how the claim gets tested; refusing this would make signup impossible.
+    for (const purpose of ['auth:email-code', 'auth:magic-link']) {
+      expect(admit({ purpose, authority: anon, destination: 'identity-claim' }))
+        .toMatchObject({ admitted: true, lane: 'P0' });
+    }
+  });
+
+  it('REFUSES passkey recovery as an identity claim — it discloses a standing secret', () => {
+    // The message must confer nothing except by being received. Recovery mails
+    // an existing passkey, so it must confirm against the record instead.
+    const r = admit({
+      purpose: 'auth:passkey-recovery',
+      authority: anon,
+      destination: 'identity-claim',
+    });
+    expect(r).toMatchObject({ admitted: false, reason: 'identity_claim_not_permitted_for_purpose' });
+  });
+
+  it('REFUSES verification as an identity claim — that is the 2026-09 defect', () => {
+    // Direction of claim is what separates the two: claiming an address for
+    // yourself vs asserting a new address for an existing member.
+    expect(admit({ purpose: 'auth:verification', authority: anon, destination: 'identity-claim' }).admitted)
+      .toBe(false);
+  });
+
+  it('is a closed set — an arbitrary purpose cannot opt itself in', () => {
+    for (const purpose of ['invite:team', 'broadcast:update', 'notify:dm', 'anything:else']) {
+      expect(admit({ purpose, authority: anon, destination: 'identity-claim' }).admitted).toBe(false);
+    }
+  });
+});

@@ -83,8 +83,42 @@ export type DestinationOrigin =
   | 'actor-supplied'
   /** A fixed operational address from configuration (alerts, founder inbox). */
   | 'configured'
-  /** Chosen by the caller with no proven authority. Never admissible. */
+  /**
+   * The caller supplied the address AND the message exists solely to TEST
+   * control of it. A sign-in code mailed to a typed address is the mechanism
+   * by which that address is proven; there is no record to read from yet.
+   *
+   * Admissible anonymously ONLY for purposes in IDENTITY_CLAIM_PURPOSES, and
+   * only under a property the type cannot check for you:
+   *
+   *     the message must confer NOTHING except by being received.
+   *
+   * A one-time code satisfies this — intercepting the request gains an attacker
+   * nothing, because the value lands in the mailbox they had to already control.
+   * A message that DISCLOSES a standing secret does not: `auth:passkey-recovery`
+   * mails an existing passkey, so it must confirm the address against the record
+   * first and is 'member-record', never this.
+   *
+   * The distinction from the 2026-09 defect is the direction of the claim. Here
+   * an unknown person asserts an address as their own. There, a stranger
+   * asserted a NEW address for an EXISTING member — redirecting an identity
+   * rather than claiming one.
+   */
+  | 'identity-claim'
+  /** Chosen by the caller with no proven authority. Never admissible anonymously. */
   | 'request-supplied';
+
+/**
+ * The only purposes that may be sent anonymously to a caller-supplied address.
+ *
+ * Closed and short by design. Every entry is a message that is useless unless
+ * it arrives at the address the caller named. Adding one is a decision about
+ * whether that property holds — not a way to get a caller past `admit()`.
+ */
+export const IDENTITY_CLAIM_PURPOSES = new Set<string>([
+  'auth:email-code',   // one-time sign-in code
+  'auth:magic-link',   // single-use sign-in link
+]);
 
 export interface AdmissionRequest {
   purpose: string;
@@ -99,6 +133,7 @@ export type AdmissionResult =
 export type AdmissionRefusal =
   | 'anonymous_caller_chose_destination'
   | 'unauthenticated_actor_supplied'
+  | 'identity_claim_not_permitted_for_purpose'
   | 'system_supplied_by_request';
 
 /**
@@ -111,8 +146,24 @@ export function admit(req: AdmissionRequest): AdmissionResult {
   const lane = resolvePriority(req.purpose);
   const { authority, destination } = req;
 
-  // THE RULE. An anonymous caller may cause a send; they may not aim it.
+  // THE RULE. An anonymous caller may cause a send; they may not aim it —
+  // except to claim an address as their own, which is the one case where
+  // aiming IS the mechanism.
   if (authority.kind === 'anonymous') {
+    if (destination === 'identity-claim') {
+      if (!IDENTITY_CLAIM_PURPOSES.has(req.purpose)) {
+        return {
+          admitted: false,
+          reason: 'identity_claim_not_permitted_for_purpose',
+          detail:
+            `purpose="${req.purpose}" is not an identity claim. Only ` +
+            `${[...IDENTITY_CLAIM_PURPOSES].join(', ')} may be sent anonymously to a ` +
+            `caller-supplied address, because only they confer nothing except by ` +
+            `being received. Confirm the address against the member record instead.`,
+        };
+      }
+      return { admitted: true, lane };
+    }
     if (destination === 'request-supplied') {
       return {
         admitted: false,
