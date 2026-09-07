@@ -22,6 +22,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {
+  isReadingScope,
+  resolveScope,
+  type ReadingScope,
+} from '@/lib/manuscript/developmentalReading/scope';
 import { query } from '@/lib/db/postgres';
 import { isDevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { commissionReading, type CommissionStage } from '@/lib/manuscript/developmentalReading/commission';
@@ -41,6 +46,42 @@ async function addressableSectionIds(manuscriptId: string, memberId: string): Pr
       ORDER BY s.position ASC`,
     [manuscriptId, memberId]);
   return r.rows.map((row) => row.id);
+}
+
+/**
+ * Section ids per authored division. Ownership is IN the query, so a unit id
+ * belonging to another member's Work resolves to nothing and is refused as
+ * unknown — it never confirms that the id exists.
+ */
+async function unitSectionIds(
+  manuscriptId: string,
+  memberId: string,
+): Promise<Record<string, string[]>> {
+  /* ⛔ THE SUBTREE, not direct membership. A Part typically holds no sections
+     of its own — its chapters do. Resolving "Part One" to its direct members
+     would resolve it to NOTHING and refuse the writer's most natural request
+     with `empty_scope`, which would read as the feature being broken.
+
+     Choosing a division means that division and everything under it. */
+  const r = await query<{ unit_id: string; draft_section_id: string }>(
+    `WITH RECURSIVE subtree(root_id, unit_id) AS (
+       SELECT u.id, u.id
+         FROM manuscript_structure_units u
+         JOIN member_manuscripts m ON m.id = u.manuscript_id
+        WHERE u.manuscript_id = $1 AND m.member_id = $2
+       UNION ALL
+       SELECT s.root_id, c.id
+         FROM subtree s
+         JOIN manuscript_structure_units c ON c.parent_id = s.unit_id
+        WHERE c.manuscript_id = $1
+     )
+     SELECT DISTINCT s.root_id AS unit_id, sm.draft_section_id
+       FROM subtree s
+       JOIN manuscript_structure_members sm ON sm.unit_id = s.unit_id`,
+    [manuscriptId, memberId]);
+  const byUnit: Record<string, string[]> = {};
+  for (const row of r.rows) (byUnit[row.unit_id] ??= []).push(row.draft_section_id);
+  return byUnit;
 }
 
 /** Whether the member has authored any structure for this Work. Ownership is IN the query. */
@@ -106,19 +147,50 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!isDevelopmentalLens(lens)) {
     return NextResponse.json({ refusal: 'invalid_lens' }, { status: 400 });
   }
-  /* The body may carry the lens and nothing else. A client that sends scope,
-     sections, text or an observation is refused, not partially honoured. */
+  /* WS-DEV-SCOPE-01. The body may carry the lens and a STRUCTURAL scope, and
+     nothing else. A client that sends text, sections' prose or an observation
+     is still refused, not partially honoured — the widening admits identifiers
+     only, and `isReadingScope` admits no shape that could carry prose.
+
+     Absent `scope` means the whole work, which is what every existing caller
+     asked for and still gets. */
+  const ALLOWED = new Set(['lens', 'scope']);
   const keys = Object.keys((body as object) ?? {});
-  if (keys.some((k) => k !== 'lens')) {
-    return NextResponse.json({ refusal: 'foreign_field', detail: keys.filter((k) => k !== 'lens').join(', ') }, { status: 400 });
+  const foreign = keys.filter((k) => !ALLOWED.has(k));
+  if (foreign.length > 0) {
+    return NextResponse.json({ refusal: 'foreign_field', detail: foreign.join(', ') }, { status: 400 });
   }
 
-  const bodyScope = await addressableSectionIds(manuscriptId, memberId);
-  if (bodyScope.length === 0) {
+  const rawScope = (body as { scope?: unknown } | null)?.scope;
+  const scope: ReadingScope =
+    rawScope === undefined ? { kind: 'whole' } : (rawScope as ReadingScope);
+  if (rawScope !== undefined && !isReadingScope(rawScope)) {
+    return NextResponse.json({ refusal: 'invalid_scope' }, { status: 400 });
+  }
+
+  const topology = await addressableSectionIds(manuscriptId, memberId);
+  if (topology.length === 0) {
     /* Either no such Work for this member, or no section-addressable draft
        yet. Both mean there is nothing to read, and neither leaks existence. */
     return NextResponse.json({ refusal: 'not_readable', stage: 'capture' }, { status: 404 });
   }
+
+  /* Divisions are loaded only when one is named. A scope that does not ask
+     about structure does not pay for reading it. */
+  const unitSections =
+    scope.kind === 'unit' ? await unitSectionIds(manuscriptId, memberId) : {};
+
+  const resolved = resolveScope(scope, { topology, unitSections });
+  if (!resolved.ok) {
+    /* The member's own terms, and a 400: their request named something this
+       work does not contain, which is theirs to correct — not a server fault
+       and not a capability refusal. */
+    return NextResponse.json(
+      { refusal: resolved.refusal, stage: 'capture', detail: resolved.detail },
+      { status: 400 },
+    );
+  }
+  const bodyScope = [...resolved.bodyScope];
   const withStructure = await hasAuthoredStructure(manuscriptId, memberId);
 
   const outcome = await commissionReading({ manuscriptId, memberId, lens, bodyScope, withStructure });

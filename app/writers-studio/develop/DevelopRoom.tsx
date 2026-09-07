@@ -34,6 +34,8 @@ import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
+import { fetchStructure, type StructureNodeDTO } from '@/lib/writersStudio/structureClient';
+import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import {
@@ -190,6 +192,10 @@ export default function DevelopRoom({
   const [readingPhase, setReadingPhase] = useState<ReadingPhase>('idle');
   const [payload, setPayload] = useState<ReadingPayload | null>(null);
   const [lens, setLens] = useState<DevelopmentalLens>('development');
+  /* WS-DEV-SCOPE-01 — what the writer asked MAIA to read. 'whole' is the
+     default because it is what this room has always meant by "read this". */
+  const [scopeUnitId, setScopeUnitId] = useState<string | null>(null);
+  const [divisions, setDivisions] = useState<StructureNodeDTO[] | null>(null);
   const [commission, setCommission] = useState<
     { phase: 'idle' } | { phase: 'reading' } | { phase: 'refused'; outcome: Extract<CommissionOutcome, { ok: false }> }
   >({ phase: 'idle' });
@@ -317,9 +323,45 @@ export default function DevelopRoom({
     [payload],
   );
 
+  /* The member's own divisions, loaded once. Only the ones that actually hold
+     sections can be read, so only those are offered — an option that is
+     certain to refuse is not an option. */
+  useEffect(() => {
+    let live = true;
+    void fetchStructure(manuscriptId).then((r) => {
+      if (!live) return;
+      if (!r.ok) {
+        setDivisions([]);
+        return;
+      }
+      /* Flattened in the member's own order, parents before their children, so
+         a Part and the chapters inside it are both choosable. `derivedSectionIds`
+         is what a division actually resolves to — a Part usually holds no
+         sections directly, only its chapters do. */
+      const flat: StructureNodeDTO[] = [];
+      const walk = (nodes: StructureNodeDTO[]) => {
+        for (const n of nodes) {
+          flat.push(n);
+          walk(n.children);
+        }
+      };
+      walk(r.tree.roots);
+      setDivisions(flat.filter((n) => n.derivedSectionIds.length > 0));
+    });
+    return () => {
+      live = false;
+    };
+  }, [manuscriptId]);
+
   const ask = async () => {
     setCommission({ phase: 'reading' });
-    const outcome = await requestDevelopmentalReading(manuscriptId, lens);
+    /* The scope is a structural identifier or it is absent. Nothing about the
+       Work's prose goes up the wire — the invocation carries the lens, the
+       member's identity, and at most the name of a division they authored. */
+    const scope: ReadingScope | undefined = scopeUnitId
+      ? { kind: 'unit', unitId: scopeUnitId }
+      : undefined;
+    const outcome = await requestDevelopmentalReading(manuscriptId, lens, scope);
     if (!outcome.ok) { setCommission({ phase: 'refused', outcome }); return; }
     setCommission({ phase: 'idle' });
     await loadList(outcome.readingId);
@@ -528,6 +570,55 @@ export default function DevelopRoom({
           {listPhase === 'ready' && prep.phase === 'ready' && prep.state.kind === 'ready' && (
             <div className="mt-7 pt-5 border-t" style={{ borderColor: PRESS.ruleSoft }}>
               <p className="text-[11px] tracking-[0.2em] uppercase opacity-40 mb-3">Ask for a reading</p>
+              {/* ── WHAT MAIA READS ─────────────────────────────────────
+                  WS-DEV-SCOPE-01, founder ruling 2026-09-07. This room always
+                  read the whole draft, so a full-length book met the ceiling
+                  and stopped there — the capability could not succeed on its
+                  own subject.
+
+                  The ceiling is unchanged and refusing the whole work is still
+                  right: a reading that quietly read a fifth of a book and
+                  reported on "the work" is the worse failure. What changes is
+                  that refusal is no longer the only outcome.
+
+                  ⛔ Nothing here ranks, recommends or preselects a division.
+                  The order is the member's own, and the reading is of exactly
+                  what they named. */}
+              {divisions && divisions.length > 0 && (
+                <fieldset disabled={commission.phase === 'reading'} className="space-y-1.5 mb-4">
+                  <legend className="text-[12.5px] opacity-60 mb-2">Reading:</legend>
+                  <label className="flex items-baseline gap-2 text-[13px] cursor-pointer">
+                    <input
+                      type="radio"
+                      name="reading-scope"
+                      checked={scopeUnitId === null}
+                      onChange={() => setScopeUnitId(null)}
+                      className="translate-y-[1px]"
+                    />
+                    <span>The whole work</span>
+                  </label>
+                  {divisions.map((d) => (
+                    <label key={d.id} className="flex items-baseline gap-2 text-[13px] cursor-pointer">
+                      <input
+                        type="radio"
+                        name="reading-scope"
+                        checked={scopeUnitId === d.id}
+                        onChange={() => setScopeUnitId(d.id)}
+                        className="translate-y-[1px]"
+                      />
+                      <span>
+                        {d.title ?? d.kind ?? 'Untitled division'}
+                        <span className="opacity-55">
+                          {' '}
+                          — {d.derivedSectionIds.length} section
+                          {d.derivedSectionIds.length === 1 ? '' : 's'}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+
               <fieldset disabled={commission.phase === 'reading'} className="space-y-1.5 mb-4">
                 <legend className="text-[12.5px] opacity-60 mb-2">Under one lens:</legend>
                 {LENS_ORDER.map((l) => (
