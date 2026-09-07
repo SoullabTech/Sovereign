@@ -51,6 +51,88 @@ is a line to cut.**
   ┌ Begin a new work ┐   ┌ Import writing ┐
 ```
 
+## FIELD QUALITY (founder, 2026-09-07)
+
+The redesign is not "better Studio UX." It is a change of what the place is.
+
+```text
+NOT                          BUT
+files → tools → AI → tasks   my work → where I am with it →
+                             what has been alive → what is calling →
+                             a place to enter → MAIA beside me when I want her
+```
+
+**The writer should not arrive and feel managed. They should feel received.**
+
+```text
+RECOGNIZED    this is my work, not a database object
+ORIENTED      I understand where I have been without being told what to do
+INVITED       meaningful possibilities are available to me
+UNHURRIED     unfinished and resting work may remain unfinished and resting
+SUPPORTED     help appears when meaning is unclear
+ACCOMPANIED   MAIA is nearby when wanted, quiet when not
+INSPIRED      my own material can call me back into the work
+SOVEREIGN     nothing interprets itself into authority over my writing
+```
+
+### Unfinishedness must be safe
+
+Most software treats unfinished work as a defect — *incomplete · overdue ·
+needs attention · 0%*. A writing field must hold that a Work can be **forming ·
+resting · waiting · fragmentary · contradictory · being reconsidered · alive but
+untouched for months**, and that none of those is failure. Room for incubation
+may be this Studio's most distinctive quality.
+
+### Trust is part of atmosphere
+
+This is why the HOME TRUTH LAW is an *aesthetic* requirement, not only an
+ethical one. A beautiful interface that tells a writer they are "in structural
+revision" when nothing knows that is not embracing — it is **invasive**. A field
+that says *"last time you were here, you were in Chapter Six"* and leaves the
+meaning to them is respectful. Same information, opposite relationship.
+
+### Visual direction
+
+```text
+TOWARD   library · studio · desk · manuscript · atmosphere · warmth ·
+         spaciousness · tactile identity · quiet movement
+AWAY     cards · metrics · status badges · productivity counters ·
+         dashboard grids
+```
+
+The work itself should have gravity. A cover, a title, a purpose, a remembered
+note, a fragment of recent language — enough that a Work feels like a **presence**
+rather than a row.
+
+> **North star:** a place where a writer feels their work waiting for them,
+> rather than software waiting for input.
+
+## ⚠ v0.1 audited against FIELD QUALITY — one failure
+
+**UNHURRIED fails.** The work-card in v0.1 shows elapsed time:
+
+```text
+3 days   ·   2 wks   ·   never opened
+```
+
+Elapsed time is the single most common way software makes rest look like
+neglect, and *"never opened"* reads as a reproach for a Work the writer has not
+yet chosen to enter. The card is quietly scoring dormancy.
+
+The fix is not to hide the fact. `lastWrittenAt` is FACT and orienting. It is to
+stop rendering it as a **countdown**:
+
+```text
+INSTEAD OF   3 days · 2 wks · never opened
+TOWARD       last written in March · begun in June · not yet opened
+```
+
+Dates and beginnings sit still. Durations accumulate. **A resting Work should
+not look more neglected the longer it rests.**
+
+The other seven qualities are satisfied or gap-marked in v0.1. This one was a
+real defect, found by the standard rather than by review.
+
 ## Legend and the rule it enforces
 
 ```text
