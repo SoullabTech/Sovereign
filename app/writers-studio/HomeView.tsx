@@ -47,19 +47,37 @@ const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
 const pagesLabel = (chars: number) =>
   chars === 0 ? 'No writing yet' : `${pageEstimate(chars)} page${pageEstimate(chars) === 1 ? '' : 's'}`;
 
+/**
+ * WS-HOME-REDESIGN v0.2 — dates remember, durations judge.
+ *
+ * This returned "written 3 days ago", "written 2 weeks ago". Elapsed time is
+ * the most common way software makes rest look like neglect: a resting Work
+ * looked more neglected the longer it rested, and the card was quietly scoring
+ * dormancy. The FIELD QUALITY ruling (UNHURRIED) forbids that — unfinished and
+ * resting work may remain unfinished and resting.
+ *
+ * The fact is unchanged and still orienting. Only its shape changes: a fixed
+ * point the writer can recognize, not a counter running against them.
+ */
 function whenWritten(iso: string | null | undefined): string | null {
   if (!iso) return null;
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return null;
-  const mins = Math.floor((Date.now() - then) / 60000);
-  if (mins < 2) return 'written just now';
-  if (mins < 60) return `written ${mins} minutes ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `written ${hours} hour${hours === 1 ? '' : 's'} ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'written yesterday';
-  if (days < 7) return `written ${days} days ago`;
-  return `written ${new Date(iso).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return null;
+  const now = new Date();
+
+  /* Today and yesterday are still FIXED points, not accumulating durations —
+     a writer recognizes them as moments, not as distance travelled. */
+  if (then.toDateString() === now.toDateString()) return 'written today';
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (then.toDateString() === yesterday.toDateString()) return 'written yesterday';
+
+  const sameYear = then.getFullYear() === now.getFullYear();
+  return `written ${then.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })}`;
 }
 
 const DELETE_FAILED =
@@ -101,8 +119,32 @@ export default function HomeView({
   const [confirming, setConfirming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const [query, setQuery] = useState('');
+
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
-  const { kind, resume, shelf, feature, imported } = arrivalFor(works, manuscripts);
+  const { kind, resume, alsoWritten, shelf, feature, imported } = arrivalFor(works, manuscripts);
+
+  /* ── FINDING WHAT IS ALREADY YOURS ──────────────────────────────────────
+     Not a feature; a condition of the room staying usable. A writer with
+     forty works should not have to scroll a shelf to reach the one they have
+     in mind, and "View all 40 →" is not selection, it is a longer list.
+
+     What it searches is exactly what the Home HAS: titles. There is no body
+     text on this surface — `CurrentManuscript` carries id · title · counts ·
+     lastWrittenAt and no words — so the field says "by title" rather than
+     letting the writer believe their sentences were searched and came back
+     empty. An honest small search beats a search that silently under-reads.
+
+     It searches EVERYTHING the member has, not just what is on screen: the
+     hero, the shelf beyond its cap, and unclaimed writing alike. */
+  const q = query.trim().toLowerCase();
+  const titled = (t: string | null) => (t ?? '').toLowerCase();
+  const unclaimedWriting = feature ? [feature, ...imported] : imported;
+  const foundWorks = q ? works.filter((w) => titled(w.title).includes(q)) : [];
+  const foundWriting = q ? unclaimedWriting.filter((m) => titled(m.title).includes(q)) : [];
+  /* Offered only once the room is large enough for finding to be a real
+     problem. A search box above two works is furniture, not help. */
+  const searchable = works.length + manuscripts.length > 5;
 
   const run = async (fn: () => Promise<void>, whenItFails: string) => {
     setBusy(true);
@@ -200,10 +242,21 @@ export default function HomeView({
   const workMeta = (work: LivingWork): string => {
     const id = manuscriptIdOf(work);
     const m = id ? byId.get(id) : undefined;
-    if (!m) return 'No writing yet';
-    return [work.form ?? null, pagesLabel(m.charCount), whenWritten(m.lastWrittenAt)]
-      .filter(Boolean)
-      .join(' · ');
+    /* FOREGROUNDING LAW — truth grants a line permission to appear, not
+       importance. Page counts are true and are the system's accounting of the
+       Work, not the Work. They belong inside it, not on the shelf.
+       Absent values VANISH: no dash, no "Untyped", no placeholder asserting an
+       absence the writer never declared. */
+    if (!m) return work.form ?? '';
+    /* ⛔ Observed on production 2026-09-07: a Work with zero characters rendered
+       "No writing yet · written August 14". `lastWrittenAt` is stamped when the
+       working-draft ROW is created (a blank page, a seeded import), so on its
+       own it does not evidence that a person wrote. homeState already refuses
+       to promote such a work to RETURN for exactly this reason; the card must
+       refuse to narrate it for the same reason. Characters AND a timestamp, or
+       the clause does not appear. */
+    const wrote = m.charCount > 0 ? whenWritten(m.lastWrittenAt) : null;
+    return [work.form ?? null, wrote].filter(Boolean).join(' · ');
   };
 
   /* ── The room ─────────────────────────────────────────────────────────
@@ -404,11 +457,18 @@ export default function HomeView({
         {loading ? (
           <p className="text-[15px] opacity-40">Opening your studio…</p>
         ) : kind === 'begin' ? (
+          /* WS-HOME-REDESIGN v0.2 — the empty Home reads as POTENTIAL, not
+             vacancy, and the room RECEIVES rather than explains.
+
+             No lesson, no permission language, no description of what a Work
+             can be. FIELD is not LESSONS: the room should not explain itself
+             while you are trying to inhabit it. MAIA is present without
+             announcing what she does — presence that announces nothing
+             presupposes nothing. */
           <div className="max-w-xl">
-            <h1 className="text-[36px] md:text-[44px] leading-[1.1] mb-4">Begin your work.</h1>
-            <p className="text-[16.5px] opacity-55 mb-10 leading-relaxed">
-              Start something new, or bring in writing you already have.
-            </p>
+            <h1 className="text-[36px] md:text-[44px] leading-[1.1] mb-10">
+              Welcome, writer. You are home.
+            </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <button
                 onClick={() => setBeginning(true)}
@@ -428,12 +488,86 @@ export default function HomeView({
           </div>
         ) : (
           <>
-            {/* ── THE ARRIVAL ─────────────────────────────────────────── */}
+            {searchable ? (
+              <div className="mb-10 md:mb-12 max-w-sm">
+                <label htmlFor="find-work" className="sr-only">
+                  Find your work by title
+                </label>
+                <input
+                  id="find-work"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setQuery('');
+                  }}
+                  /* The placeholder names the SCOPE, not the promise. A writer
+                     who searches a remembered sentence and gets nothing would
+                     otherwise conclude the sentence is gone. */
+                  placeholder="Find by title…"
+                  className="w-full bg-transparent border-b px-0 py-2.5 text-[15px] min-h-[44px] outline-none placeholder:opacity-35 focus:opacity-100"
+                  style={{ borderColor: PRESS.ruleSoft, color: PRESS.text, fontFamily: SERIF }}
+                />
+              </div>
+            ) : null}
+
+            {q ? (
+              /* Selection, not a filtered view of the shelf: everything the
+                 member has is reachable here — the work in the hero, the works
+                 past "View all", and unclaimed writing — with the same cards
+                 and the same delete they have everywhere else. */
+              <section className="mb-14 md:mb-20">
+                <Eyebrow>Found</Eyebrow>
+                <div className="mt-5">
+                  {foundWorks.length + foundWriting.length === 0 ? (
+                    <p className="text-[15px] opacity-50">
+                      Nothing here by that name. Only titles are searched.
+                    </p>
+                  ) : (
+                    <Cards>
+                      {foundWorks.map((w) => (
+                        <Card
+                          key={`w-${w.id}`}
+                          itemKey={`work:${w.id}`}
+                          target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
+                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          title={w.title ?? 'Untitled work'}
+                          untitled={!w.title}
+                          meta={workMeta(w)}
+                        />
+                      ))}
+                      {foundWriting.map((m) => (
+                        <Card
+                          key={`m-${m.id}`}
+                          itemKey={`writing:${m.id}`}
+                          target={{ workId: null, manuscriptId: m.id }}
+                          href={canvasForManuscript(CANVAS_HREF, m.id)}
+                          title={m.title ?? 'Untitled'}
+                          untitled={!m.title}
+                          meta={pagesLabel(m.charCount)}
+                        />
+                      ))}
+                    </Cards>
+                  )}
+                </div>
+              </section>
+            ) : (
+              <>
+            {/* ── RETURN ──────────────────────────────────────────────────
+                WS-HOME-REDESIGN v0.2. This said "Continue writing", which is
+                an instruction: keep going. RETURN says something else — this
+                is here when you are ready. The writer's process is plural and
+                they cycle among Works by inspiration, so recency must not
+                quietly masquerade as priority. The shelf below carries the
+                rest, one keystroke away, and this Work holds the foreground
+                only because it is where they last were.
+
+                RETURN is also already a stage in the Larger Arc. ─────────── */}
             {kind === 'continue' && resume ? (
               <section className="mb-14 md:mb-20">
-                <p className="text-[17px] opacity-55 mb-6">Your work is here.</p>
+                <Eyebrow>Return</Eyebrow>
                 <h1
-                  className="leading-[1.08] mb-3 max-w-2xl"
+                  className="leading-[1.08] mb-3 mt-5 max-w-2xl"
                   style={{ fontSize: 'clamp(2.375rem, 4.6vw, 3.375rem)' }}
                 >
                   {resume.title ?? 'Your untitled work'}
@@ -445,7 +579,7 @@ export default function HomeView({
                     className={`${FILLED} w-full sm:w-auto`}
                     style={{ background: PRESS.accent, color: PRESS.ink }}
                   >
-                    Continue writing
+                    Return to this work
                   </Link>
                   {/* The work in the hero is excluded from the shelf below, so
                       without this the most prominent thing in the room — often
@@ -465,6 +599,37 @@ export default function HomeView({
                     />
                   </div>
                 ) : null}
+
+                {/* The other live work, offered in the SAME breath as the hero.
+                    The hero leads because it is where the writer last was —
+                    not because the Studio has decided it matters most. These
+                    stand beside it so returning stays a choice.
+
+                    They are Cards, not a text list, for a reason beyond looks:
+                    a Card carries its own delete. A work promoted out of the
+                    shelf and rendered as bare text would become the one thing
+                    in the room a member could not remove — the same trap the
+                    hero's own DeleteButton exists to close. */}
+                {alsoWritten.length > 0 ? (
+                  <div className="mt-12">
+                    <h3 className="text-[10.5px] tracking-[0.3em] uppercase opacity-30 mb-5">
+                      Also recently written
+                    </h3>
+                    <Cards>
+                      {alsoWritten.map((w) => (
+                        <Card
+                          key={w.id}
+                          itemKey={`work:${w.id}`}
+                          target={{ workId: w.id, manuscriptId: manuscriptIdOf(w) }}
+                          href={canvasForManuscript(CANVAS_HREF, manuscriptIdOf(w))}
+                          title={w.title ?? 'Untitled work'}
+                          untitled={!w.title}
+                          meta={workMeta(w)}
+                        />
+                      ))}
+                    </Cards>
+                  </div>
+                ) : null}
               </section>
             ) : feature ? (
               /* Writing exists that no Work has claimed. It is NOT recast as a
@@ -472,7 +637,7 @@ export default function HomeView({
               <section className="mb-14 md:mb-20">
                 <p className="text-[17px] opacity-55 mb-6">Your writing is here.</p>
                 <h1
-                  className="leading-[1.08] mb-3 max-w-2xl"
+                  className="leading-[1.08] mb-3 mt-5 max-w-2xl"
                   style={{ fontSize: 'clamp(2.375rem, 4.6vw, 3.375rem)' }}
                 >
                   {feature.title ?? 'Untitled writing'}
@@ -555,6 +720,8 @@ export default function HomeView({
                 </Cards>
               </section>
             ) : null}
+              </>
+            )}
           </>
         )}
 

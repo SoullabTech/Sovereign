@@ -149,6 +149,56 @@ describe('Studio Home — arrival state', () => {
     expect(a.resume).toBeNull();
   });
 
+  /**
+   * WS-HOME-REDESIGN v0.2 — RETURN is plural.
+   *
+   * A single hero made recency masquerade as priority: the newest thing was
+   * the only thing offered, and every other live work was demoted to a list
+   * beneath a heading. A writer cycling among works by inspiration was being
+   * told, every arrival, which one to resume.
+   */
+  describe('RETURN offers the live work, not only the newest', () => {
+    const written = (n: number, daysAgo: number) => ({
+      w: work(`w${n}`, { title: `Work ${n}`, updatedAt: iso(50), manuscriptId: `m${n}` }),
+      m: ms(`m${n}`, { lastWrittenAt: iso(daysAgo) }),
+    });
+
+    it('offers up to two other written works beside the resumed one', () => {
+      const rows = [written(1, 1), written(2, 3), written(3, 8)];
+      const a = arrivalFor(rows.map((r) => r.w), rows.map((r) => r.m));
+      expect(a.resume?.id).toBe('w1');
+      expect(a.alsoWritten.map((w) => w.id)).toEqual(['w2', 'w3']);
+      expect(a.shelf).toEqual([]);
+    });
+
+    it('⛔ never offers a work that has no writing in it', () => {
+      const live = written(1, 1);
+      const empty = work('w-empty', { title: 'Renamed yesterday', updatedAt: iso(0) });
+      const a = arrivalFor([empty, live.w], [live.m]);
+      expect(a.alsoWritten).toEqual([]);
+      expect(a.shelf.map((w) => w.id)).toEqual(['w-empty']);
+    });
+
+    it('caps RETURN and passes the rest to the shelf — nothing is lost', () => {
+      const rows = [written(1, 1), written(2, 2), written(3, 3), written(4, 4), written(5, 5)];
+      const a = arrivalFor(rows.map((r) => r.w), rows.map((r) => r.m));
+      const offered = [a.resume!.id, ...a.alsoWritten.map((w) => w.id)];
+      expect(offered).toEqual(['w1', 'w2', 'w3']);
+      expect(a.shelf.map((w) => w.id)).toEqual(['w4', 'w5']);
+      /* Every work appears exactly once — a work in both RETURN and the shelf
+         would let a member delete it in one place and still see it in the
+         other. */
+      expect([...offered, ...a.shelf.map((w) => w.id)].sort()).toEqual([
+        'w1', 'w2', 'w3', 'w4', 'w5',
+      ]);
+    });
+
+    it('ORIENT and BEGIN offer nothing to return to', () => {
+      expect(arrivalFor([], []).alsoWritten).toEqual([]);
+      expect(arrivalFor([work('w1', { updatedAt: iso(0) })], []).alsoWritten).toEqual([]);
+    });
+  });
+
   it('a work with one real character IS continuable', () => {
     const a = arrivalFor([work('w1', { updatedAt: iso(9), manuscriptId: 'm1' })], [
       ms('m1', { lastWrittenAt: iso(0), chars: 1 }),
