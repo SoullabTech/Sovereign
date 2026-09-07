@@ -1,7 +1,12 @@
 # MAIL-03 — Release & Production Witness Runbook
 
-Code under test: **`ee612602`** (containment). `cf808bf7` (docs) may accompany it;
-it does not change the security boundary.
+Code under test: **`ee612602`** (containment). Docs commits may accompany it;
+they do not change the security boundary.
+
+**BUILD: PASS.** `npm run build` on `ee612602` exits 0 — verify scripts,
+critical-file validation, internal-import check and `next build` all clean, no
+errors in the log. Both containment routes are present in `.next/server` with
+their runtime markers compiled in.
 
 **Run from the Mac Studio.** Deploys execute on minisforum over SSH. The remote
 Claude session that wrote this patch has no `ssh` binary, cannot resolve
@@ -41,12 +46,26 @@ curl -k https://soullab.life/api/health
 
 `GIT_COMMIT` must be the deployed short SHA and must contain `ee612602`'s
 changes. `unknown` means the deploy bypassed the provenance chain — do not
-proceed to witness. Confirm containment is in the running artifact:
+proceed to witness.
+
+Confirm containment is in the RUNNING artifact. Grep for a runtime string, not
+a comment: minification strips comments, so a check against the explanatory
+comment would pass on an unpatched build and prove nothing.
 
 ```bash
+# send-verification: the 409 refusal reason. Present only with containment.
 ssh soullab@minisforum "docker exec maia-sovereign sh -c \
-  'grep -rl \"THE DESTINATION IS THE RECORD\" .next/server 2>/dev/null | head -1'"
+  'grep -c destination_mismatch .next/server/app/api/members/send-verification/route.js'"
+
+# recover: its rate-limit endpoint key. Absent before containment.
+ssh soullab@minisforum "docker exec maia-sovereign sh -c \
+  'grep -c members/recover .next/server/app/api/members/recover/route.js'"
 ```
+
+Both must be non-zero. Verified against the local production build of
+`ee612602`: `destination_mismatch` compiles into the send-verification route,
+and `EMERGENCY_CEILING_BLOCKED` compiles into every route that uses the
+limiter.
 
 ## 3. Production witness — controlled test member
 
