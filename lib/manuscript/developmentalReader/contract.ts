@@ -135,20 +135,50 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * never revisited, so it had quietly become a rule that a writing studio
  * cannot read a book.
  *
- * The new one is derived, not chosen. `read.ts` runs `claude-opus-5` with
- * DEFAULT_MAX_TOKENS = 16_000:
+ * ── ⚠️ THE DERIVATION BELOW WAS WRONG. CORRECTED 2026-09-07 ───────────────
  *
- *     500,000 code points  ≈  125,000 tokens at ~4 chars/token
- *     + 16,000 output budget
- *     + 20,000 system prompt · structure context · thread history
- *     ─────────
- *     161,000 of a 200,000 window  →  ~39,000 tokens of margin
+ * This number was ruled at 500,000 and STAYS at 500,000. What was wrong was
+ * the reason recorded for it, and the reason is the part that governs what
+ * anyone does next — so it is corrected here rather than left standing.
  *
- * ⚠️ 650,000 was proposed first and REFUSED as too close to the edge: it
- * computes to ~198,500 of 200,000, leaving essentially nothing for tokenizer
- * variation or overhead growth. The margin is the ruling, not the ceiling —
- * a number that fits in theory and fails in practice is worse than a smaller
- * one, because it fails after the writer has waited.
+ * ⛔ SUPERSEDED, kept verbatim because a bad derivation that is deleted
+ * teaches nothing:
+ *
+ *       500,000 code points  ≈  125,000 tokens at ~4 chars/token
+ *       + 16,000 output budget
+ *       + 20,000 system prompt · structure context · thread history
+ *       ─────────
+ *       161,000 of a 200,000 window  →  ~39,000 tokens of margin
+ *
+ *     and, on the same assumption, 650,000 was REFUSED as "~198,500 of
+ *     200,000, leaving essentially nothing for tokenizer variation".
+ *
+ * The 200,000 was assumed, never verified. Founder-verified against
+ * Anthropic's current published specification for `claude-opus-5`
+ * (platform.claude.com/docs/en/models/opus-5/overview), 2026-09-07:
+ *
+ *     context window      1,000,000 tokens
+ *     max output            128,000 tokens
+ *     our request            16,000 tokens   ← comfortably inside
+ *
+ * So the true arithmetic, at the same 500,000 code points:
+ *
+ *     125,000 read + 16,000 output + 20,000 reserve  =  ~161,000
+ *     against 1,000,000                              →  ~839,000 remaining
+ *
+ * ⭐ 500,000 IS THEREFORE A PRODUCT CEILING, NOT A CAPACITY ONE, and calling
+ * it derived was the error. Capacity would put the bound at roughly
+ * (1,000,000 − 16,000 − 20,000) × 4 ≈ 3,850,000 code points — nearly eight
+ * times this. 500,000 is retained deliberately as a CONSERVATIVE BRIDGE: it
+ * admits ordinary books whole while hierarchical whole-work reading remains
+ * unbuilt, and a bound we can raise on evidence is safer than one we set from
+ * a number nobody checked.
+ *
+ * ⛔ The old objection to 650,000 — "too close to the window" — is OBSOLETE
+ * and must not be cited again. If a larger ceiling is wanted, the argument
+ * has to be made on reading quality, latency and cost at that size, not on
+ * running out of context. Those are unmeasured; that is why this has not
+ * moved.
  *
  * Elemental Alchemy (~385,000 code points) sits comfortably inside 500,000.
  *
@@ -159,16 +189,28 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * meets it. What changed is that meeting it is now rare, and where it happens
  * the room offers a range that works rather than a wall.
  *
- * ⚠️ THE HEADROOM IS LOAD-BEARING. The 20,000 is not padding: without it a
- * manuscript near the limit fails at the MODEL's boundary rather than ours —
- * after the writer has waited, with a worse error, and outside our ability to
- * say anything useful about it. Raising this further means measuring the
- * actual prompt overhead, not shrinking the margin.
+ * ⚠️ THE HEADROOM IS STILL LOAD-BEARING, for a smaller reason than before.
+ * The 20,000 no longer stands between us and the model's edge — there are
+ * ~839,000 tokens behind it. It remains as the allowance for prompt overhead
+ * we have never actually measured, and measuring it is what a future change
+ * to these numbers should rest on.
  *
- * ⚠️ AND IT IS TIED TO A MODEL. If MAIA_DEVELOPMENTAL_READER_MODEL names a
- * model with a smaller context, this number is wrong in the dangerous
- * direction. It is a constant here because the reader has one default model;
- * the day that stops being true, this becomes a function of the model.
+ * ⚠️ AND IT IS TIED TO A MODEL — the one lesson the superseded derivation
+ * got right, and the one that caught it. `MAIA_DEVELOPMENTAL_READER_MODEL`
+ * can redirect this reader at runtime; if it names a model with a smaller
+ * context or a lower output cap, the figures above do not describe what is
+ * running and this number may be wrong in the dangerous direction. The
+ * numbers here describe `claude-opus-5` and nothing else.
+ *
+ * ⛔ AS OF THIS WRITING THE EFFECTIVE PRODUCTION MODEL IS UNVERIFIED. The
+ * source default is `claude-opus-5`, nothing in this repository overrides it,
+ * and the production environment has not been read. A default is not a
+ * reading. Verify with:
+ *
+ *     docker exec maia-sovereign printenv MAIA_DEVELOPMENTAL_READER_MODEL
+ *
+ * An empty result IS the answer — it means the default is in force — and
+ * should be recorded as such rather than treated as a failed command.
  */
 export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 500_000;
 

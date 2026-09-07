@@ -13,9 +13,21 @@ question and the real one starts.
 The question was *what should `DEVELOPMENTAL_READ_CEILING_CODE_POINTS` be?* It is now *what is the
 maximum size of one bounded reading UNIT, and how does MAIA compose complete coverage from many?*
 
-⚠️ **The constant is now 500,000** (raised from 60,000; 650,000 was proposed and refused as too
-close to the window's edge — ~198,500 of 200,000, with no tolerance for tokenizer variation. The
-margin is the ruling, not the ceiling). **Under this architecture even that is the wrong shape.** The founder ruling is explicit: *do not solve long manuscripts with an ever-larger
+⚠️ **The constant is now 500,000** (raised from 60,000).
+
+⛔ **CORRECTION 2026-09-07 — the reason first recorded here was wrong, and it is corrected rather
+than deleted.** This paragraph said 650,000 was refused as *"too close to the window's edge —
+~198,500 of 200,000"*. **The 200,000 was assumed, never verified.** Founder-verified against
+Anthropic's current published specification for `claude-opus-5`: **1,000,000-token context,
+128,000-token max output**; the application requests 16,000. At 500,000 code points the whole
+request is ~161,000 tokens, leaving **~839,000** — so the window was never the binding constraint
+and the edge-of-window objection is **obsolete and must not be cited again**.
+
+⭐ **This makes the bridge framing MORE true, not less.** 500,000 is a **product ceiling** — a
+deliberately conservative bound that admits ordinary books whole while composition is unbuilt — and
+never a capacity one; capacity would sit near 3,850,000 code points. A larger ceiling must now be
+argued on reading quality, latency and cost at size, which are unmeasured. **Under this
+architecture even that is the wrong shape.** The founder ruling is explicit: *do not solve long manuscripts with an ever-larger
 ceiling.* The raise is a **bridge** and must be recorded as one — it lets an ordinary book be read
 at all today, when no composition exists. When units arrive, the constant becomes a **unit** ceiling
 and **650,000 is far too large for a unit**: a chapter is the bounded thing.
