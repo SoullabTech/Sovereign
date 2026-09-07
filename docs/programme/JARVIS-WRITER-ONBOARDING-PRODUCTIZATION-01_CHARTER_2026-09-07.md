@@ -182,3 +182,55 @@ it does not open.
 ⛔ The counts already rendered (`materials` 24, `notes` 12) are **map fixtures,
 not member data** — they must be reconciled against real objects before any of
 these surfaces claims a number.
+
+---
+
+## LANE STOPPED — CLEAN · 2026-09-07 (founder act)
+
+```text
+77f72055          SUPERSEDED · MUST NOT DEPLOY
+717cef35          UNWITNESSED · claimed failure withdrawn
+surviving scroll  observed stable · mechanism unadjudicated
+image failure     quiet · cause unknown
+deploy            HOLD · prior eligibility withdrawn
+```
+
+### The image item, held open deliberately
+
+```text
+symptom      no longer reproducing
+cause        UNKNOWN
+status       QUIET / UNCHARACTERIZED
+closed       NO, unless what changed is established
+```
+
+⛔ **Founder ruling on its eventual disposition:** if the explanation turns out to
+be an environment variable or a watched-path configuration, it belongs in
+**environment / onboarding custody** — ⛔ **it may not be rewritten as a Studio
+product fix.** *A cause found in the environment does not become a product defect
+because a product surface is where it was noticed.*
+
+### What this lane produced that outlives it
+
+The **subject-custody protocol** (`WRITERS-STUDIO_SUBJECT_CUSTODY_RULE_2026-09-07.md`):
+
+```text
+1  ASK    what commit is actually being served?
+2  PROVE  does that served commit contain the change?
+3  BIND   attach the witness to the served commit, not the conversational branch
+```
+
+⭐ Founder assessment: *"That turns a recurring epistemic failure into a
+mechanical check."* **That is the point.** The failure recurred three times in
+this lane, the third committed by the session that had named the first two — so
+the remedy could not be better attention. It had to become a step someone
+performs.
+
+### Carried out, separate, none opened
+
+- **Studio capability completion** — Notes · Goals · Discover · Insights ·
+  Suggestions · Tools, ⛔ separated by authority class, never one drawer.
+- **MAIL-04c witness** — mail lane.
+- **Orphan migration `20260903000001`** — BRANCH GATE.
+
+⛔ Nothing was squeezed out of this lane before stopping.
