@@ -32,6 +32,21 @@ exercises exactly the credential check and delivers nothing; a send-based probe
 would mail someone if the key were still live, turning the test for a leak into
 a use of it.
 
+### How Resend actually reports a revoked key
+
+Observed 2026-09-07 against a genuinely revoked key:
+
+```
+HTTP 400
+{"statusCode":400,"message":"API key is invalid","name":"validation_error"}
+```
+
+**400, not 401.** The first version of the witness accepted only 401/403 as
+proof of death and classified 400 as "malformed — no verdict", which would have
+aborted on a *successful* rotation. The status line cannot carry this decision
+alone; the body must be read. A 400 whose body is not an invalid-key error still
+yields NO VERDICT, because an empty or malformed key lands on the same status.
+
 ## Sequence
 
 ### 1 · Capture the pre-rotation SHA

@@ -86,20 +86,45 @@ read -rs OLD_KEY; echo
 case "$OLD_KEY" in re_*) ;; *) ylw 'warning: does not look like a Resend key (re_...)';; esac
 
 # Authenticate only. Never send.
-PROBE=$(curl -s -o /dev/null -w '%{http_code}' \
+#
+# Resend answers a REVOKED key with HTTP 400 and
+#   {"statusCode":400,"message":"API key is invalid","name":"validation_error"}
+# not with 401. Observed 2026-09-07 against a genuinely revoked key. An earlier
+# version of this script accepted only 401/403 as proof of death and classified
+# 400 as "malformed — no verdict", which would have aborted on a SUCCESSFUL
+# rotation. The status line alone cannot carry this decision; the body must be
+# read.
+RESP=$(curl -s -w $'\n%{http_code}' \
   -H "Authorization: Bearer $OLD_KEY" https://api.resend.com/domains)
 OLD_KEY=''; unset OLD_KEY
+PROBE=$(printf '%s' "$RESP" | tail -n1)
+BODY=$(printf '%s' "$RESP" | sed '$d')
 echo "GET /domains with old key -> HTTP $PROBE"
+echo "body: $BODY"
 
 case "$PROBE" in
-  401|403) grn 'PASS · old key is rejected — revoked';;
-  200)     die 'OLD KEY IS STILL LIVE. Revoke it in the Resend dashboard, then re-run.';;
-  000)     die 'no response — network/proxy problem, NO VERDICT';;
-  400)     die 'HTTP 400 — the key was empty or malformed, so nothing was tested.
-       This is NOT evidence the key is dead. Re-run and paste the full key
-       (it starts with re_). Read it from production BEFORE revoking:
-         ssh soullab@minisforum '"'"'docker exec maia-sovereign printenv RESEND_API_KEY'"'"'';;
-  *)       die "unexpected HTTP $PROBE from Resend — NO VERDICT";;
+  200)
+    die 'OLD KEY IS STILL LIVE. Revoke it in the Resend dashboard, then re-run.';;
+  401|403)
+    grn 'PASS · old key is rejected — revoked';;
+  400)
+    # 400 is ambiguous and the body settles it. "API key is invalid" is how
+    # Resend reports a revoked key; anything else at 400 means the request was
+    # rejected for some other reason and NOTHING about the key was established.
+    case "$BODY" in
+      *'API key is invalid'*|*'api_key'*'invalid'*)
+        grn 'PASS · old key is rejected ("API key is invalid") — revoked';;
+      *)
+        die "HTTP 400 but not an invalid-key error — NO VERDICT.
+       Body: $BODY
+       An empty or malformed key also lands here. Read the real key from
+       production BEFORE revoking it:
+         ssh soullab@minisforum 'docker exec maia-sovereign printenv RESEND_API_KEY'";;
+    esac;;
+  000)
+    die 'no response — network/proxy problem, NO VERDICT';;
+  *)
+    die "unexpected HTTP $PROBE from Resend — NO VERDICT. Body: $BODY";;
 esac
 
 # ---------------------------------------------------------------------------
