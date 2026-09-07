@@ -265,9 +265,30 @@ export function assertStudioMapHonest(map: StudioGroup[] = STUDIO_MAP): void {
  *
  * NO ROADMAP LEAKAGE — where the rule now lives (WS2-02).
  *
- * The rule is unchanged: *a product reveals capability, not construction
- * status.* An author arriving to write must not read a list of things the room
- * cannot do before reaching the one it can.
+ * ⚠️ RECONCILED BY FR-C, 2026-09-07 — read this before citing the paragraph
+ * below. The rule as written ("a product reveals capability, not construction
+ * status") governs THIS function, which drops `later` entirely. It does NOT
+ * govern the shell rail, which shows the whole grammar and now, under FR-C,
+ * must SAY why a destination cannot be taken.
+ *
+ * The two are not in conflict once the object of each is named:
+ *
+ *   visibleDestinations   a member never learns the room exists
+ *   shellDestinations     a member learns the room exists AND that it is not
+ *                         open yet — because a Studio that shows sixteen rooms
+ *                         and dims five without a word is not withholding a
+ *                         roadmap, it is withholding an explanation
+ *
+ * What FR-C forbids is the thing this paragraph was really written against: a
+ * DELIVERY PROMISE. "Coming soon" is rejected outright. "Not available yet" is
+ * a fact about now, not a commitment about later.
+ *
+ * ⛔ Do not read the paragraph below as forbidding FR-C's state sentence. It
+ * predates the ruling and is scoped to this function alone.
+ *
+ * The rule is unchanged FOR THIS FUNCTION: *a product reveals capability, not
+ * construction status.* An author arriving to write must not read a list of
+ * things the room cannot do before reaching the one it can.
  *
  * What changed is where it is enforced. Before WS2-02 the rule was kept by
  * holding the map itself empty of unbuilt destinations — the map could not
@@ -345,6 +366,82 @@ export interface ShellDestination extends StudioDestination {
   actionable: boolean;
   /** Actionable as a panel in the current room rather than as a route. */
   satisfiedInRoom: boolean;
+  /**
+   * FR-C — why this destination cannot be taken, in the member's language, or
+   * null when it can. DERIVED here from availability and subject, never
+   * authored. See UNAVAILABILITY below for why that direction is load-bearing.
+   */
+  unavailability: Unavailability | null;
+}
+
+/* ── FR-C · UNAVAILABILITY — state, said ─────────────────────────────────────
+ *
+ * RULED 2026-09-07. `docs/programme/JARVIS-WRITER-ONBOARDING-PRODUCTIZATION-01
+ * _RUN_2026-09-07.md` §11.
+ *
+ *   A Studio may reveal its larger architecture before every room is usable,
+ *   but it must distinguish intentional incompleteness from malfunction or
+ *   lack of access.
+ *
+ * WHY THIS EXISTS AT ALL. Before FR-C the entire state communication for an
+ * unavailable destination was `opacity: 0.55`. Dimness is ambiguous between
+ * four different facts — not available to me · empty · broken · not built —
+ * and a founder walking the Studio on 2026-09-07 read the dimmed rail as
+ * "very few options are present and useful". That was the CORRECT reading of
+ * the rendering: the surface supplied no other one.
+ *
+ * TWO STATES, NOT ONE. `unbuilt` and `no-subject` are different facts and the
+ * member is owed the difference — the same distinction StudioModeBar has
+ * carried in `data-state` since BUILD-07D without ever showing it.
+ *
+ * ⛔ DERIVED, NEVER AUTHORED. This does not come from `note` and may never be
+ * hand-written into one (founder amendment 2, 2026-09-07). A description and
+ * an operational state that are authored in the same field drift apart the
+ * first time availability changes and the copy does not. The state is computed
+ * from the same inputs that decide actionability, so it cannot disagree with
+ * it.
+ *
+ * ⛔ NO DELIVERY PROMISE. "Coming soon" is rejected: it quietly commits to a
+ * schedule nobody has ratified.
+ */
+export type Unavailability = 'unbuilt' | 'no-subject';
+
+/** The member-facing sentence for each state. Candidates under FR-C. */
+export const UNAVAILABILITY_SAYS: Readonly<Record<Unavailability, string>> = {
+  unbuilt: 'Not available yet',
+  'no-subject': 'Open a work first',
+};
+
+/**
+ * ⛔ `note` IS ORIENTATION. IT IS NOT STATE. (founder amendment 2)
+ *
+ *   note  ≠ availability state · ≠ refusal · ≠ consent · ≠ access state
+ *
+ * A note answers *why would I use this*. It must never answer *why can I not
+ * use this* — that answer is derived above and would drift if duplicated here.
+ * Asserted rather than trusted to review, because the failure is invisible
+ * once made: a note reading "not available yet" looks correct on the day it is
+ * written and lies on the day the room ships.
+ *
+ * EMPTINESS IS LEGITIMATE. Two of sixteen destinations carry a note and that
+ * is not a gap to be closed. Filling all sixteen would produce exactly the
+ * explanatory clutter FR-D forbids.
+ */
+const STATE_SHAPED_NOTE = /\b(not available|coming soon|unavailable|locked|no access|open a work first|not built|disabled)\b/i;
+
+export function assertNoteIsOrientation(map: StudioGroup[] = STUDIO_MAP): void {
+  for (const g of map) {
+    for (const d of g.destinations) {
+      if (d.note && STATE_SHAPED_NOTE.test(d.note)) {
+        throw new Error(
+          `Studio map: "${d.label}" has a note that states availability ` +
+            `("${d.note}"). A note is orientation — why you would use this. ` +
+            `Availability is derived in shellDestinations and rendered from ` +
+            `UNAVAILABILITY_SAYS, so authoring it here would let the two drift.`,
+        );
+      }
+    }
+  }
 }
 
 export interface ShellGroup extends StudioGroup {
@@ -430,14 +527,23 @@ export function shellDestinations(
         d.availability === 'later' && !inRoom
           ? (situatedHrefs[d.id] || undefined)
           : undefined;
-      const actionable =
-        (d.availability === 'available' || inRoom || Boolean(situated)) &&
-        (!d.requiresManuscript || hasManuscript);
+      const built = d.availability === 'available' || inRoom || Boolean(situated);
+      const actionable = built && (!d.requiresManuscript || hasManuscript);
+      /* FR-C — the two facts, kept apart. A destination that exists but has
+         nothing to act upon is not the same as one that was never built, and
+         the member is owed the difference. Derived from the SAME inputs as
+         `actionable`, so the sentence and the affordance cannot disagree. */
+      const unavailability: Unavailability | null = actionable
+        ? null
+        : built
+          ? 'no-subject'
+          : 'unbuilt';
       const { count: _mapCount, ...rest } = d;
       return {
         ...rest,
         actionable,
         satisfiedInRoom: inRoom,
+        unavailability,
         // No href unless it can actually be taken. A destination satisfied in
         // place has no href either — there is nowhere to go, only something
         // to open — which is why the shell rail renders it as a button.
@@ -490,6 +596,21 @@ export function assertShellPromisesNothing(groups: ShellGroup[]): void {
       }
       if (d.satisfiedInRoom && d.href !== undefined) {
         throw new Error(`Shell: "${d.label}" is a panel here and must not also be a link.`);
+      }
+      /* FR-C, executable. Before this, an unavailable destination could reach
+         a member carrying nothing but reduced opacity — which is the defect
+         the ruling exists to end. Silence is now unrepresentable rather than
+         merely discouraged. */
+      if (!d.actionable && d.unavailability === null) {
+        throw new Error(
+          `Shell: "${d.label}" cannot be taken and says nothing about why. ` +
+            `FR-C: a visible, unavailable destination states its state.`,
+        );
+      }
+      if (d.actionable && d.unavailability !== null) {
+        throw new Error(
+          `Shell: "${d.label}" is actionable but claims to be unavailable.`,
+        );
       }
     }
   }

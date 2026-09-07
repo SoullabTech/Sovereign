@@ -24,6 +24,7 @@ import {
   type StudioState,
 } from '../studioTheme';
 import {
+  UNAVAILABILITY_SAYS,
   shellDestinations,
   visibleDestinations,
   type ShellDestination,
@@ -31,6 +32,7 @@ import {
   type StudioDestination,
   type StudioGroup,
   type StudioRegion,
+  type Unavailability,
 } from '../studioMap';
 import { StudioText } from './StudioType';
 import { StudioIcon } from './StudioIcon';
@@ -49,6 +51,13 @@ export const REGION_LABEL: Record<StudioRegion, string> = {
 
 export interface StudioRailItemProps {
   destination: StudioDestination;
+  /**
+   * FR-C — why this cannot be taken, when it cannot. Passed in rather than
+   * derived here: the shell already computed it from the same inputs that
+   * decided actionability, and a second derivation is a second chance to
+   * disagree.
+   */
+  unavailability?: Unavailability | null;
   state?: Extract<
     StudioState,
     'rest' | 'hover' | 'focus' | 'active' | 'selected' | 'quiet' | 'unavailable'
@@ -65,6 +74,7 @@ export interface StudioRailItemProps {
 
 export function StudioRailItem({
   destination,
+  unavailability = null,
   state = 'rest',
   inert,
   onSelect,
@@ -81,6 +91,13 @@ export function StudioRailItem({
      href in the DOM), not a button that does nothing. The tag itself is the
      honesty: there is nothing here to take. */
   const unavailable = state === 'unavailable';
+  /* FR-C / FR-D — what sits under the label, if anything.
+     STATE is said whenever the destination cannot be taken; it never waits to
+     be requested, because a member cannot interpret the row without it.
+     ORIENTATION (`note`) is shown where one is written — sparse by intent, and
+     an empty note is a legitimate answer, not a gap (founder amendment 2). */
+  const says = unavailable && unavailability ? UNAVAILABILITY_SAYS[unavailability] : null;
+  const beneath = says ?? destination.note ?? null;
   const Tag = inert || unavailable ? 'span' : onSelect ? 'button' : 'a';
   return (
     <Tag
@@ -94,13 +111,21 @@ export function StudioRailItem({
       data-actionable={inert || unavailable ? 'false' : 'true'}
       style={{
         display: 'flex',
-        alignItems: 'center',
+        /* The icon aligns to the LABEL, not to the block, so a two-line row
+           does not float its icon into the gap between the lines. */
+        alignItems: beneath ? 'flex-start' : 'center',
         gap: SPACE.snug + 2,
         /* Height comes from the MEASURED pitch rather than accumulating out of
            padding at each call site — pitch is what the eye reads as density,
-           and the first composition drifted to ~37px against 04's 32px. */
-        height: RAIL_RHYTHM.itemPitch - 2,
+           and the first composition drifted to ~37px against 04's 32px.
+           A row carrying a second line keeps that pitch as a FLOOR and grows
+           instead of cramming: an unreadable state is not a state.
+           ⚠️ The shorthand is written FIRST so the longhand below can override
+           it; the reverse order silently discards the vertical padding. */
         padding: `0 ${SPACE.base}px`,
+        ...(beneath
+          ? { minHeight: RAIL_RHYTHM.itemPitch - 2, paddingTop: 5, paddingBottom: 6 }
+          : { height: RAIL_RHYTHM.itemPitch - 2 }),
         borderRadius: RADIUS.base,
         textDecoration: 'none',
         textAlign: 'left',
@@ -117,23 +142,42 @@ export function StudioRailItem({
         ...(isCurrent ? { boxShadow: `inset 2px 0 0 ${GOLD.DEFAULT}` } : {}),
       }}
     >
-      <StudioIcon id={destination.id} />
-      <StudioText
-        role="navItem"
-        as="span"
-        tone={onRow ? 'primary' : unavailable || state === 'quiet' ? 'quiet' : 'secondary'}
-      >
-        {destination.label}
-      </StudioText>
+      <span style={{ display: 'flex', flexShrink: 0, ...(beneath ? { marginTop: 2 } : {}) }}>
+        <StudioIcon id={destination.id} />
+      </span>
+      <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+        <StudioText
+          role="navItem"
+          as="span"
+          tone={onRow ? 'primary' : unavailable || state === 'quiet' ? 'quiet' : 'secondary'}
+        >
+          {destination.label}
+        </StudioText>
+        {/* FR-C — the sentence, at rest, never waiting to be requested.
+            `role="quiet"` is the design system's own answer: TYPE.quiet is
+            documented as "supporting text that must not compete: notes under a
+            destination". Harvested, not invented (flow §6).
+
+            One slot carries STATE or ORIENTATION because they are never both
+            present: a destination that can be taken has no state to declare,
+            and one that cannot is not the place for an invitation. */}
+        {beneath && (
+          <StudioText
+            role="quiet"
+            as="span"
+            tone="quiet"
+            data-rail-beneath={says ? 'state' : 'orientation'}
+          >
+            {beneath}
+          </StudioText>
+        )}
+      </span>
       {/* 04 right-aligns a count on Materials (24) and Notes (12). A count is
           a fact about the member's own material, never a rating. */}
       {typeof destination.count === 'number' && (
-        <>
-          <span style={{ flex: 1 }} />
-          <StudioText role="metadata" as="span">
-            {destination.count}
-          </StudioText>
-        </>
+        <StudioText role="metadata" as="span" style={{ flexShrink: 0 }}>
+          {destination.count}
+        </StudioText>
       )}
     </Tag>
   );
@@ -177,6 +221,12 @@ export function StudioBand({
             <StudioRailItem
               key={d.id}
               destination={d}
+              /* FR-C — a ShellDestination arrives carrying its own resolved
+                 state; a plain StudioDestination (Studio Home, the fixture)
+                 does not, and passes null. The rail never derives it. */
+              unavailability={
+                'unavailability' in d ? (d as ShellDestination).unavailability : null
+              }
               inert={inert}
               state={state}
               onSelect={

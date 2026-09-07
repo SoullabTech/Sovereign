@@ -22,7 +22,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { GOLD, GROUND, INK, RADIUS, SPACE } from '../studioTheme';
 import { STUDIO_MODES, type StudioMode } from '../studioMap';
-import { typeStyle } from './StudioType';
+import { StudioText, typeStyle } from './StudioType';
 import { canvasForManuscript } from '../canvasIdentity';
 
 export interface StudioModeBarProps {
@@ -44,7 +44,20 @@ export function StudioModeBar({ current, manuscriptId = null, style }: StudioMod
 }
 
 /**
- * THREE STATES, not two. When the bar was written, Write was the only room and
+ * What an unpressable mode says about itself. Candidates under FR-C: a fact
+ * about now, never a delivery promise — "Coming soon" is rejected.
+ *
+ * `needs-work` is not a failure and is not phrased as one. The capability
+ * exists; there is simply nothing yet for it to act upon, and the sentence
+ * names the member's next act rather than the system's limitation.
+ */
+const MODE_SAYS = {
+  unavailable: 'Not available yet',
+  'needs-work': 'Open a work first',
+} as const;
+
+/**
+ * FOUR STATES, and all four now legible. When the bar was written, Write was the only room and
  * the writer was already standing in it, so no mode ever had to carry anyone
  * anywhere and every mode was a span. BUILD-07D built the Develop room, so an
  * available mode must now actually go there — and go there holding the same
@@ -67,6 +80,29 @@ function StudioModeItem({
   const available = mode.availability === 'available';
   const navigable = available && !active && mode.href !== undefined && manuscriptId !== null;
   const state = active ? 'active' : !available ? 'unavailable' : manuscriptId === null ? 'needs-work' : 'rest';
+  /* FR-C / F2 — THE DOCTRINE ABOVE, NOW ON THE SURFACE.
+   *
+   * This component has distinguished `needs-work` from `unavailable` since
+   * BUILD-07D and said so only in `data-state`. On the screen the two were not
+   * merely similar — `needs-work` and `rest` rendered IDENTICALLY: same ink,
+   * same opacity, one a link and one a span. A writer with no Work on the
+   * table pressed DEVELOP and received silence.
+   *
+   * Founder ruling, 2026-09-07, as a hard requirement:
+   *
+   *   A control that cannot perform its apparent action may not look
+   *   actionable and then answer the writer with silence.
+   *
+   * So the fact the component already knew is now said, at rest, in words.
+   * ⛔ Not a tooltip: this is STATE, and state may never wait to be requested
+   * (FR-D, HELP ≠ STATE).
+   */
+  const says =
+    state === 'unavailable'
+      ? MODE_SAYS.unavailable
+      : state === 'needs-work'
+        ? MODE_SAYS['needs-work']
+        : null;
   const body = (
     <span
       data-mode={mode.id}
@@ -84,8 +120,12 @@ function StudioModeItem({
            unreadable rather than merely off-screen. */
         whiteSpace: 'nowrap',
         flexShrink: 0,
-        color: active ? INK.primary : available ? INK.secondary : INK.quiet,
-        opacity: available ? 1 : 0.5,
+        /* `needs-work` no longer borrows `rest`'s treatment. A mode that
+           cannot be entered reads as quiet whether the reason is "not built"
+           or "nothing to bring" — the reason itself is carried in words
+           below, which is where a reason belongs. */
+        color: active ? INK.primary : says ? INK.quiet : available ? INK.secondary : INK.quiet,
+        opacity: says ? 0.6 : 1,
         ...(active
           ? { background: GROUND.active, boxShadow: `inset 0 -2px 0 ${GOLD.DEFAULT}` }
           : {}),
@@ -94,7 +134,36 @@ function StudioModeItem({
       {mode.label}
     </span>
   );
-  if (!navigable) return body;
+  if (!navigable) {
+    /* The mode and its reason are one block, so the sentence cannot be read as
+       belonging to a neighbouring mode. `title` is a convenience for pointer
+       users only — the sentence is already visible to everyone, on every
+       input, which is what makes this compliant with FR-D's cross-input rule
+       rather than dependent on hover. */
+    if (!says) return body;
+    return (
+      <span
+        data-mode-block={mode.id}
+        style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start' }}
+      >
+        {body}
+        <StudioText
+          role="metadata"
+          as="span"
+          tone="quiet"
+          data-mode-says={state}
+          style={{
+            paddingLeft: SPACE.base,
+            paddingRight: SPACE.base,
+            marginTop: -2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {says}
+        </StudioText>
+      </span>
+    );
+  }
   return (
     <Link href={canvasForManuscript(mode.href!, manuscriptId)} style={{ textDecoration: 'none' }}>
       {body}
