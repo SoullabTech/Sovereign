@@ -287,3 +287,45 @@ ruling. Keeping R3 separate is what keeps the minimum remedy honest.
 
 ⛔ **A says nothing about whether the writing plane has enough visual primacy.
 B remains completely open.** No finding or ruling above may be cited under B or C.
+
+---
+
+## 6 · BUILD HELD — R1 is itself a perceptual intervention (founder, 2026-09-07)
+
+```text
+A   RULED     R1 approved · R2 hold · R3 open
+B   NEXT      judge the current UNMODIFIED surface
+C   AFTER B   design-contract adjudication
+
+BUILD   HOLD until A + B + C have independent rulings
+```
+
+### Why R1 must not be built before B
+
+⭐ **Naming the room is itself a perceptual intervention.** R1 is not a hierarchy
+fix, but putting *"Canvas"* visibly onto the surface could change the experience
+of coherence, centre and figure-ground. B judged after R1 would be judged against
+an **A-modified subject**, and the result would be unreadable:
+
+```text
+did the manuscript actually have sufficient primacy?
+or did explicit room identity merely make the whole composition feel
+more coherent?
+```
+
+That is precisely the cross-contamination the flow's separation rule exists to
+prevent — and it would be A's answer smuggling authority into B's, in the one
+direction the rule did not name explicitly.
+
+⚠️ **Correction of record.** The witness recommended building R1 before B, on the
+grounds that *"see what that changes"* is itself a witness. That was wrong: it
+would have destroyed B's subject. The founder's earlier frozen rule governs —
+**A, B and C must each be ruled independently before any of them is implemented**
+— and the later line *"give the room its name and see what that changes"*
+describes **R1's eventual acceptance test**, not a change to sequencing.
+
+### Staging, after all three are ruled
+
+Implementation may still be **staged rather than bundled**. R1 first, witnessed
+independently, is the likely order — it is a very small intervention. ⛔ But that
+is decided **after** B and C have produced their own evidence, not now.
