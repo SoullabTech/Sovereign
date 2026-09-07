@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { requireCircleAccess } from '@/lib/circles/circleAccess';
 import { revokeArtifact } from '@/lib/circles/sharingService';
 
 export async function POST(
@@ -9,10 +9,11 @@ export async function POST(
   { params }: { params: Promise<{ sharedId: string }> }
 ) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    const access = await requireCircleAccess(request);
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+    const memberId = access.memberId;
 
     const { sharedId } = await params;
     await revokeArtifact(sharedId, memberId);
