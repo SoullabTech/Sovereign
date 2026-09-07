@@ -127,6 +127,107 @@ ssh soullab@minisforum 'docker exec maia-sovereign printenv GIT_COMMIT'
 
 Custody: the founder walk captured no runtime SHA. This packet must.
 
+## 3a · Experiment protocol — PRE-REGISTERED, before any result
+
+⚠️ Recorded before the data so the design cannot be reshaped around the
+outcome. Three runs, deliberately distinct. **They are not interchangeable and
+their labels must not be merged in the record.**
+
+### The validity rule that governs Pass 2
+
+```text
+PASS 2 is valid ONLY IF fresh re-entry actually restores a DEEP section.
+```
+
+If House → Writer's Studio → same Work returns at row 0, or with no `&s=`, the
+run is **not** an NR / H1 / H2 result. Record it as:
+
+```text
+PASS 2     CONDITION NOT ESTABLISHED
+finding    fresh re-entry did not preserve or restore the deep section
+```
+
+⭐ That is real evidence about re-entry state, and it is **not a W-03 result**.
+It would also mean the walk's deep `&s=1f80f706…` arrived by a restoration path
+not yet identified. **Preserve that; do not solve it inside this packet.**
+
+### Why the condition matters
+
+```text
+WALK      entry from Studio Home  →  &s=1f80f706…   row 8    DEEP
+PASS 1    entry from the House    →  &s=f9998f60…   row 0    HEAD
+```
+
+Under H2a — `scrollIntoView({block:'center'})` on the restored section — a
+head-adjacent section scrolls to approximately the top and produces **no visible
+displacement**. Pass 1 would read NR whether or not the mechanism is live. Pass 1
+is therefore NR *under a head-section condition*, and does not clear W-03.
+
+Second condition changed since the walk, preserved rather than pretended away:
+the Work is now **declared**, and the MAIA column renders different copy. Pass 2
+holds everything else in the present state, including the declaration, so that
+active-section depth is isolated as far as is now possible.
+
+`lib/writersStudio/writeStateClient.ts` carries rows and sections but **no
+cursor** — no persisted active section is visible there. Yet entry produced an
+`&s=` on both occasions, with different sections. The restore mechanism is
+unestablished; this packet does not investigate it.
+
+### The three runs
+
+```text
+PASS 1 · HEAD SECTION (run)
+  URL HAS &s=…?          yes / no
+  FIRST VIEW             top / displaced
+  "This work" visible?   yes / no
+  SCROLL UP RESULT       appears / does not appear / unnecessary
+  AFTER ONE RELOAD       top / displaced
+
+PASS 2 · FRESH RE-ENTRY, DEEP SECTION
+  1  in the same Work, select a clearly deep section
+     (ideally "Part One — The Ground", ≈ row 8, as the walk had)
+  2  record its &s= value
+  3  leave Writer's Studio normally, to the House
+  4  re-enter from the House and open the same Work normally
+     ⛔ no direct URL · no reload · no scrolling
+  5  URL HAS &s=…?        yes / no
+     WHICH SECTION        row / title      ← the validity field
+     FIRST VIEW           top / displaced
+     "This work" visible? yes / no
+     SCROLL UP RESULT     appears / does not appear / unnecessary
+  6  reload once
+     AFTER ONE RELOAD     top / displaced
+
+DEEP-URL RELOAD CONTROL · only if Pass 2's condition fails
+  ⛔ A CONTROL, NOT A SUBSTITUTE FOR PASS 2. Reload and history behaviour is a
+     different condition from a fresh House re-entry, and the two labels stay
+     distinct in the record.
+  1  select the deep section
+  2  DEEP &s= CONFIRMED    yes / no
+  3  BEFORE RELOAD VIEW    top / displaced     ← selection itself may move it
+  4  reload in place
+  5  AFTER RELOAD VIEW     top / displaced
+
+  Without field 3, a displaced post-reload view could be wrongly attributed to
+  reload/mount behaviour when the displacement happened at selection.
+
+  It answers only: when the page mounts with a guaranteed deep &s=, does the
+  viewport end up displaced?
+```
+
+### Comparison that would be informative
+
+```text
+PASS 1 head → top   AND   PASS 2 deep → displaced
+   → H2 established as SECTION-DEPTH-CONDITIONED on this runtime and state
+   → substantially strengthens the restored-section hypothesis
+   ⛔ still does NOT declare scrollIntoView the cause
+
+PASS 1 head → top   AND   PASS 2 deep → top
+   → NR confirmed under current declared-Work conditions
+   → W-03 not reproduced · walk evidence preserved · no repair authorized
+```
+
 ## 4 · DO NOT
 
 ```text
