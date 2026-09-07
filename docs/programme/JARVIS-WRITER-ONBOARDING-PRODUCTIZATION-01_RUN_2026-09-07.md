@@ -205,17 +205,37 @@ arose **after** entering the Canvas, where `This work` was not visible in the
 clipped first view and later became the unblock boundary.
 
 ```text
-DISCRIMINATOR — OPEN, awaiting first-person answer
-  AFFORDANCE  saw the words; they did not register as clickable
-  NAMING      knew it was clickable; "This work" gave no reason to press it,
-              no link to declaring the manuscript or reaching MAIA
-  BOTH
+DISCRIMINATOR — ANSWERED (founder, first person, 2026-09-07)
+
+W-05b   NAMING / MEANING
+
+"This work" did not communicate:
+  → identify / declare this manuscript's Work
+  → this is the act required before MAIA can engage
+
+Primary failure: SEMANTIC DISCOVERABILITY, not click affordance.
 ```
 
-Observation, not an answer: in the screenshots `This work` is enclosed in a
-bordered rounded rectangle, so it does carry some button-like affordance. That
-says nothing about what was perceived at the moment of being stuck, which is the
-only thing that decides this.
+In the founder's words:
+
+> *"The problem wasn't primarily 'I didn't realize that was clickable.' It was:
+> 'This work' gave me no reason to think clicking it had anything to do with
+> declaring the manuscript, identifying what Work it belonged to, or getting
+> access to MAIA… I was searching for the meaning of the required act, not
+> simply overlooking a button."*
+
+⭐ **Corroborated by recorded behaviour, not recollection alone.** The walk's
+help-seeking sequence — hover `IN RELATION TO`, search the left rail for
+instructions, search it again for MAIA, then try other controls — is the
+signature of someone hunting for *what the act means*, not of someone who missed
+a button. A missed-affordance failure looks different: it ends when the control
+is noticed. This one did not end until the meaning was supplied.
+
+⚠️ **Affordance is NOT cleared, only demoted.** The founder's qualification is
+preserved: *"I wouldn't claim the affordance is perfect, but it wasn't the
+central first-person block."* In the screenshots the control sits in a bordered
+rounded rectangle, so it carries some button affordance — unassessed, and a
+secondary factor, not a closed question.
 
 ### W-16 · arrival state quality — Lane E, new
 
