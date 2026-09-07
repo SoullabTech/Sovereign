@@ -798,6 +798,15 @@ function CanvasRoom() {
           data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
           style={{
             ...canvasSurfaceVars,
+            /* The page's ink, stated on the page itself.
+               Setting the variables is not enough on its own: an element that
+               inherits its colour, or one that was written before these tokens
+               existed, resolves against whatever ancestor last declared one —
+               and that ancestor is the dark Studio shell. Declaring it HERE
+               makes the writing field the nearest answer for everything inside
+               it, which is what "the ink belongs to the material, not the
+               room" has to mean in the cascade. */
+            color: INK.primary,
             width: compact ? '100%' : pct(L.writingField),
             flexShrink: 0,
             minWidth: compact ? 0 : MEASURE.fieldMinWidth,
@@ -827,6 +836,31 @@ function CanvasRoom() {
               padding: `${SPACE.band}px ${MEASURE.roomGutter}px ${SPACE.generous}px`,
             }}
           >
+            {/* ⛔ The one place a stylesheet beats an inline style here, and
+                the reason is the same one recorded in globals.css on
+                2026-07-31: the writer's own prose rendered near-black on the
+                espresso ground while every piece of surrounding chrome
+                rendered cream — the software more visible than the work. The
+                inverse happened on Paper, 2026-09-07: the page turned and the
+                prose stayed the room's colour, leaving a founder unable to
+                read their own book.
+
+                These two elements ARE the member's words — the read-only
+                <pre> and the editable <textarea> of the section surface. They
+                take the page's ink unconditionally, because a writing surface
+                whose text might not follow it is not a writing surface. Scoped
+                to [data-canvas-surface='material'], so Dark is untouched and
+                nothing outside the writing field can be reached at all. */}
+            <style>{`
+              [data-canvas-surface='material'] pre,
+              [data-canvas-surface='material'] textarea {
+                color: var(--ws-ink-primary) !important;
+                -webkit-text-fill-color: var(--ws-ink-primary) !important;
+              }
+              [data-canvas-surface='material'] ::selection {
+                background: var(--ws-ground-active);
+              }
+            `}</style>
             <FieldBody
               writeMount={writeMount}
               witnessDelayMs={witnessDelayMs}

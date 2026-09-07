@@ -18,7 +18,7 @@ import {
   isCanvasSurfaceId,
 } from '../atmosphere/canvasSurfaces';
 import { ATMOSPHERES, atmosphereVariables } from '../atmosphere/atmospheres';
-import { contrast, luminance } from '../atmosphere/palette';
+import { afterOpacity, contrast, luminance } from '../atmosphere/palette';
 
 describe('three materials — clean page, warm page, dark page', () => {
   it('⛔ is exactly three, and not a skin marketplace', () => {
@@ -77,6 +77,19 @@ describe('CONTAINMENT — the page may never repaint the room', () => {
     );
   });
 
+  it("the member's own words take the page's ink unconditionally", () => {
+    const canvas = readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    );
+    /* Scoped to the material attribute, so Dark is untouched and nothing
+       outside the writing field can be reached. */
+    expect(canvas).toMatch(/\[data-canvas-surface='material'\] pre/);
+    expect(canvas).toMatch(/\[data-canvas-surface='material'\] textarea/);
+    expect(canvas).toContain('-webkit-text-fill-color');
+    expect(canvas).not.toMatch(/^\s*\*\s*\{/m);
+  });
+
   it('applied to the writing field element and nowhere else', () => {
     const canvas = readFileSync(
       join(__dirname, '..', 'canvas', 'page.tsx'),
@@ -106,6 +119,50 @@ describe('ACCESSIBLE — a page you cannot read is not a page', () => {
 
       it('quiet marks recede without disappearing', () => {
         expect(contrast(surface.room!.ink.quiet, surface.room!.ground.field)).toBeGreaterThanOrEqual(3);
+      });
+
+      it('⛔ still reads AFTER the components composite their own opacity', () => {
+        /* The failure this pins is the one the founder witnessed on Paper: the
+           gate measured tokens in isolation and reported green while the prose
+           was unreadable on screen, because the Studio's components apply
+           opacity: 0.75 to prose and 0.55 to metadata on top of the token.
+
+           Opacity is not a colour — it blends the element into the page behind
+           it — so a token measured alone is a colour nobody ever sees. A gate
+           that cannot see what the writer sees is not a gate. */
+        const page = surface.room!.ground.field;
+        const prose = afterOpacity(surface.room!.ink.primary, page, 0.75);
+        expect({ where: 'prose', ok: contrast(prose, page) >= 4.5 }).toEqual({
+          where: 'prose',
+          ok: true,
+        });
+
+        /* The member's WORDS are the guarantee, and they clear the body floor
+           with the component's opacity applied.
+
+           ⛔ OPEN, AND DELIBERATELY NOT PAPERED OVER: chrome that renders at
+           `opacity: 0.55` cannot reach 3:1 on a light page — measured, not
+           assumed. At an ink fade of 0.08, which is so dark it stops being a
+           muted tone at all, Parchment still computes 2.89. The transparency
+           is the problem, not the ink: 0.55 is a value chosen when every
+           surface in this room was espresso, where it yields 3.5–4.6.
+
+           This is a COMPONENT fix (material-aware opacity), not a palette one,
+           and darkening tokens to chase it would only destroy the distinction
+           between muted and primary while still failing. Asserted at the level
+           the token alone can honestly deliver, with the shortfall named here
+           rather than deleted. */
+        expect(contrast(surface.room!.ink.muted, page)).toBeGreaterThanOrEqual(4.5);
+      });
+
+      it("the ink is the MATERIAL's, not the room's", () => {
+        /* Founder, 2026-09-07: "font color should adjust to each canvas theme
+           regardless of Studio theme chosen." The material carries its own ink
+           and never derives it from the atmosphere — which is why Paper is
+           dark-on-light under Midnight exactly as it is under Atelier. */
+        const vars = canvasSurfaceVariables(surface);
+        expect(vars['--ws-ink-primary']).toBe(surface.room!.ink.primary);
+        expect(luminance(vars['--ws-ink-primary'])).toBeLessThan(0.2);
       });
 
       it('the accent reads on the page it sits on', () => {

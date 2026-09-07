@@ -114,16 +114,33 @@ export interface InkRamp {
 }
 
 export function inkRamp(anchor: string, ground: string): InkRamp {
-  /* ⚠️ The fades were 0.42 / 0.58 and were tightened after the contrast gate
-     failed Cloud at 2.30:1 for quiet text. A dark room hides a generous fade —
-     ratios stay comfortable a long way down — while a light room compresses
-     them, so the same "quiet" that reads as restraint on espresso reads as
-     unreadable on paper. One ramp that clears the floor in EVERY room beats a
-     prettier one that only works in the rooms nobody checked. */
+  /* ⚠️ Tightened twice, both times by a light surface.
+     0.42/0.58 → 0.16/0.33/0.46 when the contrast gate failed Cloud at 2.30:1.
+     Then again, here, because the gate was measuring the WRONG THING: it
+     checked tokens in isolation while the components composite `opacity: 0.75`
+     and `0.55` on top of them. A token that passes alone can be well under the
+     floor by the time it reaches the writer's eye, and the test said green.
+
+     A dark room hides a generous fade — ratios stay comfortable a long way
+     down. A light page compresses them, so the same "quiet" that reads as
+     restraint on espresso reads as absent on paper. One ramp that clears the
+     floor in every room AFTER the components have had their say. */
   return {
     primary: anchor,
-    secondary: mix(anchor, ground, 0.16),
-    muted: mix(anchor, ground, 0.33),
-    quiet: mix(anchor, ground, 0.46),
+    secondary: mix(anchor, ground, 0.12),
+    muted: mix(anchor, ground, 0.18),
+    quiet: mix(anchor, ground, 0.34),
   };
+}
+
+/**
+ * What a colour ACTUALLY becomes once a component composites opacity over it.
+ *
+ * The Studio's own components apply `opacity: 0.75` to prose and `0.55` to
+ * metadata. Opacity is not a colour — it blends the element into whatever is
+ * behind it — so measuring the token alone measures something the writer never
+ * sees. This is what the contrast gate must measure instead.
+ */
+export function afterOpacity(ink: string, ground: string, alpha: number): string {
+  return mix(ground, ink, Math.max(0, Math.min(1, alpha)));
 }
