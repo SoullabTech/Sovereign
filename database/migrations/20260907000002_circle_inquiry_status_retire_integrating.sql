@@ -45,7 +45,3 @@ COMMENT ON COLUMN circle_inquiries.status IS
   'open | closed. There is no third state: a synthesis is an optional property of a closed inquiry (field_synthesis), not a status. Do not confuse with FieldPhase, which is a separate concept about Circle activity.';
 COMMENT ON COLUMN circle_inquiries.field_synthesis IS
   'Optional synthesis authored by the inquiry opener at close. Its presence is derived where displayed; it is never encoded as a second status.';
-
-INSERT INTO schema_migrations (filename, applied_at)
-VALUES ('20260907000002_circle_inquiry_status_retire_integrating.sql', NOW())
-ON CONFLICT (filename) DO NOTHING;

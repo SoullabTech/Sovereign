@@ -75,7 +75,3 @@ COMMENT ON COLUMN circle_inquiry_responses.withdrawn_at IS
 CREATE INDEX IF NOT EXISTS idx_inquiry_responses_live
   ON circle_inquiry_responses(inquiry_id)
   WHERE withdrawn_at IS NULL;
-
-INSERT INTO schema_migrations (filename, applied_at)
-VALUES ('20260907000001_circle_inquiry_response_withdrawal.sql', NOW())
-ON CONFLICT (filename) DO NOTHING;

@@ -91,7 +91,3 @@ COMMENT ON COLUMN circle_membership_removals.grounds IS
   'Facilitator-supplied grounds. Required by FR-05 so a removal can be independently reviewed; an unexplained removal is the interpretive judgment FR-05 forbids.';
 COMMENT ON COLUMN circle_membership_removals.removed_by IS
   'The facilitator who enacted the removal. The review route required by FR-05 must be served by someone OTHER than this member.';
-
-INSERT INTO schema_migrations (filename, applied_at)
-VALUES ('20260906000003_circle_membership_removals.sql', NOW())
-ON CONFLICT (filename) DO NOTHING;
