@@ -170,3 +170,85 @@ A not reopened      · C not prejudged  · BUILD HOLD
 
 ⛔ **Owed before B can be closed:** the dynamic witness — does Studio recede while
 the writer is actually typing? Finding 6 is a prediction, not an observation.
+
+---
+
+## 5 · OUT-OF-B FINDING — logged, untouched (2026-09-07)
+
+⛔ **Category change named rather than solved inside B**, per the flow's
+escalation rule.
+
+```text
+OUT-OF-B FINDING
+possible viewport displacement on outline selection
+
+founder report
+"the screen jumps up when I select a field from Manuscript"
+
+candidate relation
+W-03 residual / StructuredOutline scrollIntoView path
+
+status
+HYPOTHESIS · not characterized
+no repair authorized
+```
+
+### Category boundaries, held
+
+```text
+B OWNS                          B DOES NOT OWN
+figure / ground                 viewport jumping
+manuscript primacy              scrollIntoView behaviour
+attentional recession           component remounting
+  while writing                 outline selection mechanics
+```
+
+### ⚠️ Correction of record — the witness was wrong once already here
+
+During B's reconciliation the witness stated that a `scrollIntoView` inside the
+outline panel *"cannot displace the document"* because the panel is its own
+scroll container. **That is false.** `scrollIntoView` scrolls **every** scrollable
+ancestor, not only the nearest, so it can move the page even where the panel
+scrolls too.
+
+Source, `app/writers-studio/canvas/StructuredOutline.tsx:163-170`:
+
+```text
+const revealed = useRef(false);
+useEffect(() => {
+  if (revealed.current || !activeId) return;
+  ...
+  revealed.current = true;
+  el.scrollIntoView({ block: 'center' });
+}, [activeId, ordered]);
+```
+
+The `revealed` guard means this should fire **once**. If it fires on every
+selection, the component is remounting and resetting that ref — which would make
+the remount the defect, not the scroll call.
+
+### ⛔ Guard against premature diagnosis
+
+**Do not let the remount explanation harden into diagnosis merely because it fits
+W-03.** The source gives a plausible mechanism; that is all. W-03 was closed
+UNREPRODUCED precisely because a plausible mechanism is not an established one,
+and the same discipline applies here. This finding needs its own
+characterization, on the same terms.
+
+## 6 · B DYNAMIC WITNESS — quiet-condition protocol
+
+```text
+1. Select the section once.
+2. Let any viewport movement finish.
+3. Do NOT touch the outline again.
+4. Click into the manuscript.
+5. Write continuously for 30–60 seconds.
+6. Report only what happens to attention while writing.
+```
+
+```text
+DISCRIMINATOR
+no further jump while writing        → B dynamic witness USABLE
+viewport moves again untouched       → STOP · witness CONTAMINATED, still owed
+accidental navigation or selection   → DISCARD the attempt, do not interpret it
+```
