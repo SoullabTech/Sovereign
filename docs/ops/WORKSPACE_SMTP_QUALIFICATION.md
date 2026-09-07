@@ -1,50 +1,58 @@
 # Google Workspace SMTP — Qualification Runbook
 
-> ## VERDICT 2026-09-07 · DISQUALIFIED AT PHASE 0
+> ## STATUS 2026-09-07 · NOT DNS-READY · availability UNRESOLVED
 >
 > ```
-> MX     10 mail.protonmail.ch. / 20 mailsec.protonmail.ch.
-> SPF    v=spf1 include:_spf.protonmail.ch include:send.resend.com mx ~all
-> DMARC  <no record>
+> MX      10 mail.protonmail.ch. / 20 mailsec.protonmail.ch.
+> SPF     v=spf1 include:_spf.protonmail.ch include:send.resend.com mx ~all
+> DMARC   <absent>
+> DKIM    google ✗  default ✗  s1 ✗  k1 ✗  selector1 ✗  resend ✓
 > ```
 >
-> | Gate | Result |
-> |---|---|
-> | Workspace-hosted | ❌ mail is hosted by **Proton Mail** |
-> | Google in SPF | ❌ Google is not authorised to send for the domain |
-> | Existing SPF | ✅ Proton + Resend authorised |
-> | DMARC | ❌ absent |
+> ### Correction to this runbook's own gate
 >
-> The DNS gate did its job: the mismatch surfaced **before** any credential was
-> provisioned and without production being touched. Resend remains the live
-> transport, unchanged.
+> An earlier version read Proton MX as *disqualifying* Workspace relay. That is
+> wrong: it treats an INBOUND fact as evidence about an OUTBOUND path. Google
+> supports relaying outbound application mail through `smtp-relay.gmail.com`
+> configured in the Admin console, and inbound MX need not point at Google for
+> that to work. Proton can keep receiving while Google relays outbound.
 >
-> Kept rather than deleted — the phases below apply unchanged if `soullab.life`
-> is ever Workspace-hosted, and the negative result is itself the record of why
-> this path was not taken.
+> The gate is therefore an account fact, not a DNS fact:
 >
-> **Two findings preserved, neither remediated here:**
+> ```
+> Does a Google Workspace tenant own/contain soullab.life?
+>       ├─ NO  → relay genuinely unavailable
+>       └─ YES → relay viable, even with Proton inbound
+> ```
 >
-> 1. **No DMARC policy on `soullab.life`.** With `~all` softfail and no DMARC,
->    the domain has weak spoofing protection and produces no failure reports.
->    A real mail-authentication finding; its remediation is not smuggled into a
->    transport qualification act.
-> 2. **Proton is already the domain's mail authority.** Whether Proton offers an
->    application SMTP submission path is the natural next transport inquiry —
->    it would add independence without adding a vendor. A separate inquiry, and
->    explicitly **not** a reason to hold MAIL-04.
+> **Unresolved. Establish it before provisioning anything.** If no such tenant
+> exists, buying Workspace purely as an escape transport makes little sense when
+> Proton is already the domain's mail provider and a sovereign MTA is the
+> eventual architecture — Proton SMTP submission would be the cheaper inquiry.
 >
-> Note also the SPF record already carries two `include:` mechanisms. Any future
-> transport adds a third, and SPF permits at most 10 DNS lookups in total.
-
-
-**Goal: transport plurality, not transport migration.** At the end of this,
-Resend remains live primary and Workspace SMTP is a *proven* standby. Resend
-stops being the only way MAIA can deliver an identity email.
-
-This is deliberately not the MTA. Building sovereign transport under pressure is
-how you get a rushed IP with no warmup delivering sign-in codes into spam.
-
+> ### What DNS does establish
+>
+> Even given a tenant, the domain is **not presently authenticated** for
+> Google-originated mail: no Google SPF include, no Google DKIM selector, no
+> DMARC policy. Those must be in place before inbox placement means anything.
+>
+> DKIM alignment can satisfy DMARC independently of SPF, so a missing SPF
+> include does not mathematically doom every message. **Do not qualify P0
+> identity mail on that loophole** — the raw headers must demonstrate the
+> intended authentication path, not an accidental one that happens to pass.
+>
+> SPF caveat unchanged: modify the single existing record, never add a second
+> or replace the Proton/Resend authorisations. It already carries two
+> `include:` mechanisms against a 10-lookup limit.
+>
+> ### Parked, and not folded into this act
+>
+> - **No DMARC policy on `soullab.life`** — a genuine authentication finding.
+> - **Proton SMTP submission** — the natural inquiry, since Proton already holds
+>   the domain's mail authority. Independence without a new vendor.
+>
+> Neither blocks MAIL-04.
+>
 ## Why the relay, not smtp.gmail.com
 
 `smtp-relay.gmail.com` is Workspace's application-sending path (≈10,000
