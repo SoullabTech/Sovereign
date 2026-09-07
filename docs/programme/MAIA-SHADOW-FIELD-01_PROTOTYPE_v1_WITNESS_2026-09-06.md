@@ -782,3 +782,93 @@ P8       OPEN
 RUBRIC   RECORDED BEFORE WALK
 WITNESS  HOLD
 ```
+
+---
+
+## 13 · P8 walk — BLOCKED AT ENTRY (2026-09-07, diagnosis only, no repair)
+
+**The walk did not begin.** Nothing behind Arrival has been witnessed, and no claim may be
+made about the Shadow Field room itself. §12's rubric is unspent.
+
+### Founder witness — corrected wording
+
+The earlier phrasing *"click produces no response"* is withdrawn. The witnessed fact is:
+
+```text
+VISIBLE       Primary action "Enter the Shadow Field" is rendered.
+OBSERVED      The visible primary action cannot be activated by mouse click.
+CONSEQUENCE   Founder walk blocked at Arrival.
+UNKNOWN       Whether the handler runs; whether an element intercepts the pointer;
+              whether the control is keyboard-focusable; whether activation requests.
+REPAIR        NONE — diagnose only.
+```
+
+Also witnessed: **the Shadow Field tile was absent from The House**, so the founder reached
+Arrival by direct route.
+
+### Read-only source diagnosis (assistant, no code changed)
+
+**One hypothesis explains both symptoms: the session is not founder-resolved on the walk
+origin.**
+
+```text
+houseDestinations.ts:436   shadow-field  audience: 'founder'      ← set deliberately in P3-R1
+houseDestinations.ts:503   filter(d => d.audience !== 'founder' || isFounder)
+MaiaShell.tsx:379          isFounder = isAdmin || isPractitioner
+```
+
+An absent tile therefore means the walk session did not resolve as admin/practitioner — not
+that the destination is missing. The same fact predicts the entry failure: `/enter` requires a
+session, returns **401**, and the client swallows it.
+
+```ts
+// ShadowFieldSheet.tsx:86
+const res = await fetch('/api/maia/shadow-field/enter', {...});
+const data = await res.json();
+if (!res.ok) return;            // ← silent swallow: no state change, no message
+// try/finally with no catch — a non-JSON error body throws, visible only in console
+```
+
+**Finding D1 — the entrance refuses without disclosure.** Independent of the status code, this
+is a constitutional finding and not only a UX one: the Field's laws require a refusal to be
+encounterable, and the member cannot contest what they cannot see. A silent refusal at the
+entrance is the entry-side analogue of concealed authority.
+
+**Finding D2 — the room is a drawer given a route.** `ShadowFieldSheet` is a bottom sheet:
+scrim `fixed inset-0 bg-black/60 z-[9998]`, sheet `inset-x-0 bottom-0 z-[9999] max-h-[92vh]`.
+The ~70% black is the scrim, not empty page. It reads as a drawer because it is one; P3-R1 gave
+a conversation-overlay component a standalone place. Design finding, not a styling slip.
+
+**Finding D3 — the scrim exits the Field.** The scrim carries `onClick={leave}`. On a page
+route that is a full navigation away from ~70% of the viewport, unwarned. Lawful in outcome
+(leaving keeps nothing) but not a threshold's behaviour.
+
+### Founder Arrival observations — recorded as evidence, not repaired
+
+```text
+~70% of viewport is empty black; everything sits in a bottom strip
+text runs the full width — no measure; the eye has no line length to hold
+the button spans nearly the full width — reads as a banner, not a threshold
+the Sanctuary checkbox is tiny and visually orphaned from the consent it carries
+"Leave" sits top-right, far from the act it opposes
+nothing is vertically composed — a drawer, not a room
+```
+
+The copy is the strong part and is doing what the canon asks. The layout undercuts writing that
+is already right.
+
+### Custody
+
+These are pre-walk findings. They are **not** scored against §12, because §12 scores MAIA's
+turns inside the Field and no turn has occurred. Whether House discoverability and threshold
+composition are P8 failures or separate roadmap items is a founder ruling that the walk has not
+yet earned the evidence to inform.
+
+```text
+P8 WALK    BLOCKED AT ENTRY
+HOUSE      tile audience-gated ('founder'); absence explained, not yet confirmed
+ENTRY      silent-refusal path identified in source; status code not yet observed
+RUBRIC     FROZEN @ 2277119cd — UNSPENT
+REPAIR     HOLD
+LAW        UNCHANGED · DESIGN UNCHANGED
+```
