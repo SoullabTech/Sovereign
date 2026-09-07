@@ -372,8 +372,24 @@ export default function DevelopRoom({
       setSections(secs);
       /* Measured here, before anything is asked. A work larger than one
          sitting opens the choice itself — the writer meets a sentence about
-         their book, not a refusal about a ceiling. */
-      if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) setReadMode('part');
+         their book, not a refusal about a ceiling.
+
+         ⛔ AND IT OPENS AT A RANGE THAT FITS. Founder-witnessed on production
+         2026-09-07: "Part of it" opened at From: first → To: the end, which IS
+         the whole work — so the mode that exists to solve the problem started
+         holding the problem, the ask button was disabled, and the only way
+         forward was to guess which of two dropdowns to change. A choice
+         offered in a state that cannot succeed is not a choice.
+
+         It opens at the FIRST SECTION ALONE — the smallest stretch, at the
+         beginning. That is not the system choosing what is worth reading: it
+         is the least it can offer that works, and the writer widens from
+         there. Choosing a bigger stretch for them, or one that "looks
+         important", is the ranking this room refuses. */
+      if (codePointsOf(secs) > DEVELOPMENTAL_READ_CEILING_CODE_POINTS) {
+        setReadMode('part');
+        setToIndex(0);
+      }
     });
     return () => {
       live = false;
