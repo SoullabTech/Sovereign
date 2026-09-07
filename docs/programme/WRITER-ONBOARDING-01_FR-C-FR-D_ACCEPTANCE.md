@@ -249,3 +249,97 @@ not be read as a failure.
 ```
 
 ⛔ No code changes.
+
+---
+
+## 7 · FOUNDER WITNESS — RESULT (2026-09-07)
+
+```text
+SUBJECT     227e4e63b served at localhost:3100 from a clean worktree
+MARKER      verified before the walk — Notes → "Not available yet"
+WALKER      Kelly, as a writer
+```
+
+### The governing question
+
+> **Did Writer's Studio become more intelligible without becoming more
+> instructional?**
+
+**Founder verdict, verbatim:**
+
+> *"it has. I'm looking forward to the unavailable functions to be added. this
+> is feeling better somehow"*
+
+```text
+FR-C   WITNESSED · PASS
+FR-D   WITNESSED · PASS  (partial — see coverage below)
+```
+
+### ⭐ What this resolves, and it resolves it the other way
+
+The founder's own hypothesis before the walk:
+
+> *"Eleven repetitions of 'Not available yet' may satisfy FR-C semantically while
+> creating a new visual problem: the rail could become dominated by everything
+> the Studio cannot yet do."*
+
+**It did not.** The witness reports the opposite reaction:
+
+> *"I'm looking forward to the unavailable functions to be added."*
+
+Explicit state turned a rail that read as *broken, empty, or inaccessible* into
+one that reads as **a Studio with rooms still to open**. That is precisely the
+FR-C deeper ruling working in the lived case:
+
+> *A Studio may reveal its larger architecture before every room is usable, but
+> it must distinguish intentional incompleteness from malfunction or lack of
+> access.*
+
+⭐ Before FR-C, the same rail produced *"very few options in Work Space are
+present and useful."* After it, the same absence produces anticipation. **Nothing
+about what the Studio can do changed. Only what it says about what it cannot.**
+
+### ⭐ "somehow" is the FR-D success condition, met
+
+The flow's own success test:
+
+> *The strongest implementation will feel like the Studio simply knows when
+> something needs explaining. It should not feel like Help has been added.*
+
+The founder reports feeling better **without being able to name what changed**.
+That is the intended quality, not a vagueness in the report. A witness who could
+point straight at the help would have been evidence of the failure mode FR-D was
+written to avoid.
+
+### Coverage — what this verdict does and does not carry
+
+```text
+WITNESSED
+  3  unavailable rooms read as not-yet, not broken/empty      PASS
+  4  the whole rail — clarifying, not mostly-unfinished       PASS
+     the governing question                                  PASS
+
+NOT YET REPORTED — the verdict does not carry these
+  1  pointer hover on "This work"
+  2  keyboard focus parity
+  5  writing surface — does help recede
+  6  GOALS coherence with the rail
+  7  Keeps — naming problem left undisguised
+  ·  touch / iPhone
+  ·  DEVELOP with no Work → "Open a work first"
+  ·  Develop room unchanged and still good
+```
+
+⛔ **FR-D is witnessed on the rail and on the governing question. It is not yet
+witnessed on the object-local help (StudioHint), which is the part rows 1, 2, 5
+and 7 test.** The two `?` affordances were rendered and available during this
+walk but are not reported on. Do not read this PASS as covering them.
+
+### Environment note, so the result is not over-read
+
+This walk ran on a local dev instance whose database was significantly behind —
+structure contiguity, proposals, adoption provenance, working-draft revision
+partition, developmental readings, standing, and heading depth were all missing
+and applied during setup. That was environment drift, not product state, and it
+cost the first two attempts at this walk. The verdict above was given only after
+the schema was current and the Canvas loaded normally.
