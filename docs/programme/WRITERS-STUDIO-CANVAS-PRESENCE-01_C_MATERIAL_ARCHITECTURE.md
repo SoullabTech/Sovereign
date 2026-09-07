@@ -192,3 +192,119 @@ ADD Canvas material as an independent writer preference.
 ⚠️ For the viewport fix at `382d3f31`: smoke-test a few outline selections to
 confirm the page stays stationary. ⛔ **Do not reopen B around it.** That was a
 separate behavioral defect and has received its own repair.
+
+---
+
+# SOURCE DISCOVERY — the premise changed (2026-09-07)
+
+## ⭐ THE CORRECTION WORTH PRESERVING
+
+> **Paper and Parchment were not missing capabilities. They were capabilities
+> trapped behind the wrong rendering path and stored at the wrong ownership
+> level.**
+
+That is exactly the sort of thing to find **before** building replacements.
+
+```text
+app/writers-studio/canvas/WritingSurface.tsx:89
+
+warm      "Warm Canvas"   #221B17   ← default
+ivory     "Ivory Paper"   #f3eddd   ← parchment
+white     "White Paper"   #FAFAF7   ← paper
+midnight  "Midnight"      #0E1114
+
+persisted as  localStorage  writing_surface:<manuscriptId>
+```
+
+Two defects, both already present:
+
+```text
+C1 VIOLATION   keyed per MANUSCRIPT — the material belongs to the Work.
+               That is literally "the book itself is Parchment."
+
+C2 FAILURE     the control lives in the continuous WritingSurface and is
+               unreachable from SectionWritingSurface, which is what a
+               174-section book renders through. A capability unreachable
+               from the state the member inhabits — the principle, already
+               instantiated in the codebase.
+```
+
+## RULING 1 · STUDIO ATMOSPHERE — NOT THIS PASS
+
+The source check changed the premise: there is nothing to reuse.
+
+```text
+existing selector/system    NO
+warm ground                 FROZEN DESIGN RULE
+assertGroundIsWarm()        actively enforces it
+```
+
+Adding charcoal/espresso would **not** expose an existing preference. It would
+create a new appearance system **and** amend a sampled, frozen design
+constraint. That belongs to its own design-contract ruling.
+
+```text
+THIS BUILD
+Canvas material       YES
+
+NOT THIS BUILD
+Studio atmosphere     HOLD
+ground-token changes  HOLD
+assertGroundIsWarm    UNTOUCHED
+```
+
+> Page inside the existing room — **not** redesign the room while fixing the page.
+
+## RULING 2 · REKEY THE EXISTING PREFERENCE — YES, CONSERVATIVELY
+
+C1 requires it. Leaving `writing_surface:<manuscriptId>` would knowingly preserve
+the wrong ownership model. But migrate rather than drop.
+
+```text
+KEY   writers_studio:canvas_material
+
+IF new Canvas preference already exists
+    use it
+ELSE IF current manuscript has legacy writing_surface:<manuscriptId>
+    seed the new Canvas preference from that value once
+ELSE
+    use the existing default
+
+READ     new Canvas-level preference
+WRITE    new Canvas-level preference only
+LEGACY   old per-manuscript keys become INERT
+         ⛔ do not delete them in this pass
+```
+
+Three properties this buys: **continuity** (the writer does not suddenly lose the
+appearance they were looking at), **C1 compliance** (material no longer belongs to
+the Work), and **reversibility** (legacy values are not destroyed while ownership
+semantics change).
+
+⛔ If two manuscripts historically carried different materials, **no attempt is
+made to infer a "true preference"** from localStorage. The currently opened
+Work's legacy value seeds the writer preference once. From then on the writer has
+one Canvas choice.
+
+## SCOPE PRECISION
+
+⛔ This remains a **browser-local** writer preference, because that is what the
+existing persistence mechanism supports. **Do not introduce account or backend
+persistence** merely to make "per-writer" mean cross-device sync — that would
+enlarge the build again. Cross-device sync is a later decision if wanted.
+
+## AUTHORIZED BUILD SHAPE
+
+```text
+CANVAS MATERIAL — BUILD AUTHORIZED
+
+LIFT      material ownership out of WritingSurface
+REKEY     per-manuscript → Canvas/writer presentation preference
+REACH     same material system from
+            - continuous WritingSurface
+            - sectioned SectionWritingSurface
+CONTROL   one editor-side Canvas Appearance control
+MATERIALS harvest existing implementation
+          ⛔ do not invent a second material engine
+STUDIO ATMOSPHERE   HOLD · separate design-contract question
+```
