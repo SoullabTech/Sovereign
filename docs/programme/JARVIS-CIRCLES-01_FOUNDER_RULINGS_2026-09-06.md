@@ -316,6 +316,25 @@ constitutional authority.
 > completion · birth · separation — is where human interpretation and member acts return, and stays
 > separate (CA-04).
 
+## Principle · Fact derivation vs meaning declaration *(founder, cross-lane)*
+
+⚠️ **Not ratified as Circle law.** Articulated by the founder as a general architectural principle
+while ruling on FR-13, and recorded here so it is not lost.
+
+> **Prefer derived facts over declared system state when the authoritative fact already exists and
+> the derivation is deterministic.**
+
+Deliberately narrower than *all state should be derived*:
+
+| | |
+|---|---|
+| **FACT DERIVATION** | the system reads what is already true — a Circle's **plurality** |
+| **MEANING DECLARATION** | a person authors what it means — whether a Circle is **complete**, whether a relationship is **repaired**, whether something new is **being born** |
+
+The second class requires **human acts of meaning and authority** and must never be derived. This
+names precisely why FR-13 works, and why CA-04's richer lifecycle (maturation · rest · completion ·
+birth · separation) has to stay separate from it.
+
 ---
 
 ## Remaining canonical open questions (CA)

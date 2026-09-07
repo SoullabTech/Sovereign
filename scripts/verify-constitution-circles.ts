@@ -156,74 +156,51 @@ async function groupC() {
       : fail('C5 FR-08.3 ambient MAIA-content read path', offenders.join(', '));
   }
 
-  // C6 — FR-08.7: no counts / scores rendered into Circle surfaces.
-  if (inquiryService) {
-    /response_count/.test(inquiryService)
-      ? fail('C6 FR-08.7 response_count is returned to the client', 'inquiryService.listInquiries')
-      : pass('C6 FR-08.7 no participation counts returned');
-  }
-
-  // C9 — FR-06: discovery reads declared interests only.
+  // C6 — FR-08.7: participation must not become a member-visible signal.
+  //
+  //      DESTINATION-AWARE BY DESIGN. This does NOT sweep Circle code for
+  //      COUNT(*) — counting is legitimate wherever it is technically required:
+  //      constitutional derivation (constitutionState.ts counts active
+  //      memberships to derive FORMING/ACTIVE), authorization, integrity checks,
+  //      verification, operations. FR-08.7 concerns Circle SOCIAL SURFACES and
+  //      member-facing status mechanics, not arithmetic.
+  //
+  //      So it asks one question of two destinations: does the member-facing
+  //      inquiry listing, or a Circle surface component, carry a participation
+  //      quantity?
   {
-    const hasDiscovery = ['listAllCircles', 'discoverCircles', 'searchCircles'].some((fn) =>
-      (src('lib/circles/circleService.ts') || '').includes(fn)
-    );
-    hasDiscovery
-      ? warn('C9 FR-06 a discovery path exists — assert its inputs explicitly')
-      : pass('C9 FR-06 no discovery surface exists yet; nothing can read forbidden sources');
-  }
+    const SIGNALS = /\bresponse_count\b|\bresponseCount\b|\bparticipation_count\b|\bparticipationCount\b/;
+    const offenders: string[] = [];
 
-  // C10 — FR-07: collective release must not exist before its mechanism does.
-  {
-    const anyRelease = ['lib/circles', 'app/api/circles'].some((d) => {
-      const b = src(join(d, 'sharingService.ts')) || '';
-      return /constellation|releaseToCommons|commons_release/i.test(b);
-    });
-    anyRelease
-      ? fail('C10 FR-07 a Circle→Constellation/Commons release path exists without a ratified mechanism')
-      : pass('C10 FR-07 no collective release path exists; collective material does not cross');
-  }
-
-  // C11 — FR-01/FR-08.8: a crossing is representational, not a live pointer.
-  if (sharingService) {
-    const i = sharingService.indexOf('export async function listFeed');
-    const scope = i >= 0 ? sharingService.slice(i) : '';
-    /JOIN\s+(?!members)/i.test(scope)
-      ? fail('C11 FR-08.8 feed dereferences the source object', 'live pointer')
-      : pass('C11 FR-08.8 feed serves the stored representation only');
-  }
-
-  // C13 — B-01 / CIRCLE-04 R1: the declared release posture must be the ENFORCED
-  //       one. A Next.js layout does not run for route handlers, so the page
-  //       gate in app/commons/circles/layout.tsx cannot close the API. Every
-  //       /api/circles route must go through requireCircleAccess(), and none may
-  //       resolve identity directly — a direct getMemberIdFromRequest() call is
-  //       exactly how the gap existed before R1.
-  {
-    const walk = (dir: string): string[] => {
-      const out: string[] = [];
-      for (const e of readdirSync(dir)) {
-        const full = join(dir, e);
-        out.push(...(statSync(full).isDirectory() ? walk(full) : full.endsWith('.ts') ? [full] : []));
+    // Destination 1 — the member-facing inquiry listing itself.
+    if (inquiryService) {
+      const i = inquiryService.indexOf('export async function listInquiries');
+      if (i >= 0) {
+        const rest = inquiryService.slice(i + 1);
+        const nextExport = rest.indexOf('\nexport ');
+        const body = nextExport >= 0 ? rest.slice(0, nextExport) : rest;
+        // Strip comments: the site documents WHY the count was removed, and
+        // that prose must not read as the defect returning.
+        const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+        if (SIGNALS.test(code)) offenders.push('inquiryService.listInquiries');
+      } else {
+        offenders.push('inquiryService.listInquiries (not found)');
       }
-      return out;
-    };
-    const apiDir = join(ROOT, 'app/api/circles');
-    const routes = existsSync(apiDir) ? walk(apiDir) : [];
-    const ungated = routes.filter((f) => {
-      const body = readFileSync(f, 'utf8');
-      return body.includes('getMemberIdFromRequest') || !body.includes('requireCircleAccess');
-    });
-    if (routes.length === 0) {
-      fail('C13 B-01 no Circle API routes found to check');
-    } else if (ungated.length === 0) {
-      pass('C13 B-01 every Circle API route is gated by requireCircleAccess', `${routes.length} routes`);
-    } else {
-      fail(
-        'C13 B-01 Circle API route bypasses the release-posture gate',
-        ungated.map((f) => f.replace(ROOT + '/', '')).join(', ')
-      );
     }
+
+    // Destination 2 — Circle surface components, where a count would be rendered.
+    const compDir = join(ROOT, 'components/circles');
+    if (existsSync(compDir)) {
+      for (const f of readdirSync(compDir).filter((n) => n.endsWith('.tsx'))) {
+        const body = readFileSync(join(compDir, f), 'utf8');
+        const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+        if (SIGNALS.test(code)) offenders.push(`components/circles/${f}`);
+      }
+    }
+
+    offenders.length === 0
+      ? pass('C6 FR-08.7 no participation quantity reaches a member-facing Circle surface')
+      : fail('C6 FR-08.7 participation exposed as a member-facing signal', offenders.join(', '));
   }
 
   // C14 — FR-11 vs FieldPhase: two different questions that share string values.

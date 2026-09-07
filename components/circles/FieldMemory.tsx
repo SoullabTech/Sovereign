@@ -7,7 +7,6 @@ import type { CircleInquiryRow } from '@/lib/circles/types';
 
 type InquiryListItem = CircleInquiryRow & {
   opener_name: string | null;
-  response_count: number;
 };
 
 function formatDate(dateStr: string): string {

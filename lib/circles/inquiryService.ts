@@ -119,7 +119,7 @@ export async function listInquiries(
   circleId: string,
   memberId: string,
   status?: InquiryStatus
-): Promise<(CircleInquiryRow & { opener_name: string | null; response_count: number })[]> {
+): Promise<(CircleInquiryRow & { opener_name: string | null })[]> {
   await getCircleWithMembership(circleId, memberId);
 
   const statusClause = status ? `AND ci.status = $3` : '';
@@ -128,8 +128,7 @@ export async function listInquiries(
 
   const result = await query(
     `SELECT ci.*,
-       m.name AS opener_name,
-       (SELECT COUNT(*)::int FROM circle_inquiry_responses WHERE inquiry_id = ci.id) AS response_count
+       m.name AS opener_name
      FROM circle_inquiries ci
      LEFT JOIN members m ON m.id = ci.opened_by
      WHERE ci.circle_id = $1
