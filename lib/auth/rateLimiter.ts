@@ -15,10 +15,193 @@ export interface RateLimitResult {
   remainingAttempts: number;
   blockedUntil: Date | null;
   retryAfterSeconds: number | null;
+  /**
+   * True when the durable limiter was unavailable and this verdict came from
+   * the in-process emergency ceiling instead. Callers do not need to branch on
+   * it; it exists so the degraded mode is visible in logs and responses rather
+   * than silently indistinguishable from a healthy allow.
+   */
+  degraded?: boolean;
 }
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MINUTES = 15;
+
+
+/**
+ * EMERGENCY CEILING — what happens when the durable limiter is unavailable.
+ * ========================================================================
+ *
+ * This function previously returned `allowed: true` whenever the database path
+ * threw, with the reasoning that rate limiting should never block a legitimate
+ * user. That reasoning is half right, and the missing half is the one that
+ * matters: `auth_rate_limits` can be missing or broken while `members` is
+ * perfectly healthy — the catch comment named "table doesn't exist" as the
+ * motivating case. In exactly that state every authentication endpoint became
+ * an unlimited email issuer with no ceiling of any kind.
+ *
+ * So failing open is not acceptable, and failing closed is not either: a
+ * limiter outage would lock every member out of their own account.
+ *
+ * The third option is a small, bounded, in-process allowance:
+ *
+ *     durable limiter available   -> normal limits, durable and shared
+ *     durable limiter unavailable -> tiny local ceiling, then BLOCK
+ *
+ * Legitimate sign-in survives a limiter outage. Unlimited issuance does not.
+ *
+ * Deliberate properties, and their limits stated plainly:
+ *
+ *  - PROCESS-LOCAL. State lives in this process and is LOST ON RESTART, and it
+ *    is not shared between processes. A restart therefore hands back a fresh
+ *    allowance. That is acceptable for CONTAINMENT — it bounds an outage window
+ *    rather than an adversary — and it is explicitly NOT the guarantee MAIL-05
+ *    must provide. Do not let this stand in for a durable per-lane guard.
+ *
+ *  - Per-identifier AND global. Per-identifier alone would let an attacker
+ *    rotating addresses spend unlimited capacity while each key stayed under
+ *    its own limit.
+ *
+ *  - BOUNDED IN MEMORY, not merely in sends. A fallback keyed by attacker-chosen
+ *    input is itself an attack surface: rotating IPs faster than the window
+ *    expires would grow the map without limit, and a prune that only removes
+ *    EXPIRED entries removes nothing in exactly that case. So the map has a hard
+ *    cardinality cap, and once it is full a NEW identifier is decided on the
+ *    global ceiling alone rather than being allocated a bucket. Bounded memory,
+ *    bounded sends, no unbounded growth path.
+ */
+const EMERGENCY_WINDOW_MS = WINDOW_MINUTES * 60 * 1000;
+
+/** Per-identifier allowance while degraded. Matches the normal limit. */
+const EMERGENCY_PER_IDENTIFIER_MAX = MAX_ATTEMPTS;
+
+/**
+ * Process-wide ceiling while degraded. Above real traffic, far below the
+ * volume that makes abuse worth doing.
+ */
+const EMERGENCY_GLOBAL_MAX = (() => {
+  const raw = Number(process.env.AUTH_LIMITER_EMERGENCY_GLOBAL_MAX);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 500;
+})();
+
+/**
+ * Hard cap on tracked identifiers. Reached only under rotation — real traffic
+ * has nothing like this many distinct identifiers inside one window.
+ */
+const EMERGENCY_MAX_TRACKED = 10_000;
+
+type EmergencyBucket = { count: number; windowStart: number };
+
+const emergencyBuckets = new Map<string, EmergencyBucket>();
+let emergencyGlobal: EmergencyBucket = { count: 0, windowStart: Date.now() };
+
+function bump(bucket: EmergencyBucket, now: number, max: number): boolean {
+  if (now - bucket.windowStart >= EMERGENCY_WINDOW_MS) {
+    bucket.windowStart = now;
+    bucket.count = 0;
+  }
+  if (bucket.count >= max) return false;
+  bucket.count += 1;
+  return true;
+}
+
+/**
+ * Decide an attempt using only in-process state. Called ONLY when the durable
+ * limiter failed.
+ */
+function emergencyCheck(key: string): RateLimitResult {
+  const now = Date.now();
+
+  let bucket = emergencyBuckets.get(key);
+
+  if (!bucket) {
+    // Reclaim expired buckets before allocating a new one.
+    if (emergencyBuckets.size >= EMERGENCY_MAX_TRACKED) {
+      for (const [k, b] of emergencyBuckets) {
+        if (now - b.windowStart >= EMERGENCY_WINDOW_MS) emergencyBuckets.delete(k);
+      }
+    }
+
+    if (emergencyBuckets.size >= EMERGENCY_MAX_TRACKED) {
+      // Still full: every tracked bucket is live, which only happens under
+      // identifier rotation. Do NOT allocate — that is the unbounded-growth
+      // path. Decide on the global ceiling alone, which is what actually
+      // constrains a rotating attacker anyway.
+      const globalOnly = bump(emergencyGlobal, now, EMERGENCY_GLOBAL_MAX);
+      if (!globalOnly) {
+        console.error(
+          `[RateLimiter] EMERGENCY_CEILING_BLOCKED scope=global-untracked ` +
+            `tracked=${emergencyBuckets.size} globalMax=${EMERGENCY_GLOBAL_MAX}`
+        );
+        return {
+          allowed: false,
+          remainingAttempts: 0,
+          blockedUntil: new Date(emergencyGlobal.windowStart + EMERGENCY_WINDOW_MS),
+          retryAfterSeconds: Math.max(
+            1,
+            Math.ceil((emergencyGlobal.windowStart + EMERGENCY_WINDOW_MS - now) / 1000)
+          ),
+          degraded: true,
+        };
+      }
+      return {
+        allowed: true,
+        remainingAttempts: 0,
+        blockedUntil: null,
+        retryAfterSeconds: null,
+        degraded: true,
+      };
+    }
+
+    bucket = { count: 0, windowStart: now };
+    emergencyBuckets.set(key, bucket);
+  }
+
+  const globalOk = bump(emergencyGlobal, now, EMERGENCY_GLOBAL_MAX);
+  const identifierOk = bump(bucket, now, EMERGENCY_PER_IDENTIFIER_MAX);
+  const allowed = globalOk && identifierOk;
+
+  if (!allowed) {
+    const windowStart = globalOk ? bucket.windowStart : emergencyGlobal.windowStart;
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((windowStart + EMERGENCY_WINDOW_MS - now) / 1000)
+    );
+    console.error(
+      `[RateLimiter] EMERGENCY_CEILING_BLOCKED scope=${globalOk ? 'identifier' : 'global'} ` +
+        `globalCount=${emergencyGlobal.count} globalMax=${EMERGENCY_GLOBAL_MAX}`
+    );
+    return {
+      allowed: false,
+      remainingAttempts: 0,
+      blockedUntil: new Date(now + retryAfterSeconds * 1000),
+      retryAfterSeconds,
+      degraded: true,
+    };
+  }
+
+  return {
+    allowed: true,
+    remainingAttempts: Math.max(0, EMERGENCY_PER_IDENTIFIER_MAX - bucket.count),
+    blockedUntil: null,
+    retryAfterSeconds: null,
+    degraded: true,
+  };
+}
+
+/** Test seam: the cardinality cap, so a test can assert the map cannot exceed it. */
+export const __EMERGENCY_MAX_TRACKED_FOR_TESTS = EMERGENCY_MAX_TRACKED;
+
+/** Test seam: current tracked-identifier count. */
+export function __emergencyTrackedSizeForTests(): number {
+  return emergencyBuckets.size;
+}
+
+/** Test seam: drop all in-process emergency state. */
+export function __resetEmergencyCeilingForTests(): void {
+  emergencyBuckets.clear();
+  emergencyGlobal = { count: 0, windowStart: Date.now() };
+}
 
 /**
  * Check rate limit for an authentication attempt
@@ -87,15 +270,15 @@ export async function checkRateLimit(
     };
 
   } catch (error) {
-    // If rate limiting fails (e.g., table doesn't exist), allow the request
-    // but log the error. We don't want rate limiting failures to block legitimate users
-    console.error('[RateLimiter] Error checking rate limit:', error);
-    return {
-      allowed: true,
-      remainingAttempts: MAX_ATTEMPTS,
-      blockedUntil: null,
-      retryAfterSeconds: null
-    };
+    // The durable limiter is unavailable (table missing, connection lost).
+    // Do NOT allow unconditionally — see EMERGENCY CEILING above. A bounded
+    // in-process allowance keeps legitimate sign-in working through a limiter
+    // outage without restoring unlimited issuance.
+    console.error(
+      `[RateLimiter] DEGRADED endpoint=${endpoint} type=${identifierType} — durable limiter unavailable, applying emergency ceiling:`,
+      error
+    );
+    return emergencyCheck(`${identifierType}:${hashedIdentifier}:${endpoint}`);
   }
 }
 

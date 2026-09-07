@@ -4,12 +4,38 @@ export const dynamic = 'force-dynamic'
 /**
  * Passkey Recovery via Email
  * Sends member their passkey if email matches
+ *
+ * MAIL-03 CONTAINMENT (2026-09-07)
+ * ===============================
+ * This route was unauthenticated AND unmetered while `members/email-code` and
+ * `members/magic-link` both gated on checkRateLimit. Uncapped, it is a
+ * mail-bomb against any address already registered, and — because the message
+ * body contains the member's PLAINTEXT PASSKEY — an amplifier for credential
+ * exposure rather than merely a waste of sending capacity.
+ *
+ * Rate limiting is applied here on IP and on the submitted address, BEFORE the
+ * member lookup. Ordering matters for enumeration safety: a limit checked after
+ * the lookup could answer "does this account exist?" through timing or through
+ * which limiter fired.
+ *
+ * NOT fixed here, and deliberately out of scope for a containment patch:
+ * recovery mails the passkey itself instead of a single-use, expiring reset
+ * link. That is a change to what recovery MEANS, it alters the member-facing
+ * flow, and it deserves its own lane rather than being folded into a security
+ * hotfix. Tracked as a follow-up.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { sendEmail, SENDERS } from '@/lib/email/sendEmail';
 import { memberRef } from '@/lib/privacy/memberRef';
+import {
+  checkRateLimit,
+  getClientIP,
+  buildRateLimitHeaders,
+} from '@/lib/auth/rateLimiter';
+
+const ENDPOINT = 'members/recover';
 
 export const revalidate = false;
 
@@ -30,9 +56,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Metered BEFORE the lookup — see the enumeration note in the header.
+    // The refusal text is the same non-committal sentence used on the success
+    // path, so a throttled request still reveals nothing about existence.
+    const throttled = NextResponse.json(
+      {
+        success: true,
+        message: 'If an account exists with this email, recovery instructions have been sent.',
+      },
+      { status: 429 }
+    );
+
+    const clientIP = getClientIP(request);
+    const ipLimit = await checkRateLimit(clientIP, 'ip', ENDPOINT);
+    if (!ipLimit.allowed) {
+      for (const [k, v] of Object.entries(buildRateLimitHeaders(ipLimit))) {
+        throttled.headers.set(k, v);
+      }
+      return throttled;
+    }
+
+    const emailLimit = await checkRateLimit(String(email).toLowerCase().trim(), 'email', ENDPOINT);
+    if (!emailLimit.allowed) {
+      for (const [k, v] of Object.entries(buildRateLimitHeaders(emailLimit))) {
+        throttled.headers.set(k, v);
+      }
+      return throttled;
+    }
+
     // Find member by email
     const result = await query(
-      'SELECT passkey, name, username FROM members WHERE LOWER(email) = LOWER($1)',
+      // `id` is selected because the log lines below derive memberRef(member.id).
+      // It was absent before, so every recovery failure logged `memberRef(undefined)`
+      // — the correlation handle the comment below promises was never actually there.
+      'SELECT id, passkey, name, username FROM members WHERE LOWER(email) = LOWER($1)',
       [email]
     );
 
@@ -157,7 +214,9 @@ The Soullab Team
       );
     }
 
-    console.log('[MEMBERS] Recovery email sent to:', email, 'resendId:', delivery.id ?? 'none');
+    console.log(
+      `[MEMBERS] Recovery email sent for member=${memberRef(member.id)} (id: ${delivery.id ?? 'none'})`
+    );
 
     return NextResponse.json({
       success: true,
