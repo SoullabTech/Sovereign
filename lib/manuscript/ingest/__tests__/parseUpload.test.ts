@@ -10,10 +10,13 @@ import { segment } from '@/lib/manuscript/ingest/segment';
 // Mock pdf-parse so the scanned-vs-typed logic is deterministic (the real
 // text-layer extraction is exercised in the container/local render smoke).
 const mockPdf: { text: string; pages: unknown[] } = { text: '', pages: [] };
+/** Params the last getText() call received — see the PDF-CLEAN guard below. */
+const getTextCalls: unknown[] = [];
 jest.mock('pdf-parse', () => ({
   PDFParse: class {
     constructor(_opts: unknown) {}
-    async getText() {
+    async getText(params?: unknown) {
+      getTextCalls.push(params);
       return { text: mockPdf.text, pages: mockPdf.pages };
     }
     async destroy() {}
@@ -87,5 +90,34 @@ describe('parseUpload', () => {
     await expect(parseUpload(Buffer.from('x'), 'archive.zip')).rejects.toBeInstanceOf(
       UnsupportedUploadError,
     );
+  });
+});
+
+describe('PDF-CLEAN · the synthetic page marker is never generated', () => {
+  it("getText is called with an empty pageJoiner", async () => {
+    // pdf-parse's default pageJoiner is '\n-- page_number of total_number --',
+    // and the library documents an empty joiner as "no page boundary marker is
+    // added". Suppressed at source rather than filtered afterwards: an author
+    // may legitimately write `-- 1 of 2 --`, which is byte-identical to the
+    // synthetic line, so no filter can remove ours without risking theirs.
+    getTextCalls.length = 0;
+    mockPdf.text = 'Chapter One\n\nSome real text with enough length to pass.';
+    mockPdf.pages = [{}];
+
+    await parseUpload(Buffer.from('%PDF-1.4'), 'typed.pdf');
+
+    expect(getTextCalls).toHaveLength(1);
+    expect(getTextCalls[0]).toEqual({ pageJoiner: '' });
+  });
+
+  it('and what the option DOES is proven elsewhere, not here', () => {
+    // This suite mocks pdf-parse, so it cannot observe the library's real
+    // output — a mock cannot falsify a defect that IS the default output.
+    // scripts/witness/pdf-page-marker-witness.ts runs the real extractor.
+    expect(
+      fs.existsSync(
+        path.join(__dirname, '../../../../scripts/witness/pdf-page-marker-witness.ts'),
+      ),
+    ).toBe(true);
   });
 });

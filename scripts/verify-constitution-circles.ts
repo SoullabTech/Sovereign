@@ -1,0 +1,1499 @@
+/**
+ * Circle Boundary Verification Matrix
+ *
+ * Proves that the Circle constitutional boundaries ratified on 2026-09-06
+ * (FR-01 … FR-11, docs/programme/JARVIS-CIRCLES-01_FOUNDER_RULINGS_2026-09-06.md)
+ * are STRUCTURALLY enforced — not merely intended.
+ *
+ * Usage:
+ *   npx tsx scripts/verify-constitution-circles.ts
+ *   DATABASE_URL=postgres://... npx tsx scripts/verify-constitution-circles.ts
+ *
+ * PASS CONDITION — two parts, both required:
+ *
+ *     0 failed   AND   every required assertion still present
+ *
+ * `0 failed` alone is NOT sufficient. On 2026-09-07 an edit to C6 accidentally
+ * deleted C9, C10, C11 and C13; the remaining assertions all passed and the
+ * verifier reported `31 passed · 0 failed · exit 0`. It had become greener by
+ * forgetting what it used to ask.
+ *
+ *     An instrument can satisfy all of its remaining questions by forgetting to
+ *     ask the difficult ones.
+ *
+ * So REQUIRED_ASSERTIONS below is a NAMED COVERAGE FLOOR, not a frozen total.
+ * A numeric total would be brittle — legitimate new assertions raise it. The
+ * floor is deliberately by name:
+ *
+ *     required assertion missing   →  FAIL
+ *     required assertion failed    →  FAIL
+ *     required assertion WARN/SKIP →  FAIL  (executed, but established nothing)
+ *     new assertion added          →  allowed
+ *     non-required WARN/SKIP       →  non-fatal
+ *     all required discharged      →  PASS
+ *
+ * ⛔ Do not make the total authoritative. ⛔ Do not remove an ID from the floor
+ * to make a run green — that is the exact failure this exists to catch. An ID
+ * leaves the floor only by a founder act that retires the obligation itself.
+ *
+ * Consequence contract:
+ *   - Read-only in consequence. Every fixture is created inside a transaction
+ *     that is ALWAYS rolled back, including on throw.
+ *   - Exits non-zero on any failure. The pass condition is `0 failed`, never
+ *     the total — a total moves whenever checks are added.
+ *
+ * IMPORTANT — where the boundary actually lives:
+ *   This codebase has no row-level security (by design: plain self-hosted
+ *   Postgres, never Supabase RLS). Circle scoping is enforced in TypeScript by
+ *   getCircleWithMembership() in lib/circles/circleService.ts. A SQL-only
+ *   verifier would therefore prove nothing about the real boundary, and a
+ *   service-only verifier cannot see rolled-back fixtures (services hold their
+ *   own pool). This script uses three groups accordingly:
+ *
+ *     GROUP S  service layer, against REAL existing principals, pure read
+ *     GROUP T  data invariants, on fixtures inside a rolled-back transaction
+ *     GROUP C  source assertions, for constitutional properties that live in code
+ *
+ * Canon: docs/canon/VERIFICATION_STATES.md
+ */
+
+import { Pool, PoolClient } from 'pg';
+import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
+
+const DATABASE_URL =
+  process.env.DATABASE_URL ||
+  'postgresql://soullab@localhost:5432/maia_consciousness';
+
+const pool = new Pool({ connectionString: DATABASE_URL });
+const ROOT = join(__dirname, '..');
+
+let passed = 0;
+let failed = 0;
+let warned = 0;
+let skipped = 0;
+
+/**
+ * The coverage floor — every constitutional obligation this verifier is
+ * required to still be asking. Named, never counted.
+ */
+const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
+  // Group C — source and schema
+  'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8',
+  'C9', 'C10', 'C11', 'C12', 'C13', 'C14',
+  // C15 pulse contract (B-08) · C16 withdrawal visibility (CA-03)
+  'C15', 'C16',
+  // C17/C18 B-09 retirement + CA-14 scope boundary · C19 ruling-C leave cascade
+  'C17', 'C18', 'C19',
+  // I0.5 · I-02 closed join surface · I-01 join door
+  'C20', 'C21', 'C22',
+  // Group S — service layer against real principals
+  'S1', 'S2', 'S3', 'S5',
+  // FR-03 / FR-11 constitution state
+  'S4a', 'S4b', 'S4c', 'S4d', 'S4e',
+  // Group T — data invariants and live semantics
+  'T1', 'T2',
+  'T3a', 'T3b', 'T3c', 'T3d', 'T3e', 'T3f', 'T3g', 'T3h', 'T3i',
+  // CA-03 response withdrawal
+  'T7a', 'T7b', 'T7c', 'T7d', 'T7e', 'T7f', 'T7g', 'T7h',
+  // ruling C boundary cascade · B-09 retired status
+  'T8a', 'T8b', 'T8c', 'T9a', 'T9b',
+  // I0.5 · I-01 entry safety: a generic invitation cannot reinstate
+  // T10f is the interleaving witness — the mutation boundary, not a precheck
+  'T10a', 'T10b', 'T10c', 'T10d', 'T10e', 'T10f',
+  'T5', 'T6',
+]);
+
+/**
+ * Outcomes recorded per assertion ID this run.
+ *
+ * Tracked as a SET of outcomes, not a boolean, because "did it run" and "did it
+ * hold" are different questions — and only the second one discharges an
+ * obligation. A required assertion that WARNs or SKIPs has executed without
+ * establishing anything; treating that as coverage would reopen the same hole
+ * FR-14 exists to close, one level down.
+ */
+type Outcome = 'pass' | 'fail' | 'warn' | 'skip';
+const outcomes = new Map<string, Set<Outcome>>();
+
+function note(label: string, outcome: Outcome) {
+  const id = label.split(/\s+/)[0];
+  if (!id) return;
+  const set = outcomes.get(id) ?? new Set<Outcome>();
+  set.add(outcome);
+  outcomes.set(id, set);
+}
+
+/**
+ * A required obligation is discharged only when it passed and did nothing else.
+ *
+ *   PASS     satisfies
+ *   FAIL     does not      (and already counts as a failure)
+ *   WARN     does not      — executed, but established nothing
+ *   SKIP     does not      — executed, but established nothing
+ *   MISSING  does not      — never asked
+ *
+ * Non-required diagnostic WARN/SKIP outcomes remain non-fatal.
+ */
+function satisfied(id: string): boolean {
+  const set = outcomes.get(id);
+  return !!set && set.has('pass') && set.size === 1;
+}
+
+function pass(label: string, detail?: string) {
+  note(label, 'pass');
+  console.log(`  ✅ PASS  ${label}${detail ? `  (${detail})` : ''}`);
+  passed++;
+}
+function fail(label: string, detail?: string) {
+  note(label, 'fail');
+  console.log(`  ❌ FAIL  ${label}${detail ? `  → ${detail}` : ''}`);
+  failed++;
+}
+function warn(label: string, detail?: string) {
+  note(label, 'warn');
+  console.log(`  ⚠️  WARN  ${label}${detail ? `  (${detail})` : ''}`);
+  warned++;
+}
+function skip(label: string, detail?: string) {
+  note(label, 'skip');
+  console.log(`  ⏭️  SKIP  ${label}${detail ? `  (${detail})` : ''}`);
+  skipped++;
+}
+function section(title: string) {
+  console.log(`\n── ${title} ${'─'.repeat(Math.max(0, 64 - title.length))}`);
+}
+
+function src(rel: string): string | null {
+  const p = join(ROOT, rel);
+  return existsSync(p) ? readFileSync(p, 'utf8') : null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP C · Source assertions (no database)
+// Constitutional properties enforced in TypeScript, not in SQL.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function groupC() {
+  section('GROUP C · source assertions (B-01, FR-04, FR-06, FR-08)');
+
+  const circleService = src('lib/circles/circleService.ts');
+  const inquiryService = src('lib/circles/inquiryService.ts');
+  const sharingService = src('lib/circles/sharingService.ts');
+  const membership = src('lib/circles/membershipService.ts');
+  const consent = src('lib/circles/consentService.ts');
+  const pulse = src('lib/circles/fieldPulseService.ts');
+
+  // C1 — every read path is membership-gated in the service layer.
+  if (circleService && inquiryService && sharingService) {
+    const gated = [
+      ['listCircleMembers', circleService],
+      ['listFeed', sharingService],
+      ['shareArtifact', sharingService],
+      ['createInquiry', inquiryService],
+      ['respondToInquiry', inquiryService],
+      ['listInquiries', inquiryService],
+      ['getInquiryWithResponses', inquiryService],
+    ] as const;
+    const ungated = gated.filter(([fn, body]) => {
+      const i = body.indexOf(`export async function ${fn}`);
+      if (i < 0) return true;
+      const scope = body.slice(i, i + 2200);
+      return !scope.includes('getCircleWithMembership');
+    });
+    ungated.length === 0
+      ? pass('C1 every Circle read/write path calls getCircleWithMembership')
+      : fail('C1 ungated service path', ungated.map(([f]) => f).join(', '));
+  } else {
+    fail('C1 service sources unreadable');
+  }
+
+  // C2 — FR-04: contribute-before-see is enforced server-side for INQUIRY.
+  if (inquiryService) {
+    const i = inquiryService.indexOf('export async function getInquiryWithResponses');
+    const scope = i >= 0 ? inquiryService.slice(i) : '';
+    scope.includes('hasResponded') && /responses\s*=\s*\[\]|responses:\s*\(/.test(scope)
+      ? pass('C2 FR-04 inquiry withholds responses until the member has contributed')
+      : fail('C2 FR-04 inquiry contribute-before-see not evident server-side');
+  }
+
+  // C3 — FR-04: the LIVING FIELD must NOT require contribution.
+  //      Ratified: quiet presence is legitimate. A precondition here is a violation.
+  if (sharingService) {
+    const i = sharingService.indexOf('export async function listFeed');
+    const scope = i >= 0 ? sharingService.slice(i) : '';
+    /hasResponded|hasContributed|hasShared|mustContribute/.test(scope)
+      ? fail('C3 FR-04 listFeed imposes a contribution precondition on ordinary witnessing')
+      : pass('C3 FR-04 ordinary witnessing requires no contribution');
+  }
+
+  // C4 — FR-08.2: inferred material must not reach a shared field.
+  if (pulse) {
+    /from\s+member_theme_signals|JOIN\s+member_theme_signals/i.test(pulse)
+      ? fail('C4 FR-08.2 field pulse reads member_theme_signals')
+      : pass('C4 FR-08.2 field pulse does not read inferred theme signals');
+  }
+
+  // C5 — FR-08.3: no ambient MAIA-content path into a Circle.
+  //      Explicit member-authored Offer remains constitutionally allowed.
+  {
+    const offenders: string[] = [];
+    for (const rel of [
+      'lib/circles/sharingService.ts',
+      'lib/circles/fieldPulseService.ts',
+      'lib/circles/circleService.ts',
+      'lib/circles/inquiryService.ts',
+    ]) {
+      const body = src(rel);
+      if (body && /conversation_messages|semantic_memory|memory_atoms|daily_anchors|maia_turns/i.test(body)) {
+        offenders.push(rel);
+      }
+    }
+    offenders.length === 0
+      ? pass('C5 FR-08.3 no Circle service reads MAIA conversation / memory sources')
+      : fail('C5 FR-08.3 ambient MAIA-content read path', offenders.join(', '));
+  }
+
+  // C6 — FR-08.7: participation must not become a member-visible signal.
+  //
+  //      DESTINATION-AWARE BY DESIGN. This does NOT sweep Circle code for
+  //      COUNT(*) — counting is legitimate wherever it is technically required:
+  //      constitutional derivation (constitutionState.ts counts active
+  //      memberships to derive FORMING/ACTIVE), authorization, integrity checks,
+  //      verification, operations. FR-08.7 concerns Circle SOCIAL SURFACES and
+  //      member-facing status mechanics, not arithmetic.
+  //
+  //      So it asks one question of two destinations: does the member-facing
+  //      inquiry listing, or a Circle surface component, carry a participation
+  //      quantity?
+  {
+    const SIGNALS = /\bresponse_count\b|\bresponseCount\b|\bparticipation_count\b|\bparticipationCount\b/;
+    const offenders: string[] = [];
+
+    // Destination 1 — the member-facing inquiry listing itself.
+    if (inquiryService) {
+      const i = inquiryService.indexOf('export async function listInquiries');
+      if (i >= 0) {
+        const rest = inquiryService.slice(i + 1);
+        const nextExport = rest.indexOf('\nexport ');
+        const body = nextExport >= 0 ? rest.slice(0, nextExport) : rest;
+        // Strip comments: the site documents WHY the count was removed, and
+        // that prose must not read as the defect returning.
+        const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+        if (SIGNALS.test(code)) offenders.push('inquiryService.listInquiries');
+      } else {
+        offenders.push('inquiryService.listInquiries (not found)');
+      }
+    }
+
+    // Destination 2 — Circle surface components, where a count would be rendered.
+    const compDir = join(ROOT, 'components/circles');
+    if (existsSync(compDir)) {
+      for (const f of readdirSync(compDir).filter((n) => n.endsWith('.tsx'))) {
+        const body = readFileSync(join(compDir, f), 'utf8');
+        const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+        if (SIGNALS.test(code)) offenders.push(`components/circles/${f}`);
+      }
+    }
+
+    offenders.length === 0
+      ? pass('C6 FR-08.7 no participation quantity reaches a member-facing Circle surface')
+      : fail('C6 FR-08.7 participation exposed as a member-facing signal', offenders.join(', '));
+  }
+
+  // C9 — FR-06: discovery reads declared interests only.
+  {
+    const hasDiscovery = ['listAllCircles', 'discoverCircles', 'searchCircles'].some((fn) =>
+      (src('lib/circles/circleService.ts') || '').includes(fn)
+    );
+    hasDiscovery
+      ? warn('C9 FR-06 a discovery path exists — assert its inputs explicitly')
+      : pass('C9 FR-06 no discovery surface exists yet; nothing can read forbidden sources');
+  }
+
+  // C10 — FR-07: collective release must not exist before its mechanism does.
+  {
+    const anyRelease = ['lib/circles', 'app/api/circles'].some((d) => {
+      const b = src(join(d, 'sharingService.ts')) || '';
+      return /constellation|releaseToCommons|commons_release/i.test(b);
+    });
+    anyRelease
+      ? fail('C10 FR-07 a Circle→Constellation/Commons release path exists without a ratified mechanism')
+      : pass('C10 FR-07 no collective release path exists; collective material does not cross');
+  }
+
+  // C11 — FR-01/FR-08.8: a crossing is representational, not a live pointer.
+  if (sharingService) {
+    const i = sharingService.indexOf('export async function listFeed');
+    const scope = i >= 0 ? sharingService.slice(i) : '';
+    /JOIN\s+(?!members)/i.test(scope)
+      ? fail('C11 FR-08.8 feed dereferences the source object', 'live pointer')
+      : pass('C11 FR-08.8 feed serves the stored representation only');
+  }
+
+  // C13 — B-01 / CIRCLE-04 R1: the declared release posture must be the ENFORCED
+  //       one. A Next.js layout does not run for route handlers, so the page
+  //       gate in app/commons/circles/layout.tsx cannot close the API. Every
+  //       /api/circles route must go through requireCircleAccess(), and none may
+  //       resolve identity directly — a direct getMemberIdFromRequest() call is
+  //       exactly how the gap existed before R1.
+  {
+    const walk = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const e of readdirSync(dir)) {
+        const full = join(dir, e);
+        out.push(...(statSync(full).isDirectory() ? walk(full) : full.endsWith('.ts') ? [full] : []));
+      }
+      return out;
+    };
+    const apiDir = join(ROOT, 'app/api/circles');
+    const routes = existsSync(apiDir) ? walk(apiDir) : [];
+    const ungated = routes.filter((f) => {
+      const body = readFileSync(f, 'utf8');
+      return body.includes('getMemberIdFromRequest') || !body.includes('requireCircleAccess');
+    });
+    if (routes.length === 0) {
+      fail('C13 B-01 no Circle API routes found to check');
+    } else if (ungated.length === 0) {
+      pass('C13 B-01 every Circle API route is gated by requireCircleAccess', `${routes.length} routes`);
+    } else {
+      fail(
+        'C13 B-01 Circle API route bypasses the release-posture gate',
+        ungated.map((f) => f.replace(ROOT + '/', '')).join(', ')
+      );
+    }
+  }
+
+  // C14 — FR-11 vs FieldPhase: two different questions that share string values.
+  //       CircleConstitutionState is structurally assignable to FieldPhase, so
+  //       TypeScript cannot catch a mix-up. The separation is a discipline, and
+  //       this is the only thing that can falsify a drift back together.
+  {
+    const cs = src('lib/circles/constitutionState.ts');
+    const pulse2 = src('lib/circles/fieldPulseService.ts');
+    if (!cs) {
+      fail('C14 FR-11 constitution state module missing');
+    } else if (/from '\.\/fieldPulseService'|FieldPhase/.test(cs.replace(/\/\*[\s\S]*?\*\//g, ''))) {
+      fail('C14 FR-11 constitution state depends on FieldPhase', 'the two concepts must stay separate');
+    } else if (pulse2 && /constitutionState|CircleConstitutionState/.test(pulse2)) {
+      fail('C14 FR-11 field pulse depends on constitution state', 'activity heuristic must not carry plurality');
+    } else {
+      pass('C14 FR-11 constitution state and FieldPhase remain independent');
+    }
+  }
+
+  // C15 — B-08 / P4: the membership boundary lives in the pulse CONTRACT.
+  //       No exported pulse function may surface Circle-native activity from a
+  //       bare Circle id. Callers being correctly scoped today is not the same
+  //       as the signature refusing an unscoped call tomorrow.
+  {
+    const body = src('lib/circles/fieldPulseService.ts');
+    if (!body) {
+      fail('C15 B-08 field pulse source unreadable');
+    } else {
+      const unscoped: string[] = [];
+      const re = /export async function (\w+)\(([^)]*)\)/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(body))) {
+        const [, name, args] = m;
+        if (!/memberId/.test(args)) unscoped.push(name);
+      }
+      const gated = body.includes('getCircleWithMembership');
+      unscoped.length === 0 && gated
+        ? pass('C15 B-08 every exported pulse function requires member identity')
+        : fail('C15 B-08 pulse exposes Circle activity without member identity',
+               unscoped.join(', ') || 'no membership gate present');
+    }
+  }
+
+  // C16 — CA-03: a withdrawn response must leave the visible set. Asserted on
+  //       the read itself, because that is where visibility is decided.
+  {
+    const body = src('lib/circles/inquiryService.ts');
+    if (!body) {
+      fail('C16 CA-03 inquiry service source unreadable');
+    } else {
+      const i = body.indexOf('export async function getInquiryWithResponses');
+      const scope = i >= 0 ? body.slice(i) : '';
+      const filtered = /withdrawn_at IS NULL/.test(scope);
+      // No target-member parameter anywhere in the withdrawal contract: the
+      // caller can only ever withdraw their own. Proxy withdrawal is not
+      // refused at runtime — it is unrepresentable.
+      const w = body.indexOf('export async function withdrawResponseWithClient');
+      const sig = w >= 0 ? body.slice(w, body.indexOf(')', w) + 1) : '';
+      const proxyable = /target|onBehalf|responderId|authorId/i.test(sig);
+      if (!filtered) {
+        fail('C16 CA-03 the response read does not exclude withdrawn responses');
+      } else if (proxyable) {
+        fail('C16 CA-03 the withdrawal contract accepts a target member', 'proxy withdrawal representable');
+      } else {
+        pass('C16 CA-03 withdrawn responses leave the visible set; proxy withdrawal is unrepresentable');
+      }
+    }
+  }
+
+  // C17 — B-09: the retired status is gone from the type and from the writer.
+  {
+    const types = src('lib/circles/types.ts');
+    const inq = src('lib/circles/inquiryService.ts');
+    const typeOk = !!types && /export type InquiryStatus = 'open' \| 'closed';/.test(types);
+    const i = inq ? inq.indexOf('export async function closeInquiry') : -1;
+    const closeBody = i >= 0 ? inq!.slice(i, inq!.indexOf('\nexport ', i + 1)) : '';
+    const writerOk = !!closeBody && !/'integrating'/.test(closeBody.replace(/\/\/.*$/gm, ''));
+    typeOk && writerOk
+      ? pass('C17 B-09 InquiryStatus is open|closed and closeInquiry never writes the retired status')
+      : fail('C17 B-09 the retired inquiry status survives', typeOk ? 'closeInquiry still writes it' : 'still in the type');
+  }
+
+  // C18 — CA-14 scope boundary: FieldPhase is a DIFFERENT concept and must not
+  //       have been swept up in the InquiryStatus retirement. Its 'integrating'
+  //       answers "what appears to be happening in this Circle's activity".
+  {
+    const types = src('lib/circles/types.ts');
+    const pulse3 = src('lib/circles/fieldPulseService.ts');
+    const phaseIntact = !!types && /export type FieldPhase = 'forming' \| 'active' \| 'integrating' \| 'quiet';/.test(types);
+    const deriveIntact = !!pulse3 && /return 'integrating';/.test(pulse3);
+    phaseIntact && deriveIntact
+      ? pass('C18 CA-14 FieldPhase is untouched by the InquiryStatus retirement')
+      : fail('C18 CA-14 FieldPhase was altered', 'the two integrating concepts must stay separate');
+  }
+
+  // C19 — ruling C: leaving wires the boundary cascade. leaveCircle() runs its
+  //       own transaction, so the semantics are proven at T8a; this proves the
+  //       wire exists at all.
+  {
+    const body = src('lib/circles/membershipService.ts');
+    body && /tombstoneMemberResponsesInCircle/.test(body)
+      ? pass('C19 ruling-C leaveCircle cascades to inquiry responses')
+      : fail('C19 ruling-C leaveCircle does not cascade to inquiry responses');
+  }
+
+  // ── I0.5 · ENTRY SAFETY (I-01, I-02, I-03) ───────────────────────────────
+  //
+  // R1 closed the Circle API and left the member-facing surface behind. The
+  // page then asked an unauthorized visitor for an invite token AND a consent
+  // mode, and POSTed both to a door already committed to refusing. These three
+  // assert that the surface and the door now say the same thing.
+
+  // C20 — I-02: /commons/join refuses before it renders. A page gate is not the
+  //       authorization (C13 holds that line for the API); it is the surface
+  //       telling the truth the API already tells.
+  {
+    const joinLayout = src('app/commons/join/layout.tsx');
+    if (!joinLayout) {
+      fail('C20 I-02 no closed-state gate on /commons/join', 'app/commons/join/layout.tsx missing');
+    } else if (!/requireFounder\s*\(/.test(joinLayout)) {
+      fail('C20 I-02 the join surface does not check authorization');
+    } else if (!/!auth\.ok/.test(joinLayout)) {
+      fail('C20 I-02 the join surface checks authorization without acting on it');
+    } else {
+      pass('C20 I-02 /commons/join states its closure before rendering a join surface');
+    }
+  }
+
+  // C21 — I-02/I-03: the closed state SOLICITS NOTHING and VALIDATES NOTHING.
+  //       Two distinct wrongs. Asking for a consent mode collects a sovereign
+  //       act the system has no standing to receive; reading circle_invites
+  //       would let a refused visitor learn whether their token is real, which
+  //       is exactly the disclosure I-03 preserves against.
+  {
+    const joinLayout = src('app/commons/join/layout.tsx');
+    if (!joinLayout) {
+      fail('C21 I-03 no closed-state gate to inspect');
+    } else {
+      // Strip comments before scanning — the same discipline C6 already uses.
+      // The layout documents WHY it reads no invite, and on the first canonical
+      // run of ae0fadd54 that sentence ("nothing here reads circle_invites") was
+      // itself matched: 62 passed · 1 failed. The instrument took its own
+      // documentation as evidence of the defect it documents the absence of.
+      // A prose ban must never read as the banned behavior returning.
+      const code = joinLayout
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      const solicits = /consentMode|consent_mode|<input|<form/.test(code);
+      const validates = /circle_invites|joinWithInvite|getInvite|validateToken/.test(code);
+      if (solicits) {
+        fail('C21 I-02 the closed join surface still solicits', 'a form, an input, or a consent mode');
+      } else if (validates) {
+        fail('C21 I-03 the closed join surface inspects the token', 'valid and invalid become distinguishable');
+      } else {
+        pass('C21 I-02/I-03 the closed surface asks for nothing and reads no invite');
+      }
+    }
+  }
+
+  // C22 — I-01: the join door itself. C13 sweeps every /api/circles route; this
+  //       names the one that can change standing, because a regression there is
+  //       not a scoping bug — it is entry into a Circle somebody was removed from.
+  {
+    const joinRoute = src('app/api/circles/join/route.ts');
+    if (!joinRoute) {
+      fail('C22 I-01 the join route is missing');
+    } else if (!/requireCircleAccess\s*\(/.test(joinRoute)) {
+      fail('C22 I-01 the join route does not go through requireCircleAccess()');
+    } else if (/getMemberIdFromRequest\s*\(/.test(joinRoute)) {
+      fail('C22 I-01 the join route resolves identity directly', 'this is how B-01 existed');
+    } else if (!/REINSTATEMENT_REQUIRED/.test(joinRoute)) {
+      fail('C22 I-01 the join route cannot express a reinstatement refusal');
+    } else {
+      pass('C22 I-01 the join door is gated and can refuse a reinstatement');
+    }
+  }
+
+  // C12 — FR-05/FR-01: revocation must never touch the source item.
+  if (sharingService && membership && consent) {
+    const deletesSource = [sharingService, membership, consent].some((b) =>
+      /DELETE\s+FROM\s+(?!shared_artifacts)/i.test(b)
+    );
+    deletesSource
+      ? fail('C12 FR-01 a revocation path deletes from a non-share table')
+      : pass('C12 FR-01 revocation sets revoked_at only; source untouched');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP S · Service layer, real principals, pure read
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function groupS() {
+  section('GROUP S · service layer vs real principals (FR-01)');
+
+  const rows = (
+    await pool.query<{ member_id: string; circle_id: string }>(
+      `SELECT member_id, circle_id FROM circle_memberships WHERE status = 'active' ORDER BY created_at`
+    )
+  ).rows;
+
+  const byMember = new Map<string, string[]>();
+  for (const r of rows) {
+    byMember.set(r.member_id, [...(byMember.get(r.member_id) ?? []), r.circle_id]);
+  }
+
+  // S1 — cross-circle isolation, using two real members in different Circles.
+  const members = [...byMember.keys()];
+  let a: string | null = null;
+  let bCircle: string | null = null;
+  outer: for (const m of members) {
+    for (const other of members) {
+      if (other === m) continue;
+      const foreign = (byMember.get(other) ?? []).find((c) => !(byMember.get(m) ?? []).includes(c));
+      if (foreign) {
+        a = m;
+        bCircle = foreign;
+        break outer;
+      }
+    }
+  }
+
+  if (!a || !bCircle) {
+    skip('S1 cross-circle isolation', 'no two members in disjoint Circles');
+  } else {
+    const { getCircleWithMembership } = await import('../lib/circles/circleService');
+    try {
+      await getCircleWithMembership(bCircle, a);
+      fail('S1 FR-01 member A read Circle B', `${a.slice(0, 8)} → ${bCircle.slice(0, 8)}`);
+    } catch (e: any) {
+      e?.message === 'FORBIDDEN'
+        ? pass('S1 FR-01 member A cannot read Circle B')
+        : fail('S1 FR-01 unexpected error', e?.message);
+    }
+
+    const { listFeed } = await import('../lib/circles/sharingService');
+    try {
+      await listFeed(bCircle, a);
+      fail('S2 FR-01 member A read Circle B feed');
+    } catch (e: any) {
+      e?.message === 'FORBIDDEN'
+        ? pass('S2 FR-01 member A cannot read Circle B feed')
+        : fail('S2 FR-01 unexpected error', e?.message);
+    }
+
+    const { getCirclePulse } = await import('../lib/circles/fieldPulseService');
+    try {
+      await getCirclePulse(bCircle, a);
+      fail('S5 B-08 member A read Circle B pulse');
+    } catch (e: any) {
+      e?.message === 'FORBIDDEN'
+        ? pass('S5 B-08 member A cannot read Circle B pulse')
+        : fail('S5 B-08 unexpected error', e?.message);
+    }
+
+    const { shareArtifact } = await import('../lib/circles/sharingService');
+    try {
+      await shareArtifact({
+        circleId: bCircle,
+        memberId: a,
+        artifactType: 'verifier-probe',
+        artifactRef: 'probe',
+        contentMode: 'summary_only',
+        sharedTitle: null,
+        sharedSummary: null,
+        sharedText: null,
+      });
+      fail('S3 FR-01 member A shared into Circle B — WRITE LEAK');
+    } catch (e: any) {
+      e?.message === 'FORBIDDEN'
+        ? pass('S3 FR-01 member A cannot share into Circle B')
+        : fail('S3 FR-01 unexpected error', e?.message);
+    }
+  }
+
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP T · Data invariants on rolled-back fixtures
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Probe an expected constraint violation without poisoning the shared
+ * transaction.
+ *
+ * PostgreSQL aborts the whole transaction on any error, so catching a UNIQUE
+ * violation in TypeScript and continuing leaves every later statement failing
+ * with 25P02. That is exactly how T5 and T6 silently stopped executing on the
+ * 2026-09-07 run — and FR-14 caught it, because they never discharged.
+ *
+ * It also requires the EXACT SQLSTATE. Catching any error and calling it proof
+ * that an invariant held is too permissive: a typo, a missing column or a
+ * poisoned transaction would all "pass".
+ */
+async function expectViolation(
+  tx: PoolClient,
+  savepoint: string,
+  sqlstate: string,
+  sql: string,
+  params: unknown[] = []
+): Promise<'violated' | 'succeeded' | string> {
+  await tx.query(`SAVEPOINT ${savepoint}`);
+  try {
+    await tx.query(sql, params);
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`);
+    return 'succeeded';
+  } catch (e: any) {
+    await tx.query(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`);
+    return e?.code === sqlstate ? 'violated' : `sqlstate ${e?.code ?? 'unknown'}`;
+  }
+}
+
+async function groupT(tx: PoolClient) {
+  section('GROUP T · live semantics on rolled-back fixtures (FR-01, FR-05, FR-08)');
+
+  const mk = async (name: string) =>
+    (
+      await tx.query<{ id: string }>(
+        `INSERT INTO members (passkey, username, password_hash, name)
+         VALUES ($1, $1, 'verifier', $2) RETURNING id`,
+        [`VERIFY-${name}-${Date.now()}`, `verifier-${name}`]
+      )
+    ).rows[0].id;
+
+  const mA = await mk('a');
+  const mB = await mk('b');
+
+  const circle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier fixture') RETURNING id`,
+      [mA]
+    )
+  ).rows[0].id;
+
+  for (const [m, role] of [
+    [mA, 'facilitator'],
+    [mB, 'member'],
+  ] as const) {
+    await tx.query(
+      `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+       VALUES ($1, $2, $3, 'active', 'manual', NOW())`,
+      [circle, m, role]
+    );
+  }
+
+  const art = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO shared_artifacts (circle_id, shared_by, artifact_type, artifact_ref, content_mode, shared_title)
+       VALUES ($1, $2, 'note', 'src-1', 'summary_only', 'fixture') RETURNING id`,
+      [circle, mB]
+    )
+  ).rows[0].id;
+
+  // T1 — FR-01: revocation removes the share from the field.
+  await tx.query(`UPDATE shared_artifacts SET revoked_at = NOW() WHERE id = $1`, [art]);
+  const visible = (
+    await tx.query(`SELECT 1 FROM shared_artifacts WHERE id = $1 AND revoked_at IS NULL`, [art])
+  ).rowCount;
+  visible === 0
+    ? pass('T1 FR-01 revoked material leaves the field')
+    : fail('T1 FR-01 revoked material still visible');
+
+  // T2 — FR-01: the source is untouched by revocation.
+  const ref = (
+    await tx.query<{ artifact_ref: string }>(`SELECT artifact_ref FROM shared_artifacts WHERE id = $1`, [art])
+  ).rows[0];
+  ref?.artifact_ref === 'src-1'
+    ? pass('T2 FR-01 source reference intact after revocation')
+    : fail('T2 FR-01 revocation mutated the source reference');
+
+  // ── FR-05 removal contract (CIRCLE-04 R2) ────────────────────────────────
+  //
+  // C7 and C8 moved into this group deliberately. As source-token checks they
+  // could only report that some string existed; here they interrogate the live
+  // schema. T3 then drives the REAL removal path — removeMemberWithClient() on
+  // this rolled-back client — so the assertions test semantics, not spelling.
+
+  // C7 — the append-only removal record exists with the fields FR-05 requires.
+  const removalCols = (
+    await tx.query<{ column_name: string; is_nullable: string }>(
+      `SELECT column_name, is_nullable FROM information_schema.columns
+       WHERE table_name = 'circle_membership_removals'`
+    )
+  ).rows;
+  const colNames = new Set(removalCols.map((r) => r.column_name));
+  const required = ['circle_id', 'removed_member_id', 'removed_by', 'grounds', 'resulting_status', 'created_at'];
+  const missing = required.filter((c) => !colNames.has(c));
+  if (removalCols.length === 0) {
+    fail('C7 FR-05 no removal record table', 'circle_membership_removals does not exist');
+  } else if (missing.length) {
+    fail('C7 FR-05 removal record incomplete', `missing: ${missing.join(', ')}`);
+  } else {
+    pass('C7 FR-05 removal record exists with circle, member, actor, grounds, state, time');
+  }
+
+  // C8 — the record is append-only and grounds cannot be empty.
+  {
+    const groundsNullable = removalCols.find((r) => r.column_name === 'grounds')?.is_nullable;
+    const hasUpdatedAt = colNames.has('updated_at');
+    const checks = (
+      await tx.query<{ conname: string }>(
+        `SELECT conname FROM pg_constraint
+         WHERE conrelid = to_regclass('circle_membership_removals') AND contype = 'c'`
+      )
+    ).rows.map((r) => r.conname);
+    const hasBlankGuard = checks.some((c) => c.includes('grounds_not_blank'));
+    const hasSelfGuard = checks.some((c) => c.includes('not_self'));
+    if (removalCols.length === 0) {
+      fail('C8 FR-05 removal grounds/actor cannot be recorded', 'no removal record table');
+    } else if (groundsNullable !== 'NO' || !hasBlankGuard) {
+      fail('C8 FR-05 grounds are not required', 'an unexplained removal would be recordable');
+    } else if (!hasSelfGuard) {
+      fail('C8 FR-05 self-removal is recordable as a removal', 'missing not_self constraint');
+    } else if (hasUpdatedAt) {
+      fail('C8 FR-05 removal record is not append-only', 'updated_at present');
+    } else {
+      pass('C8 FR-05 removal record is append-only with required, non-blank grounds');
+    }
+  }
+
+  // Fixtures for the semantic family: a facilitator, an ordinary member, a
+  // second ordinary member, and a SECOND Circle to prove scoping.
+  const mC = await mk('c');
+  await tx.query(
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [circle, mC]
+  );
+  const otherCircle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier other') RETURNING id`,
+      [mC]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [otherCircle, mB]
+  );
+  const shareB = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO shared_artifacts (circle_id, shared_by, artifact_type, artifact_ref, content_mode)
+       VALUES ($1, $2, 'note', 'src-removal', 'summary_only') RETURNING id`,
+      [circle, mB]
+    )
+  ).rows[0].id;
+
+  const { removeMemberWithClient } = await import('../lib/circles/removalService');
+  const attempt = async (input: Parameters<typeof removeMemberWithClient>[1]) => {
+    try {
+      await removeMemberWithClient(tx as any, input);
+      return null;
+    } catch (e: any) {
+      return e?.message ?? 'UNKNOWN';
+    }
+  };
+
+  // T3a — an ordinary member cannot remove another member.
+  const asOrdinary = await attempt({
+    circleId: circle, actingMemberId: mC, targetMemberId: mB, grounds: 'probe',
+  });
+  asOrdinary === 'ROLE_INSUFFICIENT'
+    ? pass('T3a FR-05 an ordinary member cannot remove another member')
+    : fail('T3a FR-05 ordinary-member removal was not refused', String(asOrdinary));
+
+  // T3b — a facilitator cannot remove themselves; that is leaving.
+  const asSelf = await attempt({
+    circleId: circle, actingMemberId: mA, targetMemberId: mA, grounds: 'probe',
+  });
+  asSelf === 'SELF_REMOVAL'
+    ? pass('T3b FR-05 self-removal is refused; leaving is a different act')
+    : fail('T3b FR-05 self-removal was not refused', String(asSelf));
+
+  // T3c — grounds are required. An unexplained removal is the interpretive
+  //       judgment FR-05 forbids.
+  const noGrounds = await attempt({
+    circleId: circle, actingMemberId: mA, targetMemberId: mB, grounds: '   ',
+  });
+  noGrounds === 'GROUNDS_REQUIRED'
+    ? pass('T3c FR-05 removal without grounds is refused')
+    : fail('T3c FR-05 groundless removal was not refused', String(noGrounds));
+
+  // T3d — an authorized facilitator can enact removal.
+  let record: any = null;
+  try {
+    record = await removeMemberWithClient(tx as any, {
+      circleId: circle,
+      actingMemberId: mA,
+      targetMemberId: mB,
+      grounds: 'explicit boundary breach, verifier fixture',
+    });
+    pass('T3d FR-05 an authorized facilitator can enact removal');
+  } catch (e: any) {
+    fail('T3d FR-05 facilitator removal failed', e?.message);
+  }
+
+  // T3e — the act records WHO and WHY.
+  record && record.removed_by === mA && record.grounds.includes('boundary breach')
+    ? pass('T3e FR-05 removal records the acting facilitator and the grounds')
+    : fail('T3e FR-05 removal did not record actor and grounds');
+
+  // T3f — removal cuts access.
+  const stillActive = (
+    await tx.query(
+      `SELECT 1 FROM circle_memberships WHERE circle_id = $1 AND member_id = $2 AND status = 'active'`,
+      [circle, mB]
+    )
+  ).rowCount;
+  stillActive === 0
+    ? pass('T3f FR-05 removal cuts active membership')
+    : fail('T3f FR-05 removal did not cut membership');
+
+  // T3g — removal revokes the removed member's shares, exactly as leaving does.
+  const liveShare = (
+    await tx.query(`SELECT 1 FROM shared_artifacts WHERE id = $1 AND revoked_at IS NULL`, [shareB])
+  ).rowCount;
+  liveShare === 0
+    ? pass('T3g FR-05 removal revokes the removed member\'s Circle shares')
+    : fail('T3g FR-05 removed member\'s material is still in the field');
+
+  // T3h — the source is untouched. Only the Circle-side representation is revoked.
+  const srcRef = (
+    await tx.query<{ artifact_ref: string }>(
+      `SELECT artifact_ref FROM shared_artifacts WHERE id = $1`,
+      [shareB]
+    )
+  ).rows[0];
+  srcRef?.artifact_ref === 'src-removal'
+    ? pass('T3h FR-05 removal leaves the original source material untouched')
+    : fail('T3h FR-05 removal mutated the source reference');
+
+  // T3i — removal is scoped to one field. Other Circles are not affected.
+  const elsewhere = (
+    await tx.query(
+      `SELECT 1 FROM circle_memberships
+       WHERE circle_id = $1 AND member_id = $2 AND status = 'active'`,
+      [otherCircle, mB]
+    )
+  ).rowCount;
+  elsewhere === 1
+    ? pass('T3i FR-05 removal does not affect memberships in any other Circle')
+    : fail('T3i FR-05 removal leaked across Circles');
+
+  // ── FR-03 / FR-11 constitution state (CIRCLE-04 R3) ──────────────────────
+  //
+  // Derived, never stored. These walk ONE fixture Circle through the
+  // transitions and assert the canonical derivation each time — deliberately
+  // NOT reading the four historical production Circles, which could only
+  // manufacture a pass. The derivation itself is what is under test.
+
+  const { getCircleConstitutionState } = await import('../lib/circles/constitutionState');
+  const csCircle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier constitution') RETURNING id`,
+      [mA]
+    )
+  ).rows[0].id;
+  const join = async (member: string) =>
+    tx.query(
+      `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+       VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+      [csCircle, member]
+    );
+  const stateNow = () => getCircleConstitutionState(csCircle, tx as any);
+
+  // S4a — one active member. Intention, not yet plurality.
+  await join(mA);
+  (await stateNow()) === 'forming'
+    ? pass('S4a FR-11 one active member derives FORMING')
+    : fail('S4a FR-11 one active member did not derive FORMING');
+
+  // S4b — two. Relationship, but dyadic geometry (FR-03). Still not a Circle.
+  await join(mB);
+  (await stateNow()) === 'forming'
+    ? pass('S4b FR-11 two active members derive FORMING')
+    : fail('S4b FR-11 two active members did not derive FORMING');
+
+  // S4c — three. Plurality exists; the field is constituted.
+  await join(mC);
+  (await stateNow()) === 'active'
+    ? pass('S4c FR-03 three active members derive ACTIVE')
+    : fail('S4c FR-03 three active members did not derive ACTIVE');
+
+  // S4d — re-formation. A Circle that falls below plurality is not a failure
+  //       and has not returned to its beginning; it is simply not presently
+  //       constituted as a plural field.
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'left' WHERE circle_id = $1 AND member_id = $2`,
+    [csCircle, mC]
+  );
+  (await stateNow()) === 'forming'
+    ? pass('S4d FR-11 falling below plurality derives FORMING')
+    : fail('S4d FR-11 an ACTIVE Circle below plurality still derived ACTIVE');
+
+  // S4e — and back, with no administrator act and no timer.
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'active' WHERE circle_id = $1 AND member_id = $2`,
+    [csCircle, mC]
+  );
+  (await stateNow()) === 'active'
+    ? pass('S4e FR-11 regaining plurality derives ACTIVE')
+    : fail('S4e FR-11 regaining plurality did not derive ACTIVE');
+
+  // ── CA-03 response withdrawal (CIRCLE-04 · P3) ───────────────────────────
+  //
+  // Drives the real contract on the rolled-back client. mA and mC are both
+  // active in `circle`; mB was removed by the T3 family above.
+
+  const { withdrawResponseWithClient } = await import('../lib/circles/inquiryService');
+  const wInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier withdrawal fixture question') RETURNING id`,
+      [circle, mA]
+    )
+  ).rows[0].id;
+  for (const [m, text] of [[mA, 'author answer'], [mC, 'other answer']] as const) {
+    await tx.query(
+      `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+       VALUES ($1, $2, $3)`,
+      [wInq, m, text]
+    );
+  }
+  const tryWithdraw = async (inq: string, member: string) => {
+    try {
+      await withdrawResponseWithClient(tx as any, inq, member);
+      return null;
+    } catch (e: any) {
+      return e?.message ?? 'UNKNOWN';
+    }
+  };
+
+  // T7a — the author may withdraw their own response.
+  (await tryWithdraw(wInq, mA)) === null
+    ? pass('T7a CA-03 a member can withdraw their own response')
+    : fail('T7a CA-03 the author could not withdraw their own response');
+
+  // T7b — withdrawal leaves the visible set, using the service's own filter.
+  const liveResponders = (
+    await tx.query<{ member_id: string }>(
+      `SELECT member_id FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND withdrawn_at IS NULL`,
+      [wInq]
+    )
+  ).rows.map((r) => r.member_id);
+  !liveResponders.includes(mA) && liveResponders.includes(mC)
+    ? pass('T7b CA-03 the withdrawn response leaves the field; others remain')
+    : fail('T7b CA-03 withdrawal did not remove the response from the visible set');
+
+  // T7c — nobody withdraws on the author's behalf. Scoped by the query itself,
+  //       so there is no branch in which another member's id reaches the write.
+  (await tryWithdraw(wInq, mA)) === 'ALREADY_WITHDRAWN'
+    ? pass('T7c CA-03 a withdrawn response cannot be withdrawn twice')
+    : fail('T7c CA-03 double withdrawal was not refused');
+
+  // T7d — one member's withdrawal never touches another's contribution.
+  //       Note the stronger fact this rests on: the contract takes no TARGET
+  //       member parameter at all, so withdrawing on someone else's behalf is
+  //       unreachable by construction rather than refused by a branch. C16
+  //       asserts that structurally; this asserts the data consequence.
+  const othersLive = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+  othersLive === 1
+    ? pass('T7d CA-03 withdrawal never touches another member\'s response')
+    : fail('T7d CA-03 a withdrawal affected another member\'s response');
+
+  // T7e — a member with no response has nothing to withdraw, and learns nothing.
+  (await tryWithdraw(wInq, mB)) === 'NOT_FOUND'
+    ? pass('T7e CA-03 a non-responder cannot withdraw, and is told only that')
+    : fail('T7e CA-03 a non-responder withdrawal was not refused as NOT_FOUND');
+
+  // T7f — the row is retained, so FR-04 still holds: withdrawing does not buy a
+  //       second answer informed by having seen the others.
+  const second = await expectViolation(
+    tx, 'sp_t7f', '23505',
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'second attempt')`,
+    [wInq, mA]
+  );
+  second === 'violated'
+    ? pass('T7f FR-04 withdrawal does not permit a second, better-informed answer')
+    : fail('T7f FR-04 a withdrawn member could answer again', String(second));
+
+  // T7g — the tombstone: the fact survives, the authored payload does not.
+  const tomb = (
+    await tx.query<{ response_text: string | null; response_type: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, response_type, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [wInq, mA]
+    )
+  ).rows[0];
+  tomb && tomb.withdrawn_at && tomb.response_text === null && tomb.response_type === null
+    ? pass('T7g CA-03 withdrawal tombstones the payload; only the fact remains')
+    : fail('T7g CA-03 withdrawal retained authored content', JSON.stringify(tomb));
+
+  // T7h — the two halves cannot drift: a withdrawn row with a payload is not
+  //       representable, and neither is a live row without one.
+  const drift = await expectViolation(
+    tx, 'sp_t7h', '23514',
+    `UPDATE circle_inquiry_responses SET response_text = 'restored'
+     WHERE inquiry_id = $1 AND member_id = $2`,
+    [wInq, mA]
+  );
+  drift === 'violated'
+    ? pass('T7h CA-03 a withdrawn response cannot regain a payload')
+    : fail('T7h CA-03 the tombstone invariant did not hold', String(drift));
+
+  // ── Boundary cascade (founder ruling C) ──────────────────────────────────
+  //
+  // Ending membership ends the eligibility of that member's Circle-side
+  // representations to remain in the field. Not proxy withdrawal — the
+  // relationship ended.
+
+  const { tombstoneMemberResponsesInCircle } = await import('../lib/circles/inquiryService');
+  const cascadeCircle = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circles (created_by, name) VALUES ($1, 'verifier cascade') RETURNING id`,
+      [mA]
+    )
+  ).rows[0].id;
+  for (const [m, role] of [[mA, 'facilitator'], [mC, 'member']] as const) {
+    await tx.query(
+      `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+       VALUES ($1, $2, $3, 'active', 'manual', NOW())`,
+      [cascadeCircle, m, role]
+    );
+  }
+  const cInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier cascade fixture question') RETURNING id`,
+      [cascadeCircle, mA]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'cascade answer')`,
+    [cInq, mC]
+  );
+  // mC also holds a LIVE response in another Circle (wInq) — it must survive.
+  const otherCircleLiveBefore = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+
+  // T8a — the cascade tombstones live responses in the Circle being left.
+  await tombstoneMemberResponsesInCircle(tx as any, cascadeCircle, mC);
+  const cascaded = (
+    await tx.query<{ response_text: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [cInq, mC]
+    )
+  ).rows[0];
+  cascaded?.withdrawn_at && cascaded.response_text === null
+    ? pass('T8a ruling-C leaving/removal tombstones the member\'s live responses')
+    : fail('T8a ruling-C a response survived the boundary cascade', JSON.stringify(cascaded));
+
+  // T8b — a removal carries the same cascade, atomically with the removal.
+  const rInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier removal cascade question') RETURNING id`,
+      [cascadeCircle, mA]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `UPDATE circle_memberships SET status = 'active' WHERE circle_id = $1 AND member_id = $2`,
+    [cascadeCircle, mC]
+  );
+  await tx.query(
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+     VALUES ($1, $2, 'removal cascade answer')`,
+    [rInq, mC]
+  );
+  try {
+    await removeMemberWithClient(tx as any, {
+      circleId: cascadeCircle, actingMemberId: mA, targetMemberId: mC,
+      grounds: 'verifier cascade fixture',
+    });
+  } catch { /* asserted below */ }
+  const removedResp = (
+    await tx.query<{ response_text: string | null; withdrawn_at: string | null }>(
+      `SELECT response_text, withdrawn_at FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2`,
+      [rInq, mC]
+    )
+  ).rows[0];
+  removedResp?.withdrawn_at && removedResp.response_text === null
+    ? pass('T8b ruling-C removal tombstones the removed member\'s live responses')
+    : fail('T8b ruling-C a response survived removal', JSON.stringify(removedResp));
+
+  // T8c — no other Circle is affected. The cascade is scoped to one field.
+  const otherCircleLiveAfter = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+  otherCircleLiveBefore === 1 && otherCircleLiveAfter === 1
+    ? pass('T8c ruling-C the cascade never reaches another Circle')
+    : fail('T8c ruling-C the cascade leaked across Circles');
+
+  // ── B-09: the retired inquiry status ─────────────────────────────────────
+
+  // T9a — the vocabulary no longer admits it.
+  const retired = await expectViolation(
+    tx, 'sp_t9a', '23514',
+    `UPDATE circle_inquiries SET status = 'integrating' WHERE id = $1`,
+    [cInq]
+  );
+  retired === 'violated'
+    ? pass('T9a B-09 the database rejects the retired inquiry status')
+    : fail('T9a B-09 status=integrating is still storable', String(retired));
+
+  // T9b — a closed inquiry may legitimately carry a synthesis. That was always
+  //       the underlying fact; it just is not a second status.
+  await tx.query(
+    `UPDATE circle_inquiries SET status = 'closed', closed_at = NOW(), field_synthesis = $1 WHERE id = $2`,
+    ['verifier synthesis', cInq]
+  );
+  const closedWithSynthesis = (
+    await tx.query<{ status: string; field_synthesis: string | null }>(
+      `SELECT status, field_synthesis FROM circle_inquiries WHERE id = $1`,
+      [cInq]
+    )
+  ).rows[0];
+  closedWithSynthesis?.status === 'closed' && !!closedWithSynthesis.field_synthesis
+    ? pass('T9b B-09 a closed inquiry carries its synthesis as a property, not a status')
+    : fail('T9b B-09 closed + synthesis is not representable');
+
+  // ── I0.5 · I-01: an invitation cannot reinstate a removed member ─────────
+  //
+  // THE DEFECT THIS CLOSES. A Circle invite token is CIRCLE-WIDE and never
+  // expires, and joinWithInvite() upserted membership — so a member removed
+  // under the FR-05 contract (grounds, authority, an append-only record) was
+  // restored to `active` by the same link everyone else holds. FR-05 requires
+  // removal to cut access; it cut access only until the next join request.
+  //
+  // The repair is NOT revoking the token. Revocation is Circle-wide: it would
+  // withdraw the invitation from every person who holds it in order to answer
+  // one person's standing. An invitation is permission to approach a threshold.
+  // It was never authority to erase relational history.
+  //
+  // mB was removed from `circle` by T3d above and remains active in
+  // `otherCircle`. The invite below is real, live, and unrevoked throughout.
+  const { joinWithInviteWithClient } = await import('../lib/circles/inviteService');
+  const liveToken = (
+    await tx.query<{ token: string }>(
+      `INSERT INTO circle_invites (circle_id, created_by, token)
+       VALUES ($1, $2, $3) RETURNING token`,
+      [circle, mA, `verifier-invite-${Date.now()}`]
+    )
+  ).rows[0].token;
+
+  const tryJoin = async (memberId: string) => {
+    try {
+      return { ok: true as const, circleId: await joinWithInviteWithClient(tx as any, liveToken, memberId, 'manual') };
+    } catch (e: any) {
+      return { ok: false as const, error: e?.message ?? 'UNKNOWN' };
+    }
+  };
+
+  const removalsBefore = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0].n;
+
+  // T10a — the refusal itself. A recorded removal standing outranks a generic
+  //        invitation. (Precheck-satisfiable on its own — see T10f.)
+  const reinstate = await tryJoin(mB);
+  !reinstate.ok && reinstate.error === 'REINSTATEMENT_REQUIRED'
+    ? pass('T10a I-01 a valid live invite does not reinstate a removed member')
+    : fail('T10a I-01 a removed member rejoined on a generic invite', JSON.stringify(reinstate));
+
+  // T10b — and no write happened. A refusal that still upserted would satisfy
+  //        the error message and defeat the boundary. With the guard inside the
+  //        upsert, "refused" and "not written" are the same event.
+  const standing = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0]?.status;
+  standing === 'removed'
+    ? pass('T10b I-01 the removed standing survives the join attempt')
+    : fail('T10b I-01 the join attempt altered standing', String(standing));
+
+  // T10c — the evidence of the removal act is untouched. FR-05's record is the
+  //        thing that makes later independent review possible.
+  const removalsAfter = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mB]
+    )
+  ).rows[0].n;
+  removalsBefore > 0 && removalsAfter === removalsBefore
+    ? pass('T10c I-01 the removal record is intact after the refusal')
+    : fail('T10c I-01 the removal record changed', `${removalsBefore} → ${removalsAfter}`);
+
+  // T10d — THE COUNTERPART, and the reason revocation was the wrong repair: the
+  //        same invitation still works for anyone whose standing does not
+  //        forbid it. One person's boundary did not close the door.
+  const mD = await mk('d');
+  const eligible = await tryJoin(mD);
+  const dStatus = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mD]
+    )
+  ).rows[0]?.status;
+  eligible.ok && eligible.circleId === circle && dStatus === 'active'
+    ? pass('T10d I-01 the same live invite still admits an independently eligible member')
+    : fail('T10d I-01 the invitation was collateral damage', JSON.stringify({ eligible, dStatus }));
+
+  // T10e — the refusal is scoped to one field. mB's standing elsewhere is not a
+  //        consequence of being removed here (AUTHOR WITHDRAWAL ≠ BOUNDARY
+  //        CASCADE, FR-16 — and neither cascades across Circles).
+  const elsewhereAfterRefusal = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [otherCircle, mB]
+    )
+  ).rows[0]?.status;
+  elsewhereAfterRefusal === 'active'
+    ? pass('T10e I-01 the refusal did not reach another Circle')
+    : fail('T10e I-01 standing in another Circle changed', String(elsewhereAfterRefusal));
+
+  // ⭐ T10f — THE INTERLEAVING WITNESS. T10a–T10e all evaluate a standing that
+  //        was already `removed` before the join began. That is satisfiable by a
+  //        precheck, and a precheck is not the rule: `transaction()` is an
+  //        ordinary BEGIN with no row lock, so a removal committing between a
+  //        standing SELECT and the membership write would let a generic
+  //        invitation overwrite it. FR-18 is a claim about the MUTATION
+  //        BOUNDARY, so something has to test that boundary specifically.
+  //
+  //        Constructed deterministically rather than concurrently. A second
+  //        connection would need committed fixtures, which would break this
+  //        verifier's rollback-only consequence contract — the property being
+  //        tested does not require real parallelism, only that a REAL removal
+  //        land after the invitation has been evaluated and before membership is
+  //        written. So an InviteClient wrapper delegates every statement to this
+  //        same rolled-back transaction, and on the membership INSERT — the
+  //        moment before the mutation — it runs the REAL removeMemberWithClient()
+  //        first:
+  //
+  //            join crosses the invitation threshold
+  //              ↓
+  //            real FR-05 removal is enacted
+  //              ↓
+  //            join reaches the membership mutation
+  //              ↓
+  //            the generic invitation MUST lose
+  //
+  //        A candidate that refuses via a precheck passes T10a–T10e and FAILS
+  //        HERE. That is the point of the obligation.
+  const mE = await mk('e');
+  await tx.query(
+    `INSERT INTO circle_memberships (circle_id, member_id, role, status, consent_mode, consented_at)
+     VALUES ($1, $2, 'member', 'active', 'manual', NOW())`,
+    [circle, mE]
+  );
+
+  let interleaved = false;
+  const racingClient = {
+    query: async (sql: string, params?: unknown[]) => {
+      // Fires once, on the membership mutation only. `circle_membership_removals`
+      // does not match, and the flag guards the removal service's own writes.
+      if (!interleaved && /INSERT INTO circle_memberships\b/i.test(sql)) {
+        interleaved = true;
+        await removeMemberWithClient(tx as any, {
+          circleId: circle,
+          actingMemberId: mA,
+          targetMemberId: mE,
+          grounds: 'verifier interleaving witness: removal lands mid-join',
+        });
+      }
+      return tx.query(sql, params as any);
+    },
+  };
+
+  let raced: { ok: true; circleId: string } | { ok: false; error: string };
+  try {
+    raced = { ok: true, circleId: await joinWithInviteWithClient(racingClient as any, liveToken, mE, 'manual') };
+  } catch (e: any) {
+    raced = { ok: false, error: e?.message ?? 'UNKNOWN' };
+  }
+
+  const racedStanding = (
+    await tx.query<{ status: string }>(
+      `SELECT status FROM circle_memberships WHERE circle_id = $1 AND member_id = $2`,
+      [circle, mE]
+    )
+  ).rows[0]?.status;
+  const racedRemovals = (
+    await tx.query(
+      `SELECT COUNT(*)::int AS n FROM circle_membership_removals
+        WHERE circle_id = $1 AND removed_member_id = $2`,
+      [circle, mE]
+    )
+  ).rows[0].n;
+
+  if (!interleaved) {
+    fail('T10f I-01 the interleaving witness never fired', 'the membership mutation was not observed');
+  } else if (raced.ok) {
+    fail('T10f I-01 a removal mid-join was overwritten by the invitation', 'FR-18 is a precheck, not the boundary');
+  } else if (raced.error !== 'REINSTATEMENT_REQUIRED') {
+    fail('T10f I-01 the mid-join removal produced the wrong refusal', raced.error);
+  } else if (racedStanding !== 'removed') {
+    fail('T10f I-01 the mid-join removal did not survive the mutation', String(racedStanding));
+  } else if (racedRemovals !== 1) {
+    fail('T10f I-01 the mid-join removal record is not intact', `count=${racedRemovals}`);
+  } else {
+    pass('T10f I-01 a removal landing at the mutation boundary defeats the invitation');
+  }
+
+  // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
+  const before = (
+    await tx.query(`SELECT COUNT(*)::int AS n FROM circle_memberships WHERE circle_id = $1`, [circle])
+  ).rows[0].n;
+  await tx.query(
+    `INSERT INTO shared_artifacts (circle_id, shared_by, artifact_type, artifact_ref, content_mode)
+     VALUES ($1, $2, 'note', 'src-3', 'summary_only')`,
+    [circle, mA]
+  );
+  const after = (
+    await tx.query(`SELECT COUNT(*)::int AS n FROM circle_memberships WHERE circle_id = $1`, [circle])
+  ).rows[0].n;
+  before === after
+    ? pass('T5 FR-08.5 a crossing creates no membership')
+    : fail('T5 FR-08.5 a crossing altered membership');
+
+  // T6 — FR-04: one response per member per inquiry (independent perception).
+  const inq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier fixture question') RETURNING id`,
+      [circle, mA]
+    )
+  ).rows[0].id;
+  await tx.query(
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text) VALUES ($1, $2, 'first')`,
+    [inq, mA]
+  );
+  const dup = await expectViolation(
+    tx, 'sp_t6', '23505',
+    `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text) VALUES ($1, $2, 'second')`,
+    [inq, mA]
+  );
+  dup === 'violated'
+    ? pass('T6 FR-04 one response per member per inquiry is enforced by the database')
+    : fail('T6 FR-04 uniqueness did not hold', String(dup));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('\n════ Circle Boundary Verification Matrix ════');
+  console.log(`   ratified minimum: FR-01 … FR-10 (2026-09-06)`);
+  console.log(`   database: ${DATABASE_URL.replace(/:[^:@]*@/, ':***@')}`);
+
+  await groupC();
+
+  try {
+    await groupS();
+  } catch (e: any) {
+    fail('GROUP S aborted', e?.message);
+  }
+
+  const tx = await pool.connect();
+  try {
+    await tx.query('BEGIN');
+    await groupT(tx);
+  } catch (e: any) {
+    fail('GROUP T aborted', e?.message);
+  } finally {
+    await tx.query('ROLLBACK').catch(() => {});
+    tx.release();
+  }
+
+  // ── Coverage floor ────────────────────────────────────────────────────────
+  // Checked last, so a group that aborted mid-way still reports which
+  // obligations went unasked rather than hiding behind the assertions that ran.
+  section('COVERAGE');
+  const undischarged = [...REQUIRED_ASSERTIONS].filter((id) => !satisfied(id));
+  if (undischarged.length === 0) {
+    console.log(`  ✅ all ${REQUIRED_ASSERTIONS.size} required obligations discharged by PASS`);
+  } else {
+    for (const id of undischarged) {
+      const set = outcomes.get(id);
+      // A missing obligation is not a smaller test suite, it is an unverified
+      // boundary — and a WARNed or SKIPped one is exactly as unverified.
+      const why = !set
+        ? 'never asked'
+        : set.has('fail')
+          ? 'failed'
+          : `outcome ${[...set].join('+')} does not discharge the obligation`;
+      // Do not double-count an already-recorded FAIL.
+      if (set?.has('fail')) {
+        console.log(`  ❌ ${id} — ${why}`);
+      } else {
+        fail(`COVERAGE required assertion ${id} not discharged`, why);
+      }
+    }
+  }
+
+  section('RESULT');
+  console.log(`  ${passed} passed · ${failed} failed · ${warned} warned · ${skipped} skipped`);
+  console.log(`  coverage: ${REQUIRED_ASSERTIONS.size - undischarged.length}/${REQUIRED_ASSERTIONS.size} required obligations discharged by PASS`);
+  console.log(`  PASS = 0 failed AND every required obligation discharged. The total is never the gate.\n`);
+
+  await pool.end();
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+main().catch(async (e) => {
+  console.error(e);
+  await pool.end().catch(() => {});
+  process.exit(1);
+});
