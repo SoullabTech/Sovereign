@@ -16,7 +16,19 @@ WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_CORRECTION_2026-09-07.md
   before it is a product-design problem.
 
 CORRECTED FLOW   RECOVER → RECONCILE → PRESENT → FOUNDER ACT → BUILD
-CURRENT ACT      REPAIR TRUTH (D1-D4 authorized, Founder Rulings III)
+CURRENT ACT      capability work, per the founder's product sequence
+
+  ACCEPTED     D1-D4 repair truth · Notes v1 (witnessed)
+               Goals v1 core (witnessed) · FR-13 grant (witnessed)
+  NEXT ACT     Goals Support — bounded by FR-13 and FR-14.
+               NOT "finish Goals": a writer can already declare, hold,
+               measure and govern one.
+
+  FR-14  GRANT ≠ TRIGGER ≠ CADENCE
+         Permission to support is not permission to interrupt.
+         A grant says what relationship is permitted. It does not
+         authorize push, reminders, interruption, or a cadence.
+         maiaMaySupport() answers MAY, never SHOULD.
 
   Writer's Studio does not have an "unbuilt-half" problem. It has a truth
   problem, a bounded-perception problem, and then a set of already-ratified

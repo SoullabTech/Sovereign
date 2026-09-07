@@ -273,16 +273,34 @@ export async function setGoalSupport(
 }
 
 /**
- * FR-13, as the gate every future MAIA path must pass through.
+ * FR-13, as the gate every future MAIA path must pass through — and FR-14, as
+ * the three things it deliberately is not.
  *
- * There is no MAIA path to Goals today and this function commissions none. It
- * exists so that when one is designed it cannot be written without answering
- * the question the founder made structural: **did the writer ask for this?**
+ * ⚠️ CORRECTED. This said the gate answers whether MAIA may speak about a goal
+ * "unbidden". That was wrong in one word, and the word was the whole problem:
  *
- * Deliberately narrow: it answers only whether MAIA may SPEAK ABOUT this goal
- * unbidden. It grants nothing about what she may say — FR-10 still forbids any
- * figure derived from the clock even when support was invited, and FR-12 still
- * forbids creating, altering, or completing a goal at any grant level.
+ *     GRANT     what relationship the writer permits around this goal
+ *     TRIGGER   the circumstance in which support may actually appear
+ *     CADENCE   how often it may recur
+ *
+ * **Permission to support is not permission to interrupt.** Choosing
+ * `encourage` must not authorize MAIA to speak because progress changed or a
+ * date approached. This function returns the GRANT and nothing else — note that
+ * it takes no occasion, no timestamp, no previous-support time and no
+ * frequency, and cannot be made into a trigger without changing its signature,
+ * which is the point.
+ *
+ * **It answers MAY, never SHOULD.** A stored `encourage` cannot itself become a
+ * command to produce motivational prose; whatever path eventually reads it must
+ * still decide whether support is appropriate in the present interaction. The
+ * gate removes a prohibition. It does not supply a reason.
+ *
+ * There is no MAIA path to Goals today and this commissions none. It exists so
+ * that when one is designed it cannot be written without answering the question
+ * the founder made structural: **did the writer ask for this?**
+ *
+ * Nothing here loosens FR-10 (no figure derived from the clock, at any grant
+ * level) or FR-12 (no creating, altering or completing a goal, ever).
  */
 export function maiaMaySupport(goal: Pick<WriterGoal, 'support'>): boolean {
   return goal.support !== 'track_only';

@@ -196,3 +196,44 @@ describe('FR-13 · encouragement is invited; pressure is imposed', () => {
     expect(typeof maiaMaySupport).toBe('function');
   });
 });
+
+describe('FR-14 · grant ≠ trigger ≠ cadence', () => {
+  const src = readFileSync(join(process.cwd(), 'lib', 'writersStudio', 'goalsClient.ts'), 'utf8');
+
+  it('the gate takes a grant and nothing else — it cannot become a trigger', () => {
+    /* PERMISSION TO SUPPORT IS NOT PERMISSION TO INTERRUPT. A trigger needs an
+       occasion: a timestamp, a last-shown time, a frequency, an event. This
+       function is given none, so it cannot answer "now?" — only "allowed?".
+       Making it a trigger would require changing its signature, which is
+       exactly the visible act this test exists to force. */
+    expect(maiaMaySupport.length).toBe(1);
+    expect(maiaMaySupport({ support: 'encourage' })).toBe(true);
+    /* and it is total over the grant alone: same input, same answer, always */
+    expect(maiaMaySupport({ support: 'encourage' })).toBe(maiaMaySupport({ support: 'encourage' }));
+  });
+
+  it('no trigger or cadence machinery exists in the module', () => {
+    for (const banned of [
+      'lastSupportedAt', 'nextSupportAt', 'shouldSupport', 'supportDue',
+      'cadence', 'interval', 'remind', 'notify', 'checkIn',
+    ]) {
+      expect(src).not.toMatch(new RegExp(`(function|const|let)\\s+${banned}`, 'i'));
+    }
+  });
+
+  it('answers MAY, not SHOULD — the name and the absence both say so', () => {
+    /* A stored `encourage` is not a command to produce motivational prose. If a
+       `shouldSupport` ever appears beside this, the decision about whether
+       support is appropriate right now has been moved out of the interaction
+       and into a column. */
+    expect(src).toContain('export function maiaMaySupport');
+    expect(src).not.toMatch(/export function (maiaShould|shouldMaia)/i);
+  });
+
+  it('the correction is recorded, not silently applied', () => {
+    /* The shipped docstring said the gate answered whether MAIA may speak
+       "unbidden" — a trigger smuggled into a permission by one word. */
+    expect(src).toContain('Permission to support is not permission to interrupt');
+    expect(src).not.toMatch(/may SPEAK ABOUT this goal\s*\n?\s*\*?\s*unbidden/);
+  });
+});
