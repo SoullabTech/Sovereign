@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/http/apiBase';
+
 /**
  * AVOIDANCE BREAKER
  *
@@ -105,7 +107,12 @@ export function AvoidanceBreaker({
   const [copied, setCopied] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
-  const [latestStewardship, setLatestStewardship] = useState<AvoidanceResult['stewardship']>(null);
+  // `stewardship` is declared optional (`{...} | undefined`), so the previous
+  // `null` initial value was never assignable. Pre-existing; it surfaced only
+  // when this file entered the typecheck program. `undefined` rather than
+  // widening the type to include null: nothing ever sets null, it is read only
+  // for truthiness, and widening pushed the mismatch downstream to onComplete.
+  const [latestStewardship, setLatestStewardship] = useState<AvoidanceResult['stewardship']>(undefined);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -133,7 +140,8 @@ export function AvoidanceBreaker({
           ? JSON.parse(localStorage.getItem('beta_user') || '{}').email
           : 'anonymous';
 
-        const response = await fetch(`/api/gmail/send?userId=${encodeURIComponent(userId)}`);
+        // MAIL-04c: subject comes from the session, not the query string.
+        const response = await apiFetch('/api/gmail/send');
         if (response.ok) {
           const data = await response.json();
           setGmailConnected(data.connected);
@@ -256,7 +264,7 @@ export function AvoidanceBreaker({
         ? JSON.parse(localStorage.getItem('beta_user') || '{}').email
         : 'anonymous';
 
-      const response = await fetch('/api/gmail/send', {
+      const response = await apiFetch('/api/gmail/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -30,6 +30,11 @@ const GUARD_SELF = 'lib/email/__tests__/no-direct-provider-imports.test.ts';
  */
 const ALLOWED_VENDOR_IMPORTERS = [
   'lib/email/providers/ResendProvider.ts',
+  // The SMTP adapter. Speaks a protocol rather than a vendor API, so the same
+  // file serves a commodity relay and Soullab's own MTA — but it still imports
+  // a client library, and that import belongs behind the provider boundary
+  // exactly like a vendor SDK does.
+  'lib/email/providers/SmtpProvider.ts',
 ];
 
 /**
