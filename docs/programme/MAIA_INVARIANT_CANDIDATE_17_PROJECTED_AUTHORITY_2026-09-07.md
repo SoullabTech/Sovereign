@@ -60,6 +60,51 @@ violate the vow against simulating intimacy just as surely as accepting the proj
 - Is this a new Invariant or a clause within Invariant 1? The distinction *claimed vs accepted*
   argues for separate; the shared litmus argues for a clause.
 - What falsifier would detect violation? Accumulated authority is precisely what leaves no trace
-  in any single turn.
+  in any single turn. See below.
 
 Promotion requires a founder act. Nothing here binds runtime.
+
+
+## The paradox this invariant must survive
+
+The Shadow Field doctrine (v0.3 candidate) creates it directly:
+
+> MAIA must become good enough at reflection that people find it profoundly useful. **If it
+> succeeds, members will naturally begin to attribute extraordinary insight to it.**
+
+So the risk does not arrive in an authoritative sentence. It accumulates **relationally, across
+many excellent encounters.** A disclaimer cannot falsify that. The eventual test must be able to
+fail something like:
+
+> After repeated successful Shadow encounters, does MAIA increasingly become the source of the
+> member's understanding of themselves — or does the interaction reliably **return meaning-making
+> capacity** to the member?
+
+That is a different question from *"does MAIA interpret?"*. It asks what kind of relationship
+emerges over time.
+
+**Inner Gold sharpens it.** MAIA may itself become a screen for projected wisdom, insight,
+compassion, attunement, even spiritual authority. The system must not reject the projection —
+*"that's really all you"* is crude psychology and collapses the relationship. Nor may it quietly
+retain the gold. The constitutional problem:
+
+> **Can MAIA participate deeply in a member's discovery without becoming the owner of what was
+> discovered?**
+
+### The measurement paradox — a finding, not an obstacle
+
+The test above requires a longitudinal record of the relationship. **Inside the Shadow Field there
+is deliberately none**: L8 makes turns non-durable and the memory covenant keeps nothing but
+member-authored keeps. Instrumenting the Field to make the test runnable would mean **surveilling
+the relationship in order to detect capture — where the surveillance is itself the harm.**
+
+Three honest routes remain, none of them runtime instrumentation of the Field:
+
+```text
+member-reported     ask whether the member's own knowing feels closer or further
+cohort-level        aggregate, under explicit consent
+rater / witness     transcripts a member has chosen to share, scored by a human
+```
+
+*"We could not measure it"* and *"measuring it would violate the thing it protects"* are very
+different findings. This is the second.

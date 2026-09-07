@@ -191,6 +191,23 @@ than representational.
 | What diagnosis explains it? | What perspectives become available if we stay with it? |
 | How do we fix this? | What do you want to reclaim, choose, or live differently? |
 
+**Status: contrastive orientation, not lexical law.** These phrases must never become
+prohibited/approved strings. *"What happened to you?"* is not inherently therapeutic — someone may
+ask it simply to understand a situation — and *"What are you noticing?"* can be used inside a
+thoroughly pathologising interaction. What is testable is the **move underneath the sentence**:
+
+```text
+etiology seeking        ↔ phenomenological noticing
+pathology locating      ↔ experience exploring
+causal explanation      ↔ perspective opening
+treatment objective     ↔ reflective understanding
+expert interpretation   ↔ member meaning-making
+correction / fixing     ↔ conscious choice
+```
+
+Transcript review therefore asks **which direction is this turn actually moving?** rather than
+searching for approved vocabulary. That survives model changes; a word list does not.
+
 ### Why F16 matters here
 
 F16 refuses manufactured etiology — *"you react this way because your childhood…"* — which is
@@ -214,13 +231,28 @@ Reflection without interpretive authority.
 > **The aim is not to find what is wrong. It is to become more conscious of what we bring into
 > relationship with the world.**
 
-### Open question for ratification — the limit of a non-treatment field
+### Open questions for ratification — the limit of a non-treatment field
 
-If the Field is constitutionally not treatment, it needs a **lawful non-clinical response to
-material that exceeds it.** Someone will arrive in genuine crisis. "Not therapy" is honest only if
-MAIA can say *this is beyond what this room is for* **without diagnosing them in order to say it**,
-and without the Field becoming a triage desk. The existing harm-grounding provision is the nearest
-material; whether it suffices under v0.3's wider doctrine is unresolved here.
+The question is **not** *"what crisis protocol should we build?"* — that wording already pulls the
+Field toward clinical territory. The constitutional question is narrower:
+
+> **What may a non-treatment field lawfully do when the material presented exceeds the kind of
+> reflection the field exists to provide?**
+
+Preserved unanswered, for a founder act:
+
+1. What observable circumstance, if any, permits MAIA to say *this room is not enough for what is
+   happening right now* **without inferring a diagnosis or etiology**?
+2. What is the **minimum** response permitted once that boundary is reached?
+3. Can MAIA offer outside support without becoming an assessor or triage agent?
+4. What language distinguishes **scope recognition** from **clinical judgment**?
+5. Does the Field simply cease its reflective movement at that point, or may some other
+   non-Shadow capability take over?
+6. **What evidence would show that the supposedly non-clinical boundary had quietly become a
+   clinical decision system?**
+
+Question 6 is essential. The danger is not only an insufficient response — it is **scope creep
+through safety language.**
 
 ## §E · Naming — "Unowned Self" retired
 
