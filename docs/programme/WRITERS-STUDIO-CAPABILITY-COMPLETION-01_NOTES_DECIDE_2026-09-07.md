@@ -4,7 +4,8 @@
 **Opened by** founder act, 2026-09-07 — *Notes next, as a product sequence, not
 a complexity sequence.*
 **Bound by** FR-02 (three distinct objects) and the founder's Notes v1 block
-**Status** DESIGN. **Not built.** Two questions stand open at §5.
+**Status** DESIGN. **Not built.** Question A is RULED (FR-07 amendment);
+**question B stands open** and blocks the migration.
 
 > **Before Studio tells the writer more about the Work, give the writer
 > somewhere to think with the Work.**
@@ -50,9 +51,14 @@ carries neither.
 ## 3 · BOUND, AS RULED
 
 ```text
-PURPOSE      mutable thinking beside the Work
+PURPOSE      mutable thinking beside the WRITING          ← refined by FR-07
 AUTHOR       member
-SCOPE        Work-level, optionally anchored to a section
+SCOPE        SUPERSEDED: Work-level, optionally anchored to a section
+             OPERATIVE (FR-07):
+               primary anchor        manuscript
+               optional context      Work, when exactly one is declared
+               optional local anchor section
+             A Note belongs BESIDE the manuscript, never INSIDE its content.
 NOT PROSE    does not alter the manuscript
 NOT A KEEP   does not represent a preserved manuscript state
 NOT MATERIAL does not become source material merely by existing
@@ -79,8 +85,10 @@ CREATE TABLE writer_notes (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id      uuid NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
   -- scope: see OPEN QUESTION A
-  living_work_id uuid     REFERENCES living_works(id)        ON DELETE CASCADE,
-  manuscript_id  uuid     REFERENCES member_manuscripts(id)  ON DELETE CASCADE,
+  -- FR-07: the manuscript is the PRIMARY anchor and is required; the Work is
+  -- optional context, recorded only when exactly one Work declares it.
+  manuscript_id  uuid NOT NULL REFERENCES member_manuscripts(id) ON DELETE CASCADE,
+  living_work_id uuid          REFERENCES living_works(id)       ON DELETE SET NULL,
   -- anchor: see OPEN QUESTION B
   section_id     uuid     REFERENCES manuscript_sections(id) ON DELETE SET NULL,
   anchor_heading text,     -- where it was anchored, as it read at the time
@@ -98,7 +106,11 @@ stripped until the shell counts actual notes).
 
 ## 5 · THE TWO OPEN QUESTIONS
 
-### A · Work-level scope collides with the Work context the Canvas actually has
+### A · RULED by FR-07 — manuscript-scoped, Work-context when unambiguous
+
+*Kept below as the reasoning that produced the amendment.*
+
+Work-level scope collides with the Work context the Canvas actually has
 
 `SCOPE: Work-level` is ratified. But the Canvas resolves Work context in three
 states, and **two of them have no single Work**:
@@ -140,8 +152,9 @@ not an abstraction:
 ```text
 HARVEST      COMPLETE — placement and band are ratified, not invented
 DESIGN       this document
-QUESTIONS    A and B open
-BUILD        NOT AUTHORIZED until A and B are ruled
+QUESTION A   RULED — FR-07 amendment
+QUESTION B   OPEN
+BUILD        BLOCKED on B
 DEPLOY       NOT AUTHORIZED
 CEILING      untouched — Notes needs no expansion of MAIA perception
 ```
