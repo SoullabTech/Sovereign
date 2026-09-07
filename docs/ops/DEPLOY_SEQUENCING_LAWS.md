@@ -115,3 +115,29 @@ one doctrine and were ratified as a pair — ⛔ do not split them.
 
 ⛔ **No re-drafting during promotion.** The text is already fixed on the lane; the PR moves it
 unchanged.
+
+---
+
+## 3 · CLOSURE BOUNDARY LAW
+
+> **Proximity does not establish provenance. A residual discovered during a closure belongs to that
+> closure's RECORD without automatically becoming evidence against what the closure actually
+> CERTIFIED.**
+
+A closed witness is closed **on what it witnessed**. Bounded cleanup and tooling debt found along the
+way are **named and carried**, not folded back into the certification.
+
+**Worked case (I0.5, 2026-09-08).** Closure certified `891b33ee0` running in production with its
+migrations, schema effects and state preserved. Two residuals were named in the same record:
+
+```text
+maia_i05_shadow_d58488db     disposable local DB, empty — adjacent bounded debt
+PG client/server-major       operational/tooling debt, will recur
+```
+
+⛔ Neither reopens I0.5. Reopening a closure for adjacent debt is the same error as reading an
+unattributed field as provenance: **letting proximity stand in for the thing itself.**
+
+⚠️ The law cuts **both** ways — it is not licence to discard a residual. *Named and carried* means
+recorded in the closure's own record, with its own disposition, so it survives the closure rather
+than being absorbed or forgotten by it.
