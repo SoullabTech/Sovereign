@@ -33,6 +33,7 @@ import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
+import { StudioHint } from '../studio/StudioHint';
 import { StudioText } from '../studio/StudioType';
 
 export interface SectionWritingSurfaceProps {
@@ -174,24 +175,35 @@ function KeepAVersion({
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: SPACE.base, justifyContent: 'flex-end' }}>
       {note && <StudioText role="metadata" tone="quiet">{note}</StudioText>}
-      <button
-        type="button"
-        onClick={keep}
-        disabled={phase === 'keeping'}
-        data-keep-a-version
-        style={{
-          background: 'transparent',
-          border: `1px solid ${RULE.quiet}`,
-          borderRadius: RADIUS.pill,
-          padding: `${SPACE.tight}px ${SPACE.base}px`,
-          color: INK.secondary,
-          cursor: phase === 'keeping' ? 'default' : 'pointer',
-        }}
+      {/* FR-D step 3 — the unblocking act for two Develop refusals (W-04).
+          Develop names it from another room and nothing here said what it
+          was for. */}
+      <StudioHint
+        label="What does keeping a version do?"
+        anchor={
+        <button
+          type="button"
+          onClick={keep}
+          disabled={phase === 'keeping'}
+          data-keep-a-version
+          style={{
+            background: 'transparent',
+            border: `1px solid ${RULE.quiet}`,
+            borderRadius: RADIUS.pill,
+            padding: `${SPACE.tight}px ${SPACE.base}px`,
+            color: INK.secondary,
+            cursor: phase === 'keeping' ? 'default' : 'pointer',
+          }}
+        >
+          <StudioText role="metadata" as="span">
+            {phase === 'keeping' ? 'keeping…' : 'Keep a version'}
+          </StudioText>
+        </button>
+        }
       >
-        <StudioText role="metadata" as="span">
-          {phase === 'keeping' ? 'keeping…' : 'Keep a version'}
-        </StudioText>
-      </button>
+        Marks the draft as it stands now, so you can come back to it. MAIA
+        reads a kept version, so Develop needs one.
+      </StudioHint>
     </div>
   );
 }

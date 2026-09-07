@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { countDraftWords } from '@/lib/writersStudio/draftWords';
+import { StudioHint } from '../studio/StudioHint';
 import { PRESS, SERIF } from '../pressTheme';
 import {
   AUTOSAVE_DELAY_MS,
@@ -540,13 +541,25 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWrit
         )}
         <span className="flex-1" />
         {kept && <span style={{ color: PRESS.accent }}>version kept</span>}
-        <button
-          onClick={() => void keepVersion()}
-          disabled={keeping}
-          className="opacity-55 hover:opacity-90 underline underline-offset-4 disabled:opacity-30"
+        {/* FR-D step 3 — the unblocking act for two Develop refusals
+            (W-04). Develop names it from another room — "Keep a version
+            in the Writer Canvas, then ask again" — and nothing here said
+            what it was for. */}
+        <StudioHint
+          label="What does keeping a version do?"
+          anchor={
+          <button
+            onClick={() => void keepVersion()}
+            disabled={keeping}
+            className="opacity-55 hover:opacity-90 underline underline-offset-4 disabled:opacity-30"
+          >
+            {keeping ? 'keeping…' : 'Keep a version'}
+          </button>
+          }
         >
-          {keeping ? 'keeping…' : 'Keep a version'}
-        </button>
+          Marks the draft as it stands now, so you can come back to it.
+          MAIA reads a kept version, so Develop needs one.
+        </StudioHint>
       </div>
       {/* THE WORKTABLE IS ONE PAGE. On a section-addressable draft the writer's
           characters live in one node per section — real client state carrying

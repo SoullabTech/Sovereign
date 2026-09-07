@@ -21,6 +21,7 @@ import {
 import { StudioPanel } from '../studio/StudioPanel';
 import { StudioShellRail } from '../studio/StudioRail';
 import { WriterStudioShell } from '../studio/WriterStudioShell';
+import { StudioHint } from '../studio/StudioHint';
 import { StudioModeBar } from '../studio/StudioModeBar';
 import { StudioScrollbars } from '../studio/StudioScrollbars';
 import { StudioText } from '../studio/StudioType';
@@ -572,26 +573,41 @@ function CanvasRoom() {
             }
           }}
           lead={
-            <button
-              type="button"
-              onClick={() => setWorkOpen((v) => !v)}
-              aria-expanded={workOpen}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                background: workOpen ? GROUND.active : 'transparent',
-                border: `1px solid ${workOpen ? GOLD.edge : RULE.soft}`,
-                borderRadius: RADIUS.base,
-                padding: `${SPACE.tight + 1}px ${SPACE.base}px`,
-                marginBottom: SPACE.comfortable,
-                cursor: 'pointer',
-              }}
+            /* FR-D step 3 — the control the founder walk terminated on.
+               "This work" gave no reason to think pressing it had anything to
+               do with declaring the manuscript or reaching MAIA (W-05b:
+               NAMING / semantic discoverability). The answer now arrives AT
+               the object rather than three columns away in MaiaColumn, which
+               is where it already lived and where it already failed. */
+            <StudioHint
+              label="What is “This work”?"
+              style={{ width: '100%', marginBottom: SPACE.comfortable }}
+              anchor={
+                <button
+                  type="button"
+                  onClick={() => setWorkOpen((v) => !v)}
+                  aria-expanded={workOpen}
+                  style={{
+                    display: 'block',
+                    flex: 1,
+                    minWidth: 0,
+                    textAlign: 'left',
+                    background: workOpen ? GROUND.active : 'transparent',
+                    border: `1px solid ${workOpen ? GOLD.edge : RULE.soft}`,
+                    borderRadius: RADIUS.base,
+                    padding: `${SPACE.tight + 1}px ${SPACE.base}px`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <StudioText role="navItem" as="span" tone={workOpen ? 'primary' : 'secondary'}>
+                    This work
+                  </StudioText>
+                </button>
+              }
             >
-              <StudioText role="navItem" as="span" tone={workOpen ? 'primary' : 'secondary'}>
-                This work
-              </StudioText>
-            </button>
+              Say which Work this manuscript belongs to. MAIA can only speak
+              about a declared Work.
+            </StudioHint>
           }
           style={{
             width: compact ? '100%' : pct(L.rail),
