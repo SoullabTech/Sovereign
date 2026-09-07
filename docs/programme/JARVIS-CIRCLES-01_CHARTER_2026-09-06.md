@@ -411,3 +411,39 @@ discharged by PASS · exit 0.** ⛔ Production unchanged.
 observed. ⛔ No deploy · no migration · no cohort authorized · no invitation sent · no facilitator
 assigned · no discovery built · founder UI gate untouched · doctrine byte-identical · no number
 ratified.
+
+
+---
+
+## Stage log addendum — 2026-09-07 (evening)
+
+**I0.5 CANONICALLY VERIFIED.** SHA `1725a0857624d3d23040dfbb51d45c06d834b6f5` —
+`63 passed · 0 failed · 0 warned · 0 skipped · 63/63 discharged by PASS · exit 0`; three pending
+migrations applied in order to a disposable shadow; residue `0|0|0|0`; shadow destroyed. The
+committed SHA passed, not a disposable edit. An earlier `59/4` attempt was a shadow-construction
+error (schema restored without the two disjoint Group S principals) and **FR-14 correctly refused the
+resulting skips** — the instrument caught a bad harness, which is what it is for.
+
+**Production custody:** deployed SHA `cca4568bd…`; production has moved for unrelated work, but
+neither `1725a0857` nor `26508109b` is in its ancestry. Circles remain unmigrated and undeployed.
+
+```
+I0            CLOSED
+I0.5          VERIFIED ON CANDIDATE
+VERIFY        FULL PASS · 63/63
+I1 DESIGN     OPEN
+I1 IMPLEMENT  NOT AUTHORIZED
+PRODUCTION    UNCHANGED AS TO CIRCLES · UNMIGRATED · UNDEPLOYED
+DEPLOY        NOT AUTHORIZED
+COHORT        NOT AUTHORIZED
+```
+
+**I1 DESIGN OPENED** — `docs/programme/JARVIS-CIRCLES-01_I1_INTEREST_COMMONS_DESIGN_2026-09-07.md`.
+Design only: object model, authority model, privacy model, member acts, Commons identity, Circle
+relation, discovery contract, revocation, thirteen proposed future obligations (IDs reserved, not
+registered — a MISSING required obligation would fail FR-14 by construction), and a seven-item
+founder docket **D-J1…D-J7**.
+
+*The lane changes character here. Up to now it constrained what a Circle must never do. I1 designs
+the first positive human act the ecology requires — "this matters to me" — known because the person
+said it.*
