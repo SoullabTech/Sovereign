@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCircleAccess } from '@/lib/circles/circleAccess';
-import { listMyCircles } from '@/lib/circles/circleService';
-import { getCirclePulseLight } from '@/lib/circles/fieldPulseService';
+import { getCirclePulseSummariesForMember } from '@/lib/circles/fieldPulseService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,19 +12,9 @@ export async function GET(request: NextRequest) {
     }
     const memberId = access.memberId;
 
-    const circles = await listMyCircles(memberId);
-    const summaries: Record<string, Awaited<ReturnType<typeof getCirclePulseLight>>> = {};
-
-    // Acceptable for <10 circles. Optimize to single query if needed later.
-    await Promise.all(
-      circles.map(async (c) => {
-        try {
-          summaries[c.id] = await getCirclePulseLight(c.id);
-        } catch {
-          // Graceful degradation — card shows without pulse data
-        }
-      })
-    );
+    // One membership-scoped query. Authorization is the join, not a per-circle
+    // check — no N+1, and no Circle the member does not belong to can appear.
+    const summaries = await getCirclePulseSummariesForMember(memberId);
 
     return NextResponse.json({ summaries });
   } catch (error) {

@@ -25,10 +25,12 @@
  * A numeric total would be brittle — legitimate new assertions raise it. The
  * floor is deliberately by name:
  *
- *     required assertion missing  →  FAIL
- *     required assertion failed   →  FAIL
- *     new assertion added         →  allowed
- *     all required + new pass     →  PASS
+ *     required assertion missing   →  FAIL
+ *     required assertion failed    →  FAIL
+ *     required assertion WARN/SKIP →  FAIL  (executed, but established nothing)
+ *     new assertion added          →  allowed
+ *     non-required WARN/SKIP       →  non-fatal
+ *     all required discharged      →  PASS
  *
  * ⛔ Do not make the total authoritative. ⛔ Do not remove an ID from the floor
  * to make a run green — that is the exact failure this exists to catch. An ID
@@ -79,41 +81,73 @@ const REQUIRED_ASSERTIONS: ReadonlySet<string> = new Set([
   // Group C — source and schema
   'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8',
   'C9', 'C10', 'C11', 'C12', 'C13', 'C14',
+  // C15 pulse contract (B-08) · C16 withdrawal visibility (CA-03)
+  'C15', 'C16',
   // Group S — service layer against real principals
-  'S1', 'S2', 'S3',
+  'S1', 'S2', 'S3', 'S5',
   // FR-03 / FR-11 constitution state
   'S4a', 'S4b', 'S4c', 'S4d', 'S4e',
   // Group T — data invariants and live semantics
   'T1', 'T2',
   'T3a', 'T3b', 'T3c', 'T3d', 'T3e', 'T3f', 'T3g', 'T3h', 'T3i',
+  // CA-03 response withdrawal
+  'T7a', 'T7b', 'T7c', 'T7d', 'T7e', 'T7f',
   'T5', 'T6',
 ]);
 
-/** Assertion IDs that actually executed this run, in any outcome. */
-const executed = new Set<string>();
+/**
+ * Outcomes recorded per assertion ID this run.
+ *
+ * Tracked as a SET of outcomes, not a boolean, because "did it run" and "did it
+ * hold" are different questions — and only the second one discharges an
+ * obligation. A required assertion that WARNs or SKIPs has executed without
+ * establishing anything; treating that as coverage would reopen the same hole
+ * FR-14 exists to close, one level down.
+ */
+type Outcome = 'pass' | 'fail' | 'warn' | 'skip';
+const outcomes = new Map<string, Set<Outcome>>();
 
-function note(label: string) {
+function note(label: string, outcome: Outcome) {
   const id = label.split(/\s+/)[0];
-  if (id) executed.add(id);
+  if (!id) return;
+  const set = outcomes.get(id) ?? new Set<Outcome>();
+  set.add(outcome);
+  outcomes.set(id, set);
+}
+
+/**
+ * A required obligation is discharged only when it passed and did nothing else.
+ *
+ *   PASS     satisfies
+ *   FAIL     does not      (and already counts as a failure)
+ *   WARN     does not      — executed, but established nothing
+ *   SKIP     does not      — executed, but established nothing
+ *   MISSING  does not      — never asked
+ *
+ * Non-required diagnostic WARN/SKIP outcomes remain non-fatal.
+ */
+function satisfied(id: string): boolean {
+  const set = outcomes.get(id);
+  return !!set && set.has('pass') && set.size === 1;
 }
 
 function pass(label: string, detail?: string) {
-  note(label);
+  note(label, 'pass');
   console.log(`  ✅ PASS  ${label}${detail ? `  (${detail})` : ''}`);
   passed++;
 }
 function fail(label: string, detail?: string) {
-  note(label);
+  note(label, 'fail');
   console.log(`  ❌ FAIL  ${label}${detail ? `  → ${detail}` : ''}`);
   failed++;
 }
 function warn(label: string, detail?: string) {
-  note(label);
+  note(label, 'warn');
   console.log(`  ⚠️  WARN  ${label}${detail ? `  (${detail})` : ''}`);
   warned++;
 }
 function skip(label: string, detail?: string) {
-  note(label);
+  note(label, 'skip');
   console.log(`  ⏭️  SKIP  ${label}${detail ? `  (${detail})` : ''}`);
   skipped++;
 }
@@ -339,21 +373,53 @@ async function groupC() {
     }
   }
 
-  // C14 — FR-11 vs FieldPhase: two different questions that share string values.
-  //       CircleConstitutionState is structurally assignable to FieldPhase, so
-  //       TypeScript cannot catch a mix-up. The separation is a discipline, and
-  //       this is the only thing that can falsify a drift back together.
+  // C15 — B-08 / P4: the membership boundary lives in the pulse CONTRACT.
+  //       No exported pulse function may surface Circle-native activity from a
+  //       bare Circle id. Callers being correctly scoped today is not the same
+  //       as the signature refusing an unscoped call tomorrow.
   {
-    const cs = src('lib/circles/constitutionState.ts');
-    const pulse2 = src('lib/circles/fieldPulseService.ts');
-    if (!cs) {
-      fail('C14 FR-11 constitution state module missing');
-    } else if (/from '\.\/fieldPulseService'|FieldPhase/.test(cs.replace(/\/\*[\s\S]*?\*\//g, ''))) {
-      fail('C14 FR-11 constitution state depends on FieldPhase', 'the two concepts must stay separate');
-    } else if (pulse2 && /constitutionState|CircleConstitutionState/.test(pulse2)) {
-      fail('C14 FR-11 field pulse depends on constitution state', 'activity heuristic must not carry plurality');
+    const body = src('lib/circles/fieldPulseService.ts');
+    if (!body) {
+      fail('C15 B-08 field pulse source unreadable');
     } else {
-      pass('C14 FR-11 constitution state and FieldPhase remain independent');
+      const unscoped: string[] = [];
+      const re = /export async function (\w+)\(([^)]*)\)/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(body))) {
+        const [, name, args] = m;
+        if (!/memberId/.test(args)) unscoped.push(name);
+      }
+      const gated = body.includes('getCircleWithMembership');
+      unscoped.length === 0 && gated
+        ? pass('C15 B-08 every exported pulse function requires member identity')
+        : fail('C15 B-08 pulse exposes Circle activity without member identity',
+               unscoped.join(', ') || 'no membership gate present');
+    }
+  }
+
+  // C16 — CA-03: a withdrawn response must leave the visible set. Asserted on
+  //       the read itself, because that is where visibility is decided.
+  {
+    const body = src('lib/circles/inquiryService.ts');
+    if (!body) {
+      fail('C16 CA-03 inquiry service source unreadable');
+    } else {
+      const i = body.indexOf('export async function getInquiryWithResponses');
+      const scope = i >= 0 ? body.slice(i) : '';
+      const filtered = /withdrawn_at IS NULL/.test(scope);
+      // No target-member parameter anywhere in the withdrawal contract: the
+      // caller can only ever withdraw their own. Proxy withdrawal is not
+      // refused at runtime — it is unrepresentable.
+      const w = body.indexOf('export async function withdrawResponseWithClient');
+      const sig = w >= 0 ? body.slice(w, body.indexOf(')', w) + 1) : '';
+      const proxyable = /target|onBehalf|responderId|authorId/i.test(sig);
+      if (!filtered) {
+        fail('C16 CA-03 the response read does not exclude withdrawn responses');
+      } else if (proxyable) {
+        fail('C16 CA-03 the withdrawal contract accepts a target member', 'proxy withdrawal representable');
+      } else {
+        pass('C16 CA-03 withdrawn responses leave the visible set; proxy withdrawal is unrepresentable');
+      }
     }
   }
 
@@ -423,6 +489,16 @@ async function groupS() {
       e?.message === 'FORBIDDEN'
         ? pass('S2 FR-01 member A cannot read Circle B feed')
         : fail('S2 FR-01 unexpected error', e?.message);
+    }
+
+    const { getCirclePulse } = await import('../lib/circles/fieldPulseService');
+    try {
+      await getCirclePulse(bCircle, a);
+      fail('S5 B-08 member A read Circle B pulse');
+    } catch (e: any) {
+      e?.message === 'FORBIDDEN'
+        ? pass('S5 B-08 member A cannot read Circle B pulse')
+        : fail('S5 B-08 unexpected error', e?.message);
     }
 
     const { shareArtifact } = await import('../lib/circles/sharingService');
@@ -742,6 +818,94 @@ async function groupT(tx: PoolClient) {
     ? pass('S4e FR-11 regaining plurality derives ACTIVE')
     : fail('S4e FR-11 regaining plurality did not derive ACTIVE');
 
+  // ── CA-03 response withdrawal (CIRCLE-04 · P3) ───────────────────────────
+  //
+  // Drives the real contract on the rolled-back client. mA and mC are both
+  // active in `circle`; mB was removed by the T3 family above.
+
+  const { withdrawResponseWithClient } = await import('../lib/circles/inquiryService');
+  const wInq = (
+    await tx.query<{ id: string }>(
+      `INSERT INTO circle_inquiries (circle_id, opened_by, question)
+       VALUES ($1, $2, 'verifier withdrawal fixture question') RETURNING id`,
+      [circle, mA]
+    )
+  ).rows[0].id;
+  for (const [m, text] of [[mA, 'author answer'], [mC, 'other answer']] as const) {
+    await tx.query(
+      `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+       VALUES ($1, $2, $3)`,
+      [wInq, m, text]
+    );
+  }
+  const tryWithdraw = async (inq: string, member: string) => {
+    try {
+      await withdrawResponseWithClient(tx as any, inq, member);
+      return null;
+    } catch (e: any) {
+      return e?.message ?? 'UNKNOWN';
+    }
+  };
+
+  // T7a — the author may withdraw their own response.
+  (await tryWithdraw(wInq, mA)) === null
+    ? pass('T7a CA-03 a member can withdraw their own response')
+    : fail('T7a CA-03 the author could not withdraw their own response');
+
+  // T7b — withdrawal leaves the visible set, using the service's own filter.
+  const liveResponders = (
+    await tx.query<{ member_id: string }>(
+      `SELECT member_id FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND withdrawn_at IS NULL`,
+      [wInq]
+    )
+  ).rows.map((r) => r.member_id);
+  !liveResponders.includes(mA) && liveResponders.includes(mC)
+    ? pass('T7b CA-03 the withdrawn response leaves the field; others remain')
+    : fail('T7b CA-03 withdrawal did not remove the response from the visible set');
+
+  // T7c — nobody withdraws on the author's behalf. Scoped by the query itself,
+  //       so there is no branch in which another member's id reaches the write.
+  (await tryWithdraw(wInq, mA)) === 'ALREADY_WITHDRAWN'
+    ? pass('T7c CA-03 a withdrawn response cannot be withdrawn twice')
+    : fail('T7c CA-03 double withdrawal was not refused');
+
+  // T7d — one member's withdrawal never touches another's contribution.
+  //       Note the stronger fact this rests on: the contract takes no TARGET
+  //       member parameter at all, so withdrawing on someone else's behalf is
+  //       unreachable by construction rather than refused by a branch. C16
+  //       asserts that structurally; this asserts the data consequence.
+  const othersLive = (
+    await tx.query(
+      `SELECT 1 FROM circle_inquiry_responses
+       WHERE inquiry_id = $1 AND member_id = $2 AND withdrawn_at IS NULL`,
+      [wInq, mC]
+    )
+  ).rowCount;
+  othersLive === 1
+    ? pass('T7d CA-03 withdrawal never touches another member\'s response')
+    : fail('T7d CA-03 a withdrawal affected another member\'s response');
+
+  // T7e — a member with no response has nothing to withdraw, and learns nothing.
+  (await tryWithdraw(wInq, mB)) === 'NOT_FOUND'
+    ? pass('T7e CA-03 a non-responder cannot withdraw, and is told only that')
+    : fail('T7e CA-03 a non-responder withdrawal was not refused as NOT_FOUND');
+
+  // T7f — the row is retained, so FR-04 still holds: withdrawing does not buy a
+  //       second answer informed by having seen the others.
+  let secondAnswer = false;
+  try {
+    await tx.query(
+      `INSERT INTO circle_inquiry_responses (inquiry_id, member_id, response_text)
+       VALUES ($1, $2, 'second attempt')`,
+      [wInq, mA]
+    );
+    secondAnswer = true;
+  } catch { /* UNIQUE violation — expected */ }
+  !secondAnswer
+    ? pass('T7f FR-04 withdrawal does not permit a second, better-informed answer')
+    : fail('T7f FR-04 a withdrawn member answered twice');
+
   // T5 — FR-08.5: membership never arrives as a side effect of a crossing.
   const before = (
     await tx.query(`SELECT COUNT(*)::int AS n FROM circle_memberships WHERE circle_id = $1`, [circle])
@@ -811,21 +975,32 @@ async function main() {
   // Checked last, so a group that aborted mid-way still reports which
   // obligations went unasked rather than hiding behind the assertions that ran.
   section('COVERAGE');
-  const missing = [...REQUIRED_ASSERTIONS].filter((id) => !executed.has(id));
-  if (missing.length === 0) {
-    console.log(`  ✅ all ${REQUIRED_ASSERTIONS.size} required assertions executed`);
+  const undischarged = [...REQUIRED_ASSERTIONS].filter((id) => !satisfied(id));
+  if (undischarged.length === 0) {
+    console.log(`  ✅ all ${REQUIRED_ASSERTIONS.size} required obligations discharged by PASS`);
   } else {
-    for (const id of missing) {
-      // Counts as a failure: a missing obligation is not a smaller test suite,
-      // it is an unverified boundary.
-      fail(`COVERAGE required assertion ${id} did not execute`, 'obligation unasked');
+    for (const id of undischarged) {
+      const set = outcomes.get(id);
+      // A missing obligation is not a smaller test suite, it is an unverified
+      // boundary — and a WARNed or SKIPped one is exactly as unverified.
+      const why = !set
+        ? 'never asked'
+        : set.has('fail')
+          ? 'failed'
+          : `outcome ${[...set].join('+')} does not discharge the obligation`;
+      // Do not double-count an already-recorded FAIL.
+      if (set?.has('fail')) {
+        console.log(`  ❌ ${id} — ${why}`);
+      } else {
+        fail(`COVERAGE required assertion ${id} not discharged`, why);
+      }
     }
   }
 
   section('RESULT');
   console.log(`  ${passed} passed · ${failed} failed · ${warned} warned · ${skipped} skipped`);
-  console.log(`  coverage: ${REQUIRED_ASSERTIONS.size - missing.length}/${REQUIRED_ASSERTIONS.size} required assertions executed`);
-  console.log(`  PASS = 0 failed AND no required assertion missing. The total is never the gate.\n`);
+  console.log(`  coverage: ${REQUIRED_ASSERTIONS.size - undischarged.length}/${REQUIRED_ASSERTIONS.size} required obligations discharged by PASS`);
+  console.log(`  PASS = 0 failed AND every required obligation discharged. The total is never the gate.\n`);
 
   await pool.end();
   process.exit(failed > 0 ? 1 : 0);

@@ -19,7 +19,7 @@ export async function GET(
     const { circleId } = await params;
     await getCircleWithMembership(circleId, memberId);
 
-    const pulse = await getCirclePulse(circleId);
+    const pulse = await getCirclePulse(circleId, memberId);
     return NextResponse.json({ pulse });
   } catch (error: any) {
     const msg = error?.message;
