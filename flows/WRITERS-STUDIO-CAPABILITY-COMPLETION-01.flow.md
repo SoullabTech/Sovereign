@@ -2,7 +2,21 @@ WRITER'S STUDIO — CAPABILITY COMPLETION
 Jarvis Flow · 01
 
 STATUS
-NEW LANE
+RULED · 2026-09-07 (founder)
+DISCOVER complete. Packets adjudicated individually.
+Ruling of record: docs/programme/
+WRITERS-STUDIO-CAPABILITY-COMPLETION-01_FOUNDER_RULINGS_2026-09-07.md
+
+GOVERNING FINDING FROM DISCOVER
+
+  The unfinished Studio is not thirteen grey buttons.
+  It is disagreement about what the Studio already is,
+  what MAIA is allowed to become,
+  and which proposed rooms deserve to exist at all.
+
+  "Unbuilt Studio" is not one problem. Some things are already built
+  but misdeclared. Some are constitutionally premature. Some should
+  disappear.
 
 PURPOSE
 Discover, constitute, sequence, and eventually build the unfinished
