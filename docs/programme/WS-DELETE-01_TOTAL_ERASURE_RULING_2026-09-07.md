@@ -425,6 +425,19 @@ CLOSE                      NOT YET
 1. **Bind the consumer to an operational trigger**, then prove one abandoned
    obligation is picked up *without manually launching the sweep*. Small, but
    constitutionally real — see below.
+
+   **Constraint on how (founder, 2026-09-07).** Before introducing any new
+   scheduling infrastructure, identify the smallest **existing** production
+   lifecycle or operational trigger capable of consuming owed vault erasures
+   without member action or manual operator invocation.
+
+   If no such existing trigger exists, treat creation of a bounded trigger as an
+   **explicit implementation decision**; do not introduce a scheduler or new
+   operational subsystem implicitly in order to satisfy this closure condition.
+
+   This is recorded because the repository has no cron/scheduler substrate at
+   all, which makes "add one" the path of least resistance — and would solve a
+   narrow, correct problem with an unnecessarily large subsystem.
 2. Run the erasure witness against production — including the fourteenth
    substrate, `developmental_readings` — with the census re-established there:
 
