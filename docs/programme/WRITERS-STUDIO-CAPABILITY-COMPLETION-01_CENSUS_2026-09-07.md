@@ -1,10 +1,37 @@
+> # ⛔ PRODUCT JUDGEMENTS IN THIS CENSUS ARE WITHDRAWN
+>
+> **Founder correction, 2026-09-07** —
+> `…_LANE_CORRECTION_2026-09-07.md` is binding on this document.
+>
+> This census overstepped: it made **product inferences from implementation
+> state**. Every capability-level judgement below — Packet assignment,
+> "presumptively obsolete", "reclassified into Packet A", DEFER / REMOVE
+> candidates, "defer or rename" — is **WITHDRAWN as product truth** and
+> survives only where it states an implementation fact.
+>
+> **A census may establish what is implemented, what is absent, and where
+> contradictions are. It may not retire a founder-ratified capability,
+> redefine its purpose, substitute another capability for it, or infer that
+> absence of implementation means absence of intent.**
+>
+> Where code and ratified R&D disagree, **CODE IS THE DEFECT** — unless the
+> founder explicitly reopens the R&D decision.
+>
+> The reachability ledger (§1) and Findings X-1 … X-6 stand as **technical
+> evidence**. The packet reasoning does not.
+>
+> Kept in full rather than rewritten: a withdrawn judgement that is erased
+> cannot be distinguished from one that was never made.
+
+---
+
 # WRITER'S STUDIO — CAPABILITY COMPLETION · 01
 ## FIRST JARVIS ACT · DISCOVER — WHOLE-TERRAIN CENSUS
 
 **Lane** `flows/WRITERS-STUDIO-CAPABILITY-COMPLETION-01.flow.md`
 **Custody** branch `claude/writers-studio-capability-clxw8d` · HEAD `e7e1e075` · tree clean at census start
 **Mode** READ-ONLY. No build. No migration. No deploy. No repair.
-**Status** CENSUS COMPLETE — STOP FOR FOUNDER ADJUDICATION
+**Status** CENSUS COMPLETE · PRODUCT JUDGEMENTS WITHDRAWN · retained as technical evidence
 
 ---
 

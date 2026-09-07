@@ -2,6 +2,23 @@ WRITER'S STUDIO — CAPABILITY COMPLETION
 Jarvis Flow · 01
 
 STATUS
+CORRECTED · 2026-09-07 (founder)
+Product rulings WITHDRAWN. Source census retained as technical evidence only.
+Binding lane rule + corrected flow: docs/programme/
+WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_CORRECTION_2026-09-07.md
+
+  Founder-ratified R&D intent governs the product.
+  Repository state reports implementation reality.
+  Where the two disagree, CODE IS THE DEFECT — unless the founder
+  explicitly reopens the R&D decision.
+
+  "We cannot find why this exists" is a RETRIEVAL problem
+  before it is a product-design problem.
+
+CORRECTED FLOW   RECOVER → RECONCILE → PRESENT → FOUNDER ACT → BUILD
+CURRENT ACT      RECOVER
+
+SUPERSEDED STATUS LINE, kept:
 RULED · 2026-09-07 (founder)
 DISCOVER complete. Packets adjudicated individually.
 Ruling of record: docs/programme/

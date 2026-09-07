@@ -1,6 +1,43 @@
 # WRITER'S STUDIO — CAPABILITY COMPLETION · 01
 ## FOUNDER ADJUDICATION OF THE DISCOVER CENSUS
 
+> # ⛔ WITHDRAWN BY THE FOUNDER, 2026-09-07, SAME DAY
+>
+> **The product rulings in this document are withdrawn.** They were inferences
+> from implementation state, not decisions grounded in the founder's vision for
+> Writer's Studio.
+>
+> **What was withdrawn:**
+>
+> ```text
+> WITHDRAWN AS FOUNDER RULINGS
+>
+> - retire Discover
+> - retire Insights
+> - retire Suggestions
+> - build Goals next
+> - hold Notes
+> - remove Timeline
+> - remove Threads
+> - build Find
+> - any sequencing based only on the source census
+> ```
+>
+> **The reason, in the founder's words:** *a repository census was treated as
+> if it were a product census.* A source census can say what code exists, what
+> routes are live, what data models are present, and where contradictions are.
+> **It cannot say what Notes, Goals, Discover, Insights, Suggestions, Timeline,
+> Word Web or Threads should MEAN in Writer's Studio.** That is the founder's
+> to answer, and the census inverted the direction.
+>
+> **What survives from this document:** only §2, the FR-C / FR-D record
+> correction — which is a governance-status correction, not a product ruling.
+>
+> This document is kept in full rather than deleted. A withdrawn ruling that is
+> erased cannot be distinguished from one that was never made.
+
+---
+
 **Ruled** 2026-09-07, founder, on the census
 `WRITERS-STUDIO-CAPABILITY-COMPLETION-01_CENSUS_2026-09-07.md`
 **Lane** `flows/WRITERS-STUDIO-CAPABILITY-COMPLETION-01.flow.md`
@@ -20,7 +57,9 @@ premature. Some should disappear.
 
 ---
 
-## 1 · THE ADJUDICATION
+## 1 · THE ADJUDICATION ⛔ WITHDRAWN
+
+*Kept as the record of what was ruled and withdrawn. Not operative.*
 
 | Item | Ruling | Meaning |
 |---|---|---|
@@ -41,7 +80,7 @@ premature. Some should disappear.
 
 ---
 
-## 2 · FR-C / FR-D — CORRECTION OF RECORD
+## 2 · FR-C / FR-D — CORRECTION OF RECORD ✅ SURVIVES
 
 The census reported FR-C as *asserted PASS, observably FAIL*. The founder
 correction is precise and load-bearing:
@@ -72,7 +111,7 @@ every time a later branch loses their implementation.
 
 ---
 
-## 3 · PACKET B — THE DECISIVE RULING
+## 3 · PACKET B — THE DECISIVE RULING ⛔ WITHDRAWN
 
 > **Discover, Insights and Suggestions are not waiting to be built. They are
 > retired candidate labels unless a future inquiry establishes a capability
@@ -87,7 +126,7 @@ dashboard buckets.
 
 ---
 
-## 4 · PACKET A — GOALS, BOUND
+## 4 · PACKET A — GOALS, BOUND ⛔ WITHDRAWN
 
 Goals is the clean next genuinely new capability. It is bound as follows:
 
@@ -121,7 +160,9 @@ not exist.
 
 ---
 
-## 5 · X-2 IS THE FIRST REPAIR
+## 5 · X-2 IS THE FIRST REPAIR ⛔ WITHDRAWN AS SEQUENCING
+
+*The Statistics contradiction remains a TECHNICAL FINDING. That it should be repaired first was sequencing derived from the source census, and is withdrawn with the rest.*
 
 **Statistics is reconciled before any new capability is built**, because it
 establishes declaration truth:
@@ -139,7 +180,7 @@ making the others projections of it where possible.
 
 ---
 
-## 6 · SEQUENCE
+## 6 · SEQUENCE ⛔ WITHDRAWN
 
 ```text
 1  DECLARATION TRUTH
@@ -167,6 +208,9 @@ truth about what already exists.** Then Goals becomes the first new capability.
 ---
 
 ## 7 · STANDING AFTER THIS RULING
+
+⛔ SUPERSEDED BY THE WITHDRAWAL ABOVE. The operative standing is in
+`…_LANE_CORRECTION_2026-09-07.md`.
 
 ```text
 DISCOVER                 COMPLETE · ACCEPTED
