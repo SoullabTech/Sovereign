@@ -268,3 +268,94 @@ A distinct founder requirement, kept separate from both findings above. Joins
 R-1 (Help section), R-2 (MAIA understands the Studio), R-3 (hover explanations).
 
 ⛔ Still held. No repair, no copy, no navigation change authorized.
+
+---
+
+## 8 · FR-B CLOSED · FR-C–FR-F OPENED (founder, 2026-09-07)
+
+```text
+FR-B   CLOSED / ANSWERED
+
+W-03 characterization completed.
+Defect NOT reproduced under available conditions.
+No repair authorized.  No repair → no FR-B rewalk owed.
+
+RESIDUAL
+  The founder walk's displaced first view remains real, unexplained and
+  unreproduced. Preserved as a DEFECT-HISTORY RESIDUAL — not permitted to
+  remain an indefinite productization gate.
+```
+
+⭐ **The distinction that unblocks the lane:** *unexplained evidence should remain
+evidence; it should not become a veto over every question downstream.* Even a
+later explanation of the displaced viewport would not erase W-05b, which stands
+on its own footing.
+
+### Adjudication order (founder)
+
+```text
+1  FR-C   HONESTY RULE     what may the interface say about unavailable things
+2  FR-D   HELP FORM        what "Help section" actually means
+3  FR-F   COHORT 01 RECON  re-author the missing flow, or keep searching
+4  FR-E   07G PRIORITY     belongs to WS2-07 capability sequencing, not here
+```
+
+FR-C precedes FR-D because what the interface is *allowed to communicate about
+unavailable things* must be settled before designing guidance that explains the
+interface.
+
+```text
+FR-B       CLOSED
+W-03       RESIDUAL · unexplained, unreproduced
+FR-C–F     OPEN FOR RULING
+R-1 / R-3  OPEN FOR SCOPING, NOT BUILD
+BUILD      NOT AUTHORIZED
+```
+
+## 9 · ⚠️ Third correction of record — C-3 was wrong
+
+The Journey Truth's **C-3** stated: *"Two opposite honesty rules on one screen.
+The rail deletes unbuilt destinations (`visibleDestinations`); the mode bar shows
+Explore/Review/Publish disabled… A writer meets both simultaneously."*
+
+**The first clause is false.** Verified at `9212f0b7`:
+
+```text
+StudioRail          → visibleDestinations  → DROPS `later`
+                      rendered NOWHERE. No member-facing consumer.
+CanonicalRail       → the whole grammar, inert   __fixtures__ only
+StudioShellRail     → shellDestinations    → SHOWS unbuilt, not actionable,
+                      href stripped, map-authored counts stripped
+                      rendered by canvas/page.tsx AND develop/DevelopRoom.tsx
+StudioModeBar       → STUDIO_MODES         → SHOWS unbuilt, aria-disabled
+Studio Home         → renders NO rail at all
+```
+
+So a member never meets two colliding rules. **They meet exactly one rule —
+*show unbuilt, disabled* — applied consistently in both the rail and the mode
+bar.** The hide rule is live code with no member-facing consumer.
+
+This changes FR-C's question. It is not *"resolve a collision"*. It is: *the
+product has already settled on show-disabled; the walk says it does not land as
+intended — keep it, replace it, or make it legible?*
+
+## 10 · FR-C · the evidence, both sides
+
+**The rule's own stated intent** (`StudioRail.tsx`, shell projection):
+
+> "…so what the member reads is *'the Studio has a Notes room and I cannot open
+> it yet'*, never a dead link and never someone else's twelve notes."
+
+**What the walker actually read** (Develop, first person):
+
+> *"I'm there and notice a Readings section with many options yet very few
+> options in Work Space are present and useful"*
+
+⭐ **Intent and reception diverge.** The rule wants the member to read a specific
+sentence about a room that exists and is not yet open. The member read
+**absence and uselessness**. Nothing on the surface carries the sentence the
+rule is relying on — dimness alone is ambiguous between *not available to you*,
+*empty*, *broken*, and *not built yet*.
+
+⛔ Recorded as evidence for the ruling. No option recommended in this artifact;
+the ruling is the founder's.
