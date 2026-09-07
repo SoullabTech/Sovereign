@@ -481,3 +481,121 @@ HOUSE UI / ROUTING  HOLD
 SCHEMA              UNCHANGED
 IMPLEMENTATION      NOT AUTHORIZED
 ```
+
+---
+
+# ADDENDUM III — D-S4 RESOLVED AT CODE LEVEL · OUTCOME C
+**Read-only census, 2026-09-08 · ⛔ nothing modified · no production read required to reach this**
+
+## The chain, end to end
+
+```text
+agent_runs  <-  lib/services/corpusCallosumService.ts:120  logAgentRun()
+                THE ONLY WRITER anywhere in the tree
+
+imports:        ../db/postgres · ../sanctuary/turnPosture
+                ⛔ NEITHER ShadowAgent implementation
+
+agent_name:     input.agentName — A CALLER-SUPPLIED STRING
+                'MythicAtlas' · 'MaiaVoice' · 'WisdomRouter' are literals in the service;
+                every other row arrives as agent.agentName from the caller (:435, :460)
+
+'shadow' here:  an ELEMENT UNION VALUE
+                'fire'|'water'|'earth'|'air'|'aether'|'shadow'  (:51, :229)
+                mapped to 'relational' (:303), and explicitly distinguished from the
+                "classical five" (:505-508)
+
+live caller:    app/api/sovereign/app/maia/list/route.ts
+                ⛔ imports NEITHER ShadowAgent implementation
+```
+
+## ⭐ THE DECISIVE FINDING — `agent_runs` CANNOT ATTRIBUTE AN IMPLEMENTATION
+
+D-S4 asked *which implementation produces production `agent_runs` rows attributed to ShadowAgent.*
+
+> **The row does not carry that information.** `agent_name` is a **string the caller chose**, not a
+> record of what executed. A row reading `ShadowAgent` proves only that **a caller passed that
+> string** — it is not evidence that either `ShadowAgent` class ran.
+
+⛔ **Attribution must come from the call site, never from the ledger.** And at the call site, the
+live route imports neither implementation.
+
+## Disposition: OUTCOME C
+
+```text
+A. silent-projection ShadowAgent      RULED OUT — not imported by the writer or the live route
+B. complete-agent-field ShadowAgent   RULED OUT — same
+C. another implementation / stale documentation   ✅ THIS ONE
+```
+
+⚠️ **`CLAUDE.md`'s Corpus Callosum bullet lists `ShadowAgent` among eight live voices.** What is live
+is a Corpus Callosum voice **whose `element` is `'shadow'`** — ⛔ **not the `ShadowAgent` class**, of
+which there are two and neither is on the live path. The documentation names a class where the
+runtime has an **element label**.
+
+⛔ **NOT CORRECTED HERE.** That bullet is a **Cat 6 liveness claim**; amending it changes the live
+runtime inventory and is a founder act, not a lane edit. **Flagged, not changed.**
+
+**Optional confirming production read** (read-only, narrow, no longer load-bearing):
+
+```sql
+SELECT DISTINCT agent_name, element FROM agent_runs
+WHERE created_at > NOW() - INTERVAL '30 days' ORDER BY 1;
+```
+
+It would show which **names** appear — useful for correcting the documentation. ⛔ It cannot, and
+need not, identify an implementation.
+
+## ⚠️ SIXTH MEANING OF "SHADOW"
+
+Every `shadow` hit in the live route is **CMT-01 shadow-mode canonical-turn construction**
+(`MAIA_CANONICAL_SHADOW`, `[MAIA/shadow]`, `cognitionPath: 'shadow'`) — shadow **deployment**, a
+sixth distinct sense:
+
+```text
+1 shadow work                    5 shadow databases (disposable verification)
+2 AUTH-01-D3 variable shadowing  6 CMT-01 shadow-mode evaluation
+3 astrological house/shadow
+4 agent backchanneling
+```
+
+⛔ **A string-level `shadow` census is not a valid instrument for anything in this codebase.**
+Semantic classification precedes every routing conclusion.
+
+## ⭐ THE SAME LESSON, THIRD TIME TODAY
+
+```text
+self-registering migrations   the runner already owned insertion
+checksum column               created "for future compatibility", never written
+agent_name                    a caller-supplied string, not an execution record
+```
+
+> ***A ledger records what its writer chose to record. It is evidence of the write, never of the
+> thing the write describes.*** Established independently in three places today: migration
+> registration, migration checksums, and agent attribution.
+
+## D-S4 standing
+
+```text
+D-S4  RESOLVED AT CODE LEVEL — OUTCOME C
+      silent-projection path     Cat 3, not reachable (ADDENDUM II)
+      neither ShadowAgent class  on the agent_runs write path
+      CLAUDE.md liveness claim   REQUIRES FOUNDER CORRECTION (flagged, not made)
+      closure                    founder act
+```
+
+## SHADOW-GOLD-01 standing
+
+```text
+D-S1    RATIFIED
+D-S2    RATIFIED
+D-S3    OPEN — voice custody; ⭐ materially eased: neither ShadowAgent is member-facing
+                today, because neither is on the live path at all
+D-S4    RESOLVED AT CODE LEVEL (Outcome C) · closure = founder act
+
+FRESH vs LEGACY     HOLD — ⭐ the legacy case is now weakest it has been:
+                    the relevant paths are unreachable AND unattributed
+HOUSE UI / ROUTING  HOLD
+SCHEMA              UNCHANGED
+IMPLEMENTATION      NOT AUTHORIZED
+```
