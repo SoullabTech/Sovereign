@@ -81,9 +81,32 @@ interface WorktableProps {
   }) => void;
   /** A version was kept; the History drawer re-reads. */
   onCheckpointed?: () => void;
+  /**
+   * NAV-03 — the parent's write authority for this Work is out of date.
+   *
+   * The name is the meaning: NOT "a draft was created here", but "read again".
+   * An earlier draft of this said the callback fires only on a creation, on the
+   * reasoning that `exists` means someone else got there first and the parent
+   * "is not stale on our account". That was wrong. Staleness is not a question
+   * of authorship — the parent read `no_draft`, a draft now exists, and its
+   * answer is obsolete no matter which tab created it. A second tab reaching
+   * `exists` and then loading the draft successfully is PROOF the parent's
+   * earlier answer is stale, not evidence against it.
+   *
+   * Carries nothing. The draft is section-addressable (`section_addressable_at`
+   * is stamped at creation), so the parent should now mount a different engine
+   * — but deciding that is the parent's job. Passing the draft up would let
+   * this room adjudicate which surface wins, and the point of the write-state
+   * resolver is that the SERVER decides and the parent obeys.
+   *
+   * Without it, a session renders "not yet navigable" over a Work the server
+   * already calls section_aware, and only a manual reload fixes it — observed
+   * in production 2026-09-06.
+   */
+  onWriteAuthorityChanged?: () => void;
 }
 
-export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: WorktableProps) {
+export default function Worktable({ manuscriptId, onMeta, onCheckpointed, onWriteAuthorityChanged }: WorktableProps) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [editable, setEditable] = useState<Editable>({ addressable: false, content: '' });
   const [saveState, setSaveState] = useState<SaverState>('idle');
@@ -224,7 +247,22 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
     (async () => {
       const loaded = await loadDraft(apiFetch, manuscriptId);
       if (cancelled) return;
-      if (loaded.kind === 'ok') return settle(loaded);
+      if (loaded.kind === 'ok') {
+        settle(loaded);
+        /* R2 — the initial-load race. The parent mounted this room, and the
+           draft it found is section-addressable. Those two facts cannot both
+           be current: an addressable draft is one the parent should be showing
+           through the sections engine, not here. So THIS ROOM BEING MOUNTED
+           OVER AN ADDRESSABLE DRAFT IS ITSELF PROOF THE PARENT IS STALE —
+           whether its last read said no_draft (another tab created it) or
+           continuous (another tab converted it). Either way: read again.
+
+           An ordinary continuous draft stays silent. That is the normal
+           reason to be here, and notifying would re-read on every session for
+           no change. */
+        if (loaded.sectionAddressable) onWriteAuthorityChanged?.();
+        return;
+      }
       if (loaded.kind === 'unauthorized') return setPhase('unauthorized');
       if (loaded.kind === 'error') return setPhase('error');
       /* ⛔ NOT a fall-through to beginDraft. The server claims section
@@ -236,11 +274,27 @@ export default function Worktable({ manuscriptId, onMeta, onCheckpointed }: Work
       // Source, verbatim. (A blank page creates its draft at birth.)
       const begun = await beginDraft(apiFetch, manuscriptId);
       if (cancelled) return;
-      if (begun.kind === 'ok') return settle(begun);
+      /* Both paths below end with a draft the parent has not seen. Notified
+         after settle() so this room is coherent even if the parent unmounts it
+         on the next tick. No loop is possible: this initialisation runs once
+         per mount, and the parent's response is a read. */
+      if (begun.kind === 'ok') {
+        settle(begun);
+        onWriteAuthorityChanged?.();
+        return;
+      }
       if (begun.kind === 'exists') {
+        /* Another session created it between the parent's read and ours. The
+           parent is stale for exactly the same reason it would be had we
+           created it, so this must notify too — otherwise the second tab
+           reproduces the very defect NAV-03 repairs. */
         const again = await loadDraft(apiFetch, manuscriptId);
         if (cancelled) return;
-        if (again.kind === 'ok') return settle(again);
+        if (again.kind === 'ok') {
+          settle(again);
+          onWriteAuthorityChanged?.();
+          return;
+        }
         if (again.kind === 'unreadable') return setPhase('unreadable');
         return setPhase('error');
       }

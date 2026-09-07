@@ -276,6 +276,17 @@ function CanvasRoom() {
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
+  /* NAV-03 — the single way this page re-reads write authority. Conversion and
+     first-draft creation both change what the server would answer; neither may
+     invent its own remount. */
+  const refreshWriteState = useCallback(async () => {
+    const id = manuscript?.id;
+    if (!id) return;
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url));
+    setWritePhase(refreshed.phase);
+    setWriteState(refreshed.state);
+  }, [manuscript?.id]);
+
   const onConfirmSectionBreaks = useCallback(async () => {
     const id = manuscript?.id;
     if (!id || confirming) return;
@@ -290,11 +301,9 @@ function CanvasRoom() {
     /* Re-read the authority rather than assuming it. The draft is section-
        addressable because the server says so, and the outline remounts through
        the existing 'sections' branch — no second navigation path is created. */
-    const refreshed = await fetchWriteState(id, (url) => apiFetch(url));
-    setWritePhase(refreshed.phase);
-    setWriteState(refreshed.state);
+    await refreshWriteState();
     setConfirming(false);
-  }, [manuscript?.id, confirming]);
+  }, [manuscript?.id, confirming, refreshWriteState]);
 
   const writeMount = chooseMount(writePhase, writeState);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
@@ -783,6 +792,7 @@ function CanvasRoom() {
               onPick={(id) => setRequested(id)}
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
+              onWriteAuthorityChanged={refreshWriteState}
             />
           </div>
         </main>
@@ -852,6 +862,7 @@ function FieldBody({
   onPick,
   onMeta,
   onCheckpointed,
+  onWriteAuthorityChanged,
   writeMount,
   witnessDelayMs,
   onWriting,
@@ -862,6 +873,8 @@ function FieldBody({
   onPick: (id: string) => void;
   onMeta: (m: { updatedAt: string | null; revisionCount: number | null; words: number }) => void;
   onCheckpointed: () => void;
+  /** NAV-03 — the write authority moved; re-read what the server now says. */
+  onWriteAuthorityChanged: () => void;
   /** What the server said to mount. Resolved above; never guessed here. */
   writeMount: WriteMount;
   witnessDelayMs?: number;
@@ -1022,6 +1035,7 @@ function FieldBody({
       manuscriptId={manuscript.id}
       onMeta={onMeta}
       onCheckpointed={onCheckpointed}
+      onWriteAuthorityChanged={onWriteAuthorityChanged}
     />
   );
 }
