@@ -462,12 +462,39 @@ v0.2 card             MAY PROCEED
 **Absent fields vanish.** No *"No purpose"*, no dash, no invitation masquerading
 as content. A card composes around what exists.
 
-## Still open
+## The empty Home (founder, 2026-09-07) — CLOSED
 
-Whether the empty Home offers orientation without instruction — *what a Work can
-be · permission to begin small · MAIA nearby* — which v0.1 got wrong by leaving
-two bare doors. An empty Studio should read as potential, not vacancy.
+```text
+        A Work can begin small — a sentence, a question, a fragment,
+        or something already underway. It does not need to be fully
+        formed. MAIA is nearby when you want company.
 
-## Not done## Not done
+        Begin a new work              Import writing
+```
+
+Visually quiet, and **not attached to a button** — orientation, not a call to
+action. Three things at once, none of them instruction:
+
+```text
+orients      what a Work can be
+permits      incompleteness, without saying what to do about it
+establishes  MAIA as available, not intrusive
+```
+
+### ⚠ "when you want company" — the word choice is load-bearing
+
+```text
+help · guidance · assistance   all presuppose a DEFICIT in the writer
+company                        presupposes nothing
+```
+
+MAIA offering *help* implies the writer needs helping. **Company implies only
+that she is there.** That is the relational position the whole design is
+protecting, arriving in a single noun on the emptiest screen in the product.
+
+**Rule:** the word for MAIA's availability must never presuppose the writer's
+need.
+
+## Not done## Not done## Not done
 
 No component, schema, route, or build.
