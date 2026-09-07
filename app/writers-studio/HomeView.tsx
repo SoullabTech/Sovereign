@@ -13,8 +13,7 @@ import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
 import { byDay, sentenceFor, beneath, type StudioAct } from './studioHistory';
 import { AtmosphereSwitch } from './atmosphere/AtmosphereSwitch';
-import { WorkVisualChooser, WorkVisualImage } from './WorkVisual';
-import { useWorkVisual } from './useWorkVisual';
+import { WorkVisualChooser, CardVisual, HeroVisual } from './WorkVisual';
 
 /**
  * Writer's Studio — Home.
@@ -408,37 +407,6 @@ export default function HomeView({
     );
   };
 
-  /* Bumped whenever the writer changes a Work's image, and threaded into the
-     visual components as a key. Without it, replacing a cover would update the
-     chooser and leave the hero and the card showing the previous image until a
-     reload — the room disagreeing with the act the writer just performed. */
-  const ResumeVisual = ({ work }: { work: LivingWork }) => {
-    const { src } = useWorkVisual(work.id);
-    if (!src) return null;
-    return (
-      <div className="w-[104px] md:w-[132px] shrink-0 overflow-hidden rounded-[3px]">
-        <WorkVisualImage
-          src={src}
-          alt={`The image chosen for ${work.title ?? 'this work'}`}
-          className="w-full h-auto"
-        />
-      </div>
-    );
-  };
-
-  /* A Work's own image on its card. Reads its own bytes because the Home's
-     list endpoints carry no image — and shows NOTHING when the writer has
-     chosen none, rather than a placeholder pretending to be the Work. */
-  const CardVisual = ({ workId, title }: { workId: string; title: string }) => {
-    const { src } = useWorkVisual(workId);
-    if (!src) return null;
-    return (
-      <div className="w-[52px] h-[68px] shrink-0 overflow-hidden rounded-[2px]">
-        <WorkVisualImage src={src} alt={`The image chosen for ${title}`} className="w-full h-full" />
-      </div>
-    );
-  };
-
   const Cards = ({ children }: { children: React.ReactNode }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">{children}</div>
   );
@@ -644,7 +612,11 @@ export default function HomeView({
                     the row simply has one column and nothing pretends to be
                     the Work's visual identity. */}
                 <div className="flex items-start gap-6 md:gap-8 mt-5">
-                  <ResumeVisual key={visualEpoch} work={resume} />
+                  <HeroVisual
+                    key={visualEpoch}
+                    workId={resume.id}
+                    title={resume.title}
+                  />
                   <div className="min-w-0">
                     <h1
                       className="leading-[1.08] mb-3 max-w-2xl"

@@ -217,3 +217,43 @@ export function WritingFieldVisual({
     </div>
   );
 }
+
+/**
+ * ⚠️ These live at MODULE scope, and that is load-bearing rather than tidiness.
+ *
+ * They were first written inside HomeView's function body. A component defined
+ * there is a NEW COMPONENT TYPE on every parent render, so React unmounts and
+ * remounts it — and since each of these fetches its Work's image on mount, a
+ * single keystroke in the Home search field refetched every Work's metadata and
+ * bytes. The room would have flickered under the writer's own typing.
+ *
+ * Caught by reading the code before the founder's localhost witness rather than
+ * by the witness, which is where it would have cost an hour to find and looked
+ * like a network problem.
+ */
+
+/** A Work's image on its shelf card. Small, and absent when none was chosen. */
+export function CardVisual({ workId, title }: { workId: string; title: string }) {
+  const { src } = useWorkVisual(workId);
+  if (!src) return null;
+  return (
+    <span className="block w-[52px] h-[68px] shrink-0 overflow-hidden rounded-[2px]">
+      <WorkVisualImage src={src} alt={`The image chosen for ${title}`} className="w-full h-full" />
+    </span>
+  );
+}
+
+/** The Work's image where a writer returns to it. */
+export function HeroVisual({ workId, title }: { workId: string; title: string | null }) {
+  const { src } = useWorkVisual(workId);
+  if (!src) return null;
+  return (
+    <div className="w-[104px] md:w-[132px] shrink-0 overflow-hidden rounded-[3px]">
+      <WorkVisualImage
+        src={src}
+        alt={`The image chosen for ${title ?? 'this work'}`}
+        className="w-full h-auto"
+      />
+    </div>
+  );
+}
