@@ -194,3 +194,96 @@ C   untouched
 BUILD  NOT AUTHORIZED
 FR-C / FR-D  remain PASS
 ```
+
+---
+
+## 5 · A — RULED (founder, 2026-09-07)
+
+```text
+A · CANVAS IDENTITY       RULED
+
+DOMINANT FINDING
+insufficiently declared as a place
+
+R1  NAME THE ROOM         APPROVED
+R2  REMOTE ACTS           HOLD · no blanket surfacing
+R3  organise              OPEN · separate placement question
+
+NEW CONTROLS              NOT JUSTIFIED
+NEW CAPABILITY            NOT JUSTIFIED
+RENAMING ACTS             NOT JUSTIFIED
+```
+
+### The governing sentence
+
+> **The container is anonymous while its contents are all labelled.**
+
+That is the actual defect. The decisive evidence is structural: every constituent
+surface is named while the containing place is not. `WRITE` tells the writer
+which mode is active; it does not tell them which room they are inhabiting.
+
+### ⭐ The key product insight
+
+> **You did not fail to see Canvas options because Canvas lacked options. You
+> failed to encounter them as belonging to a place called Canvas.**
+
+### R1 · APPROVED
+
+```text
+The member-facing writing place must identify itself as Canvas.
+
+This is:
+- naming
+- orientation
+- place identity
+
+This is NOT:
+- a new control
+- a new capability
+- a toolbar
+- a navigation change
+- evidence about visual hierarchy
+```
+
+### R2 · AMENDED — HOLD / EVIDENCE-DEPENDENT
+
+⚠️ **The census established DEPTH, not a discoverability failure.** Six acts being
+remote is not sufficient evidence to advertise six acts at Canvas level; doing so
+could recreate exactly the clutter FR-D just avoided.
+
+```text
+R2  HOLD / EVIDENCE-DEPENDENT
+
+Do not enumerate remote acts merely because they exist.
+
+A remote act should acquire higher-level orientation only where a writer
+cannot reasonably know that the enclosing destination contains the capability
+AND that ignorance impairs an actual choice.
+
+Use the existing sparse note channel if such a case is witnessed.
+```
+
+> **Depth is not hiding until the depth causes a real orientation failure.**
+
+Two census observations are explicitly demoted by this amendment: the reading
+path being three panels deep may be entirely appropriate if reading is not a
+primary Canvas act, and `AskMaia` having a single call site is architecturally
+interesting but is **not by itself** evidence that the Canvas should advertise it.
+
+### R3 · OPEN
+
+```text
+"organise" appears to require local presence.
+A has established that as a control-placement question.
+
+It is not necessary to resolve R1.
+It should be adjudicated separately against the actual writing workflow.
+```
+
+⛔ The one act requiring local presence must not contaminate the room-identity
+ruling. Keeping R3 separate is what keeps the minimum remedy honest.
+
+### Separation, still intact
+
+⛔ **A says nothing about whether the writing plane has enough visual primacy.
+B remains completely open.** No finding or ruling above may be cited under B or C.
