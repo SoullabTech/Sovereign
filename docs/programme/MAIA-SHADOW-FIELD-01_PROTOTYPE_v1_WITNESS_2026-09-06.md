@@ -934,6 +934,14 @@ nothing is vertically composed — a drawer, not a room
 The copy is the strong part and is doing what the canon asks. The layout undercuts writing that
 is already right.
 
+### No resumption — a later attempt is a new witness run
+
+Restoring the localhost founder session (signing in, obtaining the intended admin/practitioner
+role) is **test-environment preparation, not modification of the subject.** But the walk does
+not resume. This attempt closes BLOCKED, and a successful later attempt is recorded as a
+**fresh witness run against the same unchanged subject** — never as a continuation of this one.
+A walk stitched across an environment repair cannot say which conditions produced which turn.
+
 ### Custody
 
 These are pre-walk findings. They are **not** scored against §12, because §12 scores MAIA's
