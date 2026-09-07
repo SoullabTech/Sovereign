@@ -80,3 +80,68 @@ formatting** — it should not be absorbed into a marks lane, and marks should n
 The formatting substrate is otherwise constituted: one code-point coordinate space, a sidecar shape
 with precedent, a text-only digest, and the marks-only staleness rule ruled. **What remains before
 bold + italic can ship end to end is an export that reads the draft at all.**
+
+---
+
+# Addendum · the draft has no heading field, and its text already contains one
+
+**Found while scoping the ruled repair (current draft wins). Read-only.** This is the thing that
+would have shipped silently, so it is recorded before any code.
+
+## The two facts
+
+```
+manuscript_draft_sections   id · draft_id · position · text · source_section_id
+                            ⛔ NO heading column
+```
+
+`saveSection.ts` states why, and it is a ruling not an omission:
+
+> the stored text **contains its heading bytes**, but there is no draft-level heading field — only
+> `source_section_id` provenance. Editing a heading through the body box would mean inferring
+> "first line = heading" forever, which goes ambiguous the moment a section has no heading or a
+> member deletes one.
+
+And the renderer's contract is a pair:
+
+```
+renderMemberBook.ts:70   if (heading) parts.push(`# ${heading}`)
+                         …then the body
+```
+
+## The silent failure this creates
+
+A draft-backed export that fills the renderer's `{ heading, body }` the obvious way —
+`heading` from the write-state derivation, `body` from `text` — **emits every chapter title twice**:
+once as the `#` heading the renderer adds, once at the top of the body where the writer's own text
+already carries it. The export succeeds. The book is wrong.
+
+`write-state` derives a heading by matching a **prefix of the text** against the Source's heading
+(`heading_prefix_not_found` is one of its refusals). It is a *reading* of the text, not a field
+beside it — so using it as a separate field double-counts by construction.
+
+## The fork, for ruling
+
+**A · `{ heading: null, body: text }`** — hand the renderer the writer's exact character stream and
+let the heading travel inside it, where the writer put it.
+✅ No duplication. ✅ No inference about where a heading ends — the concern `saveSection` names.
+⚠️ Whether the exported book gets real chapter *structure* then depends on the composer that built
+the draft: `composers.ts` carries several conventions, one of them `composeLegacyHashHeadings`. Where
+the text uses `# `, pandoc reads a chapter; where it does not, the title renders as a line of prose.
+**A knowable, nameable limit rather than a wrong book.**
+
+**B · strip the derived heading prefix from `text`, pass both** — restores structure for every draft.
+⛔ Requires the system to decide where a heading ends in the member's own characters, which is
+exactly the inference `saveSection` refused to build a room on. And a strip that mismatches silently
+eats the first line of a chapter.
+
+**Recommendation: A.** It cannot produce a wrong book, only a plainer one, and the limit is
+reportable. B trades a visible plainness for an invisible risk of deletion.
+
+⛔ Not chosen. Both change what a member's exported book looks like, which makes it the founder's.
+
+## What this does to the sequence
+
+Step 1 (current-draft export truth) is **blocked on this fork, not on the plumbing.** Reading the
+draft instead of the Source is a small change; deciding what a draft section *is* to a renderer is
+not, and getting it wrong is silent in exactly the way the census was written to prevent.
