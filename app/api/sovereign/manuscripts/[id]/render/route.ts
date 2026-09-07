@@ -58,6 +58,16 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   if (format !== 'pdf' && format !== 'epub') {
     return NextResponse.json({ error: "format must be 'pdf' or 'epub'" }, { status: 400 });
   }
+  /* The draft version the caller believes is current, after settling its own
+     pending saves. Optional, and enforced when present: a caller that names a
+     version is refused if the draft has moved under it, rather than exporting a
+     state nobody was looking at.
+     ⚠️ A caller that omits it gets no settle guarantee — the server cannot
+     flush a client's autosave, only decline to disagree with it. */
+  const claimedVersion = (body as { draftVersion?: unknown })?.draftVersion;
+  if (claimedVersion !== undefined && typeof claimedVersion !== 'number') {
+    return NextResponse.json({ error: 'draftVersion must be a number' }, { status: 400 });
+  }
 
   // Ownership gate: the manuscript must belong to the caller. 404 (never leak).
   let title: string;
@@ -91,14 +101,69 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
      */
     title = ms.rows[0].title ?? UNTITLED_EXPRESSION;
 
-    const secRows = await query<{ heading: string | null; body: string }>(
-      `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
-      [id],
+    /* ── THE CURRENT DRAFT IS THE MANUSCRIPT ────────────────────────────
+       Founder ruling 2026-09-07. This read `manuscript_sections` — the SOURCE —
+       so a writer could revise a chapter in WRITE, export a .docx, and receive
+       the pre-revision text. Silently: the export succeeded and nothing
+       refused. Export is not keeping and keeping is not exporting, so this
+       reads the LIVE draft and mints no revision.
+
+       ⛔ heading IS NULL, ALWAYS, and that is the ruling rather than a gap.
+       `manuscript_draft_sections` has no heading column by decision:
+       saveSection records that the stored text CONTAINS its heading bytes, and
+       that a heading field would mean inferring "first line = heading" forever.
+       write-state's heading is a PREFIX MATCH against the Source — a reading of
+       the text, not a field beside it — so passing it here would print every
+       chapter title twice, once from the renderer's `# ` and once from the
+       writer's own characters.
+
+         Export the writer's characters before beautifying the writer's structure.
+
+       So the text travels WHOLE: no derived heading prepended, no prefix
+       stripped, code point for code point. Where a draft carries `# Chapter
+       One`, pandoc reads a chapter; where it carries an ordinary title line,
+       that line exports as prose. A visible limitation — and the alternative,
+       stripping a matched prefix, silently eats a chapter's first line when the
+       match is wrong. Structural headings are a separate question. */
+    const draft = await query<{ id: string; version: number; content: string; addressable: boolean }>(
+      `SELECT id, version, content, (section_addressable_at IS NOT NULL) AS addressable
+         FROM manuscript_working_drafts WHERE manuscript_id = $1 AND member_id = $2`,
+      [id, memberId],
     );
-    if (secRows.rows.length === 0) {
+    const live = draft.rows[0];
+
+    if (live && claimedVersion !== undefined && claimedVersion !== live.version) {
+      /* The draft moved under a caller that told us what it had settled. Refuse
+         rather than export a state nobody was looking at. */
+      return NextResponse.json(
+        { error: 'unsettled_draft', detail: 'This draft changed while preparing the export. Try again.' },
+        { status: 409 },
+      );
+    }
+
+    if (live?.addressable) {
+      const rows = await query<{ text: string }>(
+        `SELECT text FROM manuscript_draft_sections WHERE draft_id = $1 ORDER BY position ASC`,
+        [live.id],
+      );
+      sections = rows.rows.map((r) => ({ heading: null, body: r.text }));
+    } else if (live) {
+      /* A continuous draft is one span of the member's characters and has no
+         section identity at all. It exports as itself rather than being cut. */
+      sections = [{ heading: null, body: live.content }];
+    } else {
+      /* No draft has ever been created, so the Source IS the current state —
+         and saying so is honest rather than a fallback to a stale one. */
+      const secRows = await query<{ heading: string | null; body: string }>(
+        `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
+        [id],
+      );
+      sections = secRows.rows.map((r) => ({ heading: r.heading, body: r.body }));
+    }
+
+    if (sections.length === 0 || sections.every((s) => s.body.trim().length === 0)) {
       return NextResponse.json({ error: 'This manuscript has no sections to render' }, { status: 400 });
     }
-    sections = secRows.rows.map((r) => ({ heading: r.heading, body: r.body }));
 
     const who = await query<{ name: string | null }>(
       `SELECT name FROM members WHERE id = $1`,

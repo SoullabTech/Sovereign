@@ -38,6 +38,67 @@ function req(bodyObj: unknown): NextRequest {
 }
 const ctx = { params: Promise.resolve({ id: 'm1' }) };
 
+/**
+ * The DB answers BY TABLE, not by call order.
+ *
+ * These fixtures were positional (`mockResolvedValueOnce` × 4) until the
+ * current-draft export ruling added a `manuscript_working_drafts` read between
+ * the ownership check and the section read. Four tests then failed with a 500
+ * — not because the route broke, but because each answer had silently shifted
+ * one place along and the manuscript row was being handed to the section
+ * reader. A fixture that survives only while the query order is frozen tests
+ * the order, not the behaviour; dispatching on the SQL says which table each
+ * answer belongs to and lets a new read be added without inventing failures.
+ *
+ * An unrecognized query throws rather than returning empty rows: a silent
+ * `{ rows: [] }` for a read nobody anticipated is how a route under test
+ * quietly stops exercising the path the test names.
+ */
+type DbAnswers = {
+  /** null ⇒ not owned by the caller */
+  manuscript?: { title: string | null } | null;
+  /** null ⇒ no working draft has ever existed for this manuscript */
+  draft?: { id: string; version: number; content: string; addressable: boolean } | null;
+  draftSections?: { text: string }[];
+  sections?: { heading: string | null; body: string }[];
+  member?: { name: string | null } | null;
+};
+
+function db(answers: DbAnswers): void {
+  const rows = <T>(r: T[]) => ({ rows: r, rowCount: r.length });
+  mockQuery.mockImplementation(async (sql: unknown) => {
+    const s = String(sql);
+    if (s.includes('FROM member_manuscripts')) {
+      return rows(answers.manuscript === undefined || answers.manuscript === null ? [] : [answers.manuscript]);
+    }
+    if (s.includes('FROM manuscript_working_drafts')) {
+      return rows(answers.draft ? [answers.draft] : []);
+    }
+    if (s.includes('FROM manuscript_draft_sections')) return rows(answers.draftSections ?? []);
+    if (s.includes('FROM manuscript_sections')) return rows(answers.sections ?? []);
+    if (s.includes('FROM members')) return rows(answers.member ? [answers.member] : []);
+    if (s.includes('INSERT INTO manuscript_renders')) return rows([]);
+    throw new Error(`unmocked query in render route test: ${s.trim().slice(0, 90)}`);
+  });
+}
+
+/** A temp file standing in for pandoc's output, and the render result naming it. */
+async function stubRenderedFile(tag: string): Promise<string> {
+  const tmp = path.join(
+    os.tmpdir(),
+    `render-${tag}-${process.pid}-${Math.floor(performance.now())}-${Math.random().toString(16).slice(2)}.pdf`,
+  );
+  await fs.writeFile(tmp, Buffer.from('%PDF-1.4 test body'));
+  mockRender.mockResolvedValue({
+    filePath: tmp,
+    sizeBytes: 18,
+    pageCount: 1,
+    sourceHash: 'abc123',
+    sectionCount: 1,
+  });
+  return tmp;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -59,7 +120,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
   it('404 when the manuscript is not owned by the caller (no existence leak)', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 }); // ownership SELECT → empty
+    db({ manuscript: null }); // ownership SELECT → empty
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(404);
     expect(mockRender).not.toHaveBeenCalled();
@@ -67,9 +128,7 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
   it('400 when the owned manuscript has no sections', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery
-      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [], rowCount: 0 }); // sections → empty
+    db({ manuscript: { title: 'My Book' }, draft: null, sections: [] });
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(400);
     expect(mockRender).not.toHaveBeenCalled();
@@ -77,21 +136,13 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 
   it('streams the rendered PDF, records provenance, and deletes the temp file', async () => {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery
-      .mockResolvedValueOnce({ rows: [{ title: 'My Book' }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [{ heading: 'Ch', body: 'text' }], rowCount: 1 }) // sections
-      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 }) // member name
-      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // INSERT provenance
-
-    const tmp = path.join(os.tmpdir(), `render-test-${process.pid}-${Math.floor(performance.now())}.pdf`);
-    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 test body'));
-    mockRender.mockResolvedValue({
-      filePath: tmp,
-      sizeBytes: 18,
-      pageCount: 1,
-      sourceHash: 'abc123',
-      sectionCount: 1,
+    db({
+      manuscript: { title: 'My Book' },
+      draft: null, // never drafted → the Source IS the current state
+      sections: [{ heading: 'Ch', body: 'text' }],
+      member: { name: 'Ann Author' },
     });
+    const tmp = await stubRenderedFile('stream');
 
     const res = await POST(req({ format: 'pdf' }), ctx);
     expect(res.status).toBe(200);
@@ -136,24 +187,13 @@ describe('POST /api/sovereign/manuscripts/[id]/render — auth & isolation', () 
 describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () => {
   async function renderWithTitle(title: string | null) {
     mockAuth.mockResolvedValue(MEMBER);
-    mockQuery
-      .mockResolvedValueOnce({ rows: [{ title }], rowCount: 1 }) // manuscript
-      .mockResolvedValueOnce({ rows: [{ heading: null, body: 'text' }], rowCount: 1 }) // sections
-      .mockResolvedValueOnce({ rows: [{ name: 'Ann Author' }], rowCount: 1 }) // member name
-      .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // INSERT provenance
-
-    const tmp = path.join(
-      os.tmpdir(),
-      `render-title-${process.pid}-${Math.floor(performance.now())}-${Math.random().toString(16).slice(2)}.pdf`,
-    );
-    await fs.writeFile(tmp, Buffer.from('%PDF-1.4 test body'));
-    mockRender.mockResolvedValue({
-      filePath: tmp,
-      sizeBytes: 18,
-      pageCount: 1,
-      sourceHash: 'abc123',
-      sectionCount: 1,
+    db({
+      manuscript: { title },
+      draft: null,
+      sections: [{ heading: null, body: 'text' }],
+      member: { name: 'Ann Author' },
     });
+    const tmp = await stubRenderedFile('title');
 
     const res = await POST(req({ format: 'pdf' }), ctx);
     const passed = mockRender.mock.calls[0]?.[1] as { title: unknown } | undefined;
@@ -185,5 +225,161 @@ describe('POST /api/sovereign/manuscripts/[id]/render — nullable title', () =>
     expect(passed?.title).toBe('The Salt Road');
     // The fallback is for absence only — it must never displace a real name.
     expect(passed?.title).not.toBe('Your writing');
+  });
+});
+
+/**
+ * The current draft is the manuscript — founder ruling 2026-09-07.
+ *
+ * This route read `manuscript_sections` (the Source), so a writer could revise
+ * a chapter in WRITE, export a .docx, and be handed the pre-revision text. The
+ * export succeeded; nothing refused. The sibling `currentDraftExport.test.ts`
+ * pins the shape of the code; these pin what the route actually DOES, which is
+ * the part that can regress without the source changing shape.
+ */
+describe('POST /api/sovereign/manuscripts/[id]/render — exports the current draft', () => {
+  const sectionsPassed = () => mockRender.mock.calls[0]?.[0] as { heading: string | null; body: string }[];
+  const sourceWasRead = () =>
+    mockQuery.mock.calls.some((c) => String(c[0]).includes('FROM manuscript_sections'));
+
+  it('renders the draft text, and never reaches the Source at all', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 7, content: 'ignored', addressable: true },
+      draftSections: [{ text: '# Chapter One\n\nRevised opening.' }, { text: 'Second.' }],
+      sections: [{ heading: 'Ch', body: 'STALE SOURCE TEXT' }],
+      member: { name: 'Ann Author' },
+    });
+    const tmp = await stubRenderedFile('draft');
+
+    const res = await POST(req({ format: 'pdf' }), ctx);
+    expect(res.status).toBe(200);
+    expect(sectionsPassed()).toEqual([
+      { heading: null, body: '# Chapter One\n\nRevised opening.' },
+      { heading: null, body: 'Second.' },
+    ]);
+    /* Not merely "the draft won" — the stale read never happened. */
+    expect(sourceWasRead()).toBe(false);
+
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+  });
+
+  it('⛔ passes the writer’s characters code point for code point', async () => {
+    /* The two failures the ruling names, both silent: a derived heading
+       prepended (printing the chapter title twice) and a matched prefix
+       stripped (eating the chapter's first line). Neither raises anything. */
+    const text = '# Chapter One\n\nShe wrote — “café”, 𝄞, and a trailing space. ';
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 1, content: '', addressable: true },
+      draftSections: [{ text }],
+      member: { name: null },
+    });
+    const tmp = await stubRenderedFile('verbatim');
+
+    await POST(req({ format: 'pdf' }), ctx);
+    const [only] = sectionsPassed();
+    expect(only.body).toBe(text);
+    expect([...only.body].length).toBe([...text].length);
+    expect(only.heading).toBeNull();
+
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+  });
+
+  it('a continuous draft exports as one span, not cut into invented sections', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 3, content: 'One long unbroken piece.', addressable: false },
+      member: { name: null },
+    });
+    const tmp = await stubRenderedFile('continuous');
+
+    await POST(req({ format: 'pdf' }), ctx);
+    expect(sectionsPassed()).toEqual([{ heading: null, body: 'One long unbroken piece.' }]);
+    expect(sourceWasRead()).toBe(false);
+
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+  });
+
+  it('falls back to the Source only when no draft has ever existed', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: null,
+      sections: [{ heading: 'Ch', body: 'Imported text.' }],
+      member: { name: null },
+    });
+    const tmp = await stubRenderedFile('source');
+
+    await POST(req({ format: 'pdf' }), ctx);
+    /* Not a stale fallback: with no draft, the Source IS the current state,
+       and its own heading is the member's — so it travels as a heading. */
+    expect(sectionsPassed()).toEqual([{ heading: 'Ch', body: 'Imported text.' }]);
+
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+  });
+
+  it('refuses (409) when the caller’s settled version has been overtaken', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 9, content: 'newer', addressable: true },
+      draftSections: [{ text: 'newer' }],
+      member: { name: null },
+    });
+
+    const res = await POST(req({ format: 'pdf', draftVersion: 8 }), ctx);
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toBe('unsettled_draft');
+    /* Refusal is the whole act: nothing rendered, and nothing recorded as
+       though a book had been made. */
+    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockQuery.mock.calls.some((c) => String(c[0]).includes('INSERT INTO'))).toBe(false);
+  });
+
+  it('proceeds when the caller’s settled version matches', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 9, content: '', addressable: true },
+      draftSections: [{ text: 'current' }],
+      member: { name: null },
+    });
+    const tmp = await stubRenderedFile('settled');
+
+    const res = await POST(req({ format: 'pdf', draftVersion: 9 }), ctx);
+    expect(res.status).toBe(200);
+    expect(sectionsPassed()).toEqual([{ heading: null, body: 'current' }]);
+
+    await new Promise((r) => setTimeout(r, 25));
+    await fs.rm(tmp, { force: true });
+  });
+
+  it('400 for a draftVersion that is not a number', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({ manuscript: { title: 'My Book' } });
+    const res = await POST(req({ format: 'pdf', draftVersion: '9' }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockRender).not.toHaveBeenCalled();
+  });
+
+  it('400 when the draft holds nothing but whitespace', async () => {
+    mockAuth.mockResolvedValue(MEMBER);
+    db({
+      manuscript: { title: 'My Book' },
+      draft: { id: 'd1', version: 1, content: '', addressable: true },
+      draftSections: [{ text: '   \n\n' }],
+      member: { name: null },
+    });
+    const res = await POST(req({ format: 'pdf' }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockRender).not.toHaveBeenCalled();
   });
 });
