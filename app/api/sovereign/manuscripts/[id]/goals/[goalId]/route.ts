@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { GOAL_COLUMNS, type WriterGoalRow } from '../route';
+import { occasionFor, type SupportOccasionKind } from '@/lib/writersStudio/goalSupportOccasion';
 
 export async function PATCH(
   request: NextRequest,
@@ -77,7 +78,18 @@ export async function PATCH(
        editsSupport ? (support as string) : null],
     );
     if (updated.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ goal: updated.rows[0] });
+    const goal = updated.rows[0];
+    /* FR-15 — only a STANDING move is an act the writer performed on the goal.
+       Changing the GRANT is not: choosing "encourage me" must not itself be the
+       occasion for encouragement, or the invitation would answer itself. */
+    const act: SupportOccasionKind | null =
+      editsStanding && standing === 'met' ? 'met'
+      : editsStanding && standing === 'set_aside' ? 'set_aside'
+      : null;
+    return NextResponse.json({
+      goal,
+      occasion: act ? occasionFor(act, { id: goal.id, support: goal.support }) : null,
+    });
   } catch (error) {
     console.error('[goals] standing failed', error);
     return NextResponse.json({ error: 'Could not change that just now' }, { status: 500 });
@@ -96,16 +108,22 @@ export async function DELETE(
     if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id: manuscriptId, goalId } = await ctx.params;
 
-    const removed = await query<{ id: string }>(
+    const removed = await query<{ id: string; support: 'track_only' | 'encourage' | 'work_with' }>(
       `DELETE FROM writer_goals g
         USING member_manuscripts m
         WHERE g.id = $1 AND g.manuscript_id = $2
           AND m.id = g.manuscript_id AND m.member_id = $3
-      RETURNING g.id`,
+      RETURNING g.id, g.support`,
       [goalId, manuscriptId, memberId],
     );
     if (removed.rows.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ released: removed.rows[0].id });
+    const gone = removed.rows[0];
+    /* Respecting a release is a legitimate thing to accompany — and FR-15 rule 4
+       is explicit that it is met with respect, never with persuasion back. */
+    return NextResponse.json({
+      released: gone.id,
+      occasion: occasionFor('released', { id: gone.id, support: gone.support }),
+    });
   } catch (error) {
     console.error('[goals] release failed', error);
     return NextResponse.json({ error: 'Could not release that goal just now' }, { status: 500 });

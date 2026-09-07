@@ -30,6 +30,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { occasionFor } from '@/lib/writersStudio/goalSupportOccasion';
 
 export interface WriterGoalRow {
   id: string;
@@ -192,7 +193,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         (byWhen as string | undefined) ?? null,
       ],
     );
-    return NextResponse.json({ goal: inserted.rows[0] }, { status: 201 });
+    /* FR-15 — declaring is a member ACT, so it may occasion support once, here,
+       in the handling of the act. Nothing is generated: this is the seam a
+       support path must come through, and it is minted nowhere else. */
+    const goal = inserted.rows[0];
+    return NextResponse.json(
+      { goal, occasion: occasionFor('declared', { id: goal.id, support: goal.support }) },
+      { status: 201 },
+    );
   } catch (error) {
     console.error('[goals] declare failed', error);
     return NextResponse.json({ error: 'Could not record that goal just now' }, { status: 500 });
