@@ -462,39 +462,63 @@ v0.2 card             MAY PROCEED
 **Absent fields vanish.** No *"No purpose"*, no dash, no invitation masquerading
 as content. A card composes around what exists.
 
-## The empty Home (founder, 2026-09-07) — CLOSED
+## The empty Home — CLOSED (founder, 2026-09-07)
 
 ```text
-        A Work can begin small — a sentence, a question, a fragment,
-        or something already underway. It does not need to be fully
-        formed. MAIA is nearby when you want company.
+                    Welcome, writer. You are home.
 
-        Begin a new work              Import writing
+              Begin a new work        Import writing
 ```
 
-Visually quiet, and **not attached to a button** — orientation, not a call to
-action. Three things at once, none of them instruction:
+No explanation. No lesson. No permission language. **The room receives them.**
+MAIA is simply present, without announcing what she does.
+
+This supersedes an earlier draft that explained what a Work could be and named
+MAIA as *"nearby when you want company."* That draft made a rule of not
+presupposing the writer's need. **This goes further: presence that announces
+nothing presupposes nothing at all.** The word was only necessary if she
+introduces herself.
+
+*Recorded so it is not later reopened as a defect:* "you are home" reads as
+hospitality, not as a factual claim about the writer's history with the room —
+the same way a host saying *make yourself at home* asserts nothing about where
+you live. It is offered, not described.
+
+## FIELD ≠ LESSONS (founder ruling, 2026-09-07)
+
+> **The room should not explain itself while you are trying to inhabit it.**
 
 ```text
-orients      what a Work can be
-permits      incompleteness, without saying what to do about it
-establishes  MAIA as available, not intrusive
+FIELD      experience     the Work · atmosphere · the writer's own words ·
+                          visual identity · return cues · MAIA nearby
+                          NO embedded teaching copy
+LESSONS    explanation    a distinct area the writer chooses to enter:
+                          what a Work is · Source vs Working Draft · how
+                          Development works · keeps, dismiss, unresolved ·
+                          how MAIA participates · process and habits ·
+                          Studio conventions
 ```
 
-### ⚠ "when you want company" — the word choice is load-bearing
+**The one exception:** contextual explanation at a *specific consequential
+action* — the shape `SECTION_BREAKS_COPY` already demonstrates, where an
+unfamiliar act explains itself at the moment it is offered and nowhere else.
+
+### Bearing on FR-D
+
+This is a founder ruling on the help-form question. The FR-D evidence
+(`8ccb73b60`) found the Studio already answers at the act, and asked what the
+minimum help architecture is. The answer is now three-layered and the layers do
+not mix:
 
 ```text
-help · guidance · assistance   all presuppose a DEFICIT in the writer
-company                        presupposes nothing
+1  the field explains nothing
+2  a consequential act explains itself, there and only there
+3  Lessons holds everything a writer might want to learn, entered by choice
 ```
 
-MAIA offering *help* implies the writer needs helping. **Company implies only
-that she is there.** That is the relational position the whole design is
-protecting, arriving in a single noun on the emptiest screen in the product.
+FR-D's remaining open is only *where Lessons lives and how it is reached* — not
+whether help is inline. **It is not.**
 
-**Rule:** the word for MAIA's availability must never presuppose the writer's
-need.
-
-## Not done## Not done## Not done
+## Not done## Not done## Not done## Not done
 
 No component, schema, route, or build.
