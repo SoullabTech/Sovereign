@@ -400,30 +400,74 @@ inspiration becomes covert curation.
    and writer-controlled grouping regardless.
 ```
 
-## Open — and one that must be settled before any card is built
+## RULING — `work.purpose` (founder, 2026-09-07) · card UNBLOCKED
 
-**`work.purpose` may not mean what this design needs.** The substrate says it
-exists and is writer-authored (the "Becoming"). The founder walk answered
-*purpose* as *personal · professional · social*. Those may be different semantic
-objects.
+> **A storage field does not gain a new meaning merely because the redesign
+> needs somewhere to put one.**
+
+HOME TRUTH LAW applied to the schema itself. The founder walk uncovered a NEW
+axis; it did not redefine the old one.
 
 ```text
-column exists  ≠  column means what the redesign needs
+TITLE       what do I call this Work?              Elemental Alchemy
+FORM        what kind of thing is it taking        book · memoir · essay —
+            shape as?                              the writer's own word,
+                                                   explicitly never a taxonomy
+INTENTION   why does this Work exist? what am      = work.purpose · KEEP
+            I holding through it?                  free, writer-authored
+CONTEXT     where does this Work live in my        personal · professional ·
+            life?                                  social · NOT work.purpose ·
+                                                   NOT constituted · working
+                                                   term only, not ratified
 ```
 
-Reusing it because it is available would be the data equivalent of *artifact
-exists ≠ artifact has authority*. **Settle the semantics before the card.**
+**A vocabulary conflict already exists in the product**, verified in source —
+`useLivingWorks.ts:47,49` stores `purpose` and `form`, while
+`WorkDrawer.tsx:218` renders `purpose` under the heading **Becoming**, prompting
+*"In your words — what is this, and what is it becoming?"* So one field carries
+intention, identity and emergence, while `form` separately claims what the Work
+is becoming.
 
-**A synopsis field does not exist.** `work.purpose` is the Becoming — a
-different object. A SENSE OF THE WHOLE therefore needs either a writer act, or
-MAIA's brief clearly labelled as hers. It may not be derived and presented as
-the Work speaking about itself.
+**Home must not canonize that overloading by accident.** v0.2 therefore prints
+neither *Purpose* nor *Becoming* on the card — the writer's sentence simply sits
+beneath title and form as part of the Work's presence. Vocabulary reconciliation
+is a separate act, not something Home settles visually.
 
-Still open: whether the empty Home offers orientation without instruction —
-*what a Work can be · permission to begin small · MAIA nearby* — which v0.1 got
-wrong by leaving two bare doors. An empty Studio should read as potential, not
-vacancy.
+```text
+work.purpose          KEEP — writer-authored intention
+work.form             KEEP — the writer's own word
+personal/pro/social   DO NOT squeeze into either
+new schema            NO
+v0.2 card             MAY PROCEED
+```
 
-## Not done
+## The Work card — v0.2
+
+```text
+┌────────────────────────────────────────┐
+│ [ writer-chosen visual ]               │  WRITER · never generated
+│                                        │
+│ ELEMENTAL ALCHEMY                      │  WRITER · title
+│ Book                                   │  WRITER · form
+│                                        │
+│ <the writer's own sentence>            │  WRITER · purpose, UNLABELLED
+│                                        │
+│ "actual words from the Work…"          │  WRITER · source text
+│                                        │
+│ Last here · Chapter 6 — Fire     FACT  │
+│                             Return →   │
+└────────────────────────────────────────┘
+```
+
+**Absent fields vanish.** No *"No purpose"*, no dash, no invitation masquerading
+as content. A card composes around what exists.
+
+## Still open
+
+Whether the empty Home offers orientation without instruction — *what a Work can
+be · permission to begin small · MAIA nearby* — which v0.1 got wrong by leaving
+two bare doors. An empty Studio should read as potential, not vacancy.
+
+## Not done## Not done
 
 No component, schema, route, or build.
