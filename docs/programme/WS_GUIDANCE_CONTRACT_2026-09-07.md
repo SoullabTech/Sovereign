@@ -48,6 +48,33 @@ C UNBUILT       "That isn't in Writer's Studio yet." — no date, no promise
 D CLAIM FAILURE MAIA must not paper over a defect. Report, don't reassure.
 ```
 
+### §1a · Three axes, never collapsed (founder refinement, 2026-09-07)
+
+D-01 exposed a dimension §1 alone does not cover:
+
+```text
+availability   can this capability exist here?        ← STUDIO_MAP
+health         did its state/data actually resolve?   ← the owning runtime
+knowledge      known present · known absent · unknown ← the envelope field
+```
+
+**Capability availability is derived from the Studio map; capability health is
+derived from the owning runtime state. Neither may be authored in the guidance
+registry.**
+
+The failure this forbids, in MAIA's own voice:
+
+```text
+FORBIDDEN   "Versions is available, and you have 0 kept versions."
+            — availability true, health unchecked, unknown rounded to zero
+REQUIRED    "Versions belongs here, but I couldn't check your kept versions
+             just now."
+```
+
+Availability being true says nothing about whether the fact resolved. Collapsing
+the two is exactly D-01 with authority attached: the map says the room exists, so
+MAIA reports a number the runtime never produced.
+
 ## §2 · One vocabulary, two surfaces
 
 A single canonical guidance registry, keyed by concept:
@@ -206,6 +233,8 @@ G5  "what should I do next?" produces doors, never a ranking
 G6  Ask MAIA never navigates away from the current Work
 G7  MAIA never reports an action as done that she did not perform
 G8  when the envelope cannot be built, MAIA says so and answers nothing about state
+G9  an AVAILABLE capability whose state failed to resolve is never reported with
+    a derived value — availability and health are answered separately
 ```
 
 G2 is the one that catches drift, and it is only checkable because §1 forbids
