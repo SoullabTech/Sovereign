@@ -201,3 +201,82 @@ FR-C / FR-D               remain PASS
 
 Each proposal must be capable of being **accepted, amended, or refused on its
 own** without disturbing the other two.
+
+---
+
+# ANTI-DRIFT LOCK — binding (founder, 2026-09-07)
+
+```text
+ANTI-DRIFT LOCK — CANVAS PRESENCE
+
+A · CANVAS IDENTITY
+Already ruled.
+May not be reopened by B or C.
+
+B · WRITING HIERARCHY
+May judge only:
+- figure / ground
+- manuscript primacy
+- spatial composition
+- visual competition
+- whether Studio recedes around the work
+
+B may NOT:
+- add controls
+- rename Canvas
+- surface remote acts
+- solve R3 organise
+- change material/color system
+
+C · MATERIAL CONTRACT
+May judge only:
+- whether a new manuscript-material role is permitted
+- whether the frozen dark ground ramp remains intact
+- whether reference-pack custody must be amended
+
+C may NOT:
+- justify parchment because Canvas identity is weak
+- change controls
+- change capability
+- solve hierarchy through naming
+
+BUILD
+NONE until A + B + C are independently ruled.
+```
+
+## The three contamination tests, preserved exactly
+
+```text
+A may not be answered by making the surface lighter.
+B may not be answered by adding controls.
+C may not be justified by "it would make the acts clearer."
+```
+
+## ⭐ The discipline that makes the lock workable
+
+> **A finding may span questions; a remedy may not.**
+
+So an observation made during B — *"the writing area feels lost partly because
+the room has no identity"* — is legitimately recorded as relevant to **both A and
+B**. But B still may not fix it by naming Canvas, **because A already owns that
+remedy.**
+
+This is what keeps the lock from suppressing real evidence. Findings travel
+freely. Remedies stay where they were ruled.
+
+## When a boundary must be crossed
+
+⛔ If anything encountered requires crossing these boundaries, **stop and name the
+category change** rather than quietly solving it inside the current question.
+
+That is the drift protection: the failure mode is not a wrong answer, it is a
+right answer given under the wrong question's authority, where nobody later can
+see which ruling licensed it.
+
+```text
+A       RULED   · R1 approved · R2 hold · R3 open separately
+B       NEXT    · current unchanged subject
+C       AFTER B
+BUILD   HOLD
+FR-C/D  PASS · not reopened
+```
