@@ -469,3 +469,97 @@ if it reads as SELF-CONTRADICTION → FR-C has uncovered a second-order
 ```
 
 **No need to anticipate which.** `648d4a13` stays untouched until the walk says.
+
+---
+
+## 10 · NEW FINDINGS — a different class from FR-C / FR-D (founder, 2026-09-07)
+
+⚠️ **Provenance.** These are the founder's first-person perceptions from the
+served subject. The witness has no screen and did not observe them; nothing here
+is corroborated analysis, and the phrase *"I don't see any Canvas options"* is
+recorded as a founder report, not as an agreed reading.
+
+```text
+FOUNDER WITNESS — NEW FINDINGS
+
+1. CANVAS IDENTITY WEAK
+Founder does not perceive "Canvas options" on the surface.
+The Studio may be semantically clearer, but the WRITE surface still does not
+strongly read as a distinct canvas/worktable with available acts.
+
+2. WRITING SURFACE NOT SUFFICIENTLY RECESSED / DIFFERENTIATED
+The manuscript surface could recede more from the surrounding shell and read
+more clearly as the primary work area.
+
+3. COLOR / MATERIAL DIRECTION
+Current dark-brown writing surface keeps the manuscript visually too close to
+the chrome. A lighter paper/parchment tone would likely better support reading,
+writing, and figure-ground separation for many users, while avoiding stark white.
+```
+
+### ⛔ NOT an FR-D failure
+
+FR-D answered *what things are*, *what unavailable things mean*, and *whether the
+Studio became more intelligible*. It did. This is a different question:
+
+> The Studio is more intelligible, but the writing field still lacks enough
+> visual and spatial authority.
+
+```text
+KEEP
+- FR-C rail state language
+- FR-D contextual clarity
+
+NEXT
+- strengthen Canvas / WRITE identity
+- make the writing surface more primary
+- increase figure-ground separation between manuscript and shell
+- explore a paper / parchment writing plane rather than dark brown
+```
+
+The intent is **not light mode**:
+
+> The manuscript feels like a page inside a darker studio environment.
+
+Candidate register: warm paper · parchment · lightly aged cream · soft oat/bone.
+Expected to help three things at once — the writing area feels primary, long-form
+reading is easier, and the surrounding Studio recedes appropriately.
+
+### ⭐ The open question this raises
+
+> **What are the actual Canvas acts, and where should they become perceptible
+> without clutter?**
+
+Finding 1 is a **surface-identity** problem, not a comprehension one: WRITE may be
+functioning without declaring itself as a canvas with meaningful available acts.
+
+### ⚠️ CONSTRAINT the next ruling must reckon with — read before scoping
+
+A parchment writing plane is **not a value tweak**. Verified in
+`app/writers-studio/studioTheme.ts` at `227e4e63`:
+
+```text
+GROUND   deepest #15120D · base #1A1513 · field #1D1812
+         raised #221B12 · active #342715
+```
+
+**Every ground token is dark. There is no light or paper surface token in the
+theme at all.** And the file's own authority block states:
+
+- `DESIGN-CONTRACT.md` is **FROZEN**, with six reference screens under custody;
+- the ground ramp is **SAMPLED** — measured off reference pixels, not inferred;
+- the provenance system exists precisely so an inferred value cannot inherit the
+  authority of a measured one.
+
+So this direction changes a **sampled, frozen** foundation rather than a
+provisional number. That makes it a founder ruling on the design contract, not an
+implementation choice — and it should be opened as one, with the reference pack
+in view.
+
+⛔ Nothing scoped, nothing built, no token touched.
+
+```text
+FR-C / FR-D   WITNESSED · PASS · unchanged by these findings
+NEW FINDINGS  RECORDED · unscoped
+CODE          HOLD
+```
