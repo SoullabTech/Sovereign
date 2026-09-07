@@ -893,3 +893,74 @@ nothing existing was constituted under the superseded model.
 
 > The journey walks moved the Circle from *a collection of equal members* to *an equality-preserving act
 > of constitution*. That distinction is structural, not poetic.
+
+## ADDENDUM III · carry-forward — recorded, deliberately NOT adjudicated
+
+> **Retention follows the meaning of the relationship, not merely who can see it.** That is why FR-30
+> eliminates the member-facing attendance history as well as the host-facing ledger: a private *"my
+> past Salons"* list would still require Soullab to retain the very person↔Salon edge the ruling says
+> ceases to exist.
+
+### D-M4 · "Destroyed" must eventually include derived copies
+
+When FR-29/FR-30 become implementation work, deletion **cannot mean only "delete the primary row."**
+The relationship can otherwise survive in: search/index tables · caches · analytics and event payloads
+· exports · materialized views · operational logs · backup snapshots kept beyond their normal expiry.
+
+⛔ This does **not** mean backups must support surgical deletion immediately. It means the eventual
+retention doctrine owes a precise distinction between:
+
+```
+LIVE RECONSTRUCTABILITY        an application-readable social graph          → must not survive
+EXPIRING DISASTER-RECOVERY     a copy that expires and is not app-readable   → different question
+```
+
+> Otherwise **"destroyed" becomes true in one table and false in the system.**
+
+⭐ **Scope note (Jarvis, recorded as an observation):** this is not FR-29/FR-30's problem alone. The
+constitution now says *destroyed* or *deleted* in **four** places — FR-15 (surrendered meaning),
+FR-22 (withdrawn native-offering payload), FR-29 (repair intake), FR-30 (co-attendance edge). They
+should share **one definition**, authored once, rather than four implementations each deciding for
+itself how far deletion reaches. **Not opened as a lane.**
+
+### D-M5 · `constituted_by` is historical constitution, not current membership
+
+FR-31 creates a distinction that will matter later:
+
+```
+constituted_by     who authored the Circle into existence
+current_members    who belongs now
+```
+
+If one of the four founding members later leaves, ⛔ **the constitution must not silently rewrite
+itself** to say the Circle was constituted by three. Likewise ⛔ joining later must not make someone
+**retroactively a constitutor**. This points toward a future dissolution / reconstitution question —
+⛔ **not a reason to open another ruling now.**
+
+### The ACTIVE formula, written once
+
+When FR-31 is implemented the derived state becomes, in full:
+
+```
+ACTIVE =
+  active_members >= 3
+  AND facilitation_constituted
+```
+
+⛔ **Not a new test pasted onto an old claim.** The current **63/63 remains valid evidence for the
+substrate it tested**, and must never be retroactively described as proving FR-31.
+
+### Standing
+
+```
+FR-29 / FR-30 / FR-31   RATIFIED
+D-M1 / D-M2 / D-M3      CLOSED
+D-M4 / D-M5             CARRIED FORWARD, NOT ADJUDICATED
+C33–C36 · T30–T33       RESERVED
+SCHEMA                  UNCHANGED
+IMPLEMENTATION          NOT AUTHORIZED
+```
+
+> The architecture now distinguishes cleanly among **co-presence · membership · constitution** — and
+> that distinction does real work: **a Salon can vanish relationally after it occurs, while a Circle
+> can legitimately retain the authored fact of who brought that continuing relationship into being.**
