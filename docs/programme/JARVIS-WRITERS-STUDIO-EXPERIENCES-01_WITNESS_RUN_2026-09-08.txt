@@ -1,0 +1,50 @@
+
+── WITNESS A — SELF / POETRY ───────────────────────
+PASS  A1     a self-directed Experience exists with NO participation record
+             zero rows — no student record
+PASS  A2     no progress-bearing column exists anywhere in the Experience schema
+             none
+PASS  A3     the member authored the container; nothing is MAIA-derived
+             all movements member-authored
+
+── WITNESS B — FACILITATOR / MEMOIR ────────────────
+PASS  B1     no bridge exists from the Experience to a participant Work
+             declared relations to the private Work=0; sharing/access tables in the Experience namespace=0
+PASS  B2     the facilitator's method is attributed to them at movement level
+             authorship=facilitator, attributed to its author
+PASS  B3     an encountered version cannot be rewritten
+             this Experience version was encountered on 2026-09-08 12:37:16.094095+00 and is history — 
+PASS  B4     the earlier participant still holds the version they moved through
+             participant on version 1, revision is version 2
+
+── WITNESS C — SCREENWRITER ────────────────────────
+PASS  C1     participation records no position, so entering anywhere violates no invariant
+             participation carries no movement reference of any kind
+PASS  C2     the Work's relation to the Experience is the author's own sentence
+             I brought this screenplay into the twelve weeks.
+PASS  C3     form belongs to the Work and the Experience has no form column at all
+             living_works.form=Screenplay; Experience form columns=0
+
+── WITNESS D — PLAYWRIGHT (the suitcase) ───────────
+PASS  D1     a contributor with no account keeps a human-readable identity
+             Maria Alvarez, actor playing Ruth
+PASS  D2     the contribution is in relationship to the Work without being part of it
+             no material, no adoption — the decision has not been taken
+PASS  D3     influence adoption records causation without attaching any material
+             the Work changed; nothing of the actor's was incorporated
+PASS  D4     the provenance survives adoption and names the human it came from
+             Maria Alvarez, actor playing Ruth → influence
+PASS  D5     a Contribution needs no Experience — it belongs to the Work
+             recorded with experience_id NULL
+
+── NEGATIVE PRIVACY WITNESS ────────────────────────
+PASS  P1     no shipped query reaches a private table from participation
+             no such query exists
+PASS  P2     no view or function in the database travels participation to private material
+             no such database object exists
+PASS  P3     no Experience sharing surface exists yet — sharing stays a separate authority
+             none built; sharing is not implied by participation
+
+════════════════════════════════════════════════════════════════════════
+passed 18 · failed 0
+✅ [POSTGRES] Pool closed gracefully
