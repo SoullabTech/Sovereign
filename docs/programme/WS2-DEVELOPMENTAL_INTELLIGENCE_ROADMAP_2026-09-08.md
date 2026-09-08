@@ -39,7 +39,10 @@ OPEN — MUST BE PREDECLARED BEFORE EXECUTION
 
 ---
 
-## 2 · Phase 0 — Product direction · FROZEN
+## 2 · Phase 0 — Product direction · **SUPERSEDED IN PLACE 2026-09-08**
+
+> ⛔ **THIS BLOCK NO LONGER GOVERNS.** Phase 0 was re-frozen by founder act after the Pass B falsification pass narrowed six of these statements. The authoritative version is **`WS2-PHASE0_RE-FROZEN_2026-09-08.md`**. The pre-falsification text is kept below as the before-state — a stamp is a reading at a time, and the honest repair is to date it, not to hide it.
+
 
 ```text
 Reading opens a conversation, not a report.
@@ -52,7 +55,7 @@ Complexity stays below the writer experience.
 Sovereignty governs what may ship; quality governs whether we ship.
 ```
 
-These are not redesigned each session. They are, however, the **explicit targets of the Phase 1 falsification pass** — a frozen assumption is not an unexaminable one.
+These were not redesigned each session, and were the explicit targets of the Phase 1 falsification pass — a frozen assumption is not an unexaminable one. That pass ran, and this text did not survive it unchanged. See the re-freeze for what each statement now says, and §1 there for the two record defects discovered during assembly.
 
 ---
 
@@ -106,6 +109,8 @@ The falsification pass targets the eight frozen Phase 0 assumptions as **rows**,
 | Session is the primary quality unit | Evidence output-level measures adequately predict collaboration quality | TBD | TBD |
 | Complexity stays below writer experience | Evidence explicit control or exposed ontology improves outcomes enough to justify writer burden | TBD | TBD |
 | Sovereignty decides eligibility; quality decides readiness | Evidence the boundary produces an unacceptable persistent capability deficit | TBD | TBD |
+
+> ⛔ **This matrix is a DERIVED PROJECTION of §2, not Phase 0 itself, and it diverged from it.** It split §2 #2 into two rows without provenance and omitted §2 #3 entirely, while preserving the same row count. Both defects were discovered during the item 6 assembly and are recorded in the re-freeze §1. The matrix must map back to §2; it does not replace it.
 
 Quota: five credible contrary findings, each attacking a **named row** and stating its survival condition (schema: research record §15). Until the quota is met, **convergence may not be claimed**.
 
