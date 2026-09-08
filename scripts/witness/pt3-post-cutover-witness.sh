@@ -36,14 +36,23 @@ q() { docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc "$1" 
 # the SAME question this witness asks. A re-typed invariant drifts, and drift is how the wrong I4/I6
 # survived review in the first place.
 PT3_LIB="${PT3_LIB:-$(dirname "$0")}"
-if [ ! -r "$PT3_LIB/pt3-currency-invariants.sh" ]; then
-  echo "INCONCLUSIVE — $PT3_LIB/pt3-currency-invariants.sh not found."
-  echo "Run this witness from the materialized snapshot (the orchestrator does), not by piping it"
-  echo "over ssh: a witness missing its own invariant definitions cannot pronounce on anything."
-  exit 2
-fi
+for lib in pt3-currency-invariants.sh pt3-compose.sh; do
+  if [ ! -r "$PT3_LIB/$lib" ]; then
+    echo "INCONCLUSIVE — $PT3_LIB/$lib not found."
+    echo "Run this witness from the materialized snapshot (the orchestrator does), not by piping it"
+    echo "over ssh: a witness missing its own definitions cannot pronounce on anything."
+    exit 2
+  fi
+done
 # shellcheck source=/dev/null
 . "$PT3_LIB/pt3-currency-invariants.sh"
+# ⭐ B45 — THE MIGRATION EXEMPTION IS DEFINED ONCE. Repair 7 narrowed it from the `*migrate*` name
+# substring to the Compose service identity, but this witness kept its own copy of the old rule —
+# so an ordinary container merely NAMED `maia-migrate-helper` could hold owner material and vanish
+# from the final constitutional census by substring. Same defect class as B41, in the exemption
+# instead of the invariant: one rule, one executable definition. pt3_is_exempt() is that rule.
+# shellcheck source=/dev/null
+. "$PT3_LIB/pt3-compose.sh"
 
 echo "════════ 1. RUNTIME OPERATES AS THE CONSTRAINED ROLE (§XI · B38) ════════"
 #
@@ -72,7 +81,8 @@ owner_material() {   # container → names of owner-bearing variables, one per l
 
 checked=0
 for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
-  case "$c" in maia-postgres|*migrate*) continue ;; esac
+  # B45 — postgres and the GOVERNED MIGRATION SERVICE, by Compose service identity. Never by name.
+  pt3_is_exempt "$c" && continue
   app=$(docker exec "$c" printenv MAIA_APP_DATABASE_URL 2>/dev/null || true)
   own=$(owner_material "$c")
   # In scope: anything that touches the database at all, or holds owner material for any reason.

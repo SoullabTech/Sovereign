@@ -18,11 +18,18 @@
 #   3 NEGATIVE        sections, no currency, no withdrawal, no ambiguity record           → FAIL
 #   4 UNRECORDED      a representation with no act and no ambiguity record                → FAIL
 #   5 STALE WITHDRAWAL  an OLD lawful withdrawal, then a LATER unexplained loss           → FAIL
+#   6 NON-CAUSAL LATE   a LATER withdrawal of an ALREADY-INACTIVE representation          → FAIL
+#   7 LATE UNACTED REP  a new unacted representation on a genuinely ambiguous Work         → FAIL
 #
-# ⛔ Do not weaken 3, 4 or 5 to obtain green. They are the reason the repair is not an escape hatch.
+# ⛔ Do not weaken 3, 4, 5, 6 or 7 to obtain green. They are the reason the repair is not an escape hatch.
 # Case 5 is what makes the withdrawal rule falsifiable rather than merely demonstrating the friendly
 # case: cases 1-4 contain no withdrawal followed by anything, so a predicate that accepted ANY
 # historical withdrawal passed all four while letting a stale one mask a newer loss.
+#
+# 5 and 6 are opposite directions of the same law and both are needed:
+#   5  an EARLIER withdrawal must not excuse a LATER loss   (stale)
+#   6  a LATER withdrawal must not excuse an EARLIER loss   (non-causal)
+# 7 is the same law for I6: a record explains the subject it was recorded about, not the Work.
 #
 # The invariants themselves are NOT re-typed here: they are sourced from the same file the
 # post-cutover witness sources. An instrument that restates the law it tests can pass while the law
@@ -185,14 +192,72 @@ expect "no open ambiguity record"                   "$(q "SELECT count(*) FROM s
 expect "→ stale withdrawal does NOT excuse the loss" "$(absence)" "2"
 
 echo
+echo "── 6 · NON-CAUSAL LATE WITHDRAWAL — withdrawing what was already inactive ──"
+# ⛔ Control, and the mirror of case 5. The seam permits withdrawing ANY representation of the Work
+# without requiring it to be operative first, so a late lawful call can be made to LOOK like the
+# explanation for a loss it did not cause. Representation A was already superseded; B is the real
+# loss; the withdrawal of A comes afterwards and ends nothing.
+W6=$(mk_work "non-causal-withdrawal" source_custodied)
+A6=$(mk_arr "$W6" "text")
+R6A=$(mk_rep "$W6" "'$A6'" source_custodied); mk_sec "$W6" "$R6A"
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W6','extraction','$R6A',true,'$MEMBER', now() - interval '4 days')" >/dev/null
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W6','replacement','$R6A',false,'$MEMBER', now() - interval '3 days')" >/dev/null
+R6B=$(mk_rep "$W6" "'$A6'" source_custodied)
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W6','replacement','$R6B',false,'$MEMBER', now() - interval '2 days')" >/dev/null
+# The late seam call. Lawful, governed, member-attributed — and causally irrelevant.
+q "SELECT source_withdraw_representation('$W6','$MEMBER','$R6A','late withdrawal of an inactive rep')" >/dev/null
+expect "the LATEST act IS a governed withdrawal"    "$(q "SELECT act FROM source_lifecycle_acts WHERE manuscript_id='$W6' AND representation_id IS NOT NULL ORDER BY occurred_at DESC, id DESC LIMIT 1")" "withdrawal"
+expect "the withdrawn rep was already inactive"     "$(q "SELECT p.operative::text FROM source_lifecycle_acts p WHERE p.manuscript_id='$W6' AND p.representation_id='$R6A' AND p.act <> 'withdrawal' ORDER BY p.occurred_at DESC, p.id DESC LIMIT 1")" "false"
+expect "no operative representation"                "$(q "SELECT (source_operative_representation('$W6') IS NULL)::text")" "true"
+expect "no open ambiguity record"                   "$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE manuscript_id='$W6' AND resolved_at IS NULL")" "0"
+expect "→ a withdrawal that caused nothing EXPLAINS nothing" "$(absence)" "3"
+
+echo
+echo "── 7 · LATE UNACTED REPRESENTATION on a genuinely ambiguous Work ──"
+# ⛔ Control for I6. Work 1 really is ambiguous and its legacy representation is really excused.
+# A representation created AFTER the ambiguity was noticed is not the subject that record is about,
+# and must not inherit the excuse by sharing a manuscript_id.
+R1LATE=$(mk_rep "$W1" NULL legacy_interpreted_import)
+expect "the ambiguous Work's record is still open"  "$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE manuscript_id='$W1' AND kind='multiple_legacy_arrivals' AND resolved_at IS NULL")" "1"
+expect "the later rep postdates the record"         "$(q "SELECT (r.created_at > c.noticed_at)::text FROM manuscript_source_representations r, source_lifecycle_reconciliation c WHERE r.id='$R1LATE' AND c.manuscript_id='$W1' AND c.kind='multiple_legacy_arrivals'")" "true"
+expect "the later rep carries no lifecycle act"     "$(q "SELECT count(*) FROM source_lifecycle_acts WHERE representation_id='$R1LATE'")" "0"
+expect "→ the original legacy rep is STILL accounted for, the later one is DETECTED" "$(unrecorded)" "2"
+
+echo
 echo "════════════════════════════════════════════════════════════════════════"
 if [ "$fail" -eq 0 ]; then
   echo "REGRESSION PASSED — absence of currency is admitted only when it is explained,"
   echo "                    and only by the act that actually explains it."
   echo
-  echo "teardown: live fixture residue 0 · lifecycle tombstones RETAINED BY LAW"
-  echo "          (source_lifecycle_acts is append-only; the acts of an erased fixture survive"
-  echo "           as history naming no live row and carrying no content — that is not residue.)"
+  # ⭐ CLEANUP IS ASSERTED, NOT PREDICTED. This line used to print "residue 0" BEFORE the EXIT trap
+  # ran, and cleanup() swallows its own errors with `|| true` — so the number was a claim about what
+  # was about to happen. It is now a reading taken after the act, of the tables themselves. This
+  # lane has already shown once what silent fixture residue costs.
+  cleanup
+  live=$(q "SELECT (SELECT count(*) FROM member_manuscripts WHERE title LIKE '$TAG%')
+                 + (SELECT count(*) FROM manuscript_sections s JOIN member_manuscripts m ON m.id=s.manuscript_id WHERE m.title LIKE '$TAG%')
+                 + (SELECT count(*) FROM manuscript_source_representations r JOIN member_manuscripts m ON m.id=r.manuscript_id WHERE m.title LIKE '$TAG%')
+                 + (SELECT count(*) FROM manuscript_source_arrivals a JOIN member_manuscripts m ON m.id=a.manuscript_id WHERE m.title LIKE '$TAG%')
+                 + (SELECT count(*) FROM source_lifecycle_reconciliation c JOIN member_manuscripts m ON m.id=c.manuscript_id WHERE m.title LIKE '$TAG%')
+                 + (SELECT count(*) FROM members WHERE name = '$TAG')" 2>/dev/null || echo '?')
+  # Counted by this instrument's own teardown reasons. These ACCUMULATE across runs on a disposable
+  # database, because the table is append-only — so the number is not "this run" and must not be
+  # labelled as if it were.
+  tombs=$(q "SELECT count(*) FROM source_lifecycle_acts WHERE reason IN ('regression teardown','late withdrawal of an inactive rep','regression')" 2>/dev/null || echo '?')
+  if [ "$live" = "0" ]; then
+    echo "teardown: live fixture residue 0 — ASSERTED by reading the fixture tables after cleanup"
+  else
+    echo "teardown: LIVE FIXTURE RESIDUE $live — the instrument did not clean up after itself"
+    exit 1
+  fi
+  echo "          lifecycle tombstones RETAINED BY LAW — ${tombs:-?} act row(s) bearing this"
+  echo "          instrument's teardown reasons, accumulated across every run on this disposable"
+  echo "          database (the table is append-only, so they do not reset)."
+  echo "          source_lifecycle_acts is append-only; the acts of an erased fixture survive as"
+  echo "          history naming no live row and carrying no content — that is not residue."
   exit 0
 fi
 echo "REGRESSION FAILED — $fail expectation(s). Do not weaken the negative controls to obtain green."

@@ -65,14 +65,40 @@ PT3_OPEN_AMBIGUITY="EXISTS (SELECT 1 FROM source_lifecycle_reconciliation c
 # (occurred_at DESC, id DESC), and must be a governed member withdrawal: member_act, with an actor,
 # leaving the representation non-operative. COALESCE because a Work with sections and no acts at all
 # has no explanation, and NULL must not silently drop it from the defect count.
+#
+# ⭐ B43 — AND THE WITHDRAWAL MUST HAVE CAUSED THE ABSENCE. Latest-act was still not enough. The
+# seam permits source_withdraw_representation() on ANY representation of the Work: it checks
+# ownership and belonging, then appends withdrawal · operative=false. It does not require the
+# subject to have been operative first. So this manufactures an explanation after the fact:
+#
+#   representation A   extraction(true) → replacement(false)   already inactive
+#   representation B   replacement(false)                      the real, unexplained loss
+#   later              withdrawal(A, false)                    a lawful seam call that caused nothing
+#
+# The latest act is now a governed withdrawal, and the Work would read EXPLAINED — by an act that
+# ended nothing. So the predicate also asks what the withdrawn representation's state WAS: look past
+# any trailing withdrawal rows for that representation (repeated withdrawal calls must not break the
+# explanation) to its latest preceding NON-withdrawal act, and require `operative = true`.
+#
+#   extraction(true)  → withdrawal(false)   explains the absence
+#   replacement(false) → withdrawal(false)  explains nothing; it was already inactive
+#
+#   ⭐ AN EXPLANATION CANNOT MERELY BE NEARBY IN HISTORY. It must bind to the state it explains.
 PT3_WITHDRAWN="COALESCE((
-  SELECT a.act = 'withdrawal'
-     AND NOT a.operative
-     AND a.provenance = 'member_act'
-     AND a.actor_member_id IS NOT NULL
-    FROM source_lifecycle_acts a
-   WHERE a.manuscript_id = w.m AND a.representation_id IS NOT NULL
-   ORDER BY a.occurred_at DESC, a.id DESC
+  SELECT l.act = 'withdrawal'
+     AND NOT l.operative
+     AND l.provenance = 'member_act'
+     AND l.actor_member_id IS NOT NULL
+     AND COALESCE((SELECT p.operative
+                     FROM source_lifecycle_acts p
+                    WHERE p.manuscript_id   = l.manuscript_id
+                      AND p.representation_id = l.representation_id
+                      AND p.act <> 'withdrawal'
+                    ORDER BY p.occurred_at DESC, p.id DESC
+                    LIMIT 1), false)
+    FROM source_lifecycle_acts l
+   WHERE l.manuscript_id = w.m AND l.representation_id IS NOT NULL
+   ORDER BY l.occurred_at DESC, l.id DESC
    LIMIT 1), false)"
 
 # ── I4 (replacement) — UNEXPLAINED ABSENCE OF SOURCE CURRENCY ──────────────────────────────────
@@ -85,14 +111,32 @@ SELECT count(*) FROM (SELECT DISTINCT manuscript_id AS m FROM manuscript_section
 
 # ── I6 (replacement) — UNRECORDED REPRESENTATION ───────────────────────────────────────────────
 # A representation with no lifecycle act is permissible ONLY where the system recorded why it
-# refused to infer one.
+# refused to infer one — AND where that record is about THIS representation.
+#
+# ⭐ B44. The first version excused any unacted representation whose WORK carried an open ambiguity
+# record. That is broader than the fact recorded: the migration refuses to infer currency for ONE
+# backfilled representation built from ONE selected arrival. Under the Work-scoped rule, a second,
+# later, unacted representation on the same Work inherited the old excuse merely by sharing a
+# manuscript_id — turning the reconciliation row into the generic "ignore this" marker §VII exists
+# to prevent. A record explains a historical subject, not every future defect on the Work.
 PT3_INV_UNRECORDED_REPRESENTATION="
 SELECT count(*) FROM manuscript_source_representations r
  WHERE NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.representation_id = r.id)
-   AND NOT EXISTS (SELECT 1 FROM source_lifecycle_reconciliation c
-                    WHERE c.manuscript_id = r.manuscript_id
-                      AND c.kind = 'multiple_legacy_arrivals'
-                      AND c.resolved_at IS NULL)"
+   AND NOT EXISTS (
+     SELECT 1 FROM source_lifecycle_reconciliation c
+      WHERE c.manuscript_id = r.manuscript_id
+        AND c.kind = 'multiple_legacy_arrivals'
+        AND c.resolved_at IS NULL
+        -- ⭐ B44 — SUBJECT-BOUND, NOT WORK-SCOPED. The record must have been able to be ABOUT this
+        -- representation: it existed no later than the moment the ambiguity was noticed. (Equality
+        -- is required, not strict inequality — the migration creates both in one transaction, so
+        -- created_at and noticed_at are the same now().)
+        AND r.created_at <= c.noticed_at
+        -- And where the migration named the arrival it selected, the representation must be the
+        -- one built from it. The migration records earliest_arrival_id precisely so the subject of
+        -- its refusal is identifiable; a representation on some other arrival is not that subject.
+        AND (c.detail->>'earliest_arrival_id' IS NULL
+             OR r.arrival_id IS NOT DISTINCT FROM (c.detail->>'earliest_arrival_id')::uuid))"
 
 # ── §VII — THE EXCEPTION MUST BE TRUTHFUL ──────────────────────────────────────────────────────
 # An open ambiguity record may only excuse a Work that really is ambiguous …

@@ -681,3 +681,117 @@ egress policy. No amount of further source review substitutes for those.
 
 ⛔ **PT-3 is enforced in code and not in production.** Production HELD · Experiences HELD ·
 Encounter HELD.
+
+---
+
+# Repair 10 — B43, B44, B45 (founder exact-tree review of `8ea28a14…`)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §XI. Witness-only.
+⛔ Migration, lifecycle schema, seam, backfill, application runtime, grants, roles, Experience and
+Encounter unchanged. **PT-3 migration and runtime are not defective.**
+
+> The two semantic findings are one law: **an explanation cannot merely be nearby in history. It
+> must bind to the state it actually explains.** Closed once, in the shared definitions.
+
+## B43 — latest-act was still not causality
+
+`source_withdraw_representation()` checks ownership and belonging, then appends
+`withdrawal · operative=false`. It does **not** require the subject to have been operative. So a
+lawful late seam call could be made to look like the explanation for a loss it did not cause:
+
+```
+representation A   extraction(true) → replacement(false)    already inactive
+representation B   replacement(false)                       the real, unexplained loss
+later              withdrawal(A, false)                     lawful, governed — and causally irrelevant
+```
+
+The Work's latest act is now a governed withdrawal, so repair 9 read **EXPLAINED**.
+
+`PT3_WITHDRAWN` now also asks what the withdrawn representation's state **was**: past any trailing
+withdrawal rows (repeated calls must not break the explanation), its latest preceding
+non-withdrawal act must have left it `operative = true`.
+
+| | |
+|---|---|
+| `extraction(true) → withdrawal(false)` | explains the absence |
+| `replacement(false) → withdrawal(false)` | explains nothing |
+
+## B44 — the ambiguity record explains a subject, not a Work
+
+I6 excused any unacted representation whose **Work** carried an open `multiple_legacy_arrivals`
+record. The migration refuses currency for **one** backfilled representation built from **one**
+selected arrival — so a later, unacted representation inherited the old excuse by sharing a
+`manuscript_id`, which is precisely the generic *"ignore this"* marker §VII exists to prevent.
+
+The exception is now subject-bound: the record must be open, on the same Work, the representation
+must have existed **no later than** `noticed_at` (equality is required — the migration creates both
+in one transaction, so the two timestamps are the same `now()`), and where the migration named
+`earliest_arrival_id`, the representation must be the one built from it. Verified against the real
+backfill: `arrival_matches = t`, `predates = t`.
+
+## B45 — the stale `*migrate*` exemption
+
+Repair 7 narrowed migration authority to the Compose service identity, but this witness kept its own
+copy of the old substring rule, so a container merely **named** `maia-migrate-helper` could hold
+owner material and vanish from the final constitutional census. Same defect class as B41, in the
+exemption instead of the invariant. It now calls `pt3_is_exempt()` — the already-accepted definition.
+**One rule, one executable definition.**
+
+## Cleanup is asserted, not predicted (§IX)
+
+The success line printed `residue 0` **before** the EXIT trap ran, and `cleanup()` swallows its own
+errors with `|| true` — so the number was a claim about what was about to happen. Cleanup is now
+called explicitly on the success path and the fixture tables are **read afterwards**; a non-zero
+reading exits 1. Lifecycle tombstones are reported separately, and the count is now labelled for
+what it is — accumulated across every run on the disposable database, because the table is
+append-only and does not reset.
+
+## The new controls falsify
+
+A control that passes under both the old and new definitions proves nothing. Both were proven
+discriminating on their own fixture shapes, in rolled-back transactions:
+
+```
+CASE 6  operative currency: f
+        repair-9  predicate says EXPLAINED : t
+        repair-10 predicate says EXPLAINED : f
+
+CASE 7  two unacted representations on one genuinely ambiguous Work
+        repair-9  I6 detects : 0   (both excused by sharing the Work)
+        repair-10 I6 detects : 1   (only the later, unbound one)
+```
+
+Cases 5 and 6 are opposite directions of the same law: an **earlier** withdrawal must not excuse a
+**later** loss; a **later** withdrawal must not excuse an **earlier** one.
+
+## Evidence executed on this SHA
+
+```
+pt3-currency-absence-regression.sh          30 PASS · 0 FAIL · exit 0
+  MULTI-ARRIVAL                  EXPLAINED
+  WITHDRAWAL                     EXPLAINED
+  NEGATIVE                       DETECTED
+  UNRECORDED REPRESENTATION      DETECTED
+  STALE WITHDRAWAL               DETECTED
+  NON-CAUSAL LATE WITHDRAWAL     DETECTED
+  LATE UNACTED REP ON AMBIGUITY  DETECTED
+
+shared invariants vs the real legacy-backfill shadow
+  unexplained absence 0 · unrecorded representation 0 · false ambiguity 0 · ambiguity with currency 0
+
+teardown
+  live fixture residue   0 — ASSERTED by reading the fixture tables after cleanup
+  lifecycle tombstones   retained by law
+```
+
+**Inherited from `744c8012…`, byte-identical blobs re-verified, NOT re-executed:** falsifier
+`25 · 0 · 0` · enforcement `29 · 0` · pool witness `READY`, six sites · the PT-3 migration.
+
+⛔ **Still unexecuted:** the integrated Compose cutover, the Docker-bound quiesced backfill,
+readiness `READY`, post-cutover `READY`. Image layers remain `403 Forbidden` from the organization
+egress policy.
+
+## Standing
+
+⛔ **PT-3 is enforced in code and not in production.** Production HELD · Experiences HELD ·
+Encounter HELD.
