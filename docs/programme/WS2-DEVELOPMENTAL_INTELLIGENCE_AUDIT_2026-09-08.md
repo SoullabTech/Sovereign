@@ -221,7 +221,58 @@ MAIA ranks natively             ecologically valid, but the two rankings
                                 same items
 ```
 
-**Neither is chosen here.** Whichever is ruled, the item set must be **identical** across both rankers, and the manifest must record which surface MAIA ranked from. A representational asymmetry that is recorded is a stated limitation; the same asymmetry unrecorded is a confound discovered after the result exists.
+**RULED 2026-09-08 — MAIA ranks natively.** SEL-0 asks a production question: *does MAIA already know which lawful observations are useful to raise first?* Ranking sanitized summaries would test her ability to rank sanitized summaries — cleaner symmetry, wrong question.
+
+```text
+KELLY   blinded plain member-facing wording only
+        (instrumentation could anchor his judgment)
+MAIA    the native information the production selector ordinarily has
+        (removing it would cripple the capability under test)
+```
+
+**The asymmetry is part of the construct, not an uncontrolled confound** — because it is declared in advance and the lawful item set is identical for both.
+
+### Manifest C — the native surface must also be frozen
+
+*"MAIA ranks natively"* may **not** mean *whatever native state happens to exist when we run her*; that would let the stimulus drift after the freeze.
+
+```text
+C. MAIA NATIVE RANKING SURFACE
+     lawful observation_id            SAME IDs as Manifest B
+     exact native fields presented
+     family / window / evidence linkage / production-visible context
+     per-item native payload digest
+     selector / model / config version
+     global ranking-context digest, if any
+     captured_at · manifest SHA-256
+```
+
+All three views bind to one candidate-set identity: **same lawful IDs · same N · same candidate-set digest · different representations by design.**
+
+**Native does not mean unlimited.** MAIA receives only what the production selector would lawfully have *before* this experiment. She must not receive: Kelly's ranking · the frozen threshold · benchmark-specific annotations · any label implying an item was included because it is expected to be useful · any state created after the Step-0 snapshot · any F-7-ineligible material.
+
+⚠️ If an existing production score or prior selection signal is normally available to the selector, **do not silently decide either way — name it in the native-field allowlist before the read.** That choice determines whether SEL-0 tests *the selector as deployed* or *a newly recomputed selection judgment*. They are different experiments.
+
+**⛔ No second MAIA condition in SEL-0.** Ranking both native and blinded surfaces would yield two results and a post-result temptation to prefer whichever tells the better story. One founder ranking, one MAIA ranking, one predeclared interpretation. Whether native metadata helps or hurts is a later controlled experiment.
+
+### ⚠️ One further requirement — the canonical sort must be selection-neutral
+
+The hypergeometric null assumes MAIA's ranking is independent of the founder's. Native features do not break that. **A shared upstream cause would.**
+
+If Manifest B presents items to Kelly in production-selector order, by score, or in any order correlated with salience, then primacy and recency effects on his top-5 correlate with MAIA's native ranking *through a common cause* — inflating overlap without any selection ability, and making the null wrong in the optimistic direction.
+
+**Manifest B's canonical sort must therefore carry no selection signal**: a deterministic, selection-neutral ordering — a seeded shuffle or a sort on an ID hash — **with the seed or method recorded in the manifest** so the presentation order is reproducible and auditable. Production order, score order, and recency order are all disqualified.
+
+### Frozen order, as ruled
+
+```text
+STEP 0   freeze A + B + C, yields N
+STEP 1   sees N ONLY; freezes threshold
+STEP 2   Kelly sees items for the first time and ranks
+STEP 3   Kelly ranking LOCKS
+STEP 4   MAIA ranks from the already-frozen native surface
+STEP 5   reveal + measure
+```
 
 **Predeclared floor**: SEL-0 as specified requires **N ≥ 40**. If the lawful corpus after F-7 exclusions is smaller, SEL-0 **must not be run against these measures and a weak result must not be read as a finding** — the instrument would need redesign (rank correlation over the full set rather than top-k overlap). *Recorded now so the floor cannot be reconsidered once N is known and a preferred reading exists.*
 
