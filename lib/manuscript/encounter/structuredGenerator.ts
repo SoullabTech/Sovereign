@@ -64,14 +64,14 @@ export interface CognitionCounters {
 }
 
 /**
- * @param text the snapshot's own captured text — passed in, never re-read, so a
- *             draft that moved mid-Encounter cannot be bound against its new state.
+ * The production cognition path (B1). The text arrives from the act itself —
+ * the same captured text the traversal was made from — so nothing here re-reads
+ * the draft or takes a second snapshot.
  */
 export function structuredGenerator(
-  text: string,
   counters: CognitionCounters = { planned: 0, actual: 0 },
 ): NoticeGenerator {
-  return async ({ snapshot, windows }) => {
+  return async ({ snapshot, windows, text }) => {
     /* The plan is fixed here, before anything runs. */
     counters.planned = windows.length;
     counters.actual = 0;
@@ -93,7 +93,12 @@ export function structuredGenerator(
       /* C6: this window is now accounted for by a COMPLETED call. A window that
          threw above never reaches here, so a partially processed Work cannot
          return the notices it managed to collect. */
-      candidates.push(...bindProposals(text, parsed.proposals));
+      /* B2: bound against what THIS call was actually shown, not the whole Work.
+         Overlap is lawful because overlap was genuinely shown. */
+      candidates.push(...bindProposals(text, parsed.proposals, {
+        visibleStart: w.contextStartCodePoint,
+        visibleEnd: w.endCodePoint,
+      }));
     }
 
     return candidates;

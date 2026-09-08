@@ -48,10 +48,26 @@ export interface NoticeGenerator {
   (input: {
     readonly snapshot: EncounterSnapshot;
     readonly windows: readonly ReadWindow[];
+    /**
+     * The captured text itself, passed so a generator binds against EXACTLY what
+     * was traversed. No generator re-reads the draft and none takes a second
+     * snapshot: a draft that moved mid-Encounter must not be bound against its
+     * new state.
+     */
+    readonly text: string;
   }): Promise<readonly CandidateNotice[]>;
 }
 
-/** The lawful floor: an Encounter with nothing to say is a complete Encounter. */
+/**
+ * The lawful floor, FOR TESTS AND EXPLICIT CALLERS ONLY.
+ *
+ * ⛔ It is deliberately NOT a default (B1, founder review). Once cognition is
+ * constituted, "silence is lawful" must never come to mean "cognition is
+ * optional": lawful silence is the result of a COMPLETED perceiving act that has
+ * nothing lawful to say, never the result of skipping perception. `encounter()`
+ * therefore requires a generator, so no shipping path can quietly fall back to
+ * this one.
+ */
 export const silentGenerator: NoticeGenerator = async () => [];
 
 export interface CapturedDraft {
@@ -117,7 +133,8 @@ export function anchorsAreCurrent(
 export async function encounter(
   manuscriptId: string,
   memberId: string,
-  generate: NoticeGenerator = silentGenerator,
+  /* REQUIRED. See silentGenerator above: there is no default. */
+  generate: NoticeGenerator,
 ): Promise<EncounterResult> {
   const captured = await captureDraft(manuscriptId, memberId);
   /* No Working Draft is a refusal, NOT a Source read. */
@@ -129,7 +146,11 @@ export async function encounter(
 
   let candidates;
   try {
-    candidates = await generate({ snapshot: captured.snapshot, windows: traversal.windows });
+    candidates = await generate({
+      snapshot: captured.snapshot,
+      windows: traversal.windows,
+      text: captured.text,
+    });
   } catch (err) {
     /* C7. A perceiving act that did not complete is a typed refusal, never an
        empty notice list — the one substitution that would let a provider outage

@@ -10,7 +10,7 @@ import { join } from 'path';
 import { createHash } from 'crypto';
 import { screenCandidate } from '../vocabulary';
 import { traverseWhole } from '../traversal';
-import { encounter, captureDraft, anchorMatches, anchorsAreCurrent, silentGenerator } from '../read';
+import { encounter, captureDraft, anchorMatches, anchorsAreCurrent, silentGenerator, type NoticeGenerator } from '../read';
 import { ENCOUNTER_FAMILIES, isEncounterFamily } from '../contract';
 import { SEMANTIC_EAR_CORPUS } from '../semanticEar';
 import type { CandidateNotice, EncounterSnapshot } from '../contract';
@@ -43,7 +43,7 @@ const candidate = (text: string, family = 'recurrence'): CandidateNotice => ({
 });
 
 /** A generator that proposes exactly what a test hands it. */
-const proposing = (...cs: CandidateNotice[]) => async () => cs;
+const proposing = (...cs: CandidateNotice[]): NoticeGenerator => async () => cs;
 
 /** The act, with the database stubbed at the capture seam. */
 jest.mock('@/lib/db/postgres', () => ({ query: jest.fn() }));

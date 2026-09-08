@@ -11,7 +11,7 @@ import { join } from 'path';
 import { createHash } from 'crypto';
 import { bindProposals } from '../bind';
 import { parseNoticeBlocks } from '../parse';
-import { renderWindowRequest, ENCOUNTER_SYSTEM, encounterModel, NOTICE_TOOL_NAME } from '../render';
+import { renderWindowRequest, ENCOUNTER_SYSTEM, encounterModel, RESULT_TOOL_NAME } from '../render';
 import { traverseWhole } from '../traversal';
 import { screenCandidate } from '../vocabulary';
 import { SEMANTIC_EAR_CORPUS } from '../semanticEar';
@@ -27,9 +27,12 @@ const SNAP: EncounterSnapshot = {
   wholeDraftDigest: sha256(TEXT), length: Array.from(TEXT).length,
 };
 
-const toolUse = (input: unknown): StructuredBlock => ({ type: 'tool_use', id: 't', name: NOTICE_TOOL_NAME, input });
+const toolUse = (input: unknown): StructuredBlock => ({ type: 'tool_use', id: 't', name: RESULT_TOOL_NAME, input });
+/** One closed envelope carrying one notice. */
 const proposal = (spans: { startCodePoint: number; endCodePoint: number }[], text = 'Water recurs at thresholds.') =>
-  toolUse({ family: 'recurrence', text, spans });
+  toolUse({ outcome: 'notices', notices: [{ family: 'recurrence', text, spans }] });
+const silence = () => toolUse({ outcome: 'none' });
+const WHOLE = (t: string) => ({ visibleStart: 0, visibleEnd: Array.from(t).length });
 
 /* The seam is mocked so cognition outcomes can be driven; nothing calls a model. */
 const mockRun = jest.fn();
@@ -49,7 +52,7 @@ describe('G1 · the model may point, it may not certify the pointing', () => {
   it('the SERVER computes the digest — nothing the model said reaches it', () => {
     const parsed = parseNoticeBlocks([proposal([{ startCodePoint: 41, endCodePoint: 76 }])]);
     expect(parsed.ok && parsed.proposals[0]).not.toHaveProperty('spanDigest');
-    const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : []);
+    const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT));
     expect(bound[0].anchors[0].spanDigest).toBe(
       sha256(Array.from(TEXT).slice(41, 76).join('')),
     );
@@ -57,10 +60,10 @@ describe('G1 · the model may point, it may not certify the pointing', () => {
 
   it('the tool schema has no field through which evidence could be certified', () => {
     const props = Object.keys(
-      (require('../render').noticeTool.inputSchema as any).properties.spans.items.properties,
+      (require('../render').resultTool.inputSchema as any).properties.notices.items.properties.spans.items.properties,
     );
     expect(props.sort()).toEqual(['endCodePoint', 'startCodePoint']);
-    expect(JSON.stringify(require('../render').noticeTool)).not.toMatch(/digest|hash|sha/i);
+    expect(JSON.stringify(require('../render').resultTool)).not.toMatch(/digest|hash|sha/i);
   });
 
   it('⛔ an invented, inverted or out-of-range span does not bind', () => {
@@ -69,7 +72,7 @@ describe('G1 · the model may point, it may not certify the pointing', () => {
       proposal([{ startCodePoint: 40, endCodePoint: 10 }]),
       proposal([{ startCodePoint: -3, endCodePoint: 10 }]),
     ]);
-    expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [])).toEqual([]);
+    expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT))).toEqual([]);
   });
 
   it('⛔ one unbindable span discards the whole proposal', () => {
@@ -78,20 +81,20 @@ describe('G1 · the model may point, it may not certify the pointing', () => {
       { startCodePoint: 0, endCodePoint: 10 },
       { startCodePoint: 9000, endCodePoint: 9001 },
     ])]);
-    expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [])).toEqual([]);
+    expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT))).toEqual([]);
   });
 });
 
 describe('G2 / G3 · silence and failure are different answers', () => {
   it('G2 zero proposals is lawful silence — a success', async () => {
-    mockRun.mockResolvedValue(ok([{ type: 'text', text: 'nothing to add' }]));
-    const r = await encounter('m', 'mem', structuredGenerator(TEXT));
+    mockRun.mockResolvedValue(ok([silence()]));
+    const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toMatchObject({ ok: true, notices: [] });
   });
 
   it('⛔ G3 provider unavailable → cognition_unavailable, NEVER notices: []', async () => {
     mockRun.mockResolvedValue({ ok: false, refusal: 'provider_unavailable', detail: 'boom' });
-    const r = await encounter('m', 'mem', structuredGenerator(TEXT));
+    const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
@@ -99,19 +102,18 @@ describe('G2 / G3 · silence and failure are different answers', () => {
     /* A model that cannot honour the structured contract would be a DIFFERENT
        cognitive act. A sovereign deployment gets an honest refusal. */
     mockRun.mockResolvedValue({ ok: false, refusal: 'structured_inference_unavailable', detail: 'mode=sovereign' });
-    const r = await encounter('m', 'mem', structuredGenerator(TEXT));
+    const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
   it('⛔ G3 a malformed structured response is a failure, not silence', async () => {
-    mockRun.mockResolvedValue(ok([toolUse({ family: 'recurrence' })]));
-    const r = await encounter('m', 'mem', structuredGenerator(TEXT));
+    mockRun.mockResolvedValue(ok([toolUse({ outcome: 'notices' })]));
+    const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
   it('⛔ G3 a foreign tool name is a failure, not an empty answer', async () => {
-    mockRun.mockResolvedValue(ok([{ type: 'tool_use', id: 't', name: 'develop', input: {} }]));
-    expect(parseNoticeBlocks([{ type: 'tool_use', id: 't', name: 'develop', input: {} }]))
+    expect(parseNoticeBlocks([{ type: 'tool_use', id: 't', name: 'develop', input: { outcome: 'none' } }]))
       .toEqual({ ok: false, reason: 'malformed_tool_input' });
   });
 });
@@ -124,16 +126,16 @@ describe('G4 · partial cognition may not masquerade as whole-Work attention', (
       .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 0, endCodePoint: 10 }])]))
       .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 20, endCodePoint: 30 }])]))
       .mockResolvedValueOnce({ ok: false, refusal: 'provider_unavailable', detail: 'W3' });
-    const r = await encounter('m', 'mem', structuredGenerator(long));
+    const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
   it('every planned window is processed on a successful Encounter', async () => {
     const long = 'y'.repeat(30_000);
     (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
-    mockRun.mockResolvedValue(ok([]));
+    mockRun.mockResolvedValue(ok([silence()]));
     const counters = { planned: 0, actual: 0 };
-    await encounter('m', 'mem', structuredGenerator(long, counters));
+    await encounter('m', 'mem', structuredGenerator(counters));
     expect(counters.planned).toBe(traverseWhole(long).windows.length);
     expect(counters.actual).toBe(counters.planned);
   });
@@ -145,7 +147,7 @@ describe('G5 · rejection creates no retry', () => {
     mockRun.mockResolvedValue(ok([
       proposal([{ startCodePoint: 0, endCodePoint: 10 }], 'The opening is underdeveloped and could be stronger.'),
     ]));
-    const r = await encounter('m', 'mem', structuredGenerator(TEXT, counters));
+    const r = await encounter('m', 'mem', structuredGenerator(counters));
     /* Screened out downstream → silence. Not a second attempt. */
     expect(r).toMatchObject({ ok: true, notices: [] });
     expect(counters.actual).toBe(counters.planned);
@@ -212,7 +214,7 @@ describe('G7 · Encounter is not DEVELOP', () => {
 
   it('the contract asks no developmental question', () => {
     /* The lens QUESTIONS are the epistemology, so those are what must be absent. */
-    const wire = `${ENCOUNTER_SYSTEM} ${JSON.stringify(require('../render').noticeTool)}`.toLowerCase();
+    const wire = `${ENCOUNTER_SYSTEM} ${JSON.stringify(require('../render').resultTool)}`.toLowerCase();
     for (const question of [
       'what is missing', 'does this belong here', 'does the sequence work',
       'what repeats', 'sufficiently developed', 'introduced too late',
@@ -265,7 +267,7 @@ describe('G8 · the semantic ear, run through the real pipeline', () => {
     for (const e of SEMANTIC_EAR_CORPUS) {
       const parsed = parseNoticeBlocks([proposal([{ startCodePoint: 0, endCodePoint: 20 }], e.text)]);
       expect(parsed.ok).toBe(true);
-      const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : []);
+      const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT));
       expect(bound).toHaveLength(1);
       const violations = screenCandidate(bound[0]);
       if (e.verdict === 'lawful') expect(violations).toEqual([]);
@@ -281,5 +283,118 @@ describe('G8 · the semantic ear, run through the real pipeline', () => {
        coverage — and it is not a second judge model, which would need its own
        constitution and its own negative controls first. */
     expect(SEMANTIC_EAR_CORPUS.some((e) => e.verdict === 'unlawful' && !e.structurallyCaught)).toBe(true);
+  });
+});
+
+describe('G10 · the production act crosses cognition (B1)', () => {
+  it('⛔ encounter() has NO default generator — cognition cannot be skipped', () => {
+    const src = readFileSync(join(REPO, 'lib/manuscript/encounter/read.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ');
+    /* "Silence is lawful" must never come to mean "cognition is optional". */
+    expect(src).not.toMatch(/generate\s*:\s*NoticeGenerator\s*=/);
+  });
+
+  it('the route invokes the structured generator, not a silent one', () => {
+    const route = readFileSync(join(REPO, 'app/api/sovereign/manuscripts/[id]/encounter/route.ts'), 'utf8');
+    expect(route).toMatch(/encounter\(id, memberId, structuredGenerator\(\)\)/);
+    expect(route).not.toMatch(/silentGenerator/);
+  });
+
+  it('the generator binds against the captured text the traversal came from', () => {
+    /* No re-read, no second snapshot: the text arrives from the act itself. */
+    const gen = readFileSync(join(REPO, 'lib/manuscript/encounter/structuredGenerator.ts'), 'utf8');
+    expect(gen).toMatch(/\{\s*snapshot,\s*windows,\s*text\s*\}/);
+    expect(gen).not.toMatch(/captureDraft|SELECT/);
+  });
+});
+
+describe('G1B · existence is not exposure (B2)', () => {
+  const long = 'A'.repeat(12_000) + 'B'.repeat(12_000);
+  const windows = traverseWhole(long).windows;
+
+  it('⛔ a span valid in the manuscript but wholly inside ANOTHER window does not bind', async () => {
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
+    /* Window 2 answers with coordinates 100..150 — real bytes, genuinely in the
+       Work, that this call never saw. Certifying them would prove evidence for
+       the WORK rather than evidence for the CLAIM. */
+    mockRun
+      .mockResolvedValueOnce(ok([silence()]))
+      .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 100, endCodePoint: 150 }])]));
+    const r = await encounter('m', 'mem', structuredGenerator());
+    expect(r).toMatchObject({ ok: true, notices: [] });
+  });
+
+  it('a span inside the call’s own visible range binds', () => {
+    const w = windows[1];
+    const parsed = parseNoticeBlocks([proposal([
+      { startCodePoint: w.startCodePoint + 5, endCodePoint: w.startCodePoint + 25 },
+    ])]);
+    const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
+      visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
+    });
+    expect(bound).toHaveLength(1);
+  });
+
+  it('overlap is lawful, because overlap was genuinely shown', () => {
+    const w = windows[1];
+    /* Inside the context prefix: earlier in the Work, but this call saw it. */
+    const inOverlap = { startCodePoint: w.contextStartCodePoint + 1, endCodePoint: w.startCodePoint - 1 };
+    const parsed = parseNoticeBlocks([proposal([inOverlap])]);
+    const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
+      visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
+    });
+    expect(bound).toHaveLength(1);
+  });
+});
+
+describe('B3 · silence is something the model SAYS', () => {
+  const run = async (blocks: StructuredBlock[]) => {
+    mockRun.mockResolvedValue(ok(blocks));
+    return encounter('m', 'mem', structuredGenerator());
+  };
+
+  it('an explicit structured `none` is lawful silence', async () => {
+    expect(await run([silence()])).toMatchObject({ ok: true, notices: [] });
+  });
+
+  it('⛔ a prose-only answer REFUSES — it is not contemplative silence', async () => {
+    /* The ambiguity B3 removes: "nothing to add" and "I notice the ending wants
+       resolution" both used to read as lawful silence. The second is an
+       unscreened diagnosis. */
+    expect(await run([{ type: 'text', text: 'I notice the ending wants resolution.' }]))
+      .toEqual({ ok: false, refusal: 'cognition_unavailable' });
+  });
+
+  it('⛔ zero structured results refuses', async () => {
+    expect(await run([])).toEqual({ ok: false, refusal: 'cognition_unavailable' });
+  });
+
+  it('⛔ two envelopes refuse — the contract is one answer', async () => {
+    expect(await run([silence(), silence()])).toEqual({ ok: false, refusal: 'cognition_unavailable' });
+  });
+
+  it('⛔ inconsistent outcomes refuse', async () => {
+    expect(parseNoticeBlocks([toolUse({ outcome: 'none', notices: [] })]).ok).toBe(false);
+    expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: [] })]).ok).toBe(false);
+    expect(parseNoticeBlocks([toolUse({ outcome: 'maybe' })]).ok).toBe(false);
+  });
+
+  it('⛔ undeclared fields refuse rather than acquiring meaning', async () => {
+    /* A field the model invented must not mean anything merely because the
+       provider tolerated it — least of all one that looks like evidence proof. */
+    for (const rogue of [
+      { outcome: 'none', digest: 'deadbeef' },
+      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5 }], confidence: 0.9 }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5, spanDigest: 'forged' }] }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5 }], severity: 'high' }] },
+    ]) {
+      expect(parseNoticeBlocks([toolUse(rogue)]).ok).toBe(false);
+    }
+  });
+
+  it('the contract requires the tool — prose is not an answer', () => {
+    const req = renderWindowRequest(SNAP, traverseWhole(TEXT).windows[0]);
+    expect(req.toolChoice).toEqual({ type: 'tool', name: RESULT_TOOL_NAME });
+    expect(JSON.stringify(req.tools)).toContain('"additionalProperties":false');
   });
 });

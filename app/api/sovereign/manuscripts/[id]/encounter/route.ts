@@ -35,6 +35,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { encounter } from '@/lib/manuscript/encounter/read';
+import { structuredGenerator } from '@/lib/manuscript/encounter/structuredGenerator';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,7 +86,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (refusal) return NextResponse.json({ refusal }, { status: 400 });
 
   const { id } = await ctx.params;
-  const result = await encounter(id, memberId);
+  /* B1: the member-initiated act CROSSES cognition. There is no default
+     generator and no silent path — lawful silence is what a completed perceiving
+     act returns when it has nothing lawful to say, never what skipping
+     perception returns. */
+  const result = await encounter(id, memberId, structuredGenerator());
 
   if (!result.ok) {
     /* A Work with no Working Draft is refused rather than answered from Source:

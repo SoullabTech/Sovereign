@@ -1,6 +1,8 @@
 # WS2-ENCOUNTER-01 · E2-C — Encounter cognition binding
 
-**Status: RATIFIED WITH AMENDMENTS (founder, 2026-09-08) · IMPLEMENTED.**
+**Status: STRUCTURAL BINDING REPAIRED (B1–B3) — self-closing conditions met.**
+**⚠ E2-C acceptance as a perceptive act still waits on G8, which CANNOT be run in this
+environment (no inference credential). The witness is written and owed a run (§6).**
 Amendments **E2-C/A** (model output may not mint its own anchor proof) and **E2-C/B**
 (model selection is server-owned) folded in. Witness: §5. **⚠ G8 is not complete —
 adjudication against live model output is owed (§5).**
@@ -237,15 +239,93 @@ prohibits it.
 
 ---
 
+## 6 — B1–B3 · the structural binding repair
+
+Founder review found three defects the 70 checks did not exercise. All three were real.
+
+**B1 · the production act was still silent.** The route called `encounter(id, memberId)`
+while `encounter()` defaulted to `silentGenerator`, so the member-initiated act never
+crossed the cognition just built. Now: **`encounter()` has no default generator** — the
+route passes `structuredGenerator()`, and a scan asserts no default may return. The
+governing line, recorded in the code:
+
+> *"Silence is lawful" must never come to mean "cognition is optional". Lawful silence is
+> the result of a completed perceiving act that has nothing lawful to say, never the result
+> of skipping perception.*
+
+The captured text now travels **with** the act (`generate({ snapshot, windows, text })`), so
+the generator binds against exactly what the traversal was made from — no re-read, no second
+snapshot.
+
+**B2 · existence is not exposure.** The binder proved coordinates exist *in the Work*; it
+did not prove *this call saw them*. A call answering window 2 could propose bytes from
+window 1 — real text it never saw — and the server would certify evidence **for the Work
+rather than for the claim**. `bindProposals()` now takes the visible range
+(`contextStartCodePoint … endCodePoint`) and binds only within it. **Overlap is lawful,
+because overlap was genuinely shown.**
+
+> An anchor must prove both **existence** and **exposure**.
+
+**B3 · silence is now something the model says.** `toolChoice: auto` plus "no tool call =
+silence" collapsed three different things: intentional silence, a prose reply ignoring the
+contract, and **an observation delivered in prose that never passed the screen**. One
+required, closed `encounter_result` envelope replaces it — `outcome: "none" | "notices"`,
+`additionalProperties: false` at every level, enforced by the parser rather than trusted to
+the provider. A closed envelope is transport discipline, not a developmental lens.
+
+### New controls — **83 Encounter checks green** (was 70)
+
+| | |
+|---|---|
+| **G10** `encounter()` has no default generator · the route invokes the structured one · the generator binds the captured text and never re-reads | ✅ |
+| **G1B** a span valid in the manuscript but wholly inside another window **does not bind** · a span in the call's own range binds · **overlap binds** | ✅ |
+| **B3** explicit `none` → silence · **prose-only → `cognition_unavailable`** · zero envelopes → refuse · two envelopes → refuse · inconsistent outcomes → refuse · undeclared `digest` / `confidence` / `severity` / `spanDigest` → refuse · tool is required | ✅ |
+
+The prose control uses the case that matters: *"I notice the ending wants resolution"* — an
+unscreened diagnosis that the old contract would have read as lawful silence.
+
+**Self-closing conditions:** POST crosses cognition ✅ · no accidental silent default ✅ ·
+binds the exact captured text ✅ · valid-but-unseen spans fail ✅ · silence is explicit ✅ ·
+prose / missing / malformed refuse ✅ · no retry or synthesis introduced ✅ · all Encounter
+laws green (**83**) ✅ · PT-3 **39** ✅ · typecheck 229 vs baseline 239, 0 regressions ✅.
+
+---
+
+## 7 — ⛔ G8 remains owed, and cannot be run here
+
+`scripts/witness/encounter-g8-live-ear.ts` is written: it drives the **real** seam, prints
+the configured model, the raw blocks, each bound anchor **with the cited text**, and the
+screen result, then names the two questions for the adjudicator —
+
+1. recognition, or the beginning of a case?
+2. does the cited text **ground** the observation, or merely exist at those coordinates?
+
+*SHA-256 proves identity. It cannot prove the observation arises from that evidence.*
+
+⛔ **This environment has no `ANTHROPIC_API_KEY`, so no live case has been run.** Written is
+not run; run is not adjudicated. The witness refuses fuzzy search, quote matching and
+nearest-span repair by construction — if the model cannot produce reliable coordinates, that
+is a **finding to return**, not something to patch around.
+
+**Standing, stated exactly:** the cognition path is now *bound to the member gesture* and
+its evidence law is complete. **MAIA has still never encountered a Work.**
+
+---
+
 ## 4 — Standing
 
 ⛔ Not authorized: E3 surface · keeping · PT-5 · WS2-08B · hierarchy ·
 intention authority · Restore · lineage · `living_works.stage` · deployment.
 
-Owed to the founder: **G8 against live model output**, adjudicated by a person, before E3 is
-considered. Until then the constituted cognition path exists and is falsified, but **no
-Encounter has actually been perceived.** *Built is not the same as perceived, and a pipeline
-verified only by its own fixtures is a claim about code, not about MAIA.*
+Owed: **a G8 run** in an environment with an inference credential, adjudicated by a person.
+*Built is not perceived, and a pipeline verified only by its own fixtures is a claim about
+code, not about MAIA.*
+
+⚠ **Unrelated pre-existing failures, recorded not fixed.** Widening the run to
+`app/api/sovereign` surfaced **15 failures** in `manuscripts/[id]/draft/**` and
+`episodes/mark/**` (500s where 201/400 are expected). **Confirmed pre-existing**: the same
+15 fail with this branch's working tree stashed. Same class as the voice-notes copy drift —
+not opened by this lane.
 
 > The cognition path may perceive. The Encounter screen determines what may be said. The
 > writer determines whether anything said becomes part of their continuing relationship with

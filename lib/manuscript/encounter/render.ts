@@ -59,36 +59,71 @@ Rules that are not stylistic preferences:
 
 HAVING NOTHING TO SAY IS A COMPLETE ANSWER. Propose no observation you do not actually see. Do not fill the five acts of attention; most encounters touch one or two. An empty answer is correct far more often than a full one.`;
 
-export const NOTICE_TOOL_NAME = 'notice';
+export const RESULT_TOOL_NAME = 'encounter_result';
 
 /**
- * The tool the model answers through. Note what is ABSENT: no digest, no hash,
- * no confidence, no severity, no priority, no recommendation. It reports where
- * it looked and what it saw.
+ * The ONE tool the model answers through, and it must (B3, founder review).
+ *
+ * ── WHY SILENCE IS PART OF THE STRUCTURED ANSWER ──────────────────────────
+ *
+ * The first cut used an optional tool and read "no tool call" as lawful silence.
+ * That made three different things indistinguishable:
+ *
+ *   the model intentionally has nothing to notice        (lawful silence)
+ *   the model ignored the contract and replied in prose  (contract failure)
+ *   the model put an OBSERVATION in prose instead        (contract failure —
+ *                                                         and possibly an
+ *                                                         unscreened diagnosis)
+ *
+ * C7 forbids that collapse: infrastructure failure is not contemplative silence,
+ * and neither is contract failure. So silence is now something the model SAYS,
+ * with `outcome: "none"`, and anything that fails to say it refuses.
+ *
+ * A closed result envelope is transport discipline, not a developmental lens —
+ * it imports nothing from DEVELOP's epistemology.
+ *
+ * Note what is still absent: no digest, no confidence, no severity, no priority.
+ * `additionalProperties: false` at every level, and the parser enforces the same
+ * rather than trusting a provider to have done so — a field the model invented
+ * must not acquire meaning merely because something tolerated it.
  */
-export const noticeTool = {
-  name: NOTICE_TOOL_NAME,
+export const resultTool = {
+  name: RESULT_TOOL_NAME,
   description:
-    'Record one thing you notice is present in the writing, and the exact character range you noticed it in. Use it once per observation. If you notice nothing, do not use it at all.',
+    'Report what you noticed. If you noticed nothing worth saying, answer with outcome "none" — that is a complete and correct answer.',
   inputSchema: {
     type: 'object',
+    additionalProperties: false,
     properties: {
-      family: { type: 'string', enum: [...ENCOUNTER_FAMILIES] },
-      text: { type: 'string' },
-      spans: {
+      outcome: { type: 'string', enum: ['none', 'notices'] },
+      notices: {
         type: 'array',
         minItems: 1,
         items: {
           type: 'object',
+          additionalProperties: false,
           properties: {
-            startCodePoint: { type: 'integer', minimum: 0 },
-            endCodePoint: { type: 'integer', minimum: 1 },
+            family: { type: 'string', enum: [...ENCOUNTER_FAMILIES] },
+            text: { type: 'string' },
+            spans: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                properties: {
+                  startCodePoint: { type: 'integer', minimum: 0 },
+                  endCodePoint: { type: 'integer', minimum: 1 },
+                },
+                required: ['startCodePoint', 'endCodePoint'],
+              },
+            },
           },
-          required: ['startCodePoint', 'endCodePoint'],
+          required: ['family', 'text', 'spans'],
         },
       },
     },
-    required: ['family', 'text', 'spans'],
+    required: ['outcome'],
   },
 } as const;
 
@@ -110,8 +145,10 @@ export function renderWindowRequest(
     model: encounterModel(),
     system: ENCOUNTER_SYSTEM,
     maxTokens: 2048,
-    tools: [noticeTool as unknown as StructuredRequest['tools'] extends (infer T)[] ? T : never],
-    toolChoice: { type: 'auto' },
+    tools: [resultTool as unknown as NonNullable<StructuredRequest['tools']>[number]],
+    /* Prose is not an answer here. The model must speak through the contract,
+       including to say it has nothing to say. */
+    toolChoice: { type: 'tool', name: RESULT_TOOL_NAME },
     messages: [
       {
         role: 'user',

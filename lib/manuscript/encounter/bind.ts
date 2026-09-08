@@ -14,6 +14,21 @@
  *
  * A span the model invented, mis-ranged, inverted or hallucinated past the end of
  * the Work does not bind, and its proposal is dropped rather than repaired.
+ *
+ * ── EXISTENCE IS NOT EXPOSURE (B2, founder review) ────────────────────────
+ *
+ * The first cut proved only that coordinates EXIST in the captured Work. That is
+ * half the law. Each inference call sees ONE window, so a call answering window 2
+ * could propose coordinates from window 1 — real bytes, genuinely in the Work,
+ * that this cognition never saw — and a whole-manuscript binder would certify
+ * them. The server would then be proving evidence for the WORK rather than
+ * evidence for the CLAIM.
+ *
+ *   An anchor must prove both EXISTENCE and EXPOSURE.
+ *
+ * So binding takes the range actually shown to that call. Overlap is lawful
+ * because overlap was genuinely shown; anything outside is not bindable by that
+ * call, however real it is.
  */
 import { createHash } from 'crypto';
 import type { CandidateNotice, Anchor } from './contract';
@@ -27,9 +42,17 @@ const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
  * `text` is the snapshot's own text — never re-read from the database, so a
  * draft that moved mid-Encounter cannot be silently bound against its new state.
  */
+export interface VisibleRange {
+  /** Inclusive start of what this inference call was actually shown. */
+  readonly visibleStart: number;
+  /** Exclusive end of what this inference call was actually shown. */
+  readonly visibleEnd: number;
+}
+
 export function bindProposals(
   text: string,
   proposals: readonly ModelNoticeProposal[],
+  visible: VisibleRange,
 ): CandidateNotice[] {
   const points = Array.from(text);
   const bound: CandidateNotice[] = [];
@@ -42,6 +65,10 @@ export function bindProposals(
       if (!Number.isInteger(s.startCodePoint) || !Number.isInteger(s.endCodePoint)) { allBound = false; break; }
       if (s.startCodePoint < 0 || s.endCodePoint > points.length) { allBound = false; break; }
       if (s.endCodePoint <= s.startCodePoint) { allBound = false; break; }
+      /* EXPOSURE: the model may point only within what it was actually shown. */
+      if (s.startCodePoint < visible.visibleStart || s.endCodePoint > visible.visibleEnd) {
+        allBound = false; break;
+      }
       const slice = points.slice(s.startCodePoint, s.endCodePoint).join('');
       anchors.push({
         startCodePoint: s.startCodePoint,
