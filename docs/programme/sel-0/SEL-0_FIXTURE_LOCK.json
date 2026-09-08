@@ -1,0 +1,25 @@
+{
+  "acceptance_instrument": "af155f4149a76d01ab83139bde2c45c0bb2f57ba",
+  "binding": "These digests constitute the fixture for the acceptance run. The eligibility predicates are time-varying and are frozen here by founder ruling; a later production state does not retroactively alter this fixture.",
+  "byte_identical_since_step_0_freeze": {
+    "excluded_set": false,
+    "manifest_a_source": false,
+    "manifest_b_blind": true,
+    "manifest_c_native": true,
+    "source_snapshot": true
+  },
+  "components": {
+    "eligibility_overlay": "0e63748b84b02c40d69d54df43d90942fc3b23587a3f0be4c8d2f86228220244",
+    "excluded_set": "79812f3fb56e93013b90df248859d6be27c6f902dbbccb8c528b3a72bd4494c6",
+    "manifest_a_source": "4da6664ee3a2765cc4f1cb5593b95fd8769d3f1ce411817d20d92114fb725518",
+    "manifest_b_blind": "a5564f058890963f370fe17ab8960a7325697c9fb3e40283058f8fc07fb1e843",
+    "manifest_c_native": "7cd7685ef09abe5697e0eaa6eef2c062d80193b029d5040b4151496a2dca7980",
+    "source_snapshot": "2f45070104c2d598b1bc4b43168cff5ddaae4571d96fa24bce867ebac9cb7272"
+  },
+  "contract_lawful_n": 19,
+  "locked_at": "2026-09-08T22:52:32.134Z",
+  "manifest": "SEL-0 \u00b7 FIXTURE LOCK",
+  "note_on_a_and_excluded": "A and the excluded set were amended upstream at 81d79b941, the blind-safety repair of the Step-0 exclusion reasons. They differ from their original freeze digests by that founder act, not by drift. B, C and the source snapshot \u2014 the fixture's stimulus and native surfaces \u2014 are unchanged.",
+  "product_contract": "ebcb46d0d",
+  "step_4": "COMPATIBLE"
+}

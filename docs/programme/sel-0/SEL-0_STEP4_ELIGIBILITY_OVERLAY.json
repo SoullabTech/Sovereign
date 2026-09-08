@@ -1,0 +1,164 @@
+{
+  "manifest": "SEL-0 · STEP 4 · ELIGIBILITY OVERLAY (frozen)",
+  "captured_at": "2026-09-08T22:52:32.134Z",
+  "binds": "the fixture-lock state for the acceptance run; predicates are time-varying and are frozen here by founder ruling",
+  "product_contract": "ebcb46d0d §2.3",
+  "q12_ruling": "unmeasured ABORTS the overlay (option c). unmeasured count was 0; the overlay is valid.",
+  "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+  "predicate_sources": {
+    "standing": "developmental_observation_standing_events via currentStandings(memberId, readingId) — lib/manuscript/standing/store.ts",
+    "supersession": "assessReading(frozenReading, loadLiveWork(manuscriptId, memberId)) — lib/manuscript/developmentalReading/assess.ts + lib/manuscript/development/capture.ts"
+  },
+  "read_environment": {
+    "host": "minisforum",
+    "container": "maia-sovereign",
+    "database": "maia_consciousness",
+    "deployed_runtime_git_commit": "3afa51b9f",
+    "note": "read executed inside the deployed container using its own code paths; SELECT only"
+  },
+  "live_work_sections_loaded": true,
+  "standing_rows_for_reading": 0,
+  "counts": {
+    "frozen_f7_candidates": 19,
+    "excluded_by_dismiss_only": 0,
+    "excluded_by_supersession_only": 0,
+    "excluded_by_both": 0,
+    "unmeasured": 0,
+    "contract_lawful_n": 19
+  },
+  "items": [
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o10",
+      "observation_key": "o10",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o11",
+      "observation_key": "o11",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o12",
+      "observation_key": "o12",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o13",
+      "observation_key": "o13",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o15",
+      "observation_key": "o15",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o17",
+      "observation_key": "o17",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o19",
+      "observation_key": "o19",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o21",
+      "observation_key": "o21",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o22",
+      "observation_key": "o22",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o24",
+      "observation_key": "o24",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o25",
+      "observation_key": "o25",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o26",
+      "observation_key": "o26",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o3",
+      "observation_key": "o3",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o4",
+      "observation_key": "o4",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o5",
+      "observation_key": "o5",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o6",
+      "observation_key": "o6",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o7",
+      "observation_key": "o7",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o8",
+      "observation_key": "o8",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o9",
+      "observation_key": "o9",
+      "standing": "UNSET",
+      "supersession_state": "current",
+      "contract_lawful": true
+    }
+  ]
+}
