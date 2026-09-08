@@ -25,10 +25,14 @@
  * ── THE GENERATOR IS A PORT ───────────────────────────────────────────────
  *
  * Notices are proposed by an injected `NoticeGenerator` and every proposal is
- * screened before it can become a `MaiaNotice`. The default generator is silent,
- * so the act's lawful floor — an Encounter that says nothing — is also its
- * default. Wiring a model-backed generator is a separate act; the constitutional
- * work is the screen, and the screen does not care what proposed the text.
+ * screened before it can become a `MaiaNotice`. THERE IS NO DEFAULT GENERATOR:
+ * once cognition was constituted, a silent default would have meant the member
+ * gesture could complete without any perceiving act occurring at all. The
+ * shipping route passes `structuredGenerator()`; `silentGenerator` survives only
+ * as a value an explicit caller or test may choose.
+ *
+ * The constitutional work is the screen, and the screen does not care what
+ * proposed the text.
  */
 import { createHash } from 'crypto';
 import { query } from '@/lib/db/postgres';

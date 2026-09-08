@@ -85,8 +85,21 @@ async function main() {
       process.exit(1);
     }
 
+    /* PROVENANCE IS WHAT THE SEAM RETURNS, not the stop reason. The first draft
+       of this witness printed `stopReason` under the label "raw provenance",
+       which is a record saying something it does not know: a stop reason
+       describes how the completion ended, and says nothing about which provider
+       or which model actually answered. The distinction between the CONFIGURED
+       model and the model REPORTED BACK is exactly what a provenance witness
+       exists to expose. */
+    const prov = outcome.result.provenance;
     console.log(`── WINDOW ${i + 1} (${w.contextStartCodePoint}..${w.endCodePoint}) ─────────────`);
-    console.log(`raw provenance : ${JSON.stringify(outcome.result.stopReason)}`);
+    console.log(`provenance     : provider=${prov.provider} model=${prov.model} latencyMs=${prov.latencyMs}`);
+    if (prov.model !== encounterModel()) {
+      console.log(`  ⚠ RETURNED MODEL DIFFERS FROM CONFIGURED (${encounterModel()}) — record this.`);
+    }
+    console.log(`stop reason    : ${JSON.stringify(outcome.result.stopReason)}`);
+    console.log(`tokens         : in=${outcome.result.usage.inputTokens} out=${outcome.result.usage.outputTokens}`);
     console.log(`raw blocks     : ${JSON.stringify(outcome.result.content)}\n`);
 
     const parsed = parseNoticeBlocks(outcome.result.content);

@@ -1,6 +1,7 @@
 # WS2-ENCOUNTER-01 · E2-C — Encounter cognition binding
 
-**Status: STRUCTURAL BINDING REPAIRED (B1–B3) — self-closing conditions met.**
+**Status: B1–B3 STRUCTURAL BINDING CLOSED (founder, 2026-09-08). Two evidence repairs
+folded in (§8).**
 **⚠ E2-C acceptance as a perceptive act still waits on G8, which CANNOT be run in this
 environment (no inference credential). The witness is written and owed a run (§6).**
 Amendments **E2-C/A** (model output may not mint its own anchor proof) and **E2-C/B**
@@ -291,6 +292,48 @@ laws green (**83**) ✅ · PT-3 **39** ✅ · typecheck 229 vs baseline 239, 0 r
 
 ---
 
+## 8 — Evidence repairs (founder review, 2026-09-08)
+
+Neither reopened production architecture; both were about **proving and recording the
+boundary accurately**.
+
+**1 · G10 needed its behavioral half.** The structural checks inspected source — no default
+generator, the route names `structuredGenerator()`, the generator takes the captured text —
+while the HTTP suite still mocked `encounter()` and never exercised the cognition path.
+`…/encounter/__tests__/cognitionBinding.test.ts` now mocks **only the seam and the database**
+and leaves `POST → structuredGenerator → encounter → capture → traverse → cognition` intact:
+
+| | |
+|---|---|
+| the route reaches the seam — cognition is not skipped | ✅ `runStructured` called once |
+| ⛔ **structured refusal → HTTP 503 `cognition_unavailable`, never 200 `notices: []`** | ✅ |
+| ⛔ a sovereign-mode refusal is also 503 | ✅ |
+| ⛔ a prose-only answer is 503 — contract failure is not silence | ✅ |
+| declared silence → 200, empty list, **no message** | ✅ |
+| a lawful notice reaches the writer, anchored and screened | ✅ |
+| ⛔ a developmental notice does **not** reach the writer | ✅ |
+
+If the route ever stopped crossing cognition, or a silent default returned, these would pass
+a 200 with an empty list — the exact substitution C7 forbids.
+
+**2 · the G8 witness called a stop reason "provenance".** It printed `stopReason` under that
+label, which is a record asserting something it does not know: a stop reason describes how a
+completion ended and says nothing about which provider or model answered. It now prints the
+seam's actual `provenance` — **provider · model · latencyMs** — plus tokens and the stop
+reason under its own name, and **flags when the returned model differs from the configured
+one**, because *configured* and *reported back* are two different facts and a provenance
+witness exists to keep both.
+
+**3 · record drift.** `read.ts` still opened by saying *"the default generator is silent"*
+after the same file had established there is no default. Corrected.
+
+**Self-closing conditions:** handler-level refusal → 503 ✅ · no silent or default production
+path ✅ · witness prints real provider/model provenance ✅ · `stopReason` labelled as a stop
+reason ✅ · no cognition behavior changed ✅ · Encounter **90 green** (was 83) ✅ · PT-3 **39**
+✅ · typecheck 229 vs baseline 239, 0 regressions ✅.
+
+---
+
 ## 7 — ⛔ G8 remains owed, and cannot be run here
 
 `scripts/witness/encounter-g8-live-ear.ts` is written: it drives the **real** seam, prints
@@ -307,8 +350,9 @@ not run; run is not adjudicated. The witness refuses fuzzy search, quote matchin
 nearest-span repair by construction — if the model cannot produce reliable coordinates, that
 is a **finding to return**, not something to patch around.
 
-**Standing, stated exactly:** the cognition path is now *bound to the member gesture* and
-its evidence law is complete. **MAIA has still never encountered a Work.**
+**Standing, stated exactly:** the cognition path is bound to the member gesture, its
+evidence law is complete, and the binding is now proven behaviorally rather than by reading
+the source. **G8 is the sole remaining blocker. MAIA has still never encountered a Work.**
 
 ---
 
