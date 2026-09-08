@@ -1,7 +1,8 @@
 # AIN-STRUCTURED-PROVENANCE-01 — Census · DISCOVER ONLY
 
-**Status: CENSUS ACCEPTED · REPAIR IMPLEMENTED (§9) · ⛔ BLOCKED ON A RATIFIED INSTRUMENT
-I AM NOT AUTHORIZED TO RE-BASELINE (§10). One further finding returned (§11).**
+**Status: REPAIR CLOSED — self-closing conditions met (§12).** Census accepted · repair
+implemented (§9) · seam baseline moved by founder act, not weakened (§10) · transparent-proxy
+finding folded into an explicit operator attestation (§11).
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 (WS2-ENCOUNTER-01 · G8) — discovery only.
 
@@ -249,9 +250,34 @@ itself*. This is not that: it is the seam's own lane adding a fact to the shared
 under its own ruling, and **Encounter consumes nothing new** — the only Encounter-side change
 is witness code. But the guard pins bytes, not intent, and it is right not to guess.
 
-**Owed:** a founder act — either re-pin `MERGED` to the commit carrying this repair, or amend
-the invariant to distinguish *a caller altering the seam* (still forbidden) from *the seam's
-own governed amendment* (this act). ⛔ **Not mine to choose.**
+**⭐ RULED (founder, 2026-09-08): the guard was RIGHT TO FAIL.** Not a stale test — *a
+constitutional stop asking who authorized the seam itself to change.* The pin is **not**
+weakened. The baseline **moves**, and moving it is itself a governed act:
+
+```text
+ORIGINAL_SEAM_MERGE     = 8b31d931…   preserved as history, never deleted
+GOVERNED_SEAM_BASELINE  = 35d0f81d…   the active pin
+```
+
+The amended invariant, recorded in the guard: *a caller migration must bend the caller to the
+governed seam, never the seam to the caller. The seam itself may change only through an
+explicitly authorized amendment of its governing contract. Such an amendment establishes a new
+governed baseline; moving that baseline is itself a governed act, never an automatic test
+repair.*
+
+⛔ **No exception was added** — no caller exception, no branch inspection, no *"if this belongs
+to the seam lane, skip the comparison"*. Any of those would gut the instrument. Two new
+controls hold the shape: the original merge is asserted preserved **and** genuinely different
+from the active baseline (equal values would mean no amendment ever happened), and **the
+comparison body is asserted unconditional** — it hashes, resolves and expects, with nowhere for
+an exception to live.
+
+⚠ *That second control failed on its first run, by matching its own title and its own regex —
+the C21 lesson for the fifth time in this lane. It now asserts the property rather than
+scanning for words.*
+
+The authorization is narrow, as ruled: **those four seam-file states at `35d0f81d`** are the
+baseline. No unrelated file gains constitutional status by having travelled in the same commit.
 
 ---
 
@@ -273,6 +299,53 @@ That does not weaken the ruling; it confirms the part of it that was already rig
 
 But it means the operator attestation is carrying more weight than "belt and braces" — in an
 environment like this one, **it is the only thing standing between a real witness and a
-plausible-looking counterfeit.** Worth stating in the G8 acceptance record rather than
-discovering later, and worth knowing that it is a further reason G8 still cannot be run here
-even if a key appeared.
+plausible-looking counterfeit.**
+
+**⭐ RULED: confirmed, and SP-4 is split rather than discarded.**
+
+```text
+SP-4A  configured base URL origin observably foreign  → refuse BEFORE inference
+SP-4B  origin canonical but channel transparent       → machine verdict INSUFFICIENT
+                                                        → operator attestation supplies it
+```
+
+**Wording corrected throughout**: the value is the **configured base URL origin**, never a
+"resolved endpoint" or channel identity. *A machine can tell us what endpoint was configured;
+it cannot, in this architecture, tell us who authorized the channel that actually carried the
+request.*
+
+**The attestation is now an explicit act**, because it carries real acceptance authority and
+must not sit implicit in whoever runs the command:
+
+```text
+ENCOUNTER_G8_CONFIRM                  I intend to execute cognition (a real, paid call)
+ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST   I attest, as a person, that this execution context
+                                      is the product-authorized one
+```
+
+Deliberately not collapsed — they are different acts. Without the attestation the witness
+exits non-zero **before inference**, and its own output states that this is human attestation,
+not machine verification. Verified: foreign origin refuses (SP-4A); canonical origin without
+attestation stops (SP-4B). The credential is read exactly once, as a boolean — never printed,
+hashed, fingerprinted or persisted.
+
+⛔ **And the environment rule stands: G8 must not be run from the authoring session**, even if
+a key appears there, because its transparent proxy makes this context unsuitable for
+acceptance evidence unless the channel is separately constituted — which has not occurred.
+
+⛔ Endpoint policy remains unopened: no TLS pinning, no DNS verification, no allowlist, no
+credential-provenance infrastructure. None is needed to finish G8 on the direct-Anthropic
+path.
+
+---
+
+## 12 — Self-closing conditions
+
+seam pins to `GOVERNED_SEAM_BASELINE` ✅ · `ORIGINAL_SEAM_MERGE` preserved ✅ · no caller/lane
+exception ✅ · SP-1 · SP-2 · SP-3 · SP-5 · SP-6 green ✅ · SP-4A refuses before inference ✅ ·
+SP-4B attestation explicit and required ✅ · no claim of network-channel proof ✅ · key never
+printed, hashed or persisted ✅ · **seam suite 60/60** ✅ · Encounter, DEVELOP and Writer's
+Studio **618 passed** ✅ · PT-3 **39** ✅ · typecheck 229 vs baseline 239, **0 regressions** ✅.
+
+> A guard refusing a governed amendment is not a broken guard. It is the guard demanding the
+> amendment's authority be made explicit.

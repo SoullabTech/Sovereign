@@ -14,7 +14,21 @@
  *
  *   MAIA_INFERENCE_MODE=primary ANTHROPIC_API_KEY=... \
  *   MAIA_ENCOUNTER_MODEL=<pinned> DATABASE_URL=... \
- *   ENCOUNTER_G8_CONFIRM=1 npx tsx scripts/witness/encounter-g8-live-ear.ts <manuscriptId> <memberId>
+ *   ENCOUNTER_G8_CONFIRM=1 ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST=1 \
+ *   npx tsx scripts/witness/encounter-g8-live-ear.ts <manuscriptId> <memberId>
+ *
+ * TWO GUARDS, TWO DIFFERENT ACTS — deliberately not collapsed:
+ *
+ *   ENCOUNTER_G8_CONFIRM                 I intend to execute cognition
+ *                                        (a real, paid inference call)
+ *   ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST  I attest, as a person, that this
+ *                                        execution context is the
+ *                                        product-authorized one
+ *
+ * ⛔ DO NOT RUN THIS FROM THE AUTHORING-SESSION ENVIRONMENT, even if a key
+ * appears there. Its transparent proxy presents at the canonical origin, which
+ * makes that context unsuitable for acceptance evidence unless its channel is
+ * separately constituted as product-authorized — which has not occurred.
  *
  * READ-ONLY: it captures a draft, calls the seam, and prints. It writes nothing
  * to the database and nothing to the vault.
@@ -71,7 +85,21 @@ if (!process.env.ENCOUNTER_G8_CONFIRM) {
  */
 const CANONICAL_ORIGIN = 'https://api.anthropic.com';
 
-function resolvedOrigin(): string {
+/**
+ * ⚠ WHAT THIS VALUE IS, AND WHAT IT IS NOT.
+ *
+ * It is the CONFIGURED BASE URL ORIGIN — read from `ANTHROPIC_BASE_URL`, or the
+ * canonical default when unset. It is **not** proof of the network channel, and
+ * it must never be described as a resolved endpoint or as channel identity.
+ *
+ * This lane learned the difference the hard way: the authoring session's own
+ * transparent proxy presents AT `https://api.anthropic.com`. So this check
+ * catches an OBSERVABLY foreign endpoint (SP-4A) and cannot catch a transparent
+ * one (SP-4B). A machine can tell us what endpoint was configured; it cannot, in
+ * this architecture, tell us who authorized the channel that actually carried
+ * the request.
+ */
+function configuredBaseUrlOrigin(): string {
   const raw = process.env.ANTHROPIC_BASE_URL;
   if (!raw || raw.trim() === '') return CANONICAL_ORIGIN;
   try {
@@ -89,21 +117,42 @@ if (!manuscriptId || !memberId) {
 }
 
 async function main() {
-  const origin = resolvedOrigin();
+  const origin = configuredBaseUrlOrigin();
   const keyPresent = Boolean(process.env.ANTHROPIC_API_KEY);
+  const attested = Boolean(process.env.ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST);
 
   console.log(`\nG8 LIVE EAR WITNESS`);
   console.log(`inference mode      : ${process.env.MAIA_INFERENCE_MODE ?? '<unset>'}`);
   console.log(`configured model    : ${encounterModel()}`);
-  console.log(`endpoint origin     : ${origin}`);
+  console.log(`configured base URL : ${origin}`);
+  console.log(`  (the CONFIGURED origin — not proof of the network channel; a transparent`);
+  console.log(`   proxy can present at the canonical origin.)`);
   console.log(`ANTHROPIC_API_KEY   : ${keyPresent ? 'present' : 'ABSENT'}`);
-  console.log(`  (whether that key is the PRODUCT's credential rather than a borrowed one`);
-  console.log(`   is the operator's attestation — this process cannot determine it.)\n`);
+  console.log(`product-channel     : ${attested ? 'OPERATOR ATTESTED' : 'NOT ATTESTED'}`);
+  console.log(`  (human attestation, NOT machine verification: this process can see that a`);
+  console.log(`   variable is set; it cannot determine the provenance of the bytes in it.)\n`);
 
+  /* SP-4A — machine-observable foreign origin. Refused BEFORE any inference, so
+     a borrowed endpoint never gets to answer, and a matching model name could
+     not rescue it. */
   if (origin !== CANONICAL_ORIGIN) {
-    console.error(`⛔ G8 CHANNEL FAILURE — endpoint origin is ${origin}, not ${CANONICAL_ORIGIN}.`);
-    console.error('   No inference is performed. A matching model name would not rescue this:');
-    console.error('   a witness that borrows a credential is witnessing a different act.');
+    console.error(`⛔ G8 CHANNEL FAILURE — configured base URL origin is ${origin}, not ${CANONICAL_ORIGIN}.`);
+    console.error('   No inference is performed. Correct model + wrong inference authority');
+    console.error('   is still the wrong act.');
+    process.exit(1);
+  }
+
+  /* SP-4B — the fact no machine here can supply. Made an explicit act rather
+     than left implicit in whoever happens to run the command, because it now
+     carries real acceptance authority: with a transparent proxy, this is the
+     ONLY thing between a real witness and a plausible-looking counterfeit. */
+  if (!attested) {
+    console.error('⛔ G8 STOP — product-channel attestation absent.');
+    console.error('   Set ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST=1 to attest, as a person, that');
+    console.error('   this process is using the PRODUCT-AUTHORIZED inference credential and');
+    console.error('   channel. A canonical configured origin is NECESSARY evidence and is NOT');
+    console.error('   SUFFICIENT: a transparent proxy presents at the canonical origin too.');
+    console.error('   ⛔ Do not set this from the authoring-session environment.');
     process.exit(1);
   }
   if (!keyPresent) {
