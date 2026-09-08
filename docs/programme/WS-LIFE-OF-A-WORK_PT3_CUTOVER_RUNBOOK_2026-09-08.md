@@ -1,7 +1,7 @@
-# PT-3 production cutover — runbook (repair 2)
+# PT-3 production cutover — runbook (repair 3)
 
-**Authority:** FOUNDER RULING — Writer's Studio (2026-09-08) §I–§XII. Instrument repair 2 authorized.
-**Supersedes** the runbooks at `dcce6f97` and `e4207656`; neither is to be run.
+**Authority:** FOUNDER RULING — Writer's Studio (2026-09-08) §XI. Instrument repair 3 authorized.
+**Supersedes** the runbooks at `dcce6f97`, `e4207656` and `0819d749`; none is to be run.
 **Executed on the production host.** ⛔ This session has no route to production.
 
 > **Every command below is labelled `[MAC]` or `[PROD]`.** B9 was caused by changing one machine's
@@ -9,51 +9,67 @@
 
 ---
 
-## What repair 2 changed
+## What repair 3 changed
 
 | | Defect | Repair |
 |---|---|---|
-| **B8** | `docker-compose.pt3-cutover.yml` was absent from the pinned tree — the preflight required a file the artifact did not contain. **Cause: `.gitignore:145` matches `docker-compose.*.yml`**, so `git add -A` silently swallowed it and I asserted completeness without checking the commit. | The overlay is **deleted**, not re-added. See B12 — it was the wrong mechanism, and its disappearance is what exposed that. |
-| **B9** | Step 0 edited the Mac Studio checkout; the preflight then tested `$HOME/MAIA-SOVEREIGN` on production. | Compose is brought forward **on the production host**, from the accepted SHA, and the preflight verifies it there. Every command is host-labelled. |
-| **B10** | Step 3 said "never in shell history", then Step 4 had the operator type the password into a `printf`. Raw interpolation into a URI could also corrupt the connection string. | `scripts/witness/pt3-install-runtime-credential.sh`: non-echoing (or generated, URI-safe by construction), delivered to psql **on stdin**, percent-encoded, written only to gitignored files at mode 600, and it prints the **role**, never the password or URL. |
-| **B11** | The preflight required a full 40-character SHA and then `cut -c1-9` before attribution. | `applied_by_commit` is `TEXT`; all 40 characters are stored. The short form is printed alongside, never instead. |
-| **B12** | An ordinary deploy passes `-f "$COMPOSE_FILE"` alone, so the next routine deployment would have omitted the overlay and handed owner authority back to runtime. | ⭐ **Closed structurally — see below.** |
+| **B13** | ⭐ **Hard blocker.** Step 3 ran `ALTER ROLE maia_app` before Step 4's migration, which is the act that **creates** that role (`20260908000001`, line 38). The documented cutover could not complete in its order. | The single installer is **split in two, on opposite sides of the migration**. Staging preserves migration authority and touches nothing else; activation **refuses to run until `maia_app` exists**. |
+| **B14** | The preflight *noted* a missing `MIGRATE_DATABASE_URL` and continued toward `PREFLIGHT PASSED` — a false green, since the canonical Compose now sources migrate's credential from it. | The preflight proves the **artifact** and reports phase state without judging it. Readiness is a separate, **fail-closed** verifier that resolves the value **through Compose**, so it answers what the migrate service will actually receive. |
+| **B15** | The installer proved source and destination were gitignored, then created a third secret-bearing file whose status it never proved. | The backup moves **outside the repository** to a mode-700 directory, mode-600 file, and activation **refuses** if that path is inside the repo. ⚠️ *Precision: `.gitignore:303` is `.env*`, which does cover `.env.production.pt3-backup` — so it was not in fact committable. The defect was the unproven claim, and the repair is better regardless.* |
+| **B16** | The optional prompted password was interpolated into `ALTER ROLE … PASSWORD '<pw>'`. **stdin-safe is not SQL-literal-safe**, and percent-encoding the URI afterwards does nothing about a quote inside the statement. | The arbitrary-password path is **removed**. The credential is a generated 40-character hex string — SQL-literal-safe and URI-safe by construction, validated before use. The class of defect is eliminated rather than escaped around. |
+| **B17** | The production checkout was mutated in Step 1 and the "pre-mutation" preflight ran in Step 2; an abort would leave the checkout altered for a later deploy to consume. | **Prove, then change.** The preflight reads the accepted SHA's Compose **out of the snapshot**; bringing the production checkout forward is the first bounded act *after* it passes. |
 
-### ⭐ B12: the boundary is now a property of the file every service already loads
+Carried unchanged from repair 2: the durable Compose architecture (no optional overlay), full-SHA
+attribution, the complete pending-set proof, the Experiences hold, discovery-based runtime witnessing,
+and every production-safe post-cutover check.
 
-There is **no overlay**. `.env.production` is loaded by all fourteen services. After cutover it
-carries the **constrained** credential and **no owner credential**, so every ordinary runtime service
-loses owner authority by loading the file it has always loaded. `migrate` alone gets the owner
-credential back, from `~/MAIA-SOVEREIGN/.env` — Compose's own interpolation file, which is not
-injected into containers.
+### The temporal law this encodes
 
-**The failure mode is inverted on purpose.** Forget `MIGRATE_DATABASE_URL` and *migration* fails,
-loudly. Nothing that can be forgotten weakens the boundary, because there is no second file to name.
+```
+preserve migration authority → create constrained role → credential it →
+remove owner runtime authority → restart runtime
+```
 
-Two base-compose edits carry it, and **both are inert until the credential moves**:
-
-- `migrate` gains `DATABASE_URL: ${MIGRATE_DATABASE_URL:-}`.
-- The four worker healthchecks become `psql "${MAIA_APP_DATABASE_URL:-$DATABASE_URL}"` — constrained
-  when present, owner while it is not. §VI's trap is closed: no one is ever pressured to restore
-  owner authority to make a container green.
+Owner runtime authority stays intact until the migration has safely completed. Runtime authority
+moves only after the constrained role exists.
 
 ---
 
-## Step 0 · `[MAC]` — verify the artifact you are about to pin
+## Step 0 · `[MAC]` — verify the artifact before pinning
 
 ```bash
 cd /Users/soullab/MAIA-SOVEREIGN
 git fetch origin claude/writers-studio-experiences-afia8t
 ACCEPTED_SHA=<full 40-char sha>
-git ls-tree -r --name-only "$ACCEPTED_SHA" | grep -E 'pt3-(cutover-preflight|post-cutover-witness|install-runtime-credential|cutover-readiness)'
+git ls-tree -r --name-only "$ACCEPTED_SHA" | grep -E 'pt3-(cutover-preflight|stage-migration-authority|verify-migration-authority|activate-runtime-authority|post-cutover-witness|cutover-readiness)'
 git show "$ACCEPTED_SHA":docker-compose.production.yml | grep -c 'MIGRATE_DATABASE_URL'
 ```
 
-Four scripts, and a non-zero count. ⛔ If either fails, the artifact is incomplete — stop.
+Six scripts, non-zero count. ⛔ Otherwise the artifact is incomplete.
 
-## Step 1 · `[PROD]` — bring the production checkout's compose forward
+## Step 1 · `[PROD]` — immutable preflight. Mutates nothing, on any host.
 
-`cmd_migrate` reads **production's** `$PROJECT_DIR` compose, not the snapshot's.
+```bash
+ssh soullab@minisforum "ACCEPTED_SHA=$ACCEPTED_SHA sh -s" < scripts/witness/pt3-cutover-preflight.sh
+```
+
+Refuses a missing, short or branch-shaped SHA; materializes the snapshot from the SHA; removes the
+held Experiences migration; computes the **complete pending set** against production; verifies the
+accepted tree's Compose, the two-phase scripts, and the credential properties; lists every container
+possessing `DATABASE_URL`; prints the **§VII evidence record**.
+
+⛔ `PREFLIGHT FAILED` ends the cutover — **and nothing on production has been touched.**
+
+## Step 2 · `[PROD]` — stage migration authority only
+
+```bash
+ssh soullab@minisforum 'sh -s' < scripts/witness/pt3-stage-migration-authority.sh
+```
+
+Copies the owner URL into `.env` as `MIGRATE_DATABASE_URL`. ⛔ Leaves `DATABASE_URL` in
+`.env.production`, does not touch `maia_app` (it does not exist), restarts nothing.
+
+## Step 3 · `[PROD]` — bring the canonical Compose forward
 
 ```bash
 ssh soullab@minisforum "cd ~/MAIA-SOVEREIGN \
@@ -62,57 +78,53 @@ ssh soullab@minisforum "cd ~/MAIA-SOVEREIGN \
   && git diff --stat HEAD -- docker-compose.production.yml"
 ```
 
-Expect only the migrate `environment:` block and the four healthchecks.
+`cmd_migrate` reads production's checkout, so it must be forward before the migration consumes it —
+and only now, after the preflight passed.
 
-## Step 2 · `[PROD]` — preflight (§IX, ten conditions). Mutates nothing.
-
-```bash
-ssh soullab@minisforum "ACCEPTED_SHA=$ACCEPTED_SHA sh -s" \
-  < scripts/witness/pt3-cutover-preflight.sh
-```
-
-It refuses a missing, short, or branch-shaped SHA; materializes the snapshot **from the SHA**;
-removes the held Experiences migration; computes the **complete pending set** against production;
-verifies the attribution passthrough, the authority separation, healthcheck authority, the absence
-of any optional overlay, and the credential installer's properties; lists every running container
-possessing `DATABASE_URL`; and prints the **§VII evidence record**.
-
-⛔ `PREFLIGHT FAILED` ends the cutover. Use the exports it prints — including the **full** SHA.
-
-## Step 3 · `[PROD]` — install the credential and move the authority (§V)
+## Step 4 · `[PROD]` — migration-authority verifier (fail-closed)
 
 ```bash
-ssh -t soullab@minisforum 'sh -s' < scripts/witness/pt3-install-runtime-credential.sh
+ssh soullab@minisforum 'sh -s' < scripts/witness/pt3-verify-migration-authority.sh
 ```
 
-Generates a URI-safe credential (or `PT3_PROMPT_FOR_PASSWORD=1` to type one, unechoed), sets it via
-stdin, moves the owner URL out of `.env.production` into `.env` as `MIGRATE_DATABASE_URL`, writes
-`MAIA_APP_DATABASE_URL` into `.env.production` at mode 600, keeps a backup, and prints the role only.
+Required: **`MIGRATION READY`**. It resolves the credential through Compose, reports the **role**
+never the URL, and expects `maia_app` **not** to exist yet.
 
-⛔ It refuses to run if either destination is not gitignored.
+## Step 5 · `[PROD]` — the governed, attributed migration
 
-## Step 4 · `[PROD]` — the governed, attributed migration (§IX.1)
-
-Run the three exports the preflight printed, then:
+Run the three exports the preflight printed — `GIT_COMMIT` is the **full 40 characters** — then:
 
 ```bash
 cd ~/MAIA-SOVEREIGN && scripts/deploy-production.sh migrate
 ```
 
-**Verify before continuing** — full SHA recorded, exactly one row, zero Experience tables:
+**Verify:**
 
 ```bash
 docker exec maia-postgres psql -U soullab maia_consciousness -tAc "
 SELECT filename, applied_by_commit, applied_run_id, applied_by_authority, left(checksum,12)
   FROM schema_migrations WHERE filename LIKE '20260908%';
-SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'writer_experience%';"
+SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'writer_experience%';
+SELECT count(*) FROM pg_roles WHERE rolname='maia_app';"
 ```
+
+⛔ Abort unless: one row, full 40-char commit, **0** Experience tables, **1** `maia_app`.
 
 **Expected backfill** — deviation is a finding: **11** representations (6 custodied, 5 legacy) ·
 **17** acts, all `migration_legacy`, **0** with a member actor · **5** `representation_without_arrival` ·
 **0** multi-arrival · 2 blank Works and 2 unclaimed arrivals untouched.
 
-## Step 5 · `[PROD]` — restart runtime to pick up the new authority (§IX.6)
+## Step 6 · `[PROD]` — activate runtime authority (only now)
+
+```bash
+ssh soullab@minisforum 'sh -s' < scripts/witness/pt3-activate-runtime-authority.sh
+```
+
+Refuses unless `maia_app` exists and is not a superuser; generates the credential; sets it on stdin;
+backs up `.env.production` **outside the repository** at mode 700/600; writes
+`MAIA_APP_DATABASE_URL` and removes the owner `DATABASE_URL`. Prints the role and file modes only.
+
+## Step 7 · `[PROD]` — restart runtime
 
 ```bash
 ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && \
@@ -120,28 +132,18 @@ ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && \
     maia maia-api rlm maia-embed-worker maia-comms-worker maia-summary-worker maia-media-worker'
 ```
 
-One compose file — there is nothing else to name. No `--build`, no other change.
+One compose file — there is nothing else to name. No `--build`.
 
-## Step 6 · `[MAC→PROD]` — cutover verifier (§IX.7)
-
-```bash
-git show "$ACCEPTED_SHA":scripts/witness/pt3-cutover-readiness.sh | ssh soullab@minisforum 'sh -s'
-```
-
-Required: **`READY`**. `INCONCLUSIVE` is never success.
-
-## Step 7 · `[MAC→PROD]` — post-cutover acceptance witness (§IX.8)
+## Step 8 · `[MAC→PROD]` — readiness verifier, then the post-cutover witness
 
 ```bash
+git show "$ACCEPTED_SHA":scripts/witness/pt3-cutover-readiness.sh    | ssh soullab@minisforum 'sh -s'
 git show "$ACCEPTED_SHA":scripts/witness/pt3-post-cutover-witness.sh | ssh soullab@minisforum 'sh -s'
 ```
 
-Production-safe: no `INSERT`, `UPDATE` or `DELETE`, no fixture, no adversarial mutation. Refusal is
-proven from the catalogue; ordinary draft work is proven **by privilege**, never by writing to a
-member's draft. It **discovers** every database-using container, and block 7 proves durability —
-owner credential gone from `.env.production`, constrained credential present, no overlay.
-
----
+Both must return **`READY`**. `INCONCLUSIVE` is never success. The witness is production-safe — no
+`INSERT`, `UPDATE` or `DELETE`, no fixture, no adversarial mutation; refusal is proven from the
+catalogue and ordinary draft work by privilege. Block 7 proves durability.
 
 ## §IX — the Experiences hold survives
 

@@ -80,11 +80,25 @@ fi
 
 echo
 echo "════════ §IX.5 — ATTRIBUTION REACHES THE MIGRATE CONTAINER ════════"
-if grep -q 'GIT_COMMIT: \${GIT_COMMIT' "$PROJECT/docker-compose.production.yml" 2>/dev/null; then
-  ok "5" "the checkout's compose carries the attribution passthrough"
+#
+# ⭐ B17 — PROVE, THEN CHANGE. This reads the ACCEPTED SHA's Compose out of the snapshot, not the
+# production checkout. The earlier order mutated the production checkout in Step 1 and ran the
+# "pre-mutation" preflight in Step 2, so an abort left the deployment checkout altered for some
+# later unrelated deploy to consume. Nothing on this host has been changed when this runs.
+SNAP_COMPOSE="$SNAP/docker-compose.production.yml"
+if grep -q 'GIT_COMMIT: \${GIT_COMMIT' "$SNAP_COMPOSE" 2>/dev/null; then
+  ok "5" "the accepted tree's compose carries the attribution passthrough"
 else
-  bad "5" "the checkout's compose has no attribution passthrough" \
-      "cmd_migrate reads \$PROJECT_DIR's compose, not the snapshot's. Bring it forward first, or migration records commit=unknown."
+  bad "5" "the accepted tree's compose has no attribution passthrough" \
+      "migration would record commit=unknown"
+fi
+
+# Whether the production checkout has been brought forward YET is reported, not judged: bringing it
+# forward is the first bounded act AFTER this preflight passes.
+if grep -q 'GIT_COMMIT: \${GIT_COMMIT' "$PROJECT/docker-compose.production.yml" 2>/dev/null; then
+  echo "      production checkout's compose is already forward"
+else
+  echo "      production checkout's compose is NOT yet forward — expected; bring it forward after this preflight"
 fi
 
 echo
@@ -99,7 +113,7 @@ echo "════════ §IX.6–8 — THE RUNTIME SEAM, AND ITS DURABILI
 # restore owner authority by omitting anything. `migrate` alone gets the owner credential back,
 # from Compose's own .env. Forgetting that breaks MIGRATION, loudly; it never weakens the boundary.
 
-COMPOSE="$PROJECT/docker-compose.production.yml"
+COMPOSE="$SNAP/docker-compose.production.yml"
 if grep -q 'DATABASE_URL: \${MIGRATE_DATABASE_URL' "$COMPOSE" 2>/dev/null; then
   ok "6" "the production compose separates migration authority from runtime authority"
 else
@@ -123,33 +137,56 @@ else
   ok "8" "no optional overlay exists — the boundary cannot be omitted"
 fi
 
-# The owner credential must not be reachable by ordinary runtime once cutover completes; before it,
-# report the state rather than judging it.
+# §V (B14) — this instrument proves the IMMUTABLE ARTIFACT. It deliberately does NOT pronounce on
+# migration readiness, because that depends on an act (staging MIGRATE_DATABASE_URL) which has not
+# happened yet and must not be pre-judged here. An earlier version printed a note about the missing
+# variable and continued toward PREFLIGHT PASSED — a false green, since the canonical Compose now
+# sources migrate's credential from it. Readiness is answered by
+# scripts/witness/pt3-verify-migration-authority.sh, which FAILS CLOSED.
+echo
+echo "  phase state (reported, not judged — readiness is the verifier's question):"
 if grep -qE '^DATABASE_URL=' "$PROJECT/.env.production" 2>/dev/null; then
-  echo "      .env.production still carries DATABASE_URL — expected BEFORE the credential step"
+  echo "      .env.production still carries the owner credential — expected before activation"
 else
-  ok "8" "the owner credential has already left .env.production"
+  echo "      .env.production no longer carries the owner credential — activation has run"
 fi
 if grep -qE '^MIGRATE_DATABASE_URL=' "$PROJECT/.env" 2>/dev/null; then
-  ok "8" "MIGRATE_DATABASE_URL is set for the migrate service"
+  echo "      MIGRATE_DATABASE_URL staged"
 else
-  echo "      MIGRATE_DATABASE_URL not yet set in .env — required before Step 2, written by the credential installer"
+  echo "      MIGRATE_DATABASE_URL not staged — stage it, then run the migration-authority verifier"
 fi
 
 echo
 echo "════════ §IX.9 — CREDENTIAL ESTABLISHMENT DOES NOT EXPOSE THE SECRET ════════"
-INSTALLER="$SNAP/scripts/witness/pt3-install-runtime-credential.sh"
-if [ -r "$INSTALLER" ]; then
-  if grep -q "PASSWORD '\$" "$INSTALLER" && ! grep -q 'printf "ALTER ROLE' "$INSTALLER"; then
-    bad "9" "the installer interpolates the password into a command" "§V — it must reach psql on stdin"
-  elif grep -q 'stty -echo' "$INSTALLER" && grep -q 'docker exec -i' "$INSTALLER" \
-       && grep -q 'check-ignore' "$INSTALLER"; then
-    ok "9" "credential installation is non-echoing, stdin-delivered, and refuses a tracked destination"
+STAGE="$SNAP/scripts/witness/pt3-stage-migration-authority.sh"
+ACT="$SNAP/scripts/witness/pt3-activate-runtime-authority.sh"
+if [ -r "$STAGE" ] && [ -r "$ACT" ]; then
+  # B13 — activation must refuse before the migration has created the role.
+  if grep -q "maia_app does not exist" "$ACT" && grep -q 'rolname=.maia_app' "$ACT"; then
+    ok "9" "activation refuses until the migration has created maia_app"
   else
-    bad "9" "the installer does not satisfy §X.3" "expected non-echo, stdin delivery, and a gitignore check"
+    bad "9" "activation does not check that maia_app exists" "§III (B13) — it cannot succeed before the migration"
+  fi
+  # B13 — staging must not touch the role or remove owner authority.
+  if grep -q 'ALTER ROLE' "$STAGE"; then
+    bad "9" "the staging phase configures maia_app" "§IV — that belongs after the migration"
+  elif grep -q 'UNCHANGED' "$STAGE"; then
+    ok "9" "staging preserves migration authority and leaves runtime authority intact"
+  fi
+  # B16 — no arbitrary-password path.
+  if grep -qE 'read -r PW|PROMPT_FOR_PASSWORD' "$ACT"; then
+    bad "9" "an arbitrary-password path remains" "§VII (B16) — stdin-safe is not SQL-literal-safe"
+  else
+    ok "9" "the credential is generated from a safe alphabet; no arbitrary password can alter the SQL"
+  fi
+  # B15 — the backup must be proven outside the repository.
+  if grep -q 'REPO_ROOT' "$ACT" && grep -q 'chmod 700' "$ACT"; then
+    ok "9" "the owner-credential backup is proven outside the repository, mode 700/600"
+  else
+    bad "9" "the backup location is not proven protected" "§VI (B15)"
   fi
 else
-  bad "9" "the credential installer is missing from the snapshot" "$INSTALLER"
+  bad "9" "the two-phase authority scripts are missing from the snapshot" "$STAGE / $ACT"
 fi
 
 echo
