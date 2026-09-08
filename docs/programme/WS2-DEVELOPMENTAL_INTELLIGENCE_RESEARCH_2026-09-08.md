@@ -275,7 +275,7 @@ The system may maintain provenance, scope, anchors, writer intent, temporal stat
 
 # 7 · Model research — current candidates as of 2026-09-08
 
-> **UNVERIFIED — every context window, output limit, price, and product name in the table below awaits primary-source audit.** These figures were gathered through an assistant session and have not been read at their vendor sources by this system. Do not plan benchmark spend, provider selection, or context architecture against them until §16 clears them.
+> ✅ **VENDOR PAGES READ IN PASS B — and the table below is MATERIALLY INCOMPLETE as written.** The context windows and headline prices verified, but this table omits OpenAI's long-context multiplier: **requests over 272K input tokens are billed at 2× input and 1.5× output for the full request.** Above that threshold the stated ordering **reverses** — GPT-5.6 Sol becomes effectively `$8/$30` against Opus 5's flat `$5/$25`, so "lower listed cost than Opus 5" is false in the whole-Work regime Phases 7–8 operate in. GPT-5.6 Sol's `$4/$20` is itself promotional. **Authoritative model census: Pass B §2.** Re-read vendor pricing when Strand G is actually armed; these figures are dated, not permanent.
 
 Model specs are capability ceilings, not evidence of developmental-reading quality. **No model wins by spec sheet.**
 
@@ -659,37 +659,56 @@ Each finding must attack a **named frozen Phase 0 assumption**, not a generic bu
 
 ---
 
-# 16 · Unverified-figures register
+# 16 · Register — **SUPERSEDED IN PLACE 2026-09-08**
 
-Every entry below is a **research lead pending primary-source audit** — DOI · exact supported proposition · location/page · evidence strength. Anything that does not survive the audit is **removed, not softened**.
+> ⛔ **THIS REGISTER NO LONGER STATES CURRENT EVIDENCE STATUS.** It recorded the Pass A position, when nothing had been read at source. Pass B (`98fce0cdd`) read twenty primary and official sources. **The authoritative ledger is `WS2-DEVELOPMENTAL_INTELLIGENCE_AUDIT_PASS_B_2026-09-08.md` §1 (citations) and §2 (model census).** It is deliberately NOT duplicated here — roadmap §2 and §4 diverged because a derived copy of a list outlived its source, and the evidence set is the last place to repeat that.
 
-| § | Precise claim | Audit status |
-|---|---|---|
-| A3 | 2024 *Learning and Instruction* dialogic-writing study | UNVERIFIED |
-| B1 | 109 HCI papers · 15 writers · DOI 10.1145/3757566 | UNVERIFIED |
-| B2 | 253 participants (Gero et al.) | UNVERIFIED |
-| B4 | 62 human–AI co-creativity papers | UNVERIFIED |
-| B5 | 2026 ACM C&C co-design study | **STRUCTURALLY UNSUPPORTED** — cited to `cc.acm.org/2026/proceedings/`, a conference index page, which cannot support a specific finding. Locate the paper or strike the claim. |
-| C1 | 1,300 stories (Rashkin et al., ACL 2025) | UNVERIFIED |
-| D1 | >880,000 texts across seven datasets; 21–50% variance reduction | UNVERIFIED — **and two different DOIs have been cited for this article** (`10.1038/s41562-026-02550-0` here, `…-02549-7` elsewhere). At most one is correct. Resolve before any use. |
-| D2 | 19 studies / 61 effect sizes | UNVERIFIED |
-| §7 | All context windows, output limits, prices, product names | UNVERIFIED — no vendor page read at source |
+**Current dispositions, by reference only:**
 
-Two structural cautions for the auditor:
+```text
+usable evidence set        Pass B §1 and §2 — that document governs
+B5                         REMOVED from usable evidence (close item 1)
+D2                         REMOVED from usable evidence (close item 2)
+open question              ACCESS CEILING of abstract-located rows
+                           — Pass B §8.2, proposed, not ruled
+```
 
-1. **A finding that enumerates our own feature list is the one to check hardest.** Confirmation-shaped results are the most likely to be misattributed.
-2. **Every link in the original sweep carries `utm_source=chatgpt.com`.** That is a provenance fact about how the corpus was gathered, not a judgement about any individual source — but it means no citation here has been read at source by this system.
+**Historical Pass A record, kept as the before-state.** Every row below was written when no source had been read. Two of its judgements were overturned by Pass B and are marked; the rest were superseded by primary reads.
+
+| § | Pass A claim | Pass A status | Pass B outcome |
+|---|---|---|---|
+| A3 | 2024 *Learning and Instruction* dialogic-writing study | UNVERIFIED | read — see Pass B §1 |
+| B1 | 109 HCI papers · 15 writers | UNVERIFIED | read — see Pass B §1 |
+| B2 | 253 participants | UNVERIFIED | read — see Pass B §1 |
+| B4 | 62 co-creativity papers | UNVERIFIED | read — see Pass B §1 |
+| B5 | 2026 ACM C&C co-design study | **STRUCTURALLY UNSUPPORTED** | ⚠️ **overturned then removed** — the paper exists (`10.1145/3803784.3807569`); the defect was the citation target, not the finding. Primary still unread → REMOVED. |
+| C1 | 1,300 stories | UNVERIFIED | read — see Pass B §1 |
+| D1 | >880,000 texts; 21–50% variance reduction | UNVERIFIED — **two conflicting DOIs** | ⚠️ **overturned** — not a conflict. `-02550-0` is the research article; `-02549-7` is separate accompanying coverage. |
+| D2 | 19 studies / 61 effect sizes | UNVERIFIED | REMOVED — final article open access since 2026-08-31, PDF not read |
+| §7 | context windows, prices, product names | UNVERIFIED | read at vendor pages — see Pass B §2, and §7 above as corrected |
+
+Two structural cautions, retained because both proved out:
+
+1. **A finding that enumerates our own feature list is the one to check hardest.** B5 was exactly that shape — and while the paper turned out real, it is the one source that could not clear the read standard.
+2. **Every link in the original sweep carried `utm_source=chatgpt.com`.** Pass B replaced that provenance for twenty sources.
 
 ---
 
 # 17 · Standing
 
 ```text
-RESEARCH CORPUS                    LEAD SET · NOT SOURCE-VERIFIED
-CITATION AUDIT                     NOT RUN · every source is a LEAD
-FALSIFICATION QUOTA (5)            NOT MET · convergence may not be claimed
-CANDIDATE CONSTRAINTS R-L1..R-L15  PENDING AUDIT + FALSIFICATION · NOT ADOPTED
-MODEL SPEC CENSUS                  UNVERIFIED · no vendor page read at source
+RESEARCH CORPUS                    PASS B VERIFIED except where marked
+CITATION AUDIT                     PASS A + PASS B RUN · 20 primary/official reads
+                                   authoritative ledger = Pass B §1, §2
+B5 · D2                            REMOVED from usable evidence (close items 1, 2)
+FALSIFICATION QUOTA (5)            5 / 5 MET · convergence STILL not claimed
+                                   (quota met lifts the bar; it does not establish
+                                    convergence)
+PHASE 0                            RE-FROZEN — WS2-PHASE0_RE-FROZEN_2026-09-08.md
+CANDIDATE CONSTRAINTS R-L1..R-L15  STILL NOT ADOPTED · each needs its own source,
+                                   falsifier and reconciliation (close item 5)
+MODEL SPEC CENSUS                  VENDOR PAGES READ · §7 table materially
+                                   incomplete · see Pass B §2
 ACCEPTANCE FLOOR (§12)             PREDECLARED · FROZEN · AMENDED 2026-09-08 (A+B)
 STRAND G EXCEPTION                 AUTHORIZED · NOT ARMED · expires 2026-10-08
 SEL-0 (§14)                        SPECIFIED · NOT RUN · threshold NOT SET

@@ -307,3 +307,54 @@ FQs disposed                              5 / 5
 ```
 
 **Item 6 must not proceed until the set being re-frozen is itself ruled.** Re-freezing over an unrecorded split and an untested statement would stamp as authoritative a set that no pass ever examined — the stale-authority defect item 6 exists to remove, arriving through the reconciliation rather than around it.
+
+---
+
+# 8 · Close items 1 and 2 — B5 and D2 REMOVED · and an access-ceiling finding
+
+## 8.1 · Rulings
+
+```text
+ITEM 1 — B5   Johnston, Pappin & Thue (2026), 10.1145/3803784.3807569
+REMOVE from usable design evidence.
+Primary paper not read; the official C&C proceedings page gives only the
+abstract, which is insufficient under the declared standard.
+No surviving constraint depends on it — FQ-5 was licensed independently
+and explicitly noted B5 "is not needed to license this qualification".
+
+ITEM 2 — D2   de Rooij & Biskjaer (2026), 10.1080/0144929X.2026.2726451
+REMOVE from usable design evidence for this close.
+The peer-reviewed final article was published open access 2026-08-31 and
+Tilburg exposes the final PDF, but that PDF was not retrieved or read in
+this pass. Existence of an accessible primary is not a read of it.
+D1 independently carries the relied-on homogenization finding.
+May be reintroduced ONLY through a future primary read.
+```
+
+Both removals cost nothing that any surviving constraint stands on. **Removal is the audit functioning, not evidence lost.**
+
+## 8.2 · Finding — the `Location` column does not record access ceiling
+
+**Raised during item 3 reconciliation. Not ruled.**
+
+Most rows in §1 carry `Abstract` as their location. That column records **where the claim was found**, not **what access was available**. Those are different facts, and the distinction is load-bearing here because **it is exactly the distinction B5 was removed for.**
+
+```text
+CASE 1   full text retrievable; the claim happens to sit in the abstract
+         -> a primary read with a precise location
+
+CASE 2   the abstract is the ceiling of available access
+         -> epistemically the position B5 was just REMOVED for
+```
+
+The ledger cannot presently distinguish them. For rows with an open preprint (B1 `arXiv:2504.12488`, B2 `2604.11009`, B4 `2506.21333`, C2, C3, E2a, E2b) full text is plausibly reachable, so Case 1 is likely. For paywalled venues it may not be. **Neither can be asserted from the record as it stands.**
+
+This does not disturb the FQ results: FQ-1 rests on Sommers (A2, primary article text read), FQ-3 on Bhat et al. (open preprint), and FQ-5 explicitly declined to lean on B5.
+
+**Proposed, not ruled**: the reconciled ledger adds an `ACCESS CEILING` column — `full text` / `abstract only` — and any row whose ceiling is `abstract only` is held to the same standard applied to B5. If that reclassifies rows, the honest outcome is fewer usable sources, consistent with *the audit shrinking certainty where evidence cannot support it.*
+
+## 8.3 · Item 3 reconciliation — structural ruling applied
+
+The parent records **point at this document's §1 and §2 as the authoritative ledger.** They do not duplicate it.
+
+That choice is taken directly from the §7 divergence finding: roadmap §2 and §4 drifted precisely because a derived copy of a list was maintained alongside its source until nobody could tell which governed. **A second ledger would reproduce that defect on the evidence set** — the one place the lane can least afford it.
