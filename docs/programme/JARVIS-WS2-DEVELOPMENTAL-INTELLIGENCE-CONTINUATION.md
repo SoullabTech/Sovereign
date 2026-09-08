@@ -108,19 +108,16 @@ to stop; a gate saying no is.
 ## Cross-phase authority
 
 ```text
-STATUS   PROPOSED — NOT YET RATIFIED
+STATUS   RATIFIED — founder act, 2026-09-08
 ```
 
-⛔ **This flow may not record cross-phase authority as founder authority until the
-founder ratifies it by explicit act.** Recorded here as proposed text only.
+Provenance, kept rather than erased: the wording below was first drafted as
+proposed language, not uttered as a founder act, and was recorded here as `PROPOSED
+— NOT YET RATIFIED` for exactly that reason. In this programme a proposed text
+adopted by echo and a founder act are not interchangeable. It became authority by
+explicit founder act on 2026-09-08, and the record of how it did so is retained.
 
-Provenance, stated because it is the reason ratification is required: the wording
-below was drafted as proposed language, not uttered as a founder act. What the
-founder independently expressed was willingness to follow through as many phases as
-possible. In this programme a proposed text adopted by echo and a founder act are
-not interchangeable, and the weaker of the two is what currently exists.
-
-Proposed text, verbatim and unratified:
+Ratified text, verbatim:
 
 > I authorize the WS2 Developmental Intelligence continuation flow to proceed
 > through successive roadmap phases during this run whenever all predeclared gates
@@ -130,9 +127,9 @@ Proposed text, verbatim and unratified:
 > production deploy unless separately authorized. If a new founder ruling is
 > required, stop and return it to me.
 
-Until ratified, this flow advances **one phase at a time against explicit
-authorization**, exactly as it did before the text was drafted. Ratification changes
-the flow's continuity, never any gate.
+This changed the flow's continuity and **no gate**. Every gate stands exactly as it
+stood before. It does not clear `C0`, which is unavailable production access rather
+than missing authority.
 
 ---
 
@@ -140,7 +137,7 @@ the flow's continuity, never any gate.
 
 ```text
 PARENT FLOW            RECORDED
-CROSS-PHASE AUTHORITY  PROPOSED · NOT RATIFIED
+CROSS-PHASE AUTHORITY  RATIFIED — founder act, 2026-09-08
 PHASE 1.5              OPEN — blocked at C0
   MANIFESTS A/B/C      NOT FROZEN
   EXCLUDED SET         NOT FROZEN
