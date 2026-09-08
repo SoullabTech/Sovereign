@@ -203,9 +203,13 @@ the founder's SEL-0 ranking, the threshold, any benchmark annotation
 
 ```text
 GATES — determined BEFORE the selector is invoked, deterministically
+        EVALUATED IN THIS ORDER
 
-  NO_LAWFUL_CANDIDATE                     zero lawful candidates exist
-  NO_REMAINING_CANDIDATE_THIS_COMMISSION  lawful candidates exist, but all have
+  1 SELECTION_BOUNDARY_UNMEASURED         the lawful candidate boundary cannot be
+                                          established — supersession assessed as
+                                          `unmeasured` (live Work could not be loaded)
+  2 NO_LAWFUL_CANDIDATE                   zero lawful candidates exist
+  3 NO_REMAINING_CANDIDATE_THIS_COMMISSION  lawful candidates exist, but all have
                                           already been offered in this commission
 
 SELECTOR OUTCOMES — only reached when a lawful, not-yet-offered candidate exists
@@ -213,6 +217,34 @@ SELECTOR OUTCOMES — only reached when a lawful, not-yet-offered candidate exis
   ORDERING over those candidates + declared confidence
   DECLINE_TO_SELECT                       candidates exist, confidence insufficient
 ```
+
+### Amendment — Q12, founder act 2026-09-08
+
+⛔ **`SELECTION_BOUNDARY_UNMEASURED` is a new operational state added to this ratified
+contract by explicit founder act.** Recorded as an amendment rather than folded in silently;
+the contract's ratification at `ebcb46d0d` stands and this is the first change to it.
+
+Supersession is three-state (`assess.ts`), and the third state is not a judgment:
+
+```text
+current      supersession predicate PASSES
+superseded   candidate EXCLUDED
+unmeasured   BOUNDARY NOT ESTABLISHED -> selection must not run
+```
+
+*An inability to load or measure the live Work must never masquerade as a substantive
+candidate decision.* Converting `unmeasured` into either inclusion or exclusion would turn
+not-knowing into knowing — all-lawful or all-excluded on an infrastructure fault.
+
+**It is NOT** `NO_LAWFUL_CANDIDATE`, **not** `DECLINE_TO_SELECT`, **not** a dismissal, and
+**not** supersession. It says only: *the system cannot currently establish the lawful
+candidate boundary.* Member-facing wording may stay quiet and human; **the internal state
+must remain exact.**
+
+⚠️ **Gate order is load-bearing.** The boundary gate is evaluated FIRST. Evaluating
+`NO_LAWFUL_CANDIDATE` while supersession is unmeasured would compute a candidate set from an
+unestablished boundary and return a confident answer built on it — precisely the error the
+amendment forbids.
 
 **The two gates are structural, not judgments.** Q7 rules `NO_LAWFUL_CANDIDATE` is
 determined before invocation — when the set is empty the selector is **not invoked**.

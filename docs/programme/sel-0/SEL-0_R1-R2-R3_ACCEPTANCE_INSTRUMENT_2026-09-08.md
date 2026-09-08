@@ -374,6 +374,24 @@ contract reopened                                         NO — no contradictio
 
 ---
 
+## Post-freeze note — Q12 does NOT reopen this instrument
+
+The Q12 amendment adds `SELECTION_BOUNDARY_UNMEASURED` to the product contract's gate set.
+**The frozen instrument is unaffected, and the reason is structural rather than convenient:**
+the overlay ABORTS when supersession is `unmeasured`, so no fixture is ever frozen in that
+condition and no acceptance run can encounter the state. It cannot appear in R1.4's
+adjudication table because it cannot appear in a run.
+
+```text
+contract gates      3 (boundary · no-lawful-candidate · none-remaining)
+instrument gates    2 — the boundary gate is discharged UPSTREAM, at fixture lock
+```
+
+Recorded so a later reader does not mistake the frozen instrument for stale. Digest and
+decision rule unchanged; no threshold or analytic choice moved.
+
+---
+
 ## Standing
 
 ```text

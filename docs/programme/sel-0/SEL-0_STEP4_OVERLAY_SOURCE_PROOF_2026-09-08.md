@@ -77,9 +77,9 @@ is impossible because fewer than 60 pairs exist.**
 
 ---
 
-## Founder question returned before any production read
+## Q12 · RULED — founder act, 2026-09-08 · option (c)
 
-**Q12 · How is `unmeasured` classified for the eligibility overlay?**
+**`unmeasured` ABORTS the overlay. It is neither lawful nor excluded.**
 
 ```text
 a  unmeasured is LAWFUL      (only an explicit `superseded` excludes)
@@ -88,10 +88,18 @@ c  unmeasured ABORTS the overlay — a fixture whose lawfulness could not be
    measured is not a fixture; re-attempt when the live Work loads
 ```
 
-⛔ **Not defaulted**, per the ruling. The three differ sharply when the live Work fails to
-load: (a) admits an unverified set, (b) empties the fixture on an infrastructure fault, (c)
-refuses to freeze an unmeasured answer at all. **(c) is the reading most consistent with the
-Step-4 finding it repairs** — *"assuming is not verifying"* — but it is a founder call.
+**Ruled (c).** `unmeasured` is not an exclusion state; it is a separate gate. If any required
+supersession assessment is `unmeasured`: do not freeze an overlay, do not compute final
+lawful `n`, do not proceed to Step 5, do not implement. Report only that the overlay aborted
+because the boundary could not be measured.
+
+**Reattempt is permitted** after the live Work loads successfully. That is not rerolling the
+benchmark: no candidate set was frozen and no ranking occurred, so it is retrying a failed
+measurement of an opening condition. Once an overlay successfully measures every required
+predicate and is frozen, **that** fixture-lock state binds the acceptance run.
+
+**Extended to Writer's Studio runtime** by the same act — see the contract amendment. The
+finding was never benchmark-specific; the product uses the same derivation.
 
 ---
 
@@ -99,7 +107,7 @@ Step-4 finding it repairs** — *"assuming is not verifying"* — but it is a fo
 
 ```text
 predicate 1 standing        SOURCE PROVEN — safe to read
-predicate 2 supersession    DERIVED, three-state — Q12 must be ruled first
+predicate 2 supersession    DERIVED, three-state — Q12 RULED (c): unmeasured ABORTS
 production read             NOT PERFORMED — no production access in this session
 overlay                     NOT BUILT · NOT FROZEN
 Step 4                      STILL MISMATCH — unresolved
