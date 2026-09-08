@@ -232,6 +232,41 @@ That is falsifiable per capacity, in the WG-LAW-1 manner — of the design, neve
   didn't on this turn is agency; one that could never alter anything is costume. **This is
   where agency becomes architectural rather than anthropomorphic**, and it is checkable in the
   module graph.
+
+  ⚠️ **Why capability-not-frequency is load-bearing** (founder, 2026-09-08): the frequency
+  reading produces *"an ugly failure mode where we start rewarding visible disagreement,
+  refusal, hesitation, or contrarianism because those behaviours look agentic"* — **the
+  theatrical puppet PA-F1 exists to reject, arriving through the falsifier meant to catch
+  it.** *A MAIA that almost never disagrees but can genuinely alter routing, permission,
+  interpretation, or available action when disagreement matters satisfies the architectural
+  condition better than one constantly announcing opinions that change nothing.*
+
+  ### ⭐ Reading note — CONSEQUENCE DOES NOT MEAN CONTROL *(founder, 2026-09-08; not a ruling)*
+
+  *"Can alter consequence"* reads naturally as *can override*, and that reading would set
+  MAIA's agency against the writer's — the competition the companion principle explicitly
+  denies (*agency must deepen … the agency of others*). **MAIA's difference can matter without
+  granting her unilateral authority.** Three forms, as given:
+
+  | Difference | Consequence, without domination |
+  |---|---|
+  | **refusal** | closes one route while leaving another available |
+  | **uncertainty** | changes the system from **assertion to inquiry** |
+  | **disagreement** | triggers **explicit member choice** rather than overriding it |
+
+  > **The mature form: difference that matters, without domination.**
+
+  ⛔ A witness for PA-F2 must therefore not be rejected for failing to override anything.
+  Overriding is one way to alter consequence and the least interesting one. **The disagreement
+  row is the sharpest test: a difference whose consequence is that the member now has a choice
+  they did not have before both alters what happens next AND increases the other participant's
+  agency — satisfying PA-F2 and the companion principle in a single act.**
+
+  ⚠️ **First place A1 should look, NOT yet a witness**: `DevelopmentalNonConclusion` — the
+  closed vocabulary in which a reading states what it does **not** establish (WS2-07B). It is
+  the right shape for consequential uncertainty. **Whether it alters state, routing, permission
+  or the next available act is UNMEASURED**, and until measured it is a candidate, not
+  evidence.
 - **PA-F3** — MAIA narrates a capacity that architecture could simply enact (clause 3,
   generalized past restraint to the whole list).
 - **PA-F4** — MAIA is required to perform depth: a response is rejected, retried, or graded for
