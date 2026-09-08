@@ -133,6 +133,17 @@ describe('F-C · declaration belongs to the writer first', () => {
     }
   });
 
+  it('draws the four distinctions the LAW draws', () => {
+    /* The law is narrower than the regex implementing it: MAIA may acknowledge
+       that the writer declared a goal, and may not evaluate the goal or the
+       writer's performance in declaring it. These four cases are the law; the
+       implementation is a deliberately broader heuristic over them. */
+    expect(refusalOf('That is a wonderful goal.', 'declared')).toBe('evaluates_the_goal');
+    expect(refusalOf("You've named this clearly.", 'declared')).toBe('evaluates_the_goal');
+    expect(ok('That goal is now recorded.', 'declared').ok).toBe(true);
+    expect(ok('That is written down now, in your words.', 'declared').ok).toBe(true);
+  });
+
   it('allows the same plain acknowledgement it would allow anywhere', () => {
     expect(ok('Recorded, in your words.', 'declared').ok).toBe(true);
   });

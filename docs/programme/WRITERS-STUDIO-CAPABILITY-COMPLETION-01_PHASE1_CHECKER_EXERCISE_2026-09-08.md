@@ -87,6 +87,39 @@ because silence is lawful and a false refusal costs nothing, but flagged rather
 than hidden: it is the kind of rule that should be revisited once real language
 has been heard.
 
+## THE LAW, AND THE HEURISTIC IMPLEMENTING IT — kept apart deliberately
+
+**Founder precision, 2026-09-08.** The broad syntactic ban is an implementation
+heuristic. It must never be read back as the underlying law.
+
+```text
+THE LAW
+  MAIA may acknowledge that the writer declared a goal.
+  MAIA may not evaluate the goal — as worthy, admirable, good, impressive,
+  sensible, beautiful — nor evaluate the writer's performance in declaring it.
+
+THE FOUR CASES THAT ARE THE LAW
+  "That is a wonderful goal."                 evaluates the aim         REFUSE
+  "You've named this clearly."                evaluates the writer      REFUSE
+  "That goal is now recorded."                reports system state      lawful
+  "That is written down now, in your words."  acknowledges authorship
+                                              without judging it        lawful
+```
+
+All four are now pinned as tests, and the module carries the same distinction
+above the regex with: *do not later read the heuristic as the law — if this list
+has to be argued about, argue from the four cases, not from the regex.*
+
+⚠️ **One judgement I resolved rather than left open.** The founder marked
+*"You've named this clearly."* as **probably** refuse. The checker accepted it,
+so I extended the rule to quality adverbs about the writer's act of naming —
+praising *how* they declared it is the same move one step to the left. **I
+resolved a "probably" toward refusal because a false refusal costs only
+silence.** Flagged so it can be overturned rather than discovered.
+
+**The heuristic is broader than the law and will refuse some harmless
+sentences.** That is acceptable now, and only because FR-16 made silence free.
+
 ## WHAT THE KEYED WITNESS STILL NEEDS
 
 ```text
@@ -111,6 +144,6 @@ approval leak on declaration                                          FOUND · R
 generated warmth                                                      UNWITNESSED
 product result                                                        UNKNOWN
 
-Gates: 45 suites · 738 tests passed · typecheck no regressions · no-supabase clean
+Gates: 45 suites · 739 tests passed · typecheck no regressions · no-supabase clean
 PRODUCTION untouched
 ```

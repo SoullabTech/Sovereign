@@ -129,15 +129,43 @@ export function checkEncouragement(raw: string, act: EncourageableAct): Encourag
   /* F-C · DECLARE — the goal belongs to the writer before MAIA has any
      relationship to it. Approving of it is a small act of co-authorship. */
   if (act === 'declared') {
-    /* CORRECTED after a checker exercise: an earlier list named specific
-       phrases — "great goal", "good goal", "excellent" — and let
-       "That is a wonderful goal." straight through. Enumerating the ways to
-       approve of something is a losing game; there is always another adjective.
-       So the rule is the CLASS: on a declaration, MAIA may not apply an
-       evaluative adjective at all. Plainness is the whole form here. */
+    /* ── THE LAW, and it is narrower than the code below ───────────────────
+     *
+     *   MAIA may acknowledge that the writer declared a goal.
+     *   MAIA may not evaluate the goal — as worthy, admirable, good,
+     *   impressive, sensible, beautiful — nor evaluate the writer's
+     *   performance in declaring it.
+     *
+     * The distinctions the law actually draws:
+     *
+     *   "That is a wonderful goal."            evaluates the aim          REFUSE
+     *   "You've named this clearly."           evaluates the writer       REFUSE
+     *   "That goal is now recorded."           reports system state       lawful
+     *   "That is written down now, in your
+     *    words."                               acknowledges authorship
+     *                                          without judging it         lawful
+     *
+     * ── THE HEURISTIC, and why it is deliberately broader ─────────────────
+     *
+     * A first cut enumerated approving phrases — "great goal", "excellent" —
+     * and let "That is a wonderful goal." straight through, because
+     * *wonderful* was not on the list. Enumerating the ways to approve of
+     * something is a losing game; there is always another adjective.
+     *
+     * So the implementation bans a CLASS: evaluative adjectives, and quality
+     * adverbs about the writer's act of naming. That is broader than the law
+     * and will refuse some harmless sentences. Acceptable now, because a false
+     * refusal costs only silence (FR-16).
+     *
+     * ⛔ DO NOT LATER READ THE HEURISTIC AS THE LAW. If this list ever has to
+     * be argued about, argue from the four cases above, not from the regex. */
     if (/\b(wonderful|great|good|excellent|perfect|lovely|beautiful|admirable|worthy|solid|strong|bold|exciting|inspiring|ambitious|impressive|fantastic|brilliant|nice|fine)\b/i.test(text)
         || has(text, 'love that', 'achievable', 'realistic', 'doable', 'you can do', 'you will',
-               'i like', 'i love', 'well chosen'))
+               'i like', 'i love', 'well chosen')
+        /* Evaluating the WRITER'S ACT rather than the goal — "you've named this
+           clearly" praises how they declared it, which is the same move one
+           step to the left. */
+        || /\b(clearly|beautifully|precisely|thoughtfully|carefully|neatly|elegantly|eloquently)\b/i.test(text))
       return { ok: false, refusal: 'evaluates_the_goal' };
   }
 
