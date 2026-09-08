@@ -282,3 +282,240 @@ human witness pending (PR/merge HOLD) · `WS-DEVELOP-REFUSAL-TRUTH-OBS-01`
 
 *Nothing in this record proposes a repair. Evidence licenses; it does not
 itself edit the public record.*
+
+---
+
+# PART II — FOUNDER RULING ON FINDING B (ratified 2026-09-08)
+
+> **Removal may dissolve the container without dissolving the history by which
+> the writer knows what remains.**
+
+The member made this declaration:
+
+```
+"This Work is called REMOVE-WORK-WITNESS-d326fc479."
+```
+
+They did not make this one:
+
+```
+"This manuscript is titled REMOVE-WORK-WITNESS-d326fc479."
+```
+
+Copying `living_works.title` into `member_manuscripts.title` would be false.
+Deleting every trace of the first declaration is also wrong, because it
+destroys the member's ability to recognize the writing that remains. The
+lawful move is to preserve the Work name as **historical provenance** —
+not title, not current Work identity. **Lineage.**
+
+Three facts must remain distinct after removal:
+
+```
+manuscript title      unknown / undeclared
+historical lineage    this writing was previously carried by a Work
+                      named "REMOVE-WORK-WITNESS-d326fc479"
+current Work          none
+```
+
+**D-16 stands completely intact.**
+
+### Ratified
+
+**RW-B1 — Naming continuity after removal is lineage, not title.**
+When a member removes a Work while retaining its writing, the system may
+preserve the member-declared Work name as historical provenance associated with
+that retained writing. It may not copy, promote, or otherwise reinterpret that
+Work name as a manuscript or expression title.
+
+**RW-B2 — Removal may end a relationship without erasing its history.**
+Removing a Work ends the current container and arrangement. It does not require
+erasure of historical facts necessary for the member to recognize and account
+for the writing that remains.
+
+**RW-B3 — Provenance may support recognition but must not masquerade as
+declaration.** If retained writing has no member-declared title, the Studio may
+use former-Work provenance to make it recognizable only through copy or
+structure that clearly marks the name as prior context rather than the title of
+the writing.
+
+**RW-B4 — A title still requires a title act.** The only lawful way for
+`member_manuscripts.title` to become the former Work name is for the member to
+make a separate naming gesture establishing that title.
+
+### Semantics of removal, sharpened
+
+```
+CURRENT RELATIONSHIP   "This writing belongs to Work X"        → ends
+HISTORICAL FACT        "This writing was in a Work named X"    → may remain
+MANUSCRIPT TITLE       "The writing itself is titled X"        → never inferred
+```
+
+*A deleted house can be gone while the fact that someone once lived there
+remains true.*
+
+### Presentation constraint (copy to be designed later)
+
+Not bare `Untitled` — that discards the only human-recognizable continuity.
+Not bare `REMOVE-WORK-WITNESS-d326fc479` — that visually asserts a title.
+Lawful shapes are semantically explicit, e.g. `Untitled writing / From "…"`.
+Once the writer names the manuscript, the real title becomes primary and the
+former Work name recedes into lineage.
+
+### Not authorized by this ruling
+
+```
+living_works.title → member_manuscripts.title      NOT AUTHORIZED
+implementation mechanism                            NOT DECIDED
+BUILD                                               NOT AUTHORIZED
+```
+
+Finding A remains outside B's repair authority. The five-site
+`Your Writings → Your Writing` correction remains HELD — there is no benefit to
+a more precisely named destination while the destination still misidentifies
+the retained writing.
+
+---
+
+# PART III — B IMPLEMENTATION DISCOVER (read-only)
+
+**Question:** find the smallest existing lineage/provenance mechanism that can
+carry former-Work naming without preserving the Work itself or mutating
+`member_manuscripts.title`.
+
+**Answer: there is none. And the search surfaced two further consequences of
+removal that were not visible from the witness card.**
+
+## III.1 — The name loss is DESIGNED, documented, and rests on a prior ruling
+
+`app/api/sovereign/living-works/[id]/route.ts` states the consequence in its
+own header:
+
+> *"It is reversible by a member act: the member may declare again. This route
+> does NOT soft-delete, because a `withdrawn_at` column would be a status, and
+> status is excluded from this ontology. The consequence is honest and stated
+> in the UI: **the name is not kept.**"*
+
+⛔ So Finding B is **not an oversight**. It is a designed consequence of an
+earlier ruling that excluded status from the Living Works ontology. Any repair
+must therefore answer that ruling, not bypass it.
+
+⭐ RW-B2 already contains the reconciliation: *"That is not secretly preserving
+the Work. It is preserving lineage after the Work is gone."* The prior ruling
+excluded **status on the work row**. An append-only historical fact is a
+different object — it asserts what happened, not what something currently is.
+That distinction is what makes RW-B1 implementable without reopening the
+status question, and it should be stated explicitly in whatever spec follows.
+
+## III.2 — ⭐ Removal also erases the act "Began X" from the member's history
+
+`app/api/sovereign/studio/history/route.ts` is **a live projection over current
+rows, not an append-only act ledger.** The `work_begun` act is:
+
+```sql
+SELECT w.id, 'work_begun', w.created_at, w.title, ...
+  FROM living_works w WHERE w.member_id = $1
+```
+
+The act **is** the row. And the title used everywhere else in history comes from
+a JOIN on the same table:
+
+```sql
+WITH work_of AS (
+  SELECT e.expression_id, CASE WHEN count(*) = 1 THEN min(w.title) END
+    FROM living_work_expressions e JOIN living_works w ON w.id = e.living_work_id
+   WHERE e.expression_type = 'manuscript' AND w.member_id = $1
+  GROUP BY e.expression_id)
+```
+
+**Consequence, independent of the witness card:** removing a Work retroactively
+deletes *"Began REMOVE-WORK-WITNESS-d326fc479"* from the member's own history,
+and blanks the Work name from every other act that referenced it. Last week's
+history changes because of something done today.
+
+⛔ This is the exact failure the same file forbids by name for a different
+column: *"A history entry that moves is not a history."* An entry that
+**vanishes** is a stronger form of the same defect, and it is live.
+
+⛔ It also means **the history machinery cannot carry the lineage** — it derives
+from the very row removal deletes.
+
+## III.3 — The membership declaration cascades too
+
+`database/migrations/20260801000001_living_works.sql:67`
+
+```sql
+living_work_id UUID NOT NULL REFERENCES living_works(id) ON DELETE CASCADE
+```
+
+The route explains why, and the reasoning is sound for what it decides:
+*"Those rows ARE declarations of membership, not the members themselves.
+Removing the work removes the statements 'this belongs to that' — which is
+exactly what withdrawing a declaration means."*
+
+Correct as to the **current** relationship (RW-B2 line 1). But since nothing
+else records it, the cascade also removes the only trace of the **historical**
+fact (RW-B2 line 2). After removal, **no row anywhere states that this
+manuscript was ever carried by a Work of any name.**
+
+## III.4 — What survives, and what the nearest precedent is
+
+```
+member_manuscripts            SURVIVES · title NULL · no FK to a Work
+manuscript_working_drafts     SURVIVES · holds the writing (check 3 evidence)
+working_draft_revisions       SURVIVES · append-only, immutable by trigger
+source arrivals / custody     SURVIVES · append-only, carries FILE provenance
+manuscript_keeps              SURVIVES
+living_works                  DELETED
+living_work_expressions       CASCADE-DELETED
+studio history "work_begun"   DISAPPEARS (projection, not a record)
+```
+
+⭐ **The nearest architectural precedent is `working_draft_revisions`** —
+append-only, immutable by trigger, fixed in time, and chosen by the history
+route precisely because it does not move. That is a **pattern**, not a carrier:
+it is scoped to draft content and records nothing about Work membership.
+
+`source arrivals` is the nearest *semantic* precedent — it already keeps
+provenance (a filename) that is deliberately never treated as a name, under the
+2026-09-07 ruling *a source filename is provenance, not a Work name*. `subjectOf()`
+in `studioHistory.ts` already implements an RW-B3-shaped precedence
+(`workTitle ?? manuscriptTitle`), demonstrating the distinction is expressible.
+
+## III.5 — Consequence for sequencing
+
+```
+existing mechanism that can carry former-Work naming      NONE
+repair therefore requires a new append-only fact          ⇒ MIGRATION
+migration                                                  ⇒ Class B
+merge to clean-main-no-secrets                             ⇒ BRANCH GATE
+```
+
+Per the standing BRANCH GATE finding, merging a migration to the production
+branch is latent schema-deploy authorization: the next unrelated deploy applies
+it. That is a founder sequencing decision, not an implementation detail, and it
+should be taken before any spec is written rather than discovered at merge.
+
+## III.6 — What DISCOVER did not decide
+
+```
+mechanism (event · lineage table · retained provenance record)   NOT DECIDED
+whether III.2 is one lane with B or its own                      NOT DECIDED
+presentation copy                                                NOT DECIDED
+BUILD                                                            NOT AUTHORIZED
+```
+
+⛔ III.2 is recorded as a **new finding of this DISCOVER**, not as part of
+Finding B's repair authority. It shares B's cause but has its own scope: B is
+about recognizing retained *writing*; III.2 is about the integrity of the
+member's *act history*. Bundling them would repeat exactly the error §6 refuses
+for Finding A.
+
+## III.7 — Standing after Part III
+
+```
+Finding A     OPEN · separate lane · unowned
+Finding B     CONSTITUTIONALLY RESOLVED (RW-B1..B4) · mechanism UNDECIDED
+Finding C     NEW — removal erases "Began X" from history (III.2) · unruled
+BUILD         NOT AUTHORIZED
+witness       UNTOUCHED
+```
