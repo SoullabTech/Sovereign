@@ -1,8 +1,9 @@
 # WS-DEVELOP-REFUSAL-TRUTH-OBS-01 — Constitution
 
-**Standing: DISCOVER / CONSTITUTE. BUILD NOT AUTHORIZED.**
+**Standing: BUILD AUTHORIZED (founder, 2026-09-08 — see §5).**
 Branch `fix/develop-refusal-truth-observability`, from canonical `379c9b40a`.
-No code changed. This document constitutes the contract; it does not implement it.
+This document constitutes the contract. §1-4 were written at DISCOVER, before
+any code moved; §5 records the rulings that authorized BUILD and corrects O-5.
 
 Sibling lanes, deliberately separate: **#1266** (`section-run` prompt conformance,
 head `e655f0719`) · **BRANCH GATE** (parked governance finding).
@@ -81,9 +82,9 @@ Two carry **model-authored** strings, bounded in intent and unbounded in fact:
 - `non_conclusion_unknown` — `carries ${JSON.stringify(v)}` (an invented vocabulary token)
 
 A model that emitted a key or token containing quoted manuscript text would put
-it in a detail. **The obligation below therefore bounds detail length and
-forbids claim `text` from ever entering a record — it does not rely on the
-current shape staying safe.**
+it in a detail. **O-5 as corrected therefore persists no model-supplied value at
+all** — this audit describes what today's details happen to contain, and is not
+the basis on which anything is written down.
 
 ---
 
@@ -121,11 +122,29 @@ hash.
 *Falsifier:* a refusal is provoked, every browser is closed, and the cause is
 still recoverable.
 
-**O-5 · No manuscript prose enters any record.**
-Ids, indices, codes and counts only. Claim `text` is barred absolutely. Detail
-strings are length-bounded at the record boundary, not trusted for shape.
-*Falsifier:* a modelled refusal whose detail carries a long quoted string is
-recorded truncated, and no record path can reach `claim.text`.
+**O-5 · No model-supplied value is persisted. (CORRECTED — founder, 2026-09-08)**
+The first draft said no manuscript prose enters the record and then permitted
+model-authored `detail` to be merely length-bounded. **Those two statements do
+not coexist: a 100-character excerpt of manuscript prose is still manuscript
+prose.** Truncation is not redaction.
+
+The record therefore persists **normalized diagnostics only** — a closed set of
+fields whose every value is either system-generated or drawn from a closed
+vocabulary:
+
+```
+timestamp · manuscriptId · lens · stage · refusal · detailKind
+claimIndex · refIndex · completion · attribution · stopReason
+inputTokens · outputTokens · readerVersion · promptHash
+```
+
+Barred absolutely: claim text · raw `detail` · foreign-field names · any
+model-supplied section or unit id · IP · user-agent. `manuscriptId` is
+system-issued and stays; a model-supplied id is untrusted and does not, because
+a model can put prose where an id belongs. Where an untrusted value is
+diagnostically necessary, persist a one-way digest of it, never the value.
+*Falsifier:* a modelled refusal whose `detail` carries quoted prose produces a
+record containing none of it, and no record path can reach `claim.text`.
 
 **O-6 · Nothing about the reading store moves.**
 A refusal still stores no reading (07C). Atomic all-or-nothing acceptance is
@@ -138,22 +157,64 @@ developmentally yet."
 
 ---
 
-## 5 · Open — founder rulings owed before BUILD
+## 5 · Founder rulings — 2026-09-08. BUILD AUTHORIZED.
 
-1. **Does truncation become its own refusal code** (e.g. `output_truncated`),
-   or a cause field on the existing codes? A new code is legible and widens the
-   union; a field keeps the union closed and moves the branching into copy.
-2. **Where does the operator record live** — a log line, or a table? A table is
-   storage, and storage of a refusal is exactly the boundary O-6 defends. A log
-   line is weaker but cannot be mistaken for a reading.
-3. **Retention.** A refusal record names a member's manuscript and section ids.
-   Whatever it is, it inherits Sanctuary-adjacent obligations and needs a stated
-   lifetime rather than an implicit forever.
-4. **Copy shape.** One honest generic sentence plus a cause line, or a distinct
-   sentence per cause? More sentences is more truth and more surface to get
-   wrong.
+**R-1 · Keep the existing refusal codes; add orthogonal cause context.**
+`claim_unbindable`, `malformed_output` and the rest continue to say *what
+failed*. `output_truncated` is NOT invented as another semantic refusal —
+that would collapse two independent dimensions into one. Carried alongside:
 
----
+```
+completion  : complete | truncated | unknown
+attribution : contract_violation | system | unknown
+stopReason  : the seam's value, verbatim
+usage       : input + output tokens
+```
+
+*A response can, in principle, contain a genuine contract violation AND
+terminate at a token boundary.* One axis cannot express that; two can.
+
+**R-2 · The operator record is a dedicated persistent JSONL file family — not a
+table, and not `auditLogger`.**
+Production already mounts `audit_data:/app/data/audit-logs` with
+`AUDIT_LOG_DIR=/app/data/audit-logs` (`docker-compose.production.yml:123,190-192`),
+volume-backed so it survives container swaps. This lane uses that substrate in
+its own subdirectory with its own writer. It does **not** reuse
+`lib/security/auditLog.ts`: that carries a broader security-audit schema, and
+`replicateToExternalService` fires on every production write
+(`auditLog.ts:88-90,117`) — refusal telemetry must not leave the host. It has no
+deletion mechanism either, which R-3 requires.
+
+**R-3 · Retention is a hard seven days.**
+Daily JSONL files; records physically removed after seven rolling days. **This
+may not be "prune the next time a refusal happens"** — the falsifier must prove
+an expired record disappears when no later refusal ever occurs. Nothing becomes
+forever by accident.
+
+**R-4 · Copy is one neutral outcome sentence plus one cause line.**
+MAIA is no longer blamed *at all*, including when a protocol violation is
+proven:
+
+```
+This reading could not be completed, so nothing was kept.
+Your work has not changed.
+```
+
+then exactly one of:
+
+```
+proven contract violation → The result came back in a form the Studio could not
+                            verify safely.
+proven truncation         → The result ended before it was complete.
+unknown                   → The Studio could not determine the cause.
+```
+
+More durable than a growing tree of bespoke sentences, and it retires
+"MAIA's reading did not hold to its own rules" outright.
+
+**Authorized:** BUILD, under R-1…R-4 and the corrected O-5.
+**Not authorized:** any table · any migration · any reading-store change ·
+retry · `DEFAULT_MAX_TOKENS` · hierarchical reading.
 
 ## 6 · Not in this lane
 
