@@ -105,7 +105,7 @@ present intention governs how much it influences this encounter
 
 Narrowed to the primary **collaboration-quality** unit, paired with independent Work outcomes: **voice preservation, scope truth, provenance, artifact quality, and writer authority.** Session quality cannot waive those gates — a session that feels helpful can still degrade the artifact, the voice, or authorship.
 
-> **Open dependency**: this narrowing is what places the frozen acceptance floor (research record §12, stated on the seven session questions alone) in tension. **Step 1 close item 8 is not disposed by this re-freeze** and remains amendable only while no blind model result exists.
+> **Dependency — DISCHARGED 2026-09-08.** This narrowing placed the frozen acceptance floor (research record §12) in tension, because that floor was stated on the seven session questions alone. **Step 1 close item 8 closed the gap**: §12 now carries Layer A (the seven questions, unchanged) and Layer B (five independent Work-integrity gates), amended before any blind model result existed. Neither layer may now be weakened, removed, reweighted or reworded for a benchmark.
 
 ### 7 · Complexity stays below the writer experience — **QUALIFIED (FQ-5)**
 
@@ -156,7 +156,7 @@ ROADMAP §2                   SUPERSEDED IN PLACE — points here
 ROADMAP §4                   DERIVED PROJECTION — must map back to §2
 STEP 1 CLOSE ITEM 4          CLOSED
 STEP 1 CLOSE ITEM 6          CLOSED BY THIS DOCUMENT
-STEP 1 CLOSE ITEM 8          OPEN — amendable only while no blind result exists
+STEP 1 CLOSE ITEM 8          CLOSED — §12 amended (A+B) before any blind result existed
 STEP 1 CLOSE ITEMS 1,2,3,5,7,9  OPEN
 STEP 1                       STILL OPEN
 VOICE BASELINE · SEL-0 · F-7 · PHASE 2      HOLD

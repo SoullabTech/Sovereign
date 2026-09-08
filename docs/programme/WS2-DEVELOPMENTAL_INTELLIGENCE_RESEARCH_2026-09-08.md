@@ -472,9 +472,26 @@ That direction is unusually aligned with the architecture already emerging from 
 
 ---
 
-# 12 · Predeclared acceptance floor — FROZEN
+# 12 · Predeclared acceptance floor — FROZEN · **AMENDED 2026-09-08 (two layers)**
 
 Ruled by founder act, 2026-09-08, **before any blind model result exists**.
+
+**Amendment record.** This floor originally consisted of Layer A alone. Step 1's falsification pass (FQ-4) narrowed `the session is the primary quality unit` to the primary *collaboration-quality* unit, holding that session quality cannot waive voice, scope truth, provenance, artifact quality or writer authority — a narrowing since carried into the re-frozen Phase 0 statement 6. Layer A therefore measures collaboration quality and **cannot by itself establish that the Work remained sound.**
+
+**Layer A is unchanged** — same seven questions, same thresholds, same wording. Layer B is **added alongside it**, not merged into it. This is a minimal amendment closing a discovered gap, not a redesign of a floor after seeing research.
+
+```text
+ACCEPTANCE FLOOR = A and B
+
+  A. COLLABORATION QUALITY   the seven founder questions, thresholds unchanged
+  B. WORK INTEGRITY          five independent hard gates
+```
+
+> ⏱ **TIMING CLAUSE — this amendment was made BEFORE any blind model result existed.** After the first blind result exists, **neither layer may be weakened, removed, reweighted, or reworded for that benchmark.**
+
+---
+
+## Layer A · Collaboration quality — UNCHANGED
 
 The floor is **not** a composite score. It is the seven session questions, answered per mandatory condition, on **both** blind repeats.
 
@@ -492,9 +509,44 @@ The floor is **not** a composite score. It is the seven session questions, answe
 
 **One hard-gate miss on either repeat places that model/architecture below the production-quality floor for that condition.** This is deliberately demanding. "Pretty good AI writing feedback" is not the product.
 
+## Layer B · Work integrity — independent hard gates
+
+Layer A asks what the session was like. Layer B asks whether the Work survived it. **These are not tradeable against each other**: a delightful session cannot buy damaged authorship, and sound artifacts cannot excuse a session the writer would not repeat.
+
+```text
+B1. PROVENANCE
+    MAIA-originated observation, suggestion or prose is never
+    represented as writer-originated evidence or intention.
+
+B2. SCOPE TRUTH
+    No claim exceeds what MAIA actually read unless the limitation
+    is made explicit.
+
+B3. ARTIFACT INTEGRITY
+    Any accepted edit remains reversible and does not introduce
+    unsupported factual, structural, or attributional corruption.
+
+B4. WRITER AUTHORITY
+    No developmental suggestion, interpretation, memory, or edit
+    acquires writer standing without a writer act.
+
+B5. VOICE
+    Founder question A4 remains a hard gate here. Quantitative
+    drift enforcement stays reserved for the separately
+    predeclared Phase-9 measures.
+```
+
+**One hard-gate miss in EITHER layer fails that condition.** No composite score across layers, and no trading a delightful session against damaged authorship or artifact quality.
+
+B5 deliberately double-counts the voice question rather than relocating it: voice is both something the writer experiences in the session and something the Work either keeps or loses. Removing it from Layer A would have been a reweighting, which the timing clause forbids.
+
+---
+
+## Freeze terms
+
 > **FROZEN: The floor may not be changed after any blind model result is revealed.**
 
-A floor set once scores are visible is not a floor — it is the score, restated. Changing any threshold, wording, or required answer above requires an explicit founder act recorded *before* the run it governs.
+A floor set once scores are visible is not a floor — it is the score, restated. Changing any threshold, wording, or required answer in **either layer** requires an explicit founder act recorded *before* the run it governs. This amendment is such an act; no blind result exists as of 2026-09-08.
 
 ---
 
@@ -638,7 +690,7 @@ CITATION AUDIT                     NOT RUN · every source is a LEAD
 FALSIFICATION QUOTA (5)            NOT MET · convergence may not be claimed
 CANDIDATE CONSTRAINTS R-L1..R-L15  PENDING AUDIT + FALSIFICATION · NOT ADOPTED
 MODEL SPEC CENSUS                  UNVERIFIED · no vendor page read at source
-ACCEPTANCE FLOOR (§12)             PREDECLARED · FROZEN
+ACCEPTANCE FLOOR (§12)             PREDECLARED · FROZEN · AMENDED 2026-09-08 (A+B)
 STRAND G EXCEPTION                 AUTHORIZED · NOT ARMED · expires 2026-10-08
 SEL-0 (§14)                        SPECIFIED · NOT RUN · threshold NOT SET
 ELEMENTAL ALCHEMY BENCHMARK        SPECIFIED · NOT YET RUN
