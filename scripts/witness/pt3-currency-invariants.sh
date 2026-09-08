@@ -37,7 +37,7 @@
 #
 #   OPERATIVE        source_operative_representation() resolves a representation
 #   AMBIGUOUS LEGACY an OPEN multiple_legacy_arrivals record says the migration refused to decide
-#   WITHDRAWN        governed history records the member-directed withdrawal that ended currency
+#   WITHDRAWN        the Work's LATEST representation-level act is a governed member withdrawal
 #
 # Anything else is an unexplained loss of Source authority.
 
@@ -47,16 +47,33 @@ PT3_OPEN_AMBIGUITY="EXISTS (SELECT 1 FROM source_lifecycle_reconciliation c
                                AND c.kind = 'multiple_legacy_arrivals'
                                AND c.resolved_at IS NULL)"
 
-# A Work whose currency ended by an explicit member act. Read from the LATEST act of each
-# representation — the same derivation source_operative_representation() uses — so an old
-# withdrawal followed by a lawful re-extraction does not qualify (that Work is OPERATIVE anyway).
-PT3_WITHDRAWN="EXISTS (
-  SELECT 1 FROM (
-    SELECT DISTINCT ON (representation_id) representation_id, act
-      FROM source_lifecycle_acts
-     WHERE manuscript_id = w.m AND representation_id IS NOT NULL
-     ORDER BY representation_id, occurred_at DESC, id DESC
-  ) latest WHERE latest.act = 'withdrawal')"
+# A Work whose currency ended by an explicit member act.
+#
+# ⭐ B42 — THE LATEST ACT, NOT ANY ACT. This first read "some representation of the Work has a
+# latest act of kind withdrawal", which proves too little. Consider:
+#
+#   representation A   extraction(true) → withdrawal(false)      ← lawful, and OLD
+#   representation B   later replacement(false), nothing after   ← the real, unexplained loss
+#
+# Currency is NULL because of B, but the permissive predicate found A's historical withdrawal and
+# pronounced the absence explained. A STALE LAWFUL WITHDRAWAL WOULD MASK A NEWER UNEXPLAINED LOSS —
+# and the original four fixtures could not catch it, because none of them contained a withdrawal
+# followed by anything.
+#
+# The invariant answers a temporal question — *why is there no currency NOW* — so the explaining act
+# must be the Work's most recent representation-level act, under the lifecycle's own global ordering
+# (occurred_at DESC, id DESC), and must be a governed member withdrawal: member_act, with an actor,
+# leaving the representation non-operative. COALESCE because a Work with sections and no acts at all
+# has no explanation, and NULL must not silently drop it from the defect count.
+PT3_WITHDRAWN="COALESCE((
+  SELECT a.act = 'withdrawal'
+     AND NOT a.operative
+     AND a.provenance = 'member_act'
+     AND a.actor_member_id IS NOT NULL
+    FROM source_lifecycle_acts a
+   WHERE a.manuscript_id = w.m AND a.representation_id IS NOT NULL
+   ORDER BY a.occurred_at DESC, a.id DESC
+   LIMIT 1), false)"
 
 # ── I4 (replacement) — UNEXPLAINED ABSENCE OF SOURCE CURRENCY ──────────────────────────────────
 # Every absence of operative Source currency must be governed or explicitly reconciliatory.

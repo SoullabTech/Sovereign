@@ -587,3 +587,97 @@ not a passing witness.
 
 ⛔ **PT-3 is enforced in code and not in production.** Production cutover HELD.
 Experiences HELD. Encounter HELD.
+
+---
+
+# Repair 9 — B41, B42 (founder exact-tree review of `7af1a344…`)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §IX. Witness-only, again.
+⛔ Migration, lifecycle schema, seam, backfill, application runtime, grants, roles, Experience and
+Encounter unchanged. **The PT-3 migration is not defective.**
+
+## B41 — the old I4 was still alive, twelve lines further down
+
+Block 4 asked the ratified question through the shared definition. Block 5 then independently
+computed `resolved == with_secs` under the label *"every Work with Source resolves through the
+seam"* — **the old I4, restated in different words**, and still convicting both lawful absences:
+
+| | block 4 | block 5 (old gate) |
+|---|---|---|
+| multi-arrival ambiguity | PASS | **DEFECT** |
+| governed withdrawal | PASS | **DEFECT** |
+
+The witness contradicted itself. Measured on the legacy-backfill shadow, the deleted gate reads
+`operative 2 of 3 Works with Source` — it would have failed a correct system.
+
+> **⛔ One law, one executable definition.**
+
+That is the whole reason `pt3-currency-invariants.sh` exists: so the same invariant cannot survive
+elsewhere under different wording. The gate is **deleted, not rewritten**. What remains in block 5
+is a census — Works carrying Source · operative · explained non-operative — that reports shape and
+**decides nothing** about which absence is lawful.
+
+## B42 — a stale lawful withdrawal could mask a newer unexplained loss
+
+`PT3_WITHDRAWN` read *"some representation of the Work has a latest act of kind withdrawal"*. That
+proves too little:
+
+```
+representation A   extraction(true) → withdrawal(false)      lawful, and OLD
+representation B   later replacement(false), nothing after   the real, unexplained loss
+→ source_operative_representation() = NULL, excused by A
+```
+
+The invariant answers a **temporal** question — *why is there no currency NOW* — so the explaining
+act must be the Work's **most recent** representation-level act under the lifecycle's own global
+ordering (`occurred_at DESC, id DESC`), and must be a governed member withdrawal: `act='withdrawal'`,
+`operative=false`, `provenance='member_act'`, actor present. `COALESCE(…, false)` because a Work with
+sections and no acts at all has no explanation and must not drop out of the count on a NULL.
+
+**The old four fixtures could not catch this** — none contained a withdrawal followed by anything.
+
+## The fifth control, and proof that it falsifies
+
+Case 5 builds A-withdrawn-then-B-lost and requires the absence to be **DETECTED**. Proven
+discriminating on the same fixture shape, in a rolled-back transaction:
+
+```
+operative currency present                    : f
+OLD predicate says WITHDRAWN (would EXCUSE)   : t
+NEW predicate says WITHDRAWN (would EXCUSE)   : f
+```
+
+A control that passes under both predicates proves nothing; this one fails under the old and passes
+under the new. Cases 1–4 unchanged.
+
+## Evidence executed on this SHA
+
+```
+pt3-currency-absence-regression.sh          23 expectations · 23 PASS · exit 0
+  MULTI-ARRIVAL              EXPLAINED
+  WITHDRAWAL                 EXPLAINED
+  NEGATIVE                   DETECTED
+  UNRECORDED REPRESENTATION  DETECTED
+  STALE WITHDRAWAL           DETECTED
+
+shared invariants vs the real legacy-backfill shadow
+  unexplained absence 0 · unrecorded representation 0 · false ambiguity 0 · ambiguity with currency 0
+
+teardown
+  live fixture residue    0
+  lifecycle tombstones    RETAINED BY LAW — source_lifecycle_acts is append-only; the acts of an
+                          erased fixture survive as history naming no live row and carrying no
+                          content. That is not residue, and the report no longer calls it zero.
+```
+
+**Inherited from `744c8012…`, byte-identical blobs re-verified, NOT re-executed here:** falsifier
+`25 · 0 · 0` · enforcement `29 · 0` · pool witness `READY`, six sites · the PT-3 migration.
+
+⛔ **Still unexecuted:** the integrated Compose cutover, the Docker-bound quiesced backfill,
+readiness `READY`, post-cutover `READY`. Image layers remain `403 Forbidden` from the organization
+egress policy. No amount of further source review substitutes for those.
+
+## Standing
+
+⛔ **PT-3 is enforced in code and not in production.** Production HELD · Experiences HELD ·
+Encounter HELD.

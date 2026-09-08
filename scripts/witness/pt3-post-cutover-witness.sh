@@ -343,15 +343,26 @@ else
   bad "the Source tier is empty or unreadable" "works=${works:-?} sections=${secs:-?} — §X abort condition"
 fi
 
-# Equality against a LIVE denominator, not against the remembered 11.
+# ⭐ B41 — THE OLD I4 LIVED ON HERE, IN DIFFERENT WORDS. This block used to require
+# `resolved == with_secs` under the label "every Work with Source resolves through the seam" — the
+# invariant block 4 had just replaced, restated a dozen lines later and still convicting both lawful
+# absences: the multi-arrival Work the migration refused to decide, and a Work the member withdrew.
+# The witness contradicted itself, PASS in block 4 and DEFECT here.
+#
+#   ⛔ ONE LAW, ONE EXECUTABLE DEFINITION.
+#
+# That is the entire reason pt3-currency-invariants.sh exists — so the same invariant cannot survive
+# elsewhere under different wording. The gate is deleted, not rewritten. Block 4 owns the
+# constitutional question. What remains here is a CENSUS: it reports the shape of the lineage and
+# decides nothing about which absence is lawful.
 with_secs=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id FROM manuscript_sections) t")
-resolved=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id m FROM manuscript_sections) t
-               WHERE source_operative_representation(t.m) IS NOT NULL")
-if [ -n "$with_secs" ] && [ "$resolved" = "$with_secs" ]; then
-  ok "every Work with Source resolves through the seam" "$resolved of $with_secs — resolution is total, whatever the total becomes"
-else
-  bad "some Works with Source do not resolve" "$resolved of ${with_secs:-?} — §X abort condition"
-fi
+operative=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id AS m FROM manuscript_sections) w
+                WHERE source_operative_representation(w.m) IS NOT NULL")
+explained=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id AS m FROM manuscript_sections) w
+                WHERE source_operative_representation(w.m) IS NULL
+                  AND ($PT3_OPEN_AMBIGUITY OR $PT3_WITHDRAWN)")
+note "Works carrying Source: ${with_secs:-?} · operative: ${operative:-?} · explained non-operative: ${explained:-?}"
+note "(informational — lawfulness of any absence is decided by block 4 alone)"
 
 # A Work that never had Source must not have acquired one from a migration.
 inv "the backfill fabricated no Source for a Work that had none" \

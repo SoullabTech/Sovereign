@@ -17,8 +17,12 @@
 #   2 WITHDRAWAL      a governed member withdrawal ended currency; sections retained      → PASS
 #   3 NEGATIVE        sections, no currency, no withdrawal, no ambiguity record           → FAIL
 #   4 UNRECORDED      a representation with no act and no ambiguity record                → FAIL
+#   5 STALE WITHDRAWAL  an OLD lawful withdrawal, then a LATER unexplained loss           → FAIL
 #
-# ⛔ Do not weaken 3 or 4 to obtain green. They are the reason the repair is not an escape hatch.
+# ⛔ Do not weaken 3, 4 or 5 to obtain green. They are the reason the repair is not an escape hatch.
+# Case 5 is what makes the withdrawal rule falsifiable rather than merely demonstrating the friendly
+# case: cases 1-4 contain no withdrawal followed by anything, so a predicate that accepted ANY
+# historical withdrawal passed all four while letting a stale one mask a newer loss.
 #
 # The invariants themselves are NOT re-typed here: they are sourced from the same file the
 # post-cutover witness sources. An instrument that restates the law it tests can pass while the law
@@ -159,7 +163,37 @@ expect "no open ambiguity record"                   "$(q "SELECT count(*) FROM s
 expect "→ UNRECORDED representation is DETECTED"    "$(unrecorded)" "1"
 
 echo
+echo "── 5 · STALE WITHDRAWAL — an old lawful withdrawal must not excuse a later loss ──"
+# ⛔ Control. Representation A was lawfully withdrawn long ago; representation B then lost currency
+# with nothing explaining it. The Work's LATEST representation-level act is B's replacement, not A's
+# withdrawal, so the absence is unexplained and must be DETECTED. If this ever reads 0, PT3_WITHDRAWN
+# has drifted back to "some representation somewhere ended in withdrawal".
+W5=$(mk_work "stale-withdrawal" source_custodied)
+A5=$(mk_arr "$W5" "text")
+R5A=$(mk_rep "$W5" "'$A5'" source_custodied); mk_sec "$W5" "$R5A"
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W5','extraction','$R5A',true,'$MEMBER', now() - interval '3 days')" >/dev/null
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W5','withdrawal','$R5A',false,'$MEMBER', now() - interval '2 days')" >/dev/null
+R5B=$(mk_rep "$W5" "'$A5'" source_custodied)
+q "INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, occurred_at)
+   VALUES ('$W5','replacement','$R5B',false,'$MEMBER', now() - interval '1 day')" >/dev/null
+expect "a historical withdrawal exists"             "$(q "SELECT count(*) FROM source_lifecycle_acts WHERE manuscript_id='$W5' AND act='withdrawal'")" "1"
+expect "the LATEST act is not that withdrawal"      "$(q "SELECT act FROM source_lifecycle_acts WHERE manuscript_id='$W5' AND representation_id IS NOT NULL ORDER BY occurred_at DESC, id DESC LIMIT 1")" "replacement"
+expect "no operative representation"                "$(q "SELECT (source_operative_representation('$W5') IS NULL)::text")" "true"
+expect "no open ambiguity record"                   "$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE manuscript_id='$W5' AND resolved_at IS NULL")" "0"
+expect "→ stale withdrawal does NOT excuse the loss" "$(absence)" "2"
+
+echo
 echo "════════════════════════════════════════════════════════════════════════"
-[ "$fail" -eq 0 ] && { echo "REGRESSION PASSED — absence of currency is admitted only when it is explained."; exit 0; }
+if [ "$fail" -eq 0 ]; then
+  echo "REGRESSION PASSED — absence of currency is admitted only when it is explained,"
+  echo "                    and only by the act that actually explains it."
+  echo
+  echo "teardown: live fixture residue 0 · lifecycle tombstones RETAINED BY LAW"
+  echo "          (source_lifecycle_acts is append-only; the acts of an erased fixture survive"
+  echo "           as history naming no live row and carrying no content — that is not residue.)"
+  exit 0
+fi
 echo "REGRESSION FAILED — $fail expectation(s). Do not weaken the negative controls to obtain green."
 exit 1
