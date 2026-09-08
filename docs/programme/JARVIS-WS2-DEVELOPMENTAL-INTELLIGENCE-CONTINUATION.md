@@ -158,6 +158,53 @@ the reader path, to be established rather than assumed.
 
 ---
 
+## Productization obligation — founder act, 2026-09-08
+
+> Developmental Intelligence research, falsifiers, and benchmarks exist to establish or
+> test capabilities of Writer's Studio. A successful benchmark implementation does not
+> satisfy a roadmap requirement unless the capability it validates is either already
+> present in the actual Studio runtime or is explicitly carried forward as an
+> implementation requirement for that runtime.
+>
+> No evaluation-only substitute may be treated as evidence that Writer's Studio
+> possesses the corresponding capability.
+>
+> Where discovery shows that a required capability does not presently exist in the
+> deployed Studio path, record that as a product gap. Do not silently invent an
+> evaluation-only implementation and treat the gap as closed.
+
+```text
+BENCHMARK PASSES  ≠  STUDIO HAS THE CAPABILITY
+```
+
+unless an actual Studio runtime path can be named.
+
+### The destination is the Studio
+
+> Every Developmental Intelligence phase must state which Writer's Studio capability it
+> establishes, falsifies, specifies, or ships.
+
+| Phase | Studio capability |
+|---|---|
+| SEL-0 | MAIA knows **what to raise first** |
+| F-7 | MAIA knows **what she is permitted to infer or raise** |
+| Phase 2 | MAIA can conduct **one excellent developmental session** |
+| Phase 3 | MAIA respects **scope and competence boundaries** |
+| Phase 4 | MAIA develops **persistent Work understanding** |
+| Phase 5 | Write and Develop have **lawful continuity** |
+| Phase 6 | Development happens as **conversation** |
+| Phase 7 | MAIA can reason across the **whole Work** |
+| Phase 8 | best model/configuration for the actual capability |
+| Phase 9 | developmental intelligence **preserves the writer's voice** |
+| Phase 10 | it works for **other writers and other Works** |
+
+**Governance infrastructure is not the Studio.** Manifests, snapshots, digests, blinding,
+`N >= 40`, nulls, seeds, PASS/FAIL thresholds and cross-machine verification exist so we
+cannot fool ourselves. The writer should never need to know they exist. F-7 exclusion
+records sit between the two: internal constitutional infrastructure, not a feature.
+
+---
+
 ## Standing
 
 ```text
