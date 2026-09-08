@@ -78,8 +78,27 @@ type PrepPhase =
   | { phase: 'ready'; state: DevelopPreparation }
   | { phase: 'error' };
 
+/**
+ * WHAT SHE DOES, NOT WHAT SHE PRODUCES.
+ *
+ * The previous sentence — "look at how this work is developing and bring back
+ * what she noticed" — described a report generator, which is the product the
+ * founder ruled against on 2026-09-08: a reading should open a conversation, not
+ * terminate in findings.
+ *
+ * ⛔ IT IS DELIBERATELY NOT YET THE FULL REPLACEMENT. The drafted copy offers to
+ * "explore it together, stay with a section, or zoom out to the larger work" —
+ * and this room has no discussion turn, no scope switching and no "what else did
+ * you notice?". This sentence is live on the production branch, so promising
+ * those would be telling tomorrow's story as if it were today's, which the claim
+ * discipline forbids. The wording lands when the behaviour does.
+ *
+ * ⭐ AND THE SECOND CLAUSE IS LOAD-BEARING, not decoration. "Nothing changes
+ * unless you change it" is the sentence that tells a writer this act cannot
+ * touch their Work. Both drafted replacements dropped it; it is kept.
+ */
 const INVOCATION_SENTENCE =
-  'MAIA will look at how this work is developing and bring back what she noticed. Nothing changes unless you change it.';
+  'MAIA will read this work and tell you what she notices. Nothing changes unless you change it.';
 
 /**
  * What did not happen, in the member's language. The code is shown beneath
