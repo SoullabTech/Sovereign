@@ -185,20 +185,45 @@ LANE    CLOSED on landing this record
 
 ---
 
-## 7. ⛔ Deliberately NOT reconstructed
+## 7. Record completion (founder-supplied 2026-09-08)
 
-Two things belong to this lane and are **absent from this document because
-their text is not attributable from here** — neither is in the repository, and
-inventing either would be exactly the fabrication this constitution forbids:
+Both items §7 previously recorded as owed are now supplied by the founder and
+appended here as **record completion only**. ⛔ This does not reopen the lane
+and does not authorize build.
 
-- **DWF-1 … DWF-9.** Founder-supplied in session, never committed. Referenced
-  by name in the session anchor; their content is not recoverable here.
-- **The Mercurius formulation.** Ruled on 2026-09-08 as now having "the job we
-  were waiting for" and therefore admissible to the constitution. ⛔ Its
-  wording is not in this session's context and the only `mercurius` occurrence
-  in the repository is an unrelated identifier in
-  `lib/intelligence/AwarenessLevelDetector.ts`.
+### 7.1 The Mercurius formulation
 
-Both are **owed to this file** and should be added by whoever holds their
-authoritative text. This section exists so their absence is a recorded gap
-rather than a silent one.
+> **Relation does not require merger. What becomes knowable between writer and
+> MAIA must remain decomposable according to the authority by which each part
+> became knowable.**
+
+Its constitutional job is specific: **to prevent the Developmental Field from
+becoming an invented third author.**
+
+⭐ Note that this is the same sentence ratified as Q-A in §3. That is not a
+duplication to be tidied away — the formulation and the ruling are the same
+proposition arriving by two routes, and Q-A is precisely the moment it acquired
+the job named above. Recording both is what makes that history legible.
+
+### 7.2 DWF-1 … DWF-9 — the capabilities
+
+```
+DWF-1  Enter an observation
+DWF-2  Work it through with MAIA
+DWF-3  See its evidence and related passages
+DWF-4  Establish writer standing
+DWF-5  Follow emerging developmental threads
+DWF-6  Take me to the relevant place
+DWF-7  Keep a version before consequential change
+DWF-8  Keep developmental context present while writing
+DWF-9  Record that the writer acted on something
+```
+
+⛔ **DWF-8 must be read under Q-B.** *The field may remain present without MAIA
+remaining active. MAIA's developmental attention is commissioned, not ambient.
+Persistent context does not constitute persistent invitation.* Keeping
+developmental context present while writing is a property of the **field**, not
+a standing engagement of MAIA — the two would otherwise collapse, and DWF-8 is
+the capability where that collapse is easiest to make by accident.
+
+⚠️ These are capabilities, not a build list. None is authorized.
