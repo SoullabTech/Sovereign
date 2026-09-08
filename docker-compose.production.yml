@@ -331,7 +331,10 @@ services:
 
     # Healthcheck: verify DB + Ollama are reachable
     healthcheck:
-      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1 && curl -sf $${OLLAMA_BASE_URL}/api/tags >/dev/null 2>&1"]
+      # PT-3 §VI (B6) — health follows the authority. Constrained credential when present, owner
+      # while it is not: inert before cutover, correct after, and never a reason to restore owner
+      # authority just to make a container green.
+      test: ["CMD-SHELL", "psql \"$${MAIA_APP_DATABASE_URL:-$${DATABASE_URL}}\" -c 'SELECT 1' >/dev/null 2>&1 && curl -sf $${OLLAMA_BASE_URL}/api/tags >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -370,7 +373,8 @@ services:
 
     # Healthcheck: verify DB is reachable (worker has no HTTP endpoint)
     healthcheck:
-      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      # PT-3 §VI (B6) — health follows the authority; see maia-embed-worker.
+      test: ["CMD-SHELL", "psql \"$${MAIA_APP_DATABASE_URL:-$${DATABASE_URL}}\" -c 'SELECT 1' >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -408,7 +412,8 @@ services:
     command: ["npx", "tsx", "scripts/run-session-summary-worker.ts"]
 
     healthcheck:
-      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      # PT-3 §VI (B6) — health follows the authority; see maia-embed-worker.
+      test: ["CMD-SHELL", "psql \"$${MAIA_APP_DATABASE_URL:-$${DATABASE_URL}}\" -c 'SELECT 1' >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -454,7 +459,8 @@ services:
       - media_data:/app/data/media
 
     healthcheck:
-      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      # PT-3 §VI (B6) — health follows the authority; see maia-embed-worker.
+      test: ["CMD-SHELL", "psql \"$${MAIA_APP_DATABASE_URL:-$${DATABASE_URL}}\" -c 'SELECT 1' >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -538,6 +544,35 @@ services:
 
     env_file:
       - .env.production
+
+    # PT-3 §IX.1 (founder ruling 2026-09-08) — migration attribution must reach the runner.
+    #
+    # The runner records applied_by_commit and applied_run_id, but the migrate service had no
+    # `environment:` block, so an exported GIT_COMMIT never crossed into the container and every
+    # migration would have recorded `commit=unknown`. §X makes that an abort condition, so the
+    # attribution machinery could not have been satisfied without this passthrough.
+    #
+    # Empty defaults keep this inert: unset, the runner falls back exactly as before. Nothing here
+    # is a secret — a commit SHA and a run id are the two facts that make an owner-level schema act
+    # attributable, which is the whole point of §VIII.
+    environment:
+      GIT_COMMIT: ${GIT_COMMIT:-}
+      MIGRATION_RUN_ID: ${MIGRATION_RUN_ID:-}
+
+      # PT-3 §VII (B12) — migration authority, held apart from runtime authority.
+      #
+      # After cutover `.env.production` carries the CONSTRAINED credential and no owner credential,
+      # so every ordinary service loses owner authority by loading the same file it always loaded.
+      # `migrate` gets the owner credential back here, from ~/MAIA-SOVEREIGN/.env — Compose's own
+      # interpolation file, which is not injected into containers.
+      #
+      # ⭐ THIS IS WHY THE BOUNDARY IS DURABLE. There is no optional overlay to omit: forgetting
+      # MIGRATE_DATABASE_URL breaks MIGRATION, loudly, and never weakens the boundary. The failure
+      # mode is inverted on purpose — an ordinary deploy cannot silently restore owner authority.
+      #
+      # Empty rather than `:?` so `docker compose config` (the pre-deploy gate) still validates;
+      # the preflight asserts it is set before Step 2 runs.
+      DATABASE_URL: ${MIGRATE_DATABASE_URL:-}
 
     depends_on:
       postgres:

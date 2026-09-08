@@ -268,8 +268,15 @@ export async function resolveDraftWriteState(
      unavailable, so the outline can be honest instead of merely inert. */
   const { classifyDraft } = await import('./draftProof');
   const sections = await query<{ heading: string | null; body: string }>(
+    /* PT-3 §IV — the sections of a Work are the sections of its OPERATIVE representation.
+       Re-extraction and replacement can leave several representations standing; this scopes
+       the read to the one the lifecycle history says is current. COALESCE falls back to
+       today's behaviour when no lifecycle act is known, so a Work is never hidden from its
+       author by an absent record. */
     `SELECT heading, body FROM manuscript_sections
-      WHERE manuscript_id = $1 ORDER BY position ASC`, [manuscriptId]);
+      WHERE manuscript_id = $1
+        AND representation_id = COALESCE(source_operative_representation($1), representation_id)
+      ORDER BY position ASC`, [manuscriptId]);
   const verdict = classifyDraft(sections.rows, d.content);
   const provable =
     verdict.classification === 'PRISTINE' ||

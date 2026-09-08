@@ -6,11 +6,24 @@ import { Pool } from 'pg';
 // Singleton connection pool
 let pool: Pool | null = null;
 
+/**
+ * PT-3 §IV (B23) — the constrained credential must be seen on its own.
+ *
+ * This pool used to gate entry on `DATABASE_URL`. After cutover that variable is GONE and only
+ * `MAIA_APP_DATABASE_URL` remains, so the URL branch was never entered: the pool fell through to
+ * individual POSTGRES_* parameters whose default user is `soullab` — quietly reconnecting as the
+ * owner and undoing the boundary the cutover exists to create.
+ *
+ * The rule every runtime pool now obeys: **either URL is authority.** The constrained credential is
+ * preferred; the owner variable survives only as the explicit pre-cutover fallback.
+ */
 function createPool(): Pool {
-  // Use DATABASE_URL if available, otherwise individual connection parameters
-  if (process.env.DATABASE_URL) {
+  const connectionString = process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL;
+  // Either URL is authority. Individual POSTGRES_* parameters remain only for environments that
+  // never had a URL at all — never as a silent landing place when the owner variable is withdrawn.
+  if (connectionString) {
     return new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       // Connection pool settings
       max: 20,
       idleTimeoutMillis: 30000,

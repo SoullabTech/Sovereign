@@ -1,0 +1,35 @@
+
+── what the migration produced, per Work ────────────────────────────
+
+  PT3SIM A one arrival  [source_custodied]
+    representations : 1
+    lifecycle acts  : extraction/migration_legacy/no-actor, arrival/migration_legacy/no-actor
+    reconciliation  : (none)
+    operative rep   : derived from history
+
+  PT3SIM B multiple arrivals  [source_custodied]
+    representations : 1
+    lifecycle acts  : (none)
+    reconciliation  : multiple_legacy_arrivals
+    operative rep   : NONE — transitional compatibility
+
+  PT3SIM C no arrival  [legacy_interpreted_import]
+    representations : 1
+    lifecycle acts  : extraction/migration_legacy/no-actor
+    reconciliation  : representation_without_arrival
+    operative rep   : derived from history
+
+  PT3SIM D blank member-written  [legacy_interpreted_import]
+    representations : 0
+    lifecycle acts  : (none)
+    reconciliation  : (none)
+    operative rep   : NONE — transitional compatibility
+
+── the separation §V requires ───────────────────────────────────────
+  migration_legacy  acts=3  carrying a member actor=0
+
+  ✓ no migration-attributed act is signed with a member id — legacy stays legacy.
+
+── ambiguity returned as data, not resolved ─────────────────────────
+  multiple_legacy_arrivals         1
+  representation_without_arrival   1

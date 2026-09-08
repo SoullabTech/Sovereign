@@ -18,7 +18,8 @@ app.use(express.json());
 
 const CONFIG = {
   port: parseInt(process.env.PORT || '3100'),
-  databaseUrl: process.env.DATABASE_URL,
+  // PT-3 §IV (B23) — either URL is authority; the owner variable disappears at cutover.
+  databaseUrl: process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL,
   beadsPath: process.env.BEADS_PROJECT_ROOT || '/app',
   beadsContainer: process.env.BEADS_CONTAINER || 'maia-beads-memory',
   syncInterval: parseInt(process.env.SYNC_INTERVAL_MS || '30000'),

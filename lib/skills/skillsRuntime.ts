@@ -99,7 +99,8 @@ export interface SkillResult {
 // ==============================================================================
 
 const SKILLS_ROOT = path.join(process.cwd(), 'skills');
-const DATABASE_URL = process.env.DATABASE_URL || '';
+// PT-3 §VIII.A — prefer the constrained application credential; see lib/db/postgres.ts.
+const DATABASE_URL = process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL || '';
 
 // Database connection pool
 let dbPool: Pool | null = null;

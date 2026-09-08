@@ -239,8 +239,15 @@ export async function convertDraftToSections(
     if (expect !== undefined) {
       const told = expect.authority === 'mechanical' ? expect.stateDigest : expect.disclosureDigest;
       const sourceRows = await tx.query<{ id: string; heading: string | null; body: string }>(
+        /* PT-3 §IV — the sections of a Work are the sections of its OPERATIVE representation.
+           Re-extraction and replacement can leave several representations standing; this scopes
+           the read to the one the lifecycle history says is current. COALESCE falls back to
+           today's behaviour when no lifecycle act is known, so a Work is never hidden from its
+           author by an absent record. */
         `SELECT id, heading, body FROM manuscript_sections
-          WHERE manuscript_id = $1 ORDER BY position ASC`,
+          WHERE manuscript_id = $1
+            AND representation_id = COALESCE(source_operative_representation($1), representation_id)
+          ORDER BY position ASC`,
         [manuscriptId],
       );
       const actual = draftStateDigest({
@@ -309,7 +316,9 @@ export async function convertDraftToSections(
       body: string;
     }>(
       `SELECT id, heading, body FROM manuscript_sections
-        WHERE manuscript_id = $1 ORDER BY position ASC`,
+        WHERE manuscript_id = $1
+          AND representation_id = COALESCE(source_operative_representation($1), representation_id)
+        ORDER BY position ASC`,
       [manuscriptId],
     );
     const plan = planConversion(draft.content, sourceSections.rows);

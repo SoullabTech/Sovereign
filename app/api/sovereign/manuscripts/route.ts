@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   segment,
@@ -34,7 +34,8 @@ import {
   type HeadingSignal,
 } from '@/lib/manuscript/ingest/segment';
 import { memberRef } from '@/lib/privacy/memberRef';
-import { claimArrival, recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import { recordSuppliedArrival } from '@/lib/manuscript/source/arrivals';
+import { extractRepresentation } from '@/lib/manuscript/source/lifecycle';
 import { detectOmission, omissionMarker } from '@/lib/manuscript/source/omission';
 
 const MAX_TEXT_CHARS = 2_000_000; // ~a very long book; hard cap for sanity
@@ -57,8 +58,15 @@ export async function GET(request: NextRequest) {
       last_written_at: string | null;
     }>(
       `SELECT m.id, m.title, m.created_at,
-              (SELECT count(*) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS section_count,
-              (SELECT coalesce(sum(length(s.body)), 0) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS char_count,
+/* PT-3 §IV — the sections of a Work are the sections of its OPERATIVE representation.
+   Re-extraction and replacement can leave several representations standing; this scopes
+   the read to the one the lifecycle history says is current. COALESCE falls back to
+   today's behaviour when no lifecycle act is known, so a Work is never hidden from its
+   author by an absent record. */
+(SELECT count(*) FROM manuscript_sections s WHERE s.manuscript_id = m.id
+                 AND s.representation_id = COALESCE(source_operative_representation(m.id), s.representation_id)) AS section_count,
+              (SELECT coalesce(sum(length(s.body)), 0) FROM manuscript_sections s WHERE s.manuscript_id = m.id
+                 AND s.representation_id = COALESCE(source_operative_representation(m.id), s.representation_id)) AS char_count,
               (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count,
               -- WRITING ACTIVITY — a member act, not a row mutation.
               --
@@ -222,52 +230,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'no non-empty sections' }, { status: 400 });
     }
 
-    const ms = await query<{ id: string }>(
-      `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
-      [memberId, title.trim()],
-    );
-    const manuscriptId = ms.rows[0].id;
-    for (const s of clean) {
-      await query(
-        `INSERT INTO manuscript_sections (manuscript_id, position, heading, body, heading_depth, heading_signal)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [manuscriptId, s.position, s.heading, s.body, s.headingDepth ?? null, s.headingSignal ?? null],
-      );
+    /* PT-3 (founder ruling 2026-09-08, §II) — representation and custody are ONE act.
+     *
+     * This block used to write the sections first (before the claim) and then attempt custody in a
+     * try/catch that was allowed to fail, leaving the manuscript labelled `legacy_interpreted_import`
+     * by column DEFAULT. The 2026-09-08 design found that ordering: an uncustodied representation
+     * was not an edge case but the state a row received when nothing said otherwise.
+     *
+     * Now: the arrival is established FIRST, and the seam creates the representation together with
+     * its custody or creates neither. `legacy_interpreted_import` is left to describe genuine legacy
+     * history — it is no longer the fallback meaning of a new import whose custody failed.
+     *
+     * The arrival is deliberately recorded OUTSIDE the transaction. An arrival is append-only and
+     * self-witnessing, and an unclaimed one is a state the schema already documents ("the member
+     * uploaded, then abandoned before saving"). So if the save below rolls back, what remains is a
+     * legitimate unclaimed arrival rather than a half-made Work.
+     */
+    let arrivalId: string;
+    if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
+      arrivalId = sourceArrivalId;
+    } else {
+      /* No artifact, so no artifact is invented. The authoritative source of a pasted or typed
+       * import is the exact text the member confirmed at THIS act — which is the text below, and
+       * nothing else. */
+      const suppliedText =
+        typeof confirmedText === 'string' && confirmedText.trim().length > 0
+          ? confirmedText
+          : clean.map((s) => (s.heading ? `${s.heading}\n\n${s.body}` : s.body)).join('\n\n');
+      const arrival = await recordSuppliedArrival({ memberId, sourceText: suppliedText });
+      arrivalId = arrival.id;
     }
 
-    /* WS-01 — bind the manuscript to its arrival.
-     *
-     * Two paths, and the difference between them is provenance, not plumbing:
-     *
-     *   a file-backed import already has an arrival, taken into custody at
-     *   ingest before the member could edit anything. It is claimed here.
-     *
-     *   a pasted or typed import has no artifact and must never be given one.
-     *   Its authoritative source is the exact text the member supplied at THIS
-     *   act — the confirmation — which is why it is recorded now rather than
-     *   captured earlier from a textarea the member had not finished with.
-     *
-     * A manuscript whose arrival cannot be bound stays labelled
-     * `legacy_interpreted_import` by the column default. It is not failed and
-     * not deleted — the member's words are saved either way — but neither is it
-     * allowed to claim a custody it does not have. */
-    let custody = 'legacy_interpreted_import';
+    let manuscriptId: string;
     try {
-      if (typeof sourceArrivalId === 'string' && sourceArrivalId.length > 0) {
-        if (await claimArrival(sourceArrivalId, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        }
-      } else if (typeof confirmedText === 'string' && confirmedText.trim().length > 0) {
-        const arrival = await recordSuppliedArrival({ memberId, sourceText: confirmedText });
-        if (await claimArrival(arrival.id, manuscriptId, memberId)) {
-          custody = 'source_custodied';
-        }
-      }
+      manuscriptId = await transaction(async (tx) => {
+        const ms = await tx.query<{ id: string }>(
+          `INSERT INTO member_manuscripts (member_id, title) VALUES ($1, $2) RETURNING id`,
+          [memberId, title.trim()],
+        );
+        const id = ms.rows[0].id;
+        await extractRepresentation(
+          id,
+          memberId,
+          arrivalId,
+          clean.map((s) => ({
+            heading: s.heading,
+            body: s.body,
+            heading_depth: s.headingDepth ?? null,
+            heading_signal: s.headingSignal ?? null,
+          })),
+          tx,
+        );
+        return id;
+      });
     } catch (err) {
-      // Custody is additive: failing to record it must not lose the member's
-      // manuscript, which is already saved. The label stays honest instead.
-      console.error('[press/manuscripts] source custody binding failed', err);
+      /* Custody is no longer additive: without it there is no representation to save. The refusal
+       * is reported rather than swallowed, because a silent fallback is precisely what produced the
+       * uncustodied default this repair removes. */
+      console.error('[press/manuscripts] source custody refused the import', err);
+      return NextResponse.json(
+        { error: 'could not establish source custody for this import' },
+        { status: 409 },
+      );
     }
+    const custody = 'source_custodied';
 
     // Log marker: counts and provenance only, never content.
     console.log(

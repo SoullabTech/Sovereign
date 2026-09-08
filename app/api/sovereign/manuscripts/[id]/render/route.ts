@@ -92,7 +92,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     title = ms.rows[0].title ?? UNTITLED_EXPRESSION;
 
     const secRows = await query<{ heading: string | null; body: string }>(
-      `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`,
+      /* PT-3 §IV — the sections of a Work are the sections of its OPERATIVE representation.
+         Re-extraction and replacement can leave several representations standing; this scopes
+         the read to the one the lifecycle history says is current. COALESCE falls back to
+         today's behaviour when no lifecycle act is known, so a Work is never hidden from its
+         author by an absent record. */
+      `SELECT heading, body FROM manuscript_sections WHERE manuscript_id = $1
+          AND representation_id = COALESCE(source_operative_representation($1), representation_id)
+        ORDER BY position`,
       [id],
     );
     if (secRows.rows.length === 0) {

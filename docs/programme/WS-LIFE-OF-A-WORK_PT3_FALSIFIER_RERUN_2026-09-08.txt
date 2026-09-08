@@ -1,0 +1,60 @@
+
+── LEG 1 ──────────────────────────────────────────────────────────
+PASS  C1        every Source write is on the named allowlist
+                 2 write site(s), all classified
+PASS  C2        every allowlisted write still exists (the census cannot go stale)
+                 all present
+PASS  C3        no write is classified as a prohibited content-working mutation
+PASS  C4·HIST   INSERT manuscript_source_arrivals — arrival creation
+                 lib/manuscript/source/arrivals.ts · recordArtifactArrival / recordSuppliedArrival — the custody-bearing arrival is written once.
+PASS  C4·HIST   UPDATE manuscript_source_arrivals — custody or claim bookkeeping
+                 lib/manuscript/source/arrivals.ts · claimArrival binds an unclaimed arrival to a manuscript. Guarded by manuscript_id IS NULL; touches no source text, hash, or artifact.
+
+── LEG 2 ──────────────────────────────────────────────────────────
+PASS  B1h       saveSection — revise a section of the working draft — HISTORICAL SOURCE preserved
+                 act=saved
+PASS  B1r       saveSection — revise a section of the working draft — SOURCE REPRESENTATION preserved
+                 act=saved
+PASS  B2h       normalizeLegacyScaffoldForDraft — formatting correction on the draft — HISTORICAL SOURCE preserved
+                 act=refused:not_legacy_composer_variant
+PASS  B2r       normalizeLegacyScaffoldForDraft — formatting correction on the draft — SOURCE REPRESENTATION preserved
+                 act=refused:not_legacy_composer_variant
+PASS  B3h       convertDraftToSections — re-partition the working draft — HISTORICAL SOURCE preserved
+                 act=already_converted
+PASS  B3r       convertDraftToSections — re-partition the working draft — SOURCE REPRESENTATION preserved
+                 act=already_converted
+PASS  B6h       authorStructureFromProposal — adopt a structure over the sections — HISTORICAL SOURCE preserved
+                 act=ok
+PASS  B6r       authorStructureFromProposal — adopt a structure over the sections — SOURCE REPRESENTATION preserved
+                 act=ok
+PASS  B4        the descendant working representation DID change (custody is not paralysis)
+                 draft version=2 revisions=0
+PASS  B5h       convertDraftToSections — first partition of an unconverted draft — HISTORICAL SOURCE preserved
+                 act=converted
+PASS  B5r       convertDraftToSections — first partition of an unconverted draft — SOURCE REPRESENTATION preserved
+                 act=converted
+PASS  B5x       that partition actually ran (the act was not a no-op)
+                 draft sections after conversion=2
+
+── LEG 3 ──────────────────────────────────────────────────────────
+PASS  A3.1      a Source id smuggled into saveSection is refused
+                 saveSection→refused:section_not_found
+PASS  A3.2      direct UPDATE manuscript_sections is refused by the architecture
+                 refused: permission denied for table manuscript_sections
+PASS  A3.3      deleting a Source Representation row beneath a live draft is refused
+                 refused: permission denied for table manuscript_sections
+
+── LEG 4 ──────────────────────────────────────────────────────────
+PASS  A4.1      direct UPDATE of the arrival source text is refused by the architecture
+                 refused: permission denied for table manuscript_source_arrivals
+PASS  A4.2      a second arrival never rewrites the first (it is added, not merged)
+                 second claim=true; arrivals 1→2
+PASS  A4.3      custody FAILS when the bytes are gone but the hash remains
+                 verifyCustody→false:artifact_missing
+PASS  A4.4      custody is recoverable once the bytes return
+                 verifyCustody→true:artifact_recovered
+PASS  A4.5      member-directed erasure removes the Source — gone, not altered
+                 arrivals=0 manuscripts=0
+
+════════════════════════════════════════════════════════════════════════
+passed 25 · failed 0 · structurally-unenforced 0

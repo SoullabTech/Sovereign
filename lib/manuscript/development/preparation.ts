@@ -142,7 +142,13 @@ export async function resolveDevelopPreparation(
     `SELECT s.id, s.heading, s.body
        FROM manuscript_sections s
        JOIN member_manuscripts m ON m.id = s.manuscript_id
+      /* PT-3 §IV — the sections of a Work are the sections of its OPERATIVE representation.
+         Re-extraction and replacement can leave several representations standing; this scopes
+         the read to the one the lifecycle history says is current. COALESCE falls back to
+         today's behaviour when no lifecycle act is known, so a Work is never hidden from its
+         author by an absent record. */
       WHERE s.manuscript_id = $1 AND m.member_id = $2
+        AND s.representation_id = COALESCE(source_operative_representation($1), s.representation_id)
       ORDER BY s.position ASC`,
     [manuscriptId, memberId],
   );

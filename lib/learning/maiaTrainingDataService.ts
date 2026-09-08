@@ -40,9 +40,10 @@ const toSmallInt = (value: unknown): number | null => {
 
 function getPool(): Pool {
   if (!pool) {
-    // Use DATABASE_URL for consistency with lib/db/postgres.ts
-    // Falls back to individual env vars if DATABASE_URL not set
-    const connectionString = process.env.DATABASE_URL;
+    /* PT-3 §IV (B23) — either URL is authority. Gating on DATABASE_URL alone meant this pool
+       fell through to individual POSTGRES_* parameters (default user `soullab`) once the owner
+       variable was withdrawn at cutover, silently reconnecting as the owner. */
+    const connectionString = process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL;
 
     if (connectionString) {
       pool = new Pool({

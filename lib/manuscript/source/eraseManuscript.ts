@@ -61,6 +61,7 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import { commissionErasure } from './lifecycle';
 
 export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false when bytes are still owed destruction. */
@@ -103,6 +104,16 @@ export async function eraseManuscript(
         WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
       [manuscriptId, memberId],
     );
+
+    /* PT-3 §II (founder ruling 2026-09-08) — erasure must be commissioned as erasure.
+     *
+     * The delete below reaches both protected Source tiers by FK cascade, and a referential action
+     * runs as the table owner, so privilege alone would not stop it. The refusal triggers therefore
+     * refuse a cascade that names no act — which makes this call load-bearing rather than
+     * bookkeeping: it records the erasure acts and opens a transaction-local window the triggers
+     * honour. Without it this delete is refused, which is the point. An erasure that could happen
+     * as a side effect of deleting something else is not an erasure the member commissioned. */
+    await commissionErasure(manuscriptId, memberId, 'member-directed manuscript erasure', tx);
 
     const removed = await tx.query<{ id: string }>(
       `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
