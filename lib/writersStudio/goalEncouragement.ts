@@ -129,8 +129,15 @@ export function checkEncouragement(raw: string, act: EncourageableAct): Encourag
   /* F-C · DECLARE — the goal belongs to the writer before MAIA has any
      relationship to it. Approving of it is a small act of co-authorship. */
   if (act === 'declared') {
-    if (has(text, 'great goal', 'good goal', 'ambitious', 'love that', 'excellent', 'perfect',
-            'achievable', 'realistic', 'doable', 'you can do', 'you will'))
+    /* CORRECTED after a checker exercise: an earlier list named specific
+       phrases — "great goal", "good goal", "excellent" — and let
+       "That is a wonderful goal." straight through. Enumerating the ways to
+       approve of something is a losing game; there is always another adjective.
+       So the rule is the CLASS: on a declaration, MAIA may not apply an
+       evaluative adjective at all. Plainness is the whole form here. */
+    if (/\b(wonderful|great|good|excellent|perfect|lovely|beautiful|admirable|worthy|solid|strong|bold|exciting|inspiring|ambitious|impressive|fantastic|brilliant|nice|fine)\b/i.test(text)
+        || has(text, 'love that', 'achievable', 'realistic', 'doable', 'you can do', 'you will',
+               'i like', 'i love', 'well chosen'))
       return { ok: false, refusal: 'evaluates_the_goal' };
   }
 

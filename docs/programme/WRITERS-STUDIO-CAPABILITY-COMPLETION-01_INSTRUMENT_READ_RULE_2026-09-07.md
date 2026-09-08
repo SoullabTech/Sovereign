@@ -74,6 +74,34 @@ and subject errors — an instrument read before its subject had settled. This i
 a **scope** error: the instrument read the right subject at the right time and
 could not tell code from commentary about code.
 
+## A FIFTH READING — TEMPORAL ADJACENCY IS NOT CAUSAL ATTRIBUTION
+
+```text
+a response matching the endpoint   ≠   the response to the act you just performed
+```
+
+A witness registered `waitForResponse` before clicking "met" and caught the
+still-in-flight PATCH from the **previous** click — a grant change, whose null
+occasion is correct — then printed it under the MET label. It read as a defect
+in code that was behaving exactly as ruled.
+
+**An instrument must BIND an observation to the act that caused it**, exactly as
+a founder witness binds to the served commit. Matching the endpoint is not
+binding; arriving next is not binding.
+
+## THE DISCIPLINE, AT FOUR LAYERS
+
+The same epistemic move, asked four times:
+
+```text
+SOURCE     what code was actually served?
+ACT        what action actually occurred?
+RESPONSE   which observation actually belongs to that act?
+READ       what does that observation actually establish?
+```
+
+Every false reading in this session failed at one of these four and at no other.
+
 ## Why this is not ceremony
 
 > **It prevents the testing apparatus from manufacturing defects.**

@@ -119,6 +119,20 @@ describe('F-C · declaration belongs to the writer first', () => {
     expect(refusalOf('You can do this.', 'declared')).toBe('evaluates_the_goal');
   });
 
+  it('refuses the CLASS of approval, not a list of phrases', () => {
+    /* REGRESSION. The first list named "great goal" and "excellent" and let
+       "That is a wonderful goal." through — found by exercising the checker
+       against hand-written candidates rather than by any test. Enumerating the
+       ways to approve of something is a losing game; there is always another
+       adjective. */
+    for (const leak of [
+      'That is a wonderful goal.', 'A fine goal.', 'Bold.', 'What a brilliant aim.',
+      'Nice one.', 'An inspiring thing to set yourself.',
+    ]) {
+      expect(refusalOf(leak, 'declared')).toBe('evaluates_the_goal');
+    }
+  });
+
   it('allows the same plain acknowledgement it would allow anywhere', () => {
     expect(ok('Recorded, in your words.', 'declared').ok).toBe(true);
   });
