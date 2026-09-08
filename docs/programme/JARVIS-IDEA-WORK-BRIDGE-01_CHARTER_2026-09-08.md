@@ -1,11 +1,17 @@
 # JARVIS-IDEA-WORK-BRIDGE-01
 
-## `IDEAS → WRITER'S STUDIO — EMERGENCE TO EXPRESSION`
+## `REFLECTIONS ↔ LIVING WORKS — CREATIVE PROVENANCE`
 
-**Opened**: 2026-09-08, founder act.
+> **Lane widened by founder act, 2026-09-08, before CONSTITUTE.** Formerly
+> `IDEAS → WRITER'S STUDIO — EMERGENCE TO EXPRESSION`. **Same lane, widened scope** — not a
+> new lane, not a split. The lane ID is retained unchanged so every prior finding, ruling
+> and reference stays addressable; only its title and scope move. §§1–3 below are the
+> **original charter, preserved verbatim as the narrower reading**. They were true when
+> recorded and remain true of the Idea case. **§9 is the amendment and governs.**
+
+**Opened**: 2026-09-08, founder act. **Widened**: 2026-09-08, same day, founder act.
 **Branch**: `claude/jarvis-flow-architecture-w2gont`
-**Standing**: RECOVER complete · RECONCILE complete · **CONSTITUTE BLOCKED on R-01** ·
-DESIGN not opened · PROVE not opened · no build · no migration · no deploy.
+**Standing**: see §9.7.
 
 ---
 
@@ -308,4 +314,225 @@ STOP           founder witness owed
 no schema change · no migration authored · no route added or removed
 no UI built · no deploy · Writer's Studio capability lane NOT reopened
 from-idea drift instance RECORDED, deliberately NOT repaired
+```
+
+---
+
+# 9. AMENDMENT — LANE WIDENED *(founder act, 2026-09-08, before CONSTITUTE)*
+
+**This section governs.** §§1–8 are preserved as the narrower reading and remain true of
+the Idea case.
+
+## 9.1 Why the lane widened
+
+The Idea → Work census exposed the underlying problem, but Idea → Work is **one instance of
+a broader creative relationship**. Writer's Studio should be able to draw inspiration and
+material from the member's wider **Reflections field** — at minimum Journal, Keeps, Ideas,
+Changes, Decisions. Widened now rather than after DESIGN, because otherwise the Idea case
+ships and the ontology immediately reopens for the other four.
+
+**Not scope creep — scope correction.** The lane's jurisdiction is unchanged: it owns the
+*relationship*, never the objects.
+
+### Governing topology
+
+```
+                 REFLECTIONS
+        ┌────────────┼─────────────┐
+     Journal       Keeps        Ideas
+     Changes      Decisions       ...
+        └────────────┼─────────────┘
+                     ↓
+              LIVING WORK
+                     ↓
+             one or many FORMS
+```
+
+And, because a Work may draw from many Reflections over years while any Reflection may
+inspire many Works, the true shape is:
+
+```
+MANY REFLECTIONS  ↔  MANY LIVING WORKS  →  MANY FORMS
+```
+
+Governing vision: **`docs/design/author-studio/WRITERS_STUDIO_PRODUCT_THESIS_2026-09-08.md`**
+(EXPLORE → DISCOVER → DEVELOP → CREATE → OFFER). Owned by Writer's Studio R&D; **cited
+here, never amended here.**
+
+> **Writer's Studio should organize a creative life, not just files.**
+
+## 9.2 Founder law *(recorded as given)*
+
+Do not collapse the Reflection types into a generic content bucket. Their distinctions
+carry meaning and should remain visible.
+
+1. A Reflection remains independently existent when associated with a Work.
+2. Nothing is moved, consumed, converted, or silently copied into a Work.
+3. One Reflection may contribute to many Works.
+4. One Work may draw from many Reflections.
+5. One Work may give rise to many Forms.
+6. Reflection type and provenance are preserved.
+7. *"Originated from," "inspired by," "contributes to,"* and similar relationships **must
+   not be collapsed without ontological justification.**
+8. Association with a Work remains a **member authorship act**; MAIA may surface possible
+   connections but **may not silently establish them.**
+9. Writer's Studio should eventually be capable of presenting the **creative genealogy** of
+   a Work: the Reflections, Ideas, experiences, Changes, Keeps, and Decisions from which it
+   has developed.
+10. **Reflections remain valuable even when they never become part of a Work.**
+
+**R-01 preserved unchanged**: Idea = generative possibility · Living Work = undertaken
+creative continuity · Form = expression arising from a Work. An Idea may hold the special
+provenance relation *"gave rise to this Work"* — but **Ideas are not the only source from
+which a Work may develop.**
+
+## 9.3 RECOVER — the Reflections field as implemented
+
+| Founder's type | Substrate found | State |
+|---|---|---|
+| **Journal** | `/journal`, `/journal/room`; `quick_journal` (`20260102000000`), `elemental_journal` (`20260104000002`), chart integration (`20260109000001`) | live, **multiple substrates** |
+| **Keeps** | (a) `reflection_capsules` via `/api/capsules` — the member's Keeps behind `/reflections`; (b) manuscript keeps — marked passages, `/api/sovereign/keeps` | live, **two different objects** |
+| **Ideas** | `member_ideas` + `member_idea_blocks` | live, censused §2 |
+| **Changes** | (a) `member_idea_blocks.block_type='change'`; (b) `studio_changes` (`20260212000001`, practitioner) | **not a first-class member object** |
+| **Decisions** | (a) `member_idea_blocks.block_type='decision'`; (b) `studio_decisions` (`20260208000002`, practitioner) | **not a first-class member object** |
+| *(also)* | `member_reflections` (`20260721000001`) — Developmental Reflection Experience, `/maia/reflection` | live, **a sixth thing that owns the word** |
+
+## 9.4 RECONCILE — findings exposed by the expansion
+
+### 🔴 F-09 — THE REFLECTIONS FIELD DOES NOT EXIST AS A CONTAINER.
+
+There is no object, table, route, or surface that groups Journal · Keeps · Ideas · Changes
+· Decisions. The founder's "Reflections field" is a **true description of the member's
+creative reservoir and an unimplemented one**. Five separately-authored substrates, no
+common address, no common identity, no common grammar.
+
+This is not an argument against the model. It is the statement of what building it costs:
+**the bridge cannot reference "a Reflection" until something can name one.**
+
+### 🔴 F-10 — "REFLECTION" ALREADY DENOTES AT LEAST THREE DIFFERENT THINGS.
+
+1. **`/reflections`** — the capsules feed. Founder-ruled 2026-09-04, *"the only address they
+   have"*, moved out of Lab Tools deliberately (`app/labtools/reflections/` deleted, ⛔ do
+   not reintroduce).
+2. **`member_reflections` / `/maia/reflection`** — the Developmental Reflection Experience:
+   a six-question seasonal mirror, verbatim, no scoring, no categories *by design*.
+3. **`idea_block_maia_reflection`** — MAIA's reflection *on* an Idea block. Plus
+   `pattern_reflections`, `mentor_reflections`, studio encounter reflections.
+
+**This is the Circles "Commons" finding repeating exactly** (*"Commons denotes THREE
+different existing things and NONE matches ratified FR-02"*). Adopting "Reflection" as the
+bridge's source term without ruling which one it means would inherit all three.
+
+### 🔴 F-11 — CHANGES AND DECISIONS ARE NOT OBJECTS. THEY ARE ROWS INSIDE AN IDEA.
+
+`member_idea_blocks.block_type IN ('note','decision','change')` — a Decision **exists only
+as a child of an Idea** and cannot exist without one. There is no free-standing member
+Decision or Change.
+
+So founder law 6 — *Reflection type and provenance are preserved* — **cannot be satisfied
+today for two of the five named types**, because:
+
+- *"this Decision contributes to this Work"* has no addressable subject; the closest true
+  statement is *"this block, inside that Idea, contributes"*;
+- promoting Decisions and Changes to first-class Reflections is **an Ideas R&D ontology
+  change**, not this lane's, per the anti-drift test.
+
+The `member_ideas` migration header anticipated exactly this: *"those systems are not
+unified with this one — that's a future bridge, not a present concern."*
+
+**F-11 is the finding that bounds what CONSTITUTE can close today.**
+
+### 🔴 F-12 — "KEEP" DENOTES TWO OBJECTS, AND ONLY ONE IS A REFLECTION.
+
+(a) **Capsules** — the member's Keeps at `/reflections`. (b) **Manuscript keeps** — marked
+verbatim passages *inside the member's own manuscripts*, whose route doctrine is explicit:
+it *"ORDERS but never SELECTS"*, is *"NOT a search endpoint and not a text corpus."*
+
+A manuscript keep is a mark **inside a Work's own expression** — downstream of a Work, not a
+source feeding one. Admitting both under one name would let Studio output re-enter as
+Studio input and quietly close a loop nobody authorized.
+
+### 🔴 F-13 — SOME "REFLECTIONS" ARE MAIA'S WORDS, NOT THE MEMBER'S.
+
+`reflection_capsules`, by its own header: *"MAIA witnesses experience and remembers what
+mattered. Capsules are **distilled** artifacts"* — carrying summary, gold lines, practices,
+decisions, next steps, patterns.
+
+So the feed the member reads as *their* Reflections is **partly MAIA's distillation of their
+words**. A creative genealogy that does not distinguish *the member's words* from *MAIA's
+distillation of the member's words* would credit the writer with MAIA's summaries — making
+MAIA, invisibly and in part, **the hidden source of the person's voice**, which the Product
+Thesis names as the thing it must never be.
+
+Compare the Circles precedent, where system-created affinities were **barred absolutely** as
+a substrate for member-declared interest (FR-06). The same discipline applies: **a
+system-distilled artifact may not cross into a Work as member material without saying what
+it is.**
+
+⛔ This does **not** mean capsules are barred. It means **authorship provenance is a
+required field of the crossing**, not an optional one. → **RB-16**.
+
+### ⚠️ F-14 — THE MOVEMENT MUST NOT BECOME A STAGE COLUMN.
+
+EXPLORE → DISCOVER → DEVELOP → CREATE → OFFER is a description of creative life across many
+Works. `living_works.stage` (capturing → developing → writing → refining → sharing) is a
+member-set orientation on **one** Work, whose ratified header says *"Orientation, never
+progress … the system never advances it."* Different lists, different questions; DISCOVER
+has no `stage` counterpart. **Do not reconcile them into one ladder.** Detail:
+Product Thesis §N-1. → **RB-17**.
+
+### ✅ F-15 — REACHABILITY PRECEDENT EXISTS, AND IT IS GOOD.
+
+`app/maia/useStudioHandoff.ts` (WS2-03C) already carries one Work from Studio → MAIA by URL
+and **refuses to take that URL's word for anything**: the id is a claim, verified against
+the member's own declared works; unresolved fails visibly rather than degrading into "some
+other work". That is the correct shape for bridge reachability in the other direction, and
+the lane should follow it rather than invent one.
+
+## 9.5 New questions
+
+| # | Question | Owner |
+|---|---|---|
+| **O-05** | What is a Reflection? Which of the three existing senses (F-10) does the bridge mean, and does the field need a name of its own to avoid inheriting all three? | **founder** — blocking |
+| **O-06** | Are Changes and Decisions promoted to first-class member Reflections, or addressed as Idea blocks (F-11)? | **Ideas R&D** — blocking for those two types |
+| **O-07** | Which Journal substrate is *the* Journal (quick / elemental / chart-integrated)? | Journal owner |
+| **O-08** | Are manuscript keeps admissible sources at all, or only capsule-Keeps (F-12)? | **founder** |
+| **O-09** | How is authorship provenance (member-authored vs MAIA-distilled) represented on a crossing (F-13)? | **this lane**, at DESIGN |
+| **O-10** | Does the distinction between *originated from* / *inspired by* / *contributes to* apply to all source types, or is *originated from* reserved to Ideas per R-01? | **this lane**, at CONSTITUTE |
+
+## 9.6 New falsifiers *(extending B-01..B-14, §6 + CONSTITUTE)*
+
+| # | Obligation |
+|---|---|
+| **RB-15** | **Type survives the crossing.** A Journal entry associated with a Work is still legible as a Journal entry, a Decision as a Decision. No crossing writes a generic `material_type='reflection'`. |
+| **⭐ RB-16** | **Authorship provenance is carried.** Every crossing states whether the source is member-authored or system-distilled (F-13). A capsule crossing as though it were the member's own words **fails**. |
+| **⭐ RB-17** | **No ladder.** No surface presents EXPLORE→DISCOVER→DEVELOP→CREATE→OFFER as a member state, progress indicator, or advanceable phase, and nothing writes `living_works.stage` on the member's behalf (F-14). |
+| **RB-18** | **Surfaced ≠ established.** A MAIA-surfaced possible connection creates no relation until a member act. Dismissing one leaves no residue and does not suppress the Reflection elsewhere. |
+| **RB-19** | **Zero is a valid count, for every type.** No Reflections surface presents Work-contribution as progress, completion, or achievement. Founder law 10, made falsifiable. |
+| **RB-20** | **No return loop.** Nothing produced inside a Work re-enters that Work as a source (F-12). |
+| **RB-21** | **Relations do not collapse.** *Originated from*, *inspired by*, and *contributes to* remain distinguishable in storage and in presentation; none is derived from another. Founder law 7. |
+
+**RB-16 is the new drift falsifier.** An implementation that carries content faithfully and
+drops authorship passes RB-15 and every earlier obligation, and fails RB-16 — and the
+failure is invisible in the product exactly where it matters most.
+
+## 9.7 Standing
+
+```
+LANE           WIDENED — REFLECTIONS ↔ LIVING WORKS — CREATIVE PROVENANCE
+R-01           CLOSED — preserved unchanged under the wider model
+R-02           CLOSED — origination is a third relation, not a material
+FOUNDER LAW    RECORDED — ten clauses, §9.2
+PRODUCT THESIS RECORDED under Writer's Studio R&D, cited not owned
+
+RECOVER        COMPLETE for all five named types (read-only)
+RECONCILE      COMPLETE — F-09..F-15
+CONSTITUTE     PARTIALLY UNBLOCKED — see CONSTITUTE §7 verdict
+DESIGN         NOT OPENED
+STOP           founder witness owed
+
+O-05, O-06, O-08 blocking · O-07 · O-09, O-10 to this lane
+no schema change · no migration · no route added or removed · no UI · no deploy
+from-idea drift instance UNTOUCHED by direction
+Writer's Studio capability lane cited, NOT reopened
 ```
