@@ -38,7 +38,10 @@
  * quietly makes that place inhabitable.*
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect,
+  useMemo, useRef, useState,
+} from 'react';
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import {
   evictedIndices, mountedIndices, type WindowInput,
@@ -66,11 +69,43 @@ export interface WholeManuscriptSurfaceProps {
   jumpTo?: string | null;
   /** Cleared once the jump has been honoured, so the same request cannot repeat. */
   onJumpHandled?: () => void;
+  /**
+   * ⭐ WHERE THE WRITER IS STANDING, in this view's own terms.
+   *
+   * NOT `writing.activeId`. That value belongs to the single-editor seam and,
+   * in this view, would keep naming whatever section was open when the writer
+   * arrived — so the rail's gold row and the URL would both assert a place the
+   * writer left an hour ago. `ManuscriptOutline` draws that marker only when a
+   * real current section is known, precisely because drawing it otherwise is a
+   * confident guess.
+   *
+   * The place is the focused section if one has focus, else the first section
+   * the viewport covers.
+   */
+  onPlaceChange?: (sectionId: string) => void;
 }
 
-export function WholeManuscriptSurface({
-  writing, jumpTo, onJumpHandled,
-}: WholeManuscriptSurfaceProps) {
+/** What the parent may ask of a mounted surface. */
+export interface WholeManuscriptSurfaceHandle {
+  /**
+   * ⛔ THE THIRD WAY AN EDITOR CAN DISAPPEAR. A section's editor leaves on
+   * eviction, on blur — and when this whole surface leaves, which happens all at
+   * once when the writer switches back to Section view.
+   *
+   * This must be called BEFORE the view changes. Not from an unmount cleanup:
+   * by then React has already decided and the nodes being read are nodes the
+   * writer can no longer see. Staging per keystroke is not a substitute — the
+   * staged copy is only as new as the last debounce, and the point of capture
+   * is the text on screen right now.
+   */
+  captureMountedBeforeLeave: () => void;
+}
+
+export const WholeManuscriptSurface = forwardRef<
+  WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
+>(function WholeManuscriptSurface({
+  writing, jumpTo, onJumpHandled, onPlaceChange,
+}, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
     const m = new Map<string, number>();
@@ -210,6 +245,28 @@ export function WholeManuscriptSurface({
     return () => clearTimeout(t);
   }, [note]);
 
+  /* Every mounted editor, captured from its live value, in one named act the
+     parent can call before it takes this surface away. */
+  const captureMountedBeforeLeave = useCallback(() => {
+    for (const [sectionId, field] of fields.current) {
+      writing.captureForUnmount(sectionId, field.value);
+    }
+  }, [writing]);
+
+  useImperativeHandle(handleRef, () => ({ captureMountedBeforeLeave }), [captureMountedBeforeLeave]);
+
+  /* The orientation signal. Focus if there is any, else the top of the
+     viewport — and only when it actually changes, so the parent is not told the
+     same thing on every scroll frame. */
+  const lastPlace = useRef<string | null>(null);
+  useEffect(() => {
+    const i = focusedIndex ?? visible.first;
+    const id = sections[i]?.id ?? null;
+    if (!id || id === lastPlace.current) return;
+    lastPlace.current = id;
+    onPlaceChange?.(id);
+  }, [focusedIndex, visible.first, sections, onPlaceChange]);
+
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const el = e.currentTarget;
     if (!isBoundaryGesture({
@@ -314,4 +371,4 @@ export function WholeManuscriptSurface({
       )}
     </div>
   );
-}
+});

@@ -109,6 +109,43 @@ describe('ordinary scrolling can advance the window', () => {
   });
 });
 
+describe('the third way an editor can disappear: the surface itself leaves', () => {
+  it('exposes one named act that captures every mounted editor', () => {
+    /* Eviction and blur are handled inside. Switching back to Section view
+       unmounts all of them at once, and there is no scroll or blur to catch
+       it — so the parent needs something to call, by name, before it goes. */
+    const cap = block(SRC, 'const captureMountedBeforeLeave =', '}, [writing]);');
+    expect(cap).toContain('for (const [sectionId, field] of fields.current)');
+    expect(cap).toContain('writing.captureForUnmount(sectionId, field.value)');
+    expect(SRC).toContain('useImperativeHandle(handleRef, () => ({ captureMountedBeforeLeave })');
+  });
+
+  it('still refuses to satisfy the invariant with a cleanup', () => {
+    expect(SRC).not.toMatch(/return \(\) => \{[\s\S]{0,200}captureForUnmount/);
+  });
+});
+
+describe('where the writer is standing, in this view\'s own terms', () => {
+  it('reports a place that is focus first, then the top of the viewport', () => {
+    const place = block(SRC, 'const lastPlace =', 'onPlaceChange?.(id);');
+    expect(place).toContain('const i = focusedIndex ?? visible.first;');
+  });
+
+  it('reports it only when it changes', () => {
+    /* Otherwise the parent is told the same thing on every scroll frame, and
+       a URL write per frame is its own defect. */
+    const place = block(SRC, 'const lastPlace =', 'onPlaceChange?.(id);');
+    expect(place).toContain('if (!id || id === lastPlace.current) return;');
+  });
+
+  it('never fakes a section switch to move the marker', () => {
+    /* goToSection owns the single-editor switching and capture seam. Whole
+       mode needs orientation, not a pretend switch through machinery built
+       for something else. */
+    expect(SRC).not.toContain('goToSection');
+  });
+});
+
 describe('the structural guarantees the view may not quietly drop', () => {
   it('uses independent editors, never one giant contenteditable', () => {
     /* A single editable document over 262 section nodes would reopen the
