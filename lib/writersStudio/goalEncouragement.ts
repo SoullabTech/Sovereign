@@ -131,15 +131,24 @@ export function checkEncouragement(raw: string, act: EncourageableAct): Encourag
   if (act === 'declared') {
     /* ── THE LAW, and it is narrower than the code below ───────────────────
      *
-     *   MAIA may acknowledge that the writer declared a goal.
-     *   MAIA may not evaluate the goal — as worthy, admirable, good,
-     *   impressive, sensible, beautiful — nor evaluate the writer's
-     *   performance in declaring it.
+     *   LAWFUL      acknowledge that the writer declared something
+     *               acknowledge authorship
+     *               report what the system recorded
+     *
+     *   NOT LAWFUL  evaluate the goal
+     *               evaluate the writer FOR HAVING the goal
+     *               evaluate how well the writer declared or named it
+     *
+     * Three clauses, not two — the middle one is its own move. "Good for you."
+     * praises no aim and no phrasing; it approves of the person for having an
+     * aim at all, which is the same displacement arriving by a third road.
      *
      * The distinctions the law actually draws:
      *
      *   "That is a wonderful goal."            evaluates the aim          REFUSE
-     *   "You've named this clearly."           evaluates the writer       REFUSE
+     *   "Good for you."                        evaluates the writer for
+     *                                          having it                  REFUSE
+     *   "You've named this clearly."           evaluates the naming       REFUSE
      *   "That goal is now recorded."           reports system state       lawful
      *   "That is written down now, in your
      *    words."                               acknowledges authorship

@@ -140,6 +140,10 @@ describe('F-C · declaration belongs to the writer first', () => {
        implementation is a deliberately broader heuristic over them. */
     expect(refusalOf('That is a wonderful goal.', 'declared')).toBe('evaluates_the_goal');
     expect(refusalOf("You've named this clearly.", 'declared')).toBe('evaluates_the_goal');
+    /* The third clause: approving of the WRITER for having an aim at all —
+       praising no goal and no phrasing, and displacing authorship anyway. */
+    expect(refusalOf('Good for you.', 'declared')).toBe('evaluates_the_goal');
+    expect(refusalOf('How admirable of you to take this on.', 'declared')).toBe('evaluates_the_goal');
     expect(ok('That goal is now recorded.', 'declared').ok).toBe(true);
     expect(ok('That is written down now, in your words.', 'declared').ok).toBe(true);
   });
