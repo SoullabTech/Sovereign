@@ -62,8 +62,27 @@ import {
  * -03 is kept as its own version rather than corrected in place. Two different
  * prompt renderings under one reader version would make provenance ambiguous,
  * and a reading's identity is the whole of what the model was shown.
+ *
+ * -05 (2026-09-08) is WS-DEVELOP-SECTION-RUN-CONFORMANCE-01: rule 1 defined
+ * `section-run` correctly as "a contiguous run, in sequence order" and then, one
+ * sentence later, said it "may name any sections in the sequence". The second
+ * sentence was written to widen a DEPTH permission — a run may cite sections
+ * whose prose was withheld — and it reads as widening the SHAPE, which the
+ * binder refuses. Production, 2026-09-07: a whole-work read of a 96k-token Work
+ * returned 27 claims; 26 bound; `claims[26] refs[3]` was a `section-run` over
+ * non-adjacent ids and `run_not_as_read` discarded the whole reading.
+ *
+ * The repair is to the instruction only. The binder is unchanged — it refused a
+ * genuine violation and remains the authority. What the model reached for was
+ * lawful all along in a different container: `refs` is an array whose items are
+ * independently typed, so several non-adjacent sections are cited as several
+ * `section` refs. Rule 1 now says the constraint and names that alternative.
+ *
+ * The version moves because the prompt moved, under the rule stated above for
+ * -03: a reading's identity is the whole of what the model was shown, and the
+ * -04 text is not the -05 text. `promptContractHash()` moves with it.
  */
-export const READER_VERSION = 'DEVELOPMENTAL-READER-04';
+export const READER_VERSION = 'DEVELOPMENTAL-READER-05';
 export const TOOL_NAME = 'draft_reader_claims';
 
 /* ── the prompt ──────────────────────────────────────────────────────────── */
@@ -87,7 +106,7 @@ RULES.
      { "kind": "structure-unit", "unitId": "<id>" }
      { "kind": "structure-units", "unitIds": ["<id>", ...] }
      { "kind": "structure-topology" }
-   "section" and "passage" may name ONLY sections whose text you were given. "section-run" may name any sections in the sequence. Structure references are permitted ONLY if an AUTHORED STRUCTURE block was given; if none was, make no structural claim.
+   "section" and "passage" may name ONLY sections whose text you were given. "section-run" may name only one contiguous run of sections in exact sequence order, including sections available only at POSITION depth. Do not use it as a collection of non-adjacent section IDs. For non-adjacent BODY-depth evidence, use separate "section" or "passage" refs in the claim's refs array. Structure references are permitted ONLY if an AUTHORED STRUCTURE block was given; if none was, make no structural claim.
 2. Every claim carries at least one non-conclusion from this closed vocabulary, naming what the evidence does not establish:
 ${VOCABULARY}
 3. A claim may NOT consist solely of content that can be re-derived mechanically from the Work or the member's declared structure. Counts, lengths, positions, sequence, heading format, topology and how many sections a division holds are MEASUREMENTS of the container: they are mechanical evidence, one layer below what you are drafting. A claim must add a noticing whose falsity would require reading the Work, not merely rerunning a measurement. Measurements may SUPPORT a noticing; they may not BE the noticing. If all you can say about something is what a count, a length or a position would show, do not draft it.
