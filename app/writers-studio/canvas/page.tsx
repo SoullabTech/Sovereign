@@ -931,7 +931,14 @@ function CanvasRoom() {
               goals={goals}
               counts={goalCounts}
               sections={sections}
-              currentSectionId={sections[0]?.id ?? null}
+              /* THE SECTION THE WRITER IS ACTUALLY IN.
+                 This was `sections[0]`, which anchored every note and goal to
+                 the FIRST section of the manuscript — so a writer at chapter 12
+                 caught a thought and it attached to "Untitled section". The
+                 acceptance question is "catch a thought BESIDE THE WRITING",
+                 and beside means where they are. Null while nothing is open,
+                 which correctly offers "across the manuscript". */
+              currentSectionId={writing?.activeId ?? null}
               onChanged={reloadGoals}
             />
           </StudioPanel>
@@ -948,7 +955,14 @@ function CanvasRoom() {
             <NotesDrawer
               manuscriptId={manuscript.id}
               sections={sections}
-              currentSectionId={sections[0]?.id ?? null}
+              /* THE SECTION THE WRITER IS ACTUALLY IN.
+                 This was `sections[0]`, which anchored every note and goal to
+                 the FIRST section of the manuscript — so a writer at chapter 12
+                 caught a thought and it attached to "Untitled section". The
+                 acceptance question is "catch a thought BESIDE THE WRITING",
+                 and beside means where they are. Null while nothing is open,
+                 which correctly offers "across the manuscript". */
+              currentSectionId={writing?.activeId ?? null}
               onCountChange={setNoteCount}
             />
           </StudioPanel>

@@ -77,14 +77,35 @@ export const REFLECTION_READY =
   'Open Conversations to speak with MAIA here, beside your manuscript.';
 export const REFLECTION_NEEDS_WORK =
   'MAIA can speak with you about a declared Work. Declare one in “This work” and Conversations opens.';
+/**
+ * THE AMBIGUOUS CASE HAD THE WRONG ADVICE, and it was the more misleading half
+ * of the D4 defect.
+ *
+ * A member who declared this manuscript in two Works was told to "declare one",
+ * which is the thing they had already done — twice. The act that opens
+ * Conversations for them is a WITHDRAWAL, not another declaration, and sending
+ * them toward a third was the same dead end the drawer used to have, phrased as
+ * guidance.
+ *
+ * It also does not press. Belonging to several Works is correct by design
+ * (D-018); the sentence says what would change the situation and leaves the
+ * choice alone.
+ */
+export const REFLECTION_NEEDS_ONE_WORK =
+  'This manuscript belongs to more than one Work, so there is no single Work to speak into. That is allowed — you can leave it, or withdraw one in “This work”.';
 
 export default function MaiaColumn({ context }: { context: WorkContext }) {
   /* Which resting sentence is true right now. Conversations is available
      exactly when one Work is declared, so that is the condition. */
   const ready = context.kind === 'work';
+  const resting = ready
+    ? REFLECTION_READY
+    : context.kind === 'ambiguous'
+      ? REFLECTION_NEEDS_ONE_WORK
+      : REFLECTION_NEEDS_WORK;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.comfortable }}>
-      <MaiaVoice>{ready ? REFLECTION_READY : REFLECTION_NEEDS_WORK}</MaiaVoice>
+      <MaiaVoice>{resting}</MaiaVoice>
 
       <div
         style={{
