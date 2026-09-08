@@ -139,13 +139,12 @@ interface AllowedWrite {
  * identified by purpose and classified; an unidentified Source write fails
  * the census outright.
  */
+/* ⚠️ 2026-09-08, PT-3 enforcement. The import route's direct
+ * `INSERT INTO manuscript_sections` is GONE from this list because it is gone from the code:
+ * representation creation moved behind the governed seam, where it happens together with custody
+ * or not at all. The census recording that removal is the census doing its job — C2 would have
+ * failed had the entry been left behind. */
 const ALLOWLIST: AllowedWrite[] = [
-  {
-    file: 'app/api/sovereign/manuscripts/route.ts',
-    statement: 'INSERT', table: 'manuscript_sections',
-    classification: 'extraction / Source representation creation',
-    purpose: 'Import cuts the arrival into sections. This CREATES the representation; it never revises one.',
-  },
   {
     file: 'lib/manuscript/source/arrivals.ts',
     statement: 'INSERT', table: 'manuscript_source_arrivals',
@@ -329,7 +328,6 @@ async function buildFixture(): Promise<Fixture> {
     [memberId, 'The House on Laurel Street'],
   );
   const manuscriptId = ms.rows[0].id;
-  await claimArrival(arrival.id, manuscriptId, memberId);
 
   /* The Source Representation, cut exactly as the import route cuts it. */
   const cut = [
@@ -341,16 +339,19 @@ async function buildFixture(): Promise<Fixture> {
      it would be testing a draft shape the product cannot hold. */
   const draftText = (i: number) =>
     `${cut[i].heading}\n\n${cut[i].body}${i < cut.length - 1 ? '\n\n' : ''}`;
-  const sectionIds: string[] = [];
-  for (const c of cut) {
-    const r = await query<{ id: string }>(
-      `INSERT INTO manuscript_sections
-         (manuscript_id, position, heading, body, heading_depth, heading_signal)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-      [manuscriptId, c.position, c.heading, c.body, c.depth, c.signal],
-    );
-    sectionIds.push(r.rows[0].id);
-  }
+  /* Through the seam. Under PT-3 enforcement there is no other lawful way to create a Source
+     Representation — which is the point of the change, and is why this fixture had to move. The
+     ATTACKS below are byte-identical to the 2026-09-08 run: only the lawful world around them
+     changed. */
+  await query(`SELECT source_extract($1,$2,$3,$4::jsonb)`, [
+    manuscriptId, memberId, arrival.id,
+    JSON.stringify(cut.map((c) => ({
+      heading: c.heading, body: c.body, heading_depth: c.depth, heading_signal: c.signal,
+    }))),
+  ]);
+  const secRows = await query<{ id: string }>(
+    `SELECT id FROM manuscript_sections WHERE manuscript_id = $1 ORDER BY position`, [manuscriptId]);
+  const sectionIds: string[] = secRows.rows.map((r) => r.id);
 
   /* The descendant working representation, created as the draft route creates
      it — content and section rows descending from the representation above. */
@@ -378,9 +379,24 @@ async function buildFixture(): Promise<Fixture> {
 }
 
 async function destroyFixture(f: Fixture) {
-  await query(`DELETE FROM manuscript_source_arrivals WHERE member_id = $1`, [f.memberId]);
-  await query(`DELETE FROM member_manuscripts WHERE member_id = $1`, [f.memberId]);
-  await query(`DELETE FROM members WHERE id = $1`, [f.memberId]);
+  /* Teardown is itself an erasure, and under PT-3 an erasure must be commissioned by name — a
+     cascade that names no act is refused. That the fixture cleanup had to change is evidence the
+     boundary is real, not an inconvenience to route around. */
+  await transaction(async (tx) => {
+    const rows = await tx.query<{ id: string }>(
+      `SELECT id FROM member_manuscripts WHERE member_id = $1`, [f.memberId]);
+    for (const r of rows.rows) {
+      await tx.query(`SELECT source_commission_erasure($1,$2,$3)`,
+        [r.id, f.memberId, 'falsifier teardown']);
+    }
+    /* The cascade from member_manuscripts reaches both protected tiers, and the commissioned
+       erasure above is what lets it. Deleting arrivals separately would be refused — unclaimed
+       ones belong to no manuscript and no erasure names them. */
+    await tx.query(`DELETE FROM member_manuscripts WHERE member_id = $1`, [f.memberId]);
+  });
+  /* Unclaimed arrivals outlive their fixture by design: the schema documents that state, and no
+     erasure was commissioned for them. Left for the disposable database to take with it. */
+  await query(`DELETE FROM members WHERE id = $1`, [f.memberId]).catch(() => undefined);
 }
 
 /* ═════════════════ LEG 2 — behavioural witness (real paths) ══════════════ */
@@ -639,7 +655,9 @@ async function legHistoricalAttacks(f: Fixture) {
     check('4', 'A4.2', 'a second arrival never rewrites the first (it is added, not merged)',
       firstIntact.rows[0]?.source_text === SOURCE_TEXT,
       `second claim=${claimed}; arrivals ${before.historical.rows}→${after.historical.rows}`);
-    await query(`DELETE FROM manuscript_source_arrivals WHERE id = $1`, [second.id]);
+    /* Cleanup, not an attack: this DELETE is now refused, and correctly so. */
+    await query(`DELETE FROM manuscript_source_arrivals WHERE id = $1`, [second.id])
+      .catch(() => undefined);
   }
 
   /* A4.3 — custody without bytes is not custody. The WS-01 negative control:

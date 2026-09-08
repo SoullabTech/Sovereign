@@ -169,9 +169,17 @@ export async function verifyCustody(manuscriptId: string, memberId: string): Pro
     artifact_ref: string | null;
     artifact_hash: string | null;
   }>(
+    /* PT-3 §IV (founder ruling 2026-09-08) — currency is no longer decided by sort order.
+     *
+     * This read used to be `ORDER BY created_at ASC LIMIT 1`: with several arrivals on one Work,
+     * custody was verified against whichever happened to sort first. That is an implementation
+     * contingency standing in for a law. `source_operative_arrival()` derives the answer from the
+     * append-only lifecycle history instead, and the ordering below survives only as the fallback
+     * for Works whose history predates that record — never as the authority when one exists. */
     `SELECT source_kind, artifact_ref, artifact_hash
        FROM manuscript_source_arrivals
       WHERE manuscript_id = $1 AND member_id = $2
+        AND id = COALESCE(source_operative_arrival($1), id)
       ORDER BY created_at ASC LIMIT 1`,
     [manuscriptId, memberId],
   );
