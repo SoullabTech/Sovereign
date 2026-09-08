@@ -225,20 +225,33 @@ PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
   R1 · R2 · R3         FROZEN — founder act, 2026-09-08
   statistic            Somers' D · PASS = p<=.05 AND D>=.60 AND U>=60
                        D .60 == 80% concordance on discriminated pairs
+  STEP 4               COMPATIBLE · 58f033adc
+  OVERLAY              FROZEN
+  FIXTURE              LOCKED
+  contract-lawful n    19
+  acceptance thresholds FROZEN · af155f414
   THRESHOLD            UNSET
   FOUNDER RANKING      NOT STARTED
   MAIA RANKING         NOT STARTED
   MANIFEST B           NOT OPENED
   SELECTOR             NOT IMPLEMENTED
+  next act             IMPLEMENT smallest real Studio selector
   FOUNDER BLIND        INTACT
 F-7                    NOT OPEN (opening condition is Phase 1.5 closed)
 PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: founder ruling on the Step-4 fixture MISMATCH — see
-`sel-0/SEL-0_STEP4_FIXTURE_COMPATIBILITY_2026-09-08.md`. Implementation does NOT open until
-Step 4 passes. Product contract and acceptance instrument are both FROZEN.
+**Next executable act**: implement the smallest real Writer's Studio selector. Product
+contract and acceptance instrument are both FROZEN and may not move to accommodate it.
+
+**The Step-4 MISMATCH is kept as history, not rewritten.** It was real:
+`sel-0/SEL-0_STEP4_FIXTURE_COMPATIBILITY_2026-09-08.md` records a fixture that could not
+express the ratified boundary, and that document stands unedited. It was resolved by the
+founder-ruled eligibility overlay, whose state-read half is recorded in
+`sel-0/SEL-0_STEP4_CLOSURE_2026-09-08.md` — 0 dismissed, 0 superseded, 0 unmeasured, so the
+Step-0 corpus and the §2.3 boundary agree on all 19. The MISMATCH is superseded by an act,
+not deleted by a correction.
 Production discovery is CLOSED and is no longer the next act.
 
 **Historical note, kept rather than rewritten.** Earlier in this file the next act was the
