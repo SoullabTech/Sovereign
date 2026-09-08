@@ -49,6 +49,20 @@ Candidate retrieval architectures are required to **falsify against this constra
 
 **No mechanism is prescribed here.** Boosting member-marked rows, exempting them from decay, reserving slots, separating pools, or changing half-lives are all *unauthorized candidate responses* — listing them is not endorsing them. Choosing among them is Phase 2 work, decided on evidence.
 
+### §4.a. Shared-competition requirement
+
+*Appended by founder authorization, 2026-09-08. This defines what would count as a valid falsification of the already-ratified constraint. It is not a choice of acceptance mechanism.*
+
+> A falsifier does not test this constraint if the singular encounter and the reinforced pattern are placed in separate pools or retrieval paths that never compete. The witness must establish that both candidates contend for the same retrieval budget at the same selection stage toward the same prompt destination. If the architecture intentionally separates them, the witness must instead identify and test the **cross-pool arbitration** that determines which reaches the prompt. Segregation alone is not evidence that singular developmental significance has been preserved.
+
+The reason, which belongs with it:
+
+> **A system may not pass this constraint by arranging for the discriminating comparison never to occur.**
+
+This constrains the **witness**, not the architecture. Every mechanism remains open — shared pool, reserved capacity, separate pools with explicit arbitration, or something not yet named. What it forecloses is a **false-positive witness**: a Phase 2 candidate reporting preservation when it has only achieved segregation, and never placed the two classes under the same selection pressure.
+
+Concretely, a witness discharging §4.2 must state, as measured facts and not as design intent: the selection stage at which the two candidates met, the budget they contended for, and the prompt destination they were competing to reach — or, where they did not meet, the arbitration step that chose between them and the result of testing it.
+
 ## §5. Provenance of the constraint
 
 Surfaced 2026-09-08 while reading a transcript of a Terence McKenna talk on shamanism, in the passage observing that only what recurs is "authenticated by our languages," while "the edge of cognition, the unique part of our own felt experience" is not.
