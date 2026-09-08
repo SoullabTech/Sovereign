@@ -9,6 +9,8 @@ all 33 windows** · product channel OPERATOR ATTESTED.
 **Windows**: **33 planned · 33 completed · 0 refused.**
 
 > ## ⭐ The act completed. For the first time, MAIA read a Work whole.
+>
+> ## ⛔ AND G8 FAILS. Founder ruling, 2026-09-08, on a human-ear falsifier — see §5A.
 
 ---
 
@@ -118,6 +120,9 @@ no instrument for. Returned, unrepaired.
 
 ## 5 · The semantic question: does any surviving notice read as developmental?
 
+> ⛔ **SUPERSEDED SAME DAY BY FOUNDER RULING — see §5A. The reading below is WRONG and is kept
+> verbatim, not corrected in place, because how it was wrong is the finding.**
+
 **On my reading of the 226: no.** Zero prescriptions. Zero deficit verdicts. Zero reader-effect
 claims. Zero rankings. Zero imputed volition. The five families are being used as **attention**,
 not as an assessment rubric, sustained across 386,031 code points.
@@ -153,9 +158,92 @@ three; W13 names a detail absent from its citation — but the rate appears lowe
 
 ---
 
+## 5A · ⛔ **G8 FAILS** — founder ruling, human-ear falsifier
+
+```
+model / channel evidence    PASS
+exact quote grounding       PASS
+mechanical rejection        8 notices rejected
+surviving notices           226
+
+HUMAN-EAR FALSIFIER         FOUND
+G8                          FAIL
+```
+
+**The decisive notice (W2, `openness`):**
+
+> *"A distinction between two kinds of imagining is drawn in a single sentence and **is not
+> developed further** within this stretch."*
+
+**Second, independent (W4, `openness`):**
+
+> *"…with the elemental interplay **not elaborated** under that heading in this stretch."*
+
+> **"Appears once" is observational. "Not developed further" is the beginning of a developmental
+> case** — it marks a lack of development as salient, quietly implying an unfinished obligation.
+
+**What failed, stated narrowly.** Not the model call. Not grounding. Not quote fidelity. Not
+scope. **The `openness` family can still encode absence in deficit-shaped language.**
+
+### ⛔ The reading in §5 was wrong, and how it was wrong is the point
+
+It checked for prescriptions, rankings, reader-effects and imputed volition — the shapes the
+screen already names — and never examined the **verb shape of the non-return clause itself**. It
+treated *"is not developed further within this stretch"* as discharged because it was correctly
+**scoped**, and stopped reading at the boundary marker.
+
+⭐ **The F-2 repair is implicated in the miss, not by being wrong but by being partial.** It
+disciplined *how far* these sentences reach. It did not touch *what shape they take*. Both
+defects live in the same clause, and fixing the first made the second easier to walk past — for
+the model, for the screen, and for this record's own author.
+
+### The seam, precisely
+
+E1 §3.2 distinguishes **bounded non-return** (lawful) from **absence measured against an expected
+standard** (not). The lexicon operationalizes only two of the three shapes that carries:
+
+| shape | example | caught? |
+|---|---|---|
+| deficit **noun** | *underdeveloped*, *gap*, *thin* | ✅ `DEFICIT` |
+| **unbounded** absence | *there is no*, *never resolves*, *no clear* | ✅ `UNBOUNDED_ABSENCE` |
+| **negated verb of development** | *not developed further*, *not elaborated*, *without further elaboration*, *named but not described* | ⛔ **nothing** |
+
+The third is **bounded in scope and developmental in shape**. Scoping is exactly what let it
+through.
+
+### ⚠ It is not two instances — the shape recurs
+
+The founder stopped at the first valid falsifier, correctly: one settles G8. For repair scoping,
+the same shape appears in at least six surviving notices:
+
+| window | clause |
+|---|---|
+| W2 | *"is **not developed further** within this stretch"* — the ruling falsifier |
+| W4 | *"the elemental interplay **not elaborated** under that heading"* |
+| W16 | *"appears here **without further elaboration** in this stretch"* |
+| W23 | *"that civic claim is set down **without further elaboration** in this stretch"* |
+| W24 | *"it is **named but not described**"* |
+| W31 | *"tagged with vector, circle and spiral alone, **without the paired second terms** that accompany those tags in the four preceding facet sets"* |
+
+⭐ **W31 is the sharpest and should shape the repair.** It measures absence against a standard the
+**Work itself establishes** — four sets have the paired terms, the fifth does not. That is not an
+imported literary standard, which is what E1 §3.2 was written against; it is an internal-consistency
+expectation. Whether an internally-derived standard is lawful is a question this witness raises and
+does not answer. ⛔ Do not assume either way.
+
+By contrast these stay observational, and any repair must leave them intact:
+
+> *"does not recur in this stretch"* · *"is not taken up again in this stretch"* · *"this stretch
+> does not come back to it"* · *"named here and not returned to"*
+
+The difference: **whether the sentence names what IS present and bounds it, or names what did not
+happen to it.**
+
 ## 6 · Standing
 
 ```
+G8 OVERALL                  ⛔ **FAIL** — human-ear falsifier (§5A)
+
 whole-Work completion       ✅ 33/33 — FIRST COMPLETE ENCOUNTER
 exact excerpt binding       ✅ ~520/520, zero failures, zero suppression
 schema conformance          ✅ 0 contract failures (W4 clean)
@@ -166,19 +254,22 @@ F-4 screen                  ⛔ 8 rejections · 0 true catches · 8 false positi
   F-4b prosodic collision       5   ← NEW, systematic against `heat`
 F-6 boundary-as-content     🔴 NEW — the one misleading notice in 226
 F-1 partial grounding       ⚠ persists, reduced, unmeasured
+F-7 absence-shaped openness 🔴 NEW — THE G8 FALSIFIER, ≥6 instances
 
-human adjudication of 226   OWED — founder
+human adjudication of 226   NOT OWED — the first valid falsifier settles it
 E3 · PR · deploy            HOLD
 ```
 
 ## 7 · Owed
 
-1. ⛔ **Founder adjudication of the 226.** This record samples; it does not decide. G8's semantic
-   half closes on a human ear, by ruling, and that has not happened.
-2. The completion-reliability design lane (D-1, D-2, `p` measurement) is **answered for now, not
-   closed**: 33/33 at the observed rate is a strong result but a single trial. Whether the
-   amendment made failure rare or absent needs more than one run.
-3. ⛔ No repair authorized here. F-4 and F-6 are returned.
+1. ⛔ **The F-7 repair**, targeting that semantic seam and nothing else — then **rerun this
+   witness unchanged**. Founder direction. ⛔ Not authorized here; not begun.
+2. ⛔ **Do not adjudicate the remaining 226.** The first valid falsifier settles G8, and grading
+   the rest would spend attention on a question already answered.
+3. The completion-reliability design lane (D-1, D-2, `p` measurement) is **answered for now, not
+   closed**: 33/33 is a strong result but a single trial.
+4. ⛔ F-4 and F-6 remain returned and unrepaired, and stay separate from F-7.
 
-> The plumbing questions are closed. What remains is the only question that was ever the point:
-> whether what MAIA saw is worth showing a writer.
+> The plumbing questions are closed. The act ran whole and the words came back exact — and the
+> Work was still handed a sentence about what had not been developed. **Completing the act is not
+> the same as being fit to speak.**
