@@ -59,8 +59,32 @@ import { bindProposals } from '@/lib/manuscript/encounter/bind';
 import { screenCandidate } from '@/lib/manuscript/encounter/vocabulary';
 import { runStructured } from '@/lib/ai/structured/router';
 
-if (!process.env.ENCOUNTER_G8_CONFIRM) {
-  console.error('Refusing to run without ENCOUNTER_G8_CONFIRM=1 (this calls a real model).');
+/**
+ * ── TWO AFFIRMATIVE ACTS, AND ONLY ONE TOKEN MEANS YES ────────────────────
+ *
+ * Founder review 2026-09-08. These were `Boolean(process.env.X)`, so
+ * `X=0`, `X=false` and `X=no` all counted as affirmative — a negative value
+ * becoming a positive assertion because the string was non-empty.
+ *
+ * That is tolerable for a feature flag. It is not tolerable here: the channel
+ * attestation is the one fact this program explicitly admits it CANNOT verify in
+ * a transparent-proxy environment, which makes the human gesture more load-
+ * bearing, not less.
+ *
+ *   Where machine proof ends and human attestation begins, the attestation
+ *   itself must be unambiguous.
+ *
+ * So exactly `'1'` is affirmative. Deliberately NOT general env parsing and NOT
+ * truthy aliases — `'true'` is refused too, because this is a ceremony with one
+ * explicit positive token, and a ceremony with synonyms is a ceremony you can
+ * perform by accident.
+ */
+const affirmed = (v: string | undefined) => v === '1';
+
+if (!affirmed(process.env.ENCOUNTER_G8_CONFIRM)) {
+  console.error('⛔ Refusing to run: ENCOUNTER_G8_CONFIRM must be exactly "1".');
+  console.error('   This states an intent to execute cognition — a real, paid inference call.');
+  console.error('   No other value is affirmative, including "true", "yes" or "0".');
   process.exit(2);
 }
 
@@ -119,7 +143,7 @@ if (!manuscriptId || !memberId) {
 async function main() {
   const origin = configuredBaseUrlOrigin();
   const keyPresent = Boolean(process.env.ANTHROPIC_API_KEY);
-  const attested = Boolean(process.env.ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST);
+  const attested = affirmed(process.env.ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST);
 
   console.log(`\nG8 LIVE EAR WITNESS`);
   console.log(`inference mode      : ${process.env.MAIA_INFERENCE_MODE ?? '<unset>'}`);
@@ -148,7 +172,7 @@ async function main() {
      ONLY thing between a real witness and a plausible-looking counterfeit. */
   if (!attested) {
     console.error('⛔ G8 STOP — product-channel attestation absent.');
-    console.error('   Set ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST=1 to attest, as a person, that');
+    console.error('   Set ENCOUNTER_G8_PRODUCT_CHANNEL_ATTEST=1 — exactly "1" — to attest, as a person, that');
     console.error('   this process is using the PRODUCT-AUTHORIZED inference credential and');
     console.error('   channel. A canonical configured origin is NECESSARY evidence and is NOT');
     console.error('   SUFFICIENT: a transparent proxy presents at the canonical origin too.');

@@ -339,13 +339,55 @@ path.
 
 ---
 
-## 12 — Self-closing conditions
+## 12 — The attestation sentinel (founder review, 2026-09-08)
 
-seam pins to `GOVERNED_SEAM_BASELINE` ✅ · `ORIGINAL_SEAM_MERGE` preserved ✅ · no caller/lane
-exception ✅ · SP-1 · SP-2 · SP-3 · SP-5 · SP-6 green ✅ · SP-4A refuses before inference ✅ ·
-SP-4B attestation explicit and required ✅ · no claim of network-channel proof ✅ · key never
-printed, hashed or persisted ✅ · **seam suite 60/60** ✅ · Encounter, DEVELOP and Writer's
-Studio **618 passed** ✅ · PT-3 **39** ✅ · typecheck 229 vs baseline 239, **0 regressions** ✅.
+One defect remained: both guards were `Boolean(process.env.X)`, so `X=0`, `X=false` and
+`X=no` all counted as affirmative — **a negative value becoming a positive assertion because
+the string was non-empty.**
+
+Tolerable for a feature flag. Not here: the channel attestation is the one fact this program
+**explicitly admits it cannot verify** in a transparent-proxy environment, which makes the
+human gesture more load-bearing, not less.
+
+> **Where machine proof ends and human attestation begins, the attestation itself must be
+> unambiguous.**
+
+Both acts now require **exactly `'1'`**. Deliberately not general env parsing and not truthy
+aliases — **`'true'` is refused too**, because this is a ceremony with one explicit positive
+token, and *a ceremony with synonyms is a ceremony you can perform by accident.*
+
+**22 controls, spawning the real witness** so the refusal is proven in the program rather
+than in a helper a caller could bypass:
+
+| | |
+|---|---|
+| `undefined` · `''` · `'0'` · `'false'` · `'no'` · `'true'` · `'yes'` · `'TRUE'` · `' 1'` → refuse, both guards | ✅ |
+| exactly `'1'` accepted at each guard, in order | ✅ |
+| the attestation refusal **precedes the Work** — no snapshot, digest or windows are printed | ✅ |
+| the witness never claims the attestation is machine-verified | ✅ |
+| ⛔ **SP-4A still refuses a visibly foreign origin, attested or not** — an attestation cannot overrule what the machine *can* see | ✅ |
+
+---
+
+## 13 — Self-closing conditions
+
+both affirmative guards require literal `'1'` ✅ · non-affirmative strings refuse before
+inference ✅ · SP-4A green ✅ · SP-4B remains human attestation, never machine proof ✅ ·
+byte-pin unchanged and unconditional ✅ · seam suite fully green ✅ · Encounter, DEVELOP,
+Writer's Studio and the witness controls **640 passed** ✅ · PT-3 **39** ✅ · typecheck 229 vs
+baseline 239, **0 regressions** ✅ · SP-1 · SP-2 · SP-3 · SP-5 · SP-6 green ✅ ·
+`ORIGINAL_SEAM_MERGE` preserved ✅ · no caller/lane exception ✅ · key never printed, hashed or
+persisted ✅.
+
+**AIN-STRUCTURED-PROVENANCE-01 — CLOSED.**
+
+```text
+G8 infrastructure    ✅ READY
+G8 perception        ⏳ UNWITNESSED
+```
+
+⛔ No further infrastructure work is authorized merely because G8 is uncomfortable. **The next
+evidence must be the Work itself.**
 
 > A guard refusing a governed amendment is not a broken guard. It is the guard demanding the
 > amendment's authority be made explicit.
