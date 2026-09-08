@@ -149,11 +149,7 @@ The baseline is the **published** corpus at a fixed digest — never "the manusc
 ### SEL-0 — frozen order · **AMENDED 2026-09-08, step 0 added**
 
 ```text
-0. FREEZE THE LAWFUL CANDIDATE CORPUS
-     exact observation IDs
-     exact count N
-     digest / manifest
-     exclusions named as constitutionally ineligible (F-7)
+0. FREEZE THE LAWFUL CANDIDATE CORPUS  (two bound manifests — see below)
 1. freeze numerical threshold      <- against the frozen N, never in the abstract
 2. founder records top-5
 3. lock founder ranking
@@ -178,6 +174,54 @@ Two consequences, both predeclared **before the manifest exists**:
 **(a) `3/5 + 4/10` is not evidence below N ≈ 30.** At N=15 it fires one time in six by chance; at N=20, one in fourteen. The same numbers that are near-impossible at N=226 are near-meaningless at N=15. **A threshold chosen without N is not a threshold.**
 
 **(b) The top-10 containment measure is vacuous at small N, and which condition binds *flips*.** At N=15, MAIA's "top-10" is two-thirds of the entire corpus, so containment constrains almost nothing (43% by chance) — there, the top-5 condition is the stricter one. From N≈60 upward the relationship inverts and containment becomes the stricter test. Containment carries information only when `10 << N`.
+
+### Step 0 · two bound manifests — **IDs alone do not freeze the stimulus**
+
+An observation can keep its ID while its rendering changes. `N`, the ID list and a digest could then all look stable while **the actual test stimulus had moved**. Step 0 therefore produces two manifests, each digested:
+
+```text
+A. SOURCE MANIFEST
+     observation_id
+     immutable / source evidence reference
+     raw observation revision + content digest
+     F-7 eligibility
+     exclusion reason, where ineligible
+
+B. BLIND RANKING MANIFEST          lawful survivors ONLY
+     observation_id
+     exact plain member-facing wording shown in SEL-0
+     no family / window / hash / instrumentation metadata
+     per-item text digest
+     canonical sort · N · manifest SHA-256
+```
+
+The **excluded set is frozen separately**, with IDs and explicit F-7 reason, so nobody can later improve the score by quietly relaxing eligibility.
+
+```text
+production observations -> freeze source state -> apply F-7 eligibility
+  -> freeze exclusions -> freeze exact blinded wording -> N confirmed >= 40
+  -> freeze threshold -> KELLY top-5 -> LOCK -> MAIA ranking
+```
+
+⛔ **`N` is whatever survives the production read and F-7 exclusion. It is NOT 226 by inheritance** — that figure is historical and carries no standing here.
+
+### Two sharpenings on the blind
+
+**(a) Step 1 sees `N` and nothing else.** "Freeze the corpus before seeing its size or composition" cannot be taken literally, because the threshold is set *against* N and so N must be known. The operative rule is narrower: **the threshold is set knowing the count and nothing about the contents.** The founder reads the items exactly once, at step 2, as the ranking act itself. Studying the item set between step 0 and step 1 would let the threshold be tuned to an anticipated result.
+
+**(b) ⚠️ The two rankers may not see the same surface — record it, do not paper over it.** Manifest B is the founder's stimulus: blinded plain wording, instrumentation stripped. But MAIA's selection capability, as it would operate in production, works over her *native* representation — families, windows, evidence links, the lot. So either:
+
+```text
+MAIA ranks from Manifest B      like-for-like, but strips context she
+                                would really have -> tests something
+                                narrower than production selection
+
+MAIA ranks natively             ecologically valid, but the two rankings
+                                are over different representations of the
+                                same items
+```
+
+**Neither is chosen here.** Whichever is ruled, the item set must be **identical** across both rankers, and the manifest must record which surface MAIA ranked from. A representational asymmetry that is recorded is a stated limitation; the same asymmetry unrecorded is a confound discovered after the result exists.
 
 **Predeclared floor**: SEL-0 as specified requires **N ≥ 40**. If the lawful corpus after F-7 exclusions is smaller, SEL-0 **must not be run against these measures and a weak result must not be read as a finding** — the instrument would need redesign (rank correlation over the full set rather than top-k overlap). *Recorded now so the floor cannot be reconsidered once N is known and a preferred reading exists.*
 
