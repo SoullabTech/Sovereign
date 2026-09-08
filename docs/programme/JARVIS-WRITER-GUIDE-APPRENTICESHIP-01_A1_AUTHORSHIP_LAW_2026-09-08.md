@@ -221,9 +221,19 @@ clause 2).
 
 ⭐ **Cases 5 and 6 are the structural ones, and they name a collision worth flagging now**:
 split, merge, rename and reorder are exactly the operations **WS2-08** governs (08C's topology
-commands, held). Lineage across a split is not a provenance detail — it is the same question
-08C asks about section identity, arriving from the other side. ⛔ Not a reason to open 08C, and
-not this lane's to open. **Recorded so that whoever opens either finds the other.**
+commands, held). Lineage across a split is not merely an authorship-provenance problem — it is
+**also a section-identity / topology problem**, the same question 08C asks, arriving from the
+other side.
+
+> **Founder guard, 2026-09-08: A1 may DISCOVER and SPECIFY that dependency. A1 may NOT
+> silently solve 08C from the provenance side.**
+
+⛔ The failure mode is not opening 08C — it is **answering it without opening it.** When cases
+5 and 6 block, the available move is to define section identity from whatever provenance
+needs, because that unblocks the work. That is the ownership inversion this programme
+repeatedly guards against, arriving through a blocked test rather than through a proposal.
+**Specify the dependency and return it. Recorded so that whoever opens either finds the
+other.**
 
 ### Why this cannot be deferred
 
