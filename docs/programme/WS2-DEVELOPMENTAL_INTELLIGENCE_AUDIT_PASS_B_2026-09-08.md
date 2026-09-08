@@ -22,27 +22,27 @@ The audit continues to distinguish **what the source found** from **what Writer'
 
 # 1 · Pass B citation ledger
 
-| ID | Primary source actually read | Status | Location | Disposition / qualification |
-|---|---|---|---|---|
-| **A1** | Dobson & Gilbert (2024), *Becoming the falconer*, New Writing, DOI `10.1080/14790726.2024.2329198` | **QUALIFIED** | Abstract; Introduction; Conclusion | Supports reader power, harm from unempathetic feedback, empathy, and development toward an internal ideal reader. The lead's `demonstrates close reading` phrasing is not established as such; narrow to what the paper actually says. Autoethnographic/educational setting limits generalization. |
-| **A2** | Nancy Sommers (2006), *Across the Drafts*, CCC 58(2), DOI `10.58680/ccc20065899`; primary article text read via faithful JSTOR/NCTE reproduction, publisher metadata independently confirmed | **QUALIFIED** | pp. 250–254 | Supports feedback partnership across drafts, specificity, and the fact that feedback alone does not develop writers if they cannot use it. It does **not** establish a universal experimental superiority of synchronous dialogue over written response. |
-| **A3** | Bouwer, van Braak & van der Veen (2024), *Learning and Instruction* 93:101965, DOI `10.1016/j.learninstruc.2024.101965` | **QUALIFIED** | Abstract | Supports exploratory dialogic peer conversations, shift toward higher-order comments, and higher-order revisions. Population is 84 grade-six students; mechanism is relevant, magnitude/generalization to expert writers is not licensed. |
-| **A4** | Goldstein & Conrad (1990), *Student Input and Negotiation of Meaning in ESL Writing Conferences*, TESOL Quarterly 24:443–460, DOI `10.2307/3587229` | **QUALIFIED · REPLACE CITATION** | Abstract | The research lead's generic overview citation should be replaced. Primary study supports clarification/negotiation in conferences and better revisions when meaning was negotiated. Sample is one teacher + three advanced ESL students; `reduces perceptual error` is an inference and should be removed or explicitly marked as such. |
-| **B1** | Reza et al. (2025), *Co-Writing with AI, on Human Terms*, arXiv `2504.12488`, related DOI `10.1145/3757566` | **SUPPORTED** | Abstract | Confirms PRISMA review of 109 HCI papers + 15 writer interviews; four support strategies; desired AI intervention varies across writing process, writer type, goals, values, originality, and authorship concerns. |
-| **B2** | Gero et al. (2026), *From Planning to Revision*, arXiv `2604.11009` | **QUALIFIED** | Abstract | Confirms between-subjects `n=253`, short-essay writing, ownership decrease under any AI support, planning least and drafting most, more AI text/ideas associated with less ownership and higher essay quality. Transfer to book-length professional authorship remains unlicensed. |
-| **B3** | Arnold & Kim (2025), *Interaction-Required Suggestions for Control, Ownership, and Awareness in Human-AI Co-Writing*, ACL In2Writing 2025, DOI `10.18653/v1/2025.in2writing-1.6` | **QUALIFIED** | Abstract | Implementations demonstrate fine-grained control and visibility of revision possibilities. Cognitive engagement/agency are argued design benefits, not established comparative outcome effects in the abstract. Narrow `can preserve` language accordingly. |
-| **B4** | Singh et al. (2025), *A Systematic Review of Human-AI Co-Creativity*, arXiv `2506.21333` | **SUPPORTED AS REVIEW CLAIM** | Abstract | Confirms review of 62 papers; design dimensions include creative phase, task, proactivity, user control, embodiment, model type. Review reports high user control associated with satisfaction/trust/ownership and adaptive context-sensitive proactivity as potentially enhancing collaboration. Still a preprint review; use as design evidence, not production fact. |
-| **B5** | Johnston, Pappin & Thue (2026), *Co-Designing an AI Feedback Tool for Visual Artists*, DOI `10.1145/3803784.3807569` | **CORROBORATED — PRIMARY NOT READ** | — | Official C&C proceedings index reproduces the abstract, but the paper itself remained inaccessible in this environment. Under the declared standard an index abstract is not enough. This row licenses nothing unless the paper is read; otherwise remove it from usable design evidence. |
-| **C1** | Rashkin et al. (2025), *Help Me Write a Story*, ACL 2025, DOI `10.18653/v1/2025.acl-long.1254` | **QUALIFIED** | Abstract; p. 25827 | Confirms 1,300 deliberately corrupted stories, models often specific/mostly accurate yet often miss the biggest issue and critical-vs-positive choice. This motivates selection as distinct from detection; it does not predict SEL-0 on genuine observations from uncorrupted published prose. |
-| **C2** | Fang et al. (2026), *MindCopilot*, arXiv `2605.23535`, accepted IJCAI 2026 | **QUALIFIED** | Abstract | Confirms interaction-aware metrics add information beyond output-only measures; 16 domains, 1,688 continuation queries, 30-person follow-up. Task is granular proactive continuation, not developmental manuscript dialogue. It supports interaction-aware evaluation, not `session is sufficient`. |
-| **C3** | Fan, Davis & Viberg (2026), *From Intention to Text / WriteFlow*, arXiv `2604.15800`, accepted AIED 2026 | **QUALIFIED** | Abstract | Confirms 17-person formative study and 12-expert Wizard-of-Oz study; dialogic goal articulation, monitoring, negotiation, iterative goal refinement, goal-text alignment. Small academic-writing study; useful analogue, not general proof for professional authors. |
-| **D1** | Sourati et al. (2026), *The shrinking landscape of linguistic diversity in the age of large language models*, Nature Human Behaviour, DOI `10.1038/s41562-026-02550-0` | **SUPPORTED** | Abstract | Directly confirms 3 studies / 7 datasets / >880,000 texts, retained core content, decline in linguistic diversity, 21–50% reduction in writing-complexity variance, dominant patterns amplified and others suppressed. The separate `-02549-7` item is not a competing DOI. |
-| **D2** | de Rooij & Biskjaer (2026), *Does generative AI make us think alike?*, peer-reviewed version DOI `10.1080/0144929X.2026.2726451` | **CORROBORATED — PRIMARY NOT READ** | — | Institutional final-publication record confirms 19 studies / 61 effect sizes, small significant homogenization, and task moderation, but direct paper/PDF access was blocked. Do not graduate it. D1 already carries the voice-risk argument without this source. |
-| **E1** | Liu et al. (2024), *Lost in the Middle*, TACL 12:157–173, DOI `10.1162/tacl_a_00638` | **QUALIFIED** | Abstract; §1; Conclusion | Directly demonstrates position-sensitive long-context use and middle degradation in tested models/tasks. Important risk signal, but tested systems predate current 2026 frontier models and tasks were QA/key-value retrieval. Do not state that current Opus 5 / GPT-5.6 / Gemini 3.8 necessarily exhibit the same magnitude. |
-| **E2a** | Li et al. (2025), *LaRA*, arXiv `2502.09977` | **SUPPORTED** | Abstract | 2,326 cases; 11 LLMs; optimal RAG-vs-long-context choice depends on model, context length, task and retrieval characteristics. Supports `no universal winner`. |
-| **E2b** | Li et al. (2024), *Retrieval Augmented Generation or Long-Context LLMs?*, arXiv `2407.16833`, EMNLP 2024 industry track | **SUPPORTED** | Abstract | Supports: sufficiently resourced long context outperformed RAG on average in their benchmark, RAG substantially cheaper, hybrid routing preserved comparable performance with lower cost. |
-| **E3a** | Jin et al. (2025), *LongRefiner*, ACL 2025, DOI `10.18653/v1/2025.acl-long.176` | **QUALIFIED** | Abstract | Uses hierarchical document structuring; seven QA datasets; competitive performance with 10x lower computational cost/latency than best baseline. Supports hierarchy as useful retrieval structure in QA, not proof of developmental manuscript cognition. |
-| **E3b** | Chen et al. (2026), *Beyond Chunking*, ACL 2026, DOI `10.18653/v1/2026.acl-long.829` | **QUALIFIED** | Abstract | Discourse-aware hierarchical retrieval improves long-document QA across four datasets, genres and languages. Transfer from QA to Writer's Studio remains an architectural hypothesis. |
+| ID | Primary source actually read | Status | Location | Source object | Read depth | Read-basis note | Disposition / qualification |
+|---|---|---|---|---|---|---|---|
+| **A1** | Dobson & Gilbert (2024), *Becoming the falconer*, New Writing, DOI `10.1080/14790726.2024.2329198` | **QUALIFIED** | Abstract; Introduction; Conclusion | FULL PRIMARY | TARGETED BODY TEXT |  | Supports reader power, harm from unempathetic feedback, empathy, and development toward an internal ideal reader. The lead's `demonstrates close reading` phrasing is not established as such; narrow to what the paper actually says. Autoethnographic/educational setting limits generalization. |
+| **A2** | Nancy Sommers (2006), *Across the Drafts*, CCC 58(2), DOI `10.58680/ccc20065899`; primary article text read via faithful JSTOR/NCTE reproduction, publisher metadata independently confirmed | **QUALIFIED** | pp. 250–254 | FULL PRIMARY (faithful reproduction) | TARGETED BODY TEXT |  | Supports feedback partnership across drafts, specificity, and the fact that feedback alone does not develop writers if they cannot use it. It does **not** establish a universal experimental superiority of synchronous dialogue over written response. |
+| **A3** | Bouwer, van Braak & van der Veen (2024), *Learning and Instruction* 93:101965, DOI `10.1016/j.learninstruc.2024.101965` | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Supports exploratory dialogic peer conversations, shift toward higher-order comments, and higher-order revisions. Population is 84 grade-six students; mechanism is relevant, magnitude/generalization to expert writers is not licensed. |
+| **A4** | Goldstein & Conrad (1990), *Student Input and Negotiation of Meaning in ESL Writing Conferences*, TESOL Quarterly 24:443–460, DOI `10.2307/3587229` | **QUALIFIED · REPLACE CITATION** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | The research lead's generic overview citation should be replaced. Primary study supports clarification/negotiation in conferences and better revisions when meaning was negotiated. Sample is one teacher + three advanced ESL students; `reduces perceptual error` is an inference and should be removed or explicitly marked as such. |
+| **B1** | Reza et al. (2025), *Co-Writing with AI, on Human Terms*, arXiv `2504.12488`, related DOI `10.1145/3757566` | **SUPPORTED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Confirms PRISMA review of 109 HCI papers + 15 writer interviews; four support strategies; desired AI intervention varies across writing process, writer type, goals, values, originality, and authorship concerns. |
+| **B2** | Gero et al. (2026), *From Planning to Revision*, arXiv `2604.11009` | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Confirms between-subjects `n=253`, short-essay writing, ownership decrease under any AI support, planning least and drafting most, more AI text/ideas associated with less ownership and higher essay quality. Transfer to book-length professional authorship remains unlicensed. |
+| **B3** | Arnold & Kim (2025), *Interaction-Required Suggestions for Control, Ownership, and Awareness in Human-AI Co-Writing*, ACL In2Writing 2025, DOI `10.18653/v1/2025.in2writing-1.6` | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Implementations demonstrate fine-grained control and visibility of revision possibilities. Cognitive engagement/agency are argued design benefits, not established comparative outcome effects in the abstract. Narrow `can preserve` language accordingly. |
+| **B4** | Singh et al. (2025), *A Systematic Review of Human-AI Co-Creativity*, arXiv `2506.21333` | **SUPPORTED AS REVIEW CLAIM** | Abstract | PRIMARY ABSTRACT (arXiv 2506.21333) | ABSTRACT ONLY | ✅ founder-verified: relied-on propositions completely stated in the primary abstract | Confirms review of 62 papers; design dimensions include creative phase, task, proactivity, user control, embodiment, model type. Review reports high user control associated with satisfaction/trust/ownership and adaptive context-sensitive proactivity as potentially enhancing collaboration. Still a preprint review; use as design evidence, not production fact. |
+| **B5** | Johnston, Pappin & Thue (2026), *Co-Designing an AI Feedback Tool for Visual Artists*, DOI `10.1145/3803784.3807569` | **CORROBORATED — PRIMARY NOT READ** | — | ABSTRACT SURROGATE / INDEX | ABSTRACT ONLY | REMOVED — close item 1 | Official C&C proceedings index reproduces the abstract, but the paper itself remained inaccessible in this environment. Under the declared standard an index abstract is not enough. This row licenses nothing unless the paper is read; otherwise remove it from usable design evidence. |
+| **C1** | Rashkin et al. (2025), *Help Me Write a Story*, ACL 2025, DOI `10.18653/v1/2025.acl-long.1254` | **QUALIFIED** | Abstract; p. 25827 | FULL PRIMARY | TARGETED BODY TEXT |  | Confirms 1,300 deliberately corrupted stories, models often specific/mostly accurate yet often miss the biggest issue and critical-vs-positive choice. This motivates selection as distinct from detection; it does not predict SEL-0 on genuine observations from uncorrupted published prose. |
+| **C2** | Fang et al. (2026), *MindCopilot*, arXiv `2605.23535`, accepted IJCAI 2026 | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade — FQ-4 rests on this row | Confirms interaction-aware metrics add information beyond output-only measures; 16 domains, 1,688 continuation queries, 30-person follow-up. Task is granular proactive continuation, not developmental manuscript dialogue. It supports interaction-aware evaluation, not `session is sufficient`. |
+| **C3** | Fan, Davis & Viberg (2026), *From Intention to Text / WriteFlow*, arXiv `2604.15800`, accepted AIED 2026 | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Confirms 17-person formative study and 12-expert Wizard-of-Oz study; dialogic goal articulation, monitoring, negotiation, iterative goal refinement, goal-text alignment. Small academic-writing study; useful analogue, not general proof for professional authors. |
+| **D1** | Sourati et al. (2026), *The shrinking landscape of linguistic diversity in the age of large language models*, Nature Human Behaviour, DOI `10.1038/s41562-026-02550-0` | **SUPPORTED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Directly confirms 3 studies / 7 datasets / >880,000 texts, retained core content, decline in linguistic diversity, 21–50% reduction in writing-complexity variance, dominant patterns amplified and others suppressed. The separate `-02549-7` item is not a competing DOI. |
+| **D2** | de Rooij & Biskjaer (2026), *Does generative AI make us think alike?*, peer-reviewed version DOI `10.1080/0144929X.2026.2726451` | **CORROBORATED — PRIMARY NOT READ** | — | not reached | — | REMOVED — close item 2 | Institutional final-publication record confirms 19 studies / 61 effect sizes, small significant homogenization, and task moderation, but direct paper/PDF access was blocked. Do not graduate it. D1 already carries the voice-risk argument without this source. |
+| **E1** | Liu et al. (2024), *Lost in the Middle*, TACL 12:157–173, DOI `10.1162/tacl_a_00638` | **QUALIFIED** | Abstract; §1; Conclusion | FULL PRIMARY | TARGETED BODY TEXT |  | Directly demonstrates position-sensitive long-context use and middle degradation in tested models/tasks. Important risk signal, but tested systems predate current 2026 frontier models and tasks were QA/key-value retrieval. Do not state that current Opus 5 / GPT-5.6 / Gemini 3.8 necessarily exhibit the same magnitude. |
+| **E2a** | Li et al. (2025), *LaRA*, arXiv `2502.09977` | **SUPPORTED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | 2,326 cases; 11 LLMs; optimal RAG-vs-long-context choice depends on model, context length, task and retrieval characteristics. Supports `no universal winner`. |
+| **E2b** | Li et al. (2024), *Retrieval Augmented Generation or Long-Context LLMs?*, arXiv `2407.16833`, EMNLP 2024 industry track | **SUPPORTED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Supports: sufficiently resourced long context outperformed RAG on average in their benchmark, RAG substantially cheaper, hybrid routing preserved comparable performance with lower cost. |
+| **E3a** | Jin et al. (2025), *LongRefiner*, ACL 2025, DOI `10.18653/v1/2025.acl-long.176` | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Uses hierarchical document structuring; seven QA datasets; competitive performance with 10x lower computational cost/latency than best baseline. Supports hierarchy as useful retrieval structure in QA, not proof of developmental manuscript cognition. |
+| **E3b** | Chen et al. (2026), *Beyond Chunking*, ACL 2026, DOI `10.18653/v1/2026.acl-long.829` | **QUALIFIED** | Abstract | **UNRESOLVED** | ABSTRACT ONLY | ⚠️ downgrade | Discourse-aware hierarchical retrieval improves long-document QA across four datasets, genres and languages. Transfer from QA to Writer's Studio remains an architectural hypothesis. |
 
 ---
 
@@ -358,3 +358,76 @@ This does not disturb the FQ results: FQ-1 rests on Sommers (A2, primary article
 The parent records **point at this document's §1 and §2 as the authoritative ledger.** They do not duplicate it.
 
 That choice is taken directly from the §7 divergence finding: roadmap §2 and §4 drifted precisely because a derived copy of a list was maintained alongside its source until nobody could tell which governed. **A second ledger would reproduce that defect on the evidence set** — the one place the lane can least afford it.
+
+---
+
+# 9 · Item 3 · access/read-depth reconciliation — **ITEM 3 DOES NOT CLOSE HERE**
+
+Two fields added to §1 per founder ruling. `Location = Abstract` is **not itself a defect**; B5 failed for the narrower recorded reason — what was reached was an index reproduction of an abstract while the paper stayed unread.
+
+### Evidentiary rule, applied
+
+```text
+An ORIGINAL PRIMARY ABSTRACT may license a narrow SUPPORTED/QUALIFIED claim
+when the relied-upon proposition is actually and completely stated in it.
+It may NOT license details requiring methods, results, tables, population
+description, or body argument.
+
+An ABSTRACT SURROGATE / INDEX cannot license a Pass-B design constraint.
+
+Where the record cannot establish which source object was read:
+  -> CORROBORATED — READ BASIS UNRESOLVED, until established.
+
+Full-text access is NOT inferred from an arXiv ID, a DOI, or a PDF existing.
+```
+
+### Classification result
+
+```text
+FULL PRIMARY · TARGETED BODY TEXT        4   A1 · A2 · C1 · E1
+PRIMARY ABSTRACT · founder-verified      1   B4
+READ BASIS UNRESOLVED                   12   A3 A4 B1 B2 B3 C2 C3 D1
+                                             E2a E2b E3a E3b
+REMOVED                                  2   B5 · D2
+```
+
+Four rows were determinable **from the record itself**: their `Location` column cites sections or pages beyond the abstract (`Introduction; Conclusion`, `pp. 250–254`, `p. 25827`, `§1; Conclusion`), which is positive evidence of body-text reading. The twelve showing `Abstract` alone name no source object, so under the ruled ordering they downgrade.
+
+**This is a recall task, not a research expedition.** Whoever ran Pass B knows which object was opened for each row; annotating twelve entries restores them without re-reading anything. The downgrade records what the *document* can establish, not a claim that the reads did not happen.
+
+### ⚠️ Consequence for the falsification quota
+
+Applying the same standard to falsifying and supporting evidence — the symmetry already ruled when Pass A's `2/5` became `0/5 licensed` — the five FQs no longer verify uniformly from the ledger:
+
+```text
+FQ-1   Sommers A2      FULL PRIMARY · body text        ✅ intact
+FQ-2   Singh B4        primary abstract, verified      ✅ intact
+FQ-5   Singh B4        primary abstract, verified      ✅ intact
+FQ-4   MindCopilot C2  READ BASIS UNRESOLVED           ⚠️ basis unconfirmed
+FQ-3   Bhat et al.     ⛔ NO LEDGER ROW EXISTS          ⛔ unverifiable here
+```
+
+**⛔ Second finding, and the more serious one: FQ-3's source is not in the citation ledger at all.** *Reactive Writers* (`arXiv:2603.10374`) was "added during this pass" and carries no row, no status, no location, no read basis. The same is true of Zhang, Bu & Dhillon (`arXiv:2601.10236`) cited in §4. **A source that licensed a ruling is absent from the register of sources** — structurally the §7 divergence again: a set used for a decision that no register records.
+
+FQ-3 is load-bearing. It governs re-frozen Phase 0 statement 4, contributes to statement 5, and generates the entire close item 9 lineage constraint set.
+
+**Neither finding says FQ-3 or FQ-4 is wrong.** Both say the record cannot presently confirm their basis, which under this lane's own standard is the thing that must be said out loud.
+
+### Item 3 close condition — remaining
+
+```text
+done   1. SOURCE OBJECT + READ DEPTH added to the authoritative ledger
+done   2. every Abstract row classified
+open   3. verify the relied-on claim appears within what was actually read
+        -> requires the Pass B reader to name the object for 12 rows
+open   4. downgrade/remove rows whose basis cannot be established
+        -> 12 currently downgraded pending step 3
+open   4b. ADMIT Bhat et al. 2603.10374 to the ledger with a read basis,
+        or FQ-3's licensing cannot be confirmed
+open   5. replace the headline tally with the honest split
+done   6. B5 and D2 stay REMOVED
+```
+
+**Headline tally may not read `20 source entries read at primary text`.** The defensible statement today is: **5 rows with an established read basis, 12 unresolved, 2 removed, and 1+ falsification source unregistered.**
+
+Item 5 correctly waits on this. Reconciling candidate constraints against a ledger whose evidentiary status is unsettled would invert the dependency.
