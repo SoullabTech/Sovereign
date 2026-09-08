@@ -66,9 +66,52 @@ const OCCASIONING_ACTS: readonly SupportOccasionKind[] = [
 export interface SupportOccasion {
   readonly goalId: string;
   readonly kind: SupportOccasionKind;
-  /** The grant in force. Never `track_only`: that grant mints nothing. */
-  readonly grant: Exclude<GoalSupport, 'track_only'>;
+  /** FR-17 — where the authority for THIS response comes from. */
+  readonly authority: SupportAuthority;
 }
+
+/**
+ * FR-17 — STANDING GRANT vs TURN-LOCAL AUTHORITY.
+ *
+ *     Standing grant governs what MAIA may offer without a fresh request.
+ *     An explicit member request may grant narrower turn-local authority
+ *     without modifying the standing grant.
+ *
+ * Without this the system says the absurd thing:
+ *
+ *     Writer:  "Could you encourage me about this right now?"
+ *     MAIA:    "No — three weeks ago you selected Track only."
+ *
+ * A stored preference is a standing permission, not a gag order against the
+ * writer's own present request. So an explicit ask carries its own authority
+ * for that turn — and `scope` records what was actually asked for, because the
+ * ask bounds the response in BOTH directions: `encourage` plus an explicit ask
+ * yields encouragement, never the broader reflective powers of `work_with`.
+ *
+ * ⛔ A turn-local authority NEVER mutates the stored grant. Asking to be
+ * encouraged today is not choosing to be encouraged from now on, and silently
+ * promoting `track_only` to `encourage` would convert one request into a
+ * standing permission the writer never gave.
+ */
+export type SupportAuthority =
+  /** The writer's standing choice on this goal. Never `track_only`. */
+  | { readonly kind: 'standing'; readonly grant: Exclude<GoalSupport, 'track_only'> }
+  /** The writer asked, in this turn, for exactly this. */
+  | { readonly kind: 'turn_local'; readonly scope: Exclude<GoalSupport, 'track_only'> };
+
+/**
+ * FR-16 — what a form may return. **Silence is a first-class member.**
+ *
+ * An occasion authorizes AT MOST ONE response; it does not require one. Written
+ * as a type so that "response required" is unrepresentable: a form implementing
+ * this contract can always return null, and nothing downstream may treat null
+ * as a failure to be retried or filled.
+ *
+ * If MAIA speaks every time she may, the writer learns that acting on a goal
+ * summons her — FR-15 prevents cadence at the minting layer, and this prevents
+ * the FORM layer from quietly recreating it.
+ */
+export type SupportResponse<T> = T | null;
 
 /**
  * Mint an occasion for a member act — the ONLY way one comes into existence.
@@ -84,8 +127,29 @@ export interface SupportOccasion {
 export function occasionFor(
   act: SupportOccasionKind,
   goal: { id: string; support: GoalSupport },
+  /**
+   * FR-17 — what the writer asked for IN THIS TURN, if they asked.
+   *
+   * Only meaningful with `act: 'asked'`. Supplying it does not and cannot
+   * change `goal.support`: this function returns an occasion and writes
+   * nothing, which is why turn-local authority can exist without a storage
+   * path that could silently promote a grant.
+   */
+  askedFor?: Exclude<GoalSupport, 'track_only'>,
 ): SupportOccasion | null {
-  if (goal.support === 'track_only') return null;
   if (!OCCASIONING_ACTS.includes(act)) return null;
-  return { goalId: goal.id, kind: act, grant: goal.support };
+
+  if (act === 'asked') {
+    /* An explicit request carries its own authority, bounded to what was
+       asked. A bare 'asked' with no scope is not a request — it is a caller
+       that has not said what the writer wanted, and inventing a scope for them
+       would be the system deciding what they asked for. */
+    if (!askedFor) return null;
+    return { goalId: goal.id, kind: act, authority: { kind: 'turn_local', scope: askedFor } };
+  }
+
+  /* Every other act is unsolicited by definition, so it needs the standing
+     grant — this is the "without a fresh request" half of FR-17. */
+  if (goal.support === 'track_only') return null;
+  return { goalId: goal.id, kind: act, authority: { kind: 'standing', grant: goal.support } };
 }

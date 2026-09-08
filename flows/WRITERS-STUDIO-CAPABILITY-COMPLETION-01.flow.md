@@ -24,11 +24,21 @@ CURRENT ACT      capability work, per the founder's product sequence
                NOT "finish Goals": a writer can already declare, hold,
                measure and govern one.
 
-  FR-14  GRANT ≠ TRIGGER ≠ CADENCE
-         Permission to support is not permission to interrupt.
-         A grant says what relationship is permitted. It does not
-         authorize push, reminders, interruption, or a cadence.
-         maiaMaySupport() answers MAY, never SHOULD.
+  THE GOALS SUPPORT RULES, in order
+
+  FR-13  GRANT       what support the writer permits, standing
+  FR-14  SEPARATION  grant ≠ occasion ≠ cadence
+                     permission to support is not permission to interrupt
+  FR-15  OCCASION    only a member act may mint one; a render path cannot
+                     support comes from an EVENT, never from STATE
+  FR-16  FORM        silence is lawful; a response must close, not open
+                     a completed goal is allowed to be complete
+  FR-17  AUTHORITY   standing grant, or turn-local ask — never silently
+                     converted from one into the other
+
+  MAIA SUPPORT still absent. The negative space was built first:
+  the system knows when MAIA may have a moment of support before it
+  has any ability to support.
 
   Writer's Studio does not have an "unbuilt-half" problem. It has a truth
   problem, a bounded-perception problem, and then a set of already-ratified

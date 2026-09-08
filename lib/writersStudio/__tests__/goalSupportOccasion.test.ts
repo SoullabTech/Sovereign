@@ -46,12 +46,17 @@ describe('FR-15 · a member act may occasion support', () => {
 
   it('mints one occasion for each occasioning act', () => {
     for (const act of ['declared', 'met', 'set_aside', 'released', 'asked'] as SupportOccasionKind[]) {
-      expect(occasionFor(act, goal)).toEqual({ goalId: 'g1', kind: act, grant: 'encourage' });
+      const expected = act === 'asked'
+        ? { goalId: 'g1', kind: act, authority: { kind: 'turn_local', scope: 'encourage' } }
+        : { goalId: 'g1', kind: act, authority: { kind: 'standing', grant: 'encourage' } };
+      expect(occasionFor(act, goal, 'encourage')).toEqual(expected);
     }
   });
 
   it('mints nothing when the writer asked for quiet', () => {
-    for (const act of ['declared', 'met', 'asked'] as SupportOccasionKind[]) {
+    /* Unsolicited acts only. An explicit ask is FR-17 territory, tested below:
+       a stored preference is not a gag order against the writer's own request. */
+    for (const act of ['declared', 'met', 'set_aside', 'released'] as SupportOccasionKind[]) {
       expect(occasionFor(act, { id: 'g1', support: 'track_only' })).toBeNull();
     }
   });
@@ -66,7 +71,7 @@ describe('FR-15 · a member act may occasion support', () => {
     /* "Is this occasion still fresh enough to use?" is the first question of a
        cadence. An occasion has no answer to it. */
     const o = occasionFor('met', goal)!;
-    expect(Object.keys(o).sort()).toEqual(['goalId', 'grant', 'kind']);
+    expect(Object.keys(o).sort()).toEqual(['authority', 'goalId', 'kind']);
     expect(code(MODULE)).not.toMatch(/Date\.now\(\)|new Date\(|timestamp|lastSupported|cadence|interval/i);
   });
 
@@ -132,5 +137,58 @@ describe('FR-15 · no surveillance was built to prevent repetition', () => {
        nothing needs to — which is how Invariant 3 operates without
        surveillance. */
     expect(MODULE).toContain('EXPLICIT MAIA ASK         is itself a new member act');
+  });
+});
+
+
+describe('FR-17 · standing grant vs turn-local authority', () => {
+  it('an explicit ask is honored even when the standing grant is quiet', () => {
+    /* Otherwise: "Could you encourage me about this right now?" — "No, three
+       weeks ago you selected Track only." A stored preference is a standing
+       permission, not a gag order against the writer's own present request. */
+    const o = occasionFor('asked', { id: 'g', support: 'track_only' }, 'encourage');
+    expect(o).toEqual({ goalId: 'g', kind: 'asked', authority: { kind: 'turn_local', scope: 'encourage' } });
+  });
+
+  it('the ask bounds the response in BOTH directions', () => {
+    /* encourage + an explicit ask yields encouragement, never the broader
+       reflective powers of work_with. */
+    const o = occasionFor('asked', { id: 'g', support: 'encourage' }, 'encourage')!;
+    expect(o.authority).toEqual({ kind: 'turn_local', scope: 'encourage' });
+    const w = occasionFor('asked', { id: 'g', support: 'track_only' }, 'work_with')!;
+    expect(w.authority).toEqual({ kind: 'turn_local', scope: 'work_with' });
+  });
+
+  it('a bare ask with no scope is not a request', () => {
+    /* Inventing a scope would be the system deciding what the writer asked
+       for. */
+    expect(occasionFor('asked', { id: 'g', support: 'encourage' })).toBeNull();
+  });
+
+  it('unsolicited acts still require the standing grant', () => {
+    expect(occasionFor('met', { id: 'g', support: 'track_only' }, 'encourage')).toBeNull();
+  });
+
+  it('turn-local authority cannot mutate the stored grant', () => {
+    /* Asking to be encouraged today is not choosing to be encouraged from now
+       on. This function returns an occasion and writes nothing at all, which is
+       why the promotion path does not exist to be taken. */
+    const goal = { id: 'g', support: 'track_only' as const };
+    occasionFor('asked', goal, 'work_with');
+    expect(goal.support).toBe('track_only');
+    expect(code(MODULE)).not.toMatch(/UPDATE|INSERT|apiFetch|fetch\(|query\(/);
+  });
+});
+
+describe('FR-16 · silence is a first-class result', () => {
+  it('the form contract admits null, so "response required" is unrepresentable', () => {
+    const src = code(MODULE);
+    expect(src).toContain('SupportResponse<T> = T | null');
+  });
+
+  it('nothing in the seam treats an absent response as a failure', () => {
+    for (const banned of ['retry', 'fallback', 'ensureResponse', 'mustRespond', 'defaultResponse']) {
+      expect(code(MODULE)).not.toMatch(new RegExp(banned, 'i'));
+    }
   });
 });
