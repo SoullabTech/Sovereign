@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
-import { deleteWork, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
+import { deleteWork, removeWork, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
 import { CANVAS_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { useCurrentManuscript } from './useCurrentManuscript';
@@ -119,6 +119,18 @@ export default function WritersStudioHome() {
     if (!outcome.ok) throw new Error(outcome.message);
   };
 
+  /**
+   * WRITERS-STUDIO-WORK-SHELF-01. The container-only act, kept as its own
+   * handler rather than a flag on the one above — a boolean would put both
+   * outcomes one typo apart, and the two differ in whether a member's writing
+   * still exists afterwards.
+   */
+  const onRemove = async (workId: string) => {
+    const outcome = await removeWork(workId, apiFetch);
+    await refresh();
+    if (!outcome.ok) throw new Error(outcome.message);
+  };
+
   return (
     <HomeView
       loading={worksPhase === 'loading' || msPhase === 'loading'}
@@ -130,6 +142,7 @@ export default function WritersStudioHome() {
       onMakeWork={onMakeWork}
       onAddToWork={onAddToWork}
       onDelete={onDelete}
+      onRemove={onRemove}
     />
   );
 }
