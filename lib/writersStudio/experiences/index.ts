@@ -119,6 +119,23 @@ export async function reviseExperience(
  * ⛔ This confers participation and NOTHING else (§XII). It grants no read of the participant's
  * Works, drafts, Reflections, MAIA conversations or private Studio material, and nothing anywhere
  * may key access off the row it writes.
+ *
+ * ⭐ THIS FUNCTION IS THE ENCOUNTER THRESHOLD (§X — semantic hold).
+ *
+ * Writing a participation row freezes the version, by database trigger. So whatever product event
+ * calls this IS the encounter, and the schema must not be allowed to decide that by accident.
+ * The binding is therefore stated here, once, and asserted by
+ * `__tests__/encounterThresholdIsExplicit.test.ts`: this is the ONLY writer of
+ * `writer_experience_participations`.
+ *
+ * **What must NOT be wired to this**, unless a founder ruling separately intends it:
+ *
+ *   invitation · enrollment by a facilitator · roster creation · preview ·
+ *   opening an informational landing page · browsing the movements
+ *
+ * None of those is a member encountering the Experience, and each would freeze a version the
+ * creator was still shaping — turning a look at the door into history. The threshold is the
+ * member's own act of entering.
  */
 export async function beginParticipation(
   experienceId: string, memberId: string, client: Client = null,
