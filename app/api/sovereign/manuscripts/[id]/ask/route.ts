@@ -40,6 +40,15 @@ import {
 } from '@/lib/manuscript/ask/developmentalContext';
 import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReader';
 import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
+import { parseSelectionCommission, type SelectionCommission } from '@/lib/manuscript/ask/selectionCommission';
+import { selectDevelopmental } from '@/lib/manuscript/ask/developmentalSelector';
+/* THE BOUNDARY SEAM, AND NOT THE STANDING STORE. This route does not import
+   `currentStandings` and must not: the D5 amendment permits standing to enforce
+   eligibility upstream of cognition, through this seam, and the seam returns
+   lawful KEYS rather than a standing map. There is no standing value in this
+   file to leak into a prompt. */
+import { resolveLawfulCandidates } from '@/lib/manuscript/boundary/candidateEligibility';
+import { assessReading } from '@/lib/manuscript/developmentalReading/assess';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,6 +138,9 @@ function parseAnyAnchor(v: unknown): AskAnchor | null {
 export const __supportedAnchorsForTest = SUPPORTED_ANCHORS;
 export const __parseAnchorForTest = parseAnchor;
 export const __parseDevelopmentalAnchorForTest = parseDevelopmentalAnchor;
+/* A commission is NOT an anchor. Exported separately for the falsifier that
+   asserts it never reached SUPPORTED_ANCHORS or either anchor parser. */
+export const __parseSelectionCommissionForTest = parseSelectionCommission;
 
 /**
  * GET — the threads already open on an anchor, so the surface may offer to
@@ -204,6 +216,25 @@ export async function POST(
 
   const threadId = typeof body.threadId === 'string' ? body.threadId : null;
   const anchor = threadId ? null : parseAnyAnchor(body.anchor);
+
+  /* SEL-0 — THE SELECTION COMMISSION BRANCH.
+     WRITER PRECEDENCE IS ENFORCED BY THIS ORDER AND BY NOTHING ELSE (Q1,
+     absolute). The commission is only READ when no anchor was parsed, so a
+     request naming an observation cannot reach the selector even if it also
+     carries a commission field — the selector is not consulted, rather than
+     consulted and then overruled. A resumed thread never selects either: it
+     already has its observation, and choosing a second one inside it would
+     substitute for an address the writer already made.
+     ABSENCE OF AN ANCHOR IS NOT PERMISSION — a commission must be present and
+     well-formed in its own right, which is what `parseSelectionCommission`
+     refuses to infer from anything else about the request. */
+  const commission = threadId || anchor ? null : parseSelectionCommission(body.selectionCommission);
+  if (commission) {
+    return developmentalSelectionTurn({
+      manuscriptId: id, memberId, commission, question,
+    });
+  }
+
   if (!threadId && !anchor) {
     return NextResponse.json({ refusal: 'anchor_unknown' }, { status: 422 });
   }
@@ -487,4 +518,144 @@ async function developmentalTurn(input: {
       unverifiableEvidence: ctx.evidence.filter((e) => e.kind === 'unverifiable').length,
     },
   });
+}
+
+/**
+ * SEL-0 — MAIA choosing what to raise, on the writer's explicit commission.
+ *
+ * THIS IS THE REAL STUDIO PATH. The boundary and the selector run here, in the
+ * ask route, and the observation the selector chooses is handed straight to
+ * `developmentalTurn` — the same function that serves an observation the writer
+ * named. What reaches the room is one observation in an ordinary ask thread,
+ * with ordinary turns, ordinary staleness and ordinary provenance. Nothing
+ * about the conversation is a selection surface.
+ *
+ * THE ORDER IS THE CONTRACT'S ORDER: boundary, then set, then selector. The
+ * selector is NOT INVOKED when a gate fires. A gate is a 200 carrying a named
+ * state, not an error — *"there is nothing I may raise"* is a true answer to
+ * the question the writer asked.
+ *
+ * ⛔ STANDING NEVER APPEARS IN THIS FUNCTION. It is read inside the boundary
+ * seam and reduced there to the set of keys it excludes; what comes back is a
+ * list of lawful keys. So there is no standing value here to pass on, log, or
+ * accidentally include — the D5 amendment is satisfied by the absence of the
+ * data rather than by discipline about it.
+ *
+ * ⛔ THE ORDERING NEVER LEAVES THIS FUNCTION. `ordering[0]` becomes the offered
+ * observation; the rest is discarded with the request. Confidence is never
+ * returned. §2.7 forbids the room a ranked list and §2.6 forbids it a number,
+ * and the way to guarantee that is to never send either.
+ */
+async function developmentalSelectionTurn(input: {
+  manuscriptId: string;
+  memberId: string;
+  commission: SelectionCommission;
+  question: string;
+}) {
+  const { manuscriptId, memberId, commission, question } = input;
+
+  const reading = await loadFrozenDevelopmentalReading(
+    manuscriptId, commission.readingId, memberId);
+  if (!reading || reading.outcome !== 'reading') {
+    return NextResponse.json({ refusal: 'not_found' }, { status: 404 });
+  }
+
+  /* The frozen reading against the Work as it now stands — the only comparison
+     that establishes supersession. A failure to load the live Work surfaces as
+     `unmeasured` and is caught by the first gate; it is never absorbed. */
+  const now = await loadLiveWork(manuscriptId, memberId);
+  const assessment = assessReading(reading, now);
+
+  let boundary;
+  try {
+    boundary = await resolveLawfulCandidates({
+      memberId, reading, assessment, offered: new Set(commission.offered),
+    });
+  } catch {
+    /* THE STANDING READ THREW, AND THAT IS NOT "NOTHING IS DISMISSED".
+       `currentStandings` throws rather than returning an empty result for
+       exactly this reason. Selecting from a candidate set built on an unread
+       boundary would let an infrastructure failure quietly re-offer something
+       the writer dismissed. */
+    return NextResponse.json(
+      { selection: { commissionId: commission.commissionId, refusal: 'boundary_unreadable' } },
+      { status: 503 });
+  }
+
+  if (boundary.gate !== null) {
+    return NextResponse.json(
+      { selection: { commissionId: commission.commissionId, gate: boundary.gate } },
+      { status: 200 });
+  }
+
+  const candidates = reading.observations.filter((o) => boundary.lawfulKeys.includes(o.key));
+
+  /* Permitted input (§2.4, unaffected by the D5 amendment), read through the
+     existing thread reader rather than a second query written for the selector.
+     An observation the writer already opened a conversation about is a fact
+     about THEIR act, not a standing and not a usage signal. */
+  const openThreads = new Set<string>();
+  for (const o of candidates) {
+    const threads = await threadsOnAnchor(manuscriptId, memberId, {
+      on: 'observation', readingId: reading.id, observationKey: o.key,
+    });
+    if (threads.length > 0) openThreads.add(o.key);
+  }
+
+  const result = await selectDevelopmental({
+    candidates,
+    writerTurn: question,
+    commissionedLens: reading.scope.commissionedLens,
+    withStructure: reading.scope.withStructure,
+    sectionsRead: reading.scope.bodyScope.length,
+    revisionNumber: reading.readState.revisionNumber,
+    openThreads,
+  });
+
+  if (result.kind === 'unreachable') {
+    /* NOT A DECLINE. A transport or format failure must never be rendered to
+       the writer as MAIA's developmental restraint. */
+    return NextResponse.json(
+      { selection: { commissionId: commission.commissionId, refusal: 'unreachable' } },
+      { status: 502 });
+  }
+
+  if (result.kind === 'decline') {
+    /* Terminal within this commission (§2.6): the inputs are unchanged by a
+       decline, so a subsequent "what else?" would deterministically decline
+       again. The room is told so rather than invited to retry. */
+    return NextResponse.json(
+      { selection: { commissionId: commission.commissionId, outcome: 'decline', terminal: true } },
+      { status: 200 });
+  }
+
+  const chosen = result.ordering[0]!;
+
+  /* ONE OBSERVATION, THROUGH THE ORDINARY PATH. The synthesized anchor is the
+     same shape the writer's own address produces, so the thread MAIA opens is
+     indistinguishable from one they opened themselves — which is what makes
+     this a conversation rather than a recommendation. */
+  const turn = await developmentalTurn({
+    manuscriptId,
+    memberId,
+    anchor: { on: 'observation', readingId: reading.id, observationKey: chosen },
+    existing: null,
+    question,
+  });
+
+  const turnBody = await turn.json().catch(() => ({}));
+  return NextResponse.json(
+    {
+      ...(turnBody as Record<string, unknown>),
+      selection: {
+        commissionId: commission.commissionId,
+        outcome: 'offered',
+        observationKey: chosen,
+        /* What the room carries back on "what else?" so the next offer
+           advances. Commission-scoped by construction: a new commissionId
+           starts from an empty record and cannot inherit this one. */
+        offered: [...commission.offered, chosen],
+      },
+    },
+    { status: turn.status });
 }

@@ -37,6 +37,8 @@ import type { DevelopmentalReaderRequest, DevelopmentalReaderResult } from '../d
 import type { ReaderIdentity } from '../structure/readerProvenance';
 import {
   READING_CONTRACT_VERSION,
+  type F7EligibilityRecord,
+  type F7Verdict,
   isPhenomenon,
   observationKey,
   type ClassifierIdentity,
@@ -84,6 +86,36 @@ export function structureDependencyOf(refs: readonly EvidenceRef[]): StructureDe
   return refs.some(isStructural) ? { kind: 'authored-structure' } : { kind: 'independent' };
 }
 
+/**
+ * The F-7 eligibility record a NEW reading is frozen with.
+ *
+ * ⛔ EVERY VERDICT IS `unestablished`, AND THAT IS THE TRUTH, NOT A PLACEHOLDER.
+ * No F-7 adjudicator exists in this runtime: nothing classifies absence-shaped
+ * openness at freeze time. The ruling requires the record to exist and to be
+ * immutable; it does not authorize inventing verdicts, and building a
+ * classifier here would be the later F-7 repair phase, which is not open.
+ *
+ * So the record says exactly what happened — no adjudicator ran — and because
+ * `unestablished` is not `eligible`, nothing becomes MAIA-selectable by having
+ * been recorded. The substrate is in place for the repair phase to fill.
+ */
+export const F7_RULE = 'E1 §3.2 — unbounded absence forbidden; bounded non-return lawful';
+export const F7_RULE_VERSION = 'WS2-ENCOUNTER-01_E1_NOTICING_VOCABULARY_2026-09-08';
+
+function unadjudicatedF7(keys: readonly string[]): F7EligibilityRecord {
+  const verdicts: Record<string, F7Verdict> = {};
+  for (const k of keys) verdicts[k] = 'unestablished';
+  return {
+    rule: F7_RULE,
+    ruleVersion: F7_RULE_VERSION,
+    adjudicator: {
+      kind: 'none',
+      reason: 'no F-7 adjudicator exists in this runtime; the verdicts are unestablished, not assumed',
+    },
+    verdicts,
+  };
+}
+
 export function freezeReading(input: FreezeInput): FreezeOutcome {
   const { request, result, phenomena, reader, classifier, manuscriptId } = input;
   const { evidence } = request;
@@ -106,6 +138,9 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
       manuscriptId, scope,
       readState: evidence.readState, coverage: evidence.coverage,
       provenance: { reader, classifier: null, readingContractVersion: READING_CONTRACT_VERSION },
+      /* A `none` reading has no observation to adjudicate, so the record is a
+         complete record of nothing rather than an absent one. */
+      f7Eligibility: unadjudicatedF7([]),
       outcome: 'none', observations: [],
     } };
   }
@@ -155,6 +190,7 @@ export function freezeReading(input: FreezeInput): FreezeOutcome {
     manuscriptId, scope,
     readState: evidence.readState, coverage: evidence.coverage,
     provenance: { reader, classifier, readingContractVersion: READING_CONTRACT_VERSION },
+    f7Eligibility: unadjudicatedF7(observations.map((o) => o.key)),
     outcome: 'reading',
     observations: observations as unknown as NonEmptyArray<DevelopmentalObservation>,
   } };

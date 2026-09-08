@@ -1,0 +1,189 @@
+SEL-0 · Develop room commission surface — HELD, NOT APPLIED
+
+This is the writer-facing half of the SEL-0 selector: the door the writer opens
+to ask MAIA what is worth looking at, the single observation offered, and the
+'what else?' that advances within one commission.
+
+IT IS NOT APPLIED TO THE TREE, and that is deliberate. The design-canon gate
+requires an Experience Contract for any member-facing surface, with two
+screenshots on disk and an account of a real experience walk. Neither could be
+produced without fabricating evidence, so the surface is held here instead of
+shipped without a contract, and instead of being deleted.
+
+To take it up: write the Develop room's Experience Contract (nearest sibling
+docs/design/contracts/structure-review.md), walk the gesture against a real
+reading, capture desktop and mobile, then apply this patch.
+
+  git apply docs/programme/sel-0/SEL-0_DEVELOP_ROOM_SURFACE.patch
+
+-----------------------------------------------------------------------
+
+diff --git a/app/writers-studio/develop/DevelopRoom.tsx b/app/writers-studio/develop/DevelopRoom.tsx
+index b91239aa9..c11b0da36 100644
+--- a/app/writers-studio/develop/DevelopRoom.tsx
++++ b/app/writers-studio/develop/DevelopRoom.tsx
+@@ -921,6 +921,10 @@ function Reading({
+         <StateLine state={view.state} label={view.stateLabel} sentence={view.stateSentence} moved={view.moved} whole />
+       </header>
+ 
++      {view.outcome === 'reading' && (
++        <AskWhatIsWorthLooking manuscriptId={manuscriptId} readingId={view.id} />
++      )}
++
+       {view.outcome === 'none' ? (
+         <p className="text-[15px] leading-relaxed opacity-75" data-reading-none>
+           MAIA found nothing to report under this lens in what she read. That is a complete reading,
+@@ -950,6 +954,153 @@ function Reading({
+   );
+ }
+ 
++/**
++ * SEL-0 — the writer asking MAIA what is worth looking at.
++ *
++ * THE ROOM'S POSTURE IS UNCHANGED. This is a door the writer opens, not an
++ * offer the room makes: nothing is preselected on load, nothing is recommended
++ * ambiently, and the reading below is rendered in its own order whether this is
++ * used or not. The anti-steering rule the room was built on survives because
++ * selection happens only after an explicit act, inside a scope already chosen.
++ *
++ * ⛔ ONE OBSERVATION, NEVER A LIST, NEVER A NUMBER. The route returns a single
++ * observation key and no ordering and no confidence — there is nothing here to
++ * render as a ranking because nothing ranked ever arrives.
++ *
++ * THE COMMISSION LIVES FOR AS LONG AS THIS COMPONENT DOES. `commissionId` is
++ * minted on the first ask and the offered keys accumulate beside it, so "what
++ * else?" advances. Closing it ends the commission: the next ask mints a new id
++ * and starts from nothing, which is how Q8's confinement is structural rather
++ * than promised.
++ *
++ * ⛔ IGNORING OR REJECTING AN OFFER IS NOT A STANDING ACT. Nothing in here
++ * writes a standing, and it cannot: the standing surface is `YourStanding`,
++ * reached by the writer's own deliberate gesture. Advancing past an offer
++ * changes what this commission will show next and nothing else about the Work.
++ */
++function AskWhatIsWorthLooking({
++  manuscriptId, readingId,
++}: { manuscriptId: string; readingId: string }) {
++  const [commissionId, setCommissionId] = useState<string | null>(null);
++  const [offered, setOffered] = useState<string[]>([]);
++  const [current, setCurrent] = useState<string | null>(null);
++  const [asking, setAsking] = useState(false);
++  /* A closed commission cannot be advanced. Set by a decline and by the
++     exhausted gate; it is what stops "what else?" being offered. */
++  const [ended, setEnded] = useState<string | null>(null);
++
++  const commission = async (question: string, id: string, already: string[]) => {
++    setAsking(true);
++    try {
++      const r = await fetch(`/api/sovereign/manuscripts/${manuscriptId}/ask`, {
++        method: 'POST',
++        headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({
++          question,
++          selectionCommission: { readingId, commissionId: id, offered: already },
++        }),
++      });
++      const body = await r.json().catch(() => null);
++      const s = ((body && typeof body === 'object'
++        ? (body as Record<string, unknown>).selection : null) ?? {}) as Record<string, unknown>;
++
++      if (s.outcome === 'offered' && typeof s.observationKey === 'string') {
++        setCurrent(s.observationKey);
++        setOffered(Array.isArray(s.offered) ? (s.offered as string[]) : [...already, s.observationKey]);
++        return;
++      }
++      setCurrent(null);
++      /* SAID PLAINLY, AND WITHOUT BLAMING THE WRITER FOR THEIR OWN LIFECYCLE
++         CHOICES (Q7). The room does not volunteer that they dismissed things,
++         and never suggests reversing a dismissal. The internal state stays
++         exact; only the sentence is human. */
++      setEnded(
++        s.outcome === 'decline'
++          ? 'Nothing here feels worth raising right now.'
++          : s.gate === 'SELECTION_BOUNDARY_UNMEASURED'
++            ? 'MAIA cannot tell how this reading stands to the Work as it is now, so she is not going to choose from it.'
++            : s.gate === 'NO_REMAINING_CANDIDATE_THIS_COMMISSION'
++              ? 'That is everything she would raise from this reading just now.'
++              : s.gate === 'NO_LAWFUL_CANDIDATE'
++                ? 'There is nothing here she can raise at the moment.'
++                : 'She could not answer that just now.');
++    } catch {
++      setCurrent(null);
++      setEnded('She could not answer that just now.');
++    } finally {
++      setAsking(false);
++    }
++  };
++
++  const start = () => {
++    const id = `c-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
++    setCommissionId(id); setOffered([]); setEnded(null); setCurrent(null);
++    void commission('What is worth looking at here?', id, []);
++  };
++  const more = () => {
++    if (!commissionId) return;
++    setEnded(null);
++    void commission('What else?', commissionId, offered);
++  };
++  const close = () => {
++    setCommissionId(null); setOffered([]); setCurrent(null); setEnded(null);
++  };
++
++  if (!commissionId) {
++    return (
++      <button
++        type="button"
++        onClick={start}
++        data-selection-commission-start
++        className="mb-7 text-[12.5px] opacity-60 underline underline-offset-4"
++        style={{ cursor: 'pointer' }}
++      >
++        ask MAIA what is worth looking at
++      </button>
++    );
++  }
++
++  return (
++    <section className="mb-7 border-l pl-5" style={{ borderColor: PRESS.rule }} data-selection-commission>
++      {asking && <p className="text-[13px] opacity-55">She is thinking about it.</p>}
++
++      {!asking && current && (
++        <p className="text-[13px] opacity-70" data-selection-offered={current}>
++          She would start with the observation marked{' '}
++          <span style={{ color: PRESS.accent }}>{current}</span> below.
++        </p>
++      )}
++
++      {!asking && ended && (
++        <p className="text-[13px] opacity-70" data-selection-ended>{ended}</p>
++      )}
++
++      <div className="mt-2 flex gap-4">
++        {!asking && current && (
++          <button
++            type="button"
++            onClick={more}
++            data-selection-what-else
++            className="text-[12px] opacity-55 underline underline-offset-4"
++            style={{ cursor: 'pointer' }}
++          >
++            what else?
++          </button>
++        )}
++        <button
++          type="button"
++          onClick={close}
++          data-selection-close
++          className="text-[12px] opacity-40 underline underline-offset-4"
++          style={{ cursor: 'pointer' }}
++        >
++          leave it
++        </button>
++      </div>
++    </section>
++  );
++}
++
+ /**
+  * BUILD-07E — the observation, and the door into talking about it.
+  *

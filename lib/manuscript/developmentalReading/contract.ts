@@ -202,6 +202,46 @@ export interface DevelopmentalReadingProvenance {
   frozenAt: string;
 }
 
+/* ── F-7 eligibility · reading provenance ──────────────────────────────── */
+
+/**
+ * FOUNDER RULING, 2026-09-08 — F-7 eligibility is READING PROVENANCE, not a
+ * fresh selector-time judgement.
+ *
+ * The verdict is decided once, when a reading freezes, under a named rule at a
+ * named version, and is then immutable with the row. Runtime developmental
+ * selection READS it. Nothing re-adjudicates F-7 at selection time, which is
+ * what stops the same observation being lawful in one conversation and unlawful
+ * in the next for no recorded reason.
+ *
+ * ⛔ `unestablished` IS NOT `eligible`, and must never default to it. It is the
+ * honest third state — no adjudication has been made — and it carries the same
+ * discipline Q12 applies to supersession: not-knowing may never be converted
+ * into knowing by a default.
+ */
+export type F7Verdict = 'eligible' | 'ineligible' | 'unestablished';
+
+export function isF7Verdict(v: unknown): v is F7Verdict {
+  return v === 'eligible' || v === 'ineligible' || v === 'unestablished';
+}
+
+/** Who or what decided, sufficient for audit. */
+export type F7Adjudicator =
+  /** No adjudicator ran. Every verdict is `unestablished`, and says so. */
+  | { kind: 'none'; reason: string }
+  /** A named classifier at a named version, with when it ran. */
+  | { kind: 'classifier'; version: string; adjudicatedAt: string };
+
+export interface F7EligibilityRecord {
+  /** The governing constitutional rule, named. */
+  rule: string;
+  /** The instrument and version that rule was read from. */
+  ruleVersion: string;
+  adjudicator: F7Adjudicator;
+  /** One verdict per observation key of THIS reading. Complete or absent. */
+  verdicts: Readonly<Record<string, F7Verdict>>;
+}
+
 /* ── the reading ───────────────────────────────────────────────────────── */
 
 /** INV-18 — what this reading was commissioned for. Per reading, never per session. */
@@ -223,6 +263,14 @@ interface ReadingCommon {
   /** What she actually read, per section (INV-8). Unread spans are DERIVED, never stored (INV-9). */
   coverage: DevelopmentalCoverage;
   provenance: DevelopmentalReadingProvenance;
+  /**
+   * ABSENT means the reading predates the F-7 eligibility record — NOT that its
+   * observations are eligible. A reader that treats absence as permission has
+   * made exactly the default the ruling forbids; `verdictsFor` in the boundary
+   * seam is the one place that resolves this, and it resolves absence to
+   * `unestablished`.
+   */
+  f7Eligibility?: F7EligibilityRecord;
 }
 
 /**

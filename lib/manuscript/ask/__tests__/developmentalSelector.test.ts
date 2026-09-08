@@ -13,10 +13,10 @@ import type { DevelopmentalObservation } from '../../developmentalReading/contra
 import type { ReadingAssessment } from '../../developmentalReading/assess';
 import type { Standing } from '../../standing/contract';
 import { parseSelectionCommission } from '../selectionCommission';
-import { f7EligibilityFrom, runtimeF7Eligibility, type F7Verdict } from '../f7Eligibility';
+import type { F7Verdict } from '../../developmentalReading/contract';
+import { applyBoundary } from '../../boundary/candidateEligibility';
 import {
-  lawfulCandidateBoundary, canonicalise, selectDevelopmental,
-  __systemForTest, SELECTOR_CONFIDENCE_FLOOR,
+  canonicalise, selectDevelopmental, __systemForTest, SELECTOR_CONFIDENCE_FLOOR,
 } from '../developmentalSelector';
 
 jest.mock('../../../ai/structured/router', () => ({ runStructured: jest.fn() }));
@@ -44,9 +44,6 @@ function assessmentOf(states: Record<string, State>): ReadingAssessment {
   for (const [k, s] of Object.entries(states)) observations[k] = { state: s };
   return { observations } as unknown as ReadingAssessment;
 }
-const allEligible = (keys: string[]) =>
-  f7EligibilityFrom(new Map(keys.map((k) => [k, 'eligible' as F7Verdict])));
-
 function boundary(opts: {
   keys: string[];
   states?: Record<string, State>;
@@ -55,11 +52,13 @@ function boundary(opts: {
   eligible?: string[];
 }) {
   const keys = opts.keys;
-  return lawfulCandidateBoundary({
+  const eligible = new Set(opts.eligible ?? keys);
+  const standings = Object.entries(opts.standings ?? {}) as [string, Standing][];
+  return applyBoundary({
     observations: keys.map(obs),
     assessment: assessmentOf(opts.states ?? Object.fromEntries(keys.map((k) => [k, 'current' as State]))),
-    standings: new Map(Object.entries(opts.standings ?? {}) as [string, Standing][]),
-    f7: allEligible(opts.eligible ?? keys),
+    dismissed: new Set(standings.filter(([, v]) => v === 'dismiss').map(([k]) => k)),
+    f7: (k) => (eligible.has(k) ? 'eligible' : 'unestablished') as F7Verdict,
     offered: new Set(opts.offered ?? []),
   });
 }
@@ -74,7 +73,6 @@ const selectorInput = (keys: string[], writerTurn = 'what is worth looking at?')
   withStructure: false,
   sectionsRead: 12,
   revisionNumber: 3,
-  standings: new Map<string, Standing>(),
   openThreads: new Set<string>(),
 });
 
@@ -110,8 +108,19 @@ describe('the anchor boundary is untouched and a commission is not an anchor', (
     expect(parsers).not.toMatch(/commission/i);
   });
 
-  it('the route does not yet reach the selector — the gap is open, not closed', () => {
-    expect(route).not.toMatch(/developmentalSelector|selectionCommission/);
+  it('the route reaches the selector through the real ask path', () => {
+    expect(route).toMatch(/developmentalSelector/);
+    expect(route).toMatch(/selectionCommission/);
+    expect(route).toMatch(/developmentalSelectionTurn/);
+  });
+
+  it('the commission is only read when no anchor was parsed, and never on a resumed thread', () => {
+    expect(route).toMatch(
+      /const commission = threadId \|\| anchor \? null : parseSelectionCommission\(body\.selectionCommission\)/);
+  });
+
+  it('the observation anchor still branches to the exact-key turn', () => {
+    expect(route).toMatch(/if \(effectiveAnchor\.on === 'observation'\)/);
   });
 
   it('an explicitly addressed observation still resolves exactly, never by nearest match', () => {
@@ -166,21 +175,16 @@ describe('the lawful candidate boundary', () => {
   it('excludes a dismissed observation and keeps keep / unresolved', () => {
     const out = boundary({ keys: ['o1', 'o2', 'o3'], standings: { o1: 'dismiss', o2: 'keep', o3: 'unresolved' } });
     expect(out.gate).toBeNull();
-    expect((out as { candidates: DevelopmentalObservation[] }).candidates.map((o) => o.key))
-      .toEqual(['o2', 'o3']);
+    expect((out as { lawfulKeys: string[] }).lawfulKeys).toEqual(['o2', 'o3']);
   });
 
   it('excludes a superseded observation', () => {
     const out = boundary({ keys: ['o1', 'o2'], states: { o1: 'superseded', o2: 'current' } });
-    expect((out as { candidates: DevelopmentalObservation[] }).candidates.map((o) => o.key)).toEqual(['o2']);
+    expect((out as { lawfulKeys: string[] }).lawfulKeys).toEqual(['o2']);
   });
 
   it('excludes an observation whose F-7 eligibility is unestablished', () => {
     expect(boundary({ keys: ['o1'], eligible: [] })).toEqual({ gate: 'NO_LAWFUL_CANDIDATE' });
-  });
-
-  it('the deployed F-7 source establishes nothing, so it admits nothing', () => {
-    expect(runtimeF7Eligibility.verdict('o1')).toBe('unestablished');
   });
 
   it('reports NO_REMAINING_CANDIDATE_THIS_COMMISSION when all lawful ones were offered', () => {
@@ -194,15 +198,13 @@ describe('the lawful candidate boundary', () => {
 describe('commission-scoped offer memory', () => {
   it('does not re-offer inside the same commission', () => {
     const out = boundary({ keys: ['o1', 'o2', 'o3'], offered: ['o2'] });
-    expect((out as { candidates: DevelopmentalObservation[] }).candidates.map((o) => o.key))
-      .toEqual(['o1', 'o3']);
+    expect((out as { lawfulKeys: string[] }).lawfulKeys).toEqual(['o1', 'o3']);
   });
 
   it('a later commission is not narrowed by an earlier one', () => {
     /* A new commission carries a new record; the old one is not reachable. */
     const later = boundary({ keys: ['o1', 'o2', 'o3'], offered: [] });
-    expect((later as { candidates: DevelopmentalObservation[] }).candidates.map((o) => o.key))
-      .toEqual(['o1', 'o2', 'o3']);
+    expect((later as { lawfulKeys: string[] }).lawfulKeys).toEqual(['o1', 'o2', 'o3']);
   });
 
   it('being offered is not a standing act', () => {
@@ -318,11 +320,28 @@ describe('the selector yields one observation, and nothing rankable', () => {
     expect((r as { ordering: string[] }).ordering[0]).toBe('o2');
   });
 
-  it('confidence is a number the contract keeps internal — it is never a rendered field', () => {
-    /* Asserted where it can be asserted: the selector result names it, and no
-       surface exists that receives it, because the wiring is withheld. */
-    const room = readFileSync(join(ROOT, 'app/writers-studio/develop/DevelopRoom.tsx'), 'utf8');
+  it('the route sends the room one key, and neither the ordering nor the confidence', () => {
+    const route = readFileSync(join(ROOT, 'app/api/sovereign/manuscripts/[id]/ask/route.ts'), 'utf8');
+    const turn = route.slice(route.indexOf('async function developmentalSelectionTurn'));
+    expect(turn).toMatch(/const chosen = result\.ordering\[0\]!/);
+    expect(turn).toMatch(/observationKey: chosen/);
+    expect(turn).not.toMatch(/ordering:\s/);
+    expect(turn).not.toMatch(/confidence/);
+  });
+
+  it('the room never renders a confidence', () => {
+    /* COMMENTS STRIPPED FIRST. The room's own comment documents that no
+       confidence arrives, and a raw scan reads that as one arriving — the same
+       false positive that has now appeared three times in this lane, and for
+       the same reason each time: prose about a ban is not the ban broken. */
+    const room = readFileSync(join(ROOT, 'app/writers-studio/develop/DevelopRoom.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
     expect(room).not.toMatch(/confidence/i);
-    expect(room).not.toMatch(/selectionCommission/);
+  });
+
+  it('FALSIFIER · a rendered confidence would be caught', () => {
+    const poisoned = '<span>{selection.confidence}</span>';
+    expect(poisoned).toMatch(/confidence/i);
   });
 });

@@ -71,8 +71,9 @@ export async function freezeAndStore(memberId: string, reading: ReadingToFreeze)
       `INSERT INTO developmental_readings
          (manuscript_id, member_id, draft_id, revision_number, commissioned_lens, scope,
           read_state, coverage, input_fingerprint, outcome, observations,
-          reader_provenance, classifier_provenance)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          reader_provenance, classifier_provenance,
+          f7_eligibility, reading_contract_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id, frozen_at`,
       [reading.manuscriptId, memberId, reading.readState.draftId, reading.readState.revisionNumber,
        reading.scope.commissionedLens, JSON.stringify(reading.scope),
@@ -80,7 +81,15 @@ export async function freezeAndStore(memberId: string, reading: ReadingToFreeze)
        reading.readState.inputFingerprint, reading.outcome,
        JSON.stringify(reading.observations),
        JSON.stringify(reading.provenance.reader),
-       reading.provenance.classifier === null ? null : JSON.stringify(reading.provenance.classifier)]);
+       reading.provenance.classifier === null ? null : JSON.stringify(reading.provenance.classifier),
+       /* SEL-0 — the F-7 record and the contract version now REACH A COLUMN.
+          The version was assembled by `freeze.ts` and dropped here for as long
+          as this store has existed, which made the contract's own "v1 is the
+          ABSENCE of this field" discriminator false for every row. Writing it
+          makes the ratified rule true; it does not change it, and nothing is
+          backfilled. */
+       reading.f7Eligibility === undefined ? null : JSON.stringify(reading.f7Eligibility),
+       reading.provenance.readingContractVersion ?? null]);
     return { ok: true as const, id: r.rows[0].id as string, frozenAt: (r.rows[0].frozen_at as Date).toISOString() };
   });
 }
@@ -89,6 +98,7 @@ interface ReadingRow {
   id: string; manuscript_id: string; scope: unknown; read_state: unknown; coverage: unknown;
   outcome: 'reading' | 'none'; observations: unknown; reader_provenance: unknown;
   classifier_provenance: unknown | null; frozen_at: Date;
+  f7_eligibility: unknown | null; reading_contract_version: string | null;
 }
 
 function hydrate(row: ReadingRow): DevelopmentalReading {
@@ -101,8 +111,14 @@ function hydrate(row: ReadingRow): DevelopmentalReading {
     provenance: {
       reader: row.reader_provenance as DevelopmentalReading['provenance']['reader'],
       classifier: (row.classifier_provenance ?? null) as DevelopmentalReading['provenance']['classifier'],
+      /* OMITTED WHEN NULL, never `undefined` spelled as a present key: absence
+         is the v1 evidence and must stay absence on the way back out. */
+      ...(row.reading_contract_version === null
+        ? {} : { readingContractVersion: row.reading_contract_version }),
       frozenAt: row.frozen_at.toISOString(),
     },
+    ...(row.f7_eligibility === null || row.f7_eligibility === undefined
+      ? {} : { f7Eligibility: row.f7_eligibility as DevelopmentalReading['f7Eligibility'] }),
   };
   if (row.outcome === 'none') return { ...common, outcome: 'none', observations: [] };
   return {
@@ -112,7 +128,8 @@ function hydrate(row: ReadingRow): DevelopmentalReading {
 }
 
 const COLUMNS = `id, manuscript_id, scope, read_state, coverage, outcome, observations,
-                 reader_provenance, classifier_provenance, frozen_at`;
+                 reader_provenance, classifier_provenance, frozen_at,
+                 f7_eligibility, reading_contract_version`;
 
 /** By identity, scoped to the member. Null when absent — not distinguished from "not yours". */
 export async function loadReading(id: string, memberId: string): Promise<DevelopmentalReading | null> {

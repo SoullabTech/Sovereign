@@ -27,9 +27,6 @@ import { createHash } from 'crypto';
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalObservation } from '../developmentalReading/contract';
-import type { ReadingAssessment } from '../developmentalReading/assess';
-import type { Standing } from '../standing/contract';
-import type { F7EligibilitySource } from './f7Eligibility';
 
 export const DEVELOPMENTAL_SELECTOR_VERSION = 'ws2-sel0-selector-01';
 
@@ -43,61 +40,24 @@ const DEFAULT_MODEL = process.env.MAIA_SELECT_MODEL || process.env.MAIA_ASK_MODE
  */
 export const SELECTOR_CONFIDENCE_FLOOR = 0.5;
 
-/* ── gates ──────────────────────────────────────────────────────────────── */
-
-export type SelectionGate =
-  | 'SELECTION_BOUNDARY_UNMEASURED'
-  | 'NO_LAWFUL_CANDIDATE'
-  | 'NO_REMAINING_CANDIDATE_THIS_COMMISSION';
-
-export interface BoundaryInput {
-  readonly observations: readonly DevelopmentalObservation[];
-  /** Supersession, three-state, from `assessReading(frozenReading, liveWork)`. */
-  readonly assessment: ReadingAssessment;
-  readonly standings: ReadonlyMap<string, Standing>;
-  readonly f7: F7EligibilitySource;
-  /** Keys already offered in THIS commission. Never from another one. */
-  readonly offered: ReadonlySet<string>;
-}
-
-export type BoundaryOutcome =
-  | { readonly gate: SelectionGate }
-  | { readonly gate: null; readonly candidates: readonly DevelopmentalObservation[] };
+/* ── where the gates went ───────────────────────────────────────────────── */
 
 /**
- * The lawful candidate set, or the gate that stopped it being one.
+ * ⛔ THE GATES ARE NOT HERE ANY MORE, AND THAT IS THE POINT.
  *
- * PURE. No I/O, no model, no clock — so the gates are testable as arithmetic
- * and cannot silently depend on anything the contract prohibits.
+ * They moved to `lib/manuscript/boundary/candidateEligibility.ts` by the
+ * founder's D5 amendment: the candidate boundary reads member-authored
+ * standing, and standing may not enter cognition. This module IS cognition — it
+ * builds a prompt and calls a model — so it must not be able to reach standing
+ * even transitively. Leaving the gates here would have put the standing read
+ * one import away from the prompt builder, and a later edit could have closed
+ * that distance without anyone deciding to.
  *
- * ⛔ `unmeasured` ANYWHERE stops everything. Not "skip that one": if the live
- * Work could not establish supersession for an observation, the boundary of the
- * lawful set is unknown, and a set computed from an unknown boundary is not a
- * set. Excluding only the unmeasured ones would answer confidently from a
- * candidate space nobody measured.
+ * What arrives here is already lawful: keys the boundary admitted. This module
+ * cannot know why any of them survived, and cannot tell a `keep` from an
+ * `unresolved` from an UNSET, because none of that is a parameter of anything
+ * below.
  */
-export function lawfulCandidateBoundary(input: BoundaryInput): BoundaryOutcome {
-  const { observations, assessment, standings, f7, offered } = input;
-
-  for (const o of observations) {
-    const loc = assessment.observations[o.key];
-    if (!loc || loc.state === 'unmeasured') {
-      return { gate: 'SELECTION_BOUNDARY_UNMEASURED' };
-    }
-  }
-
-  const lawful = observations.filter((o) => {
-    if (f7.verdict(o.key) !== 'eligible') return false;
-    if (standings.get(o.key) === 'dismiss') return false;
-    return assessment.observations[o.key]!.state === 'current';
-  });
-  if (lawful.length === 0) return { gate: 'NO_LAWFUL_CANDIDATE' };
-
-  const remaining = lawful.filter((o) => !offered.has(o.key));
-  if (remaining.length === 0) return { gate: 'NO_REMAINING_CANDIDATE_THIS_COMMISSION' };
-
-  return { gate: null, candidates: remaining };
-}
 
 /* ── the selector ───────────────────────────────────────────────────────── */
 
@@ -131,9 +91,19 @@ export interface SelectorInput {
   readonly withStructure: boolean;
   readonly sectionsRead: number;
   readonly revisionNumber: number;
-  /** Member-authored standings for the candidates. Permitted input (§2.4). */
-  readonly standings: ReadonlyMap<string, Standing>;
-  /** Keys carrying an open ask thread. Permitted input (§2.4). */
+  /**
+   * ⛔ THERE IS NO `standings` FIELD, AND ITS ABSENCE IS THE ENFORCEMENT.
+   *
+   * Contract §2.4 originally listed member-authored standings as a permitted
+   * selector input. The D5 amendment of 2026-09-08 is later and narrower —
+   * *"standing values ... may not enter MAIA cognition, ranking, inference, or
+   * prompt context"* — and supersedes that item. Recorded here rather than
+   * silently dropped: this is a withdrawn permission, not an oversight.
+   *
+   * The type is the guard. A future caller cannot pass standing to the selector
+   * because there is nowhere to put it.
+   */
+  /** Keys carrying an open ask thread. Permitted input (§2.4, unaffected). */
   readonly openThreads: ReadonlySet<string>;
 }
 
@@ -143,10 +113,10 @@ WHAT YOU ARE DECIDING
 Which ONE of the observations below would be most useful to raise with them first, given what they just said. You are ordering them privately so the room can offer them one at a time; the author will never see a ranked list, a score, or a number.
 
 WHAT YOU MAY USE
-The observations themselves and what each says it does not establish; how much verified evidence each rests on; the lens the reading was commissioned under and how much of the Work it covered; the author's own present turn and stated intention; the standing the author has taken on an observation; whether an observation already has a conversation open.
+The observations themselves and what each says it does not establish; how much verified evidence each rests on; the lens the reading was commissioned under and how much of the Work it covered; the author's own present turn and stated intention; whether an observation already has a conversation open.
 
 WHAT YOU MAY NOT USE
-Anything about how often or how long they use this product. Any inference about their psychology, mood, ability, or stage of development. Anything about other writers. You do not have those and must not invent them.
+Anything about how often or how long they use this product. Any inference about their psychology, mood, ability, or stage of development. Anything about other writers. Anything about which observations the author has kept, dismissed or left unresolved — those are their decisions about their own Work, not evidence for you to weigh. You do not have any of this and must not invent it.
 
 WHAT "MOST USEFUL" MEANS HERE
 Useful to the author's own thinking about their Work, now, given what they just said. Not the most severe, not the most impressive, not the one that best demonstrates that you read carefully. An observation that opens a real question they can do something with beats one that is merely true.
@@ -175,10 +145,8 @@ export function developmentalSelectorPromptHash(): string {
  */
 function candidateSays(
   o: DevelopmentalObservation,
-  standings: ReadonlyMap<string, Standing>,
   openThreads: ReadonlySet<string>,
 ): string {
-  const standing = standings.get(o.key);
   return [
     `KEY ${o.key}`,
     `  what you noticed: ${o.observation}`,
@@ -188,7 +156,6 @@ function candidateSays(
     o.structureDependency.kind === 'authored-structure'
       ? '  depends on the structure the author made'
       : '  does not depend on the author\'s structure',
-    standing ? `  the author's standing on this: ${standing}` : '  the author has taken no standing on this',
     openThreads.has(o.key) ? '  a conversation about this is already open' : '  no conversation open on this',
   ].join('\n');
 }
@@ -207,7 +174,7 @@ function systemFor(input: SelectorInput): string {
     `  the author's own structure was ${input.withStructure ? 'given to you' : 'not given to you'}`,
     `  frozen against revision ${input.revisionNumber}`, '',
     '--- THE OBSERVATIONS YOU MAY OFFER ---',
-    input.candidates.map((o) => candidateSays(o, input.standings, input.openThreads)).join('\n\n'),
+    input.candidates.map((o) => candidateSays(o, input.openThreads)).join('\n\n'),
   ].join('\n');
 }
 

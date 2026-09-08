@@ -33,6 +33,8 @@ interface ReadingRow {
   coverage: unknown;
   outcome: 'reading' | 'none';
   observations: unknown;
+  f7_eligibility: unknown | null;
+  reading_contract_version: string | null;
   reader_provenance: unknown;
   classifier_provenance: unknown | null;
   frozen_at: Date;
@@ -48,12 +50,20 @@ function hydrate(row: ReadingRow): DevelopmentalReading {
     provenance: {
       reader: row.reader_provenance as DevelopmentalReading['provenance']['reader'],
       classifier: (row.classifier_provenance ?? null) as DevelopmentalReading['provenance']['classifier'],
-      /* `readingContractVersion` is NOT selected because it is not a column.
-         The v1/v2 distinction lives in the observation shape itself — whether
-         `phenomenon` may be absent — and a hydrator that invented the field
-         would be asserting a provenance the row does not carry. */
+      /* IT IS A COLUMN NOW (20260908000001), so it is selected and carried.
+         The comment this replaces was accurate and is worth keeping in mind:
+         a hydrator must never invent a provenance the row does not carry.
+         That still holds — NULL is omitted rather than spelled, because the
+         reading contract identifies v1 by the ABSENCE of this field. */
+      ...(row.reading_contract_version === null
+        ? {} : { readingContractVersion: row.reading_contract_version }),
       frozenAt: row.frozen_at.toISOString(),
     },
+    /* SEL-0 — F-7 eligibility travels with the reading it belongs to. Absent
+       stays absent; the boundary seam resolves absence to `unestablished`, and
+       it is the only place that resolution is made. */
+    ...(row.f7_eligibility === null || row.f7_eligibility === undefined
+      ? {} : { f7Eligibility: row.f7_eligibility as DevelopmentalReading['f7Eligibility'] }),
   };
   if (row.outcome === 'none') return { ...common, outcome: 'none', observations: [] };
   return {
@@ -76,7 +86,8 @@ export async function loadFrozenDevelopmentalReading(
 ): Promise<DevelopmentalReading | null> {
   const r = await query<ReadingRow>(
     `SELECT id, manuscript_id, scope, read_state, coverage, outcome, observations,
-            reader_provenance, classifier_provenance, frozen_at
+            reader_provenance, classifier_provenance, frozen_at,
+            f7_eligibility, reading_contract_version
        FROM developmental_readings
       WHERE id = $1 AND manuscript_id = $2 AND member_id = $3
       LIMIT 1`,

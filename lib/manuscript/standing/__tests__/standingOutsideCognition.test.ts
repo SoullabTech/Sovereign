@@ -6,6 +6,23 @@
  * MAIA / system   ──X──►  the standing writer   D6
  * ```
  *
+ * ⭐ AMENDED — founder ruling, 2026-09-08. D5 said standing must be unreachable
+ * from the ask route. That was too broad in one direction and not narrow enough
+ * in the other: standing is member-authored LIFECYCLE AUTHORITY, and authority
+ * is not cognition. The amended boundary:
+ *
+ * ```text
+ * standing ──►  the candidate-boundary seam        PERMITTED  (authority)
+ * standing ──X─► selector · readers · prompts      FORBIDDEN  (cognition)
+ * route    ──►  standing ONLY THROUGH that seam    PERMITTED, and asserted
+ * ```
+ *
+ * So this file now proves BOTH SIDES, because half of it would pass vacuously:
+ * a gate that only forbade would be satisfied by deleting the feature, and a
+ * gate that only permitted would be satisfied by leaking. The seam must be
+ * reachable, the cognition modules must not be, and the route's every path to
+ * standing must pass through the seam.
+ *
  * Two directions of one boundary, and both are MODULE-GRAPH assertions —
  * following 07E's gate-7 method: strip comments, walk the actual imports, and
  * refuse the capability rather than trusting prose. A file that says "standing
@@ -34,11 +51,23 @@ const COGNITION_ROOTS = [
   'lib/manuscript/ask/developmentalContext.ts',
   'lib/manuscript/ask/developmentalAskReader.ts',
   'lib/manuscript/ask/askReader.ts',
-  'app/api/sovereign/manuscripts/[id]/ask/route.ts',
+  /* SEL-0 — the selector builds a prompt and calls a model, so it is cognition
+     in the strictest sense and is named here explicitly. The gates it once
+     carried moved to the boundary seam precisely so this root can be asserted. */
+  'lib/manuscript/ask/developmentalSelector.ts',
+  /* ⛔ THE ASK ROUTE IS NO LONGER IN THIS LIST, and its removal is not a
+     loosening — it is replaced by a STRICTER, more specific assertion below
+     (`the route reaches standing ONLY through the boundary seam`). A blanket
+     ban here would have been satisfied by the route reaching standing through
+     any second seam somebody added later; the path assertion is not. */
   /* When 07G synthesis exists, its root is added HERE — so that permitting
      standing into a writer-initiated conversation requires a deliberate
      architectural change rather than one convenient import. */
 ];
+
+/** The one seam the D5 amendment authorizes to read standing. */
+const BOUNDARY_SEAM = 'lib/manuscript/boundary/candidateEligibility.ts';
+const ASK_ROUTE = 'app/api/sovereign/manuscripts/[id]/ask/route.ts';
 
 /**
  * The ONLY module permitted to reach the standing STORE (D6). The store is the
@@ -48,6 +77,11 @@ const COGNITION_ROOTS = [
  */
 const PERMITTED_STORE_IMPORTERS = [
   'app/api/sovereign/manuscripts/[id]/readings/[readingId]/standings/route.ts',
+  /* SEL-0 · D5 amendment — the candidate-boundary seam. It READS standing to
+     enforce writer-authored eligibility and returns lawful keys; it never
+     returns, logs or forwards a standing value. Added by founder act, not by
+     convenience. */
+  BOUNDARY_SEAM,
 ];
 
 type Reader = (relPath: string) => string | null;
@@ -188,6 +222,133 @@ describe('D5 · standing never reaches MAIA cognition', () => {
     const doctored = `import { currentStanding } from '@/lib/manuscript/standing/store';\n${
       readFileSync(join(ROOT, via), 'utf8')}`;
     expect(pathsToStanding(root, overlayReader({ [via]: doctored })).length).toBeGreaterThan(0);
+  });
+});
+
+describe('D5 amendment · authority may reach the seam, and stops there', () => {
+  /* ── the PERMITTING half. A ban-only gate passes by deletion. ── */
+
+  it('the boundary seam CAN reach the authoritative standing store', () => {
+    const paths = pathsToStanding(BOUNDARY_SEAM, realReader);
+    expect(paths.length).toBeGreaterThan(0);
+    expect(paths.some((p) => p[p.length - 1].endsWith('standing/store.ts'))).toBe(true);
+  });
+
+  it('the ask route CAN reach standing — through the seam', () => {
+    expect(pathsToStanding(ASK_ROUTE, realReader).length).toBeGreaterThan(0);
+  });
+
+  /* ── the CONFINING half. Every route path goes through the seam. ── */
+
+  it('EVERY path from the ask route to standing passes through the boundary seam', () => {
+    const paths = pathsToStanding(ASK_ROUTE, realReader);
+    for (const path of paths) {
+      expect(path).toContain(BOUNDARY_SEAM);
+    }
+  });
+
+  it('FALSIFIER · a route that reaches standing WITHOUT the seam is reported', () => {
+    /* Remove the boundary: give the route the store directly. The path that
+       results does not contain the seam, and the assertion above must fail on
+       it — which is what makes that assertion mean something. */
+    const doctored = `import { currentStandings } from '@/lib/manuscript/standing/store';\n${
+      readFileSync(join(ROOT, ASK_ROUTE), 'utf8')}`;
+    const paths = pathsToStanding(ASK_ROUTE, overlayReader({ [ASK_ROUTE]: doctored }));
+    expect(paths.some((path) => !path.includes(BOUNDARY_SEAM))).toBe(true);
+  });
+
+  /* ── standing must not cross the seam into cognition ── */
+
+  it('the selector cannot reach standing at all', () => {
+    expect(pathsToStanding('lib/manuscript/ask/developmentalSelector.ts', realReader)).toEqual([]);
+  });
+
+  it('FALSIFIER · a selector given the standing import is reported', () => {
+    const target = 'lib/manuscript/ask/developmentalSelector.ts';
+    const doctored = `import { currentStandings } from '@/lib/manuscript/standing/store';\n${
+      readFileSync(join(ROOT, target), 'utf8')}`;
+    expect(pathsToStanding(target, overlayReader({ [target]: doctored })).length).toBeGreaterThan(0);
+  });
+
+  it('the selector has no way to RECEIVE a standing either — there is no such input', () => {
+    /* The graph stops an import; this stops a parameter. Both are needed: a
+       caller could otherwise read standing itself and hand it over, which the
+       import walk would never see.
+       SCANNED AT THE INPUT TYPE, NOT ACROSS THE FILE. The file legitimately
+       contains the word twice — `STANDING_PROMPT` is the standing INSTRUCTIONS,
+       an unrelated sense, and the prompt names the writer's lifecycle choices in
+       order to forbid weighing them. A whole-file scan would fail on a selector
+       precisely because it is compliant, which is the C21 false positive this
+       repository has already paid for once. */
+    const src = stripComments(
+      readFileSync(join(ROOT, 'lib/manuscript/ask/developmentalSelector.ts'), 'utf8'));
+    const iface = src.slice(src.indexOf('export interface SelectorInput'));
+    const body = iface.slice(0, iface.indexOf('\n}') + 2);
+    expect(body).toMatch(/candidates/);
+    expect(body).not.toMatch(/standing/i);
+  });
+
+  it('FALSIFIER · a selector input that DID carry standing is reported', () => {
+    const doctored = `export interface SelectorInput {
+  readonly candidates: readonly Obs[];
+  readonly standings: ReadonlyMap<string, Standing>;
+}`;
+    const body = doctored.slice(0, doctored.indexOf('\n}') + 2);
+    expect(body).toMatch(/standing/i);
+  });
+
+  it('the assembled selector prompt carries no standing VALUE', () => {
+    /* The prohibition may name them; the data may not carry them. This is the
+       same separation the selector's own falsifiers make: scan what is
+       assembled from the reading, not the instructions written above it. */
+    const src = stripComments(
+      readFileSync(join(ROOT, 'lib/manuscript/ask/developmentalSelector.ts'), 'utf8'));
+    const assembler = src.slice(src.indexOf('function candidateSays'), src.indexOf('function systemFor'));
+    expect(assembler).not.toMatch(/standing/i);
+  });
+
+  it('the seam returns lawful KEYS, never a standing map or a standing-derived signal', () => {
+    const src = stripComments(readFileSync(join(ROOT, BOUNDARY_SEAM), 'utf8'));
+    /* The exported outcome type is the contract with cognition. It may name
+       keys and gates; it may not name a standing, a count of them, or anything
+       a ranker could weigh. */
+    const outcome = src.slice(src.indexOf('export type BoundaryOutcome'), src.indexOf('export function verdictFor'));
+    expect(outcome).toMatch(/lawfulKeys/);
+    expect(outcome).not.toMatch(/standing|dismiss|keep|unresolved/i);
+  });
+
+  it('only `dismiss` acts: keep, unresolved and UNSET are indistinguishable to the boundary', () => {
+    const src = stripComments(readFileSync(join(ROOT, BOUNDARY_SEAM), 'utf8'));
+    /* A `keep` that conferred a nudge would be a standing-derived preference
+       signal reaching ranking through the permitted seam — the precise leak the
+       amendment describes. The seam must read exactly one value. */
+    expect(src).toMatch(/standing === 'dismiss'/);
+    expect(src).not.toMatch(/=== 'keep'|=== 'unresolved'/);
+  });
+
+  it('the ask route holds no standing value of its own', () => {
+    const src = stripComments(readFileSync(join(ROOT, ASK_ROUTE), 'utf8'));
+    expect(src).not.toMatch(/currentStandings|standing\s*[:=]/i);
+  });
+
+  it('client-supplied standing is not authority: the seam takes no standing parameter', () => {
+    /* Option (c) — carrying standing from the browser — is FORBIDDEN by the
+       ruling. The enforcement is that there is nowhere to put it: the seam takes
+       a memberId and reads the store itself, so a caller cannot assert a
+       standing even if it wanted to. */
+    const src = stripComments(readFileSync(join(ROOT, BOUNDARY_SEAM), 'utf8'));
+    const from = src.indexOf('export async function resolveLawfulCandidates');
+    const sig = src.slice(from, src.indexOf('Promise<BoundaryOutcome>', from));
+    expect(sig).toMatch(/memberId/);
+    expect(sig).toMatch(/reading/);
+    expect(sig).not.toMatch(/standing|dismiss/i);
+  });
+
+  it('the commission a client sends carries no standing field', () => {
+    const src = stripComments(
+      readFileSync(join(ROOT, 'lib/manuscript/ask/selectionCommission.ts'), 'utf8'));
+    expect(src).toMatch(/keys !== 'commissionId,offered,readingId'/);
+    expect(src).not.toMatch(/standing/i);
   });
 });
 

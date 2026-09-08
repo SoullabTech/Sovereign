@@ -94,7 +94,13 @@ describe('the developmental-evidence substrate cannot act', () => {
        observation — a member's own act, addressed to the reading. It is not an
        evidence table either, so naming it here keeps this claim exact rather
        than weakening it. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$/;
+    /* SEL-0 (2026-09-08) records F-7 ELIGIBILITY as reading provenance — a
+       constitutional verdict ABOUT an observation, decided when the reading
+       froze. It is not an evidence table either, and it is named here for the
+       same reason as the two above: this claim stays exact by enumerating what
+       is NOT the evidence substrate, rather than by loosening the pattern until
+       nothing trips it. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$|^20260908000001_developmental_reading_f7_eligibility\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
