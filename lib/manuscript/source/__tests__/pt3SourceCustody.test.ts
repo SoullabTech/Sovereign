@@ -255,4 +255,104 @@ describe('P11 · Source-write reachability', () => {
     const offenders = find(/writeVaultBytes\(\s*['"`]manuscript-sources/, []);
     expect(offenders).toEqual([]);
   });
+
+  /* ── P11(iii) · DIRECT VAULT-WRITE REACHABILITY ─────────────────────────────
+   *
+   * Founder review 2026-09-08. The two assertions above prove that nobody else
+   * calls `createSourceArtifact()` and nobody names the reserved namespace at
+   * `writeVaultBytes()`. That is not the whole property, and the gap is the
+   * write-side form of the P7 lesson:
+   *
+   *   Pinning who calls the sanctioned operation is not sufficient if another
+   *   route can reach the protected resource without that operation.
+   *
+   * The repo already contains four routes that write beneath the vault root
+   * through Node's filesystem API directly, never touching either helper. None
+   * of them can presently resolve into Source. But a helper-only scan would stay
+   * green if one of them — or a new one — later could.
+   *
+   * So the required property is about the RESOURCE, not the helper:
+   *
+   *   Every runtime path capable of writing beneath the vault root either is the
+   *   WS-01 Source-create boundary, or is structurally bounded away from the
+   *   canonical Source destination.
+   *
+   * This is deliberately NOT "every vault writer must use writeVaultBytes()" —
+   * that would be an unrelated storage refactor. Independently bounded writers
+   * may stay independent. What must be impossible is a new direct vault-writing
+   * route quietly acquiring Source reachability while this suite stays green. */
+  describe('P11(iii) · every direct vault writer is enumerated and bounded', () => {
+    const WRITE_CALL = /writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|copyFile|\.rename\(|flag:\s*['"`][wa]/;
+    const VAULT_ROOT = /FILE_STORAGE_PATH|resolveVaultRoot/;
+
+    /** Pure, so the bypass class can be demonstrated on a synthetic file. */
+    const vaultWriters = (files: { rel: string; src: string }[]) =>
+      files
+        .filter(({ src }) => VAULT_ROOT.test(src) && WRITE_CALL.test(src))
+        .map(({ rel }) => rel)
+        .sort();
+
+    /** Every entry names WHY it cannot resolve into the Source namespace.
+     *  Adding a writer means editing this list — a visible, reviewable act. */
+    const BOUNDED_VAULT_WRITERS: Record<string, string> = {
+      'lib/manuscript/source/sourceArtifact.ts':
+        'THE WS-01 SOURCE BOUNDARY ITSELF. Owns the namespace; create-only via wx.',
+      'lib/storage/fileVault.ts':
+        'The generic writer. Refuses a canonical Source destination — P11(i).',
+      'app/api/studio/files/route.ts':
+        'First segment is a server-derived practitioner UUID; the only caller-influenced '
+        + 'component is path.extname(file.name), which cannot contain a separator.',
+      'app/api/studio/sessions/[sessionId]/voice-notes/route.ts':
+        'Server-derived practitioner UUID, then the literal "voice-notes", then a '
+        + 'randomUUID note id with an extension chosen from a fixed literal set.',
+      'app/api/practitioner/materials/route.ts':
+        'Server-derived practitioner UUID, then the literal "materials", then a '
+        + 'randomUUID file id; the extension comes from path.extname and cannot contain a separator.',
+      'app/api/open/threshold/[token]/stream/[streamId]/route.ts':
+        'Literal "encounters" segment, then encounter and stream ids read from uuid '
+        + 'columns on a row the token owns — never from the request path.',
+    };
+
+    it('the census matches the allowlist exactly — no UNKNOWN writer', () => {
+      /* UNKNOWN is not green. A new direct writer fails here until someone
+         states, in the allowlist, why it cannot reach Source. */
+      const found = vaultWriters(
+        runtimeFiles().map((f) => ({ rel: rel(f), src: strip(readFileSync(f, 'utf8')) })),
+      );
+      expect(found).toEqual(Object.keys(BOUNDED_VAULT_WRITERS).sort());
+    });
+
+    it('every allowlisted writer states the reason it cannot reach Source', () => {
+      for (const [file, reason] of Object.entries(BOUNDED_VAULT_WRITERS)) {
+        expect(reason.length).toBeGreaterThan(40);
+        expect(existsSync(join(REPO, file))).toBe(true);
+      }
+    });
+
+    it('⛔ NEGATIVE CONTROL — the helper-only scan misses the bypass class, and this one catches it', () => {
+      /* A synthetic route representing the class: it writes beneath the vault
+         root through Node directly, into Source, without ever calling either
+         helper P11(i)/(ii) scan for. No production code is modified. */
+      const rogue = {
+        rel: 'app/api/rogue/route.ts',
+        src: `
+          import { writeFile } from 'fs/promises';
+          import path from 'path';
+          const BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
+          export async function POST(req) {
+            await writeFile(path.join(BASE, 'manuscript-sources', 'x.docx'), Buffer.from('rewritten'));
+          }
+        `,
+      };
+
+      /* What the helper-only assertions see: nothing. This is the false green. */
+      expect(/createSourceArtifact/.test(rogue.src)).toBe(false);
+      expect(/writeVaultBytes\(\s*['"`]manuscript-sources/.test(rogue.src)).toBe(false);
+
+      /* What P11(iii) sees. */
+      const found = vaultWriters([rogue]);
+      expect(found).toEqual(['app/api/rogue/route.ts']);
+      expect(Object.keys(BOUNDED_VAULT_WRITERS)).not.toContain('app/api/rogue/route.ts');
+    });
+  });
 });

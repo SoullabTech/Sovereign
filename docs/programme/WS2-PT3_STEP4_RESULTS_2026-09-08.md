@@ -1,6 +1,6 @@
 # PT-3 — Step 4 Results · P1–P11
 
-**Status: P1–P11 GREEN against the repaired architecture.**
+**Status: P1–P11 GREEN, including P11(iii). Vault-writer census complete, no UNKNOWN.**
 **P11 falsified on first run (§4), was RETURNED not repaired, and WS-01 built the missing
 write-side boundary under its own ruling (§6). The falsification and its wording are kept
 verbatim — the finding is the record, not a stage to be tidied away.**
@@ -190,17 +190,84 @@ Studio and a row diff would never notice.
 
 ---
 
+## 7 — P11(iii) · direct vault-write reachability
+
+Founder review 2026-09-08 accepted the WS-01 production repair and found one last false
+green — **in the falsifier, not the mechanism**. P11's reachability assertions proved that
+nobody else calls `createSourceArtifact()` and nobody names the reserved namespace at
+`writeVaultBytes()`. That is not the whole property. It is the write-side form of the P7
+lesson:
+
+> Pinning who calls the sanctioned operation is not sufficient if another route can reach
+> the protected resource without that operation.
+
+### The census (read-only)
+
+Rule: a runtime file in `app/` or `lib/` that references the vault root
+(`FILE_STORAGE_PATH` / `resolveVaultRoot`) **and** contains a byte-writing call
+(`writeFile` · `writeFileSync` · `appendFile` · `createWriteStream` · `copyFile` · `rename`
+· a `w`/`a` flag). **Six, and every one is classified — no UNKNOWN.**
+
+| Writer | Why it cannot resolve into Source |
+|---|---|
+| `lib/manuscript/source/sourceArtifact.ts` | **the WS-01 Source boundary itself** — owns the namespace, create-only via `wx` |
+| `lib/storage/fileVault.ts` | the generic writer; refuses a canonical Source destination — P11(i) |
+| `app/api/studio/files/route.ts` | first segment is a server-derived practitioner UUID; the only caller-influenced component is `path.extname(file.name)`, which cannot contain a separator |
+| `app/api/studio/sessions/[sessionId]/voice-notes/route.ts` | practitioner UUID, then the literal `voice-notes`, then a `randomUUID` note id with an extension from a fixed literal set |
+| `app/api/practitioner/materials/route.ts` | practitioner UUID, then the literal `materials`, then a `randomUUID` file id; extension via `path.extname`, no separator possible |
+| `app/api/open/threshold/[token]/stream/[streamId]/route.ts` | literal `encounters` segment, then encounter and stream ids read from uuid **columns on a row the token owns** — never from the request path |
+
+**No existing route can presently reach Source.** Nothing to return, and no further production
+repair is implied.
+
+### The assertion
+
+Three distinct properties, deliberately not folded together:
+
+```text
+P11(i)    the generic helper cannot resolve into Source
+P11(ii)   WS-01 Source creation is create-only
+P11(iii)  every other direct vault writer is enumerated and bounded away from Source
+```
+
+The allowlist carries a **reason per entry**, and a new direct writer fails the census until
+someone states why it cannot reach Source — a visible, reviewable act. This is deliberately
+**not** "every vault writer must use `writeVaultBytes()`": that would be an unrelated storage
+refactor, and independently bounded writers may stay independent.
+
+### The demonstrated false green
+
+The scanner is a pure function over `{path, source}`, so the bypass class is demonstrated on
+a **synthetic** route — no production code modified. It writes beneath the vault root through
+Node directly, into `manuscript-sources`, calling neither helper:
+
+| | |
+|---|---|
+| the helper-only assertions see it | **not at all** — this is the false green |
+| P11(iii) sees it | **caught**, and it is not in the allowlist |
+
+---
+
 ## 5 — Standing
 
 ⛔ Not done and not authorized: release-gate binding (step 5) · Encounter ·
 Restore · intention authority · Work→Work lineage · WS2-08B · `living_works.stage` ·
 deployment.
 
-**Gates (after the repair):** typecheck 229 vs baseline 239, **0 regressions** ·
-`lib/manuscript` + `lib/storage` + `lib/bugs` + living-works: **59 suites, 1028 passed,
-1 skipped, 0 failed.** The behavioral witness reruns **ALL CONTROLS PASSED · 1 skipped**.
-No previously green constitutional test was weakened or removed; P11 was strengthened, not
-relaxed, on its way to green.
+**Gates (final):** typecheck 229 vs baseline 239, **0 regressions** · structural suite
+**19 passed** · behavioral witness **ALL CONTROLS PASSED · 1 skipped** · `lib/manuscript` +
+`lib/storage` + `lib/bugs` + living-works + `app/api/studio`: **60 suites, 1034 passed,
+1 skipped, 1 failed.**
+
+⚠ **That one failure is pre-existing and unrelated to this lane** — `app/api/studio/
+sessions/[sessionId]/voice-notes/__tests__/route.test.ts` expects the 404 copy
+`"Practitioner not found"` where the route says `"Practitioner not found for member"`. That
+route and its test are untouched by this branch (last modified by PR #1216) and appear here
+only because the P11(iii) census widened which suites I ran. Recorded rather than fixed:
+repairing it is not authorized by this act.
+
+No previously green constitutional test was weakened or removed; P11 was strengthened
+twice — to canonical destinations, then to resource reachability — on its way to green.
 
 **Provenance of the behavioral run:** a PostgreSQL 16.13 cluster stood up in-session, schema
 restored from `database/baseline/0001_baseline_2026-09-01.sql` plus every migration from
