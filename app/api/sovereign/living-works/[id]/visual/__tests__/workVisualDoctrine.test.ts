@@ -104,7 +104,10 @@ describe('bytes go when the record goes', () => {
     /* Outside it, a rollback would owe destruction of an image the Work still
        displays; enqueueing before the commit ties the obligation to the fact. */
     const txAt = MUTATE.indexOf('await transaction(');
-    const enqueueAt = MUTATE.indexOf('INSERT INTO vault_erasure_queue');
+    /* WS-DELETE-01 · S4: the raw INSERT moved behind the one governed erasure
+       seam. The doctrine is unchanged — the obligation is still tied to the
+       commit — so this pins the seam call where it used to pin the SQL. */
+    const enqueueAt = MUTATE.indexOf('enqueueVaultErasure(');
     expect(txAt).toBeGreaterThan(-1);
     expect(enqueueAt).toBeGreaterThan(txAt);
     expect(MUTATE).toContain('sweepVaultErasureQueue');
@@ -120,7 +123,7 @@ describe('bytes go when the record goes', () => {
        database knows the file was ever ours. */
     for (const source of [ERASE, WITHDRAW]) {
       expect(source).toContain('living_work_visuals');
-      expect(source).toContain('vault_erasure_queue');
+      expect(source).toContain('enqueueVaultErasure(');
       const readAt = source.indexOf('SELECT storage_path FROM living_work_visuals');
       const deleteAt = source.indexOf('DELETE FROM living_works');
       expect(readAt).toBeGreaterThan(-1);

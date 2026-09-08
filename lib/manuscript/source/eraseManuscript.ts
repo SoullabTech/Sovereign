@@ -61,6 +61,11 @@
 
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
+import {
+  enqueueVaultErasure,
+  mintSourceErasureAuthority,
+  workVisualErasureAuthority,
+} from '@/lib/storage/erasureAuthority';
 
 export type EraseOutcome =
   /** Rows are gone. `sweptAll` is false when bytes are still owed destruction. */
@@ -119,11 +124,23 @@ export async function eraseManuscript(
        actually gone. */
     const refs = arrivals.rows.map((r) => r.artifact_ref);
     if (refs.length > 0) {
-      await tx.query(
-        `INSERT INTO vault_erasure_queue (artifact_ref)
-         SELECT unnest($1::text[])`,
-        [refs],
-      );
+      /* WS-DELETE-01 · S4. Source bytes may be placed beyond recovery only under
+         Source lifecycle authority, and that authority is not requested — it is
+         granted on evidence, read here inside this transaction, that the
+         manuscript and its arrival rows are ALREADY gone. The mint therefore
+         has to come after the DELETE above, never before it: an authority taken
+         out first would be a claim, and PT-3 forbids a caller claiming custody
+         lifecycle power. A content-working act cannot reach this line without
+         having performed the member-directed erasure itself. */
+      const authority = await mintSourceErasureAuthority(tx, manuscriptId, memberId, 'eraseManuscript');
+      if (!authority) {
+        /* The rows this act just deleted are somehow still readable in its own
+           transaction. Refusing is the only safe answer: enqueueing without
+           established authority is exactly what S4 exists to prevent, and the
+           rollback leaves the member's Work intact. */
+        throw new Error('[erase] source lifecycle authority not established after deletion');
+      }
+      await enqueueVaultErasure(tx, authority, refs);
     }
     return { ok: true as const, refs };
   });
@@ -188,7 +205,11 @@ async function removeDeclaration(
      a live Work is still displaying would be worse than not owing it at all. */
   const path = visual.rows[0]?.storage_path;
   if (workGone.rows.length > 0 && path) {
-    await tx.query(`INSERT INTO vault_erasure_queue (artifact_ref) VALUES ($1)`, [path]);
+    /* A Work cover, not Source — so this cascade takes work-visual authority and
+       nothing wider. Erasing a manuscript does not confer generic vault
+       destruction power (ruling property B): presented with a Source path this
+       authority would refuse. */
+    await enqueueVaultErasure(tx, workVisualErasureAuthority('eraseManuscript:workVisual'), [path]);
   }
 }
 
