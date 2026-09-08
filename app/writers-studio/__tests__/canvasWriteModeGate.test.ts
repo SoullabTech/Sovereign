@@ -44,9 +44,24 @@ describe('the section outline and canvas share ONE session', () => {
     // would give the outline a different queue, active id and statuses — the
     // bug this file exists to make hard to reintroduce.
     expect(page).toContain("writeMount.mount === 'sections' && writing");
-    expect(page).toContain('activeId={writing.activeId}');
     expect(page).toContain('statusOf={writing.statusOf}');
-    expect(page).toContain('onSelect={writing.goToSection}');
+    // WS-WHOLE-MANUSCRIPT-01. `activeId={writing.activeId}` and
+    // `onSelect={writing.goToSection}` were pinned here directly until the
+    // Whole Manuscript view existed. They now go through two named helpers,
+    // and this gate's INTENT is unchanged and still asserted: ONE lifted
+    // session, and the outline reading from it.
+    //
+    // What moved is that `writing.activeId` is the SINGLE-EDITOR seam. In
+    // Whole view it names the section the writer arrived from, so consuming
+    // it directly would light the gold row on a place the writer left — and
+    // `goToSection` would perform a real editor mutation to move a marker.
+    // Both helpers take `writing`, so neither can reach a second session.
+    expect(page).toContain('activeId={outlinePlace(session, writing)}');
+    expect(page).toContain('onSelect={outlineSelect(session, writing, setJumpTo)}');
+    expect(page).toMatch(/function outlinePlace\(session: ManuscriptSession \| null, writing: SectionWriting\)/);
+    // Section view is byte-identical in behaviour: same active id, same act.
+    expect(page).toMatch(/if \(!session\) return writing\.activeId;/);
+    expect(page).toMatch(/return writing\.goToSection;/);
   });
 
   it('only ONE component in the canvas calls useSectionWriting', () => {
