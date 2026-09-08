@@ -1,0 +1,1076 @@
+{
+  "classifier_provenance": {
+    "classifierVersion": "DEVELOPMENTAL-PHENOMENON-04",
+    "model": "claude-opus-5",
+    "promptHash": "1116c66c0dd7c4c07925691a136339ea318c8e67842fcdddbee9e641c99daf3e",
+    "provider": "anthropic"
+  },
+  "count_total": 26,
+  "frozen_at": "2026-09-08T21:07:27Z",
+  "items": [
+    {
+      "content_digest_sha256": "cd06495e59a6ce6fcd964f854b140575ac4d7cb00721328788092a45851b08b0",
+      "exclusion_reason": "E1 §3.2 — trailing clause names an act not performed upon the material, not a non-return of something the Work established; absence measured against an expected standard.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o1",
+      "observation_key": "o1",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1437,
+            "start": 0
+          },
+          "sectionId": "7c06d840-a154-48cf-b5d9-71263cda211e"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1926,
+            "start": 0
+          },
+          "sectionId": "81238ec3-673b-47b9-bd5b-29acc3dff441"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "d4c16102a389191ba08d8351901d4ec3ad39399136c33eb0437950c37b7da5d9",
+      "exclusion_reason": "E1 §3.2 — negated-act shape; the expectation invoked is not one the Work establishes.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o2",
+      "observation_key": "o2",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 900,
+            "start": 650
+          },
+          "sectionId": "119b0979-3d2e-42b3-a386-ff7a8ca1c9f4"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 380,
+            "start": 0
+          },
+          "sectionId": "1bfd3fb7-95b8-423d-a1a8-5f3b8a9d7430"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "8afc9ecfa7f063747c12828fc073b64c2c573821589e2efe9c8617937d022a8d",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o3",
+      "observation_key": "o3",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1486,
+            "start": 900
+          },
+          "sectionId": "119b0979-3d2e-42b3-a386-ff7a8ca1c9f4"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2600,
+            "start": 2100
+          },
+          "sectionId": "8b6a3354-86fc-4a1e-a0e3-bf4c5be74b72"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1664,
+            "start": 1150
+          },
+          "sectionId": "ea728cd7-9402-4c1a-b30f-72460972f838"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "4b4ae68d9bd71a9f34dba205a89d2af9179ed9bb8cadc21737554a5e09084d3a",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o4",
+      "observation_key": "o4",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2200,
+            "start": 0
+          },
+          "sectionId": "44cf077e-929b-4249-9141-0c507050888d"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "1e3021ba-d24b-4d4c-879d-e9e7510d56b2",
+            "e0343dd0-254c-4341-b1b5-0b7a1a3fa569",
+            "b8d215b5-47b1-403d-8b85-1fc3c2c9e2b2",
+            "2c54f5e2-827a-4e40-8fb7-fb12229e56f9",
+            "194733d8-3b17-4e22-911e-1a86de55a3fd",
+            "e5c9075f-0371-41a2-9f92-cdf52be5e8d7",
+            "8a7df294-4d5c-4227-9c13-cb87268e08ab",
+            "0959b2f0-ce59-43bc-a380-b133762e01fd",
+            "5d9602c7-bef7-4a9f-9bf6-0f1039bf038a"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 3200,
+            "start": 2600
+          },
+          "sectionId": "f54fbfce-9cc8-4405-b00c-2ab27516012d"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "926c9e9a8ac1a5eab9c76794699a1af36febb0f1f4c6bf55ac6d49478113a3f5",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o5",
+      "observation_key": "o5",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "a6936397-b0d4-4204-be30-3f91629e29dc",
+            "5df6a281-6e64-4224-9c74-88168fac1d1b",
+            "2848fff5-2ca9-4f0c-8a99-881d90c7be1c",
+            "f910d535-4450-43ac-89bd-02abb381681b"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2200,
+            "start": 530
+          },
+          "sectionId": "b2b6fc72-04cf-43a0-8ed8-82c2ba0d5b65"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1500,
+            "start": 900
+          },
+          "sectionId": "f8d8bcb3-89aa-4431-a81d-1ec8da6fbd4f"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "3becdb8d0292c40514213b7e5086ad736ff2e41b078220f2b25ab5d7f7376487",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o6",
+      "observation_key": "o6",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "2e04ba96-41bc-4b94-a85c-0405f628fa6e",
+            "0e90e85a-5219-46a9-a3ad-66b743dff650",
+            "6f9734ed-8163-4a9a-ad00-23c04e9e66a0",
+            "779b3c1e-c687-4426-983c-8265b9245be8",
+            "a20f278e-e5c8-4bd8-8b84-2e8eac7630c8",
+            "9c089ffb-83cd-4994-8a62-88692db379d6",
+            "9c3213cb-66c7-438f-aec2-d8fe8674ced6",
+            "c483d7ae-b778-4485-937d-2d7dbde0a29a"
+          ]
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "3674eb4ada0adeb6f9eb3f8ced6066b6a1633ba2a7f1593de8a65ea358146a54",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o7",
+      "observation_key": "o7",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1729,
+            "start": 1050
+          },
+          "sectionId": "81c55917-8dae-4412-97d5-b7fb9b5a60a2"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1800,
+            "start": 600
+          },
+          "sectionId": "37dafb1f-0ce9-4c1e-a66d-7cc038cf86e2"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "adadec79-b369-45b4-a4a6-b020f078fac3",
+            "b8f69e22-966b-4c8d-885d-02270e71ed28",
+            "b372f82c-7762-41b6-90ad-f3b749e67a95"
+          ]
+        },
+        {
+          "kind": "section",
+          "sectionId": "0281ce0d-bdd7-4cac-bb3d-64f3dc58fc8e"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "c300a6895582ee5eb46ad30d47ff956dc29da871bec12722ebe9ef0294d39646",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o8",
+      "observation_key": "o8",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "ce156e45-a139-416b-9871-b1fb023726df"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "414c9717-0e0a-4150-bed5-f64a10edd1f4",
+            "f72f5546-9d23-45eb-b1de-62723c21204a",
+            "0cb7d16d-29a8-4fd2-82e6-1fdca637d23d"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1000,
+            "start": 600
+          },
+          "sectionId": "61680378-e2a0-4811-9334-2226da2344df"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 680,
+            "start": 380
+          },
+          "sectionId": "1eec4cd9-1a20-4064-aaea-87ab4d116f01"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "8fede2cd84baf10923a5983f5a435ca73b580ad73ed59de288889a07191af50e",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o9",
+      "observation_key": "o9",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "88b4c773-2be0-4f55-a01f-ab0184f2af50",
+            "92ad7634-a895-4821-bd41-bd2f0a4a2bf4",
+            "01125cb2-b9c4-4a35-b4e5-e154c8bda940",
+            "e90eacc7-e951-455d-bb65-5faf66998dd9"
+          ]
+        },
+        {
+          "kind": "section",
+          "sectionId": "13d80ef8-5e82-4a19-8f2f-09bdad4dec9e"
+        },
+        {
+          "kind": "section",
+          "sectionId": "ce547aa4-5fb9-45ad-8a34-524177f80705"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "0f6cf88c10398ff0abe0f1a9225fe6c4097495feea78c2bd981b2741b92c05e5",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o10",
+      "observation_key": "o10",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "b6ce4676-9b55-46f1-9dec-07c22d789936"
+        },
+        {
+          "kind": "section",
+          "sectionId": "754345a8-d4c2-4baa-b808-6e1b5ed23adb"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1500,
+            "start": 300
+          },
+          "sectionId": "8ae0d4bc-6078-42d0-960a-da0c3787863b"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "cf3ad458721cc5ac37c96fffd72bfed7d8eb1712025641e350d1a98617633275",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o11",
+      "observation_key": "o11",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "bf5a7292-68a9-4b96-b37e-a947fb2c649f"
+        },
+        {
+          "kind": "section",
+          "sectionId": "1eccb5be-7a5e-4dd3-96a7-b4b01cd4bcce"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "7c5cef2061ec9f5776e0252f5aab287acf266e85e822417333443985d1fe3f23",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o12",
+      "observation_key": "o12",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "555f6929-c927-41e7-805b-3ed6ea3d1296",
+            "d3a63efe-beab-4fe5-959c-64928e7964af",
+            "2c56cfd5-92ad-4124-b8f2-c656784c8180",
+            "099b386c-d9d7-4733-8f51-cb9370784d30",
+            "9c575cfd-6331-4141-9a59-a3398d50b6d1",
+            "45b5cb6c-2f88-4861-b8bb-a9977149f9b2",
+            "7bd0aa53-3148-4c1c-9a0b-c653a6ed709d"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 700,
+            "start": 0
+          },
+          "sectionId": "8b6a3354-86fc-4a1e-a0e3-bf4c5be74b72"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "74290188ab2eb5d6faf68f3756dccaa8d945860c35257850741ce13538a3afd6",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o13",
+      "observation_key": "o13",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "cf233352-e898-40b1-8a81-0c8d4592e2c4",
+            "65dfadc8-2154-4a8d-b388-02a143960335",
+            "a65c2c4a-c224-43c9-98a2-c11f28172ba1",
+            "c229b4d8-ec73-444a-9925-b08f43d40212",
+            "96920ffb-e08f-406e-afbd-0b9dc372b640",
+            "532730e8-7c92-4fa9-82f9-d023927457a8"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 320,
+            "start": 95
+          },
+          "sectionId": "14cfa568-3093-4c02-9fc8-fbdd47f31f33"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "665a4dd130c0ed4aef9ed7ee95e23ae5af5defa9c4b030c18b8dd0b82c85dd27",
+      "exclusion_reason": "E1 §3.2 — checklist absence across an enumerated set, measured against a reader-constructed comparator.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o14",
+      "observation_key": "o14",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2721,
+            "start": 2100
+          },
+          "sectionId": "3cee707c-21fb-402e-b31c-94b09544a017"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2654,
+            "start": 2380
+          },
+          "sectionId": "b4ff9271-c6bb-401c-a268-3f1b2098ce25"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 4993,
+            "start": 4700
+          },
+          "sectionId": "2c01ad5f-5cd0-438b-9beb-9a94fa2c437b"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2000,
+            "start": 1750
+          },
+          "sectionId": "f8d8bcb3-89aa-4431-a81d-1ec8da6fbd4f"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "578bc0cf31db0e1293232d958613890a8a2c1970b5fcb61e0b93a9bb781684ce",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o15",
+      "observation_key": "o15",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "3cee707c-21fb-402e-b31c-94b09544a017"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "cca612ef-35f7-4a56-afa3-7beacb384cf4",
+            "aceca601-49cd-4490-b192-f9b746e69cb3",
+            "653dfe49-bd57-49d6-9155-5d01fdb2639e",
+            "c0541a1c-a499-41f8-8ce8-88723c570579",
+            "45219f30-49c9-49a9-b13e-53a1347b5cbf"
+          ]
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 700,
+            "start": 0
+          },
+          "sectionId": "812a5eb9-2414-4616-8bf1-4fc59e361caf"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1000,
+            "start": 620
+          },
+          "sectionId": "194733d8-3b17-4e22-911e-1a86de55a3fd"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1323,
+            "start": 180
+          },
+          "sectionId": "780c8132-b64a-42fa-bc01-44dfbb2a0f32"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "110faf8d9f443c8f8d6f468d22ebfecb5fb8a00b76dc73fa1d8bf7f2d60c9b61",
+      "exclusion_reason": "E1 §3.2 — negated-act clause plus an imported expositional standard the Work never establishes.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o16",
+      "observation_key": "o16",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 737,
+            "start": 480
+          },
+          "sectionId": "88b4c773-2be0-4f55-a01f-ab0184f2af50"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1900,
+            "start": 1500
+          },
+          "sectionId": "5f95ba13-c05a-49f7-93d8-96cf1b6d93cd"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1434,
+            "start": 1200
+          },
+          "sectionId": "346cfc36-6ce8-4e05-bcb2-b681fe1a90da"
+        },
+        {
+          "kind": "section",
+          "sectionId": "bf680b00-30b7-42cb-8c38-c12344951b2e"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "88729d89d5103982fc12d610a76a9525bff4e7393c0d04a8fff22fad6f4d1418",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o17",
+      "observation_key": "o17",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "ee97f617-9cfb-48ec-a0df-80d56330e650",
+            "ffadc37a-10c7-410c-8894-c7a5c1741859",
+            "39eb5988-aaf0-48dd-82d0-fa3963d34db0",
+            "3272382a-3d9d-4dfc-badc-47e0d00a876b",
+            "c93a1f58-f188-4280-afb8-61f1592d5562"
+          ]
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "461c2cab0af13ee9040f625a3fb61af2369e40b651ae4c869f88496d4b689dcb",
+      "exclusion_reason": "E1 §3.2 — absence of a relation never established, measured against a pattern held by sibling members; an expected whole.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o18",
+      "observation_key": "o18",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "670ba587-b8c9-4e4d-b4cd-edc62250b8af",
+            "53d3bd96-6355-43f7-99ce-57485b06f815",
+            "176c71b4-bcb4-4c6f-b75e-e81d95d0b1a0",
+            "717a9e0d-3e04-406a-a2c7-86879f5cec7c",
+            "36c4bcb9-7164-4445-b02c-2e70cdbf68c3"
+          ]
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "65dfadc8-2154-4a8d-b388-02a143960335",
+            "a65c2c4a-c224-43c9-98a2-c11f28172ba1",
+            "c229b4d8-ec73-444a-9925-b08f43d40212",
+            "96920ffb-e08f-406e-afbd-0b9dc372b640",
+            "532730e8-7c92-4fa9-82f9-d023927457a8"
+          ]
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "0ceaeb086d2b75deeee7eaa04f449be0b99a511434fae02d96968a9f4a586791",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o19",
+      "observation_key": "o19",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1800,
+            "start": 600
+          },
+          "sectionId": "37dafb1f-0ce9-4c1e-a66d-7cc038cf86e2"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "0e407a9a-484f-4f9d-b38e-de7329518a29",
+            "efa68c5a-b215-4690-9f09-22b1f90c99c8",
+            "7250d48b-1502-4150-8fc1-8521a8245a98",
+            "a5007fb0-df20-4797-a8b7-8d0bae683e1b",
+            "206b0fb6-1676-45ec-a332-892947b831d8",
+            "927d04fb-c61a-46c2-8123-762cd757b774"
+          ]
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "cd86eed179ac2b4c76b2419b7519e44ccb69ab7ed8463098d4d680b6e1bf6817",
+      "exclusion_reason": "E1 §3.2 — leads with what one member lacks, measured against an expected whole inferred from sibling members rather than declared by the Work.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o20",
+      "observation_key": "o20",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "ba546e91-fa27-4962-8e60-d2ce1023a96d",
+            "274ada50-000b-42be-9818-e9e3f1f8a495",
+            "7ec61f0b-c03a-4d98-a51a-2d2aec56b9f8",
+            "028b93a4-ae1d-4a9c-acd9-bac39d3c9466",
+            "e95ef7a6-4d90-46d2-be4d-6e0e450c389c",
+            "dde2e430-f5ec-4585-bd15-0f3ed61111d7",
+            "a6ae431b-fbc1-4338-84d0-217244f7a73d",
+            "b251603c-b3ae-4234-b134-45abb2366cee",
+            "8bed7fa5-033e-4f19-a82b-07222ae013fc",
+            "7b4377db-d8f4-4692-ad3b-ba5f2eabdc74",
+            "e61bb100-086c-43b6-97d8-dfd742137ffe",
+            "7b0d43bd-8056-4880-bf96-3fdb2e766fc6",
+            "f21d69df-d5a8-4730-8c07-61c786b51baf",
+            "346cfc36-6ce8-4e05-bcb2-b681fe1a90da"
+          ]
+        },
+        {
+          "kind": "section",
+          "sectionId": "e5b64b1f-5eb0-43b1-a359-6d1eb9f55031"
+        },
+        {
+          "kind": "section",
+          "sectionId": "f000f41c-d860-48d1-886f-0af85440441d"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1705,
+            "start": 1350
+          },
+          "sectionId": "8bed7fa5-033e-4f19-a82b-07222ae013fc"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "8c873042b8fedf0bddaa29cde1d3fa4f2aaed7b7953b7cab9dc96f30fa3dac84",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o21",
+      "observation_key": "o21",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "bf680b00-30b7-42cb-8c38-c12344951b2e"
+        },
+        {
+          "kind": "section",
+          "sectionId": "404f7605-69af-4f9a-a882-cf699d739739"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1799,
+            "start": 1250
+          },
+          "sectionId": "29bc6f39-e51e-460b-b068-4934f1c7f161"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1500,
+            "start": 900
+          },
+          "sectionId": "5f95ba13-c05a-49f7-93d8-96cf1b6d93cd"
+        },
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "414c9717-0e0a-4150-bed5-f64a10edd1f4",
+            "f72f5546-9d23-45eb-b1de-62723c21204a",
+            "0cb7d16d-29a8-4fd2-82e6-1fdca637d23d"
+          ]
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "7bbf0e5e5553bf8608dd56fe8f301a2712a945a6a38f13cfd99873540519b5c4",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o22",
+      "observation_key": "o22",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "10098d78-be1a-45a9-9bae-c6ac10834e0f"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1500,
+            "start": 900
+          },
+          "sectionId": "ba546e91-fa27-4962-8e60-d2ce1023a96d"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 3400,
+            "start": 2900
+          },
+          "sectionId": "754345a8-d4c2-4baa-b808-6e1b5ed23adb"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "ad19e2d8db0a9bfe89c63a1a3cf94d5eb548f8806c6413b54fe8a3330898589d",
+      "exclusion_reason": "E1 §3.2 — closing clause names an act not performed upon the material.",
+      "f7_eligibility": "INELIGIBLE_F7",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o23",
+      "observation_key": "o23",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2644,
+            "start": 2500
+          },
+          "sectionId": "6d1d0a9c-b07f-4f3b-94b8-1e58357ed0e0"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 3720,
+            "start": 3550
+          },
+          "sectionId": "f458f7c9-459a-4e76-8e95-2094b810b9e3"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 963,
+            "start": 840
+          },
+          "sectionId": "295f0182-0f6c-4f35-a98b-92ffe4f2f6ba"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2400,
+            "start": 2250
+          },
+          "sectionId": "948c800d-3883-487c-baf8-6ccfbca36f5b"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2560,
+            "start": 2400
+          },
+          "sectionId": "97adbab3-65a5-40d4-9bb7-ddaeab4f436d"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1787,
+            "start": 1720
+          },
+          "sectionId": "ae66b016-b7e8-4c8d-aa3b-4e2847a81d7c"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1660,
+            "start": 1580
+          },
+          "sectionId": "76ba9254-0b64-4a7a-bf31-f439706ec2a3"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 160,
+            "start": 80
+          },
+          "sectionId": "14cfa568-3093-4c02-9fc8-fbdd47f31f33"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 1270,
+            "start": 1180
+          },
+          "sectionId": "8bed7fa5-033e-4f19-a82b-07222ae013fc"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "9d711d411298e93b4c1831fb48232a200552956d75c59d7bd91b111296354841",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o24",
+      "observation_key": "o24",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "passage",
+          "range": {
+            "end": 4800,
+            "start": 4550
+          },
+          "sectionId": "10098d78-be1a-45a9-9bae-c6ac10834e0f"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 2916,
+            "start": 2880
+          },
+          "sectionId": "18e7484e-dbac-4636-ad08-414d74ac6fd9"
+        },
+        {
+          "kind": "passage",
+          "range": {
+            "end": 130,
+            "start": 80
+          },
+          "sectionId": "3f222549-9fa9-4f9a-b79a-9e6d2a93f078"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "d2bf8fe5ac1ae1eda0669e41d3d4aa0f49ac56c402009c9d7e67d85ccf026bad",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o25",
+      "observation_key": "o25",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section",
+          "sectionId": "e6404bd4-d99d-430d-b5b1-e63ffaa432e2"
+        },
+        {
+          "kind": "section",
+          "sectionId": "d7554f3a-51e1-4167-8197-d94258f90fb7"
+        },
+        {
+          "kind": "section",
+          "sectionId": "bbe5a11d-ad1f-41bb-95d7-b1beb48928e7"
+        }
+      ]
+    },
+    {
+      "content_digest_sha256": "db6792c086d837c32fe0a4bace0d168ff2ca8a4f1fb56c7754f8c7200cc139c1",
+      "exclusion_reason": null,
+      "f7_eligibility": "ELIGIBLE",
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o26",
+      "observation_key": "o26",
+      "raw_revision": {
+        "draft_id": "cef52911-dcc5-448a-b844-734aa026266d",
+        "input_fingerprint": "bb1c3ca4b6167175ec7fb668f88643afe60c080a8172372ad46f2613f626d555",
+        "manuscript_id": "55742458-be2c-406a-a158-d0438cf02892",
+        "revision_number": 5
+      },
+      "reading_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+      "source_evidence_refs": [
+        {
+          "kind": "section-run",
+          "sectionIds": [
+            "1837f7ec-725c-4ac2-bd37-328b6899a5cc",
+            "31b98d92-c186-40ff-9a3a-292f27fb9b54",
+            "948c800d-3883-487c-baf8-6ccfbca36f5b",
+            "44cf077e-929b-4249-9141-0c507050888d",
+            "a6936397-b0d4-4204-be30-3f91629e29dc",
+            "5df6a281-6e64-4224-9c74-88168fac1d1b",
+            "2848fff5-2ca9-4f0c-8a99-881d90c7be1c",
+            "f910d535-4450-43ac-89bd-02abb381681b",
+            "14e1fa30-c65f-47e7-b002-7dd4633fe2df",
+            "40679ffb-339b-4ad3-92bb-df1654c1e4fa",
+            "22004cac-2147-474e-bb98-18b84280189f",
+            "21c63c25-f251-49a6-a50a-fa56237891a1",
+            "9b158390-7d61-4b80-9552-7d8b0c9d2eda",
+            "190e2c70-e4d1-4e55-ad72-c72ccf41cae8",
+            "0209edd0-2453-4542-b8fb-9bfeefcccfb2",
+            "b7a52b7a-52f3-428c-b8c4-fb3246d11113",
+            "a658e4d6-33c0-4725-8bf2-95e23a005f5e"
+          ]
+        },
+        {
+          "kind": "section",
+          "sectionId": "e136e6c6-5bb9-49cd-b6e5-e0d8bc4c3863"
+        },
+        {
+          "kind": "section",
+          "sectionId": "f000f41c-d860-48d1-886f-0af85440441d"
+        }
+      ]
+    }
+  ],
+  "manifest": "SEL-0 · A · SOURCE",
+  "production_store": {
+    "column": "observations (jsonb array)",
+    "database": "maia_consciousness",
+    "host": "minisforum",
+    "row_frozen_at": "2026-09-08T12:07:18.442295+00:00",
+    "row_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553",
+    "table": "developmental_readings"
+  },
+  "reader_provenance": {
+    "model": "claude-opus-5",
+    "promptHash": "5c0ab1683726c9dec78f56cc19412dd3a6cd600d4254f1f545b977c86a0b21a1",
+    "provider": "anthropic",
+    "readerVersion": "DEVELOPMENTAL-READER-05"
+  },
+  "source_snapshot_sha256": "2f45070104c2d598b1bc4b43168cff5ddaae4571d96fa24bce867ebac9cb7272"
+}

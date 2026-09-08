@@ -1,0 +1,134 @@
+{
+  "N": 19,
+  "canonical_sort": {
+    "disqualified_orders_not_used": [
+      "production order",
+      "score order",
+      "recency order",
+      "reading-native o1..oN order"
+    ],
+    "method": "ascending sha256(seed + ':' + observation_id)",
+    "seed": "SEL-0-BLIND-SORT-2026-09-08",
+    "selection_neutral": true
+  },
+  "content_rule": "Verbatim reader claim text only. No phenomenon label, no evidence refs, no read-state, no coverage, no digests-in-view, no instrumentation.",
+  "frozen_at": "2026-09-08T21:07:27Z",
+  "items": [
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o11",
+      "position": 1,
+      "text": "Position 56 tells the story of the four yogis at length and closes on \"That is the joke. And that is also the teaching.\" Position 57 then maps each yogi to a path of yoga and an element, and states that the fifth element \"appears in the space between them, when they finally stop arguing and stand together.\" This is the only extended narrative parable I encountered in the four chapters of Part One; the surrounding sections proceed by exposition, quotation and personal anecdote rather than by story. The four-paths mapping is not referred back to in the element chapters that follow it in what I read.",
+      "text_digest_sha256": "cf3ad458721cc5ac37c96fffd72bfed7d8eb1712025641e350d1a98617633275"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o4",
+      "position": 2,
+      "text": "The campfire-tending sequence is narrated three times in the fire chapter with overlapping sentences. At position 73 the narrator sits down after \"a long day of mundane tasks, sessions with clients, and the distractions of a busy schedule,\" the wood is \"a bit damp from last night's rain,\" the flames \"begin to spread through the twigs and pine needles,\" \"the chopped wood is sizzling as it releases itself to the heat of the flames,\" and then the embers \"spread across the firepit, forming an undulating pattern of darkness and light.\" Positions 87 through 95 restate each of these beats in turn under separate headings — the same long day and clients, the same dampness, the same twigs and pine needles and sizzling wood, the same anticipation of whether the fire will spread, the same undulating pattern of dark and light, and the same explanation of pareidolia that had already been given at position 17.",
+      "text_digest_sha256": "4b4ae68d9bd71a9f34dba205a89d2af9179ed9bb8cadc21737554a5e09084d3a"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o21",
+      "position": 3,
+      "text": "The tenth chapter's opening (positions 200 and 201) re-explains material already given in Part One: that life moves in cycles, that a spiral differs from a cycle by allowing development, that the elements are distinguished for the sake of description but move together in lived experience, and — at length, through the extended lost-hiker analogy — that a map is not the territory and that symbolic maps orient without dictating. The map-and-symbol point was made at position 29 (\"As imaginal beings, we find simple symbols helpful in managing the complexity of our experience\") and at length at position 173 (\"Maps of meaning ensure consistency and purpose... much like a city map uses symbols\"), and the spiral-versus-circle point at positions 30, 42, 43 and 44.",
+      "text_digest_sha256": "8c873042b8fedf0bddaa29cde1d3fa4f2aaed7b7953b7cab9dc96f30fa3dac84"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o26",
+      "position": 4,
+      "text": "The fire chapter runs from position 70 to position 114, forty-five sections, many of them under 800 code points and each carrying its own heading. Reading through them, the same three propositions recur across many of these short sections in varied wording: that fire illuminates and burns away what is false, that it is future-oriented and projective, and that it must be tended so as neither to burn out nor go dark. The later element chapters use fewer and longer sections — earth's core exposition sits in a handful of sections of 2,500 to 6,200 code points, and the tenth chapter's architecture is delivered in six sections of roughly even length.",
+      "text_digest_sha256": "db6792c086d837c32fe0a4bace0d168ff2ca8a4f1fb56c7754f8c7200cc139c1"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o6",
+      "position": 5,
+      "text": "Two consecutive sections at positions 99 and 100 carry the identical heading \"The Dark Side of Fire\" and both open the same territory: fire's dual nature as life-giver and destroyer, and the saying \"The greater the light, the deeper the shadow.\" The saying then recurs a third time in restated form at position 102 (\"The brighter a lamp burns, the longer and deeper its shadows grow\"). Positions 101 through 106 continue to treat fire's destructive aspect under six further headings.",
+      "text_digest_sha256": "3becdb8d0292c40514213b7e5086ad736ff2e41b078220f2b25ab5d7f7376487"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o25",
+      "position": 6,
+      "text": "Two front-matter sections list the book's contents at positions 3 and 9–11, and both include entries that also appear as standalone sections in the sequence. The section at position 8 is headed \"Contents\" and lists only \"Preface\" and \"Introduction\"; no section headed \"Introduction\" appears in what I read, though the bibliography at position 250 carries an \"Introduction\" heading with its own reference list.",
+      "text_digest_sha256": "d2bf8fe5ac1ae1eda0669e41d3d4aa0f49ac56c402009c9d7e67d85ccf026bad"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o5",
+      "position": 7,
+      "text": "Four short sections in the fire chapter (positions 74 through 77) — on softness and sacred presence, on expanded intuition, on the presence of ancestors, and on gathering around campfires through the ages — are restated later at position 97 as consecutive paragraphs of a single section, in close to the same words: \"Sitting in front of a fire transports us to a place of softness and presence that feels mystical and sacred. The bright, noisy crackling... gives way to glowing embers that undulate... Our intuition expands, and the world seems more enchanted. We can feel the presence of our ancestors, nature, and all that has come before us. For generations, we've gathered around fires...\" That same section also repeats verbatim a passage first given at position 97 and again at position 109 about maintaining \"personal sovereignty\" while \"recognizing the sovereignty of all other sentient beings\" and seeking \"our God-given right to be free to pursue what our heart yearns and burns to actualize.\"",
+      "text_digest_sha256": "926c9e9a8ac1a5eab9c76794699a1af36febb0f1f4c6bf55ac6d49478113a3f5"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o22",
+      "position": 8,
+      "text": "The dream that opens position 13 — waking at 3:30 in the morning in a tent beside the nine-year-old son, being the elements, stepping barefoot onto dew — is the founding experience of the book's first prose section and runs about 8,000 code points. Its imagery returns once, briefly, at position 184 (\"It's 3:33 in the morning, and I'm awakened by a light descending our stairs. It is my son...\"). In between, the dream itself is not revisited; the crystalline-mandala dream at position 34 is presented as a separate and distinct vision, described as the experience that \"birthed an elemental understanding that I have faithfully explored for over twenty-five years.\"",
+      "text_digest_sha256": "7bbf0e5e5553bf8608dd56fe8f301a2712a945a6a38f13cfd99873540519b5c4"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o3",
+      "position": 9,
+      "text": "The closing benediction of the water chapter's opening — \"In doing so, we align ourselves with the fluid dance of creation... May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relationships, in all we create, and in all we do\" — recurs in near-identical wording at the close of the earth chapter (position 165) and again inside the air chapter (position 169), each time with the element name swapped. The air-chapter instance retains the word \"earth\" throughout (\"grounding ourselves in the wisdom of the earth... the harmony and balance that the earth so generously offers\") within a section otherwise about the Word, breath, and communication.",
+      "text_digest_sha256": "8afc9ecfa7f063747c12828fc073b64c2c573821589e2efe9c8617937d022a8d"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o13",
+      "position": 10,
+      "text": "The three-state and three-phase structure of each element — Fire as Activating/Amplifying/Actualizing with phases Purpose, Play, Practice; Water as Being/Balancing/Becoming with Heart, Healing, Holy; Earth as Cultivating/Crystallizing/Creating with Mission, Method, Medicine; Air as Directing/Developing/Discerning with Connection, Community, Consciousness — is set out for the first time at positions 210 through 215, in the tenth chapter. The five element chapters that precede it do not use these state or phase names in what I read; they organise their material by other headings. Position 20, early in the first chapter, refers once to \"the five elemental spheres and their three-phase developments\" without naming the phases.",
+      "text_digest_sha256": "74290188ab2eb5d6faf68f3756dccaa8d945860c35257850741ce13538a3afd6"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o8",
+      "position": 11,
+      "text": "The spiral as a model of non-linear growth is introduced at position 30 and then given a second, fuller treatment across positions 42, 43 and 44 — \"we often envision a linear path leading steadily upward. However, true growth resembles a spiral,\" followed by the cycles of challenge, insight, integration and refinement, and the observation that returning to the same spot is not failure. The same claim about revisiting problems from a higher vantage point appears in all three places. The paragraph at position 33 (\"Despite our best-laid plans, life often takes unforeseen directions. We intuitively sense the underlying cycles and patterns... navigate unpredictability with a sense of wonder and discovery\") repeats verbatim a paragraph given at position 31.",
+      "text_digest_sha256": "c300a6895582ee5eb46ad30d47ff956dc29da871bec12722ebe9ef0294d39646"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o24",
+      "position": 12,
+      "text": "Position 13 contains, mid-sentence and inside the narrative about the son coaxing the narrator away from work, an embedded web address: \"splash abouthttps://soullab.life/writers-studio/develop?m=55742458-be2c-406a-a158-d0438cf02892 in the streams.\" Position 19 ends with a lone stray character on its own line after the closing paragraph. Position 2 contains a replacement-character sequence where a copyright symbol would sit.",
+      "text_digest_sha256": "9d711d411298e93b4c1831fb48232a200552956d75c59d7bd91b111296354841"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o9",
+      "position": 13,
+      "text": "The Trinity is introduced at position 38 as \"the dynamic interaction between three essential aspects of our nature: Agent, Agency, and Manifestation\" and elaborated across positions 39, 40 and 41. In the sections that follow through the end of Part One and across all five element chapters, the terms Agent, Agency and Manifestation are not used again in what I read; the gunas, alchemical principles and astrological modalities that share the same chapter continue to recur. The chapter's own title names the Trinity, and its opening paragraph frames the Trinity as \"another layer of understanding our inner dynamics\" alongside the gunas.",
+      "text_digest_sha256": "8fede2cd84baf10923a5983f5a435ca73b580ad73ed59de288889a07191af50e"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o12",
+      "position": 14,
+      "text": "Six of the eight sections following position 155 in the earth chapter (positions 157 through 163) turn from the expository and anecdotal register of the rest of the chapter to a sustained personification of Mother Earth — \"the mother of diversity,\" her womb, her unconditional love that \"does not discriminate between the stone and the stork.\" Each is short and each begins its own heading. This maternal-divine register is picked up once more at position 165 (\"the principles of earth wisdom are rightly personified as feminine... Isis\") and, in what I read, does not appear in the fire, water, air or aether chapters.",
+      "text_digest_sha256": "7c5cef2061ec9f5776e0252f5aab287acf266e85e822417333443985d1fe3f23"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o7",
+      "position": 15,
+      "text": "The torus and the three-part rhythm (gunas / astrological modalities / alchemical principles) are set out at least four times in Part One with substantially the same content. Position 22 names them as a list; position 45 explains the guna–modality correspondence and its meaning at length; positions 46, 47 and 48 then give each of the three triads its own section with the same expansion/contraction/balance framing; and position 50 restates the toroidal cycling of Rajas–Sulfur, Tamas–Salt, Sattva–Mercury while explicitly \"referencing the previous chapter.\" Position 45 also lists Libra twice, once as cardinal and once as mutable.",
+      "text_digest_sha256": "3674eb4ada0adeb6f9eb3f8ced6066b6a1633ba2a7f1593de8a65ea358146a54"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o17",
+      "position": 16,
+      "text": "The appendix section at position 227 announces \"The Four Grades of the Elements\" and states that \"every element is understood to have four grades.\" The sections that follow give the four grades for Water, Earth and Air. I did not encounter sections giving the four grades for Fire or Aether; the next section after Air's grades turns to \"Chapter Summaries by Elemental Type,\" which does treat all five.",
+      "text_digest_sha256": "88729d89d5103982fc12d610a76a9525bff4e7393c0d04a8fff22fad6f4d1418"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o10",
+      "position": 17,
+      "text": "The crystal image is developed at length at position 18 — a crystal held in the hand containing everything one knows about oneself, opening onto others' crystals, Indra's net, and its use in difficult conversations — and again at position 34 as a dreamed crystalline mandala with people gazing into facets. Position 32 returns to Indra's web independently. After position 34, the crystal is not taken up again in what I read; the mandala, medicine wheel and spiral images continue to recur, including in the appendix material.",
+      "text_digest_sha256": "0f6cf88c10398ff0abe0f1a9225fe6c4097495feea78c2bd981b2741b92c05e5"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o15",
+      "position": 18,
+      "text": "Maya, the composite figure introduced at position 202, is the only sustained case narrative followed across multiple sections in what I read. She is introduced in the tenth of ten chapters and carried through positions 203 to 207 and again at 219, 220 and 222, then into the Conclusion at position 223, where five of the concluding paragraphs return to her. The earlier chapters use named clients — David at position 91, Bill at position 144, an unnamed teenage client at position 111, an unnamed ADHD cohort at position 154 — each appearing once and not returning.",
+      "text_digest_sha256": "578bc0cf31db0e1293232d958613890a8a2c1970b5fcb61e0b93a9bb781684ce"
+    },
+    {
+      "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o19",
+      "position": 19,
+      "text": "Position 45 introduces the astrological modalities and their guna correspondences within the third chapter, and positions 242 through 246 in the appendix give a fuller elemental astrology with all twelve signs and a \"Spiral Journey of Astrology.\" Between these, in the five element chapters, astrological signs and modalities are not used to organise or illustrate the elements in what I read — the fire, water, earth, air and aether chapters proceed without reference to Aries, Cancer, Capricorn or the cardinal/fixed/mutable distinction.",
+      "text_digest_sha256": "0ceaeb086d2b75deeee7eaa04f449be0b99a511434fae02d96968a9f4a586791"
+    }
+  ],
+  "manifest": "SEL-0 · B · BLIND RANKING SURFACE",
+  "warning": "CONTAINS THE STIMULUS. Not to be opened before SEL-0 Step 2."
+}
