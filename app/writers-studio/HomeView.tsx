@@ -516,12 +516,18 @@ export default function HomeView({
               >
                 Begin a new work
               </button>
+              {/* Founder ruling 2026-09-08 (Life of a Work, step 1): this door
+                  was labelled "Import writing", which named a file operation
+                  rather than the act. Returning to a Work the writer already
+                  has is a second PRIMARY doorway, not an accessory to
+                  beginning. The path is unchanged — the label stops
+                  under-describing what the Studio can already hold. */}
               <Link
                 href={IMPORT_HREF}
                 className={`${QUIET} w-full sm:w-auto`}
                 style={{ borderColor: PRESS.rule }}
               >
-                Import writing
+                Bring a work back to life
               </Link>
             </div>
           </div>
@@ -1009,7 +1015,7 @@ export default function HomeView({
               style={{ borderColor: PRESS.rule }}
             >
               <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-              Import writing
+              Bring a work back to life
             </Link>
           </section>
         ) : null}

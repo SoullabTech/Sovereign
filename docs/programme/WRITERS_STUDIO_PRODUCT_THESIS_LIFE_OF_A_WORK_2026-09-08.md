@@ -4,13 +4,18 @@
 Deliberately *not* filed under the Idea→Work lane: this defines what the Studio must be
 capable of **holding across the life of a Work**, not how an idea becomes one.
 
-**Status: DOCTRINE PROPOSED · Cat 1 — preserved direction, held, NOT authorized.**
-Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
-Source: founder articulation, 2026-09-08.
+**Status: RATIFIED — founder ruling, 2026-09-08.**
+**PT-1 · PT-2 · PT-5 · PT-6 ratified as written. PT-3 · PT-4 ratified with amendment
+(both amended in place below; the pre-amendment wording is quoted where it was
+narrowed, never silently replaced).**
+**STEP 1 — DOORWAY REFRAMING — AUTHORIZED AND EXECUTED (§12).**
 
-No lane is opened here. No schema is proposed for application, no route added, no copy
-shipped. Provisional identifiers below are marked **PT-n** precisely so they are never
-mistaken for ratified law.
+Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
+Source: founder articulation and ruling, 2026-09-08.
+
+The **PT-n** identifiers are retained now that they carry law: they were provisional
+when written and are the same clauses the founder ruled on, so renumbering them would
+break the ruling's own references.
 
 ---
 
@@ -57,7 +62,7 @@ their own book again.
 
 ---
 
-## 3 — PT-1 · Encounter precedes intervention
+## 3 — PT-1 · Encounter precedes intervention · **RATIFIED**
 
 > **A returned Work is allowed to become present again before the system proposes
 > anything.**
@@ -81,7 +86,7 @@ order meaning may never be manufactured on top of it.
 
 ---
 
-## 4 — PT-2 · The four intentions are contracts, not modes
+## 4 — PT-2 · The four intentions are contracts, not modes · **RATIFIED**
 
 They determine **what MAIA is authorized to do**. That makes them constitutional, and
 it settles the question the prior draft left open: intention **gates behavior**. It is
@@ -110,11 +115,22 @@ pages (§6).
 
 ---
 
-## 5 — PT-3 · The Source custody law
+## 5 — PT-3 · The Source custody law · **RATIFIED WITH AMENDMENT**
 
-> **No act performed in Writer's Studio modifies the historical Source from which a
-> Working Draft was created. Even "fix this typo." The correction belongs in a
-> descendant representation.**
+> **No content-working act performed in Writer's Studio may modify the historical
+> Source from which a Working Draft was created. Revision, restoration, development,
+> generation, formatting correction, or other work upon the manuscript occurs only in a
+> descendant representation. Explicit member-directed Source lifecycle acts are
+> separately governed and must never be disguised as editing.**
+
+*Amendment note (founder, 2026-09-08).* The proposed wording — *"No act performed in
+Writer's Studio modifies the historical Source"* — was too absolute: it would have
+constitutionalized against the member's own deletion, withdrawal or replacement of their
+Source, taking control of the Source away from its owner in the name of protecting it.
+The prohibition binds **content-working acts**. Lifecycle acts remain the member's, under
+separate governance, and the second sentence is the load-bearing one: **a lifecycle act
+must never be disguised as editing.** Even "fix this typo" is a content-working act and
+lands in a descendant representation.
 
 ```text
 SOURCE            What you entrusted to the Studio. Unaltered.
@@ -135,7 +151,7 @@ storage feature.
 
 ---
 
-## 6 — PT-4 · Works have descendants; a writer has a body of work
+## 6 — PT-4 · Works have descendants; a writer has a body of work · **RATIFIED WITH AMENDMENT**
 
 Continuing does not necessarily mean adding pages to the same manuscript:
 
@@ -153,14 +169,26 @@ Elemental Alchemy  ──gives rise to──▶  Inner Guide Meditation
 Original Work                          Elemental Alchemy · Part II
 ```
 
-These are not two files in a folder. **The author declares the lineage; MAIA never
-infers it.** Recorded lineage lets MAIA understand a creative history *without
-collapsing the Works together* — and turns the Studio's top level from a project list
-into a literary life.
+These are not two files in a folder.
+
+> **The author declares lineage. MAIA may notice and propose a possible relationship
+> between Works, but may neither assert nor persist Work→Work lineage without the
+> author's explicit declaration.**
+
+*Amendment note (founder, 2026-09-08).* The proposed wording — *"the author declares the
+lineage; MAIA never infers it"* — went one step too far and would have forbidden the
+most valuable moment this thesis identified: MAIA noticing that something in one Work
+may want to become another. Noticing and proposing are permitted; **asserting and
+persisting are not.** This is the master brief §5 rule applied to lineage — *machines
+may detect; they may not silently declare* — and the persistence boundary is where it
+is enforced, not the conversation.
+
+Recorded lineage lets MAIA understand a creative history *without collapsing the Works
+together* — and turns the Studio's top level from a project list into a literary life.
 
 ---
 
-## 7 — PT-5 · Section is attention; Whole Manuscript is presence
+## 7 — PT-5 · Section is attention; Whole Manuscript is presence · **RATIFIED**
 
 ```text
 SECTION VIEW       precision · structure · focused work   → acting UPON the Work
@@ -176,7 +204,7 @@ of the Studio's most distinctive experiences.
 
 ---
 
-## 8 — PT-6 · What "Living" means (doctrine clarification)
+## 8 — PT-6 · What "Living" means · **RATIFIED**
 
 > **"Living" refers to the continuing relationship between Work and author — not
 > compulsory revision of the artifact.**
@@ -199,7 +227,7 @@ contract, the lineage, and the quiet.
 
 | Needed | State | Evidence |
 |---|---|---|
-| Second doorway on Home | **BUILT (mis-framed)** | `app/writers-studio/HomeView.tsx:517,520` — "Begin a new work" · "Import writing" → `IMPORT_HREF` (`studioMap.ts:129`) |
+| Second doorway on Home | **BUILT · REFRAMED §12** | was "Import writing"; now "Bring a work back to life" at both `app/writers-studio/HomeView.tsx` sites → unchanged `IMPORT_HREF` (`studioMap.ts:129`) |
 | Original preserved immutably | **BUILT** | `manuscript_source_arrivals` (`20260824000001`): vault-backed bytes, `artifact_hash`, `source_text_hash`, `extraction_method`, `extractor_version` |
 | Source ≠ Working Draft, member-visible | **BUILT** | tabs `Manuscript` / `Working Draft` (`app/press/manuscript/page.tsx:915-916`); `manuscript_working_drafts` (`20260727000001`) + revision partition (`20260902000002`) |
 | PT-3 enforced at the mutation boundary | **UNVERIFIED** | the distinction is architecturally present; that *no* Studio act can write the Source has not been asserted as a falsifier |
@@ -211,43 +239,104 @@ contract, the lineage, and the quiet.
 
 ---
 
-## 10 — Sequencing (highest leverage first)
+## 10 — Sequencing (founder-ruled)
 
-1. **Reframe the doorway.** "Import writing" → *"Bring a work back to life."* Copy and
-   framing on a path that already works. Near-zero risk; it carries the meaning.
-2. **Assert PT-3 as a falsifier before building anything on top of it.** A test that
-   proves no Studio act — Restore included — can write `manuscript_source_arrivals`.
-   The law is worth more as an assertion than as a paragraph.
-3. **Encounter (PT-1).** The space between arrival and intention. Serves every intention
-   and is the phase that most distinguishes this from an import wizard.
-4. **WS2-08B** — member-confirmed imported hierarchy (currently held). Prerequisite for
-   a returning writer seeing chapters rather than caps-derived cuts.
-5. **Intention as contract (PT-2)**, on a new axis, enforced at the mutation boundary.
+```text
+doorway → prove custody → Encounter → hierarchy → intention authority →
+quiet manuscript → Restore → lineage
+```
+
+1. **Doorway** — *DONE, §12.* Telling the truth about a capability the Studio already
+   has. This is deliberately the first shipped act: it makes "Bring a Work Back to Life"
+   a framing rather than a large new feature.
+2. **Prove custody** — the **PT-3 falsifier**. A test asserting that no content-working
+   act can mutate a historical Source, and that lifecycle acts are reachable only as
+   themselves. ⛔ **Founder condition: return with the falsifier DESIGN before Encounter
+   or any behavior that can act upon a returned Work.** The law is worth more as an
+   assertion than as a paragraph, and Restore is the feature that will test it.
+3. **Encounter (PT-1)** — the space between arrival and intention.
+4. **Hierarchy** — WS2-08B, member-confirmed imported structure. **HOLD NOT LIFTED.**
+5. **Intention authority (PT-2)** — a new axis, enforced at the mutation boundary.
    Preserve first: it is the contract that *withholds*, and the cheapest to prove.
 6. **Quiet Whole Manuscript (PT-5).**
-7. **Restore**, proposal-shaped: one correction at a time, individually refusable, each
+7. **Restore** — proposal-shaped: one correction at a time, individually refusable, each
    bound to the exact Source span it came from (`lib/manuscript/development/`
    `EvidenceRef` + `bindEvidence` is the right substrate — a correction that cannot name
    its span should not be offerable). Never bundled, never applied.
-8. **Lineage (PT-4).** Additive, member-declared, provenance not ownership; no backfill,
-   no inferred edges.
+8. **Lineage (PT-4)** — additive, member-declared. MAIA may propose; only the author's
+   declaration persists.
 
 Redevelop needs no new capability — it needs WS2-07 DEVELOP to be able to observe that
 **nothing needs to change here** and stay quiet (`WS2-07-BUILD-07D_NATURAL_DECLINE`).
 
 ---
 
-## 11 — Standing
+## 11 — Founder ruling, 2026-09-08
 
-⛔ NOT AUTHORIZED: no lane opened · no migration authored · no schema changed · no route
-added · no copy shipped · WS2-08B still held · `living_works.stage` CHECK untouched ·
-no deploy.
+> **PT-1, PT-2, PT-5 and PT-6 are RATIFIED as written.**
+>
+> **PT-3 is RATIFIED with amendment**: the prohibition governs all content-working acts
+> upon a Source. Revision, restoration, development, generation, formatting correction
+> or other manuscript work may not mutate the historical Source and must occur in a
+> descendant representation. Explicit member-directed Source lifecycle acts remain
+> separately governed and must not be disguised as editing.
+>
+> **PT-4 is RATIFIED with amendment**: the author declares lineage. MAIA may notice and
+> propose a possible relationship between Works, but may neither assert nor persist
+> Work→Work lineage without the author's explicit declaration.
+>
+> **STEP 1 AUTHORIZED — DOORWAY REFRAMING ONLY.** Open the minimum bounded Writer's
+> Studio R&D implementation lane necessary to change the existing Home doorway from
+> "Import writing" to "Bring a work back to life", using the existing import path.
 
-Open founder acts: **(a)** ratify PT-1…PT-6 (or amend) into the Writer's Studio product
-constitution — PT-3, PT-5 and PT-6 are prohibitions and are the ones that decay fastest
-if left as prose; **(b)** authorize step 1 (doorway reframing) on its own, ahead of
-everything else; **(c)** open the R&D / Product Thesis lane if this is to proceed as
-work rather than as a record.
+**Procedural correction (founder).** §11 of the pre-ruling draft listed three founder
+acts, because opening the R&D lane was enumerated separately. That extra ceremony is
+refused: **the bounded lane-opening is folded into the authorization for step 1.** One
+act, not two.
+
+### Explicitly NOT authorized by this ruling
+
+no new route or import mechanism · no schema change · no intention object · no Encounter
+implementation · no Restore · no Work→Work lineage · WS2-08B and its HOLD untouched · no
+change to `living_works.stage` · no Source mutation · no deployment beyond the ordinary
+acceptance path for this bounded change.
+
+---
+
+## 12 — Step 1 — executed
+
+Copy and framing only. **The import path, its mechanism, its schema and its acceptance
+behaviour are byte-for-byte unchanged**; `IMPORT_HREF` still resolves to
+`/press/manuscript?import=1` and the `studioMap` tests that pin it are untouched.
+
+| Surface | Was | Is |
+|---|---|---|
+| `app/writers-studio/HomeView.tsx` (empty-state door) | "Import writing" | **"Bring a work back to life"** |
+| `app/writers-studio/HomeView.tsx` (returning-writer action row) | "Import writing" | **"Bring a work back to life"** |
+| `app/press/manuscript/page.tsx` (threshold heading) | "Import a manuscript" | **"Bring a work back to life"** |
+| `app/press/manuscript/page.tsx` (threshold lead) | "Bring in a book you have already written. Paste it, or choose a file." | **"Import something you've written before and decide what, if anything, you want to do with it."** |
+
+**Two judgment calls, named rather than buried:**
+
+**(a) The threshold surface was included.** The ruling authorizes "the Home doorway".
+Home is the door; `/press/manuscript?import=1` is the room immediately behind it. A door
+reading *Bring a work back to life* opening onto a page headed *Import a manuscript*
+would reintroduce the file-operation framing one click after removing it — and that page
+is the first thing a returning writer reads. It is committed **separately** so it can be
+reverted alone if the founder reads the authorization more narrowly.
+
+**(b) The descriptive sentence went to the threshold, not to Home.** The founder's
+intended framing is a label plus a sentence. The Home empty state carries a standing
+design ruling in the code itself — *"No lesson, no permission language, no description
+of what a Work can be. FIELD is not LESSONS: the room should not explain itself while
+you are trying to inhabit it"* — so placing the sentence there would have shipped one
+ruling in violation of another. The threshold already admits explanatory copy (it is
+where the Source custody promise is stated before the file dialog), so the sentence
+landed there, where it also introduces PT-1: *decide what, if anything, you want to do
+with it.*
+
+⛔ Nothing else moved. No schema, no route, no mechanism, no intention object, no
+Encounter, no lineage, no deploy.
 
 > A Living Work does not have to keep changing. It has to keep being possible to return
 > to. The Studio's job is to make sure that when someone comes back after forty years,
