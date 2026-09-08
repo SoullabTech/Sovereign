@@ -146,15 +146,40 @@ must record:
 
 The baseline is the **published** corpus at a fixed digest — never "the manuscript as it stands in the Studio", which drifts with every session and would make the baseline a moving reference under a fixed label.
 
-### SEL-0 — frozen order
+### SEL-0 — frozen order · **AMENDED 2026-09-08, step 0 added**
 
 ```text
-1. freeze numerical threshold
+0. FREEZE THE LAWFUL CANDIDATE CORPUS
+     exact observation IDs
+     exact count N
+     digest / manifest
+     exclusions named as constitutionally ineligible (F-7)
+1. freeze numerical threshold      <- against the frozen N, never in the abstract
 2. founder records top-5
 3. lock founder ranking
 4. reveal MAIA ranking
 5. measure overlap / containment / ordering disagreement
 ```
+
+**Why step 0 precedes the threshold — computed, not asserted.** The significance of any overlap depends on N. Under the null (MAIA's ranking random, founder marks 5 of N), the proposed `STRONG` criterion fires by chance at these rates:
+
+| N | P(≥3/5 in MAIA top-5) | P(≥4/5 in MAIA top-10) |
+|---:|---:|---:|
+| 15 | **16.68%** | **43.36%** |
+| 20 | **7.26%** | **15.17%** |
+| 30 | 2.19% | 3.12% |
+| 40 | 0.93% | 1.00% |
+| 60 | 0.28% | 0.20% |
+| 80 | 0.12% | 0.06% |
+| 226 | 0.005% | 0.001% |
+
+Two consequences, both predeclared **before the manifest exists**:
+
+**(a) `3/5 + 4/10` is not evidence below N ≈ 30.** At N=15 it fires one time in six by chance; at N=20, one in fourteen. The same numbers that are near-impossible at N=226 are near-meaningless at N=15. **A threshold chosen without N is not a threshold.**
+
+**(b) The top-10 containment measure is vacuous at small N, and which condition binds *flips*.** At N=15, MAIA's "top-10" is two-thirds of the entire corpus, so containment constrains almost nothing (43% by chance) — there, the top-5 condition is the stricter one. From N≈60 upward the relationship inverts and containment becomes the stricter test. Containment carries information only when `10 << N`.
+
+**Predeclared floor**: SEL-0 as specified requires **N ≥ 40**. If the lawful corpus after F-7 exclusions is smaller, SEL-0 **must not be run against these measures and a weak result must not be read as a finding** — the instrument would need redesign (rank correlation over the full set rather than top-k overlap). *Recorded now so the floor cannot be reconsidered once N is known and a preferred reading exists.*
 
 Independence alone is insufficient: if MAIA's ranking is visible first, "independent" degrades to "unanchored" and the ordering-disagreement measure loses most of its meaning.
 
