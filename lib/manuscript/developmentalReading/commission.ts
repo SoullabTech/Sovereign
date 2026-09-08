@@ -22,6 +22,7 @@ import { captureEvidence, loadRevisionContent } from '../development/capture';
 import { recoverEvidence } from '../development/resolve';
 import type { DevelopmentalLens, RecoveredBody } from '../developmentalReader/contract';
 import { readDevelopmentally, type ReadOptions } from '../developmentalReader/read';
+import type { RefusalCause } from '../developmentalReader/contract';
 import { classifyClaims } from './classify';
 import type { DevelopmentalReading } from './contract';
 import { freezeReading } from './freeze';
@@ -41,10 +42,14 @@ export type CommissionStage = 'capture' | 'recover' | 'read' | 'classify' | 'fre
 
 export type CommissionOutcome =
   | { outcome: 'frozen'; reading: DevelopmentalReading }
-  | { outcome: 'refused'; stage: CommissionStage; refusal: string; detail: string };
+  | { outcome: 'refused'; stage: CommissionStage; refusal: string; detail: string;
+      /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01. Present only where a model response
+         existed to classify; a capture or recover refusal never reached one. */
+      cause?: RefusalCause };
 
-const refused = (stage: CommissionStage, refusal: string, detail: string): CommissionOutcome =>
-  ({ outcome: 'refused', stage, refusal, detail });
+const refused = (
+  stage: CommissionStage, refusal: string, detail: string, cause?: RefusalCause,
+): CommissionOutcome => ({ outcome: 'refused', stage, refusal, detail, ...(cause ? { cause } : {}) });
 
 export async function commissionReading(input: CommissionInput, opts: ReadOptions = {}): Promise<CommissionOutcome> {
   const { manuscriptId, memberId, lens, bodyScope, withStructure } = input;
@@ -65,7 +70,7 @@ export async function commissionReading(input: CommissionInput, opts: ReadOption
 
   const request = { commissionedLens: lens, evidence, recovered };
   const result = await readDevelopmentally(request, opts);
-  if (result.outcome === 'refused') return refused('read', result.refusal, result.detail);
+  if (result.outcome === 'refused') return refused('read', result.refusal, result.detail, result.cause);
 
   let phenomena: Awaited<ReturnType<typeof classifyClaims>> | null = null;
   if (result.outcome === 'claims') {

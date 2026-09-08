@@ -29,10 +29,13 @@ import { bindEvidence } from '../development/bind';
 import type { NonEmptyArray } from '../development/evidenceRef';
 import type { ReaderIdentity } from '../structure/readerProvenance';
 import {
+  CAUSE_UNKNOWN,
+  completionOf,
   refused,
   type DevelopmentalReaderRequest,
   type DevelopmentalReaderResult,
   type ReaderClaimDraft,
+  type RefusalCause,
 } from './contract';
 import { parseReaderBlocks } from './parse';
 import { promptContractHash, READER_SYSTEM, READER_VERSION, readerTool, renderRequest } from './render';
@@ -48,6 +51,25 @@ const DEFAULT_MODEL = process.env.MAIA_DEVELOPMENTAL_READER_MODEL || 'claude-opu
 const DEFAULT_MAX_TOKENS = 16_000;
 
 /**
+ * The seam's own facts about a response that came back. Attribution is NOT
+ * decided here — `refused()` decides it, so that every refusal in the codebase
+ * gets the same answer for the same inputs and no call site can differ.
+ */
+function classifyCause(result: {
+  stopReason: string | null; usage: { inputTokens: number; outputTokens: number };
+}): RefusalCause {
+  return {
+    completion: completionOf(result.stopReason),
+    attribution: 'unknown',
+    stopReason: result.stopReason,
+    inputTokens: result.usage.inputTokens,
+    outputTokens: result.usage.outputTokens,
+    readerVersion: READER_VERSION,
+    promptHash: promptContractHash(),
+  };
+}
+
+/**
  * From the seam's blocks to a result, with every reference proven. Pure.
  *
  * ONE UNPROVABLE REF REFUSES THE WHOLE RESULT. A result is never returned with
@@ -58,16 +80,20 @@ export function resultFromBlocks(
   blocks: readonly StructuredBlock[],
   request: DevelopmentalReaderRequest,
   reader: ReaderIdentity,
+  /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · O-1. What the seam knew about the
+     response these blocks came from. Every refusal raised below carries it, so
+     a truncated reading and a malformed one stop being the same event. */
+  cause: RefusalCause = CAUSE_UNKNOWN,
 ): DevelopmentalReaderResult {
   const parsed = parseReaderBlocks(blocks);
-  if (!parsed.ok) return refused(parsed.refusal, parsed.detail, parsed.index);
+  if (!parsed.ok) return refused(parsed.refusal, parsed.detail, parsed.index, cause);
   if (parsed.outcome === 'none') return { outcome: 'none', reader };
 
   const claims: ReaderClaimDraft[] = [];
   for (const [i, c] of parsed.claims.entries()) {
     const bound = bindEvidence(c.refs, request.evidence);
     if (!bound.ok) {
-      return refused('claim_unbindable', `claims[${i}] ${bound.refusal}: ${bound.detail}`, i);
+      return refused('claim_unbindable', `claims[${i}] ${bound.refusal}: ${bound.detail}`, i, cause);
     }
     claims.push({ text: c.text, refs: bound.value.refs, doesNotEstablish: c.doesNotEstablish });
   }
@@ -106,20 +132,28 @@ export async function readDevelopmentally(
   });
 
   if (!outcome.ok) {
-    /* The seam's refusal, unchanged. Not a cue to try something else. */
-    return refused(outcome.refusal, outcome.detail ?? outcome.refusal);
+    /* The seam's refusal, unchanged. Not a cue to try something else.
+       No response exists, so completion is unknowable — but the failure is
+       unambiguously ours: availability, configuration, transport. */
+    return refused(outcome.refusal, outcome.detail ?? outcome.refusal, null, CAUSE_UNKNOWN);
   }
   const { provenance } = outcome.result;
+  /* ⚠️ `stopReason` and `usage` are SIBLINGS of `provenance` on the result, not
+     members of it (structured/types.ts:82-97). They were being dropped here
+     either way — `resultFromBlocks` only ever received `content`. */
+  const cause = classifyCause(outcome.result);
   if (provenance.provider !== 'anthropic') {
     /* `ReaderIdentity.provider` is the literal the store knows. A provider the
        identity cannot name is a configuration this reader was never ruled for. */
     return refused('not_configured',
-      `provider ${String(provenance.provider)} cannot be recorded as this reader's identity`);
+      `provider ${String(provenance.provider)} cannot be recorded as this reader's identity`,
+      null, cause);
   }
   return resultFromBlocks(
     outcome.result.content,
     request,
     /* The model ACTUALLY SENT, from the seam — never the default's name. */
     readerIdentity(provenance.model),
+    cause,
   );
 }

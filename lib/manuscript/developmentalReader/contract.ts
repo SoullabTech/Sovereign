@@ -294,6 +294,46 @@ export type DevelopmentalReaderRefusal =
   | 'non_conclusion_unknown';
 
 /**
+ * WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R-1 — TWO AXES, NOT ONE.
+ *
+ * `refusal` says WHAT failed and is unchanged. These say whether the response
+ * was whole, and whose failure it was. They are orthogonal on purpose: a
+ * response can carry a genuine contract violation AND have ended at a token
+ * boundary, and a single enum cannot express that. `output_truncated` was
+ * deliberately NOT added to the refusal vocabulary for exactly this reason.
+ *
+ * ⛔ `unknown` is a real answer, not a placeholder to be tidied away. The defect
+ * this lane exists to repair is a confident wrong attribution; replacing "MAIA
+ * broke a rule" with "we cut her off" on a guess is the same defect reversed.
+ */
+export type ReadCompletion = 'complete' | 'truncated' | 'unknown';
+export type RefusalAttribution = 'contract_violation' | 'system' | 'unknown';
+
+/** What the seam knew about the response the refusal was built from. */
+export interface RefusalCause {
+  completion: ReadCompletion;
+  attribution: RefusalAttribution;
+  /** The seam's value, verbatim — provider vocabulary, never re-spelled. */
+  stopReason: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  /* WHICH reader produced the response being classified. Carried here rather
+     than looked up by whoever records it: the develop surface may not import
+     the reader's render module (developSurfaceCannotAct), and a fact about the
+     reader's act belongs to the act, not to the recorder. Null when no
+     response existed — there is then no reader to name. */
+  readerVersion: string | null;
+  promptHash: string | null;
+}
+
+/** Nothing was learned. Distinct from a cause that was read and came back empty. */
+export const CAUSE_UNKNOWN: RefusalCause = {
+  completion: 'unknown', attribution: 'unknown',
+  stopReason: null, inputTokens: null, outputTokens: null,
+  readerVersion: null, promptHash: null,
+};
+
+/**
  * Three outcomes, distinct by type (A4, INV-0, INV-23). `claims` cannot be
  * empty; `none` cannot carry claims; a refusal is neither. `none` carries the
  * reader's identity exactly as `claims` does — it is a complete result.
@@ -301,10 +341,84 @@ export type DevelopmentalReaderRefusal =
 export type DevelopmentalReaderResult =
   | { outcome: 'claims'; claims: NonEmptyArray<ReaderClaimDraft>; reader: ReaderIdentity }
   | { outcome: 'none'; reader: ReaderIdentity }
-  | { outcome: 'refused'; refusal: DevelopmentalReaderRefusal; detail: string; index: number | null };
+  | { outcome: 'refused'; refusal: DevelopmentalReaderRefusal; detail: string;
+      index: number | null; cause: RefusalCause };
 
+/**
+ * Stop reasons that mean the model finished saying what it meant to say. Any
+ * other value — including one this list has never seen — is `unknown` rather
+ * than `complete`: a provider may add a stop reason tomorrow, and inferring
+ * completeness from an unrecognised token is exactly how a wrong attribution
+ * gets made confidently (O-3).
+ */
+const COMPLETE_STOP_REASONS = new Set(['end_turn', 'stop_sequence', 'tool_use']);
+
+export function completionOf(stopReason: string | null): ReadCompletion {
+  if (stopReason === 'max_tokens') return 'truncated';
+  if (stopReason === null) return 'unknown';
+  return COMPLETE_STOP_REASONS.has(stopReason) ? 'complete' : 'unknown';
+}
+
+/**
+ * Refusals that require content to be PRESENT AND WRONG. A response cut off
+ * mid-flight cannot manufacture any of these: truncation removes text, it does
+ * not reorder a run's ids, invent a vocabulary token, add a foreign key, or
+ * call a second tool. When one of these is raised the violation is proven
+ * whether or not the response also ended at a token boundary — which is
+ * precisely the case R-1 keeps two axes for.
+ */
+const AFFIRMATIVE_VIOLATIONS: ReadonlySet<string> = new Set<DevelopmentalReaderRefusal>([
+  'claim_unbindable',
+  'foreign_field',
+  'non_conclusion_unknown',
+  'read_request_attempted',
+]);
+
+/**
+ * Refusals that are ours by definition: the seam never reached a model, or
+ * reached one this reader was not constituted for. No response exists to
+ * attribute, and none of these can be the model's conduct.
+ */
+const SYSTEM_REFUSALS: ReadonlySet<string> = new Set<DevelopmentalReaderRefusal>([
+  'structured_inference_unavailable',
+  'provider_unavailable',
+  'invalid_inference_mode',
+  'not_configured',
+  'ceiling_exceeded',
+]);
+
+/**
+ * Whose failure it was, given what failed and whether the response was whole.
+ *
+ *   affirmative violation    → the model's, however the response ended
+ *   absence-shaped + cut off → ours: we removed the text that would have been there
+ *   absence-shaped + whole   → the model's: nothing was missing but what it omitted
+ *   anything + unknown       → unknown, and said so
+ */
+export function attributionOf(refusal: string, completion: ReadCompletion): RefusalAttribution {
+  if (SYSTEM_REFUSALS.has(refusal)) return 'system';
+  if (AFFIRMATIVE_VIOLATIONS.has(refusal)) return 'contract_violation';
+  if (completion === 'truncated') return 'system';
+  if (completion === 'complete') return 'contract_violation';
+  return 'unknown';
+}
+
+/**
+ * ⭐ THE ONE PLACE ATTRIBUTION IS DECIDED. Callers supply what the seam knew;
+ * they do not get to say whose fault it was. A caller that could set
+ * `attribution` itself would be a second authority on the question this lane
+ * exists to answer once — the same reason FR-18 put its guard in the mutation
+ * rather than in a precheck.
+ */
 export const refused = (
   refusal: DevelopmentalReaderRefusal,
   detail: string,
   index: number | null = null,
-): DevelopmentalReaderResult => ({ outcome: 'refused', refusal, detail, index });
+  /* Defaulted so a refusal raised before the seam is reached — an invalid
+     request, a ceiling — is honestly `unknown` rather than silently `complete`.
+     Nothing was sent, so nothing is known. */
+  cause: RefusalCause = CAUSE_UNKNOWN,
+): DevelopmentalReaderResult => ({
+  outcome: 'refused', refusal, detail, index,
+  cause: { ...cause, attribution: attributionOf(refusal, cause.completion) },
+});

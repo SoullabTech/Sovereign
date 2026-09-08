@@ -60,9 +60,24 @@ export async function fetchReading(manuscriptId: string, readingId: string): Pro
 
 export type CommissionStageName = 'capture' | 'recover' | 'read' | 'classify' | 'freeze' | 'store';
 
+export type ReadCompletion = 'complete' | 'truncated' | 'unknown';
+export type RefusalAttribution = 'contract_violation' | 'system' | 'unknown';
+
+/* Validated, never cast. A value the server did not send — or sent outside the
+   vocabulary — must not become a confident sentence about whose failure it was. */
+const isCompletion = (v: unknown): v is ReadCompletion =>
+  v === 'complete' || v === 'truncated' || v === 'unknown';
+const isAttribution = (v: unknown): v is RefusalAttribution =>
+  v === 'contract_violation' || v === 'system' || v === 'unknown';
+
 export type CommissionOutcome =
   | { ok: true; readingId: string; outcome: 'reading' | 'none'; observationCount: number }
-  | { ok: false; refusal: string; stage: CommissionStageName | null; detail?: string };
+  | { ok: false; refusal: string; stage: CommissionStageName | null; detail?: string;
+      /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R-1. Two axes, carried separately:
+         whether the response was whole, and whose failure it was. Absent when
+         the server did not answer at all — which is itself `unknown`, not an
+         invitation to assume. */
+      completion?: ReadCompletion; attribution?: RefusalAttribution };
 
 /** One member gesture, one reading. The server refuses rather than retries. */
 export async function requestDevelopmentalReading(
@@ -86,7 +101,9 @@ export async function requestDevelopmentalReading(
     if (!res.ok) {
       return { ok: false, refusal: String(body?.refusal ?? `http_${res.status}`),
         stage: (body?.stage as CommissionStageName | undefined) ?? null,
-        ...(body?.detail ? { detail: String(body.detail) } : {}) };
+        ...(body?.detail ? { detail: String(body.detail) } : {}),
+        ...(isCompletion(body?.completion) ? { completion: body.completion } : {}),
+        ...(isAttribution(body?.attribution) ? { attribution: body.attribution } : {}) };
     }
     if (typeof body?.readingId !== 'string') return { ok: false, refusal: 'malformed', stage: null };
     return { ok: true, readingId: body.readingId, outcome: body.outcome, observationCount: Number(body.observationCount ?? 0) };

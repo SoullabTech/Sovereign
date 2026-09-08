@@ -24,6 +24,7 @@
  * reading. The only act is: ask for a new reading, under one lens.
  */
 
+import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -163,9 +164,16 @@ function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
     case 'recover':
       return 'The kept version this reading needs could not be recovered, so nothing was read. Your work has not changed.';
     case 'read':
-      return o.refusal === 'ceiling_exceeded'
-        ? 'This work is longer than MAIA reads in one sitting, so she did not read it. Nothing has changed.'
-        : 'MAIA’s reading did not hold to its own rules, so nothing was kept. Your work has not changed.';
+      if (o.refusal === 'ceiling_exceeded') {
+        return 'This work is longer than MAIA reads in one sitting, so she did not read it. Nothing has changed.';
+      }
+      /* R-4. One neutral outcome sentence; the cause is its own line. The copy
+         that stood here attributed the failure to MAIA's conduct — an
+         attribution the system had not established and, before this lane,
+         could not have established. It is retired; the wording it retired is
+         quoted once, in the lane's constitution, and deliberately nowhere in
+         this tree. */
+      return OUTCOME_SENTENCE;
     /* No `case 'classify'`. The classify-stage refusals that have something
        specific to say are said above, by name. Anything else that stage can
        produce — including the legacy `classifier_unclassifiable`, which v2 no
@@ -804,8 +812,24 @@ export default function DevelopRoom({
               </button>
               <p className="text-[12.5px] leading-relaxed opacity-55 mt-2.5">{INVOCATION_SENTENCE}</p>
               {commission.phase === 'refused' && (
-                <div className="mt-3" role="status" data-develop-refused={commission.outcome.refusal}>
+                <div
+                  className="mt-3"
+                  role="status"
+                  data-develop-refused={commission.outcome.refusal}
+                  data-develop-completion={commission.outcome.completion ?? undefined}
+                  data-develop-attribution={commission.outcome.attribution ?? undefined}
+                >
                   <p className="text-[12.5px] leading-relaxed opacity-75">{refusalSentence(commission.outcome)}</p>
+                  {/* R-4 · the cause, as its own sentence and only when known.
+                      Separated from the outcome on purpose: the outcome is
+                      always true, the cause sometimes is not knowable, and
+                      folding them into one sentence is what made the old copy
+                      assert something it had not established. */}
+                  {causeLine(commission.outcome) && (
+                    <p className="text-[12.5px] leading-relaxed opacity-55 mt-1" data-develop-cause>
+                      {causeLine(commission.outcome)}
+                    </p>
+                  )}
                   {commission.outcome.refusal === 'revision_not_current' && (
                     <Link
                       href={canvasForManuscript(CANVAS_HREF, manuscriptId)}
