@@ -376,7 +376,17 @@ it exits 2 without touching anything.
 
 So the witness captures, digests, traverses, reaches the seam, reports the real reason, and
 **exits non-zero rather than printing an empty, reassuring report**. ⛔ **This proves the
-instrument, not the ear.** No model has proposed anything; nothing has been adjudicated. The witness refuses fuzzy search, quote matching and
+instrument, not the ear.** No model has proposed anything; nothing has been adjudicated.
+
+> **Narrowed (founder, 2026-09-08).** This record first said *"the instrument is sound"*.
+> Quoted rather than replaced, because the overstatement is the point: **the instrument is
+> verified through capture, traversal, inference refusal and fail-closed behaviour — its
+> model-provenance acceptance evidence is NOT yet sufficient.** The seam records
+> `provenance.model` from the REQUEST, so the G8 mismatch check currently reduces to
+> `requested === requested` and cannot detect substitution. And even a matching name proves
+> nothing about the channel: *correct model + wrong inference authority = wrong act.*
+> Census: `AIN-STRUCTURED-PROVENANCE-01_CENSUS_2026-09-08.md`. Nothing about the scratch run
+> was wrong; the finding came from inspecting what the shared seam means by that field. The witness refuses fuzzy search, quote matching and
 nearest-span repair by construction — if the model cannot produce reliable coordinates, that
 is a **finding to return**, not something to patch around.
 
