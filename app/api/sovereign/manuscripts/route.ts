@@ -103,18 +103,24 @@ export async function GET(request: NextRequest) {
 
               -- Substantive draft presence. Whitespace is not writing; this is a
               -- PRESENCE TEST ONLY and alters nothing that is stored or shown.
-              (SELECT coalesce(btrim(d.content), '') <> ''
+              --
+              -- NOT btrim(). PostgreSQL's one-argument btrim strips ORDINARY
+              -- SPACES only, so a draft of tabs or newlines would have passed as
+              -- writing while the design said it must not. The POSIX class is the
+              -- predicate the design actually describes: does any non-whitespace
+              -- character exist at all?
+              (SELECT d.content ~ '[^[:space:]]'
                  FROM manuscript_working_drafts d
                 WHERE d.manuscript_id = m.id) IS TRUE AS has_draft_writing,
 
               -- Writing exists in EITHER lifecycle layer. Deliberately an OR and
               -- not the CASE the extent uses: an emptied draft over a Source that
               -- still holds the book is not "no writing".
-              ((SELECT coalesce(btrim(d.content), '') <> ''
+              ((SELECT d.content ~ '[^[:space:]]'
                   FROM manuscript_working_drafts d
                  WHERE d.manuscript_id = m.id) IS TRUE
                OR EXISTS (SELECT 1 FROM manuscript_sections s
-                           WHERE s.manuscript_id = m.id AND btrim(s.body) <> ''))
+                           WHERE s.manuscript_id = m.id AND s.body ~ '[^[:space:]]'))
                 AS has_writing,
 
               -- ⭐ AUTHORSHIP: does the current draft diverge from the baseline
@@ -150,7 +156,7 @@ export async function GET(request: NextRequest) {
         sectionCount: Number(r.section_count),
         charCount: Number(r.char_count),
         keepCount: Number(r.keep_count),
-        lastWrittenAt: r.last_written_at,
+        lastMemberDraftActivityAt: r.last_written_at,
         draftCharCount: r.draft_char_count === null ? null : Number(r.draft_char_count),
         hasDraftWriting: r.has_draft_writing === true,
         hasWriting: r.has_writing === true,

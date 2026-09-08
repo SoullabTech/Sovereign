@@ -29,7 +29,7 @@ export interface CurrentManuscript {
    * the API comment). Kept under its legacy wire name; it may not be used as
    * authority for continuability and may not render as "written <when>".
    */
-  lastWrittenAt: string | null;
+  lastMemberDraftActivityAt: string | null;
 
   /* STUDIO-WRITING-PRESENCE-01 — Source, writing presence and authorship are
      three different truths; none may stand in for another. `charCount` above is

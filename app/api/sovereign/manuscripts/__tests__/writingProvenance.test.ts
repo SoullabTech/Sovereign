@@ -1,5 +1,6 @@
 /**
- * `lastWrittenAt` must mean a member act, not a row mutation.
+ * The draft timestamp must mean a member act, not a row mutation — and, since
+ * 2026-09-08, must not be mistaken for a WRITING act either.
  *
  * Three production rows disproved three successive definitions of "writing
  * activity", each one a layer better than the last and each still measuring a
@@ -73,14 +74,14 @@ const ms = (
   opts: { contributed?: boolean; draftChars?: number | null; hasDraftWriting?: boolean } = {},
 ): CurrentManuscript => ({
   id, title, createdAt: iso(8), sectionCount: 1, charCount: chars, keepCount: 0,
-  lastWrittenAt: written,
+  lastMemberDraftActivityAt: written,
   draftCharCount: opts.draftChars ?? null,
   hasDraftWriting: opts.hasDraftWriting ?? false,
   hasWriting: chars > 0 || (opts.draftChars ?? 0) > 0,
   hasCurrentMemberContribution: opts.contributed ?? written !== null,
 });
 
-describe('lastWrittenAt — the API boundary', () => {
+describe('the draft-activity timestamp — the API boundary', () => {
   it('a SEEDED IMPORT yields null: created and updated in the same second', () => {
     const t = iso(8);
     expect(lastWrittenAt(t, t)).toBeNull();
@@ -175,7 +176,7 @@ describe('a checkpoint is a member gesture, not a writing act', () => {
     });
     const a = arrivalFor([work('w-cp', 'The Book', '33a9233c')], [checkpointed]);
 
-    expect(checkpointed.lastWrittenAt).not.toBeNull();            // activity: yes
+    expect(checkpointed.lastMemberDraftActivityAt).not.toBeNull();            // activity: yes
     expect(checkpointed.hasWriting).toBe(true);                   // writing exists
     expect(checkpointed.hasCurrentMemberContribution).toBe(false);// authorship: no
     expect(a.kind).not.toBe('continue');                          // and NOT offered back

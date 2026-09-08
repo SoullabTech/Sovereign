@@ -456,3 +456,8 @@ scripts/eval/reports/
 
 # Walk probe snapshots (scripts/walk/*) — local evidence, never committed
 .walk/
+
+# Local audit/telemetry output. `AUDIT_LOG_DIR` defaults to ./audit-logs, so a
+# test run writes real files here; one was committed by a `git add -A` on
+# 2026-09-08. These are operator telemetry, never source.
+audit-logs/

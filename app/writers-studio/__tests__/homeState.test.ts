@@ -13,7 +13,7 @@
  * actually been writing in. A row changing is not a person writing.
  */
 
-import { arrivalFor } from '../homeState';
+import { arrivalFor, homeWritingExtent } from '../homeState';
 import type { LivingWork } from '../useLivingWorks';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 
@@ -45,7 +45,7 @@ const work = (
 const ms = (
   id: string,
   opts: {
-    lastWrittenAt: string | null;
+    lastMemberDraftActivityAt: string | null;
     chars?: number;
     title?: string | null;
     draftChars?: number | null;
@@ -60,7 +60,7 @@ const ms = (
   sectionCount: 1,
   charCount: opts.chars ?? 1000,
   keepCount: 0,
-  lastWrittenAt: opts.lastWrittenAt,
+  lastMemberDraftActivityAt: opts.lastMemberDraftActivityAt,
   draftCharCount: opts.draftChars ?? null,
   hasDraftWriting: opts.hasDraftWriting ?? false,
   hasWriting: opts.hasWriting ?? (opts.chars ?? 1000) > 0,
@@ -74,7 +74,7 @@ describe('Studio Home — arrival state', () => {
 
   it('CONTINUE when a work has real writing activity', () => {
     const a = arrivalFor([work('w1', { updatedAt: iso(9), manuscriptId: 'm1' })], [
-      ms('m1', { lastWrittenAt: iso(1) }),
+      ms('m1', { lastMemberDraftActivityAt: iso(1) }),
     ]);
     expect(a.kind).toBe('continue');
     expect(a.resume?.id).toBe('w1');
@@ -84,7 +84,7 @@ describe('Studio Home — arrival state', () => {
     /* The shipped defect. The work was touched seconds ago — renamed, or given
        a form — but nothing was ever written in it. */
     const a = arrivalFor([work('w1', { updatedAt: iso(0), manuscriptId: 'm1' })], [
-      ms('m1', { lastWrittenAt: null }),
+      ms('m1', { lastMemberDraftActivityAt: null }),
     ]);
     expect(a.kind).toBe('orient');
     expect(a.resume).toBeNull();
@@ -93,27 +93,30 @@ describe('Studio Home — arrival state', () => {
   it('⛔ the newest EMPTY work cannot outrank an older actively-written one', () => {
     const empty = work('w-empty', { title: 'Just renamed', updatedAt: iso(0) });
     const written = work('w-real', { title: 'Elemental Alchemy', updatedAt: iso(30), manuscriptId: 'm1' });
-    const a = arrivalFor([empty, written], [ms('m1', { lastWrittenAt: iso(2) })]);
+    const a = arrivalFor([empty, written], [ms('m1', { lastMemberDraftActivityAt: iso(2) })]);
     expect(a.kind).toBe('continue');
     expect(a.resume?.id).toBe('w-real');
     /* and the empty work is still visible, just not impersonating activity */
     expect(a.shelf.map((w) => w.id)).toContain('w-empty');
   });
 
-  it('picks the most recently WRITTEN work, not the most recently touched', () => {
+  /* ⚠️ Renamed 2026-09-08: this orders by latest MEMBER DRAFT ACTIVITY among
+     Works already proven continuable. A checkpoint moves that timestamp without
+     changing a character, so it never established "most recently written". */
+  it('orders eligible works by latest draft activity, not by row touch', () => {
     const older = work('w-older', { updatedAt: iso(0), manuscriptId: 'm-old' });
     const newer = work('w-newer', { updatedAt: iso(60), manuscriptId: 'm-new' });
     const a = arrivalFor(
       [older, newer],
-      [ms('m-old', { lastWrittenAt: iso(20) }), ms('m-new', { lastWrittenAt: iso(1) })],
+      [ms('m-old', { lastMemberDraftActivityAt: iso(20) }), ms('m-new', { lastMemberDraftActivityAt: iso(1) })],
     );
     expect(a.resume?.id).toBe('w-newer');
   });
 
   it('⛔ orphan manuscript activity produces ORIENT, not CONTINUE', () => {
-    /* Writing exists and was recently written — but no Work claims it, so
+    /* Writing exists and carries recent draft activity — but no Work claims it, so
        there is nothing to "continue" in the Studio's own terms. */
-    const a = arrivalFor([], [ms('m9', { lastWrittenAt: iso(1), chars: 151000 })]);
+    const a = arrivalFor([], [ms('m9', { lastMemberDraftActivityAt: iso(1), chars: 151000 })]);
     expect(a.kind).toBe('orient');
     expect(a.resume).toBeNull();
     expect(a.feature?.id).toBe('m9');
@@ -122,7 +125,7 @@ describe('Studio Home — arrival state', () => {
   it('ORIENT features the most substantial unclaimed writing', () => {
     const a = arrivalFor(
       [work('w1', { updatedAt: iso(0) })],
-      [ms('small', { lastWrittenAt: null, chars: 900 }), ms('big', { lastWrittenAt: null, chars: 151000 })],
+      [ms('small', { lastMemberDraftActivityAt: null, chars: 900 }), ms('big', { lastMemberDraftActivityAt: null, chars: 151000 })],
     );
     expect(a.kind).toBe('orient');
     expect(a.feature?.id).toBe('big');
@@ -139,7 +142,7 @@ describe('Studio Home — arrival state', () => {
 
   it('a claimed manuscript never appears as imported writing', () => {
     const a = arrivalFor([work('w1', { updatedAt: iso(5), manuscriptId: 'm1' })], [
-      ms('m1', { lastWrittenAt: iso(1) }),
+      ms('m1', { lastMemberDraftActivityAt: iso(1) }),
     ]);
     expect(a.feature).toBeNull();
     expect(a.imported).toEqual([]);
@@ -147,8 +150,8 @@ describe('Studio Home — arrival state', () => {
 
   it('CONTINUE still surfaces unclaimed writing beneath the resumed work', () => {
     const a = arrivalFor([work('w1', { updatedAt: iso(5), manuscriptId: 'm1' })], [
-      ms('m1', { lastWrittenAt: iso(1) }),
-      ms('m9', { lastWrittenAt: null, chars: 151000 }),
+      ms('m1', { lastMemberDraftActivityAt: iso(1) }),
+      ms('m9', { lastMemberDraftActivityAt: null, chars: 151000 }),
     ]);
     expect(a.kind).toBe('continue');
     expect(a.imported.map((m) => m.id)).toEqual(['m9']);
@@ -161,7 +164,7 @@ describe('Studio Home — arrival state', () => {
        the hero and rendered "No writing yet · written 6 hours ago". A row
        being touched is not a person writing. */
     const a = arrivalFor([work('w1', { title: 'Test', updatedAt: iso(0), manuscriptId: 'm-blank' })], [
-      ms('m-blank', { lastWrittenAt: iso(0), chars: 0 }),
+      ms('m-blank', { lastMemberDraftActivityAt: iso(0), chars: 0 }),
     ]);
     expect(a.kind).toBe('orient');
     expect(a.resume).toBeNull();
@@ -178,7 +181,7 @@ describe('Studio Home — arrival state', () => {
   describe('RETURN offers the live work, not only the newest', () => {
     const written = (n: number, daysAgo: number) => ({
       w: work(`w${n}`, { title: `Work ${n}`, updatedAt: iso(50), manuscriptId: `m${n}` }),
-      m: ms(`m${n}`, { lastWrittenAt: iso(daysAgo) }),
+      m: ms(`m${n}`, { lastMemberDraftActivityAt: iso(daysAgo) }),
     });
 
     it('offers up to two other written works beside the resumed one', () => {
@@ -219,7 +222,7 @@ describe('Studio Home — arrival state', () => {
 
   it('a work with one real character IS continuable', () => {
     const a = arrivalFor([work('w1', { updatedAt: iso(9), manuscriptId: 'm1' })], [
-      ms('m1', { lastWrittenAt: iso(0), chars: 1 }),
+      ms('m1', { lastMemberDraftActivityAt: iso(0), chars: 1 }),
     ]);
     expect(a.kind).toBe('continue');
     expect(a.resume?.id).toBe('w1');
@@ -248,41 +251,41 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
 
   it('F0 the helper can actually observe continuability (guards F1\u2013F12)', () => {
     const genuine = ms('m', {
-      lastWrittenAt: iso(1), chars: 0, draftChars: 4200,
+      lastMemberDraftActivityAt: iso(1), chars: 0, draftChars: 4200,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     expect(continuable(genuine)).toBe(true);
   });
 
   it('F1 untouched blank: no writing, no contribution, not continuable', () => {
-    const m = ms('m', { lastWrittenAt: null, chars: 0, hasWriting: false, contributed: false });
+    const m = ms('m', { lastMemberDraftActivityAt: null, chars: 0, hasWriting: false, contributed: false });
     expect(m.hasWriting).toBe(false);
     expect(continuable(m)).toBe(false);
   });
 
   it('F2 touched then emptied: draft activity moved, still not continuable', () => {
-    const m = ms('m', { lastWrittenAt: iso(1), chars: 0, hasWriting: false, contributed: false });
-    expect(m.lastWrittenAt).not.toBeNull();
+    const m = ms('m', { lastMemberDraftActivityAt: iso(1), chars: 0, hasWriting: false, contributed: false });
+    expect(m.lastMemberDraftActivityAt).not.toBeNull();
     expect(continuable(m)).toBe(false);
   });
 
   it('F3 Studio-born with real writing: continuable despite zero Source', () => {
     const m = ms('m', {
-      lastWrittenAt: iso(1), chars: 0, draftChars: 4200,
+      lastMemberDraftActivityAt: iso(1), chars: 0, draftChars: 4200,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     expect(continuable(m)).toBe(true);
   });
 
   it('F4 imported, no draft yet: Source supplies the extent', () => {
-    const m = ms('m', { lastWrittenAt: null, chars: 9000, contributed: false });
+    const m = ms('m', { lastMemberDraftActivityAt: null, chars: 9000, contributed: false });
     const { feature } = arrivalFor([], [m]);
     expect(feature?.id).toBe('m');
   });
 
   it('F5a imported, seeded, untouched: writing exists but is not the member\u2019s', () => {
     const m = ms('m', {
-      lastWrittenAt: null, chars: 9000, draftChars: 9000,
+      lastMemberDraftActivityAt: null, chars: 9000, draftChars: 9000,
       hasDraftWriting: true, hasWriting: true, contributed: false,
     });
     expect(continuable(m)).toBe(false);
@@ -292,17 +295,17 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
     /* import seed \u2192 member presses "Keep a version". The checkpoint route
        advances updated_at and the revision trail and changes NO content. */
     const m = ms('m', {
-      lastWrittenAt: iso(1), chars: 9000, draftChars: 9000,
+      lastMemberDraftActivityAt: iso(1), chars: 9000, draftChars: 9000,
       hasDraftWriting: true, hasWriting: true, contributed: false,
     });
-    expect(m.lastWrittenAt).not.toBeNull();          // draft activity: TRUE
+    expect(m.lastMemberDraftActivityAt).not.toBeNull();          // draft activity: TRUE
     expect(m.hasCurrentMemberContribution).toBe(false);
     expect(continuable(m)).toBe(false);              // and NOT continuable
   });
 
   it('F6 imported then genuinely edited: continuable', () => {
     const m = ms('m', {
-      lastWrittenAt: iso(1), chars: 9000, draftChars: 9400,
+      lastMemberDraftActivityAt: iso(1), chars: 9000, draftChars: 9400,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     expect(continuable(m)).toBe(true);
@@ -310,7 +313,7 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
 
   it('F7 edited then restored to Source exactly: no current divergence', () => {
     const m = ms('m', {
-      lastWrittenAt: iso(1), chars: 9000, draftChars: 9000,
+      lastMemberDraftActivityAt: iso(1), chars: 9000, draftChars: 9000,
       hasDraftWriting: true, hasWriting: true, contributed: false,
     });
     expect(continuable(m)).toBe(false);
@@ -318,20 +321,20 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
 
   it('F10 a large Studio-born draft outranks a one-page import', () => {
     const born = ms('born', {
-      lastWrittenAt: iso(1), chars: 0, draftChars: 200_000,
+      lastMemberDraftActivityAt: iso(1), chars: 0, draftChars: 200_000,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
-    const imported = ms('imported', { lastWrittenAt: null, chars: 1800, contributed: false });
+    const imported = ms('imported', { lastMemberDraftActivityAt: null, chars: 1800, contributed: false });
     expect(arrivalFor([], [imported, born]).feature?.id).toBe('born');
   });
 
   it('F11 Source non-empty with an emptied draft still has writing, and orients by Source', () => {
     const emptied = ms('emptied', {
-      lastWrittenAt: iso(1), chars: 200_000, draftChars: 0,
+      lastMemberDraftActivityAt: iso(1), chars: 200_000, draftChars: 0,
       hasDraftWriting: false, hasWriting: true, contributed: true,
     });
     const small = ms('small', {
-      lastWrittenAt: iso(2), chars: 0, draftChars: 500,
+      lastMemberDraftActivityAt: iso(2), chars: 0, draftChars: 500,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     expect(emptied.hasWriting).toBe(true);
@@ -342,11 +345,11 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
 
   it('F11b a shortened draft governs over its larger Source (never max)', () => {
     const shortened = ms('shortened', {
-      lastWrittenAt: iso(1), chars: 200_000, draftChars: 10_000,
+      lastMemberDraftActivityAt: iso(1), chars: 200_000, draftChars: 10_000,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     const other = ms('other', {
-      lastWrittenAt: iso(2), chars: 0, draftChars: 50_000,
+      lastMemberDraftActivityAt: iso(2), chars: 0, draftChars: 50_000,
       hasDraftWriting: true, hasWriting: true, contributed: true,
     });
     expect(arrivalFor([], [other, shortened]).feature?.id).toBe('other');
@@ -354,9 +357,41 @@ describe('STUDIO-WRITING-PRESENCE-01 — presence, authorship, extent', () => {
 
   it('F12 a missing revision-1 baseline fails closed: not continuable', () => {
     const m = ms('m', {
-      lastWrittenAt: iso(1), chars: 9000, draftChars: 9000,
+      lastMemberDraftActivityAt: iso(1), chars: 9000, draftChars: 9000,
       hasDraftWriting: true, hasWriting: true, contributed: false,
     });
     expect(continuable(m)).toBe(false);
+  });
+});
+
+
+/**
+ * STUDIO-WRITING-PRESENCE-01 — the two corrections that closed the build review.
+ */
+describe('extent and substance', () => {
+  it('\u2b50 a Studio-born draft reports its OWN extent, not Source', () => {
+    /* pageEstimate clamps to 1, so reading Source here would have said "1 page"
+       for a four-thousand-word draft: the sentence fixed, the number beside it
+       still false. */
+    const born = {
+      charCount: 0, draftCharCount: 4200, hasDraftWriting: true, hasWriting: true,
+    };
+    expect(homeWritingExtent(born)).toBe(4200);
+  });
+
+  it('an emptied draft falls back to Source extent', () => {
+    expect(homeWritingExtent({ charCount: 200_000, draftCharCount: 0, hasDraftWriting: false }))
+      .toBe(200_000);
+  });
+
+  it('a shortened draft governs over its larger Source — never max()', () => {
+    expect(homeWritingExtent({ charCount: 200_000, draftCharCount: 10_000, hasDraftWriting: true }))
+      .toBe(10_000);
+  });
+
+  it('a whitespace-only draft contributes no extent', () => {
+    /* hasDraftWriting is false for whitespace (asserted against the SQL predicate
+       in the API test), so the extent falls back to Source — 0 here. */
+    expect(homeWritingExtent({ charCount: 0, draftCharCount: 12, hasDraftWriting: false })).toBe(0);
   });
 });
