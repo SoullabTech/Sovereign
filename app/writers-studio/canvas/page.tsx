@@ -1251,7 +1251,8 @@ function SectionSurfaceBridge({
         <WholeManuscriptSurface
           ref={whole}
           writing={writing}
-          jumpTo={jumpTo ?? session.wholeOpensAt}
+          initialOpenAt={session.wholeOpensAt}
+          jumpTo={jumpTo}
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
         />

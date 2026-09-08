@@ -146,6 +146,30 @@ describe('where the writer is standing, in this view\'s own terms', () => {
   });
 });
 
+describe('arrival is not a command', () => {
+  it('takes arrival as its own prop, consumed once at mount', () => {
+    /* Found by the runtime falsifier on 0cf26e22a, check 5: passing
+       `jumpTo ?? wholeOpensAt` made an arrival coordinate and a navigation
+       command interchangeable, so when a real rail jump completed and jumpTo
+       returned to null, the arrival value became a fresh command and yanked the
+       window back. The jump was undone by its own completion. */
+    expect(SRC).toContain('initialOpenAt?: string | null;');
+    const arr = block(SRC, 'const arrival = useRef', '}, []);');
+    expect(arr).toContain('arrival.current = null;');
+    /* Emptied BEFORE it is used, so a re-render cannot find it again. */
+    expect(arr.indexOf('arrival.current = null;')).toBeLessThan(arr.indexOf('commitWindow('));
+    /* Mount only. Any dependency here would recreate the fallback. */
+    expect(arr.trimEnd().endsWith('}, []);')).toBe(true);
+  });
+
+  it('never re-derives a command from the arrival value', () => {
+    /* The exact shape that failed. `jumpTo` nullish-coalesced with anything is
+       the defect, wherever it appears. */
+    expect(SRC).not.toMatch(/jumpTo\s*\?\?/);
+    expect(SRC).not.toMatch(/initialOpenAt[\s\S]{0,80}jumpTo\s*=/);
+  });
+});
+
 describe('the structural guarantees the view may not quietly drop', () => {
   it('uses independent editors, never one giant contenteditable', () => {
     /* A single editable document over 262 section nodes would reopen the
@@ -167,5 +191,17 @@ describe('the structural guarantees the view may not quietly drop', () => {
 
   it('edits through the per-section path, so section identity is kept', () => {
     expect(SRC).toMatch(/writing\.editSection\(section\.id, e\.target\.value\)/);
+  });
+});
+
+describe('the page passes the two as separate props', () => {
+  const PAGE = strip(readFileSync(join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8'));
+
+  it('gives the surface an arrival AND a command, never one standing in for the other', () => {
+    expect(PAGE).toContain('initialOpenAt={session.wholeOpensAt}');
+    expect(PAGE).toContain('jumpTo={jumpTo}');
+    /* The line that failed check 5. */
+    expect(PAGE).not.toContain('jumpTo={jumpTo ?? session.wholeOpensAt}');
+    expect(PAGE).not.toMatch(/jumpTo=\{[^}]*\?\?/);
   });
 });

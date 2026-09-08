@@ -65,7 +65,27 @@ const ESTIMATED_SECTION_HEIGHT = 320;
 
 export interface WholeManuscriptSurfaceProps {
   writing: SectionWriting;
-  /** A section the rail asked for. Mounted, then scrolled to. */
+  /**
+   * ⭐ WHERE WHOLE BEGINS — consumed ONCE, at entry. Not a command.
+   *
+   * `wholeOpensAt` was previously passed as `jumpTo ?? session.wholeOpensAt`,
+   * which made an ARRIVAL COORDINATE and a NAVIGATION COMMAND interchangeable.
+   * When a real rail jump completed and `jumpTo` returned to null, the arrival
+   * value fell through and became a fresh command, and the window was yanked
+   * back to where Whole had opened. The rail jump was undone by its own
+   * completion — found by the runtime falsifier on `0cf26e22a`, check 5.
+   *
+   * The one-shot is structural rather than remembered: this surface is mounted
+   * when the writer enters Whole and unmounted when they leave, so mount IS
+   * entry, and the value is read once there and discarded.
+   */
+  initialOpenAt?: string | null;
+  /**
+   * A section the rail asked for: an actual navigation request, and nothing
+   * else. ⛔ `null` here means THERE IS NO COMMAND. It must never mean "fall
+   * back to some older command-shaped value" — that equivalence is precisely
+   * the defect this separation repairs.
+   */
   jumpTo?: string | null;
   /** Cleared once the jump has been honoured, so the same request cannot repeat. */
   onJumpHandled?: () => void;
@@ -104,7 +124,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, jumpTo, onJumpHandled, onPlaceChange,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -214,6 +234,26 @@ export const WholeManuscriptSurface = forwardRef<
       commitWindow({ first: first === Number.POSITIVE_INFINITY ? 0 : first, last });
     }
   }, [commitWindow, indexOfId, visible.first, visible.last]);
+
+  /**
+   * ARRIVAL — read once, then gone. Held in a ref that is emptied BEFORE the
+   * value is used, so a re-render cannot find it again: there is no later
+   * moment at which this coordinate can behave like a command.
+   */
+  const arrival = useRef<string | null>(initialOpenAt ?? null);
+  useEffect(() => {
+    const at = arrival.current;
+    arrival.current = null;
+    if (!at) return;
+    const i = indexOfId.get(at);
+    if (i === undefined) return;
+    commitWindow({ first: i, last: i });
+    setPendingScroll(at);
+    /* Mount only. Entry is the lifecycle boundary this one-shot is anchored to,
+       and re-running it on any later change would recreate the very fallback
+       that check 5 caught. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* A rail request: capture, mount around the destination, and only then ask to
      scroll. The scroll itself waits for the node to exist. */
