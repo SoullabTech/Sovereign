@@ -368,3 +368,206 @@ schema change        NONE — every value derives from data already stored
 BUILD                NOT AUTHORIZED
 adjacent, unfixed    'Started writing' revision 1 in studio/history
 ```
+
+---
+
+# PART III — DESIGN R2 (checkpoint counterexample; three resolutions)
+
+```
+SUPERSEDES  Part II §II.1 discriminator · §II.2 hasMemberWritingActivity ·
+            §II.2 hasWriting · §II.4 S4
+BUILD       NOT AUTHORIZED
+```
+
+> **A member gesture is not necessarily a writing act.**
+
+## III.0 ⛔ The counterexample, and the false claim it exposes
+
+Part II asserted that every writer advancing `updated_at` is *"always paired
+with `SET content = …`"*. **That is false.** It was generalized from the save
+and restore routes without reading checkpoint's UPDATE body.
+
+`app/api/sovereign/manuscripts/[id]/draft/checkpoint/route.ts:145-160`:
+
+```sql
+UPDATE manuscript_working_drafts
+   SET version = version + 1,
+       revision_count = revision_count + 1,
+       updated_at = now(),
+       last_idempotency_key = $4, …
+```
+
+⛔ **No `SET content`.** The route then INSERTs a revision (`note NULL`,
+`revision_number = revision_count`). So this lawful sequence exists:
+
+```
+import Source → draft seeded verbatim → member presses Keep a version
+  updated_at > created_at   TRUE
+  revision_number > 1       TRUE
+  content                   BYTE-IDENTICAL to the imported Source
+```
+
+⭐ **The two "independent discriminators" are not independent.** A checkpoint
+moves both. They independently report the same weaker fact: *a member performed
+a post-creation draft lifecycle act.* That is not authorship.
+
+```
+5a  imported + untouched          distinguishable
+5b  imported + checkpoint only    ⛔ NOT distinguishable from an edit
+6   imported + genuine edit
+```
+
+⚠️ **The API comment in `manuscripts/route.ts` is therefore too strong** where
+it enumerates `draft UPDATE (save / autosave) — updated_at = now() MEMBER` as
+if content always moved with it. Checkpoint is the exception, and the comment
+must be corrected with the implementation — ⛔ not silently preserved as
+doctrine.
+
+## III.1 What `updated_at` actually establishes
+
+```
+hasMemberDraftActivity     = d.updated_at > d.created_at
+lastMemberDraftActivityAt  = that timestamp
+```
+
+Meaning: *the member performed a post-creation draft act* — saving,
+checkpointing, restoring, or editing. ⛔ Not `hasMemberWritingActivity`, and
+⛔ not `lastMemberWrittenAt`. Those names claim more than the data knows.
+
+⭐ **The lane's law is symmetric.** Part II argued a value must not know more
+than its name says. The converse binds equally: **a value must not say more
+than it knows.**
+
+## III.2 Resolution 1 — `hasCurrentMemberContribution`
+
+Baseline is revision 1, which every creation path writes (`'Started writing'`
+for a blank page, `'Initialized verbatim from source'` for a seeded draft) and
+which **nothing ever deletes** — the revision partition migration carries no
+prune, no DETACH, no retention path. Verified, because this design rests on it.
+
+```
+hasCurrentMemberContribution =
+    manuscript_working_drafts.content
+      IS DISTINCT FROM
+    (working_draft_revisions WHERE draft_id = d.id AND revision_number = 1).content
+```
+
+```
+blank → still empty                    FALSE
+blank → wrote text                     TRUE
+blank → wrote then erased to empty     FALSE
+import → seeded verbatim               FALSE
+import → checkpoint only               ⭐ FALSE
+import → genuine edit                  TRUE
+import → edit then restore exact source FALSE
+```
+
+⭐ The last row is coherent rather than a compromise: there is no longer a
+current authored divergence to continue. That the member once worked and then
+restored is **history**, and history does not need to manufacture a current
+writing state.
+
+```
+S2 continuable = hasWriting && hasCurrentMemberContribution
+```
+
+⚠️ **Fail-closed obligation:** if revision 1 is missing (a legacy draft
+predating both creation paths), there is no lawful baseline and
+`hasCurrentMemberContribution` is **FALSE**, never assumed true. A Work does
+not become continuable because its evidence is absent.
+
+## III.3 Resolution 2 — `hasWriting` is independent, an OR not a CASE
+
+Part II let the boolean inherit the number's CASE. ⛔ Corrected:
+
+```
+hasWriting = substantive Source exists OR substantive current Draft exists
+```
+
+```
+sourceCharCount > 0 · draft empty  →  hasWriting TRUE
+```
+
+Under Part II this returned FALSE while the immutable Source still held the
+book — contradicting `hasWriting`'s own definition. **The boolean must not
+inherit the CASE merely because the number does.**
+
+## III.4 Resolution 3 — S3 for Source non-empty, Draft empty *(proposed, needs ratification)*
+
+Ranking asks *how much writing is there*, so it needs the number, not the
+boolean. Proposal — the CASE gains an emptiness guard rather than becoming a
+`max()`:
+
+```
+writingCharCount =
+  CASE WHEN a draft exists AND its content is substantive
+       THEN length(draft.content)
+       ELSE sourceCharCount END
+```
+
+Argued: the current representation governs **while it holds writing**; when it
+holds none, the Source is what the member still has. ⛔ Not `max()` — that
+would rank a deliberately shortened draft by the extent it no longer has. ⛔
+Never a SUM — Source and Draft are one book at two layers.
+
+⚠️ This is the one point where DESIGN is proposing product semantics rather
+than reporting what the data can establish. **It needs your ratification, not
+my judgement.**
+
+## III.5 Resolution — S4 is not establishable
+
+```
+S4  "written <when>"   ⛔ NOT PRESENTLY ESTABLISHABLE FROM updated_at
+```
+
+A checkpoint moves that timestamp without writing. ⛔ Do not rename
+`lastWrittenAt → lastMemberWrittenAt`; that would replace one false name with a
+more confident one. Two lawful futures, neither taken here: expose
+`lastMemberDraftActivityAt` and change the surface to *"worked &lt;when&gt;"*,
+or establish a genuine content-change timestamp through stronger evidence —
+which likely needs persistence this schema-free repair may not add.
+
+**A valid result of DESIGN is that a fact cannot yet be told.**
+
+## III.6 Falsifiers — R2 set
+
+```
+F1   untouched blank              hasWriting F · draftActivity F · contribution F
+F2   touched then emptied         hasWriting F · draftActivity T · contribution F
+F3   Studio-born, real writing    hasWriting T · contribution T · continuable
+F4   imported, no draft yet       writingCharCount == sourceCharCount
+F5a  imported, seeded, untouched  hasWriting T · draftActivity F · contribution F
+F5b  ⭐⭐ THE CHECKPOINT FALSIFIER
+       import seed → checkpoint, no content change
+         hasMemberDraftActivity        TRUE
+         hasCurrentMemberContribution  FALSE
+         continuable                   FALSE
+       ⛔ This is the test that proves the lane repaired the semantic error
+         rather than renaming it. A design that passes F1–F5a and fails F5b has
+         changed vocabulary and nothing else.
+F6   imported, genuine edit       contribution T · continuable
+F7   edit then restore to source  contribution F · continuable F
+F8   whitespace-only draft        hasWriting F · content byte-identical in storage
+F9   sourceCharCount unmoved in every case
+F10  200k-char Studio-born draft outranks a one-page import (S3 inversion)
+F11  ⭐ Source non-empty, draft emptied
+       source presence T · draft presence F · hasWriting TRUE
+       writingCharCount per §III.4, once ratified
+F12  revision 1 absent (legacy draft) → contribution FALSE, fail-closed
+```
+
+## III.7 Standing
+
+```
+core separation                       RATIFIED
+sourceCharCount                       RATIFIED
+hasWriting as OR                      RESOLVED (III.3)
+hasCurrentMemberContribution          RESOLVED (III.2)
+S3 emptiness-guarded CASE             ⚠️ PROPOSED — needs ratification
+S4 "written <when>"                   ⛔ NOT ESTABLISHABLE — recorded as such
+hasMemberWritingActivity via updated_at   REJECTED, and the false claim that
+                                          produced it is recorded in III.0
+API comment correction                OWED WITH THE IMPLEMENTATION
+schema change                         STILL NOT REQUIRED
+BUILD                                 NOT AUTHORIZED
+```
