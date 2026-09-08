@@ -505,3 +505,42 @@ ITEM 3 — CLOSED
 ```
 
 Item 5 is now legitimately next.
+
+---
+
+# 11 · **STEP 1 — CLOSED 2026-09-08**
+
+```text
+STEP 1 — SOURCE AUDIT + PHASE-0 FALSIFICATION
+CLOSED 2026-09-08
+
+1  CLOSED    B5 removed from usable evidence
+2  CLOSED    D2 removed from usable evidence
+3  CLOSED    ledger reconciled — 19 established · 0 unresolved · 5/5 verified
+4  CLOSED    remaining Phase-0 rows disposed
+5  CLOSED    R-L set disposed — 3 constraints · 1 evaluation req · 2 hypotheses
+6  CLOSED    Phase 0 re-frozen; roadmap authority repaired
+8  CLOSED    acceptance floor amended (A+B) before any blind result existed
+
+7  SATISFIED — hand-forward requirement; existing text governs (§8 close list)
+9  SATISFIED — hand-forward lineage constraints; existing text governs
+
+No restatement of 7 or 9.
+No build authorized by Step 1 close.
+```
+
+**Items 7 and 9 are recorded as pointers, deliberately.** Copying their text into a closing package would recreate the duplicate-authority defect this audit spent most of its effort removing — the roadmap §2/§4 divergence, the parent-versus-increment ledger split, and the R-L shadow constitution were all the same failure. **The existing text governs; nothing is restated.**
+
+## Next act — immutable voice baseline
+
+```text
+STEP 1           CLOSED
+VOICE BASELINE   NEXT
+SEL-0            HOLD until baseline captured
+F-7              HOLD
+PHASE 2          HOLD
+```
+
+Scope is deliberately tiny — identify the exact published artifact, name its immutable revision, compute its digest, record the capture time. **No interpretation, no voice metrics, no provider call, no editing.** Opening conditions are already recorded at §4 and are not restated here.
+
+The one substantive constraint: it must be **the published corpus, not whatever manuscript is sitting in Writer's Studio**, because that copy changes once collaboration begins — which is the whole reason the baseline moved ahead of Phase 2.
