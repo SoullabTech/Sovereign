@@ -46,14 +46,19 @@ Two defects, one lane:
 **It dies at one call.** `lib/manuscript/developmentalReader/read.ts:112-124`:
 
 ```ts
-const { provenance } = outcome.result;      // stopReason + usage in scope HERE
-...
+// stopReason and usage are SIBLINGS of `provenance` on the result — both in
+// scope on `outcome.result` here, and both dropped at the next statement.
 return resultFromBlocks(
   outcome.result.content,                    // only the blocks travel
   request,
   readerIdentity(provenance.model),          // only provider + model survive
 );
 ```
+
+*(An earlier draft of this census said `provenance` carried `stopReason` and
+`usage`. It does not — they sit beside it on `StructuredResult`,
+`structured/types.ts:82-97`. The placement was wrong; the finding was not, since
+`resultFromBlocks` received neither either way.)*
 
 `resultFromBlocks` constructs every post-seam refusal — `malformed_output`,
 `foreign_field`, `empty_claim_text`, `non_conclusion_*`, `claim_unbindable` —

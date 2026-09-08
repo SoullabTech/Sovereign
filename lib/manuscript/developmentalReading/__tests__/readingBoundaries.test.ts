@@ -34,6 +34,12 @@ const ALLOWED: Record<string, RegExp[]> = {
      law can be falsified without a browser or a book. */
   'scope.ts': [],
   'commission.ts': [/^\.\/(classify|contract|freeze|store)$/, /^\.\.\/development\/(capture|resolve)$/, /^\.\.\/developmentalReader\/(contract|read)$/],
+  /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01. Operator telemetry for a refusal that
+     kept nothing. It reaches the filesystem and the reader's CONTRACT (types
+     only) and nothing else — no store, no database, no reader behaviour. That
+     narrowness is the point: a module that writes to disk on the refusal path
+     must not also be able to read a member's work. */
+  'refusalRecord.ts': [/^node:(fs|path|crypto)$/, /^\.\.\/developmentalReader\/contract$/],
 };
 
 describe('developmental reading — module boundaries', () => {
