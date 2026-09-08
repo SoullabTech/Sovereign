@@ -147,4 +147,44 @@ A second new source, Zhang, Bu & Dhillon (2026), *Who Owns the Text?* (`arXiv:26
 4. Give explicit dispositions to the remaining Phase-0 rows (`writer chooses scope`, `work understanding may persist with permission`, `sovereignty decides eligibility; quality decides readiness`) rather than forcing empirical literature to answer a constitutional/normative question it cannot answer.
 5. Candidate constraints remain **UNADOPTED** until their individual supporting source, falsifier, and survival of this falsification pass are reconciled item by item.
 
+6. **Re-freeze the narrowed Phase 0.** Phase 0 is currently recorded twice, and the copy carrying the `FROZEN` stamp is the superseded one. `WS2-DEVELOPMENTAL_INTELLIGENCE_ROADMAP_2026-09-08.md` §2 still states the original eight assumptions verbatim under `Phase 0 — Product direction · FROZEN`, with no pointer to this document; five of those eight have been narrowed by FQ-1…FQ-5 above. A session opening the roadmap gets the pre-falsification text under an authoritative stamp. This is the same defect class the research-record restamp corrected, relocated. The narrowed Phase 0 must be recorded and re-frozen by explicit act, and the roadmap §2 block must point at it. Until then, **neither copy should be treated as governing.**
+
+7. **FQ-3 names a lineage relationship the roadmap's Phase 4 type list cannot express.** Roadmap §10 lists `writer said / intended / decided · MAIA observed / proposed · system observed an edit · current manuscript state`. Content MAIA seeded that the writer then developed, transformed or retained fits none of them, so under the current types it records as writer-originated — precisely the laundering FQ-3 declares mandatory to prevent. **Terminology ruling: do not freeze `joint-origin` as the eventual name.** It smuggles in joint authorship, which the developmental-field doctrine explicitly avoids. The fact to preserve is narrower and relational:
+
+   ```text
+   MAIA seeded something
+           |
+   writer developed / transformed / retained it
+   ```
+
+   That is a lineage relationship, **not a new third author.** Naming and representation belong to Phase 4; only the requirement that the relationship be expressible is settled here.
+
+8. **Dispose the tension between FQ-4 and the frozen acceptance floor — this item has a deadline.** The floor (research record §12) is stated on the seven session questions alone. FQ-4 narrows `primary quality unit` to *collaboration* quality and holds that session quality cannot waive voice, scope truth, provenance, artifact quality, or authorship. If that stands, the floor as frozen is incomplete — not wrong. It remains **lawfully amendable now**, because no blind model result exists; once one does, §12 locks and may not be changed. Dispose it before Strand G arms, or accept it unchanged by explicit act. It is the only close item with a closing window.
+
+9. **FQ-3 consequence — influence lineage must survive into later design.** Step 1 hands Phase 4 these constraints **without designing their implementation here**:
+
+   a. A "cold read" may be conclusion-blind but **cannot be lineage-blind.** Agreement between the continuity view and the cold-read view is not independent corroboration when the manuscript evidence itself contains prior MAIA-origin influence.
+
+      > **Two analytical views are not independent witnesses when their evidence shares an influence lineage.**
+
+      This sentence is frozen as a constraint input. Phase 4 and Phase 7 must honour it.
+
+   b. **Text lineage is permanent.** Later writer revision never erases origin history. Revision degree is a separate recorded fact. Any threshold for *surfacing* lineage is separate, tunable, and must be predeclared before the evaluated data is seen — the record stays lossless while the reporting bar moves.
+
+   c. **Lineage disclosure is factual, not interpretive.**
+
+      ```text
+      lawful    "Two of these passages began from alternatives I offered;
+                 you later rewrote both."
+      unlawful  "So I would discount this pattern."
+      ```
+
+      Meaning remains the writer's to decide. Disclosure that editorializes is still steering — a writer may over-correct and reject a direction they genuinely adopted purely because it came back marked.
+
+   d. **Text lineage is necessary but insufficient.** MAIA can influence the Work by directing attention without supplying any prose. Selection/attention provenance is a separate problem, to be informed by SEL-0.
+
+   e. **These are CONSTRAINT INPUTS TO PHASE 4.** They are not a Phase 4 design, schema, data model, or build authorization.
+
+   Governing rule behind all five: *MAIA may influence the Work; she may never lose track of where that influence entered.* The failure being prevented is recursive self-confirmation — MAIA detecting a pattern she helped introduce and attributing it to the writer, then reinforcing it.
+
 **Nothing downstream opens on this increment alone.** Voice baseline, SEL-0, F-7 repair, Phase 2, PR, merge and deploy remain HOLD.
