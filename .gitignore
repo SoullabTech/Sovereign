@@ -456,3 +456,6 @@ scripts/eval/reports/
 
 # Walk probe snapshots (scripts/walk/*) — local evidence, never committed
 .walk/
+
+# Capture browser profile — holds a real signed-in session. Never commit.
+.capture-profile/
