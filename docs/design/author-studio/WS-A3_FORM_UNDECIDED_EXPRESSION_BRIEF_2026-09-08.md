@@ -114,13 +114,36 @@ promises and what apprenticeship needs.
 - A3 **may inform** later Creative Apprenticeship work and **must not block** A1 or the
   non-generative portions of A2.
 
+## 5a. Raised by founder ruling, 2026-09-08
+
+`docs/programme/WRITER_GUIDE_FOUNDER_RULING_PROVENANCE_RESTRAINT_ROOM_2026-09-08.md` §6 **governs**.
+
+**A3 is LOAD-BEARING.** The form-undecided condition must be a **positive capability, not a
+nullable database field**. Provisional design term: **the Open Creative Room** — ⛔ design
+purposes only, **not ratified as product naming**; A3 determines what it actually is inside
+existing Studio architecture.
+
+The member must be able to do all of the following **without first declaring the Work a
+manuscript**: remain with a Work before genre or form is known · gather material · explore ·
+write fragments · encounter Reflections · converse with Writer Guide · notice emerging
+patterns · experiment · learn craft where relevant · allow possible forms to appear.
+
+⭐ **And A3 now carries a second load.** Clause 3 rules that MAIA's restraint is structural and
+*"should ordinarily be experienced as room."* Restraint may not be narrated and must therefore
+be encountered somewhere — and today there is nowhere but a manuscript. **The Open Creative
+Room is where restraint becomes room**; without it, structural restraint has no medium.
+A3 is therefore load-bearing for the authorship law itself, not only for apprenticeship
+breadth. It no longer merely *does not block* A1 — the two are coupled in substance and run
+in parallel by ruling §7.
+
 ## 6. Standing
 
 ```
-A3        OPEN — Writer's Studio R&D
+A3        OPEN — Writer's Studio R&D — LOAD-BEARING (founder ruling 2026-09-08 §6)
 DEPENDS   nothing
-BLOCKS    Creative Apprenticeship A6 (form discovery), A9; apprenticeship breadth generally
-          does NOT block A1 or A2
+BLOCKS    A2's non-forcing door · apprenticeship breadth · A6, A9
+COUPLED   A1 — restraint must be experienced as room, and the room is A3's (ruling §8 C-1)
+          runs in parallel with A1 by ruling §7, not in series
 OUTPUT    findings first — no schema or UI change proposed before the ontology answers A3-Q2
 
 no code · no schema · no route · no UI · no deploy

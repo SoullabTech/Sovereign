@@ -164,6 +164,23 @@ member asked for.
 
 ---
 
+## 4a. Amended by founder ruling, 2026-09-08
+
+`docs/programme/WRITER_GUIDE_FOUNDER_RULING_PROVENANCE_RESTRAINT_ROOM_2026-09-08.md` **governs**.
+
+- **WG-B8 is RULED, not recommended**, and specified: provenance must distinguish
+  member-authored · MAIA-authored · member revision of MAIA-authored (where materially
+  relevant) · MAIA transformation of member-authored. **Never inferred from style or model
+  behaviour — it arises from the act.**
+- **Restraint is structural, never performed** (clause 3). No stance may narrate holding back.
+  The boundary lives in permissions, commissioning, route capability, stance contracts,
+  provenance and module structure.
+- **WG-Q1 opens under A1** — the revision threshold. Provenance must neither launder silently
+  through incremental edits nor stain permanently a passage the member has wholly rewritten.
+  Answerable only from edit acts, not text similarity.
+- **A1 ∥ A3.** Coupled in substance: restraint must be *experienced as room*, and the room is
+  A3's to build (ruling §8 C-1).
+
 ## 4. Standing
 
 ```
