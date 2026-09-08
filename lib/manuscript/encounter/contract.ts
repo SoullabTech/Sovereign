@@ -1,0 +1,113 @@
+/**
+ * WS2-ENCOUNTER-01 · E2 — the Encounter act's types.
+ *
+ * Founder rulings 2026-09-08: E1 ratified with amendments A1–A5, E2 ratified with
+ * amendments and narrowly authorized for implementation.
+ *
+ *   PT-1 · Encounter precedes intervention.
+ *   An Encounter observation helps the writer recognize the Work without telling
+ *   the writer what ought to happen to it.
+ *
+ * ── THE AUTHORSHIP SPLIT IS A TYPE, NOT A PROMPT (A5) ─────────────────────
+ *
+ * Six acts of attention; only FIVE may yield MAIA-authored observations.
+ * RECOLLECTION is the writer's, and it is not a member of `EncounterFamily` —
+ * it is not available to be selected. There is deliberately no common
+ * `EncounterObservation` supertype: a shared PRESENTATION union is fine, a
+ * shared semantic record that lets one masquerade as the other is not.
+ */
+
+/** The five families MAIA may notice under. RECOLLECTION is absent by design. */
+export const ENCOUNTER_FAMILIES = [
+  'preoccupation',
+  'movement',
+  'recurrence',
+  'heat',
+  'openness',
+] as const;
+
+export type EncounterFamily = (typeof ENCOUNTER_FAMILIES)[number];
+
+export function isEncounterFamily(v: unknown): v is EncounterFamily {
+  return typeof v === 'string' && (ENCOUNTER_FAMILIES as readonly string[]).includes(v);
+}
+
+/**
+ * The exact state of the Work an Encounter happened to (E2 §1B).
+ *
+ * The DIGEST is the authority. A revision counter is useful provenance but is not
+ * on its own a claim that the text is unchanged — two drafts can share a number
+ * across a restore, and a counter cannot notice that.
+ */
+export interface EncounterSnapshot {
+  readonly draftId: string;
+  readonly manuscriptId: string;
+  readonly revisionNumber: number;
+  readonly wholeDraftDigest: string;
+  /** Code-point length. The unit is code points everywhere, never UTF-16 units. */
+  readonly length: number;
+}
+
+/**
+ * Where an observation came from. Distributed anchors are lawful (A4): an anchor
+ * may be one passage, several, a span, or an evidence set across the Work.
+ *
+ * `spanDigest` is what keeps an anchor honest after the draft moves: a stale
+ * anchor identifies itself rather than quietly relocating onto new prose.
+ */
+export interface Anchor {
+  readonly startCodePoint: number;
+  readonly endCodePoint: number;
+  readonly spanDigest: string;
+}
+
+/** MAIA-authored. Always anchored — an unanchored notice is an impression. */
+export interface MaiaNotice {
+  readonly authoredBy: 'maia';
+  readonly family: EncounterFamily;
+  readonly text: string;
+  readonly anchors: readonly Anchor[];
+}
+
+/**
+ * The writer's own return, held as theirs.
+ *
+ * No family, no anchor — it was never MAIA's to anchor — and `authoredBy` cannot
+ * be 'maia'. Attribution survives paraphrase, rendering, persistence, retrieval
+ * and any later reintroduction.
+ */
+export interface WriterRecollection {
+  readonly authoredBy: 'writer';
+  readonly writerText: string;
+  readonly saidAt: string;
+}
+
+/** Presentation union only. Nothing normalizes these into one record. */
+export type EncounterItem = MaiaNotice | WriterRecollection;
+
+export type EncounterResult =
+  /** `notices: []` is a complete success. Silence carries no message (E1 §3.1). */
+  | {
+      readonly ok: true;
+      readonly snapshot: EncounterSnapshot;
+      readonly notices: readonly MaiaNotice[];
+      readonly recollections: readonly WriterRecollection[];
+    }
+  | {
+      readonly ok: false;
+      /**
+       * `not_readable`  no Working Draft — and Source is NOT read in its place
+       *                 (E2 §1: a fallback would change the object being
+       *                 encountered without telling the writer).
+       * `not_traversable` the Work could not be read mechanically whole, so it
+       *                 is refused rather than sampled invisibly (§1A).
+       */
+      readonly refusal: 'not_found' | 'not_readable' | 'not_traversable';
+    };
+
+/** A generator's proposal. It is NOT a MaiaNotice until it survives screening. */
+export interface CandidateNotice {
+  readonly family: string;
+  readonly text: string;
+  readonly anchors: readonly Anchor[];
+}

@@ -1,6 +1,8 @@
 # WS2-ENCOUNTER-01 · E2 — The Encounter Act: contract and falsifier design
 
-**Status: DESIGN, FOR FOUNDER RULING. No code. Implementation remains held.**
+**Status: RATIFIED WITH AMENDMENT (founder, 2026-09-08) · IMPLEMENTED NARROWLY.**
+Four amendments folded in below (**B1–B4**), plus the ruled additions F11–F13 and the
+two evidence classes. Implementation witness: §10.
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 — E1 ratified with amendment, E2 design authorized.
 Vocabulary: `WS2-ENCOUNTER-01_E1_NOTICING_VOCABULARY_2026-09-08.md` (**A1–A5** folded in).
@@ -191,16 +193,119 @@ falsifier set must include a human-legible check as well as a lexical one:
 
 ---
 
+## 9A — Amendments (founder, 2026-09-08)
+
+**B1 · §1 ratified, with the distinction stated.**
+
+```text
+Source          answers: what did the writer ENTRUST?
+Working Draft   answers: what is the Work NOW?
+```
+
+Encounter is an encounter with the Work now, not a forensic rereading of custody — which
+matters most for the case the thesis is built around: an older Source may correctly describe
+what arrived years ago while no longer describing the Work the writer is presently returning
+to. **Source restraint ratified with the document's precision preserved: PT-3 does not
+prohibit reading Source; this act simply has no reason to cross that boundary.** No Working
+Draft is a refusal, never a silent Source fallback — a fallback would change the object being
+encountered without telling the writer.
+
+**B2 · §1A — "read whole" must mean whole.** *Encounter may computationally partition the
+text, but it may not silently sample the Work and present partial observation as whole-Work
+attention.* Windows are **transport mechanics**, never sections, chapters, units or inferred
+hierarchy. If the full Work cannot be processed, **refuse honestly rather than sampling
+invisibly** (F12).
+
+**B3 · §1B — anchor the snapshot, and the digest is the authority.** A revision counter is
+useful provenance but cannot on its own claim the text is unchanged. `EncounterSnapshot`
+carries `wholeDraftDigest`; each `Anchor` carries its own `spanDigest`; a distributed
+observation carries several anchors against the same snapshot. If the draft moves while an
+Encounter is open, its anchors identify themselves as **stale** rather than relocating onto
+new prose (F13).
+
+**B4 · §3 — Keeping remains held, but the record must not constitutionalize a false
+dichotomy.** The contract framed the space as *client echo (forgery) or server persistence*.
+Founder correction: there is at least a third architecture —
+
+```text
+MAIA notice → server signs an opaque, self-authenticating receipt → response stays
+ephemeral → member explicitly chooses Keep → receipt returned → server verifies
+provenance → only then is the named thing persisted
+```
+
+A cryptographically verifiable receipt is **not** the caller-selected authority token S4
+rejected: it would not claim authority because its type shape looks convincing; its
+provenance would be externally verifiable. **Not authorized here.** Recorded instead:
+*Keeping requires a later provenance-preserving design that permits an explicit member act
+without requiring automatic server persistence. The mechanism remains open.* For E2: **no
+Keep.**
+
+**P4 amended** accordingly — E2 proves authorship preservation, not persistence, and does not
+pretend to a capability it intentionally does not contain.
+
+**§8 · two evidence classes, ratified.** Class **A** executable structural falsifiers; class
+**B** the semantic ear — a retained adversarial corpus adjudicated by a person. The ear must
+not collapse into *"we told the model not to evaluate"*, nor become a regex pretending to
+understand expectation. If anyone later automates it with a model, classifier or judge, **that
+evaluator needs its own negative controls before its verdict can carry release authority.**
+The adjudication question: *does this merely help the writer recognize what is present, or has
+it begun establishing what the Work wants, lacks, owes, should do, does to a reader, or ought
+to become?* **If uncertain, Encounter loses.**
+
+---
+
+## 10 — Implementation witness
+
+`lib/manuscript/encounter/{contract,vocabulary,traversal,read,semanticEar}.ts` ·
+`app/api/sovereign/manuscripts/[id]/encounter/route.ts` ·
+`lib/manuscript/encounter/__tests__/encounter.test.ts` — **28 passed.**
+
+**The generator is a port.** Notices are proposed by an injected `NoticeGenerator` and every
+proposal is screened before it can become a `MaiaNotice`. The default generator is **silent**,
+so the act's lawful floor — an Encounter that says nothing — is also its default. Wiring a
+model-backed generator is a separate act: the constitutional work is the screen, and the
+screen does not care what proposed the text.
+
+**Failing closed toward silence.** An unlawful proposal is **dropped** — not repaired, and
+never reported. Telling the writer something was withheld would make the system's silence
+into information about their book.
+
+**One structural rule earned its place.** *Imputed volition* — wanting, waiting, needing or
+trying predicated of the Work — is mechanically detectable and is exactly FG-2's move, so it
+became a screen rule rather than being left to the ear.
+
+| | |
+|---|---|
+| **F1–F5** evaluative · prescription · unbounded absence · comparative quality · DEVELOP-lens answer and DEVELOP imports | ✅ |
+| **F6–F7** unanchored · span digest mismatch · recollection-as-notice · no common supertype | ✅ |
+| **F8–F9** the act issues only `SELECT`; nothing in the module writes; **only the route may reach the act** | ✅ |
+| **F10–F13** no hierarchy · refusal not Source fallback · whole traversal incl. astral code points · stale-anchor honesty | ✅ |
+| **P1–P6** silence · bounded OPENNESS · distributed anchors · recollection stays writer-authored · descriptive relation · a draft with no sections | ✅ |
+
+**Two of my own tests failed first, and both failures were mine.** F9's directory walk
+excluded every path containing "encounter" — including its own route — so it passed on an
+empty offender list, proving nothing; it now excludes the module directory only. And the
+semantic-ear entry I had marked *not structurally caught* contained the word **absence**, so
+the screen caught it after all: the honest-limit assertion failed because I had **understated**
+the instrument. Both are recorded rather than quietly fixed, because a test that passes
+without observing anything is the exact failure this lane exists to notice.
+
+The corpus now carries a genuine residue — *"…and then the book turns elsewhere, as though it
+had been set down"* — no forbidden lexeme, no volition verb, no comparison, and still
+unlawful, because it frames a bounded non-return as an abandonment.
+
+**Gates:** typecheck 229 vs baseline 239, **0 regressions** · PT-3 source-custody gate
+**39 passed** (floor intact) · Encounter **28 passed**.
+
+---
+
 ## 9 — Standing
 
-⛔ Not authorized: E2 implementation · the Encounter surface · persistence / keeping ·
+⛔ Not authorized: the Encounter surface · persistence / keeping ·
 PT-5 quiet-manuscript build · WS2-08B · intention authority · Restore · lineage ·
 `living_works.stage` · deployment.
 
-Owed to the founder: a ruling on this act contract, and specifically on **§1** (the Working
-Draft as substrate, and the recorded restraint against reading Source), **§3** (keeping held
-out of scope, with the forgery-versus-persistence question named), and **§8 FG-2** (whether
-a human-legible check belongs in the falsifier set alongside the lexical one).
+Owed to the founder: review of the implementation witness (§10) before **E3** opens.
 
 > The writer opened a box from 1987. MAIA's job is to help them see what is in it — and to
 > have nothing to say about whether it is good.
