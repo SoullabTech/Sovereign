@@ -75,6 +75,8 @@ log_block()   { echo -e "${RED}[gate:BLOCK]${NC} $1" >&2; }
 MIN_COLAB_CHECKS="${MIN_COLAB_CHECKS:-31}"
 CONTAINER="${MAIA_CONTAINER:-maia-sovereign}"
 MIN_FREE_DISK_GB="${MIN_FREE_DISK_GB:-60}"
+# PT-3 Step 5 floor. Descriptive number, named set is the law (P6·P7·P8·P11·S4).
+MIN_SOURCE_CUSTODY_CHECKS="${MIN_SOURCE_CUSTODY_CHECKS:-39}"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # Gate 1 — Provenance
@@ -199,6 +201,66 @@ gate_disk() {
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
+# Gate 4 — PT-3 Source custody (structural falsifiers)
+#
+# PT-3 Step 5 (founder ruling 2026-09-08). The Studio must not ship while any
+# required PT-3 structural falsifier is red:
+#
+#   P6   who may mutate the Source RECORD
+#   P7   who may enter the manuscript destructive lifecycle boundary
+#   P8   who may acquire, counterfeit, repurpose or pathname-cross into
+#        Source destruction
+#   P11  who may create, overwrite or truncate Source BYTES — including the
+#        census of every direct vault writer, where UNKNOWN is not green
+#   S4   the governed erasure seam and its NC-12…NC-19 controls
+#
+# EXECUTION CLASS, deliberately. These are pure: source scans plus a temp
+# directory, no database, no vault, seconds to run — so they belong on every
+# Studio change. The DATABASE-BACKED witnesses do NOT run here and must not be
+# turned into unit-test dependencies for ceremony:
+#
+#   scripts/witness/pt3-source-custody-witness.ts       (P1-P5, P9, P10)
+#   scripts/witness/ws-delete-01-s4-concurrency-witness.ts (NC-19)
+#
+# Those are the heavier acceptance boundary: run them when migration or FK
+# semantics relevant to Source custody change, per the founder's NC-19 standing.
+#
+# Fail-closed, like gate_colab: unverifiable is a BLOCK, not a skip. A
+# constitutional gate that quietly stands down when it cannot run is not a gate.
+# NOTE: this requires dev dependencies in the deploy checkout (jest). If they are
+# absent the gate blocks and says so, rather than shipping unverified.
+# ───────────────────────────────────────────────────────────────────────────────
+gate_source_custody() {
+    local cmd="${SOURCE_CUSTODY_CMD:-npm run --silent test:source-custody}"
+
+    log_info "Source custody: running PT-3 structural falsifiers ..."
+    local output exit_code=0
+    output="$(cd "$PROJECT_DIR" && eval "$cmd" 2>&1)" || exit_code=$?
+
+    if [ "$exit_code" -ne 0 ]; then
+        log_block "PT-3 Source custody falsifiers did not pass (exit $exit_code)."
+        log_block "The Studio does not ship while a Source custody falsifier is red."
+        echo "$output" | tail -30
+        return 1
+    fi
+
+    # A suite that silently stops asserting is also a block: the floor catches a
+    # regression where checks DISAPPEAR rather than fail — the FR-14 discipline
+    # the Co-Lab gate already uses. The number is descriptive; the named set is
+    # the law, and the named set is P6 · P7 · P8 · P11 · S4.
+    local passed
+    passed="$(echo "$output" | grep -Eo 'Tests:[^,]*[0-9]+ passed' | grep -Eo '[0-9]+' | tail -1 || echo '')"
+    if [ -z "$passed" ] || [ "$passed" -lt "${MIN_SOURCE_CUSTODY_CHECKS:-39}" ]; then
+        log_block "Source custody suite reported '${passed:-no}' passing checks — floor is ${MIN_SOURCE_CUSTODY_CHECKS:-39}."
+        log_block "Checks that vanish are a regression, not a pass."
+        return 1
+    fi
+
+    log_ok "Source custody: $passed structural falsifiers passed (floor ${MIN_SOURCE_CUSTODY_CHECKS:-39})"
+    return 0
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
 # Composite + deploy driver
 # ───────────────────────────────────────────────────────────────────────────────
 gate_all() {
@@ -206,6 +268,7 @@ gate_all() {
     sha="$(gate_provenance)"   # exits non-zero (set -e) if provenance blocks
     gate_disk
     gate_colab
+    gate_source_custody
     log_ok "All pre-deploy gates passed for $sha."
     echo "$sha"
 }

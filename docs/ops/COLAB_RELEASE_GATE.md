@@ -100,3 +100,28 @@ When a new Co-Lab-scoped surface ships, add a corresponding check to `scripts/ve
 2. Write a `check*` function that queries across principal boundaries and asserts zero cross-bleed
 3. Add it to `main()` under the appropriate section
 4. Update the pass-condition count in this document
+
+
+---
+
+## PT-3 Source custody gate (added 2026-09-08)
+
+`gate_source_custody()` in `scripts/pre-deploy-gate.sh` runs alongside the Co-Lab gate and
+blocks the deploy while any PT-3 structural falsifier is red.
+
+    npm run test:source-custody
+
+It covers the four separate constitutional powers — P6 (who may mutate the Source record),
+P7 (who may enter the destructive lifecycle boundary), P8 (who may reach Source
+destruction), P11 (who may create or alter Source bytes, including the census of every
+direct vault writer) — plus S4's erasure-seam controls. Floor:
+`MIN_SOURCE_CUSTODY_CHECKS` (39). Checks that vanish are a regression, not a pass.
+
+The database-backed witnesses stay OUT of this gate on purpose
+(`scripts/witness/pt3-source-custody-witness.ts`,
+`scripts/witness/ws-delete-01-s4-concurrency-witness.ts`): they need a real database and
+vault, and belong at a heavier acceptance boundary — run them when migration or FK
+semantics relevant to Source custody change.
+
+Unlike the Co-Lab verifier this runs from the deploy checkout, so dev dependencies must be
+installed there. Absent them the gate blocks. That is intended: do not make it skippable.

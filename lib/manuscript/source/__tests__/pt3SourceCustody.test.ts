@@ -282,8 +282,26 @@ describe('P11 · Source-write reachability', () => {
    * may stay independent. What must be impossible is a new direct vault-writing
    * route quietly acquiring Source reachability while this suite stays green. */
   describe('P11(iii) · every direct vault writer is enumerated and bounded', () => {
-    const WRITE_CALL = /writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|copyFile|\.rename\(|flag:\s*['"`][wa]/;
-    const VAULT_ROOT = /FILE_STORAGE_PATH|resolveVaultRoot/;
+    /* The named filesystem-write families the census claims to cover — including
+       `open`/`openSync` in a write-capable mode, which is ordinary style and not
+       obfuscation. The argument span is matched loosely because the path is
+       usually a `path.join(...)` call: a nested-paren-safe pattern would miss the
+       most common form. A false positive here fails the census loudly and forces
+       a human classification, which is the safe direction to err in.
+
+       Deliberately NOT a speculative parser for arbitrary indirection: this is
+       not required to defeat `eval`, aliasing or deliberate obfuscation. The
+       standard is that a NORMAL new filesystem writer cannot quietly acquire
+       vault reachability while the suite stays green. */
+    const WRITE_CALL =
+      /writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|copyFile|\.rename\(|flag:\s*['"`][wa]|\bopen(?:Sync)?\s*\([\s\S]{0,200}?,\s*['"`](?:w|a|r\+)[a-z+]*['"`]/;
+
+    /* Both representations of the shared root. The env var is how it is
+       configured; `/app/data/vault` is the standing fallback every one of these
+       routes actually carries, and a route that hard-codes it reaches exactly the
+       same bytes. Recognizing only the env-var spelling would let the literal
+       form stay invisible. */
+    const VAULT_ROOT = /FILE_STORAGE_PATH|resolveVaultRoot|\/app\/data\/vault/;
 
     /** Pure, so the bypass class can be demonstrated on a synthetic file. */
     const vaultWriters = (files: { rel: string; src: string }[]) =>
@@ -353,6 +371,55 @@ describe('P11 · Source-write reachability', () => {
       const found = vaultWriters([rogue]);
       expect(found).toEqual(['app/api/rogue/route.ts']);
       expect(Object.keys(BOUNDED_VAULT_WRITERS)).not.toContain('app/api/rogue/route.ts');
+    });
+
+    it('⛔ NC-P11-OPEN — a writer using open() in a write mode is not invisible', () => {
+      /* `open(path, 'w')` writes just as surely as `writeFile`. A scanner that
+         knew only one family would let the other in. */
+      const viaOpen = {
+        rel: 'app/api/rogue-open/route.ts',
+        src: `
+          import { open } from 'fs/promises';
+          import path from 'path';
+          const BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
+          export async function POST() {
+            const fh = await open(path.join(BASE, 'manuscript-sources', 'x.docx'), 'w');
+            await fh.write(Buffer.from('rewritten'));
+          }
+        `,
+      };
+      expect(/writeFile|createWriteStream/.test(viaOpen.src)).toBe(false);
+      expect(vaultWriters([viaOpen])).toEqual(['app/api/rogue-open/route.ts']);
+    });
+
+    it('a read-mode open is NOT a writer — the check is the mode, not the verb', () => {
+      /* `open(abs, 'r')` appears in the runtime today. Counting it would make the
+         census cry wolf, and a census that over-reports is one people learn to
+         override. */
+      const reader = {
+        rel: 'app/api/reader/route.ts',
+        src: `
+          const BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
+          const fh = await fs.open(path.join(BASE, 'x'), 'r');
+        `,
+      };
+      expect(vaultWriters([reader])).toEqual([]);
+    });
+
+    it('⛔ NC-P11-LITERAL-ROOT — hard-coding the fallback root does not hide a writer', () => {
+      /* The env-var spelling is a convention, not the boundary. The bytes are the
+         same bytes. */
+      const literal = {
+        rel: 'app/api/rogue-literal/route.ts',
+        src: `
+          import { writeFile } from 'fs/promises';
+          export async function POST() {
+            await writeFile('/app/data/vault/manuscript-sources/x.docx', Buffer.from('rewritten'));
+          }
+        `,
+      };
+      expect(/FILE_STORAGE_PATH|resolveVaultRoot/.test(literal.src)).toBe(false);
+      expect(vaultWriters([literal])).toEqual(['app/api/rogue-literal/route.ts']);
     });
   });
 });

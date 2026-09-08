@@ -119,6 +119,7 @@
     "test:watch": "jest --config jest.config.js --watch",
     "test:coverage": "jest --config jest.config.js --coverage",
     "test:canon": "jest --config jest.config.js lib/sovereign/__tests__/presenceMode.test.ts lib/sovereign/__tests__/canonDrift.test.ts",
+    "test:source-custody": "jest --config jest.config.js lib/manuscript/source/__tests__/pt3SourceCustody.test.ts lib/storage/__tests__/erasureAuthority.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",

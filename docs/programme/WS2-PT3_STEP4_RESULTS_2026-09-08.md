@@ -1,6 +1,8 @@
 # PT-3 — Step 4 Results · P1–P11
 
-**Status: P1–P11 GREEN, including P11(iii). Vault-writer census complete, no UNKNOWN.**
+**Status: STEP 4 CLOSED (founder self-closing condition met, 2026-09-08). STEP 5 DONE —
+the PT-3 structural set is bound into the Writer's Studio release gate (§8).**
+P1–P11 green, including P11(iii). Vault-writer census complete, no UNKNOWN.
 **P11 falsified on first run (§4), was RETURNED not repaired, and WS-01 built the missing
 write-side boundary under its own ruling (§6). The falsification and its wording are kept
 verbatim — the finding is the record, not a stage to be tidied away.**
@@ -248,6 +250,61 @@ Node directly, into `manuscript-sources`, calling neither helper:
 
 ---
 
+## 8 — Step 5 · release-gate binding
+
+Authorized by the founder's self-closing condition, all nine limbs met: census still
+**exactly six** writers after the scanner was widened, all classified, no UNKNOWN, the
+direct-`writeFile` bypass still caught, **NC-P11-OPEN** and **NC-P11-LITERAL-ROOT** caught,
+P1–P11 green, behavioral witness green with its legitimate P10 skip, and **no production
+file changed** by the hardening.
+
+### The scanner hardening (test-only)
+
+| Shape | Before | Now |
+|---|---|---|
+| `open`/`openSync` in a write mode (`w` `wx` `w+` `a` `ax` `a+` `r+`) | invisible | detected — **NC-P11-OPEN** |
+| a read-mode `open(path, 'r')` | — | **not** counted; the check is the mode, not the verb. A census that over-reports is one people learn to override |
+| the literal fallback root `/app/data/vault` | invisible | detected — **NC-P11-LITERAL-ROOT** |
+
+Deliberately **not** a speculative parser for arbitrary indirection: it is not required to
+defeat `eval`, aliasing or obfuscation. The standard is that *a normal new filesystem
+writer cannot quietly acquire vault reachability while the suite stays green.*
+
+### Gate composition — the execution-class split
+
+Step 5 owns binding, not doctrine, and the split is the one substantive choice it carries:
+
+```text
+EVERY STUDIO CHANGE  (pre-deploy gate, fail-closed)
+  P6 · P7 · P8 · P11  lib/manuscript/source/__tests__/pt3SourceCustody.test.ts
+  S4 · NC-12…NC-18    lib/storage/__tests__/erasureAuthority.test.ts
+  → pure: source scans plus a temp directory. No database, no vault, seconds.
+
+HEAVIER ACCEPTANCE BOUNDARY  (witness class, unchanged)
+  P1–P5 · P9 · P10    scripts/witness/pt3-source-custody-witness.ts
+  NC-19               scripts/witness/ws-delete-01-s4-concurrency-witness.ts
+  → real database, real vault, two interleaved transactions. Run when migration
+    or FK semantics relevant to this boundary change.
+```
+
+The database-backed witnesses are **not** turned into unit-test dependencies for ceremony;
+their execution class is preserved as ruled.
+
+**Binding:** `npm run test:source-custody` → `gate_source_custody()` in
+`scripts/pre-deploy-gate.sh`, called from `gate_all()` alongside provenance, disk and
+Co-Lab. **Fail-closed like `gate_colab`: unverifiable is a BLOCK, not a skip** — a
+constitutional gate that quietly stands down when it cannot run is not a gate. It also
+carries a **floor** (39, `MIN_SOURCE_CUSTODY_CHECKS`) on the FR-14 discipline the Co-Lab
+gate already uses: *checks that vanish are a regression, not a pass.* The number is
+descriptive; the named set — P6 · P7 · P8 · P11 · S4 — is the law.
+
+⚠ **Operational prerequisite, stated rather than assumed:** unlike the Co-Lab gate, which
+runs inside the container, this runs `jest` from the deploy checkout and therefore needs dev
+dependencies present there. If they are absent the gate **blocks and says so**. Confirm on
+minisforum before the next deploy; do not resolve it by making the gate skippable.
+
+---
+
 ## 5 — Standing
 
 ⛔ Not done and not authorized: release-gate binding (step 5) · Encounter ·
@@ -255,7 +312,7 @@ Restore · intention authority · Work→Work lineage · WS2-08B · `living_work
 deployment.
 
 **Gates (final):** typecheck 229 vs baseline 239, **0 regressions** · structural suite
-**19 passed** · behavioral witness **ALL CONTROLS PASSED · 1 skipped** · `lib/manuscript` +
+**22 passed** (39 with the S4 controls, the gate's floor) · behavioral witness **ALL CONTROLS PASSED · 1 skipped** · `lib/manuscript` +
 `lib/storage` + `lib/bugs` + living-works + `app/api/studio`: **60 suites, 1034 passed,
 1 skipped, 1 failed.**
 
