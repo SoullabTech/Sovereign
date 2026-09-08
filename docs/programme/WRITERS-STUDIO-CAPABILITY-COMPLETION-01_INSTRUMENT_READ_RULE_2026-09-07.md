@@ -102,6 +102,47 @@ READ       what does that observation actually establish?
 
 Every false reading in this session failed at one of these four and at no other.
 
+## A SEVENTH FAILURE — AND THE NASTIEST, BECAUSE NOTHING LOOKED WRONG
+
+The lane built for a day on a branch **28 commits behind canonical**, missing the
+entire Studio atmosphere system, the Appearance control, and the rewritten
+Develop room (`91414f2ba`). Notes and Goals were correct, tested, witnessed —
+**and designed against a Studio that no longer existed.**
+
+```text
+everything internally correct   ≠   built against the current product
+```
+
+No test could see it. No conflict announced it. A founder looked at the screen
+and said *"this build is strange."*
+
+### MANDATORY PRE-BUILD CUSTODY CHECK
+
+```bash
+git fetch origin
+
+git rev-list --count HEAD..origin/clean-main-no-secrets
+# must be 0 before substantial product work
+
+git merge-base --is-ancestor origin/clean-main-no-secrets HEAD
+# must succeed
+```
+
+This joins binding a witness to its served commit. **Bind the witness to what
+was served; bind the BUILD to current canonical.**
+
+### THE COMPANION RULE, from the duplicated D4 repair
+
+Canonical already carried the D4 fix — `WS-WORKDRAWER-01`, the same founder
+ruling, with its own module and better copy. A second implementation was written
+without knowing.
+
+> ### Before implementing a ratified repair, search current CANONICAL for the ruling and the capability — not merely the current branch.
+
+The GOVERNING-RECORD RULE said to follow a pointer when documentation names one.
+This is its other half: **look for the thing itself, in the place the product
+actually lives**, before building it again.
+
 ## Why this is not ceremony
 
 > **It prevents the testing apparatus from manufacturing defects.**
