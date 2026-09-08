@@ -270,21 +270,24 @@ which is what authorized this transcription and nothing else.
 
 ### Witness subjects
 
+*(Superseded in place by §4c, which records all three subjects and the runtime
+falsifier. Kept because it is the record of what was known when `0cf26e22a` was
+named, before the runtime falsifier had run against it.)*
+
 ```
 d863d4df5   PRE-WITNESS FAIL
             "Maximum update depth exceeded" — 110 console errors
             unstable SectionWritingSession.session identity
             the 8-observation instrument was NEVER ENTERED
 
-0cf26e22a   CURRENT WITNESS SUBJECT
+0cf26e22a   witness subject as of eee2dde16 — later itself a RUNTIME FAIL
             identity stabilization only; nothing else moved
 ```
 
 ⛔ **`d863d4df5` stays in this record.** It is the commit on which the render loop
 was discovered, and replacing it silently would make the witness look like it had
 never happened. **The eight observations did not fail — they were never validly
-reached.** The instrument below is unchanged; only the commit judged against it
-has moved.
+reached.** The instrument is unchanged; only the commit judged against it moved.
 
 ⚠️ **What that failure taught, recorded and NOT turned into new work.** Every
 automated gate on this lane is a pure-function test or a source contract. Neither
@@ -348,6 +351,108 @@ marker there is the instrument working.** `ManuscriptOutline` draws its gold row
 only when a real current section is known; `placeForMode` returns `null` in Whole
 view until Whole has observed something; and that null reaches presentation
 unchanged, by design.
+
+---
+
+## 4c · Runtime falsifier — witness history
+
+⛔ **APPENDED. The eight-observation instrument in §4b is UNALTERED** — same
+observations, same separate 6a/6b witnesses, same negative clause. What follows
+is history and machine evidence about subjects, never a change to what is asked.
+
+### Three subjects
+
+```
+d863d4df5   PRE-WITNESS FAIL
+            Maximum update depth exceeded
+            cause: unstable session identity
+            instrument never validly entered
+
+0cf26e22a   RUNTIME FALSIFIER FAIL
+            G1 · G2 · 1–4   PASS
+            5               FAIL
+            cause: Whole ARRIVAL persisted as a fallback NAVIGATION COMMAND
+                   (`jumpTo ?? session.wholeOpensAt`)
+            6a · 6b · 7     NOT RUN — stopped at first failure
+
+af013cb4a   CURRENT WITNESS SUBJECT
+```
+
+### Automated runtime falsifier — `af013cb4a`
+
+```
+G1  render loop         PASS      G2  windowing   PASS  (262 shells · 4 mounted · 258 unmounted)
+1   distant-scroll      PASS      2   eviction → remount   PASS
+3   view-change capture PASS      4   boundary refusal     PASS
+5   far rail            PASS      6a  gold row             PASS
+6b  url s=              PASS      7   return transfer      PASS
+
+non-HMR console errors  0
+```
+
+### The negative 6a/6b case
+
+```
+6ab negative   UNOBSERVABLE IN BROWSER   — not manufactured
+
+reason          Whole-view entry always supplies a known arrival section, so the
+                current product path exposes no browser-reachable null-place
+                interval. Probed at 40ms x10 on entry; values never moved.
+structural      placeForMode(whole, null) → null    PASS
+reachability    UNRESOLVED / not required for this runtime pass
+```
+
+⛔ Neither PASS nor FAIL. The constitutional invariant is held by the pure
+falsifier; whether the product ever exposes a null-place Whole state is a
+separate reachability question, deferred rather than answered by a test state.
+
+### Provenance of the check-5 attempts
+
+```
+FIRST ATTEMPT    INVALID HARNESS CORPUS
+                 Working Draft seeded without Source sections → rail absent
+CORPUS CORRECTED Source + Working Draft present → 262 navigable rows
+SECOND ATTEMPT   VALID FAIL — the application defect above
+```
+
+**No application defect is attributed to the invalid attempt.** *(A separate
+post-restart reading of zero view choices was a harness race against the route's
+first compile — a diagnostic note, not part of this lane's failure history.)*
+
+### What the runtime falsifier positively established
+
+More than "it did not crash". At `af013cb4a`: all 262 shells coexist with four
+mounted editors · distant scrolling never empties the viewport across ten sampled
+positions · an edit survives **proved** eviction, not mere re-render · an edit
+survives the whole surface disappearing · boundaries stay non-mergeable · a rail
+target **proved absent** mounts and then scrolls into place · gold row and `s=`
+follow observed place **independently asserted** · Whole → Section preserves the
+reading location.
+
+⭐ Check 5 witnesses the semantic repair itself, not merely a green test:
+**arrival is consumed as arrival, and a later navigation command's completion no
+longer resurrects it.**
+
+### What automation cannot establish
+
+```
+AUTOMATED RUNTIME FALSIFIER   af013cb4a · synthetic corpus   PASS
+HUMAN §4b WITNESS             af013cb4a · real Work          PENDING · BLOCKED ON ACCESS
+Whole implementation          HOLD
+PR · DEPLOY                   HOLD
+```
+
+The human witness owns what no harness can claim: whether the divisions
+**perceptually recede** into one manuscript · whether long-distance movement
+**feels continuous** rather than mechanically correct · whether the boundary
+response **feels quiet** · whether the view switch feels like **continuity of
+place** rather than mode machinery.
+
+**A machine PASS makes the runtime mechanics eligible for human witnessing. It
+does not promote the human witness.** Both recorded failures were the same class:
+a React value carrying two meanings because source-level structure made the
+distinction look harmless — neither reachable by any pure or source-contract gate
+on this lane.
 
 ---
 
