@@ -3,7 +3,7 @@
 /**
  * ChangeCouncilResult — Display AIN Council Result for Changes
  *
- * Shows emergence rating, confidence, framings used,
+ * Shows emergence rating, framings used,
  * tensions, risks, insights, and recommendation.
  * Mirrors CouncilResultView from decisions.
  */
@@ -53,10 +53,10 @@ export default function ChangeCouncilResult({ council, animate = true }: ChangeC
             </>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-500">Confidence:</span>
-          <span className="text-sm text-slate-300">{Math.round(council.confidence * 100)}%</span>
-        </div>
+        {/* COUNCIL-CONFIDENCE-01: confidence percentage removed. The stored value is
+            `framings.length >= 3 ? 0.8 : 0.6` — a count of participating framings, not
+            an evaluation of how well-grounded the reading is. The perspective count
+            below states that same fact truthfully. Do NOT substitute `emergenceRating`. */}
       </MotionDiv>
 
       {/* Framings Used */}

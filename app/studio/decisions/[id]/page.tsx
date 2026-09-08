@@ -226,8 +226,10 @@ function CouncilResultView({ council, animate = true }: { council: NonNullable<D
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-400" />
           <span className="text-sm text-purple-300 capitalize">{council.emergenceRating}</span>
+          {/* COUNCIL-CONFIDENCE-01: percentage removed — see councilScope.ts note
+              and the lane record. `confidence` is a framing count, not footing. */}
           <span className="text-xs text-slate-500">
-            ({council.framingsUsed?.length || 0} perspectives, {((council.confidence || 0) * 100).toFixed(0)}% confidence)
+            ({council.framingsUsed?.length || 0} perspectives)
           </span>
         </div>
       )}

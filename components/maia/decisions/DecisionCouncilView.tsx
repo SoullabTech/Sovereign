@@ -198,9 +198,13 @@ export default function DecisionCouncilView({ decisionId, onBack }: DecisionCoun
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-400" />
                 <span className="text-sm text-purple-300 capitalize">{council.emergenceRating}</span>
+                {/* COUNCIL-CONFIDENCE-01: percentage removed. The stored `confidence`
+                    is `framings.length >= 3 ? 0.8 : 0.6` — a framing count, not an
+                    assessment of epistemic footing. Displaying it under that name
+                    invited members to read it as the Council's self-assessment.
+                    Do NOT substitute `emergenceRating` here; it measures novelty. */}
                 <span className="text-xs text-stone-500">
                   {council.framingsUsed?.length || 0} perspectives
-                  {council.confidence !== undefined && ` · ${((council.confidence) * 100).toFixed(0)}% confidence`}
                 </span>
               </div>
             )}
