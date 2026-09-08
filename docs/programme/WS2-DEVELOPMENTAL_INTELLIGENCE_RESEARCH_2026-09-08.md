@@ -1,8 +1,21 @@
 # Writer's Studio — Developmental Intelligence Research · 2026-09-08
 
 **Lane**: JARVIS — WRITER'S STUDIO DEVELOPMENTAL INTELLIGENCE RESEARCH
-**Status**: RESEARCH COMPLETE FOR DESIGN INPUT · **NO BUILD AUTHORIZATION**
+**Status**: **UNVERIFIED LEAD SET · CITATIONS NOT AUDITED AT SOURCE · NO CLAIM HERE LICENSES A DESIGN DECISION**
+**Restamped**: 2026-09-08, founder act. Supersedes the original `RESEARCH COMPLETE FOR DESIGN INPUT` stamp, which overstated this document's standing: the sweep is a research lead set, not a source-verified literature record. The prior stamp is corrected in place rather than deleted — a stamp is a reading at a time, and the honest repair is to date the change, not to hide it.
+**Build authorization**: NONE.
 **Benchmark Work**: *Elemental Alchemy* — published Work, founder-authorized for calibration and model comparison.
+
+### Standing rules for every reader of this document
+
+1. **Every citation here is a research lead, not a source.** The links were gathered through an assistant session and carry `utm_source=chatgpt.com`; none has been read at source by this system. Task zero of this lane replaces each with primary-source support — DOI · exact supported proposition · location/page · evidence strength.
+2. **Every unusually precise empirical figure is UNVERIFIED** — participant counts, corpus sizes, effect sizes, percentages. The register is §16.
+3. **Every model context window, output limit, price, and product name in §7 is UNVERIFIED.** Benchmark cost planning must not rest on this table until audited.
+4. **The candidate constraints in §6 are PENDING SOURCE AUDIT + FALSIFICATION. Not adopted.**
+5. **A claim that does not survive the audit is REMOVED, not softened.**
+6. **Nothing in this document licenses a design decision, a build, a prompt change, or a provider call.**
+
+> A document that describes its own findings as complete will be read as a record by the next session, which will not have this conversation. That is how a witness goes stale in place.
 
 ---
 
@@ -188,9 +201,15 @@ Source: https://aclanthology.org/2026.acl-long.829/
 
 ---
 
-# 6 · Candidate design laws derived from the research
+# 6 · Candidate constraints derived from the research
 
-These are **candidate design laws**, not ratified canon.
+> **Candidate constraints — PENDING SOURCE AUDIT + FALSIFICATION. Not adopted.**
+
+These are **candidate constraints**, not design laws and not ratified canon. Each rests on citations that have not been audited at source (§16), and none has yet been given a falsifier. A constraint with no way to fail is a slogan, not a constraint.
+
+Adoption of any R-L item requires, per item: (a) its supporting citation verified at source, (b) a named falsifier — what observation would show the constraint is wrong, (c) survival of the §15 falsification pass. Until all three hold, an R-L identifier may be cited as *a candidate under audit* and in no stronger form.
+
+The `L` in the `R-L*` identifiers is retained only for continuity of reference. It does not read as "law".
 
 ### R-L1 · The session is the primary quality unit
 
@@ -255,6 +274,8 @@ The system may maintain provenance, scope, anchors, writer intent, temporal stat
 ---
 
 # 7 · Model research — current candidates as of 2026-09-08
+
+> **UNVERIFIED — every context window, output limit, price, and product name in the table below awaits primary-source audit.** These figures were gathered through an assistant session and have not been read at their vendor sources by this system. Do not plan benchmark spend, provider selection, or context architecture against them until §16 clears them.
 
 Model specs are capability ceilings, not evidence of developmental-reading quality. **No model wins by spec sheet.**
 
@@ -451,12 +472,175 @@ That direction is unusually aligned with the architecture already emerging from 
 
 ---
 
-# 12 · Standing
+# 12 · Predeclared acceptance floor — FROZEN
+
+Ruled by founder act, 2026-09-08, **before any blind model result exists**.
+
+The floor is **not** a composite score. It is the seven session questions, answered per mandatory condition, on **both** blind repeats.
 
 ```text
-RESEARCH CORPUS                    COMPLETE for first design pass
-CANDIDATE DESIGN LAWS R-L1..R-L15 RESEARCH-DERIVED · NOT RATIFIED
-MODEL SPEC CENSUS                  CURRENT 2026-09-08
+1. Did MAIA make writing easier?                         REQUIRED: YES
+2. Did she understand what I was trying to do?           REQUIRED: YES
+3. Did she help me see something genuinely useful?       REQUIRED: YES or SOMEWHAT
+4. Did she preserve my voice?                            REQUIRED: YES
+5. Did she stay at the scope I asked for?                REQUIRED: YES
+6. When I disagreed or corrected her, did she hear me
+   without merely capitulating?                          REQUIRED: YES
+   (applies to the correction condition)
+7. Would I want her beside me for the next section?      REQUIRED: YES
+```
+
+**One hard-gate miss on either repeat places that model/architecture below the production-quality floor for that condition.** This is deliberately demanding. "Pretty good AI writing feedback" is not the product.
+
+> **FROZEN: The floor may not be changed after any blind model result is revealed.**
+
+A floor set once scores are visible is not a floor — it is the score, restated. Changing any threshold, wording, or required answer above requires an explicit founder act recorded *before* the run it governs.
+
+---
+
+# 13 · Exception-arming protocol — Strand G
+
+The Strand G research exception is **AUTHORIZED but NOT ARMED**. The authorization does not itself permit a third-party model call.
+
+An open authorization that nothing has claimed is a standing channel waiting for whoever walks through next — structurally the same defect as a migration becoming deployable merely by becoming canonical. The exception is therefore bound to a document, not to a decision.
+
+**The exception becomes executable only when a committed protocol names all of:**
+
+```text
+- exact models / providers
+- exact manuscript material authorized
+- control manuscript and its rights basis
+- exact prompts
+- exact scopes / tasks
+- randomization and blinding procedure
+- two-repeat procedure
+- seven-question scale and the frozen floor (§12)
+- provider data handling / retention / training check
+- what leaves Soullab and what explicitly may not
+- result disposition
+- start and end of authorization
+```
+
+If the provider data-handling condition cannot be established to the required standard, **that provider is excluded rather than assumed safe.**
+
+**Expiration**: end of the registered bake-off run, or **2026-10-08 23:59 UTC**, whichever occurs first. Anything later requires another explicit founder act.
+
+### Ruled disposition — preserved
+
+```text
+non-sovereign may win blind evaluation     YES
+non-sovereign thereby becomes deployable   NO
+sovereign below frozen floor               FEATURE HOLDS
+persistent capability gap                  RECORDED FINDING
+constitution reconsideration               separate founder act only
+```
+
+The bake-off selects the best developmental intelligence, **not** the production provider. If the winner is production-ineligible, its result becomes the performance target for the sovereign system. If the sovereign system cannot approach that target, that is an important negative finding, not an inconvenience to hide.
+
+"Sovereign model wins regardless of score" is not an experiment. Scores stay open. What a non-sovereign model cannot win is custody of member Work.
+
+---
+
+# 14 · SEL-0 — next zero-cost falsifier · RECORDED, NOT RUN
+
+**Status: SPECIFIED · NOT AUTHORIZED TO RUN BY THIS DOCUMENT.**
+
+SEL-0 precedes S1 because it can change the architecture at zero provider cost and requires no exception.
+
+### Question
+
+> Among observations MAIA is actually *permitted* to bring into conversation, does she already know which ones are useful to raise first?
+
+Detection and selection are distinct capabilities (§C1, R-L13). A one-section working session is small enough that selection barely bites, so Phase 2 can pass while selection is absent — and the failure then surfaces at Develop scope, at maximum accumulated cost.
+
+### Candidate set
+
+The **lawful surviving corpus only**. Observations already known to be constitutionally unlawful (F-7 absence-shaped Encounter language) are **excluded because they are ineligible, not because they ranked poorly.** A test of selection quality must not be contaminated by material that was never permitted to be raised at all.
+
+Observations are rendered in **plain member-facing language**, with families, windows, hashes and screen metadata removed. The test is selection, not tolerance for instrumentation.
+
+### Procedure
+
+```text
+MAIA       ranks the lawful corpus by what she would bring
+           into conversation first
+KELLY      independently chooses the five observations that would
+           have been most useful to encounter first
+MEASURE    top-5 exact overlap
+           founder top-5 contained in MAIA top-10
+           ordering disagreement
+```
+
+### Predeclared interpretation
+
+```text
+strong overlap
+  -> selection ability may already be latent;
+     investigate surfacing / interaction before building a selector
+
+weak overlap
+  -> truthful detection does not imply useful selection;
+     selection is a separate capability requiring design and calibration
+```
+
+> **OPEN — MUST BE PREDECLARED BEFORE THE RUN**: the numerical threshold separating "strong" from "weak" overlap. It belongs in the SEL-0 instrument before it runs, never chosen after seeing the result.
+
+---
+
+# 15 · Falsification quota — schema
+
+The quota is **five credible findings that challenge, qualify, or contradict a current Writer's Studio assumption**. Five soft caveats do not satisfy it.
+
+Each contrary finding must state all four rows:
+
+```text
+CURRENT ASSUMPTION   what Writer's Studio currently believes
+CONTRARY EVIDENCE    what the source actually found
+THREAT               why that challenges our assumption
+SURVIVAL CONDITION   what would have to be true for our assumption
+                     to remain defensible
+```
+
+Each finding must attack a **named frozen Phase 0 assumption**, not a generic bucket. A pass that returns five findings none of which touches a frozen assumption has not met the quota.
+
+**Until the quota is met, this document may not claim convergence between the literature and the current design direction.** A sweep that confirms the design it was commissioned to inform is the least informative available result and the most likely search artifact.
+
+---
+
+# 16 · Unverified-figures register
+
+Every entry below is a **research lead pending primary-source audit** — DOI · exact supported proposition · location/page · evidence strength. Anything that does not survive the audit is **removed, not softened**.
+
+| § | Precise claim | Audit status |
+|---|---|---|
+| A3 | 2024 *Learning and Instruction* dialogic-writing study | UNVERIFIED |
+| B1 | 109 HCI papers · 15 writers · DOI 10.1145/3757566 | UNVERIFIED |
+| B2 | 253 participants (Gero et al.) | UNVERIFIED |
+| B4 | 62 human–AI co-creativity papers | UNVERIFIED |
+| B5 | 2026 ACM C&C co-design study | **STRUCTURALLY UNSUPPORTED** — cited to `cc.acm.org/2026/proceedings/`, a conference index page, which cannot support a specific finding. Locate the paper or strike the claim. |
+| C1 | 1,300 stories (Rashkin et al., ACL 2025) | UNVERIFIED |
+| D1 | >880,000 texts across seven datasets; 21–50% variance reduction | UNVERIFIED — **and two different DOIs have been cited for this article** (`10.1038/s41562-026-02550-0` here, `…-02549-7` elsewhere). At most one is correct. Resolve before any use. |
+| D2 | 19 studies / 61 effect sizes | UNVERIFIED |
+| §7 | All context windows, output limits, prices, product names | UNVERIFIED — no vendor page read at source |
+
+Two structural cautions for the auditor:
+
+1. **A finding that enumerates our own feature list is the one to check hardest.** Confirmation-shaped results are the most likely to be misattributed.
+2. **Every link in the original sweep carries `utm_source=chatgpt.com`.** That is a provenance fact about how the corpus was gathered, not a judgement about any individual source — but it means no citation here has been read at source by this system.
+
+---
+
+# 17 · Standing
+
+```text
+RESEARCH CORPUS                    LEAD SET · NOT SOURCE-VERIFIED
+CITATION AUDIT                     NOT RUN · every source is a LEAD
+FALSIFICATION QUOTA (5)            NOT MET · convergence may not be claimed
+CANDIDATE CONSTRAINTS R-L1..R-L15  PENDING AUDIT + FALSIFICATION · NOT ADOPTED
+MODEL SPEC CENSUS                  UNVERIFIED · no vendor page read at source
+ACCEPTANCE FLOOR (§12)             PREDECLARED · FROZEN
+STRAND G EXCEPTION                 AUTHORIZED · NOT ARMED · expires 2026-10-08
+SEL-0 (§14)                        SPECIFIED · NOT RUN · threshold NOT SET
 ELEMENTAL ALCHEMY BENCHMARK        SPECIFIED · NOT YET RUN
 MODEL WINNER                       NONE
 ARCHITECTURE WINNER                NONE
@@ -467,4 +651,8 @@ PR / MERGE / DEPLOY                NOT AUTHORIZED
 
 ## Next empirical act
 
-Run **S1–S2 first**, not the whole seven-session suite: one real section, then one intentional author correction. If the experience is not clearly better than writing alone, stop and repair before spending on whole-Work benchmarks.
+**SEL-0 (§14) precedes S1.** It costs nothing, needs no provider exception, and can change the architecture before anything is built on it.
+
+Then run **S1–S2 first**, not the whole seven-session suite: one real section, then one intentional author correction. If the experience is not clearly better than writing alone, stop and repair before spending on whole-Work benchmarks.
+
+Sequencing for the whole lane is recorded separately in `WS2-DEVELOPMENTAL_INTELLIGENCE_ROADMAP_2026-09-08.md`. That roadmap is a recorded sequence, not a build authorization, and it does not license anything this document withholds.
