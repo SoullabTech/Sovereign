@@ -90,15 +90,29 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       sectionHeading = section.rows[0]?.heading ?? null;
     }
 
-    const response = await livingVoiceEncounter({
+    const outcome = await livingVoiceEncounter({
       passage: bounded.passage,
       lens: lens as LivingVoiceLens,
       sectionHeading,
     });
 
-    /* Null is lawful and unremarkable. The encounter happened; MAIA had nothing
-       that held to its own rules, and that is silence rather than an error. */
-    return NextResponse.json({ response });
+    /* THE SEAM COULD NOT RUN. Reported as unavailability, never as silence: a
+       writer told "nothing to add" about a passage MAIA never saw would have
+       witnessed a refusal that did not happen. The reason is not disclosed to
+       them — it is not theirs to debug — but the fact that nothing was looked
+       at is. */
+    if (outcome.kind === 'unavailable') {
+      return NextResponse.json(
+        { error: 'Could not look at that just now' },
+        { status: 503 },
+      );
+    }
+
+    /* Silence is lawful and unremarkable. The encounter happened; MAIA had
+       nothing that held to its own rules. Not an error, not a retry. */
+    return NextResponse.json({
+      response: outcome.kind === 'response' ? outcome.text : null,
+    });
   } catch (error) {
     /* The passage is never in the log line. */
     console.error('[living-voice] encounter failed', error instanceof Error ? error.message : 'unknown');

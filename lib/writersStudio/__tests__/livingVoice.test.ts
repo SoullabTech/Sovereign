@@ -342,3 +342,46 @@ describe('LV-J · disclosure memory is UI state, never permission', () => {
     expect(DISCLOSURE).toMatch(/window\.localStorage/);
   });
 });
+
+describe('silence and unavailability are different events', () => {
+  /* WITNESS INTEGRITY. This is not a nicety: with both collapsed into `null`,
+     an unconfigured environment renders "Nothing to add to this one" for every
+     lens, and a writer performing a real witness would honestly report that
+     Living Voice declined to speak about their passage — when Living Voice was
+     never reached. An infrastructure refusal must never be readable as a
+     constitutional one. */
+
+  const MODULE = readFileSync(
+    join(process.cwd(), 'lib', 'writersStudio', 'livingVoice.ts'), 'utf8');
+  const ROUTE = readFileSync(
+    join(process.cwd(), 'app', 'api', 'sovereign', 'manuscripts', '[id]', 'living-voice', 'route.ts'), 'utf8');
+
+  it('the encounter reports three outcomes, not two', () => {
+    expect(MODULE).toMatch(/kind: 'response'/);
+    expect(MODULE).toMatch(/kind: 'silent'/);
+    expect(MODULE).toMatch(/kind: 'unavailable'/);
+  });
+
+  it('ONLY the inference seam refusing produces unavailability', () => {
+    /* Every content-based failure stays silence — the check is the product,
+       and a response that fails its own rules is a response MAIA does not
+       make. `unavailable` is reachable from exactly one place. */
+    const occurrences = MODULE.match(/\{ kind: 'unavailable' \}/g) ?? [];
+    expect(occurrences).toHaveLength(1);
+    expect(MODULE).toMatch(/if \(!outcome\.ok\) return \{ kind: 'unavailable' \}/);
+    /* A response failing the form contract is silence, not unavailability. */
+    expect(MODULE).toMatch(/verdict\.ok \? \{ kind: 'response'[^\n]*: \{ kind: 'silent' \}/);
+  });
+
+  it('the route says nothing was looked at, without disclosing why', () => {
+    expect(ROUTE).toMatch(/outcome\.kind === 'unavailable'/);
+    expect(ROUTE).toMatch(/status: 503/);
+    /* The writer is not asked to debug a deployment: no refusal code, no
+       provider name, no mode reaches them. */
+    expect(ROUTE).not.toMatch(/refusal:|not_configured|provider_unavailable|ANTHROPIC/);
+  });
+
+  it('silence still carries no error', () => {
+    expect(ROUTE).toMatch(/response: outcome\.kind === 'response' \? outcome\.text : null/);
+  });
+});

@@ -310,19 +310,46 @@ export const LIVING_VOICE_MODEL =
   process.env.MAIA_LIVING_VOICE_MODEL || 'claude-opus-5';
 
 /**
- * One encounter, or nothing.
+ * One encounter, and THREE distinct outcomes.
  *
- * Null is a lawful outcome, never a failure to retry or fill: an inference
- * refusal, or a response that fails the form contract, simply produces no
- * response. The writer asked to look at their own sentence; whether MAIA had
- * something worth saying about it is not an error they need to hear about.
+ * ── WHY SILENCE AND UNAVAILABILITY MAY NOT SHARE A RETURN VALUE ───────────
+ *
+ * An earlier cut returned `string | null`, and both of these produced `null`:
+ *
+ *     MAIA had nothing that held to her own rules   →  lawful silence
+ *     the inference seam refused the call            →  nothing happened
+ *
+ * They are not the same event and must never look the same to the writer. A
+ * missing key, or `sovereign` mode with no local provider, would have rendered
+ * as "Nothing to add to this one" — an infrastructure refusal wearing the
+ * costume of a constitutional outcome. A writer would then have witnessed
+ * Living Voice declining to speak about their passage when in fact Living
+ * Voice was never reached.
+ *
+ * ⛔ THE DISTINCTION IS THE SOURCE OF THE REFUSAL, NOT ITS SEVERITY:
+ *
+ *     refusal to INFER     infrastructure  →  'unavailable'  →  say so
+ *     refusal to RESPOND   constitutional  →  'silent'       →  say nothing
+ *
+ * So every content-based outcome stays silence — a response that fails the
+ * form contract, an empty completion, a passage that cannot be checked. Only
+ * the seam declining to run at all becomes `unavailable`. Silence remains
+ * lawful, unremarkable, and never something to retry; it just stops being the
+ * bucket that a broken deployment falls into.
  */
+export type LivingVoiceOutcome =
+  | { readonly kind: 'response'; readonly text: string }
+  /** Lawful. MAIA looked and had nothing worth saying. Not an error. */
+  | { readonly kind: 'silent' }
+  /** The encounter could not happen. Nothing was looked at. */
+  | { readonly kind: 'unavailable' };
+
 export async function livingVoiceEncounter(
   input: { passage: string; lens: LivingVoiceLens; sectionHeading?: string | null },
   model: string = LIVING_VOICE_MODEL,
-): Promise<string | null> {
+): Promise<LivingVoiceOutcome> {
   const checked = checkPassage(input.passage);
-  if (!checked.ok) return null;
+  if (!checked.ok) return { kind: 'silent' };
 
   /* ONLY what LV-H authorizes: the exact passage, the chosen lens, and minimal
      anchor information to situate it. Nothing else about the Work travels. */
@@ -336,7 +363,9 @@ export async function livingVoiceEncounter(
     }],
     maxTokens: 220,
   });
-  if (!outcome.ok) return null;
+
+  /* The seam refused to run. Not silence — the passage was never looked at. */
+  if (!outcome.ok) return { kind: 'unavailable' };
 
   const text = outcome.result.content
     .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
@@ -344,6 +373,9 @@ export async function livingVoiceEncounter(
     .join('')
     .trim();
 
+  /* From here down every outcome is content, so every failure is silence: the
+     check is the product, and a response that cannot hold to its own rules is
+     a response MAIA does not make. */
   const verdict = checkLivingVoiceResponse(text);
-  return verdict.ok ? verdict.text : null;
+  return verdict.ok ? { kind: 'response', text: verdict.text } : { kind: 'silent' };
 }
