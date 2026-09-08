@@ -682,9 +682,16 @@ function PressManuscriptRoom() {
           >
             ← Author Studio
           </a>
-          <h1 className="text-3xl leading-snug mb-4">Import a manuscript</h1>
+          {/* Founder ruling 2026-09-08 (Life of a Work, step 1). Home's door now
+              reads "Bring a work back to life"; a threshold still headed "Import
+              a manuscript" would name a file operation the moment the writer
+              stepped through it. "decide what, if anything, you want to do with
+              it" is the ratified PT-1 shape stated up front: encounter precedes
+              intervention, and nothing here presumes the work needs changing. */}
+          <h1 className="text-3xl leading-snug mb-4">Bring a work back to life</h1>
           <p className="text-[15px] leading-relaxed opacity-70 mb-3">
-            Bring in a book you have already written. Paste it, or choose a file.
+            Import something you’ve written before and decide what, if anything, you want to do
+            with it.
           </p>
           {/* State the consequence BEFORE the file dialog, not after. */}
           <p className="text-[14px] leading-relaxed opacity-50 mb-12 max-w-md">
