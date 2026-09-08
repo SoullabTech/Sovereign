@@ -92,29 +92,135 @@ inside it.
 
 ## 0b · Two questions this reshaping opens
 
-⛔ Neither is answered here. Both are constitutional, and both would be easy to
-answer by accident during implementation.
+Both are constitutional and both would be easy to answer by accident during
+implementation. **Q-B is now RATIFIED; Q-A remains OPEN by ruling.**
 
-**Q-A · What is the epistemic status of what the FIELD concludes?**
+**Q-A · What is the epistemic status of what the FIELD concludes? — OPEN.**
+
 A frozen observation is evidence-bound and validated. A standing is a member
 decision. But *"the recurrence is intentional; the second appearance does not
-deepen the first"* is neither — it is jointly authored understanding, arrived at
-in conversation, resting on evidence the reader gathered but stating something
-the reader was constitutionally barred from stating. It must be named, or it will
-be quietly filed as one of the two things it is not. **A field conclusion that
-gets stored as an observation corrupts the reading; one stored as a standing
-misattributes it to the writer alone.**
+deepen the first"* is neither.
 
-**Q-B · Does a persistent MAIA beside the writer change the relational posture?**
-Every DEVELOP act so far is *commissioned*: one member gesture, one reading,
-frozen. DWF-8 makes MAIA continuously present while the writer works. That may be
-exactly right — a gifted developmental editor in the room — but it is a different
-posture from a commissioned reader, and the Sovereignty Invariants ask of any
-capability increase whether it *reduces the system's psychological centrality over
-time*. **The question is not whether MAIA writes. It is whether presence becomes
-ambient rather than invited.** An invited presence and an always-on one are
-different relationships to a writer's solitude, and the difference should be
-designed rather than defaulted.
+⛔ **Founder ruling: do NOT name it yet.** Calling the whole thing a "joint
+conclusion" would itself flatten provenance, because **one sentence can carry
+different authorities in its two halves**:
+
+```
+"The recurrence is intentional."          → AUTHOR DISCLOSURE
+                                             only the author can establish this
+
+"The second appearance does not deepen     → DEVELOPMENTAL INFERENCE
+ the first."                                 evidence + dialogue
+```
+
+So the constitution must first decompose the ingredients rather than choose a
+database noun:
+
+```
+author disclosure
+evidence-bound observation
+developmental inference
+jointly reached understanding
+```
+
+**What each component carries as authority is the question. The name of the
+resulting object is downstream of that answer.**
+
+⭐ **One structural observation, offered as input rather than resolution.** The
+reader's own non-conclusion vocabulary already enumerates precisely what a
+reading cannot establish — and every one of the 26 observations carries these:
+
+```
+author intent          the evidence does not establish why the author did
+                       or omitted something
+editorial consequence  … does not establish defect, importance, priority,
+                       or that anything should change
+reader effect          … does not establish an actual reader effect
+whole work pattern     local evidence does not establish a whole-Work pattern
+```
+
+**The field is where those non-conclusions get answered — by whoever holds the
+authority to answer each one.** `author intent` is answerable only by the author.
+`editorial consequence` is the writer's, informed by dialogue. `whole work
+pattern` may be reachable jointly across several observations. `reader effect`
+may remain unanswerable by anyone in the room.
+
+If that mapping holds, the field object is not one thing with one provenance; it
+is **a set of answers to specific named non-conclusions, each carrying the
+authority of whoever answered it.** That would make provenance decomposable by
+construction rather than by convention — but it is a hypothesis this document
+records, not a ruling it makes.
+
+---
+
+### Q-B · Does a persistent MAIA change the relational posture? — RATIFIED 2026-09-08
+
+> **The field may remain present without MAIA remaining active. MAIA's
+> developmental attention is commissioned, not ambient. Persistent context does
+> not constitute persistent invitation.**
+
+```
+PERSISTENT                      NOT PERSISTENT BY DEFAULT
+observations                    MAIA's active attention
+evidence                        unsolicited interpretation
+conversation history            monitoring of the writer's edits
+emerging understandings         continuous commentary
+writer standings                automatic re-reading
+developmental threads           intervention because something changed
+relevant places in the Work
+unfinished questions
+```
+
+⛔ **DWF-8 means CONTEXT-presence, not AGENT-presence.** Its wording —
+*"keep developmental context present while writing"* — is preserved exactly and
+must not be silently translated into *"keep MAIA present while writing."* Those
+are not synonyms. When MAIA is not commissioned, the developmental panel is
+**memory and orientation, not another consciousness interrupting the act of
+writing.**
+
+**Bounded presence is lawful within an encounter.** The boundary is not one click
+per utterance:
+
+```
+writer commissions a developmental encounter
+    ↓
+MAIA and writer work together
+    ↓
+the encounter stays active while mutually engaged
+    ↓
+writer returns to solitary authorship · dismisses · leaves
+    ↓
+MAIA becomes quiet · context remains
+```
+
+*A developmental editor does not need re-inviting every thirty seconds during a
+conversation. Neither do they follow you silently around the room afterwards,
+watching your notebook for opportunities to intervene.*
+
+**Two falsifiers DWF-8 must pass before it can ship:**
+
+```
+1  Can the writer remain inside the field, work on the manuscript, and receive
+   NO new developmental intervention unless they commission MAIA?
+   → if no, presence has become ambient
+
+2  Can the developmental context remain useful while MAIA is silent?
+   → if no, this is a chat room with an editor attached, not a working field
+```
+
+### The lane's purpose, stated so it cannot drift
+
+> **The purpose of the Developmental Working Field is not to maximize
+> collaboration with MAIA. It is to make relationship available without
+> destroying solitude.**
+
+Two modes of authorship, and the system supports passage between them rather than
+deciding that more MAIA is inherently better:
+
+```
+SOLITUDE       I need to hear the Work myself.
+RELATIONSHIP   I want another intelligence beside me while I work this through.
+```
 
 ---
 
