@@ -172,19 +172,129 @@ ugly.* But there may be genuinely different phenomena inside it — near-verbati
 repetition · re-explanation · structural return · repeated figure · repeated
 origin story. **That is a small Develop inquiry, not arbitrary relabeling.**
 
-## Three levels
+## WHO IS READING THIS — the standard this sets
 
-**Level 1 — the whole.** Lead with the dominant pattern, then something factual:
+⚠️ **Founder amendment, later the same day. This changes the presentation
+standard more than the underlying intelligence.**
+
+These writers are not coming to inspect a diagnostic report. They are writing
+**a book of teachings · a healing methodology · a memoir · a spiritual or
+contemplative text · a practitioner manual · workshop material · a body of
+clinical or coaching wisdom · a mythology, philosophy, or creative work.**
+
+> ### Develop should feel like an intelligent reader sitting beside the work, not an analytics console.
+
+### Speak human first
+
+⛔ **NOT** the lead an earlier draft of this document proposed —
+*"19 of 23 observations concern recurrence."* A count is not a first language.
 
 ```text
-The manuscript repeatedly returns to and re-explains its central material
-across multiple scales.
+Your book keeps circling back to its central ideas.
 
-19 of 23 observations concern recurrence.
+Across the manuscript, MAIA noticed several places where an image, teaching,
+explanation, or piece of language returns. Some are almost identical; others
+return later with a different emphasis.
+
+That may be rhythm, teaching, deepening, redundancy, or simply the way this
+work wants to move. You decide.
 ```
 
-⛔ Not *"this is too repetitive."* ⛔ Not *"you should cut it."*
-**Just the shape MAIA actually observed.**
+Underneath that:
+
+```text
+19 places where this appears        See them in the manuscript →
+```
+
+**The technical evidence stays exact. It simply is not the first language the
+writer meets.**
+
+⛔ Still not *"this is too repetitive."* ⛔ Still not *"you should cut it."*
+
+## Three layers
+
+**1 · WHAT MAIA IS NOTICING** — plain, synthetic, relational. No taxonomy
+required to understand the reading.
+
+```text
+You return often to the spiral as a way of understanding growth.
+Several teachings are introduced more than once, sometimes in nearly the
+same language.
+A few ideas disappear for long stretches and then return much later.
+```
+
+**2 · WHERE SHE SEES IT** — concrete evidence, all the provenance rigour
+preserved.
+
+```text
+Seen in Chapters 2, 7 and 11        View passages
+```
+
+**3 · WHAT YOU MAKE OF IT** — authority returns to the writer immediately.
+
+```text
+How does this feel to you?
+   Intentional · Worth exploring · Not important · I'm not sure yet
+```
+
+⛔ Not MAIA deciding whether something is "good writing."
+
+## DIFFERENT WRITERS NEED DIFFERENT KINDS OF SEEING
+
+```text
+A TECHNICAL WRITER      inconsistency · duplication
+
+A HEALER OR THERAPIST   whether a teaching is coherent across the book
+                        whether an idea becomes clearer or muddier as it develops
+                        whether the voice changes
+                        whether a concept is introduced before it is prepared
+                        whether a client story or metaphor appears in
+                          conflicting ways
+
+A SHAMAN OR SPIRITUAL   recurring symbols
+TEACHER                 images that accumulate meaning
+                        where the same teaching returns from another direction
+                        initiatory or cyclical structure
+                        where language shifts from explanation into revelation
+
+A MEMOIRIST             emotional threads
+                        people disappearing and reappearing
+                        unresolved events
+                        repetitions that feel psychologically meaningful
+                        changes in narrative voice or distance
+```
+
+### ⛔ AND THIS IS A CONSTITUTIONAL CONSTRAINT, NOT A DESIGN NOTE
+
+> **MAIA should be capable of perceiving those differences WITHOUT CLASSIFYING
+> THE WRITER INTO A TYPE.**
+>
+> **The Work itself teaches MAIA what kind of attention is useful.**
+
+A "writer type" would be a measured attribute of a person driving what she is
+shown — the shape Invariant 14 and the no-scoring rules already forbid, arriving
+as a persona instead of a number. **The attention is read from the Work, never
+from a classification of its author.**
+
+## NAMING — the felt experience is not institutional
+
+```text
+INTERNAL / CONSTITUTIONAL   "developmental reading"      keep
+WRITER-FACING               "A reading of your work"
+                            "What MAIA is seeing in the work"
+⛔ NOT                       "developmental reading report"
+```
+
+## THE DESIGN PRINCIPLE
+
+> ### Develop should help a writer see their work more clearly without requiring them to think like an editor, analyst, or software operator.
+
+The evidence machinery may be extremely technical underneath. **The experience
+should be clear, spacious, humane, and creatively intelligent.**
+
+> Many of these writers have decades of tacit knowledge they are trying to make
+> communicable. **The Studio's job is not to turn them into professional
+> editors. It is to help them hear the shape of what they already know.**
 
 **Level 2 — pattern families, IF the evidence supports them.** Inspect the 19
 and ask whether real sub-patterns emerge. Possible, **not pre-approved**:
@@ -239,6 +349,11 @@ At the **pattern** level, eventually and only if it fits that model:
 > **Can I understand what MAIA saw in my book within thirty seconds, then
 > inspect exactly where she saw it — without surrendering the judgement of what
 > it means?**
+
+And its companion, from the amendment:
+
+> **Does this read as an intelligent reader sitting beside the work — or as an
+> analytics console?**
 
 ## ⛔ THE RESTRAINT ITSELF STAYS
 
