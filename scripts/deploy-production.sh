@@ -296,13 +296,13 @@ run_smoke_tests() {
     if docker exec maia-sovereign test -f /app/scripts/constitutional-verification.sh 2>/dev/null; then
         local cv_output
         if cv_output=$(docker exec maia-sovereign sh -c \
-            'DATABASE_URL="$DATABASE_URL" bash scripts/constitutional-verification.sh 2>&1'); then
+            'bash scripts/constitutional-verification.sh 2>&1'); then
             log_success "  Constitutional verification: PASSED"
             add_result "PASS  Constitutional verification (Co-Lab + Memory + Relationships + Development + MAIA)"
         else
             log_error "  Constitutional verification FAILED"
             echo "$cv_output" | grep -E "FAIL|Release gate" >&2
-            add_result "FAIL  Constitutional verification — run: docker exec maia-sovereign sh -c 'DATABASE_URL=\"\$DATABASE_URL\" bash scripts/constitutional-verification.sh'"
+            add_result "FAIL  Constitutional verification — run: docker exec maia-sovereign bash scripts/constitutional-verification.sh"
             all_passed=false
         fi
     else
@@ -330,7 +330,31 @@ cmd_setup() {
 
     cd "$PROJECT_DIR"
 
-    # Check if .env.production exists
+    # ───────────────────────────────────────────────────────────────────────────
+    # PT-3 §VI / B33.A — OWNER SECRET CUSTODY.
+    #
+    # This function used to generate POSTGRES_PASSWORD into .env.production and then rewrite
+    # DATABASE_URL there from it. Every service in docker-compose.production.yml loads that file,
+    # so setup was the act that GAVE the whole runtime owner authority — and it would have
+    # reconstructed exactly the defect the cutover removes, silently, on the next `setup`.
+    #
+    # Owner material now lives only where the service that needs it loads it:
+    #   .env.postgres  → POSTGRES_PASSWORD   (the postgres service alone)
+    #   .env.migrate   → DATABASE_URL owner  (the migrate service alone)
+    #   .env.production→ MAIA_APP_DATABASE_URL only — the constrained credential, universal
+    #
+    # "Owner authority means any credential material sufficient to authenticate as the database
+    # owner, not merely a variable named DATABASE_URL." The password alone is sufficient; so the
+    # password alone is enough to keep out of the universal file.
+    # ───────────────────────────────────────────────────────────────────────────
+    if [ -f .env.postgres ] || [ -f .env.migrate ]; then
+        log_warn "Owner-secret custody is already established (.env.postgres / .env.migrate)."
+        log_info  "setup writes NOTHING: regenerating credentials here would either break the"
+        log_info  "running database or push owner material back into the universal .env.production."
+        log_info  "To rotate the owner password, do it in .env.postgres and .env.migrate together."
+        return 0
+    fi
+
     if [ -f ".env.production" ]; then
         log_warn ".env.production already exists. Skipping creation."
         log_info "To regenerate, delete it first: rm .env.production"
@@ -338,26 +362,19 @@ cmd_setup() {
         log_info "Creating .env.production from template..."
         cp .env.production.template .env.production
 
-        # Generate secrets
         log_info "Generating secure secrets..."
-
-        POSTGRES_PASS=$(openssl rand -hex 32)
         JWT_SECRET=$(openssl rand -hex 64)
         AUDIT_SECRET=$(openssl rand -hex 32)
 
-        # Replace placeholders (macOS-compatible sed)
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASS/" .env.production
             sed -i '' "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" .env.production
             sed -i '' "s/MAIA_AUDIT_FINGERPRINT_SECRET=.*/MAIA_AUDIT_FINGERPRINT_SECRET=$AUDIT_SECRET/" .env.production
         else
-            sed -i "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$POSTGRES_PASS/" .env.production
             sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" .env.production
             sed -i "s/MAIA_AUDIT_FINGERPRINT_SECRET=.*/MAIA_AUDIT_FINGERPRINT_SECRET=$AUDIT_SECRET/" .env.production
         fi
 
         log_success "Secrets generated and saved to .env.production"
-
         echo ""
         log_warn "IMPORTANT: Edit .env.production to set:"
         echo "  - BASE_URL (your domain)"
@@ -366,18 +383,32 @@ cmd_setup() {
         echo ""
     fi
 
-    # Update DATABASE_URL with the password
-    log_info "Updating DATABASE_URL..."
-    POSTGRES_PASS=$(grep "^POSTGRES_PASSWORD=" .env.production | cut -d'=' -f2)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|DATABASE_URL=.*|DATABASE_URL=postgresql://soullab:${POSTGRES_PASS}@postgres:5432/maia_consciousness|" .env.production
-    else
-        sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql://soullab:${POSTGRES_PASS}@postgres:5432/maia_consciousness|" .env.production
+    # The universal file must not carry owner material, even as an inherited template placeholder.
+    log_info "Removing owner-credential keys from the universal environment..."
+    TMP_ENV=$(mktemp)
+    grep -v -E '^(POSTGRES_PASSWORD|DATABASE_URL|MIGRATE_DATABASE_URL)=' .env.production > "$TMP_ENV"
+    cat "$TMP_ENV" > .env.production
+    rm -f "$TMP_ENV"
+
+    # Owner secrets, generated straight into their protected files. Never printed.
+    POSTGRES_PASS=$(openssl rand -hex 32)
+    umask 077
+    printf 'POSTGRES_PASSWORD=%s\n' "$POSTGRES_PASS" > .env.postgres
+    printf 'DATABASE_URL=postgresql://soullab:%s@postgres:5432/maia_consciousness\n' "$POSTGRES_PASS" > .env.migrate
+    chmod 600 .env.postgres .env.migrate
+    unset POSTGRES_PASS
+    log_success "Owner authority written to .env.postgres and .env.migrate (mode 600), and nowhere else"
+
+    if ! grep -qE '^MAIA_APP_DATABASE_URL=' .env.production; then
+        log_warn "MAIA_APP_DATABASE_URL is not set in .env.production."
+        log_info  "It is established by the PT-3 cutover, which creates the constrained role:"
+        log_info  "  scripts/pt3-cutover.sh   (see docs/ops/PT3_CUTOVER_RUNBOOK.md)"
+        log_info  "Until then the application has no database credential — deliberately."
     fi
 
     log_success "Setup complete! Next steps:"
     echo "  1. Edit .env.production with your domain and API keys"
-    echo "  2. Run: ./scripts/deploy-production.sh deploy"
+    echo "  2. Run: ./scripts/deploy-production.sh deploy <SHA>"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

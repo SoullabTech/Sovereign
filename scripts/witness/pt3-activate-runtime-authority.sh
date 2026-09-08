@@ -81,17 +81,21 @@ cp -p "$ENVPROD" "$BACKUP_DIR/env.production.$STAMP"
 chmod 600 "$BACKUP_DIR/env.production.$STAMP"
 echo "OK    previous .env.production backed up to $BACKUP_DIR/env.production.$STAMP (mode 600)"
 
+# §V (B28) — OWNER AUTHORITY IS NOT A VARIABLE NAME. It is any credential material sufficient to
+# authenticate as the owner. Removing DATABASE_URL while leaving POSTGRES_PASSWORD behind left every
+# runtime service holding the owner's password: the pools chose maia_app, but the processes remained
+# CAPABLE of being the owner, and several pools still support POSTGRES_* fallback whose default user
+# is `soullab`. Selection is not incapability.
 TMP=$(mktemp "$PROJECT/.env.production.pt3.XXXXXX")
-grep -v -E '^(DATABASE_URL|MAIA_APP_DATABASE_URL)=' "$ENVPROD" > "$TMP"
+grep -v -E '^(DATABASE_URL|MAIA_APP_DATABASE_URL|POSTGRES_PASSWORD|MIGRATE_DATABASE_URL)=' "$ENVPROD" > "$TMP"
 printf 'MAIA_APP_DATABASE_URL=postgresql://maia_app:%s@postgres:5432/%s\n' "$PW" "$DB" >> "$TMP"
 chmod 600 "$TMP"; mv "$TMP" "$ENVPROD"
 unset PW
-echo "OK    .env.production now carries MAIA_APP_DATABASE_URL and NO owner DATABASE_URL"
-
-if ! grep -qE '^MIGRATE_DATABASE_URL=' "$PROJECT/.env" 2>/dev/null; then
-  echo "WARN  MIGRATE_DATABASE_URL is not in .env — migration would now be impossible."
-  echo "      That is loud rather than unsafe (§IX), but stage it before the next migration."
-fi
+echo "OK    .env.production carries MAIA_APP_DATABASE_URL and no owner material at all"
+echo "      (removed: DATABASE_URL, POSTGRES_PASSWORD, MIGRATE_DATABASE_URL)"
+for f in .env.migrate .env.postgres; do
+  [ -s "$PROJECT/$f" ] || echo "WARN  $PROJECT/$f is missing or empty — postgres/migrate would lose authority"
+done
 
 echo
 echo "resolved runtime role : $(docker exec -i "$PGC" psql -U soullab -d "$DB" -tAc \

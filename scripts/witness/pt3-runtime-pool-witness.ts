@@ -1,9 +1,9 @@
 /**
- * PT-3 §XIV (B22, B23) — runtime pool witness.
+ * PT-3 §III / §XIV (B22, B23) — runtime pool witness.
  *
  * AUTHORITY. Founder ruling, Writer's Studio, 2026-09-08 §III, §IV, §VII, §XIV.
  *
- *   MAIA_APP_DATABASE_URL=postgresql://maia_app:…@…/…_fixture \
+ *   MAIA_APP_DATABASE_URL=postgresql://maia_app:…@127.0.0.1:5432/…_fixture \
  *   PT3_POOL_WITNESS_CONFIRM=1 npx tsx scripts/witness/pt3-runtime-pool-witness.ts
  *
  * ⭐ WHY THIS EXISTS. PT-3 is a protocol change between the application and the database, and the
@@ -15,21 +15,101 @@
  *        whose default user is `soullab` — silently reconnecting AS THE OWNER
  *
  * A grant census cannot catch that: the grants would be perfect while the application quietly
- * reconnected around them. So this witness **deletes DATABASE_URL from its own environment** —
- * reproducing the post-cutover world exactly — and asks each runtime pool the only question that
- * settles it: `SELECT current_user`.
+ * reconnected around them.
  *
- * SAFETY. Read-only (`SELECT current_user`), disposable databases only.
+ * ⭐ §III — WHY IT WAS STRENGTHENED. The earlier version announced "every runtime pool connects as
+ * maia_app" while genuinely constructing only two of the five. The other three were exercised
+ * through a connection expression RE-TYPED INTO THIS FILE. Re-typed truth drifts: the day someone
+ * edits lib/memory/beads-sync/server.ts back to `process.env.DATABASE_URL`, this witness keeps
+ * passing, because it never read that file. A witness whose claim is wider than its observation is
+ * the same defect as a verifier that returns READY having observed nothing.
+ *
+ * So the claim is now bounded by three separate legs, and the verdict names them separately:
+ *
+ *   1  DISCOVERY  — pool construction sites are FOUND by scanning lib/ and app/, never listed.
+ *                   A sixth pool added tomorrow fails this witness instead of going unwitnessed.
+ *   2  SOURCE     — each site's own file is read and asserted: no path may consult DATABASE_URL
+ *                   without having consulted MAIA_APP_DATABASE_URL first, in the same expression.
+ *   3  EXERCISE   — the two modules that can be imported are actually made to connect, with the
+ *                   owner variable deleted from the environment, and asked `SELECT current_user`.
+ *                   The remaining three are reported as SOURCE-ASSERTED and never as exercised.
+ *
+ * SAFETY. Read-only (`SELECT current_user`), disposable local databases only.
  */
 import { Pool } from 'pg';
+import { readFileSync, readdirSync, statSync } from 'fs';
+import { join, relative } from 'path';
 
 const EXPECTED = 'maia_app';
-let failed = 0;
+const REPO = join(__dirname, '..', '..');
 
-function report(pool: string, role: string, note = '') {
-  const ok = role === EXPECTED;
-  if (!ok) failed++;
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${pool.padEnd(42)} current_user=${role}${note ? `  ${note}` : ''}`);
+/** Every file that constructs a pg pool, and how this witness is entitled to speak about it. */
+const WITNESSED: Record<string, 'exercised' | 'source-asserted'> = {
+  'lib/db/postgres.ts': 'exercised',
+  'lib/database/postgres.ts': 'exercised',
+  'lib/learning/maiaTrainingDataService.ts': 'source-asserted',
+  'lib/memory/beads-sync/server.ts': 'source-asserted',
+  'lib/skills/skillsRuntime.ts': 'source-asserted',
+};
+
+const POOL_CTOR = /new\s+(?:Pool|PgPool|pg\.Pool)\s*\(/;
+
+let failed = 0;
+const pass = (leg: string, what: string, detail = '') => {
+  console.log(`PASS  ${leg.padEnd(9)} ${what.padEnd(44)} ${detail}`);
+};
+const fail = (leg: string, what: string, detail = '') => {
+  failed++;
+  console.log(`FAIL  ${leg.padEnd(9)} ${what.padEnd(44)} ${detail}`);
+};
+
+function walk(dir: string, out: string[] = []): string[] {
+  let entries: string[];
+  try { entries = readdirSync(dir); } catch { return out; }
+  for (const e of entries) {
+    if (e === 'node_modules' || e === '.next' || e === '__tests__' || e.startsWith('.')) continue;
+    const p = join(dir, e);
+    if (statSync(p).isDirectory()) walk(p, out);
+    else if (/\.tsx?$/.test(p)) out.push(p);
+  }
+  return out;
+}
+
+/** LEG 1 — the set of pool sites is discovered, so the witness cannot fall behind the code. */
+function discover(): string[] {
+  const found: string[] = [];
+  for (const abs of [...walk(join(REPO, 'lib')), ...walk(join(REPO, 'app'))]) {
+    const src = readFileSync(abs, 'utf8');
+    if (POOL_CTOR.test(src)) found.push(relative(REPO, abs));
+  }
+  return found.sort();
+}
+
+/**
+ * LEG 2 — the drift guard. The rule is not "the file mentions MAIA_APP_DATABASE_URL somewhere"
+ * (a comment would satisfy that; lib/database/postgres.ts has one). The rule is that the owner
+ * variable is never REACHED except through the constrained one: every `process.env.DATABASE_URL`
+ * in the file must be immediately preceded by `process.env.MAIA_APP_DATABASE_URL ||`.
+ */
+function assertSource(rel: string): void {
+  const src = readFileSync(join(REPO, rel), 'utf8');
+  const needle = 'process.env.DATABASE_URL';
+  const guard = /process\.env\.MAIA_APP_DATABASE_URL\s*\|\|\s*$/;
+
+  const occurrences: number[] = [];
+  for (let i = src.indexOf(needle); i !== -1; i = src.indexOf(needle, i + 1)) occurrences.push(i);
+
+  if (!src.includes('process.env.MAIA_APP_DATABASE_URL')) {
+    fail('source', rel, 'never consults MAIA_APP_DATABASE_URL — B23 defect present');
+    return;
+  }
+  const unguarded = occurrences.filter((i) => !guard.test(src.slice(Math.max(0, i - 80), i)));
+  if (unguarded.length > 0) {
+    const lines = unguarded.map((i) => src.slice(0, i).split('\n').length).join(', ');
+    fail('source', rel, `${unguarded.length} unguarded process.env.DATABASE_URL at line(s) ${lines}`);
+    return;
+  }
+  pass('source', rel, `${occurrences.length} DATABASE_URL read(s), all constrained-first`);
 }
 
 async function main() {
@@ -41,42 +121,72 @@ async function main() {
   const disposable = /\/[a-z0-9_]*(falsifier|fixture|shadow|disposable|legacy)[a-z0-9_]*(\?|$)/i.test(app);
   if (!local || !disposable) throw new Error('Refusing: MAIA_APP_DATABASE_URL must be local and disposable.');
 
-  /* ⭐ THE POST-CUTOVER WORLD, REPRODUCED. Nothing below may lean on the owner variable, because
-     after cutover it does not exist. A pool that needs it will now fail visibly rather than
-     silently reconnecting as `soullab`. */
+  console.log('════════ LEG 1 — DISCOVERY (the witness finds its own subjects) ════════');
+  const found = discover();
+  const known = Object.keys(WITNESSED).sort();
+  const unwitnessed = found.filter((f) => !(f in WITNESSED));
+  const vanished = known.filter((k) => !found.includes(k));
+  if (unwitnessed.length > 0) {
+    fail('discovery', 'an unwitnessed pool exists', unwitnessed.join(', '));
+    console.log('      A pool this witness has never read can reconnect as the owner unobserved.');
+    console.log('      Add it to WITNESSED — do not narrow the scan to make this pass.');
+  } else {
+    pass('discovery', `${found.length} pool construction site(s) found`, 'all are witnessed below');
+  }
+  for (const v of vanished) fail('discovery', 'a witnessed file no longer constructs a pool', v);
+
+  console.log('\n════════ LEG 2 — SOURCE (each file is read, not remembered) ════════');
+  for (const rel of known) {
+    if (vanished.includes(rel)) continue;
+    assertSource(rel);
+  }
+
+  console.log('\n════════ LEG 3 — EXERCISE (the post-cutover world, reproduced) ════════');
+  /* ⭐ Nothing below may lean on the owner variable, because after cutover it does not exist.
+     A pool that needs it now fails visibly rather than silently reconnecting as `soullab`. */
   delete process.env.DATABASE_URL;
-  console.log('DATABASE_URL removed from the environment — this is the post-cutover world.\n');
+  console.log('      DATABASE_URL removed from this process — this is the post-cutover world.');
+
+  const exercise = (rel: string, role: string, note = '') =>
+    role === EXPECTED
+      ? pass('exercise', rel, `current_user=${role}${note ? `  ${note}` : ''}`)
+      : fail('exercise', rel, `current_user=${role} — reconnected outside the boundary`);
 
   const { getPool } = await import('@/lib/database/postgres');
-  report('lib/database/postgres.ts',
+  exercise('lib/database/postgres.ts',
     (await getPool().query<{ u: string }>('SELECT current_user AS u')).rows[0].u,
     '(gated on DATABASE_URL before B23)');
   await getPool().end();
 
   const { query, closePool } = await import('@/lib/db/postgres');
-  report('lib/db/postgres.ts', (await query<{ u: string }>('SELECT current_user AS u')).rows[0].u);
+  exercise('lib/db/postgres.ts', (await query<{ u: string }>('SELECT current_user AS u')).rows[0].u);
   await closePool();
 
-  /* maiaTrainingDataService and beads-sync construct their pools at module scope or behind service
-     setup; their connection expression is what B23 changed, so it is exercised directly here rather
-     than by booting each service. */
-  for (const [name, cs] of [
-    ['lib/learning/maiaTrainingDataService.ts', process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL],
-    ['lib/memory/beads-sync/server.ts', process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL],
-    ['lib/skills/skillsRuntime.ts', process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL || ''],
-  ] as const) {
-    const p = new Pool({ connectionString: cs as string });
-    report(name, (await p.query<{ u: string }>('SELECT current_user AS u')).rows[0].u);
+  /* The remaining three construct their pools at module scope or behind service setup, so importing
+     them would start a service rather than answer a question. They are NOT claimed as exercised.
+     Their connection expression was proved by LEG 2 to be the constrained-first one; this connects
+     with that expression and reports what it yields — evidence about the expression, and the source
+     leg is what binds the expression to the file. */
+  for (const rel of known.filter((k) => WITNESSED[k] === 'source-asserted')) {
+    if (vanished.includes(rel)) continue;
+    const p = new Pool({ connectionString: process.env.MAIA_APP_DATABASE_URL });
+    const role = (await p.query<{ u: string }>('SELECT current_user AS u')).rows[0].u;
     await p.end();
+    if (role === EXPECTED) pass('expression', rel, `current_user=${role} (source-asserted, module not booted)`);
+    else fail('expression', rel, `current_user=${role}`);
   }
 
-  console.log(`\n${'═'.repeat(70)}`);
+  console.log(`\n${'═'.repeat(78)}`);
+  const exercised = Object.values(WITNESSED).filter((v) => v === 'exercised').length;
+  const asserted = Object.values(WITNESSED).length - exercised;
   if (failed === 0) {
-    console.log(`READY — every runtime pool connects as ${EXPECTED} with the owner variable absent.`);
+    console.log(`READY — ${found.length} pool site(s) discovered; ${exercised} exercised as modules, ` +
+                `${asserted} source-asserted. With the owner variable absent, none reaches it.`);
     process.exit(0);
   }
-  console.log(`DEFECT — ${failed} pool(s) did not connect as ${EXPECTED}.`);
+  console.log(`DEFECT — ${failed} finding(s).`);
   console.log('A pool that reconnects as the owner undoes the boundary the grants describe.');
+  console.log('Do not narrow this witness to make it pass.');
   process.exit(1);
 }
 

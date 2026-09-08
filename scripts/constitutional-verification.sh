@@ -6,11 +6,14 @@
 # release report. A release is not ready until this passes.
 #
 # Usage (from minisforum, inside the running container):
-#   docker exec maia-sovereign sh -c \
-#     'DATABASE_URL="$DATABASE_URL" bash scripts/constitutional-verification.sh'
+#   docker exec maia-sovereign bash scripts/constitutional-verification.sh
 #
-# Usage (local, against a DATABASE_URL):
-#   DATABASE_URL=postgres://... bash scripts/constitutional-verification.sh
+#   PT-3 §VI / B33.B — the container's own environment already carries the credential it is
+#   entitled to. There is no longer any DATABASE_URL to forward, and forwarding an empty one is
+#   how a verifier ends up silently checking its own local default instead of production.
+#
+# Usage (local, against a database):
+#   MAIA_APP_DATABASE_URL=postgres://... bash scripts/constitutional-verification.sh
 #
 # Exit code:
 #   0 — all verifiers passed (warnings are noted but do not block)
@@ -84,7 +87,11 @@ run_verifier() {
   echo -e "\n${BOLD}── $name $( printf '─%.0s' $(seq 1 $((58 - ${#name}))) )${NC}"
 
   local output exit_code
-  output=$(DATABASE_URL="${DATABASE_URL:-}" npx tsx "$script_path" 2>&1) || exit_code=$?
+  # PT-3 §VI / B33.B — pass whichever credential this runtime actually holds. Post-cutover that
+  # is MAIA_APP_DATABASE_URL and DATABASE_URL is absent; a constitutional verifier must not require
+  # resurrection of owner authority merely to pronounce the release constitutional.
+  output=$(MAIA_APP_DATABASE_URL="${MAIA_APP_DATABASE_URL:-}" DATABASE_URL="${DATABASE_URL:-}" \
+             npx tsx "$script_path" 2>&1) || exit_code=$?
   exit_code=${exit_code:-0}
 
   echo "$output"

@@ -10,9 +10,16 @@ Before inviting testers or deploying changes to any of the surfaces below, the b
 
 ```bash
 # Run on minisforum (inside the container — pg is available there)
-docker exec maia-sovereign sh -c \
-  'DATABASE_URL="$DATABASE_URL" npx tsx scripts/verify-constitution-colab.ts'
+docker exec maia-sovereign npx tsx scripts/verify-constitution-colab.ts
 ```
+
+The credential is no longer forwarded on the command line. After the PT-3 Source-custody cutover
+the runtime holds `MAIA_APP_DATABASE_URL` and no `DATABASE_URL` at all, so the older form
+(`DATABASE_URL="$DATABASE_URL" …`) would forward an empty string and the verifier would silently
+fall back to its local default — a green run against the wrong database. The verifier now reads
+`MAIA_APP_DATABASE_URL` first and `DATABASE_URL` second, so the container's own environment
+supplies whichever credential it is entitled to. *A constitutional verifier must not require
+resurrection of owner authority merely to pronounce the release constitutional.*
 
 **Pass condition:** `0 failed`. Observed in production 2026-09-06, runtime `ca5fdff44`:
 `33 passed · 0 failed · 0 warned` — a read-only run executed in-session via the founder's

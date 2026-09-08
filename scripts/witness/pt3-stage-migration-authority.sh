@@ -32,26 +32,36 @@ ENVCOMPOSE="$PROJECT/.env"
 cd "$PROJECT"
 
 # The destination must not be source-controlled (§X.3).
-git check-ignore -q .env 2>/dev/null || {
-  echo "ABORT — .env is not gitignored. Refusing to write a credential to a tracked path." >&2; exit 1; }
-echo "OK    .env is gitignored"
+for f in .env.migrate .env.postgres; do
+  git check-ignore -q "$f" 2>/dev/null || {
+    echo "ABORT — $f is not gitignored. Refusing to write a credential to a tracked path." >&2; exit 1; }
+done
+echo "OK    .env.migrate and .env.postgres are gitignored"
 
 OWNER_URL=$(grep -E '^DATABASE_URL=' "$ENVPROD" | head -1 | cut -d= -f2- || true)
+OWNER_PW=$(grep -E '^POSTGRES_PASSWORD=' "$ENVPROD" | head -1 | cut -d= -f2- || true)
 if [ -z "$OWNER_URL" ]; then
   echo "ABORT — no DATABASE_URL in .env.production. Nothing to preserve; is this already staged?" >&2
   exit 1
 fi
 
 umask 077
-touch "$ENVCOMPOSE"; chmod 600 "$ENVCOMPOSE"
-TMP=$(mktemp "$PROJECT/.env.pt3.XXXXXX")
-grep -v -E '^MIGRATE_DATABASE_URL=' "$ENVCOMPOSE" > "$TMP" 2>/dev/null || true
-printf 'MIGRATE_DATABASE_URL=%s\n' "$OWNER_URL" >> "$TMP"
-chmod 600 "$TMP"; mv "$TMP" "$ENVCOMPOSE"
-unset OWNER_URL
+# §VI (B28) — owner authority moves into SERVICE-SPECIFIC custody, not Compose interpolation.
+# deploy-context.sh passes `--env-file .env.production`, so an interpolated variable would resolve
+# from the universal file under the ordinary deploy path — precisely where it must not be.
+printf 'DATABASE_URL=%s\n' "$OWNER_URL" > "$PROJECT/.env.migrate"
+chmod 600 "$PROJECT/.env.migrate"
+if [ -n "$OWNER_PW" ]; then
+  printf 'POSTGRES_PASSWORD=%s\n' "$OWNER_PW" > "$PROJECT/.env.postgres"
+  chmod 600 "$PROJECT/.env.postgres"
+else
+  echo "WARN  no POSTGRES_PASSWORD found in .env.production — check .env.postgres by hand" >&2
+  : > "$PROJECT/.env.postgres"; chmod 600 "$PROJECT/.env.postgres"
+fi
+unset OWNER_URL OWNER_PW
 
-echo "OK    MIGRATE_DATABASE_URL staged in .env (mode $(stat -c '%a' "$ENVCOMPOSE" 2>/dev/null || echo '?'))"
+echo "OK    owner authority staged into .env.migrate and .env.postgres (mode 600)"
 echo "OK    .env.production is UNCHANGED — runtime keeps owner authority until the role exists"
 echo
 echo "Nothing about maia_app was attempted: the migration creates it. Nothing was restarted."
-echo "Next: bring the canonical Compose forward, then run the migration-authority verifier."
+echo "Next: the orchestrator brings Compose forward and verifies migration authority."

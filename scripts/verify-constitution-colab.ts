@@ -24,6 +24,7 @@
 import { Pool } from 'pg';
 
 const DATABASE_URL =
+  process.env.MAIA_APP_DATABASE_URL ||
   process.env.DATABASE_URL ||
   'postgresql://soullab@localhost:5432/maia_consciousness';
 

@@ -135,3 +135,117 @@ operates against the new constitutional schema.**
 
 ⛔ Nothing here is deployed. **PT-3 is enforced in code and not in production.** The Experiences
 migration remains held; Encounter remains held.
+
+---
+
+# Repair 5 — final bounded integration repair (§XIV: B28–B33, §III)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §XIV. Twelve permitted changes.
+**Unchanged, by ruling:** PT-3 Source doctrine · grants and seam semantics · lifecycle ontology ·
+Experience code · the Experience migration HOLD · the doorway · Encounter · unrelated runtime
+behaviour. No application logic was touched in this repair. No migration was authored or edited.
+
+## What changed, and why each was a defect and not a preference
+
+### B28 — owner secrets left the universal environment (§VI)
+`.env.production` is loaded by every service in `docker-compose.production.yml`. While it carried
+`POSTGRES_PASSWORD`, withdrawing `DATABASE_URL` withdrew a *variable*, not *authority*:
+**owner authority is any credential material sufficient to authenticate as the database owner.**
+Custody is now service-specific, as **required `env_file` entries** — not interpolated variables, so
+a missing file is a hard failure rather than a silently empty credential (§XIII):
+
+| file | contents | loaded by |
+|---|---|---|
+| `.env.postgres` | `POSTGRES_PASSWORD` | `postgres` only |
+| `.env.migrate` | owner `DATABASE_URL` | `migrate` only |
+| `.env.production` | `MAIA_APP_DATABASE_URL` | every service |
+
+### B29 / B30 / B31 — the cutover became one act
+`scripts/pt3-cutover.sh`. **One** `acquire_deploy_lock "pt3-cutover"` held across ten steps, so no
+deploy, update, rollback or migrate can enter between them; the kernel releases it when the process
+tree exits. The image is **built before quiescence** and started only at the single release act.
+Every failure after the migration commits calls `die_quiesced()` — the runtime stays stopped and
+says so, because per §X **the pre-PT-3 image is not a rollback target**: the old protocol writes
+Source by direct `INSERT` and does not understand the seam.
+
+The migration runs as the compose command directly rather than through
+`deploy-production.sh migrate`, which would re-acquire the same lock and contend with its own parent.
+
+The launcher also **refuses to run unless it is byte-identical to the accepted commit's copy** in
+the snapshot. Every witness already ran from the snapshot; the launcher is invoked from a shared
+checkout that can be on any branch, which is B19's asymmetry one level up.
+
+### B32 — the deterministic counts moved to where they are true
+The exact backfill census (11 representations · 6 custodied · 5 legacy · 17 acts, all
+`migration_legacy` · 0 member actors · 5 `representation_without_arrival` · 0 multi-arrival ·
+2 unclaimed arrivals) is asserted by `scripts/witness/pt3-verify-backfill.sh` **at step 7, while
+quiesced, before the single release act.** If the backfill is wrong, member writes never reopen.
+
+That verifier **checks its own precondition** — a recorded quiescence and a stopped
+`maia-sovereign` — and returns `REFUSED` otherwise. *A comment claiming when a number is true is
+not a falsifier.*
+
+The post-cutover witness, which runs after release, now tests **invariants**: laundering, actor
+presence, custody-matches-arrival, no hidden representation, no orphan section, every representation
+recorded, reconciliation completeness expressed as a condition rather than a number, truthful
+arrival claims. Live totals are tested as **floors** (append-only: the record may grow, never
+shrink); only the genuinely **sealed** sets — those the migration alone produces — are still tested
+by equality, and the script says which is which and why. Block 5's four unconditional `ok()` lines
+(the B27 defect surviving where nobody re-read) are now gates, and its denominator is derived live
+instead of remembered as `11`.
+
+### B33.A — `setup` no longer reconstructs the defect
+`deploy-production.sh setup` generated `POSTGRES_PASSWORD` into `.env.production` and rewrote the
+owner `DATABASE_URL` from it. **`setup` was the act that handed the entire runtime owner authority**,
+and it would have silently rebuilt what this cutover removes. It now generates owner material
+directly into `.env.postgres` / `.env.migrate` at mode 600, strips owner keys from
+`.env.production`, and refuses to touch anything once custody exists.
+
+### B33.B — a constitutional verifier no longer needs owner authority
+Every `verify-constitution-*.ts` reads `MAIA_APP_DATABASE_URL` before `DATABASE_URL`; the harness
+forwards whichever the runtime holds; the documented command forwards nothing. The old form
+`DATABASE_URL="$DATABASE_URL" …` would post-cutover forward an **empty string**, and each verifier
+would fall back to its local default — *a green run against the wrong database*, which is worse than
+a red one. *A constitutional verifier should not require resurrection of owner authority merely to
+pronounce the release constitutional.*
+
+### §III — the pool witness can no longer drift away from the code it names
+It claimed "every runtime pool connects as `maia_app`" while genuinely constructing two of five; the
+other three ran a connection expression **re-typed into the witness itself**. Now three legs, named
+separately in the verdict:
+
+- **DISCOVERY** — pool constructors are found by scanning `lib/` and `app/`. A sixth pool fails the
+  witness rather than going unwitnessed. Narrowing the scan to pass is explicitly refused in text.
+- **SOURCE** — each file is read. The rule is not "mentions `MAIA_APP_DATABASE_URL`" (a comment
+  satisfies that, and `lib/database/postgres.ts` has one) but that **no `process.env.DATABASE_URL`
+  is reachable except through `process.env.MAIA_APP_DATABASE_URL ||`**.
+- **EXERCISE** — the two importable modules actually connect, with `DATABASE_URL` deleted from the
+  process. The other three are reported as *source-asserted*, never as exercised.
+
+### B29 — the runbook now describes the instrument
+`docs/programme/WS-LIFE-OF-A-WORK_PT3_CUTOVER_RUNBOOK_2026-09-08.md` is four steps: verify the
+artifact · preflight · bring Compose forward · **run the orchestrator** · the two witnesses. The
+prior eight-step manual sequence is superseded and is not to be run.
+
+## What was verified here, and what was not
+
+| gate | result |
+|---|---|
+| `npm run check:no-supabase` | clean |
+| `npm run typecheck` | `229 errors · baseline 239 · 10 fixed · 0 regressions` |
+| `npx jest` (full suite) | 37 failing suites — **identical set before and after this change**, verified by running the suite against the stashed tree; **0 introduced** |
+| `sh -n` / `bash -n` on every changed script | parses |
+| `git check-ignore` on all 17 consumed paths | none ignored (the B8 lesson) |
+
+⛔ **NOT run here, and not claimed:** the PT-3 falsifier, the enforcement witness, the runtime pool
+witness and the backfill verifier all require a PostgreSQL instance and a Docker daemon. This
+environment has neither (`pg_isready` → no response; no `docker.sock`). Their code is reviewed and
+parses; **that is a claim about the instruments, not about a database.** *Absence of observation is
+not evidence of compliance.*
+
+## Standing
+
+⛔ Nothing is deployed. **PT-3 is enforced in code and not in production.**
+The Experiences migration remains held and the orchestrator aborts the cutover if any
+`writer_experience%` table appears. Encounter remains held. The cutover pin stays HELD pending the
+founder's act.

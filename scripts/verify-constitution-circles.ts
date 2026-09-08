@@ -62,6 +62,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 const DATABASE_URL =
+  process.env.MAIA_APP_DATABASE_URL ||
   process.env.DATABASE_URL ||
   'postgresql://soullab@localhost:5432/maia_consciousness';
 

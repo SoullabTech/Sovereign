@@ -485,7 +485,12 @@ services:
     logging: *default_logging
 
     env_file:
+      # PT-3 §VI (B28) — the owner password is Postgres's alone. `setup` wrote POSTGRES_PASSWORD
+      # into .env.production, which all fourteen services load, so ordinary runtime possessed
+      # owner-authentication material even while its pools correctly chose maia_app.
+      # Selection is not incapability.
       - .env.production
+      - .env.postgres
 
     environment:
       POSTGRES_DB: maia_consciousness
@@ -543,7 +548,17 @@ services:
         DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-}
 
     env_file:
+      # PT-3 §VI, §XIII (B28) — migration authority arrives through a MIGRATION-SPECIFIC file.
+      #
+      # Not interpolation: deploy-context.sh invokes Compose with `--env-file .env.production`, so
+      # ${MIGRATE_DATABASE_URL} would resolve from the universal file under the ordinary deploy
+      # path — exactly where owner authority must no longer be. A per-service env_file is
+      # independent of interpolation and works under every path.
+      #
+      # REQUIRED, not optional: if .env.migrate is missing Compose refuses, so an ordinary deploy
+      # cannot silently omit the boundary — the property the rejected overlay lacked.
       - .env.production
+      - .env.migrate
 
     # PT-3 §IX.1 (founder ruling 2026-09-08) — migration attribution must reach the runner.
     #
@@ -559,20 +574,6 @@ services:
       GIT_COMMIT: ${GIT_COMMIT:-}
       MIGRATION_RUN_ID: ${MIGRATION_RUN_ID:-}
 
-      # PT-3 §VII (B12) — migration authority, held apart from runtime authority.
-      #
-      # After cutover `.env.production` carries the CONSTRAINED credential and no owner credential,
-      # so every ordinary service loses owner authority by loading the same file it always loaded.
-      # `migrate` gets the owner credential back here, from ~/MAIA-SOVEREIGN/.env — Compose's own
-      # interpolation file, which is not injected into containers.
-      #
-      # ⭐ THIS IS WHY THE BOUNDARY IS DURABLE. There is no optional overlay to omit: forgetting
-      # MIGRATE_DATABASE_URL breaks MIGRATION, loudly, and never weakens the boundary. The failure
-      # mode is inverted on purpose — an ordinary deploy cannot silently restore owner authority.
-      #
-      # Empty rather than `:?` so `docker compose config` (the pre-deploy gate) still validates;
-      # the preflight asserts it is set before Step 2 runs.
-      DATABASE_URL: ${MIGRATE_DATABASE_URL:-}
 
     depends_on:
       postgres:

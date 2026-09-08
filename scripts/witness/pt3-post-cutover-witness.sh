@@ -125,71 +125,140 @@ exec_ok=$(q "SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.prona
                      || bad "maia_app cannot reach the erasure seam" "member erasure would break"
 
 echo
-echo "════════ 4. THE BACKFILL DID WHAT WAS PREDICTED (§X) ════════"
-# §XII (B27) — THESE ARE GATES, NOT COMMENTARY.
+echo "════════ 4. THE BACKFILL HOLDS AS AN INVARIANT (§X · B32) ════════"
 #
-# These lines used to print the accepted census's predictions through unconditional ok(...) calls:
-# the expected answer was displayed beside the actual one and never compared. A sentence stating the
-# expected value is not a falsifier — the same failure mode this lane has corrected twice before.
+# ⭐ B32 — INVARIANTS, NOT FROZEN PRODUCTION TOTALS.
 #
-# The migration backfill is DETERMINISTIC against the accepted census (13 Works, 11 with sections,
-# 6 with an arrival, zero multi-arrival), so these values must gate acceptance. Live-changing facts
-# are tested as INVARIANTS instead, never as frozen counts — production numerology would be brittle
-# and would fail for lawful reasons.
-expect() {  # label · actual · expected
-  if [ "$2" = "$3" ]; then ok "$1" "$2 (as predicted)"
-  else bad "$1" "got $2, the accepted census predicts $3 — §X: a data shape inconsistent with the census"; fi
+# An earlier version of this block compared LIVE totals against the accepted census
+# ("representations created … 11"). That comparison is sound exactly once — while the runtime is
+# quiesced and no member can write. This witness runs AFTER release, so one lawful member import
+# moves those numbers and a perfectly correct system would report a §X abort condition. A gate
+# that fires on lawful use is not a gate; it is a future excuse to weaken the boundary.
+#
+# The exact counts are therefore proved where they are deterministic and nowhere else:
+#   scripts/witness/pt3-verify-backfill.sh — run inside the cutover, under quiescence,
+#   BEFORE the single release act. If the backfill was wrong, the runtime never reopens.
+#
+# Here the same facts are tested as properties that must hold forever. Two classes, and the
+# distinction is the point:
+#
+#   LIVE   — grows with lawful member use. Tested by structure and by floor, never by equality.
+#   SEALED — produced by the migration backfill and by NOTHING else (every seam act writes
+#            provenance='member_act' with an actor; source_extract writes 'source_custodied';
+#            only the migration writes reconciliation rows). For these, equality IS the invariant:
+#            a change means something other than the migration manufactured legacy history.
+SEALED_LEGACY_REPRESENTATIONS=5     # legacy_interpreted_import  — migration-produced, constant
+SEALED_LEGACY_ACTS=17               # provenance='migration_legacy' — migration-produced, constant
+SEALED_RECON_MULTI_ARRIVAL=0        # census: production has zero multi-arrival Works
+FLOOR_REPRESENTATIONS=11            # append-only: may grow, may never fall below the backfill
+FLOOR_ACTS=17
+
+inv() {  # label · actual-count-that-must-be-zero · what a non-zero means
+  if [ "$2" = "0" ]; then ok "$1" "0 violations"
+  else bad "$1" "$2 violation(s) — $3 — §X abort condition"; fi
+}
+sealed() {  # label · actual · sealed value
+  if [ "$2" = "$3" ]; then ok "$1" "$2 (sealed — only the migration produces these)"
+  else bad "$1" "got $2, the migration produced $3 — something other than the backfill has manufactured legacy history — §X abort condition"; fi
+}
+floor() {  # label · actual · floor
+  if [ -n "$2" ] && [ "$2" -ge "$3" ] 2>/dev/null; then ok "$1" "$2 (≥ $3; the record is append-only and may grow)"
+  else bad "$1" "got ${2:-<none>}, below the backfill floor $3 — the lifecycle record has LOST rows — §X abort condition"; fi
 }
 
-reps_total=$(q "SELECT count(*) FROM manuscript_source_representations")
-reps_cust=$(q "SELECT count(*) FROM manuscript_source_representations WHERE custody='source_custodied'")
-reps_leg=$(q "SELECT count(*) FROM manuscript_source_representations WHERE custody='legacy_interpreted_import'")
-expect "representations created" "$reps_total" "11"
-expect "representations custodied" "$reps_cust" "6"
-expect "representations legacy_interpreted_import" "$reps_leg" "5"
+# ── SEALED ────────────────────────────────────────────────────────────────────────────────────
+sealed "legacy_interpreted_import representations" \
+  "$(q "SELECT count(*) FROM manuscript_source_representations WHERE custody='legacy_interpreted_import'")" \
+  "$SEALED_LEGACY_REPRESENTATIONS"
+sealed "acts attributed to the migration, not to a member" \
+  "$(q "SELECT count(*) FROM source_lifecycle_acts WHERE provenance='migration_legacy'")" \
+  "$SEALED_LEGACY_ACTS"
+sealed "multi-arrival reconciliation rows" \
+  "$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE kind='multiple_legacy_arrivals'")" \
+  "$SEALED_RECON_MULTI_ARRIVAL"
 
-acts_total=$(q "SELECT count(*) FROM source_lifecycle_acts")
-acts_leg=$(q "SELECT count(*) FROM source_lifecycle_acts WHERE provenance='migration_legacy'")
-expect "lifecycle acts recorded" "$acts_total" "17"
-expect "acts attributed to the migration, not a member" "$acts_leg" "17"
+# ── LIVE, tested as floors ────────────────────────────────────────────────────────────────────
+floor "representations in the lineage" \
+  "$(q "SELECT count(*) FROM manuscript_source_representations")" "$FLOOR_REPRESENTATIONS"
+floor "lifecycle acts recorded" \
+  "$(q "SELECT count(*) FROM source_lifecycle_acts")" "$FLOOR_ACTS"
 
-# The invariant, not a count: no migration-attributed act may ever carry a member actor.
-laundered=$(q "SELECT count(*) FROM source_lifecycle_acts WHERE provenance='migration_legacy' AND actor_member_id IS NOT NULL")
-[ "$laundered" = "0" ] && ok "no migration-attributed act carries a member actor" "legacy stays legacy" \
-  || bad "backfill created member-attributed history from legacy inference" "$laundered row(s) — §X abort condition"
+# ── LIVE, tested as structure ─────────────────────────────────────────────────────────────────
+#
+# THE LAUNDERING INVARIANT (§V). The one this lane got wrong first and must never get wrong again:
+# a migration-attributed act may never carry a member actor, because the earlier system's inference
+# is not the member's declaration.
+inv "no migration-attributed act carries a member actor" \
+    "$(q "SELECT count(*) FROM source_lifecycle_acts WHERE provenance='migration_legacy' AND actor_member_id IS NOT NULL")" \
+    "legacy inference has been laundered into member authorship"
 
-recon_multi=$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE kind='multiple_legacy_arrivals'")
-recon_noarr=$(q "SELECT count(*) FROM source_lifecycle_reconciliation WHERE kind='representation_without_arrival'")
-expect "multi-arrival reconciliation rows" "$recon_multi" "0"
-expect "representation_without_arrival rows" "$recon_noarr" "5"
+inv "every member act names its actor" \
+    "$(q "SELECT count(*) FROM source_lifecycle_acts WHERE provenance='member_act' AND actor_member_id IS NULL")" \
+    "an unattributed act is presented as a member's own"
 
-# Invariant: nothing may be hidden from its author, whatever the counts become in live use.
-hidden=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id FROM manuscript_sections) s
-             WHERE source_operative_representation(s.manuscript_id) IS NULL")
-[ "$hidden" = "0" ] && ok "every Work with sections has an operative representation" "nothing hidden from its author" \
-  || bad "$hidden Work(s) have sections but no operative representation" "§X: a legacy representation would be hidden"
+inv "custody is the presence of the arrival, not a word beside it" \
+    "$(q "SELECT count(*) FROM manuscript_source_representations WHERE (custody='source_custodied') <> (arrival_id IS NOT NULL)")" \
+    "a representation claims custody it cannot evidence"
 
-# Invariant: an unclaimed arrival is never laundered into a custody claim.
-claimed_wrong=$(q "SELECT count(*) FROM manuscript_source_arrivals a
-                    WHERE a.manuscript_id IS NOT NULL
-                      AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = a.manuscript_id)")
-[ "$claimed_wrong" = "0" ] && ok "no arrival claims a Work that does not exist" "claims remain truthful" \
-  || bad "$claimed_wrong arrival(s) claim a missing Work" "§X abort condition"
+inv "every Work with sections has an operative representation" \
+    "$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id FROM manuscript_sections) s WHERE source_operative_representation(s.manuscript_id) IS NULL")" \
+    "a Work's Source would be invisible to its own author"
 
+inv "no section is orphaned from the lineage" \
+    "$(q "SELECT count(*) FROM manuscript_sections s WHERE s.representation_id IS NULL
+            OR NOT EXISTS (SELECT 1 FROM manuscript_source_representations r WHERE r.id = s.representation_id)")" \
+    "Source exists outside the custody record"
+
+inv "every representation is recorded in the lifecycle" \
+    "$(q "SELECT count(*) FROM manuscript_source_representations r
+           WHERE NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.representation_id = r.id)")" \
+    "a representation entered the lineage without an act creating it"
+
+# RECONCILIATION IS COMPLETE — expressed as a condition, never as a count. The accepted census
+# said five; if production had held fifty, the correct behaviour would be fifty rows, not a defect.
+inv "every arrival-less legacy representation is reconciliation-flagged" \
+    "$(q "SELECT count(*) FROM manuscript_source_representations r
+           WHERE r.arrival_id IS NULL
+             AND NOT EXISTS (SELECT 1 FROM source_lifecycle_reconciliation c
+                              WHERE c.manuscript_id = r.manuscript_id
+                                AND c.kind = 'representation_without_arrival')")" \
+    "an unevidenced legacy representation is not flagged for founder reconciliation"
+
+inv "no arrival claims a Work that does not exist" \
+    "$(q "SELECT count(*) FROM manuscript_source_arrivals a WHERE a.manuscript_id IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM member_manuscripts m WHERE m.id = a.manuscript_id)")" \
+    "a claim is untruthful"
 
 echo
 echo "════════ 5. ORDINARY LAWFUL WORK REMAINS POSSIBLE (§IX.8) ════════"
+#
+# Also B32: these four lines used to print live totals through unconditional ok(...) calls — the
+# B27 defect, surviving in the block nobody re-read. Each is now a gate.
 works=$(q "SELECT count(*) FROM member_manuscripts")
 secs=$(q "SELECT count(*) FROM manuscript_sections")
-ok "existing Works remain visible" "$works Works, $secs sections   — census recorded 13 and 1137"
+if [ -n "$works" ] && [ -n "$secs" ] && [ "$works" -gt 0 ] && [ "$secs" -gt 0 ] 2>/dev/null; then
+  ok "member Works and their Source are intact" "$works Works, $secs sections   (census recorded 13 and 1137)"
+else
+  bad "the Source tier is empty or unreadable" "works=${works:-?} sections=${secs:-?} — §X abort condition"
+fi
 
+# Equality against a LIVE denominator, not against the remembered 11.
+with_secs=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id FROM manuscript_sections) t")
 resolved=$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id m FROM manuscript_sections) t
                WHERE source_operative_representation(t.m) IS NOT NULL")
-ok "imported Works resolve to an operative representation" "$resolved of 11 Works with sections"
+if [ -n "$with_secs" ] && [ "$resolved" = "$with_secs" ]; then
+  ok "every Work with Source resolves through the seam" "$resolved of $with_secs — resolution is total, whatever the total becomes"
+else
+  bad "some Works with Source do not resolve" "$resolved of ${with_secs:-?} — §X abort condition"
+fi
 
-blank=$(q "SELECT count(*) FROM member_manuscripts m
-            WHERE NOT EXISTS (SELECT 1 FROM manuscript_sections s WHERE s.manuscript_id=m.id)")
-ok "blank member-authored Works remain lawful" "$blank Work(s) with no Source, untouched"
+# A Work that never had Source must not have acquired one from a migration.
+inv "the backfill fabricated no Source for a Work that had none" \
+    "$(q "SELECT count(*) FROM member_manuscripts m
+           WHERE NOT EXISTS (SELECT 1 FROM manuscript_sections s WHERE s.manuscript_id = m.id)
+             AND EXISTS (SELECT 1 FROM manuscript_source_representations r WHERE r.manuscript_id = m.id)")" \
+    "a blank Work was given a representation it never earned"
+note "$(q "SELECT count(*) FROM member_manuscripts m WHERE NOT EXISTS (SELECT 1 FROM manuscript_sections s WHERE s.manuscript_id=m.id)") blank Work(s) carry no Source and were untouched"
 
 # Draft work is proven by PRIVILEGE, not by writing to a member's draft.
 draftp=$(q "SELECT count(DISTINCT table_name) FROM information_schema.role_table_grants
