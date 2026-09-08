@@ -127,10 +127,6 @@ Ratified text, verbatim:
 > production deploy unless separately authorized. If a new founder ruling is
 > required, stop and return it to me.
 
-This changed the flow's continuity and **no gate**. Every gate stands exactly as it
-stood before. It does not clear `C0`, which is unavailable production access rather
-than missing authority.
-
 ---
 
 ## Standing
