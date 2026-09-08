@@ -1,10 +1,26 @@
 # WS-DELETE-01 — Erasure Authority Amendment (S4)
 
-**Status: SEAM REPAIRED TWICE · NC-12…NC-19 GREEN, NC-19 AGAINST REAL POSTGRESQL ·
-RETURNED FOR FOUNDER REVIEW (3rd).**
+**Status: ACCEPTED — founder ruling, 2026-09-08. This defect is CLOSED.**
+Seam repaired twice · NC-12…NC-19 green, NC-19 against real PostgreSQL.
 **Review 1 refused the implementation (§2.0). Review 2 accepted the architectural shape
-and held acceptance for one concurrency defect (§2.1). Both are recorded, not erased.
-Step 4 (building PT-3) remains held.**
+and held acceptance for one concurrency defect (§2.1). Review 3 accepted the repair.**
+All three are recorded, not erased — the five original defects remain constitutionally
+instructive and stay in the record. **PT-3 Step 4 is authorized on this acceptance.**
+
+The accepted invariant, in full:
+
+```text
+lock member-scoped lifecycle subject
+  → capture the complete stable Source inventory
+    → member-scoped destructive transition, requiring positive DELETE … RETURNING
+      → enqueue exactly the captured Source refs
+        → commit or roll back as one transaction
+```
+
+**The lock is part of the constitutional boundary, not an optimization.** The accepted
+concurrency law: *a snapshot is not the relinquished set unless the boundary prevents that
+set from changing while the lifecycle act is underway.* The unlocked demonstration in the
+NC-19 witness is retained as the negative control for the lock.
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08, *PT-3 Source Custody / WS-DELETE-01 Erasure
 Authority*, §2 (S4 authorized first) and §1 (lane ownership).
@@ -125,9 +141,10 @@ nothing to widen, nothing to carry out of the transaction that gave it meaning.
 operation, running inside the caller's transaction:
 
 ```text
-capture the exact Source refs                 (read while the rows naming them exist)
-  → member-scoped DELETE … RETURNING          (positive evidence of the transition)
-    → enqueue exactly those captured refs     (only after a row comes back)
+lock the member-scoped manuscript FOR UPDATE  (the custody inventory becomes stable)
+  → capture the exact Source refs             (read while the rows naming them exist)
+    → member-scoped DELETE … RETURNING        (positive evidence of the transition)
+      → enqueue exactly those captured refs   (only after a row comes back)
 ```
 
 It returns an **outcome**, never destruction power.
@@ -178,7 +195,7 @@ asserts *nothing was enqueued*, not merely that an error was raised.
 | **NC-18** an outcome surviving a rollback | authorizes nothing — there is no call that accepts it; asserted against the module's own source |
 | Content authority handed a plainly canonical Source path | **REFUSED**, 0 inserts |
 | Mixed batch, one ungoverned path | **REFUSED entirely**, 0 inserts |
-| Statement ordering: capture → delete → enqueue | **PASS** |
+| Statement ordering: **lock → capture → delete → enqueue** | **PASS** |
 | **P9** a real relinquishment still completes fully | both refs enqueued |
 | All producers through the seam, none grandfathered | **PASS** |
 | Whole-runtime scan: the seam is the only queue inserter (comments stripped) | **PASS** |

@@ -1,0 +1,208 @@
+/**
+ * PT-3 — Source Custody falsifier. Structural half (P6, P7, P8, P11).
+ *
+ * Founder ruling 2026-09-08 authorizing Step 4. The behavioral half lives in
+ * `scripts/witness/pt3-source-custody-witness.ts` and proves the Studio does not
+ * violate the law today. THIS half is the prospective one — the reason PT-3
+ * exists at all:
+ *
+ *   Make it difficult for Writer's Studio to become capable of violating Source
+ *   custody tomorrow without visibly breaking the law.
+ *
+ * ⚠ THE FOUR POWERS ARE KEPT SEPARATE, AS RULED. Do not merge these into one
+ * allowlist. A green P8 does not prove P11; a green P11 does not prove P7. The
+ * separation is the law:
+ *
+ *   S4  queue / destruction mechanism  one governed enqueue boundary
+ *   P7  lifecycle reachability         content work cannot ENTER the manuscript
+ *                                      destructive lifecycle boundary
+ *   P8  destruction reachability       content work cannot acquire, counterfeit,
+ *                                      repurpose or pathname-cross into Source
+ *                                      destruction
+ *   P11 write reachability             content work cannot create, overwrite or
+ *                                      truncate historical Source through
+ *                                      generic vault-writing power
+ *
+ * ⛔ P11 IS EXPECTED TO FAIL AGAINST THE PRESENT IMPLEMENTATION, and it is
+ * written to the ruled law rather than to what the code currently does. The
+ * founder's instruction is explicit: stop at the falsification and return it; do
+ * not silently repair the Source-write architecture from inside the falsifier
+ * build. A falsifier weakened to accommodate the thing it exists to catch is not
+ * a falsifier.
+ */
+import { mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
+const REPO = join(__dirname, '../../../..');
+
+/** Comments stripped — the ratified C21 discipline. This file names every banned
+ *  construct in prose, and a scan reading prose as behaviour fails on exactly the
+ *  files that document their own compliance. */
+const strip = (src: string) =>
+  src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+function runtimeFiles(): string[] {
+  const out: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      if (name === 'node_modules' || name === '.next') continue;
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) walk(full);
+      else if (/\.tsx?$/.test(name) && !/__tests__/.test(full)) out.push(full);
+    }
+  };
+  walk(join(REPO, 'lib'));
+  walk(join(REPO, 'app'));
+  return out;
+}
+
+const rel = (f: string) => f.slice(REPO.length + 1);
+const find = (pattern: RegExp, except: string[] = []) =>
+  runtimeFiles()
+    .filter((f) => !except.includes(rel(f)))
+    .filter((f) => pattern.test(strip(readFileSync(f, 'utf8'))))
+    .map(rel);
+
+/* `scripts/` is EXCLUDED from every allowlist below and pinned here instead.
+   Witness fixtures legitimately write Source; without naming that exclusion,
+   `scripts/` becomes the smuggling route the scans exist to close. */
+const SCRIPT_SOURCE_WRITERS = [
+  'scripts/verify-ws01-source-custody.ts',
+  'scripts/witness/ws-delete-01-erasure-witness.ts',
+  'scripts/witness/ws-delete-01-s4-concurrency-witness.ts',
+  'scripts/witness/pt3-source-custody-witness.ts',
+];
+
+describe('P6 · Source-write locality', () => {
+  it('only the Source-arrival module writes manuscript_source_arrivals', () => {
+    expect(
+      find(/(INSERT INTO|UPDATE|DELETE FROM)\s+manuscript_source_arrivals/, [
+        'lib/manuscript/source/arrivals.ts',
+      ]),
+    ).toEqual([]);
+  });
+
+  it('the scripts/ exclusion is named, not assumed', () => {
+    const writers = readdirSync(join(REPO, 'scripts'), { recursive: true } as any) as string[];
+    const found = writers
+      .filter((f) => typeof f === 'string' && /\.ts$/.test(f))
+      .map((f) => join('scripts', f))
+      .filter((f) => {
+        try {
+          return /(INSERT INTO|UPDATE|DELETE FROM)\s+manuscript_source_arrivals/
+            .test(strip(readFileSync(join(REPO, f), 'utf8')));
+        } catch { return false; }
+      });
+    /* If a new script writes Source, this fails until someone names it here —
+       which is the visible, reviewable act the law asks for. */
+    expect(found.sort()).toEqual([...SCRIPT_SOURCE_WRITERS].sort());
+  });
+});
+
+describe('P7 · lifecycle reachability — content work cannot ENTER the destructive boundary', () => {
+  it('(a) locality: the cascade-triggering transition exists only in the seam', () => {
+    expect(find(/DELETE FROM member_manuscripts/, ['lib/storage/erasureAuthority.ts'])).toEqual([]);
+  });
+
+  it('(b) reachability: only the sanctioned lifecycle act may invoke the seam operation', () => {
+    /* Locality alone was the defect the founder found in the first P7: it proves
+       WHERE the destructive SQL lives and says nothing about WHO can reach it. A
+       content-working route calling the sanctioned helper leaves an SQL
+       allowlist perfectly green. */
+    expect(
+      find(/relinquishManuscriptSource/, [
+        'lib/storage/erasureAuthority.ts',
+        'lib/manuscript/source/eraseManuscript.ts',
+      ]),
+    ).toEqual([]);
+  });
+
+  it('(b) reachability: only the manuscript DELETE route may invoke the erasure act', () => {
+    expect(
+      find(/\beraseManuscript\b\s*[(,]|import\s*\{[^}]*\beraseManuscript\b/, [
+        'lib/manuscript/source/eraseManuscript.ts',
+        'app/api/sovereign/manuscripts/[id]/route.ts',
+      ]),
+    ).toEqual([]);
+  });
+
+  it('(b) negative control: a content-working caller obtaining deletion authority is structurally unreachable', () => {
+    /* There is no argument, flag or exported helper by which a content path can
+       obtain the transition. It must import one of two allowlisted symbols, and
+       the two tests above fail the moment anything else does. */
+    const seam = strip(readFileSync(join(REPO, 'lib/storage/erasureAuthority.ts'), 'utf8'));
+    expect(seam).not.toMatch(/export\s+(async\s+)?function\s+\w*[Dd]elete\w*Manuscript/);
+    expect(seam).toMatch(/FOR UPDATE/);
+  });
+});
+
+describe('P8 · Source-destruction reachability', () => {
+  it('content work cannot ACQUIRE Source-erasure power — there is no such export', () => {
+    const seam = require('@/lib/storage/erasureAuthority');
+    expect(Object.keys(seam).sort()).toEqual([
+      'ErasureRefused',
+      'SOURCE_NAMESPACE',
+      'WORK_VISUAL_NAMESPACE',
+      'canonicalVaultRef',
+      'eraseWorkVisualBytes',
+      'relinquishManuscriptSource',
+    ]);
+  });
+
+  it('content work cannot COUNTERFEIT it — no authority object exists to fabricate', () => {
+    const seam = strip(readFileSync(join(REPO, 'lib/storage/erasureAuthority.ts'), 'utf8'));
+    expect(seam).not.toMatch(/export\s+(interface|type|class)\s+\w*Authority\b/);
+    expect(seam).not.toMatch(/export\s+(async\s+)?function\s+\w+\([^)]*authority/i);
+  });
+
+  it('content work cannot REPURPOSE another authority — the queue has one writer', () => {
+    expect(find(/INSERT INTO vault_erasure_queue/, ['lib/storage/erasureAuthority.ts'])).toEqual([]);
+  });
+
+  it('content work cannot PATHNAME-CROSS into Source — canonical refusal holds', () => {
+    const { canonicalVaultRef, SOURCE_NAMESPACE, WORK_VISUAL_NAMESPACE } =
+      require('@/lib/storage/erasureAuthority');
+    expect(canonicalVaultRef(`${WORK_VISUAL_NAMESPACE}/../${SOURCE_NAMESPACE}/x.docx`)).toBeNull();
+    expect(canonicalVaultRef(`/${SOURCE_NAMESPACE}/x.docx`)).toBeNull();
+  });
+});
+
+describe('⛔ P11 · Source-write reachability — EXPECTED TO FALSIFY', () => {
+  /* Written to the ruled law, not to the implementation. The census already
+     established that writeVaultBytes() is truncating and caller-selects its
+     namespace; the ruling forbids weakening P11 to accommodate that.
+
+     Historical Source must be immutable BY MECHANISM, not by the improbability
+     of a timestamp-plus-hash filename collision. */
+  const vault = () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pt3-vault-'));
+    process.env.FILE_STORAGE_PATH = dir;
+    return dir;
+  };
+
+  it('(i) generic vault writing cannot target the Source namespace', async () => {
+    const { writeVaultBytes, SOURCE_VAULT_NAMESPACE } = require('@/lib/storage/fileVault');
+    vault();
+    /* The law: a generic writer handed the Source namespace must refuse. Any
+       caller — a Restore that has not been written yet included — must be unable
+       to reach Source bytes through the shared helper. */
+    await expect(
+      writeVaultBytes('manuscript-sources', 'forged', 'docx', Buffer.from('not the book')),
+    ).rejects.toThrow();
+    expect(SOURCE_VAULT_NAMESPACE).toBeDefined();
+  });
+
+  it('(ii) Source arrival is create-only — it cannot overwrite a historical artifact', async () => {
+    const { writeVaultBytes } = require('@/lib/storage/fileVault');
+    vault();
+    const original = Buffer.from('the book as it arrived');
+    await writeVaultBytes('manuscript-sources', 'same-id', 'docx', original);
+    /* Establishing a NEW artifact is permitted. Rewriting a historical one is
+       not — the second write at the same path must be refused by the mechanism,
+       not merely be unlikely. */
+    await expect(
+      writeVaultBytes('manuscript-sources', 'same-id', 'docx', Buffer.from('THE BOOK IS GONE')),
+    ).rejects.toThrow();
+  });
+});
