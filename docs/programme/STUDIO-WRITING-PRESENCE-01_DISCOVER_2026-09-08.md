@@ -192,3 +192,179 @@ open question       one predicate or two (§7)
 NOT IN THIS LANE    Finding B/C/D · Remove Work lineage ·
                     copy correction · shelf ordering
 ```
+
+---
+
+# PART II — FOUNDER RULING (2026-09-08) AND API DESIGN
+
+```
+STATUS   DESIGN · schema-free, derivation only
+BUILD    NOT AUTHORIZED
+```
+
+> **Source, writing presence, and authorship activity are three different
+> truths. None may stand in for another.**
+
+## II.0 The ruling
+
+Three different facts were hiding behind `charCount`. S2 must **not** share a
+predicate with S1/S3, and S4 must not either.
+
+```
+SOURCE EXTENT             sourceCharCount           how much immutable Source
+CURRENT WRITING EXTENT    writingCharCount          how much writing is in the
+                                                    current writing state
+WRITING PRESENCE          hasWriting                does substantive writing exist
+MEMBER AUTHORSHIP         hasMemberWritingActivity  did the member author HERE,
+                                                    not merely inherit/seed
+MEMBER WRITING TIME       lastMemberWrittenAt       when, if establishable
+```
+
+⛔ **Do not redefine `charCount`.** It stays Source extent, which is what it
+truthfully means wherever Source is meant. New facts get names that say what
+they know.
+
+## II.1 ⭐ Cases 5 and 6 ARE distinguishable — enumeration re-verified on `21e315871`
+
+The API's own comment requires this before trusting `updated_at`:
+*"If a future migration, normalisation job, or import-completion step ever
+writes updated_at, this stops being authority. Re-run the enumeration before
+trusting it again."* Re-run:
+
+```
+manuscript_working_drafts.updated_at
+  NO TRIGGER — plain DEFAULT now() on insert; every advance is EXPLICIT
+
+WRITERS THAT ADVANCE IT      always paired with SET content = …
+  draft/route.ts:463-466     save / autosave           MEMBER
+  draft/route.ts:585-588     content path              MEMBER
+  draft/revisions:179-182    restore                   MEMBER
+  draft/revisions:313-316    restore                   MEMBER
+  draft/checkpoint:146-149   checkpoint                MEMBER
+
+WRITERS THAT DO NOT TOUCH IT
+  ⭐ draft/route.ts:267-268  section-addressable conversion — SYSTEM
+     sets section_addressable_at + section_conversion_version only
+  blank/route.ts:124         insert    → updated_at == created_at
+  draft/route.ts:172         insert    → updated_at == created_at
+```
+
+⭐ **A system conversion of the draft does not move the discriminator.** The
+`updated_at > created_at` test is still authority on this SHA.
+
+### A second, independent discriminator exists
+
+```
+import seed    revision 1, note 'Initialized verbatim from source'   SYSTEM
+blank start    revision 1, note 'Started writing'                    member gesture,
+                                                                     content ''
+member act     revision_number > 1, or any other note                MEMBER
+```
+
+⭐ **Two independent means, which must agree.** That is a falsifier, not
+redundancy: if they ever disagree, the enumeration has been invalidated by a
+change nobody noticed, and `hasMemberWritingActivity` must fail closed rather
+than pick a winner.
+
+⚠️ **Recorded, adjacent, not this lane's to fix:** `studio/history`'s exclusion
+filter matches only the *import* note, so a blank manuscript's `'Started
+writing'` revision 1 surfaces as a `version_kept` act with empty content. As
+history that is arguably right — the member did start. As **writing presence**
+it must not count, and this design does not let it.
+
+## II.2 Derivation
+
+```sql
+sourceCharCount   = sum(length(s.body)) over manuscript_sections        -- UNCHANGED
+
+writingCharCount  = CASE WHEN d.id IS NOT NULL THEN length(d.content)
+                         ELSE sourceCharCount END
+
+hasWriting        = (that value, ignoring whitespace) > 0
+
+hasMemberWritingActivity = d.updated_at > d.created_at
+
+lastMemberWrittenAt      = CASE WHEN d.updated_at > d.created_at
+                                THEN d.updated_at END                  -- today's
+                                                                       -- lastWrittenAt
+```
+
+⛔ **`writingCharCount` is a CASE, never a SUM.** Source and Draft are the same
+writing at two lifecycle layers; adding them double-counts every imported book.
+
+⚠️ **On "substantive".** `hasWriting` ignores whitespace — a draft holding only
+newlines is not writing. This is a **presence test only**: it never alters,
+trims, normalizes or re-renders stored content, and nothing downstream sees a
+modified string. ⛔ It must not be mistaken for licence to normalize elsewhere;
+matching evidence against a Work remains exact.
+
+## II.3 ⭐ `hasMemberWritingActivity` stays PURE — the composition lives at S2
+
+The tempting definition is *activity AND extent*, because that is what the
+CONTINUE hero needs. **Refused.**
+
+```
+hasMemberWritingActivity = the member authored here          (authorship only)
+S2 (continuable)         = hasMemberWritingActivity && hasWriting
+```
+
+If the field silently carried an extent test, its name would lie — a value
+that knows more than it says is exactly the defect this lane exists to fix, one
+layer along. The CONTINUE-hero protection is preserved *by the conjunction*,
+not by overloading a name.
+
+This yields the states the ruling requires:
+
+```
+hasWriting  hasMemberWritingActivity  case
+   true              false            imported Source seeded into a draft
+   false             false            blank manuscript, untouched
+   false             true             ⭐ touched then emptied — NOT continuable
+   true              true             genuinely written here
+```
+
+⭐ The third row is the one the ruling names, and it falls out of keeping the
+two facts separate rather than needing its own rule.
+
+## II.4 Surface ownership
+
+```
+S1  "No writing yet"      → hasWriting
+S2  Continue / resumable  → hasMemberWritingActivity && hasWriting
+S3  ordering / feature    → writingCharCount        ⛔ not sourceCharCount
+S4  "written <when>"      → lastMemberWrittenAt, only when established
+```
+
+`pagesLabel` on a Press/Source surface keeps `sourceCharCount`. ⚠️
+`lastWrittenAt` → `lastMemberWrittenAt` is a rename with **one** consumer
+(`HomeView.tsx:337`); the value is unchanged.
+
+## II.5 Falsifiers
+
+```
+F1  untouched blank            source 0 · writing 0 · hasWriting F · activity F
+F2  touched then emptied       hasWriting F · activity T · ⭐ NOT continuable
+F3  Studio-born, real writing  source 0 · writing >0 · hasWriting T · activity T
+                               ⭐ never says "No writing yet"
+                               ⭐ can be the feature, ranked by writingCharCount
+F4  imported, no draft yet     writingCharCount == sourceCharCount
+F5  imported, seeded draft     hasWriting T · activity F · not continuable
+F6  imported, later edited     hasWriting T · activity T · continuable
+F7  ⭐ the two discriminators agree on F1–F6; a constructed disagreement
+       fails closed rather than choosing
+F8  whitespace-only draft      hasWriting F · content byte-identical in storage
+F9  sourceCharCount unchanged for every case — no surface meaning Source moves
+F10 a 200k-char Studio-born draft outranks a one-page import in feature
+       selection (the S3 inversion, stated as a test)
+```
+
+## II.6 Standing
+
+```
+ruling               RECORDED · five fields, four questions
+enumeration          ⭐ RE-VERIFIED on 21e315871
+cases 5 vs 6         ⭐ DISTINGUISHABLE — two independent means
+schema change        NONE — every value derives from data already stored
+BUILD                NOT AUTHORIZED
+adjacent, unfixed    'Started writing' revision 1 in studio/history
+```
