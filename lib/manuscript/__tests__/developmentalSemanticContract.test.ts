@@ -165,9 +165,17 @@ describe('provenance moved because the semantic contract moved', () => {
        -03 for an unrelated reason — DEVELOPMENTAL-READER-03 (2026-09-05) took
        raw section ids out of member-facing claim prose without touching the
        phenomenon family or the classifier. Both literals are pinned so that a
-       future move of either has to be argued for, not absorbed. */
+       future move of either has to be argued for, not absorbed.
+
+       The reader moved again to -05, and here is the argument. WS-DEVELOP-
+       SECTION-RUN-CONFORMANCE-01 (2026-09-08) rewrote one sentence of rule 1:
+       `section-run` was defined as contiguous and then described as naming "any
+       sections in the sequence", and a production read of 2026-09-07 lost 27
+       claims to `run_not_as_read` on `claims[26] refs[3]`. The classifier did
+       not move — the phenomenon family is untouched, and the two versions are
+       pinned apart precisely so a reader repair cannot drift the classifier. */
     expect(CLASSIFIER_VERSION).toBe('DEVELOPMENTAL-PHENOMENON-04');
-    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-04');
+    expect(READER_VERSION).toBe('DEVELOPMENTAL-READER-05');
     expect(promptContractHash()).toHaveLength(64);
   });
 
