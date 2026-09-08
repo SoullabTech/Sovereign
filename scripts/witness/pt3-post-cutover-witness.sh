@@ -33,20 +33,31 @@ fi
 q() { docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc "$1" 2>/dev/null || true; }
 
 echo "════════ 1. RUNTIME OPERATES AS THE CONSTRAINED ROLE (§XI) ════════"
-for svc in maia-sovereign maia-api maia-comms-worker maia-rlm; do
-  docker ps --format '{{.Names}}' | grep -qx "$svc" || { note "$svc not running"; continue; }
-  app=$(docker exec "$svc" printenv MAIA_APP_DATABASE_URL 2>/dev/null || true)
-  own=$(docker exec "$svc" printenv DATABASE_URL 2>/dev/null || true)
+#
+# ⭐ DISCOVERED, NOT ASSUMED. An earlier version asked about a hardcoded list of four services —
+# which is how three database-using workers (embed, summary, media) stayed out of the cutover set
+# until the compose audit found them. The constitutional condition is POSSESSION of the owner
+# credential, so the only sound question is: which running container holds one?
+checked=0
+for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
+  [ "$c" = "maia-postgres" ] && continue
+  app=$(docker exec "$c" printenv MAIA_APP_DATABASE_URL 2>/dev/null || true)
+  own=$(docker exec "$c" printenv DATABASE_URL 2>/dev/null || true)
+  # Only containers that touch the database at all are in scope.
+  [ -n "$app" ] || [ -n "$own" ] || continue
+  checked=$((checked+1))
   app_role=$(printf '%s' "$app" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
   own_role=$(printf '%s' "$own" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
-  if [ "$app_role" = "maia_app" ] && [ -z "$own" ]; then
-    ok "$svc runs as maia_app and holds no owner credential" "app role=maia_app, DATABASE_URL absent"
-  elif [ "$app_role" != "maia_app" ]; then
-    bad "$svc does not run as maia_app" "MAIA_APP_DATABASE_URL role=${app_role:-<absent>} — §X: ordinary runtime still receives owner authority"
+  if [ -n "$own" ]; then
+    bad "$c still possesses the owner credential" "DATABASE_URL role=${own_role:-?} — §X abort condition. An ordinary deploy that did not name docker-compose.pt3-cutover.yml reverts the cutover."
+  elif [ "$app_role" = "maia_app" ]; then
+    ok "$c runs as maia_app and holds no owner credential" "MAIA_APP_DATABASE_URL role=maia_app, DATABASE_URL absent"
   else
-    bad "$svc still receives owner authority" "DATABASE_URL role=${own_role:-?} is still present — §X abort condition"
+    bad "$c does not run as maia_app" "MAIA_APP_DATABASE_URL role=${app_role:-<absent>} — §X abort condition"
   fi
 done
+[ "$checked" -gt 0 ] || bad "no database-using container was observed" "cannot pronounce on a runtime it cannot see"
+note "$checked database-using container(s) discovered and checked"
 
 echo
 echo "════════ 2. PROTECTED SOURCE CANNOT BE MUTATED BY ORDINARY AUTHORITY (§XI) ════════"
