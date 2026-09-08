@@ -97,7 +97,19 @@ no PR · no deploy.
 **F-1, F-3 and F-4 remain live semantic-ear evidence.** The rerun after this repair measures
 them again. Absorbing them now would have destroyed the evidence they constitute.
 
-## 6 · Owed
+## 6 · Carried forward — an E3 acceptance constraint (founder, 2026-09-08)
+
+> **A MAIA Encounter notice is never just its text. Its text has authority only within its
+> server-owned scope. A future surface may not discard that scope and present the sentence as an
+> unqualified whole-Work claim.**
+
+⛔ **This does not open E3.** It is recorded here so that when a presentation surface is
+constituted, this is an acceptance condition it must already satisfy rather than a discovery
+made afterwards. The repair put the scope on the record; a surface that drops it on the way to
+the writer would re-create F-2 downstream of every guard in this module — the same defect, one
+layer further out, where none of S1–S7 can see it.
+
+## 7 · Owed
 
 1. ⛔ **G8 rerun on this commit**, founder-run from the product-authorized shell — whole Work,
    33 windows, with `scope` now printed beside every surviving notice.
