@@ -259,6 +259,73 @@ gap is recorded rather than hidden: a writer who opens the same book on a second
 device gets the default until a preference store exists. Naming it here so it is
 a known limitation rather than a silent failure of F-3.
 
+## 4b · The browser acceptance instrument — RATIFIED 2026-09-08
+
+Ratified in conversation before this transcription, and recorded here unchanged.
+**Nothing in this section is new.** It was deliberately held unrecorded while the
+upstream DEVELOP re-witness at `6345b8e08` was open, because beginning to improve
+a downstream acceptance record while its upstream predicate is unresolved is how
+*gated* quietly becomes *mostly proceeding anyway*. That witness has now PASSED,
+which is what authorized this transcription and nothing else.
+
+**Subject: `d863d4df5`.** The implementation is frozen. Changing it before these
+run would move the subject being witnessed.
+
+**Why an instrument at all.** The automated gates prove what can be proven
+without a browser: the pure decisions, and the ORDER in which the component calls
+them. They cannot prove a real browser honours that order under a real scroll.
+These eight observations are that missing half, fixed in advance so the result
+cannot be read backwards from whatever happens.
+
+```
+1   scroll from the start through far-off sections
+    → the manuscript keeps flowing · no blank territory · no scroll jump
+    [persistent shells + measured heights]
+
+2   type in a section · scroll far away · scroll back
+    → the words are there
+    [capture before eviction]
+
+3   type · switch to SECTION · switch back
+    → the words are there
+    [capture before the view change — the third disappearance]
+
+4   Backspace at a section start
+    → "Sections stay separate here." · no merge · no modal
+    [F-2]
+
+5   rail click to a far section from a distant window
+    → it arrives
+    [mount, then scroll]
+
+6a  the gold current row follows the observed manuscript place
+
+6b  `s=` follows the same observed manuscript place
+
+7   WHOLE MANUSCRIPT → SECTION
+    → Section opens where you were reading
+    [transfer, never infer]
+```
+
+**6a and 6b are witnessed SEPARATELY**, even when performed in one scrolling
+action. They share a source of truth today, which is exactly why: a regression
+leaving one correct and the other stale is the precise failure this
+implementation was built to prevent, and one combined observation would hide it.
+
+### The negative expectation — verbatim, and load-bearing
+
+> **Before Whole Manuscript has established an observed place, no gold row is
+> shown and `s=` is not advanced to the arrival section.**
+
+⛔ Recorded so a future tester does not read the absence as a defect and "fix" it,
+reintroducing the lie the observed-place seam exists to prevent. **An absent
+marker there is the instrument working.** `ManuscriptOutline` draws its gold row
+only when a real current section is known; `placeForMode` returns `null` in Whole
+view until Whole has observed something; and that null reaches presentation
+unchanged, by design.
+
+---
+
 ## 5 · Not in this lane
 
 Find/Replace · Statistics · Timeline · Word Web · shelf ordering · split/merge
