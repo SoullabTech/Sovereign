@@ -108,6 +108,34 @@ describe('FR-C · an unavailable destination must SAY its state, not merely dim'
     expect(discover?.unavailableBecause).toBe('unbuilt');
   });
 
+  it('a built capability seen from a room that does not host it says WHERE, not "not built"', () => {
+    /* Found by the founder on the Develop page: the rail there said Notes,
+       Goals, Materials, Structure and Versions were "not built yet". They are
+       built — Develop simply does not host them. That is FR-C working and
+       stating a falsehood plainly, which is worse than dimness: a member reads
+       it and learns their own Notes do not exist. */
+    const elsewhere = shellDestinations(true, undefined, {
+      satisfiedInRoom: [],          // the Develop room hosts nothing in-room
+      manuscriptId: 'm1',
+    }).flatMap((g) => g.destinations);
+    for (const id of ['notes', 'goals', 'materials', 'structure', 'versions', 'statistics']) {
+      const d = elsewhere.find((x) => x.id === id);
+      expect(d?.actionable).toBe(false);
+      expect(d?.unavailableBecause).toBe('served-elsewhere');
+      expect(d?.room).toBe('Write');
+    }
+    /* and a genuinely unbuilt one is still called unbuilt */
+    expect(elsewhere.find((x) => x.id === 'goals')?.unavailableBecause).not.toBe('unbuilt');
+    expect(elsewhere.find((x) => x.id === 'timeline')?.unavailableBecause).toBe('unbuilt');
+  });
+
+  it('every in-room destination names the room that hosts it', () => {
+    for (const d of STUDIO_MAP.flatMap((g) => g.destinations)) {
+      if (d.availability === 'in-room') expect(d.room).toBeTruthy();
+      else expect(d.room).toBeUndefined();
+    }
+  });
+
   it('says where a ratified function is already served instead of calling it absent', () => {
     const insights = shellDestinations(true, undefined, { manuscriptId: 'm1' })
       .flatMap((g) => g.destinations)

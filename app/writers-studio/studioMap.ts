@@ -137,6 +137,20 @@ export interface StudioDestination {
    */
   servedBy?: { mode: string; label: string };
   /**
+   * FR-C, at the right granularity — WHICH ROOM an `in-room` capability lives in.
+   *
+   * Found by the founder on the Develop page: the rail there said Notes, Goals,
+   * Materials, Structure and Versions were "not built yet". They are built. The
+   * Develop room simply does not host them, and the shell had only one word for
+   * "you cannot take this from here".
+   *
+   * That is the FR-C rule working and saying the wrong thing — honest that a
+   * destination cannot be taken, wrong about why, which is worse than dimness
+   * because it states a falsehood plainly. A member reading it learns their
+   * Notes do not exist.
+   */
+  room?: string;
+  /**
    * TRUE when this destination only makes sense once the member has a
    * manuscript. Hidden (not disabled) before then — an empty Studio should
    * offer the one real door, not a row of greyed-out ones.
@@ -244,16 +258,16 @@ export const STUDIO_MAP: StudioGroup[] = [
          Notes is bound by FR-02 as the writer's mutable thinking beside the
          Work — distinct from a Keep (a preserved state of the writing) and from
          a material of kind `note` (source brought into the Work). */
-      { id: 'materials', label: 'Materials', availability: 'in-room', count: 24 },
-      { id: 'structure', label: 'Structure', availability: 'in-room' },
+      { id: 'materials', label: 'Materials', availability: 'in-room', room: 'Write', count: 24 },
+      { id: 'structure', label: 'Structure', availability: 'in-room', room: 'Write' },
       /* NOTES v1 — BUILT. The writer's mutable thinking beside the writing
          (FR-02, refined by FR-07). A panel in WRITE, per FUNCTION-PLACEMENT:
          "each surfaces inside the mode where it is needed — none becomes a
          sixth mode". The map's reference count of 12 is 04's, and the shell
          strips it; the rail shows a figure only once the room has counted the
          member's own notes. */
-      { id: 'notes', label: 'Notes', availability: 'in-room', count: 12 },
-      { id: 'versions', label: 'Versions', availability: 'in-room' },
+      { id: 'notes', label: 'Notes', availability: 'in-room', room: 'Write', count: 12 },
+      { id: 'versions', label: 'Versions', availability: 'in-room', room: 'Write' },
       /* GOALS v1 — BUILT. Ratified in six places (FIELD-MAP §1 "Goals strip",
          §5 "active goals", D-003's showable-measurement list, D-019's band,
          FUNCTION-PLACEMENT, maiaOffering.ts) and now implemented.
@@ -263,7 +277,7 @@ export const STUDIO_MAP: StudioGroup[] = [
          room is a DOOR. When EXPLORE ships it becomes the primary room by taking
          another door onto the same object — no data migration, no second
          semantics, and no temporary Goals system to unbuild. */
-      { id: 'goals', label: 'Goals', availability: 'in-room' },
+      { id: 'goals', label: 'Goals', availability: 'in-room', room: 'Write' },
     ],
   },
   {
@@ -284,7 +298,7 @@ export const STUDIO_MAP: StudioGroup[] = [
     destinations: [
       /* Built: StudioConversation, situated through workSituation.ts. A panel
          beside the manuscript, not a route — `in-room`. */
-      { id: 'conversations', label: 'Conversations', availability: 'in-room' },
+      { id: 'conversations', label: 'Conversations', availability: 'in-room', room: 'Write' },
       /* FR-03. Three different relationships with possibility, none of them a
          duplicate of another:
              Discover      what might be worth noticing?
@@ -315,7 +329,7 @@ export const STUDIO_MAP: StudioGroup[] = [
          computes words, sections and versions kept — counted, never judged,
          exactly the figures FIELD-MAP §7 permits. The rail drew it unavailable
          while the same screen displayed it. */
-      { id: 'statistics', label: 'Statistics', availability: 'in-room' },
+      { id: 'statistics', label: 'Statistics', availability: 'in-room', room: 'Write' },
       /* Ratified STRUCTURE VIEWS, unbuilt. Timeline and Threads are named
          together in FIELD-MAP §3 ("Timeline · Threads · Flow · Table views"),
          and §4 is explicit that Threads is a Structure concept in the target.
@@ -422,6 +436,14 @@ export function assertStudioMapHonest(map: StudioGroup[] = STUDIO_MAP): void {
          question. */
       if (d.servedBy && isBuilt(d.availability)) {
         throw new Error(`Studio map: "${d.label}" is built and also claims to be served elsewhere.`);
+      }
+      /* A room is where an in-room capability lives. On anything else it would
+         be naming a host for something that has none. */
+      if (d.room && d.availability !== 'in-room') {
+        throw new Error(`Studio map: "${d.label}" names a room but is not opened in one.`);
+      }
+      if (d.availability === 'in-room' && !d.room) {
+        throw new Error(`Studio map: "${d.label}" is opened in a room but does not say which.`);
       }
     }
   }
@@ -626,10 +648,15 @@ export function shellDestinations(
       /* FR-C — one reason, and the order matters. A destination that is not
          built is not "waiting for a manuscript"; saying so would promise it
          arrives when one exists. */
+      /* FR-C — one reason, and the order matters. A destination that is not
+         built is not "waiting for a manuscript"; saying so would promise it
+         arrives when one exists. And a BUILT capability seen from a room that
+         does not host it is not unbuilt — it is elsewhere, and saying "not
+         built yet" would tell a member their own Notes do not exist. */
       const unavailableBecause: ShellDestination['unavailableBecause'] = actionable
         ? undefined
         : !reachable
-          ? (d.servedBy ? 'served-elsewhere' : 'unbuilt')
+          ? (d.servedBy || d.availability === 'in-room' ? 'served-elsewhere' : 'unbuilt')
           : 'needs-manuscript';
       const { count: _mapCount, ...rest } = d;
       return {

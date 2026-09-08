@@ -92,7 +92,10 @@ export function StudioRailItem({
     : shellState === 'needs-manuscript'
       ? 'needs a manuscript'
       : shellState === 'served-elsewhere'
-        ? `in ${destination.servedBy?.label ?? 'another room'}`
+        /* Where it actually lives: the mode that serves a ratified function
+           under another name (Insights → Develop), or the room that hosts a
+           built in-room capability (Notes → Write). */
+        ? `in ${destination.servedBy?.label ?? destination.room ?? 'another room'}`
         : shellState === 'unbuilt'
           ? 'not built yet'
           : null;
