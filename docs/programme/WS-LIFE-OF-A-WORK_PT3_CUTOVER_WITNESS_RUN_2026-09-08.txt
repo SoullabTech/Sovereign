@@ -1,0 +1,71 @@
+
+── ORDINARY AUTHORITY CANNOT ─────────────────────
+PASS  O1    cannot UPDATE protected Source content (was A3.2 — 2 rows)
+            permission denied for table manuscript_sections
+PASS  O2    cannot DELETE protected Source content (was A3.3 — 1 row)
+            permission denied for table manuscript_sections
+PASS  O3    cannot rewrite the Historical Source (was A4.1 — 1 row)
+            permission denied for table manuscript_source_arrivals
+PASS  O4    cannot disable the constitutional refusal
+            must be owner of table manuscript_sections
+PASS  O5    cannot create a Source Representation outside the governed seam
+            permission denied for table manuscript_sections
+PASS  O6    cannot smuggle content through bookkeeping authority
+            permission denied for table manuscript_source_arrivals
+PASS  O8    cannot declare currency without performing the act
+            permission denied for table source_lifecycle_acts
+PASS  O9    cascade cannot erase Source without erasure being commissioned
+            PT-3: destruction of protected Source (manuscript_sections) refused — erasure must be commissioned as erasure 
+PASS  O10   ordinary authority is not the owner credential and is not superuser
+            current_user=maia_app superuser=false
+
+── LAWFUL AUTHORITY CAN ──────────────────────────
+PASS  L1    ordinary authority can import a Historical Source
+            arrival 865c8519
+PASS  L2    a representation is created WITH its custody, in one act
+            custody=source_custodied sections=1
+PASS  L3    custody that cannot be established creates NOTHING (atomic, not partial)
+            PT-3 seam: custody could not be established for arrival 061dc415-7d97-4c5b-b2f8-8e2675e813f7 — nothing created
+PASS  L4    re-extraction creates a new representation and alters no earlier one
+            operative=new · earlier digest unchanged
+PASS  L5    replacement moves the operative lineage without rewriting the former
+            operative lineage moved · former text intact
+PASS  L6    withdrawal removes currency and destroys nothing
+            withdrawn rows still present=1
+PASS  L7    ordinary authority can still perform custody bookkeeping
+            claimed 1 row(s)
+PASS  L8    erasure, once commissioned, destroys — and only then
+            deleted 1 manuscript · protected rows remaining=0
+
+── HISTORICAL TRUTH ──────────────────────────────
+PASS  H1    the history distinguishes each act by name, never one generic state
+            arrival → extraction → re_extraction → re_extraction → replacement → replacement → replacement → replacement → withdrawal
+PASS  H2    why it changed is recoverable
+            reasons present
+PASS  H3    what remains historical is still present and unrewritten
+            3 representations retained
+PASS  H4    what was erased is recoverable as a fact, without its content
+            erasure acts retained after the content is gone
+
+── DEPLOYMENT EVIDENCE ───────────────────────────
+PASS  D1    the migration ledger can carry attribution
+            filename,applied_at,checksum,applied_by_authority,applied_by_commit,applied_run_id
+PASS  D2    this migration is attributable to its authority, commit and run
+            attributed rows=1
+PASS  D3    protected tiers are owned by custody authority, not the application role
+            owner=soullab
+
+── CUTOVER ───────────────────────────────────────
+PASS  C1    a blank member-authored Work remains lawful under the constrained role
+            created with no arrival and no sections
+PASS  C2    existing Works remain visible to ordinary authority
+            2 Works readable
+PASS  C3    an imported Work resolves to its OPERATIVE representation, not to every cut ever made
+            operative cut=2 sections · all representations=3 sections
+PASS  C4    the superseded representation is retained and simply not current
+            1 historical sections retained
+PASS  C5    runtime cannot assume owner authority
+            permission denied to set role "soullab"
+
+════════════════════════════════════════════════════════════════════════
+passed 29 · failed 0

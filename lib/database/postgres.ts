@@ -10,7 +10,8 @@ function createPool(): Pool {
   // Use DATABASE_URL if available, otherwise individual connection parameters
   if (process.env.DATABASE_URL) {
     return new Pool({
-      connectionString: process.env.DATABASE_URL,
+      // PT-3 §VIII.A — prefer the constrained application credential; see lib/db/postgres.ts.
+      connectionString: process.env.MAIA_APP_DATABASE_URL || process.env.DATABASE_URL,
       // Connection pool settings
       max: 20,
       idleTimeoutMillis: 30000,

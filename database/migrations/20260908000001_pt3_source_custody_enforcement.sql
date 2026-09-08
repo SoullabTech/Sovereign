@@ -145,7 +145,20 @@ CREATE TABLE IF NOT EXISTS source_lifecycle_acts (
   operative boolean NOT NULL,
 
   occurred_at timestamptz NOT NULL DEFAULT now(),
-  actor_member_id uuid NOT NULL,
+
+  -- §V (founder ruling 2026-09-08) — LEGACY BACKFILL LAW.
+  --
+  -- A migration may preserve legacy operational state AS legacy operational state. It may not
+  -- rewrite that state as though the member declared it. So a migration-attributed record is
+  -- marked as one and carries NO member actor: the earlier system's behaviour is a fact about the
+  -- system, and signing it with the member's id would launder inference into authorship.
+  provenance text NOT NULL DEFAULT 'member_act'
+    CHECK (provenance IN ('member_act', 'migration_legacy')),
+
+  -- NULL only for migration_legacy: nobody performed that act.
+  actor_member_id uuid,
+  CONSTRAINT lifecycle_member_act_has_actor
+    CHECK ((provenance = 'member_act') = (actor_member_id IS NOT NULL)),
 
   -- Why, in the vocabulary of the act. Never content: an erasure act must not preserve what the
   -- erasure destroyed. The vault_erasure_queue precedent — errno only, never the path.
@@ -470,23 +483,89 @@ GRANT EXECUTE ON FUNCTION source_operative_arrival(uuid) TO maia_app;
 REVOKE ALL ON FUNCTION source_write_representation(uuid, uuid, uuid, jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION source_assert_owner(uuid, uuid) FROM PUBLIC;
 
--- Backfill lifecycle history for representations created by the §2 backfill, so currency is
--- derivable for existing Works from the moment this migration lands. Custody-bearing rows only:
--- a legacy representation with no arrival gets an extraction act naming it operative, because it
--- IS what those Works are working from — the honest record, not a manufactured custody claim.
-INSERT INTO source_lifecycle_acts (manuscript_id, act, representation_id, operative, actor_member_id, reason)
-SELECT r.manuscript_id, 'extraction', r.id, true, m.member_id, 'backfilled at PT-3 enforcement'
-  FROM manuscript_source_representations r
-  JOIN member_manuscripts m ON m.id = r.manuscript_id
- WHERE NOT EXISTS (
-   SELECT 1 FROM source_lifecycle_acts a WHERE a.representation_id = r.id);
+-- ── §V/§VI — legacy backfill, and the ambiguity it must NOT resolve ─────────────
+--
+-- Production holds history created before this authority existed. Migration preserves it without
+-- claiming member intent. Two rules govern what follows:
+--
+--   DETERMINABLE   the pre-migration runtime deterministically selected one arrival — verifyCustody
+--                  read `ORDER BY created_at ASC LIMIT 1`. Where exactly one arrival exists, that
+--                  selection is not a guess: it is the only thing the old code could have done.
+--                  A migration_legacy record makes that implicit machine behaviour explicit.
+--
+--   AMBIGUOUS      more than one arrival, so the old ordering PICKED one among several. Preserving
+--                  it as currency would convert an incidental property into an authority — the very
+--                  substitution §III forbids. Migration records the ambiguity as data and creates
+--                  NO currency act. Those Works stay on transitional compatibility until a member
+--                  or the founder reconciles them.
 
-INSERT INTO source_lifecycle_acts (manuscript_id, act, arrival_id, operative, actor_member_id, reason)
-SELECT r.manuscript_id, 'arrival', r.arrival_id, true, m.member_id, 'backfilled at PT-3 enforcement'
+CREATE TABLE IF NOT EXISTS source_lifecycle_reconciliation (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  manuscript_id uuid NOT NULL,
+  kind text NOT NULL CHECK (kind IN ('multiple_legacy_arrivals', 'representation_without_arrival')),
+  detail jsonb NOT NULL,
+  noticed_at timestamptz NOT NULL DEFAULT now(),
+  resolved_at timestamptz,
+  resolved_note text
+);
+
+CREATE INDEX IF NOT EXISTS idx_slr_open ON source_lifecycle_reconciliation(manuscript_id)
+  WHERE resolved_at IS NULL;
+
+COMMENT ON TABLE source_lifecycle_reconciliation IS
+  'Legacy Source state a migration REFUSED to resolve. §V: where existing data are genuinely '
+  'ambiguous, migration must not manufacture certainty — it returns the ambiguity as data. A row '
+  'here means the Work has no governed currency and is running on transitional compatibility.';
+
+-- Determinable: exactly one arrival on the Work. The old runtime's selection was forced.
+INSERT INTO source_lifecycle_acts
+  (manuscript_id, act, representation_id, operative, provenance, actor_member_id, reason)
+SELECT r.manuscript_id, 'extraction', r.id, true, 'migration_legacy', NULL,
+       'legacy operational state preserved at PT-3 enforcement'
   FROM manuscript_source_representations r
-  JOIN member_manuscripts m ON m.id = r.manuscript_id
+ WHERE NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.representation_id = r.id)
+   AND (SELECT count(*) FROM manuscript_source_arrivals x WHERE x.manuscript_id = r.manuscript_id) <= 1;
+
+INSERT INTO source_lifecycle_acts
+  (manuscript_id, act, arrival_id, operative, provenance, actor_member_id, reason)
+SELECT r.manuscript_id, 'arrival', r.arrival_id, true, 'migration_legacy', NULL,
+       'legacy operational state preserved at PT-3 enforcement'
+  FROM manuscript_source_representations r
  WHERE r.arrival_id IS NOT NULL
-   AND NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.arrival_id = r.arrival_id);
+   AND NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.arrival_id = r.arrival_id)
+   AND (SELECT count(*) FROM manuscript_source_arrivals x WHERE x.manuscript_id = r.manuscript_id) <= 1;
+
+-- Ambiguous: several arrivals. Recorded, not resolved.
+INSERT INTO source_lifecycle_reconciliation (manuscript_id, kind, detail)
+SELECT m.manuscript_id, 'multiple_legacy_arrivals',
+       jsonb_build_object(
+         'arrival_count', m.n,
+         'earliest_arrival_id', m.earliest,
+         'note', 'pre-migration runtime read ORDER BY created_at ASC; that ordering is not authority')
+  FROM (
+    SELECT a.manuscript_id, count(*) AS n,
+           (array_agg(a.id ORDER BY a.created_at ASC, a.id ASC))[1] AS earliest
+      FROM manuscript_source_arrivals a
+     WHERE a.manuscript_id IS NOT NULL
+     GROUP BY a.manuscript_id HAVING count(*) > 1
+  ) m
+ WHERE NOT EXISTS (
+   SELECT 1 FROM source_lifecycle_reconciliation r
+    WHERE r.manuscript_id = m.manuscript_id AND r.kind = 'multiple_legacy_arrivals');
+
+-- A representation with no arrival behind it. Genuine legacy history (`legacy_interpreted_import`),
+-- recorded so it is visible rather than mistaken for custody.
+INSERT INTO source_lifecycle_reconciliation (manuscript_id, kind, detail)
+SELECT r.manuscript_id, 'representation_without_arrival',
+       jsonb_build_object('representation_id', r.id, 'custody', r.custody)
+  FROM manuscript_source_representations r
+ WHERE r.arrival_id IS NULL
+   AND NOT EXISTS (
+     SELECT 1 FROM source_lifecycle_reconciliation x
+      WHERE x.manuscript_id = r.manuscript_id AND x.kind = 'representation_without_arrival');
+
+REVOKE INSERT, UPDATE, DELETE ON source_lifecycle_reconciliation FROM maia_app;
+GRANT SELECT ON source_lifecycle_reconciliation TO maia_app;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- 8. Position uniqueness belongs to the representation, not the Work

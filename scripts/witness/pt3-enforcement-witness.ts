@@ -34,13 +34,35 @@ function check(block: string, id: string, label: string, pass: boolean, detail =
 
 const sha = (s: string) => createHash('sha256').update(Buffer.from(s, 'utf-8')).digest('hex');
 
+/**
+ * Erase a member's Works the only lawful way: commission, then delete, IN ONE TRANSACTION.
+ *
+ * The seam opens a transaction-local window, so a `source_commission_erasure` issued on the pool
+ * authorizes nothing for the next statement — each pool query is its own transaction. This teardown
+ * originally got that wrong and was refused, which is the seam behaving exactly as designed: an
+ * erasure window that leaked across statements would be the side-effect erasure §II forbids.
+ */
+async function eraseWorksOf(pool: Pool, memberId: string) {
+  const c = await pool.connect();
+  try {
+    await c.query('BEGIN');
+    const works = await c.query<{ id: string }>(
+      `SELECT id FROM member_manuscripts WHERE member_id = $1`, [memberId]);
+    for (const w of works.rows) {
+      await c.query(`SELECT source_commission_erasure($1,$2,$3)`, [w.id, memberId, 'witness teardown']);
+    }
+    await c.query(`DELETE FROM member_manuscripts WHERE member_id = $1`, [memberId]);
+    await c.query('COMMIT');
+  } catch { await c.query('ROLLBACK').catch(() => {}); } finally { c.release(); }
+}
+
 function assertDisposable(url: string, which: string) {
   const local = /@(127\.0\.0\.1|localhost)(:\d+)?\//.test(url);
-  const disposable = /\/[a-z0-9_]*(falsifier|fixture|shadow|disposable)[a-z0-9_]*(\?|$)/i.test(url);
+  const disposable = /\/[a-z0-9_]*(falsifier|fixture|shadow|disposable|legacy)[a-z0-9_]*(\?|$)/i.test(url);
   if (!local || !disposable) {
     throw new Error(
       `Refusing to run: ${which} must name a local host AND a disposable database ` +
-      `(…falsifier / …fixture / …shadow / …disposable). Source protection is never proven by ` +
+      `(…falsifier / …fixture / …shadow / …disposable / …legacy). Source protection is never proven by ` +
       `attacking production or real member material.`);
   }
 }
@@ -319,21 +341,91 @@ async function main() {
     check('4', 'D3', 'protected tiers are owned by custody authority, not the application role',
       owns.rows[0].owner !== 'maia_app', `owner=${owns.rows[0].owner}`);
 
+    // ══ BLOCK 5 — CUTOVER (§VIII.E) — the world after runtime is constrained ══
+    //
+    // Enforcement that broke ordinary reading would be a worse outcome than the defect it fixed.
+    // These check the three things a cutover must NOT cost: visible Works, imported Works that
+    // resolve to the representation their author is actually working from, and blank
+    // member-authored Works that never had a Source at all.
+
+    const legacyMember = randomUUID();
+    await owner.query(
+      `INSERT INTO members (id, passkey, username, password_hash, name, email, onboarded)
+       VALUES ($1,$2,$3,$4,$5,$6,true)`,
+      [legacyMember, `PT3C-${legacyMember.slice(0, 8)}`, `pt3c_${legacyMember.slice(0, 8)}`,
+       'x'.repeat(64), 'PT-3 Cutover', `pt3c+${legacyMember.slice(0, 8)}@fixture.invalid`]);
+
+    // An imported Work, created the lawful way, then re-cut once.
+    const cwArr = await app.query<{ id: string }>(
+      `INSERT INTO manuscript_source_arrivals
+         (member_id, source_kind, source_text, source_text_hash, extraction_method, extractor_version)
+       VALUES ($1,'member_supplied_text',$2,$3,'member-supplied','n/a') RETURNING id`,
+      [legacyMember, SOURCE_TEXT, sha(SOURCE_TEXT)]);
+    const cwMs = await app.query<{ id: string }>(
+      `INSERT INTO member_manuscripts (member_id, title, provenance)
+       VALUES ($1,'Cutover import','member_uploaded') RETURNING id`, [legacyMember]);
+    const cwId = cwMs.rows[0].id;
+    await app.query(`SELECT source_extract($1,$2,$3,$4::jsonb)`,
+      [cwId, legacyMember, cwArr.rows[0].id, JSON.stringify(CUT)]);
+    const cwRe = await app.query<{ id: string }>(`SELECT source_re_extract($1,$2,$3,$4::jsonb,$5) AS id`,
+      [cwId, legacyMember, cwArr.rows[0].id, JSON.stringify(CUT_B), 'cutover re-cut']);
+
+    // A blank member-written Work: no arrival, no sections. §III — still lawful.
+    const blank = await app.query<{ id: string }>(
+      `INSERT INTO member_manuscripts (member_id, title, provenance)
+       VALUES ($1,'Cutover blank','member_written') RETURNING id`, [legacyMember]);
+    check('5', 'C1', 'a blank member-authored Work remains lawful under the constrained role',
+      !!blank.rows[0].id, 'created with no arrival and no sections');
+
+    // Ordinary reading, as the application will actually do it.
+    const visible = await app.query<{ n: string }>(
+      `SELECT count(*) AS n FROM member_manuscripts WHERE member_id = $1`, [legacyMember]);
+    check('5', 'C2', 'existing Works remain visible to ordinary authority',
+      visible.rows[0].n === '2', `${visible.rows[0].n} Works readable`);
+
+    // The scoped read the ten call sites now perform.
+    const scoped = await app.query<{ heading: string }>(
+      `SELECT heading FROM manuscript_sections
+        WHERE manuscript_id = $1
+          AND representation_id = COALESCE(source_operative_representation($1), representation_id)
+        ORDER BY position`, [cwId]);
+    const allRows = await owner.query<{ n: string }>(
+      `SELECT count(*) AS n FROM manuscript_sections WHERE manuscript_id = $1`, [cwId]);
+    check('5', 'C3', 'an imported Work resolves to its OPERATIVE representation, not to every cut ever made',
+      scoped.rows.length === CUT_B.length && Number(allRows.rows[0].n) === CUT.length + CUT_B.length,
+      `operative cut=${scoped.rows.length} sections · all representations=${allRows.rows[0].n} sections`);
+
+    // The superseded cut is still there, unrewritten — enforcement did not cost history.
+    const superseded = await owner.query<{ n: string }>(
+      `SELECT count(*) AS n FROM manuscript_sections
+        WHERE manuscript_id = $1 AND representation_id <> $2`, [cwId, cwRe.rows[0].id]);
+    check('5', 'C4', 'the superseded representation is retained and simply not current',
+      Number(superseded.rows[0].n) === CUT.length, `${superseded.rows[0].n} historical sections retained`);
+
+    // §VIII.A/E — runtime cannot become the owner.
+    let gotOwner = false; let ownerDetail = '';
+    try {
+      await app.query(`SET ROLE soullab`);
+      gotOwner = true; ownerDetail = 'SET ROLE soullab SUCCEEDED';
+    } catch (e) { ownerDetail = (e as Error).message.slice(0, 90); }
+    check('5', 'C5', 'runtime cannot assume owner authority', !gotOwner, ownerDetail);
+
+    await eraseWorksOf(owner, legacyMember);
+    await owner.query(`DELETE FROM members WHERE id = $1`, [legacyMember]).catch(() => {});
+
   } finally {
-    await owner.query(`SELECT source_commission_erasure(id, member_id, 'witness teardown')
-                         FROM member_manuscripts WHERE member_id = $1`, [memberId]).catch(() => {});
-    await owner.query(`DELETE FROM manuscript_source_arrivals WHERE member_id = $1`, [memberId]).catch(() => {});
-    await owner.query(`DELETE FROM member_manuscripts WHERE member_id = $1`, [memberId]).catch(() => {});
-    await owner.query(`DELETE FROM manuscript_source_arrivals WHERE member_id <> $1
-                         AND original_filename IS NULL AND source_text = 'x'`, [memberId]).catch(() => {});
-    await owner.query(`DELETE FROM members WHERE id = $1 OR username LIKE 'pt3x_%'`, [memberId]).catch(() => {});
+    await eraseWorksOf(owner, memberId);
+    /* Unclaimed arrivals belong to no Work and no erasure names them; they are left for the
+       disposable database to take with it. */
+    await owner.query(`DELETE FROM members WHERE id = $1 OR username LIKE 'pt3x_%'`, [memberId])
+      .catch(() => {});
     await owner.end(); await app.end();
   }
 
   const pad = (s: string, n: number) => (s.length >= n ? s : s + ' '.repeat(n - s.length));
   const names: Record<string, string> = {
     '1': 'ORDINARY AUTHORITY CANNOT', '2': 'LAWFUL AUTHORITY CAN',
-    '3': 'HISTORICAL TRUTH', '4': 'DEPLOYMENT EVIDENCE',
+    '3': 'HISTORICAL TRUTH', '4': 'DEPLOYMENT EVIDENCE', '5': 'CUTOVER',
   };
   let block = '';
   for (const l of lines.sort((a, b) => a.block.localeCompare(b.block))) {

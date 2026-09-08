@@ -13,10 +13,24 @@ import type { Pool, QueryResult, QueryResultRow } from 'pg';
 const isServer = typeof window === 'undefined';
 let pool: Pool | null = null;
 
+/**
+ * PT-3 §VIII.A (founder ruling 2026-09-08) — runtime authority separation.
+ *
+ * Ordinary runtime connects as the CONSTRAINED application role; the owner/migration credential
+ * belongs to the deploy path alone. `MAIA_APP_DATABASE_URL` is that constrained credential.
+ *
+ * The fallback to `DATABASE_URL` is the UN-CUT-OVER state, and it is deliberately visible rather
+ * than silent: while it is in effect the process is running as the owner and **PT-3 is not enforced
+ * in production**, however correct the migration and application code are. `scripts/witness/
+ * pt3-cutover-readiness.ts` fails while that is true.
+ */
 if (isServer) {
   const { Pool: PgPool } = require('pg');
   const newPool = new PgPool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+    connectionString:
+      process.env.MAIA_APP_DATABASE_URL ||
+      process.env.DATABASE_URL ||
+      'postgresql://soullab@localhost:5432/maia_consciousness',
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
