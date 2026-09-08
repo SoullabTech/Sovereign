@@ -4,6 +4,20 @@
 **For**: a session with Mac Studio / production terminal access. Opening prompt: *"perform SEL-0 production-store discovery read-only; prove the owning store before exporting anything."*
 **Governing instrument** (read before acting, do not re-derive): `WS2-DEVELOPMENTAL_INTELLIGENCE_AUDIT_2026-09-08.md` §4 — SEL-0 frozen order, manifests A/B/C, native-field boundary, selection-neutral sort, `N ≥ 40` floor.
 
+## Placement
+
+Pointers only — the governing text lives at the referenced sections and is not restated here.
+
+```text
+PLACEMENT
+Phase:      Roadmap §3 — Phase 1.5 · SEL-0 Selection Falsifier
+Gate:       Roadmap §6 — SEL-0 gates Phase 2
+F-7 status: Roadmap §7 — Phase 1.5 is exempt from F-7 repair;
+             F-7 remains the next blocking gate before Phase 2
+```
+
+Roadmap: `WS2-DEVELOPMENTAL_INTELLIGENCE_ROADMAP_2026-09-08.md`.
+
 > This file exists because the mission was ruled in conversation. A session on another machine reads the repository, not that conversation — the same gap that put the baseline conditions and the SEL-0 blinding order at risk twice before.
 
 ---
