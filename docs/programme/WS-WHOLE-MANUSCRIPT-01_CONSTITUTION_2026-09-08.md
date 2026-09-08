@@ -1,7 +1,8 @@
 # WS-WHOLE-MANUSCRIPT-01 — Constitution
 
-**Standing: DISCOVER / CONSTITUTE. BUILD NOT AUTHORIZED.**
-Opened by founder act 2026-09-08. No code written.
+**Standing: BUILD AUTHORIZED (founder, 2026-09-08 — see §4).**
+Opened by founder act 2026-09-08. §1-3 were written at DISCOVER, before any
+code; §4 records the rulings that authorized BUILD and the first-cut boundary.
 
 > **North star (founder).** A writer may return to a whole manuscript as a
 > continuous living work without giving up the safety, identity, and
@@ -157,19 +158,106 @@ that needs it. *Section for precision, Whole Manuscript for flow.*
 
 ---
 
-## 4 · Open questions for founder ruling before BUILD
+## 4 · Founder rulings — 2026-09-08. BUILD AUTHORIZED.
 
-1. **Mounting strategy.** All 262 sections mounted at once (simple, heavy), or
-   windowed around the viewport (light, but a section can scroll out mid-edit)?
-   This decides whether "dirty but unmounted" is a state that can exist.
-2. **What the boundary gesture DOES.** Backspace at a section start: silently
-   nothing, a quiet inline note, or an offer of the explicit merge command?
-3. **Where the view switch lives**, and whether the choice persists per Work or
-   per member.
-4. **Whether Find/Replace is in scope at all.** Recommendation: no — separate
-   lane, because it mutates across sections.
+**F-1 · Mounting is WINDOWED, and capture precedes unmount.**
+262 live editors are not mounted at once. Virtualize around the viewport under
+one invariant:
 
----
+> **A section may not unmount until its exact visible state has been
+> SYNCHRONOUSLY captured into the existing staged-section map.**
+
+The focused section is **pinned** and cannot be virtualized away while the
+writer is editing it. After capture, *dirty-but-unmounted is lawful* — the
+census established that staging is keyed by `sectionId` and already holds
+several dirty sections independently of the DOM.
+
+```
+visible editor
+     ↓ before unmount — synchronous
+staged Map<sectionId, body>
+     ↓
+existing draft-level save queue
+```
+
+⛔ No new persistence system. This is the same discipline `captureOnLeave`
+already keeps at the section switch, applied to a second event: scrolling out of
+view. The failure it prevents is identical — reading an editor's value after the
+DOM has moved on is how the last thing someone typed disappears.
+
+**F-2 · Backspace at a section boundary refuses, quietly.**
+At the start of Section 87, Backspace does not merge into Section 86. A brief
+inline message — *"Sections stay separate here."* No modal, no warning dialog,
+no automatic trip to Structure. **Merge is not offered from this view in the
+first cut**: merge, split and reorder remain explicit structural capabilities
+owned elsewhere. *Whole Manuscript is for flow, not covert topology editing.*
+
+**F-3 · The view switch sits at the top of the manuscript field, remembered per
+member × Work.**
+`SECTION | WHOLE MANUSCRIPT`, at the top of the canvas — not in Settings, not
+buried in the sidebar. Persistence is **member × Work**, not a universal member
+preference: someone may keep one book almost permanently in Whole Manuscript
+while working section-by-section on another. Default is **Section** for a Work
+that has never had a choice made.
+
+⛔ **Age and provenance do not choose for the writer.** An old import is not
+inferred into Whole Manuscript. The writer chooses how to enter their book.
+This preference is **view state, never manuscript state**.
+
+**F-4 · Find/Replace is out of scope.**
+Whole Manuscript must not manufacture Find/Replace merely because the writing
+now appears continuous. Cross-section replacement has its own mutation,
+settling, review and undo questions. Separate lane.
+
+**F-5 · Cross-section selection is not in the first cut.**
+*(Ruled after the founder noticed §3 identified Q3 as having no existing
+behaviour and then failed to carry it forward as an owed ruling — a real gap in
+this document, corrected here rather than quietly filled.)*
+
+Selection stays inside one canonical section. Whole Manuscript gives **visual
+and navigational continuity, not a flattened editing buffer**. A writer scrolls
+seamlessly from 86 into 87; a text selection does not become one mutable range
+spanning both.
+
+```
+continuous reading        ✅
+continuous scrolling      ✅
+edit any visible section  ✅
+section identity          ✅
+cross-boundary mutation   ❌
+silent repartition        ❌
+```
+
+Cross-section selection for copying, or for asking MAIA, may be worth designing
+later. It arrives deliberately or not at all.
+
+### First-cut boundary
+
+```
+windowed continuous section mounting
+existing staged Map + save queue
+capture-before-unmount
+focused section pinned
+rail click → scroll to section
+Section / Whole Manuscript switch
+preference per member × Work
+quiet boundary refusal
+Keep a version unchanged
+Working Draft only
+Source untouched
+
+NO: Find/Replace · cross-section selection · merge/split/reorder ·
+    new persistence model · flattened manuscript
+```
+
+⚠️ **One thing F-3 needs that this lane cannot supply.** *member × Work*
+persistence implies account-level storage, and no preference table exists —
+adding one is a migration, which this lane is not authorized to author and which
+carries the BRANCH GATE consequences witnessed repeatedly on 2026-09-07. The
+first cut therefore stores the choice **per device**, keyed by Work, and the
+gap is recorded rather than hidden: a writer who opens the same book on a second
+device gets the default until a preference store exists. Naming it here so it is
+a known limitation rather than a silent failure of F-3.
 
 ## 5 · Not in this lane
 
