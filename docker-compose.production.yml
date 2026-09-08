@@ -539,6 +539,20 @@ services:
     env_file:
       - .env.production
 
+    # PT-3 §IX.1 (founder ruling 2026-09-08) — migration attribution must reach the runner.
+    #
+    # The runner records applied_by_commit and applied_run_id, but the migrate service had no
+    # `environment:` block, so an exported GIT_COMMIT never crossed into the container and every
+    # migration would have recorded `commit=unknown`. §X makes that an abort condition, so the
+    # attribution machinery could not have been satisfied without this passthrough.
+    #
+    # Empty defaults keep this inert: unset, the runner falls back exactly as before. Nothing here
+    # is a secret — a commit SHA and a run id are the two facts that make an owner-level schema act
+    # attributable, which is the whole point of §VIII.
+    environment:
+      GIT_COMMIT: ${GIT_COMMIT:-}
+      MIGRATION_RUN_ID: ${MIGRATION_RUN_ID:-}
+
     depends_on:
       postgres:
         condition: service_healthy
