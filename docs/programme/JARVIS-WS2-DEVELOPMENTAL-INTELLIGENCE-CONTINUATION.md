@@ -221,7 +221,7 @@ PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
   product gap          OPEN — Studio lacks developmental selection
   SEL-0 role           PRE-BUILD ACCEPTANCE STANDARD (redesignated 2026-09-08)
   Manifest C status    frozen production-surface evidence · NOT the input contract
-  selector contract    Q1–Q6 INCORPORATED · Q7–Q8 RETURNED · NOT RATIFIED
+  selector contract    RATIFIED — founder act, 2026-09-08 · Q1–Q8
   R1 · R2 · R3         NOT OPENED
   THRESHOLD            UNSET
   FOUNDER RANKING      NOT STARTED
@@ -234,9 +234,9 @@ PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: founder ruling on selector-contract questions Q7 and Q8, in
-`sel-0/SEL-0_REDESIGNATION_AND_SELECTOR_CONTRACT_2026-09-08.md`. Production discovery is
-CLOSED and is no longer the next act.
+**Next executable act**: open R1 · R2 · R3 — freeze the SEL-0 acceptance instrument before
+any selector implementation is written. The product-architecture phase of SEL-0 is CLOSED.
+Production discovery is CLOSED and is no longer the next act.
 
 **Historical note, kept rather than rewritten.** Earlier in this file the next act was the
 production-discovery child, and the manifests were unfrozen with `N` undetermined. That was

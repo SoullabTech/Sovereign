@@ -93,12 +93,15 @@ FAIL → gap remains open · diagnose implementation · the benchmark does not m
 
 ## 2 · Product contract — Q1–Q6 INCORPORATED
 
-**Status: Q1–Q6 ruled and incorporated. NOT RATIFIED — two new questions returned (§3).**
+**Status: RATIFIED — founder act, 2026-09-08. Q1–Q8 ruled and incorporated.**
 
-> **Provenance of the Q1–Q6 rulings, kept rather than erased.** The ruling text was drafted
-> as a recommendation and delivered as a founder ruling in the same message. It is recorded
-> here as a founder act of 2026-09-08. If a separate adoption act was intended, this block
-> flips to PROPOSED on request; nothing downstream depends on the distinction yet.
+> **Adoption, explicit.** *"I adopt Q1–Q6 as recorded in `676aa8e59` as my founder
+> rulings."* — founder, 2026-09-08.
+>
+> **Provenance, kept rather than erased.** The Q1–Q6 wording originated as a recommendation
+> and was adopted afterwards by the explicit act above, not by implication from the
+> instruction to incorporate it. Q7 and Q8 were ruled directly. The record of how each
+> became authoritative is retained.
 
 ### 2.1 Invocation condition — Q2 RULED
 
@@ -106,10 +109,19 @@ Selection is permitted **only** when all hold:
 
 ```text
 a  a frozen developmental reading is open in the Develop room
-b  the reading holds >= 2 lawful candidates
-c  the writer has NOT named an observation in this act
-d  the route receives an EXPLICIT writer-originating selection commission
+b  the lawful candidate set is non-empty                  (>= 1, see note)
+c  not every lawful candidate has already been offered in this commission
+d  the writer has NOT named an observation in this act
+e  the route receives an EXPLICIT writer-originating selection commission
 ```
+
+⚠️ **(b) was `>= 2` in the pre-ruling draft; corrected to `>= 1`.** That threshold was my
+drafting, and Q6 contradicts it: at exactly one lawful candidate a `>= 2` gate would skip
+the selector entirely and force the sole observation to be offered, making
+`DECLINE_TO_SELECT` unreachable precisely where restraint may be the correct developmental
+act. With one candidate there is nothing to order, but there is still something to judge —
+whether it is worth raising at all. Applying Q6, not defaulting a new question; reversible
+if that reading is wrong.
 
 ⛔ **(c) is necessary but not sufficient.** Absence of `observationKey` never confers
 permission to choose — that would convert missing specificity into authority.
@@ -190,10 +202,28 @@ the founder's SEL-0 ranking, the threshold, any benchmark annotation
 ### 2.6 Output form — Q6 RULED
 
 ```text
-ORDERING over the lawful candidates + declared confidence
-        OR
-DECLINE_TO_SELECT
+GATES — determined BEFORE the selector is invoked, deterministically
+
+  NO_LAWFUL_CANDIDATE                     zero lawful candidates exist
+  NO_REMAINING_CANDIDATE_THIS_COMMISSION  lawful candidates exist, but all have
+                                          already been offered in this commission
+
+SELECTOR OUTCOMES — only reached when a lawful, not-yet-offered candidate exists
+
+  ORDERING over those candidates + declared confidence
+  DECLINE_TO_SELECT                       candidates exist, confidence insufficient
 ```
+
+**The two gates are structural, not judgments.** Q7 rules `NO_LAWFUL_CANDIDATE` is
+determined before invocation — when the set is empty the selector is **not invoked**.
+`NO_REMAINING_CANDIDATE_THIS_COMMISSION` is determined the same way and for the same
+reason: it is mechanical set arithmetic over Q8's commission-scoped offer record, carrying
+no interpretation. Neither gate is a member of the comparative ranking statistic; both
+belong in SEL-0 as deterministic product-contract gates.
+
+**`DECLINE_TO_SELECT` is terminal within its commission.** The inputs are unchanged by a
+decline, so re-invoking on a subsequent "what else?" would deterministically decline again.
+This is mechanical, not a further authority question.
 
 **No forced pick.** Decline is a first-class product outcome, not an error path. The
 founder-side SEL-0 protocol must carry the corresponding *"none warrants raising now"*, or
@@ -203,6 +233,22 @@ ruled here.
 
 Confidence is internal. It is **not surfaced as a number** — a percentage beside a
 developmental observation reads as authority, which §2.8 forbids.
+
+### 2.6a Disclosure on an empty set — Q7 RULED
+
+```text
+DEFAULT     state neutrally that there is no observation currently available
+            to raise; do NOT volunteer that the writer dismissed everything,
+            and never frame the writer's lifecycle choices as a problem
+
+ON REQUEST  if the writer explicitly asks why, disclose the structural
+            provenance truthfully and neutrally (dismissed · superseded),
+            WITHOUT recommending that a dismissal be reversed
+```
+
+*Transparency on request is not authority to reopen lifecycle decisions.* Q5 gives the
+writer lifecycle authority; a system that volunteers the cost of exercising it would erode
+that authority while formally respecting it.
 
 ### 2.7 Product surface — Q4 RULED
 
@@ -232,6 +278,29 @@ writer-addressed observation, or turn selection into instruction. The selector o
 *after and beneath* that rule, inside a scope the writer already chose, only on explicit
 commission.
 
+### 2.8a Offer memory — Q8 RULED
+
+MAIA may retain which observations she has offered **only for the life of the current
+explicit selection commission**, solely so `"what else?"` advances monotonically.
+
+```text
+offered_this_commission
+  MAY   prevent re-offering inside THIS commission
+  MAY NOT  alter standing
+  MAY NOT  imply keep | dismiss | unresolved
+  MAY NOT  affect later commissions
+  MAY NOT  become longitudinal Work understanding
+```
+
+**Ignoring an offer is not a dismissal. Rejecting one and asking "what else?" is not a
+dismissal.** When the commission ends, prior offers confer no authority on future selection.
+
+**Persistence and authority are not the same thing.** If `ask_threads` / `ask_turns`
+physically persists offer provenance for transcript or audit purposes, that persistence is
+permitted — the selector is contractually forbidden from consuming it outside the
+originating commission. *Persistence of MAIA's conduct does not confer future selection
+authority.*
+
 ### 2.9 Runtime integration point — the actual Studio path
 
 ```text
@@ -254,58 +323,63 @@ ordering, no derived persisted state.
 
 ---
 
-## 3 · Q1–Q6 CLOSED · two genuinely new questions returned
+## 3 · Consistency review — Q1–Q8 · RESULT: no unresolved product-authority question
 
-Q1–Q6 are ruled and incorporated above. Working through their consequences surfaced two
-questions that did not exist before those rulings and that cannot be safely defaulted.
+Contract-only review. Nothing implemented, no provider called, Manifest B/C and the source
+snapshot not opened, R1/R2/R3 not opened.
 
-### Q7 · An empty lawful candidate set is not the same as a decline
+### One real contradiction, found and resolved by applying an existing ruling
 
-Q3 and Q5 together can empty the candidate set — every observation dismissed, or every one
-superseded. §2.6 then yields `DECLINE_TO_SELECT`, and MAIA says she has no clear one. **But
-that is not what happened.** Two different states collapse into one utterance:
+**`>= 2` lawful candidates as an invocation condition contradicted Q6.** At exactly one
+lawful candidate, that gate skipped the selector and forced the sole observation to be
+offered — making `DECLINE_TO_SELECT` unreachable at the precise point where restraint is
+most likely to be the correct developmental act. Corrected to `>= 1` (§2.1b).
 
-```text
-DECLINE     candidates exist; confidence insufficient
-EMPTY       no lawful candidate exists at all
-```
+The threshold was **my drafting, not a founder ruling**, and Q6 decides it: decline must be
+reachable wherever a candidate exists. So this applies Q6 rather than defaulting a new
+question. At n=1 there is nothing to order but there is still something to judge — whether
+it is worth raising at all. Reversible if that reading is wrong.
 
-Saying "I don't have a clear one" when the truth is "you have dismissed all of them" is a
-false account of MAIA's own state, and this project treats that as a defect rather than a
-kindness.
-
-The follow-on is why this is an authority question, not a wording one: **if MAIA discloses
-that the set is empty because the writer dismissed everything, is that pressure to
-un-dismiss?** Q5 gives the writer lifecycle authority; a system that reports the
-consequence of exercising it may erode that authority while formally respecting it.
+### Two mechanical specifications, carrying no interpretation
 
 ```text
-a  EMPTY is a distinct outcome, disclosed plainly
-b  EMPTY is a distinct outcome, disclosed without naming the cause
-c  EMPTY collapses into DECLINE   (rejected in the draft as dishonest — needs a ruling)
+NO_REMAINING_CANDIDATE_THIS_COMMISSION   specified as a GATE before invocation,
+                                         matching Q7's treatment of the empty set —
+                                         set arithmetic over Q8's commission record
+
+DECLINE_TO_SELECT                        terminal within its commission: inputs are
+                                         unchanged by a decline, so re-invoking would
+                                         deterministically decline again
 ```
 
-### Q8 · Is a MAIA offer recorded, and if so does that create authority?
+Both follow the founder's own framing of these as mechanical rather than interpretive.
 
-Q4 permits "what else?" to advance to the next candidate. Standings are `keep | dismiss |
-unresolved`, plus UNSET. **An observation MAIA offered and the writer simply ignored stays
-UNSET** — indistinguishable from one never offered. §2.4 permits reading which observations
-have open `ask_threads`, but an offer that produced no thread leaves no trace at all.
+### One tension recorded, resolved, not escalated
+
+§2.4 permits the selector to read **which observations already have open `ask_threads`**,
+and threads persist across commissions. Q8 confines *offer* memory to one commission. Since
+an engaged offer typically produces a thread, thread-presence is a **partial proxy** for
+past offers, so some cross-commission trace of MAIA's conduct survives.
+
+Resolved on the distinction the founder already drew: a **thread records the writer's act of
+engaging** — writer-authored, permitted, and durable; an **offer records MAIA's act** —
+which is what Q8 confines. The proxy is imperfect (an ignored offer leaves no thread) and
+the authority basis differs. Recorded rather than escalated; reversible by narrowing §2.4.
+
+### Checks that came back clean
 
 ```text
-NO RECORD   MAIA may re-offer the same observation every session — nagging,
-            and it makes "what else?" non-monotonic within a session
-
-RECORD      new persisted state describing MAIA's own past behaviour toward
-            this writer — which is precisely the kind of accumulated memory
-            the programme is careful not to let acquire authority
+writer precedence vs selection      no overlap — selector not consulted when a key is named
+Q3 superseded vs Q5 dismissed       independent exclusions, no interaction
+Q7 gates vs Q6 decline              disjoint by construction; gates precede invocation
+Q4 one-at-a-time vs ORDERING        internal ordering, single surfaced offer, no conflict
+Q8 scope vs longitudinal memory      no path from offer memory to Work understanding
+anchor boundaries                    commission is a field, not an anchor; both frozen
+                                     parsers and SUPPORTED_ANCHORS untouched
+anti-steering posture (Q1)           preserved in §2.8; selector operates after and beneath
 ```
 
-Neither is obviously right. Recording is the smaller technical change and the larger
-constitutional one. **A middle form exists — offers retained for the life of the
-commission and discarded after, so "what else?" is monotonic within a conversation and
-carries nothing across sessions** — but choosing it is a founder act, since it decides how
-much MAIA is permitted to remember about her own conduct.
+**No genuine unresolved product-authority question remains.**
 
 ---
 
@@ -314,7 +388,7 @@ much MAIA is permitted to remember about her own conduct.
 ```text
 SEL-0                  PRE-BUILD ACCEPTANCE STANDARD (redesignated)
 product gap            OPEN — Studio lacks developmental selection
-selector contract      Q1–Q6 INCORPORATED · Q7–Q8 RETURNED · NOT RATIFIED
+selector contract      RATIFIED — founder act, 2026-09-08 · Q1–Q8 incorporated
 Manifest C             frozen production-surface evidence, NOT the input contract
 R1 · R2 · R3           NOT OPENED
 threshold              UNSET
