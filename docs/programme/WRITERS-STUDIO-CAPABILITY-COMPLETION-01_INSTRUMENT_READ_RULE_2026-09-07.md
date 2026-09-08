@@ -43,6 +43,37 @@ initial render says unavailable      ≠  hydrated capability state
 **All three were reported as findings before the instrument was understood.**
 None was a defect in the code.
 
+## A FOURTH READING — and the one the repo had already answered
+
+```text
+prose describing a prohibition   ≠   the prohibited behaviour returning
+```
+
+Two FR-15 absence tests failed on the module's own docstring: it says *"there is
+no `lastSupportedAt`, no cadence"*, and a scan for `lastSupportedAt` matched the
+sentence saying it is absent. **A file that documents its own compliance fails a
+scan looking for the thing it documents.**
+
+This repository had already hit it and already answered it — the Circles
+verifier's **C6 and C21** strip comments before scanning, for exactly this
+reason, after C21 failed on a page whose prose said *"nothing here reads
+`circle_invites`"*. The founder's ruling then applies unchanged here:
+
+> *A prose ban must never read as the banned behaviour returning.*
+
+**The reusable rule:**
+
+> ### An absence test must examine EXECUTABLE SURFACE, not prose describing the prohibition.
+
+Practically: strip block and line comments before any scan asserting something
+is *not* there. Presence assertions about documentation may still read raw
+source — they are asking a different question.
+
+This one belongs to a different family from the three above. Those were timing
+and subject errors — an instrument read before its subject had settled. This is
+a **scope** error: the instrument read the right subject at the right time and
+could not tell code from commentary about code.
+
 ## Why this is not ceremony
 
 > **It prevents the testing apparatus from manufacturing defects.**
