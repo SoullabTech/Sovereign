@@ -31,6 +31,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { occasionFor } from '@/lib/writersStudio/goalSupportOccasion';
+import { encouragementFor } from '@/lib/writersStudio/goalEncouragement';
 
 export interface WriterGoalRow {
   id: string;
@@ -197,10 +198,16 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
        in the handling of the act. Nothing is generated: this is the seam a
        support path must come through, and it is minted nowhere else. */
     const goal = inserted.rows[0];
-    return NextResponse.json(
-      { goal, occasion: occasionFor('declared', { id: goal.id, support: goal.support }) },
-      { status: 201 },
-    );
+    const occasion = occasionFor('declared', { id: goal.id, support: goal.support });
+    /* PHASE 1 — produced in the handling of the act that occasioned it and
+       returned with that act's response. There is no endpoint to redeem an
+       occasion and nothing stores one, so it cannot be fetched twice and a
+       re-render cannot reproduce it (FR-15). Null is a lawful, ordinary
+       outcome (FR-16) and is never surfaced as a failure. */
+    const encouragement = occasion
+      ? await encouragementFor(occasion, { statement: goal.statement })
+      : null;
+    return NextResponse.json({ goal, occasion, encouragement }, { status: 201 });
   } catch (error) {
     console.error('[goals] declare failed', error);
     return NextResponse.json({ error: 'Could not record that goal just now' }, { status: 500 });
