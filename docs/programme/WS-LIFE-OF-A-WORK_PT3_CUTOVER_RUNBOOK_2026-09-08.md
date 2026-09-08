@@ -145,9 +145,16 @@ member actor · **5** `representation_without_arrival` · **0** multi-arrival ·
 ## Step 4 · `[MAC→PROD]` — the two acceptance witnesses
 
 ```bash
-git show "$ACCEPTED_SHA":scripts/witness/pt3-cutover-readiness.sh    | ssh soullab@minisforum 'sh -s'
-git show "$ACCEPTED_SHA":scripts/witness/pt3-post-cutover-witness.sh | ssh soullab@minisforum 'sh -s'
+ssh soullab@minisforum "sh $MAIA_BUILD_CONTEXT/scripts/witness/pt3-cutover-readiness.sh"
+ssh soullab@minisforum "PT3_ACCEPTED_SHA=$ACCEPTED_SHA sh $MAIA_BUILD_CONTEXT/scripts/witness/pt3-post-cutover-witness.sh"
 ```
+
+⭐ **Run these from the snapshot, not by piping the file over ssh.** The post-cutover witness sources
+its Source-currency invariants from `scripts/witness/pt3-currency-invariants.sh` — one shared
+definition, so the witness and the disposable regression ask the same question and cannot drift
+apart. Piped over stdin it has no sibling to source, and it returns **INCONCLUSIVE** rather than
+pretending it can judge. (The orchestrator's step 12 already runs both this way; this is the
+re-run for the record.)
 
 **Both must return `READY`.** `INCONCLUSIVE` is never success — a verifier that observed nothing
 has proved nothing. The post-cutover witness is production-safe: no `INSERT`, `UPDATE` or `DELETE`,
@@ -177,6 +184,7 @@ as *authorized*. PT-3 finishing authorizes nothing about it.
 | a second production runtime outside the census | discovery roots include `apps/`; orchestrator step 3 builds and stamps both images; step 12 and witness block 1 prove both |
 | a surviving container holding stale owner material | orchestrator steps 4 and 10; witness block 1 sweeps every owner-material form |
 | the cutover changing unrelated production configuration | `pt3-compose.sh` — every PT-3 Compose act uses production's own invocation (B39) |
+| Source currency lost with nothing explaining it | witness block 4 — `pt3-currency-invariants.sh`, proven by `pt3-currency-absence-regression.sh` |
 | owner custody missing at the moment it is needed | orchestrator step 1 (before the outage) and step 9 (before removal) — aborts, not warnings |
 | `maia_app` can escalate | witness block 2 |
 | owner credential in the universal environment | witness block 7 · `deploy-production.sh setup` no longer writes it |

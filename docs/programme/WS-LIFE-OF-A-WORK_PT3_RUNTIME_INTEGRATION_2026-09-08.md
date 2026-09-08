@@ -469,3 +469,121 @@ has neither. Per §X.5 they remain explicitly unrun until disposable infrastruct
 
 ⛔ Nothing is deployed. **PT-3 is enforced in code and not in production.**
 Experiences migration HELD. Encounter HELD.
+
+---
+
+# Repair 8 — witness-only: the Source-currency invariants were wrong
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §IV–§X (disposable rehearsal).
+**Scope:** `pt3-post-cutover-witness.sh`, one disposable regression fixture, this record and the
+runbook. ⛔ **The migration is not defective and was not touched** — nor the lifecycle schema, seam,
+backfill, application behaviour, grants, roles, Experience or Encounter. *The migration survived
+the test; do not modify it to make the old witness pass.*
+
+## What the rehearsal found
+
+Running the repair-6 block-4 invariants against the **real backfill output** on a disposable
+database, two fired on a lawful state:
+
+| | actual | asserted |
+|---|---|---|
+| I4 "every Work with sections has an operative representation" | **1** | 0 |
+| I6 "every representation is recorded in the lifecycle" | **1** | 0 |
+
+Both on the multi-arrival Work. `20260908000001…:527,536` guards its currency-act inserts with
+`count(arrivals) <= 1` and writes a `multiple_legacy_arrivals` reconciliation row instead; the
+table's own comment says the Work then *"has no governed currency and is running on transitional
+compatibility"*. Currency derives only from lifecycle acts, so no act means no operative
+representation — **by design**.
+
+The invariants therefore reported the system's refusal to manufacture authority as a §X abort
+condition. That is the exact failure PT-3 exists to prevent, committed by the instrument meant to
+prove it — and an instrument that convicts a truthful refusal pressures someone to make the system
+decide what it has no authority to decide.
+
+## The law, as ratified
+
+> **No currency is not the same thing as missing currency.** The witness must distinguish an
+> authored or refused absence from an accidental one.
+
+A Work carrying Source sections must be in one of three states:
+
+| | state | evidence |
+|---|---|---|
+| 1 | **OPERATIVE** | `source_operative_representation()` resolves |
+| 2 | **AMBIGUOUS LEGACY** | an **open** `multiple_legacy_arrivals` record: the migration refused to decide |
+| 3 | **WITHDRAWN** | governed history records the member-directed withdrawal that ended currency |
+
+Anything else is an unexplained loss of Source authority and remains a defect. **State 3 is the
+founder's extension to my proposed correction**, and it matters: `source_withdraw_representation()`
+writes `operative = false`, so an intentionally withdrawn single-representation Work also lawfully
+has sections and no currency. Excepting only ambiguity would have repaired one witness case while
+leaving the invariant constitutionally wrong.
+
+I6 is likewise replaced: an unacted representation is permissible **only** where the system recorded
+why it refused to infer an act.
+
+## The exception is not an escape hatch
+
+Merely excluding reconciliation rows would let any absence be excused by writing one. So the record
+itself is now tested, in both directions:
+
+- every open `multiple_legacy_arrivals` must describe a Work that really has **more than one**
+  arrival, and that really has **no** governed currency;
+- every representation with no act must **have** such an open record.
+
+> **Unresolved ambiguity is a valid state. Unrecorded ambiguity is a defect.**
+
+## One definition, two readers
+
+`scripts/witness/pt3-currency-invariants.sh` holds the SQL; the post-cutover witness and the
+regression both source it. A re-typed invariant drifts — this lane has corrected that defect three
+times and would have introduced it a fourth by writing these queries twice. The witness returns
+**INCONCLUSIVE** if the file is absent rather than pretending it can judge, so the runbook's Step 4
+now runs both witnesses **from the snapshot** instead of piping them over ssh.
+
+## The regression, and why the failures matter most
+
+`scripts/witness/pt3-currency-absence-regression.sh` — disposable databases only. Without negative
+controls the repair degrades into *"NULL is always okay"*, which it is not: **NULL must be
+explainable.**
+
+| fixture | required |
+|---|---|
+| multi-arrival · unacted rep · open ambiguity | PASS |
+| governed withdrawal · sections retained | PASS |
+| sections, no currency, no withdrawal, no ambiguity | **FAIL (detected)** |
+| representation with no act and no ambiguity record | **FAIL (detected)** |
+
+Its teardown goes through `source_commission_erasure()`, because PT-3 refuses a bare `DELETE` on the
+protected tiers even to the owner — and it deliberately does **not** delete
+`source_lifecycle_acts`, which is append-only by design. *An instrument must not fight the law it
+exists to verify.* Two defects in my own first draft were found and fixed by running it: a naive
+teardown that left four fixtures behind, and a double quote inside a shell-quoted SQL comment that
+silently truncated the teardown statement.
+
+## Evidence
+
+**Executed on this SHA:**
+
+```
+pt3-currency-absence-regression.sh   18 expectations · 18 PASS · exit 0 · residue 0
+  multi-arrival PASS · withdrawal PASS · negative control DETECTED · unrecorded DETECTED
+repaired invariants vs the real legacy backfill   unexplained-absence 0 · unrecorded 0
+                                                  ambiguity-is-real 0 · ambiguity-has-no-currency 0
+```
+
+**Inherited from `744c8012a80e7f8b6b0a8dd52dc585c45a77c6fb`** — carried forward because the blobs
+are byte-identical, **not** re-executed here: the original falsifier (`25 passed · 0 failed ·
+0 structurally-unenforced`), the enforcement witness (`29 passed · 0 failed`), the runtime pool
+witness (`READY`, six sites), the PT-3 migration, and all six pool sources.
+
+⛔ **Still unexecuted:** the full Docker/Compose cutover composition, the Docker-bound quiesced
+backfill script, readiness `READY` and post-cutover `READY`. Image layers cannot be obtained —
+`403 Forbidden` from the organization egress policy. Infrastructure blocker, not a PT-3 defect and
+not a passing witness.
+
+## Standing
+
+⛔ **PT-3 is enforced in code and not in production.** Production cutover HELD.
+Experiences HELD. Encounter HELD.

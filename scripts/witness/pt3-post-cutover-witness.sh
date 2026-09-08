@@ -32,6 +32,19 @@ fi
 
 q() { docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc "$1" 2>/dev/null || true; }
 
+# ⭐ SOURCE-CURRENCY INVARIANTS live in one shared file, because the disposable regression must ask
+# the SAME question this witness asks. A re-typed invariant drifts, and drift is how the wrong I4/I6
+# survived review in the first place.
+PT3_LIB="${PT3_LIB:-$(dirname "$0")}"
+if [ ! -r "$PT3_LIB/pt3-currency-invariants.sh" ]; then
+  echo "INCONCLUSIVE — $PT3_LIB/pt3-currency-invariants.sh not found."
+  echo "Run this witness from the materialized snapshot (the orchestrator does), not by piping it"
+  echo "over ssh: a witness missing its own invariant definitions cannot pronounce on anything."
+  exit 2
+fi
+# shellcheck source=/dev/null
+. "$PT3_LIB/pt3-currency-invariants.sh"
+
 echo "════════ 1. RUNTIME OPERATES AS THE CONSTRAINED ROLE (§XI · B38) ════════"
 #
 # ⭐ DISCOVERED, NOT ASSUMED. An earlier version asked about a hardcoded list of four services —
@@ -266,19 +279,29 @@ inv "custody is the presence of the arrival, not a word beside it" \
     "$(q "SELECT count(*) FROM manuscript_source_representations WHERE (custody='source_custodied') <> (arrival_id IS NOT NULL)")" \
     "a representation claims custody it cannot evidence"
 
-inv "every Work with sections has an operative representation" \
-    "$(q "SELECT count(*) FROM (SELECT DISTINCT manuscript_id FROM manuscript_sections) s WHERE source_operative_representation(s.manuscript_id) IS NULL")" \
-    "a Work's Source would be invisible to its own author"
+# ⭐ I4, REPLACED. It used to assert "every Work with sections has an operative representation" —
+# false as constitutional law, and the disposable rehearsal proved it: the migration deliberately
+# creates NO currency act for a Work with several Historical Arrivals, recording the ambiguity
+# instead of manufacturing an answer. The old invariant convicted that refusal.
+#
+#   NO CURRENCY IS NOT THE SAME THING AS MISSING CURRENCY.
+#
+# Three lawful shapes: OPERATIVE · AMBIGUOUS LEGACY (open, recorded) · WITHDRAWN (governed member
+# act). Anything else is an unexplained loss of Source authority and is still a defect.
+inv "no Work has lost Source currency unexplainably" \
+    "$(q "$PT3_INV_UNEXPLAINED_ABSENCE")" \
+    "a Work's Source currency is gone with no recorded ambiguity and no governed withdrawal"
 
 inv "no section is orphaned from the lineage" \
     "$(q "SELECT count(*) FROM manuscript_sections s WHERE s.representation_id IS NULL
             OR NOT EXISTS (SELECT 1 FROM manuscript_source_representations r WHERE r.id = s.representation_id)")" \
     "Source exists outside the custody record"
 
-inv "every representation is recorded in the lifecycle" \
-    "$(q "SELECT count(*) FROM manuscript_source_representations r
-           WHERE NOT EXISTS (SELECT 1 FROM source_lifecycle_acts a WHERE a.representation_id = r.id)")" \
-    "a representation entered the lineage without an act creating it"
+# ⭐ I6, REPLACED, for the same reason: the ambiguous representation has no act ON PURPOSE. An
+# unacted representation is permissible only where the system recorded WHY it refused to infer one.
+inv "every unacted representation is accounted for by a recorded ambiguity" \
+    "$(q "$PT3_INV_UNRECORDED_REPRESENTATION")" \
+    "a representation entered the lineage with neither an act nor a recorded reason for its absence"
 
 # RECONCILIATION IS COMPLETE — expressed as a condition, never as a count. The accepted census
 # said five; if production had held fifty, the correct behaviour would be fifty rows, not a defect.
@@ -289,6 +312,18 @@ inv "every arrival-less legacy representation is reconciliation-flagged" \
                               WHERE c.manuscript_id = r.manuscript_id
                                 AND c.kind = 'representation_without_arrival')")" \
     "an unevidenced legacy representation is not flagged for founder reconciliation"
+
+# ⛔ §VII — THE EXCEPTION IS NOT AN ESCAPE HATCH. Excluding reconciliation rows from the two
+# invariants above would let any absence be excused by writing a reconciliation row. So the record
+# itself is tested: it may only excuse a Work that really is ambiguous and really has no currency.
+#   Unresolved ambiguity is a valid state. Unrecorded ambiguity is a defect.
+inv "every open ambiguity record describes a genuinely multi-arrival Work" \
+    "$(q "$PT3_INV_AMBIGUITY_IS_REAL")" \
+    "a reconciliation row excuses a Work that has at most one arrival — an escape hatch, not a record"
+
+inv "every open ambiguity record describes a Work with no governed currency" \
+    "$(q "$PT3_INV_AMBIGUITY_HAS_NO_CURRENCY")" \
+    "currency was established through the seam and the record was never resolved"
 
 inv "no arrival claims a Work that does not exist" \
     "$(q "SELECT count(*) FROM manuscript_source_arrivals a WHERE a.manuscript_id IS NOT NULL
