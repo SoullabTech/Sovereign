@@ -29,7 +29,19 @@ export interface Arrival {
   kind: ArrivalKind;
   /** The work to resume. Only ever set when kind === 'continue'. */
   resume: LivingWork | null;
-  /** Works other than the resumed one, most-recently-written first. */
+  /**
+   * Other works the member has genuinely written in, most-recently-written
+   * first, standing BESIDE `resume` rather than beneath it.
+   *
+   * WS-HOME-REDESIGN v0.2 (founder ruling 2026-09-07): a writer's process is
+   * plural — they cycle among works by inspiration, not by schedule — so a
+   * single hero makes recency quietly masquerade as priority. `resume` still
+   * leads because it is where they last were; these are offered at the same
+   * moment so returning is a CHOICE among live work, not an instruction to
+   * resume the newest thing. Capped, and never presented as a ranking.
+   */
+  alsoWritten: LivingWork[];
+  /** Works not offered under RETURN, most-recently-written first. */
   shelf: LivingWork[];
   /**
    * The most substantial piece of unclaimed writing, when it is the most
@@ -101,10 +113,15 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
     .sort((a, b) => time(b.updatedAt) - time(a.updatedAt));
 
   if (written.length > 0) {
+    /* Three at most. Beyond that RETURN stops being a doorway and becomes a
+       second listing of the shelf — and a room offering everything at once
+       offers nothing. The rest are not hidden; they are on the shelf below. */
+    const RETURN_WITH = 3;
     return {
       kind: 'continue',
       resume: written[0],
-      shelf: [...written.slice(1), ...unwritten],
+      alsoWritten: written.slice(1, RETURN_WITH),
+      shelf: [...written.slice(RETURN_WITH), ...unwritten],
       feature: null,
       imported: unclaimed,
     };
@@ -116,11 +133,12 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
     return {
       kind: 'orient',
       resume: null,
+      alsoWritten: [],
       shelf: unwritten,
       feature: unclaimed[0] ?? null,
       imported: unclaimed.slice(1),
     };
   }
 
-  return { kind: 'begin', resume: null, shelf: [], feature: null, imported: [] };
+  return { kind: 'begin', resume: null, alsoWritten: [], shelf: [], feature: null, imported: [] };
 }

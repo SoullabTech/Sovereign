@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS, SERIF } from '../pressTheme';
 import { formatWhen } from '../../press/manuscript/workingDraftClient';
 import type { LivingWork } from '../useLivingWorks';
-import { declaringWorks } from '../workContext';
+import { declarationState, worksDeclaring } from '@/lib/writersStudio/workDeclarations';
 
 /**
  * The Work drawer — the anchor of the Study Wall (Work Continuity Layer,
@@ -134,64 +134,64 @@ export default function WorkDrawer({
     );
   }
 
-  /* D4 — THE DEAD END, AND WHY IT WAS ONE.
-   *
-   * `unitedWork` is null in two completely different situations, and this
-   * branch used to treat them as one:
-   *
-   *   NONE      no Work declares this manuscript. Asking which Work it is a
-   *             form of is exactly the right question.
-   *   SEVERAL   the member declared it in two or more Works — which D-018 says
-   *             is CORRECT BY DESIGN, an expression may belong to several Works.
-   *
-   * In the second case the drawer asked the first case's question. The member
-   * had already answered it, twice, and the only gesture that could undo either
-   * answer — "no longer a form of this work" — lives in the united-work view
-   * they could no longer reach. So the room offered declaring into a THIRD Work
-   * as the only way out of having declared into two, while Conversations stayed
-   * shut because MAIA will not choose between Works.
-   *
-   * The founder rule this repairs:
-   *
-   *     A reversible member act must not hide the gesture required to reverse it.
-   *
-   * Nothing here chooses for the member and nothing is withdrawn on their
-   * behalf. The room shows the declarations they made and hands back the
-   * gesture that was always theirs.
-   */
-  const declaring = manuscript ? declaringWorks(works, manuscript.id) : [];
+  /* ── AMBIGUOUS ─────────────────────────────────────────────────────────
+     WS-WORKDRAWER-01, founder ruling 2026-09-07.
 
-  if (!work && declaring.length > 1) {
+     A manuscript may be declared in more than one Work by design (D-018), and
+     the Studio correctly refuses to guess which is "the" Work. But this branch
+     also caught that case and offered the same single gesture as the unclaimed
+     one: "Which one is this a form of?" — an offer to make a THIRD declaration.
+
+     The gesture that resolves it, `undeclare`, already existed and the member
+     always had the authority. It simply rendered in the single-Work branch,
+     which an ambiguous manuscript never reaches. So the only remedy on screen
+     made the ambiguity worse, and the real one was unreachable.
+
+       A state created by a reversible member act must not hide the gesture
+       required to reverse that act.
+
+     ⛔ NO NEW POWER. The Works are shown in the member's own order and the
+     drawer names no preference between them — it shows the member their own
+     acts and lets them withdraw one. */
+  const declaringWorks = worksDeclaring(manuscript?.id ?? null, works);
+  const state = declarationState(declaringWorks);
+
+  if (!work && state === 'ambiguous') {
     return (
-      <div data-state="ambiguous-declaration">
-        <p className="text-[13px] leading-relaxed opacity-60 mb-1">
-          You have declared {manuscriptLabel} in {declaring.length} works.
+      <div>
+        {/* Founder ruling 2026-09-07: the domain model keeps `expression`,
+            `declare` and `form`; the writer does not have to perform ontology
+            to undo an act. The operation underneath is still `undeclare`. */}
+        <p className="text-[13px] leading-relaxed opacity-60 mb-3">
+          This writing is currently part of {declaringWorks.length} Works.
         </p>
-        <p className="text-[12.5px] leading-relaxed opacity-45 mb-4">
-          That is allowed — a piece of writing can be a form of more than one
-          work. While it is, the Studio carries no single work context, so MAIA
-          has none to speak into. You can leave it as it is, or withdraw one.
-        </p>
-        <ul className="space-y-2">
-          {declaring.map((w) => (
+        <ul className="space-y-1.5 mb-3">
+          {declaringWorks.map((w) => (
             <li key={w.id} className="text-[13px] opacity-75">
-              ✓ {w.title ?? 'Your work'}
+              ✓ {w.title ?? 'Untitled work'}
               <button
                 disabled={busy}
                 onClick={() => void undeclare(w.id)}
                 className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
               >
-                no longer a form of this work
+                Remove from this Work
               </button>
             </li>
           ))}
         </ul>
+        {/* FIELD ≠ LESSONS, and its one exception: the consequential act
+            explains its consequence THERE, and only there. A writer about to
+            remove their book from a Work should not have to wonder whether
+            they are about to lose the book. */}
+        <p className="text-[12px] opacity-45">
+          Removing it from a Work does not delete the writing.
+        </p>
         {failed && <p className="text-[12px] opacity-60 mt-3">{failed}</p>}
       </div>
     );
   }
 
-  // No work declares this manuscript: the drawer does not guess.
+  // Several works, none united with the table: the drawer does not guess.
   // The Shape gesture below is how the member says which one this belongs to.
   if (!work) {
     return (
@@ -341,14 +341,14 @@ export default function WorkDrawer({
             {work.expressions.map((e) => (
               <li key={`${e.expressionType}:${e.expressionId}`} className="text-[13px] opacity-75">
                 ✓ {manuscript && e.expressionId === manuscript.id ? manuscriptLabel : 'a manuscript'}
-                <span className="opacity-55"> — declared by you, {formatWhen(e.declaredAt)}</span>
+                <span className="opacity-55"> — added by you, {formatWhen(e.declaredAt)}</span>
                 {manuscript && e.expressionId === manuscript.id && (
                   <button
                     disabled={busy}
                     onClick={() => void undeclare(work.id)}
                     className="ml-2 text-[11px] opacity-35 hover:opacity-70 underline underline-offset-4"
                   >
-                    no longer a form of this work
+                    Remove from this Work
                   </button>
                 )}
               </li>

@@ -203,9 +203,22 @@ export default function SectionWritingSurface({
   const activeId = writing.activeId;
 
   /* Focus follows the writer, so keyboard navigation lands in the prose rather
-     than leaving them somewhere they have to hunt for. */
+     than leaving them somewhere they have to hunt for.
+     
+     ⛔ preventScroll, and it is the whole point of this line rather than a
+     detail of it. Founder-witnessed 2026-09-07: selecting a section in the
+     outline made the room jump. `.focus()` scrolls the nearest scrollable
+     ancestor to reveal the element, and this field GROWS TO CONTENT while
+     <main> does the scrolling — so focusing after a section change dragged the
+     viewport somewhere the writer had not asked to be.
+     
+     The intent was keyboard focus. The scroll was collateral, and a writing
+     room that moves under you while you are reading is worse than one that
+     makes you press Tab. If showing the selected section ever becomes a
+     requirement, it should be a deliberate scroll that says so — not a side
+     effect of asking for the caret. */
   useEffect(() => {
-    if (activeId) fieldRef.current?.focus();
+    if (activeId) fieldRef.current?.focus({ preventScroll: true });
   }, [activeId]);
 
   /* GROW TO CONTENT, exactly as the continuous field does.

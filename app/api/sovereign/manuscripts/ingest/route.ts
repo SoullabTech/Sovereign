@@ -43,6 +43,7 @@ import {
 } from '@/lib/auth/identityAssertions';
 import { parseUpload, UnsupportedUploadError } from '@/lib/manuscript/ingest/parseUpload';
 import { memberRef } from '@/lib/privacy/memberRef';
+import { titleFromFilename } from '@/lib/manuscript/ingest/titleSuggestion';
 import { recordArtifactArrival } from '@/lib/manuscript/source/arrivals';
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB — generous for a full book file
@@ -166,9 +167,6 @@ function denialResponse(
   }
 }
 
-function titleFromFilename(filename: string): string {
-  return filename.replace(/\.[a-z0-9]+$/i, '').trim();
-}
 
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {

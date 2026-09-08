@@ -645,7 +645,7 @@ export default function WorkingDraftEditor({
         <a
           href={canvasForManuscript('/writers-studio/canvas', manuscriptId)}
           className="text-[14px] underline underline-offset-4"
-          style={{ color: '#C9A227' }}
+          style={{ color: 'var(--ws-gold, #C9A227)' }}
         >
           Open on the Canvas
         </a>
@@ -681,7 +681,7 @@ export default function WorkingDraftEditor({
              canvasParamPin across this boundary. */
           href={canvasForManuscript('/writers-studio/canvas', manuscriptId)}
           className="text-[14px] underline underline-offset-4"
-          style={{ color: '#C9A227' }}
+          style={{ color: 'var(--ws-gold, #C9A227)' }}
         >
           Open on the Canvas
         </a>
@@ -726,7 +726,7 @@ export default function WorkingDraftEditor({
         <button
           onClick={() => void begin()}
           disabled={creating}
-          className="px-8 py-3 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
+          className="px-8 py-3 bg-[var(--ws-gold,#C9A227)] text-[var(--ws-on-accent,#1A1513)] text-[14px] tracking-wide disabled:opacity-30"
         >
           {creating ? 'preparing your draft…' : 'Begin your working draft'}
         </button>
@@ -820,7 +820,7 @@ export default function WorkingDraftEditor({
                tap target, visible focus ring. */
             <button
               onClick={saveNow}
-              className="underline underline-offset-4 opacity-100 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+              className="underline underline-offset-4 opacity-100 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ws-gold,#C9A227)]"
             >
               Save now
             </button>
@@ -867,7 +867,7 @@ export default function WorkingDraftEditor({
           }}
           fontFamily={SERIF}
           fontSize="19px"
-          caretColor="#C9A227"
+          caretColor="var(--ws-gold, #C9A227)"
           ariaLabel="Working draft"
           minHeight="60vh"
         />
@@ -882,20 +882,20 @@ export default function WorkingDraftEditor({
           }}
           placeholder="Name this checkpoint (optional)"
           aria-label="Checkpoint note"
-          className="press-field flex-1 min-w-[12rem] bg-transparent border-b border-[#4A4238] py-2 text-[14px] outline-none placeholder:opacity-40"
+          className="press-field flex-1 min-w-[12rem] bg-transparent border-b border-[var(--ws-rule,#4A4238)] py-2 text-[14px] outline-none placeholder:opacity-40"
           style={{ fontFamily: SERIF }}
         />
         <button
           onClick={() => void checkpoint()}
           disabled={checkpointing}
-          className="px-6 py-2.5 bg-[#C9A227] text-[#1A1513] text-[14px] tracking-wide disabled:opacity-30"
+          className="px-6 py-2.5 bg-[var(--ws-gold,#C9A227)] text-[var(--ws-on-accent,#1A1513)] text-[14px] tracking-wide disabled:opacity-30"
         >
           {checkpointing ? 'saving…' : 'Save a checkpoint'}
         </button>
       </div>
       {checkpointMsg && <p className="text-[13px] opacity-60 mt-3">{checkpointMsg}</p>}
 
-      <div className="mt-10 border-t border-[#3a322b] pt-6">
+      <div className="mt-10 border-t border-[var(--ws-rule-soft,#3a322b)] pt-6">
         <button
           onClick={toggleHistory}
           className="text-[12px] tracking-[0.15em] uppercase opacity-50 hover:opacity-80"
@@ -919,7 +919,7 @@ export default function WorkingDraftEditor({
                 {revisions.map((r) => (
                   <div
                     key={r.revisionNumber}
-                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-[#3a322b] pb-4"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-[var(--ws-rule-soft,#3a322b)] pb-4"
                   >
                     <span className="text-[12px] opacity-40 w-8">#{r.revisionNumber}</span>
                     <span className="text-[15px]">{r.note ?? 'Checkpoint'}</span>
@@ -953,7 +953,7 @@ export default function WorkingDraftEditor({
                             setRestoreError(false);
                           }}
                           aria-label={`Restore checkpoint ${r.revisionNumber}${r.note ? `: ${r.note}` : ''}`}
-                          className="text-[12px] opacity-80 underline underline-offset-4 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A227]"
+                          className="text-[12px] opacity-80 underline underline-offset-4 min-h-[44px] px-2 -mx-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ws-gold,#C9A227)]"
                         >
                           restore
                         </button>

@@ -36,6 +36,9 @@ import {
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
+import { WritingFieldVisual } from '../WorkVisual';
+import { AppearanceMenu } from '../atmosphere/AppearanceMenu';
+import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
@@ -531,8 +534,18 @@ function CanvasRoom() {
 
   /* The header's right-hand controls are Write's own, so the shell takes them
      as a slot rather than knowing about them. */
+  /* The page's variables. Applied to the writing field alone — see the
+     comment at that element for why this is the whole containment mechanism. */
+  const canvasSurfaceVars = useCanvasSurfaceVariables();
+
   const headerRight = (
     <>
+        {/* ── APPEARANCE — both axes, reachable from inside the editor ────
+            Founder ruling 2026-09-07: a writer must never have to leave their
+            manuscript to change the room OR the page. This is the editor's
+            door onto the SAME preference the Home control writes — not a
+            second setting that could disagree with it. */}
+        <AppearanceMenu />
         {/* ── WS2-03B correction: a way back to MAIA ────────────────────────
             Her panel was dismissible with no route home. Every other panel is
             re-opened from the rail, but her whole rail band is unavailable and
@@ -658,6 +671,19 @@ function CanvasRoom() {
             }
           }}
           lead={
+            <>
+              {/* WS-WORK-VISUAL-01 — the Work's own image, present while the
+                  writer is actually writing.
+
+                  It sits in the RAIL, which is the surrounding field: beside
+                  the manuscript column, never behind or beneath editable
+                  prose, where it would trade the writer's legibility for the
+                  room's atmosphere. The manuscript stays exactly as stable as
+                  it was; the image belongs to what is around it.
+
+                  Nothing appears when no image was chosen — a Work without one
+                  is complete, and the rail simply begins at "This work". */}
+              <WritingFieldVisual workId={work?.id ?? null} title={work?.title ?? null} />
             <button
               type="button"
               onClick={() => setWorkOpen((v) => !v)}
@@ -678,6 +704,7 @@ function CanvasRoom() {
                 This work
               </StudioText>
             </button>
+            </>
           }
           style={{
             width: compact ? '100%' : pct(L.rail),
@@ -835,10 +862,37 @@ function CanvasRoom() {
           </StudioPanel>
         )}
 
-        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════ */}
+        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════
+
+            WS-CANVAS-MATERIAL-01. The Studio is the room; this is the page.
+
+            The chosen material is applied HERE, as CSS custom properties on
+            this one element. A custom property set on an element reaches that
+            element and its descendants and nothing else, so Paper repaints the
+            prose, its hairlines and its insets together — and cannot reach the
+            rails, MAIA, the outline, the dock, the header or the shell. Not by
+            convention; by the cascade. No component inside the field knows
+            this exists, because they all already read these token names.
+
+            Dark emits {} — it is the absence of an override, so the field
+            inherits whatever room the writer chose. `--ws-bg` is deliberately
+            never among these: that is the page gradient behind the whole
+            Studio, and a writing surface able to repaint the room would be
+            exactly the leak this design exists to prevent. */}
         <main
           data-panel-role="writing-field"
+          data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
           style={{
+            ...canvasSurfaceVars,
+            /* The page's ink, stated on the page itself.
+               Setting the variables is not enough on its own: an element that
+               inherits its colour, or one that was written before these tokens
+               existed, resolves against whatever ancestor last declared one —
+               and that ancestor is the dark Studio shell. Declaring it HERE
+               makes the writing field the nearest answer for everything inside
+               it, which is what "the ink belongs to the material, not the
+               room" has to mean in the cascade. */
+            color: INK.primary,
             width: compact ? '100%' : pct(L.writingField),
             flexShrink: 0,
             minWidth: compact ? 0 : MEASURE.fieldMinWidth,
@@ -868,6 +922,31 @@ function CanvasRoom() {
               padding: `${SPACE.band}px ${MEASURE.roomGutter}px ${SPACE.generous}px`,
             }}
           >
+            {/* ⛔ The one place a stylesheet beats an inline style here, and
+                the reason is the same one recorded in globals.css on
+                2026-07-31: the writer's own prose rendered near-black on the
+                espresso ground while every piece of surrounding chrome
+                rendered cream — the software more visible than the work. The
+                inverse happened on Paper, 2026-09-07: the page turned and the
+                prose stayed the room's colour, leaving a founder unable to
+                read their own book.
+
+                These two elements ARE the member's words — the read-only
+                <pre> and the editable <textarea> of the section surface. They
+                take the page's ink unconditionally, because a writing surface
+                whose text might not follow it is not a writing surface. Scoped
+                to [data-canvas-surface='material'], so Dark is untouched and
+                nothing outside the writing field can be reached at all. */}
+            <style>{`
+              [data-canvas-surface='material'] pre,
+              [data-canvas-surface='material'] textarea {
+                color: var(--ws-ink-primary) !important;
+                -webkit-text-fill-color: var(--ws-ink-primary) !important;
+              }
+              [data-canvas-surface='material'] ::selection {
+                background: var(--ws-ground-active);
+              }
+            `}</style>
             <FieldBody
               writeMount={writeMount}
               witnessDelayMs={witnessDelayMs}

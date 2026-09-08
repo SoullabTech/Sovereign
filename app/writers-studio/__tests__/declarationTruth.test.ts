@@ -183,27 +183,26 @@ describe('D3 · capability truth has one authority; placement may have many', ()
 });
 
 describe('D4 · a reversible act may not hide the gesture that reverses it', () => {
-  const work = (id: string, manuscriptId: string): LivingWork =>
-    ({
-      id,
-      title: id,
-      expressions: [{ expressionType: 'manuscript', expressionId: manuscriptId }],
-    } as unknown as LivingWork);
+  /* ⚠️ CORRECTED BY A FRESHNESS MERGE. This lane implemented the D4 repair
+     independently, not knowing canonical had already shipped it as
+     WS-WORKDRAWER-01 under the same founder ruling — with its own
+     `workDeclarations` module and better copy. The duplicate was dropped and
+     canonical's kept, which is the rule this whole lane exists to enforce: do
+     not build a second implementation while an existing viable one can be
+     converged.
 
-  it('a manuscript declared in several works reports every declaring work', () => {
-    const works = [work('a', 'm1'), work('b', 'm1'), work('c', 'm2')];
-    expect(declaringWorks(works, 'm1').map((w) => w.id)).toEqual(['a', 'b']);
-  });
-
+     The assertion therefore tests the RULE against whatever implements it,
+     rather than pinning the phrasing of one branch's version. */
   it('the drawer answers the ambiguous state with withdrawal, not another declaration', () => {
-    /* The dead end: unitedWork is null both when NO work declares the
-       manuscript and when SEVERAL do, and the drawer used to ask the first
-       case's question in both — offering declaration into a third Work as the
-       only exit from having declared into two. */
-    const ambiguous = WORK_DRAWER_SOURCE.split('data-state="ambiguous-declaration"')[1] ?? '';
-    expect(ambiguous).toBeTruthy();
-    const branch = ambiguous.slice(0, ambiguous.indexOf('// No work declares'));
+    const i = WORK_DRAWER_SOURCE.indexOf("state === 'ambiguous'");
+    expect(i).toBeGreaterThan(-1);
+    const branch = WORK_DRAWER_SOURCE.slice(i, i + 1600);
     expect(branch).toContain('undeclare(w.id)');
     expect(branch).not.toContain('ShapeGesture');
+  });
+
+  it('the ambiguous state is derived, never guessed', () => {
+    expect(WORK_DRAWER_SOURCE).toContain('worksDeclaring(');
+    expect(WORK_DRAWER_SOURCE).toContain('declarationState(');
   });
 });
