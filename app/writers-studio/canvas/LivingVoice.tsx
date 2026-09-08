@@ -25,7 +25,13 @@
  */
 'use client';
 
+import { useEffect, useState } from 'react';
 import { LENSES, LENS_INVITATION, LENS_LABEL } from '@/lib/writersStudio/livingVoice';
+import {
+  DISCLOSURE_COPY,
+  hasSeenDisclosure,
+  markDisclosureSeen,
+} from '@/lib/writersStudio/livingVoiceDisclosure';
 import type { LivingVoice } from '@/lib/writersStudio/useLivingVoice';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
@@ -35,7 +41,28 @@ export interface LivingVoicePanelProps {
 }
 
 export default function LivingVoicePanel({ voice }: LivingVoicePanelProps) {
-  if (voice.phase === 'closed' || !voice.offer) return null;
+  /* LV-J — shown once per browser, then remembered as UI state.
+     
+     Read after mount rather than during render: localStorage does not exist on
+     the server, and a first paint that guessed would either flash the copy at
+     a writer who has seen it or hide it from one who has not. `null` is "not
+     yet known", and the panel says nothing about disclosure until it is.
+     
+     ⛔ This flag suppresses copy. It is not consulted anywhere in `ask`, and
+     it must never become an input to whether a passage may be sent. */
+  const [seen, setSeen] = useState<boolean | null>(null);
+  const open = voice.phase !== 'closed' && !!voice.offer;
+
+  useEffect(() => {
+    if (!open || seen !== null) return;
+    const already = hasSeenDisclosure();
+    setSeen(already);
+    /* Marked at the moment it is actually put in front of the writer — not on
+       app load, and not on the offer that never opened. */
+    if (!already) markDisclosureSeen();
+  }, [open, seen]);
+
+  if (!open || !voice.offer) return null;
 
   const busy = voice.phase === 'asking';
 
@@ -63,6 +90,15 @@ export default function LivingVoicePanel({ voice }: LivingVoicePanelProps) {
           <StudioText role="metadata" as="span" tone="quiet">Done</StudioText>
         </button>
       </div>
+
+      {seen === false && (
+        /* Said once per browser, before the passage. What it explains is the
+           SHAPE of the act — and having read it grants nothing: the writer
+           still selects and still presses, every single time. */
+        <StudioText role="quiet" tone="muted" data-living-voice-disclosure>
+          {DISCLOSURE_COPY}
+        </StudioText>
+      )}
 
       {/* The passage the writer chose, shown back exactly as it was offered. */}
       <blockquote

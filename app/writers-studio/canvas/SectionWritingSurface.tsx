@@ -34,6 +34,7 @@ import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { StudioText } from '../studio/StudioType';
+import { canOfferPassage, PASSAGE_TOO_LONG_AT_THE_DOOR } from '@/lib/writersStudio/livingVoice';
 
 export interface SectionWritingSurfaceProps {
   /** The shared writing session — see the header. */
@@ -215,15 +216,25 @@ export default function SectionWritingSurface({
      anything to offer. It is read from the field on demand rather than stored
      as text, so the passage exists in one place — the writer's own draft —
      until the moment they choose to hand it over. */
-  const [hasSelection, setHasSelection] = useState(false);
+  const [selection, setSelection] = useState<'none' | 'offerable' | 'too-long'>('none');
   const readSelection = () => {
     const el = fieldRef.current;
-    setHasSelection(!!el && el.selectionEnd > el.selectionStart);
+    if (!el || el.selectionEnd <= el.selectionStart) { setSelection('none'); return; }
+
+    /* LV-I — the threshold tells the truth BEFORE the writer crosses it. The
+       length is known here, so an over-long selection is answered at the door
+       rather than by opening an encounter that has already been declined. The
+       selection itself is untouched; the writer narrows it. */
+    setSelection(
+      canOfferPassage(el.value.slice(el.selectionStart, el.selectionEnd))
+        ? 'offerable'
+        : 'too-long',
+    );
   };
 
   /* A section change invalidates any selection: the offer must never be able
      to carry text out of a section the writer has already left. */
-  useEffect(() => { setHasSelection(false); }, [activeId]);
+  useEffect(() => { setSelection('none'); }, [activeId]);
 
   /* Focus follows the writer, so keyboard navigation lands in the prose rather
      than leaving them somewhere they have to hunt for.
@@ -322,7 +333,17 @@ export default function SectionWritingSurface({
           there is a selection to offer, says exactly what it will do, and does
           nothing until pressed. Reading the selection at press time — not at
           selection time — keeps the passage in the draft until then. */}
-      {onOfferPassage && hasSelection && active.editable && (
+      {onOfferPassage && selection === 'too-long' && active.editable && (
+        /* Refused at the door: no panel, no request, nothing sent. This is a
+           statement about scale, never about the writing. */
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <StudioText role="metadata" tone="muted" data-passage-too-long>
+            {PASSAGE_TOO_LONG_AT_THE_DOOR}
+          </StudioText>
+        </div>
+      )}
+
+      {onOfferPassage && selection === 'offerable' && active.editable && (
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button
             type="button"

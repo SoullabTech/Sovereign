@@ -104,8 +104,56 @@ export const LENS_INVITATION: Readonly<Record<LivingVoiceLens, string>> = {
  * different act — "what may MAIA read of the Work?" — and someone will
  * eventually reach for it because it is the only prose ceiling that exists.
  * This one answers "what has the writer handed MAIA for this exchange?"
+ *
+ * ── LV-I · WHAT IS LAW HERE, AND WHAT IS NOT ──────────────────────────────
+ *
+ * ⛔ THE NUMBER IS NOT THE LAW. Ruled 2026-09-08: `2_000` is a PROVISIONAL
+ * IMPLEMENTATION CONSTANT for the first prototype and must never be elevated
+ * into constitutional status. It is expected to move once real writers meet
+ * it, and moving it is an ordinary implementation change.
+ *
+ * The law is the relation, and it does not move:
+ *
+ *     Living Voice receives a PASSAGE, not an arbitrarily large region of the
+ *     Work. The writer chooses it. The system never truncates it and never
+ *     enlarges it.
+ *
+ * So the four properties below are constitutional — passage-scale ·
+ * writer-selected · whole selection or refusal · never truncated, never
+ * auto-expanded — and this integer is only the current, revisable expression
+ * of the first of them. A change to the number is a tuning; a change to any
+ * of the four is a constitutional amendment.
  */
 export const LIVING_VOICE_PASSAGE_MAX_CODE_POINTS = 2_000;
+
+/**
+ * Can this selection be offered at all?
+ *
+ * ── LV-I · THE THRESHOLD TELLS THE TRUTH BEFORE IT IS CROSSED ─────────────
+ *
+ * The client already knows how long the selection is. Making the writer press
+ * "Explore this passage", enter the encounter, and only then meet a wall is a
+ * worse relation than saying so at the door — it stages an invitation the
+ * system has already decided to decline.
+ *
+ *     within bound   →  Explore this passage
+ *     over bound     →  Choose a shorter passage to explore
+ *
+ * No truncation, and no network request. The selection is untouched: the
+ * writer narrows it themselves, which is the whole point of the writer being
+ * the one who chooses the passage.
+ *
+ * ⛔ THIS IS NOT CUSTODY. Client enforcement is a courtesy to the writer, not
+ * a boundary — the route calls `checkPassage` independently and refuses on its
+ * own authority. Deleting this function would degrade the experience; deleting
+ * the server check would remove the bound.
+ */
+export function canOfferPassage(raw: string): boolean {
+  return checkPassage(raw).ok;
+}
+
+/** Said at the door, before the encounter opens. See `canOfferPassage`. */
+export const PASSAGE_TOO_LONG_AT_THE_DOOR = 'Choose a shorter passage to explore';
 
 export type PassageRefusal = 'empty' | 'too_long';
 

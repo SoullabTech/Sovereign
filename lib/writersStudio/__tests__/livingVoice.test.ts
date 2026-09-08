@@ -1,14 +1,22 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import {
+  canOfferPassage,
   checkLivingVoiceResponse,
   checkPassage,
+  PASSAGE_TOO_LONG_AT_THE_DOOR,
   passageRefusalCopy,
   LENSES,
   LENS_LABEL,
   LIVING_VOICE_PASSAGE_MAX_CODE_POINTS,
   MAX_RESPONSE_CHARS,
 } from '../livingVoice';
+import {
+  DISCLOSURE_KEY,
+  DISCLOSURE_VERSION,
+  hasSeenDisclosure,
+  markDisclosureSeen,
+} from '../livingVoiceDisclosure';
 
 /**
  * LIVING VOICE v1 — the constitution, made falsifiable.
@@ -207,5 +215,130 @@ describe('LV-H · non-durability is guaranteed by construction', () => {
     for (const banned of ['previousPassages', 'history', 'accumulat', 'lastPassage', 'cache']) {
       expect(MODULE).not.toMatch(new RegExp(banned, 'i'));
     }
+  });
+});
+
+describe('LV-I · the bound is a relation; the number is provisional', () => {
+  it('a passage-scale selection may be offered at the door', () => {
+    expect(canOfferPassage('The river had gone the colour of tea.')).toBe(true);
+  });
+
+  it('an over-long selection is answered at the door, not by opening an encounter', () => {
+    expect(canOfferPassage('a'.repeat(LIVING_VOICE_PASSAGE_MAX_CODE_POINTS + 1))).toBe(false);
+    expect(PASSAGE_TOO_LONG_AT_THE_DOOR).toMatch(/shorter passage/i);
+  });
+
+  it('the door check and the custody check agree, and neither truncates', () => {
+    /* The client courtesy and the server boundary must not disagree about what
+       a passage is — but they are two checks, not one: `canOfferPassage` is
+       deletable without changing what the route accepts. */
+    const over = 'a'.repeat(LIVING_VOICE_PASSAGE_MAX_CODE_POINTS + 1);
+    expect(canOfferPassage(over)).toBe(false);
+    const checked = checkPassage(over);
+    expect(checked.ok).toBe(false);
+    if (!checked.ok) expect(checked.refusal).toBe('too_long');
+  });
+
+  it('the writing surface refuses BEFORE the offer, and sends nothing', () => {
+    const SURFACE = readFileSync(
+      join(process.cwd(), 'app', 'writers-studio', 'canvas', 'SectionWritingSurface.tsx'), 'utf8');
+    /* The control that opens an encounter exists only for an offerable
+       selection; an over-long one reaches a sentence, never a button. */
+    expect(SURFACE).toMatch(/selection === 'offerable'[^\n]*&&[\s\S]{0,200}<button/);
+    expect(SURFACE).toMatch(/selection === 'too-long'/);
+    expect(SURFACE).toMatch(/canOfferPassage/);
+  });
+
+  it('the number is marked provisional and the relation is not', () => {
+    const SOURCE = readFileSync(
+      join(process.cwd(), 'lib', 'writersStudio', 'livingVoice.ts'), 'utf8');
+    /* Ruled: 2,000 is a revisable implementation constant. If a later reader
+       cannot tell that from the source, the ruling has been lost.
+       
+       The comment gutter is flattened first: a doc comment wraps, so an
+       assertion on a phrase would otherwise pass or fail on where the line
+       happened to break. */
+    const prose = SOURCE.replace(/^\s*\*\s?/gm, '').replace(/\s+/g, ' ');
+    expect(prose).toMatch(/THE NUMBER IS NOT THE LAW/);
+    expect(prose).toMatch(/PROVISIONAL IMPLEMENTATION CONSTANT/);
+    expect(prose).toMatch(/never truncates it and never enlarges it/i);
+  });
+});
+
+describe('LV-J · disclosure memory is UI state, never permission', () => {
+  const store = new Map<string, string>();
+  beforeAll(() => {
+    Object.defineProperty(globalThis, 'window', {
+      value: {
+        localStorage: {
+          getItem: (k: string) => store.get(k) ?? null,
+          setItem: (k: string, v: string) => { store.set(k, v); },
+        },
+      },
+      configurable: true,
+      writable: true,
+    });
+  });
+  beforeEach(() => store.clear());
+
+  it('is remembered per browser under a versioned key', () => {
+    expect(hasSeenDisclosure()).toBe(false);
+    markDisclosureSeen();
+    expect(hasSeenDisclosure()).toBe(true);
+    expect(DISCLOSURE_KEY).toBe(`living_voice_disclosure_seen_v${DISCLOSURE_VERSION}`);
+  });
+
+  it('stores a flag and never a passage', () => {
+    markDisclosureSeen();
+    expect([...store.values()]).toEqual(['true']);
+    expect([...store.keys()]).toEqual([DISCLOSURE_KEY]);
+  });
+
+  it('a changed disclosure is shown again, because the key carries its version', () => {
+    store.set('living_voice_disclosure_seen_v0', 'true');
+    expect(hasSeenDisclosure()).toBe(false);
+  });
+
+  it('unreadable storage resolves to NOT seen', () => {
+    /* Erring toward showing it twice, never toward a writer who was not told. */
+    Object.defineProperty(globalThis, 'window', {
+      value: { get localStorage(): Storage { throw new Error('blocked'); } },
+      configurable: true, writable: true,
+    });
+    expect(hasSeenDisclosure()).toBe(false);
+    expect(() => markDisclosureSeen()).not.toThrow();
+  });
+
+  it('⛔ having seen the disclosure authorizes nothing', () => {
+    /* The load-bearing separation. The flag lives in its own module, and
+       neither the encounter core nor the route may read it: if the flag could
+       reach the send path, "seen" would have quietly become "permitted". */
+    const MODULE = readFileSync(
+      join(process.cwd(), 'lib', 'writersStudio', 'livingVoice.ts'), 'utf8');
+    const HOOK = readFileSync(
+      join(process.cwd(), 'lib', 'writersStudio', 'useLivingVoice.ts'), 'utf8');
+    const ROUTE = readFileSync(
+      join(process.cwd(), 'app', 'api', 'sovereign', 'manuscripts', '[id]', 'living-voice', 'route.ts'), 'utf8');
+    for (const src of [MODULE, HOOK, ROUTE]) {
+      expect(src).not.toMatch(/DisclosureSeen|DISCLOSURE_KEY|livingVoiceDisclosure/);
+    }
+  });
+
+  it('the disclosure never leaves the device', () => {
+    /* Comments stripped FIRST, and it is not a detail: this file's whole
+       middle section is a list of the places the flag may not live, so a
+       scanner reading prose finds "analytics" in a file whose only mention of
+       analytics is a ban on it. An instrument that cannot tell a prohibition
+       from the prohibited behaviour will always fail on the file that
+       documents its own compliance. */
+    const DISCLOSURE = readFileSync(
+      join(process.cwd(), 'lib', 'writersStudio', 'livingVoiceDisclosure.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    for (const banned of [/apiFetch/, /fetch\(/, /\/api\//, /INSERT/i, /analytics/i, /track\(/]) {
+      expect(DISCLOSURE).not.toMatch(banned);
+    }
+    /* And the store it does touch is the browser's own. */
+    expect(DISCLOSURE).toMatch(/window\.localStorage/);
   });
 });

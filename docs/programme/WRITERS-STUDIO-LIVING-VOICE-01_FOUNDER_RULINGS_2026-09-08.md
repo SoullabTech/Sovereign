@@ -190,3 +190,159 @@ of writing** — lyrical/poetic · memoir/personal · teaching/practitioner.
 > me feel corrected, graded, or rewritten?**
 
 *If yes, Living Voice has found its center.*
+
+---
+
+# ADDENDUM — LV-I and LV-J · founder rulings, 2026-09-08
+
+Both were held open deliberately during the build, on the founder's instruction
+to *"keep those two decisions open until you have implementation evidence."*
+They are ruled here, on that evidence, after the prototype existed.
+
+## LV-I · PASSAGE BOUND — **RULED**
+
+> ⭐ **The relationship is constitutional. The literal implementation number is
+> not.**
+
+```text
+LV-I
+
+constitutional:
+  passage-scale
+  writer-selected
+  whole selection or refusal
+  never truncated
+  never auto-expanded
+
+implementation v1:
+  LIVING_VOICE_PASSAGE_MAX_CODE_POINTS = 2_000
+  provisional
+```
+
+⛔ **`2_000` MUST NOT BE ELEVATED INTO LAW.** It is a provisional implementation
+constant for the first prototype, expected to move once real writers meet it.
+Changing it is an ordinary tuning; changing any of the four properties above is
+a constitutional amendment.
+
+The law it expresses:
+
+> Living Voice receives a **passage**, not an arbitrarily large region of the
+> Work. The writer chooses the passage; the system never truncates or enlarges
+> it.
+
+**No sizing study was conducted, deliberately.** Ruled: *"I would not delay the
+first witness to conduct a sizing study. Use 2,000, see whether real writers
+naturally hit it, then adjust the implementation constant from evidence."*
+
+### The threshold tells the truth before the writer crosses it
+
+```text
+selection within bound   →  Explore this passage
+selection over bound     →  Choose a shorter passage to explore
+```
+
+No truncation. **No network request.** Making the writer press the control,
+enter the encounter, and only then meet a wall stages an invitation the system
+has already decided to decline.
+
+⛔ **CLIENT ENFORCEMENT IS NOT CUSTODY.** The route calls `checkPassage`
+independently and refuses on its own authority. Deleting `canOfferPassage()`
+would degrade the experience; deleting the server check would remove the bound.
+The test `the door check and the custody check agree, and neither truncates`
+pins that they are two checks rather than one.
+
+## LV-J · DISCLOSURE MEMORY — **RULED**
+
+```text
+LV-J
+
+DISCLOSURE SEEN      device-local UI state
+PASSAGE AUTHORITY    never remembered · freshly given on every encounter
+```
+
+A versioned browser-local flag, `living_voice_disclosure_seen_v1`.
+
+| may live in | ⛔ may not live in |
+|---|---|
+| `localStorage` on this browser | a member DB attribute · MAIA memory · Work metadata · analytics · a voice profile · a cross-device preference |
+
+Cleared storage, a private window, or another device means the writer sees the
+disclosure again. **That is the correct outcome, not a defect.**
+
+> ⭐ **Remembering that the disclosure was shown is not remembering permission.**
+
+The stored flag suppresses repetitive explanatory copy. It authorizes nothing.
+Every encounter still requires both acts, every time:
+
+```text
+select passage  +  explicitly press "Explore this passage"
+```
+
+That pair is the authority. A writer who has seen the disclosure a hundred
+times has granted nothing by having seen it. **If the disclosure materially
+changes, increment `DISCLOSURE_VERSION` and every writer sees it again** — a
+silent edit under an old key would let changed text ride on an
+acknowledgement of the previous text.
+
+⛔ **STRUCTURAL SEPARATION, PINNED BY TEST.** The flag lives in its own module
+(`lib/writersStudio/livingVoiceDisclosure.ts`), and the test *"having seen the
+disclosure authorizes nothing"* asserts that neither the encounter core
+(`livingVoice.ts`), nor the hook, nor the route imports or names it. If the flag
+could reach the send path, *seen* would have quietly become *permitted*.
+
+## CUSTODY CORRECTION — what `cc6846fb6` actually is
+
+Founder correction, recorded because it matters for custody: `cc6846fb6` is
+**prototype-complete on the sectioned Canvas path**, not Living Voice v1
+complete across WRITE.
+
+```text
+SectionWritingSurface   ✅ Living Voice reachable
+Worktable               ⛔ no Living Voice entrance yet
+```
+
+Ruled: **no second product ruling is needed.** Once the prototype is witnessed
+and accepted, the same Living Voice core is made reachable from `Worktable` —
+**no second implementation, no different semantics.** Parity does **not** block
+the first witness: *"the point of the prototype is to hear whether the
+relationship works."*
+
+## STANDING
+
+```text
+LV-I       RULED · 2,000 provisional for prototype
+LV-J       RULED · disclosure memory device-local only
+LV-H       RATIFIED
+PROTOTYPE  built on sectioned Canvas
+WORKTABLE  parity owed after prototype acceptance
+MERGE      HOLD
+DEPLOY     HOLD
+
+NEXT       founder Living Voice witness
+```
+
+## THE WITNESS
+
+A real passage from a real Work, several very different lenses.
+
+| lens | the question it must survive |
+|---|---|
+| **See it** | Does MAIA help you notice where an abstraction might become perceivable — **without telling you the passage is deficient**? |
+| **Hear it** | Does she invite attention to rhythm **without becoming a copy editor**? |
+| **Go closer** | Does she invite creative courage **without pressuring intimate disclosure**? |
+| **Clarify it** | Does she help expose what the sentence is trying to carry **without privileging plainness over poetry**? |
+
+And **deliberately decline one invitation**. Declining should feel like nothing
+happened, not like you disappointed the system.
+
+### Acceptance
+
+> **Did Living Voice help me hear another possibility in my own words while
+> leaving me more — not less — in possession of the writing?**
+
+Companion:
+
+> **Did I feel invited to experiment, or subtly informed that my writing was
+> inadequate?**
+
+*If those pass, Living Voice has found its center.*
