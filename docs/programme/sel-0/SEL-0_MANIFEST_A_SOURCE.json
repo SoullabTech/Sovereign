@@ -10,7 +10,7 @@
   "items": [
     {
       "content_digest_sha256": "cd06495e59a6ce6fcd964f854b140575ac4d7cb00721328788092a45851b08b0",
-      "exclusion_reason": "E1 §3.2 — trailing clause names an act not performed upon the material, not a non-return of something the Work established; absence measured against an expected standard.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o1",
       "observation_key": "o1",
@@ -42,7 +42,7 @@
     },
     {
       "content_digest_sha256": "d4c16102a389191ba08d8351901d4ec3ad39399136c33eb0437950c37b7da5d9",
-      "exclusion_reason": "E1 §3.2 — negated-act shape; the expectation invoked is not one the Work establishes.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o2",
       "observation_key": "o2",
@@ -478,7 +478,7 @@
     },
     {
       "content_digest_sha256": "665a4dd130c0ed4aef9ed7ee95e23ae5af5defa9c4b030c18b8dd0b82c85dd27",
-      "exclusion_reason": "E1 §3.2 — checklist absence across an enumerated set, measured against a reader-constructed comparator.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o14",
       "observation_key": "o14",
@@ -580,7 +580,7 @@
     },
     {
       "content_digest_sha256": "110faf8d9f443c8f8d6f468d22ebfecb5fb8a00b76dc73fa1d8bf7f2d60c9b61",
-      "exclusion_reason": "E1 §3.2 — negated-act clause plus an imported expositional standard the Work never establishes.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o16",
       "observation_key": "o16",
@@ -650,7 +650,7 @@
     },
     {
       "content_digest_sha256": "461c2cab0af13ee9040f625a3fb61af2369e40b651ae4c869f88496d4b689dcb",
-      "exclusion_reason": "E1 §3.2 — absence of a relation never established, measured against a pattern held by sibling members; an expected whole.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o18",
       "observation_key": "o18",
@@ -721,7 +721,7 @@
     },
     {
       "content_digest_sha256": "cd86eed179ac2b4c76b2419b7519e44ccb69ab7ed8463098d4d680b6e1bf6817",
-      "exclusion_reason": "E1 §3.2 — leads with what one member lacks, measured against an expected whole inferred from sibling members rather than declared by the Work.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o20",
       "observation_key": "o20",
@@ -856,7 +856,7 @@
     },
     {
       "content_digest_sha256": "ad19e2d8db0a9bfe89c63a1a3cf94d5eb548f8806c6413b54fe8a3330898589d",
-      "exclusion_reason": "E1 §3.2 — closing clause names an act not performed upon the material.",
+      "exclusion_reason": "INELIGIBLE_F7 · E1 §3.2",
       "f7_eligibility": "INELIGIBLE_F7",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o23",
       "observation_key": "o23",

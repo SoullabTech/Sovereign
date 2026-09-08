@@ -3,37 +3,37 @@
   "frozen_at": "2026-09-08T21:07:27Z",
   "items": [
     {
-      "f7_reason": "E1 §3.2 — trailing clause names an act not performed upon the material, not a non-return of something the Work established; absence measured against an expected standard.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o1",
       "observation_key": "o1"
     },
     {
-      "f7_reason": "E1 §3.2 — negated-act shape; the expectation invoked is not one the Work establishes.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o2",
       "observation_key": "o2"
     },
     {
-      "f7_reason": "E1 §3.2 — checklist absence across an enumerated set, measured against a reader-constructed comparator.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o14",
       "observation_key": "o14"
     },
     {
-      "f7_reason": "E1 §3.2 — negated-act clause plus an imported expositional standard the Work never establishes.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o16",
       "observation_key": "o16"
     },
     {
-      "f7_reason": "E1 §3.2 — absence of a relation never established, measured against a pattern held by sibling members; an expected whole.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o18",
       "observation_key": "o18"
     },
     {
-      "f7_reason": "E1 §3.2 — leads with what one member lacks, measured against an expected whole inferred from sibling members rather than declared by the Work.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o20",
       "observation_key": "o20"
     },
     {
-      "f7_reason": "E1 §3.2 — closing clause names an act not performed upon the material.",
+      "f7_reason": "INELIGIBLE_F7 · E1 §3.2",
       "observation_id": "e8cd07c7-1b33-4c7d-a020-3bc2db9d6553:o23",
       "observation_key": "o23"
     }
