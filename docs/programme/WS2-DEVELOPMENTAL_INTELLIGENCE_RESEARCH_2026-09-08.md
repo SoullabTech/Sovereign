@@ -201,15 +201,84 @@ Source: https://aclanthology.org/2026.acl-long.829/
 
 ---
 
-# 6 · Candidate constraints derived from the research
+# 6 · Candidate constraints — **DISPOSED BY STEP 1 CLOSE ITEM 5, 2026-09-08**
 
-> **Candidate constraints — PENDING SOURCE AUDIT + FALSIFICATION. Not adopted.**
+> **Fifteen candidates → 3 constraints · 1 evaluation requirement · 2 hypotheses · 9 absorbed or retired.**
 
-These are **candidate constraints**, not design laws and not ratified canon. Each rests on citations that have not been audited at source (§16), and none has yet been given a falsifier. A constraint with no way to fail is a slogan, not a constraint.
+Each R-L item required, per item: (a) a supporting source registered in the Pass B ledger with an established read basis, (b) a named falsifier, (c) survival of the falsification pass. Item 5 applied that test. Most did not survive as *research-derived constraints*, and the set is smaller as a result.
 
-Adoption of any R-L item requires, per item: (a) its supporting citation verified at source, (b) a named falsifier — what observation would show the constraint is wrong, (c) survival of the §15 falsification pass. Until all three hold, an R-L identifier may be cited as *a candidate under audit* and in no stronger form.
+### What item 5 decided, and what it did not
 
-The `L` in the `R-L*` identifiers is retained only for continuity of reference. It does not read as "law".
+**Item 5 decides the provenance of authority — not whether a behaviour is required.** Retiring an R-L row never deletes the behaviour; it relocates the authority to whichever instrument actually governs it.
+
+> **R-L4 and R-L14 are the clearest demonstration.** Non-capitulation has no registered source establishing it, and "nothing needs changing" has none at all — yet both remain binding: R-L4 as §12 Layer A question 6, R-L14 as benchmark session S7. **A perfectly legitimate product requirement or benchmark test can fail the research-derived-constraint test.** Item 5 refuses to manufacture a literature basis after the fact for either.
+
+The purpose is to stop this research document becoming **a shadow constitution beside the re-frozen Phase 0 and the §12 acceptance floor.** Where an R-L row merely restated an instrument that already governs, the row is retired and the instrument named.
+
+### Disposition table
+
+| ID | Disposition | Governing home / basis |
+|---|---|---|
+| R-L1 | **RETIRE / ABSORB QUALIFIED** | Phase 0 #6 + §12 A+B. C2's falsifier already fired: session alone is insufficient. |
+| R-L2 | **RETIRE / ABSORB QUALIFIED** | Phase 0 #2. FQ-2 falsified the stronger reading. No duplicate authority. |
+| R-L3 | **SURVIVES — QUALIFIED, ADOPTED** | A4 + C3 |
+| R-L4 | **REMOVE AS RESEARCH CONSTRAINT** | Behaviour frozen at §12 Layer A Q6. A4/C3 do not establish the non-capitulation half. |
+| R-L5 | **SURVIVES — NARROWED, ADOPTED** | A1 + A2 |
+| R-L6 | **RETIRE AS COMPOUND** | Three independent claims in one row. No replacement created. Surfacing → interaction design; selection → R-L13/SEL-0; authority visibility → Phase 0 #7. |
+| R-L7 | **SURVIVES — QUALIFIED, ADOPTED** | B1 + B2 + B3 + B4 |
+| R-L8 | **RETIRE / ABSORB** | §12 A4 + B5, plus the immutable voice-baseline programme. Stronger there than here. |
+| R-L9 | **DEMOTE — longitudinal outcome hypothesis** | A1, narrow autoethnographic/educational basis. Not a build constraint. |
+| R-L10 | **RETIRE AS RESEARCH CONSTRAINT / ABSORB** | Phase 0 #4 and #5. B6 supports the re-grounding risk, not the compound benefit claim. No source backfilled to save the row. |
+| R-L11 | **RETIRE AS EMPIRICAL CONSTRAINT / ABSORB AS DESIGN COMMITMENT** | Phase 0 #3, which already carries the QA→manuscript qualification. E3 supplies no manuscript evidence. |
+| R-L12 | **DEMOTE — architecture / benchmark hypothesis** | E1 + E2a/b + E3a/b license *testing* the mixture, not declaring complementarity in advance. |
+| R-L13 | **SURVIVES — evaluation requirement** | C1, motivating not demonstrating |
+| R-L14 | **REMOVE AS RESEARCH CONSTRAINT** | No registered source establishes it. Preserved as benchmark **S7 · Nothing to fix** — a deliberate product test. |
+| R-L15 | **RETIRE / ABSORB QUALIFIED** | Phase 0 #7, as narrowed by FQ-5: hide machinery, not meaningful authority or choice. |
+
+### The surviving set
+
+```text
+STANDALONE QUALIFIED CONSTRAINTS
+R-L3   When developmental meaning materially depends on unstated or
+       uncertain author intent, MAIA must ask or mark uncertainty
+       before hardening the inference into a conclusion.
+       FALSIFIER: in genuinely intent-dependent cases, clarification adds
+       no material correction or usefulness and uncertainty marking
+       performs equally well.
+
+R-L5   Developmental recommendations must remain inspectably grounded in
+       specific Work evidence; the writer must be able to see what
+       prompted them.  [rigid temporal ordering DROPPED]
+       FALSIFIER: recommendation-first interaction consistently improves
+       usefulness without reducing grounding, trust, or writer
+       understanding.
+
+R-L7   MAIA may OFFER drafting or rewrite help; generating or replacing
+       prose requires writer commission, and accepted edits remain
+       reversible.
+       FALSIFIER: unsolicited generation improves relevant Work outcomes
+       without measurable ownership, voice, or authority cost.
+
+EVALUATION REQUIREMENT
+R-L13  Evaluate selection separately from detection until SEL-0 shows
+       that separate evaluation adds no useful information.
+       ⛔ Does NOT claim selection is already known to be deficient.
+
+HYPOTHESES — NOT CONSTRAINTS
+R-L9   Does working with MAIA strengthen the writer's own internal reader?
+       Longitudinal. Worth testing; not a build constraint.
+R-L12  Test broad context and hierarchical retrieval together rather than
+       assuming either dominates.
+
+ABSORBED / RETIRED
+R-L1  R-L2  R-L4  R-L6  R-L8  R-L10  R-L11  R-L14  R-L15
+```
+
+---
+
+## Original candidate text — retained as the before-state
+
+The fifteen entries below are kept as written, superseded by the dispositions above. They are **not** current authority; several were drafted when the corpus was an unverified lead set.
 
 ### R-L1 · The session is the primary quality unit
 
@@ -705,8 +774,9 @@ FALSIFICATION QUOTA (5)            5 / 5 MET · convergence STILL not claimed
                                    (quota met lifts the bar; it does not establish
                                     convergence)
 PHASE 0                            RE-FROZEN — WS2-PHASE0_RE-FROZEN_2026-09-08.md
-CANDIDATE CONSTRAINTS R-L1..R-L15  STILL NOT ADOPTED · each needs its own source,
-                                   falsifier and reconciliation (close item 5)
+CANDIDATE CONSTRAINTS R-L1..R-L15  DISPOSED (close item 5) · 3 adopted
+                                   1 evaluation requirement · 2 hypotheses
+                                   9 absorbed or retired
 MODEL SPEC CENSUS                  VENDOR PAGES READ · §7 table materially
                                    incomplete · see Pass B §2
 ACCEPTANCE FLOOR (§12)             PREDECLARED · FROZEN · AMENDED 2026-09-08 (A+B)
