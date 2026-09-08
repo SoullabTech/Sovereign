@@ -202,15 +202,29 @@ export const NON_CONCLUSION_MEANING: Readonly<Record<DevelopmentalNonConclusion,
  * running and this number may be wrong in the dangerous direction. The
  * numbers here describe `claude-opus-5` and nothing else.
  *
- * ⛔ AS OF THIS WRITING THE EFFECTIVE PRODUCTION MODEL IS UNVERIFIED. The
- * source default is `claude-opus-5`, nothing in this repository overrides it,
- * and the production environment has not been read. A default is not a
- * reading. Verify with:
+ * ✅ THE EFFECTIVE PRODUCTION MODEL WAS READ BY THE FOUNDER, 2026-09-07,
+ * from the Mac Studio against the running container — this sentence replaces
+ * the "UNVERIFIED" one that stood here for a few hours:
  *
  *     docker exec maia-sovereign printenv MAIA_DEVELOPMENTAL_READER_MODEL
+ *     → (empty, twice)
  *
- * An empty result IS the answer — it means the default is in force — and
- * should be recorded as such rather than treated as a failed command.
+ * An empty result IS the answer, not a failed command: the variable is unset,
+ * so the source default `claude-opus-5` is what production runs, and the
+ * figures above describe the model actually in use. A failed `docker exec`
+ * would have written to stderr; two clean empty returns are a reading.
+ *
+ * ⚠️ WHAT THAT READING DOES AND DOES NOT COVER. `printenv` reports the
+ * container's environment, which is where this deployment's variables arrive
+ * (compose `env_file`). It would not see a value bundled into the image at
+ * build time by a framework-loaded `.env*` file. That path is not used here,
+ * and saying so is the honest boundary of the check rather than a hedge.
+ *
+ * ⛔ AND THE READING HAS A SHELF LIFE. It is true of the container running on
+ * 2026-09-07. Anyone changing `MAIA_DEVELOPMENTAL_READER_MODEL`, or reading
+ * these numbers long after that date, is looking at a fact that was verified
+ * once and can silently stop being true — re-read it rather than trusting
+ * this comment.
  */
 export const DEVELOPMENTAL_READ_CEILING_CODE_POINTS = 500_000;
 
