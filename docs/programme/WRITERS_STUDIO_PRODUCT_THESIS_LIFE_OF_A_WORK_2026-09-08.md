@@ -8,7 +8,13 @@ capable of **holding across the life of a Work**, not how an idea becomes one.
 **PT-1 · PT-2 · PT-5 · PT-6 ratified as written. PT-3 · PT-4 ratified with amendment
 (both amended in place below; the pre-amendment wording is quoted where it was
 narrowed, never silently replaced).**
-**STEP 1 — DOORWAY REFRAMING — AUTHORIZED AND EXECUTED (§12).**
+**STEP 1 — DOORWAY REFRAMING — AUTHORIZED, EXECUTED (§12), ACCEPTED AND CLOSED**
+(founder, 2026-09-08: both commits within scope; the threshold surface completes the
+semantic doorway the authorization intended; no deployment authorized by that
+acceptance alone).
+
+**NEXT AUTHORIZED ACT: PT-3 falsifier DESIGN only →
+`WS2-PT3_SOURCE_CUSTODY_FALSIFIER_DESIGN_2026-09-08.md`.**
 
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Source: founder articulation and ruling, 2026-09-08.
@@ -249,11 +255,13 @@ quiet manuscript → Restore → lineage
 1. **Doorway** — *DONE, §12.* Telling the truth about a capability the Studio already
    has. This is deliberately the first shipped act: it makes "Bring a Work Back to Life"
    a framing rather than a large new feature.
-2. **Prove custody** — the **PT-3 falsifier**. A test asserting that no content-working
-   act can mutate a historical Source, and that lifecycle acts are reachable only as
-   themselves. ⛔ **Founder condition: return with the falsifier DESIGN before Encounter
-   or any behavior that can act upon a returned Work.** The law is worth more as an
-   assertion than as a paragraph, and Restore is the feature that will test it.
+2. **Prove custody** — the **PT-3 falsifier**. Design delivered 2026-09-08:
+   `WS2-PT3_SOURCE_CUSTODY_FALSIFIER_DESIGN_2026-09-08.md` (census · protected object ·
+   seams · P1–P10 · false-green demonstration · implementation series). ⛔ **One finding
+   surfaced rather than built: P8 requires a new Source-lifecycle authority seam on
+   `vault_erasure_queue`, which is not authorized.** Nothing implemented. The law is
+   worth more as an assertion than as a paragraph, and Restore is the feature that will
+   test it.
 3. **Encounter (PT-1)** — the space between arrival and intention.
 4. **Hierarchy** — WS2-08B, member-confirmed imported structure. **HOLD NOT LIFTED.**
 5. **Intention authority (PT-2)** — a new axis, enforced at the mutation boundary.
