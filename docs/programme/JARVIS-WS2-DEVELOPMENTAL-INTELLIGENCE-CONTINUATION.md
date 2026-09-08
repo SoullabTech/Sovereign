@@ -210,7 +210,13 @@ records sit between the two: internal constitutional infrastructure, not a featu
 ```text
 PARENT FLOW            RECORDED
 CROSS-PHASE AUTHORITY  RATIFIED — founder act, 2026-09-08
-PHASE 1.5              OPEN — blocked at C0
+PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
+  Outcome              B — lawful N 19, excluded 7, corpus 26
+  top-k instrument     DISCHARGED / MUST NOT RUN
+  small-corpus redesign OPEN · DESIGN ONLY
+  selector contract    INSPECTED — no comparative-selection output
+  product gap          RECORDED — Studio lacks developmental selection
+  next act             FOUNDER RULING (evaluator vs deployed selector)
   MANIFESTS A/B/C      NOT FROZEN
   EXCLUDED SET         NOT FROZEN
   N                    NOT DETERMINED
