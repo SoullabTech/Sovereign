@@ -268,8 +268,33 @@ a downstream acceptance record while its upstream predicate is unresolved is how
 *gated* quietly becomes *mostly proceeding anyway*. That witness has now PASSED,
 which is what authorized this transcription and nothing else.
 
-**Subject: `d863d4df5`.** The implementation is frozen. Changing it before these
-run would move the subject being witnessed.
+### Witness subjects
+
+```
+d863d4df5   PRE-WITNESS FAIL
+            "Maximum update depth exceeded" — 110 console errors
+            unstable SectionWritingSession.session identity
+            the 8-observation instrument was NEVER ENTERED
+
+0cf26e22a   CURRENT WITNESS SUBJECT
+            identity stabilization only; nothing else moved
+```
+
+⛔ **`d863d4df5` stays in this record.** It is the commit on which the render loop
+was discovered, and replacing it silently would make the witness look like it had
+never happened. **The eight observations did not fail — they were never validly
+reached.** The instrument below is unchanged; only the commit judged against it
+has moved.
+
+⚠️ **What that failure taught, recorded and NOT turned into new work.** Every
+automated gate on this lane is a pure-function test or a source contract. Neither
+can see a React render loop. The commit that introduced the surface said as much
+in its own message — *"proves the ordering is written, not that a browser honours
+it; the browser's part belongs to the witness."* The browser witness supplied
+precisely that missing epistemic layer, on first contact, before observation 1.
+
+**The subject is frozen.** Changing it before these run would move what is being
+witnessed.
 
 **Why an instrument at all.** The automated gates prove what can be proven
 without a browser: the pure decisions, and the ORDER in which the component calls
