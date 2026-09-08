@@ -7,7 +7,7 @@ import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { DELETE_WORK_COPY, REMOVE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
-import { arrivalFor, manuscriptIdOf } from './homeState';
+import { arrivalFor, homeWritingExtent, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
 import type { MarkedLine } from './useMarkedLines';
@@ -34,7 +34,9 @@ import { AppearanceMenu } from './atmosphere/AppearanceMenu';
  * · A manuscript is NOT silently recast as a Work because it makes the page
  *   look populated. The member declares Works; the Studio does not.
  * · No progress bar, streak, quote, theme, or recommendation.
- * · No continuation is claimed that `lastWrittenAt` does not evidence.
+ * · No continuation is claimed that authorship does not evidence, and no
+ *   recency of WRITING is claimed at all — the only timestamp available moves
+ *   on a checkpoint (STUDIO-WRITING-PRESENCE-01).
  *
  * ── And what must always be possible ──────────────────────────────────────
  * · OPEN WRITING is immediate. A member is never made to classify old work
@@ -48,8 +50,31 @@ import { AppearanceMenu } from './atmosphere/AppearanceMenu';
  */
 
 const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
-const pagesLabel = (chars: number) =>
-  chars === 0 ? 'No writing yet' : `${pageEstimate(chars)} page${pageEstimate(chars) === 1 ? '' : 's'}`;
+/**
+ * STUDIO-WRITING-PRESENCE-01 · S1, ratified 2026-09-08.
+ *
+ * ⛔ "No writing yet" may appear ONLY when no substantive writing exists in
+ * either lifecycle layer. It used to be `sourceCharCount === 0`, and
+ * `manuscript_sections` is written by exactly one route — import. So every
+ * manuscript begun in the Studio said "No writing yet" forever, however much
+ * the member wrote: a Source extent answering a presence question.
+ *
+ * The page estimate still reads Source extent, which is what it truthfully
+ * means. Presence and extent are separate arguments precisely so neither can
+ * silently answer for the other.
+ */
+const pagesLabel = (
+  m: Pick<CurrentManuscript, 'charCount' | 'draftCharCount' | 'hasDraftWriting' | 'hasWriting'>,
+) => {
+  if (!m.hasWriting) return 'No writing yet';
+  /* ⛔ NOT pageEstimate(m.charCount). Source extent is 0 for anything begun in
+     the Studio, and pageEstimate clamps to 1 — so fixing only the sentence would
+     have left the number beside it just as false: "1 page" for a four-thousand
+     word draft. Presence and extent were both wrong, and both are the same
+     substitution. */
+  const pages = pageEstimate(homeWritingExtent(m));
+  return `${pages} page${pages === 1 ? '' : 's'}`;
+};
 
 /**
  * WS-HOME-REDESIGN v0.2 — dates remember, durations judge.
@@ -146,7 +171,7 @@ export default function HomeView({
 
      What it searches is exactly what the Home HAS: titles. There is no body
      text on this surface — `CurrentManuscript` carries id · title · counts ·
-     lastWrittenAt and no words — so the field says "by title" rather than
+     draft activity and no words — so the field says "by title" rather than
      letting the writer believe their sentences were searched and came back
      empty. An honest small search beats a search that silently under-reads.
 
@@ -327,15 +352,25 @@ export default function HomeView({
        Absent values VANISH: no dash, no "Untyped", no placeholder asserting an
        absence the writer never declared. */
     if (!m) return work.form ?? '';
-    /* ⛔ Observed on production 2026-09-07: a Work with zero characters rendered
-       "No writing yet · written August 14". `lastWrittenAt` is stamped when the
-       working-draft ROW is created (a blank page, a seeded import), so on its
-       own it does not evidence that a person wrote. homeState already refuses
-       to promote such a work to RETURN for exactly this reason; the card must
-       refuse to narrate it for the same reason. Characters AND a timestamp, or
-       the clause does not appear. */
-    const wrote = m.charCount > 0 ? whenWritten(m.lastWrittenAt) : null;
-    return [work.form ?? null, wrote].filter(Boolean).join(' · ');
+    /**
+     * STUDIO-WRITING-PRESENCE-01 · S4 — the clause is GONE, ratified 2026-09-08.
+     *
+     * ⛔ "written <when>" IS NOT PRESENTLY ESTABLISHABLE. The only timestamp
+     * available is the draft row's `updated_at`, and the checkpoint route
+     * advances it without changing a character — so the card could say a member
+     * wrote on a day they pressed "Keep a version" over verbatim imported text.
+     *
+     * The earlier guard here (`charCount > 0` AND a timestamp) was aimed at a
+     * real production defect — "No writing yet · written August 14" — but its
+     * first half was SOURCE extent, so it suppressed the clause for everything
+     * begun in the Studio while still admitting the checkpoint case it could
+     * not see.
+     *
+     * ⛔ Not renamed to "worked <when>" either. That is a separate product
+     * decision about how to speak of draft activity, and this lane has no
+     * ruling on it. A fact that cannot be told is not told.
+     */
+    return work.form ?? '';
   };
 
   /* ── The room ─────────────────────────────────────────────────────────
@@ -651,7 +686,7 @@ export default function HomeView({
                           href={canvasForManuscript(CANVAS_HREF, m.id)}
                           title={m.title ?? 'Untitled'}
                           untitled={!m.title}
-                          meta={pagesLabel(m.charCount)}
+                          meta={pagesLabel(m)}
                         />
                       ))}
                     </Cards>
@@ -745,7 +780,11 @@ export default function HomeView({
                 {alsoWritten.length > 0 ? (
                   <div className="mt-12">
                     <h3 className="text-[10.5px] tracking-[0.3em] uppercase opacity-30 mb-5">
-                      Also recently written
+                      {/* ⛔ NOT "Also recently written". These Works are proven
+                          written by the member, but the ordering behind them
+                          rests on draft activity, which a checkpoint moves — so
+                          the recency claim is not established and is not made. */}
+                      Also written
                     </h3>
                     <Cards>
                       {alsoWritten.map((w) => (
@@ -775,7 +814,7 @@ export default function HomeView({
                 >
                   {feature.title ?? 'Untitled writing'}
                 </h1>
-                <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature.charCount)}</p>
+                <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature)}</p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Link
                     href={canvasForManuscript(CANVAS_HREF, feature.id)}
@@ -1000,7 +1039,7 @@ export default function HomeView({
                       href={canvasForManuscript(CANVAS_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}
-                      meta={pagesLabel(m.charCount)}
+                      meta={pagesLabel(m)}
                     />
                   ))}
                 </Cards>

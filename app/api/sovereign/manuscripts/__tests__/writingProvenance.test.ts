@@ -1,5 +1,6 @@
 /**
- * `lastWrittenAt` must mean a member act, not a row mutation.
+ * The draft timestamp must mean a member act, not a row mutation — and, since
+ * 2026-09-08, must not be mistaken for a WRITING act either.
  *
  * Three production rows disproved three successive definitions of "writing
  * activity", each one a layer better than the last and each still measuring a
@@ -15,11 +16,30 @@
  * since. Under the previous rule Studio Home would have offered to "continue
  * writing" a book nobody had written a word of in this system.
  *
- * The discriminator is `updated_at > created_at`, which is exact rather than
- * heuristic ONLY because every writer to that column was enumerated on this
- * SHA: both INSERT paths omit updated_at (so it equals created_at), both
- * UPDATE paths are member acts (save/autosave, restore-a-revision), and no
- * migration backfills it.
+ * ⚠️ CORRECTED 2026-09-08 — STUDIO-WRITING-PRESENCE-01.
+ *
+ * This header used to conclude that `updated_at > created_at` is exact
+ * "because every writer to that column was enumerated on this SHA: both INSERT
+ * paths omit updated_at, both UPDATE paths are member acts (save/autosave,
+ * restore-a-revision)". ⛔ THE ENUMERATION MISSED A THIRD UPDATE PATH:
+ *
+ *   draft/checkpoint/route.ts — advances updated_at and revision_count and
+ *   writes a revision, with NO `content` in the SET list.
+ *
+ * So a member may import a book, let the draft be seeded verbatim, press
+ * "Keep a version", and move BOTH updated_at and the revision trail without
+ * authoring a character. `updated_at > created_at` therefore establishes
+ * MEMBER DRAFT ACTIVITY — saving, checkpointing, restoring, editing — and not
+ * writing.
+ *
+ * ⭐ THE FOURTH DEFINITION, and the first that measures authorship rather than
+ * a mutation: the current draft content differs from the durable revision-1
+ * baseline (`hasCurrentMemberContribution`). Continuability is that AND
+ * `hasWriting`, composed at the Home layer so neither name carries the other's
+ * meaning.
+ *
+ * The cases below still pin the third definition at the API boundary, which
+ * remains correct for what it now claims to be.
  */
 
 import { arrivalFor } from '@/app/writers-studio/homeState';
@@ -42,12 +62,26 @@ const work = (id: string, title: string | null, manuscriptId?: string): LivingWo
   materials: [],
 });
 
-const ms = (id: string, chars: number, written: string | null, title = 'm'): CurrentManuscript => ({
+/**
+ * ⚠️ `contributed` defaults to `written !== null` — which is EXACTLY the
+ * conflation the checkpoint counterexample broke. It is safe for the cases in
+ * this file only because each models a seed or a genuine save, never a
+ * checkpoint. ⛔ Any new case must set it explicitly; see the checkpoint case
+ * at the foot of this file.
+ */
+const ms = (
+  id: string, chars: number, written: string | null, title = 'm',
+  opts: { contributed?: boolean; draftChars?: number | null; hasDraftWriting?: boolean } = {},
+): CurrentManuscript => ({
   id, title, createdAt: iso(8), sectionCount: 1, charCount: chars, keepCount: 0,
-  lastWrittenAt: written,
+  lastMemberDraftActivityAt: written,
+  draftCharCount: opts.draftChars ?? null,
+  hasDraftWriting: opts.hasDraftWriting ?? false,
+  hasWriting: chars > 0 || (opts.draftChars ?? 0) > 0,
+  hasCurrentMemberContribution: opts.contributed ?? written !== null,
 });
 
-describe('lastWrittenAt — the API boundary', () => {
+describe('the draft-activity timestamp — the API boundary', () => {
   it('a SEEDED IMPORT yields null: created and updated in the same second', () => {
     const t = iso(8);
     expect(lastWrittenAt(t, t)).toBeNull();
@@ -125,5 +159,26 @@ describe('Studio Home — the production row that forced this fix', () => {
       const a = arrivalFor([work('w1', 'X', 'm1')], [ms('m1', 5000, bad as string | null)]);
       expect(a.kind).toBe('orient');
     }
+  });
+});
+
+
+/**
+ * STUDIO-WRITING-PRESENCE-01 — the fourth production row, and the one this
+ * file's own enumeration could not see.
+ */
+describe('a checkpoint is a member gesture, not a writing act', () => {
+  it('\u26d4 draft activity moved, and the seeded import is STILL not continuable', () => {
+    /* 33a9233c again: seeded verbatim, never edited — but this time the member
+       pressed "Keep a version", so updated_at DID advance past created_at. */
+    const checkpointed = ms('33a9233c', 374697, iso(0), 'book-print-kdp-final', {
+      contributed: false, draftChars: 374697, hasDraftWriting: true,
+    });
+    const a = arrivalFor([work('w-cp', 'The Book', '33a9233c')], [checkpointed]);
+
+    expect(checkpointed.lastMemberDraftActivityAt).not.toBeNull();            // activity: yes
+    expect(checkpointed.hasWriting).toBe(true);                   // writing exists
+    expect(checkpointed.hasCurrentMemberContribution).toBe(false);// authorship: no
+    expect(a.kind).not.toBe('continue');                          // and NOT offered back
   });
 });
