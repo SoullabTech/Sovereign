@@ -181,11 +181,64 @@ member asked for.
 - **A1 ∥ A3.** Coupled in substance: restraint must be *experienced as room*, and the room is
   A3's to build (ruling §8 C-1).
 
+## 4b. A1's FIRST EVIDENTIARY OBLIGATION *(founder, 2026-09-08)*
+
+> **The current corpus is all member-authored by construction. It is the only corpus against
+> which prose provenance can be proven with the correct answer known in advance. That
+> evidentiary window closes permanently the first time MAIA writes into a Work.**
+
+### WG-W1 — THE PRE-GENERATION BASELINE
+
+> **Before authorizing any MAIA-generated Work prose, prove that prose-level provenance
+> correctly identifies the existing corpus as entirely member-authored. Preserve that witness
+> permanently as the pre-generation baseline.**
+
+A clean-room moment that cannot be recreated. Every word in every existing Work is
+member-authored **by construction**, so the instrument can be falsified against a known
+answer — the only time that will ever be true.
+
+⛔ **A1 therefore does not begin by constraining an unruly generator. It begins by making
+authorship visible before mixed authorship exists at all.** The Studio already knows how not
+to take the pen (§2, WG-A1-03/04); what it does not yet know is how to say who held it.
+
+### WG-W2 — THE POST-AUTHORIZATION CONTROLLED CASES
+
+Deliberately introduced once generation is authorized, forming a before/after experimental
+boundary with WG-W1:
+
+| # | Case | Required |
+|---|---|---|
+| 1 | member writes prose | `member` |
+| 2 | MAIA generates by **explicit commission** | `maia` |
+| 3 | member revises MAIA prose | **lineage preserved** |
+| 4 | MAIA transforms member prose | **lineage preserved** |
+| 5 | copy / move / reorder | **authorship does not mysteriously change** |
+| 6 | deletion | provenance **disappears with the deleted text** rather than corrupting neighbouring lineage |
+
+**Case 3 is where WG-Q1 is answered** — the revision threshold, which must neither launder
+silently nor stain permanently. It is a rule about edit acts, never text similarity (ruling
+clause 2).
+
+⭐ **Cases 5 and 6 are the structural ones, and they name a collision worth flagging now**:
+split, merge, rename and reorder are exactly the operations **WS2-08** governs (08C's topology
+commands, held). Lineage across a split is not a provenance detail — it is the same question
+08C asks about section identity, arriving from the other side. ⛔ Not a reason to open 08C, and
+not this lane's to open. **Recorded so that whoever opens either finds the other.**
+
+### Why this cannot be deferred
+
+Beyond auditing: **a pre-generation population whose authorship is certain rather than
+retrospectively inferred** is what makes it possible, years from now, to ask whether Writer
+Guide achieved *"not more MAIA, more them"* — and to answer from evidence rather than from
+inference over prose whose origins were never recorded.
+
 ## 4. Standing
 
 ```
 WG-LAW-1       RATIFIED
 A1             OPEN → constitution recorded (WG-B1..WG-B8, WG-F1..WG-F9)
+               FIRST JOB: WG-W1 pre-generation baseline (§4b) — window is time-bound
+               WG-W2 controlled cases follow authorization; case 3 answers WG-Q1
 A2             follows A1 — must not outrun this law
 WS2-07         PRESERVED as ratified; v2 is a founder act in its own lane
 A3             open in parallel (Writer's Studio R&D) — does not block A1
