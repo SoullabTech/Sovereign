@@ -227,18 +227,69 @@ gate_disk() {
 #
 # Fail-closed, like gate_colab: unverifiable is a BLOCK, not a skip. A
 # constitutional gate that quietly stands down when it cannot run is not a gate.
-# NOTE: this requires dev dependencies in the deploy checkout (jest). If they are
-# absent the gate blocks and says so, rather than shipping unverified.
+#
+# ── THE TESTED SUBJECT MUST BE THE SHIPPED SUBJECT ────────────────────────────
+#
+# Founder review 2026-09-08 (Step 5, second return). The first binding ran Jest
+# from $PROJECT_DIR while the deploy builds $MAIA_BUILD_CONTEXT — the archived
+# immutable commit. That is a two-source acceptance path:
+#
+#   CHECKOUT A → PT-3 green
+#   SNAPSHOT B → shipped
+#
+# It is constitutionally invalid even when both trees are identical today; it is
+# the same defect the 2026-09-03 provenance repair removed from the build itself.
+# So the tree is a REQUIRED ARGUMENT. There is no default and no fallback to the
+# checkout: a caller that does not name a tree is refused.
+#
+# Dependencies are supplied WITHOUT changing the snapshot's source identity: the
+# trusted checkout's node_modules is symlinked in for the run and removed again
+# before the build, so the tested files are the snapshot's own and the build
+# context is byte-identical afterwards. node_modules is gitignored and excluded
+# by .dockerignore, so it is not source and never reaches the image. If a trusted
+# dependency environment is unavailable, deployment BLOCKS — it does not fall
+# back to testing $PROJECT_DIR.
 # ───────────────────────────────────────────────────────────────────────────────
 gate_source_custody() {
-    local cmd="${SOURCE_CUSTODY_CMD:-npm run --silent test:source-custody}"
+    local tree="${1:-}"
+    if [ -z "$tree" ]; then
+        log_block "Source custody: no tree named. This gate must run against the EXACT"
+        log_block "materialized commit being built — testing the checkout and shipping the"
+        log_block "snapshot is not verification. Refusing rather than guessing."
+        return 1
+    fi
+    if [ ! -d "$tree" ]; then
+        log_block "Source custody: named tree does not exist: $tree"
+        return 1
+    fi
 
-    log_info "Source custody: running PT-3 structural falsifiers ..."
+    local cmd="${SOURCE_CUSTODY_CMD:-npm run --silent test:source-custody}"
+    local linked=0
+    if [ ! -e "$tree/node_modules" ]; then
+        if [ -d "$PROJECT_DIR/node_modules" ]; then
+            ln -s "$PROJECT_DIR/node_modules" "$tree/node_modules" || {
+                log_block "Source custody: could not supply a dependency environment to $tree."
+                return 1
+            }
+            linked=1
+        else
+            log_block "Source custody: no trusted dependency environment available."
+            log_block "The snapshot cannot be tested, so the deploy does not proceed."
+            log_block "Install dev dependencies in $PROJECT_DIR. Do NOT make this gate skippable,"
+            log_block "and do NOT fall back to testing the checkout — that is the two-source path."
+            return 1
+        fi
+    fi
+
+    log_info "Source custody: running PT-3 structural falsifiers against $tree ..."
     local output exit_code=0
-    output="$(cd "$PROJECT_DIR" && eval "$cmd" 2>&1)" || exit_code=$?
+    output="$(cd "$tree" && eval "$cmd" 2>&1)" || exit_code=$?
+
+    # Always restore the snapshot to what was authorized, pass or fail.
+    if [ "$linked" = "1" ]; then rm -f "$tree/node_modules"; fi
 
     if [ "$exit_code" -ne 0 ]; then
-        log_block "PT-3 Source custody falsifiers did not pass (exit $exit_code)."
+        log_block "PT-3 Source custody falsifiers did not pass for the tree being built (exit $exit_code)."
         log_block "The Studio does not ship while a Source custody falsifier is red."
         echo "$output" | tail -30
         return 1
@@ -250,13 +301,18 @@ gate_source_custody() {
     # the law, and the named set is P6 · P7 · P8 · P11 · S4.
     local passed
     passed="$(echo "$output" | grep -Eo 'Tests:[^,]*[0-9]+ passed' | grep -Eo '[0-9]+' | tail -1 || echo '')"
-    if [ -z "$passed" ] || [ "$passed" -lt "${MIN_SOURCE_CUSTODY_CHECKS:-39}" ]; then
-        log_block "Source custody suite reported '${passed:-no}' passing checks — floor is ${MIN_SOURCE_CUSTODY_CHECKS:-39}."
+    if [ -z "$passed" ]; then
+        log_block "Source custody: could not parse a 'Tests: … N passed' line. Unverifiable is a BLOCK."
+        echo "$output" | tail -10
+        return 1
+    fi
+    if [ "$passed" -lt "${MIN_SOURCE_CUSTODY_CHECKS:-39}" ]; then
+        log_block "Source custody suite reported '$passed' passing checks — floor is ${MIN_SOURCE_CUSTODY_CHECKS:-39}."
         log_block "Checks that vanish are a regression, not a pass."
         return 1
     fi
 
-    log_ok "Source custody: $passed structural falsifiers passed (floor ${MIN_SOURCE_CUSTODY_CHECKS:-39})"
+    log_ok "Source custody: $passed structural falsifiers passed on the tree being built (floor ${MIN_SOURCE_CUSTODY_CHECKS:-39})"
     return 0
 }
 
@@ -268,7 +324,9 @@ gate_all() {
     sha="$(gate_provenance)"   # exits non-zero (set -e) if provenance blocks
     gate_disk
     gate_colab
-    gate_source_custody
+    # `all` inspects the CHECKOUT and says so. It is a developer convenience, not
+    # a shipping path: the shipping paths name their materialized commit.
+    gate_source_custody "$PROJECT_DIR"
     log_ok "All pre-deploy gates passed for $sha."
     echo "$sha"
 }
@@ -302,8 +360,11 @@ cmd_deploy_maia() {
     deploy_ctx_assert_and_materialize "$ref" || exit 1
 
     # Remaining pre-build gates (provenance is now covered by materialize above).
+    # Source custody runs against the MATERIALIZED TREE — the exact commit about
+    # to be built — never the shared checkout.
     gate_disk
     gate_colab
+    gate_source_custody "$MAIA_BUILD_CONTEXT"
 
     # Build AND swap use the SNAPSHOT's compose file (deploy_ctx_compose): the
     # deployment structure is the authorized commit's, never the checkout's
@@ -333,12 +394,13 @@ case "${1:-help}" in
     provenance) gate_provenance ;;
     colab)      gate_colab ;;
     disk)       gate_disk ;;
+    source-custody) gate_source_custody "${2:-}" ;;
     all)        gate_all >/dev/null ;;   # SHA already logged to stderr; suppress stdout echo
     deploy-maia) cmd_deploy_maia "${2:-}" ;;
     *)
         echo "Pre-Deploy Gate — Construction Gate as structure, not discipline"
         echo ""
-        echo "Usage: $0 <provenance|colab|disk|all> | deploy-maia <SHA>"
+        echo "Usage: $0 <provenance|colab|disk|all> | source-custody <TREE> | deploy-maia <SHA>"
         echo ""
         echo "  provenance        Validate GIT_COMMIT (never unknown/empty); echo resolved SHA"
         echo "  colab             Run Co-Lab boundary verifier; block unless 31/31 · 0 failed · 0 warned"

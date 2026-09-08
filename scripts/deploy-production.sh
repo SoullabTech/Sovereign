@@ -441,6 +441,10 @@ cmd_deploy() {
     # Disk preflight — refuse BEFORE the storage-expanding build (a full-disk
     # build dies at metadata write after minutes and can exit 0 through ssh).
     "$SCRIPT_DIR/pre-deploy-gate.sh" disk
+    # PT-3 Step 5: Source custody, against the MATERIALIZED COMMIT being built.
+    # One gate, multiple mandatory callers — never a second implementation, and
+    # never the checkout: the tested subject must be the shipped subject.
+    "$SCRIPT_DIR/pre-deploy-gate.sh" source-custody "$MAIA_BUILD_CONTEXT"
 
     # Build image first (never rebuild while down!) — from the immutable snapshot
     # (compose reads MAIA_BUILD_CONTEXT for every build `context:`).
@@ -555,6 +559,10 @@ cmd_update() {
     # Disk preflight — refuse BEFORE the storage-expanding build (a full-disk
     # build dies at metadata write after minutes and can exit 0 through ssh).
     "$SCRIPT_DIR/pre-deploy-gate.sh" disk
+    # PT-3 Step 5: Source custody, against the MATERIALIZED COMMIT being built.
+    # One gate, multiple mandatory callers — never a second implementation, and
+    # never the checkout: the tested subject must be the shipped subject.
+    "$SCRIPT_DIR/pre-deploy-gate.sh" source-custody "$MAIA_BUILD_CONTEXT"
 
     # Build + swap from the immutable snapshot — code AND compose structure
     # (deploy_ctx_compose; 2026-09-03 provenance repair).

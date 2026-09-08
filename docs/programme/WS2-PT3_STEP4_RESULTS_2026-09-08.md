@@ -1,7 +1,7 @@
 # PT-3 — Step 4 Results · P1–P11
 
-**Status: STEP 4 CLOSED (founder self-closing condition met, 2026-09-08). STEP 5 DONE —
-the PT-3 structural set is bound into the Writer's Studio release gate (§8).**
+**Status: STEP 4 CLOSED. STEP 5 — first binding REFUSED on founder review; repaired (§9).**
+The gate itself was accepted; its attachment to deployment was not.
 P1–P11 green, including P11(iii). Vault-writer census complete, no UNKNOWN.
 **P11 falsified on first run (§4), was RETURNED not repaired, and WS-01 built the missing
 write-side boundary under its own ruling (§6). The falsification and its wording are kept
@@ -290,18 +290,16 @@ HEAVIER ACCEPTANCE BOUNDARY  (witness class, unchanged)
 The database-backed witnesses are **not** turned into unit-test dependencies for ceremony;
 their execution class is preserved as ruled.
 
-**Binding:** `npm run test:source-custody` → `gate_source_custody()` in
-`scripts/pre-deploy-gate.sh`, called from `gate_all()` alongside provenance, disk and
-Co-Lab. **Fail-closed like `gate_colab`: unverifiable is a BLOCK, not a skip** — a
+**Binding (first attempt — REFUSED, see §9):** `npm run test:source-custody` →
+`gate_source_custody()` in `scripts/pre-deploy-gate.sh`, called from `gate_all()`. **Fail-closed like `gate_colab`: unverifiable is a BLOCK, not a skip** — a
 constitutional gate that quietly stands down when it cannot run is not a gate. It also
 carries a **floor** (39, `MIN_SOURCE_CUSTODY_CHECKS`) on the FR-14 discipline the Co-Lab
 gate already uses: *checks that vanish are a regression, not a pass.* The number is
 descriptive; the named set — P6 · P7 · P8 · P11 · S4 — is the law.
 
-⚠ **Operational prerequisite, stated rather than assumed:** unlike the Co-Lab gate, which
-runs inside the container, this runs `jest` from the deploy checkout and therefore needs dev
-dependencies present there. If they are absent the gate **blocks and says so**. Confirm on
-minisforum before the next deploy; do not resolve it by making the gate skippable.
+⚠ The operational note recorded here — "runs jest from the deploy checkout" — was itself
+the second defect. Superseded by §9; kept as written because it names the assumption that
+turned out to be wrong.
 
 ---
 
@@ -340,3 +338,93 @@ built directly from the real migrations and had it throughout.
 > Source **record**, and now against Source **bytes**. Historical Source is no longer
 > unlikely to be overwritten by the Studio — it is un-overwritable through the Studio's
 > ordinary writing powers.
+
+
+---
+
+## 9 — Step 5 binding repair
+
+Founder review 2026-09-08 accepted the 39-check gate and **refused its binding**, on two
+defects that were both real.
+
+**Defect 1 — the shipping paths did not cross it.** `gate_all()` called
+`gate_source_custody`, but nothing that ships calls `gate_all()`. `deploy-maia` ran
+disk → Co-Lab → build; `deploy-production.sh deploy` and `update` ran only the disk
+preflight. *A standalone command that would block if invoked is not a release gate unless
+the shipping path must cross it.*
+
+**Defect 2 — the gate verified the wrong tree.** It ran Jest from `$PROJECT_DIR` while the
+deploy builds `$MAIA_BUILD_CONTEXT`, the archived immutable commit:
+
+```text
+CHECKOUT A → PT-3 green
+SNAPSHOT B → shipped
+```
+
+Invalid even when both trees are identical, and the same shape the 2026-09-03 provenance
+repair removed from the build itself. **Testing the checkout and shipping the snapshot is
+not verification.**
+
+### The repair
+
+**The tree is a required argument.** No default, no fallback to the checkout; a caller that
+names no tree is refused. `gate_all` passes `$PROJECT_DIR` *explicitly* and is documented as
+a developer convenience, not a shipping path.
+
+**One gate, three mandatory callers**, each naming the materialized commit — never a second
+implementation (`deploy-production.sh` contains no `test:source-custody` of its own):
+
+| Path | Call |
+|---|---|
+| `pre-deploy-gate.sh deploy-maia` | `gate_source_custody "$MAIA_BUILD_CONTEXT"`, before `build maia` |
+| `deploy-production.sh deploy` | `pre-deploy-gate.sh source-custody "$MAIA_BUILD_CONTEXT"` |
+| `deploy-production.sh update` | same |
+
+**Build-path census.** `scripts/deploy-maia-frontend.sh` also builds the `maia` service from
+`docker-compose.production.yml` — but it never calls `acquire_deploy_lock()`, so no
+`DEPLOY_LANE_TOKEN` reaches the build and the Dockerfile tripwire refuses it in under a
+second. **Adjudicated as structurally dead, not gated**, on the same footing as the retired
+bare compose command. `deploy-maia-api.sh` builds a different service;
+`deploy-consciousness-computing.sh` builds different images. No UNKNOWN path remains.
+
+**Dependencies, sharpened.** The requirement is not "the checkout has Jest" — it is that the
+immutable snapshot can be tested **without changing its source identity**. The gate symlinks
+the trusted checkout's `node_modules` into the snapshot for the run and **removes it again**,
+so the tested files are the snapshot's own and the build context is byte-identical
+afterwards (`node_modules` is gitignored and `.dockerignore`d, so it is not source and never
+reaches the image). No trusted environment → **BLOCK**, never a fallback to `$PROJECT_DIR`.
+
+### Binding falsifiers — `scripts/__tests__/releaseGateBinding.test.ts`, 13 passed
+
+| | |
+|---|---|
+| deploy-maia runs it against the materialized tree, **before** the build | ✅ |
+| deploy **and** update both run it, both naming the materialized tree, one implementation | ✅ |
+| ⛔ no shipping path may name the checkout instead of the tree it builds | ✅ |
+| the gate refuses to run with no tree named | ✅ |
+| ⛔ **THE TWO-SOURCE CONTROL** — checkout green, named tree red → **BLOCKS** | ✅ *(this repo's own suite is green; had the gate inspected the checkout, this would have passed — which is the defect)* |
+| passes only when the named tree itself is green | ✅ |
+| 39 green → may pass · one red → BLOCK · 38 none-red → BLOCK · command unavailable → BLOCK · unparseable → BLOCK | ✅ |
+| no trusted dependency environment → BLOCK, never a checkout fallback | ✅ |
+| the snapshot is left byte-identical — the borrowed `node_modules` is removed | ✅ |
+
+One harness note worth keeping: the first run of the two-source control passed on exit code
+while reading an empty string, because the gate logs its verdict to **stderr** and the
+harness captured only stdout. A test that never observes the gate speak is not evidence, so
+the harness now captures both streams.
+
+### Acceptance conditions
+
+1. every sanctioned production build path crosses Source custody ✅ (census complete, one
+   path adjudicated dead) · 2. the gate runs against the exact materialized commit ✅ ·
+3. green-checkout/red-snapshot blocks ✅ · 4. missing dependencies block ✅ · 5. the
+structural suite remains green ✅ (**62 passed** across the four suites) · 6. **no production
+Source-custody behavior changed** ✅ — `git diff` against the previous commit touches
+**zero** of `sourceArtifact.ts` · `fileVault.ts` · `erasureAuthority.ts` · `arrivals.ts` ·
+`eraseManuscript.ts`.
+
+Typecheck 229 vs baseline 239, **0 regressions**. **No deployment is authorized by
+completing Step 5.**
+
+> The release gate becomes real only when the thing that passes PT-3 is the same immutable
+> thing that is built.
