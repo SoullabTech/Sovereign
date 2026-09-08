@@ -79,6 +79,21 @@ export type StructuredBlock =
   | { type: 'text'; text: string }
   | { type: 'tool_use'; id: string; name: string; input: unknown };
 
+export type ModelAgreement = 'agreed' | 'differs' | 'unreported';
+
+/**
+ * THE ONE DERIVATION. Single-owned so no adapter can spell the three-way
+ * comparison its own way, and so no fixture can hand back an agreement
+ * inconsistent with the two facts it is supposed to summarise (SP-6).
+ */
+export function deriveModelAgreement(
+  requested: string,
+  reported: string | null,
+): ModelAgreement {
+  if (reported === null) return 'unreported';
+  return reported === requested ? 'agreed' : 'differs';
+}
+
 export interface StructuredResult {
   /**
    * THE BLOCKS SURVIVE. A missing or malformed tool call must remain DETECTABLE
@@ -91,8 +106,38 @@ export interface StructuredResult {
   usage: { inputTokens: number; outputTokens: number };
   provenance: {
     provider: ProviderName;
-    /** The model ACTUALLY SENT, resolved — never the default's name. */
+    /**
+     * THE MODEL REQUESTED AND SENT — the caller's pinned model, taken from the
+     * request that went up the wire. Its meaning has never changed and must not:
+     * `readerIdentity()` carries it into frozen `DevelopmentalReading` provenance
+     * that is already persisted and already shown to members, so redefining it
+     * would retroactively alter what those rows assert about what read someone's
+     * Work.
+     *
+     * It is NOT the model the provider says answered. That is `reportedModel`.
+     */
     model: string;
+    /**
+     * WHAT THE PROVIDER SAYS ANSWERED, read from the response — never from the
+     * request. `null` where a provider does not report model identity.
+     *
+     * REQUIRED, not optional (founder ruling 2026-09-08). An optional field would
+     * let "nobody supplied the fact" look indistinguishable from normal, which is
+     * the shape of the defect this repair exists to remove: a missing fact must
+     * remain visible as missing.
+     */
+    reportedModel: string | null;
+    /**
+     * SYNTACTIC agreement between `model` and `reportedModel`, mechanically
+     * derived — never asserted by a provider or a fixture.
+     *
+     * It is not authorization, not proof of endpoint identity, and not a judgment
+     * that a differing string is necessarily an unlawful substitution. Aliases are
+     * deliberately NOT normalized: deciding two identifiers are equivalent is its
+     * own policy question, and `differs` simply stops acceptance so a person can
+     * look.
+     */
+    modelAgreement: ModelAgreement;
     latencyMs: number;
   };
 }

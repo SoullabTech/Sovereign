@@ -1,7 +1,7 @@
 # AIN-STRUCTURED-PROVENANCE-01 — Census · DISCOVER ONLY
 
-**Status: READ-ONLY CENSUS AND REPAIR DESIGN. NOTHING CHANGED. The structured seam is
-untouched.**
+**Status: CENSUS ACCEPTED · REPAIR IMPLEMENTED (§9) · ⛔ BLOCKED ON A RATIFIED INSTRUMENT
+I AM NOT AUTHORIZED TO RE-BASELINE (§10). One further finding returned (§11).**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 (WS2-ENCOUNTER-01 · G8) — discovery only.
 
@@ -184,3 +184,95 @@ endpoint-policy question), and authorization for §7.
 
 > The seam was right about the fact it recorded. It was wrong only about the name it gave it,
 > and that name is what made a check look like proof.
+
+
+---
+
+## 9 — Repair, as implemented
+
+Per the ruling, with the amendment that the new fields are **required**.
+
+**`types.ts`** — `model`'s documentation corrected to say plainly *the model requested and
+sent*, with the reason it must never move (it is carried into already-persisted frozen reader
+provenance). Added **required** `reportedModel: string | null` and `modelAgreement: 'agreed' |
+'differs' | 'unreported'`, plus **one shared `deriveModelAgreement()`** so no adapter spells
+the three-way comparison its own way. An optional field would have let *nobody supplied the
+fact* look indistinguishable from normal — the shape of the defect being removed.
+
+**`anthropicStructuredAdapter.ts`** — reads `message.model` from the same returned `Message`
+already read for content, stop reason and usage. **No second request.** `reportedModel` is
+never populated from `req.model`, which would recreate the defect under a second field name.
+
+**Falsifiers — 27 passed in the seam suite:**
+
+| | |
+|---|---|
+| **SP-1** provider answers with a different model → `model` unchanged · `reportedModel` differs · `differs` | ✅ |
+| **SP-2** no model identity → `null` / `unreported`, never silently equal to the request; empty, non-string and `undefined` all included; **the long-running path reports identically** | ✅ |
+| **SP-3** `readerIdentity()` still receives the requested/sent model; frozen provenance shape unchanged (**468 DEVELOP + Studio tests green**) | ✅ |
+| **SP-5** the seam's own tests no longer call a requested value *"resolved-model provenance"* — the mislabel that let this survive | ✅ |
+| **SP-6** agreement derivable only from the two facts; aliases deliberately **not** normalized (`claude-opus-5` vs `claude-opus-5-20260101` → `differs`); the adapter is asserted not to spell the comparison itself | ✅ |
+
+**G8 witness** — reports inference mode · configured model · requested/sent · reported ·
+agreement · resolved endpoint **origin** (scheme + host + port) · whether a credential is
+present. It never prints, hashes or derives from the key, and it states in its own output
+that **whether the key is the product's is the operator's attestation, which the process
+cannot determine.** Model acceptance stops on `unreported` or `differs` *before* adjudication;
+channel acceptance (**SP-4**) refuses a non-canonical origin **before any inference** —
+verified: `https://proxy.internal:8443` refuses with no call made.
+
+**Gates:** Encounter **90** · PT-3 **39** · DEVELOP + Writer's Studio **468** · typecheck 229
+vs baseline 239, 0 regressions.
+
+---
+
+## 10 — ⛔ BLOCKED: the repair collides with a ratified seam-isolation instrument
+
+`lib/ai/structured/__tests__/seamIsolation.test.ts` pins the seam's four source files
+**byte-identical to the merge commit `8b31d931`**, under a stated invariant:
+
+> *A CALLER MIGRATION MUST BEND THE CALLER TO THE SEAM, NEVER THE SEAM TO THE CALLER. A
+> migration that "worked" by loosening the router, or by teaching the adapter about one
+> caller's shape, would have migrated nothing — it would have moved the vendor coupling one
+> file inward.*
+
+Two of the four are modified by this repair, so **that guard now fails.** It is the only
+failure.
+
+⛔ **I have not touched `MERGED`, and will not.** Re-pinning it would be a lane deciding to
+re-baseline a constitutional instrument in order to pass — the same error pattern this
+repository has ruled on before (*never re-baseline to absorb*), and precisely the move the
+guard exists to catch.
+
+**The distinction the guard cannot make.** Its subject is *a caller bending the seam to
+itself*. This is not that: it is the seam's own lane adding a fact to the shared contract
+under its own ruling, and **Encounter consumes nothing new** — the only Encounter-side change
+is witness code. But the guard pins bytes, not intent, and it is right not to guess.
+
+**Owed:** a founder act — either re-pin `MERGED` to the commit carrying this repair, or amend
+the invariant to distinguish *a caller altering the seam* (still forbidden) from *the seam's
+own governed amendment* (this act). ⛔ **Not mine to choose.**
+
+---
+
+## 11 — ⚠ A further finding: the origin check cannot see this environment's proxy
+
+SP-4 works. But running it here surfaced something the ruling should know:
+
+```text
+ANTHROPIC_BASE_URL (this authoring session) → origin https://api.anthropic.com
+```
+
+**The authoring-session proxy presents AT the canonical origin.** So the origin check —
+correct and worth having — would **not** have caught the borrowed channel I declined to use.
+It catches an obviously foreign endpoint; it cannot catch a transparent one.
+
+That does not weaken the ruling; it confirms the part of it that was already right:
+
+> *credential identity remains an operator responsibility · do not manufacture that proof*
+
+But it means the operator attestation is carrying more weight than "belt and braces" — in an
+environment like this one, **it is the only thing standing between a real witness and a
+plausible-looking counterfeit.** Worth stating in the G8 acceptance record rather than
+discovering later, and worth knowing that it is a further reason G8 still cannot be run here
+even if a key appeared.

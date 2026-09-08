@@ -50,6 +50,38 @@ if (!process.env.ENCOUNTER_G8_CONFIRM) {
   process.exit(2);
 }
 
+/**
+ * ── CHANNEL PROVENANCE, BEFORE ANY INFERENCE ──────────────────────────────
+ *
+ * Founder ruling 2026-09-08. Three facts, and no two may be collapsed:
+ *
+ *   REQUESTED   what we intended to invoke
+ *   REPORTED    what the provider says answered
+ *   AUTHORIZED  whether we invoked it through the constituted channel
+ *
+ * A matching model name proves nothing about the channel: correct model + wrong
+ * inference authority = wrong act. So the origin is checked BEFORE the first
+ * call — a borrowed proxy must not get to answer at all.
+ *
+ * ⛔ The credential itself is never printed, hashed, fingerprinted or derived
+ * from. And the witness deliberately does NOT claim to know where the key came
+ * from: a process can observe that an environment variable is set; it cannot
+ * determine the human provenance of the bytes in it. That last fact is the
+ * operator's attestation, not a machine-derived boolean.
+ */
+const CANONICAL_ORIGIN = 'https://api.anthropic.com';
+
+function resolvedOrigin(): string {
+  const raw = process.env.ANTHROPIC_BASE_URL;
+  if (!raw || raw.trim() === '') return CANONICAL_ORIGIN;
+  try {
+    const u = new URL(raw);
+    return u.port ? `${u.protocol}//${u.hostname}:${u.port}` : `${u.protocol}//${u.hostname}`;
+  } catch {
+    return `<unparseable: ${raw.slice(0, 40)}>`;
+  }
+}
+
 const [manuscriptId, memberId] = process.argv.slice(2);
 if (!manuscriptId || !memberId) {
   console.error('usage: encounter-g8-live-ear.ts <manuscriptId> <memberId>');
@@ -57,6 +89,28 @@ if (!manuscriptId || !memberId) {
 }
 
 async function main() {
+  const origin = resolvedOrigin();
+  const keyPresent = Boolean(process.env.ANTHROPIC_API_KEY);
+
+  console.log(`\nG8 LIVE EAR WITNESS`);
+  console.log(`inference mode      : ${process.env.MAIA_INFERENCE_MODE ?? '<unset>'}`);
+  console.log(`configured model    : ${encounterModel()}`);
+  console.log(`endpoint origin     : ${origin}`);
+  console.log(`ANTHROPIC_API_KEY   : ${keyPresent ? 'present' : 'ABSENT'}`);
+  console.log(`  (whether that key is the PRODUCT's credential rather than a borrowed one`);
+  console.log(`   is the operator's attestation — this process cannot determine it.)\n`);
+
+  if (origin !== CANONICAL_ORIGIN) {
+    console.error(`⛔ G8 CHANNEL FAILURE — endpoint origin is ${origin}, not ${CANONICAL_ORIGIN}.`);
+    console.error('   No inference is performed. A matching model name would not rescue this:');
+    console.error('   a witness that borrows a credential is witnessing a different act.');
+    process.exit(1);
+  }
+  if (!keyPresent) {
+    console.error('⛔ ANTHROPIC_API_KEY absent — G8 cannot run. This is not a product defect.');
+    process.exit(1);
+  }
+
   const captured = await captureDraft(manuscriptId, memberId);
   if (!captured) {
     console.error('No Working Draft for that Work and member. (Source is not read.)');
@@ -68,11 +122,9 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\nG8 LIVE EAR WITNESS`);
-  console.log(`configured model : ${encounterModel()}`);
-  console.log(`snapshot         : rev ${captured.snapshot.revisionNumber} · ${captured.snapshot.length} code points`);
-  console.log(`digest           : ${captured.snapshot.wholeDraftDigest}`);
-  console.log(`windows          : ${traversal.windows.length}\n`);
+  console.log(`snapshot            : rev ${captured.snapshot.revisionNumber} · ${captured.snapshot.length} code points`);
+  console.log(`digest              : ${captured.snapshot.wholeDraftDigest}`);
+  console.log(`windows             : ${traversal.windows.length}\n`);
 
   let surviving = 0;
   let rejected = 0;
@@ -94,9 +146,27 @@ async function main() {
        exists to expose. */
     const prov = outcome.result.provenance;
     console.log(`── WINDOW ${i + 1} (${w.contextStartCodePoint}..${w.endCodePoint}) ─────────────`);
-    console.log(`provenance     : provider=${prov.provider} model=${prov.model} latencyMs=${prov.latencyMs}`);
+    console.log(`provider       : ${prov.provider}`);
+    console.log(`requested/sent : ${prov.model}`);
+    console.log(`reported model : ${prov.reportedModel ?? '<unreported>'}`);
+    console.log(`model agreement: ${prov.modelAgreement}`);
+    console.log(`latencyMs      : ${prov.latencyMs}`);
+
+    /* MODEL ACCEPTANCE, before any semantic adjudication. */
+    if (prov.reportedModel === null) {
+      console.error('\n⛔ G8 STOP — provenance incomplete: the provider reported no model identity.');
+      console.error('   Nothing is adjudicated on an unreported act.');
+      process.exit(1);
+    }
+    if (prov.modelAgreement === 'differs') {
+      console.error(`\n⛔ G8 STOP — MODEL PROVENANCE FINDING: requested ${prov.model}, reported ${prov.reportedModel}.`);
+      console.error('   If another model performed the act, the constituted act is not the act');
+      console.error('   we thought we were witnessing. Return this; do not adjudicate.');
+      process.exit(1);
+    }
     if (prov.model !== encounterModel()) {
-      console.log(`  ⚠ RETURNED MODEL DIFFERS FROM CONFIGURED (${encounterModel()}) — record this.`);
+      console.error(`\n⛔ G8 STOP — the model SENT (${prov.model}) is not the CONFIGURED Encounter model (${encounterModel()}).`);
+      process.exit(1);
     }
     console.log(`stop reason    : ${JSON.stringify(outcome.result.stopReason)}`);
     console.log(`tokens         : in=${outcome.result.usage.inputTokens} out=${outcome.result.usage.outputTokens}`);
