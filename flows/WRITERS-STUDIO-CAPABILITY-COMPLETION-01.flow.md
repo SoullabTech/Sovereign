@@ -16,7 +16,15 @@ WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_CORRECTION_2026-09-07.md
   before it is a product-design problem.
 
 CORRECTED FLOW   RECOVER → RECONCILE → PRESENT → FOUNDER ACT → BUILD
-CURRENT ACT      capability work, per the founder's product sequence
+CURRENT ACT      HOLD — awaiting the keyed warmth witness
+                 Lane state of record: docs/programme/
+                 WRITERS-STUDIO-CAPABILITY-COMPLETION-01_LANE_STATE_2026-09-08.md
+
+                 Nothing further in this lane before that witness. More static
+                 architecture would be speculation around an experience
+                 deliberately designed to be judged by ear.
+
+PRIOR            capability work, per the founder's product sequence
 
   ACCEPTED     D1-D4 repair truth · Notes v1 (witnessed)
                Goals v1 core (witnessed) · FR-13 grant (witnessed)
