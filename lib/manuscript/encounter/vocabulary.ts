@@ -12,6 +12,21 @@
  * falsifier. A regex pretending to understand expectation would be worse than an
  * honest limit.
  *
+ * ── WHAT THIS SCREENS, AFTER THE FIRST LIVE WITNESS ───────────────────────
+ *
+ * `c.text` is MAIA'S ASSERTION ONLY. It is not, and must not become, a mixed
+ * utterance of MAIA's words and the Work's. The live run showed why: the Work's
+ * own quoted language tripped rules written for MAIA's authorship, and a Work is
+ * entitled to contain sentences MAIA may never assert.
+ *
+ *   Quoting the Work does not make MAIA the author of it.
+ *
+ * The boundary is upstream, in the SHAPE — the model reports `assertion` and
+ * `evidence` separately, and `bind.ts` puts only the assertion in `text` after
+ * proving each excerpt is literally Work material. Quotation marks would not do:
+ * they are presentation syntax, not provenance. Nothing here is loosened for
+ * quoted material, because no quoted material arrives here.
+ *
  * ── FAILING CLOSED ────────────────────────────────────────────────────────
  *
  * A candidate that trips any rule is DROPPED, not repaired and not reported to

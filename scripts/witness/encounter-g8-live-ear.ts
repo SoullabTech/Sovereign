@@ -55,7 +55,7 @@ import { captureDraft } from '@/lib/manuscript/encounter/read';
 import { traverseWhole } from '@/lib/manuscript/encounter/traversal';
 import { renderWindowRequest, encounterModel } from '@/lib/manuscript/encounter/render';
 import { parseNoticeBlocks } from '@/lib/manuscript/encounter/parse';
-import { bindProposals } from '@/lib/manuscript/encounter/bind';
+import { bindExcerpt, bindProposals } from '@/lib/manuscript/encounter/bind';
 import { screenCandidate } from '@/lib/manuscript/encounter/vocabulary';
 import { runStructured } from '@/lib/ai/structured/router';
 
@@ -255,12 +255,34 @@ async function main() {
       continue;
     }
 
-    const bound = bindProposals(captured.text, parsed.proposals, {
-      visibleStart: w.contextStartCodePoint,
-      visibleEnd: w.endCodePoint,
-    });
+    const visible = { visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint };
+
+    /* Per-excerpt diagnosis BEFORE the canonical binding, so a failure is visible
+       as what it is. The model reproduces evidence; the server locates it. A
+       failure here is lawful and is never repaired — it is the finding. */
+    for (const prop of parsed.proposals) {
+      console.log(`  ── proposal (${prop.family})`);
+      console.log(`  assertion  : ${prop.assertion}`);
+      for (const e of prop.evidence) {
+        const b = bindExcerpt(captured.text, visible, e.excerpt);
+        console.log(`  model quote: ${JSON.stringify(e.excerpt)}`);
+        if (!b.ok) {
+          console.log(
+            b.reason === 'not_found'
+              ? '  → DOES NOT BIND (not_found): these exact characters do not occur in what this call was shown. Not repaired, not approximated.'
+              : '  → DOES NOT BIND (ambiguous): these exact characters occur more than once here. The server chooses nothing.',
+          );
+          continue;
+        }
+        console.log(`  server text: ${JSON.stringify(b.boundText)}`);
+        console.log(`  server range: ${b.anchor.startCodePoint}..${b.anchor.endCodePoint}  digest ${b.anchor.spanDigest.slice(0, 12)}…`);
+        console.log(`  exact       : ${b.boundText === e.excerpt ? 'YES' : 'NO ⛔'}`);
+      }
+    }
+
+    const bound = bindProposals(captured.text, parsed.proposals, visible);
     if (bound.length < parsed.proposals.length) {
-      console.log(`  ⚠ ${parsed.proposals.length - bound.length} proposal(s) did NOT bind — invented, mis-ranged, or outside what this call saw. Coordinates are NOT repaired.`);
+      console.log(`  ⚠ ${parsed.proposals.length - bound.length} proposal(s) did NOT bind. Evidence that cannot be located exactly and uniquely is discarded with its notice — never relocated onto the nearest plausible text.`);
     }
 
     for (const c of bound) {
@@ -272,6 +294,10 @@ async function main() {
         console.log(`  anchor     : ${a.startCodePoint}..${a.endCodePoint}  digest ${a.spanDigest.slice(0, 12)}…`);
         console.log(`  cited text : ${JSON.stringify(points.slice(a.startCodePoint, a.endCodePoint).join(''))}`);
       }
+      /* The adjudication question that failed on the first run is unchanged, and
+         it is still the one that matters: an anchor now proves the excerpt is
+         real and was shown. It still cannot prove the excerpt GROUNDS the
+         assertion. That remains a human judgment. */
       if (violations.length > 0) {
         rejected += 1;
         console.log(`  SCREEN     : REJECTED (${violations.join(', ')}) — never reaches the writer\n`);

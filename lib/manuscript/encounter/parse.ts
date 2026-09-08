@@ -1,32 +1,51 @@
 /**
  * WS2-ENCOUNTER-01 · E2-C — model output → UNBOUND proposals.
  *
- * Founder amendment E2-C/A. Model output must NOT parse into `CandidateNotice`,
- * because a `CandidateNotice` already carries `Anchor.spanDigest` — and either
- * the model would supply that digest, appearing to certify its own evidence, or
- * this parser would need the manuscript bytes it has no business holding.
+ * ── WHY THE MODEL NO LONGER SUPPLIES COORDINATES (founder ruling 2026-09-08) ─
  *
- *   Evidence provenance is established by the boundary holding the evidence,
- *   never by the cognition proposing the observation.
+ * The first live witness settled it. The model quoted the Work accurately and
+ * located it falsely: drifts of +422, +499 and +1808 code points, growing with
+ * distance into the window. Not a constant shift and not our indexing — a model
+ * ESTIMATING positions rather than counting them.
  *
- * So this file produces `ModelNoticeProposal`: family, words, and coordinates.
- * It never reads the Work, and it computes no hash. Binding happens in `bind.ts`,
- * with the captured snapshot in hand.
+ *   It can copy what it saw. It cannot count where it saw it.
+ *
+ * So the claim changed. The model now reproduces the evidence VERBATIM, and the
+ * server establishes where that evidence is:
+ *
+ *   The cognition identifies the evidence by reproducing it.
+ *   The server establishes where that evidence actually is.
+ *
+ * This is not the forbidden quote-lookup repair. That prohibition's subject was
+ * *repairing a location claim after the model got it wrong*, which remains
+ * forbidden. Here there is no model-authored location claim to repair. The server
+ * never asks where the model probably meant; it asks whether the exact evidence
+ * claimed occurs in the exact text this call was shown.
+ *
+ * ── AND WHY `assertion` AND `evidence` ARE NOW SEPARATE FIELDS ────────────
+ *
+ * The same run showed the vocabulary screen reading MAIA's words and the Work's
+ * quoted words as one undifferentiated utterance. A Work may contain language
+ * MAIA is forbidden to assert; quoting it does not make MAIA its author. The
+ * boundary lives in the SHAPE — quotation marks are presentation syntax, not
+ * provenance — and it only earns its exemption once the server has proved the
+ * evidence is literally Work material.
  */
 import { isEncounterFamily } from './contract';
 import { RESULT_TOOL_NAME } from './render';
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 
-export interface ProposedSpan {
-  readonly startCodePoint: number;
-  readonly endCodePoint: number;
+/** Verbatim Work material, as the model reproduced it. Unverified until bound. */
+export interface ProposedEvidence {
+  readonly excerpt: string;
 }
 
-/** Unbound: coordinates only. No digest — there is nothing here to certify with. */
+/** Unbound: words only. No coordinates, no digest — nothing to certify with. */
 export interface ModelNoticeProposal {
   readonly family: string;
-  readonly text: string;
-  readonly spans: readonly ProposedSpan[];
+  /** MAIA's own words. This — and only this — is screened. */
+  readonly assertion: string;
+  readonly evidence: readonly ProposedEvidence[];
 }
 
 export type ParseOutcome =
@@ -37,8 +56,8 @@ export type ParseOutcome =
    *  found nothing worth saying (C7). */
   | { readonly ok: false; readonly reason: 'malformed_tool_input' };
 
-const NOTICE_KEYS = new Set(['family', 'text', 'spans']);
-const SPAN_KEYS = new Set(['startCodePoint', 'endCodePoint']);
+const NOTICE_KEYS = new Set(['family', 'assertion', 'evidence']);
+const EVIDENCE_KEYS = new Set(['excerpt']);
 const ENVELOPE_KEYS = new Set(['outcome', 'notices']);
 
 const bad = { ok: false, reason: 'malformed_tool_input' } as const;
@@ -48,9 +67,9 @@ const bad = { ok: false, reason: 'malformed_tool_input' } as const;
  *
  * Text blocks are IGNORED as content but cannot substitute for the envelope: a
  * prose-only answer produces no envelope and therefore refuses (B3). An
- * undeclared field anywhere refuses too — a `digest`, `confidence`, `severity`
- * or `priority` the model invented must not acquire meaning merely because the
- * provider tolerated it.
+ * undeclared field anywhere refuses too — a `startCodePoint`, `spanDigest`,
+ * `confidence` or `unitId` the model invented must not acquire meaning merely
+ * because the provider tolerated it. Location is not the model's to assert.
  */
 export function parseNoticeBlocks(blocks: readonly StructuredBlock[]): ParseOutcome {
   const envelopes = blocks.filter((b) => b.type === 'tool_use') as Extract<StructuredBlock, { type: 'tool_use' }>[];
@@ -66,7 +85,6 @@ export function parseNoticeBlocks(blocks: readonly StructuredBlock[]): ParseOutc
 
   const outcome = input.outcome;
   if (outcome === 'none') {
-    /* Consistency: nothing may ride along with a declared silence. */
     if (input.notices !== undefined) return bad;
     return { ok: true, proposals: [] };
   }
@@ -81,23 +99,21 @@ export function parseNoticeBlocks(blocks: readonly StructuredBlock[]): ParseOutc
     const notice = n as Record<string, unknown>;
     for (const k of Object.keys(notice)) if (!NOTICE_KEYS.has(k)) return bad;
 
-    const { family, text, spans } = notice;
+    const { family, assertion, evidence } = notice;
     if (typeof family !== 'string' || !isEncounterFamily(family)) return bad;
-    if (typeof text !== 'string' || text.trim() === '') return bad;
-    if (!Array.isArray(spans) || spans.length === 0) return bad;
+    if (typeof assertion !== 'string' || assertion.trim() === '') return bad;
+    if (!Array.isArray(evidence) || evidence.length === 0) return bad;
 
-    const parsedSpans: ProposedSpan[] = [];
-    for (const s of spans) {
-      if (!s || typeof s !== 'object' || Array.isArray(s)) return bad;
-      const span = s as Record<string, unknown>;
-      for (const k of Object.keys(span)) if (!SPAN_KEYS.has(k)) return bad;
-      if (!Number.isInteger(span.startCodePoint) || !Number.isInteger(span.endCodePoint)) return bad;
-      parsedSpans.push({
-        startCodePoint: span.startCodePoint as number,
-        endCodePoint: span.endCodePoint as number,
-      });
+    const parsed: ProposedEvidence[] = [];
+    for (const e of evidence) {
+      if (!e || typeof e !== 'object' || Array.isArray(e)) return bad;
+      const item = e as Record<string, unknown>;
+      for (const k of Object.keys(item)) if (!EVIDENCE_KEYS.has(k)) return bad;
+      if (typeof item.excerpt !== 'string' || item.excerpt.length === 0) return bad;
+      parsed.push({ excerpt: item.excerpt });
     }
-    proposals.push({ family, text, spans: parsedSpans });
+
+    proposals.push({ family, assertion, evidence: parsed });
   }
 
   return { ok: true, proposals };

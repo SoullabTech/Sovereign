@@ -167,6 +167,14 @@ mechanically.
 ⛔ Nothing implemented. No lexicon changed, no screen re-scoped, no evidence primitive
 altered, no coordinate repaired, no witness re-run.
 
+> ⭐ **SUPERSEDED IN PART, 2026-09-08 (same day), by founder ruling and the repair it
+> authorized.** Kept verbatim because it was true when written. What changed: A3.2
+> quotation-as-primitive was ruled **lawful and selected** (exact / unique / else no bind);
+> server-enumerated units were **NOT** selected; Part A landed and Part B landed only as the
+> structural boundary Part A makes possible — **the lexicon is still unchanged and the screen
+> is still not re-scoped**. Record: `WS2-ENCOUNTER-01_EXACT_EXCERPT_REPAIR_2026-09-08.md`.
+> ⛔ **"No witness re-run" remains TRUE and is the open obligation.**
+
 Owed to the founder: **(a)** whether A3.2's quotation-as-primitive is barred by the
 "automatic quote lookup" prohibition or is a different act; **(b)** which representation Part A
 should pursue, given that only A3.4 catches both failure classes and it is the most demanding

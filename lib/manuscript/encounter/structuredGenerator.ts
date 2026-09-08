@@ -7,7 +7,8 @@
  * developmental renderer, not inside it.
  *
  *   window → renderWindowRequest → runStructured → parseNoticeBlocks
- *          → bindProposals (SERVER computes the digest) → CandidateNotice[]
+ *          → bindProposals (the SERVER locates the evidence and computes the
+ *            digest; the model supplied only verbatim excerpts) → CandidateNotice[]
  *          → screenCandidate (E2, unchanged) → MaiaNotice
  *
  * ── SOVEREIGNTY OUTRANKS ENCOUNTER AVAILABILITY ───────────────────────────
@@ -94,7 +95,10 @@ export function structuredGenerator(
          threw above never reaches here, so a partially processed Work cannot
          return the notices it managed to collect. */
       /* B2: bound against what THIS call was actually shown, not the whole Work.
-         Overlap is lawful because overlap was genuinely shown. */
+         Overlap is lawful because overlap was genuinely shown. An excerpt that
+         exists elsewhere in the Work but was not shown here is not found, and an
+         excerpt that is not unique here does not bind at all — the server
+         establishes an exact correspondence, never an intended one. */
       candidates.push(...bindProposals(text, parsed.proposals, {
         visibleStart: w.contextStartCodePoint,
         visibleEnd: w.endCodePoint,

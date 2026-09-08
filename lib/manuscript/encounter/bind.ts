@@ -1,34 +1,38 @@
 /**
- * WS2-ENCOUNTER-01 · E2-C — server-owned evidence binding.
+ * WS2-ENCOUNTER-01 — server-owned evidence binding, by exact correspondence.
  *
- * Founder amendment E2-C/A: **the model may point; it may not certify the
- * pointing.** This is the boundary that holds the Work, so this is the boundary
- * that computes the proof.
+ * Founder ruling 2026-09-08, after the first live witness:
  *
- *   proposal (coordinates)  →  [ this file, with the captured text ]  →  anchor
+ *   The cognition identifies the evidence by reproducing it.
+ *   The server establishes where that evidence actually is.
  *
- * Two protections remain distinct downstream, and both matter:
+ *   The server may establish an EXACT correspondence.
+ *   It may never infer an INTENDED correspondence.
  *
- *   binding        proves the proposed evidence ACTUALLY EXISTS in the Work
- *   anchorMatches  proves the resulting notice still names EXACTLY that evidence
+ * Those are different powers. The first is evidence binding. The second is the
+ * forbidden repair, and every tempting form of it is refused here:
  *
- * A span the model invented, mis-ranged, inverted or hallucinated past the end of
- * the Work does not bind, and its proposal is dropped rather than repaired.
+ *   0 exact matches   → does not bind       (a fabricated or altered excerpt)
+ *   1 exact match     → binds; server computes the range and the digest
+ *   2+ exact matches  → does not bind       (ambiguous — the server chooses NOTHING)
  *
- * ── EXISTENCE IS NOT EXPOSURE (B2, founder review) ────────────────────────
+ * The model may quote a longer surrounding passage to make its evidence unique.
+ * If it still is not unique, the proposal does not bind. **That is lawful
+ * failure**, and it is preferable to a server that guesses which occurrence was
+ * meant — guessing is the thing the prohibition exists to prevent.
  *
- * The first cut proved only that coordinates EXIST in the captured Work. That is
- * half the law. Each inference call sees ONE window, so a call answering window 2
- * could propose coordinates from window 1 — real bytes, genuinely in the Work,
- * that this cognition never saw — and a whole-manuscript binder would certify
- * them. The server would then be proving evidence for the WORK rather than
- * evidence for the CLAIM.
+ * ⛔ EXACTNESS MEANS EXACTNESS. No curly-to-straight apostrophes, no whitespace
+ * normalization, no case folding, no punctuation repair, no fuzzy matching, no
+ * edit distance, no substring approximation, no semantic similarity. If the model
+ * changes the Work while quoting it, it does not bind. That will suppress some
+ * lawful observations; measure it later rather than hiding it behind a forgiving
+ * matcher.
  *
- *   An anchor must prove both EXISTENCE and EXPOSURE.
+ * ── CODE POINTS, NOT UTF-16 ───────────────────────────────────────────────
  *
- * So binding takes the range actually shown to that call. Overlap is lawful
- * because overlap was genuinely shown; anything outside is not bindable by that
- * call, however real it is.
+ * JavaScript's string APIs index UTF-16 units, and the external anchor contract
+ * is code points. Every offset that leaves this module is converted, so an em
+ * dash or an emoji in a manuscript cannot silently shift an anchor.
  */
 import { createHash } from 'crypto';
 import type { CandidateNotice, Anchor } from './contract';
@@ -36,52 +40,87 @@ import type { ModelNoticeProposal } from './parse';
 
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
 
-/**
- * Bind proposals against the exact captured text. Returns only what bound.
- *
- * `text` is the snapshot's own text — never re-read from the database, so a
- * draft that moved mid-Encounter cannot be silently bound against its new state.
- */
 export interface VisibleRange {
-  /** Inclusive start of what this inference call was actually shown. */
+  /** Inclusive code-point start of what this inference call was shown. */
   readonly visibleStart: number;
-  /** Exclusive end of what this inference call was actually shown. */
+  /** Exclusive code-point end of what this inference call was shown. */
   readonly visibleEnd: number;
 }
 
+export type BindOutcome =
+  | { readonly ok: true; readonly anchor: Anchor; readonly boundText: string }
+  | { readonly ok: false; readonly reason: 'not_found' | 'ambiguous' };
+
+/**
+ * Bind ONE excerpt against the exact text this call was shown.
+ *
+ * Exposure is structural rather than checked: the search happens inside the
+ * visible slice only, so an excerpt that exists elsewhere in the Work but was
+ * not shown to this call simply is not there to be found.
+ */
+export function bindExcerpt(
+  text: string,
+  visible: VisibleRange,
+  excerpt: string,
+): BindOutcome {
+  const points = Array.from(text);
+  const windowText = points.slice(visible.visibleStart, visible.visibleEnd).join('');
+
+  /* Every occurrence, because the second one is what makes the first unusable. */
+  const hits: number[] = [];
+  for (let at = windowText.indexOf(excerpt); at !== -1; at = windowText.indexOf(excerpt, at + 1)) {
+    hits.push(at);
+    if (hits.length > 1) break; // two is already ambiguous; no need to count further
+  }
+
+  if (hits.length === 0) return { ok: false, reason: 'not_found' };
+  if (hits.length > 1) return { ok: false, reason: 'ambiguous' };
+
+  /* UTF-16 index → code-point index, then into whole-draft coordinates. */
+  const startInWindow = Array.from(windowText.slice(0, hits[0])).length;
+  const startCodePoint = visible.visibleStart + startInWindow;
+  const endCodePoint = startCodePoint + Array.from(excerpt).length;
+  const boundText = points.slice(startCodePoint, endCodePoint).join('');
+
+  return {
+    ok: true,
+    boundText,
+    anchor: { startCodePoint, endCodePoint, spanDigest: sha256(boundText) },
+  };
+}
+
+/**
+ * Bind proposals. Returns only what bound completely.
+ *
+ * `text` is the snapshot's own captured text — never re-read, so a draft that
+ * moved mid-Encounter cannot be bound against its new state.
+ */
 export function bindProposals(
   text: string,
   proposals: readonly ModelNoticeProposal[],
   visible: VisibleRange,
 ): CandidateNotice[] {
-  const points = Array.from(text);
   const bound: CandidateNotice[] = [];
 
   for (const p of proposals) {
     const anchors: Anchor[] = [];
     let allBound = true;
 
-    for (const s of p.spans) {
-      if (!Number.isInteger(s.startCodePoint) || !Number.isInteger(s.endCodePoint)) { allBound = false; break; }
-      if (s.startCodePoint < 0 || s.endCodePoint > points.length) { allBound = false; break; }
-      if (s.endCodePoint <= s.startCodePoint) { allBound = false; break; }
-      /* EXPOSURE: the model may point only within what it was actually shown. */
-      if (s.startCodePoint < visible.visibleStart || s.endCodePoint > visible.visibleEnd) {
-        allBound = false; break;
-      }
-      const slice = points.slice(s.startCodePoint, s.endCodePoint).join('');
-      anchors.push({
-        startCodePoint: s.startCodePoint,
-        endCodePoint: s.endCodePoint,
-        /* THE SERVER COMPUTES THIS. Nothing the model said reaches it. */
-        spanDigest: sha256(slice),
-      });
+    for (const e of p.evidence) {
+      const outcome = bindExcerpt(text, visible, e.excerpt);
+      if (!outcome.ok) { allBound = false; break; }
+      anchors.push(outcome.anchor);
     }
 
-    /* One unbindable span discards the whole proposal: an observation half of
-       whose evidence does not exist is not a partially true observation. */
+    /* One unbindable member discards the whole notice: an observation half of
+       whose evidence cannot be established is not half true. */
     if (!allBound || anchors.length === 0) continue;
-    bound.push({ family: p.family, text: p.text, anchors });
+
+    /* `text` on the candidate is MAIA'S ASSERTION ONLY. The evidence does not
+       travel in it, which is what gives the vocabulary screen an authorship
+       boundary — and that exemption is earned here, by the binding above having
+       proved the evidence is literally Work material. */
+    bound.push({ family: p.family, text: p.assertion, anchors });
   }
 
   return bound;

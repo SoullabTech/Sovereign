@@ -1,15 +1,24 @@
 /**
- * WS2-ENCOUNTER-01 · E2-C — G1–G9.
+ * WS2-ENCOUNTER-01 · E2-C — G1–G10, and the E-series added after the first live
+ * witness.
  *
  * The gate is not "does the model produce text?" It is:
  *
  *   Can actual cognition perceive under Encounter's epistemology while remaining
  *   structurally unable to become DEVELOPMENT?
+ *
+ * G8 added the second question, and the live run answered it badly:
+ *
+ *   Does the evidence a notice cites actually correspond to the notice?
+ *
+ * The model quoted accurately and located falsely. So the E-series (E1–E10)
+ * exists to pin the repair: the model reproduces evidence verbatim, the server
+ * establishes where it is, and every way of softening that is a failing test.
  */
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { createHash } from 'crypto';
-import { bindProposals } from '../bind';
+import { bindExcerpt, bindProposals } from '../bind';
 import { parseNoticeBlocks } from '../parse';
 import { renderWindowRequest, ENCOUNTER_SYSTEM, encounterModel, RESULT_TOOL_NAME } from '../render';
 import { traverseWhole } from '../traversal';
@@ -22,15 +31,23 @@ const REPO = join(__dirname, '../../../..');
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
 
 const TEXT = 'The house stood at the edge of the water. Every threshold in the book is wet.';
+const CITED = 'Every threshold in the book is wet.';
 const SNAP: EncounterSnapshot = {
   draftId: 'd', manuscriptId: 'm', revisionNumber: 1,
   wholeDraftDigest: sha256(TEXT), length: Array.from(TEXT).length,
 };
 
+/** Long enough to traverse into several windows, and unique at every position. */
+const longText = (sentences: number) =>
+  Array.from({ length: sentences }, (_, i) => `Sentence ${i} sits here with a number of its own. `).join('');
+
 const toolUse = (input: unknown): StructuredBlock => ({ type: 'tool_use', id: 't', name: RESULT_TOOL_NAME, input });
-/** One closed envelope carrying one notice. */
-const proposal = (spans: { startCodePoint: number; endCodePoint: number }[], text = 'Water recurs at thresholds.') =>
-  toolUse({ outcome: 'notices', notices: [{ family: 'recurrence', text, spans }] });
+/** One closed envelope carrying one notice. Evidence is VERBATIM Work material. */
+const proposal = (excerpts: string[], assertion = 'Water recurs at thresholds.') =>
+  toolUse({
+    outcome: 'notices',
+    notices: [{ family: 'recurrence', assertion, evidence: excerpts.map((excerpt) => ({ excerpt })) }],
+  });
 const silence = () => toolUse({ outcome: 'none' });
 const WHOLE = (t: string) => ({ visibleStart: 0, visibleEnd: Array.from(t).length });
 
@@ -48,39 +65,31 @@ beforeEach(() => {
   (query as jest.Mock).mockReset().mockResolvedValue({ rows: [{ id: 'd', content: TEXT, version: '1' }] });
 });
 
-describe('G1 · the model may point, it may not certify the pointing', () => {
-  it('the SERVER computes the digest — nothing the model said reaches it', () => {
-    const parsed = parseNoticeBlocks([proposal([{ startCodePoint: 41, endCodePoint: 76 }])]);
+describe('G1 · the model may point, it may not certify — or locate — the pointing', () => {
+  it('the SERVER computes the range and the digest — nothing the model said reaches them', () => {
+    const parsed = parseNoticeBlocks([proposal([CITED])]);
     expect(parsed.ok && parsed.proposals[0]).not.toHaveProperty('spanDigest');
+    expect(parsed.ok && parsed.proposals[0]).not.toHaveProperty('startCodePoint');
     const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT));
-    expect(bound[0].anchors[0].spanDigest).toBe(
-      sha256(Array.from(TEXT).slice(41, 76).join('')),
-    );
+    expect(bound[0].anchors[0]).toEqual({
+      startCodePoint: TEXT.indexOf(CITED),
+      endCodePoint: TEXT.indexOf(CITED) + Array.from(CITED).length,
+      spanDigest: sha256(CITED),
+    });
   });
 
   it('the tool schema has no field through which evidence could be certified', () => {
-    const props = Object.keys(
-      (require('../render').resultTool.inputSchema as any).properties.notices.items.properties.spans.items.properties,
-    );
-    expect(props.sort()).toEqual(['endCodePoint', 'startCodePoint']);
     expect(JSON.stringify(require('../render').resultTool)).not.toMatch(/digest|hash|sha/i);
   });
 
-  it('⛔ an invented, inverted or out-of-range span does not bind', () => {
-    const parsed = parseNoticeBlocks([
-      proposal([{ startCodePoint: 5000, endCodePoint: 5010 }]),
-      proposal([{ startCodePoint: 40, endCodePoint: 10 }]),
-      proposal([{ startCodePoint: -3, endCodePoint: 10 }]),
-    ]);
+  it('⛔ a fabricated excerpt does not bind', () => {
+    const parsed = parseNoticeBlocks([proposal(['The house burned down at dawn.'])]);
     expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT))).toEqual([]);
   });
 
-  it('⛔ one unbindable span discards the whole proposal', () => {
+  it('⛔ one unbindable excerpt discards the whole proposal', () => {
     /* An observation half of whose evidence does not exist is not half true. */
-    const parsed = parseNoticeBlocks([proposal([
-      { startCodePoint: 0, endCodePoint: 10 },
-      { startCodePoint: 9000, endCodePoint: 9001 },
-    ])]);
+    const parsed = parseNoticeBlocks([proposal([CITED, 'a sentence never written'])]);
     expect(bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT))).toEqual([]);
   });
 });
@@ -112,7 +121,7 @@ describe('G2 / G3 · silence and failure are different answers', () => {
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
-  it('⛔ G3 a foreign tool name is a failure, not an empty answer', async () => {
+  it('⛔ G3 a foreign tool name is a failure, not an empty answer', () => {
     expect(parseNoticeBlocks([{ type: 'tool_use', id: 't', name: 'develop', input: { outcome: 'none' } }]))
       .toEqual({ ok: false, reason: 'malformed_tool_input' });
   });
@@ -120,18 +129,18 @@ describe('G2 / G3 · silence and failure are different answers', () => {
 
 describe('G4 · partial cognition may not masquerade as whole-Work attention', () => {
   it('⛔ one failing window refuses the whole Encounter, discarding earlier notices', async () => {
-    const long = 'x'.repeat(30_000);
+    const long = longText(700);
     (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
     mockRun
-      .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 0, endCodePoint: 10 }])]))
-      .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 20, endCodePoint: 30 }])]))
+      .mockResolvedValueOnce(ok([proposal(['Sentence 1 sits here with a number of its own.'])]))
+      .mockResolvedValueOnce(ok([silence()]))
       .mockResolvedValueOnce({ ok: false, refusal: 'provider_unavailable', detail: 'W3' });
     const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
   it('every planned window is processed on a successful Encounter', async () => {
-    const long = 'y'.repeat(30_000);
+    const long = longText(700);
     (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
     mockRun.mockResolvedValue(ok([silence()]));
     const counters = { planned: 0, actual: 0 };
@@ -145,7 +154,7 @@ describe('G5 · rejection creates no retry', () => {
   it('⛔ every proposal failing the vocabulary screen still costs exactly the planned calls', async () => {
     const counters = { planned: 0, actual: 0 };
     mockRun.mockResolvedValue(ok([
-      proposal([{ startCodePoint: 0, endCodePoint: 10 }], 'The opening is underdeveloped and could be stronger.'),
+      proposal([CITED], 'The opening is underdeveloped and could be stronger.'),
     ]));
     const r = await encounter('m', 'mem', structuredGenerator(counters));
     /* Screened out downstream → silence. Not a second attempt. */
@@ -171,7 +180,7 @@ describe('G5 · rejection creates no retry', () => {
 describe('G6 · the request carries only authorized evidence and context', () => {
   const req = renderWindowRequest(SNAP, traverseWhole(TEXT).windows[0]);
 
-  it('the Work, the contract, and coordinates — nothing else (C8)', () => {
+  it('the Work and the contract — nothing else (C8)', () => {
     const wire = JSON.stringify(req);
     for (const forbidden of [
       'memory', 'profile', 'prior encounter', 'previous reading', 'developmental',
@@ -181,6 +190,13 @@ describe('G6 · the request carries only authorized evidence and context', () =>
     }
     expect(req.messages).toHaveLength(1);
     expect(req.messages[0].content).toContain(TEXT);
+  });
+
+  it('and no coordinates — the model is handed no number it could count back to', () => {
+    /* The live witness showed the model estimating positions from exactly this
+       framing. Withholding the numbers removes the invitation. */
+    const preamble = (req.messages[0].content as string).replace(TEXT, '');
+    expect(preamble).not.toMatch(/\d/);
   });
 
   it('the contract tells the model that nothing to say is a complete answer', () => {
@@ -265,7 +281,7 @@ describe('G9 · model choice cannot originate from the member gesture', () => {
 describe('G8 · the semantic ear, run through the real pipeline', () => {
   it('every corpus entry travels parse → bind → screen as a real proposal would', () => {
     for (const e of SEMANTIC_EAR_CORPUS) {
-      const parsed = parseNoticeBlocks([proposal([{ startCodePoint: 0, endCodePoint: 20 }], e.text)]);
+      const parsed = parseNoticeBlocks([proposal([CITED], e.text)]);
       expect(parsed.ok).toBe(true);
       const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT));
       expect(bound).toHaveLength(1);
@@ -308,27 +324,157 @@ describe('G10 · the production act crosses cognition (B1)', () => {
   });
 });
 
-describe('G1B · existence is not exposure (B2)', () => {
-  const long = 'A'.repeat(12_000) + 'B'.repeat(12_000);
-  const windows = traverseWhole(long).windows;
+/* ══════════════════════════════════════════════════════════════════════════
+   E1–E10 · the exact-excerpt evidence primitive.
 
-  it('⛔ a span valid in the manuscript but wholly inside ANOTHER window does not bind', async () => {
+   Founder ruling 2026-09-08, after G8 FAILED on grounding:
+
+     The cognition identifies the evidence by reproducing it.
+     The server establishes where that evidence actually is.
+
+     The server may establish an EXACT correspondence.
+     It may never infer an INTENDED correspondence.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** A fixture Work with the awkward cases built in, not sanded off. */
+const WORK = [
+  'A rune: 𝔊 stands here.',                                    // astral: UTF-16 ≠ code points
+  'The house stood at the edge of the water.',
+  'She said it wasn’t hers.',                                  // curly apostrophe
+  'There is no clear theme here, and the reader loses orientation.', // the WORK's own words
+  'The door opened.',
+  'A while later, the wind turned.',
+  'The door opened.',                                          // deliberate repetition
+].join('\n');
+const WORK_WHOLE = WHOLE(WORK);
+const bindOne = (excerpt: string) => bindExcerpt(WORK, WORK_WHOLE, excerpt);
+
+describe('E1 · an exact, unique excerpt binds — in CODE POINTS', () => {
+  it('binds, and the anchor addresses the same characters the model quoted', () => {
+    const excerpt = 'She said it wasn’t hers.';
+    const b = bindOne(excerpt);
+    expect(b.ok).toBe(true);
+    if (!b.ok) return;
+    expect(b.boundText).toBe(excerpt);
+    /* The astral rune earlier in the Work makes UTF-16 and code-point indices
+       disagree; the anchor must be right in code points, which is the contract. */
+    expect(Array.from(WORK).slice(b.anchor.startCodePoint, b.anchor.endCodePoint).join('')).toBe(excerpt);
+    expect(b.anchor.startCodePoint).not.toBe(WORK.indexOf(excerpt)); // UTF-16 index would be wrong
+    expect(b.anchor.spanDigest).toBe(sha256(excerpt));
+  });
+});
+
+describe('E2 · a fabricated excerpt does not bind', () => {
+  it('⛔ not_found — never the nearest plausible text', () => {
+    expect(bindOne('She said it was never hers at all.')).toEqual({ ok: false, reason: 'not_found' });
+  });
+});
+
+describe('E3 · a repeated excerpt does not bind', () => {
+  it('⛔ ambiguous — with two occurrences the server chooses NOTHING', () => {
+    expect(bindOne('The door opened.')).toEqual({ ok: false, reason: 'ambiguous' });
+  });
+
+  it('extending the quotation until it is unique is the lawful remedy', () => {
+    /* The model's own move, not the server's: quote more, do not guess which. */
+    expect(bindOne('The door opened.\nA while later').ok).toBe(true);
+  });
+});
+
+describe('E4 · exactness means exactness', () => {
+  const cases: Array<[string, string]> = [
+    ['straight apostrophe for curly', "She said it wasn't hers."],
+    ['case folded', 'she said it wasn’t hers.'],
+    ['whitespace normalized', 'She said  it wasn’t hers.'],
+    ['newline collapsed to a space', 'The door opened. A while later, the wind turned.'],
+    ['punctuation added', 'She said, it wasn’t hers.'],
+  ];
+  it.each(cases)('⛔ %s does not bind', (_label, excerpt) => {
+    /* No normalization, no folding, no fuzzy match, no edit distance. This will
+       suppress some lawful observations. Measure that later rather than hide it
+       behind a forgiving matcher. */
+    expect(bindOne(excerpt).ok).toBe(false);
+  });
+
+  it('a SHORTER exact substring binds, and that is correct, not leniency', () => {
+    /* Dropping the closing period leaves an exact substring, so it binds — to
+       the shorter span it actually names. The rule is exact correspondence, not
+       whole-sentence quotation: the server certifies what the model quoted, no
+       more and no less. */
+    const b = bindOne('She said it wasn’t hers');
+    expect(b.ok).toBe(true);
+    if (b.ok) expect(b.boundText).toBe('She said it wasn’t hers');
+  });
+
+  it('and the matcher contains no normalization machinery at all', () => {
+    const src = readFileSync(join(REPO, 'lib/manuscript/encounter/bind.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    expect(src).not.toMatch(/toLowerCase|normalize|replace\(|trim\(|levenshtein|fuzzy|similar/i);
+  });
+});
+
+describe('E5 · the model has no field in which to make a location claim', () => {
+  const schema = JSON.stringify(require('../render').resultTool);
+
+  it('⛔ no coordinate, digest or unit field exists anywhere in the tool schema', () => {
+    for (const forbidden of [
+      'startCodePoint', 'endCodePoint', 'spanDigest', 'unitId', 'paragraph',
+      'section', 'offset', 'index', 'position', 'line',
+    ]) {
+      expect(schema).not.toContain(forbidden);
+    }
+  });
+
+  it('the notice carries exactly family, assertion and evidence; evidence exactly an excerpt', () => {
+    const notice = (require('../render').resultTool.inputSchema as any).properties.notices.items;
+    expect(Object.keys(notice.properties).sort()).toEqual(['assertion', 'evidence', 'family']);
+    expect(Object.keys(notice.properties.evidence.items.properties)).toEqual(['excerpt']);
+  });
+
+  it('⛔ and a coordinate the model volunteers anyway is REFUSED, not ignored', () => {
+    for (const rogue of [
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED }], spans: [{ startCodePoint: 0 }] }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED, startCodePoint: 41 }] }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED, spanDigest: 'forged' }] }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED }], confidence: 0.9 }] },
+      { outcome: 'none', digest: 'deadbeef' },
+    ]) {
+      expect(parseNoticeBlocks([toolUse(rogue)]).ok).toBe(false);
+    }
+  });
+});
+
+describe('E6 · existence is not exposure — still true of excerpts (B2)', () => {
+  const long = longText(600);
+  const windows = traverseWhole(long).windows;
+  const sentence = (i: number) => `Sentence ${i} sits here with a number of its own.`;
+  /** The first whole sentence lying entirely inside [lo, hi). ASCII, so UTF-16
+      indices and code points coincide in this fixture only. */
+  const pick = (lo: number, hi: number) => {
+    for (let i = 0; i < 600; i += 1) {
+      const s = sentence(i);
+      const at = long.indexOf(s);
+      if (at >= lo && at + s.length <= hi) return s;
+    }
+    throw new Error('fixture has no sentence in that range');
+  };
+
+  it('⛔ an excerpt genuinely in the Work but shown to ANOTHER call does not bind', async () => {
     (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
-    /* Window 2 answers with coordinates 100..150 — real bytes, genuinely in the
-       Work, that this call never saw. Certifying them would prove evidence for
-       the WORK rather than evidence for the CLAIM. */
+    /* Real bytes, genuinely in the Work, that window 2 never saw. Binding them
+       would prove evidence for the WORK rather than evidence for the CLAIM. */
     mockRun
       .mockResolvedValueOnce(ok([silence()]))
-      .mockResolvedValueOnce(ok([proposal([{ startCodePoint: 100, endCodePoint: 150 }])]));
+      .mockResolvedValueOnce(ok([proposal([sentence(0)])]))
+      .mockResolvedValue(ok([silence()]));
     const r = await encounter('m', 'mem', structuredGenerator());
     expect(r).toMatchObject({ ok: true, notices: [] });
   });
 
-  it('a span inside the call’s own visible range binds', () => {
+  it('an excerpt inside the call’s own visible range binds', () => {
     const w = windows[1];
-    const parsed = parseNoticeBlocks([proposal([
-      { startCodePoint: w.startCodePoint + 5, endCodePoint: w.startCodePoint + 25 },
-    ])]);
+    const own = pick(w.startCodePoint, w.endCodePoint);
+    const parsed = parseNoticeBlocks([proposal([own])]);
     const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
       visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
     });
@@ -337,13 +483,87 @@ describe('G1B · existence is not exposure (B2)', () => {
 
   it('overlap is lawful, because overlap was genuinely shown', () => {
     const w = windows[1];
-    /* Inside the context prefix: earlier in the Work, but this call saw it. */
-    const inOverlap = { startCodePoint: w.contextStartCodePoint + 1, endCodePoint: w.startCodePoint - 1 };
+    const inOverlap = pick(w.contextStartCodePoint, w.startCodePoint);
     const parsed = parseNoticeBlocks([proposal([inOverlap])]);
     const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
       visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
     });
     expect(bound).toHaveLength(1);
+  });
+});
+
+describe('E7 · quoting the Work does not make MAIA the author of it', () => {
+  it('the Work’s own forbidden language, quoted as evidence, does not trip the screen', () => {
+    /* This is the second G8 finding. A Work is entitled to contain sentences
+       MAIA may never assert; the boundary is the SHAPE, not quotation marks. */
+    const quoted = 'There is no clear theme here, and the reader loses orientation.';
+    const parsed = parseNoticeBlocks([
+      proposal([quoted], 'This sentence runs longer than the ones around it.'),
+    ]);
+    const bound = bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE);
+    expect(bound).toHaveLength(1);
+    expect(screenCandidate(bound[0])).toEqual([]);
+  });
+});
+
+describe('E8 · evidence is not a second, unscreened assertion channel', () => {
+  it('the bound notice carries the assertion ONLY — the excerpt never travels in it', () => {
+    const quoted = 'There is no clear theme here, and the reader loses orientation.';
+    const assertion = 'This sentence runs longer than the ones around it.';
+    const parsed = parseNoticeBlocks([proposal([quoted], assertion)]);
+    const bound = bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE);
+    expect(bound[0].text).toBe(assertion);
+    expect(bound[0].text).not.toContain(quoted);
+    /* All the evidence becomes is coordinates and a digest. There is no field on
+       a CandidateNotice through which model-authored prose could ride along. */
+    expect(Object.keys(bound[0]).sort()).toEqual(['anchors', 'family', 'text']);
+  });
+
+  it('⛔ a diagnosis smuggled into `evidence` cannot reach the writer — it is not in the Work', () => {
+    const parsed = parseNoticeBlocks([
+      proposal(['The ending is underdeveloped and needs work.'], 'The final line is short.'),
+    ]);
+    /* Evidence must be Work material. Anything MAIA composed is, by definition,
+       not present in the Work, so it does not bind, and the notice dies with it. */
+    expect(bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE)).toEqual([]);
+  });
+});
+
+describe('E9 · the assertion is still screened, exactly as before', () => {
+  it('⛔ MAIA’s own deficit language is caught even when the evidence is impeccable', () => {
+    const parsed = parseNoticeBlocks([
+      proposal(['The door opened.\nA while later'], 'The middle is underdeveloped and the reader loses orientation.'),
+    ]);
+    const bound = bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE);
+    expect(bound).toHaveLength(1);
+    expect(screenCandidate(bound[0])).toEqual(
+      expect.arrayContaining(['deficit_lexicon', 'reader_effect']),
+    );
+  });
+});
+
+describe('E10 · one failed evidence member invalidates the whole notice', () => {
+  it('⛔ good excerpt + fabricated excerpt = no notice', () => {
+    const parsed = parseNoticeBlocks([
+      proposal(['She said it wasn’t hers.', 'and then she left the house forever'], 'Two moments sit together.'),
+    ]);
+    expect(bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE)).toEqual([]);
+  });
+
+  it('⛔ good excerpt + ambiguous excerpt = no notice', () => {
+    const parsed = parseNoticeBlocks([
+      proposal(['She said it wasn’t hers.', 'The door opened.'], 'Two moments sit together.'),
+    ]);
+    expect(bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE)).toEqual([]);
+  });
+
+  it('and a notice whose evidence all binds survives, with one anchor per excerpt', () => {
+    const parsed = parseNoticeBlocks([
+      proposal(['She said it wasn’t hers.', 'A while later, the wind turned.'], 'Two moments sit together.'),
+    ]);
+    const bound = bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE);
+    expect(bound).toHaveLength(1);
+    expect(bound[0].anchors).toHaveLength(2);
   });
 });
 
@@ -373,23 +593,16 @@ describe('B3 · silence is something the model SAYS', () => {
     expect(await run([silence(), silence()])).toEqual({ ok: false, refusal: 'cognition_unavailable' });
   });
 
-  it('⛔ inconsistent outcomes refuse', async () => {
+  it('⛔ inconsistent outcomes refuse', () => {
     expect(parseNoticeBlocks([toolUse({ outcome: 'none', notices: [] })]).ok).toBe(false);
     expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: [] })]).ok).toBe(false);
     expect(parseNoticeBlocks([toolUse({ outcome: 'maybe' })]).ok).toBe(false);
   });
 
-  it('⛔ undeclared fields refuse rather than acquiring meaning', async () => {
-    /* A field the model invented must not mean anything merely because the
-       provider tolerated it — least of all one that looks like evidence proof. */
-    for (const rogue of [
-      { outcome: 'none', digest: 'deadbeef' },
-      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5 }], confidence: 0.9 }] },
-      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5, spanDigest: 'forged' }] }] },
-      { outcome: 'notices', notices: [{ family: 'recurrence', text: 'x', spans: [{ startCodePoint: 0, endCodePoint: 5 }], severity: 'high' }] },
-    ]) {
-      expect(parseNoticeBlocks([toolUse(rogue)]).ok).toBe(false);
-    }
+  it('⛔ an empty or absent excerpt refuses rather than binding to nothing', () => {
+    expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: '' }] }] })]).ok).toBe(false);
+    expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [] }] })]).ok).toBe(false);
+    expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: [{ family: 'recurrence', assertion: '  ', evidence: [{ excerpt: CITED }] }] })]).ok).toBe(false);
   });
 
   it('the contract requires the tool — prose is not an answer', () => {

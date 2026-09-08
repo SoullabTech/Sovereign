@@ -17,9 +17,30 @@
  *
  * ── WHAT THE MODEL IS ASKED FOR, AND WHAT IT IS NOT ───────────────────────
  *
- * It proposes SPANS AND WORDS. It does not certify evidence: the tool schema has
- * no digest field, because provenance is established by the boundary holding the
+ * It proposes WORDS OF ITS OWN and QUOTATIONS OF THE WORK. It does not certify
+ * evidence and it no longer locates it: the tool schema has no digest field and
+ * no offset field, because provenance is established by the boundary holding the
  * Work, never by the cognition proposing the observation (E2-C/A).
+ *
+ * ── WHY THE COORDINATE FIELDS ARE GONE (founder ruling 2026-09-08, post-G8) ─
+ *
+ * The first live witness settled it. Quotations were accurate; the offsets
+ * reported alongside them drifted +422, +499 and +1808 code points, growing with
+ * distance into the window. A model estimating positions, not counting them.
+ *
+ *   It can copy what it saw. It cannot count where it saw it.
+ *
+ * So the model is asked only for what it demonstrably can do. `spans` is
+ * replaced by `evidence`, a set of verbatim excerpts; the server establishes
+ * where each excerpt actually is (`bind.ts`), or refuses to bind it.
+ *
+ * ── WHY `assertion` AND `evidence` ARE SEPARATE FIELDS ────────────────────
+ *
+ * The same run showed the vocabulary screen reading MAIA's words and the Work's
+ * quoted words as one undifferentiated utterance. A Work may contain language
+ * MAIA is forbidden to assert; quoting it does not make MAIA its author. Two
+ * fields give the screen an authorship boundary that quotation marks — which are
+ * presentation syntax, not provenance — never could.
  *
  * It is also told, in the contract itself, that having nothing to say is a
  * complete answer. A generator that believes it owes observations will find some.
@@ -55,7 +76,13 @@ Rules that are not stylistic preferences:
 3. Never measure the writing against something absent. "This appears here and does not recur afterward" is a fact. "There is no clear theme" is a verdict.
 4. Never mention a reader, an audience, or the effect on anyone.
 5. Never rank, compare, praise, or grade.
-6. Every observation must point at specific text you can quote from what you were shown.
+
+How to report an observation:
+
+6. Every observation has two parts, and they must not be mixed. \`assertion\` is what YOU say, in your own words. \`evidence\` is what the WRITING says, quoted. Keep the writing's words out of your assertion — do not quote, echo, or reproduce phrases from the text there.
+7. Every excerpt in \`evidence\` must be copied from the text above CHARACTER FOR CHARACTER. Do not paraphrase, summarize, retype from recall, correct a typo, standardize a quotation mark, change spacing, or alter capitalization or punctuation in any way. An excerpt that is not exactly present in the text above is discarded, and the observation with it.
+8. Quote enough to be unique. If the exact characters you quote occur more than once in the text above, the observation is discarded. Extend the quotation — take the surrounding sentence or sentences — until it occurs exactly once.
+9. Do not report positions, offsets, character counts, paragraph numbers or section numbers. You are not asked where the words are, only which words they are.
 
 HAVING NOTHING TO SAY IS A COMPLETE ANSWER. Propose no observation you do not actually see. Do not fill the five acts of attention; most encounters touch one or two. An empty answer is correct far more often than a full one.`;
 
@@ -82,10 +109,13 @@ export const RESULT_TOOL_NAME = 'encounter_result';
  * A closed result envelope is transport discipline, not a developmental lens —
  * it imports nothing from DEVELOP's epistemology.
  *
- * Note what is still absent: no digest, no confidence, no severity, no priority.
- * `additionalProperties: false` at every level, and the parser enforces the same
- * rather than trusting a provider to have done so — a field the model invented
- * must not acquire meaning merely because something tolerated it.
+ * Note what is absent, and stays absent: no digest, no confidence, no severity,
+ * no priority — and, since the live witness, no coordinate of any kind. There is
+ * no `startCodePoint`, no `endCodePoint`, no unit, paragraph or section id. The
+ * model cannot make a location claim here because there is no field in which to
+ * make one. `additionalProperties: false` at every level, and the parser enforces
+ * the same rather than trusting a provider to have done so — a field the model
+ * invented must not acquire meaning merely because something tolerated it.
  */
 export const resultTool = {
   name: RESULT_TOOL_NAME,
@@ -104,22 +134,29 @@ export const resultTool = {
           additionalProperties: false,
           properties: {
             family: { type: 'string', enum: [...ENCOUNTER_FAMILIES] },
-            text: { type: 'string' },
-            spans: {
+            assertion: {
+              type: 'string',
+              description:
+                'What you noticed, in your own words. Do not quote or echo the writing here.',
+            },
+            evidence: {
               type: 'array',
               minItems: 1,
               items: {
                 type: 'object',
                 additionalProperties: false,
                 properties: {
-                  startCodePoint: { type: 'integer', minimum: 0 },
-                  endCodePoint: { type: 'integer', minimum: 1 },
+                  excerpt: {
+                    type: 'string',
+                    description:
+                      'A passage copied from the writing character for character, long enough to occur exactly once in the text you were shown.',
+                  },
                 },
-                required: ['startCodePoint', 'endCodePoint'],
+                required: ['excerpt'],
               },
             },
           },
-          required: ['family', 'text', 'spans'],
+          required: ['family', 'assertion', 'evidence'],
         },
       },
     },
@@ -129,18 +166,19 @@ export const resultTool = {
 
 /**
  * One request per traversal window. Windows are transport, not structure, so the
- * message says where in the Work this text sits — the model needs absolute
- * offsets to point at anything — and says nothing about chapters or sections,
- * because none have been decided.
+ * message says nothing about chapters or sections, because none have been
+ * decided — and, since the live witness, nothing about offsets either. The model
+ * was being handed coordinates it could only estimate back; withholding them
+ * removes the invitation to count rather than quote.
  *
- * C8: the Work, the contract, and the coordinates needed to bind evidence.
- * Nothing else. No member memory, no prior Encounter, no other Work, no
- * developmental taxonomy. Transport coordinates are not semantic context.
+ * C8: the Work and the contract. Nothing else. No member memory, no prior
+ * Encounter, no other Work, no developmental taxonomy.
  */
 export function renderWindowRequest(
   snapshot: EncounterSnapshot,
   w: ReadWindow,
 ): StructuredRequest {
+  const whole = w.contextStartCodePoint === 0 && w.endCodePoint === snapshot.length;
   return {
     model: encounterModel(),
     system: ENCOUNTER_SYSTEM,
@@ -153,8 +191,10 @@ export function renderWindowRequest(
       {
         role: 'user',
         content:
-          `Character offsets ${w.contextStartCodePoint} to ${w.endCodePoint} of a ${snapshot.length}-character piece of writing. `
-          + `Offsets in any span you report are absolute within the whole piece.\n\n`
+          (whole
+            ? 'A piece of writing.'
+            : 'A continuous stretch of a longer piece of writing. Quote only from what appears below.')
+          + `\n\n`
           + w.text,
       },
     ],
