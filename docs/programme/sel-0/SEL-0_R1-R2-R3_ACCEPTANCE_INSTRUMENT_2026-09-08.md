@@ -1,4 +1,7 @@
-# SEL-0 · R1 · R2 · R3 — acceptance instrument · **PROPOSED, NOT FROZEN**
+# SEL-0 · R1 · R2 · R3 — acceptance instrument · **FROZEN**
+
+**FROZEN by founder act, 2026-09-08.** Q9 · Q10 · Q11 ratified. No threshold or analytic
+choice may change from this point; see the rerun bar in R3 and the contamination rules below.
 
 **Governing contract**: RATIFIED at `ebcb46d0d`. Not reopened; no contradiction found.
 **Preserved**: lawful `n = 19` · top-k DISCHARGED · full-set rank correlation · founder blind
@@ -82,12 +85,29 @@ Conditioning is **mathematically required, not a convenience**: D's null varies 
 structure (p95 from 0.367 at 6/7/6 to 0.524 at 1/3/15). A tabulated null would be wrong.
 
 ```text
-PASS          p <= 0.05  AND  D >= 0.60
+PASS          p <= 0.05  AND  D >= 0.60  AND  U >= 60
 INCONCLUSIVE  p <= 0.05  AND  D <  0.60          significant but weak
               or  0.05 < p <= 0.20
               or  U < 60                          insufficient founder dispersion
 FAIL          p > 0.20   AND  U >= 60
 ```
+
+### R1.3a What `D >= 0.60` actually means — recorded so it cannot be misread
+
+With a **total** selector ordering every founder-discriminated pair is concordant or
+discordant, so `C + Dp = U` and therefore
+
+```text
+D = (C - Dp)/U = 2(C/U) - 1        =>   concordance C/U = (D + 1)/2
+
+D 0.50  ->  75% of founder-discriminated pairs ordered correctly
+D 0.60  ->  80%
+D 0.70  ->  85%
+```
+
+⚠️ **`D >= 0.60` is NOT "right 60% of the time." It is at least 80% concordance on the
+comparisons the founder actually chose to make.** Verified numerically, not asserted.
+Recorded here because a future reader seeing `0.60` will otherwise assume the weaker claim.
 
 **Measured joint PASS power**, against a synthetic "genuinely good selector" (tier signal
 plus noise, sd 0.75), 40 000 draws per cell:
@@ -216,7 +236,10 @@ permutation      permute selector ordering; founder tiers HELD FIXED
 draws            1 000 000
 RNG              numpy PCG64, seed 20260908           (frozen here, before any response)
 tail             one-sided upper
-p-value          (1 + #{D_perm >= D_obs}) / (draws + 1)      add-one, unbiased
+p-value          (1 + #{D_perm >= D_obs}) / (draws + 1)
+                 add-one Monte Carlo permutation p-value — VALID / CONSERVATIVE,
+                 never reports zero. NOT an unbiased estimator of the true p;
+                 it is slightly upward-biased, which is why it is conservative.
 MC tolerance     +/- 0.0005 at p = 0.05; a p within tolerance of a boundary
                  resolves to the LESS favourable side
 extraction       R1.3 verbatim
@@ -283,32 +306,79 @@ which is what the contract asks of it — not a claim that the capability is rob
 
 ---
 
-## Genuine founder questions
+## Founder rulings — Q9 · Q10 · Q11 · RATIFIED 2026-09-08
 
-**Q9 · Is Somers' D acceptable as the primary statistic?** It is tau-b divided by a constant
-determined by your own tiering, and it stays inside the predeclared rank-correlation family
-— but it *is* a modification, and you asked to be told rather than have one substituted
-quietly. The necessity argument is R1.1: raw tau-b's ceiling moves between 0.607 and 0.838
-with tier structure, so an absolute tau-b floor would silently be a different test depending
-on how you happened to tier. **Recommendation: adopt D as decisive, report tau-b alongside.**
+**Q9 — RATIFIED.** Somers' D is the decisive full-set rank-correlation statistic. Kendall
+tau-b is reported alongside diagnostically but does not decide acceptance. D is used because
+it normalises the attainable ceiling created by founder ties while remaining inside the
+predeclared rank-correlation construct.
 
-**Q10 · Where is the effect floor, and where is the dispersion minimum?** Proposed `D >= 0.60`
-and `U >= 60`. The statistics above give the trade — 0.70 costs about a quarter of the
-power at n=19, 0.50 licenses a selector that gets barely half the discriminated pairs
-net-right — but *how good is good enough to claim Studio has this capability* is product
-judgment, not a statistical fact, and it must be set before you see anything.
+**Q10 — RATIFIED.** Effect floor `D >= 0.60`; minimum founder dispersion `U >= 60`. At
+`D = 0.60` a total selector ordering is concordant on **80%** of founder-discriminated
+pairs. `U < 60` yields INCONCLUSIVE — *the founder is not required to manufacture additional
+distinctions to satisfy the statistic.* The instrument serves the judgment; the judgment
+does not serve the instrument.
 
-**Q11 · Is `p <= 0.05` the right level for a capability claim?** Conventional, and at n=19
-tightening to 0.01 costs real power under a lopsided tiering. But this licenses a product
-claim rather than publishing a finding, and you may want the stricter bar.
+**Q11 — RATIFIED.** Significance is `p <= 0.05`, one-sided, under the frozen conditional
+permutation null. Not tightened to 0.01: this is a precommitted acceptance test for a
+bounded product capability with non-founder and multi-Work validation still ahead, not a
+publication claiming a universal law, and at n=19 the stricter level would mostly buy false
+negatives. **PASS requires the conjunction of significance, effect floor and dispersion
+floor — significance alone can never close the capability gap.**
+
+---
+
+## Final consistency review — one finding, resolved, not escalated
+
+### The instrument depends on the selector emitting a total order, and the contract never said so
+
+`R1.3a`'s 80% reading and R3's normative formula both assume **no selector ties**
+(`C + Dp = U`). The ratified contract §2.6 says only `ORDERING`; tie-permissibility was
+left open. Read carelessly, the instrument would silently close an open product question —
+the exact failure the founder named: *the benchmark fixture does not get to define the
+product architecture by accident.*
+
+**It does not, and here is why.** Q4 already forces a total order independently of SEL-0:
+Studio surfaces **one** observation at a time and advances to the next on `"what else?"`.
+Picking one, and then the next, requires a deterministic total order over the candidates
+regardless of whether any benchmark exists. R2.4 therefore **reflects** a constraint Q4
+already imposes rather than adding one.
+
+Recorded because the chain `Q4 -> total order -> 80% reading` is not obvious and a later
+reader could unpick it.
+
+**One consequence, and its bias direction.** If the selector's internal judgment contains
+genuine ties it must still break them deterministically to surface one. Those arbitrary
+tiebreaks are measured and count against it, attenuating D. That biases the instrument
+toward **FAIL**, never toward PASS — acceptable in an acceptance test, and stated rather
+than discovered at reveal.
+
+### Checks clean
+
+```text
+D defined for the declared response shape                 yes
+C + Dp = U identity verified numerically                  yes
+concordance mapping (D+1)/2 verified                      yes
+null conditioned on realised structure                    yes
+effect floor ceiling-independent                          yes
+decline adjudicated, never scored                         yes
+gates excluded from the statistic                         yes
+degenerate response predeclared                           yes
+seed, draws, tail, tolerance fixed before any response    yes
+p-value characterisation corrected                        yes — valid/conservative
+multiplicity                                              none — one test, one run
+contract reopened                                         NO — no contradiction found
+```
+
+**No genuine contradiction remains. The instrument is frozen at this act.**
 
 ---
 
 ## Standing
 
 ```text
-R1 · R2 · R3           PROPOSED — NOT FROZEN, NOT RATIFIED
-Q9 · Q10 · Q11         RETURNED
+R1 · R2 · R3           FROZEN — founder act, 2026-09-08
+Q9 · Q10 · Q11         RATIFIED
 selector contract      RATIFIED · ebcb46d0d · not reopened
 threshold              UNSET
 founder ranking        NOT STARTED · Manifest B NOT OPENED

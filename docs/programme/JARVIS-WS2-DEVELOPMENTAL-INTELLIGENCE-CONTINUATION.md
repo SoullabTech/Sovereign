@@ -222,7 +222,9 @@ PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
   SEL-0 role           PRE-BUILD ACCEPTANCE STANDARD (redesignated 2026-09-08)
   Manifest C status    frozen production-surface evidence · NOT the input contract
   selector contract    RATIFIED — founder act, 2026-09-08 · Q1–Q8
-  R1 · R2 · R3         NOT OPENED
+  R1 · R2 · R3         FROZEN — founder act, 2026-09-08
+  statistic            Somers' D · PASS = p<=.05 AND D>=.60 AND U>=60
+                       D .60 == 80% concordance on discriminated pairs
   THRESHOLD            UNSET
   FOUNDER RANKING      NOT STARTED
   MAIA RANKING         NOT STARTED
@@ -234,8 +236,9 @@ PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: open R1 · R2 · R3 — freeze the SEL-0 acceptance instrument before
-any selector implementation is written. The product-architecture phase of SEL-0 is CLOSED.
+**Next executable act**: implement the smallest REAL Writer's Studio developmental selector,
+on the actual ask-route path, locked without access to founder answers. Product contract and
+acceptance instrument are both FROZEN.
 Production discovery is CLOSED and is no longer the next act.
 
 **Historical note, kept rather than rewritten.** Earlier in this file the next act was the
