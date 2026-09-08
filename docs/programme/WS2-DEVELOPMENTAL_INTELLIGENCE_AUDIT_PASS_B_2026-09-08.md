@@ -188,3 +188,68 @@ A second new source, Zhang, Bu & Dhillon (2026), *Who Owns the Text?* (`arXiv:26
    Governing rule behind all five: *MAIA may influence the Work; she may never lose track of where that influence entered.* The failure being prevented is recursive self-confirmation — MAIA detecting a pattern she helped introduce and attributing it to the writer, then reinforcing it.
 
 **Nothing downstream opens on this increment alone.** Voice baseline, SEL-0, F-7 repair, Phase 2, PR, merge and deploy remain HOLD.
+
+---
+
+# 6 · Item 4 — remaining Phase-0 rows · **PROPOSED DISPOSITIONS, NOT RULED**
+
+**Status: PROPOSED. Awaiting founder ruling. Nothing here is disposed until ruled.**
+
+Item 4's framing is load-bearing: give these rows explicit dispositions *rather than forcing empirical literature to answer a constitutional/normative question it cannot answer.* The first move is therefore not to search for evidence but to establish **what kind of claim each row is**, because that determines whether evidence can bear on it at all.
+
+### Prior error, named
+
+The Phase-0 falsification matrix (roadmap §4) listed all eight assumptions as rows with a `what would falsify it` column. That was a category error on my part: at least one of the eight is not an empirical claim and cannot be falsified by any finding. The quota was therefore only ever addressable against **seven** rows, not eight. This does not change the `5 of 5` result — none of FQ-1…FQ-5 attacked the non-empirical row — but the matrix's framing should be corrected when Phase 0 is re-frozen under item 6.
+
+---
+
+## Row C — `sovereignty decides eligibility; quality decides readiness`
+
+**Kind of claim**: **constitutional / normative. Not empirical.**
+
+This is a rule about *how decisions are made*, not a claim about the world. No finding about model performance can falsify it, because it does not assert that sovereign systems perform better — it asserts what may ship and on whose authority.
+
+The row is **self-insulating by design**, and deliberately so: the ruled Strand G disposition already routes contrary evidence to `persistent capability gap → RECORDED FINDING`, explicitly not to a provider exception. Evidence of a capability deficit is an anticipated output of the rule, not a defeat of it.
+
+**Proposed disposition**: **NOT AN EMPIRICAL CLAIM. Exempt from the falsification quota. Survives unamended. Amendable only by separate constitutional act**, never by a benchmark result — per the standing ruling that a result may not amend the constitution that authorized the experiment.
+
+---
+
+## Row A — `writer chooses scope`
+
+**Kind of claim**: **mixed — normative core, empirical periphery.**
+
+- *Normative*: the writer holds authority over what is examined in their own Work. This follows from the sovereignty invariants and is not decidable by outcome data.
+- *Empirical*: whether system-chosen scope produces better developmental insight than writer-chosen scope. Genuinely testable.
+
+The two do not compete. Even if system-controlled scope measurably outperformed, the normative half would stand and the finding would surface as a tension to be designed around — it would change *how* scope is offered, never *who decides*.
+
+**No new literature is required, because FQ-2 already governs this row.** Choosing the scope of examination *is* a developmental act, and FQ-2 ruled that MAIA may offer a developmental act while only the writer commissions it — *proactivity proposes authority; it does not acquire it.* Row A is an instance of that ruling, not an independent question.
+
+**Proposed disposition**: **QUALIFIED by extension of FQ-2 — MAIA may propose a scope or a change of scale; the writer holds the decision.** Empirical evidence may inform how scope is offered; it cannot relocate the decision. No separate falsification finding is owed.
+
+---
+
+## Row B — `Work understanding may persist with permission`
+
+**Kind of claim**: **compound. Must be split before it can be disposed.**
+
+1. *The permission clause* — persistence requires member consent. **Constitutional.** This is the project's consent-for-memory vow and Sanctuary Mode boundary. No evidence can amend it.
+2. *The persistence clause* — that accumulated Work understanding may legitimately inform later developmental judgment. **Already qualified by FQ-3**: the feed may orient, it may not launder authority; provenance separation is mandatory and Develop re-grounds in the current manuscript and current commission.
+3. *The residual empirical question* — whether persistent context produces harmful anchoring or staleness outweighing its continuity benefit. **Genuinely open, genuinely falsifiable, and not yet addressed by any of FQ-1…FQ-5.**
+
+**Proposed disposition**: clauses 1 and 2 dispose now — constitutional and already-qualified respectively. **Clause 3 does not.** It needs a primary-source read that this session cannot perform (`WebFetch` blocked, `ctx_fetch_and_index` absent), so it must be carried to whichever environment completes Pass B.
+
+---
+
+## Consequence for item 6
+
+```text
+Row C    disposable now — no literature required
+Row A    disposable now — governed by FQ-2, no literature required
+Row B    PARTIALLY disposable — clause 3 needs a Pass B read
+```
+
+**Item 4 therefore does not fully close here, and item 6 must not proceed on a partial disposition.** Re-freezing Phase 0 with Row B clause 3 undisposed would stamp an open empirical question as settled — the same stale-authority defect item 6 exists to remove, reintroduced at the moment of repair.
+
+Either clause 3 is read and disposed, or Phase 0 is re-frozen with clause 3 **explicitly marked open on its face**, so the stamp does not overstate what was settled. That choice is a founder ruling, not an editorial one.
