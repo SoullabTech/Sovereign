@@ -795,3 +795,65 @@ egress policy.
 
 ⛔ **PT-3 is enforced in code and not in production.** Production HELD · Experiences HELD ·
 Encounter HELD.
+
+---
+
+# Repair 11 — B46 (runbook only)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §X–§XI. **Documentation-only.**
+⛔ No executable changed: every PT-3 script and the migration are byte-identical to
+`133c793dc28245f4c8234facda9b7d10169b67f4`, proven by `git hash-object`. The `30/30` regression is
+therefore **not rerun**; it stands as evidence for unchanged blobs.
+
+## B46 — Step 4 repeated B40 one step later
+
+Step 3 fixed B40 by opening an interactive production session and pasting the literal block the
+preflight printed, so `MAIA_BUILD_CONTEXT` exists **in the remote shell**. Step 4 then went back to
+`[MAC→PROD]`:
+
+```bash
+ssh soullab@minisforum "sh $MAIA_BUILD_CONTEXT/scripts/witness/pt3-cutover-readiness.sh"
+```
+
+The double quotes make the **Mac's** shell expand `$MAIA_BUILD_CONTEXT` before SSH — and the runbook
+never establishes it as a Mac-shell variable; it only ever tells the operator to export it inside the
+production session. Unset locally, the transmitted command becomes `sh /scripts/witness/…`: safe,
+and broken. The same class B40 already eliminated, reintroduced by a second remote-command form.
+
+**Repair:** Step 4 is now `[PROD]` and stays in the session opened for Step 3, where the preflight's
+exports are still live. No second quoting layer exists to get wrong.
+
+```bash
+sh "$MAIA_BUILD_CONTEXT/scripts/witness/pt3-cutover-readiness.sh"
+
+PT3_ACCEPTED_SHA="$ACCEPTED_SHA" \
+  sh "$MAIA_BUILD_CONTEXT/scripts/witness/pt3-post-cutover-witness.sh"
+```
+
+This also preserves the sibling requirement: the post-cutover witness runs from its materialized
+snapshot and can source both `pt3-currency-invariants.sh` and `pt3-compose.sh`. Piped over stdin it
+has neither and returns **INCONCLUSIVE** rather than pretending to judge.
+
+The only remaining occurrences of the `ssh "… $MAIA_BUILD_CONTEXT …"` shape in the tree are the two
+places that **describe** the defect — this repair note and the preflight's own warning.
+
+## Evidence
+
+```
+executables vs 133c793d          14 files · all byte-identical
+inherited subjects vs 744c8012    4 files · all byte-identical
+working tree change set           1 file  · the runbook
+```
+
+**Carried forward, not re-executed:** regression `30 PASS · 0 FAIL · exit 0` across seven cases ·
+shared invariants on the legacy shadow `0 · 0 · 0 · 0` · live fixture residue `0` asserted ·
+falsifier `25 · 0 · 0` · enforcement `29 · 0` · pool witness `READY`, six sites.
+
+⛔ **Still unexecuted:** integrated Docker/Compose cutover rehearsal, the Docker-bound quiesced
+backfill, readiness `READY`, post-cutover `READY`. Image-layer `403 Forbidden` remains the
+infrastructure blocker, and no further source review substitutes for it.
+
+## Standing
+
+⛔ **PT-3 is enforced in code and not in production.** Production HELD · Experiences HELD ·
+Encounter HELD.

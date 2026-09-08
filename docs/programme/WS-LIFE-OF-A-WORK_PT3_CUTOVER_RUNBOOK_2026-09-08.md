@@ -142,19 +142,30 @@ The step-7 counts are deterministic **only** because no member can write at that
 member actor · **5** `representation_without_arrival` · **0** multi-arrival · 2 blank Works and
 2 unclaimed arrivals untouched.
 
-## Step 4 · `[MAC→PROD]` — the two acceptance witnesses
+## Step 4 · `[PROD]` — the two acceptance witnesses
+
+⭐ **B46 — REMAIN IN THE PRODUCTION SESSION OPENED FOR STEP 3.** Do not reconstruct the snapshot
+path through another SSH quoting layer. This step used to read
+`ssh soullab@minisforum "sh $MAIA_BUILD_CONTEXT/…"`, which is B40 again one step later: the double
+quotes make the **Mac's** shell expand `$MAIA_BUILD_CONTEXT` before SSH, and the runbook never
+establishes it as a Mac-shell variable — it exists only in the production session, where the
+preflight's block exported it. Unset locally, the transmitted command becomes
+`sh /scripts/witness/…`: safe, and broken. The exports from Step 3 are still live in that shell, so
+there is no second remote-command form to get wrong.
 
 ```bash
-ssh soullab@minisforum "sh $MAIA_BUILD_CONTEXT/scripts/witness/pt3-cutover-readiness.sh"
-ssh soullab@minisforum "PT3_ACCEPTED_SHA=$ACCEPTED_SHA sh $MAIA_BUILD_CONTEXT/scripts/witness/pt3-post-cutover-witness.sh"
+sh "$MAIA_BUILD_CONTEXT/scripts/witness/pt3-cutover-readiness.sh"
+
+PT3_ACCEPTED_SHA="$ACCEPTED_SHA" \
+  sh "$MAIA_BUILD_CONTEXT/scripts/witness/pt3-post-cutover-witness.sh"
 ```
 
-⭐ **Run these from the snapshot, not by piping the file over ssh.** The post-cutover witness sources
-its Source-currency invariants from `scripts/witness/pt3-currency-invariants.sh` — one shared
-definition, so the witness and the disposable regression ask the same question and cannot drift
-apart. Piped over stdin it has no sibling to source, and it returns **INCONCLUSIVE** rather than
-pretending it can judge. (The orchestrator's step 12 already runs both this way; this is the
-re-run for the record.)
+⭐ **Run them from the snapshot, never by piping the file over ssh.** The post-cutover witness
+sources `pt3-currency-invariants.sh` (one shared definition, so the witness and the disposable
+regression ask the same question and cannot drift apart) and `pt3-compose.sh` (for the single
+service-identity migration exemption). Piped over stdin it has no siblings to source, and it
+returns **INCONCLUSIVE** rather than pretending it can judge. (The orchestrator's step 12 already
+runs both this way; this is the re-run for the record.)
 
 **Both must return `READY`.** `INCONCLUSIVE` is never success — a verifier that observed nothing
 has proved nothing. The post-cutover witness is production-safe: no `INSERT`, `UPDATE` or `DELETE`,
