@@ -7,6 +7,7 @@ import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
 import { DELETE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
+import { RETURN_DOORWAY_COPY } from '@/lib/writersStudio/returnDoorwayCopy';
 import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
@@ -91,6 +92,38 @@ const FILLED =
   'inline-flex items-center justify-center px-8 py-3.5 text-[15px] min-h-[48px] rounded-[2px] transition-opacity hover:opacity-90';
 const QUIET =
   'inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-[14px] min-h-[48px] rounded-[2px] border transition-all opacity-75 hover:opacity-100';
+/** QUIET, stacked: an action with one quiet line beneath it. */
+const QUIET_STACK =
+  'inline-flex flex-col items-start justify-center gap-1 px-6 py-3 text-[14px] min-h-[48px] rounded-[2px] border text-left transition-all opacity-75 hover:opacity-100';
+
+/**
+ * The doorway back to writing that already exists.
+ *
+ * Life of a Work, Step 1 (founder ruling 2026-09-08): it used to say "Import
+ * writing", which named the mechanism and hid the capability. One component
+ * serves both placements — the empty Studio and the shelf footer — so the two
+ * doors cannot drift into different promises. Presentation only: the path it
+ * opens (IMPORT_HREF) is unchanged.
+ */
+function ReturnDoorway({ withIcon = false }: { withIcon?: boolean }) {
+  return (
+    <Link
+      href={IMPORT_HREF}
+      className={`${QUIET_STACK} w-full sm:w-auto`}
+      style={{ borderColor: PRESS.rule }}
+    >
+      <span className="inline-flex items-center gap-2.5">
+        {withIcon ? (
+          <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
+        ) : null}
+        {RETURN_DOORWAY_COPY.label}
+      </span>
+      <span className="text-[13px] leading-snug opacity-70 max-w-[34ch]">
+        {RETURN_DOORWAY_COPY.note}
+      </span>
+    </Link>
+  );
+}
 
 export interface HomeViewProps {
   loading: boolean;
@@ -516,13 +549,7 @@ export default function HomeView({
               >
                 Begin a new work
               </button>
-              <Link
-                href={IMPORT_HREF}
-                className={`${QUIET} w-full sm:w-auto`}
-                style={{ borderColor: PRESS.rule }}
-              >
-                Import writing
-              </Link>
+              <ReturnDoorway />
             </div>
           </div>
         ) : (
@@ -1003,14 +1030,7 @@ export default function HomeView({
               </button>
             )}
 
-            <Link
-              href={IMPORT_HREF}
-              className={`${QUIET} w-full sm:w-auto`}
-              style={{ borderColor: PRESS.rule }}
-            >
-              <FolderInput size={16} style={{ color: PRESS.accent }} aria-hidden="true" />
-              Import writing
-            </Link>
+            <ReturnDoorway withIcon />
           </section>
         ) : null}
       </div>
