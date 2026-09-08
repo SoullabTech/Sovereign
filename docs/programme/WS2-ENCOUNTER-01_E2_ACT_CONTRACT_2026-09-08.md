@@ -1,6 +1,8 @@
 # WS2-ENCOUNTER-01 · E2 — The Encounter Act: contract and falsifier design
 
-**Status: RATIFIED WITH AMENDMENT (founder, 2026-09-08) · IMPLEMENTED NARROWLY.**
+**Status: CONSTITUTIONAL SHELL CLOSED (founder self-closing condition met, 2026-09-08).**
+Request-authority repair landed (§11). Cognition binding is a separate act:
+`WS2-ENCOUNTER-01_E2C_COGNITION_BINDING_2026-09-08.md`.
 Four amendments folded in below (**B1–B4**), plus the ruled additions F11–F13 and the
 two evidence classes. Implementation witness: §10.
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
@@ -296,6 +298,32 @@ unlawful, because it frames a bounded non-return as an abandonment.
 
 **Gates:** typecheck 229 vs baseline 239, **0 regressions** · PT-3 source-custody gate
 **39 passed** (floor intact) · Encounter **28 passed**.
+
+---
+
+## 11 — Request-authority repair (self-closing)
+
+Founder review held closure on one defect: the route **documented** an empty-body contract
+and never read the body, so `{ lens }`, `{ scope }`, `{ text }` or `{ observation }` was
+**ignored rather than refused**. No forgery path existed — and that is not the standard:
+
+> **Inadmissible must mean refused, not ignored.** A constitutional rule that is merely
+> unused is a rule the next refactor can quietly honour differently.
+
+`readEmptyGesture()` now validates **before the Work is read**. No body and `{}` are the same
+act; everything else is a typed 400 — `foreign_field` · `invalid_body` · `malformed` — and a
+foreign field is never partially honoured.
+
+**17 route-boundary controls, at the HTTP handler rather than the helper:** no body ✅ · `{}` ✅ ·
+lens · scope · client prose · proposed observation · any other field → `foreign_field` ·
+array · null · string · number · boolean → `invalid_body` · malformed JSON → `malformed` ·
+**and the strongest one — none of the refused inputs reaches Working Draft capture**, plus
+401 short-circuits before the body is even considered.
+
+Self-closing conditions: enforcement ✅ · all foreign/non-object/malformed refuse ✅ · refusal
+precedes capture ✅ · Encounter checks green (**28 + 17 = 45**) ✅ · PT-3 gate **39** ✅ ·
+no Source, hierarchy, persistence, cognition or surface added ✅. Typecheck 229 vs baseline
+239, 0 regressions.
 
 ---
 

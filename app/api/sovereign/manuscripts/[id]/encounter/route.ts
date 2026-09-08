@@ -13,6 +13,15 @@
  * would arrive wearing Encounter's name, and there is nothing to choose: the
  * ratified vocabulary is the whole permitted space.
  *
+ * ⛔ AND "INADMISSIBLE" MEANS REFUSED, NOT IGNORED. The first implementation
+ * documented an empty-body contract and then never read the body, so a client
+ * could send `{ lens: 'development' }` or `{ observation: '…' }` and have it
+ * silently discarded. Nothing was affected — and that is not the standard. A
+ * constitutional rule that is merely unused is a rule the next refactor can
+ * quietly honour differently. The body is now validated BEFORE the Work is read,
+ * so a foreign field is refused rather than tolerated, and a refused request
+ * never reaches Working Draft capture at all.
+ *
  * MEMBER-INITIATED MEANS AN ACTUAL GESTURE (E-03). Opening a page, finishing an
  * import, route navigation, preload and background jobs must not commission an
  * Encounter — an unsolicited Encounter is a diagnosis by another name. POST is
@@ -29,6 +38,39 @@ import { encounter } from '@/lib/manuscript/encounter/read';
 
 export const dynamic = 'force-dynamic';
 
+export type BodyRefusal = 'malformed' | 'foreign_field' | 'invalid_body';
+
+/**
+ * The empty gesture, or a refusal. No request body and `{}` are the same act:
+ * the client says *who is asking, which Work, and that they are asking* — and
+ * has no channel for anything else.
+ *
+ * A foreign field is never partially honoured and never silently discarded.
+ */
+export async function readEmptyGesture(req: NextRequest): Promise<BodyRefusal | null> {
+  let raw: string;
+  try {
+    raw = await req.text();
+  } catch {
+    return 'malformed';
+  }
+  if (raw.trim() === '') return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return 'malformed';
+  }
+  /* null, arrays, strings, numbers and booleans are all "a body that says
+     something", and there is nothing for a client to say here. */
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return 'invalid_body';
+  }
+  if (Object.keys(parsed as Record<string, unknown>).length > 0) return 'foreign_field';
+  return null;
+}
+
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ error: 'Not available in static build' }, { status: 501 });
@@ -36,6 +78,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const memberId = await getMemberIdFromRequest(req);
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  /* Before the Work is touched: the client contributes no content, no
+     interpretation, no scope, no lens and no proposed perception. */
+  const refusal = await readEmptyGesture(req);
+  if (refusal) return NextResponse.json({ refusal }, { status: 400 });
 
   const { id } = await ctx.params;
   const result = await encounter(id, memberId);
