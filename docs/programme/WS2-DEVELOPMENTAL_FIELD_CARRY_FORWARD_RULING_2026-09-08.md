@@ -7,6 +7,10 @@
 
 ## The ruling
 
+> ⭐ **AMENDED SAME DAY — see §A. The consent GRANULARITY below is superseded: one Work-level
+> permission, not a per-item act. Everything else in this record stands, and the provenance
+> discipline matters MORE under the amendment, not less.** Kept verbatim; not corrected in place.
+
 > **Developmental context is written only by an explicit member carry-forward act.** Never by
 > default, never merely because MAIA observed something, and never merely because a discussion
 > occurred.
@@ -155,3 +159,136 @@ E3 · PR · deploy                HOLD
 > She knows what you told her mattered, checks it against the actual manuscript, and brings back a
 > larger pattern. Not memory for memory's sake — a collaborator whose understanding of the Work
 > deepens because she was there while it was being made.
+
+---
+
+# §A · AMENDMENT — one permission, not dozens
+
+**Founder, 2026-09-08, same day.** *Our last pass made the governance cleaner but the experience
+heavier. That's the wrong tradeoff for Writer's Studio.*
+
+> The writer should mostly experience: **write → talk with MAIA → make the writing better → keep
+> going.** Not: classify this → carry this forward → approve this memory → label this decision →
+> manage a developmental field.
+
+## The product law
+
+> **Complexity belongs to the system. Clarity belongs to the writer.**
+>
+> **Never ask the writer to perform bookkeeping that MAIA can safely perform from an authority the
+> writer has already granted.**
+
+## The consent act, restated
+
+One **Work-level** permission, chosen once:
+
+> *Let MAIA carry what she learns while helping me with this Work, so she can understand the
+> manuscript more deeply over time.*
+
+After that, MAIA maintains the developmental context **inside that Work only**, without asking
+again. ⛔ No `SAVE INTENTION TO DEVELOPMENTAL FIELD?`. The categories exist **so the system stays
+truthful, not so the writer has homework.**
+
+## A.1 · ⭐⭐ What changed, and what did not — this is the load-bearing distinction
+
+The ruling above bundled two things. **Only one is superseded.**
+
+| | status |
+|---|---|
+| consent **granularity** — a confirming act per item | ⛔ **SUPERSEDED** — one Work-level act |
+| provenance **discipline** — typed classes, origin preserved, no joint author, act-not-reason | ✅ **STANDS, and now carries more weight** |
+
+⭐ **Removing the writer's confirmation step RAISES the burden on the type system.** Under the
+original ruling, the writer's *yes* was what made an entry true — a human check on every
+classification. Under the amendment the classification is **automatic and unwitnessed**, so the
+system's own typing is the only thing keeping the record honest.
+
+Concretely, these now have to be right without anyone checking them:
+
+- `maia_proposed_question` must not drift into `writer_carried_question` because the writer
+  engaged with it warmly. **Adoption still requires the writer to say they are carrying it** — but
+  in conversation, not in a dialog box.
+- `system_observed_act` must still record *the writer moved passage X* and never *because the
+  reader needed more emotional space*. **The system may record the act; it may not infer the
+  reason** — and there is no longer a confirmation screen where a wrong inference would have been
+  caught.
+
+## A.2 · ✅ The precedent supports this exactly
+
+This is not a loosening; it is the pattern already established and hard-won in this codebase.
+**Daily Anchor `surface_preference`**: a member act sets a standing preference, defaulting to
+private, and the system then operates within it **without asking again per anchor**. One act,
+durable scope, no per-item ceremony. The Work-level permission has the same shape and the same
+default.
+
+## A.3 · ⛔ The compensating control the amendment requires: legibility, not management
+
+*No stealth memory* is a vow, and one Work-level permission is only compatible with it if the
+writer can **see what MAIA holds**. That is different from managing it:
+
+| | |
+|---|---|
+| **bookkeeping** — ⛔ rejected | approve each item · label each decision · maintain the field |
+| **legibility** — ✅ required | *"What do you understand about this Work?"* answered on demand, and correctable in one gesture |
+
+⭐ **And this is a feature, not a compliance tax.** *"Here is what I understand about your book"*
+is something a writer would actually want to read — arguably one of the better things in the
+Studio. The vow and the product want the same screen.
+
+**Boundary condition, stated so it cannot slip quietly:** *MAIA quietly maintains the context* is
+lawful **only** while it is **Work-scoped · permissioned · legible**. Lose any one and it becomes
+the ambient memory this project has refused everywhere else.
+
+## A.4 · ⭐ It gives the standing-vs-later-writing problem a lighter answer
+
+§1 above posed: the writer carries *"keep this experiential"*, then makes it instructional
+themselves. Under per-item snapshots that is a stale record needing reconciliation machinery.
+
+Under continuous understanding **MAIA was there when it changed**, so the Temporal Memory law
+(*detect → ask → record*, never a timer) becomes a **sentence rather than a workflow**:
+
+> *"You'd said you wanted experience to lead here — this now opens with the framework. Did that
+> change?"*
+
+Which is exactly the register the amendment is asking for. ⭐ **The simplification did not weaken
+the temporal discipline; it gave it somewhere natural to live.**
+
+## A.5 · ⛔ The calibration target moves — and this supersedes my step-1 note
+
+Founder, explicitly: *calibrate MAIA not merely for "good observations," but for the whole
+experience — does working with her make writing easier, clearer, more alive, and more coherent?
+If not, the feature fails regardless of how sophisticated the architecture is.*
+
+§3 above said the step-1 corpus does not exist and must be made. **That stands and sharpens:**
+
+> The judgment object is not a sentence, and not a reading. **It is a working session.**
+
+A recorded session over one real section — the writer's turns included — judged as an experience.
+Everything in the Studio can be individually lawful and the session still be worse than writing
+alone. That is the failure this calibration must be able to detect, and no corpus of MAIA-only
+observations can detect it.
+
+## A.6 · Editing without ceremony
+
+> *"I can show you a lighter version of that paragraph without changing your original."*
+> **See it** → **Use this · Try another · Keep mine**
+
+`Keep a Version` stays available for consequential moments. ⛔ Ordinary collaboration must not
+require it. PT-3 is untouched — Source custody is unaffected by anything here; this is Working
+Draft territory, where the writer's authority is already total.
+
+## A.7 · Amended standing
+
+```
+consent act                     ⭐ RULED — ONE Work-level permission, default off
+per-item carry-forward          ⛔ SUPERSEDED
+provenance discipline           ✅ STANDS — and is now unwitnessed, so it must be automatic
+legibility ("what do you        ⛔ REQUIRED by the amendment — not yet specified
+  understand about this Work?")
+Work-scoped · permissioned      ⛔ BOUNDARY — lose one and it is ambient memory
+  · legible
+calibration object              ⭐ A WORKING SESSION, not a sentence or a reading
+```
+
+> The constitutional machinery should make Writer's Studio safer and simpler, not expose itself as
+> process.
