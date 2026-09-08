@@ -346,7 +346,37 @@ screen result, then names the two questions for the adjudicator —
 *SHA-256 proves identity. It cannot prove the observation arises from that evidence.*
 
 ⛔ **This environment has no `ANTHROPIC_API_KEY`, so no live case has been run.** Written is
-not run; run is not adjudicated. The witness refuses fuzzy search, quote matching and
+not run; run is not adjudicated.
+
+⚠ **And the credential that IS present must not be borrowed.** `ANTHROPIC_BASE_URL` is set
+here — it belongs to the authoring session's own proxy, not to the product's authorized
+inference. Routing an Encounter through it would mean the model answering was whatever that
+proxy resolves, not `MAIA_ENCOUNTER_MODEL` — which the founder's own acceptance rule says
+must **fail** G8 as a cognition-provenance finding rather than pass it. *A witness that
+borrows a credential is witnessing a different act.*
+
+### Instrument verification (NOT G8)
+
+What could be established here is that the witness itself is sound. Against a real fixture
+Work in a scratch PostgreSQL built from the actual migrations:
+
+```text
+configured model : claude-opus-5
+snapshot         : rev 1 · 339 code points
+digest           : 801ebc98…
+windows          : 1
+WINDOW 1: COGNITION UNAVAILABLE — provider_unavailable: Could not resolve
+                                  authentication method…            exit 1
+```
+
+Under `MAIA_INFERENCE_MODE=sovereign` the same fixture gives
+`structured_inference_unavailable: no local provider can honour a structured contract` —
+**sovereignty refusing on its own terms**, exactly as ruled. Without the confirmation guard
+it exits 2 without touching anything.
+
+So the witness captures, digests, traverses, reaches the seam, reports the real reason, and
+**exits non-zero rather than printing an empty, reassuring report**. ⛔ **This proves the
+instrument, not the ear.** No model has proposed anything; nothing has been adjudicated. The witness refuses fuzzy search, quote matching and
 nearest-span repair by construction — if the model cannot produce reliable coordinates, that
 is a **finding to return**, not something to patch around.
 
