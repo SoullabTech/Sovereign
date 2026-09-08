@@ -51,6 +51,14 @@ import { StudioText } from '../studio/StudioType';
 const OVERSCAN = 3;
 /** How long the boundary note stays. Long enough to read, short enough to forget. */
 const NOTE_MS = 2400;
+/**
+ * What a section is assumed to be tall before it has ever rendered.
+ *
+ * ⛔ A LAYOUT ESTIMATE, NOTHING MORE. It is replaced by the real height the
+ * first time the section is measured, and no part of the system may read it as
+ * a fact about the writing.
+ */
+const ESTIMATED_SECTION_HEIGHT = 320;
 
 export interface WholeManuscriptSurfaceProps {
   writing: SectionWriting;
@@ -73,8 +81,30 @@ export function WholeManuscriptSurface({
   /* Live editor values, by section id. Read at capture time so the text is the
      text on screen — never state, which may already have moved on. */
   const fields = useRef(new Map<string, HTMLTextAreaElement>());
-  /* Every mounted section's outer node, for scrolling to one. */
-  const anchors = useRef(new Map<string, HTMLDivElement>());
+  /**
+   * ⭐ A SHELL FOR EVERY SECTION, MOUNTED OR NOT. Only the EDITOR is
+   * virtualized; the shell that holds its place always exists.
+   *
+   * The first cut observed visibility from mounted editors alone, and that
+   * made ordinary scrolling impossible: once the writer moved below the mounted
+   * window nothing intersected the viewport, so `last` stayed -1, `commitWindow`
+   * never ran, and the next sections never mounted. The rail worked only
+   * because it bypasses the scroll path and commits a window directly. A view
+   * whose whole purpose is continuous scrolling could not scroll.
+   *
+   * 262 lightweight divs are a different thing entirely from 262 live
+   * textareas, and geometry has to come from something that is always there.
+   */
+  const shells = useRef(new Map<string, HTMLDivElement>());
+  /**
+   * The last height each section actually rendered at.
+   *
+   * ⛔ LAYOUT ESTIMATE ONLY — it carries no manuscript authority, is never
+   * persisted, and nothing downstream may read it as a fact about the work. Its
+   * one job is that evicting a long section does not collapse it to a stub and
+   * yank the page out from under someone mid-read.
+   */
+  const heights = useRef(new Map<string, number>());
 
   const [visible, setVisible] = useState({ first: 0, last: OVERSCAN * 2 });
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -112,8 +142,12 @@ export function WholeManuscriptSurface({
       const field = fields.current.get(section.id);
       /* The live value, from the node that still exists. */
       if (field) writing.captureForUnmount(section.id, field.value);
+      /* Then its height, while the editor is still laid out. Measured after the
+         capture, because the capture is the part that matters and must not be
+         behind anything that could throw. */
+      const shell = shells.current.get(section.id);
+      if (shell && shell.offsetHeight > 0) heights.current.set(section.id, shell.offsetHeight);
       fields.current.delete(section.id);
-      anchors.current.delete(section.id);
     }
     if (nextFocus !== undefined) setFocusedIndex(nextFocus);
     setVisible(next);
@@ -130,7 +164,7 @@ export function WholeManuscriptSurface({
     const bottom = top + el.clientHeight;
     let first = Number.POSITIVE_INFINITY;
     let last = -1;
-    for (const [id, node] of anchors.current) {
+    for (const [id, node] of shells.current) {
       const i = indexOfId.get(id);
       if (i === undefined) continue;
       const start = node.offsetTop;
@@ -164,7 +198,7 @@ export function WholeManuscriptSurface({
      paint would show the writer the wrong part of their book first. */
   useLayoutEffect(() => {
     if (!pendingScroll) return;
-    const node = anchors.current.get(pendingScroll);
+    const node = shells.current.get(pendingScroll);
     if (!node) return; /* not mounted yet — the next commit will bring it */
     node.scrollIntoView({ block: 'start' });
     setPendingScroll(null);
@@ -199,31 +233,31 @@ export function WholeManuscriptSurface({
       data-whole-manuscript
     >
       {sections.map((section, i) => {
-        if (!mounted.has(i)) {
-          /* A placeholder holds the scroll position without holding an editor.
-             Its height is the last one this section had, so the page does not
-             jump as the window moves. */
-          return (
-            <div
-              key={section.id}
-              data-whole-manuscript-placeholder={section.id}
-              style={{ minHeight: 320, marginBottom: SPACE.generous }}
-              aria-hidden="true"
-            />
-          );
-        }
-        const body = writing.bodyOf(section.id);
+        const isMounted = mounted.has(i);
+        const body = isMounted ? writing.bodyOf(section.id) : '';
         return (
           <div
             key={section.id}
-            ref={(n) => { if (n) anchors.current.set(section.id, n); }}
+            ref={(n) => { if (n) shells.current.set(section.id, n); else shells.current.delete(section.id); }}
             data-whole-manuscript-section={section.id}
-            style={{ marginBottom: SPACE.generous }}
+            data-whole-manuscript-mounted={isMounted ? 'true' : 'false'}
+            style={{
+              marginBottom: SPACE.generous,
+              /* A shell whose editor is absent still occupies the space that
+                 editor occupied, so the document's geometry does not move under
+                 the writer as the window slides. A section never yet rendered
+                 gets a rough estimate; the measured height replaces it the
+                 first time it is real. */
+              minHeight: isMounted ? undefined : (heights.current.get(section.id) ?? ESTIMATED_SECTION_HEIGHT),
+            }}
           >
             {/* W-6 — the divisions recede. A hairline and breathing space, never
                 a card or a box: nine obvious text boxes moving through a list is
                 not a manuscript. But the writer can still tell where they are,
-                because losing that is its own defect. */}
+                because losing that is its own defect.
+
+                It lives in the shell rather than beside the editor so the
+                spacing is identical whether or not the editor is mounted. */}
             {i > 0 && (
               <div
                 aria-hidden="true"
@@ -233,7 +267,7 @@ export function WholeManuscriptSurface({
                 }}
               />
             )}
-            {section.editable ? (
+            {!isMounted ? null : section.editable ? (
               <textarea
                 ref={(n) => { if (n) fields.current.set(section.id, n); }}
                 value={body}

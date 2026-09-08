@@ -71,6 +71,44 @@ describe('the rail mounts before it scrolls', () => {
   });
 });
 
+describe('ordinary scrolling can advance the window', () => {
+  it('reads visibility from PERSISTENT shells, not from mounted editors', () => {
+    /* THE DEFECT THIS FIXES. Observing only mounted nodes meant that once the
+       writer scrolled below the window nothing intersected, `last` stayed -1,
+       and commitWindow never ran — a continuous-scroll view that could not
+       scroll. The rail worked only because it bypasses this path. */
+    const scroll = block(SRC, 'const onScroll =', 'commitWindow({ first:');
+    expect(scroll).toContain('for (const [id, node] of shells.current)');
+    expect(SRC).not.toContain('anchors.current');
+  });
+
+  it('gives every section a shell, mounted or not', () => {
+    /* The shell ref is registered on the outer div of every section, outside
+       the mounted branch, so geometry comes from something always present. */
+    expect(SRC).toMatch(/ref=\{\(n\) => \{ if \(n\) shells\.current\.set\(section\.id, n\);/);
+    expect(SRC).toMatch(/data-whole-manuscript-mounted=\{isMounted \? 'true' : 'false'\}/);
+    /* And the editor — not the shell — is what the window decides. */
+    expect(SRC).toContain('{!isMounted ? null : section.editable ? (');
+  });
+
+  it('an evicted section keeps the height it actually had', () => {
+    /* Otherwise a long section collapses to a stub on eviction and the page
+       moves under the writer. The estimate is only for a section that has
+       never rendered. */
+    expect(SRC).toContain('heights.current.get(section.id) ?? ESTIMATED_SECTION_HEIGHT');
+    const commit = block(SRC, 'const commitWindow =', 'setVisible(next);');
+    expect(commit).toContain('heights.current.set(section.id, shell.offsetHeight)');
+    /* Measured AFTER the capture: the capture is the part that matters and
+       must not sit behind anything that could throw. */
+    expect(commit.indexOf('writing.captureForUnmount('))
+      .toBeLessThan(commit.indexOf('heights.current.set('));
+  });
+
+  it('never lets the estimate pass for a fact about the writing', () => {
+    expect(SRC).not.toMatch(/ESTIMATED_SECTION_HEIGHT[\s\S]{0,80}(save|persist|revision|draft)/i);
+  });
+});
+
 describe('the structural guarantees the view may not quietly drop', () => {
   it('uses independent editors, never one giant contenteditable', () => {
     /* A single editable document over 262 section nodes would reopen the
