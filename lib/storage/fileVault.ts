@@ -41,8 +41,65 @@ export function imageExtFromMime(mime: string): string | null {
 }
 
 /**
+ * WS-01 · Source write authority (founder ruling 2026-09-08, PT-3 P11).
+ *
+ * The vault is a shared storage mechanism used by several domains. What is
+ * exceptional is entrusted manuscript Source, and this namespace is RESERVED
+ * from generic writing: `writeVaultBytes()` refuses it, and Source bytes are
+ * established only through WS-01's own create-only operation
+ * (`lib/manuscript/source/sourceArtifact.ts`).
+ *
+ *   Source arrival authority is an operation, not a namespace a caller may choose.
+ */
+export const SOURCE_VAULT_NAMESPACE = 'manuscript-sources';
+
+export class VaultDestinationRefused extends Error {
+  constructor(readonly reason: 'not_canonical' | 'source_namespace_reserved', detail: string) {
+    super(`[vault] ${reason}: ${detail}`);
+    this.name = 'VaultDestinationRefused';
+  }
+}
+
+/**
+ * The ONE canonical vault-destination rule. One rule, not an accumulation of
+ * string special cases — the object a writer is authorized to create and the
+ * object the filesystem creates must be the same object.
+ *
+ * `namespace` and `fileId` are both caller-influenced, and either can carry a
+ * traversal, so this refuses on SEGMENTS rather than normalizing: absolute
+ * paths, drive letters, backslashes, NUL, and any empty, `.` or `..` segment.
+ * A destination that survives is one `path.resolve` cannot relocate — the
+ * write-side form of the refusal S4 established for destruction.
+ *
+ * Returns the canonical vault-relative path, or null if it cannot be trusted.
+ */
+export function canonicalVaultDestination(
+  namespace: string,
+  fileId: string,
+  ext: string,
+): { path: string; namespace: string } | null {
+  const parts = [namespace, `${fileId}.${ext}`];
+  for (const part of parts) {
+    if (typeof part !== 'string' || part.length === 0) return null;
+    if (part.includes('\0') || part.includes('\\')) return null;
+    if (part.startsWith('/') || /^[A-Za-z]:/.test(part)) return null;
+  }
+  const segments = `${namespace}/${fileId}.${ext}`.split('/');
+  if (segments.length < 2) return null;
+  for (const segment of segments) {
+    if (segment === '' || segment === '.' || segment === '..') return null;
+  }
+  return { path: segments.join('/'), namespace: segments[0] };
+}
+
+/**
  * Persist bytes at {root}/{namespace}/{fileId}.{ext}. Returns the storagePath
  * RELATIVE to the vault root (e.g. "bugs/<uuid>.png") for later retrieval.
+ *
+ * ⛔ Cannot reach manuscript Source. The refusal is on the CANONICAL DESTINATION,
+ * not on the spelling of `namespace`, so `work-visuals/../manuscript-sources`,
+ * `./manuscript-sources`, and a `fileId` carrying `../manuscript-sources/...` are
+ * all refused — before any byte is written, and before any directory is created.
  */
 export async function writeVaultBytes(
   namespace: string,
@@ -50,12 +107,17 @@ export async function writeVaultBytes(
   ext: string,
   buffer: Buffer
 ): Promise<string> {
+  const dest = canonicalVaultDestination(namespace, fileId, ext);
+  if (!dest) {
+    throw new VaultDestinationRefused('not_canonical', `${namespace}/${fileId}.${ext}`);
+  }
+  if (dest.namespace === SOURCE_VAULT_NAMESPACE) {
+    throw new VaultDestinationRefused('source_namespace_reserved', dest.path);
+  }
   const root = resolveVaultRoot();
-  const dir = path.join(root, namespace);
-  await mkdir(dir, { recursive: true });
-  const storagePath = path.join(namespace, `${fileId}.${ext}`);
-  await writeFile(path.join(root, storagePath), buffer);
-  return storagePath;
+  await mkdir(path.join(root, dest.namespace), { recursive: true });
+  await writeFile(path.join(root, dest.path), buffer);
+  return dest.path;
 }
 
 /**

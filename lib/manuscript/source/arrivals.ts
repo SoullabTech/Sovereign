@@ -1,5 +1,6 @@
 import { query } from '@/lib/db/postgres';
-import { readVaultBytes, writeVaultBytes } from '@/lib/storage/fileVault';
+import { readVaultBytes } from '@/lib/storage/fileVault';
+import { createSourceArtifact } from './sourceArtifact';
 import {
   ARTIFACT_EXTRACTION,
   artifactExt,
@@ -26,7 +27,10 @@ import {
  * strictly preferable to a false claim of custody.
  */
 
-const VAULT_NAMESPACE = 'manuscript-sources';
+/* The namespace is no longer named here: it is owned by createSourceArtifact()
+   and reserved from generic vault writing (WS-01 Source write authority,
+   founder ruling 2026-09-08). A constant here would be a second place that
+   believes it knows where Source lives. */
 
 export interface StoredArrival {
   id: string;
@@ -48,8 +52,11 @@ export async function recordArtifactArrival(params: {
 }): Promise<StoredArrival> {
   const artifactHash = hashBytes(params.bytes);
   const fileId = `${Date.now().toString(36)}-${artifactHash.slice(0, 16)}`;
-  const artifactRef = await writeVaultBytes(
-    VAULT_NAMESPACE,
+  /* WS-01 Source write authority (founder ruling 2026-09-08). Source bytes are
+     established through the create-only operation that owns the namespace, not
+     through the generic vault writer — which now refuses this namespace outright.
+     An existing path is never replaced. */
+  const artifactRef = await createSourceArtifact(
     fileId,
     artifactExt(params.originalFilename),
     params.bytes,

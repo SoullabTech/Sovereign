@@ -1,6 +1,9 @@
 # PT-3 — Step 4 Results · P1–P11
 
-**Status: BUILT AND RUN. P1–P10 GREEN. ⛔ P11 FALSIFIES — RETURNED, NOT REPAIRED.**
+**Status: P1–P11 GREEN against the repaired architecture.**
+**P11 falsified on first run (§4), was RETURNED not repaired, and WS-01 built the missing
+write-side boundary under its own ruling (§6). The falsification and its wording are kept
+verbatim — the finding is the record, not a stage to be tidied away.**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 (S4 acceptance / PT-3 Step 4).
 Design: `WS2-PT3_SOURCE_CUSTODY_FALSIFIER_DESIGN_2026-09-08.md`.
@@ -74,8 +77,8 @@ stage later: WS-01 proved custody **at arrival**, PT-3 proves it **survives the 
 | **P8** cannot **counterfeit** — no authority type, no function taking one | ✅ |
 | **P8** cannot **repurpose** — the queue has exactly one writer | ✅ |
 | **P8** cannot **pathname-cross** — canonical refusal holds | ✅ |
-| **⛔ P11(i)** generic vault writing cannot target the Source namespace | ❌ **FALSIFIES** |
-| **⛔ P11(ii)** Source arrival is create-only and cannot overwrite a historical artifact | ❌ **FALSIFIES** |
+| **⛔ P11(i)** generic vault writing cannot target the Source namespace | ❌ **FALSIFIED on first run** → ✅ after the WS-01 repair, strengthened to canonical destination |
+| **⛔ P11(ii)** Source arrival is create-only and cannot overwrite a historical artifact | ❌ **FALSIFIED on first run** → ✅ after the WS-01 repair, now exercising the dedicated Source-create operation |
 
 ---
 
@@ -102,7 +105,7 @@ prospective and it is precisely PT-3's subject: **Restore has not been written y
 when it is, this is the door it would walk through.** Latent reachability becomes an actual
 editing capability the moment a correction feature exists.
 
-### The smallest repair, if authorized (⛔ NOT DONE)
+### The smallest repair, as proposed at the time of the falsification (⛔ NOT DONE THEN)
 
 1. A dedicated Source-arrival write boundary that owns the `manuscript-sources` namespace,
    with `writeVaultBytes` **refusing** that namespace — the write-side mirror of what S4
@@ -116,17 +119,88 @@ That is a new authority boundary on the write side, adjacent to WS-01. **It belo
 whoever owns Source arrival, not to PT-3** — the same ownership discipline that sent the
 erasure-channel defect back to WS-DELETE-01 rather than letting PT-3 rewrite it.
 
+*Founder ruling, same day: ownership confirmed to WS-01. The repair is §6.*
+
+---
+
+## 6 — The WS-01 Source write authority repair
+
+Built under the founder ruling of 2026-09-08 (PT-3 Step 4 / P11 falsification). Bounded:
+the vault remains a shared mechanism used by several domains; **what is exceptional is
+entrusted manuscript Source, and WS-01 owns that exception.** No global vault programme was
+opened.
+
+```text
+GENERIC VAULT WRITE      ordinary artifacts — MUST NOT resolve into Source
+SOURCE ARRIVAL WRITE     the WS-01 boundary — owns the namespace, creates only
+CONTENT WORK             has no Source-write operation at all
+```
+
+**A · Source reserved from generic writing.** `lib/storage/fileVault.ts` gains
+`SOURCE_VAULT_NAMESPACE` and **one canonical vault-destination rule**,
+`canonicalVaultDestination()`. The refusal is on the **canonical destination**, never on
+the spelling of the `namespace` argument — banning the literal string would repeat S4's
+textual mistake in write form, and *both* `namespace` and `fileId` are caller-influenced.
+It refuses on segments rather than normalizing: absolute paths, drive letters, backslashes,
+NUL, and any empty, `.` or `..` segment. Refused **before** any byte is written and before
+any directory is created.
+
+**B · A dedicated Source-arrival operation.** `lib/manuscript/source/sourceArtifact.ts` →
+`createSourceArtifact(fileId, ext, bytes)`. It takes **no caller-selected namespace** —
+`manuscript-sources` is owned internally — and returns artifact data, never generic write
+authority. **No capability token was created:** S4's lesson is that a token is a claim, and
+imitating its shape without its reasons would be cargo cult. `arrivals.ts` now establishes
+Source through it; the local namespace constant is gone, because a constant there would be
+a second place that believes it knows where Source lives.
+
+**C · Create-only by mechanism.** The write uses `wx` (`O_CREAT | O_EXCL`): **the kernel,
+not a convention, refuses an existing path.** `EEXIST` never becomes overwrite — the
+operation retries at a fresh unique path, establishing a genuinely new artifact.
+Deliberately **not** deduplication: identical bytes arriving twice are two entrustments, and
+collapsing them would decide a semantic question nobody has ruled on. `allowRetry: false`
+makes the refusal directly observable, which is what P11(ii) falsifies against.
+
+### P11 as amended and rerun — **all green**
+
+| | |
+|---|---|
+| (i) six caller-controlled constructions — `manuscript-sources` · `work-visuals/../manuscript-sources` · `./manuscript-sources` · `ordinary` + `fileId=../manuscript-sources/x` · `../manuscript-sources` · `manuscript-sources/nested` | **all REFUSED**, and no Source directory was created |
+| (i) ordinary namespaces still write | ✅ — the refusal is Source-specific, not a general seizure of the vault |
+| (ii) duplicate create refused **and the historical bytes read back identical** | ✅ — the assertion is the bytes, not the error |
+| (ii) a collision resolves to a NEW artifact, never a replacement | ✅ |
+| reachability — only WS-01 Source arrival may establish Source bytes | ✅, kept **separate from P6**: P6 asks who may mutate the Source *record*, P11 who may create or alter the *bytes* |
+
+### The negative controls, before and after
+
+```text
+BEFORE REPAIR   row unchanged + bytes overwritten
+                → P2 catches the damage after the fact
+
+AFTER REPAIR    a content path attempts the same overwrite through the generic
+                writer → REFUSED before historical Source changes (D0)
+```
+
+Both are retained in the behavioral witness. D1–D3 still demonstrate the row-diff false
+green, with the corruption now applied **out of band** — by writing the file directly,
+because the Studio's own writer can no longer reach it. That is the point: the vector is
+closed *and* the detection still works, since bytes can be lost to something outside the
+Studio and a row diff would never notice.
+
+> From detection to constitutional inability.
+
 ---
 
 ## 5 — Standing
 
-⛔ Not done and not authorized: the P11 repair · release-gate binding (step 5) · Encounter ·
+⛔ Not done and not authorized: release-gate binding (step 5) · Encounter ·
 Restore · intention authority · Work→Work lineage · WS2-08B · `living_works.stage` ·
 deployment.
 
-**Gates:** typecheck 229 vs baseline 239, **0 regressions** · `lib/manuscript` +
-`lib/storage` + living-works: **59 suites, 1022 passed, 1 skipped, 2 failed — the two
-failures being P11 and nothing else.** No previously green test went red.
+**Gates (after the repair):** typecheck 229 vs baseline 239, **0 regressions** ·
+`lib/manuscript` + `lib/storage` + `lib/bugs` + living-works: **59 suites, 1028 passed,
+1 skipped, 0 failed.** The behavioral witness reruns **ALL CONTROLS PASSED · 1 skipped**.
+No previously green constitutional test was weakened or removed; P11 was strengthened, not
+relaxed, on its way to green.
 
 **Provenance of the behavioral run:** a PostgreSQL 16.13 cluster stood up in-session, schema
 restored from `database/baseline/0001_baseline_2026-09-01.sql` plus every migration from
@@ -138,6 +212,7 @@ record surviving an erasure — which is the falsifier behaving correctly agains
 incomplete fixture. Production carries the FK; NC-19's earlier run used a minimal schema
 built directly from the real migrations and had it throughout.
 
-> Content work is constitutionally powerless against Source **destruction** and against the
-> Source **record**. It is not yet powerless against Source **bytes**. That gap is P11, and
-> it is the finding.
+> Content work is constitutionally powerless against Source **destruction**, against the
+> Source **record**, and now against Source **bytes**. Historical Source is no longer
+> unlikely to be overwritten by the Studio — it is un-overwritable through the Studio's
+> ordinary writing powers.

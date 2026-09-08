@@ -23,14 +23,15 @@
  *                                      truncate historical Source through
  *                                      generic vault-writing power
  *
- * ⛔ P11 IS EXPECTED TO FAIL AGAINST THE PRESENT IMPLEMENTATION, and it is
- * written to the ruled law rather than to what the code currently does. The
- * founder's instruction is explicit: stop at the falsification and return it; do
- * not silently repair the Source-write architecture from inside the falsifier
- * build. A falsifier weakened to accommodate the thing it exists to catch is not
- * a falsifier.
+ * P11 FALSIFIED on 2026-09-08 and was returned, not repaired here: the
+ * missing write-side boundary belonged to WS-01, which built it
+ * (`lib/manuscript/source/sourceArtifact.ts`, and the Source namespace reserved
+ * from generic writing in `lib/storage/fileVault.ts`). These assertions were
+ * written to the ruled law BEFORE that repair existed and were not weakened to
+ * accommodate it — a falsifier weakened to fit the thing it exists to catch is
+ * not a falsifier.
  */
-import { mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -168,41 +169,90 @@ describe('P8 · Source-destruction reachability', () => {
   });
 });
 
-describe('⛔ P11 · Source-write reachability — EXPECTED TO FALSIFY', () => {
-  /* Written to the ruled law, not to the implementation. The census already
-     established that writeVaultBytes() is truncating and caller-selects its
-     namespace; the ruling forbids weakening P11 to accommodate that.
+describe('P11 · Source-write reachability', () => {
+  /* Written to the ruled law, not to the implementation. P11 falsified on
+     2026-09-08 and WS-01 repaired it; these now enforce the repair.
 
      Historical Source must be immutable BY MECHANISM, not by the improbability
      of a timestamp-plus-hash filename collision. */
-  const vault = () => {
-    const dir = mkdtempSync(join(tmpdir(), 'pt3-vault-'));
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'pt3-vault-'));
     process.env.FILE_STORAGE_PATH = dir;
-    return dir;
-  };
-
-  it('(i) generic vault writing cannot target the Source namespace', async () => {
-    const { writeVaultBytes, SOURCE_VAULT_NAMESPACE } = require('@/lib/storage/fileVault');
-    vault();
-    /* The law: a generic writer handed the Source namespace must refuse. Any
-       caller — a Restore that has not been written yet included — must be unable
-       to reach Source bytes through the shared helper. */
-    await expect(
-      writeVaultBytes('manuscript-sources', 'forged', 'docx', Buffer.from('not the book')),
-    ).rejects.toThrow();
-    expect(SOURCE_VAULT_NAMESPACE).toBeDefined();
   });
 
-  it('(ii) Source arrival is create-only — it cannot overwrite a historical artifact', async () => {
-    const { writeVaultBytes } = require('@/lib/storage/fileVault');
-    vault();
+  const vault = () => require('@/lib/storage/fileVault');
+  const source = () => require('@/lib/manuscript/source/sourceArtifact');
+
+  it('(i) generic vault writing cannot produce a canonical destination inside Source', async () => {
+    /* The property is the CANONICAL DESTINATION, not the spelling of the
+       namespace argument. Banning the literal string would repeat S4's textual
+       mistake in write form: both `namespace` and `fileId` are caller-influenced
+       and either can carry a traversal. */
+    const { writeVaultBytes } = vault();
+    const bytes = Buffer.from('not the book');
+    const attempts: [string, string][] = [
+      ['manuscript-sources', 'forged'],
+      ['work-visuals/../manuscript-sources', 'forged'],
+      ['./manuscript-sources', 'forged'],
+      ['ordinary', '../manuscript-sources/x'],
+      ['../manuscript-sources', 'forged'],
+      ['manuscript-sources/nested', 'forged'],
+    ];
+    for (const [ns, fileId] of attempts) {
+      await expect(writeVaultBytes(ns, fileId, 'docx', bytes)).rejects.toThrow();
+    }
+    /* Refused BEFORE bytes are written: nothing reached the Source namespace,
+       and no directory was created for it either. */
+    expect(existsSync(join(dir, 'manuscript-sources'))).toBe(false);
+  });
+
+  it('(i) ordinary namespaces still write, so the refusal is Source-specific', async () => {
+    const { writeVaultBytes } = vault();
+    const at = await writeVaultBytes('work-visuals', 'cover', 'png', Buffer.from('img'));
+    expect(at).toBe('work-visuals/cover.png');
+  });
+
+  it('(ii) Source create-only — a duplicate create is refused and the bytes do not change', async () => {
+    const { createSourceArtifact, SourceArtifactExists } = source();
     const original = Buffer.from('the book as it arrived');
-    await writeVaultBytes('manuscript-sources', 'same-id', 'docx', original);
-    /* Establishing a NEW artifact is permitted. Rewriting a historical one is
-       not — the second write at the same path must be refused by the mechanism,
-       not merely be unlikely. */
+    const at = await createSourceArtifact('same-id', 'docx', original, { allowRetry: false });
+
     await expect(
-      writeVaultBytes('manuscript-sources', 'same-id', 'docx', Buffer.from('THE BOOK IS GONE')),
-    ).rejects.toThrow();
+      createSourceArtifact('same-id', 'docx', Buffer.from('THE BOOK IS GONE'), { allowRetry: false }),
+    ).rejects.toBeInstanceOf(SourceArtifactExists);
+
+    /* The assertion is not that an error occurred. It is that what the writer
+       entrusted is still there, byte for byte. */
+    expect(readFileSync(join(dir, at))).toEqual(original);
+  });
+
+  it('(ii) a collision resolves to a NEW artifact, never a replacement', async () => {
+    /* EEXIST must never become overwrite. Retry establishes a genuinely new
+       artifact; it is deliberately not deduplication — identical bytes arriving
+       twice are two entrustments. */
+    const { createSourceArtifact } = source();
+    const first = await createSourceArtifact('dup', 'docx', Buffer.from('A'));
+    const second = await createSourceArtifact('dup', 'docx', Buffer.from('B'));
+    expect(second).not.toBe(first);
+    expect(readFileSync(join(dir, first))).toEqual(Buffer.from('A'));
+    expect(readFileSync(join(dir, second))).toEqual(Buffer.from('B'));
+  });
+
+  it('⛔ reachability — only WS-01 Source arrival may establish Source bytes', () => {
+    /* Kept separate from P6 on purpose. P6 asks who may mutate the Source
+       relational RECORD; P11 asks who may create or alter the Source BYTES.
+       They are different constitutional powers and must not share an allowlist. */
+    expect(
+      find(/createSourceArtifact/, [
+        'lib/manuscript/source/sourceArtifact.ts',
+        'lib/manuscript/source/arrivals.ts',
+      ]),
+    ).toEqual([]);
+  });
+
+  it('⛔ reachability — nothing outside the Source operation names the reserved namespace as a write target', () => {
+    const offenders = find(/writeVaultBytes\(\s*['"`]manuscript-sources/, []);
+    expect(offenders).toEqual([]);
   });
 });

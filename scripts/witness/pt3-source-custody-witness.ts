@@ -24,7 +24,9 @@ import { randomUUID } from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { recordArtifactArrival, claimArrival } from '@/lib/manuscript/source/arrivals';
 import { witnessSource, witnessIsLive, type SourceWitness } from '@/lib/manuscript/source/sourceWitness';
-import { writeVaultBytes, readVaultBytes } from '@/lib/storage/fileVault';
+import { writeVaultBytes, readVaultBytes, resolveVaultRoot } from '@/lib/storage/fileVault';
+import { writeFileSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { eraseManuscript } from '@/lib/manuscript/source/eraseManuscript';
 import { saveSection } from '@/lib/manuscript/sections/saveSection';
 
@@ -172,13 +174,32 @@ async function main() {
     `SELECT artifact_hash, source_text_hash, source_text FROM manuscript_source_arrivals WHERE id = $1`,
     [target.id],
   );
-  /* A "content-working act" that overwrites the artifact in place through the
-     shared truncating writer, touching no column. Test-double only: no
-     production code is modified to make this reproduce. */
+  /* ── D0: the structural predecessor, added after the WS-01 repair ────────
+     Before the repair, this exact call succeeded and was the vector. Now the
+     generic writer refuses the canonical Source destination BEFORE any byte
+     moves. This is the movement PT-3 exists to create: from detecting damage
+     afterwards to being constitutionally unable to do it. */
   const seg = target.artifactRef!.split('/');
   const fileId = seg[1].replace(/\.[^.]+$/, '');
   const ext = seg[1].slice(seg[1].lastIndexOf('.') + 1);
-  await writeVaultBytes('manuscript-sources', fileId, ext, Buffer.from('THE BOOK IS GONE', 'utf8'));
+  let refusedBeforeWriting = false;
+  try {
+    await writeVaultBytes('manuscript-sources', fileId, ext, Buffer.from('THE BOOK IS GONE', 'utf8'));
+  } catch {
+    refusedBeforeWriting = true;
+  }
+  check('D0 ⛔ P11 · a content path attempting the overwrite through the generic writer is REFUSED',
+    refusedBeforeWriting);
+  check('D0 …and the entrusted bytes never changed',
+    (await readVaultBytes(target.artifactRef!)).equals(bytes));
+
+  /* ── D1–D3: the false green itself, still demonstrated ───────────────────
+     The corruption is now applied OUT OF BAND, by writing the file directly,
+     because the Studio's own generic writer can no longer reach it. That is the
+     point: the vector is closed, and the detection must still work — bytes can
+     still be lost to something outside the Studio, and a row diff would never
+     notice. */
+  writeFileSync(join(resolveVaultRoot(), target.artifactRef!), Buffer.from('THE BOOK IS GONE', 'utf8'));
   const columnsAfter = await query<any>(
     `SELECT artifact_hash, source_text_hash, source_text FROM manuscript_source_arrivals WHERE id = $1`,
     [target.id],
@@ -189,8 +210,10 @@ async function main() {
   check('D2 ⛔ P2 CATCHES IT — the witness is no longer live', witnessIsLive(corrupted) === false);
   check('D3 ⛔ and the digest moved, because liveness is part of the witness',
     corrupted.digest !== before.digest);
-  /* Put the entrusted bytes back so P9 erases the real thing. */
-  await writeVaultBytes('manuscript-sources', fileId, ext, bytes);
+
+  /* Put the entrusted bytes back so P9 erases the real thing. Direct, for the
+     same reason: the Studio can no longer write here, which is correct. */
+  writeFileSync(join(resolveVaultRoot(), target.artifactRef!), bytes);
   check('D4 the fixture artifact is restored for the lifecycle leg',
     (await readVaultBytes(target.artifactRef!)).equals(bytes));
 
