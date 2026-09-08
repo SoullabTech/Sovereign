@@ -107,7 +107,7 @@ describe('bytes go when the record goes', () => {
     /* WS-DELETE-01 · S4: the raw INSERT moved behind the one governed erasure
        seam. The doctrine is unchanged — the obligation is still tied to the
        commit — so this pins the seam call where it used to pin the SQL. */
-    const enqueueAt = MUTATE.indexOf('enqueueVaultErasure(');
+    const enqueueAt = MUTATE.indexOf('eraseWorkVisualBytes(');
     expect(txAt).toBeGreaterThan(-1);
     expect(enqueueAt).toBeGreaterThan(txAt);
     expect(MUTATE).toContain('sweepVaultErasureQueue');
@@ -123,7 +123,7 @@ describe('bytes go when the record goes', () => {
        database knows the file was ever ours. */
     for (const source of [ERASE, WITHDRAW]) {
       expect(source).toContain('living_work_visuals');
-      expect(source).toContain('enqueueVaultErasure(');
+      expect(source).toContain('eraseWorkVisualBytes(');
       const readAt = source.indexOf('SELECT storage_path FROM living_work_visuals');
       const deleteAt = source.indexOf('DELETE FROM living_works');
       expect(readAt).toBeGreaterThan(-1);

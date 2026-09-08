@@ -1,6 +1,8 @@
 # WS-DELETE-01 — Erasure Authority Amendment (S4)
 
-**Status: SEAM BUILT · NEGATIVE CONTROLS GREEN · RETURNED FOR FOUNDER REVIEW.**
+**Status: SEAM REPAIRED · NC-12…NC-18 GREEN · RETURNED FOR FOUNDER REVIEW (2nd).**
+**First implementation REFUSED by founder review, 2026-09-08 — recorded in §2.0, not
+erased. Step 4 (building PT-3) remains held.**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08, *PT-3 Source Custody / WS-DELETE-01 Erasure
 Authority*, §2 (S4 authorized first) and §1 (lane ownership).
@@ -40,113 +42,132 @@ invariant. It stands in the record as written, superseded here rather than edite
 
 ---
 
-## 2 — The seam
+## 2.0 — The first implementation, and why it was refused
 
-`lib/storage/erasureAuthority.ts`.
+Recorded rather than deleted: it was refused for reasons that are now the design.
+
+It minted a portable `ErasureAuthority` on the observation that a manuscript and its
+arrival rows were **absent**. The founder's finding:
+
+> **absence + namespace is not evidence + locality.**
+
+| # | Defect | Consequence |
+|---|---|---|
+| 1 | Absence proves a **state**, not the **transition** that produced it | a nonexistent id, or an id belonging to another member, minted Source authority with no erasure having occurred — so the claim *"a content-working path cannot obtain it without having performed the erasure"* was **not true** |
+| 2 | The authority was **namespace-wide** | a legitimate erasure of manuscript A could enqueue manuscript B's Source — authority over one act becoming authority over every Source artifact |
+| 3 | The token was **transferable** | mint in transaction A, let it escape, roll A back, use it in transaction B |
+| 4 | `MINTED` was a type-shape intention the seam never validated at runtime | a cast or a hand-built object was a capability |
+| 5 | The namespace check was **textual** while destruction resolves paths | `work-visuals/../manuscript-sources/x` classified as a Work visual, resolved into Source |
+
+The corrected requirement, in the founder's words:
+
+> Source-destruction authority must arise from the **actual governed lifecycle
+> mutation**, be **bounded to exactly what that mutation relinquished**, and be
+> **unreachable from content-working code** except by crossing the visible lifecycle
+> boundary.
+
+---
+
+## 2 — The repaired seam
+
+`lib/storage/erasureAuthority.ts`. **There is no authority object.** Nothing to forge,
+nothing to widen, nothing to carry out of the transaction that gave it meaning.
+
+> **Source lifecycle authority is an operation, not a portable token.**
+
+**`relinquishManuscriptSource(tx, manuscriptId, memberId, label)`** — the governed
+operation, running inside the caller's transaction:
 
 ```text
-SOURCE ARRIVAL AUTHORITY    may establish a NEW entrusted artifact,
-                            never rewrite a historical one
-CONTENT-WORKING AUTHORITY   cannot create, replace, truncate, overwrite or
-                            destroy bytes in the Source namespace
-SOURCE LIFECYCLE AUTHORITY  may relinquish the entrusted artifact, only through
-                            the explicitly governed lifecycle
+capture the exact Source refs                 (read while the rows naming them exist)
+  → member-scoped DELETE … RETURNING          (positive evidence of the transition)
+    → enqueue exactly those captured refs     (only after a row comes back)
 ```
 
-**A · One enqueue primitive.** `enqueueVaultErasure(tx, authority, refs)` is the only
-runtime writer of `vault_erasure_queue`. The queue gained **no new column**: authority is
-decided before the row is written and is never stored, so the row still cannot
-reconstruct or attribute erased writing.
+It returns an **outcome**, never destruction power.
 
-**B · Authority is scoped to a namespace.** `workVisualErasureAuthority()` governs
-`work-visuals` and nothing else. Erasing a manuscript does not confer generic vault
-power: the Work-cover path inside `eraseManuscript` takes work-visual authority, the same
-authority the content route holds.
-
-**C · Source authority is evidence, not a request.** `mintSourceErasureAuthority(tx, …)`
-reads, **inside the caller's transaction**, whether the manuscript and its arrival rows
-are *already gone*, and returns an authority only then. There is no flag, enum or label a
-caller can supply to obtain it. A content-working path cannot reach it without having
-performed the member-directed erasure — at which point it is not masquerading as the
-lifecycle act, it **is** the lifecycle act. Same shape as Circles FR-18: *the authority is
-the mutation, not a precheck.*
-
-> ⚠ **Stated plainly rather than oversold:** in-process JavaScript cannot stop a module
-> from importing an exported function, so this is **evidence plus locality**, not an
-> unforgeable capability. The runtime half is the evidence condition; the locality half is
-> PT-3's static P7 scan, which pins where the cascade-triggering DELETE may live. Neither
-> half alone is sufficient, and the design does not claim otherwise.
-
-**D · Namespace refusal at the seam.** A content-working authority handed a
-`manuscript-sources/` path is refused — loudly, as a thrown refusal, never a silent skip
-that would leave bytes retained behind a caller who believes it asked for destruction. A
-batch containing one ungoverned path is refused **entirely**; a refusal that half-succeeds
-is not a refusal.
-
-**E · All three producers migrated, none grandfathered.**
-
-| Producer | Authority now used |
+| Requirement | How it is met |
 |---|---|
-| `lib/manuscript/source/eraseManuscript.ts` (source artifacts) | Source lifecycle, minted after the DELETE |
-| `lib/manuscript/source/eraseManuscript.ts` (cascaded Work cover) | work-visual |
-| `app/api/sovereign/living-works/[id]/route.ts` (delete Work) | work-visual |
-| `app/api/sovereign/living-works/[id]/visual/route.ts` (replace · remove) | work-visual |
+| **1 · positive transition evidence** | the enqueue is downstream of `DELETE … RETURNING`; no row returned → `{deleted:false}`, nothing enqueued, *even though the manuscript is then demonstrably absent* |
+| **2 · exact-artifact binding** | the refs enqueued are the ones this call captured, for this manuscript, under this member. There is no parameter by which another manuscript's Source could be named — the binding is the query, not an argument |
+| **3 · same-transaction binding** | capture, delete and enqueue are one call on the caller's `tx`; a rollback takes all three |
+| **4 · runtime non-forgeability** | achieved by removal: the generic enqueue is module-private, and the module exports no authority type, no mint, and no function taking an authority. A capability that does not exist cannot be counterfeited |
+| **5 · canonical namespace** | one `canonicalVaultRef()` validator at the boundary refuses absolute paths, drive letters, backslashes, NUL, empty, `.` and `..` segments — so the object authorized and the object destroyed are the same canonical object. It refuses rather than normalizes: a reference that survives is one `path.resolve` cannot relocate |
 
-**F · WS-DELETE-01 still erases completely.** The lifecycle act is unchanged in effect:
-one transaction, paths read while the rows naming them exist, obligation committed with
-the deletion, idempotent sweep, independent consumer. The mint sits *after* the DELETE
-and refuses if the rows are somehow still readable — in which case the transaction rolls
-back and the member's Work is intact. Custody that cannot be relinquished is capture, not
-custody; nothing here narrows the member's right to end it.
+**Content-working counterpart.** `eraseWorkVisualBytes(tx, refs, label)` is likewise an
+operation, bounded to `work-visuals` by construction. Handed a Source path — canonical or
+disguised as traversal — it refuses. A batch containing one ungoverned path is refused
+**entirely**; a refusal that half-succeeds is not a refusal.
+
+**Producers, all migrated, none grandfathered.**
+
+| Producer | Operation |
+|---|---|
+| `lib/manuscript/source/eraseManuscript.ts` (Source) | `relinquishManuscriptSource` — its own `DELETE` moved inside the seam |
+| `lib/manuscript/source/eraseManuscript.ts` (cascaded Work cover) | `eraseWorkVisualBytes` |
+| `app/api/sovereign/living-works/[id]/route.ts` | `eraseWorkVisualBytes` |
+| `app/api/sovereign/living-works/[id]/visual/route.ts` (replace · remove) | `eraseWorkVisualBytes` |
+
+**The queue gained no column.** Authority is decided before the row is written and is
+never stored, so the row still cannot reconstruct or attribute erased writing.
+
+**F · WS-DELETE-01 still erases completely.** Ordering and atomicity are unchanged; the
+member's right to relinquish custody is untouched. Custody that cannot be ended is
+capture, not custody.
 
 ---
 
 ## 3 — Negative-control evidence
 
-`lib/storage/__tests__/erasureAuthority.test.ts` — **11 passed, 0 failed.** Every control
+`lib/storage/__tests__/erasureAuthority.test.ts` — **15 passed, 0 failed.** Every control
 asserts *nothing was enqueued*, not merely that an error was raised.
 
 | Control | Result |
 |---|---|
-| Work-visual (content-working) authority handed a Source path | **REFUSED**, 0 inserts |
-| Source authority handed a Work-visual path | **REFUSED**, 0 inserts |
-| Namespaceless path | **REFUSED**, 0 inserts |
-| Mixed batch, one path ungoverned | **REFUSED entirely**, 0 inserts |
-| Source authority requested while the manuscript still exists | **null** — the act has not happened |
-| Source authority requested while an arrival row survives | **null** — a half-done erasure confers nothing |
-| Source authority after both are gone, then enqueue | granted; exactly the Source refs enqueued |
-| Empty batch | 0 inserts, no statement issued |
-| All three producers contain the seam call and no direct INSERT (property E) | **PASS** |
-| Whole-runtime scan: the seam is the only inserter, comments stripped | **PASS** |
+| **NC-12** nonexistent manuscript | no transition, no refs, **0 inserts** |
+| **NC-13** manuscript outside the member scope | no transition, **0 inserts**, existence never confirmed |
+| **NC-14** one act cannot reach another manuscript's Source | only the captured refs enqueued; B absent |
+| **NC-15 / NC-16** fabricate or repurpose an authority | **structural**: the module's entire export surface is pinned — no authority type, no mint, no generic enqueue, no function taking an authority |
+| **NC-17** `work-visuals/../manuscript-sources/x` under content authority | **REFUSED**, 0 inserts; plus 9 further non-canonical shapes refused |
+| **NC-18** an outcome surviving a rollback | authorizes nothing — there is no call that accepts it; asserted against the module's own source |
+| Content authority handed a plainly canonical Source path | **REFUSED**, 0 inserts |
+| Mixed batch, one ungoverned path | **REFUSED entirely**, 0 inserts |
+| Statement ordering: capture → delete → enqueue | **PASS** |
+| **P9** a real relinquishment still completes fully | both refs enqueued |
+| All producers through the seam, none grandfathered | **PASS** |
+| Whole-runtime scan: the seam is the only queue inserter (comments stripped) | **PASS** |
+| Whole-runtime scan: `DELETE FROM member_manuscripts` exists only in the seam | **PASS** |
 
-Comment-stripping is the ratified C21 discipline: this document, the seam and the test all
-name the banned statement in prose, and a scan that reads prose as behaviour would fail on
-the files that document their own compliance.
+**Stated rather than overclaimed:** these run against a recording transaction client, so
+they prove the seam's decisions and its statement ordering. They do not re-test
+PostgreSQL's rollback — that is the database's guarantee. What the repair makes
+*structurally* true, and what NC-18 checks, is that no object exists that could outlive a
+transaction and still authorize anything.
 
 **Other gates:** typecheck 229 vs baseline 239, **0 regressions** · `lib/manuscript`,
-`lib/storage`, `app/api/sovereign/living-works` — **58 suites, 1006 passed, 0 failed**,
-including the pre-existing Work-visual doctrine suite (its two assertions that pinned the
-raw SQL now pin the seam call; the doctrine — the obligation is tied to the commit — is
-unchanged).
+`lib/storage`, `app/api/sovereign/living-works` — **58 suites, 1010 passed, 0 failed**,
+including the pre-existing Work-visual doctrine suite (its assertions now pin the seam
+operation; the doctrine — the obligation is tied to the commit — is unchanged).
 
 ---
 
 ## 4 — Standing
 
 ⛔ Not authorized and not done: Encounter · Restore · intention authority · lineage ·
-WS2-08B · `living_works.stage` · deployment · unrelated vault work · the PT-3 witness
-itself (sequence step 4).
+WS2-08B · `living_works.stage` · deployment · unrelated vault work · **the PT-3 witness
+(step 4 remains held)**.
 
 ⛔ **No migration.** The queue's schema is untouched; this is an authority boundary in
-code, not a new column.
+code.
 
-⛔ **Not deployed.** The seam changes how four runtime paths reach destruction. It should
-be reviewed as a constitutional shape before it runs against member data.
+⛔ **Not deployed.** The seam changes how four runtime paths reach destruction, and moves
+the manuscript DELETE itself. It should be accepted as a constitutional shape before it
+runs against member data.
 
-Owed next, per the ruling's sequence: PT-3 design amended for **P7 reachability** and the
-**Source vault-write authority** (step 3, done — see the PT-3 design document), then the
-PT-3 witness built against this final authority shape (step 4), then bound into the
-release gate (step 5).
+Owed next, per the ruling's sequence: founder acceptance of the repaired S4 → amend PT-3
+**P8** to the post-S4 shape (already folded into the design document, §4) → build PT-3 →
+let **P11** expose whether the Source-write boundary needs its own repair → bind into the
+release gate → demonstrate P9 still fully relinquishes custody.
 
 > Stop making safety depend on which code happens to know a pathname. Make the system
 > know what kind of authority is acting.

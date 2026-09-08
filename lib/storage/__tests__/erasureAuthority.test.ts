@@ -1,130 +1,198 @@
 /**
- * WS-DELETE-01 · S4 — negative controls for the governed erasure authority seam.
+ * WS-DELETE-01 · S4 (repaired) — negative controls.
  *
- * Founder ruling 2026-09-08. These are the evidence the ruling asks to be
- * returned with the seam. Each one is a refusal: the seam is only worth
- * anything if it says NO to the acts PT-3 forbids, so every control here
- * asserts that nothing was enqueued, not merely that an error was thrown.
+ * Founder review 2026-09-08: evidence + locality accepted as the standard, the
+ * first implementation refused as its expression. These are NC-12…NC-18 plus the
+ * controls that survived, and every one asserts that NOTHING WAS ENQUEUED rather
+ * than merely that an error was raised.
+ *
+ * What these controls can and cannot prove is stated where it matters: they run
+ * against a recording transaction client, so they prove the seam's decisions and
+ * its statement ordering. They do not prove PostgreSQL's rollback, which is the
+ * database's guarantee and is relied upon here rather than re-tested — the point
+ * of the repair is that there is no object able to outlive a transaction, which
+ * is a structural fact these tests can and do check.
  */
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
+import * as seam from '../erasureAuthority';
 import {
-  enqueueVaultErasure,
-  mintSourceErasureAuthority,
-  workVisualErasureAuthority,
-  namespaceOf,
-  ErasureAuthorityRefused,
+  canonicalVaultRef,
+  eraseWorkVisualBytes,
+  relinquishManuscriptSource,
+  ErasureRefused,
   SOURCE_NAMESPACE,
   WORK_VISUAL_NAMESPACE,
 } from '../erasureAuthority';
 
 const REPO = join(__dirname, '../../..');
 
-/** A transaction client that records what it was asked to run. */
-function fakeTx(rows: (sql: string) => any[] = () => []) {
+const SOURCE_A = `${SOURCE_NAMESPACE}/aaa-1111.docx`;
+const SOURCE_B = `${SOURCE_NAMESPACE}/bbb-2222.docx`;
+const VISUAL = `${WORK_VISUAL_NAMESPACE}/cover-1.png`;
+
+/** Records every statement, and answers reads per the scenario given. */
+function fakeTx(opts: { arrivals?: string[]; deletes?: boolean } = {}) {
   const seen: { sql: string; params: any[] }[] = [];
-  return {
-    seen,
-    client: {
-      query: async (sql: string, params: any[] = []) => {
-        seen.push({ sql, params });
-        return { rows: rows(sql), rowCount: rows(sql).length } as any;
-      },
+  const client = {
+    query: async (sql: string, params: any[] = []) => {
+      seen.push({ sql, params });
+      if (/FROM manuscript_source_arrivals/.test(sql)) {
+        return { rows: (opts.arrivals ?? []).map((artifact_ref) => ({ artifact_ref })) } as any;
+      }
+      if (/DELETE FROM member_manuscripts/.test(sql)) {
+        return { rows: opts.deletes ? [{ id: 'm-1' }] : [] } as any;
+      }
+      return { rows: [] } as any;
     },
+  };
+  return {
+    client,
+    seen,
     inserts: () => seen.filter((s) => /INSERT INTO vault_erasure_queue/.test(s.sql)),
+    queued: () => seen.filter((s) => /INSERT INTO vault_erasure_queue/.test(s.sql)).flatMap((s) => s.params[0] as string[]),
   };
 }
 
-const SOURCE_PATH = `${SOURCE_NAMESPACE}/abc123-deadbeef.docx`;
-const VISUAL_PATH = `${WORK_VISUAL_NAMESPACE}/1111-2222.png`;
-
-describe('namespace is the boundary, not the caller', () => {
-  it('reads the namespace segment, and refuses a path that has none', () => {
-    expect(namespaceOf(SOURCE_PATH)).toBe(SOURCE_NAMESPACE);
-    expect(namespaceOf('loose-file.docx')).toBeNull();
-    expect(namespaceOf('/leading-slash.docx')).toBeNull();
-  });
-
-  it('⛔ CONTENT WORK CANNOT DESTROY SOURCE — a work-visual authority handed a Source path is refused', async () => {
-    /* This is P8. The Work-cover route is an ordinary content-working path and
-       keeps its own artifact's authority; presented with an entrusted Source
-       artifact it must refuse, whatever it intended. */
+describe('NC-17 · canonical namespace, not a textual prefix', () => {
+  it('⛔ traversal that resolves into Source is refused under Work-visual authority', async () => {
+    /* The defect the founder found: `namespaceOf()` read the first segment while
+       destruction resolves the path, so this string was "work-visuals" to the
+       authority and `manuscript-sources` to the filesystem. */
     const tx = fakeTx();
     await expect(
-      enqueueVaultErasure(tx.client, workVisualErasureAuthority('test:content'), [SOURCE_PATH]),
-    ).rejects.toBeInstanceOf(ErasureAuthorityRefused);
+      eraseWorkVisualBytes(tx.client, [`${WORK_VISUAL_NAMESPACE}/../${SOURCE_NAMESPACE}/x.docx`], 'nc17'),
+    ).rejects.toBeInstanceOf(ErasureRefused);
     expect(tx.inserts()).toHaveLength(0);
   });
 
-  it('⛔ authority over one class is not authority over another — Source authority is refused a Work visual', async () => {
-    const tx = fakeTx(() => []); // nothing exists → the act completed
-    const authority = await mintSourceErasureAuthority(tx.client, 'm-1', 'mem-1', 'test:lifecycle');
-    expect(authority).not.toBeNull();
-    await expect(
-      enqueueVaultErasure(tx.client, authority!, [VISUAL_PATH]),
-    ).rejects.toBeInstanceOf(ErasureAuthorityRefused);
-    expect(tx.inserts()).toHaveLength(0);
+  it('refuses every shape whose meaning could change under resolution', () => {
+    for (const bad of [
+      `${WORK_VISUAL_NAMESPACE}/../${SOURCE_NAMESPACE}/x.docx`,
+      `${WORK_VISUAL_NAMESPACE}/./x.png`,
+      `${WORK_VISUAL_NAMESPACE}//x.png`,
+      `/${WORK_VISUAL_NAMESPACE}/x.png`,
+      `C:\\${WORK_VISUAL_NAMESPACE}\\x.png`,
+      `${WORK_VISUAL_NAMESPACE}\\x.png`,
+      'loose.png',
+      '',
+      `${WORK_VISUAL_NAMESPACE}/x\0.png`,
+    ]) {
+      expect(canonicalVaultRef(bad)).toBeNull();
+    }
+    expect(canonicalVaultRef(VISUAL)).toEqual({ ref: VISUAL, namespace: WORK_VISUAL_NAMESPACE });
   });
 
-  it('⛔ a namespaceless path is refused rather than destroyed', async () => {
+  it('⛔ content work handed a plainly canonical Source path is still refused', async () => {
     const tx = fakeTx();
-    await expect(
-      enqueueVaultErasure(tx.client, workVisualErasureAuthority('test'), ['orphan.png']),
-    ).rejects.toBeInstanceOf(ErasureAuthorityRefused);
+    await expect(eraseWorkVisualBytes(tx.client, [SOURCE_A], 'nc-content')).rejects.toBeInstanceOf(ErasureRefused);
     expect(tx.inserts()).toHaveLength(0);
   });
 
-  it('refuses the whole batch when any path is outside the authority', async () => {
-    /* Partial enqueue would destroy the governed half and silently drop the
-       rest — a refusal that half-succeeded is not a refusal. */
+  it('refuses the whole batch when any single path is ungoverned', async () => {
     const tx = fakeTx();
-    await expect(
-      enqueueVaultErasure(tx.client, workVisualErasureAuthority('test'), [VISUAL_PATH, SOURCE_PATH]),
-    ).rejects.toBeInstanceOf(ErasureAuthorityRefused);
+    await expect(eraseWorkVisualBytes(tx.client, [VISUAL, SOURCE_A], 'nc-batch')).rejects.toBeInstanceOf(ErasureRefused);
     expect(tx.inserts()).toHaveLength(0);
+  });
+
+  it('a governed Work-visual path is enqueued, canonically', async () => {
+    const tx = fakeTx();
+    expect(await eraseWorkVisualBytes(tx.client, [VISUAL], 'ok')).toBe(1);
+    expect(tx.queued()).toEqual([VISUAL]);
   });
 });
 
-describe('Source lifecycle authority is evidence, never a request', () => {
-  it('⛔ REFUSES while the manuscript still exists — the act has not happened', async () => {
-    /* The masquerade this forbids: a content-working path that wants Source
-       destruction power without performing the member-directed erasure. */
-    const tx = fakeTx((sql) => (/FROM member_manuscripts/.test(sql) ? [{ id: 'm-1' }] : []));
-    expect(await mintSourceErasureAuthority(tx.client, 'm-1', 'mem-1', 'test')).toBeNull();
-  });
-
-  it('⛔ REFUSES while any arrival row survives — a half-done erasure confers nothing', async () => {
-    const tx = fakeTx((sql) =>
-      /FROM manuscript_source_arrivals/.test(sql) ? [{ id: 'a-1' }] : [],
-    );
-    expect(await mintSourceErasureAuthority(tx.client, 'm-1', 'mem-1', 'test')).toBeNull();
-  });
-
-  it('grants only after the member-directed deletion has taken both, and then enqueues', async () => {
-    /* P9's half: custody that cannot be relinquished is capture, not custody.
-       The lifecycle act must still be able to finish. */
-    const tx = fakeTx(() => []);
-    const authority = await mintSourceErasureAuthority(tx.client, 'm-1', 'mem-1', 'test');
-    expect(authority).not.toBeNull();
-    const n = await enqueueVaultErasure(tx.client, authority!, [SOURCE_PATH]);
-    expect(n).toBe(1);
-    expect(tx.inserts()).toHaveLength(1);
-    expect(tx.inserts()[0].params[0]).toEqual([SOURCE_PATH]);
-  });
-
-  it('enqueues nothing, and touches the database not at all, for an empty batch', async () => {
-    const tx = fakeTx(() => []);
-    const authority = await mintSourceErasureAuthority(tx.client, 'm-1', 'mem-1', 'test');
-    expect(await enqueueVaultErasure(tx.client, authority!, [])).toBe(0);
+describe('NC-12 / NC-13 · the transition, not the state', () => {
+  it('⛔ NC-12 a nonexistent manuscript relinquishes nothing and enqueues nothing', async () => {
+    /* The first implementation minted authority here, because both rows were
+       absent. Absence proves a state; only DELETE … RETURNING proves the act. */
+    const tx = fakeTx({ arrivals: [], deletes: false });
+    const out = await relinquishManuscriptSource(tx.client, 'ghost', 'mem-1', 'nc12');
+    expect(out.deleted).toBe(false);
     expect(tx.inserts()).toHaveLength(0);
+  });
+
+  it('⛔ NC-13 a manuscript outside the member scope relinquishes nothing', async () => {
+    /* Member-scoped in the DELETE predicate, so another member's id returns no
+       row: no transition, no authority, nothing enqueued — and the caller is
+       never told whether the manuscript exists. */
+    const tx = fakeTx({ arrivals: [SOURCE_A], deletes: false });
+    const out = await relinquishManuscriptSource(tx.client, 'm-1', 'not-the-owner', 'nc13');
+    expect(out.deleted).toBe(false);
+    expect(out.refs).toEqual([]);
+    expect(tx.inserts()).toHaveLength(0);
+  });
+
+  it('the refs are captured BEFORE the delete and enqueued only after it returns a row', async () => {
+    /* Both orderings are load-bearing: read while the rows naming the files
+       still exist, enqueue only once the transition is witnessed. */
+    const tx = fakeTx({ arrivals: [SOURCE_A], deletes: true });
+    await relinquishManuscriptSource(tx.client, 'm-1', 'mem-1', 'order');
+    const readAt = tx.seen.findIndex((s) => /FROM manuscript_source_arrivals/.test(s.sql));
+    const deleteAt = tx.seen.findIndex((s) => /DELETE FROM member_manuscripts/.test(s.sql));
+    const enqueueAt = tx.seen.findIndex((s) => /INSERT INTO vault_erasure_queue/.test(s.sql));
+    expect(readAt).toBeGreaterThan(-1);
+    expect(readAt).toBeLessThan(deleteAt);
+    expect(deleteAt).toBeLessThan(enqueueAt);
+  });
+
+  it('P9 · a real relinquishment still completes fully', async () => {
+    /* Custody that cannot be ended is capture, not custody. */
+    const tx = fakeTx({ arrivals: [SOURCE_A, SOURCE_B], deletes: true });
+    const out = await relinquishManuscriptSource(tx.client, 'm-1', 'mem-1', 'p9');
+    expect(out.deleted).toBe(true);
+    expect(out.queued).toBe(2);
+    expect(tx.queued()).toEqual([SOURCE_A, SOURCE_B]);
   });
 });
 
-describe('one governed seam — no runtime path writes the queue directly', () => {
-  /* Property A of the ruling, asserted rather than intended. Comment-stripped
-     for the ratified C21 reason: a file that DOCUMENTS the banned statement
-     must not read as the banned statement returning — this test file and the
-     seam itself both name it in prose. */
+describe('NC-14 / NC-15 / NC-16 / NC-18 · nothing to widen, forge, or carry away', () => {
+  it('⛔ NC-14 one act cannot reach another manuscript’s Source', async () => {
+    /* Only the refs THIS call captured are enqueued. Manuscript B's Source is
+       not reachable from A's erasure by any argument, because there is no
+       argument — the binding is the query, not a parameter. */
+    const tx = fakeTx({ arrivals: [SOURCE_A], deletes: true });
+    const out = await relinquishManuscriptSource(tx.client, 'm-A', 'mem-1', 'nc14');
+    expect(tx.queued()).toEqual([SOURCE_A]);
+    expect(tx.queued()).not.toContain(SOURCE_B);
+    expect(out.refs).toEqual([SOURCE_A]);
+  });
+
+  it('⛔ NC-15 / NC-16 there is no authority object to fabricate or repurpose', () => {
+    /* The repair's whole shape. A capability that does not exist cannot be
+       cast into being, mutated from a content authority, or handed to a
+       generic enqueue — so these controls are structural rather than
+       behavioural, and that is stronger, not weaker. */
+    const exported = Object.keys(seam).sort();
+    expect(exported).toEqual([
+      'ErasureRefused',
+      'SOURCE_NAMESPACE',
+      'WORK_VISUAL_NAMESPACE',
+      'canonicalVaultRef',
+      'eraseWorkVisualBytes',
+      'relinquishManuscriptSource',
+    ]);
+    /* No generic enqueue, no mint, no authority type in the runtime surface. */
+    expect(exported).not.toContain('enqueueVaultErasure');
+    expect(exported.some((k) => /mint|authority/i.test(k) && k !== 'ErasureRefused')).toBe(false);
+  });
+
+  it('⛔ NC-18 the outcome is data, and carries no power into another transaction', async () => {
+    /* Nothing returned by the operation is accepted by anything as authority:
+       the only exported functions take a transaction client, and there is no
+       parameter anywhere of an authority type. So an outcome that survives a
+       rollback authorizes nothing — there is no second call it could be used
+       for. PostgreSQL's rollback of the rows is the database's guarantee and is
+       not re-tested here. */
+    const tx = fakeTx({ arrivals: [SOURCE_A], deletes: true });
+    const out = await relinquishManuscriptSource(tx.client, 'm-1', 'mem-1', 'nc18');
+    expect(Object.isFrozen(Object.freeze(out))).toBe(true);
+    const src = readFileSync(join(REPO, 'lib/storage/erasureAuthority.ts'), 'utf8');
+    expect(src).not.toMatch(/export\s+(async\s+)?function\s+\w+\([^)]*authority/i);
+  });
+});
+
+describe('one governed seam', () => {
   const strip = (src: string) =>
     src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
@@ -134,29 +202,40 @@ describe('one governed seam — no runtime path writes the queue directly', () =
     'app/api/sovereign/living-works/[id]/visual/route.ts',
   ];
 
-  it('every discovered producer goes through the seam, with none grandfathered', () => {
-    /* Property E: reconcile all three, do not leave existing direct producers
-       as exceptions while new code uses the helper. */
+  it('every producer goes through the seam, with none grandfathered', () => {
     for (const rel of PRODUCERS) {
       const src = strip(readFileSync(join(REPO, rel), 'utf8'));
-      expect(src).toContain('enqueueVaultErasure(');
+      expect(src).toMatch(/eraseWorkVisualBytes\(|relinquishManuscriptSource\(/);
       expect(src).not.toContain('INSERT INTO vault_erasure_queue');
     }
   });
 
   it('⛔ the seam is the only writer of the queue in the whole runtime', () => {
-    /* The sweep still DELETEs and UPDATEs rows it is finishing; only insertion
-       is the authority act, so only insertion is pinned here. */
-    const offenders = walk(join(REPO, 'lib')).concat(walk(join(REPO, 'app')))
+    /* Comment-stripped for the ratified C21 reason: this file and the seam both
+       name the statement in prose, and a scan that reads prose as behaviour
+       fails on exactly the files documenting their own compliance. */
+    const offenders = walk(join(REPO, 'lib'))
+      .concat(walk(join(REPO, 'app')))
       .filter((f) => !f.endsWith('lib/storage/erasureAuthority.ts'))
       .filter((f) => !/__tests__/.test(f))
       .filter((f) => /INSERT INTO vault_erasure_queue/.test(strip(readFileSync(f, 'utf8'))));
     expect(offenders).toEqual([]);
   });
+
+  it('⛔ the destructive manuscript transition lives only in the seam', () => {
+    /* P7's locality half, asserted here because S4 created the seam that makes
+       it true. Reachability — who may CALL it — is PT-3's P7 and is not
+       claimed by this test. */
+    const offenders = walk(join(REPO, 'lib'))
+      .concat(walk(join(REPO, 'app')))
+      .filter((f) => !f.endsWith('lib/storage/erasureAuthority.ts'))
+      .filter((f) => !/__tests__/.test(f))
+      .filter((f) => /DELETE FROM member_manuscripts/.test(strip(readFileSync(f, 'utf8'))));
+    expect(offenders).toEqual([]);
+  });
 });
 
 function walk(dir: string): string[] {
-  const { readdirSync, statSync } = require('fs');
   const out: string[] = [];
   for (const name of readdirSync(dir)) {
     if (name === 'node_modules' || name === '.next') continue;

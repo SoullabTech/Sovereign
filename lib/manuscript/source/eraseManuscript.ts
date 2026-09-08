@@ -62,9 +62,8 @@
 import { transaction, query, type TransactionClient } from '@/lib/db/postgres';
 import { destroyVaultBytes } from '@/lib/storage/fileVault';
 import {
-  enqueueVaultErasure,
-  mintSourceErasureAuthority,
-  workVisualErasureAuthority,
+  eraseWorkVisualBytes,
+  relinquishManuscriptSource,
 } from '@/lib/storage/erasureAuthority';
 
 export type EraseOutcome =
@@ -101,48 +100,20 @@ export async function eraseManuscript(
       return { ok: false as const, refusal: 'declared_in_other_works' as const, works: claims.rows.length };
     }
 
-    /* The paths, read while the rows that name them still exist. After the
-       cascade nothing in the database knows these files were ever ours. */
-    const arrivals = await tx.query<{ artifact_ref: string }>(
-      `SELECT artifact_ref FROM manuscript_source_arrivals
-        WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
-      [manuscriptId, memberId],
-    );
-
-    const removed = await tx.query<{ id: string }>(
-      `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
-      [manuscriptId, memberId],
-    );
-    if (removed.rows.length === 0) {
+    /* WS-DELETE-01 · S4 (repaired). Capture, DELETE with positive RETURNING
+       evidence, and enqueue exactly what this act relinquished — one governed
+       operation, inside this transaction, so the relinquishment and the
+       obligation it creates commit or roll back together. No authority object
+       is produced, so none can escape this transaction, name another
+       manuscript's Source, or be counterfeited by a content-working path. */
+    const relinquished = await relinquishManuscriptSource(tx, manuscriptId, memberId, 'eraseManuscript');
+    if (!relinquished.deleted) {
       return { ok: false as const, refusal: 'not_found' as const };
     }
 
     await removeDeclaration(tx, claims.rows[0]?.living_work_id, manuscriptId, memberId);
 
-    /* Written inside the transaction: if the commit fails, nothing was destroyed
-       and nothing is owed. If it succeeds, every path is recoverable until it is
-       actually gone. */
-    const refs = arrivals.rows.map((r) => r.artifact_ref);
-    if (refs.length > 0) {
-      /* WS-DELETE-01 · S4. Source bytes may be placed beyond recovery only under
-         Source lifecycle authority, and that authority is not requested — it is
-         granted on evidence, read here inside this transaction, that the
-         manuscript and its arrival rows are ALREADY gone. The mint therefore
-         has to come after the DELETE above, never before it: an authority taken
-         out first would be a claim, and PT-3 forbids a caller claiming custody
-         lifecycle power. A content-working act cannot reach this line without
-         having performed the member-directed erasure itself. */
-      const authority = await mintSourceErasureAuthority(tx, manuscriptId, memberId, 'eraseManuscript');
-      if (!authority) {
-        /* The rows this act just deleted are somehow still readable in its own
-           transaction. Refusing is the only safe answer: enqueueing without
-           established authority is exactly what S4 exists to prevent, and the
-           rollback leaves the member's Work intact. */
-        throw new Error('[erase] source lifecycle authority not established after deletion');
-      }
-      await enqueueVaultErasure(tx, authority, refs);
-    }
-    return { ok: true as const, refs };
+    return { ok: true as const, refs: relinquished.refs };
   });
 
   if (!result.ok) return result;
@@ -209,7 +180,7 @@ async function removeDeclaration(
        nothing wider. Erasing a manuscript does not confer generic vault
        destruction power (ruling property B): presented with a Source path this
        authority would refuse. */
-    await enqueueVaultErasure(tx, workVisualErasureAuthority('eraseManuscript:workVisual'), [path]);
+    await eraseWorkVisualBytes(tx, [path], 'eraseManuscript:workVisual');
   }
 }
 

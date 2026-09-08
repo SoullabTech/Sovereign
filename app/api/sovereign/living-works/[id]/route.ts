@@ -36,7 +36,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
-import { enqueueVaultErasure, workVisualErasureAuthority } from '@/lib/storage/erasureAuthority';
+import { eraseWorkVisualBytes } from '@/lib/storage/erasureAuthority';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { refuseTitle } from '@/lib/livingWork/domain';
 
@@ -228,7 +228,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
         /* WS-DELETE-01 · S4: through the one governed seam, under work-visual
            authority only. Deleting a Work does not confer authority over any
            other class of artifact. */
-        await enqueueVaultErasure(tx, workVisualErasureAuthority('deleteWork:visual'), [path]);
+        await eraseWorkVisualBytes(tx, [path], 'deleteWork:visual');
       }
       return { id: gone.rows[0].id, hadVisual: Boolean(path) };
     });

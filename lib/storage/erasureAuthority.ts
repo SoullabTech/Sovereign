@@ -1,179 +1,208 @@
 /**
- * WS-DELETE-01 · S4 — the governed erasure authority seam.
+ * WS-DELETE-01 · S4 (repaired) — the governed erasure seam.
  *
- * Founder ruling 2026-09-08 (PT-3 Source Custody / WS-DELETE-01 Erasure Authority).
+ * Founder ruling 2026-09-08, and its review of the first implementation the same
+ * day. The constitutional standard was accepted; the implementation was not:
  *
- * ── What this amends, and why the old wording is preserved ─────────────────
+ *   "absence + namespace is not evidence + locality."
  *
- * `20260907000001_vault_erasure_queue.sql` constituted the queue with this
- * discipline, quoted here rather than deleted because it was right about the
- * danger and wrong only about the invariant that contains it:
+ * ── What the first attempt got wrong, kept here because it is instructive ──
  *
- *   "NOT a general lifecycle system. It has exactly one producer (the manuscript
- *    DELETE act) and one consumer (the sweep). Anything wanting a broader
- *    deletion lifecycle needs its own ruling."
+ * It minted a portable `ErasureAuthority` object on the observation that a
+ * manuscript and its arrival rows were ABSENT. Five defects, all real:
  *
- * By 2026-09-08 there were THREE runtime producers — manuscript erasure, Work
- * deletion, and Work-cover replacement, the last of which is a content-working
- * route. The founder's correction is not "three producers are acceptable now":
+ *   1. Absence proves a STATE, not the TRANSITION that produced it. A
+ *      nonexistent id, or an id belonging to another member, satisfied the mint
+ *      without any erasure having occurred.
+ *   2. The minted authority covered the whole `manuscript-sources` namespace,
+ *      so a legitimate erasure of manuscript A could enqueue manuscript B's
+ *      Source. Authority over one lifecycle act became authority over every
+ *      Source artifact.
+ *   3. The token was transferable: mint in transaction A, let it escape, roll A
+ *      back, use it in transaction B.
+ *   4. The private `MINTED` symbol expressed intent in the type shape, and the
+ *      seam never validated it at runtime. A cast or a hand-built object was a
+ *      capability.
+ *   5. The namespace check was textual while destruction resolves filesystem
+ *      paths, so `work-visuals/../manuscript-sources/x` passed as a Work visual
+ *      and resolved into Source.
  *
- *   Producer count was a proxy for bounded authority. The system has outgrown
- *   the proxy. Preserve the bounded authority, not the obsolete count.
+ * ── The repaired shape ────────────────────────────────────────────────────
  *
- * So the durable invariant is now:
+ * There is no authority object. Nothing to forge, nothing to repurpose, nothing
+ * to outlive its transaction.
  *
- *   Every runtime request to place a vault artifact beyond recovery passes
- *   through ONE governed authority boundary, and that boundary decides whether
- *   the requesting act may destroy that CLASS of artifact.
+ *   Source lifecycle authority is an OPERATION, not a portable token.
  *
- * ── The separation this enforces (PT-3) ────────────────────────────────────
+ * `relinquishManuscriptSource()` is that operation. Inside the CALLER'S
+ * transaction it: captures the exact Source refs → performs the member-scoped
+ * manuscript DELETE and requires positive `RETURNING` evidence → enqueues
+ * exactly those captured refs. It returns an outcome, never destruction power.
+ * The transition that relinquishes custody and the obligation it authorizes
+ * commit or roll back together, because they are the same transaction and the
+ * same call.
  *
- *   SOURCE ARRIVAL AUTHORITY    may establish a NEW entrusted artifact,
- *                               never rewrite a historical one
- *   CONTENT-WORKING AUTHORITY   cannot create, replace, truncate, overwrite or
- *                               destroy bytes in the Source namespace
- *   SOURCE LIFECYCLE AUTHORITY  may relinquish the entrusted artifact, only
- *                               through the explicitly governed lifecycle
+ * `eraseWorkVisualBytes()` is the content-working counterpart, bounded to the
+ * Work-visual namespace by construction. It cannot name a Source artifact, and
+ * there is no argument by which a caller could widen it.
  *
- * Authorship work and custody lifecycle are different powers. Holding one must
- * never imply holding the other.
- *
- * ── Why Source authority is EVIDENCE, not a request ────────────────────────
- *
- * The ruling forbids satisfying it with `enqueue(path, "source_lifecycle")` when
- * any caller can supply that value. In-process JavaScript cannot stop a module
- * from importing an exported function, so a token minted on request would be a
- * claim wearing a type. This module does not pretend otherwise. Instead, Source
- * erasure authority is derived from the completed member-directed act:
- *
- *   `mintSourceErasureAuthority()` reads, INSIDE the caller's transaction,
- *   whether the manuscript and its arrival rows are already gone. It returns an
- *   authority only when they are.
- *
- * A content-working path cannot obtain it without having performed the
- * member-directed erasure — at which point it is not masquerading as the
- * lifecycle act, it IS the lifecycle act, and where that deletion may live is
- * pinned separately by the PT-3 static reachability falsifier (P7).
- *
- * This is the same shape as Circles FR-18: the authority is the mutation, not a
- * precheck. It is evidence plus locality, and it is deliberately not described
- * as an unforgeable capability, because in this runtime it is not one.
+ * The queue primitive is module-private. This module exports no generic enqueue
+ * and no way to obtain one, so P8's question — can content-working code acquire
+ * or counterfeit Source-erasure power — has a structural answer rather than a
+ * conventional one. Locality (who may call the lifecycle operation) is pinned
+ * separately by PT-3's P7.
  *
  * ── What the queue may still hold ──────────────────────────────────────────
  *
- * A vault path and nothing else. Authority is decided HERE, before the row is
- * written; it is not stored. The queue must never gain a reason, a member, a
- * manuscript or any other field that could reconstruct or attribute erased
+ * A vault path and nothing else. Authority is decided here, before the row is
+ * written, and is never stored. The queue must never gain a reason, a member, a
+ * manuscript or any other field capable of reconstructing or attributing erased
  * writing merely to make authorization convenient.
+ *
+ * ── The amended invariant (the migration's wording is superseded, not edited) ─
+ *
+ * `20260907000001_vault_erasure_queue.sql` says "exactly one producer". Three
+ * runtime producers existed by 2026-09-08, one of them a content-working route.
+ * Producer count was a proxy for bounded authority; the system outgrew the
+ * proxy. Preserve the bounded authority, not the obsolete count:
+ *
+ *   Every runtime request to place a vault artifact beyond recovery passes
+ *   through one governed boundary, and that boundary decides whether the
+ *   requesting act may destroy that CLASS of artifact.
  */
 import type { TransactionClient } from '@/lib/db/postgres';
 
-/** Vault namespaces this seam governs. A path in no known namespace is refused. */
 export const SOURCE_NAMESPACE = 'manuscript-sources';
 export const WORK_VISUAL_NAMESPACE = 'work-visuals';
 
-const MINTED = Symbol('vault-erasure-authority');
-
-export type ErasureClass = 'source_lifecycle' | 'work_visual';
-
-export interface ErasureAuthority {
-  readonly [MINTED]: true;
-  /** The single namespace this authority may destroy within. */
-  readonly namespace: string;
-  readonly erasureClass: ErasureClass;
-  /** Human-readable act name, for refusal messages only. Never stored. */
-  readonly actLabel: string;
-}
-
-function mint(namespace: string, erasureClass: ErasureClass, actLabel: string): ErasureAuthority {
-  return { [MINTED]: true, namespace, erasureClass, actLabel } as const;
-}
-
-/** The namespace segment of a vault-relative path, or null if it has none. */
-export function namespaceOf(artifactRef: string): string | null {
-  const cut = artifactRef.indexOf('/');
-  if (cut <= 0) return null;
-  return artifactRef.slice(0, cut);
+export class ErasureRefused extends Error {
+  constructor(
+    readonly reason:
+      | 'not_canonical'
+      | 'namespace_not_governed'
+      | 'transition_not_witnessed',
+    detail: string,
+  ) {
+    super(`[erasure] ${reason}: ${detail}`);
+    this.name = 'ErasureRefused';
+  }
 }
 
 /**
- * Authority over a Work's own cover image, and nothing else.
+ * The one canonical vault-reference validator, used at the authority boundary.
  *
- * Available to ordinary content-working routes on purpose: replacing a cover is
- * content work, and it governs that artifact. It is bounded to `work-visuals`,
- * so the same route presented with a `manuscript-sources/` path is refused —
- * property D of the ruling, and half of PT-3's P8.
+ * The object authorized and the object eventually destroyed must be the SAME
+ * canonical object, so this refuses anything whose meaning could change under
+ * filesystem resolution rather than trying to normalize it into safety:
+ * absolute paths, drive letters, backslashes, NUL, empty segments, `.` and `..`.
+ * A reference that survives is one no `path.resolve` can relocate.
  */
-export function workVisualErasureAuthority(actLabel: string): ErasureAuthority {
-  return mint(WORK_VISUAL_NAMESPACE, 'work_visual', actLabel);
+export function canonicalVaultRef(ref: unknown): { ref: string; namespace: string } | null {
+  if (typeof ref !== 'string' || ref.length === 0) return null;
+  if (ref.includes('\0') || ref.includes('\\')) return null;
+  if (ref.startsWith('/') || /^[A-Za-z]:/.test(ref)) return null;
+
+  const segments = ref.split('/');
+  if (segments.length < 2) return null;
+  for (const segment of segments) {
+    if (segment === '' || segment === '.' || segment === '..') return null;
+  }
+  return { ref: segments.join('/'), namespace: segments[0] };
+}
+
+/** Module-private. The only writer of the queue; never exported in any form. */
+async function enqueue(
+  tx: TransactionClient,
+  namespace: string,
+  refs: readonly string[],
+  actLabel: string,
+): Promise<number> {
+  const canonical: string[] = [];
+  for (const raw of refs) {
+    const c = canonicalVaultRef(raw);
+    /* Loud, and the WHOLE batch fails. A refusal that half-succeeds is not a
+       refusal: it would destroy the governed half and silently drop the rest,
+       leaving bytes retained behind a caller that believes it asked. */
+    if (!c) throw new ErasureRefused('not_canonical', actLabel);
+    if (c.namespace !== namespace) throw new ErasureRefused('namespace_not_governed', actLabel);
+    canonical.push(c.ref);
+  }
+  if (canonical.length === 0) return 0;
+
+  await tx.query(
+    `INSERT INTO vault_erasure_queue (artifact_ref) SELECT unnest($1::text[])`,
+    [canonical],
+  );
+  return canonical.length;
 }
 
 /**
- * Authority to relinquish a manuscript's entrusted Source artifacts.
+ * Content-working authority over a Work's own cover image, and nothing else.
  *
- * Granted only on evidence, inside the caller's transaction, that the
- * member-directed erasure has ALREADY removed the manuscript and its arrival
- * rows. While either still exists this returns null, so a caller that merely
- * wants the authority cannot have it, and a caller that has satisfied the
- * condition has performed the act the authority is for.
+ * An operation rather than a token, for the same reason as below: there is no
+ * object a caller could widen, cast or carry into another transaction. Handed a
+ * Source path — canonical or disguised — it refuses.
  */
-export async function mintSourceErasureAuthority(
+export async function eraseWorkVisualBytes(
+  tx: TransactionClient,
+  refs: readonly string[],
+  actLabel: string,
+): Promise<number> {
+  return enqueue(tx, WORK_VISUAL_NAMESPACE, refs, actLabel);
+}
+
+export interface RelinquishOutcome {
+  /** True only when this call's DELETE actually removed the manuscript row. */
+  readonly deleted: boolean;
+  /** The exact Source refs this act relinquished. Data, never authority. */
+  readonly refs: readonly string[];
+  readonly queued: number;
+}
+
+/**
+ * THE governed Source lifecycle operation. Runs inside the caller's transaction.
+ *
+ *   capture the exact Source refs
+ *     → member-scoped DELETE ... RETURNING   ← positive evidence of the transition
+ *       → enqueue exactly those captured refs
+ *
+ * Ordering is load-bearing in both directions. The refs are read while the rows
+ * naming them still exist, because after the cascade nothing in the database
+ * knows the files were ever ours. The enqueue happens only after the DELETE
+ * returns a row, because a state observed is not a transition performed — the
+ * defect this repair exists to close.
+ *
+ * Nothing here can reach another manuscript's Source: the refs enqueued are the
+ * ones this call captured, from this manuscript, under this member. There is no
+ * parameter, and no returned object, by which that binding could be widened.
+ *
+ * A caller that does not want to erase cannot use this to obtain erasure power,
+ * because there is no power to obtain — only an act with consequences.
+ */
+export async function relinquishManuscriptSource(
   tx: TransactionClient,
   manuscriptId: string,
   memberId: string,
   actLabel: string,
-): Promise<ErasureAuthority | null> {
-  const manuscript = await tx.query<{ id: string }>(
-    `SELECT id FROM member_manuscripts WHERE id = $1 AND member_id = $2`,
+): Promise<RelinquishOutcome> {
+  const arrivals = await tx.query<{ artifact_ref: string }>(
+    `SELECT artifact_ref FROM manuscript_source_arrivals
+      WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
     [manuscriptId, memberId],
   );
-  if (manuscript.rows.length > 0) return null;
+  const refs = arrivals.rows.map((r) => r.artifact_ref).filter(Boolean);
 
-  const arrivals = await tx.query<{ id: string }>(
-    `SELECT id FROM manuscript_source_arrivals WHERE manuscript_id = $1 AND member_id = $2`,
+  const removed = await tx.query<{ id: string }>(
+    `DELETE FROM member_manuscripts WHERE id = $1 AND member_id = $2 RETURNING id`,
     [manuscriptId, memberId],
   );
-  if (arrivals.rows.length > 0) return null;
-
-  return mint(SOURCE_NAMESPACE, 'source_lifecycle', actLabel);
-}
-
-export class ErasureAuthorityRefused extends Error {
-  constructor(readonly reason: 'unknown_namespace' | 'namespace_not_governed', detail: string) {
-    super(`[erasure-authority] ${reason}: ${detail}`);
-    this.name = 'ErasureAuthorityRefused';
-  }
-}
-
-/**
- * The ONE enqueue primitive. No runtime product path may insert into
- * `vault_erasure_queue` outside this function; the PT-3 static scan asserts it.
- *
- * Refusal is loud. A path this authority does not govern is a programming error
- * at a custody boundary, and silently skipping it would leave bytes retained
- * behind a caller that believes it asked for destruction.
- */
-export async function enqueueVaultErasure(
-  tx: TransactionClient,
-  authority: ErasureAuthority,
-  artifactRefs: readonly string[],
-): Promise<number> {
-  const refs = artifactRefs.filter((r) => typeof r === 'string' && r.length > 0);
-  if (refs.length === 0) return 0;
-
-  for (const ref of refs) {
-    const ns = namespaceOf(ref);
-    if (ns === null) {
-      throw new ErasureAuthorityRefused('unknown_namespace', authority.actLabel);
-    }
-    if (ns !== authority.namespace) {
-      throw new ErasureAuthorityRefused('namespace_not_governed', authority.actLabel);
-    }
+  if (removed.rows.length === 0) {
+    /* No transition, therefore no authority, therefore nothing enqueued — even
+       though the manuscript is now demonstrably absent. Absence is not
+       evidence. */
+    return { deleted: false, refs: [], queued: 0 };
   }
 
-  await tx.query(
-    `INSERT INTO vault_erasure_queue (artifact_ref) SELECT unnest($1::text[])`,
-    [refs],
-  );
-  return refs.length;
+  const queued = await enqueue(tx, SOURCE_NAMESPACE, refs, actLabel);
+  return { deleted: true, refs, queued };
 }

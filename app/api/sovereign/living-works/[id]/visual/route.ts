@@ -36,7 +36,7 @@ import { randomUUID } from 'crypto';
 import { query, transaction } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { writeVaultBytes, imageExtFromMime, deleteVaultBytes } from '@/lib/storage/fileVault';
-import { enqueueVaultErasure, workVisualErasureAuthority } from '@/lib/storage/erasureAuthority';
+import { eraseWorkVisualBytes } from '@/lib/storage/erasureAuthority';
 import { sweepVaultErasureQueue } from '@/lib/manuscript/source/eraseManuscript';
 
 /** The bytes live beside the other vault namespaces, never mixed into them. */
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
            erase the cover it replaced. Handed a `manuscript-sources/` path this
            same call refuses — which is the point. Content work is
            constitutionally powerless against entrusted Source. */
-        await enqueueVaultErasure(tx, workVisualErasureAuthority('workVisual:replace'), [old]);
+        await eraseWorkVisualBytes(tx, [old], 'workVisual:replace');
       }
       return old ?? null;
     });
@@ -227,7 +227,7 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       );
       const path = gone.rows[0]?.storage_path;
       if (path) {
-        await enqueueVaultErasure(tx, workVisualErasureAuthority('workVisual:remove'), [path]);
+        await eraseWorkVisualBytes(tx, [path], 'workVisual:remove');
       }
       return path ?? null;
     });
