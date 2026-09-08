@@ -1,6 +1,9 @@
 # WS2-ENCOUNTER-01 · E1 — The Encounter Noticing Vocabulary
 
-**Status: DESIGN, FOR FOUNDER RATIFICATION. No code. E2 does not open on this document.**
+**Status: RATIFIED WITH AMENDMENT AND CLOSED — founder, 2026-09-08.**
+Five amendments are folded in below (**A1–A5**). Each narrows wording that contradicted the
+document's own distinction; the pre-amendment wording is **quoted where it was narrowed,
+never silently replaced.** **E2 is open for design.**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 (WS2-ENCOUNTER-01), E1 design authorized.
 Doctrine: **PT-1** *Encounter precedes intervention* · E-01 ephemeral by default ·
@@ -63,12 +66,22 @@ text; repetition-as-failure is a verdict.** In a memoir or a liturgy, return is 
 
 *Where does the language change register, quicken, slow, or press harder?*
 
-Belongs: *"The sentences get very short for two pages here, and nowhere else."* ·
-*"This passage is the only place the narrator addresses someone directly."*
+Belongs: *"For two pages here, the sentences become very short."* · *"Here the narrator
+begins addressing someone directly."*
 
 Does **not** belong: **anything comparative about quality.** *"This is the strongest
 section"* implies the rest is weaker and is a ranking. HEAT is **per-place and
 non-comparative**: it says *something happens here*, never *more than there*.
+
+> **A1 (founder amendment).** The first draft's own examples broke this rule —
+> *"…and nowhere else"* and *"this passage is the only place…"* — both establish a
+> comparison against the rest of the Work. Quoted rather than deleted, because the slip is
+> instructive: rarity reads as neutral and is not.
+>
+> HEAT may describe a local change of **register · rhythm · syntax · address · density ·
+> tempo · pressure**. It may not convert that shift into **rarity-as-value**,
+> **uniqueness-as-praise**, **strongest/weakest**, or **comparative importance**.
+> *The writer does not need MAIA to rank the places where the book becomes vivid.*
 
 ⚠ This is the family most likely to drift, because praise feels safe. It is not. Praise
 establishes a scale, and a scale has a bottom.
@@ -81,7 +94,9 @@ This is the family the ruling asks for by name: **how "unfinished" is noticed wi
 becoming "underdeveloped."**
 
 Belongs: *"The Work names a practice in chapter 4 — 'the evening inventory' — and does not
-return to it."* · *"The question the prologue asks is never asked again."*
+return to it."* · *"The question introduced in the prologue is not taken up again in the
+remaining text."* — both **bounded non-return** under **A2 §3.2**: each begins from
+something the Work positively established.
 
 Does **not** belong: *"underdeveloped"* · *"abandoned"* · *"a loose end"* · *"needs
 resolution."* Every one carries failure. **The distinction is verifiability:** *the Work
@@ -91,6 +106,20 @@ underdeveloped* is a judgment about what the Work should have been.
 A thread left open may be the most deliberate thing in the book.
 
 ### 1.6 · RECOLLECTION — the writer's own return, held as theirs
+
+> **A5 (founder amendment) — RECOLLECTION IS NOT A MAIA OBSERVATION TYPE.** The ontology is
+> as sharp as the semantics. There are six acts of attention, but only **five** may yield
+> MAIA-authored textual observations:
+>
+> ```text
+> MAIA MAY NOTICE     PREOCCUPATION · MOVEMENT · RECURRENCE · HEAT · OPENNESS
+> WRITER RECOLLECTS   RECOLLECTION
+> ```
+>
+> **Do not normalize both into one object because an implementation prefers one schema.** In
+> E2 a writer recollection must never enter the system wearing `author=maia`, `observation`,
+> or any morally equivalent provenance. **Attribution survives paraphrase, rendering,
+> persistence, retrieval, and any later reintroduction.**
 
 *What comes back to the writer, now that they are seeing it again?*
 
@@ -120,14 +149,27 @@ the writer supplies remains the writer's; MAIA does not become its narrator.
 Sufficient to distinguish Encounter from DEVELOP reproducibly. A loose instruction to *"be
 gentle and non-judgmental"* is not.
 
-**2.1 · The structural rule — no consequence clause.**
-An Encounter observation states what is there **and stops**. A sentence whose second half
-says what follows from it has crossed over.
+**2.1 · The structural rule — no *intervention* consequence.**
+
+> **A3 (founder amendment).** The first draft said *"a sentence whose second half says what
+> follows from it has crossed over."* Quoted rather than deleted: as written it was broader
+> than the constitutional purpose and would have forbidden describing relationships that are
+> already present in the Work.
+
+The ratified rule: **an Encounter observation stops before drawing a normative, evaluative,
+reader-effect, or intervention consequence from what it notices.**
 
 ```text
-"Water appears at every threshold."                              ✅
-"Water appears at every threshold — you could make more of it."  ⛔
+"Water appears at every threshold."                                    ✅
+"When water appears, the narration shifts into the present tense."     ✅ descriptive relation
+"Water appears at every threshold, which makes it the central symbol." ⛔ interpretive
+                                                                          elevation stated
+                                                                          as settled fact
+"Water appears at every threshold, so you could make more of it."      ⛔ intervention
+                                                                          consequence
 ```
+
+**Encounter may describe relation. It may not turn relation into instruction.**
 
 **2.2 · Forbidden lexical families.**
 
@@ -159,12 +201,48 @@ under `structure`, `development`, `continuity`, `arc`, `voice`, `coherence` or `
 patterns are already obvious to its author — silence is a lawful and complete Encounter.
 Saying little is not a failed Encounter, and nothing may be manufactured to fill a family.
 
-**3.2 · Absence is never a finding.** *"I notice the Work has no recurring images"* is a
-deficit statement in descriptive clothing, and it is exactly the move that turns the six
-families into a checklist. **Only what is present may be noticed.**
+⛔ **No synthetic "nothing found" messages.** Not *"I didn't notice any recurrence"*, not
+*"there doesn't seem to be much movement"*, not *"I couldn't identify a clear
+preoccupation."* **The system's lack of an observation is not information about the Work** —
+saying so out loud converts silence into a finding, which is the same move §3.2 forbids.
 
-**3.3 · Not scoring dimensions.** No Encounter must populate every family; no coverage,
-count, ratio or completeness is ever computed or shown. A one-family Encounter is whole.
+**3.2 · Unbounded absence is forbidden; bounded non-return is lawful.**
+
+> **A2 (founder amendment).** The first draft said *"Absence is never a finding … only what
+> is present may be noticed."* Quoted rather than deleted, because as written it would have
+> outlawed **OPENNESS itself** — the family whose whole subject is something the Work names
+> and does not return to.
+
+The ratified rule: **unbounded or checklist absence is never an Encounter finding. Bounded
+non-return may be noticed only when it begins from something positively present and anchored
+in the Work.**
+
+```text
+"The Work has no recurring images."                          ⛔ checklist absence
+"This image appears in chapters 2 and 4 and does not recur
+ afterward."                                                 ✅ bounded recurrence fact
+"The book never resolves its central problem."               ⛔ evaluative absence
+"The question introduced in the prologue is not taken up
+ again in the remaining text."                               ✅ bounded OPENNESS
+```
+
+The distinction is **not** positive versus negative grammar. It is:
+
+```text
+absence measured against an EXPECTED STANDARD        → forbidden
+non-return of something the WORK ITSELF ESTABLISHED  → potentially lawful
+```
+
+A thread left open remains allowed to be deliberate. OPENNESS does not presume otherwise.
+
+**3.3 · Not scoring dimensions, and not mutually exclusive.** The families are **not
+exclusive categories**: a noticing may plausibly touch PREOCCUPATION and RECURRENCE at once,
+and no canonical classification is forced merely to make the system tidy. Family identifiers
+may exist internally where useful for generation constraints or falsification; they must not
+create **coverage semantics**. No Encounter must populate every family; no coverage, count,
+ratio or completeness is ever computed or shown, and the writer never receives a tally
+(*"PREOCCUPATION 2 findings · MOVEMENT 1 …"* would turn acts of attention back into a
+diagnostic instrument). A one-family Encounter is whole.
 
 **3.4 · No latent agenda (E-04).** Nothing noticed here is retained as system input to
 Restore, Redevelop or Continue. A later authority act begins from its own boundary. Even an
@@ -179,9 +257,20 @@ see — never the whole Encounter behind one kept sentence.
 
 ## 4 — Anchoring
 
-Every Encounter observation should be **locatable in the text** — a place the writer can
-turn to. An observation with no anchor is an impression about the book rather than a
-noticing of it, and impressions are where theories start.
+> **A4 (founder amendment).** The first draft said *"locatable in the text — a place the
+> writer can turn to"*, which is too singular for PREOCCUPATION, MOVEMENT and RECURRENCE,
+> whose evidence is distributed by nature.
+
+The ratified requirement: **every MAIA-authored Encounter observation must be grounded in
+one or more locatable textual anchors sufficient for the writer to see what the observation
+arose from.** An anchor may be one passage · several passages · a span · a sequence of
+places · a distributed evidence set across the Work.
+
+A whole-Work synthesis is lawful **if its evidence is turn-to-able**. *"Something about this
+book feels haunted"*, with no textual ground, is an impression about the Work and is not
+Encounter evidence. Anchoring does not mean quoting everything to the writer — it means the
+observation **must be able to name where it came from**, and impressions are where durable
+theories start.
 
 Anchoring is also the practical guard on §1.6: the writer's recollection has no anchor of
 MAIA's, because it was never MAIA's to anchor.
@@ -197,7 +286,8 @@ recollection restated as MAIA's own observation fails · an Encounter that persi
 without a member act fails · an Encounter that populates a family with nothing to say fails ·
 and silence passes.
 
-⛔ E2 does not open on this document. It opens on a founder act ratifying the vocabulary.
+✅ **E2 is open for design** on the founder's ratification of 2026-09-08 —
+`WS2-ENCOUNTER-01_E2_ACT_CONTRACT_2026-09-08.md`. Implementation remains held.
 
 > The writer opened a box from 1987. MAIA's job is to help them see what is in it — and to
 > have nothing to say about whether it is good.
