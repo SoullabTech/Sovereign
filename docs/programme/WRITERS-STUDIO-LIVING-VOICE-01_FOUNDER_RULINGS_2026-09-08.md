@@ -346,3 +346,53 @@ Companion:
 > inadequate?**
 
 *If those pass, Living Voice has found its center.*
+
+---
+
+## ACCEPTANCE DISCRIMINATOR — recorded 2026-09-08, before the first witness
+
+Placed here, in the witness and acceptance section, and **deliberately not in
+the falsifier contract.** Where it is written is part of what it says.
+
+> ⭐ **Living Voice acceptance discriminator:**
+>
+> **Did MAIA open possibility, or quietly establish a preferred direction?**
+>
+> A response may satisfy every mechanical prohibition and still fail Living
+> Voice if its overall stance leaves the writer feeling gently managed,
+> corrected, or steered toward what MAIA prefers.
+>
+> That failure is **relational, not lexical**. Its remedy belongs in the Living
+> Voice system prompt, lens framing, or interaction stance — **not** by
+> continuously enlarging `checkLivingVoiceResponse` until lawful language
+> becomes impossible.
+
+Companion, and the two are kept together:
+
+> **Do I hear more possibilities in my own writing, or do I become more aware
+> of what MAIA wants from it?**
+
+### ⛔ WHY THIS MUST NOT BECOME A FALSIFIER
+
+`checkLivingVoiceResponse` detects **moves** — evaluation, diagnosis, rewriting
+offered as the answer, disclosure pressure, classification, unlawful claims
+about the Work, reaching past the passage. Each is a discrete act, present or
+absent in a sentence, and that is exactly why it can be checked.
+
+**Warmth that functions as instruction is not a move the checker missed.** It
+is a property of the whole response — stance, not vocabulary. Every regex that
+could catch it would also fire on lawful responses, because the words a gently
+steering response uses are the same words an opening one uses. An instrument
+enlarged until it caught this would not have become stricter; it would have
+made honest speech unavailable, and Living Voice would go silent for reasons
+that have nothing to do with its constitution.
+
+> *The checker can detect prohibited moves. It cannot detect warmth that
+> functions as instruction — and it is not supposed to.*
+
+So this criterion is answered by a **writer**, in a witness, and by nothing
+else. If the witness returns *"too teacherly"* or *"it wanted something from
+me"*, the repair is to the relationship — the system prompt, the lens framing,
+the interaction stance. ⛔ **Do not translate an experiential failure into
+another regex.** That instinct is named here in advance precisely because it
+will be strongest at the moment a bad reading arrives.
