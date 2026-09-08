@@ -65,6 +65,10 @@ cd "$PROJECT"
 acquire_deploy_lock "pt3-cutover" "$ACCEPTED_SHA"
 echo "── deploy-lane lock held for the whole transition (pid $$) ──"
 
+# B39 — every PT-3 Compose act runs under production's own interpolation contract.
+# shellcheck source=/dev/null
+. "$MAIA_BUILD_CONTEXT/scripts/witness/pt3-compose.sh"
+
 step() { printf '\n════════ %s ════════\n' "$1"; }
 q()    { docker exec maia-postgres psql -U soullab -d "$DB" -tAc "$1"; }
 die()  { echo "ABORT — $1" >&2; exit 1; }
@@ -82,7 +86,7 @@ step "0 · fail-closed host verification (B36) — prove the installed surface b
 # already equal it — that gate was internally impossible, because this repair changes
 # deploy-production.sh and the preflight ran before the step that installs it. The equality question
 # belongs HERE, after the forward step and before the first mutation, where it can actually be true.
-HOST_SURFACE="docker-compose.production.yml scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh"
+HOST_SURFACE="docker-compose.production.yml scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh scripts/witness/pt3-compose.sh"
 surface_fail=0
 for f in $HOST_SURFACE; do
   [ -r "$MAIA_BUILD_CONTEXT/$f" ] || continue
@@ -113,8 +117,7 @@ step "3 · build BOTH PT-3 runtime images — prepared, NOT started (B34)"
 # pool — outside the five-pool census because the search covered lib/ and app/ and production also
 # builds from apps/. Correcting the API source without rebuilding its image would leave production
 # running the old owner-era binary: the fix would exist in the repository and not in the platform.
-docker compose --env-file "$PROJECT/.env.production" -f "$COMPOSE" build \
-  --build-arg GIT_COMMIT="$ACCEPTED_SHA" maia maia-api \
+pt3_compose build --build-arg GIT_COMMIT="$ACCEPTED_SHA" maia maia-api \
   || die "a PT-3 image did not build — nothing has been quiesced and nothing migrated"
 
 # Provenance BEFORE the outage. An image that cannot state its commit cannot join an immutable-SHA
@@ -139,8 +142,7 @@ sh "$W/pt3-quiesce-source-writes.sh" || die "quiescence failed; nothing has been
 
 step "6 · apply exactly the PT-3 migration, attributed"
 # Beneath the lane authority already held — never via deploy-production.sh, which would re-acquire.
-docker compose --env-file "$PROJECT/.env.production" -f "$COMPOSE" \
-  --profile migrate run --rm migrate || die_quiesced "the migration failed"
+pt3_compose --profile migrate run --rm migrate || die_quiesced "the migration failed"
 
 step "7 · verify migration, attribution and scope"
 [ "$(q "SELECT count(*) FROM schema_migrations WHERE filename='20260908000001_pt3_source_custody_enforcement.sql' AND applied_by_commit='$ACCEPTED_SHA'")" = "1" ] \

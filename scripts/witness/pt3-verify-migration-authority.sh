@@ -23,6 +23,17 @@ PROJECT="${PROJECT_DIR:-$HOME/MAIA-SOVEREIGN}"
 cd "$PROJECT"
 fail=0
 
+# B39 — resolve migrate's credential under the SAME Compose invocation production is interpreted
+# under. Asking "what will migrate receive?" through a different invocation answers a different
+# question. Invoked by scripts/pt3-cutover.sh from the materialized snapshot.
+PT3_LIB="${PT3_LIB:-$(dirname "$0")}"
+if [ ! -r "$PT3_LIB/pt3-compose.sh" ]; then
+  echo "ABORT   $PT3_LIB/pt3-compose.sh not found. Run this from the materialized snapshot." >&2
+  exit 1
+fi
+# shellcheck source=/dev/null
+. "$PT3_LIB/pt3-compose.sh"
+
 # §VI (B37) — service-specific owner custody is REQUIRED, not "missing but continue". Both files
 # must exist, be non-empty, carry their key, and be readable only by their owner.
 check_custody() {  # file · required key · which service depends on it
@@ -58,8 +69,7 @@ else
 fi
 
 # What will the migrate service actually receive? Ask Compose, not the file.
-RESOLVED=$(docker compose --env-file "$PROJECT/.env.production" -f docker-compose.production.yml \
-  --profile migrate config 2>/dev/null \
+RESOLVED=$(pt3_compose --profile migrate config 2>/dev/null \
   | awk '/^  migrate:/,/^  [a-z]/' | grep -E '^\s+DATABASE_URL:' | head -1 | cut -d: -f2- | tr -d ' ' || true)
 
 if [ -z "$RESOLVED" ] || [ "$RESOLVED" = '""' ]; then

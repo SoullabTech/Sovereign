@@ -217,7 +217,7 @@ echo "════════ §XIII — THE HIGH-PRIVILEGE LAUNCHER (B36 — A
 #                                   byte-identical to the snapshot.
 #
 # prove artifact → install bounded operational surface → prove installed surface → mutate.
-for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh; do
+for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh scripts/witness/pt3-compose.sh; do
   if [ ! -r "$SNAP/$helper" ]; then
     bad "13" "$helper is missing from the accepted tree" "the transition cannot be launched from a reviewed source"
   else
@@ -254,7 +254,7 @@ fi
 # in the sequence: these files have not been brought forward yet, by design.
 echo
 echo "  host operational files (reported — the forward step installs them, the orchestrator proves them):"
-for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh docker-compose.production.yml; do
+for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh scripts/witness/pt3-compose.sh docker-compose.production.yml; do
   [ -r "$SNAP/$helper" ] || continue
   if [ ! -r "$PROJECT/$helper" ]; then
     echo "      $helper — ABSENT on the host; the forward step must install it"
@@ -287,23 +287,29 @@ fi
 cat <<NEXT
 PREFLIGHT PASSED — all §IX conditions hold on the immutable artifact. Nothing on this host changed.
 
-  1 · INSTALL the bounded operational surface (the host files whose behaviour must change):
+1 · INSTALL the bounded operational surface (the host files whose behaviour must change). Compose
+    alone is not enough: B33's ordinary-deploy durability lives in deploy-production.sh.
 
       cd "$PROJECT" && git fetch -q origin $BRANCH \\
         && git checkout $ACCEPTED_SHA -- docker-compose.production.yml \\
              scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh \\
-             scripts/pt3-cutover.sh
+             scripts/pt3-cutover.sh scripts/witness/pt3-compose.sh
 
-  2 · RUN THE ORCHESTRATOR. It re-verifies every installed file against this snapshot and
-      refuses to mutate anything if one differs (B36, fail-closed):
+2 · RUN THE ORCHESTRATOR, on THIS host. Its step 0 re-verifies every installed file against this
+    snapshot and refuses to mutate anything if one differs (B36, fail-closed).
 
-      export ACCEPTED_SHA="$ACCEPTED_SHA"        # §VI (B11) — all 40 characters. applied_by_commit
-                                                 # is TEXT and stores it whole; the commit
-                                                 # authorized, presented and recorded is one
-                                                 # identity. Short form: $(printf '%s' "$ACCEPTED_SHA" | cut -c1-9)
-      export MAIA_BUILD_CONTEXT="$SNAP"
-      export MIGRATION_RUN_ID="$RUN_ID"
-      bash "$SNAP/scripts/pt3-cutover.sh"
+    ⛔ B40 — paste the four lines below into a shell ON THIS HOST. Do not wrap them in a quoted
+    ssh argument from another machine: the local shell would expand \$MAIA_BUILD_CONTEXT before
+    the remote export ran. The values below are already literal; retyping them from an earlier run
+    would govern the transition with a snapshot nobody reviewed.
+
+export ACCEPTED_SHA="$ACCEPTED_SHA"
+export MAIA_BUILD_CONTEXT="$SNAP"
+export MIGRATION_RUN_ID="$RUN_ID"
+bash "$SNAP/scripts/pt3-cutover.sh"
+
+    (§VI/B11 — ACCEPTED_SHA is all 40 characters. applied_by_commit is TEXT and stores it whole;
+     the commit authorized, presented and recorded must be one identity. Short form: $(printf '%s' "$ACCEPTED_SHA" | cut -c1-9))
 
 ⛔ Do NOT run scripts/deploy-production.sh migrate by hand. It takes the same deploy-lane lock and
    performs one act out of thirteen; the transition is the orchestrator or it is nothing.

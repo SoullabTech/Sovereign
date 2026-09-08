@@ -370,3 +370,102 @@ Per §XI they are to be run against disposable infrastructure before production 
 
 ⛔ Nothing is deployed. **PT-3 is enforced in code and not in production.**
 Experiences migration HELD. Encounter HELD. The cutover pin awaits the founder's act.
+
+---
+
+# Repair 7 — B39, B40 (founder exact-tree review of `47bb7b1a…`)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §IX. Two repairs, plus the §IX
+exemption hardening. B34–B38 are ACCEPTED and untouched; no PT-3 architecture is reopened.
+
+## B39 — the release path was not the production invocation
+
+The ordinary deploy runs Compose as `deploy_ctx_compose()` does:
+
+```
+docker compose -p maia-sovereign --project-directory "$PROJECT" \
+               -f "$COMPOSE" --env-file "$PROJECT/.env.production" …
+```
+
+The PT-3 stop / recreate / release acts ran `docker compose -f "$COMPOSE" …`. **That is not the
+same interpretation of the same file**, because `env_file:` and interpolation are different
+mechanisms:
+
+- `env_file:` hands variables to the **container**;
+- `${...}` inside an `environment:` or `ports:` value is resolved by **Compose itself**, from the
+  shell and `--env-file` — never from a service's `env_file`.
+
+So `caddy`'s `DOMAIN=${DOMAIN:-localhost}` resolves to `localhost` under an invocation that omits
+`--env-file`, and an `environment:` entry produced by `${...}` overrides what the same service would
+otherwise have loaded through `env_file`. The state available at step 10 or 11 was therefore
+**correct PT-3 database authority with wrong unrelated production configuration** — a cutover that
+quietly re-pointed the proxy while proving the boundary held. Not an acceptable cutover.
+
+**Repair:** one helper, `scripts/witness/pt3-compose.sh`, carrying the deploy path's contract
+verbatim — project name, `--project-directory` on the project dir, the Compose file from the
+immutable snapshot when one is materialized, `--env-file .env.production` always, and a refusal if
+that file is absent. **All six** PT-3 Compose acts go through it:
+
+| act | where |
+|---|---|
+| build both images | orchestrator step 3 |
+| apply the migration | orchestrator step 6 |
+| stop the source-writing set | `pt3-quiesce-source-writes.sh` |
+| release that set | `pt3-quiesce-source-writes.sh release` |
+| recreate owner-credential holders | `pt3-recreate-credential-bearing-runtime.sh` |
+| resolve what migrate will receive | `pt3-verify-migration-authority.sh` |
+
+The last one matters as much as the mutating five: asking *"what will migrate actually receive?"*
+through a different invocation answers a different question.
+
+⛔ **Not repaired by copying more variables into `.env`.** That would make two invocations agree by
+coincidence; this makes them the same invocation.
+
+*A cutover may change authority. It may not change configuration merely because its Compose
+invocation differs from the one production is normally interpreted under.*
+
+Verified by stubbing `docker` and running the helper: argv is byte-for-byte the deploy path's shape
+(`-p` → `--project-directory` → `-f` → `--env-file`), the snapshot Compose is preferred when one is
+materialized and the host's used otherwise, and a missing `.env.production` is a refusal, not a
+silent different interpretation.
+
+## §IX — the exemption is an identity, not a substring
+
+`is_exempt()` matched `*migrate*`, which is broader than the law's stated exception (postgres, and
+the **governed migration service**). It is now keyed on the Compose service label
+`com.docker.compose.service ∈ {postgres, migrate}` — which is the migrate service's actual identity,
+since it declares no `container_name`.
+
+## B40 — the runbook's Step 3 expanded the wrong shell
+
+Step 3 placed `$MAIA_BUILD_CONTEXT` inside a locally double-quoted `ssh … "'…'"` argument, so the
+**Mac's** shell expanded it before the remote `export` ran; unset locally, the transmitted command
+became `bash /scripts/pt3-cutover.sh`. It fails safely, before anything is touched — but the
+runbook's one-command path was not executable as written.
+
+**Repair:** the runbook no longer maintains a second, independently quoted form. It instructs the
+operator to open a session on the host and paste **the block the successful preflight printed**,
+whose values are already literal. The preflight's emitted block was tidied to paste cleanly, and it
+now warns against retyping a snapshot path or run id from an earlier run — *pairing them with a
+different snapshot is how a transition ends up governed by a tree nobody reviewed.*
+*One executable instruction is better than two almost-equivalent ones.*
+
+## Verified here / not verified here
+
+| gate | result |
+|---|---|
+| `sh -n` / `bash -n` on all eleven PT-3 scripts | parses |
+| `pt3_compose` argv simulation (stubbed `docker`) | matches `deploy_ctx_compose`'s shape exactly; snapshot preference and the missing-`.env.production` refusal both behave |
+| residual bare `docker compose` in PT-3 scripts | **none** |
+| `git check-ignore` on every consumed path | none ignored |
+| `npm run check:no-supabase` · `npm run typecheck` · `npx jest` | unchanged — this repair touched shell and docs only |
+
+⛔ **NOT run here, and not claimed:** the falsifier, enforcement witness, pool witness, backfill
+verifier, readiness and post-cutover witnesses need PostgreSQL and a Docker daemon. This environment
+has neither. Per §X.5 they remain explicitly unrun until disposable infrastructure is provided.
+*Absence of observation is not evidence of compliance.*
+
+## Standing
+
+⛔ Nothing is deployed. **PT-3 is enforced in code and not in production.**
+Experiences migration HELD. Encounter HELD.

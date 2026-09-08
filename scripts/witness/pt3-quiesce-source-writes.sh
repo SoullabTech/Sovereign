@@ -33,9 +33,23 @@ STATE="${PT3_QUIESCE_STATE:-$HOME/.pt3-cutover/quiesced-services}"
 MODE="${1:-quiesce}"
 cd "$PROJECT"
 
-# postgres is the database; migrate must retain owner authority and is not a live writer; caddy is
-# a proxy and is left up so the outage presents as a refusal rather than a black hole.
-is_exempt() { case "$1" in maia-postgres|*migrate*|maia-caddy) return 0 ;; *) return 1 ;; esac; }
+# B39 — one production Compose invocation, shared. These two scripts are invoked by the
+# orchestrator from the immutable snapshot, so the helper is a sibling; if it is missing, this
+# script must refuse rather than fall back to a different interpretation of the same file.
+PT3_LIB="${PT3_LIB:-$(dirname "$0")}"
+if [ ! -r "$PT3_LIB/pt3-compose.sh" ]; then
+  echo "ABORT — $PT3_LIB/pt3-compose.sh not found. Run this from the materialized snapshot" >&2
+  echo "        (scripts/pt3-cutover.sh does), not by piping the file over ssh." >&2
+  exit 1
+fi
+# shellcheck source=/dev/null
+. "$PT3_LIB/pt3-compose.sh"
+
+# postgres is the database; the governed migration service must retain owner authority and is not a
+# live writer; caddy is a proxy left up so the outage presents as a refusal rather than a black hole
+# — it sheds its stale owner material by recreation instead (B38).
+# §IX (B39) — the migrate exemption is now the Compose SERVICE IDENTITY, not a name substring.
+is_exempt() { case "$1" in maia-caddy) return 0 ;; esac; pt3_is_exempt "$1"; }
 
 discover() {
   for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
@@ -43,7 +57,7 @@ discover() {
     own=$(docker exec "$c" printenv DATABASE_URL 2>/dev/null || true)
     app=$(docker exec "$c" printenv MAIA_APP_DATABASE_URL 2>/dev/null || true)
     [ -n "$own" ] || [ -n "$app" ] || continue
-    docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$c" 2>/dev/null || true
+    pt3_compose_service "$c"
   done | grep -v '^$' | sort -u
 }
 
@@ -53,7 +67,7 @@ if [ "$MODE" = "release" ]; then
   echo "════════ releasing quiescence ════════"
   printf '  %s\n' $SERVICES
   # shellcheck disable=SC2086
-  docker compose -f "$COMPOSE" up -d --no-deps $SERVICES
+  pt3_compose up -d --no-deps $SERVICES
   sleep 5
   echo
   echo "  running again: $(discover | tr '\n' ' ')"
@@ -73,7 +87,7 @@ printf '%s\n' $SERVICES > "$STATE"
 echo
 echo "════════ stopping — Source writes must be refused, not merely discouraged ════════"
 # shellcheck disable=SC2086
-docker compose -f "$COMPOSE" stop $SERVICES
+pt3_compose stop $SERVICES
 sleep 3
 
 REMAIN=$(discover)

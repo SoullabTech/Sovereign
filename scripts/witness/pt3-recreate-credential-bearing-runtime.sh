@@ -30,8 +30,21 @@ COMPOSE="$PROJECT/docker-compose.production.yml"
 DB="${PT3_DB:-maia_consciousness}"
 cd "$PROJECT"
 
-# postgres IS the database; migrate must retain owner authority (§IX.5). Everything else is ordinary.
-is_exempt() { case "$1" in maia-postgres|*migrate*) return 0 ;; *) return 1 ;; esac; }
+# B39 — one production Compose invocation, shared. These two scripts are invoked by the
+# orchestrator from the immutable snapshot, so the helper is a sibling; if it is missing, this
+# script must refuse rather than fall back to a different interpretation of the same file.
+PT3_LIB="${PT3_LIB:-$(dirname "$0")}"
+if [ ! -r "$PT3_LIB/pt3-compose.sh" ]; then
+  echo "ABORT — $PT3_LIB/pt3-compose.sh not found. Run this from the materialized snapshot" >&2
+  echo "        (scripts/pt3-cutover.sh does), not by piping the file over ssh." >&2
+  exit 1
+fi
+# shellcheck source=/dev/null
+. "$PT3_LIB/pt3-compose.sh"
+
+# postgres IS the database; the governed migration service must retain owner authority (§IX.5).
+# §IX (B39) — keyed on the Compose service identity, not on a name substring.
+is_exempt() { pt3_is_exempt "$1"; }
 
 # The owner role is derived from the protected tier itself, never hardcoded, so the sweep follows
 # the boundary if the owner is ever something other than `soullab`.
@@ -55,7 +68,7 @@ discover() {  # prints "service<TAB>VAR,VAR"
     is_exempt "$c" && continue
     vars=$(owner_material "$c" | tr '\n' ',' | sed 's/,$//')
     [ -n "$vars" ] || continue
-    svc=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$c" 2>/dev/null || true)
+    svc=$(pt3_compose_service "$c")
     if [ -n "$svc" ]; then printf '%s\t%s\n' "$svc" "$vars"; fi
   done | sort -u
 }
@@ -92,7 +105,7 @@ fi
 echo
 echo "════════ recreating exactly that set — their old environment must disappear ════════"
 # shellcheck disable=SC2086
-docker compose -f "$COMPOSE" up -d --no-deps --force-recreate $SERVICES
+pt3_compose up -d --no-deps --force-recreate $SERVICES
 
 echo
 echo "════════ re-discovering — the law must now hold ════════"
