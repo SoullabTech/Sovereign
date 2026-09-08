@@ -1,9 +1,28 @@
 # WRITER'S STUDIO — CAPABILITY COMPLETION · 01
 ## LOCAL BRANCH TEST — no merge, no deploy
 
-**Served subject** `claude/writers-studio-capability-clxw8d` @ `d199dd76a`,
-clean tree. **Ancestor check:** every feature commit in this record is an
-ancestor of the served commit (they are the same branch, tested at its tip).
+## CUSTODY — the witness binds to the SERVED commit
+
+```text
+SERVED SUBJECT   d199dd76a      ← what was actually running. The evidence is
+                                  about THIS commit.
+RECORD TIP       6ab0e657b      ← this document. Later, and not itself witnessed.
+```
+
+**PROVEN, not asserted:**
+
+```text
+git merge-base --is-ancestor d199dd76a 6ab0e657b   → yes
+git diff --name-only d199dd76a 6ab0e657b           → 1 file, this document
+                                                     0 non-docs files
+```
+
+So the record tip descends from the served commit and changes no product code —
+which is why these findings may be read forward to it. **That is a proof, not a
+convention**: a product witness is evidence about the commit that was served,
+never automatically about a later tip, and the founder's precision on this is
+recorded because the shortcut is easy and silent.
+
 **Environment** ephemeral local PostgreSQL 16.13 + `next dev` inside this
 session's container.
 ⛔ **`clean-main-no-secrets` untouched at `379c9b40a`. Nothing deployed.
