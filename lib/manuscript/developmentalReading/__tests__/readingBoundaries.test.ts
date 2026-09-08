@@ -8,6 +8,7 @@
  *   commission                   the only module that joins capture, reader, classifier, freeze, store
  *   the reader                   still cannot reach this unit (gate beside the reader)
  *   the evidence substrate       still cannot reach this unit (gate beside the substrate)
+ *   sweepRefusalRecords          the retention caller: refusalRecord only
  */
 
 import { readFileSync, readdirSync } from 'fs';
@@ -40,6 +41,17 @@ const ALLOWED: Record<string, RegExp[]> = {
      narrowness is the point: a module that writes to disk on the refusal path
      must not also be able to read a member's work. */
   'refusalRecord.ts': [/^node:(fs|path|crypto)$/, /^\.\.\/developmentalReader\/contract$/],
+  /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R-3. The retention CALLER, and the
+     narrowest module in this unit: it imports `./refusalRecord` and nothing
+     else — not the filesystem it is ultimately deleting through, not the
+     store, not the contract, not the reader.
+
+     ⛔ The empty remainder is the law, not an accident. A scheduled job that
+     runs unattended every hour and holds a delete is exactly the module that
+     must not be able to reach a member's work; giving it `node:fs` directly
+     would let a later edit widen what it deletes without touching the one
+     function whose retention rule was actually ratified. */
+  'sweepRefusalRecords.ts': [/^\.\/refusalRecord$/],
 };
 
 describe('developmental reading — module boundaries', () => {

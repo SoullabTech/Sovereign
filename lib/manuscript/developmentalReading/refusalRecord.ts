@@ -144,19 +144,50 @@ export function recordRefusal(record: RefusalRecord): Promise<void> {
  * quiet month's records sitting forever precisely because nothing failed —
  * retention that depends on failure recurring is not retention. `now` is a
  * parameter so the falsifier can prove expiry with no later refusal at all.
+ *
+ * ⛔ UNLIKE `recordRefusal`, THIS MAY THROW. That asymmetry is deliberate:
+ * `recordRefusal` sits on the member's refusal path, where an operator log
+ * must never take a member's answer down with it. The sweep sits on no member
+ * path at all — its only caller is the retention CLI, whose ratified contract
+ * is a non-zero exit on a genuine failure. Swallowing an unreadable directory
+ * here would make that contract unimplementable.
  */
-export async function sweepExpired(now: Date = new Date()): Promise<string[]> {
+export interface SweepResult {
+  /** Daily files actually removed. */
+  removed: string[];
+  /**
+   * Files that were due for removal and could NOT be removed. Separate from
+   * `removed` because a caller that cannot tell these apart has no way to
+   * exit non-zero on a real failure — and a retention sweep that reports
+   * success while retaining is the one outcome it must never produce.
+   */
+  failed: string[];
+  /** `YYYY-MM-DD`, UTC. The boundary this run applied, for the operator line. */
+  cutoffDay: string;
+}
+
+export async function sweepExpired(now: Date = new Date()): Promise<SweepResult> {
   const dir = baseDir();
   const cutoff = new Date(now.getTime() - REFUSAL_RECORD_RETENTION_DAYS * 86_400_000);
   /* Snapped to the day boundary once, outside the loop: the unit of retention
      is the file's day, not the instant the sweep happened to run. */
   const cutoffDay = Date.UTC(cutoff.getUTCFullYear(), cutoff.getUTCMonth(), cutoff.getUTCDate());
+  const cutoffDayIso = new Date(cutoffDay).toISOString().slice(0, 10);
   const removed: string[] = [];
+  const failed: string[] = [];
   let names: string[];
   try {
     names = await fs.readdir(dir);
-  } catch {
-    return removed; /* nothing has ever been written */
+  } catch (err) {
+    /* ⛔ ENOENT is the ONLY lawful "nothing to do". A directory we cannot READ
+       is not an empty one, and reporting it as empty would be exactly the
+       silent success this sweep exists to prevent: retention would appear to
+       run for as long as the permission fault lasted. Every other errno is a
+       real failure and is raised to the caller. */
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return { removed, failed, cutoffDay: cutoffDayIso };
+    }
+    throw err;
   }
   for (const name of names) {
     const m = FILE_RE.exec(name);
@@ -169,10 +200,11 @@ export async function sweepExpired(now: Date = new Date()): Promise<string[]> {
         removed.push(name);
       } catch (err) {
         console.error('[MAIA/develop] refusal record not swept:', name, err);
+        failed.push(name);
       }
     }
   }
-  return removed;
+  return { removed, failed, cutoffDay: cutoffDayIso };
 }
 
 /** Read a day's records back — the operator path O-4 exists for. */

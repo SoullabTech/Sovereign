@@ -245,7 +245,7 @@ describe('O-4 · a refusal is reconstructable after every browser is closed', ()
     /* ⛔ THE POINT OF THIS TEST. Nothing is written before the sweep. Retention
        that only runs when the next failure happens is not retention — a quiet
        month would keep its records forever precisely because nothing broke. */
-    const removed = await sweepExpired(new Date('2026-09-08T00:00:00.000Z'));
+    const { removed } = await sweepExpired(new Date('2026-09-08T00:00:00.000Z'));
     expect(removed).toContain(`refusals-${old}.jsonl`);
     await expect(fs.access(oldFile)).rejects.toBeTruthy();
     expect(await readRecords(old)).toEqual([]);
@@ -258,7 +258,7 @@ describe('O-4 · a refusal is reconstructable after every browser is closed', ()
     const file = path.join(dir, 'develop-refusals', `refusals-${boundary}.jsonl`);
     await fs.mkdir(path.dirname(file), { recursive: true });
     await fs.writeFile(file, `${JSON.stringify(record({ timestamp: `${boundary}T00:00:00.000Z` }))}\n`);
-    const removed = await sweepExpired(now);
+    const { removed } = await sweepExpired(now);
     expect(removed).not.toContain(`refusals-${boundary}.jsonl`);
     await fs.rm(file, { force: true });
   });
@@ -266,12 +266,12 @@ describe('O-4 · a refusal is reconstructable after every browser is closed', ()
   it('ignores files it did not write, and a missing directory is not an error', async () => {
     const stray = path.join(dir, 'develop-refusals', 'notes.txt');
     await fs.writeFile(stray, 'not ours');
-    expect(await sweepExpired(new Date('2030-01-01T00:00:00.000Z'))).not.toContain('notes.txt');
+    expect((await sweepExpired(new Date('2030-01-01T00:00:00.000Z'))).removed).not.toContain('notes.txt');
     await fs.rm(stray, { force: true });
 
     const saved = process.env.AUDIT_LOG_DIR;
     process.env.AUDIT_LOG_DIR = path.join(os.tmpdir(), `refusal-none-${process.pid}-${Math.random().toString(16).slice(2)}`);
-    expect(await sweepExpired()).toEqual([]);
+    expect((await sweepExpired()).removed).toEqual([]);
     process.env.AUDIT_LOG_DIR = saved;
   });
 });
