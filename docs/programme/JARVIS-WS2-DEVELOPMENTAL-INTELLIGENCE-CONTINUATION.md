@@ -210,24 +210,36 @@ records sit between the two: internal constitutional infrastructure, not a featu
 ```text
 PARENT FLOW            RECORDED
 CROSS-PHASE AUTHORITY  RATIFIED — founder act, 2026-09-08
+PRODUCTIZATION OBLIG.  RATIFIED — founder act, 2026-09-08
 PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
-  Outcome              B — lawful N 19, excluded 7, corpus 26
+  MANIFESTS A/B/C      FROZEN · 81d79b941
+  EXCLUDED SET         FROZEN · 81d79b941
+  corpus 26 · excluded 7 · lawful N   19
+  Outcome              B — N 19 < floor 40
   top-k instrument     DISCHARGED / MUST NOT RUN
-  small-corpus redesign OPEN · DESIGN ONLY
-  selector contract    INSPECTED — no comparative-selection output
-  product gap          RECORDED — Studio lacks developmental selection
-  next act             FOUNDER RULING (evaluator vs deployed selector)
-  MANIFESTS A/B/C      NOT FROZEN
-  EXCLUDED SET         NOT FROZEN
-  N                    NOT DETERMINED
+  selector contract    INSPECTED — no comparative-selection output in deployed path
+  product gap          OPEN — Studio lacks developmental selection
+  SEL-0 role           PRE-BUILD ACCEPTANCE STANDARD (redesignated 2026-09-08)
+  Manifest C status    frozen production-surface evidence · NOT the input contract
+  selector contract    Q1–Q6 INCORPORATED · Q7–Q8 RETURNED · NOT RATIFIED
+  R1 · R2 · R3         NOT OPENED
   THRESHOLD            UNSET
   FOUNDER RANKING      NOT STARTED
   MAIA RANKING         NOT STARTED
+  MANIFEST B           NOT OPENED
+  SELECTOR             NOT IMPLEMENTED
   FOUNDER BLIND        INTACT
 F-7                    NOT OPEN (opening condition is Phase 1.5 closed)
 PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: the production-discovery child, run from a host with
-production terminal access, opening from the branch tip named above.
+**Next executable act**: founder ruling on selector-contract questions Q7 and Q8, in
+`sel-0/SEL-0_REDESIGNATION_AND_SELECTOR_CONTRACT_2026-09-08.md`. Production discovery is
+CLOSED and is no longer the next act.
+
+**Historical note, kept rather than rewritten.** Earlier in this file the next act was the
+production-discovery child, and the manifests were unfrozen with `N` undetermined. That was
+true when written and is false now. The line above supersedes it; the earlier records and
+the `C0 BLOCKED` section are retained as the state at their time.
+

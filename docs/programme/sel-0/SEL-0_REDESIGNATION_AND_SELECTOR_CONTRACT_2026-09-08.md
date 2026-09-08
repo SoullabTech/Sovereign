@@ -91,154 +91,221 @@ FAIL → gap remains open · diagnose implementation · the benchmark does not m
 
 ---
 
-## 2 · PROPOSED product contract — Writer's Studio developmental selector
+## 2 · Product contract — Q1–Q6 INCORPORATED
 
-**Status: PROPOSED. Not ratified, not implemented, not frozen.** Product architecture, not
-benchmark convenience.
+**Status: Q1–Q6 ruled and incorporated. NOT RATIFIED — two new questions returned (§3).**
 
-### 2.1 Invocation condition
+> **Provenance of the Q1–Q6 rulings, kept rather than erased.** The ruling text was drafted
+> as a recommendation and delivered as a founder ruling in the same message. It is recorded
+> here as a founder act of 2026-09-08. If a separate adoption act was intended, this block
+> flips to PROPOSED on request; nothing downstream depends on the distinction yet.
+
+### 2.1 Invocation condition — Q2 RULED
 
 Selection is permitted **only** when all hold:
 
 ```text
 a  a frozen developmental reading is open in the Develop room
-b  the reading holds >= 2 lawful observations
+b  the reading holds >= 2 lawful candidates
 c  the writer has NOT named an observation in this act
-d  the writer has performed an act that opens conversational space
+d  the route receives an EXPLICIT writer-originating selection commission
 ```
 
-⛔ Never on load, never on a timer, never as ambient suggestion. The existing room reads on
-member act only; selection inherits that discipline rather than introducing polling.
+⛔ **(c) is necessary but not sufficient.** Absence of `observationKey` never confers
+permission to choose — that would convert missing specificity into authority.
 
-### 2.2 Writer-selected-observation precedence — absolute
+```text
+COMMISSIONS      an explicit writer act asking MAIA what is worth raising
+                 ("what do you notice?" · "what feels worth looking at?" ·
+                  "help me develop this" · a later explicit "what else?")
+
+DOES NOT COMMISSION
+                 room load · scope selection · navigation · a timer ·
+                 completion of another dialogue · ambiguous free text
+```
+
+UI copy is a later design act. The contract is that the **signal is explicit and
+writer-originating**, carried to the route as its own field — not inferred from the shape
+of the request. It must not be added to `SUPPORTED_ANCHORS` or to either anchor parser:
+those two boundaries stay frozen and non-interchangeable, and a commission is not an anchor.
+
+### 2.2 Writer-selected-observation precedence — Q1, absolute
 
 ```text
 if anchor.observationKey is present  ->  selectObservation() resolves it exactly
                                          the selector IS NOT INVOKED
 ```
 
-Precedence is structural, not advisory: the selector is not consulted and cannot be
-consulted on that path. This preserves `parseDevelopmentalAnchor`'s boundary unchanged.
+Structural, not advisory. `parseDevelopmentalAnchor` and `"never a nearest match"` unchanged.
 
-### 2.3 Lawful candidate-set boundary
+### 2.3 Lawful candidate-set boundary — Q3, Q5 RULED
 
 ```text
 INCLUDED   observations in the open frozen reading
-           F-7 eligible only
+           F-7 eligible
            standing != 'dismiss'
+           not superseded
 
-EXCLUDED   F-7 ineligible (ineligible, not low-ranked)
-           observations the writer has dismissed
-           observations from any other reading
-           anything not in the frozen reading
+EXCLUDED   F-7 ineligible          (ineligible, not low-ranked)
+           dismissed by the writer  (Q5 — sticky, writer-reversible only)
+           superseded               (Q3 — visible, writer-addressable, not MAIA-selectable)
+           any other reading
 ```
 
-Superseded observations stay visible in the room (07D product rule) — whether they are
-*selectable* is **open question Q3**.
+**Q3.** Supersession operationally means: `VISIBLE yes · HISTORICALLY TRUE yes ·
+WRITER-ADDRESSABLE yes · MAIA-SELECTABLE no`. MAIA may not autonomously resurrect a
+superseded observation as current guidance. A genuinely new observation in a later reading
+is a new object, governed on its own terms.
+
+**Q5.** `dismiss` is sticky for that observation identity. It does not expire through time,
+session change, revision, or MAIA inference. Re-eligibility requires an explicit
+writer-authored standing change (`dismiss → unresolved` or `dismiss → keep`). **MAIA may not
+decide a dismissal has expired.** Lifecycle authority belongs to the writer.
 
 ### 2.4 Permitted selector inputs
 
 ```text
 the lawful candidate observations themselves
-the writer's present turn / stated intention
-the commissioned lens + reading scope
+the writer's present turn and stated intention
+the commissioned lens and reading scope
 the frozen read_state (revision, section topology, coverage)
 member-authored standings: keep | dismiss | unresolved
 which observations already have open ask_threads
 evidentiary strength carried by the observation itself
 ```
 
-Every one is either the Work, the writer's own act, or the reading's own provenance.
+Each is the Work, the writer's own act, or the reading's own provenance.
 
 ### 2.5 Prohibited inputs
 
 ```text
-engagement, dwell, retention or any usage-derived signal
+engagement, dwell, retention, any usage-derived signal
 inferred member psychology, state, or developmental level
 cross-member or aggregate patterns
 any signal created by or for the benchmark
 anything post-dating the frozen reading's snapshot
-the founder's SEL-0 ranking, the threshold, or any benchmark annotation
+the founder's SEL-0 ranking, the threshold, any benchmark annotation
 ```
 
-### 2.6 Output form
+### 2.6 Output form — Q6 RULED
 
 ```text
-an ORDERING over the lawful candidate set
-ties permitted and meaningful
-accompanied by a declared confidence
+ORDERING over the lawful candidates + declared confidence
+        OR
+DECLINE_TO_SELECT
 ```
 
-An ordering, not a single pick — the writer must be able to see past the first suggestion,
-and an ordering is what SEL-0 can evaluate without inventing structure. **Whether the room
-surfaces one item or a short ordered set is a product decision (Q4), not a contract change.**
+**No forced pick.** Decline is a first-class product outcome, not an error path. The
+founder-side SEL-0 protocol must carry the corresponding *"none warrants raising now"*, or
+the instrument would force both sides to manufacture preference where the correct
+developmental act is restraint. Scoring of decline combinations is R1/R2 and is **not**
+ruled here.
 
-### 2.7 Authority and uncertainty behaviour
+Confidence is internal. It is **not surfaced as a number** — a percentage beside a
+developmental observation reads as authority, which §2.8 forbids.
+
+### 2.7 Product surface — Q4 RULED
+
+```text
+selector internally      ordered candidates
+Studio conversationally  ONE observation, offered
+```
+
+Writer's Studio does **not** display a ranked list. On rejection or an explicit "what else?",
+the next lawful candidate may be offered. This keeps development a conversation rather than
+a "top 5 things wrong with your manuscript" report, and leaves alternatives available
+without confronting the writer with an authoritative-looking menu.
+
+### 2.8 Authority and uncertainty — Q1 posture binding
 
 ```text
 selection is an OFFER, never a redirection of the session
-the writer may accept, reject, correct, redirect, deepen, or ignore it
-low confidence -> MAIA declines to select and says so
-                  declining is a lawful output, never a forced pick
-selection is never presented as diagnosis, priority, or instruction
+the writer may accept, reject, correct, redirect, deepen, or ignore
+low confidence -> DECLINE_TO_SELECT, stated plainly
+never presented as diagnosis, priority, instruction, or ranking
 no selection is recorded as authority over the Work
 ```
 
-### 2.8 Runtime integration point — the actual Studio path
+**The anti-steering posture of the room's `⛔` survives Q1 intact.** MAIA may not choose the
+writer's scope, preselect on load, ambiently recommend a starting place, override a
+writer-addressed observation, or turn selection into instruction. The selector operates
+*after and beneath* that rule, inside a scope the writer already chose, only on explicit
+commission.
+
+### 2.9 Runtime integration point — the actual Studio path
 
 ```text
 component   lib/manuscript/ask/  (new module, sibling of developmentalAnchor.ts)
 invoked by  app/api/sovereign/manuscripts/[id]/ask/route.ts  POST,
-            on the branch where anchor.observationKey is ABSENT
-consumed by the ask thread's MAIA turn — the same ask_threads / ask_turns
-            surface that already carries developmental dialogue
+            on the branch carrying an explicit selection commission
+consumed by the MAIA turn of the ask thread — the existing
+            ask_threads / ask_turns surface
 surfaced in app/writers-studio/develop/DevelopRoom.tsx
 ```
 
-⛔ Not a script, not an agent, not an offline scorer, not a benchmark harness. If the
-selector cannot be reached from the ask route, the gap is not closed.
+⛔ Not a script, agent, offline scorer, or benchmark harness. If the selector cannot be
+reached from the ask route, the gap is not closed.
 
-### 2.9 Downstream consumer
+### 2.10 Downstream consumer
 
 The MAIA turn of an ask thread. Selection determines *what MAIA raises*; the existing
-developmental dialogue determines *how she raises it*. Nothing else consumes the selection —
-no rendering, no ordering, no persisted state is derived from it in v1.
+developmental dialogue determines *how*. Nothing else consumes it in v1 — no rendering, no
+ordering, no derived persisted state.
 
 ---
 
-## 3 · Genuine founder questions — these need rulings, not defaults
+## 3 · Q1–Q6 CLOSED · two genuinely new questions returned
 
-**Q1 · Does the room's existing no-recommendation posture extend to observations?**
-`DevelopRoom.tsx:436` carries `⛔ Nothing preselects, recommends, or ranks a place to start.`
-Read strictly it governs **where MAIA reads** — the scope range — and not which observation
-is raised, so the selector does not literally violate it. But it expresses a posture, and a
-developmental selector inverts that posture in an adjacent place. **Is that ⛔
-scope-specific, or is it a Studio-wide stance that a selector must be ruled to override?**
-This is the single most consequential question here and it should not be answered by
-reading the comment narrowly and proceeding.
+Q1–Q6 are ruled and incorporated above. Working through their consequences surfaced two
+questions that did not exist before those rulings and that cannot be safely defaulted.
 
-**Q2 · What opens conversational space?** §2.1(d) is deliberately vague because the room has
-no such act today. A "what should I look at?" question is explicit. Is opening the room? Is
-finishing a dialogue on another observation? The invocation condition cannot be frozen until
-this is named, and naming it wrongly makes selection either never fire or fire ambiently.
+### Q7 · An empty lawful candidate set is not the same as a decline
 
-**Q3 · Are superseded observations selectable?** They remain visible and marked. Visible and
-selectable are different acts, and MAIA raising a superseded observation may be exactly right
-or clearly wrong depending on your intent for supersession.
+Q3 and Q5 together can empty the candidate set — every observation dismissed, or every one
+superseded. §2.6 then yields `DECLINE_TO_SELECT`, and MAIA says she has no clear one. **But
+that is not what happened.** Two different states collapse into one utterance:
 
-**Q4 · One item or a short ordered set in the room?** Contract-neutral, product-visible. A
-single suggestion is calmer; an ordered set is less directive because the writer sees the
-alternatives. This bears directly on §2.7's authority posture.
+```text
+DECLINE     candidates exist; confidence insufficient
+EMPTY       no lawful candidate exists at all
+```
 
-**Q5 · Does `dismiss` exclude permanently?** §2.3 excludes dismissed observations. A writer
-may dismiss something in one session that becomes apt three revisions later. Permanent
-exclusion is safe and possibly wasteful; re-eligibility needs a rule that is not "MAIA
-decides the dismissal expired."
+Saying "I don't have a clear one" when the truth is "you have dismissed all of them" is a
+false account of MAIA's own state, and this project treats that as a defect rather than a
+kindness.
 
-**Q6 · Is declining to select a first-class outcome in SEL-0?** §2.7 permits MAIA to decline
-under low confidence. If the acceptance standard cannot represent a decline, the instrument
-silently forces a pick and measures something the contract forbids. This must be settled in
-R1/R2, before the instrument freezes.
+The follow-on is why this is an authority question, not a wording one: **if MAIA discloses
+that the set is empty because the writer dismissed everything, is that pressure to
+un-dismiss?** Q5 gives the writer lifecycle authority; a system that reports the
+consequence of exercising it may erode that authority while formally respecting it.
+
+```text
+a  EMPTY is a distinct outcome, disclosed plainly
+b  EMPTY is a distinct outcome, disclosed without naming the cause
+c  EMPTY collapses into DECLINE   (rejected in the draft as dishonest — needs a ruling)
+```
+
+### Q8 · Is a MAIA offer recorded, and if so does that create authority?
+
+Q4 permits "what else?" to advance to the next candidate. Standings are `keep | dismiss |
+unresolved`, plus UNSET. **An observation MAIA offered and the writer simply ignored stays
+UNSET** — indistinguishable from one never offered. §2.4 permits reading which observations
+have open `ask_threads`, but an offer that produced no thread leaves no trace at all.
+
+```text
+NO RECORD   MAIA may re-offer the same observation every session — nagging,
+            and it makes "what else?" non-monotonic within a session
+
+RECORD      new persisted state describing MAIA's own past behaviour toward
+            this writer — which is precisely the kind of accumulated memory
+            the programme is careful not to let acquire authority
+```
+
+Neither is obviously right. Recording is the smaller technical change and the larger
+constitutional one. **A middle form exists — offers retained for the life of the
+commission and discarded after, so "what else?" is monotonic within a conversation and
+carries nothing across sessions** — but choosing it is a founder act, since it decides how
+much MAIA is permitted to remember about her own conduct.
 
 ---
 
@@ -247,7 +314,7 @@ R1/R2, before the instrument freezes.
 ```text
 SEL-0                  PRE-BUILD ACCEPTANCE STANDARD (redesignated)
 product gap            OPEN — Studio lacks developmental selection
-selector contract      PROPOSED — not ratified
+selector contract      Q1–Q6 INCORPORATED · Q7–Q8 RETURNED · NOT RATIFIED
 Manifest C             frozen production-surface evidence, NOT the input contract
 R1 · R2 · R3           NOT OPENED
 threshold              UNSET
