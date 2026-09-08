@@ -234,6 +234,12 @@ services:
       context: ${MAIA_BUILD_CONTEXT:-.}
       dockerfile: apps/api/Dockerfile
       args:
+        # PT-3 §XIV (B34) — the API is a second production runtime and carries the same
+        # immutable-SHA provenance as the main image, so a cutover can prove BOTH running
+        # services are the accepted commit rather than proving one and assuming the other.
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        APP_VERSION: ${APP_VERSION:-1.0.0}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
         # Deploy-lane tripwire — see x-maia-build above.
         DEPLOY_LANE_TOKEN: ${DEPLOY_LANE_TOKEN:-}
     image: maia-api:prod

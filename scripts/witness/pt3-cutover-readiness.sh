@@ -14,7 +14,8 @@
 #
 # THE MODEL IT NOW GOVERNS
 #   .env.production   carries MAIA_APP_DATABASE_URL (constrained) and NO owner DATABASE_URL
-#   .env              carries MIGRATE_DATABASE_URL (owner), for the migrate service alone
+#   .env.migrate      carries the owner DATABASE_URL, for the migrate service alone (B28)
+#   .env.postgres     carries POSTGRES_PASSWORD, for the postgres service alone (B28)
 #   runtime           no ordinary running container possesses owner authority
 #   no overlay        nothing optional can be omitted to restore owner authority
 #
@@ -74,11 +75,25 @@ if [ -r "$PROJECT/.env.production" ]; then
 else
   note ".env.production not readable from this shell"
 fi
-if grep -qE '^MIGRATE_DATABASE_URL=' "$PROJECT/.env" 2>/dev/null; then
-  ok "migration authority is staged separately in .env" "migrate alone receives it, by Compose interpolation"
+# B28 — owner custody is per-service and REQUIRED, so a missing file is a hard Compose failure
+# rather than a silently empty credential.
+if [ -s "$PROJECT/.env.migrate" ] && grep -qE '^DATABASE_URL=.' "$PROJECT/.env.migrate" 2>/dev/null; then
+  ok "migration authority is staged in .env.migrate" "migrate alone loads it, as a required env_file"
 else
-  gap "MIGRATE_DATABASE_URL is not staged" "migration would receive an empty credential"
+  gap ".env.migrate is absent or empty" "migration would receive no credential"
 fi
+if [ -s "$PROJECT/.env.postgres" ] && grep -qE '^POSTGRES_PASSWORD=.' "$PROJECT/.env.postgres" 2>/dev/null; then
+  ok "the owner password is staged in .env.postgres" "postgres alone loads it"
+else
+  gap ".env.postgres is absent or empty" "postgres would have no owner password"
+fi
+for f in .env.migrate .env.postgres; do
+  [ -e "$PROJECT/$f" ] || continue
+  case "$(stat -c '%a' "$PROJECT/$f" 2>/dev/null || echo '?')" in
+    600|400) ;;
+    *) bad "$f is not owner-only" "owner material must not be group- or world-readable" ;;
+  esac
+done
 if ls "$PROJECT"/docker-compose.*cutover*.yml >/dev/null 2>&1; then
   bad "an optional cutover overlay exists" "a boundary that depends on remembering a second -f flag is not durable"
 else

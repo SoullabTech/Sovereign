@@ -32,32 +32,98 @@ fi
 
 q() { docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc "$1" 2>/dev/null || true; }
 
-echo "════════ 1. RUNTIME OPERATES AS THE CONSTRAINED ROLE (§XI) ════════"
+echo "════════ 1. RUNTIME OPERATES AS THE CONSTRAINED ROLE (§XI · B38) ════════"
 #
 # ⭐ DISCOVERED, NOT ASSUMED. An earlier version asked about a hardcoded list of four services —
 # which is how three database-using workers (embed, summary, media) stayed out of the cutover set
-# until the compose audit found them. The constitutional condition is POSSESSION of the owner
-# credential, so the only sound question is: which running container holds one?
+# until the compose audit found them.
+#
+# ⭐ B38 — AND OWNER AUTHORITY IS NOT ONE VARIABLE NAME. Asking only about DATABASE_URL missed two
+# things at once: POSTGRES_PASSWORD is by itself sufficient to authenticate as the owner, and
+# maia-caddy — deliberately left UP through the outage so it can serve a refusal rather than a
+# black hole — never rereads .env.production, so it carries whatever it was created with. The
+# question is possession of owner MATERIAL, in any form, by any ordinary running container.
+#
+# Variable NAMES are printed. Values never are.
+OWNER_ROLE=$(q "SELECT tableowner FROM pg_tables WHERE tablename='manuscript_sections'")
+[ -n "$OWNER_ROLE" ] || OWNER_ROLE='soullab'
+
+owner_material() {   # container → names of owner-bearing variables, one per line
+  docker exec "$1" env 2>/dev/null | awk -F= -v owner="$OWNER_ROLE" '
+    $1 == "DATABASE_URL"         && length($2) { print $1; next }
+    $1 == "MIGRATE_DATABASE_URL" && length($2) { print $1; next }
+    $1 == "POSTGRES_PASSWORD"    && length($2) { print $1; next }
+    $0 ~ ("=postgres(ql)?://" owner ":")       { print $1; next }
+  ' | sort -u | tr '\n' ',' | sed 's/,$//'
+}
+
 checked=0
 for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
-  [ "$c" = "maia-postgres" ] && continue
+  case "$c" in maia-postgres|*migrate*) continue ;; esac
   app=$(docker exec "$c" printenv MAIA_APP_DATABASE_URL 2>/dev/null || true)
-  own=$(docker exec "$c" printenv DATABASE_URL 2>/dev/null || true)
-  # Only containers that touch the database at all are in scope.
+  own=$(owner_material "$c")
+  # In scope: anything that touches the database at all, or holds owner material for any reason.
   [ -n "$app" ] || [ -n "$own" ] || continue
   checked=$((checked+1))
   app_role=$(printf '%s' "$app" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
-  own_role=$(printf '%s' "$own" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
   if [ -n "$own" ]; then
-    bad "$c still possesses the owner credential" "DATABASE_URL role=${own_role:-?} — §X abort condition."
+    bad "$c still possesses owner material" "variables: $own — §X abort condition (B38: recreate it)"
   elif [ "$app_role" = "maia_app" ]; then
-    ok "$c runs as maia_app and holds no owner credential" "MAIA_APP_DATABASE_URL role=maia_app, DATABASE_URL absent"
+    ok "$c runs as maia_app and holds no owner material" "MAIA_APP_DATABASE_URL role=maia_app"
   else
     bad "$c does not run as maia_app" "MAIA_APP_DATABASE_URL role=${app_role:-<absent>} — §X abort condition"
   fi
 done
 [ "$checked" -gt 0 ] || bad "no database-using container was observed" "cannot pronounce on a runtime it cannot see"
-note "$checked database-using container(s) discovered and checked"
+note "$checked container(s) discovered and checked for owner material of any form"
+
+# ⭐ §XI — ACTUAL CONNECTIONS, NOT VARIABLE NAMES. Everything above reads configuration; a pool can
+# still reconnect around its configuration, which is exactly the B23/B34 failure mode a grant census
+# cannot see. So ask the database who is actually connected. A TCP client (client_addr NOT NULL) is
+# another container; this witness's own psql arrives over the unix socket and is excluded by that
+# same test rather than by naming it.
+FOREIGN=$(q "SELECT count(*) FROM pg_stat_activity
+              WHERE datname = current_database() AND backend_type = 'client backend'
+                AND client_addr IS NOT NULL AND usename <> 'maia_app'")
+APPCONN=$(q "SELECT count(DISTINCT client_addr) FROM pg_stat_activity
+              WHERE datname = current_database() AND backend_type = 'client backend'
+                AND client_addr IS NOT NULL AND usename = 'maia_app'")
+if [ "$FOREIGN" = "0" ]; then
+  ok "every live application connection authenticates as maia_app" "0 client backends on any other role"
+else
+  ROLES=$(q "SELECT string_agg(DISTINCT usename, ',') FROM pg_stat_activity
+              WHERE datname = current_database() AND backend_type = 'client backend'
+                AND client_addr IS NOT NULL AND usename <> 'maia_app'")
+  bad "$FOREIGN live application connection(s) are not maia_app" "role(s): ${ROLES:-?} — §X abort condition"
+fi
+if [ -n "$APPCONN" ] && [ "$APPCONN" -gt 0 ] 2>/dev/null; then
+  ok "the application is actually connected as maia_app" "$APPCONN distinct client address(es)"
+else
+  bad "no application connection as maia_app was observed" \
+      "configuration may be right and the runtime still not connected — absence of observation is not evidence of compliance"
+fi
+
+# ⭐ B34 — BOTH production runtimes, proven by name. maia-api is a separate image built from
+# apps/api/Dockerfile; proving the main runtime and assuming the API is how a second production
+# database client stays outside the census.
+for c in maia-sovereign maia-api; do
+  docker ps --format '{{.Names}}' | grep -qx "$c" || { bad "$c is not running" "the transition did not bring it back"; continue; }
+  sha=$(docker exec "$c" printenv GIT_COMMIT 2>/dev/null || echo '')
+  case "$sha" in
+    ''|unknown) bad "$c cannot state which commit it is" "GIT_COMMIT=${sha:-<absent>} — §XIV (B34): an unstamped image cannot join an immutable-SHA transition" ;;
+    *)          ok "$c reports its build commit" "GIT_COMMIT=$(printf '%s' "$sha" | cut -c1-12)" ;;
+  esac
+done
+if [ -n "${PT3_ACCEPTED_SHA:-}" ]; then
+  for c in maia-sovereign maia-api; do
+    sha=$(docker exec "$c" printenv GIT_COMMIT 2>/dev/null || echo '')
+    [ "$sha" = "$PT3_ACCEPTED_SHA" ] \
+      && ok "$c is the accepted commit" "$(printf '%s' "$sha" | cut -c1-12)" \
+      || bad "$c is not the accepted commit" "running $(printf '%s' "${sha:-<absent>}" | cut -c1-12), expected $(printf '%s' "$PT3_ACCEPTED_SHA" | cut -c1-12) — §X abort condition"
+  done
+else
+  note "PT3_ACCEPTED_SHA not set — image identity reported, not compared against the authorized commit"
+fi
 
 echo
 echo "════════ 2. PROTECTED SOURCE CANNOT BE MUTATED BY ORDINARY AUTHORITY (§XI) ════════"
@@ -288,13 +354,22 @@ echo "════════ 7. THE BOUNDARY SURVIVES THE ORDINARY DEPLOY PATH
 # configuration every deploy loads, or of something an ordinary deploy can omit.
 PROJECT="${PROJECT_DIR:-$HOME/MAIA-SOVEREIGN}"
 if [ -r "$PROJECT/.env.production" ]; then
-  if grep -qE '^DATABASE_URL=' "$PROJECT/.env.production"; then
-    bad "the owner credential is still in .env.production" \
-        "every service loads it — runtime possesses owner authority by configuration"
+  # B38 — every form of owner material, not one variable name.
+  LEFTOVER=$(grep -oE '^(DATABASE_URL|POSTGRES_PASSWORD|MIGRATE_DATABASE_URL)=' "$PROJECT/.env.production" | tr -d '=' | tr '\n' ',' | sed 's/,$//')
+  if [ -n "$LEFTOVER" ]; then
+    bad "owner material is still in .env.production" \
+        "$LEFTOVER — every service loads this file, so runtime possesses owner authority by configuration"
   else
-    ok "the owner credential has left .env.production" \
+    ok "no owner material remains in .env.production" \
        "every ordinary service loses owner authority by loading the file it always loaded"
   fi
+  for f in .env.postgres .env.migrate; do
+    if [ -s "$PROJECT/$f" ]; then
+      ok "$f holds its service's owner credential" "mode $(stat -c '%a' "$PROJECT/$f" 2>/dev/null || echo '?')"
+    else
+      bad "$f is missing or empty" "a required env_file — postgres or migrate would lose authority"
+    fi
+  done
   if grep -qE '^MAIA_APP_DATABASE_URL=' "$PROJECT/.env.production"; then
     ok "the constrained credential is in .env.production" "no optional file is required to supply it"
   else

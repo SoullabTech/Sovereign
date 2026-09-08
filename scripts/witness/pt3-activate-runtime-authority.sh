@@ -86,6 +86,21 @@ echo "OK    previous .env.production backed up to $BACKUP_DIR/env.production.$ST
 # runtime service holding the owner's password: the pools chose maia_app, but the processes remained
 # CAPABLE of being the owner, and several pools still support POSTGRES_* fallback whose default user
 # is `soullab`. Selection is not incapability.
+# ⭐ B37 — PROVE CUSTODY BEFORE REMOVING AUTHORITY. This used to remove owner material from
+# .env.production and only afterwards WARN if .env.postgres or .env.migrate was missing. That order
+# makes the warning a description of an outage already caused: postgres and migrate would have lost
+# the credential the removal assumed they had. Custody is proven first, and failure is an abort.
+for spec in ".env.migrate:DATABASE_URL:the migrate service" ".env.postgres:POSTGRES_PASSWORD:the postgres service"; do
+  f=${spec%%:*}; rest=${spec#*:}; key=${rest%%:*}; who=${rest#*:}
+  [ -s "$PROJECT/$f" ] || { echo "ABORT — $PROJECT/$f is missing or empty; $who would lose authority." >&2; exit 1; }
+  grep -qE "^$key=." "$PROJECT/$f" || { echo "ABORT — $PROJECT/$f carries no $key; $who would lose authority." >&2; exit 1; }
+  case "$(stat -c '%a' "$PROJECT/$f" 2>/dev/null || echo '?')" in
+    600|400) ;;
+    *) echo "ABORT — $PROJECT/$f is not owner-only." >&2; exit 1 ;;
+  esac
+done
+echo "OK    service-specific owner custody proven present before owner material is removed"
+
 TMP=$(mktemp "$PROJECT/.env.production.pt3.XXXXXX")
 grep -v -E '^(DATABASE_URL|MAIA_APP_DATABASE_URL|POSTGRES_PASSWORD|MIGRATE_DATABASE_URL)=' "$ENVPROD" > "$TMP"
 printf 'MAIA_APP_DATABASE_URL=postgresql://maia_app:%s@postgres:5432/%s\n' "$PW" "$DB" >> "$TMP"
@@ -93,14 +108,11 @@ chmod 600 "$TMP"; mv "$TMP" "$ENVPROD"
 unset PW
 echo "OK    .env.production carries MAIA_APP_DATABASE_URL and no owner material at all"
 echo "      (removed: DATABASE_URL, POSTGRES_PASSWORD, MIGRATE_DATABASE_URL)"
-for f in .env.migrate .env.postgres; do
-  [ -s "$PROJECT/$f" ] || echo "WARN  $PROJECT/$f is missing or empty — postgres/migrate would lose authority"
-done
-
 echo
 echo "resolved runtime role : $(docker exec -i "$PGC" psql -U soullab -d "$DB" -tAc \
   "SELECT rolname FROM pg_roles WHERE rolname='maia_app'" 2>/dev/null || echo '<not found>')"
 echo "runtime secret file   : $ENVPROD (mode $(stat -c '%a' "$ENVPROD" 2>/dev/null || echo '?'))"
-echo "migrate secret file   : $PROJECT/.env (mode $(stat -c '%a' "$PROJECT/.env" 2>/dev/null || echo '?'))"
+echo "migrate secret file   : $PROJECT/.env.migrate (mode $(stat -c '%a' "$PROJECT/.env.migrate" 2>/dev/null || echo '?'))"
+echo "postgres secret file  : $PROJECT/.env.postgres (mode $(stat -c '%a' "$PROJECT/.env.postgres" 2>/dev/null || echo '?'))"
 echo
 echo "No password and no connection URL was printed. Restart the runtime services next."

@@ -8,9 +8,21 @@
 import pg, { QueryResultRow } from 'pg';
 const { Pool } = pg;
 
+// PT-3 §XIV (B34) — CONSTRAINED-FIRST. This service is a SEPARATE production image
+// (maia-api:prod, apps/api/Dockerfile) and was outside the five-pool census: the search was sound
+// for the roots it covered, and `apps/` was not one of them. After the Source-custody cutover the
+// runtime holds MAIA_APP_DATABASE_URL and no DATABASE_URL at all, so reading the owner variable
+// first — or only — would leave this service unable to reach the database, and the bare fallback
+// below names the OWNER role. The application half of the boundary has to include every image the
+// platform actually runs.
+const connectionString =
+  process.env.MAIA_APP_DATABASE_URL ||
+  process.env.DATABASE_URL ||
+  'postgresql://soullab@localhost:5432/maia_consciousness';
+
 // Create connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+  connectionString,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,

@@ -249,3 +249,124 @@ not evidence of compliance.*
 The Experiences migration remains held and the orchestrator aborts the cutover if any
 `writer_experience%` table appears. Encounter remains held. The cutover pin stays HELD pending the
 founder's act.
+
+---
+
+# Repair 6 — B34–B38 (founder exact-tree review of `8e0b585…`)
+
+**Authority:** FOUNDER RULING — Writer's Studio, 2026-09-08 §IX. Nine bounded repairs.
+**Accepted and untouched:** the §XIV operational architecture — one orchestrator, one deploy-lane
+lock, image preparation before outage, quiescence before migration, backfill checked while quiesced,
+service-specific owner custody, credential activation while stopped, one release point, forward-only
+recovery. PT-3 Source doctrine, grants, seam semantics, lifecycle ontology, Experience code, the
+Experience HOLD, the doorway and Encounter are unchanged.
+
+## B34 — the census had the wrong boundary, not the wrong list
+
+The strengthened pool witness reported five sites and was internally sound **for the roots it
+searched**. Production also builds a **second image** — `maia-api:prod`, from `apps/api/Dockerfile`
+— and `apps/api/src/db/postgres.ts` held exactly the owner-era pool this lane exists to eliminate:
+`DATABASE_URL` only, falling back to a URL naming the **owner** role. After activation withdrew
+`DATABASE_URL`, that service would not have crossed to `maia_app`.
+
+Two consequences, and the second is the one that matters:
+
+- **Correcting the source is not enough.** `maia-api` is a separate image. The orchestrator built
+  only `maia`, so the repair would have existed in the repository and not in the platform.
+- **The API image stamped no `GIT_COMMIT`.** An image that cannot say which commit it is cannot
+  participate in an immutable-SHA transition. Treating it as exempt is how a second production
+  runtime stays permanently outside the boundary.
+
+Repairs: the API pool is constrained-first; `apps/api/Dockerfile` carries `GIT_COMMIT` /
+`APP_VERSION` / `BUILD_DATE` / `DEPLOY_LANE`; compose passes them; the orchestrator builds **both**
+images and provenance-verifies both **before quiescence**, and proves both running services after
+release. Discovery now walks every production source root — `lib`, `app`, `apps`, `components`,
+`server`. ⛔ *The repair to a future finding is another root, never one more hardcoded path bolted
+onto a still-blind scan.* Verified: discovery finds exactly six sites, and all six pass the
+constrained-first source law.
+
+## B35 — the branch is transport, never authority
+
+Preflight's object-fetch still defaulted to the Experiences lane, so a clean production checkout
+would fetch a branch not containing the accepted commit and abort for a reason that reads like a
+missing artifact. Default bound to `claude/pt3-runtime-integration`; `CUTOVER_BRANCH` overrides;
+`ACCEPTED_SHA` remains the sole authorization and `git archive` still runs from the SHA.
+
+## B36 — the preflight demanded what only a later step could install
+
+It compared the accepted `deploy-production.sh` against the host's and recorded a defect if they
+differed — while the sequence ran it *before* the forward step, and while this repair *changes that
+file*. A precondition its own procedure cannot satisfy is not a gate. The forward step also brought
+only Compose across, leaving B33's durability repair uninstalled.
+
+Now three questions, each asked where it can be answered:
+
+| where | question |
+|---|---|
+| immutable preflight | does the **accepted** launcher have the required architecture? (host divergence reported, not judged) |
+| forward step | install the bounded operational surface — Compose **and** `deploy-production.sh`, `deploy-lock.sh`, `deploy-tag.sh`, `pt3-cutover.sh` |
+| orchestrator step 0 | fail closed unless every installed host file is byte-identical to the snapshot |
+
+*prove artifact → install bounded operational surface → prove installed surface → mutate.*
+
+**Also found and repaired in the same place:** three instruments were still checking B28's
+*superseded* mechanism (`MIGRATE_DATABASE_URL` interpolated from `.env`). `pt3-verify-migration-authority.sh`
+is fail-closed, so on a correctly staged cutover it would have **aborted**; the preflight and the
+readiness witness would have reported a correct architecture as a gap. All three now follow the
+`.env.migrate` / `.env.postgres` custody they are meant to police.
+
+## B37 — owner-secret staging failed open
+
+Staging emitted `WARN`, wrote an **empty** `.env.postgres`, and continued. Activation only warned
+about missing custody **after** removing owner material from `.env.production`. Under a required-
+`env_file` architecture that means the database returns with no owner password — discovered
+mid-outage, past the point of no return, on the strength of a warning printed several steps earlier.
+
+Both are aborts now. Staging refuses **before the outage begins**, when nothing has been mutated.
+Activation proves both files exist, are non-empty, carry their key and are owner-only **before** it
+removes anything. *No production boundary may depend on somebody noticing a warning.*
+
+## B38 — two sets were being answered by one
+
+`maia-caddy` is deliberately left **up** through the outage so it serves a refusal rather than a
+network black hole. That is right. But it loads `.env.production`, and **a running container never
+rereads an env file** — so after activation cleanses that file, Caddy still holds the owner material
+it was created with.
+
+- **Source-writing runtime** — stopped at quiescence.
+- **Owner-credential holders** — recorded *before* the transition, recreated *after* the cleanse,
+  then re-discovered until none remains.
+
+Caddy is in the second set and not the first. Possession is tested for **every form** of owner
+material: `DATABASE_URL`, `POSTGRES_PASSWORD`, `MIGRATE_DATABASE_URL`, and any URL authenticating as
+the owner role — derived from `pg_tables`, never hardcoded. Variable **names** are printed; values
+never are. Postgres and the governed migration authority are the explicit exceptions.
+
+## §XI — the final witness now proves connections, not variable names
+
+Configuration checks cannot see a pool reconnecting around its configuration — the exact B23/B34
+failure mode. The witness now asks the database: **no** TCP client backend on any role but
+`maia_app`, **and at least one** actually connected as `maia_app`. Observing zero application
+connections is a defect, not a pass.
+
+## Verified here / not verified here
+
+| gate | result |
+|---|---|
+| `npm run check:no-supabase` | clean |
+| `npm run typecheck` | `229 errors · baseline 239 · 0 regressions` |
+| `apps/api` `tsc --noEmit` | exit 0 |
+| `npx jest` (full suite) | 37 failing suites — **identical set** to the pre-change baseline; 0 introduced |
+| pool discovery, simulated over the real tree | **6 sites** found: the five plus `apps/api/src/db/postgres.ts` |
+| constrained-first source law, all six | PASS — one `DATABASE_URL` read each, every one guarded |
+| `sh -n` / `bash -n` on every changed script | parses |
+
+⛔ **NOT run here, and not claimed:** the falsifier, enforcement witness, pool witness, backfill
+verifier and post-cutover witness need PostgreSQL and a Docker daemon; this environment has neither.
+Per §XI they are to be run against disposable infrastructure before production execution.
+*Absence of observation is not evidence of compliance.*
+
+## Standing
+
+⛔ Nothing is deployed. **PT-3 is enforced in code and not in production.**
+Experiences migration HELD. Encounter HELD. The cutover pin awaits the founder's act.

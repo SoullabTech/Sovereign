@@ -54,6 +54,20 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 maiaapi
 
+# PT-3 §XIV (B34) — IMAGE PROVENANCE. This image was previously unstamped, so the cutover could
+# prove which commit the main runtime was serving and could not ask the same question of the API.
+# An image that cannot answer "which commit are you" cannot participate in an immutable-SHA
+# transition, and treating it as exempt is how a second production runtime stays outside the
+# boundary. Same three build-args and the same DEPLOY_LANE marker as the main Dockerfile.
+ARG GIT_COMMIT=unknown
+ARG APP_VERSION=1.0.0
+ARG BUILD_DATE=unknown
+ARG DEPLOY_LANE_TOKEN=""
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV APP_VERSION=${APP_VERSION}
+ENV BUILD_DATE=${BUILD_DATE}
+ENV DEPLOY_LANE=${DEPLOY_LANE_TOKEN}
+
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=3001

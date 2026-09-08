@@ -1,8 +1,8 @@
-# PT-3 production cutover — runbook (repair 5, orchestrated)
+# PT-3 production cutover — runbook (repair 6, orchestrated)
 
-**Authority:** FOUNDER RULING — Writer's Studio (2026-09-08) §XIV. Final bounded integration repair.
-**Supersedes** every earlier runbook (`dcce6f97`, `e4207656`, `0819d749`, `ceee18cc`, and repair 4's
-eight-step manual sequence); none is to be run.
+**Authority:** FOUNDER RULING — Writer's Studio (2026-09-08) §IX/§X (B34–B38), on top of §XIV.
+**Supersedes** every earlier runbook (`dcce6f97`, `e4207656`, `0819d749`, `ceee18cc`, repair 4's
+eight-step manual sequence, and repair 5's four-step form); none is to be run.
 **Executed on the production host.** ⛔ This session has no route to production.
 
 ---
@@ -18,6 +18,17 @@ eight-step manual sequence); none is to be run.
 | **B33.A** | `deploy-production.sh setup` generated `POSTGRES_PASSWORD` into `.env.production` and rewrote the owner `DATABASE_URL` from it — so `setup` was the act that handed the whole runtime owner authority, and would have silently reconstructed the defect this cutover removes. | Owner material is generated straight into `.env.postgres` and `.env.migrate` (mode 600); `setup` strips owner keys from `.env.production` and refuses to touch anything once custody exists. |
 | **B33.B** | The constitutional verifiers were invoked as `DATABASE_URL="$DATABASE_URL" …`. Post-cutover that forwards an **empty string**, and each verifier falls back to its local default — a green run against the wrong database. | Every `verify-constitution-*.ts` reads `MAIA_APP_DATABASE_URL` first; the harness forwards whichever the runtime holds; the documented command forwards nothing. *A constitutional verifier must not require resurrection of owner authority merely to pronounce the release constitutional.* |
 | **§III** | `pt3-runtime-pool-witness.ts` claimed "every runtime pool connects as `maia_app`" while genuinely constructing **two of five**; the other three ran a connection expression **re-typed into the witness**, which drifts from the files it names. | Three separate legs, named separately in the verdict: **DISCOVERY** scans `lib/` and `app/` for pool constructors so a sixth pool fails the witness instead of going unwitnessed; **SOURCE** reads each file and requires that no `process.env.DATABASE_URL` is reachable except through `process.env.MAIA_APP_DATABASE_URL ||`; **EXERCISE** connects the two importable modules for real. The three others are reported as source-asserted and never as exercised. |
+
+## ⭐ What repair 6 changed: the census had the wrong boundary
+
+| | Defect | Repair |
+|---|---|---|
+| **B34** | ⭐ **There are six runtime pools, not five.** The strengthened witness scanned `lib/` and `app/` — internally sound for the roots it searched, and blind to the fact that production also builds a **separate image**, `maia-api:prod` from `apps/api/Dockerfile`. `apps/api/src/db/postgres.ts` read `DATABASE_URL` only, with an owner-named fallback. After activation the API would not have crossed to `maia_app` — and correcting the source without rebuilding **that** image would have left the fix in the repository and not in the platform. The API Dockerfile also stamped no `GIT_COMMIT`, so it could not participate in an immutable-SHA transition at all. | Discovery now walks every **production source root** (`lib`, `app`, `apps`, `components`, `server`) — and the correct response to a future finding is another root, never one more hardcoded path bolted onto a still-blind scan. The API pool is constrained-first; the API image carries `GIT_COMMIT`/`APP_VERSION`/`BUILD_DATE`/`DEPLOY_LANE`; the orchestrator **builds and provenance-verifies both images before quiescence** and proves both running services afterwards. |
+| **B35** | The runbook fetched `claude/pt3-runtime-integration` while the preflight still defaulted its object-fetch to `claude/writers-studio-experiences-afia8t`. A clean production checkout would fetch a branch not containing the accepted commit, then abort for a reason reading like a missing artifact. | Default bound to the PT-3 lane; `CUTOVER_BRANCH` overrides. **The branch may make the object reachable; it never determines which object is authorized.** `ACCEPTED_SHA` remains the sole authority. |
+| **B36** | The preflight required the accepted `deploy-production.sh` to *already* be installed on the host — while the sequence ran it *before* the forward step, and while this repair *changes that file*. Another internally impossible gate. And the forward step brought only Compose across, leaving B33's durability repair uninstalled. | Three questions, each asked where it can be answered: the **preflight** proves the accepted artifact's *architecture* (host divergence reported, not judged); the **forward step** installs the bounded operational surface; the **orchestrator's step 0** fails closed unless every installed host file is byte-identical to the snapshot. *prove artifact → install bounded surface → prove installed surface → mutate.* |
+| **B37** | Staging emitted `WARN`, wrote an **empty** `.env.postgres`, and continued; activation only warned if custody was missing *after* owner material had already been removed. Under a required-`env_file` architecture that means the database returns with no owner password — discovered mid-outage, past the point of no return, on the strength of a warning printed several steps earlier. | Both are aborts. Staging refuses **before the outage** if either credential cannot be positively established. Activation proves `.env.migrate` and `.env.postgres` exist, are non-empty, carry their key and are owner-only **before** it removes anything. *No production boundary may depend on somebody noticing a warning.* |
+| **B38** | ⭐ **Two different sets were being answered by one.** `maia-caddy` is deliberately left **up** through the outage so it serves a refusal rather than a black hole — correct — but it loads `.env.production` and **a running container never rereads an env file**, so it kept the owner material it was created with. | The sets are now distinct and both recorded: **source-writing runtime** (stopped at quiescence) and **owner-credential holders** (recorded before the transition, recreated after `.env.production` is cleansed, re-discovered until none remain). Possession is tested for **every form** of owner material — `DATABASE_URL`, `POSTGRES_PASSWORD`, `MIGRATE_DATABASE_URL`, and any URL authenticating as the owner role derived from `pg_tables` — reporting **variable names only, never values**. Postgres and the governed migration authority are the explicit exceptions. |
+| **§XI** | The final witness proved variable *names*. A pool can reconnect around its configuration — the B23/B34 failure mode a grant census cannot see. | It now asks the database who is actually connected: **no** TCP client backend on any role but `maia_app`, **and at least one** actually connected as `maia_app`. Zero observed application connections is a defect, not a pass — *absence of observation is not evidence of compliance.* |
 
 Carried unchanged: the temporal law, the two-phase authority split, generated-credential safety,
 backup custody outside the repository, prove-before-change, durable Compose with no overlay,
@@ -50,19 +61,23 @@ Preflight materializes the snapshot; **step 3 runs the orchestrator out of that 
 of the checkout, and the orchestrator refuses to run at all unless it is byte-identical to the
 accepted commit's copy. The shared checkout can be on any branch; the transition may not be.
 
-## Step 2 · `[MAC→PROD]` — bring the canonical Compose forward
+## Step 2 · `[MAC→PROD]` — install the bounded operational surface (B36)
 
 ```bash
 ssh soullab@minisforum "cd ~/MAIA-SOVEREIGN \
   && git fetch -q origin claude/pt3-runtime-integration \
   && git checkout $ACCEPTED_SHA -- docker-compose.production.yml \
-  && git diff --stat HEAD -- docker-compose.production.yml"
+       scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh \
+  && git diff --stat HEAD -- docker-compose.production.yml scripts/"
 ```
 
-The one file that must exist on production's checkout, because the migrate service reads it.
-It declares `env_file: .env.migrate` for migrate and `.env.postgres` for postgres — **required
-files, not interpolated variables**, so a missing one is a hard failure rather than a silent empty
-credential (§XIII).
+Not Compose alone: **B33's ordinary-deploy durability lives in `deploy-production.sh`**, so
+installing only Compose would leave `setup` able to write owner material back into
+`.env.production` the next time anyone ran it.
+
+Compose declares `env_file: .env.migrate` for migrate and `.env.postgres` for postgres — **required
+files, not interpolated variables** — so a missing one is a hard Compose failure rather than a
+silent empty credential (§XIII). Nothing here is proven by this step; **step 3 proves it**.
 
 ## Step 3 · `[PROD]` — ⭐ THE CUTOVER. One command, one lock, one outage.
 
@@ -77,20 +92,24 @@ ssh soullab@minisforum bash -lc "'
 
 The orchestrator performs, under a single held deploy-lane lock:
 
-| | Act | Runtime |
+| | Act | Source runtime |
 |---|---|---|
-| 1 | stage owner authority into `.env.migrate` / `.env.postgres` | serving |
+| 0 | ⭐ **fail-closed host verification (B36)** — every installed operational file byte-identical to the snapshot, or nothing is mutated | serving |
+| 1 | stage owner custody into `.env.migrate` / `.env.postgres` — ⭐ **aborts before the outage** if either cannot be established (B37) | serving |
 | 2 | verify migration authority (fail-closed; resolved role must **be** the protected tier's owner; a pre-existing `maia_app` aborts) | serving |
-| 3 | **build** the PT-3 image — prepared, not started | serving |
-| 4 | **QUIESCE** — the outage begins; the stopped set is recorded | stopped |
-| 5 | apply exactly the PT-3 migration, attributed | stopped |
-| 6 | verify migration, attribution and scope (one row · full 40-char commit · **0** Experience tables · **1** `maia_app`) | stopped |
-| 7 | ⭐ **assert the deterministic backfill** — `pt3-verify-backfill.sh` | stopped |
-| 8 | generate the `maia_app` credential; move runtime authority out of the universal environment | stopped |
-| 9 | ⭐ **RELEASE** — the single release act; the recorded set returns on the new image | serving |
-| 10 | prove the running image and the constrained authority | serving |
+| 3 | ⭐ **build BOTH images** — `maia-sovereign:prod` and `maia-api:prod` — and provenance-verify both against the accepted SHA. Prepared, not started (B34) | serving |
+| 4 | ⭐ **record the owner-credential holders** (B38) — the set that must be recreated later, including Caddy | serving |
+| 5 | **QUIESCE** — the outage begins; the stopped source-writing set is recorded | stopped |
+| 6 | apply exactly the PT-3 migration, attributed | stopped |
+| 7 | verify migration, attribution and scope (one row · full 40-char commit · **0** Experience tables · **1** `maia_app`) | stopped |
+| 8 | ⭐ **assert the deterministic backfill** — `pt3-verify-backfill.sh`, which refuses unless the runtime really is stopped | stopped |
+| 9 | generate the `maia_app` credential; remove **all** owner material from the universal environment | stopped |
+| 10 | ⭐ **shed stale owner credentials** — recreate every surviving holder (Caddy) until none possesses owner material in any form (B38) | stopped |
+| 11 | ⭐ **RELEASE** — the single release act; the recorded set returns on the new images | serving |
+| 12 | prove **both** running images are the accepted SHA, and that live connections authenticate as `maia_app` | serving |
 
-⛔ **Any failure before step 9 leaves the runtime QUIESCED, deliberately.** The script says so.
+⛔ **Any failure between step 5 and step 11 leaves the runtime QUIESCED, deliberately.** The script
+says so. Failures at steps 0–4 abort with production untouched and no outage begun.
 Per §X, the pre-PT-3 application image is **not an authorized rollback target** once the migration
 has committed: stay quiesced, report, recover forward.
 
@@ -130,7 +149,10 @@ as *authorized*. PT-3 finishing authorizes nothing about it.
 | a legacy representation hidden | step 7 · post-cutover witness block 4 (invariant) |
 | competing Sources | census: zero multi-arrival Works · step 7 |
 | runtime still receives owner authority | orchestrator step 10 · witness blocks 1 and 7 |
-| an application pool reconnecting as the owner | `pt3-runtime-pool-witness.ts` — discovery + source + exercise |
+| an application pool reconnecting as the owner | `pt3-runtime-pool-witness.ts` — discovery across all production roots + source + exercise; and witness block 1's live `pg_stat_activity` role check |
+| a second production runtime outside the census | discovery roots include `apps/`; orchestrator step 3 builds and stamps both images; step 12 and witness block 1 prove both |
+| a surviving container holding stale owner material | orchestrator steps 4 and 10; witness block 1 sweeps every owner-material form |
+| owner custody missing at the moment it is needed | orchestrator step 1 (before the outage) and step 9 (before removal) — aborts, not warnings |
 | `maia_app` can escalate | witness block 2 |
 | owner credential in the universal environment | witness block 7 · `deploy-production.sh setup` no longer writes it |
 | attribution absent | orchestrator step 6 · witness block 6 |

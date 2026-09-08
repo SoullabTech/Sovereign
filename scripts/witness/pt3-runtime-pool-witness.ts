@@ -26,8 +26,17 @@
  *
  * So the claim is now bounded by three separate legs, and the verdict names them separately:
  *
- *   1  DISCOVERY  — pool construction sites are FOUND by scanning lib/ and app/, never listed.
- *                   A sixth pool added tomorrow fails this witness instead of going unwitnessed.
+ *   1  DISCOVERY  — pool construction sites are FOUND by scanning every production source root,
+ *                   never listed. A new pool fails this witness instead of going unwitnessed.
+ *
+ *                   ⭐ B34 — THE ROOT WAS THE DEFECT, NOT THE LIST. The first strengthening scanned
+ *                   lib/ and app/ and reported five sites. It was internally sound and still wrong:
+ *                   production also runs a SEPARATE image, maia-api:prod from apps/api/Dockerfile,
+ *                   whose apps/api/src/db/postgres.ts held exactly the owner-era pool this lane
+ *                   exists to eliminate. Discovery that is blind to a source tree cannot fail on
+ *                   what lives there. The roots below are therefore derived from what production
+ *                   BUILDS — and the correct repair to a future finding is another root, never one
+ *                   more hardcoded path bolted onto a still-blind scan.
  *   2  SOURCE     — each site's own file is read and asserted: no path may consult DATABASE_URL
  *                   without having consulted MAIA_APP_DATABASE_URL first, in the same expression.
  *   3  EXERCISE   — the two modules that can be imported are actually made to connect, with the
@@ -43,6 +52,13 @@ import { join, relative } from 'path';
 const EXPECTED = 'maia_app';
 const REPO = join(__dirname, '..', '..');
 
+/**
+ * Every source root a production image is built from. `Dockerfile` builds the Next.js runtime out
+ * of lib/ + app/ (+ components/); `apps/api/Dockerfile` builds maia-api:prod out of apps/api/.
+ * If a new production image is introduced, its root belongs here on the same day.
+ */
+const PRODUCTION_ROOTS = ['lib', 'app', 'apps', 'components', 'server'];
+
 /** Every file that constructs a pg pool, and how this witness is entitled to speak about it. */
 const WITNESSED: Record<string, 'exercised' | 'source-asserted'> = {
   'lib/db/postgres.ts': 'exercised',
@@ -50,6 +66,9 @@ const WITNESSED: Record<string, 'exercised' | 'source-asserted'> = {
   'lib/learning/maiaTrainingDataService.ts': 'source-asserted',
   'lib/memory/beads-sync/server.ts': 'source-asserted',
   'lib/skills/skillsRuntime.ts': 'source-asserted',
+  // ⭐ B34 — the sixth site. A separate image (maia-api:prod), a separate tsconfig and package,
+  // so it cannot be imported into this process; source-asserted, and never claimed as exercised.
+  'apps/api/src/db/postgres.ts': 'source-asserted',
 };
 
 const POOL_CTOR = /new\s+(?:Pool|PgPool|pg\.Pool)\s*\(/;
@@ -78,7 +97,8 @@ function walk(dir: string, out: string[] = []): string[] {
 /** LEG 1 — the set of pool sites is discovered, so the witness cannot fall behind the code. */
 function discover(): string[] {
   const found: string[] = [];
-  for (const abs of [...walk(join(REPO, 'lib')), ...walk(join(REPO, 'app'))]) {
+  const files = PRODUCTION_ROOTS.flatMap((r) => walk(join(REPO, r)));
+  for (const abs of files) {
     const src = readFileSync(abs, 'utf8');
     if (POOL_CTOR.test(src)) found.push(relative(REPO, abs));
   }
@@ -129,9 +149,11 @@ async function main() {
   if (unwitnessed.length > 0) {
     fail('discovery', 'an unwitnessed pool exists', unwitnessed.join(', '));
     console.log('      A pool this witness has never read can reconnect as the owner unobserved.');
-    console.log('      Add it to WITNESSED — do not narrow the scan to make this pass.');
+    console.log('      Add it to WITNESSED and make it constrained-first (B34).');
+    console.log('      ⛔ Do not narrow PRODUCTION_ROOTS to make this pass.');
   } else {
-    pass('discovery', `${found.length} pool construction site(s) found`, 'all are witnessed below');
+    pass('discovery', `${found.length} pool construction site(s) found`,
+      `roots: ${PRODUCTION_ROOTS.join(', ')} — all witnessed below`);
   }
   for (const v of vanished) fail('discovery', 'a witnessed file no longer constructs a pool', v);
 

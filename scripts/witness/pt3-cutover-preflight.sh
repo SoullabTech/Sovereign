@@ -21,7 +21,12 @@ case "$ACCEPTED_SHA" in
   *) echo "ABORT — ACCEPTED_SHA must be a full 40-character hex SHA, not '$ACCEPTED_SHA'." >&2; exit 1 ;;
 esac
 
-BRANCH="${CUTOVER_BRANCH:-claude/writers-studio-experiences-afia8t}"
+# ⭐ B35 — TRANSPORT, NOT AUTHORITY. The branch exists only to make the commit OBJECT reachable on
+# a production checkout that has never seen it; ACCEPTED_SHA remains the sole authorization, and
+# §IX.2 archives from the SHA. The default had been left pointing at the Experiences lane, so a
+# clean production checkout would fetch a branch that does not contain the accepted commit and then
+# abort at §IX.1 for a reason that reads like a missing artifact rather than a wrong transport.
+BRANCH="${CUTOVER_BRANCH:-claude/pt3-runtime-integration}"
 PT3_MIGRATION="20260908000001_pt3_source_custody_enforcement.sql"
 HELD_MIGRATION="20260908000002_writer_experiences.sql"
 PROJECT="${PROJECT_DIR:-$HOME/MAIA-SOVEREIGN}"
@@ -114,11 +119,14 @@ echo "════════ §IX.6–8 — THE RUNTIME SEAM, AND ITS DURABILI
 # from Compose's own .env. Forgetting that breaks MIGRATION, loudly; it never weakens the boundary.
 
 COMPOSE="$SNAP/docker-compose.production.yml"
-if grep -q 'DATABASE_URL: \${MIGRATE_DATABASE_URL' "$COMPOSE" 2>/dev/null; then
-  ok "6" "the production compose separates migration authority from runtime authority"
+# B28 — the separation is now a REQUIRED per-service env_file, not interpolation. Compose refuses to
+# start a service whose env_file is absent, so an ordinary deploy cannot silently omit the boundary
+# — the property the rejected overlay lacked.
+if grep -q '\.env\.migrate' "$COMPOSE" 2>/dev/null && grep -q '\.env\.postgres' "$COMPOSE" 2>/dev/null; then
+  ok "6" "the accepted compose separates owner custody into service-specific env_files"
 else
-  bad "6" "compose does not carry the migration-authority separation" \
-      "bring $COMPOSE forward from $ACCEPTED_SHA on THIS host"
+  bad "6" "compose does not carry the service-specific owner custody" \
+      "§VI (B28) — migrate needs .env.migrate and postgres needs .env.postgres"
 fi
 
 if grep -q 'MAIA_APP_DATABASE_URL:-\$\${DATABASE_URL}' "$COMPOSE" 2>/dev/null \
@@ -138,7 +146,7 @@ else
 fi
 
 # §V (B14) — this instrument proves the IMMUTABLE ARTIFACT. It deliberately does NOT pronounce on
-# migration readiness, because that depends on an act (staging MIGRATE_DATABASE_URL) which has not
+# migration readiness, because that depends on an act (staging owner custody) which has not
 # happened yet and must not be pre-judged here. An earlier version printed a note about the missing
 # variable and continued toward PREFLIGHT PASSED — a false green, since the canonical Compose now
 # sources migrate's credential from it. Readiness is answered by
@@ -150,11 +158,13 @@ if grep -qE '^DATABASE_URL=' "$PROJECT/.env.production" 2>/dev/null; then
 else
   echo "      .env.production no longer carries the owner credential — activation has run"
 fi
-if grep -qE '^MIGRATE_DATABASE_URL=' "$PROJECT/.env" 2>/dev/null; then
-  echo "      MIGRATE_DATABASE_URL staged"
-else
-  echo "      MIGRATE_DATABASE_URL not staged — stage it, then run the migration-authority verifier"
-fi
+for f in .env.migrate .env.postgres; do
+  if [ -s "$PROJECT/$f" ]; then
+    echo "      $f staged (mode $(stat -c '%a' "$PROJECT/$f" 2>/dev/null || echo '?'))"
+  else
+    echo "      $f not staged — the orchestrator stages it; the verifier then refuses if it is empty"
+  fi
+done
 
 echo
 echo "════════ §IX.9 — CREDENTIAL ESTABLISHMENT DOES NOT EXPOSE THE SECRET ════════"
@@ -190,25 +200,68 @@ else
 fi
 
 echo
-echo "════════ §XIII — THE HIGH-PRIVILEGE LAUNCHER IS THE LAST MUTABLE DEPENDENCY ════════"
+echo "════════ §XIII — THE HIGH-PRIVILEGE LAUNCHER (B36 — ARCHITECTURE, NOT EQUALITY) ════════"
 #
-# The witnesses are piped from the accepted SHA and the migration SQL and runner arrive inside
-# MAIA_BUILD_CONTEXT. But the owner-level mutation is launched by the PRODUCTION CHECKOUT's
-# scripts/deploy-production.sh and its helpers. Leaving the command that chooses and launches the
-# migration as a mutable dependency would undo the pinning one level up.
-for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh; do
-  [ -r "$SNAP/$helper" ] || { echo "      $helper not in the accepted tree — skipped"; continue; }
-  if [ ! -r "$PROJECT/$helper" ]; then
-    bad "13" "$helper missing from the production checkout" "the launcher cannot be proven"
-    continue
-  fi
-  a=$(sha256sum "$SNAP/$helper" | cut -d' ' -f1)
-  b=$(sha256sum "$PROJECT/$helper" | cut -d' ' -f1)
-  if [ "$a" = "$b" ]; then
-    ok "13" "$helper matches the accepted artifact ($(printf '%s' "$a" | cut -c1-12))"
+# ⭐ B36 — THIS GATE USED TO BE INTERNALLY IMPOSSIBLE. It compared the accepted
+# scripts/deploy-production.sh against the production checkout's and recorded a defect if they
+# differed — while the runbook deliberately ran the preflight BEFORE bringing accepted files
+# forward, and while this very repair CHANGES deploy-production.sh. On an unchanged production host
+# the gate therefore demanded that the new launcher already be installed by the step that installs
+# it. A precondition that its own procedure cannot satisfy is not a gate.
+#
+# The three questions are now separated, and each is asked where it can be answered:
+#
+#   HERE (immutable, pre-mutation)  does the ACCEPTED launcher have the required architecture?
+#   FORWARD STEP                    install the bounded set of host files whose behaviour changes.
+#   ORCHESTRATOR (pre-mutation)     fail closed unless every installed host file it will rely on is
+#                                   byte-identical to the snapshot.
+#
+# prove artifact → install bounded operational surface → prove installed surface → mutate.
+for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh; do
+  if [ ! -r "$SNAP/$helper" ]; then
+    bad "13" "$helper is missing from the accepted tree" "the transition cannot be launched from a reviewed source"
   else
-    bad "13" "$helper DIFFERS from the accepted artifact" \
-        "accepted $(printf '%s' "$a" | cut -c1-12) vs production $(printf '%s' "$b" | cut -c1-12) — bring it forward or run the migration from the reviewed source"
+    ok "13" "$helper present in the accepted artifact ($(sha256sum "$SNAP/$helper" | cut -c1-12))"
+  fi
+done
+
+# B33.A — the accepted launcher must not reconstruct owner authority in the universal environment.
+if grep -qE '^\s*sed -i.*POSTGRES_PASSWORD=\$POSTGRES_PASS.*\.env\.production' "$SNAP/scripts/deploy-production.sh" 2>/dev/null \
+   || grep -q 'DATABASE_URL=postgresql://soullab:${POSTGRES_PASS}@postgres' "$SNAP/scripts/deploy-production.sh" 2>/dev/null; then
+  bad "13" "the accepted setup path still writes owner material into .env.production" \
+      "§VI (B33.A) — setup would hand the whole runtime owner authority back"
+else
+  ok "13" "the accepted setup path writes no owner material into .env.production"
+fi
+if grep -q '\.env\.postgres' "$SNAP/scripts/deploy-production.sh" 2>/dev/null \
+   && grep -q '\.env\.migrate' "$SNAP/scripts/deploy-production.sh" 2>/dev/null; then
+  ok "13" "the accepted setup path routes owner secrets to service-specific custody"
+else
+  bad "13" "the accepted setup path has no service-specific owner custody" "§VI (B33.A)"
+fi
+
+# B34 — the accepted compose must carry provenance for BOTH production images.
+if grep -q 'dockerfile: apps/api/Dockerfile' "$SNAP_COMPOSE" 2>/dev/null; then
+  if sed -n '/dockerfile: apps\/api\/Dockerfile/,/image:/p' "$SNAP_COMPOSE" | grep -q 'GIT_COMMIT: ${GIT_COMMIT'; then
+    ok "13" "the accepted compose stamps the API image with the deploy SHA"
+  else
+    bad "13" "the API image build carries no GIT_COMMIT" \
+        "§XIV (B34) — a second production runtime cannot be proven to be the accepted commit"
+  fi
+fi
+
+# Host divergence is REPORTED here and PROVEN by the orchestrator. It is not a defect at this point
+# in the sequence: these files have not been brought forward yet, by design.
+echo
+echo "  host operational files (reported — the forward step installs them, the orchestrator proves them):"
+for helper in scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh scripts/pt3-cutover.sh docker-compose.production.yml; do
+  [ -r "$SNAP/$helper" ] || continue
+  if [ ! -r "$PROJECT/$helper" ]; then
+    echo "      $helper — ABSENT on the host; the forward step must install it"
+  elif [ "$(sha256sum "$SNAP/$helper" | cut -d' ' -f1)" = "$(sha256sum "$PROJECT/$helper" | cut -d' ' -f1)" ]; then
+    echo "      $helper — already forward"
+  else
+    echo "      $helper — differs; the forward step must install it"
   fi
 done
 
@@ -232,14 +285,28 @@ if [ "$fail" -gt 0 ]; then
   exit 1
 fi
 cat <<NEXT
-PREFLIGHT PASSED — all §IX conditions hold. Step 1 may now mutate production:
+PREFLIGHT PASSED — all §IX conditions hold on the immutable artifact. Nothing on this host changed.
 
-  export MAIA_BUILD_CONTEXT="$SNAP"
-  export GIT_COMMIT="$ACCEPTED_SHA"        # §VI (B11) — all 40 characters. applied_by_commit is
-                                          # TEXT and stores it whole; the commit authorized, presented
-                                          # and recorded must be one identity. Short form: $(printf '%s' "$ACCEPTED_SHA" | cut -c1-9)
-  export MIGRATION_RUN_ID="$RUN_ID"
-  cd "$PROJECT" && scripts/deploy-production.sh migrate
+  1 · INSTALL the bounded operational surface (the host files whose behaviour must change):
+
+      cd "$PROJECT" && git fetch -q origin $BRANCH \\
+        && git checkout $ACCEPTED_SHA -- docker-compose.production.yml \\
+             scripts/deploy-production.sh scripts/deploy-lock.sh scripts/deploy-tag.sh \\
+             scripts/pt3-cutover.sh
+
+  2 · RUN THE ORCHESTRATOR. It re-verifies every installed file against this snapshot and
+      refuses to mutate anything if one differs (B36, fail-closed):
+
+      export ACCEPTED_SHA="$ACCEPTED_SHA"        # §VI (B11) — all 40 characters. applied_by_commit
+                                                 # is TEXT and stores it whole; the commit
+                                                 # authorized, presented and recorded is one
+                                                 # identity. Short form: $(printf '%s' "$ACCEPTED_SHA" | cut -c1-9)
+      export MAIA_BUILD_CONTEXT="$SNAP"
+      export MIGRATION_RUN_ID="$RUN_ID"
+      bash "$SNAP/scripts/pt3-cutover.sh"
+
+⛔ Do NOT run scripts/deploy-production.sh migrate by hand. It takes the same deploy-lane lock and
+   performs one act out of thirteen; the transition is the orchestrator or it is nothing.
 
 Record the evidence block above alongside the run.
 NEXT

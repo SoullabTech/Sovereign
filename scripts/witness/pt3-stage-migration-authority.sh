@@ -16,7 +16,8 @@
 #   remove owner runtime authority → restart runtime
 #
 # THIS SCRIPT DOES ONLY THE FIRST STEP. It:
-#   · copies the owner DATABASE_URL from .env.production into .env as MIGRATE_DATABASE_URL
+#   · copies the owner DATABASE_URL into .env.migrate and POSTGRES_PASSWORD into .env.postgres
+#   · ABORTS if either cannot be positively established (B37) — before any outage begins
 #   · LEAVES DATABASE_URL in .env.production — runtime keeps working, unchanged
 #   · does NOT touch maia_app, which does not exist yet
 #   · does NOT restart anything
@@ -51,16 +52,34 @@ umask 077
 # from the universal file under the ordinary deploy path — precisely where it must not be.
 printf 'DATABASE_URL=%s\n' "$OWNER_URL" > "$PROJECT/.env.migrate"
 chmod 600 "$PROJECT/.env.migrate"
-if [ -n "$OWNER_PW" ]; then
-  printf 'POSTGRES_PASSWORD=%s\n' "$OWNER_PW" > "$PROJECT/.env.postgres"
-  chmod 600 "$PROJECT/.env.postgres"
-else
-  echo "WARN  no POSTGRES_PASSWORD found in .env.production — check .env.postgres by hand" >&2
-  : > "$PROJECT/.env.postgres"; chmod 600 "$PROJECT/.env.postgres"
+# ⭐ B37 — FAIL CLOSED, BEFORE THE OUTAGE. This used to WARN, write an EMPTY .env.postgres and
+# continue. Under the ratified credential law a required service-specific owner credential cannot be
+# "missing, but continue": .env.postgres is a REQUIRED env_file, so an empty one means the database
+# comes back with no owner password — discovered mid-outage, after the point of no return, on the
+# strength of a warning printed several steps earlier. No production boundary may depend on somebody
+# noticing a warning. Aborting here costs nothing: not one thing has been mutated yet.
+if [ -z "$OWNER_PW" ]; then
+  echo "ABORT — no POSTGRES_PASSWORD in .env.production. Postgres owner custody cannot be preserved," >&2
+  echo "        so it must not be half-established. Nothing has been changed; nothing is quiesced." >&2
+  rm -f "$PROJECT/.env.migrate"
+  exit 1
 fi
+printf 'POSTGRES_PASSWORD=%s\n' "$OWNER_PW" > "$PROJECT/.env.postgres"
+chmod 600 "$PROJECT/.env.postgres"
 unset OWNER_URL OWNER_PW
 
-echo "OK    owner authority staged into .env.migrate and .env.postgres (mode 600)"
+# Positively established, or not established at all.
+for f in .env.migrate .env.postgres; do
+  [ -s "$PROJECT/$f" ] || { echo "ABORT — $PROJECT/$f is empty after staging." >&2; exit 1; }
+  case "$(stat -c '%a' "$PROJECT/$f" 2>/dev/null || echo '?')" in
+    600|400) ;;
+    *) echo "ABORT — $PROJECT/$f is not owner-only." >&2; exit 1 ;;
+  esac
+done
+grep -qE '^DATABASE_URL=.'      "$PROJECT/.env.migrate"  || { echo "ABORT — .env.migrate carries no DATABASE_URL." >&2; exit 1; }
+grep -qE '^POSTGRES_PASSWORD=.' "$PROJECT/.env.postgres" || { echo "ABORT — .env.postgres carries no POSTGRES_PASSWORD." >&2; exit 1; }
+
+echo "OK    owner authority staged into .env.migrate and .env.postgres (mode 600), both verified non-empty"
 echo "OK    .env.production is UNCHANGED — runtime keeps owner authority until the role exists"
 echo
 echo "Nothing about maia_app was attempted: the migration creates it. Nothing was restarted."
