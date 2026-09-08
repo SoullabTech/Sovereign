@@ -49,7 +49,7 @@ for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
   app_role=$(printf '%s' "$app" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
   own_role=$(printf '%s' "$own" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
   if [ -n "$own" ]; then
-    bad "$c still possesses the owner credential" "DATABASE_URL role=${own_role:-?} — §X abort condition. An ordinary deploy that did not name docker-compose.pt3-cutover.yml reverts the cutover."
+    bad "$c still possesses the owner credential" "DATABASE_URL role=${own_role:-?} — §X abort condition."
   elif [ "$app_role" = "maia_app" ]; then
     ok "$c runs as maia_app and holds no owner credential" "MAIA_APP_DATABASE_URL role=maia_app, DATABASE_URL absent"
   else
@@ -183,6 +183,35 @@ esac
 exp=$(q "SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'writer_experience%'")
 [ "$exp" = "0" ] && ok "no Experience table was applied" "§XII respected — Experience deployment stays held" \
                  || bad "Experience tables exist in production" "$exp table(s) — §XII does not authorize Experience deployment"
+
+echo
+echo "════════ 7. THE BOUNDARY SURVIVES THE ORDINARY DEPLOY PATH (§VII / B12) ════════"
+#
+# Detection is not prevention. This block asks whether the boundary is a property of the
+# configuration every deploy loads, or of something an ordinary deploy can omit.
+PROJECT="${PROJECT_DIR:-$HOME/MAIA-SOVEREIGN}"
+if [ -r "$PROJECT/.env.production" ]; then
+  if grep -qE '^DATABASE_URL=' "$PROJECT/.env.production"; then
+    bad "the owner credential is still in .env.production" \
+        "every service loads it — runtime possesses owner authority by configuration"
+  else
+    ok "the owner credential has left .env.production" \
+       "every ordinary service loses owner authority by loading the file it always loaded"
+  fi
+  if grep -qE '^MAIA_APP_DATABASE_URL=' "$PROJECT/.env.production"; then
+    ok "the constrained credential is in .env.production" "no optional file is required to supply it"
+  else
+    bad "the constrained credential is not in .env.production" "runtime would have no database access"
+  fi
+else
+  note ".env.production not readable from this shell — durability unverified"
+fi
+if ls "$PROJECT"/docker-compose.*cutover*.yml >/dev/null 2>&1; then
+  bad "an optional cutover overlay is present" \
+      "§VII — a boundary that depends on remembering a second -f flag is not durable"
+else
+  ok "no optional overlay exists" "an ordinary deploy cannot restore owner authority by omitting a file"
+fi
 
 echo
 echo "════════ VERDICT ════════"

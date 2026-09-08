@@ -88,59 +88,68 @@ else
 fi
 
 echo
-echo "════════ §IX.6–8 — THE RUNTIME SEAM, BEFORE IT IS APPLIED ════════"
-OVERRIDE="$SNAP/docker-compose.pt3-cutover.yml"
-if [ -r "$OVERRIDE" ]; then
-  n_app=$(grep -c 'MAIA_APP_DATABASE_URL: \${MAIA_APP_DATABASE_URL' "$OVERRIDE" || true)
-  n_own=$(grep -c 'DATABASE_URL: ""' "$OVERRIDE" || true)
-  ok "6" "the override gives $n_app runtime services the constrained credential"
-  if [ "$n_own" = "$n_app" ]; then
-    ok "7" "the same $n_own services receive DATABASE_URL as an empty literal, never an interpolation"
-  else
-    bad "7" "constrained/blanked service counts disagree" "app=$n_app blanked=$n_own"
-  fi
-  if grep -q 'psql \$\${DATABASE_URL}' "$OVERRIDE"; then
-    bad "8" "a healthcheck in the override still uses owner authority" "§VI — health must not require the credential being removed"
-  else
-    ok "8" "no healthcheck in the override depends on owner authority"
-  fi
-  if grep -qE '^\s{2}migrate:' "$OVERRIDE"; then
-    bad "8" "the override touches the migrate service" "§IX.5 — migration authority must stay separate"
-  fi
+echo "════════ §IX.6–8 — THE RUNTIME SEAM, AND ITS DURABILITY (B12) ════════"
+#
+# ⭐ THERE IS NO OVERLAY. An earlier design put the authority seam in an optional second Compose
+# file, which meant an ordinary deploy that failed to name it handed owner authority back to
+# runtime. A boundary that disappears down the ordinary path is not a boundary.
+#
+# The seam is now a property of `.env.production` — the file EVERY service already loads. After
+# cutover it carries the constrained credential and no owner credential, so no invocation can
+# restore owner authority by omitting anything. `migrate` alone gets the owner credential back,
+# from Compose's own .env. Forgetting that breaks MIGRATION, loudly; it never weakens the boundary.
+
+COMPOSE="$PROJECT/docker-compose.production.yml"
+if grep -q 'DATABASE_URL: \${MIGRATE_DATABASE_URL' "$COMPOSE" 2>/dev/null; then
+  ok "6" "the production compose separates migration authority from runtime authority"
 else
-  bad "6" "docker-compose.pt3-cutover.yml is absent from the snapshot" "the runtime seam cannot be applied"
+  bad "6" "compose does not carry the migration-authority separation" \
+      "bring $COMPOSE forward from $ACCEPTED_SHA on THIS host"
 fi
 
-# Every ordinary runtime container that currently POSSESSES owner authority must be covered.
-echo
-echo "  services currently possessing DATABASE_URL, and whether the override covers them:"
-for c in $(docker ps --format '{{.Names}}' 2>/dev/null); do
-  [ "$c" = "maia-postgres" ] && continue
-  url=$(docker exec "$c" printenv DATABASE_URL 2>/dev/null || true)
-  [ -n "$url" ] || continue
-  svc=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$c" 2>/dev/null || echo '?')
-  if [ -r "$OVERRIDE" ] && grep -qE "^  ${svc}:" "$OVERRIDE"; then
-    printf '      %-24s (service %-22s) covered\n' "$c" "$svc"
-  else
-    printf '      %-24s (service %-22s) NOT COVERED\n' "$c" "$svc"
-    bad "7" "$c would keep owner authority after cutover" \
-        "§IX.4 — any additional ordinary runtime service that accesses the database must be included"
-  fi
-done
+if grep -q 'MAIA_APP_DATABASE_URL:-\$\${DATABASE_URL}' "$COMPOSE" 2>/dev/null \
+   || grep -q 'MAIA_APP_DATABASE_URL:-\${DATABASE_URL}' "$COMPOSE" 2>/dev/null; then
+  ok "7" "database healthchecks follow the authority, not the owner credential"
+else
+  bad "7" "a healthcheck still requires owner authority" \
+      "§VI — health must not require the credential being removed"
+fi
+
+# There is no optional file whose omission could revert the cutover.
+if ls "$PROJECT"/docker-compose.*cutover*.yml >/dev/null 2>&1; then
+  bad "8" "an optional cutover overlay is present" \
+      "§VII (B12) — the boundary must not depend on a file an ordinary deploy can omit"
+else
+  ok "8" "no optional overlay exists — the boundary cannot be omitted"
+fi
+
+# The owner credential must not be reachable by ordinary runtime once cutover completes; before it,
+# report the state rather than judging it.
+if grep -qE '^DATABASE_URL=' "$PROJECT/.env.production" 2>/dev/null; then
+  echo "      .env.production still carries DATABASE_URL — expected BEFORE the credential step"
+else
+  ok "8" "the owner credential has already left .env.production"
+fi
+if grep -qE '^MIGRATE_DATABASE_URL=' "$PROJECT/.env" 2>/dev/null; then
+  ok "8" "MIGRATE_DATABASE_URL is set for the migrate service"
+else
+  echo "      MIGRATE_DATABASE_URL not yet set in .env — required before Step 2, written by the credential installer"
+fi
 
 echo
 echo "════════ §IX.9 — CREDENTIAL ESTABLISHMENT DOES NOT EXPOSE THE SECRET ════════"
-RUNBOOK="$SNAP/docs/programme/WS-LIFE-OF-A-WORK_PT3_CUTOVER_RUNBOOK_2026-09-08.md"
-if [ -r "$RUNBOOK" ]; then
-  if grep -q "PASSWORD '\$" "$RUNBOOK"; then
-    bad "9" "the runbook still interpolates the password into SQL" "§VI — use psql's \\password instead"
-  elif grep -q '\\password maia_app' "$RUNBOOK"; then
-    ok "9" "the runbook uses psql's \\password — the secret is never a shell or SQL argument"
+INSTALLER="$SNAP/scripts/witness/pt3-install-runtime-credential.sh"
+if [ -r "$INSTALLER" ]; then
+  if grep -q "PASSWORD '\$" "$INSTALLER" && ! grep -q 'printf "ALTER ROLE' "$INSTALLER"; then
+    bad "9" "the installer interpolates the password into a command" "§V — it must reach psql on stdin"
+  elif grep -q 'stty -echo' "$INSTALLER" && grep -q 'docker exec -i' "$INSTALLER" \
+       && grep -q 'check-ignore' "$INSTALLER"; then
+    ok "9" "credential installation is non-echoing, stdin-delivered, and refuses a tracked destination"
   else
-    bad "9" "no credential-establishment mechanism found in the runbook" "expected \\password maia_app"
+    bad "9" "the installer does not satisfy §X.3" "expected non-echo, stdin delivery, and a gitignore check"
   fi
 else
-  bad "9" "the runbook is missing from the snapshot" "$RUNBOOK"
+  bad "9" "the credential installer is missing from the snapshot" "$INSTALLER"
 fi
 
 echo
@@ -166,7 +175,9 @@ cat <<NEXT
 PREFLIGHT PASSED — all §IX conditions hold. Step 1 may now mutate production:
 
   export MAIA_BUILD_CONTEXT="$SNAP"
-  export GIT_COMMIT="$(printf '%s' "$ACCEPTED_SHA" | cut -c1-9)"
+  export GIT_COMMIT="$ACCEPTED_SHA"        # §VI (B11) — all 40 characters. applied_by_commit is
+                                          # TEXT and stores it whole; the commit authorized, presented
+                                          # and recorded must be one identity. Short form: $(printf '%s' "$ACCEPTED_SHA" | cut -c1-9)
   export MIGRATION_RUN_ID="$RUN_ID"
   cd "$PROJECT" && scripts/deploy-production.sh migrate
 
