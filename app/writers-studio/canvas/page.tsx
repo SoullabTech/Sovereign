@@ -44,6 +44,8 @@ import { loadRevisions, type RevisionSummary } from '../../press/manuscript/work
 import Worktable from './Worktable';
 import SectionWritingSession from './SectionWritingSession';
 import SectionWritingSurface from './SectionWritingSurface';
+import LivingVoicePanel from './LivingVoice';
+import { useLivingVoice } from '@/lib/writersStudio/useLivingVoice';
 import {
   chooseMount,
   fetchWriteState,
@@ -1275,12 +1277,30 @@ function SectionSurfaceBridge({
     onWriting?.(writing);
     return () => onWriting?.(null);
   }, [writing, onWriting]);
+
+  /* LIVING VOICE lives HERE, beneath the field, rather than in one of the
+     room's panel slots. Two reasons, and both are about what the writer is
+     doing rather than about layout:
+
+       The encounter is about a passage they just chose. Putting it beside the
+       prose keeps MAIA next to the sentence instead of in a console the writer
+       has to turn towards.
+
+       The panel slots arbitrate — Goals hides Notes, conversation hides both.
+       An offer the writer just made should not be able to close something else
+       they had open, and nothing else should be able to close it. */
+  const voice = useLivingVoice(manuscriptId);
+
   return (
-    <SectionWritingSurface
-      writing={writing}
-      manuscriptId={manuscriptId}
-      onCheckpointed={onCheckpointed}
-    />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.comfortable }}>
+      <SectionWritingSurface
+        writing={writing}
+        manuscriptId={manuscriptId}
+        onCheckpointed={onCheckpointed}
+        onOfferPassage={(passage, sectionId) => voice.open(passage, sectionId)}
+      />
+      <LivingVoicePanel voice={voice} />
+    </div>
   );
 }
 

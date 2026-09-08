@@ -42,6 +42,15 @@ export interface SectionWritingSurfaceProps {
   manuscriptId: string;
   /** Told after a version is kept, so the room's version list can refresh. */
   onCheckpointed?: () => void;
+  /**
+   * LIVING VOICE — the writer offering one passage for one creative encounter.
+   *
+   * ⛔ SELECTION IS NOT THE OFFER. Highlighting text in this field reaches
+   * nothing; it only makes an offer possible, and this callback fires only
+   * when the writer presses the control themselves (LV-A). If the room does
+   * not pass it, the control does not exist and the surface is unchanged.
+   */
+  onOfferPassage?: (passage: string, sectionId: string) => void;
 }
 
 /**
@@ -197,10 +206,24 @@ function KeepAVersion({
 }
 
 export default function SectionWritingSurface({
-  writing, manuscriptId, onCheckpointed,
+  writing, manuscriptId, onCheckpointed, onOfferPassage,
 }: SectionWritingSurfaceProps) {
   const fieldRef = useRef<HTMLTextAreaElement | null>(null);
   const activeId = writing.activeId;
+
+  /* WHAT IS SELECTED, held only so the offer control can know whether there is
+     anything to offer. It is read from the field on demand rather than stored
+     as text, so the passage exists in one place — the writer's own draft —
+     until the moment they choose to hand it over. */
+  const [hasSelection, setHasSelection] = useState(false);
+  const readSelection = () => {
+    const el = fieldRef.current;
+    setHasSelection(!!el && el.selectionEnd > el.selectionStart);
+  };
+
+  /* A section change invalidates any selection: the offer must never be able
+     to carry text out of a section the writer has already left. */
+  useEffect(() => { setHasSelection(false); }, [activeId]);
 
   /* Focus follows the writer, so keyboard navigation lands in the prose rather
      than leaving them somewhere they have to hunt for.
@@ -275,7 +298,9 @@ export default function SectionWritingSurface({
         <textarea
           ref={fieldRef}
           value={writing.activeBody}
-          onChange={(e) => writing.edit(e.target.value)}
+          onChange={(e) => { writing.edit(e.target.value); readSelection(); }}
+          onSelect={readSelection}
+          onBlur={readSelection}
           spellCheck
           aria-label={active.heading ?? `Section ${active.position + 1}`}
           rows={1}
@@ -291,6 +316,37 @@ export default function SectionWritingSurface({
             color: 'inherit',
           }}
         />
+      )}
+
+      {/* THE OFFER, and it is the writer's act. The control appears only when
+          there is a selection to offer, says exactly what it will do, and does
+          nothing until pressed. Reading the selection at press time — not at
+          selection time — keeps the passage in the draft until then. */}
+      {onOfferPassage && hasSelection && active.editable && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            data-offer-passage
+            onMouseDown={(e) => e.preventDefault() /* keep the selection */}
+            onClick={() => {
+              const el = fieldRef.current;
+              if (!el) return;
+              const passage = el.value.slice(el.selectionStart, el.selectionEnd);
+              if (passage.trim().length === 0) return;
+              onOfferPassage(passage, active.id);
+            }}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${RULE.quiet}`,
+              borderRadius: RADIUS.pill,
+              padding: `${SPACE.tight}px ${SPACE.base}px`,
+              color: INK.secondary,
+              cursor: 'pointer',
+            }}
+          >
+            <StudioText role="metadata" as="span">Explore this passage</StudioText>
+          </button>
+        </div>
       )}
     </div>
   );
