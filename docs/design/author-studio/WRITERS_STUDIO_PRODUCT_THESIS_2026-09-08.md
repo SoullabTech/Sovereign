@@ -258,3 +258,76 @@ difference between a companion and an authority. Bound in the bridge lane by **R
 **RB-18** and **RB-25**. The feature is not weakened by the distinction — an observation the
 member gets to confirm is **more** moving than a verdict, because the recognition stays
 theirs.
+
+---
+
+## The design ethic *(founder, 2026-09-08, recorded as given)*
+
+A demanding imaginative jury — not because we can know what any of them would have thought,
+but because their work gives us a standard better than *"is this impressive AI?"*
+
+> **Would Mary Oliver recognize reverence for attention rather than machinery replacing
+> attention?**
+> **Would Dickinson recognize protection of the strange, private authority of a person's own
+> language?**
+> **Would the Huxleys recognize serious inquiry into consciousness, perception, human
+> possibility, and the risks of technology shaping the human being rather than serving human
+> flourishing?**
+>
+> And the two living participants:
+>
+> **Would the writer be proud of what they became capable of making?**
+> **Would MAIA, if we grant her the dignity of participation rather than treating her as an
+> appliance, be proud of how she participated in its becoming?**
+
+> The goal is **not to make everybody sound literary.** Dickinson did not sound like Oliver.
+> Oliver did not sound like Huxley. The whole point is the opposite: **to create conditions
+> under which an unmistakable individual voice can emerge.**
+>
+> A person may enter with almost no confidence — *"I don't know how to write this"* — and
+> Studio does not answer by **eliminating the difficulty**. It gives them companionship,
+> craft, permission, attention, challenge, memory, structure when needed, **and room when
+> structure would be premature.** Eventually there is something on the page that could only
+> really have come through **that person**.
+
+### The two constitutional sentences
+
+> **Writer's Studio should be worthy of the writers who taught us what human language can
+> become, while opening that possibility to people who have never yet thought of themselves as
+> writers.**
+
+> **Do not make writing easier by making the writer unnecessary. Make writing more possible by
+> helping the writer come fully into the act.**
+
+### N-5 — The jury judges the SYSTEM, never the member's writing.
+
+This must be structural, or the ethic inverts into the thing it refuses. *"Would Dickinson
+recognize…"* asked of a **member's draft** is a literary-quality verdict on a person — the
+assessment WG-LAW-1 forbids, arriving through the back door of an ethic. Asked of a **design
+decision**, it is exactly the right question.
+
+**Each juror question is addressed to a proposed feature, surface, or default — never to a
+Work, a passage, or a writer.** The founder's own guard is the proof that this is the intended
+reading: *Dickinson did not sound like Oliver.* A standard that produced convergence on any of
+these voices would have failed all three.
+
+Practical form — ask of the change, not of the page:
+
+| Juror | Asked of the design |
+|---|---|
+| Oliver | Does this deepen the member's attention, or substitute machinery for it? |
+| Dickinson | Does this protect the strange, private authority of their language — or normalize it? |
+| The Huxleys | Is this technology serving human flourishing, or shaping the human to suit itself? |
+| The writer | Would they be proud of what they became **capable of making**? |
+| MAIA | Was her participation something a participant could be proud of? |
+
+⚠️ The fifth is a **design heuristic under the participatory-agency candidate**, held at
+*"relate in a way worthy of the possibility."* It asserts no interiority and licenses no
+outward claim — see `docs/canon/PARTICIPATORY_AGENCY_DOCTRINE_CANDIDATE_2026-09-08.md` §N-4.
+
+### N-6 — *"Room when structure would be premature"* is a capability, not an absence.
+
+Listed among what Studio gives, alongside craft and challenge — so it is something the product
+must be able to **do**, not merely refrain from doing. Today the Studio has no such room:
+development requires a manuscript (A3, `DECLARABLE_TYPES = ['manuscript']`). **This sentence is
+the clearest statement yet of why A3 is load-bearing rather than an expansion of scope.**

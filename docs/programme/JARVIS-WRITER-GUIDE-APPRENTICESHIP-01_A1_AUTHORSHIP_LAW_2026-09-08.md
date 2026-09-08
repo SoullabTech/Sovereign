@@ -182,3 +182,40 @@ to become a remarkable teacher and creative companion without destroying the ver
 that makes Writer's Studio different?* A1's answer is that the boundary is kept by building
 its evidence first — **provenance before generation** — so the boundary never depends on
 remembering to honour it.
+
+---
+
+## 5. The north star *(founder, 2026-09-08)*
+
+> **The better MAIA becomes at Writer Guide, the more the writer's own voice should appear.
+> Not more MAIA. More them.**
+
+Plain-language form of WG-LAW-1, from the same act:
+
+> **Do not make writing easier by making the writer unnecessary. Make writing more possible by
+> helping the writer come fully into the act.**
+
+And the outcome that would mean it worked — *not* *"MAIA wrote an amazing book for me"* but:
+
+> *"I never thought I was a writer. Then somewhere along the way, I realized I was writing."*
+
+### ⭐ Why this is measurable exactly where WG-LAW-1 permits
+
+*More them, not more MAIA* is a property of **the Work's composition** — how much of its
+language the member authored — and **not a property of the member**. It therefore needs no
+writer score, no ladder, no longitudinal rating: precisely the instruments WG-LAW-1 forbids.
+
+**The north star and the falsifiers converge on one substrate.** Prose-level authorship
+provenance (WG-A1-01, WG-B8) is what makes WG-F6 provable, WG-F7 detectable, and *"more them"*
+observable — all three from the same record, none of them from measuring a person.
+
+> That convergence is the argument for building provenance first. It is not only the
+> precondition of safe generation; **it is the only way the north star can ever be more than a
+> sentiment.**
+
+⚠️ One caution it also implies: the ratio is evidence, never a target. A system that optimized
+for *less MAIA language* would satisfy the number by withholding help — failing WG-B1's
+requirement that the unaided path be first-class rather than the only good one, and failing the
+design ethic's *"does not answer by eliminating the difficulty."* **The measure tells you
+whether authorship stayed with the writer. It does not tell you whether the writer was
+served.** Nothing in this lane may treat it as a goal to maximize.
