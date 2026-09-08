@@ -2,7 +2,15 @@
 ## LANE STATE — HELD FOR THE KEYED WITNESS
 
 **As of** `0072d3d5c` on `claude/writers-studio-capability-clxw8d`
+**Classification** (founder, 2026-09-08): **HELD / RESTARTABLE** — *not
+abandoned, and not fully product-accepted.* `9fc865f33` is the handoff point.
+
 **Status** HOLD. **Nothing further in this lane before the keyed witness.**
+
+> The distinction is load-bearing. A lane recorded as *abandoned* invites
+> someone to start over; one recorded as *accepted* invites someone to build on
+> an experience nobody has had. **HELD / RESTARTABLE** says the architecture is
+> finished enough to resume from and the product judgement has not been made.
 
 > Recorded because this lane opened on a retrieval failure — governing R&D that
 > existed one branch away and was not found. Leaving its own state in a
