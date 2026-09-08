@@ -1,8 +1,10 @@
 # WS-DELETE-01 — Erasure Authority Amendment (S4)
 
-**Status: SEAM REPAIRED · NC-12…NC-18 GREEN · RETURNED FOR FOUNDER REVIEW (2nd).**
-**First implementation REFUSED by founder review, 2026-09-08 — recorded in §2.0, not
-erased. Step 4 (building PT-3) remains held.**
+**Status: SEAM REPAIRED TWICE · NC-12…NC-19 GREEN, NC-19 AGAINST REAL POSTGRESQL ·
+RETURNED FOR FOUNDER REVIEW (3rd).**
+**Review 1 refused the implementation (§2.0). Review 2 accepted the architectural shape
+and held acceptance for one concurrency defect (§2.1). Both are recorded, not erased.
+Step 4 (building PT-3) remains held.**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08, *PT-3 Source Custody / WS-DELETE-01 Erasure
 Authority*, §2 (S4 authorized first) and §1 (lane ownership).
@@ -68,6 +70,50 @@ The corrected requirement, in the founder's words:
 
 ---
 
+## 2.1 — The concurrency defect, and the lock that closes it
+
+Founder review 2026-09-08 (second return) accepted the architectural shape and held
+acceptance for one remaining defect. It was real, and it recreated the exact custody
+failure the seam exists to prevent.
+
+`relinquishManuscriptSource()` captured the Source refs and only then deleted the parent
+manuscript, with no lock on the manuscript before the capture. `claimArrival()` attaches
+an unclaimed arrival to a manuscript through ordinary independent queries. So:
+
+```text
+ERASURE TX                         ARRIVAL CLAIM
+capture refs → [A]
+                                   attach arrival B → manuscript M, commit
+DELETE manuscript M
+  cascade deletes A AND B
+enqueue [A]
+COMMIT
+  → B's custody row: gone · B's bytes: retained · erasure handle: absent
+```
+
+> **A snapshot is not the relinquished set unless the boundary prevents that set from
+> changing while the act is underway.**
+
+**The repair.** A member-scoped `SELECT … FOR UPDATE` on the manuscript, **above** the
+capture, establishing it as a locked lifecycle subject before any inventory is taken:
+
+```text
+lock the manuscript FOR UPDATE   →  capture refs  →  DELETE … RETURNING  →  enqueue
+```
+
+`FOR UPDATE` conflicts with the `FOR KEY SHARE` a foreign-key attachment takes on its
+referenced row, so a concurrent claim **waits**. If the erasure commits, the claim can no
+longer attach to a manuscript that no longer exists; if it rolls back, the claim proceeds
+and is visible to the next attempt. The lock also doubles as the existence and ownership
+test — no row to lock means no lifecycle subject, so nothing is inventoried and nothing
+is deleted.
+
+It must stay above the capture: a second read after the DELETE is too late, because the
+cascade has already destroyed the rows carrying the refs. Isolation was **not** raised
+globally — the invariant belongs locally, at the custody boundary.
+
+---
+
 ## 2 — The repaired seam
 
 `lib/storage/erasureAuthority.ts`. **There is no authority object.** Nothing to forge,
@@ -119,7 +165,7 @@ capture, not custody.
 
 ## 3 — Negative-control evidence
 
-`lib/storage/__tests__/erasureAuthority.test.ts` — **15 passed, 0 failed.** Every control
+`lib/storage/__tests__/erasureAuthority.test.ts` — **17 passed, 0 failed.** Every control
 asserts *nothing was enqueued*, not merely that an error was raised.
 
 | Control | Result |
@@ -138,14 +184,51 @@ asserts *nothing was enqueued*, not merely that an error was raised.
 | Whole-runtime scan: the seam is the only queue inserter (comments stripped) | **PASS** |
 | Whole-runtime scan: `DELETE FROM member_manuscripts` exists only in the seam | **PASS** |
 
-**Stated rather than overclaimed:** these run against a recording transaction client, so
-they prove the seam's decisions and its statement ordering. They do not re-test
-PostgreSQL's rollback — that is the database's guarantee. What the repair makes
-*structurally* true, and what NC-18 checks, is that no object exists that could outlive a
-transaction and still authorize anything.
+**Stated rather than overclaimed:** the controls above run against a recording
+transaction client, so they prove the seam's decisions and its statement ordering, not
+PostgreSQL's row-lock or rollback behaviour. That admitted limit is exactly why the
+concurrency defect gets its own database-backed witness.
+
+### NC-19 — concurrent arrival claim, against real PostgreSQL
+
+`scripts/witness/ws-delete-01-s4-concurrency-witness.ts` — two real connections, two real
+transactions, interleaved. **Run 2026-09-08 against PostgreSQL 16.13, schema built from
+the actual `20260824000001` and `20260907000001` migrations: ALL CONTROLS PASSED.**
+
+| Control | Result |
+|---|---|
+| 1 the lifecycle subject is locked before any inventory is taken | **ok** |
+| 2 the inventory sees exactly the Source already attached | **ok** |
+| 3 ⛔ **the race is closed** — the concurrent claim cannot cross the locked boundary | **ok**, blocked while the inventory is open |
+| 4 positive transition evidence preserved | **ok** |
+| 5 once erasure commits, the claim cannot attach to the erased manuscript | **ok** — PostgreSQL gives the *stronger* outcome: the waiting UPDATE resumes, finds its parent gone, and the foreign key **refuses it (23503)** rather than quietly matching zero rows |
+| 6 ⛔ **no orphaned Source** — B never became this manuscript's and was never cascaded away | **ok** |
+| 7 every Source actually relinquished is owed destruction | **ok** |
+| 8 and nothing else is | **ok** |
+| 9 the cascade took exactly the row whose ref was captured | **ok** |
+
+**And the defect demonstration, in the same witness** — the identical interleaving with
+the lock removed, i.e. the code exactly as it stood before this repair. A falsifier that
+cannot show what it would catch is not yet a falsifier:
+
+| | |
+|---|---|
+| D1 without the lock the claim crosses the open inventory | **reproduces** |
+| D2 the erasure still reports a clean success | **reproduces** |
+| D3 ⛔ B's custody row was cascaded away | **reproduces** |
+| D4 ⛔ …and its bytes are owed to **nobody** — *unreferenced but retained* | **reproduces** |
+
+If that half ever stops reproducing, the control above has stopped meaning anything and
+the witness fails rather than reporting a quiet pass.
+
+**Static ordering pin.** Two further unit controls hold the lock in place: `lockAt === 0`
+in the statement sequence, and a source-order assertion that `FOR UPDATE` precedes the
+capture, which precedes the DELETE, which precedes the enqueue. A future edit moving the
+lock beneath the snapshot would leave every single-threaded control green and silently
+reopen the race; these fail instead.
 
 **Other gates:** typecheck 229 vs baseline 239, **0 regressions** · `lib/manuscript`,
-`lib/storage`, `app/api/sovereign/living-works` — **58 suites, 1010 passed, 0 failed**,
+`lib/storage`, `app/api/sovereign/living-works` — **58 suites, 1012 passed, 0 failed**,
 including the pre-existing Work-visual doctrine suite (its assertions now pin the seam
 operation; the doctrine — the obligation is tied to the commit — is unchanged).
 
@@ -168,6 +251,14 @@ Owed next, per the ruling's sequence: founder acceptance of the repaired S4 → 
 **P8** to the post-S4 shape (already folded into the design document, §4) → build PT-3 →
 let **P11** expose whether the Source-write boundary needs its own repair → bind into the
 release gate → demonstrate P9 still fully relinquishes custody.
+
+## 5 — Recorded, not expanded into this lane
+
+`claimArrival()` performs its arrival claim and the subsequent `member_manuscripts.source_custody`
+update as **two separate top-level statements**, not one transaction. The NC-19 repair did
+not require changing it — the parent lock closes Source custody from the erasure side — so
+per the ruling it is recorded here as a follow-on for its own review, and **not** used to
+broaden S4.
 
 > Stop making safety depend on which code happens to know a pathname. Make the system
 > know what kind of authority is acting.

@@ -32,11 +32,14 @@ const SOURCE_B = `${SOURCE_NAMESPACE}/bbb-2222.docx`;
 const VISUAL = `${WORK_VISUAL_NAMESPACE}/cover-1.png`;
 
 /** Records every statement, and answers reads per the scenario given. */
-function fakeTx(opts: { arrivals?: string[]; deletes?: boolean } = {}) {
+function fakeTx(opts: { arrivals?: string[]; deletes?: boolean; locks?: boolean } = {}) {
   const seen: { sql: string; params: any[] }[] = [];
   const client = {
     query: async (sql: string, params: any[] = []) => {
       seen.push({ sql, params });
+      if (/FOR UPDATE/.test(sql)) {
+        return { rows: opts.locks === false ? [] : [{ id: 'm-1' }] } as any;
+      }
       if (/FROM manuscript_source_arrivals/.test(sql)) {
         return { rows: (opts.arrivals ?? []).map((artifact_ref) => ({ artifact_ref })) } as any;
       }
@@ -123,16 +126,46 @@ describe('NC-12 / NC-13 · the transition, not the state', () => {
     expect(tx.inserts()).toHaveLength(0);
   });
 
-  it('the refs are captured BEFORE the delete and enqueued only after it returns a row', async () => {
-    /* Both orderings are load-bearing: read while the rows naming the files
-       still exist, enqueue only once the transition is witnessed. */
+  it('the whole order holds: lock → capture → transition → enqueue', async () => {
+    /* Every step is load-bearing. The lock first, so the inventory cannot grow
+       behind the act's back (NC-19). The capture before the delete, because the
+       cascade destroys the rows carrying the refs. The enqueue only after a
+       returned row, because a state observed is not a transition performed. */
     const tx = fakeTx({ arrivals: [SOURCE_A], deletes: true });
     await relinquishManuscriptSource(tx.client, 'm-1', 'mem-1', 'order');
+    const lockAt = tx.seen.findIndex((s) => /FOR UPDATE/.test(s.sql));
     const readAt = tx.seen.findIndex((s) => /FROM manuscript_source_arrivals/.test(s.sql));
     const deleteAt = tx.seen.findIndex((s) => /DELETE FROM member_manuscripts/.test(s.sql));
     const enqueueAt = tx.seen.findIndex((s) => /INSERT INTO vault_erasure_queue/.test(s.sql));
-    expect(readAt).toBeGreaterThan(-1);
+    expect(lockAt).toBe(0);
+    expect(lockAt).toBeLessThan(readAt);
     expect(readAt).toBeLessThan(deleteAt);
+    expect(deleteAt).toBeLessThan(enqueueAt);
+  });
+
+  it('⛔ NC-19 an unlockable subject stops the act before any inventory', async () => {
+    /* The lock is also the existence and ownership test: no row to lock means no
+       lifecycle subject, so nothing is inventoried and nothing is deleted. */
+    const tx = fakeTx({ arrivals: [SOURCE_A], deletes: true, locks: false });
+    const out = await relinquishManuscriptSource(tx.client, 'm-1', 'not-mine', 'nc19-scope');
+    expect(out.deleted).toBe(false);
+    expect(tx.seen.filter((s) => /DELETE FROM member_manuscripts/.test(s.sql))).toHaveLength(0);
+    expect(tx.inserts()).toHaveLength(0);
+  });
+
+  it('⛔ NC-19 static: the lock cannot drift below the snapshot', () => {
+    /* The database witness proves the lock works; this proves it stays where it
+       works. A future edit moving FOR UPDATE beneath the capture would leave
+       every single-threaded control green and silently reopen the race. */
+    const src = readFileSync(join(REPO, 'lib/storage/erasureAuthority.ts'), 'utf8');
+    const body = src.slice(src.indexOf('export async function relinquishManuscriptSource'));
+    const lockAt = body.indexOf('FOR UPDATE');
+    const captureAt = body.indexOf('FROM manuscript_source_arrivals');
+    const deleteAt = body.indexOf('DELETE FROM member_manuscripts');
+    const enqueueAt = body.indexOf('enqueue(tx, SOURCE_NAMESPACE');
+    expect(lockAt).toBeGreaterThan(-1);
+    expect(lockAt).toBeLessThan(captureAt);
+    expect(captureAt).toBeLessThan(deleteAt);
     expect(deleteAt).toBeLessThan(enqueueAt);
   });
 

@@ -185,6 +185,41 @@ export async function relinquishManuscriptSource(
   memberId: string,
   actLabel: string,
 ): Promise<RelinquishOutcome> {
+  /* ── The lock is the inventory's stability, not a way to serialize deletes ──
+   *
+   * Founder review 2026-09-08 (second return). Without it the captured set is a
+   * snapshot, and a snapshot is not the relinquished set:
+   *
+   *   ERASURE TX                      ARRIVAL CLAIM
+   *   capture refs → [A]
+   *                                   attach arrival B to manuscript M, commit
+   *   DELETE M  → cascade takes A AND B
+   *   enqueue [A]
+   *   COMMIT     → B's row is gone, B's bytes are retained, and nothing in the
+   *                database can name them: *unreferenced but retained*, the
+   *                state WS-DELETE-01 exists to forbid.
+   *
+   * `FOR UPDATE` on the parent conflicts with the `FOR KEY SHARE` a foreign-key
+   * attachment takes on its referenced row, so `claimArrival()` must WAIT here.
+   * If this act commits, the claim can no longer attach to a manuscript that no
+   * longer exists; if it rolls back, the claim proceeds and is visible to the
+   * next erasure attempt. Either way the Source set cannot grow behind the
+   * inventory's back.
+   *
+   * It must stay ABOVE the capture. A second read after the DELETE would be too
+   * late — the cascade has already destroyed the rows that carried the refs. */
+  const subject = await tx.query<{ id: string }>(
+    `SELECT id FROM member_manuscripts
+      WHERE id = $1 AND member_id = $2
+      FOR UPDATE`,
+    [manuscriptId, memberId],
+  );
+  if (subject.rows.length === 0) {
+    /* Not this member's manuscript, or not there at all. No transition, and the
+       caller is never told which. */
+    return { deleted: false, refs: [], queued: 0 };
+  }
+
   const arrivals = await tx.query<{ artifact_ref: string }>(
     `SELECT artifact_ref FROM manuscript_source_arrivals
       WHERE manuscript_id = $1 AND member_id = $2 AND artifact_ref IS NOT NULL`,
