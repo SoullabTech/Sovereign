@@ -37,21 +37,41 @@ fi
 # What will the migrate service actually receive? Ask Compose, not the file.
 RESOLVED=$(docker compose -f docker-compose.production.yml --profile migrate config 2>/dev/null \
   | awk '/^  migrate:/,/^  [a-z]/' | grep -E '^\s+DATABASE_URL:' | head -1 | cut -d: -f2- | tr -d ' ' || true)
-if [ -n "$RESOLVED" ] && [ "$RESOLVED" != '""' ]; then
-  ROLE=$(printf '%s' "$RESOLVED" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
-  echo "OK      migrate resolves a non-empty DATABASE_URL (role: ${ROLE:-<unparsed>})"
-else
+
+if [ -z "$RESOLVED" ] || [ "$RESOLVED" = '""' ]; then
   echo "ABORT   migrate would receive an EMPTY DATABASE_URL — the migration would fail or misapply"
   fail=1
+else
+  ROLE=$(printf '%s' "$RESOLVED" | sed -n 's#^[a-z+]*://\([^:@/]*\).*#\1#p')
+  # §V (B20) — a non-empty credential is not the test. It must be the ACTUAL custody authority.
+  # Derived from the protected tier's own ownership rather than a hardcoded name, so the check
+  # follows the boundary if the owner is ever something other than `soullab`.
+  OWNER=$(docker exec maia-postgres psql -U soullab -d "${PT3_DB:-maia_consciousness}" -tAc \
+    "SELECT tableowner FROM pg_tables WHERE tablename='manuscript_sections'" 2>/dev/null || true)
+  if [ -z "$OWNER" ]; then
+    echo "ABORT   could not read the protected tier's owner — cannot prove migrate holds custody authority"
+    fail=1
+  elif [ "$ROLE" = "$OWNER" ]; then
+    echo "OK      migrate resolves the custody authority (role: $ROLE = owner of manuscript_sections)"
+  else
+    echo "ABORT   migrate would run as '$ROLE', which is NOT the protected tier's owner ('$OWNER')"
+    echo "        A mistakenly staged constrained or unrelated credential must never read as ready."
+    fail=1
+  fi
 fi
 
-# maia_app must NOT exist yet: the migration creates it. Its presence means a prior run.
-EXISTS=$(docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc \
+# §V (B20) — maia_app must be ABSENT. Production witnessed it absent; its unexpected presence means
+# the observed state has changed or a partial act occurred. That is a reconciliation question, not
+# a note, and this instrument must not permit readiness through it.
+EXISTS=$(docker exec maia-postgres psql -U soullab -d "${PT3_DB:-maia_consciousness}" -tAc \
   "SELECT count(*) FROM pg_roles WHERE rolname='maia_app'" 2>/dev/null || echo '?')
 case "$EXISTS" in
-  0) echo "OK      maia_app does not exist yet — the migration will create it (§IV)" ;;
-  1) echo "NOTE    maia_app already exists — the migration has run before; verify before repeating" ;;
-  *) echo "NOTE    could not read pg_roles" ;;
+  0) echo "OK      maia_app is absent — the migration will create it (§IV)" ;;
+  1) echo "ABORT   maia_app ALREADY EXISTS before the first PT-3 migration"
+     echo "        Production witnessed it absent. Either the state has changed since the census or a"
+     echo "        partial act occurred. RECONCILIATION REQUIRED — do not migrate."
+     fail=1 ;;
+  *) echo "ABORT   could not read pg_roles — readiness cannot be established"; fail=1 ;;
 esac
 
 echo
