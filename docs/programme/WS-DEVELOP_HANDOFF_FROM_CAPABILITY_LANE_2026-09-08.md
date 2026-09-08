@@ -8,7 +8,37 @@ the founder tested a real reading; they belong to the lane that owns the reader.
 
 ---
 
-# 1 · DEVELOP-EVIDENCE-INTEGRITY — repair before relying on readings
+# 0 · THE SEQUENCE — founder ruling, 2026-09-08
+
+> ### Two sequential Develop acts, not one redesign. Integrity first, composition second.
+>
+> **If we mix them, a prettier reading could hide evidence defects.**
+
+```text
+DEVELOP REPAIR 01     Evidence-binding integrity
+STOP                  prove every evidentiary claim binds to structured refs
+
+DEVELOP REPAIR 02     Reading composition
+                        whole-reading lead
+                        manuscript-order default
+                        evidence-derived grouping
+                        constitutional language collapsed but preserved
+                        detailed observations underneath
+STOP                  founder witness
+
+LATER                 large-work hierarchical reading architecture
+```
+
+⛔ **The perception ceiling is NOT touched by either act.** The long-manuscript
+architecture is related and separate:
+
+> Otherwise we will end up changing how MAIA reads the manuscript while
+> simultaneously changing how we judge what she read. **Bad experimental
+> design.**
+
+---
+
+# 1 · DEVELOP REPAIR 01 · EVIDENCE-BINDING INTEGRITY — first, non-negotiable
 
 > ### Prose may not name evidence that its structured refs do not bind.
 
@@ -49,27 +79,58 @@ named parts of the work.* An observation whose prose names parts its evidence
 does not bind is **unauditable in the one way the design exists to make
 auditable** — and it fails silently, looking exactly like a sound reading.
 
-## Repair direction (founder)
+## The goal
 
-**Not another regex if it can be avoided.**
+> **An observation must never be able to say it rests on a section that its
+> structured evidence does not bind.**
 
-> The model should not freehand evidence identifiers that the structured
-> observation does not carry.
-
-So: **render section citations FROM the structured refs**, or at minimum
-validate prose identifiers against them before an observation may stand.
-Possibly the stronger, symmetric rule:
-
-> Every evidentiary section named in prose must bind to a ref; every ref
-> presented as supporting the claim must be intelligibly represented in the
-> claim/evidence display.
-
-### Falsifiers it must fail
+## The architecture
 
 ```text
-prose names 165 · refs omit 165            → observation invalid
-prose names 36 and 92 · refs 36,71,49,65   → observation invalid
+MODEL PRODUCES     observation prose
+                   + structured refs[]
+
+VALIDATOR CHECKS   every section/evidence identifier named in prose
+                   must exist in refs[]
+
+RENDERER           renders citations / "rests on" from refs[]
+                   NOT from model-written citation prose
 ```
+
+### And further, where possible: stop the model freehanding citations at all
+
+```text
+INSTEAD OF   "Sections 36 and 92 sustain this register…"
+
+THE MODEL    claim: "This register recurs across these passages."
+PRODUCES     refs:  [36, 92]
+
+THE UI       Rests on: §36 · §92
+RENDERS
+```
+
+> **That makes the structured evidence the authority.**
+
+## Hard falsifiers
+
+Pin the exact failures found:
+
+```text
+prose says 165 · refs = [187, 217]           → REJECT
+prose says 36, 92 · refs = [36, 71, 49, 65]  → REJECT
+```
+
+And also:
+
+```text
+invalid ref
+missing ref
+duplicate / ambiguous ref
+ref whose source digest no longer matches the frozen reading subject
+                                             → observation cannot stand
+```
+
+> ### No silent repair by MAIA. If evidence binding fails, the observation is invalid.
 
 ⚠️ **Note for whoever writes them:** assert over the exported constant or the
 structured object, never over the source file's own bytes — a source scan for a
@@ -78,7 +139,7 @@ and the same family cost this lane two false readings).
 
 ---
 
-# 2 · DEVELOP-PRESENTATION — make many bounded observations compose
+# 2 · DEVELOP REPAIR 02 · READING COMPOSITION — only after integrity
 
 > ### MAIA should make the pattern easier to see than the twenty-three individual findings are to read.
 
@@ -111,23 +172,73 @@ ugly.* But there may be genuinely different phenomena inside it — near-verbati
 repetition · re-explanation · structural return · repeated figure · repeated
 origin story. **That is a small Develop inquiry, not arbitrary relabeling.**
 
-## The shape the founder proposed
+## Three levels
+
+**Level 1 — the whole.** Lead with the dominant pattern, then something factual:
 
 ```text
-WHAT MAIA NOTICED
-The manuscript repeatedly reintroduces ideas, language and figures.
+The manuscript repeatedly returns to and re-explains its central material
+across multiple scales.
 
-WHERE
-19 evidenced recurrences
-
-WHAT MAIA IS NOT CLAIMING
-This does not establish that the repetition is unwanted or should be changed.
-
-YOU DECIDE
-Which recurrences feel intentional, structural, excessive, or important?
+19 of 23 observations concern recurrence.
 ```
 
-Detailed evidence follows that.
+⛔ Not *"this is too repetitive."* ⛔ Not *"you should cut it."*
+**Just the shape MAIA actually observed.**
+
+**Level 2 — pattern families, IF the evidence supports them.** Inspect the 19
+and ask whether real sub-patterns emerge. Possible, **not pre-approved**:
+near-verbatim repetition · repeated explanatory passages · concepts
+reintroduced with different framing · figures recurring · origin stories
+retold · structural returns across distant sections.
+
+> **The taxonomy remains the underlying evidence class. The grouping is a
+> reading aid.** No new badges. No reclassification to make a chart prettier.
+
+**Level 3 — the book's own shape, as the default view.**
+
+```text
+PART ONE      §7 · §17 · §18 · §21 …
+PART TWO      §73 · §74 …
+```
+
+Optionally `By manuscript | By pattern` — but **manuscript order is the
+default, because the writer is trying to understand a book, not an observation
+database.**
+
+## Collapsing the constitutional repetition without weakening it
+
+The shared authority boundary, stated **once** near the top:
+
+```text
+WHAT THIS READING MEANS
+MAIA is showing recurring patterns she can evidence in the manuscript. These
+observations do not establish that a pattern is a defect, important, unwanted,
+or something you should change.
+```
+
+Then each observation carries something compact —
+`Observation only · you determine its importance` — with an expander if the
+complete constitutional language must remain locally inspectable.
+
+> **The law stays attributable to every observation without consuming most of
+> the page.**
+
+## Giving the writer a way to work with it
+
+Per observation, the existing standing model: `Keep · Dismiss · Unresolved`.
+
+At the **pattern** level, eventually and only if it fits that model:
+`Intentional · Worth looking at · Not important to me · Unsure`.
+⛔ **Not built automatically.**
+
+> ### MAIA detects recurrence. The writer decides whether it is motif, rhythm, redundancy, pedagogy, style, or problem.
+
+## ACCEPTANCE QUESTION
+
+> **Can I understand what MAIA saw in my book within thirty seconds, then
+> inspect exactly where she saw it — without surrendering the judgement of what
+> it means?**
 
 ## ⛔ THE RESTRAINT ITSELF STAYS
 
@@ -144,11 +255,17 @@ cut it."* The line —
 
 ---
 
-## PRIORITY
+## STANDING
 
 ```text
-DEVELOP-EVIDENCE-INTEGRITY   repair BEFORE relying heavily on readings
-DEVELOP-PRESENTATION         turns correct seeing into something usable
+DEVELOP REPAIR 01   evidence-binding integrity   FIRST · non-negotiable
+STOP                founder proof
+DEVELOP REPAIR 02   reading composition          AFTER integrity
+STOP                founder witness
+LATER               whole-work chunk / synthesis · separate R&D act
+
+PERCEPTION CEILING  untouched by both acts
 ```
 
-Neither is built here. Neither is authorized here.
+**Neither is built here. Neither is authorized here.** This lane found them and
+hands them over.
