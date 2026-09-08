@@ -55,6 +55,16 @@ export interface SectionWriting {
   statusOf: (sectionId: string) => SectionStatus;
   /** Record a keystroke in the active section. */
   edit: (body: string) => void;
+  /** WS-WHOLE-MANUSCRIPT-01 · F-1 — a keystroke in any mounted section. */
+  editSection: (sectionId: string, body: string) => void;
+  /**
+   * F-1's invariant, for a section about to leave the DOM. Synchronous, and the
+   * caller supplies the body it can still see. Returns whether anything was
+   * captured. A section may not unmount before this has been called.
+   */
+  captureForUnmount: (sectionId: string, visible: string) => boolean;
+  /** The newest body for any section, mounted or not. */
+  bodyOf: (sectionId: string) => string;
   /** Leave for another section. Captures, enqueues, then switches. */
   goToSection: (nextId: string) => void;
   hasUnsavedWork: () => boolean;
@@ -233,7 +243,17 @@ export function useSectionWriting(
      first keystroke; it is only SAVED on a flush. */
   const staged = useRef(new Map<string, string>());
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* WS-WHOLE-MANUSCRIPT-01 · F-1. One timer per section, because more than one
+     section can now be mounted and dirty at the same time. The single `timer`
+     above stays for the Section view's active section so that path is
+     byte-identical; every per-section edit uses this map. */
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const [stagedTick, setStagedTick] = useState(0);
+
+  const clearTimerFor = useCallback((sectionId: string) => {
+    const t = timers.current.get(sectionId);
+    if (t) { clearTimeout(t); timers.current.delete(sectionId); }
+  }, []);
 
   const flush = useCallback((sectionId: string) => {
     const text = staged.current.get(sectionId);
@@ -243,34 +263,98 @@ export function useSectionWriting(
     setStagedTick((n) => n + 1);
   }, [queue]);
 
+  /**
+   * The newest body that exists for ANY section, mounted or not.
+   *
+   * Staged text outranks the queue's copy and the server's, because it is the
+   * most recent thing the writer typed. Unmounted-but-dirty is lawful under
+   * F-1, so a remounting editor must be able to ask for its text and get what
+   * the writer last saw — not what the server last stored.
+   */
+  const bodyOf = useCallback((sectionId: string): string => (
+    staged.current.get(sectionId)
+      ?? queue.localBody(sectionId)
+      ?? persisted.get(sectionId)
+      ?? sectionsById.get(sectionId)?.body
+      ?? ''
+  ), [queue, persisted, sectionsById]);
+
   const active = activeId ? sectionsById.get(activeId) ?? null : null;
   /* Staged text is the newest thing that exists, so it outranks both the
      queue's copy and the server's. stagedTick is what makes a staged edit
      produce a render at all — the map itself is a ref. */
   void stagedTick;
-  const activeBody = activeId
-    ? (staged.current.get(activeId)
-        ?? queue.localBody(activeId)
-        ?? persisted.get(activeId)
-        ?? active?.body
-        ?? '')
-    : '';
+  const activeBody = activeId ? bodyOf(activeId) : '';
 
+  /**
+   * Send EVERY staged section now, not merely the active one.
+   *
+   * W-4. In Whole Manuscript several sections are dirty at once, and the two
+   * callers of this — Keep a version and Export — are exactly the acts that
+   * must not proceed on a state the writer cannot see. Flushing only the active
+   * section would leave the others waiting out their autosave timers while
+   * `settleDraft` spun, and a version that silently omits a paragraph typed two
+   * seconds ago is worse than no version at all.
+   *
+   * In Section view only one section is ever staged, so this is identical to
+   * what it replaced.
+   */
   const flushPending = useCallback(() => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
-    if (activeId) flush(activeId);
-  }, [activeId, flush]);
+    for (const id of [...timers.current.keys()]) clearTimerFor(id);
+    for (const id of [...staged.current.keys()]) flush(id);
+  }, [flush, clearTimerFor]);
 
+  /**
+   * A keystroke in ANY mounted section — F-1's edit path.
+   *
+   * `visibleBody` is only updated for the active section: it is the ref
+   * `goToSection` reads when capturing the section being left, and pointing it
+   * at some other section's text is precisely how the wrong body would be
+   * captured on a switch.
+   */
+  const editSection = useCallback((sectionId: string, body: string) => {
+    const section = sectionsById.get(sectionId);
+    if (!section?.editable) return;
+    if (sectionId === activeId) visibleBody.current = body;
+    staged.current.set(sectionId, body);
+    setStagedTick((n) => n + 1);
+    clearTimerFor(sectionId);
+    timers.current.set(sectionId, setTimeout(() => {
+      timers.current.delete(sectionId);
+      flush(sectionId);
+    }, AUTOSAVE_DELAY_MS));
+  }, [activeId, clearTimerFor, flush, sectionsById]);
+
+  /**
+   * ⭐ F-1's INVARIANT. A section may not unmount until its exact visible state
+   * has been captured.
+   *
+   * Same discipline `goToSection` keeps at a section switch, applied to the
+   * second event that can take an editor away: scrolling out of the window. The
+   * failure is identical — read an editor's value after the DOM has moved on
+   * and you get the next section's text or nothing, which is how the last thing
+   * someone typed disappears.
+   *
+   * SYNCHRONOUS. The caller passes the body it can still see; nothing here
+   * awaits, and the pending timer for that section is cancelled first so it
+   * cannot fire against a section whose editor is gone.
+   */
+  const captureForUnmount = useCallback((sectionId: string, visible: string): boolean => {
+    clearTimerFor(sectionId);
+    staged.current.delete(sectionId);
+    const leaving = sectionsById.get(sectionId) ?? null;
+    const captured = captureOnLeave(queue, leaving, visible, persisted.get(sectionId));
+    setStagedTick((n) => n + 1);
+    return captured;
+  }, [clearTimerFor, persisted, queue, sectionsById]);
+
+  /* The Section view's edit path, now expressed through the per-section one so
+     the two cannot drift. */
   const edit = useCallback((body: string) => {
     if (!activeId) return;
-    const section = sectionsById.get(activeId);
-    if (!section?.editable) return;
-    visibleBody.current = body;
-    staged.current.set(activeId, body);
-    setStagedTick((n) => n + 1);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => flush(activeId), AUTOSAVE_DELAY_MS);
-  }, [activeId, flush, sectionsById]);
+    editSection(activeId, body);
+  }, [activeId, editSection]);
 
   /* RETIREMENT. When the draft changes, the outgoing queue takes every unsent
      body with it before it is let go. React runs this cleanup with the OLD
@@ -279,8 +363,11 @@ export function useSectionWriting(
   useEffect(() => {
     const outgoing = queue;
     const pendingTimer = timer;
+    const pendingTimers = timers;
     return () => {
       if (pendingTimer.current) { clearTimeout(pendingTimer.current); pendingTimer.current = null; }
+      for (const t of pendingTimers.current.values()) clearTimeout(t);
+      pendingTimers.current.clear();
       retireQueue(outgoing, staged.current);
     };
   }, [queue]);
@@ -291,6 +378,8 @@ export function useSectionWriting(
   useEffect(() => {
     const flushAll = () => {
       if (timer.current) clearTimeout(timer.current);
+      for (const t of timers.current.values()) clearTimeout(t);
+      timers.current.clear();
       for (const id of [...staged.current.keys()]) flush(id);
     };
     const onHide = () => { if (document.visibilityState === 'hidden') flushAll(); };
@@ -370,11 +459,15 @@ export function useSectionWriting(
       activeBody,
       statusOf,
       edit,
+      editSection,
+      captureForUnmount,
+      bodyOf,
       goToSection,
       hasUnsavedWork,
       currentRevisionId,
       flushPending,
     }),
-    [initialSections, activeId, active, activeBody, statusOf, edit, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
+    [initialSections, activeId, active, activeBody, statusOf, edit, editSection, captureForUnmount,
+     bodyOf, goToSection, hasUnsavedWork, currentRevisionId, flushPending],
   );
 }
