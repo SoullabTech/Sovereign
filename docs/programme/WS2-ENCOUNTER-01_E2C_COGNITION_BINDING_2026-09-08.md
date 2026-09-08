@@ -1,6 +1,9 @@
 # WS2-ENCOUNTER-01 · E2-C — Encounter cognition binding
 
-**Status: DESIGN, FOR FOUNDER RULING. No model code. Nothing wired.**
+**Status: RATIFIED WITH AMENDMENTS (founder, 2026-09-08) · IMPLEMENTED.**
+Amendments **E2-C/A** (model output may not mint its own anchor proof) and **E2-C/B**
+(model selection is server-owned) folded in. Witness: §5. **⚠ G8 is not complete —
+adjudication against live model output is owed (§5).**
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Authorizing act: founder ruling 2026-09-08 — E2 constitutional shell self-closed (§4);
 E2-C design authorized, design only.
@@ -161,20 +164,88 @@ existing `NoticeGenerator` port · the `cognition_unavailable` refusal · falsif
 
 ---
 
+## 5 — Implementation witness
+
+`lib/manuscript/encounter/{render,parse,bind,structuredGenerator}.ts` ·
+`cognition_unavailable` in the result and a 503 at the route ·
+`lib/manuscript/encounter/__tests__/cognition.test.ts` — **70 Encounter checks green**
+(45 shell + 25 cognition).
+
+### E2-C/A — the model points; the server proves
+
+```text
+runStructured → parseNoticeBlocks → ModelNoticeProposal[]   (family · text · spans)
+                                       ↓  no digest anywhere
+                                  bindProposals(capturedText)
+                                       ↓  SERVER computes spanDigest
+                                  CandidateNotice[] → screenCandidate → MaiaNotice
+```
+
+`parse.ts` never touches the Work and computes no hash; `bind.ts` holds the captured text
+and computes every digest. The tool schema carries **no digest, hash, confidence, severity
+or priority field** — there is nothing through which the model could certify itself. One
+unbindable span discards the whole proposal: *an observation half of whose evidence does not
+exist is not half true.*
+
+### E2-C/B — the model is cognition configuration
+
+`MAIA_ENCOUNTER_MODEL`, server-side. The route names no model; any key in the body — `model`
+included — is already refused as `foreign_field`; the generator takes no model, provider or
+mode argument.
+
+### The ruled laws, as built
+
+| | |
+|---|---|
+| **G1** invented · inverted · out-of-range span cannot become an anchor; server computes the digest | ✅ |
+| **G2** zero proposals → lawful silence | ✅ |
+| **G3** provider unavailable · **sovereign-mode refusal** · malformed response · foreign tool → `cognition_unavailable`, never `notices: []` | ✅ |
+| **G4** one failing window refuses the whole Encounter, **discarding the notices already collected** | ✅ |
+| **G5** every proposal screened out still costs exactly the planned calls; no retry, backoff or regeneration path; **exactly one `runStructured` call site**, so no synthesis pass | ✅ |
+| **G6** the request carries the Work, the contract and coordinates only; the contract itself says nothing to say is a complete answer | ✅ |
+| **G7** no DEVELOP imports or symbols; the contract asks **no lens question** | ✅ |
+| **G9** model choice cannot originate from the request or the member gesture | ✅ |
+
+**Sovereignty.** `structured_inference_unavailable` maps to `cognition_unavailable` like any
+other non-completion. There is no quiet exception and no plain-text substitute: *a model that
+cannot honour the structured contract would be a different cognitive act.*
+
+### ⚠ G8 — what is proven, and what is not
+
+The corpus now travels the **real** pipeline — `parseNoticeBlocks` → `bindProposals` →
+`screenCandidate` — exactly as a model proposal would, and the screen agrees with every
+verdict it claims to reach.
+
+⛔ **But the seam is driven by fixtures in these tests, so this proves the pipeline, not the
+model's ear.** G8 is **not complete** until a person adjudicates real generated candidates
+against the corpus. That is recorded as owed rather than counted as coverage, and it is
+deliberately **not** closed by adding a judge model — such an evaluator would need its own
+constitution and its own negative controls before its verdict could carry any authority.
+
+### Two failures this suite found in itself
+
+The C21 discipline bit twice more, and both are kept. The import scan failed because
+`render.ts` **names `READER_SYSTEM` in a comment explaining that it is not used** — a prose
+ban reading as the banned behaviour returning; it now strips comments. And the vocabulary
+scan failed because the contract legitimately **names "underdeveloped" in order to forbid
+it** — banning the word outright would have forbidden the instruction that protects the
+writer, so the assertion moved to the shape: every occurrence must sit in a sentence that
+prohibits it.
+
+**Gates:** typecheck 229 vs baseline 239, **0 regressions** · PT-3 source-custody **39** ·
+`lib/manuscript` + `lib/storage` + `lib/ai`: **1057 passed, 1 skipped, 0 failed.**
+
+---
+
 ## 4 — Standing
 
-⛔ Not authorized: writing any of §3 · E3 surface · keeping · PT-5 · WS2-08B · hierarchy ·
+⛔ Not authorized: E3 surface · keeping · PT-5 · WS2-08B · hierarchy ·
 intention authority · Restore · lineage · `living_works.stage` · deployment.
 
-Owed to the founder: a ruling on **§2's central claim** — that the structured-inference seam
-is shared *transport and provenance* while DEVELOP's epistemology lives above it in
-`render.ts`, and that sharing the former imports none of the latter.
-
-One consequence worth naming before it is ruled on: under `sovereign` or `local_only` the
-seam refuses today, so **on a fully sovereign deployment Encounter would not speak at all**
-until a local provider can honour a structured contract. That is the honest outcome rather
-than a defect — but it is a product fact, not only an infrastructure one, and it belongs in
-the ruling rather than in a later surprise.
+Owed to the founder: **G8 against live model output**, adjudicated by a person, before E3 is
+considered. Until then the constituted cognition path exists and is falsified, but **no
+Encounter has actually been perceived.** *Built is not the same as perceived, and a pipeline
+verified only by its own fixtures is a claim about code, not about MAIA.*
 
 > The cognition path may perceive. The Encounter screen determines what may be said. The
 > writer determines whether anything said becomes part of their continuing relationship with

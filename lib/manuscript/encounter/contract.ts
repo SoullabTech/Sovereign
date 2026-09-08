@@ -101,8 +101,15 @@ export type EncounterResult =
        *                 encountered without telling the writer).
        * `not_traversable` the Work could not be read mechanically whole, so it
        *                 is refused rather than sampled invisibly (§1A).
+       * `cognition_unavailable` the perceiving act did not COMPLETE — provider
+       *                 unavailable, inference forbidden by the deployment's
+       *                 sovereignty policy, timeout, malformed structured
+       *                 response, or a Work window left unprocessed. C7: this is
+       *                 categorically NOT `notices: []`. Infrastructure silence
+       *                 is not contemplative silence, and must never be shown to
+       *                 the writer as MAIA having quietly found nothing.
        */
-      readonly refusal: 'not_found' | 'not_readable' | 'not_traversable';
+      readonly refusal: 'not_found' | 'not_readable' | 'not_traversable' | 'cognition_unavailable';
     };
 
 /** A generator's proposal. It is NOT a MaiaNotice until it survives screening. */

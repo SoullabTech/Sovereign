@@ -90,7 +90,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!result.ok) {
     /* A Work with no Working Draft is refused rather than answered from Source:
        falling back would change the object being encountered without saying so. */
-    const status = result.refusal === 'not_traversable' ? 503 : 404;
+    /* `cognition_unavailable` is a 503: the Work is fine, the perceiving act did
+       not complete. A 200 with an empty list here would tell the writer MAIA
+       looked and found nothing, which would be false. */
+    const status =
+      result.refusal === 'not_traversable' || result.refusal === 'cognition_unavailable' ? 503 : 404;
     return NextResponse.json({ refusal: result.refusal }, { status });
   }
 

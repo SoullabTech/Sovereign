@@ -127,7 +127,18 @@ export async function encounter(
   /* Refuse honestly rather than sampling invisibly (§1A). */
   if (!traversal.complete) return { ok: false, refusal: 'not_traversable' };
 
-  const candidates = await generate({ snapshot: captured.snapshot, windows: traversal.windows });
+  let candidates;
+  try {
+    candidates = await generate({ snapshot: captured.snapshot, windows: traversal.windows });
+  } catch (err) {
+    /* C7. A perceiving act that did not complete is a typed refusal, never an
+       empty notice list — the one substitution that would let a provider outage
+       look like MAIA having considered the Work and found nothing to say. */
+    if (err instanceof Error && err.name === 'CognitionUnavailable') {
+      return { ok: false, refusal: 'cognition_unavailable' };
+    }
+    throw err;
+  }
 
   const notices: MaiaNotice[] = [];
   for (const c of candidates) {
