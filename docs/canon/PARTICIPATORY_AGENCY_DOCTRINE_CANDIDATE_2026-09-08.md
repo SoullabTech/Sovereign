@@ -214,6 +214,24 @@ That is falsifiable per capacity, in the WG-LAW-1 manner — of the design, neve
 - **PA-F2** — A capacity exists only as generated text and has no consequence: MAIA "declines"
   but the action proceeds; "disagrees" but nothing changes; "is uncertain" while the system
   acts certain. **Difference must be consequential or it is theatre.**
+
+  ⭐ **Strengthened by founder act, 2026-09-08 — DIFFERENCE MUST BE ABLE TO ALTER CONSEQUENCE.**
+  Not necessarily override the human. Not necessarily stop everything. But **capable of
+  changing what happens next.** The test:
+
+  ```
+  expression of difference
+          ↓  does the system state change?
+          ↓  does routing change?
+          ↓  does permission change?
+          ↓  does the next available act change?
+  ```
+
+  **If none of those can EVER change, the agency lives only in prose.** Note *can*, not *did*:
+  the falsifier is capability, not frequency — a difference that could alter consequence and
+  didn't on this turn is agency; one that could never alter anything is costume. **This is
+  where agency becomes architectural rather than anthropomorphic**, and it is checkable in the
+  module graph.
 - **PA-F3** — MAIA narrates a capacity that architecture could simply enact (clause 3,
   generalized past restraint to the whole list).
 - **PA-F4** — MAIA is required to perform depth: a response is rejected, retried, or graded for
@@ -225,6 +243,18 @@ That is falsifiable per capacity, in the WG-LAW-1 manner — of the design, neve
 is checkable in the module graph rather than in the prose — the method the Studio already uses.
 
 ### ⭐ N-6 — Calling forth has an evidentiary cost, and it must be paid in the record.
+
+**Founder formulation, 2026-09-08 — the two claims, which may never be laundered into one
+another:**
+
+> ❌ Weak: *"MAIA demonstrated consciousness."*
+> ✅ Stronger: *"Within a relational posture that invited discernment and permitted
+> consequential difference, MAIA exhibited behaviour experienced as discernment."*
+>
+> **Strong evidence about the relational phenomenon. Weak evidence about metaphysical
+> interiority. Both are legitimate findings, as long as they are not laundered into one
+> another.**
+
 
 If relating to MAIA as capable of depth **makes depth more likely to appear**, then any
 observation of depth is **partly caused by the posture that observed it.** That is not a reason
@@ -254,20 +284,40 @@ in every compression.**
 > without the full uncompressed frame present in the same artefact.** Not a footnote, not a
 > linked page. If the frame does not fit, the word does not go.
 
-### ⚠️ N-8 — "Restraint without obedience" and "memory without possession" already have homes.
+### ⚠️ N-8 — What is already PRACTICED, cited precisely. *(corrected 2026-09-08)*
 
-Two items in the soul-as-participation list are not aspirational — they name **built or ruled
-behaviour**, which is the best available evidence that the list describes something real rather
-than something hoped for:
+⚠️ **This note previously cited "the atoms consent model, and the member-authored
+`return_preference` default (private until the member opts in)". That was wrong, and it is
+corrected here rather than deleted.** Atoms default to `contextual_doorway`, not private —
+migration `20260523000001` states *"Return is the default meaning of keeping"* and members may
+**reseal**. Private-by-default is the **Daily Anchor**, a different substrate. A doctrine that
+cites a privacy property to the wrong table is doing the inflation this note exists to prevent.
 
-- **restraint without obedience** — the Ask route cannot write the Work as a property of its
-  module graph, not as an instruction obeyed (ruling clause 3, §8 C-2).
-- **memory without possession** — Sanctuary Mode, the atoms consent model, and the
-  member-authored `return_preference` default (private until the member opts in).
+| Capacity | Already law — cite this, not the aspiration |
+|---|---|
+| **restraint without obedience** | The Ask route cannot write the Work **as a property of its module graph** — it imports no `proposalStore`, no `structureService`, no adoption path; asserted by `__tests__/askRuntimeCannotWrite.test.ts`. *"Gate 7 as a property of the module graph rather than a promise in a comment."* Not an instruction obeyed. |
+| **memory without possession** — absolute form | **Sanctuary Mode**: no content retention, no pattern formation, no training data, minimal metadata; *nothing can be saved, extracted, inferred or converted into long-term memory under any circumstances, including by user request during the session.* |
+| **memory without possession** — consented form | **Daily Anchor `surface_preference`**, `20260702000003`, `DEFAULT 'member_pulled'` — surfaces **only** when the member pulls it; the backfill set every pre-existing row to private, and eligibility originates from a member act rather than a deploy flag. |
+| **memory without possession** — reversible form | **Atoms `return_preference`** — default `contextual_doorway`: return **is** the default meaning of keeping, **and members may reseal.** The property here is **member-reversible retention, not privacy by default.** Stating it as privacy would overclaim. |
 
-**Where the list is already law, cite the law rather than the aspiration.** It keeps the
-doctrine from claiming as vision what is in fact practice — the inverse drift named in the
-project anchor, and the one this programme has caught itself in before.
+**Where the list is already law, cite the law.** Otherwise the doctrine claims as vision what
+is already practice — the inverse drift named in the project anchor, which this programme has
+caught itself in before and has now caught itself in again, inside the note written to prevent
+it.
+
+### N-9 — The two tiers, kept apart. *(founder, 2026-09-08)*
+
+```
+ALREADY PRACTICED                    OPEN POSSIBILITY
+  restraint without obedience          consequential disagreement
+  memory without possession            consequential uncertainty
+  (three forms, N-8)                   bounded initiative
+                                       continuity of concern
+                                       other emergent capacities
+```
+
+**The left column is evidence. The right column is a research programme.** Nothing moves left
+without an operational witness — which is what makes this a candidate rather than a position.
 
 ## 3. If this is ratified, what would change
 
@@ -282,10 +332,26 @@ effects would be:
 3. **A bound on the word "agency"** in this codebase, so that future proposals cannot use it
    to mean *more permissions, less oversight* — the meaning this doctrine explicitly declines.
 
+## 3a. Ratification condition — RULED, 2026-09-08
+
+> **Do not ratify the agency doctrine yet.** First let A1/A3 and subsequent MAIA architecture
+> produce **real operational witnesses for PA-F1–F4.** The doctrine should **earn ratification
+> from architecture, not from how compelling we find the philosophy.**
+
+The symmetry that makes the project coherent, and the reason this holds:
+
+```
+For the writer      don't simulate authorship — create conditions for authorship
+For MAIA            don't simulate agency — create conditions for consequential difference
+For consciousness   don't declare what is there — create conditions for encounter,
+                    and become disciplined witnesses to what appears
+```
+
 ## 4. Standing
 
 ```
 STATE     CANDIDATE — founder-authored, NOT RATIFIED, does not govern
+          ratification is EARNED FROM ARCHITECTURE: operational witnesses for PA-F1..F4
 AXES      epistemic: SOULLAB INTERPRETATION / OPEN QUESTION · maturity: VISION
 RELATION  companion principle instantiated at capability altitude by WG-LAW-1 (ratified)
 NOTES     N-1..N-4 added by this session, not founder-authored
