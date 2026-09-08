@@ -242,11 +242,15 @@ export function useSectionWriting(
   /* Text typed but not yet handed to the queue. A section is dirty from the
      first keystroke; it is only SAVED on a flush. */
   const staged = useRef(new Map<string, string>());
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /* WS-WHOLE-MANUSCRIPT-01 · F-1. One timer per section, because more than one
-     section can now be mounted and dirty at the same time. The single `timer`
-     above stays for the Section view's active section so that path is
-     byte-identical; every per-section edit uses this map. */
+  /* WS-WHOLE-MANUSCRIPT-01 · F-1. ONE TIMER PER SECTION, and no singleton.
+     More than one section can be mounted and dirty at once, and a shared timer
+     would let a keystroke in section 87 cancel section 86's pending save.
+
+     The previous singleton `timer` was retired rather than kept beside this:
+     once `edit` began delegating to `editSection`, nothing assigned it, so it
+     survived only as something for a future reader to clear and believe in.
+     A cancel that cancels nothing is worse than no cancel — it reads as a
+     guarantee. */
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const [stagedTick, setStagedTick] = useState(0);
 
@@ -300,7 +304,6 @@ export function useSectionWriting(
    * what it replaced.
    */
   const flushPending = useCallback(() => {
-    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     for (const id of [...timers.current.keys()]) clearTimerFor(id);
     for (const id of [...staged.current.keys()]) flush(id);
   }, [flush, clearTimerFor]);
@@ -362,10 +365,8 @@ export function useSectionWriting(
      the flush lands in the queue that owns those section rows. */
   useEffect(() => {
     const outgoing = queue;
-    const pendingTimer = timer;
     const pendingTimers = timers;
     return () => {
-      if (pendingTimer.current) { clearTimeout(pendingTimer.current); pendingTimer.current = null; }
       for (const t of pendingTimers.current.values()) clearTimeout(t);
       pendingTimers.current.clear();
       retireQueue(outgoing, staged.current);
@@ -377,7 +378,6 @@ export function useSectionWriting(
      tab, and losing it silently is worse than an extra save. */
   useEffect(() => {
     const flushAll = () => {
-      if (timer.current) clearTimeout(timer.current);
       for (const t of timers.current.values()) clearTimeout(t);
       timers.current.clear();
       for (const id of [...staged.current.keys()]) flush(id);
@@ -397,9 +397,13 @@ export function useSectionWriting(
        the active id changes — synchronously, from the ref, so the text read is
        the text on screen. */
     /* A pending debounce must not fire against the section we are leaving
-       after the active id has moved on. */
-    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
-    if (activeId) staged.current.delete(activeId);
+       after the active id has moved on — and since F-1 that debounce lives in
+       the per-section map, so this must cancel THERE. Clearing a singleton
+       here left the real timer armed across the switch: no word-loss path,
+       because the visible body is enqueued synchronously below and the staged
+       entry is gone before the orphan could fire, but the invariant this seam
+       exists to state was not mechanically true. */
+    if (activeId) { clearTimerFor(activeId); staged.current.delete(activeId); }
     const leaving = activeId ? sectionsById.get(activeId) ?? null : null;
     captureOnLeave(queue, leaving, visibleBody.current,
       leaving ? persisted.get(leaving.id) : undefined);
@@ -414,7 +418,7 @@ export function useSectionWriting(
       ?? persisted.get(nextId)
       ?? next?.body
       ?? '';
-  }, [activeId, queue, sectionsById]);
+  }, [activeId, clearTimerFor, persisted, queue, sectionsById]);
 
   const statusOf = useCallback(
     (id: string) => resolveSectionStatus(queue.statusOf(id), staged.current.has(id)),

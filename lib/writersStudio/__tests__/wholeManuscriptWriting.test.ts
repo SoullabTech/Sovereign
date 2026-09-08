@@ -41,6 +41,21 @@ describe('F-1 · the hook can hold more than one dirty section', () => {
     }
   });
 
+  it('retired the singleton timer entirely — a cancel that cancels nothing reads as a guarantee', () => {
+    /* Once `edit` delegated to `editSection`, nothing assigned the old
+       singleton. It survived only as something to clear and believe in, and
+       `goToSection` was clearing it while the real per-section timer stayed
+       armed across the switch. */
+    expect(SOURCE).not.toContain('timer.current');
+    expect(SOURCE).not.toMatch(/const timer = useRef/);
+  });
+
+  it('cancels the LEAVING section\'s own timer before the switch', () => {
+    const g = SOURCE.slice(SOURCE.indexOf('const goToSection = useCallback('));
+    expect(g).toMatch(/if \(activeId\) \{ clearTimerFor\(activeId\); staged\.current\.delete\(activeId\); \}/);
+    expect(g.indexOf('clearTimerFor(activeId)')).toBeLessThan(g.indexOf('captureOnLeave('));
+  });
+
   it('keeps one autosave timer per section, not one for the surface', () => {
     /* A single timer shared by several mounted editors would let a keystroke in
        section 87 cancel section 86's pending save. */
