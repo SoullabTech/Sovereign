@@ -129,6 +129,35 @@ Ratified text, verbatim:
 
 ---
 
+## Founder rulings — staged for the two Step-0 boundaries
+
+Founder acts, 2026-09-08, recorded verbatim. Both were ruled **in advance** of the
+boundaries they govern, so the executing session does not stall waiting for a relay.
+Neither is a discovery detail; each is visible before the freeze by design, because
+every downstream digest pins whatever was decided.
+
+**Write boundary** — if the mission's no-write rule appears to conflict with Step 0's
+freeze:
+
+> Production remains strictly read-only. Repository writes on this Jarvis branch are
+> authorized only to freeze the manifests and record their digests required by SEL-0
+> Step 0. No production write, PR, merge, or deploy is authorized.
+
+**Native surface** — if production exposes an existing score or prior-selection
+signal (audit §4 forbids deciding this silently):
+
+> SEL-0 tests the selector as deployed. Manifest C includes any lawful pre-snapshot
+> score or prior-selection signal that the deployed selector ordinarily has
+> available, and the allowlist names it explicitly before Manifest C freezes. No
+> benchmark-created or post-snapshot signal may enter.
+
+⚠️ **The native-surface ruling turns on consumption, not existence.** If a signal
+exists in the store but the deployed selector does not actually consume it, it does
+not enter Manifest C merely because it is there. That is an empirical question about
+the reader path, to be established rather than assumed.
+
+---
+
 ## Standing
 
 ```text
