@@ -66,9 +66,29 @@ const time = (iso: string | null | undefined): number => {
 export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]): Arrival {
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const claimed = new Set(works.map(manuscriptIdOf).filter(Boolean) as string[]);
+  /**
+   * STUDIO-WRITING-PRESENCE-01 · S3 — ORIENTATION EXTENT, ratified 2026-09-08.
+   *
+   * How much writing Studio Home should treat as presently available when
+   * deciding which unclaimed writing to foreground. The current representation
+   * governs WHILE it holds substantive writing; when it holds none, Source
+   * supplies the extent of the writing that still exists.
+   *
+   * ⛔ NEVER `max(source, draft)` — that would let abandoned Source extent
+   * overrule a deliberately shortened current draft.
+   * ⛔ NEVER a sum — Source and Draft are one book at two lifecycle layers.
+   *
+   * Derived HERE and not at the API, deliberately: this is a product question
+   * about foregrounding, not a property of the manuscript. Derived presentation
+   * semantics must not masquerade as underlying ontology — which is why it is
+   * not called `writingCharCount`.
+   */
+  const featureExtent = (m: CurrentManuscript): number =>
+    m.hasDraftWriting ? (m.draftCharCount ?? 0) : m.charCount;
+
   const unclaimed = [...manuscripts]
     .filter((m) => !claimed.has(m.id))
-    .sort((a, b) => b.charCount - a.charCount);
+    .sort((a, b) => featureExtent(b) - featureExtent(a));
 
   /**
    * Writing activity for a work — never the work row's own updatedAt, and
@@ -103,7 +123,25 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
     const id = manuscriptIdOf(w);
     if (!id) return 0;
     const m = byId.get(id);
-    if (!m || m.charCount <= 0) return 0;
+    /**
+     * STUDIO-WRITING-PRESENCE-01 · S2, ratified 2026-09-08.
+     *
+     * ⛔ `charCount > 0` was SOURCE extent, which is 0 forever for anything
+     * begun in the Studio — so a Work the member is actively writing could
+     * never be offered back to them. That is the defect this replaces.
+     *
+     * Continuable requires BOTH:
+     *   hasWriting                    there is something to continue, and
+     *   hasCurrentMemberContribution  the member authored it HERE — the current
+     *                                 draft diverges from its revision-1 baseline.
+     *
+     * The conjunction lives here rather than inside either fact, so neither name
+     * secretly carries the other's meaning. It preserves the original CONTINUE
+     * discipline exactly: a touched-but-empty draft fails the first, and a
+     * verbatim seed — including one the member has merely CHECKPOINTED — fails
+     * the second.
+     */
+    if (!m || !m.hasWriting || !m.hasCurrentMemberContribution) return 0;
     return time(m.lastWrittenAt);
   };
 

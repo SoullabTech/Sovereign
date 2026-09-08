@@ -48,8 +48,23 @@ import { AppearanceMenu } from './atmosphere/AppearanceMenu';
  */
 
 const pageEstimate = (chars: number) => Math.max(1, Math.round(chars / 1800));
-const pagesLabel = (chars: number) =>
-  chars === 0 ? 'No writing yet' : `${pageEstimate(chars)} page${pageEstimate(chars) === 1 ? '' : 's'}`;
+/**
+ * STUDIO-WRITING-PRESENCE-01 · S1, ratified 2026-09-08.
+ *
+ * ⛔ "No writing yet" may appear ONLY when no substantive writing exists in
+ * either lifecycle layer. It used to be `sourceCharCount === 0`, and
+ * `manuscript_sections` is written by exactly one route — import. So every
+ * manuscript begun in the Studio said "No writing yet" forever, however much
+ * the member wrote: a Source extent answering a presence question.
+ *
+ * The page estimate still reads Source extent, which is what it truthfully
+ * means. Presence and extent are separate arguments precisely so neither can
+ * silently answer for the other.
+ */
+const pagesLabel = (m: { charCount: number; hasWriting: boolean }) =>
+  !m.hasWriting
+    ? 'No writing yet'
+    : `${pageEstimate(m.charCount)} page${pageEstimate(m.charCount) === 1 ? '' : 's'}`;
 
 /**
  * WS-HOME-REDESIGN v0.2 — dates remember, durations judge.
@@ -327,15 +342,25 @@ export default function HomeView({
        Absent values VANISH: no dash, no "Untyped", no placeholder asserting an
        absence the writer never declared. */
     if (!m) return work.form ?? '';
-    /* ⛔ Observed on production 2026-09-07: a Work with zero characters rendered
-       "No writing yet · written August 14". `lastWrittenAt` is stamped when the
-       working-draft ROW is created (a blank page, a seeded import), so on its
-       own it does not evidence that a person wrote. homeState already refuses
-       to promote such a work to RETURN for exactly this reason; the card must
-       refuse to narrate it for the same reason. Characters AND a timestamp, or
-       the clause does not appear. */
-    const wrote = m.charCount > 0 ? whenWritten(m.lastWrittenAt) : null;
-    return [work.form ?? null, wrote].filter(Boolean).join(' · ');
+    /**
+     * STUDIO-WRITING-PRESENCE-01 · S4 — the clause is GONE, ratified 2026-09-08.
+     *
+     * ⛔ "written <when>" IS NOT PRESENTLY ESTABLISHABLE. The only timestamp
+     * available is the draft row's `updated_at`, and the checkpoint route
+     * advances it without changing a character — so the card could say a member
+     * wrote on a day they pressed "Keep a version" over verbatim imported text.
+     *
+     * The earlier guard here (`charCount > 0` AND a timestamp) was aimed at a
+     * real production defect — "No writing yet · written August 14" — but its
+     * first half was SOURCE extent, so it suppressed the clause for everything
+     * begun in the Studio while still admitting the checkpoint case it could
+     * not see.
+     *
+     * ⛔ Not renamed to "worked <when>" either. That is a separate product
+     * decision about how to speak of draft activity, and this lane has no
+     * ruling on it. A fact that cannot be told is not told.
+     */
+    return work.form ?? '';
   };
 
   /* ── The room ─────────────────────────────────────────────────────────
@@ -651,7 +676,7 @@ export default function HomeView({
                           href={canvasForManuscript(CANVAS_HREF, m.id)}
                           title={m.title ?? 'Untitled'}
                           untitled={!m.title}
-                          meta={pagesLabel(m.charCount)}
+                          meta={pagesLabel(m)}
                         />
                       ))}
                     </Cards>
@@ -775,7 +800,7 @@ export default function HomeView({
                 >
                   {feature.title ?? 'Untitled writing'}
                 </h1>
-                <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature.charCount)}</p>
+                <p className="text-[14.5px] opacity-50 mb-8">{pagesLabel(feature)}</p>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <Link
                     href={canvasForManuscript(CANVAS_HREF, feature.id)}
@@ -1000,7 +1025,7 @@ export default function HomeView({
                       href={canvasForManuscript(CANVAS_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}
-                      meta={pagesLabel(m.charCount)}
+                      meta={pagesLabel(m)}
                     />
                   ))}
                 </Cards>
