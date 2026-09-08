@@ -842,8 +842,17 @@ places that **describe** the defect — this repair note and the preflight's own
 ```
 executables vs 133c793d          14 files · all byte-identical
 inherited subjects vs 744c8012    4 files · all byte-identical
-working tree change set           1 file  · the runbook
+commit change set                 2 documentation files
+                                  · the cutover runbook
+                                  · this record (the B46 audit/closure note)
 ```
+
+> **Record correction (founder, same day).** This block first read
+> `working tree change set 1 file · the runbook`. It was measured before the record you are reading
+> was added to the same commit, so it counted the tree at the moment of measurement and then the
+> commit grew. The count is corrected in place rather than deleted — *a witness is a reading at a
+> time, and the honest repair is to date it.* No technical consequence follows: both files are
+> documentation and no executable moved.
 
 **Carried forward, not re-executed:** regression `30 PASS · 0 FAIL · exit 0` across seven cases ·
 shared invariants on the legacy shadow `0 · 0 · 0 · 0` · live fixture residue `0` asserted ·
