@@ -236,9 +236,9 @@ PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: implement the smallest REAL Writer's Studio developmental selector,
-on the actual ask-route path, locked without access to founder answers. Product contract and
-acceptance instrument are both FROZEN.
+**Next executable act**: founder ruling on the Step-4 fixture MISMATCH — see
+`sel-0/SEL-0_STEP4_FIXTURE_COMPATIBILITY_2026-09-08.md`. Implementation does NOT open until
+Step 4 passes. Product contract and acceptance instrument are both FROZEN.
 Production discovery is CLOSED and is no longer the next act.
 
 **Historical note, kept rather than rewritten.** Earlier in this file the next act was the
