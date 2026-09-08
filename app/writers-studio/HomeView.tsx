@@ -6,7 +6,7 @@ import { FilePlus2, FolderInput, Loader2, Trash2 } from 'lucide-react';
 import { PRESS, SERIF } from './pressTheme';
 import { CANVAS_HREF, IMPORT_HREF } from './studioMap';
 import { canvasForManuscript } from './canvasIdentity';
-import { DELETE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
+import { DELETE_WORK_COPY, REMOVE_WORK_COPY, type DeleteTarget } from '@/lib/writersStudio/deleteWork';
 import { arrivalFor, manuscriptIdOf } from './homeState';
 import type { CurrentManuscript } from './useCurrentManuscript';
 import type { LivingWork } from './useLivingWorks';
@@ -105,6 +105,8 @@ export interface HomeViewProps {
   onAddToWork: (manuscriptId: string, workId: string) => Promise<void>;
   /** Ends custody of a work or a piece of writing. Rejects with member copy. */
   onDelete: (target: DeleteTarget) => Promise<void>;
+  /** WRITERS-STUDIO-WORK-SHELF-01 — container only; the writing survives. */
+  onRemove: (workId: string) => Promise<void>;
 }
 
 export default function HomeView({
@@ -117,6 +119,7 @@ export default function HomeView({
   onMakeWork,
   onAddToWork,
   onDelete,
+  onRemove,
 }: HomeViewProps) {
   const [beginning, setBeginning] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -185,6 +188,19 @@ export default function HomeView({
     }
   };
 
+  const runRemove = async (key: string, workId: string) => {
+    setDeleting(key);
+    setError(null);
+    try {
+      await onRemove(workId);
+      setConfirming(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : DELETE_FAILED);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   /* Quiet, and always reachable. Faint by default so it never competes with the
      member's title, brighter under a pointer — but never hidden behind hover,
      which would put the only exit from this room out of reach on a phone. */
@@ -225,29 +241,80 @@ export default function HomeView({
       className="rounded-[3px] border p-6 min-h-[136px] flex flex-col justify-between"
       style={{ borderColor: PRESS.rule, background: 'rgba(0,0,0,0.22)' }}
     >
+      {/* WRITERS-STUDIO-WORK-SHELF-01 · two acts, and they are NOT peers.
+          Taking something off the desk is ordinary; destroying the pages is
+          not. Equal buttons side by side would make them look like a choice of
+          flavour. So removal leads and reads plainly, and deletion sits below a
+          rule, quieter, in the consequential colour — deeper in the hierarchy,
+          still always reachable.
+
+          A Work with no writing has only ONE act available: there is nothing
+          to keep, and offering "keeps your writing" would be a promise about
+          something that does not exist. */}
       <div>
-        <p className="text-[16.5px] leading-[1.3] mb-2">{DELETE_WORK_COPY.question(title)}</p>
-        <p className="text-[13px] opacity-55 leading-relaxed">{DELETE_WORK_COPY.body}</p>
+        <p className="text-[16.5px] leading-[1.3] mb-2">
+          {target.manuscriptId ? REMOVE_WORK_COPY.question(title) : DELETE_WORK_COPY.question(title)}
+        </p>
+        <p className="text-[13px] opacity-55 leading-relaxed">
+          {target.manuscriptId ? REMOVE_WORK_COPY.body : DELETE_WORK_COPY.body}
+        </p>
       </div>
-      <div className="flex items-center gap-3 mt-4">
-        <button
-          type="button"
-          onClick={() => void runDelete(itemKey, target)}
-          disabled={deleting !== null}
-          className="px-4 min-h-[44px] text-[13.5px] rounded-[2px] border transition-opacity disabled:opacity-40"
-          style={{ borderColor: '#8C4A4A', color: '#E0A0A0' }}
-        >
-          {deleting === itemKey ? DELETE_WORK_COPY.working : DELETE_WORK_COPY.confirm}
-        </button>
-        <button
-          type="button"
-          onClick={() => setConfirming(null)}
-          disabled={deleting !== null}
-          className="px-4 min-h-[44px] text-[13.5px] opacity-60 hover:opacity-100 transition-opacity"
-        >
-          {DELETE_WORK_COPY.cancel}
-        </button>
-      </div>
+      {target.manuscriptId && target.workId ? (
+        <div className="mt-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void runRemove(itemKey, target.workId as string)}
+              disabled={deleting !== null}
+              className="px-4 min-h-[44px] text-[13.5px] rounded-[2px] border transition-opacity disabled:opacity-40"
+              style={{ borderColor: PRESS.rule }}
+            >
+              {deleting === itemKey ? REMOVE_WORK_COPY.working : REMOVE_WORK_COPY.confirm}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(null)}
+              disabled={deleting !== null}
+              className="px-4 min-h-[44px] text-[13.5px] opacity-60 hover:opacity-100 transition-opacity"
+            >
+              {REMOVE_WORK_COPY.cancel}
+            </button>
+          </div>
+          <div className="mt-4 pt-3 border-t" style={{ borderColor: PRESS.ruleSoft }}>
+            <button
+              type="button"
+              onClick={() => void runDelete(itemKey, target)}
+              disabled={deleting !== null}
+              data-work-delete-everything
+              className="text-[12.5px] underline underline-offset-4 opacity-55 hover:opacity-100 transition-opacity disabled:opacity-30"
+              style={{ color: '#E0A0A0' }}
+            >
+              {DELETE_WORK_COPY.action}
+            </button>
+            <p className="text-[12px] opacity-40 leading-relaxed mt-1">{DELETE_WORK_COPY.hint}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => void runDelete(itemKey, target)}
+            disabled={deleting !== null}
+            className="px-4 min-h-[44px] text-[13.5px] rounded-[2px] border transition-opacity disabled:opacity-40"
+            style={{ borderColor: '#8C4A4A', color: '#E0A0A0' }}
+          >
+            {deleting === itemKey ? DELETE_WORK_COPY.working : DELETE_WORK_COPY.confirm}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(null)}
+            disabled={deleting !== null}
+            className="px-4 min-h-[44px] text-[13.5px] opacity-60 hover:opacity-100 transition-opacity"
+          >
+            {DELETE_WORK_COPY.cancel}
+          </button>
+        </div>
+      )}
     </div>
   );
 

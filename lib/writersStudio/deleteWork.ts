@@ -124,12 +124,76 @@ export function deletionRefusalCopy(refusal: string): string {
   }
 }
 
+/**
+ * WRITERS-STUDIO-WORK-SHELF-01 · REMOVE WORK, KEEP WRITING (founder, 2026-09-08).
+ *
+ * The second act, and deliberately NOT a redefinition of the first. WS-DELETE-01
+ * stands: Delete means deletion, and must never quietly mean "detach the
+ * container but keep the writing somewhere else" — the *unreferenced but
+ * retained* state it forbids by name. What was missing was a different act, so
+ * this adds one rather than softening that one.
+ *
+ * ⭐ NOTHING HERE TOUCHES MANUSCRIPT STORAGE. The census that produced this
+ * ruling found that every foreign key into `living_works` cascades only to link
+ * rows — `living_work_expressions` carries `expression_type` + `expression_id`
+ * with NO foreign key to any manuscript table, and no manuscript table
+ * references `living_works` at all. So the container-only removal is what the
+ * database already does; it needed a door, not a mechanism. The destructive path
+ * (`eraseManuscript.ts`) is untouched and stays separate.
+ *
+ * ⛔ THE LABEL MAY NOT OUTRUN THE ACT. WS-DELETE-01 named the price of keeping
+ * the writing: the button then cannot say Delete. Nor Archive, which would
+ * promise a reversibility nothing implements, nor Withdraw, which would make a
+ * lifecycle state out of a word no one ruled. It says Remove, and the
+ * confirmation says exactly what survives.
+ */
+export async function removeWork(
+  workId: string,
+  fetcher: Fetcher,
+): Promise<DeleteOutcome> {
+  let res: Response;
+  try {
+    /* The living-works route only ever deleted the declaration and queued the
+       Work's own image bytes. It is already container-only; this is its door. */
+    res = await fetcher(`/api/sovereign/living-works/${workId}`, { method: 'DELETE' });
+  } catch {
+    return { ok: false, message: REMOVE_GENERIC };
+  }
+  if (res.ok || res.status === 404) return { ok: true };
+  return { ok: false, message: REMOVE_GENERIC };
+}
+
+const REMOVE_GENERIC =
+  'That work could not be removed just now. Nothing changed — your writing is untouched.';
+
+/**
+ * Copy for removal. Separate constant from `DELETE_WORK_COPY` so the two acts
+ * cannot drift into each other's language — the drift that would recreate the
+ * exact confusion this ruling resolved.
+ */
+export const REMOVE_WORK_COPY = {
+  action: 'Remove Work',
+  working: 'Removing…',
+  cancel: 'Keep it',
+  confirm: 'Remove Work',
+  question: (title: string) => `Remove “${title}” from Your Works?`,
+  /* Says what survives, not merely what goes. A member agreeing to this must
+     not have to infer where their writing went. */
+  body:
+    'This removes the work and how it was arranged. Your writing stays in Your '
+    + 'Writings, and you can delete it there if you ever want to.',
+  /** Shown beneath the action, so the choice is legible before it is made. */
+  hint: 'Keeps your writing in Your Writings.',
+} as const;
+
 /** Copy for the confirmation step. Kept beside the act so the two cannot drift. */
 export const DELETE_WORK_COPY = {
-  action: 'Delete',
+  action: 'Delete Work and writing',
   working: 'Deleting…',
   cancel: 'Keep it',
   confirm: 'Delete permanently',
+  /** Shown beneath the action. The two hints are the whole distinction. */
+  hint: 'Permanently deletes this Work and its writing.',
   /* Names the work, and names what deletion actually reaches. A member agreeing
      to this should not later discover the original import outlived it. */
   question: (title: string) => `Delete “${title}”?`,
