@@ -139,17 +139,82 @@ reader effect          … does not establish an actual reader effect
 whole work pattern     local evidence does not establish a whole-Work pattern
 ```
 
-**The field is where those non-conclusions get answered — by whoever holds the
-authority to answer each one.** `author intent` is answerable only by the author.
-`editorial consequence` is the writer's, informed by dialogue. `whole work
-pattern` may be reachable jointly across several observations. `reader effect`
-may remain unanswerable by anyone in the room.
+**The field may be where those non-conclusions get answered.** But two questions
+have to be kept apart, and the first draft of this paragraph ran them together:
 
-If that mapping holds, the field object is not one thing with one provenance; it
-is **a set of answers to specific named non-conclusions, each carrying the
-authority of whoever answered it.** That would make provenance decomposable by
-construction rather than by convention — but it is a hypothesis this document
-records, not a ruling it makes.
+> **"Who has authority to answer this?" and "what evidence would make this
+> answerable?" are separate questions.** (founder, 2026-09-08)
+
+| non-conclusion | authority / source | what could establish it |
+|---|---|---|
+| author intent | author | author disclosure |
+| editorial consequence | developmental judgment | evidence + dialogue; the author retains the decision about changing the Work |
+| whole-work pattern | **not inherently author-only** | sufficient whole-Work evidence / synthesis |
+| reader effect | an actual reader | reader-response evidence; MAIA and author cannot manufacture it |
+
+⚠️ **A correction to this document's own first phrasing, kept rather than
+deleted.** It said `editorial consequence` "is the writer's, informed by
+dialogue." That is too flat. The *decision* — **does anything change in my
+Work?** — is unquestionably the writer's. But claims like *"this recurrence
+weakens the escalation"* or *"this unresolved thread is structurally more
+consequential than that duplicated explanation"* are **developmental judgments
+MAIA may legitimately propose and reason through with the writer.** They do not
+become objective facts because MAIA said them, and they do not become author
+assertions because the writer discussed them. **That gap is exactly the third
+epistemic territory Q-A exists to represent** — and collapsing it into "the
+writer's" would have dissolved the question while appearing to answer it.
+
+### What Q-A needs: coordinates, not a noun
+
+A field understanding is probably several fields, not a new bucket called
+`joint_conclusion`:
+
+```
+proposition          "The second appearance doesn't deepen the first."
+kind                 editorial consequence
+basis                observation o__ · passages [...] · dialogue [...]
+source / authority   developmental inference — MAIA + writer encounter
+status               proposed | accepted | contested | unresolved
+work authority       NONE — does not itself change the manuscript
+```
+
+and beside it, in the same thread, with different provenance:
+
+```
+proposition          "I repeated it deliberately because this is where the
+                      reader meets it experientially."
+kind                 author intent
+source / authority   author disclosure
+status               established-for-this-field
+```
+
+Two propositions, one thread, no pretence that they share a provenance.
+
+### The hypothesis, and its caution
+
+> **HYPOTHESIS.** The reader's non-conclusions are not merely prohibitions. They
+> identify questions deliberately **handed forward** to the developmental field,
+> where each may become answerable only under the authority and evidence
+> appropriate to its kind.
+
+⛔ **CAUTION, and the reason this stays a hypothesis.** It is not established that
+those four categories are complete enough to describe what actually emerges in
+developmental conversation. The field may produce something important that is
+none of author intent, editorial consequence, reader effect, or whole-work
+pattern. **If the field is prematurely defined as "answers to the reader's four
+non-conclusions," the reader contract ends up determining the ontology of a
+richer relational environment** — a smaller thing silently deciding the shape of
+a larger one.
+
+### How the two questions relate
+
+```
+Q-A asks    what can become known here, and by whose authority?
+Q-B answers under what conditions is MAIA present while that knowing unfolds?
+```
+
+Together they begin to define an actual field, rather than a chat interface with
+manuscript metadata attached.
 
 ---
 
