@@ -106,8 +106,19 @@ export async function readDevelopmentally(
   });
 
   if (!outcome.ok) {
+    /* AIN-STRUCTURED-INFERENCE-SEAM-01 amendment, 2026-09-08. The seam gained a
+       refusal for a guarantee this caller never asks for: DEVELOP requests no
+       provider-enforced schema conformance, so `schema_conformance_unavailable`
+       is unreachable here. Mapped explicitly rather than added to this caller's
+       refusal vocabulary — declaring a refusal it cannot receive would be a
+       behaviour change to DEVELOP, and the amendment must not cause one. If it
+       ever did arrive it would mean the seam was configured with a provider that
+       cannot serve the request as asked, which is what `not_configured` says. */
     /* The seam's refusal, unchanged. Not a cue to try something else. */
-    return refused(outcome.refusal, outcome.detail ?? outcome.refusal);
+    const refusal = outcome.refusal === 'schema_conformance_unavailable'
+      ? 'not_configured' as const
+      : outcome.refusal;
+    return refused(refusal, outcome.detail ?? outcome.refusal);
   }
   const { provenance } = outcome.result;
   if (provenance.provider !== 'anthropic') {

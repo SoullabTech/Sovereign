@@ -804,6 +804,42 @@ describe('S7 · the prompt asks; the scope is what enforces', () => {
   });
 });
 
+describe('SC7–SC8 · Encounter requires the guarantee, and still checks anyway', () => {
+  it('SC7 the result tool declares provider-enforced schema conformance', () => {
+    /* Founder ruling 2026-09-08, after W4: stop asking for schema-invalid
+       arguments rather than tolerating them downstream. The requirement is
+       neutral seam vocabulary; the adapter owns the mechanism. */
+    expect((require('../render').resultTool as { inputSchemaConformance?: string }).inputSchemaConformance)
+      .toBe('provider_enforced');
+    /* ⛔ and Encounter never names the vendor's term itself. */
+    expect(readFileSync(join(REPO, 'lib/manuscript/encounter/render.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')).not.toMatch(/\bstrict\b/);
+  });
+
+  it('⛔ SC8 the parser is NOT relaxed — the exact Window 4 shape still refuses', () => {
+    /* The failure that opened this amendment: `notices` arrived as a JSON string
+       instead of an array. Provider enforcement should make it ungeneratable —
+       which is not the same as making it acceptable. A guarantee we did not
+       compute is a guarantee taken on trust, and this is the instrument that
+       would still catch it if enforcement silently stopped working. */
+    const w4 = '[{"family": "preoccupation", "assertion": "x", "evidence": [{"excerpt": "y"}]}]';
+    expect(parseNoticeBlocks([toolUse({ outcome: 'notices', notices: w4 })]).ok).toBe(false);
+  });
+
+  it('⛔ SC8 and every other parser obligation is untouched by the amendment', () => {
+    /* Enforcement is upstream. It buys no leniency anywhere downstream of it. */
+    for (const rogue of [
+      { outcome: 'notices', notices: '{}' },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: '[]' }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED }], strict: true }] },
+    ]) {
+      expect(parseNoticeBlocks([toolUse(rogue)]).ok).toBe(false);
+    }
+    /* And the lawful shape still parses, so this is a scalpel and not a wall. */
+    expect(parseNoticeBlocks([proposal([CITED])]).ok).toBe(true);
+  });
+});
+
 describe('B3 · silence is something the model SAYS', () => {
   const run = async (blocks: StructuredBlock[]) => {
     mockRun.mockResolvedValue(ok(blocks));

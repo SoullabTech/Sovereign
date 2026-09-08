@@ -39,6 +39,14 @@ export function toAnthropicParams(
       name: t.name,
       ...(t.description !== undefined ? { description: t.description } : {}),
       input_schema: t.inputSchema,
+      /* THE REQUIREMENT IS NEUTRAL; THIS IS THIS VENDOR'S MECHANISM FOR IT.
+         The caller asked that the returned tool input be guaranteed to conform
+         to its schema. For Anthropic today that is `strict`, a top-level field
+         on the tool definition — grammar-constrained generation, no beta header.
+         A caller that asked for nothing sends nothing: the key is omitted
+         entirely, so an unchanged caller's wire params are byte-identical to
+         what they were before this field existed. */
+      ...(t.inputSchemaConformance === 'provider_enforced' ? { strict: true } : {}),
     }));
   }
   if (req.toolChoice !== undefined) {
@@ -83,6 +91,9 @@ export function anthropicStructuredProvider(
   const provider: ProviderName = 'anthropic';
   return {
     name: provider,
+    /* Declared, not inferred. Anthropic constrains generation to the tool schema
+       when the tool asks for it, so this provider can honour the guarantee. */
+    enforcesInputSchema: true,
     async execute(req: StructuredRequest): Promise<StructuredResult> {
       const client = opts.client ?? new Anthropic();
       const params = toAnthropicParams(req);

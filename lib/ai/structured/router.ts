@@ -116,6 +116,22 @@ async function route(
 async function execute(
   provider: StructuredProvider, req: StructuredRequest,
 ): Promise<StructuredOutcome> {
+  /* BEFORE COGNITION. A caller that required provider-enforced schema
+     conformance asked for a guarantee, not for a request that will probably
+     validate. A provider that cannot give it refuses here — no downgrade to
+     ordinary tool use, and no call made. Checked on every path, local included,
+     because the guarantee is a property of the provider and not of the mode. */
+  if (
+    (req.tools ?? []).some((t) => t.inputSchemaConformance === 'provider_enforced')
+    && provider.enforcesInputSchema !== true
+  ) {
+    return {
+      ok: false,
+      refusal: 'schema_conformance_unavailable',
+      detail: `${provider.name} does not guarantee tool input schema conformance`,
+    };
+  }
+
   try {
     return { ok: true, result: await provider.execute(req) };
   } catch (err) {

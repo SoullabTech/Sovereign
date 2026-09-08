@@ -122,6 +122,25 @@ export const RESULT_TOOL_NAME = 'encounter_result';
  * A closed result envelope is transport discipline, not a developmental lens —
  * it imports nothing from DEVELOP's epistemology.
  *
+ * ── SCHEMA CONFORMANCE IS REQUIRED OF THE PROVIDER ────────────────────────
+ *
+ * G8 attempt #3 stopped at Window 4: the provider returned a completed
+ * `tool_use` whose `notices` array arrived as a JSON STRING containing corrupt
+ * JSON. Post-cognition contract failure — the parser refused, C7 held, and by
+ * ruling there is no retry, because a second call would re-roll cognition that
+ * already answered.
+ *
+ * So the repair is upstream of the failure rather than downstream of it: this
+ * tool declares `inputSchemaConformance: 'provider_enforced'`, and the seam
+ * refuses before cognition if the authorized provider cannot guarantee it. The
+ * malformed shape that ended that run should not be generatable.
+ *
+ * ⛔ THE PARSER IS NOT RELAXED BY THIS, and must never be. Provider enforcement
+ * and `parseNoticeBlocks` are two independent instruments, and the second is the
+ * one that belongs to us: a guarantee we did not compute is a guarantee we are
+ * taking on trust. If enforcement silently stopped working, the parser is what
+ * would still catch it.
+ *
  * Note what is absent, and stays absent: no digest, no confidence, no severity,
  * no priority — and, since the live witness, no coordinate of any kind. There is
  * no `startCodePoint`, no `endCodePoint`, no unit, paragraph or section id. The
@@ -132,6 +151,9 @@ export const RESULT_TOOL_NAME = 'encounter_result';
  */
 export const resultTool = {
   name: RESULT_TOOL_NAME,
+  /* The seam's neutral requirement, not a vendor term. The adapter decides how
+     to satisfy it; a provider that cannot must refuse rather than downgrade. */
+  inputSchemaConformance: 'provider_enforced' as const,
   description:
     'Report what you noticed. If you noticed nothing worth saying, answer with outcome "none" — that is a complete and correct answer.',
   inputSchema: {

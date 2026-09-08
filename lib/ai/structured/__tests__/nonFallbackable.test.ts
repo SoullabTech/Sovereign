@@ -13,7 +13,8 @@ import type { StructuredProvider, StructuredRequest } from '../types';
 const execute = jest.fn();
 jest.mock('../anthropicStructuredAdapter', () => ({
   anthropicStructuredProvider: (): StructuredProvider => ({
-    name: 'anthropic', execute: (req: StructuredRequest) => execute(req),
+    name: 'anthropic', enforcesInputSchema: true,
+    execute: (req: StructuredRequest) => execute(req),
   }),
 }));
 

@@ -23,11 +23,41 @@ export interface StructuredMessage {
   content: string;
 }
 
+/**
+ * WHETHER THE PROVIDER MUST ENFORCE THE SCHEMA DURING GENERATION.
+ *
+ * `best_effort`      the schema is a contract the model is asked to honour. A
+ *                    response that violates it is the caller's to detect and
+ *                    refuse. This is the default and the historical behaviour.
+ * `provider_enforced` the provider must constrain generation so the returned
+ *                    tool input conforms to the schema. A provider that cannot
+ *                    guarantee it must REFUSE — it may not silently downgrade.
+ *
+ * NEUTRAL BY CONSTRUCTION, like `execution.completion` above it: this states the
+ * REQUIREMENT, and each adapter chooses its own mechanism. No vendor term
+ * appears here. Anthropic happens to satisfy it with grammar-constrained
+ * generation; another provider might satisfy it differently or not at all, and
+ * this seam must be able to say so without borrowing anyone's wire format.
+ *
+ * Founder ruling 2026-09-08, after G8 attempt #3 stopped at Window 4: the
+ * provider returned a completed `tool_use` whose array-typed field arrived as a
+ * JSON string containing corrupt JSON. That is a post-cognition contract
+ * failure — no retry (C5) — and the lawful response is not to tolerate it
+ * downstream but to stop asking for schema-invalid arguments in the first place.
+ */
+export type SchemaConformance = 'best_effort' | 'provider_enforced';
+
 export interface StructuredTool {
   name: string;
   description?: string;
   /** JSON Schema, passed through verbatim. The seam does not rewrite contracts. */
   inputSchema: Record<string, unknown>;
+  /**
+   * Omitted means `best_effort`, which is the historical behaviour and stays the
+   * default: a caller that does not ask for enforcement gets a byte-identical
+   * request to the one it got before this field existed.
+   */
+  inputSchemaConformance?: SchemaConformance;
 }
 
 export type StructuredToolChoice =
@@ -158,7 +188,17 @@ export type StructuredRefusal =
    * turn a sovereign deployment into a primary one.
    */
   | 'invalid_inference_mode'
-  | 'not_configured';
+  | 'not_configured'
+  /**
+   * A tool required `provider_enforced` schema conformance and the authorized
+   * provider does not guarantee it.
+   *
+   * REFUSED BEFORE COGNITION, never downgraded. Running the request anyway as
+   * ordinary tool use would answer a question the caller did not ask: it asked
+   * for a guarantee, and receiving an unguaranteed answer that happens to
+   * validate is not the same thing. A caller that wants best-effort can say so.
+   */
+  | 'schema_conformance_unavailable';
 
 export type StructuredOutcome =
   | { ok: true; result: StructuredResult }
@@ -172,5 +212,13 @@ export type StructuredOutcome =
  */
 export interface StructuredProvider {
   name: ProviderName;
+  /**
+   * Whether this provider can GUARANTEE that a returned tool input conforms to
+   * the tool's schema.
+   *
+   * REQUIRED, not optional — a new provider must state it rather than inherit a
+   * guarantee by saying nothing. `false` is a lawful answer; silence is not.
+   */
+  enforcesInputSchema: boolean;
   execute(req: StructuredRequest): Promise<StructuredResult>;
 }
