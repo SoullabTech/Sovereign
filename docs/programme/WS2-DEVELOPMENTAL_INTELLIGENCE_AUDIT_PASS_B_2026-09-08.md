@@ -253,3 +253,57 @@ Row B    PARTIALLY disposable — clause 3 needs a Pass B read
 **Item 4 therefore does not fully close here, and item 6 must not proceed on a partial disposition.** Re-freezing Phase 0 with Row B clause 3 undisposed would stamp an open empirical question as settled — the same stale-authority defect item 6 exists to remove, reintroduced at the moment of repair.
 
 Either clause 3 is read and disposed, or Phase 0 is re-frozen with clause 3 **explicitly marked open on its face**, so the stamp does not overstate what was settled. That choice is a founder ruling, not an editorial one.
+
+---
+
+# 7 · Item 6 reconciliation — **THE TWO PHASE-0 LISTS ARE NOT THE SAME SET**
+
+**Found while assembling the re-freeze. Item 6 is blocked again, for a new reason.**
+
+Roadmap §2 (the frozen product direction) and roadmap §4 (the falsification matrix) each contain eight rows. **The matching count is coincidental. They are different sets**, and no document anywhere records that they diverge.
+
+| # | §2 frozen statement | §4 matrix row | Status |
+|---|---|---|---|
+| 1 | Reading opens a conversation, not a report | Reading opens conversation, not report | aligned · FQ-1 |
+| 2 | **Writer chooses both question and scope** | *(split into two rows)* | **split without record** |
+| — | — | Writer chooses the developmental act | FQ-2 — **not a verbatim §2 statement** |
+| — | — | Writer chooses scope | Row A — half of §2 #2 |
+| 3 | **Scope can be selection → section → chapter → part → whole Work** | **NO MATRIX ROW** | **never falsification-tested** |
+| 4 | Write feeds Develop | Write feeds Develop | aligned · FQ-3 |
+| 5 | MAIA can learn the Work over time, within Work-level permission | MAIA may carry Work understanding with permission | aligned · Row B |
+| 6 | The session, not the isolated sentence, is the primary quality unit | Session is the primary quality unit | aligned · FQ-4 |
+| 7 | Complexity stays below the writer experience | Complexity stays below writer experience | aligned · FQ-5 |
+| 8 | Sovereignty governs what may ship; quality governs whether we ship | Sovereignty decides eligibility; quality decides readiness | aligned · Row C |
+
+### Two consequences
+
+**(a) One frozen statement was never tested.** `Scope can be selection → section → chapter → part → whole Work` has no matrix row. It was not disposed by FQ-1…FQ-5, and it was not among the three rows item 4 addressed — it silently fell out of the falsification universe. **It is a fourth undisposed statement**, discovered by this reconciliation rather than by the pass.
+
+**(b) `Writer chooses the developmental act` is a derived half, not a frozen statement.** FQ-2 — which also governs Row A by extension — attaches to a row the frozen Phase 0 never stated in that form. The ruling is sound; its anchoring is not recorded.
+
+So **"re-freeze the eight" is underspecified: which eight?** Re-freezing either list as-is would ratify a set that was never the one tested.
+
+### Proposed disposition of the untested statement — **PROPOSED, NOT RULED**
+
+The scope ladder is **not an empirical prediction and not a constitutional rule.** It is a **design commitment** — a declaration of what the system will offer, in the same kind-class as "we will build a Writer's Studio at all." It carries no normative claim about authority (Row A carries that) and asserts nothing about the world that a finding could contradict.
+
+Evidence bears on it supportively but does not license it: **E3** (hierarchical / discourse-aware retrieval outperforming flat chunking) is Pass B-read and already carries a pending qualification about transfer from QA tasks to manuscripts (§5 item 3). That qualification is exactly the caution the ladder needs — it is supported as an architecture, not proven as a benefit for book-length developmental reading.
+
+**Proposed**: reclassify as `DESIGN COMMITMENT — not falsifiable, evidence-informed`, distinct from both the seven empirical rows and Row C's constitutional exemption. Recorded as untested rather than silently absorbed into the re-freeze.
+
+### Revised falsification universe
+
+```text
+§2 frozen statements                      8
+  empirically falsifiable                 6   (rows 1, 2*, 4, 5, 6, 7)
+  constitutional / exempt                 1   (row 8 — Row C)
+  design commitment / untested            1   (row 3 — scope ladder)
+
+* §2 row 2 was tested as TWO matrix rows (act + scope);
+  both disposed — FQ-2 and Row A.
+
+FQs run                                   5
+FQs disposed                              5 / 5
+```
+
+**Item 6 must not proceed until the set being re-frozen is itself ruled.** Re-freezing over an unrecorded split and an untested statement would stamp as authoritative a set that no pass ever examined — the stale-authority defect item 6 exists to remove, arriving through the reconciliation rather than around it.
