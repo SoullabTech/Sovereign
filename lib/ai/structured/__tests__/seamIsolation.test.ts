@@ -118,14 +118,39 @@ describe('the existing plain-text seam is untouched', () => {
 const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
 
 /**
- * The ACTIVE pin. Founder-authorized 2026-09-08 (AIN-STRUCTURED-PROVENANCE-01).
+ * Superseded baseline. Founder-authorized 2026-09-08 (AIN-STRUCTURED-PROVENANCE-01),
+ * when `reportedModel` was added so a witness could tell the model REQUESTED from
+ * the model REPORTED. Kept, not deleted: the seam's amendment history is the
+ * evidence that each change was authorized, and a baseline that only ever shows
+ * its latest value cannot show that.
+ */
+const PROVENANCE_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
+
+/**
+ * The ACTIVE pin. Founder-authorized 2026-09-08 — the SECOND governed amendment:
+ * provider-enforced tool input schema conformance.
+ *
+ * ⭐ THIS PIN FAILED, AND IT WAS RIGHT TO. G8 attempt #3 stopped when a completed
+ * `tool_use` carried an array-typed field as a JSON string with corrupt JSON
+ * inside it. No retry was lawful, so the repair had to move upstream of the
+ * failure — into the seam — and the pin stopped it and asked *who authorized the
+ * seam itself to change?* The answer is a founder ruling, and the response is
+ * the one the amendment above prescribes: the baseline moves, and the pin is
+ * immovable again.
+ *
+ * ⛔ THE MOVE IS DELIBERATELY ITS OWN COMMIT. The commit this names carries the
+ * amendment with this constant still on the previous baseline — so that guard is
+ * red there, on purpose. Folding the pin move into the same commit would let a
+ * seam change and its own authorization arrive as one indistinguishable act,
+ * which is exactly the property this instrument exists to deny.
  *
  * The authorization is narrow and worth stating exactly: **those four seam-file
  * states at this commit** constitute the new governed baseline. The commit also
- * carries witness-side work, and no unrelated file gains constitutional status
- * by having travelled in the same commit — this guard resolves four paths.
+ * carries caller-side and test-side work, and no unrelated file gains
+ * constitutional status by having travelled in the same commit — this guard
+ * resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
+const GOVERNED_SEAM_BASELINE = 'f6a8a3dc8503d1b7f8fb3b6353ffc01c4cbf3291';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
@@ -146,6 +171,15 @@ describe('callers bend to the seam, never the seam to a caller', () => {
        governed amendment ever happened. */
     expect(ORIGINAL_SEAM_MERGE).toBe('8b31d931c2ca4349b08fa49428b2e93508f47613');
     expect(GOVERNED_SEAM_BASELINE).not.toBe(ORIGINAL_SEAM_MERGE);
+  });
+
+  it('every amendment stays on the record, and each one moved the pin', () => {
+    /* An amendment history that collapses to its latest value cannot show that
+       each change was separately authorized. Each baseline is distinct, and each
+       remains nameable after being superseded. */
+    const chain = [ORIGINAL_SEAM_MERGE, PROVENANCE_SEAM_BASELINE, GOVERNED_SEAM_BASELINE];
+    expect(new Set(chain).size).toBe(chain.length);
+    for (const sha of chain) expect(sha).toMatch(/^[0-9a-f]{40}$/);
   });
 
   it('⛔ the pin is unconditional — no caller, lane or branch may talk it out of comparing', () => {
