@@ -61,12 +61,48 @@ export interface Anchor {
   readonly spanDigest: string;
 }
 
+/**
+ * The perceptual field an observation actually arose from — server-owned.
+ *
+ * Founder ruling 2026-09-08, on the second live witness (F-2):
+ *
+ *   A cognition may not assert more than the evidence field it was actually
+ *   permitted to perceive.
+ *
+ * Two notices in that witness claimed non-return across the whole Work —
+ * *"she is not mentioned again in what follows"* — from a call shown 12,000 of
+ * 386,031 code points. Encounter has no synthesis pass by ratified law, so
+ * whole-Work non-return is something the act **structurally cannot establish**.
+ *
+ * The defect was not the wording. It was that the record could not tell:
+ * `MaiaNotice` carried family, text and anchors, and the window that produced
+ * the assertion disappeared at the moment the candidate was promoted.
+ *
+ *   Window was transport on the way in and vanished as authority on the way out.
+ *
+ * So scope is a REQUIRED field on both the candidate and the notice. Not
+ * optional, not defaulted, not inferred: a notice that cannot say what it was
+ * shown cannot be constructed. The model never supplies it — it is derived from
+ * the exact `ReadWindow` the inference call was made from, in the same place the
+ * anchors are bound, so the two cannot disagree.
+ */
+export interface EncounterScope {
+  /** The only kind that exists. A wider one would need its own constitution. */
+  readonly kind: 'visible_window';
+  /** Inclusive code-point start of what the call was shown. */
+  readonly startCodePoint: number;
+  /** Exclusive code-point end of what the call was shown. */
+  readonly endCodePoint: number;
+}
+
 /** MAIA-authored. Always anchored — an unanchored notice is an impression. */
 export interface MaiaNotice {
   readonly authoredBy: 'maia';
   readonly family: EncounterFamily;
   readonly text: string;
   readonly anchors: readonly Anchor[];
+  /** What this observation was permitted to perceive. Never widened. */
+  readonly scope: EncounterScope;
 }
 
 /**
@@ -117,4 +153,6 @@ export interface CandidateNotice {
   readonly family: string;
   readonly text: string;
   readonly anchors: readonly Anchor[];
+  /** Server-derived, never proposed. Carried through the screen unchanged. */
+  readonly scope: EncounterScope;
 }

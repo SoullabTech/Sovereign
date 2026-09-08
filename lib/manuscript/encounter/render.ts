@@ -44,6 +44,18 @@
  *
  * It is also told, in the contract itself, that having nothing to say is a
  * complete answer. A generator that believes it owes observations will find some.
+ *
+ * ── RULE 10 IS NOT THE AUTHORITY (founder ruling 2026-09-08, F-2) ─────────
+ *
+ * The second live witness produced notices asserting non-return across the whole
+ * Work from a call shown 12,000 of 386,031 code points. Rule 10 asks the model
+ * not to do that. It is an instruction, and instructions are asked, not enforced.
+ *
+ * The authority is the server-derived `EncounterScope` attached in `bind.ts` and
+ * preserved through promotion in `read.ts`: every observation carries the exact
+ * field it was permitted to perceive, whatever it says about itself. If rule 10
+ * were deleted tomorrow the record would still be honest — the assertion could
+ * overreach, but it could no longer overreach INVISIBLY.
  */
 import { ENCOUNTER_FAMILIES } from './contract';
 import type { StructuredRequest } from '@/lib/ai/structured/types';
@@ -83,6 +95,7 @@ How to report an observation:
 7. Every excerpt in \`evidence\` must be copied from the text above CHARACTER FOR CHARACTER. Do not paraphrase, summarize, retype from recall, correct a typo, standardize a quotation mark, change spacing, or alter capitalization or punctuation in any way. An excerpt that is not exactly present in the text above is discarded, and the observation with it.
 8. Quote enough to be unique. If the exact characters you quote occur more than once in the text above, the observation is discarded. Extend the quotation — take the surrounding sentence or sentences — until it occurs exactly once.
 9. Do not report positions, offsets, character counts, paragraph numbers or section numbers. You are not asked where the words are, only which words they are.
+10. Every assertion concerns ONLY the continuous stretch shown in this call. You have not been shown the rest of the writing and cannot know what it contains. Do not claim that something does not recur later, does not appear again, is not returned to, is absent from the writing as a whole, or is not mentioned "in what follows". Where you notice a bounded non-return, name the bound: "this appears here and does not recur in this stretch."
 
 HAVING NOTHING TO SAY IS A COMPLETE ANSWER. Propose no observation you do not actually see. Do not fill the five acts of attention; most encounters touch one or two. An empty answer is correct far more often than a full one.`;
 

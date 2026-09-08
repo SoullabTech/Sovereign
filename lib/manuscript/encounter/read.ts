@@ -42,6 +42,7 @@ import type {
   Anchor,
   CandidateNotice,
   EncounterResult,
+  EncounterScope,
   EncounterSnapshot,
   MaiaNotice,
 } from './contract';
@@ -113,6 +114,33 @@ export async function captureDraft(
   };
 }
 
+/**
+ * Whether an anchor lies inside the field its notice was permitted to perceive.
+ *
+ * Structurally redundant while `bindProposals()` is the only producer — it binds
+ * and scopes from one range. Asserted anyway, because the law is about what a
+ * notice may CLAIM, and a future generator must not be able to widen authority
+ * by constructing the pair by hand.
+ */
+export function isLawfulScope(scope: EncounterScope | undefined): scope is EncounterScope {
+  /* No scope, or a kind this act has not constituted, is not a promotable
+     notice. It fails closed like every other screen failure rather than
+     throwing: an observation that cannot say what it was shown says nothing. */
+  return (
+    !!scope
+    && scope.kind === 'visible_window'
+    && Number.isInteger(scope.startCodePoint)
+    && Number.isInteger(scope.endCodePoint)
+    && scope.startCodePoint >= 0
+    && scope.endCodePoint > scope.startCodePoint
+  );
+}
+
+export function withinScope(scope: EncounterScope | undefined, a: Anchor): boolean {
+  if (!isLawfulScope(scope)) return false;
+  return a.startCodePoint >= scope.startCodePoint && a.endCodePoint <= scope.endCodePoint;
+}
+
 /** An anchor is honest only if its span still hashes to what it claims. */
 export function anchorMatches(text: string, a: Anchor): boolean {
   const points = Array.from(text);
@@ -172,11 +200,21 @@ export async function encounter(
        would make the system's silence into information about their book. */
     if (screenCandidate(c).length > 0) continue;
     if (!c.anchors.every((a) => anchorMatches(captured.text, a))) continue;
+    /* F-2: the promotion boundary is exactly where the perceptual field used to
+       be lost. An anchor outside the scope its notice claims would mean evidence
+       from one field carrying authority from another, so it is dropped rather
+       than promoted — fail closed, like every other screen failure. */
+    if (!isLawfulScope(c.scope)) continue;
+    if (!c.anchors.every((a) => withinScope(c.scope, a))) continue;
     notices.push({
       authoredBy: 'maia',
       family: c.family as MaiaNotice['family'],
       text: c.text,
       anchors: c.anchors,
+      /* Carried through UNCHANGED. Never widened, never defaulted, never
+         recomputed from the whole draft: a window-local cognition may not
+         emerge wearing whole-Work authority. */
+      scope: c.scope,
     });
   }
 

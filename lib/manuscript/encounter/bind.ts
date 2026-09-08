@@ -35,7 +35,7 @@
  * dash or an emoji in a manuscript cannot silently shift an anchor.
  */
 import { createHash } from 'crypto';
-import type { CandidateNotice, Anchor } from './contract';
+import type { CandidateNotice, Anchor, EncounterScope } from './contract';
 import type { ModelNoticeProposal } from './parse';
 
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
@@ -94,6 +94,15 @@ export function bindExcerpt(
  *
  * `text` is the snapshot's own captured text — never re-read, so a draft that
  * moved mid-Encounter cannot be bound against its new state.
+ *
+ * ── SCOPE IS ATTACHED HERE, FROM THE SAME RANGE THE EVIDENCE IS BOUND IN ──
+ *
+ * Founder ruling 2026-09-08 (F-2): *a cognition may not assert more than the
+ * evidence field it was actually permitted to perceive.* The visible range is
+ * already the authority for what may be bound; making it the authority for what
+ * may be claimed puts both facts on one server-owned value, so a notice cannot
+ * carry evidence from one field and authority from another. The model has no
+ * say in it, and no wider `kind` exists to widen it to.
  */
 export function bindProposals(
   text: string,
@@ -101,6 +110,11 @@ export function bindProposals(
   visible: VisibleRange,
 ): CandidateNotice[] {
   const bound: CandidateNotice[] = [];
+  const scope: EncounterScope = {
+    kind: 'visible_window',
+    startCodePoint: visible.visibleStart,
+    endCodePoint: visible.visibleEnd,
+  };
 
   for (const p of proposals) {
     const anchors: Anchor[] = [];
@@ -120,7 +134,7 @@ export function bindProposals(
        travel in it, which is what gives the vocabulary screen an authorship
        boundary — and that exemption is earned here, by the binding above having
        proved the evidence is literally Work material. */
-    bound.push({ family: p.family, text: p.assertion, anchors });
+    bound.push({ family: p.family, text: p.assertion, anchors, scope });
   }
 
   return bound;

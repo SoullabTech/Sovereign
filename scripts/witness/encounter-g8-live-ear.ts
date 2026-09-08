@@ -290,6 +290,12 @@ async function main() {
       const points = Array.from(captured.text);
       console.log(`  family     : ${c.family}`);
       console.log(`  notice     : ${c.text}`);
+      /* F-2: what this observation was PERMITTED to perceive. Server-derived
+         from the window the call was made from; the model has no say in it.
+         Read every assertion against this range — a claim about "the Work" or
+         "what follows" made from a scope narrower than the whole draft is
+         asserting past its evidence field, whatever its wording. */
+      console.log(`  scope      : ${c.scope.kind} ${c.scope.startCodePoint}..${c.scope.endCodePoint} of ${captured.snapshot.length}`);
       for (const a of c.anchors) {
         console.log(`  anchor     : ${a.startCodePoint}..${a.endCodePoint}  digest ${a.spanDigest.slice(0, 12)}…`);
         console.log(`  cited text : ${JSON.stringify(points.slice(a.startCodePoint, a.endCodePoint).join(''))}`);

@@ -36,10 +36,18 @@ const anchorFor = (text: string, phrase: string) => {
   };
 };
 
+/** The whole draft was one window for these fixtures, so scope is the draft. */
+const WHOLE_SCOPE = {
+  kind: 'visible_window',
+  startCodePoint: 0,
+  endCodePoint: Array.from(TEXT).length,
+} as const;
+
 const candidate = (text: string, family = 'recurrence'): CandidateNotice => ({
   family,
   text,
   anchors: [anchorFor(TEXT, 'Every threshold in the book is wet.')],
+  scope: WHOLE_SCOPE,
 });
 
 /** A generator that proposes exactly what a test hands it. */
@@ -108,7 +116,7 @@ describe('F1–F5 · the observation must not be developmental', () => {
 describe('F6–F7 · anchoring and authorship', () => {
   it('F6 an unanchored MAIA observation is not emitted', async () => {
     draftExists();
-    const r = await encounter('m', 'mem', proposing({ family: 'recurrence', text: 'Water recurs.', anchors: [] }));
+    const r = await encounter('m', 'mem', proposing({ family: 'recurrence', text: 'Water recurs.', anchors: [], scope: WHOLE_SCOPE }));
     expect(r.ok && r.notices).toEqual([]);
   });
 
@@ -260,6 +268,7 @@ describe('P1–P6 · what Encounter is allowed to be', () => {
         anchorFor(TEXT, 'She left the room without saying anything.'),
         anchorFor(TEXT, 'The house stood at the edge of the water.'),
       ],
+      scope: WHOLE_SCOPE,
     }));
     expect(r.ok && r.notices).toHaveLength(1);
     expect(r.ok && r.notices[0].anchors).toHaveLength(2);
@@ -272,7 +281,7 @@ describe('P1–P6 · what Encounter is allowed to be', () => {
     expect(rec.authoredBy).toBe('writer');
     expect(rec).not.toHaveProperty('family');
     expect(rec).not.toHaveProperty('anchors');
-    expect(screenCandidate({ family: 'recurrence', text: rec.writerText, anchors: [] }))
+    expect(screenCandidate({ family: 'recurrence', text: rec.writerText, anchors: [], scope: WHOLE_SCOPE }))
       .toContain('unanchored');
   });
 

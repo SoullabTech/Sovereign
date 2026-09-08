@@ -25,6 +25,7 @@ import { traverseWhole } from '../traversal';
 import { screenCandidate } from '../vocabulary';
 import { SEMANTIC_EAR_CORPUS } from '../semanticEar';
 import type { EncounterSnapshot } from '../contract';
+import type { NoticeGenerator } from '../read';
 import type { StructuredBlock } from '@/lib/ai/structured/types';
 
 const REPO = join(__dirname, '../../../..');
@@ -515,8 +516,9 @@ describe('E8 · evidence is not a second, unscreened assertion channel', () => {
     expect(bound[0].text).toBe(assertion);
     expect(bound[0].text).not.toContain(quoted);
     /* All the evidence becomes is coordinates and a digest. There is no field on
-       a CandidateNotice through which model-authored prose could ride along. */
-    expect(Object.keys(bound[0]).sort()).toEqual(['anchors', 'family', 'text']);
+       a CandidateNotice through which model-authored prose could ride along —
+       `scope` is server-derived and carries no model input at all. */
+    expect(Object.keys(bound[0]).sort()).toEqual(['anchors', 'family', 'scope', 'text']);
   });
 
   it('⛔ a diagnosis smuggled into `evidence` cannot reach the writer — it is not in the Work', () => {
@@ -564,6 +566,241 @@ describe('E10 · one failed evidence member invalidates the whole notice', () =>
     const bound = bindProposals(WORK, parsed.ok ? parsed.proposals : [], WORK_WHOLE);
     expect(bound).toHaveLength(1);
     expect(bound[0].anchors).toHaveLength(2);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   S1–S7 · scope honesty.
+
+   Founder ruling 2026-09-08, after the second live witness falsified F-2:
+
+     A cognition may not assert more than the evidence field it was actually
+     permitted to perceive.
+
+     Encounter scope is server-owned provenance. Every MAIA observation must
+     carry the exact perceptual scope from which it arose. A window-local
+     cognition may never emerge wearing whole-Work authority.
+
+   Two notices in that witness claimed non-return across a 386,031-code-point
+   Work from a call shown 12,000. The wording was the symptom; the defect was
+   that the record could not tell — window was transport on the way in and
+   vanished as authority on the way out.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+describe('S1 · scope is derived from the window the call was actually made from', () => {
+  it('and is the same range the evidence was bound in — one value, so they cannot disagree', () => {
+    const long = longText(600);
+    const w = traverseWhole(long).windows[1];
+    const sentence = (i: number) => `Sentence ${i} sits here with a number of its own.`;
+    let own = '';
+    for (let i = 0; i < 600 && !own; i += 1) {
+      const at = long.indexOf(sentence(i));
+      if (at >= w.startCodePoint && at + sentence(i).length <= w.endCodePoint) own = sentence(i);
+    }
+    const parsed = parseNoticeBlocks([proposal([own], 'The numbering advances steadily here.')]);
+    const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
+      visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
+    });
+    expect(bound[0].scope).toEqual({
+      kind: 'visible_window',
+      startCodePoint: w.contextStartCodePoint,
+      endCodePoint: w.endCodePoint,
+    });
+    /* Including the overlap: the context prefix was genuinely shown, so it is
+       genuinely inside what may be claimed. */
+    expect(bound[0].scope.startCodePoint).toBe(w.contextStartCodePoint);
+  });
+
+  it('a Work small enough to be one window is scoped to the whole draft — truthfully', () => {
+    const parsed = parseNoticeBlocks([proposal([CITED])]);
+    const bound = bindProposals(TEXT, parsed.ok ? parsed.proposals : [], WHOLE(TEXT));
+    expect(bound[0].scope).toEqual({
+      kind: 'visible_window', startCodePoint: 0, endCodePoint: Array.from(TEXT).length,
+    });
+  });
+});
+
+describe('S2 · the model has no say in its own scope', () => {
+  it('⛔ there is no scope field anywhere in the tool schema', () => {
+    const schema = JSON.stringify(require('../render').resultTool);
+    for (const forbidden of ['scope', 'window', 'visible', 'whole', 'range']) {
+      expect(schema.toLowerCase()).not.toContain(forbidden);
+    }
+  });
+
+  it('⛔ a volunteered scope is REFUSED, not ignored and not honoured', () => {
+    for (const rogue of [
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED }], scope: { kind: 'whole_work' } }] },
+      { outcome: 'notices', notices: [{ family: 'recurrence', assertion: 'x', evidence: [{ excerpt: CITED, scope: 'whole' }] }] },
+    ]) {
+      expect(parseNoticeBlocks([toolUse(rogue)]).ok).toBe(false);
+    }
+  });
+
+  it('the parsed proposal carries no scope at all — there is nothing to honour', () => {
+    const parsed = parseNoticeBlocks([proposal([CITED])]);
+    expect(parsed.ok && parsed.proposals[0]).not.toHaveProperty('scope');
+  });
+});
+
+describe('S3 · promotion preserves scope unchanged', () => {
+  it('the MaiaNotice carries the candidate’s scope, never the whole draft', async () => {
+    const long = longText(600);
+    const windows = traverseWhole(long).windows;
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
+    const w = windows[1];
+    const sentence = (i: number) => `Sentence ${i} sits here with a number of its own.`;
+    let own = '';
+    for (let i = 0; i < 600 && !own; i += 1) {
+      const at = long.indexOf(sentence(i));
+      if (at >= w.startCodePoint && at + sentence(i).length <= w.endCodePoint) own = sentence(i);
+    }
+    mockRun
+      .mockResolvedValueOnce(ok([silence()]))
+      .mockResolvedValueOnce(ok([proposal([own], 'The numbering advances steadily here.')]))
+      .mockResolvedValue(ok([silence()]));
+    const r = await encounter('m', 'mem', structuredGenerator());
+    expect(r.ok).toBe(true);
+    expect(r.notices).toHaveLength(1);
+    expect(r.notices[0].scope).toEqual({
+      kind: 'visible_window',
+      startCodePoint: w.contextStartCodePoint,
+      endCodePoint: w.endCodePoint,
+    });
+    /* ⛔ The defect this repair exists to prevent: a window-local observation
+       emerging with the authority of the whole Work. */
+    expect(r.notices[0].scope.endCodePoint).toBeLessThan(Array.from(long).length);
+  });
+});
+
+describe('S4 · each notice carries its OWN field, and inherits no other', () => {
+  it('two windows produce two different scopes in one Encounter', async () => {
+    const long = longText(600);
+    const windows = traverseWhole(long).windows;
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: long, version: '1' }] });
+    const sentence = (i: number) => `Sentence ${i} sits here with a number of its own.`;
+    const pickIn = (w: typeof windows[number]) => {
+      for (let i = 0; i < 600; i += 1) {
+        const at = long.indexOf(sentence(i));
+        if (at >= w.startCodePoint && at + sentence(i).length <= w.endCodePoint) return sentence(i);
+      }
+      throw new Error('no sentence in window');
+    };
+    mockRun
+      .mockResolvedValueOnce(ok([proposal([pickIn(windows[0])], 'The numbering advances steadily here.')]))
+      .mockResolvedValueOnce(ok([proposal([pickIn(windows[1])], 'The numbering continues in this stretch.')]))
+      .mockResolvedValue(ok([silence()]));
+    const r = await encounter('m', 'mem', structuredGenerator());
+    expect(r.ok && r.notices).toHaveLength(2);
+    const [a, b] = r.notices;
+    expect(a.scope).not.toEqual(b.scope);
+    expect(a.scope.endCodePoint).toBe(windows[0].endCodePoint);
+    expect(b.scope.startCodePoint).toBe(windows[1].contextStartCodePoint);
+  });
+});
+
+describe('S5 · an anchor may never sit outside the field its notice claims', () => {
+  it('⛔ a hand-built candidate whose anchor escapes its scope is not promoted', async () => {
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: TEXT, version: '1' }] });
+    const points = Array.from(TEXT);
+    const start = TEXT.indexOf(CITED);
+    const outside: NoticeGenerator = async () => [{
+      family: 'recurrence',
+      text: 'Water recurs at thresholds.',
+      anchors: [{
+        startCodePoint: start,
+        endCodePoint: start + Array.from(CITED).length,
+        spanDigest: createHash('sha256').update(points.slice(start, start + Array.from(CITED).length).join('')).digest('hex'),
+      }],
+      /* A narrower scope than the evidence it carries: real bytes, honest
+         digest, and an authority claim the evidence does not sit inside. */
+      scope: { kind: 'visible_window', startCodePoint: 0, endCodePoint: 10 },
+    }];
+    const r = await encounter('m', 'mem', outside);
+    expect(r).toMatchObject({ ok: true, notices: [] });
+  });
+
+  it('the same candidate scoped to what it was actually shown IS promoted', async () => {
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: TEXT, version: '1' }] });
+    const points = Array.from(TEXT);
+    const start = TEXT.indexOf(CITED);
+    const inside: NoticeGenerator = async () => [{
+      family: 'recurrence',
+      text: 'Water recurs at thresholds.',
+      anchors: [{
+        startCodePoint: start,
+        endCodePoint: start + Array.from(CITED).length,
+        spanDigest: createHash('sha256').update(points.slice(start, start + Array.from(CITED).length).join('')).digest('hex'),
+      }],
+      scope: { kind: 'visible_window', startCodePoint: 0, endCodePoint: points.length },
+    }];
+    const r = await encounter('m', 'mem', inside);
+    expect(r.ok && r.notices).toHaveLength(1);
+  });
+});
+
+describe('S6 · a notice that cannot say what it was shown says nothing', () => {
+  const base = (scope: unknown) => {
+    const points = Array.from(TEXT);
+    const start = TEXT.indexOf(CITED);
+    return {
+      family: 'recurrence',
+      text: 'Water recurs at thresholds.',
+      anchors: [{
+        startCodePoint: start,
+        endCodePoint: start + Array.from(CITED).length,
+        spanDigest: createHash('sha256').update(points.slice(start, start + Array.from(CITED).length).join('')).digest('hex'),
+      }],
+      scope,
+    };
+  };
+
+  it.each([
+    ['no scope at all', undefined],
+    ['a kind this act has not constituted', { kind: 'whole_work', startCodePoint: 0, endCodePoint: 77 }],
+    ['an inverted range', { kind: 'visible_window', startCodePoint: 50, endCodePoint: 10 }],
+    ['a negative start', { kind: 'visible_window', startCodePoint: -1, endCodePoint: 77 }],
+    ['a non-integer bound', { kind: 'visible_window', startCodePoint: 0, endCodePoint: 12.5 }],
+  ])('⛔ %s is dropped, not defaulted and not thrown on', async (_label, scope) => {
+    (query as jest.Mock).mockResolvedValue({ rows: [{ id: 'd', content: TEXT, version: '1' }] });
+    const gen: NoticeGenerator = async () => [base(scope) as never];
+    const r = await encounter('m', 'mem', gen);
+    /* Fails closed toward silence, exactly like the vocabulary screen. */
+    expect(r).toMatchObject({ ok: true, notices: [] });
+  });
+});
+
+describe('S7 · the prompt asks; the scope is what enforces', () => {
+  it('the contract instructs bounded non-return', () => {
+    expect(ENCOUNTER_SYSTEM).toMatch(/Every assertion concerns ONLY the continuous stretch shown in this call/);
+    expect(ENCOUNTER_SYSTEM).toMatch(/does not recur later/);
+    expect(ENCOUNTER_SYSTEM).toMatch(/name the bound/);
+  });
+
+  it('⭐ but an assertion that IGNORES the instruction still carries its true scope', () => {
+    /* The exact F-2 wording, from a call shown one window. The system does not
+       screen it — that is the honest limit — but the record can no longer be
+       read as whole-Work authority, because the scope says otherwise. */
+    const long = longText(600);
+    const w = traverseWhole(long).windows[1];
+    const sentence = (i: number) => `Sentence ${i} sits here with a number of its own.`;
+    let own = '';
+    for (let i = 0; i < 600 && !own; i += 1) {
+      const at = long.indexOf(sentence(i));
+      if (at >= w.startCodePoint && at + sentence(i).length <= w.endCodePoint) own = sentence(i);
+    }
+    const parsed = parseNoticeBlocks([
+      proposal([own], 'This figure appears here and is not mentioned again in what follows.'),
+    ]);
+    const bound = bindProposals(long, parsed.ok ? parsed.proposals : [], {
+      visibleStart: w.contextStartCodePoint, visibleEnd: w.endCodePoint,
+    });
+    expect(bound).toHaveLength(1);
+    expect(bound[0].scope.endCodePoint).toBeLessThan(Array.from(long).length);
+    /* ⛔ Recorded honestly: the wording overreaches and nothing mechanical stops
+       it. What changed is that the overreach is now VISIBLE — the notice states
+       the field it arose from, so a reader can see the claim exceeds it. That
+       residue belongs to the semantic ear, not to a regex. */
   });
 });
 
