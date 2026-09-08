@@ -13,8 +13,12 @@ narrowed, never silently replaced).**
 semantic doorway the authorization intended; no deployment authorized by that
 acceptance alone).
 
-**NEXT AUTHORIZED ACT: PT-3 falsifier DESIGN only →
-`WS2-PT3_SOURCE_CUSTODY_FALSIFIER_DESIGN_2026-09-08.md`.**
+**CUSTODY IS PROVEN.** PT-3 Steps 4 and 5 are closed (`6aa266eb`); Source custody is
+executable law and no longer the blocker. **NEXT: Encounter —
+`WS2-ENCOUNTER-01_DECIDE_2026-09-08.md`.**
+
+> Before Writer's Studio learns how to touch an old book, the system has executable proof
+> of what it is not allowed to touch.
 
 Date: 2026-09-08 · Branch: `claude/studio-bring-work-back-icvfaa`
 Source: founder articulation and ruling, 2026-09-08.
@@ -255,14 +259,18 @@ quiet manuscript → Restore → lineage
 1. **Doorway** — *DONE, §12.* Telling the truth about a capability the Studio already
    has. This is deliberately the first shipped act: it makes "Bring a Work Back to Life"
    a framing rather than a large new feature.
-2. **Prove custody** — the **PT-3 falsifier**. Design delivered 2026-09-08:
+2. **Prove custody** — ✅ **COMPLETE (founder, 2026-09-08).** PT-3 Steps 4 and 5 closed;
+   P1–P11 green and bound into the release gate against the exact commit being built.
+   Record: `WS2-PT3_STEP4_RESULTS_2026-09-08.md`, `WS-DELETE-01_ERASURE_AUTHORITY_AMENDMENT_2026-09-08.md`.
+   *Original entry:* the **PT-3 falsifier**. Design delivered 2026-09-08:
    `WS2-PT3_SOURCE_CUSTODY_FALSIFIER_DESIGN_2026-09-08.md` (census · protected object ·
    seams · P1–P10 · false-green demonstration · implementation series). ⛔ **One finding
    surfaced rather than built: P8 requires a new Source-lifecycle authority seam on
    `vault_erasure_queue`, which is not authorized.** Nothing implemented. The law is
    worth more as an assertion than as a paragraph, and Restore is the feature that will
    test it.
-3. **Encounter (PT-1)** — the space between arrival and intention.
+3. **Encounter (PT-1)** — ⬅ **NEXT. Lane permitted to open (founder, 2026-09-08):**
+   `WS2-ENCOUNTER-01_DECIDE_2026-09-08.md`. The space between arrival and intention.
 4. **Hierarchy** — WS2-08B, member-confirmed imported structure. **HOLD NOT LIFTED.**
 5. **Intention authority (PT-2)** — a new axis, enforced at the mutation boundary.
    Preserve first: it is the contract that *withholds*, and the cheapest to prove.

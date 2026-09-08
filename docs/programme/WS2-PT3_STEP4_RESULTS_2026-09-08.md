@@ -1,7 +1,9 @@
 # PT-3 — Step 4 Results · P1–P11
 
-**Status: STEP 4 CLOSED. STEP 5 — first binding REFUSED on founder review; repaired (§9).**
-The gate itself was accepted; its attachment to deployment was not.
+**Status: STEP 4 CLOSED · STEP 5 ACCEPTED AND CLOSED at `6aa266eb` (founder, 2026-09-08).**
+PT-3 is executable law and is no longer the blocker for the next product-thesis step.
+Two record precisions from the closing ruling are folded in below (§9) — neither changes
+production behavior.
 P1–P11 green, including P11(iii). Vault-writer census complete, no UNKNOWN.
 **P11 falsified on first run (§4), was RETURNED not repaired, and WS-01 built the missing
 write-side boundary under its own ruling (§6). The falsification and its wording are kept
@@ -383,8 +385,12 @@ implementation (`deploy-production.sh` contains no `test:source-custody` of its 
 **Build-path census.** `scripts/deploy-maia-frontend.sh` also builds the `maia` service from
 `docker-compose.production.yml` — but it never calls `acquire_deploy_lock()`, so no
 `DEPLOY_LANE_TOKEN` reaches the build and the Dockerfile tripwire refuses it in under a
-second. **Adjudicated as structurally dead, not gated**, on the same footing as the retired
-bare compose command. `deploy-maia-api.sh` builds a different service;
+second. **Adjudicated as NOT A LEGITIMATE PRODUCTION PATH** — its ordinary invocation is
+structurally refused, but *(founder precision, 2026-09-08)* it is **not structurally
+impossible**: `DEPLOY_LANE_TOKEN` is documented as a **tripwire, not a credential**, and a
+deliberate manually supplied token can still override the lane by existing deploy doctrine.
+The accurate state is *quiet invocation refused; deliberate override possible by design* —
+not "structurally dead". `deploy-maia-api.sh` builds a different service;
 `deploy-consciousness-computing.sh` builds different images. No UNKNOWN path remains.
 
 **Dependencies, sharpened.** The requirement is not "the checkout has Jest" — it is that the
@@ -405,7 +411,7 @@ reaches the image). No trusted environment → **BLOCK**, never a fallback to `$
 | ⛔ **THE TWO-SOURCE CONTROL** — checkout green, named tree red → **BLOCKS** | ✅ *(this repo's own suite is green; had the gate inspected the checkout, this would have passed — which is the defect)* |
 | passes only when the named tree itself is green | ✅ |
 | 39 green → may pass · one red → BLOCK · 38 none-red → BLOCK · command unavailable → BLOCK · unparseable → BLOCK | ✅ |
-| no trusted dependency environment → BLOCK, never a checkout fallback | ✅ |
+| dependency **borrowing works**, and the refusal branch is asserted **structurally** | ✅ — *(founder precision, 2026-09-08)* this is **not** a behavioral negative control and must not be counted as one: because this checkout has `node_modules`, the gate legitimately links it in and succeeds, and the refusal is then verified only by reading the gate's own text. `PROJECT_DIR_OVERRIDE` in that test does nothing. The production code does fail closed correctly — a genuine test needs a dependency-root seam that removes or substitutes the source, and does not exist yet |
 | the snapshot is left byte-identical — the borrowed `node_modules` is removed | ✅ |
 
 One harness note worth keeping: the first run of the two-source control passed on exit code
@@ -417,7 +423,8 @@ the harness now captures both streams.
 
 1. every sanctioned production build path crosses Source custody ✅ (census complete, one
    path adjudicated dead) · 2. the gate runs against the exact materialized commit ✅ ·
-3. green-checkout/red-snapshot blocks ✅ · 4. missing dependencies block ✅ · 5. the
+3. green-checkout/red-snapshot blocks ✅ · 4. missing dependencies block ✅ *(by production code and structural assertion; see the
+label correction above)* · 5. the
 structural suite remains green ✅ (**62 passed** across the four suites) · 6. **no production
 Source-custody behavior changed** ✅ — `git diff` against the previous commit touches
 **zero** of `sourceArtifact.ts` · `fileVault.ts` · `erasureAuthority.ts` · `arrivals.ts` ·
