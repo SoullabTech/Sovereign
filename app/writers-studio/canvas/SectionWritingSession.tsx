@@ -144,8 +144,23 @@ export default function SectionWritingSession({
     }
   }, [place]);
 
-  return <>{children({
+  /**
+   * ⭐ ONE STABLE IDENTITY. Built inline, this object was new on every render,
+   * and the consumer publishes it upward through an effect keyed on it —
+   * `setSession` then re-rendered this component, which built another one.
+   * "Maximum update depth exceeded", found by the browser witness on
+   * `d863d4df5` before the acceptance instrument could be entered.
+   *
+   * The tell was the asymmetry beside it: `writing` is a `useMemo` from
+   * `useSectionWriting` and is stable. This is its sibling and was not.
+   *
+   * `setWholePlaceId` is a state setter and is stable by React's contract, so
+   * it is deliberately absent from the dependency list.
+   */
+  const session = useMemo<ManuscriptSession>(() => ({
     writing, view, changeView, wholePlaceId, onWholePlace: setWholePlaceId,
     wholeOpensAt, place,
-  })}</>;
+  }), [writing, view, changeView, wholePlaceId, wholeOpensAt, place]);
+
+  return <>{children(session)}</>;
 }
