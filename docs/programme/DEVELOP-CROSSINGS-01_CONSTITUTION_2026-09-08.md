@@ -1,6 +1,10 @@
-# DEVELOP — Observation-to-Work Crossings
+# DEVELOP — Developmental Working Field
 
-**Lane: `DEVELOP-CROSSINGS-01`**
+**Lane: `DEVELOP-DWF-01`** *(opened 2026-09-08 as `DEVELOP-CROSSINGS-01`;
+reshaped the same day by founder act — the crossings turned out to be
+capabilities inside a larger environment, not the environment itself. The
+original framing is kept below in §3 rather than deleted, because the crossings
+are still the concrete work and their census is still the evidence.)*
 ```
 LANE                 OPEN
 DISCOVER / FALSIFY   COMPLETE enough to constitute
@@ -16,9 +20,109 @@ lane; it was never a global prohibition on recording this one.
 Opened by founder act 2026-09-08, on the evidence of the first successful
 whole-work developmental reading (`6345b8e08`, 262/262 sections, 26 observations).
 
-> **The lane's question.** Once the writer decides an observation matters, how do
-> they move from reading to authorship without friction — and without MAIA
-> crossing the authorship boundary?
+> **The lane's purpose (founder, 2026-09-08).** After MAIA reveals a developmental
+> reading, provide a persistent environment in which writer and MAIA can explore,
+> test, relate, disposition and work through those insights, while preserving the
+> writer's sole authority over the Work.
+
+> **DEVELOP should not end when the insights appear. That is where DEVELOP
+> begins.** The reading is the diagnostic event; what follows is the
+> developmental relationship.
+
+### The three objects, and why they must stay three
+
+```
+READING       what MAIA observed          IMMUTABLE
+FIELD         what writer and MAIA are    LIVING
+              discovering about it
+WORK          what the author makes       AUTHORITATIVE
+```
+
+⭐ **This separation is the lane's load-bearing insight.** MAIA may notice
+repetition; through conversation the writer may establish *"the recurrence is
+intentional — what is actually wrong is that the second appearance does not
+deepen the first."* That is new developmental understanding, and it must **not**
+retroactively alter the frozen observation. It belongs to the living field.
+
+**That is how MAIA becomes wiser with the writer without corrupting evidence
+provenance.**
+
+### It resolves the ranking problem by dissolving it
+
+The earlier question — should MAIA rank 26 observations? — was the wrong
+abstraction. The writer does not need priorities. They need to **enter an insight
+and discover its significance**. Some die immediately (*that's intentional —
+dismiss*). Some open (*that connects to something in Chapter 9*). Some become
+substantial (*this is not a duplicated paragraph; I have not decided what the
+Trinity is doing in the architecture*) and become a developmental thread.
+
+> Significance emerges through the writer–MAIA encounter, rather than being
+> manufactured beforehand by an algorithmic priority score.
+
+### The capabilities
+
+```
+DWF-1  enter an observation
+DWF-2  work it through with MAIA
+DWF-3  see its evidence and related passages
+DWF-4  establish writer standing
+DWF-5  follow emerging developmental threads
+DWF-6  take me to the relevant place
+DWF-7  keep a version before consequential change
+DWF-8  keep developmental context present while writing
+DWF-9  record that the writer acted on something
+```
+
+DWF-6, DWF-7, DWF-4 and DWF-8 are the four crossings censused in §2; the rest are
+the field they sit inside.
+
+### Where composition belongs
+
+```
+DEVELOP READING                → what has MAIA seen?
+reader-facing composition      → made intelligible
+DEVELOPMENTAL WORKING FIELD    → what do we make of it together?
+WORK                           → what will I do?
+```
+
+The presentation / composition problem is immediately UPSTREAM of this lane, not
+inside it.
+
+---
+
+## 0b · Two questions this reshaping opens
+
+⛔ Neither is answered here. Both are constitutional, and both would be easy to
+answer by accident during implementation.
+
+**Q-A · What is the epistemic status of what the FIELD concludes?**
+A frozen observation is evidence-bound and validated. A standing is a member
+decision. But *"the recurrence is intentional; the second appearance does not
+deepen the first"* is neither — it is jointly authored understanding, arrived at
+in conversation, resting on evidence the reader gathered but stating something
+the reader was constitutionally barred from stating. It must be named, or it will
+be quietly filed as one of the two things it is not. **A field conclusion that
+gets stored as an observation corrupts the reading; one stored as a standing
+misattributes it to the writer alone.**
+
+**Q-B · Does a persistent MAIA beside the writer change the relational posture?**
+Every DEVELOP act so far is *commissioned*: one member gesture, one reading,
+frozen. DWF-8 makes MAIA continuously present while the writer works. That may be
+exactly right — a gifted developmental editor in the room — but it is a different
+posture from a commissioned reader, and the Sovereignty Invariants ask of any
+capability increase whether it *reduces the system's psychological centrality over
+time*. **The question is not whether MAIA writes. It is whether presence becomes
+ambient rather than invited.** An invited presence and an always-on one are
+different relationships to a writer's solitude, and the difference should be
+designed rather than defaulted.
+
+---
+
+## 0c · The original lane question, retained
+
+> Once the writer decides an observation matters, how do they move from reading to
+> authorship without friction — and without MAIA crossing the authorship
+> boundary?
 
 > **The lane's centre (founder).** *MAIA may help the writer arrive at the work.
 > MAIA may not become the writer.*
