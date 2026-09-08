@@ -119,3 +119,38 @@ describe('unreadSpan is derived from coverage plus the refs (INV-9)', () => {
     expect(r.ok && unreadSpan(r.value, evidence)).toEqual(['s3']);
   });
 });
+
+/**
+ * WS-DEVELOP-SECTION-RUN-CONFORMANCE-01 — the production shape of 2026-09-07.
+ *
+ * A whole-work read returned 27 claims; 26 bound; `claims[26] refs[3]` was a
+ * `section-run` over non-adjacent ids, and `run_not_as_read` discarded all 27.
+ *
+ * The binder was right and is unchanged. What moved is the instruction, which
+ * had defined `section-run` as contiguous and then said it "may name any
+ * sections in the sequence". These two tests are the pair that instruction now
+ * teaches: the collection shape is refused, and the SAME sections cited as
+ * separate refs are proven. The second half is what makes the repaired sentence
+ * falsifiable — advice to use separate refs is only sound if separate refs bind.
+ */
+describe('a collection of non-adjacent sections is not a run — but is lawful as separate refs', () => {
+  it('refuses non-adjacent ids packed into one section-run', () => {
+    const { evidence } = evidenceAtRev1({ bodyScope: ['s0', 's1', 's2', 's3'] });
+    /* s0 · s2 · s3 — every id real, ascending, one gap. The witnessed shape. */
+    expect(bindEvidence([{ kind: 'section-run', sectionIds: ['s0', 's2', 's3'] }], evidence))
+      .toMatchObject({ refusal: 'run_not_as_read' });
+  });
+
+  it('proves the same three sections as three separate section refs', () => {
+    const { evidence } = evidenceAtRev1({ bodyScope: ['s0', 's1', 's2', 's3'] });
+    const r = bindEvidence([
+      { kind: 'section', sectionId: 's0' },
+      { kind: 'section', sectionId: 's2' },
+      { kind: 'section', sectionId: 's3' },
+    ], evidence);
+    expect(r.ok).toBe(true);
+    /* Not a consolation prize: this is the shape a recurrence claim — "this
+       returns here, and here" — was always supposed to take. */
+    expect(r.ok && r.value.refs).toHaveLength(3);
+  });
+});
