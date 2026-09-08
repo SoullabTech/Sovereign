@@ -215,10 +215,23 @@ visible, reviewable, constitutional act, not an accident.
 | **P5** | A second import creates a NEW arrival; the first arrival's witness is unchanged (F5) | a later arrival making an old one "become something else" |
 | **P6** | Static: source-write allowlist | a future capability writing Source directly |
 | **P7** | **Cascade reachability — two-part.** (a) *mutation locality*: the cascade-triggering `DELETE FROM member_manuscripts` exists only at the sanctioned lifecycle boundary; (b) *authority reachability*: content-working paths cannot **enter** that boundary — an allowlist of who may import or invoke `eraseManuscript()`, with the negative control *a content-working caller attempts to obtain manuscript-deletion authority through the sanctioned helper* → **REFUSED / structurally unreachable** | Source destroyed without naming it, **and** a content route calling the approved helper while the SQL allowlist stays perfectly green |
-| **P8** | Static: erasure-enqueue allowlist + namespace refusal | editing reaching lifecycle authority |
+| **P8** | **Source-destruction reachability (post-S4).** Content-working code cannot **acquire** Source-erasure power, **counterfeit** it, **repurpose** another authority into it, or **cross into Source by pathname construction**; canonical-namespace refusal holds. *(Queue locality — exactly one runtime SQL inserter — is now an S4 structural assertion, not a PT-3 falsifier: after S4 the seam is the only inserter, so allowlisting direct inserts would describe the pre-S4 world.)* | editing reaching lifecycle authority |
 | **P9** | Lifecycle still works: WS-DELETE-01 erasure destroys Source completely | a falsifier that "protects" Source by making the member's own erasure impossible |
 | **P10** | Vacuity guard: a manuscript with no arrival yields **SKIP, never PASS** | green earned by having nothing to protect |
-| **P11** | **Source vault-write authority (structural).** Only the Source-arrival authority may create bytes in the `manuscript-sources` namespace, and content-working code cannot acquire an overwrite capability against an existing Source artifact — asserted structurally, **never** by collision arithmetic, timestamps, hashes, or conventions about which callers currently use which namespace | a future content route acquiring `writeVaultBytes` truncation power over Source without ever appearing in the behavioral corpus |
+| **P11** | **Source-write reachability (structural).** Two properties: **(i)** generic vault writing cannot target the `manuscript-sources` namespace at all; **(ii)** Source arrival may create a NEW artifact but cannot overwrite an existing historical one — **create-only filesystem semantics**, so historical Source is immutable by mechanism rather than by improbable filename collision. Never satisfied by collision arithmetic, timestamps, hashes, or by observing which callers happen to pass which namespace today | a future content route acquiring `writeVaultBytes` truncation power over Source without ever appearing in the behavioral corpus |
+
+**Post-S4, each falsifier proves a distinct thing — the split matters because P8's old
+wording described an architecture that no longer exists:**
+
+```text
+S4  / queue locality        exactly one runtime SQL enqueue primitive
+P7  / lifecycle locality    only the sanctioned lifecycle path may invoke the
+                            manuscript destructive transition
+P8  / destruction reach     content work cannot acquire or counterfeit
+                            Source-erasure power; canonical namespace holds
+P11 / write reach           content work cannot acquire Source creation,
+                            overwrite or truncation power
+```
 
 **P7's second half is the amendment that matters most.** The original assertion proved
 *where* the destructive SQL lives; it said nothing about *who can reach it*. A future
@@ -283,10 +296,13 @@ arrival and asserts nothing about any subsequent act.
 required a new architectural authority boundary for **P8**: there was no Source-lifecycle
 authority seam, only an open table with three producers and a doctrine comment. The
 founder ruled S4 first, adjudicated in WS-DELETE-01, and the seam now exists
-(`lib/storage/erasureAuthority.ts`, 11 negative controls green). P8 is therefore
-implementable against a final authority shape rather than a hoped-for one — which is why
-the ruling forbade building S2/S3 against the old shape and rewriting their allowlists
-afterwards.
+(`lib/storage/erasureAuthority.ts`). Its **first implementation was refused** on founder
+review — *absence + namespace is not evidence + locality* — and repaired the same day:
+Source lifecycle authority is now an operation, not a portable token, so there is no
+authority object to widen, counterfeit, or carry past a rollback. NC-12…NC-18 green.
+**Founder acceptance of the repaired seam is still outstanding, and step 4 is held until
+it lands** — which is the same discipline that forbade building S2/S3 against the old
+shape and rewriting their allowlists afterwards.
 
 Proposed series, smallest first:
 
@@ -295,7 +311,7 @@ Proposed series, smallest first:
 | **S1** | `sourceWitness()` — pure + read-only; no schema, no new table | within this design act |
 | **S2** | **P1–P5, P9, P10** behavioral falsifier over the real content surface, disposable fixture, rollback-only consequence | needs a build act |
 | **S3** | **P6, P7 (locality + reachability), P11** static scans (comment-stripped, `scripts/` excluded and pinned) | needs a build act |
-| **S4** | **P8** — the guarded enqueue seam | ✅ **RULED AND BUILT** (WS-DELETE-01, 2026-09-08) |
+| **S4** | the governed erasure seam that P8 falsifies | **RULED · BUILT · FIRST ATTEMPT REFUSED · REPAIRED** (WS-DELETE-01, 2026-09-08). ⛔ Awaiting founder acceptance; steps below are held until it lands |
 | **S5** | Bind the whole set into the release gate so it runs on every Studio change | needs a build act |
 
 **S4 is done.** S1–S3 and S5 now deliver PT-3 as executable law over everything that
@@ -309,10 +325,8 @@ exists today, written once against the authority shape that will stand.
 deploy. This document is a design and a census. The only code that exists is the
 WS-DELETE-01 seam PT-3 depends on, built under its own lane's ruling and recorded there.
 
-Owed to the founder: **(a)** review of the S4 seam as a constitutional shape — in
-particular that Source authority is *evidence plus locality* rather than an unforgeable
-capability, which is what this runtime can actually guarantee; **(b)** a build act for
-S1–S3 + S5 against that shape. §1.4's three-producer finding is **adjudicated in
+Owed to the founder: **(a)** acceptance of the **repaired** S4 seam; **(b)** a build act
+for S1–S3 + S5 against that shape. §1.4's three-producer finding is **adjudicated in
 WS-DELETE-01** per the ruling, not here.
 
 > Get PT-3 right and Restore can later become dangerous in exactly the right way:
