@@ -1301,3 +1301,124 @@ intermittent — one run in five. The cause was **momentum from the preceding st
 frame handle with the mouse and then reads the baseline before the resulting smooth scroll has
 settled. The instrument now waits for four consecutive still frames before taking the baseline.
 *The failure was in the measurement, but the measurement was measuring the right thing.*
+
+---
+
+# 25 · THE ACCEPTANCE WALK
+
+## 25.1 ⭐ MAXIMUM CLAIM — pre-authored, before the walk began
+
+> **If the walk passes, the prototype demonstrates a form in which a writer can enter an inviting
+> writing field, place and resize attention, invite MAIA into that attention, pursue an observation
+> without surrendering the Work as primary, use surrounding capabilities without losing their place,
+> and return to writing.**
+>
+> **Nothing beyond that.**
+
+⛔ **Explicitly NOT established by a passing walk:** real MAIA cognition · production readiness ·
+that this form helps any writer other than the one who walked it · that the felt room survives
+contact with a manuscript the walker did not already know.
+
+⛔ **The Workbench is excluded as a gate.** Its bottom-cover behaviour is a named partial defect
+(§23.3). It may be opened if naturally useful; a failure there is not new witness evidence.
+
+## 25.2 · The walk, as it happened
+
+Arrived, sat, wrote a real paragraph into section 4, framed the sentence at section 5 where the
+chapter turns from encounter into explanation, invited MAIA, pursued one of her observations, used
+Structure for an actual reason, closed her, and wrote again. Only spontaneous friction recorded.
+
+## 25.3 🔴 WHAT MADE ME STOP
+
+**1 · "Why did she say the same thing twice?"** — ⭐ **the decisive finding.**
+Inviting her produced the seam observation. My actual question produced *the identical paragraph*.
+I then wrote **"You just said that. I was asking something narrower."** and got it **a third time,
+verbatim, still opening "My first read."** ⛔ **My turn had no causal effect on her thinking.**
+
+**2 · "Where did her words go?"** — opening a thread **broke the MAIA orbit's layout**. The panel is
+376px; the thread strip's label alone is 248px and cannot shrink, forcing `#composer .inner` to
+**446px** — so every child *including her transcript* overflowed 70px past the panel and was clipped
+mid-word by the viewport. It recovers on **Stop pursuing** (340px). ⛔ **Her words are unreadable
+for exactly the duration of the feature's purpose.**
+⚠️ **`d9-workwith`'s 25 checks all passed through this.** They asserted visibility, text and
+semantics — never that the text stayed *inside the panel*. **The same error as the original orbit
+law: verified what it meant, missed what it looked like.**
+
+**3 · "Why is she still here after I closed her?"** — closing MAIA returns the composer to the Work
+with the whole transcript still in it: a **369px** block, **41% of the viewport**, sitting over the
+manuscript above the composer and the focus strip. ⛔ **RETURN fails.** *This is the direct cost of
+"one conversation, one home" — the home is the composer, and the composer comes back.*
+
+**4 · "Why is the composer floating in the middle of the page?"** — `body.focusheld` is **added at
+line 535 and never removed**. Once anything has been framed, the composer stays raised 5.2rem for a
+strip that is no longer there, with manuscript text visible beneath it, for the rest of the session.
+⛔ **Residue. None of the 152 checks looked at it.**
+
+**Surface, recorded without weight:** the rail labels break mid-word (`Str/uct`) · the epigraphs show
+their markdown (`*"We try to realize…"`) so the eye meets an asterisk before it meets Tagore · the
+frame box and section 5's focus rule compete (*"which one is my focus?"*) · her sentence has an
+em-dash after a full stop where the fixture meets the `orient()` wrapper.
+
+**What held:** the aperture. At 1440 with **both** orbits open, the Work sat between them fully
+readable, no text underneath either, the Focus intact on section 5, the whole encounter preserved,
+Escape closing Structure and leaving her open. The composer's placeholder becoming *"What are you
+attending to here?"* on framing was the one moment I wrote down as **"oh, that's useful."**
+
+## 25.4 ⭐⭐ FOUNDER RULING — ARTIFACT COGNITION WITNESS: **FAIL / NOT TESTABLE HERE**
+
+Reached independently, from the founder's own use, on the same failure:
+
+> *"You change the question → MAIA's understanding should change → her next response should be
+> different. Current artifact: you change or clarify the question → **same observation re-emitted**;
+> wording changes slightly, understanding does not."*
+
+> ⭐⭐ **The form can simulate conversational behaviour. It cannot simulate understanding without
+> eventually revealing the simulation. And you just found the revealing moment.**
+
+> ⭐ **Formula repeats its insight. Intelligence lets the relationship change its mind.**
+
+⛔ **Not because the interface failed** — because the artifact has demonstrated why the next phase
+must be real MAIA. ⛔ **Do not patch another phrase, trigger, or fixture. Do not polish the fixture
+into a better impersonation of cognition.**
+
+⛔ **No manufactured thinking time.** A fake pause to seem thoughtful is forbidden. What creates the
+sense of thought is **responsiveness, specificity, revision, surprise, and accumulation across
+turns** — not latency.
+
+**The next implementation preserves this surface and replaces the fixture responder with the
+canonical cognition path.** Its acceptance case:
+
+```text
+WRITER    Does this opening prepare the reader for the book?
+MAIA      answers that actual question
+WRITER    No — I mean emotionally and experientially, not structurally.
+REQUIRED  MAIA abandons or revises her prior frame, re-reads the passage
+          through the new intention, and gives a materially different response.
+FAIL      she repeats the same observation with different wrapping.
+```
+
+⭐ **And the criterion beneath it: a correction must change MAIA's working understanding, not merely
+her next sentence.** *That is the test the fixture cannot pass convincingly.*
+
+## 25.5 · Against the pre-authored maximum claim
+
+| Clause | Verdict |
+|---|---|
+| enter an inviting writing field | **HELD** |
+| place attention | **HELD** |
+| resize attention | ⚠️ **NOT EXERCISED in this walk** (covered by `d9-frame-drag-verify`, not by encounter) |
+| invite MAIA into that attention | **HELD** |
+| pursue an observation without surrendering the Work as primary | ⚠️ **HELD IN SEMANTICS, FAILED IN FORM** — the Focus stayed primary; her words left the panel |
+| use surrounding capabilities without losing their place | **HELD** — Structure, both orbits, Escape, Focus, encounter all intact |
+| return to writing | 🔴 **FAILED** — the transcript follows you back into the Work |
+
+⛔ **The walk does not pass in full, so the maximum claim is not claimed in full.**
+
+```text
+ARRIVAL     YES.  Nothing asked for anything. I read Tagore before I noticed there was software.
+IMMERSION   YES, until the first frame — after which a composer sat in the middle of the page.
+RELATION    NO.   She said the same thing three times, including after I told her she had.
+RETURN      NO.   Closing her did not put the conversation away; it moved it on top of the Work.
+```
+
+> ⭐ **The room is right. The Work stayed the Work. What is inside the room is not yet a mind.**
