@@ -320,8 +320,8 @@ export const PRODUCER_REGISTRY = {
   'retrieved.relationship_memory': {
     authoredBy: 'system', participationClass: 'retrieved', authority: 'infer',
     provenance: 'RelationshipAnamnesis (system-authored essence)', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between', 'writers_studio'], mandatory: false, scope: 'tier',
-    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: central to "the same MAIA knows me"] system-authored relationship summary, retrieved — authoredBy system, not member',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'tier',
+    ...CMT, reason: '[-writers_studio 2026-09-09 WS-ROOM-02: EXCLUDED PENDING PARTITION. This producer is not merely continuity: it carries recurring themes, emerging patterns, relationship phase, trust and intimacy estimates and archetypal resonance — system-generated meaning ABOUT the member. Ambient in a writing room it would let "knowing the writer" become "explaining the writer". A situate-only continuity partition (recognized identity, prior encounter existence, raw count, last date, member-confirmed markers) is OWED and would be admitted; the interpretive remainder is invited or separately adjudicated, never ambient.] system-authored relationship summary, retrieved — authoredBy system, not member',
   },
   'collective.knowledge_field': {
     authoredBy: 'collective', participationClass: 'retrieved', authority: 'situate',
@@ -333,7 +333,7 @@ export const PRODUCER_REGISTRY = {
     authoredBy: 'system', participationClass: 'inferred', authority: 'infer',
     provenance: 'DEEP consultation lane', consentBasis: null,
     requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'tier',
-    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: cognitive capacity, not a competing authority; DEEP-invoked only] DEEP council synthesis (MAIA_USE_CLAUDE_CONSULTATION)',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01/02: CURRENT-TURN cognition about the WORK, not stored inference about the PERSON — which is why it stays where relationship_memory does not. Current-turn inference may ENLARGE MAIA\'s thinking; it may not acquire authority over the writer\'s attention, intention or authorship. It remains hypothesis-bearing and subordinate to Focus and the writer\'s response.] DEEP council synthesis (MAIA_USE_CLAUDE_CONSULTATION)',
   },
   'house.youth_support': {
     authoredBy: 'house', participationClass: 'authored', authority: 'situate',
@@ -357,7 +357,9 @@ export const PRODUCER_REGISTRY = {
     ...WSROOM,
     reason: 'MAIA participates as a WRITERLY INTELLIGENCE in relationship with the author and the '
       + 'Work. She may perceive, question, compare, develop, propose and remember. ONLY THE WRITER '
-      + 'AUTHORS THE WORK. Mandatory: the role may not depend on a tier remembering to add a prompt.',
+      + 'AUTHORS THE WORK. Mandatory: the role may not depend on a tier remembering to add a prompt. '
+      + 'WS-ROOM-02: current-turn inference may enlarge her thinking but may never acquire authority '
+      + 'over the writer\'s attention, intention or authorship.',
   },
   'member.writer_focus': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',

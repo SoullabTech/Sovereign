@@ -2012,3 +2012,96 @@ value is `UNAVAILABLE`.** *That is the F-ABSENCE structure again.*
 `108 + 41 = 149` tests across canonical-turn and writers-studio, **0 failed** · typecheck **229 vs
 baseline 239, no regressions** · `check:no-supabase` clean · **production Writer's Studio untouched ·
 no cognition wired · the fixture responder still lives only in the artifact.**
+
+
+---
+
+# 32 · WS-ROOM-02 — THE MEMBRANE HAS THREE CLASSES
+
+> ⭐⭐ **Writer's Studio admits CONTINUITY ambiently, INTERPRETATION by invitation, and COGNITION
+> provisionally.**
+
+**Founder ruling 2026-09-09, superseding the single-axis form of WS-ROOM-01.** It is stronger than
+*"continuity before interpretation"* because it explains **how the whole MAIA can be present without
+the whole of her history and machinery becoming operative at once.**
+
+```text
+AMBIENT     conversation continuity · member-placed memory · writer Work/Focus/intention
+            · raw relationship continuity
+            arrives without another gesture: preserves relationship without steering the Work
+
+INVITED     journals · captures · symbolic systems · past significant moments · outside
+            references · non-contiguous material
+            enters because the WRITER brings it into this creative encounter
+
+COGNITIVE   consultation · eventually elemental / PFI / resonance / unified intelligence
+            may help MAIA think; provisional; cannot move attention or authority silently
+```
+
+## 32.1 ⭐ THE TWO-INFERENCE QUESTION — RESOLVED BY SEPARATING KINDS
+
+**`retrieved.relationship_memory` → EXCLUDED PENDING PARTITION.** As constituted it is **not merely
+continuity**: it carries recurring themes, emerging patterns, relationship phase, trust and intimacy
+estimates, and archetypal resonance — *system-generated meaning about the member.* The code already
+had to add a provenance boundary to stop encounter frequency being laundered into relational truth.
+
+> ⭐⭐ **Ambient in a writing room, it would let "knowing the writer" become "explaining the writer".**
+
+**Owed:** a situate-only partition — recognized identity · prior encounter existence · raw encounter
+count · last encounter date · member-confirmed continuity markers — which would be admitted
+ambiently. **The interpretive remainder is invited or separately adjudicated, never ambient.**
+⛔ **The new producer is NOT registered: it is design-owed, and registering an undesigned entry is
+the move the registry's own convention forbids.**
+
+**`computed.consultation` → ADMITTED.** It is not past inference *about the member*; it is
+**current-turn cognition about the Work**.
+
+> ⭐⭐ **Current-turn inference may enlarge MAIA's thinking. It may not acquire authority over the
+> writer's attention, intention, or authorship.**
+
+It may help her notice *"section 2 may be resolving a tension too early."* ⛔ It may never silently
+become *"therefore we are restructuring section 2."* That rule is written into
+`floor.writer_role_boundary` — the room's **mandatory** floor — not left in a document.
+
+⭐ **One intentional inferential producer remains, and it infers about the Work now rather than about
+the person in the past.** A test asserts the set is exactly `['computed.consultation']`.
+
+## 32.2 · The six, ruled
+
+| Producer | Ruling |
+|---|---|
+| `member.capture_context` | **EXCLUDE ambiently** → INVITED · *"Bring this into the Work"* |
+| `member.journal_context` | **EXCLUDE ambiently** → INVITED · *"Bring this journal entry into the Work"* |
+| `retrieved.significant_moments` | **EXCLUDE** — too likely to steer creative interpretation; unresolved partition concerns |
+| `declared.epistemic_path` | **EXCLUDE v1** — writer intention/commission is the local authority; do not import another process frame |
+| `declared.scribe_session_discussion` | **EXCLUDE** — wrong encounter type |
+| `house.place` | **EXCLUDE** — room and role already situate MAIA; no duplicate room narration |
+
+⭐ **Journals and captures are not forbidden — they need a gesture.** They then arrive as
+Writer-owned material, **not because another room happened to have a `journal_context` block.**
+
+## 32.3 · Built
+
+`lib/writers-studio/membrane.ts` classifies **every one of the 50 producers** as `ambient`,
+`invited`, `cognitive`, or excluded-with-a-reason. ⛔ **It classifies; it does not admit** — admission
+is `rooms` in the registry, and tests fail if the two ever drift:
+
+```text
+every admitted producer is classified ambient or cognitive
+nothing classified `invited` is admitted — invitation is a gesture, and it is not built
+every `invited` producer names the gesture that would bring it in
+nothing is both classified and excluded outright
+every producer in the registry has a disposition — none is left undecided
+```
+
+⭐ **That last one is the structural gain.** Under WS-ROOM-01 six producers were undecided and held
+out only by a fail-closed default. Now **no producer can be added to the registry at all without
+someone deciding what it means in this room** — the test fails until they do.
+
+**Gates:** `159` tests across canonical-turn and writers-studio, **0 failed** · typecheck **229 vs
+baseline 239, no regressions** · `check:no-supabase` clean · production Writer's Studio untouched ·
+no cognition wired.
+
+**Next: the whole-organism producer census** — elemental · PFI · resonance · unified, separated and
+truthfully authorized, every signal carrying `ACTUAL / DERIVED / UNAVAILABLE`, ⛔ never `0.5` where
+the honest value is `UNAVAILABLE`.
