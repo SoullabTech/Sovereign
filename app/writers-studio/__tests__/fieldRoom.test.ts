@@ -93,3 +93,33 @@ describe('the Field room', () => {
     expect(src).not.toContain('--field-thread-color');
   });
 });
+
+describe('the study is opt-in and inert by default', () => {
+  const page = fs.readFileSync(
+    path.join(__dirname, '..', 'canvas', 'page.tsx'), 'utf8',
+  );
+
+  /**
+   * ⛔ ABSENT MEANS ABSENT. With no `?field=` parameter — which is every member,
+   * every session, today — the canvas returns exactly the shell it always
+   * returned. A study that changed the room for people who did not ask to be in
+   * it would be a deployment wearing a study's clothes.
+   */
+  it('the Field room is reached only by an explicit route parameter', () => {
+    expect(page).toContain("parseTreatment(searchParams?.get('field') ?? null)");
+    expect(page).toContain('if (fieldTreatment) {');
+    /* The canonical shell is still the fall-through, not a branch of the room. */
+    expect(page).toContain('<WriterStudioShell');
+  });
+
+  /**
+   * The room receives what this page already resolved. If it ever called
+   * `useSectionWriting` itself it would be a second implementation of the
+   * engine, which is the one thing the integration was told not to build.
+   */
+  it('the room re-derives no part of the engine', () => {
+    for (const f of files()) {
+      expect(strip(raw(f))).not.toContain('useSectionWriting');
+    }
+  });
+});
