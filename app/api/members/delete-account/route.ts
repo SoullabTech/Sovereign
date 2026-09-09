@@ -123,6 +123,13 @@ const GOVERNED_CONTENT: ReadonlyArray<{ table: string; column: string; label: st
   { table: 'bardic_teloi', column: 'user_id', label: 'field records' },
   { table: 'bardic_links', column: 'user_id', label: 'field records' },
   { table: 'bardic_cues', column: 'user_id', label: 'field records' },
+  // Records that your writing was shown to MAIA.
+  // ⭐ Named here DELIBERATELY. The Focus disclosure receipt is content-free and
+  // has no automatic pruning, so without this line it would survive account
+  // deletion the way audit_logs does — by nobody having listed it.
+  // Retention may be shared by decision. It may not be shared by accident.
+  // (docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md §5)
+  { table: 'context_disclosure_receipts', column: 'member_id', label: 'records of when your context was shown to MAIA' },
 ];
 
 /**

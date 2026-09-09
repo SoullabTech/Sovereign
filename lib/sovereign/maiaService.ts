@@ -4,6 +4,7 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory } f
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -619,7 +620,49 @@ type MaiaRequest = {
    * Absent → getMaiaResponse computes one at the shared boundary.
    */
   orientationContract?: OrientationContract | null;
+  /**
+   * FOCUS-PRODUCER-01 — the writers_studio canonical participation path.
+   *
+   * ⭐ TYPED AND TOP-LEVEL, for the same reason `orientationContract` is: `meta`
+   * starts as the client's request-body rest-spread, so Writer material arriving
+   * there would be forgeable AND ungoverned. The Writer's Studio context contract
+   * refuses the `meta`/addendum/prompt family outright — it is the open channel
+   * CMT-01 exists to close.
+   *
+   * A frozen, already-adjudicated turn. Membership was fixed by
+   * `constructCanonicalTurn` at the Writer's Studio route; this service renders it
+   * for whichever tier routing selects and may not add or remove participants.
+   *
+   *   ⭐⭐ Tier selects how MAIA thinks. The room decides what is allowed to think
+   *       with her.
+   */
+  writerStudio?: WriterStudioInput | null;
 };
+
+/**
+ * FOCUS-PRODUCER-01A — everything the Writer's Studio lane carries into the
+ * service, typed and top-level.
+ */
+export interface WriterStudioInput {
+  /** Frozen and already adjudicated. Membership was fixed at the route. */
+  readonly turn: CanonicalTurn;
+  /**
+   * ⭐ H3 · ONE TURN, ONE PRIVACY POSTURE. The route resolved this once, and the
+   * same object governs the consent row, the CanonicalTurn's sovereignty, and
+   * every content writer here. ⛔ The service must NOT re-resolve posture from
+   * `meta` on this path: with no sanctuary signal in a Writer request's meta,
+   * that silently yields `normal` while the disclosure record says `sanctuary`.
+   * *One turn cannot have two privacy postures.*
+   */
+  readonly posture: TurnPosture;
+  /**
+   * ⭐ H1 · THE TRUE HANDOFF. Fired immediately after the response-producing call
+   * is invoked — not when this service is entered. *Starting the service is not
+   * starting cognition*: entry is followed by turn counts, history, field safety,
+   * routing and much else before any model is reached.
+   */
+  readonly onHandoff?: () => void;
+}
 
 /**
  * Content-based processing router using sophisticated analysis from MaiaConversationRouter
@@ -2646,14 +2689,38 @@ function finalizeMemberFacingText(
   return { text, presenceConstrained, identityGuarded: guard.wasConstrained };
 }
 
+/**
+ * ⛔ H2 marker: a responder that must never produce the answer on a Writer turn.
+ * Thrown to leave the surrounding non-blocking `catch` intact rather than adding
+ * a second exit shape to a hot path.
+ */
+class WriterCanonicalOnly extends Error {
+  constructor(public readonly responder: string) {
+    super(`[writers-studio] ${responder} may not respond on a canonical Writer turn`);
+    this.name = 'WriterCanonicalOnly';
+  }
+}
+
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  // FOCUS-PRODUCER-01: present only for writers_studio, and only when the route
+  // built and adjudicated the turn. Absent → every existing caller is unchanged.
+  const writerStudio = req.writerStudio ?? null;
+  const writerStudioTurn = writerStudio?.turn ?? null;
   // NOTE: read from `req`, never from `meta`. See MaiaRequest.orientationContract.
   const trustedOrientation = req.orientationContract ?? null;
   const startTime = Date.now();
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
-  const turnPosture = TurnPosture.resolve(meta);
+  // H3: the Writer lane carries its already-resolved posture; every other caller
+  // resolves its own exactly as before.
+  const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  if (writerStudio) {
+    // The legacy tail reads `meta.sanctuary` directly. Deriving it from the one
+    // trusted posture keeps both readings identical; it can only ever make the
+    // turn MORE protective, never less.
+    (meta as Record<string, unknown>).sanctuary = writerStudio.posture.sanctuary;
+  }
   // One exchange identity per member action, minted at the boundary and shared
   // by every persistence path in this request: addConversationExchange (which
   // reaches conversation_turns via sessionManager) and the direct
@@ -2775,7 +2842,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             context: 'maia',
           });
 
-          // If not safe, return boundary message immediately (before Bloom, router, etc.)
+          // ⛔ H2 · Field safety MAY legitimately refuse a turn — that is its job.
+          // What it may not do is look like an ordinary Focus answer: it returns
+          // BEFORE the Work reaches a model, so `onHandoff` is never signalled and
+          // the receipt stays `attempted`. A refusal is a non-crossing, not a
+          // Focus response produced without the Focus.
           if (!fieldSafety.allowed) {
             console.log(
               `🛡️  [Field Safety - Service] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
@@ -2783,7 +2854,22 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             );
 
             const text = fieldSafety.message ?? "Let's take the safest next step together.";
-            await addConversationExchange(sessionId, input, text, {
+            // ⭐⭐ W2 · A PRE-HANDOFF REFUSAL MUST LEAVE NO RESPONSE BEHIND THAT THE
+            // WRITER WAS NEVER SHOWN.
+            //
+            // On a Writer turn this return happens before the Work reaches a model,
+            // so `onHandoff` never fires, the receipt stays `attempted`, and the
+            // Writer surface presents a non-crossing state with NO assistant
+            // response. Persisting this text anyway would leave a ghost turn in
+            // continuity: MAIA remembering an answer the writer never received,
+            // and carrying it into the next turn's history.
+            //
+            // ⛔ The refusal still travels outward in the return value — it is
+            // information the surface may choose to present. What it may not do is
+            // write itself into the conversation from inside the service.
+            if (writerStudio) {
+              console.log('🖋️ [Field Safety] Writer turn refused pre-handoff — no exchange persisted');
+            } else await addConversationExchange(sessionId, input, text, {
               ...meta,
               exchangeId,
               fieldRouting: fieldSafety.fieldRouting,
@@ -3116,8 +3202,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingDepth: processingProfile,
     };
 
+    // ⛔ H2 · NO RESPONSE BYPASS. RCN returns a response of its own, produced
+    // without the Writer canonical turn. On a Focus turn that would answer the
+    // writer while the Work never reached a model — the inert-Focus defect in a
+    // new location, and with a `crossed` receipt beside it. Excluded outright for
+    // this first Writer lane rather than made conditional.
     // Try RCN for appropriate queries (non-blocking - falls back to standard paths)
     try {
+      if (writerStudioTurn) throw new WriterCanonicalOnly('rcn');
       const rcnDecision = await maiaRcnProcess(input, rcnContext);
       if (rcnDecision.used) {
         rcnResult = rcnDecision.result;
@@ -3165,8 +3257,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       }
     } catch (rcnError) {
-      // RCN failure is non-blocking - fall back to standard paths
-      console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+      if (rcnError instanceof WriterCanonicalOnly) {
+        // ⭐ W1 · An intentional room-policy exclusion must not wear the telemetry
+        // of a runtime failure. *A refusal witness must prove the intended
+        // refusal, not merely prove that the operation failed* — and the same
+        // discipline governs the log line a witness will read.
+        console.log('🖋️ [RCN] excluded — writers_studio canonical participation owns the response path');
+      } else {
+        // RCN failure is non-blocking - fall back to standard paths
+        console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+      }
     }
 
     // 🔭 CONTEXT INVENTORY — epistemic observability (descriptive, NOT interpretive).
@@ -3262,6 +3362,32 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [MAIA] context-inventory emit failed (non-blocking):', invErr);
     }
 
+    // ── FOCUS-PRODUCER-01 · the writers_studio canonical branch ──────────────
+    //
+    // ⛔ CANONICAL PARTICIPATION OWNS MEMBERSHIP. The legacy tier assemblies are
+    // not merely skipped for tidiness: running them would let MIPA govern one
+    // portion of the prompt while the old machinery quietly places excluded
+    // material beside it — field, memory and symbolic injections the room refused.
+    // That is the double-participation trap (P8), and it would be invisible.
+    //
+    // The tier still chooses STRATEGY. It has lost the authority to decide who
+    // participates. Membership was fixed at construction, before this line.
+    if (writerStudioTurn) {
+      const rendered = renderTurnForCognition(writerStudioTurn, { tier: processingProfile === 'FAST' ? 'FAST' : processingProfile === 'DEEP' ? 'DEEP' : 'CORE' });
+      // ⭐ H1 · THE CROSSING IS THIS LINE. The call is invoked, THEN the handoff is
+      // signalled, THEN the result is awaited. Signalling any earlier would confirm
+      // a receipt for Work that had not yet reached a response-producing model.
+      const canonicalGeneration = generateText({
+        systemPrompt: rendered.systemPrompt,
+        userInput: input,
+        meta: { ...meta, currentUserMessage: input, canonicalTurnId: writerStudioTurn.turnId },
+      });
+      writerStudio?.onHandoff?.();
+      const { text: canonicalText, provider: canonicalProvider } = await canonicalGeneration;
+      rawResponse = canonicalText;
+      provider = canonicalProvider;
+      console.log(`🖋️ [MAIA/writers-studio] canonical turn ${writerStudioTurn.turnId} rendered at ${rendered.tier}: ${rendered.participantOrder.join(', ')}`);
+    } else
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
