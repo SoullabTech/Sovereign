@@ -592,6 +592,104 @@ MAIA who converts being right into acting is the covert co-author Law 4 forbids.
 is that she says it, argues for it, and the writer decides anyway — including deciding wrongly.**
 
 ⚠️ **PACE IS A RULED VALUE, NOT A CONSTRAINT TO OPTIMIZE AWAY.** *"It shouldn't be quick but
-creatively effective."* ⛔ **Latency, turn count and time-to-polished-draft are therefore NOT
-success metrics for Writer's Studio**, and an optimization that shortens the process by removing
-deliberation is a **regression** under Laws 4 and 5, however much faster it is.
+creatively effective."*
+
+### 7.1 ⚠️ PRECISION (founder, same day) — **deliberative time is not machine latency**
+
+⛔ **An earlier wording here said "latency, turn count and time-to-polished-draft are NOT success
+metrics." That is too blunt and hides a product trap.** Corrected in place:
+
+```text
+DELIBERATIVE TIME   three turns because the writer is considering a
+                    consequential choice                    -> potentially GOOD
+
+SYSTEM LATENCY      eight seconds waiting for a response that required
+                    no deliberation                         -> STILL BAD
+
+fewer turns because MAIA silently made the decision         -> REGRESSION
+fewer turns because the writer already delegated it         -> possibly GOOD
+```
+
+⛔ **Future performance work must not collapse these into one "time to result" metric.**
+
+> ⭐ **The meaningful question: did the interaction take no more of the writer's ATTENTION than the
+> authorship decision actually required?**
+
+**That protects deliberation without romanticizing friction.** ⛔ Slowness is not a virtue; **slowness
+where a decision lives** is.
+
+### 7.2 ⭐⭐ AUTHORITY OVER THE WORK IS NOT AUTHORITY OVER TRUTH
+
+**Founder ruling.** The second half of the separation is the operationally hard half.
+
+> **The writer may choose something MAIA believes is mistaken. MAIA must honor the writer's
+> authority over the Work WITHOUT rewriting her own epistemic state to pretend the disagreement
+> disappeared.**
+
+```text
+LAWFUL
+  MAIA    "I believe this historical claim is unsupported, for these reasons."
+  WRITER  "I understand. Keep it."
+  MAIA    keeps it.
+
+⛔ UNLAWFUL
+  the writer chose it
+  -> therefore MAIA now represents it as established fact
+```
+
+> ⭐ **Sovereignty is not ceremonial if the system only permits choices it agrees with.**
+
+**This protects collaboration AND intellectual integrity at once**, and it is what gives *"including
+deciding wrongly"* real content.
+
+⚠️ **Architectural consequence: an unresolved disagreement is a DURABLE STANDING, not an erased
+one.** The writer's decision settles **what the Work does**; it does not settle **what MAIA
+believes**. Under Authority × Time this is a dated assertion that was *overruled*, never one that
+was *withdrawn* — so MAIA must not later cite the writer's own choice back to them as evidence that
+the claim is sound.
+
+⛔ **And the symmetric failure: retained disagreement must never become a standing objection
+surface.** Held, not re-raised — unless something new makes it newly relevant. *"MAIA honors your
+choice"* must not decay into *"MAIA reminds you she disagreed."*
+
+# 8 · ⭐ THE CAUSAL STACK — five layers, each failing independently
+
+**Founder ruling · 2026-09-10.**
+
+```text
+SOURCE FIDELITY      Did the Work survive representation?
+        ↓
+COGNITIVE FIDELITY   Did MAIA understand what survived?
+        ↓
+EDITORIAL JUDGMENT   Was the developmental observation good?
+        ↓
+AUTHORITY            Was MAIA permitted to act on it?
+        ↓
+INTERACTION          Did the writer remain author?
+```
+
+⭐ **Why this matters:** without it, **model evaluation gets blamed for ingest defects, governance
+gets blamed for cognition defects, and a beautifully governed interaction creates false confidence
+around a malformed representation.** Chapter 4 failed at layers 1, 3, 4 and 5 — and the layer-1
+failure was invisible from every layer above it.
+
+> ⭐ **SEL-0 is therefore no longer a plumbing audit. It sits UPSTREAM of editorial legitimacy.**
+
+⚠️ **Third Strand G arming input, derived here:** **source fidelity is a confound for model
+evaluation.** A bake-off run over a representation that has already erased the Work's dimensions
+measures the ingest, not the reader — and will report the result as a fact about the model.
+*(Joins: interaction architecture as an independent contributor; and the protocol must state the
+representational capability of the architecture models are evaluated through.)*
+
+# 9 · ⭐⭐ THE BOOKENDS
+
+```text
+UPSTREAM    A model cannot honor dimensions of a Work that representation
+            has already erased.
+                                    ← what MAIA is ALLOWED TO SEE
+
+DOWNSTREAM  A derived grammar is a reason to look, never a permission to act.
+                                    ← what MAIA may DO with what she sees
+```
+
+⭐ **Everything between them is craft. The bookends are the constitution.**
