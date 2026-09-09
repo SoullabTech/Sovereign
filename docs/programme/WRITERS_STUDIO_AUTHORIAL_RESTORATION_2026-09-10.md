@@ -53,7 +53,15 @@ RECOVER     clearly strengthens the Work and restores authorial method
 DEVELOP     valuable original material, needs shaping before return
 HOLD        interesting, uncertain whether it belongs
 LEAVE OUT   removal genuinely improved the Work
+
+⭐ WRITE ANEW   none of the above — the writer writes it fresh
 ```
+
+⭐ **WRITE ANEW is the founder-ratified fifth outcome.** ⛔ **Not another storage class** — the
+architecture needs no new object. **The writer needs an explicit way to refuse the premise that the
+answer is hidden somewhere in the archive.** Without it, *"authorial restoration"* quietly converts
+historical provenance into authority, contradicting everything already ruled about standings over
+time. **The present writer holds authority over both versions.**
 
 **Disclosure format for anything substantial — this IS Law 4 applied:**
 
@@ -66,10 +74,28 @@ Here are the options for restoring it.
 YOU DECIDE.
 ```
 
-⚠️ **And Law 4 applies to the PASS, not only to each item.** A whole-manuscript restoration sweep
-is itself a strategic act on the Work — **its scope, order and stopping point must be authorized
-before it runs**, or the writer ends up reverse-engineering a restoration exactly as they had to
-reverse-engineer an edit.
+⚠️ **And Law 4 applies to the PASS, not only to each item — founder-ratified.** A whole-manuscript
+restoration sweep **can itself impose a theory**:
+
+```text
+⛔ "We are now restoring the original Kelly."
+   is exactly as dangerous as
+⛔ "We are now making Kelly more concise."
+```
+
+**The writer authorizes the sweep's parameters BEFORE it runs:**
+
+```text
+which versions are compared
+which chapters are in scope
+what kinds of loss are being looked for
+whether moved material counts as loss
+how much evidence is surfaced at once
+where the pass STOPS before another decision is required
+```
+
+⛔ **Otherwise the restoration becomes another silent strategic transformation** — the writer
+reverse-engineering a restoration exactly as they had to reverse-engineer an edit.
 
 ## 4 · ⭐ The second benefit — editing history as evidence of authorial grammar
 
@@ -138,13 +164,28 @@ MAIA retrieves from those files gets the writer's headings with the phenomenolog
 
 ### 6.2 🔴 DEFECT — corroborated: `full.json`'s Chapter 4 section order is wrong
 
-⭐ **Both derivative files list `keyTeachings` for Chapter 4 beginning "My Morning Ritual",** then
-"Integrating the Elements". **`full.json`'s `chapters[3].sections` begins at "Integrating the
-Elements"** and files the Morning Ritual under `chapters[2]` (Chapter 3).
+⚠️ **PROVENANCE CORRECTION (founder, same day).** An earlier wording here called `book.json` and
+`processed.json` **"two independent files."** ⛔ **They are not independent witnesses.** They share
+lineage from the published manuscript, so they are **two representations, not two witnesses** —
+per the law already established: *two analytical views are not independent witnesses when their
+evidence shares an influence lineage.* **The conclusion does not weaken; the provenance becomes
+correct.**
 
-> **Two independent files corroborate the published order. The file used for retrieval is the one
-> that is wrong** — and it is the file the acceptance instrument read. **F-ABSENCE, with its cause
-> now identified.**
+```text
+PRIMARY SOURCE              published manuscript
+                            Chapter 4 → My Morning Ritual
+                            (prayer · ancestors and guides · the elements · Chi Kung)
+
+DERIVATIVE REPRESENTATIONS  book.json       → My Morning Ritual
+                            processed.json  → My Morning Ritual
+
+CONFLICTING REPRESENTATION  full.json       → starts at "Integrating the Elements"
+                                              Morning Ritual misfiled under Chapter 3
+```
+
+> **The published book establishes the order directly. Two derivative representations preserve it.
+> `full.json` conflicts with all three** — and it is the file the acceptance instrument read.
+> **F-ABSENCE, with its cause now identified.**
 
 ⛔ **No repair authorized here.** Recorded for SEL-0, whose *freeze the lawful corpus before the
 threshold* ruling this makes concrete and urgent.
@@ -159,3 +200,54 @@ BLOCKED ON     a recovery corpus that does not exist in this repository
 ⛔ NOT AUTHORIZED   no manuscript edit · no corpus repair · no surface built ·
                     no restoration pass run
 ```
+
+---
+
+## 8 · ⭐⭐ THE SUPERIMPOSED FAILURES — representation precedes cognition
+
+**Founder ruling · 2026-09-10.** The Chapter 4 event was **two different failures superimposed**,
+and separating them changes what must be fixed.
+
+```text
+SOURCE WORK              Morning Ritual belongs to Chapter 4
+        ↓
+INGEST / REPRESENTATION  Morning Ritual assigned elsewhere        ← FAILURE 1
+        ↓
+DEVELOPMENTAL READING    chapter appears to begin with exposition
+        ↓
+EDITORIAL POSSIBILITY    expository architecture becomes plausible ← FAILURE 2
+```
+
+⭐ **The system was partly reasoning CORRECTLY from an INCORRECT representation of the Work.** The
+Morning Ritual was not judged expendable — **it was not present as Chapter 4 material at all.**
+
+**The headings-only compression is the more disturbing of the two.** A representation that keeps
+*"My Morning Ritual"* as a teaching label while losing meditation, prayer, guides, the harmonizing
+of inner and outer, the elements and Chi Kung has not summarized prose. It has transformed:
+
+> **a way of knowing → into → a topic about knowing.**
+
+**That is the exact inversion the editorial laws exist to prevent — occurring UPSTREAM of the
+model.**
+
+### ⭐ The architectural law
+
+> **Authorial sovereignty can be violated by representation before the model ever speaks.**
+> **A perfectly governed editor cannot honor phenomenology it was never given.**
+> **The Work must survive ingestion in the dimensions that make it the Work — not merely in
+> informational content.**
+
+⚠️ **Candidate acceptance criterion for manuscript ingestion (recorded, not adopted):** scenes,
+stories, rituals, sequence, narrative position and embodied context **may not be collapsed into
+topic labels without that loss being explicitly represented.**
+
+### ⭐ SEL-0 is reframed
+
+```text
+WAS   "is retrieval good enough?"
+NOW   "When MAIA believes she is reading the Work, what dimensions of the
+       Work actually survived the journey into cognition?"
+```
+
+> **Before asking whether cognition is good enough, we must know whether the cognition was allowed
+> to encounter the Work at all.** ⭐ **Founder: this now looks foundational.**
