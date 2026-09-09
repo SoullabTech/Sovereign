@@ -157,9 +157,11 @@ A NEW MEMBER           may never discover Structure, Materials or Versions
 AN ELDER / FIRST-TIME  the cost concentrates here
 ```
 
-⛔ **Not solved here.** ⚠️ **And the obvious fix is forbidden**: onboarding tours, feature
-highlights, or MAIA volunteering capabilities during composition would each reintroduce exactly the
-pressure the quiet room removes. **Discoverability must be found somewhere other than interruption.**
+⚠️ **The obvious fix is forbidden**: onboarding tours, feature highlights, or MAIA volunteering
+capabilities during composition would each reintroduce exactly the pressure the quiet room removes.
+**Discoverability must be found somewhere other than interruption.**
+
+> ⭐⭐ **RESOLVED — founder, 2026-09-09. See §5.**
 
 ## 4.4 It resolves the two screenshots
 
@@ -172,3 +174,82 @@ WRITER'S STUDIO    needs the centre of the first and the capabilities of
 ```
 
 ⛔ **NOT AUTHORIZED — recorded as design direction. No implementation.**
+
+---
+
+# 5 · ⭐⭐ LEGIBLE FORM — the resolution of §4.3
+
+**Founder ruling, 2026-09-09.**
+
+> ⭐⭐ **The room should teach itself through its form.**
+> **Not by displaying every capability, but by making the POSSIBILITY of capability perceptible.**
+
+```text
+⛔ EVERYTHING EXPOSED   → cognitive pressure
+⛔ EVERYTHING HIDDEN    → poor discoverability
+⭐ LEGIBLE FORM         → capability is discoverable without demanding use
+```
+
+⭐ **A third solution between the two bad ones** — and *form serving function rather than decoration
+serving software.*
+
+```text
+THE WORK              visually unmistakable centre
+edge / rail           quietly says "there is more here"
+highlight             naturally reveals relationship
+drawer edge / handle  tells you a workbench exists
+MAIA presence         available, not demanding
+structure gesture     visible enough to discover,
+                      quiet enough not to solicit attention
+```
+
+## 5.1 ⭐ IT ALSO SOLVES F-REACTIVE AT THE INTERFACE LEVEL
+
+⭐ **A control does not need to disappear. It needs to change what it SAYS.**
+
+```text
+⛔ "Use me. You may be neglecting something."
+⭐ "I am here when you need me."
+```
+
+### ⭐ THIS IS A WALKABLE AUDIT, NOT ONLY A PRINCIPLE
+
+⚠️ **The diagnostic is not the presence or absence of a control — it is which sentence the control
+speaks.** ⭐ **That can be walked element by element across a screen:**
+
+```text
+FOR EVERY VISIBLE ELEMENT
+  read it as a sentence addressed to a writer mid-paragraph
+  → "use me / you may be neglecting something"   ⛔ FAILS
+  → "I am here when you need me"                 ⭐ PASSES
+```
+
+⭐ **Counts, badges, progress indicators and unread markers fail this automatically** — *a number is
+always a demand.*
+
+## 5.2 The principles
+
+> ⭐ **Function should be discoverable through form before it is explained through instruction.**
+>
+> ⭐⭐ **The Work commands attention. The room reveals possibility.**
+
+⭐ **A worked example is already in hand.** The acceptance instrument teaches both of its
+capabilities with one line of placeholder text — *"Write in the chapter above, or say something
+here"* — **no tutorial, no menu, no tour.** ⚠️ **And the founder learned both without being told**:
+he wrote in the chapter, and he asked MAIA.
+
+## 5.3 ⚠️ THE IMPLEMENTATION CONSTRAINT — legibility is learned, not universal
+
+⛔ **"Quietly says there is more here" is a CONVENTION**, and conventions are exactly what the
+platform's own law warns against assuming are shared: **Invariant 14** — *do not assume "self,"
+"growth," or any framework means the same everywhere.* **An edge rail, a drawer handle, a
+hover-reveal read as "available" to someone fluent in contemporary software UI and as **nothing at
+all** to someone who is not.**
+
+⚠️ **And the accessibility form of the same problem is harder**: a quiet affordance that depends on
+subtle contrast, small targets, or hover has **no legible form at all** for a screen-reader or
+low-vision writer. ⛔ **Quiet must not mean inaccessible** — *an affordance that only some people can
+perceive is not legible form; it is a hidden room with better manners.*
+
+⛔ **Named as an implementation constraint, not an objection.** ⭐ **The principle stands; it must be
+delivered in more than one perceptual channel.**
