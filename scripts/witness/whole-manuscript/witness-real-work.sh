@@ -233,8 +233,9 @@ CREATE TEMP TABLE t_rev (draft_id uuid, revision_number int, content text, saved
 INSERT INTO member_manuscripts (id, member_id, title, provenance, source_custody, created_at)
   SELECT id, '$WITNESS_MEMBER', title, provenance, source_custody, created_at FROM t_ms;
 INSERT INTO manuscript_sections (id, manuscript_id, position, heading, body) SELECT * FROM t_src;
--- ⛔ HONOUR THE INVARIANT; DO NOT DISABLE IT. `manuscript_working_drafts_
--- round_trip()` refuses a section-addressable draft whose content is not the
+-- ⛔ HONOUR THE INVARIANT; DO NOT DISABLE IT. The round-trip trigger on
+-- manuscript_working_drafts refuses a section-addressable draft whose
+-- content is not the
 -- flattening of its sections. Inserting the draft ALREADY addressable, before
 -- its sections exist, fails that check at 0 chars against 385,948 — which is
 -- the trigger doing its job on a load order that was simply wrong.
