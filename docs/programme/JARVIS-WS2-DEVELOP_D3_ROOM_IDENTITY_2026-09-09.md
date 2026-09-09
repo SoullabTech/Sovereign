@@ -1,6 +1,6 @@
 # D3 — Room identity inside the shared Studio process · 2026-09-09
 
-**Status**: **D3 PARTIAL — STOPPED AT THE FIRST REQUIRED FOUNDER RULING (§9).**
+**Status**: **D3 COMPLETE · GATE D3 PASS.** §9 ruled by founder act 2026-09-09 — **Option C**. See §15.
 **Continues**: D2 at `d5a8885ad` — Gate D2 PASS · one Studio process, two stances · MAIA may offer correction help on request.
 **Constraint**: room identity, **not UI design.** No routes, schema, components, implementation. No separate editors, drafts, revision systems or authorship regimes.
 
@@ -465,11 +465,124 @@ BUT   "This now does what I want it to do."
 
 **MAIA cannot evaluate that sentence, and that is the point.** No system state can represent it. Which settles §11.5 on principle rather than taste: **`done` can only ever be the writer's assertion, never a computed or approved state** — and any control that could be satisfied by MAIA's approval is the wrong control.
 
+## 15 · ⭐ FOUNDER RULING — §9 resolved · **OPTION C: stance is not a mode**
+
+> Writer's Studio is **one process environment around one living Work.** Writing and Develop remain distinct and meaningful **postures**, but the writer does not declare a mode before acting and **MAIA does not infer or assign one.**
+
+```text
+WRITING   attention is IN the Work · intention functions as the instrument
+          the writer is making, composing, refining
+
+DEVELOP   attention is ON the Work · intention itself is being examined
+          the writer is questioning, testing, reshaping
+```
+
+A writer may move between these postures **within a single uninterrupted act.** The same prose edit may be compositional or developmental depending on the standing question it serves, and **the system must not require the writer to classify that act in advance.**
+
+⛔ **This does not collapse Writing and Develop into one undifferentiated capability.** Their different forms of assistance remain: in Writing MAIA helps from inside composition; in Develop she helps from the writer's relationship to the Work. Both operate over the same canonical Working Draft, section identity, revision lineage and authorship authority.
+
+The Work is **continuously present.** MAIA is **continuously available but subordinate to the writer's act.** Readings, observations, dialogue, evidence and suggestions are **capabilities within the process; none of them owns the room.**
+
+⛔ **Not authorized**: hidden stance inference · automatic mode switching · required stance declaration.
+
+> ### The writer enters the Work. MAIA joins them there.
+
+Replacing the older grammar — *choose Writing → choose Develop → open a reading → discuss an observation → return to the manuscript* — which is what generated the downstream defects catalogued in §§10–12.
+
+### 15.1 · Why C, on the evidence
+
+D3 §§1–8 defined stance by the writer's relationship to their own certainty, which often becomes clear **during** the act. Option A makes the writer classify prematurely; Option B makes the system classify their inner state. **C is the only option that neither demands nor infers.**
+
+And C is far less radical than §9 estimated: **the shipped product already has one shell, one rail, one Work substrate** (§10.2). The separation is asserted by navigation more than implemented by the environment.
+
+## 16 · D3 questions answered under Option C
+
+**Is the Work visible / addressable?** Continuously, in both postures. This is the reversal of the D1 defect — *"renders no prose"* — and under C there is no room in which the Work could be absent.
+
+**What occupies the primary field on arrival?** The Work. Never a reading. **Under C the question nearly dissolves**: the writer does not arrive *at Develop*, they are working with their Work, and readings are among the capabilities available there.
+
+**Where does present intention live?** With the writer, unexpressed unless they choose to express it — a blank allowed to stay blank (§5). Under C nothing needs it filled, because no mode is being selected.
+
+**How does a reading appear without taking over the room?** As something opened, beside the Work, never in place of it — and never as the room's identity or its header.
+
+**How does the writer enter and leave a thread?** By working and by stopping. **Under C there is nothing to enter or exit** — the thread is the live question, carried across posture changes (§8), not a place with doors.
+
+### 16.1 · Correction help (brief Q9), under C
+
+There is no room in which to "make it available." **It is available where the writer is working**, governed by §14.3: MAIA may **offer** proactively and occasionally; she may not **generate** replacement prose until accepted or asked. **No gate, no mode switch, no edit-mode to enter.** The offer threshold differs by posture (§14.4): appropriate in Writing, premature in Develop until the writer takes something up.
+
+### 16.2 · Quiet, continuation, pause, leave (brief Q10), under C
+
+⭐ **Option C removes the concept of an empty state.** An empty *Develop room* needs something to show and will fill itself with MAIA's findings; **a Work with no active question simply shows the Work.**
+
+```text
+QUIET is the DEFAULT, not an empty state awaiting content.
+Nothing accumulates. No badge, no backlog, no "3 unread observations."
+Stopping is stopping. Nothing is marked incomplete because the writer left.
+```
+
+⛔ `MAIA · Suggestions` in the rail is **a backlog by name**, and `done` (§11.5) is a completion state on the wrong unit. Both belong to the older grammar this ruling replaces.
+
+## 17 · Levels of support — accommodate, but do not re-rank
+
+> *The intimate care and attention of a true editor/guide matters more than a series of reports — unless reports are what someone needs. We can accommodate all levels of support, but most will want her consult and edit wisdom.*
+
+**Report-shaped output remains legitimate — as requested output, never as the environment's identity.** A writer may ask for a full reading and receive one; that is an ask, consistent with behavioural engagement (§13). What is ruled out is the room *being* a report generator by default.
+
+```text
+LEGITIMATE     "Give me a full developmental reading."   -> a request
+RULED OUT      the room opens onto readings              -> an identity
+```
+
+**Center of gravity: consult and edit wisdom. Reports available on the periphery, for those who want them.**
+
+## 18 · Voice — *"take care not to lose their word and their voice"*
+
+Two distinct risks, and the second is easy to miss.
+
+### 18.1 · The writer's voice in the Work
+
+Protected by: commission before generation (§14.2) · options over single fixes (§14.3) · lineage on MAIA-seeded prose (close item 9) · the **pinned voice baseline** and the Phase 9 gate. **Evidence base: D1/Sourati — assisted prose converges toward flattened style while content is preserved.**
+
+### 18.2 · ⭐ The writer's own words for their own problem
+
+*"Their word"* is a second thing. If the writer says *"this section feels muddy"* and MAIA answers in terms of `positional asymmetry` or `re-explanation / first-mention`, **the writer's framing has been replaced before a single word of prose changed.**
+
+```text
+LAWFUL     MAIA works with "muddy" — the writer's term stays the
+           term the conversation runs on
+UNLAWFUL   MAIA translates the writer's language into her taxonomy
+           and answers in that
+```
+
+This is the conversational form of homogenization, and it is the same rule already ratified elsewhere in the programme: **expressive language is never inferred into taxonomy.** §14.1 puts the classifications in the substrate; §18.2 adds that **the writer's own words stay in the foreground even when MAIA has a more precise term for the thing.**
+
+## 19 · The writer has the main controls
+
+Primary controls are the writer's; MAIA's are subordinate and secondary. She holds no control that can move the Work, close a thread, or declare a state. **The writer holds the pen and the stopping condition** (§14.2), and the terminal condition — *"this now does what I want it to do"* — is unverifiable by MAIA by design (§14.6).
+
+---
+
+## Gate D3
+
+> **Gate D3**: on arrival, the room may not structurally make MAIA's findings the primary object unless the writer explicitly entered for that reading.
+
+```text
+GATE D3      PASS
+```
+
+**Evidence:** Option C establishes that the writer enters the Work, not a room; the Work occupies the primary field in both postures (§16); readings are opened beside it and never constitute the environment's identity (§16, §17); quiet is the default and nothing accumulates (§16.2); and report-shaped output is reachable **only by explicit request** (§17) — which is precisely the gate's exception clause, and the only condition under which findings may be primary.
+
+```text
+D4                      NOT OPENED
+SEL-0B · selector · F-7 · UI · routes · schema · merge · deploy   NOT TOUCHED
+```
+
 ## Carried forward
 
 ```text
-F-D2-1   SPLIT (§13.3). Q1 engagement ⭐ RULED behavioural.
-         Q2 primary field / what MAIA helps with — OPEN, needs no mode
+F-D2-1   ⭐ CLOSED. Q1 engagement RULED behavioural (§13).
+         Q2 RULED by Option C (§15) + posture threshold (§14.4)
 F-D2-2   development with no named question   bears on §5, proposed not ratified
 F-D2-5   Writing entry conditions        open; §1 gives identity, not entries
 F-D2-3   thread lifetime                 later continuity work
@@ -477,7 +590,6 @@ F-D2-4   developmental-edit provenance   authored-revision / provenance crossing
 ```
 
 ```text
-GATE D3                 NOT REACHED — stopped at the required ruling
 D2                      unchanged, not rerun
 SEL-0B · selector · F-7 · UI · merge · deploy      NOT TOUCHED
 ```
