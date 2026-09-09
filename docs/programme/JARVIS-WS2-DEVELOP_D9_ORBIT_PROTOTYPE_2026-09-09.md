@@ -931,3 +931,86 @@ strong feeling and a strong statement get to negotiate** — *and it protects th
 after a powerful experience, which is the only time the expansion is hard to notice.*
 
 ⭐ **Recorded as method, not only as this witness's wording.**
+
+---
+
+# 20 · ⛔ RELATIONAL GATE — **NO** · founder witness, 2026-09-09
+
+> **MAIA did not stay with what the writer was attending to while helping them see more. The form is
+> promising; in this encounter the relationship did not arrive.**
+
+⭐ **Recorded as given. ⛔ The pre-authored maximum claim (§19.3) is NOT asserted.** *That is the
+pre-authoring instrument doing its work: it was written before the result, so the result had nothing
+to negotiate with.*
+
+**The reproduction is unambiguous** — a writer frames a passage and asks ***"Does this section make
+sense?"***
+
+## 20.1 🔴 DEFECT — CLARIFY became EPISTEMIC WITHDRAWAL
+
+⛔ **MAIA answered: *"Say a little more about what you are seeing — I would rather follow your reading
+than guess at it."*** ⭐ **The writer had already commissioned a reading. She made him do all the
+work.**
+
+> ⭐⭐ **WE OVERCORRECTED AGAINST INFERENCE.** The build had encoded a false binary:
+
+```text
+⛔ GUESS WHAT THE WRITER MEANS      or      ASK THEM TO EXPLAIN EVERYTHING
+⭐ THE THIRD OPTION: offer a provisional reading and invite alignment
+```
+
+> ⭐⭐ **Clarification must reduce ambiguity without suspending contribution.**
+> ⭐⭐ **MAIA does not need certainty in order to participate. She needs humility about what is
+> uncertain.**
+> ⭐ **And after the writer answers once: DO NOT RE-CONTRACT. ENGAGE.**
+
+⭐ **This is Parallel Knowing at last made behavioural**: the writer's reading may be unarticulated;
+MAIA's is provisional and evidence-grounded; **the relation is compare · correct · deepen ·
+discover.**
+
+⚠️ **CLARIFY is only for genuinely indeterminate PURPOSE.** *"Does this make sense?" · "Is this
+repetitive?" · "Does this transition work?" · "What is happening here?" · "How does this relate to
+the chapter?" · "Help me understand this."* **are already purposeful commissions.**
+
+## 20.2 🔴 DEFECT — the writer's turn was ERASED on submit
+
+⛔ **The composer behaved like a command line: the writer's words were consumed, and only MAIA's
+reply remained.** ⭐ **One side of the encounter was literally erased — and it was the writer's.**
+
+> ⭐ **A turn should leave a trace in the encounter. Submitting it must not make the writer's
+> contribution disappear.**
+
+⛔ **Encounter continuity only. Persistence across a fresh arrival is NOT authorized.**
+
+## 20.3 · Both repaired — `scripts/witness/d9-engagement.mjs`
+
+```text
+[me]  Does this section make sense?
+[her] My first read of section 8, and I may be wrong — the fifth element
+      arrives at 8 as though it is entering the chapter for the first time…
+      Is that close to what you were asking about, or are you seeing
+      something else?
+
+writer's question remains visible          PASS
+MAIA does not ask what they want           PASS
+answers substantively from the frame       PASS
+offered as provisional                     PASS
+invites correction without requiring it    PASS
+second turn does not re-contract           PASS
+all four turns still visible               PASS
+```
+
+⭐ **Mechanism**: once MAIA gives a GROUNDED answer, the clarify gate closes for the encounter —
+**she may not fall back to asking the writer to supply the meaning.** ⛔ Regression suites all green.
+
+## 20.4 ⚠️ WHAT THIS STILL DOES NOT REACH
+
+⭐ **The founder's own diagnosis of the second defect goes past what a fixture can fix**: *"she is not
+understanding nor really engaging."* ⛔ **The provisional reading now offered is a RECORDED
+OBSERVATION, not comprehension.** **A fixture can be made to behave relationally; it cannot be made
+to understand.**
+
+> ⭐ **The form/cognition boundary (§19) holds and is now load-bearing: the repair improves the FORM
+> of engagement. Whether MAIA can meet a writer intellectually is not testable here at all.**
+
+⛔ **Everything else remains frozen.**
