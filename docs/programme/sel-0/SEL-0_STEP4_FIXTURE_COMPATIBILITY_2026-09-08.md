@@ -1,3 +1,10 @@
+> **STATUS — SUPERSEDED AS CURRENT WORK.** Preserved as history; findings stand.
+> **Do not resume execution from any "next act" in this file.** Step 4 closed COMPATIBLE
+> (`58f033adc`); the selector shipped (`15bb7f0b8`, wired `64e439f66`); SEL-0 corpus 01 was
+> then retired unrun as confirmatory (`e4c7c54af`) after pre-ranking exposure was found.
+> Current WS2 child: `JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md`.
+> SEL-0B is a future confirmatory corpus requirement, not active in that child.
+
 # SEL-0 Step 4 — fixture ⇄ product-contract compatibility · **MISMATCH**
 
 **Contract**: `ebcb46d0d` §2.3–§2.5 · **Instrument**: `af155f4149a76d01ab83139bde2c45c0bb2f57ba`

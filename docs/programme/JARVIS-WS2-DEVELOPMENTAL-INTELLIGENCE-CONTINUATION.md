@@ -230,20 +230,43 @@ PHASE 1.5              PRODUCTION DISCOVERY CLOSED · 81d79b941
   FIXTURE              LOCKED
   contract-lawful n    19
   acceptance thresholds FROZEN · af155f414
-  THRESHOLD            UNSET
+  original top-k thresh DISCHARGED / NOT APPLICABLE
   FOUNDER RANKING      NOT STARTED
   MAIA RANKING         NOT STARTED
   MANIFEST B           NOT OPENED
-  SELECTOR             NOT IMPLEMENTED
-  next act             IMPLEMENT smallest real Studio selector
+  SELECTOR             IMPLEMENTED · 15bb7f0b8 · runtime wired 64e439f66
+  CORPUS 01            RETIRED UNRUN as confirmatory · e4c7c54af
+                       pre-ranking exposure found before Manifest B opened
+  MANIFEST B           NEVER OPENED · the 19 never ranked · no test occurred
+  SEL-0B               future confirmatory corpus requirement · NOT ACTIVE
+                       D>=.60 · p<=.05 · U>=60 preserved; n!=19 needs a superseding record
+  next act             see current child flow below
   FOUNDER BLIND        INTACT
 F-7                    NOT OPEN (opening condition is Phase 1.5 closed)
 PHASE 2 AND BEYOND     NOT OPEN
 PR / MERGE / DEPLOY    NOT AUTHORIZED
 ```
 
-**Next executable act**: implement the smallest real Writer's Studio selector. Product
-contract and acceptance instrument are both FROZEN and may not move to accommodate it.
+**Next executable act**: the current WS2 child —
+`JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md` (opened `49460c6c0`).
+
+⛔ **SEL-0 Step-4 and Q12 records are SUPERSEDED AS CURRENT WORK.** They are preserved as
+history and their findings stand; **do not resume execution from their "next act"
+instructions.** Step 4 closed COMPATIBLE at `58f033adc`; the selector was implemented at
+`15bb7f0b8` and wired at `64e439f66`; corpus 01 was then retired unrun at `e4c7c54af`.
+
+**Why corpus 01 was retired, recorded because it corrects a classification made here.**
+A production `ask_thread` existed on one of the 19 — author-initiated minutes after the
+reading froze. That is founder pre-exposure, so independence was gone before Manifest B was
+ever opened, and salvage was refused in every form including a fresh reading over the same
+material: *a new reading identity does not restore founder independence.*
+
+⚠️ **Step 4 classified open `ask_threads` as "permitted but non-required, non-blocking" and
+excluded them from the overlay query.** That was right about the *selector-input* axis and
+wrong to stop there: open threads were also evidence of **founder pre-exposure**, which is a
+blind-integrity fact on a different axis entirely. Conflating the two is what let the
+exposure survive the compatibility gate. **SEL-0B must query prior discussion as a
+blind-integrity predicate, not merely as an optional selector input.**
 
 **The Step-4 MISMATCH is kept as history, not rewritten.** It was real:
 `sel-0/SEL-0_STEP4_FIXTURE_COMPATIBILITY_2026-09-08.md` records a fixture that could not

@@ -1,3 +1,10 @@
+> **STATUS — SUPERSEDED AS CURRENT WORK.** Preserved as history; findings stand.
+> **Do not resume execution from any "next act" in this file.** Step 4 closed COMPATIBLE
+> (`58f033adc`); the selector shipped (`15bb7f0b8`, wired `64e439f66`); SEL-0 corpus 01 was
+> then retired unrun as confirmatory (`e4c7c54af`) after pre-ranking exposure was found.
+> Current WS2 child: `JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md`.
+> SEL-0B is a future confirmatory corpus requirement, not active in that child.
+
 # SEL-0 Step 4 — eligibility-overlay source proof · **STRUCTURAL HALF ONLY**
 
 **Founder ruling**: resolve the Step-4 MISMATCH by a blind eligibility overlay over the 19
