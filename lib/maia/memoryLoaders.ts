@@ -29,6 +29,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { DEPRECATED_PATTERN_KEYS } from '@/lib/memory/deprecatedPatternKeys';
 import type {
   DevelopmentalMemorySnapshot,
   ThemeSignalSnapshot,
@@ -83,6 +84,21 @@ function isValidDistilledSignal(text: string | null | undefined): boolean {
  * SELECTs id, memory_type, facet_code, significance, formed_at, content_text.
  * content_text is expected to be the X4 pre-distilled directional signal;
  * it is mapped into directional_cue only if it passes the format guard.
+ *
+ * ⛔ EVIDENCE-NAMING-01A — QUARANTINE, NOT A DISPLAY FILTER.
+ *
+ * Rows tagged with a withdrawn pattern identity are excluded IN THE QUERY, so
+ * they cannot occupy one of the `limit` slots. This matters more than it looks:
+ * the orchestrator reads `[0]` and, when a row's `content_text` fails the format
+ * guard above, still emits *"A prior developmental memory is present; let it bias
+ * direction subtly"*. A withdrawn row surviving into the result set would keep
+ * biasing the turn precisely by being unreadable — a filter that only nulls the
+ * cue removes the sentence while leaving the influence.
+ *
+ * ⛔ Only the named keys are excluded. `emergent_pattern` as a memory_type stays
+ * fully eligible; the withdrawal is of one meaning, not of pattern memory.
+ * ⛔ Nothing is mutated. Historical rows remain exactly as written — their
+ * custody is EVIDENCE-NAMING-01B, and it is not decided here.
  */
 export async function loadRecentDevelopmentalMemories(
   userId: string,
@@ -102,9 +118,18 @@ export async function loadRecentDevelopmentalMemories(
        FROM developmental_memories
        WHERE user_id = $1
          AND (valid_to IS NULL)
+         AND NOT EXISTS (
+           SELECT 1 FROM unnest(COALESCE(entity_tags, ARRAY[]::text[])) AS tag
+           WHERE split_part(tag, ':', 1) = ANY($3::text[])
+         )
        ORDER BY significance DESC, formed_at DESC
        LIMIT $2`,
-      [userId, limit],
+      // split_part mirrors `isDeprecatedPatternKey` exactly: keys are
+      // `type` or `type:identifier`, and it is the TYPE that was withdrawn, so a
+      // suffixed variant cannot slip through. COALESCE because a NULL entity_tags
+      // would otherwise make the predicate NULL and drop an untagged row that has
+      // nothing to do with this quarantine.
+      [userId, limit, [...DEPRECATED_PATTERN_KEYS]],
     );
     return result.rows.map((r) => {
       // Guard: pass content_text through format validator before surfacing as signal.

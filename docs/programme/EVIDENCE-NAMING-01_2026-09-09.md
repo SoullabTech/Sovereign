@@ -206,3 +206,85 @@ elemental reading be something MAIA says, not something the database asserts.**
 
 > ⭐⭐ **Name the observation before naming its meaning — and when the meaning is finally named, name
 > it in the language the model actually uses about people, not the language of diagnosis.**
+
+---
+
+## EVIDENCE-NAMING-01A — CONTAINMENT: CLOSED
+
+Founder authorization: *"I'd split this into containment now, historical custody
+second."* Four acts, no replacement identity.
+
+**1 · STOP THE PRODUCER.** `lib/memory/ConsciousnessMemoryLattice.ts` —
+`detectEmergentPatterns` Pattern 4 removed. The seven-day
+`mental` vs `emotional` count no longer runs and no key is emitted. ⛔ No
+replacement key.
+
+**2 · STOP THE INTERPRETATION.** Same file — the `synthesizeInsights()` branch
+that rendered the key as *"You're processing mentally more than emotionally…"*
+is removed. ⛔ No replacement member-about insight.
+
+**3 · QUARANTINE HISTORICAL MEMORY.** `lib/maia/memoryLoaders.ts` —
+`loadRecentDevelopmentalMemories()` excludes withdrawn keys **in the query**:
+
+```sql
+AND NOT EXISTS (
+  SELECT 1 FROM unnest(COALESCE(entity_tags, ARRAY[]::text[])) AS tag
+  WHERE split_part(tag, ':', 1) = ANY($3::text[])
+)
+```
+
+⭐ In-query, not post-filter, because of the founder's strengthened finding: the
+orchestrator reads `[0]` and, when `content_text` fails the format guard, still
+emits *"A prior developmental memory is present; let it bias direction subtly."*
+A row that survived into the result set would keep biasing the turn **precisely by
+being unreadable**. Excluding it in SQL means it cannot occupy a `limit` slot.
+
+⛔ Only the named keys. `emergent_pattern` as a memory_type stays fully eligible.
+⛔ No historical row is mutated. `split_part` mirrors `isDeprecatedPatternKey`
+exactly, so a suffixed variant cannot slip past; `COALESCE` because
+`NOT (NULL && …)` is NULL and would silently drop untagged rows.
+
+**4 · STOP REINTRODUCTION.** `lib/memory/stores/PatternMemoryStore.ts` — the
+description mapping is gone and `upsertByKey()` **throws** on a withdrawn key.
+A loud refusal, never a silent rename: the description is what
+`generateLocalEmbedding()` vectorises, so the clinical rendering governed
+**semantic retrieval**, not merely display.
+
+One shared list — `lib/memory/deprecatedPatternKeys.ts` — is imported by both the
+writer's refusal and the reader's quarantine. *A quarantine that lives in only one
+of those two places is not a quarantine.*
+
+### Falsifiers — `lib/memory/__tests__/evidenceNaming01a.test.ts` · 19/19
+
+| # | Falsifier | Verdict |
+|---|---|---|
+| F1 | same event history → no `potential_spiritual_bypassing` key | PASS (2) |
+| F2 | deprecated key → cannot be newly persisted | PASS (4) |
+| F3 | historical deprecated row → cannot enter developmental-memory loading | PASS (4) |
+| F4 | deprecated key → cannot produce a member-facing insight | PASS (1) |
+| F5 | no replacement diagnosis or interpretation introduced | PASS (8) |
+
+⚠️ **Honest scope on F3.** Without a Postgres connection the witness asserts that
+the quarantine is *in the query* and parameterised by the shared list — not that
+Postgres evaluated it. The executable check is owed at 01B, which is the step
+that has a production connection. F5 strips comments before scanning (the C21
+lesson: a file documenting a withdrawn string must not read as its return).
+
+F1 also asserts `facet_dwelling` still fires and F2 that a lawful key still
+persists — **containment, not amputation**.
+
+### Gates
+
+- `npm run typecheck` → **228 errors vs baseline 239 · 0 regressions · exit 0**
+- `npm run check:no-supabase` → clean
+- jest `evidenceNaming01a` → **19 passed · 0 failed**
+
+### Standing
+
+`01A CONTAINED` · `01B NOT OPENED` (production read owed: row count under the old
+key · affected members and date range · how many rank in the top-3 developmental
+memories · whether description/content_text/embedding match the code path) ·
+`01C NOT OPENED` (lawful observation identity + elemental translation layer) ·
+⛔ no production row migrated, deleted or re-embedded · ⛔ no successor key
+introduced · ⛔ the hard-coded `bypassing: false` at `lib/sovereign/maiaService.ts`
+remains a **separate finding**, deliberately not folded in.

@@ -619,30 +619,30 @@ export class ConsciousnessMemoryLattice {
       patterns.push(`facet_dwelling:${facet.code}`);
     }
 
-    // Pattern 4: Spiritual bypassing (mental insights without emotional processing)
-    if (event.type === 'mental') {
-      const recentEmotional = await dbQuery(
-        `SELECT COUNT(*) as count FROM lattice_nodes
-         WHERE user_id = $1
-           AND event_type = 'emotional'
-           AND created_at > NOW() - INTERVAL '7 days'`,
-        [userId]
-      );
-      const recentMental = await dbQuery(
-        `SELECT COUNT(*) as count FROM lattice_nodes
-         WHERE user_id = $1
-           AND event_type = 'mental'
-           AND created_at > NOW() - INTERVAL '7 days'`,
-        [userId]
-      );
-
-      const emotionalCount = parseInt(recentEmotional.rows[0].count);
-      const mentalCount = parseInt(recentMental.rows[0].count);
-
-      if (mentalCount > emotionalCount * 3) {
-        patterns.push('potential_spiritual_bypassing');
-      }
-    }
+    /**
+     * ⛔ EVIDENCE-NAMING-01A (2026-09-09) — PATTERN 4 WITHDRAWN.
+     *
+     * Was: a seven-day count of `event_type = 'mental'` against `'emotional'`,
+     * emitting `potential_spiritual_bypassing` when the ratio exceeded 3:1.
+     *
+     * ⭐⭐ A seven-day event-count ratio may not acquire a psychological
+     *    interpretation merely by crossing a software boundary.
+     *
+     * The ratio can establish only that mental-tagged events outnumbered
+     * emotional-tagged ones. It cannot establish bypassing — a relationship to
+     * experience, over an unbounded window, with an attributed motive. In this
+     * model the same state is "more Air than Water lately": ⭐ a position in the
+     * model, not a disorder in a person. Chapter 4 calls one-sidedness the
+     * ordinary human starting point, which this classifier inverted.
+     *
+     * ⛔ NO REPLACEMENT KEY IS EMITTED YET, deliberately.
+     * ⭐ Containment may remove an unlawful capability before we know how to
+     *   preserve its lawful remainder. Temporary loss of the signal is preferable
+     *   to preserving false meaning. A lawful successor
+     *   (`high_mental_to_emotional_event_ratio`) waits on historical custody —
+     *   EVIDENCE-NAMING-01B — because a new correct key created now would
+     *   fracture identity against rows still carrying the old one.
+     */
 
     return patterns;
   }
@@ -670,10 +670,11 @@ export class ConsciousnessMemoryLattice {
         const facetCode = pattern.split(':')[1];
         insights.push(`You've been in ${facetCode} for an extended period - consider what wants to emerge to move you forward.`);
       }
-
-      if (pattern === 'potential_spiritual_bypassing') {
-        insights.push(`You're processing mentally more than emotionally - your insights may benefit from grounding in felt experience.`);
-      }
+      // ⛔ EVIDENCE-NAMING-01A — the member-about insight for this pattern is
+      // WITHDRAWN. It read "You're processing mentally more than emotionally…",
+      // a claim about HOW THE PERSON IS PROCESSING drawn from an event count.
+      // ⛔ No replacement insight. The observation may exist before we decide
+      // whether it has any useful relational meaning.
     }
 
     // Breakthrough detection

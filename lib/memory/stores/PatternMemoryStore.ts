@@ -10,11 +10,15 @@
  *   - recurring_somatic:chest
  *   - recurring_emotion:anxiety
  *   - facet_dwelling:FIRE-2
- *   - potential_spiritual_bypassing
+ *
+ * ⛔ `potential_spiritual_bypassing` was such a key and is WITHDRAWN
+ * (EVIDENCE-NAMING-01A). `upsertByKey` now refuses it. See
+ * `lib/memory/deprecatedPatternKeys.ts`.
  */
 
 import { query } from '../../db/postgres';
 import { generateLocalEmbedding } from '../embeddings';
+import { isDeprecatedPatternKey } from '../deprecatedPatternKeys';
 
 export interface PatternRecord {
   id: string;
@@ -39,12 +43,20 @@ export interface UpsertPatternInput {
 /**
  * Generate human-readable description from pattern key
  */
+/**
+ * ⛔ EVIDENCE-NAMING-01A — deprecated, and refused rather than silently renamed.
+ *
+ * The list and the reasoning live in one place so the writer's refusal and the
+ * reader's quarantine can never disagree. Re-exported here because this store is
+ * the historical home of the key.
+ */
+export { DEPRECATED_PATTERN_KEYS, isDeprecatedPatternKey } from '../deprecatedPatternKeys';
+
 function describePattern(patternKey: string): string {
   const descriptions: Record<string, string> = {
     recurring_somatic: 'Recurring focus on body region',
     recurring_emotion: 'Recurring emotional pattern',
     facet_dwelling: 'Extended time in facet without movement',
-    potential_spiritual_bypassing: 'Mental insights without emotional integration',
   };
 
   const [type, identifier] = patternKey.split(':');
@@ -61,6 +73,17 @@ export const PatternMemoryStore = {
    */
   async upsertByKey(input: UpsertPatternInput): Promise<string> {
     const { userId, patternKey, facetCode, confidence = 0.7 } = input;
+    // ⛔ Loud refusal, never a silent rename: recreating this key would add rows
+    // under a meaning the programme has withdrawn — and the description it would
+    // carry is the string that gets embedded.
+    if (isDeprecatedPatternKey(patternKey)) {
+      throw new Error(
+        `PatternMemoryStore: '${patternKey}' is withdrawn (EVIDENCE-NAMING-01A). ` +
+        'A seven-day event-count ratio may not acquire a psychological interpretation. ' +
+        'No replacement key exists yet — see docs/programme/EVIDENCE-NAMING-01_2026-09-09.md',
+      );
+    }
+
     const description = input.description ?? describePattern(patternKey);
 
     // Check if pattern already exists for this user
