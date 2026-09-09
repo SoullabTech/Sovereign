@@ -85,7 +85,7 @@ interface SpiralTask extends BeadsIssue {
   cognitive: {
     requiredLevel: number;  // Bloom's 1-6
     recommendedLevel: number;
-    bypassRisk?: 'spiritual' | 'intellectual' | 'none';
+    // ⛔ bypassRisk REMOVED — SACRED-AS-SYMPTOM · INSTANCE 2 (2026-09-09)
   };
 
   somatic: {
@@ -208,7 +208,8 @@ export class SpiralMemoryBridge {
       cognitive: {
         requiredLevel: this.calculateRequiredLevel(taskCreation.taskType),
         recommendedLevel: cognitiveProfile?.currentLevel || 3,
-        bypassRisk: this.assessBypassRisk(
+        // ⛔ WITHDRAWN — SACRED-AS-SYMPTOM · INSTANCE 2
+        // bypassRisk: this.assessBypassRisk(
           cognitiveProfile?.bypassingFrequency || { spiritual: 0, intellectual: 0 }
         ),
       },
@@ -246,11 +247,25 @@ export class SpiralMemoryBridge {
         return false;
       }
 
-      // Bypassing risk gate
-      if (task.cognitive.bypassRisk === 'spiritual' &&
-          cognitiveProfile.bypassingFrequency.spiritual > 0.3) {
-        return false;
-      }
+      // ⛔ SUPERSEDED 2026-09-09 — SACRED-AS-SYMPTOM · INSTANCE 2.
+      //
+      // This gate is WITHDRAWN and must not be implemented:
+      //
+      //   if (task.cognitive.bypassRisk === 'spiritual' &&
+      //       cognitiveProfile.bypassingFrequency.spiritual > 0.3) return false;
+      //
+      // `task.cognitive.bypassRisk` was produced as
+      // `element === 'aether' ? 'spiritual' : 'none'`, so this gate would have
+      // withheld a task from a member BECAUSE THE TASK CONCERNED THE SACRED
+      // ELEMENT — not because of anything the member did.
+      //
+      // ⭐⭐ A sacred subject may be the content of an encounter. It may not
+      //    become evidence that the encounter is pathological.
+      //
+      // The field no longer exists. A future eligibility gate may consult the
+      // MEASURED `cognitiveProfile.bypassingFrequency.*`, which is lawful — but
+      // it may not consult the SUBJECT MATTER of the task.
+      // See docs/canon/THE_SACRED_IS_NOT_A_SYMPTOM.md
 
       // Field safety gate
       if (!task.field.safetyCheck) {

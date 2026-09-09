@@ -201,7 +201,15 @@ async function syncTaskToPostgres(beadsTask: any, maiaMeta: any = {}): Promise<v
     realm || null,
     cognitive.requiredLevel || null,
     cognitive.recommendedLevel || null,
-    cognitive.bypassRisk || 'none',
+    /**
+     * SACRED-AS-SYMPTOM · INSTANCE 2 — was `cognitive.bypassRisk || 'none'`.
+     * ⭐ Deleting the producer alone would not have been enough: this seam
+     * RECREATED the claim at the next layer, converting a missing value into an
+     * assertion that there is no bypassing risk. Absence is now NULL.
+     * ⛔ The column is deliberately NOT dropped — stop creating false rows first;
+     * schema and history custody are adjudicated separately.
+     */
+    null,
     somatic.bodyRegion || null,
     somatic.tensionLevel || null,
     somatic.practiceName || null,

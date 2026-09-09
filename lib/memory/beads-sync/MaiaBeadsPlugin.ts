@@ -35,7 +35,25 @@ interface TaskCreationParams {
     cognitive?: {
       requiredLevel: number;
       recommendedLevel: number;
-      bypassRisk?: 'none' | 'spiritual' | 'intellectual';
+      /**
+       * ⛔ SACRED-AS-SYMPTOM · INSTANCE 2 (2026-09-09) — `bypassRisk` REMOVED.
+       *
+       * It was produced as `event.element === 'aether' ? 'spiritual' : 'none'`:
+       * a psychological/safety classification manufactured SOLELY from the name
+       * of an element — the platform's own word for soul.
+       *
+       * ⭐⭐ A sacred subject may be the CONTENT of an encounter. It may not
+       *    become EVIDENCE that the encounter is pathological.
+       *
+       * ⛔ Not repaired by changing Aether to 'none'. `'none'` is still an
+       * unevidenced risk classification: a task has no bypassing risk to report,
+       * because a task is not a person and nothing here observed one.
+       *
+       * ⛔ Do NOT reintroduce a task-level field. Lawful bypassing evidence lives
+       * on `cognitiveProfile.bypassingFrequency.{spiritual,intellectual}` — a
+       * MEASURED member attribute — and is untouched by this repair.
+       * See docs/canon/THE_SACRED_IS_NOT_A_SYMPTOM.md.
+       */
     };
     somatic?: {
       bodyRegion?: string;
@@ -186,7 +204,6 @@ export class MaiaBeadsPlugin {
         cognitive: {
           requiredLevel: 3, // APPLY level - can follow protocol
           recommendedLevel: cognitiveProfile?.currentLevel || 3,
-          bypassRisk: 'none',
         },
         somatic: {
           bodyRegion: event.bodyRegion,
@@ -257,7 +274,6 @@ export class MaiaBeadsPlugin {
         cognitive: {
           requiredLevel: 4, // ANALYZE level - understand elemental dynamics
           recommendedLevel: cognitiveProfile?.currentLevel || 4,
-          bypassRisk: event.element === 'aether' ? 'spiritual' : 'none',
         },
         field: {
           intensity: event.severity >= 8 ? 'high' : 'medium',

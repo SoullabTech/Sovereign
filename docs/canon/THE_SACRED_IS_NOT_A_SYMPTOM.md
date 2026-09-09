@@ -96,7 +96,7 @@ would destroy the evidence trail: *one rule, multiple failure classes, separatel
 | | Instance | Mechanism | Status |
 |---|---|---|---|
 | **1** | `FIELD-SAFETY-COPY-01A` | dormant lexical/prose doorway | ✅ **CLOSED** `0f8191eb2` |
-| **2** | `MaiaBeadsPlugin:260` | element-as-flag | ⛔ **OPEN** |
+| **2** | `MaiaBeadsPlugin:260` | element-as-flag | ✅ **CLOSED** — see below |
 
 ⚠️ **`ConsciousnessMemoryLattice:643` was DISCOVERED BY THIS AUDIT BUT IS NOT A VIOLATION OF THIS
 CANON.** Its mechanism is a seven-day event ratio — **vocabulary-invariant**, so it *passes* the
@@ -134,3 +134,45 @@ field*, and `panconsciousFieldRouter` reads it structurally. ⭐ **Reading a mea
 the same act as inferring from vocabulary** — the router is not in violation.
 
 > ⭐⭐ **The sacred is not a symptom.**
+
+
+---
+
+# Instance 2 — CLOSED 2026-09-09
+
+> ⭐⭐ **A sacred subject may be the CONTENT of an encounter. It may not become EVIDENCE that the
+> encounter is pathological.**
+
+**Standing at repair:** `PRODUCTION latent · STAGING unknown, possibly persisted · OPERATIVE no ·
+SPOKEN no`. ⭐ Liveness set the blast radius; **it never determined whether the assignment was
+lawful.**
+
+⛔ **Not repaired by changing Aether to `'none'`.** `'none'` is still an unevidenced risk
+classification — **a task has no bypassing risk to report, because a task is not a person and nothing
+here observed one.** The task-level concept is removed.
+
+| | |
+|---|---|
+| **producer** | `bypassRisk` deleted from `TaskCreationParams.cognitive` and from both producers (`:189` `'none'`, `:260` the Aether ternary) |
+| **persistence** | `server.ts` bound `cognitive.bypassRisk \|\| 'none'` — ⭐ **deleting the producer alone would NOT have been enough: the seam RECREATED the claim at the next layer**, converting a missing value into an assertion that there is no risk. Now binds `null`. ⛔ Column deliberately **not dropped**. |
+| **spec** | the designed gate in `SPIRAL_MEMORY_MESH_SPEC.md:250` is **superseded in place**, with the reason, so it cannot be implemented from the spec later |
+| **preserved** | `cognitiveProfile.bypassingFrequency.{spiritual,intellectual}` and every lawful consumer — **untouched** |
+
+**Witness — `lib/memory/__tests__/sacredInstance2.test.ts` · 14 passed.** Substitution across all five
+elements · earth and aether produce **identical** cognitive metadata · no `bypassRisk` property, and
+**not `'none'` either** · the persistence seam no longer defaults · and ⭐ **a test asserting the
+MEASURED frequency remains lawful**, so a later reader cannot mistake this repair for a ban on
+recognising bypassing at all.
+
+## ⚠️ Three instrument faults, found before any verdict was read
+
+1. The witness was first written into `lib/memory/beads-sync/__tests__/` — **excluded from jest by
+   `jest.config.js:37`.** ⭐⭐ **The canon repair would have looked verified while never running.**
+   Moved to a directory that executes, with a comment saying why.
+2. The event fixture omitted `recommendedProtocols` and `matrix`; it failed *inside the plugin*
+   rather than at an assertion.
+3. The plugin was constructed with a client object — its constructor takes a **URL** and builds its
+   own client, so it tried to fetch `[object Object]/beads/task`.
+
+⭐ *A green suite proves nothing about a test that never ran, and a red one proves nothing about the
+product until the instrument is known to exercise it.*
