@@ -1,0 +1,30 @@
+import { chromium } from 'playwright';
+const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell'});
+const p=await b.newPage({viewport:{width:1440,height:900}});
+await p.goto('file://'+process.cwd()+'/ch4-working.html'); await p.waitForTimeout(300);
+const say=()=>p.locator('#say').innerText();
+const lit=()=>p.evaluate(()=>[...document.querySelectorAll('.sec.lit')].map(e=>+e.id.slice(1)));
+await p.evaluate(()=>{const a=document.querySelector('#s0 .body'),z=document.querySelector('#s2 .body');
+ const r=document.createRange();r.setStart(a,0);r.setEnd(z,z.childNodes.length);
+ const s=getSelection();s.removeAllRanges();s.addRange(r);document.dispatchEvent(new Event('selectionchange'));});
+await p.waitForTimeout(250);
+await p.click('#q');
+// walk to the yogi observation — the one that lives entirely outside 0–2
+let t='';
+for(let i=0;i<3;i++){ await p.fill('#q','what else'); await p.press('#q','Enter'); await p.waitForTimeout(160);
+  t=await say(); if(/yogi/.test(t)) break; }
+console.log('YOGI OBSERVATION, FRAME 0–2:\n  "'+t.replace(/\s+/g,' ').slice(0,240)+'"\n');
+console.log(`FRAME FIRST — opens from the frame:      ${/^Starting from sections 0–2, which you framed/.test(t)?'PASS':'FAIL'}`);
+console.log(`RELATE — the outside insight is KEPT:    ${/yogi/.test(t)?'PASS':'FAIL'}`);
+console.log(`         and marked as outside:          ${/outside your frame/.test(t)?'PASS':'FAIL'}`);
+console.log(`RETURN — attention comes back:           ${/change how sections 0–2 reads/.test(t)?'PASS':'FAIL'}`);
+console.log(`framed sections are lit first:           ${(await lit()).slice(0,3).every(i=>i<=2)?'PASS':'FAIL'}  [${await lit()}]`);
+await p.fill('#q','how do these add up'); await p.press('#q','Enter'); await p.waitForTimeout(200);
+const t2=await say();
+console.log(`\nsynthesis centres the frame:             ${/^Starting from sections 0–2/.test(t2)?'PASS':'FAIL'}`);
+console.log(`  ranges outward, marked:                ${/runs past your frame/.test(t2)?'PASS':'FAIL'}`);
+console.log(`  returns to the frame:                  ${/why sections 0–2 reads/.test(t2)?'PASS':'FAIL'}`);
+await p.click('#clearFocus'); await p.waitForTimeout(150);
+await p.fill('#q','how do these add up'); await p.press('#q','Enter'); await p.waitForTimeout(200);
+console.log(`\nunframed behaviour unchanged:            ${/^I think they may be one movement/.test(await say())?'PASS':'FAIL'}`);
+await b.close();

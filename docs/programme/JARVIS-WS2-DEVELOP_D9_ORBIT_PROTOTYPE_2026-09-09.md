@@ -707,3 +707,115 @@ all of this"* — **without a thought about modes or levels.**
 where the thought changes · ask MAIA something genuinely wanted about that whole movement.
 ⛔ **Then stop exercising buttons and just use it.** ⭐ **First spontaneous description, not a
 PASS/FAIL.**
+
+---
+
+# 17 · ⭐⭐ FOCUS FIDELITY — the frame is a shared-attention declaration
+
+**Founder witness and rulings, 2026-09-09.**
+
+```text
+FOCUS FRAME — FELT FORM   ⭐ PASS   "This is beyond perfect."
+SCALE AS INTERACTION      ⭐ PASS   widened the aperture and asked a larger
+                                    question, without a thought about modes
+SCOPE VISIBILITY          ⭐ PASS   the frame remained perceptible
+FOCUS FIDELITY            ⛔ FAIL   broader context REPLACED the framed
+                                    material as the subject of the answer
+```
+
+⛔ **The defect was NOT that MAIA consulted outside the frame — that is authorized.** ⭐ **It was
+that outside context DISPLACED visible focus as the object of attention.**
+
+> ⭐⭐ **Context may exceed the aperture. Attention may not.**
+> ⭐⭐ **MAIA follows attention before she leads attention.**
+> ⭐⭐ **MAIA may extend her CONTEXT freely. She may not extend the WRITER'S ATTENTION silently.**
+
+⚠️ **This is F-SCALE, not a ninth falsifier.** Scale Coherence requires both directions at once;
+**MAIA did the second half badly — she used the whole, and stopped treating the framed part as
+primary.**
+
+## 17.1 · The contract, and my first repair being wrong
+
+⛔ **My first attempt FILTERED OUT observations living outside the frame.** ⭐ **The founder rejected
+it: that traps MAIA in the box and destroys the most valuable thing she did — recognizing a
+relationship between the framed material and an earlier movement.**
+
+```text
+JOIN      attend to what the writer is attending to
+DEEPEN    explore it locally and relationally
+RANGE     consult the rest of the Work when useful
+RETURN    bring what was found back to illuminate the writer's focus
+INVITE    if the outside material now deserves attention itself,
+          ASK the writer to extend the aperture
+```
+
+> ⭐ **The frame determines the CENTRE of inquiry. It does not limit the FIELD of intelligence.**
+
+**Built**: an oriented response opens from the frame, keeps the outside insight, marks it as outside,
+returns attention with a question — and offers **INVITE as a real control the WRITER clicks.**
+⛔ **MAIA never moves the centre.** ⭐ **And the invitation appears ONCE, not on every turn** —
+*she should not always conclude with a question or a next-step button.*
+
+## 17.2 ⭐ THE FRAME GIVES THE APERTURE; CONVERSATION GIVES THE INTENTION
+
+> ⭐⭐ **MAIA may infer context. She should not infer purpose when purpose would change the kind of
+> work being done.**
+
+**Same box, different encounter**: *"help me rewrite it"* · *"help me understand why this is
+essential"* · *"something is wrong but don't touch the language"* · *"compare this with the rest of
+the book"* · *"stay with this because I don't understand what I'm discovering."*
+
+**Built — CLARIFY, only when purpose is not evident**: *"I am with you in this passage. What are you
+wanting to understand or work with here?* — *and do you want me to stay closely with what is here,
+or also bring in what I am seeing elsewhere?"* ⛔ **Not a menu. Not ceremony when the ask already
+discloses its purpose.**
+
+## 17.3 ⭐ THE COMPOSER HOLDS SHARED PROCESS
+
+> **The frame answers WHERE ARE WE. The conversation answers WHAT ARE WE DOING HERE. Neither has to
+> be known at the beginning.**
+
+⛔ **The composer must never behave like a prompt box** — *"enter a question about the selected
+text"* makes every turn a query and the relationship transactional. **It must hold ask · answer ·
+clarify · redirect · protect · invite · negotiate · experiment · reflect · continue — moves inside
+one conversation.**
+
+```text
+no frame          "Write in the chapter above, or say something here."
+frame just set    "What are you attending to here?"
+after the writer
+  answers         "Continue…"          ⭐ the conversation now carries the process
+```
+
+> ⭐ **The composer may respond to the STATE OF THE ENCOUNTER. It may not PRESCRIBE the encounter.**
+
+## 17.4 🔴 DEFECT FOUND WHILE BUILDING — **the Work was being read as instruction**
+
+⛔ **The submit handler passed `framedText + " — " + utterance` into the intent matcher.** ⭐ **So the
+writer's own manuscript could trigger MAIA's branches**: framing a passage containing the word
+*"something"* made her answer as though the writer had said *"something is off."*
+
+> ⭐⭐ **THE WORK IS CONTEXT. IT IS NEVER INSTRUCTION.** ⛔ **A framed passage is what we are looking
+> at together — it must never be read as what the writer asked for.**
+
+⚠️ **Found by instrumenting a failing test rather than by reasoning about it** — *the founder's own
+sharpened rule, applied and rewarded: three prior red results were instrument defects, this one was
+real.*
+
+## 17.5 · Verified
+
+```text
+scripts/witness/d9-fidelity.mjs   FRAME FIRST · RELATE · marked · RETURN
+scripts/witness/d9-invite.mjs     invitation offered, frame unchanged until
+                                  the writer acts, then it moves
+scripts/witness/d9-field.mjs      ⭐ "hmm" reaches CLARIFY, not a fixture branch
+                                  composer placeholder follows encounter state
+                                  INVITE appears once, as a control
+```
+
+⚠️ **One stale check corrected**: `d9-orbit-verify` asserted the old acknowledgement wording, which
+CLARIFY deliberately replaced. ⛔ **A test asserting superseded behaviour is not evidence of a
+regression.**
+
+⚠️ **One honest limit**: extending to sections 3, 4 and 8 produces a contiguous span 0–8, because a
+frame is a single range. **Non-contiguous attention is not representable.** ⛔ Recorded, not solved.
