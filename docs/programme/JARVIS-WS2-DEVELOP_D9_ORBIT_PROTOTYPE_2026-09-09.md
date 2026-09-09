@@ -366,3 +366,75 @@ live commission is the room remembering a PERMISSION.** ⛔ **Only one of those 
 act still in force.**
 
 ⛔ **REQUIRED BY F-SCOPE · DESIGN OWED · IMPLEMENTATION NOT AUTHORIZED.**
+
+---
+
+# 11 · ⭐⭐ RULING — arrival vs. standing authority · founder, 2026-09-09
+
+> **Arrival resets convenience state, not explicitly standing authority. Any writer-granted
+> authority that remains operative across arrival must remain quietly perceptible until the writer
+> ends or amends it. Authority may cross sessions only when its persistence was itself authorized.**
+>
+> ⭐⭐ **Reset the room. Preserve the permission. Show only what is still in force.**
+
+```text
+INHERITED TOOL STATE                 STANDING AUTHORITY
+"Structure was open yesterday."      "You may restructure this chapter."
+"Workbench was expanded."            "Preserve the personal stories."
+"MAIA panel was docked."             "Do not teach while editing."
+→ RESET on arrival                   → REMAINS PERCEPTIBLE while operative
+```
+
+## 11.1 · Presentation — the indicator mirrors the writer's act
+
+```text
+⛔ NOT   MAIA IS WORKING · 3 CHANGES PENDING · ACTIVE COMMISSION
+
+⭐ BUT   Your commission
+         Restructure this chapter for pacing.
+         Preserve the personal stories.
+```
+
+⭐ **Its presence says everything necessary. No `ACTIVE`, no count, no urgency, no progress.**
+⚠️ **And note the grammar again — *"Your commission."* Second person, possessive.** **The same form
+as the six requests: the surface speaks from the writer's side, which is why it reassures instead of
+demanding.**
+
+## 11.2 ⭐⭐ THE DURATION BOUNDARY — founder's catch
+
+```text
+EXPLICITLY STANDING   "Use this commission until I end it."
+                      → may cross sessions · must remain visible
+SESSION-BOUNDED       "Work with me on this now."
+                      → ends with the encounter
+AMBIGUOUS             → ⛔ DO NOT SILENTLY PROMOTE to standing authority
+```
+
+> ⭐ **Otherwise MAIA would be silently deciding that yesterday's permission still governs today** —
+> **which keeps the system from solving the F-SCOPE problem by creating a Law 4 problem.**
+
+⭐ **The AMBIGUOUS case resolves by the same asymmetry that set the preservation default: DEFAULT TO
+THE NARROWER AUTHORITY.** ⛔ Not *ask every time* — that is friction. **A too-narrow authority is
+recoverable, because the writer simply re-grants it. A too-broad one is not, because MAIA has
+already acted beyond what was meant.**
+
+## 11.3 ⭐⭐ THE GENERAL HAZARD THIS EXPOSES — a repair can MIGRATE a violation
+
+**Twice now in one session, a fix for one constitutional problem has created another:**
+
+```text
+1  "surface the divergence" (Parallel Knowing)
+   → risked becoming a persistent objection surface      → F-REACTIVE
+   resolved by sequencing: surface once, then retained
+
+2  "make standing authority perceptible" (F-SCOPE)
+   → risked silently promoting yesterday's permission    → LAW 4
+   resolved by requiring duration to be authorized too
+```
+
+> ⭐⭐ **A constitution with eight falsifiers has a new failure mode: the repair that moves the defect
+> rather than removing it.** ⛔ **Neither instance was caught by the falsifier being repaired — both
+> were caught by asking what the repair now permits.**
+
+⚠️ **Recorded as a standing check, not a new falsifier:** ***after any constitutional repair, ask
+which other falsifier the repair has just made reachable.***

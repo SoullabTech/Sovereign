@@ -306,6 +306,17 @@ F-SCOPE           (founder-ruled 2026-09-09) FAIL when a scope the system holds
 
                   ⭐ "Writer-owned scope may never become hidden operative state."
 
+                  ⭐ DURATION (founder, 2026-09-09): authority may cross sessions
+                    ONLY when its persistence was itself authorized.
+                    explicitly standing → may cross · must stay visible
+                    session-bounded     → ends with the encounter
+                    ambiguous           → ⛔ default to the NARROWER authority;
+                                          never silently promote to standing
+                    ⛔ Otherwise a fix for F-SCOPE creates a Law 4 violation.
+
+                  ⭐ "Reset the room. Preserve the permission.
+                     Show only what is still in force." 
+
 ⭐ Register now stands at EIGHT.
 ```
 
