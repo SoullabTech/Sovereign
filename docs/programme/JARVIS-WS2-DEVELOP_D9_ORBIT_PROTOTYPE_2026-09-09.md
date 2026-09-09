@@ -285,3 +285,84 @@ lost sight of it.*
 only" reading scope · any standing instruction that outlives the turn that created it.
 
 ⛔ **Named, not designed. No implementation authorized here.**
+
+---
+
+# 10 · ⭐ THE COMMISSION INDICATOR — required by F-SCOPE, design owed
+
+**Founder, 2026-09-09.**
+
+> ⭐⭐ **If MAIA is acting because the member chose a boundary, the member must be able to see that
+> boundary while MAIA acts.**
+
+⭐ **A commission is no longer conversational context. Once MAIA acts under it, it is MEMBER-AUTHORED
+OPERATIVE STATE.** ⛔ **A commission living only in an earlier message is constitutionally
+insufficient.**
+
+**What the eventual room must be able to answer — ⛔ not another dashboard:**
+
+```text
+WHAT IS MAIA CURRENTLY AUTHORIZED TO DO?
+  scope        this chapter / these passages / this commission
+  permission   restructure substantially
+  protected    personal stories · phenomenological method
+  posture      no teaching while working
+  status       ACTIVE
+  writer can   inspect · amend · end
+```
+
+**The same rule now cleanly covers**: Focus Frame · reading range · editing commission · standing
+instruction · a deferred observation that becomes active again · Sanctuary Mode. ⛔ **And it does NOT
+require exposing MAIA's internal orientation, retrieval or cognition merely because those exist —
+the two-condition test prevents that overreach.**
+
+## 10.1 ⭐ THE TENSION, AND ITS RESOLUTION
+
+```text
+F-SCOPE      demands the boundary be PERCEPTIBLE
+F-REACTIVE   forbids the room from SOLICITING
+```
+
+⭐ **Legible Form already resolves it: a control is judged by the SENTENCE IT SPEAKS.**
+
+```text
+⭐ LAWFUL     "this is what you authorized"    — a mirror of the writer's act
+⛔ UNLAWFUL   "MAIA is working"                — reports the system
+⛔ UNLAWFUL   "review this" / "3 pending"      — a demand
+```
+
+> ⭐⭐ **An F-SCOPE surface reflects the writer's own decision back to them. A reflection of your own
+> act does not solicit — it reassures.** ⚠️ **It becomes solicitation only when something is ADDED:
+> counts, urgency, progress, or a prompt to act.**
+
+⚠️ **One field in the sketch is the risk.** ⛔ **`status: ACTIVE` is redundant while the indicator is
+shown — its presence IS the status** — and a status field invites a second value, which invites
+attention. *Remove it and one pressure vector disappears with it.*
+
+## 10.2 🔴 COLLISION — commission lifetime vs. the quiet arrival rule
+
+**Both rules were recorded today and they meet here:**
+
+```text
+ARRIVAL RULE   every fresh arrival begins in the quiet room; no inherited
+               open panels unless the writer explicitly chose persistence
+F-SCOPE        a boundary the writer authorized must be perceptible for as
+               long as it is operative
+```
+
+⛔ **A commission can outlive a session.** ⚠️ **So the writer returns tomorrow, MAIA is still acting
+under an authorization they granted, and the quiet room shows nothing.** ⭐ **That is F-SCOPE
+failing by obeying the arrival rule.**
+
+**Candidate resolution — ⛔ not ruled:**
+
+> ⭐ **The arrival rule bars INHERITED TOOL STATE. It does not bar, and F-SCOPE requires, showing
+> STANDING AUTHORITY the writer granted and has not ended.**
+>
+> **A fresh arrival is quiet of instruments. It is not silent about what MAIA may do.**
+
+⭐ **These are different objects: a panel someone left open is the room remembering a convenience; a
+live commission is the room remembering a PERMISSION.** ⛔ **Only one of those is the writer's own
+act still in force.**
+
+⛔ **REQUIRED BY F-SCOPE · DESIGN OWED · IMPLEMENTATION NOT AUTHORIZED.**
