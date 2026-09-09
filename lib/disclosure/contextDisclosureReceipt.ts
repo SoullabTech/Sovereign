@@ -31,9 +31,10 @@
  *   ⭐ Accountability may block the optional disclosure.
  *     It must not unnecessarily block the conversation.
  *
- * So `mintDisclosureAttempt()` returns `null` on any failure and the CALLER MUST
- * then not disclose — and must tell the writer (see §3a of the contract; that
- * obligation lives on the Writer's Studio surface, not here).
+ * So `mintDisclosureAttempt()` authorizes a crossing ONLY on `{ kind: 'minted' }`
+ * — see `mayCross()`. On every other outcome the caller must not disclose, and
+ * must tell the writer (§3a of the contract; that obligation lives on the
+ * Writer's Studio surface, not here).
  */
 
 import { query } from '@/lib/db/postgres';
@@ -114,10 +115,36 @@ export type RefusedReceiptField =
   | 'hash' | 'digest' | 'fingerprint'
   | 'startOffset' | 'endOffset' | 'range' | 'length' | 'wordCount' | 'geometry';
 
-export interface MintedDisclosure {
-  readonly id: string;
-  readonly disclosureId: string;
-}
+/**
+ * ⭐⭐ SUBSTRATE-A(A): only ONE outcome authorizes a crossing.
+ *
+ *   **Idempotency may prevent duplicate evidence. It must not turn old evidence
+ *   into fresh authority.**
+ *
+ * The first draft returned the existing row's id on conflict and the caller read
+ * that as success — so a second use of a `disclosure_id` could cross with a
+ * DIFFERENT Work while the receipt still described the first, and an already
+ * `crossed` receipt could authorize a second crossing. Both are the exact
+ * contradiction idempotency was supposed to prevent.
+ */
+export type MintOutcome =
+  /** Freshly minted. ⭐ The ONLY outcome that authorizes a crossing. */
+  | { readonly kind: 'minted'; readonly id: string; readonly disclosureId: string }
+  /**
+   * A receipt for this disclosure_id already exists and matches byte-for-byte.
+   * ⛔ Does NOT authorize a crossing. An `attempted` receipt is ambiguous by
+   * constitution — it may already represent an unconfirmed crossing — and a
+   * `crossed` one certainly represents an earlier crossing. Neither is fresh
+   * authority. A genuine retry by the writer mints a NEW disclosure_id.
+   */
+  | { readonly kind: 'existing'; readonly id: string; readonly state: 'attempted' | 'crossed' }
+  /** The id is in use describing a DIFFERENT disclosure. Refuse, loudly. */
+  | { readonly kind: 'identity_mismatch'; readonly differing: readonly string[] }
+  /** The accountability substrate is unavailable. Fail closed. */
+  | { readonly kind: 'unavailable' };
+
+/** The single lawful test a caller performs before disclosing. */
+export const mayCross = (o: MintOutcome): boolean => o.kind === 'minted';
 
 /**
  * PHASE 1 — mint BEFORE the context reaches the cognition boundary.
@@ -130,7 +157,7 @@ export interface MintedDisclosure {
  */
 export async function mintDisclosureAttempt(
   attempt: ContextDisclosureAttempt,
-): Promise<MintedDisclosure | null> {
+): Promise<MintOutcome> {
   if (attempt.sectionRef && attempt.scopeKind !== 'section') {
     // Refuse in the application too, not only at the CHECK: a caller that passes
     // this is holding a locator, and the honest response is to refuse the
@@ -138,7 +165,7 @@ export async function mintDisclosureAttempt(
     console.error('[DISCLOSURE] mint refused — sectionRef supplied for a non-section scope', {
       scopeKind: attempt.scopeKind,
     });
-    return null;
+    return { kind: 'unavailable' };
   }
 
   try {
@@ -158,22 +185,59 @@ export async function mintDisclosureAttempt(
       ],
     );
 
-    if (result.rows[0]?.id) return { id: result.rows[0].id, disclosureId: attempt.disclosureId };
-
-    // Conflict: this disclosure was already minted. A retry is lawful and must
-    // resolve to the SAME row rather than a second piece of evidence.
-    const existing = await query<{ id: string }>(
-      `SELECT id FROM context_disclosure_receipts WHERE disclosure_id = $1`,
-      [attempt.disclosureId],
-    );
-    if (existing.rows[0]?.id) {
-      return { id: existing.rows[0].id, disclosureId: attempt.disclosureId };
+    if (result.rows[0]?.id) {
+      return { kind: 'minted', id: result.rows[0].id, disclosureId: attempt.disclosureId };
     }
 
-    console.error('[DISCLOSURE] mint refused — no row after conflict', {
-      disclosureIdPrefix: attempt.disclosureId.slice(0, 12),
+    // ── Conflict. Read the WHOLE immutable identity plus state, and reconcile.
+    const existing = await query<Record<string, string | null>>(
+      `SELECT id, member_id, request_ref, boundary, source_class, participation_basis,
+              source_ref, scope_kind, section_ref, authorized_by, gesture,
+              policy_version, state
+         FROM context_disclosure_receipts
+        WHERE disclosure_id = $1`,
+      [attempt.disclosureId],
+    );
+    const row = existing.rows[0];
+    if (!row) {
+      console.error('[DISCLOSURE] mint refused — no row after conflict', {
+        disclosureIdPrefix: attempt.disclosureId.slice(0, 12),
+      });
+      return { kind: 'unavailable' };
+    }
+
+    const expected: Record<string, string | null> = {
+      member_id: attempt.memberId,
+      request_ref: attempt.requestRef,
+      boundary: attempt.boundary,
+      source_class: attempt.sourceClass,
+      participation_basis: attempt.participationBasis,
+      source_ref: attempt.sourceRef,
+      scope_kind: attempt.scopeKind,
+      section_ref: attempt.sectionRef ?? null,
+      authorized_by: 'member',
+      gesture: attempt.gesture,
+      policy_version: DISCLOSURE_POLICY_VERSION,
+    };
+    const differing = Object.keys(expected).filter(k => row[k] !== expected[k]);
+
+    if (differing.length > 0) {
+      // ⛔ The id is in use describing a different disclosure. Letting this cross
+      // would leave the receipt describing something that did not happen.
+      console.error('[DISCLOSURE] mint refused — disclosure_id describes a DIFFERENT disclosure', {
+        disclosureIdPrefix: attempt.disclosureId.slice(0, 12),
+        differing, // field NAMES only — never their values, which are references
+      });
+      return { kind: 'identity_mismatch', differing };
+    }
+
+    // Exact match. Evidence is intact and NOT duplicated — and equally, this is
+    // not a fresh authorization to cross again.
+    const state = row.state === 'crossed' ? 'crossed' : 'attempted';
+    console.warn('[DISCLOSURE] mint declined — a receipt for this disclosure already exists', {
+      disclosureIdPrefix: attempt.disclosureId.slice(0, 12), state,
     });
-    return null;
+    return { kind: 'existing', id: String(row.id), state };
   } catch (err) {
     // Fail closed. The accountability substrate being unavailable is exactly the
     // case where a disclosure may not proceed.
@@ -181,7 +245,7 @@ export async function mintDisclosureAttempt(
       disclosureIdPrefix: attempt.disclosureId.slice(0, 12),
       error: err instanceof Error ? err.message : String(err),
     });
-    return null;
+    return { kind: 'unavailable' };
   }
 }
 
