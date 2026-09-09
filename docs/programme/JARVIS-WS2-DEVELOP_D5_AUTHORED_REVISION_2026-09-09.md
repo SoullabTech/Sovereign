@@ -171,6 +171,8 @@ NOT   make this professionally written
 BUT   make this stronger while preserving the particular person writing it
 ```
 
+⭐ **Governed by `WRITERS_STUDIO_WISDOM_BEFORE_OPTIMIZATION_2026-09-09.md`** — the founding principle, which supplies the *measure* this boundary correction lacked: **the goal is not minimal intervention but maximum faithful transmission.** Not restated here.
+
 **An editor can make prose technically stronger while quietly making it less yours.** That is the failure MAIA must beat, not merely match.
 
 ### 5A.3 · ⭐ Craft defect vs authorial particularity
