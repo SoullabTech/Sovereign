@@ -97,7 +97,12 @@ would destroy the evidence trail: *one rule, multiple failure classes, separatel
 |---|---|---|---|
 | **1** | `FIELD-SAFETY-COPY-01A` | dormant lexical/prose doorway | ✅ **CLOSED** `0f8191eb2` |
 | **2** | `MaiaBeadsPlugin:260` | element-as-flag | ⛔ **OPEN** |
-| **3** | `ConsciousnessMemoryLattice:643` | mislabelled functional pattern | ⛔ **OPEN** |
+
+⚠️ **`ConsciousnessMemoryLattice:643` was DISCOVERED BY THIS AUDIT BUT IS NOT A VIOLATION OF THIS
+CANON.** Its mechanism is a seven-day event ratio — **vocabulary-invariant**, so it *passes* the
+substitution falsifier above. It reads as a sacred-as-symptom defect only because of what it is
+NAMED. ⭐ Keeping it in this register would make the canon look broader than it is. Moved to
+**`EVIDENCE-NAMING-01`** (`docs/programme/EVIDENCE-NAMING-01_2026-09-09.md`), cross-referenced here.
 
 ## Audit — 2026-09-09
 
