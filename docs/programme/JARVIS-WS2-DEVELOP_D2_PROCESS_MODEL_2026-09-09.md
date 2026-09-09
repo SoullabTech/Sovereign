@@ -1,0 +1,209 @@
+# D2 — The writer's developmental process · model · 2026-09-09
+
+**Status**: **D2 COMPLETE · STOPPED BEFORE D3.** Model of human activity. **No UI, routes, schema or implementation proposed.**
+**Continues**: `JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md`. D0/D1 complete at `b0f8f5485`; Gate D1 passed.
+**Evidence**: D1 archaeology · founder walk against *Elemental Alchemy* Ch. 4 · Writer's Studio doctrine · the founder's six episode vignettes (2026-09-09).
+
+---
+
+## A · Human-activity process model
+
+### A.1 · The distinction that organizes everything
+
+The Write/Develop labels are not about editors, surfaces, or whether prose changes. Both regimes edit. The difference is **what the writer's intention is doing in the act**:
+
+```text
+WRITE      intention is the INSTRUMENT
+           The writer knows what they mean. The work is making the
+           prose carry it. Uncertainty is local and craft-level.
+
+DEVELOP    intention is the OBJECT
+           The writer's own intention is what is under examination —
+           whether it holds, whether it is what the Work needs,
+           whether the text carries it at all.
+```
+
+This resolves all six founder vignettes without appeal to any control:
+
+| Episode | Intention is | Regime |
+|---|---|---|
+| I know what I want to change | instrument | WRITE |
+| Something feels wrong, I don't know why | object — and currently unavailable | DEVELOP |
+| Does this chapter earn its ending? | object | DEVELOP |
+| I find the issue and start rewriting at once | object when the act began | **DEVELOP, in authored action** |
+| Mid-composition, I need a better sentence | instrument | WRITE |
+| I revise, then ask whether the chapter now moves | re-opened as object | **developmental reflection** |
+
+**Consequence (answers D2-Q1).** What makes an editing act part of Write or Develop is neither the act nor the surface but **the standing question the act is serving.** The identical prose edit is a Write act when it executes a settled intention and a Develop act when it tests an unsettled one. *The regime is a property of the writer's relationship to their own certainty, not of the tool they touch.*
+
+### A.2 · The process has no terminal state
+
+Development does not end in resolution. It ends when the writer leaves. **Any model with a `done` state is a task tracker**, and a room built to reach `done` will convert the writer's inquiry into a queue of MAIA's items — which is critique-first arriving by a different road.
+
+### A.3 · The invariant
+
+**The Work is present throughout.** Not a section list, not a locus reference — the prose the writer is actually standing in relationship to. Everything else in the field is optional and reachable from anywhere.
+
+---
+
+## B · Entry conditions — how a process can begin
+
+```text
+1  WRITER INTENTION        "I want to test whether the frame arrives too early."
+2  FELT DIFFICULTY         "Something is wrong here and I can't name it."
+3  A MANUSCRIPT LOCUS      reading, and stopping at a place
+4  A MAIA OBSERVATION      something MAIA noticed is available
+5  A CONVERSATION          a thread already underway, returned to
+6  A RECENT EDIT           "I changed that — did it move?"
+```
+
+> ⭐ **The structural diagnosis. Exactly one of these six is MAIA-originated, and it is the only one the room currently has.** D1 found no path in from intention, difficulty, locus, or edit. **The room has one entrance and it belongs to MAIA.** That — not the tone of the observations, not the density of the list — is what makes the present room critique-first. A room can be gentle, well-worded, and still critique-first if the writer can only get in through MAIA's door.
+
+**Entries 1, 2, 3, 6 are writer-originated. Entry 5 is shared. Entry 4 is MAIA's.**
+
+**MAIA never opens a process (answers D2-Q6 in part).** An observation is *available*; it does not summon. The difference is whether the writer arrived or was fetched.
+
+---
+
+## C · Movements within the process
+
+Not a sequence. A field of movements available from wherever the writer is:
+
+```text
+                 NOTICE
+                ↗       ↘
+     ORIENT ←  INTENTION  → INQUIRE
+        ↑                      ↓
+     REFLECT  ←  WORK  ←    DECIDE
+        ↘                      ↗
+            CONTINUE / LEAVE
+```
+
+- **NOTICE** — something catches. May be the writer's or MAIA's.
+- **ORIENT** — where am I, what is this part doing, what did I mean here.
+- **INTENTION** — naming what is being tested. May be absent, and its absence is legitimate (entry 2).
+- **INQUIRE** — asking: the writer of the Work, the writer of MAIA, or MAIA of the writer.
+- **DECIDE** — this is worth taking up; or it is not; or not now.
+- **WORK** — the authored act, including prose editing. **This is developmental editing** — the same keystrokes as Write, under a different standing question.
+- **REFLECT** — did that move the Work. Re-reading, comparing, feeling the change.
+- **CONTINUE / LEAVE** — both lawful, at any point.
+
+**Staying is a movement.** Sitting with a difficulty without acting is developmental work, and a room that treats stillness as an unfinished task is pressuring the writer.
+
+### C.1 · What must travel into the manuscript (answers D2-Q3, Q8)
+
+⭐ **The live question travels. Not the observation.**
+
+If only the observation crosses, the writer arrives at their prose carrying *MAIA's finding* — and the crossing itself reinstates critique-first no matter how good the room was. What must remain present while the writer edits:
+
+```text
+the question being tested          in the writer's own words where they have them
+the locus                          where in the Work, exactly
+the thread                         the conversation this came from, if any
+the observation                    AVAILABLE, not foregrounded
+what the writer already tried      so the edit is not act one again
+```
+
+### C.2 · After an edit (answers D2-Q4)
+
+The available movements after an authored act are **continue writing · reflect · reread · ask MAIA · compare · leave** — and *none of them is the default.* Which one the writer takes is itself developmental information and must not be chosen for them.
+
+⛔ **The one prohibition: MAIA does not speak first after an edit.** This is the moment a helpful system most wants to assess, and precisely the moment where its assessment would replace the writer's own perception of their own change. **The writer must be able to feel what they did before being told about it.**
+
+---
+
+## D · Exit, pause, resume
+
+```text
+LEAVE      lawful at any point, from any movement, with nothing resolved.
+           A developmental thread may be abandoned honestly.
+           Nothing is marked incomplete because the writer left.
+
+PAUSE      the question survives the session. Threads persist (D1: PARTIAL,
+           server-side, survives reload and device).
+
+RESUME     ⭐ restores THE QUESTION, not the observation list.
+           A resume that reopens a list has resumed MAIA's state,
+           not the writer's process.
+```
+
+**There is no "resolve everything" exit.** A room that can only be left clean teaches the writer that their unfinished inquiries are debts.
+
+---
+
+## E · Relationship between Write and Develop
+
+### E.1 · The shared ground already exists
+
+D1 established: **one canonical Working Draft, one section identity, one revision lineage** — and `develop/preparation` structurally refuses to mint a second draft because *"the two would drift."* The substrate is lawful and shared.
+
+Today the relationship runs **one way, as invalidation**: a Write save changes the draft bytes; Develop later hashes those bytes and marks an observation superseded. **Write can speak to Develop. Develop cannot speak to the Work.**
+
+⛔ **Design consequence: do not build a second editor or a second manuscript lifecycle.** The missing thing is not a surface. It is the **process relationship around the editor that already exists**.
+
+### E.2 · Moving between stances (answers D2-Q2)
+
+**The writer must be able to move from Develop into authored action and back without ending the developmental thread.** If entering the prose closes the process, then every developmental act costs the writer their context, and the room becomes a place you visit *before* working rather than a place you work *within*.
+
+The stance changes; the thread does not. This is the single most important structural requirement D2 produces.
+
+### E.3 · Taking up, without a verdict (answers D2-Q7, Q9)
+
+⭐ **Taking something up is an act of the writer's attention, never a verdict on MAIA's accuracy.**
+
+A writer can act productively on an observation that is *wrong* — it pointed somewhere useful for reasons MAIA did not have. So the record may say:
+
+```text
+lawful     the writer worked here after this was raised
+unlawful   this observation was correct
+unlawful   this observation was resolved
+```
+
+*Resolution is a claim about the observation. The writer's act is a claim about the Work.* Conflating them converts a developmental field into a to-do list — and silently credits MAIA with the writer's judgment.
+
+### E.4 · Disagreement (answers D2-Q5)
+
+Disagreement changes **what is live**, not who is right. When the writer says *"you have misread my intention"*:
+
+```text
+MAIA's reading LOSES standing as a reading of the writer's INTENTION
+MAIA's reading RETAINS standing as a reading of the TEXT AS IT STANDS
+```
+
+Both can be true at once: the writer meant X, and the text does Y. **Capitulation erases the second; obstinacy denies the first.** The process then moves to the question that actually matters — *given that you meant X, does the text carry it?* — which is a better question than either party had before.
+
+### E.5 · Whose act is next (answers D2-Q10)
+
+> **Test: can the writer name what they are working on without referring to MAIA?**
+
+If the answer is *"MAIA said the ending doesn't land"*, the next act is MAIA's regardless of who performs it. If it is *"I'm testing whether the ending earns itself"*, it is the writer's — even if MAIA raised it first.
+
+**The room's job is to make the second sentence available.** That is a much harder requirement than making observations dismissible.
+
+---
+
+## F · Unresolved — founder questions
+
+**F-D2-1 · Does the regime need to be declared, or is it inferred?** A2 says regime is a property of the writer's relationship to their certainty. Asking the writer to declare it converts an inner state into a control. Inferring it risks MAIA deciding what stance the writer is in. *Neither is chosen here.*
+
+**F-D2-2 · Can a process legitimately have no question?** Entry 2 (felt difficulty) begins with no nameable intention, and the model treats that as fully legitimate. But C.1 says *the live question travels*. What travels when there isn't one yet — and does helping the writer name it become MAIA supplying the intention?
+
+**F-D2-3 · How long does a thread stay live?** Threads persist. Nothing in this model says when a developmental question stops being live, or whether a stale question should be surfaced, allowed to lapse silently, or asked about. **Adjacent to the ruled memory law** — *consent to remember is not consent to be interpreted through the memory every time.*
+
+**F-D2-4 · Does developmental editing need its own provenance class?** E.1 says one revision lineage. But close item 9 requires that MAIA-seeded content the writer developed be expressible. An edit made *inside* a developmental process, following a thread MAIA participated in, is not obviously the same provenance as a Write-regime edit. *Flagged, not decided.*
+
+---
+
+## Gate D2
+
+```text
+Does the model reduce to  read observations -> discuss -> edit ?   NO
+```
+
+**Evidence it does not:** the spine is the intention-as-instrument/object distinction, which is upstream of observations entirely. Four of six entry conditions are writer-originated and involve no observation. The field permits staying, looping, skipping, returning and leaving, has no terminal state, and MAIA is prohibited from speaking first after an edit. Reading and observations appear as **one available entrance among six**, not as the spine.
+
+```text
+GATE D2      PASS
+D3           NOT OPENED
+SEL-0B · selector · F-7 · UI · merge · deploy      NOT TOUCHED
+```
