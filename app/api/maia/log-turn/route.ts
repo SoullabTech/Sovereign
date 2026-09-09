@@ -35,7 +35,51 @@ const MaiaTurnLogSchema = z.object({
   })
 });
 
-export async function POST(request: NextRequest) {
+/**
+ * ⛔ CONTAINED — THIS ROUTE MAY NOT CREATE `maia_turns` ROWS.
+ *
+ * B1 of the maia_turns derivative-custody lane. `maia_turns` can hold derivative
+ * copies of member conversation text, and the table carries NO member identity
+ * capable of making account deletion authoritative: there is no `user_id`, and
+ * `session_id` is bare TEXT with no foreign key. It is absent from the
+ * 44-table refuse-by-default account-deletion list AND from the S5
+ * constitutional substrate, whose mint and tombstone triggers attach only to
+ * `conversation_turns`, `agent_runs` and `integration_passes`.
+ *
+ * ⭐ **A derived copy cannot outlive the member data whose deletion created the
+ * obligation to remove it.** Until this table can prove whose row it is, nothing
+ * may add to it.
+ *
+ * ⚠️ THE SQL BELOW IS ALREADY BROKEN, AND THAT IS NOT THE CONTAINMENT.
+ * It names four columns that do not exist — `role`, `content`, `engine`, `meta`
+ * — against a schema that carries `user_text` and `maia_text`, so the insert
+ * cannot succeed. It is preserved unrepaired, deliberately: a route that fails
+ * by accident is one plausible "fix" away from becoming a successful writer, and
+ * the accident is not a boundary. This refusal is the boundary.
+ *
+ * ⛔ DO NOT REPAIR THE STATEMENT BELOW to make this route work. Repairing it
+ * would turn a broken writer into a live one before custody is solved, which is
+ * the exact failure this containment exists to prevent. The route is reopened by
+ * the custody lane — with authoritative member identity and deletion coverage in
+ * place — or not at all.
+ */
+export async function POST(_request: NextRequest) {
+  return NextResponse.json(
+    {
+      error: 'maia_turns writes are contained',
+      detail:
+        'This endpoint is closed while derivative custody of maia_turns is unresolved. ' +
+        'Nothing was written and nothing was read.',
+    },
+    { status: 503 },
+  );
+}
+
+/**
+ * Preserved as evidence of what the route did, and unreachable. See the refusal
+ * above before changing anything here.
+ */
+async function retiredPost(request: NextRequest) {
   try {
     const body = await request.json();
 

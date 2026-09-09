@@ -4,6 +4,32 @@
 
 BEGIN;
 
+-- ⛔ CONTAINED — THIS SCRIPT MAY NOT BE RUN.
+--
+-- B1 of the maia_turns derivative-custody lane. This script copies
+-- conversation_turns.content into maia_turns.user_text / maia_text, creating a
+-- durable derivative copy of member conversation text in a table that:
+--
+--   * has NO user_id, and only a bare TEXT session_id with no foreign key, so
+--     the destination schema cannot prove whose row it is;
+--   * is absent from the 44-table refuse-by-default account-deletion list;
+--   * is absent from the S5 constitutional substrate (no mint gate, no
+--     tombstone refusal, no deletion-manifest scope).
+--
+-- ⭐ A derived copy cannot outlive the member data whose deletion created the
+-- obligation to remove it. This script creates exactly such a copy, and the
+-- deletion obligation cannot be fulfilled from the destination schema.
+--
+-- The guard below aborts the transaction before any row is written. It is
+-- removed by the custody lane once maia_turns carries authoritative member
+-- identity and deletion coverage — never to "just run it once".
+DO $$
+BEGIN
+  RAISE EXCEPTION
+    'backfill-training-data.sql is contained: maia_turns has no member identity and no deletion coverage (see docs/programme/WS-MAIA-TURNS-CUSTODY_IDENTITY_CENSUS_2026-09-09.md)';
+END $$;
+
+
 -- 1. Create maia_sessions for unique session_ids that don't exist
 INSERT INTO maia_sessions (id, created_at, updated_at, turn_count, conversation_history)
 SELECT DISTINCT
