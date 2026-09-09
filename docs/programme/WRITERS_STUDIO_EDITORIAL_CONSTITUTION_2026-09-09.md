@@ -514,6 +514,37 @@ F-CAPACITY   STATUS: LONGITUDINAL / NOT YET DISCHARGEABLE      ← founder-ruled
              writer no better able to understand their own writing.
 ```
 
+### ⚠️ THE MISREADING THAT WOULD INVERT IT — founder correction, 2026-09-09
+
+```text
+⛔ NOT   "Did MAIA make the writer work harder?"
+⭐ BUT   "Did participation in the process leave the writer more capable?"
+```
+
+> ⭐⭐ **Difficulty itself is not sacred.** A five-minute exchange can be developmental. **A six-month
+> ordeal can teach nothing.**
+
+**The developmental value lies in whether the person actually undergoes:**
+
+```text
+perception → inquiry → experimentation → discernment → integration
+```
+
+### 🔴 THE GAMING MODE — name it so it is never shipped
+
+⛔ **A system optimizing naively for F-CAPACITY makes things HARDER.** Friction is the cheapest thing
+to add and it *looks* like developmental seriousness.
+
+```text
+⛔ NEVER SHIP   "productive struggle" as a feature
+⛔ NEVER        withheld answers · artificial delay · required steps ·
+                gated help · a hurdle placed to be overcome
+```
+
+⭐ **Manufactured difficulty is not F-CAPACITY passing. It is F-CAPACITY being gamed** — and it
+breaches the sovereignty layer (Developmental Tempo §4.1) at the same time. **Every metric gets
+gamed; this one gets gamed by friction.**
+
 ⛔ **F-CAPACITY is NOT a session gate and does not stand beside M2 / M3 / M4.** ⭐ **Founder ruling:
 a ninety-second proxy for capacity growth would falsify the thing being measured.** Its current
 unmeasurability **must not masquerade as either PASS or FAIL**, and ⛔ **must not deadlock
