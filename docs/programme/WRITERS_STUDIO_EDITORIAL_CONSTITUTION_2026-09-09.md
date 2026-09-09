@@ -864,6 +864,9 @@ DIAGNOSTIC THOUGHTS — each one is a FAIL signal, not a UX annoyance:
    "What was I supposed to be working on?"
    "Wasn't there something MAIA said I needed to address?"
    "Maybe I shouldn't write this because it will get cut."
+   ⭐ ADDED 2026-09-09 (D9 mode-inference):
+   "Which mode should I use?"
+   "Should I ask for whole-work analysis?"
 
 STATUS: DETECTABLE IN A SESSION · NOT DISCHARGEABLE BY ONE
 ```

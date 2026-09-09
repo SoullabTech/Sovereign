@@ -253,3 +253,117 @@ last one** — *without the writer having to manage any of them.* **It is the sa
 criterion 11** (*the writer must never have to think like the architecture in order to write*), the
 **no-menu ruling**, and **F-REACTIVE**. ⛔ **Six requests satisfied by six controls would fail this
 question completely.**
+
+---
+
+## 14 · ⭐ THE DIVISION OF LABOUR — founder, 2026-09-09
+
+```text
+THE CONSTITUTION   protects the writer from being overrun
+D9                 asks whether the room can actively help something new emerge
+```
+
+> ⭐ **The eight candidates are not extra law. They are the generative capacities that must become
+> available INSIDE the already-ratified protective boundary.**
+>
+> ⭐⭐ **The writer should experience six forms of support without operating six forms of machinery.**
+
+## 15 · ⭐ THE MINIMAL INTERACTION GRAMMAR
+
+```text
+THE WORK  +  THE WRITER'S ATTENTION  +  MAIA IN RELATION
+```
+
+**Everything else happens beneath those three.** **The writer**: writes · highlights something ·
+asks something · continues.
+
+> ⭐⭐ **MAIA determines whether the response requires local attention, whole-Work context, remembered
+> intention, developmental history, generative possibility, or SIMPLE SILENCE. The writer does not
+> choose a mode.**
+
+```text
+⛔ NOT EXPOSED AS CONTROLS
+   Rewrite · Improve · Analyze · Deepen · Whole Work · Recall ·
+   Development · Creative Mode
+```
+
+⭐ **These may describe capabilities internally. Exposing them would make the writer manage the
+architecture — F-REACTIVE by furniture.**
+
+### 15.1 ⚠️ MODE INFERENCE NEEDS A RECOVERY PATH THAT IS NOT A CONTROL
+
+**Removing mode selection means MAIA infers the mode — and inference can be wrong.** ⛔ **A naive
+build leaves the writer stuck with a wrong inference and no way to correct it except by naming the
+mode we just removed.**
+
+```text
+⭐ THE RECOVERY IS MORE CONVERSATION, NOT A CONTROL
+   "no — I meant the whole chapter"
+   "I don't want a rewrite, I want to understand it"
+   "stay with the sentence"
+```
+
+⚠️ **This must be designed in, not assumed.** *A room that infers well but cannot be corrected in
+its own language has replaced a menu with a guess.*
+
+### 15.2 ⚠️ SILENCE IS THE ONLY NON-OUTPUT IN THE LIST — and it must be implementable
+
+⭐ **"Simple silence" sits in the same list as whole-Work context and generative possibility. It is a
+lawful response, not an absence of one.**
+
+⛔ **A system that always answers cannot perform Developmental Tempo or the Fertility of
+Not-Knowing** — *not filling the unknown too quickly requires the capacity not to fill it at all.*
+⚠️ **And a conversational surface structurally pressures toward always responding.** **Silence has to
+be built; it will not survive as a default.**
+
+## 16 · ⭐⭐ THE BUILD HYPOTHESIS — D9 becoming product rather than doctrine
+
+> **Can selection + natural conversation + whole-Work relational intelligence carry the six requests
+> without adding operational burden to the writer?**
+
+**Worked example — the writer highlights a strange paragraph and says:**
+
+> *"Something is alive here, but I can't quite find it."*
+
+**One lawful response may simultaneously**: see more without deciding (notice possibilities rather
+than pronounce meaning) · go deeper without taking over (ask or offer rather than complete) ·
+protect uniqueness (not normalize odd language for being statistically unusual) · support productive
+difficulty (not rush to solve what is still being discovered) · hold the whole (know how the passage
+participates in chapter and Work) · remember the thread while permitting emergence (know what the
+writer previously wanted while allowing that they have changed).
+
+⛔ **And the writer must experience NONE of that as six systems firing.**
+
+```text
+⭐ WHAT THEY SHOULD EXPERIENCE
+   "MAIA understood where I was and helped me go further."
+   ⭐ THAT IS THE TEST.
+```
+
+### 16.1 It can fail — and the failure signals are already registered
+
+```text
+⛔ LEAKED MACHINERY          ⭐ SUCCESS
+"Which mode should I use?"       "Wait — what if I try this?"
+"Does MAIA remember this?"
+"Should I ask for whole-work
+  analysis?"
+"Is this still active?"
+"Where did that observation go?"
+```
+
+⭐ **Two of those are NEW and specific to mode inference — *"which mode should I use?"* and *"should
+I ask for whole-work analysis?"* — and are added to F-REACTIVE's diagnostic set.** The other three
+were already there.
+
+⭐⭐ **And the success signal is not a new invention: *"what if I try this?"* is the generative finding
+from the M4 witness, returning as the acceptance criterion.** **The witness produced the target the
+prototype is now built to hit** — which means the prototype has a **positive test**, not only
+falsifiers.
+
+## 17 · ⭐ THE NEXT MOVE, SIZED
+
+> **Design one Write room around Work + attention + conversation, and prove that all six requests
+> can be inhabited there without becoming six controls.**
+
+⛔ **NOT AUTHORIZED YET — recorded as the sized next move, awaiting a founder act.**
