@@ -218,6 +218,31 @@ unlawful   this observation was resolved
 
 *Resolution is a claim about the observation. The writer's act is a claim about the Work.* Conflating them converts a developmental field into a to-do list — and silently credits MAIA with the writer's judgment.
 
+### E.3b · MAIA offers corrections to what she raises — **founder ruling, 2026-09-09**
+
+> **MAIA should be able to offer suggestions to correct the issues she brings up.**
+
+**Lawful as it stands.** Adopted constraint **R-L7** already permits it: *MAIA may **offer** drafting or rewrite help; generating or replacing prose requires writer commission, and accepted edits remain reversible.* Nothing here needs a new permission — and D1 shows the capability is genuinely **ABSENT**: `structure/proposals` refuses prose outright (`prose_in_payload: 422`) and `AskMaia.tsx` states *"nothing here changes the book."* This is a real requirement for later stages, not a tweak.
+
+⚠️ **The risk is sequencing, not permission.** An observation that arrives **with its own fix attached is no longer an observation — it is a proposal.** A proposal is much harder to disagree with than a noticing, because refusing it now costs the writer a concrete alternative rather than merely a reading. Three registered sources bear on exactly this: **B2** (drafting assistance reduces ownership most of any stage), **D1/Sourati** (assisted prose converges toward flattened style), **B6/Reactive Writers** (suggestions seed directions writers later elaborate without noticing the influence).
+
+If the fix arrives simultaneously with the finding, **MAIA has answered her own question before the writer formed one** — critique-first returning in its strongest form, with a rewrite attached.
+
+```text
+lawful     observation stands alone
+           writer encounters it, forms their own sense of it
+           writer asks: "what would you do?"
+           MAIA offers — preferably OPTIONS, not a single fix
+
+unlawful   observation delivered WITH its correction already written
+```
+
+**Three constraints follow, none of them new law:**
+
+1. **Available on request, not delivered with the noticing.** This is the same principle as *MAIA does not speak first after an edit* (§C.2), moved earlier in the loop: the writer's own perception comes first.
+2. **Options over a single fix.** One suggestion is a direction; several are a space. The founder's own Writing-stance example — *"give me three ways into this section"* — applies identically to corrections, and plurality is the available defence against the homogenization finding.
+3. **An offered correction never converts the observation into a verdict.** §E.3 holds unchanged: if the writer adopts MAIA's language, the record still says *the writer worked here after this was raised* — **never `resolved`, never `correct`** — and close item 9 lineage applies, since MAIA-seeded prose the writer developed must remain expressible as such.
+
 ### E.4 · Disagreement (answers D2-Q5)
 
 Disagreement changes **what is live**, not who is right. When the writer says *"you have misread my intention"*:
