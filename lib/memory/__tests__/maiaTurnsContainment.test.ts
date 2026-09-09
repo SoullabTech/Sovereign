@@ -171,3 +171,59 @@ describe('what the containment now rests on', () => {
     expect(read(BACKFILL)).toContain('RAISE EXCEPTION');
   });
 });
+
+/**
+ * ⭐ THE WITNESS CONTRACT, HELD DURABLY.
+ *
+ * The B4 witness is only as fail-closed as the command that runs it. Both
+ * boundaries were found the same way — a refusal that returns success is not a
+ * refusal — and both are asserted here so neither can be quietly dropped from
+ * the record.
+ */
+describe('the B4 occupancy witness contract', () => {
+  const witness = read('scripts/witness/maia-turns-b4-occupancy.sql');
+  /**
+   * ⭐ Assertions about what the SQL DOES must read the SQL, not the prose
+   * beside it. This file bans naming member columns and therefore names them,
+   * in comments, to say so — a scanner that read the rationale would fail the
+   * file precisely because it documents its own compliance.
+   */
+  const sql = witness.replace(/--.*$/gm, '');
+
+  it('is read-only and mutates nothing', () => {
+    expect(sql).toContain('SET TRANSACTION READ ONLY');
+    expect(sql).toContain('ROLLBACK;');
+    expect(sql).not.toMatch(/^\s*(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/mi);
+  });
+
+  it('refuses mechanically before occupancy, not advisorily', () => {
+    const gate = sql.indexOf('subject_matches');
+    const occupancy = sql.indexOf('count(DISTINCT session_id)');
+    expect(gate).toBeGreaterThan(-1);
+    expect(gate).toBeLessThan(occupancy);
+    expect(sql).toContain('RAISE EXCEPTION');
+    expect(sql).toContain('ON_ERROR_STOP');
+  });
+
+  /** ⛔ `\quit 3` exits 0 on psql 16 — the refusal must raise, never quit. */
+  it('does not refuse by quitting', () => {
+    expect(sql).not.toMatch(/\\quit\s+\d/);
+  });
+
+  /** ⛔ Without pipefail a missing pinned object exits 0 and no witness runs. */
+  it('documents pipefail as part of the contract, with the pinned invocation', () => {
+    expect(witness).toContain('set -o pipefail');
+    expect(witness).toContain('PART OF THE WITNESS CONTRACT');
+    expect(witness).toContain('git show');
+  });
+
+  it('prints counts only — no member content, no identifiers', () => {
+    /* No member column is ever selected; session_id appears only inside a
+       count(DISTINCT …), never as a value. */
+    expect(sql).not.toContain('user_text');
+    expect(sql).not.toContain('maia_text');
+    expect(sql).toContain('count(DISTINCT session_id)');
+    expect(sql.match(/session_id/g) ?? []).toHaveLength(1);
+  });
+});
+
