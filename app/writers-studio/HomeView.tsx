@@ -443,6 +443,7 @@ export default function HomeView({
     itemKey,
     target,
     visualWorkId,
+    makeWorkFrom,
   }: {
     href: string;
     title: string;
@@ -452,6 +453,24 @@ export default function HomeView({
     target: DeleteTarget;
     /** Set only for a declared Work — unclaimed writing has no visual custody. */
     visualWorkId?: string;
+    /**
+     * Set only for UNCLAIMED writing, and only where the member can act on it.
+     *
+     * ⛔ REACHABILITY DEFECT, found in production 2026-09-09. "Make this a work"
+     * existed and was wired, but rendered in exactly one place: beside the
+     * `feature` writing. `feature` is non-null only in the `orient` arrival —
+     * so the moment a member has ONE continuable Work, Home enters `return`,
+     * `feature` becomes null, and the only door to making a Work out of writing
+     * leaves the product entirely.
+     *
+     * That is most members, and it became most members the day Studio-born
+     * Works started counting as continuable (STUDIO-WRITING-PRESENCE-01) — a
+     * correct repair that moved the arrival and took this action with it.
+     *
+     * The capability never changed; only its reach did. The handler here is the
+     * same `onMakeWork` the feature slot has always called.
+     */
+    makeWorkFrom?: CurrentManuscript;
   }) => {
     /* The confirmation REPLACES the card. A destructive question floating over a
        still-clickable card is a question the member can walk past by accident. */
@@ -505,6 +524,31 @@ export default function HomeView({
         <div className="absolute top-2 right-2">
           <DeleteButton itemKey={itemKey} label={`Delete ${title}`} />
         </div>
+        {/* Offered beneath the writing, never in front of it — the same posture
+            the feature slot has always taken. A sibling of the Link for the
+            same reason Delete is: a button inside an anchor is invalid, and
+            would make this a second way to open the writing.
+
+            ⛔ NOT the same act as Canvas's "which work is this a form of?".
+            That attaches writing to a Work that already exists. This makes the
+            writing the originating writing of a NEW Work. */}
+        {makeWorkFrom ? (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() =>
+                void run(
+                  () => onMakeWork(makeWorkFrom.id, makeWorkFrom.title),
+                  'Could not make this a work just now. Nothing was changed.',
+                )
+              }
+              disabled={busy}
+              className="text-[12.5px] opacity-55 hover:opacity-100 transition-opacity disabled:opacity-30 underline underline-offset-4"
+            >
+              Make this a work
+            </button>
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -683,6 +727,7 @@ export default function HomeView({
                           key={`m-${m.id}`}
                           itemKey={`writing:${m.id}`}
                           target={{ workId: null, manuscriptId: m.id }}
+                          makeWorkFrom={m}
                           href={canvasForManuscript(CANVAS_HREF, m.id)}
                           title={m.title ?? 'Untitled'}
                           untitled={!m.title}
@@ -1036,6 +1081,7 @@ export default function HomeView({
                       key={m.id}
                       itemKey={`writing:${m.id}`}
                       target={{ workId: null, manuscriptId: m.id }}
+                      makeWorkFrom={m}
                       href={canvasForManuscript(CANVAS_HREF, m.id)}
                       title={m.title ?? 'Untitled'}
                       untitled={!m.title}
