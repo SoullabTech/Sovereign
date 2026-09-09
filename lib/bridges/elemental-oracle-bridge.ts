@@ -40,6 +40,15 @@ const elementalCounters = { engineFailure: 0, noSignal: 0, signalPresent: 0 };
 export function getElementalTruthCounters(): Readonly<typeof elementalCounters> {
   return { ...elementalCounters };
 }
+/**
+ * The engine-failure outcome is only visible to the CALLER — the bridge throws
+ * rather than returning — so callers record it here. Without this the third
+ * outcome was declared but never counted, which is the same "declared but not
+ * measured" gap the census kept finding elsewhere.
+ */
+export function recordElementalEngineFailure(): void {
+  elementalCounters.engineFailure++;
+}
 
 export interface ElementalResponse {
   elements: ElementalWisdom;

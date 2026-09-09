@@ -96,7 +96,7 @@ import {
 import { TurnPosture } from '../sanctuary/turnPosture';
 import { recordConsentState } from '../provenance/consentState';
 import { VoiceDistinctionScorer } from '../spiralogic/VoiceDistinctionScorer';
-import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
+import { ElementalOracleBridge, recordElementalEngineFailure, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
 import { logFieldOrchestratorTelemetry } from '../field/fieldOrchestratorTelemetry';
 import {
@@ -864,6 +864,7 @@ async function fastPathResponse(
   } catch (err) {
     // FIELD-TRUTH-02: engine failure is a THIRD outcome, distinct from
     // "ran and found no elemental signal". Both previously looked like Earth.
+    recordElementalEngineFailure();
     console.warn('[field-truth] elemental_engine_failure', JSON.stringify({
       outcome: 'engine_failure',
       reason: err instanceof Error ? err.message : 'unknown',
