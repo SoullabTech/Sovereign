@@ -203,3 +203,85 @@ system acts on it.**
 
 ⚠️ **Recorded as a CANDIDATE falsifier, deliberately NOT registered.** F-REACTIVE and the Law 4
 disclosure family may already cover it. ⛔ **Founder ruling owed on whether it needs its own name.**
+
+---
+
+# 9 · ⭐⭐ F-SCOPE — REGISTERED, founder ruling 2026-09-09
+
+> **FAIL when a scope the system holds as the writer's chosen or authorized boundary remains
+> operative while that scope is no longer perceptible to the writer.**
+>
+> ⭐⭐ **Writer-owned scope may never become hidden operative state.**
+
+## 9.1 · Why it needed its own name — the defect passed both neighbours
+
+```text
+F-REACTIVE   asks whether MAIA's influence leaves the writer writing toward
+             MAIA rather than toward the Work
+LAW 4        governs undisclosed or unauthorized STRATEGIC action
+F-SCOPE      the system is still acting inside a boundary ATTRIBUTED TO THE
+             WRITER, but the writer can no longer PERCEIVE that boundary
+```
+
+⭐ **The Focus Frame defect is the clean counterexample, and it is evidence rather than argument:**
+
+```text
+LAW 4        clean — MAIA held the passage the writer selected.
+             No new strategy, nothing unauthorized.
+F-REACTIVE   clean — the writer had not become reactive; no obligation,
+             no orientation toward MAIA.
+⛔ AND YET    the system continued acting on state that had become invisible.
+```
+
+> ⭐ **A real defect walked through the gap between two falsifiers. That is the argument for the
+> third.**
+
+## 9.2 ⭐ THE TWO-CONDITION TEST
+
+```text
+(1) is the scope ATTRIBUTED TO THE WRITER — chosen or authorized by them?
+(2) is it OPERATIVE — does the system act under it?
+
+BOTH YES   → it must remain perceptible for as long as it acts
+EITHER NO  → not F-SCOPE
+```
+
+⛔ **Both conditions are load-bearing.** ⚠️ **Without them F-SCOPE would demand that all cognition be
+exposed — and destroy the quiet room the whole architecture is built to protect.** ⭐ **The founder's
+three exclusions are not softeners; they are what makes the falsifier survivable.**
+
+## 9.3 ⭐⭐ F-SCOPE IS ALREADY RATIFIED CANON UNDER ANOTHER NAME
+
+**Sanctuary Mode, invariant 4:** *"Visual clarity — user must see unambiguous indication that
+Sanctuary is active."*
+
+```text
+(1) attributed to the member?   ✅ Sanctuary is their explicit choice
+(2) operative?                  ✅ it governs what the system may retain
+→ therefore it must be perceptible while it acts
+```
+
+> ⭐ **That invariant IS F-SCOPE, written years earlier for a single case.** ⭐ **F-SCOPE is not new
+> law — it is the generalization of a vow the platform already holds**, which is the strongest
+> possible provenance for a new falsifier: *the principle was already trusted; only its scope was
+> narrow.*
+
+## 9.4 ⚠️ RETROACTIVE REACH — what F-SCOPE now governs that is not yet built
+
+⭐ **The commission is the significant one.** Law 5 makes a lawful commission possible —
+*"restructure this chapter for pacing, preserve all personal stories, don't explain as you work."*
+
+```text
+(1) attributed to the writer?   ✅ they authored it
+(2) operative?                  ✅ MAIA acts under it, possibly for hours
+→ ⛔ IT MUST THEREFORE BE VISIBLE WHILE IT IS IN FORCE
+```
+
+⚠️ **No such indicator has been designed.** ⛔ **A commission that governs MAIA's editing while
+living only in a past message is precisely F-SCOPE** — *the writer authorized a boundary and then
+lost sight of it.*
+
+**Also now governed**: a deferred observation that becomes operative again · any "these chapters
+only" reading scope · any standing instruction that outlives the turn that created it.
+
+⛔ **Named, not designed. No implementation authorized here.**

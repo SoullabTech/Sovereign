@@ -274,7 +274,39 @@ F-ORBIT           (D9, product layer) A capability may ENTER the room when
                   ⭐ M2 at the interface layer — and M2's PASS does not predict
                   it, because the instrument had nothing to dismiss.
 
-⭐ Register now stands at SEVEN.
+
+F-SCOPE           (founder-ruled 2026-09-09) FAIL when a scope the system holds
+                  as the writer's CHOSEN OR AUTHORIZED boundary remains OPERATIVE
+                  while that scope is NO LONGER PERCEPTIBLE to the writer.
+
+                  FAIL
+                    a passage remains MAIA's focus after its visible frame
+                      disappears
+                    a commission remains active but its boundaries cannot be seen
+                    "these chapters only" still governs a reading after the UI
+                      no longer shows that scope
+                    a deferred observation becomes operative again without
+                      showing that it has become active
+
+                  ⛔ NOT F-SCOPE
+                    MAIA consulting broader whole-Work context beneath a visible
+                      writer-owned frame
+                    internal retrieval/ranking state that does not claim to be
+                      the writer's boundary and exercises no delegated authority
+                    inert retained understanding
+
+                  ⭐ TWO CONDITIONS, BOTH REQUIRED
+                    (1) the scope is ATTRIBUTED TO THE WRITER — chosen or
+                        authorized by them
+                    (2) the scope is OPERATIVE — the system acts under it
+                    Both yes → it must be perceptible while it acts.
+                    Either no → not F-SCOPE.
+                  ⛔ Without both conditions F-SCOPE would force the system to
+                    expose all cognition and destroy the quiet room.
+
+                  ⭐ "Writer-owned scope may never become hidden operative state."
+
+⭐ Register now stands at EIGHT.
 ```
 
 ⛔ **None of these amends M2 / M3 / M4.** Those concern interaction grammar and remain the open
