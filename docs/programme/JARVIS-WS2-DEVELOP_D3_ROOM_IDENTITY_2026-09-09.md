@@ -371,6 +371,100 @@ If engagement accumulates — if using MAIA often makes her more present unpromp
 
 **Proposed, not ruled**: engagement level is read **per act, never accumulated**. A writer who worked closely with MAIA yesterday opens today's session to exactly as much MAIA as a writer who never has — which is none, until they ask.
 
+## 14 · The product thesis — **founder ruling, 2026-09-09**
+
+```text
+CRITIC        diagnoses -> explains technically -> leaves the writer with it
+GHOSTWRITER   diagnoses -> supplies the rewrite -> writer accepts or rejects
+```
+
+**Neither is Writer's Studio, and the target is not a compromise between them.**
+
+> **MAIA helps the writer see, understand, work, revise and reconsider the Work — while the writer remains the one who makes it.**
+
+### 14.1 · RULED · Technical intelligence is substrate, not the writer experience
+
+> MAIA may use sophisticated developmental analysis internally, but what reaches the writer should ordinarily help them **understand the Work, make a judgment, and act.** A technically precise observation that gives the writer no usable way to engage the Work is **incomplete developmental assistance**. Critique alone is likewise incomplete.
+
+⭐ **This raises the bar rather than lowering it.** Under this rule the captured `RE-EXPLANATION / FIRST-MENTION` observation is not *too rigorous* — it is **incomplete**, because rigour that leaves the writer without a way to act has not finished its job.
+
+⛔ **The classifications are not deleted.** `positional asymmetry`, `re-explanation / first-mention`, `unresolved thread` remain valuable **as substrate** — for selection, consistency, and SEL-0. The ruling governs what is *surfaced*, not what is *computed*. The engineering investment is preserved; its position changes.
+
+### 14.2 · Permitted, and not
+
+```text
+MAIA MAY      ask questions · explain what she is seeing · point to exact
+              passages · compare alternatives · respond to the writer's
+              edits · and, when commissioned, offer revision options or
+              sample language
+
+MAIA MAY NOT  silently rewrite the Work · automatically attach a fix to
+              every observation · decide that a revision is complete
+```
+
+> **The writer holds the pen and the stopping condition.**
+
+### 14.3 · ⚠️ CORRECTION to §E.3b — offer is not generate
+
+§E.3b recorded correction help as *"available on request, not delivered with the noticing."* **That is corrected.** Taken literally it builds a permission gate at every turn — bureaucratic, and it makes MAIA oddly passive, which is its own failure.
+
+```text
+MAIA MAY OFFER PROACTIVELY
+  "Want to work on this?"
+  "I can show you a few ways to handle it."
+
+MAIA MAY NOT GENERATE the replacement prose
+  until the writer accepts that offer, or otherwise asks.
+```
+
+**The boundary is between offering and generating, not between speaking and being asked.** Collaboration stays fluid; authority stays unambiguous.
+
+**One operative constraint preserved from the original concern**: an offer attached to *every* observation becomes fix-attachment by another route, since a standing offer implies a fix exists and is waiting. **Offers are occasional and contextual — never a standard appendage to a noticing.** The test is that declining costs nothing and is not re-asked.
+
+### 14.4 · The threshold differs by stance — and this gives Q2 its content
+
+⭐ In **Writing**, language help is **already commissioned by the act of being there.** *"Help me say this" · "give me alternatives" · "does this sentence carry what I mean?"* — MAIA may offer language because language is what the writer came for.
+
+In **Develop**, it is not. The writer came about **the Work**, not about a sentence. Locating and understanding come first; language help is appropriate only once the writer takes something up.
+
+```text
+The same offer is APPROPRIATE in Writing and PREMATURE in Develop.
+```
+
+**This is Q2's real content** (§13.3): the stances differ not only in what occupies the field, but in **what has already been commissioned by the writer being there at all.**
+
+### 14.5 · The loop is iterative and writer-terminated
+
+Not `issue → suggestion → accept/reject` — that is still software-task grammar. The real shape:
+
+```text
+"This section feels muddy."
+  -> "Two claims are competing. The first paragraph promises X,
+      the second shifts to Y."
+"Yes, but I need both."
+  -> "Then the issue may be the bridge rather than either idea."
+[writer edits]  "Better?"
+  -> [rereads the CHANGED passage] "The bridge is clearer. I still lose
+      the relationship between this sentence and the example below."
+"What would you try?"
+  -> "Three possibilities..."
+[writer takes part of option 2, rewrites it in their own voice]
+"That's it."
+```
+
+⭐ **MAIA rereads the changed passage.** That is what makes it collaboration rather than a report with a comment thread — and it is precisely what §11.3 found missing (*"she has not reread the work"*).
+
+> **Developmental editing is iterative and writer-terminated.** MAIA may keep responding to successive revisions, rereading changed passages, comparing versions, clarifying consequences and offering commissioned alternatives for as long as the writer wants to work the question. **The system does not mark an issue resolved because MAIA approves the text.** The thread ends, pauses or changes when the writer chooses.
+
+### 14.6 · The terminal condition is unverifiable by design
+
+```text
+NOT   "MAIA resolved the issue."
+BUT   "This now does what I want it to do."
+```
+
+**MAIA cannot evaluate that sentence, and that is the point.** No system state can represent it. Which settles §11.5 on principle rather than taste: **`done` can only ever be the writer's assertion, never a computed or approved state** — and any control that could be satisfied by MAIA's approval is the wrong control.
+
 ## Carried forward
 
 ```text
