@@ -1,5 +1,10 @@
 # WS2-DEVELOP — D0 BEFORE-STATE + D1 PROCESS ARCHAEOLOGY
 
+**Programme**: `JARVIS-WS2-DEVELOPMENTAL-INTELLIGENCE-CONTINUATION.md` — **ACTIVE**.
+**This is a CHILD INVESTIGATION inside that programme, not a new roadmap and not an
+architecture reset** (founder correction, 2026-09-09). One programme, one history, one line of
+authority. The flow below is the child produced by the founder walk.
+
 **Flow**: `docs/programme/JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md` @ `49460c6c`
 **Acts executed**: **D0** and **D1 only.** Read-only. **STOPPED at the D1 gate.**
 **Substrate surveyed**: canonical `6345b8e08` — the commit live in production. *"What can Studio
@@ -153,6 +158,76 @@ no substrate today, and D4's loop has nothing to persist into.
 
 ---
 
+## D1 (cont.) — WHERE THE ROADMAP DEPENDS ON THE FALSIFIED MODEL
+
+Founder obligation, 2026-09-09: *map where the current Developmental Intelligence roadmap
+phases depend on the critique-first model that the founder walk falsified. **Do not rewrite
+those historical records**; identify which future phase opening conditions now need a
+process-oriented interpretation.*
+
+⛔ **Nothing below edits the continuation roadmap.** These are readings of existing phase
+statements against D1 evidence.
+
+**The shared dependency**: every phase capability in *The destination is the Studio* is stated
+with **MAIA as subject** — *MAIA knows · MAIA can conduct · MAIA develops · MAIA can reason*.
+Under a critique-first model that is coherent, because the room's whole output is MAIA's. Under
+a process model several of these name **the wrong subject**: the capability belongs to the
+room, or to the writer's process, and MAIA participates in it.
+
+| Phase | Stated capability | D1 reading |
+|---|---|---|
+| **SEL-0** | MAIA knows **what to raise first** | ⚠️ **Needs reinterpretation.** Presupposes raising is the act and ranking is standalone. In a process, what to raise first depends on **what the writer is working**, which no substrate carries (F-D1-4). Selection inside a thread ≠ selection over a Work. |
+| **F-7** | what she is permitted to **infer or raise** | ✅ **Survives.** A constitutional boundary on MAIA holds under either model. One extension: it must also govern MAIA's answers inside **writer-initiated** work, not only what she raises unprompted. |
+| **Phase 2** | **one excellent developmental session** | 🔴 **DIRECTLY FALSIFIED AS PREVIOUSLY READ.** Implicitly *excellent reading + good conversation about it*; the founder's restatement includes *"writer works directly on the manuscript"* and *"writer sees what changed."* D1 says every capability that restatement requires is ABSENT in Develop. |
+| **Phase 3** | **scope and competence** boundaries | ⚠️ Partly. Scope exists for **reading** (`ReadingScope`, PRESENT). Scope for **editing within a developmental context** has no referent today. |
+| **Phase 4** | persistent **Work understanding** | ⚠️ **Gains a second object.** Stated as MAIA's understanding. F-D1-4 shows the missing persistence is the **writer's developmental thread** — Develop persists observations, not process. Both are needed; only one is named. |
+| **Phase 5** | Write and Develop have **lawful continuity** | 🔴 **ORDERING CONSEQUENCE — see F-D1-5.** |
+| **Phase 6** | development happens **as conversation** | ⚠️ Partly already true (07E is live). But under the amended hypothesis conversation is **one strand beside editing**, not the destination. "As conversation" may now understate the phase. |
+| **Phase 7** | reason across the **whole Work** | ✅ Largely unaffected — `ReadingScope.whole` already exists. |
+| **Phase 8** | best model / configuration | ✅ Unaffected. |
+| **Phase 9** | **preserves the writer's voice** | ⚠️ Now coupled to A1's prose-authorship provenance (SHARED · provenance = PARTIAL). "Preserves voice" becomes measurable only once whose-language-is-whose is recorded. |
+| **Phase 10** | other writers, other Works | ✅ Unaffected. |
+
+### 🔴 F-D1-5 — PHASE 5 HAS BECOME A PRECONDITION OF PHASE 2.
+
+Phase 2's amended definition contains *"writer works directly on the manuscript"* and *"writer
+sees what changed."* Those are **Write ↔ Develop continuity** — the subject matter scheduled at
+**Phase 5**, three phases later.
+
+D1 makes the dependency concrete rather than theoretical: the SHARED substrate Phase 5 would
+establish **already exists and is already lawful** (one Working Draft, shared section and
+revision identity, structurally defended against a second lifecycle — F-D1-3). What is missing
+is Develop's reach into it.
+
+> **So Phase 5 is not blocked work waiting its turn. Part of it is already built, and the
+> unbuilt part is now inside Phase 2's definition.** A sequence that keeps them three phases
+> apart will either stall Phase 2 or quietly satisfy it with critique plus a handoff — **PF-5,
+> exactly.**
+
+⛔ **Not a proposal to reorder the roadmap.** That is a founder act. Recorded as the ordering
+question D2 must carry.
+
+### ⭐ F-D1-6 — THE WALK VALIDATED THE PRODUCTIZATION RULE, ONE ALTITUDE UP.
+
+The rule ratified 2026-09-08:
+
+```
+BENCHMARK PASSES  ≠  STUDIO HAS THE CAPABILITY
+```
+
+The founder walk produced its successor:
+
+```
+CRITIQUE EXISTS   ≠  DEVELOP EXISTS
+```
+
+**Same rule, next altitude.** The first says a passing evaluation is not a Studio capability;
+the second says a *shipped* Studio capability is not the *purpose* it was built to serve. 07A–07F
+each closed on its own acceptance terms and each was honestly built — D1 found no unmet
+obligation in any of them. **The gap is not between claim and implementation; it is between an
+implemented capability and the room a writer needs.** That is what a founder walk catches and
+no unit gate can, and it is the programme working as designed rather than failing.
+
 ## Gate D1
 
 **PASS.** Every capability above names a route, module or surface on canonical `6345b8e08`.
@@ -160,12 +235,25 @@ Nothing is recorded as PRESENT on the strength of an intention, a comment, or a 
 F-D1-2 exists precisely because a comment and the code disagreed, and the code was taken.
 
 ```
-D0    COMPLETE — before-state preserved, including the patch's own account of the gap
-D1    COMPLETE — WRITE / DEVELOP / SHARED censused on canonical
-STOP  D2 NOT STARTED — no process model, no UI, no architecture proposed
+WS2 DEVELOPMENTAL INTELLIGENCE     ACTIVE — one programme, one history
+  SEL-0 corpus 01                  RETIRED UNRUN
+  SEL-0B                           REQUIRED LATER
+  selector core / runtime          BUILT / LOCKED
+  F-7 adjudicator                  PRODUCT GAP
+  Develop founder walk             PURPOSE-LEVEL FAIL — critique-first, process-incomplete
+
+CURRENT CHILD                      Develop process architecture
+  D0 preserve before-state         COMPLETE
+  D1 process archaeology           COMPLETE — WRITE / DEVELOP / SHARED + phase dependency map
+  D2 human developmental process   NOT STARTED
+
+WRITE ↔ DEVELOP relationship       LOAD-BEARING QUESTION — hypothesis, established not presumed
+implementation                     NOT AUTHORIZED
+merge / deploy                     NOT AUTHORIZED
 
 not reopened: selector · Q12 · D5 standing ruling · F-7 · SEL-0B
-no redesign · no implementation · no merge · no deploy · read-only throughout
+roadmap NOT rewritten — phase readings recorded, historical records untouched
+no redesign · no implementation · read-only throughout
 ```
 
 **Next act — D2** (model the writer's developmental process, no screens), which now opens
