@@ -61,14 +61,53 @@ Suppose the Work carries: *a psychologically and spiritually grounded book begin
 
 **The North Star is the most Work-level object in the entire system, and A has no locus above the line.**
 
+**Three pressures, none chosen in advance** (founder framing, 2026-09-10):
+
 ```text
-as marks in the margin  -> fails the D8 question outright: it becomes
-                           "another collection of margin marks"
-somewhere outside       -> A now needs a non-place surface, contradicting
-the margin                 its own organizing principle
+ATTACH IT TO A PASSAGE
+  -> FALSE LOCALITY. The North Star governs no single passage.
+     It would also fail the D8 question outright by becoming
+     "another collection of margin marks".
+
+PUT IT ABOVE THE CHAPTER / WORK
+  -> introduces the ABOVE-THE-LINE LOCUS A does not possess.
+     This is the A/M1-2 gap arriving a third time.
+
+PUT IT IN A SEPARATE WORK-LEVEL PLACE
+  -> place remains useful, but "there is no room but the Work"
+     is no longer the complete organizing principle.
 ```
 
+⭐ **The third is the honest one, and it is not a repair — it is a change of premise.** A can hold the North Star only by ceasing to be the architecture that was specified.
+
 **Three moments, one defect, three faces**: M2 could not represent a distributed finding, M3 could not recover a non-local exchange, M4 cannot hold the Work's orientation. **A has no representation for anything whose scope exceeds a line.**
+
+### ⚠️ Finding A/M4-1b — A's D6 strength cannot operate here, because the strength requires a destination
+
+The natural follow-on test: *can I reach the North Star when I want it, without it appearing beside every passage merely because it persists?*
+
+**A should be excellent at this.** Its D6 property (A/M3-2) is that nothing can come to the writer — the writer goes to it. Applied here, the North Star would sit perfectly quiet until sought. **That is exactly the behaviour the requirement asks for.**
+
+⛔ **But going-to requires somewhere to go.** A's non-resurfacing strength is a property of *destinations*, and the North Star has no lawful destination in A.
+
+```text
+A's strength    "nothing reaches you; you go to it"
+A's gap         there is nowhere to go
+RESULT          the right behaviour is unavailable for want of a place
+```
+
+**So A/M4 is not asking whether the North Star is a nice addition.** It asks whether **Work-level orientation is representable at all in an architecture whose native unit is locality** — and the answer is no, twice over: it cannot be stored, and the one mechanism that would have made it unobtrusive cannot be used.
+
+### ⛔ Finding A/M4-1c — location must not overwrite lineage
+
+Per the ruled lineage law: if MAIA helped formulate a sentence in the North Star, **that provenance survives.**
+
+```text
+PROHIBITED   the sentence now sits inside a writer-owned Work-level
+             object, THEREFORE it reads as writer-declared
+```
+
+⭐ **A location cannot launder an origin.** This is close item 9 in a new setting, and it is the precise hazard flagged when the North Star was recorded: the cleanest writer-originated source becoming the laundering channel. **Whatever architecture is adopted, the North Star's container must not overwrite the lineage of its contents.** Applies to B and C equally.
 
 ### ⭐⭐ Finding A/M4-2 — and yet A may *honour* the North Star better than any architecture that displays it
 
@@ -104,12 +143,31 @@ A/M4   ⚠️ cannot represent Work-level orientation
        ⭐ but may honour it better than architectures that can
 
 VERDICT   NOT ADOPTABLE AS SPECIFIED (ruled at M2)
-INGREDIENTS WORTH CARRYING FORWARD
-  · locus-anchored local interaction
-  · navigation as recovery
-  · resurfacing structurally impossible rather than prohibited
-  · orientation as disposition rather than displayed object
 ```
+
+### Portable law from M3 · founder
+
+> **Continuity can only be as truthful as the representation it preserves.**
+
+A preserves local history beautifully because local things have somewhere to live. It cannot preserve a non-local developmental exchange because **it never had a truthful identity for one.** The M2 defect propagating — not a new bug.
+
+### What A gives the eventual architecture
+
+```text
+KEEP FROM A
+  local encounter
+  spatial recovery
+  staleness at the changed prose
+  structural non-resurfacing
+  (and, open) orientation as disposition rather than displayed object
+
+DO NOT ASSUME FROM A
+  developmental observation identity
+  non-local continuity
+  Work-level orientation
+```
+
+⛔ **These are carried into B and C as COMPARISON CRITERIA ONLY — never as modifications to B or C.** Each candidate is walked as specified.
 
 ```text
 NEXT   B M1-M4, then C M1-M4. No adjudication until all cells are walked.
