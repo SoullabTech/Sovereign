@@ -166,6 +166,82 @@ fi
 
 mkdir -p "$RUN"; chown "$PG_OWNER" "$RUN" 2>/dev/null || true; chmod 1777 "$RUN"
 
+# ⛔ NO MEMBER TEXT CROSSES THE BOUNDARY YET.
+#
+# Custody used to be taken HERE, before anything had been proven. Every failure
+# that followed — missing PostgreSQL binaries, a load order the round-trip
+# trigger refused, a build that aborted in V8, a build that could not resolve a
+# declared dependency — destroyed a real copy of the member's book and forced
+# another export to learn the next thing.
+#
+#   Real member text should cross the custody boundary only after every failure
+#   that can be discovered WITHOUT it has already been eliminated.
+#
+# So the order is now: prove the dependency tree, the cluster, the schema and
+# the BUILD first — all of which need no manuscript — and take custody only
+# once the runtime is known to work.
+export PATH="$PGBIN:$PATH"
+
+# ⛔ PROVE THE DEPENDENCY TREE BEFORE THE BOOK IS COPIED. A build that cannot
+# resolve a DECLARED dependency is an environment failure, and it cost two real
+# copies of the manuscript to discover twice. `require.resolve` is the same
+# question webpack asks, asked cheaply and early.
+echo "[1/6] installed dependency reconstruction"
+MISSING=""
+for m in nodemailer next react pg; do
+  node -e "require.resolve('$m/package.json')" 2>/dev/null || MISSING="$MISSING $m"
+done
+if [ -n "$MISSING" ]; then
+  echo "⛔ declared dependencies are NOT installed:$MISSING"
+  echo "   node_modules is out of sync with package.json. Reconcile it first:"
+  echo "     npm ci"
+  echo "   Refusing to continue — a build failure here would cost a real copy"
+  echo "   of the member's manuscript to learn something npm already knows."
+  exit 1
+fi
+echo "  dependencies    resolved (nodemailer · next · react · pg)"
+
+echo "[2/6] ephemeral PostgreSQL"
+as_pg "'$PGBIN/initdb' -D '$RUN/pg' -U wm -A trust" >/dev/null 2>&1
+as_pg "'$PGBIN/pg_ctl' -D '$RUN/pg' -o \"-k $RUN -p $PGPORT_LOCAL -h ''\" -l '$RUN/pg.log' start" >/dev/null
+export DATABASE_URL="postgresql://wm@localhost:$PGPORT_LOCAL/$DB?host=$RUN"
+createdb -h "$RUN" -p $PGPORT_LOCAL -U wm "$DB"
+case "$DATABASE_URL" in *"$RUN"*) : ;; *) echo "⛔ not the ephemeral socket — refusing"; exit 1 ;; esac
+
+echo "[3/6] schema from committed artifacts"
+npm run db:bootstrap >"$RUN/bootstrap.log" 2>&1 || { echo "⛔ bootstrap failed"; tail -20 "$RUN/bootstrap.log"; exit 1; }
+npm run db:migrate  >"$RUN/migrate.log"  2>&1 || { echo "⛔ migrate failed";  tail -20 "$RUN/migrate.log";  exit 1; }
+
+# ⛔ THE REPOSITORY'S DECLARED BUILD HEAP DOES NOT REACH `next build`.
+# package.json's build script reads:
+#
+#   NODE_OPTIONS=--max-old-space-size=8192 node verify-… && node … && next build
+#
+# In a shell, VAR=x cmd1 && cmd2 sets VAR for cmd1 ONLY. So the 8 GB heap the
+# repository plainly intends applies to the first verifier and NOT to the build
+# it was written for — `next build` runs on the default heap unless the parent
+# environment already carries the setting. On this machine it aborted inside
+# V8 allocation with `Abort trap: 6`, after the real Work had already loaded.
+#
+# ⛔ NOT REPAIRED IN package.json HERE. That would add a third changed path and
+# trip this script's own product-drift refusal — the witness must observe the
+# merged implementation, unmodified. The intention is instead carried into
+# npm's environment, where every descendant inherits it.
+#
+# ⚠️ The falsifier's run.sh has the same latent gap. It has not failed there
+# (Linux container, different memory profile) and is part of the frozen subject,
+# so it is RECORDED and deliberately not touched.
+BUILD_HEAP_MB=8192
+echo "  node build heap : ${BUILD_HEAP_MB} MB"
+echo "[4/6] build — still no member text on this machine"
+NODE_OPTIONS="--max-old-space-size=${BUILD_HEAP_MB}" \
+  npm run build >"$RUN/build.log" 2>&1 || {
+    echo "⛔ build failed — see the tail below"
+    echo "   (heap was ${BUILD_HEAP_MB} MB; an 'Abort trap: 6' inside V8 here"
+    echo "    means the build needs more than that, not that the copy is bad)"
+    tail -30 "$RUN/build.log"; exit 1; }
+
+echo "[5/6] take custody, and load the real Work"
 # ⭐ TAKE CUSTODY, SO THE PROMISE IS TRUE. `cleanup()` removes $RUN on every
 # exit path. Until the copy lives inside $RUN, "Ctrl-C destroys the copy" is a
 # claim about a directory this script never touches — the export would outlive
@@ -185,20 +261,7 @@ else
   exit 1
 fi
 IN="$RUN/export"
-export PATH="$PGBIN:$PATH"
 
-echo "[1/5] ephemeral PostgreSQL"
-as_pg "'$PGBIN/initdb' -D '$RUN/pg' -U wm -A trust" >/dev/null 2>&1
-as_pg "'$PGBIN/pg_ctl' -D '$RUN/pg' -o \"-k $RUN -p $PGPORT_LOCAL -h ''\" -l '$RUN/pg.log' start" >/dev/null
-export DATABASE_URL="postgresql://wm@localhost:$PGPORT_LOCAL/$DB?host=$RUN"
-createdb -h "$RUN" -p $PGPORT_LOCAL -U wm "$DB"
-case "$DATABASE_URL" in *"$RUN"*) : ;; *) echo "⛔ not the ephemeral socket — refusing"; exit 1 ;; esac
-
-echo "[2/5] schema from committed artifacts"
-npm run db:bootstrap >"$RUN/bootstrap.log" 2>&1 || { echo "⛔ bootstrap failed"; tail -20 "$RUN/bootstrap.log"; exit 1; }
-npm run db:migrate  >"$RUN/migrate.log"  2>&1 || { echo "⛔ migrate failed";  tail -20 "$RUN/migrate.log";  exit 1; }
-
-echo "[3/5] load the witness copy, remapped to a witness member"
 node -e "
 const {hashPassword}=require('$ROOT/node_modules/bcryptjs')?{}:{};
 " 2>/dev/null || true
@@ -264,36 +327,7 @@ if [ "$ADDRESSABLE" != "1" ]; then
   exit 1
 fi
 
-# ⛔ THE REPOSITORY'S DECLARED BUILD HEAP DOES NOT REACH `next build`.
-# package.json's build script reads:
-#
-#   NODE_OPTIONS=--max-old-space-size=8192 node verify-… && node … && next build
-#
-# In a shell, VAR=x cmd1 && cmd2 sets VAR for cmd1 ONLY. So the 8 GB heap the
-# repository plainly intends applies to the first verifier and NOT to the build
-# it was written for — `next build` runs on the default heap unless the parent
-# environment already carries the setting. On this machine it aborted inside
-# V8 allocation with `Abort trap: 6`, after the real Work had already loaded.
-#
-# ⛔ NOT REPAIRED IN package.json HERE. That would add a third changed path and
-# trip this script's own product-drift refusal — the witness must observe the
-# merged implementation, unmodified. The intention is instead carried into
-# npm's environment, where every descendant inherits it.
-#
-# ⚠️ The falsifier's run.sh has the same latent gap. It has not failed there
-# (Linux container, different memory profile) and is part of the frozen subject,
-# so it is RECORDED and deliberately not touched.
-BUILD_HEAP_MB=8192
-echo "  node build heap : ${BUILD_HEAP_MB} MB"
-echo "[4/5] build"
-NODE_OPTIONS="--max-old-space-size=${BUILD_HEAP_MB}" \
-  npm run build >"$RUN/build.log" 2>&1 || {
-    echo "⛔ build failed — see the tail below"
-    echo "   (heap was ${BUILD_HEAP_MB} MB; an 'Abort trap: 6' inside V8 here"
-    echo "    means the build needs more than that, not that the copy is bad)"
-    tail -30 "$RUN/build.log"; exit 1; }
-
-echo "[5/5] app on loopback :$APP_PORT"
+echo "[6/6] app on loopback :$APP_PORT"
 if (exec 3<>/dev/tcp/127.0.0.1/$APP_PORT) 2>/dev/null; then
   exec 3>&- 3<&-; echo "⛔ something is already listening on :$APP_PORT"; exit 1
 fi
