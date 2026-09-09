@@ -174,16 +174,17 @@ describe('the held focus increment, at its boundaries', () => {
   });
 
   /**
-   * ⚠️ RECORDED, NOT HIDDEN. The mark on the Work is section-level because the
-   * substrate renders each editable section as a <textarea>, whose value no
-   * highlight API can address. The focus MODEL is character-exact; only the
-   * paint is coarse, and making it exact needs an overlay seam in a preserved
-   * component — a separate decision.
+   * ⭐ ONE MARK FOR ONE FOCUS. The paint is drawn over the exact run the focus
+   * names, through the surface's presentation seam — so widening a sentence to
+   * its paragraph visibly widens. The earlier section-level shell mark is gone:
+   * keeping both would have put two marks in the Work for one focus, and the
+   * Work is allowed exactly one.
    */
-  it('says plainly that the paint is section-level', () => {
-    const src = raw('FieldRoom.tsx');
-    expect(src).toContain('SECTION-LEVEL PAINT, AND SAID SO');
-    expect(strip(src)).toContain('focusedSectionIds');
+  it('paints the focus where the writer put it, not on the section around it', () => {
+    const src = strip(raw('FieldRoom.tsx'));
+    expect(src).not.toContain('focusedSectionIds');
+    expect(src).not.toContain('data-whole-manuscript-section=');
+    expect(strip(raw('FocusOverlay.tsx'))).toContain('body.slice(a, b)');
   });
 
   /** The room does not claim the conversation it opens is CanonicalTurn. */

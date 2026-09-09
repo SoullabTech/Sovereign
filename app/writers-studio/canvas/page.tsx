@@ -62,6 +62,9 @@ import FieldRoom from '../field/FieldRoom';
 import { parseTreatment } from '../field/fieldTreatments';
 import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
+import FocusOverlay from '../field/FocusOverlay';
+import { focusPaint } from '../field/focusPaint';
+import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
@@ -483,6 +486,26 @@ function CanvasRoom() {
     [writing],
   );
   const held = useHeldFocus(focusSections, focusBodyOf);
+
+  /**
+   * The focus, drawn where the writer put it. Built here because it needs both
+   * the held focus and the treatment under study; handed to the surface as a
+   * read-only mark and nothing else.
+   */
+  const renderSectionOverlay = useCallback((sectionId: string, body: string) => {
+    const f = held.focus;
+    if (!f || !fieldTreatment || !f.sectionIds.includes(sectionId)) return null;
+    const first = f.sectionIds[0] === sectionId;
+    const last = f.sectionIds[f.sectionIds.length - 1] === sectionId;
+    return (
+      <FocusOverlay
+        body={body}
+        start={first ? f.start : 0}
+        end={last ? f.end : body.length}
+        paint={focusPaint(resolveMark(TREATMENTS[fieldTreatment], 'focus'))}
+      />
+    );
+  }, [held.focus, fieldTreatment]);
   const named = Boolean(work?.title ?? manuscript?.title);
 
   /* 📖 WS2-03D — Conversations opens HERE.
@@ -596,7 +619,6 @@ function CanvasRoom() {
         title={headline}
         note={named ? null : UNTITLED_EXPRESSION}
         workRef={held.rootRef}
-        focusedSectionIds={held.focus?.sectionIds}
         focus={held.focus
           ? ({ openMaia }) => (
             <FocusStrip
@@ -669,6 +691,7 @@ function CanvasRoom() {
             onMeta={setDraftMeta}
             onCheckpointed={() => setHistoryKey((k) => k + 1)}
             onWriteAuthorityChanged={refreshWriteState}
+            renderSectionOverlay={renderSectionOverlay}
           />
         }
       />
@@ -1082,6 +1105,7 @@ function FieldBody({
   onSession,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -1100,6 +1124,8 @@ function FieldBody({
   onSession?: (s: ManuscriptSession | null) => void;
   jumpTo?: string | null;
   onJumpHandled?: () => void;
+  /** Presentation only — see WholeManuscriptSurface's seam. */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1241,6 +1267,7 @@ function FieldBody({
         {(session) => (
           <SectionSurfaceBridge
             session={session}
+            renderSectionOverlay={renderSectionOverlay}
             onWriting={onWriting}
             onSession={onSession}
             manuscriptId={manuscript.id}
@@ -1310,6 +1337,7 @@ function SectionSurfaceBridge({
   onCheckpointed,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
@@ -1318,6 +1346,7 @@ function SectionSurfaceBridge({
   onCheckpointed?: () => void;
   jumpTo?: string | null;
   onJumpHandled?: () => void;
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1378,6 +1407,7 @@ function SectionSurfaceBridge({
           jumpTo={jumpTo}
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
+          renderSectionOverlay={renderSectionOverlay}
         />
       ) : (
         <SectionWritingSurface
