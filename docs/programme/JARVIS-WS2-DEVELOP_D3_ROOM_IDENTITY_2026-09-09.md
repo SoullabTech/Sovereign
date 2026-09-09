@@ -183,6 +183,51 @@ Remove MAIA entirely. Is Writing still a writing room?     YES
 
 ⛔ **§9 remains open. This capture is evidence, not a ruling.**
 
+---
+
+## 11 · The `TALKING ABOUT` panel — dialogue exists, and its shape is the finding
+
+Third capture, Develop room, `How is it developing?` · `Whole work`. **Confirms F-D1-2 by sight**: `ObservationDialogue` renders, with a `What made you notice this?` input and `ask` / `done`, while the room header still declares dialogue absent by construction.
+
+⚠️ **This is careful, honest work — the disclaimers are true, the evidence links are precise, and the panel does not overclaim.** The findings below are about *shape*, not quality.
+
+### 11.1 · The conversation is anchored to the observation, not to the Work
+
+You talk about **what MAIA noticed**. There is no path to say *"this ending doesn't earn itself"* without an observation to hang it on. **The dialogue inherits the one-entrance defect rather than relieving it** — §B's four writer-originated entries still have no door, and the one conversational surface that exists opens only downstream of MAIA speaking first.
+
+### 11.2 · ⭐ Disagreement has no target — declared in advance
+
+> *"Nothing said here changes your work or her reading."*
+
+D2 §E.4 requires that disagreement change **what is live**: MAIA's reading loses standing as a reading of the writer's *intention* while keeping standing as a reading of the *text as it stands*. That resolution needs the reading to be **mutable in standing**.
+
+Here the reading is **immutable by declaration**. So the failure is neither capitulation nor obstinacy — **it is that the writer's disagreement has nowhere to land.** The room states, before the writer types, that nothing they say can move anything. That is a stronger constraint than restraint; it is inertness, and it is announced as a feature.
+
+### 11.3 · It is a conversation with a record, not with a reader
+
+> *"She is talking about what she noticed then, and has not reread the work."*
+
+Honest, and decisive for identity. The writer is discussing a **frozen artifact** with someone who is no longer looking at their book. Against the north star — *a developmental editor sitting next to you* — **this is a conversation with the editor's notes, not with the editor.**
+
+### 11.4 · The room supplies the writer's first question, and points it at MAIA
+
+The placeholder is `What made you notice this?` — a request for **MAIA's reasoning**. Compare what a writer actually says to someone sitting beside them:
+
+```text
+"I disagree — that's not what I meant."
+"What would you do?"
+"Show me where."
+"I already tried that."
+```
+
+**The prompt steers the writer into introspection about the observation instead of work on the Work.** It is the most natural question to ask a *report*, and among the least useful to ask a *reader*.
+
+### 11.5 · `done` manufactures the terminal state D2 forbids
+
+D2 §A.2: *development does not end in resolution; any model with a `done` state is a task tracker.* The panel closes with `ask · done`, and the rail carries `MAIA · Suggestions`. **Together that is a tracker's grammar** — items, with completion — grafted onto a process that D2 established has no terminus.
+
+⛔ Recorded as identity evidence. **No redesign proposed; §9 still open.**
+
 ## Carried forward
 
 ```text
