@@ -19,6 +19,11 @@
 # nothing here deletes, merges or judges either one.
 
 set -Eeuo pipefail
+
+# ⛔ REAL MEMBER TEXT IS ABOUT TO EXIST ON DISK. Restrict it to this user before
+# a single byte is written — not after, when the window has already been open.
+umask 077
+
 MID="${1:?manuscript_id required — this script will not guess which Work}"
 OUT="${2:?output directory required}"
 : "${DATABASE_URL:?DATABASE_URL (source) required}"
@@ -42,11 +47,34 @@ SQL
 # the witness a runtime containing no book — and the §4b observer would have
 # been left to discover that a manuscript id matched nothing by finding an empty
 # Canvas. An instrument that cannot fail cannot be trusted when it passes.
+# ⛔ `wc -l` COUNTS LINES, AND A MANUSCRIPT IS FULL OF NEWLINES. The first
+# version reported row counts as `wc -l` minus one. Bodies contain newlines
+# inside quoted CSV fields, so one record spans many lines: a Work with 262
+# sections was reported as 3952. The export was correct; the number was a
+# fabrication produced by counting the wrong thing.
+#
+#   A value must not say more than it knows.
+#
+# Counts now come from the database itself, in the same read-only session that
+# produced the copy — authoritative, and about the same rows.
+COUNTS="$(psql "$DATABASE_URL" -tA -F'|' -c "
+  $RO
+  SELECT (SELECT count(*) FROM member_manuscripts WHERE id = '$MID'),
+         (SELECT count(*) FROM manuscript_sections WHERE manuscript_id = '$MID'),
+         (SELECT count(*) FROM manuscript_working_drafts WHERE manuscript_id = '$MID'),
+         (SELECT count(*) FROM manuscript_draft_sections s
+            JOIN manuscript_working_drafts d ON d.id = s.draft_id
+           WHERE d.manuscript_id = '$MID'),
+         (SELECT count(*) FROM working_draft_revisions r
+            JOIN manuscript_working_drafts d ON d.id = r.draft_id
+           WHERE d.manuscript_id = '$MID')")"
+IFS='|' read -r ROWS_MS C_SRC C_DR C_DS C_REV <<EOC
+$COUNTS
+EOC
+
 echo "── witness copy ──"
-ROWS_MS=$(( $(wc -l < "$OUT/manuscript.csv") - 1 ))
-for f in manuscript source_sections draft draft_sections revisions; do
-  printf '  %-16s %s rows\n' "$f" "$(( $(wc -l < "$OUT/$f.csv") - 1 ))"
-done
+printf '  %-16s %s rows\n' manuscript "$ROWS_MS" source_sections "$C_SRC" \
+       draft "$C_DR" draft_sections "$C_DS" revisions "$C_REV"
 
 if [ "$ROWS_MS" -lt 1 ]; then
   echo
@@ -66,7 +94,7 @@ if [ "$ROWS_MS" -lt 1 ]; then
   exit 1
 fi
 
-DS=$(( $(wc -l < "$OUT/draft_sections.csv") - 1 ))
+DS="$C_DS"
 if [ "$DS" -lt 1 ]; then
   echo
   echo "⛔ The Work exists but has NO addressable draft sections."
@@ -76,7 +104,24 @@ if [ "$DS" -lt 1 ]; then
   rm -rf "$OUT"
   exit 1
 fi
+# ⭐ THE CUSTODY MARKER. The witness runtime TAKES CUSTODY of this directory and
+# deletes the original, so that "Ctrl-C destroys the copy" is true rather than
+# merely claimed. A script that deletes a directory the caller named must never
+# hold generic `rm -rf "$IN"` authority over an arbitrary path — so it deletes
+# only a directory carrying this marker, written by this script, here.
+{
+  echo "wm-witness-export"
+  echo "manuscript_id=$MID"
+  echo "exported_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "draft_sections=$DS"
+} > "$OUT/.wm-witness-export"
+
 echo "  ✓ $DS addressable sections — this is a witnessable Work"
+echo
+echo "⛔ This directory now holds real member text, readable only by you."
+echo "   The witness runtime will TAKE CUSTODY of it and delete this original,"
+echo "   so the copy dies when the witness ends. Until then it persists here:"
+echo "     $OUT"
 echo
 echo "⛔ This copy contains real member text. Keep it off shared storage, and"
 echo "   delete it when the witness is finished."

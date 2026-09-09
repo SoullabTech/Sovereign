@@ -22,8 +22,22 @@
 # Usage:  bash witness-real-work.sh <export_dir>
 
 set -Eeuo pipefail
+umask 077
 IN="${1:?export directory required (output of export-work.sh)}"
-[ -f "$IN/draft_sections.csv" ] || { echo "⛔ $IN is not a witness export"; exit 1; }
+
+# ⛔ THE MARKER IS THE AUTHORITY, NOT THE ARGUMENT. This script deletes the
+# directory it is handed, so it must never accept an arbitrary path. It deletes
+# ONLY a directory carrying the marker export-work.sh wrote — anything else is
+# refused untouched, including a directory that merely looks like an export.
+[ -f "$IN/.wm-witness-export" ] || {
+  echo "⛔ $IN carries no witness-export marker — refusing."
+  echo "   This script takes custody of and deletes what it is given, so it"
+  echo "   accepts only a directory written by export-work.sh."
+  exit 1
+}
+head -1 "$IN/.wm-witness-export" | grep -qx 'wm-witness-export' || {
+  echo "⛔ $IN/.wm-witness-export is not a witness-export marker — refusing."; exit 1; }
+[ -f "$IN/draft_sections.csv" ] || { echo "⛔ $IN is missing draft_sections.csv"; exit 1; }
 
 SHA="$(git rev-parse HEAD)"
 ROOT="$(git rev-parse --show-toplevel)"
@@ -106,6 +120,24 @@ else
 fi
 
 mkdir -p "$RUN"; chown "$PG_OWNER" "$RUN" 2>/dev/null || true; chmod 1777 "$RUN"
+
+# ⭐ TAKE CUSTODY, SO THE PROMISE IS TRUE. `cleanup()` removes $RUN on every
+# exit path. Until the copy lives inside $RUN, "Ctrl-C destroys the copy" is a
+# claim about a directory this script never touches — the export would outlive
+# the witness on the caller's disk.
+#
+# The original is removed only AFTER the copy is verifiably in place: a failed
+# move must never destroy the member's only copy of the export.
+mkdir -p "$RUN/export"; chmod 700 "$RUN/export"
+cp -p "$IN/." "$RUN/export/" 2>/dev/null || cp -Rp "$IN"/. "$RUN/export/"
+if [ -f "$RUN/export/.wm-witness-export" ] && [ -f "$RUN/export/draft_sections.csv" ]; then
+  rm -rf "$IN"
+  echo "  custody       taken · original export removed · copy dies with this run"
+else
+  echo "⛔ could not take custody of the export — leaving the original untouched"
+  exit 1
+fi
+IN="$RUN/export"
 export PATH="$PGBIN:$PATH"
 
 echo "[1/5] ephemeral PostgreSQL"
