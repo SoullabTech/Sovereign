@@ -218,6 +218,82 @@ or record the order walked and read the results against it.
 
 Not a reason to delay the walk — a reason to write the order down before starting.
 
+## 2B · CREATIVE NORTH STAR — cross-cutting D8 requirement · founder, 2026-09-09
+
+⛔ **Not a fourth candidate. Not a built feature.** Recorded before the walk so D8 can test whether the chosen architecture has a **natural place** for it — because adopting an architecture and only then discovering the writer's own creative orientation has nowhere coherent to live would be expensive to undo.
+
+> **The Work may carry an optional writer-authored Creative North Star: what the writer is trying to make, qualities they want to protect, and works or writers that inspire them.**
+
+### Shape — small, and it stays small
+
+```text
+THE WORK I'M TRYING TO MAKE      a few sentences, the writer's own words
+QUALITIES I WANT TO PROTECT      their language, not preset categories
+WRITERS / WORKS THAT INSPIRE ME  each with "what I love about this"
+```
+
+⭐ **That last clause is the substance.** Naming *Morrison* or *Jung* tells MAIA far less than *"the density of meaning and the refusal to over-explain."* **The value is named, not the name.**
+
+Five or six prompts at most, answered briefly or deeply. Must serve a coach writing a methodology, a healer writing a guide, or a teacher building a course — not only prose books.
+
+⚠️ **Possible additional field, flagged not decided**: *what I do NOT want this Work to become.* Founder listed it among the prompts but not the fields. **Negative constraints are often clearer to writers than positive ones, and are the most directly usable when refusing an edit.**
+
+### Boundaries — already clear
+
+```text
+OPTIONAL                 blank is complete; never required to begin writing
+WRITER-AUTHORED          MAIA may help articulate; she does not invent it
+WORK-LEVEL               belongs to the Work, not a session or chapter
+INSPIRATION != IMITATION named works identify qualities the writer values,
+                         never styles MAIA should copy
+MEMORY != AUTHORITY      persistence does not license MAIA to invoke it
+WRITER'S LANGUAGE FIRST  "what I love about this" outweighs a name alone
+```
+
+> ### Influence is a compass, not a mold.
+
+**The governing law:**
+> The writer's inspirations may **orient MAIA's attention**. They do not become **standards against which MAIA judges the Work** unless the writer asks.
+
+⚠️ **And even on request, this must answer rather than recur.** *"Does this chapter still carry the intimacy I said I wanted to protect?"* is a question the writer asks. It must not become a comparison MAIA runs and volunteers — that would be the aspiration converted into a standing measurement, which is §5's prohibited move in new clothing.
+
+### ⭐ It solves the particularity problem directly
+
+D5 §5A.3 left MAIA with a **heuristic** for telling craft defect from authorial particularity — consistent across the Work → particularity; uncertain → ask. A declared *"qualities I want to protect"* replaces the guess with **a writer's declaration.** That is materially better evidence than anything MAIA can infer from prose, and it is available before the first edit.
+
+### ⚠️ The catch it creates — the clean source can be contaminated
+
+Writer-declared inspiration is **unmistakably writer-originated direction**, timestamped and provably prior to any MAIA observation. That makes it potentially **the cleanest form of writer-originated standing in the whole Studio** — it breaks the self-confirmation loop at its source, because *"I want this to retain intimacy even when it becomes systematic"* is nothing like MAIA noticing intimacy and later reinforcing her own observation.
+
+⛔ **But the boundaries permit MAIA to help articulate it.** If she does, **the North Star itself acquires MAIA lineage** — and the one clean writer-originated source becomes the laundering channel for everything downstream that cites it.
+
+```text
+REQUIRED   assistance in articulating the North Star carries its own
+           provenance, on the same terms as any other MAIA-seeded language
+           (close item 9; D5 §4)
+```
+
+*Not designed here — recorded so it is not discovered after the architecture is chosen.*
+
+### The D8 question this adds
+
+> **Can I tell MAIA what kind of Work I am trying to make — and what inspires me — without that becoming another form, prompt, or set of rules hanging over the writing?**
+
+It tests the three candidates **differently**, which is why it belongs in the walk:
+
+```text
+A · MARGIN     can the North Star exist WITHOUT becoming another
+               collection of margin marks?
+B · QUESTION   can an enduring orientation sit behind a current inquiry
+               without every session becoming "answer the questionnaire again"?
+C · TWO HANDS  can the current exchange clear while the Work's deeper
+               orientation remains available when the writer wants it?
+```
+
+⛔ **Not decided here**: whether these statements become `standing`, memory context, or a new representation. **That belongs later.** For this flow only one thing must hold:
+
+> **A good Writer's Studio must let the writer bring their creative aspirations and influences into the relationship with MAIA without turning inspiration into prescription.**
+
 ## 3 · Standing
 
 ```text
