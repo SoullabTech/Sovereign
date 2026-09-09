@@ -208,3 +208,47 @@ fabrication unrepresentable rather than merely discouraged.
 ⛔ no room cut over    ⛔ no shadow built    ⛔ formatFieldAddendum untouched
 ⛔ existing rooms unchanged — Writer's Studio did not rewrite any other MAIA encounter
 ```
+
+---
+
+# 8 · FIELD-TRUTH-01 — the fabricated elemental identity is contained
+
+**Founder ruling 2026-09-09: this is a live defect in every existing room, not something to carry
+forward. Fixed now, in its own lane.**
+
+> ⭐⭐ **When a prerequisite is absent, downstream intelligence becomes UNAVAILABLE — not generic.
+> Absence of an elemental reading is not Earth.**
+
+**The repair, conservatively scoped:**
+
+```text
+PFI succeeds       → Unified runs its current PARTIAL path (remaining fabricated inputs still owed)
+PFI fails/absent   → Unified DOES NOT RUN
+                   → unified = UNAVAILABLE, basis "PFI prerequisite unavailable"
+                   → the absence is counted and logged
+```
+
+`ctx.pfi?.element?.toLowerCase() ?? 'earth'` and `ctx.pfi?.element ?? 'Earth'` are **gone**. ⛔ No
+fallback element, and no `'unknown'` masquerading as a real enum value either — the leg does not run.
+
+⭐ **The absence is recorded on `FieldContext.unavailability`, and `formatFieldAddendum()` strips it
+before serializing.** Handing MAIA *"somatic tolerance: unavailable"* would turn an absence into
+subject matter. So the record is receipt evidence only — and because the field is stripped, **this
+change adds nothing whatsoever to any existing room's prompt.**
+
+⭐ **PFI failures are now counted** (`getFieldTruthCounters()`, plus a stable `[field-truth]` log
+marker). The census could not say how often production had spoken a defaulted element because
+nothing counted; that is no longer true going forward. ⚠️ **It says nothing retrospectively.**
+
+**Witness — `lib/field/__tests__/fieldTruth01.test.ts` · 13 passed.** Including: Unified is never
+invoked when PFI failed · no `dominantElement` appears anywhere in the context · the absence is
+recorded with its reason · `unified` is absent from `meta.sources` · both counters increment ·
+Resonance is unaffected · the addendum contains no trace of the absence · with PFI present the
+prescription derives from the **observed** element and the existing partial path is unchanged ·
+Sanctuary stays meta-only.
+
+⛔ **Deliberately NOT done, and pinned by a test so removing them stays a visible decision:** the
+remaining fabricated Unified inputs (`windowOfTolerance: 0.5`, `unifiedFieldStrength: 0`,
+`fieldQuality: 'normal'`, `coherenceTrend: 'stable'`) are **still there**. ⛔ Also untouched: the
+turn-count intimacy defect · Elemental Oracle · producer registration · room cutover · any broader
+Unified rewrite.

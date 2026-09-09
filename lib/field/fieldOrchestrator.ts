@@ -24,6 +24,16 @@ import {
 } from '../consciousness/field/UnifiedElementalFieldCalculator';
 import type { CognitiveProfile } from '../consciousness/cognitiveProfileService';
 
+/**
+ * FIELD-TRUTH-01 — PFI failures are counted, not merely warned about.
+ * The census could not say how often production had spoken a defaulted element
+ * because nothing counted. Read via getFieldTruthCounters() for the receipt.
+ */
+const counters = { pfiFailures: 0, unifiedSkippedNoPfi: 0 };
+export function getFieldTruthCounters(): Readonly<typeof counters> {
+  return { ...counters };
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -61,6 +71,16 @@ export type FieldContext = {
     chars: number;
     depth: number;
   };
+  /**
+   * FIELD-TRUTH-01 — what this turn could NOT know, and why.
+   *
+   * ⭐ `unavailable` is evidence for the RECEIPT, not content for cognition.
+   * `formatFieldAddendum()` strips this field, so an absence is recorded and
+   * observable without ever being narrated to MAIA as though it were subject
+   * matter. That closes F-ABSENCE from both sides: no fabricated value, and no
+   * silent disappearance.
+   */
+  unavailability?: Array<{ id: string; reason: string }>;
 };
 
 export type BuildFieldContextArgs = {
@@ -179,6 +199,7 @@ export async function buildFieldContext(
   }
 
   const sources: string[] = [];
+  const unavailability: Array<{ id: string; reason: string }> = [];
   const ctx: FieldContext = {
     meta: {
       ms: 0,
@@ -222,8 +243,15 @@ export async function buildFieldContext(
         };
         sources.push('pfi');
       } catch (err) {
-        // PFI failure is non-fatal — log and continue
-        console.warn('[field-orchestrator] PFI failed:', err instanceof Error ? err.message : 'unknown');
+        // PFI failure is non-fatal — log and continue. FIELD-TRUTH-01: it is now
+        // also COUNTED and recorded, because everything PFI-dependent downstream
+        // must become unavailable rather than defaulted.
+        counters.pfiFailures++;
+        unavailability.push({ id: 'pfi', reason: 'PFI engine failed or timed out' });
+        console.warn('[field-truth] pfi_unavailable', JSON.stringify({
+          reason: err instanceof Error ? err.message : 'unknown',
+          pfiFailures: counters.pfiFailures,
+        }));
       }
     }
 
@@ -258,11 +286,36 @@ export async function buildFieldContext(
 
     // ─── Unified Field (turn 4+) ────────────────────────────────
     if (flags.unified) {
+      /**
+       * FIELD-TRUTH-01 — PREREQUISITE GATE.
+       *
+       * Every meaningful input this leg feeds the calculator is derived from PFI:
+       * sacredThreshold, soulEmergence, the one-hot elementalPrescription, and
+       * archetypalRouting. Before this gate, a swallowed PFI failure left
+       * `ctx.pfi` undefined and the element defaulted to 'earth' — so an Earth
+       * identity the member never showed reached cognition indistinguishable
+       * from an observed one.
+       *
+       * ⭐⭐ WHEN A PREREQUISITE IS ABSENT, DOWNSTREAM INTELLIGENCE BECOMES
+       *     UNAVAILABLE — NOT GENERIC. Absence of an elemental reading is not Earth.
+       *
+       * ⛔ No fallback element. No 'unknown' masquerading as a real enum value.
+       * ⛔ The remaining fabricated inputs on this leg (the 0 / 0.5 / 'normal' /
+       *    'stable' stubs) are SEPARATELY OWED and deliberately untouched here.
+       */
+      if (!ctx.pfi) {
+        counters.unifiedSkippedNoPfi++;
+        unavailability.push({ id: 'unified', reason: 'PFI prerequisite unavailable' });
+        console.warn('[field-truth] unified_unavailable', JSON.stringify({
+          reason: 'PFI prerequisite unavailable',
+          unifiedSkippedNoPfi: counters.unifiedSkippedNoPfi,
+        }));
+      } else {
       try {
         // Build a minimal SystemOutputs from what we have.
         // The real UEFC expects 50+ system outputs — we provide what's available
         // so the calculator returns meaningful (if partial) results.
-        const pfiElement = ctx.pfi?.element?.toLowerCase() ?? 'earth';
+        const pfiElement = ctx.pfi.element.toLowerCase();
         const minimalSystems = {
           fieldIntelligence: {
             sacredThreshold: ctx.pfi?.fieldWorkSafe ? 0.3 : 0.1,
@@ -282,7 +335,7 @@ export async function buildFieldContext(
             },
           },
           affectDetector: {
-            archetypalRouting: ctx.pfi?.element ?? 'Earth',
+            archetypalRouting: ctx.pfi.element,
           },
           // Stubs for required fields — zero-value defaults
           consciousnessEmergencePredictor: { next15Minutes: 0 },
@@ -358,7 +411,9 @@ export async function buildFieldContext(
         };
         sources.push('unified');
       } catch (err) {
+        unavailability.push({ id: 'unified', reason: 'Unified calculator failed or timed out' });
         console.warn('[field-orchestrator] Unified failed:', err instanceof Error ? err.message : 'unknown');
+      }
       }
     }
   } catch (err) {
@@ -367,6 +422,7 @@ export async function buildFieldContext(
   } finally {
     ctx.meta.ms = Date.now() - started;
     ctx.meta.sources = sources;
+    if (unavailability.length) ctx.unavailability = unavailability;
   }
 
   return truncateFieldContext(ctx, maxChars);
@@ -384,7 +440,12 @@ export function formatFieldAddendum(field: FieldContext | null): string {
   if (!field) return '';
   if (field.meta.sources.length === 0) return '';
 
-  const json = JSON.stringify(field);
+  // FIELD-TRUTH-01: `unavailability` is receipt evidence, never prompt content.
+  // Handing MAIA "somatic tolerance: unavailable" would make an absence into
+  // subject matter. Stripped here so the prompt carries only what exists —
+  // and so this change adds NOTHING to any existing room's prompt.
+  const { unavailability: _receiptOnly, ...forPrompt } = field;
+  const json = JSON.stringify(forPrompt);
   if (json.length < 10) return '';
 
   return `\n\n[Field Intelligence]\n${json}`;
