@@ -83,7 +83,12 @@ CREATE TABLE IF NOT EXISTS context_disclosure_receipts (
   -- runtime_consent_state, where the posture is REFERENCED, never copied.
   -- ⛔ Deliberately NOT a conversation_turns.id: durable audit identity must not
   -- depend on a routinely pruned content object.
-  request_ref    TEXT NOT NULL,
+  -- ⭐ SUBSTRATE-A(B): the reference must RESOLVE. Without the FK a receipt could
+  -- satisfy every constraint while pointing at a consent record that does not
+  -- exist — "posture is referenced, not copied" would be a comment, not an
+  -- architecture. runtime_consent_state.request_id is UNIQUE, and the serving
+  -- boundary mints it before any Work context is assembled.
+  request_ref    TEXT NOT NULL REFERENCES runtime_consent_state(request_id),
 
   boundary       TEXT NOT NULL CHECK (
     boundary IN ('writers_studio.focus->maia_cognition')
@@ -153,7 +158,9 @@ BEGIN
      OR NEW.member_id     IS DISTINCT FROM OLD.member_id
      OR NEW.request_ref   IS DISTINCT FROM OLD.request_ref
      OR NEW.boundary      IS DISTINCT FROM OLD.boundary
-     OR NEW.work_ref      IS DISTINCT FROM OLD.work_ref
+     OR NEW.source_class  IS DISTINCT FROM OLD.source_class
+     OR NEW.participation_basis IS DISTINCT FROM OLD.participation_basis
+     OR NEW.source_ref    IS DISTINCT FROM OLD.source_ref
      OR NEW.scope_kind    IS DISTINCT FROM OLD.scope_kind
      OR NEW.section_ref   IS DISTINCT FROM OLD.section_ref
      OR NEW.authorized_by IS DISTINCT FROM OLD.authorized_by
@@ -182,13 +189,77 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SUBSTRATE-A(C) · Custody ENFORCED, not merely claimed.
+--
+-- ⛔ The contract said "deletion outside governed custody is refused" and
+-- "restores must honour manifests and tombstones". A stronger sentence must never
+-- stand over weaker machinery, so both are triggers now.
+--
+-- The S5 generic restore-refusal machinery is NOT reused: it was written around
+-- content rows carrying session_id/created_at, while this receipt carries
+-- member_id/request_ref/attempted_at. A receipt-shaped refusal, deliberately.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Deletion is lawful only inside a governed custody act that NAMES its manifest.
+ * The manifest id is set for the transaction:
+ *   SET LOCAL app.disclosure_deletion_manifest = '<manifest uuid>';
+ * An unnamed DELETE — ordinary pruning, a stray script, a cleanup job — refuses.
+ */
+CREATE OR REPLACE FUNCTION context_disclosure_receipt_governed_delete() RETURNS trigger AS $$
+DECLARE
+  manifest TEXT := NULLIF(current_setting('app.disclosure_deletion_manifest', TRUE), '');
+BEGIN
+  IF manifest IS NULL THEN
+    RAISE EXCEPTION
+      '[DISCLOSURE] DELETE refused — a disclosure receipt may be ended only by a governed custody act naming its manifest (SET LOCAL app.disclosure_deletion_manifest). disclosure_id prefix %',
+      LEFT(OLD.disclosure_id, 12);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM deletion_manifests WHERE id::text = manifest) THEN
+    RAISE EXCEPTION
+      '[DISCLOSURE] DELETE refused — named manifest % does not exist', manifest;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS context_disclosure_receipt_governed_delete_trigger ON context_disclosure_receipts;
+CREATE TRIGGER context_disclosure_receipt_governed_delete_trigger
+  BEFORE DELETE ON context_disclosure_receipts
+  FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_governed_delete();
+
+/**
+ * A tombstoned receipt may never be resurrected by a restore.
+ * Forgetting is a decision; a backup must not quietly reverse it.
+ */
+CREATE OR REPLACE FUNCTION context_disclosure_receipt_restore_refusal() RETURNS trigger AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM provenance_tombstones
+     WHERE object_kind = 'context_disclosure_receipts'
+       AND object_id = NEW.disclosure_id
+  ) THEN
+    RAISE EXCEPTION
+      '[DISCLOSURE] INSERT refused — reason=tombstone disclosure_id prefix %',
+      LEFT(NEW.disclosure_id, 12);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS context_disclosure_receipt_restore_refusal_trigger ON context_disclosure_receipts;
+CREATE TRIGGER context_disclosure_receipt_restore_refusal_trigger
+  BEFORE INSERT ON context_disclosure_receipts
+  FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_restore_refusal();
+
 DROP TRIGGER IF EXISTS context_disclosure_receipt_monotonic_trigger ON context_disclosure_receipts;
 CREATE TRIGGER context_disclosure_receipt_monotonic_trigger
   BEFORE UPDATE ON context_disclosure_receipts
   FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_monotonic();
 
 COMMENT ON TABLE context_disclosure_receipts IS
-'Records that member-owned or member-derived context crossed a defined boundary into cognition, with source_class naming the kind of context and participation_basis naming why it was entitled to participate. Focus/work is the first implemented source class; each axis admits only what v1 can produce, and widening either is a governed migration. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deliberately deleted with the member''s account (named in GOVERNED_CONTENT); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
+'Records that member-owned or member-derived context crossed a defined boundary into cognition, with source_class naming the kind of context and participation_basis naming why it was entitled to participate. Focus/work is the first implemented source class; each axis admits only what v1 can produce, and widening either is a governed migration. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deletable ONLY by a governed custody act naming its deletion manifest (BEFORE DELETE trigger); deliberately deleted with the member''s account (named in GOVERNED_CONTENT); a tombstoned receipt cannot be restored (BEFORE INSERT trigger); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
 
 COMMENT ON COLUMN context_disclosure_receipts.participation_basis IS
 'Why this context was entitled to participate — not merely that it was available. Availability is not permission to participate; participation is not authority. NEVER derived from the crossed content: the Work may contain an invitation as content, but only the member can turn it into authority.';

@@ -338,3 +338,90 @@ typecheck 228 vs baseline 239 · 0 regressions.
 **Standing: substrate GENERALIZED · unapplied · `#1275` FROZEN · §3a surface
 behaviour still owed · the participation membrane (ambient / invited / invoked)
 is DESIGNED HERE ONLY — no source class beyond `work` is built.**
+
+---
+
+## 10 · FOCUS-RECEIPT-SUBSTRATE-A — three structural gaps repaired
+
+Founder review of `10cdc7bc4` (before the §9 generalization). All three findings
+held against the generalized substrate.
+
+### A · The retry path could contradict the receipt — **REPAIRED**
+
+The mint read only the row `id` on conflict. So a second use of a `disclosure_id`
+with a different Work and scope found the row, returned success, and **Work-B
+could cross while the receipt still described Work-A** — and an already-`crossed`
+receipt could be handed back as fresh authority.
+
+The conflict path now reads the **whole immutable identity plus `state`** and
+reconciles field by field. `mintDisclosureAttempt` returns a discriminated
+`MintOutcome`, and only one member of it authorizes anything:
+
+```text
+minted             → the caller MAY cross   (mayCross() === true)
+existing           → evidence intact, authority NOT renewed
+identity_mismatch  → the id describes a different disclosure; refuse, loudly
+unavailable        → fail closed
+```
+
+> ⭐⭐ **Idempotency may prevent duplicate evidence. It must not turn old evidence
+> into fresh authority.**
+
+An existing `attempted` is ambiguous by constitution and a `crossed` certainly
+represents an earlier crossing; **neither is a fresh authorization.** A genuine
+retry by the writer mints a new `disclosure_id`. The mismatch log names the
+**fields** that differ and never their values — they are references.
+
+### B · `request_ref` now structurally resolves — **REPAIRED**
+
+```sql
+request_ref TEXT NOT NULL REFERENCES runtime_consent_state(request_id)
+```
+
+Without it a receipt could satisfy every constraint while pointing at a consent
+record that does not exist. *Posture is referenced, not copied — and the
+reference must resolve.*
+
+### C · Restore and deletion custody now enforced — **REPAIRED**
+
+Two new triggers, deliberately **not** the generic S5 machinery (written around
+content rows carrying `session_id`/`created_at`, where this receipt carries
+`member_id`/`request_ref`/`attempted_at`):
+
+- `BEFORE DELETE` — refuses unless the transaction **names its manifest**
+  (`SET LOCAL app.disclosure_deletion_manifest`) and that manifest exists.
+  Ordinary pruning, a stray script or a cleanup job cannot reach a receipt.
+- `BEFORE INSERT` — refuses a `disclosure_id` carrying a tombstone. *Forgetting
+  is a decision; a backup must not quietly reverse it.*
+
+The contract's stronger sentence no longer stands over weaker machinery.
+
+### D · Execution witness — `scripts/witness/context-disclosure-substrate-witness.sql`
+
+Run against a **disposable Postgres 16**, every fixture inside a transaction that
+`ROLLBACK`s (verified: 0 rows after), cluster destroyed afterwards.
+
+**14 checks · 14 PASS · 0 FAIL.** B1–B2 · S1–S3 · M1–M4 · I1 · C1–C4.
+
+⭐⭐ **The witness earned itself on the first run.** The §9 generalization renamed
+`work_ref → source_ref` in the table, and the monotonic trigger still referenced
+`NEW.work_ref` — so **every UPDATE failed with `record "new" has no field
+"work_ref"`**. The immutability trigger was broken, and it failed in a way that
+*looked* like a refusal: two checks reported FAIL only because the error text did
+not match, and the source-scanning suite was green throughout. **No amount of
+reading the SQL would have found it.**
+
+> ⭐ *A trigger asserted is not a trigger executed. An instrument that only reads
+> the machinery cannot tell a refusal from a crash.*
+
+⚠️ **Still owed at first real deployment:** the shadow rehearsal confirms the FK
+works; it does not confirm that every lawful Writer's Studio request mints its
+`runtime_consent_state` row **before** Work context is assembled. If it does not,
+Focus fails closed — the correct direction, and still a silent capability loss.
+**Verify the ordering before wiring, not after.**
+
+**Gates:** disclosure suite **40 passed · 0 failed** · shadow witness **14/14** ·
+typecheck 228 vs baseline 239 · 0 regressions · `check:no-supabase` clean.
+
+**Standing: SUBSTRATE-A CLOSED · §3a the only remaining obligation · `#1275`
+FROZEN · no Focus text has crossed.**

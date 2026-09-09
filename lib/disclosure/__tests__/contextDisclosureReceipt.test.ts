@@ -16,6 +16,9 @@ import path from 'path';
 
 const calls: { sql: string; params: unknown[] }[] = [];
 let mode: 'ok' | 'throw' | 'empty' = 'ok';
+/* The row a conflicting mint finds. Mutated per-test to model a receipt that
+   describes a DIFFERENT disclosure, or one that has already crossed. */
+let existingRow: Record<string, string | null> = {};
 
 jest.mock('@/lib/db/postgres', () => ({
   query: jest.fn(async (sql: string, params: unknown[] = []) => {
@@ -23,13 +26,14 @@ jest.mock('@/lib/db/postgres', () => ({
     if (mode === 'throw') throw new Error('relation "context_disclosure_receipts" does not exist');
     if (mode === 'empty') return { rows: [], rowCount: 0 };
     if (/INSERT INTO context_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
-    if (/SELECT id FROM context_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
+    if (/SELECT id, member_id/.test(sql)) return { rows: [existingRow], rowCount: 1 };
     return { rows: [{ n: '0' }], rowCount: 1 };
   }),
 }));
 
 import {
   mintDisclosureAttempt,
+  mayCross,
   confirmDisclosureCrossed,
   DISCLOSURE_POLICY_VERSION,
 } from '../contextDisclosureReceipt';
@@ -65,13 +69,23 @@ const STORE_CODE_ONLY = () => STORE
 const STORE = fs.readFileSync(
   path.join(process.cwd(), 'lib/disclosure/contextDisclosureReceipt.ts'), 'utf8');
 
-beforeEach(() => { calls.length = 0; mode = 'ok'; jest.spyOn(console, 'error').mockImplementation(() => {}); });
+const matchingRow = () => ({
+  id: 'r1', member_id: 'm-1', request_ref: 'req-1',
+  boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
+  participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
+  section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
+  policy_version: DISCLOSURE_POLICY_VERSION, state: 'attempted',
+});
+
+beforeEach(() => { calls.length = 0; mode = 'ok'; existingRow = matchingRow(); jest.spyOn(console, 'error').mockImplementation(() => {}); });
 afterEach(() => jest.restoreAllMocks());
 
 describe('F1 · accountability may block the disclosure — fail closed', () => {
   it('returns null when the substrate is unavailable, so the caller cannot disclose', async () => {
     mode = 'throw';
-    expect(await mintDisclosureAttempt(attempt())).toBeNull();
+    const out = await mintDisclosureAttempt(attempt());
+    expect(out.kind).toBe('unavailable');
+    expect(mayCross(out)).toBe(false);
   });
 
   it('mints BEFORE the crossing, in the `attempted` state', async () => {
@@ -90,15 +104,59 @@ describe('F1 · accountability may block the disclosure — fail closed', () => 
 });
 
 describe('F2 · a retry cannot duplicate or contradict a crossing', () => {
-  it('resolves a conflicting mint to the SAME row rather than a second receipt', async () => {
-    mode = 'empty';
-    // INSERT returns nothing (conflict); the SELECT fallback is what must resolve it.
+  it('an EXACT existing receipt does not authorize a second crossing', async () => {
     const q = require('@/lib/db/postgres').query as jest.Mock;
-    q.mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [], rowCount: 0 }; })
-     .mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [{ id: 'r1' }], rowCount: 1 }; });
-    const res = await mintDisclosureAttempt(attempt());
-    expect(res).toEqual({ id: 'r1', disclosureId: 'd-1' });
+    q.mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [], rowCount: 0 }; });
+    const out = await mintDisclosureAttempt(attempt());
+    expect(out.kind).toBe('existing');
+    // ⭐ The point of the repair: evidence is intact, authority is not renewed.
+    expect(mayCross(out)).toBe(false);
     expect(calls.filter(c => /INSERT INTO/.test(c.sql))).toHaveLength(1);
+  });
+
+  it('an already-CROSSED receipt cannot be handed back as fresh authority', async () => {
+    existingRow = { ...matchingRow(), state: 'crossed' };
+    const q = require('@/lib/db/postgres').query as jest.Mock;
+    q.mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [], rowCount: 0 }; });
+    const out = await mintDisclosureAttempt(attempt());
+    expect(out).toMatchObject({ kind: 'existing', state: 'crossed' });
+    expect(mayCross(out)).toBe(false);
+  });
+
+  it('⭐ a reused id describing a DIFFERENT disclosure is refused, not accepted', async () => {
+    // The exact contradiction the first draft admitted: same disclosure_id, a
+    // different Work and a different scope. The old code returned the row id and
+    // Work-B would have crossed while the receipt described Work-A.
+    existingRow = { ...matchingRow(), source_ref: 'work-A', scope_kind: 'section' };
+    const q = require('@/lib/db/postgres').query as jest.Mock;
+    q.mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [], rowCount: 0 }; });
+    const out = await mintDisclosureAttempt(attempt({ sourceRef: 'work-B' }));
+    expect(out.kind).toBe('identity_mismatch');
+    expect(mayCross(out)).toBe(false);
+    expect((out as any).differing).toEqual(expect.arrayContaining(['source_ref', 'scope_kind']));
+  });
+
+  it('reconciles the WHOLE immutable identity, not merely the row id', async () => {
+    const q = require('@/lib/db/postgres').query as jest.Mock;
+    q.mockImplementationOnce(async (sql: string, p: unknown[]) => { calls.push({ sql, params: p }); return { rows: [], rowCount: 0 }; });
+    await mintDisclosureAttempt(attempt());
+    const select = calls.find(c => /^\s*SELECT/m.test(c.sql))!;
+    for (const col of ['member_id', 'request_ref', 'boundary', 'source_class',
+      'participation_basis', 'source_ref', 'scope_kind', 'section_ref',
+      'authorized_by', 'gesture', 'policy_version', 'state']) {
+      expect(select.sql).toContain(col);
+    }
+  });
+
+  it('logs which FIELDS differ, never their values — they are references', async () => {
+    existingRow = { ...matchingRow(), source_ref: 'work-A' };
+    const err = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const q = require('@/lib/db/postgres').query as jest.Mock;
+    q.mockImplementationOnce(async () => ({ rows: [], rowCount: 0 }));
+    await mintDisclosureAttempt(attempt({ sourceRef: 'work-B' }));
+    const logged = JSON.stringify(err.mock.calls);
+    expect(logged).toMatch(/source_ref/);
+    expect(logged).not.toMatch(/work-A|work-B/);
   });
 
   it('the INSERT is idempotent on disclosure_id', async () => {
@@ -151,13 +209,13 @@ describe('F4 · the receipt cannot become a shadow copy of the Work', () => {
   });
 
   it('refuses a section_ref on a passage scope — in the app AND at the constraint', async () => {
-    expect(await mintDisclosureAttempt(attempt({ sectionRef: 's-1' }))).toBeNull();
+    expect(mayCross(await mintDisclosureAttempt(attempt({ sectionRef: 's-1' })))).toBe(false);
     expect(calls).toHaveLength(0);
     expect(MIGRATION).toMatch(/section_ref IS NULL OR scope_kind = 'section'/);
   });
 
   it('admits a section_ref when the section IS the disclosed thing', async () => {
-    expect(await mintDisclosureAttempt(attempt({ scopeKind: 'section', sectionRef: 's-1' }))).not.toBeNull();
+    expect(mayCross(await mintDisclosureAttempt(attempt({ scopeKind: 'section', sectionRef: 's-1' })))).toBe(true);
   });
 });
 
@@ -226,5 +284,27 @@ describe('F6 · the Work is not an instruction channel', () => {
     for (const later of ['journal', 'keep', 'symbolic_system', 'ambient_continuity', 'standing_authorization']) {
       expect(MIGRATION_CODE_ONLY()).not.toMatch(new RegExp(`'${later}'`));
     }
+  });
+});
+
+describe('F7 · SUBSTRATE-A(B,C) · the claims are structural, not comments', () => {
+  it('request_ref resolves — a receipt cannot point at a consent record that does not exist', () => {
+    expect(MIGRATION_CODE_ONLY()).toMatch(/request_ref\s+TEXT NOT NULL REFERENCES runtime_consent_state\(request_id\)/);
+  });
+
+  it('deletion is refused unless a governed custody act names its manifest', () => {
+    expect(MIGRATION_CODE_ONLY()).toMatch(/BEFORE DELETE ON context_disclosure_receipts/);
+    expect(MIGRATION_CODE_ONLY()).toMatch(/app\.disclosure_deletion_manifest/);
+    expect(MIGRATION_CODE_ONLY()).toMatch(/DELETE refused/);
+  });
+
+  it('a tombstoned receipt cannot be restored', () => {
+    expect(MIGRATION_CODE_ONLY()).toMatch(/BEFORE INSERT ON context_disclosure_receipts/);
+    expect(MIGRATION_CODE_ONLY()).toMatch(/provenance_tombstones/);
+    expect(MIGRATION_CODE_ONLY()).toMatch(/reason=tombstone/);
+  });
+
+  it('does not reuse the S5 generic restore machinery, which is shaped for content rows', () => {
+    expect(MIGRATION_CODE_ONLY()).not.toMatch(/s5_refuse_restore|s5_restore_guard/);
   });
 });
