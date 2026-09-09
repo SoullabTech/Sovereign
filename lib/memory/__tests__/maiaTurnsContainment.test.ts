@@ -24,6 +24,14 @@ const read = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 const ROUTE = 'app/api/maia/log-turn/route.ts';
 const BACKFILL = 'scripts/backfill-training-data.sql';
+/**
+ * ⭐ THE ONE EXEMPTION, AND WHY IT IS NARROW. The B3 falsifier inserts into
+ * maia_turns — it must, to prove the gate refuses and that deletion reaches the
+ * rows. It is not a creation path: it runs only against a disposable database
+ * and every fixture is rolled back. The assertions below hold it to that, so the
+ * exemption cannot quietly become a way in.
+ */
+const FALSIFIER = 'scripts/witness/maia-turns-custody-falsifier.sql';
 
 /** The exported POST handler only, so the retired body below it is not read. */
 function exportedPost(src: string): string {
@@ -98,28 +106,68 @@ describe('no third creation path exists', () => {
         if (rel.startsWith('database/migrations/')) continue;
         if (rel.startsWith('lib/database/maia-training-schema.sql')) continue;
         if (rel.startsWith('lib/memory/__tests__/')) continue;
+        if (rel === FALSIFIER) continue;
         if (/INSERT\s+INTO\s+maia_turns/i.test(fs.readFileSync(full, 'utf8'))) hits.push(rel);
       }
     };
     walk(root);
     expect(hits.sort()).toEqual([BACKFILL, ROUTE].sort());
   });
+
+  it('the exempt falsifier commits nothing, ever', () => {
+    const sql = read(FALSIFIER);
+    expect(sql).toContain('ROLLBACK;');
+    /* Not one COMMIT anywhere: a fixture that could commit is a creation path
+       wearing a test's clothes. */
+    expect(sql).not.toMatch(/^\s*COMMIT\s*;/mi);
+    expect(sql).toContain('DISPOSABLE database only');
+  });
 });
 
-describe('the fact the containment rests on', () => {
+describe('what the containment now rests on', () => {
   /**
-   * ⭐ A TRIPWIRE, NOT A PREFERENCE. The containment exists because the table
-   * cannot prove whose row it is. If a `user_id` is ever added, this fails —
-   * forcing the custody question to be re-adjudicated deliberately rather than
-   * quietly satisfied by a column appearing.
+   * ⚠️ THE TRIPWIRE'S PREMISE CHANGED IN B3, so the tripwire changed with it
+   * rather than being left to pass on a stale reading.
+   *
+   * B1 rested on the table being unable to prove whose row it is. B3 gave it
+   * that ability for NEW rows — a nullable `member_id`, an insert-time gate, and
+   * a cascade from `members`. What has NOT changed is the historical population:
+   * rows that predate the gate remain unattributed, and no join may attribute
+   * them.
+   *
+   * ⛔ So the guards stay for a different reason than they were raised. The
+   * writers stay closed until the historical custody question is adjudicated —
+   * not because identity is impossible, but because opening them would add to a
+   * table whose existing contents are still unaccounted for.
    */
-  it('maia_turns still carries no member identity', () => {
-    const baseline = read('database/baseline/0001_baseline_2026-09-01.sql');
-    const start = baseline.indexOf('CREATE TABLE "public"."maia_turns"');
-    expect(start).toBeGreaterThan(-1);
-    const ddl = baseline.slice(start, baseline.indexOf(');', start));
-    expect(ddl).not.toContain('"user_id"');
-    expect(ddl).toContain('"session_id" "text" NOT NULL');
-    expect(ddl).not.toMatch(/session_id[^,]*REFERENCES/i);
+  const migration = 'database/migrations/20260909000001_maia_turns_member_identity.sql';
+
+  it('new rows can carry identity, and are refused without it', () => {
+    const sql = read(migration);
+    expect(sql).toContain('ADD COLUMN IF NOT EXISTS member_id UUID');
+    expect(sql).toContain('REFERENCES public.members(id) ON DELETE CASCADE');
+    expect(sql).toContain('maia_turns_require_member_identity');
+  });
+
+  /** ⛔ Historical rows keep their NULL. A table-wide NOT NULL would force
+   *  backfilling attribution nobody earned. */
+  it('the column is nullable, so history is not retroactively attributed', () => {
+    const sql = read(migration);
+    expect(sql).not.toMatch(/member_id\s+UUID\s+NOT NULL/i);
+    expect(sql).not.toMatch(/ALTER COLUMN member_id SET NOT NULL/i);
+  });
+
+  /** ⛔ The database refuses missing identity. It does NOT prove the id came
+   *  from the authenticated actor — that stays the server's auth boundary. */
+  it('claims no authority the database does not have', () => {
+    const sql = read(migration);
+    const flat = sql.replace(/\s*--\s*/g, ' ').replace(/\s+/g, ' ');
+    expect(flat).toContain('does NOT prove the supplied id came from the authenticated actor');
+    expect(flat).toContain('Not proof of authenticated actor');
+  });
+
+  it('both B1 guards still stand despite the new schema', () => {
+    expect(read(ROUTE)).toContain('status: 503');
+    expect(read(BACKFILL)).toContain('RAISE EXCEPTION');
   });
 });
