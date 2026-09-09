@@ -181,6 +181,86 @@ Vision    everything in §6
 
 ⛔ **This document is VISION.** Nothing here is built: the crossing, commissioned prose, reread and provenance are all still absent from the runtime. This language must not reach public copy, decks, or onboarding as though it described current capability. *We do not tell tomorrow's story as if it were today's.*
 
+## 10 · The arc — Studio to Soullab Press
+
+```text
+WISDOM / LIVED KNOWLEDGE
+   -> WRITING    bring the Work into form
+   -> DEVELOP    strengthen what it is becoming
+   -> EXPLORE    deepen, question, extend, discover
+   -> REVIEW     test the Work at a high standard
+   -> PUBLISH    prepare and release what is ready
+   -> SOULLAB PRESS   bring worthy Works into the world
+```
+
+MAIA stays beside the member through the whole movement — **not as the author, but as access to developmental capacity most people could otherwise never afford.**
+
+### 10.1 · ⭐ The nav bar is the arc — and Option C did not condemn all of it
+
+`WRITE · DEVELOP · EXPLORE · REVIEW · PUBLISH` has been read in D3 as a mode-partition defect. **That reading applies to two of the five, not to all of them.**
+
+```text
+WRITE · DEVELOP     POSTURES of attention — ruled not modes (Option C).
+                    A writer moves between them within one act.
+
+EXPLORE · REVIEW    STAGES in a Work's life. A Work either is or is not
+· PUBLISH           ready for review. These are not attention postures
+                    and Option C did not rule on them.
+```
+
+⛔ **Do not over-correct.** Option C dissolves the Write/Develop partition; it does not say a Work has no stages. **Whether EXPLORE, REVIEW and PUBLISH are lawful as sequential stages is undecided and belongs to a later act** — but they must not be deleted merely because two neighbours were miscast.
+
+## 11 · Soullab Press
+
+> **Soullab Press exists to bring important human wisdom into the world at the level of development, care and craft that wisdom deserves.**
+
+Many members are helpers. Their deepest expertise comes from decades of practice, service, inquiry, healing, teaching, lived experience or direct encounter — **not from training as professional writers.** Writer's Studio gives them the developmental partnership to turn that into powerful Work without surrendering authorship or voice.
+
+**MAIA brings** editorial intelligence, structural understanding, rigorous reading, dialogue, challenge, revision support, patient iteration.
+**The member brings** what only they can: experience, meaning, insight, language, judgment, wisdom.
+
+> The goal is not for MAIA to write books for people. **The goal is for people with something important to give to receive the level of support necessary to give it fully.**
+
+The Press is the **final expression of developmental equity**: a powerful book should not require its author to already be wealthy enough to hire an exceptional developmental editor, structural editor, line editor, coach, researcher and publishing team.
+
+### 11.1 · ⚠️ The structural conflict this creates — name it now
+
+If the Press publishes Works developed in the Studio, **MAIA's developmental judgment sits upstream of a commercial selection decision.** *"This Work is ready"* acquires a business consequence, and a member could reasonably ask whether her encouragement serves their Work or the Press's pipeline.
+
+```text
+REQUIRED
+  Developmental partnership is NEVER conditioned on publication candidacy.
+  A member who will never publish receives the same MAIA.
+
+  MAIA is NEVER the selector. She does not assess publication-worthiness,
+  rank Works, or advise the Press about a member's manuscript.
+
+  "Ready" remains the writer's judgment — as already ruled: MAIA cannot
+  determine "this now does what I want it to do."
+```
+
+⭐ **This is the same membrane discipline used elsewhere in the programme**, and it is far easier to build in now than to remove later. A developmental relationship that is also a talent pipeline is not a developmental relationship.
+
+### 11.2 · The bar the Press sets on the whole Studio
+
+> **A book reaching Soullab Press must not feel like an "AI book." It should feel like the fullest, clearest, strongest expression of the person who wrote it.**
+
+⭐ **This is what the voice work is ultimately for.** The pinned *Elemental Alchemy* baseline and the Phase 9 drift measures are not internal quality metrics — **they are what would let the Press make its central claim honestly.** Without them the claim is unfalsifiable, and an unfalsifiable claim about authorship is exactly the kind this project refuses to make.
+
+### 11.3 · ⛔ Claim discipline — Press language is maximally outward-facing
+
+```text
+Live      NOTHING
+Designed  the D2-D5 model and architecture
+Vision    §6 · §10 · §11 in their entirety
+```
+
+Specific hazard: *"We find people carrying something worth transmitting"* implies a **selection process that does not exist.** It must not appear as a live offer, an imprint description, or onboarding copy. The Press has no members, no list, no submissions, and no published Work developed this way.
+
+> ### You bring what only you can know. We help you develop it to the level it deserves. Soullab Press helps it reach the world.
+
+**That sentence is the north star and is currently VISION in all three clauses.**
+
 ## 9 · The chain
 
 ```text
