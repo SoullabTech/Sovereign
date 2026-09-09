@@ -1,6 +1,6 @@
 # D5 — Shared Studio Process → Authored Revision / Proposal / Lineage · 2026-09-09
 
-**Status**: **D5 ARCHITECTURE SPECIFIED · ⛔ STOPPED AT ONE FOUNDER QUESTION (§6).**
+**Status**: **D5 COMPLETE · GATE D5 PASS.** Both founder rulings received 2026-09-09 (§6A, §5A ratified).
 **Continues**: D4 PASS at `c93ec7c5d`. Architecture only — no UI, schema, routes, migration, proposal generation or editing behaviour implemented.
 
 ### Superseding interpretation — the historical flow is not rewritten
@@ -234,7 +234,7 @@ BARRED     "MAIA contributed 23% of this chapter."
 
 Deep editing means **far more MAIA-originated language legitimately enters the Work.** The §6 provenance-location question therefore matters more, not less, and **Option 2's failure mode worsens in proportion**: the more MAIA lawfully writes, the more a missing ancestry row silently over-attributes to the writer. ⛔ Still not decided.
 
-## 6 · ⛔ STOP — the one founder question
+## 6 · The founder question — **RULED, see §6A**
 
 **Act 9 cannot be expressed by the existing substrate.**
 
@@ -276,18 +276,146 @@ OPTION 2   a separate proposal-ancestry relation referencing
 
 ---
 
-## 7 · Standing
+## 6A · ⭐ FOUNDER RULING — provenance belongs to the canonical revision
+
+**Option 2 is rejected on exactly the ground D5 identified**: if "no ancestry row" can mean `writer_direct`, then a dropped write, race, migration defect or partial failure **silently erases MAIA's contribution.** That is an unacceptable failure mode.
+
+**Option 1 in principle — with the detail kept normalized.**
 
 ```text
-D5 ARCHITECTURE            SPECIFIED
-ACTS LAWFUL TODAY          7 of 12
-BLOCKED ON FOUNDER RULING  act 9 — provenance location (§6)
-STILL ABSENT               crossing (1) · commissioned prose (3,4) · reread (11)
-PROVENANCE KEYED TO POSTURE   ⛔ REFUSED — no lawful observable boundary
-D5 GATE                    NOT APPLIED — stopped at the ruling first
-D6                         NOT OPENED
-SEL-0B · selector · F-7 · UI · schema · migration · merge · deploy   NOT TOUCHED
+working_draft_revision
+    id · draft_id · revision_number · content · saved_by · ...
+    provenance_state / provenance_id        <- CANONICAL and MANDATORY
+              |
+revision_provenance
+    origin_kind · proposal_id if any · adoption act if any ·
+    source revision · exact locus · thread/question context ·
+    observation context if applicable
 ```
 
-**Carried**: F-D2-2 · F-D2-5 (both still open, neither blocking) · F-D2-3 (continuity work).
-**F-D2-4**: answered in principle at §4 — provenance describes acts, never posture — **and blocked on §6 for where it lives.**
+> ### Every new revision states what is known about how it came to exist. **Silence is never interpreted as writer authorship.**
+
+**Provenance states** — deliberately not MAIA-specific:
+
+```text
+writer_direct · proposal_adopted · proposal_modified · legacy_unmeasured
+```
+
+Names refinable; **the semantic rule is what binds.**
+
+```text
+ATOMICITY     revision and provenance are recorded together. If provenance
+              recording fails, the REVISION ACT FAILS — nothing enters the
+              Work carrying false or unknown attribution.
+
+NO BACKFILL   historical revisions without provable ancestry are NOT
+              backfilled as writer_direct. They hold an explicit
+              legacy_unmeasured state.
+
+NEVER POSTURE Provenance describes observable acts and textual ancestry.
+              Writing/Develop posture is never a provenance value.
+
+TWO AXES      process influence stays separate from textual ancestry.
+```
+
+**Worked, both directions:**
+
+```text
+MAIA: "The bridge may be the problem."  ->  writer rewrites independently
+   canonical provenance   writer_direct
+   process context        conversation/thread may be linked
+
+Writer: "Rewrite this transition but keep my voice."
+   MAIA proposes; writer substantially modifies and adopts
+   canonical provenance   proposal_modified
+   ancestry               proposal P -> writer adoption/modification -> revision R
+```
+
+**No co-author claim. No `Develop edit` claim. Facts only.**
+
+### 6A.1 · Division of labour between the two records
+
+```text
+THE REVISION RECORD ANSWERS
+  What kind of authored act produced this revision, insofar as the
+  system can establish it?
+
+THE PROVENANCE RELATION ANSWERS
+  What exactly is its ancestry and process context?
+```
+
+## 7 · Substantive editorial authority — **RATIFIED**
+
+The §5A boundary correction is **ratified as founder ruling**, not carried as a proposal. MAIA may work at any commissioned editorial scale — sentence · paragraph · passage · section · chapter · structure · logical flow · continuity · clarity · repetition · transitions · cuts · expansion · reordering · substantial rewrite.
+
+The boundary is four questions, none of them *"did MAIA contribute words":*
+
+```text
+AUTHORSHIP AUTHORITY   Does the writer still decide what the Work means
+                       and becomes?
+VOICE                  Is MAIA strengthening THIS writer's Work, rather
+                       than normalizing it toward her preferred prose?
+ADOPTION               Does the writer inspect / alter / accept / reject?
+REVERSIBILITY          Can the writer recover what preceded it?
+```
+
+**Not reducible to one-shot prose suggestions** — D4's iterative relationship remains binding: writer and MAIA may work a passage repeatedly until the writer decides it is right.
+
+## 8 · Gate D5
+
+> **Gate D5**: a lifecycle act may never be disguised as editing, and an edit may never be disguised as acceptance of MAIA's interpretation.
+
+### 8.1 · ⚠️ The first half bites the §5A correction — and the substrate already answers it
+
+§7 permits *reordering* and *restructuring* under commission. **Those are lifecycle acts, not edits**, and implementing them as prose saves would be precisely the disguise this gate forbids.
+
+**The existing substrate already draws the line, and D5 adopts it unchanged:**
+
+```text
+EDITING        saveSection(id, memberId, sectionId, body, baseVersion)
+               changes CONTENT WITHIN one section
+               -> reordering paragraphs inside a section is EDITING
+
+LIFECYCLE      structure/proposals -> adopt(memberId, proposalId,
+                                            expectedReviewRevision)
+               changes the Work's TOPOLOGY
+               -> moving material BETWEEN sections, splitting, merging,
+                  renaming, reordering sections is a LIFECYCLE ACT
+```
+
+⭐ **So §7's permission splits across two mechanisms, and must not be built as one.** A commissioned "restructure this chapter" that silently rewrote section bodies would change topology through the editing path — the exact prohibited disguise. It must surface as a **structure proposal the writer adopts**, which is why `prose_in_payload: 422` was correct all along: **that refusal is what keeps the two paths from collapsing.** WS2-08's `topology_change_requires_explicit_command` is the same rule from the other side.
+
+### 8.2 · The second half is already discharged
+
+An edit may never be disguised as acceptance of MAIA's interpretation:
+
+```text
+DECIDE durable state   "the writer worked here after this was raised"
+                       NEVER "resolved" · NEVER "correct"
+provenance             records the ACT and its ANCESTRY, never agreement
+                       and never posture
+no terminal state      no `done`, no queue, no observation closed by an edit
+```
+
+**Adopting MAIA's language is not agreeing with her reading**, and nothing in the recorded architecture can express that it is.
+
+```text
+GATE D5      PASS
+```
+
+## 9 · Standing
+
+```text
+D5                          COMPLETE · GATE D5 PASS
+PROVENANCE LOCATION         RULED — canonical assertion + normalized detail
+SUBSTANTIVE EDITING         RATIFIED — any commissioned scale
+LIFECYCLE / EDITING LINE    saveSection vs structure-proposal-adopt (§8.1)
+IMPLEMENTATION              ⛔ NOT AUTHORIZED — the flow says "specify"
+STILL ABSENT IN RUNTIME     crossing (1) · commissioned prose (3,4) · reread (11)
+D6                          NOT OPENED — process continuity
+SEL-0B · selector · F-7 · schema · migration · routes · UI · merge · deploy
+                            NOT TOUCHED
+```
+
+**Carried, none blocking**: F-D2-2 · F-D2-5 · F-D2-3 (belongs to D6).
+**F-D2-4**: ⭐ **CLOSED** — provenance describes observable acts and textual ancestry (§4), and its location is ruled (§6A).
