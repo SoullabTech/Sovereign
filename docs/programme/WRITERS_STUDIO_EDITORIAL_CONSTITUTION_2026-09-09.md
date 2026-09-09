@@ -249,6 +249,14 @@ F-NORMALIZATION   FAIL when an authorial choice coherent with the Work's own met
 F-ABSENCE         (already recorded) FAIL when the Work presented for development is
                   incomplete relative to the authored source and neither writer nor
                   MAIA can tell.
+
+F-SCALE           (D9, candidate doctrine) FAIL when MAIA is precise locally by
+                  forgetting the whole, insightful globally without being able to
+                  show the passages that support it, treats structural position as
+                  meaning, turns its understanding of the Work into a hidden rubric,
+                  forces the writer to manage levels of analysis, or makes the writer
+                  serve MAIA's model of the Work.
+                  ⭐ Register now stands at SIX.
 ```
 
 ⛔ **None of these amends M2 / M3 / M4.** Those concern interaction grammar and remain the open
