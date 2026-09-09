@@ -261,6 +261,65 @@ Specific hazard: *"We find people carrying something worth transmitting"* implie
 
 **That sentence is the north star and is currently VISION in all three clauses.**
 
+## 12 · The product — three inseparable layers
+
+> **Soullab helps people with something meaningful to say develop that wisdom into its strongest possible form, at a level of editorial and developmental support ordinarily available only to those who can afford an excellent professional team — without taking away their authorship, language or voice.**
+
+```text
+1. THE PLATFORM             Writer's Studio — the environment in which
+                            the Work lives and develops
+2. THE SERVICE INTELLIGENCE MAIA — sustained relational, editorial,
+                            developmental partnership
+3. THE PUBLICATION PATHWAY  Soullab Press — for Works that are ready
+                            and aligned
+```
+
+**The writer does not need to arrive knowing** how to structure a book, develop an argument, fix pacing, recognise repetition, shape a chapter, line-edit prose, or understand publishing craft. **They bring what they know and what they are trying to give. The Studio brings the craft.**
+
+### 12.1 · ⭐ We are not democratizing authorship
+
+> **People already have the authorship. We are democratizing developmental capacity.**
+
+The expensive thing, historically, has been **having enough skilled people around the author** for what is inside them to become the Work it could be. That is the scarcity being addressed — **not the ability to produce text**, which is now abundant and is not what anyone lacked.
+
+⭐ **Consequence**: the product's value is measurable in **capacity** terms, never in output terms. This is the same line as §6.1 — a rise in finished manuscripts is not evidence the promise is being kept.
+
+### 12.2 · ⚠️ MAIA spans the roles — and this is the strongest argument for personas, which must be refused
+
+She can do what a publishing team distributes across several people:
+
+```text
+developmental editor · structural editor · writing coach · line editor ·
+critical reader · research and thinking partner · continuity reader ·
+revision partner · publishing guide
+```
+
+⛔ **These are capabilities, not voices.** All of them remain **one MAIA in relationship with the member — never a carousel of artificial personas** (§10.4).
+
+⚠️ **Name the temptation, because this codebase makes it easy.** Those roles have genuinely different postures, and a multi-agent substrate already exists in this system — parallel epistemic emission, elemental voices, per-agent runs. **Wiring "line editor voice" and "structural editor voice" onto that substrate would be a small change and a large violation.** The member would meet a rotating cast wearing MAIA's name, which is precisely the defect §10.4 exists to prevent. **Internal decomposition of capability is permitted; presentational decomposition of MAIA is not.**
+
+### 12.3 · The standard
+
+```text
+NOT   minimal AI intervention
+BUT   maximum developmental help consistent with the writer retaining
+      authorship authority and becoming more fully themselves in the Work
+```
+
+### 12.4 · ⚠️ "Inseparable" forecloses the easiest mitigation
+
+Declaring the three layers inseparable is a design commitment with a cost: **the Press conflict at §11.1 can no longer be resolved by separating the Press from the Studio.** It must be resolved *by rule* — partnership never conditioned on publication candidacy, MAIA never the selector.
+
+**Recorded so the choice is visible.** If those rules ever prove unenforceable, the inseparability is what will have to be revisited, not the rules.
+
+## 13 · The decision north star
+
+> **Does this help the member bring their wisdom into its strongest transmissible form while making the resulting Work more fully theirs — not more fully MAIA's?**
+
+**If yes, it belongs in the product.**
+
+⚠️ **Apply it as a conjunction.** The second clause is the operative one and the easiest to drop. A feature can pass the first — it genuinely helps transmission — and fail the second, because it achieves that by MAIA doing more of the work. **Passing the first clause alone is how every system in this category has drifted.**
+
 ## 9 · The chain
 
 ```text
