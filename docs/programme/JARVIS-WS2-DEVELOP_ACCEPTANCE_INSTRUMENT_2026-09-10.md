@@ -110,6 +110,27 @@ Once D9's Experience Contract exists, an implementation will naturally be judged
 
 ⭐ **An implementation could satisfy the contract's description of how it feels while violating an invariant underneath** — passing the wrong test. **The implementation acceptance set must be the eleven falsifiers, derived independently of D9's prose.** *(This is the same inversion of authority the post-D8 gate was created to prevent, arriving one stage later.)*
 
+### ⭐ Three gates, which must not collapse
+
+```text
+1  ARCHITECTURE ACCEPTANCE
+   11 falsifiers + felt witness
+   -> is this the right architecture?
+
+2  D9 EXPERIENCE CONTRACT
+   description of the proven experience
+   -> what should Writer's Studio feel like?
+
+3  IMPLEMENTATION ACCEPTANCE
+   the 11 architectural falsifiers, derived INDEPENDENTLY of D9
+   PLUS the experience-contract witness
+   -> did the build preserve BOTH structure and experience?
+```
+
+⭐ **Gate 3 requires both, and that is the addition.** A build judged only on the contract could feel right while silently violating provenance, selective history, dormancy or authority. A build judged only on the falsifiers could satisfy every invariant and be unusable.
+
+⛔ **D9 can never become the source of truth for the architecture underneath it.**
+
 ---
 
 ## The felt-witness protocol
