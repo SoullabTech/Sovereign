@@ -13,7 +13,7 @@ lines.forEach(l=>console.log('  ['+l.c.split(' ')[1]+'] '+l.t.replace(/\s+/g,' '
 const her=lines.filter(l=>/her/.test(l.c)).map(l=>l.t).join(' ');
 console.log(`\n  writer's question remains visible:      ${lines.some(l=>/me/.test(l.c)&&/make sense/.test(l.t))?'PASS':'FAIL'}`);
 console.log(`  MAIA does NOT ask what they want:       ${!/What are you wanting to understand|Say a little more about what you are seeing/.test(her)?'PASS':'FAIL'}`);
-console.log(`  answers substantively from the frame:   ${/first read of section 8|Starting from section 8/.test(her)?'PASS':'FAIL'}`);
+console.log(`  answers substantively from the frame:   ${/first read of (passage in )?section 8|Starting from (passage in )?section 8/.test(her)?'PASS':'FAIL'}`);
 console.log(`  offers it as provisional:               ${/I may be wrong|Starting from/.test(her)?'PASS':'FAIL'}`);
 console.log(`  invites correction, not required:       ${/Is that close to what you were asking about/.test(her)?'PASS':'FAIL'}`);
 await p.fill('#q','yes — the jump to universal structure'); await p.press('#q','Enter'); await p.waitForTimeout(200);

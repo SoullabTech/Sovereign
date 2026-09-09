@@ -3,7 +3,7 @@ const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headles
 const p=await b.newPage({viewport:{width:1440,height:900}});
 await p.goto('file://'+process.cwd()+'/ch4-working.html'); await p.waitForTimeout(300);
 const a11y=()=>p.locator('#focusA11y').innerText();
-const say=()=>p.locator('#say').innerText();
+const say=()=>p.locator('#say .line.her').last().innerText();  /* her LATEST turn: since the one-thread ruling #say holds the whole encounter */
 console.log(`no frame → describedby empty: ${(await a11y())===''?'PASS':'FAIL'}`);
 await p.evaluate(()=>{const b=document.querySelector('#s0 .body'),t=b.firstChild;
  const r=document.createRange();r.setStart(t,0);r.setEnd(t,140);
@@ -15,8 +15,8 @@ await p.click('#q'); await p.fill('#q','hmm'); await p.press('#q','Enter'); awai
 const first=await say();
 await p.fill('#q','ok then'); await p.press('#q','Enter'); await p.waitForTimeout(150);
 const second=await say();
-console.log(`1st ambiguous turn ACKNOWLEDGES scope: ${first.includes('held with you')?'PASS':'FAIL'}`);
-console.log(`2nd ambiguous turn does NOT repeat it: ${!second.includes('held with you')?'PASS':'FAIL'}  ("${second}")`);
+console.log(`1st ambiguous turn ACKNOWLEDGES scope: ${first.includes('I am with you in')?'PASS':'FAIL'}`);
+console.log(`2nd ambiguous turn does NOT repeat it: ${!second.includes('I am with you in')?'PASS':'FAIL'}  ("${second}")`);
 await p.click('#clearFocus'); await p.waitForTimeout(150);
 console.log(`release → describedby cleared: ${(await a11y())===''?'PASS':'FAIL'}`);
 await b.close();

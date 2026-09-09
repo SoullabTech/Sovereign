@@ -59,13 +59,50 @@ const snap = () => p.evaluate(() => {
   const m = document.querySelector('main').getBoundingClientRect();
   return [Math.round(m.left), Math.round(m.width)].join(',');
 });
-const s0 = await snap();
-await p.click('#bStructure'); await p.waitForTimeout(150);
-const s1 = await snap();
-ok('orbit: Structure open — Work did NOT move', s0 === s1);
-await p.keyboard.press('Escape'); await p.waitForTimeout(150);
-ok('orbit: Escape closed Structure', await p.locator('#structure').isHidden());
-ok('orbit: no residue — Work unchanged', await snap() === s0);
+const scrollY = () => p.evaluate(() => Math.round(scrollY));
+const words = () => p.evaluate(() => {
+  const r = document.querySelector('#s3 .body').getBoundingClientRect();
+  return Math.round(r.top);
+});
+const docPos = () => p.evaluate(() => {
+  const b = document.querySelector('#s3 .body');
+  return Math.round(b.getBoundingClientRect().top + scrollY);   /* position in the DOCUMENT */
+});
+/* let any scrolling started by the preceding drag/turn settle before the baseline */
+await p.waitForFunction(() => new Promise(r => {
+  let last = -1, still = 0;
+  const tick = () => { const y = Math.round(scrollY);
+    still = (y === last) ? still + 1 : 0; last = y;
+    if (still >= 4) return r(true); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}), null, { timeout: 4000 });
+const s0 = await snap(), y0 = await scrollY(), d0 = await docPos();
+await p.click('#bStructure'); await p.waitForTimeout(220);
+/* AMENDED ORBIT LAW (founder, 2026-09-09): an orbit MAY reduce the field around the
+   Work and gently recenter it in the remaining aperture. It MAY NOT move the writer to
+   a different place in the Work, change scroll position, or cover readable manuscript text. */
+ok('orbit: Structure open — the writer is on the same words', (await docPos()) === d0);
+ok('orbit: Structure open — scroll position held (<=2px)', Math.abs((await scrollY()) - y0) <= 2,
+   `dY=${(await scrollY()) - y0}`);
+ok('orbit: Structure open — no manuscript text underneath', await p.evaluate(() => {
+  for (const id of ['structure','maiaPanel']) {
+    const el = document.getElementById(id); if (el.hidden) continue;
+    const pr = el.getBoundingClientRect();
+    for (const body of document.querySelectorAll('.sec .body')) {
+      const r = document.createRange(); r.selectNodeContents(body);
+      for (const t of r.getClientRects()) {
+        if (t.bottom < 0 || t.top > innerHeight || !t.width) continue;
+        if (Math.min(t.right,pr.right) - Math.max(t.left,pr.left) > 0.5 &&
+            Math.min(t.bottom,pr.bottom) - Math.max(t.top,pr.top) > 0.5) return false;
+      }
+    }
+  }
+  return true;
+}));
+await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+ok('orbit: Escape closed the orbit opened LAST', await p.locator('#structure').isHidden());
+ok('orbit: MAIA was not dismissed for her', !(await p.locator('#maiaPanel').isHidden()));
+ok('orbit: no residue — Work unchanged', (await snap()) === s0 && (await docPos()) === d0);
 ok('orbit: frame survived the orbit', await p.locator('#frame').isVisible());
 
 // release only by writer act

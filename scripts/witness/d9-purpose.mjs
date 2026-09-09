@@ -5,7 +5,7 @@ const frame=async()=>{await p.evaluate(()=>{const a=document.querySelector('#s0 
  const r=document.createRange();r.setStart(a,0);r.setEnd(z,z.childNodes.length);
  const s=getSelection();s.removeAllRanges();s.addRange(r);document.dispatchEvent(new Event('selectionchange'));});
  await p.waitForTimeout(200);};
-const say=()=>p.locator('#say').innerText();
+const say=()=>p.locator('#say .line.her').last().innerText();  /* the LAST thing she said, not the whole scrollback */
 const ask=async t=>{await p.fill('#q',t);await p.press('#q','Enter');await p.waitForTimeout(180);return say();};
 
 await p.goto('file://'+process.cwd()+'/ch4-working.html'); await p.waitForTimeout(300);

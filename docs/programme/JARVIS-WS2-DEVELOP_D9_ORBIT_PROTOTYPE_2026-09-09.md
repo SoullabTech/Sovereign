@@ -1129,3 +1129,175 @@ FOCUS            tells MAIA what you are attending to
 ASK MAIA         invites her perception
 WORK WITH THIS   tells her which of her perceptions to develop together
 ```
+
+---
+
+# 23 · THE APERTURE — an orbit may reduce the field, never cover the Work
+
+## 23.1 🔴 F-ORBIT DEFECT (founder, from screenshots)
+
+> *"The MAIA panel is covering the right side of the manuscript. You can see lines being cut off
+> at the panel boundary. The Work has not moved, but it has become partially unreadable."*
+
+⭐ **`Not moving the Work is insufficient if the orbit obscures the Work.`**
+
+The prototype's original orbit law was *"the Work never reflows"*, implemented as fixed overlay
+panels and asserted as *`main.getBoundingClientRect()` is unchanged*. That law was satisfied and
+the writer still lost text. **The invariant was measuring the wrong thing** — it protected the
+Work's *coordinates* rather than the writer's *reading*.
+
+## 23.2 ⭐ AMENDED ORBIT LAW (founder, ratified 2026-09-09)
+
+```text
+OPENING AN ORBIT MAY NOT
+• reflow the writer to a different place in the Work
+• cover readable manuscript text
+• change scroll position
+• make the current Focus inaccessible
+
+IT MAY
+• reduce the available field around the Work
+• gently recenter the readable manuscript within the remaining aperture
+```
+
+> **The writer stays on the same words. The room around those words gets smaller.**
+
+## 23.3 · Repair
+
+| | |
+|---|---|
+| **Field, not overlay** | `body.structopen` / `body.maiaopen` / `body.benchopen` add padding equal to the orbit's width, so the Work's column is *laid out inside the remaining aperture* instead of underneath a panel. |
+| **Column width held** | While the aperture can hold the full 41rem measure, only the column's horizontal position changes. Line breaking, section heights and document height are untouched, so there is nothing for the writer to re-find. |
+| **Anchored when it cannot be held** | Below that width the measure must narrow. `preserveWorkPosition()` records the flow position of what the writer is attending to (the Focus's containing passage, else the passage they are reading), applies the layout change, and restores that element to the same line of the viewport. |
+| **Header yields rather than grows** | `header h1` now ellipsizes. A wrapping title would have added a line *above* the Work and pushed every word down — a height change disguised as chrome. |
+| **Keyboard focus stops scrolling the Work** | `open()` now focuses the orbit's first control with `{preventScroll:true}`; without it, focusing a link inside Structure scrolled the manuscript ~9px underneath. |
+| **The strip stops where the Work stops** | `#focusbar` and the body composer inherit the same aperture bounds. |
+
+⛔ **Not repaired, and named rather than claimed:** the **Workbench** is a bottom drawer and still
+lies over the last screenful of manuscript while open. `body.benchopen` adds matching bottom padding
+so no line is *unreachable*, but text under the drawer is still covered until the writer scrolls.
+**That is a partial repair and is recorded as one.**
+
+## 23.4 · A second defect found while repairing the first
+
+🔴 **Escape dismissed the wrong orbit.** The handler closed the last panel *named in a list*, so
+opening Structure while MAIA was open and pressing Escape closed **MAIA** — she vanished without the
+writer dismissing her. That is the F-ORBIT failure the founder named directly. Repaired with an
+`openOrder` stack: **Escape dismisses the orbit the writer opened last.**
+
+## 23.5 · Witness — `scripts/witness/d9-aperture.mjs`
+
+`17 passed · 0 failed`, run at **1440×900** (aperture holds the full measure) and **1180×820**
+(aperture forces the measure to narrow):
+
+```text
+MAIA open — no manuscript text under the orbit
+MAIA open — same words still on screen
+MAIA open — same place in the Work (Δtop = 0)
+Structure + MAIA — no manuscript text under either
+Structure + MAIA — same place in the Work (Δtop = 0 / -1)
+closing both — the Work is exactly as it was  (Δtop 0 · Δwidth 0 · ΔscrollY 0)
+no manuscript text under MAIA while focused
+the focus frame is still drawn · not underneath the orbit · same line of the viewport (Δ = 0)
+the focus strip stops where the Work stops
+```
+
+⚠️ **One tolerance is declared, not hidden.** With an orbit open, `window.scrollY` can differ by up
+to 2px with **no layout change whatsoever** — the document position of the manuscript
+(`rect.top + scrollY`) is byte-identical, `offsetTop` is identical, no `scroll` event fires and our
+code calls no scroll method. `d9-orbit-verify.mjs` therefore asserts **document position exactly**
+and scroll position **within 2px**, and says so. *A tolerance that is written down is an admission;
+a tolerance that is quietly widened is a lie.*
+
+---
+
+# 24 · "WORK WITH THIS" — MAIA's observation becomes material
+
+**Authorized narrowly** (founder, 2026-09-09): *add "Work with this" to the existing MAIA
+encounter.* ⛔ **Not authorized and not built:** Primary + Related Focus · non-contiguous focus ·
+any change to Focus Frame semantics · editing menus · auto-applying anything to the Work · a second
+conversation state.
+
+## 24.1 ⭐ The distinction the feature rests on
+
+```text
+FOCUS   = what in the Work we are attending to.
+THREAD  = what in our conversation we are pursuing about it.
+```
+
+> ⭐⭐ **Do not turn MAIA's observation into another Focus Frame.**
+
+An observation is not a location in the manuscript. Making it one would have collapsed two different
+kinds of attention into a single mechanism and given MAIA's reading the same standing as the
+writer's own act of framing.
+
+## 24.2 · Behaviour
+
+1. MAIA answers into the Focus, as before.
+2. The writer selects a meaningful portion (≥ 8 characters) of what **she** said.
+3. A single quiet control appears: **Work with this**. ⛔ No `Accept · Apply · Fix · Rewrite` row.
+4. Invoking it opens a **thread**: her words are underlined in the transcript, the taking-up appears
+   as the writer's own turn in the one conversation, and a thread strip appears reading
+   `FOCUS · <the writer's focus> · PURSUING  "<her words>"`.
+5. Subsequent turns are held to that observation — `show me where` points into the Work at the
+   evidence her observation carried; `say more` deepens the same reading instead of moving to the
+   next one; disagreement makes her hold it loosely rather than defend it.
+6. **Stop pursuing** releases the thread and **not** the Focus.
+
+**The Focus stays visibly primary by construction**: it is named *first* in the thread strip, it
+keeps the accent colour, and its rule is 3px against the thread's 2px in MAIA's dimmer green. The
+thread lives inside her orbit; the Focus lives with the Work.
+
+## 24.3 · Witness — `scripts/witness/d9-workwith.mjs` · `25 passed · 0 failed`
+
+```text
+no affordance before a selection
+"Work with this" appears on a meaningful selection
+the affordance is quiet — one control, no menu · no editing verbs offered
+the Work Focus is NOT replaced · the focus frame did not move
+the Focus is named first; the thread reads as held inside it
+the Focus rule is heavier than the thread rule
+nothing was applied to the Work
+her observation was NOT turned into a second frame in the Work
+taking it up is visible in the one conversation · still exactly one conversation surface
+she answers about the observation being pursued
+pursuing does not wander to the next observation · she marks her reading as a reading
+the thread is released; the Work Focus survives · the encounter is intact
+the broader encounter resumes · and the Work is still untouched
+```
+
+## 24.4 ⚠️ WHAT THIS DOES NOT ESTABLISH
+
+⛔ **The pursuit responses are fixtures.** *`Staying with "…" — what makes me say it is that the same
+move appears in more than one place`* is a written sentence, not a re-reading of the manuscript. The
+witness establishes that **the form holds** — that a thread can be opened, pursued, and released
+without disturbing the Focus, the Work, or the single conversation. It establishes **nothing about
+whether MAIA can actually develop an observation with a writer.**
+
+> ⭐ **This is the point at which the prototype stops being able to answer its own question.
+> Everything after this is a question about cognition, not form.**
+
+## 24.5 · Three instrument mismatches, verified before being attributed
+
+Per the standing rule — *a failing test is evidence of a mismatch; verify the instrument actually
+exercised what it claims before attributing the mismatch to the product.* All three were confirmed
+against the pre-change file, where they fail identically:
+
+| Instrument | Asserted | Actual | Verdict |
+|---|---|---|---|
+| `d9-orbit-verify` | `main` never moves | the amended law authorizes recentering | **superseded law** — rewritten |
+| `d9-purpose` | read `#say` whole | since the one-thread ruling `#say` holds the entire encounter, so `^Starting from` and "no re-contracting" matched *earlier* turns | **instrument** — now reads her latest turn |
+| `d9-engagement` (`two`) | `"first read of section 8"` | `"first read of passage in section 8"` — the label unification landed in `8dae8a3e6` | **instrument** — the unified naming is the correct behaviour |
+| `d9-fidelity` | `"sections 0–2"`, and a `"change how sections 0–2 reads"` return clause | the unified label, and a return move now carried by *"the frame would need to reach it"* — the old sentence was removed when the duplicate reach clause was de-duplicated | **instrument** — same move, one statement of it |
+| `d9-invite` | focus strip reads exactly `SECTIONS 0–2` | `FOCUS · PASSAGE ACROSS SECTIONS 0–2` | **instrument** — unified naming |
+| `d9-scope-perceptibility` | `"held with you"` | `"I am with you in <label>"` — the authorized scope-acknowledgement repair | **instrument** |
+
+**All six were confirmed against the pre-change file, where they fail identically. None was a
+product regression, and none was resolved by loosening an assertion: each instrument was re-pointed
+at the behaviour that actually supersedes it.**
+
+⚠️ **One further instrument fault, and it was a real one.** `d9-orbit-verify`'s scroll assertion was
+intermittent — one run in five. The cause was **momentum from the preceding step**: the test drags a
+frame handle with the mouse and then reads the baseline before the resulting smooth scroll has
+settled. The instrument now waits for four consecutive still frames before taking the baseline.
+*The failure was in the measurement, but the measurement was measuring the right thing.*
