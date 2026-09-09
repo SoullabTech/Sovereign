@@ -154,6 +154,17 @@ unchanged — and `meta.sanctuary` is **derived from that same object**, so the 
 readings cannot diverge, and the derivation can only ever make a turn more
 protective.
 
+⚖️ **CORRECTION (founder, 2026-09-09) — what H3 gives, precisely.** ONE
+AUTHORITATIVE PRIVACY DECISION, **not literally one `TurnPosture` object through
+every writer.** `addConversationExchange` (`sessionManager.ts:66`) still calls
+`TurnPosture.resolve(meta)` and constructs a **fresh** posture from the derived
+meta. *"The readings cannot diverge"* is true; *"the same object is passed by
+reference into every legacy writer"* is **not yet true**, and the earlier wording
+implied it. ⛔ Recorded as **wording debt, not a reopened defect**: the derivation
+is fail-closed (any affirmative sanctuary signal wins), so a fresh resolve from
+derived meta reaches the same decision. Passing the object itself is the honest
+end state and belongs to a later lane.
+
 ### Falsifiers — H1–H3 · 13 more
 
 | | | |
@@ -235,3 +246,57 @@ canonical-turn + field unbroken · typecheck 228 vs baseline 239 · 0 regression
 
 **Standing: FOCUS-PRODUCER-01A FULLY CLOSED · W1 · W2 done · route still
 DISABLED · seven-step human witness now unblocked at code level · `#1275` FROZEN.**
+
+
+---
+
+## Seven-step human witness — authorized, NOT RUN
+
+⛔ **This session cannot run it.** The walk needs the witness environment, a real
+manuscript, a live MAIA and the production-side database; this is a remote session
+with no path to any of them. Recorded here so the method is fixed **before** the
+walk rather than improvised inside it.
+
+### Order — ordinary success established before any fault injection
+
+1. `WRITERS_STUDIO_FOCUS_ENABLED=1`, **witness environment only**.
+2. Select a real passage; ask something whose answer **requires detail present only
+   in that passage**.
+3. Receipt reaches `crossed`; the manifest/render evidence names **both**
+   `member.writer_focus` and `retrieved.writer_work_context`.
+4. MAIA unmistakably engages content available only in the selection.
+5. Force a pre-boundary failure → no handoff, no confirmation, **no ghost
+   exchange**, truthful `did_not_cross`.
+6. Deny only receipt confirmation (below) → real response **and**
+   `crossed_unaccounted` **and** a durable `attempted` receipt.
+7. *Continue without Focus* → the ordinary-scope request exists **only** after that
+   new member gesture.
+
+Then turn the flag off before interpreting results.
+
+### Step 6 — a targeted UPDATE denial, never a general fault
+
+⛔ A general DB fault could disturb the consent mint, the manuscript read, the
+model call or ordinary persistence, and an ambiguous witness proves nothing.
+
+```text
+leave SELECT + INSERT intact
+deny UPDATE on context_disclosure_receipts
+run exactly ONE Focus request
+restore the original grant exactly
+```
+
+That targets `confirmDisclosureCrossed()` precisely — its only act is
+`UPDATE … state='crossed'`. Determine the application role first and whether it
+**owns** the table: an owner is immune to `REVOKE`, in which case use a
+witness-environment-only `BEFORE UPDATE` trigger that raises **only** on
+`attempted → crossed`, and drop it immediately. Preferable to making the whole
+database flaky.
+
+⭐ **The pair that matters in step 6**: the real response is still delivered AND
+the receipt stays `attempted`. *An accountability failure must not erase the
+response after the Work genuinely crossed.*
+
+> ⭐⭐ The writer places attention; the system establishes authority; the Work
+> enters canonical MAIA; the receipt tells the truth about whether that happened;
+> and the surface tells the same truth back to the writer.
