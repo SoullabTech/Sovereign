@@ -13,6 +13,41 @@
 
 ⭐ **That is the wisdom-before-optimization north star landing in a lived reaction** — *maximum faithful transmission*, felt rather than argued.
 
+## 1A · ⭐ Witness table — four dimensions, verbatim
+
+**SOURCE for every row: founder · direct witness.** Rows 2–4 were said in this session; row 1 was said in the founder's ChatGPT session, in the message immediately following the sharing of the artifact URL. ⭐ **Both are first-person founder testimony about the same artifact — the channel differs, the witness does not.** The founder has confirmed the provenance explicitly; **no provenance caveat attaches to row 1.**
+
+| # | Dimension | Verbatim | Channel |
+|---|---|---|---|
+| 1 | **Representation** | *"The way it is represented is absolutely perfect"* | founder · ChatGPT session |
+| 2 | **Authorship feeling** | *"it is profoundly my work"* | founder · this session |
+| 3 | **Developmental value** | *"This reading is extraordinary!"* · *"yet is so well developed"* | founder · this session |
+| 4 | **Desire to continue** | *"Now I want my entire manuscript reviewed and worked in this way."* | founder · this session |
+
+⭐ **Rows 2 and 3 together are the load-bearing pair.** Either alone is ordinary: prose that is "profoundly my work" and undeveloped is just the draft; prose that is "so well developed" and not the writer's is ghostwriting. **The claim under test has always been that both hold at once — and this witness reports both at once, unprompted, in a single sentence.** Row 4 is the behavioural consequence rather than a fifth judgement.
+
+⛔ **Row 1 is about the ARCHITECTURE, not the prose.** It reports the representation — how the Work and MAIA's contribution were shown and related — as correct. **That is the strongest available evidence for the amended architecture and the weakest possible evidence about any model**, and it must never be cited as the latter.
+
+## 1B · ⭐ Founder observation on the class of capability
+
+> *"this is something well-designed AI can do that most humans simply can't no matter how well trained"*
+> — **founder · this session**
+
+**Recorded as founder testimony, and deliberately NOT promoted to a finding.** What it asserts is a **capability-class claim**: sustained, evenly-distributed developmental attention across a whole Work — attending to section 15 with the same fidelity as section 1, holding four hundred pages without fatigue, favouritism, or drift — is a property of the instrument, not a degree of human skill.
+
+⚠️ **Claim-state discipline applies without exception.**
+
+```text
+LIVE          the founder felt this, about this artifact, at this time
+DESIGNED      the architecture is built to support it
+VISION        that AI reliably exceeds trained human developmental editors
+NOT SUPPORTED any general comparative claim about AI vs human editors
+```
+
+⭐ **It is a hypothesis worth arming, not a result.** Its natural home is **Strand G**: it names a *capability axis* (attentional evenness across a long Work) that no current model-quality benchmark measures, and it is exactly the kind of claim the interaction-architecture confound in §3 could manufacture. **Do not put it in outward-facing material.** A single-Work, single-writer, single-session reaction is not a comparative finding about human editors, and publishing it as one would be the precise failure `MARKETING_CLAIM_DISCIPLINE.md` exists to prevent.
+
+⛔ **It also does not discharge M2 / M3 / M4.** It is general, and §4 already rules that a strong general impression must not swallow the narrow falsifiers.
+
 ## 2 · ⚠️ Correction to the epistemic claim made when this arrived
 
 ```text
