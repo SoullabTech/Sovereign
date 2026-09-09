@@ -56,4 +56,20 @@ export const ROOM_POLICIES: Readonly<Record<RoomKind, RoomPolicy>> = {
   vision_studio:         { kind: 'vision_studio',         persists: false, memberAboutAllowed: true,  fieldCompositionAllowed: true },
   living_field:          { kind: 'living_field',          persists: true,  memberAboutAllowed: true,  fieldCompositionAllowed: false },
   relational_navigation: { kind: 'relational_navigation', persists: false, memberAboutAllowed: false, fieldCompositionAllowed: false },
+  /**
+   * WRITER'S STUDIO — WS-ROOM-01 (founder ruling, 2026-09-09).
+   *
+   *   persists: true                — Writer's Studio is meant to become a LONGITUDINAL
+   *     relationship with a Work. "Remember the thread" cannot eventually be satisfied by a
+   *     room that constitutionally forgets every encounter. ⛔ This authorizes ordinary MAIA
+   *     turn continuity ONLY — not new silent Writer-role memories, commissions, or
+   *     manuscript mutations.
+   *   memberAboutAllowed: true      — the whole point is that the MAIA who KNOWS the member
+   *     arrives here. Writer's Studio must not create an amnesiac editorial copy of her.
+   *   fieldCompositionAllowed: false — this property is specifically permission to compose a
+   *     PRACTITIONER field, and a Writer's Studio encounter is not a practitioner encounter.
+   *     ⛔ It does NOT mean elemental / PFI / field intelligence is forbidden; those belong to
+   *     MAIA's cognition and are owed their own truthful producer representation (WS-ORGANISM).
+   */
+  writers_studio:        { kind: 'writers_studio',        persists: true,  memberAboutAllowed: true,  fieldCompositionAllowed: false },
 };
