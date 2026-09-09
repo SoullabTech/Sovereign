@@ -168,3 +168,38 @@ it.**
 expects an answer.**
 
 > **The next epistemically legitimate act is not another argument. It is the encounter.**
+
+### 6.1 ⚠️ PRE-RUN INSTRUMENT LIMITS — read before scoring, recorded 2026-09-09
+
+**Source-verified in `ch4-working.html`. These are mechanical facts about the throwaway, not
+predictions about the felt result. They change what a verdict MEANS; they do not supply one.**
+
+```text
+M2  DEFERRAL STORES NOTHING
+    branch: has('matters','come back','later','not now') -> speak('Understood.', null)
+    `say.innerHTML` is overwritten every turn, and typing ONE character clears it.
+    ⛔ No chip, no list, no badge, no persisted item anywhere.
+```
+
+⭐ **M2 therefore tests DEFERRAL-WITH-NO-STORAGE.** A PASS here is evidence that *"Understood."*
+followed by silence released the writer — **it is NOT evidence about the specified behaviour**, in
+which the observation is durable and clears when the writer takes the next turn. ⛔ **Do not let a
+PASS on this instrument discharge the specified design.** *(A FAIL would be all the more
+significant: obligation surviving even when the system kept nothing.)*
+
+```text
+M3  the recall reply carries its own temporal qualifier —
+    "That was in the version before your later edits."
+    ⭐ the grammar of remembering-together is IN the fixture, not inferred by the writer
+
+M4  trigger set includes the bare substring 'feel like'
+    ⚠️ broad enough to fire ACCIDENTALLY on ordinary phrasing
+    ⛔ an unintended early trigger would produce a FALSE FAIL on M4's
+       "genuinely absent until invoked" half
+```
+
+**Verified: the three protocol prompts each reach their intended branch with no earlier branch
+intercepting them.** ⛔ **Improvised phrasing is not guaranteed the same path** — `has('off',...)`
+matches inside *offer*, *often*, *effort*, and `'something'` is common.
+
+> ⛔ **Nothing here is a verdict, a prediction, or a substitute for the run.**
