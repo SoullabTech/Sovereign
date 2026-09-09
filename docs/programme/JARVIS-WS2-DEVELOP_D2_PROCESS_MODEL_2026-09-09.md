@@ -3,10 +3,67 @@
 **Status**: **D2 COMPLETE · STOPPED BEFORE D3.** Model of human activity. **No UI, routes, schema or implementation proposed.**
 **Continues**: `JARVIS-WS2-DEVELOP-PROCESS-ENVIRONMENT_FLOW_2026-09-08.md`. D0/D1 complete at `b0f8f5485`; Gate D1 passed.
 **Evidence**: D1 archaeology · founder walk against *Elemental Alchemy* Ch. 4 · Writer's Studio doctrine · the founder's six episode vignettes (2026-09-09).
+**AMENDED 2026-09-09 — scope broadened by founder act. See §A.0.** First drafted as a model of the *Develop* process; the founder ruled that the model governs **the whole Writer's Studio process, with Writing and Develop as two stances inside it.** The body below was written under the narrower frame and stands; §A.0 restates the scope it now serves. *The narrower reading is not deleted — the model survived the broadening unchanged, which is itself the finding.*
 
 ---
 
 ## A · Human-activity process model
+
+### A.0 · Scope — one process, two stances · **AMENDED**
+
+The question is no longer *"what developmental process does a writer inhabit in Develop?"* but:
+
+> **What process does a writer inhabit while making and developing a Work, and what distinguishes the Writing and Develop stances within that shared process?**
+
+**Both are process environments around the same living Work.** The distinction is not *process in Develop, editor in Write* — that framing would rebuild the very split D1 found.
+
+```text
+WRITING                          DEVELOP
+"I am making this."              "I am working on what I've made."
+  draft                            orient
+  shape                            notice / question
+  rewrite                          test
+  refine                           reshape
+  continue                         edit
+                                   reflect
+                                   continue
+```
+
+```text
+                     THE WORK
+                        |
+          +-------------+-------------+
+          |                           |
+       WRITING                     DEVELOP
+   making / composing         developing / reshaping
+   primary editing            developmental editing
+          |                           |
+          +-------------+-------------+
+                        |
+                 authored revision
+```
+
+**Shared, and already lawful per D1**: one Working Draft · one section identity · one manuscript text · one revision lineage · one authorship authority · one MAIA relationship.
+
+**What changes between stances is what MAIA is helping with:**
+
+```text
+WRITING — MAIA helps from INSIDE composition
+  "help me find this sentence"  ·  "say this more clearly"
+  "three ways into this section"  ·  "this paragraph isn't landing"
+  commissioned prose suggestions · compare / adopt / reject
+
+DEVELOP — MAIA helps from the RELATIONSHIP to the Work
+  "something isn't working in this chapter"  ·  "what is this section doing?"
+  "where am I repeating myself?"  ·  "does this arc develop?"
+  "what would be worth working on here?"
+  follow the observation into the manuscript · edit there · reflect
+```
+
+⛔ **Do not build two unrelated editing systems.** D1 established the shared substrate exists; the missing piece is that **Develop cannot reach into that shared authorship substrate in an ordinary process.**
+
+> **Why the model below did not need rewriting.** It was drafted for Develop and is stated in terms of the writer's relationship to their own certainty — never in terms of a room. **That distinction was already the stance distinction.** §A.1 defines Write and Develop against each other from the first line, so broadening the scope changed what the model is *for* without changing what it *says*. A model that had described Develop's screens would have had to be discarded here.
+
 
 ### A.1 · The distinction that organizes everything
 
@@ -189,6 +246,8 @@ If the answer is *"MAIA said the ending doesn't land"*, the next act is MAIA's r
 **F-D2-2 · Can a process legitimately have no question?** Entry 2 (felt difficulty) begins with no nameable intention, and the model treats that as fully legitimate. But C.1 says *the live question travels*. What travels when there isn't one yet — and does helping the writer name it become MAIA supplying the intention?
 
 **F-D2-3 · How long does a thread stay live?** Threads persist. Nothing in this model says when a developmental question stops being live, or whether a stale question should be surfaced, allowed to lapse silently, or asked about. **Adjacent to the ruled memory law** — *consent to remember is not consent to be interpreted through the memory every time.*
+
+**F-D2-5 · Does the Writing stance have entry conditions of its own?** §B enumerates six ways a *developmental* process begins. Under the broadened scope, the same question is now owed of Writing — and whether "I sat down to write" is an entry condition or the absence of one is not obvious. *Not answered here.*
 
 **F-D2-4 · Does developmental editing need its own provenance class?** E.1 says one revision lineage. But close item 9 requires that MAIA-seeded content the writer developed be expressible. An edit made *inside* a developmental process, following a thread MAIA participated in, is not obviously the same provenance as a Write-regime edit. *Flagged, not decided.*
 
