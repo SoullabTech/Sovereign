@@ -252,3 +252,100 @@ remaining fabricated Unified inputs (`windowOfTolerance: 0.5`, `unifiedFieldStre
 `fieldQuality: 'normal'`, `coherenceTrend: 'stable'`) are **still there**. ⛔ Also untouched: the
 turn-count intimacy defect · Elemental Oracle · producer registration · room cutover · any broader
 Unified rewrite.
+
+---
+
+# 9 · ELEMENTAL INTELLIGENCE — census pass (read-only)
+
+**Founder ruling: same whole-organism lane, separate pass. Do not fold into PFI; do not call it
+`actual` merely because it reads real text.** ⛔ **Elemental Oracle changes were explicitly NOT
+authorized under FIELD-TRUTH-01, so nothing below is repaired.**
+
+## 9.1 🔴 THE TOPOLOGY IS NOT FOUR INDEPENDENT LEGS
+
+The census's §1 said Elemental reaches cognition by a second seam. Reading the call sites shows
+something stronger: **Elemental is upstream of the other three.**
+
+```text
+Elemental Oracle  (maiaService.ts:850, fastMode)
+        │  .dominant
+        ▼
+(meta as any).elementalResult                        ← the untyped channel CMT-01 exists to close
+        │
+        ▼  maiaService.ts:1914
+buildFieldContext({ element: elementalResult?.dominant ?? (meta as any)?.element })
+        │
+        ▼
+PFI  routePanconsciousField({ element, ... })  →  elementalDominance
+        │
+        ▼
+Unified  one-hot elementalPrescription from the PFI element  →  dominantElement
+        │
+        ▼
+[Field Intelligence] { … } appended to the prompt
+```
+
+⭐⭐ **One classification of the current text becomes three apparently independent corroborating
+signals by the time it reaches cognition.** PFI's `elementalDominance` and Unified's
+`dominantElement` are not second and third opinions; they are the same reading, re-emitted with more
+authority at each hop and marked nowhere.
+
+⚠️ It also **transits `(meta as any)`** — so the value crossing from Elemental into the field chain
+does so through exactly the untyped channel this programme has been closing.
+
+## 9.2 · The census, per the ruling's schema
+
+| | |
+|---|---|
+| SOURCE | `ElementalOracleBridge.processAll` (`lib/bridges/elemental-oracle-bridge.ts`) |
+| INPUT ACTUALLY OBSERVED | the current turn's text **only** — no memory, no profile, no history |
+| TRANSFORMATION (fast) | **regex keyword counting.** Per element a keyword list is matched; `score = matches.length`; `intensity = min(1, score/5)` |
+| TRANSFORMATION (full) | parallel per-element processing via the AI bridge, then `findDominantElement` by intensity |
+| OUTPUT SEMANTICS | `dominant` (an element name) · `elements[].intensity` · `archetype` · matched keywords as "symbols" · `synthesis` |
+| MEMBER-ABOUT | ⭐ **YES.** *"Fire resonance detected"* with an archetype attached is a claim about the person, not about the text |
+| AVAILABILITY | **fast: `derived`** — from keyword counts on one turn. ⛔ **NOT `actual`**; nothing observes an element, a lexical proxy is counted |
+| AUTHORITY | ⭐ **`infer`.** A keyword tally is `compute`; **naming the member's dominant element from it is inference**, and the axes must not be collapsed |
+| ROOM RELEVANCE | ⛔ **not admissible to Writer's Studio as constituted** — inferring, member-about, and single-turn. Under WS-ROOM-02 it is at best **invited**, never ambient |
+
+## 9.3 🔴 THE SAME FABRICATED EARTH, ON THE NORMAL PATH
+
+`elemental-oracle-bridge.ts:376`:
+
+```ts
+let dominantElement = 'earth'; // Default
+...
+if (score > maxScore) { maxScore = score; dominantElement = element; }
+```
+
+`maxScore` starts at `0`. **If no keyword matches — no `anger|passion|burn`, no `fear|shame|hide` —
+no branch is ever taken and `dominant` is returned as `'earth'`.**
+
+> ⭐⭐ **FIELD-TRUTH-01 closed the FAILURE route to a fabricated Earth. This is the SUCCESS route to
+> the same fabrication, and it fires far more often — it is the ORDINARY path for any text that does
+> not happen to contain those words.** For a manuscript passage about writing, zero matches is the
+> expected case.
+
+⚠️ **And the two code paths disagree about absence.** `findDominantElement` (`:732`), used by the
+full path, returns **`''`** when nothing dominates — an honest empty. The fast path returns
+**`'earth'`**. **Same question, two answers, neither marked**, and the fabricating one is the one the
+FAST tier uses.
+
+⚠️ `elementalResult?.dominant ?? (meta as any)?.element` (`:1914`) uses **nullish** coalescing, so an
+honest `''` from the full path **passes through as an element** rather than falling back. ⛔ Not
+repaired; recorded.
+
+## 9.4 · What this census establishes
+
+1. ⛔ **Elemental cannot be named as a producer yet** — and now for a stronger reason than "provenance
+   unestablished": **its output is not independent of PFI's or Unified's.** Registering three
+   producers would represent one signal as three.
+2. ⭐ **`derived` and `infer`, not `actual`** — the ruling's warning was correct and specific.
+3. 🔴 **A second live fabricated-identity defect exists, of the same class the founder just ruled
+   must be fixed, on a hotter path.** ⛔ **Repair NOT authorized here** (FIELD-TRUTH-01 excluded
+   Elemental Oracle changes). **Recommended as `FIELD-TRUTH-02`**, its own bounded lane:
+   remove the `'earth'` default, reconcile the two paths' absence semantics on the honest one, and
+   fix the nullish-vs-falsy hand-off at the call site — nothing else.
+4. ⚠️ **The `(meta as any)` transit is a third finding** and belongs to the CMT-01 lane, not this one.
+
+**Standing:** Elemental census COMPLETE (read-only) · no producer named · nothing repaired ·
+`FIELD-TRUTH-02` recommended and **not** opened · every existing room unchanged.
