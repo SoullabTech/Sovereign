@@ -224,8 +224,24 @@ FOR EVERY VISIBLE ELEMENT
   → "I am here when you need me"                 ⭐ PASSES
 ```
 
-⭐ **Counts, badges, progress indicators and unread markers fail this automatically** — *a number is
-always a demand.*
+⚠️ **NARROWED — founder correction, 2026-09-09, applied in place.** An earlier wording said *"a
+number is always a demand"* and failed counts, badges and indicators **automatically**. ⛔ **Too
+absolute — it would ban a useful section count inside Structure.** The accurate rule:
+
+> ⭐ **In the creative field, UNSOLICITED numbers tend to behave as demands.**
+
+```text
+CONTEXTUAL INFORMATION      summoned for a purpose        → USEFUL
+THE SAME INFORMATION        persistently visible          → PRESSURE
+                            mid-creation
+```
+
+⭐ **A section count in Structure is useful when the writer opened Structure. The same `262` sitting
+beside them while writing becomes an evaluation** — *262 things exist; perhaps I should be managing
+them.*
+
+> ⭐⭐ **That is Developmental Tempo at the interface layer: the system does not continually drag
+> operational time into creative time.**
 
 ## 5.2 The principles
 
@@ -253,3 +269,125 @@ perceive is not legible form; it is a hidden room with better manners.*
 
 ⛔ **Named as an implementation constraint, not an objection.** ⭐ **The principle stands; it must be
 delivered in more than one perceptual channel.**
+
+---
+
+# 6 · ⭐⭐ F-ORBIT — the Field + Orbit falsifier
+
+**Founder, 2026-09-09.**
+
+> ⭐⭐ **The form is the sovereignty claim, rendered.** The page says, without explaining itself:
+> ***Your Work is primary. MAIA is available. Nothing else has a claim on your attention until you
+> invoke it.*** ⛔ **That is not aesthetic minimalism. It is constitutional behaviour expressed
+> spatially.**
+
+⛔ **The prototype must NOT ask "can we fit Structure, Materials, Versions, MAIA and the workbench
+around this?"**
+
+> ⭐ **It asks: can every capability ENTER AND LEAVE without changing what this room fundamentally
+> feels like?**
+
+```text
+F-ORBIT
+
+START              the room feels like a place to write
+SUMMON STRUCTURE   structure becomes useful without making the Work secondary
+DISMISS STRUCTURE  the room returns COMPLETELY — no residue, no rearranged
+                   attention
+SUMMON MAIA        conversation joins the Work rather than replacing it
+SUMMON WORKBENCH   operational information available without a cockpit
+DISMISS ALL        the writer is immediately back inside the Work
+
+FAILURE IS NOT CLUTTER. FAILURE IS:
+⛔ the writer becomes aware of OPERATING Writer's Studio instead of
+   INHABITING their Work
+```
+
+⭐ **That is the interface version of what has been protected conversationally all day.**
+
+## 6.1 ⭐⭐ THE APERTURE RULE
+
+> **Capabilities may alter the room's APERTURE, but not its CENTRE OF GRAVITY.**
+
+```text
+Structure            widens the aperture
+Whole-Work context   widens the aperture
+Versions             turns attention backward
+MAIA                 deepens the aperture
+⭐ THE CENTRE REMAINS THE WORK
+```
+
+⚠️ **Note the shared instrument**: *Center of Gravity* is already a named test in
+`MARKETING_CLAIM_DISCIPLINE.md`, for what a public surface's substance actually rests on. ⭐ **Same
+instrument, second domain — there for claims, here for attention.** *A room and a claim can both be
+technically complete and still rest their weight in the wrong place.*
+
+## 6.2 ⭐⭐ DISMISS IS M2 AT THE INTERFACE LAYER
+
+```text
+M2        "that matters, later" → did it RELEASE you back into writing,
+          or leave residue?                         ⭐ WITNESSED: PASS
+F-ORBIT   dismiss Structure → does the room RELEASE you back into the Work,
+          or leave rearranged attention?            ⛔ NOT WITNESSED
+```
+
+⭐ **The same falsifier at two scales — conversational and spatial.** ⚠️ **And the witness we hold is
+evidence for one and not the other.** ⛔ **A PASS on M2 must not be read as predicting a PASS on
+dismiss.** *The instrument had nothing to dismiss.*
+
+## 6.3 ⭐ The artifact's actual contribution
+
+> **Not a finished UI — the PHENOMENOLOGICAL BASELINE against which every added capability can now
+> be judged.** ⭐ **It proves Field. It does not yet prove Field + Orbit.**
+
+---
+
+# 7 · ⭐ "QUIET" IS A BEHAVIOURAL PROPERTY, NOT A VISUAL STYLE
+
+**Founder ruling, 2026-09-09. The resolved principle is not *make the interface subtle*. It is:**
+
+> ⭐⭐ **Make possibility perceptible without making it solicitous.**
+
+**It must survive every perceptual channel:**
+
+```text
+VISUAL         quiet but unmistakable affordance
+               ⛔ no badges · counts · urgency cues · progress pressure
+KEYBOARD       reachable in a predictable order · clear focus states
+               ⛔ nothing dependent on hover
+SCREEN READER  the same capabilities named and reachable
+               ⛔ without announcing them as obligations
+TOUCH          comfortable targets
+               ⛔ no tiny edge gestures required
+COGNITIVE      plain language · no hidden mode knowledge
+               ⛔ no need to remember where a capability lives
+```
+
+⚠️ **The COGNITIVE row is the most constraining and easiest to violate.** ⛔ **"No need to remember
+where a capability lives" rules out spatial memory as the discovery mechanism** — *a room learned by
+memorizing its corners is a room that must be operated.*
+
+## 7.1 ⭐ THE ACCEPTANCE TEST
+
+> **Can a writer discover and invoke the major capabilities through sight, touch, keyboard, or
+> assistive technology — without the room ever implying that those capabilities ought to be used?**
+
+```text
+discoverability   WITHOUT solicitation
+accessibility     WITHOUT clutter
+capability        WITHOUT pressure
+```
+
+⭐ **The placeholder already proves the shape at the smallest scale.** *"Write in the chapter above,
+or say something here"* **teaches through INVITATION, not instruction**, and establishes two
+available acts:
+
+```text
+WRITE   or   RELATE
+```
+
+⛔ **No "AI Assistant." No onboarding tour. No capability matrix. No command syntax.** ⭐ **The
+writer discovers the room by inhabiting it.**
+
+> ⭐⭐ **THE WORK COMMANDS ATTENTION. THE ROOM REVEALS POSSIBILITY.**
+> **Founder: less a design slogan, more the governing UX test.**

@@ -256,7 +256,17 @@ F-SCALE           (D9, candidate doctrine) FAIL when MAIA is precise locally by
                   meaning, turns its understanding of the Work into a hidden rubric,
                   forces the writer to manage levels of analysis, or makes the writer
                   serve MAIA's model of the Work.
-                  ⭐ Register now stands at SIX.
+
+F-ORBIT           (D9, product layer) FAIL when a capability entering or leaving
+                  the room changes what the room fundamentally feels like — when
+                  the writer becomes aware of OPERATING Writer's Studio instead
+                  of INHABITING their Work. Sequence: summon and dismiss
+                  Structure, MAIA and the Workbench; the room must return
+                  completely, with no residue and no rearranged attention.
+                  ⭐ M2 at the interface layer — and M2's PASS does not predict
+                  it, because the instrument had nothing to dismiss.
+
+⭐ Register now stands at SEVEN.
 ```
 
 ⛔ **None of these amends M2 / M3 / M4.** Those concern interaction grammar and remain the open
