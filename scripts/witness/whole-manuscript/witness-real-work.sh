@@ -264,8 +264,34 @@ if [ "$ADDRESSABLE" != "1" ]; then
   exit 1
 fi
 
+# ⛔ THE REPOSITORY'S DECLARED BUILD HEAP DOES NOT REACH `next build`.
+# package.json's build script reads:
+#
+#   NODE_OPTIONS=--max-old-space-size=8192 node verify-… && node … && next build
+#
+# In a shell, VAR=x cmd1 && cmd2 sets VAR for cmd1 ONLY. So the 8 GB heap the
+# repository plainly intends applies to the first verifier and NOT to the build
+# it was written for — `next build` runs on the default heap unless the parent
+# environment already carries the setting. On this machine it aborted inside
+# V8 allocation with `Abort trap: 6`, after the real Work had already loaded.
+#
+# ⛔ NOT REPAIRED IN package.json HERE. That would add a third changed path and
+# trip this script's own product-drift refusal — the witness must observe the
+# merged implementation, unmodified. The intention is instead carried into
+# npm's environment, where every descendant inherits it.
+#
+# ⚠️ The falsifier's run.sh has the same latent gap. It has not failed there
+# (Linux container, different memory profile) and is part of the frozen subject,
+# so it is RECORDED and deliberately not touched.
+BUILD_HEAP_MB=8192
+echo "  node build heap : ${BUILD_HEAP_MB} MB"
 echo "[4/5] build"
-npm run build >"$RUN/build.log" 2>&1 || { echo "⛔ build failed"; tail -30 "$RUN/build.log"; exit 1; }
+NODE_OPTIONS="--max-old-space-size=${BUILD_HEAP_MB}" \
+  npm run build >"$RUN/build.log" 2>&1 || {
+    echo "⛔ build failed — see the tail below"
+    echo "   (heap was ${BUILD_HEAP_MB} MB; an 'Abort trap: 6' inside V8 here"
+    echo "    means the build needs more than that, not that the copy is bad)"
+    tail -30 "$RUN/build.log"; exit 1; }
 
 echo "[5/5] app on loopback :$APP_PORT"
 if (exec 3<>/dev/tcp/127.0.0.1/$APP_PORT) 2>/dev/null; then
