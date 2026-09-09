@@ -47,7 +47,12 @@ echo "────────────────────────�
 # was supposed to only observe. Cleanup runs on PASS, on FAIL, and on signal.
 cleanup() {
   local rc=$?
-  [ -n "${APP_PID:-}" ] && kill "$APP_PID" 2>/dev/null || true
+  # ⛔ KILL THE GROUP, NOT THE WRAPPER. `npm run start` forks `next start`, and
+  # killing only the npm process orphans the server still holding the port. A
+  # later run then finds the port occupied — and, if it did not refuse, would
+  # run its checks against a server it did not build. Found by the shakedown on
+  # 2026-09-09, which did exactly that.
+  if [ -n "${APP_PGID:-}" ]; then kill -- "-$APP_PGID" 2>/dev/null || true; fi
   if [ -d "$RUN/pg" ]; then
     as_pg "'$PGBIN/pg_ctl' -D '$RUN/pg' -m immediate stop" >/dev/null 2>&1 || true
   fi
@@ -120,13 +125,46 @@ echo "[4/6] build"
 npm run build >"$RUN/build.log" 2>&1 || { echo "⛔ build failed — see $RUN/build.log"; tail -30 "$RUN/build.log"; exit 1; }
 
 echo "[5/6] app on loopback :$APP_PORT"
-PORT=$APP_PORT npm run start >"$RUN/app.log" 2>&1 &
+# ⛔ REFUSE A PORT THAT IS ALREADY ANSWERING. Whatever is listening there was
+# not built by this run, and a falsifier that attaches to it is witnessing an
+# unknown subject while reporting a known SHA. This is the one failure mode that
+# would produce a confident, entirely meaningless PASS.
+if (exec 3<>/dev/tcp/127.0.0.1/$APP_PORT) 2>/dev/null; then
+  exec 3>&- 3<&-
+  echo "⛔ something is already listening on :$APP_PORT — refusing to test an unknown subject"
+  exit 1
+fi
+# Own process group, so cleanup can take the server down with the wrapper.
+setsid bash -c "PORT=$APP_PORT exec npm run start" >"$RUN/app.log" 2>&1 &
 APP_PID=$!
+APP_PGID="$APP_PID"
+# ⛔ REACHABILITY IS INSUFFICIENT. A server answering on this port proves only
+# that SOMETHING is answering. If ours died during startup and anything else
+# appeared on :$APP_PORT, a readiness probe alone would wave the falsifier
+# through to witness an application this run never built. So liveness of the
+# group we spawned is checked on every iteration AND once more after readiness.
+#
+# ⛔ The loop is written as an explicit `if` rather than an `[ $i -eq 60 ] && …`
+# tail: under `set -e` that trailing test evaluates false on every iteration
+# before the last, and the loop body's failing status would end the script on
+# the FIRST not-ready poll — a harness that could only ever succeed against a
+# server that happened to be instant.
+READY=0
 for i in $(seq 1 60); do
-  curl -sf "http://127.0.0.1:$APP_PORT/api/health" >/dev/null 2>&1 && break
+  if ! kill -0 -- "-$APP_PGID" 2>/dev/null; then
+    echo "⛔ the app process group died during startup"; tail -30 "$RUN/app.log"; exit 1
+  fi
+  if curl -sf "http://127.0.0.1:$APP_PORT/api/health" >/dev/null 2>&1; then READY=1; break; fi
   sleep 2
-  [ $i -eq 60 ] && { echo "⛔ app never became healthy"; tail -30 "$RUN/app.log"; exit 1; }
 done
+if [ "$READY" != 1 ]; then
+  echo "⛔ app never became healthy"; tail -30 "$RUN/app.log"; exit 1
+fi
+if ! kill -0 -- "-$APP_PGID" 2>/dev/null; then
+  echo "⛔ :$APP_PORT is reachable, but the process this harness started is gone —"
+  echo "   refusing to witness an application this run did not build"
+  exit 1
+fi
 
 echo "[6/6] falsifier"
 RESULT="$RUN/checks.txt"

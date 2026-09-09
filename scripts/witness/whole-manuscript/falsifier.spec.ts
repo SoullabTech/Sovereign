@@ -31,7 +31,24 @@ test.describe.configure({ mode: 'serial' });
 
 const SCROLLER = '[data-whole-manuscript]';
 const NOTE = '[data-whole-manuscript-note]';
-const OUTLINE = '[data-structured-outline]';
+/**
+ * ⛔ THE CHROME IS NOT THE CONTAINER. `data-structured-outline` marks the
+ * outline panel's sticky header — the count and the organise control — and it
+ * is a SIBLING of the rows inside a fragment, not their ancestor. A descendant
+ * selector through it matches nothing and never could: the first four words of
+ * its own comment are "PANEL CHROME, NOT THE FIRST ROW."
+ *
+ * Read as a container, it cost this harness a 180s timeout that looked exactly
+ * like a product hang. So the chrome is used for what it can honestly say —
+ * that the structured outline is the one rendered — and rows are addressed on
+ * their own identity. Playwright strict mode makes an ambiguous row a loud
+ * failure rather than a silent first-match.
+ */
+const OUTLINE_CHROME = '[data-structured-outline]';
+/** One outline row, by the position it carries. */
+const railRow = (position: number) => `[data-section="${position}"]`;
+/** The gold current row, whichever position it names. */
+const RAIL_ACTIVE = '[data-section][data-active]';
 const shell = (i: number) => `[data-whole-manuscript-section="${draftSectionId(i)}"]`;
 const editor = (i: number) => `${shell(i)} textarea`;
 
@@ -117,7 +134,7 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
 
   await page.goto(`/writers-studio/canvas?m=${MANUSCRIPT_ID}`);
   await expect(page.locator('[data-manuscript-view]')).toBeVisible({ timeout: 60_000 });
-  await expect(page.locator(OUTLINE)).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator(OUTLINE_CHROME)).toBeVisible({ timeout: 60_000 });
 });
 
 test.afterEach(({}, info) => {
@@ -190,16 +207,33 @@ test('1 · the book keeps flowing under a long scroll', async () => {
   expect(progress[progress.length - 1]).toBeGreaterThan(progress[0]);
 });
 
-/* ── 2 ── type · scroll far away · scroll back → the words are there ─────── */
-test('2 · an edit survives eviction and return', async () => {
+/* ── 2 ── type · move on · scroll far away · scroll back → words there ──
+   ⭐ THE FOCUS PIN IS WHY THIS CHECK HAS THE SHAPE IT DOES. A first version
+   typed and then scrolled, expecting eviction; the editor stayed mounted and
+   the check failed its own precondition. It was right to fail. `mountedIndices`
+   is `window ∪ focused`, so a focused section is PINNED and scrolling a
+   textarea does not blur it — the surface was behaving exactly as designed and
+   the check had contradicted a documented invariant of the thing it measured.
+
+   It also means the original framing described a gesture no member can make:
+   typing requires focus, focus prevents eviction, so for member-typed text BLUR
+   ALWAYS PRECEDES EVICTION. The honest sequence is the one a writer actually
+   performs — write here, move on to somewhere else, read on, come back. */
+test('2 · an edit survives moving on, eviction, and return', async () => {
   await page.$eval(SCROLLER, (el) => { (el as HTMLElement).scrollTop = 0; });
   await expect(page.locator(editor(1))).toBeVisible();
+  await expect(page.locator(editor(4))).toBeVisible();
 
   const marker = ' EDIT-SURVIVES-EVICTION';
   await page.locator(editor(1)).click();
   await caretToEnd();
   await page.keyboard.type(marker);
   await expect(page.locator(editor(1))).toHaveValue(new RegExp(marker.trim()));
+
+  /* Moving on: a real click into another section. This releases the pin and is
+     the moment the blur capture runs — not a synthetic blur() call, because the
+     point is that the member's own gesture is sufficient. */
+  await page.locator(editor(4)).click();
 
   /* Away, until the editor is genuinely gone — not merely off screen. */
   for (let i = 0; i < 30; i++) {
@@ -235,7 +269,7 @@ test('3 · an edit survives the view change', async () => {
   await page.locator('[data-manuscript-view-choice="whole"]').click();
   await expect(page.locator(SCROLLER)).toBeVisible();
 
-  await page.locator(`${OUTLINE} [data-section="2"]`).click();
+  await page.locator(railRow(2)).click();
   await expect(page.locator(editor(2))).toBeVisible();
   await expect(page.locator(editor(2)), 'switching views ate the sentence').toHaveValue(new RegExp(marker.trim()));
 });
@@ -263,15 +297,28 @@ test('5 · the rail arrives, and is not undone by its own completion', async () 
   expect(Math.max(...(await mountedPositions())),
     'the jump must start from a window that does not already contain 218').toBeLessThan(200);
 
-  await page.locator(`${OUTLINE} [data-section="217"]`).click();
+  await page.locator(railRow(217)).click();
   await expect(page.locator(editor(217))).toBeVisible({ timeout: 15_000 });
 
-  const near = await page.evaluate(() => {
+  /**
+   * ⛔ MEASURE THE DESTINATION, NOT THE WINDOW. A first version read
+   * `querySelector('[data-whole-manuscript-mounted="true"]')` — the FIRST
+   * mounted shell in DOM order, which with OVERSCAN 3 is section 214, sitting
+   * three sections above the scroll position. It measured the overscan and
+   * reported the product had failed to scroll. It had not: the screenshot
+   * showed section 218 at the top of the viewport and its rail row gold.
+   *
+   * The distance is reported in the message, so a future failure says how far
+   * off it was rather than only that it was off.
+   */
+  const near = await page.evaluate((sel) => {
     const sc = document.querySelector('[data-whole-manuscript]') as HTMLElement;
-    const el = sc.querySelector('[data-whole-manuscript-mounted="true"]') as HTMLElement;
-    return Math.abs(el.offsetTop - sc.scrollTop);
-  });
-  expect(near, 'the destination must be brought to the top, not merely mounted').toBeLessThan(120);
+    const el = sc.querySelector(sel) as HTMLElement | null;
+    return el ? Math.abs(el.offsetTop - sc.scrollTop) : -1;
+  }, shell(217));
+  expect(near, `the destination must be brought to the top, not merely mounted (off by ${near}px)`)
+    .toBeLessThan(120);
+  expect(near, 'the destination shell was not found at all').toBeGreaterThanOrEqual(0);
 
   /* 0cf26e22a: the arrival coordinate fell through as a fresh command when the
      jump completed, and the window was yanked back to where Whole had opened.
@@ -289,7 +336,7 @@ test('6a · the gold row names the place on screen', async () => {
   const observed = await observedTopPosition();
   expect(observed, 'nothing intersects the viewport — the check is unobservable').toBeGreaterThanOrEqual(0);
 
-  await expect(page.locator(`${OUTLINE} [data-active]`)).toHaveAttribute(
+  await expect(page.locator(RAIL_ACTIVE)).toHaveAttribute(
     'data-section', String(observed),
   );
 });
