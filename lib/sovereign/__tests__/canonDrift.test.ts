@@ -11,7 +11,10 @@
  * CANON: autonomyRatio influences only mouth-layer (articulation), NEVER mind conclusions.
  */
 
-import { getDefaultMindState } from '../types/mindContext';
+/* PFI-REPRESENTATION-A: was `getDefaultMindState` — a test-only constructor whose
+ * posture (fieldWorkSafe: true) contradicted the live one. Asserting against the
+ * fallback that actually runs is stronger evidence. */
+import { buildFallbackMindState as getDefaultMindState } from '../pfiMindEntrypoint';
 import type { PFIMindState, MindContext } from '../types/mindContext';
 
 // =============================================================================
@@ -109,7 +112,9 @@ describe('PFIMindState Canon Compliance', () => {
   describe('Default Mind State', () => {
     it('asserts posture, and invents nothing about the member', () => {
       const s = getDefaultMindState();
-      expect(s.fieldWorkSafe).toBe(true);
+      // ⭐ The LIVE fallback is the cautious one. In uncertainty the system
+      // chooses the careful posture; it does not assume field work is safe.
+      expect(s.fieldWorkSafe).toBe(false);
       expect(s.realm).toBe('MIDDLEWORLD');
       expect(s.deepWorkRecommended).toBe(false);
       expect(s.routingBasis).toBe('conservative_policy_default');

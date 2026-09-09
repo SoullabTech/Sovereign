@@ -14,6 +14,8 @@ export interface FieldRoutingContext {
   bloomLevel?: number | null;
 }
 
+import type { RoutingBasis } from '@/lib/sovereign/types/mindContext';
+
 export interface FieldRoutingDecision {
   realm: FieldRealm;
   /**
@@ -30,8 +32,22 @@ export interface FieldRoutingDecision {
   maxSymbolicIntensity: 'low' | 'medium' | 'high';
   /**
    * Textual reasoning for logs / diagnostics.
+   *
+   * ⛔ PRESENTATION ONLY. Nothing may recover a fact from this string.
    */
   reasoning: string;
+  /**
+   * PFI-REPRESENTATION-A — why the decisions above exist, stated structurally.
+   *
+   *   'profile_derived'              a cognitive profile was read
+   *   'conservative_policy_default'  no profile; the careful posture was CHOSEN
+   *
+   * ⭐⭐ Provenance may be rendered into prose. It may never be recovered from
+   *    prose. The previous caller inferred this by testing whether `reasoning`
+   *    started with "No cognitive profile" — so a copy edit could silently change
+   *    the epistemic basis of the result.
+   */
+  basis: RoutingBasis;
 }
 
 /**
@@ -59,6 +75,7 @@ export function routePanconsciousField(
       deepWorkRecommended,
       maxSymbolicIntensity,
       reasoning,
+      basis: 'conservative_policy_default',
     };
   }
 
@@ -123,5 +140,6 @@ export function routePanconsciousField(
     deepWorkRecommended,
     maxSymbolicIntensity,
     reasoning,
+    basis: 'profile_derived',
   };
 }

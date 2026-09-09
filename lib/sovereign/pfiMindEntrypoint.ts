@@ -178,12 +178,12 @@ function buildMindStateFromRouting(
     fieldWorkSafe: routing.fieldWorkSafe,
     realm: routing.realm,
     deepWorkRecommended: routing.deepWorkRecommended,
-    // ⭐ The router has two meanings and they must not look identical: with a
-    // profile these are DERIVED decisions; without one they are the conservative
-    // posture the system CHOSE. `reasoning` names the no-profile case explicitly.
-    routingBasis: routing.reasoning.startsWith('No cognitive profile')
-      ? 'conservative_policy_default'
-      : 'profile_derived',
+    // PFI-REPRESENTATION-A — taken from the router's own typed basis.
+    // ⛔ Was inferred from `routing.reasoning.startsWith('No cognitive profile')`:
+    // a human-readable explanation parsed to establish provenance, so a copy edit
+    // could silently change the epistemic basis of the result.
+    // ⭐⭐ Provenance may be rendered into prose. It may never be recovered from it.
+    routingBasis: routing.basis,
     source,
   };
 }
@@ -203,7 +203,7 @@ function buildMindStateFromRouting(
  * travelling as evidence, and it is gone. `source: 'fallback'` is what callers
  * must read before treating any field here as cognition-bearing.
  */
-function buildFallbackMindState(): PFIMindState {
+export function buildFallbackMindState(): PFIMindState {
   return {
     // ⛔ No elementalDominance: absence of an elemental reading is not Earth.
     // ⭐ What remains is POSTURE — what the system chooses to do when it cannot

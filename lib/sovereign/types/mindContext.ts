@@ -182,17 +182,19 @@ export interface PFITelemetryRecord {
 // =============================================================================
 
 /**
- * Default fallback mind state for when PFI is unavailable
+ * PFI-REPRESENTATION-A — ⛔ `getDefaultMindState()` DELETED.
  *
- * CANON: Fallback maintains full autonomy and grounded presence.
+ * The census found it test-only: nothing in the application called it. It also
+ * returned `fieldWorkSafe: true` while the LIVE critical fallback
+ * (`buildFallbackMindState`, now exported from pfiMindEntrypoint) returns
+ * `fieldWorkSafe: false` — so the same `source` + `routingBasis` pair encoded
+ * OPPOSITE operational safety decisions depending on which constructor ran.
+ *
+ * ⭐ There were never two situations. There was one live fallback and one dead
+ * export that the canon suite kept alive, asserting a posture nothing used.
+ * The suite now asserts against the fallback that actually runs — which is
+ * better evidence, not merely a redirected import.
+ *
+ * ⭐ In uncertainty the careful posture is `fieldWorkSafe: false`. A permissive
+ * default reached only by tests was the more dangerous of the two to keep.
  */
-export function getDefaultMindState(): PFIMindState {
-  return {
-    // ⛔ No element, and no invented numbers. Posture only.
-    fieldWorkSafe: true,
-    realm: 'MIDDLEWORLD',
-    deepWorkRecommended: false,
-    routingBasis: 'conservative_policy_default',
-    source: 'fallback'
-  };
-}

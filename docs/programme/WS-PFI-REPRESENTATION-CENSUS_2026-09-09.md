@@ -179,3 +179,89 @@ socket.**
 tree before this pass) · typecheck **no regressions** · `check:no-supabase` clean.
 ⛔ No adapter built · routing thresholds untouched · no 50+ integration · Unified changed only where
 the shape required · no producer named · no room cut over.
+
+---
+
+# 7 · PFI-REPRESENTATION-A ✅ CLOSED
+
+> ⭐⭐ **Provenance may be rendered into prose. It may never be recovered from prose.**
+
+## 7.1 · `routingBasis` is now structural
+
+`FieldRoutingDecision` carries a typed `basis`, set at the point the router *knows* whether it read a
+profile. The caller reads it. ⛔ **Gone:**
+`routing.reasoning.startsWith('No cognitive profile') ? … : …` — a human-readable diagnostic string
+parsed to establish provenance, where **a copy edit could silently change the epistemic basis of the
+result.** `reasoning` is now marked PRESENTATION ONLY in its own docstring. The compiler confirms
+every return path is tagged.
+
+## 7.2 ⭐ The two fallbacks were never two situations
+
+**Census: `getDefaultMindState()` is TEST-ONLY** — nothing in the application called it. So the
+contradiction (`fieldWorkSafe: true` there vs `false` in the live `buildFallbackMindState`) was not
+two postures for two circumstances. **It was one live fallback and one dead export that the canon
+suite kept alive, asserting a posture nothing used.**
+
+**Deleted.** The live constructor is exported and the canon suite now asserts against **the fallback
+that actually runs** — better evidence, not merely a redirected import. ⭐ **In uncertainty the
+careful posture is `fieldWorkSafe: false`; the permissive default reachable only by tests was the
+more dangerous of the two to keep.**
+
+**Inventory verified: 20 `it(` before and after.** *After changing an instrument, verify the
+inventory as well as the verdict.*
+
+## 7.3 🔴 THE PATTERN RECURS, AND WORSE — `lib/field/fieldSafetyCopy.ts`
+
+A sweep for prose-derived facts found `getBypassingContextNote()`:
+
+```ts
+const reasoning = fieldRouting.reasoning.toLowerCase();
+if (reasoning.includes('spiritual bypassing') || reasoning.includes('spiritual')) {
+  return `there's a pattern of reaching for the symbolic/spiritual as a way to *transcend*
+          difficulty rather than *work through* it …`;
+}
+```
+
+⭐⭐ **This is not presentation deriving from presentation. It is a MEMBER-FACING PSYCHOLOGICAL
+CLAIM — "there's a pattern of reaching for the spiritual to transcend difficulty" — recovered by
+substring-matching a diagnostic log string.** It is the same failure class as everything in this
+sequence, at the highest stakes yet: **the fabrication is spoken to the member.**
+
+⚠️ **And the match is loose.** `reasoning.includes('spiritual')` fires on **any** reasoning
+containing the word — not only on spiritual bypassing. The structural facts it wants
+(`bypassingFrequency.spiritual`, `.intellectual`, `stability`) are already on the cognitive profile;
+nothing needs to be inferred from prose at all.
+
+⛔ **NOT repaired — outside this amendment.** Recommended as its own lane, **FIELD-SAFETY-COPY-01**,
+and it should be adjudicated before UNIFIED-TRUTH given what it says to a person.
+
+## 7.4 · Retained rulings
+
+**`pfi_coherence` NOT dropped.** ⭐ *Do not erase false historical evidence before ensuring nobody
+still mistakes it for true historical evidence.* The rows are evidence of **what the system used to
+claim** — not evidence of coherence. A narrow telemetry-history census decides later: if nothing
+reads it, drop or rename-as-deprecated; if something does, that consumer stops treating old values as
+measurements **before** the schema is touched.
+
+**Two laws recorded from the provenance-header finding:**
+
+> ⭐⭐ **Provenance specificity may never exceed the evidence that establishes it.**
+> ⭐⭐ **A processing tier is not a source.**
+
+`direct` is the right temporary value: **it says less, but everything it says is true.** ⛔ A
+read-only **canon-header census** is owed before producers are drawn — looking for headers deriving
+source, capability or provenance from tier/mode/path rather than the participating system. It does
+not block the next truth pass.
+
+**Methodological finding, preserved:**
+
+> ⭐⭐ **A passing suite that silently lost eleven tests is not stronger evidence than a red suite;
+> it is weaker evidence wearing green. After changing an instrument, verify the INVENTORY as well as
+> the verdict.**
+
+## 7.5 · Gates
+
+`599 passed` · one **pre-existing** failure (`Presence Mode Wiring`) · typecheck **no regressions** ·
+`check:no-supabase` clean. ⛔ No routing thresholds changed · no field restored · no Unified work.
+
+**Next: UNIFIED-TRUTH** — with `FIELD-SAFETY-COPY-01` flagged as arguably prior.
