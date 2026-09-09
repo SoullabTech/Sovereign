@@ -34,7 +34,14 @@ export type PFISource = 'pfi_full' | 'pfi_legacy' | 'fallback';
  */
 export interface PFIMindState {
   // Field-derived state (pre-language)
-  elementalDominance: ElementName;
+  /**
+   * FIELD-TRUTH-03 — ABSENT when no elemental signal reached PFI, or when the
+   * incoming value was not a recognised element.
+   *
+   * ⭐⭐ A fallback may preserve operational posture. It may not manufacture
+   *     observational content. Absence of an elemental reading is not Earth.
+   */
+  elementalDominance?: ElementName;
   elementalBalance: number;        // 0-1 (balance vs skew)
   coherenceLevel: number;          // 0-1 (settling/stability, NOT alignment)
   resonanceIndex: number;          // 0-1
@@ -128,7 +135,7 @@ export interface PFITelemetryRecord {
  */
 export function getDefaultMindState(): PFIMindState {
   return {
-    elementalDominance: 'Earth',
+    // FIELD-TRUTH-03: no element is asserted by a default posture.
     elementalBalance: 0.5,
     coherenceLevel: 0.7,
     resonanceIndex: 0.5,

@@ -185,3 +185,94 @@ describe('scope — what FIELD-TRUTH-01 deliberately did not touch', () => {
     expect(mockPfi).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * FIELD-TRUTH-03 — PFI honours absence.
+ *
+ *   A fallback may preserve operational posture.
+ *   It may not manufacture observational content.
+ *
+ *   Honest absence must survive the entire derivation chain.
+ */
+describe('FIELD-TRUTH-03 · a returned PFI object is not evidence', () => {
+  it('declines Unified when PFI returned a fallback posture rather than observation', async () => {
+    mockPfi.mockResolvedValue({
+      source: 'fallback',                 // returns, does NOT throw
+      elementalDominance: undefined,
+      coherenceLevel: 0.5, resonanceIndex: 0.5,
+      fieldWorkSafe: false, realm: 'MIDDLEWORLD', deepWorkRecommended: false,
+    });
+    const ctx = await buildFieldContext(args());
+    expect(mockCalc).not.toHaveBeenCalled();
+    expect(ctx!.unified).toBeUndefined();
+    expect(ctx!.unavailability).toEqual(expect.arrayContaining([
+      { id: 'pfi.evidence', reason: 'PFI returned a fallback operational posture, not observation' },
+      { id: 'unified', reason: 'PFI returned operational posture, not evidence' },
+    ]));
+  });
+
+  it('keeps the conservative POSTURE while refusing it as evidence', async () => {
+    mockPfi.mockResolvedValue({
+      source: 'fallback', elementalDominance: undefined,
+      fieldWorkSafe: false, realm: 'MIDDLEWORLD', deepWorkRecommended: false,
+      coherenceLevel: 0.5, resonanceIndex: 0.5,
+    });
+    const ctx = await buildFieldContext(args());
+    // the posture survives — "in uncertainty, use the careful operating stance"
+    expect(ctx!.pfi?.fieldWorkSafe).toBe(false);
+    expect(ctx!.pfi?.realm).toBe('MIDDLEWORLD');
+    // but no element is asserted, and nothing derives from it
+    expect(ctx!.pfi?.element).toBeUndefined();
+    expect(ctx!.unified).toBeUndefined();
+  });
+
+  it('declines Unified when PFI ran but no elemental signal reached it', async () => {
+    mockPfi.mockResolvedValue({
+      source: 'pfi_legacy', elementalDominance: undefined,   // FIELD-TRUTH-02 upstream absence
+      coherenceLevel: 0.4, fieldWorkSafe: true, realm: 'MIDDLEWORLD', deepWorkRecommended: false,
+    });
+    const ctx = await buildFieldContext(args());
+    expect(mockCalc).not.toHaveBeenCalled();
+    expect(ctx!.unavailability).toEqual(expect.arrayContaining([
+      { id: 'pfi.elementalDominance', reason: 'no elemental signal reached PFI' },
+      { id: 'unified', reason: 'no elemental signal to derive from' },
+    ]));
+  });
+
+  it('THE CHAIN: absence at the Elemental Oracle now survives all the way down', async () => {
+    // This is the case the lineage census found still fabricating: FIELD-TRUTH-02
+    // produced undefined, normalizeElement turned it back into Earth, PFI succeeded,
+    // and Unified emitted dominantElement: 'earth'.
+    mockPfi.mockResolvedValue({
+      source: 'pfi_legacy', elementalDominance: undefined,
+      coherenceLevel: 0.4, fieldWorkSafe: true, realm: 'MIDDLEWORLD', deepWorkRecommended: false,
+    });
+    const ctx = await buildFieldContext(args());
+    expect(JSON.stringify(ctx)).not.toMatch(/earth/i);
+  });
+
+  it('still runs Unified for an evidence-bearing PFI with a real element', async () => {
+    mockPfi.mockResolvedValue({
+      source: 'pfi_legacy', elementalDominance: 'Water',
+      coherenceLevel: 0.7, fieldWorkSafe: true, realm: 'MIDDLEWORLD', deepWorkRecommended: true,
+    });
+    const ctx = await buildFieldContext(args());
+    expect(mockCalc).toHaveBeenCalled();
+    expect(ctx!.unified).toBeDefined();
+    expect(ctx!.unavailability).toBeUndefined();
+  });
+
+  it('counts the states separately, so none can masquerade as another', async () => {
+    const before = getFieldTruthCounters();
+    mockPfi.mockResolvedValue({ source: 'fallback', elementalDominance: undefined,
+      fieldWorkSafe: false, realm: 'MIDDLEWORLD', deepWorkRecommended: false });
+    await buildFieldContext(args());
+    mockPfi.mockRejectedValue(new Error('down'));
+    await buildFieldContext(args());
+    const after = getFieldTruthCounters();
+    expect(after.pfiFallbackPosture).toBe(before.pfiFallbackPosture + 1);
+    expect(after.pfiFailures).toBe(before.pfiFailures + 1);
+    expect(after.pfiNoElement).toBe(before.pfiNoElement + 1);
+    expect(after.unifiedSkippedNoPfi).toBe(before.unifiedSkippedNoPfi + 2);
+  });
+});

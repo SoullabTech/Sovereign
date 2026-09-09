@@ -196,9 +196,20 @@ function buildMindStateFromRouting(
 /**
  * Build fallback mind state when all else fails
  */
+/**
+ * FIELD-TRUTH-03 — this is an OPERATIONAL POSTURE, not an observation.
+ *
+ *   OPERATIONAL DEFAULT   what the system chooses to DO when it cannot know
+ *   COGNITIVE SIGNAL      what the system is entitled to say it KNOWS
+ *
+ * `fieldWorkSafe: false`, `realm: 'MIDDLEWORLD'` and `deepWorkRecommended: false`
+ * are lawful conservative policy — "in uncertainty, use the careful posture".
+ * ⛔ `elementalDominance: 'Earth'` was NOT policy. It was an unobserved identity
+ * travelling as evidence, and it is gone. `source: 'fallback'` is what callers
+ * must read before treating any field here as cognition-bearing.
+ */
 function buildFallbackMindState(): PFIMindState {
   return {
-    elementalDominance: 'Earth', // Grounding default
     elementalBalance: 0.5,
     coherenceLevel: 0.5,
     resonanceIndex: 0.5,
@@ -217,10 +228,24 @@ function buildFallbackMindState(): PFIMindState {
 /**
  * Normalize element string to typed enum
  */
+/**
+ * FIELD-TRUTH-03 — the element is COPIED, not observed here.
+ *
+ * This function's only job is to case-map an elemental signal that arrived from
+ * upstream. It has no evidence of its own, so it may not supply one:
+ *
+ *   valid signal        → normalized element
+ *   absent signal       → absent          (was: 'Earth')
+ *   unrecognised value  → absent          (was: 'Earth')
+ *
+ * ⭐ Honest absence must survive the entire derivation chain. FIELD-TRUTH-02 made
+ * the Elemental Oracle return absence; this is the next link, where that absence
+ * was being converted straight back into a fabricated identity.
+ */
 function normalizeElement(
   element: string | null | undefined
 ): PFIMindState['elementalDominance'] {
-  if (!element) return 'Earth'; // Grounding default
+  if (!element) return undefined;
 
   const normalized = element.toLowerCase();
   switch (normalized) {
@@ -233,7 +258,7 @@ function normalizeElement(
     case 'spirit':
       return 'Aether';
     default:
-      return 'Earth'; // Grounding default for unknown
+      return undefined; // FIELD-TRUTH-03: an unrecognised value is not evidence of Earth
   }
 }
 

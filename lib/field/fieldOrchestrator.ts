@@ -29,7 +29,12 @@ import type { CognitiveProfile } from '../consciousness/cognitiveProfileService'
  * The census could not say how often production had spoken a defaulted element
  * because nothing counted. Read via getFieldTruthCounters() for the receipt.
  */
-const counters = { pfiFailures: 0, unifiedSkippedNoPfi: 0 };
+const counters = {
+  pfiFailures: 0,            // threw or timed out
+  pfiFallbackPosture: 0,     // returned, but source === 'fallback' — posture, not evidence
+  pfiNoElement: 0,           // ran, but no elemental signal reached it
+  unifiedSkippedNoPfi: 0,    // Unified declined for want of PFI evidence
+};
 export function getFieldTruthCounters(): Readonly<typeof counters> {
   return { ...counters };
 }
@@ -46,7 +51,8 @@ type FieldFlags = {
 
 export type FieldContext = {
   pfi?: {
-    element: string;
+    /** FIELD-TRUTH-03 — absent when no elemental signal reached PFI. Never defaulted. */
+    element?: string;
     coherence: number;
     fieldWorkSafe: boolean;
     realm: string;
@@ -199,6 +205,7 @@ export async function buildFieldContext(
   }
 
   const sources: string[] = [];
+  let pfiEvidenceBearing = false;
   const unavailability: Array<{ id: string; reason: string }> = [];
   const ctx: FieldContext = {
     meta: {
@@ -234,6 +241,30 @@ export async function buildFieldContext(
           timeoutMs
         );
 
+        /**
+         * FIELD-TRUTH-03 — a returned object is not evidence.
+         *
+         * generatePFIMindState() does NOT throw on internal failure; it RETURNS
+         * buildFallbackMindState() with `source: 'fallback'`. FIELD-TRUTH-01's
+         * `if (!ctx.pfi)` gate therefore never saw that path. `source` is the
+         * discriminator, and it was already on the object — merely unread.
+         *
+         * ⭐⭐ A fallback may preserve operational posture. It may not manufacture
+         *     observational content.
+         */
+        pfiEvidenceBearing = pfiState.source !== 'fallback';
+        if (!pfiEvidenceBearing) {
+          counters.pfiFallbackPosture++;
+          unavailability.push({ id: 'pfi.evidence', reason: 'PFI returned a fallback operational posture, not observation' });
+          console.warn('[field-truth] pfi_fallback_posture', JSON.stringify({
+            outcome: 'fallback_posture', source: pfiState.source,
+            pfiFallbackPosture: counters.pfiFallbackPosture,
+          }));
+        }
+        if (pfiState.elementalDominance === undefined) {
+          counters.pfiNoElement++;
+          unavailability.push({ id: 'pfi.elementalDominance', reason: 'no elemental signal reached PFI' });
+        }
         ctx.pfi = {
           element: pfiState.elementalDominance,
           coherence: pfiState.coherenceLevel,
@@ -303,11 +334,21 @@ export async function buildFieldContext(
        * ⛔ The remaining fabricated inputs on this leg (the 0 / 0.5 / 'normal' /
        *    'stable' stubs) are SEPARATELY OWED and deliberately untouched here.
        */
-      if (!ctx.pfi) {
+      /**
+       * FIELD-TRUTH-03 amends FIELD-TRUTH-01's gate. Every meaningful Unified
+       * input derives from PFI EVIDENCE, so the prerequisite is evidence — not
+       * the mere presence of a PFI-shaped object, and not a defaulted element.
+       */
+      const unifiedPrereq =
+        !ctx.pfi ? 'PFI prerequisite unavailable'
+        : !pfiEvidenceBearing ? 'PFI returned operational posture, not evidence'
+        : ctx.pfi.element === undefined ? 'no elemental signal to derive from'
+        : null;
+      if (unifiedPrereq) {
         counters.unifiedSkippedNoPfi++;
-        unavailability.push({ id: 'unified', reason: 'PFI prerequisite unavailable' });
+        unavailability.push({ id: 'unified', reason: unifiedPrereq });
         console.warn('[field-truth] unified_unavailable', JSON.stringify({
-          reason: 'PFI prerequisite unavailable',
+          reason: unifiedPrereq,
           unifiedSkippedNoPfi: counters.unifiedSkippedNoPfi,
         }));
       } else {
@@ -315,13 +356,16 @@ export async function buildFieldContext(
         // Build a minimal SystemOutputs from what we have.
         // The real UEFC expects 50+ system outputs — we provide what's available
         // so the calculator returns meaningful (if partial) results.
-        const pfiElement = ctx.pfi.element.toLowerCase();
+        // The prerequisite above established all three facts; bind them once so the
+        // compiler sees what the guard proved.
+        const pfi = ctx.pfi!;
+        const pfiElement = pfi.element!.toLowerCase();
         const minimalSystems = {
           fieldIntelligence: {
-            sacredThreshold: ctx.pfi?.fieldWorkSafe ? 0.3 : 0.1,
+            sacredThreshold: pfi.fieldWorkSafe ? 0.3 : 0.1,
             relationalField: {
               emotionalVelocity: 0.5,
-              soulEmergence: ctx.pfi?.deepWorkRecommended ? 0.7 : 0.2,
+              soulEmergence: pfi.deepWorkRecommended ? 0.7 : 0.2,
             },
           },
           unifiedIntelligence: {
@@ -335,7 +379,7 @@ export async function buildFieldContext(
             },
           },
           affectDetector: {
-            archetypalRouting: ctx.pfi.element,
+            archetypalRouting: pfi.element!,
           },
           // Stubs for required fields — zero-value defaults
           consciousnessEmergencePredictor: { next15Minutes: 0 },

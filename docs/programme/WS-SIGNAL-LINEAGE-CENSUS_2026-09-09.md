@@ -70,15 +70,34 @@ and let dependents become absent. ⛔ Do not redesign PFI, do not touch routing,
 
 # 1 · PFI — output by output
 
-`routePanconsciousField({ cognitiveProfile, element, facet, archetype, bloomLevel })` where
-`element` is **the Elemental Oracle's `dominant`** (via `(meta as any)` → `buildFieldContext`).
+⚠️ **AMENDED 2026-09-09 — this table's first version was wrong about the routing lineage, and the
+tree is cleaner than it claimed.**
+
+`routePanconsciousField()` **accepts** `element`, `facet`, `archetype` and `bloomLevel` — and
+**never reads them.** Verified in `lib/field/panconsciousFieldRouter.ts`: the body reads only
+`cognitiveProfile.rollingAverage`, `.stability`, `.bypassingFrequency.spiritual` and
+`.bypassingFrequency.intellectual`, returning conservative MIDDLEWORLD defaults when there is no
+profile.
+
+⭐ **So the router's outputs are NOT partly-independent elaborations of the Elemental reading — they
+are independent OF it, deriving wholly from the cognitive profile.** The correction matters: it means
+PFI is **already several epistemic lineages inside one object**, which is precisely the case the
+producer-boundary rule was written for.
+
+```text
+ELEMENTAL LINEAGE        current text → lexical classifier → PFI.elementalDominance
+                                                           → Unified elemental outputs
+PROFILE-ROUTING LINEAGE  cognitiveProfile → fieldWorkSafe · realm · deepWorkRecommended
+                                          → coherenceLevel · reactivityIndex · integrationReadiness
+RESONANCE LINEAGE        current text → its own text-shape analysis
+```
 
 | Output | Origin | Derived from | New evidence | Transformation | Claim | Independence |
 |---|---|---|---|---|---|---|
 | `elementalDominance` | Elemental lexical match on the current turn | `Elemental.dominant` **only** | ⛔ **none** | `normalizeElement()` — a case map | "the member's dominant element" | 🔴 **DERIVATIVE-ONLY** |
-| `fieldWorkSafe` | `routePanconsciousField` | cognitive profile · element · facet · archetype · bloom | ✅ profile & bloom are independent of the text | routing decision | "field work is safe now" | **partly independent** |
-| `realm` | `routePanconsciousField` | same | ✅ same | routing decision | "which realm this is" | **partly independent** |
-| `deepWorkRecommended` | `routePanconsciousField` | same | ✅ same | routing decision | "deep work is indicated" | **partly independent** |
+| `fieldWorkSafe` | `routePanconsciousField` | ⭐ **`cognitiveProfile` ONLY** | ✅ independent of the text | routing decision | "field work is safe now" | ⭐ **INDEPENDENT of the elemental lineage** |
+| `realm` | `routePanconsciousField` | same | ✅ | routing decision | "which realm this is" | ⭐ **INDEPENDENT of the elemental lineage** |
+| `deepWorkRecommended` | `routePanconsciousField` | same | ✅ | routing decision | "deep work is indicated" | ⭐ **INDEPENDENT of the elemental lineage** |
 | `coherenceLevel` | — | `routing.fieldWorkSafe` **only** | ⛔ **none** | `fieldWorkSafe ? 0.7 : 0.4` | "how coherent the member is" | 🔴 **DERIVATIVE-ONLY** |
 | `reactivityIndex` | — | `routing.fieldWorkSafe` **only** | ⛔ **none** | `1 - (fieldWorkSafe ? 0.7 : 0.3)` | "how activated the member is" | 🔴 **DERIVATIVE-ONLY** |
 | `integrationReadiness` | — | `routing.deepWorkRecommended` **only** | ⛔ **none** | `? 0.8 : 0.5` | "readiness to integrate" | 🔴 **DERIVATIVE-ONLY** |
@@ -247,3 +266,85 @@ accepted production form           writers_studio room + membrane
 ```
 
 > ⭐ **Not one branch swallowing the other. They meet when each has proved the thing it owns.**
+
+
+---
+
+# 7 · ⚠️ `source: 'pfi_full'` DOES NOT MEAN FULL INTEGRATION
+
+Verified at `lib/sovereign/pfiMindEntrypoint.ts:114-131`. With
+`MAIA_PFI_FULL_INTEGRATION=true` the code dynamically imports `ElementalFieldIntegration` and
+`MAIAConsciousnessFieldIntegration`, **uses neither**, logs
+
+```text
+🧠 [PFI Full] Would integrate 50+ systems (pending canon drift tests)
+```
+
+and returns **the same routing-only state** as the legacy path, relabelled `pfi_full` with
+`integrationCoverage: 0.8` and `signalQuality: 0.75` — versus `0.2` / `0.7` for the identical
+computation on the legacy path.
+
+⭐⭐ **The label and the two numbers are the only difference. `source: 'pfi_full'` is a
+representation claim that no integration supports**, and `integrationCoverage` — the field whose
+whole job is to say how much of PFI contributed — is a **fixed constant on both paths.**
+
+⛔ **A representation finding, not a repair.** Do not activate that path. It belongs to step 3
+(PFI-REPRESENTATION), pinned as lineage debt.
+
+---
+
+# 8 · FIELD-TRUTH-03 — PFI HONOURS ABSENCE ✅ CLOSED
+
+> ⭐⭐ **A fallback may preserve operational posture. It may not manufacture observational content.**
+> ⭐⭐ **Honest absence must survive the entire derivation chain.**
+
+**Five Earth defaults were live across the chain. Three are closed here; two were closed earlier.**
+
+```text
+1 Unified, missing PFI                     FIELD-TRUTH-01   ✅
+2 Elemental fast path, zero matches        FIELD-TRUTH-02   ✅
+3 normalizeElement(absent)      → 'Earth'  FIELD-TRUTH-03   ✅ now absent
+4 normalizeElement(unknown)     → 'Earth'  FIELD-TRUTH-03   ✅ now absent
+5 buildFallbackMindState()      → 'Earth'  FIELD-TRUTH-03   ✅ asserts no element
+  (+ getDefaultMindState() in mindContext.ts — same treatment)
+```
+
+**A · Elemental dominance.** `PFIMindState.elementalDominance` is **optional**. `normalizeElement`
+case-maps a signal that arrived; it has no evidence of its own, so it supplies none — absent and
+unrecognised both yield **absence**.
+
+**B · The fallback.** ⭐ **The posture SURVIVES; only the fabricated content goes.**
+`fieldWorkSafe: false` · `realm: 'MIDDLEWORLD'` · `deepWorkRecommended: false` remain as lawful
+conservative policy — *"in uncertainty, use the careful operating stance."* `elementalDominance:
+'Earth'` was never policy; it was an unobserved identity travelling as evidence.
+
+```text
+OPERATIONAL DEFAULT   what the system chooses to DO when it cannot know
+COGNITIVE SIGNAL      what the system is entitled to say it KNOWS
+```
+
+**C · The orchestrator gate, amended.** FIELD-TRUTH-01 asked *"is there a PFI object?"* — which
+`buildFallbackMindState()` satisfies, because `generatePFIMindState` **returns rather than throws.**
+The prerequisite is now **evidence**:
+
+```text
+no ctx.pfi                     → 'PFI prerequisite unavailable'
+source === 'fallback'          → 'PFI returned operational posture, not evidence'
+element === undefined          → 'no elemental signal to derive from'
+```
+
+⭐ **`source` was already on the object. The orchestrator simply never read it** — the evidence
+needed to catch this was present and discarded.
+
+**D · Observability.** Four counters where there was one: `pfiFailures` (threw/timed out) ·
+`pfiFallbackPosture` (returned, not evidence) · `pfiNoElement` (ran, no signal) ·
+`unifiedSkippedNoPfi`. Plus `[field-truth]` markers. **No state can masquerade as another.**
+
+**Witness: `lib/field/__tests__/fieldTruth01.test.ts` · 19 passed**, including ⭐ **THE CHAIN** —
+absence originating at the Elemental Oracle now produces a context containing **no occurrence of
+"earth" at all.**
+
+⛔ **Untouched, as ruled:** the decimal aliases (`coherenceLevel` 0.7/0.4, `reactivityIndex`,
+`integrationReadiness`) · `elementalBalance` 0.6 · `resonanceIndex` 0.5 · the
+`integrationCoverage`/`signalQuality` constants · the `pfi_full` identity · Resonance · Unified's
+other fabrications · producer registration · room cutover.
