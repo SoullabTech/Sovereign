@@ -201,6 +201,23 @@ if [ -n "$MISSING" ]; then
 fi
 echo "  dependencies    resolved (nodemailer · next · react · pg)"
 
+# ⛔ THE PORT IS A PREFLIGHT FACT. This check used to live at [6/6], AFTER
+# custody — so a stale app from an earlier run refused the witness only once a
+# real copy of the book had already been taken and was about to be destroyed.
+# Whether something else holds the port needs no manuscript to answer, so it is
+# answered here with everything else that needs no manuscript.
+if (exec 3<>/dev/tcp/127.0.0.1/$APP_PORT) 2>/dev/null; then
+  exec 3>&- 3<&-
+  echo "⛔ something is already listening on :$APP_PORT — refusing."
+  echo "   Almost certainly a leftover app from an earlier witness run."
+  echo "   Find and stop it, then run again:"
+  echo "     lsof -nP -iTCP:$APP_PORT -sTCP:LISTEN"
+  echo "     kill \$(lsof -t -nP -iTCP:$APP_PORT -sTCP:LISTEN)"
+  echo "   ⛔ No export is needed to fix this, and none has been consumed."
+  exit 1
+fi
+echo "  port :$APP_PORT   free"
+
 echo "[2/6] ephemeral PostgreSQL"
 as_pg "'$PGBIN/initdb' -D '$RUN/pg' -U wm -A trust" >/dev/null 2>&1
 as_pg "'$PGBIN/pg_ctl' -D '$RUN/pg' -o \"-k $RUN -p $PGPORT_LOCAL -h ''\" -l '$RUN/pg.log' start" >/dev/null
