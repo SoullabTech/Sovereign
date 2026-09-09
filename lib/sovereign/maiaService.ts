@@ -862,7 +862,12 @@ async function fastPathResponse(
     // Store in meta for corpus callosum logging
     (meta as any).elementalResult = elementalResult;
   } catch (err) {
-    console.warn('🌋 [ElementalOracle FAST] Skipped (non-fatal):', err);
+    // FIELD-TRUTH-02: engine failure is a THIRD outcome, distinct from
+    // "ran and found no elemental signal". Both previously looked like Earth.
+    console.warn('[field-truth] elemental_engine_failure', JSON.stringify({
+      outcome: 'engine_failure',
+      reason: err instanceof Error ? err.message : 'unknown',
+    }));
   }
 
   // 🧠 MEMORY RECALL DETECTION: Detect when user is asking about previous conversation
@@ -1911,6 +1916,12 @@ The current user has not provided their name. Address them as "friend" or "there
         content: h.userMessage ?? h.maiaResponse ?? h.content ?? '',
       })),
       cognitiveProfile: (meta as any)?.cognitiveProfile ?? null,
+      // FIELD-TRUTH-02: `dominant` is now ABSENT (undefined) when the Elemental
+      // Oracle found no signal, so this `??` falls through correctly instead of
+      // forwarding a fabricated 'earth' or an `''` sentinel.
+      // ⛔ The fallback is a DIFFERENT SOURCE — a separately supplied element
+      // from the meta route. Nothing here may present it as an Elemental Oracle
+      // reading. (The untyped transit itself remains CMT-01 debt, unrepaired.)
       element: elementalResult?.dominant ?? (meta as any)?.element,
       facet: (meta as any)?.facet,
       archetype: (meta as any)?.archetype,

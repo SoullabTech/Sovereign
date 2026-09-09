@@ -349,3 +349,111 @@ repaired; recorded.
 
 **Standing:** Elemental census COMPLETE (read-only) · no producer named · nothing repaired ·
 `FIELD-TRUTH-02` recommended and **not** opened · every existing room unchanged.
+
+---
+
+# 10 · FIELD-TRUTH-02 — honest elemental absence
+
+> ⭐⭐ **No evidence of an element is not evidence of Earth.**
+
+**Authorized and closed 2026-09-09.** `10` tests · `lib/bridges/__tests__/fieldTruth02.test.ts`.
+
+| | Before | After |
+|---|---|---|
+| FAST, zero matches | `'earth'` | **absent** (`undefined`) + `dominantAbsentReason: 'no_elemental_signal'` |
+| FULL, no dominance | `''` | **absent** (`undefined`) — same semantics as FAST |
+| Handoff `?? meta.element` | `''` is not nullish → **sentinel forwarded as an element** | `undefined` falls through correctly |
+| Outcomes | indistinguishable in logs | **three counted**: engine failure · success/no signal · success/signal |
+
+⭐ **`undefined`, not `''`.** An empty string is more honest than *"earth"* but it is still a
+value-shaped sentinel — and the `??` at the call site treated it as a real answer. **Absence must not
+need to masquerade as data.** The type now permits no value at all.
+
+⛔ **The meta-route fallback stays as existing behaviour, and is annotated at the call site as a
+DIFFERENT SOURCE.** Nothing presents it as an Elemental Oracle reading. **The untyped transit itself
+remains CMT-01 debt, unrepaired.**
+
+⛔ **Untouched, as ruled:** keyword vocabulary · thresholds · PFI · Unified beyond respecting absence
+· `(meta as any)` · producer registration · room cutover.
+
+## 10.1 ⚠️ FOUND WHILE WRITING THE WITNESS — base-form-only vocabularies
+
+`/\banger|rage|…|burn\b/` matches **base forms only**. **"burned" does not match "burn"; "raging"
+does not match "rage".** An unmistakably fiery passage — *"The forest burned for three days, raging
+through the pines"* — scores **zero** and now correctly returns absent.
+
+⛔ **NOT repaired** (vocabulary changes are explicitly out of scope). ⭐ **Recorded because it bears
+directly on how often "no signal" actually fires** — and therefore on how often the old code was
+returning a fabricated Earth. **The rate is higher than the keyword lists suggest.**
+
+⚠️ **Three of the witness's own probes failed on first run** because the prose contained keywords
+(*"I think"* → air; *"structure"* / *"whole"* → earth / aether). Instrument faults, verified as such
+before any product change — the standing rule.
+
+---
+
+# 11 · ⭐⭐ TWO LAWS FROM THE LINEAGE FINDING
+
+## 11.1 · DERIVATION DOES NOT CREATE CORROBORATION
+
+> **Two outputs are independent evidence only to the degree that their evidentiary ancestry is
+> independent.**
+
+The mental model of *"four intelligences corroborating one another"* is **disproved**. The actual
+graph carries lineage: current text → Elemental lexical classification → PFI routing → Unified
+transformation. **One ancestral signal emerges three times looking like consensus.**
+
+⭐ *Three modules saying "Earth" is not three votes if all three got Earth from the same keyword
+classifier.*
+
+**Consequence, binding on producer design:**
+
+> ⭐⭐ **A producer represents one coherent epistemic LINEAGE, not one software MODULE.**
+
+⛔ **The SIGNAL-LINEAGE CENSUS is owed before any whole-organism producer is named**, at
+**output-field level**, because one subsystem may mix ancestries:
+
+```text
+ORIGIN         what observation first generated this signal?
+DERIVED FROM   which earlier signal(s) does this output depend on?
+NEW EVIDENCE   what additional independent observation entered here?
+TRANSFORMATION what did this subsystem actually add?
+CLAIM          what does the resulting value claim?
+INDEPENDENCE   independent / partly independent / derivative-only
+```
+
+## 11.2 · THE WORK IS NEVER IMPLICITLY EVIDENCE ABOUT THE WRITER
+
+> ⭐⭐ **The Work may be evidence about the Work without becoming evidence about the writer.**
+
+The elemental sibling of *"the Work is never implicitly instruction"*, and possibly the most
+important Writer's Studio boundary yet.
+
+```text
+⛔ WRONG AMBIENT MOVE    manuscript language → elemental state of the WRITER
+✅ LAWFUL WRITERLY MOVE  manuscript language → elemental qualities, movement,
+                         balance OF THE WORK
+✅ INVITED               the writer asks "what does this reveal about where I am?"
+                         → member-about elemental inquiry becomes invited
+```
+
+⭐ **The intelligence stays. The referent changes.** *"The forest burned for three days"* must not
+become *"Kelly is in Fire."*
+
+⚠️ **This is not repaired and cannot be repaired by FIELD-TRUTH-02**, which only stopped the
+fabrication — it did not change what a reading is *about*. A test pins that distinction so it stays
+visible.
+
+---
+
+# 12 · SEQUENCE
+
+```text
+1 ✅ FIELD-TRUTH-01   fabricated Earth on PFI failure                     CLOSED
+2 ✅ FIELD-TRUTH-02   fabricated Earth on the ordinary Elemental path     CLOSED
+3 ⛔ SIGNAL-LINEAGE CENSUS   Elemental → PFI → Unified, output by output
+4 ⛔ RESONANCE-TRUTH         turn-count "intimacy"; empty-string userWeather/userState
+5 ⛔ UNIFIED-TRUTH           remaining invented measurements and categoricals
+6 ⛔ WRITER REFERENT RULING  Work-about vs member-about
+7 ⛔ ONLY THEN               canonical producer boundaries
+```

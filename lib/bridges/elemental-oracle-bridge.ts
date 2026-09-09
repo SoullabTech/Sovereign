@@ -32,12 +32,32 @@ export interface ElementalQuery {
   fastMode?: boolean;
 }
 
+/**
+ * FIELD-TRUTH-02 — the three outcomes must be distinguishable. Before this, a
+ * fabricated Earth was indistinguishable from an observed one in every log.
+ */
+const elementalCounters = { engineFailure: 0, noSignal: 0, signalPresent: 0 };
+export function getElementalTruthCounters(): Readonly<typeof elementalCounters> {
+  return { ...elementalCounters };
+}
+
 export interface ElementalResponse {
   elements: ElementalWisdom;
   synthesis: string;
   depth: number;
   harmonics: ElementalHarmonic[];
-  dominant: string;
+  /**
+   * FIELD-TRUTH-02 — the dominant element, ABSENT when nothing indicated one.
+   *
+   * ⭐⭐ No evidence of an element is not evidence of Earth.
+   *
+   * `undefined` rather than `''`: an empty string is more honest than "earth" but
+   * it is still a value-shaped sentinel, and `??` at the call sites treats it as
+   * a real answer. Absence must not need to masquerade as data.
+   */
+  dominant?: string;
+  /** Why there is no dominant element, when there isn't one. Receipt evidence. */
+  dominantAbsentReason?: 'no_elemental_signal';
   // Corpus Callosum trace data for parallel processing auditing
   traceData?: {
     elementalAgents: Array<{
@@ -54,7 +74,7 @@ export interface ElementalResponse {
     }>;
     synthesis: {
       synthesis: string;
-      dominant: string;
+      dominant?: string;
       depth: number;
       harmonics?: Array<{
         elements: string[];
@@ -373,7 +393,12 @@ export class ElementalOracleBridge {
     // Score each element based on keyword matches
     const elementScores: Record<string, number> = {};
     let maxScore = 0;
-    let dominantElement = 'earth'; // Default
+    // FIELD-TRUTH-02: no default. `maxScore` starts at 0, so with zero keyword
+    // matches no branch below is ever taken — which previously left this as
+    // 'earth' and shipped a fabricated elemental identity downstream on the
+    // ORDINARY path, not an error path. Manuscript prose without the keyword
+    // vocabulary is exactly that case.
+    let dominantElement: string | undefined = undefined;
 
     for (const [element, pattern] of Object.entries(elementPatterns)) {
       const matches = input.match(pattern.keywords) || [];
@@ -430,7 +455,16 @@ export class ElementalOracleBridge {
     const depth = Math.min(1, activeElements.length / 4);
 
     // Build synthesis summary
-    const synthesis = `[Fast] Dominant: ${dominantElement} (${elementScores[dominantElement]} signals). ` +
+    if (dominantElement === undefined) {
+      elementalCounters.noSignal++;
+      console.log('[field-truth] elemental_no_signal', JSON.stringify({
+        outcome: 'success_no_signal', noSignal: elementalCounters.noSignal }));
+    } else {
+      elementalCounters.signalPresent++;
+    }
+    const synthesis = dominantElement === undefined
+      ? '[Fast] No elemental signal in this text.'
+      : `[Fast] Dominant: ${dominantElement} (${elementScores[dominantElement]} signals). ` +
       `Active elements: ${activeElements.join(', ') || 'none detected'}.`;
 
     const totalLatency = Date.now() - startTime;
@@ -442,6 +476,7 @@ export class ElementalOracleBridge {
       depth,
       harmonics,
       dominant: dominantElement,
+      ...(dominantElement === undefined ? { dominantAbsentReason: 'no_elemental_signal' as const } : {}),
       traceData: {
         elementalAgents: traceAgents,
         synthesis: {
@@ -729,8 +764,13 @@ export class ElementalOracleBridge {
   /**
    * Find dominant element
    */
-  private findDominantElement(elements: ElementalWisdom): string {
-    let dominant = '';
+  /**
+   * FIELD-TRUTH-02 — the FULL path already refused to fabricate, but expressed
+   * absence as `''`. FAST said 'earth' for the same situation. Same question,
+   * two answers, neither marked. Both now answer `undefined`.
+   */
+  private findDominantElement(elements: ElementalWisdom): string | undefined {
+    let dominant: string | undefined = undefined;
     let maxIntensity = 0;
 
     Object.entries(elements).forEach(([element, response]) => {
