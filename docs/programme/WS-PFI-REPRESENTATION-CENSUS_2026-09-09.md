@@ -83,3 +83,99 @@ reappearing at every layer: *the shape demanded a value where the system had non
 **Falsifier for the implementation pass:** ⭐⭐ *No number may appear in canonical PFI cognition
 unless changing that number could reflect a change in EVIDENCE rather than merely a change in a
 hard-coded mapping.*
+
+---
+
+# 6 · IMPLEMENTATION ✅ CLOSED
+
+> ⭐⭐ **Do not preserve the intention of a future signal by requiring the present system to have a
+> place to lie about it.**
+
+## 6.1 · Telemetry preflight — deterministic
+
+```text
+rg 'PFI_TELEMETRY|PFITelemetryRecord|logPFITelemetry' . --glob '!node_modules/**' …
+→ the type · the emitter · four call sites · one test · this census. NO PARSER.
+```
+
+**Ruling therefore: change the shape directly.** Not versioned, not dual-emitted.
+
+## 6.2 · The state now
+
+```text
+elementalDominance?    derived copy of a real upstream signal, absent otherwise
+fieldWorkSafe          routing DECISION
+realm                  routing DECISION
+deepWorkRecommended    routing DECISION
+routingBasis           profile_derived | conservative_policy_default
+source                 routing_only | fallback
+```
+
+⭐ **`source` and `routingBasis` are kept distinct** — *source* is what generated the state, *basis*
+is what the routing rested on. The code did not prove them identical, so they were not merged.
+
+**Deleted:** `elementalBalance` · `resonanceIndex` · `integrationReadiness` · `integrationCoverage` ·
+`signalQuality` · `coherenceLevel` · `reactivityIndex` · `autonomyRatio` · the `pfi_full` identity.
+⛔ **None kept as optional.** `pfi_legacy` → **`routing_only`**, which is what it is.
+
+⭐ **`coherenceLevel` did not become a boolean named coherence. The false CONCEPT disappeared;
+`fieldWorkSafe` remains because that is what the system decided.** Repairing the number while keeping
+the name would have preserved the semantic inflation.
+
+## 6.3 🔴 THREE CONSUMERS THE CENSUS MISSED
+
+⚠️ **My census traced `pfiState.*` and stopped there. It did not follow the DERIVED context, and all
+three misses were downstream of it.** The method was right; my application of it was one hop short.
+
+| Missed consumer | What it was doing |
+|---|---|
+| `fieldOrchestratorTelemetry.ts:61` | wrote `ctx.pfi.coherence` — the `0.7/0.4` alias — into a **persisted database column** `pfi_coherence`, every turn |
+| `app/api/sovereign/app/maia/list/route.ts:1816` | 🔴 set an **outbound canon provenance header** to `'pfi_full'` when `processingProfile === 'DEEP'` — **asserting a PFI integration level from the processing TIER, having never consulted PFI at all** |
+| `maiaService.ts:2856` | logged `autonomy=${autonomyRatio}` — a constant, printed as a per-turn measurement |
+
+⭐⭐ **The provenance-header one is the worst thing found in this whole sequence.** Every DEEP turn
+carried an outbound header claiming full PFI integration — whether PFI ran, failed, or was never
+reached. **The label was not merely inflated inside the system; it was asserted to the outside.** It
+now reads `direct`; ⚠️ what it *should* say is the canon-headers owner's question, not this pass's.
+
+⚠️ **The persisted column `pfi_coherence` still exists** in
+`20260215210000_field_orchestrator_telemetry.sql`. This pass **stops writing false rows** (writes
+`null`); dropping the column is a schema act outside this authorization. ⛔ **Historical rows in it
+are the old fiction and must not be read as measurements.**
+
+## 6.4 · The canon suite — rewritten, not deleted
+
+⭐ The old suite asserted that four field **NAMES must exist** (`toHaveProperty('resonanceIndex')`).
+**That is how a vacant socket becomes self-perpetuating: a test demanded a home for a value nobody
+could supply.** It now asserts the opposite, so the sockets cannot quietly return.
+
+Sovereignty over articulation is **canon unchanged** — only its location moved. `autonomyRatio: 1.0`
+was a constant policy claim wearing the shape of a measurement; the policy belongs in the
+constitution, not in a field a future reader could mistake for evidence, or start varying.
+
+⚠️ **While rewriting it I deleted two unrelated describe blocks by accident** — `Canon Violation
+Detection` and `MindContext Type Safety`, 11 tests — by slicing past my target. Caught by counting
+`it(` against `HEAD` and restored. **20/20 now.** *A test count is worth checking after any
+mechanical edit to a test file.*
+
+## 6.5 · DESIGN-OWED SIGNALS — intent preserved outside the ontology
+
+```text
+elemental balance · resonance · integration readiness ·
+integration coverage / provenance coverage · signal quality
+
+STATUS   No lawful PFI representation currently exists.
+⛔ Do not reintroduce a runtime field until:
+     source exists · transformation established ·
+     availability semantics exist · authority adjudicated
+```
+
+⭐ **A real resonance intelligence will EARN a field from its evidence. It will not inherit a vacant
+socket.**
+
+## 6.6 · Gates
+
+`599 passed`, one **pre-existing** failure (`Presence Mode Wiring`, verified failing on the clean
+tree before this pass) · typecheck **no regressions** · `check:no-supabase` clean.
+⛔ No adapter built · routing thresholds untouched · no 50+ integration · Unified changed only where
+the shape required · no producer named · no room cut over.

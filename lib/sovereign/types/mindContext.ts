@@ -24,7 +24,19 @@ export type ElementName = 'Fire' | 'Water' | 'Earth' | 'Air' | 'Aether';
 export type RealmName = 'MIDDLEWORLD' | 'UPPERWORLD_SYMBOLIC' | 'UNDERWORLD';
 
 /** Source of PFI mind state generation */
-export type PFISource = 'pfi_full' | 'pfi_legacy' | 'fallback';
+/**
+ * PFI-REPRESENTATION — ⛔ `pfi_full` RETIRED.
+ *
+ * The branch it named imports two integration modules, uses neither, logs
+ * "Would integrate 50+ systems (pending canon drift tests)", and returns the
+ * same routing-derived state with larger constants. Calling that `pfi_full` is
+ * precisely the label-over-measurement error this census set out to expose.
+ *
+ * ⭐⭐ A requested capability is not an achieved capability.
+ *
+ * `pfi_legacy` is renamed `routing_only`, which is what it actually is.
+ */
+export type PFISource = 'routing_only' | 'fallback';
 
 /**
  * PFI Mind State - Field-derived pre-language state
@@ -42,27 +54,55 @@ export interface PFIMindState {
    *     observational content. Absence of an elemental reading is not Earth.
    */
   elementalDominance?: ElementName;
-  elementalBalance: number;        // 0-1 (balance vs skew)
-  coherenceLevel: number;          // 0-1 (settling/stability, NOT alignment)
-  resonanceIndex: number;          // 0-1
-  integrationReadiness: number;    // 0-1 (process readiness, NOT "breakthrough")
-  reactivityIndex: number;         // 0-1 (how hooked/activated the field appears)
 
-  // Sovereignty/autonomy
-  autonomyRatio: number;           // 0-1 (sovereignty over external articulation support)
+  // ── ROUTING DECISIONS ──────────────────────────────────────────────────────
+  // What the system DECIDED, not what it measured about the member.
+  // ⭐ "We chose the cautious posture" is not the same statement as
+  //   "we observed that the member requires the cautious posture."
   fieldWorkSafe: boolean;
-
-  // Routing guidance
   realm: RealmName;
   deepWorkRecommended: boolean;
 
-  // Integration metrics
-  integrationCoverage: number;     // 0-1 (how much of PFI is contributing)
-  signalQuality: number;           // 0-1
+  /**
+   * PFI-REPRESENTATION — why those decisions exist. The router has two meanings
+   * and they must not look identical epistemically:
+   *   'profile_derived'              a cognitive profile was read
+   *   'conservative_policy_default'  no profile; the careful posture was chosen
+   */
+  routingBasis: RoutingBasis;
 
-  // Source tracking
+  /** What GENERATED this state — distinct from what the routing rested on. */
   source: PFISource;
 }
+
+/**
+ * ⛔ DELETED BY PFI-REPRESENTATION (2026-09-09), five with zero consumers and
+ * three that carried no information beyond a boolean:
+ *
+ *   elementalBalance 0.6 · resonanceIndex 0.5 · integrationReadiness ·
+ *   integrationCoverage 0.2/0.8 · signalQuality 0.7/0.75   — never read
+ *   coherenceLevel   fieldWorkSafe ? 0.7 : 0.4             — a boolean in decimals
+ *   reactivityIndex  1 - (fieldWorkSafe ? 0.7 : 0.3)       — the same boolean again
+ *   autonomyRatio    constant 1.0                          — policy, not observation
+ *
+ * ⭐⭐ If a number contains no information beyond a boolean, the boolean is the
+ *     knowledge and the number is presentation.
+ *
+ * ⛔ They are NOT kept as optional placeholders. `resonanceIndex?: number` is a
+ * vacant socket, and a future implementer would quite reasonably fill it.
+ *
+ * ⭐⭐ A future capability is not a present data field. Do not preserve the
+ *     intention of a future signal by requiring the present system to have a
+ *     place to lie about it.
+ *
+ * The design intent is preserved in the programme record (DESIGN-OWED SIGNALS),
+ * not in the executable ontology. A real resonance intelligence will EARN a
+ * field from its evidence; it will not inherit a socket.
+ *
+ * "MAIA retains sovereignty over articulation assistance" remains architectural
+ * policy — it belongs in the constitution, not in a per-turn numeric observation.
+ */
+export type RoutingBasis = 'profile_derived' | 'conservative_policy_default';
 
 /**
  * Conversation Turn - minimal structure for history
@@ -112,15 +152,28 @@ export interface MindContext {
  * - No engagement proxies (session length, time on platform, share intent)
  * - Only canon-relevant scalars
  */
+/**
+ * PFI-REPRESENTATION — telemetry reports DECISIONS AND BASIS, never aliases.
+ *
+ * ⭐ Observation systems are not exempt from truthfulness. Logging
+ * `coherence = 0.7` merely ARCHIVES the fiction instead of giving it to
+ * cognition — a dashboard can launder a hard-coded mapping just as effectively
+ * as a prompt can.
+ *
+ * Preflight census (exact, whole repo, all file types) found only this type, its
+ * emitter, four call sites and one test: no parser, internal or external. The
+ * shape therefore changes directly rather than being versioned.
+ */
 export interface PFITelemetryRecord {
   _tag: 'PFI_TELEMETRY';
   source: PFISource;
   path: 'FAST' | 'CORE' | 'DEEP';
-  autonomyRatio: number;
-  coherenceLevel: number;
-  reactivityIndex: number;
+  routingBasis: RoutingBasis;
   fieldWorkSafe: boolean;
   realm: RealmName;
+  deepWorkRecommended: boolean;
+  /** Whether a real elemental signal reached PFI. Presence, not a fabricated value. */
+  elementalSignal: 'present' | 'absent';
   timestamp: number;
 }
 
@@ -135,18 +188,11 @@ export interface PFITelemetryRecord {
  */
 export function getDefaultMindState(): PFIMindState {
   return {
-    // FIELD-TRUTH-03: no element is asserted by a default posture.
-    elementalBalance: 0.5,
-    coherenceLevel: 0.7,
-    resonanceIndex: 0.5,
-    integrationReadiness: 0.5,
-    reactivityIndex: 0.3,
-    autonomyRatio: 1.0,  // Full autonomy in fallback
+    // ⛔ No element, and no invented numbers. Posture only.
     fieldWorkSafe: true,
     realm: 'MIDDLEWORLD',
     deepWorkRecommended: false,
-    integrationCoverage: 0,
-    signalQuality: 0,
+    routingBasis: 'conservative_policy_default',
     source: 'fallback'
   };
 }

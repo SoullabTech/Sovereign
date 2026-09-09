@@ -1813,7 +1813,21 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const canonHeaders = makeCanonHeaders({
       requestId,
       pipeline: 'sovereign.getMaiaResponse',
-      source: orchestratorResult.processingProfile === 'DEEP' ? 'pfi_full' : 'pfi_legacy',
+      /**
+       * PFI-REPRESENTATION — ⛔ was `processingProfile === 'DEEP' ? 'pfi_full' :
+       * 'pfi_legacy'`. That asserted a PFI integration level in an OUTBOUND
+       * PROVENANCE HEADER on the basis of the processing TIER, having never
+       * consulted PFI at all — a DEEP turn was labelled `pfi_full` whether or not
+       * PFI ran, succeeded, or was even reached.
+       *
+       * ⭐⭐ A requested capability is not an achieved capability — and a tier is
+       *    not a capability at all.
+       *
+       * This header does not describe PFI, so it no longer claims to. ⚠️ What it
+       * SHOULD say is a separate question for the canon-headers owner; `direct`
+       * is the truthful minimum today: the response came from this pipeline.
+       */
+      source: 'direct',
       mode: 'STANDARD',
       validation: orchestratorResult.validation || null,
       repaired: orchestratorResult.regenerated || false,

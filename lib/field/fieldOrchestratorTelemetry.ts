@@ -58,7 +58,20 @@ async function _persistTelemetry(
       ctx.meta.truncated,
       ctx.meta.depth,
       ctx.pfi?.element ?? null,
-      ctx.pfi?.coherence ?? null,
+      /**
+       * PFI-REPRESENTATION — ⛔ was `ctx.pfi?.coherence`, i.e. `fieldWorkSafe ? 0.7
+       * : 0.4` written to a persisted column on every turn. ⭐ Observation systems
+       * are not exempt from truthfulness: a dashboard can launder a hard-coded
+       * mapping just as effectively as a prompt can. It now writes NULL.
+       *
+       * ⚠️ The COLUMN `pfi_coherence` still exists in
+       * database/migrations/20260215210000_field_orchestrator_telemetry.sql and is
+       * owed a migration. Dropping it is a schema act outside this pass; what this
+       * pass can do — and does — is stop adding false rows to it.
+       * ⛔ Historical rows in that column are the old fiction and must not be read
+       * as measurements.
+       */
+      null,
       ctx.pfi?.fieldWorkSafe ?? null,
       ctx.unified?.dominantElement ?? null,
       ctx.unified?.coherenceLevel ?? null,

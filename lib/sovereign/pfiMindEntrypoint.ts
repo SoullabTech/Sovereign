@@ -65,11 +65,11 @@ export function logPFITelemetry(
     _tag: 'PFI_TELEMETRY',
     source: mindState.source,
     path,
-    autonomyRatio: mindState.autonomyRatio,
-    coherenceLevel: mindState.coherenceLevel,
-    reactivityIndex: mindState.reactivityIndex,
+    routingBasis: mindState.routingBasis,
     fieldWorkSafe: mindState.fieldWorkSafe,
     realm: mindState.realm,
+    deepWorkRecommended: mindState.deepWorkRecommended,
+    elementalSignal: mindState.elementalDominance === undefined ? 'absent' : 'present',
     timestamp: Date.now(),
   };
 
@@ -113,35 +113,32 @@ export async function generatePFIMindState(
     // ─────────────────────────────────────────────────────────────
     const useFullIntegration = process.env.MAIA_PFI_FULL_INTEGRATION === 'true';
 
+    /**
+     * PFI-REPRESENTATION — ⛔ the `pfi_full` identity is RETIRED.
+     *
+     * This branch imported two integration modules, USED NEITHER, logged that it
+     * "would integrate 50+ systems", and returned the same routing-derived state
+     * relabelled `pfi_full` with `integrationCoverage: 0.8` instead of `0.2`.
+     * The label and two constants were the only difference.
+     *
+     * ⭐⭐ A requested capability is not an achieved capability.
+     *
+     * The flag may still be REQUESTED; the receipt can say so truthfully. What it
+     * may no longer do is hand cognition an identity claiming an integration that
+     * did not occur. The dead imports go with it.
+     */
     if (useFullIntegration && userId) {
-      try {
-        // Dynamic import to avoid loading heavy modules when not needed
-        const { ElementalFieldIntegration } = await import('../consciousness/field/ElementalFieldIntegration');
-        const { MAIAConsciousnessFieldIntegration } = await import('../consciousness/autonomy/MAIAConsciousnessFieldIntegration');
-
-        // This would wire the full 50+ system integration
-        // For now, we prepare the structure but don't fully wire until tests pass
-        console.log(`🧠 [PFI Full] Would integrate 50+ systems (pending canon drift tests)`);
-
-        // Return PFI-full placeholder (actual integration pending tests)
-        return buildMindStateFromRouting(fieldRouting, element, 'pfi_full', {
-          // Full integration would provide richer values here
-          integrationCoverage: 0.8,
-          signalQuality: 0.75,
-        });
-      } catch (err) {
-        console.warn('⚠️ [PFI Full] Integration failed, falling back to legacy:', err);
-        // Fall through to legacy path
-      }
+      console.log('[field-truth] pfi_full_integration', JSON.stringify({
+        fullIntegrationRequested: true,
+        fullIntegrationAvailable: false,
+        actualSource: 'routing_only',
+      }));
     }
 
     // ─────────────────────────────────────────────────────────────
     // STEP 3: Legacy path (panconscious router only)
     // ─────────────────────────────────────────────────────────────
-    return buildMindStateFromRouting(fieldRouting, element, 'pfi_legacy', {
-      integrationCoverage: 0.2, // Only panconscious router active
-      signalQuality: 0.7,
-    });
+    return buildMindStateFromRouting(fieldRouting, element, 'routing_only');
 
   } catch (err) {
     console.error('❌ [PFI Mind] Critical failure, using fallback:', err);
@@ -160,35 +157,33 @@ function buildMindStateFromRouting(
   routing: FieldRoutingDecision,
   element: string | null | undefined,
   source: PFIMindState['source'],
-  metrics: { integrationCoverage: number; signalQuality: number }
 ): PFIMindState {
   // Derive elemental dominance from context or default
   const elementalDominance = normalizeElement(element);
 
-  // Derive reactivity from routing stability signals
-  // Lower stability = higher reactivity (more hooked/activated)
-  const stabilityScore = routing.fieldWorkSafe ? 0.7 : 0.3;
-  const reactivityIndex = 1 - stabilityScore;
-
-  // Derive coherence from field safety (stable = coherent)
-  const coherenceLevel = routing.fieldWorkSafe ? 0.7 : 0.4;
-
-  // Integration readiness based on deep work recommendation
-  const integrationReadiness = routing.deepWorkRecommended ? 0.8 : 0.5;
-
+  /**
+   * PFI-REPRESENTATION — ⛔ three numeric recodings deleted, not repaired:
+   *
+   *   coherenceLevel      = fieldWorkSafe ? 0.7 : 0.4
+   *   reactivityIndex     = 1 - (fieldWorkSafe ? 0.7 : 0.3)
+   *   integrationReadiness= deepWorkRecommended ? 0.8 : 0.5
+   *
+   * ⭐ They do not become booleans named "coherence". The false CONCEPT
+   * disappears; `fieldWorkSafe` and `deepWorkRecommended` remain because that is
+   * what the system actually decided. Repairing the number while keeping the name
+   * would have preserved the semantic inflation.
+   */
   return {
     elementalDominance,
-    elementalBalance: 0.6, // Placeholder until full integration
-    coherenceLevel,
-    resonanceIndex: 0.5, // Placeholder until full integration
-    integrationReadiness,
-    reactivityIndex,
-    autonomyRatio: 1.0, // MAIA fully sovereign (Claude only assists articulation)
     fieldWorkSafe: routing.fieldWorkSafe,
     realm: routing.realm,
     deepWorkRecommended: routing.deepWorkRecommended,
-    integrationCoverage: metrics.integrationCoverage,
-    signalQuality: metrics.signalQuality,
+    // ⭐ The router has two meanings and they must not look identical: with a
+    // profile these are DERIVED decisions; without one they are the conservative
+    // posture the system CHOSE. `reasoning` names the no-profile case explicitly.
+    routingBasis: routing.reasoning.startsWith('No cognitive profile')
+      ? 'conservative_policy_default'
+      : 'profile_derived',
     source,
   };
 }
@@ -210,17 +205,13 @@ function buildMindStateFromRouting(
  */
 function buildFallbackMindState(): PFIMindState {
   return {
-    elementalBalance: 0.5,
-    coherenceLevel: 0.5,
-    resonanceIndex: 0.5,
-    integrationReadiness: 0.3,
-    reactivityIndex: 0.5,
-    autonomyRatio: 1.0, // Full sovereignty in fallback
-    fieldWorkSafe: false, // Conservative default
+    // ⛔ No elementalDominance: absence of an elemental reading is not Earth.
+    // ⭐ What remains is POSTURE — what the system chooses to do when it cannot
+    // know — never a claim that anything about the member was observed.
+    fieldWorkSafe: false,
     realm: 'MIDDLEWORLD',
     deepWorkRecommended: false,
-    integrationCoverage: 0,
-    signalQuality: 0.3,
+    routingBasis: 'conservative_policy_default',
     source: 'fallback',
   };
 }

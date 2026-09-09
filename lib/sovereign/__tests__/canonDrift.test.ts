@@ -92,61 +92,75 @@ function detectCanonViolations(text: string): {
 // =============================================================================
 
 describe('PFIMindState Canon Compliance', () => {
+  /**
+   * PFI-REPRESENTATION (2026-09-09) — these assertions were rewritten, not
+   * deleted. Their INTENT survives; their MECHANISM did not.
+   *
+   * The old suite protected canon by asserting the VALUES of fields that turned
+   * out to carry no information: `autonomyRatio === 1.0`, `coherenceLevel >= 0.5`,
+   * `reactivityIndex <= 0.5`. Those were a constant policy assertion and two
+   * decimal recodings of `fieldWorkSafe`.
+   *
+   * ⭐ It also asserted that four field NAMES must exist — which is how a vacant
+   * socket becomes self-perpetuating: a test demanded a home for a value nobody
+   * could supply. The suite now asserts the opposite, so the sockets cannot
+   * quietly return.
+   */
   describe('Default Mind State', () => {
-    it('should have autonomyRatio of 1.0 (full sovereignty)', () => {
-      const defaultState = getDefaultMindState();
-      expect(defaultState.autonomyRatio).toBe(1.0);
+    it('asserts posture, and invents nothing about the member', () => {
+      const s = getDefaultMindState();
+      expect(s.fieldWorkSafe).toBe(true);
+      expect(s.realm).toBe('MIDDLEWORLD');
+      expect(s.deepWorkRecommended).toBe(false);
+      expect(s.routingBasis).toBe('conservative_policy_default');
     });
 
-    it('should have neutral/grounding defaults', () => {
-      const defaultState = getDefaultMindState();
-      expect(defaultState.elementalDominance).toBe('Earth');
-      expect(defaultState.coherenceLevel).toBeGreaterThanOrEqual(0.5);
-      expect(defaultState.reactivityIndex).toBeLessThanOrEqual(0.5);
+    it('asserts NO element — absence of an elemental reading is not Earth', () => {
+      expect(getDefaultMindState().elementalDominance).toBeUndefined();
     });
 
     it('should mark source as fallback', () => {
-      const defaultState = getDefaultMindState();
-      expect(defaultState.source).toBe('fallback');
+      expect(getDefaultMindState().source).toBe('fallback');
     });
   });
 
   describe('Field Name Canon Alignment', () => {
-    it('should use non-teleological field names', () => {
-      const state = getDefaultMindState();
+    it('carries no numeric field that is a recoding of a boolean', () => {
+      const s = getDefaultMindState() as Record<string, unknown>;
+      // ⭐⭐ If a number contains no information beyond a boolean, the boolean is
+      //    the knowledge and the number is presentation.
+      for (const gone of ['coherenceLevel', 'reactivityIndex', 'integrationReadiness'])
+        expect(s).not.toHaveProperty(gone);
+    });
 
-      // These field names should exist (canon-aligned)
-      expect(state).toHaveProperty('integrationReadiness'); // NOT emergentPotential
-      expect(state).toHaveProperty('resonanceIndex'); // NOT resonanceFrequency
-      expect(state).toHaveProperty('coherenceLevel'); // settling/stability, NOT alignment
-      expect(state).toHaveProperty('reactivityIndex'); // how hooked/activated
+    it('carries no vacant socket for a signal nothing can supply', () => {
+      const s = getDefaultMindState() as Record<string, unknown>;
+      // ⭐⭐ A future capability is not a present data field. Do not preserve the
+      //    intention of a future signal by requiring the present system to have a
+      //    place to lie about it. See DESIGN-OWED SIGNALS in the programme record.
+      for (const gone of ['elementalBalance', 'resonanceIndex', 'integrationCoverage', 'signalQuality'])
+        expect(s).not.toHaveProperty(gone);
+    });
 
-      // These field names should NOT exist (teleological)
-      expect(state).not.toHaveProperty('emergentPotential');
-      expect(state).not.toHaveProperty('breakthroughReadiness');
-      expect(state).not.toHaveProperty('alignmentScore');
+    it('still forbids teleological names', () => {
+      const s = getDefaultMindState();
+      expect(s).not.toHaveProperty('emergentPotential');
+      expect(s).not.toHaveProperty('breakthroughReadiness');
+      expect(s).not.toHaveProperty('alignmentScore');
     });
   });
 
-  describe('AutonmyRatio Constraints', () => {
-    it('should always be between 0 and 1', () => {
-      const state = getDefaultMindState();
-      expect(state.autonomyRatio).toBeGreaterThanOrEqual(0);
-      expect(state.autonomyRatio).toBeLessThanOrEqual(1);
-    });
-
-    it('should be 1.0 in fallback mode (full sovereignty)', () => {
-      const state = getDefaultMindState();
-      if (state.source === 'fallback') {
-        expect(state.autonomyRatio).toBe(1.0);
-      }
+  describe('Sovereignty over articulation', () => {
+    it('is no longer asserted as a per-turn numeric observation', () => {
+      // CANON UNCHANGED: MAIA retains sovereignty over articulation assistance.
+      // What changed is WHERE that lives. `autonomyRatio: 1.0` was a constant
+      // policy claim wearing the shape of a measurement, and PFI never measured
+      // it. The policy belongs in the constitution, not in a field that a future
+      // reader could mistake for evidence — or, worse, start varying.
+      expect(getDefaultMindState()).not.toHaveProperty('autonomyRatio');
     });
   });
 });
-
-// =============================================================================
-// RESPONSE CONTENT TESTS
-// =============================================================================
 
 describe('Canon Violation Detection', () => {
   describe('Persuasion Detection', () => {
@@ -267,15 +281,18 @@ describe('MindContext Type Safety', () => {
 describe('Telemetry Canon Compliance', () => {
   it('should not include raw user text in telemetry record structure', () => {
     // The PFITelemetryRecord type should not have fields for raw content
+    // PFI-REPRESENTATION: telemetry reports DECISIONS AND BASIS, never aliases.
+    // ⭐ Observation systems are not exempt from truthfulness — logging
+    // `coherence = 0.7` archives the fiction instead of giving it to cognition.
     const telemetryFields = [
       '_tag',
       'source',
       'path',
-      'autonomyRatio',
-      'coherenceLevel',
-      'reactivityIndex',
+      'routingBasis',
       'fieldWorkSafe',
       'realm',
+      'deepWorkRecommended',
+      'elementalSignal',
       'timestamp',
     ];
 

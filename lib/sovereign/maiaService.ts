@@ -2853,7 +2853,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           bloomLevel: (meta as any)?.bloomDetection?.numericLevel ?? null,
         });
         mindContext.pfiMindState = pfiMindState;
-        console.log(`🧠 [PFI Mind] Generated: source=${pfiMindState.source}, realm=${pfiMindState.realm}, autonomy=${pfiMindState.autonomyRatio}`);
+        // PFI-REPRESENTATION: report the decisions and their basis, never a constant
+        // policy assertion dressed as a per-turn measurement (`autonomy=1.0`).
+        console.log(`🧠 [PFI Mind] source=${pfiMindState.source} realm=${pfiMindState.realm} basis=${pfiMindState.routingBasis} element=${pfiMindState.elementalDominance ?? 'absent'}`);
       } catch (err) {
         console.warn('⚠️ [PFI Mind] Generation failed (non-blocking):', err);
         // mindContext.pfiMindState remains undefined - safe fallback

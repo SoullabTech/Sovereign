@@ -53,7 +53,6 @@ export type FieldContext = {
   pfi?: {
     /** FIELD-TRUTH-03 — absent when no elemental signal reached PFI. Never defaulted. */
     element?: string;
-    coherence: number;
     fieldWorkSafe: boolean;
     realm: string;
     deepWorkRecommended: boolean;
@@ -268,7 +267,12 @@ export async function buildFieldContext(
         }
         ctx.pfi = {
           element: pfiState.elementalDominance,
-          coherence: pfiState.coherenceLevel,
+          // ⛔ `coherence: pfiState.coherenceLevel` REMOVED — it was
+          // `fieldWorkSafe ? 0.7 : 0.4`, a boolean wearing a decimal point, and
+          // it was the ONLY numeric alias that reached the prompt.
+          // ⭐⭐ No number may appear in canonical PFI cognition unless changing
+          //    that number could reflect a change in EVIDENCE rather than merely
+          //    a change in a hard-coded mapping.
           fieldWorkSafe: pfiState.fieldWorkSafe,
           realm: pfiState.realm,
           deepWorkRecommended: pfiState.deepWorkRecommended,
