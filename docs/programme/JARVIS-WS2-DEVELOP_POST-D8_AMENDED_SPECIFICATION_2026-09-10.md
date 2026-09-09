@@ -49,11 +49,11 @@ the manuscript                  manuscript / revision state
 
 ```text
 1 DURABLE CREATIVE ORIENTATION
-  writer-authored · Work-level · DORMANT unless invoked
+  writer-AUTHORIZED · Work-level · DORMANT unless invoked
   never displayed unbidden · its APPLICATION is class 3, never class 1
 
 2 PRESENT INQUIRY
-  writer-authored · present authority · BLANK IS COMPLETE
+  writer-AUTHORIZED · present authority · BLANK IS COMPLETE
   may cease without any inferred unfinishedness
 
 3 CURRENT MAIA TURN
@@ -67,6 +67,10 @@ the manuscript                  manuscript / revision state
 5 MANUSCRIPT / REVISION STATE
   canonical · append-only · provenance-bearing
 ```
+
+> ⭐ **RATIFIED 2026-09-10 — `writer-authorized`, not `writer-authored`.** Authorization is a **standing**; authorship is **provenance**. A writer may grant present or durable authority to language MAIA helped formulate without retroactively becoming its sole author.
+>
+> **Precision**: *writer-authorized* describes **the standing**, never the underlying utterance's type. **The substrate still records what was actually said and where it came from.**
 
 **Place is not a sixth class.** It is an **address into class 5**, used as evidence by class 4.
 
