@@ -1,10 +1,22 @@
 # LANE B · B4 — production occupancy witness · **RUN**
 
-> ## ⚠️ PROVISIONAL — founder ruling, 2026-09-09, AFTER this record was written
+> ## ✅ PROVISIONAL STATUS RESOLVED — superseded 2026-09-09, see §7
 >
 > **This record is NOT withdrawn and NOT deleted.** Everything below stands as
-> written and is internally coherent: the run happened, the counts are real, and
-> occupancy is correctly kept apart from attribution.
+> written. The superseding run in §7 has since closed the instrument-subject
+> question, and **B4 is now AUTHORITATIVE**.
+>
+> ```text
+> result                      174,662 rows · 860 sessions
+> database subject qualified  YES — the drift check passed
+> instrument subject proven   YES — by the §7 superseding run
+> verdict                     SUPERSEDED · NOT WITHDRAWN · conclusion UNCHANGED
+> ```
+>
+> The original provisional reasoning is kept verbatim below, because a witness is
+> a reading at a time and the honest repair is to date it, never to edit it.
+>
+> ### The provisional reasoning, as recorded before §7
 >
 > What it cannot establish **retroactively** is its INSTRUMENT subject.
 >
@@ -40,8 +52,8 @@
 > earlier witness. A record that demanded identity would be asking the database
 > to hold still to flatter the instrument.
 >
-> **Until that rerun:** occupancy is **PROVISIONALLY WITNESSED** · B5 is
-> **PREPARATION ONLY, no remediation act** · B3 deploy **HOLD**.
+> *(That paragraph read: until the rerun, occupancy is provisionally witnessed,
+> B5 preparation only, B3 deploy HOLD. **§7 discharged it.**)*
 
 
 **Class A, read-only.** Executed by the founder from the Mac Studio against
@@ -274,3 +286,104 @@ non-zero
   → never read past the refusal or failure
   → this record remains PROVISIONAL
 ```
+
+---
+
+# 7 · ⭐ SUPERSEDING RUN — **AUTHORITATIVE**
+
+Executed by the founder from the Mac Studio, 2026-09-09, through the **amended**
+fail-closed protocol at `288fccab5`, using the pinned launcher and instrument.
+
+```text
+B4 instrument resolved: 8c2343a9866202cfcd5983d50da928eb891693a5:scripts/witness/maia-turns-b4-occupancy.sql (    4517 bytes)
+B4 contacting production now — read-only, ON_ERROR_STOP, ends in ROLLBACK.
+Pager usage is off.
+BEGIN
+SET
+ total_rows | distinct_sessions
+------------+-------------------
+     174662 |               860
+(1 row)
+
+ROLLBACK
+B4 exit=0
+```
+
+## 7.1 · What this run proves that the first one could not
+
+**The instrument subject is now closed, by two independent measurements.**
+
+```text
+this run, Mac Studio, --no-replace-objects     4517 bytes
+independent clone, --no-replace-objects        4517 bytes
+remote chain          commit 8c2343a98 → tree 91e58cdd → blob 674684b74
+```
+
+⭐ Same commit, same extraction discipline, two hosts, identical byte count. A
+local `git replace` ref substituting a different tree is excluded — which is
+precisely what the provisional status was reserving judgement on.
+
+**And the ordering was structural, not merely reported.** The launcher resolved
+the commit, extracted with `--no-replace-objects`, proved the file non-empty, and
+only then contacted production.
+
+## 7.2 · The count is identical — corroboration, not a requirement
+
+```text
+provisional run   174,662 · 860
+superseding run   174,662 · 860
+```
+
+⛔ **Identity was never required** — the outcome law asks only `> 0`, because a
+later observation of a live table is not obliged to match an earlier one. That it
+*did* match is corroborating, and consistent with B1 containment holding: both
+creation paths are closed, so nothing has been adding rows between the two
+readings.
+
+## 7.3 · ⚠️ The false success recurred once more, in the same session
+
+The founder's transcript shows the **old** invocation attempted first, mangled
+again in transit — this time to
+`6dc62f2fc2dd600f2080117a830478282dafc241upancy.sh` — and reporting **`B4
+exit=0`** for a run that never contacted production.
+
+⭐ **So the fourth manifestation was witnessed twice: once in the failure that
+prompted the amendment, and once more immediately before the amended block
+succeeded.** The transport corruption is not a one-off, and the amendment was
+load-bearing rather than tidy-up.
+
+## 7.4 · OUTCOME LAW — applied, no re-litigation
+
+```text
+exit 0 + total_rows > 0
+  → B4 AUTHORITATIVE                        ✅
+  → prior record SUPERSEDED, not deleted    ✅ (kept verbatim above)
+  → B5 FORMALLY OPEN                        🔴
+  → B3 production deployment BLOCKED by historical custody
+```
+
+# 8 · Standing after B4
+
+```text
+B1 containment      ✅ holding — no new rows via either path
+B2 identity design  ✅ ratified
+B3 qualification    ✅ complete locally
+B3 production       ⛔ BLOCKED by B4's result — not merely unauthorized
+B4                  ✅ AUTHORITATIVE · 174,662 rows · 860 sessions
+B5 remediation      🔴 FORMALLY OPEN · not begun · scope is a founder act
+
+historical rows     EXIST · unattributed · unreachable by deletion
+deletion of them    still BLOCKED in production by the expansion_events NO ACTION FK
+restore semantics   live question — the B3 insert gate would refuse ordinary
+                    reinsertion of these historical NULL rows
+Focus disclosure    ⛔ NOT AUTHORIZED — this outranks it
+#1275               frozen @ 18d8c7004
+```
+
+⛔ **No remediation is proposed here, and no attribution is attempted.** 860
+distinct sessions remains a count; joining it to members is the heuristic that
+was ruled out.
+
+---
+
+*The number did not move. What moved is that we can now say why we believe it.*
