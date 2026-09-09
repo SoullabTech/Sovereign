@@ -144,7 +144,8 @@ export type MintOutcome =
   | { readonly kind: 'unavailable' };
 
 /** The single lawful test a caller performs before disclosing. */
-export const mayCross = (o: MintOutcome): boolean => o.kind === 'minted';
+export const mayCross = (o: MintOutcome): o is Extract<MintOutcome, { kind: 'minted' }> =>
+  o.kind === 'minted';
 
 /**
  * PHASE 1 — mint BEFORE the context reaches the cognition boundary.

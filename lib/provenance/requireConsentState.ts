@@ -37,7 +37,9 @@ export type ConsentPreconditionOutcome =
   | { readonly kind: 'unavailable'; readonly reason: string };
 
 /** The single lawful test a caller performs before assembling any context. */
-export const consentEstablished = (o: ConsentPreconditionOutcome): boolean =>
+export const consentEstablished = (
+  o: ConsentPreconditionOutcome,
+): o is Extract<ConsentPreconditionOutcome, { kind: 'ready' | 'existing_exact' }> =>
   o.kind === 'ready' || o.kind === 'existing_exact';
 
 /**
