@@ -57,13 +57,32 @@ export interface FieldRoomProps {
    * into the conversation. Absent when the writer holds no focus — the strip is
    * never a permanent band, because a band that is always there is chrome.
    */
-  focus?: React.ReactNode;
+  focus?: (api: { openMaia: () => void }) => React.ReactNode;
+  /**
+   * Attached to the element containing the Work, so the room can hear the
+   * writer's own selection acts without the substrate being modified to
+   * announce them.
+   */
+  workRef?: (node: HTMLElement | null) => void;
+  /**
+   * Which section shells currently carry part of the held focus.
+   *
+   * ⚠️ SECTION-LEVEL PAINT, AND SAID SO. The prototype highlighted the exact
+   * characters, using an API that addresses DOM text nodes; the substrate
+   * renders each editable section as a <textarea>, whose value is not such a
+   * node. Painting inside it would mean an overlay mirror, which means a seam
+   * in the preserved component — a separate decision, not one to take by
+   * reflex here. So the mark says WHICH SECTIONS the focus covers, and the
+   * strip says exactly what is held. The focus MODEL is character-exact
+   * regardless; only this mark is coarse.
+   */
+  focusedSectionIds?: string[];
   title: string;
   note?: string | null;
 }
 
 export default function FieldRoom({
-  treatment, work, structure, maia, workbench, focus, title, note,
+  treatment, work, structure, maia, workbench, focus, workRef, focusedSectionIds, title, note,
 }: FieldRoomProps) {
   /**
    * ⭐ ARRIVAL IS THE QUIET ROOM. Nothing is read from storage and nothing is
@@ -80,6 +99,11 @@ export default function FieldRoom({
 
   const a = useMemo(() => aperture(open), [open]);
   const strip = useMemo(() => stripBox(open), [open]);
+  /* The one gesture that opens her. Handed to the strip rather than performed
+     by it, so the room stays the only thing that decides where a capability
+     sits. */
+  const openMaia = useCallback(() => setOpen((o) => ({ ...o, maia: true })), []);
+  const focusNode = focus ? focus({ openMaia }) : null;
   const boundary = sectionBoundary(t);
   const focusMark = resolve(t, 'focus');
   const locationMark = resolve(t, 'location');
@@ -166,6 +190,7 @@ export default function FieldRoom({
         </header>
 
         <main
+          ref={workRef}
           data-field-work
           style={{
             flex: 1, minHeight: 0, minWidth: 0,
@@ -180,6 +205,15 @@ export default function FieldRoom({
             ['--field-location-color' as string]: locationMark.color,
           }}
         >
+          {/* The focus mark, drawn on the section shells the focus covers.
+              Scoped to this room so nothing outside it can be reached. */}
+          {focusedSectionIds && focusedSectionIds.length > 0 && (
+            <style>{focusedSectionIds.map((id) => (
+              `[data-field-room] [data-whole-manuscript-section="${id}"]{` +
+              `box-shadow:inset ${Math.max(focusMark.weight, 2)}px 0 0 ${focusMark.color};` +
+              `border-radius:2px}`
+            )).join('')}</style>
+          )}
           {work}
         </main>
       </div>
@@ -237,7 +271,7 @@ export default function FieldRoom({
           SAME attention carried into the conversation. Two manifestations of
           one thing, so they share the focus mark — and it stops where the Work
           stops, because it belongs to the Work and not to the building. */}
-      {focus && (
+      {focusNode && (
         <div
           data-field-focus-strip
           style={{
@@ -250,7 +284,7 @@ export default function FieldRoom({
             borderLeft: `${Math.max(focusMark.weight, 2)}px solid ${focusMark.color}`,
             paddingLeft: SPACE.base, minWidth: 0,
           }}>
-            {focus}
+            {focusNode}
           </div>
         </div>
       )}
