@@ -1,0 +1,24 @@
+import { chromium } from 'playwright';
+const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell'});
+const p=await b.newPage({viewport:{width:1440,height:900}});
+await p.goto('file://'+process.cwd()+'/ch4-working.html'); await p.waitForTimeout(300);
+const nComposers=()=>p.locator('#composer').count();
+const where=()=>p.evaluate(()=>document.getElementById('composer').parentElement.id||'body');
+const ok=(n,v)=>console.log(`${v?'PASS':'FAIL'}  ${n}`);
+ok('exactly one composer exists', await nComposers()===1);
+ok('MAIA closed → composer at the bottom', await where()==='body');
+await p.locator('#s7 h2').scrollIntoViewIfNeeded(); await p.locator('#s7 h2').click(); await p.waitForTimeout(220);
+ok('focus strip visible with the Work', await p.locator('#focusbar').isVisible());
+await p.locator('#ask').click(); await p.waitForTimeout(300);
+ok('Ask MAIA opens the MAIA orbit', await p.locator('#maiaPanel').isVisible());
+ok('composer MOVED into the orbit', await where()==='maiaPanel');
+ok('still exactly one composer', await nComposers()===1);
+ok('no second field at the bottom',
+   await p.evaluate(()=>{const c=document.getElementById('composer').getBoundingClientRect();
+     const f=document.getElementById('focusbar').getBoundingClientRect();
+     return c.left>f.right-2 || c.bottom<f.top+2;}));
+ok('MAIA engaged in the orbit', /first read of|Starting from/.test(await p.locator('#say').innerText()));
+await p.locator('#maiaPanel .x').click(); await p.waitForTimeout(250);
+ok('close MAIA → composer returns to the bottom', await where()==='body');
+ok('focus survives closing MAIA', await p.locator('#focusbar').isVisible());
+await b.close();

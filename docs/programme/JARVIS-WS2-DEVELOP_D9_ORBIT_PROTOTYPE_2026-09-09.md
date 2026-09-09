@@ -1014,3 +1014,118 @@ to understand.**
 > of engagement. Whether MAIA can meet a writer intellectually is not testable here at all.**
 
 ⛔ **Everything else remains frozen.**
+
+---
+
+# 21 · ⭐ THE RELATIONAL GRAMMAR — three more defects, repaired
+
+**Founder witness and rulings, 2026-09-09.**
+
+## 21.1 · Ask MAIA was a selection popup, not part of the contract
+
+⛔ **It appeared only after a particular mouse gesture and vanished incidentally.** ⭐ **It carries a
+distinct meaning — *"I have placed my attention here. Come look with me."*** — and must therefore be
+**a deterministic consequence of attention, never of the browser.**
+
+> ⭐⭐ **New attention re-arms the invitation. Conversation consumes it.**
+
+```text
+⛔ NOTHING ELSE CONTROLS IT
+   browser selection · hover · mouse position · timers ·
+   keyboard focus · MAIA judging the selection "important"
+```
+
+**Implemented as the founder's generation model** — `focusGeneration` / `encounterGeneration`,
+armed on every establish and on **dragend** (⛔ no churn mid-drag), consumed by invoking it or by the
+writer simply beginning. **Nine-step acceptance case passes** —
+`scripts/witness/d9-askcontract.mjs`, including *no timers, no hover dependency*.
+
+## 21.2 · The focus strip whispered what it should state
+
+⛔ ***`PASSAGE "Ancient Insights…"`* read like metadata.** ⭐ **It is the writer's own attention,
+carried into the conversation.**
+
+```text
+FOCUS · SECTIONS 7–8
+Ancient Insights Meet Modern Science — "What we forget…"
+```
+
+**Larger type (15.2px → 17.9px), the frame's own gold, manuscript serif for the excerpt, quiet
+controls to the right, and clicking it scrolls back to what was framed.** ⭐ **Frame and strip now
+read as two manifestations of one thing — F-SCOPE expressed through form rather than explanation.**
+
+## 21.3 🔴 TWO COMPOSERS — the writer could not tell which was the real conversation
+
+**Witnessed: a MAIA panel on the right AND a second field at the bottom.**
+
+> ⭐⭐ **Ask MAIA belongs with MAIA. The Focus belongs with the Work.**
+
+```text
+MAIA CLOSED   composer sits at the bottom · Ask MAIA beside the frame
+ASK MAIA      opens the orbit · the exchange moves INTO it
+MAIA OPEN     ⛔ no duplicate composer · the strip stays with the Work
+              and stops at the panel edge
+MAIA CLOSED   composer returns · focus survives unless released
+```
+
+⭐ **There is exactly ONE composer element in the document; it is relocated, never duplicated** —
+verified as an invariant (`scripts/witness/d9-one.mjs`).
+
+## 21.4 · On having both Ask MAIA and a composer — ⭐ NOT a defect
+
+**Founder's own earlier ruling answers it**: *Ask MAIA means "tell me what you see here." The
+composer means you arrive with your own intention.* ⭐ **Two lawful doors into the same frame.**
+**They coexist only before the encounter begins; the first turn consumes the invitation**, so the
+room never asks two questions at once.
+
+---
+
+# 22 · ⛔ AUTHORIZED AND NOT YET BUILT
+
+**Recorded so they are not lost, and deliberately NOT built in the same step as the layout change —
+compounding unverified changes is how the last three defects reached the founder.**
+
+## 22.1 · PRIMARY FOCUS + RELATED FOCUS — non-contiguous attention
+
+⭐ **The single-range constraint recorded in §12 is now superseded by a witnessed need**: *"look at
+this paragraph in Chapter 2, this section in Chapter 7, and this passage near the ending — I think
+they are doing the same thing."*
+
+```text
+PRIMARY   the current centre, full gold frame
+RELATED   lighter gold bracket, added by a quiet "+ Add to focus"
+          ⛔ no multi-select mode · no checklist · no menu
+```
+
+> ⭐ **A frame says "I am here." Adding another passage says "this is also part of what I mean."**
+
+⚠️ **Everything MAIA treats as writer-chosen focus must remain perceptible — F-SCOPE governs the
+whole set, not only the primary.**
+
+## 22.2 · "WORK WITH THIS" — MAIA's observation becomes material
+
+⛔ **Ask MAIA currently ENDS in an analysis. It should BEGIN an encounter.**
+
+```text
+ASK MAIA → MAIA offers a reading
+writer selects part of her response → "Work with this"
+→ Work Focus stays visible · her insight becomes the active thread
+→ explore · question · compare · experiment · revise
+→ MAIA may propose; the writer decides what enters the Work
+```
+
+⛔ **NOT `Apply · Rewrite · Fix · Accept · Reject · Expand · Improve`** — *that turns relational
+inquiry back into an AI editing menu.*
+
+⭐ **And her references to places in the Work can be live**: clicking one scrolls there and shows it
+temporarily; **it does NOT silently join the focus.** *"Add to focus"* remains the writer's act.
+
+> ⭐⭐ **MAIA may show you where she is looking. You decide whether to look there with her.**
+
+**The grammar, complete:**
+
+```text
+FOCUS            tells MAIA what you are attending to
+ASK MAIA         invites her perception
+WORK WITH THIS   tells her which of her perceptions to develop together
+```
