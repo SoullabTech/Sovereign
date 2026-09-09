@@ -82,6 +82,75 @@ any FAIL        -> AMEND from the observed failure -> D9 stays closed
 
 ⛔ **The prototype does not become canonical by passing.** It is evidence for the architecture, never the implementation of it.
 
+---
+
+## ⛔ What a PASS here does and does not license
+
+> **The instrument closes the felt-interaction evidence only. It does not certify the later implementation.**
+
+```text
+A PASS MEANS      the architecture has BOTH its structural case
+                  and its missing human-experience evidence
+A PASS DOES NOT   prove a production implementation preserves selective
+   PROVE          history, atomic provenance, or North-Star input-path
+                  dormancy
+```
+
+```text
+structural walk PASS + throwaway felt witness PASS
+   -> ADOPT architecture
+   -> D9: write the Experience Contract FROM proven experience
+   -> later implementation
+   -> implementation must INDEPENDENTLY prove the architectural invariants
+```
+
+### ⚠️ Forward hazard — register the implementation gates against the falsifiers, not the contract
+
+Once D9's Experience Contract exists, an implementation will naturally be judged **against the contract**. But **the contract describes the experience; the eleven falsifiers describe the architecture.**
+
+⭐ **An implementation could satisfy the contract's description of how it feels while violating an invariant underneath** — passing the wrong test. **The implementation acceptance set must be the eleven falsifiers, derived independently of D9's prose.** *(This is the same inversion of authority the post-D8 gate was created to prevent, arriving one stage later.)*
+
+---
+
+## The felt-witness protocol
+
+**Use the instrument as a writer, not as its designer.** Run the interactions, actually edit the text, and answer the three questions **only afterward.**
+
+```text
+M2   "That matters. I want to come back to it later."  -> immediately keep writing
+     WATCH THE RESIDUE: did anything in you feel a pending obligation had
+     been created?
+
+M3   "What was that thing about the chapter turning from story into system?"
+     WATCH THE RETRIEVAL: did it feel like remembering together, or did you
+     become aware of querying a memory mechanism?
+
+M4   write for a while without mentioning orientation, then:
+     "Read this against what I said I wanted to protect."
+     WATCH BOTH HALVES: was the orientation genuinely absent before you asked,
+     and once invoked did it feel like support rather than a rubric?
+```
+
+⛔ **Do not score criterion 11 separately** — it reveals itself through the same use.
+
+⭐ **If a thought like *"do I need to save this?" · "where did that go?" · "is this still active?" · "how do I get back to that?"* arises, write it down verbatim.** A rating compresses; **the exact wording identifies which leak.** And per the ruling, **the exact felt failure — not the prior specification — owns the next amendment**, so the verbatim thought is the amendment's source material.
+
+### ⚠️ One instrument artifact not to misread
+
+**The instrument has no persistence. A reload loses everything.** ⛔ **Do not read a reload as evidence about M3** — that amnesia is a build limit of the throwaway, not the architecture's behaviour. **M3's felt question is about the grammar of return within a working session.**
+
+---
+
+```text
+THEORY       exhausted
+STRUCTURE    passed
+INSTRUMENT   exists
+NEXT ACT     use it
+
+all three PASS  -> no remaining reason to withhold ADOPT
+any FAIL        -> the exact felt failure owns the next amendment
+```
+
 ```text
 PRODUCTION · SCHEMA · ROUTES · MIGRATIONS   UNTOUCHED
 ADOPT                                        WITHHELD
