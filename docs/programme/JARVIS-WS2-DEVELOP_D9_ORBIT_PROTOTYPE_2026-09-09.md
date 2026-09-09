@@ -1776,3 +1776,118 @@ everywhere."**
 `MAIA · Writer` is NOT authorized for build.** Sanctuary's memory posture, Co-Lab's facilitation and
 Shadow & Gold's non-treatment boundary each carry their own ratified law, and a role contract that
 touched them would be adjudicating those lanes from this one.
+
+---
+
+# 30 · STEP 3 — HARNESS BOUNDARY · AUTHORIZED AND BUILT
+
+> ⭐⭐ **Bring the real MAIA into the proven room without changing either the room or who MAIA is.**
+
+⭐ **The harness is production-hosted and founder-gated**, because a local or Claude-hosted harness
+can prove UI but **cannot prove real continuity**. Only inside Soullab's authenticated member
+boundary, against the real memory substrate, does the MAIA who actually knows the member arrive.
+
+## 30.1 ⭐ THE AUTHORIZATION (founder, 2026-09-09)
+
+```text
+Harness page   /writers-studio/lab/maia          experimental status visible in the URL
+Server gate    WRITERS_STUDIO_MAIA_HARNESS_ENABLED=true   default false · server-side only
+Identity gate  verified session AND founder/admin authorization · fail closed
+Cognition      existing canonical sovereign MAIA · no parallel Writer-MAIA · no fixture
+Writer context typed top-level object · validated at the HTTP boundary ·
+               enters via the canonical-turn producer registry · NEVER via untyped meta
+Authority      cognition / read / propose only · no manuscript mutation ·
+               no durable Writer-role memory
+Observability  founder-only cognition receipt · actual/derived/unavailable ·
+               explicit grader-contamination check
+DO NOT         port into production Writer's Studio · broaden the role taxonomy ·
+               claim full Unified Field · expose the §26 exemplar to cognition
+```
+
+> ⭐⭐ **The environment authorizes the experiment. The authenticated member determines whose MAIA
+> arrives.** *That is what stops the harness from becoming a route into someone else's memory.*
+
+**Cognition-only authority.** She may read the Work, receive Focus, consult whole-Work context,
+remember the member, use lawful elemental and field intelligence, converse, propose, compare and
+develop an observation. ⛔ **This lane does not newly authorize** silently altering manuscript text ·
+applying revisions · creating standing commissions · persisting Writer-role state · promoting
+observations to memory. **Existing ordinary MAIA memory rules still operate where already lawful —
+the harness must not invent a new Writer-memory writer just because cognition became real.**
+
+## 30.2 · Built in this step
+
+| | |
+|---|---|
+| `lib/writers-studio/harnessAccess.ts` | both gates, fail-closed, **one failure shape** |
+| `lib/writers-studio/harnessContext.ts` | the typed `WriterStudioContext` and its boundary validator |
+| `app/writers-studio/lab/maia/layout.tsx` | route gate → `notFound()` |
+| `app/writers-studio/lab/maia/page.tsx` | ⛔ **boundary only** — the room is not ported, no cognition is wired |
+| `lib/writers-studio/__tests__/harnessBoundary.test.ts` | the falsifiers below |
+
+⚠️ **The gate deliberately diverges from the existing founder-page precedent.**
+`app/book-studio/workbench/layout.tsx` redirects `401 → /signin` and renders a `FounderGateScreen` on
+`403`. **Both disclose that the surface exists.** The harness returns `notFound()` for *every*
+failure — environment off, no session, wrong member — so the three are **indistinguishable to the
+caller**. A test asserts that equality, because the divergence is the point and a later "alignment"
+with the precedent would silently undo it.
+
+⛔ **The page re-checks access even though its layout already gated it.** A layout is not an
+authorization boundary for anything but rendering; this is the same confusion `C22` guards in the
+Circles lane, and it is the shape of `B-01`.
+
+**Falsifiers now standing:** the flag is off for `false`/`TRUE`/`1`/`yes`/empty and when absent ·
+identity is **not consulted at all** when the environment refuses · the flag has no `NEXT_PUBLIC_`
+form · `401`, `403` and environment-off return byte-identical results · every identity key
+(`userId`, `memberId`, `email`, `sessionId`, …) is **refused rather than ignored** · every prompt
+channel (`meta`, `studioAddendum`, `systemPrompt`, `prompt`, `instructions`) is refused · an
+undeclared field is refused rather than dropped · identity nested inside `focus` is refused · an
+oversized Work is refused rather than silently truncated.
+
+⭐ **Refusal rather than silent ignoring is the load-bearing choice.** A dropped key is invisible; a
+refused key is visible in tests and logs. **A later refactor that starts reading unknown keys would
+quietly re-open identity spoofing or the `meta` channel — the refusal is what makes that impossible
+to do by accident.**
+
+## 30.3 ⭐ THE CONTRACT IS A SHAPE, NOT A STRING
+
+```ts
+writerStudioContext: {
+  workId · focus{scale,label,text,sectionIds} · localContext ·
+  structuralPosition{sectionId,index,total,heading,preceding,following} ·
+  wholeWork[] · conversationThread[] · pursuit · commission
+}
+```
+
+⛔ **No field on it can be appended to a prompt as-is**, and a test asserts the exact key set.
+Turning it into prompt material is the **producers'** job, under the registry's three axes. **The
+Work remains context and never implicitly instruction** — text in the Work cannot acquire control
+authority merely because MAIA read it.
+
+⭐ `focus.label` is **exactly what the writer's focus strip says**, so MAIA cannot name the focus
+differently from the room — the same law the prototype enforces between its strip and her prose.
+
+## 30.4 ⚠️ WHAT THE CENSUS FOUND THAT THE DESIGN MUST ANSWER
+
+`lib/maia/canonical-turn/producerRegistry.ts` is the right seam and it is **stricter than the
+authorization assumed**. Every entry declares `authoredBy · participationClass · authority`,
+`provenance`, `consentBasis`, `requires`, `rooms`, `mandatory`, `scope`, and a dated
+`registeredBy` + `reason` — and its own convention states: ***adding an entry to silence a failure is
+the wrong action.***
+
+🔴 **`RoomKind` is a CLOSED union** — `sovereign_chat · between · now_what · vision_studio ·
+living_field · relational_navigation`. **Writer's Studio is not in it.** A producer absent from a
+room is `EXCLUDED not_registered_for_room`, so **the writer producers cannot be registered at all
+until a `writers_studio` room exists**, and adding a `RoomKind` decides which *existing* producers
+may enter this room — member continuity, developmental memory, symbolic context and the rest.
+
+⛔ **That is a room-policy decision, not plumbing, and it is not authorized here.** It is the first
+substantive design question of step 4, and it is exactly where §29's discernment membrane becomes
+code: *what from the whole MAIA organism belongs here, now, in service of this field?* **Recorded,
+not decided.**
+
+## 30.5 ⛔ NOT DONE
+
+The room is **not** ported · `writerStudioContext` is **not** yet carried on the sovereign request ·
+**no** producers are registered · **no** `writers_studio` room exists · the cognition receipt is
+**not** built · the fixture responder is untouched (it lives in the artifact, not in Sovereign) ·
+production Writer's Studio is **untouched**.
