@@ -1,7 +1,14 @@
 # FOCUS DISCLOSURE RECEIPT — minimal contract
 
-**2026-09-09 · STEP 5, DESIGN ONLY.** No migration authored. No implementation.
-No `#1275` wiring. The DDL sketch in §6 is illustrative and is **not** a migration.
+**2026-09-09 · STEP 5 — RATIFIED** (founder, same day, with four amendments and
+one tightening, recorded inline below and marked ⚖️). `#1275` remains frozen until
+the substrate exists **and** the Writer's Studio surface carries the visible
+Focus-withheld behaviour of §3a.
+
+> ⚖️ **THE IMPLEMENTATION GATE**
+> *MAIA may see the writer's Focus only when the writer authorized the crossing,
+> the system can account for it, and the writer can tell whether the crossing
+> actually happened.*
 
 > **Disclosure without accountability is not authorized. Accountability without a
 > disclosure must never pretend that one occurred.**
@@ -45,7 +52,7 @@ table comment, and no reader may read it as absence. *Unknown stays unknown.*
 
 **Immutability is monotonic, not frozen.** Every identifying field is fixed at
 mint; only `state` may advance, once, in one direction. A trigger permits exactly
-`attempted → crossed` (and `attempted → withheld`, §3) and refuses every other
+`attempted → crossed` (§3 — and no other target state exists in v1) and refuses every other
 UPDATE — no reversal, no rescope, no re-attempt. This is the
 `runtime_consent_state` immutability pattern widened by exactly one lawful
 transition, and no more.
@@ -55,19 +62,53 @@ Retry of the mint is `ON CONFLICT DO NOTHING`; retry of the confirm is a no-op
 when already `crossed`. ⛔ A retry can therefore neither duplicate a crossing nor
 contradict a recorded one.
 
-## 3 · `withheld` — recommended, with its risk named
+## 3 · ⚖️ `withheld` — **OUT for v1** (amendment 1)
 
-A third terminal state for *"minted, then deliberately not disclosed"* (cognition
-refused, tier fell back, the writer moved on). Without it, every such case decays
-into `attempted` and the unresolved-crossing signal drowns in noise — the anomaly
-must stay rare to stay meaningful.
+v1 has two states and no third:
 
-⛔ **Its risk, stated plainly:** `withheld` is a way to be wrong. A bug on a path
-that *did* reach the boundary would record a non-crossing. It is therefore
-writable **only from a path that provably did not reach cognition**, never as a
-catch-all for an error whose position is unknown — an error of unknown position
-must leave the row `attempted`. **Founder adjudication owed**: include `withheld`,
-or accept a noisier `attempted`.
+```text
+attempted  = receipt minted; crossing not conclusively recorded
+crossed    = crossing conclusively recorded
+```
+
+A `withheld` state would assert *"did not cross"* — a negative **the database
+cannot prove**. If mint succeeds and something aborts before cognition, the row
+stays `attempted`. Conservative, and true.
+
+> ⚖️ **Unknown may be noisy. False certainty is worse.**
+
+⛔ `withheld` may be added later **only** if the boundary architecture yields a
+*structural* proof of non-crossing — never on an application branch that merely
+says so. The trigger's lawful transition set is therefore exactly
+`attempted → crossed`, and nothing else.
+
+## 3a · ⚖️ The writer must know when Focus was not disclosed (amendment 3 — MANDATORY)
+
+An explicitly Focus-scoped act — *Ask MAIA* while the writer has placed attention
+on a passage — **may not be silently downgraded into an ordinary MAIA question.**
+
+```text
+mint fails
+   ↓
+Focus is NOT disclosed
+Focus-scoped cognition does NOT run
+the writer is TOLD what happened
+ordinary conversation remains available
+```
+
+Copy of the shape the founder gave:
+
+> *I couldn't bring this Focus into MAIA just now. Nothing from the passage was
+> sent. You can try again or continue without Focus.*
+
+Three truths preserved at once: the writer knows MAIA did not see the passage;
+the platform does not imply the answer is about it; the conversation stays usable.
+
+> ⚖️ **A scoped request may fail visibly. It may not succeed under a different
+> scope without the writer knowing.**
+
+⛔ This is a law bound to the **surface**, not to the table. The substrate lane
+does not discharge it, and `#1275` stays frozen until the surface carries it.
 
 ## 4 · Shape — admitted, and refused
 
@@ -80,14 +121,13 @@ writer selected, the receipt contains too much.*
 |---|---|
 | `disclosure_id` | opaque idempotency key |
 | `member_id` | required for governed deletion (§5) |
-| `encounter_ref` | which encounter the crossing served |
-| `request_ref` | joins to `runtime_consent_state`. ⭐ The posture is **referenced, never copied** — three truths, three authorities. |
+| `request_ref` | ⚖️ **the temporal anchor** (amendment 4). The disclosure occurs *within the serving request*, whether or not a conversation turn is ever persisted. Also joins to `runtime_consent_state` — the posture is **referenced, never copied**: three truths, three authorities. |
 | `boundary` | closed vocabulary, e.g. `writers_studio.focus → maia_cognition` |
 | `work_ref` | the Work's identity — authored, not derived from the selection |
 | `scope_kind` | closed: `whole_work \| section \| passage` — the **shape** of the selection, not its location |
 | `section_ref` | ⭐ **only when `scope_kind = 'section'`**, where the reference *is* the disclosure. For `passage`, omitted — see below. |
-| `initiated_by` + `gesture` | `member` / `system` and the gesture kind — distinguishes a member's selecting act from a system assembly. The gesture kind, never its content. |
-| `state`, `attempted_at`, `crossed_at` | the crossing itself |
+| `authorized_by` + `gesture` | ⚖️ **`member` is the only v1 value** (tightening). Closed gesture vocabulary; the gesture kind, never its content. |
+| `state`, `attempted_at`, `crossed_at` | the crossing itself — two states only (§3) |
 | `policy_version` | which disclosure contract governed |
 
 **REFUSED — each is a surrogate copy or a locator**
@@ -110,8 +150,17 @@ helpful, so the falsifier excludes it. What auditing a crossing actually require
 is: **that** it occurred, **when**, across **which** boundary, from **which**
 Work, at what **scope kind**, under which **policy**, and by **whose act** — never
 what the passage said. ⚠️ The cost is real and should be stated rather than
-smoothed over: an audit of a passage disclosure cannot identify the passage. That
-is the intended trade, and the founder may rule otherwise.
+smoothed over: an audit of a passage disclosure cannot identify the passage.
+
+⚖️ **Ruled (amendment 2): keep it out.** That limitation is not a defect in the
+audit trail — it states what this receipt exists to prove:
+
+> ⚖️ **The receipt proves the governed crossing, not the identity of the content
+> that crossed.**
+
+⛔ If forensic reconstruction of an exact passage is ever needed, that is a
+different custody system with a different threat model. **We do not quietly turn
+this receipt into it.**
 
 ## 5 · Custody — stated, never inherited
 
@@ -141,40 +190,47 @@ immutable at mint with one lawful forward transition; no automatic pruning;
 deliberately deleted with the member's account; restores honour manifests and
 tombstones; `attempted` means unresolved, never absent.*
 
-## 6 · Illustrative shape — ⛔ NOT A MIGRATION, NOT AUTHORIZED
+## 6 · ⚖️ Ratified shape — the substrate lane implements this
 
 ```sql
--- SKETCH. No migration file is authored by this step.
 focus_disclosure_receipts(
-  id uuid pk, disclosure_id text UNIQUE NOT NULL,
-  member_id text NOT NULL, encounter_ref text NOT NULL, request_ref text,
-  boundary text NOT NULL CHECK (boundary IN (...)),
-  work_ref text NOT NULL,
+  id uuid pk,
+  disclosure_id text UNIQUE NOT NULL,
+  member_id  text NOT NULL,
+  request_ref text NOT NULL,              -- temporal anchor; joins runtime_consent_state
+  boundary   text NOT NULL CHECK (boundary IN (...)),
+  work_ref   text NOT NULL,
   scope_kind text NOT NULL CHECK (scope_kind IN ('whole_work','section','passage')),
   section_ref text CHECK (section_ref IS NULL OR scope_kind = 'section'),
-  initiated_by text NOT NULL CHECK (initiated_by IN ('member','system')),
-  gesture text NOT NULL, policy_version text NOT NULL,
-  state text NOT NULL CHECK (state IN ('attempted','crossed','withheld')),
-  attempted_at timestamptz NOT NULL DEFAULT now(), resolved_at timestamptz,
-  CHECK ((state = 'attempted') = (resolved_at IS NULL))
+  authorized_by text NOT NULL CHECK (authorized_by = 'member'),   -- v1: member only
+  gesture    text NOT NULL CHECK (gesture IN (...)),
+  policy_version text NOT NULL,
+  state      text NOT NULL CHECK (state IN ('attempted','crossed')),
+  attempted_at timestamptz NOT NULL DEFAULT now(),
+  crossed_at   timestamptz,
+  CHECK ((state = 'crossed') = (crossed_at IS NOT NULL))
 )
--- + trigger: identifying fields immutable; state may advance only
---   attempted → crossed | withheld; every other UPDATE refused.
+-- + trigger: every identifying field immutable at mint; the ONLY lawful UPDATE is
+--   attempted → crossed. Every other UPDATE, and every DELETE outside governed
+--   custody, is refused.
 ```
 
-## 7 · Owed before implementation opens
+⛔ **Still refused**: passage text · summary · embedding · hash or fingerprint ·
+offsets · length · geometry · a passage-level `section_ref`.
 
-1. **`withheld`: in or out** (§3) — a rarer, more meaningful anomaly versus one
-   fewer way to record a falsehood.
-2. **`section_ref` on a passage disclosure** (§4) — the audit cost is real.
-3. ⭐ **Does the writer learn that their Focus was withheld?** A mint failure
-   leaves MAIA answering *as though she had not been given the passage* — which
-   she was not. ⛔ But if the writer is not told, they will read her answer as a
-   response to the passage. **That is an interface-humility defect, not a storage
-   question**, and it belongs to the Writer's Studio surface, not to this table.
-4. Whether `encounter_ref` may reference a `conversation_turns.id` at all, given
-   that turn rows are pruned by age while receipts are not — **a dangling
-   reference is honest; a resurrected one would not be.**
+⛔ **Gone from the draft**: `encounter_ref` (amendment 4) and
+`initiated_by = 'system'` (tightening).
 
-**Standing: Step 5 DESIGN DRAFTED · not ratified · no migration · no
-implementation · `#1275` frozen.**
+## 7 · ⚖️ Amendments ruled — what is closed, what is bound elsewhere
+
+| # | Question the draft raised | Ruling |
+|---|---|---|
+| 1 | `withheld` in or out | **OUT for v1.** Unknown may be noisy; false certainty is worse. |
+| 2 | `section_ref` on a passage disclosure | **OUT.** The receipt proves the crossing, not the identity of what crossed. |
+| 3 | Does the writer learn Focus was withheld | **MANDATORY, §3a** — bound to the surface, not this table. |
+| 4 | `encounter_ref` → a prunable turn row | **REMOVED.** *Do not make durable audit identity depend on a routinely pruned content object.* `request_ref` is the cleaner anchor. If a first-class encounter object emerges, add its reference then — do not invent one to fill a field. |
+| ⚖️ | `initiated_by = 'system'` | **REMOVED.** Visible Focus is writer-owned. **The system may assemble what the member authorized. Assembly is not authorization.** A lawful ambient Work-context policy, if it ever exists, is its own authority class — not an enum value available from day one. |
+
+**Standing: Step 5 RATIFIED · substrate lane OPEN (migration + triggers + store +
+custody tests first) · Writer's Studio surface owes §3a · `#1275` FROZEN until
+both exist.**
