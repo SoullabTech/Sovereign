@@ -234,3 +234,41 @@ offsets · length · geometry · a passage-level `section_ref`.
 **Standing: Step 5 RATIFIED · substrate lane OPEN (migration + triggers + store +
 custody tests first) · Writer's Studio surface owes §3a · `#1275` FROZEN until
 both exist.**
+
+---
+
+## 8 · Substrate lane — IMPLEMENTED (2026-09-09)
+
+| Artifact | |
+|---|---|
+| `database/migrations/20260909000001_focus_disclosure_receipts.sql` | table · CHECKs · two indexes (one being the unresolved-crossing anomaly query) · `focus_disclosure_receipt_monotonic()` trigger · lifecycle stated in the table comment |
+| `lib/writers-studio/disclosure/focusDisclosureReceipt.ts` | `mintDisclosureAttempt` (fail-closed) · `confirmDisclosureCrossed` (idempotent, loud on failure) · `unresolvedCrossings` |
+| `app/api/members/delete-account/route.ts` | the table named in `GOVERNED_CONTENT`, label *"records of when your writing was shown to MAIA"* |
+| `lib/writers-studio/disclosure/__tests__/focusDisclosureReceipt.test.ts` | 29 falsifiers, F1–F5 |
+
+⭐ The store carries a `RefusedReceiptField` type naming every field that has ever
+turned a receipt into a shadow copy, so a caller reaching for one is refused at
+compile time rather than in review.
+
+⭐ `mintDisclosureAttempt` refuses a `sectionRef` on a passage scope **in the
+application as well as at the CHECK** — a caller passing it is holding a locator,
+and the honest response is to refuse the disclosure, not to drop the field and
+proceed.
+
+**Gates:** `typecheck` 228 vs baseline 239 · 0 regressions · `check:no-supabase`
+clean · disclosure suite **29 passed · 0 failed**.
+
+⚠️ **Honest scope.** The falsifiers bind the store's protocol and the substrate's
+authored shape. The trigger's refusal of an unlawful transition is asserted as
+authored SQL, **not executed** — an executable trigger witness is owed when the
+migration first runs against a disposable shadow.
+
+⚠️ **Instrument fault, found and fixed before reading the verdict**: the first
+draft scanned the raw migration and failed its own *no TTL* ban on the header
+sentence *"No TTL now."* — prose documenting an absence matched as evidence of
+the presence. Comments are stripped before every ban scan. *A prose ban must never
+read as the banned thing returning.*
+
+⛔ **Still owed before `#1275` unfreezes:** the Writer's Studio surface behaviour
+of §3a — a scoped request may fail visibly, but it may not succeed under a
+different scope without the writer knowing. **The substrate does not discharge it.**
