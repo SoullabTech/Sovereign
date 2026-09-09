@@ -249,3 +249,61 @@ describe('identity stays canonical', () => {
     expect(r).not.toMatch(/getMemberIdFromRequest|x-member-id|meta\.userId/);
   });
 });
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01 · the ephemeral locator is not a receipt field', () => {
+  /**
+   * ⭐⭐ The request may carry an ephemeral locator needed to execute the writer's
+   * act. The receipt records only what it is constitutionally entitled to retain.
+   *
+   * Before this repair a real passage had no lawful path: send `sectionRef` and
+   * the mint refuses it; omit it and the assembler cannot find the passage. The
+   * old fixtures hid it — `passage` with no locator, against a mocked assembler.
+   */
+  const crossing = () => CODE('lib/writers-studio/focusCrossing.ts');
+
+  it('a passage never puts its locator in the receipt', () => {
+    expect(crossing()).toMatch(/sectionRef: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
+  });
+
+  it('a passage never puts its locator in the producer label either', () => {
+    // The producer text says WHERE the writer looked; a section name there would
+    // leak the same locator the receipt refuses.
+    expect(crossing()).toMatch(/label: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
+  });
+
+  it('the assembler still receives the locator for BOTH section and passage', () => {
+    const c = crossing();
+    const assembleCall = c.slice(c.indexOf('deps.assemble('), c.indexOf('deps.assemble(') + 300);
+    expect(assembleCall).toMatch(/sectionRef: req\.sectionRef/);
+    expect(assembleCall).not.toMatch(/scopeKind === 'section'/);
+  });
+});
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01 · the read authority', () => {
+  const asm = () => CODE('lib/writers-studio/assembleFocus.ts');
+
+  it('reads the addressable working draft, not Source', () => {
+    expect(asm()).toMatch(/manuscript_draft_sections/);
+    expect(asm()).toMatch(/manuscript_working_drafts/);
+    expect(asm()).toMatch(/member_manuscripts/);
+    // ⛔ Source appears nowhere in the executable SQL.
+    expect(asm()).not.toMatch(/manuscript_sections/);
+  });
+
+  it('enforces addressability and BOTH ownership hops inside the query', () => {
+    const a = asm();
+    expect(a).toMatch(/d\.section_addressable_at IS NOT NULL/);
+    expect(a).toMatch(/d\.member_id = \$2/);
+    expect(a).toMatch(/m\.member_id = \$2/);
+  });
+
+  it('⛔ never names the tables the old defect used', () => {
+    expect(asm()).not.toMatch(/JOIN manuscripts\b/);
+    expect(asm()).not.toMatch(/user_id/);
+  });
+
+  it('slices passages in UTF-16 code units, as the browser reports them', () => {
+    expect(asm()).toMatch(/text\.slice\(Math\.max\(0, range\.start\)/);
+    expect(asm()).not.toMatch(/\[\.\.\.text\]\.slice/);
+  });
+});

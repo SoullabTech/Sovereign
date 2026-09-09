@@ -1,38 +1,90 @@
 /**
- * Reads the authorized Work. ⛔ CALLED ONLY AFTER `may_cross`.
+ * FOCUS-ASSEMBLER-CONTRACT-01 — reads the Work the writer is actually writing.
  *
- * The writer's selection range travels in the REQUEST — it is their act — and is
- * deliberately absent from the receipt, where an offset would be a locator.
- * *Provenance may be rendered into prose. It may never be recovered from prose.*
+ *   ⭐⭐ Focus reads the Work the writer is actually writing, not the Source it
+ *       once came from. Addressability is the boundary that makes "here"
+ *       durable enough to disclose.
+ *
+ * ⛔ CALLED ONLY AFTER `may_cross`.
+ *
+ * ⚠️ THE DEFECT THIS REPLACES. The first implementation joined a `manuscripts`
+ * table that does not exist, on a `user_id` column that does not exist, and read
+ * `manuscript_sections` — the SOURCE ingest relation. Every query would have
+ * failed, been caught, and produced a truthful non-crossing; the witness would
+ * have proved only that the failure path works. ⭐ And the naive repair — renaming
+ * the table — would have been WORSE than the bug: it would have worked, while
+ * disclosing Source text the member never made section-addressable.
+ *
+ * READ AUTHORITY (founder ruling, 2026-09-09):
+ *
+ *   member_manuscripts        identity of the Work            member_id must match
+ *   manuscript_working_drafts current authored state          member_id must match
+ *                             ⭐ section_addressable_at IS NOT NULL
+ *   manuscript_draft_sections section-native writable truth   text, position order
+ *   manuscript_sections       ⛔ SOURCE / provenance only — NEVER the payload
+ *
+ * ⭐ The addressability gate is enforced INSIDE the query, not before it. A
+ * predicate a caller could forget is not a boundary — and `section_addressable_at`
+ * is conferred by a member act, never by import
+ * (`__tests__/sectionAddressabilityLifecycle.test.ts` holds ingest to that).
  */
 
 import { query } from '@/lib/db/postgres';
 import type { FocusAssembler } from './focusCrossing';
 
+/**
+ * The Work's addressable draft, gated. Both ownership hops are asserted: the
+ * manuscript's and the draft's — they are separate columns and a future schema
+ * change could let them disagree.
+ */
+const ADDRESSABLE_DRAFT = `
+  SELECT d.id
+    FROM manuscript_working_drafts d
+    JOIN member_manuscripts m ON m.id = d.manuscript_id
+   WHERE d.manuscript_id = $1
+     AND d.member_id = $2
+     AND m.member_id = $2
+     AND d.section_addressable_at IS NOT NULL`;
+
 export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKind, sectionRef, range }) => {
   try {
-    // Ownership is part of the read, not a separate check a later edit could drop.
     if (scopeKind === 'whole_work') {
-      const r = await query<{ body: string }>(
-        `SELECT s.body FROM manuscript_sections s
-           JOIN manuscripts m ON m.id = s.manuscript_id
-          WHERE s.manuscript_id = $1 AND m.user_id = $2
-          ORDER BY s.position ASC`, [workRef, memberId]);
-      return r.rows.length ? r.rows.map(x => x.body).join('\n\n') : null;
+      const r = await query<{ text: string }>(
+        `SELECT s.text
+           FROM manuscript_draft_sections s
+          WHERE s.draft_id IN (${ADDRESSABLE_DRAFT})
+          ORDER BY s.position ASC`,
+        [workRef, memberId],
+      );
+      return r.rows.length ? r.rows.map(x => x.text).join('\n\n') : null;
     }
 
-    const r = await query<{ body: string }>(
-      `SELECT s.body FROM manuscript_sections s
-         JOIN manuscripts m ON m.id = s.manuscript_id
-        WHERE s.manuscript_id = $1 AND m.user_id = $2 AND s.id = $3`,
-      [workRef, memberId, sectionRef ?? null]);
-    const body = r.rows[0]?.body;
-    if (!body) return null;
-    if (scopeKind === 'section') return body;
+    // section and passage both resolve ONE draft section, by draft-section id.
+    // The `draft_id IN (…)` clause is what ties that id to this member's
+    // addressable draft: a section id alone proves nothing about who may read it.
+    if (!sectionRef) return null;
+    const r = await query<{ text: string }>(
+      `SELECT s.text
+         FROM manuscript_draft_sections s
+        WHERE s.id = $3
+          AND s.draft_id IN (${ADDRESSABLE_DRAFT})`,
+      [workRef, memberId, sectionRef],
+    );
+    const text = r.rows[0]?.text;
+    if (!text) return null;
+    if (scopeKind === 'section') return text;
 
     if (!range || !Number.isFinite(range.start) || !Number.isFinite(range.end)) return null;
-    const text = [...body].slice(Math.max(0, range.start), Math.max(0, range.end)).join('');
-    return text.length > 0 ? text : null;
+    /**
+     * ⭐ UTF-16 CODE UNITS, matching the browser. A textarea's `selectionStart` /
+     * `selectionEnd` are code-unit offsets and Held Focus applies them with plain
+     * `.slice()`. The previous `[...body].slice()` converted to CODE POINTS first,
+     * so a selection after an emoji silently shifted — the server would read
+     * different words than the writer framed.
+     * ⛔ Do not "improve" this to code points without changing the capture side.
+     */
+    const passage = text.slice(Math.max(0, range.start), Math.max(0, range.end));
+    return passage.length > 0 ? passage : null;
   } catch (err) {
     console.error('[FOCUS] assembly failed', {
       memberIdPrefix: memberId.slice(0, 8),

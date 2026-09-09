@@ -83,7 +83,25 @@ export interface FocusCrossingRequest {
   disclosureId: string;
   workRef: string;
   scopeKind: DisclosureScopeKind;
+  /**
+   * ⭐⭐ AN EPHEMERAL LOCATOR, NOT A RECEIPT FIELD.
+   *
+   * For `section` this is the draft-section that IS the disclosed thing, and it
+   * may lawfully become the receipt's `section_ref`. For `passage` it is only how
+   * the server FINDS the passage — and it may never be recorded, because a
+   * section id beside the Work narrows reconstruction of what was selected.
+   *
+   * ⚠️ Before this repair the two were the same field, so a real passage faced an
+   * impossible choice: send it and the receipt mint refuses (application check AND
+   * CHECK constraint), or omit it and the assembler cannot locate the passage.
+   * The unit tests hid it — their default request was `passage` with NO
+   * sectionRef, against an assembler mocked to return text regardless.
+   *
+   *   The request may carry an ephemeral locator needed to execute the writer's
+   *   act. The receipt records only what it is constitutionally entitled to retain.
+   */
   sectionRef?: string;
+  /** Writer-supplied UTF-16 offsets. Ephemeral, exactly like the locator. */
   range?: { start: number; end: number };
   gesture: DisclosureGesture;
   ask: string;
@@ -114,7 +132,9 @@ export async function performFocusCrossing(
       participationBasis: 'member_invoked',
       sourceRef: req.workRef,
       scopeKind: req.scopeKind,
-      sectionRef: req.sectionRef,
+      // ⭐ The partition, in one line: the locator reaches the receipt ONLY when
+      // the section is itself what crossed.
+      sectionRef: req.scopeKind === 'section' ? req.sectionRef : undefined,
       gesture: req.gesture,
     },
   });
@@ -149,7 +169,10 @@ export async function performFocusCrossing(
   const prepared = await deps.prepare({
     identity: req.identity,
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
-    workRef: req.workRef, scopeKind: req.scopeKind, label: req.sectionRef,
+    workRef: req.workRef, scopeKind: req.scopeKind,
+    // ⛔ No label for a passage: the producer text says WHERE the writer looked,
+    // and a section name inside it would leak the same locator the receipt refuses.
+    label: req.scopeKind === 'section' ? req.sectionRef : undefined,
     focusContext, sanctuary: req.posture.sanctuary,
   });
   if (!prepared) {
