@@ -97,3 +97,80 @@ lawfully runnable for the first time — step 4 could not have passed before thi
 lane — but it has **not** been run, and no real Focus has crossed.
 
 **FOCUS-PRODUCER-01 BUILT · HUMAN WITNESS HOLD · `#1275` FROZEN.**
+
+---
+
+## FOCUS-PRODUCER-01A — three defects the P-gates did not falsify
+
+> ⭐⭐ **Do not record a crossing until the Work actually enters response-producing
+> cognition, and do not let any other responder or privacy posture slip around
+> that moment.**
+
+### H1 · `crossed` was confirmed before the model was reached — REPAIRED
+
+`beginCanonicalGeneration()` returned `getMaiaResponse()`'s promise, and the
+crossing confirmed on it. But entering that service is followed by turn counts,
+history, identity backfill, field safety, PFI/Bloom/Atlas, routing, RCN and the
+context inventory **before** the canonical `generateText` call.
+
+> ⭐ **Starting the service is not starting cognition.**
+
+`generate()` now returns **two** promises — `handoff` and `result`. The signal is
+emitted **inside the canonical branch, immediately after `generateText` is
+invoked**, and `.finally()` resolves it `false` if the service ever returns
+without reaching the model. `performFocusCrossing` awaits `handoff` and confirms
+only on `true`; otherwise the receipt stays `attempted` and the writer gets the
+non-crossing §3a state.
+
+### H2 · Pre-canonical responders could answer without the Focus — REPAIRED
+
+The sharper P8 hole: **RCN** and **field safety** both return before the Writer
+branch. A high-confidence RCN answer would have reached the writer while the Work
+never reached a model — *the inert-Focus defect in a new location, with a
+`crossed` receipt beside it.*
+
+- **RCN is excluded outright** on a Writer turn (`WriterCanonicalOnly`), before
+  `maiaRcnProcess` is called. Not conditional.
+- **Field safety may still refuse** — that is its job — but it returns before the
+  model, so `onHandoff` never fires. ⭐ A refusal is a **non-crossing**, not a
+  Focus answer produced without the Focus.
+
+⭐ The falsifier asserts the stronger thing: on a bypass the writer is handed
+`response: null`, **not** the bypass answer dressed as a Focus reply.
+
+### H3 · One turn had two privacy postures — REPAIRED
+
+The route resolved a real `TurnPosture` and the CanonicalTurn carried it, but the
+port passed only `{ userId, exchangeId }` and the service re-ran
+`TurnPosture.resolve(meta)` — yielding `normal` while the consent row and the
+turn said `sanctuary`. Downstream, both that posture **and** `meta.sanctuary`
+govern state-vector storage, `TurnsStore` persistence and memory integration.
+
+> ⭐ **One turn cannot have two privacy postures.**
+
+The posture is now carried as a typed top-level input beside the turn; the service
+uses `writerStudio?.posture ?? TurnPosture.resolve(meta)` — legacy callers
+unchanged — and `meta.sanctuary` is **derived from that same object**, so the two
+readings cannot diverge, and the derivation can only ever make a turn more
+protective.
+
+### Falsifiers — H1–H3 · 13 more
+
+| | | |
+|---|---|---|
+| H1 | confirm follows the true handoff + ordering + **mutation** | 5 |
+| H2 | no response bypass + **mutation** | 3 |
+| H3 | one posture through consent, cognition and persistence + **mutation** | 5 |
+
+⚠️ **Instrument note:** the H1 ordering falsifier first ordered a `result`/`handoff`
+event array and failed because the *result* promise's own `.then` ran during the
+microtask ticks — it was testing the fixture's scheduling, not the product. The
+real property is simply that **no confirmation exists while the handoff is
+unresolved**, and that is what it asserts now.
+
+**Gates:** `lib/disclosure` + `lib/writers-studio` **182 passed · 0 failed** ·
+canonical-turn + field suites unbroken · typecheck 228 vs baseline 239 ·
+0 regressions · `check:no-supabase` clean.
+
+**Standing: FOCUS-PRODUCER-01A CLOSED · route still DISABLED · human witness now
+lawfully runnable and NOT RUN · `#1275` FROZEN.**

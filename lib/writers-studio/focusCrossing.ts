@@ -68,8 +68,8 @@ export interface CanonicalCognitionPort {
   prepare: (input: CognitionPrepareInput) => Promise<PreparedHandoff | null>;
   generate: (
     prepared: PreparedHandoff,
-    input: { memberId: string; sessionId: string; requestId: string; ask: string },
-  ) => Promise<{ ok: boolean; response?: string }>;
+    input: { memberId: string; sessionId: string; requestId: string; ask: string; posture: TurnPosture },
+  ) => { handoff: Promise<boolean>; result: Promise<{ ok: boolean; response?: string }> };
 }
 
 export interface FocusCrossingRequest {
@@ -163,16 +163,29 @@ export async function performFocusCrossing(
 
   // ── 4 · THE HANDOFF. Generation BEGINS here; the promise is deliberately not
   // awaited yet, so the receipt is confirmed at the moment of crossing.
-  const generating = deps.generate(prepared, {
+  const { handoff, result: generating } = deps.generate(prepared, {
     memberId: req.memberId, sessionId: req.sessionId,
-    requestId: req.requestId, ask: req.ask,
+    requestId: req.requestId, ask: req.ask, posture: req.posture,
   });
+
+  // ⭐ H1 · Wait for the TRUE handoff — the response-producing call being invoked,
+  // not this service being entered. A refusal, an early responder or a throw
+  // before the model resolves this false.
+  const crossed = await handoff;
+  if (!crossed) {
+    // ⛔ No crossing, therefore no confirmation. The receipt stays `attempted`.
+    void generating;
+    return {
+      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
+      response: null, disclosureId: null, boundary,
+    };
+  }
 
   // ⭐ C3/C6 · Confirm the id that authorized THIS handoff, because the admitted
   // Work entered the response-producing path — not because an answer came back.
   const confirmed = await confirmDisclosureCrossed(boundary.disclosureId);
 
-  // ── 5 · Only now await generation. A failure here leaves a truthful `crossed`.
+  // ── 6 · Only now await generation. A failure here leaves a truthful `crossed`.
   const result = await generating;
 
   return {

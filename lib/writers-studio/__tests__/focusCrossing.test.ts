@@ -58,7 +58,12 @@ const assemble = jest.fn(async () => { events.push('assemble'); return 'the sele
 /* FOCUS-PRODUCER-01 made the port two-phase: prepare (construct · adjudicate ·
    render) then generate (the handoff). The receipt is confirmed between them. */
 const prepare = jest.fn(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
-const cognition = jest.fn(() => { events.push('handoff'); return Promise.resolve({ ok: true, response: 'MAIA reply' }); });
+/* 01A made generate return TWO promises: the true handoff (the response-producing
+   call actually invoked) and the eventual result. */
+const cognition = jest.fn(() => {
+  events.push('handoff');
+  return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: true, response: 'MAIA reply' }) };
+});
 const deps = () => ({ assemble, prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
@@ -155,7 +160,10 @@ describe('C2 · ASSEMBLY ORDER — no Work text before may_cross', () => {
 
 describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', () => {
   it('confirms because the handoff began, even when generation then fails', async () => {
-    const failing = jest.fn(() => { events.push('handoff'); return Promise.resolve({ ok: false } as never); });
+    const failing = jest.fn(() => {
+      events.push('handoff');
+      return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: false }) };
+    });
     const out = await performFocusCrossing(req(), ({ assemble, prepare, generate: failing } as never));
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(true);
     expect(out.presentation.state).toBe('crossed_accounted');
@@ -208,7 +216,7 @@ describe('C5 · CANONICAL MAIA — no private brain', () => {
 
   it('holds the room constant — the Work enters as an adjudicated participant', () => {
     expect(CODE('lib/writers-studio/canonicalWriterTurn.ts')).toMatch(/ROOM_POLICIES\.writers_studio/);
-    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/writerStudioTurn: prepared\.turn/);
+    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/turn: prepared\.turn/);
   });
 
   it('passes the carried requestId as canonical exchange identity', () => {

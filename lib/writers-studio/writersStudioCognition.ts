@@ -15,13 +15,22 @@
  *     → rendered request handed to the response-producing path   ← CROSS
  *
  * So this port is two-phase. `prepare()` does everything up to but not including
- * generation and returns proof, or null. `generate()` begins the model handoff.
- * The caller confirms the receipt between them.
+ * generation and returns proof, or null. `generate()` returns TWO things:
+ *
+ *   handoff  resolves true only when the response-producing call actually began
+ *   result   the eventual MAIA response
+ *
+ * ⭐ FOCUS-PRODUCER-01A: `getMaiaResponse` entry is NOT the handoff. Entering it is
+ * followed by turn counts, history, field safety, routing and much else before any
+ * model is reached — and some of those can return a response of their own.
+ * *Starting the service is not starting cognition.* The signal is emitted inside
+ * the canonical branch, immediately after `generateText` is invoked.
  */
 
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { constructWriterTurn, renderWriterTurn, tierInvariant, type WriterHandoffProof } from './canonicalWriterTurn';
 import type { CanonicalTurn, MemberIdentity } from '@/lib/maia/canonical-turn';
+import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 export interface CognitionPrepareInput {
   identity: MemberIdentity;
@@ -98,23 +107,48 @@ export async function prepareCanonicalHandoff(
  * await generation afterwards. A generation failure after this point does not
  * unmake the crossing.
  */
+export interface CanonicalGeneration {
+  /** ⭐ true only if the response-producing call was actually invoked. */
+  readonly handoff: Promise<boolean>;
+  readonly result: Promise<{ ok: boolean; response?: string }>;
+}
+
 export function beginCanonicalGeneration(
   prepared: PreparedHandoff,
-  input: { memberId: string; sessionId: string; requestId: string; ask: string },
-): Promise<{ ok: boolean; response?: string }> {
-  return getMaiaResponse({
+  input: { memberId: string; sessionId: string; requestId: string; ask: string; posture: TurnPosture },
+): CanonicalGeneration {
+  let signalled = false;
+  let settle: (v: boolean) => void = () => {};
+  const handoff = new Promise<boolean>(resolve => { settle = resolve; });
+
+  const result = getMaiaResponse({
     sessionId: input.sessionId,
     input: input.ask,
     originRoute: '/api/writers-studio/focus',
     // ⛔ meta carries NO Writer material — identity and continuity only.
     meta: { userId: input.memberId, exchangeId: input.requestId },
-    writerStudioTurn: prepared.turn,
+    writerStudio: {
+      turn: prepared.turn,
+      // ⭐ H3 · the SAME posture object the route resolved and the consent row and
+      // the CanonicalTurn already carry. One turn, one privacy posture.
+      posture: input.posture,
+      onHandoff: () => { signalled = true; settle(true); },
+    },
   })
     .then(r => ({ ok: true, response: r?.text ?? undefined }))
     .catch(err => {
-      console.error('[FOCUS] generation failed after handoff — the crossing still stands', {
+      console.error('[FOCUS] generation failed', {
+        crossed: signalled,
         error: err instanceof Error ? err.message : 'unknown',
       });
       return { ok: false };
+    })
+    .finally(() => {
+      // ⛔ The service returned without ever reaching the model — a field-safety
+      // refusal, an early responder, a throw. No handoff occurred, so no receipt
+      // may be confirmed: the Work did not cross.
+      if (!signalled) settle(false);
     });
+
+  return { handoff, result };
 }

@@ -636,8 +636,33 @@ type MaiaRequest = {
    *   ⭐⭐ Tier selects how MAIA thinks. The room decides what is allowed to think
    *       with her.
    */
-  writerStudioTurn?: CanonicalTurn | null;
+  writerStudio?: WriterStudioInput | null;
 };
+
+/**
+ * FOCUS-PRODUCER-01A — everything the Writer's Studio lane carries into the
+ * service, typed and top-level.
+ */
+export interface WriterStudioInput {
+  /** Frozen and already adjudicated. Membership was fixed at the route. */
+  readonly turn: CanonicalTurn;
+  /**
+   * ⭐ H3 · ONE TURN, ONE PRIVACY POSTURE. The route resolved this once, and the
+   * same object governs the consent row, the CanonicalTurn's sovereignty, and
+   * every content writer here. ⛔ The service must NOT re-resolve posture from
+   * `meta` on this path: with no sanctuary signal in a Writer request's meta,
+   * that silently yields `normal` while the disclosure record says `sanctuary`.
+   * *One turn cannot have two privacy postures.*
+   */
+  readonly posture: TurnPosture;
+  /**
+   * ⭐ H1 · THE TRUE HANDOFF. Fired immediately after the response-producing call
+   * is invoked — not when this service is entered. *Starting the service is not
+   * starting cognition*: entry is followed by turn counts, history, field safety,
+   * routing and much else before any model is reached.
+   */
+  readonly onHandoff?: () => void;
+}
 
 /**
  * Content-based processing router using sophisticated analysis from MaiaConversationRouter
@@ -2676,17 +2701,38 @@ function finalizeMemberFacingText(
   return { text, presenceConstrained, identityGuarded: guard.wasConstrained };
 }
 
+/**
+ * ⛔ H2 marker: a responder that must never produce the answer on a Writer turn.
+ * Thrown to leave the surrounding non-blocking `catch` intact rather than adding
+ * a second exit shape to a hot path.
+ */
+class WriterCanonicalOnly extends Error {
+  constructor(public readonly responder: string) {
+    super(`[writers-studio] ${responder} may not respond on a canonical Writer turn`);
+    this.name = 'WriterCanonicalOnly';
+  }
+}
+
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   // FOCUS-PRODUCER-01: present only for writers_studio, and only when the route
   // built and adjudicated the turn. Absent → every existing caller is unchanged.
-  const writerStudioTurn = req.writerStudioTurn ?? null;
+  const writerStudio = req.writerStudio ?? null;
+  const writerStudioTurn = writerStudio?.turn ?? null;
   // NOTE: read from `req`, never from `meta`. See MaiaRequest.orientationContract.
   const trustedOrientation = req.orientationContract ?? null;
   const startTime = Date.now();
   // SANCTUARY (S1): per-turn posture, resolved once for this request and
   // passed to every content writer (turns store, corpus callosum trace).
-  const turnPosture = TurnPosture.resolve(meta);
+  // H3: the Writer lane carries its already-resolved posture; every other caller
+  // resolves its own exactly as before.
+  const turnPosture = writerStudio?.posture ?? TurnPosture.resolve(meta);
+  if (writerStudio) {
+    // The legacy tail reads `meta.sanctuary` directly. Deriving it from the one
+    // trusted posture keeps both readings identical; it can only ever make the
+    // turn MORE protective, never less.
+    (meta as Record<string, unknown>).sanctuary = writerStudio.posture.sanctuary;
+  }
   // One exchange identity per member action, minted at the boundary and shared
   // by every persistence path in this request: addConversationExchange (which
   // reaches conversation_turns via sessionManager) and the direct
@@ -2808,7 +2854,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             context: 'maia',
           });
 
-          // If not safe, return boundary message immediately (before Bloom, router, etc.)
+          // ⛔ H2 · Field safety MAY legitimately refuse a turn — that is its job.
+          // What it may not do is look like an ordinary Focus answer: it returns
+          // BEFORE the Work reaches a model, so `onHandoff` is never signalled and
+          // the receipt stays `attempted`. A refusal is a non-crossing, not a
+          // Focus response produced without the Focus.
           if (!fieldSafety.allowed) {
             console.log(
               `🛡️  [Field Safety - Service] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
@@ -3151,8 +3201,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingDepth: processingProfile,
     };
 
+    // ⛔ H2 · NO RESPONSE BYPASS. RCN returns a response of its own, produced
+    // without the Writer canonical turn. On a Focus turn that would answer the
+    // writer while the Work never reached a model — the inert-Focus defect in a
+    // new location, and with a `crossed` receipt beside it. Excluded outright for
+    // this first Writer lane rather than made conditional.
     // Try RCN for appropriate queries (non-blocking - falls back to standard paths)
     try {
+      if (writerStudioTurn) throw new WriterCanonicalOnly('rcn');
       const rcnDecision = await maiaRcnProcess(input, rcnContext);
       if (rcnDecision.used) {
         rcnResult = rcnDecision.result;
@@ -3309,11 +3365,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // participates. Membership was fixed at construction, before this line.
     if (writerStudioTurn) {
       const rendered = renderTurnForCognition(writerStudioTurn, { tier: processingProfile === 'FAST' ? 'FAST' : processingProfile === 'DEEP' ? 'DEEP' : 'CORE' });
-      const { text: canonicalText, provider: canonicalProvider } = await generateText({
+      // ⭐ H1 · THE CROSSING IS THIS LINE. The call is invoked, THEN the handoff is
+      // signalled, THEN the result is awaited. Signalling any earlier would confirm
+      // a receipt for Work that had not yet reached a response-producing model.
+      const canonicalGeneration = generateText({
         systemPrompt: rendered.systemPrompt,
         userInput: input,
         meta: { ...meta, currentUserMessage: input, canonicalTurnId: writerStudioTurn.turnId },
       });
+      writerStudio?.onHandoff?.();
+      const { text: canonicalText, provider: canonicalProvider } = await canonicalGeneration;
       rawResponse = canonicalText;
       provider = canonicalProvider;
       console.log(`🖋️ [MAIA/writers-studio] canonical turn ${writerStudioTurn.turnId} rendered at ${rendered.tier}: ${rendered.participantOrder.join(', ')}`);
