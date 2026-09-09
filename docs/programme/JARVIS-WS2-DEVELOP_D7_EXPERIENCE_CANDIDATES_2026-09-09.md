@@ -123,6 +123,36 @@ B fails IF   the blank becomes a prompt
 C fails IF   the second surface stops clearing
 ```
 
+## 1A · ⚠️ Structural failure condition ≠ known tradeoff weakness
+
+**These are different categories and §1/§2 nearly collapse them.** Corrected here before the walk.
+
+```text
+STRUCTURAL FAILURE CONDITION   the architecture stops being itself
+                               C: the second surface stops clearing
+                               A: the margin becomes a list
+                               B: the blank becomes a prompt
+
+KNOWN TRADEOFF WEAKNESS        the architecture works as designed and
+                               that design costs something
+                               C: clearing may discard useful continuity
+                               A: density pressure — everything wants a mark
+                               B: the wordless arrival needs deliberate welcome
+```
+
+⭐ **Operational consequence — this maps onto the three verdicts:**
+
+```text
+A TRADEOFF may be met with AMEND.
+  The architecture holds; the cost is designed against.
+
+A STRUCTURAL FAILURE cannot be met with AMEND.
+  Amending it produces a DIFFERENT CANDIDATE, not a repaired one —
+  a Two Hands whose surface persists is no longer Two Hands.
+```
+
+⛔ **D8 must not reject C because the continuity tradeoff exists.** The question is whether, in an actual writing process, that tradeoff makes the experience worse enough to require amendment. Same for A's density pressure and B's wordless arrival.
+
 ## 2 · The tradeoff the founder is actually choosing
 
 ```text
@@ -139,6 +169,54 @@ C  strongest on QUIET (PF-1, PF-3, PF-10) — nothing can accumulate
 ```
 
 ⛔ **Not ranked here. D8 is the founder walk against a real chapter** — and per the flow, it must judge **process, not styling or button success.**
+
+## 2A · D8 walk protocol — **frozen before the walk**
+
+Recorded now, before any candidate is walked, for the same reason the SEL-0 threshold is frozen before its run: **a protocol written afterward can be fitted to whichever candidate won.**
+
+### Constants
+
+```text
+same real chapter · same writer · same underlying writing difficulty
+```
+
+**A process walk, not a feature comparison.** The flow is explicit: judge process, not styling or button success.
+
+### The three stress moments
+
+Each targets one candidate at its actual seam:
+
+```text
+1. ARRIVE WITH ONLY "something feels off"           -> B's real test
+2. LET SEVERAL THINGS BECOME NOTICEABLE             -> A's real test
+3. MOVE AWAY, EDIT, THEN NEED SOMETHING
+   FROM THE PRIOR EXCHANGE                          -> C's real test
+```
+
+⚠️ **Run every moment through every candidate — nine cells, not three.** If each moment is walked only in the candidate it targets, the result is three unrelated observations rather than a comparison, and no candidate is ever seen handling a difficulty it was not designed for. **The diagonal is the stress test; the off-diagonal is the evidence.**
+
+### Judgment questions
+
+```text
+where did I naturally begin?
+did MAIA help without taking over?
+did I stay in the Work?
+did anything accumulate into obligation?
+did context survive when I needed it?
+did the architecture make me explain myself unnecessarily?
+did I want to keep writing?
+```
+
+### ⚠️ Order effect — cheap to control, expensive to discover afterward
+
+Walking A → B → C gives the **last** candidate a writer already warmed to the chapter and the **first** a cold read. That difference will look like an architectural difference.
+
+```text
+Either vary which candidate meets the fresh difficulty,
+or record the order walked and read the results against it.
+```
+
+Not a reason to delay the walk — a reason to write the order down before starting.
 
 ## 3 · Standing
 
