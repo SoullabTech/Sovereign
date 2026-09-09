@@ -17,11 +17,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing } from '@/lib/writers-studio/focusCrossing';
 import { assembleFocus } from '@/lib/writers-studio/assembleFocus';
-import { writersStudioCognition } from '@/lib/writers-studio/writersStudioCognition';
+import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +30,16 @@ const enabled = () => process.env.WRITERS_STUDIO_FOCUS_ENABLED === '1';
 export async function POST(request: NextRequest) {
   if (!enabled()) return new NextResponse(null, { status: 404 });
 
-  const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  // ⭐ ONE IDENTITY TRUTH. `constructCanonicalTurn` refuses any identity not minted
+  // here, and rightly: authenticating for the route and then passing a raw string
+  // downstream would be two identities pretending to be one. The member id used
+  // for manuscript ownership is taken FROM the verified identity, never from meta,
+  // a body field, or an x-member-id header.
+  const identity = await resolveCanonicalIdentity(request);
+  if (identity.status !== 'verified') {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  const memberId = identity.memberId;
 
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
   const { sessionId, workRef, scopeKind, sectionRef, range, gesture, ask } = body ?? {};
@@ -61,14 +69,14 @@ export async function POST(request: NextRequest) {
 
   const result = await performFocusCrossing(
     {
-      requestId, posture: TurnPosture.resolve(body), memberId, sessionId,
+      requestId, identity, posture: TurnPosture.resolve(body), memberId, sessionId,
       disclosureId, workRef, scopeKind,
       sectionRef: typeof sectionRef === 'string' ? sectionRef : undefined,
       range: range && typeof range === 'object'
         ? { start: Number((range as any).start), end: Number((range as any).end) } : undefined,
       gesture, ask,
     },
-    { assemble: assembleFocus, cognition: writersStudioCognition },
+    { assemble: assembleFocus, prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration },
   );
 
   // ⛔ Internal vocabulary never leaves: the §3a presentation is the contract.
