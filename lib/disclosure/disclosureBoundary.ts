@@ -46,8 +46,13 @@ export type BoundaryOutcome =
   | { readonly kind: 'may_cross'; readonly disclosureId: string; readonly receiptId: string }
   /** The consent precondition was not established. Nothing was assembled. */
   | { readonly kind: 'consent_unavailable'; readonly reason: string }
-  /** The accountability record could not be minted. Nothing was assembled. */
-  | { readonly kind: 'receipt_refused'; readonly outcome: MintOutcome };
+  /**
+   * The accountability record could not be minted. Nothing was assembled.
+   * ⭐ The outcome type EXCLUDES `minted`: a refusal that could carry a mint
+   * would force every consumer to handle an impossible case, and the §3a surface
+   * would need a fallback with no truthful copy. Make it unrepresentable instead.
+   */
+  | { readonly kind: 'receipt_refused'; readonly outcome: Exclude<MintOutcome, { kind: 'minted' }> };
 
 export const mayCrossBoundary = (o: BoundaryOutcome): o is Extract<BoundaryOutcome, { kind: 'may_cross' }> =>
   o.kind === 'may_cross';
