@@ -149,3 +149,44 @@ developmental relationship that produces a worse book has not succeeded at somet
 has failed at the thing the writer came for.**
 
 ⭐ **Founder: "a very strong foundation for D9."**
+
+---
+
+## 8 · ⭐ D9's ACTUAL JOB — founder ruling, 2026-09-09
+
+⛔ **DO NOT turn the eight candidate doctrines into eight more Laws.**
+
+```text
+Scale Coherence · Developmental Tempo · Continuity of Becoming ·
+Creative Perseverance · Fertility of Not-Knowing · Parallel Knowing ·
+Evolutionary Diversity · Differentiated Genius
+                        ↓
+        WHAT DOES DEVELOP ACTUALLY FEEL LIKE?
+```
+
+> ⭐ **D9 tests whether they COMPOSE INTO ONE LIVED EXPERIENCE.** Not whether each is true — whether
+> together they are a room a writer can be in.
+
+⚠️ **This is the correct level and the correct restraint.** **Eight doctrines ratified separately
+would be eight things to comply with; the question is whether they are one thing to inhabit.**
+
+## 9 · ⭐⭐ THE POSITIVE CONTRACT — founder, 2026-09-09
+
+> **Help me see more without deciding for me.**
+> **Help me go deeper without taking me over.**
+> **Help me communicate what is uniquely mine without making it ordinary.**
+> **Help me through difficulty without stealing what difficulty can teach me.**
+> **Hold the whole while we work on the smallest part.**
+> **Remember the thread while allowing the Work — and me — to become something neither of us could
+> have predicted.**
+
+⭐ **Note the grammatical form, which is not incidental: this is written in the WRITER'S VOICE.** Not
+*"MAIA will…"* but ***"Help me…"*** — **six requests, from the person whose Work it is.**
+
+⭐ **That is the right form for a contract about sovereignty.** A promise MAIA makes could be revised
+by MAIA; **a request the writer makes can only be met or failed.** ⛔ **And each line names its own
+failure in its second half** — deciding for them · taking over · making it ordinary · stealing the
+lesson · losing the whole · losing the thread. **The contract is its own falsifier set, stated by
+the person entitled to state it.**
+
+⭐ **Founder: "That feels like the actual substance D9 now needs to embody."**
