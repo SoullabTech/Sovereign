@@ -183,13 +183,70 @@ is an ordinary turn."*
 governs state-vector storage, `TurnsStore` persistence and memory writes.
 ⭐ **A violation of a written contract, not an inference.**
 
-### Fourth item — reported, not expanded
+### Fourth item — ⛔ A CONTAINMENT LAW, NOT A CENSUS
 
 `beginCanonicalGeneration` passes `meta: { userId, exchangeId }` only. Whatever
 else `getMaiaResponse` reads from `meta` on this path is **absent by
-construction**. The consumers were not enumerated. ⚠️ **The posture split may not
-be the only field silently defaulting** — worth checking before you trust any
-other meta-derived behaviour on this route.
+construction**.
+
+⛔ **DO NOT turn this into an organism-wide `meta` census.** That would reopen
+whole-organism machinery this lane has no authority over. It becomes a bounded
+rule instead:
+
+> ⭐ **A Writer's Studio turn may not silently derive sovereignty- or
+> persistence-relevant state from an incomplete legacy `meta` object.**
+
+`TurnPosture` is the **proven** violation. While making 01A, if another `meta`
+default demonstrably changes:
+
+```text
+privacy / Sanctuary behaviour
+persistence
+canonical identity
+admitted participant membership
+```
+
+**STOP and name that specific field before broadening the repair.** ⛔ Do not
+enumerate unrelated legacy consumers.
+
+## 5.1 · THE CROSSING ORDER — the shape the runtime must take
+
+```text
+authorize Focus
+→ construct producers
+→ canonical adjudication
+→ render admitted Writer turn
+→ perform any lawful pre-handoff gates
+→ invoke response-producing canonical model
+→ signal handoff
+→ confirmDisclosureCrossed()
+→ await model result
+```
+
+⛔ **Not:**
+
+```text
+start getMaiaResponse()
+→ confirm
+→ eventually reach model
+```
+
+⭐ **Do not infer handoff merely because `getMaiaResponse()` returned a Promise.**
+The acknowledgement must be emitted **from** the Writer canonical
+response-producing seam.
+
+### On the two H2 categories, restated as repairs
+
+```text
+RCN            exclude / bypass RCN response production for a properly typed
+               Writer's Studio canonical turn.
+               ⛔ Do not redesign RCN globally.
+
+field safety   a legitimate refusal before handoff:
+                 no Writer model handoff · no disclosure confirmation
+                 receipt remains non-crossed · the refusal may be returned
+               ⛔ Never force unsafe content through merely to create a crossing.
+```
 
 ## 6 · IF AND ONLY IF RECOVERY AGREES WITH THE RECORD
 
@@ -206,6 +263,12 @@ H3  Sanctuary Writer turn carries the same trusted TurnPosture through
     consent, cognition and persistence; substituting normal           → RED
 ```
 
+⭐ **And one POSITIVE proof, not only hostile ones:**
+
+```text
+pre-handoff field-safety refusal → NO crossed receipt
+```
+
 Preserve P1–P8.
 
 ```text
@@ -219,17 +282,24 @@ HUMAN WITNESS                  HOLD
 ## 7 · REPORT WHEN COMPLETE
 
 ```text
-recovered subject / branch
+recovered branch / HEAD
 relationship to a5fbafc8a
-H1 finding + repair
-H2 finding + repair
-H3 finding + repair
-P1–P8 status
-H1–H3 falsifier results
-typecheck / regression result
+material divergence found?  YES / NO
+
+H1   verified seam · repair · hostile falsifier
+H2   RCN handling · field-safety handling · hostile falsifier
+H3   trusted posture path · persistence proof · hostile falsifier
+
+P1–P8   status
+H1–H3   status
+
+tests
+typecheck / regression comparison
 new commit SHA
-route enabled?          NO
-human witness spent?    NO
+
+WRITERS_STUDIO_FOCUS_ENABLED   OFF
+human witness                  UNSPENT
+production                     UNTOUCHED
 ```
 
 ## 8 · Lanes that are NOT yours
