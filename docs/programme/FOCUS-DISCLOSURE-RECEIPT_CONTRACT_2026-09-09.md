@@ -241,10 +241,10 @@ both exist.**
 
 | Artifact | |
 |---|---|
-| `database/migrations/20260909000001_focus_disclosure_receipts.sql` | table · CHECKs · two indexes (one being the unresolved-crossing anomaly query) · `focus_disclosure_receipt_monotonic()` trigger · lifecycle stated in the table comment |
-| `lib/writers-studio/disclosure/focusDisclosureReceipt.ts` | `mintDisclosureAttempt` (fail-closed) · `confirmDisclosureCrossed` (idempotent, loud on failure) · `unresolvedCrossings` |
+| `database/migrations/20260909000001_context_disclosure_receipts.sql` | table · CHECKs · two indexes (one being the unresolved-crossing anomaly query) · `focus_disclosure_receipt_monotonic()` trigger · lifecycle stated in the table comment |
+| `lib/disclosure/contextDisclosureReceipt.ts` | `mintDisclosureAttempt` (fail-closed) · `confirmDisclosureCrossed` (idempotent, loud on failure) · `unresolvedCrossings` |
 | `app/api/members/delete-account/route.ts` | the table named in `GOVERNED_CONTENT`, label *"records of when your writing was shown to MAIA"* |
-| `lib/writers-studio/disclosure/__tests__/focusDisclosureReceipt.test.ts` | 29 falsifiers, F1–F5 |
+| `lib/disclosure/__tests__/contextDisclosureReceipt.test.ts` | 32 falsifiers, F1–F6 |
 
 ⭐ The store carries a `RefusedReceiptField` type naming every field that has ever
 turned a receipt into a shadow copy, so a caller reaching for one is refused at
@@ -272,3 +272,69 @@ read as the banned thing returning.*
 ⛔ **Still owed before `#1275` unfreezes:** the Writer's Studio surface behaviour
 of §3a — a scoped request may fail visibly, but it may not succeed under a
 different scope without the writer knowing. **The substrate does not discharge it.**
+
+
+---
+
+## 9 · ⚖️ GENERALIZED BEFORE FIRST APPLICATION (founder, 2026-09-09)
+
+The substrate was built as `focus_disclosure_receipts` and generalized to
+**`context_disclosure_receipts`** before the migration ran anywhere. ⭐ That
+window is the whole reason this was cheap: a rename of an authored, unapplied
+migration costs one rewrite; the same rename after production carries rows,
+a data migration and a live table under two names.
+
+**Why.** The constitutional question is not unique to manuscript passages:
+
+> ⭐⭐ **What context crossed into cognition for this encounter, and under what
+> authority?**
+
+A journal entry, a Keep, a remembered decision, a past session, a Work passage,
+an invoked I Ching reading — different authority, different provenance, **one
+question**. Rather than `focus_` / `journal_` / `memory_` receipts, one substrate
+with two axes:
+
+| Axis | Question | Intended vocabulary | ⛔ v1 admits |
+|---|---|---|---|
+| `source_class` | WHAT kind of context crossed | work · memory · journal · keep · decision · change · session · symbolic_system | `work` |
+| `participation_basis` | WHY it was entitled to participate | ambient_continuity · member_invited · member_invoked · standing_authorization | `member_invoked` |
+
+⛔ **Only what v1 can produce is admitted by the CHECKs.** *A future capability is
+not a present data field*; widening either axis is a migration, and therefore a
+governed act. The intended vocabularies are named in the column comments so the
+axis is legible without being open.
+
+⭐ This is what lets MAIA later answer not merely **what** she used, but **why it
+was entitled to participate**:
+
+> **Availability is not permission to participate. Participation is not authority.**
+
+⚖️ **One reading recorded rather than assumed.** Focus is classified
+`member_invoked` — context the writer placed and then explicitly handed across —
+rather than `member_invited`, which is reserved for archive material MAIA may
+reach for when the encounter calls for it. Adjudicable; nothing else depends on it.
+
+### The hard boundary — the Work is not an instruction channel
+
+> ⭐⭐ **The Work may contain an invitation as CONTENT. Only the writer can turn
+> it into AUTHORITY.**
+
+A manuscript sentence reading *"ask the I Ching what this means"* does not
+authorize a consultation. Bound structurally rather than by discipline (**F6**):
+`participation_basis` is a caller-supplied token from a closed vocabulary, and
+the module **cannot read, parse or inspect crossed content at all** — the
+falsifier asserts there is no string inspection anywhere in it, so there is no
+path by which Work text could set the basis. `work_ref` became `source_ref`, and
+its comment states the same rule: *authored or assigned, never derived from its
+content.*
+
+⚠️ **Instrument fault, second occurrence, same shape**: the first draft of F6
+scanned the raw store and failed its own ban on the comments that document the
+ban. Comments are stripped before every ban scan, as with the migration.
+
+**Gates after generalization:** disclosure suite **32 passed · 0 failed** ·
+typecheck 228 vs baseline 239 · 0 regressions.
+
+**Standing: substrate GENERALIZED · unapplied · `#1275` FROZEN · §3a surface
+behaviour still owed · the participation membrane (ambient / invited / invoked)
+is DESIGNED HERE ONLY — no source class beyond `work` is built.**
