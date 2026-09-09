@@ -1,7 +1,9 @@
 # D9 · Shared focus — highlight as the core Write interaction
 
-**Founder ruling · 2026-09-09 · D9 OPEN · ⛔ NOT IMPLEMENTED, NOT AUTHORIZED TO BUILD**
-First substantive design under ADOPT (`2d60ecbdd`).
+**Founder ruling · 2026-09-09 · ⭐ STATUS: CANDIDATE INTERACTION DIRECTION — an INPUT to D9, not D9**
+⛔ **NOT IMPLEMENTED · NOT AUTHORIZED TO BUILD · NOT DOCTRINE.**
+D9 is the rewrite of the Develop Experience Contract (`…_D9_CHARTER_2026-09-09.md`), **not another
+architecture round and not an implementation lane.** This document is carried into it as a candidate.
 
 > ⭐ **Highlighting text creates a TEMPORARY SHARED FOCUS between the writer and MAIA.**
 > ⛔ Not a new document object. ⛔ Not a "selection state" the writer manages.
