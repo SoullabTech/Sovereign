@@ -391,3 +391,105 @@ writer discovers the room by inhabiting it.**
 
 > ⭐⭐ **THE WORK COMMANDS ATTENTION. THE ROOM REVEALS POSSIBILITY.**
 > **Founder: less a design slogan, more the governing UX test.**
+
+---
+
+# 8 · ⭐⭐ THE FIELD INVITES CREATION — inspiring, not merely clean
+
+**Founder, 2026-09-09.**
+
+```text
+THE WORK COMMANDS ATTENTION.
+THE ROOM REVEALS POSSIBILITY.
+⭐ THE FIELD INVITES CREATION.
+```
+
+⛔ **A sterile field removes distraction and leaves the writer emotionally untouched.** ⭐ **What the
+artifact had was not minimalism — it was ATMOSPHERE. It made the writing feel consequential.**
+
+> ⭐⭐ **The writing field should create the felt sense that something worth discovering could happen
+> here.**
+
+**Seven qualities, held together:** spaciousness (room for imagination to move) · beauty
+(typography, proportion, texture, rhythm that dignify the Work) · warmth (not the cold neutrality of
+productivity software) · depth (the page belongs to something larger than task completion) · quiet
+vitality (calm without deadness) · possibility (open, unfinished, generative) · **presence (the
+writer is located INSIDE the Work rather than operating an application).**
+
+## 8.1 ⭐ INSPIRATION IS NOT STIMULATION
+
+```text
+⛔ NOT   animations · motivational quotes · badges · decorative clutter ·
+         visual novelty competing with the prose
+⭐ BUT   a form that communicates:
+         Your attention matters here.
+         Your words have weight.
+         There is room for what you do not yet know.
+         Stay with it.
+```
+
+⭐ **Testable form, and it extends the walkable audit**: *does this element draw the eye, or does it
+make the eye READY?* **Stimulation competes for attention. Inspiration prepares it.**
+
+## 8.2 · Elemental without themed software
+
+⭐ **A subtle relationship to nature and elemental life** — ⛔ **not literal fire icons or animated
+water**, but **qualities of living environments**: light · depth · breath · materiality · changing
+atmosphere · organic proportion.
+
+⚠️ **This is the visual form of a trap the platform already names**: *name the mechanism, not the
+mythology; metaphor after measurement, never before.* ⛔ **Elemental theming would be
+mythology-before-measurement rendered in CSS.**
+
+## 8.3 ⭐⭐ THE TWO TESTS ARE IN TENSION — and that IS the design problem
+
+```text
+BEFORE A WORD IS WRITTEN
+  Does the room make the writer want to begin?        → wants PRESENCE
+
+AFTER TWENTY MINUTES
+  Does it still disappear enough for the Work
+  to take over?                                       → wants ABSENCE
+```
+
+⛔ **A room passing only the first is DECORATED. A room passing only the second is STERILE.** ⭐ **It
+is not a two-item checklist — it is one problem with two poles, and the whole difficulty of the
+brief lives in the space between them.**
+
+## 8.4 🔴 ATMOSPHERE THAT READS THE WRITER IS A DIAGNOSIS IN COLOUR
+
+⚠️ **"Different writing states could have restrained atmospheric qualities" must be reconciled with
+the gesture-driven rule (§4.1), or it becomes the most charming possible violation.**
+
+```text
+⭐ LAWFUL — atmosphere responds to THE WORK and the writer's own acts
+   time of day · session length · which section is open ·
+   whether the writer is writing or reading · what they summoned
+
+⛔ UNLAWFUL — atmosphere responds to a READING OF THE WRITER
+   "the room warmed because you seem frustrated"
+   "the field narrowed because you appear stuck"
+```
+
+> ⭐⭐ **A room that changes because MAIA concluded something about the writer's inner state has
+> rendered a diagnosis in colour.** ⛔ **It is Law 4 at the interface layer, F-REACTIVE in
+> atmosphere, and unfalsifiable from inside — the writer cannot see the inference, only feel the
+> room move.**
+
+⭐ **The founder's own framing already protects it — *"not modes the writer manages, but a room
+capable of feeling alive."* Alive to the Work and the hour, not to a model of the person.**
+
+## 8.5 ⚠️ ATMOSPHERE MAY NEVER CARRY INFORMATION
+
+**Atmosphere is the ONE element that legitimately cannot be multi-channel** — warmth, depth and
+light have no screen-reader form, and demanding one would destroy them.
+
+```text
+⭐ LAWFUL     purely atmospheric — carries no meaning a writer could miss
+⛔ UNLAWFUL   atmosphere AS SIGNAL — colour, dimming or texture conveying
+              state, progress, urgency or MAIA's view
+```
+
+⭐ **That resolves it cleanly against §7: atmosphere is exempt from the five-channel rule precisely
+BECAUSE it says nothing.** ⛔ **The moment it means something, it must be available in every channel
+— and at that moment it has stopped being atmosphere.**
