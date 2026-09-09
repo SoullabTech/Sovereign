@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -42,7 +42,9 @@ import { useCanvasSurfaceVariables } from '../atmosphere/StudioAtmosphere';
 import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
-import SectionWritingSession from './SectionWritingSession';
+import SectionWritingSession, { type ManuscriptSession } from './SectionWritingSession';
+import { WholeManuscriptSurface, type WholeManuscriptSurfaceHandle } from './WholeManuscriptSurface';
+import { placeForMode } from '@/lib/writersStudio/manuscriptViewPlace';
 import SectionWritingSurface from './SectionWritingSurface';
 import {
   chooseMount,
@@ -252,6 +254,12 @@ function CanvasRoom() {
   const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
   const [writeState, setWriteState] = useState<WriteState | null>(null);
   const [writing, setWriting] = useState<SectionWriting | null>(null);
+  /* WS-WHOLE-MANUSCRIPT-01. The outline is rendered here, outside the session,
+     so it needs the session's MODE and observed PLACE to route by. Held beside
+     `writing` rather than derived from it: `writing.activeId` is the
+     single-editor seam and says nothing about where a Whole reader is. */
+  const [session, setSession] = useState<ManuscriptSession | null>(null);
+  const [jumpTo, setJumpTo] = useState<string | null>(null);
 
   useEffect(() => {
     const id = manuscript?.id;
@@ -693,9 +701,9 @@ function CanvasRoom() {
                 <StructuredOutline
                   manuscriptId={manuscript.id}
                   sections={writeMount.rows}
-                  activeId={writing.activeId}
+                  activeId={outlinePlace(session, writing)}
                   statusOf={writing.statusOf}
-                  onSelect={writing.goToSection}
+                  onSelect={outlineSelect(session, writing, setJumpTo)}
                 />
                 {/* Renders NOTHING when no reading exists. The absence of an
                     interpreter must look like absence, not like an offer. */}
@@ -706,9 +714,9 @@ function CanvasRoom() {
                 manuscriptId={manuscript?.id ?? null}
                 phase="ready"
                 sections={writeMount.rows}
-                activeId={writing.activeId}
+                activeId={outlinePlace(session, writing)}
                 statusOf={writing.statusOf}
-                onSelect={writing.goToSection}
+                onSelect={outlineSelect(session, writing, setJumpTo)}
               />
             ) : (
               <>
@@ -865,6 +873,9 @@ function CanvasRoom() {
               writeMount={writeMount}
               witnessDelayMs={witnessDelayMs}
               onWriting={setWriting}
+              onSession={setSession}
+              jumpTo={jumpTo}
+              onJumpHandled={() => setJumpTo(null)}
               listPhase={listPhase}
               resolution={resolution}
               manuscript={manuscript}
@@ -945,6 +956,9 @@ function FieldBody({
   writeMount,
   witnessDelayMs,
   onWriting,
+  onSession,
+  jumpTo,
+  onJumpHandled,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -959,6 +973,10 @@ function FieldBody({
   witnessDelayMs?: number;
   /** Publishes the section session so the outline can share it. */
   onWriting?: (w: SectionWriting | null) => void;
+  /** WS-WHOLE-MANUSCRIPT-01 — the view mode and observed place, for the rail. */
+  onSession?: (s: ManuscriptSession | null) => void;
+  jumpTo?: string | null;
+  onJumpHandled?: () => void;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1097,12 +1115,15 @@ function FieldBody({
         version={writeMount.version}
         witnessDelayMs={witnessDelayMs}
       >
-        {(writing) => (
+        {(session) => (
           <SectionSurfaceBridge
-            writing={writing}
+            session={session}
             onWriting={onWriting}
+            onSession={onSession}
             manuscriptId={manuscript.id}
             onCheckpointed={onCheckpointed}
+            jumpTo={jumpTo}
+            onJumpHandled={onJumpHandled}
           />
         )}
       </SectionWritingSession>
@@ -1125,27 +1146,124 @@ function FieldBody({
  * would give it a different queue, a different active id and statuses nobody
  * can see.
  */
+/**
+ * WS-WHOLE-MANUSCRIPT-01 — the outline, routed by the view in force.
+ *
+ * ⛔ PLACE IS OBSERVED, NOT BORROWED. In Whole view the gold current row must
+ * come from what Whole observed; `writing.activeId` names the section the
+ * writer arrived from. `placeForMode` returns null when nothing is known, and
+ * that null reaches the outline unchanged — ManuscriptOutline already draws no
+ * marker without a known current section, which is the correct behaviour and
+ * not a gap to fill in.
+ */
+function outlinePlace(session: ManuscriptSession | null, writing: SectionWriting): string | null {
+  if (!session) return writing.activeId;
+  return placeForMode(session.view, {
+    sectionActiveId: writing.activeId,
+    wholePlaceId: session.wholePlaceId,
+  });
+}
+
+/**
+ * ⛔ AND NAVIGATION IS NOT OBSERVATION. In Whole view a rail click asks the
+ * surface to bring that part of the book into view; it does NOT call
+ * `goToSection`, which owns the single-editor switch and capture seam. Driving
+ * it here would perform a real editor mutation to move a marker.
+ */
+function outlineSelect(
+  session: ManuscriptSession | null,
+  writing: SectionWriting,
+  setJumpTo: (id: string) => void,
+): (sectionId: string) => void {
+  if (session?.view === 'whole') return setJumpTo;
+  return writing.goToSection;
+}
+
 function SectionSurfaceBridge({
-  writing,
+  session,
   onWriting,
+  onSession,
   manuscriptId,
   onCheckpointed,
+  jumpTo,
+  onJumpHandled,
 }: {
-  writing: SectionWriting;
+  session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
+  onSession?: (s: ManuscriptSession | null) => void;
   manuscriptId: string;
   onCheckpointed?: () => void;
+  jumpTo?: string | null;
+  onJumpHandled?: () => void;
 }) {
+  const { writing, view, changeView } = session;
+  const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
+
   useEffect(() => {
     onWriting?.(writing);
     return () => onWriting?.(null);
   }, [writing, onWriting]);
+  useEffect(() => {
+    onSession?.(session);
+    return () => onSession?.(null);
+  }, [session, onSession]);
+
   return (
-    <SectionWritingSurface
-      writing={writing}
-      manuscriptId={manuscriptId}
-      onCheckpointed={onCheckpointed}
-    />
+    <>
+      {/* F-3 — the switch, at the top of the manuscript field. Quiet: two words
+          and a rule, not a control panel. */}
+      <div
+        style={{
+          display: 'flex', gap: SPACE.base, alignItems: 'baseline',
+          marginBottom: SPACE.roomy,
+        }}
+        data-manuscript-view={view}
+      >
+        {(['section', 'whole'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            data-manuscript-view-choice={m}
+            aria-pressed={view === m}
+            onClick={() => {
+              /* The capture is inside `changeView`, before the view moves —
+                 leaving Whole unmounts every editor at once, and no scroll or
+                 blur catches that. */
+              changeView(m, () => whole.current?.captureMountedBeforeLeave());
+            }}
+            style={{
+              background: 'transparent', border: 'none', padding: 0,
+              cursor: 'pointer', font: 'inherit',
+              opacity: view === m ? 1 : 0.45,
+              textDecoration: view === m ? 'underline' : 'none',
+              textUnderlineOffset: 5,
+              color: 'inherit',
+            }}
+          >
+            <StudioText role="metadata" as="span">
+              {m === 'section' ? 'Section' : 'Whole manuscript'}
+            </StudioText>
+          </button>
+        ))}
+      </div>
+
+      {view === 'whole' ? (
+        <WholeManuscriptSurface
+          ref={whole}
+          writing={writing}
+          initialOpenAt={session.wholeOpensAt}
+          jumpTo={jumpTo}
+          onJumpHandled={onJumpHandled}
+          onPlaceChange={session.onWholePlace}
+        />
+      ) : (
+        <SectionWritingSurface
+          writing={writing}
+          manuscriptId={manuscriptId}
+          onCheckpointed={onCheckpointed}
+        />
+      )}
+    </>
   );
 }
 
