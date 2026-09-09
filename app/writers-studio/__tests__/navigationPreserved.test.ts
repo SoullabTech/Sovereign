@@ -85,3 +85,74 @@ describe('the navigation mechanism the integration must not touch', () => {
     }
   });
 });
+
+/**
+ * ⭐ THE PRESENTATION SEAM CONFERS NO AUTHORITY.
+ *
+ * A narrow seam into the preserved surface was authorized so a room may draw a
+ * read-only mark over the writer's held focus. These assertions are the limits
+ * it was authorized under. A seam that could be typed into, saved from, or
+ * navigated by would be a second manuscript wearing a mark's clothes.
+ */
+describe('the focus presentation seam', () => {
+  const surface = read('WholeManuscriptSurface.tsx');
+  const overlay = fs.readFileSync(
+    path.join(__dirname, '..', 'field', 'FocusOverlay.tsx'), 'utf8',
+  );
+  const bare = (src: string) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
+
+  it('the textarea remains the sole editable manuscript control', () => {
+    expect((bare(surface).match(/<textarea/g) ?? [])).toHaveLength(1);
+    expect(bare(surface)).not.toContain('contentEditable');
+    expect(bare(overlay)).not.toContain('contentEditable');
+    expect(bare(overlay)).not.toContain('<textarea');
+    expect(bare(overlay)).not.toContain('<input');
+  });
+
+  it('the overlay is inert: no handlers, no focus, no pointer', () => {
+    const src = bare(overlay);
+    expect(src).toContain("aria-hidden=\"true\"");
+    expect(src).toContain("pointerEvents: 'none'");
+    expect(src).not.toMatch(/\son[A-Z]\w+=/);
+    expect(src).not.toContain('tabIndex');
+    expect(src).not.toContain('useState');
+    expect(src).not.toContain('useEffect');
+  });
+
+  /** Derived from the current body, never a copy it keeps. */
+  it('the overlay stores nothing and owns no capture', () => {
+    const src = bare(overlay);
+    expect(src).not.toContain('captureForUnmount');
+    expect(src).not.toContain('editSection');
+    expect(src).not.toContain('useRef');
+    expect(src).toContain('body: string');
+  });
+
+  /** It moves nobody. Finding A's mechanism stays the only way to travel. */
+  it('the overlay navigates nothing', () => {
+    const src = bare(overlay);
+    expect(src).not.toContain('scrollIntoView');
+    expect(src).not.toContain('scrollTo');
+  });
+
+  /**
+   * ⛔ AN UNUSED SEAM CHANGES NOTHING. Without a room that draws, the surface
+   * renders exactly as it did — same wrapper, same editor metrics. The
+   * canonical room passes no renderer, so this is the assertion that keeps its
+   * appearance byte-for-byte what it was.
+   */
+  it('is inert when no room draws through it', () => {
+    const src = bare(surface);
+    expect(src).toContain("renderSectionOverlay ? { position: 'relative' } : undefined");
+    expect(src).toContain('...(renderSectionOverlay ? { padding: 0, margin: 0 } : null)');
+  });
+
+  /** The seam is presentation. It may not be handed anything that writes. */
+  it('is given a section id and a body, and nothing that writes', () => {
+    expect(surface).toContain(
+      'renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;',
+    );
+  });
+});
+

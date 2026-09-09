@@ -64,25 +64,12 @@ export interface FieldRoomProps {
    * announce them.
    */
   workRef?: (node: HTMLElement | null) => void;
-  /**
-   * Which section shells currently carry part of the held focus.
-   *
-   * ⚠️ SECTION-LEVEL PAINT, AND SAID SO. The prototype highlighted the exact
-   * characters, using an API that addresses DOM text nodes; the substrate
-   * renders each editable section as a <textarea>, whose value is not such a
-   * node. Painting inside it would mean an overlay mirror, which means a seam
-   * in the preserved component — a separate decision, not one to take by
-   * reflex here. So the mark says WHICH SECTIONS the focus covers, and the
-   * strip says exactly what is held. The focus MODEL is character-exact
-   * regardless; only this mark is coarse.
-   */
-  focusedSectionIds?: string[];
   title: string;
   note?: string | null;
 }
 
 export default function FieldRoom({
-  treatment, work, structure, maia, workbench, focus, workRef, focusedSectionIds, title, note,
+  treatment, work, structure, maia, workbench, focus, workRef, title, note,
 }: FieldRoomProps) {
   /**
    * ⭐ ARRIVAL IS THE QUIET ROOM. Nothing is read from storage and nothing is
@@ -205,15 +192,12 @@ export default function FieldRoom({
             ['--field-location-color' as string]: locationMark.color,
           }}
         >
-          {/* The focus mark, drawn on the section shells the focus covers.
-              Scoped to this room so nothing outside it can be reached. */}
-          {focusedSectionIds && focusedSectionIds.length > 0 && (
-            <style>{focusedSectionIds.map((id) => (
-              `[data-field-room] [data-whole-manuscript-section="${id}"]{` +
-              `box-shadow:inset ${Math.max(focusMark.weight, 2)}px 0 0 ${focusMark.color};` +
-              `border-radius:2px}`
-            )).join('')}</style>
-          )}
+          {/* ⭐ THE FOCUS IS PAINTED WHERE THE WRITER PUT IT, not on the
+              section that contains it. The mark is drawn by the surface's
+              presentation seam, over the exact run the focus names, so widening
+              a sentence to its paragraph visibly widens. A second, coarser mark
+              on the shell would be two marks for one focus — and the Work is
+              allowed exactly one. */}
           {work}
         </main>
       </div>
