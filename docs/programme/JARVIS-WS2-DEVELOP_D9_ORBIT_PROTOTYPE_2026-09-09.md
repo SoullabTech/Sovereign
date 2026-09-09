@@ -923,8 +923,11 @@ outside material followed or declined **as the writer actually would.**
 — *"this reading is extraordinary"* nearly swallowing three narrow falsifiers; *"the mechanical layer
 is not weak"* generalizing from three instrument errors.
 
-> ⭐⭐ **Pre-declaring the strongest claim a result may license is the claim-side equivalent of
-> pre-declaring a falsifier.** ⛔ **It removes the moment in which a strong feeling and a strong
-> statement get to negotiate.**
+> ⭐⭐ **Decide what the evidence could lawfully establish before seeing whether the evidence is
+> emotionally compelling.** — founder, 2026-09-09, the canonical form
+
+⭐ **The claim-side equivalent of pre-declaring a falsifier.** ⛔ **It removes the moment in which a
+strong feeling and a strong statement get to negotiate** — *and it protects the claim from expanding
+after a powerful experience, which is the only time the expansion is hard to notice.*
 
 ⭐ **Recorded as method, not only as this witness's wording.**
