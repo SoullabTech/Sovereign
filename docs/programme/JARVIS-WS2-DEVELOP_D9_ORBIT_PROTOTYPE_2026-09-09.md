@@ -1422,3 +1422,100 @@ RETURN      NO.   Closing her did not put the conversation away; it moved it on 
 ```
 
 > ⭐ **The room is right. The Work stayed the Work. What is inside the room is not yet a mind.**
+
+---
+
+# 26 · THE COGNITION EXEMPLAR — ⛔ NOT A FIXTURE
+
+⚠️ **Two independent encounters, one failure.** The founder framed **section 2** and asked *"Is this
+section effective and well placed?"*; this session framed **section 5** and asked *"Does the chapter
+lose its nerve here?"* Both received a stored observation about the fifth element at section 8.
+Both then corrected her explicitly. Both received the same paragraph again. ⭐ **The failure is not
+question-specific. It is that the writer's turn has no causal effect on her understanding.**
+
+## 26.1 · The reading the artifact could not produce (founder, 2026-09-09)
+
+Recorded as **the founder's own developmental reading**, not as a ruling about the manuscript and
+not as an answer MAIA must reproduce.
+
+> Section 1 establishes *integration → coherence → fifth element → wholeness*. Section 2 says it
+> again — *one-sided identification → complementary elements → integration → fifth element →
+> wholeness* — so arriving at "From the Four Comes the Way Forward" feels like the chapter has
+> **restarted its argument rather than moved forward**. Section 3, the Four Yogis, is a far stronger
+> embodiment of exactly the problem section 2 is naming. The William James epigraph is detached:
+> changing life by changing attitude is not yet the problem this passage is addressing.
+>
+> ⭐ **Do not delete the idea. Change its job.** Section 2 could become a short hinge — name the
+> problem of becoming identified with one path, then let the story embody it — producing actual
+> movement: *integration is possible → one-sidedness prevents it → here is what one-sidedness looks
+> like → the story opens the teaching.*
+>
+> ⭐⭐ **Section 2 is a developmental hinge that currently resolves what it should instead prepare.**
+
+## 26.2 ⭐ THE COGNITION TARGET — the thinking, not the answer
+
+```text
+UNDERSTAND THE QUESTION   evaluate effectiveness + placement, not retrieve an observation
+READ LOCALLY              notice what the section actually says
+READ RELATIONALLY         compare it with what precedes and what follows
+DISCERN FUNCTION          ask what job this section performs in the movement of the chapter
+NAME THE PROBLEM          it repeats rather than advances
+SEE THE OPPORTUNITY       the underlying idea is useful
+DEVELOP, DON'T REPLACE    change the section's job; do not rewrite it
+PRESERVE AUTHORSHIP       offer the possibility and its tradeoffs
+```
+
+⭐ **This needed no great cleverness. It needed staying with the question long enough to notice the
+relationship between three adjacent movements.** Scale Coherence + Parallel Knowing + developmental
+intelligence, operating together.
+
+## 26.3 · The acceptance case
+
+**Given this manuscript state and the question *"Is this section effective and well placed?"*, can
+real MAIA independently produce a grounded developmental reading that addresses the section's
+function, its relationship to neighbouring material, and plausible ways forward?**
+
+⭐ **She may disagree with the founder's reading. On good evidence that is healthy.** What fails is:
+
+```text
+generic editorial advice
+repeating a previously stored observation
+answering a different question
+treating the section in isolation
+immediately rewriting it
+asking the writer to explain what they meant when they already asked clearly
+```
+
+**Second-turn falsifier.** After her reading, the writer says *"I think it's repetitive and
+disconnected."* She may agree and sharpen why, distinguish repetition from intentional
+recapitulation, or notice something neither party did. ⛔ **What she may not do is emit the same
+understanding in different wording.**
+
+> ⭐⭐ **THE CRITERION: the writer's contribution must be capable of changing MAIA's understanding of
+> the Work — not merely changing the wording of her next response.**
+
+## 26.4 ⛔ THE TRAP THIS DOCUMENT CREATES
+
+⛔ **Do NOT teach the prototype "when asked about section 2, say it should become a hinge."** That
+reproduces precisely the failure being left behind.
+
+⚠️ **And the exemplar is now committed to this repository.** A future run that gives MAIA §26.1 as
+context and then observes her propose a hinge would **pass a naive reading of this test while
+failing its purpose**. ⛔ **The acceptance run must be against a MAIA that has not been shown the
+answer** — §26.1 is the grader's key, not an input. Any run that cannot establish that separation
+is **NOT A WITNESS**.
+
+⛔ **No manufactured deliberation.** A pause inserted to look thoughtful is forbidden. Thought is
+felt as **responsiveness, specificity, revision, surprise, and accumulation across turns.**
+
+## 26.5 · The bar
+
+> Not *"AI gives editorial suggestions."*
+>
+> ⭐⭐ **You put your finger on something that feels wrong. MAIA looks with you, holds the
+> surrounding Work in mind, helps articulate what the problem actually is, and together you discover
+> what the passage wants to become.**
+
+**Standing: form ACCEPTED with four named defects (§25.3) · artifact cognition FAIL / NOT TESTABLE
+HERE · fixture work CLOSED · next phase preserves this surface and puts the canonical cognition path
+inside it.**
