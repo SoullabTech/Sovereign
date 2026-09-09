@@ -867,6 +867,9 @@ DIAGNOSTIC THOUGHTS — each one is a FAIL signal, not a UX annoyance:
    ⭐ ADDED 2026-09-09 (D9 mode-inference):
    "Which mode should I use?"
    "Should I ask for whole-work analysis?"
+   ⭐ ADDED 2026-09-09 (interface form — F-REACTIVE by furniture):
+   "there are other things I should probably be doing"
+   "I should check the statistics / versions / goals"
 
 STATUS: DETECTABLE IN A SESSION · NOT DISCHARGEABLE BY ONE
 ```
