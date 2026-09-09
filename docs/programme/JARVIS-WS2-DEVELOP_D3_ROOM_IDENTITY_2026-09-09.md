@@ -306,10 +306,76 @@ Consequences, none of them new law:
 
 ⛔ Recorded as identity and manner. No interface proposed; §9 still open.
 
+## 13 · Engagement is behavioural — **founder ruling, 2026-09-09**
+
+> *The writer can choose whether to engage MAIA at all, or as much as is needed, through their behaviour.*
+
+### 13.1 · What this rules
+
+```text
+MAIA's degree of involvement is NOT a setting, a mode, or a declaration.
+It is expressed by what the writer does.
+
+ZERO is a complete, unremarkable use of the Studio.
+   Writing an entire Work with no MAIA at all is not a degraded path.
+
+The CEILING is the writer's need — never MAIA's capability or readiness.
+```
+
+This is the general form of something already established: *MAIA never opens a process; an observation is available, it does not summon.* §13 extends that from process entry to **all** engagement.
+
+### 13.2 · ⚠️ This is NOT inference about the writer
+
+The distinction is sharp and load-bearing:
+
+```text
+INFERRING STANCE      MAIA decides what posture the writer is in,
+                      or what they meant
+                      -> against Interface Humility. This was Option B's cost.
+
+RESPONDING TO
+ENGAGEMENT            MAIA is present in proportion to being addressed
+                      -> no inference about any inner state.
+                         Simply: she does not arrive uninvited.
+```
+
+**Behavioural engagement therefore avoids Option B's cost entirely**, because MAIA reads nothing about the writer. She answers, or she is quiet.
+
+### 13.3 · ⭐ This splits F-D2-1, which is why §9 was stuck
+
+F-D2-1 was posed as one question — *declared or inferred?* It was two:
+
+```text
+Q1  How does MAIA know how much to engage?
+    ⭐ RULED (§13): behaviour. Not a mode.
+
+Q2  What occupies the writer's primary field, and what is MAIA
+    helping WITH — composition, or relationship to the Work?
+    STILL OPEN — but it no longer needs to be a MODE to be answered.
+```
+
+**The two were conflated, and Q1 was carrying Q2.** The main work modes were doing was *telling MAIA how to behave* — and Q1 removes that job from them entirely. What remains for Q2 is a question about the writer's environment, not about MAIA's licence.
+
+**Consequence for §9**: Option A (declared) loses its strongest justification, since it was justified largely by needing to tell MAIA which stance she was operating in. Option B is now moot for engagement. **Q2 alone does not require modes** — the field can follow what the writer is doing without any mode existing. ⛔ *Still not ruled here; the option set is simply smaller and the question is now the right one.*
+
+### 13.4 · ⚠️ One caution — engagement must not ratchet
+
+*"As much as is needed"* has a failure mode worth naming before it is built:
+
+```text
+SAFE        behaviour determines WHETHER MAIA responds
+UNSAFE      behaviour determines HOW MUCH MAIA VOLUNTEERS
+```
+
+If engagement accumulates — if using MAIA often makes her more present unprompted — then *"as much as is needed"* quietly becomes *"as much as you have been using."* That is a habituation loop, and it runs directly at the vow against attachment capture and at the sovereignty test *does this reduce the system's psychological centrality over time?*
+
+**Proposed, not ruled**: engagement level is read **per act, never accumulated**. A writer who worked closely with MAIA yesterday opens today's session to exactly as much MAIA as a writer who never has — which is none, until they ask.
+
 ## Carried forward
 
 ```text
-F-D2-1   stance declared vs inferred     ⛔ RULING REQUIRED — D3 blocked
+F-D2-1   SPLIT (§13.3). Q1 engagement ⭐ RULED behavioural.
+         Q2 primary field / what MAIA helps with — OPEN, needs no mode
 F-D2-2   development with no named question   bears on §5, proposed not ratified
 F-D2-5   Writing entry conditions        open; §1 gives identity, not entries
 F-D2-3   thread lifetime                 later continuity work
