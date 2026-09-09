@@ -631,8 +631,21 @@ release clears. **6/6, and the 20-check suite still 20/20.**
 ⚠️ **My test was wrong a THIRD time before the product was**: the probe phrase *"something unclear"*
 contains `something`, a real trigger, so it never reached the fallback at all. ⭐ **Caught by the
 founder's own sharpened rule, applied to itself** — the instrument was checked before the product
-was blamed. ⛔ **Three instrument errors, zero product errors, in the mechanical layer. The
-mechanical layer is not where this prototype is weak.**
+was blamed. ⚠️ **OVERREACH CORRECTED — founder, 2026-09-09.** ⛔ *"The mechanical layer is not where this
+prototype is weak"* **was not established.** It generalized from three instrument errors to a claim
+about a whole layer — **the same evidence-outrunning-what-was-exercised error the testing rule above
+exists to prevent, committed one paragraph after stating it.**
+
+**What IS established, and only this:**
+
+```text
+KNOWN MECHANICAL DEFECTS   two real ones, found immediately by use, repaired
+CURRENT SUITE              20/20 + 6/6 against the behaviours NOW SPECIFIED
+RECENT RED RESULTS         three were instrument defects, not product defects
+
+⭐ THEREFORE   the known mechanics are currently behaving as specified
+⛔ NOT THAT    the mechanical layer has been proven generally strong
+```
 
 ## 14.2 ⛔ THE WITNESS THAT REMAINS
 
@@ -650,3 +663,47 @@ THEN IGNORE THE MECHANICS AND NOTICE:
 > ⭐ **Founder: the next defect, if there is one, is most likely to be EXPERIENTIAL rather than
 > mechanical.** ⚠️ **Both defects so far appeared immediately under real use and were invisible to
 > every structural check — which is why the suite is supporting evidence and never the witness.**
+
+---
+
+# 15 · ⚠️ ACCESSIBILITY — STRUCTURAL PASS IS NOT AN AT WITNESS
+
+**Founder, 2026-09-09.** ⭐ **The `aria-describedby` contract can be structurally correct while real
+assistive technology behaves differently.**
+
+```text
+✅ ESTABLISHED   the accessible scope description exists, is referenced by
+                 the composer, updates on frame change, clears on release
+⛔ NOT ESTABLISHED   that a screen-reader writer actually perceives the scope
+                     once on entry, and is not interrupted at it
+
+OWED   a witness with a real screen reader
+⛔ NOT a blocker for this prototype walk
+```
+
+⚠️ **This is F-SCOPE's own hazard turned on the repair for F-SCOPE**: *a boundary that is
+structurally announced but not actually perceived is still an invisible operative scope* — **it
+merely has a passing test.**
+
+# 16 · ⭐ THE FELT WITNESS — two questions, and the second is the harder one
+
+```text
+1  Did it feel like SHOWING MAIA WHAT YOU MEANT,
+   or like MANAGING A BOX?
+
+2  ⭐ Did WIDENING THE FRAME CHANGE THE KIND OF CONVERSATION
+   you naturally wanted to have with MAIA?
+```
+
+⭐⭐ **Question 2 is the stronger test, and it is not one an interface can fake.** ⛔ **Question 1 can
+be passed by good interaction design alone.** **Question 2 asks whether the writer's own INTENTION
+moved with the aperture** — from *"help me with this sentence"* to *"look at what I'm doing across
+all of this"* — **without a thought about modes or levels.**
+
+> ⭐ **If that happens, Scale Coherence has reached the writer rather than merely the architecture:
+> the interface is letting attention move from leaf to branch to tree.**
+
+**Protocol**: take a real stretch of Chapter Four · frame something small · widen it across the point
+where the thought changes · ask MAIA something genuinely wanted about that whole movement.
+⛔ **Then stop exercising buttons and just use it.** ⭐ **First spontaneous description, not a
+PASS/FAIL.**
