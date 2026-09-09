@@ -497,8 +497,15 @@ release only on explicit act · highlight cleared                  PASS
 
 ⚠️ **Two of my own test runs were wrong before the product was**: the first suite failed on a
 threshold I set badly, and the drag suite failed twice because it never scrolled the frame into
-view. ⭐ **Recorded because it is the same lesson at instrument level: a red result is a claim about
-the test until the test is checked.**
+view. ⚠️ **SHARPENED — founder correction, 2026-09-09.** ⛔ *"A red result is a claim about the test"* is
+half a rule, and the half that produces the opposite error.
+
+> ⭐⭐ **A failing test is evidence of a MISMATCH. Before attributing the mismatch to the product,
+> verify the instrument actually exercised what it claims to have exercised.**
+
+⭐ **Then attribute.** ⛔ **Neither "the product is broken" nor "the test is wrong" may be assumed —
+the instrument is checked FIRST because it is the cheaper of the two to check, not because it is the
+likelier to be at fault.**
 
 ## 12.3 ⭐ ONE PRODUCT CHANGE MADE WHILE FIXING — the scope-blind fallback
 
@@ -578,3 +585,68 @@ averaged into one verdict.**
 ⭐ **That is the Field + Orbit argument beginning to prove itself rather than merely being well
 specified.** ⛔ **Beginning — one witness, one screen, ten sections, no live cognition. F-ORBIT's
 full sequence (arrival · immersion · summon and dismiss each capability · return) is still owed.**
+
+---
+
+# 14 · ⭐ RULING — acknowledgement, not repetition · founder 2026-09-09
+
+> **F-SCOPE requires the writer to be able to PERCEIVE the operative scope. It does not require MAIA
+> to keep REMINDING them of it.**
+
+```text
+⭐ LAWFUL     "I'm holding the passage you framed."
+              → when ambiguity makes acknowledgement useful
+⭐ LAWFUL     accessible scope state available in the active channel
+              → no repeated conversational interruption required
+⛔ UNLAWFUL   "Still working on sections 1–2…" · "Your frame remains active…"
+              → repeated reminders become pressure and interface chatter
+```
+
+⭐ **The visual frame already discharges F-SCOPE for a sighted writer. A screen-reader or voice-only
+channel needs an EQUIVALENT PERCEPTIBLE FORM — not a spoken reminder.**
+
+> ⭐⭐ **Solving F-SCOPE by repetition would drift straight into F-REACTIVE** — *the third instance in
+> this session of a repair migrating a violation, and the first one caught before it shipped.*
+
+## 14.1 · Built and verified
+
+```text
+ACCESSIBLE STATE   a visually-hidden description names the current scope;
+                   the composer carries aria-describedby to it, so a
+                   screen-reader writer hears the scope ONCE ON ENTERING
+                   the field, never repeatedly at it
+                   → "Focus frame holds sections 1–2. MAIA is scoped to it
+                      until you release it."
+REGION             the focus chip is a labelled region, findable on demand
+ACKNOWLEDGE ONCE   under ambiguity MAIA names the frame on the FIRST
+                   unrecognized turn only; a second says "Say more?"
+RESET              a new frame, or any recognized answer, re-arms it
+CLEARED            release empties the accessible description
+```
+
+**Verified** (`scripts/witness/d9-scope-perceptibility.mjs`): no frame → empty · frame → scope
+present · composer describes it · 1st ambiguous turn acknowledges · **2nd does not repeat** ·
+release clears. **6/6, and the 20-check suite still 20/20.**
+
+⚠️ **My test was wrong a THIRD time before the product was**: the probe phrase *"something unclear"*
+contains `something`, a real trigger, so it never reached the fallback at all. ⭐ **Caught by the
+founder's own sharpened rule, applied to itself** — the instrument was checked before the product
+was blamed. ⛔ **Three instrument errors, zero product errors, in the mechanical layer. The
+mechanical layer is not where this prototype is weak.**
+
+## 14.2 ⛔ THE WITNESS THAT REMAINS
+
+```text
+frame a passage → drag the bottom handle well down, across a boundary →
+drag the top handle up → click into MAIA → ask a real question about the
+larger framed movement
+
+THEN IGNORE THE MECHANICS AND NOTICE:
+
+⭐ "I'm showing MAIA what I mean."   → the Focus Frame has found its form
+⛔ "I'm managing a box."             → mechanics perfect, interaction not
+```
+
+> ⭐ **Founder: the next defect, if there is one, is most likely to be EXPERIENTIAL rather than
+> mechanical.** ⚠️ **Both defects so far appeared immediately under real use and were invisible to
+> every structural check — which is why the suite is supporting evidence and never the witness.**
