@@ -94,3 +94,58 @@ treatments introduced: it was already there.** Any treatment adopted must re-for
 **Owed before adoption:** repair §4, then re-walk A and C on the founder's own acts — *read · jump ·
 select a sentence · widen · Ask MAIA · Work with an observation · close MAIA · continue writing* —
 and pick by which one stops being noticed first.
+
+---
+
+# 6 · FOUNDER RULING — **C SELECTED**
+
+**B — REJECT.** Section location and shared Focus both use filled manuscript regions. ⭐ **Two
+meanings share one visual form. Even if the shades differ, the writer has to DECODE them — that
+violates the falsifier before aesthetics enter into it.**
+
+**A — VIABLE, but weaker.** Very quiet and preserves the Work beautifully, but it places more burden
+on the rail to carry location. **Less manuscript-local orientation.**
+
+**C — SELECT.** Location and Focus are deliberately different phenomena rather than stronger and
+weaker versions of the same highlight.
+
+```text
+WHERE        structure / margin / rail
+HERE         Focus Frame in the Work
+ABOUT HERE   MAIA orbit / pursuit
+```
+
+> ⭐⭐ **Structure says where. Focus says here. MAIA says what we are exploring about here.**
+
+## 6.1 ⭐ THE FALSIFIER, STRENGTHENED — form and placement before colour
+
+The hue-extractor bug exposed something more important than itself: **the verdict must not depend
+primarily on colour.** The three states have to stay distinguishable **in greyscale, under
+colour-vision differences, and across theme changes.**
+
+> ⭐⭐ **Location, Focus and Thread must remain distinguishable by FORM and PLACEMENT before colour
+> is considered.** Hue is an additional variable, not the identity of the mark.
+
+```text
+LOCATION   spatial channel: margin / rail / structural boundary
+FOCUS      spatial channel: bracket or frame around manuscript content
+THREAD     spatial channel: MAIA orbit / carried focus strip
+```
+
+⚠️ **The measured study passes under the strengthened rule too** — C's three marks differ by channel
+(`hrule` structural · `bracket` in-text · `margin-rule` beside-text) **before** hue is consulted.
+⛔ But the instrument still tests hue as a co-equal term and should be re-cut to test **channel
+first, hue only as reinforcement**. Recorded as owed.
+
+## 6.2 ⛔ THE ANTI-DRIFT CONSTRAINT
+
+> ⛔ **Do not add a persistent "current section" background fill to C later for emphasis. That would
+> slowly recreate B.**
+
+**Current location stays structural and peripheral. Only deliberate shared attention gets to enter
+the manuscript as a strong mark.** ⭐ *The pressure to add "just a little" section highlight will
+recur every time orientation feels weak; that pressure is the treatment we rejected, arriving by
+increments.*
+
+**Standing: C is the treatment carried into the old-build integration. No further options
+researched unless C fails during a sustained real writing session.**
