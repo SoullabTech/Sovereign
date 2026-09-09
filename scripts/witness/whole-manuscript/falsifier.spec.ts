@@ -21,6 +21,7 @@
  * not that the product behaves.
  */
 
+import { appendFileSync } from 'node:fs';
 import { test, expect, type Browser, type Page } from '@playwright/test';
 import {
   MANUSCRIPT_ID, PASSWORD, SECTION_COUNT, USERNAME, draftSectionId, headingFor,
@@ -37,6 +38,27 @@ const editor = (i: number) => `${shell(i)} textarea`;
 let page: Page;
 /** Every console error and uncaught exception for the whole run, in order. */
 const faults: string[] = [];
+
+/**
+ * ⭐ THE DATABASE IS DISPOSABLE. THE CLAIM THAT IT PASSED IS NOT.
+ *
+ * The harness destroys its cluster, its build and its run directory on a pass —
+ * which is right, and would also destroy the only record that the pass ever
+ * happened. Each check therefore reports its own outcome to a durable file the
+ * caller composes into a result block, so the evidence survives the evidence's
+ * environment.
+ *
+ * Written per check rather than summarised at the end: a run that dies midway
+ * must leave what it had established, and a summary written by the last test
+ * cannot exist for a run whose last test never ran.
+ */
+const record = (label: string, outcome: string) => {
+  const out = process.env.WM_RESULT;
+  if (out) appendFileSync(out, `${label} ${outcome}\n`);
+};
+
+/** The constitution's own name for a check: the token before the first '·'. */
+const labelOf = (title: string) => title.split('·')[0].trim();
 
 /** Which sections currently hold a live editor, by position. */
 const mountedPositions = () =>
@@ -98,7 +120,22 @@ test.beforeAll(async ({ browser }: { browser: Browser }) => {
   await expect(page.locator(OUTLINE)).toBeVisible({ timeout: 60_000 });
 });
 
-test.afterAll(async () => { await page?.context().close(); });
+test.afterEach(({}, info) => {
+  /* ⛔ Only `passed` is a pass. A timed-out, skipped or interrupted check is
+     reported as what it was — UNOBSERVABLE IS NOT PASS, in the record as well
+     as in the assertions. */
+  record(labelOf(info.title), info.status === 'passed' ? 'PASS' : String(info.status ?? 'unknown').toUpperCase());
+});
+
+test.afterAll(async () => {
+  /* Dev-server hot-reload noise cannot arise here — the subject is a production
+     build served by `next start` — but the filter is explicit rather than
+     assumed, so the number means what its name says. */
+  const nonHmr = faults.filter((f) => !/\[HMR\]|hot-update|webpack-hmr/i.test(f));
+  record('console non-HMR errors:', String(nonHmr.length));
+  for (const f of nonHmr.slice(0, 10)) record('  fault:', f.slice(0, 200));
+  await page?.context().close();
+});
 
 test('enter Whole Manuscript', async () => {
   await page.locator('[data-manuscript-view-choice="whole"]').click();

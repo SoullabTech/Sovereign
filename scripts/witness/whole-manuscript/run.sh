@@ -111,8 +111,10 @@ npm run db:bootstrap >"$RUN/bootstrap.log" 2>&1 || {
 npm run db:migrate >"$RUN/migrate.log" 2>&1 || {
   echo "⛔ db:migrate failed on the baselined database"; tail -40 "$RUN/migrate.log"; exit 1; }
 
+SCHEMA_RESULT="PASS"
+
 echo "[3/6] synthetic member + deterministic 262-section Work"
-npx tsx scripts/witness/whole-manuscript/seed.ts
+FIXTURE="$(npx tsx scripts/witness/whole-manuscript/seed.ts | tee /dev/stderr | tail -1 | sed 's/^ *//')"
 
 echo "[4/6] build"
 npm run build >"$RUN/build.log" 2>&1 || { echo "⛔ build failed — see $RUN/build.log"; tail -30 "$RUN/build.log"; exit 1; }
@@ -127,5 +129,41 @@ for i in $(seq 1 60); do
 done
 
 echo "[6/6] falsifier"
-WM_BASE="http://127.0.0.1:$APP_PORT" WM_SHA="$SHA" WM_OUT="$RUN/results" \
+RESULT="$RUN/checks.txt"
+: >"$RESULT"
+set +e
+WM_BASE="http://127.0.0.1:$APP_PORT" WM_SHA="$SHA" WM_OUT="$RUN/results" WM_RESULT="$RESULT" \
   npx playwright test --config scripts/witness/whole-manuscript/playwright.config.ts
+FALSIFIER_RC=$?
+set -e
+
+# ⭐ THE DATABASE IS DISPOSABLE. THE CLAIM THAT IT PASSED IS NOT.
+#
+# Everything this run built is about to be deleted, including the only place the
+# result existed. So the result is composed and PRINTED here, self-contained and
+# transcribable, before cleanup touches anything. Set WM_RESULT_OUT to also keep
+# a copy at a path of your choosing.
+#
+# ⛔ It reports what happened, never what was hoped for: `overall` is derived
+# from the runner's exit status, and a check that did not run appears as its
+# own status rather than being absent.
+BLOCK="$(
+  echo "─────── WS-WHOLE-MANUSCRIPT-01 · falsifier result ───────"
+  echo "subject SHA             $SHA"
+  echo "harness SHA             $SHA (same tree — the harness is versioned with its subject)"
+  echo "schema reconstruction   $SCHEMA_RESULT (canonical baseline + ledger stamp + db:migrate)"
+  echo "fixture identity        $FIXTURE"
+  cat "$RESULT" 2>/dev/null
+  if [ "$FALSIFIER_RC" -eq 0 ]; then echo "overall                 PASS"; else echo "overall                 FAIL (runner exit $FALSIFIER_RC)"; fi
+  echo "────────────────────────────────────────────────────────"
+)"
+echo "$BLOCK"
+# An `&&` chain here would be the script's own last word under `set -e`: with
+# WM_RESULT_OUT unset the chain evaluates false and the harness would exit 1,
+# reporting a PASS as a failure. The condition is spelled out instead.
+if [ -n "${WM_RESULT_OUT:-}" ]; then
+  printf '%s\n' "$BLOCK" >"$WM_RESULT_OUT"
+  echo "[result] also written to $WM_RESULT_OUT"
+fi
+
+exit "$FALSIFIER_RC"
