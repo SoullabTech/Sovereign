@@ -58,6 +58,8 @@ import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
+import FieldRoom from '../field/FieldRoom';
+import { parseTreatment } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
@@ -446,6 +448,22 @@ function CanvasRoom() {
 
   const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
   const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
+
+  /**
+   * ── THE DESIGN STUDY ──────────────────────────────────────────────────────
+   *
+   * `?field=A|B|C` renders the recovered Field + Orbit room around this same
+   * substrate. ABSENT MEANS ABSENT: with no parameter, or an unrecognised one,
+   * every line below runs exactly as it did and no member sees any difference.
+   * The study surface is reachable only by explicitly asking for it.
+   *
+   * ⛔ The room is a SHELL. It receives the pieces this page has already
+   * resolved — the same session, the same writing, the same outline rows, the
+   * same conversation — and decides only where they sit. Nothing about the
+   * engine is re-derived here, because re-deriving it is how a room quietly
+   * becomes a second implementation of the thing it was supposed to wrap.
+   */
+  const fieldTreatment = parseTreatment(searchParams?.get('field') ?? null);
   const named = Boolean(work?.title ?? manuscript?.title);
 
   /* 📖 WS2-03D — Conversations opens HERE.
@@ -551,6 +569,73 @@ function CanvasRoom() {
       )}
     </>
   );
+
+  if (fieldTreatment) {
+    return (
+      <FieldRoom
+        treatment={fieldTreatment}
+        title={headline}
+        note={named ? null : UNTITLED_EXPRESSION}
+        structure={
+          /* THE SAME ROWS, THE SAME NAMESPACE RULE. In section_aware the rows
+             are manuscript_draft_sections ids and carry navigation; otherwise
+             they are the immutable Source and carry none. The room does not get
+             to relax that — a column that looks wired and misses every click is
+             the same defect wherever it is drawn. */
+          writeMount.mount === 'sections' && writing && manuscript?.id ? (
+            <StructuredOutline
+              manuscriptId={manuscript.id}
+              sections={writeMount.rows}
+              activeId={outlinePlace(session, writing)}
+              statusOf={writing.statusOf}
+              onSelect={outlineSelect(session, writing, setJumpTo)}
+            />
+          ) : null
+        }
+        maia={
+          /* The existing Canvas conversation, unchanged and unimproved. It does
+             not go through CanonicalTurn, and this room does not pretend
+             otherwise. */
+          work && manuscript ? (
+            <StudioConversation
+              work={work}
+              manuscriptId={manuscript.id}
+              conversationId={conversationId}
+              onClose={() => undefined}
+            />
+          ) : (
+            <MaiaColumn context={workContext} />
+          )
+        }
+        workbench={
+          <WorkDrawer
+            works={works}
+            unitedWork={work}
+            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
+            manuscriptLabel={manuscriptLabel}
+            onChanged={reloadWorks}
+          />
+        }
+        work={
+          <FieldBody
+            writeMount={writeMount}
+            witnessDelayMs={witnessDelayMs}
+            onWriting={setWriting}
+            onSession={setSession}
+            jumpTo={jumpTo}
+            onJumpHandled={() => setJumpTo(null)}
+            listPhase={listPhase}
+            resolution={resolution}
+            manuscript={manuscript}
+            onPick={(id) => setRequested(id)}
+            onMeta={setDraftMeta}
+            onCheckpointed={() => setHistoryKey((k) => k + 1)}
+            onWriteAuthorityChanged={refreshWriteState}
+          />
+        }
+      />
+    );
+  }
 
   return (
     <WriterStudioShell
