@@ -151,7 +151,6 @@ export async function POST(req: NextRequest) {
         deepWorkRecommended: safety.fieldRouting.deepWorkRecommended,
         reasoning: safety.fieldRouting.reasoning,
         message: safety.message,
-        elementalNote: safety.elementalNote,
       } : null,
     });
   } catch (err: any) {

@@ -143,3 +143,47 @@ function getBypassingContextNote(fieldRouting: FieldRoutingDecision): string {
 
 
 ```
+
+---
+
+# FIELD-SAFETY-COPY-01B — the live copy, before and after
+
+> ⭐⭐ **The gate can say "I won't go there yet." It should not say "you are not ready."**
+
+**BEFORE** — a routing decision narrated as the member's inner condition:
+
+> *"…I also see something important: **your field right now is asking** for something more grounded.
+> Not instead of the symbolic work **you're longing for**, but before it. **You're in a phase where**
+> the most powerful work we can do is here in the middleworld… **what you're building right now is
+> too important to skip**… The oracular realm will still be there **when your field is ready to hold
+> it**."*
+
+**AFTER** — the same boundary, MAIA's own:
+
+> *"Kelly, I'm going to keep this grounded for now rather than move into deeper symbolic or oracular
+> work. The signals available to me don't give me enough confidence to justify taking us further in
+> that direction yet. We can stay with what's concrete, embodied, and present, and return to the
+> symbolic layer when there's a clearer basis for it."*
+
+⭐ **What moved:** *"I'm going to…"* owns the decision · *"the signals available to me…"* locates the
+uncertainty in the system's evidence rather than the member's supposed deficiency · *"don't give me
+enough confidence"* replaces *"you're not ready"* · and nothing frames symbolic work as escapist,
+dangerous or lesser. **The boundary is exactly as firm. The jurisdiction claim is gone.**
+
+⛔ **`elementalNote` removed at source**, and from `FieldSafetyDecision` and its five consumers — not
+left as an unfilled optional. After the Aether finding, a bare `element` string may not become
+member-about prose until its provenance and referent are adjudicated.
+
+⚠️ **The five consumers did not fail the compiler.** They read `fieldSafety.elementalNote` where
+`fieldSafety` is declared `let fieldSafety = null` — implicitly `any` — so removing the field from the
+type surfaced nothing. ⭐ **A response was still declaring a property it could no longer carry, and
+the type system had no way to say so.** They were corrected by hand.
+
+**Witness — `lib/field/__tests__/interfaceHumility.test.ts` · 18 passed**, including a check that no
+second-person psychological predicate appears at all, and that the copy is byte-identical with and
+without an `element` argument.
+
+⚠️ **One test row was wrong and was corrected rather than the copy.** It matched
+`rather than …(symbolic)`, flagging the copy's own *"keep this grounded for now rather than move into
+deeper symbolic work"* — **MAIA stating which of two paths she is taking, not a claim that the
+symbolic path is lesser.** *Contrastive phrasing is not disparagement.*

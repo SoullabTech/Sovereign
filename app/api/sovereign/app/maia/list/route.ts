@@ -484,7 +484,6 @@ export async function POST(req: NextRequest) {
         const duration = Date.now() - start;
         return jsonWithCors(req, {
           message: fieldSafety.message,
-          elementalNote: fieldSafety.elementalNote,
           route: {
             endpoint: '/api/sovereign/app/maia',
             type: 'Sovereign Consciousness Interface',

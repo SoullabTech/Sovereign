@@ -759,7 +759,6 @@ export async function POST(request: NextRequest) {
             {
               success: true,
               response: fieldSafety.message,
-              elementalNote: fieldSafety.elementalNote,
               metadata: {
                 fieldWorkSafe: false,
                 fieldRouting: fieldSafety.fieldRouting,

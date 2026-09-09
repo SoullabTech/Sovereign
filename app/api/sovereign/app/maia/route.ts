@@ -237,7 +237,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
               {
                 message: fieldSafety.message,
-                elementalNote: fieldSafety.elementalNote,
                 route: {
                   endpoint: '/api/sovereign/app/maia',
                   type: 'Sovereign Consciousness Interface',

@@ -451,7 +451,6 @@ export class MainOracleAgent {
           return {
             personalResponse: {
               text: fieldSafety.message,
-              elementalNote: fieldSafety.elementalNote,
               metadata: {
                 fieldWorkSafe: false,
                 fieldRouting: fieldSafety.fieldRouting,

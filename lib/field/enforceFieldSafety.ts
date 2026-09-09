@@ -8,7 +8,6 @@ import type { FieldRoutingDecision } from './panconsciousFieldRouter';
 export type FieldSafetyDecision = {
   allowed: boolean;
   message?: string;
-  elementalNote?: string;
   fieldRouting: FieldRoutingDecision;
 };
 
@@ -71,7 +70,6 @@ export function enforceFieldSafety(args: {
   return {
     allowed: false,
     message: copy.message,
-    elementalNote: copy.elementalNote,
     fieldRouting,
   };
 }

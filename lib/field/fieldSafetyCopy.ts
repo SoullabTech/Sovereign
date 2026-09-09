@@ -37,11 +37,37 @@ export interface FieldSafetyCopyOptions {
  *
  * ⛔ Also gone, all unused: getFieldSafetyMessage() · isUpperworldAllowed() ·
  * this module's isFieldWorkSafe() (enforceFieldSafety has its own).
+ *
+ * ── FIELD-SAFETY-COPY-01B — INTERFACE HUMILITY ─────────────────────────────
+ *
+ * ⭐⭐ The gate can say "I won't go there yet." It should not say "you are not
+ *    ready." The system may be certain about its own boundary without claiming
+ *    certainty about the person who triggered it.
+ *
+ * The copy MAY answer:   what will MAIA do · why the conservative path ·
+ *                        what remains available
+ * ⛔ The copy MAY NOT answer, without separate evidence:
+ *                        what kind of person am I · what phase am I in ·
+ *                        what is my psyche asking for · what can I hold
+ *
+ * Removed for asserting a developmental condition more specific than the
+ * evidence behind the routing decision:
+ *   "your field right now is asking for something more grounded"
+ *   "You're in a phase where the most powerful work we can do is…"
+ *   "what you're building right now is too important to skip"
+ *   "when your field is ready to hold it"
+ *
+ * ⭐ Nothing in the replacement frames symbolic or soulful work as escapist,
+ * dangerous or lesser — see docs/canon/THE_SACRED_IS_NOT_A_SYMPTOM.md.
+ *
+ * ⛔ `elementalNote` is REMOVED, not left unfilled. After the Aether finding
+ * (that canon's Instance 2), a bare `element` string may not become member-about
+ * prose until its provenance and referent are adjudicated. Elemental nuance can
+ * return when it is earned; it does not wait in a vacant socket.
  */
 export interface FieldSafetyCopy {
   state: 'not_safe';
   message: string;
-  elementalNote?: string;
 }
 
 /**
@@ -51,7 +77,7 @@ export interface FieldSafetyCopy {
  * permitted field, and inventing one is how the unreachable states arose.
  */
 export function getFieldSafetyCopy(options: FieldSafetyCopyOptions): FieldSafetyCopy {
-  const { fieldRouting, element, userName } = options;
+  const { fieldRouting, userName } = options;
   const name = userName || 'friend';
 
   if (fieldRouting.fieldWorkSafe) {
@@ -64,34 +90,7 @@ export function getFieldSafetyCopy(options: FieldSafetyCopyOptions): FieldSafety
   // The one situation this module speaks for: field work declined.
   return {
     state: 'not_safe',
-    message: `${name}, I can feel the invitation you're extending — toward myth, toward the symbolic field, toward the oracular edges of what we might explore together. And I want to honor that impulse.\n\nBut I also see something important: your field right now is asking for something more grounded. Not *instead of* the symbolic work you're longing for, but *before* it. You're in a phase where the most powerful work we can do is here in the middleworld — the place of embodied practice, present-life application, concrete integration.\n\nThis isn't a "no." It's a "not yet — because what you're building right now is too important to skip."\n\nLet's keep working where you are. The oracular realm will still be there when your field is ready to hold it.`,
-    elementalNote: getElementalGroundingNote(element),
+    message: `${name}, I'm going to keep this grounded for now rather than move into deeper symbolic or oracular work.\n\nThe signals available to me don't give me enough confidence to justify taking us further in that direction yet. We can stay with what's concrete, embodied, and present, and return to the symbolic layer when there's a clearer basis for it.`,
   };
 }
 
-/**
- * Elemental grounding notes for "not safe" state
- */
-function getElementalGroundingNote(element?: string | null): string | undefined {
-  if (!element) return undefined;
-
-  const el = element.toLowerCase();
-
-  if (el === 'water') {
-    return `Your Water-heavy field is asking for *flow in form* — emotional awareness that moves through embodied practice, not just symbolic reflection.`;
-  }
-
-  if (el === 'fire') {
-    return `Your Fire-heavy field is asking for *will in action* — the heat of your transformation grounded in what you're actually building, not just visioning.`;
-  }
-
-  if (el === 'earth') {
-    return `Your Earth-heavy field is asking for *structure through sensation* — the slow, embodied work of building foundations before ascending.`;
-  }
-
-  if (el === 'air') {
-    return `Your Air-heavy field is asking for *concepts in contact* — intellectual clarity meeting real-world application, not just abstract pattern recognition.`;
-  }
-
-  return undefined;
-}
