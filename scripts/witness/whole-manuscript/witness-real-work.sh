@@ -38,9 +38,35 @@ IN="${1:?export directory required (output of export-work.sh)}"
 head -1 "$IN/.wm-witness-export" | grep -qx 'wm-witness-export' || {
   echo "⛔ $IN/.wm-witness-export is not a witness-export marker — refusing."; exit 1; }
 [ -f "$IN/draft_sections.csv" ] || { echo "⛔ $IN is missing draft_sections.csv"; exit 1; }
+ORIGINAL_EXPORT="$IN"
 
-SHA="$(git rev-parse HEAD)"
+# ⭐ THREE IDENTITIES, NEVER ONE. An earlier version read `git rev-parse HEAD`
+# and labelled it "implementation" — but this runs from the TOOLING branch, so
+# that names the witness scripts, not the thing being witnessed. A §4b record
+# that names the wrong subject is worse than one that names none.
+IMPLEMENTATION="e20e3270453b3be9bdb1718486b178124549fa0d"   # H2, the frozen subject
+CANONICAL="d73ce1f24f71edfdec599eb4923a32742fea6577"        # the merge carrying it
+TOOLING="$(git rev-parse HEAD)"                             # these scripts
 ROOT="$(git rev-parse --show-toplevel)"
+
+# ⛔ PROVE THE PRODUCT IS UNCHANGED. The witness must run the merged
+# implementation, not the tooling branch's idea of it. Anything differing from
+# canonical outside the two approved witness-script paths means this checkout is
+# not the subject, and the run refuses rather than producing a §4b observation
+# about code nobody adjudicated.
+git cat-file -e "$CANONICAL^{commit}" 2>/dev/null || {
+  echo "⛔ canonical merge $CANONICAL not present — fetch clean-main-no-secrets"; exit 1; }
+git merge-base --is-ancestor "$IMPLEMENTATION" HEAD 2>/dev/null || {
+  echo "⛔ the frozen implementation $IMPLEMENTATION is not an ancestor of this checkout"; exit 1; }
+DRIFT="$(git diff --name-only "$CANONICAL" HEAD -- \
+          ':!scripts/witness/whole-manuscript/export-work.sh' \
+          ':!scripts/witness/whole-manuscript/witness-real-work.sh')"
+if [ -n "$DRIFT" ]; then
+  echo "⛔ this checkout differs from canonical outside the witness scripts:"
+  printf '     %s\n' $DRIFT
+  echo "   Refusing: §4b must observe the merged implementation, unmodified."
+  exit 1
+fi
 RUN="${TMPDIR:-/tmp}/wm-witness.$$"
 PGPORT_LOCAL=55688
 DB=wm_witness
@@ -55,16 +81,35 @@ WITNESS_PASS='wm-witness-fixture-not-a-secret'
 
 echo "──────────────────────────────────────────────────────────────"
 echo "WS-WHOLE-MANUSCRIPT-01 · §4b real-Work witness runtime"
-echo "  implementation : $SHA"
+echo "  implementation : $IMPLEMENTATION  (H2, frozen subject)"
+echo "  canonical      : $CANONICAL  (merge carrying it)"
+echo "  witness tooling: $TOOLING"
+echo "  product drift  : none — verified against canonical"
 echo "  export         : $IN"
 echo "──────────────────────────────────────────────────────────────"
 
+# ⛔ CLEANUP MUST NOT CLAIM A DESTRUCTION IT DID NOT PERFORM. The first version
+# always printed "the copied text is gone with it" — including when the script
+# exited BEFORE taking custody (missing PostgreSQL binaries, for instance), in
+# which case the operator's export was still sitting on their disk. A false
+# all-clear is how member text is forgotten.
+CUSTODY_TAKEN=0
+ORIGINAL_EXPORT=""
 cleanup() {
   local rc=$?
   [ -n "${APP_PGID:-}" ] && kill -- "-$APP_PGID" 2>/dev/null || true
   [ -d "$RUN/pg" ] && as_pg "'$PGBIN/pg_ctl' -D '$RUN/pg' -m immediate stop" >/dev/null 2>&1 || true
   rm -rf "$RUN"
-  echo "[cleanup] witness environment removed — the copied text is gone with it"
+  if [ "$CUSTODY_TAKEN" = "1" ]; then
+    echo "[cleanup] witness environment removed — the copied text is gone with it"
+  else
+    echo "[cleanup] witness environment removed."
+    if [ -n "$ORIGINAL_EXPORT" ] && [ -d "$ORIGINAL_EXPORT" ]; then
+      echo "⚠️  CUSTODY WAS NEVER TAKEN. Real member text REMAINS at:"
+      echo "      $ORIGINAL_EXPORT"
+      echo "    Delete it yourself when you are finished with it."
+    fi
+  fi
   exit $rc
 }
 trap cleanup EXIT INT TERM
@@ -132,6 +177,8 @@ mkdir -p "$RUN/export"; chmod 700 "$RUN/export"
 cp -p "$IN/." "$RUN/export/" 2>/dev/null || cp -Rp "$IN"/. "$RUN/export/"
 if [ -f "$RUN/export/.wm-witness-export" ] && [ -f "$RUN/export/draft_sections.csv" ]; then
   rm -rf "$IN"
+  CUSTODY_TAKEN=1
+  ORIGINAL_EXPORT=""
   echo "  custody       taken · original export removed · copy dies with this run"
 else
   echo "⛔ could not take custody of the export — leaving the original untouched"
@@ -231,7 +278,10 @@ done
 cat <<BANNER
 
 ────────────────────────────────────────────────────────────────
-§4b WITNESS READY — implementation $SHA
+§4b WITNESS READY
+  implementation  $IMPLEMENTATION
+  canonical       $CANONICAL
+  witness tooling $TOOLING
 
   sign in   http://127.0.0.1:$APP_PORT/signin
             username  $WITNESS_USER
