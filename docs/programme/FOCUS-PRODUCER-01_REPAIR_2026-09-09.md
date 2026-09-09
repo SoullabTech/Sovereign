@@ -262,8 +262,22 @@ walk rather than improvised inside it.
 1. `WRITERS_STUDIO_FOCUS_ENABLED=1`, **witness environment only**.
 2. Select a real passage; ask something whose answer **requires detail present only
    in that passage**.
-3. Receipt reaches `crossed`; the manifest/render evidence names **both**
-   `member.writer_focus` and `retrieved.writer_work_context`.
+
+   ⭐ **The question must carry no fingerprint of its own answer.** Good forms:
+   > *"What concrete image does the passage I selected use to make its turn, and
+   > what is that image doing in the argument?"*
+   > *"What changes between the first and last sentence of the passage I selected?"*
+
+   ⛔ Avoid *"Does this passage work?"* or *"What do you think?"* — **MAIA could
+   answer those plausibly while blind**, which is precisely the coincidence that
+   made step 4 meaningless before this lane existed.
+3. Receipt reaches `crossed`; the evidence names **both** `member.writer_focus`
+   and `retrieved.writer_work_context`.
+
+   ⭐ Two records, two jobs: the `🖋️ [MAIA/writers-studio] canonical turn … rendered
+   at …` line is the **fast human read** of the rendered participant set; the
+   `[MAIA/manifest]` emission is the **durable governance record**. Read the log,
+   keep the manifest.
 4. MAIA unmistakably engages content available only in the selection.
 5. Force a pre-boundary failure → no handoff, no confirmation, **no ghost
    exchange**, truthful `did_not_cross`.
@@ -293,9 +307,20 @@ witness-environment-only `BEFORE UPDATE` trigger that raises **only** on
 `attempted → crossed`, and drop it immediately. Preferable to making the whole
 database flaky.
 
-⭐ **The pair that matters in step 6**: the real response is still delivered AND
-the receipt stays `attempted`. *An accountability failure must not erase the
-response after the Work genuinely crossed.*
+⭐⭐ **STEP 6's ACCEPTANCE IS AN INDIVISIBLE TRIPLE:**
+
+```text
+real Focus-specific response delivered
++ crossed_unaccounted surfaced
++ receipt remains attempted
+```
+
+**Any two without the third is a FAILURE**, and each pair fails differently:
+no response = an accountability fault erased an answer the Work earned;
+no `crossed_unaccounted` = the surface claims a clean turn it cannot vouch for;
+a `crossed` receipt = the confirmation did not actually fail and the fault was
+mis-injected. *An accountability failure must not erase the response after the
+Work genuinely crossed.*
 
 > ⭐⭐ The writer places attention; the system establishes authority; the Work
 > enters canonical MAIA; the receipt tells the truth about whether that happened;
