@@ -60,6 +60,8 @@ import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/c
 import StructuredOutline from './StructuredOutline';
 import FieldRoom from '../field/FieldRoom';
 import { parseTreatment } from '../field/fieldTreatments';
+import { useHeldFocus } from '../field/useHeldFocus';
+import FocusStrip from '../field/FocusStrip';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
@@ -464,6 +466,23 @@ function CanvasRoom() {
    * becomes a second implementation of the thing it was supposed to wrap.
    */
   const fieldTreatment = parseTreatment(searchParams?.get('field') ?? null);
+
+  /**
+   * The held focus. Called unconditionally, as every hook must be, and inert
+   * until the writer frames something — with no Work resolved it has no
+   * sections to read and captures nothing.
+   */
+  const focusSections = useMemo(
+    () => (writing?.sections ?? []).map((s) => ({
+      id: s.id, position: s.position, heading: s.heading ?? null,
+    })),
+    [writing],
+  );
+  const focusBodyOf = useCallback(
+    (sectionId: string) => writing?.bodyOf(sectionId) ?? '',
+    [writing],
+  );
+  const held = useHeldFocus(focusSections, focusBodyOf);
   const named = Boolean(work?.title ?? manuscript?.title);
 
   /* 📖 WS2-03D — Conversations opens HERE.
@@ -576,6 +595,25 @@ function CanvasRoom() {
         treatment={fieldTreatment}
         title={headline}
         note={named ? null : UNTITLED_EXPRESSION}
+        workRef={held.rootRef}
+        focusedSectionIds={held.focus?.sectionIds}
+        focus={held.focus
+          ? ({ openMaia }) => (
+            <FocusStrip
+              focus={held.focus!}
+              sections={focusSections}
+              bodyOf={focusBodyOf}
+              canWiden={held.canWiden}
+              canNarrow={held.canNarrow}
+              onWiden={held.widen}
+              onNarrow={held.narrow}
+              onRelease={held.release}
+              /* EXPLICIT ONLY. The gesture opens her and leaves the focus
+                 standing beside the conversation; it sends nothing. */
+              onAsk={openMaia}
+            />
+          )
+          : undefined}
         structure={
           /* THE SAME ROWS, THE SAME NAMESPACE RULE. In section_aware the rows
              are manuscript_draft_sections ids and carry navigation; otherwise

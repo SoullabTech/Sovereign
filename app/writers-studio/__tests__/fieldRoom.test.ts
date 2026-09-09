@@ -123,3 +123,74 @@ describe('the study is opt-in and inert by default', () => {
     }
   });
 });
+
+describe('the held focus increment, at its boundaries', () => {
+  /**
+   * ⛔ FRAMING IS NOT ASKING. Nothing may be sent, and no conversation opened,
+   * because the writer selected text. The gesture is the writer's.
+   */
+  it('sends nothing and opens nothing on its own', () => {
+    for (const f of files()) {
+      const src = strip(raw(f));
+      expect(src).not.toMatch(/method:\s*'POST'/);
+      expect(src).not.toContain('/api/');
+    }
+    /* The strip receives the act; it does not perform it. */
+    expect(strip(raw('FocusStrip.tsx'))).toContain('onAsk: () => void');
+  });
+
+  /** No new persistence and no new memory destination. */
+  it('persists nothing', () => {
+    for (const f of files()) {
+      const src = strip(raw(f));
+      expect(src).not.toContain('localStorage');
+      expect(src).not.toContain('sessionStorage');
+      expect(src).not.toContain('indexedDB');
+    }
+  });
+
+  /**
+   * ⛔ THE FOCUS IS RELEASED, NEVER RELOCATED. A model that searched for its
+   * captured text would find it most confidently in exactly the case where the
+   * writer had just changed their mind on the page.
+   */
+  it('never searches for the captured text somewhere else', () => {
+    const src = strip(raw('heldFocus.ts'));
+    expect(src).not.toContain('indexOf(focus.capturedText');
+    expect(src).not.toContain('.includes(focus.capturedText');
+    expect(src).not.toMatch(/similar/i);
+    /* Validity is a comparison, and it is the only question asked. */
+    expect(src).toContain('return textOf(focus, bodyOf) === focus.capturedText;');
+  });
+
+  /**
+   * The ladder is structural. A rung that asked what a passage was ABOUT would
+   * make the aperture MAIA's opinion rather than the writer's act.
+   */
+  it('widens on paragraph breaks and section boundaries only', () => {
+    const src = strip(raw('heldFocus.ts'));
+    expect(src).toContain('lastIndexOf(JOIN');
+    expect(src).not.toMatch(/embedding|semantic|classif/i);
+  });
+
+  /**
+   * ⚠️ RECORDED, NOT HIDDEN. The mark on the Work is section-level because the
+   * substrate renders each editable section as a <textarea>, whose value no
+   * highlight API can address. The focus MODEL is character-exact; only the
+   * paint is coarse, and making it exact needs an overlay seam in a preserved
+   * component — a separate decision.
+   */
+  it('says plainly that the paint is section-level', () => {
+    const src = raw('FieldRoom.tsx');
+    expect(src).toContain('SECTION-LEVEL PAINT, AND SAID SO');
+    expect(strip(src)).toContain('focusedSectionIds');
+  });
+
+  /** The room does not claim the conversation it opens is CanonicalTurn. */
+  it('claims nothing about the cognition path it reaches', () => {
+    for (const f of files()) {
+      expect(strip(raw(f))).not.toContain('CanonicalTurn');
+    }
+  });
+});
+
