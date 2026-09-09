@@ -55,10 +55,15 @@ import { performFocusCrossing } from '../focusCrossing';
 
 const events: string[] = [];
 const assemble = jest.fn(async () => { events.push('assemble'); return 'the selected paragraph'; });
-const cognition = jest.fn(async () => { events.push('handoff'); return { ok: true, response: 'MAIA reply' }; });
+/* FOCUS-PRODUCER-01 made the port two-phase: prepare (construct · adjudicate ·
+   render) then generate (the handoff). The receipt is confirmed between them. */
+const prepare = jest.fn(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
+const cognition = jest.fn(() => { events.push('handoff'); return Promise.resolve({ ok: true, response: 'MAIA reply' }); });
+const deps = () => ({ assemble, prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
-  requestId: 'req-1', posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 's-1',
+  requestId: 'req-1', identity: {} as never,
+  posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 's-1',
   disclosureId: 'd-1', workRef: 'work-1', scopeKind: 'passage' as const,
   range: { start: 0, end: 10 }, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
@@ -70,7 +75,8 @@ const CODE = (rel: string) => SRC(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(
 beforeEach(() => {
   calls.length = 0; events.length = 0; consentPresent = false;
   receiptMode = 'ok'; confirmFails = false;
-  assemble.mockClear(); cognition.mockClear();
+  assemble.mockClear(); cognition.mockClear(); prepare.mockClear();
+  prepare.mockImplementation(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
@@ -78,7 +84,7 @@ afterEach(() => jest.restoreAllMocks());
 
 describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () => {
   it('mints exactly one consent row and exactly one receipt per crossing', async () => {
-    await performFocusCrossing(req(), { assemble, cognition });
+    await performFocusCrossing(req(), deps());
     expect(calls.filter(c => /INSERT INTO runtime_consent_state/.test(c.sql))).toHaveLength(1);
     expect(calls.filter(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))).toHaveLength(1);
     expect(cognition).toHaveBeenCalledTimes(1);
@@ -96,7 +102,7 @@ describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () =>
   it('⭐ HOSTILE MUTATION — a second cognition call around the boundary is caught', async () => {
     // The drift most likely to arrive later: an extra "just also ask MAIA" call
     // added beside the constituted path. C1 must go RED, not shrug.
-    await performFocusCrossing(req(), { assemble, cognition });
+    await performFocusCrossing(req(), deps());
     await cognition({ memberId: 'm-1', sessionId: 's-1', requestId: 'req-1', ask: 'x', focusContext: 'y' });
     expect(() => expect(cognition).toHaveBeenCalledTimes(1)).toThrow();
     expect(calls.filter(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))).toHaveLength(1);
@@ -126,16 +132,16 @@ describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () =>
 
 describe('C2 · ASSEMBLY ORDER — no Work text before may_cross', () => {
   it('assembles only after the receipt is minted', async () => {
-    await performFocusCrossing(req(), { assemble, cognition });
+    await performFocusCrossing(req(), deps());
     const receiptIdx = calls.findIndex(c => /INSERT INTO context_disclosure_receipts/.test(c.sql));
     expect(receiptIdx).toBeGreaterThanOrEqual(0);
-    expect(events).toEqual(['assemble', 'handoff']);
+    expect(events).toEqual(['assemble', 'prepare', 'handoff']);
     expect(assemble).toHaveBeenCalledTimes(1);
   });
 
   it('⛔ reads nothing when the boundary refuses', async () => {
     receiptMode = 'down';
-    const out = await performFocusCrossing(req(), { assemble, cognition });
+    const out = await performFocusCrossing(req(), deps());
     expect(assemble).not.toHaveBeenCalled();
     expect(cognition).not.toHaveBeenCalled();
     expect(out.presentation.state).toBe('did_not_cross');
@@ -149,8 +155,8 @@ describe('C2 · ASSEMBLY ORDER — no Work text before may_cross', () => {
 
 describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', () => {
   it('confirms because the handoff began, even when generation then fails', async () => {
-    const failing = jest.fn(async () => { events.push('handoff'); throw new Error('model down'); });
-    const out = await performFocusCrossing(req(), { assemble, cognition: failing as never });
+    const failing = jest.fn(() => { events.push('handoff'); return Promise.resolve({ ok: false } as never); });
+    const out = await performFocusCrossing(req(), ({ assemble, prepare, generate: failing } as never));
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(true);
     expect(out.presentation.state).toBe('crossed_accounted');
     expect(out.response).toBeNull();
@@ -159,7 +165,7 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
 
   it('⛔ never confirms when the route fails before the handoff', async () => {
     const emptyAssemble = jest.fn(async () => null);
-    const out = await performFocusCrossing(req(), { assemble: emptyAssemble as never, cognition });
+    const out = await performFocusCrossing(req(), ({ assemble: emptyAssemble, prepare, generate: cognition } as never));
     expect(cognition).not.toHaveBeenCalled();
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(false);
     expect(out.presentation.state).toBe('did_not_cross');
@@ -167,7 +173,7 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
 
   it('a confirm failure after handoff reports crossed_unaccounted, never "nothing sent"', async () => {
     confirmFails = true;
-    const out = await performFocusCrossing(req(), { assemble, cognition });
+    const out = await performFocusCrossing(req(), deps());
     expect(out.presentation.state).toBe('crossed_unaccounted');
     expect(out.presentation.message).toMatch(/MAIA received this Focus/);
     expect(out.presentation.mayClaimNothingSent).toBe(false);
@@ -177,7 +183,7 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
 describe('C4 · NO SCOPE SUBSTITUTION', () => {
   it('an unresolved prior attempt yields the §3a state and no cognition', async () => {
     receiptMode = 'conflict_attempted';
-    const out = await performFocusCrossing(req(), { assemble, cognition });
+    const out = await performFocusCrossing(req(), deps());
     expect(out.presentation.state).toBe('prior_unresolved');
     expect(cognition).not.toHaveBeenCalled();
     expect(assemble).not.toHaveBeenCalled();
@@ -186,7 +192,7 @@ describe('C4 · NO SCOPE SUBSTITUTION', () => {
 
   it('every refusal carries a §3a presentation and a null response', async () => {
     receiptMode = 'down';
-    const out = await performFocusCrossing(req(), { assemble, cognition });
+    const out = await performFocusCrossing(req(), deps());
     expect(out.response).toBeNull();
     expect(out.disclosureId).toBeNull();
     expect(out.presentation.actions).toContain('continue_without_focus');
@@ -200,22 +206,19 @@ describe('C5 · CANONICAL MAIA — no private brain', () => {
     expect(c).not.toMatch(/anthropic|runStructured|openai|fetch\(|new Anthropic/i);
   });
 
-  it('holds the room constant and carries Focus as context, not as a prompt', () => {
-    const c = CODE('lib/writers-studio/writersStudioCognition.ts');
-    expect(c).toMatch(/room: 'writers_studio'/);
-    expect(c).toMatch(/writerFocusContext/);
-    // the writer's ask is the input; the Work is context beside it
-    expect(c).toMatch(/input: ask/);
+  it('holds the room constant — the Work enters as an adjudicated participant', () => {
+    expect(CODE('lib/writers-studio/canonicalWriterTurn.ts')).toMatch(/ROOM_POLICIES\.writers_studio/);
+    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/writerStudioTurn: prepared\.turn/);
   });
 
   it('passes the carried requestId as canonical exchange identity', () => {
-    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/exchangeId: requestId/);
+    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/exchangeId: input\.requestId/);
   });
 });
 
 describe('C6 · ONE RECEIPT / ONE CROSSING', () => {
   it('confirms exactly the disclosureId that authorized the handoff', async () => {
-    const out = await performFocusCrossing(req({ disclosureId: 'd-AUTH' }), { assemble, cognition });
+    const out = await performFocusCrossing(req({ disclosureId: 'd-AUTH' }), deps());
     const confirm = calls.find(c => /UPDATE context_disclosure_receipts/.test(c.sql))!;
     expect(confirm.params[0]).toBe('d-AUTH');
     expect(out.disclosureId).toBe('d-AUTH');
@@ -228,16 +231,18 @@ describe('C6 · ONE RECEIPT / ONE CROSSING', () => {
   });
 
   it('one requestId reaches consent, receipt and cognition', async () => {
-    await performFocusCrossing(req({ requestId: 'req-CARRIED' }), { assemble, cognition });
+    await performFocusCrossing(req({ requestId: 'req-CARRIED' }), deps());
     const consent = calls.find(c => /INSERT INTO runtime_consent_state/.test(c.sql))!;
     expect(consent.params[0]).toBe('req-CARRIED');
-    expect(cognition.mock.calls[0][0]).toMatchObject({ requestId: 'req-CARRIED' });
+    // generate(prepared, input) — the carried id is on the second argument now.
+    expect(cognition.mock.calls[0][1]).toMatchObject({ requestId: 'req-CARRIED' });
+    expect(prepare.mock.calls[0][0]).toMatchObject({ requestId: 'req-CARRIED' });
   });
 });
 
 describe('the lane stays narrow — one source class, one basis, one boundary', () => {
   it('emits only work / member_invoked / the constituted boundary', async () => {
-    await performFocusCrossing(req(), { assemble, cognition });
+    await performFocusCrossing(req(), deps());
     const insert = calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))!;
     expect(insert.params).toContain('work');
     expect(insert.params).toContain('member_invoked');

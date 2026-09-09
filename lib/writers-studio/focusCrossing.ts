@@ -6,13 +6,20 @@
  * path passes through the constituted disclosure boundary **exactly once** —
  * not "at least once". This module is that path, and it is the only one.
  *
- * ⭐⭐ WHAT COUNTS AS A CROSSING (frozen before implementation):
+ * ⭐⭐ WHAT COUNTS AS A CROSSING — AMENDED BY FOCUS-PRODUCER-01.
  *
- *   The crossing occurs when the authorized Work context is HANDED TO canonical
- *   MAIA cognition — not when MAIA finishes answering.
+ * "Not the answer, the handoff" still stands. What changed is what qualifies as
+ * the handoff. Entering a wrapper function is not one: the first implementation
+ * confirmed the receipt immediately after invoking the cognition port, and that
+ * port merely placed the text in a `meta` field nothing read. A receipt can be
+ * perfectly valid and describe content canonical cognition never rendered.
  *
- *   boundary authorized → Work assembled → ⭐ HANDOFF ← the crossing
- *      → receipt confirmed → cognition continues → response succeeds or fails
+ *   The crossing occurs when an ADMITTED Writer's Studio producer containing the
+ *   authorized Work is handed into the RESPONSE-PRODUCING cognition path.
+ *
+ *   authorized → typed producers → MIPA admits → CanonicalTurn → renderer
+ *     includes them at every tier → generation begins   ← ⭐ THE CROSSING
+ *       → receipt confirmed → generation awaited
  *
  * ⛔ A generation failure after handoff does NOT mean the Work never crossed:
  * the receipt still says `crossed`. And a route failure BEFORE the handoff must
@@ -37,6 +44,8 @@ import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureRece
 import { presentBoundaryOutcome, presentCrossing, type FocusDisclosurePresentation } from './focusDisclosureSurface';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
+import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
+import type { MemberIdentity } from '@/lib/maia/canonical-turn';
 
 /** Reads the authorized Work. ⛔ Called ONLY after `may_cross`. */
 export interface FocusAssembler {
@@ -49,21 +58,25 @@ export interface FocusAssembler {
 }
 
 /**
- * Hands the assembled context to canonical MAIA cognition.
+ * The two-phase cognition port.
  *
- * ⛔ Injected as a port so the falsifiers can observe the handoff — NOT so an
- * alternate brain can be substituted. C5 asserts the production wiring is the
- * canonical `writers_studio` path and nothing else.
+ * ⛔ Injected so the falsifiers can observe the handoff — NOT so an alternate
+ * brain can be substituted. C5 asserts the production wiring is the canonical
+ * `writers_studio` path and nothing else.
  */
-export interface CanonicalCognition {
-  (input: {
-    memberId: string; sessionId: string; requestId: string;
-    ask: string; focusContext: string;
-  }): Promise<{ ok: boolean; response?: string }>;
+export interface CanonicalCognitionPort {
+  prepare: (input: CognitionPrepareInput) => Promise<PreparedHandoff | null>;
+  generate: (
+    prepared: PreparedHandoff,
+    input: { memberId: string; sessionId: string; requestId: string; ask: string },
+  ) => Promise<{ ok: boolean; response?: string }>;
 }
 
 export interface FocusCrossingRequest {
   requestId: string;
+  /** ⭐ Minted by `resolveCanonicalIdentity` at the route. A raw id is refused
+   *  by `constructCanonicalTurn`, and rightly: one identity truth, not two. */
+  identity: MemberIdentity;
   posture: TurnPosture;
   memberId: string;
   sessionId: string;
@@ -86,7 +99,7 @@ export type FocusCrossingResult = {
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,
-  deps: { assemble: FocusAssembler; cognition: CanonicalCognition },
+  deps: { assemble: FocusAssembler; prepare: CanonicalCognitionPort['prepare']; generate: CanonicalCognitionPort['generate'] },
 ): Promise<FocusCrossingResult> {
   // ── 1 · THE ONE BOUNDARY. Consent precondition, then receipt, then permission.
   const boundary = await establishDisclosureBoundary({
@@ -132,22 +145,39 @@ export async function performFocusCrossing(
     };
   }
 
-  // ── 3 · THE CROSSING IS THE HANDOFF.
-  const handoff = deps.cognition({
-    memberId: req.memberId, sessionId: req.sessionId, requestId: req.requestId,
-    ask: req.ask, focusContext,
+  // ── 3 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
+  const prepared = await deps.prepare({
+    identity: req.identity,
+    sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
+    workRef: req.workRef, scopeKind: req.scopeKind, label: req.sectionRef,
+    focusContext, sanctuary: req.posture.sanctuary,
+  });
+  if (!prepared) {
+    // ⛔ Construction, adjudication or rendering failed → NO HANDOFF, NO CONFIRM.
+    // The receipt stays `attempted`: authorization existed, the crossing did not.
+    return {
+      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
+      response: null, disclosureId: null, boundary,
+    };
+  }
+
+  // ── 4 · THE HANDOFF. Generation BEGINS here; the promise is deliberately not
+  // awaited yet, so the receipt is confirmed at the moment of crossing.
+  const generating = deps.generate(prepared, {
+    memberId: req.memberId, sessionId: req.sessionId,
+    requestId: req.requestId, ask: req.ask,
   });
 
-  // ⭐ C3/C6 · Confirm because the handoff BEGAN, with the same disclosureId that
-  // authorized it — not because an answer came back. A generation failure after
-  // this point leaves a truthful `crossed` receipt.
+  // ⭐ C3/C6 · Confirm the id that authorized THIS handoff, because the admitted
+  // Work entered the response-producing path — not because an answer came back.
   const confirmed = await confirmDisclosureCrossed(boundary.disclosureId);
 
-  const result = await handoff.catch(() => ({ ok: false as const }));
+  // ── 5 · Only now await generation. A failure here leaves a truthful `crossed`.
+  const result = await generating;
 
   return {
     presentation: presentCrossing(confirmed),
-    response: result.ok ? (result as { response?: string }).response ?? null : null,
+    response: result.ok ? result.response ?? null : null,
     disclosureId: boundary.disclosureId,
     boundary,
   };

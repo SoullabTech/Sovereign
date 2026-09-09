@@ -4,6 +4,7 @@ import { incrementTurnCount, addConversationExchange, getConversationHistory } f
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 import { PLATFORM_KNOWLEDGE_ADDENDUM } from './platformKnowledge';
 import { generateText, type ProviderMeta } from '../ai/modelService';
+import { renderTurnForCognition, type CanonicalTurn } from '../maia/canonical-turn';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -619,6 +620,23 @@ type MaiaRequest = {
    * Absent → getMaiaResponse computes one at the shared boundary.
    */
   orientationContract?: OrientationContract | null;
+  /**
+   * FOCUS-PRODUCER-01 — the writers_studio canonical participation path.
+   *
+   * ⭐ TYPED AND TOP-LEVEL, for the same reason `orientationContract` is: `meta`
+   * starts as the client's request-body rest-spread, so Writer material arriving
+   * there would be forgeable AND ungoverned. The Writer's Studio context contract
+   * refuses the `meta`/addendum/prompt family outright — it is the open channel
+   * CMT-01 exists to close.
+   *
+   * A frozen, already-adjudicated turn. Membership was fixed by
+   * `constructCanonicalTurn` at the Writer's Studio route; this service renders it
+   * for whichever tier routing selects and may not add or remove participants.
+   *
+   *   ⭐⭐ Tier selects how MAIA thinks. The room decides what is allowed to think
+   *       with her.
+   */
+  writerStudioTurn?: CanonicalTurn | null;
 };
 
 /**
@@ -2648,6 +2666,9 @@ function finalizeMemberFacingText(
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
+  // FOCUS-PRODUCER-01: present only for writers_studio, and only when the route
+  // built and adjudicated the turn. Absent → every existing caller is unchanged.
+  const writerStudioTurn = req.writerStudioTurn ?? null;
   // NOTE: read from `req`, never from `meta`. See MaiaRequest.orientationContract.
   const trustedOrientation = req.orientationContract ?? null;
   const startTime = Date.now();
@@ -3262,6 +3283,27 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [MAIA] context-inventory emit failed (non-blocking):', invErr);
     }
 
+    // ── FOCUS-PRODUCER-01 · the writers_studio canonical branch ──────────────
+    //
+    // ⛔ CANONICAL PARTICIPATION OWNS MEMBERSHIP. The legacy tier assemblies are
+    // not merely skipped for tidiness: running them would let MIPA govern one
+    // portion of the prompt while the old machinery quietly places excluded
+    // material beside it — field, memory and symbolic injections the room refused.
+    // That is the double-participation trap (P8), and it would be invisible.
+    //
+    // The tier still chooses STRATEGY. It has lost the authority to decide who
+    // participates. Membership was fixed at construction, before this line.
+    if (writerStudioTurn) {
+      const rendered = renderTurnForCognition(writerStudioTurn, { tier: processingProfile === 'FAST' ? 'FAST' : processingProfile === 'DEEP' ? 'DEEP' : 'CORE' });
+      const { text: canonicalText, provider: canonicalProvider } = await generateText({
+        systemPrompt: rendered.systemPrompt,
+        userInput: input,
+        meta: { ...meta, currentUserMessage: input, canonicalTurnId: writerStudioTurn.turnId },
+      });
+      rawResponse = canonicalText;
+      provider = canonicalProvider;
+      console.log(`🖋️ [MAIA/writers-studio] canonical turn ${writerStudioTurn.turnId} rendered at ${rendered.tier}: ${rendered.participantOrder.join(', ')}`);
+    } else
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
