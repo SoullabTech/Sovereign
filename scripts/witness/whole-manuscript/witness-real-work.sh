@@ -233,9 +233,23 @@ CREATE TEMP TABLE t_rev (draft_id uuid, revision_number int, content text, saved
 INSERT INTO member_manuscripts (id, member_id, title, provenance, source_custody, created_at)
   SELECT id, '$WITNESS_MEMBER', title, provenance, source_custody, created_at FROM t_ms;
 INSERT INTO manuscript_sections (id, manuscript_id, position, heading, body) SELECT * FROM t_src;
+-- ⛔ HONOUR THE INVARIANT; DO NOT DISABLE IT. `manuscript_working_drafts_
+-- round_trip()` refuses a section-addressable draft whose content is not the
+-- flattening of its sections. Inserting the draft ALREADY addressable, before
+-- its sections exist, fails that check at 0 chars against 385,948 — which is
+-- the trigger doing its job on a load order that was simply wrong.
+--
+-- The fix is the order the product itself requires: land the draft NOT
+-- addressable, land its sections, then declare it addressable — at which point
+-- the flattening matches and the trigger passes. Disabling the trigger would
+-- have produced a witness runtime whose state the product would never accept,
+-- and §4b would have been observing something that cannot exist.
 INSERT INTO manuscript_working_drafts (id, manuscript_id, member_id, content, base_source_hash, revision_count, version, section_addressable_at)
-  SELECT id, manuscript_id, '$WITNESS_MEMBER', content, base_source_hash, revision_count, version, section_addressable_at FROM t_dr;
+  SELECT id, manuscript_id, '$WITNESS_MEMBER', content, base_source_hash, revision_count, version, NULL FROM t_dr;
 INSERT INTO manuscript_draft_sections (id, draft_id, position, text, source_section_id) SELECT * FROM t_ds;
+UPDATE manuscript_working_drafts d
+   SET section_addressable_at = t.section_addressable_at
+  FROM t_dr t WHERE d.id = t.id AND t.section_addressable_at IS NOT NULL;
 INSERT INTO working_draft_revisions (draft_id, revision_number, content, saved_by, note, created_at)
   SELECT draft_id, revision_number, content, '$WITNESS_MEMBER', note, created_at FROM t_rev;
 SQL
