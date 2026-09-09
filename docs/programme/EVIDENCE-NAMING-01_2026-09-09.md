@@ -132,3 +132,77 @@ integrate route    `event` arrives from an untyped request body
 
 ⛔ **Nothing renamed. Nothing repaired.** ⭐ A rename before (1)–(3) would be a schema act performed
 without knowing what it breaks — and would silently split one member's history into two identities.
+
+---
+
+# ⭐⭐ THE RENAMING TARGET, RECONSIDERED — "Air without Water"
+
+**Founder, 2026-09-09:** *"Mental insights without emotional integration is equivalent to air without
+water, in our model."*
+
+⭐ **That is the key to this defect, and it moves the repair.**
+
+## What the measurement actually is
+
+`ConsciousnessMemoryLattice:620-644` counts `lattice_nodes` rows with `event_type = 'mental'` against
+`event_type = 'emotional'` over seven days. In Soullab's own model — Water as feeling
+(`holoflower/facets-interpretation.ts`, the Water Agent as *Emotional Healing*), Air as the path of
+intellect and clear seeing — **that is an AIR-TO-WATER ACTIVITY RATIO.**
+
+## 🔴 So the description is an ELEMENTAL claim wearing CLINICAL clothes
+
+> *"Mental insights without emotional integration"*
+
+**translates an elemental configuration into a deficit diagnosis.** The same state, in the
+platform's own language, is *"more Air than Water lately"* — ⭐ **a position in the model, not a
+disorder in a person.**
+
+And Chapter 4 — **the very chapter being written in Writer's Studio** — says this configuration is
+ordinary and universal:
+
+> *"It is common to find ourselves primarily connected to one element of experience, often
+> neglecting the others."*
+
+Each path alone *"becomes a kind of prison"* — said of **all four**, as the human condition. ⛔ **The
+model treats one-sidedness as the starting point of development, not as pathology.** The description
+inverts that.
+
+## ⭐ This is the sacred-as-symptom rule from the other side
+
+```text
+THE SACRED IS NOT A SYMPTOM     sacred VOCABULARY may not become evidence of pathology
+AND                             an elemental CONFIGURATION may not either
+```
+
+**Air-heavy is not a symptom. It is a place in the model.**
+
+## 🔴 The embedding consequence is sharper than the label's
+
+The description **is what gets embedded** (`PatternMemoryStore:105`). So the row's vector sits in
+**clinical semantic space** rather than elemental semantic space. ⭐⭐ **Two members with identical
+Air/Water configurations — one described elementally, one clinically — become semantically distant,
+and the clinical one retrieves against pathology-adjacent language.** The naming defect is not
+cosmetic; it determines what the memory is *near*.
+
+## Where this leaves the repair
+
+⭐ **The MEASUREMENT is closer to lawful than the census implied. What is unlawful is the RENDERING.**
+
+```text
+NAME THE OBSERVATION   high_mental_to_emotional_event_ratio
+                       — faithful to what was counted: 'mental' and 'emotional'
+                         event types, not 'air' and 'water' columns
+DESCRIBE IT PLAINLY    "Mental-tagged events exceeded emotional-tagged events by
+                       more than 3:1 over the observed window."
+THE ELEMENTAL READING  "more Air than Water lately" is an INTERPRETATION MAIA may
+                       offer — lawful, native, non-pathologizing — but held loosely
+                       and never stored as the observation's identity
+```
+
+⚠️ **Do not rename the key to `high_air_to_water_ratio`.** The counted columns are `mental` and
+`emotional`; naming the row elementally would embed an interpretation as though it were the
+measurement — the same error one layer up. ⭐ **Name the observation by what was counted; let the
+elemental reading be something MAIA says, not something the database asserts.**
+
+> ⭐⭐ **Name the observation before naming its meaning — and when the meaning is finally named, name
+> it in the language the model actually uses about people, not the language of diagnosis.**
