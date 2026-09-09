@@ -77,6 +77,50 @@ repair for those two. Flagged because a governance inventory that names non-exis
 itself a custody signal** — and it is precisely why the founder's instruction *"do not repair from
 this list alone"* was correct.
 
+### 3.2 ⚠️ THIRD RECORD/REPOSITORY DIVERGENCE — **"Law 0" does not exist**
+
+**The founder's closing custody correction reads:** *"the earlier contaminated lineage explicitly
+included Law 0 in the Editorial Constitution at `65d6ab69`… the accurate closure should be Laws
+0–6."*
+
+⛔ **Verified against the repository: there is no Law 0, and there never was.**
+
+```text
+git grep -i "law 0|law zero" -- docs/    HEAD          no match
+                                          65d6ab69      no match
+
+LAW HEADINGS AT 65d6ab69   LAW 1 · LAW 2 · LAW 3 · LAW 4      (four)
+LAW HEADINGS AT HEAD       LAW 1 … LAW 6                       (six)
+```
+
+**The Editorial Constitution has begun at LAW 1 from its creation commit onward.** ⭐ **The original
+closure wording — `Laws 1–6 not reopened` — was correct and stands. `Laws 0–6` is NOT adopted.**
+
+⚠️ **Recorded plainly because adopting an unverified correction into a canonical closure is exactly
+the failure this incident exists to prevent** — and because the founder's own instruction governs
+here: *repository truth outranks the remembered/session inventory.*
+
+### 3.3 ⭐⭐ THE PATTERN — THREE PHANTOMS IN ONE INCIDENT
+
+```text
+WRITERS_STUDIO_DEVELOP_RESTORATION_LANE_2026-09-10.md   never existed
+WRITERS_STUDIO_PROOF_PLAN_2026-09-10.md                 never existed
+"Law 0"                                                 never existed
+```
+
+⭐ **All three originated session-side. All three were caught by deterministic repository census.
+None caused a wrong repair, because enumeration preceded mutation in every case.**
+
+> ⭐ **This, not the date itself, may be the incident's most portable finding: a governance record
+> maintained across several sessions accumulates artifacts that exist only in the remembering.**
+> **They are confident, specific, plausibly named, and absent.** ⛔ **The date error propagated
+> because nothing verified an assertion against reality; the phantoms are the same defect in the
+> other direction — an inventory asserting existence with nothing checking it.**
+
+⚠️ **The asymmetry that makes this safe is procedural, not epistemic:** the repository can be
+enumerated deterministically and the session record cannot. **Where they disagree about what exists,
+the repository is dispositive** — not because it is wiser, but because it is checkable.
+
 ## 4 · ⭐ SEMANTIC CLASSIFICATION — the prohibition on mechanical normalization was honoured
 
 ⛔ **Founder invariant: *"do not normalize every 2026-09-10 mechanically… a deterministic search
@@ -155,3 +199,30 @@ has an unexamined trust in its own authorship** — and this one propagated an u
 across 26 artifacts in 129 minutes without a single check firing.
 
 ⛔ **No lane opened. No automation authorized.**
+
+---
+
+## 8 · ⭐ CLOSURE — **CUSTODY-DATE-01 · REPAIRED**
+
+> **CUSTODY-DATE-01 — REPAIRED.** A one-day-forward date error entered the repository at
+> `03b96911d` during the D8 walk on 2026-09-09 and propagated for 2h 09m across **26 paths, 30
+> historical assertions and 3 path references.** Exhaustive repository enumeration established
+> **zero genuinely prospective September 10 references.** `d1d19ede8` corrects the false custody
+> while **preserving Git history and all substantive governance.** ⭐ **Laws 1–6 remain unopened**
+> (there is no Law 0 — §3.2); **M2/M3/M4 remain the sole open input; ADOPT remains withheld; D9
+> remains blocked.**
+
+⭐ **Incident has a terminus. No further forensic question is necessary for this date error.**
+
+### 8.1 ⭐⭐ THE CONSTITUTIONAL RESULT — larger than the repair
+
+> **Law 4 survived contact with an error inside its own constitutional corpus.**
+
+**The proposed rename stayed visible with its consequences, was withheld before authorization, and
+only then became durable.** ⛔ **The governance mechanism was not suspended because governance
+itself needed repair.**
+
+⭐ **That is the strongest available evidence that Law 4 is a real constraint rather than a
+description of good intentions** — *a rule that yields the moment it becomes inconvenient to its own
+author was never a rule.* **It was tested by the least glamorous possible case: twenty-six
+filenames, an obvious fix, and every reason to just do it.**
