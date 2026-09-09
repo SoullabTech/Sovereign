@@ -423,5 +423,24 @@ Focus fails closed — the correct direction, and still a silent capability loss
 **Gates:** disclosure suite **40 passed · 0 failed** · shadow witness **14/14** ·
 typecheck 228 vs baseline 239 · 0 regressions · `check:no-supabase` clean.
 
-**Standing: SUBSTRATE-A CLOSED · §3a the only remaining obligation · `#1275`
+### ⚖️ Two corrections (founder, 2026-09-09) — claims narrowed to evidence
+
+1. **Not "§3a is the only remaining obligation".** There are **two** pre-wiring
+   obligations: **REQUEST-ORDER-01** (prove the consent-state mint precedes
+   context assembly) and **§3a** (prove the writer can distinguish *crossed* /
+   *did not cross* / *prior attempt unresolved*). *Fail-closed capability loss
+   can still be invisible.*
+2. **Custody wording.** The table comment said *"deliberately deleted with the
+   member's account"*. The delete-account route is in **REFUSE** posture, so the
+   exact truth today is: **a receipt cannot survive a successful account deletion
+   because deletion refuses to proceed while one exists.** Deletion *with* the
+   account awaits the governed deletion lane. Both the migration comment and this
+   record now say that instead.
+
+⭐ Recorded as programme method, from D:
+
+> **A refusal witness must prove the intended refusal, not merely prove that the
+> operation failed.**
+
+**Standing: SUBSTRATE-A CLOSED · REQUEST-ORDER-01 and §3a both owed · `#1275`
 FROZEN · no Focus text has crossed.**
