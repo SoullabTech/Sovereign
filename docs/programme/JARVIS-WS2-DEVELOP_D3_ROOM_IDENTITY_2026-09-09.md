@@ -228,6 +228,84 @@ D2 §A.2: *development does not end in resolution; any model with a `done` state
 
 ⛔ Recorded as identity evidence. **No redesign proposed; §9 still open.**
 
+## 12 · The band — founder ruling on register and iteration, 2026-09-09
+
+> *We don't want MAIA writing for the writer, but offering too-technical insights isn't helpful either — nor is just critiquing without the option for the writer to edit with MAIA and get advice until it is just right.*
+
+### 12.1 · Three failure modes, and the band between them
+
+```text
+TOO MUCH        MAIA writes it
+                ownership collapses (B2: drafting costs most)
+
+TOO TECHNICAL   MAIA proves it
+                accurate, and the writer must translate it before
+                they can use it
+
+TOO LITTLE      MAIA critiques and leaves
+                the writer is stranded at the finding
+
+THE BAND        MAIA notices in the writer's register,
+                says more when asked, offers options when asked,
+                and stays until it is right
+```
+
+The first two are the ones a careful system lands on. **The present room is TOO TECHNICAL and TOO LITTLE simultaneously** — which is not two faults but one, as §12.2 shows.
+
+### 12.2 · ⭐ All three failures have one cause: **MAIA gets one utterance**
+
+Look at what the captured observation must carry: ~90 words of positional accounting (*"position 17 … position 6 … positions 11 through 15"*), a classification label (`RE-EXPLANATION / FIRST-MENTION`), three `RESTS ON` citations, five `DOES NOT ESTABLISH` disclaimers.
+
+A developmental editor beside the writer says:
+
+> *"You introduce the fifth element three times as though each is the first."*
+
+**Same finding. One sentence.** The difference is not care or rigour — it is that the editor **expects to be asked more.**
+
+```text
+When you get ONE utterance, every utterance must be COMPLETE:
+  exhaustive evidence      because you cannot be asked for it
+  every disclaimer         because you cannot be corrected
+  the full derivation      because you cannot be questioned
+  no fix offered           because an unrequested fix is imposition
+```
+
+⭐ **Technicality, exhaustiveness, the disclaimer block, and the inability to help fix are not four defects. They are one adaptation to having no second turn.** Dialogue is therefore not a feature to add beside the readings — **dialogue is the precondition for the right register.** A system that cannot be asked a follow-up will always over-deliver on its first, and over-delivery reads as technical.
+
+### 12.3 · Register: say the thing, keep the proof reachable
+
+**The evidence discipline is not traded away — it is repositioned.**
+
+```text
+SAID        the noticing, in the writer's register, short enough
+            to disagree with in one breath
+REACHABLE   RESTS ON · DOES NOT ESTABLISH · positions · classification
+            present, addressable, never the opening move
+```
+
+This is the same principle already ruled twice: correction **available on request** (§E.3b), MAIA **not speaking first** after an edit (§C.2). One rule, three applications: **say the thing; keep the proof reachable.**
+
+⚠️ Register is not softening. *"You introduce the fifth element three times as though each is the first"* is **blunter** than the paragraph it replaces — it just stops making the writer derive the point.
+
+### 12.4 · "Until it is just right" — the iteration requirement
+
+The clause is load-bearing and is **not** satisfied by a single suggestion.
+
+```text
+NOT THIS    observation -> one suggestion -> adopt or reject -> done
+THIS        the writer and MAIA work the same passage across many turns
+            until the writer is satisfied — and the writer decides when
+```
+
+Consequences, none of them new law:
+
+- **The unit of work is a passage being worked, not an observation being closed.** `done` (§11.5) belongs to the wrong unit.
+- **Options over a single fix** (§E.3b) is what makes iteration possible: a space can be moved within; a proposal can only be accepted or refused.
+- **Each turn carries lineage** (close item 9) without any turn being a resolution. Ten rounds of joint work on a paragraph produce **one lineage record and zero verdicts** on the original observation.
+- **The writer ends it.** Satisfaction is not a state MAIA can detect or declare, and *"until it is just right"* means *until the writer says so.*
+
+⛔ Recorded as identity and manner. No interface proposed; §9 still open.
+
 ## Carried forward
 
 ```text
