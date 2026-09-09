@@ -1,20 +1,54 @@
 # THE SACRED IS NOT A SYMPTOM
 
-**Ratified 2026-09-09.** Governs any inference the system draws from the language a member uses.
+> ⭐⭐ **Soullab may recognize spiritual bypassing. It may never infer it merely because someone
+> speaks the language of soul.**
+
+**Ratified 2026-09-09.** Organism-level canon. Governs any psychological, developmental or safety
+inference the system draws anywhere, not one module.
+
+## The rule
 
 > ⭐⭐ **Spiritual language is not evidence of spiritual bypassing.**
 > ⭐⭐ **Bypassing is a pattern of relationship to experience, not a vocabulary category.**
 
-## The rule
+**Operationally:**
 
-**Soulful, spiritual, symbolic, mystical, mythic, oracular or transcendent language may never, by
-itself, increase the system's confidence that a member is avoiding embodiment, difficulty,
-responsibility, emotion, or reality.**
+> **Spiritual, soulful, mystical, symbolic, mythic, transcendent or oracular language is evidence of
+> the DOMAIN IN WHICH A PERSON IS MAKING MEANING. It is not, by itself, evidence of bypassing,
+> avoidance, instability, dissociation, lack of grounding, or psychological risk.**
 
-**Technical corollary:**
+**And the harder clause:**
 
-> ⭐⭐ **Never infer pathology from the LANGUAGE DOMAIN in which meaning is being expressed. Infer
-> only from the PATTERN OF RELATIONSHIP TO EXPERIENCE.**
+> ⭐⭐ **A psychological or safety inference must be supported by a pattern INDEPENDENT of the
+> vocabulary used to express experience.**
+
+## The falsifier
+
+```text
+FAIL if changing ONLY the member's meaning-language
+  — "deeply meaningful" → "spiritual"
+  — "inner life"        → "soul"
+can change a psychological, developmental or safety inference,
+with NO change in the underlying behaviour or relationship to experience.
+```
+
+⭐ **This is strong enough to catch the defect class without denying that spiritual bypassing
+exists.** It tests substitutability, not sentiment: if the vocabulary is doing the work, the
+inference was never about the person.
+
+⚠️ **Executable only per instance, at repair time.** A repo-wide runtime test cannot be written
+while INSTANCE 2 and 3 remain open — it would fail by design. Each repair carries its own
+substitution test as its witness.
+
+⭐ **The reference implementation exists:** `lib/field/__tests__/sacredIsNotASymptom.test.ts` runs the
+substitution test against the lawful case — `routePanconsciousField` — across five profile shapes,
+swapping `earth/inner life/the maker` for `aether/soul/the mystic`. **7 passed.** It also records the
+strongest form of the guarantee: the router is invariant **by construction**, because it never reads
+meaning-language at all — *not "the words happen not to matter", but "the words are never read"*.
+
+⭐ **And it pins the boundary of the rule**: the router still responds to the MEASURED
+`bypassingFrequency.spiritual`. **The canon forbids inference from vocabulary; it does not forbid
+measurement.** Each instance repair should end able to pass a test of this shape.
 
 ## Why this is constitutional here, not merely a lint
 
@@ -52,6 +86,18 @@ But something closer to:
 > away from it."*
 
 ⭐ **That leaves the member the authority over their own life.**
+
+## Instance register
+
+⭐ **Shared canon, SEPARATE adjudication.** These are not one "spiritual language pass". They fail by
+different mechanisms and each needs its own evidence and its own repair. ⛔ Repairing them together
+would destroy the evidence trail: *one rule, multiple failure classes, separately witnessed repairs.*
+
+| | Instance | Mechanism | Status |
+|---|---|---|---|
+| **1** | `FIELD-SAFETY-COPY-01A` | dormant lexical/prose doorway | ✅ **CLOSED** `0f8191eb2` |
+| **2** | `MaiaBeadsPlugin:260` | element-as-flag | ⛔ **OPEN** |
+| **3** | `ConsciousnessMemoryLattice:643` | mislabelled functional pattern | ⛔ **OPEN** |
 
 ## Audit — 2026-09-09
 
