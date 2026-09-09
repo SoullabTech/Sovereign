@@ -51,7 +51,7 @@ await p.click('#q');
 await p.fill('#q', 'what is happening across this');
 await p.press('#q', 'Enter');
 await p.waitForTimeout(250);
-ok('5 · MAIA asks what we are attending to, rather than guessing',        /What are you wanting to understand or work with here/.test(await p.locator('#say').innerText()));
+ok('5 · purposeful ask is JOINED, not clarified',        (t=>t.length>20 && !/What are you wanting to understand/.test(t))(await p.locator('#say').innerText()));
 ok('5 · frame survives asking', await p.locator('#frame').isVisible());
 
 // orbit: enter + leave without residue

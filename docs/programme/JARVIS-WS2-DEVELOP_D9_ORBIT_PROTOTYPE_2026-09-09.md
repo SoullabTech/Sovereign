@@ -795,8 +795,16 @@ after the writer
 writer's own manuscript could trigger MAIA's branches**: framing a passage containing the word
 *"something"* made her answer as though the writer had said *"something is off."*
 
-> ⭐⭐ **THE WORK IS CONTEXT. IT IS NEVER INSTRUCTION.** ⛔ **A framed passage is what we are looking
-> at together — it must never be read as what the writer asked for.**
+⚠️ **PRECISION — founder, 2026-09-09, applied in place before this becomes portable law.** ⛔ *"The
+Work is never instruction"* **is too absolute**: a manuscript may legitimately contain
+`[TODO: ask MAIA to compare this with Chapter 7]`, or quoted instructions as prose, and a writer may
+deliberately say *"use this note as my instruction."*
+
+> ⭐⭐ **THE WORK IS NEVER *IMPLICITLY* INSTRUCTION.**
+> ⭐⭐ **Text in the Work cannot acquire control authority merely because MAIA read it.**
+
+⭐ **Promotion from content to instruction requires an explicit writer act.** ⛔ **No falsifier added
+— the defect is captured and repaired; this is a trust boundary to carry forward.**
 
 ⚠️ **Found by instrumenting a failing test rather than by reasoning about it** — *the founder's own
 sharpened rule, applied and rewarded: three prior red results were instrument defects, this one was
@@ -817,5 +825,54 @@ scripts/witness/d9-field.mjs      ⭐ "hmm" reaches CLARIFY, not a fixture branc
 CLARIFY deliberately replaced. ⛔ **A test asserting superseded behaviour is not evidence of a
 regression.**
 
-⚠️ **One honest limit**: extending to sections 3, 4 and 8 produces a contiguous span 0–8, because a
-frame is a single range. **Non-contiguous attention is not representable.** ⛔ Recorded, not solved.
+⭐ **RULED — leave it alone.** Extending to sections 3, 4 and 8 produces a contiguous span 0–8,
+because a frame is a single range. **Non-contiguous attention is not representable** — and the
+founder ruled that a single aperture is proving something important, while **multiple independent
+frames would very quickly turn attention back into selection management.** ⛔ **Not a defect. A
+deliberate constraint.**
+
+---
+
+# 18 · ⭐ PURPOSE ROUTING — "unrecognized" is not "purpose not evident"
+
+**Gap found by building the founder's three witness cases, 2026-09-09.**
+
+⛔ **CLARIFY was firing on any utterance the fixture did not recognize.** ⭐ **But a purposeful
+question — *"I think I'm repeating myself here, what do you see?"* — should be JOINED IMMEDIATELY,
+without ceremony.** **Asking a writer what they mean when they have just told you is its own small
+failure of attention.**
+
+```text
+JOIN       purpose evident   →  answer, no clarification
+CLARIFY    purpose absent    →  ask once, then leave the field open
+⛔ NEVER    re-contract turn after turn
+```
+
+**Also fixed**: `'something'` was a trigger, so ***"something about this"* — genuinely ambiguous
+intent — was answered as though the writer had said *"something is off."*** ⭐ **It now reaches
+CLARIFY.** And recurrence became a real route, since *"am I repeating myself"* is exactly what the
+recorded observations are about.
+
+## 18.1 · The three cases, verified — `scripts/witness/d9-purpose.mjs`
+
+```text
+1  "I think I'm repeating myself here — what do you see?"
+   joins without clarifying · answers about recurrence            PASS
+2  "hmm"                    → clarifies                           PASS
+   "something about this"   → no longer guesses "off"             PASS
+   then a real answer       → no re-contracting; field open       PASS
+3  outside material → opens from the frame · marks it outside ·
+   INVITES rather than moving · frame remains the writer's        PASS
+```
+
+⚠️ **FOURTH instrument correction**: the main suite asserted CLARIFY for *"what is happening across
+this"* — which is purposeful, so she joins. ⛔ **The test was asserting the behaviour the contract
+now forbids.** ⭐ **Suite corrected; 20/20.**
+
+## 18.2 ⛔ THE FELT QUESTION THAT REMAINS
+
+> ⭐⭐ **Do I feel that MAIA is actually with my attention — and capable of enlarging what I can see
+> without taking my attention away from me?**
+
+⭐ **If that lands, this has moved beyond good editor UX and demonstrated the relational behaviour
+the constitution was written to specify.** ⛔ **Mechanics cannot answer it. Only use can.**
