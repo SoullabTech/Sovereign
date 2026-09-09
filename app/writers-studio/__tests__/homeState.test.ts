@@ -395,3 +395,60 @@ describe('extent and substance', () => {
     expect(homeWritingExtent({ charCount: 0, draftCharCount: 12, hasDraftWriting: false })).toBe(0);
   });
 });
+
+/**
+ * WS-MAKE-WORK-REACH-01 — the doorway must live where the writing lives.
+ *
+ * ⛔ Found in production 2026-09-09. "Make this a work" was wired and working,
+ * and rendered in exactly ONE place: beside the `feature` writing. `feature` is
+ * non-null only in the `orient` arrival, so a member with even one continuable
+ * Work lands in `return`, `feature` is null, and the action is not on the page
+ * at all — their unclaimed writing can only be opened or deleted, forever.
+ *
+ * These assert the ARRIVAL FACT that made it unreachable. The rendering is
+ * asserted structurally beneath.
+ */
+describe('WS-MAKE-WORK-REACH-01 — unclaimed writing is reachable from any arrival', () => {
+  const writing = (id: string, chars = 9000) =>
+    ms(id, { lastMemberDraftActivityAt: null, chars, contributed: false });
+
+  it('⛔ the arrival that hid it: one continuable Work ⇒ return ⇒ feature is null', () => {
+    const w = work('w1', { updatedAt: iso(1), manuscriptId: 'm-live' });
+    const live = ms('m-live', {
+      lastMemberDraftActivityAt: iso(1), chars: 0, draftChars: 4200,
+      hasDraftWriting: true, hasWriting: true, contributed: true,
+    });
+    const a = arrivalFor([w], [live, writing('e1'), writing('e2')]);
+
+    expect(a.kind).toBe('continue');
+    expect(a.feature).toBeNull();
+    /* …yet the unclaimed writing is still there, and still the member's to act on. */
+    expect(a.imported.map((m) => m.id).sort()).toEqual(['e1', 'e2']);
+  });
+
+  it('the same writing IS the feature when nothing is continuable', () => {
+    const a = arrivalFor([], [writing('e1'), writing('e2', 100)]);
+    expect(a.kind).toBe('orient');
+    expect(a.feature?.id).toBe('e1');
+  });
+
+  it('⭐ unclaimed writing appears in EVERY arrival that has any', () => {
+    /* feature ∪ imported is the whole unclaimed set, in both arrivals — so a
+       surface offered on both reaches all of it, and one offered only on
+       `feature` reaches none of it in `return`. */
+    const w = work('w1', { updatedAt: iso(1), manuscriptId: 'm-live' });
+    const live = ms('m-live', {
+      lastMemberDraftActivityAt: iso(1), chars: 0, draftChars: 4200,
+      hasDraftWriting: true, hasWriting: true, contributed: true,
+    });
+    for (const arrival of [
+      arrivalFor([w], [live, writing('e1'), writing('e2')]),
+      arrivalFor([], [writing('e1'), writing('e2', 100)]),
+    ]) {
+      const reachable = [arrival.feature?.id, ...arrival.imported.map((m) => m.id)]
+        .filter(Boolean)
+        .sort();
+      expect(reachable).toEqual(['e1', 'e2']);
+    }
+  });
+});
