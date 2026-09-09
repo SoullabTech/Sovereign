@@ -520,3 +520,61 @@ not.**
 ⚠️ BOTH defects so far were found by USE and missed by every structural check.
    The mechanical suite now covers them — which means it will not find the third.
 ```
+
+---
+
+# 13 · ⭐ FIRST F-ORBIT WITNESS — two results, one screen
+
+**Founder, 2026-09-09.**
+
+## 13.1 ⭐⭐ ORBIT RAIL — **POSITIVE**
+
+> **"This setup is brilliant, in terms of function, with Structure, MAIA and Workbench on the left
+> side so lightly but effectively."** — founder, verbatim
+
+**What the witness reports**: the manuscript still owns almost the entire visual field. **Structure ·
+MAIA · Workbench sit at the edge as quiet possibilities** — no icons demanding interpretation, no
+counts, no badges, no dashboard chrome. ***You can tell where the power is without feeling asked to
+use it.***
+
+⭐ **That is the Legible Form test passing on its own terms**: *"I am here when you need me,"* rather
+than *"use me."*
+
+⭐⭐ **AND IT ANSWERS AN OPEN PROBLEM WITH EVIDENCE RATHER THAN PRINCIPLE.** §4.3 flagged that a quiet
+room is harder to learn, and §5 resolved it in doctrine. **This is the first evidence that
+discoverability was solvable without bringing the cockpit back.**
+
+> ⭐ **RULING: do not change the rail on this witness. It is doing exactly what was wanted.**
+
+## 13.2 ⚠️ FOCUS FRAME — **PARTIAL** — ⛔ and the verdict is DATED
+
+```text
+WITNESSED   the frame persists and supports working with MAIA
+⛔ FAILED    the promised drag-to-extend aperture did not function in use
+```
+
+⚠️ **CUSTODY NOTE — this verdict was formed against the PRE-REPAIR build.** ⭐ **The drag defect was
+diagnosed and repaired after that observation and is live now (`56d0ac264`):**
+
+```text
+ROOT CAUSE   the caret probe landed in the column's padding and in the
+             handle itself, so the drag silently no-opped
+VERIFIED     Playwright + Chromium — bottom 140→695 · top 695→1027 ·
+             across a section boundary 1027→1172 · label "SECTIONS 1–2"
+```
+
+⛔ **The PARTIAL stands as a true reading of the build it was taken on.** ⭐ **It is not evidence
+about the current build, and must not be carried forward as one.** ⚠️ **RE-WITNESS OWED on the
+current artifact** — *and a mechanical pass is not that witness; only use is.*
+
+⭐ **The founder's separation was exactly right and should be preserved as method: repair the Frame
+without touching the successful orbit arrangement.** ⛔ **Two results from one screen must not be
+averaged into one verdict.**
+
+## 13.3 ⭐⭐ THE FINDING
+
+> **The Work can remain visually sovereign while substantial capability sits one gesture away.**
+
+⭐ **That is the Field + Orbit argument beginning to prove itself rather than merely being well
+specified.** ⛔ **Beginning — one witness, one screen, ten sections, no live cognition. F-ORBIT's
+full sequence (arrival · immersion · summon and dismiss each capability · return) is still owed.**
