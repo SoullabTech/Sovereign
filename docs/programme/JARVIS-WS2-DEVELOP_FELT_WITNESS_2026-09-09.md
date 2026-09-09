@@ -123,3 +123,48 @@ M4   NOT  "was the North Star useful"
 ⛔ **A FAIL is worth more than a PASS.** A PASS closes the last gate on ADOPT; a FAIL gives the next amendment its exact shape. **Report the failure that actually occurred rather than the one that is easiest to describe** — the value is in its specificity, and a softened FAIL costs more than a clean one.
 
 ⚠️ **These forms do not replace the falsifiers; they are how the falsifiers are asked.** If a narrow form and its source ever disagree, **the source governs.**
+
+---
+
+## 6 · ⭐ DOCTRINE FREEZE PENDING WITNESS — founder ruling 2026-09-09
+
+**Instrument verified runnable** (`ch4-working.html`): M2 handler line 112, M3 line 117, M4 line 125.
+⛔ **No build repair is owed. The last legitimate technical blocker is removed.**
+
+```text
+INSTRUMENT        RUNNABLE
+build repair      NOT OWED
+assistant ruling  NOT ADMISSIBLE
+founder witness   OWED
+```
+
+⚠️ **THE FINDING THAT STOPS THE LANE.** Since this gate opened, the lane produced **six laws, five
+falsifiers, a resolved custody incident, a restoration charter and three phantom findings — while
+the single empirical input went unperformed.** ⛔ **Governance became productive AROUND an
+unperformed empirical act.** The laws may all be sound and still **cannot substitute for the
+encounter they govern.**
+
+> ⭐⭐ **REASONING ABOUT AN ENCOUNTER CANNOT ACQUIRE THE AUTHORITY OF THE ENCOUNTER.**
+
+⛔ **Further doctrine before witness: NOT NEEDED, and now actively hazardous** — additional reasoning
+risks becoming **compensatory structure around missing evidence.** ⭐ *The system built architecture
+in the shape of the hole.*
+
+**⛔ CONSTITUTIONAL WORK STOPS HERE.** Order to preserve when run:
+
+```text
+M2  interaction → continue writing → notice what remains
+M3  invoke the earlier observation → notice whether MAIA or "the memory
+    system" enters awareness
+M4  invoke orientation → notice supported, or evaluated
+```
+
+⭐ **Record the first spontaneous residue BEFORE interpretation** — *"where did that go?" · "do I
+need to remember this?" · "oh, it stored that" · "I should satisfy this" · "that's checking me
+against a standard."* **The thought is primary evidence; the verdict is a later classification of
+it.**
+
+⛔ **If nothing appears, that matters too. Do not manufacture introspection because the instrument
+expects an answer.**
+
+> **The next epistemically legitimate act is not another argument. It is the encounter.**
