@@ -49,6 +49,17 @@ const UNIFIED_STATE = {
   aetherResonance: { aetherElementBalance: 0.5 },
 };
 
+
+/**
+ * RESONANCE-TRUTH makes `resonance.intimacy` PERMANENTLY unavailable — there is
+ * no lawful intimacy signal, and the turn-count derivation is gone. So the
+ * receipt is never empty, and "no unavailability" must be stated precisely:
+ * no PFI, Unified or elemental absence — not "nothing at all".
+ */
+const absencesExcludingStructural = (ctx: any) =>
+  (ctx?.unavailability ?? []).filter((u: any) =>
+    !u.id.startsWith('resonance.'));
+
 const args = (over: Record<string, unknown> = {}) => ({
   memberId: 'm1', sessionId: 's1', isSanctuary: false,
   depth: 6,                     // past both gates: resonance 3+, unified 4+
@@ -127,7 +138,7 @@ describe('the absence is evidence for the receipt, never content for cognition',
       realm: 'personal', deepWorkRecommended: false,
     });
     const ctx = await buildFieldContext(args());
-    expect(ctx!.unavailability).toBeUndefined();
+    expect(absencesExcludingStructural(ctx)).toEqual([]);
     expect(formatFieldAddendum(ctx)).toContain('[Field Intelligence]');
   });
 });
@@ -155,9 +166,9 @@ describe('PFI available — the existing partial path is unchanged', () => {
     expect(systems.affectDetector.archetypalRouting).toBe('Water');
   });
 
-  it('records no unavailability', async () => {
+  it('records no PFI, Unified or elemental absence', async () => {
     const ctx = await buildFieldContext(args());
-    expect(ctx!.unavailability).toBeUndefined();
+    expect(absencesExcludingStructural(ctx)).toEqual([]);
   });
 });
 
@@ -259,7 +270,7 @@ describe('FIELD-TRUTH-03 · a returned PFI object is not evidence', () => {
     const ctx = await buildFieldContext(args());
     expect(mockCalc).toHaveBeenCalled();
     expect(ctx!.unified).toBeDefined();
-    expect(ctx!.unavailability).toBeUndefined();
+    expect(absencesExcludingStructural(ctx)).toEqual([]);
   });
 
   it('counts the states separately, so none can masquerade as another', async () => {

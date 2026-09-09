@@ -39,25 +39,29 @@ export interface HemisphericBalance {
  * The Resonance Field - Multi-dimensional atmospheric state
  */
 export interface ResonanceField {
-  // Elemental weights
-  elements: ElementalFrequency;
-
-  // Consciousness layers
-  consciousness: ConsciousnessInfluence;
-
-  // Hemispheric balance
+  /** Weather-derived, and ABSENT when no weather signal was supplied. */
+  elements?: ElementalFrequency;
+  /** State-derived, and ABSENT when no user state was supplied. */
+  consciousness?: ConsciousnessInfluence;
+  /** ⭐ Computed from THIS TEXT. Always present. */
   hemispheres: HemisphericBalance;
+  /** ⭐ Archetypal readings of THIS TEXT. Always present. */
+  textSilence: number;
+  textTiming: number;
 
-  // Derived atmospheric properties
-  wordDensity: number;          // 0-1: How many words can emerge
-  silenceProbability: number;   // 0-1: Chance of null response
-  fragmentationRate: number;    // 0-1: Incomplete thoughts
-  responseLatency: number;      // ms: Delayed emergence
-  pauseDuration: number;        // ms: Length of silence between words
+  // Derived atmospheric properties — present only where their premises are
+  wordDensity?: number;
+  silenceProbability?: number;
+  fragmentationRate?: number;
+  responseLatency?: number;
+  pauseDuration?: number;
 
-  // Intimacy deepening
-  intimacyLevel: number;        // 0-1: Conversation depth
-  exchangeCount: number;        // Total exchanges so far
+  /**
+   * ⭐ CHRONOLOGY ONLY. The factual number of exchanges. It may NOT determine
+   * intimacy, "deepening", elemental identity, or relational depth.
+   * ⛔ `intimacyLevel` is REMOVED — it was `exchangeCount / 30`.
+   */
+  exchangeCount: number;
 }
 
 /**
@@ -90,43 +94,29 @@ export class ProbabilityCascade {
   /**
    * Calculate elemental weights based on conversation phase
    */
+  /**
+   * RESONANCE-TRUTH (founder ruling, 2026-09-09).
+   *
+   * ⭐⭐ Count may describe chronology. It may not masquerade as relationship.
+   * ⭐⭐ Chronology tells us how long the conversation has gone on. It does not
+   *     tell us what the relationship has become.
+   *
+   * REMOVED: `exchangeCount < 10 → Air 0.5` ("early") and `< 30 → Water 0.4`
+   * ("deepening"), which declared turn 11 more Water-like than turn 9 purely
+   * because two more exchanges had occurred. Also removed the `intimacyLevel > 0.7
+   * → Earth 0.6` branch, since intimacy itself was `exchangeCount / 30`.
+   *
+   * REMOVED: the "balanced middle" 0.25/0.25/0.25/0.25 fallthrough. ⭐ Unknown is
+   * not neutral — a balanced field is a CLAIM that the four are in equilibrium,
+   * and nothing observed that.
+   *
+   * ⛔ No replacement heuristic. Absence is returned as absence.
+   */
   static calculateElementalWeights(
-    exchangeCount: number,
-    intimacyLevel: number,
-    userWeather: string
-  ): ElementalFrequency {
-    // Early conversation: Air dominant (questions, exploration)
-    if (exchangeCount < 10) {
-      return {
-        earth: 0.1,
-        water: 0.2,
-        air: 0.5,
-        fire: 0.2,
-      };
-    }
-
-    // Deepening: Water rises (emotional attunement)
-    if (exchangeCount < 30) {
-      return {
-        earth: 0.2,
-        water: 0.4,
-        air: 0.2,
-        fire: 0.2,
-      };
-    }
-
-    // Intimate: Earth dominates (silence, presence)
-    if (intimacyLevel > 0.7) {
-      return {
-        earth: 0.6,
-        water: 0.2,
-        air: 0.1,
-        fire: 0.1,
-      };
-    }
-
-    // Crisis/Fire: When user weather is intense
-    if (userWeather.includes('crisis') || userWeather.includes('rage')) {
+    userWeather: string | undefined
+  ): ElementalFrequency | undefined {
+    // Weather-derived, and only when weather was actually supplied.
+    if (userWeather && (userWeather.includes('crisis') || userWeather.includes('rage'))) {
       return {
         earth: 0.1,
         water: 0.1,
@@ -135,23 +125,26 @@ export class ProbabilityCascade {
       };
     }
 
-    // Balanced middle
-    return {
-      earth: 0.25,
-      water: 0.25,
-      air: 0.25,
-      fire: 0.25,
-    };
+    // ⛔ No fallthrough weights. With no weather signal there is nothing to
+    // derive an elemental field from, and a "balanced middle" would assert
+    // equilibrium nobody observed.
+    return undefined;
   }
 
   /**
    * Calculate consciousness influence based on user state
    */
+  /**
+   * RESONANCE-TRUTH — ⭐ Unknown is not neutral.
+   *
+   * Previously an absent state arrived as `''`, matched no branch, and fell
+   * through to an "ordinary" distribution — silently transforming UNKNOWN into
+   * ORDINARY. State-dependent branches now simply do not participate.
+   */
   static calculateConsciousnessInfluence(
-    userState: string,
-    intimacyLevel: number
-  ): ConsciousnessInfluence {
-    // User in crisis: Lower self + unconscious dominant
+    userState: string | undefined
+  ): ConsciousnessInfluence | undefined {
+    if (!userState) return undefined;
     if (userState.includes('crisis') || userState.includes('raw')) {
       return {
         conscious: 0.2,
@@ -161,23 +154,9 @@ export class ProbabilityCascade {
       };
     }
 
-    // Deep intimacy: Higher self + unconscious
-    if (intimacyLevel > 0.7) {
-      return {
-        conscious: 0.2,
-        unconscious: 0.4,
-        higherSelf: 0.3,
-        lowerSelf: 0.1,
-      };
-    }
-
-    // Early conversation: Conscious + balanced
-    return {
-      conscious: 0.4,
-      unconscious: 0.2,
-      higherSelf: 0.2,
-      lowerSelf: 0.2,
-    };
+    // ⛔ REMOVED: an `intimacyLevel > 0.7` branch (intimacy was exchangeCount/30)
+    // and an "early conversation" fallthrough that fired for every unknown state.
+    return undefined;
   }
 }
 
@@ -193,7 +172,7 @@ export class ResponsePalette {
     const { elements, consciousness, hemispheres } = field;
 
     // Earth-heavy field: Minimal, grounding
-    if (elements.earth > 0.5) {
+    if (elements && elements.earth > 0.5) {
       responses.push(
         "Yeah.",
         "Mm.",
@@ -205,7 +184,7 @@ export class ResponsePalette {
     }
 
     // Water-heavy field: Emotional, flowing
-    if (elements.water > 0.4) {
+    if (elements && elements.water > 0.4) {
       responses.push(
         "Feel that.",
         "Let it flow.",
@@ -216,7 +195,7 @@ export class ResponsePalette {
     }
 
     // Air-heavy field: Questions, exploration
-    if (elements.air > 0.4) {
+    if (elements && elements.air > 0.4) {
       responses.push(
         "Tell me.",
         "What else?",
@@ -227,7 +206,7 @@ export class ResponsePalette {
     }
 
     // Fire-heavy field: Active, immediate
-    if (elements.fire > 0.4) {
+    if (elements && elements.fire > 0.4) {
       responses.push(
         "Yes!",
         "Do it.",
@@ -238,7 +217,7 @@ export class ResponsePalette {
     }
 
     // Higher self influence: Space and wisdom
-    if (consciousness.higherSelf > 0.3) {
+    if (consciousness && consciousness.higherSelf > 0.3) {
       responses.push(
         "Breathe.",
         "Space.",
@@ -249,7 +228,7 @@ export class ResponsePalette {
     }
 
     // Lower self influence: Raw immediacy
-    if (consciousness.lowerSelf > 0.3) {
+    if (consciousness && consciousness.lowerSelf > 0.3) {
       responses.push(
         "Fuck.",
         "Real.",
@@ -282,7 +261,8 @@ export class ResponsePalette {
     randomSeed: number = Math.random()
   ): string | null {
     // Silence probability check first
-    if (randomSeed < field.silenceProbability) {
+    // RESONANCE-TRUTH: no silence probability means no basis to fall silent.
+    if (field.silenceProbability !== undefined && randomSeed < field.silenceProbability) {
       return null;
     }
 
@@ -386,24 +366,26 @@ export class ResonanceFieldGenerator {
   /**
    * Generate resonance field from all archetypal contributions
    */
+  /**
+   * RESONANCE-TRUTH — the question is not "how do we keep every field
+   * populated?" but ⭐ "what is still knowable once the fabricated premises are
+   * removed?" Several outputs cannot survive, and that is the correct outcome.
+   *
+   * ⛔ `intimacyLevel` is gone as a parameter. A real intimacy signal would be a
+   * separate member-about inference with its own provenance, consent, authority
+   * and room policy — and Writer's Studio has already ruled that kind of
+   * relationship interpretation is not ambient. Absent means absent: not 0, not
+   * 0.1, and not a better-looking formula.
+   */
   generateField(
     userInput: string,
     context: any,
-    exchangeCount: number,
-    intimacyLevel: number
+    exchangeCount: number
   ): ResonanceField {
-    // Get base elemental weights from cascade
-    const elements = ProbabilityCascade.calculateElementalWeights(
-      exchangeCount,
-      intimacyLevel,
-      context.userWeather || ''
-    );
-
-    // Get consciousness influence
-    const consciousness = ProbabilityCascade.calculateConsciousnessInfluence(
-      context.userState || '',
-      intimacyLevel
-    );
+    // ⭐ `context.userWeather || ''` used to turn UNKNOWN into a value that
+    // matched no branch and therefore read as ORDINARY. Absence stays absent.
+    const elements = ProbabilityCascade.calculateElementalWeights(context.userWeather);
+    const consciousness = ProbabilityCascade.calculateConsciousnessInfluence(context.userState);
 
     // Calculate hemispheric balance
     const hemispheres = this.calculateHemisphericBalance(userInput, context);
@@ -423,35 +405,44 @@ export class ResonanceFieldGenerator {
       sum + reading.timing, 0
     ) / readings.length;
 
-    // Derive atmospheric properties from field configuration
+    /**
+     * Each derived property survives only where its premises do.
+     *
+     *   wordDensity        f(elements) ONLY          → absent without elements
+     *   silenceProbability blends elements + consciousness + text readings
+     *                      → absent; rescaling the surviving term would be a
+     *                        DIFFERENT quantity wearing the same name
+     *   fragmentationRate  blends elements.air + a real hemispheric reading
+     *                      → absent, same reason. The hemispheric reading itself
+     *                        survives and is exported as `hemispheres`.
+     *   responseLatency    avgTiming (text) × elements → absent
+     *   pauseDuration      was literally `intimacyLevel * 2000` → absent
+     *
+     * ⭐ What remains is what was actually observed: the hemispheric balance and
+     * the archetypal readings, both computed from THIS TEXT, plus the factual
+     * exchange count — as chronology, claiming nothing about the relationship.
+     */
     const field: ResonanceField = {
       elements,
       consciousness,
       hemispheres,
+      textSilence: totalSilence,
+      textTiming: avgTiming,
 
-      // Word density decreases with Earth, increases with Air
-      wordDensity: (1 - elements.earth * 0.7) * (1 + elements.air * 0.3),
+      ...(elements ? {
+        wordDensity: (1 - elements.earth * 0.7) * (1 + elements.air * 0.3),
+        fragmentationRate: elements.air * 0.7 + hemispheres.rightBrain * 0.3,
+        responseLatency: Math.max(500, avgTiming * (1 + elements.earth * 2) * (1 - elements.fire * 0.5)),
+        pauseDuration: 1000 + (elements.earth * 1500),
+        ...(consciousness ? {
+          silenceProbability:
+            elements.earth * 0.6 +
+            consciousness.higherSelf * 0.4 +
+            consciousness.unconscious * 0.2 +
+            totalSilence * 0.3,
+        } : {}),
+      } : {}),
 
-      // Silence probability from Earth + Higher Self + unconscious
-      silenceProbability:
-        elements.earth * 0.6 +
-        consciousness.higherSelf * 0.4 +
-        consciousness.unconscious * 0.2 +
-        totalSilence * 0.3,
-
-      // Fragmentation from Air + right brain
-      fragmentationRate: elements.air * 0.7 + hemispheres.rightBrain * 0.3,
-
-      // Response latency from Fire (quick) vs Earth (slow)
-      responseLatency: Math.max(
-        500,
-        avgTiming * (1 + elements.earth * 2) * (1 - elements.fire * 0.5)
-      ),
-
-      // Pause duration increases with intimacy and Earth
-      pauseDuration: 1000 + (intimacyLevel * 2000) + (elements.earth * 1500),
-
-      intimacyLevel,
       exchangeCount
     };
 
@@ -489,7 +480,7 @@ export class ResonanceFieldGenerator {
     };
   }> {
     // Generate field
-    const field = this.generateField(userInput, context, exchangeCount, intimacyLevel);
+    const field = this.generateField(userInput, context, exchangeCount);
 
     // Let response emerge from field
     const response = this.generateResponse(field);
@@ -497,9 +488,16 @@ export class ResonanceFieldGenerator {
     return {
       response,
       field,
+      /**
+       * OPERATIONAL DEFAULT, not a cognitive signal. A response still has to be
+       * scheduled, so when the field cannot supply a timing the system falls back
+       * to a plain default. ⭐ That is the system choosing what to DO in the
+       * absence of knowledge — it is not a claim that anything was observed, and
+       * these values never enter cognition.
+       */
       timing: {
-        delay: field.responseLatency,
-        pauseAfter: field.pauseDuration
+        delay: field.responseLatency ?? 800,
+        pauseAfter: field.pauseDuration ?? 1000
       }
     };
   }
@@ -617,37 +615,38 @@ export class ResonanceFieldGenerator {
    * Analyze field evolution over conversation
    */
   analyzeFieldEvolution(): {
-    elementalShift: string;
-    intimacyGrowth: number;
-    silenceTrend: number;
+    /** Absent when the two fields did not both carry elemental weights. */
+    elementalShift?: string;
+    /** Absent when either field lacked a silence premise. */
+    silenceTrend?: number;
+    // ⛔ `intimacyGrowth` REMOVED — it measured the growth of exchangeCount/30.
   } {
-    if (this.fieldHistory.length < 2) {
-      return {
-        elementalShift: 'insufficient data',
-        intimacyGrowth: 0,
-        silenceTrend: 0
-      };
-    }
+    // ⛔ Was: `{ elementalShift: 'insufficient data', intimacyGrowth: 0, silenceTrend: 0 }`.
+    // Zero is not "no trend"; it is a trend of zero. With fewer than two fields
+    // there is nothing to compare, so nothing is returned.
+    if (this.fieldHistory.length < 2) return {};
 
     const first = this.fieldHistory[0];
     const last = this.fieldHistory[this.fieldHistory.length - 1];
 
-    // Which element increased most
-    const elementDeltas = {
-      earth: last.elements.earth - first.elements.earth,
-      water: last.elements.water - first.elements.water,
-      air: last.elements.air - first.elements.air,
-      fire: last.elements.fire - first.elements.fire
-    };
-
-    const maxElement = Object.entries(elementDeltas).reduce((a, b) =>
-      a[1] > b[1] ? a : b
-    )[0];
+    // RESONANCE-TRUTH: a trend across two fields is only computable where BOTH
+    // carried the premise. ⛔ `intimacyGrowth` is gone entirely — it measured the
+    // growth of a number that was `exchangeCount / 30`, i.e. it measured the
+    // passage of turns and called it deepening.
+    const elementalShift = (last.elements && first.elements)
+      ? `Moving toward ${Object.entries({
+          earth: last.elements.earth - first.elements.earth,
+          water: last.elements.water - first.elements.water,
+          air: last.elements.air - first.elements.air,
+          fire: last.elements.fire - first.elements.fire,
+        }).reduce((a, b) => (a[1] > b[1] ? a : b))[0]}`
+      : undefined;
 
     return {
-      elementalShift: `Moving toward ${maxElement}`,
-      intimacyGrowth: last.intimacyLevel - first.intimacyLevel,
-      silenceTrend: last.silenceProbability - first.silenceProbability
+      elementalShift,
+      silenceTrend: (last.silenceProbability !== undefined && first.silenceProbability !== undefined)
+        ? last.silenceProbability - first.silenceProbability
+        : undefined,
     };
   }
 }

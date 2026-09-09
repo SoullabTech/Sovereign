@@ -65,10 +65,11 @@ export type FieldContext = {
     interference: string[];
   };
   resonance?: {
-    elements: Record<string, number>;
-    wordDensity: number;
-    silenceProbability: number;
-    fragmentationRate: number;
+    /** RESONANCE-TRUTH: each present only where its premises survived. */
+    elements?: Record<string, number>;
+    wordDensity?: number;
+    silenceProbability?: number;
+    fragmentationRate?: number;
   };
   meta: {
     ms: number;
@@ -291,24 +292,34 @@ export async function buildFieldContext(
       try {
         const rfs = getResonanceGenerator();
         const exchangeCount = args.depth;
-        const intimacyLevel = Math.min(1, exchangeCount / 30); // Grows with turns
-
+        /**
+         * RESONANCE-TRUTH — `intimacyLevel = min(1, exchangeCount / 30)` is GONE,
+         * with no replacement. ⭐⭐ Chronology tells us how long the conversation
+         * has gone on. It does not tell us what the relationship has become.
+         *
+         * `userWeather: ''` / `userState: ''` are gone too: an empty string was
+         * UNKNOWN wearing the costume of ORDINARY. Absent is now passed as absent,
+         * and the weather- and state-dependent branches simply do not fire.
+         */
         const field = await runWithTimeout(
-          Promise.resolve(
-            rfs.generateField(args.text, {
-              userWeather: '',
-              userState: '',
-            }, exchangeCount, intimacyLevel)
-          ),
+          Promise.resolve(rfs.generateField(args.text, {}, exchangeCount)),
           timeoutMs
         );
 
+        // Only what survived its premises reaches cognition.
         ctx.resonance = {
-          elements: { ...field.elements },
-          wordDensity: field.wordDensity,
-          silenceProbability: field.silenceProbability,
-          fragmentationRate: field.fragmentationRate,
+          ...(field.elements ? { elements: { ...field.elements } } : {}),
+          ...(field.wordDensity !== undefined ? { wordDensity: field.wordDensity } : {}),
+          ...(field.silenceProbability !== undefined ? { silenceProbability: field.silenceProbability } : {}),
+          ...(field.fragmentationRate !== undefined ? { fragmentationRate: field.fragmentationRate } : {}),
         };
+        if (!field.elements) {
+          unavailability.push({ id: 'resonance.elements', reason: 'no weather signal; elemental weights were previously derived from turn count' });
+        }
+        if (field.silenceProbability === undefined) {
+          unavailability.push({ id: 'resonance.silenceProbability', reason: 'premises absent (elemental weights and/or user state)' });
+        }
+        unavailability.push({ id: 'resonance.intimacy', reason: 'no lawful intimacy signal; turn-count derivation removed' });
         sources.push('resonance');
       } catch (err) {
         console.warn('[field-orchestrator] Resonance failed:', err instanceof Error ? err.message : 'unknown');

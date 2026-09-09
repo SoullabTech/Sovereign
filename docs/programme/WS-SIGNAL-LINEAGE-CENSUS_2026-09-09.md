@@ -348,3 +348,85 @@ absence originating at the Elemental Oracle now produces a context containing **
 `integrationReadiness`) · `elementalBalance` 0.6 · `resonanceIndex` 0.5 · the
 `integrationCoverage`/`signalQuality` constants · the `pfi_full` identity · Resonance · Unified's
 other fabrications · producer registration · room cutover.
+
+---
+
+# 9 · RESONANCE-TRUTH ✅ CLOSED — and a census correction
+
+> ⭐⭐ **Count may describe chronology. It may not masquerade as relationship.**
+> ⭐⭐ **Chronology tells us how long the conversation has gone on. It does not tell us what the
+> relationship has become.**
+> ⭐ **Unknown is not neutral.**
+
+## 9.1 ⚠️ CENSUS CORRECTION — Resonance was NOT the independent text observer
+
+§3 of this census called Resonance *"the one genuinely independent leg"* with all four exported
+fields *"measured from the current text"*. **That was wrong, and the founder's read of
+`ProbabilityCascade` is confirmed at `lib/maia/resonance-field-system.ts:93-144`:**
+
+```ts
+if (exchangeCount < 10)      return { air: 0.5, … };   // "Early conversation"
+if (exchangeCount < 30)      return { water: 0.4, … }; // "Deepening"
+if (intimacyLevel > 0.7)     return { earth: 0.6, … }; // "Intimate"
+if (userWeather.includes('crisis'|'rage')) …
+return { earth: .25, water: .25, air: .25, fire: .25 } // "Balanced middle"
+```
+
+🔴 **`elements` contained NO TEXT AT ALL** — it was turn count, an intimacy number that was itself
+`exchangeCount / 30`, and a weather string the orchestrator supplied as `''`. **`wordDensity` is a
+pure function of `elements`, so it contained no text either.** `silenceProbability` and
+`fragmentationRate` mixed those synthetic weights with genuinely text-derived readings.
+
+⭐ **So turn 11 was declared more Water-like than turn 9 because two more exchanges had occurred** —
+and removing `intimacyLevel` alone would not have touched that.
+
+## 9.2 · The repair
+
+| | |
+|---|---|
+| `intimacyLevel = exchangeCount / 30` | **REMOVED, no replacement.** ⛔ Not `0`, not `0.1`, not a better formula. A lawful intimacy signal would be a member-about inference with its own provenance, consent, authority and room policy — and Writer's Studio has ruled that kind of interpretation **not ambient**. |
+| `exchangeCount < 10` / `< 30` branches | **REMOVED.** Count remains as a plain fact; it determines nothing. |
+| `intimacyLevel > 0.7 → Earth` | **REMOVED** in both cascades. |
+| `"balanced middle" 0.25 ×4` | **REMOVED.** ⭐ A balanced field is a *claim* that the four are in equilibrium. Nobody observed that. |
+| `"early conversation"` consciousness fallthrough | **REMOVED** — it fired for every unknown state. |
+| `userWeather \|\| ''` · `userState \|\| ''` | **GONE.** ⭐ An empty string was **unknown wearing the costume of ordinary**: it matched no branch, so it read as "none of the special states apply". Absent is now passed as absent and the dependent branches simply do not fire. |
+| `{ elementalShift: 'insufficient data', intimacyGrowth: 0, silenceTrend: 0 }` | **REMOVED.** ⭐ *Zero is not "no trend"; it is a trend of zero.* Returns `{}`. |
+
+## 9.3 ⭐ WHAT SURVIVED — the outputs shrank, and that is the result
+
+```text
+ABSENT now       elements · wordDensity · silenceProbability · fragmentationRate
+                 responseLatency · pauseDuration · intimacyLevel · intimacyGrowth
+
+SURVIVING        hemispheres    computed from THIS TEXT
+                 textSilence    archetypal readings of THIS TEXT
+                 textTiming     archetypal readings of THIS TEXT
+                 exchangeCount  chronology, claiming nothing
+```
+
+⛔ **No surviving term was rescaled into the missing quantity.** `fragmentationRate` was
+`elements.air * 0.7 + hemispheres.rightBrain * 0.3`; returning just the hemispheric term would be a
+**different quantity under the same name**, so it is absent and the hemispheric reading is exported
+as itself. A test pins that.
+
+⚠️ **One operational default is kept and labelled as such.** A response still has to be *scheduled*,
+so `timing.delay` / `pauseAfter` fall back to plain constants. **That is the system choosing what to
+DO in the absence of knowledge — not a claim that anything was observed — and those values never
+enter cognition.** The `OPERATIONAL DEFAULT / COGNITIVE SIGNAL` distinction from FIELD-TRUTH-03,
+applied.
+
+## 9.4 · Witness
+
+`lib/maia/__tests__/resonanceTruth.test.ts` · **23 passed**, including: no elemental weights at
+exchange 1/9/11/29/31/200 · **turn 9 and turn 11 produce identical fields** · no intimacy value
+anywhere in the serialized field · absent weather and state yield absence rather than defaults · real
+signals still work · the surviving hemispheric reading **actually varies with the text** ·
+`analyzeFieldEvolution()` returns `{}` rather than zeros.
+
+⚠️ **Three FIELD-TRUTH tests were updated, not silenced.** They asserted *"records no
+unavailability"*; `resonance.intimacy` is now **permanently** unavailable, so the receipt is never
+empty. They now assert precisely *no PFI, Unified or elemental absence* — **the record was kept and
+the assertion was made exact.**
+
+⛔ **Untouched:** the PFI decimal aliases · `pfi_full` · Unified's remaining fabrications · producer
+registration · room cutover · every existing room's behaviour beyond these removals.
