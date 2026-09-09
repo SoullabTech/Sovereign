@@ -1,6 +1,6 @@
 # Authorial Restoration — lane charter
 
-**Founder ruling · 2026-09-10 · lane OPENED as direction · ⛔ NOT BUILT, NOT AUTHORIZED TO EDIT**
+**Founder ruling · 2026-09-09 · lane OPENED as direction · ⛔ NOT BUILT, NOT AUTHORIZED TO EDIT**
 
 > ⭐ **THE GOVERNING RULE**
 > **"Preserve what editing clarified. Recover what editing accidentally erased. Let the writer
@@ -119,7 +119,7 @@ the one place the grammar can be derived from behaviour rather than from self-re
 dated, superseded-by-successor, shown and correctable. ⛔ Never a static verdict about who this
 writer is.
 
-## 5 · Product surface (founder direction, 2026-09-10)
+## 5 · Product surface (founder direction, 2026-09-09)
 
 > *"we could have a section or an option that allows for works to be reworked based on old/new
 > materials"*
@@ -130,7 +130,7 @@ in another version**, not a new class of object. **Do not invent a fifth store f
 
 ## 6 · ⚠️ CORPUS FINDING — the recovery baseline does NOT exist in this repository
 
-**Searched 2026-09-10.** Four manuscript artifacts exist under
+**Searched 2026-09-09.** Four manuscript artifacts exist under
 `app/api/_backend/data/founder-knowledge/`:
 
 ```text
@@ -205,7 +205,7 @@ BLOCKED ON     a recovery corpus that does not exist in this repository
 
 ## 8 · ⭐⭐ THE SUPERIMPOSED FAILURES — representation precedes cognition
 
-**Founder ruling · 2026-09-10.** The Chapter 4 event was **two different failures superimposed**,
+**Founder ruling · 2026-09-09.** The Chapter 4 event was **two different failures superimposed**,
 and separating them changes what must be fixed.
 
 ```text

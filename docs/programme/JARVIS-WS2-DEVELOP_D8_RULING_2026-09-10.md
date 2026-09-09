@@ -1,4 +1,4 @@
-# D8 — Founder ruling · **AMEND** · 2026-09-10
+# D8 — Founder ruling · **AMEND** · 2026-09-09
 
 **Status**: **D8 CLOSED. NO CANDIDATE ADOPTED.**
 **Basis**: twelve walk cells, A M1–M4 · B M1–M4 · C M1–M4, `03b96911d` … `b285013f7`.

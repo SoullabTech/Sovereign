@@ -1,6 +1,6 @@
 # Develop the meaning. Preserve the lived encounter.
 
-**Founder ruling · 2026-09-10 · Writer's Studio editorial law**
+**Founder ruling · 2026-09-09 · Writer's Studio editorial law**
 **Status: RATIFIED as North Star addition. Supersedes any compression target.**
 
 ---
@@ -18,7 +18,7 @@
 > insight actually arose — **it stays.** It can be refined, shortened, or moved. It must
 > not be silently replaced by a polished abstraction.
 >
-> — founder, 2026-09-10
+> — founder, 2026-09-09
 
 ⭐ **North Star addition, ratified**: **"Develop the meaning. Preserve the lived encounter."**
 
@@ -63,7 +63,7 @@ RIGHT   preserve the lived material, develop the prose AROUND it until the meani
 
 ## 3 · ⚠️ VERIFIED CORPUS DEFECT — the loss happened UPSTREAM of any editorial judgment
 
-**Read 2026-09-10 from `app/api/_backend/data/founder-knowledge/elemental-alchemy-full.json`:**
+**Read 2026-09-09 from `app/api/_backend/data/founder-knowledge/elemental-alchemy-full.json`:**
 
 ```text
 chapters[3]  "Chapter 4: The Elements of Wholeness"

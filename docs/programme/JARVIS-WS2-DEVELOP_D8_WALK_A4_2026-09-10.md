@@ -4,7 +4,7 @@
 
 ---
 
-## 0 · Three layers — A/M2 failed at the third · founder, 2026-09-10
+## 0 · Three layers — A/M2 failed at the third · founder, 2026-09-09
 
 ```text
 1  COGNITION        Can MAIA notice a real developmental pattern?
@@ -61,7 +61,7 @@ Suppose the Work carries: *a psychologically and spiritually grounded book begin
 
 **The North Star is the most Work-level object in the entire system, and A has no locus above the line.**
 
-**Three pressures, none chosen in advance** (founder framing, 2026-09-10):
+**Three pressures, none chosen in advance** (founder framing, 2026-09-09):
 
 ```text
 ATTACH IT TO A PASSAGE

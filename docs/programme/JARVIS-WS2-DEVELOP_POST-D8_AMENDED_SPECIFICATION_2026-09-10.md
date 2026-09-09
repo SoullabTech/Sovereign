@@ -1,7 +1,7 @@
-# Post-D8 · The amended architecture — **SPECIFICATION** · 2026-09-10
+# Post-D8 · The amended architecture — **SPECIFICATION** · 2026-09-09
 
 **Status**: **SPECIFIED · NOT WALKED · NOT ADOPTED.**
-**Gate ruling, founder 2026-09-10**: **D9 is BLOCKED pending ADOPT.**
+**Gate ruling, founder 2026-09-09**: **D9 is BLOCKED pending ADOPT.**
 
 ```text
 A. SPECIFY      one amended multi-class candidate against all 11 falsifiers   <- THIS
@@ -23,7 +23,7 @@ then D9         rewrite the Develop Experience Contract
 
 ---
 
-## 0 · The organizing statement — **DEMOTED 2026-09-10, not replaced**
+## 0 · The organizing statement — **DEMOTED 2026-09-09, not replaced**
 
 ⛔ **Governed by `WRITERS_STUDIO_FOUNDATIONAL_RELATIONSHIP_2026-09-10.md`.** The statement below is the **interaction doctrine**, a consequence of the foundational relationship — not the ontological ground. Criterion 11 is strengthened there. Not restated here.
 
@@ -68,7 +68,7 @@ the manuscript                  manuscript / revision state
   canonical · append-only · provenance-bearing
 ```
 
-> ⭐ **RATIFIED 2026-09-10 — `writer-authorized`, not `writer-authored`.** Authorization is a **standing**; authorship is **provenance**. A writer may grant present or durable authority to language MAIA helped formulate without retroactively becoming its sole author.
+> ⭐ **RATIFIED 2026-09-09 — `writer-authorized`, not `writer-authored`.** Authorization is a **standing**; authorship is **provenance**. A writer may grant present or durable authority to language MAIA helped formulate without retroactively becoming its sole author.
 >
 > **Precision**: *writer-authorized* describes **the standing**, never the underlying utterance's type. **The substrate still records what was actually said and where it came from.**
 

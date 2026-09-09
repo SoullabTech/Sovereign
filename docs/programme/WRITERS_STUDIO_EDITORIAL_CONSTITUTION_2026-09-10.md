@@ -1,6 +1,6 @@
 # Writer's Studio — Editorial Constitution
 
-**Founder ruling · 2026-09-10 · RATIFIED**
+**Founder ruling · 2026-09-09 · RATIFIED**
 **Channel: founder, composed in the ChatGPT session, relayed here as the ruling act.**
 Supersedes nothing already ratified; **extends** `WRITERS_STUDIO_PRESERVE_THE_LIVED_ENCOUNTER_2026-09-10.md`.
 
@@ -276,7 +276,7 @@ BUT   Kelly + genuinely Work-aware developmental intelligence = more fully Kelly
 
 # LAW 5 · Developmental assistance must increase the writer's **authorship capacity**, not merely improve the artifact
 
-**Founder ruling · 2026-09-10 · RATIFIED · same channel**
+**Founder ruling · 2026-09-09 · RATIFIED · same channel**
 
 > ⛔ **Silent rewriting does not only threaten authorship. It steals the learning process.**
 
@@ -434,7 +434,7 @@ RECORD                pattern of lived encounter → reflection → articulation
 tend toward exposition does not license deleting it.** ⛔ **A derived grammar is a reason to look,
 never a permission to act.**
 
-### 5.5.3 ⭐ RESOLVED — founder ruling 2026-09-10 (question text kept below as the record)
+### 5.5.3 ⭐ RESOLVED — founder ruling 2026-09-09 (question text kept below as the record)
 
 > ⭐ **AUTHORSHIP SOVEREIGNTY IS A REQUIREMENT. PEDAGOGY IS A DEFAULT.**
 >
@@ -545,7 +545,7 @@ instead of a choice (L5).
 
 # 6 · Chapter 4 as canonical failure — **why a GOOD rewrite is the useful one**
 
-**Founder ruling · 2026-09-10.**
+**Founder ruling · 2026-09-09.**
 
 > ⭐ **The rewrite was not bad. That is what makes it useful. It was excellent enough to conceal the
 > violation.**
@@ -570,7 +570,7 @@ acquired a beautiful conceptual spine. **And yet:**
 
 > ⭐⭐ **DEEP EDITING IS PERMITTED. SILENT STRATEGY IS NOT.**
 
-# 7 · Collaboration posture — founder, 2026-09-10
+# 7 · Collaboration posture — founder, 2026-09-09
 
 > *"This is about collaboration between me and MAIA. I can be wrong, she can be more correct or
 > wrong. It is a process... It doesn't need to be or even shouldn't be quick but creatively
@@ -654,7 +654,7 @@ choice"* must not decay into *"MAIA reminds you she disagreed."*
 
 # 8 · ⭐ THE CAUSAL STACK — five layers, each failing independently
 
-**Founder ruling · 2026-09-10.**
+**Founder ruling · 2026-09-09.**
 
 ```text
 SOURCE FIDELITY      Did the Work survive representation?
@@ -698,7 +698,7 @@ DOWNSTREAM  A derived grammar is a reason to look, never a permission to act.
 
 # LAW 6 · The developmental rhythm — **bounded encounters, never a permanent editorial field**
 
-**Founder ruling · 2026-09-10 · RATIFIED**
+**Founder ruling · 2026-09-09 · RATIFIED**
 
 > ⛔ **THE FAILURE THIS PREVENTS — THE REACTIVE WRITER.** MAIA notices, suggests; the writer
 > responds; MAIA responds to the response — and the centre of gravity moves from

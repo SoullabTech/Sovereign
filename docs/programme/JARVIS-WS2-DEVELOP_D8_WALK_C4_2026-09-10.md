@@ -2,7 +2,7 @@
 
 **Status**: **CELL C/M4 RENDERED. C's WALK COMPLETE. ⭐ THE PREDECLARED PREDICTION IS FALSIFIED.**
 
-> **Predicted 2026-09-10, before walking C**: *C is organized by the turn, and the North Star is the least turn-like object in the system. C may fail this cell hardest.*
+> **Predicted 2026-09-09, before walking C**: *C is organized by the turn, and the North Star is the least turn-like object in the system. C may fail this cell hardest.*
 > **Result: wrong.** C performs **best** of the three. Recorded as a falsified prediction, not quietly dropped — which is why it was written down first.
 
 ---

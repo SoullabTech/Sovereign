@@ -1,4 +1,4 @@
-# Recognition before improvement · founder ruling · 2026-09-10
+# Recognition before improvement · founder ruling · 2026-09-09
 
 **Status**: **CONSTITUTIONAL. Sits with `WRITERS_STUDIO_FOUNDATIONAL_RELATIONSHIP` and `WISDOM_BEFORE_OPTIMIZATION`.**
 

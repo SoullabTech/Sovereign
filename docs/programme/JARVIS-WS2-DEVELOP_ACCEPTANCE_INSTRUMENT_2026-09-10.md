@@ -1,4 +1,4 @@
-# Acceptance instrument · minimal prototype · 2026-09-10
+# Acceptance instrument · minimal prototype · 2026-09-09
 
 **Status**: **BUILT. Awaiting founder felt witness on M2 / M3 / M4.**
 **Sequencing ruling**: **OPTION 2 — minimal prototype first.** ADOPT withheld; D9 blocked.

@@ -1,4 +1,4 @@
-# Amended architecture · structural adjudication · 2026-09-10
+# Amended architecture · structural adjudication · 2026-09-09
 
 **Status**: **STRUCTURAL PASS ON ALL CELLS. ⛔ ADOPT NOT RECORDED. D9 STILL BLOCKED.**
 

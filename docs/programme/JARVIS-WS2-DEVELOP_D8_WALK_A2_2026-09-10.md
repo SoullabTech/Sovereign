@@ -1,6 +1,6 @@
 # D8 walk · Candidate A · The Margin · Moment 2 — several things become noticeable
 
-**Status**: ⭐ **STRUCTURAL FAILURE — founder ruling 2026-09-10.** Candidate A is **not adoptable as specified.**
+**Status**: ⭐ **STRUCTURAL FAILURE — founder ruling 2026-09-09.** Candidate A is **not adoptable as specified.**
 
 > **Ruling.** Not because nine marks are ugly. Because **the architecture cannot truthfully represent the basic object developmental work produces.** A developmental finding may be distributed, relational, recurrent, or located at a seam. In A, a mark's identity *is* its place — so one finding becomes several apparent objects and **the representation changes the cardinality of the thing represented.** That is semantic failure, not density pressure.
 >

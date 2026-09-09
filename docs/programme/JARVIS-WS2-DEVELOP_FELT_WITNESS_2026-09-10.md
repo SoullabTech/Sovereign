@@ -1,4 +1,4 @@
-# Felt witness · first record · 2026-09-10
+# Felt witness · first record · 2026-09-09
 
 **Status**: **GENERAL WITNESS: PASS. M2 / M3 / M4: NOT YET FORMALLY WITNESSED.**
 ⛔ **ADOPT still withheld. D9 still blocked.**
@@ -51,7 +51,7 @@ NOT SUPPORTED any general comparative claim about AI vs human editors
 ## 2 · ⚠️ Correction to the epistemic claim made when this arrived
 
 ```text
-WRONG (asserted 2026-09-10)
+WRONG (asserted 2026-09-09)
   "there was no cognition available to confound it"
   -> implied the interaction shape ALONE produced the value
 
@@ -99,7 +99,7 @@ all three PASS   -> no remaining reason to withhold ADOPT -> D9 opens
 any FAIL         -> the exact felt failure owns the next amendment
 ```
 
-## 5 · ⭐ Operative form of each verdict — **adopted, founder act 2026-09-10**
+## 5 · ⭐ Operative form of each verdict — **adopted, founder act 2026-09-09**
 
 **Ruled: these are the questions the three verdicts answer.** Each is checked against its source falsifier (`JARVIS-WS2-DEVELOP_ACCEPTANCE_INSTRUMENT_2026-09-10.md` §§41–45, 72–76) and **narrows it without softening it** — the fidelity direction that matters, since a reframing that made a falsifier easier to pass would be a way of buying ADOPT rather than earning it.
 

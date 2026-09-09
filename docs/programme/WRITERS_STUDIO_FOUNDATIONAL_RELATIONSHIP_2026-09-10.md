@@ -1,4 +1,4 @@
-# Writer's Studio — **the foundational relationship** · founder ruling · 2026-09-10
+# Writer's Studio — **the foundational relationship** · founder ruling · 2026-09-09
 
 **Status**: **CONSTITUTIONAL. Placed ABOVE the amended specification and the acceptance walk.**
 **Effect**: the prior organizing statement is **demoted, not replaced.**
