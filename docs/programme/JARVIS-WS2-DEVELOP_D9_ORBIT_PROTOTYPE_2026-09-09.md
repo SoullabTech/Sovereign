@@ -113,3 +113,93 @@ RETURN      summon Structure, then dismiss.  Summon MAIA, then dismiss.
 
 ⛔ **STOP AFTER THE PROTOTYPE AND EVIDENCE. Prototype success alone does not promote it into
 Writer's Studio.**
+
+---
+
+# 7 · 🔴 DEFECT FOUND BY USE — shared focus died when the composer took keyboard focus
+
+**Founder, 2026-09-09, first run. ⭐ REPAIRED.**
+
+> ⭐⭐ **"The system knows what you're talking about while you can no longer see what the system knows
+> you're talking about. That is exactly the kind of hidden state we've been trying to eliminate."**
+
+⛔ **The browser's native selection was being treated AS the focus state.** Clicking the composer
+collapses that selection, so the highlight vanished — **while the scope remained set and MAIA
+remained scoped to the passage.**
+
+⭐ **The state was never lost. Its VISIBILITY was.** ⚠️ **The worse of the two failures**: a system
+that forgets is merely broken; **a system that remembers invisibly is the hidden-state defect this
+constitution exists to prevent, at the smallest possible scale.**
+
+⭐ **Found by USE, on the first session — not by review, and not by any check I ran.** *Every
+structural verification passed on a room containing it.*
+
+# 8 · ⭐ THE FOCUS FRAME — founder amendment, built
+
+> **Shared focus is an ARBITRARY WRITER-DEFINED RANGE, not a section boundary. The writer may widen
+> or narrow it across the Work while MAIA retains the relationship between local focus and
+> whole-Work context.**
+
+```text
+word / sentence → paragraph → several paragraphs → passage → section →
+several sections → chapter → whole Work
+```
+
+**Built:**
+
+```text
+FRAME          a soft bordered aperture drawn around the held range,
+               with DRAG HANDLES on its top and bottom edges
+DRAG           pull an edge up or down to include earlier or later
+               material — across paragraph and section boundaries
+GESTURES       drag-select · click a section heading to frame that section ·
+               Wider / Narrower to step the aperture · Release
+LABEL          the frame names its own scale — "passage" · "paragraph" ·
+               "section 3" · "sections 3–5" · "whole chapter"
+⛔ NO MENU      there is no analysis-level control; the frame IS the scale
+PAINTING       CSS Custom Highlight API, independent of the browser
+               selection, with a span-wrap fallback
+RELEASE        only by writer act: another passage · Release · Escape ·
+               or editing the framed text (which announces itself)
+```
+
+## 8.1 ⭐⭐ VISIBLE FOCUS IS WRITER-OWNED. CONTEXT MAY BE BROADER.
+
+**Founder constraint, and the most important line in this amendment.**
+
+⭐ **MAIA may consult the whole Work underneath — but the visible frame remains the writer's declared
+centre of attention.** ⛔ **The frame never auto-expands because MAIA "thinks" more context is
+relevant.**
+
+> ⭐ **This resolves what would otherwise be a contradiction between Scale Coherence (hold the whole)
+> and the Focus Frame (the writer draws the aperture): context is MAIA's business, aperture is the
+> writer's. Only one of them is rendered.**
+
+⭐ **It is the most tangible expression yet of Scale Coherence — *the writer is literally drawing the
+aperture through which they want to work.***
+
+## 8.2 · Verified after both changes
+
+```text
+✅ corpus byte-identical · fixtures byte-identical · respond() byte-identical
+✅ M2 / M3 / M4 handlers intact
+✅ 0 localStorage · 0 sessionStorage · 0 timers
+✅ nothing opens, moves or resizes without a writer gesture
+```
+
+⛔ **NOT verified by use.** ⚠️ **And the defect just repaired was invisible to exactly this kind of
+verification — which is the standing reason a felt witness is required and a structural pass is
+not evidence about a room.**
+
+## 8.3 ⭐ THE FINDING WORTH KEEPING
+
+> ⭐⭐ **Shared attention must survive the transfer of keyboard focus.**
+>
+> **Generalized: wherever the system holds a scope on the writer's behalf, that scope must remain
+> perceptible for as long as it is in force.**
+
+⛔ **An invisible scope is indistinguishable from no scope at all — and worse than none, because the
+system acts on it.**
+
+⚠️ **Recorded as a CANDIDATE falsifier, deliberately NOT registered.** F-REACTIVE and the Law 4
+disclosure family may already cover it. ⛔ **Founder ruling owed on whether it needs its own name.**
