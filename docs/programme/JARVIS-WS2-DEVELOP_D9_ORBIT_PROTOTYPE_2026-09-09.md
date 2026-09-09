@@ -438,3 +438,85 @@ already acted beyond what was meant.**
 
 ⚠️ **Recorded as a standing check, not a new falsifier:** ***after any constitutional repair, ask
 which other falsifier the repair has just made reachable.***
+
+---
+
+# 12 · 🔴 SECOND DEFECT FOUND BY USE — "I can work within the box but not extend it"
+
+**Founder, 2026-09-09. ⭐ REPAIRED, and verified in a real browser this time.**
+
+## 12.1 · Root cause — the caret probe never reached the prose
+
+**Dragging a handle calls `caretRangeFromPoint(x,y)` to turn a pointer position into a text
+position. It was returning the wrong thing, twice over:**
+
+```text
+1  THE HANDLE WAS UNDER THE POINTER
+   the probe resolved to the handle element, not the text beneath it
+   → fixed: the frame drops pointer-events for the duration of the drag
+
+2  ⭐ THE PROBE LANDED IN THE COLUMN'S PADDING
+   x was clamped to main.left+8, but main carries 24px of padding, so the
+   probe sat OUTSIDE the text and returned the <section>, not a text node
+   → the guard `if(!bodyOf(...)) return` then silently no-opped
+   → fixed: the probe SNAPS INTO THE NEAREST BODY OF PROSE
+```
+
+⭐ **Silent no-op is exactly how it presented**: the frame was live, the handle grabbable, the drag
+tracked — **and nothing happened.** ⚠️ **A guard that returns quietly on an unexpected value
+produces a defect with no symptom except that the thing does not work.**
+
+**Two further repairs from the same screenshot:**
+
+```text
+HANDLES SAT ON THE PROSE   → moved into the left margin, clear of the text
+                             (verified: handle-right 439 ≤ text-left 442)
+A SECOND BOX APPEARED      → the contenteditable's focus ring read as a rival
+                             frame; it is now an inset left bar, never a box
+"ASK MAIA" COVERED WORDS   → moved into the margin beside the selection
+```
+
+## 12.2 ⭐ VERIFIED IN A REAL BROWSER — `20/20`, plus the drag suite
+
+**Playwright + Chromium, scripts committed at `scripts/witness/d9-orbit-verify.mjs` and
+`d9-frame-drag-verify.mjs`:**
+
+```text
+arrival: Structure / MAIA / Workbench closed · no frame          PASS
+selection → frame visible · scale label · highlight painted      PASS
+⭐ composer focus: browser selection GONE, frame + highlight SURVIVE  PASS
+drag bottom handle:      140 → 695 chars                          PASS
+drag top handle:         695 → 1027 chars, scale "SECTIONS 1–2"   PASS
+drag across a boundary:  1027 → 1172 chars                        PASS
+ask with a frame held → MAIA names the frame she is holding       PASS
+orbit open: the Work did NOT move (identical geometry)            PASS
+Escape closes · no residue · frame survived the orbit             PASS
+release only on explicit act · highlight cleared                  PASS
+                                                     0 failed of 20
+```
+
+⚠️ **Two of my own test runs were wrong before the product was**: the first suite failed on a
+threshold I set badly, and the drag suite failed twice because it never scrolled the frame into
+view. ⭐ **Recorded because it is the same lesson at instrument level: a red result is a claim about
+the test until the test is checked.**
+
+## 12.3 ⭐ ONE PRODUCT CHANGE MADE WHILE FIXING — the scope-blind fallback
+
+**With a frame held, an unrecognized question answered *"Say more?"* — as though nothing were
+held.** ⭐ **It now names the frame it is actually holding:** *"I have sections 1–2 held with you.
+Say more about what you are after here — or widen the frame and ask again."*
+
+⛔ **No new developmental claim was added.** ⭐ **This is scope acknowledgement, not cognition — and
+it is arguably F-SCOPE at the level of speech: MAIA holding a boundary and speaking as if she were
+not.**
+
+## 12.4 ⛔ WHAT IS STILL NOT PROVEN
+
+```text
+✅ MECHANICS   verified in a browser, 20/20 plus three drag cases
+⛔ FELT        arrival · immersion · return · F-ORBIT — all still owed,
+               and all still the founder's alone
+
+⚠️ BOTH defects so far were found by USE and missed by every structural check.
+   The mechanical suite now covers them — which means it will not find the third.
+```
