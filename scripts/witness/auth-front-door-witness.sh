@@ -47,11 +47,21 @@ NEW_EMAIL="${1:-}"; EXISTING_EMAIL="${2:-}"
 
 hdr '0 · Arguments'
 [ -n "$NEW_EMAIL" ] || die "usage: $0 <NEW_TEST_EMAIL> [EXISTING_MEMBER_EMAIL]"
-# Placeholders have been run verbatim before. Refuse them by name.
-case "$NEW_EMAIL$EXISTING_EMAIL" in
-  *'<'*|*'YOUR@'*|*'her@email'*|*'example.com'*|*'paste'*|*'you+newtest'*|*'newtest@'*)
-    die 'placeholder value — substitute a real inbox you can read';;
-esac
+# A blacklist of placeholder spellings loses every time a new one is written.
+# The only reliable guard is the operator confirming the address OUT LOUD, so
+# the check is confirmation, not pattern matching. WITNESS_YES=1 skips it for
+# automation that genuinely means it.
+if [ "${WITNESS_YES:-}" != '1' ]; then
+  [ -t 0 ] || die 'not a terminal and WITNESS_YES is unset — refusing to send mail unconfirmed'
+  ylw "About to send a real sign-in code to: $NEW_EMAIL"
+  ylw 'If that is an example address copied from instructions, answer no.'
+  printf 'Is this an inbox you can actually open? [y/N] '
+  read -r CONFIRM
+  case "$CONFIRM" in
+    y|Y|yes|YES) ;;
+    *) die 'not confirmed — nothing was sent';;
+  esac
+fi
 case "$NEW_EMAIL" in *@*.*) ;; *) die 'NEW_TEST_EMAIL is not an address';; esac
 
 EXISTS=$(psql_q "SELECT count(*) FROM members WHERE LOWER(email) = LOWER('$NEW_EMAIL');" | tr -d '[:space:]')
