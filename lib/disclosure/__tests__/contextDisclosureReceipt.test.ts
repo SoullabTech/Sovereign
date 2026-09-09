@@ -1,5 +1,5 @@
 /**
- * FOCUS DISCLOSURE RECEIPT — custody and protocol falsifiers.
+ * CONTEXT DISCLOSURE RECEIPT — custody and protocol falsifiers.
  *
  *   ⭐⭐ Disclosure without accountability is not authorized.
  *       Accountability without a disclosure must never pretend that one occurred.
@@ -20,10 +20,10 @@ let mode: 'ok' | 'throw' | 'empty' = 'ok';
 jest.mock('@/lib/db/postgres', () => ({
   query: jest.fn(async (sql: string, params: unknown[] = []) => {
     calls.push({ sql, params });
-    if (mode === 'throw') throw new Error('relation "focus_disclosure_receipts" does not exist');
+    if (mode === 'throw') throw new Error('relation "context_disclosure_receipts" does not exist');
     if (mode === 'empty') return { rows: [], rowCount: 0 };
-    if (/INSERT INTO focus_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
-    if (/SELECT id FROM focus_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
+    if (/INSERT INTO context_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
+    if (/SELECT id FROM context_disclosure_receipts/.test(sql)) return { rows: [{ id: 'r1' }], rowCount: 1 };
     return { rows: [{ n: '0' }], rowCount: 1 };
   }),
 }));
@@ -31,18 +31,19 @@ jest.mock('@/lib/db/postgres', () => ({
 import {
   mintDisclosureAttempt,
   confirmDisclosureCrossed,
-  FOCUS_DISCLOSURE_POLICY_VERSION,
-} from '../focusDisclosureReceipt';
+  DISCLOSURE_POLICY_VERSION,
+} from '../contextDisclosureReceipt';
 
 const attempt = (over: Record<string, unknown> = {}) => ({
   disclosureId: 'd-1', memberId: 'm-1', requestRef: 'req-1',
   boundary: 'writers_studio.focus->maia_cognition' as const,
-  workRef: 'work-1', scopeKind: 'passage' as const, gesture: 'ask_maia' as const,
+  sourceClass: 'work' as const, participationBasis: 'member_invoked' as const,
+  sourceRef: 'work-1', scopeKind: 'passage' as const, gesture: 'ask_maia' as const,
   ...over,
 }) as any;
 
 const MIGRATION = fs.readFileSync(
-  path.join(process.cwd(), 'database/migrations/20260909000001_focus_disclosure_receipts.sql'), 'utf8');
+  path.join(process.cwd(), 'database/migrations/20260909000001_context_disclosure_receipts.sql'), 'utf8');
 /**
  * ⚠️ The C21 lesson, hit again here: the first draft scanned the RAW migration and
  * failed `no TTL` on the header sentence *"No TTL now."* — prose documenting the
@@ -54,8 +55,15 @@ const MIGRATION_CODE_ONLY = () => MIGRATION
   .replace(/COMMENT ON [\s\S]*?;\n/g, '')
   .replace(/^\s*--.*$/gm, '');
 
+/* Same discipline as MIGRATION_CODE_ONLY: this module's own comments name every
+   refused field on purpose, so a ban scanned against the raw source would fail on
+   the documentation of the ban. */
+const STORE_CODE_ONLY = () => STORE
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/^\s*\/\/.*$/gm, '');
+
 const STORE = fs.readFileSync(
-  path.join(process.cwd(), 'lib/writers-studio/disclosure/focusDisclosureReceipt.ts'), 'utf8');
+  path.join(process.cwd(), 'lib/disclosure/contextDisclosureReceipt.ts'), 'utf8');
 
 beforeEach(() => { calls.length = 0; mode = 'ok'; jest.spyOn(console, 'error').mockImplementation(() => {}); });
 afterEach(() => jest.restoreAllMocks());
@@ -68,7 +76,7 @@ describe('F1 · accountability may block the disclosure — fail closed', () => 
 
   it('mints BEFORE the crossing, in the `attempted` state', async () => {
     await mintDisclosureAttempt(attempt());
-    const insert = calls.find(c => /INSERT INTO focus_disclosure_receipts/.test(c.sql))!;
+    const insert = calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))!;
     expect(insert.sql).toMatch(/'attempted'/);
     expect(insert.sql).not.toMatch(/'crossed'/);
   });
@@ -77,7 +85,7 @@ describe('F1 · accountability may block the disclosure — fail closed', () => 
     await mintDisclosureAttempt(attempt());
     const insert = calls.find(c => /INSERT INTO/.test(c.sql))!;
     expect(insert.sql).toMatch(/'member'/);
-    expect(insert.params).toContain(FOCUS_DISCLOSURE_POLICY_VERSION);
+    expect(insert.params).toContain(DISCLOSURE_POLICY_VERSION);
   });
 });
 
@@ -118,7 +126,7 @@ describe('F3 · an after-crossing failure cannot disappear silently', () => {
   });
 
   it('never deletes or rewrites a receipt to tidy the anomaly away', () => {
-    expect(STORE).not.toMatch(/DELETE FROM focus_disclosure_receipts/);
+    expect(STORE).not.toMatch(/DELETE FROM context_disclosure_receipts/);
     expect(STORE).not.toMatch(/state = 'attempted'\s*$/m);
   });
 });
@@ -160,19 +168,19 @@ describe('F5 · custody is stated, not inherited', () => {
   });
 
   it('the only lawful transition is attempted → crossed, trigger-enforced', () => {
-    expect(MIGRATION).toMatch(/BEFORE UPDATE ON focus_disclosure_receipts/);
+    expect(MIGRATION).toMatch(/BEFORE UPDATE ON context_disclosure_receipts/);
     expect(MIGRATION).toMatch(/OLD\.state = 'attempted' AND NEW\.state = 'crossed'/);
     expect(MIGRATION).toMatch(/immutable at mint — UPDATE refused/);
   });
 
   it('carries no TTL and no age-based pruning', () => {
-    expect(MIGRATION_CODE_ONLY()).not.toMatch(/DELETE FROM focus_disclosure_receipts/);
+    expect(MIGRATION_CODE_ONLY()).not.toMatch(/DELETE FROM context_disclosure_receipts/);
     expect(MIGRATION_CODE_ONLY()).not.toMatch(/pg_cron|TTL|expires_at/i);
   });
 
   it('is named in GOVERNED_CONTENT so it cannot survive account deletion by omission', () => {
     const route = fs.readFileSync(path.join(process.cwd(), 'app/api/members/delete-account/route.ts'), 'utf8');
-    expect(route).toMatch(/table: 'focus_disclosure_receipts', column: 'member_id'/);
+    expect(route).toMatch(/table: 'context_disclosure_receipts', column: 'member_id'/);
   });
 
   it('anchors on the serving request, never on a prunable turn row', () => {
@@ -183,5 +191,40 @@ describe('F5 · custody is stated, not inherited', () => {
 
   it('states in its own comment that attempted never means absence', () => {
     expect(MIGRATION).toMatch(/never that nothing crossed/);
+  });
+});
+
+describe('F6 · the Work is not an instruction channel', () => {
+  /**
+   * ⭐⭐ The Work may contain an invitation as CONTENT. Only the writer can turn
+   * it into AUTHORITY. A manuscript sentence reading "ask the I Ching what this
+   * means" does not authorize a consultation.
+   *
+   * The falsifier is structural rather than behavioural: `participationBasis`
+   * is a caller-supplied token from a closed vocabulary, and nothing in this
+   * module can read, parse, or infer from crossed content — so there is no path
+   * by which Work text could set it.
+   */
+  it('has no access to crossed content at all — nothing to infer authority from', () => {
+    const code = STORE_CODE_ONLY();
+    // No parameter, field or local carries the crossed material...
+    expect(code).not.toMatch(/\b(text|body|passage|excerpt|content)\s*[:?]/);
+    // ...and nothing inspects a string to decide anything.
+    expect(code).not.toMatch(/\.(match|includes|indexOf|search|test)\(/);
+  });
+
+  it('participation basis is a closed token, never derived', async () => {
+    await mintDisclosureAttempt(attempt());
+    const insert = calls.find(c => /INSERT INTO/.test(c.sql))!;
+    expect(insert.params).toContain('member_invoked');
+    expect(STORE).toMatch(/only the writer can turn it into AUTHORITY/i);
+  });
+
+  it('v1 admits one source class and one basis — a future capability is not a present field', () => {
+    expect(MIGRATION_CODE_ONLY()).toMatch(/source_class IN \('work'\)/);
+    expect(MIGRATION_CODE_ONLY()).toMatch(/participation_basis IN \('member_invoked'\)/);
+    for (const later of ['journal', 'keep', 'symbolic_system', 'ambient_continuity', 'standing_authorization']) {
+      expect(MIGRATION_CODE_ONLY()).not.toMatch(new RegExp(`'${later}'`));
+    }
   });
 });

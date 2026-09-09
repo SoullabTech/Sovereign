@@ -1,7 +1,19 @@
 /**
- * FOCUS DISCLOSURE RECEIPT — the accountability half of a Focus crossing.
+ * CONTEXT DISCLOSURE RECEIPT — the accountability half of a context crossing.
  *
- * Contract: docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md (RATIFIED)
+ * ⭐ GENERALIZED BEFORE FIRST APPLICATION (founder, 2026-09-09). The
+ * constitutional question is not unique to manuscript passages:
+ *
+ *   ⭐⭐ What context crossed into cognition for this encounter,
+ *       and under what authority?
+ *
+ * A journal entry, a Keep, a remembered decision, a past session, a Work
+ * passage, an invoked I Ching reading — different authority and different
+ * provenance, one question. Focus (`source_class: 'work'`) is the first
+ * implemented source class, and ⛔ the only one v1 admits.
+ *
+ * Contract: docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md (RATIFIED,
+ * generalized §9)
  *
  *   ⭐⭐ Disclosure without accountability is not authorized.
  *       Accountability without a disclosure must never pretend that one occurred.
@@ -27,7 +39,32 @@
 import { query } from '@/lib/db/postgres';
 
 /** Bump when the disclosure contract changes; recorded on every receipt. */
-export const FOCUS_DISCLOSURE_POLICY_VERSION = 'focus-disclosure-v1';
+export const DISCLOSURE_POLICY_VERSION = 'context-disclosure-v1';
+
+/**
+ * WHAT kind of context crossed. Intended axis: work · memory · journal · keep ·
+ * decision · change · session · symbolic_system.
+ * ⛔ v1 admits `work` only — a future capability is not a present data field, and
+ * widening the axis is a migration.
+ */
+export type DisclosureSourceClass = 'work';
+
+/**
+ * WHY it was entitled to participate — not merely that it was available.
+ *
+ *   ⭐ Availability is not permission to participate.
+ *   ⭐ Participation is not authority.
+ *
+ * Intended axis: ambient_continuity · member_invited · member_invoked ·
+ * standing_authorization. ⛔ v1 admits `member_invoked` only: Focus is context
+ * the writer placed and then explicitly handed across, never context MAIA
+ * reached for.
+ *
+ * ⛔⛔ NEVER DERIVED FROM CROSSED CONTENT. A manuscript sentence reading "ask the
+ * I Ching what this means" does not authorize a consultation. The Work may
+ * contain an invitation as CONTENT; only the writer can turn it into AUTHORITY.
+ */
+export type DisclosureParticipationBasis = 'member_invoked';
 
 /** The only boundary constituted in v1. */
 export type DisclosureBoundary = 'writers_studio.focus->maia_cognition';
@@ -41,15 +78,17 @@ export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
  */
 export type DisclosureGesture = 'ask_maia' | 'work_with_this' | 'widen_focus';
 
-export interface FocusDisclosureAttempt {
+export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */
   readonly disclosureId: string;
   readonly memberId: string;
   /** Serving-request id. ⛔ Never a conversation turn id. */
   readonly requestRef: string;
   readonly boundary: DisclosureBoundary;
-  /** The Work's identity — authored, never derived from the selection. */
-  readonly workRef: string;
+  readonly sourceClass: DisclosureSourceClass;
+  readonly participationBasis: DisclosureParticipationBasis;
+  /** Identity of the crossed thing — authored or assigned, never derived from its content. */
+  readonly sourceRef: string;
   readonly scopeKind: DisclosureScopeKind;
   /**
    * Admitted ONLY when the section IS the disclosed thing. For a passage the
@@ -90,7 +129,7 @@ export interface MintedDisclosure {
  * ordinary conversation remains available.
  */
 export async function mintDisclosureAttempt(
-  attempt: FocusDisclosureAttempt,
+  attempt: ContextDisclosureAttempt,
 ): Promise<MintedDisclosure | null> {
   if (attempt.sectionRef && attempt.scopeKind !== 'section') {
     // Refuse in the application too, not only at the CHECK: a caller that passes
@@ -104,16 +143,18 @@ export async function mintDisclosureAttempt(
 
   try {
     const result = await query<{ id: string }>(
-      `INSERT INTO focus_disclosure_receipts
-         (disclosure_id, member_id, request_ref, boundary, work_ref,
-          scope_kind, section_ref, authorized_by, gesture, policy_version, state)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'member', $8, $9, 'attempted')
+      `INSERT INTO context_disclosure_receipts
+         (disclosure_id, member_id, request_ref, boundary, source_class,
+          participation_basis, source_ref, scope_kind, section_ref,
+          authorized_by, gesture, policy_version, state)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted')
        ON CONFLICT (disclosure_id) DO NOTHING
        RETURNING id`,
       [
         attempt.disclosureId, attempt.memberId, attempt.requestRef, attempt.boundary,
-        attempt.workRef, attempt.scopeKind, attempt.sectionRef ?? null,
-        attempt.gesture, FOCUS_DISCLOSURE_POLICY_VERSION,
+        attempt.sourceClass, attempt.participationBasis, attempt.sourceRef,
+        attempt.scopeKind, attempt.sectionRef ?? null,
+        attempt.gesture, DISCLOSURE_POLICY_VERSION,
       ],
     );
 
@@ -122,7 +163,7 @@ export async function mintDisclosureAttempt(
     // Conflict: this disclosure was already minted. A retry is lawful and must
     // resolve to the SAME row rather than a second piece of evidence.
     const existing = await query<{ id: string }>(
-      `SELECT id FROM focus_disclosure_receipts WHERE disclosure_id = $1`,
+      `SELECT id FROM context_disclosure_receipts WHERE disclosure_id = $1`,
       [attempt.disclosureId],
     );
     if (existing.rows[0]?.id) {
@@ -158,7 +199,7 @@ export async function mintDisclosureAttempt(
 export async function confirmDisclosureCrossed(disclosureId: string): Promise<boolean> {
   try {
     const result = await query(
-      `UPDATE focus_disclosure_receipts
+      `UPDATE context_disclosure_receipts
           SET state = 'crossed', crossed_at = COALESCE(crossed_at, NOW())
         WHERE disclosure_id = $1`,
       [disclosureId],
@@ -185,7 +226,7 @@ export async function confirmDisclosureCrossed(disclosureId: string): Promise<bo
  */
 export async function unresolvedCrossings(olderThanMinutes = 5): Promise<number> {
   const result = await query<{ n: string }>(
-    `SELECT COUNT(*)::text AS n FROM focus_disclosure_receipts
+    `SELECT COUNT(*)::text AS n FROM context_disclosure_receipts
       WHERE state = 'attempted' AND attempted_at < NOW() - make_interval(mins => $1)`,
     [olderThanMinutes],
   );

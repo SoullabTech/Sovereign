@@ -1,4 +1,4 @@
--- Focus Disclosure Receipts — the disclosure-accountability substrate.
+-- Context Disclosure Receipts — the disclosure-accountability substrate.
 --
 -- Authority:
 --   docs/programme/FOCUS-DISCLOSURE-RECEIPT_CONTRACT_2026-09-09.md  (Step 5, RATIFIED)
@@ -8,6 +8,22 @@
 --   Disclosure without accountability is not authorized.
 --   Accountability without a disclosure must never pretend that one occurred.
 --
+-- ⭐ GENERALIZED BEFORE FIRST APPLICATION (founder, 2026-09-09). The
+-- constitutional question is not unique to manuscript passages. It is the same
+-- wherever ANY member-owned or member-derived context crosses into cognition —
+-- a journal entry, a Keep, a remembered decision, a past session, a Work
+-- passage, an invoked astrological or divinatory reading:
+--
+--   ⭐⭐ What context crossed into cognition for this encounter,
+--       and under what authority?
+--
+-- One substrate answers that, with `source_class` naming the kind of context and
+-- `participation_basis` naming why it was entitled to participate. Focus is the
+-- FIRST implemented source class, not the only conceivable one — but ⛔ only the
+-- values v1 can actually produce are admitted by the CHECKs. A future capability
+-- is not a present data field; widening either axis is a migration, and
+-- therefore a governed act.
+--
 -- WHAT THIS IS, and the three truths it must not collapse:
 --   conversation_turns              what was said
 --   S5 provenance / consent state   under what authority persistence was allowed
@@ -15,6 +31,11 @@
 --
 -- Persistence provenance is not disclosure provenance. A receipt is minted where
 -- the disclosure occurs, not where the conversation turn is stored.
+--
+-- ⛔ THE WORK IS NOT AN INSTRUCTION CHANNEL. A manuscript sentence reading
+-- "ask the I Ching what this means" does not authorize a consultation. The Work
+-- may contain an invitation as CONTENT; only the writer can turn it into
+-- AUTHORITY. No `participation_basis` may ever be derived from crossed content.
 --
 -- ⛔ CONTENT-FREE BY CONSTITUTION. A disclosure receipt records the fact and
 -- scope of disclosure, never the disclosed content itself: the evidence that
@@ -48,7 +69,7 @@
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS focus_disclosure_receipts (
+CREATE TABLE IF NOT EXISTS context_disclosure_receipts (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Idempotency: one disclosure attempt, one row. A retry carrying the same id
@@ -68,8 +89,21 @@ CREATE TABLE IF NOT EXISTS focus_disclosure_receipts (
     boundary IN ('writers_studio.focus->maia_cognition')
   ),
 
-  -- Identity of the Work: authored, not derived from the selection.
-  work_ref       TEXT NOT NULL,
+  -- WHAT kind of context crossed. Intended axis vocabulary (⛔ NOT admitted yet):
+  --   work · memory · journal · keep · decision · change · session · symbolic_system
+  source_class   TEXT NOT NULL CHECK (source_class IN ('work')),
+
+  -- WHY it was entitled to participate. ⭐ Availability is not permission to
+  -- participate; participation is not authority. Intended axis vocabulary
+  -- (⛔ NOT admitted yet): ambient_continuity · member_invited ·
+  -- member_invoked · standing_authorization.
+  --   v1 admits only `member_invoked`: Focus is context the writer placed and
+  --   then explicitly handed across, not context MAIA reached for.
+  participation_basis TEXT NOT NULL CHECK (participation_basis IN ('member_invoked')),
+
+  -- Identity of the crossed thing: authored or assigned, NEVER derived from its
+  -- content. For source_class='work' this is the Work id.
+  source_ref     TEXT NOT NULL,
 
   -- The SHAPE of the selection, never its location.
   scope_kind     TEXT NOT NULL CHECK (scope_kind IN ('whole_work', 'section', 'passage')),
@@ -96,24 +130,24 @@ CREATE TABLE IF NOT EXISTS focus_disclosure_receipts (
   attempted_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   crossed_at     TIMESTAMPTZ,
 
-  CONSTRAINT focus_disclosure_receipts_section_scope_only
+  CONSTRAINT context_disclosure_receipts_section_scope_only
     CHECK (section_ref IS NULL OR scope_kind = 'section'),
-  CONSTRAINT focus_disclosure_receipts_crossed_at_matches_state
+  CONSTRAINT context_disclosure_receipts_crossed_at_matches_state
     CHECK ((state = 'crossed') = (crossed_at IS NOT NULL))
 );
 
-CREATE INDEX IF NOT EXISTS idx_focus_disclosure_receipts_member
-  ON focus_disclosure_receipts (member_id, attempted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_context_disclosure_receipts_member
+  ON context_disclosure_receipts (member_id, attempted_at DESC);
 
 -- The governance anomaly query: crossings begun and never confirmed. Permanent,
 -- queryable and loud — the opposite of a silent loss.
-CREATE INDEX IF NOT EXISTS idx_focus_disclosure_receipts_unresolved
-  ON focus_disclosure_receipts (attempted_at) WHERE state = 'attempted';
+CREATE INDEX IF NOT EXISTS idx_context_disclosure_receipts_unresolved
+  ON context_disclosure_receipts (attempted_at) WHERE state = 'attempted';
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Monotonic immutability: frozen at mint, except one lawful step forward.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION focus_disclosure_receipt_monotonic() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION context_disclosure_receipt_monotonic() RETURNS trigger AS $$
 BEGIN
   IF NEW.disclosure_id IS DISTINCT FROM OLD.disclosure_id
      OR NEW.member_id     IS DISTINCT FROM OLD.member_id
@@ -148,23 +182,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS focus_disclosure_receipt_monotonic_trigger ON focus_disclosure_receipts;
-CREATE TRIGGER focus_disclosure_receipt_monotonic_trigger
-  BEFORE UPDATE ON focus_disclosure_receipts
-  FOR EACH ROW EXECUTE FUNCTION focus_disclosure_receipt_monotonic();
+DROP TRIGGER IF EXISTS context_disclosure_receipt_monotonic_trigger ON context_disclosure_receipts;
+CREATE TRIGGER context_disclosure_receipt_monotonic_trigger
+  BEFORE UPDATE ON context_disclosure_receipts
+  FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_monotonic();
 
-COMMENT ON TABLE focus_disclosure_receipts IS
-'Records that member-owned context crossed a defined boundary into cognition. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deliberately deleted with the member''s account (named in GOVERNED_CONTENT); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
+COMMENT ON TABLE context_disclosure_receipts IS
+'Records that member-owned or member-derived context crossed a defined boundary into cognition, with source_class naming the kind of context and participation_basis naming why it was entitled to participate. Focus/work is the first implemented source class; each axis admits only what v1 can produce, and widening either is a governed migration. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deliberately deleted with the member''s account (named in GOVERNED_CONTENT); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
 
-COMMENT ON COLUMN focus_disclosure_receipts.request_ref IS
+COMMENT ON COLUMN context_disclosure_receipts.participation_basis IS
+'Why this context was entitled to participate — not merely that it was available. Availability is not permission to participate; participation is not authority. NEVER derived from the crossed content: the Work may contain an invitation as content, but only the member can turn it into authority.';
+
+COMMENT ON COLUMN context_disclosure_receipts.request_ref IS
 'Serving-request id; the temporal anchor, and the join to runtime_consent_state where the posture is referenced rather than copied. Never a conversation_turns.id: durable audit identity must not depend on a routinely pruned content object.';
 
-COMMENT ON COLUMN focus_disclosure_receipts.state IS
+COMMENT ON COLUMN context_disclosure_receipts.state IS
 'attempted = minted before the crossing and not conclusively confirmed (a crossing may have occurred). crossed = confirmed. There is no withheld state: it would assert a negative the database cannot prove.';
 
 COMMIT;
 
 DO $$
 BEGIN
-  RAISE NOTICE 'Migration 20260909000001: focus_disclosure_receipts + monotonic immutability trigger applied';
+  RAISE NOTICE 'Migration 20260909000001: context_disclosure_receipts + monotonic immutability trigger applied';
 END $$;
