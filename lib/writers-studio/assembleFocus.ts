@@ -7,6 +7,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { memberRef } from '@/lib/privacy/memberRef';
 import type { FocusAssembler } from './focusCrossing';
 
 export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKind, sectionRef, range }) => {
@@ -35,7 +36,7 @@ export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKi
     return text.length > 0 ? text : null;
   } catch (err) {
     console.error('[FOCUS] assembly failed', {
-      memberIdPrefix: memberId.slice(0, 8),
+      memberRef: memberRef(memberId),
       error: err instanceof Error ? err.message : 'unknown',
     });
     return null;
