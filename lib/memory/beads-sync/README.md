@@ -75,8 +75,7 @@ Content-Type: application/json
     "realm": "MIDDLEWORLD",
     "cognitive": {
       "requiredLevel": 3,
-      "recommendedLevel": 4,
-      "bypassRisk": "none"
+      "recommendedLevel": 4
     },
     "somatic": {
       "bodyRegion": "shoulders",

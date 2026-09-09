@@ -201,7 +201,13 @@ async function syncTaskToPostgres(beadsTask: any, maiaMeta: any = {}): Promise<v
     realm || null,
     cognitive.requiredLevel || null,
     cognitive.recommendedLevel || null,
-    cognitive.bypassRisk || 'none',
+    /* ⛔ NULL, NOT 'none'. The column is kept — historical custody is a
+       separate question — but nothing populates it any more. Defaulting a
+       missing value to 'none' would have the server manufacture the very
+       classification the producer was deleted for making: absence of evidence
+       rendered as evidence of absence, in a column a future gate was designed
+       to read. */
+    null,
     somatic.bodyRegion || null,
     somatic.tensionLevel || null,
     somatic.practiceName || null,

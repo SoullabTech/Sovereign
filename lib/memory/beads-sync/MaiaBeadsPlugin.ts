@@ -35,7 +35,28 @@ interface TaskCreationParams {
     cognitive?: {
       requiredLevel: number;
       recommendedLevel: number;
-      bypassRisk?: 'none' | 'spiritual' | 'intellectual';
+      /**
+       * ⛔ `bypassRisk` IS DELETED, NOT DEFAULTED.
+       *
+       * SACRED-AS-SYMPTOM · INSTANCE 2. A task-level bypass-risk field had no
+       * lawful producer. One writer asserted `'none'`; the other manufactured
+       * `'spiritual'` from the element name alone — a psychological
+       * classification of a member, created because a task concerned Aether.
+       *
+       * ⭐ SETTING IT TO `'none'` WOULD NOT HAVE REPAIRED IT. `none` is also a
+       * claim, and the system has established the absence of bypass risk no
+       * more than it established its presence. The repair is the removal of
+       * the socket, because a vacant socket invites a producer.
+       *
+       * ⭐ WHAT REMAINS LAWFUL: `cognitiveProfile.bypassingFrequency.spiritual`
+       * and `.intellectual` — the member's own MEASURED values. The defect was
+       * never that bypassing can be measured. It was the invented property of
+       * the task.
+       *
+       * A future task-specific risk model is not forbidden, but it would have
+       * to earn its own evidence, independently of element or sacred
+       * vocabulary.
+       */
     };
     somatic?: {
       bodyRegion?: string;
@@ -186,7 +207,6 @@ export class MaiaBeadsPlugin {
         cognitive: {
           requiredLevel: 3, // APPLY level - can follow protocol
           recommendedLevel: cognitiveProfile?.currentLevel || 3,
-          bypassRisk: 'none',
         },
         somatic: {
           bodyRegion: event.bodyRegion,
@@ -255,9 +275,15 @@ export class MaiaBeadsPlugin {
         archetype: this.getArchetypeForElement(event.element),
         realm: this.determineRealm(cognitiveProfile, fieldState),
         cognitive: {
+          /* ⛔ No bypass risk is asserted here, in either direction.
+             `event.element === 'aether' ? 'spiritual' : 'none'` stood on this
+             line: a safety classification derived from the element name, so a
+             task about Aether was marked as carrying spiritual-bypass risk
+             while the identical task about Earth was not. Changing only the
+             element must not change any risk classification — asserted in
+             lib/memory/__tests__/sacredInstance2TaskBypassRisk.test.ts. */
           requiredLevel: 4, // ANALYZE level - understand elemental dynamics
           recommendedLevel: cognitiveProfile?.currentLevel || 4,
-          bypassRisk: event.element === 'aether' ? 'spiritual' : 'none',
         },
         field: {
           intensity: event.severity >= 8 ? 'high' : 'medium',

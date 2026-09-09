@@ -1,5 +1,44 @@
 # 🌀 Spiral Memory Mesh: Technical Integration Specification
 
+> ## ⛔ SUPERSEDED — task-level `bypassRisk` is unlawful (SACRED-AS-SYMPTOM · INSTANCE 2, 2026-09-09)
+>
+> **The mechanism below is withdrawn. Do not implement it.** Four sites in this
+> document design a task-level bypass-risk value: the field on `SpiralTask`, a
+> producer, a readiness gate, and a sample payload. Each is marked in place
+> rather than deleted, so the design intention survives as history — but none of
+> them may be built.
+>
+> **Why.** There is no lawful producer for a bypass-risk property *of a task*.
+> In the implementation the value was manufactured from the element name —
+> `event.element === 'aether' ? 'spiritual' : 'none'` — so a task about Aether
+> was marked as carrying spiritual-bypass risk and the identical task about
+> Earth was not. ⭐ **A sacred subject may be the content of an encounter. It may
+> not become the evidence that the encounter is pathological.**
+>
+> ⚠️ **And the implementation did not follow this spec.** The producer designed
+> at §Task Creation derives the value from the member's own measured
+> `bypassingFrequency`, never from the element. The element-derived assignment
+> was invented at implementation time. Both are withdrawn — the first because a
+> task cannot carry a property of a person, the second because it is the sacred
+> violation itself — but they are different errors and are recorded as such.
+>
+> ⛔ **`'none'` is not the repair either.** Absence of bypass risk is as
+> unestablished as its presence, and a default of `'none'` would have the system
+> assert it on every task. The field is removed; the database column is retained
+> for historical custody and is now written `NULL`.
+>
+> ✅ **What remains lawful and untouched:**
+> `cognitiveProfile.bypassingFrequency.spiritual` and `.intellectual` — the
+> member's own measured values — and every decision that lawfully consumes them.
+> The defect was never that bypassing can be measured. It was the invented
+> property of the task.
+>
+> A future task-specific risk model is not forbidden. It would have to earn its
+> own evidence, independently of element and of sacred vocabulary.
+>
+> Guarded by `lib/memory/__tests__/sacredInstance2TaskBypassRisk.test.ts`.
+
+
 **Version:** 1.0.0
 **Status:** Architecture Design
 **Authors:** Soullab Consciousness Engineering Team
@@ -85,7 +124,8 @@ interface SpiralTask extends BeadsIssue {
   cognitive: {
     requiredLevel: number;  // Bloom's 1-6
     recommendedLevel: number;
-    bypassRisk?: 'spiritual' | 'intellectual' | 'none';
+    // ⛔ SUPERSEDED — see the notice above. Not to be implemented.
+    // bypassRisk?: 'spiritual' | 'intellectual' | 'none';
   };
 
   somatic: {
@@ -208,9 +248,11 @@ export class SpiralMemoryBridge {
       cognitive: {
         requiredLevel: this.calculateRequiredLevel(taskCreation.taskType),
         recommendedLevel: cognitiveProfile?.currentLevel || 3,
-        bypassRisk: this.assessBypassRisk(
-          cognitiveProfile?.bypassingFrequency || { spiritual: 0, intellectual: 0 }
-        ),
+        // ⛔ SUPERSEDED — a task may not carry a bypass-risk property, even one
+        // derived from the member's own measurement. Not to be implemented.
+        // bypassRisk: this.assessBypassRisk(
+        //   cognitiveProfile?.bypassingFrequency || { spiritual: 0, intellectual: 0 }
+        // ),
       },
 
       somatic: this.extractSomaticContext(eventData, taskCreation),
@@ -246,11 +288,18 @@ export class SpiralMemoryBridge {
         return false;
       }
 
-      // Bypassing risk gate
-      if (task.cognitive.bypassRisk === 'spiritual' &&
-          cognitiveProfile.bypassingFrequency.spiritual > 0.3) {
-        return false;
-      }
+      // ⛔ SUPERSEDED — THE GATE IS WITHDRAWN. Not to be implemented.
+      //
+      // This is the consumer that would have made the latent classification
+      // operative: a task withheld from a member because it was labelled
+      // spiritual-risk. With the implemented producer, that label came from the
+      // element — so an Aether task would have been withheld because it
+      // concerned the sacred, not because of anything the member did.
+      //
+      // if (task.cognitive.bypassRisk === 'spiritual' &&
+      //     cognitiveProfile.bypassingFrequency.spiritual > 0.3) {
+      //   return false;
+      // }
 
       // Field safety gate
       if (!task.field.safetyCheck) {
@@ -716,7 +765,7 @@ BEADS_COMMUNITY_SHARE=false  # Opt-in for collective wisdom
 ## 9. Appendix: Sample Task JSONL
 
 ```jsonl
-{"id":"maia-a1b2c3","title":"Ground shoulder tension","description":"Practice deep breathing with shoulder rolls to release chronic tension","status":"completed","priority":"high","dependencies":{"blocks":[],"depends_on":[],"related":[],"discovered_from":[]},"spiral":{"element":"earth","phase":1,"archetype":"Healer","realm":"MIDDLEWORLD"},"cognitive":{"requiredLevel":3,"recommendedLevel":4,"bypassRisk":"none"},"somatic":{"bodyRegion":"shoulders","tensionLevel":8,"practice":"breathing_shoulder_rolls"},"field":{"intensity":"medium","safetyCheck":true,"coherenceRequired":0.5},"evolution":{"firstAppearance":"2025-12-20T10:00:00Z","lastWorked":"2025-12-20T11:30:00Z","completionCount":1,"integrationLevel":8},"experience":{"type":"somatic_inquiry","readinessLevel":7,"layerDepth":"personal"},"created":"2025-12-20T10:00:00Z","updated":"2025-12-20T11:30:00Z","logs":[{"timestamp":"2025-12-20T11:30:00Z","message":"Completed with high effectiveness (8/10). Tension reduced from 8→3. Insight: Deep breathing + shoulder rolls combination highly effective.","metadata":{"effectiveness":8,"somaticShift":{"before":8,"after":3},"insight":"Deep breathing with shoulder rolls worked well"}}]}
+{"id":"maia-a1b2c3","title":"Ground shoulder tension","description":"Practice deep breathing with shoulder rolls to release chronic tension","status":"completed","priority":"high","dependencies":{"blocks":[],"depends_on":[],"related":[],"discovered_from":[]},"spiral":{"element":"earth","phase":1,"archetype":"Healer","realm":"MIDDLEWORLD"},"cognitive":{"requiredLevel":3,"recommendedLevel":4},"somatic":{"bodyRegion":"shoulders","tensionLevel":8,"practice":"breathing_shoulder_rolls"},"field":{"intensity":"medium","safetyCheck":true,"coherenceRequired":0.5},"evolution":{"firstAppearance":"2025-12-20T10:00:00Z","lastWorked":"2025-12-20T11:30:00Z","completionCount":1,"integrationLevel":8},"experience":{"type":"somatic_inquiry","readinessLevel":7,"layerDepth":"personal"},"created":"2025-12-20T10:00:00Z","updated":"2025-12-20T11:30:00Z","logs":[{"timestamp":"2025-12-20T11:30:00Z","message":"Completed with high effectiveness (8/10). Tension reduced from 8→3. Insight: Deep breathing + shoulder rolls combination highly effective.","metadata":{"effectiveness":8,"somaticShift":{"before":8,"after":3},"insight":"Deep breathing with shoulder rolls worked well"}}]}
 ```
 
 ---
