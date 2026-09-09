@@ -86,8 +86,11 @@ CREATE TABLE IF NOT EXISTS context_disclosure_receipts (
   -- ⭐ SUBSTRATE-A(B): the reference must RESOLVE. Without the FK a receipt could
   -- satisfy every constraint while pointing at a consent record that does not
   -- exist — "posture is referenced, not copied" would be a comment, not an
-  -- architecture. runtime_consent_state.request_id is UNIQUE, and the serving
-  -- boundary mints it before any Work context is assembled.
+  -- architecture. runtime_consent_state.request_id is UNIQUE.
+  -- ⚠️ UNWITNESSED AS OF THIS MIGRATION: that the serving boundary mints the
+  -- consent row BEFORE Work context is assembled. The FK makes a violation fail
+  -- closed — the correct direction, and still a silent capability loss.
+  -- REQUEST-ORDER-01 proves the ordering; do not wire Focus before it passes.
   request_ref    TEXT NOT NULL REFERENCES runtime_consent_state(request_id),
 
   boundary       TEXT NOT NULL CHECK (
@@ -259,7 +262,7 @@ CREATE TRIGGER context_disclosure_receipt_monotonic_trigger
   FOR EACH ROW EXECUTE FUNCTION context_disclosure_receipt_monotonic();
 
 COMMENT ON TABLE context_disclosure_receipts IS
-'Records that member-owned or member-derived context crossed a defined boundary into cognition, with source_class naming the kind of context and participation_basis naming why it was entitled to participate. Focus/work is the first implemented source class; each axis admits only what v1 can produce, and widening either is a governed migration. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deletable ONLY by a governed custody act naming its deletion manifest (BEFORE DELETE trigger); deliberately deleted with the member''s account (named in GOVERNED_CONTENT); a tombstoned receipt cannot be restored (BEFORE INSERT trigger); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
+'Records that member-owned or member-derived context crossed a defined boundary into cognition, with source_class naming the kind of context and participation_basis naming why it was entitled to participate. Focus/work is the first implemented source class; each axis admits only what v1 can produce, and widening either is a governed migration. Content-free by constitution: the fact and scope of a disclosure, never the disclosed content — no text, excerpt, summary, embedding, hash, offset, length or geometry, and no passage-level section_ref (a hash or offset beside the Work is a selection locator). Lifecycle: identifying fields immutable at mint, the only lawful UPDATE being attempted → crossed (trigger-enforced); no automatic pruning and no age-based lifecycle; deletable ONLY by a governed custody act naming its deletion manifest (BEFORE DELETE trigger); named in GOVERNED_CONTENT, where the account-deletion route is in REFUSE posture — so today a receipt cannot survive a successful account deletion because deletion refuses to proceed while one exists; deletion WITH the account awaits the governed deletion lane; a tombstoned receipt cannot be restored (BEFORE INSERT trigger); permitted under Sanctuary while the disclosed thing is forbidden; restores must honour deletion manifests and tombstones. state=attempted means A CROSSING MAY HAVE OCCURRED AND WAS NOT CONFIRMED — never that nothing crossed.';
 
 COMMENT ON COLUMN context_disclosure_receipts.participation_basis IS
 'Why this context was entitled to participate — not merely that it was available. Availability is not permission to participate; participation is not authority. NEVER derived from the crossed content: the Work may contain an invitation as content, but only the member can turn it into authority.';
