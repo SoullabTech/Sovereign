@@ -143,13 +143,77 @@ make no duplicate.
 
 ---
 
-## 3 · 🔴 AN OPEN CONSEQUENCE THE PR MUST NAME
+## 3 · THE ACCOUNT-DELETION INTERSECTION — ruled, and checked
 
-The FOCUS unit adds its receipt table to `GOVERNED_CONTENT` in
-`app/api/members/delete-account/route.ts` (added `10cdc7bc4`, renamed
-`450f5c158`).
+**RULED:** `app/api/members/delete-account/route.ts` is a **shared custody
+boundary**, not owned wholesale by B5. Registering `context_disclosure_receipts`
+in `GOVERNED_CONTENT` is intrinsic to the disclosure substrate and belongs to
+FOCUS.
 
-That list is **not** a deletion list. On canonical:
+```text
+same file                     YES
+same semantic responsibility  NO
+current dependency            NO
+current replay collision      NO
+cross-lane boundary contact    YES
+```
+
+**Bounded check performed, as directed:**
+
+```text
+git log 5b133abcd..origin/claude/maia-turns-derivative-custody
+        -- app/api/members/delete-account/route.ts
+→ (empty)
+```
+
+⭐ **No B5 commit touches that route. → `NO COUPLING ESTABLISHED`.** The contact
+is closed. ⛔ B5 is **not** added to the FOCUS dependency chain, and this was not
+broadened into a B5 census.
+
+### 3.1 ⚠️ TWO CORRECTIONS THE CHECK SURFACED
+
+Reported because the record should be accurate, not because either changes the
+no-coupling conclusion.
+
+**(a) B5 is not docs-only.** It was characterised as *"read-only census, docs
+only, no code, no migration."* It carries **seven executable files, 683
+insertions**:
+
+```text
+app/api/maia/log-turn/route.ts                    B1 containment — the 503 refusal
+scripts/backfill-training-data.sql                B1 containment — the abort guard
+lib/memory/__tests__/maiaTurnsContainment.test.ts the containment falsifier
+scripts/witness/{maia-turns-b4-occupancy.sql,
+                 maia-turns-custody-falsifier.sql,
+                 run-b4-occupancy.sh}             witnesses
+database/migrations/20260909000001_maia_turns_member_identity.sql   ⚠️ B3
+```
+
+⭐ **The no-coupling conclusion still holds** — none of these is the deletion
+route — **but the premise "B5 has no code and no migration" was wrong**, and a
+replay built on it would have mis-scoped B5's merge.
+
+**(b) 🔴 A THIRD MIGRATION SHARES THE `20260909000001` PREFIX.**
+
+```text
+canonical  5b133abcd   (none)
+FOCUS      bda87b27e   20260909000001_context_disclosure_receipts.sql
+B5         aed7ebbb3   20260909000001_maia_turns_member_identity.sql
+```
+
+Neither lane can see the other's. **If both merge, canonical holds two migrations
+under one timestamp.** Lexical ordering makes execution deterministic
+(`context_…` before `maia_turns_…`), so this is a **convention breach and a
+latent hazard**, not a proven runtime failure — ⛔ but it should be resolved by
+renumbering one of them **before** the second lane merges, not discovered later.
+
+⛔ **Not ruled here.** It is FOCUS's prefix by first arrival; B5's migration is
+unauthorized for production anyway (its ruling holds B3 behind remediation), so
+the cheap resolution is to renumber B5's when its lane moves.
+
+### 3.2 🔴 AND THE OPEN CONSEQUENCE THE PR MUST STILL NAME
+
+`GOVERNED_CONTENT` is **not** a deletion list. On canonical:
 
 ```text
 route.ts:139   const CONTAINMENT_POSTURE: 'refuse' | 'proceed' = 'refuse';
@@ -165,15 +229,11 @@ deletion the way audit_logs does"* — which describes deletion, not refusal. Th
 **act** is coherent under refuse posture (*"retention may be shared by decision,
 not by accident"*); the **wording** points at the wrong mechanism.
 
-⛔ **Not a defect ruling — a consequence that must be stated in the PR rather
-than discovered in production.** Whether refuse-on-receipt is the intended
-member experience is a founder question.
+⛔ **A consequence to declare in the PR, not a defect ruling.** Whether
+refuse-on-receipt is the intended member experience is a founder question.
 
-⭐ **Cross-lane note:** this is the same list B5 found `maia_turns` absent from.
-Here the discipline was applied; there it was not. Same mechanism, opposite
-outcome.
-
----
+⭐ **Cross-lane note:** the same list B5 found `maia_turns` absent from. Here the
+discipline was applied; there it was not.
 
 ## 4 · NOT IN THIS REPLAY
 
@@ -187,8 +247,11 @@ FIELD-SAFETY-COPY          separate unit
 WS2-DEVELOP room copy      separate unit
 EVIDENCE-NAMING-01A        58eb18998 · separate · not ruled here
 
-B5 maia_turns remediation  aed7ebbb3 · record MAY merge as docs
-                           ⛔ the 174,662-row deletion MAY NOT ride this deploy
+B5 maia_turns remediation  aed7ebbb3 · ⚠️ NOT docs-only — see §3.1(a)
+                           record + B1 containment may merge; B3 migration is
+                           unauthorized for production; ⛔ the 174,662-row
+                           deletion MAY NOT ride this deploy
+                           ⚠️ renumber its migration prefix — §3.1(b)
 #1275                      18d8c7004 · FROZEN
 Lane A Focus receipt       56606ff3f · HOLD
 ```
