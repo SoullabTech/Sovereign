@@ -2105,3 +2105,77 @@ no cognition wired.
 **Next: the whole-organism producer census** — elemental · PFI · resonance · unified, separated and
 truthfully authorized, every signal carrying `ACTUAL / DERIVED / UNAVAILABLE`, ⛔ never `0.5` where
 the honest value is `UNAVAILABLE`.
+
+---
+
+# 33 · WS-ORGANISM — THE FIELD CENSUS
+
+> ⭐⭐ **The whole organism may know. The room decides what may speak.**
+
+**Founder ruling 2026-09-09.** `fieldOrchestrator` does two jobs — *compute/gather* and
+*participate* — and `formatFieldAddendum()` lets the first grant itself the second. **Field engines
+may produce knowledge; they may not decide for themselves whether it enters an encounter.**
+
+⭐ **Migrate room by room, never rip it out globally.** Writer's Studio becomes the **first
+canonical-only field consumer** because it has no existing real-cognition behaviour to preserve; every
+other room keeps its live injection and gets a **shadow** path, parity, and its own cutover. ⛔ **The
+Writer's Studio lane must not silently change Sovereign Chat just because it found the defect** —
+the same lane-local discipline this programme has protected throughout.
+
+Full census: **`docs/programme/WS-ORGANISM-CENSUS_2026-09-09.md`** (read-only, no producer named,
+nothing changed). Five findings:
+
+**1 · ⚠️ There are TWO organism→prompt paths, not one.** The Elemental Oracle is invoked separately
+in `maiaService.ts:844-852`, **not** through `fieldOrchestrator`. The ruling's diagram assumed a
+single seam. ⛔ **Closing one does not close the other; Elemental is owed its own census pass.**
+
+**2 · Availability is genuinely item-level, as ruled.** In one bundle `wordDensity` is measured from
+the current text while `windowOfTolerance` is invented. *"Unified Field: partial"* says nothing
+usable about either.
+
+**3 · 🔴 TWO KINDS of fabrication, not one.** Neutral magnitudes (`0`, `0.5`) **and fabricated
+categoricals** — `fieldQuality: 'normal'`, `coherenceTrend: 'stable'`. ⭐ **The second kind reads as
+an observation in prose and is the more dangerous.**
+
+**4 · 🔴 THE WORST FINDING — a fabricated IDENTITY.** `pfiElement = ctx.pfi?.element ?? 'earth'`
+(`:266`, `:285`). PFI failure is caught and non-fatal; Unified's gate is `depth >= 4`, independent of
+PFI succeeding. **So when PFI fails at turn 4+, Unified runs a one-hot EARTH prescription, and
+`dominantElement: earth` enters the prompt indistinguishable from an observed one.**
+
+> ⭐⭐ **A `0.5` is a fabricated magnitude. `?? 'earth'` is a fabricated identity — the system names
+> an element for the member that nothing observed.** ⚠️ **Frequency unmeasured; the census does not
+> claim it is rare.**
+
+**5 · 🔴 `intimacyLevel = Math.min(1, exchangeCount / 30)`** (`:234`) — intimacy as a pure function
+of turn count. ⭐ **This is exactly what WS-ROOM-02 excluded `retrieved.relationship_memory` for —
+encounter frequency laundered into relational truth — live in a different subsystem, unguarded.**
+
+## 33.1 · The fourth axis — built, wired to nothing
+
+`lib/field/signalAvailability.ts`. **Distinct from the other three, never overloaded onto them:**
+
+```text
+authoredBy          WHO originated this?
+participationClass  HOW did it arrive?
+authority           WHAT may cognition do with it?
+availability        WHAT IS ACTUALLY PRESENT?
+```
+
+⭐ **An `unavailable` signal has no `value` field at all** — not `null`, not `0`. **The type makes
+the fabrication unrepresentable rather than merely discouraged.** Every signal carries a required
+`basis`: what was observed, what it was derived from, or why nothing is there.
+
+> ⭐⭐ **`unavailable` is evidence for the receipt, not content for cognition.** A candidate carries
+> the signals that exist; the receipt records what did not. **That closes F-ABSENCE by both routes —
+> no fake value, and no silent disappearance.**
+
+## 33.2 ⛔ WHY NO PRODUCER IS NAMED
+
+The ruling anticipated that a channel might need to become several producers. **Unified alone already
+spans derived-from-PFI, measured-from-text and pure fabrication inside one object.** Naming
+`inferred.unified_field` now would freeze that mixture into a single participation identity — the
+same error the pursuit partition avoided, and the same reason `retrieved.relationship_continuity`
+was not stubbed.
+
+**Standing:** Elemental census OWED · no producer named · no room cut over · no shadow built ·
+`formatFieldAddendum` untouched · **every existing room unchanged.**
