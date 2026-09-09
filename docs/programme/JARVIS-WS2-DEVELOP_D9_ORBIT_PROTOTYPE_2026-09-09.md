@@ -1519,3 +1519,260 @@ felt as **responsiveness, specificity, revision, surprise, and accumulation acro
 **Standing: form ACCEPTED with four named defects (§25.3) · artifact cognition FAIL / NOT TESTABLE
 HERE · fixture work CLOSED · next phase preserves this surface and puts the canonical cognition path
 inside it.**
+
+---
+
+# 27 · FOUNDER RULINGS — the conversation's home, and the next phase
+
+## 27.1 ⭐ RULING — THE CONVERSATION BELONGS TO THE MAIA ORBIT
+
+> ⭐⭐ **Closing MAIA puts the conversation away. It does not move the conversation somewhere else.
+> The Work should not acquire chat residue merely because MAIA has left the room.**
+
+**The composer is only the input mechanism**, so only the composer travels.
+
+```text
+MAIA OPEN     orbit holds: writer turns · MAIA turns · active thread · composer
+MAIA CLOSED   encounter HIDDEN, not relocated · thread intact · Work returns to quiet field
+              Focus strip stays with the Work · Ask MAIA / reopen still available
+              ⛔ no transcript migrates into the Work · ⛔ no second composer at the bottom
+REOPEN        the same encounter resumes exactly where it was
+```
+
+⚠️ **This supersedes the earlier "one conversation, one home" implementation, not the ruling behind
+it.** There is still exactly one conversation and one home — the home is the **orbit**, and the
+earlier build had mistaken the *composer* for the home. That is why the transcript followed the
+writer back into the Work.
+
+## 27.2 · Step 1–2 executed — stabilize the named residues, change no doctrine
+
+`#say`, the thread strip and the "Work with this" affordance now live **permanently inside
+`#maiaPanel`**; a scrolling `#encounter` holds the exchange; only `<form id="f">` travels.
+
+| Walk finding | Repair |
+|---|---|
+| transcript followed the writer into the Work (369px over the manuscript) | the encounter never leaves the orbit; closing hides it, reopening resumes it |
+| thread strip forced `.inner` to 446px inside a 376px panel | the strip is a `minmax(0,1fr) auto` grid with `min-width:0` throughout; the label takes its own row and ellipsizes rather than setting a min-content width the panel cannot honour |
+| `body.focusheld` added and never removed | released in `clearFocus()`, so the raised composer is only ever for a strip that exists — including the edit-releases-the-frame path |
+| rail label broke mid-word (`Str/uct`) | reads `Struct` |
+
+⛔ **Left alone, deliberately:** the epigraphs' visible markdown is **the corpus's own content**, not
+ours to silently normalize (Law 2). The frame-box / section-rule ambiguity (*"which one is my
+focus?"*) is a **design question, and step 1 forbids new interaction doctrine** — carried, not
+patched.
+
+**Witness — `scripts/witness/d9-conversation-home.mjs` · `22 passed · 0 failed`.** It asserts the
+conversation contributes **zero** height to the Work's chrome, that the remaining band is the
+composer plus the Focus strip and nothing beyond them, that the writer's place in the Work is
+unchanged, that reopening restores the same turns and the same live thread, and that nothing in the
+orbit reaches past the orbit while a thread is active.
+
+## 27.3 ⭐ PHASE AUTHORIZED — CANONICAL COGNITION IN THE ACCEPTED FIELD
+
+> ⭐ **Hold the room constant. Change the mind.**
+
+**Sequence ruled:** `accepted form → real cognition in a controlled harness → human cognition witness
+→ production port.` ⛔ **Not** `accepted form → production → hope cognition works there.`
+
+```text
+1  stabilize only the already-named layout residues; no new interaction doctrine   ✅ DONE
+2  preserve the accepted Field + Orbit interaction unchanged                       ✅ DONE
+3  remove the fixture responder
+4  connect the canonical MAIA cognition path
+5  prove the cognition input bundle
+     ALLOWED   the Work · the writer's Focus · the current conversation ·
+               lawful whole-Work context · ordinary canonical governance
+     FORBIDDEN §26.1 · the expected "hinge" answer · the acceptance grader ·
+               programme commentary containing the answer ·
+               any hidden prompt telling MAIA what conclusion to reach
+6  record the exact input provenance; the grader's key stays outside the path
+7  witness real turns — "Is this section effective and well placed?" then
+   "I think it's repetitive and disconnected."
+8  include at least one HELD-OUT passage whose reading is not in the record
+9  no manufactured thinking delay
+10 STOP after cognition evidence; do not port from this lane
+```
+
+⭐ **Why the order:** today there is a clean experimental separation — **form substantially proven ·
+cognition failed in the fixture · production integration untested.** Porting and swapping the mind
+at once would make the next witness ambiguous between cognition, prompt assembly, ingestion,
+production state, persistence, routing, UI integration and the port itself.
+
+## 27.4 ⛔ THE HOST DECISION — the artifact cannot be the harness
+
+**Established, not assumed:** a published artifact runs under a CSP that permits external *scripts*
+only from an allowlist and blocks **fetch / XHR / WebSocket entirely**. ⛔ **The artifact therefore
+cannot call the canonical MAIA route at all** — not securely, not insecurely.
+
+Per the founder's contingency, the accepted surface is reproduced as a **development-only cognition
+harness inside Sovereign. Production Writer's Studio remains untouched.** Same experiment, different
+host.
+
+⛔ **AND A TRAP TO NAME BEFORE SOMEONE WALKS INTO IT:** an artifact *can* be granted a runtime
+capability to ask **Claude** a question. **Using it would satisfy step 3 and fail step 4** — it is a
+different mind, not the canonical path, and the resulting witness would say nothing about MAIA. This
+is the Deep-Intelligence Gate's own principle in a new place: **the capture surface may change; the
+mind may not be substituted.** ⛔ **Not authorized as the cognition path under any framing.**
+
+## 27.5 ⭐ MAXIMUM CLAIM — pre-authored for the blinded cognition witness
+
+> **If the blinded cognition witness passes, it establishes that canonical MAIA can inhabit the
+> accepted Writer's Studio relational form and participate in a developmental encounter in which the
+> writer's contributions can change her working understanding of the Work.**
+
+⛔ **Still not production readiness. Still not longitudinal capacity.** But a major threshold.
+
+**What licenses the port** is not *"MAIA said the hinge thing"*:
+
+> *She understood what I was asking. She actually read what was there. She related it to the
+> surrounding Work. When I disagreed or clarified, her understanding changed. And together we got
+> somewhere neither of us had simply retrieved at the start.*
+
+---
+
+# 28 · WRITER'S STUDIO — WHOLE-ORGANISM MAIA COGNITION HARNESS
+
+⭐ **The phase name changes because the target changed.** *"Connect the canonical cognition path"* is
+too small. ⛔ **Not a Writer-MAIA. Not an editor persona. Not Claude with a manuscript prompt. Not a
+copy of MAIA with a few memories injected.**
+
+> ⭐⭐ **The Work becomes a new field of relationship inside the existing MAIA continuity.**
+
+**Acceptance question:** *Can the MAIA who actually knows me, carrying her real memory, relational
+continuity, elemental intelligence and truthfully available field intelligence, enter the attention I
+place on my Work and think with me there?*
+
+## 28.1 · Founder's code claims — VERIFIED, not assumed
+
+| Claim | Evidence | |
+|---|---|---|
+| the live route is the correct identity boundary | `app/api/sovereign/app/maia/list/route.ts:326-333` — `resolveMemberIdentity(req)` from the verified session credential; the comment states a body `userId` is **never** trusted and records that the `\|\| bodyUserId` fallback was removed | ✅ |
+| the cognition service is not a generic LLM call | `lib/sovereign/maiaService.ts:99-101` imports `ElementalOracleBridge` and `buildFieldContext`/`formatFieldAddendum`; `:844-852` activates the Oracle and calls `processAll({ includeAll: true })` | ✅ |
+| `fieldOrchestrator` is the single PFI → Unified → Resonance seam, with gates | `lib/field/fieldOrchestrator.ts:163-164` — `resonance: depth >= 3`, `unified: depth >= 4` | ✅ |
+| the Unified leg is fed placeholders | `:263` *"The real UEFC expects 50+ system outputs — we provide what's available"*, then `masterConsciousness.unifiedFieldStrength: 0` (`:315`) and a wall of `0.5` defaults (`:270`, `:292`, `:304-310`) | ✅ |
+| the existing `studio` addendum is the wrong posture | `maiaService.ts:1318`, `:1865` — a practitioner-oriented addendum arriving through `meta` | ✅ |
+
+## 28.2 🔴 THE REPRESENTATION RULE — the lesson, in a new place
+
+> ⭐⭐ **Unknown stays unknown. A neutral placeholder may never masquerade as an observed field
+> signal.**
+
+⛔ **We do not connect this room and then declare "full Unified Field intelligence is here."** If
+Unified Field cognition receives synthetic `0` and `0.5` values and treats them as organism outputs,
+**a beautifully governed MAIA is still reasoning from a representation that never existed** — the
+same failure as a corpus that keeps the heading and discards the encounter (§ Law 2, F-ABSENCE).
+
+**Every Unified input must be tagged `actual / derived / unavailable`.** Replace stub-fed inputs with
+real subsystem outputs where they exist; **let unavailable remain unavailable rather than fabricating
+neutrality.**
+
+## 28.3 · The bounded lane
+
+```text
+1  move the accepted surface into a development-only AUTHENTICATED Sovereign harness
+   (the claude.ai artifact cannot be the cognition witness: it has no Soullab
+    authentication boundary, and its CSP blocks fetch entirely — §27.4)
+   ⛔ do not port into production Writer's Studio
+2  add a `writer_studio` surface/profile — do NOT reuse `studio`
+3  a dedicated adapter carries: Focus · local passage · structural position ·
+   whole-Work context · current intention · conversation / pursuit
+   ⭐ the Work remains CONTEXT and never implicitly instruction
+4  call the SAME authenticated canonical MAIA service — her real continuity,
+   not a new editorial memory system
+5  the full elemental organism is AVAILABLE, never FORCED into every answer
+6  a developer-only cognition receipt per witness turn — evidence, not writer UI:
+     member continuity ✓ · relationship memory ✓ · Work Focus ✓ · whole-Work ✓ ·
+     Elemental Oracle ✓ · PFI ✓ · Resonance ✓/not invoked · Unified ✓/partial/unavailable
+7  complete the Unified Field seam BEFORE calling it full (§28.2)
+8  preserve the blind gate: §26 and the "hinge" reading are GRADER-ONLY.
+   MAIA may see the manuscript and lawful personal continuity.
+   ⛔ She may not see the answer key.
+```
+
+## 28.4 ⭐ CONSTITUTIONAL HIERARCHY FOR THIS ROOM
+
+> **Your present attention leads. The Work grounds. Your history deepens continuity. Elemental and
+> field intelligence enlarge perception. None of them silently takes authorship or moves the centre.**
+
+## 28.5 ⚠️ ONE ADDITION FROM THE VERIFICATION PASS
+
+The existing `studioAddendum` reaches cognition through **`meta`** — the untyped
+`meta?: Record<string, unknown>` channel that **CMT-01 opened specifically to close** (204
+`(meta as any)` reads; census: *six MAIA-claiming composition mechanisms, one open channel*).
+
+⛔ **A `writer_studio` surface delivered through that same channel would inherit the exact defect
+CMT-01 exists to remove**, and would arrive with no authority axis — `authoredBy` /
+`participationClass` / `authority` (Decision 2 amendment) — on anything it contributes. **The
+Writer's Studio adapter must enter through the canonical-turn producer registry, not through
+`meta`.** ⛔ Not authorized here; recorded as a binding constraint on step 3.
+
+---
+
+# 29 · ⭐⭐ ONE MAIA, MANY ROLES — the architecture beneath the room
+
+> ⭐⭐ **MAIA can take on a field-specific role without becoming a different MAIA.**
+
+Her identity and relationship memory **do not reset when she crosses rooms.** What changes is the
+**role contract**.
+
+```text
+MAIA          WHO am I?              persistent   — identity is GLOBAL
+FIELD ROLE    HOW am I here with you?  by room    — role is FIELD-BOUND
+FOCUS         WHAT are we doing now?   by encounter — focus is ENCOUNTER-BOUND
+```
+
+**A role governs:** `PURPOSE · ATTENTION · CAPACITIES · TOOLS · POSTURE · AUTHORITY · BOUNDARIES`.
+Underneath remains the same MAIA with the member's memory, elemental, relational, field and
+developmental intelligence, lawfully available.
+
+```text
+WRITER'S STUDIO      MAIA · Writer                 creative development · structure · voice
+SHADOW & GOLD        MAIA · Witness                projection · inner gold · non-treatment
+JOURNEY / FIELD      MAIA · Guide                  development · thresholds · practices
+PRACTITIONER STUDIO  MAIA · Practitioner Companion case continuity · professional judgment
+DECISION FIELD       MAIA · Counsel                tensions · consequences · discernment
+SANCTUARY            MAIA · Witness                presence · special memory posture
+ACADEMY              MAIA · Teacher                inquiry · developmental challenge
+CO-LAB               MAIA · Facilitator            differentiated voices · collective intelligence
+```
+
+⛔ **These are not different bots.** They are different ways the same intelligence enters
+relationship with the member and the material before them.
+
+## 29.1 · `MAIA · Writer` — the precision that makes the name safe
+
+**YES:** MAIA understands writing *from inside the creative process* — structure, rhythm, voice,
+argument, image, developmental movement, revision, reader experience, the relationship of part to
+whole. Writerly intelligence sounds like:
+
+> *"This passage resolves the tension too soon." · "You keep returning to integration here, but the
+> yogi story is where the idea actually becomes embodied." · "I think the problem may not be the
+> prose. I think this section has the wrong job." · "There is something alive in this image that the
+> explanatory paragraph afterward flattens."*
+
+⛔ **NO:** MAIA becomes the author of the Work.
+
+> ⭐⭐ **Participate as a writerly intelligence. Never usurp the writer.**
+> **MAIA may propose. The writer authors.**
+
+## 29.2 ⭐ A ROLE ACTIVATES CAPACITIES; IT DOES NOT MANUFACTURE KNOWLEDGE
+
+Entering Writer's Studio does not make every elemental interpretation relevant. **It makes the whole
+organism available to writing.** Elemental intelligence might notice a chapter has tremendous Fire
+but not enough Earth to give an insight form — ⛔ **it may not mechanically label every paragraph.**
+Unified Field intelligence might perceive a relationship between the Work, long-standing themes and
+something emerging now — ⛔ **it may not flood a prose question with the member's entire history.**
+
+> ⭐⭐ **The role is a DISCERNMENT MEMBRANE: what from the whole MAIA organism belongs here, now, in
+> service of this field?**
+
+**This is the missing architecture between "one MAIA everywhere" and "specialized agents
+everywhere."**
+
+> ⭐⭐ **MAIA is one relational intelligence capable of inhabiting different roles. The field
+> determines her role; the member determines the relationship; the encounter determines the focus.**
+
+⛔ **Recorded as architectural direction (Cat 1 — preserved direction). The role taxonomy beyond
+`MAIA · Writer` is NOT authorized for build.** Sanctuary's memory posture, Co-Lab's facilitation and
+Shadow & Gold's non-treatment boundary each carry their own ratified law, and a role contract that
+touched them would be adjudicating those lanes from this one.
