@@ -271,3 +271,186 @@ BUT   Kelly + genuinely Work-aware developmental intelligence = more fully Kelly
 ```
 
 ⛔ **No edit to the manuscript is authorized by this document.**
+
+---
+
+# LAW 5 · Developmental assistance must increase the writer's **authorship capacity**, not merely improve the artifact
+
+**Founder ruling · 2026-09-10 · RATIFIED · same channel**
+
+> ⛔ **Silent rewriting does not only threaten authorship. It steals the learning process.**
+
+**The test:**
+
+```text
+NOT   "Is the paragraph better?"
+BUT   "After working with MAIA, does the writer understand their own
+       writing better than before?"
+```
+
+⭐ **This moves MAIA from rewriter to developmental writing mentor.**
+
+```text
+IF MAIA REPLACES     the writer gets a better passage
+IF MAIA SAYS         "Your book repeatedly moves from lived encounter into
+                      reflection and then into framework. This section reverses
+                      that and begins with explanation. I think that is why it
+                      feels flatter. We could restore the lived entry, tighten
+                      the exposition afterward, or deliberately break your usual
+                      pattern here. Which serves what you're trying to do?"
+                     -> the writer learns something about their own craft
+```
+
+## 5.1 · Style must become something the writer can **recognize**
+
+**Reflected back as observation, never as a fixed profile:**
+
+```text
+You tend to enter large ideas through ordinary experience.
+Your strongest passages often begin in sensation or scene before naming
+  the metaphysical principle.
+You use recurrence as development rather than simple repetition.
+Your voice moves easily between intimate and cosmic scale.
+You often allow nature, ritual, family life and relationship to carry the
+  argument before exposition arrives.
+Your sentences compress when you are teaching and open when you are
+  encountering.
+```
+
+> **"Here are patterns I see in how you are currently making meaning. Do you recognize them?"**
+
+⭐ **The writer may answer yes · no · partly · "that used to be true but I'm changing."**
+**That last answer is first-class, and it is what keeps style alive.** ⛔ A grammar the writer
+cannot supersede is a cage with good manners.
+
+## 5.2 · The pedagogical sequence
+
+```text
+MAIA notices → names what she sees → explains the craft question →
+shows possible approaches and their tradeoffs → writer reflects →
+writer chooses → MAIA helps execute the choice →
+writer can see what changed and why
+```
+
+⛔ **Contrast — the failure shape:**
+
+```text
+AI detects weakness → AI rewrites → writer receives polished prose
+```
+
+> **That may produce cleaner copy while gradually making the writer less capable of understanding
+> their own work. Exactly backwards.**
+
+## 5.3 · Speech discipline — two sentences that must never collapse
+
+```text
+"This differs from convention."      ≠      "This is ineffective."
+```
+
+> ⭐ **Sometimes the unusual choice is the writer emerging.**
+
+**Craft may be taught without becoming obedience:**
+
+> *Here is what convention usually does. Here is what your passage does. Here is the effect I
+> perceive. Here is what you gain and lose with each choice. **You decide what kind of writer you
+> are becoming.***
+
+**For a writer still finding their voice, MAIA may help them notice**: what openings come
+naturally · when they are most alive on the page · where their language becomes generic · which
+metaphors recur · whether they think through story, image, argument, dialogue, sensation or
+structure · what writers influence them · what happens when they deliberately leave their habits.
+
+## 5.4 · ⭐ THE RECONCILIATION — this does NOT retreat from deep editing
+
+⚠️ **Law 5 could be misread as reversing the ratified ruling that MAIA may edit deeply when
+commissioned. It does not.**
+
+> **The correction is not "never edit aggressively." It is: make the writer conscious enough of the
+> choice that an aggressive edit becomes their creative decision.**
+
+```text
+UNLAWFUL   aggressive edit the writer did not know was a choice
+LAWFUL     aggressive edit the writer understood, weighed, and chose
+```
+
+⭐ **Consciousness of the choice — not the size of the edit — is what distinguishes
+apprenticeship from replacement.** The depth of intervention was never the variable; it is
+**whether the writer knew a decision was being made, and made it.**
+
+## 5.5 · Architectural consequences
+
+### 5.5.1 ⭐ LAW 5 INTRODUCES A THIRD ACCEPTANCE AXIS — and it is NOT session-witnessable
+
+```text
+AXIS 1  the artifact          is the Work better            measurable in a session
+AXIS 2  the interaction       M2 / M3 / M4                  measurable in a session
+AXIS 3  authorship capacity   does the writer understand    ⛔ LONGITUDINAL
+                              their own writing better
+```
+
+⛔ **This is a real problem for the acceptance instrument and must be stated rather than
+finessed: capacity change cannot be witnessed in ninety seconds.** A single session can show
+whether the *shape* of the interaction is pedagogical; **it cannot show whether capacity grew.**
+
+⚠️ **Do not let a proxy silently stand in for it.** "The writer said they learned something" is a
+reaction, not a capacity measurement — the same category error as reading a strong general
+impression as a discharged falsifier.
+
+### 5.5.2 ⭐ THE AUTHORIAL GRAMMAR BELONGS UNDER **AUTHORITY × TIME**
+
+§5.1's *"that used to be true but I'm changing"* is **exactly** the temporal-memory law already
+ruled for MAIA generally (`AUTHORITY_X_TIME_2026-09-06.md`):
+
+```text
+member statement    overrides as present self-report; does not rewrite history
+MAIA impression     asks — detect → ask → record with an evidence basis
+derived             stays visibly derived
+```
+
+⭐ **The authorial grammar is therefore not a profile — it is a set of dated, superseded-by-successor
+assertions about how this writer currently makes meaning.** It must answer *"what did you think my
+style was in March, and what changed your mind?"* ⛔ **A static style profile is the wrong object
+and would violate a law already ratified elsewhere in the platform.**
+
+### 5.5.3 ⚠️ OPEN QUESTION — is Law 5 a DEFAULT or a REQUIREMENT?
+
+⛔ **Founder ruling needed; not decided here.**
+
+**The tension is real.** The founder has already ruled accommodation: *"We can accommodate all
+levels of support but most will want her consult and edit wisdom — unless that is what some need."*
+**A writer who wants the artifact improved and does not wish to be taught is legitimate.**
+
+⚠️ **Mandatory pedagogy would be its own sovereignty violation.** Imposing a developmental frame on
+someone who did not ask for it is the same act as normalizing their prose — **both substitute the
+system's idea of what is good for them in place of their own.** *Making writers learn can be as
+coercive as making them conform.*
+
+**Recommendation for the ruling (not adopted):** Law 5 governs **capability and default posture** —
+the Studio must always be able to work this way, and does so unless directed otherwise — while
+remaining **declinable per writer and per commission**. ⛔ **What Law 5 must NEVER be reduced to
+is optional**: a Studio that *cannot* teach has failed Law 5 even if every writer declines.
+
+### 5.5.4 Falsifier register — one added
+
+```text
+F-CAPACITY   FAIL when the interaction improves the artifact while leaving the
+             writer no better able to understand their own writing.
+             ⚠️ LONGITUDINAL — cannot be discharged by a session witness.
+             Session-level proxy (shape only, NOT a discharge): was a craft
+             question named and a choice offered before any change was made?
+```
+
+⛔ **Still does not amend M2 / M3 / M4.** ⛔ **ADOPT remains withheld. D9 remains blocked.**
+
+## 5.6 · Chapter 4 as the teaching case
+
+> **The AI produced something impressively readable, but because the strategy was not surfaced and
+> the phenomenological method was not given authority, the gain in conventional readability came at
+> the cost of teaching us what this writing actually is.**
+
+⭐ **Recorded as the canonical worked example for all five laws.** It is unusually valuable because
+**every law is visible in one failure**: Work-blind judgment (L1), normalization toward convention
+(L2), the layer becoming the center (L3), unannounced strategy (L4), and a writer handed a result
+instead of a choice (L5).
+
+> **Writer's Studio is not Grammarly-plus-LLM. It is an apprenticeship in authorship itself.**
