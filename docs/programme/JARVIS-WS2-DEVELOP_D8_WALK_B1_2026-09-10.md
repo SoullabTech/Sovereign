@@ -92,6 +92,37 @@ B     its premise PERMITS both the good and the bad version.
 
 ---
 
+## ⚠️ Watch 6 · Visible multiplicity — the flow-level finding applied to B
+
+Carried from A/M2-3: **removing explicit system state does not remove experienced accumulation.**
+
+⭐ **Finding B/M1-4 — cardinality-correct is not the same as quiet, and the two failures are independent.**
+
+```text
+A's FAILURE     wrong count      9 marks for 4 findings   -> MISINFORMATION
+B's RISK        right count      4 findings shown at once -> OBLIGATION
+```
+
+**B fixes A's semantic defect and inherits none of A's protection against volume** — because A had none either. Preserving cardinality removes the *misinformation*; it does not remove the pile. **Four true things displayed at once is still four things the writer now owes attention to.**
+
+So B/M1 must begin with **one response to one writer-authored inquiry**, and let the writer decide whether the exchange opens further.
+
+⛔ **And that is a discipline, not a structure** — which is B/M1-3 again. Nothing in B's premise prevents four observations from appearing beneath the inquiry. **The restraint has to be enforced; it cannot be relied upon.**
+
+### The rendered response
+
+> *"I see one thing that may be contributing. Here, aether arrives as though it is entering the chapter for the first time. But you've already introduced it twice earlier."*
+
+Then **stop.** No taxonomy. No *"your question is…"* label. No automatic expansion of the inquiry.
+
+```text
+"show me"        -> MAIA takes the writer to the earlier places
+say nothing      -> the inquiry stays historically available and
+                    does not become an unfinished task
+```
+
+⭐ *"I see **one thing** that may be contributing"* does two things at once: it **states the cardinality** — this is one finding, not the first of several — and it **marks provisionality** without a disclaimer block. **The count and the hedge are carried by ordinary speech**, which is §12.2's whole argument in one sentence.
+
 ## What the founder must judge
 
 ```text
