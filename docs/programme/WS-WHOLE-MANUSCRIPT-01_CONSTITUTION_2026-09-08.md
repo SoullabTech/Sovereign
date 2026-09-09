@@ -1,0 +1,466 @@
+# WS-WHOLE-MANUSCRIPT-01 — Constitution
+
+**Standing: BUILD AUTHORIZED (founder, 2026-09-08 — see §4).**
+Opened by founder act 2026-09-08. §1-3 were written at DISCOVER, before any
+code; §4 records the rulings that authorized BUILD and the first-cut boundary.
+
+> **North star (founder).** A writer may return to a whole manuscript as a
+> continuous living work without giving up the safety, identity, and
+> editability of its sections.
+
+> **Governing rule (founder).** Whole Manuscript is a **view of the same
+> sections**, not a second manuscript. There is no second source of truth.
+
+This is not a display mode. It is where someone sits with a book they wrote ten,
+twenty, thirty years ago and experiences it again as *their book* — then decides
+whether to restore it, redevelop it, or let it seed another Work. Constituted
+now, while the intention is fresh.
+
+---
+
+## 1 · Census — the eight questions, answered against the code
+
+### Q1 · How does section autosave work today?
+
+`lib/writersStudio/useSectionWriting.ts` + `sectionSaveQueue.ts`, under a founder
+contract of 2026-08-30:
+
+- **A keystroke is not a logical save.** Typing STAGES text locally into a
+  `Map<sectionId, body>` and marks the section dirty. The staged snapshot reaches
+  the queue on the autosave timer, on a section switch, or when the page hides.
+- **Leaving a section is synchronous capture, then switch.** `captureOnLeave`
+  forces the exact visible snapshot into the queue *before* the next section
+  mounts, so a pending debounce can never race navigation.
+- **The queue serializes at the DRAFT level, not per section.** `baseVersion` is
+  taken at dispatch, never at enqueue — because two saves in flight cannot both
+  build on the same version.
+
+⭐ **Consequence for this lane:** the staging map is already keyed by section and
+already holds *several dirty sections at once*. Continuous editing does not need
+a new persistence model. It needs the existing one exposed to more than one
+mounted editor.
+
+### Q2 · Can multiple sections be mounted and editable simultaneously?
+
+**No.** `activeId` is a single `string | null`; one `active` section, one body,
+one editor. This is the single largest gap between today and the north star, and
+it is a *mounting* limitation, not a data limitation — see Q1.
+
+### Q3 · How do selection ranges survive across section boundaries?
+
+**The question cannot arise today.** With one section mounted, a selection
+physically cannot span a boundary. There is no existing behaviour to preserve —
+and no existing guarantee either. Whatever this lane builds is the first answer.
+
+### Q4 · How does Find/Replace behave across the whole draft?
+
+**It does not exist.** `studioMap.ts:227` declares it `availability: 'later'`,
+alongside Statistics, Timeline and Word Web; the file states plainly that *"only
+Export is real."* The sidebar entry is a declared destination, not a built tool.
+
+⛔ So Find/Replace is an **input to this lane, not a constraint on it** — and a
+trap to name: a whole-manuscript view makes cross-draft Find/Replace look
+trivially adjacent. It is a separate capability with its own mutation semantics
+across 262 canonical sections, and must not be smuggled in as "just a view
+feature."
+
+### Q5 · Does "Keep a version" coherently snapshot many changed sections?
+
+**Yes, already.** `settleDraft()` flushes pending work and waits on
+`hasUnsavedWork()` — which is true if *any* staged section or queued save
+remains — then returns the settled draft version, which `Keep a version` uses as
+`baseRevisionId`. Versions are draft-level, so a keep is a snapshot of the whole
+draft at a version, not of one section.
+
+⭐ **This is the strongest existing foundation for the lane.** Editing six
+sections in one continuous scroll and keeping a version is already coherent.
+
+### Q6 · How does scroll-to-section from the left rail work?
+
+`ManuscriptOutline.tsx:167` calls `onSelect(s.id)`, which **switches the mounted
+section**. There is no scrolling — the centre is replaced.
+
+Under the north star this inverts: *the rail becomes the map, the centre becomes
+the territory.* The same gesture must move the eye within a continuous document
+rather than swap a document out.
+
+### Q7 · What happens at section boundaries when typing or deleting?
+
+**Nothing happens, because no boundary is reachable.** The first boundary this
+lane creates is also the first place a writer can backspace from the start of
+Section 87 into the end of Section 86.
+
+⛔ **Founder boundary, ratified here:** editing inside Section 86 edits Section 86
+*directly*. Backspacing across a boundary must NOT silently merge two canonical
+sections, and no editor may re-partition the manuscript behind the writer.
+Merge, split and reorder remain **explicit structural acts** — WS2-08's
+`topology_change_requires_explicit_command` discipline, which this view must
+inherit rather than quietly bypass.
+
+### Q8 · How is the Source / Working Draft distinction preserved for old imports?
+
+Two tables, and the split is load-bearing:
+
+- `manuscript_sections` — **Source**: the work as it arrived (an import, a
+  30-year-old file).
+- `manuscript_draft_sections` — **Working Draft**: what the writer is editing,
+  addressable only once `section_addressable_at` is set.
+
+⭐ **This matters most for exactly the writer the lane exists for.** Someone
+returning to a decades-old manuscript must be able to work continuously *without
+the original ceasing to exist as it was*. The continuous view renders the
+Working Draft. The Source remains untouched and recoverable, and the view must
+never blur which one is on screen.
+
+---
+
+## 2 · What the census changes about the plan
+
+| Assumption | Census |
+|---|---|
+| Needs a new continuous persistence model | **No.** Staging is already multi-section; versions are already draft-level. |
+| Needs a flattened document | **No, and forbidden.** One source of truth stays the 262 sections. |
+| Find/Replace comes along for free | **No.** It does not exist at all. |
+| Section switching can be reused for navigation | **No.** It swaps the centre; the lane needs movement within it. |
+| Boundary behaviour must be preserved | **Nothing to preserve.** It must be *decided*, and the founder has: no silent merge. |
+
+The lane is therefore **a mounting-and-navigation problem with a boundary
+discipline**, not a data-architecture problem. That is a much smaller and much
+safer shape than it first appears.
+
+---
+
+## 3 · Obligations to be discharged before BUILD is authorized
+
+**W-1 · One source of truth.** The view renders the same canonical sections. No
+flattening, no second document, no derived text that can be saved back as a
+whole.
+
+**W-2 · Section identity survives editing.** A keystroke inside a section edits
+that section. No mounted editor may re-partition, merge, or reorder.
+
+**W-3 · Boundaries refuse rather than guess.** A gesture that would change
+topology does nothing structural and says so. Explicit commands only.
+
+**W-4 · Settling still means settling.** With several dirty sections mounted,
+`Keep a version` and Export must still refuse or settle — never export a state
+the writer cannot see, which is the WS-EXPORT settle contract applied here.
+
+**W-5 · Source is never edited by a view.** A continuous view of the Working
+Draft may not write to `manuscript_sections`.
+
+**W-6 · The divisions recede visually but not structurally.** Generous space or a
+hairline, never cards or database-looking separators — and never at the cost of
+a writer being unable to tell which section they are in when it matters.
+
+**W-7 · Precision is not lost.** Section view remains, unchanged, for the work
+that needs it. *Section for precision, Whole Manuscript for flow.*
+
+---
+
+## 4 · Founder rulings — 2026-09-08. BUILD AUTHORIZED.
+
+**F-1 · Mounting is WINDOWED, and capture precedes unmount.**
+262 live editors are not mounted at once. Virtualize around the viewport under
+one invariant:
+
+> **A section may not unmount until its exact visible state has been
+> SYNCHRONOUSLY captured into the existing staged-section map.**
+
+The focused section is **pinned** and cannot be virtualized away while the
+writer is editing it. After capture, *dirty-but-unmounted is lawful* — the
+census established that staging is keyed by `sectionId` and already holds
+several dirty sections independently of the DOM.
+
+```
+visible editor
+     ↓ before unmount — synchronous
+staged Map<sectionId, body>
+     ↓
+existing draft-level save queue
+```
+
+⛔ No new persistence system. This is the same discipline `captureOnLeave`
+already keeps at the section switch, applied to a second event: scrolling out of
+view. The failure it prevents is identical — reading an editor's value after the
+DOM has moved on is how the last thing someone typed disappears.
+
+**F-2 · Backspace at a section boundary refuses, quietly.**
+At the start of Section 87, Backspace does not merge into Section 86. A brief
+inline message — *"Sections stay separate here."* No modal, no warning dialog,
+no automatic trip to Structure. **Merge is not offered from this view in the
+first cut**: merge, split and reorder remain explicit structural capabilities
+owned elsewhere. *Whole Manuscript is for flow, not covert topology editing.*
+
+**F-3 · The view switch sits at the top of the manuscript field, remembered per
+member × Work.**
+`SECTION | WHOLE MANUSCRIPT`, at the top of the canvas — not in Settings, not
+buried in the sidebar. Persistence is **member × Work**, not a universal member
+preference: someone may keep one book almost permanently in Whole Manuscript
+while working section-by-section on another. Default is **Section** for a Work
+that has never had a choice made.
+
+⛔ **Age and provenance do not choose for the writer.** An old import is not
+inferred into Whole Manuscript. The writer chooses how to enter their book.
+This preference is **view state, never manuscript state**.
+
+**F-4 · Find/Replace is out of scope.**
+Whole Manuscript must not manufacture Find/Replace merely because the writing
+now appears continuous. Cross-section replacement has its own mutation,
+settling, review and undo questions. Separate lane.
+
+**F-5 · Cross-section selection is not in the first cut.**
+*(Ruled after the founder noticed §3 identified Q3 as having no existing
+behaviour and then failed to carry it forward as an owed ruling — a real gap in
+this document, corrected here rather than quietly filled.)*
+
+Selection stays inside one canonical section. Whole Manuscript gives **visual
+and navigational continuity, not a flattened editing buffer**. A writer scrolls
+seamlessly from 86 into 87; a text selection does not become one mutable range
+spanning both.
+
+```
+continuous reading        ✅
+continuous scrolling      ✅
+edit any visible section  ✅
+section identity          ✅
+cross-boundary mutation   ❌
+silent repartition        ❌
+```
+
+Cross-section selection for copying, or for asking MAIA, may be worth designing
+later. It arrives deliberately or not at all.
+
+### First-cut boundary
+
+```
+windowed continuous section mounting
+existing staged Map + save queue
+capture-before-unmount
+focused section pinned
+rail click → scroll to section
+Section / Whole Manuscript switch
+preference per member × Work
+quiet boundary refusal
+Keep a version unchanged
+Working Draft only
+Source untouched
+
+NO: Find/Replace · cross-section selection · merge/split/reorder ·
+    new persistence model · flattened manuscript
+```
+
+⚠️ **One thing F-3 needs that this lane cannot supply.** *member × Work*
+persistence implies account-level storage, and no preference table exists —
+adding one is a migration, which this lane is not authorized to author and which
+carries the BRANCH GATE consequences witnessed repeatedly on 2026-09-07. The
+first cut therefore stores the choice **per device**, keyed by Work, and the
+gap is recorded rather than hidden: a writer who opens the same book on a second
+device gets the default until a preference store exists. Naming it here so it is
+a known limitation rather than a silent failure of F-3.
+
+## 4b · The browser acceptance instrument — RATIFIED 2026-09-08
+
+Ratified in conversation before this transcription, and recorded here unchanged.
+**Nothing in this section is new.** It was deliberately held unrecorded while the
+upstream DEVELOP re-witness at `6345b8e08` was open, because beginning to improve
+a downstream acceptance record while its upstream predicate is unresolved is how
+*gated* quietly becomes *mostly proceeding anyway*. That witness has now PASSED,
+which is what authorized this transcription and nothing else.
+
+### Witness subjects
+
+*(Superseded in place by §4c, which records all three subjects and the runtime
+falsifier. Kept because it is the record of what was known when `0cf26e22a` was
+named, before the runtime falsifier had run against it.)*
+
+```
+d863d4df5   PRE-WITNESS FAIL
+            "Maximum update depth exceeded" — 110 console errors
+            unstable SectionWritingSession.session identity
+            the 8-observation instrument was NEVER ENTERED
+
+0cf26e22a   witness subject as of eee2dde16 — later itself a RUNTIME FAIL
+            identity stabilization only; nothing else moved
+```
+
+⛔ **`d863d4df5` stays in this record.** It is the commit on which the render loop
+was discovered, and replacing it silently would make the witness look like it had
+never happened. **The eight observations did not fail — they were never validly
+reached.** The instrument is unchanged; only the commit judged against it moved.
+
+⚠️ **What that failure taught, recorded and NOT turned into new work.** Every
+automated gate on this lane is a pure-function test or a source contract. Neither
+can see a React render loop. The commit that introduced the surface said as much
+in its own message — *"proves the ordering is written, not that a browser honours
+it; the browser's part belongs to the witness."* The browser witness supplied
+precisely that missing epistemic layer, on first contact, before observation 1.
+
+**The subject is frozen.** Changing it before these run would move what is being
+witnessed.
+
+**Why an instrument at all.** The automated gates prove what can be proven
+without a browser: the pure decisions, and the ORDER in which the component calls
+them. They cannot prove a real browser honours that order under a real scroll.
+These eight observations are that missing half, fixed in advance so the result
+cannot be read backwards from whatever happens.
+
+```
+1   scroll from the start through far-off sections
+    → the manuscript keeps flowing · no blank territory · no scroll jump
+    [persistent shells + measured heights]
+
+2   type in a section · scroll far away · scroll back
+    → the words are there
+    [capture before eviction]
+
+3   type · switch to SECTION · switch back
+    → the words are there
+    [capture before the view change — the third disappearance]
+
+4   Backspace at a section start
+    → "Sections stay separate here." · no merge · no modal
+    [F-2]
+
+5   rail click to a far section from a distant window
+    → it arrives
+    [mount, then scroll]
+
+6a  the gold current row follows the observed manuscript place
+
+6b  `s=` follows the same observed manuscript place
+
+7   WHOLE MANUSCRIPT → SECTION
+    → Section opens where you were reading
+    [transfer, never infer]
+```
+
+**6a and 6b are witnessed SEPARATELY**, even when performed in one scrolling
+action. They share a source of truth today, which is exactly why: a regression
+leaving one correct and the other stale is the precise failure this
+implementation was built to prevent, and one combined observation would hide it.
+
+### The negative expectation — verbatim, and load-bearing
+
+> **Before Whole Manuscript has established an observed place, no gold row is
+> shown and `s=` is not advanced to the arrival section.**
+
+⛔ Recorded so a future tester does not read the absence as a defect and "fix" it,
+reintroducing the lie the observed-place seam exists to prevent. **An absent
+marker there is the instrument working.** `ManuscriptOutline` draws its gold row
+only when a real current section is known; `placeForMode` returns `null` in Whole
+view until Whole has observed something; and that null reaches presentation
+unchanged, by design.
+
+---
+
+## 4c · Runtime falsifier — witness history
+
+⛔ **APPENDED. The eight-observation instrument in §4b is UNALTERED** — same
+observations, same separate 6a/6b witnesses, same negative clause. What follows
+is history and machine evidence about subjects, never a change to what is asked.
+
+### Three subjects
+
+```
+d863d4df5   PRE-WITNESS FAIL
+            Maximum update depth exceeded
+            cause: unstable session identity
+            instrument never validly entered
+
+0cf26e22a   RUNTIME FALSIFIER FAIL
+            G1 · G2 · 1–4   PASS
+            5               FAIL
+            cause: Whole ARRIVAL persisted as a fallback NAVIGATION COMMAND
+                   (`jumpTo ?? session.wholeOpensAt`)
+            6a · 6b · 7     NOT RUN — stopped at first failure
+
+af013cb4a   CURRENT WITNESS SUBJECT
+```
+
+### Automated runtime falsifier — `af013cb4a`
+
+```
+G1  render loop         PASS      G2  windowing   PASS  (262 shells · 4 mounted · 258 unmounted)
+1   distant-scroll      PASS      2   eviction → remount   PASS
+3   view-change capture PASS      4   boundary refusal     PASS
+5   far rail            PASS      6a  gold row             PASS
+6b  url s=              PASS      7   return transfer      PASS
+
+non-HMR console errors  0
+```
+
+### The negative 6a/6b case
+
+```
+6ab negative   UNOBSERVABLE IN BROWSER   — not manufactured
+
+reason          Whole-view entry always supplies a known arrival section, so the
+                current product path exposes no browser-reachable null-place
+                interval. Probed at 40ms x10 on entry; values never moved.
+structural      placeForMode(whole, null) → null    PASS
+reachability    UNRESOLVED / not required for this runtime pass
+```
+
+⛔ Neither PASS nor FAIL. The constitutional invariant is held by the pure
+falsifier; whether the product ever exposes a null-place Whole state is a
+separate reachability question, deferred rather than answered by a test state.
+
+### Provenance of the check-5 attempts
+
+```
+FIRST ATTEMPT    INVALID HARNESS CORPUS
+                 Working Draft seeded without Source sections → rail absent
+CORPUS CORRECTED Source + Working Draft present → 262 navigable rows
+SECOND ATTEMPT   VALID FAIL — the application defect above
+```
+
+**No application defect is attributed to the invalid attempt.** *(A separate
+post-restart reading of zero view choices was a harness race against the route's
+first compile — a diagnostic note, not part of this lane's failure history.)*
+
+### What the runtime falsifier positively established
+
+More than "it did not crash". At `af013cb4a`: all 262 shells coexist with four
+mounted editors · distant scrolling never empties the viewport across ten sampled
+positions · an edit survives **proved** eviction, not mere re-render · an edit
+survives the whole surface disappearing · boundaries stay non-mergeable · a rail
+target **proved absent** mounts and then scrolls into place · gold row and `s=`
+follow observed place **independently asserted** · Whole → Section preserves the
+reading location.
+
+⭐ Check 5 witnesses the semantic repair itself, not merely a green test:
+**arrival is consumed as arrival, and a later navigation command's completion no
+longer resurrects it.**
+
+### What automation cannot establish
+
+```
+AUTOMATED RUNTIME FALSIFIER   af013cb4a · synthetic corpus   PASS
+HUMAN §4b WITNESS             af013cb4a · real Work          PENDING · BLOCKED ON ACCESS
+Whole implementation          HOLD
+PR · DEPLOY                   HOLD
+```
+
+The human witness owns what no harness can claim: whether the divisions
+**perceptually recede** into one manuscript · whether long-distance movement
+**feels continuous** rather than mechanically correct · whether the boundary
+response **feels quiet** · whether the view switch feels like **continuity of
+place** rather than mode machinery.
+
+**A machine PASS makes the runtime mechanics eligible for human witnessing. It
+does not promote the human witness.** Both recorded failures were the same class:
+a React value carrying two meanings because source-level structure made the
+distinction look harmless — neither reachable by any pure or source-contract gate
+on this lane.
+
+---
+
+## 5 · Not in this lane
+
+Find/Replace · Statistics · Timeline · Word Web · shelf ordering · split/merge
+commands (WS2-08C) · the writer-facing Develop presentation lane · anything that
+writes to Source.
+
+> The rail is the map. The centre is the territory. Neither may pretend to be
+> the other.
