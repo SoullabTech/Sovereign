@@ -876,3 +876,55 @@ now forbids.** ⭐ **Suite corrected; 20/20.**
 
 ⭐ **If that lands, this has moved beyond good editor UX and demonstrated the relational behaviour
 the constitution was written to specify.** ⛔ **Mechanics cannot answer it. Only use can.**
+
+---
+
+# 19 · ⭐⭐ FINAL PRECISION AND FREEZE — founder, 2026-09-09
+
+> **The three cases establish that the prototype now behaves according to the INTERACTION CONTRACT.
+> They do not establish that live MAIA possesses the RELATIONAL INTELLIGENCE the contract is
+> designed to support.**
+
+⭐ **The artifact can prove the FORM OF THE ENCOUNTER while cognition is still simulated or
+constrained.** ⛔ **A pass here licenses the form and nothing beyond it.**
+
+```text
+✅ ESTABLISHED     the prototype obeys the contract
+⛔ NOT ESTABLISHED  that MAIA can do this with real cognition
+⛔ NOT ESTABLISHED  production readiness
+⛔ NOT ESTABLISHED  longitudinal behaviour
+```
+
+## 19.1 · ⛔ PROTOTYPE FROZEN
+
+**No further changes. The build stands as published.** ⭐ **Use it once WITHOUT TEST LANGUAGE** — a
+passage genuinely cared about, framed, begun however comes naturally, focus allowed to evolve,
+outside material followed or declined **as the writer actually would.**
+
+## 19.2 ⭐⭐ THE RELATIONAL GATE — one question
+
+> **Did you feel that MAIA stayed with what you were attending to while helping you see more than
+> you were already seeing?**
+
+⛔ **Not whether every response was perfect. Not whether the interface worked.**
+
+## 19.3 ⭐ THE WITNESS WORDING, PRE-AUTHORED — not yet asserted
+
+**If the answer is yes, the witness is recorded as EXACTLY this and no more:**
+
+> **The prototype demonstrated a form in which the writer can place attention, negotiate shared
+> focus, and receive broader relational insight without surrendering the center of attention.**
+
+⛔ **It does not claim cognition, production readiness, or longitudinal behaviour.**
+
+### ⭐ WRITING THE MAXIMUM LAWFUL CLAIM *BEFORE* THE WITNESS IS ITSELF AN INSTRUMENT
+
+⚠️ **This session has repeatedly watched claims inflate to match the enthusiasm that produced them**
+— *"this reading is extraordinary"* nearly swallowing three narrow falsifiers; *"the mechanical layer
+is not weak"* generalizing from three instrument errors.
+
+> ⭐⭐ **Pre-declaring the strongest claim a result may license is the claim-side equivalent of
+> pre-declaring a falsifier.** ⛔ **It removes the moment in which a strong feeling and a strong
+> statement get to negotiate.**
+
+⭐ **Recorded as method, not only as this witness's wording.**
