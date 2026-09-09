@@ -60,7 +60,7 @@ working_draft_revisions (
 | 4 | MAIA language exists first as a proposal | proposal store exists; **prose refused 422** | **PATTERN PRESENT · PROSE EXCLUDED** |
 | 5 | proposal visibly provisional and reversible | proposals are separate objects; revisions append-only | **PRESENT** |
 | 6 | writer adopts / modifies / rejects | adopt route; refuses `already_adopted` | **PRESENT (structure only)** |
-| 7 | only the writer's act mutates the Work | adopt carries `memberId`, no content | **PRESENT — and it is the strongest thing here** |
+| 7 | only the writer's act mutates the Work | adopt carries `memberId`, no content | **PRESENT** — the authorization model; see §5A.1 on scope |
 | 8 | revision enters existing lineage | `working_draft_revisions`, `saved_by`, append-only | **PRESENT** |
 | 9 | MAIA-seeded language expressible in provenance | **see §6** | ⛔ **BLOCKED** |
 | 10 | question/observation context reachable, not a task | threads and standing persist | **PARTIAL** |
@@ -136,6 +136,103 @@ LIVE QUESTION / CONVERSATION / OBSERVATION if any
 **No observation is resolved. No posture is recorded as a truth about the writer.**
 
 ---
+
+## 5A · ⚠️ BOUNDARY CORRECTION — founder ruling, 2026-09-09
+
+> **Do not confuse substantial editorial intervention with ghostwriting. MAIA may edit deeply. The protected boundary is authorship authority and voice — not a prohibition on MAIA contributing prose.**
+
+**The programme has been guarding against ghostwriting so carefully that it risked under-authorizing real editing.** A serious human editor legitimately rewrites sentences, tightens and expands, moves material, restructures sections, repairs logic and transitions, cuts, proposes connective language, offers alternatives, and sometimes rewrites a difficult passage substantially so the author can see what stronger prose could do. **All of that is editing** when done in service of the author's Work, meaning, intention and voice.
+
+```text
+FALSE       EDITOR never writes words  ·  GHOSTWRITER writes words
+
+TRUE        EDITORIAL HELP   MAIA works on MY Work, toward what MY Work is
+                             trying to become, and I retain authorship
+                             authority over what stays
+            GHOSTWRITING     MAIA takes over deciding what I mean, what I
+                             want to say, or what the book should become,
+                             and produces the Work in my place
+```
+
+### 5A.1 · "The writer holds the pen" is superseded
+
+⛔ That phrase served as an authority metaphor and **becomes too restrictive when read literally.** Replaced:
+
+> **The writer holds authorship authority. MAIA may take up the editorial pen when commissioned.**
+
+MAIA may perform substantive editorial work **at any scale** when commissioned — sentence, paragraph, section, chapter, structure, logic, continuity, clarity, rhythm, developmental revision — including rewriting existing prose, reorganizing, cutting, expanding, bridging and restructuring. **Contributing words does not constitute ghostwriting.** Every intervention remains **inspectable, reversible, contestable**, and subject to acceptance, alteration or rejection.
+
+⭐ **This matters most for a writer who is not a trained editor.** They should not need the craft vocabulary to name the operation before they can get help. They know *"this chapter doesn't feel right"*; MAIA may know the argument arrives before its grounding, three paragraphs repeat one function, the transition skips a conceptual step, the ending introduces rather than resolves. **Her value is partly that she knows the craft they don't need to know** — and §10's relational register is what turns that into help rather than a vocabulary lesson.
+
+### 5A.2 · The higher standard
+
+```text
+NOT   make this professionally written
+BUT   make this stronger while preserving the particular person writing it
+```
+
+**An editor can make prose technically stronger while quietly making it less yours.** That is the failure MAIA must beat, not merely match.
+
+### 5A.3 · ⭐ Craft defect vs authorial particularity
+
+```text
+CRAFT DEFECT              awkward syntax · unclear antecedent · repetition ·
+                          weak transition · structural imbalance
+AUTHORIAL PARTICULARITY   unusual rhythm · intentional repetition ·
+                          idiosyncratic phrase · spiritual vocabulary ·
+                          long cadence · nonstandard but meaningful construction
+```
+
+⚠️ **The same surface feature can be either, and the text alone does not say which.** Repetition is a defect or a device. Long cadence is flab or breath. A nonstandard construction is an error or a signature.
+
+**Operational heuristic, grounded in evidence MAIA actually has** — she has read the Work:
+
+```text
+CONSISTENT across the Work   -> treat as particularity until the writer says otherwise
+LOCAL and isolated           -> may be a defect
+UNCERTAIN                    -> ASK. Never flatten to resolve doubt.
+```
+
+⭐ **The error costs are asymmetric, and this is why uncertainty resolves toward asking.** A defect left standing is **visible** and correctable later. A flattened signature is **invisible** — the writer may never notice it is gone. That is precisely the Sourati finding's shape: content preserved, style narrowed, and the loss undetectable from the output. **Bias toward asking follows from the asymmetry, not from timidity.**
+
+### 5A.4 · Deep editing requires the diff
+
+If MAIA reorders paragraphs, cuts repetition, rewrites a transition and tightens four sentences, she must **show what she changed and why.** Reversibility without visibility is technically true and practically useless: **the writer cannot contest what they cannot see.** Under deep editing, the diff is not a nicety — it is the mechanism by which authorship authority is actually exercised.
+
+### 5A.5 · The revised model
+
+```text
+WRITER WORKS DIRECTLY
+        |
+MAIA ADVISES
+        |
+MAIA PROPOSES OPTIONS
+        |
+MAIA EDITS UNDER COMMISSION
+        |
+WRITER REVIEWS / REWRITES / REJECTS / KEEPS
+        |
+MAIA REREADS
+        |
+repeat until the writer is satisfied
+```
+
+Replacing the thinner `writer edits OR MAIA proposes` fork at §5. *"Yes, except this sounds too much like you"* is a lawful and expected turn in this loop.
+
+### 5A.6 · Provenance is transparency, never an ownership claim
+
+The classes at §4 record **how language entered the Work**. They do not adjudicate who authored the book.
+
+```text
+LAWFUL     "MAIA proposed this language; you adopted and modified it."
+BARRED     "MAIA contributed 23% of this chapter."
+```
+
+⛔ **No derived statistic over provenance** — no percentages, no contribution scores, no *"MAIA-assisted"* badge on the Work. **A heavily edited paragraph is still the writer's paragraph and the writer's book.** Provenance exists for transparency and reversibility; aggregating it into a metric converts a safeguard into a claim about authorship, which is the thing it was built to protect.
+
+### 5A.7 · Effect on §6 — the open ruling gets heavier
+
+Deep editing means **far more MAIA-originated language legitimately enters the Work.** The §6 provenance-location question therefore matters more, not less, and **Option 2's failure mode worsens in proportion**: the more MAIA lawfully writes, the more a missing ancestry row silently over-attributes to the writer. ⛔ Still not decided.
 
 ## 6 · ⛔ STOP — the one founder question
 
