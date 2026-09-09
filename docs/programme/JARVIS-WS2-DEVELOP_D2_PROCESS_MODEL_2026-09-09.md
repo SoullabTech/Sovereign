@@ -278,6 +278,48 @@ If the answer is *"MAIA said the ending doesn't land"*, the next act is MAIA's r
 
 ---
 
+## G · North star, and the before-state read against it — **founder, 2026-09-09**
+
+> **MAIA should be like having a developmental editor / writing coach sitting next to you as you go through the writing experience — offering ideas, insights, edits and more, as asked for.**
+
+*"As asked for"* is load-bearing and consistent with §E.3b: the editor beside you does not hand over a rewrite before you have reacted to what they said.
+
+### G.1 · The room states its own thesis in its subtitle
+
+Founder-supplied screen capture of the live Develop room, *Elemental Alchemy* Ch. 4, 2026-09-09. **The header reads:**
+
+> *"What MAIA noticed when she read this work, kept exactly as she noticed it."*
+
+⭐ **That is the critique-first thesis, written by the product, on the product.** §B's diagnosis — *the room has one entrance and it belongs to MAIA* — is not an inference from code alone; it is the room's stated purpose. The subtitle describes a **record of MAIA's noticing**, not a place the writer works.
+
+### G.2 · What the capture adds beyond D1
+
+**(a) The rail makes MAIA a set of destinations, not a presence.** Under `MAIA`: `Conversations · Discover · Insights · Suggestions` — four *places you go*. **Nobody sitting next to you is a menu item.** The navigation contradicts the north star before any interaction occurs.
+
+**(b) The lens picker chooses the lens, not the question.** Seven radio options (`How is it developing? · How is it shaped? · What carries through? · How does the work move? · How does the voice hold? · Does it hold together? · What does the reader meet?`). The writer selects which reading MAIA performs — but **cannot bring their own question**, which is §B entry 1 and the most common way a writer actually arrives.
+
+**(c) ⭐ The `DOES NOT ESTABLISH` block is a written substitute for the conversation the room cannot have.** The observation is followed by four scrupulous disclaimers — *outside coverage · author intent · reader effect · editorial consequence*. **The epistemic discipline is right and hard-won; it must not be traded away.** But a developmental editor sitting beside you does not preface with *"this does not establish author intent."* They say *"I might be wrong — what were you going for?"* and then you talk. **Prose disclaimers are carrying the load that dialogue should carry**, because dialogue has nowhere to happen.
+
+**(d) The room promises what it cannot honour.** *"Nothing changes unless you change it"* — reassuring, and true only because **the writer cannot change anything from here.** D1: the sole outbound link renders inside a refusal branch. The promise of restraint is indistinguishable from the absence of reach.
+
+**(e) `ask MAIA what is worth looking at` exists — and points the wrong way.** It is the one conversational affordance visible, and it asks MAIA to select. §E.5's test applies: after using it, the writer's account of their work is *"MAIA said this was worth looking at."*
+
+### G.3 · The distance to the north star, stated exactly
+
+```text
+TODAY        a scrupulous reader who files careful reports,
+             with disclaimers where the conversation should be
+
+NORTH STAR   someone sitting beside you, who noticed something,
+             will say more if you ask, will show you where,
+             will offer options if you want them,
+             and will hear you when you say they misread it
+```
+
+**The gap is not observation quality.** The observation in the capture is specific, evidence-bound and honest about its limits — it is *good work*. The gap is that **nothing can happen next inside the room.**
+
+⛔ **Recorded as D0/D2 evidence. D3 is not opened and no interface is proposed here.**
+
 ## Gate D2
 
 ```text
