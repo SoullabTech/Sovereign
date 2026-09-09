@@ -203,3 +203,110 @@ intercepting them.** ⛔ **Improvised phrasing is not guaranteed the same path**
 matches inside *offer*, *often*, *effort*, and `'something'` is common.
 
 > ⛔ **Nothing here is a verdict, a prediction, or a substitute for the run.**
+
+---
+
+# 7 · ⭐⭐ FOUNDER WITNESS COMPLETE — M2 · M3 · M4 ALL PASS — 2026-09-09
+
+**Run by the founder in the rebuilt instrument. Verbatim, as given.**
+
+```text
+M2  PASS   "I forgot about it and kept writing."
+M3  PASS   felt like remembering together
+M4  PASS   "It is very helpful."  — support, not evaluation
+```
+
+⭐ **M2's verbatim is the strongest possible form of that verdict.** The falsifier asked whether the
+deferral **released** the writer back into the Work or left obligation on the next sentence.
+*"I forgot about it and kept writing"* is not the absence of a leak-thought — **it is the positive
+report that attention returned to the Work.** ⛔ Nothing was carried.
+
+## 7.1 ⚠️ SCOPE THE M2 PASS — pre-recorded at `3baffcda7`, applied now
+
+**The instrument's deferral branch stores nothing** — `speak('Understood.', null)` into a line the
+next keystroke wipes. **So M2 PASSED on deferral-with-no-storage.**
+
+```text
+ESTABLISHED   "Understood." followed by nothing released the writer
+⛔ NOT YET    that the SPECIFIED behaviour — a durable observation that
+              clears when the writer takes the next turn — also releases
+```
+
+⭐ **The scope note was written BEFORE the run precisely so it could not be discovered afterward as
+an excuse.** It **narrows what M2 discharged; it does not weaken the verdict.** ⚠️ **The durable form
+carries a risk the tested form could not have**: something that persists can be felt to persist.
+**That must be witnessed again when the durable class is built.**
+
+⛔ **The rebuild changed the corpus, not the three handlers** — M2/M3/M4 logic is byte-identical
+across both instrument versions, so the verdicts hold regardless of which build was used.
+
+## 7.2 ⭐⭐ SEPARATE FINDING — **the field invites generative work**
+
+**Founder ruling: this must NOT be collapsed into the M4 verdict.** Verbatim:
+
+> **"It makes me want to ask more detailed questions and search for generative solutions with the
+> help of MAIA, enter it in and reevaluate."**
+
+⭐ **M4 asked only whether orientation arrived as support rather than rubric. It did. But what the
+writer reported next was not a judgement about the answer — it was a MOVE TOWARD THE WORK.** The
+response did not terminate in an evaluation; **it opened a next act that belongs to the writer.**
+
+> ⭐ **Founder: "That describes the desired Writer–MAIA relationship better than a lot of the
+> architecture we've written around it."**
+
+⚠️ **Recorded as a positive finding with no falsifier yet.** It is the first evidence in this lane of
+the **generative** direction rather than the protective one — every falsifier so far tests what MAIA
+must not do; **this names something MAIA should cause.** ⛔ Not converted into a law here.
+
+## 7.3 ⭐ ADOPT
+
+```text
+M2 / M3 / M4      PASS
+STRUCTURAL PASS   previously adjudicated
+GENERAL WITNESS   PASS
+WITNESS TABLE     four dimensions recorded
+
+ADOPT             ⭐ NO LONGER WITHHELD
+D9                ⭐ MAY OPEN
+```
+
+⛔ **Unchanged by ADOPT:** F-ABSENCE · F-STRATEGY · F-NORMALIZATION · F-CAPACITY (longitudinal) ·
+F-REACTIVE remain open against any build. **ADOPT is of the amended architecture, not of any
+implementation.**
+
+## 7.4 · Write-room design harvest (founder direction — recorded, not designed)
+
+> ⭐ **Write should feel like a creative field with intelligence available inside it — not an editor
+> squeezed between controls.**
+
+**Six qualities to harvest — ⛔ harvest the QUALITIES, do not copy the artifact UI literally:**
+
+```text
+1  the Work dominates the visual field
+2  MAIA is adjacent to the Work, not surrounding it with interface
+3  conversation happens FROM the same field you write in — you never
+   leave the manuscript to operate an AI tool
+4  MAIA's response is provisional and relational — somewhere to go next,
+   not a diagnostic dashboard
+5  the technical apparatus disappears — entering a place to write, not
+   content inside software
+6  the next act remains the writer's
+```
+
+**The felt rhythm — ⛔ not a wizard, not visible steps:**
+
+```text
+WRITE → NOTICE / ASK MAIA → MAIA REFLECTS → EXPLORE TOGETHER →
+WRITER CHANGES SOMETHING, OR DOESN'T → READ AGAIN IN CONTEXT → CONTINUE
+```
+
+⭐ **Product distinction, founder:**
+
+```text
+STUDIO HOME   helps me MANAGE my Work
+WRITE         lets me INHABIT my Work
+```
+
+**Technical controls — version, structure, Source/Draft, modes, tools — still exist, but recede from
+the primary writing field.** *Architecture supporting the room, not furniture piled into the middle
+of it.* ⛔ **No implementation authorized by this record.**
