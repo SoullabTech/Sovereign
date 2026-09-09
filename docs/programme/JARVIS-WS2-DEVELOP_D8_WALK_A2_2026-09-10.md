@@ -1,6 +1,21 @@
 # D8 walk · Candidate A · The Margin · Moment 2 — several things become noticeable
 
-**Status**: **WALK CELL A/M2 RENDERED. NO VERDICT. NO AMENDMENT.**
+**Status**: ⭐ **STRUCTURAL FAILURE — founder ruling 2026-09-10.** Candidate A is **not adoptable as specified.**
+
+> **Ruling.** Not because nine marks are ugly. Because **the architecture cannot truthfully represent the basic object developmental work produces.** A developmental finding may be distributed, relational, recurrent, or located at a seam. In A, a mark's identity *is* its place — so one finding becomes several apparent objects and **the representation changes the cardinality of the thing represented.** That is semantic failure, not density pressure.
+>
+> **Did *"the margin becomes a list"* happen? Yes, functionally.** A list needs no numbers, badges or panel — nine visible marks are already a perceptual inventory.
+>
+> ⛔ **Not repaired here.** The obvious fix — one observation identity anchored at several loci — technically solves the false cardinality, but it makes the finding exist independently of its locations, so place becomes *evidence* rather than the thing organizing identity. **That is no longer A.** It may be an excellent eventual synthesis; it is not a small repair to The Margin.
+>
+> ```text
+> A/M1   strong PASS on wordless / local arrival
+> A/M2   STRUCTURAL FAIL for developmental representation
+> A      NOT ADOPTABLE AS SPECIFIED
+>        possible ingredient: local margin interaction inside another architecture
+> ```
+>
+> **The walk continues** — M3 and M4 can still show whether A's strengths belong in the eventual architecture.
 **Carried**: `A-FINDING` from A/M1 — *place is sufficient for local encounter; some legitimate developmental observations have scope without a single locus.* **Carried as amendment pressure, not repaired** — repairing A mid-test would let it adapt while B and C stay frozen.
 
 ---
