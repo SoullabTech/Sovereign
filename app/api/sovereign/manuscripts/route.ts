@@ -55,44 +55,94 @@ export async function GET(request: NextRequest) {
       char_count: string;
       keep_count: string;
       last_written_at: string | null;
+      draft_char_count: string | null;
+      has_draft_writing: boolean;
+      has_writing: boolean;
+      has_current_member_contribution: boolean;
     }>(
       `SELECT m.id, m.title, m.created_at,
               (SELECT count(*) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS section_count,
               (SELECT coalesce(sum(length(s.body)), 0) FROM manuscript_sections s WHERE s.manuscript_id = m.id) AS char_count,
               (SELECT count(*) FROM manuscript_keeps k WHERE k.manuscript_id = m.id) AS keep_count,
-              -- WRITING ACTIVITY — a member act, not a row mutation.
+              -- ⛔ DRAFT ACTIVITY — a member act, but NOT NECESSARILY WRITING.
               --
-              -- ⚠️ CORRECTED 2026-08-14. The previous version returned the raw
-              -- working-draft updated_at and its comment claimed that column
-              -- "moves when the member actually writes". Production disproved
-              -- that: manuscript 33a9233c carries 374,697 characters with
-              -- created_at == updated_at == 08-06 18:02:42 — manuscript, draft
-              -- and its only revision all written in the SAME SECOND by the
-              -- import path, and never touched since. Studio Home would have
-              -- offered to "continue writing" a book nobody had written a word
-              -- of in this system.
+              -- ⚠️ CORRECTED 2026-09-08 (STUDIO-WRITING-PRESENCE-01). The
+              -- previous version of this comment enumerated the writers to
+              -- updated_at and concluded that the column advances only when
+              -- the member actually writes. That enumeration was INCOMPLETE and
+              -- the conclusion was FALSE:
               --
-              -- The discriminator is exact rather than heuristic, and rests on
-              -- an enumeration of every writer to this column on this SHA:
-              --   draft INSERT (seed from sections) — no updated_at → == created
-              --   blank INSERT (empty page)         — no updated_at → == created
-              --   draft UPDATE (save / autosave)    — updated_at = now()  MEMBER
-              --   revisions UPDATE (restore)        — updated_at = now()  MEMBER
-              -- No migration backfills the column. So updated_at can only have
-              -- advanced past created_at through a member act, and equality
-              -- means the row has only ever been created.
+              --   draft/checkpoint/route.ts:145  UPDATE manuscript_working_drafts
+              --      SET version, revision_count, updated_at, last_idempotency_*
+              --      ⛔ and NO content.
               --
-              -- ⛔ If a future migration, normalisation job, or import-completion
-              -- step ever writes updated_at, this stops being authority and the
-              -- Home needs a dedicated authored-activity signal. Re-run the
-              -- enumeration before trusting it again.
+              -- So a member may import a book, let the draft be seeded verbatim,
+              -- press "Keep a version", and advance BOTH updated_at and the
+              -- revision trail without authoring a single character. The two
+              -- signals are not independent evidence of authorship; they report
+              -- the same weaker fact — that a post-creation draft act occurred.
               --
-              -- NULL = no writing has happened here. Studio Home requires this
-              -- AND charCount > 0 before a Work is continuable, and never uses
-              -- living_works.updated_at, which a rename moves.
+              -- What this column therefore establishes is MEMBER DRAFT ACTIVITY:
+              -- saving, checkpointing, restoring, or editing. It does not
+              -- establish writing, and nothing may render it as a writing time.
+              -- Authorship is established below, by
+              -- has_current_member_contribution, against the durable
+              -- revision-1 baseline.
+              --
+              -- Kept as last_written_at on the wire only to avoid unrelated
+              -- compatibility work. ⛔ It may not be used as authority for
+              -- continuability and may not render as "written <when>".
               (SELECT CASE WHEN d.updated_at > d.created_at THEN d.updated_at END
                  FROM manuscript_working_drafts d
-                WHERE d.manuscript_id = m.id) AS last_written_at
+                WHERE d.manuscript_id = m.id) AS last_written_at,
+
+              -- STUDIO-WRITING-PRESENCE-01 · three truths, none standing in for
+              -- another. char_count above is SOURCE extent and stays that.
+              (SELECT length(d.content) FROM manuscript_working_drafts d
+                WHERE d.manuscript_id = m.id) AS draft_char_count,
+
+              -- Substantive draft presence. Whitespace is not writing; this is a
+              -- PRESENCE TEST ONLY and alters nothing that is stored or shown.
+              --
+              -- NOT btrim(). PostgreSQL's one-argument btrim strips ORDINARY
+              -- SPACES only, so a draft of tabs or newlines would have passed as
+              -- writing while the design said it must not. The POSIX class is the
+              -- predicate the design actually describes: does any non-whitespace
+              -- character exist at all?
+              (SELECT d.content ~ '[^[:space:]]'
+                 FROM manuscript_working_drafts d
+                WHERE d.manuscript_id = m.id) IS TRUE AS has_draft_writing,
+
+              -- Writing exists in EITHER lifecycle layer. Deliberately an OR and
+              -- not the CASE the extent uses: an emptied draft over a Source that
+              -- still holds the book is not "no writing".
+              ((SELECT d.content ~ '[^[:space:]]'
+                  FROM manuscript_working_drafts d
+                 WHERE d.manuscript_id = m.id) IS TRUE
+               OR EXISTS (SELECT 1 FROM manuscript_sections s
+                           WHERE s.manuscript_id = m.id AND s.body ~ '[^[:space:]]'))
+                AS has_writing,
+
+              -- ⭐ AUTHORSHIP: does the current draft diverge from the baseline
+              -- every creation path writes as revision 1 ('Started writing' for a
+              -- blank page, 'Initialized verbatim from source' for a seeded one)?
+              -- Nothing prunes revisions, so the baseline is durable.
+              --
+              -- ⛔ FAILS CLOSED. A draft with no revision 1 — a legacy row
+              -- predating both creation paths — yields FALSE. A Work must not
+              -- become continuable because its evidence is absent.
+              --
+              -- The length test is first so a genuine edit short-circuits before
+              -- two long texts are compared; equal-length cases (a verbatim seed,
+              -- a checkpoint) fall through to the content comparison, which is
+              -- what actually decides them.
+              (SELECT length(d.content) IS DISTINCT FROM length(r1.content)
+                   OR d.content IS DISTINCT FROM r1.content
+                 FROM manuscript_working_drafts d
+                 JOIN working_draft_revisions r1
+                   ON r1.draft_id = d.id AND r1.revision_number = 1
+                WHERE d.manuscript_id = m.id) IS TRUE
+                AS has_current_member_contribution
          FROM member_manuscripts m
         WHERE m.member_id = $1
         ORDER BY m.created_at DESC`,
@@ -106,7 +156,11 @@ export async function GET(request: NextRequest) {
         sectionCount: Number(r.section_count),
         charCount: Number(r.char_count),
         keepCount: Number(r.keep_count),
-        lastWrittenAt: r.last_written_at,
+        lastMemberDraftActivityAt: r.last_written_at,
+        draftCharCount: r.draft_char_count === null ? null : Number(r.draft_char_count),
+        hasDraftWriting: r.has_draft_writing === true,
+        hasWriting: r.has_writing === true,
+        hasCurrentMemberContribution: r.has_current_member_contribution === true,
       })),
     });
   } catch (err) {

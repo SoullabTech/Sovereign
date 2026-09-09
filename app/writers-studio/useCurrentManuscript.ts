@@ -24,11 +24,28 @@ export interface CurrentManuscript {
   charCount: number;
   keepCount: number;
   /**
-   * When the member last WROTE here — a member act, never a row mutation.
-   * NULL when the draft has only ever been created (seeded import or blank
-   * page), which the API distinguishes by `updated_at > created_at`.
+   * ⛔ MEMBER DRAFT ACTIVITY, NOT WRITING TIME. Advances on save, checkpoint,
+   * restore or edit — a checkpoint moves it without changing a character (see
+   * the API comment). Kept under its legacy wire name; it may not be used as
+   * authority for continuability and may not render as "written <when>".
    */
-  lastWrittenAt: string | null;
+  lastMemberDraftActivityAt: string | null;
+
+  /* STUDIO-WRITING-PRESENCE-01 — Source, writing presence and authorship are
+     three different truths; none may stand in for another. `charCount` above is
+     SOURCE extent and is unchanged. */
+
+  /** Raw extent of the current Working Draft. NULL when no draft row exists. */
+  draftCharCount: number | null;
+  /** Substantive draft presence — whitespace is not writing. */
+  hasDraftWriting: boolean;
+  /** Substantive writing exists in EITHER layer. An OR, never the extent's CASE. */
+  hasWriting: boolean;
+  /**
+   * The current draft diverges from the revision-1 baseline: the member has
+   * authored here. FALSE when the baseline is missing — fail closed.
+   */
+  hasCurrentMemberContribution: boolean;
 }
 
 export type ManuscriptPhase = 'loading' | 'none' | 'ready' | 'unauthorized' | 'error';

@@ -16,7 +16,7 @@ import type { LivingWork } from './useLivingWorks';
  * ⛔ NOT `living_work.updatedAt`. A Work row changing does not establish that
  * the writer last worked there — renaming it, declaring a form, or attaching
  * a material all move that timestamp without a word being written.
- * ✅ `manuscript.lastWrittenAt` — the working draft's updated_at, which moves
+ * ✅ `manuscript.lastMemberDraftActivityAt` — the working draft's updated_at, which moves
  * when the member actually writes. NULL means no writing has happened.
  *
  * If no work has writing activity, there is no trustworthy continuation
@@ -63,12 +63,38 @@ const time = (iso: string | null | undefined): number => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+/**
+ * STUDIO-WRITING-PRESENCE-01 — HOME WRITING EXTENT, ratified 2026-09-08.
+ *
+ * How much writing Studio Home should treat as presently available: the current
+ * representation governs WHILE it holds substantive writing; when it holds none,
+ * Source supplies the extent of the writing that still exists.
+ *
+ * ⛔ NEVER `max(source, draft)` — that would let abandoned Source extent
+ * overrule a deliberately shortened current draft.
+ * ⛔ NEVER a sum — Source and Draft are one book at two lifecycle layers.
+ *
+ * Lives HERE, exported, and is used by BOTH the foregrounding sort and the page
+ * estimate on the card. Two call sites, one definition: a second copy of this
+ * rule would drift, and the whole lane exists because one number was answering
+ * a question it did not know.
+ *
+ * ⛔ Not called `writingCharCount`. It answers a product question about what to
+ * foreground and how much to say is there — derived presentation semantics must
+ * not masquerade as a property of the manuscript. `charCount` remains SOURCE
+ * extent and is unchanged.
+ */
+export const homeWritingExtent = (
+  m: Pick<CurrentManuscript, 'charCount' | 'draftCharCount' | 'hasDraftWriting'>,
+): number => (m.hasDraftWriting ? (m.draftCharCount ?? 0) : m.charCount);
+
 export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]): Arrival {
   const byId = new Map(manuscripts.map((m) => [m.id, m]));
   const claimed = new Set(works.map(manuscriptIdOf).filter(Boolean) as string[]);
+  /* STUDIO-WRITING-PRESENCE-01 · S3 — ranked by `homeWritingExtent`. */
   const unclaimed = [...manuscripts]
     .filter((m) => !claimed.has(m.id))
-    .sort((a, b) => b.charCount - a.charCount);
+    .sort((a, b) => homeWritingExtent(b) - homeWritingExtent(a));
 
   /**
    * Writing activity for a work — never the work row's own updatedAt, and
@@ -95,7 +121,7 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
    *    charCount guard alone cannot see this — the characters are real, they
    *    were simply never written HERE.
    *
-   * (2) is now excluded at the API boundary: `lastWrittenAt` is NULL unless
+   * (2) is now excluded at the API boundary: the timestamp is NULL unless
    * `updated_at > created_at`, so this module receives a member act or nothing.
    * The guard below still requires characters, so both failures are closed.
    */
@@ -103,8 +129,38 @@ export function arrivalFor(works: LivingWork[], manuscripts: CurrentManuscript[]
     const id = manuscriptIdOf(w);
     if (!id) return 0;
     const m = byId.get(id);
-    if (!m || m.charCount <= 0) return 0;
-    return time(m.lastWrittenAt);
+    /**
+     * STUDIO-WRITING-PRESENCE-01 · S2, ratified 2026-09-08.
+     *
+     * ⛔ `charCount > 0` was SOURCE extent, which is 0 forever for anything
+     * begun in the Studio — so a Work the member is actively writing could
+     * never be offered back to them. That is the defect this replaces.
+     *
+     * Continuable requires BOTH:
+     *   hasWriting                    there is something to continue, and
+     *   hasCurrentMemberContribution  the member authored it HERE — the current
+     *                                 draft diverges from its revision-1 baseline.
+     *
+     * The conjunction lives here rather than inside either fact, so neither name
+     * secretly carries the other's meaning. It preserves the original CONTINUE
+     * discipline exactly: a touched-but-empty draft fails the first, and a
+     * verbatim seed — including one the member has merely CHECKPOINTED — fails
+     * the second.
+     */
+    if (!m || !m.hasWriting || !m.hasCurrentMemberContribution) return 0;
+    /**
+     * ⛔ ORDERING ONLY, AMONG WORKS ALREADY PROVEN CONTINUABLE.
+     *
+     * A checkpoint advances this timestamp without changing a character, so it
+     * cannot establish WHEN the member wrote. It can say where they last
+     * engaged — which is a lawful basis for ordering Works that have already
+     * passed the eligibility test above, and is not a basis for any claim about
+     * recency of writing. The surface copy says "Also written", never "recently".
+     *
+     *   eligibility : hasWriting && hasCurrentMemberContribution
+     *   ordering    : latest member draft activity
+     */
+    return time(m.lastMemberDraftActivityAt);
   };
 
   const written = works.filter((w) => writtenAt(w) > 0).sort((a, b) => writtenAt(b) - writtenAt(a));

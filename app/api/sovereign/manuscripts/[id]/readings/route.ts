@@ -31,6 +31,8 @@ import { query } from '@/lib/db/postgres';
 import { isDevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { commissionReading, type CommissionStage } from '@/lib/manuscript/developmentalReading/commission';
 import { listReadings } from '@/lib/manuscript/developmentalReading/store';
+import { normalizeDetail, recordRefusal } from '@/lib/manuscript/developmentalReading/refusalRecord';
+import { CAUSE_UNKNOWN } from '@/lib/manuscript/developmentalReader/contract';
 
 export const dynamic = 'force-dynamic';
 
@@ -195,8 +197,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const outcome = await commissionReading({ manuscriptId, memberId, lens, bodyScope, withStructure });
   if (outcome.outcome === 'refused') {
+    /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · O-4. The operator's record, written
+       before the response leaves — a refusal that only ever existed in one
+       browser tab is the defect this repairs. Normalized fields only (O-5);
+       `detail` itself never reaches disk. Not awaited: the member's refusal
+       does not wait on telemetry, and `recordRefusal` never throws. */
+    const { detailKind, claimIndex, refIndex } = normalizeDetail(outcome.detail);
+    const cause = outcome.cause ?? CAUSE_UNKNOWN;
+    void recordRefusal({
+      timestamp: new Date().toISOString(),
+      manuscriptId, lens, stage: outcome.stage, refusal: outcome.refusal,
+      detailKind, claimIndex, refIndex,
+      completion: cause.completion, attribution: cause.attribution,
+      stopReason: cause.stopReason,
+      inputTokens: cause.inputTokens, outputTokens: cause.outputTokens,
+      readerVersion: cause.readerVersion, promptHash: cause.promptHash,
+    });
     return NextResponse.json(
-      { refusal: outcome.refusal, stage: outcome.stage, detail: outcome.detail },
+      { refusal: outcome.refusal, stage: outcome.stage, detail: outcome.detail,
+        /* The two axes reach the surface so the member's sentence can be chosen
+           from what is known, rather than from the stage alone (O-2, O-3). */
+        completion: cause.completion, attribution: cause.attribution },
       { status: statusFor(outcome.stage, outcome.refusal) });
   }
   const { reading } = outcome;

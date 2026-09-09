@@ -39,7 +39,12 @@ describe('develop surface — what it may reach', () => {
        declares an empty import allow-list of its own, so reaching it cannot
        reach anything else. It carries the four shapes a reading scope may
        take and no behaviour at all. */
-    const allowed = new Set(['contract', 'store', 'assess', 'commission', 'scope']);
+    /* `refusalRecord` joined for WS-DEVELOP-REFUSAL-TRUTH-OBS-01. It is
+       telemetry, not cognition: it writes normalized diagnostics about a
+       refusal that kept nothing, reaches no database and no reader behaviour,
+       and cannot produce, alter or reveal a reading. The gate this test exists
+       to hold — the surface may not perform the read — is untouched by it. */
+    const allowed = new Set(['contract', 'store', 'assess', 'commission', 'scope', 'refusalRecord']);
     for (const [name, rel] of Object.entries(FILES)) {
       for (const spec of importsOf(read(rel))) {
         const m = READING_UNIT.exec(spec);
