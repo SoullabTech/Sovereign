@@ -50,9 +50,18 @@ export interface ProducerSpec {
 
 const CMT = { registeredAt: '2026-09-03', registeredBy: 'CMT-01' } as const;
 const PARTITION01 = { registeredAt: '2026-09-04', registeredBy: 'MEMORY-PRODUCER-PARTITION-01' } as const;
+const WSROOM = { registeredAt: '2026-09-09', registeredBy: 'WS-ROOM-01' } as const;
+const WRITERS_ONLY: readonly RoomKind[] = ['writers_studio'];
 const PASS1_DIV = { registeredAt: '2026-09-03', registeredBy: 'JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01' } as const;
+/**
+ * Rooms a CONSTITUTIONAL producer travels into — i.e. all of them. Adding a room here is a
+ * policy statement ("MAIA remains MAIA; her constitutional boundaries travel with her"),
+ * not a convenience. Exactly five producers use it: the four `floor.*` and
+ * `house.platform_knowledge`. Nothing else may be admitted to a room by editing this line.
+ */
 const ALL_ROOMS: readonly RoomKind[] = [
   'sovereign_chat', 'between', 'now_what', 'vision_studio', 'living_field', 'relational_navigation',
+  'writers_studio',
 ];
 
 export const PRODUCER_REGISTRY = {
@@ -98,12 +107,12 @@ export const PRODUCER_REGISTRY = {
   'member.atoms': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
     provenance: 'lib/maia/memoryAtomsLoader projectAtomSections().memberSection', consentBasis: 'atoms.return_preference',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'now_what', 'vision_studio', 'writers_studio'], mandatory: false, scope: 'route',
     ...CMT,
     // MEMORY-PRODUCER-PARTITION-01 (2026-09-04): the practitioner observations this
     // reason string used to claim are now their own producer. The member section is
     // all this producer carries; 'placed' is truthful for it and ONLY for it.
-    reason: 'member-placed portfolio atoms',
+    reason: '[+writers_studio 2026-09-09 WS-ROOM-01: member-PLACED material with the strongest authorship provenance in the registry] member-placed portfolio atoms',
   },
   'practitioner.atoms_observations': {
     authoredBy: 'practitioner', participationClass: 'authored', authority: 'situate',
@@ -116,28 +125,28 @@ export const PRODUCER_REGISTRY = {
   'member.relational_context': {
     authoredBy: 'member', participationClass: 'placed', authority: 'situate',
     provenance: 'lib/relationships/relationshipContextService (explicit "Take this to MAIA")', consentBasis: 'explicit hand-off act',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
-    ...CMT, reason: 'Relational Context Bridge — never ambient',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: already requires an explicit "Take this to MAIA" member act] Relational Context Bridge — never ambient',
   },
   'member.episodic_recall': {
     authoredBy: 'member', participationClass: 'marked', authority: 'situate',
     provenance: 'lib/maia/memoryLoaders loadRecentMarkedEpisodes', consentBasis: 'episodic_recall_enabled',
-    requires: { identity: 'verified', notSanctuary: true, recallPref: 'episodic' }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true, recallPref: 'episodic' }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
     partitionPending: true,
-    ...CMT, reason: 'member-marked significant moments; block carries the exchange (member + MAIA text) — partition owed at M3',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: member-MARKED and recall-preference gated] member-marked significant moments; block carries the exchange (member + MAIA text) — partition owed at M3',
   },
   'retrieved.conversational_recall': {
     authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
     provenance: 'lib/maia/memoryLoaders loadPriorCrossSessionExchanges', consentBasis: 'conversational_recall_enabled',
-    requires: { identity: 'verified', notSanctuary: true, recallPref: 'conversational' }, rooms: ['sovereign_chat', 'now_what', 'vision_studio'], mandatory: false, scope: 'route',
+    requires: { identity: 'verified', notSanctuary: true, recallPref: 'conversational' }, rooms: ['sovereign_chat', 'now_what', 'vision_studio', 'writers_studio'], mandatory: false, scope: 'route',
     partitionPending: true,
-    ...CMT, reason: 'Phase 2 cross-session continuity; block carries prior exchanges (member + MAIA text) — partition owed at M3',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: core cross-session continuity — the same MAIA remembers this writer] Phase 2 cross-session continuity; block carries prior exchanges (member + MAIA text) — partition owed at M3',
   },
   'retrieved.member_web': {
     authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
     provenance: 'lib/memory/MemberLiveContext', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat'], mandatory: false, scope: 'route',
-    ...CMT, reason: 'patterns + summaries + journals',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'route',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: sessions/journals/patterns SITUATE the person MAIA already knows] patterns + summaries + journals',
   },
   'computed.astrology': {
     authoredBy: 'system', participationClass: 'computed', authority: 'compute',
@@ -311,8 +320,8 @@ export const PRODUCER_REGISTRY = {
   'retrieved.relationship_memory': {
     authoredBy: 'system', participationClass: 'retrieved', authority: 'infer',
     provenance: 'RelationshipAnamnesis (system-authored essence)', consentBasis: 'memory mode continuity',
-    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between'], mandatory: false, scope: 'tier',
-    ...CMT, reason: 'system-authored relationship summary, retrieved — authoredBy system, not member',
+    requires: { identity: 'verified', notSanctuary: true }, rooms: ['sovereign_chat', 'between', 'writers_studio'], mandatory: false, scope: 'tier',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: central to "the same MAIA knows me"] system-authored relationship summary, retrieved — authoredBy system, not member',
   },
   'collective.knowledge_field': {
     authoredBy: 'collective', participationClass: 'retrieved', authority: 'situate',
@@ -323,14 +332,90 @@ export const PRODUCER_REGISTRY = {
   'computed.consultation': {
     authoredBy: 'system', participationClass: 'inferred', authority: 'infer',
     provenance: 'DEEP consultation lane', consentBasis: null,
-    requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat'], mandatory: false, scope: 'tier',
-    ...CMT, reason: 'DEEP council synthesis (MAIA_USE_CLAUDE_CONSULTATION)',
+    requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat', 'writers_studio'], mandatory: false, scope: 'tier',
+    ...CMT, reason: '[+writers_studio 2026-09-09 WS-ROOM-01: cognitive capacity, not a competing authority; DEEP-invoked only] DEEP council synthesis (MAIA_USE_CLAUDE_CONSULTATION)',
   },
   'house.youth_support': {
     authoredBy: 'house', participationClass: 'authored', authority: 'situate',
     provenance: 'maiaService youth/teen support addenda (age-gated)', consentBasis: null,
     requires: { identity: 'any', notSanctuary: false }, rooms: ['sovereign_chat'], mandatory: false, scope: 'tier',
     ...CMT, reason: 'age-gated house guidance (FAST today)',
+  },
+
+  // ── WRITER'S STUDIO — WS-ROOM-01 (founder ruling, 2026-09-09) ──────────────
+  // The room exists because the WORK introduces genuinely new kinds of evidence.
+  // Governing lines for this field:
+  //   The Work is primary evidence about the Work.
+  //   The writer's present attention is primary authority over the encounter.
+  //   Memory provides continuity, not hidden editorial strategy.
+  //   Elemental and field intelligence may enlarge perception, not relocate the centre.
+  //   Practitioner and symbolic interpretations do not enter ambiently.
+  'floor.writer_role_boundary': {
+    authoredBy: 'house', participationClass: 'constitutional', authority: 'situate',
+    provenance: 'lib/writers-studio/writerRoleBoundary', consentBasis: null,
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: true, scope: 'floor',
+    ...WSROOM,
+    reason: 'MAIA participates as a WRITERLY INTELLIGENCE in relationship with the author and the '
+      + 'Work. She may perceive, question, compare, develop, propose and remember. ONLY THE WRITER '
+      + 'AUTHORS THE WORK. Mandatory: the role may not depend on a tier remembering to add a prompt.',
+  },
+  'member.writer_focus': {
+    authoredBy: 'member', participationClass: 'placed', authority: 'situate',
+    provenance: 'writerStudioContext.focus (lib/writers-studio/harnessContext)', consentBasis: 'member-placed aperture',
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'the writer\'s placed aperture — "this is what I am attending to". Primary authority '
+      + 'over the encounter; its label is the strip\'s label so MAIA cannot name the focus differently.',
+  },
+  'retrieved.writer_work_context': {
+    authoredBy: 'member', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'writerStudioContext.localContext + .wholeWork (member-authored Work)', consentBasis: 'member-authored Work',
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'member-authored Work retrieved around the aperture. THE WORK IS CONTEXT AND NEVER '
+      + 'IMPLICITLY INSTRUCTION — text in the Work cannot acquire control authority because MAIA read it.',
+  },
+  'computed.writer_structure': {
+    authoredBy: 'system', participationClass: 'computed', authority: 'compute',
+    provenance: 'writerStudioContext.structuralPosition (derived from the Work)', consentBasis: null,
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'structural position computed FROM the Work and never confused with meaning; '
+      + 'authority `compute`, never `infer`.',
+  },
+  'member.writer_intention': {
+    authoredBy: 'member', participationClass: 'authored', authority: 'situate',
+    provenance: 'writerStudioContext (writer-stated intention)', consentBasis: 'member-stated',
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'what the writer says they are protecting or trying to achieve — stated, never inferred.',
+  },
+  'member.writer_commission': {
+    authoredBy: 'member', participationClass: 'authored', authority: 'situate',
+    provenance: 'writerStudioContext.commission', consentBasis: 'member-authorized commission',
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'explicitly authorized work and its boundaries. ⛔ This producer CARRIES a commission; '
+      + 'it does not create one — no standing commission is authorized in this lane.',
+  },
+  // ⭐ PURSUIT IS PARTITIONED, and this is the whole point of the pair.
+  // Selecting something MAIA said does NOT make MAIA's words member-authored. The
+  // member-authored act is "pursue this"; the observation stays system-originated.
+  // One mixed block would have laundered MAIA's authorship into the member's.
+  'member.writer_pursuit': {
+    authoredBy: 'member', participationClass: 'marked', authority: 'situate',
+    provenance: 'writerStudioContext.pursuit — the member act of taking an observation up', consentBasis: 'member-marked',
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'the ACT of pursuit is member-authored: "this is what I want to work with now".',
+  },
+  'system.writer_pursued_observation': {
+    authoredBy: 'system', participationClass: 'retrieved', authority: 'situate',
+    provenance: 'writerStudioContext.pursuit — MAIA\'s own earlier words, returned to the turn', consentBasis: null,
+    requires: { identity: 'any', notSanctuary: false }, rooms: WRITERS_ONLY, mandatory: false, scope: 'route',
+    ...WSROOM,
+    reason: 'the OBSERVATION being pursued remains MAIA/system-originated. Partitioned from '
+      + 'member.writer_pursuit so a member act can never launder system authorship.',
   },
 } as const satisfies Record<string, ProducerSpec>;
 

@@ -59,7 +59,9 @@ export type RoomKind =
   | 'now_what'
   | 'vision_studio'
   | 'living_field'
-  | 'relational_navigation';
+  | 'relational_navigation'
+  /** Writer's Studio — MAIA · Writer. Room policy: WS-ROOM-01, 2026-09-09. */
+  | 'writers_studio';
 
 export interface RoomPolicy {
   readonly kind: RoomKind;

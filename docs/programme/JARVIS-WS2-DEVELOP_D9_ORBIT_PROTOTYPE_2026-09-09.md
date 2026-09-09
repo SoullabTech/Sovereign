@@ -1891,3 +1891,124 @@ The room is **not** ported · `writerStudioContext` is **not** yet carried on th
 **no** producers are registered · **no** `writers_studio` room exists · the cognition receipt is
 **not** built · the fixture responder is untouched (it lives in the artifact, not in Sovereign) ·
 production Writer's Studio is **untouched**.
+
+---
+
+# 31 · WS-ROOM-01 — WRITER'S STUDIO IS A REAL ROOM
+
+> ⭐⭐ **Writer's Studio admits CONTINUITY before INTERPRETATION.**
+> ⭐⭐ **Bring the whole MAIA. Admit only what belongs.**
+
+**Founder ruling 2026-09-09.** The room is created explicitly rather than inheriting Sovereign Chat
+by convenience.
+
+```text
+writers_studio   persists true · memberAboutAllowed true · fieldCompositionAllowed false
+```
+
+**`persists: true`** — Writer's Studio is meant to become a longitudinal relationship with a Work;
+*"remember the thread" cannot be satisfied by a room that constitutionally forgets.* ⛔ Authorizes
+ordinary MAIA turn continuity **only** — not new silent Writer-role memories, commissions, or
+manuscript mutations. **`memberAboutAllowed: true`** — ⛔ *no amnesiac editorial copy of her.*
+**`fieldCompositionAllowed: false`** — that flag is specifically permission to compose a
+**practitioner** field, and this is not a practitioner encounter. ⛔ It does **not** forbid elemental
+or field intelligence; those are owed their own truthful producers.
+
+## 31.1 · The governing lines
+
+> **The Work is primary evidence about the Work.**
+> **The writer's present attention is primary authority over the encounter.**
+> **Memory provides continuity, not hidden editorial strategy.**
+> **Elemental and field intelligence may enlarge perception, but may not relocate the centre.**
+> **Practitioner and symbolic interpretations do not enter ambiently.**
+
+⭐ *MAIA may know you. She should know you. But your personal history should not become a hidden
+explanation of why you wrote a paragraph the way you did.*
+
+## 31.2 · Built — design first, registration second
+
+`RoomKind` += `writers_studio` · `ROOM_POLICIES.writers_studio` · **12 existing producers admitted**
+(5 constitutional via `ALL_ROOMS`, 7 named one at a time, each carrying a dated `[+writers_studio]`
+reason) · **8 new writer producers** · registry 42 → **50 entries** · `lib/writers-studio/` boundary
+from §30.
+
+⭐ **`ALL_ROOMS` turned out to contain exactly the five producers the ruling admits
+constitutionally** — the four `floor.*` and `house.platform_knowledge`. Nothing else uses it, so it
+is now documented as a policy statement rather than a convenience, and the file says in as many
+words that no other producer may be admitted by editing that line.
+
+**The room's own producers**, because the Work introduces genuinely new kinds of evidence:
+
+```text
+floor.writer_role_boundary          house/constitutional/situate   MANDATORY, this room only
+member.writer_focus                 member/placed/situate
+retrieved.writer_work_context       member/retrieved/situate
+computed.writer_structure           system/computed/compute
+member.writer_intention             member/authored/situate
+member.writer_commission            member/authored/situate
+member.writer_pursuit               member/marked/situate
+system.writer_pursued_observation   system/retrieved/situate
+```
+
+⭐ **`floor.writer_role_boundary` is mandatory**, so the role cannot depend on a tier remembering to
+add a prompt: *MAIA participates as a writerly intelligence in relationship with the author and the
+Work. She may perceive, question, compare, develop, propose and remember. **Only the writer authors
+the Work.*** It is scoped to this room alone — a role contract, not a new global law.
+
+⭐⭐ **Pursuit is partitioned, and that is the whole point of the pair.** Selecting something MAIA
+said does **not** make her words member-authored. The member-authored act is *"pursue this"*; the
+observation stays system-originated. **One mixed block would have laundered MAIA's authorship into
+the member's** — the provenance lesson the registry already learned elsewhere, applied before the
+mistake rather than after.
+
+## 31.3 🔴 TWO THINGS THE RULING DID NOT COVER — surfaced, not decided
+
+**(1) ⚠️ Two producers admitted BY NAME carry `authority: 'infer'`.**
+
+```text
+computed.consultation          system / inferred  / infer
+retrieved.relationship_memory  system / retrieved / infer
+```
+
+The ruling's principle is that memory may **situate** but not silently **steer** — which is exactly
+why `inferred.memory_influence` is excluded in as many words. These two are admitted because they
+were **named**, not because they satisfy that principle. **The other ten admitted producers all
+`situate` or `compute`.**
+
+⛔ **Recorded, not resolved.** A test pins the exception at exactly two, so a third can never be
+added quietly and the divergence cannot dissolve into *"inference was always allowed here"*. The
+standing question: **is `retrieved.relationship_memory` — system-authored inference about the member
+— the thing that makes MAIA know this writer, or the thing that becomes a hidden explanation of why
+they wrote a paragraph the way they did?** *It is currently classified as the second and admitted as
+the first.*
+
+**(2) ⚠️ Six producers were not in the ruling table at all.**
+
+```text
+member.capture_context · member.journal_context · retrieved.significant_moments
+declared.epistemic_path · declared.scribe_session_discussion · house.place
+```
+
+All six are `authority: 'situate'`, so admitting them is arguable — **which is exactly why the
+default must be exclusion until ruled, not inclusion because it seemed fine.** A room policy that
+leaves a producer undecided decides it by whatever the registration happens to do, and that is the
+migration fallout the registry's convention forbids. **All six are excluded and a test holds them
+there, awaiting a ruling.**
+
+## 31.4 ⛔ THE WHOLE-ORGANISM GAP IS NAMED IN THE ROOM ITSELF
+
+**There is no elemental, PFI, resonance or unified producer in the registry** — verified, and a test
+asserts the absence. Meanwhile `fieldOrchestrator` really does inject those capacities into MAIA's
+prompt, and its Unified leg is partly built from synthetic defaults.
+
+⛔ **Writer's Studio must not smuggle "full MAIA" around the canonical-turn boundary by letting
+`maiaService` quietly append intelligence the room cannot account for.** Step 4 owes a census and
+ruling for whole-organism producers — separation and truthful authority first, names later — and
+every field signal must carry `ACTUAL / DERIVED / UNAVAILABLE`. ⛔ **Never `0.5` where the honest
+value is `UNAVAILABLE`.** *That is the F-ABSENCE structure again.*
+
+## 31.5 · Gates
+
+`108 + 41 = 149` tests across canonical-turn and writers-studio, **0 failed** · typecheck **229 vs
+baseline 239, no regressions** · `check:no-supabase` clean · **production Writer's Studio untouched ·
+no cognition wired · the fixture responder still lives only in the artifact.**
