@@ -1,5 +1,49 @@
 # LANE B · B4 — production occupancy witness · **RUN**
 
+> ## ⚠️ PROVISIONAL — founder ruling, 2026-09-09, AFTER this record was written
+>
+> **This record is NOT withdrawn and NOT deleted.** Everything below stands as
+> written and is internally coherent: the run happened, the counts are real, and
+> occupancy is correctly kept apart from attribution.
+>
+> What it cannot establish **retroactively** is its INSTRUMENT subject.
+>
+> ```text
+> result                      174,662 rows · 860 sessions
+> database subject qualified  YES — the drift check passed
+> instrument content likely   YES
+> instrument subject proven   NOT TO CURRENT STANDARD
+> verdict                     PROVISIONAL · NOT WITHDRAWN
+> ```
+>
+> Two reasons, both about the instrument and neither about the database:
+>
+> 1. ⛔ **A local `git replace` ref cannot be excluded after the fact.** If one
+>    existed on the executing host, `git show 8c2343…` could have supplied a
+>    different tree under the same commit name. The remote side is verified —
+>    commit `8c2343a98…` → tree `91e58cdd…` → blob `674684b74…`, and no replace
+>    refs exist on the authoring side — but the *executing* host's state at the
+>    moment of the run is not something this record can reach back and prove.
+> 2. ⛔ **The run used the old concurrent pipeline**, before `6dc62f2fc` made
+>    retrieval-before-contact structural. `pipefail` reported failure; it did not
+>    order the processes.
+>
+> ⭐ **Evidence belongs to an instrument subject as well as a database subject,
+> and this run proved only the second one to current standard.**
+>
+> **Closure is one superseding rerun** through the pinned launcher
+> `6dc62f2fc2dd600f2080117a830478282dafc241`, which resolves, extracts with
+> `--no-replace-objects`, proves non-empty, and only then contacts production.
+>
+> ⭐ **The rerun's count need NOT equal 174,662.** It is a later observation of a
+> live table; the decisive property is `> 0`, never numerical identity with an
+> earlier witness. A record that demanded identity would be asking the database
+> to hold still to flatter the instrument.
+>
+> **Until that rerun:** occupancy is **PROVISIONALLY WITNESSED** · B5 is
+> **PREPARATION ONLY, no remediation act** · B3 deploy **HOLD**.
+
+
 **Class A, read-only.** Executed by the founder from the Mac Studio against
 production, from the pinned instrument.
 
@@ -126,3 +170,43 @@ production          read-only witness only; no mutation
 *The count was the cheapest question in the lane and the only one that could
 have closed it. It didn't close it. There are 174,662 rows here that the system
 promised it could delete and cannot.*
+
+---
+
+## 6 · Supersession protocol — one rerun, then this record closes
+
+```bash
+git fetch origin \
+  refs/heads/claude/maia-turns-derivative-custody:refs/remotes/origin/claude/maia-turns-derivative-custody
+
+LAUNCHER=6dc62f2fc2dd600f2080117a830478282dafc241
+INSTRUMENT=8c2343a9866202cfcd5983d50da928eb891693a5
+TMP="$(mktemp)"
+trap 'rm -f "$TMP"' EXIT
+
+git --no-replace-objects show "$LAUNCHER:scripts/witness/run-b4-occupancy.sh" > "$TMP"
+test -s "$TMP"
+chmod 700 "$TMP"
+
+"$TMP" "$INSTRUMENT" soullab@minisforum
+STATUS=$?
+echo "B4 exit=$STATUS"
+```
+
+⭐ **Both the launcher and the instrument are pinned, and the launcher is itself
+extracted with `--no-replace-objects`** — so the tool that enforces the
+instrument subject is not itself taken on trust from a working tree.
+
+### Outcome law for the superseding run
+
+```text
+exit 0 + counts
+  → the superseding run is AUTHORITATIVE; this record closes as superseded
+  → total_rows > 0  → B5 formally OPEN
+  → B3 production deployment BLOCKED by historical custody
+
+non-zero
+  → NO B4 conclusion from that run
+  → never read past the refusal or failure
+  → this record remains PROVISIONAL
+```
