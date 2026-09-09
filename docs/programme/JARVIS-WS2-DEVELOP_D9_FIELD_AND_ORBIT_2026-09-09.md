@@ -493,3 +493,69 @@ light have no screen-reader form, and demanding one would destroy them.
 ⭐ **That resolves it cleanly against §7: atmosphere is exempt from the five-channel rule precisely
 BECAUSE it says nothing.** ⛔ **The moment it means something, it must be available in every channel
 — and at that moment it has stopped being atmosphere.**
+
+---
+
+# 9 · ⭐ CONSOLIDATION — founder, 2026-09-09
+
+> ⭐ **"This is now tight enough that I would stop adding doctrine and let the prototype carry the
+> argument."**
+
+> ⭐⭐ **Atmosphere may shape presence. It may not carry hidden meaning.**
+
+```text
+⭐ LAWFUL — world-side and observable
+   time of day · duration of the session · where the writer is in the Work ·
+   what they have explicitly opened · what they have explicitly highlighted ·
+   whether the Workbench is summoned
+
+⛔ UNLAWFUL — inference about the person
+   "you seem anxious" · "you appear blocked" ·
+   "you need encouragement" · "your energy is low"
+```
+
+> ⭐ **The moment the atmosphere encodes an inference about the person, it stops being atmosphere and
+> becomes COMMUNICATION. Then it must be explicit, inspectable, and available across channels.**
+
+## 9.1 · The field must satisfy three things at once
+
+```text
+ARRIVAL     I want to begin.
+IMMERSION   I forget the interface.
+RETURN      when I summon a capability and release it, I return
+            immediately to the Work.
+```
+
+> ⭐ **Presence before writing; disappearance during writing.** **The field should feel almost
+> ceremonial when you ENTER it — without behaving ceremonially while you WORK.**
+
+## 9.2 ⭐ F-ORBIT — founder's full statement (register updated)
+
+> **A capability may enter the room when invoked without displacing the Work as the centre of
+> gravity, and must leave without residue when dismissed.**
+
+**Failure forms**: the page permanently shrinking because a tool was opened · a panel remaining
+visually dominant after its purpose is over · badges or counts continuing to solicit attention · the
+writer having to restore the room manually · **the interface remembering a strategic state the
+writer did not explicitly choose** · the writer becoming aware of managing software instead of
+making the Work.
+
+⭐ **One direct implication of the fifth form, worth stating once: EVERY ARRIVAL DEFAULTS TO THE
+QUIET ROOM.** ⛔ **Restoring yesterday's open panels is the interface remembering a strategic state
+the writer never chose** — *convenient, conventional, and a violation.* **Persistence must be
+explicitly chosen, never inherited from the last session.**
+
+## 9.3 ⭐⭐ THE DESIGN BRIEF, IN ONE LINE
+
+> **The room should be beautiful enough to invite attention, quiet enough to surrender it, and
+> intelligent enough to return it to the Work.**
+
+```text
+THE WORK COMMANDS ATTENTION.
+THE ROOM REVEALS POSSIBILITY.
+THE FIELD INVITES CREATION.
+```
+
+> ⭐ **Everything added next has to earn its right to enter that room.**
+
+⛔ **DOCTRINE CLOSED FOR D9's INTERFACE LAYER. The prototype carries the argument from here.**

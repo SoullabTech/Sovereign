@@ -257,12 +257,20 @@ F-SCALE           (D9, candidate doctrine) FAIL when MAIA is precise locally by
                   forces the writer to manage levels of analysis, or makes the writer
                   serve MAIA's model of the Work.
 
-F-ORBIT           (D9, product layer) FAIL when a capability entering or leaving
-                  the room changes what the room fundamentally feels like — when
-                  the writer becomes aware of OPERATING Writer's Studio instead
-                  of INHABITING their Work. Sequence: summon and dismiss
-                  Structure, MAIA and the Workbench; the room must return
-                  completely, with no residue and no rearranged attention.
+F-ORBIT           (D9, product layer) A capability may ENTER the room when
+                  invoked without displacing the Work as the centre of gravity,
+                  and must LEAVE WITHOUT RESIDUE when dismissed.
+
+                  FAILURE FORMS (founder, 2026-09-09):
+                    the page permanently shrinking because a tool was opened
+                    a panel remaining visually dominant after its purpose is over
+                    badges or counts continuing to solicit attention
+                    the writer having to restore the room manually
+                    the interface remembering a strategic state the writer did
+                      not explicitly choose
+                    the writer becoming aware of managing software instead of
+                      making the Work
+
                   ⭐ M2 at the interface layer — and M2's PASS does not predict
                   it, because the instrument had nothing to dismiss.
 
