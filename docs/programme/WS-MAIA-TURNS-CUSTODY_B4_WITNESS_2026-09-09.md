@@ -175,27 +175,91 @@ promised it could delete and cannot.*
 
 ## 6 · Supersession protocol — one rerun, then this record closes
 
+⚠️ **AMENDED 2026-09-09 — the previously recorded block could report a false
+`B4 exit=0`.** The launcher and instrument SHAs below are UNCHANGED and remain
+byte-pinned; only the invocation is corrected. See §6.1 for what went wrong.
+
 ```bash
 git fetch origin \
   refs/heads/claude/maia-turns-derivative-custody:refs/remotes/origin/claude/maia-turns-derivative-custody
 
 LAUNCHER=6dc62f2fc2dd600f2080117a830478282dafc241
 INSTRUMENT=8c2343a9866202cfcd5983d50da928eb891693a5
-TMP="$(mktemp)"
-trap 'rm -f "$TMP"' EXIT
 
-git --no-replace-objects show "$LAUNCHER:scripts/witness/run-b4-occupancy.sh" > "$TMP"
-test -s "$TMP"
-chmod 700 "$TMP"
+if (
+  set -euo pipefail
 
-"$TMP" "$INSTRUMENT" soullab@minisforum
-STATUS=$?
+  TMP="$(mktemp)"
+  trap 'rm -f "$TMP"' EXIT
+
+  git --no-replace-objects cat-file -e "${LAUNCHER}^{commit}"
+
+  git --no-replace-objects show \
+    "${LAUNCHER}:scripts/witness/run-b4-occupancy.sh" > "$TMP"
+
+  test -s "$TMP"
+  chmod 700 "$TMP"
+
+  "$TMP" "$INSTRUMENT" soullab@minisforum
+); then
+  STATUS=0
+else
+  STATUS=$?
+fi
+
 echo "B4 exit=$STATUS"
 ```
+
+⛔ **The braces around `${LAUNCHER}` are part of the contract.** No escaped `\:`
+and no escaped `\@` — see §6.2.
 
 ⭐ **Both the launcher and the instrument are pinned, and the launcher is itself
 extracted with `--no-replace-objects`** — so the tool that enforces the
 instrument subject is not itself taken on trust from a working tree.
+
+## 6.1 · 🔴 THE FALSE SUCCESS THIS AMENDMENT CLOSES
+
+The previous block had no `set -e`. When launcher retrieval failed, execution did
+not stop:
+
+```text
+launcher retrieval failed
+→ empty temporary file existed
+→ chmod made it executable
+→ empty executable returned 0        ← measured: an empty script exits 0
+→ wrapper reported B4 exit=0
+→ production was NEVER contacted
+```
+
+⭐ **This is the FOURTH manifestation of one invariant in this lane:**
+
+```text
+1  `\quit 3`      printed STOP, exited 0            (psql ignores the argument)
+2  pipefail        reported failure, did not ORDER   (ssh started anyway)
+3  empty stdin     psql exits 0 having witnessed nothing
+4  empty launcher  chmod + run returns 0             ← this one
+```
+
+> ⭐ **A path that did not perform the witnessed act must be structurally
+> incapable of returning success.**
+
+⛔ **And note where it sat: one level ABOVE everything already hardened.** The
+launcher hardens retrieval of the *instrument*; nothing hardened retrieval of the
+*launcher*. A bootstrap always needs its own guard, and the `set -euo pipefail`
+subshell is that guard.
+
+## 6.2 · ⚠️ Pasted terminal text is not an authoritative instrument carrier
+
+The failing invocation contained `"$LAUNCHER\:scripts/…"`. Inside double quotes
+`\:` is not an escape sequence, so the backslash survives into the pathspec and
+git cannot resolve it. **That backslash was in neither party's message** — it
+entered somewhere in transit between chat and terminal.
+
+⛔ **The launcher's bytes are pinned; the invocation that reaches it is not.** The
+small bootstrap typed into a shell cannot be eliminated, but it can be made to
+fail closed before it reaches the pinned launcher — which is exactly what the
+amended block does, and why `${LAUNCHER}` braces are now contractual rather than
+stylistic.
 
 ### Outcome law for the superseding run
 
