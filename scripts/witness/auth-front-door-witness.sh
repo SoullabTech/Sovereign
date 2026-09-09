@@ -49,7 +49,7 @@ hdr '0 · Arguments'
 [ -n "$NEW_EMAIL" ] || die "usage: $0 <NEW_TEST_EMAIL> [EXISTING_MEMBER_EMAIL]"
 # Placeholders have been run verbatim before. Refuse them by name.
 case "$NEW_EMAIL$EXISTING_EMAIL" in
-  *'<'*|*'YOUR@'*|*'her@email'*|*'example.com'*|*'paste'*)
+  *'<'*|*'YOUR@'*|*'her@email'*|*'example.com'*|*'paste'*|*'you+newtest'*|*'newtest@'*)
     die 'placeholder value — substitute a real inbox you can read';;
 esac
 case "$NEW_EMAIL" in *@*.*) ;; *) die 'NEW_TEST_EMAIL is not an address';; esac
@@ -169,7 +169,7 @@ hdr '7 · Is anyone actually COMPLETING signup?'
 # ---------------------------------------------------------------------------
 # The steps above prove the door opens. This asks whether people walk through it.
 # A door that opens onto a flow nobody finishes is a broken signup with green checks.
-psql_t "SELECT date_trunc('day', created_at) AS day,
+psql_t "SELECT date_trunc('day', created_at) AS d,
                count(*) AS created,
                count(*) FILTER (WHERE onboarded) AS onboarded,
                count(*) FILTER (WHERE NOT onboarded) AS stalled
