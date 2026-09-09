@@ -102,4 +102,42 @@ SELECT refuses('C4 a tombstoned receipt cannot be restored',
      VALUES ('d-1','m-1','req-1','writers_studio.focus->maia_cognition','work','member_invoked','w1','passage','member','ask_maia','context-disclosure-v1','attempted')$q$,
   'reason=tombstone');
 
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- REQUEST-ORDER-01 · the ORDERING itself, executed.
+-- ⭐ A refusal witness must prove the INTENDED refusal, not merely that the
+-- operation failed — so each check matches the specific error it expects.
+-- ─────────────────────────────────────────────────────────────────────────────
+DO $$
+DECLARE n int; p text;
+BEGIN
+  PERFORM refuses('R1 a receipt whose consent row has not landed is REFUSED by the FK',
+    $q$INSERT INTO context_disclosure_receipts (disclosure_id,member_id,request_ref,boundary,source_class,participation_basis,source_ref,scope_kind,authorized_by,gesture,policy_version,state)
+       VALUES ('d-r1','m-1','req-not-yet','writers_studio.focus->maia_cognition','work','member_invoked','w1','passage','member','ask_maia','context-disclosure-v1','attempted')$q$,
+    'foreign key');
+  SELECT count(*) INTO n FROM context_disclosure_receipts WHERE disclosure_id='d-r1';
+  PERFORM w('R3 a refused precondition leaves NO receipt behind', n = 0);
+
+  -- awaited insert, then the dependent write in the same session: the ordering
+  -- the seam guarantees, executed rather than assumed.
+  INSERT INTO runtime_consent_state (request_id, member_id, session_id, posture, resolved_from)
+    VALUES ('req-2','m-1','s-1','normal','request-meta') ON CONFLICT (request_id) DO NOTHING;
+  INSERT INTO context_disclosure_receipts (disclosure_id,member_id,request_ref,boundary,source_class,participation_basis,source_ref,scope_kind,authorized_by,gesture,policy_version,state)
+    VALUES ('d-r2','m-1','req-2','writers_studio.focus->maia_cognition','work','member_invoked','w1','passage','member','ask_maia','context-disclosure-v1','attempted');
+  SELECT count(*) INTO n FROM context_disclosure_receipts WHERE disclosure_id='d-r2';
+  PERFORM w('R1b once the consent row exists, the receipt mints', n = 1);
+
+  -- R2 · first write wins on retry; the row is not overwritten by a second attempt
+  INSERT INTO runtime_consent_state (request_id, member_id, session_id, posture, resolved_from)
+    VALUES ('req-2','m-1','s-1','sanctuary','request-meta') ON CONFLICT (request_id) DO NOTHING;
+  SELECT posture INTO p FROM runtime_consent_state WHERE request_id='req-2';
+  PERFORM w('R2 a conflicting retry does not overwrite the resolved posture', p = 'normal');
+
+  -- R4 · one id, both rows
+  SELECT count(*) INTO n FROM context_disclosure_receipts r
+    JOIN runtime_consent_state c ON c.request_id = r.request_ref
+   WHERE r.disclosure_id = 'd-r2' AND c.request_id = 'req-2';
+  PERFORM w('R4 the receipt and the consent row cite ONE carried request id', n = 1);
+END $$;
+
 ROLLBACK;
