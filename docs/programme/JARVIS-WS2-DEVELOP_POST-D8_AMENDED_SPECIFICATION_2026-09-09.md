@@ -25,7 +25,7 @@ then D9         rewrite the Develop Experience Contract
 
 ## 0 · The organizing statement — **DEMOTED 2026-09-09, not replaced**
 
-⛔ **Governed by `WRITERS_STUDIO_FOUNDATIONAL_RELATIONSHIP_2026-09-10.md`.** The statement below is the **interaction doctrine**, a consequence of the foundational relationship — not the ontological ground. Criterion 11 is strengthened there. Not restated here.
+⛔ **Governed by `WRITERS_STUDIO_FOUNDATIONAL_RELATIONSHIP_2026-09-09.md`.** The statement below is the **interaction doctrine**, a consequence of the foundational relationship — not the ontological ground. Criterion 11 is strengthened there. Not restated here.
 
 > *Writer ↔ Emerging Work. Writer's Studio preserves and supports that relationship without taking it over.*
 > **Therefore:** **The Work is present. The writer acts. Everything else is bookkeeping the writer never operates.**

@@ -2,7 +2,7 @@
 
 **Founder ruling · 2026-09-09 · RATIFIED**
 **Channel: founder, composed in the ChatGPT session, relayed here as the ruling act.**
-Supersedes nothing already ratified; **extends** `WRITERS_STUDIO_PRESERVE_THE_LIVED_ENCOUNTER_2026-09-10.md`.
+Supersedes nothing already ratified; **extends** `WRITERS_STUDIO_PRESERVE_THE_LIVED_ENCOUNTER_2026-09-09.md`.
 
 > ⭐ **The single sentence, preserved verbatim at founder instruction:**
 >

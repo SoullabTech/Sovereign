@@ -1,87 +1,157 @@
-# Custody correction — systematic one-day-forward date error
+# Superseding custody correction — one-day-forward date contamination
 
-**Found by founder · 2026-09-09 · CORRECTED IN PART · ⛔ ONE REPAIR PROPOSED, NOT EXECUTED**
+**Founder-found 2026-09-09 · repair AUTHORIZED and EXECUTED under the founder's repair invariants**
+**Supersedes the first draft of this record (commit `87bbc2dd5`), which repaired in-text dates only.**
+
+> ⭐ **RULING CARRIED FORWARD (founder):** *The September 10 error is a one-day-forward custody
+> contamination propagated across the September 9 Writer's Studio governance run. Repair is
+> authorized only as a provenance-preserving correction. No Git-history rewrite, substantive
+> reconsideration, adoption-state change, falsifier-state change, or D9 movement is authorized.*
 
 ---
 
-## 1 · The error
-
-**Twenty-six governance documents were authored on 2026-09-09 and dated 2026-09-10** — in their
-filenames and in their in-text ruling headers. **The commit metadata was correct throughout; only
-the authored record was wrong.**
-
-**Founder detection method, recorded because it is the reusable part:** commit metadata
-(`880aa6590` @ `2026-09-09 12:44:44Z`) was compared against the document's own date assertion
-(`Founder ruling · 2026-09-10`) and the two disagreed. ⭐ **The machine-generated timestamp caught
-the human-readable claim.**
-
-⛔ **The error was inherited and then propagated.** Documents dated `2026-09-10` existed before this
-session segment; every document authored afterward copied the convention without checking it against
-the actual date. **A date is an assertion, and it was never verified against anything.**
-
-## 2 · Extent — verified by `git log --diff-filter=A`
+## 1 · ⭐ THREE DATES, NEVER ONE FIELD (founder precision)
 
 ```text
-26 files named _2026-09-10        ALL first committed 2026-09-09 (10:37Z – 12:44Z)
-30 in-text date assertions        across 13 files
- 0 correct                        the error is total, not partial
+ACT DATE      when the founder ruling / witness / acceptance ACTUALLY occurred
+              2026-09-09 EDT   [contemporaneous session record]
+
+RECORD DATE   when the artifact was COMMITTED
+              2026-09-09 EDT   [Git chronology — independent]
+
+CLAIMED DATE  the date WRITTEN INTO the contaminated artifact
+              2026-09-10       ⛔ FALSE
 ```
 
-**Earliest affected: `D8_WALK_A1` @ 10:37Z. Latest: the constitution's Law 6 @ 12:44Z.**
+⚠️ **Recovery-authority precision, founder-corrected and accepted:** **Git proves the RECORD date.
+The session record proves the ACT date.** ⛔ **Commit timestamps alone must not be made to prove the
+date of every human act** — they are excellent independent evidence against a document's claim that
+an *already-completed* act occurred later, which is exactly this case. **Together they form the
+recovery chain; neither alone does.**
 
-## 3 · Repair — CORRECTED
+## 2 · ⭐ FORENSIC QUESTION — **ANSWERED**
 
-⭐ **All 30 in-text date assertions rewritten `2026-09-10` → `2026-09-09`.**
-
-**These were unambiguous factual errors**: they asserted that founder rulings occurred on a day that
-had not yet happened. ⛔ **This is NOT a superseded reading kept as a dated before-state** — the
-project's *"date it, don't edit it"* discipline governs facts that were true when recorded and are
-false now. **These were never true.** A wrong date is corrected; it is not preserved.
-
-## 4 · ⛔ NOT REPAIRED — 26 filenames still carry `_2026-09-10`
-
-⚠️ **Deliberately not executed, on the authority of Law 4 ratified in these very documents.**
-
-**Renaming twenty-six files is a systematic transformation of the record's identifiers.** It would:
+**The founder recorded `absolute introduction — NOT YET ESTABLISHED`. It is now established.**
 
 ```text
-break the link between existing commit messages and the files they describe
-invalidate every cross-reference in 13 documents
-change identifiers the founder has already verified by SHA and by name
+FIRST INTRODUCTION   03b96911d · 2026-09-09 10:37Z · 06:37 EDT
+                     docs(ws2-develop): D8 walk cell A/M1 — The Margin, wordless difficulty
+                     created JARVIS-WS2-DEVELOP_D8_WALK_A1_2026-09-10.md
+
+LATEST PROPAGATION   2a2ddf1f8 · 2026-09-09 12:46Z · 08:46 EDT   (Law 6)
+CONTAMINATION WINDOW 2h 09m
 ```
 
-> ⭐ **Law 4 applies to me here: no strategic change to the record may be executed before the
-> writer has been shown what is proposed, what it changes, and has authorized it.** **A systematic
-> rename discovered after the fact is exactly the failure this constitution was written to
-> prevent** — and it would be a poor irony to commit it while recording the law against it.
+⭐ **This is 1h 35m EARLIER than the founder's earliest positively-confirmed point (`327853cd` @
+08:12 EDT).** Method: `git log --all --diff-filter=A -- '*_2026-09-10*'` — every commit that ever
+*added* such a path, on any ref. **The D8 walk cells, not the witness chain, are where it entered.**
 
-**FOUNDER DECISION REQUIRED:**
+⚠️ **Bounded claim:** first introduction **on any ref in this repository.** The convention may have
+been inherited from a source outside it; that is unestablished and unnecessary for the repair.
+
+## 3 · ⭐ EXHAUSTIVE MANIFEST — **ESTABLISHED**
+
+**The founder's seven-artifact list was correctly labelled a minimum, not a manifest, and was NOT
+used to drive repair.** Enumeration was deterministic: `git ls-files` for paths, `git grep` for
+content, across the whole tree.
 
 ```text
-OPTION A  rename all 26 files to _2026-09-09, update all cross-references
-          → clean record; loses commit-message↔filename correspondence;
-            cheapest now, before merge
-
-OPTION B  keep filenames as stable identifiers, corrected in-text only
-          → citations stay valid; 26 filenames remain permanently wrong
-
-OPTION C  keep filenames, and let THIS record be the authority that the
-          _2026-09-10 suffix is a known-wrong identifier
-          → no churn; the error stays discoverable rather than hidden
+FALSELY DATED PATHS        26   all first committed 2026-09-09, 10:37Z–12:46Z
+IN-TEXT DATE ASSERTIONS    30   across 13 files
+PATH REFERENCES            3    across 3 files
+GENUINELY PROSPECTIVE      0
 ```
 
-⛔ **Nothing renamed pending that ruling.**
+### 3.1 ⚠️ TWO ARTIFACTS IN THE FOUNDER'S LIST DO NOT EXIST IN THIS REPOSITORY
 
-## 5 · The finding worth keeping
+```text
+WRITERS_STUDIO_DEVELOP_RESTORATION_LANE_2026-09-10.md   ⛔ no such file on any ref
+WRITERS_STUDIO_PROOF_PLAN_2026-09-10.md                 ⛔ no such file on any ref
+```
 
-> ⭐ **Nothing in the record's own machinery verified a date against reality.** Every document
+**Verified by `git ls-files` and `git log --all --diff-filter=A`: neither has ever existed here.**
+⭐ **Recorded as a cross-session record divergence, not as a missing repair target.** The founder's
+inventory was assembled from a different vantage (a GitHub search view and the ChatGPT session's own
+record); **two of its seven entries do not correspond to artifacts on this branch.** ⛔ **Nothing to
+repair for those two. Flagged because a governance inventory that names non-existent artifacts is
+itself a custody signal** — and it is precisely why the founder's instruction *"do not repair from
+this list alone"* was correct.
+
+## 4 · ⭐ SEMANTIC CLASSIFICATION — the prohibition on mechanical normalization was honoured
+
+⛔ **Founder invariant: *"do not normalize every 2026-09-10 mechanically… a deterministic search
+discovers candidates; semantic classification determines correction."*** **Satisfied, and here is
+the evidence rather than the assurance.**
+
+**All 33 occurrences were individually classified before correction:**
+
+```text
+PAST-ACT ASSERTIONS   30   "Founder ruling · 2026-09-10" · "Gate ruling, founder 2026-09-10" ·
+                           "Predicted 2026-09-10, before walking C" · "WRONG (asserted
+                           2026-09-10)" · "Searched 2026-09-10" · "Read 2026-09-10 from …"
+                           -> all describe acts ALREADY COMPLETED when written  -> CORRECT
+
+PATH REFERENCES        3   citations of renamed artifacts                        -> CORRECT
+
+PROSPECTIVE            0   ⭐ no sentence of the form "on September 10, perform…"
+                           exists anywhere in the corpus
+```
+
+⭐ **The prohibition had no work to do here — but it was checked, not presumed.** Had one
+prospective date existed, a mechanical sweep would have falsified a future obligation into a past
+one, which is the harder error to detect afterward.
+
+## 5 · Repair executed
+
+```text
+✅ 26 paths renamed  _2026-09-10.md -> _2026-09-09.md   (git mv — history preserved)
+✅ 30 in-text factual dates corrected
+✅  3 cross-references rewritten
+✅  1 superseding custody record — this document
+⛔ Git history NOT rewritten — the contaminated commits stand as the recovery evidence
+```
+
+⚠️ **The rename was NOT executed in the first repair pass.** It was withheld and proposed with its
+consequences, under Law 4 as ratified in these same documents, and executed only on the founder's
+repair-sequence authorization. **Recorded because the constitution's own rule was applied to the
+constitution's own repair.**
+
+## 6 · Substance — untouched, and verified as untouched
+
+```text
+Git commit chronology     CLEAN        do not rewrite
+Artifact filenames        REPAIRED
+Internal dates            REPAIRED
+Cross-references          REPAIRED
+Custody chronology        REPAIRED     via this record
+Substantive rulings       NO CORRUPTION FOUND    Laws 1–6 not reopened
+M2 / M3 / M4              NO STATE CHANGE
+```
+
+> ⭐ **Law 6 remains Law 6. Its custody date was false; its authority is not thereby invalidated.**
+> **The same presumption holds for Laws 1–5** — nothing in *retained-is-not-active*, asynchronous
+> orientation, the causal stack, the bookends, or any falsifier definition is date-dependent.
+
+**Standing, re-verified in the corrected files after repair:**
+
+```text
+M2 / M3 / M4    UNTOUCHED — the only open input
+ADOPT           WITHHELD
+D9              BLOCKED
+
+F-ABSENCE · F-STRATEGY · F-NORMALIZATION · F-CAPACITY · F-REACTIVE
+```
+
+## 7 · The method finding
+
+> ⭐ **Nothing in the record's own machinery ever verified a date against reality.** Every document
 > asserted its date; no instrument compared that assertion to anything. **The founder's check —
 > commit metadata against document claim — is the missing verification, and it is trivial to
 > automate.**
 
-⚠️ **This is a small instance of a pattern already named in this lane:** *an instrument can satisfy
-all of its remaining questions by forgetting to ask the difficult ones* (FR-14). **A governance
-record that cannot detect a wrong date in its own headers has an unexamined trust in its own
-authorship.**
+⚠️ **Same shape as FR-14:** *an instrument can satisfy all of its remaining questions by forgetting
+to ask the difficult ones.* **A governance record that cannot detect a wrong date in its own headers
+has an unexamined trust in its own authorship** — and this one propagated an unverified assertion
+across 26 artifacts in 129 minutes without a single check firing.
 
 ⛔ **No lane opened. No automation authorized.**

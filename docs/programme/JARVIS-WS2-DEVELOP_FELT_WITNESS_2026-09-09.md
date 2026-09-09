@@ -101,7 +101,7 @@ any FAIL         -> the exact felt failure owns the next amendment
 
 ## 5 · ⭐ Operative form of each verdict — **adopted, founder act 2026-09-09**
 
-**Ruled: these are the questions the three verdicts answer.** Each is checked against its source falsifier (`JARVIS-WS2-DEVELOP_ACCEPTANCE_INSTRUMENT_2026-09-10.md` §§41–45, 72–76) and **narrows it without softening it** — the fidelity direction that matters, since a reframing that made a falsifier easier to pass would be a way of buying ADOPT rather than earning it.
+**Ruled: these are the questions the three verdicts answer.** Each is checked against its source falsifier (`JARVIS-WS2-DEVELOP_ACCEPTANCE_INSTRUMENT_2026-09-09.md` §§41–45, 72–76) and **narrows it without softening it** — the fidelity direction that matters, since a reframing that made a falsifier easier to pass would be a way of buying ADOPT rather than earning it.
 
 ```text
 M2   NOT  "was the deferral feature good"
