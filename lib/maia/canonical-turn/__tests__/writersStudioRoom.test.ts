@@ -14,6 +14,7 @@
 
 import { PRODUCER_REGISTRY } from '../producerRegistry';
 import { ROOM_POLICIES } from '../policy';
+import { MEMBRANE, EXCLUDED_V1, admittedToWritersStudio } from '@/lib/writers-studio/membrane';
 
 type ProducerId = keyof typeof PRODUCER_REGISTRY;
 
@@ -37,7 +38,6 @@ const RULED_ADMIT = [
   'member.relational_context',
   'retrieved.conversational_recall',
   'retrieved.member_web',
-  'retrieved.relationship_memory',
   // the room's own evidence
   'computed.writer_structure',
   'floor.writer_role_boundary',
@@ -107,44 +107,40 @@ describe('WS-ROOM-01 · the membrane admits exactly what was ruled', () => {
   });
 
   /**
-   * ⚠️ THE TWO NAMED EXCEPTIONS to "continuity before interpretation".
+   * ⭐ WS-ROOM-02 resolved the two-inference question by SEPARATING KINDS.
    *
-   * WS-ROOM-01's principle is that memory may SITUATE but may not silently STEER —
-   * which is why `inferred.memory_influence` is excluded in as many words. But two
-   * producers the ruling admits BY NAME carry `authority: 'infer'`:
+   *   retrieved.relationship_memory  EXCLUDED pending partition — it is stored
+   *     inference ABOUT THE PERSON (themes, phase, trust, archetypal resonance).
+   *     Ambient, it would let "knowing the writer" become "explaining the writer".
    *
-   *   computed.consultation          system / inferred  / infer
-   *   retrieved.relationship_memory  system / retrieved / infer
+   *   computed.consultation          ADMITTED — current-turn cognition about the
+   *     WORK. It may enlarge MAIA's thinking; it may never acquire authority over
+   *     the writer's attention, intention or authorship.
    *
-   * They are admitted because the founder named them, not because they satisfy the
-   * principle. This test pins the exception at exactly two so a third can never be
-   * added quietly, and so the divergence stays visible rather than dissolving into
-   * "well, inference was always allowed here".
-   *
-   * ⛔ Do not widen this list to make a change pass. It is a standing question for
-   * the founder, recorded in the D9 record §31.
+   * One intentional inferential producer remains, and it infers about the Work now
+   * rather than about the person in the past.
    */
-  it('admits exactly the two named inferring producers, and no third', () => {
+  it('admits exactly ONE inferring producer — cognition about the Work, not about the person', () => {
     const inferring = admitted.filter(id => PRODUCER_REGISTRY[id as ProducerId].authority === 'infer');
-    expect(inferring.sort()).toEqual(['computed.consultation', 'retrieved.relationship_memory']);
+    expect(inferring).toEqual(['computed.consultation']);
   });
 
-  it('every other admitted producer situates or computes — none infers', () => {
-    const rest = admitted.filter(id =>
-      !['computed.consultation', 'retrieved.relationship_memory'].includes(id));
-    expect(rest.filter(id => PRODUCER_REGISTRY[id as ProducerId].authority === 'infer')).toEqual([]);
+  it('excludes retrieved.relationship_memory pending its situate-only partition', () => {
+    expect(inRoom('retrieved.relationship_memory')).toBe(false);
+    expect(EXCLUDED_V1['retrieved.relationship_memory']).toContain('PENDING PARTITION');
   });
 
-  it('leaves every UNRULED producer excluded — fail closed, awaiting a ruling', () => {
-    // Six producers were not covered by the WS-ROOM-01 table. All are authority
-    // 'situate', so admitting them is arguable — which is exactly why the default
-    // must be exclusion until the founder rules, not inclusion because it seemed fine.
-    const UNRULED = [
-      'member.capture_context', 'member.journal_context', 'retrieved.significant_moments',
-      'declared.epistemic_path', 'declared.scribe_session_discussion', 'house.place',
-    ] as const;
-    for (const id of UNRULED) expect(inRoom(id as ProducerId)).toBe(false);
+  it.each([
+    ['member.capture_context', 'invited, not ambient'],
+    ['member.journal_context', 'invited, not ambient'],
+    ['retrieved.significant_moments', 'too likely to steer creative interpretation'],
+    ['declared.epistemic_path', 'writer intention is the local authority'],
+    ['declared.scribe_session_discussion', 'wrong encounter type'],
+    ['house.place', 'the room and role already situate her'],
+  ] as const)('excludes %s — %s', id => {
+    expect(inRoom(id as ProducerId)).toBe(false);
   });
+
 });
 
 describe('WS-ROOM-01 · the role boundary is constitutional, not optional', () => {
@@ -203,5 +199,40 @@ describe('WS-ROOM-01 · the whole-organism gap is not smuggled past the boundary
     const organism = Object.keys(PRODUCER_REGISTRY).filter(id =>
       /elemental|pfi|resonance|unified/i.test(id));
     expect(organism).toEqual([]);
+  });
+});
+
+describe('WS-ROOM-02 · the membrane and the registry may never drift', () => {
+  it('every admitted producer is classified ambient or cognitive', () => {
+    for (const id of admittedToWritersStudio()) {
+      const entry = MEMBRANE[id];
+      expect(entry).toBeDefined();
+      expect(['ambient', 'cognitive']).toContain(entry!.cls);
+    }
+  });
+
+  it('nothing classified `invited` is admitted — invitation is a gesture, and it is not built', () => {
+    const invited = (Object.keys(MEMBRANE) as (keyof typeof MEMBRANE)[])
+      .filter(id => MEMBRANE[id]!.cls === 'invited');
+    expect(invited.length).toBeGreaterThan(0);
+    for (const id of invited) expect(admittedToWritersStudio()).not.toContain(id);
+  });
+
+  it('every `invited` producer names the gesture that would bring it in', () => {
+    for (const id of Object.keys(MEMBRANE) as (keyof typeof MEMBRANE)[]) {
+      if (MEMBRANE[id]!.cls === 'invited') expect(MEMBRANE[id]!.gesture).toBeTruthy();
+    }
+  });
+
+  it('nothing is both classified and excluded outright', () => {
+    for (const id of Object.keys(EXCLUDED_V1) as (keyof typeof EXCLUDED_V1)[]) {
+      expect(MEMBRANE[id]).toBeUndefined();
+    }
+  });
+
+  it('every producer in the registry has a disposition — none is left undecided', () => {
+    const undecided = (Object.keys(PRODUCER_REGISTRY) as ProducerId[])
+      .filter(id => !MEMBRANE[id] && !EXCLUDED_V1[id]);
+    expect(undecided).toEqual([]);
   });
 });
