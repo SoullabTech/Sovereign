@@ -179,3 +179,80 @@ describe('H3 · POSTURE IDENTITY — one turn, one privacy posture', () => {
     expect(() => expect(substituted.sanctuary).toBe(sanctuary.sanctuary)).toThrow();
   });
 });
+
+describe('W1 · an intentional exclusion does not wear the telemetry of a failure', () => {
+  it('logs the RCN exclusion as room policy, not as processing failure', () => {
+    const svc = SVC();
+    expect(svc).toMatch(/instanceof WriterCanonicalOnly/);
+    expect(svc).toMatch(/\[RCN\] excluded — writers_studio canonical participation owns the response path/);
+  });
+
+  it('the failure log remains for real RCN failures', () => {
+    expect(SVC()).toMatch(/\[RCN\] Processing failed \(non-blocking\)/);
+  });
+
+  it('⭐ the two are distinguishable — a witness reading logs can tell them apart', () => {
+    const svc = SVC();
+    const excluded = svc.indexOf('excluded — writers_studio');
+    const failed = svc.indexOf('Processing failed (non-blocking)');
+    expect(excluded).toBeGreaterThanOrEqual(0);
+    expect(failed).toBeGreaterThanOrEqual(0);
+    expect(excluded).not.toBe(failed);
+  });
+});
+
+describe('W2 · a pre-handoff refusal leaves no response the writer never saw', () => {
+  /**
+   * ⭐⭐ The residue H2 did not catch: field safety returned before the Work
+   * reached a model AND persisted its own assistant text. The writer was shown a
+   * non-crossing state with no response, while continuity remembered an answer
+   * they never received — and would carry it into the next turn's history.
+   */
+  const svc = () => SVC();
+  const BRANCH = () => svc().indexOf('if (writerStudioTurn) {');
+
+  it('the field-safety refusal does not persist an exchange on a Writer turn', () => {
+    const s = svc();
+    const site = s.indexOf('} else await addConversationExchange(sessionId, input, text, {');
+    expect(site).toBeGreaterThanOrEqual(0);
+    expect(s.slice(site - 400, site)).toMatch(/if \(writerStudio\) \{/);
+  });
+
+  it('⭐ EVERY pre-handoff persistence site is guarded or unreachable on a Writer turn', () => {
+    const s = svc();
+    const branch = BRANCH();
+    const sites: number[] = [];
+    let i = s.indexOf('addConversationExchange(');
+    while (i !== -1) { if (i < branch) sites.push(i); i = s.indexOf('addConversationExchange(', i + 1); }
+    // Exactly two persistence calls precede the canonical branch.
+    expect(sites).toHaveLength(2);
+    // (1) field safety — guarded by `if (writerStudio)`.
+    expect(s.slice(sites[0] - 400, sites[0])).toMatch(/if \(writerStudio\)/);
+    // (2) RCN's early return — unreachable, because RCN is excluded before it runs.
+    const rcnGuard = s.indexOf("WriterCanonicalOnly('rcn')");
+    expect(rcnGuard).toBeGreaterThanOrEqual(0);
+    expect(rcnGuard).toBeLessThan(sites[1]);
+  });
+
+  it('the tail persistence sites are AFTER the crossing, which is correct', () => {
+    const s = svc();
+    const branch = BRANCH();
+    expect(s.indexOf('TurnsStore.addExchange(turnPosture')).toBeGreaterThan(branch);
+  });
+
+  it('the refusal still travels outward — suppressed persistence, not suppressed information', () => {
+    const s = svc();
+    const site = s.indexOf('} else await addConversationExchange(sessionId, input, text, {');
+    // the `return { text, ... }` still follows: the surface may present it.
+    expect(s.slice(site, site + 600)).toMatch(/return \{\s*\n?\s*text,/);
+  });
+
+  it('⭐ MUTATION — removing the guard makes the pre-handoff audit go RED', () => {
+    const s = svc();
+    const mutated = s.replace(/if \(writerStudio\) \{[\s\S]{0,200}?\} else await addConversationExchange/, 'await addConversationExchange');
+    const branch = mutated.indexOf('if (writerStudioTurn) {');
+    const site = mutated.indexOf('addConversationExchange(');
+    expect(site).toBeLessThan(branch);
+    expect(() => expect(mutated.slice(site - 400, site)).toMatch(/if \(writerStudio\)/)).toThrow();
+  });
+});
