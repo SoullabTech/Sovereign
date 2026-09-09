@@ -106,7 +106,82 @@ MAIA holds           the craft the writer does not need to learn
 
 ---
 
-## 5 · The chain
+## 6 · DEVELOPMENTAL EQUITY — the social purpose
+
+> **Every member deserves the opportunity to develop what they know to the highest standard their own ability, wisdom and voice can sustain — not merely to the standard they can afford.**
+
+The asymmetry is plain:
+
+```text
+WITH RESOURCES      developmental editor · structural editor · line editor ·
+                    researcher · writing coach · multiple revision passes
+                    -> a polished Work
+
+WITHOUT             whatever they can figure out alone
+```
+
+**MAIA exists beside the writer as access to extraordinary developmental intelligence** — helping them clarify, structure, challenge, deepen, revise and refine at a professional standard **while preserving the wisdom, authorship, language and character that make the Work theirs.**
+
+Access should not depend on wealth, professional network, formal education, or prior mastery of the craft. Writer's Studio is for people whose primary gift may be **wisdom, practice, experience, teaching, healing or insight** rather than professional writing. **MAIA does not compensate for that difference by authoring the Work for them** — she brings the craft, attention, challenge and iterative support that lets the member's own capacity become fully expressed.
+
+```text
+NOT   "What could AI write from this material?"
+NOT   "How polished can we make this?"
+BUT   "What is the strongest form THIS PERSON'S wisdom can take
+       without ceasing to be recognizably theirs?"
+```
+
+> **We are not democratizing AI-generated books. We are democratizing access to excellent developmental partnership.**
+
+### 6.1 · ⚠️ The failure mode this claim invites
+
+**The cheap way to "democratize access" is to lower the cost of *output*, not of *partnership*.** That produces generated books at scale — precisely what this is not. And the market pressure runs that way, because partnership is expensive to provide and output is cheap.
+
+⭐ **The equity claim is therefore only true while the expensive thing is what gets delivered.** Any drift toward cheaper output-generation is **a betrayal of the equity claim, not a scaling of it** — and it will present as success, since more people will have finished manuscripts.
+
+### 6.2 · It reinforces the sovereignty invariant
+
+The invariant asks: *does this reduce the system's psychological centrality over time?*
+
+```text
+writer becomes more capable   -> MAIA's centrality DECLINES   ✅
+MAIA produces polished output -> centrality RISES, writer stays dependent ❌
+```
+
+**Developmental equity and the sovereignty invariant point the same way**, which is a good sign for both: the version of this product that serves equity is also the version that reduces dependence.
+
+## 7 · How MAIA should evaluate an edit
+
+*"Better writing"* alone is insufficient. Several questions at once:
+
+```text
+Is the meaning clearer?
+Is the structure carrying the wisdom?
+Can another person actually receive it?
+Has unnecessary friction been removed?
+Has anything essential been flattened?
+Does this still sound and feel like this writer?
+Is the writer becoming more capable through the process,
+  rather than merely receiving finished prose?
+```
+
+⚠️ **The last question is different in kind from the other six** — it is about the *writer*, not the *Work*. It is R-L9, which the constraint reconciliation demoted to a **longitudinal hypothesis, explicitly not a build constraint**, because it cannot be measured per edit.
+
+**Honest resolution: it is a tiebreaker, not a gate.** It cannot decide whether an edit is acceptable, but between two edits that serve transmission equally well it selects the one the writer can learn from. Recorded as an orientation, not a criterion, so it is not quietly promoted into something evaluable that it is not.
+
+## 8 · ⚠️ Claim discipline
+
+*"Professional standard"* and *"the quality of support such a team could provide"* are **outward-facing claims** and fall under the representation discipline.
+
+```text
+Live      nothing
+Designed  D2-D5 model and architecture
+Vision    everything in §6
+```
+
+⛔ **This document is VISION.** Nothing here is built: the crossing, commissioned prose, reread and provenance are all still absent from the runtime. This language must not reach public copy, decks, or onboarding as though it described current capability. *We do not tell tomorrow's story as if it were today's.*
+
+## 9 · The chain
 
 ```text
 writer's wisdom
@@ -121,3 +196,8 @@ writer's wisdom
 ```
 
 > ### You bring what only you can know. MAIA helps you make it possible for someone else to receive it.
+
+---
+
+**The outcome wanted is not** *"MAIA made this impressive."*
+**It is** — *"This person had something important to give, and they were finally given the support necessary to give it at the level it deserved."*
