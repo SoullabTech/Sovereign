@@ -98,3 +98,28 @@ M2  PASS / FAIL      M3  PASS / FAIL      M4  PASS / FAIL
 all three PASS   -> no remaining reason to withhold ADOPT -> D9 opens
 any FAIL         -> the exact felt failure owns the next amendment
 ```
+
+## 5 · ⭐ Operative form of each verdict — **adopted, founder act 2026-09-10**
+
+**Ruled: these are the questions the three verdicts answer.** Each is checked against its source falsifier (`JARVIS-WS2-DEVELOP_ACCEPTANCE_INSTRUMENT_2026-09-10.md` §§41–45, 72–76) and **narrows it without softening it** — the fidelity direction that matters, since a reframing that made a falsifier easier to pass would be a way of buying ADOPT rather than earning it.
+
+```text
+M2   NOT  "was the deferral feature good"
+     BUT  did "that matters, later" RELEASE me back into writing,
+          or leave a residue of obligation I was still carrying
+          on the next sentence
+
+M3   NOT  "did recall work"
+     BUT  did returning to an earlier observation feel like
+          REMEMBERING TOGETHER, or like operating a memory system
+
+M4   NOT  "was the North Star useful"
+     BUT  was orientation GENUINELY ABSENT until I invoked it,
+          and did it then arrive as support rather than rubric
+```
+
+⭐ **What all three share: each asks about a RESIDUE, not a feature.** What was left behind in the writer after the interaction — obligation, mechanism-awareness, or evaluation — is the thing under test. **A feature can work perfectly and still leave the wrong residue**, and it is the residue, not the function, that decides whether the architecture is fit to hold a person's Work.
+
+⛔ **A FAIL is worth more than a PASS.** A PASS closes the last gate on ADOPT; a FAIL gives the next amendment its exact shape. **Report the failure that actually occurred rather than the one that is easiest to describe** — the value is in its specificity, and a softened FAIL costs more than a clean one.
+
+⚠️ **These forms do not replace the falsifiers; they are how the falsifiers are asked.** If a narrow form and its source ever disagree, **the source governs.**
