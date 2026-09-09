@@ -62,12 +62,14 @@ describe('P1 · NO META CHANNEL', () => {
   it('the cognition port sends no Writer material through meta', () => {
     const c = CODE('lib/writers-studio/writersStudioCognition.ts');
     expect(c).toMatch(/meta: \{ userId: input\.memberId, exchangeId: input\.requestId \}/);
+    // the Writer turn travels top-level beside meta, never inside it
+    expect(c).toMatch(/writerStudio: \{/);
     expect(c).not.toMatch(/meta:.*(focus|work|addendum|prompt)/i);
   });
 
   it('the Writer turn reaches the service as a typed TOP-LEVEL field', () => {
-    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/writerStudioTurn: prepared\.turn/);
-    expect(CODE('lib/sovereign/maiaService.ts')).toMatch(/writerStudioTurn\?: CanonicalTurn \| null/);
+    expect(CODE('lib/writers-studio/writersStudioCognition.ts')).toMatch(/writerStudio: \{/);
+    expect(CODE('lib/sovereign/maiaService.ts')).toMatch(/writerStudio\?: WriterStudioInput \| null/);
   });
 });
 
