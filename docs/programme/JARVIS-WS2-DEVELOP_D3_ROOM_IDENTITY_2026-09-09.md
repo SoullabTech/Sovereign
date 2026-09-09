@@ -131,6 +131,58 @@ OPTION C — NEITHER: stance is not a mode at all
 
 ---
 
+## 10 · Write before-state — capture, 2026-09-09 · **evidence bearing on §9, not a resolution of it**
+
+Founder-supplied capture of the live **Write** room, *Elemental Alchemy* Ch. 4, §4 *The Story of the Four Yogis* selected.
+
+### 10.1 · The asymmetry is confirmed visually
+
+**Write renders the prose in the primary field.** Full text, readable, the Work under the writer's hands — exactly what §3 requires and exactly what Develop does not have. D1's *"renders no prose"* is not a subtlety of the code; **the two rooms are the same shell with opposite centres.**
+
+```text
+WRITE     centre = the manuscript text        Work PRESENT
+DEVELOP   centre = MAIA's reading             Work = a list of section names
+```
+
+### 10.2 · ⭐ The rail is identical in both — the product already half-implements Option C
+
+`Work Space` (Home · Manuscript · Materials · Structure · Notes · Versions · Goals), `MAIA` (Conversations · Discover · Insights · Suggestions), `Tools` (Find/Replace · Statistics · Timeline · Word Web · Export) — **byte-for-byte the same rail in Write and in Develop.**
+
+So Writing and Develop are **not two environments.** They are one environment with a swapped middle column, and the tab bar asserts a separation the shell does not implement.
+
+> **This bears directly on §9.** The shipped product already has **Option C's substrate** — one place, one shell, one Work — **under Option A's navigation.** The declared-stance answer was inherited from a tab bar, not designed. That does not decide the ruling, but it means Option C is *less* of a departure than §9 estimated: the shell is already one room.
+
+### 10.3 · MAIA is present in Write and structurally unavailable
+
+The MAIA column reads:
+
+> *"MAIA can speak with you about a declared Work. Declare one in 'This work' and Conversations opens."*
+> *"IN RELATION TO — No work is declared for what is on the table, so there is no Work context to carry."*
+
+⚠️ **The writer is looking at Chapter 4 of *Elemental Alchemy*. The manuscript is on screen, the section is selected, and MAIA reports no Work context.** Availability is gated on a *declaration* that duplicates what the room already displays.
+
+Against the north star — *a developmental editor sitting next to you* — this is an editor who is in the room, facing the same page, and cannot discuss it until the writer formally announces which book they are writing.
+
+### 10.4 · Both rooms promise a restraint neither needs to make
+
+```text
+WRITE     "MAIA reads; she does not hold your material.
+           Nothing in this column is written by her into your manuscript."
+DEVELOP   "Nothing changes unless you change it."
+```
+
+Per D1, **no write path exists from either column.** The promise is honest and it is also unfalsifiable: *restraint is indistinguishable from absence of reach.* When the reach is built, these sentences must be re-earned rather than retained — a promise that cost nothing to keep has not yet been kept.
+
+### 10.5 · The identity test, re-run against real evidence
+
+```text
+Remove MAIA entirely. Is Writing still a writing room?     YES
+```
+
+⚠️ **But it passes trivially, and the reason is the finding.** Write is already a writing room without MAIA *because MAIA is gated out of it.* The test is satisfied by absence rather than by proportion — which meets §3's floor and **fails the north star at the same time.** A room MAIA cannot participate in is not a room she is proportionate in.
+
+⛔ **§9 remains open. This capture is evidence, not a ruling.**
+
 ## Carried forward
 
 ```text
