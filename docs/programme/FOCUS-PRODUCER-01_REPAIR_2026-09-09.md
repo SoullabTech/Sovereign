@@ -174,3 +174,64 @@ canonical-turn + field suites unbroken · typecheck 228 vs baseline 239 ·
 
 **Standing: FOCUS-PRODUCER-01A CLOSED · route still DISABLED · human witness now
 lawfully runnable and NOT RUN · `#1275` FROZEN.**
+
+---
+
+## Witness-readiness · W1 · W2
+
+### W1 · A governed exclusion is not a failed capability
+
+`WriterCanonicalOnly('rcn')` was thrown into RCN's generic non-blocking catch and
+logged as *"Processing failed"* — an intentional constitutional exclusion wearing
+the telemetry of an operational failure. Someone reading those logs later could
+reasonably conclude RCN malfunctioned.
+
+```text
+🖋️ [RCN] excluded — writers_studio canonical participation owns the response path
+```
+
+is now emitted instead, and the failure log remains for real failures. ⛔ No
+behaviour change; truthful instrumentation only.
+
+> ⭐ *A refusal witness must prove the intended refusal, not merely prove that the
+> operation failed* — and the same discipline governs the line a witness reads.
+
+### W2 · ⭐⭐ The ghost turn — the residue H2 did not catch
+
+When field safety refused **before** the canonical handoff, `getMaiaResponse`
+still called `addConversationExchange(...)`, persisting the safety answer into
+session history and `conversation_turns`. H1 then correctly reported
+`handoff = false`, so the Writer surface showed a non-crossing state with **no
+response** — while continuity remembered an answer the member never received, and
+would carry it into the next turn's history.
+
+> ⭐⭐ **A pre-handoff refusal may not leave behind a response the writer never
+> received.**
+
+On a Writer turn that persistence is now skipped. ⛔ The refusal still travels
+outward in the return value — it is information the surface may present. What it
+may not do is **write itself into the conversation from inside the service.**
+
+⚠️ Sanctuary already suppressed this write once H3 derived `meta.sanctuary` from
+the carried posture. **Ordinary Writer turns did not**, which is precisely why the
+defect was invisible: the protected case was safe and the common one was not.
+
+### Falsifiers — 8 more
+
+⭐ **The substantive one is not the guard, it is the audit**: a falsifier
+enumerates **every** `addConversationExchange` call preceding the canonical branch
+and requires each to be guarded or unreachable. There are exactly two — field
+safety (now guarded) and RCN's early return (unreachable, because RCN is excluded
+before it runs) — and the tail sites are asserted to fall *after* the crossing. A
+mutation removing the guard makes that audit go RED.
+
+*The founder's criticism of the earlier H2 falsifier was right: it verified the
+response was not returned, and never exercised or inspected persistence. A test
+that checks the visible half of a defect proves nothing about the invisible half.*
+
+**Gates:** `lib/disclosure` + `lib/writers-studio` **190 passed · 0 failed** ·
+canonical-turn + field unbroken · typecheck 228 vs baseline 239 · 0 regressions ·
+`check:no-supabase` clean.
+
+**Standing: FOCUS-PRODUCER-01A FULLY CLOSED · W1 · W2 done · route still
+DISABLED · seven-step human witness now unblocked at code level · `#1275` FROZEN.**

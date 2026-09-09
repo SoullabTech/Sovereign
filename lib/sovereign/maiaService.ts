@@ -2854,7 +2854,22 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             );
 
             const text = fieldSafety.message ?? "Let's take the safest next step together.";
-            await addConversationExchange(sessionId, input, text, {
+            // ⭐⭐ W2 · A PRE-HANDOFF REFUSAL MUST LEAVE NO RESPONSE BEHIND THAT THE
+            // WRITER WAS NEVER SHOWN.
+            //
+            // On a Writer turn this return happens before the Work reaches a model,
+            // so `onHandoff` never fires, the receipt stays `attempted`, and the
+            // Writer surface presents a non-crossing state with NO assistant
+            // response. Persisting this text anyway would leave a ghost turn in
+            // continuity: MAIA remembering an answer the writer never received,
+            // and carrying it into the next turn's history.
+            //
+            // ⛔ The refusal still travels outward in the return value — it is
+            // information the surface may choose to present. What it may not do is
+            // write itself into the conversation from inside the service.
+            if (writerStudio) {
+              console.log('🖋️ [Field Safety] Writer turn refused pre-handoff — no exchange persisted');
+            } else await addConversationExchange(sessionId, input, text, {
               ...meta,
               exchangeId,
               fieldRouting: fieldSafety.fieldRouting,
@@ -3242,8 +3257,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       }
     } catch (rcnError) {
-      // RCN failure is non-blocking - fall back to standard paths
-      console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+      if (rcnError instanceof WriterCanonicalOnly) {
+        // ⭐ W1 · An intentional room-policy exclusion must not wear the telemetry
+        // of a runtime failure. *A refusal witness must prove the intended
+        // refusal, not merely prove that the operation failed* — and the same
+        // discipline governs the log line a witness will read.
+        console.log('🖋️ [RCN] excluded — writers_studio canonical participation owns the response path');
+      } else {
+        // RCN failure is non-blocking - fall back to standard paths
+        console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+      }
     }
 
     // 🔭 CONTEXT INVENTORY — epistemic observability (descriptive, NOT interpretive).
