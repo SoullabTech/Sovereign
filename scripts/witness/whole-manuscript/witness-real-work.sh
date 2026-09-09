@@ -55,8 +55,50 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-PGBIN="$(ls -d /usr/lib/postgresql/*/bin /opt/homebrew/opt/postgresql@16/bin 2>/dev/null | tail -1 || true)"
-[ -x "$PGBIN/initdb" ] || { echo "⛔ no PostgreSQL server binaries found"; exit 1; }
+# ⛔ FIND THE SERVER BINARIES, AND SAY WHERE YOU LOOKED. The first version
+# checked two paths and reported only "no PostgreSQL server binaries found" —
+# true, useless, and indistinguishable from "PostgreSQL is not installed" on a
+# machine where it is. A macOS install can be Homebrew (arm64 or Intel prefix,
+# any major version), Postgres.app, or already on PATH.
+#
+# `initdb` is the discriminator, not `psql`: a client-only install has psql and
+# cannot host a cluster, which is the one thing this script needs.
+PGBIN="${PGBIN:-}"
+[ -n "$PGBIN" ] && [ ! -x "$PGBIN/initdb" ] && { echo "⛔ PGBIN=$PGBIN has no initdb"; exit 1; }
+[ -z "$PGBIN" ] && for d in \
+  /opt/homebrew/opt/postgresql@*/bin \
+  /usr/local/opt/postgresql@*/bin \
+  /Applications/Postgres.app/Contents/Versions/*/bin \
+  /usr/lib/postgresql/*/bin \
+  /usr/pgsql-*/bin
+do
+  [ -x "$d/initdb" ] && PGBIN="$d"
+done
+# Last resort: whatever is already on PATH.
+if [ -z "$PGBIN" ] && command -v initdb >/dev/null 2>&1; then
+  PGBIN="$(dirname "$(command -v initdb)")"
+fi
+
+if [ -z "$PGBIN" ]; then
+  cat <<'NOPG'
+⛔ No PostgreSQL SERVER binaries found. This script must create its own
+   ephemeral cluster, so `initdb` is required — `psql` alone is not enough,
+   and a client-only install will fail exactly here.
+
+   Searched:
+     /opt/homebrew/opt/postgresql@*/bin      (Homebrew, Apple silicon)
+     /usr/local/opt/postgresql@*/bin         (Homebrew, Intel)
+     /Applications/Postgres.app/.../bin      (Postgres.app)
+     /usr/lib/postgresql/*/bin               (Debian/Ubuntu)
+     /usr/pgsql-*/bin                        (RHEL/Fedora)
+     $PATH
+
+   On macOS:  brew install postgresql@16
+   Or point at an existing install:  PGBIN=/path/to/bin bash <this script>
+NOPG
+  exit 1
+fi
+echo "  postgres       $PGBIN"
 if [ "$(id -u)" -eq 0 ] && id postgres >/dev/null 2>&1; then
   as_pg() { su postgres -s /bin/bash -c "$*"; }; PG_OWNER=postgres
 else

@@ -36,10 +36,47 @@ $RO
 \copy (SELECT r.draft_id, r.revision_number, r.content, r.saved_by, r.note, r.created_at FROM working_draft_revisions r JOIN manuscript_working_drafts d ON d.id = r.draft_id WHERE d.manuscript_id = '$MID' ORDER BY r.revision_number) TO '$OUT/revisions.csv' CSV HEADER
 SQL
 
-echo "── witness copy taken (read-only) ──"
+# ⛔ AN EMPTY EXPORT IS A FAILURE, NOT A COPY. The first version printed
+# "witness copy taken" over five header-only files and exited 0, because it
+# counted rows without ever asking whether there were any. It would have handed
+# the witness a runtime containing no book — and the §4b observer would have
+# been left to discover that a manuscript id matched nothing by finding an empty
+# Canvas. An instrument that cannot fail cannot be trusted when it passes.
+echo "── witness copy ──"
+ROWS_MS=$(( $(wc -l < "$OUT/manuscript.csv") - 1 ))
 for f in manuscript source_sections draft draft_sections revisions; do
   printf '  %-16s %s rows\n' "$f" "$(( $(wc -l < "$OUT/$f.csv") - 1 ))"
 done
+
+if [ "$ROWS_MS" -lt 1 ]; then
+  echo
+  echo "⛔ NO SUCH WORK: manuscript_id $MID matched no row in member_manuscripts."
+  echo "   Nothing was exported. This is not a copy and must not be witnessed."
+  echo
+  echo "   Find the right id (read-only):"
+  echo "     SELECT m.id, m.title, m.created_at,"
+  echo "            (SELECT count(*) FROM manuscript_draft_sections ds"
+  echo "               JOIN manuscript_working_drafts d ON d.id = ds.draft_id"
+  echo "              WHERE d.manuscript_id = m.id) AS addressable_sections,"
+  echo "            (SELECT d.section_addressable_at IS NOT NULL"
+  echo "               FROM manuscript_working_drafts d"
+  echo "              WHERE d.manuscript_id = m.id) AS is_addressable"
+  echo "       FROM member_manuscripts m ORDER BY m.created_at;"
+  rm -rf "$OUT"
+  exit 1
+fi
+
+DS=$(( $(wc -l < "$OUT/draft_sections.csv") - 1 ))
+if [ "$DS" -lt 1 ]; then
+  echo
+  echo "⛔ The Work exists but has NO addressable draft sections."
+  echo "   Whole Manuscript cannot mount, so §4b cannot be performed on it."
+  echo "   Nothing here converts it — that would be witnessing something the"
+  echo "   member never had."
+  rm -rf "$OUT"
+  exit 1
+fi
+echo "  ✓ $DS addressable sections — this is a witnessable Work"
 echo
 echo "⛔ This copy contains real member text. Keep it off shared storage, and"
 echo "   delete it when the witness is finished."
