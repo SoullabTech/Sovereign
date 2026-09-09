@@ -99,7 +99,10 @@ homogenization risk from
 "the room becomes more
   intelligent"                 SOULLAB INTERPRETATION      VISION
 "The future of intelligence
-  is not artificial…"          SOULLAB INTERPRETATION      VISION
+  is not artificial…"          ⭐ RATIFIED CANONICAL MOTTO
+                               2026-09-09 — an intention/orientation
+                               statement, NOT a capability claim.
+                               See docs/canon/SOULLAB_MOTTO_RELATIONAL_INTELLIGENCE.md
 ```
 
 ⛔ **Nothing in §1 is LIVE. Nothing in §1 is DESIGNED.** ⛔ **Do not place this on `/accounted-for`,
