@@ -190,3 +190,66 @@ lesson · losing the whole · losing the thread. **The contract is its own falsi
 the person entitled to state it.**
 
 ⭐ **Founder: "That feels like the actual substance D9 now needs to embody."**
+
+---
+
+## 10 · ⭐⭐ GOVERNING PURPOSE — top of D9
+
+> **The Writer's Studio should help a person remain in living relationship with their Work — from
+> the smallest word to the whole becoming — while MAIA increases possibility, understanding, and
+> capacity without displacing authorship.**
+
+## 11 · ⭐ D9 IN OPERATIONAL FORM — request → what changes in Write → failure
+
+| Writer's request | What changes concretely in Write | Failure |
+|---|---|---|
+| **Help me see more without deciding for me.** | MAIA notices, questions, connects, compares, proposes; highlighted text becomes shared attention. | MAIA silently determines what the passage means or what must change. |
+| **Help me go deeper without taking me over.** | Conversation deepens sentence → passage → chapter → whole Work while the next act remains the writer's. | MAIA completes the inquiry, rewrites unasked, or becomes the centre of attention. |
+| **Help me communicate what is uniquely mine without making it ordinary.** | MAIA improves clarity and reception while preserving unusual language, thought, form and intention. | Model familiarity becomes the reason for normalization. |
+| **Help me through difficulty without stealing what difficulty can teach me.** | MAIA removes useless friction, supports inquiry, may offer *answer or work through it?*; a direct request governs. | MAIA rescues prematurely, or paternalistically withholds help. |
+| **Hold the whole while we work on the smallest part.** | A highlighted sentence stays locally editable while MAIA retains section, chapter, whole-Work and essential-nature context. | Micro work loses the whole, or macro claims cannot be grounded in actual passages. |
+| **Remember the thread while allowing the Work — and me — to become something neither of us could have predicted.** | Intention, discoveries and prior understandings remain available, visible and correctable without becoming a fixed strategy. | Memory becomes rubric; prior intention constrains emergence; the system forces the future to resemble the past. |
+
+⛔ **The writer should NEVER have to see this table while writing.** ⭐ **If they can feel the
+architecture, we have probably exposed too much architecture.**
+
+**What they should feel is what the Chapter 4 room produced:**
+
+> *the Work is here; I can enter it; I can place my attention somewhere; MAIA can meet me there; we
+> can explore; I can change something; I can look again; I remain the author.*
+
+## 12 · ⭐ THE DOCTRINES COMPOSE EXPERIENTIALLY — they need not become eight compliance regimes
+
+```text
+see more without deciding      ← Parallel Knowing
+go deeper without taking over  ← ⚠️ see §12.1
+what is uniquely mine          ← Evolutionary Diversity · Differentiated Genius
+through difficulty             ← Developmental Tempo · Fertility of Not-Knowing
+hold the whole                 ← Scale Coherence
+remember the thread            ← Continuity of Becoming
+
+Creative Perseverance          ← the movement through all of them
+```
+
+### 12.1 ⭐ THE UNMAPPED REQUEST IS THE STRUCTURAL FINDING
+
+⚠️ **Five of the six requests carry a candidate doctrine. One does not: *"help me go deeper without
+taking me over."*** ⛔ **That is not a gap. It is the request the RATIFIED constitution already
+holds** — **Law 4** (no strategic change without authorization) and **Law 5** (capability required ·
+sovereignty floor required · pedagogy declinable).
+
+> ⭐⭐ **Which reveals the shape of today's work: the eight candidates cluster around the GENERATIVE
+> requests, while the one purely PROTECTIVE request was already covered by law written earlier.**
+> **The doctrines are not a second constitution — they are the generative half arriving beside a
+> protective half that was already standing.**
+
+## 13 · ⭐ THE NEXT D9 QUESTION — no longer philosophical
+
+> **Can we build one room in which all six requests are simultaneously true without the writer
+> having to manage any of them?**
+
+⭐ **That is a falsifiable product-design problem.** ⚠️ **And the clause that makes it hard is the
+last one** — *without the writer having to manage any of them.* **It is the same requirement as
+criterion 11** (*the writer must never have to think like the architecture in order to write*), the
+**no-menu ruling**, and **F-REACTIVE**. ⛔ **Six requests satisfied by six controls would fail this
+question completely.**
