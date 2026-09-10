@@ -808,3 +808,168 @@ NEXT            @codemirror/merge + jsdiff, against one question:
 implementation  NOT AUTHORIZED
 PRODUCTION      UNTOUCHED
 ```
+
+---
+
+# Addendum 5 — the diff layer · `@codemirror/merge` + `jsdiff`
+
+## ⭐ WL-1 — promoted witness law (general, beside FR-14)
+
+> **A newly introduced upstream refusal can make downstream falsifiers appear
+> green without exercising the behaviour they are named to prove.**
+
+Witnessed 2026-09-10: RC-08a's `BEFORE INSERT` trigger made T4/T5/T6 refuse at the
+producer check instead of at the candidate-reference, origin-agreement and
+work-authority constraints they are named for. **Three checks stopped being tested
+while still reporting PASS.**
+
+Detection: read the refusal *reason*, never the result alone.
+Repair: make the affected tests satisfy the new precondition so they can reach the
+constraint they exist to prove — never delete them, never relax the new gate.
+
+Companion to FR-14 (*an instrument can satisfy all of its remaining questions by
+forgetting to ask the difficult ones*). FR-14 is about questions that go missing;
+**WL-1 is about questions that are still asked and can no longer be heard.**
+
+## 🔴 `@codemirror/merge` — DOWNGRADED to ADAPT / GUARDED REUSE
+
+The earlier "high-confidence REUSE, no opinion about authority" classification was
+**wrong**. It ships mutation affordances by default:
+
+```
+unified view    mergeControls defaults to TRUE
+acceptChunk     mutates its stored original
+rejectChunk     DISPATCHES CHANGES INTO THE EDITOR DOCUMENT
+split view      optional revert controls, dispatching document changes
+```
+
+⭐ **Reusable only if the mutation affordances are structurally absent from our
+adapter**, not merely unused:
+
+```
+RevisionDiffView(oldText, proposedText)
+  internally   mergeControls: false · no revertControls
+               EditorState.readOnly.of(true)
+               EditorView.editable.of(false)
+  exposes      NOTHING that mutates text
+               no acceptChunk · no rejectChunk · no MergeView instance
+```
+
+> ⭐ **The diff renderer may SHOW the decision. It may not IMPLEMENT the decision.**
+
+`[Accept] [Revise] [Leave]` sit **outside** that component and are Soullab domain
+acts, never CodeMirror acts.
+
+## `jsdiff` 8.0.4 — REUSE for computation · REFUSE for application
+
+### 🔴 H-JD1 CONFIRMED, and worse than the documentation implies
+
+Run against a patch whose target had unrelated content inserted **above** it:
+
+```
+applyPatch(moved, patch)                    APPLIED ANYWAY — relocated
+applyPatch(moved, patch, {fuzzFactor: 2})   APPLIED ANYWAY — fuzzy accepted
+```
+
+⛔ **Relocation is the DEFAULT, not an opt-in.** `fuzzFactor` widens tolerance that
+already exists. This is the same category the census has spent its whole length
+refusing — *"the target moved; I'll find somewhere similar enough."*
+
+```
+REUSE    diffWordsWithSpace · diffWords · diffSentences · structured output
+REFUSE   applyPatch · applyPatches · any patch-search application
+         any fuzzy compareLine application
+```
+
+### ⭐ Granularity, measured on a real developmental revision
+
+Original/proposed drawn from the night-waking passage MAIA actually discussed.
+
+```
+diffChars             13 marked   mangles words: "[-th-]a[-t a-]rrived"
+diffWords             10 marked   cleanest grouping: "[-It was a-]{+The+}"
+diffWordsWithSpace    11 marked   splits that into two spans — marginally noisier
+diffSentences          4 marked   but 379 CHARS TOUCHED — rewrites whole
+                                  sentences, hiding what actually changed
+```
+
+⚠️ **On readability alone `diffWords` won.** It is nonetheless **REFUSED as the
+default**, on the discriminating test:
+
+```
+whitespace only — a doubled space closed   diffWords: SHOWS NOTHING
+whitespace only — a line break added       diffWords: SHOWS NOTHING
+trailing space removed                     diffWords: SHOWS NOTHING
+                                           diffWordsWithSpace: 1-2 spans marked
+```
+
+⭐ **`diffWords` renders a whitespace-only revision as no change at all** — a
+proposal that changes something would display as identical to the original. **A
+renderer that can silently show a real proposal as "no change" is lying about what
+MAIA proposed**, and in a manuscript where rhythm and spacing are authorial that is
+the worse failure by a wide margin.
+
+**Default: `diffWordsWithSpace`.** `diffSentences` only as an optional second-level
+summary for large revisions, never as the primary view.
+
+### The adapter
+
+```ts
+interface ProseDiffEngine {
+  compare(original: string, proposed: string): ReadonlyArray<DiffSpan>
+}
+```
+
+Only that module imports `diff`. Nothing else in the codebase knows the library
+exists.
+
+## ⭐ H-DIFF1 CONFIRMED — never persist a computed diff
+
+Verified: the same two strings produce an identical rendering, deterministically.
+
+```
+PERSIST      source identity · source revision/digest · proposed_text
+             candidate revision where applicable
+EPHEMERAL    DiffEngine(originalText, proposedText) -> presentation
+```
+
+⭐ **The diff is a view of two authoritative strings, not evidence itself.** So
+`jsdiff`, CodeMirror's internal algorithm, our styling, word segmentation, or the
+entire editor can be replaced **without migrating a single historical proposal**.
+
+⚠️ Sharpened by a real incompatibility: CodeMirror Merge uses its **own**
+character-oriented diff (diff-match-patch–inspired, with its own scan-limit and
+degradation behaviour). **Its chunks and jsdiff's tokens are not the same thing and
+neither is a stable domain concept.** Persisting either would freeze a vendor's
+segmentation into our record.
+
+## Hypotheses
+
+```
+H-CM1   CodeMirror Merge reusable only if mutation affordances are
+        structurally absent from our adapter          SUPPORTED — and the
+        default configuration is NOT safe
+H-JD1   jsdiff patch application violates targeting law
+                                                      CONFIRMED by experiment;
+        relocation is the default, not opt-in
+H-DIFF1 no diff output becomes durable domain state   CONFIRMED
+```
+
+## Standing
+
+```
+WL-1                    PROMOTED
+@codemirror/merge       ADAPT / GUARDED REUSE  (downgraded from REUSE)
+jsdiff computation      REUSE — default diffWordsWithSpace
+jsdiff application      REFUSE — witnessed relocating by default
+diff persistence        REFUSED as domain state
+
+DIFF LAYER              research substantially COMPLETE
+NEXT                    codemirror-ai · prosemirror-suggestion-mode
+                        for INTERACTION lessons, not for a rendering engine
+                        FineEdit / CoEdIT last
+
+dependency changes      STILL NOT AUTHORIZED — jsdiff installed only in the
+                        disposable research directory
+PRODUCTION              UNTOUCHED
+```
