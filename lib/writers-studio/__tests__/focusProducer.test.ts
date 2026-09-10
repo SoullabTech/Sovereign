@@ -404,3 +404,45 @@ describe('FOCUS-ASSEMBLER-CONTRACT-01B · whole-Work fidelity', () => {
     expect(wit).not.toMatch(/whole[!=]?\.?(trim|replace|normalize)\(/);
   });
 });
+
+describe('LIVE SCHEMA WITNESS · read-only, structurally', () => {
+  /**
+   * ⭐ This one runs against PRODUCTION, so "read-only" cannot rest on the author
+   * having been careful. Postgres enforces it: the whole witness runs inside
+   * `SET TRANSACTION READ ONLY` and ends in ROLLBACK, so a stray write is refused
+   * by the server — verified against a shadow:
+   *   ERROR: cannot execute INSERT in a read-only transaction
+   */
+  const sql = () => require('fs').readFileSync(
+    require('path').join(process.cwd(), 'scripts/witness/production-focus-schema-witness.sql'), 'utf8')
+    .replace(/^\s*--.*$/gm, '');
+
+  it('declares the read-only transaction and rolls back', () => {
+    expect(sql()).toMatch(/SET TRANSACTION READ ONLY/);
+    expect(sql()).toMatch(/ROLLBACK/);
+    expect(sql()).not.toMatch(/COMMIT/);
+  });
+
+  it('contains no write verb of any kind', () => {
+    for (const verb of ['INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'TRUNCATE', 'GRANT', 'REVOKE']) {
+      expect(sql()).not.toMatch(new RegExp(`\\b${verb}\\b`, 'i'));
+    }
+  });
+
+  it('reads counts, never member content', () => {
+    const s = sql();
+    // no column that could carry authored text
+    for (const col of ['content', 's.text', 'body', 'heading', 'title']) {
+      expect(s).not.toMatch(new RegExp(`SELECT[^;]*\\b${col.replace('.', '\\.')}\\b`, 'i'));
+    }
+    expect(s).toMatch(/count\(\*\)/);
+  });
+
+  it('establishes exactly the four facts the decision needs', () => {
+    const s = sql();
+    expect(s).toMatch(/manuscript_draft_sections/);
+    expect(s).toMatch(/section_addressable_at/);
+    expect(s).toMatch(/manuscript_working_drafts_round_trip/);
+    expect(s).toMatch(/schema_migrations/);
+  });
+});
