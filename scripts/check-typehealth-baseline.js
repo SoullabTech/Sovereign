@@ -29,6 +29,14 @@
  * plus an occurrence count per key. A count-only baseline would let one error
  * vanish while a different one appears and still report "no regression".
  *
+ * The message is additionally canonicalized for the KEY ONLY, by sorting the
+ * members of each union type — tsc's union print order is not stable across
+ * program compositions, and without this the same unchanged error is reported
+ * as both "fixed" and "NEW" when unrelated files enter the program. Sorting
+ * never deduplicates: an added, removed or altered member still changes the
+ * identity and still fails the gate. See scripts/lib/typehealth-identity.js
+ * and its falsifier scripts/witness/typehealth-identity-discrimination.js.
+ *
  * Line numbers are deliberately excluded from the identity key: they shift on
  * every insertion above a diagnostic and would produce constant false
  * regressions. Lines are still recorded per key (`lines`) for diagnosis.
@@ -50,6 +58,8 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+const { identityKey } = require('./lib/typehealth-identity');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const PROJECT = 'tsconfig.ship.json';
@@ -130,7 +140,7 @@ function collectDiagnostics() {
     const abs = path.isAbsolute(rawFile) ? rawFile : path.join(REPO_ROOT, rawFile);
     const file = toPosix(path.relative(REPO_ROOT, abs));
     const message = normalizeMessage(rawMessage);
-    const key = `${file}|${code}|${message}`;
+    const key = identityKey(file, code, message);
 
     total += 1;
     const existing = byKey.get(key);
@@ -205,7 +215,10 @@ function writeBaseline(payload) {
 // ---------------------------------------------------------------- comparison
 
 function keyOf(d) {
-  return `${d.file}|${d.code}|${d.message}`;
+  // Identity is computed the same way on both sides of the comparison. The
+  // stored `message` is left exactly as tsc printed it; only the KEY is
+  // canonicalized. See scripts/lib/typehealth-identity.js.
+  return identityKey(d.file, d.code, d.message);
 }
 
 function compare(current, baseline) {
@@ -440,7 +453,9 @@ function main() {
     console.log(
       `✨  ${fixedCount} error(s) fixed since the baseline ` +
         `(${result.fixed.length} identities gone, ${result.decreased.length} reduced).\n` +
-        '    Lock it in with: npm run typecheck:baseline\n'
+        // A FAILING gate must never suggest the command that can redefine the
+        // failure away. Baseline maintenance is a separately authorized act.
+        (failed ? '' : '    Recording that is a separate, governed act.\n')
     );
   }
   if (result.coverageGained.length) {
@@ -454,9 +469,11 @@ function main() {
 
   if (failed) {
     console.error(
-      'Gate FAILED. Fix the diagnostics above.\n' +
-        'Do NOT run `npm run typecheck:baseline` to absorb a new error — the baseline records\n' +
-        'pre-existing debt only. Full inventory: npm run typecheck:full\n'
+      'Gate FAILED.\n' +
+        'Inspect the new diagnostic identities above and fix what they name.\n' +
+        'Do NOT update the baseline merely to clear this failure — the baseline records\n' +
+        'pre-existing debt only, and re-baselining is a separately authorized operation,\n' +
+        'never this gate\'s escape hatch. Full inventory: npm run typecheck:full\n'
     );
     return 1;
   }
@@ -465,9 +482,15 @@ function main() {
   return 0;
 }
 
-try {
-  process.exit(main());
-} catch (err) {
-  console.error(`❌  ${err.message}`);
-  process.exit(1);
+// Exported so the falsifier can exercise the real comparison rather than a
+// reimplementation of it: scripts/witness/typehealth-identity-discrimination.js
+module.exports = { compare, keyOf };
+
+if (require.main === module) {
+  try {
+    process.exit(main());
+  } catch (err) {
+    console.error(`❌  ${err.message}`);
+    process.exit(1);
+  }
 }

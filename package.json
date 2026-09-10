@@ -99,6 +99,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "typecheck": "node scripts/check-typehealth-baseline.js",
     "typecheck:baseline": "node scripts/check-typehealth-baseline.js --update",
+    "typecheck:identity-witness": "node scripts/witness/typehealth-identity-discrimination.js",
     "typecheck:full": "tsc -p tsconfig.ship.json --noEmit",
     "typecheck:entrypoint": "tsc -p tsconfig.typecheck.json --noEmit",
     "typecheck:scripts": "tsc -p tsconfig.scripts.json --noEmit",
