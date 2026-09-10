@@ -1118,3 +1118,152 @@ NEXT   FineEdit / CoEdIT — a different question entirely:
        how do we evaluate whether MAIA's proposed revision is actually good,
        while preserving the writer's voice?
 ```
+
+---
+
+# Addendum 7 — evaluation census · FineEdit / CoEdIT · and the fidelity question
+
+## ⭐ NS-1 — canonical negative specimen (no new law)
+
+> **A rejection mechanism that depends on remembered coordinates is capable of
+> destroying later human work while preserving the machine contribution it claims
+> to reject.**
+
+⛔ **No new RC law.** RC-01, RC-06b, `current`-only application and the
+proposal-outside-Work architecture already exclude it. It becomes an **acceptance
+falsifier**:
+
+```
+AF-1   the writer edits above / beside a pending proposal
+       -> rejecting that proposal CANNOT change one byte of writer-authored Work
+```
+
+Evidence of record: Addendum 6 — Reject wrote `oldCode` at stale coordinates,
+destroyed the writer's new paragraph, and left the AI's text in place.
+
+## H-EVAL1 — CONFIRMED by the founder's primary-source pass
+
+```
+published editing benchmarks   CAN evaluate EDIT DISCIPLINE
+                               CANNOT establish AUTHORIAL FIDELITY
+```
+
+```
+CoEdIT     ~82K instruction/source/target pairs — grammar, coherence,
+           simplification, paraphrase, formalization, neutralization,
+           iterative editing. Framed around preserving meaning.
+           dataset Apache-2.0 · MODEL WEIGHTS CC-BY-NC-4.0
+           -> ⛔ not a commercial Soullab runtime dependency without
+              separate licensing
+
+FineEdit   InstrEditBench, 28,049 rows: context · edit_request ·
+           edit_content · diff · quality score. Wiki, code, LaTeX, SQL.
+           BLEU / ROUGE-L. CC-BY-4.0 -> usable as an evaluation resource
+```
+
+**Take from CoEdIT** the editing-intent vocabulary (fluency · coherence · clarity ·
+paraphrase · formality · neutralization · composite) — **internal only, never a
+taxonomy shown to the writer.** **Take from FineEdit** the evaluation shape:
+`source · instruction · candidate edit · difference · score`.
+
+## Two acceptance regimes, and only one is public
+
+```
+EDITORIAL CAPABILITY   can the model execute an edit precisely?   PUBLIC
+AUTHORIAL FIDELITY     did the edit remain in relationship with
+                       THIS writer?                               MUST BE OURS
+```
+
+MAIA Editorial Fidelity Suite (founder, candidate): **A** instruction fidelity ·
+**B** locality · **C** semantic conservation · **D** rhythmic/stylistic continuity ·
+**E** author preference · **F** modification distance.
+
+### ⭐ F needs no new schema — the designed shape already carries it
+
+```
+proposal.proposed_text          immutable (RC-01)
+candidate revision r1 body      append-only (RC-06b)
+delta                           DERIVABLE, never stored
+```
+
+**RC-04 and RC-06b are therefore worth more than provenance.** The candidate chain
+is a lawful record of *how this writer edits an editor*.
+
+### 🔴 BUT — F is structurally the same shape FR-06 barred absolutely
+
+⚠️ **Flagging before it is designed, not after.** *"MAIA tends to intensify here;
+the writer repeatedly restores understatement"* is **a derived characterization of
+a person**, produced by the system from their activity. That is the exact shape of
+`living_field_affinities` — `created_by='system'`, an inferred score, an evidence
+reason — which `JARVIS-CIRCLES-01` I0 found **BARRED ABSOLUTELY by FR-06**.
+
+The distinguishing argument, and it may well hold:
+
+```
+living_field_affinities   inferred from PRIVATE MEMORY the member never
+                          offered as a statement about themselves
+
+proposal -> candidate     the member's OWN EXPLICIT ACT on a SPECIFIC object,
+                          performed in the open, about a paragraph
+```
+
+⭐ **The delta is a record of an act. The aggregate is a claim about a person.**
+Those are not the same object and must not acquire the same standing by adjacency.
+
+⛔ **Not decided here.** Whatever F becomes needs its own founder act against FR-06
+and Invariant 14, and probably a member-facing consent surface. **Do not let F
+arrive as a side effect of building R2.**
+
+## ⭐ Evaluation must not become training by stealth
+
+```
+proposal history -> writer decisions -> evaluation / understanding      YES
+proposal history -> silently fine-tune the model                        NO
+```
+
+Any personalization use is **separately governed and explicit**.
+
+## The evidence hierarchy
+
+```
+REJECT   the proposal failed — but not on which axis
+ACCEPT   the proposal was acceptable
+MODIFY   exactly WHERE the writer took control back
+```
+
+⭐ MODIFY wins on **discriminating power**: it localizes. One refinement worth
+recording: **an ACCEPT of the only option offered is weaker still than an ACCEPT
+among alternatives** — accepting is not the same act as choosing.
+
+## ⭐ The no-edit baseline
+
+CoEdIT evaluates a copy/no-edit baseline. The principle transfers directly:
+
+> **Editorial intelligence includes knowing when the writer's existing language is
+> better than the available revision. MAIA must not be rewarded merely for
+> producing a different string.**
+
+⭐ **Already witnessed in her actual behaviour** — in the Develop transcript that
+opened this lane MAIA answered *"Then the recurrence is doing what you want it to
+do, and I'd leave it alone."* The no-edit answer is not a capability to add; it is
+one to **avoid destroying** when the Accept/Revise/Leave surface starts rewarding
+proposals.
+
+## Standing
+
+```
+ARCHITECTURAL CENSUS
+Prose · Sundial               CHANGED our design
+codemirror-ai · prosemirror   CONFIRMED the boundary
+diff layer                    CLOSED
+
+EVALUATION CENSUS
+FineEdit                      precision / locality        CC-BY-4.0, usable
+CoEdIT                        edit-intent vocabulary      model CC-BY-NC-4.0
+public voice benchmark        NONE — and none expected
+writer-specific fidelity      MUST BE OURS
+
+NS-1 / AF-1                   RECORDED
+H-EVAL1                       CONFIRMED
+F (modification distance)     PROMISING · ⛔ FR-06 QUESTION OPEN
+```
