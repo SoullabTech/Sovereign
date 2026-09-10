@@ -113,3 +113,51 @@ witness environment      not yet established
 custody defect           OPEN — own bounded lane
 #1275                    FROZEN
 ```
+
+---
+
+## ⚖️ Roadmap ruling (founder, 2026-09-09)
+
+**The Writer's Studio surface is not broken and does not need to be redesigned.
+It is waiting to be integrated.**
+
+```text
+D9 Shared Focus grammar           DESIGNED + WITNESSED
+        ↓
+lawful Focus/disclosure boundary  BUILT + REPAIRED through 01A/01B
+        ↓
+exact 01B implementation witness  STILL OWED
+        ↓
+merge/deploy custody defect       MUST BE CLOSED
+        ↓
+D9 → Canvas integration lane      THEN REOPEN
+        ↓
+production acceptance             LATER
+```
+
+⚖️ **Precision on "one authorization away"** — it is one authorization away from
+**opening the integration lane**, not from production. The earlier phrasing
+compressed those.
+
+### Two distinct achievements, to be preserved as distinct
+
+> ⭐ **D9 solved LEGIBILITY.** The writer can perceive what MAIA is attending to,
+> and work with Focus spatially.
+>
+> ⭐ **FOCUS + 01A/01B solved LEGITIMACY.** MAIA can receive the correct Work,
+> through the correct boundary, without silently substituting, corrupting or
+> fabricating it.
+
+They now need to be joined. ⛔ **The integration job is not "invent a better
+Writer's Studio."** It is: *take the already-accepted D9 Shared Focus grammar and
+make it the real Canvas expression of the now-lawful Focus boundary.* A materially
+different task — the interaction is already known; the intervening work
+established whether the thing beneath it can tell the truth.
+
+⛔ **Do not reopen D9 integration yet.** Finish the narrow proof already in
+motion, or a surface integration gets mixed with unresolved deployment provenance
+a second time.
+
+**Next substantive product lane, when it opens:**
+`D9 SHARED FOCUS → WRITER'S STUDIO CANVAS INTEGRATION` — not redesign, not another
+architecture inquiry: integration of a witnessed surface with a witnessed boundary.
