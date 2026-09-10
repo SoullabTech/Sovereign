@@ -198,6 +198,83 @@ writer MODIFY candidate   STORE
 > **Durability does not make the candidate canonical.** It is recoverable working
 > material. The Work remains unchanged until a member explicitly applies it.
 
+## RC-06 — One authoritative textual home at a time
+
+**Ruled 2026-09-10, amending RC-05's rationale.** This supersedes the shorthand *"no
+member prose in proposal tables"* — a content-type prohibition — with the law that
+actually explains why each storage decision is lawful.
+
+> ⭐ **Every piece of member writing has one authoritative textual home at a time.
+> Other records may point to it, prove what acted on it, and preserve lineage — but
+> must not quietly become competing copies of the Work.**
+
+The governing test is therefore not *"is this member prose?"* but **"does persisting
+this text create a second authoritative copy of writing that already has a home?"**
+
+```
+MAIA proposal
+  STORE       not the Work; evidence of what MAIA proposed
+
+bounded original
+  REFERENCE   already has an authoritative home in the revision store
+              copying it would create a rival
+
+MODIFY candidate
+  STORE       member prose, yes — but no other authoritative home exists yet
+              this is its FIRST copy, not its second
+```
+
+⭐ **RC-05 amended:** *a MODIFY candidate may be durably stored because, until
+application, that store is the sole authoritative home of that candidate — not a
+second copy of the Work.*
+
+### RC-06a — Application changes the candidate's status
+
+```
+before apply    candidate row owns candidate prose
+
+after apply     canonical revision owns adopted prose
+                candidate record preserves provenance / lineage
+                and points to the resulting revision
+```
+
+⛔ **At the moment of application the candidate substrate must not be allowed to
+become a permanent rival manuscript store.** That does not necessarily mean deleting
+its history.
+
+⛔ **OPEN, requires an act:** whether the candidate body remains immutable as
+historical evidence, or collapses to a reference once adopted. **The RC-06 test is
+what decides it, not convenience.**
+
+### RC-06b — Candidate state needs a trustworthy identity
+
+If MAIA makes P2 against C1 before C1 is applied, **P2 must identify the exact
+candidate state it saw.** A candidate cannot be a mutable blob whose prior state
+disappears while downstream proposals still claim to derive from it.
+
+⛔ **This blocks part of the R1 migration shape.** Under design §7, R1 must persist
+the full proposal shape so R2 needs no backfill — and a proposal's reference to a
+candidate is then **not an id but a triple**: `(candidateId, candidateRevision,
+digest)`. Choosing wrong now means migrating history later.
+
+**Recommendation, not a decision** — give the candidate its own append-only revision
+sequence, the same shape as `working_draft_revisions` (UPDATE refused by trigger,
+`UNIQUE (candidate_id, revision_number)`), and have a proposal name the triple.
+Then both existing instruments work unchanged on candidates:
+
+```
+recoverEvidence   can display exactly what P2 was based on, digest-verified
+locateCurrent     three-state against the candidate, never fuzzy
+```
+
+⭐ **The alternative — a mutable candidate plus a frozen digest on P2 — detects
+divergence but cannot recover what P2 saw**, because there would be no history to
+recover from. That is `unmeasured` where the Work would give `superseded` with the
+text. Reusing the accepted versioning shape is what makes RC-06b *literally* true
+rather than merely detectable.
+
+---
+
 ### The lineage
 
 ```
@@ -308,7 +385,10 @@ was ruled wrong.
 
 ```
 RC-01 .. RC-04              RATIFIED
-RC-05 candidate storage     AUTHORIZED
+RC-05 candidate storage     AUTHORIZED (rationale amended by RC-06)
+RC-06 one authoritative home  RATIFIED
+RC-06a post-apply rule      OPEN — requires an act
+RC-06b candidate identity   OPEN — blocks part of the R1 migration shape
 constitutional rule         RATIFIED
 DESIGN                      RECORDED
 R1                          UNBLOCKED — authorized to proceed
