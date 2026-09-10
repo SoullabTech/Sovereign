@@ -54,9 +54,38 @@ W4  ⛔ AS WRITTEN, PROBABLY NOT EXECUTABLE. "Did it feel like an operation on
     experience that has no rendering.
 ```
 
+⭐⭐ **RULED — founder, 2026-09-10: DISPOSITION (i).** Run W0–W3 now. ⛔ Do not
+hold Focus hostage to a surface that does not exist on the frozen candidate.
+
+```text
+W0–W3   EXECUTABLE ON THIS SUBJECT · run now
+W4      NOT ANSWERABLE ON THIS SUBJECT
+        no member-reachable Focus surface exists at cbbb53dc6
+P10     DEFERRED WITH W4 · transferred to D9-PHENOMENOLOGY-WITNESS-01,
+        when an inhabited WRITE surface actually exists
+```
+
+⛔ **The result therefore cannot be called an unqualified FULL PASS.** On W0–W3
+passing, the wording is exactly:
+
+```text
+FOCUS-WITNESS-01
+TECHNICAL CROSSING PASS
+PHENOMENOLOGY DEFERRED — SUBJECT HAS NO SURFACE
+```
+
+⭐ **W4 is DEFERRED, NOT WAIVED.** The claim *"the writer remains with the Work"*
+still has to lose or survive later, when there is an actual writer experience to
+witness. The original W4/P10 language below is preserved verbatim for that run.
+
+**Why not (ii):** it creates a loop — the Focus witness waits for an inhabited
+surface, Phase 4 builds the surface, and Phase 4 is paused until the Focus
+witness closes. More fundamentally it would couple two different acceptance
+questions: *is the crossing technically and evidentially truthful?* and *what does
+that crossing feel like embodied in WRITE?* Keep them separate.
+
 ⛔ **This is not repaired here, and building a surface to make the witness
-answerable would mutate the subject.** Two lawful dispositions exist and the
-choice is the founder's:
+answerable would mutate the subject.** The two dispositions, as considered:
 
 ```text
 (i)  RUN W0–W3 NOW, and record W4 as NOT ANSWERABLE ON THIS CANDIDATE
@@ -92,9 +121,32 @@ DB-B   FOCUS-WITNESS-01
 ⛔ Neither database is production. ⛔ The seeder refuses any database already
 holding member Works, structurally — not by hostname heuristic.
 
-**Required apparatus not yet built:** a credential fixture. `resolveCanonicalIdentity`
-must return a **verified** identity or the route refuses with 401, so the walk
-needs an authenticated member in DB-B. ⛔ Not created here.
+**Credential fixture — AUTHORIZED, and bounded.** `resolveCanonicalIdentity`
+returns `verified` only when `getMemberIdFromRequest` resolves an
+`auth_sessions`-backed credential:
+
+```sql
+SELECT member_id FROM auth_sessions
+ WHERE session_token = $1 AND revoked = FALSE AND expires_at > NOW()
+```
+
+⭐ **The fixture creates that real row and nothing else.** The walk presents the
+token as `x-session-token`, which is a real transport the resolver already
+honours.
+
+```text
+⛔ MAY NOT   bypass, mock or replace resolveCanonicalIdentity
+⛔ MAY NOT   introduce a witness authentication bypass, a hard-coded "verified"
+             return, or a route-only test branch
+⛔ MAY NOT   use a production credential, a real person's credential, or any
+             committed secret
+```
+
+The token is generated per run, lives only in disposable DB-B, and dies with it.
+⛔ **If making the route authenticate had required changing production runtime
+behaviour, the instruction was to STOP and report the dependency rather than
+build an auth exception. It did not: the resolver's real predicate is
+satisfiable with substrate alone.**
 
 ---
 
@@ -117,6 +169,22 @@ no pre-existing Focus crossing for this act
 ⛔ **No repair during the witness.**
 
 ### W1 · enter Focus through the real application seam
+
+⭐ **The authenticated HTTP route IS the real application seam for this
+candidate. Do not downgrade it because there is no button — and do not upgrade it
+into a UI claim.**
+
+```text
+W1 PROVES        authenticated application request → real boundary
+                 → real capability → real assembler → real custody
+                 → real evidence
+
+W1 DOES NOT      how a writer encounters Focus
+PROVE            whether Focus feels native to WRITE
+                 whether navigation / orientation is preserved
+```
+
+The second group belongs to `D9-PHENOMENOLOGY-WITNESS-01`.
 
 Exercise the actual candidate entry path.
 
