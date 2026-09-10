@@ -2176,6 +2176,125 @@ ATTRIBUTIONAL — whose process is it
   GF-5  MAIA's process returned as the member's · SP-FR-07
 ```
 
+### ⭐⭐⭐ THE TRIAD CLOSES — the two demands, and where they meet
+
+**Founder, 2026-09-10.** The polarity's completion, stated as two demands that must
+both be met because **neither has been allowed sovereignty.**
+
+```text
+SATURNIAN DEMAND — reality must HOLD FORM
+  the historical record is not rewritten
+  what was said then remains what was said then
+  distinctions, provenance, boundaries and consequences endure
+  the present cannot dissolve the past because a new interpretation is more
+    appealing
+  ⭐ "Something actually happened. Let it remain real."
+  ⛔ WITHOUT IT: development becomes REVISIONISM
+
+JUPITERIAN DEMAND — reality must remain LARGER THAN ITS EXISTING FORM
+  the past does not dictate what the present must mean
+  a pattern can be revised; an interpretation can become insufficient
+  new experience can reveal possibilities the accumulated map could not foresee
+  the person is never exhausted by what is already known about them
+  ⭐ "What has taken form is not all that can become."
+  ⛔ WITHOUT IT: continuity becomes DESTINY
+```
+
+> ## ⭐⭐⭐ **REVISION WITHOUT ERASURE is precisely where they meet.**
+>
+> **Saturn preserves the FACT of the past. Jupiter preserves the POSSIBILITY of a
+> new relationship to it.**
+
+```text
+SATURN                      historical fidelity · form · continuity · constraint
+                            "What was, was."
+              ↕
+     REVISION WITHOUT ERASURE
+              ↕
+JUPITER                     present sovereignty · possibility · reinterpretation ·
+                            development
+                            "What was need not determine what can now become."
+```
+
+### ⭐⭐ And Mercury becomes almost inevitable
+
+Mercury is what permits
+
+```text
+"I said I was stuck then."
+```
+
+to coexist with
+
+```text
+"I now understand that period as incubation."
+```
+
+**without forcing either statement to destroy the other** — carrying the old meaning
+into relationship with the new and letting a larger understanding emerge.
+
+> ## **Saturn remembers. Jupiter reimagines. Mercury translates between them.**
+
+⭐ *Not decorative symbolism — a description of the architecture this lane actually
+arrived at:*
+
+> **A healthy longitudinal MAIA must be SATURNIAN enough not to falsify history,
+> JUPITERIAN enough not to imprison the member in history, and MERCURIAL enough to
+> preserve the changing relationship between those meanings.**
+
+### The same polarity across every domain this lane has touched
+
+| Domain | Saturn | Jupiter | Failure |
+|---|---|---|---|
+| **Writer's Studio** | craft, form, the actual Work | authorial possibility, originality, vision | conformity ⇄ AI-generated possibility capture |
+| **Spiralogic** | Earth/Air manifestation and differentiation | Fire/Water possibility and significance | fixed map ⇄ projection |
+| **Personalization** | retain enough continuity to recognize the person | expect the person to exceed every accumulated understanding | **biography becomes identity** |
+| **Developmental recognition** | preserve how the person once understood themselves | allow a new seeing to reorganize that understanding | ⭐ **Mercury: preserve HOW KNOWING CHANGED** |
+
+### ⭐⭐⭐ SP-FR-11 AT A SECOND SCALE — the deeper law
+
+> **Healthy development requires enough SATURN for becoming to acquire REALITY, and
+> enough JUPITER for reality to remain capable of BECOMING.**
+
+⭐⭐ **This is not a thirteenth law. It is SP-FR-11 in its temporal form**, and the
+correspondence is exact:
+
+```text
+SP-FR-11 · RELATIONAL   determination without imprisonment
+                        possibility without colonization
+                        — the OTHER must survive both
+
+SP-FR-11 · TEMPORAL     enough Saturn for becoming to acquire reality
+                        enough Jupiter for reality to remain capable of becoming
+                        — the PAST must survive both
+```
+
+⛔ **Recorded as one law at two scales, not as a new number** — the lane has enough
+laws, and multiplying them where a correspondence exists would obscure the
+structure rather than reveal it.
+
+### The failure family, completed with its temporal axis
+
+```text
+SATURNIAN CAPTURE   the map mistaken for the person    → GF-2 · GF-4 · GF-7
+                    the past mistaken for the future   → ⭐ CONTINUITY BECOMES DESTINY
+                                                          (T-8 · the accumulation
+                                                           problem)
+
+JUPITERIAN CAPTURE  the possibility-space colonized    → GF-8 · SP-FR-10
+                    the past dissolved for a better
+                    story                              → ⭐ DEVELOPMENT BECOMES
+                                                          REVISIONISM
+                                                          (the amnesia failure)
+
+JOINT               Jupiter generates, Saturn fixes    → GF-6
+MERCURIAL           the between acquires standing      → SP-FR-07's safeguard
+```
+
+⭐ **Both new entries are failures nothing in GF-1…GF-8 names directly** — they are
+the temporal captures, and they are what Revision Without Erasure exists to hold
+apart.
+
 ### ⚠️ Claim discipline on this section
 
 The **symbolic vocabulary** (Saturn, Jupiter, Demiurge) remains **SOULLAB
@@ -4838,6 +4957,31 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   aggregation, assembled from a million individually respectful relationships** —
   and it would be breached **invisibly, by a well-intentioned attempt to learn from
   what worked.**
+- **2026-09-10 · THE TRIAD CLOSES (founder)** — ⭐⭐⭐ two demands, both met because
+  **neither has been allowed sovereignty. SATURNIAN DEMAND: reality must hold form**
+  — the record is not rewritten, what was said then remains what was said then,
+  *"something actually happened, let it remain real"*; ⛔ **without it development
+  becomes REVISIONISM. JUPITERIAN DEMAND: reality must remain larger than its
+  existing form** — the past does not dictate what the present must mean, the person
+  is never exhausted by what is known about them, *"what has taken form is not all
+  that can become"*; ⛔ **without it continuity becomes DESTINY.** ⭐⭐⭐ **REVISION
+  WITHOUT ERASURE IS PRECISELY WHERE THEY MEET — Saturn preserves the FACT of the
+  past, Jupiter preserves the POSSIBILITY of a new relationship to it.** ⭐⭐ **And
+  Mercury becomes almost inevitable**: it lets *"I said I was stuck then"* coexist
+  with *"I now understand that period as incubation"* **without either destroying
+  the other** — ⭐ **Saturn remembers · Jupiter reimagines · Mercury translates
+  between them**; *a healthy longitudinal MAIA must be Saturnian enough not to
+  falsify history, Jupiterian enough not to imprison the member in history, and
+  Mercurial enough to preserve the changing relationship between those meanings.*
+  The polarity is tabulated across Writer's Studio, Spiralogic, personalization and
+  developmental recognition — personalization's failure named as **biography becomes
+  identity**. ⭐⭐⭐ **DEEPER LAW: healthy development requires enough SATURN for
+  becoming to acquire REALITY and enough JUPITER for reality to remain capable of
+  BECOMING** — ⛔ **recorded as SP-FR-11 at a second scale, NOT a thirteenth law**
+  (relational form: *the other must survive both*; temporal form: *the past must
+  survive both*). **The failure family gains its temporal axis:** *continuity becomes
+  destiny* (Saturnian, T-8/accumulation) and *development becomes revisionism*
+  (Jupiterian, amnesia) — ⭐ **two failures nothing in GF-1…GF-8 names directly.**
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
