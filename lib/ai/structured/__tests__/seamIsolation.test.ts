@@ -127,8 +127,8 @@ const ORIGINAL_SEAM_MERGE = '8b31d931c2ca4349b08fa49428b2e93508f47613';
 const PROVENANCE_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
 
 /**
- * The ACTIVE pin. Founder-authorized 2026-09-08 — the SECOND governed amendment:
- * provider-enforced tool input schema conformance.
+ * Superseded baseline. Founder-authorized 2026-09-08 — the SECOND governed
+ * amendment: provider-enforced tool input schema conformance.
  *
  * ⭐ THIS PIN FAILED, AND IT WAS RIGHT TO. G8 attempt #3 stopped when a completed
  * `tool_use` carried an array-typed field as a JSON string with corrupt JSON
@@ -150,7 +150,39 @@ const PROVENANCE_SEAM_BASELINE = '35d0f81d167dca73431ae7640d7fabf4bae86cff';
  * constitutional status by having travelled in the same commit — this guard
  * resolves four paths.
  */
-const GOVERNED_SEAM_BASELINE = 'f6a8a3dc8503d1b7f8fb3b6353ffc01c4cbf3291';
+const SCHEMA_CONFORMANCE_SEAM_BASELINE = 'f6a8a3dc8503d1b7f8fb3b6353ffc01c4cbf3291';
+
+/**
+ * The ACTIVE pin. Founder-authorized — the THIRD governed amendment:
+ * seam-originated dispatch observation.
+ *
+ * ⭐ WHY THIS ONE EXISTS. A disclosure receipt may move `attempted → crossed`
+ * only at the moment authored material actually left the process. Nothing above
+ * the adapter can witness that: entering a reader or `execute` is too early, and
+ * a returned result is too late. `StructuredResult.provenance` already reports
+ * what happened, but only once a result exists — so it cannot serve a consumer
+ * that must record dispatch BEFORE awaiting generation, and truthfully when
+ * generation then fails.
+ *
+ * ⛔ AND THE SHAPE THAT WAS REFUSED. The first attempt threaded a caller-supplied
+ * `hooks.onHandoff` through `runStructured`, which broke the arity law and
+ * inverted the direction of control: behaviour flowing INTO the seam. The
+ * ratified form is `runStructuredObserved(request) → { handoff, result }` — the
+ * seam emits, the caller passes nothing.
+ *
+ *   An architectural seam may expose what happened without giving the caller
+ *   authority over what happens.
+ *
+ * ⛔ THE MOVE IS ITS OWN COMMIT, again. The commit this names carries the
+ * amendment with this constant still on the previous baseline — so that guard is
+ * red there, on purpose. The implementation cannot manufacture its own
+ * authorization in the commit that changes the governed bytes.
+ *
+ * The export allowlist moved from two doors to three in the same authorized act:
+ * an exhaustive allowlist is not a ban on evolution, it means every new door must
+ * itself be constitutionally admitted. A fourth still requires an amendment.
+ */
+const GOVERNED_SEAM_BASELINE = 'a8654c68bb0550873f7295465c7c4e1eab936574';
 
 describe('callers bend to the seam, never the seam to a caller', () => {
   it.each([
@@ -177,7 +209,10 @@ describe('callers bend to the seam, never the seam to a caller', () => {
     /* An amendment history that collapses to its latest value cannot show that
        each change was separately authorized. Each baseline is distinct, and each
        remains nameable after being superseded. */
-    const chain = [ORIGINAL_SEAM_MERGE, PROVENANCE_SEAM_BASELINE, GOVERNED_SEAM_BASELINE];
+    const chain = [
+      ORIGINAL_SEAM_MERGE, PROVENANCE_SEAM_BASELINE,
+      SCHEMA_CONFORMANCE_SEAM_BASELINE, GOVERNED_SEAM_BASELINE,
+    ];
     expect(new Set(chain).size).toBe(chain.length);
     for (const sha of chain) expect(sha).toMatch(/^[0-9a-f]{40}$/);
   });
