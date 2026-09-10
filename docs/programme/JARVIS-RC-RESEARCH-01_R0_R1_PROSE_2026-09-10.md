@@ -681,3 +681,130 @@ R1 remaining            codemirror-ai · prosemirror-suggestion-mode ·
 implementation          NOT AUTHORIZED
 PRODUCTION              UNTOUCHED
 ```
+
+---
+
+# Addendum 4 — R2 · Sundial AXIS 4 (turn erasure vs edit provenance)
+
+Eight questions asked. **Three answered, one decisively; four NOT ESTABLISHED at
+the repository boundary.** Axis 2 was not adjacent in these paths and was not
+chased — per the founder's instruction not to expand the search to finish a number.
+
+## ⭐⭐ S-12 — Q6 ANSWERED, and it is the exact transition RC-08 refuses
+
+`lib/workspace/use-doc-edits-realtime-key.ts:72-75`:
+
+```
+// Bash/sandbox paths may INSERT doc_edits without `assistant_message_id`
+// and backfill it via UPDATE at end-of-turn. INSERT-only realtime would
+// miss that signal, leaving the inline overlay stale…
+```
+
+⭐ **In Sundial an edit's conversational linkage goes `NULL -> value` after the
+fact, by design, and the realtime layer had to grow an UPDATE subscription to
+notice it.**
+
+```
+SUNDIAL    assistant_message_id  nullable, mutable after insert, backfilled
+SOULLAB    (thread_id, produced_in_turn_index)
+             value -> NULL           ALLOWED   member erasure
+             NULL  -> value          REFUSED   RC-08
+             value -> other value    REFUSED   RC-08
+```
+
+**We refuse precisely the transition their design depends on.** Recorded as REFUSE
+— but note the honest asymmetry: their backfill serves a real need (an edit made
+by a sandbox tool before the turn is closed), which our atomic write boundary
+(`BEGIN append turn -> insert proposal COMMIT`) removes rather than solves. **The
+answer to "when is the linkage known?" is "before either row exists", and that is
+what makes the refusal affordable.**
+
+## 🔴 S-13 — the founder's specific question: NO `never_linked / linked / severed` distinction exists
+
+There is **one nullable column carrying at least three different meanings**:
+
+```
+never linked      a bash/sandbox edit with no originating assistant turn
+not yet linked    inserted, awaiting end-of-turn backfill
+(whatever deletion does)   NOT ESTABLISHED
+```
+
+⚠️ **This is evidence that a single nullable linkage becomes overloaded — not
+evidence that Sundial was forced to add the distinction.** They have not added it;
+they live with the ambiguity. So it does **not** license adding an explicit
+severance state to R1 now. It does confirm the founder's RC-08 semantic note was
+the right call: fix the *reading* of NULL before code depends on it, and give the
+distinction its own state only if a feature genuinely needs it.
+
+⭐ Our position is already better for a reason unrelated to erasure: because
+`NULL -> value` is refused, a Soullab NULL can only ever mean **severed** or
+**never had one**, never *not yet*. One of Sundial's three meanings is structurally
+impossible for us.
+
+## Q1 · Q2 — answered
+
+```
+Q1  owns it   public.doc_edits.assistant_message_id (Postgres via Supabase)
+Q2  deletable YES — DELETE /api/workspace/chats -> sidecar.deleteChat
+```
+
+⭐ And a named refusal again, worth carrying: external sessions cannot be deleted
+through this route — *"External sessions live on disk. Delete them in the agent
+that wrote them."* A boundary stated rather than approximated.
+
+## ⛔ NOT ESTABLISHED — Q3, Q5, Q7, Q8
+
+```
+Q3  what else references assistantMessageId
+Q4  real FK vs soft string        PARTIAL: it is a nullable, post-insert-mutable
+                                  column. Whether an FK constrains it is NOT
+                                  established — the repository contains NO schema
+                                  (no .sql, no migrations, no generated db types;
+                                  only lib/supabase/browser.ts)
+Q5  on deletion: edit deleted / NULLed / dangling id / denormalized attribution
+Q7  what the UI shows when the linked turn is gone
+Q8  whether the decision stays independently interpretable
+```
+
+**Why the search stops here, rather than continuing.** Deletion executes in
+`sidecar.deleteChat` — a **local sidecar process that is not in this repository** —
+and the cloud path's cascade behaviour lives in Supabase schema that is also not
+here. Q5 in particular is decided by an `ON DELETE` clause **nobody outside the
+project can read**.
+
+⛔ **This is the axis where an inferred answer would have been most tempting and
+most misleading, because it is the one directly comparable to RC-08.** Recorded as
+unknown.
+
+## Verdict
+
+```
+REFUSE        NULL -> value backfill of conversational linkage      S-12
+LEARN FROM    one nullable column carrying three meanings           S-13
+LEARN FROM    named refusal at an ownership boundary                Q2
+NOT ESTABLISHED  Q3 · Q5 · Q7 · Q8 — sidecar and schema out of repo
+
+EXPLICIT SEVERANCE STATE   NOT licensed by this evidence.
+                           RC-08 stays as designed; the semantic note stands.
+```
+
+## ⭐ S-10 promoted — a standing falsifier for any future batch decision
+
+> **A batch decision implemented as `forEach(… void apply())` fails by
+> construction.** A member saying *"accept these five"* is ONE decision over an
+> enumerated set. The system must give a truthful atomic result, or explicitly
+> report the individual outcomes. **"Five asynchronous races happened after you
+> clicked" is not an implementation of consent.**
+
+## Standing
+
+```
+R2 SUNDIAL      axis 1 answered · axis 3 answered · axis 5 answered
+                axis 4 PARTIAL (Q1 Q2 Q6 answered; Q3 Q5 Q7 Q8 out of repo)
+                axis 2 NOT CHASED — not adjacent
+NEXT            @codemirror/merge + jsdiff, against one question:
+                which combination gives the writer the clearest revision
+                WITHOUT acquiring authority over where or whether it applies?
+implementation  NOT AUTHORIZED
+PRODUCTION      UNTOUCHED
+```
