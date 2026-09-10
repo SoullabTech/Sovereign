@@ -358,3 +358,49 @@ describe('FOCUS-ASSEMBLER-CONTRACT-01A · the instrument descends from repositor
     expect(wit()).toMatch(/DELETE FROM member_manuscripts WHERE member_id/);
   });
 });
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01B · whole-Work fidelity', () => {
+  /**
+   * ⭐⭐ The whole Work handed to MAIA must contain exactly the characters the
+   *     writer authored — no fewer, no more.
+   *
+   * ⭐ A synthesized `\n\n` is INDISTINGUISHABLE from authored text: a writer whose
+   * section genuinely ends in a blank line could not be told apart from the
+   * assembler's invention. Structure may describe boundaries; it may not
+   * manufacture characters.
+   */
+  const asm = () => CODE('lib/writers-studio/assembleFocus.ts');
+
+  it('joins whole-Work sections with nothing at all', () => {
+    expect(asm()).toMatch(/\.join\(''\)/);
+    expect(asm()).not.toMatch(/\.join\('\\n\\n'\)/);
+  });
+
+  it('⛔ solves it by concatenation, not by reading the stored flattening', () => {
+    // The ruled read authority stays section-native draft truth; the database
+    // invariant only tells us how those sections lawfully flatten.
+    expect(asm()).toMatch(/manuscript_draft_sections/);
+    expect(asm()).not.toMatch(/SELECT d\.content|d\.content AS/);
+  });
+
+  it('⛔ introduces no normalisation, trimming or alternative separator', () => {
+    const code = asm();
+    expect(code).not.toMatch(/\.trim\(\)|\.trimEnd\(\)|\.trimStart\(\)/);
+    expect(code).not.toMatch(/replace\(\/\\s/);
+    expect(code).not.toMatch(/\.join\('[^']+'\)/);
+  });
+
+  it('leaves section and passage behaviour untouched', () => {
+    const code = asm();
+    expect(code).toMatch(/if \(scopeKind === 'section'\) return text;/);
+    expect(code).toMatch(/text\.slice\(Math\.max\(0, range\.start\)/);
+  });
+
+  it('the witness compares exactly, never a canonicalised form', () => {
+    const wit = CODE('scripts/witness/focus-assembler-contract.ts');
+    expect(wit).toMatch(/whole === flat/);
+    expect(wit).toMatch(/whole === stored\.rows\[0\]\.content/);
+    // ⛔ no normalisation on either side of an equality check
+    expect(wit).not.toMatch(/whole[!=]?\.?(trim|replace|normalize)\(/);
+  });
+});

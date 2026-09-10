@@ -23,7 +23,10 @@ const OTHER  = '22222222-2222-2222-2222-222222222222';
 /* ⭐ THE LOAD-BEARING FIXTURE: Source and Draft say DIFFERENT things, so no check
    can pass merely because both happen to contain the same words. */
 const SOURCE_1 = 'SOURCE ONE: the keeper counted ships he could not save.';
-const DRAFT_1  = 'DRAFT ONE: the keeper stopped counting.';
+/* ⭐ 01B: this section ENDS IN A BLANK LINE the writer authored. A synthesized
+   `\n\n` at the boundary would be indistinguishable from it — which is the whole
+   reason separators may not be manufactured. */
+const DRAFT_1  = 'DRAFT ONE: the keeper stopped counting.\n\n';
 const SOURCE_2 = 'SOURCE TWO: the lamp failed in November.';
 const DRAFT_2  = 'DRAFT TWO: the lamp was never the point.';
 /* An emoji before the selection: UTF-16 code units vs code points diverge here. */
@@ -138,6 +141,31 @@ async function main() {
   w('Source is never the payload', !!whole && !whole.includes('SOURCE'));
   w('whole Work preserves draft order',
     !!whole && whole.indexOf(DRAFT_1) < whole.indexOf(DRAFT_2));
+
+  /**
+   * ⭐⭐ 01B · THE THREE FIDELITY OBLIGATIONS.
+   *
+   * ⛔ EXACT comparison, byte for byte. A test that trims, collapses whitespace or
+   * otherwise canonicalises before comparing would erase the very defect 01B
+   * exists to detect.
+   */
+  const canonical = await query<{ flat: string }>(
+    `SELECT COALESCE(string_agg(s.text, '' ORDER BY s.position), '') AS flat
+       FROM manuscript_draft_sections s WHERE s.draft_id = $1`, [work.draftId]);
+  const flat = canonical.rows[0].flat;
+  w('O1 · whole Work === the canonical flattening (exact)', whole === flat,
+    `assembled ${JSON.stringify(whole)}\n        canonical ${JSON.stringify(flat)}`);
+
+  const stored = await query<{ content: string }>(
+    `SELECT content FROM manuscript_working_drafts WHERE id = $1`, [work.draftId]);
+  w('O2 · whole Work === manuscript_working_drafts.content (exact)',
+    whole === stored.rows[0].content,
+    `assembled ${JSON.stringify(whole)}\n        content   ${JSON.stringify(stored.rows[0].content)}`);
+
+  w('O3 · no character is manufactured at a section boundary',
+    !!whole && Buffer.byteLength(whole, 'utf8') ===
+      [DRAFT_1, DRAFT_2, DRAFT_EMOJI].reduce((n, t) => n + Buffer.byteLength(t, 'utf8'), 0),
+    `assembled ${Buffer.byteLength(String(whole), 'utf8')} bytes`);
 
   // ── section identity is DRAFT-section identity
   const section = await assembleFocus({

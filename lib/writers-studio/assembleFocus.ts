@@ -56,7 +56,32 @@ export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKi
           ORDER BY s.position ASC`,
         [workRef, memberId],
       );
-      return r.rows.length ? r.rows.map(x => x.text).join('\n\n') : null;
+      /**
+       * ⭐⭐ 01B · WHOLE-WORK FIDELITY. `join('')`, never `join('\n\n')`.
+       *
+       * The database states the system's own contract: once a draft is
+       * section-addressable, `content` MUST equal
+       * `string_agg(s.text, '' ORDER BY s.position)` — every character belongs to
+       * a section, and concatenating them with NO separator reproduces the draft
+       * byte-for-byte (`manuscript_working_drafts_round_trip()`).
+       *
+       *   ⭐ A Work disclosure must preserve the writer's character stream
+       *     exactly. Representation may surround the Work; it may not silently
+       *     alter the Work while calling the result the Work.
+       *
+       * ⛔ AND THE REASON THIS IS NOT COSMETIC: a synthesized `\n\n` is
+       * INDISTINGUISHABLE from authored text. A writer whose section genuinely
+       * ends in a blank line could not be told apart from the assembler's
+       * invention — so the Work's own structure becomes unreadable at exactly the
+       * boundary where structure matters. Boundaries belong to
+       * `computed.writer_structure`, as structure.
+       *
+       *   ⭐ Structure may describe boundaries. It may not manufacture characters.
+       *
+       * ⛔ Do not "fix" a run-together reading by trimming, normalising, or
+       * reintroducing a separator here.
+       */
+      return r.rows.length ? r.rows.map(x => x.text).join('') : null;
     }
 
     // section and passage both resolve ONE draft section, by draft-section id.
