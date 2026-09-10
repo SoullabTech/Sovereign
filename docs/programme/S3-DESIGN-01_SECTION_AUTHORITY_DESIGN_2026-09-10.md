@@ -595,188 +595,358 @@ here.**
 
 ---
 
-## 10 · THE RESUMED-ASK PROTOCOL — concrete, end to end
+## 10 · P1 — PAUSED ASK / FRESH RESUME · the candidate protocol
 
-⛔ **Protocol design, not implementation.** Names below are design vocabulary;
-nothing here is a committed signature, a schema, or a migration.
+⛔ **Protocol design, not implementation.** Names are design vocabulary; nothing
+here is a committed signature, schema, or migration.
 
-### 10.1 · The three acts
+⭐ **Named P1**, not "A" or "C" — see §12. A protocol is compared by what it does.
 
 ```text
-ACT 1   ASK                            ordinary developmental Ask
-ACT 2   BODY_AUTHORITY_REQUIRED        server → client · a protocol STATE
-ACT 3   AUTHORIZE_SECTIONS_AND_RESUME  client → server · a DISTINCT verb
+P1 — PAUSED ASK / FRESH RESUME
+
+Ask → BODY_AUTHORITY_REQUIRED → pendingAskRef → member authorizes section(s)
+    → resumed invocation → server re-derives requirement + section set
+    → fresh boundary → may_cross → body load → cognition
 ```
 
-⭐ Act 2 is not a failure and not an error status. It is a lawful intermediate
-state of the Ask protocol, and Act 3 is its only continuation.
+### 10.1 · The protocol states
 
-### 10.2 · ACT 1 — the ordinary Ask, to the decision point
+```text
+STRUCTURE_SUFFICIENT      ratified
+BODY_AUTHORITY_REQUIRED   ratified · lawful intermediate state, not an error
+BODY_SCOPE_INCOMPLETE     ⭐ NEW · ruled 2026-09-10 · lawful intermediate state
+BODY_AUTHORIZED           ratified
+BODY_UNVERIFIABLE         ratified · reachable ONLY after may_cross
+```
+
+⚠️ `BODY_SCOPE_INCOMPLETE` is a **fifth** state added to the ratified four. It is
+recorded as an addition, not folded silently into `BODY_AUTHORITY_REQUIRED`:
+*"authority absent"* and *"authority present for some of what is required"* are
+different facts and must stay distinguishable, by the same reasoning that keeps
+`BODY_UNVERIFIABLE` distinct.
+
+### 10.2 · ACT 1 — ASK, to the decision point
 
 ```text
 POST  /api/sovereign/manuscripts/[id]/ask
       { anchor: { on:'observation', readingId, observationKey }, question }
 
-  1  resolveMember                     existing
-  2  memberOwnsWork                    existing
-  3  loadFrozenDevelopmentalReading    existing · member-gated SELECT
-  4  checkObservationAnchor            existing
-  5  canonicalFingerprint              existing
-  6  openThread / reuse existing       existing · question appended BEFORE
+ 1  resolveMember                      existing
+ 2  memberOwnsWork                     existing
+ 3  loadFrozenDevelopmentalReading     existing · member-gated SELECT
+ 4  checkObservationAnchor             existing
+ 5  canonicalFingerprint               existing
+ 6  openThread / reuse                 existing · ⭐ question appended BEFORE
                                        any model call (ratified ordering)
-  7  ⭐ RESOLVE EVIDENCE REQUIREMENT — WITHOUT PROSE
-        requirementOf(ref) over observation.evidenceRefs
-        sectionIdsOf(ref)  → the containing section id(s)
-        readState.sections → ranges + digests, ⛔ never text
+ 7  ⭐⭐ RESOLVE THE EVIDENCE REQUIREMENT WITHOUT PROSE
+       requirementOf(ref) over observation.evidenceRefs   → body|position|structure
+       sectionIdsOf(ref)                                   → required section set
+       readState.sections                                  → ranges + digests
+                                                             ⛔ never text
 ```
 
-⭐⭐ **Step 7 is the whole repair's hinge**, and canonical already supports it:
-the requirement and the sections are both derivable from ref kinds and frozen
-state. ⛔ **`loadRevisionContent` has not been called and is not reachable from
-here.**
+⭐⭐ **Step 7 is the repair's hinge, and canonical already supports it.**
+⛔ `loadRevisionContent` has not been called and is not reachable from here.
 
 ```text
-IF no ref requires 'body'
-    → STRUCTURE_SUFFICIENT
-    → existing lawful path · answer normally
-    → ⛔ no disclosure boundary · ⛔ no prose receipt
-
-IF any ref requires 'body'
-    → this invocation holds no may_cross (it minted none)
-    → ⭐ ACT 2
+no ref requires 'body'   → STRUCTURE_SUFFICIENT · answer normally
+                           ⛔ no disclosure boundary · ⛔ no prose receipt
+any ref requires 'body'  → this invocation minted no may_cross → ACT 2
 ```
 
 ### 10.3 · ACT 2 — `BODY_AUTHORITY_REQUIRED`
 
 ```text
 { result: 'BODY_AUTHORITY_REQUIRED',
-  threadId,                      the question is already on the thread
-  pendingAskRef,                 ⭐ NON-AUTHORITATIVE · see 10.6
+  threadId,                       the question is already on the thread
+  pendingAskRef,                  ⭐ NON-AUTHORITATIVE · §10.6
   workRef,
-  sections: [ sectionId, … ]     ⭐ ALL sections whose body is required
+  sections: [ { sectionId, heading? }, … ]   ⭐ ALL required sections
 }
 ```
 
-⛔ **What this response is not.** It cannot cause a load. It carries no
-`may_cross`, no receipt, no consent record, and no body characters. Presented
-again unchanged, it does nothing.
+**⭐ Q1 CLOSED — the heading may be shown.**
 
-⚠️ **Open (Q1, parked):** whether the surface may show the member their own
-headings to make the act recognisable. Headings ARE authored characters — ruled —
-and are not body disclosure — also ruled. **The protocol does not resolve this;
-it must not silently assume either answer.** Until it is ruled, `sections`
-carries ids.
+```text
+heading shown to the MEMBER      recognition / orientation
+                                 → NOT body disclosure
+                                 → NOT cognition disclosure
+                                 → ⛔ no body receipt manufactured
 
-⭐ **All required sections are named at once**, because Q5 is all-or-none at the
-answer contract: a member cannot make an informed act about a partial set.
+heading sent into COGNITION      authored-character disclosure
+                                 → separate governance question · PARKED
+```
+
+⛔ **The heading must not become authority.** The server binds the act to the
+section identity it independently re-derives. ⛔ **And a heading may not be
+smuggled into MAIA's prompt merely because the consent surface displayed it.**
+The heading is included only if available **without body loading**.
+
+⛔ **What ACT 2 is not.** It cannot cause a load. No `may_cross`, no receipt, no
+consent record, no body characters. Presented again unchanged, it does nothing.
+
+⭐ **All required sections are named at once** — Q5 is all-or-none at the answer
+contract, and a member cannot make an informed act about a partial set.
 
 **Writer-facing (ruled):** *"I need to read the relevant section to answer that
-faithfully"* — sections, plural, where several are required. ⛔ Never "passage".
+faithfully"* — **sections**, plural, where several are required. ⛔ Never
+"passage". The writer never leaves the Work; there is no Focus destination.
 
-**Then the writer either authorizes, or declines and the Ask ends there —
-nothing loads.** ⛔ No Focus destination. ⛔ The writer never leaves the Work.
+### 10.4 · ACT 2b — THE MEMBER ACT
 
-### 10.4 · ACT 3 — `AUTHORIZE_SECTIONS_AND_RESUME`
+```text
+authorizes ALL required sections   → ACT 3
+authorizes SOME                    → BODY_SCOPE_INCOMPLETE  · §10.5
+declines                           → the Ask ends · ⛔ nothing loads
+```
+
+### 10.5 · `BODY_SCOPE_INCOMPLETE` — ⭐ CLOSED: no automatic re-resolution
+
+```text
+required { A, B, C } · authorized { A, B }
+```
+
+⛔ **The original Ask remains INCOMPLETE.** The server must not silently
+reinterpret *"what I said required A+B+C can apparently be answered from A+B."*
+That would make `required` meaningless.
+
+```text
+{ result: 'BODY_SCOPE_INCOMPLETE',
+  threadId, pendingAskRef, workRef,
+  outstanding: [ … ] }        ⭐ still no authority, still no prose
+```
+
+The member may then:
+
+```text
+authorize the remaining section(s)                    → ACT 3, unchanged
+explicitly choose a narrower answer
+  "answer only from what I authorized"                → a NEWLY BOUNDED ASK
+```
+
+⭐⭐ **Narrowing requires a member act. It is never an automatic fallback.** The
+member need not retype the question, but they must **consciously choose the
+narrower epistemic contract**. The server then re-resolves the evidence
+requirement *for that narrower claim* — and if the narrower claim still requires a
+denied section, it is refused, not trimmed.
+
+### 10.6 · `pendingAskRef` — ⭐ CLOSED: `threadId` is NOT enough
+
+A thread identifies a **conversation**. It does not identify **this unfinished
+Ask**, and it cannot by itself satisfy single-use.
+
+```text
+pendingAskRef
+  IS      identifies ONE paused Ask
+          member-bound · Work-bound · Ask-bound
+          single-purpose · single-use · bounded lifetime · invalidatable
+  IS NOT  may_cross · consent · reusable authority
+          authored characters
+          ⛔ the authorized section AS A PERMISSION CLAIM
+```
+
+The resumed invocation uses it **only** to answer *"which Ask are we
+continuing?"*. Everything else — body requirement, required section set, current
+eligibility to continue — the server **re-derives independently**, and the
+member's **present** gesture establishes the fresh boundary.
+
+⚠️ **Representation is open.** No new durable table is required by this ruling.
+An existing uniquely-identifying Ask/turn object may serve **if it can genuinely
+enforce single-use and invalidation**; otherwise a dedicated opaque reference is
+needed. ⭐ **The requirement is the identity semantics, not the storage
+mechanism.**
+
+⛔⛔ **THE SHAPE TO NEVER BUILD:**
+
+```text
+durable object: { pendingAskRef, sectionId, authorized: true }
+```
+
+That is persistent permission wearing continuity's clothes.
+
+### 10.7 · ACT 3 — RESUME
 
 ```text
 POST  (same route, distinct discriminated act)
       { act: 'authorize_sections_and_resume',
         pendingAskRef,
-        authorizes: [ sectionId, … ],   ⭐ the member's explicit act
+        authorizes: [ sectionId, … ],      ⭐ the member's explicit act
         gesture: <the one new S3 gesture> }
 ```
 
 ⛔ **The client never submits `may_cross`.** ⛔ No `allowBody: true` on an
 ordinary Ask.
 
-The server, in this invocation:
-
 ```text
  1  resolveMember
- 2  RE-IDENTIFY the pending Ask from pendingAskRef
+ 2  RE-IDENTIFY the paused Ask from pendingAskRef
        member-bound · Work-bound · Ask-bound · single-use · unexpired
- 3  ⭐ RE-DERIVE the body requirement and the section set
+ 3  ⭐ RE-DERIVE the body requirement and the required section set
        from the reading and the anchor — ⛔ NEVER from the client's account
- 4  compare  authorizes ⊇ required-sections ?
-       NO  → the answer does not proceed as claimed (10.5)
- 5  recognise the explicit member gesture
+ 4  authorizes ⊇ required ?     NO → BODY_SCOPE_INCOMPLETE (§10.5)
+ 5  recognise the member's explicit present gesture
  6  establishDisclosureBoundary
        sourceRef = workRef · scopeKind = 'section' · sectionRef = S
-       ⭐ one boundary per authorized section (sectionRef is singular, and is
-         admitted ONLY under section scope — receipt law, unchanged)
+       ⭐ ONE boundary per authorized section — `sectionRef` is singular and is
+         admitted ONLY under section scope (receipt law, unchanged)
  7  mayCrossBoundary → may_cross, minted IN THIS INVOCATION
  8  ⭐ ONLY NOW is prose reachable
        W1 · the integrity envelope recoverEvidence requires
        W2 · characters derived from the authorized sections ONLY
  9  recoverEvidence · digest-verified
-10  assembleDevelopmentalContext   ⭐ STILL PURE
+10  assembleDevelopmentalContext        ⭐ STILL PURE
 11  cognition
-12  confirmDisclosureCrossed        evidence of THIS crossing · authorizes no other
+12  confirmDisclosureCrossed            evidence of THIS crossing
+                                        ⛔ authorizes no other
 13  the Ask completes on its existing thread
 ```
 
 ⭐ **Step 3 is what makes step 2 safe.** Because the requirement is re-derived,
-`pendingAskRef` carries nothing the server would otherwise have to believe — which
-is exactly why it can be an identity rather than an authority.
+`pendingAskRef` carries nothing the server would otherwise have to believe —
+which is exactly why it can be an identity rather than an authority.
 
 ⭐ Step 6 uses `scopeKind: 'section'`, where `sectionRef` **is** the admitted
-identity. The Q6 prohibition does not reach it; the canonical passage blocker
-(`sectionRef` refused for non-section scope) is structurally avoided rather than
-patched.
+identity. The canonical passage blocker (`sectionRef` refused for non-section
+scope) is structurally avoided, ⛔ never patched. **S3 does not touch Focus's
+broken route.**
 
-### 10.5 · Partial authorization — the honest branch
+---
+
+## 11 · DESIGN FALSIFICATION PASS — P1 against G1–G8
+
+⛔ **A design falsification pass is not a test.** It asks whether the protocol
+*could* permit each failure, at the design level, and reports honestly where it
+depends on something not yet settled.
+
+### 11.1 · Can pending identity become authority?
+
+**NO, by construction** — `pendingAskRef` carries no section permission, and every
+fact the resume needs is re-derived. ⚠️ **Depends on §10.6 being honoured in
+implementation**: the prohibited durable shape would defeat it silently. **The
+design names it; only the implementation can violate it.**
+
+### 11.2 · Can replay authorize a second load?
+
+⭐⭐ **THIS ONE HAS A REAL FINDING, AND IT SHARPENS A RULING.**
+
+The member's gesture arrives **as data in the ACT 3 request**. A replayed ACT 3
+carries the same bytes, and each invocation mints its own `disclosureId`, its own
+boundary, and its own receipt. So a replay would produce **a second authorized
+load and a second completed-crossing receipt from one member act.**
+
+⛔ **Nothing else in the protocol prevents that.** The *only* control is
+`pendingAskRef` being **single-use**.
+
+⚠️ **Therefore single-use is doing DISCLOSURE work, not merely continuity work.**
+This does not contradict the ruling that *expiry* is continuity hygiene — expiry
+and single-use are different properties, and it is single-use that is
+load-bearing here. **Reported for ruling; not resolved by the design.**
+
+*A receipt that records two crossings for one member act has told the record
+something false about the member.*
+
+### 11.3 · Can partial consent silently degrade?
+
+**NO** — `BODY_SCOPE_INCOMPLETE` is a distinct state, narrowing requires a member
+act, and a narrower claim that still needs a denied section is refused rather
+than trimmed. ⭐ The prohibited automatic reinterpretation has no path.
+
+### 11.4 · Can `null revisionContent` masquerade as "no permission"?
+
+**NO** — `BODY_UNVERIFIABLE` is reachable only from ACT 3 step 9, *after*
+`may_cross`. The unauthorized case returns at ACT 1 step 7 and never constructs a
+loader call. ⚠️ **Depends on Q4's two-part gate**: the route decides, and the type
+seam prevents an accidental later call. Route-level alone would leave the cheapest
+repair one edit away.
+
+### 11.5 · Can section S authorization disclose section T?
+
+**NO for the complete-answer path — structurally.** Q5's all-or-none means
+`authorized ⊇ required`, so every body ref is inside the authorized set by
+construction; the W2 filter has nothing to exclude.
+
+⚠️ **The narrower-answer path (§10.5) is where the filter earns its keep**: a
+re-resolved requirement could still name a denied section, and there the W2 filter
+must refuse rather than substitute. ⭐ **Named, because this is precisely where an
+implementation would be tempted to trim.**
+
+### 11.6 · Can a receipt restart authority?
+
+**NO** — receipts are evidence. The authority census established that no
+application code reads receipts to authorize; the only application SELECT is
+`unresolvedCrossings()`. `confirmDisclosureCrossed` at step 12 writes, never
+grants.
+
+### 11.7 · Can headings leak into cognition because they appear in the UI?
+
+⭐⭐ **P1 DOES NOT CREATE SUCH A PATH — AND THE HONEST ANSWER IS STILL "YES,
+TODAY, BY ANOTHER PATH."**
+
+`FrozenStructureUnit` carries `title` — a member-authored heading.
+`recoverEvidence` returns those units for `structure-unit` / `structure-units` /
+`structure-topology` refs, `assembleDevelopmentalContext` places them in
+`ctx.evidence`, and `askMaiaDevelopmental` receives them. Those refs carry
+requirement **`structure`**, not `body`, so **authored headings already reach
+cognition with no body authority.**
+
+⛔ **This is NOT created by S3 and NOT closed by S3.** It is the parked
+heading-to-cognition governance question, and this pass establishes that it is
+**not hypothetical — it is current behaviour on canonical.** ⚠️ **Reported.**
+
+⭐ What P1 must guarantee, and does: the heading shown in ACT 2 for recognition
+does not itself become a cognition input. It is a surface fact, discarded with the
+response.
+
+### 11.8 · Can the experience say "passage" while authority says "section"?
+
+**NO occurrence exists today** — the only disclosure-surface wording was the SEL-0
+exemplar, now superseded in place. A repository scan for member-facing "passage"
+copy finds only unrelated features (voice lab, book studio, library).
+
+⚠️ **The risk is prospective, not present**, because no Ask disclosure surface
+exists yet — the copy will be written for the first time by this repair. **G8 is
+the guard**, and it needs to hold at the moment the surface is authored.
+
+### 11.9 · Verdict
 
 ```text
-required { A, B, C } · authorized { A }
+11.1  pending → authority       SURVIVES · implementation hazard named
+11.2  replay → second load      ⚠️ FINDING · single-use is load-bearing
+                                   for disclosure, not only continuity
+11.3  partial → degradation     SURVIVES
+11.4  null → "no permission"    SURVIVES · requires Q4's two-part gate
+11.5  S authorizes T            SURVIVES · filter load-bearing on the
+                                   narrower-answer path only
+11.6  receipt → authority       SURVIVES
+11.7  headings → cognition      ⚠️ FINDING · already true on canonical,
+                                   by a path S3 neither creates nor closes
+11.8  "passage" vs section      SURVIVES · prospective risk, G8 guards it
 ```
+
+⭐ **P1 survives six of eight outright and returns two findings rather than
+absorbing them.** Neither finding is a defect in P1; both are facts P1 made
+visible.
+
+---
+
+## 12 · A / C — RETIRED AS DECISION VOCABULARY
 
 ```text
-⛔ answer from A and present it as the answer          PROHIBITED
-✅ the body-required Ask does not proceed as complete
-✅ lawful ONLY IF the system re-resolves the evidence requirement and can
-   truthfully establish that a narrower question no longer requires B and C
-   → that is a NEWLY BOUNDED ANSWER, not a degraded one
+A / C
+    previously held candidate labels
+    definitions NOT ATTRIBUTABLE in the canonical record
+    RETIRED as decision vocabulary
+    ⛔ no substantive ruling inferred from their retirement
 ```
 
-⚠️ **Design remainder:** whether re-resolution happens automatically or requires
-a fresh member question. ⛔ Not decided here — and it must not be decided by
-whichever is easier to implement.
+⭐ **A label whose definition cannot be recovered cannot legitimately win or lose
+an architecture decision.** Protocols are compared by what they do.
 
-### 10.6 · `pendingAskRef` — the identity, stated as constraints
-
-```text
-IS        non-authoritative · single-purpose · single-use
-          member-bound · Work-bound · Ask-bound
-          invalidatable · bounded in lifetime
-IS NOT    may_cross · reusable consent · authored characters
-          an authority-bearing receipt
-          a statement that any section MAY be read
-```
-
-⭐ **Expiry here is continuity hygiene, not disclosure freshness.** It ceases to
-resume the encounter after completion or cancellation, and a material change that
-makes the original Ask identity unreliable invalidates it. ⛔ No TTL is invented
-constitutionally.
-
-⚠️ **Design remainder:** whether `threadId` + re-derivation is already sufficient
-(no new artefact), or whether a distinct single-use reference is needed to make
-"single-use" enforceable. ⛔ A durable row that names an authorized section is
-where a standing permission gets built by accident — that risk decides this, not
-convenience.
-
-### 10.7 · The four result states, placed on the protocol
-
-```text
-STRUCTURE_SUFFICIENT     ACT 1 · step 7 · no ref requires body
-BODY_AUTHORITY_REQUIRED  ACT 1 · step 7 · body required, no may_cross → ACT 2
-BODY_AUTHORIZED          ACT 3 · step 8 onward
-BODY_UNVERIFIABLE        ACT 3 · step 9 · authority EXISTED, recovery failed
-```
-
-⭐⭐ **`BODY_UNVERIFIABLE` is reachable only from ACT 3, after `may_cross`.** That
-placement is the structural guarantee that an unauthorized crossing can never
-present as a verification failure — the collapse §Q4 identified as the cheapest
-and the prohibited repair.
+**P1 is the first named candidate.** ⛔ **A second candidate is not to be created
+merely because there used to be two letters.** If a genuinely different protocol
+exists, it is defined with equal precision and compared against G1–G8 and Q1–Q6 —
+otherwise there is one candidate, and saying so is the honest report.
 
 ---
 
@@ -786,30 +956,32 @@ and the prohibited repair.
 S3-DESIGN-01              ACTIVE · DESIGN ONLY
 SUBJECT                   canonical 7fa29678e
 
-Q1 headings               AUTHORED DISCLOSURE · not body disclosure
-                          separate governance question PARKED
+Q1 headings               ⭐ CLOSED — may be shown to the MEMBER for
+                          recognition; ⛔ may not enter cognition, may not
+                          become authority. Broader governance PARKED.
 Q2 DisclosureGesture      narrow S3 extension PERMITTED
-Q3 resumed act            DISTINCT PROTOCOL VERB · native in WRITE
-                          no client-supplied authority
+Q3 resumed act            DISTINCT PROTOCOL VERB · no client-supplied authority
 Q4 gate                   ROUTE DECISION + TYPE ENFORCEMENT
-                          null/unverifiable fallthrough PROHIBITED
-Q5 multi-section          ALL REQUIRED SECTIONS, or no claimed complete answer
-                          silent partial degradation PROHIBITED
-Q6 pending identity       EXPIRING · SINGLE-PURPOSE · NON-AUTHORITATIVE
+Q5 multi-section          ALL-OR-NONE at the answer contract
+§10.5                     ⭐ CLOSED — no automatic re-resolution;
+                          narrowing requires a member act
+§10.6                     ⭐ CLOSED — Ask-specific pending identity required;
+                          threadId insufficient; representation open
 
 ratified "passage" copy   SUPERSEDED with section language · reason recorded
 F7 passage form           SUPERSEDED FOR S3 · history retained
 live W2 obligation        SECTION-BOUND
 
-RESUMED-ASK PROTOCOL      DRAFTED · §10 · three acts, end to end
+P1 PROTOCOL               FULLY SPECIFIED · §10
+FALSIFICATION PASS        RUN · §11 · 6 survive · 2 findings returned
+  ⚠️ 11.2                 single-use of pendingAskRef is load-bearing for
+                          DISCLOSURE — replay is otherwise unbounded
+  ⚠️ 11.7                 authored headings already reach cognition via
+                          FrozenStructureUnit.title under 'structure'
+                          requirement — current canonical behaviour
 
-DESIGN REMAINDERS         Q1  may the surface show member headings?
-                          10.5 re-resolution automatic or re-asked?
-                          10.6 threadId sufficient, or a distinct single-use ref?
-
-A / C                     HELD UNTIL ATTRIBUTABLY DEFINED
-                          next revision: recover governed definitions OR
-                          retire the labels and define the candidates
+BODY_SCOPE_INCOMPLETE     ⭐ FIFTH protocol state, recorded as an addition
+A / C                     RETIRED as unattributable labels
 
 IMPLEMENTATION            NOT AUTHORIZED
 TESTS / FIXTURES          NOT AUTHORIZED
