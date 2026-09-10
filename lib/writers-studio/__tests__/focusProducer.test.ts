@@ -261,21 +261,40 @@ describe('FOCUS-ASSEMBLER-CONTRACT-01 · the ephemeral locator is not a receipt 
    */
   const crossing = () => CODE('lib/writers-studio/focusCrossing.ts');
 
-  it('a passage never puts its locator in the receipt', () => {
-    expect(crossing()).toMatch(/sectionRef: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
-  });
-
-  it('a passage never puts its locator in the producer label either', () => {
-    // The producer text says WHERE the writer looked; a section name there would
-    // leak the same locator the receipt refuses.
-    expect(crossing()).toMatch(/label: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
-  });
-
-  it('the assembler still receives the locator for BOTH section and passage', () => {
+  /**
+   * RE-EXPRESSED, NOT RELAXED. The partition these two scans watched has MOVED:
+   * `focusCrossing` now builds ONE locus and the boundary derives the receipt's
+   * columns from it, so a scan for the old inline ternary would pass or fail on
+   * where the code lives rather than on what it does.
+   *
+   * The law is unchanged and is asserted behaviorally in
+   * `disclosureBoundary.test.ts` ("a passage still refuses to record its
+   * containing section", and the locator partition for unit/range/evidence_set).
+   * What belongs HERE is the half that is this module's own: the locus reaches
+   * the assembler whole, for section and passage alike, so the material stays
+   * recoverable even though the receipt refuses to name where it was.
+   */
+  it('the crossing hands the assembler ONE locus, and never loose locator fields', () => {
     const c = crossing();
     const assembleCall = c.slice(c.indexOf('deps.assemble('), c.indexOf('deps.assemble(') + 300);
-    expect(assembleCall).toMatch(/sectionRef: req\.sectionRef/);
-    expect(assembleCall).not.toMatch(/scopeKind === 'section'/);
+    expect(assembleCall).toMatch(/locus,/);
+    expect(assembleCall).toMatch(/authority: boundary\.authority/);
+    // The old shape passed scope and locator separately - which is how a receipt
+    // and a capability could describe different material.
+    expect(assembleCall).not.toMatch(/scopeKind:/);
+    expect(assembleCall).not.toMatch(/sectionRef:/);
+    expect(assembleCall).not.toMatch(/range:/);
+  });
+
+  it('a passage locus carries its section AND its offsets, so the passage stays findable', () => {
+    const c = crossing();
+    expect(c).toMatch(/scopeKind: 'passage', sectionRef: req\.sectionRef, range: req\.range/);
+  });
+
+  it('a section locus carries its section, and whole_work carries no locator at all', () => {
+    const c = crossing();
+    expect(c).toMatch(/\{ scopeKind: 'section', sectionRef: req\.sectionRef \}/);
+    expect(c).toMatch(/\{ scopeKind: 'whole_work' \}/);
   });
 });
 

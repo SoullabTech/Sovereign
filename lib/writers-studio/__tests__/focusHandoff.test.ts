@@ -27,6 +27,7 @@ jest.mock('@/lib/db/postgres', () => ({
   }),
 }));
 
+import { discloseUnder } from '@/lib/disclosure/disclosureAuthority';
 import { performFocusCrossing } from '../focusCrossing';
 
 const CODE = (rel: string) =>
@@ -34,13 +35,24 @@ const CODE = (rel: string) =>
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const SVC = () => CODE('lib/sovereign/maiaService.ts');
 
-const assemble = jest.fn(async () => 'the selected paragraph');
+const assemble = jest.fn(async ({ authority, memberId, workRef, locus }: any) => {
+  /* ⭐ NOT A STRING STUB. The mock consumes the real capability, so these suites
+     exercise the gate rather than bypassing it: a crossing that reached the
+     assembler without matching authority yields null here, exactly as production
+     would, and `readDisclosed` still refuses anything this module did not seal. */
+  const out = await discloseUnder(authority, { memberId, workRef, locus }, async () => 'the selected paragraph');
+  return out.kind === 'disclosed' ? out.content : null;
+});
 const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as never));
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never, posture: TurnPosture.resolve({}),
   memberId: 'm-1', sessionId: 's-1', disclosureId: 'd-1', workRef: 'work-1',
-  scopeKind: 'passage' as const, gesture: 'ask_maia' as const, ask: 'what is repeating',
+  /* A LAWFUL PASSAGE. The old fixture named a passage with no locator at all —
+     the exact shape FOCUS-ASSEMBLER-CONTRACT-01 recorded as hidden by a mocked
+     assembler. The capability refuses it before any consent row exists. */
+  scopeKind: 'passage' as const, sectionRef: 'sec-1', range: { start: 0, end: 10 },
+  gesture: 'ask_maia' as const, ask: 'what is repeating',
   ...over,
 });
 

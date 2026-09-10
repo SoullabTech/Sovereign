@@ -38,10 +38,17 @@ jest.mock('@/lib/db/postgres', () => ({
            draft returned a junk request_ref, so the store correctly reported an
            identity_mismatch and C4 failed for the wrong reason. The fixture must
            describe the SAME disclosure, or it is testing a different case. */
+        /* THE SAME FAULT CLASS, TWICE MORE. The row must describe THIS
+           disclosure or the store rightly calls it a different one: it now needs
+           the ADDENDUM-01 locator columns the SELECT returns (absent reads as
+           `undefined`, which is not `null`), and the ADDENDUM-01 boundary the
+           crossing actually emits. Either omission reconciles as
+           `identity_mismatch`, and C4 fails for the wrong reason again. */
         return { rows: [{ id: 'r1', member_id: 'm-1', request_ref: 'req-1',
-          boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
+          boundary: 'manuscript_prose->maia_cognition', source_class: 'work',
           participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
-          section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
+          section_ref: null, unit_ref: null, range_from_ref: null, range_to_ref: null,
+          authorized_by: 'member', gesture: 'ask_maia',
           policy_version: 'context-disclosure-v1', state: 'attempted' }], rowCount: 1 };
       }
       if (/UPDATE/.test(sql)) return confirmFails ? { rows: [], rowCount: 0 } : { rows: [], rowCount: 1 };
@@ -51,10 +58,19 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { discloseUnder } from '@/lib/disclosure/disclosureAuthority';
 import { performFocusCrossing } from '../focusCrossing';
 
 const events: string[] = [];
-const assemble = jest.fn(async () => { events.push('assemble'); return 'the selected paragraph'; });
+const assemble = jest.fn(async ({ authority, memberId, workRef, locus }: any) => {
+  events.push('assemble');
+  /* ⭐ NOT A STRING STUB. The mock consumes the real capability, so these suites
+     exercise the gate rather than bypassing it: a crossing that reached the
+     assembler without matching authority yields null here, exactly as production
+     would, and `readDisclosed` still refuses anything this module did not seal. */
+  const out = await discloseUnder(authority, { memberId, workRef, locus }, async () => 'the selected paragraph');
+  return out.kind === 'disclosed' ? out.content : null;
+});
 /* FOCUS-PRODUCER-01 made the port two-phase: prepare (construct · adjudicate ·
    render) then generate (the handoff). The receipt is confirmed between them. */
 const prepare = jest.fn(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
@@ -70,6 +86,12 @@ const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never,
   posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 's-1',
   disclosureId: 'd-1', workRef: 'work-1', scopeKind: 'passage' as const,
+  /* ⭐ THE FIXTURE DEFECT THIS BLOCK ALREADY NAMED. The old request was a
+     `passage` with NO locator, against an assembler mocked to return text
+     regardless — so nothing noticed that such a request cannot locate anything.
+     The capability refuses it now, before any consent row exists, which is why
+     the repair is to make the fixture lawful rather than to relax the code. */
+  sectionRef: 'sec-1',
   range: { start: 0, end: 10 }, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
 });
@@ -232,9 +254,20 @@ describe('C6 · ONE RECEIPT / ONE CROSSING', () => {
     expect(out.disclosureId).toBe('d-AUTH');
   });
 
-  it('the route mints a NEW disclosure identity per member act', () => {
+  /**
+   * SUPERSEDED IN PART, AND DELIBERATELY. The old law read "a NEW disclosure
+   * identity per member act", enforced as `randomUUID()` at the route. That
+   * mechanism was the F1k defect: minting per HTTP invocation made a transport
+   * replay indistinguishable from a second deliberate act.
+   *
+   * What survives is the half that was always the point — the identity is not
+   * the client's to assert. It is now DERIVED from the caller's act id, so the
+   * same act yields the same identifiers and a new act yields fresh ones.
+   */
+  it('the route derives disclosure identity from the writer act, and never takes it from the body', () => {
     const route = CODE('app/api/writers-studio/focus/route.ts');
-    expect(route).toMatch(/const disclosureId = randomUUID\(\)/);
+    expect(route).toMatch(/actIdentifiers\(actId\)/);
+    expect(route).not.toMatch(/randomUUID\(\)/);
     expect(route).not.toMatch(/body\).disclosureId|body\.disclosureId/);
   });
 
@@ -254,7 +287,12 @@ describe('the lane stays narrow — one source class, one basis, one boundary', 
     const insert = calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))!;
     expect(insert.params).toContain('work');
     expect(insert.params).toContain('member_invoked');
-    expect(insert.params).toContain('writers_studio.focus->maia_cognition');
+    /* ADDENDUM-01 renamed the constituted boundary: the column says WHAT crosses,
+       not which screen the writer used — that is what `gesture` is for. The old
+       Focus-named literal remains admitted for historical rows and must not be
+       emitted by a new crossing. */
+    expect(insert.params).toContain('manuscript_prose->maia_cognition');
+    expect(insert.params).not.toContain('writers_studio.focus->maia_cognition');
   });
 
   it('⛔ wires no journal, Keep, memory, decision or symbolic source', () => {
