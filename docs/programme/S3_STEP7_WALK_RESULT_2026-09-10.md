@@ -376,3 +376,84 @@ terminal cognition gate        PASS   real model, BODY_AUTHORIZED, same thread
 
 walk result                    59 passed · 1 failed (untracked-files hygiene)
 ```
+
+---
+
+# Addendum 4 — STEP 7 CLOSED · `60 passed · 0 failed`
+
+**Run:** founder's machine, 2026-09-10, from a clean isolated checkout.
+
+```
+application SHA   785dab0de1ef274cee55c632e6c3fab1fee4a9ab
+working tree      CLEAN — git status --porcelain empty
+checkout          detached git worktree at /tmp/s3-witness
+database          maia_consciousness · soullab@:5432 · UTF8 · 526 migrations
+qualification     VERDICT: QUALIFIED · 0 failed migrations · 16 closure relations
+fixture           tag 2cfd59d0 · work af5f3a7f… · reading 29928447…
+server            real `next dev` on :3100, started from the clean checkout
+work geometry     7084595c0150ec49366b5b9a959de6e3  (identical at open and close)
+model credential  PRESENT via development environment
+provider call     REAL
+inference mode    primary (default)
+credential value  NOT RECORDED
+
+60 passed · 0 failed
+```
+
+**W0 green.** The previous run's sole failure was untracked scratch in the main
+checkout. Re-run from a detached worktree of the exact commit — rather than
+deleting unrelated files from a working directory — and the SHA now names what
+ran on the check's own terms, not on an argument about the check.
+
+**Walk 13 green, all nine.** `BODY_AUTHORIZED` · disclosed and withheld scopes as
+actually used · zero unverified evidence · answer provenance from the canonical
+model path · MAIA's own words, not an echo · the same thread · the thread grown
+by both turns · crossings recorded `crossed`.
+
+**Walks 1–12 and R1 green** in the same run, on the same clean checkout.
+
+## What blocked it, twice, and it was never the protocol
+
+Both `unreachable` failures were one cause: `.env.local` acquired a **second**
+`ANTHROPIC_API_KEY` line each time the append was run twice, and
+`grep … | cut -d= -f2-` glued the two into a 217-character value containing a
+newline. curl refused it outright (error 43); the SDK failed the same way and the
+route reported `unreachable`. Deduplicating to one 108-character line, restarting
+the server so it re-read the file, and adding `head -1` to the export fixed it.
+
+The environment defects recorded in Addendum 3 all held: the doubled key, `read -p`
+against zsh, and the qualification witness reading `PG*` instead of `DATABASE_URL`.
+
+## Standing
+
+```
+S3 server                      CLOSED
+migration acceptance           CLOSED
+writer-facing UI               BUILT
+recognition                    CLOSED   F1 · F2 · F3
+R1 geometry                    PASS
+authority / protocol walk      PASS
+terminal cognition gate        PASS
+
+STEP 7                         CLOSED
+writer-facing P1               ACCEPTED
+
+D9 / S3 integration            next
+D9-PHENOMENOLOGY-WITNESS-01    UNSPENT
+production preflight           NOT STARTED
+production migration           NOT AUTHORIZED
+production                     UNTOUCHED
+```
+
+## Two findings remain open, and neither was repaired
+
+1. **The last boundary cannot be diagnosed.** `router.ts` captures the provider's
+   real error into `detail`; `developmentalAskReader.ts:207` discards it under a
+   bare `catch` with no logging. Both of today's failures surfaced as the single
+   word `unreachable` with no cause — hours of the delay are directly attributable
+   to that.
+2. **Walk 12's fault injection is not crash-safe.** It renames
+   `runtime_consent_state` and restores it in a `finally`; an interrupted run
+   leaves it renamed. It ran against a live dev database on this session's
+   instructions and wedged it once. It must point at a disposable database, or
+   restore on startup.
