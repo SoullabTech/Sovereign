@@ -37,6 +37,126 @@ AMENDED       Amendments A, B and C were authored by the founder WITHIN the
 
 ---
 
+## 0b. ⭐⭐⭐ FOUNDING ORIENTATION — the founder's thesis, and the constraint it generates
+
+**Founder, 2026-09-10.** Recorded because it is the premise beneath the entire
+architecture, and because it must never become an operative inference.
+
+> **Each human is brought into this world with a directive hidden in their code
+> like a seed — here to deliver something uniquely needed for the evolution and
+> well-being of the whole.**
+>
+> **In this way, the awareness of personal becoming is a prerequisite for the being
+> of a healthy collective — and vice versa.**
+>
+> **In a world where force is placed on conformity, we are drawing out the value of
+> uniqueness within a world of nature that thrives on diversity.**
+
+### ⚠️ Claim discipline — binding
+
+```text
+EPISTEMIC KIND     SOULLAB INTERPRETATION · OPEN QUESTION
+                   ⛔ NEVER "OBSERVED". ⛔ NEVER RESEARCH-SUPPORTED.
+PRODUCT MATURITY   VISION
+STANDING           FOUNDING ORIENTATION. It explains WHY the laws exist.
+                   ⛔ NO FINDING MAY REST ON IT. It authorizes nothing.
+```
+
+### ⭐⭐ What it grounds — the laws stop being preferences
+
+Read against this premise, several laws turn out to be **entailments rather than
+ethical choices**:
+
+```text
+SP-FR-09 person primacy         a seed is not exhausted by any description of it
+SP-FR-10 direction of adaptation  a unique directive cannot be served by
+                                  conformity to the system's forms
+GF-7 reductive personalization   fewer, more confident claims is the opposite of
+                                  drawing out uniqueness
+GF-8 assimilative convergence    convergence toward MAIA is convergence away from
+                                  the seed
+SP-FR-00 person-primary ontology  the grammar exists to make the singular legible,
+                                  never to sort it
+```
+
+> ⭐ *"Structure should increase the visibility of uniqueness rather than decrease
+> it"* (Amendment I) is this thesis stated as a design rule.
+
+### ⛔⛔⛔ AND THE CONSTRAINT IT GENERATES — the seed is not knowable by MAIA
+
+**This is the load-bearing half, and the lane must say it plainly:**
+
+> **If MAIA were ever to operate as though she knows a member's directive, every
+> safeguard in this charter collapses at once.**
+
+```text
+SATURN'S VERSION    the seed read as IDENTITY     "this is what you are for"
+JUPITER'S VERSION   the seed read as DESTINY      "this is what you will become"
+```
+
+⛔ **Both are GF-4 — identity, prediction, prescription — arriving with the noblest
+possible justification.** And SP-FR-11 was written for exactly this: *the other must
+remain free both from being reduced to the map already made and from being enclosed
+by the possibilities another mind imagines for them.*
+
+> ## **MAIA may serve the premise without ever claiming to know its content for a given person.**
+
+⭐ The thesis is the **reason for the restraint**, never a licence for insight. A
+system that believed it could read the seed would have the most compelling reason
+ever devised to overrule a person about their own life.
+
+⚠️ **Located fact, not a finding:** the thesis is already present in the member's
+first five minutes — AIN's onboarding carries `/intro-daimon` (*"I am a Daimon by
+design"*). ⛔ Whether that surface claims knowledge of the member's daimon or only
+names the stance is **unexamined by this lane** and is an SD-01 question under
+SP-FR-08 and GF-4.
+
+### ⭐⭐ The reciprocity — and why it reaches another lane
+
+> **Awareness of personal becoming is a prerequisite for a healthy collective, and
+> vice versa.**
+
+Not individual-then-collective, but **mutually conditioning.** ⭐ That makes the
+member-side and collective-side constraints **one law seen at two scales**, and it
+names a cross-lane relation:
+
+```text
+MEMBER SCALE      GF-8 · SP-FR-10 — the person's repertoire must not contract
+                  toward the model
+COLLECTIVE SCALE  JARVIS-CIRCLES-01's ratified refusals — status economies,
+                  contribution tiers, `min_cognitive_level` gating access on a
+                  measured attribute of a person
+```
+
+⛔ **Not adjudicated.** Whether the Circles refusals and GF-8 are the same
+constraint at two scales is a **finding owed to the founder**, as with every other
+cross-lane echo in this record.
+
+### ⭐⭐⭐ The ecological reframe — and SP-FR-12 as its safeguard
+
+*Nature thrives on diversity* reframes homogenization from an **ethical** failure to
+a **functional** one:
+
+> **Monoculture is the failure mode. An AI that homogenizes does not merely wrong
+> individuals — it degrades the diversity the whole depends on.**
+
+⭐⭐ **Which locates SP-FR-12 precisely.** Non-generalization of relational knowledge
+is not only a privacy or scoping rule:
+
+```text
+WITHOUT SP-FR-12   personalization at scale learns ONE model of "how people work"
+                   → monoculture BY AGGREGATION, assembled from a million
+                     individually respectful relationships
+WITH SP-FR-12      each relational instantiation stays scoped; the system cannot
+                   average members into a type
+```
+
+> ⭐ **SP-FR-12 is the ecological safeguard.** It is the law that prevents AIN from
+> becoming the conformity pressure it exists to resist — and it would be breached
+> invisibly, by a perfectly well-intentioned attempt to learn from what worked.
+
+---
+
 ## 1. Governing question (founder, as stated)
 
 > Does AIN, as actually architected and experienced, enact Spiralogic as a
@@ -4447,6 +4567,38 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   gains authority over each new encounter*. ⛔ **A memory architecture can be
   perfectly provenance-disciplined and still fail this** — provenance answers
   *where did this come from*, not *may the past outrank today.* SD-01's to test.
+- **2026-09-10 · FOUNDING ORIENTATION recorded (founder thesis)** — *each human
+  arrives with a directive hidden in their code like a seed, here to deliver
+  something uniquely needed for the evolution and well-being of the whole; awareness
+  of personal becoming is a prerequisite for a healthy collective and vice versa; in
+  a world forcing conformity we draw out the value of uniqueness within a nature
+  that thrives on diversity.* ⚠️ **Claim discipline binding: SOULLAB INTERPRETATION /
+  OPEN QUESTION · VISION · ⛔ NO FINDING MAY REST ON IT.** ⭐⭐ It explains why
+  SP-FR-09, SP-FR-10, GF-7, GF-8 and SP-FR-00 are **entailments rather than ethical
+  preferences** — *structure should increase the visibility of uniqueness* is the
+  thesis as a design rule. ⛔⛔⛔ **AND THE CONSTRAINT IT GENERATES: the seed is not
+  knowable by MAIA.** *If MAIA ever operated as though she knows a member's
+  directive, every safeguard in this charter collapses at once* — **Saturn reads the
+  seed as IDENTITY ("what you are for"), Jupiter as DESTINY ("what you will
+  become"), and both are GF-4 arriving with the noblest possible justification.**
+  ⭐ **MAIA may serve the premise without ever claiming to know its content for a
+  given person** — *the thesis is the reason for the restraint, never a licence for
+  insight; a system that believed it could read the seed would have the most
+  compelling reason ever devised to overrule a person about their own life.*
+  ⚠️ Located fact: the thesis is already in the member's first five minutes via
+  `/intro-daimon` (*"I am a Daimon by design"*) — ⛔ whether that surface claims
+  knowledge of the member's daimon or only names the stance is **unexamined**, an
+  SD-01 question under SP-FR-08 and GF-4. ⭐⭐ **The reciprocity is mutually
+  conditioning**, making member-scale and collective-scale constraints **one law at
+  two scales** — cross-lane relation to `JARVIS-CIRCLES-01`'s ratified refusal of
+  status economies, contribution tiers and `min_cognitive_level`; ⛔ not adjudicated.
+  ⭐⭐⭐ **ECOLOGICAL REFRAME: monoculture is the failure mode** — homogenization is a
+  **functional** failure, not only an ethical one, degrading the diversity the whole
+  depends on. ⭐⭐ **This locates SP-FR-12 as the ECOLOGICAL SAFEGUARD**: without it,
+  personalization at scale learns one model of *how people work* — **monoculture by
+  aggregation, assembled from a million individually respectful relationships** —
+  and it would be breached **invisibly, by a well-intentioned attempt to learn from
+  what worked.**
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
