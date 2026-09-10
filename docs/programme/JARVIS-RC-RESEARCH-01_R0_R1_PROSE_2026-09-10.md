@@ -186,3 +186,201 @@ implementation          NOT AUTHORIZED
 dependency changes      NOT AUTHORIZED
 PRODUCTION              UNTOUCHED
 ```
+
+---
+
+# Addendum 1 — R1 persistence · R2 archaeology · R3 bounded mechanics (founder-run)
+
+**Run by the founder on the Mac Studio, 2026-09-10**, against the pinned upstream
+`72f0ca412ea9005685b0f8fa8ff2243f2928e125` in a disposable `/tmp` clone. No MAIA
+repository change, no MAIA environment copied, **no model credential**.
+
+## R1 — persistence: COMPLETE
+
+Pending suggestions live in a **separate IndexedDB store keyed by `documentId`**;
+the document itself is unchanged until acceptance. On tab switch the live marks are
+extracted and persisted separately, after annotation persistence completes.
+
+```
+persisted: suggestion id · original text · suggested text · explanation
+           positions · model · conversation id · message id · document id
+```
+
+⭐ **ADAPT for proposal ↔ conversation lineage. NOT for targeting.**
+
+## R3 — BOUNDED MECHANICS: PASS
+
+⚠️ **Apparatus finding first: the pinned web harness BUILDS but does not RUN as
+shipped.** Its mock Electron API lacks three methods the renderer now expects;
+three no-ops were added **to the disposable clone only** to make it render.
+
+> ⭐ **Build success is not runtime-parity evidence.** Carried as a JARVIS lesson,
+> not a Prose complaint — our own gates make the same claim shape.
+
+The real TipTap suggestion machinery was then driven directly, without an LLM.
+
+```
+fixture     "The night-time waking returns. First telling."
+            "The night-time waking returns. Second telling."
+            proposal placed on the SECOND occurrence
+
+before accept   document text unchanged  YES
+                suggestion exists        YES
+
+after accept    "...returns. First telling."
+                "...returns, but altered. Second telling."
+```
+
+⭐ **The central interaction is CONFIRMED IN RUNTIME: a proposal does not mutate
+prose; Accept performs the mutation.** That is a direct validation of RC's
+fundamental model, from an independent implementation.
+
+Reject removed the proposal and left the text unchanged. Clean.
+
+### 🔴 F-P2 is now BEHAVIORAL evidence, not source inspection
+
+Document reset; an ambiguous persisted proposal restored, `originalText` occurring
+twice:
+
+```
+restore returned success      YES
+attached to FIRST occurrence  YES
+ambiguity reported            NO
+```
+
+**Prose can silently reattach a pending proposal to the wrong recurrence, and
+report success.** HARD REFUSE, now witnessed rather than read.
+
+```
+R3 BOUNDED MECHANICS    COMPLETE
+R3 PHENOMENOLOGY        UNSPENT
+```
+
+⛔ **Headless direct-command execution is not a lived UX witness.** The founder
+declined to call it one. `UNSPENT` is a first-class result.
+
+## R2 — problem archaeology: where OUR failures will be
+
+### 🔴 A-1 (#578) — exact identity is NOT sufficient. Coverage must be proven too
+
+An accepted **small** edit replaced an entire ~1,800-character body, because the
+body had collapsed into a single paragraph node. The target was found correctly and
+the replacement was catastrophically wider than the proposal claimed.
+
+⭐ **Candidate invariant — application verifies BOTH:**
+
+```
+proposal target        exact
+current target         current
+expected coverage      exact
+replacement operation  bounded to that coverage
+
+ANY disagreement -> REFUSE          not "best effort"
+```
+
+⭐ **We can already express this**: the frozen `read_state` carries a per-section
+`CodePointRange` and digest. The apply path must assert the replacement is bounded
+to *that range*, not merely that the section resolved. **Locating the target and
+bounding the write are two different obligations, and #578 is what conflating them
+costs.**
+
+### 🔴 A-2 (#681) — a present identifier is not a unique one
+
+Paragraph splitting duplicated node IDs; the resolver then successfully found the
+**wrong** node because the "unique" id was not unique.
+
+⭐ Reinforces RC-06b: **uniqueness must be structural.** Our `UNIQUE (draft_id,
+position)`, `UNIQUE (candidate_id, revision_number)` and the composite FK on
+`(candidate_id, revision_number, digest)` are not overengineering — they are the
+answer to a defect another team shipped.
+
+### 🔴 A-3 (#674) — provenance must not depend on decorations
+
+A catalogue: accept-all failed to write history, collapsed ranges deleted records,
+async persistence raced tab switches, renaming orphaned attribution. Their repair
+moved toward *detach, don't delete*.
+
+⭐ **Our stronger law:**
+
+```
+proposal / candidate / decision history    DURABLE TRUTH
+editor decorations                         PROJECTION
+
+destroy every decoration -> historical truth is unchanged
+```
+
+**Architectural, not a UI convention.**
+
+### 🔴 A-4 — fire-and-forget is wrong for member candidate prose
+
+> **Acknowledged candidate state means durable candidate state.** No optimistic
+> "saved" while the only copy of member work sits in a pending async write.
+
+⚠️ **THIS CONTRADICTS A DOCUMENTED HOUSE PATTERN, and the contradiction must be
+recorded before someone cites the wrong half.** CLAUDE.md's Bridge D design
+principles state *"Fire-and-forget writes — like voiceSovereignty pattern (no
+await, no blocking)"*, and that is correct **there**. The distinction is what the
+write contains:
+
+```
+fire-and-forget IS right   derived structural state that can be recomputed
+                           (spiral element/phase, voice sovereignty)
+                           losing it costs continuity, not content
+
+fire-and-forget IS WRONG   the sole authoritative home of member writing
+                           (RC-05 / RC-06) — losing it destroys the work
+```
+
+⛔ **Bridge D's pattern must not be generalized onto the candidate store.** Under
+RC-06 the candidate store is the *only* home of that prose until application; a
+dropped write there is not a lost cache entry, it is lost writing.
+
+### A-5 — no wildcard Accept
+
+```
+Accept(P17)              means exactly P17
+Accept()                 REFUSED as a wildcard
+Accept {P17, P19, P24}   if ever added: a NEW explicit member act over an
+                         ENUMERATED set, each individually current and applicable
+```
+
+## ⭐ New future-proofing principle
+
+> **The renderer never owns a proposal. It only depicts one.**
+
+```
+RevisionProposal · RevisionCandidate · target identity · decision   SOULLAB TRUTH
+CodeMirror decoration · diff widget · popover · sidebar card        DISPOSABLE
+```
+
+The UI asks the domain *"show me P17 against its current target"*, rather than the
+database reconstructing P17 from whatever marks survived in an editor. This is what
+lets CodeMirror, React, the diff library or the whole Studio visual language be
+replaced without translating what historically happened.
+
+## RC-06a — better decision frame, ⛔ still NOT ratified
+
+After application the canonical revision owns the manuscript prose. History must
+still prove `R18 applied from C1/r3` · `C1/r3 derived from P2` · `P2 from this MAIA
+turn`. **It does not follow that candidate prose must remain forever as a second
+textual body.** Decide after the remaining systems are compared — not by copying
+Prose's annotation-history solution.
+
+## Standing
+
+```
+R0 FREEZE                 DONE
+R1 PROSE SOURCE           DONE
+R2 PROSE ARCHAEOLOGY      SUBSTANTIALLY DONE
+R3 PROSE BUILD            PASS
+R3 PROSE MECHANICS        PASS · bounded
+R3 PROSE PHENOMENOLOGY    UNSPENT
+
+NEXT   Sundial — and the sharper question the Prose pass earned:
+       how is `conversation turn -> exact edit -> human decision` preserved
+       WHILE THE DOCUMENT KEEPS CHANGING?
+
+implementation            NOT AUTHORIZED
+dependency changes        NOT AUTHORIZED
+PRODUCTION                UNTOUCHED
+```
