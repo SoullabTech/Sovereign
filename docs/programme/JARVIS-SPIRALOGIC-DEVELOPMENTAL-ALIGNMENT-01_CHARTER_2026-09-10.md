@@ -36,7 +36,7 @@ interaction architecture is linear, classificatory, static, or externally
 directive. If so it is **thematically elemental but not Spiralogic.** The lane
 exists to discover that, and is required to be able to report it.
 
-## 2. Governing falsifiers — seven, each independently sufficient, all grounded in ratified or founder-authored law
+## 2. Governing falsifiers — seven ratified or founder-authored, one Jarvis-proposed (GF-8)
 
 ### GF-1 — the spiral falsifier (opening act)
 
@@ -144,7 +144,7 @@ lane.** Whether they are one constraint is a finding owed to the founder.
 
 Tested at **SD-04f**.
 
-## 3. Lane law — nine laws, frozen at opening
+## 3. Lane law — nine laws frozen, one proposed
 
 SP-FR-01…06 are **founder-authored within the opening act**; SP-FR-07 arrives with Amendment E. All are and are **operative as
 lane law from now.** None is yet canon: placement in
@@ -162,6 +162,7 @@ SP-FR-06  The label-removal test                 (drafted in-act as SP-FR-03)
 SP-FR-07  Elemental Process Sovereignty / Non-Conflation         Amendment G
 SP-FR-08  Participatory Legibility / Native-Language Return     Amendment H
 SP-FR-09  Person Primacy / Elemental Complexity                Amendment I
+SP-FR-10  Direction of Adaptation ⚠️ JARVIS-PROPOSED             Amendment J
           (supersedes the Amendment E formalization "Elemental Attribution
            Integrity", recorded as superseded)
 ```
@@ -1169,6 +1170,77 @@ visible.**
 > **The ontology is successful not when everyone fits it. It is successful when it
 > helps each person see their own way of moving through reality more clearly.**
 
+## 3k. ⭐⭐ Amendment J — the ontology expressed in a second domain, and a law it exposes
+
+**Founder, 2026-09-10.** Writer's Studio is **the writing-specific expression of
+the same ontology**. Full doctrine:
+`docs/programme/AUTHORIAL_SIGNATURE_NON_HOMOGENIZATION_2026-09-10.md`.
+⛔ **Application to any Writer's Studio surface is a separate founder act and is
+not authorized here**; this lane records the correspondence and the law it
+exposes, and adjudicates nothing in another lane's domain.
+
+```text
+DEVELOPMENTAL ENVIRONMENT     person → process → relational map
+WRITER'S STUDIO               writer → creative process → authorial map
+```
+
+The shared ethic, in the founder's words:
+
+```text
+See the person's pattern without making them the pattern.
+Give enough structure to make the terrain legible.
+Return perception to the person in a form they can use.
+Preserve their freedom to find their own way.
+Let skill increase without uniqueness decreasing.
+```
+
+### ⭐⭐ The law this exposes — approval is not authorship
+
+The writing domain surfaces a failure shape none of GF-1…GF-7 names:
+
+```text
+AI proposes → person reacts → AI adjusts → person reacts again
+            → the work enters the STATISTICAL GRAVITY OF THE MODEL
+```
+
+> **Even where every step is approved, authorship migrates — because MAIA sets
+> the field of possibilities to which the person is responding.**
+
+⛔ **This is not GF-4 (dependence) and not GF-6 (manufactured evidence).** A
+person can be minimally dependent on MAIA and fully consenting at every step, and
+still have their voice, framing or choice-set drift toward the model. GF-4 asks
+whether they need the map; **this asks who is changing to fit whom.**
+
+### SP-FR-10 — Direction of Adaptation ⚠️ **JARVIS-PROPOSED, awaiting ratification**
+
+Formalized from the founder's sentence *"the AI adapts to the writer; the writer
+does not become adapted to the AI."* ⚠️ **Proposed, not asserted** — the founder
+stated it for the writing domain; generalizing it to all of AIN is Jarvis's move
+and needs a ruling.
+
+> **MAIA adapts to the member; the member does not become adapted to MAIA.**
+>
+> A capability that increases the member's responsiveness to MAIA's framing — its
+> vocabulary, its structures, its choice-set, its aesthetic — is moving authorship
+> toward the system, **however fully the member consents at each step.** Consent
+> at every step is not evidence of authorship, because the field of possibilities
+> was not the member's.
+>
+> The direction of adaptation must run from system toward person, and the measure
+> is **fidelity of the outcome to the person's own developing authorship**, never
+> conformity of the person to the system's suggestions.
+
+### GF-8 — convergence toward the model ⚠️ **JARVIS-PROPOSED, awaiting ratification**
+
+> **If what the member produces, says, or frames converges toward MAIA's
+> proposals over successive encounters — even with every step approved — AIN has
+> moved authorship into the field of possibilities it set.**
+
+⭐ **Convergence is measurable; approval is not evidence against it.** That makes
+this the most tractable of the direction falsifiers — and it applies to the
+member's *language about their own process* just as it applies to a manuscript,
+which connects it directly to SP-FR-08's native-language return and to GF-6.
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
@@ -2030,6 +2102,18 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   ⚠️ **McGilchrist is already in `data/ain/source/` (four files)** — correcting
   this charter's claim that Amendment B's mapping had no prior trace. ⚠️ SD-00B is
   itself **PARTIAL**: five canon artifacts read, seventeen remain.
+- **2026-09-10 · Amendment J (founder)** — Writer's Studio recorded as the
+  writing-specific expression of the same ontology; doctrine in
+  `AUTHORIAL_SIGNATURE_NON_HOMOGENIZATION_2026-09-10.md`. ⛔ Application to any
+  Writer's Studio surface is a separate founder act, not authorized here. ⭐⭐ The
+  domain exposes a failure shape none of GF-1…GF-7 names: **approval is not
+  authorship** — *AI proposes → person reacts → AI adjusts → the work enters the
+  statistical gravity of the model*, with every step consented to, because **MAIA
+  sets the field of possibilities.** ⚠️ **SP-FR-10 Direction of Adaptation** and
+  ⚠️ **GF-8 convergence toward the model** are **JARVIS-PROPOSED generalizations
+  of the founder's writing-domain sentence, awaiting ratification** — the founder
+  stated it for writers; extending it to all of AIN is Jarvis's move. **Convergence
+  is measurable; approval is not evidence against it.**
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
