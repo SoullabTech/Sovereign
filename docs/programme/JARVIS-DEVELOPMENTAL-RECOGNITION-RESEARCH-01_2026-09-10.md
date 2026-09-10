@@ -52,13 +52,22 @@ offers information, then returns immediately to what the person makes of it.
 ### A2 — Uptake is not integration (Self-Determination Theory)
 
 SDT distinguishes **external regulation → introjection → identification →
-integrated regulation**. Autonomy-supportive contexts foster deeper
-internalization by taking the person's frame seriously, allowing choice, giving
-rationale, and minimizing controlling pressure. **A person can sound as though
-they have internalized a framework while still being governed by an external
-source.** *(PMC6133074, meta-analytic review)*
+integrated regulation**. Ryan & Deci define **integration** as a regulation being
+**evaluated and brought into congruence with the person's other values and
+needs**, and connect greater internalization with greater autonomy.
+Autonomy-supportive contexts foster deeper internalization by taking the person's
+frame seriously, allowing choice, giving rationale, and minimizing controlling
+pressure. *(Ryan & Deci 2000, selfdeterminationtheory.org; PMC6133074
+meta-analytic review)*
 
-⭐⭐ **This is GF-8's empirical cousin** — see §3/S1.
+⭐ **Verified external finding:** *internalization has qualitatively different
+forms; adoption / internalization does not by itself equal autonomous
+integration.*
+
+⚠️ **RECLASSIFIED at Source Verification 01** — the stronger sentence *"something
+internalized but not owned is indistinguishable from integration when viewed from
+outside"* is **NOT an SDT empirical finding in that form.** It is **our inference**
+and now lives in Class C as **S1b**.
 
 ### A3 — Representation must return to experience (Gendlin, Focusing)
 
@@ -98,8 +107,17 @@ scaffolding literature)*
 
 - Greater confidence in AI is associated with **less critical-thinking effort**
   *(Microsoft Research, knowledge-worker survey — self-reported)*
-- **Cognitive forcing functions** that require engagement rather than acceptance
-  **reduce overreliance — and users like them less** *(arXiv 2102.09692)*
+- ⭐ **Cognitive forcing functions** that require engagement rather than acceptance
+  **reduce overreliance**, and the designs that reduced overreliance most received
+  the **least favourable subjective ratings** — 199 participants.
+  ⚠️ **CITATION CORRECTED at Source Verification 01: this is PEER-REVIEWED ACM work
+  (Buçinca, Malaya & Gajos), not a preprint**, as an earlier draft of this record
+  implied. *(Harvard SEAS / ACM)*
+  ⛔ **Boundary:** supported is *"in at least one controlled AI decision-support
+  setting, interventions that protected independent cognition carried a
+  subjective-experience cost."* **NOT supported: "users dislike developmental
+  friction"** — the study does not establish that universally and was not testing
+  developmental AI relationships.
 - AI-assisted writing can produce **quality gains alongside structural
   homogenization** *(arXiv 2603.21228 — ⚠️ PREPRINT)*
 - Interaction design and incentives **can preserve or increase diversity** rather
@@ -267,9 +285,19 @@ Can they discover a distinction Spiralogic did not hand them?
   external formula they carry internally?
 ```
 
-⭐ That last line is **introjection** (A2) named in AIN's own vocabulary — and it
-is GF-8's integration/assimilation discriminator with an empirical literature
-behind it.
+⭐ That last line is **introjection** (A2) named in AIN's own vocabulary.
+
+### S1b — ⚠️ RECLASSIFIED from external finding to AIN synthesis
+
+> **Behavioral or linguistic uptake alone may be insufficient to discriminate
+> introjection / assimilation from genuine integration in a long-term AI
+> relationship.**
+
+⚠️ **This is OUR inference from the SDT distinction, not an SDT result.** SDT
+establishes that internalization has qualitatively different forms; **it does not
+establish that the forms are externally indistinguishable.** ⭐ Recording it this
+way makes the record **stronger**, because we stop asking SDT to prove our
+observability problem for us — GF-8-O1 remains **AIN's own open question.**
 
 ### S2 — ⭐⭐ Self-interpretation vs phenomenological noticing, and what it does to the `stuck` finding
 
@@ -399,6 +427,149 @@ SD-00B.**
 
 ---
 
+---
+
+# SOURCE VERIFICATION 01 — founder pass on the load-bearing primaries
+
+```
+RUN     2026-09-10 (founder). Primary sources checked directly.
+RESULT  ⭐ The overall synthesis HOLDS. One claim moves from external result to
+        AIN synthesis; one citation status corrected. ⛔ SD-00B untouched.
+```
+
+## V1 — ⚠️ The reclassification (the important one)
+
+```text
+STAYS AS EXTERNAL FINDING
+  internalization has qualitatively different forms; adoption / internalization
+  does not by itself equal autonomous integration          (Ryan & Deci)
+
+MOVES TO AIN SYNTHESIS  → S1b
+  behavioral or linguistic uptake alone may be insufficient to discriminate
+  introjection / assimilation from genuine integration in a long-term AI
+  relationship
+```
+
+⭐ *We are not asking SDT to prove our observability problem for us.*
+
+## V2 — Hurlburt / DES: **VERIFIED**, with the application marked as ours
+
+DES methodology supports the self-interpretation vs moment-noticing distinction:
+**specific moments · bracketing presuppositions · iterative skill development ·
+the danger of sliding from phenomena to reports or theories about phenomena.**
+Later DES work explicitly warns that ordinary self-report **blends immediate
+experience with beliefs about the self, recollection and interpretation.**
+
+⛔ **But mapping that onto AIN's `explicit_statement` evidence type is OUR
+application, not Hurlburt's claim.** S2's synthesis status stands.
+
+## V3 — ⭐⭐⭐ Gendlin is CLOSER to SP-FR-00 than the first pass recorded
+
+> Words or images are **repeatedly checked back against the felt sense**; if the
+> words do not fit, **experience — not the formulation — gets final say.**
+> Concepts are useful **insofar as they point back toward experiencing**, and when
+> new experiential facets no longer fit the construct, **the construct may need to
+> change.**
+
+⭐⭐⭐ **That is the adjacent-layer test in phenomenological form:**
+
+```text
+representation returns to encounter · encounter may revise representation
+```
+
+⭐ And Gendlin's account is **relational, not solipsistic**: life-process is
+interaction with environment, and **another person's response can carry the
+experiential process forward and alter what becomes possible.**
+
+> ⭐⭐ **Substantial external support for the claim that recognition can be MEDIATED
+> RELATIONALLY without meaning being OWNED by the mediator.**
+
+⭐ And Gendlin independently makes the attention/meaning move from another
+tradition: **a helper may direct attention toward something experientially
+present, but the experience itself must answer whether the offered formulation
+fits.** *(focusing.org/gendlin)* — so **"MAIA may lead attention; she may not lead
+meaning" survives verification from a second direction.**
+
+## V4 — Participatory sense-making: **VERIFIED as external precedent**
+
+The interaction process **can acquire a degree of autonomy**, and meaning can be
+**generated and transformed through interplay** between individuals and the
+unfolding interaction.
+
+⛔ **Establishes nothing about AI consciousness or about MAIA.** What it gives is a
+serious theoretical neighbour for the claim that **the "between" can have real
+process dynamics without being declared a separate conscious subject.**
+
+## V5 — ⭐⭐ The three-way distinction this pass clarifies
+
+```text
+EPISTEMIC HUMILITY         is MAIA ENTITLED to a meaning?
+PHENOMENOLOGICAL FIDELITY  does a formulation remain ANSWERABLE to the person's
+                           actual experiencing?
+DEVELOPMENTAL RECOGNITION  is the person becoming more capable of making those
+                           distinctions THEMSELVES?
+```
+
+```text
+AIN canon is extraordinarily strong on the FIRST.
+Gendlin and Hurlburt are mature traditions for the SECOND.
+SDT, scaffolding/autonomy and human–AI work begin to inform the THIRD.
+Participatory sense-making explains why the RELATIONSHIP can participate in the
+development of meaning without becoming the sovereign interpreter.
+```
+
+> ⭐⭐⭐ **So the missing developmental epistemology does not need to be invented
+> from nothing. It can be built at an intersection:**
+
+```text
+MAIA epistemic discipline
+        +
+Gendlin — experience corrects representation
+        +
+DES — recognition requires disciplined attention
+        +
+SDT — internalization ≠ autonomous integration
+        +
+participatory sense-making — meaning can emerge relationally
+        +
+AI overreliance research — assistance can displace cognition
+        ↓
+EPISTEMOLOGY OF DEVELOPMENTAL RECOGNITION
+```
+
+## V6 — ⭐⭐⭐ The headline, sharpened once more
+
+> **AIN already knows how to prevent MAIA from mistaking an interpretation for
+> truth. What it does not yet know is how to recognize when an interpretation has
+> become THE MEMBER'S OWN DEVELOPING CAPACITY rather than merely something the
+> member has ACCEPTED.**
+>
+> **That is the hard problem.**
+
+## V7 — The next research move, narrowed (founder)
+
+> Study **how established developmental traditions distinguish genuine
+> appropriation / capacity from compliance, agreement, imitation, or dependence.**
+
+```text
+SDT / internalization
+scaffolding and fading
+metacognitive development
+transformative learning
+mentalization
+Vygotskian internalization
+        ↓ then compare against
+the human–AI literature
+```
+
+⭐ *The evidence base most likely to tell us what a defensible recognition signal
+could look like — **without turning recognition itself into another thing MAIA
+claims to know.***
+
+⛔ Not opened here. No standing conferred.
+
+---
+
 ## 6. ⛔ Standing
 
 - ⛔ **No implementation standing.** No schema, surface, protocol, metric, repair,
@@ -407,10 +578,14 @@ SD-00B.**
   it conclusions.
 - ⛔ **Nothing here is a lane finding.** Class A is attributed and unread by this
   session; Class C is synthesis; Class D is open.
-- ⚠️ **Claim discipline:** Class A = RESEARCH-SUPPORTED (A8 and two items in A7
-  are PREPRINT). Class B = SOULLAB INTERPRETATION. Class C = SOULLAB
-  INTERPRETATION / HYPOTHESIS. Class D = OPEN QUESTION. Product maturity for all:
-  **VISION**.
+- ⚠️ **Claim discipline:** Class A = RESEARCH-SUPPORTED (**A8 and the two
+  AI-writing items in A7 are PREPRINT**; the cognitive-forcing study is
+  **peer-reviewed**, corrected at V1/A7). Class B = SOULLAB INTERPRETATION.
+  Class C = SOULLAB INTERPRETATION / HYPOTHESIS. Class D = OPEN QUESTION. Product
+  maturity for all: **VISION**.
+- ⚠️ **Source Verification 01 (founder, 2026-09-10)** checked the load-bearing
+  primaries directly. Items verified there carry that status; everything else in
+  Class A remains attributed-and-unread-by-this-session.
 - ⚠️ **Sources were named by the founder and NOT read in this session.** Any
   downstream use must read them.
 
@@ -423,3 +598,22 @@ SD-00B.**
   the member, relationship mediates** — they require different directions of
   authority. Candidate doctrine **Developmental Recognition** recorded. Four
   output classes populated. **No implementation standing; SD-00B untouched.**
+- **2026-09-10 · SOURCE VERIFICATION 01 (founder).** Synthesis **holds**. ⚠️ One
+  claim **reclassified** from external finding to AIN synthesis (**S1b** — uptake
+  may be insufficient to discriminate introjection from integration; SDT
+  establishes that the forms differ, **not** that they are externally
+  indistinguishable). ⚠️ One **citation status corrected** — the cognitive-forcing
+  study is **peer-reviewed ACM (199 participants)**, not a preprint; and its
+  supported claim is bounded to *one controlled AI decision-support setting*, ⛔ not
+  *"users dislike developmental friction."* **VERIFIED:** DES (with the
+  `explicit_statement` mapping marked as ours) · participatory sense-making as
+  external precedent · ⭐⭐⭐ **Gendlin closer than first recorded — experience, not
+  the formulation, gets final say, and the construct may need to change; the
+  adjacent-layer test in phenomenological form**, plus independent support for
+  *lead attention, not meaning.* ⭐ Three-way distinction fixed: **epistemic
+  humility · phenomenological fidelity · developmental recognition.** ⭐⭐⭐ Headline
+  sharpened: *AIN knows how to stop MAIA mistaking an interpretation for truth; it
+  does not know how to recognize when an interpretation has become the member's own
+  developing capacity rather than something the member has accepted.* Next research
+  move narrowed to how developmental traditions distinguish appropriation from
+  compliance; ⛔ not opened.

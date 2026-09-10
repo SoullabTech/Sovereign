@@ -3018,10 +3018,21 @@ Two formulations from it bear directly on this charter, recorded as **candidate*
       MAIA MAY LEAD ATTENTION. SHE MAY NOT LEAD MEANING.
 ```
 
-⭐ And one external literature is GF-8's empirical cousin: **Self-Determination
-Theory's introjection** — something internalized but not owned, which *looks like*
-integration from outside. That is GF-8's discriminator with a mature literature
-behind it.
+⭐ **Self-Determination Theory's introjection** is GF-8's nearest external
+neighbour — a regulation internalized but **not** brought into congruence with the
+person's other values and needs.
+
+⚠️ **Corrected at the research record's Source Verification 01:** SDT establishes
+that **internalization has qualitatively different forms**; it does **NOT**
+establish that those forms are **externally indistinguishable.** That stronger
+sentence is **AIN's own inference**, and **GF-8-O1 therefore remains AIN's open
+problem rather than a solved one borrowed from SDT.**
+
+⭐⭐ **And the charter's SP-FR-00 has a phenomenological twin:** in Gendlin's
+Focusing, words are checked back against the felt sense and **experience — not the
+formulation — gets final say; when new experiential facets no longer fit the
+construct, the construct may need to change.** That is the **adjacent-layer test in
+phenomenological form**, reached independently.
 
 ## 4. The process under test — frozen as amended
 
