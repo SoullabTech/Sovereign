@@ -32,6 +32,17 @@ jobs:
             const changedPaths = files.map(f => f.filename);
             console.log(`Changed files: ${changedPaths.join(', ')}`);
 
+            // Covenant §191: exactly one classification. The pre-existing guard
+            // below (`if (!labelsToAdd.has('class-a'))`) only inspected labels THIS
+            // RUN was adding — it never read the PR's existing labels, so a
+            // human-applied class was invisible to it. Any PR touching
+            // .github/workflows/ therefore acquired class-b on top of its real
+            // classification. Observed on #1040: class-a by a human at 13:18:40,
+            // class-b by this workflow 8s later.
+            const existingLabels = (pr.labels || []).map(l => (typeof l === 'string' ? l : l.name));
+            const CLASSIFICATION_LABELS = ['class-a', 'class-b', 'class-c', 'frontier-dependent'];
+            const existingClassification = existingLabels.filter(l => CLASSIFICATION_LABELS.includes(l));
+
             const labelsToAdd = new Set();
 
             // ═══════════════════════════════════════════════════════════════
@@ -108,6 +119,23 @@ jobs:
             // ═══════════════════════════════════════════════════════════════
             // APPLY LABELS
             // ═══════════════════════════════════════════════════════════════
+
+            // ── §191 GUARD ─────────────────────────────────────────────────
+            // If the PR already carries a classification, this workflow may not
+            // add a second one — and may not silently replace the existing one
+            // either. Reclassification is a deliberate act, not a side effect of
+            // incidental automation. Non-classification labels still apply.
+            if (existingClassification.length > 0) {
+              const suppressed = Array.from(labelsToAdd).filter(l => CLASSIFICATION_LABELS.includes(l));
+              for (const l of suppressed) labelsToAdd.delete(l);
+              if (suppressed.length > 0) {
+                console.log(
+                  `🔒 §191: PR already classified as ${existingClassification.join(', ')}. ` +
+                  `Suppressed automatic classification: ${suppressed.join(', ')}. ` +
+                  `Reclassification requires an explicit act — this workflow neither stacks nor replaces.`
+                );
+              }
+            }
 
             if (labelsToAdd.size > 0) {
               const labels = Array.from(labelsToAdd);
