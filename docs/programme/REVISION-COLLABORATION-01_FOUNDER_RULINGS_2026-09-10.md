@@ -727,6 +727,75 @@ structured output   ≠  admitted output
 model proposal      ≠  Work mutation
 ```
 
+### ⭐ Step 3 splits into four independently witnessed gates
+
+⛔ *"Prompt + real inference, then atomic persistence"* is **three different
+claims**. Collapsing them makes failures uninterpretable.
+
+```
+3A  REAL INFERENCE CONTRACT   provider only, no database responsibility
+3B  PERSISTENCE SEMANTICS     a known-valid typed outcome vs the real migrations
+3C  INVOCATION IDEMPOTENCY    after a stable identity is found and PROVEN
+3D  END-TO-END SPECIMEN       ONLY after A, B and C independently pass
+```
+
+**3A acceptance is SEMANTIC, never exact prose.** The proposal may vary. What is
+tested: it addresses the requested target · it materially reduces abstraction ·
+it invents no unrelated edits · **its authoritative wording comes exclusively from
+the structured call.** The `no_change` fixture must be **deliberately unambiguous**,
+or model judgement variance turns a constitutional test into a taste test.
+
+**3B proves failure, not happy path:** turn written + proposal fails → neither
+survives · a proposal without a valid producer turn → rejected · `no_change`
+manufactures no proposal row · `ask_turns.body` never receives `proposed_text` as a
+persistence shortcut.
+
+**3C** must also carry the adversarial sibling: **same invocation id, different
+substantive payload → HARD CONFLICT**, never quietly treated as a retry. *An
+idempotency key that tolerates a changed payload has become overwrite authority.*
+
+### ⭐⭐ VERIFIED — what S3 `actId` actually gives 3C
+
+The founder's instruction was to verify the semantics, not the existence of a
+field. Verified at source:
+
+```
+REUSABLE ✅
+  client-minted            ObservationDialogue passes effect.actId; the walk
+                           mints randomUUID() caller-side. There is NO
+                           server-side mint, so a lost response leaves the
+                           client holding the SAME id — the one property that
+                           makes lost-response protection possible at all
+  atomic claim             "the authority is the MUTATION, not a precheck";
+                           a single mutation whose predicate includes
+                           "still pending"
+  same-act vs different    `act_already_processed` vs `already_consumed`
+  built for this           "`completion` serves lost-response recovery"
+```
+
+```
+⛔ GAP 1 — completion is a STATUS, not a RESULT
+   ConsumedCompletion = 'completed' | 'incomplete'
+   A retry learns THAT the act finished. It cannot retrieve P17 through the
+   claim. Recoverable — RC-08 binds the proposal to its producer turn, so the
+   existing proposal is findable by query — but the claim itself hands back
+   nothing, and a caller that assumed otherwise would return an empty success.
+
+⛔ GAP 2 — THE ADVERSARIAL SIBLING IS NOT DETECTABLE HERE
+   claim(ref, actId) NEVER SEES THE PAYLOAD.
+   Same actId + a different substantive payload is indistinguishable from a
+   retry. It would be refused as a replay while the second payload silently
+   vanishes — not an overwrite, but not a hard conflict either, and equally
+   untruthful.
+```
+
+⭐ **So `actId` is the right primitive and is not sufficient alone.** 3C needs the
+payload bound to the act — a request digest recorded with the consumption — or the
+limitation recorded explicitly. ⛔ **Not designed here.** Per the ruling: *if a
+stable identity exists, reuse it; otherwise record the gap rather than pretending
+transaction atomicity gave exactly-once behaviour.* **It exists, it is reused, and
+the gap is recorded.**
+
 ### Step 3 database
 
 ⛔ **The minimal FK stub is NOT sufficient for step 3.** It answered *does this
