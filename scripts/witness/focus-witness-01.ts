@@ -61,13 +61,25 @@ async function main() {
 
   /* ── W1 · THE REAL APPLICATION SEAM ───────────────────────────────────── */
   const sessionId = randomUUID();
+  /**
+   * ⭐⭐ ACT IDENTITY IS THE CLIENT'S — F1k, ratified. The route refuses without
+   * it, because only the surface that watched the writer press the button knows
+   * whether a request is that press again or a new one. The witness stands in for
+   * that surface, so it mints ONE act id and would reuse it verbatim on a retry.
+   *
+   * ⚠️ THE FIRST RUN OF THIS WITNESS OMITTED IT and took HTTP 400 at W1.3. That
+   * was an INSTRUMENT defect, not a candidate defect — the same staleness the
+   * assembler gate had: a walk written against an older request contract. The
+   * failure is preserved in the record rather than quietly overwritten.
+   */
+  const actId = `focus-witness-01-${randomUUID()}`;
   const ask = 'What is this section actually doing?';
   const started = new Date();
   const res = await fetch(`${BASE}/api/writers-studio/focus`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN },
     body: JSON.stringify({
-      sessionId, workRef, scopeKind: 'section',
+      sessionId, actId, workRef, scopeKind: 'section',
       sectionRef: sections.rows[1].id, gesture: 'work_with_this', ask,
     }),
   });
@@ -84,7 +96,8 @@ async function main() {
     : 'the authenticated identity resolved through the real seam');
   if (res.status === 404 || res.status === 401) { console.log('\n⛔ STOP.'); process.exit(1); }
 
-  w('W1.3', res.status === 200, `HTTP ${res.status}`);
+  w('W1.3', res.status === 200,
+    res.status === 200 ? 'HTTP 200' : `HTTP ${res.status} — ${JSON.stringify(body).slice(0, 140)}`);
   const state = (body as Record<string, unknown>).state;
   console.log(`        §3a state: ${JSON.stringify(state)}`);
 
