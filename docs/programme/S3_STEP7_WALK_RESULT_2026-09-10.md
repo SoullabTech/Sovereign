@@ -280,3 +280,99 @@ and confirmed as such by running them at `HEAD` with the repair stashed. They ar
 **not** discrimination evidence for the recognition repair and must not later be
 cited as such. The evidence for F1/F2 is the **seven** obligations in
 `sectionRecognition.test.ts` that fail against the pre-repair implementation.
+
+---
+
+# Addendum 3 — the terminal gate PASSED
+
+**Run:** founder's machine, 2026-09-10 · **`59 passed · 1 failed`**
+
+## W0 — the subject
+
+```
+application SHA   785dab0de1ef274cee55c632e6c3fab1fee4a9ab
+database          maia_consciousness · soullab@:5432 · UTF8 · 526 migrations
+qualification     VERDICT: QUALIFIED · 0 failed migrations · 16 closure relations
+fixture           tag fc1e90b6 · work d56a7d93… · reading a2721e14…
+server            real `next dev` on :3100 · /api/health ok
+work geometry     5f763add36bd4f35e2c1ab17ad67d9ec
+model credential  PRESENT via development environment
+provider call     REAL
+inference mode    primary (default)
+credential value  NOT RECORDED
+```
+
+## Walk 13 — every obligation met
+
+```
+13a it pauses for authority first                                  PASS
+13b the protocol reaches BODY_AUTHORIZED                           PASS
+13c it reports the disclosed and withheld scopes it actually used  PASS
+13d no evidence went unverified                                    PASS
+13e MAIA's turn carries answer provenance from the canonical path  PASS
+13f the answer is MAIA's own words, not an echo                    PASS
+13g the answer returned into the SAME thread                       PASS
+13h the thread grew: author's question AND MAIA's answer           PASS
+13i the crossings that carried it are recorded as crossed          PASS
+```
+
+The three things the gate existed to observe, all three observed: **real cognition
+happened** (provenance from the canonical model path, words that are not an echo),
+**the protocol finished truthfully** (`BODY_AUTHORIZED` with the scopes it actually
+used, zero unverified evidence), and **the writer stayed in the same conversation**
+(same thread id, thread grown by both turns).
+
+Walks 1–12 and R1 passed in the same run, on the same database and server.
+
+## The one failure, stated precisely
+
+`W0 the working tree is clean` — FAILED. Every entry in the reported list carries
+git's `??` prefix: `.jarvis/`, `data/vault/`, `maia-jest-cache/`, a stray `55`,
+`scripts/witness/local-fonts-production-witness.mjs`,
+`scripts/ws2-07d-seed-v2-decline-fixture.ts`, one docs file. **All untracked. No
+tracked file differs from `785dab0de`**, so the application that ran is that
+commit.
+
+The check is correct to fail — it cannot distinguish untracked scratch from a
+modified source file, and a check that guessed would be worse than one that is
+strict. Recorded as a hygiene failure, not a protocol one, and the SHA
+attribution stands on the tracked-file fact rather than on the check.
+
+## What it took to get here — three environment defects, none in the protocol
+
+1. **Two `ANTHROPIC_API_KEY` lines in `.env.local`.** `grep … | cut` glued them
+   with a newline into a 217-character header value; curl refused it (error 43)
+   and the SDK failed the same way. One line, 108 characters, fixed it.
+2. **`read -p` is bash syntax.** macOS runs zsh, where it means something else —
+   the prompt never appeared.
+3. **The qualification witness shells out to `psql`**, which reads `PG*`, not
+   `DATABASE_URL`. It should read the connection string.
+
+## A finding that stands regardless
+
+While diagnosing (2), the failure was invisible from outside: `router.ts` captures
+the provider's real error into `detail`, and `developmentalAskReader.ts:207`
+discards it — `if (!outcome.ok) return { ok: false, refusal: 'unreachable' }` —
+with a bare `catch` below it and no logging. A genuine terminal-cognition failure
+surfaces as one word with no cause. **The last boundary is the one that cannot be
+diagnosed.** Not repaired; recorded.
+
+## Also recorded: the witness damaged a live database
+
+Walk 12 tests the sixth state by renaming `runtime_consent_state` and renaming it
+back in a `finally`. Written for a disposable cluster; run, on this session's
+instructions, against the founder's working dev database. An interrupted run left
+the table renamed and every request 503-ing until repaired by hand. Nothing was
+lost, but the fault injection is not crash-safe and should not point at a database
+anyone uses. Repair not authorized here.
+
+## Standing
+
+```
+authority / protocol walk      PASS
+R1 geometry                    PASS
+recognition                    PASS   F1 · F2 · F3
+terminal cognition gate        PASS   real model, BODY_AUTHORIZED, same thread
+
+walk result                    59 passed · 1 failed (untracked-files hygiene)
+```
