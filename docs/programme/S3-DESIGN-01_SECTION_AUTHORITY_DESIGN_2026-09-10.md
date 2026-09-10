@@ -765,6 +765,74 @@ durable object: { pendingAskRef, sectionId, authorized: true }
 
 That is persistent permission wearing continuity's clothes.
 
+### ⭐⭐ 10.6a · SINGLE-CONSUMPTION — ruled 2026-09-10 · REQUIRED
+
+Expiry and single-use do **different jobs**, and the earlier statement is
+**amended, not reversed**:
+
+```text
+expiry               continuity hygiene
+                     "is this still the same resumable encounter?"
+
+single-consumption   DISCLOSURE-EVENT INTEGRITY
+                     "can this one member act cause another prose crossing?"
+```
+
+> **`pendingAskRef` is not disclosure authority, but its single-consumption
+> property is a REQUIRED anti-replay control on the member's authorization act.**
+
+⛔ This does **not** turn the ref into authority. Possessing it still permits
+nothing: the server must still re-derive the Ask, the requirement and the section
+set, receive the explicit member act, establish a fresh boundary, and mint
+`may_cross`.
+
+**⭐ THE CARDINALITY LAW:**
+
+> **One explicit member authorization act may cause AT MOST ONE completed
+> authored-body crossing and AT MOST ONE completed-crossing receipt.**
+
+```text
+BODY_AUTHORITY_REQUIRED
+        ↓  member authorizes
+ACT 3 arrives with pendingAskRef
+        ↓  server re-derives everything
+⭐ ATOMICALLY CONSUME pendingAskRef for this resume
+        ↓  ONLY the winning invocation may proceed
+establishDisclosureBoundary → may_cross → loadRevisionContent
+        ↓
+one crossing · one receipt
+```
+
+⛔ **A replay after consumption must NEVER mint another boundary and must NEVER
+call `loadRevisionContent`.**
+
+**⚠️ THE LOST-RESPONSE CASE.** The first invocation may complete the crossing
+while its HTTP response is lost. A retry of the same request must not create a
+second crossing:
+
+```text
+completion recoverable      → return the ALREADY-COMPLETED outcome
+completion not recoverable  → return an ALREADY-CONSUMED state
+⛔ NEVER re-execute the disclosure
+```
+
+**⚠️ CONSUMED, THEN DIED BEFORE ANY CROSSING COMPLETED.** The conservative lawful
+behaviour is to **require a fresh member act** — ⛔ never to persist a
+half-authorized permission waiting to be reused.
+
+```text
+pendingAskRef
+    IDENTITY              yes
+    RESUME CONTINUITY     yes
+    SINGLE-CONSUMPTION    yes — REQUIRED
+    AUTHORITY             no
+    CONSENT               no
+    PROSE PERMISSION      no
+
+expiry          continuity property
+single-use      anti-replay / act-integrity property
+```
+
 ### 10.7 · ACT 3 — RESUME
 
 ```text
@@ -786,6 +854,10 @@ ordinary Ask.
        from the reading and the anchor — ⛔ NEVER from the client's account
  4  authorizes ⊇ required ?     NO → BODY_SCOPE_INCOMPLETE (§10.5)
  5  recognise the member's explicit present gesture
+ 5a ⭐⭐ ATOMICALLY CONSUME pendingAskRef
+       only the winning invocation continues · §10.6a
+       already consumed → completed outcome if recoverable,
+                          else ALREADY-CONSUMED · ⛔ never re-execute
  6  establishDisclosureBoundary
        sourceRef = workRef · scopeKind = 'section' · sectionRef = S
        ⭐ ONE boundary per authorized section — `sectionRef` is singular and is
@@ -846,6 +918,14 @@ load-bearing here. **Reported for ruling; not resolved by the design.**
 *A receipt that records two crossings for one member act has told the record
 something false about the member.*
 
+### ⭐ DISPOSITION — founder, 2026-09-10 · CLOSED
+
+**The finding is correct and the behaviour is lawful.** Single-consumption of
+`pendingAskRef` is a **REQUIRED anti-replay control**, and it does not make the
+ref authority. The cardinality law, the atomic transition, the lost-response case
+and the consumed-then-died case are specified in **§10.6a**, and the atomic
+consumption is placed in the protocol at **ACT 3 step 5a**.
+
 ### 11.3 · Can partial consent silently degrade?
 
 **NO** — `BODY_SCOPE_INCOMPLETE` is a distinct state, narrowing requires a member
@@ -870,6 +950,24 @@ construction; the W2 filter has nothing to exclude.
 re-resolved requirement could still name a denied section, and there the W2 filter
 must refuse rather than substitute. ⭐ **Named, because this is precisely where an
 implementation would be tempted to trim.**
+
+### ⭐ DISPOSITION — founder, 2026-09-10 · THE FILTER REMAINS REQUIRED
+
+⛔ **Do not drop the W2 section filter because the all-or-none path makes it look
+redundant.** It is not redundant constitutionally: it is the **positive
+enforcement of the authority boundary**, and the narrower-answer path proves why.
+
+```text
+authority = section S
+
+characters from S       → potentially eligible for W2
+characters outside S    → IMPOSSIBLE at W2
+
+⭐ even if some downstream requirement/selection object erroneously names them
+```
+
+⭐ **That is stronger than depending on earlier logic to ensure the sets always
+happen to agree.**
 
 ### 11.6 · Can a receipt restart authority?
 
@@ -898,6 +996,48 @@ heading-to-cognition governance question, and this pass establishes that it is
 does not itself become a cognition input. It is a surface fact, discarded with the
 response.
 
+### ⭐ DISPOSITION — founder, 2026-09-10 · SEPARATE LANE, S3 NOT WIDENED
+
+The parked question changes status: not *"could headings someday reach
+cognition?"* but **they already do**.
+
+```text
+member-authored heading characters
+        ↓ structural evidence
+        ↓ assembleDevelopmentalContext → ctx.evidence
+        ↓ model cognition
+                        ⛔ without section-body disclosure authority
+```
+
+⛔ **This is NOT another S3 body violation.** `heading disclosure ≠ body
+disclosure`, and section-body authority would be the **wrong mechanism** to slap
+onto structural evidence merely because both contain authored characters.
+
+> **11.7 is a PRESENT AUTHORED-STRUCTURE DISCLOSURE GOVERNANCE QUESTION, outside
+> the S3 body-remediation class.**
+
+Two prohibitions at once:
+
+```text
+⛔ DO NOT declare the current heading crossing lawful merely because it is
+   structural
+
+⛔ DO NOT route headings through section-body authority merely because they are
+   authored characters
+```
+
+**The governing question for that future lane:**
+
+> *Under what authority may member-authored structural labels such as headings
+> enter cognition, and does that authority require an explicit member act
+> distinct from body disclosure?*
+
+⭐ It deserves its own census and design, because headings occupy a genuinely
+different phenomenological and technical role: **they are authored expression and
+also the Work's navigational structure.**
+
+**⛔ IT DOES NOT BLOCK S3** — but see §13: P1's claim is narrowed accordingly.
+
 ### 11.8 · Can the experience say "passage" while authority says "section"?
 
 **NO occurrence exists today** — the only disclosure-surface wording was the SEL-0
@@ -912,21 +1052,23 @@ the guard**, and it needs to hold at the moment the surface is authored.
 
 ```text
 11.1  pending → authority       SURVIVES · implementation hazard named
-11.2  replay → second load      ⚠️ FINDING · single-use is load-bearing
-                                   for disclosure, not only continuity
+11.2  replay → second load      ⭐ CLOSED · single-consumption REQUIRED
+                                   as anti-replay · §10.6a · cardinality law
 11.3  partial → degradation     SURVIVES
 11.4  null → "no permission"    SURVIVES · requires Q4's two-part gate
 11.5  S authorizes T            SURVIVES · filter load-bearing on the
                                    narrower-answer path only
 11.6  receipt → authority       SURVIVES
-11.7  headings → cognition      ⚠️ FINDING · already true on canonical,
-                                   by a path S3 neither creates nor closes
+11.7  headings → cognition      ⭐ RULED · PRESENT authored-structure
+                                   disclosure · SEPARATE LANE · S3 not widened
+                                   · P1's claim narrowed accordingly (§13)
 11.8  "passage" vs section      SURVIVES · prospective risk, G8 guards it
 ```
 
-⭐ **P1 survives six of eight outright and returns two findings rather than
-absorbing them.** Neither finding is a defect in P1; both are facts P1 made
-visible.
+⭐ **P1 survives six of eight outright and returned two findings rather than
+absorbing them.** Neither was a defect in P1; both were facts P1 made visible, and
+both are now ruled — 11.2 by requiring single-consumption, 11.7 by opening a
+separate lane and narrowing P1's claim.
 
 ---
 
@@ -950,42 +1092,85 @@ otherwise there is one candidate, and saying so is the honest report.
 
 ---
 
+## 13 · ⭐⭐ WHAT P1 CLAIMS — EXACTLY
+
+⛔ **P1 does NOT claim:**
+
+> *"No authored characters enter cognition before body authority."*
+
+**That is demonstrably false** — §11.7 shows member-authored headings crossing
+into cognition today, under `structure` requirement, with no body authority.
+
+⭐ **P1's claim is narrower and exact:**
+
+> **No authored BODY characters required by the Ask enter cognition without
+> fresh, section-scoped body-disclosure authority.**
+
+**⚠️ ADJACENT KNOWN ISSUE, recorded so the eventual S3 PR cannot imply otherwise:**
+
+```text
+AUTHORED-STRUCTURE DISCLOSURE (headings → cognition)
+    PRESENT canonical behaviour
+    governance UNRESOLVED
+    SEPARATE LANE
+    ⛔ does NOT widen S3
+    ⛔ does NOT receive body authority by default
+```
+
+⭐ *S3 closes the known body-prose crossing. It does not close every
+authored-character governance class in the system, and it must not be described
+as though it did.*
+
+---
+
 ## Standing
 
 ```text
-S3-DESIGN-01              ACTIVE · DESIGN ONLY
+S3-DESIGN-01              ACTIVE · DESIGN ONLY · revision complete
 SUBJECT                   canonical 7fa29678e
 
-Q1 headings               ⭐ CLOSED — may be shown to the MEMBER for
-                          recognition; ⛔ may not enter cognition, may not
-                          become authority. Broader governance PARKED.
+Q1 headings               CLOSED — shown to the MEMBER for recognition;
+                          ⛔ not into cognition, ⛔ not authority
 Q2 DisclosureGesture      narrow S3 extension PERMITTED
 Q3 resumed act            DISTINCT PROTOCOL VERB · no client-supplied authority
 Q4 gate                   ROUTE DECISION + TYPE ENFORCEMENT
 Q5 multi-section          ALL-OR-NONE at the answer contract
-§10.5                     ⭐ CLOSED — no automatic re-resolution;
-                          narrowing requires a member act
-§10.6                     ⭐ CLOSED — Ask-specific pending identity required;
-                          threadId insufficient; representation open
+§10.5                     CLOSED — narrowing requires a member act
+§10.6                     CLOSED — Ask-specific pending identity required
+§10.6a                    ⭐ CLOSED — SINGLE-CONSUMPTION REQUIRED
+                          anti-replay, not authority
+                          CARDINALITY LAW: one member act → at most one
+                          completed body crossing, at most one receipt
+                          lost response → completed outcome or ALREADY-CONSUMED
+                          ⛔ never re-execute the disclosure
+                          consumed-then-died → require a FRESH member act
+
+11.2                      CLOSED
+11.5                      W2 SECTION FILTER REMAINS REQUIRED
+                          positive enforcement, not redundant bookkeeping
+11.7                      RULED — PRESENT authored-structure disclosure
+                          governance UNRESOLVED · SEPARATE LANE
+                          ⛔ does not widen S3
+                          ⛔ does not receive body authority by default
+
+P1 CLAIM (§13)            "No authored BODY characters required by the Ask
+                          enter cognition without fresh, section-scoped
+                          body-disclosure authority."
+                          ⛔ NOT "no authored characters" — that is false
 
 ratified "passage" copy   SUPERSEDED with section language · reason recorded
 F7 passage form           SUPERSEDED FOR S3 · history retained
 live W2 obligation        SECTION-BOUND
+BODY_SCOPE_INCOMPLETE     fifth protocol state, recorded as an addition
+A / C                     RETIRED as unattributable labels · P1 sole candidate
 
-P1 PROTOCOL               FULLY SPECIFIED · §10
-FALSIFICATION PASS        RUN · §11 · 6 survive · 2 findings returned
-  ⚠️ 11.2                 single-use of pendingAskRef is load-bearing for
-                          DISCLOSURE — replay is otherwise unbounded
-  ⚠️ 11.7                 authored headings already reach cognition via
-                          FrozenStructureUnit.title under 'structure'
-                          requirement — current canonical behaviour
-
-BODY_SCOPE_INCOMPLETE     ⭐ FIFTH protocol state, recorded as an addition
-A / C                     RETIRED as unattributable labels
+P1 PROTOCOL               ⭐ CLOSED SPECIFICATION
+FALSIFICATION PASS        RUN · 6 survived · 2 findings · BOTH NOW RULED
 
 IMPLEMENTATION            NOT AUTHORIZED
 TESTS / FIXTURES          NOT AUTHORIZED
 PASSAGE DESIGN            OUT OF SCOPE
+AUTHORED-STRUCTURE LANE   NOT OPENED
 FOCUS ASSEMBLER CUSTODY   separate dependency · unmerged
 #1277 D9                  UNTOUCHED · DRAFT
 FOCUS WITNESS             UNSPENT
@@ -993,4 +1178,5 @@ PRODUCTION                UNTOUCHED
 ```
 
 ⭐ *S3 stays small: it governs the paused Ask and the section-body crossing
-without solving passage identity, Focus passage, or general consent.*
+without solving passage identity, Focus passage, authored-structure disclosure,
+or general consent.*
