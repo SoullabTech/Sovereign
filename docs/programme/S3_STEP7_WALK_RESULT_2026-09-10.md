@@ -195,3 +195,88 @@ overall                        OPEN — one gate remains
 The remaining gate is a real authorized Ask running through the model, with
 `BODY_AUTHORIZED` returning into the same MAIA conversation. It needs a model
 credential this environment does not have.
+
+---
+
+# Addendum 2 — the terminal gate, and where Step 7 stops
+
+## Standing
+
+```
+STEP 7
+
+authority / protocol            PASS
+single / multi-section          PASS
+act identity / replay           PASS
+continuity truth                PASS
+recognition                     PASS   F1 · F2 · F3
+Work ordering                   PASS
+R1 geometry                     PASS
+
+terminal cognition gate         NOT WITNESSED — no model credential here
+
+walk result                     51 passed · 0 failed · 1 NOT WITNESSED
+overall                         OPEN
+```
+
+**Step 7 stops here.** No provider bypass was added, no seam was mocked, and the
+final obligation was not turned green.
+
+## Walk 13 exists and is unwitnessed, which is not the same as absent
+
+The gate is written and committed. It runs only when a real model credential is
+present in the environment. Without one it reports **NOT WITNESSED** — carried
+separately from passes, named in the summary, and never simulated. An instrument
+that can satisfy its own question by declining to ask it has tested nothing, so
+an unwitnessed obligation never discharges, and `--require-cognition` makes it an
+exit failure.
+
+```
+model credential : ABSENT
+provider call    : not attempted
+inference mode   : primary (default)
+credential value : NOT RECORDED
+```
+
+## What it will observe — three things, not HTTP 200
+
+| | |
+|---|---|
+| **real cognition happened** | MAIA's turn carries `answerProvenance` from the canonical model path, with a model named; the answer is her own words, not an echo of the question |
+| **the protocol finished truthfully** | `BODY_AUTHORIZED`, carrying the `disclosedSections` and `withheldSections` it actually used, and `unverifiableEvidence: 0` |
+| **the writer stayed in the same conversation** | the same `threadId` returns — no second Ask, no new destination, no reset — and the thread has grown by the author's question and MAIA's answer |
+
+Plus: it pauses for authority first, and the crossings that carried it are
+recorded as `crossed`.
+
+## To run it
+
+Requires, through the normal environment/secret mechanism:
+
+- `ANTHROPIC_API_KEY` — a legitimate development credential. `new Anthropic()`
+  in `lib/ai/structured/anthropicStructuredAdapter.ts` reads it from the
+  environment. **Never** committed, never in the fixture, never in this record.
+- `MAIA_INFERENCE_MODE` unset or `primary` (`lib/ai/structured/policy.ts`).
+  `local_only` refuses: there is no local structured provider.
+
+```bash
+# one terminal — the real server, pointed at the walk database
+DATABASE_URL=postgresql://…/maia_consciousness npx next dev -p 3100
+
+# another — seed a fresh fixture, then walk, with the credential in the env
+DATABASE_URL=…  npx tsx scripts/witness/s3-step7/seed.ts fixture.json
+DATABASE_URL=…  ANTHROPIC_API_KEY=…  \
+  npx tsx scripts/witness/s3-step7/walk.ts fixture.json --require-cognition
+```
+
+The database must first be qualified —
+`docs/programme/S3_STEP7_WALK_DB_QUALIFICATION_2026-09-10.md`.
+
+## A note on the eleven repaired tests
+
+The eleven `askRouteBodyGate.test.ts` failures repaired alongside F1/F2 were
+**pre-existing**, caused by ACT 3 fixtures omitting the now-required `actId`,
+and confirmed as such by running them at `HEAD` with the repair stashed. They are
+**not** discrimination evidence for the recognition repair and must not later be
+cited as such. The evidence for F1/F2 is the **seven** obligations in
+`sectionRecognition.test.ts` that fail against the pre-repair implementation.
