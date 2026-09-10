@@ -1123,55 +1123,167 @@ as though it did.*
 
 ---
 
+## 14 · FOUNDER RATIFICATION — 2026-09-10
+
+### Ruling 1 — P1 is RATIFIED
+
+```text
+P1 — PAUSED ASK / FRESH RESUME
+STATUS        RATIFIED FOR IMPLEMENTATION
+
+BODY scope    section
+passage       unavailable
+authority     fresh, invocation-bound
+pending ref   identity only
+replay        prohibited
+W2            section-bounded
+assembler     pure
+```
+
+⛔ **No competing candidate needs to be invented.**
+
+### Ruling 2 — ONE SUBSTRATE CENSUS BEFORE CODE
+
+⭐ Because single-consumption is now part of **disclosure law**, not UX
+continuity, the `pendingAskRef` representation must be grounded in canonical
+reality before any source change. The next act is a **read-only representation
+census**, answering only:
+
+```text
+Can an existing Ask / turn / held-retry object provide:
+
+  • identity of exactly one unfinished Ask
+  • member binding
+  • Work binding
+  • enough non-prose state for server re-derivation
+  • ATOMIC single-consumption
+  • completion / cancellation invalidation
+  • replay detection across separate requests
+  • concurrent-request safety
+
+WITHOUT carrying:
+
+  • may_cross
+  • consent
+  • authorized = true
+  • reusable section permission
+  • authored prose
+```
+
+⭐⭐ **THE DECISIVE QUESTION IS NOT** *"can we call something `pendingAskRef`?"*
+**IT IS:**
+
+> **Can two concurrent or replayed ACT 3 requests both get past consumption?**
+> If yes, that representation FAILS.
+
+If an existing canonical object can enforce the contract, use it. If none can, a
+**dedicated opaque pending-Ask reference is permitted**, but its design must
+remain non-authoritative.
+
+⭐ **A durable IDENTITY record is not forbidden; a durable PERMISSION record is.**
+
+```text
+lawful durable state       "Ask 123 is pending / consumed"
+prohibited durable state   "Ask 123 is authorized to read section 7"
+```
+
+### Ruling 3 — TESTS BEFORE REPAIR
+
+⛔ **Do not write the repair and the tests together.** This session has produced
+too much evidence about why that is dangerous — most directly the R1·B guard that
+shipped green because it compared a function with itself.
+
+Falsifier authoring is authorized **after** the representation is grounded and
+**before** implementation. The test phase must first **reproduce canonical S3 and
+demonstrate the failures**, at minimum:
+
+```text
+NO AUTHORITY          body required → loader unreachable
+STRUCTURE SUFFICIENT  no body load · no body receipt
+VALID SECTION ACT     fresh boundary → body may load
+REPLAY                same member act twice → second invocation cannot reach
+                      boundary or load
+CONCURRENCY           two ACT 3 requests race → AT MOST ONE wins consumption
+OLD RECEIPT           cannot authorize another load
+PARTIAL SCOPE         cannot silently produce the complete answer
+SECTION BOUNDARY      authority for S cannot put T characters into W2
+VERIFICATION FAILURE  remains BODY_UNVERIFIABLE · cannot masquerade as
+                      authorization absence
+LOST RESPONSE         retry cannot create a second crossing or receipt
+```
+
+⭐⭐ **And the doctrine already earned applies to every one of them:**
+
+> *Known-bad behaviour must make the purported regression test FAIL before that
+> test counts as evidence.*
+
+### Ruling 4 — FOCUS ASSEMBLER CUSTODY IS NOT A BLOCKER
+
+P1 does not depend on `assembleFocus`; it establishes disclosure authority
+directly in the developmental Ask protocol. The unmerged custody repair is
+therefore **not a prerequisite for S3**. The boundary is frozen:
+
+```text
+S3 MAY       consume the canonical disclosure-boundary machinery
+
+S3 MAY NOT   import assembleFocus merely for convenience
+             absorb its custody repair
+             fix Focus passage handling
+
+IF implementation unexpectedly becomes dependent on assembleFocus
+   ⛔ STOP — the dependency ruling reopens
+```
+
+### The sequence
+
+```text
+1  open record/design PR            ← this record
+2  Class C if genuinely docs-only
+3  gate it
+4  merge on green
+5  refresh canonical
+6  open Class B S3 implementation branch
+7  run pendingAskRef substrate census   READ-ONLY
+8  author / falsify tests
+9  only then implement
+```
+
+⭐ *That keeps the constitutional specification ahead of the code that claims to
+implement it.*
+
+---
+
 ## Standing
 
 ```text
-S3-DESIGN-01              ACTIVE · DESIGN ONLY · revision complete
+P1 PROTOCOL               ⭐ RATIFIED FOR IMPLEMENTATION
+S3-DESIGN-01              LAND AS RECORD BEFORE CODE
 SUBJECT                   canonical 7fa29678e
 
-Q1 headings               CLOSED — shown to the MEMBER for recognition;
-                          ⛔ not into cognition, ⛔ not authority
-Q2 DisclosureGesture      narrow S3 extension PERMITTED
-Q3 resumed act            DISTINCT PROTOCOL VERB · no client-supplied authority
-Q4 gate                   ROUTE DECISION + TYPE ENFORCEMENT
-Q5 multi-section          ALL-OR-NONE at the answer contract
-§10.5                     CLOSED — narrowing requires a member act
-§10.6                     CLOSED — Ask-specific pending identity required
-§10.6a                    ⭐ CLOSED — SINGLE-CONSUMPTION REQUIRED
-                          anti-replay, not authority
-                          CARDINALITY LAW: one member act → at most one
-                          completed body crossing, at most one receipt
-                          lost response → completed outcome or ALREADY-CONSUMED
-                          ⛔ never re-execute the disclosure
-                          consumed-then-died → require a FRESH member act
-
-11.2                      CLOSED
-11.5                      W2 SECTION FILTER REMAINS REQUIRED
-                          positive enforcement, not redundant bookkeeping
-11.7                      RULED — PRESENT authored-structure disclosure
-                          governance UNRESOLVED · SEPARATE LANE
-                          ⛔ does not widen S3
-                          ⛔ does not receive body authority by default
+ALL DESIGN QUESTIONS      CLOSED
+  Q1 · Q2 · Q3 · Q4 · Q5 · Q6 · §10.5 · §10.6 · §10.6a
+  11.2 · 11.5 · 11.7
 
 P1 CLAIM (§13)            "No authored BODY characters required by the Ask
                           enter cognition without fresh, section-scoped
                           body-disclosure authority."
                           ⛔ NOT "no authored characters" — that is false
 
-ratified "passage" copy   SUPERSEDED with section language · reason recorded
-F7 passage form           SUPERSEDED FOR S3 · history retained
-live W2 obligation        SECTION-BOUND
-BODY_SCOPE_INCOMPLETE     fifth protocol state, recorded as an addition
-A / C                     RETIRED as unattributable labels · P1 sole candidate
+NEXT ACT                  pendingAskRef SUBSTRATE CENSUS · READ-ONLY
+                          decisive question: can two concurrent or replayed
+                          ACT 3 requests both get past consumption?
 
-P1 PROTOCOL               ⭐ CLOSED SPECIFICATION
-FALSIFICATION PASS        RUN · 6 survived · 2 findings · BOTH NOW RULED
+FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
+                          BEFORE repair implementation
+                          known-bad must make each test FAIL first
 
-IMPLEMENTATION            NOT AUTHORIZED
-TESTS / FIXTURES          NOT AUTHORIZED
+IMPLEMENTATION            AUTHORIZED IN PRINCIPLE
+                          source changes WAIT on substrate census + falsifiers
+
+FOCUS ASSEMBLER CUSTODY   NOT A BLOCKER · remains separate
+                          ⛔ dependency reopens the ruling if it appears
+AUTHORED-STRUCTURE        separate future lane · NOT OPENED
 PASSAGE DESIGN            OUT OF SCOPE
-AUTHORED-STRUCTURE LANE   NOT OPENED
-FOCUS ASSEMBLER CUSTODY   separate dependency · unmerged
 #1277 D9                  UNTOUCHED · DRAFT
 FOCUS WITNESS             UNSPENT
 PRODUCTION                UNTOUCHED
