@@ -31,10 +31,17 @@ lineage reconstructs every subject relation:
 | `member_manuscripts` · `manuscript_sections` · `manuscript_working_drafts` | canonical baseline |
 | `manuscript_draft_sections` · `manuscript_working_drafts.section_addressable_at` | `20260830000001` via `db:migrate` |
 
-⚠️ **Witness-environment consequence, worth its own note:** those two artifacts are
-absent from **production**. Whatever database the human witness runs against must
-have `20260830000001` applied, or Focus fails for schema reasons that have nothing
-to do with the boundary.
+⚠️ **Witness-environment consequence, worth its own note — ⚖️ narrowed (founder,
+2026-09-09):** those two artifacts are **absent from the captured production
+baseline of 2026-09-01**. ⛔ That is a fact about a *snapshot*, not about the live
+database: **current live-production presence requires a runtime ledger witness.**
+The earlier wording here said "absent from production", which claimed more than
+the repository can show.
+
+Whatever database the human witness runs against must have `20260830000001`
+applied, or Focus fails for schema reasons that have nothing to do with the
+boundary. ⛔ **Do not apply the migration to production merely to enable the
+walk** — production migration is a separate governed act.
 
 ## What the hand-written schema was hiding
 
@@ -53,15 +60,50 @@ it passed, and both failures were things a modelled schema cannot contain:
 *A modelled schema is a second source of truth, and it is always the more
 forgiving one.*
 
-## ⛔ FINDING FOR THE PRODUCT LANE — not repaired here
+## ⚖️ RULED — `FOCUS-ASSEMBLER-CONTRACT-01B · WHOLE-WORK FIDELITY`
 
-The trigger states the system's own definition of the flattening: sections joined
-with **`''`**, no separator. `assembleFocus` joins `whole_work` with **`'\n\n'`**.
+**Founder ruling 2026-09-09. ⛔ RULED, NOT YET AUTHORIZED FOR IMPLEMENTATION.**
 
-So a `whole_work` payload is **not** the Work's canonical flattening — it contains
-separator text that is not in the Work. Under 01A the assembler may not be
-touched, and this is a product ruling, not an instrument fix. It matters most for
-`whole_work`; `section` and `passage` are unaffected.
+The trigger states the system's own contract: every character belongs to a
+section, and concatenating section text with **no separator** reproduces the draft
+byte-for-byte. `assembleFocus` joins `whole_work` with **`'\n\n'`**, manufacturing
+two characters at every section boundary.
+
+⭐ That is not formatting. **At this seam the returned string represents itself as
+the Work.**
+
+> ⭐⭐ **A Work disclosure must preserve the writer's character stream exactly.
+> Representation may surround the Work; it may not silently alter the Work while
+> calling the result the Work.**
+>
+> ⭐ **Structure may accompany the Work as structure. It may not be smuggled into
+> the Work as synthetic characters.**
+
+That corollary is why the fix is not cosmetic: section boundaries, headings and
+hierarchy may one day reach MAIA legitimately — through
+`computed.writer_structure` or another adjudicated representation, **never as
+invisible punctuation inside `retrieved.writer_work_context`.**
+
+**The narrow repair, when authorized:**
+
+```text
+whole_work → ordered draft sections → join('')
+```
+
+⛔ **Not** by switching to `manuscript_working_drafts.content` to make the equality
+easy. The ruled read authority stays section-native draft truth; the database
+invariant only tells us how those sections lawfully flatten.
+
+**Witness strengthening owed with it** — the present checks prove *"draft not
+Source"* and correct order, but **not exact equality**:
+
+```text
+whole_work === canonical draft flattening
+whole_work === manuscript_working_drafts.content     (must coincide once addressable)
+mutation: join('') → join('\n\n')                    must go RED
+```
+
+`section` and `passage` need no repair.
 
 ## The gate
 
@@ -110,6 +152,30 @@ waived**.
 **203 unit tests · 0 failed** · typecheck 228 vs baseline 239 · 0 regressions ·
 `check:no-supabase` clean.
 
-**Standing: implementation `8384fc8d…` FROZEN and unchanged · instrument hardened ·
-flag OFF · human witness HOLD · `#1275` FROZEN · one product finding owed a ruling
-(`whole_work` separator).**
+## ⚖️ Custody corrections (founder, 2026-09-09)
+
+1. **This record was forward-dated `2026-09-10`.** The programme dates records by
+   founder-local time; this session's clock reads UTC, which had already rolled
+   over. Corrected by rename in a **subsequent** commit — ⛔ `edf6352f…` is not
+   amended, so the historical commit stays intact.
+2. **"Absent from production" narrowed** to "absent from the captured production
+   baseline", above. *A snapshot is a reading at a time, not a claim about now.*
+
+⚠️ Both corrections postdate `edf6352f…`, whose commit message still carries the
+un-narrowed wording. It stands as written; this record is the correction.
+
+## Before the human witness — both runtime identities
+
+```text
+serving code SHA     <post-01B implementation SHA>
+serving database     manuscript_draft_sections exists
+                     section_addressable_at exists
+                     schema_migrations contains 20260830000001_manuscript_draft_sections.sql
+DB instrument SHA    edf6352f9adcc73b68ce688de9a97c835833b58e
+gate                 PASS against a repo-derived disposable DB
+```
+
+**Standing: implementation `8384fc8d…` FROZEN and unchanged · instrument hardened
+`edf6352f…` · ⚖️ `whole_work` fidelity RULED, 01B NOT AUTHORIZED · `section` and
+`passage` unaffected · live DB schema state NOT established · flag OFF · human
+witness HOLD · `#1275` FROZEN.**
