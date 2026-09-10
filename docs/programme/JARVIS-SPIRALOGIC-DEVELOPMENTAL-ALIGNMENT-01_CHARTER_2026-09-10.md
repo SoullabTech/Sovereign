@@ -14,6 +14,12 @@ AMENDED       Amendments A, B and C were authored by the founder WITHIN the
               amendments, not edits — including the renumbering they force.
 ```
 
+> **MAIA's goal is not to know the member's process better than the member. It is
+> to help the member become increasingly able to recognize and navigate their own
+> process.**
+> — founder, 2026-09-10 (Amendment G). The shortest statement of what the
+> developmental intelligence in AIN is for.
+
 > **The journey does not begin by proving alignment. It begins by trying to
 > falsify it.**
 
@@ -30,7 +36,7 @@ interaction architecture is linear, classificatory, static, or externally
 directive. If so it is **thematically elemental but not Spiralogic.** The lane
 exists to discover that, and is required to be able to report it.
 
-## 2. Governing falsifiers — five, each independently sufficient (GF-1…GF-4 ratified; GF-5 awaiting wording)
+## 2. Governing falsifiers — six, each independently sufficient, all grounded in ratified or founder-authored law
 
 ### GF-1 — the spiral falsifier (opening act)
 
@@ -85,23 +91,58 @@ Its stake, in the founder's words: *if the map became a final model of the
 member, Saturn would have won — we would have turned a living consciousness into
 an object.*
 
-### GF-5 — MAIA's process mistaken for the member's (Amendment E · ⚠️ founder-stated intent, Jarvis-formalized, wording awaiting ratification)
+### GF-5 — MAIA's process mistaken for the member's (⭐ RATIFIED in substance, Amendment G)
 
 > **If MAIA cannot distinguish her own elemental processing from the member's,
 > any elemental reading she offers may be her own process returned to the member
 > as theirs.**
 
-The founder's statement of purpose, which this formalizes:
+Jarvis drafted this under Amendment E awaiting ratification. **Amendment G's
+founder-authored SP-FR-07 states the prohibition directly** — *MAIA may not infer
+that because her response is expansive, emotional, concrete or analytical, the
+member is therefore experiencing Fire, Water, Earth or Air* — so GF-5 is now
+grounded in law rather than in a Jarvis draft.
 
-> *My goal is that this helps MAIA recognize the parallel processes of each
-> member within an ongoing process of development, so she does not confuse their
-> processes with her own — but one of a human with the elemental mindscape.*
-
-⭐ This is **not** GF-2, GF-3 or GF-4 restated. GF-2 is telling the member what
-they are experiencing. GF-3 is representation outranking encounter. GF-4 is the
-map prescribing. **GF-5 is an attribution failure that can occur while all three
-are satisfied**: an accurate, non-prescriptive, returned reflection that is
+⭐ It is **not** GF-2, GF-3 or GF-4 restated. **GF-5 can fire while all three are
+satisfied**: an accurate, non-prescriptive, returned reflection that is
 nonetheless **about MAIA and delivered as though about the member.**
+
+### ⭐⭐⭐ GF-6 — MAIA manufactures the evidence for her own interpretation (Amendment G)
+
+From SP-FR-07's second prohibition — *nor may MAIA use her own prior
+interpretations as independent evidence that an elemental process exists.* The
+founder's loop, verbatim in structure:
+
+```text
+MAIA hypothesizes Water
+       ↓
+MAIA responds in Water language
+       ↓
+member responds to that language
+       ↓
+MAIA detects Water language
+       ↓
+"Water confirmed"
+```
+
+> **That would be MAIA manufacturing the evidence for her own interpretation.**
+
+The design requirement this imposes, and the question every pattern-detection
+surface must be able to answer:
+
+> **Did this pattern originate sufficiently independently of MAIA's framing to
+> count as evidence about the member?**
+
+⛔ **This is the most dangerous falsifier in the lane, because the system passes
+its own tests while failing it.** Confidence rises, recurrence rises, the member
+appears to confirm — and the loop is closed. GF-2 and GF-4 both fail *visibly*;
+GF-6 fails by looking like success.
+
+⭐ Cross-lane echo, recorded and **not adjudicated**: this is the same shape as
+the **discovery-vs-manufacture problem named in the Relational Consciousness
+lane.** Whether they are one constraint is a finding owed to the founder.
+
+Tested at **SD-04f**.
 
 ## 3. Lane law — seven laws, frozen at opening
 
@@ -118,7 +159,9 @@ SP-FR-04  Idiographic Relational Process Mapping               Amendment C
 SP-FR-05  Development is transformation of subsequent participation
                                                  (drafted in-act as SP-FR-02)
 SP-FR-06  The label-removal test                 (drafted in-act as SP-FR-03)
-SP-FR-07  Elemental Attribution Integrity                       Amendment E
+SP-FR-07  Elemental Process Sovereignty / Non-Conflation         Amendment G
+          (supersedes the Amendment E formalization "Elemental Attribution
+           Integrity", recorded as superseded)
 ```
 
 ⚠️ **Numbering provenance.** SP-FR-05 and SP-FR-06 were drafted earlier in this
@@ -249,35 +292,76 @@ relationship, subsequent possibility transformed — AIN is embodying Spiralogic
 
 ---
 
-### SP-FR-07 — Elemental Attribution Integrity
+### SP-FR-07 — Elemental Process Sovereignty / Non-Conflation
 
-⚠️ **Founder-stated intent (Amendment E), formalized by Jarvis. Operative as lane
-law; wording awaiting founder ratification.**
+⭐ **FOUNDER-AUTHORED (Amendment G).** Jarvis had formalized this as "Elemental
+Attribution Integrity" under Amendment E; **the founder then authored the law
+directly, wider and better named.** The Jarvis version is recorded as superseded,
+not deleted — it reached the attribution axis but missed the feedback loop, which
+is the part that can corrupt evidence.
 
-> **The elemental processes MAIA runs are not the elemental processes the member
-> lives, and the system must be able to tell them apart at every point where an
-> elemental attribution is made.**
+> **The member's elemental processes belong to the member's lived encounter, not
+> to MAIA's model of them.**
 >
-> MAIA participates in the elemental field **as a different kind of participant.**
-> She has no body that meets material constraint, no mortality, no stake that
-> consequence can touch. **An elemental reading sourced from her own processing
-> and delivered as a reading of the member is a category substitution**, however
-> accurate it sounds.
+> MAIA may maintain **hypotheses** about concurrently operating Fire, Water, Earth
+> and Air processes and about their movement across time. Such representations are
+> **aids to orientation and developmental continuity; they are not the
+> phenomenological events themselves.**
 >
-> Every elemental representation in the system must therefore carry **whose
-> process it represents** — the member's lived participation, MAIA's own
-> processing, or an inference about the member sourced from MAIA's processing —
-> and the three may never be silently merged.
+> MAIA's own computational processes — inference, generation, retrieval,
+> classification, pattern recognition and linguistic articulation — **must remain
+> ontologically distinct** from the human elemental processes she is attempting to
+> understand.
+>
+> ⛔ **MAIA may not infer that because her response is expansive, emotional,
+> concrete or analytical, the member is therefore experiencing Fire, Water, Earth
+> or Air.**
+>
+> ⛔ **Nor may MAIA use her own prior interpretations as independent evidence that
+> an elemental process exists.**
+>
+> **The member's lived encounter remains the primary referent.**
 
-### Why this is not covered by the existing laws
+### Why MAIA's elemental participation is not isomorphic to a human's
 
-SP-FR-01 bars treating a representation as the process. **SP-FR-07 bars treating
-one participant's process as another's.** A system can honour non-reification
-perfectly and still commit this: the trace is correctly understood as a trace,
-and is attributed to the wrong participant.
+Carried forward from Amendment E: she has **no body that meets material
+constraint, no mortality, no stake that consequence can touch.** Earth in
+particular — *the vision discovers what the world will permit it to become* —
+names an encounter she does not have. An Earth reading generated from her own
+processing and offered as the member's is a projection of a process she cannot
+undergo.
 
-> **The member is a human in the elemental mindscape. MAIA is not a human in it.
-> Parallel processing is the shared structure; it is not shared identity.**
+### ⭐ The three layers that must never collapse
+
+```text
+1  MEMBER ELEMENTAL PROCESS — the person's lived phenomenology
+     Fire possibility · Water significance · Earth embodiment · Air articulation
+     Multiple processes concurrent, conscious and unconscious, changing over time.
+
+2  MAIA PROCESS — what the system is actually doing
+     receiving language · retrieving memory · detecting patterns ·
+     generating hypotheses · comparing encounters · constructing responses
+     ⛔ These are computational / interpretive operations.
+     ⛔ They are NOT the member's elemental experience.
+
+3  RELATIONAL MAP — what becomes tentatively knowable BETWEEN them
+     recurring movements · transitions · loops · bypasses · tensions ·
+     emerging capacities · possible unconscious influences · developmental change
+     Co-created · revisable · never definitive.
+```
+
+Layer 3 is **neither the member's private inner reality nor MAIA's
+interpretation of the member.** It is the evolving map they build together
+through repeated encounter — which is exactly where the hiker's map holds:
+
+```text
+MAIA MAY SAY
+  "Here is the terrain I think we're seeing. Here is the route you seem to have
+   travelled before. Here is a ridge that may be appearing again."
+
+MAIA MAY NOT SAY
+  "You are at coordinate X and therefore you must go to Y."
+```
 
 ## 3a. ⭐⭐⭐ Amendment A — the sequence is foregrounding, not exclusivity
 
@@ -704,6 +788,96 @@ Air, then an elemental attribution she makes about the member that is actually
 sourced from her own processing is **her Air impersonating the member's Fire,
 Water or Earth** — the precise substitution the founder's H-01 correction named
 as the defect.
+
+## 3h. ⭐⭐⭐ Amendment G — Spiralogic is also an epistemic discipline for MAIA
+
+**Founder, 2026-09-10.** The lane's purpose becomes two-sided.
+
+> Spiralogic is **not only a map for the member.** It is also an **epistemic
+> discipline for MAIA**: a way for her to remain oriented to the fact that she is
+> encountering a human whose consciousness is undergoing several elemental
+> processes at once, across time, **without mistaking her interpretation of those
+> processes for the processes themselves.**
+
+Carries **SP-FR-07** (founder-authored, superseding the Amendment E
+formalization), the **three-layer architecture**, **GF-5** now grounded in law,
+and **GF-6**, all recorded at their own locations. Three further consequences:
+
+### ⭐ `dominant_element` is shorthand, and must not become the ontology
+
+There may genuinely be a foreground — *"Water seems especially present here"* —
+but underneath it, simultaneously:
+
+```text
+CURRENT ENCOUNTER
+Fire    active — partially explicit
+Water   strongly foregrounded
+Earth   active — largely implicit
+Air     active — explicit / explanatory
+
+rather than
+dominant_element = water
+```
+
+> A scalar **can be a useful computational shorthand. If it becomes the ontology,
+> it destroys the very parallelism it is meant to serve.**
+>
+> **Foreground is not exclusivity. And conscious foreground is not necessarily
+> causal primacy** — a person's Air may be highly conscious while an unattended
+> Water process strongly shapes it.
+
+⛔ Per the SD-Q1 restraint this is **not** a verdict on existing rows. It is a
+referent question for SD-00 §4: does the field behave as a foreground marker, or
+as a claim about the whole of the encounter?
+
+### ⭐⭐ The developmental signal is the member's noticing, not MAIA's accuracy
+
+```text
+Encounter A   Fire → Air quickly; Water appears much later
+Encounter B   Fire → Air quickly; Water appears much later
+Encounter C   ⭐ the member notices the transition THEMSELVES and stays with
+              Water before moving to Air
+```
+
+Encounter C is the developmentally important one — **not because MAIA scored
+Water more accurately, but because the member acquired greater awareness of their
+own process.**
+
+> **The developmental signal is: what can the member now notice and navigate
+> themselves that previously occurred outside awareness?** — not: how accurately
+> can MAIA classify them.
+
+This is the operative, measurable form of alchemy under SP-FR-05, and it is a
+**direct census question**: does anything in AIN record member noticing as a
+developmental signal at all? ⛔ Jarvis does not assume the answer.
+
+### MAIA's proper role — wilderness guide, not elemental oracle
+
+```text
+NOT   "You are in Water."
+
+BUT   "When visions like this appear, you often move very quickly into explaining
+       them. In previous conversations, the significance underneath arrived later.
+       I'm wondering whether there is something here worth staying with before we
+       decide what it means."
+```
+
+Then the member says **"yes"** or **"no, this feels completely different."**
+**Both responses improve the map.** That is relational intelligence without
+interpretive sovereignty.
+
+### The team-facing statement of purpose (founder)
+
+> AIN uses Spiralogic to help MAIA recognize the concurrent elemental processes
+> through which a human being encounters inner and outer reality, while
+> maintaining a strict distinction between those lived human processes and MAIA's
+> own computational interpretation of them. Across repeated encounters, MAIA can
+> participate with the member in developing an increasingly differentiated,
+> dynamic and revisable map of how that person's consciousness moves. **The
+> purpose of the map is not classification but orientation**: to help what once
+> appeared chaotic become recognizable as process, thereby increasing the
+> member's capacity to attend, choose and eventually navigate their own elemental
+> terrain.
 
 ## 4. The process under test — frozen as amended
 
@@ -1144,7 +1318,7 @@ Fire repeatedly overrides Earth   permanent possibility without consequence
 
 Output: a **transition-fracture register**. ⛔ Not a redesign. ⛔ No repair.
 
-### SD-04 — Authority over the person (five tests, reported separately)
+### SD-04 — Authority over the person (six tests, reported separately)
 
 #### SD-04a — Elemental sovereignty
 
@@ -1266,6 +1440,37 @@ assembly that carries an element into MAIA's cognition.
 itself**: the map of owners and merge points can be built before the ruling, and
 should be, because the ruling will be better made with it in hand.
 
+#### SD-04f — The independence-of-evidence test (GF-6)
+
+For every surface that detects, scores, confirms, or accumulates confidence in a
+pattern about the member, answer the founder's question:
+
+> **Did this pattern originate sufficiently independently of MAIA's framing to
+> count as evidence about the member?**
+
+```text
+PROVENANCE OF SIGNAL   member-initiated language, or language MAIA introduced
+                       into the conversation first?
+LOOP CLOSURE           can MAIA's own output re-enter as input to the same
+                       inference, directly or through the member echoing it?
+CONFIRMATION SOURCE    does anything count a member's agreement with MAIA's
+                       framing as independent evidence for that framing?
+CONFIDENCE INPUTS      does recurrence alone raise confidence, with no test of
+                       whether the recurrence is MAIA's?
+DECAY / CONFIRMATION   where confidence is stored and decayed, is a confirmation
+                       distinguishable in provenance from a restatement?
+```
+
+⛔ **A surface that cannot answer PROVENANCE OF SIGNAL is a GF-6 exposure whether
+or not the loop is currently closing.** The absence of a provenance channel *is*
+the finding.
+
+Known candidates to characterize, from SD-00 — **not assumed**: pattern memory
+with confidence and decay (the anchor records two divergent decay
+implementations) · `shouldPromptForConfirmation` · `recurring_interests` ·
+`living_field_affinities` · the conductor's hysteresis · any
+detect-then-reflect path in the Corpus Callosum emission.
+
 ### SD-05 — The spiral falsifier (closes DISCOVER)
 
 For each major developmental pathway: **where is the evidence that completion of
@@ -1310,6 +1515,10 @@ PHASE USED AS DEVELOPMENTAL RANK                  (SD-Q2 · R collision)
 PHASE GLOBALIZED TO THE MEMBER / NO PROCESS REFERENT
 ATTRIBUTION MERGE / PROVENANCE DROPPED            (SP-FR-07 breach)
 MAIA PROCESS RETURNED AS THE MEMBER'S             (GF-5 breach)
+MANUFACTURED EVIDENCE / LOOP CLOSES ON MAIA       (GF-6 breach)
+NO PROVENANCE CHANNEL FOR PATTERN ORIGIN          (GF-6 exposure)
+SCALAR ELEMENT TREATED AS THE WHOLE ENCOUNTER     (Amdt G · parallelism)
+MEMBER NOTICING NOT RECORDED AS DEVELOPMENTAL SIGNAL
 REIFICATION FINDING                               (SP-FR-01 breach)
 INERT LEGACY                                      (semantics never constituted)
 ```
@@ -1373,12 +1582,12 @@ grounded. *We do not tell tomorrow's story as if it were today's.*
 DISCOVER closes when, and only when:
 
 1. SD-00 authority-classified doctrine register exists, with the divergence list.
-2. SD-Q3 is **ruled by the founder** (SD-Q1 and SD-Q2 ruled 2026-09-10), and
-   GF-5's wording is ratified or replaced.
+2. SD-Q3 is **ruled by the founder** (SD-Q1 and SD-Q2 ruled 2026-09-10).
 3. SD-01 … SD-06 outputs exist, each naming what it could not establish.
 4. A §8 finding is recorded for each major developmental pathway, and GF-1, GF-2,
-   GF-3, GF-4 and GF-5 are each answered or explicitly recorded as unanswerable
-   from code. GF-4's status as DERIVED is restated wherever it is answered.
+   GF-3, GF-4, GF-5 and GF-6 are each answered or explicitly recorded as
+   unanswerable from code. GF-6 additionally requires a statement of whether a
+   provenance channel for pattern origin exists anywhere. GF-4's status as DERIVED is restated wherever it is answered.
 5. The §6 ceiling is restated in the closing record, so no downstream reader
    mistakes a structural finding for a lived one.
 
@@ -1459,5 +1668,27 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   door**. ⭐ **SD-00 OPENED.** ⛔ **SD-01 RE-GATED on SD-00's return** — correcting
   this session's earlier statement that its gate had lifted; opening it on today's
   synthesis is the failure SD-00 exists to prevent.
+- **2026-09-10 · Amendment G (founder)** — *Spiralogic is also an **epistemic
+  discipline for MAIA**.* ⭐ **SP-FR-07 authored by the founder as Elemental
+  Process Sovereignty / Non-Conflation**, superseding Jarvis's Amendment E
+  formalization (recorded as superseded — it reached the attribution axis and
+  missed the feedback loop). **Three layers that must never collapse**: member
+  elemental process · MAIA process · relational map, the third *neither the
+  member's private reality nor MAIA's interpretation of them*. **GF-5 now grounded
+  in law.** ⭐⭐⭐ **GF-6 ADDED — MAIA manufactures the evidence for her own
+  interpretation**: hypothesize Water → respond in Water language → member echoes
+  → "Water confirmed". **The most dangerous falsifier in the lane, because the
+  system passes its own tests while failing it.** Governing question:
+  *did this pattern originate sufficiently independently of MAIA's framing to
+  count as evidence about the member?* → **SD-04f independence-of-evidence test**;
+  cross-lane echo with the Relational Consciousness discovery-vs-manufacture
+  problem recorded, not adjudicated. ⭐ **`dominant_element` is shorthand, not
+  ontology** — foreground is not exclusivity, and conscious foreground is not
+  causal primacy; ⛔ a referent question for SD-00 §4, not a verdict. ⭐⭐ **The
+  developmental signal is the member's own noticing, not MAIA's classification
+  accuracy** — the operative measurable form of alchemy, and a direct census
+  question: does AIN record member noticing at all? MAIA's role: **wilderness
+  guide, not elemental oracle** — and *both "yes" and "no, this feels completely
+  different" improve the map*. Lane purpose now headlines the charter.
 - **Standing: SD-00 OPEN, NOT YET RUN. No code read for findings. Nothing classified. No
   docket question resolved.**

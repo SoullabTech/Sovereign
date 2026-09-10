@@ -37,6 +37,10 @@ after this returns, not a census output.
 12  Master–Emissary / return-to-whole claims WHERE ACTUALLY PRESENT
 13  places where implementation has already converted process into
     trait · global member state · rank · prescription · identity
+14  (Amdt G) whether MEMBER NOTICING is recorded anywhere as a
+    developmental signal — the operative form of alchemy
+15  (Amdt G) whether any pattern surface carries PROVENANCE OF SIGNAL:
+    member-initiated, or language MAIA introduced first (GF-6)
 ```
 
 ⚠️ Item 12 carries its own discipline: **report only where such claims are
@@ -70,7 +74,9 @@ REFERENT             the member · a momentary reading · an encounter ·
 SCOPE                globalized to the person, or scoped to a process?  (SD-Q2)
 OWNER                the member's lived participation · MAIA's own processing ·
                      an inference about the member from MAIA's processing
-                     (SP-FR-07 — feeds SD-04e)
+                     (SP-FR-07 three layers — feeds SD-04e)
+SIGNAL PROVENANCE    could MAIA's own output have produced this value, directly
+                     or via the member echoing her framing?        (GF-6/SD-04f)
 PRODUCER             what writes it
 CONSUMERS            what reads it, and what changes as a result
 SURFACED?            does it reach the member, and in what words
@@ -97,7 +103,9 @@ Every finding states what it could not establish.
 - ⛔ **No verdict from a shape.** A schema admitting a use does not settle what
   that use means — the ruling that governs `aether` governs `phase` and every
   field in §4.
-- ⛔ **No resolution of SD-Q3.** GF-5's wording is not ratified.
+- ⛔ **No resolution of SD-Q3.**
+- ⛔ **No verdict on `dominant_element`.** Amendment G makes it a referent
+  question — foreground marker or claim about the whole encounter — not a finding.
 - ⛔ **No opening of SD-01** on the strength of this census alone; that is a
   founder act.
 
@@ -111,6 +119,8 @@ D  `phase` call-site classification P · C · R · O              SD-Q2
 E  Aether framings, enumerated and kept separate               SD-Q1
 F  evidence for the SD-Q3 ruling (whose process the elemental
    agents represent) — evidence only, no ruling
+F2 whether a provenance channel for pattern origin exists anywhere  GF-6
+F3 whether member noticing is recorded as a developmental signal    Amdt G
 G  what this census could not establish                        §5
 ```
 
