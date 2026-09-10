@@ -1,4 +1,17 @@
-# SD-00 — DOCTRINE & SUBSTRATE CENSUS · FINDINGS
+# SD-00A — SUBSTRATE & TARGETED-DOCTRINE CENSUS · FINDINGS
+
+```
+⭐ FOUNDER RULING 2026-09-10 — SD-00 IS SPLIT, AND THIS DOCUMENT IS PART A ONLY.
+   SD-00A  substrate + targeted-doctrine census ........ COMPLETE (this document)
+   SD-00B  authority-complete doctrine census .......... REQUIRED · see its own record
+⛔ "SD-00 complete" and "the doctrine register is partial" must not coexist
+   unqualified. An incomplete reading of canon must NOT become the doctrine
+   against which SD-01 evaluates the architecture — that would recreate exactly
+   the problem this lane was opened to prevent.
+⛔ NO FALSIFIER FAILURE IS NOT ALIGNMENT. Nothing here licenses any summary of
+   the form "Spiralogic alignment passed." That has not been tested.
+```
+
 
 ```
 LANE        JARVIS-SPIRALOGIC-DEVELOPMENTAL-ALIGNMENT-01
@@ -101,7 +114,14 @@ Aether 1 · Aether 2 · Aether 3  — present, gradated, NOT in the twelve
 `member_spiral_state.phase INTEGER CHECK (phase BETWEEN 1 AND 12)`.
 
 > ⭐⭐⭐ **The encoded architecture independently corroborates the SD-Q1 ruling.**
-> Aether has depth without being a rung: it is gradated but uncounted. That is
+> Aether has depth without being a rung: it is gradated but uncounted.
+>
+> ⭐⭐ **FOUNDER RULING — the generalizable principle: DEVELOPMENTAL
+> DIFFERENTIATION IS NOT NECESSARILY ORDINAL PROGRESSION.** Aether can vary in
+> availability, differentiation, depth, integration and witnessing **without
+> becoming phase 13 → 14 → 15.** This is expected to apply to all four elements
+> too: *someone can become more differentiated in Water without moving further
+> along a single ladder.* That is
 > exactly "integrative/witnessing dimension, not a fifth co-equal process-event."
 
 Canon also already distinguishes senses of the word, in its own voice:
@@ -266,12 +286,10 @@ COMMENT ON COLUMN accumulating_hypotheses.original_language IS
 ```
 
 **A provenance field exists and is explicitly barred from influencing
-confidence.** ⚠️ Read honestly: this bar was almost certainly written for a
-*different and good* reason — keeping a specific agent's or model's authorship
-from acquiring routing authority, which is itself an anti-capture discipline. It
-is **not** evidence of a GF-6 failure. But it means the one provenance channel
-the substrate has is constitutionally prevented from answering the GF-6 question.
-⛔ Whether that is the right trade is a founder question, not a census verdict.
+confidence.** The bar is an anti-capture discipline — keeping a specific agent's or model's
+authorship from acquiring routing authority — and is **correct as written**. Per
+the ruling above, **no conversational-influence provenance channel exists
+anywhere in the substrate**, and this is not it.
 
 ---
 
@@ -321,6 +339,21 @@ strings. Hits were breath-cycle phase (unrelated) and `spiralogic_phase` on a
 **community event** (a property of an event, not a claim about a person). **No
 "You are in Phase 7" surface was found.** The globalized referent is currently
 **interior**, which is where GF-4 is not yet in contact with a member.
+
+### ⭐ FOUNDER RULING on how to classify this
+
+> **GLOBAL PHASE REPRESENTATION — ONTOLOGY PRESSURE TOWARD SINGLE-PROCESS MEMBER
+> STATE; NO CURRENT MEMBER-FACING FAILURE ESTABLISHED.**
+>
+> *That is very different from calling the database wrong.*
+
+The absence of rank logic is **good evidence against a feared failure**: 1–12 is
+not presently functioning computationally as a developmental hierarchy. But the
+single global row can only naturally answer *"where is the member?"* rather than
+*"where is this particular process currently represented?"* — and under SP-FR-02
+there may be **no coherent global answer**. A person can simultaneously be in a
+Fire process around vocation, deep in Water around a relationship, Earth-ing a
+book into existence, and Air-ing a proposition into shared language.
 
 ⛔ Classified **P + C, with a globalized referent and no scope channel** — an
 architectural exposure rather than a rank collision. Per SD-Q2: *the schema

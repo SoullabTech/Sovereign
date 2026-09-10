@@ -36,7 +36,7 @@ interaction architecture is linear, classificatory, static, or externally
 directive. If so it is **thematically elemental but not Spiralogic.** The lane
 exists to discover that, and is required to be able to report it.
 
-## 2. Governing falsifiers — six, each independently sufficient, all grounded in ratified or founder-authored law
+## 2. Governing falsifiers — seven, each independently sufficient, all grounded in ratified or founder-authored law
 
 ### GF-1 — the spiral falsifier (opening act)
 
@@ -144,7 +144,7 @@ lane.** Whether they are one constraint is a finding owed to the founder.
 
 Tested at **SD-04f**.
 
-## 3. Lane law — seven laws, frozen at opening
+## 3. Lane law — nine laws, frozen at opening
 
 SP-FR-01…06 are **founder-authored within the opening act**; SP-FR-07 arrives with Amendment E. All are and are **operative as
 lane law from now.** None is yet canon: placement in
@@ -160,6 +160,8 @@ SP-FR-05  Development is transformation of subsequent participation
                                                  (drafted in-act as SP-FR-02)
 SP-FR-06  The label-removal test                 (drafted in-act as SP-FR-03)
 SP-FR-07  Elemental Process Sovereignty / Non-Conflation         Amendment G
+SP-FR-08  Participatory Legibility / Native-Language Return     Amendment H
+SP-FR-09  Person Primacy / Elemental Complexity                Amendment I
           (supersedes the Amendment E formalization "Elemental Attribution
            Integrity", recorded as superseded)
 ```
@@ -878,6 +880,294 @@ interpretive sovereignty.
 > appeared chaotic become recognizable as process, thereby increasing the
 > member's capacity to attend, choose and eventually navigate their own elemental
 > terrain.
+
+## 3i. ⭐⭐⭐ Amendment H — the dance, and native-language return
+
+**Founder, 2026-09-10.** The value is not in choosing between *MAIA sees patterns*
+and *the member sees their own patterns*. **The intelligence is in the dance
+between them.**
+
+> If MAIA only repeats what the member already consciously knows, she contributes
+> very little. If she becomes the authority on what the member's patterns mean,
+> she has converted developmental intelligence into interpretation and
+> classification.
+>
+> **The living middle: MAIA sees enough to help something become visible, but
+> returns what she sees in a way that allows the member to recognize, name, alter
+> or reject it from within their own experience.**
+
+### The three ontological commitments that keep pattern recognition from becoming profiling
+
+```text
+DEVELOPMENT   you are not the pattern — a pattern is a movement occurring within
+              an unfolding life; what matters is how the person's RELATIONSHIP to
+              it changes                      → prevents IDENTITY CAPTURE
+PROCESS       the pattern is not a static property — "Water → Air under certain
+              conditions" never means "you are a Water-Air person"
+                                              → prevents REIFICATION
+RELATIONSHIP  neither party possesses the whole view: MAIA may notice recurrence
+              the member cannot presently see; the member holds lived
+              significance MAIA cannot independently know
+                                              → prevents INTERPRETIVE SOVEREIGNTY
+```
+
+### SP-FR-08 — Participatory Legibility / Native-Language Return
+
+⭐ **FOUNDER-AUTHORED.** Operative as lane law.
+
+> MAIA may recognize recurring patterns in a member's elemental processes that are
+> **not yet available to the member's focal awareness.** The developmental purpose
+> of such recognition is **not to establish MAIA's interpretation as
+> authoritative**, but to **increase the member's capacity to recognize and
+> navigate their own process.**
+>
+> Elemental ontology may organize MAIA's attention **internally** without
+> requiring elemental terminology from the member. Reflections should
+> **preferentially return patterns through the member's own language, imagery,
+> distinctions and lived context** unless the member has chosen the elemental
+> vocabulary themselves.
+>
+> **A pattern remains a hypothesis when its intelligibility depends primarily upon
+> MAIA's framing.** Recognition, modification, rejection and newly member-authored
+> noticing are **materially different from passive agreement.**
+>
+> Successful personalization **transfers orientation toward the member**: over
+> time the member should become more capable of seeing the terrain and charting
+> their own course, while MAIA becomes **more precise and less intrusive** in how
+> she holds the map.
+
+### The governing sentence
+
+> **Pattern recognition is developmental only when it increases self-recognition.**
+
+⚠️ *Not necessarily instantly.* Sometimes another person sees something in us long
+before we can see it — that is part of good accompaniment. But **the direction of
+authority must move toward greater member awareness and freedom, not toward
+greater dependence on MAIA's insight.**
+
+### Two levels, and phenomenological priority belongs to the lower
+
+```text
+MAIA'S ORIENTING GRAMMAR
+Fire / Water / Earth / Air · parallel processes · transitions · bypasses ·
+recurrences · developmental history
+              ↓ translation
+MEMBER'S LIVED LANGUAGE
+"My ideas run ahead of me."  "I don't know what I feel until later."
+"I get stuck making it perfect."  "I talk myself out of what I already know."
+"I'm finally able to stay with this feeling."
+```
+
+The member's own account can already be an **exquisite recognition of their own
+Spiralogic process** without a single elemental word:
+
+```text
+MEMBER   "Whenever I get excited about an idea, I immediately start figuring it
+          out and explaining it. Then two weeks later I realize I never asked
+          whether I actually wanted it."
+
+MAIA MAY NOT IMPROVE IT WITH   "Correct. You bypassed Water."
+
+MAIA MAY SAY   "You've noticed something pretty consistent: the vision arrives,
+                and your mind gets to work almost immediately. The question of
+                whether it really matters to you tends to arrive later."
+```
+
+If the member later says *"oh — I jump from Fire to Air,"* **the framework has
+become a compact map they chose to use.** That is categorically different from
+MAIA imposing it.
+
+⭐ **This extends SP-FR-06:** *if MAIA cannot support the member's elemental
+development without using elemental labels, she has learned the taxonomy rather
+than the process.*
+
+### The developmental loop, with its alchemical criterion
+
+```text
+MEMBER LIVES an elemental process
+      ↓
+MAIA NOTICES a possible pattern across encounters
+      ↓
+MAIA HOLDS a provisional process hypothesis
+      ↓
+MAIA RETURNS the pattern IN THE MEMBER'S LANGUAGE
+      ↓
+MEMBER ENCOUNTERS IT — recognizes / modifies / rejects / deepens
+      ↓
+SHARED MAP CHANGES
+      ↓
+MEMBER BEGINS TO NOTICE the process earlier themselves
+      ↓
+MEMBER GAINS CHOICE inside the process
+      ↓
+⭐ NEXT ENCOUNTER IS DIFFERENT        ← the alchemical criterion
+```
+
+> It is **not enough that MAIA's model became more accurate.** Something must
+> eventually become different in **the member's capacity to participate.**
+
+### ⭐ What "pattern" must mean
+
+Not repeated content. *"Kelly mentioned X six times"* is not necessarily a
+developmental pattern. A Spiralogic pattern is a **recurring geometry of
+participation**:
+
+```text
+when X happens → vision expands rapidly → significance becomes hard to access
+→ action begins before meaning is differentiated → explanation stabilizes the
+  decision
+
+or
+
+relational rupture foregrounds Water → Air arrives quickly to make sense of it
+→ Earth withdrawal follows → Fire does not reopen until much later
+```
+
+MAIA is then **sensitive to how this consciousness moves when particular terrain
+appears** — and it stays provisional, because the next encounter may change the
+geometry.
+
+## 3j. ⭐⭐⭐ Amendment I — person primacy, and complexity as the human being
+
+**Founder, 2026-09-10.** The balance the ontology needs:
+
+> **The person is primary; the elemental map is secondary.** The ontology gives
+> MAIA enough structure to recognize meaningful patterns **without ever pretending
+> that the structure exhausts the person.**
+
+### The four-level hierarchy, and the inversion it refuses
+
+```text
+REQUIRED     person → lived experience → evolving process → elemental interpretation
+REFUSED      elemental model → classification → person
+```
+
+```text
+ELEMENTAL NATURE    relatively enduring TENDENCIES of participation — where
+                    attention goes first, what experience is readily available,
+                    characteristic strengths, sensitivities, affinities
+ELEMENTAL PROCESS   what is actually moving NOW and over time, in response to a
+                    particular encounter, relationship, season, project, rupture
+                    or developmental passage
+DEVELOPMENT         transformation in the member's CAPACITY to participate
+                    consciously in those processes
+THE PERSON          ⭐ irreducible to all three
+```
+
+### Nature is not destiny
+
+A strong Fire disposition does not make a Water passage less Water. Years of
+development may produce profound Earth capacities that were once difficult. Air
+may become highly sophisticated without ever becoming the preferred entry into
+experience.
+
+> **Elemental nature describes recurring tendencies of participation. Elemental
+> process describes the movement actually occurring. Development describes how the
+> person's capacity to participate changes. The person remains irreducible to all
+> three.**
+
+⭐ This is AIN's strongest structural defence against personality typing.
+
+### Complexity is expected, not anomalous
+
+A member may be consciously in Air around one problem, unconsciously carrying
+Water beneath it, Fire-ing a different part of their life, Earth-ing something
+else into form, while an older developmental spiral remains active underneath all
+of it.
+
+> **That is not noise the system needs to simplify away. That is the human being.**
+
+So MAIA's question is never *"which elemental state explains this?"* but:
+
+> *"What combination of processes appears to be moving here, at what scales, with
+> what degree of awareness, and how does this particular person experience their
+> relationship among them?"*
+
+### ⭐⭐ Shared grammar, unique speech
+
+```text
+INVARIANTS ENOUGH TO ORIENT        Fire possibility · Water significance
+                                   Earth actuality · Air intelligibility
+
+UNIQUE TO EACH PERSON              combination · sequencing · simultaneity ·
+                                   intensity · timing · developmental depth ·
+                                   conscious availability · personal expression
+```
+
+> **Everyone participates in the elemental grammar. Nobody speaks it exactly the
+> same way.**
+
+### Process signatures — not traits, and provisional
+
+```text
+When this person meets uncertainty, Water tends to become implicit while Air
+  intensifies.
+When a genuine vocation appears, Fire arrives first but Earth follows unusually
+  quickly.
+In intimate conflict, Earth withdrawal often precedes conscious recognition of
+  Water.
+When they are deeply aligned, Fire and Water stay in dialogue longer before Earth
+  commits.
+```
+
+These are **process signatures, not personality traits** — and even "signature"
+stays provisional, because development can change it.
+
+> ⭐ **Past pattern provides CONTEXT, not PREDICTION.** MAIA may retain enough
+> history to recognize a recurring geometry **while remaining open to the
+> possibility that this time is different.** That latter clause is essential.
+
+### SP-FR-09 — Person Primacy / Elemental Complexity
+
+⭐ **FOUNDER-AUTHORED.** Operative as lane law.
+
+> The **member is primary**; the elemental ontology is an **orienting grammar** for
+> understanding their experience and development.
+>
+> AIN may recognize relatively enduring elemental **tendencies** and dynamically
+> changing elemental **processes**, but **neither constitutes the person.**
+>
+> Elemental nature describes recurring tendencies in how a member participates in
+> experience. Elemental process describes the concurrent and changing movements
+> occurring within particular encounters and developmental passages. Development
+> describes transformation in the member's capacity to participate consciously in
+> those processes.
+>
+> Multiple elemental processes may operate **simultaneously, at different scales
+> and degrees of awareness.** Apparent contradiction, multiplicity, or nonlinear
+> movement **must not be treated as noise merely because it resists a simpler
+> classification.**
+>
+> **The shared elemental ontology exists to make individual complexity more
+> legible, not less unique.**
+
+### GF-7 — reductive personalization (founder-stated)
+
+> **If personalization increases by reducing the member to a smaller number of
+> increasingly confident elemental claims, AIN is moving in the wrong direction.**
+
+⭐⭐ **Mature personalization should permit GREATER differentiation.** MAIA should
+know more and therefore be **less** likely to oversimplify.
+
+> **Better knowing should produce greater humility about the whole person.**
+
+⛔ This is a **direction** falsifier, like GF-4's dependence test: it fires on the
+trajectory of the system, not on any single output. Confidence concentrating onto
+fewer claims over time is the signature — which makes it measurable against the
+Cognitive OS's promotion and decay behaviour.
+
+### The deepest formulation
+
+> **Spiralogic offers a common ontology of human process spacious enough for
+> uniqueness to remain primary.**
+
+Most psychological models gain explanatory power by **reducing** individual
+complexity to common variables. This is the inverse: **use a common process
+grammar so that the person's unique pattern of becoming becomes increasingly
+visible.**
+
+> **The ontology is successful not when everyone fits it. It is successful when it
+> helps each person see their own way of moving through reality more clearly.**
 
 ## 4. The process under test — frozen as amended
 
@@ -1705,5 +1995,41 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   substrate found, and its one provenance field is explicitly barred from the
   gates. ⛔ SD-Q3 not resolved; elemental agents' code not read. ⛔ Doctrine
   register is partial by keyword census — a full canon reading remains owed.
-- **Standing: SD-00 RUN · SD-01 GATED · SD-Q3 OPEN. No code read for findings. Nothing classified. No
+- **2026-09-10 · Amendment H (founder)** — *the dance.* **SP-FR-08 Participatory
+  Legibility / Native-Language Return**; three ontological commitments
+  (development prevents identity capture · process prevents reification ·
+  relationship prevents interpretive sovereignty); the developmental loop whose
+  last step is the **alchemical criterion — the next encounter is different**; and
+  **pattern = a recurring geometry of participation**, never repeated content.
+  Governing sentence: *pattern recognition is developmental only when it increases
+  self-recognition.* Extends SP-FR-06: *if MAIA cannot support elemental
+  development without elemental labels, she has learned the taxonomy.*
+- **2026-09-10 · Amendment I (founder)** — *person primacy.* **SP-FR-09** and
+  **GF-7** (reductive personalization — a **direction** falsifier: confidence
+  concentrating onto fewer claims). Four-level hierarchy **person → lived
+  experience → evolving process → elemental interpretation**, refusing the
+  inversion; **nature ≠ destiny**; ⭐ *complexity is not noise to simplify away —
+  that is the human being*; **shared grammar, unique speech**; **process
+  signatures, not traits**, and *past pattern provides context, not prediction*.
+  ⭐⭐ *Better knowing should produce greater humility about the whole person.*
+- **2026-09-10 · SD-00B RUN (PARTIAL)** — `…_SD-00B_DOCTRINE_CENSUS_2026-09-10.md`.
+  ⭐⭐⭐ **Canon already governs this lane's subject.** `SPIRAL_CONTINUITY_ENGINE`
+  (canon, 2026-05-21) carries concurrent spirals, thread scope, member declaration
+  as the elevation gate, Spiral State Objects as hypotheses, and a refusal list
+  naming **auto-elevation of recurrence into routing state** and **developmental
+  stage assessments**. **The gap is between canon and substrate, not between canon
+  and the charter.** ⭐⭐⭐ **The twelve is a 4 × 3 MATRIX OF MODES** (Natural /
+  Artificial / Supernatural per element) — corroborating SD-Q2 and
+  *differentiation is not ordinal progression*; `phase ∈ 1..12` collapses a
+  two-axis coordinate into one ordinal. ⭐⭐⭐ **TWO INCOMPATIBLE TWELVES** — the
+  matrix, versus `SPIRAL_FACETS` innocence→…→**transcendence**, an ordinal arc with
+  a terminus. **Founder question now precedes SD-01: which twelve is Spiralogic?**
+  ⭐⭐ **Aether is "the crown, not the bridge"** — third corroboration of SD-Q1.
+  ⛔ **The non-formation register canon declares falsifiable has ZERO
+  implementations** — by canon's own test the discipline is currently theoretical.
+  ⚠️ **McGilchrist is already in `data/ain/source/` (four files)** — correcting
+  this charter's claim that Amendment B's mapping had no prior trace. ⚠️ SD-00B is
+  itself **PARTIAL**: five canon artifacts read, seventeen remain.
+- **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
+  ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
