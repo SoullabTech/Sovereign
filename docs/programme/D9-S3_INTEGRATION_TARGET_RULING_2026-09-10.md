@@ -199,3 +199,107 @@ FORMAL PHENOMENOLOGY WITNESS    UNSPENT
 PRODUCTION PREFLIGHT            NOT STARTED
 PRODUCTION                      UNTOUCHED
 ```
+
+---
+
+# Addendum — the receiving side is CONSTRUCTION, not wiring
+
+**Founder census, 2026-09-10.** Run by the founder rather than delegated.
+
+`StudioConversation` **cannot** receive an existing developmental conversation.
+Its contract accepts only:
+
+```
+work · manuscriptId · conversationId · onClose
+```
+
+No `threadId`, no observation anchor, no reading identity, no resume input. It
+initializes its own local `turns = []` and sends them through
+`/api/sovereign/app/maia/list`. D9's Canvas **creates its own `conversationId`**
+for the page and hands that to `StudioConversation`; the WRITE room is explicitly
+built around that exchange.
+
+## Two lanes, not one feature
+
+```
+FOCUS-PRODUCER                    DEVELOP → WRITE CONVERSATION CONTINUITY
+D9 attention → MAIA               existing developmental thread → WRITE MAIA orbit
+NAMED, DELIBERATELY DEFERRED      NOT PRESENT — genuinely new capability
+```
+
+D9 wrote its own boundary twice, in `canvas/page.tsx`:
+
+> *"⛔ IT TRANSMITS NOTHING. The focus is held, painted and carried beside the
+> conversation; it is not sent anywhere. Handing it to a boundary is
+> FOCUS-PRODUCER's work and is out of scope for this lane."*
+
+> *"EXPLICIT ONLY, AND IT SENDS NOTHING. The gesture opens her and leaves the
+> focus standing beside the conversation."*
+
+So the missing arrow was never an oversight — it is a deferred lane, and S3 has
+now made the crossing lawful to have.
+
+⛔ **The two must not be solved as one feature.** They are different authority
+problems:
+
+```
+FOCUS-PRODUCER    what orientation from the writer's own focusing act
+                  may accompany an Ask?
+
+CONTINUITY        how can WRITE receive a conversation that already exists
+                  without starting another one?
+```
+
+## The next design target is narrower
+
+⛔ **Do not redesign `StudioConversation` into a universal conversation system.**
+First specify the **receiving contract**:
+
+```
+WRITE MAY RECEIVE                 WRITE MAY NOT RECEIVE
+manuscript identity               body authority
+existing conversation/thread id   may_cross
+observation identity              pendingAskRef
+reading identity / orientation    consumed actId
+                                  standing consent
+                                  automatic heldFocus
+```
+
+## ⭐ The invariant that drives the design
+
+> **Receiving an existing conversation must not turn `StudioConversation` into
+> its owner.**
+>
+> The conversation already exists. WRITE is giving it a place to continue.
+
+## D9 live walk — a separate, concrete runtime finding
+
+The D9 canvas page did **not** render the Field room. It hit the app-level error
+boundary — the `Something Went Wrong / Try Again / Return to MAIA` surface in
+`app/error.tsx`. The D9 dev server compiled `/writers-studio/canvas` and returned
+**HTTP 200**, so this is not a server or port failure: it is a client/runtime
+render failure after the page was served.
+
+⛔ **Do not repair speculatively.** The browser console error and stack must be
+captured first. Until then the D9 live walk is BLOCKED and the Field surface is
+unverified in use, however complete it is in source.
+
+## Standing
+
+```
+D9 Field integration             BUILT
+D9 attention → disclosure        DELIBERATELY DEFERRED — FOCUS-PRODUCER
+S3 authority                     CLOSED / ACCEPTED
+
+developmental conversation
+  → WRITE conversation           ABSENT — NEW RECEIVING CAPABILITY
+
+D9 live walk                     BLOCKED — client/runtime error needs diagnosis
+
+MERGE                            NOT YET
+PRODUCTION                       UNTOUCHED
+```
+
+**What was genuinely missing is now named**: not the cleaner Canvas design, and not
+S3 authority. The missing architectural capability is **conversation continuity
+across DEVELOP → WRITE**.
