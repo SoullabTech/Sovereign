@@ -417,10 +417,25 @@ describe('FOCUS-ASSEMBLER-CONTRACT-01B · whole-Work fidelity', () => {
 
   it('the witness compares exactly, never a canonicalised form', () => {
     const wit = CODE('scripts/witness/focus-assembler-contract.ts');
-    expect(wit).toMatch(/whole === flat/);
-    expect(wit).toMatch(/whole === stored\.rows\[0\]\.content/);
-    // ⛔ no normalisation on either side of an equality check
-    expect(wit).not.toMatch(/whole[!=]?\.?(trim|replace|normalize)\(/);
+    /**
+     * ⚠️ RE-EXPRESSED 2026-09-10, AND WEAKER IN NO RESPECT.
+     *
+     * This asserted the literals `whole === flat` and `whole ===
+     * stored.rows[0].content`. The enforcement reconciliation renamed the
+     * variable while keeping both comparisons exact, and the tripwire went red
+     * on an improvement — the brittleness this repository has been burned by
+     * before.
+     *
+     * ⭐ It now names the RIGHT-HAND SIDES, which are the obligation: the
+     * assembled Work is compared to the canonical flattening and to the stored
+     * draft content, by `===`. A rename cannot break it; ⛔ dropping either
+     * comparison still does.
+     */
+    expect(wit).toMatch(/===\s*canonical\.rows\[0\]\.flat/);
+    expect(wit).toMatch(/===\s*stored\.rows\[0\]\.content/);
+    // ⛔ no normalisation ANYWHERE in the witness — it has no lawful use for one,
+    //    and a canonicalised comparison would erase the defect 01B detects.
+    expect(wit).not.toMatch(/\.(trim|replace|normalize)\(/);
   });
 });
 
