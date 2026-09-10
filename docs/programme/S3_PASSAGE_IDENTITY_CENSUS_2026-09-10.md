@@ -192,6 +192,11 @@ RECEIPT LAW     no field that narrows reconstruction may be recorded
 ⚠️ **These are both ratified. They are in direct tension, and the tension is the
 real content of Q6.** ⛔ Not resolved here.
 
+⭐ **RULED THE SAME DAY — THE COLLISION DISSOLVES.** F7-C was phrased too
+narrowly: the receipt does not need to *contain* the locator, only to support a
+lawful reference chain from which the crossed scope can be established. Receipt
+law is unchanged and every field above stays prohibited. See Ruling 2 below.
+
 ---
 
 ## P7 · THE PRECEDENT THAT ALREADY EXISTS — IDENTITY BY INDIRECTION
@@ -245,7 +250,11 @@ BLOCKER 2  focusCrossing.ts:117 passes `sectionRef: req.sectionRef`
 The one-line guard (`scopeKind === 'section' ? sectionRef : undefined`) exists
 only on the unmerged D9 branch.
 
-⛔ **Reported, not repaired.** ⚠️ It also means every canonical instrument that
+⛔ **Reported, not repaired — and RULED so.** This is a Focus fidelity defect and
+is treated here, in the passage census; ⛔ it must not be silently repaired while
+fixing developmental Ask, and ⛔ the D9 one-line guard must not be imported and
+called "passage fixed" — that would make the path executable without solving
+identity. ⚠️ It also means every canonical instrument that
 exercises passage scope is exercising a refusal path — **a green passage test on
 canonical is evidence about refusal, not about passage handling.** That is a
 direct application of the ratified rule: *an instrument that cannot fail when the
@@ -267,35 +276,175 @@ passage scope reachable on canonical           ⛔ NO — two independent blocke
 
 ---
 
+## Founder rulings on this census — 2026-09-10
+
+```text
+Q6 DISPOSITION
+
+PASSAGE AUTHORITY        NOT PRESENTLY IMPLEMENTED
+CANONICAL PASSAGE PATH   POSITIVE MINT UNREACHABLE
+RECEIPT LAW              UNCHANGED
+F7-C                     proof through lawful reference chain permitted;
+                         content-derived locator fields on receipt remain
+                         prohibited
+PASSAGE IDENTITY DESIGN  NOT AUTHORIZED IN S3
+S3                       may not rely on nominal passage authority
+```
+
+### Ruling 1 — canonical `passage` is not presently a usable authority scope
+
+It is **neither merely coarse nor merely under-specified**. It has no complete
+lawful path:
+
+```text
+member act distinguishing passage A/B     ABSENT
+boundary input distinguishing A/B         ABSENT
+receipt fields that could encode range    REFUSED BY LAW
+canonical positive passage mint           UNREACHABLE
+```
+
+The runtime contradiction confirms it: canonical passes `sectionRef` while
+minting refuses `sectionRef` for `passage`. ⭐ **A green "passage" test today can
+only prove refusal behaviour, not successful passage disclosure.**
+
+> `passage` remains a **reserved semantic scope**, but MUST NOT be treated as
+> implemented disclosure authority until a lawful passage-identity primitive
+> exists.
+
+⛔ **Do NOT import the D9 one-line guard and call passage fixed.** It would make
+the path executable without solving identity.
+
+### Ruling 2 — F7-C and receipt law do NOT actually conflict
+
+F7-C was phrased too narrowly. **The receipt itself does not need to contain the
+passage locator.** Receipt law remains intact and unchanged:
+
+```text
+NO   range · startOffset · endOffset · length · digest · geometry · authored text
+```
+
+What must be possible is: *from the completed crossing evidence, the system must
+be able to establish which authorized scope was crossed.*
+
+```text
+F7-C  (revised)
+Completed crossing evidence must distinguish the authorized passage from
+another passage THROUGH A LAWFUL REFERENCE CHAIN.
+
+The receipt need not, and MUST NOT, encode content-derived offsets,
+geometry, digests, or authored characters to do so.
+```
+
+⭐ **The collision reported in §P6 is dissolved without authorizing an
+implementation.** The observation precedent proves indirection is *possible*. ⛔
+It does **not** prove that Focus should copy that architecture.
+
+### Ruling 3 — no passage identity may be invented inside S3
+
+The five representations disagree because they answer **different questions**:
+
+```text
+PassageRef    frozen evidence identity
+AskAnchor     interaction location
+Focus range   live selection
+HeldFocus     live multi-section holding
+receipt       evidence of crossing
+```
+
+⛔ Declaring any one of them "the canonical passage identifier" inside an S3
+repair would **quietly settle several other architectures at once**. Passage
+identity is therefore a **separate design dependency**, never something the S3
+remediation may manufacture opportunistically.
+
+### What this means for the S3 repair
+
+S3 still exists and still needs repair. The repair may use **only disclosure
+scopes the authority system can honestly establish**:
+
+```text
+whole_work    AVAILABLE
+section       AVAILABLE
+passage       NOT AVAILABLE AS AUTHORITY
+```
+
+If a developmental question ultimately needs passage characters, there are two
+lawful future choices — ⛔ **neither chosen here; that belongs to the
+producer/design decision**:
+
+```text
+A. the member explicitly authorizes the containing SECTION
+   → W1 may be wider for integrity
+   → only the needed passage reaches W2
+
+B. a genuine passage-identity architecture is created first
+   → exact passage authority becomes possible
+```
+
+⛔ **The third option is PROHIBITED:**
+
+```text
+scopeKind = "passage"
+but authority really means "somewhere in this section"
+```
+
+That is **silent widening**.
+
+### The unreachable canonical path — its own treatment
+
+⭐ Recorded **here, in the passage census — NOT as an S3 repair**:
+
+> Canonical Focus advertises a `passage` scope whose positive path is
+> structurally unreachable.
+
+That is a genuine defect/fidelity issue in Focus, ⛔ **and it must not be silently
+repaired while fixing developmental Ask.**
+
+Any future passage acceptance test must satisfy the ratified testing law:
+
+```text
+known lawful passage implementation    → GREEN
+wrong passage / substituted passage    → RED
+```
+
+⛔ **Until a lawful positive implementation exists, there is no legitimate
+positive passage acceptance test to write.**
+
+### Census sequence CLOSED
+
+⭐ Founder act: the census sequence stops here. Enough is now known about the
+authority model to return to the actual S3 design problem.
+
+---
+
 ## Standing
 
 ```text
-PASSAGE-IDENTITY CENSUS   COMPLETE
-REPRESENTATIONS FOUND     5 · no two agree on units, target or extent
-TRACE 1 (member act)      ⛔ UNIMPLEMENTED — no client; consent is posture-level
-TRACE 2 (boundary)        ⛔ carries NO passage identity, BY RATIFIED LAW
-TRACE 3 (selection)       Focus: live-text range · Developmental: digest-verified
-THE THREE AGREE?          NO — and by absence, not mismatch
+#1279 AUTHORITY CENSUS      OPEN · Class C
+#1280 LOAD-SCOPE CENSUS     OPEN · Class C
+PASSAGE-IDENTITY CENSUS     COMPLETE · this record · Class C PR
 
-F7-C vs RECEIPT LAW       ⚠️ COLLISION reported for ruling
-PRECEDENT NOTED           identity by indirection (readingId, observationKey)
-                          ⛔ not proposed as the answer
+Q4 FRESHNESS                CLOSED
+Q6 PASSAGE                  RESOLVED AS NOT IMPLEMENTED
+                            future identity design required
 
-Q4 FRESHNESS              CLOSED
-Q6 PASSAGE                STILL OPEN — representation not selected
-PASSAGE SCOPE             UNREACHABLE ON CANONICAL — two blockers, reported
+CENSUS SEQUENCE             CLOSED
 
-S3 IMPLEMENTATION         NOT AUTHORIZED
-F1–F7 IMPLEMENTATION      NOT AUTHORIZED
-FOCUS ASSEMBLER CUSTODY   separate dependency · unmerged
-A / C                     HELD
-#1277 D9                  UNTOUCHED · DRAFT
-#1279 · #1280             OPEN · record only
-FOCUS WITNESS             UNSPENT
-PRODUCTION                UNTOUCHED
+S3 DEFECT                   CONFIRMED
+S3 IMPLEMENTATION           STILL NOT AUTHORIZED
+S3 SCOPE VOCABULARY         whole_work · section only
+                            ⛔ passage NOT AVAILABLE AS AUTHORITY
+
+POSITIVE PASSAGE TESTS      NOT YET POSSIBLE
+CANONICAL PASSAGE PATH      unreachable · recorded here · ⛔ not repaired here
+FOCUS ASSEMBLER CUSTODY     separate dependency · unmerged
+LOADER CUSTODY              recorded observation · no repair
+
+A / C                       HELD
+#1277 D9                    UNTOUCHED · DRAFT
+FOCUS WITNESS               UNSPENT
+PRODUCTION                  UNTOUCHED
 ```
 
-⭐ *Passage identity is not missing from this system. It exists five times, in
-two incompatible dialects, and never at the boundary that would need it. The
-boundary's silence is not an oversight — it is a ratified refusal, and Q6 is the
-place where that refusal and F7-C have to be reconciled.*
+⭐ *"passage" currently exists as vocabulary in Focus, not yet as authority. That
+is much safer to admit than to make the implementation catch up to the word by
+accident.*
