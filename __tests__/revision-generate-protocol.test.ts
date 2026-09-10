@@ -1,0 +1,115 @@
+/**
+ * RC-GEN-01 · 3A-P — PROTOCOL acceptance. Automated and falsifiable.
+ *
+ * ⛔ Nothing here judges editorial quality. "Reduces abstraction", "is genuinely
+ * concrete", "this fixture deserves no_change" are semantic judgements and belong
+ * to 3A-S, witnessed by a person against a pinned rubric. Turning them into
+ * keyword tests — or into a second model judging the first — would produce a
+ * confident number about nothing.
+ */
+import {
+  revisionSystemPrompt,
+  REVISION_ASKER_VERSION,
+  type AuthorizedSection,
+} from '../lib/manuscript/revision/generate';
+import { REVISION_TOOL_NAME, revisionToolSchema } from '../lib/manuscript/revision/outcome';
+
+const S1 = '11111111-1111-1111-1111-111111111111';
+const S2 = '22222222-2222-2222-2222-222222222222';
+const SECTIONS: AuthorizedSection[] = [
+  { sectionId: S1, label: 'A Vivid Dream — Section 13', text: 'It was a knowledge that arrived already complete.' },
+  { sectionId: S2, label: 'Aether — Section 184', text: 'Am I fit enough? Am I worthy of the journey?' },
+];
+
+describe('⭐ one assembly — the falsifier reads what production sends', () => {
+  it('the prompt is a single exported function, not rebuilt for tests', () => {
+    expect(typeof revisionSystemPrompt).toBe('function');
+    expect(revisionSystemPrompt(SECTIONS)).toBe(revisionSystemPrompt(SECTIONS));
+  });
+});
+
+describe('⭐ RC-07a — restraint is stated as a complete answer', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('says a revision request is not an instruction to change', () => {
+    expect(p).toContain('A REQUEST FOR REVISION IS NOT AN INSTRUCTION TO CHANGE SOMETHING');
+  });
+  it('names no_change as correct, not as a failure', () => {
+    expect(p).toContain('no_change');
+    expect(p).toContain('not a failure to help');
+  });
+  it('forbids manufacturing a change', () => {
+    expect(p).toContain('Do not manufacture a change');
+  });
+});
+
+describe('⭐ proposal authority, not write authority', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('states plainly that nothing it returns alters the manuscript', () => {
+    expect(p).toContain('YOU MAY PROPOSE. YOU MAY NOT CHANGE ANYTHING.');
+    expect(p).toContain('Nothing you return alters');
+  });
+  it('tells her the writer decides', () => {
+    expect(p).toContain('the writer, who decides');
+  });
+});
+
+describe('⛔ the prompt carries exactly the authorized sections', () => {
+  it('includes every authorized section id and its text', () => {
+    const p = revisionSystemPrompt(SECTIONS);
+    for (const s of SECTIONS) {
+      expect(p).toContain(s.sectionId);
+      expect(p).toContain(s.text);
+      expect(p).toContain(s.label);
+    }
+  });
+
+  it('⭐ carries NO prose beyond the sections it was given', () => {
+    const unauthorized = 'The campfire scene is narrated three times.';
+    const p = revisionSystemPrompt(SECTIONS);
+    expect(p).not.toContain(unauthorized);
+  });
+
+  it('an empty authorization carries no section prose at all', () => {
+    const p = revisionSystemPrompt([]);
+    for (const s of SECTIONS) expect(p).not.toContain(s.text);
+  });
+
+  it('narrowing the authorization narrows the prompt', () => {
+    const only1 = revisionSystemPrompt([SECTIONS[0]]);
+    expect(only1).toContain(SECTIONS[0].text);
+    expect(only1).not.toContain(SECTIONS[1].text);
+    expect(only1).not.toContain(S2);
+  });
+});
+
+describe('⛔ the answer channel is the tool, and it is named', () => {
+  it('the prompt names the tool as the only answer channel', () => {
+    const p = revisionSystemPrompt(SECTIONS);
+    expect(p).toContain(`Answer only through the ${REVISION_TOOL_NAME} tool`);
+    expect(p).toContain('Prose outside it is not an answer');
+  });
+
+  it('the schema forbids extra fields at every level', () => {
+    expect(revisionToolSchema.additionalProperties).toBe(false);
+    expect((revisionToolSchema.properties as any).proposals.items.additionalProperties).toBe(false);
+  });
+});
+
+describe('⭐ voice is protected in the instruction, not only in review', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('tells her to preserve the claim and revise expression', () => {
+    expect(p).toContain('preserve what the passage claims');
+  });
+  it('names the writer\'s rhythm and vocabulary as not defects', () => {
+    expect(p).toContain('not defects to correct');
+  });
+  it('scopes the change to what was asked about', () => {
+    expect(p).toContain('leave the rest of their language alone');
+  });
+});
+
+describe('provenance', () => {
+  it('the asker version is pinned so a proposal records which contract produced it', () => {
+    expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');
+  });
+});
