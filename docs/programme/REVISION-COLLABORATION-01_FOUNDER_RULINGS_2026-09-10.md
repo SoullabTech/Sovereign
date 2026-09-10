@@ -648,6 +648,109 @@ and likely failure. The restraint specimen exists to make that failure loud.
 
 ---
 
+## RC-GEN-01 — constraints on the generation slice
+
+**Ruled 2026-09-10.** Narrow by construction: make MAIA answer the typed contract
+through exactly one forced tool call, prove both lawful outcomes against real
+inference, then persist.
+
+### The result geometry, enforced by the caller
+
+⛔ `toolChoice: {type:'tool'}` **asks** for a tool call; it does not **guarantee**
+the geometry.
+
+```
+zero revision_outcome calls   -> no_answer
+more than one                 -> malformed     ⛔ NEVER "take the first"
+wrong tool name               -> malformed
+exactly one                   -> admitRevisionOutcome(...)
+```
+
+Multiple proposals belong **inside one call**. Two calls are two answers.
+
+```
+text only                 -> no_answer
+text + malformed tool     -> malformed        prose never repairs a tool input
+text + one lawful tool    -> the tool input IS the answer
+```
+
+⛔ **No gating on a vendor `stop_reason`.** The semantic fact is the structured
+block that arrived; a provider's word for how it stopped is not evidence about what
+it said.
+
+### ⛔ Proposed wording is NOT copied into `ask_turns.body`
+
+Forcing a tool call means there is no longer necessarily an `outcome.answer` to put
+in the turn. **Implementation must not improvise this.**
+
+```
+proposals   ask_turn.body  = the conversational reason(s)
+            proposal row   = canonical proposed_text · reason · target ·
+                             provenance · producer turn
+
+no_change   ask_turn.body  = the admitted no_change reason
+            proposal rows  = ZERO
+```
+
+> ⭐ **The conversation says what MAIA is doing. The proposal records exactly what
+> MAIA proposes.**
+
+The renderer composes `MAIA turn + proposal card(s)`; later reconstruction rejoins
+proposal rows through the exact producer turn RC-08 established.
+
+### ⚠️ Atomicity is not idempotency
+
+The one-transaction rule solves *turn commits / proposal fails* and its inverse. It
+does **not** solve:
+
+```
+BEGIN turn + P17 COMMIT -> the HTTP response is lost -> client retries
+                        -> the provider runs again
+                        -> BEGIN turn + P18 COMMIT
+
+two historical MAIA acts for ONE member invocation
+```
+
+⛔ **Required before the persistence lane is accepted**, not before step 2: a fault
+specimen where a commit succeeds, the response is lost, and the same invocation is
+retried → **no duplicate historical proposal act.** If a stable
+request/invocation identity already exists, reuse it; otherwise **record the gap
+explicitly rather than pretending transaction atomicity gave exactly-once
+behaviour.**
+
+⭐ The same class this programme keeps finding:
+
+```
+atomic transaction  ≠  exactly-once act
+tool chosen         ≠  one tool call
+structured output   ≠  admitted output
+model proposal      ≠  Work mutation
+```
+
+### Step 3 database
+
+⛔ **The minimal FK stub is NOT sufficient for step 3.** It answered *does this
+FK/trigger behave correctly?* Step 3 asks *can the real conversation substrate and
+the real proposal substrate commit as one historical act?* — so the disposable
+cluster carries the **actual relevant migrations** (members · manuscript · working
+draft · sections · ask_threads · ask_turns · R1) and their genuine dependencies.
+Still disposable, still destroyed, still nowhere near production.
+
+### Scope
+
+```
+IN     typed outcome · forced tool envelope · atomic persistence ·
+       one proposal card in DEVELOP
+OUT    Accept-to-Work · candidate store · Modify · batch ·
+       cross-section proposals · DEVELOP -> WRITE handoff
+```
+
+**Milestone:** authorized read → the writer asks for a revision → MAIA either says
+leave it alone **or** emits one concrete proposal → **the Work remains
+byte-identical.**
+
+---
+
 ## ⛔ F / authorial aggregation — the boundary for R2
 
 ```
