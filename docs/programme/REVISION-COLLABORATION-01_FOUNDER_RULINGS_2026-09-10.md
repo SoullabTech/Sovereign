@@ -460,6 +460,79 @@ convenient. Absence is representable or it is guessed.
 ⛔ Not a reason to reopen the migration now. Recorded so the reading is fixed
 before any code depends on it.
 
+## RC-08a — Producer provenance exists at birth
+
+**Ruled 2026-09-10**, on two holes S-12/S-13 exposed in our own migration.
+
+> ⭐ **A MAIA revision proposal may not be born without an exact producing MAIA
+> turn. Loss of that reference may occur only later, through lawful erasure.**
+
+```
+INSERT     value REQUIRED
+LIFETIME   value -> same    YES
+           value -> other   NO
+           value -> NULL    YES, lawful severance
+           NULL  -> value   NO
+```
+
+There is no *"not yet linked"* state and no *"forgot to link it"* state. **That is
+the architectural advantage the atomic write boundary buys us over Sundial**, whose
+single nullable column carries three meanings at once (S-13).
+
+### The two holes it closes
+
+**(1) The composite FK proves a turn, not a MAIA turn.** `ask_turns` holds both
+speakers, so a proposal could name an *author* turn and satisfy the key — while
+RC-08 says *the exact MAIA turn in which it was produced.*
+
+**(2) `NULL/NULL` at birth was still permitted**, so a NULL could mean *severed* or
+*never recorded*. Sundial showed what happens when nullable provenance accumulates
+meanings; one meaning is removable now, before any row exists.
+
+### Enforcement — ⛔ no new provenance enum
+
+`producer_link_state` REFUSED. The composite FK keeps referential integrity; a
+`BEFORE INSERT` trigger owns the semantic fact.
+
+⚠️ **`NOT NULL` cannot express this** — `ON DELETE SET NULL` requires the columns to
+be nullable, so a NOT NULL constraint would make member erasure fail. **Birth-time
+requirement and lifetime rule are two different obligations and need two different
+instruments** (BEFORE INSERT, BEFORE UPDATE). Same shape as the freeze/severance
+conflict, one layer down.
+
+⭐ **The speaker read is an AUTHORITY, not a precheck** — and only because
+`ask_turns` refuses UPDATE unconditionally. The speaker of a turn can never later
+differ from the speaker this trigger read. Under a mutable `ask_turns` this would be
+a precheck, and FR-18 already established that a precheck is not an authority.
+
+### ⚠️ Instrument finding — three tests began passing for the wrong reason
+
+Adding the BEFORE INSERT trigger made **T4, T5 and T6 refuse at the producer check
+instead of at the constraints they are named for** — the candidate-reference
+completeness, origin agreement, and work-authority checks silently stopped being
+tested while still reporting PASS.
+
+Caught by reading the refusal *reason*, not the result. Repaired by giving those
+three a valid MAIA producer turn so each reaches its own constraint.
+
+> **A new gate upstream of an existing test can retire that test without failing
+> it.** FR-14's law in a new place: *an instrument can satisfy all of its remaining
+> questions by forgetting to ask the difficult ones.*
+
+### Validated
+
+```
+17 passed · 0 failed        PostgreSQL 16.13, disposable cluster
+T15 discriminates           known-bad (FK only) ADMITS an author turn
+T16 discriminates           known-bad ADMITS a NULL/NULL birth
+```
+
+⛔ If genuinely non-conversational proposal generation is ever introduced, it needs
+**a new explicit provenance origin** — never `NULL` reused as *"well, this one had
+no turn."*
+
+---
+
 ### Write boundary, when generation lands
 
 ```
@@ -645,6 +718,8 @@ RC-06b candidate identity   RATIFIED — append-only revisions,
 RC-07 capability rule       RATIFIED
 RC-08 exact producer turn   RATIFIED — amended into the unapplied migration
                             monotonic severance, not immutability
+RC-08a producer at birth    RATIFIED — required at insert, must be a MAIA
+                            turn; 17/17 validated, T15/T16 discriminate
 R1 proposal migration       UNBLOCKED
 constitutional rule         RATIFIED
 DESIGN                      RECORDED

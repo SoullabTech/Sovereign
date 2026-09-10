@@ -74,6 +74,33 @@
 --                                            to a different act of MAIA
 --     `thread_id` obeys the same rule, for the same reason.
 --
+--   - RC-08a — PRODUCER PROVENANCE EXISTS AT BIRTH. A proposal may not be born
+--     without an exact producing MAIA turn; loss of that reference may occur
+--     only later, through lawful erasure. This removes an overloaded meaning
+--     from NULL before any row exists:
+--       NULL means SEVERED, or nothing        (after RC-08a)
+--       NULL could also mean "not yet linked"  (before it)
+--     Sundial backfills `assistant_message_id` by UPDATE at end-of-turn, so its
+--     one nullable column carries three meanings at once. Our atomic write
+--     boundary -- append the MAIA turn and insert the proposal in ONE
+--     transaction -- means the linkage is known before either row exists, so
+--     the "not yet" state is structurally impossible rather than merely
+--     discouraged.
+--
+--   - ⚠️ NOT NULL CANNOT EXPRESS THIS, for the same reason the freeze trigger
+--     could not. `ON DELETE SET NULL` requires the columns to BE nullable; a
+--     NOT NULL constraint would make member erasure fail. Birth-time
+--     requirement therefore lives in a BEFORE INSERT trigger, and the lifetime
+--     rule stays in the BEFORE UPDATE trigger. Two different obligations, two
+--     different instruments.
+--
+--   - ⭐ AND THE PRODUCER MUST BE A **MAIA** TURN. The composite FK proves a
+--     turn EXISTS; it cannot prove `speaker = 'maia'`, so an author turn would
+--     satisfy it. RC-08 says the exact MAIA turn, so the database says it too.
+--     This read is an AUTHORITY rather than a precheck precisely because
+--     `ask_turns` refuses UPDATE unconditionally: the speaker of a turn can
+--     never differ later from the speaker this trigger read.
+--
 --   - NO AUTHORITY IS CONFERRED. A row here grants no may_cross, no
 --     body-reading permission, no consent, no application authority and no
 --     standing permission to MAIA. The S3 disclosure that licensed the reading
@@ -219,6 +246,39 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/* RC-08a. A proposal is born knowing which act of MAIA produced it. */
+CREATE OR REPLACE FUNCTION manuscript_revision_proposals_producer_required()
+RETURNS TRIGGER AS $$
+DECLARE
+  turn_speaker text;
+BEGIN
+  IF NEW.thread_id IS NULL OR NEW.produced_in_turn_index IS NULL THEN
+    RAISE EXCEPTION
+      'a revision proposal may not be created without its producing MAIA turn (RC-08a); NULL means severed, never "not yet linked"';
+  END IF;
+
+  SELECT speaker INTO turn_speaker
+    FROM ask_turns
+   WHERE thread_id = NEW.thread_id AND turn_index = NEW.produced_in_turn_index;
+
+  /* Absence is left to the composite foreign key, which reports it precisely.
+     This trigger answers only the question the key cannot. */
+  IF turn_speaker IS NOT NULL AND turn_speaker <> 'maia' THEN
+    RAISE EXCEPTION
+      'turn %/% was spoken by %, not maia: a proposal names the act of MAIA that produced it (RC-08)',
+      NEW.thread_id, NEW.produced_in_turn_index, turn_speaker;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS manuscript_revision_proposals_producer_check
+  ON manuscript_revision_proposals;
+CREATE TRIGGER manuscript_revision_proposals_producer_check
+  BEFORE INSERT ON manuscript_revision_proposals
+  FOR EACH ROW EXECUTE FUNCTION manuscript_revision_proposals_producer_required();
+
 DROP TRIGGER IF EXISTS manuscript_revision_proposals_freeze_check
   ON manuscript_revision_proposals;
 CREATE TRIGGER manuscript_revision_proposals_freeze_check
@@ -238,7 +298,7 @@ COMMENT ON COLUMN manuscript_revision_proposals.origin IS
 COMMENT ON COLUMN manuscript_revision_proposals.derived_from_candidate_id IS
   'RC-06b. With _revision and _digest, identifies the exact candidate revision MAIA saw. NULL for origin=work. Composite FK to revision_candidate_revisions lands with R2.';
 COMMENT ON COLUMN manuscript_revision_proposals.produced_in_turn_index IS
-  'RC-08. With thread_id, the exact MAIA turn that produced this proposal, referencing ask_turns by its own primary key. May only be severed to NULL, never reassigned.';
+  'RC-08/RC-08a. With thread_id, the exact MAIA turn that produced this proposal, referencing ask_turns by its own primary key. Required at insert; may only be severed to NULL, never reassigned or re-acquired. NULL therefore means SEVERED, never "not yet linked".';
 COMMENT ON COLUMN manuscript_revision_proposals.declined_at IS
   'The writer said no. NOT frozen. Rejection is a recorded act, not an absence (RC-03).';
 
@@ -248,6 +308,8 @@ COMMIT;
 --   The table is referenced by nothing, changes no Work, and holds no copy of
 --   member prose. Dropping it discards proposals and touches no manuscript.
 --
+--   DROP TRIGGER IF EXISTS manuscript_revision_proposals_producer_check ON manuscript_revision_proposals;
+--   DROP FUNCTION IF EXISTS manuscript_revision_proposals_producer_required();
 --   DROP TRIGGER IF EXISTS manuscript_revision_proposals_freeze_check ON manuscript_revision_proposals;
 --   DROP FUNCTION IF EXISTS manuscript_revision_proposals_freeze();
 --   DROP TABLE IF EXISTS manuscript_revision_proposals;

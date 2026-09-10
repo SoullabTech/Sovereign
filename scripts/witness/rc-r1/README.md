@@ -29,4 +29,14 @@ Verified against a known-bad implementation (an absolute freeze on
 with `producer turn is immutable`. T10 goes red. The shipped rule is **monotonic
 severance** — `value -> NULL` allowed, `NULL -> value` and reassignment refused.
 
-Result of record, 2026-09-10: **14 passed, 0 failed** (PostgreSQL 16.13).
+Result of record, 2026-09-10: **17 passed, 0 failed** (PostgreSQL 16.13).
+
+## T15/T16 — RC-08a
+
+Known-bad = the migration before RC-08a (composite FK, no BEFORE INSERT trigger).
+It **ADMITS** a proposal naming an author turn, and **ADMITS** a `NULL/NULL` birth.
+Both falsifiers go red against it.
+
+⚠️ T4/T5/T6 carry a valid MAIA producer turn deliberately. Without it the RC-08a
+trigger refuses them first and they pass for the wrong reason — the constraints
+they are named for stop being tested while still reporting PASS.
