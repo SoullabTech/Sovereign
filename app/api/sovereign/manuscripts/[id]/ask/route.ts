@@ -47,6 +47,7 @@ import { stalenessFrom, hasUnverifiableEvidence } from '@/lib/manuscript/ask/dev
 import {
   resolveBodyRequirement, enforceW2SectionBoundary,
 } from '@/lib/manuscript/ask/bodyGate/resolveBodyRequirement';
+import { recognizeSections } from '@/lib/manuscript/ask/bodyGate/sectionRecognition';
 import { createPendingAsk } from '@/lib/manuscript/ask/pendingAsk/pendingAskStore';
 import { createPendingAskClaimant } from '@/lib/manuscript/ask/pendingAsk/pendingAskClaimant';
 import { claimAcquired } from '@/lib/manuscript/ask/pendingAsk/claimContract';
@@ -658,9 +659,11 @@ async function developmentalBodyTurn(input: {
       pendingAskRef,
       /* ⭐ ALL required sections at once: all-or-none is the answer contract, and
          a member cannot make an informed act about a partial set.
-         ⚠️ Ids only. Whether the surface may show the member their own headings
-         is ruled lawful but is a SURFACE decision; nothing here returns one. */
-      sections: requirement.requiredSections,
+         ⭐⭐ AND EACH ONE RECOGNIZABLE. A member asked to authorize a UUID has
+         been asked to consent to a string they cannot read. `heading` is their
+         own authored title or null; `label` always renders. ⛔ Neither is
+         accepted back at ACT 3 — display material is not authorization input. */
+      sections: await recognizeSections(reading.readState.draftId, requirement.requiredSections),
     });
   }
 
@@ -673,7 +676,8 @@ async function developmentalBodyTurn(input: {
   const outstanding = requirement.requiredSections.filter((sec) => !authorization.authorizes.includes(sec));
   if (outstanding.length > 0) {
     return NextResponse.json({
-      ...shared, result: 'BODY_SCOPE_INCOMPLETE', outstanding,
+      ...shared, result: 'BODY_SCOPE_INCOMPLETE',
+      outstanding: await recognizeSections(reading.readState.draftId, outstanding),
       pendingAskRef: authorization.pendingAskRef,
     }, { status: 200 });
   }
@@ -748,8 +752,9 @@ async function developmentalBodyTurn(input: {
         ...shared,
         result: 'DISCLOSURE_UNAVAILABLE',
         actSpent: true,
-        /* Continuity hygiene for the surface: authorizing again is a NEW act. */
-        sections: requirement.requiredSections,
+        /* Continuity hygiene for the surface: authorizing again is a NEW act,
+           and the member must still be able to recognize what it is about. */
+        sections: await recognizeSections(reading.readState.draftId, requirement.requiredSections),
       }, { status: 503 });
     }
     established.push(boundary.disclosureId);

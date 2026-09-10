@@ -102,6 +102,16 @@ jest.mock('@/lib/manuscript/ask/developmentalAskReader', () => ({
     return { ok: true, answer: 'an answer', provenance: {} };
   },
 }));
+jest.mock('@/lib/manuscript/ask/bodyGate/sectionRecognition', () => ({
+  /* ⭐ Recognition is a database read; the route's own control flow is the
+     subject here. The shape is what matters: heading may be null, label never. */
+  recognizeSections: async (_draftId: string, ids: readonly string[]) =>
+    ids.map((sectionId, i) => ({
+      sectionId,
+      heading: sectionId === 'section-S' ? 'The Lighthouse Keeper' : null,
+      label: sectionId === 'section-S' ? 'The Lighthouse Keeper' : `Section ${i + 1}`,
+    })),
+}));
 jest.mock('@/lib/manuscript/ask/pendingAsk/pendingAskStore', () => ({
   createPendingAsk: async () => { push('create_pending'); return PENDING; },
 }));
@@ -187,7 +197,11 @@ describe('S3 · P1 · the real Ask route', () => {
     const { status, json } = await post(ask());
     expect(status).toBe(200);
     expect(json.result).toBe('BODY_AUTHORITY_REQUIRED');
-    expect(json.sections).toEqual([S]);
+    expect(json.sections).toEqual([
+      { sectionId: S, heading: 'The Lighthouse Keeper', label: 'The Lighthouse Keeper' },
+    ]);
+    /* ⛔ A member is never asked to authorize a string they cannot read. */
+    expect(JSON.stringify(json.sections)).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/i);
     expect(json.pendingAskRef).toBe(PENDING);
     for (const forbidden of ['load', 'boundary', 'may_cross', 'cognition', 'receipt']) {
       expect(trace).not.toContain(forbidden);
@@ -224,7 +238,7 @@ describe('S3 · P1 · the real Ask route', () => {
     scenario.evidenceRefs = [bodyRef(S), bodyRef(T)];
     const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
     expect(json.result).toBe('BODY_SCOPE_INCOMPLETE');
-    expect(json.outstanding).toEqual([T]);
+    expect(json.outstanding.map((o: { sectionId: string }) => o.sectionId)).toEqual([T]);
     for (const forbidden of ['claim', 'boundary', 'load', 'cognition', 'receipt']) {
       expect(trace).not.toContain(forbidden);
     }
@@ -297,7 +311,8 @@ describe('S3 · P1 · the real Ask route', () => {
     multi();
     const { json } = await post(resume([S, T]));
     expect(json.result).toBe('BODY_SCOPE_INCOMPLETE');
-    expect(json.outstanding).toEqual([U]);
+    expect(json.outstanding.map((o: { sectionId: string }) => o.sectionId)).toEqual([U]);
+    expect(json.outstanding[0].label).toBeTruthy();
     for (const forbidden of ['claim', 'boundary', 'load', 'cognition', 'receipt']) {
       expect(trace).not.toContain(forbidden);
     }
