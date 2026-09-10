@@ -249,3 +249,158 @@ describe('identity stays canonical', () => {
     expect(r).not.toMatch(/getMemberIdFromRequest|x-member-id|meta\.userId/);
   });
 });
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01 · the ephemeral locator is not a receipt field', () => {
+  /**
+   * ⭐⭐ The request may carry an ephemeral locator needed to execute the writer's
+   * act. The receipt records only what it is constitutionally entitled to retain.
+   *
+   * Before this repair a real passage had no lawful path: send `sectionRef` and
+   * the mint refuses it; omit it and the assembler cannot find the passage. The
+   * old fixtures hid it — `passage` with no locator, against a mocked assembler.
+   */
+  const crossing = () => CODE('lib/writers-studio/focusCrossing.ts');
+
+  it('a passage never puts its locator in the receipt', () => {
+    expect(crossing()).toMatch(/sectionRef: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
+  });
+
+  it('a passage never puts its locator in the producer label either', () => {
+    // The producer text says WHERE the writer looked; a section name there would
+    // leak the same locator the receipt refuses.
+    expect(crossing()).toMatch(/label: req\.scopeKind === 'section' \? req\.sectionRef : undefined/);
+  });
+
+  it('the assembler still receives the locator for BOTH section and passage', () => {
+    const c = crossing();
+    const assembleCall = c.slice(c.indexOf('deps.assemble('), c.indexOf('deps.assemble(') + 300);
+    expect(assembleCall).toMatch(/sectionRef: req\.sectionRef/);
+    expect(assembleCall).not.toMatch(/scopeKind === 'section'/);
+  });
+});
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01 · the read authority', () => {
+  const asm = () => CODE('lib/writers-studio/assembleFocus.ts');
+
+  it('reads the addressable working draft, not Source', () => {
+    expect(asm()).toMatch(/manuscript_draft_sections/);
+    expect(asm()).toMatch(/manuscript_working_drafts/);
+    expect(asm()).toMatch(/member_manuscripts/);
+    // ⛔ Source appears nowhere in the executable SQL.
+    expect(asm()).not.toMatch(/manuscript_sections/);
+  });
+
+  it('enforces addressability and BOTH ownership hops inside the query', () => {
+    const a = asm();
+    expect(a).toMatch(/d\.section_addressable_at IS NOT NULL/);
+    expect(a).toMatch(/d\.member_id = \$2/);
+    expect(a).toMatch(/m\.member_id = \$2/);
+  });
+
+  it('⛔ never names the tables the old defect used', () => {
+    expect(asm()).not.toMatch(/JOIN manuscripts\b/);
+    expect(asm()).not.toMatch(/user_id/);
+  });
+
+  it('slices passages in UTF-16 code units, as the browser reports them', () => {
+    expect(asm()).toMatch(/text\.slice\(Math\.max\(0, range\.start\)/);
+    expect(asm()).not.toMatch(/\[\.\.\.text\]\.slice/);
+  });
+});
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01A · the instrument descends from repository truth', () => {
+  /**
+   * ⭐⭐ The SQL must meet a real database, and the database used to judge it must
+   *     itself descend from repository truth.
+   *
+   * The first witness built four tables from hand-written DDL — a second source of
+   * truth that could pass against a schema no longer in the repository. It missed
+   * a FK to `members` and an entire round-trip trigger, both of which the real
+   * schema carries.
+   */
+  const wit = () => CODE('scripts/witness/focus-assembler-contract.ts');
+
+  it('S1 · defines no subject relation of its own', () => {
+    expect(wit()).not.toMatch(/CREATE TABLE/i);
+    for (const rel of ['member_manuscripts', 'manuscript_sections',
+                       'manuscript_working_drafts', 'manuscript_draft_sections']) {
+      expect(wit()).not.toMatch(new RegExp(`CREATE TABLE[^;]*${rel}`, 'i'));
+    }
+  });
+
+  it('S2 · requires the schema instead, and names what is missing', () => {
+    expect(wit()).toMatch(/information_schema\.tables/);
+    expect(wit()).toMatch(/SCHEMA NOT CONSTRUCTED/);
+    expect(wit()).toMatch(/db:bootstrap && npm run db:migrate/);
+  });
+
+  it('S2 · records the schema input identity beside the verdict', () => {
+    expect(wit()).toMatch(/schema_migrations/);
+    expect(wit()).toMatch(/schema input/);
+  });
+
+  it('⛔ offers no fallback to a local production schema', () => {
+    const gate = CODE('scripts/witness/gate-focus-assembler.sh');
+    expect(gate).toMatch(/db:bootstrap/);
+    expect(gate).toMatch(/db:migrate/);
+    expect(gate).toMatch(/set -euo pipefail/);
+    expect(gate).not.toMatch(/\|\|\s*(true|psql)/);
+  });
+
+  it('is invocable as one named command', () => {
+    const pkg = JSON.parse(require('fs').readFileSync(
+      require('path').join(process.cwd(), 'package.json'), 'utf8'));
+    expect(pkg.scripts['gate:focus-assembler']).toMatch(/gate-focus-assembler\.sh/);
+  });
+
+  it('cleans up only its own fixtures, never the subject relations', () => {
+    expect(wit()).not.toMatch(/DROP TABLE/i);
+    expect(wit()).toMatch(/DELETE FROM member_manuscripts WHERE member_id/);
+  });
+});
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01B · whole-Work fidelity', () => {
+  /**
+   * ⭐⭐ The whole Work handed to MAIA must contain exactly the characters the
+   *     writer authored — no fewer, no more.
+   *
+   * ⭐ A synthesized `\n\n` is INDISTINGUISHABLE from authored text: a writer whose
+   * section genuinely ends in a blank line could not be told apart from the
+   * assembler's invention. Structure may describe boundaries; it may not
+   * manufacture characters.
+   */
+  const asm = () => CODE('lib/writers-studio/assembleFocus.ts');
+
+  it('joins whole-Work sections with nothing at all', () => {
+    expect(asm()).toMatch(/\.join\(''\)/);
+    expect(asm()).not.toMatch(/\.join\('\\n\\n'\)/);
+  });
+
+  it('⛔ solves it by concatenation, not by reading the stored flattening', () => {
+    // The ruled read authority stays section-native draft truth; the database
+    // invariant only tells us how those sections lawfully flatten.
+    expect(asm()).toMatch(/manuscript_draft_sections/);
+    expect(asm()).not.toMatch(/SELECT d\.content|d\.content AS/);
+  });
+
+  it('⛔ introduces no normalisation, trimming or alternative separator', () => {
+    const code = asm();
+    expect(code).not.toMatch(/\.trim\(\)|\.trimEnd\(\)|\.trimStart\(\)/);
+    expect(code).not.toMatch(/replace\(\/\\s/);
+    expect(code).not.toMatch(/\.join\('[^']+'\)/);
+  });
+
+  it('leaves section and passage behaviour untouched', () => {
+    const code = asm();
+    expect(code).toMatch(/if \(scopeKind === 'section'\) return text;/);
+    expect(code).toMatch(/text\.slice\(Math\.max\(0, range\.start\)/);
+  });
+
+  it('the witness compares exactly, never a canonicalised form', () => {
+    const wit = CODE('scripts/witness/focus-assembler-contract.ts');
+    expect(wit).toMatch(/whole === flat/);
+    expect(wit).toMatch(/whole === stored\.rows\[0\]\.content/);
+    // ⛔ no normalisation on either side of an equality check
+    expect(wit).not.toMatch(/whole[!=]?\.?(trim|replace|normalize)\(/);
+  });
+});

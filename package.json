@@ -9,6 +9,7 @@
   "main": "electron/main.js",
   "homepage": "./",
   "scripts": {
+    "gate:focus-assembler": "bash scripts/witness/gate-focus-assembler.sh",
     "dev": "env -u DATABASE_URL next dev -p ${PORT:-3000}",
     "dev:clean": "rm -rf .next && lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true; env -u DATABASE_URL next dev -p ${PORT:-3000}",
     "clean": "rm -rf .next && echo '✓ .next cache cleared'",
