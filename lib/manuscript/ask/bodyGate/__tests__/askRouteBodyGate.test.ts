@@ -32,7 +32,9 @@ const scenario = {
   recovered: [] as { sectionId: string; text: string }[],
   unverifiable: false,
   claim: 'claimed' as 'claimed' | 'already_consumed',
+  completion: 'completed' as 'completed' | 'incomplete',
   boundary: 'may_cross' as 'may_cross' | 'refused',
+  boundaryFailsAt: null as string | null,
 };
 
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
@@ -109,25 +111,35 @@ jest.mock('@/lib/manuscript/ask/pendingAsk/pendingAskClaimant', () => ({
       push('claim');
       return scenario.claim === 'claimed'
         ? { kind: 'claimed', coordinates: { memberId: MEMBER, manuscriptId: WORK, threadId: THREAD, readingId: READING, observationKey: OBS } }
-        : { kind: 'already_consumed', completion: 'completed' };
+        : { kind: 'already_consumed', completion: scenario.completion };
     },
     async recordCompleted() { push('record_completed'); },
   }),
 }));
 jest.mock('@/lib/disclosure/disclosureBoundary', () => ({
-  establishDisclosureBoundary: async () => {
+  establishDisclosureBoundary: async (input: any) => {
     push('boundary');
-    if (scenario.boundary === 'refused') return { kind: 'receipt_refused', outcome: { kind: 'unavailable' } };
+    const sec = input.disclosure.sectionRef as string;
+    /* ⭐ The `attempted` receipt is minted at the boundary, before the outcome. */
+    attempted.push({ section: sec, requestRef: input.requestId });
+    if (scenario.boundary === 'refused' || scenario.boundaryFailsAt === sec) {
+      return { kind: 'receipt_refused', outcome: { kind: 'unavailable' } };
+    }
     push('may_cross');
-    return { kind: 'may_cross', disclosureId: 'd-1', receiptId: 'r-1' };
+    const disclosureId = `d-${sec}`;
+    minted.set(disclosureId, sec);
+    return { kind: 'may_cross', disclosureId, receiptId: `r-${sec}` };
   },
   mayCrossBoundary: (o: any) => o.kind === 'may_cross',
 }));
 jest.mock('@/lib/disclosure/contextDisclosureReceipt', () => ({
-  confirmDisclosureCrossed: async () => { push('receipt'); return true; },
+  confirmDisclosureCrossed: async (id: string) => { push('receipt'); confirmed.push(minted.get(id)!); return true; },
 }));
 
 const crossed: string[] = [];
+const attempted: { section: string; requestRef: string }[] = [];
+const confirmed: string[] = [];
+const minted = new Map<string, string>();
 
 import { POST } from '@/app/api/sovereign/manuscripts/[id]/ask/route';
 
@@ -150,11 +162,14 @@ const structureRef = () => ({ kind: 'structure-topology' });
 
 beforeEach(() => {
   trace.length = 0; crossed.length = 0;
+  attempted.length = 0; confirmed.length = 0; minted.clear();
   scenario.evidenceRefs = [bodyRef(S)];
   scenario.recovered = [{ sectionId: S, text: 'S characters' }];
   scenario.unverifiable = false;
   scenario.claim = 'claimed';
+  scenario.completion = 'completed';
   scenario.boundary = 'may_cross';
+  scenario.boundaryFailsAt = null;
 });
 
 describe('S3 · P1 · the real Ask route', () => {
@@ -239,7 +254,8 @@ describe('S3 · P1 · the real Ask route', () => {
     scenario.boundary = 'refused';
     const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
     expect(status).toBe(503);
-    expect(json.refusal).toBe('disclosure_unavailable');
+    expect(json.result).toBe('DISCLOSURE_UNAVAILABLE');
+    expect(json.actSpent).toBe(true);
     expect(json.result).not.toBe('BODY_AUTHORITY_REQUIRED');
     expect(trace).not.toContain('load');
     expect(crossed).toEqual([]);
@@ -252,13 +268,93 @@ describe('S3 · P1 · the real Ask route', () => {
     expect(trace).toEqual([]);
   });
 
-  it('⛔ a multi-section requirement is reported, not improvised', async () => {
-    scenario.evidenceRefs = [bodyRef(S), bodyRef(T)];
-    const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S, T] }));
-    expect(status).toBe(501);
-    expect(json.refusal).toBe('multi_section_authority_undecided');
+  /* ═══ MULTI-SECTION · A-i ═════════════════════════════════════════════════ */
+
+  const U = 'section-U';
+  const MULTI = [S, T, U];
+  const multi = () => {
+    scenario.evidenceRefs = MULTI.map(bodyRef);
+    scenario.recovered = MULTI.map((sectionId) => ({ sectionId, text: `${sectionId} characters` }));
+  };
+  const resume = (authorizes: string[]) =>
+    ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes });
+
+  it('⭐⭐ MS1 · one act · one claim · three boundaries · ONE handoff · three receipts', async () => {
+    multi();
+    const { json } = await post(resume(MULTI));
+    expect(json.result).toBe('BODY_AUTHORIZED');
+    expect(trace.filter((t) => t === 'claim')).toHaveLength(1);
+    expect(attempted.map((a) => a.section).sort()).toEqual([...MULTI].sort());
+    expect(trace.filter((t) => t === 'cognition')).toHaveLength(1);
+    expect(confirmed.sort()).toEqual([...MULTI].sort());
+    expect(crossed.sort()).toEqual([...MULTI].sort());
+    /* ⭐ THE CARDINALITY LAW, asserted: one act, one execution, one shared
+       serving request, three section-scoped receipts. */
+    expect(new Set(attempted.map((a) => a.requestRef)).size).toBe(1);
+  });
+
+  it('MS2 · partial authorization refuses BEFORE the claim', async () => {
+    multi();
+    const { json } = await post(resume([S, T]));
+    expect(json.result).toBe('BODY_SCOPE_INCOMPLETE');
+    expect(json.outstanding).toEqual([U]);
     for (const forbidden of ['claim', 'boundary', 'load', 'cognition', 'receipt']) {
       expect(trace).not.toContain(forbidden);
     }
+  });
+
+  it('⭐⭐ MS3 · a failed kth boundary crosses nothing and confirms nothing', async () => {
+    multi();
+    scenario.boundaryFailsAt = U;
+    const { status, json } = await post(resume(MULTI));
+    expect(status).toBe(503);
+    expect(json.result).toBe('DISCLOSURE_UNAVAILABLE');
+    expect(json.actSpent).toBe(true);
+    expect(trace).not.toContain('load');
+    expect(trace).not.toContain('cognition');
+    expect(confirmed).toEqual([]);           // ⛔ S and T are NOT promoted
+    expect(attempted.length).toBeGreaterThan(0);
+    expect(crossed).toEqual([]);
+  });
+
+  it('MS4 · a spent act cannot be re-presented', async () => {
+    multi();
+    scenario.claim = 'already_consumed';
+    scenario.completion = 'incomplete';
+    const { json } = await post(resume(MULTI));
+    expect(json.result).toBe('ALREADY_CONSUMED');
+    expect(json.completion).toBe('incomplete');
+    for (const forbidden of ['boundary', 'load', 'cognition', 'receipt']) {
+      expect(trace).not.toContain(forbidden);
+    }
+  });
+
+  /* ═══ DISCLOSURE_UNAVAILABLE · B-i ════════════════════════════════════════ */
+
+  it('⭐⭐ DU1 · a boundary failure after a valid act is the sixth state, act spent', async () => {
+    scenario.boundary = 'refused';
+    const { json } = await post(resume([S]));
+    expect(json.result).toBe('DISCLOSURE_UNAVAILABLE');
+    expect(json.actSpent).toBe(true);
+  });
+
+  it('DU2 · it never masquerades as BODY_AUTHORITY_REQUIRED', async () => {
+    scenario.boundary = 'refused';
+    const { json } = await post(resume([S]));
+    expect(json.result).not.toBe('BODY_AUTHORITY_REQUIRED');
+  });
+
+  it('DU3 · it never masquerades as BODY_UNVERIFIABLE', async () => {
+    scenario.boundary = 'refused';
+    const { json } = await post(resume([S]));
+    expect(json.result).not.toBe('BODY_UNVERIFIABLE');
+  });
+
+  it('DU4 · it loads no authored body', async () => {
+    scenario.boundary = 'refused';
+    await post(resume([S]));
+    expect(trace).not.toContain('load');
+    expect(crossed).toEqual([]);
+    expect(confirmed).toEqual([]);
   });
 });

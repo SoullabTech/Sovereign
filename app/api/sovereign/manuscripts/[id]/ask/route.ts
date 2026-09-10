@@ -678,23 +678,9 @@ async function developmentalBodyTurn(input: {
     }, { status: 200 });
   }
 
-  /* ⛔ MULTI-SECTION AUTHORITY IS NOT DECIDED — reported, not improvised.
-     `sectionRef` is singular and admitted only under section scope, so N
-     required sections means N boundaries and N completed-crossing receipts —
-     which collides with the ratified cardinality law that one member act yields
-     AT MOST ONE completed-crossing receipt. Widening the authority object to
-     carry several sections would be inventing a token the ratified vocabulary
-     does not have. So the turn refuses and nothing crosses. */
-  if (requirement.requiredSections.length > 1) {
-    return NextResponse.json({
-      ...shared, refusal: 'multi_section_authority_undecided',
-      sections: requirement.requiredSections,
-    }, { status: 501 });
-  }
-
-  /* ⭐⭐ THE ATOMIC CLAIM — BEFORE any disclosure machinery. A losing resume must
-     reach no boundary, no may_cross, no load and no receipt: atomic bookkeeping
-     after the constitutional event would be useless. */
+  /* ⭐⭐ THE ATOMIC CLAIM — ONCE, and BEFORE any disclosure machinery. A losing
+     resume must reach no boundary, no may_cross, no load and no receipt: atomic
+     bookkeeping after the constitutional event would be useless. */
   const claim = await createPendingAskClaimant().claim(authorization.pendingAskRef);
   if (!claimAcquired(claim)) {
     /* ⭐ Each answer stays itself. `unavailable` means the system could not
@@ -717,33 +703,56 @@ async function developmentalBodyTurn(input: {
     return NextResponse.json({ ...shared, refusal: 'pending_ask_mismatch' }, { status: 409 });
   }
 
-  const section = requirement.requiredSections[0];
+  /* ⭐⭐ ONE SERVING REQUEST FOR THE WHOLE EXECUTION. Every section's receipt
+     shares this `request_ref`, so an auditor grouping by it sees ONE member act
+     carrying N independently section-scoped crossings.
+     ⛔ That is not a multi-section authority token: authority stays section-
+     scoped, and what is shared is the request, never the permission. */
   const requestId = randomUUID();
-  const boundary = await establishDisclosureBoundary({
-    requestId,
-    posture: TurnPosture.resolve({}),
-    memberId,
-    sessionId: liveThreadId,
-    disclosure: {
-      disclosureId: randomUUID(),
-      boundary: DEVELOPMENTAL_BOUNDARY,
-      sourceClass: 'work',
-      participationBasis: 'member_invoked',
-      sourceRef: manuscriptId,
-      scopeKind: 'section',
-      sectionRef: section,
-      gesture: 'work_with_this',
-    },
-  });
+  const posture = TurnPosture.resolve({});
 
-  if (!mayCrossBoundary(boundary)) {
-    /* ⛔ NOT `BODY_AUTHORITY_REQUIRED` — the member DID authorize, and asking
-       again would tell them their own act did not happen. ⛔ NOT
-       `BODY_UNVERIFIABLE` — nothing was verified because nothing was read.
-       ⚠️ The ratified five have no answer for "the accountability substrate
-       refused after a valid member act"; this refusal is reported as a design
-       finding rather than folded into a state that would misdescribe it. */
-    return NextResponse.json({ ...shared, refusal: 'disclosure_unavailable' }, { status: 503 });
+  /* ⭐⭐ ALL REQUIRED BOUNDARIES BEFORE ANY BODY IS LOADED.
+     ⛔ BOUNDARY ESTABLISHMENT IS NOT DISCLOSURE COMPLETION. A boundary that
+     succeeds inside a multi-boundary attempt stays merely `attempted` until the
+     ONE authorized handoff actually occurs — so if a later boundary fails, the
+     earlier ones are NEVER promoted to `crossed`. Their attempted rows are
+     truthful evidence that a crossing may have occurred and was not confirmed. */
+  const established: string[] = [];
+  for (const sec of requirement.requiredSections) {
+    const boundary = await establishDisclosureBoundary({
+      requestId,
+      posture,
+      memberId,
+      sessionId: liveThreadId,
+      disclosure: {
+        disclosureId: randomUUID(),
+        boundary: DEVELOPMENTAL_BOUNDARY,
+        sourceClass: 'work',
+        participationBasis: 'member_invoked',
+        sourceRef: manuscriptId,
+        scopeKind: 'section',
+        sectionRef: sec,
+        gesture: 'work_with_this',
+      },
+    });
+    if (!mayCrossBoundary(boundary)) {
+      /* ⭐⭐ THE SIXTH STATE. The member DID authorize; the disclosure could not
+         be established; nothing was read; and the claim above is SPENT.
+         ⛔ Saying only the first three would leave the writer believing they are
+         still authorized — the same class of untruth as an unauthorized crossing
+         wearing the verification-failure shape.
+         ⛔ NOT `BODY_AUTHORITY_REQUIRED`: their act happened.
+         ⛔ NOT `BODY_UNVERIFIABLE`: nothing was read, so nothing failed
+            verification. ⛔ And NOT a 500: the system refused correctly. */
+      return NextResponse.json({
+        ...shared,
+        result: 'DISCLOSURE_UNAVAILABLE',
+        actSpent: true,
+        /* Continuity hygiene for the surface: authorizing again is a NEW act. */
+        sections: requirement.requiredSections,
+      }, { status: 503 });
+    }
+    established.push(boundary.disclosureId);
   }
 
   /* ── ⭐ ONLY NOW IS PROSE REACHABLE ───────────────────────────────────────
@@ -774,9 +783,10 @@ async function developmentalBodyTurn(input: {
     question,
   );
 
-  /* ⭐ The crossing occurred: authorized characters entered the response-producing
-     path. The receipt records that, and authorizes nothing else. */
-  await confirmDisclosureCrossed(boundary.disclosureId);
+  /* ⭐ ONE HANDOFF HAPPENED, so every section scope it carried is now genuinely
+     crossed. N receipts, one execution — the receipts record WHICH scopes
+     crossed, and authorize nothing else. */
+  for (const disclosureId of established) await confirmDisclosureCrossed(disclosureId);
   await createPendingAskClaimant().recordCompleted(authorization.pendingAskRef);
 
   if (!outcome.ok) {
@@ -793,7 +803,7 @@ async function developmentalBodyTurn(input: {
     ...shared,
     result: 'BODY_AUTHORIZED',
     thread,
-    disclosedSections: authorization.authorizes,
+    disclosedSections: requirement.requiredSections,
     withheldSections: withheld,
     observation: {
       key: ctx.observation.key,
