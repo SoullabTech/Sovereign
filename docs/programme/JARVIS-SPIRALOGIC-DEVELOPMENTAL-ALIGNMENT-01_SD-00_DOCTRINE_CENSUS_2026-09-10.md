@@ -88,6 +88,25 @@ CLASSIFICATION       P · C · R · O for phase-like fields
 
 Output as one table, most consequential first.
 
+## 3b. ⭐⭐ MANDATORY LABELS for every remaining finding (founder ruling, 2026-09-10)
+
+⛔ **Do not reconcile new doctrine backward into old canon during this movement.**
+Every finding from here on carries exactly one:
+
+```text
+FOUND IN CANON                          already ratified; the lane INHERITS it
+DOMAIN EXTENSION OF CANON               canon's doctrine taken where canon has not
+NEW DOCTRINE FROM THIS JOURNEY          authored here; canon does not contain it
+UNRESOLVED / DEPENDS ON MISSING         e.g. anything resting on
+AUTHORITY                               `Healthy Disappearance`
+```
+
+> **Purpose: so the remaining ~60 files can CHANGE a classification rather than
+> merely supply quotations for conclusions already reached.**
+
+⭐ **Inherited instrument, to be used throughout:** *does the evidence **compel**
+this reading, or merely **permit** it?* (`CHANGES_SECTION_EPISTEMIC_DISCIPLINE`).
+
 ## 4b. ⭐ Provenance states — founder precision, 2026-09-10
 
 > **Absence of a provenance channel is a GF-6 EXPOSURE, not evidence that a

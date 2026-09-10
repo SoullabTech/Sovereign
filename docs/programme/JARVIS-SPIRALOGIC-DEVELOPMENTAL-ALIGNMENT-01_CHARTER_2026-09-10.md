@@ -17,6 +17,18 @@ AMENDED       Amendments A, B and C were authored by the founder WITHIN the
 > **MAIA's goal is not to know the member's process better than the member. It is
 > to help the member become increasingly able to recognize and navigate their own
 > process.**
+
+> ### ⭐⭐⭐ The lane's deepest question, as revised by the doctrine reconciliation (founder, 2026-09-10)
+>
+> **Not:** *how should MAIA understand the member?*
+>
+> **But: how can MAIA participate in the member becoming more able to understand
+> their own living process, while never converting that development into something
+> MAIA possesses?**
+>
+> ⭐ The core constitutional problem is **no longer** *"does AIN know how not to
+> overclaim?"* — **canon already knows that remarkably well.** The open frontier is
+> **"does AIN know how to recognize development without taking possession of it?"**
 > — founder, 2026-09-10 (Amendment G). The shortest statement of what the
 > developmental intelligence in AIN is for.
 
@@ -2811,6 +2823,180 @@ T-7  SCOPE IS CONSTITUTIONAL                        SP-FR-12
      rule about members
 ```
 
+## 3s. ⭐⭐⭐ DOCTRINE RECONCILIATION (founder ruling, 2026-09-10)
+
+Three classes. ⛔ **Nothing in class 1 may be presented as new Spiralogic doctrine;
+the charter says INHERITS / OPERATIONALIZES, never "establishes."**
+
+### CLASS 1 — INHERITED / REDISCOVERED CANON
+
+```text
+· EPISTEMIC-STATUS SEPARATION      curated meaning, inference and present sensing
+                                   must remain distinct
+· SOURCE-REVEALING MEMORY          memory references preserve where knowledge
+                                   came from
+· ARCHIVE ELEVATION                tentative material becoming authoritative
+                                   through memory/retrieval — already a named
+                                   canonical hazard
+· PSEUDO-CONVERGENCE               internal agreement cannot manufacture external
+                                   authority — ⭐ the canonical ancestor of GF-6
+· SEMANTIC COLLAPSE AFTER          possibilities cannot be offered tentatively and
+  COMPLIANCE                       then silently hardened into one "real" reading
+· QUESTION-BEFORE-ASSERT /         readiness · avoidance · resistance — and
+  CHARGED FRAMINGS                 therefore the substance of the `stuck` ruling
+                                   at interpretive-output surfaces
+· INTERFACE HUMILITY               elemental / spiral signals are orientation
+                                   data, not direct access to the truth of a person
+```
+
+> ### ⭐⭐ The compel/permit discriminator becomes an INHERITED INSTRUMENT of this lane
+>
+> **Does the evidence COMPEL this reading, or merely PERMIT it?**
+>
+> ⛔ Not a Spiralogic invention. It is canon's, and the lane uses it as an
+> inherited instrument throughout — including in SD-01.
+
+### CLASS 2 — DOMAIN EXTENSIONS OF EXISTING CANON
+
+Not wholly new; they take existing doctrine where canon has not yet taken it.
+⛔ **Do not erase these contributions — mark them as domain-specific
+operationalizations.**
+
+```text
+GF-6  canon forbids pseudo-convergence; the extension is CONVERSATIONAL-INFLUENCE
+      PROVENANCE — "did MAIA help create the very member language later counted as
+      independent evidence?" — canonical epistemic discipline applied to a
+      LONGITUDINAL RELATIONAL system
+
+`motion`  canon governs how `stuck` may be ASSERTED; the extension asks whether
+          that discipline SURVIVES when meaning is compressed into INTERNAL STATE
+          rather than spoken to the member
+
+SP-FR-00  its authority direction inherits older constitutional law; the
+          ADJACENT-LAYER TEST (encounter → pattern → map → ontology) is a new
+          operational instrument for examining whether that direction survives
+          REPRESENTATION
+
+EPISTEMIC LAUNDERING  extends Archive Elevation, which canon already names; the
+                      addition is the FULL LONGITUDINAL TRACE — encounter →
+                      inference → storage → recurrence → confidence → retrieval →
+                      biography
+```
+
+### CLASS 3 — GENUINELY NEW DOCTRINE FROM THIS JOURNEY
+
+> ⭐⭐⭐ **The strongest new claim: MEMBER RECOGNITION ITSELF IS DEVELOPMENTALLY
+> SIGNIFICANT AND NEEDS A PLACE IN THE ARCHITECTURE DISTINCT FROM MEMBER CONSENT TO
+> MAIA'S INTERPRETATION.**
+>
+> Canon protects the member's right to say yes or no. It does not appear to describe
+> the member saying: **"I see something about my own process that I could not
+> previously see."** ⭐ **That difference is enormous.**
+
+```text
+· MEMBER-AUTHORED NOTICING AS DEVELOPMENTAL SIGNAL
+    not confirmation of MAIA, but the member becoming capable of observing their
+    own process
+· DEVELOPMENT AS INCREASING CAPACITY FOR SELF-NAVIGATION
+    success is not merely correct treatment of the member by the system, but a
+    change in what the member can recognize and navigate
+· PARTICIPATORY LEGIBILITY / NATIVE-LANGUAGE RETURN
+    the map succeeds when the member discovers the process in their own language
+    and eventually EXCEEDS the vocabulary that helped orient them
+· GF-8 / ASSIMILATIVE CONVERGENCE
+    integration vs assimilation through CONTRACTION of self-authored possibility
+    ⚠️ conditional on Healthy Disappearance — see authority note below
+· POSSIBILITY-FIELD SOVEREIGNTY
+    who chooses? · who constituted what could be chosen? — more than consent
+    doctrine; it examines GENERATIVE AGENDA-SETTING
+· THE RELATIONAL THIRD
+    not what MAIA knows about the member, but what develops BETWEEN them
+· RELATIONAL MEMORY AS A DISTINCT OBJECT CLASS
+    "when I offered this interpretation before, the member rejected it" — neither
+    biography nor hypothesis, but HISTORY OF RELATIONSHIP
+· MEMBER-SPECIFIC RELATIONAL INSTANTIATION
+    one constitutional MAIA; a unique relational configuration per member, scoped
+    and non-transferable as generalized psychology
+· RELATIONAL PROVENANCE NON-EQUIVALENCE
+    unknown provenance is not mutually developed meaning — retained as DECIDE
+    trap T-1
+```
+
+> ⭐⭐⭐ **And the broadest new developmental proposition: the map should eventually
+> help produce observations that EXCEED the map. That is not epistemic humility. It
+> is a theory of development.**
+
+### ⭐⭐⭐ The central asymmetry, restated
+
+> **AIN canon contains a mature epistemology of SYSTEM RESTRAINT but no comparably
+> mature epistemology of MEMBER RECOGNITION.**
+>
+> It specifies how MAIA must distinguish evidence, inference, memory,
+> interpretation, uncertainty and authority. It rigorously protects the member
+> against system-authored meaning becoming fact.
+>
+> **What it does not yet appear to specify is how a member's growing capacity to
+> recognize, differentiate, articulate and navigate their own process becomes
+> LEGIBLE AS DEVELOPMENT without becoming another system-owned metric.**
+
+```text
+CANON IS STRONG ON                     CANON IS WEAK / SILENT ON
+What may MAIA claim?                   What did the member newly see?
+How certain may MAIA be?               Did they recognize it before MAIA named it?
+Where did MAIA's belief come from?      Can they now notice it independently?
+May MAIA elevate this interpretation?   Can they translate or depart from the
+Does the evidence compel or merely      framework?
+  permit?                              Has their repertoire expanded?
+                                       Does MAIA need to intervene less?
+                                       ⭐ Has the member become the mapper?
+```
+
+> **That second column is DEVELOPMENTAL EPISTEMOLOGY. That is what this lane is
+> actually authoring.**
+
+### ⛔ Consequence for how new work is framed
+
+> **Do NOT frame this as filling a general "epistemic provenance gap." That would
+> now be FALSE — AIN already has sophisticated epistemic provenance doctrine.**
+
+The missing layer is specific:
+
+```text
+⭐ PROVENANCE OF DEVELOPING HUMAN RECOGNITION
+⭐ or better: AN EPISTEMOLOGY OF DEVELOPMENTAL RECOGNITION
+```
+
+> **How does AIN know that something has become the member's OWN SEEING, rather
+> than MAIA's inference · member agreement · vocabulary uptake · compliance ·
+> repetition · or apparent convergence?**
+
+⭐ That question sits exactly between Spiralogic, the relational third, GF-8 and
+Writer's Studio.
+
+### ⚠️ Authority note — `Healthy Disappearance`
+
+> **Canonical lineage indicated but governing source unavailable — AUTHORITY
+> UNRESOLVED.**
+
+Applies to: **decreasing system centrality · directional dependence · GF-8
+ancestry.** Until the document is recovered or genuinely shown absent, these
+carry that label. ⭐ **Everything else can keep moving around that uncertainty.**
+
+### ⛔ STAGE-MANAGEMENT RULING — do not reconcile backward during SD-00B
+
+> **Finish the canon reading with the distinction VISIBLE.** Every remaining
+> finding is labelled:
+
+```text
+FOUND IN CANON
+DOMAIN EXTENSION OF CANON
+NEW DOCTRINE FROM THIS JOURNEY
+UNRESOLVED / DEPENDS ON MISSING AUTHORITY
+```
+
+⛔ **So that the remaining ~60 files can actually CHANGE our classification rather
+than merely supply quotations for conclusions already reached.**
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
@@ -3942,6 +4128,48 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   certain she becomes about the person.** ⭐⭐⭐ **There is one MAIA, but no two
   people meet exactly the same MAIA — because no two relationships create the same
   between.**
+- **2026-09-10 · DOCTRINE RECONCILIATION (founder ruling)** — three classes fixed.
+  **CLASS 1 INHERITED/REDISCOVERED** (epistemic-status separation · source-revealing
+  memory · Archive Elevation · **pseudo-convergence = GF-6's canonical ancestor** ·
+  semantic collapse after compliance · Question-Before-Assert incl. the `stuck`
+  substance · Interface Humility) — ⛔ **the charter says INHERITS / OPERATIONALIZES,
+  never "establishes"**; ⭐⭐ **compel-vs-permit becomes an INHERITED INSTRUMENT of
+  the lane, including in SD-01.** **CLASS 2 DOMAIN EXTENSIONS** (GF-6's
+  conversational-influence provenance · whether `stuck`'s discipline survives
+  compression into **internal state** rather than speech · SP-FR-00's **adjacent-layer
+  test** as a new operational instrument on inherited constitutional direction ·
+  epistemic laundering as the **full longitudinal trace** extending Archive
+  Elevation) — ⛔ **do not erase; mark as operationalizations.** **CLASS 3 GENUINELY
+  NEW** — ⭐⭐⭐ *member recognition is developmentally significant and needs a place
+  in the architecture **distinct from member consent to MAIA's interpretation***;
+  canon protects the right to say yes or no but **does not describe the member
+  saying "I see something about my own process that I could not previously see"** —
+  plus development as self-navigation capacity · participatory legibility /
+  native-language return · GF-8 assimilative convergence (⚠️ conditional on Healthy
+  Disappearance) · **possibility-field sovereignty** (generative agenda-setting, not
+  consent) · the relational third · relational memory as an object class ·
+  member-specific relational instantiation · Relational Provenance Non-Equivalence.
+  ⭐⭐⭐ Broadest new proposition: **the map should eventually help produce
+  observations that EXCEED the map — not epistemic humility but a theory of
+  development.** ⭐⭐⭐ **CENTRAL ASYMMETRY RESTATED: AIN canon contains a mature
+  epistemology of SYSTEM RESTRAINT and no comparably mature epistemology of MEMBER
+  RECOGNITION** — strong on *what may MAIA claim · how certain · from where · may she
+  elevate · compels or permits*; silent on *what did the member newly see · did they
+  recognize it before MAIA named it · can they notice independently · can they
+  translate or depart · has their repertoire expanded · does MAIA need to intervene
+  less · **has the member become the mapper***. **That second column is developmental
+  epistemology, and it is what this lane is authoring.** ⛔ **Do NOT frame the work
+  as filling an "epistemic provenance gap" — that is now FALSE.** The missing layer
+  is ⭐ **an epistemology of developmental recognition**: *how does AIN know that
+  something has become the member's own seeing, rather than MAIA's inference,
+  agreement, vocabulary uptake, compliance, repetition or apparent convergence?*
+  ⚠️ **`Healthy Disappearance`: canonical lineage indicated but governing source
+  unavailable — AUTHORITY UNRESOLVED** (covers decreasing centrality · directional
+  dependence · GF-8 ancestry). ⛔ **STAGE-MANAGEMENT RULING: do not reconcile
+  backward during SD-00B** — finish the canon reading labelling every finding FOUND
+  IN CANON · DOMAIN EXTENSION · NEW DOCTRINE · UNRESOLVED/MISSING AUTHORITY, **so
+  the remaining ~60 files can change classifications rather than supply quotations
+  for conclusions already reached.**
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**

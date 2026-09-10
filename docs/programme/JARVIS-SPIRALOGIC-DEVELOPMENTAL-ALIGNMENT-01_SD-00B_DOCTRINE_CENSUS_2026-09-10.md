@@ -944,9 +944,23 @@ The C6 finding **survives, and narrows further.**
    None of it records what the MEMBER came to see.
 ```
 
-> ⭐⭐⭐ **So the refined central finding is: AIN's doctrine is an extraordinarily
-> well-developed ethics of ASSERTION and an almost absent theory of
+> ⭐⭐⭐ **FOUNDER'S RESTATEMENT (2026-09-10), which supersedes the wording below:**
+>
+> **AIN canon contains a mature epistemology of SYSTEM RESTRAINT but no comparably
+> mature epistemology of MEMBER RECOGNITION.** It specifies how MAIA must
+> distinguish evidence, inference, memory, interpretation, uncertainty and
+> authority, and rigorously protects the member against system-authored meaning
+> becoming fact. **What it does not yet appear to specify is how a member's growing
+> capacity to recognize, differentiate, articulate and navigate their own process
+> becomes LEGIBLE AS DEVELOPMENT without becoming another system-owned metric.**
+>
+> ⛔ **And the consequence for framing: do NOT call this an "epistemic provenance
+> gap" — that is false. The missing layer is AN EPISTEMOLOGY OF DEVELOPMENTAL
 > RECOGNITION.**
+
+> ⭐⭐⭐ **Jarvis's earlier wording, retained as the weaker first formulation: AIN's
+> doctrine is an extraordinarily well-developed ethics of ASSERTION and an almost
+> absent theory of RECOGNITION.**
 >
 > Canon knows in great detail how MAIA must hold what she believes. It has no
 > account of how the member's own seeing becomes part of the record.
@@ -979,7 +993,10 @@ reconciliation owed to the founder — not a conclusion this census may draw.**
 · whether confidence-drops-on-missing-data conflicts with the Cognitive OS's
   recurrence gate: ⭐ SD-01
 · ~60 canon files still unread
-· Healthy Disappearance · which twelve · SD-Q3 — all still unresolved
+· Healthy Disappearance — ⚠️ status now labelled CANONICAL LINEAGE INDICATED BUT
+  GOVERNING SOURCE UNAVAILABLE — AUTHORITY UNRESOLVED; covers decreasing system
+  centrality, directional dependence and GF-8 ancestry
+· which twelve · SD-Q3 — still unresolved
 ```
 
 ## Stage log — continuation 2
