@@ -34,6 +34,7 @@ import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
+import { logAskDiagnostic, sanitizeCause, requestIdOf } from './askDiagnostics';
 
 export const DEVELOPMENTAL_ASKER_VERSION = 'ws2-07e-01';
 
@@ -204,7 +205,18 @@ export async function askMaiaDevelopmental(
     /* NO `tools` KEY, and no `execution`. The field is OMITTED rather than set
        to undefined, so nothing reaches the wire for a provider to enable. */
     const outcome = await runStructured({ model, maxTokens: opts.maxTokens ?? 1200, system, messages });
-    if (!outcome.ok) return { ok: false, refusal: 'unreachable' };
+    if (!outcome.ok) {
+      /* The router distinguishes structured_inference_unavailable / not_configured
+         / provider_unavailable and carries a detail. The WRITER still sees one
+         word; the OPERATOR no longer has to guess which of ten causes it was. */
+      logAskDiagnostic({
+        stage: 'structured_inference',
+        refusal: outcome.refusal,
+        model,
+        cause: sanitizeCause(outcome.detail),
+      });
+      return { ok: false, refusal: 'unreachable' };
+    }
     const text = outcome.result.content
       .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')
       .map((b) => b.text).join('').trim();
@@ -220,8 +232,16 @@ export async function askMaiaDevelopmental(
         answeredAt: new Date().toISOString(),
       },
     };
-  } catch {
-    /* A transport failure is not an answer, and must not be shown as one. */
+  } catch (err) {
+    /* A transport failure is not an answer, and must not be shown as one — but
+       an unexplained one is not a refusal either, it is a blind spot. */
+    logAskDiagnostic({
+      stage: 'structured_inference',
+      refusal: 'exception',
+      model,
+      cause: sanitizeCause(err),
+      requestId: requestIdOf(err),
+    });
     return { ok: false, refusal: 'unreachable' };
   }
 }
