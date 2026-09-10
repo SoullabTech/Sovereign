@@ -25,6 +25,10 @@ const OBS = 'obs-1';
 const S = 'section-S';
 const T = 'section-T';
 const PENDING = 'pending-ref-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+/* ⭐ ONE PHYSICAL PRESS → ONE ID. Supplied by the surface that watched the
+   press; the server cannot mint it and must not try. Act identity, ⛔ never
+   authority — possessing it permits nothing. */
+const ACT_ID = 'act-11111111-2222-3333-4444-555555555555';
 
 /* ── the mutable scenario each test sets ──────────────────────────────────── */
 const scenario = {
@@ -218,7 +222,7 @@ describe('S3 · P1 · the real Ask route', () => {
 
   it('⭐ R2b · a recovery failure AFTER may_cross is BODY_UNVERIFIABLE', async () => {
     scenario.unverifiable = true;
-    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(json.result).toBe('BODY_UNVERIFIABLE');
     expect(trace).toContain('may_cross');
     expect(trace).toContain('load');
@@ -227,7 +231,7 @@ describe('S3 · P1 · the real Ask route', () => {
 
   it('⭐⭐ R3 · authority for S admits S and refuses T', async () => {
     scenario.recovered = [{ sectionId: S, text: 'S characters' }, { sectionId: T, text: 'T characters' }];
-    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(json.result).toBe('BODY_AUTHORIZED');
     expect(crossed).toEqual([S]);
     expect(crossed).not.toContain(T);
@@ -236,7 +240,7 @@ describe('S3 · P1 · the real Ask route', () => {
 
   it('R3b · partial authorization yields BODY_SCOPE_INCOMPLETE and crosses nothing', async () => {
     scenario.evidenceRefs = [bodyRef(S), bodyRef(T)];
-    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(json.result).toBe('BODY_SCOPE_INCOMPLETE');
     expect(json.outstanding.map((o: { sectionId: string }) => o.sectionId)).toEqual([T]);
     for (const forbidden of ['claim', 'boundary', 'load', 'cognition', 'receipt']) {
@@ -246,7 +250,7 @@ describe('S3 · P1 · the real Ask route', () => {
 
   it('⭐⭐ R4 · a replay after a completed crossing re-executes nothing', async () => {
     scenario.claim = 'already_consumed';
-    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    const { json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(json.result).toBe('ALREADY_CONSUMED');
     expect(json.completion).toBe('completed');
     expect(trace).toContain('claim');
@@ -257,7 +261,7 @@ describe('S3 · P1 · the real Ask route', () => {
   });
 
   it('⭐⭐ the claim precedes every disclosure operation', async () => {
-    await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(trace.indexOf('claim')).toBeLessThan(trace.indexOf('boundary'));
     expect(trace.indexOf('boundary')).toBeLessThan(trace.indexOf('load'));
     expect(trace.indexOf('load')).toBeLessThan(trace.indexOf('cognition'));
@@ -266,7 +270,7 @@ describe('S3 · P1 · the real Ask route', () => {
 
   it('⛔ a boundary refusal after a valid member act crosses nothing', async () => {
     scenario.boundary = 'refused';
-    const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes: [S] }));
+    const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes: [S] }));
     expect(status).toBe(503);
     expect(json.result).toBe('DISCLOSURE_UNAVAILABLE');
     expect(json.actSpent).toBe(true);
@@ -276,7 +280,7 @@ describe('S3 · P1 · the real Ask route', () => {
   });
 
   it('⛔ a malformed act is refused, never downgraded to an ordinary Ask', async () => {
-    const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', authorizes: [S] }));
+    const { status, json } = await post(ask({ act: 'authorize_sections_and_resume', actId: ACT_ID, authorizes: [S] }));
     expect(status).toBe(400);
     expect(json.detail).toBe('act');
     expect(trace).toEqual([]);
@@ -291,7 +295,7 @@ describe('S3 · P1 · the real Ask route', () => {
     scenario.recovered = MULTI.map((sectionId) => ({ sectionId, text: `${sectionId} characters` }));
   };
   const resume = (authorizes: string[]) =>
-    ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, authorizes });
+    ask({ act: 'authorize_sections_and_resume', pendingAskRef: PENDING, actId: ACT_ID, authorizes });
 
   it('⭐⭐ MS1 · one act · one claim · three boundaries · ONE handoff · three receipts', async () => {
     multi();

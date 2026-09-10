@@ -1,6 +1,6 @@
 # S3 · Step 7 — acceptance walks · result
 
-**Date:** 2026-09-10 · **Result:** `48 passed · 2 failed`
+**Date:** 2026-09-10 · **First run:** `48 passed · 2 failed` · **After the F1/F2 repair:** `51 passed · 0 failed`
 **Both failures are findings in the recognition layer. Neither is an authority defect.**
 **Nothing was repaired during the walk.**
 
@@ -113,3 +113,85 @@ completion — happens before it and was walked. The terminal `BODY_AUTHORIZED`
 payload with MAIA's answer text was **not** observed, and no walk claims it was.
 The walks assert that the protocol *leaves* the authorization states and that the
 crossings are recorded correctly, which is exactly what is decidable here.
+
+
+---
+
+# Addendum — F1 / F2 repaired, 2026-09-10
+
+Recognition-layer repair only, on founder ruling. No authority, protocol, act
+identity, cardinality or geometry behaviour was touched.
+
+## F1 — every offered section is distinguishable
+
+`labelFor` now qualifies the authored title with the section's canonical place.
+`heading` is unchanged: authored-or-null, never invented.
+
+```
+heading = "Before the water"   label = "Before the water — Section 1"
+heading = "Before the water"   label = "Before the water — Section 2"
+heading = "After"              label = "After — Section 4"
+heading = null                 label = "Section 5"
+```
+
+The qualification is **unconditional**, not applied only when a request happens
+to contain a collision: the label is a pure function of `(heading, position)`, so
+a section reads the same whatever else is in the request. A section whose name
+depended on its company would not have a name.
+
+Distinctness is **structural**: `manuscript_draft_sections` holds
+`UNIQUE (draft_id, position)`, so two sections of one draft cannot yield one
+label. The falsifier asserts the constraint in the migration, not merely the
+behaviour.
+
+## F2 — the displayed order is the Work's order
+
+`recognizeSections` now builds its result by walking the query rows, which are
+already `ORDER BY s.position ASC`, and uses the input set for **membership only**.
+The previous `sectionIds.map(...)` re-keying discarded that ordering, and the
+input is `[...required].sort()` — a lexicographic sort of UUIDs, lawful for
+normalizing a set and with no authority over how a Work is presented.
+
+## F3 — found by the F2 falsifier, in the branch nobody looks at
+
+The obligation *"no label anywhere asserts a canonical position derived from an
+input ordinal"* failed on the **fallback** path, not the main one. When the
+structure lane is unreadable the function has no canonical positions at all, yet
+it labelled sections `Section 1…N` from their ordinal in the requested set —
+telling the member a place it did not know. It now labels them
+`Section N (unrecognized)`. Same law, same function, same construction as F2; not
+a separate scope.
+
+## Falsification
+
+`lib/manuscript/ask/bodyGate/__tests__/sectionRecognition.test.ts` — **23 passed**.
+Against the pre-repair implementation (`git show HEAD:…`), **7 fail**: the label
+composition, all three F1 distinctness obligations, and all three F2 ordering
+obligations. Source restored byte-identical afterwards.
+
+`__tests__/askRouteBodyGate.test.ts` — **18 passed**. Eleven of these were red
+**before** this repair and not because of it: they built authorization acts
+without an `actId`, stale since that field became required. Confirmed
+pre-existing by running them at `HEAD` with the repair stashed. They now supply
+an act identity, and the suite asserts that an act without one is not an act.
+
+`npm run typecheck` — no regressions.
+
+## Step 7 walks, re-run
+
+**`51 passed · 0 failed`**, including 6c and 7e. R1 geometry unchanged.
+
+## Standing
+
+```
+authority / protocol walk      PASS
+R1 geometry                    PASS
+recognition                    PASS  (F1 · F2 · F3 repaired and falsified)
+terminal model continuation    NOT WITNESSED — environment has no model credential
+
+overall                        OPEN — one gate remains
+```
+
+The remaining gate is a real authorized Ask running through the model, with
+`BODY_AUTHORIZED` returning into the same MAIA conversation. It needs a model
+credential this environment does not have.

@@ -115,9 +115,16 @@ async function main() {
      An earlier draft of this walk asserted the source section's own heading
      ('Arrival'); that expectation was the instrument's, not the design's, and
      is corrected here. What the arrangement costs is measured at 7e. */
-  check('2d the section arrives with an authored title drawn from the structure lane',
-    typeof r2.json?.sections?.[0]?.heading === 'string'
-      && r2.json.sections[0].label === r2.json.sections[0].heading, r2.json?.sections?.[0]);
+  /* The design's own promise, stated in sectionRecognition.ts: an authored title
+     comes from the STRUCTURE lane — the member's word for a division — and
+     `source_section_id` is provenance only, never a source of text. Since F1,
+     the label carries that title BESIDE the section's canonical place, because a
+     division is coarser than a section. `heading` stays authored-or-null. */
+  const s2d = r2.json?.sections?.[0];
+  check('2d the heading is the authored title, unaltered',
+    typeof s2d?.heading === 'string' && s2d.heading.trim() === s2d.heading && s2d.heading.length > 0, s2d);
+  check('2d\' the label carries that title AND names the section\'s place in the Work',
+    typeof s2d?.label === 'string' && s2d.label.includes(s2d.heading) && /Section \d+/.test(s2d.label), s2d?.label);
   check('2e a paused turn crosses nothing', (await receipts()).length === 0);
 
   /* ── 3 · the act ─────────────────────────────────────────────────────── */
