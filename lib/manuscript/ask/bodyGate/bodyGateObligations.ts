@@ -47,17 +47,28 @@ interface Harness {
   /** Everything the candidate actually handed to cognition. */
   crossed: EvidenceSlice[];
   consumed: { value: boolean };
+  /** ⭐ One `attempted` receipt per boundary attempt, succeed or fail. */
+  attempted: string[];
+  /** ⭐ One completed-crossing receipt per confirmed section. */
+  confirmed: string[];
+  /** How many times cognition was handed context. Must never exceed 1. */
+  handoffs: () => number;
+  claims: () => number;
 }
 
 const harness = (opts: {
   revision?: string | null;
   recovery?: readonly EvidenceSlice[] | { refusal: string };
   boundary?: 'may_cross' | 'refused';
+  /** ⭐ The section whose boundary fails — every other section succeeds. */
+  boundaryFailsAt?: string;
   consumedAlready?: boolean;
   completion?: ConsumedCompletion;
 } = {}): Harness => {
   const trace: GateStep[] = [];
   const crossed: EvidenceSlice[] = [];
+  const attempted: string[] = [];
+  const confirmed: string[] = [];
   const consumed = { value: opts.consumedAlready ?? false };
   const deps: GateDeps = {
     async claim() {
@@ -66,19 +77,26 @@ const harness = (opts: {
       consumed.value = true;
       return { kind: 'claimed' };
     },
-    async establishBoundary() {
+    async establishBoundary(sectionId) {
       trace.push('boundary');
-      const r = opts.boundary ?? 'may_cross';
+      /* ⭐ The attempt is recorded BEFORE the outcome is known — the receipt
+         substrate mints `attempted` at the boundary, not afterwards. */
+      attempted.push(sectionId);
+      const r = opts.boundaryFailsAt === sectionId ? 'refused' : (opts.boundary ?? 'may_cross');
       if (r === 'may_cross') trace.push('may_cross');
       return r;
     },
     async loadRevision() { trace.push('load'); return opts.revision === undefined ? 'the whole revision' : opts.revision; },
     async recover() { trace.push('recover'); return opts.recovery ?? SLICES; },
     async cognition(disclosed) { trace.push('cognition'); crossed.push(...disclosed); },
-    async confirmCrossing() { trace.push('receipt'); },
+    async confirmCrossing(sectionId) { trace.push('receipt'); confirmed.push(sectionId); },
     trace,
   };
-  return { deps, crossed, consumed };
+  return {
+    deps, crossed, consumed, attempted, confirmed,
+    handoffs: () => trace.filter((t) => t === 'cognition').length,
+    claims: () => trace.filter((t) => t === 'claim').length,
+  };
 };
 
 const reached = (h: Harness, ...steps: GateStep[]) => steps.filter((s) => h.deps.trace.includes(s));
@@ -168,6 +186,113 @@ export async function runBodyGateObligations(gate: AskBodyGate): Promise<Obligat
     out.push(r.kind === 'STRUCTURE_SUFFICIENT' && reached(h, 'boundary', 'load', 'receipt').length === 0
       ? ok('R0', 'a structure-sufficient Ask touches no prose and mints no prose receipt')
       : bad('R0', `a structure-sufficient Ask produced '${r.kind}' and reached ${reached(h, 'boundary', 'load', 'receipt').join(', ')}`));
+  }
+
+  /* ═══ MULTI-SECTION · A-i RATIFIED 2026-09-10 ═══════════════════════════════
+     One member act → one claim → one execution → one handoff, carrying several
+     independently section-scoped authorities and therefore several receipts. */
+
+  const U = 'section-U';
+  const MULTI = [S, T, U];
+  const multiSlices: readonly EvidenceSlice[] = MULTI.map((sectionId) => ({
+    sectionId, text: `authored characters belonging to ${sectionId}`,
+  }));
+
+  /* MS1 · one act, three boundaries, ONE handoff, three completed receipts. */
+  {
+    const h = harness({ recovery: multiSlices });
+    const r = await gate({ requiredSections: MULTI, bodyRequired: true, authorizes: MULTI, pendingRef: REF }, h.deps);
+    const good = r.kind === 'BODY_AUTHORIZED'
+      && h.claims() === 1
+      && h.attempted.slice().sort().join(',') === MULTI.slice().sort().join(',')
+      && h.handoffs() === 1
+      && h.confirmed.slice().sort().join(',') === MULTI.slice().sort().join(',')
+      && h.crossed.length === 3;
+    out.push(good
+      ? ok('MS1', 'one act · one claim · three section boundaries · one handoff · three receipts')
+      : bad('MS1', `'${r.kind}' with ${h.claims()} claim(s), ${h.attempted.length} boundar(ies), ${h.handoffs()} handoff(s), ${h.confirmed.length} receipt(s)`));
+  }
+
+  /* MS2 · partial authorization refuses BEFORE the claim. ⛔ No half-executed
+     authorization sequence: the full required set is presented before claim. */
+  {
+    const h = harness({ recovery: multiSlices });
+    const r = await gate({ requiredSections: MULTI, bodyRequired: true, authorizes: [S, T], pendingRef: REF }, h.deps);
+    const touched = (['claim', 'boundary', 'load', 'cognition', 'receipt'] as GateStep[])
+      .filter((step) => h.deps.trace.includes(step));
+    out.push(r.kind === 'BODY_SCOPE_INCOMPLETE' && touched.length === 0
+      ? ok('MS2', 'partial authorization refuses before the claim')
+      : bad('MS2', `'${r.kind}' after reaching ${touched.join(', ') || 'nothing'} — the claim must never occur`));
+  }
+
+  /* ⭐⭐ MS3 · the kth boundary fails. ALL boundaries precede any load, so
+     nothing is read, nothing crosses, and NO completed receipt exists — while
+     the earlier attempts remain lawful `attempted` evidence. */
+  {
+    const h = harness({ recovery: multiSlices, boundaryFailsAt: U });
+    const r = await gate({ requiredSections: MULTI, bodyRequired: true, authorizes: MULTI, pendingRef: REF }, h.deps);
+    const good = r.kind === 'DISCLOSURE_UNAVAILABLE'
+      && !h.deps.trace.includes('load')
+      && h.handoffs() === 0
+      && h.confirmed.length === 0
+      && h.attempted.length > 0;
+    out.push(good
+      ? ok('MS3', `a failed boundary crossed nothing; ${h.attempted.length} attempt(s) remain attempted only`)
+      : bad('MS3', `'${r.kind}' with ${h.confirmed.length} completed receipt(s), ${h.handoffs()} handoff(s)${h.deps.trace.includes('load') ? ', and the body was loaded' : ''}`));
+  }
+
+  /* MS4 · the act is spent. A retry cannot reuse it. */
+  {
+    const h = harness({ recovery: multiSlices, consumedAlready: true, completion: 'incomplete' });
+    const r = await gate({ requiredSections: MULTI, bodyRequired: true, authorizes: MULTI, pendingRef: REF }, h.deps);
+    const touched = (['boundary', 'load', 'cognition', 'receipt'] as GateStep[])
+      .filter((step) => h.deps.trace.includes(step));
+    out.push(r.kind === 'ALREADY_CONSUMED' && touched.length === 0
+      ? ok('MS4', 'a spent act cannot be re-presented; a new member act is required')
+      : bad('MS4', `'${r.kind}' after reaching ${touched.join(', ') || 'nothing'} — replay must create zero boundaries, loads, handoffs or receipts`));
+  }
+
+  /* ═══ DISCLOSURE_UNAVAILABLE · B-i RATIFIED 2026-09-10 ═══════════════════ */
+
+  /* DU1 · a valid act whose boundary fails yields the sixth state, and says the
+     act is spent. ⛔ A state reporting only the failure would leave the member
+     believing they are still authorized. */
+  {
+    const h = harness({ boundary: 'refused' });
+    const r = await gate({ requiredSections: [S], bodyRequired: true, authorizes: [S], pendingRef: REF }, h.deps);
+    out.push(r.kind === 'DISCLOSURE_UNAVAILABLE' && r.actSpent === true
+      ? ok('DU1', 'a boundary failure after a valid act is DISCLOSURE_UNAVAILABLE, act spent')
+      : bad('DU1', r.kind === 'DISCLOSURE_UNAVAILABLE'
+        ? 'the state does not say the authorization was spent'
+        : `a boundary failure produced '${r.kind}'`));
+  }
+
+  /* DU2 · ⛔ it may not masquerade as "you have not authorized yet". */
+  {
+    const h = harness({ boundary: 'refused' });
+    const r = await gate({ requiredSections: [S], bodyRequired: true, authorizes: [S], pendingRef: REF }, h.deps);
+    out.push(r.kind !== 'BODY_AUTHORITY_REQUIRED'
+      ? ok('DU2', 'a boundary failure is never reported as missing authorization')
+      : bad('DU2', 'a boundary failure was reported as BODY_AUTHORITY_REQUIRED — the member did authorize'));
+  }
+
+  /* DU3 · ⛔ nor as a verification failure. Nothing was read, so nothing failed
+     verification. */
+  {
+    const h = harness({ boundary: 'refused' });
+    const r = await gate({ requiredSections: [S], bodyRequired: true, authorizes: [S], pendingRef: REF }, h.deps);
+    out.push(r.kind !== 'BODY_UNVERIFIABLE'
+      ? ok('DU3', 'a boundary failure is never reported as unverifiable evidence')
+      : bad('DU3', 'a boundary failure was reported as BODY_UNVERIFIABLE — recovery never began'));
+  }
+
+  /* DU4 · and no authored body is loaded, whatever the report says. */
+  {
+    const h = harness({ boundary: 'refused' });
+    await gate({ requiredSections: [S], bodyRequired: true, authorizes: [S], pendingRef: REF }, h.deps);
+    out.push(!h.deps.trace.includes('load') && h.crossed.length === 0
+      ? ok('DU4', 'a boundary failure loads no authored body')
+      : bad('DU4', `a boundary failure reached ${h.deps.trace.includes('load') ? 'the loader' : 'cognition'}`));
   }
 
   return out;
