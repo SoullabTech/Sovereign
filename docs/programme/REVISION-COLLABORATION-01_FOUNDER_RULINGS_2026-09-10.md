@@ -136,6 +136,90 @@ Work
 
 ---
 
+## RC-05 — Candidate prose storage
+
+**Ruled 2026-09-10, on the design finding in §1a of `…_DESIGN_2026-09-10.md`.**
+
+A writer's MODIFY candidate is not MAIA's proposal and is not yet the Work.
+Calling it a diff would hide the fact that the system holds a new copy of
+member-authored prose; holding it only in-session would break the continuity RC-01
+requires.
+
+⭐ **A writer-created MODIFY candidate may be stored durably as its own governed
+manuscript artifact. It is treated as member prose, not proposal metadata.**
+
+```
+MAIA proposal             STORE
+  immutable
+  model-origin
+
+bounded original          REFERENCE ONLY
+  never copied into proposal/candidate substrate
+
+writer MODIFY candidate   STORE
+  member-controlled prose
+  separate artifact
+  derived_from proposal
+  not yet the Work
+```
+
+### The storage authority is limited by these conditions
+
+```
+1  creation requires the member's explicit MODIFY act
+   no speculative candidate may be minted
+
+2  the candidate stays a separate object from BOTH the immutable MAIA
+   proposal and the canonical manuscript revision
+
+3  it carries lineage to the proposal and to the exact
+   manuscript / revision / target it arose from
+
+4  its existence grants NOTHING — no may_cross, no body-reading
+   permission, no consent, no application authority, no standing
+   permission to MAIA
+
+5  MAIA may never mutate it in place. Handing it back and asking for
+   another revision produces a NEW proposal row under RC-04
+
+6  erasure / export / custody rules for member-authored manuscript prose
+   must explicitly reach this store. It cannot become an orphaned
+   secondary manuscript repository
+
+7  application stays separately gated: only a target resolved `current`
+   may enter the Work. `superseded` and `unmeasured` REFUSE
+
+8  span-level attribution is never manufactured retroactively. The
+   explicit attribution-grain discriminator is the correct approach
+```
+
+### ⭐ To be stated explicitly in the migration record
+
+> **Durability does not make the candidate canonical.** It is recoverable working
+> material. The Work remains unchanged until a member explicitly applies it.
+
+### The lineage
+
+```
+WORK@R17
+   | referenced
+MAIA PROPOSAL P1          immutable
+   | MODIFY
+MEMBER CANDIDATE C1       durable, member-controlled
+   | ask MAIA again
+MAIA PROPOSAL P2          immutable, derived from C1
+   | ACCEPT / MODIFY
+  ...
+   | explicit APPLY + current check
+WORK@R18
+```
+
+⭐ **R1 is UNBLOCKED by this ruling** — RC-05 settles the only §9 item identified as
+blocking it. ⛔ **The other four open design acts remain open; this ruling does not
+silently settle them, and implementation beyond R1 is not generally authorized.**
+
+---
+
 ## The constitutional rule for the novel part
 
 > ⭐ **Modification transfers control, not history. The writer owns what happens
@@ -224,10 +308,12 @@ was ruled wrong.
 
 ```
 RC-01 .. RC-04              RATIFIED
+RC-05 candidate storage     AUTHORIZED
 constitutional rule         RATIFIED
-DESIGN                      AUTHORIZED (by this record)
-IMPLEMENTATION              NOT AUTHORIZED by this ruling
-R1 build                    NOT AUTHORIZED
+DESIGN                      RECORDED
+R1                          UNBLOCKED — authorized to proceed
+IMPLEMENTATION beyond R1    NOT GENERALLY AUTHORIZED
+open design acts            4 remain (design §9 items 2..5)
 span-level attribution      OPTIONAL in first implementation,
                             NEVER faked if absent
 MERGE                       NOT YET

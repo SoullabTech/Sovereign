@@ -22,8 +22,14 @@ prose.
 > nor prompt payloads, nor model scratch text… A second copy of a member's writing
 > is exactly what this table must not become."*
 
-A prose revision chain holds three kinds of text, and they are **not** the same
-question:
+⭐ **The ban is not "no prose" — it is "no second copy of the Work."** The test is
+therefore not *is this text?* but **does storing this create a rival copy of
+something that already has an authoritative home?** A rival copy can drift from the
+authority, and then two answers exist to *what did the member write* with nothing to
+adjudicate between them.
+
+A prose revision chain holds three kinds of text, and under that test they are
+**not** the same question:
 
 ```
 MAIA's proposed replacement     MAIA's output about the Work.        STORE.
@@ -40,8 +46,24 @@ the writer's MODIFY candidate   IS the member's writing, and has     ⛔ OPEN
                                 because it is not yet the Work.
 ```
 
-⛔ **The third is a genuine second copy of a member's writing, and no existing
-ruling authorizes it.** Three ways out, honestly stated:
+⛔ **The third is where both halves of the precedent's reasoning fail, which is why
+no existing ruling covers it.** It is not MAIA's output *about* the Work, so the
+`interpretation` exemption does not reach it; and it has no authoritative home to
+point at, so referencing instead of storing is not available. Storing it does not
+create a *second* copy — it creates **the first and only copy of member writing that
+lives nowhere else.**
+
+The asymmetry in what is lost is the sharpest form of the distinction:
+
+```
+lose the proposal    the record of what MAIA said
+lose an original     nothing — the revision store holds it
+lose a candidate     the writer's actual work in progress
+```
+
+The candidate is the only one whose loss costs the **member** something, which is
+also why it is the only one that pulls erasure into a place it has never had to
+reach. Three ways out, honestly stated:
 
 ```
 (a) store it, with the reason recorded in the migration header
@@ -59,7 +81,14 @@ ruling authorizes it.** Three ways out, honestly stated:
     durable object between proposal and application.
 ```
 
-**Recommendation: (a), by explicit founder act, with the boundary named in the
+⭐ **RULED 2026-09-10 — RC-05: (a), AUTHORIZED**, under eight conditions (see the
+rulings record). Chiefly: creation requires an explicit MODIFY act, the candidate is
+a separate object from both the proposal and the canonical revision, it grants no
+authority of any kind, MAIA may never mutate it in place, and **erasure/export/custody
+for member-authored manuscript prose must explicitly reach this store.** To be stated
+in the migration: *durability does not make the candidate canonical.*
+
+Recommendation as written before the ruling — **(a), with the boundary named in the
 migration** — the table stores *candidates under active revision*, never the Work,
 never the original, and the erasure path must reach it. ⛔ Not decided here.
 
@@ -270,21 +299,25 @@ terms.
 ## 9. Open, requiring a founder act
 
 ```
-1  candidate prose storage (§1a)         the only NEW member-prose copy
-2  erasure reach over candidates          if (a) is taken
-3  R1 implementation                      not authorized
-4  span attribution timing                deferral permitted; grain field required
-5  DEVELOP <-> WRITE consequence           BODY_AUTHORITY_REQUIRED in WRITE
-                                          (from the continuity design, still open)
+1  candidate prose storage (§1a)        ⭐ RULED — RC-05, AUTHORIZED
+2  erasure reach over candidates         OPEN — required by RC-05 condition 6
+3  R1 implementation                     ⭐ AUTHORIZED by RC-05
+4  span attribution timing               OPEN — deferral permitted, grain required
+5  DEVELOP <-> WRITE consequence          OPEN — BODY_AUTHORITY_REQUIRED in WRITE
+                                         (from the continuity design)
 ```
+
+⛔ **RC-05 settles item 1 and unblocks item 3 only.** Items 2, 4 and 5 remain open
+and are not silently settled by it. Implementation beyond R1 is not authorized.
 
 ## Standing
 
 ```
-RC-01 .. RC-04              RATIFIED
+RC-01 .. RC-05              RATIFIED
 DESIGN                      RECORDED (this document)
-IMPLEMENTATION              NOT AUTHORIZED
-candidate prose storage     OPEN — recommendation (a), not decided
+R1                          AUTHORIZED
+IMPLEMENTATION beyond R1    NOT AUTHORIZED
+candidate prose storage     AUTHORIZED under RC-05's eight conditions
 MERGE                       NOT YET
 PRODUCTION                  UNTOUCHED
 ```
