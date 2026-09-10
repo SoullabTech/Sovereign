@@ -191,3 +191,73 @@ export function apertureIsIndependentOfOrbits(compact = false): boolean {
   return rest.every((a) =>
     a.left === first.left && a.right === first.right && a.bottom === first.bottom);
 }
+
+
+/* ══ THE GOVERNED WORK MEASURE ═══════════════════════════════════════════════
+
+   ⭐⭐ ONE COMPUTATION, CONSUMED BY THE UI AND EXERCISED BY ITS ACCEPTANCE.
+
+   R1 was twice declared closed on instruments that could not fail: first a
+   self-comparison (`writingFieldLayout(N, X)` against itself), then a scan
+   asserting three CSS property names were absent from a style object. The first
+   proved nothing; the second proves only that one known regression is gone.
+
+   ⛔ A test that recreates the production formula agrees with production by
+   coincidence, not by construction. So the formula lives here, the room's Work
+   slot uses it, and the acceptance calls the same function. There is one
+   answer, and if it is wrong, everything is wrong together — which is the only
+   arrangement in which a test can speak for behaviour. */
+
+/** One place converts, so the geometry cannot disagree about what a rem is. */
+export const REM_PX = 16;
+
+export interface WorkMeasure {
+  /** What the manuscript actually resolves to, in px. */
+  widthPx: number;
+  /** What the orbits reserve around it, in px. */
+  reservedPx: number;
+}
+
+/**
+ * The Work's effective measure inside a room of `containingBlockPx`.
+ *
+ * ⭐ R1 · A — `open` IS ACCEPTED AND DELIBERATELY UNREAD. It is in the signature
+ * so that acceptance can vary it and prove the output does not move, and so
+ * that any future implementation which starts reading it fails that proof
+ * rather than passing silently. An orbit's arrival changes what is drawn in
+ * reserved space; it never changes what the Work measures.
+ *
+ * ⭐ R1 · B — the measure is taken of the ROOM. The defect this replaces applied
+ * the orbits' full extent as padding first and the measured share afterwards,
+ * so the same percentage produced ~401px where canonical gave ~694px. A
+ * measured percentage is only ever a measure OF something.
+ */
+export function resolveWorkMeasure(
+  containingBlockPx: number,
+  fieldShare: number,
+  compact = false,
+  _open?: OrbitState,
+): WorkMeasure {
+  const reservedPx = compact
+    ? 0
+    : (RAIL_REM + STRUCTURE_REM + MAIA_REM) * REM_PX;
+  return {
+    widthPx: compact ? containingBlockPx : containingBlockPx * fieldShare,
+    reservedPx,
+  };
+}
+
+/**
+ * ⭐ THE ROOM MUST HOLD BOTH. If the Work's measure and everything reserved
+ * around it exceed the room, then either an orbit covers the manuscript or the
+ * Work was narrowed to make room for it — the two failures R1 forbids, and the
+ * one property that cannot be satisfied by a Work that is simply small.
+ */
+export function roomHoldsWorkAndOrbits(
+  containingBlockPx: number,
+  fieldShare: number,
+  compact = false,
+): boolean {
+  const m = resolveWorkMeasure(containingBlockPx, fieldShare, compact);
+  return m.widthPx + m.reservedPx <= containingBlockPx;
+}

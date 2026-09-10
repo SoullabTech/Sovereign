@@ -60,6 +60,7 @@ import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
 import { useHeldFocus } from '../field/useHeldFocus';
 import { focusPaint } from '../field/focusPaint';
+import { resolveWorkMeasure } from '../field/fieldAperture';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
@@ -527,6 +528,24 @@ function CanvasRoom() {
   const held = useHeldFocus(focusSections, focusBodyOf);
 
   /**
+   * ⭐ R1 — ONE GOVERNED MEASURE, SHARED WITH ITS ACCEPTANCE.
+   *
+   * The share comes from the measured table; `resolveWorkMeasure` turns it into
+   * the Work's actual geometry and is what `fieldAperture`'s behavioural suite
+   * exercises. The orbit state is deliberately not passed: nothing about which
+   * panels are open may reach this number.
+   */
+  const workMeasure = useMemo(() => {
+    /* ⭐ THE UI CALLS THE GOVERNED FUNCTION. Computing the share inline here
+       would recreate production arithmetic that the acceptance also recreates,
+       and the two would agree by coincidence — which is how the first R1
+       instrument came to be a tautology. Resolved against 100 units so the
+       result is directly the percentage the ratio must hold at every viewport. */
+    const m = resolveWorkMeasure(100, L.writingField / NOTIONAL, compact);
+    return { pct: m.widthPx, compact };
+  }, [L.writingField, compact]);
+
+  /**
    * The focus, drawn where the writer put it. Built here because it needs both
    * the held focus and the ruled treatment; handed to the substrate as a
    * read-only mark and nothing else.
@@ -823,7 +842,13 @@ function CanvasRoom() {
                  from what happens to be open. Opening MAIA and watching your
                  paragraphs acquire new line breaks is conversation physically
                  perturbing the writing it is about. */
-              width: compact ? '100%' : pct(L.writingField),
+              /* ⭐ THE GOVERNED MEASURE. `resolveWorkMeasure` is the one
+                 computation; the R1 acceptance calls this same function rather
+                 than recreating its arithmetic, so a test cannot agree with
+                 production by coincidence. Expressed as a percentage because
+                 the ratio must hold at every viewport without reading
+                 `window` during render. */
+              width: workMeasure.compact ? '100%' : `${workMeasure.pct.toFixed(4)}%`,
               flexShrink: 0,
               minWidth: compact ? 0 : MEASURE.fieldMinWidth,
               background: GROUND.field,

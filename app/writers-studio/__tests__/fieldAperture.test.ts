@@ -11,7 +11,14 @@ import {
   type OrbitState,
   OUT_OF_FLOW,
   apertureIsIndependentOfOrbits,
+  resolveWorkMeasure,
+  roomHoldsWorkAndOrbits,
+  REM_PX,
+  RAIL_REM as RAIL,
+  STRUCTURE_REM as STRUCT,
+  MAIA_REM as MAIA,
 } from '../field/fieldAperture';
+import { writingFieldLayout } from '../studioTheme';
 
 const ALL: OrbitState[] = [
   CLOSED,
@@ -121,5 +128,91 @@ describe('the aperture law', () => {
     expect(a.left).toContain('min(');
     expect(a.left).toContain('vw');
     expect(a.right).toContain('min(');
+  });
+});
+
+
+/* ══ R1 · BEHAVIOURAL ACCEPTANCE ══════════════════════════════════════════════
+
+   ⭐⭐ THIS IS THE INSTRUMENT R1 IS CLOSED ON. Not the source scan in
+   shellProjection — that remains a cheap tripwire for one known regression and
+   may not carry the law.
+
+   ⛔ WHY IT IS HERE AND SHAPED THIS WAY. R1 was twice declared closed on
+   instruments that could not fail. The first compared `writingFieldLayout(N, X)`
+   with `writingFieldLayout(N, X)` — the same call twice — and passed while the
+   manuscript rendered at ~401px against canonical's ~694px. The second asserted
+   three CSS property names were absent from a style object, which fails on
+   rewording and passes on restatement.
+
+   So this suite calls `resolveWorkMeasure` — the SAME function the room's Work
+   slot consumes. A test that recreates production's arithmetic agrees with it
+   by coincidence; one that calls it agrees by construction, and disagrees when
+   production is wrong. */
+
+const ROOM = 1680;
+const NOTIONAL = 100000;
+const ORDINARY = ['rail', 'outlinePanel', 'writingField', 'maiaPanel'] as const;
+const SHARE = writingFieldLayout(NOTIONAL, ORDINARY as never).writingField / NOTIONAL;
+
+describe('R1 — the Work keeps its measure', () => {
+  /**
+   * ⭐ R1 · A — STATE INVARIANCE. Opening or closing any orbit, in any
+   * combination, must leave the Work's effective measure identical. Not
+   * similar — identical, because line breaks are a property of that number and
+   * the writer did not ask for new ones.
+   */
+  it('R1 · A — no orbit state changes the Work’s effective measure', () => {
+    const states: OrbitState[] = [
+      { structure: false, maia: false, workbench: false },
+      { structure: true, maia: false, workbench: false },
+      { structure: false, maia: true, workbench: false },
+      { structure: false, maia: false, workbench: true },
+      { structure: true, maia: true, workbench: false },
+      { structure: true, maia: true, workbench: true },
+    ];
+    const widths = states.map((o) => resolveWorkMeasure(ROOM, SHARE, false, o).widthPx);
+    for (const w of widths) expect(w).toBe(widths[0]);
+    expect(new Set(widths).size).toBe(1);
+  });
+
+  /**
+   * ⭐ R1 · B — BASELINE CONTINUITY. Invariance alone is satisfied by a Work
+   * 400px wide forever, which is formally perfect and substantively absurd — and
+   * is precisely what the padding defect produced. So the NUMBER is pinned to
+   * canonical's ordinary arrival geometry: a Work with sections opened its
+   * outline and MAIA was present by default.
+   */
+  it('R1 · B — the measure is canonical’s ordinary arrival geometry', () => {
+    const { widthPx } = resolveWorkMeasure(ROOM, SHARE, false);
+    expect(widthPx).toBeCloseTo(ROOM * SHARE, 6);
+    /* ⛔ AND IT IS TAKEN OF THE ROOM. The defect applied the orbits' full extent
+       first and the share afterwards; that arithmetic is stated here so the
+       instrument fails on it rather than describing it. */
+    const reserved = (RAIL + STRUCT + MAIA) * REM_PX;
+    expect(widthPx).not.toBeCloseTo((ROOM - reserved) * SHARE, 0);
+    /* The concrete numbers this lane argued over. */
+    expect(Math.round(widthPx)).toBe(694);
+    expect(Math.round((ROOM - reserved) * SHARE)).toBe(401);
+  });
+
+  /**
+   * ⭐ THE PROPERTY A SMALL WORK CANNOT FAKE. Work plus everything reserved
+   * around it must fit the room. If it does not, either an orbit covers the
+   * manuscript or the Work was narrowed to make room for one — the two failures
+   * R1 forbids, and neither is satisfiable by simply shrinking the Work, which
+   * makes this the check that survives a lazy repair.
+   */
+  it('the room holds the Work and its orbits without overlap', () => {
+    expect(roomHoldsWorkAndOrbits(ROOM, SHARE, false)).toBe(true);
+    const m = resolveWorkMeasure(ROOM, SHARE, false);
+    expect(m.widthPx + m.reservedPx).toBeLessThanOrEqual(ROOM);
+  });
+
+  /** Compact stacks; the Work takes the room and reserves nothing beside it. */
+  it('compact gives the Work the room and reserves nothing', () => {
+    const m = resolveWorkMeasure(ROOM, SHARE, true);
+    expect(m.widthPx).toBe(ROOM);
+    expect(m.reservedPx).toBe(0);
   });
 });

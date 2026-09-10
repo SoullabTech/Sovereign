@@ -72,7 +72,13 @@ describe('the writing field takes its measured share', () => {
     // took whatever was left rather than what was measured.
     const field = page.slice(page.indexOf('data-panel-role="writing-field"'));
     const style = field.slice(0, field.indexOf('}}'));
-    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    /* ⭐ THE GOVERNED SEAM. This used to match the literal `pct(L.writingField)`.
+       That expression was replaced by `resolveWorkMeasure`, the one computation
+       the R1 behavioural suite exercises — so the matcher went red on an
+       IMPROVEMENT. It now names the seam rather than one spelling of it, and
+       R1 itself is closed in fieldAperture.test.ts, not here. */
+    expect(style).toMatch(/width: workMeasure\.compact \? '100%' :/);
+    expect(page).toContain('resolveWorkMeasure');
     expect(style).not.toMatch(/flex:\s*1/);
     // Nor may any column beside it grow into the field's share.
     expect(page).not.toMatch(/pct\(L\.\w+\),\s*\n\s*flex: 1/);
@@ -96,7 +102,13 @@ describe('the writing field takes its measured share', () => {
     expect(page).toContain('L.writingField');
     const field = page.slice(page.indexOf('data-panel-role="writing-field"'));
     const style = field.slice(0, field.indexOf('}}'));
-    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    /* ⭐ THE GOVERNED SEAM. This used to match the literal `pct(L.writingField)`.
+       That expression was replaced by `resolveWorkMeasure`, the one computation
+       the R1 behavioural suite exercises — so the matcher went red on an
+       IMPROVEMENT. It now names the seam rather than one spelling of it, and
+       R1 itself is closed in fieldAperture.test.ts, not here. */
+    expect(style).toMatch(/width: workMeasure\.compact \? '100%' :/);
+    expect(page).toContain('resolveWorkMeasure');
     /* And the orbits' extents are measured too, in one place, rather than
        invented at each call site. */
     const ap = fs.readFileSync(path.join(__dirname, '..', 'field', 'fieldAperture.ts'), 'utf8');
@@ -572,7 +584,7 @@ describe('the handoff contract carries identity both ways', () => {
     for (const state of ['maiaOpen', 'conversationOpen', 'materialsOpen', 'outlineOpen', 'open.maia', 'open.structure']) {
       expect(style).not.toContain(state);
     }
-    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    expect(style).toMatch(/width: workMeasure\.compact \? '100%' :/);
     /* And the room's own insets are the same whatever is open — proved by the
        aperture module rather than asserted about it. */
     expect(apertureIsIndependentOfOrbits(false)).toBe(true);
