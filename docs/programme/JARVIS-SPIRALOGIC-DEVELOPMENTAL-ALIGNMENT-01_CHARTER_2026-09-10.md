@@ -1230,11 +1230,11 @@ live substrate because it was never measured.
 
 ## 7. DISCOVER movements — read-only, in order
 
-### SD-00 — Doctrine census · ⭐ **OPEN (founder act, 2026-09-10)**
+### SD-00 — Doctrine census · ⭐ **RUN 2026-09-10 — findings returned**
 
 Scope, output contract and the referent inventory are frozen in
 `docs/programme/JARVIS-SPIRALOGIC-DEVELOPMENTAL-ALIGNMENT-01_SD-00_DOCTRINE_CENSUS_2026-09-10.md`.
-**Opened; not yet run.**
+**RUN.** Findings: `…_SD-00_FINDINGS_2026-09-10.md`. ⛔ SD-01 still gated — opening it is a founder act on these findings.
 
 What AIN **currently claims**, formally or implicitly, about: Spiralogic · the
 four (five?) elements · development · transformation · elemental states and
@@ -1690,5 +1690,20 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   question: does AIN record member noticing at all? MAIA's role: **wilderness
   guide, not elemental oracle** — and *both "yes" and "no, this feels completely
   different" improve the map*. Lane purpose now headlines the charter.
-- **Standing: SD-00 OPEN, NOT YET RUN. No code read for findings. Nothing classified. No
+- **2026-09-10 · SD-00 RUN** — findings in `…_SD-00_FINDINGS_2026-09-10.md`.
+  Founder precision recorded at GF-6: **absence of a provenance channel is an
+  EXPOSURE, not evidence a loop occurred**; three provenance states
+  (MEMBER-INITIATED · MAIA-SEEDED · INDETERMINATE), and *recurrence without
+  provenance is not independent recurrence*. **No GF found failed.** Headlines:
+  the only code-level Spiralogic definition is an 8-line prompt string with
+  **zero importers** defining elements as domains · the encoded 12 = 4 elements ×
+  3 sub-phases with **Aether gradated but uncounted — independently corroborating
+  the SD-Q1 ruling** · **no affordance anywhere records the member noticing their
+  own process**, while MAIA-side self-awareness constructs are extensive · the
+  GF-6 exposure is precise and its remedy (`maiaResponse`, already in
+  `TurnContext`) is in scope · the Cognitive OS is the strongest constitutional
+  substrate found, and its one provenance field is explicitly barred from the
+  gates. ⛔ SD-Q3 not resolved; elemental agents' code not read. ⛔ Doctrine
+  register is partial by keyword census — a full canon reading remains owed.
+- **Standing: SD-00 RUN · SD-01 GATED · SD-Q3 OPEN. No code read for findings. Nothing classified. No
   docket question resolved.**

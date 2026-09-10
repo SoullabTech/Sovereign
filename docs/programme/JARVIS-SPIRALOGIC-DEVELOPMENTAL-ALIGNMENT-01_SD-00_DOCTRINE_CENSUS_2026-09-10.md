@@ -88,6 +88,34 @@ CLASSIFICATION       P · C · R · O for phase-like fields
 
 Output as one table, most consequential first.
 
+## 4b. ⭐ Provenance states — founder precision, 2026-09-10
+
+> **Absence of a provenance channel is a GF-6 EXPOSURE, not evidence that a
+> manufacture loop has occurred.**
+
+A surface may be behaving perfectly today; but if the architecture cannot
+distinguish member-originated from MAIA-seeded signal, it **cannot later
+establish that increased confidence came from independent evidence.** *The
+vulnerability exists before the failure is witnessed.*
+
+```text
+MEMBER-INITIATED   the signal is demonstrably present BEFORE MAIA introduces
+                   the framing
+MAIA-SEEDED        MAIA introduces the framing before the member expresses it
+INDETERMINATE      the substrate cannot establish provenance
+
+INDETERMINATE                           → GF-6 EXPOSURE
+MAIA-SEEDED treated as independent confirmation → GF-6 FAILURE
+```
+
+### The same discipline applies to recurrence
+
+If pattern memory says *"Water has appeared five times"*, the census must ask
+whether those are **five independent member signals** or **five conversations in
+which an earlier MAIA hypothesis propagated forward.**
+
+> **Recurrence without provenance is not independent recurrence.**
+
 ## 5. Epistemic ceiling — restated, binding
 
 > **SD-00 can establish what doctrine and representation EXIST. It cannot
