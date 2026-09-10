@@ -35,24 +35,55 @@ const w = (label: string, ok: boolean, detail = '') => {
   ok ? pass++ : fail++;
 };
 
-async function schema() {
-  await query(`
-    CREATE TABLE member_manuscripts (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(), member_id uuid NOT NULL, title text);
-    CREATE TABLE manuscript_sections (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(), manuscript_id uuid NOT NULL,
-      position int NOT NULL, heading text, body text NOT NULL);
-    CREATE TABLE manuscript_working_drafts (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(), manuscript_id uuid NOT NULL,
-      member_id uuid NOT NULL, content text NOT NULL, base_source_hash text NOT NULL,
-      section_addressable_at timestamptz);
-    CREATE TABLE manuscript_draft_sections (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      draft_id uuid NOT NULL REFERENCES manuscript_working_drafts(id) ON DELETE CASCADE,
-      position int NOT NULL, text text NOT NULL,
-      source_section_id uuid REFERENCES manuscript_sections(id) ON DELETE SET NULL,
-      UNIQUE (draft_id, position));
-  `);
+/**
+ * ⛔ CREATES NOTHING. It asserts the repo-derived schema is present, and names
+ * exactly what is missing when it is not — a schema-lineage finding is more
+ * valuable than a green fake schema.
+ */
+async function requireSchema() {
+  const need = ['member_manuscripts', 'manuscript_sections',
+                'manuscript_working_drafts', 'manuscript_draft_sections'];
+  const t = await query<{ table_name: string }>(
+    `SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = ANY($1::text[])`, [need]);
+  const found = t.rows.map(r => r.table_name);
+  const missing = need.filter(n => !found.includes(n));
+  const gate = await query<{ column_name: string }>(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'manuscript_working_drafts' AND column_name = 'section_addressable_at'`, []);
+  if (gate.rows.length === 0) missing.push('manuscript_working_drafts.section_addressable_at');
+
+  if (missing.length) {
+    console.error(
+      `\n⛔ SCHEMA NOT CONSTRUCTED — missing: ${missing.join(', ')}\n` +
+      '   The witness builds nothing. Construct the database from repository truth:\n' +
+      '     npm run db:bootstrap && npm run db:migrate\n' +
+      '   If repository schema history CANNOT produce these relations, that is a\n' +
+      '   schema-history finding. ⛔ Do not repair it with copied DDL.\n');
+    process.exit(1);
+  }
+
+  // Identities of the schema inputs, recorded with the verdict: a witness has two
+  // subjects — the thing witnessed and the instrument witnessing it.
+  const ledger = await query<{ n: string }>(`SELECT count(*)::text AS n FROM schema_migrations`, []);
+  const genesis = await query<{ filename: string }>(
+    `SELECT filename FROM schema_migrations WHERE filename LIKE '%manuscript_draft_sections%'`, []);
+  console.log(`schema input   : ${ledger.rows[0].n} ledger entries · draft-section genesis: ${genesis.rows[0]?.filename ?? 'NOT IN LEDGER'}`);
+}
+
+/**
+ * ⭐ Real members, because the real schema has FKs the hand-written DDL did not:
+ * `member_manuscripts.member_id` and `manuscript_working_drafts.member_id` both
+ * REFERENCE `members(id)`. The modelled schema silently omitted them — the first
+ * concrete thing 01A caught.
+ */
+async function seedMembers() {
+  for (const [i, id] of [MEMBER, OTHER].entries()) {
+    await query(
+      `INSERT INTO members (id, passkey, username, password_hash)
+       VALUES ($1, $2, $3, 'x') ON CONFLICT (id) DO NOTHING`,
+      [id, `WITNESS-FOCUS-${i}`, `witness_focus_${i}`]);
+  }
 }
 
 /** One Work, its Source, and a draft that may or may not be addressable. */
@@ -64,10 +95,17 @@ async function seedWork(memberId: string, addressable: boolean, sections: string
     await query(`INSERT INTO manuscript_sections (manuscript_id, position, body) VALUES ($1,$2,$3)`,
       [manuscriptId, i, body]);
   }
+  /**
+   * ⭐ THE SECOND THING 01A CAUGHT. The real schema carries a trigger,
+   * `manuscript_working_drafts_round_trip()`, which the hand-written DDL had no
+   * trace of: once `section_addressable_at` is set, `content` MUST equal
+   * `string_agg(s.text, '' ORDER BY s.position)` — the sections concatenated with
+   * NO separator. So the draft is created un-addressable, its sections are
+   * written, and only then is it flattened and made addressable in one step.
+   */
   const d = await query<{ id: string }>(
-    `INSERT INTO manuscript_working_drafts (manuscript_id, member_id, content, base_source_hash, section_addressable_at)
-     VALUES ($1,$2,'flattened','h', ${addressable ? 'NOW()' : 'NULL'}) RETURNING id`,
-    [manuscriptId, memberId]);
+    `INSERT INTO manuscript_working_drafts (manuscript_id, member_id, content, base_source_hash)
+     VALUES ($1,$2,'','h') RETURNING id`, [manuscriptId, memberId]);
   const draftId = d.rows[0].id;
   const ids: string[] = [];
   for (const [i, text] of sections.entries()) {
@@ -76,11 +114,20 @@ async function seedWork(memberId: string, addressable: boolean, sections: string
       [draftId, i, text]);
     ids.push(s.rows[0].id);
   }
+  if (addressable) {
+    await query(
+      `UPDATE manuscript_working_drafts d
+          SET content = (SELECT COALESCE(string_agg(s.text, '' ORDER BY s.position), '')
+                           FROM manuscript_draft_sections s WHERE s.draft_id = d.id),
+              section_addressable_at = NOW()
+        WHERE d.id = $1`, [draftId]);
+  }
   return { manuscriptId, draftId, sectionIds: ids };
 }
 
 async function main() {
-  await schema();
+  await requireSchema();
+  await seedMembers();
 
   const work = await seedWork(MEMBER, true, [DRAFT_1, DRAFT_2, DRAFT_EMOJI]);
 
@@ -133,7 +180,10 @@ async function main() {
   w('passage without a locator cannot be assembled', noLocator === null);
 
   console.log(`\n${pass} passed · ${fail} failed`);
-  await query(`DROP TABLE manuscript_draft_sections, manuscript_working_drafts, manuscript_sections, member_manuscripts`);
+  // ⛔ Remove only the fixtures this run created. Dropping the subject relations
+  // would destroy the repo-derived schema the next run depends on.
+  await query(`DELETE FROM member_manuscripts WHERE member_id = ANY($1::uuid[])`, [[MEMBER, OTHER]]);
+  await query(`DELETE FROM members WHERE id = ANY($1::uuid[])`, [[MEMBER, OTHER]]);
   process.exit(fail === 0 ? 0 : 1);
 }
 

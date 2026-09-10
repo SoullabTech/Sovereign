@@ -307,3 +307,54 @@ describe('FOCUS-ASSEMBLER-CONTRACT-01 · the read authority', () => {
     expect(asm()).not.toMatch(/\[\.\.\.text\]\.slice/);
   });
 });
+
+describe('FOCUS-ASSEMBLER-CONTRACT-01A · the instrument descends from repository truth', () => {
+  /**
+   * ⭐⭐ The SQL must meet a real database, and the database used to judge it must
+   *     itself descend from repository truth.
+   *
+   * The first witness built four tables from hand-written DDL — a second source of
+   * truth that could pass against a schema no longer in the repository. It missed
+   * a FK to `members` and an entire round-trip trigger, both of which the real
+   * schema carries.
+   */
+  const wit = () => CODE('scripts/witness/focus-assembler-contract.ts');
+
+  it('S1 · defines no subject relation of its own', () => {
+    expect(wit()).not.toMatch(/CREATE TABLE/i);
+    for (const rel of ['member_manuscripts', 'manuscript_sections',
+                       'manuscript_working_drafts', 'manuscript_draft_sections']) {
+      expect(wit()).not.toMatch(new RegExp(`CREATE TABLE[^;]*${rel}`, 'i'));
+    }
+  });
+
+  it('S2 · requires the schema instead, and names what is missing', () => {
+    expect(wit()).toMatch(/information_schema\.tables/);
+    expect(wit()).toMatch(/SCHEMA NOT CONSTRUCTED/);
+    expect(wit()).toMatch(/db:bootstrap && npm run db:migrate/);
+  });
+
+  it('S2 · records the schema input identity beside the verdict', () => {
+    expect(wit()).toMatch(/schema_migrations/);
+    expect(wit()).toMatch(/schema input/);
+  });
+
+  it('⛔ offers no fallback to a local production schema', () => {
+    const gate = CODE('scripts/witness/gate-focus-assembler.sh');
+    expect(gate).toMatch(/db:bootstrap/);
+    expect(gate).toMatch(/db:migrate/);
+    expect(gate).toMatch(/set -euo pipefail/);
+    expect(gate).not.toMatch(/\|\|\s*(true|psql)/);
+  });
+
+  it('is invocable as one named command', () => {
+    const pkg = JSON.parse(require('fs').readFileSync(
+      require('path').join(process.cwd(), 'package.json'), 'utf8'));
+    expect(pkg.scripts['gate:focus-assembler']).toMatch(/gate-focus-assembler\.sh/);
+  });
+
+  it('cleans up only its own fixtures, never the subject relations', () => {
+    expect(wit()).not.toMatch(/DROP TABLE/i);
+    expect(wit()).toMatch(/DELETE FROM member_manuscripts WHERE member_id/);
+  });
+});
