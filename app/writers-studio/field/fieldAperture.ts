@@ -77,15 +77,35 @@ const maiaWidth = (compact: boolean) =>
  * anything — which is the same reason the orbits are fixed: arrival and use
  * must not be two different rooms.
  */
-export function aperture(open: OrbitState, compact = false): Aperture {
-  const left = open.structure
-    ? `calc(${RAIL_REM}rem + ${structureWidth(compact)})`
-    : `${RAIL_REM}rem`;
-  const right = open.maia ? maiaWidth(compact) : '0px';
-  const bottom = open.workbench
-    ? `calc(${WORKBENCH_BOTTOM_REM}rem + ${WORKBENCH_REM}rem)`
-    : '0px';
-  return { left, right, bottom };
+/**
+ * ⭐⭐ THE ROOM HAS AN APERTURE. THE WORK DOES NOT BECOME ONE.
+ *
+ * Founder ruling R1, 2026-09-10. An earlier form varied these insets with
+ * `open`, so opening Struct or MAIA narrowed the box the manuscript is measured
+ * in and the writer's paragraphs acquired different line breaks — because they
+ * asked for assistance. That is the deeper principle behind WS2-02B:
+ *
+ *     conversation must not physically perturb the writing it is about.
+ *
+ * So the insets are now CONSTANT. Space for every orbit is reserved whether or
+ * not it is open, and an orbit's arrival changes what is drawn in reserved
+ * space, never what the Work measures. The room recomposes around the Work; the
+ * Work does not recompose because an orbit opened.
+ *
+ * ⛔ Do not reintroduce `open` here. A narrower room when nothing is open is
+ * not the saving it appears to be: it is paid for with the writer's line
+ * breaks, every time they open a panel.
+ *
+ * `open` remains in the signature because the caller has it and a future
+ * inset that is genuinely independent of the Work may need it — but nothing
+ * that reaches the manuscript's measure may read it.
+ */
+export function aperture(_open: OrbitState, compact = false): Aperture {
+  return {
+    left: `calc(${RAIL_REM}rem + ${structureWidth(compact)})`,
+    right: maiaWidth(compact),
+    bottom: `calc(${WORKBENCH_BOTTOM_REM}rem + ${WORKBENCH_REM}rem)`,
+  };
 }
 
 /**
@@ -143,9 +163,31 @@ export function stripBox(open: OrbitState, compact = false) {
  */
 export function apertureMatchesOrbits(open: OrbitState, compact = false): boolean {
   const a = aperture(open, compact);
-  const leftWanted = open.structure
-    ? `calc(${RAIL_REM}rem + ${structureWidth(compact)})`
-    : `${RAIL_REM}rem`;
-  const rightWanted = open.maia ? maiaWidth(compact) : '0px';
-  return a.left === leftWanted && a.right === rightWanted;
+  /* Each inset reserves exactly its orbit's extent, whether or not it is open —
+     so an orbit is drawn into space the Work never had, and closing one gives
+     the Work nothing it must then re-measure. */
+  return a.left === `calc(${RAIL_REM}rem + ${structureWidth(compact)})`
+      && a.right === maiaWidth(compact)
+      && a.bottom === `calc(${WORKBENCH_BOTTOM_REM}rem + ${WORKBENCH_REM}rem)`;
+}
+
+/**
+ * ⭐ THE R1 LAW, DIRECTLY. Opening or closing any orbit must leave the Work's
+ * box identical — not merely similar, identical — because line breaks are a
+ * property of that box and the writer did not ask for new ones.
+ *
+ * Stated as a function rather than only as a test so the room itself can be
+ * asked, and so a future inset cannot quietly reintroduce the dependency.
+ */
+export function apertureIsIndependentOfOrbits(compact = false): boolean {
+  const states: OrbitState[] = [
+    { structure: false, maia: false, workbench: false },
+    { structure: true, maia: false, workbench: false },
+    { structure: false, maia: true, workbench: false },
+    { structure: false, maia: false, workbench: true },
+    { structure: true, maia: true, workbench: true },
+  ];
+  const [first, ...rest] = states.map((o) => aperture(o, compact));
+  return rest.every((a) =>
+    a.left === first.left && a.right === first.right && a.bottom === first.bottom);
 }

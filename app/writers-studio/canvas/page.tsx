@@ -782,11 +782,26 @@ function CanvasRoom() {
             style={{
               ...canvasSurfaceVars,
               color: INK.primary,
+              /* ⭐⭐ R1 — THE MEASURED COLUMN, UNCHANGED BY ANY ORBIT.
+                 Founder ruling 2026-09-10: the Work's measured width and its
+                 resulting line reflow are invariant. This is the explicit width
+                 WS2-02B requires — never a flex remainder, and never derived
+                 from what happens to be open. Opening MAIA and watching your
+                 paragraphs acquire new line breaks is conversation physically
+                 perturbing the writing it is about. */
+              width: compact ? '100%' : pct(L.writingField),
+              flexShrink: 0,
+              minWidth: compact ? 0 : MEASURE.fieldMinWidth,
               background: GROUND.field,
               border: `1px solid ${RULE.soft}`,
               borderRadius: RADIUS.panel,
               display: 'flex', flexDirection: 'column',
-              flex: 1, minHeight: 0, overflow: 'auto',
+              /* ⛔ NEVER `flex: 1`. That is the WS2-02B defect by another name:
+                 a field whose width is whatever the row had left over. The
+                 explicit width above is the measure; height fills the room. */
+              minHeight: compact ? '60vh' : 0,
+              height: '100%',
+              overflow: 'auto',
             }}
           >
             {/* ⭐ THE TEXT ITSELF, NOT ONLY ITS CONTAINER. The variables above

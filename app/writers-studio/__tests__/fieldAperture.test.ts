@@ -10,6 +10,7 @@ import {
   structureBox,
   type OrbitState,
   OUT_OF_FLOW,
+  apertureIsIndependentOfOrbits,
 } from '../field/fieldAperture';
 
 const ALL: OrbitState[] = [
@@ -28,15 +29,40 @@ describe('the aperture law', () => {
   });
 
   it('always reserves the rail, open or closed', () => {
-    expect(aperture(CLOSED).left).toBe(`${RAIL_REM}rem`);
+    expect(aperture(CLOSED).left).toContain(`${RAIL_REM}rem`);
     expect(aperture({ structure: true, maia: true, workbench: true }).left)
       .toContain(`${RAIL_REM}rem`);
   });
 
-  it('an orbit that is closed costs the Work nothing', () => {
-    const a = aperture(CLOSED);
-    expect(a.right).toBe('0px');
-    expect(a.bottom).toBe('0px');
+  /**
+   * ⭐⭐ R1 AND WHAT IT COSTS. Founder ruling, 2026-09-10.
+   *
+   * This asserted that a CLOSED orbit costs the Work nothing — `right` and
+   * `bottom` were `0px` until something opened. That was the generous reading,
+   * and it was paid for at the wrong moment: the Work grew while nothing was
+   * open and then RE-MEASURED the instant the writer asked for help, so their
+   * paragraphs acquired new line breaks as the price of opening MAIA.
+   *
+   *     conversation must not physically perturb the writing it is about.
+   *
+   * ⛔ SO THE COST IS PAID ONCE, UP FRONT, AND NEVER AGAIN. Space for every
+   * orbit is reserved whether or not it is open. The Work is narrower in the
+   * quiet room than it used to be — that is the real and deliberate price of
+   * R1, and it is recorded here rather than hidden: a permanently slightly
+   * smaller measure, in exchange for a measure that never moves.
+   *
+   * What a closed orbit costs is therefore not "nothing". What it costs is
+   * "exactly what an open one costs", which is the property that matters.
+   */
+  it('a closed orbit costs exactly what an open one costs — the Work never re-measures', () => {
+    expect(apertureIsIndependentOfOrbits(false)).toBe(true);
+    expect(apertureIsIndependentOfOrbits(true)).toBe(true);
+    const closed = aperture(CLOSED);
+    const all = aperture({ structure: true, maia: true, workbench: true });
+    expect(closed).toEqual(all);
+    /* And the reservation is real, not a zero pretending to be one. */
+    expect(closed.right).not.toBe('0px');
+    expect(closed.bottom).not.toBe('0px');
   });
 
   /**

@@ -10,6 +10,7 @@ import {
 } from '../studioMap';
 import { PANELS, writingFieldLayout, LAYOUT_TOLERANCE, COLUMN_FRACTION } from '../studioTheme';
 import { CANVAS_MANUSCRIPT_PARAM, resolveManuscript } from '../canvasIdentity';
+import { apertureIsIndependentOfOrbits } from '../field/fieldAperture';
 import {
   assertRoundTripPreservesWork,
   handoffToMaia,
@@ -77,11 +78,31 @@ describe('the writing field takes its measured share', () => {
     expect(page).not.toMatch(/pct\(L\.\w+\),\s*\n\s*flex: 1/);
   });
 
-  it('resolves every one of 04’s five columns through writingFieldLayout', () => {
-    for (const col of ['rail', 'outlinePanel', 'writingField', 'maiaPanel', 'materialsPanel']) {
-      expect(page).toContain(`L.${col}`);
+  /**
+   * ⭐ THE FIELD'S SHARE IS STILL MEASURED, NOT IMPROVISED.
+   *
+   * D9 → WRITE moved the surrounding columns into orbits, so page.tsx no longer
+   * names outlinePanel / maiaPanel / materialsPanel — those extents now live in
+   * `fieldAperture`, as measured constants, and the room reserves them.
+   *
+   * ⛔ WHAT MAY NOT CHANGE, AND IS ASSERTED HERE: the writing field's own width
+   * still comes from `writingFieldLayout`'s table. The WS2-02B defect was a
+   * field rendered at whatever was left rather than what was measured, and that
+   * is a property of where the FIELD's number comes from — not of how many
+   * siblings happen to be columns.
+   */
+  it('the writing field’s width still comes from the measured table', () => {
+    expect(page).toContain('writingFieldLayout');
+    expect(page).toContain('L.writingField');
+    const field = page.slice(page.indexOf('data-panel-role="writing-field"'));
+    const style = field.slice(0, field.indexOf('}}'));
+    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    /* And the orbits' extents are measured too, in one place, rather than
+       invented at each call site. */
+    const ap = fs.readFileSync(path.join(__dirname, '..', 'field', 'fieldAperture.ts'), 'utf8');
+    for (const token of ['RAIL_REM', 'STRUCTURE_REM', 'MAIA_REM', 'WORKBENCH_REM']) {
+      expect(ap).toContain(token);
     }
-    expect(page).toContain('writingFieldLayout(NOTIONAL, columnsShown)');
   });
 
   it('reproduces the reference share within the stated tolerance', () => {
@@ -439,9 +460,19 @@ describe('the handoff contract carries identity both ways', () => {
      the manuscript and the Work with it. MAIA is adjacent to the Work, not a
      destination you abandon your book to reach. The gate is unchanged; where
      it opens is not. */
+  /**
+   * The gate is unchanged; where it opens is not. At 03C Conversations was a
+   * LINK to /maia and speaking with MAIA ejected the writer from the Studio,
+   * taking the manuscript and the Work with it. D9 → WRITE moves her from a
+   * summoned panel to an orbit — still adjacent to the Work, still inside this
+   * room. The law is that she is NOT a destination you abandon your book for,
+   * and that is what is asserted.
+   */
   it('satisfies Conversations in this room rather than navigating away', () => {
     expect(page).toContain("'conversations'");
-    expect(page).toContain("summon('conversation')");
+    /* She is rendered INSIDE the room, as its MAIA orbit. */
+    expect(page).toMatch(/maia=\{/);
+    expect(page).toContain('StudioConversation');
     // The default interaction may not be a link out of the Studio.
     expect(page).not.toContain('handoffToMaia');
     expect(page).not.toMatch(/situatedHrefs/);
@@ -451,15 +482,34 @@ describe('the handoff contract carries identity both ways', () => {
     expect(page).toMatch(/summoned\.conversation === true && Boolean\(work\)/);
   });
 
+  /**
+   * ⭐⭐ R1 — THE WORK DOES NOT NARROW. Founder ruling, 2026-09-10.
+   *
+   * The old mechanism achieved this by arithmetic: MAIA took the Materials
+   * share, so the field gave up no pixel. The room achieves it by
+   * CONSTRUCTION, which is strictly stronger — the field's width is an
+   * explicit measured value that names no orbit state at all, and the room's
+   * insets are identical for every combination of open panels.
+   *
+   *     conversation must not physically perturb the writing it is about.
+   *
+   * ⛔ A writer whose paragraphs acquire new line breaks because they asked for
+   * assistance has had the thing they are working on altered by the act of
+   * seeking help. That is the defect, and neither mechanism may be relaxed
+   * into "the aperture narrows a little".
+   */
   it('keeps the manuscript at its measured width while conversing', () => {
-    /* The whole point of speaking beside the Work: MAIA takes the Materials
-       share, the writing field does not give up a pixel. */
-    expect(page).toMatch(/\(materialsOpen \|\| conversationOpen\) && !compact/);
-    expect(page).toContain('pct(L.maiaPanel + L.materialsPanel + L.gutter)');
-    const L = writingFieldLayout(100000);
-    const conversing = L.maiaPanel + L.materialsPanel + L.gutter;
-    expect(conversing).toBeGreaterThan(L.maiaPanel);
-    expect(L.writingField).toBeGreaterThan(conversing / 2);
+    /* The field's width expression may not mention any orbit's state. */
+    const field = page.slice(page.indexOf('data-panel-role="writing-field"'));
+    const style = field.slice(0, field.indexOf('}}'));
+    for (const state of ['maiaOpen', 'conversationOpen', 'materialsOpen', 'outlineOpen', 'open.maia', 'open.structure']) {
+      expect(style).not.toContain(state);
+    }
+    expect(style).toMatch(/width: compact \? '100%' : pct\(L\.writingField\)/);
+    /* And the room's own insets are the same whatever is open — proved by the
+       aperture module rather than asserted about it. */
+    expect(apertureIsIndependentOfOrbits(false)).toBe(true);
+    expect(apertureIsIndependentOfOrbits(true)).toBe(true);
   });
 
   it('cannot be used to promote a destination that has no room behind it', () => {
@@ -532,24 +582,51 @@ describe('Materials does not become furniture', () => {
     expect(page).toMatch(/open\('materials', materialsInContext\)/);
   });
 
-  it('is dismissible by contract, and the contract still says so', () => {
-    const m = PANELS.find((p) => p.role === 'materials')!;
-    expect(m.contextual).toBe(true);
-    expect(m.dismissible).toBe(true);
-    expect(page).toMatch(/onDismiss=\{\(\) => dismiss\('materials'\)\}/);
+  /**
+   * ⭐ R2 — MATERIALS IS A CAPABILITY, NOT A SPATIAL DESTINATION.
+   * Founder ruling, 2026-09-10.
+   *
+   * Materials used to be its own dismissible column, and these assertions
+   * described that column: when it yielded, to what, and how it was dismissed.
+   * D9 → WRITE places it inside the Workbench orbit beside declarations and
+   * export — the orbit already concerned with the Work's supporting matter.
+   *
+   * ⛔ WHAT MUST SURVIVE, AND IS ASSERTED HERE: Materials is reachable from
+   * WRITE, entering it does not trap the writer, and the orbit that holds it is
+   * dismissible. What may go is the historical fact that MaterialsDrawer
+   * happened to occupy a column of its own. That is capability preservation
+   * without interface fossilization.
+   *
+   * ⛔ AND THE YIELD RULE IS NOT LOST — IT IS SUPERSEDED BY A STRONGER ONE.
+   * "Chrome collapses before the writing field is crushed" existed because the
+   * field shared a row with the panels. Under R1 the field's measure names no
+   * orbit at all, so there is nothing left for chrome to yield ON ITS BEHALF.
+   * The R1 guard above is where that law now lives.
+   */
+  it('R2 — Materials is reachable from WRITE, inside the Workbench orbit', () => {
+    expect(page).toContain('MaterialsDrawer');
+    const workbench = page.slice(page.indexOf('workbench={'));
+    const slot = workbench.slice(0, workbench.indexOf('work={'));
+    expect(slot).toContain('MaterialsDrawer');
+    /* Beside the Work's other supporting matter, not as a fourth destination. */
+    expect(slot).toContain('WorkDrawer');
   });
 
-  it('yields its column before the field gives up its measure', () => {
-    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
-    expect(page).not.toMatch(/outlineOpen && !compact/);
+  it('R2 — entering Materials cannot trap the writer', () => {
+    /* One view, no drill-in: the Workbench renders its contents together, so
+       there is no state to be stuck inside and no exit to forget to build. */
+    const workbench = page.slice(page.indexOf('workbench={'));
+    const slot = workbench.slice(0, workbench.indexOf('work={'));
+    expect(slot).not.toMatch(/useState|router\.push|setView|activeTab/);
   });
 
-  it('also yields to the conversation, and the field still does not', () => {
-    /* WS2-03D. Materials had one yield condition (compact); it now has two.
-       Both are the same rule in different circumstances — chrome collapses
-       before the writing field is crushed. The field is in neither list. */
-    expect(page).toContain('materialsOpen && !conversationOpen && !compact');
-    expect(page).not.toMatch(/conversationOpen && !compact\s*&&[\s\S]{0,40}<main/);
+  it('R2 — the orbit holding Materials is dismissible', () => {
+    const room = fs.readFileSync(
+      path.join(__dirname, '..', 'field', 'FieldRoom.tsx'), 'utf8');
+    /* Every orbit is a toggle, and its head carries a close. */
+    expect(room).toContain("data-field-orbit-toggle");
+    expect(room).toContain('aria-expanded');
+    expect(room).toContain('onClose');
   });
 });
 
@@ -567,11 +644,30 @@ describe('the room keeps every capability it had', () => {
     expect(page).toContain('onCheckpointed');
   });
 
-  it('still renders each panel under the contract it actually is', () => {
-    const declared = new Set(PANELS.map((p) => p.role));
-    for (const role of ['manuscript-outline', 'maia', 'materials', 'writing-field']) {
-      expect(declared.has(role as never)).toBe(true);
-      expect(page).toContain(role);
+  /**
+   * ⭐ EVERY CAPABILITY STILL RENDERS — UNDER WHATEVER CONTRACT IT NOW HAS.
+   *
+   * This asserted that four PANEL roles appeared in the page. Three of them are
+   * orbits now, so the assertion is restated at the level of the capability
+   * rather than the container: the outline, MAIA, Materials and the writing
+   * field must each still be rendered, and the writing field must still declare
+   * its panel role because its measured contract is unchanged.
+   *
+   * ⛔ This is the guard named "the room keeps every capability it had", and it
+   * is the one that caught two real losses during D9 → WRITE: the writing
+   * field's canvasSurfaceVars and the ink rules that make the member's own
+   * words take the page they chose. It stays broad on purpose.
+   */
+  it('still renders each capability under the contract it actually is', () => {
+    /* The writing field keeps its declared panel contract. */
+    expect(new Set(PANELS.map((p) => p.role)).has('writing-field' as never)).toBe(true);
+    expect(page).toContain('data-panel-role="writing-field"');
+    /* And every surrounding capability is still rendered somewhere lawful. */
+    for (const component of ['StructuredOutline', 'ManuscriptOutline', 'StudioConversation', 'MaterialsDrawer', 'WorkDrawer']) {
+      expect(page).toContain(component);
     }
+    /* The member's own page still reaches their words. */
+    expect(page).toContain('canvasSurfaceVars');
+    expect(page).toMatch(/\[data-canvas-surface='material'\] textarea/);
   });
 });

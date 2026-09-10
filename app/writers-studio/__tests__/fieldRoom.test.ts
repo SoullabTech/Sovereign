@@ -105,11 +105,35 @@ describe('the study is opt-in and inert by default', () => {
    * returned. A study that changed the room for people who did not ask to be in
    * it would be a deployment wearing a study's clothes.
    */
-  it('the Field room is reached only by an explicit route parameter', () => {
-    expect(page).toContain("parseTreatment(searchParams?.get('field') ?? null)");
-    expect(page).toContain('if (fieldTreatment) {');
-    /* The canonical shell is still the fall-through, not a branch of the room. */
-    expect(page).toContain('<WriterStudioShell');
+  /**
+   * ⭐ THE ROOM IS WRITE. Founder ruling, 2026-09-10.
+   *
+   * This asserted the opposite: that the room was reachable ONLY by an explicit
+   * `?field=A|B|C`, and inert without it. That was true and right while it was a
+   * design study — three treatments, one falsifier, nothing shipped.
+   *
+   * The study answered its question. C was ruled, the parameter is retired as a
+   * product entry, and the room is now the WRITE interior of the persistent
+   * Studio. A test that still demanded the study gate would be requiring the
+   * product to stay experimental.
+   *
+   * ⛔ WHAT REPLACES IT: the room may not be a second shell. It renders INSIDE
+   * WriterStudioShell, and the treatment is fixed rather than chosen by anyone
+   * arriving with a URL.
+   */
+  it('the room is WRITE’s interior, inside the persistent Studio shell', () => {
+    /* One treatment, ruled — not selected from a parameter. */
+    expect(page).toContain("const WRITE_TREATMENT = 'C' as const");
+    expect(page).toContain('treatment={WRITE_TREATMENT}');
+    expect(page).not.toContain("parseTreatment(searchParams?.get('field') ?? null)");
+
+    /* ⛔ AND IT DOES NOT REPLACE THE SHELL. An early return of <FieldRoom>
+       would give WRITE one environment and DEVELOP another. */
+    const shellAt = page.indexOf('<WriterStudioShell');
+    const roomAt = page.indexOf('<FieldRoom');
+    expect(shellAt).toBeGreaterThan(-1);
+    expect(roomAt).toBeGreaterThan(shellAt);
+    expect(page).not.toMatch(/if \(fieldTreatment\) \{\s*return \(/);
   });
 
   /**
