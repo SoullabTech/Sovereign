@@ -973,3 +973,148 @@ dependency changes      STILL NOT AUTHORIZED — jsdiff installed only in the
                         disposable research directory
 PRODUCTION              UNTOUCHED
 ```
+
+---
+
+# Addendum 6 — `codemirror-ai` · `prosemirror-suggestion-mode` · two new laws
+
+## ⭐ DV-1 — non-identical strings must produce a visible difference
+
+**Ratified 2026-09-10**, arising from the whitespace test in Addendum 5.
+
+```
+original === proposed   ->  no diff
+original !== proposed   ->  AT LEAST ONE writer-perceivable change indicator
+
+whitespace-only         ->  EXPLICITLY visualized
+                            "line break added"
+                            "double space -> single space"
+                            or a visible whitespace glyph treatment
+```
+
+⭐ **The truthfulness obligation belongs to OUR renderer, not to jsdiff.** Choosing
+`diffWordsWithSpace` makes the algorithm detect the change; **CSS can still make a
+whitespace-only hunk practically invisible.** A review surface that can show a real
+proposal as "no change" is lying about what MAIA proposed, whatever the library
+returned.
+
+## ⭐⭐ WL-2 — the authorization resolver and the application resolver must be one truth
+
+**Promoted from a `prosemirror-suggestion-mode` finding.**
+
+> **The resolver whose result authorizes application must be the resolver that
+> determines application.**
+
+```
+NO   canApply() says "unique"   ->  execute() independently searches again
+NO   dry-run refuses ambiguity  ->  live path takes the first match
+```
+
+Its AI helper searches by `textBefore + textToReplace + textAfter` and counts
+matches. **In dry-run it reports success only when `matches.length === 1`. When
+actually dispatching, on multiple matches it logs a warning and applies the first
+one anyway.**
+
+> ⭐ **A safe preflight does not make an unsafe execution safe.**
+
+A check/use split where **the semantics themselves differ even without a race.**
+Binds our application boundary:
+
+```
+locateCurrent(...) -> CURRENT, exact identity + coverage
+                   -> THE SAME ESTABLISHED TARGET feeds the mutation
+
+never:  check current -> later search again -> apply wherever found
+```
+
+## 🔴 `codemirror-ai` — REFUSE the model. Falsified at runtime.
+
+```
+pinned  3b4222b13b18ce76415d9a4f19bd1e3389aeae8a · 2026-09-04 · Apache-2.0
+```
+
+Same already-applied shape: the model returns, the document is dispatched
+immediately, `{from, to, oldCode, newCode}` is stored, **Accept merely clears the
+state and Reject writes `oldCode` back.**
+
+### The static finding
+
+`src/inline-edit/state.ts:149` — `completionState.update()` handles the
+`showCompletion` effect and otherwise `return value`. **It never maps `from`/`to`
+through `tr.changes`.** The coordinates are frozen at the moment of suggestion.
+
+### ⛔ The runtime consequence — Reject destroys the writer's own work
+
+Pattern falsifier reconstructing that exact state field headlessly on
+`@codemirror/state` (*not* a run of the shipped UI, which needs a DOM):
+
+```
+doc after AI edit          "Chapter opening.\n\nThe knowledge arrived already complete."
+writer types ABOVE it      "A new first paragraph the writer just wrote.\n\nChapter…"
+stored coords              from=18 to=57   (unmapped)
+press Reject               "A new first paragrIt was a knowledge that arrived
+                            already complete.ning.\n\nThe knowledge arrived
+                            already complete."
+
+AI text still present after Reject      TRUE
+writer's own new paragraph intact       FALSE
+```
+
+⭐⭐ **Reject ate the writer's paragraph and kept the AI's text.** The one gesture
+whose entire promise is *"undo what the machine did"* destroyed what the human did
+and preserved what the machine did.
+
+This was recorded as NOT YET ESTABLISHED in the founder's source pass. **It is now
+established.**
+
+```
+REFUSE      mutation before acceptance
+            rejection-as-restoration
+            editor state as proposal truth
+            static coordinates on a live document
+
+LEARN FROM  compact inline request surface · loading state
+            cancellation via AbortController · keyboard accept/reject
+            showing old and new simultaneously
+```
+
+⚠️ **And a targeting lesson:** its AI command expands the writer's selection to
+whole line boundaries before asking the model. Fine for code, dangerous for prose.
+
+> **A request gesture may orient more broadly, but it must not silently widen the
+> replacement target.**
+
+## 🔴 `prosemirror-suggestion-mode` — REFUSE as substrate, LEARN as interaction
+
+```
+pinned  e61b70c3… · MIT · explicitly WIP with known issues
+```
+
+The classic Word/Docs model: the replacement is **inserted into editor state**, the
+removed text is **reinserted carrying a `suggestion_delete` mark**, the new text
+carries `suggestion_insert`, and Accept/Reject reconcile the marked pieces.
+
+⛔ **A pending proposal must remain a proposal RECORD, not special text living
+inside canonical editor state.** Possibly useful later as a reference for *human*
+track-changes inside WRITE; never the substrate for MAIA proposals.
+
+Also repeats **A-5**: its README recommends multiple AI suggestions by looping over
+`applySuggestion()`.
+
+## Standing
+
+```
+DV-1                    RATIFIED — renderer's obligation, not the library's
+WL-2                    PROMOTED — one resolver, authorization = application
+
+codemirror-ai           REFUSE model · LEARN interaction · falsified at runtime
+prosemirror-suggestion  REFUSE substrate · LEARN interaction
+
+⭐ NEITHER LIBRARY CHANGES THE RC ARCHITECTURE. Prose and Sundial did; these two
+   confirm the boundary and donate interaction lessons. The library census has
+   stopped producing architectural surprises.
+
+NEXT   FineEdit / CoEdIT — a different question entirely:
+       how do we evaluate whether MAIA's proposed revision is actually good,
+       while preserving the writer's voice?
+```
