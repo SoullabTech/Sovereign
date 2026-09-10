@@ -50,7 +50,7 @@ import {
 import { recognizeSections } from '@/lib/manuscript/ask/bodyGate/sectionRecognition';
 import { createPendingAsk } from '@/lib/manuscript/ask/pendingAsk/pendingAskStore';
 import { createPendingAskClaimant } from '@/lib/manuscript/ask/pendingAsk/pendingAskClaimant';
-import { claimAcquired } from '@/lib/manuscript/ask/pendingAsk/claimContract';
+import { claimAcquired, isUsableActId } from '@/lib/manuscript/ask/pendingAsk/claimContract';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
@@ -147,6 +147,8 @@ function parseDevelopmentalAnchor(v: unknown): AskAnchor | null {
  */
 export interface AuthorizeSectionsAct {
   readonly pendingAskRef: string;
+  /** ⭐ One physical press → one id. A transport retry carries the SAME one. */
+  readonly actId: string;
   readonly authorizes: readonly string[];
 }
 
@@ -160,9 +162,18 @@ function parseAuthorizeAct(v: unknown): AuthorizeSectionsAct | null {
      starting a second protocol. Demanding the body contain ONLY the act's three
      keys would refuse every well-formed resume. */
   if (typeof o.pendingAskRef !== 'string' || o.pendingAskRef.length < 32) return null;
+  /* ⭐⭐ THE ACT'S IDENTITY, SUPPLIED BY THE SURFACE. Only the surface that
+     watched the writer press the button knows whether a request is that press
+     again or a new one, so the server cannot mint this and must not try. It is
+     act identity, ⛔ never authority: possessing it permits nothing. */
+  if (!isUsableActId(o.actId)) return null;
   if (!Array.isArray(o.authorizes) || o.authorizes.length === 0) return null;
   if (!o.authorizes.every((x) => typeof x === 'string' && x.length > 0)) return null;
-  return { pendingAskRef: o.pendingAskRef, authorizes: [...new Set(o.authorizes as string[])].sort() };
+  return {
+    pendingAskRef: o.pendingAskRef,
+    actId: (o.actId as string).trim(),
+    authorizes: [...new Set(o.authorizes as string[])].sort(),
+  };
 }
 
 export const __parseAuthorizeActForTest = parseAuthorizeAct;
@@ -685,17 +696,24 @@ async function developmentalBodyTurn(input: {
   /* ⭐⭐ THE ATOMIC CLAIM — ONCE, and BEFORE any disclosure machinery. A losing
      resume must reach no boundary, no may_cross, no load and no receipt: atomic
      bookkeeping after the constitutional event would be useless. */
-  const claim = await createPendingAskClaimant().claim(authorization.pendingAskRef);
+  const claim = await createPendingAskClaimant().claim(
+    authorization.pendingAskRef, authorization.actId);
   if (!claimAcquired(claim)) {
     /* ⭐ Each answer stays itself. `unavailable` means the system could not
        establish what happened — ⛔ never that someone else consumed the act. */
-    const status = claim.kind === 'already_consumed' ? 200
+    const status = claim.kind === 'already_consumed' || claim.kind === 'act_already_processed' ? 200
       : claim.kind === 'expired' ? 410 : claim.kind === 'unknown' ? 404 : 503;
     return NextResponse.json({
       ...shared,
-      ...(claim.kind === 'already_consumed'
-        ? { result: 'ALREADY_CONSUMED', completion: claim.completion }
-        : { refusal: claim.kind }),
+      /* ⭐⭐ THE SAME PRESS, ARRIVING TWICE, IS NOT A REUSE ATTEMPT. Telling the
+         member they tried to spend an authorization again when they pressed
+         once would be false about their own act. Both refuse identically —
+         no boundary, no load, no cognition, no receipt. */
+      ...(claim.kind === 'act_already_processed'
+        ? { result: 'ACT_ALREADY_PROCESSED', completion: claim.completion }
+        : claim.kind === 'already_consumed'
+          ? { result: 'ALREADY_CONSUMED', completion: claim.completion }
+          : { refusal: claim.kind }),
     }, { status });
   }
 

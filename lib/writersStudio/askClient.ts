@@ -18,6 +18,8 @@ import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
 import type { StalenessState } from '@/lib/manuscript/ask/staleness';
 import type { CurrentLocation } from '@/lib/manuscript/development/resolve';
 import type { ThreadDiscovery, ThreadSummary } from './observationDialogueResume';
+import { bodyOutcomeFrom } from './bodyProtocolResponse';
+import { authorizeRequest, type BodyProtocolOutcome } from './bodyAuthorization';
 
 export interface AskTurnView {
   index: number;
@@ -45,6 +47,18 @@ export type AskOutcome =
       location?: CurrentLocation;
     }
   | { ok: false; refusal: string; detail?: string; threadId?: string; location?: CurrentLocation };
+
+/**
+ * ⭐ S3 · P1 — an Ask may pause for body authority instead of answering.
+ *
+ * `outcome` is present ONLY when the response is a body-protocol state. ⛔ Null
+ * means the ordinary path answered, and the surface must not manufacture a
+ * disclosure state from an answer that is not one.
+ */
+export interface AskResult {
+  readonly outcome: BodyProtocolOutcome | null;
+  readonly ask: AskOutcome;
+}
 
 const url = (manuscriptId: string) =>
   `/api/sovereign/manuscripts/${encodeURIComponent(manuscriptId)}/ask`;
@@ -92,6 +106,83 @@ export async function ask(input: {
   } catch {
     /* A transport failure is not an answer from MAIA and is never shown as one. */
     return { ok: false, refusal: 'unreachable' };
+  }
+}
+
+/**
+ * The same request, with the body-protocol outcome surfaced.
+ *
+ * ⭐ WHY A SECOND ENTRY POINT RATHER THAN A CHANGED `ask`. Every existing caller
+ * reasons in `{ ok }` and knows nothing about disclosure; widening `ask` would
+ * hand them a shape they cannot render and quietly make silence the default
+ * treatment of a pause.
+ */
+export async function askForBody(input: {
+  manuscriptId: string; question: string; anchor?: AskAnchor; threadId?: string;
+}): Promise<AskResult> {
+  const raw = await rawPost(input.manuscriptId, input.threadId
+    ? { threadId: input.threadId, question: input.question }
+    : { anchor: input.anchor, question: input.question });
+  return { outcome: raw.outcome, ask: raw.ask };
+}
+
+/**
+ * ⭐⭐ ACT 3 — the member's explicit authorization, resuming this same Ask.
+ *
+ * ⛔ `actId` IS PASSED IN, never minted here. A client that generated one per
+ * request would turn every transport retry into a new apparent human act, which
+ * is the exact defect the Focus witness exposed.
+ *
+ * ⛔ Section IDENTITIES only. Headings and labels are display material and the
+ * server refuses them; the required set is re-derived server-side regardless.
+ */
+export async function authorizeSections(input: {
+  manuscriptId: string; pendingAskRef: string; actId: string;
+  sectionIds: readonly string[]; question: string; threadId?: string;
+}): Promise<AskResult> {
+  const raw = await rawPost(input.manuscriptId, authorizeRequest({
+    pendingAskRef: input.pendingAskRef, actId: input.actId,
+    sectionIds: input.sectionIds, question: input.question, threadId: input.threadId,
+  }));
+  return { outcome: raw.outcome, ask: raw.ask };
+}
+
+/** One POST, read once, in both vocabularies. */
+async function rawPost(
+  manuscriptId: string, body: Record<string, unknown>,
+): Promise<{ outcome: BodyProtocolOutcome | null; ask: AskOutcome }> {
+  try {
+    const res = await apiFetch(url(manuscriptId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const outcome = bodyOutcomeFrom(res.status, j);
+    if (res.status >= 400 || outcome) {
+      return {
+        outcome,
+        ask: {
+          ok: false,
+          refusal: String(j.refusal ?? j.result ?? `http_${res.status}`),
+          detail: j.detail as string | undefined,
+          threadId: j.threadId as string | undefined,
+          location: j.location as CurrentLocation | undefined,
+        },
+      };
+    }
+    return {
+      outcome: null,
+      ask: {
+        ok: true, threadId: j.threadId as string, thread: j.thread as AskThreadView,
+        staleness: j.staleness as StalenessState, location: j.location as CurrentLocation | undefined,
+      },
+    };
+  } catch {
+    /* ⛔ A transport failure is not an answer from MAIA and is never shown as
+       one — and it is not a protocol outcome either. The caller's machine must
+       be told the transport failed so a retry stays the SAME act. */
+    return { outcome: null, ask: { ok: false, refusal: 'unreachable' } };
   }
 }
 

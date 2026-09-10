@@ -79,10 +79,28 @@ export type BodyProtocolOutcome =
   | { kind: 'DECLINED' }
   | { kind: 'BODY_AUTHORIZED' };
 
+/**
+ * The facts a rendering must carry. ⭐ Named rather than described, so a test can
+ * require them of the copy instead of trusting that the words are kind.
+ */
+export type DisclosureFact =
+  | 'section_named'          // which section(s), by the member's own labels
+  | 'nothing_read_yet'       // no authored body has been read
+  | 'authorization_happened' // the member's act did occur
+  | 'nothing_was_read'       // and still nothing was read
+  | 'new_act_required'       // trying again is a NEW authorization
+  | 'permission_established' // authority existed
+  | 'evidence_unverifiable'  // and recovery/verification failed
+  | 'some_sections_missing'; // the answer needs more than was authorized
+
 export interface BodyAuthorizationView {
-  readonly kind: BodyProtocolResult['kind'];
-  /** Sections the member is being asked about, or that remain outstanding. */
-  readonly sections: readonly string[];
+  readonly kind: BodyProtocolOutcome['kind'];
+  /**
+   * Sections the member is being asked about, or that remain outstanding —
+   * ⭐ carrying the SERVER's recognition metadata, so the surface renders a
+   * label and can never print an identity at a writer.
+   */
+  readonly sections: readonly DisclosureSection[];
   /** The act the member may take, or `null` where no act is offered. */
   /**
    * ⭐⭐ `reauthorize` AND `retry_same` ARE NOT THE SAME OFFER, and the word

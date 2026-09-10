@@ -48,7 +48,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ask, loadThread, threadsOn, type AskThreadView } from '@/lib/writersStudio/askClient';
+import {
+  askForBody, authorizeSections, loadThread, threadsOn, type AskThreadView,
+} from '@/lib/writersStudio/askClient';
+import BodyAuthorizationPanel from './BodyAuthorizationPanel';
+import {
+  initial as machineInitial, step as machineStep, type MachineState,
+} from '@/lib/writersStudio/bodyAuthorizationMachine';
 import {
   resumeDecision, sendMode, threadChoiceLabel, type ResumeDecision,
 } from '@/lib/writersStudio/observationDialogueResume';
@@ -150,6 +156,32 @@ export default function ObservationDialogue({
 
   const mode = sendMode(decision, threadId);
 
+  /**
+   * ⭐⭐ THE INTERACTION OWNER LIVES HERE — beside the conversation, never inside
+   * `heldFocus`. Attention must not acquire a memory of authorization.
+   *
+   * ⛔ `useRef`, not `useState`, for the machine: the reducer is the authority on
+   * the act's lifecycle, and a stale closure re-entering it could resend an act
+   * the machine has already moved past.
+   */
+  const machine = useRef<MachineState>(machineInitial);
+  const [authView, setAuthView] = useState<MachineState>(machineInitial);
+  /** The question this pause belongs to, kept so ACT 3 resumes the same Ask. */
+  const pausedQuestion = useRef<string>('');
+
+  /**
+   * ⭐ MINTED ONLY FROM A PRESS. This is passed INTO the machine, which calls it
+   * from exactly one place. ⛔ Never called during render.
+   */
+  const mintActId = useCallback(() => `act-${crypto.randomUUID()}`, []);
+
+  const advance = useCallback((event: Parameters<typeof machineStep>[1]) => {
+    const s = machineStep(machine.current, event, mintActId);
+    machine.current = s.state;
+    setAuthView(s.state);
+    return s.effect;
+  }, [mintActId]);
+
   const send = useCallback(async () => {
     const q = draft.trim();
     /* ONE RULE, FOR BOTH THE PERMISSION AND THE PAYLOAD. `blocked` covers
@@ -158,13 +190,26 @@ export default function ObservationDialogue({
     if (!q || busy || mode.kind === 'blocked') return;
     setBusy(true);
     setRefusal(null);
-    const r = await ask({
+    const { outcome, ask: r } = await askForBody({
       manuscriptId,
       question: q,
       ...(mode.kind === 'resume'
         ? { threadId: mode.threadId }
         : { anchor: { on: 'observation' as const, readingId, observationKey } }),
     });
+
+    /* ⭐ THE ASK PAUSED FOR BODY AUTHORITY. Not an error, and not an answer: a
+       lawful intermediate state of the protocol. The writer's words are kept so
+       the resumed act carries the same question. */
+    if (outcome) {
+      pausedQuestion.current = q;
+      advance({ type: 'served', outcome });
+      if (r.threadId) setThreadId(r.threadId);
+      if (r.location) setLocation(r.location);
+      setBusy(false);
+      return;
+    }
+
     if (r.ok) {
       setThreadId(r.threadId);
       setThread(r.thread);
@@ -178,7 +223,53 @@ export default function ObservationDialogue({
       if (r.threadId) setThreadId(r.threadId);
     }
     setBusy(false);
-  }, [draft, busy, mode, manuscriptId, readingId, observationKey]);
+  }, [draft, busy, mode, manuscriptId, readingId, observationKey, advance]);
+
+  /**
+   * ⭐⭐ ACT 3. The press produces exactly one act identity; a second press while
+   * this one is in flight reaches the machine and is refused there.
+   */
+  const authorize = useCallback(async () => {
+    const effect = advance({ type: 'press' });
+    if (effect.do !== 'send') return;
+    setRefusal(null);
+    const { outcome, ask: r } = await authorizeSections({
+      manuscriptId,
+      pendingAskRef: effect.pendingAskRef,
+      actId: effect.actId,
+      sectionIds: effect.sectionIds,
+      question: pausedQuestion.current,
+      threadId: threadId ?? undefined,
+    });
+    /* ⛔ `unreachable` is a TRANSPORT failure, not a protocol outcome. Telling
+       the machine so is what keeps the retry the SAME act. */
+    if (!outcome && !r.ok && r.refusal === 'unreachable') {
+      advance({ type: 'transport_failed' });
+      return;
+    }
+    if (outcome) {
+      advance({ type: 'served', outcome });
+      if (outcome.kind === 'BODY_AUTHORIZED' && r.ok) {
+        setThread(r.thread); setThreadId(r.threadId); setDraft('');
+      }
+      return;
+    }
+    if (r.ok) {
+      advance({ type: 'served', outcome: { kind: 'BODY_AUTHORIZED' } });
+      setThreadId(r.threadId); setThread(r.thread); setDraft('');
+    } else {
+      setRefusal(r.refusal);
+    }
+  }, [advance, manuscriptId, threadId]);
+
+  const toggleSection = useCallback((sectionId: string) => {
+    const chosen = machine.current.selectedSectionIds.includes(sectionId)
+      ? machine.current.selectedSectionIds.filter((x) => x !== sectionId)
+      : [...machine.current.selectedSectionIds, sectionId];
+    advance({ type: 'select', sectionIds: chosen });
+  }, [advance]);
+
+  const decline = useCallback(() => { advance({ type: 'decline' }); }, [advance]);
 
   /* Before the first turn the room has no measured location, so it falls back to
      what the reading itself already said. Shown as the reading's claim, not as a
@@ -204,6 +295,20 @@ export default function ObservationDialogue({
         Nothing said here changes your work or her reading. She is talking about what she noticed
         then, and has not reread the work.
       </p>
+
+      {/* ⭐⭐ THE HUMAN MOMENT, IN PLACE. It appears inside the conversation the
+          writer already opened — no route, no second screen, and nothing that
+          touches the Work's measured geometry. */}
+      {authView.outcome && (
+        <BodyAuthorizationPanel
+          outcome={authView.outcome}
+          selectedSectionIds={authView.selectedSectionIds}
+          busy={authView.phase === 'authorizing'}
+          onToggleSection={toggleSection}
+          onAuthorize={authorize}
+          onDecline={decline}
+        />
+      )}
 
       {line && (
         <p className="text-[12px] leading-relaxed opacity-70 mt-2"
