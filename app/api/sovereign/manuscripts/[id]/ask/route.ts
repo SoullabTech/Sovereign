@@ -554,11 +554,37 @@ async function developmentalTurn(input: {
     });
   }
 
-  const outcome = await askMaiaDevelopmental(
+  /* ⭐⭐ THE HANDOFF SEAM. Generation begins here and is deliberately NOT awaited
+     yet, so the receipt is confirmed at the moment of crossing rather than on an
+     answer. `onHandoff` fires inside the provider, immediately before the request
+     leaves the process; `.finally` settles false if the call completes without
+     ever dispatching — a refusal, a missing client, a throw.
+
+       handoff fails                  → receipt stays `attempted`
+       handoff succeeds, answer fails → receipt stays `crossed`
+
+     ⛔ A generation failure after handoff does NOT mean the Work never crossed.
+     Response success is not disclosure evidence — handoff is. */
+  let signalled = false;
+  let settle!: (v: boolean) => void;
+  const handoff = new Promise<boolean>((r) => { settle = r; });
+  const generating = askMaiaDevelopmental(
     ctx,
     historyFor(priorTurns.map((t) => ({ speaker: t.speaker, body: t.body })), question),
     question,
-  );
+    { onHandoff: () => { signalled = true; settle(true); } },
+  ).finally(() => { if (!signalled) settle(false); });
+
+  const crossed = await handoff;
+  if (crossed && boundary !== null) {
+    /* Confirm the id that authorized THIS handoff, because the authorized prose
+       entered the response-producing path. ⛔ A pre-handoff failure leaves the
+       receipt `attempted`, which is the truthful state — and does NOT make its
+       capability resumable: a later deliberate retry is a new authority act. */
+    await confirmDisclosureCrossed(boundary.disclosureId);
+  }
+
+  const outcome = await generating;
 
   if (!outcome.ok) {
     /* The question is already recorded. A failed answer is reported as a

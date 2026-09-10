@@ -42,6 +42,12 @@ export interface ReadOptions {
   /* No `client`, no `provider`, no `mode`. The platform authorizes the seam. */
   model?: string;
   maxTokens?: number;
+  /**
+   * ⭐ The disclosure handoff. Called at the moment the request leaves the
+   * process — not on entry here, and not when an answer returns. It is what a
+   * receipt's `attempted → crossed` transition is allowed to depend on.
+   */
+  onHandoff?: () => void;
 }
 
 const DEFAULT_MODEL = process.env.MAIA_DEVELOPMENTAL_READER_MODEL || 'claude-opus-5';
@@ -103,7 +109,7 @@ export async function readDevelopmentally(
     toolChoice: { type: 'any' },
     messages: [{ role: 'user', content: renderRequest(request) }],
     execution: { completion: 'long-running' },
-  });
+  }, { onHandoff: opts.onHandoff });
 
   if (!outcome.ok) {
     /* AIN-STRUCTURED-INFERENCE-SEAM-01 amendment, 2026-09-08. The seam gained a

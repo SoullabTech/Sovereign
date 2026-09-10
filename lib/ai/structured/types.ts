@@ -210,6 +210,23 @@ export type StructuredOutcome =
  * A provider that cannot honour tools, roles and a pinned model does not
  * partially implement this interface — it does not implement it.
  */
+/**
+ * ⭐⭐ THE HANDOFF SIGNAL. Not a callback for progress or telemetry: the one
+ * moment a disclosure receipt may lawfully move `attempted → crossed`.
+ *
+ *   The receipt is evidence of disclosure, not of successful inference.
+ *   Response success is not disclosure evidence — handoff is.
+ *
+ * ⛔ A PROVIDER MUST CALL IT IMMEDIATELY BEFORE DISPATCH AND NOWHERE ELSE.
+ * Entering `execute` is not a handoff — a provider can still refuse, and its
+ * client can still fail to construct, after that point. Signalling early would
+ * record a crossing for prose that never left the process; signalling late (on
+ * the response) would record no crossing for prose that did.
+ */
+export interface StructuredHooks {
+  readonly onHandoff?: () => void;
+}
+
 export interface StructuredProvider {
   name: ProviderName;
   /**
@@ -220,5 +237,5 @@ export interface StructuredProvider {
    * guarantee by saying nothing. `false` is a lawful answer; silence is not.
    */
   enforcesInputSchema: boolean;
-  execute(req: StructuredRequest): Promise<StructuredResult>;
+  execute(req: StructuredRequest, hooks?: StructuredHooks): Promise<StructuredResult>;
 }

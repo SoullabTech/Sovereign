@@ -20,6 +20,7 @@
 
 import { captureEvidence, loadRevisionContentForCognition } from '../development/capture';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
 import { actIdentifiers } from '@/lib/disclosure/actIdentity';
 import type { DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
@@ -102,7 +103,26 @@ export async function commissionReading(input: CommissionInput, opts: ReadOption
   }
 
   const request = { commissionedLens: lens, evidence, recovered };
-  const result = await readDevelopmentally(request, opts);
+  /* ⭐⭐ THE HANDOFF SEAM. Generation begins here and is deliberately NOT awaited
+     yet, so the receipt is confirmed at the moment of crossing rather than on an
+     answer. `onHandoff` fires inside the provider, immediately before the request
+     leaves the process; `.finally` settles false if the call completes without
+     ever dispatching — a refusal, a missing client, a throw.
+
+       handoff fails                  → receipt stays `attempted`
+       handoff succeeds, answer fails → receipt stays `crossed`
+
+     ⛔ A generation failure after handoff does NOT mean the Work never crossed.
+     Response success is not disclosure evidence — handoff is. */
+  let signalled = false;
+  let settle!: (v: boolean) => void;
+  const handoff = new Promise<boolean>((r) => { settle = r; });
+  const readingRun = readDevelopmentally(request, { ...opts, onHandoff: () => { signalled = true; settle(true); } })
+    .finally(() => { if (!signalled) settle(false); });
+
+  if (await handoff) await confirmDisclosureCrossed(boundary.disclosureId);
+
+  const result = await readingRun;
   if (result.outcome === 'refused') return refused('read', result.refusal, result.detail);
 
   let phenomena: Awaited<ReturnType<typeof classifyClaims>> | null = null;

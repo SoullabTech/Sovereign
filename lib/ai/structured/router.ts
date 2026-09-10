@@ -38,7 +38,7 @@
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
 import type {
-  StructuredOutcome, StructuredProvider, StructuredRequest,
+  StructuredOutcome, StructuredProvider, StructuredRequest, StructuredHooks,
 } from './types';
 
 /** Modes in which an external structured provider is authorized. */
@@ -64,12 +64,13 @@ async function defaultProvider(): Promise<StructuredProvider> {
  */
 export async function runStructured(
   req: StructuredRequest,
+  hooks?: StructuredHooks,
 ): Promise<StructuredOutcome> {
   const policy = resolveStructuredMode();
   if (!policy.ok) {
     return { ok: false, refusal: policy.refusal, detail: policy.detail };
   }
-  return route(req, policy.mode);
+  return route(req, policy.mode, hooks);
 }
 
 /**
@@ -89,6 +90,7 @@ export async function runStructured(
 async function route(
   req: StructuredRequest,
   mode: InferenceMode,
+  hooks?: StructuredHooks,
 ): Promise<StructuredOutcome> {
   if (!EXTERNAL_AUTHORIZED.includes(mode)) {
     if (LOCAL_STRUCTURED_PROVIDER === null) {
@@ -101,7 +103,7 @@ async function route(
         detail: `mode=${mode}: no local provider can honour a structured contract`,
       };
     }
-    return execute(LOCAL_STRUCTURED_PROVIDER, req);
+    return execute(LOCAL_STRUCTURED_PROVIDER, req, hooks);
   }
 
   let p: StructuredProvider;
@@ -110,11 +112,11 @@ async function route(
   } catch (err) {
     return { ok: false, refusal: 'not_configured', detail: String(err) };
   }
-  return execute(p, req);
+  return execute(p, req, hooks);
 }
 
 async function execute(
-  provider: StructuredProvider, req: StructuredRequest,
+  provider: StructuredProvider, req: StructuredRequest, hooks?: StructuredHooks,
 ): Promise<StructuredOutcome> {
   /* BEFORE COGNITION. A caller that required provider-enforced schema
      conformance asked for a guarantee, not for a request that will probably
@@ -133,7 +135,7 @@ async function execute(
   }
 
   try {
-    return { ok: true, result: await provider.execute(req) };
+    return { ok: true, result: await provider.execute(req, hooks) };
   } catch (err) {
     /* THE FAILURE STOPS HERE. No second provider, no local text path, no
        degraded template. A structured request that could not be served exactly

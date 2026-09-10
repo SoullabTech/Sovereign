@@ -173,6 +173,12 @@ function observationSays(ctx: DevelopmentalAskContext): string {
 }
 
 export interface DevelopmentalAskOptions {
+  /**
+   * ⭐ The disclosure handoff. Called at the moment the request leaves the
+   * process — not on entry here, and not when an answer returns. It is what a
+   * receipt's `attempted → crossed` transition is allowed to depend on.
+   */
+  onHandoff?: () => void;
   model?: string;
   maxTokens?: number;
 }
@@ -203,7 +209,10 @@ export async function askMaiaDevelopmental(
   try {
     /* NO `tools` KEY, and no `execution`. The field is OMITTED rather than set
        to undefined, so nothing reaches the wire for a provider to enable. */
-    const outcome = await runStructured({ model, maxTokens: opts.maxTokens ?? 1200, system, messages });
+    const outcome = await runStructured(
+      { model, maxTokens: opts.maxTokens ?? 1200, system, messages },
+      { onHandoff: opts.onHandoff },
+    );
     if (!outcome.ok) return { ok: false, refusal: 'unreachable' };
     const text = outcome.result.content
       .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')
