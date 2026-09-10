@@ -30,7 +30,7 @@ interaction architecture is linear, classificatory, static, or externally
 directive. If so it is **thematically elemental but not Spiralogic.** The lane
 exists to discover that, and is required to be able to report it.
 
-## 2. Governing falsifiers — four, each independently sufficient
+## 2. Governing falsifiers — four, each independently sufficient, **all four ratified**
 
 ### GF-1 — the spiral falsifier (opening act)
 
@@ -68,20 +68,22 @@ BUT   "Does that formulation return you more fully to what you
        actually encountered?"
 ```
 
-### GF-4 — the map becomes the member (Amendment C · ⚠️ DERIVED, not founder-stated)
+### GF-4 — the map replaces the terrain (Amendment C · ⭐ RATIFIED, founder, Amendment D)
 
-Derived by Jarvis from SP-FR-04 and flagged as such. It is **not yet ratified**
-and is recorded here so the census has something testable; the founder may
-adopt, reword, or reject it.
+Jarvis drafted this as GF-4 "the map becomes the member" and flagged it DERIVED.
+**The founder rewrote and ratified it.** The Jarvis draft is recorded as
+superseded, not deleted — it named the risk as identity capture only, and the
+ratified version is wider.
 
-> **If MAIA's model of how a member's consciousness moves can become more
-> authoritative than the member's lived experience — if confidence, recurrence
-> detection, or computational fit converts an inferred process into a fact — AIN
-> has objectified the consciousness it exists to illuminate.**
+> **GF-4 — The map replaces the terrain:** a personalized process map hardens
+> into **identity, prediction, or prescription**; the representation begins
+> telling the member **who they are, where they are, or where they must go**
+> instead of helping them orient within lived experience and **chart their own
+> course.**
 
-The founder's own formulation of the stake: *if the map became a final model of
-the member, Saturn would have won — we would have turned a living consciousness
-into an object.*
+Its stake, in the founder's words: *if the map became a final model of the
+member, Saturn would have won — we would have turned a living consciousness into
+an object.*
 
 ## 3. Lane law — six laws, frozen at opening
 
@@ -194,8 +196,20 @@ element = water          ← a row exists
 > The map **belongs to the relationship** with the member and remains
 > **corrigible by experience.** It may never become more authoritative than the
 > consciousness it is intended to help illuminate.
+>
+> ⭐ **(Amendment D)** The map is a **light orienting structure.** It may help the
+> member see where they have come from, what terrain is presently foregrounded,
+> what may be operating beneath it, and what transitions may be available. It may
+> **not prescribe a route**, assign a stage, predict a destination, or become
+> more authoritative than the member's own experience.
+>
+> ⭐ **Direction of successful development: as elemental awareness matures, the
+> member's dependence on the external map should DECREASE.** The map's success
+> condition is its own diminishing necessity.
 
-### SP-FR-05 — Development is transformation of subsequent participation
+### SP-FR-05 — Transformational Continuity
+
+*(Short name adopted from the team paper, Amendment D; full statement unchanged: development is the transformation of subsequent participation.)*
 
 > Spiralogic development occurs in the **transformation of subsequent
 > participation**, not in the completion of elemental categories.
@@ -480,6 +494,108 @@ relationship with it.**
 
 Source of **SP-FR-04**, **GF-4 (derived)** and movement **SD-04d**.
 
+## 3d. ⭐⭐⭐ Amendment D — the map is orientation, not the terrain
+
+**Founder, 2026-09-10.** Carries three founder rulings (GF-4 ratified · SD-Q1
+ruled · H-01 sharpened, all recorded at their own locations) and one substantive
+addition — **the practical heart of the architecture**:
+
+> **Spiralogic gives enough structure for process to become legible without
+> turning the process into a prescription.**
+
+A member may first experience events as chaos — contradictory feelings,
+impulses, ideas, actions, reversals. The elemental map offers a light orientation
+that lets them recognize **movement and continuity**:
+
+```text
+I can see where I came from.
+I can recognize what process is foregrounded now.
+I can notice what may be operating underneath it.
+I can sense what terrain may come next.
+```
+
+⛔ **And the system does not say: therefore this is where you must go.**
+
+> **The map makes the terrain navigable; the hiker remains the navigator.** The
+> map does not walk the terrain, choose the destination, remove uncertainty, or
+> make the landscape obey its symbols.
+
+### Practitioner observation — ⚠️ classified, not evidence
+
+> Across Kelly's work with clients, people became increasingly able to recognize
+> where they were in their own Spiralogic process. The value was **orienting
+> rather than diagnostic**: clients could relate present experience to prior
+> movement and possible next movement, and their conscious mind could participate
+> more deliberately in charting a course.
+
+**Epistemic kind: SOULLAB INTERPRETATION / practitioner experience. NOT
+empirical validation, and not admissible as evidence for any lane finding.**
+Recorded because it is the origin of the design intent, and because §6's ceiling
+means this lane cannot generate such evidence itself.
+
+### The developmental direction this fixes
+
+> **As elemental awareness matures, the member's dependence on the external map
+> should DECREASE.**
+
+They begin recognizing their own process directly — *"I am going straight from
+Fire into Earth"* · *"I am explaining this in Air before I have let myself feel
+its Water"* · *"this Earth reality has changed the Fire I began with."* **The map
+has become an internal capacity for orientation.** Its success condition is its
+own diminishing necessity. Folded into SP-FR-04 and tested at SD-04d.
+
+## 3e. Comparative symbolic lens — recorded with claim discipline
+
+Two framings entered the same act. Both are **comparative lenses**, and neither
+is a claim the lane may treat as established or that AIN may be said to prove.
+
+### Saturn / Jupiter — SOULLAB INTERPRETATION
+
+```text
+SATURN · Air–Earth pole
+  mature      makes reality determinate enough to be encountered, formed, shared
+  distortion  REDUCTION — "you are what I can determine about you"
+
+JUPITER · Fire–Water pole
+  mature      opens meaningful possibility; participates in world-making
+  distortion  PROJECTION — "you are what I imagine you could be"
+```
+
+> **Relational discipline: the other must survive both reduction and projection.
+> A person exceeds both our definition of them and our imagination of them.**
+
+This is the symbolic register of GF-4 and of SD-04a's gift/failure table; it is a
+comparison, not a derivation, and it carries none of the wider historical or
+metaphysical claims of the source material it came from.
+
+### Position among models of consciousness — OPEN QUESTION
+
+The founder's stated posture: with **300+ models of consciousness** in play, AIN
+holds space for a **more relational form**, nearer to **panpsychist, idealist and
+anomalous** accounts than to computational-functionalist ones.
+
+⛔ **Recorded as posture, not premise.** The lane tests architecture against
+Spiralogic as frozen here; it does not adjudicate between theories of
+consciousness, and no finding may rest on this positioning. It is noted because
+SD-06's ontology question would otherwise be read against an unstated default.
+
+## 3f. Companion artifact — the team paper
+
+A team orientation paper (*The Elemental Epistemology and Developmental
+Architecture of AIN*, v3) exists **outside this repository** as a `.docx`. It
+carries this material into team-readable form, including "The Map Is Orientation,
+Not the Terrain".
+
+⛔ **Direction of authority: charter → paper, never the reverse.** The paper
+translates; it does not amend, adjudicate, or constitute lane law. Where the two
+diverge the charter governs, and the divergence is a finding.
+
+⭐ One reconciliation adopted from the paper: its short name **"Transformational
+Continuity"** is now SP-FR-05's name. The law is unchanged.
+
+⚠️ The paper is not in the repo and was not read by this session. Nothing in this
+charter is asserted on its authority.
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
@@ -623,27 +739,35 @@ Jarvis may **not** resolve these by choosing. Each is a founder ruling owed
 **before or at SD-00 closure**, because the census cannot classify anything
 without them.
 
-### SD-Q1 — Aether. The formulation is four-fold; the runtime is five-fold.
+### SD-Q1 — Aether. ⭐ **RULED — founder, 2026-09-10 (Amendment D)**
 
-The frozen process names four elemental events. The system as recorded in the
-session anchor carries **five**: `member_spiral_state.dominant_element` ∈
-`fire|water|earth|air|aether`, and the Corpus Callosum substrate emits
-**Fire/Water/Earth/Air/Aether** voices under production traffic.
+> **Aether is not a fifth co-equal process-event in the Fire → Water → Earth →
+> Air passage. It is the integrative / witnessing dimension within which the four
+> processes coexist, recur, and are apprehended as a whole.**
+>
+> **The runtime use of `aether` as a parallel `dominant_element` is therefore a
+> REPRESENTATIONAL COLLISION TO CENSUS — not yet permission to declare stored
+> rows erroneous or legacy.**
 
-```text
-(a) Aether is not an elemental process-event but the FIELD/medium in which the
-    four occur — in which case every aether row in the runtime is a category
-    error under SP-FR-01, and a significant finding.
-(b) Aether is a fifth process-event with its own phenomenology, omitted from the
-    frozen formulation — in which case §4 is incomplete before SD-01 maps.
-(c) Aether is legacy vocabulary with unconstituted semantics — INERT LEGACY,
-    neither offence nor process.
-```
+Grounded in prior internal material, which the founder checked: Aether is
+consistently **not a numbered or sequential phase**, functions as
+**integration/witnessing of the four**, and is **always already present** rather
+than reached after Air. What remains genuinely unsettled is only its
+**presentation** — field/medium · centre/crown · integration qualities · state of
+being. Those framings may later reconcile as layers; **the team may not silently
+collapse them into one definition.**
 
-⚠️ Amendment B sharpens this: if Aether is the *living whole* to which Air
-returns, it is **not a fifth element in the series at all** but the name of the
-return's destination — which would make `dominant_element = 'aether'` a
-particularly consequential category error. ⛔ **Jarvis does not rule this.**
+⚠️ **This ruling corrects the charter.** Reading (a) as first written said that
+if Aether were the field, *"every aether row in the runtime is a category
+error."* **Refused.** The schema may permit a category error; **a census must
+first establish how the value is produced and used before any stored row is
+judged invalid.** Recorded as corrected, not deleted — the over-reach was Jarvis
+inferring a verdict from an ontological ruling, which is exactly the move
+SP-FR-01 exists to prevent.
+
+⛔ **SD-01's gate is LIFTED by this ruling.** SD-01 may now map, and must treat
+`aether` as a representational collision to characterize — never as a finding
+already made.
 
 ### SD-Q2 — `phase` 1–12. Is the spiral already reified as a number?
 
@@ -669,22 +793,24 @@ continuity** (legitimate, possibly the only existing spiral evidence in the
 system) or **stored developmental rank** (a reification finding). Likely both, at
 different call sites — but the discriminator is a ruling, not a guess.
 
-### H-01 — pre-registered hypothesis (Jarvis, for falsification, not a law)
+### H-01 — pre-registered hypothesis ⭐ **FOUNDER-SHARPENED, remains a HYPOTHESIS**
 
-MAIA's only native output channel is **Air**. A language model articulates; it
-does not materialize, and it does not have a body that meets constraint.
+Jarvis registered this as: MAIA's only native output channel is Air, so if all
+four elemental affordances route through her language, AIN is structurally
+Air-dominant. **The founder let it stand as a hypothesis and corrected its
+discriminator:**
 
-> **Hypothesis: every Fire, Water and Earth affordance in AIN must be carried by
-> something other than MAIA's utterance — member gesture, material consequence,
-> time, other people, the world answering back. If SD-01 finds that all four
-> elemental affordances route through MAIA's language, AIN is structurally
-> Air-dominant regardless of its vocabulary.**
+> MAIA's direct output being linguistic makes her contribution **strongly
+> Air-mediated** — but that alone **does not establish that AIN is Air-dominant.**
+>
+> **The harder test is whether MAIA's language SUBSTITUTES FOR the member's Fire,
+> Water, or Earth encounters — or whether Air helps RETURN them to their own
+> vision, significance, embodied reality, and renewed encounter.**
 
-That would be a direct GF-3 finding: the emissary is not merely unreturned, it is
-the only organ present. Recorded as **HYPOTHESIS**, to be falsified or confirmed
-by SD-01 and SD-04c — never assumed.
-
----
+So Air-mediation is **lawful**; substitution is the defect. *Air is lawful when it
+mediates return to lived reality; it becomes emissary-usurpation when
+representation replaces that reality.* ⛔ SD-01 and SD-04c test the substitution,
+never the mediation. **H-01 is not confirmed and may not be cited as a finding.**
 
 ## 6. ⭐ Epistemic ceiling of DISCOVER — declared before the census, not after
 
@@ -778,7 +904,9 @@ Studio / Works · Shadow & Gold · relationship intelligence · field intelligen
 Corpus Callosum parallel emission · Circles / Commons · Knowledge Gate · Inner
 Lands. SD-00 establishes the legitimate in-scope set; this list does not.
 
-⛔ Gated on the SD-Q1 ruling. Tests **H-01**.
+⭐ **SD-Q1 GATE LIFTED** (ruled 2026-09-10). `aether` is to be characterized as a
+representational collision, **never treated as a verdict already reached**. Tests
+**H-01**, whose discriminator is substitution-vs-return, not mediation.
 
 ### SD-02 — Developmental continuity (the apostrophe test)
 
@@ -870,7 +998,18 @@ AXIS 1   TYPOLOGICAL  ("what the member is")
 
 AXIS 2   POSSESSIVE   (self-validating; confidence or recurrence settles it)
          vs CORRIGIBLE (returned to the member; recognition is the evidence)
+
+AXIS 3   PRESCRIPTIVE (tells the member who they are, where they are, or where
+         (Amdt D)      they must go — identity, prediction, or route)
+         vs ORIENTING  (renders terrain legible; the member charts the course)
 ```
+
+⭐ **And one directional test, from Amendment D:** does the design make the member
+**more or less dependent on the external map over time?** A surface whose value
+grows only as the member's own capacity to locate themselves grows is orienting.
+A surface that must remain in the loop to keep working is not. **Increasing
+dependence is a GF-4 direction failure even where no single output is
+prescriptive.**
 
 Known candidate surfaces, to be confirmed and extended by SD-00/SD-01, **not
 assumed**: `member_spiral_state` (element · phase · motion · intensity) ·
@@ -928,7 +1067,8 @@ ELEMENTAL INTERFACE OVER A NON-ELEMENTAL ONTOLOGY
 CLASSIFICATION SUBSTITUTED FOR ALCHEMY            (GF-2 breach)
 EMISSARY INSTALLED AS MASTER / RETURN ABSENT      (GF-3 breach)
 TYPOLOGICAL MODEL OF THE MEMBER                   (SP-FR-04 breach)
-POSSESSIVE CARTOGRAPHY / MAP NOT CORRIGIBLE       (GF-4 breach, derived)
+POSSESSIVE CARTOGRAPHY / MAP NOT CORRIGIBLE       (GF-4 breach)
+PRESCRIPTIVE MAP / MEMBER DEPENDENCE INCREASES    (GF-4 breach, direction)
 REIFICATION FINDING                               (SP-FR-01 breach)
 INERT LEGACY                                      (semantics never constituted)
 ```
@@ -1033,5 +1173,21 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   created; **GF-4** registered by Jarvis as **DERIVED, awaiting founder
   ratification**. Earlier SP-FR-04/05 renumbered to **SP-FR-05/06**, recorded as
   moved. Cross-lane echo with Circles **FR-06** recorded, not adjudicated.
+- **2026-09-10 · Amendment D (founder rulings)** — ⭐ **GF-4 RATIFIED** in the
+  founder's wording (*the map replaces the terrain* — identity, prediction, **or
+  prescription**); the Jarvis draft is recorded as superseded, not deleted.
+  ⭐ **SD-Q1 RULED**: Aether is the **integrative/witnessing dimension**, not a
+  fifth co-equal process-event; runtime `aether` is a **representational collision
+  to census**, ⛔ **not permission to declare stored rows erroneous or legacy** —
+  which **corrects the charter's own reading (a)**, recorded as corrected.
+  **SD-01's gate is lifted.** ⭐ **H-01 sharpened and left standing as a
+  hypothesis**: Air-mediation is lawful; **substitution** is the defect. SP-FR-04
+  gains the orientation clause and the **decreasing-dependence** direction;
+  SD-04d gains **AXIS 3 prescriptive-vs-orienting** plus the dependence test.
+  §3e records the Saturn/Jupiter lens (SOULLAB INTERPRETATION) and the
+  consciousness-model posture (OPEN QUESTION, not premise). §3f records the team
+  paper as a **companion artifact outside the repo** — charter → paper, never the
+  reverse. SP-FR-05 renamed **Transformational Continuity**; law unchanged.
+  ⛔ **SD-Q2 (`phase` 1–12) REMAINS UNRULED.**
 - **Standing: NO CENSUS RUN. No code read for findings. Nothing classified. No
   docket question resolved.**
