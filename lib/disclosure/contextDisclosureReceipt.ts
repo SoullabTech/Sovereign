@@ -68,16 +68,23 @@ export type DisclosureSourceClass = 'work';
 export type DisclosureParticipationBasis = 'member_invoked';
 
 /** The only boundary constituted in v1. */
-export type DisclosureBoundary = 'writers_studio.focus->maia_cognition';
+export type DisclosureBoundary =
+  /** ⛔ HISTORICAL. Names a surface, not what crosses. Never use for a new crossing. */
+  | 'writers_studio.focus->maia_cognition'
+  /** ⭐ ADDENDUM-01 · the semantic boundary all three consumers cross. */
+  | 'manuscript_prose->maia_cognition';
 
 /** The SHAPE of the selection — never its location. */
-export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';
+export type DisclosureScopeKind =
+  | 'whole_work' | 'section' | 'passage'
+  /** ADDENDUM-01. One authored division · one bounded contiguous run. Each is ONE act. */
+  | 'unit' | 'range';
 
 /**
  * The writer gesture that authorized the crossing. Closed vocabulary: the kind
  * of gesture, never its content.
  */
-export type DisclosureGesture = 'ask_maia' | 'work_with_this' | 'widen_focus';
+export type DisclosureGesture = 'ask_maia' | 'work_with_this' | 'widen_focus' | 'commission_reading';
 
 export interface ContextDisclosureAttempt {
   /** Unique per attempt; a retry MUST reuse it so evidence cannot be duplicated. */
@@ -98,6 +105,17 @@ export interface ContextDisclosureAttempt {
    * not the identity of what crossed.
    */
   readonly sectionRef?: string;
+  /**
+   * ADDENDUM-01 locators. Admitted under the same test as `sectionRef`: a durable
+   * locator may name the thing that was disclosed, never a containing location
+   * implementation merely happens to know. A unit id names the division that IS
+   * what crossed; range bounds ARE the identity of the disclosed run.
+   * ⭐ The bounds travel as a pair — one alone is a section reference wearing a
+   * range's name.
+   */
+  readonly unitRef?: string;
+  readonly rangeFromRef?: string;
+  readonly rangeToRef?: string;
   readonly gesture: DisclosureGesture;
 }
 
@@ -159,13 +177,33 @@ export const mayCross = (o: MintOutcome): o is Extract<MintOutcome, { kind: 'min
 export async function mintDisclosureAttempt(
   attempt: ContextDisclosureAttempt,
 ): Promise<MintOutcome> {
-  if (attempt.sectionRef && attempt.scopeKind !== 'section') {
+  const misplaced =
+    (attempt.sectionRef && attempt.scopeKind !== 'section') ? 'sectionRef'
+    : (attempt.unitRef && attempt.scopeKind !== 'unit') ? 'unitRef'
+    : ((attempt.rangeFromRef || attempt.rangeToRef) && attempt.scopeKind !== 'range') ? 'rangeRef'
+    : null;
+  if (misplaced) {
     // Refuse in the application too, not only at the CHECK: a caller that passes
     // this is holding a locator, and the honest response is to refuse the
     // disclosure rather than to quietly drop the field and proceed.
-    console.error('[DISCLOSURE] mint refused — sectionRef supplied for a non-section scope', {
-      scopeKind: attempt.scopeKind,
+    console.error('[DISCLOSURE] mint refused — locator supplied for a scope that does not admit it', {
+      locator: misplaced, scopeKind: attempt.scopeKind,
     });
+    return { kind: 'unavailable' };
+  }
+
+  // ⭐ A half-named range is not a truthful locator. Refused here as well as by
+  // the CHECK, for the same reason the misplaced locator is: a caller holding one
+  // bound is holding a section reference, and the honest answer is to refuse the
+  // disclosure rather than store half of it.
+  if (attempt.scopeKind === 'range' && !(attempt.rangeFromRef && attempt.rangeToRef)) {
+    console.error('[DISCLOSURE] mint refused — a range must name both bounds', {
+      hasFrom: Boolean(attempt.rangeFromRef), hasTo: Boolean(attempt.rangeToRef),
+    });
+    return { kind: 'unavailable' };
+  }
+  if (attempt.scopeKind === 'unit' && !attempt.unitRef) {
+    console.error('[DISCLOSURE] mint refused — a unit disclosure must name its division');
     return { kind: 'unavailable' };
   }
 
@@ -174,14 +212,16 @@ export async function mintDisclosureAttempt(
       `INSERT INTO context_disclosure_receipts
          (disclosure_id, member_id, request_ref, boundary, source_class,
           participation_basis, source_ref, scope_kind, section_ref,
+          unit_ref, range_from_ref, range_to_ref,
           authorized_by, gesture, policy_version, state)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'member', $10, $11, 'attempted')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'member', $13, $14, 'attempted')
        ON CONFLICT (disclosure_id) DO NOTHING
        RETURNING id`,
       [
         attempt.disclosureId, attempt.memberId, attempt.requestRef, attempt.boundary,
         attempt.sourceClass, attempt.participationBasis, attempt.sourceRef,
         attempt.scopeKind, attempt.sectionRef ?? null,
+        attempt.unitRef ?? null, attempt.rangeFromRef ?? null, attempt.rangeToRef ?? null,
         attempt.gesture, DISCLOSURE_POLICY_VERSION,
       ],
     );
@@ -193,8 +233,8 @@ export async function mintDisclosureAttempt(
     // ── Conflict. Read the WHOLE immutable identity plus state, and reconcile.
     const existing = await query<Record<string, string | null>>(
       `SELECT id, member_id, request_ref, boundary, source_class, participation_basis,
-              source_ref, scope_kind, section_ref, authorized_by, gesture,
-              policy_version, state
+              source_ref, scope_kind, section_ref, unit_ref, range_from_ref, range_to_ref,
+              authorized_by, gesture, policy_version, state
          FROM context_disclosure_receipts
         WHERE disclosure_id = $1`,
       [attempt.disclosureId],
@@ -216,6 +256,9 @@ export async function mintDisclosureAttempt(
       source_ref: attempt.sourceRef,
       scope_kind: attempt.scopeKind,
       section_ref: attempt.sectionRef ?? null,
+      unit_ref: attempt.unitRef ?? null,
+      range_from_ref: attempt.rangeFromRef ?? null,
+      range_to_ref: attempt.rangeToRef ?? null,
       authorized_by: 'member',
       gesture: attempt.gesture,
       policy_version: DISCLOSURE_POLICY_VERSION,

@@ -38,12 +38,27 @@ import { requireConsentState, consentEstablished } from '@/lib/provenance/requir
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import {
   mintDisclosureAttempt, mayCross,
-  type ContextDisclosureAttempt, type MintOutcome,
+  type MintOutcome, type DisclosureBoundary as BoundaryName,
+  type DisclosureGesture, type DisclosureSourceClass,
+  type DisclosureParticipationBasis,
 } from './contextDisclosureReceipt';
+import {
+  mintDisclosureAuthority, type DisclosureAuthority, type DisclosureLocus,
+} from './disclosureAuthority';
 
 export type BoundaryOutcome =
   /** ⭐ The ONLY outcome under which the caller may assemble and cross. */
-  | { readonly kind: 'may_cross'; readonly disclosureId: string; readonly receiptId: string }
+  | {
+      readonly kind: 'may_cross';
+      readonly disclosureId: string;
+      readonly receiptId: string;
+      /**
+       * ⭐ The capability. Ephemeral, scoped, one-shot, unforgeable — and the ONLY
+       * way any cognition-bound load of authored prose can run. It exists solely
+       * inside this invocation; nothing serializes it and no receipt recreates it.
+       */
+      readonly authority: DisclosureAuthority;
+    }
   /** The consent precondition was not established. Nothing was assembled. */
   | { readonly kind: 'consent_unavailable'; readonly reason: string }
   /**
@@ -58,19 +73,39 @@ export const mayCrossBoundary = (o: BoundaryOutcome): o is Extract<BoundaryOutco
   o.kind === 'may_cross';
 
 /**
- * Establish the boundary for one disclosure.
+ * Establish the boundary for one disclosure, and mint the capability that is the
+ * only way its authored characters can later be loaded.
  *
- * `requestId` is supplied by the caller and used for BOTH the consent row and
- * the receipt's `request_ref` — ⭐ one visible value carried across the whole
+ * `requestId` is supplied by the caller and used for BOTH the consent row and the
+ * receipt's `request_ref` — ⭐ one visible value carried across the whole
  * boundary, never regenerated downstream. *An identifier that governs downstream
  * authority must be available downstream.*
+ *
+ * ⛔ THE CALLER MUST OWN THAT IDENTITY BEFORE CALLING. Minting `requestId` and
+ * `disclosureId` per HTTP invocation makes a transport replay indistinguishable
+ * from a deliberate second act — the boundary cannot tell them apart and must not
+ * try. Same act → same identifiers; new act → fresh ones.
  */
 export async function establishDisclosureBoundary(opts: {
   requestId: string;
   posture: TurnPosture;
   memberId: string;
   sessionId?: string | null;
-  disclosure: Omit<ContextDisclosureAttempt, 'requestRef' | 'memberId'>;
+  disclosureId: string;
+  boundary: BoundaryName;
+  sourceClass: DisclosureSourceClass;
+  participationBasis: DisclosureParticipationBasis;
+  /** The Work. `source_ref` in the receipt, and half of what the capability matches. */
+  workRef: string;
+  /**
+   * ⭐⭐ ONE LOCUS, TWO DERIVATIONS. The receipt's scope columns and the
+   * capability's grant are both computed from this single value, so they cannot
+   * describe different things. A caller that passed them separately could mint a
+   * receipt saying `section` while holding authority over a `unit` — evidence and
+   * authority disagreeing about the same act, each looking correct alone.
+   */
+  locus: DisclosureLocus;
+  gesture: DisclosureGesture;
 }): Promise<BoundaryOutcome> {
   // 1 · AUTHORITY FIRST — awaited, verified, fail-closed.
   const consent = await requireConsentState({
@@ -89,13 +124,38 @@ export async function establishDisclosureBoundary(opts: {
   }
 
   // 2 · ACCOUNTABILITY SECOND — the same requestId, carried, not regenerated.
+  //     ⭐ The locator partition, in one place: each scope carries exactly the
+  //     locator that names what crossed, and `passage` carries none — its
+  //     containing section would narrow reconstruction of the selection the
+  //     receipt deliberately does not record.
+  const l = opts.locus;
   const mint = await mintDisclosureAttempt({
-    ...opts.disclosure,
+    disclosureId: opts.disclosureId,
     memberId: opts.memberId,
     requestRef: opts.requestId,
+    boundary: opts.boundary,
+    sourceClass: opts.sourceClass,
+    participationBasis: opts.participationBasis,
+    sourceRef: opts.workRef,
+    scopeKind: l.scopeKind,
+    sectionRef: l.scopeKind === 'section' ? l.sectionRef : undefined,
+    unitRef: l.scopeKind === 'unit' ? l.unitRef : undefined,
+    rangeFromRef: l.scopeKind === 'range' ? l.fromSectionRef : undefined,
+    rangeToRef: l.scopeKind === 'range' ? l.toSectionRef : undefined,
+    gesture: opts.gesture,
   });
   if (!mayCross(mint)) return { kind: 'receipt_refused', outcome: mint };
 
-  // 3 · Permission returned. The CALLER crosses, then confirms.
-  return { kind: 'may_cross', disclosureId: mint.disclosureId, receiptId: mint.id };
+  // 3 · THE CAPABILITY. Minted only here, only after both preconditions held.
+  //     The caller performs the crossing; it cannot perform one without this.
+  return {
+    kind: 'may_cross',
+    disclosureId: mint.disclosureId,
+    receiptId: mint.id,
+    authority: mintDisclosureAuthority({
+      memberId: opts.memberId,
+      workRef: opts.workRef,
+      locus: l,
+    }),
+  };
 }
