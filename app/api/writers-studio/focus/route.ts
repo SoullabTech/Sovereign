@@ -16,7 +16,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { randomUUID } from 'crypto';
+import { actIdentifiers, isUsableActId } from '@/lib/disclosure/actIdentity';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing } from '@/lib/writers-studio/focusCrossing';
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   const memberId = identity.memberId;
 
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
-  const { sessionId, workRef, scopeKind, sectionRef, range, gesture, ask } = body ?? {};
+  const { sessionId, workRef, scopeKind, sectionRef, range, gesture, ask, actId } = body ?? {};
 
   if (typeof sessionId !== 'string' || typeof workRef !== 'string' || typeof ask !== 'string') {
     return NextResponse.json({ error: 'sessionId, workRef and ask are required' }, { status: 400 });
@@ -60,12 +60,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Work text is read server-side, never supplied' }, { status: 400 });
   }
 
-  // ⭐ ONE identity, minted here at the boundary and carried through consent,
-  // receipt and cognition. Never regenerated downstream.
-  const requestId = randomUUID();
-  // ⭐ A NEW disclosure identity per member act — never reused, so an unresolved
-  // prior attempt can never be replayed as though it were this one.
-  const disclosureId = randomUUID();
+  /**
+   * ⭐⭐ ACT IDENTITY IS THE CLIENT'S, BECAUSE THE CLASSIFICATION IS THE CLIENT'S.
+   *
+   * ⚠️ This route previously minted both identifiers with `randomUUID()` per
+   * invocation. That made a transport replay indistinguishable from a second
+   * deliberate gesture — every retry became a new disclosure act — so F1k was
+   * ratified law with no mechanism beneath it.
+   *
+   * Only the surface that watched the writer press the button knows whether this
+   * is that press again or a new one. The boundary cannot infer it and must not
+   * try; the residual procedural risk lives here, named, rather than being
+   * disguised as a server guarantee.
+   */
+  if (!isUsableActId(actId)) {
+    return NextResponse.json(
+      { error: 'actId is required — one stable id per writer act, reused verbatim on retry' },
+      { status: 400 },
+    );
+  }
+  const { requestId, disclosureId } = actIdentifiers(actId);
 
   const result = await performFocusCrossing(
     {

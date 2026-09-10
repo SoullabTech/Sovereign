@@ -30,6 +30,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { discloseUnder, type DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
 import type { FocusAssembler } from './focusCrossing';
 
 /**
@@ -46,8 +47,26 @@ const ADDRESSABLE_DRAFT = `
      AND m.member_id = $2
      AND d.section_addressable_at IS NOT NULL`;
 
-export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKind, sectionRef, range }) => {
-  try {
+/**
+ * ⭐⭐ CAPABILITY-BOUND. Every read below lives inside a closure that
+ * `discloseUnder` invokes only after provenance, freshness and exact locus match
+ * all hold. A caller without a matching capability does not fail a check here —
+ * these queries never run, and no `DisclosedContent` can come into existence.
+ *
+ *   Authority precedes cognition-bound loading. Not: loaded content receives a
+ *   trustworthy type afterward.
+ */
+export const assembleFocus: FocusAssembler = async ({ authority, memberId, workRef, locus }) => {
+  // ⛔ Focus offers three shapes. `unit` and `range` are the commissioned
+  // reading's scopes and have their own loader; refusing them here keeps one
+  // capability vocabulary without letting one consumer read another's material.
+  if (locus.scopeKind === 'unit' || locus.scopeKind === 'range') return null;
+
+  const outcome = await discloseUnder(authority, { memberId, workRef, locus }, async () => {
+   try {
+    const scopeKind = locus.scopeKind;
+    const sectionRef = locus.scopeKind === 'whole_work' ? undefined : locus.sectionRef;
+    const range = locus.scopeKind === 'passage' ? locus.range : undefined;
     if (scopeKind === 'whole_work') {
       const r = await query<{ text: string }>(
         `SELECT s.text
@@ -110,11 +129,23 @@ export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKi
      */
     const passage = text.slice(Math.max(0, range.start), Math.max(0, range.end));
     return passage.length > 0 ? passage : null;
-  } catch (err) {
+   } catch (err) {
     console.error('[FOCUS] assembly failed', {
       memberIdPrefix: memberId.slice(0, 8),
       error: err instanceof Error ? err.message : 'unknown',
     });
     return null;
+   }
+  });
+
+  if (outcome.kind === 'disclosed') return outcome.content;
+  if (outcome.kind === 'refused') {
+    // ⛔ A refusal here is the capability contract holding, not an outage. The
+    // reason names WHICH fact failed — provenance, freshness or applicability —
+    // and never the material it was asked about.
+    console.error('[FOCUS] disclosure refused', {
+      memberIdPrefix: memberId.slice(0, 8), reason: outcome.reason,
+    });
   }
+  return null;
 };

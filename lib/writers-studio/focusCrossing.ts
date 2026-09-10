@@ -41,20 +41,32 @@
 
 import { establishDisclosureBoundary, mayCrossBoundary, type BoundaryOutcome } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import {
+  readDisclosed,
+  type DisclosedContent, type DisclosureAuthority, type DisclosureLocus,
+} from '@/lib/disclosure/disclosureAuthority';
 import { presentBoundaryOutcome, presentCrossing, type FocusDisclosurePresentation } from './focusDisclosureSurface';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
 import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
 import type { MemberIdentity } from '@/lib/maia/canonical-turn';
 
-/** Reads the authorized Work. ⛔ Called ONLY after `may_cross`. */
+/**
+ * Reads the authorized Work.
+ *
+ * ⛔ "Called ONLY after `may_cross`" was a rule a caller could forget. It is now a
+ * type: without the capability there is no argument to pass, and the assembler's
+ * queries live inside `discloseUnder`, which invokes them only on an exact match.
+ * The locus travels whole rather than as loose scope/locator fields, so the
+ * capability and the read cannot describe different material.
+ */
 export interface FocusAssembler {
   (ref: {
-    memberId: string; workRef: string;
-    scopeKind: DisclosureScopeKind; sectionRef?: string;
-    /** The writer's selection. Carried in the REQUEST; never in the receipt. */
-    range?: { start: number; end: number };
-  }): Promise<string | null>;
+    authority: DisclosureAuthority;
+    memberId: string;
+    workRef: string;
+    locus: DisclosureLocus;
+  }): Promise<DisclosedContent | null>;
 }
 
 /**
@@ -82,7 +94,8 @@ export interface FocusCrossingRequest {
   sessionId: string;
   disclosureId: string;
   workRef: string;
-  scopeKind: DisclosureScopeKind;
+  /** ⛔ Focus offers three shapes. `unit`/`range` belong to the commissioned reading. */
+  scopeKind: Extract<DisclosureScopeKind, 'whole_work' | 'section' | 'passage'>;
   /**
    * ⭐⭐ AN EPHEMERAL LOCATOR, NOT A RECEIPT FIELD.
    *
@@ -119,24 +132,42 @@ export async function performFocusCrossing(
   req: FocusCrossingRequest,
   deps: { assemble: FocusAssembler; prepare: CanonicalCognitionPort['prepare']; generate: CanonicalCognitionPort['generate'] },
 ): Promise<FocusCrossingResult> {
-  // ── 1 · THE ONE BOUNDARY. Consent precondition, then receipt, then permission.
+  // ── 0 · THE LOCUS. One value, built once, from which the receipt's columns and
+  // the capability's grant are both derived downstream. A section or passage that
+  // cannot name where it is has not described a disclosure, and is refused before
+  // any authority is established.
+  const locus: DisclosureLocus | null =
+    req.scopeKind === 'whole_work'
+      ? { scopeKind: 'whole_work' }
+      : req.scopeKind === 'section'
+        ? (req.sectionRef ? { scopeKind: 'section', sectionRef: req.sectionRef } : null)
+        : (req.sectionRef && req.range
+            ? { scopeKind: 'passage', sectionRef: req.sectionRef, range: req.range }
+            : null);
+
+  if (!locus) {
+    return {
+      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
+      response: null, disclosureId: null,
+      boundary: { kind: 'receipt_refused', outcome: { kind: 'unavailable' } },
+    };
+  }
+
+  // ── 1 · THE ONE BOUNDARY. Consent precondition, then receipt, then permission
+  // AND the capability. ⭐ The locator partition now lives in the boundary: it
+  // reaches the receipt only when the thing it names is what crossed.
   const boundary = await establishDisclosureBoundary({
     requestId: req.requestId,
     posture: req.posture,
     memberId: req.memberId,
     sessionId: req.sessionId,
-    disclosure: {
-      disclosureId: req.disclosureId,
-      boundary: 'writers_studio.focus->maia_cognition',
-      sourceClass: 'work',
-      participationBasis: 'member_invoked',
-      sourceRef: req.workRef,
-      scopeKind: req.scopeKind,
-      // ⭐ The partition, in one line: the locator reaches the receipt ONLY when
-      // the section is itself what crossed.
-      sectionRef: req.scopeKind === 'section' ? req.sectionRef : undefined,
-      gesture: req.gesture,
-    },
+    disclosureId: req.disclosureId,
+    boundary: 'manuscript_prose->maia_cognition',
+    sourceClass: 'work',
+    participationBasis: 'member_invoked',
+    workRef: req.workRef,
+    locus,
+    gesture: req.gesture,
   });
 
   if (!mayCrossBoundary(boundary)) {
@@ -149,13 +180,17 @@ export async function performFocusCrossing(
     };
   }
 
-  // ── 2 · ONLY NOW is the Work read. C2 depends on this ordering.
-  const focusContext = await deps.assemble({
-    memberId: req.memberId, workRef: req.workRef,
-    scopeKind: req.scopeKind, sectionRef: req.sectionRef, range: req.range,
+  // ── 2 · ONLY NOW is the Work read — and now the ordering is structural rather
+  // than depended upon: the capability minted above is the only thing that can
+  // make the assembler's queries run at all.
+  const disclosed = await deps.assemble({
+    authority: boundary.authority,
+    memberId: req.memberId,
+    workRef: req.workRef,
+    locus,
   });
 
-  if (!focusContext) {
+  if (!disclosed) {
     // The authorized Work could not be read. The receipt stays `attempted`,
     // which is the truthful state: authorization existed, the crossing did not.
     // ⛔ Never confirmed — nothing was handed to cognition.
@@ -173,7 +208,7 @@ export async function performFocusCrossing(
     // ⛔ No label for a passage: the producer text says WHERE the writer looked,
     // and a section name inside it would leak the same locator the receipt refuses.
     label: req.scopeKind === 'section' ? req.sectionRef : undefined,
-    focusContext, sanctuary: req.posture.sanctuary,
+    focusContext: readDisclosed(disclosed), sanctuary: req.posture.sanctuary,
   });
   if (!prepared) {
     // ⛔ Construction, adjudication or rendering failed → NO HANDOFF, NO CONFIRM.
