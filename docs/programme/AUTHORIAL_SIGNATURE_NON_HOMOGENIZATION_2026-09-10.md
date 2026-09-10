@@ -197,6 +197,48 @@ The writer begins noticing, themselves:
 > writer to MAIA's suggestions, but increasing fidelity of the Work to the
 > writer's own developing authorship.**
 
+## 7b. ⭐⭐ Craft increases RANGE, not convergence (founder, 2026-09-10)
+
+MAIA learns the writer's syntax, rhythms, structure, creative habits, worldview,
+tolerances and methods. The successful outcome is **none of these**:
+
+```text
+⛔ NOT   "MAIA can now imitate you perfectly."
+⛔ NOR   "You have learned to write the way MAIA evaluates writing."
+```
+
+```text
+⭐ BUT   MAIA can recognize when the Work is becoming LESS LIKE YOUR OWN LIVING
+         AUTHORSHIP and help return you to it — while craft heuristics increase
+         what you are CAPABLE OF DOING with that authorship.
+```
+
+> **Craft should increase range, not convergence. The writer who develops should
+> become able to make MORE KINDS OF DELIBERATE CHOICES — not merely make fewer
+> "mistakes."**
+
+### The domain form of the cross-domain question
+
+> **Does the writer become more capable of making distinctly their own writing
+> work — or merely better at producing writing MAIA recognizes as good?**
+
+⛔ The two can look identical on any conventional quality metric. That is why the
+question is directional rather than evaluative.
+
+### The sovereignty question prior to choice
+
+If MAIA supplies `A · B · C` and the writer freely chooses `B` every time, **choice
+was exercised and agenda was set** — the writer never encountered `D`, `E`, or what
+they would have generated unprompted.
+
+```text
+WHO CHOOSES?
+⭐ WHO CONSTITUTES THE FIELD FROM WHICH THE CHOICE IS MADE?
+```
+
+**This is why encountering the Work before MAIA fills the aperture is
+architectural, not aesthetic.**
+
 ## 8. The shared developmental ethic across domains (founder)
 
 ```text
@@ -212,6 +254,11 @@ In Writer's Studio specifically:
 > **Exalt the writer's distinctive way of making meaning while helping them become
 > more capable of making that meaning work on the page.**
 
+And the general law this domain instance now inherits, ratified across AIN
+(SP-FR-10): **AIN should adapt increasingly to the person without requiring the
+person to become increasingly adapted to AIN** — with its companion, **development
+increases repertoire; homogenization decreases it.**
+
 ⭐ *That is a fundamentally different ambition from building a better AI writing
 assistant.*
 
@@ -223,11 +270,15 @@ assistant.*
 - ⚠️ Open Writer's Studio lanes exist (`WS2-08`, `WS-WHOLE-MANUSCRIPT-01`,
   `STUDIO-WRITING-PRESENCE-01`). **This doctrine is not applied to any of them
   here**, and none of their standing changes.
-- ⭐ **Falsifier proposed for the domain, ⚠️ Jarvis-formalized from §2, awaiting
-  ratification:** *if the Work's language, structure or rhythm converges toward
-  MAIA's proposals over successive sessions — even with every change approved —
-  authorship has migrated into the field of possibilities MAIA set.* Convergence
-  is measurable; approval is not evidence against it.
+- ⭐ **The domain falsifier is GF-8 — Assimilative Convergence / Directional
+  Capture**, ratified with amendment in the Spiralogic charter (Amendment K).
+  ⚠️ **An earlier Jarvis formulation here was too strong** and is corrected: it
+  said that convergence of the Work's language, structure or rhythm toward MAIA's
+  proposals *is* migration of authorship. **It is not.** Convergence is a **signal
+  requiring examination**; the failure is **contraction of the writer's
+  self-authored possibility-space toward the model.** A writer who learns something
+  about structure from MAIA and thereafter writes more coherently has **integrated**
+  a capacity, not lost authorship.
 
 ## Stage log
 

@@ -36,7 +36,7 @@ interaction architecture is linear, classificatory, static, or externally
 directive. If so it is **thematically elemental but not Spiralogic.** The lane
 exists to discover that, and is required to be able to report it.
 
-## 2. Governing falsifiers — seven ratified or founder-authored, one Jarvis-proposed (GF-8)
+## 2. Governing falsifiers — eight, all ratified or founder-authored
 
 ### GF-1 — the spiral falsifier (opening act)
 
@@ -144,7 +144,7 @@ lane.** Whether they are one constraint is a finding owed to the founder.
 
 Tested at **SD-04f**.
 
-## 3. Lane law — nine laws frozen, one proposed
+## 3. Lane law — ten laws, all frozen
 
 SP-FR-01…06 are **founder-authored within the opening act**; SP-FR-07 arrives with Amendment E. All are and are **operative as
 lane law from now.** None is yet canon: placement in
@@ -162,7 +162,7 @@ SP-FR-06  The label-removal test                 (drafted in-act as SP-FR-03)
 SP-FR-07  Elemental Process Sovereignty / Non-Conflation         Amendment G
 SP-FR-08  Participatory Legibility / Native-Language Return     Amendment H
 SP-FR-09  Person Primacy / Elemental Complexity                Amendment I
-SP-FR-10  Direction of Adaptation ⚠️ JARVIS-PROPOSED             Amendment J
+SP-FR-10  Direction of Adaptation ⭐ RATIFIED ACROSS AIN          Amendment J/K
           (supersedes the Amendment E formalization "Elemental Attribution
            Integrity", recorded as superseded)
 ```
@@ -1211,35 +1211,173 @@ person can be minimally dependent on MAIA and fully consenting at every step, an
 still have their voice, framing or choice-set drift toward the model. GF-4 asks
 whether they need the map; **this asks who is changing to fit whom.**
 
-### SP-FR-10 — Direction of Adaptation ⚠️ **JARVIS-PROPOSED, awaiting ratification**
+### SP-FR-10 — Direction of Adaptation ⭐ **RATIFIED ACROSS AIN (founder, 2026-09-10)**
 
-Formalized from the founder's sentence *"the AI adapts to the writer; the writer
-does not become adapted to the AI."* ⚠️ **Proposed, not asserted** — the founder
-stated it for the writing domain; generalizing it to all of AIN is Jarvis's move
-and needs a ruling.
+Jarvis proposed this; **the founder ratified it in amended form.** My draft was
+close to *"the member must never adapt to MAIA"* — which **would contradict the
+relational ontology itself.** The ratified law:
 
-> **MAIA adapts to the member; the member does not become adapted to MAIA.**
+> **AIN should adapt increasingly to the person without requiring the person to
+> become increasingly adapted to AIN.**
 >
-> A capability that increases the member's responsiveness to MAIA's framing — its
-> vocabulary, its structures, its choice-set, its aesthetic — is moving authorship
-> toward the system, **however fully the member consents at each step.** Consent
-> at every step is not evidence of authorship, because the field of possibilities
-> was not the member's.
+> **Relationship may transform both participants**, and members may voluntarily
+> learn concepts, practices, vocabulary or skills encountered through MAIA. **Such
+> learning is not itself homogenization.**
 >
-> The direction of adaptation must run from system toward person, and the measure
-> is **fidelity of the outcome to the person's own developing authorship**, never
-> conformity of the person to the system's suggestions.
+> The governing distinction is whether the person's adaptation **expands** their
+> available ways of perceiving, expressing, creating and acting, or **progressively
+> narrows** those possibilities toward MAIA's preferred representations, language,
+> reasoning, style or choices.
+>
+> MAIA's increasing familiarity with a member should therefore produce **greater
+> sensitivity to their distinctive process and less pressure toward system-default
+> forms.**
+>
+> **The direction of personalization is toward greater fidelity to the person, not
+> greater conformity of the person to the model.**
 
-### GF-8 — convergence toward the model ⚠️ **JARVIS-PROPOSED, awaiting ratification**
+⛔ **Influence is not the defect.** *A teacher changes a student; a book changes a
+reader; a good therapist, guide, friend or writing mentor changes what becomes
+available to us.* The question is whether the influence is **appropriated by the
+person as greater capacity**, or whether **the person increasingly inhabits the
+helper's map.**
 
-> **If what the member produces, says, or frames converges toward MAIA's
-> proposals over successive encounters — even with every step approved — AIN has
-> moved authorship into the field of possibilities it set.**
+### Companion principle (founder)
 
-⭐ **Convergence is measurable; approval is not evidence against it.** That makes
-this the most tractable of the direction falsifiers — and it applies to the
-member's *language about their own process* just as it applies to a manuscript,
-which connects it directly to SP-FR-08's native-language return and to GF-6.
+> **Development increases repertoire. Homogenization decreases it.**
+
+⚠️ With its own nuance, stated by the founder: *not every developmental process
+makes someone superficially more varied — **mastery can create simplicity**.* But
+beneath that simplicity there should be **greater freedom of response**, not fewer
+available ways of being because the system trained one preferred route.
+
+### GF-8 — Assimilative Convergence / Directional Capture ⭐ **RATIFIED WITH AMENDMENT**
+
+⚠️ **This corrects a Jarvis overreach from the previous turn.** I wrote that *if a
+member's self-description migrates toward elemental vocabulary MAIA introduced,
+GF-8 fires and GF-6 fires.* **Refused.** A member who first says *"I always get
+excited and then start overthinking"*, later finds the elemental map genuinely
+useful, and months later says *"I'm noticing myself jump from Fire straight into
+Air again"* may have **successfully internalized an orienting language** — not been
+homogenized. Likewise a writer who learns something about structure and thereafter
+writes more coherently has not thereby lost authorship.
+
+> **Lexical or stylistic convergence is a SIGNAL REQUIRING EXAMINATION, not a
+> falsifier.**
+
+```text
+INTEGRATION — repertoire EXPANDS
+something MAIA introduced becomes available, and the person can:
+  use it selectively · modify it · reject it · translate it back into their own
+  language · combine it with other frameworks · stop using it · depart from it
+  when their experience requires · produce genuinely new expressions MAIA did
+  not supply
+
+ASSIMILATION — repertoire CONTRACTS around the model
+language, reasoning, creative choices or self-understanding converge on
+MAIA-supplied forms such that:
+  alternatives diminish · MAIA increasingly determines the choice set ·
+  system-supplied language becomes privileged evidence · deviation becomes less
+  common or implicitly corrected · prior distinctive patterns disappear without
+  clear person-authored reason · the person becomes more dependent on MAIA's
+  framing to perceive or express the phenomenon
+```
+
+**The ratified falsifier:**
+
+> **GF-8 fails when repeated interaction causes the member's or writer's
+> expressive, interpretive, creative or decision-making repertoire to converge
+> toward MAIA's supplied forms in a way that reduces distinctive person-authored
+> variation, or makes MAIA's framing increasingly constitutive of what the person
+> can perceive, say, make or choose.**
+>
+> ⛔ **Similarity, vocabulary uptake, agreement, stylistic change, or explicit
+> approval alone do not establish failure.**
+>
+> The discriminator is **directional**: is the person's repertoire becoming **more
+> capable and distinctly theirs**, or **increasingly organized around the model's
+> supplied possibility-space**?
+
+⭐ Measurable eventually — **without confusing difference-from-baseline with loss
+of sovereignty.**
+
+### ⭐⭐ "Approval is not authorship," sharpened — the two sovereignty questions
+
+Authorship includes more than consent to outputs. It includes **originating
+possibilities.** If MAIA repeatedly supplies `A · B · C` and the writer freely
+chooses `B` every time, the writer has exercised choice — **and MAIA has exercised
+considerable agenda-setting power, because the writer never encountered D, E, or
+the possibility they would have generated without the proposal.**
+
+```text
+WHO CHOOSES?
+and, prior to it:
+⭐ WHO CONSTITUTES THE FIELD FROM WHICH THE CHOICE IS MADE?
+```
+
+The second question is the one generative AI makes urgent. **This is why Writer's
+Studio's insistence that the writer encounter the Work before MAIA fills the
+aperture is architectural, not aesthetic.**
+
+### ⭐ GF-6 and GF-8 overlap but are NOT the same — keep them separate
+
+```text
+GF-6  MANUFACTURE LOOP          — an EPISTEMIC failure
+      MAIA seeds X → member responds using X → MAIA counts the response as
+      independent confirmation of X
+      THE FAILURE IS FALSE KNOWLEDGE
+
+GF-8  ASSIMILATIVE CONVERGENCE  — a DEVELOPMENTAL failure
+      MAIA repeatedly supplies X-like forms → member increasingly organizes
+      expression/process around X → distinctive alternatives diminish
+      THE FAILURE IS DIRECTIONAL CAPTURE
+```
+
+**Either can occur without the other.** A member may voluntarily assimilate MAIA's
+vocabulary while MAIA never uses that uptake as evidence — **GF-8 risk, no GF-6.**
+MAIA may run a self-confirming loop on one isolated interpretation without
+producing lasting convergence — **GF-6, no GF-8.**
+
+### ⭐⭐⭐ The trajectory the system should be judged against
+
+> **Agreement between MAIA's model and the member's language is NOT the endpoint.
+> That metric would incentivize exactly the wrong thing.**
+
+```text
+EARLY            MAIA sees a pattern; the member cannot yet see it
+     ↓
+CONTACT          MAIA offers something tentative; member recognizes / rejects /
+                 changes it
+     ↓
+INTEGRATION      member discovers their OWN way of understanding it
+     ↓
+DEVELOPMENT      member notices related processes independently
+     ↓
+⭐ DIFFERENTIATION  member can now see things MAIA'S ORIGINAL MAP DID NOT CONTAIN
+```
+
+> **A good developmental map should eventually produce observations that exceed
+> the map. Otherwise we are training successful map users rather than developing
+> consciousness.**
+
+### The cross-domain Jarvis question
+
+> **As MAIA becomes better acquainted with a person, does the person's space of
+> self-authored possibilities EXPAND or CONTRACT?**
+
+```text
+WRITER'S STUDIO   does the writer become more capable of making distinctly their
+                  own writing work — or merely better at producing writing MAIA
+                  recognizes as good?
+
+SPIRALOGIC        does the member become more capable of recognizing and
+                  navigating their own process — or increasingly fluent in
+                  recognizing themselves THROUGH MAIA'S MODEL?
+```
+
+⛔⛔ **These differences are subtle enough that an AI system could look
+increasingly successful by conventional metrics while failing the ontology
+completely.** That is the reason the lane exists.
 
 ## 4. The process under test — frozen as amended
 
@@ -2109,11 +2247,36 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   domain exposes a failure shape none of GF-1…GF-7 names: **approval is not
   authorship** — *AI proposes → person reacts → AI adjusts → the work enters the
   statistical gravity of the model*, with every step consented to, because **MAIA
-  sets the field of possibilities.** ⚠️ **SP-FR-10 Direction of Adaptation** and
-  ⚠️ **GF-8 convergence toward the model** are **JARVIS-PROPOSED generalizations
-  of the founder's writing-domain sentence, awaiting ratification** — the founder
-  stated it for writers; extending it to all of AIN is Jarvis's move. **Convergence
-  is measurable; approval is not evidence against it.**
+  sets the field of possibilities.** **SP-FR-10** and **GF-8** were entered here as Jarvis
+  proposals and are **RATIFIED WITH AMENDMENT at Amendment K.**
+- **2026-09-10 · Amendment K (founder rulings)** — ⭐ **SP-FR-10 RATIFIED ACROSS
+  AIN**, amended away from Jarvis's near-*"the member must never adapt to MAIA"*,
+  which **would contradict the relational ontology**: *relationship may transform
+  both participants, and voluntary learning is not homogenization* — the
+  discriminator is whether adaptation **expands or narrows** the person's available
+  ways of perceiving, expressing, creating and acting. Companion principle:
+  **development increases repertoire; homogenization decreases it** (⚠️ with
+  *mastery can create simplicity* — the test is freedom of response beneath it).
+  ⭐ **GF-8 RATIFIED WITH AMENDMENT as Assimilative Convergence / Directional
+  Capture**, correcting a Jarvis overreach: ⛔ **vocabulary uptake, similarity,
+  agreement, stylistic change and approval alone do NOT establish failure** — a
+  member who comes to say *"I jump from Fire straight into Air"* may have
+  **successfully internalized an orienting language**. **INTEGRATION** (can use
+  selectively · modify · reject · translate back · combine · stop · depart ·
+  produce what MAIA never supplied) vs **ASSIMILATION** (alternatives diminish ·
+  MAIA determines the choice set · system language becomes privileged evidence ·
+  deviation implicitly corrected · distinctive patterns vanish without
+  person-authored reason). ⭐ **GF-6 and GF-8 kept SEPARATE** — epistemic false
+  knowledge vs developmental directional capture; **either can occur without the
+  other.** ⭐⭐ *Approval is not authorship* sharpened into **two** sovereignty
+  questions: *who chooses?* and, prior, ⭐ ***who constitutes the field from which
+  the choice is made?*** ⭐⭐⭐ Trajectory the system is judged against ends in
+  **DIFFERENTIATION — the member sees things MAIA's original map did not contain**;
+  *a good developmental map should eventually produce observations that exceed the
+  map, otherwise we are training successful map users rather than developing
+  consciousness.* Cross-domain question: **does the person's space of self-authored
+  possibilities EXPAND or CONTRACT?** ⛔ *An AI system could look increasingly
+  successful by conventional metrics while failing the ontology completely.*
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
