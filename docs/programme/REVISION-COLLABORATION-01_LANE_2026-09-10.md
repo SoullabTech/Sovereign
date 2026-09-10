@@ -35,9 +35,27 @@ MAIA CANNOT       silently alter the manuscript
 ⭐ **Proposal authority, not write authority.** A generic "edit the document" tool
 is refused: it would let conversation become writing authority.
 
-⭐ **`WRITER CAN alter` settles the provenance of a modified proposal.** The writer
+⚠️ ~~**`WRITER CAN alter` settles the provenance of a modified proposal.** The writer
 editing MAIA's words before adopting them is the writer's authorship. Provenance
-records that she proposed and he altered; nothing blurs.
+records that she proposed and he altered; nothing blurs.~~ — **SUPERSEDED by RC-02
+(`…_FOUNDER_RULINGS_2026-09-10.md`), 2026-09-10.** It collapsed two different
+questions into one. `WRITER CAN alter` settles **authority**, not **authorship**:
+a modified proposal is a *writer-controlled derivative of a MAIA proposal*, and
+both `modified proposal = MAIA-authored` and `modified proposal = writer-authored`
+are refused. Kept in place, not deleted — the record remembers what was ruled,
+including what was ruled wrong.
+
+⭐ **The three acts carry different provenance (RC-03), the proposal is immutable
+under MODIFY (RC-01), and MAIA never edits the writer's candidate in place
+(RC-04).** Governing rule: *modification transfers control, not history.*
+
+## Rulings
+
+Founder rulings governing this lane are recorded in
+**`REVISION-COLLABORATION-01_FOUNDER_RULINGS_2026-09-10.md`** — RC-01 (MODIFY does
+not mutate the proposal) · RC-02 (authorship ≠ provenance) · RC-03 (ACCEPT /
+REJECT / MODIFY differ) · RC-04 (MAIA never edits the candidate in place), plus the
+lane's classification as a **JARVIS application, not new JARVIS architecture**.
 
 ## The path
 
@@ -134,7 +152,10 @@ STEP 7 / S3 disclosure      CLOSED
 
 MAIA as working editor      NOT BUILT — this lane
 REVISION-COLLABORATION-01   OPEN
-first increment             R1 · propose and see
+RC-01 .. RC-04              RATIFIED 2026-09-10
+DESIGN                      AUTHORIZED
+IMPLEMENTATION              NOT AUTHORIZED
+first increment             R1 · propose and see (not authorized to build)
 MERGE                       NOT YET
 PRODUCTION                  UNTOUCHED
 ```
