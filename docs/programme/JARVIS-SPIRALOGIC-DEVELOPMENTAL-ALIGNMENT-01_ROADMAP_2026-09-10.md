@@ -36,6 +36,50 @@ until the freeze is formally reopened:**
 ⭐ *Differentiation is not anti-summary; it is anti-reduction.* ⛔ **Available
 without being legislated.**
 
+## 0b — ⭐⭐ PROGRAMME-GOVERNANCE CONSTRAINTS (founder, 2026-09-10)
+
+```
+TYPE      OPERATIONAL RULES, not doctrine. They govern how streams relate, not what
+          AIN may believe.
+PLACEMENT here, in the roadmap / research standing. ⛔ NOT in the frozen charter.
+FREEZE    ⛔ HOLDS. Landing these is not an amendment.
+```
+
+### G-1 — Research-stream independence
+
+> **SD-00B and V7 may proceed in parallel, but neither may be used as evidence of
+> what the other source-domain already contained. External research cannot establish
+> Soullab canon; canon cannot be retrofitted to appear to anticipate external
+> findings. Their relationship is adjudicated ONLY at Stage 3 reconciliation.**
+
+⭐ **This is what protects the Stage 3 gate from being pre-empted.** Without it,
+V7/DR-01's traditions begin reading as Soullab antecedents, canon begins reading as
+prescient, and reconciliation arrives with nothing left to reconcile.
+
+### G-2 — Domain-locality constraint
+
+> **Domain work may inherit constitutional and ratified programme doctrine, but any
+> domain-specific solution to an unresolved foundational question remains LOCAL to
+> that domain unless separately elevated through the foundational governance
+> process. Implementation in Writer's Studio does not constitute a ruling for AIN as
+> a whole.**
+
+⭐⭐ Writer's Studio **may legitimately need to solve ITS authorship provenance,
+signature continuity or aperture problem before the global meaning-lifecycle
+architecture exists. It should be allowed to do so.** But the solution must remain:
+
+```text
+✅ "This is how Writer's Studio lawfully handles this problem."
+⛔ "This is therefore how AIN handles the problem."
+```
+
+> ## ⛔⛔ **That prevents IMPLEMENTATION MOMENTUM from becoming CONSTITUTIONAL PRECEDENT.**
+
+⭐ Note the symmetry with **SP-FR-12**: non-generalization of relational knowledge
+stops one member's relationship becoming a rule about members; **G-2 stops one
+domain's solution becoming a rule about AIN.** Same discipline, different scale —
+⛔ recorded as an observation, not as a claim that they are one rule.
+
 ## 1 — FINISH SD-00B · authority-complete doctrine census  ·  *next operational work*
 
 Read the remaining **~60 canonical artifacts** under the four mandatory labels:
@@ -282,6 +326,20 @@ The relationship gets RICHER.
 
 ## Stage log
 
+- **2026-09-10 · G-1 and G-2 LANDED (founder ruling)** — two **programme-governance
+  constraints**, placed here rather than in the frozen charter because they govern
+  **how streams relate**, not what AIN may believe. **G-1 research-stream
+  independence** — SD-00B and V7 run in parallel and neither may evidence what the
+  other source-domain already contained; *external research cannot establish Soullab
+  canon; canon cannot be retrofitted to appear to anticipate external findings*;
+  adjudicated **only at Stage 3**. **G-2 domain-locality** — domain work inherits
+  constitutional and ratified doctrine, but any domain-specific solution to an
+  unresolved foundational question **stays local unless separately elevated**;
+  *implementation in Writer's Studio does not constitute a ruling for AIN as a
+  whole* — ✅ *"this is how Writer's Studio lawfully handles this problem"*, ⛔ never
+  *"this is therefore how AIN handles the problem."* ⭐⭐ **Prevents implementation
+  momentum from becoming constitutional precedent.** ⛔ Freeze holds; landing these is
+  not an amendment.
 - **2026-09-10** — Roadmap authored by founder and recorded. ⛔ **Recording it is
   not an amendment; the legislative freeze holds and the charter is unedited.**
   ⛔ **No stage is opened by this document.** Current standing remains: SD-00A
