@@ -3034,6 +3034,63 @@ formulation — gets final say; when new experiential facets no longer fit the
 construct, the construct may need to change.** That is the **adjacent-layer test in
 phenomenological form**, reached independently.
 
+### ⭐⭐⭐ SP-FR-00 ACROSS TIME — the reciprocity, and the one-way accumulation problem
+
+**Founder, 2026-09-10.** The charter had the loop only in one direction. The full
+relation is reciprocal:
+
+```text
+living encounter
+      ↓
+representation
+      ↓
+returned to experience
+      ↓
+fit / misfit / NEW FACET
+      ↓
+⭐ REPRESENTATION CHANGES
+      ↓
+renewed encounter
+```
+
+> **The map is not simply answerable to the terrain. The terrain continually
+> remakes the map.**
+
+⭐⭐⭐ **And the longitudinal consequence is the sharpest architectural statement in
+the lane:**
+
+```text
+THE ONE-WAY ACCUMULATION PROBLEM
+today's experience is interpreted through yesterday's map
+      ↓
+yesterday's map gains weight from today's apparent recurrence
+      ↓
+the past increasingly governs the present
+```
+
+> **A genuinely developmental system needs the opposite capability: THE PRESENT
+> ENCOUNTER MUST RETAIN ENOUGH AUTHORITY TO REORGANIZE THE ACCUMULATED PAST.**
+>
+> **That is SP-FR-00 operating across time.**
+
+⭐⭐ **This meets epistemic laundering (Amendment R) from the opposite direction, and
+they are the same mechanism seen twice:**
+
+```text
+LAUNDERING            epistemic qualifiers decay while semantic content persists
+                      → a tentative interpretation becomes biography
+ONE-WAY ACCUMULATION  the retained map gains interpretive authority over each new
+                      encounter
+                      → biography becomes the lens on the present
+```
+
+⛔ **So a memory architecture can be perfectly provenance-disciplined and still fail
+this**: every stored item correctly attributed and qualified, and the accumulated
+whole still governing what the present encounter is allowed to mean. **Provenance
+answers "where did this come from." It does not answer "may the past outrank
+today."** ⛔ Recorded as a distinct requirement; **not a finding, and SD-01's to
+test.**
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
@@ -4233,6 +4290,18 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   UNRESOLVED** — the clean question is *is MAIA doing less because the member can
   now do more?* ⛔ No finding, no schema, no protocol; sources named by the founder
   and **not read in this session.**
+- **2026-09-10 · SP-FR-00 ACROSS TIME (founder)** — Gendlin supplies the missing
+  reciprocity: **the map is not simply answerable to the terrain; the terrain
+  continually remakes the map.** ⭐⭐⭐ Longitudinal consequence — **THE ONE-WAY
+  ACCUMULATION PROBLEM**: *today's experience is interpreted through yesterday's
+  map · yesterday's map gains weight from today's apparent recurrence · the past
+  increasingly governs the present.* **A developmental system needs the opposite:
+  the present encounter must retain enough authority to REORGANIZE THE ACCUMULATED
+  PAST.** ⭐⭐ Meets **epistemic laundering** from the other side — laundering is
+  *qualifiers decay while content persists*; accumulation is *the retained map
+  gains authority over each new encounter*. ⛔ **A memory architecture can be
+  perfectly provenance-disciplined and still fail this** — provenance answers
+  *where did this come from*, not *may the past outrank today.* SD-01's to test.
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**

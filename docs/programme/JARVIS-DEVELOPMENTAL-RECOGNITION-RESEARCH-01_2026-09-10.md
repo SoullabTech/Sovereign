@@ -570,6 +570,168 @@ claims to know.***
 
 ---
 
+# V7 — OPENED (founder act, 2026-09-10)
+
+```
+STANDING   ⭐ OPEN. ⛔ Still NO IMPLEMENTATION STANDING.
+GATING     ⛔ NOT gated on SD-00B's remaining ~60 canon files — different
+           questions. SD-00B asks what Soullab has already said; V7 asks what
+           established developmental traditions have discovered.
+CONDITION  the four provenance labels stay intact, and ⛔ NOTHING from V7 is
+           retroactively discovered "inside" canon.
+```
+
+> ## Governing question
+>
+> **How do we recognize increasing human capacity without turning that capacity
+> into another thing the system claims to know about the person?**
+
+> ## Research question (narrowed, to prevent a generic tour of developmental psychology)
+>
+> **What observable distinctions have mature developmental traditions used to
+> differentiate compliance, imitation, agreement, introjection or supported
+> performance from increasing autonomous capacity — and which of those distinctions
+> remain defensible in an AI-mediated relationship?**
+
+## V7.1 — ⭐⭐⭐ The three problems are not stages of one test
+
+**A system can succeed at one and fail another.** Two worked cases:
+
+```text
+CASE 1  MAIA is exquisitely humble — "this is only a possibility" — and still
+        repeatedly offers interpretations that subtly organize the member's
+        experience around MAIA's categories.
+        ✅ passes much of EPISTEMIC HUMILITY
+        ⛔ fails PHENOMENOLOGICAL FIDELITY
+
+CASE 2  An interpretation fits beautifully — "yes, that is exactly what I'm
+        experiencing" — and produces no developmental change at all. The member
+        recognized the ACCURACY OF MAIA'S FORMULATION, not necessarily a greater
+        capacity to recognize the process independently.
+        ✅ passes PHENOMENOLOGICAL FIDELITY
+        ⛔ establishes nothing about DEVELOPMENTAL RECOGNITION
+```
+
+> ## ⭐⭐⭐ **Phenomenological fit is not developmental recognition.**
+
+### And the inverse matters as much
+
+```text
+Member: "No — that isn't it. I see what I'm actually doing now."
+
+BY AGREEMENT METRICS   MAIA just got worse.
+DEVELOPMENTALLY        something important may just have happened.
+```
+
+⛔ **This is why the third column requires evidence unlike anything AIN currently
+optimizes** — and why any metric rewarding convergence would score the most
+developmentally significant moment as a failure.
+
+## V7.2 — Negative distinctions to preserve BEFORE the next pass
+
+```text
+agreement                    ≠  recognition
+self-description             ≠  process noticing
+vocabulary adoption          ≠  integration
+remembering a concept        ≠  increased capacity
+MAIA needing less            ≠  development, by itself
+disagreement                 ≠  failure
+accurate interpretation      ≠  alchemy
+```
+
+## V7.3 — ⭐⭐ The positive target: APPROPRIATED CAPACITY
+
+> **Something has become developmentally significant when the person can
+> increasingly do something WITH AWARENESS that previously required the
+> relationship to do FOR them.**
+
+⛔ Not merely repeat the insight.
+
+```text
+recognize EARLIER
+differentiate MORE FINELY
+carry the recognition INTO ANOTHER SITUATION
+notice when an OLD MAP NO LONGER FITS
+translate the insight into language that BELONGS TO THEM
+act differently because they can now PERCEIVE MORE of what is occurring
+⭐ eventually GENERATE DISTINCTIONS THAT TEACH MAIA something about the terrain
+  her own ontology did not contain
+```
+
+> ⭐⭐ **That last movement is where member recognition becomes VISIBLY different
+> from assimilation.**
+
+## V7.4 — Candidate dimensions — ⚠️ OURS, to be warranted or refused
+
+```text
+spontaneous initiation · transfer · differentiation · generativity ·
+correction / resistance · fading of support · autonomous reappropriation
+```
+
+⛔ **The research must discover HOW EACH TRADITION ACTUALLY WARRANTS these, not
+treat our categories as settled.** A tradition that has no such distinction, or
+warrants it differently, is a result.
+
+## V7.5 — ⭐⭐⭐ THE TRAP, named before the pass begins
+
+> **Do not let "independence" become the theory of development.**
+
+Scaffolding and fading tempt the reading *less helper = more development.* **But
+this entire ontology is relational.**
+
+```text
+⛔ WRONG   dependence → independence
+⭐ RIGHT   undifferentiated dependence → increasing capacity → FREER INTERDEPENDENCE
+```
+
+> A mature person does not become developmentally complete by needing nobody. They
+> may become **capable of richer relationship precisely because they are less
+> dependent on the other for functions they can now perform themselves.**
+
+> ⭐⭐⭐ **The mature outcome is NOT that MAIA disappears because the member no longer
+> needs relationship. It is that MAIA NO LONGER NEEDS TO PERFORM THE MEMBER'S
+> RECOGNITION FOR THEM. Then the relationship can do more interesting things.**
+
+⭐ Returns to the Mercurial Third: **as both participants become more
+differentiated, the between can become RICHER without becoming MORE POSSESSIVE.**
+
+⚠️ **This trap is live for Vygotsky, mentalization, attachment, participatory
+sense-making and probably Winnicott** — each of which V7 will meet.
+
+⛔ **It also qualifies `Healthy Disappearance`**, whose internal authority remains
+unresolved: *MAIA needing to intervene less* is only evidence when it is **because
+the member can now do more**, and never on its own (V7.2).
+
+## V7.6 — ⭐⭐ How the three layers now divide the protective work
+
+```text
+ASSERTION ETHICS            protect THE MEMBER      from MAIA'S CERTAINTY
+PHENOMENOLOGICAL FIDELITY   protect THE ENCOUNTER   from MAIA'S REPRESENTATION
+DEVELOPMENTAL RECOGNITION   protect THE MEMBER'S
+                            BECOMING                from DEPENDENCE ON MAIA'S SEEING
+```
+
+⭐ Three different protected objects, three different threats. **That is why they
+cannot substitute for one another, and why AIN's strength in the first says
+nothing about the other two.**
+
+## V7.7 — Carried from the charter: SP-FR-00 across time
+
+Recorded here because it bears directly on the research question. Gendlin supplies
+the reciprocity — **the terrain continually remakes the map** — and its
+longitudinal consequence is the **one-way accumulation problem**: today's
+experience read through yesterday's map, the map reinforced by apparent
+recurrence, the past increasingly governing the present.
+
+> **The present encounter must retain enough authority to reorganize the
+> accumulated past.**
+
+⭐ V7 should look for how developmental traditions handle **revision of the
+accumulated account** — not only how capacity grows, but how a tradition lets a
+present moment overturn a settled understanding of the person.
+
+---
+
 ## 6. ⛔ Standing
 
 - ⛔ **No implementation standing.** No schema, surface, protocol, metric, repair,
@@ -616,4 +778,26 @@ claims to know.***
   does not know how to recognize when an interpretation has become the member's own
   developing capacity rather than something the member has accepted.* Next research
   move narrowed to how developmental traditions distinguish appropriation from
-  compliance; ⛔ not opened.
+  compliance.
+- **2026-09-10 · V7 OPENED (founder act).** ⛔ Not gated on SD-00B's remaining ~60
+  canon files — different questions — provided the four labels stay intact and
+  nothing from V7 is retroactively discovered "inside" canon. ⭐⭐⭐ **The three
+  problems are not stages of one test**: humble-but-organizing passes epistemic
+  humility and fails phenomenological fidelity; a formulation that fits perfectly
+  and changes nothing passes fidelity and establishes nothing developmental —
+  **phenomenological fit is not developmental recognition**; and *"no, that isn't
+  it, I see what I'm actually doing now"* makes MAIA **worse by agreement metrics
+  and may be the most developmentally significant moment there is.** Seven negative
+  distinctions preserved. Positive target: **APPROPRIATED CAPACITY** — *doing with
+  awareness what previously required the relationship to do for them* — ending in
+  **distinctions that teach MAIA about terrain her ontology did not contain.**
+  ⭐⭐⭐ **TRAP NAMED FIRST: do not let independence become the theory of
+  development** — not `dependence → independence` but `undifferentiated dependence
+  → increasing capacity → FREER INTERDEPENDENCE`; **the mature outcome is not that
+  MAIA disappears because the member no longer needs relationship, but that MAIA no
+  longer performs the member's recognition for them — then the relationship can do
+  more interesting things**, and the between becomes richer without becoming more
+  possessive. ⭐ Three protected objects: assertion ethics protect **the member**
+  from MAIA's certainty · fidelity protects **the encounter** from MAIA's
+  representation · recognition protects **the member's becoming** from dependence
+  on MAIA's seeing.
