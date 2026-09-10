@@ -262,6 +262,31 @@ increases repertoire; homogenization decreases it.**
 ⭐ *That is a fundamentally different ambition from building a better AI writing
 assistant.*
 
+## 8b. ⭐ The authority hierarchy, in this domain
+
+From **SP-FR-00** (Person-Primary Developmental Ontology), the general ordering is
+`person → encounter → process → pattern → map → ontology` — *the broadest structure
+carries the least authority over the meaning of a particular experience.* In
+Writer's Studio:
+
+```text
+REQUIRED   writer → the Work → creative process → signature → authorial map
+           → craft heuristics
+⛔ REFUSED  craft heuristics → map → signature → the Work → writer
+```
+
+⭐ **The heuristics are the broadest structure and therefore the weakest authority
+over what this sentence, on this page, in this Work means.** That is the precise
+reason they function as resistance rather than norm (§4) — not deference to the
+writer's preference, but the correct ordering of authority.
+
+> **Structure should increase the visibility of uniqueness rather than decrease
+> it.** In this domain: the heuristics hold enough structure for writing to become
+> legible, while the writer's signature, worldview, method, intention and way of
+> making meaning remain primary.
+
+> **The ontology holds the structure; the person supplies the life.**
+
 ## 9. ⛔ Standing
 
 - ⛔ **No Writer's Studio surface is audited, censused or repaired by this
