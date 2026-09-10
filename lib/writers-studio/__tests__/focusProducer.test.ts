@@ -446,3 +446,41 @@ describe('LIVE SCHEMA WITNESS · read-only, structurally', () => {
     expect(s).toMatch(/schema_migrations/);
   });
 });
+
+describe('FOCUS WITNESS SEED · local/disposable only', () => {
+  /**
+   * ⭐⭐ The witness database is local or disposable. NEVER production.
+   *     No production action is licensed by a missing local fixture.
+   */
+  const seed = () => CODE('scripts/witness/seed-focus-witness-work.ts');
+
+  it('refuses a database that already holds member Works', () => {
+    // ⭐ Structural, not a hostname heuristic: production holds 13 manuscripts,
+    // so the guard fires there even if DATABASE_URL is pointed at it by mistake.
+    expect(seed()).toMatch(/count\(\*\)[^;]*FROM member_manuscripts WHERE member_id <> \$1/);
+    expect(seed()).toMatch(/REFUSED/);
+    expect(seed()).toMatch(/process\.exit\(1\)/);
+  });
+
+  it('seeds no member data — structurally representative text only', () => {
+    const s = seed();
+    expect(s).toMatch(/Witness Work — not member data/);
+    // the three hazards the repairs must survive
+    expect(s).toMatch(/\\n\\n'/);        // 01B: an authored trailing blank line
+    expect(s).toMatch(/🌊/);              // 01A: a non-BMP char before the selection
+    expect(s).toMatch(/position/);        // observable section order
+  });
+
+  it('builds no schema — that must descend from repository truth', () => {
+    expect(seed()).not.toMatch(/CREATE TABLE/i);
+    /* Assert the RUNTIME message, not the header comment: `CODE()` strips
+       comments, so a doc-only instruction would be invisible here — and an
+       instruction only a maintainer reads is not the one a misdirected run sees. */
+    expect(seed()).toMatch(/run db:bootstrap \+ db:migrate/);
+  });
+
+  it('satisfies the round-trip invariant rather than working around it', () => {
+    expect(seed()).toMatch(/string_agg\(s\.text, '' ORDER BY s\.position\)/);
+    expect(seed()).toMatch(/section_addressable_at = NOW\(\)/);
+  });
+});
