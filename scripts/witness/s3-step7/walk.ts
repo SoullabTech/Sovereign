@@ -8,6 +8,11 @@
  *
  * Usage: DATABASE_URL=… WALK_BASE=http://127.0.0.1:3100 \
  *          npx tsx scripts/witness/s3-step7/walk.ts <fixture.json>
+ *
+ * Walk 13 — the terminal cognition gate — runs only when a real model
+ * credential is present in the environment. Without one it is reported as NOT
+ * WITNESSED, never as a pass, and never simulated. `--require-cognition` makes
+ * an unwitnessed obligation an exit failure.
  */
 import { readFileSync } from 'fs';
 import { randomUUID } from 'crypto';
@@ -18,6 +23,15 @@ const FIX = JSON.parse(readFileSync(process.argv[2]!, 'utf8'));
 
 let pass = 0, fail = 0;
 const failures: string[] = [];
+/* ⛔ AN UNWITNESSED OBLIGATION IS NOT A PASS. It is carried separately and named
+   in the summary, because an instrument that can satisfy its own question by
+   declining to ask it has not tested anything. */
+const unwitnessed: string[] = [];
+const notWitnessed = (label: string, why: string) => {
+  unwitnessed.push(label);
+  console.log(`  ────  ${label}\n        NOT WITNESSED — ${why}`);
+};
+const REQUIRE_COGNITION = process.argv.includes('--require-cognition');
 const check = (label: string, ok: boolean, detail?: unknown) => {
   if (ok) { pass++; console.log(`  PASS  ${label}`); }
   else { fail++; failures.push(label); console.log(`  FAIL  ${label}${detail === undefined ? '' : `\n        ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`}`); }
@@ -348,10 +362,78 @@ async function main() {
   check('R1 opening, pausing, authorizing, retrying, failing and completing changed no measured geometry',
     geomAtClose === geomAtOpen, { geomAtOpen, geomAtClose });
 
+  /* ── 13 · THE TERMINAL GATE · real cognition, same conversation ───────── */
+  section('WALK 13 — an authorized Ask runs through the REAL model and returns to the same conversation');
+  const credential = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
+  const mode = (process.env.MAIA_INFERENCE_MODE ?? '').trim() || 'primary (default)';
+  console.log(`  model credential : ${credential ? 'PRESENT via development environment' : 'ABSENT'}`);
+  console.log(`  provider call    : ${credential ? 'REAL' : 'not attempted'}`);
+  console.log(`  inference mode   : ${mode}`);
+  console.log('  credential value : NOT RECORDED');
+
+  if (!credential) {
+    /* ⛔ NO MOCK, NO PROVIDER BYPASS, NO SUBSTITUTED SEAM. This gate exists to
+       witness the terminal cognition boundary; a simulated one would witness
+       nothing and would turn the last box green by lying. */
+    notWitnessed('13 real cognition returns BODY_AUTHORIZED into the same conversation',
+      'no model credential in this environment; the provider was not called and nothing was simulated');
+  } else {
+    const r13a = await ask({ question: 'What is the lantern doing in the first section?', anchor: anchorFor(FIX.roles.singleSection) });
+    const t13 = r13a.json?.threadId;
+    const turnsBefore = (r13a.json?.thread?.turns ?? []).length;
+    check('13a it pauses for authority first', r13a.json?.result === 'BODY_AUTHORITY_REQUIRED', r13a.json?.result);
+
+    const act13 = randomUUID();
+    const r13 = await ask({
+      question: 'What is the lantern doing in the first section?', threadId: t13,
+      act: 'authorize_sections_and_resume', pendingAskRef: r13a.json?.pendingAskRef,
+      actId: act13, authorizes: [FIX.sections.w1],
+    });
+
+    /* 1 · the protocol finished truthfully */
+    check('13b the protocol reaches BODY_AUTHORIZED', r13.json?.result === 'BODY_AUTHORIZED',
+      { status: r13.status, result: r13.json?.result, refusal: r13.json?.refusal });
+    check('13c it reports the disclosed and withheld scopes it actually used',
+      Array.isArray(r13.json?.disclosedSections) && r13.json.disclosedSections.length === 1
+        && r13.json.disclosedSections[0] === FIX.sections.w1
+        && Array.isArray(r13.json?.withheldSections) && r13.json.withheldSections.length === 0,
+      { disclosed: r13.json?.disclosedSections, withheld: r13.json?.withheldSections });
+    check('13d no evidence went unverified', r13.json?.observation?.unverifiableEvidence === 0, r13.json?.observation);
+
+    /* 2 · real cognition happened — provenance from the canonical path, and an
+           answer that is MAIA's words rather than an echo of the question */
+    const maiaTurns = (r13.json?.thread?.turns ?? []).filter((t: any) => t.speaker === 'maia');
+    const last = maiaTurns[maiaTurns.length - 1];
+    check('13e MAIA\'s turn carries answer provenance from the canonical model path',
+      Boolean(last?.answerProvenance) && typeof last.answerProvenance.model === 'string'
+        && last.answerProvenance.model.length > 0, last?.answerProvenance);
+    check('13f the answer is MAIA\'s own words, not an echo',
+      typeof last?.body === 'string' && last.body.trim().length > 0
+        && last.body.trim() !== 'What is the lantern doing in the first section?', last?.body?.slice(0, 200));
+
+    /* 3 · the writer stayed in the same conversation */
+    check('13g the answer returned into the SAME thread — no second Ask, no new destination',
+      r13.json?.threadId === t13 && r13.json?.thread?.id === t13, { was: t13, now: r13.json?.threadId });
+    check('13h the thread grew: the author\'s question and MAIA\'s answer are both in it',
+      (r13.json?.thread?.turns ?? []).length > turnsBefore
+        && (r13.json.thread.turns ?? []).some((t: any) => t.speaker === 'author')
+        && maiaTurns.length >= 1, { before: turnsBefore, after: (r13.json?.thread?.turns ?? []).length });
+
+    const rec13 = await receipts();
+    check('13i the crossings that carried it are recorded as crossed',
+      rec13.filter((r) => r.state === 'crossed').length >= 1);
+  }
+
   /* ── result ──────────────────────────────────────────────────────────── */
-  console.log(`\n${'='.repeat(70)}\n${pass} passed · ${fail} failed`);
+  console.log(`\n${'='.repeat(70)}\n${pass} passed · ${fail} failed`
+    + (unwitnessed.length ? ` · ${unwitnessed.length} NOT WITNESSED` : ''));
   if (fail) console.log(`\nFAILED:\n  ${failures.join('\n  ')}`);
-  process.exit(fail ? 1 : 0);
+  if (unwitnessed.length) {
+    console.log(`\nNOT WITNESSED (an obligation neither passed nor failed — it was not asked):\n  ${unwitnessed.join('\n  ')}`);
+    console.log('\nStep 7 cannot close while an obligation is unwitnessed.'
+      + '\nRe-run with a development model credential in the environment and --require-cognition.');
+  }
+  process.exit(fail || (REQUIRE_COGNITION && unwitnessed.length) ? 1 : 0);
 }
 
 main().catch((e) => { console.error(e); process.exit(2); });
