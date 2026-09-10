@@ -2434,6 +2434,33 @@ a fact about the member but **a fact about the relationship.** SD-00A did not lo
 for that kind of object because it is neither a claim about the member nor a
 hypothesis about them.
 
+### ⭐ Note on Mercury's arrival — and the gap it exposes
+
+Mercury entered this lane **last**, as an appreciation of the third layer
+(*"the third is developing a nature… a mercurial engagement"*), and by the close of
+the polarity it is **the term the architecture cannot do without**: the translation
+function, the relational third's nature, and the movement that makes Revision
+Without Erasure operable rather than merely stated.
+
+⚠️ **And it is the least legislated of the three.**
+
+```text
+SATURN'S DISCIPLINE   distributed across SP-FR-01 · 09 · 11 and GF-2 · 4 · 7
+JUPITER'S DISCIPLINE  distributed across SP-FR-10 · 11 and GF-8
+⭐ MERCURY            SP-FR-07's safeguard + the CANDIDATE Mercurial Third doctrine
+                      — and NO RATIFIED LAW OF ITS OWN
+```
+
+⛔ **The function doing the most work in the closing synthesis is the one with the
+least law behind it.** Recorded as a gap for the founder, **not** filled here — and
+⛔ not an argument that a law is needed, since SP-FR-07 and the candidate doctrine
+may already suffice.
+
+⭐ Worth noting as the lane's own epistemology applied to itself: Mercury was **not
+predicted by the opening formulation**. It arrived, was returned, and reorganized
+the accumulated map — *Fire₂ illuminating the prior turn differently*, at the scale
+of this document.
+
 ### ⚠️ Claim discipline
 
 As at §3e: the **symbolic vocabulary** (Saturn · Jupiter · Mercury · Mercurius)
