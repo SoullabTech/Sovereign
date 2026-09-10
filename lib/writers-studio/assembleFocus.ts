@@ -31,6 +31,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { discloseUnder, type DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
+import { memberRef } from '@/lib/privacy/memberRef';
 import type { FocusAssembler } from './focusCrossing';
 
 /**
@@ -134,8 +135,13 @@ export const assembleFocus: FocusAssembler = async ({ authority, memberId, workR
     const passage = text.slice(Math.max(0, range.start), Math.max(0, range.end));
     return passage.length > 0 ? passage : null;
    } catch (err) {
+    /* ⛔ NEVER THE ID, AND NEVER A PIECE OF IT. `memberRef()` is a derivation;
+       `.slice(0, 8)` is a fragment of the source identifier — still directly
+       matchable against the real value, and it leaks the id's own prefix.
+       Container stdout is readable by anyone with `docker logs` access, and a
+       member id is a durable join key across every table in the system. */
     console.error('[FOCUS] assembly failed', {
-      memberIdPrefix: memberId.slice(0, 8),
+      memberRef: memberRef(memberId),
       error: err instanceof Error ? err.message : 'unknown',
     });
     return null;
@@ -148,7 +154,7 @@ export const assembleFocus: FocusAssembler = async ({ authority, memberId, workR
     // reason names WHICH fact failed — provenance, freshness or applicability —
     // and never the material it was asked about.
     console.error('[FOCUS] disclosure refused', {
-      memberIdPrefix: memberId.slice(0, 8), reason: outcome.reason,
+      memberRef: memberRef(memberId), reason: outcome.reason,
     });
   }
   return null;
