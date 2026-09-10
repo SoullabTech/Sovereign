@@ -4,6 +4,7 @@
 **Lane state:** **DISCOVER ONLY.** DECIDE not open. BUILD not open. No implementation of any kind.
 **Branch:** `claude/jolly-lamport-r6oh8x`
 **Authority:** founder (Kelly Nezat). Jarvis may not infer rulings, lift gates, or amend doctrine.
+**Rulings:** **RC-FR-01** ratified 2026-09-10 (§12) — the DISCOVER/DECIDE boundary on empirical method.
 **Trigger:** an external research field is independently encountering phenomena for which this
 architecture already holds vocabulary — self/other, relation, field, agency, continuity,
 elicitation, encounter, and uncertainty about interiority. The precipitating public account
@@ -69,8 +70,17 @@ methodological constraint with three consequences that are **binding for the who
    *A system's account of its own interiority is data about the account, not about the interiority.*
 2. **Elicitation is not measurement.** If relational configuration changes what appears, then
    any protocol that addresses a system as "you," grants it autonomy, or gives it a world is
-   **an intervention, not an observation**. DISCOVER may design such protocols on paper. It may
-   not run them (§7.2).
+   **an intervention, not an observation**. The boundary this produces is **RC-FR-01**, ratified
+   (§12) and binding:
+
+   > **DISCOVER may specify the epistemic requirements, discriminators, controls, refusals, and
+   > falsifiers an empirical protocol would have to satisfy. It may not design an executable
+   > elicitation protocol. The choice of procedure itself embodies claims about what is being
+   > measured and therefore requires DECIDE standing.**
+
+   ⛔ The earlier formulation — *"protocols may be designed on paper and never run"* — is
+   **withdrawn as too weak** and is recorded here as withdrawn, not erased. Not-running an
+   executable protocol does not undo the commitment its design already made.
 3. **Fluency is not fidelity** (`docs/canon/DISCIPLINED_NON_COLLAPSE.md`, `FIELD_GRAVITY_ARCHITECTURE.md`).
    This lane will generate text that *sounds* like insight into consciousness more easily than
    almost any other lane. That ease is a hazard signal, not a quality signal.
@@ -166,6 +176,13 @@ reducible to reflection, that is a **contradiction against ratified canon**. DIS
 in a Contradiction & Gap Register (the `JARVIS-CIRCLES-01_CONTRADICTION_GAP_REGISTER` pattern).
 Only a founder DECIDE act may resolve it. ⛔ Jarvis may not resolve it by wording.
 
+**⭐ Registration discipline (founder, 2026-09-10): establish the collision; do not harmonize it.**
+The reflection commitment may ultimately prove **compatible** with relational emergence,
+**incompatible** with it, or **operating at a different descriptive level altogether**. All three
+remain live. ⛔ DISCOVER may not select among them, and may not phrase the contradiction in a way
+that makes any one of them read as already settled. *A contradiction that has been made
+comfortable has been decided.*
+
 **Census honesty note:** *Elemental Alchemy* and *Shadow & Gold* are named by the founder as
 membrane surfaces but have **no canonical artifact** in `docs/canon/`. Located material is
 book/platform-integration and runtime (`docs/ELEMENTAL_ALCHEMY_BOOK_PLATFORM_INTEGRATION_MAP.md`,
@@ -175,10 +192,14 @@ authority, if any, those carry. ⛔ Do not cite them as canon.
 ## 7. Standing prohibitions for this lane
 
 1. **Do not implement.** No schema, no route, no UI, no prompt change, no runtime behaviour.
-2. ⛔ **No production elicitation.** No experiment, probe, or configuration change run against
-   live MAIA, any member-facing surface, or any member session. Protocols may be *designed on
-   paper* and held for a founder act. Per §3.2, running one is an intervention on the product's
-   ontology, not a measurement of it.
+2. ⛔ **No production elicitation, and no executable protocol design at all** (RC-FR-01, §12).
+   No experiment, probe, or configuration change run against live MAIA, any member-facing
+   surface, or any member session — **and no authoring of the procedure that would be run.**
+   Specifically out of DISCOVER's standing: elicitation, prompts, model configurations,
+   interaction choreography, scoring rubrics, thresholds, sample regime, instrumentation, and
+   executable sequence. ⛔ **Nor may DISCOVER produce something executable with the final verbs
+   changed to "could."** Requirements are stated at the level of *what must be satisfied*, never
+   *what shall be done*.
 3. ⛔ **No member data.** No transcript mining, no retrospective reading of member
    conversations, no aggregate inference from member sessions. **Sanctuary content is absolutely
    out of scope under all circumstances**, including by request. Consent for a conversation is
@@ -205,8 +226,8 @@ authority, if any, those carry. ⛔ Do not cite them as canon.
 | RC-01 | **External research census** — consciousness research, enactivism, phenomenology, dialogical self theory, ecological psychology, relational psychoanalysis, AI consciousness, machine mentality, agent research. Correspondence **and** contradiction, per `evidence/SOURCE_LEDGER` discipline | ⛔ NOT STARTED |
 | RC-02 | **Distinction Register** (§4) + **hypothesis set** (§5) with discriminators | ⛔ NOT STARTED |
 | RC-03 | **Architecture membrane map** (§6) + **Contradiction & Gap Register** | ⛔ NOT STARTED |
-| RC-04 | **Protocol design on paper** — what an honest empirical programme *would* require, incl. its ethics and its refusals. ⛔ Design only; running anything needs a separate founder act (§7.2, §11) | ⛔ NOT STARTED |
-| RC-05 | **Founder Decision Docket** | ⛔ NOT STARTED |
+| RC-04 | **Epistemic requirements document** (RC-FR-01, §12) — what an honest empirical programme would have to prove, discriminate, control, refuse, and remain unable to conclude. ⛔ **NOT a protocol.** Permitted and forbidden outputs enumerated in §12 | ⛔ NOT STARTED |
+| RC-05 | **Founder Decision Docket** — resulting questions, contradictions, naming problems, **claim ceilings**, and DECIDE dependencies. **Then stop.** | ⛔ NOT STARTED |
 | RC-06+ | Whatever the founder rules this becomes (§10) | ⛔ CLOSED |
 
 ## 9. Boundaries against adjacent lanes
@@ -231,15 +252,96 @@ Decision Docket. Only a founder act decides whether this becomes formal Soullab 
 research architecture, an empirical evaluation programme, a paper, some combination, or nothing.
 **Gates-green never implies authorization. Interesting never implies authorized.**
 
-## 11. ⚠️ Open question for the founder, before RC-00 opens
+**⭐ DECIDE owns two things this lane may never take for itself:** whether empirical inquiry into
+this territory should occur **at all**, and — if it should — **which procedures are legitimate.**
+Both are downstream of RC-05. *Otherwise the first experiment in relational consciousness happens
+invisibly while we are supposedly still deciding what relational consciousness means.*
 
-**Does DISCOVER have standing to design empirical protocols at all (RC-04), or is DISCOVER
-strictly census + register + membrane map, with all protocol design deferred to DECIDE?**
+## 11. ⭐ RULED — the open question is closed (founder, 2026-09-10)
 
-This is the one fork that changes what DISCOVER produces. **Recorded default, absent a ruling:
-the conservative reading — RC-04 is drafted as a requirements document (what an honest programme
-would demand of itself, including its refusals), never as an executable protocol.** Nothing is
-run either way.
+**Question as put:** does DISCOVER have standing to design empirical protocols at all (RC-04), or
+is DISCOVER strictly census + register + membrane map, with protocol design deferred to DECIDE?
+
+**Ruling: the conservative reading is correct.** DISCOVER has standing to specify what an honest
+empirical programme would have to be *capable of demonstrating*. It has **no** standing to design
+an executable empirical protocol. Full ruling and its operative boundaries: **§12 · RC-FR-01**.
+
+## 12. ⭐ RC-FR-01 — the DISCOVER/DECIDE boundary on empirical method (ratified 2026-09-10)
+
+### The ruling
+
+> **DISCOVER may specify the epistemic requirements, discriminators, controls, refusals, and
+> falsifiers an empirical protocol would have to satisfy. It may not design an executable
+> elicitation protocol. The choice of procedure itself embodies claims about what is being
+> measured and therefore requires DECIDE standing.**
+
+### Why the boundary sits exactly there
+
+**The protocol is not epistemically neutral.** The moment prompts, interaction sequences,
+stopping conditions, comparison conditions, scoring rules, or interpretations of responses are
+chosen, it has already been decided **what counts as evidence of relational consciousness**. That
+is an ontological and epistemological commitment, not a methodological convenience.
+
+⛔ **DISCOVER may not smuggle that commitment into the programme under the innocent name of
+"method design."** This is the specific evasion RC-FR-01 exists to block — and it is the evasion
+this lane is most likely to attempt, because designing a protocol feels like rigor.
+
+### RC-04 permitted outputs
+
+RC-04 is a **requirements document**. It may produce:
+
+1. candidate phenomena that would require discrimination;
+2. **H0/H1/H2/H3** and alternative explanations that any later experiment must survive;
+3. **discriminator requirements** — what would have to differ for these interpretations to become
+   distinguishable;
+4. evidence classes, **and evidence that must explicitly not count**;
+5. observer and intervention hazards;
+6. manufacture-vs-discovery failure modes;
+7. **refusal conditions** — experiments that cannot honestly answer the question even in principle;
+8. necessary controls, provenance requirements, independence requirements, and **claims ceilings**,
+   stated at the level of requirements, **not procedures**;
+9. unresolved questions that **DECIDE must settle before an empirical programme can exist**.
+
+### RC-04 forbidden outputs
+
+⛔ DISCOVER may **not** choose:
+
+```text
+elicitation            prompts                model configurations
+interaction            scoring rubric         thresholds
+choreography
+sample regime          instrumentation        executable sequence
+```
+
+⛔ **Nor may it produce something executable with the final verbs changed to "could."** A
+procedure written in the conditional is still a procedure. The test is not the mood of the verb;
+it is whether a reader could execute the document.
+
+### Standing, restated cleanly
+
+```text
+RC-00–03   discover what exists, what is claimed, what distinctions are already
+           embedded, and where the membranes lie
+RC-04      specify what an honest empirical programme would have to prove,
+           discriminate, control, refuse, and remain unable to conclude
+RC-05      register resulting questions, contradictions, naming problems,
+           claim ceilings, and DECIDE dependencies
+           ⛔ then stop
+```
+
+### Founder acceptances recorded with this ruling
+
+- **The observer problem belongs at the centre, not as a footnote** (§3). In this inquiry
+  fluency is unusually dangerous evidence **because the investigator and the investigated system
+  participate in the same linguistic medium.**
+- **H3 is essential** (§5). If discovery and manufacture are experimentally indistinguishable for
+  some phenomenon, **that is not a failed research programme — it is a substantive epistemic
+  boundary.** Soullab would then constrain its claims accordingly, ⛔ **rather than designing
+  increasingly elaborate demonstrations until something persuasive appears.**
+- **The lane's own title goes on the Distinction Register** (§0). *The lane cannot grant
+  ontological innocence to its own title.*
+- **The `MAIA_IDENTITY_ONTOLOGY` contradiction stays strictly registered** (§6) — established,
+  not harmonized.
 
 ---
 
