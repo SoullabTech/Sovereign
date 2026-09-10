@@ -83,6 +83,42 @@ describe('one press, one act', () => {
   });
 });
 
+describe('⭐⭐ the same act remains identified; only completion decides a new one', () => {
+  it('ACT_ALREADY_PROCESSED mints nothing and does not clear the act', () => {
+    const m = minter();
+    const { state } = drive([
+      { type: 'served', outcome: REQUIRED },
+      { type: 'press' },
+      { type: 'served', outcome: { kind: 'ACT_ALREADY_PROCESSED', completion: 'completed' } },
+    ], m.mint);
+    expect(m.calls).toHaveLength(1);
+    /* ⭐ The same press, recognised. It is still identified as that act. */
+    expect(state.actId).toBe('act-1');
+  });
+
+  it('⛔ a COMPLETED duplicate does not spend the act — an answer already exists', () => {
+    const m = minter();
+    const { state } = drive([
+      { type: 'served', outcome: REQUIRED },
+      { type: 'press' },
+      { type: 'served', outcome: { kind: 'ACT_ALREADY_PROCESSED', completion: 'completed' } },
+    ], m.mint);
+    /* Asking the member to authorize again for an answer they already have
+       would be the machine inventing work. */
+    expect(state.actSpent).toBe(false);
+  });
+
+  it('⭐ an INCOMPLETE duplicate spends it — the resume did not finish', () => {
+    const m = minter();
+    const { state } = drive([
+      { type: 'served', outcome: REQUIRED },
+      { type: 'press' },
+      { type: 'served', outcome: { kind: 'ACT_ALREADY_PROCESSED', completion: 'incomplete' } },
+    ], m.mint);
+    expect(state.actSpent).toBe(true);
+  });
+});
+
 describe('a spent act is never resent', () => {
   const spendingOutcomes: BodyProtocolOutcome[] = [
     { kind: 'DISCLOSURE_UNAVAILABLE', actSpent: true, sections: [S] },
@@ -133,6 +169,35 @@ describe('a fresh ask resets the act', () => {
     /* Authorizing the rest is a new press, and therefore a new id. */
     expect(m.calls).toHaveLength(2);
     expect(sends[1].sectionIds).toEqual(['sec-1', 'sec-2']);
+  });
+});
+
+describe('⭐ the server\'s scope wins', () => {
+  it('a changed required set replaces the client\'s selection', () => {
+    const m = minter();
+    const { state } = drive([
+      { type: 'served', outcome: REQUIRED },
+      { type: 'select', sectionIds: ['sec-1', 'sec-99'] },
+      { type: 'press' },
+      { type: 'served', outcome: { kind: 'BODY_SCOPE_INCOMPLETE', outstanding: [T], pendingAskRef: 'pending-1' } },
+    ], m.mint);
+    /* ⛔ Obsolete client scope is never preserved as though it were authority. */
+    expect(state.selectedSectionIds).toEqual(['sec-2']);
+    expect(state.required).toEqual([T]);
+  });
+
+  it('⛔ BODY_SCOPE_INCOMPLETE consumes nothing and regenerates nothing', () => {
+    const m = minter();
+    const { state, sends } = drive([
+      { type: 'served', outcome: REQUIRED },
+      { type: 'press' },
+      { type: 'served', outcome: { kind: 'BODY_SCOPE_INCOMPLETE', outstanding: [T], pendingAskRef: 'pending-1' } },
+    ], m.mint);
+    /* No claim occurred, so the act is neither spent nor silently replaced —
+       and receiving the outcome mints nothing. */
+    expect(m.calls).toHaveLength(1);
+    expect(sends).toHaveLength(1);
+    expect(state.actSpent).toBe(false);
   });
 });
 

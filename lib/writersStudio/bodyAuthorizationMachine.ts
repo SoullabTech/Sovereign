@@ -96,19 +96,41 @@ export function step(state: MachineState, event: MachineEvent, mint: MintActId):
         });
       }
       if (o.kind === 'BODY_SCOPE_INCOMPLETE') {
-        /* ⛔ The act is over — it reached the server and was answered — but the
-           question is not. The writer may authorize the rest, which is a NEW
-           press and therefore a new id. */
+        /* ⭐ NO CLAIM OCCURRED — the server refused before the claim, so nothing
+           was consumed. The question stays open and the act is over: authorizing
+           the rest is a different set of sections and therefore a NEW press.
+           ⛔ Nothing is consumed or regenerated silently; only a press mints.
+           ⭐ AND THE SERVER'S SCOPE WINS. Selection is reset to what the server
+           now says is outstanding — obsolete client scope is never preserved as
+           though it were authority. */
         return stay({
           ...state, phase: 'awaiting_authority', pendingAskRef: o.pendingAskRef,
-          required: o.outstanding, actId: null, actSpent: false, outcome: o,
+          required: o.outstanding,
+          selectedSectionIds: o.outstanding.map((x) => x.sectionId),
+          actId: null, actSpent: false, outcome: o,
         });
       }
-      /* ⭐⭐ DISCLOSURE_UNAVAILABLE SPENDS THE ACT. The member authorized, the
-         boundary could not be established, and nothing was read — so trying
-         again is a NEW authorization, never this one resent. */
+
+      /* ⭐⭐ WHICH OUTCOMES SPEND THE ACT.
+       *
+       *   DISCLOSURE_UNAVAILABLE   ALWAYS. The member authorized, the boundary
+       *                            could not be established, nothing was read —
+       *                            trying again is a NEW authorization.
+       *
+       *   ACT_ALREADY_PROCESSED    ⭐ THE SAME ACT REMAINS IDENTIFIED. Receiving
+       *   ALREADY_CONSUMED         it mints nothing and clears nothing. Whether
+       *                            a NEW act is required follows `completion`,
+       *                            not the kind:
+       *                              completed  → an answer exists; nothing more
+       *                              incomplete → the resume is spent and did not
+       *                                           finish, so a fresh member act
+       *                                           is required
+       *
+       * ⛔ Marking the act spent on `completed` would ask the member to
+       * authorize again for an answer they already have. */
       const spent = o.kind === 'DISCLOSURE_UNAVAILABLE'
-        || o.kind === 'ALREADY_CONSUMED' || o.kind === 'ACT_ALREADY_PROCESSED';
+        || ((o.kind === 'ACT_ALREADY_PROCESSED' || o.kind === 'ALREADY_CONSUMED')
+            && o.completion === 'incomplete');
       return stay({ ...state, phase: 'settled', actSpent: spent || state.actSpent, outcome: o });
     }
 
