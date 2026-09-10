@@ -2611,6 +2611,206 @@ another LOSES THEIR VOICE the moment MAIA begins proposing structures
 
 > ## **There is one MAIA, but no two people meet exactly the same MAIA — because no two relationships create the same between.**
 
+## 3q. ⭐⭐⭐ Amendment R — Relational Provenance Non-Equivalence (DECIDE trap, frozen)
+
+**Founder, 2026-09-10.** Settled **without designing the representation**, because
+*"the trap is not merely implementation detail — it is an epistemic distinction that
+any future representation must preserve."*
+
+> ### RELATIONAL PROVENANCE NON-EQUIVALENCE
+>
+> A meaning whose origin **cannot be determined** is **indeterminate.**
+>
+> A meaning that is **relationally developed** is one for which there is **positive
+> evidence** that the meaning changed through interaction between participants **in
+> a way not adequately described as simple transmission, adoption, or repetition
+> from either side.**
+>
+> **Absence of attributable authorship is not evidence of relational authorship.**
+>
+> `MUTUALLY DEVELOPED` may therefore **never** function as a fallback category for
+> uncertain provenance.
+
+### ⭐⭐ The burden is asymmetric — by design
+
+```text
+INDETERMINATE            should be CHEAP
+RELATIONAL DEVELOPMENT   should be EXPENSIVE to claim
+```
+
+> ⭐ *"Not because relational emergence is rare, but because **the system has less
+> epistemic authority to assert it.**"*
+
+### The worked case — and why agreement is the weaker signal
+
+```text
+MEMBER  "I think I'm avoiding this because I'm afraid."
+MAIA    "Earlier you called it lack of motivation. Does fear feel more accurate,
+         or is this something different?"
+MEMBER  "Neither, actually. It's that committing to it means letting another
+         version of my life go."
+MAIA    "That changes the frame."
+```
+
+The final meaning is **not** MAIA's original hypothesis. ⛔ **And still we must not
+jump to `mutually_developed = true`.**
+
+> ⭐⭐ **The important fact may be that the member DIFFERENTIATED BEYOND MAIA's
+> frame. That is stronger developmental evidence than agreement.**
+
+That is GF-8's integration test and Amendment K's *"produce genuinely new
+expressions MAIA did not supply"* appearing in a single exchange — and it would be
+**destroyed** by a representation that recorded it as consensus.
+
+### The four neighbouring phenomena DECIDE must not collapse
+
+```text
+TRANSMISSION      one participant introduces a meaning, the other adopts it
+ELABORATION       one introduces something, the other extends it
+CORRECTION /      one participant's frame occasions the other to discover
+DIFFERENTIATION   something importantly DIFFERENT
+RELATIONAL        interaction produces a meaning whose history genuinely depends
+DEVELOPMENT       on contributions from BOTH
+──────────────────────────────────────────────────────────────────
+INDETERMINATE     we cannot tell
+```
+
+⚠️ Phenomenologically and epistemically different **even if a future implementation
+represents them in other vocabulary.** The rule that must survive any vocabulary:
+
+> ## **Unknown must remain unknown.**
+> *Otherwise "relational" becomes the romantic version of data loss.*
+
+### ⭐⭐ The relational-memory object class
+
+```text
+⛔ NOT   fact_about_member
+⛔ NOR   hypothesis_about_member
+⭐ BUT   history_of_this_relationship
+```
+
+```text
+"Direct interpretation here was rejected."
+"The member supplied a different distinction that displaced MAIA's earlier framing."
+"This metaphor became shared language over several encounters."
+"This interpretation was once useful and later explicitly withdrawn."
+```
+
+> These describe **what happened between MAIA and the member.** They create the
+> member-specific relational instantiation **without pretending to describe the
+> person's essence.**
+
+**And SP-FR-12 gives them their hard boundary:**
+
+> **A relational memory may change how MAIA meets THIS member. It does not thereby
+> become a general rule for how MAIA should meet other members.**
+
+⭐ *That is the architectural form of the Mercurial third.*
+
+### ⭐⭐⭐ Laundering is larger than provenance
+
+```text
+tentative interpretation
+        ↓
+stored representation
+        ↓
+recurrence
+        ↓
+confidence
+        ↓
+retrieval
+        ↓
+context supplied to MAIA
+        ↓
+ordinary declarative language
+        ↓
+BIOGRAPHY
+```
+
+> **At no point does anybody have to make a false statement. The problem is that
+> EPISTEMIC QUALIFIERS DECAY WHILE SEMANTIC CONTENT PERSISTS.**
+
+⛔ **So SD-01 must inspect more than `authored_by`.** A hypothesis can remain
+**correctly attributed to MAIA** and still be laundered if six months later the
+prompt receives:
+
+```text
+⛔ "Kelly tends to bypass Water."
+✅ "MAIA previously hypothesized, with limited evidence and subsequent partial
+    member recognition, that…"
+```
+
+> **The problem is not only who said it. It is WHAT EPISTEMIC STATUS SURVIVED
+> COMPRESSION.**
+
+### ⭐ The lifecycle question
+
+> ## **What happened to the uncertainty?**
+>
+> And the form SD-01 carries it in:
+>
+> ## **When AIN turns an encounter into something it can remember, what gets lost on the way?**
+>
+> *"That may be the single best question in the investigation."*
+
+### ⭐⭐ Why the personalized MAIA needs preserved difference
+
+> **If memory compresses every negotiation into consensus, the personalized MAIA
+> becomes increasingly confident and increasingly FICTIONAL.**
+
+True relational history includes:
+
+```text
+agreement · disagreement · correction · uncertainty · abandoned interpretations ·
+changing meanings · things once true that are no longer true ·
+⭐ things MAIA repeatedly misunderstood
+```
+
+**Not noise — part of the nature of this particular relationship.**
+
+> ⭐⭐⭐ *"Some of the most important relational memory may be: **how MAIA has
+> learned that she is wrong with this person.** That is personalization without
+> possession."*
+
+---
+
+## 3r. DECIDE TRAPS — carried forward, representation NOT designed
+
+Recorded here so they survive the stage transition rather than living inside an
+amendment. ⛔ **None of these authorizes a schema, a field, an enum or an event
+type.**
+
+```text
+T-1  RELATIONAL PROVENANCE NON-EQUIVALENCE          Amendment R
+     absence of attributable authorship is not evidence of relational authorship;
+     MUTUALLY DEVELOPED may never be a fallback for uncertain provenance;
+     INDETERMINATE cheap, relational development expensive to claim
+
+T-2  THE FOUR NEIGHBOURING PHENOMENA                Amendment R
+     transmission · elaboration · correction/differentiation · relational
+     development — must not collapse, in any vocabulary
+
+T-3  EVIDENTIARY CLASS × FRAMING ORIGIN             Amendment O
+     two dimensions, never one field
+
+T-4  "SHARED" IS NOT A VALUE, IT IS FOUR            Amendment O
+     MAIA-seeded+member-complied · member-seeded+MAIA-clarified · genuinely
+     developed · undeterminable
+
+T-5  UNCERTAINTY MUST SURVIVE COMPRESSION           Amendment R
+     correct attribution does not prevent laundering; what reaches the prompt
+     carries the epistemic status, or it has been lost
+
+T-6  PRESERVE DISAGREEMENT                          Amendment R
+     a relational history compressed into consensus makes MAIA more confident and
+     more fictional; how MAIA learned she was wrong with this person is first-class
+     memory
+
+T-7  SCOPE IS CONSTITUTIONAL                        SP-FR-12
+     a relational memory changes how MAIA meets THIS member and never becomes a
+     rule about members
+```
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
