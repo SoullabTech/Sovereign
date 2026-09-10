@@ -605,6 +605,72 @@ Only when the writer wants to work directly in the manuscript does the transitio
 become `Work on this →`, opening WRITE at the section **with the conversation
 continuing beside them**.
 
+## ⭐ RC-07a — Permission to propose is not an obligation to change
+
+**Ruled 2026-09-10**, before generation, on a collision RC-07 created.
+
+RC-07 read literally *rewards making a change merely because the writer opened the
+revision loop.* That would destroy behaviour MAIA already demonstrates correctly —
+in the very transcript that opened this lane she answered *"Then the recurrence is
+doing what you want it to do, and I'd leave it alone."*
+
+> **A request for revision authorizes MAIA to consider and propose changes; it does
+> not establish that a change is warranted. If MAIA judges the existing language
+> stronger than the available revision, she may explicitly recommend leaving it
+> unchanged. When she does propose a change, the proposal must be concrete against
+> the authorized text — not merely advice about what might be changed.**
+
+### Two lawful outcomes
+
+```
+REVISION WARRANTED      one or more concrete RevisionProposal objects
+
+NO REVISION WARRANTED   explicit `no_change` outcome
+                        reason given in the conversation
+                        ZERO proposal rows
+```
+
+⛔ **`no_change` is a successful editorial judgement:**
+
+```
+no_change  ≠  failed generation
+no_change  ≠  empty model response
+no_change  ≠  refusal
+```
+
+⛔ **`no_change` is NOT persisted as a proposal, because no proposal occurred.** The
+MAIA turn already records what she said. Analytics about restraint, if ever wanted,
+are a separate question and are not smuggled into R1.
+
+⭐ **Why this is ratified before generation rather than after:** an editorial agent
+optimised to always edit — because editing is the visible feature — is a specific
+and likely failure. The restraint specimen exists to make that failure loud.
+
+---
+
+## ⛔ F / authorial aggregation — the boundary for R2
+
+```
+ALLOWED NOW                      NOT ALLOWED NOW
+proposal P17                     "writer prefers understatement"
+candidate C22/r1                 "writer dislikes intensification"
+candidate C22/r2                 style preference scores
+exact P17 -> C22/rN lineage      authorial tendency vectors
+diff computed transiently        derived writer traits
+                                 system-authored preference memory
+```
+
+⛔ **No column, JSON field, memory atom or hidden profile may appear as a side
+effect of candidate storage.** If F returns it gets its own constitutional act
+against **FR-06** and **Invariant 14**, covering what the member can see, contest
+and erase, and whether aggregation is authorized at all.
+
+> ⭐ **The delta is evidence of an act. The aggregate is a system-authored claim
+> about the person. Those cannot inherit the same authority merely because one can
+> be computed from the other.**
+
+---
+
 ### The build order this fixes
 
 ```
@@ -716,6 +782,8 @@ RC-06b candidate identity   RATIFIED — append-only revisions,
                             identity = id + revision + digest,
                             pairing enforced by composite FK
 RC-07 capability rule       RATIFIED
+RC-07a restraint            RATIFIED — no_change is a successful outcome
+F / authorial aggregation   DEFERRED — FR-06 question open, not a side effect
 RC-08 exact producer turn   RATIFIED — amended into the unapplied migration
                             monotonic severance, not immutability
 RC-08a producer at birth    RATIFIED — required at insert, must be a MAIA
