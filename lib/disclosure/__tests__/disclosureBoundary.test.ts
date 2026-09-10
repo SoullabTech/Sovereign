@@ -45,18 +45,34 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { isMintedAuthority } from '../disclosureAuthority';
 import { establishDisclosureBoundary, mayCrossBoundary } from '../disclosureBoundary';
 import { requireConsentState, consentEstablished } from '@/lib/provenance/requireConsentState';
 
 const posture = () => TurnPosture.resolve({});
+/**
+ * The ratified call shape: ONE locus, from which the receipt's scope columns and
+ * the capability's grant are both derived. The earlier fixture passed a
+ * pre-built `disclosure` block, which is how a receipt and a capability could
+ * once have described different material.
+ */
 const boundaryArgs = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', posture: posture(), memberId: 'm-1', sessionId: 's-1',
-  disclosure: {
-    disclosureId: 'd-1', boundary: 'writers_studio.focus->maia_cognition' as const,
-    sourceClass: 'work' as const, participationBasis: 'member_invoked' as const,
-    sourceRef: 'work-1', scopeKind: 'passage' as const, gesture: 'ask_maia' as const,
-  },
+  disclosureId: 'd-1',
+  boundary: 'writers_studio.focus->maia_cognition' as const,
+  sourceClass: 'work' as const, participationBasis: 'member_invoked' as const,
+  workRef: 'work-1',
+  locus: { scopeKind: 'passage' as const, sectionRef: 'sec-1', range: { start: 0, end: 10 } },
+  gesture: 'ask_maia' as const,
   ...over,
+}) as any;
+
+/** The attempt the boundary derives from those args, for direct-mint cases. */
+const attemptFromArgs = () => ({
+  disclosureId: 'd-1', memberId: 'm-1', requestRef: 'req-1',
+  boundary: 'writers_studio.focus->maia_cognition' as const,
+  sourceClass: 'work' as const, participationBasis: 'member_invoked' as const,
+  sourceRef: 'work-1', scopeKind: 'passage' as const, gesture: 'ask_maia' as const,
 }) as any;
 
 beforeEach(() => {
@@ -83,7 +99,7 @@ describe('R1 · the awaited insert completes before the disclosure mint is attem
     const { mintDisclosureAttempt, mayCross } = require('../contextDisclosureReceipt');
     consentPresent = false;
     const out = await mintDisclosureAttempt({
-      ...boundaryArgs().disclosure, memberId: 'm-1', requestRef: 'req-1',
+      ...attemptFromArgs(), memberId: 'm-1', requestRef: 'req-1',
     });
     expect(mayCross(out)).toBe(false);
     expect(out.kind).toBe('unavailable');
@@ -193,5 +209,67 @@ describe('R4 · one requestId, carried — never regenerated downstream', () => 
     expect(src).toMatch(/export function recordConsentState/); // not async
     expect(src).toMatch(/void query\(/);
     expect(src).not.toMatch(/export async function recordConsentState/);
+  });
+});
+
+/**
+ * ONE LOCUS, TWO DERIVATIONS - the ADDENDUM-01/02 vocabulary at the boundary.
+ *
+ * These exist because a repaired fixture that only ever passes `passage` would
+ * leave the suite silent about the scopes the amendments added. The locator
+ * partition is the law under test: each scope carries exactly the locator that
+ * names what crossed, and `passage` and `evidence_set` carry none.
+ */
+describe('the locator partition - the receipt names what crossed, never where it was', () => {
+  const insertParams = () => {
+    const insert = calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))!;
+    expect(insert).toBeDefined();
+    const [scopeKind, sectionRef, unitRef, rangeFrom, rangeTo] = insert.params.slice(7, 12);
+    return { scopeKind, sectionRef, unitRef, rangeFrom, rangeTo };
+  };
+
+  it('a unit names its division and nothing else', async () => {
+    const out = await establishDisclosureBoundary(boundaryArgs({
+      locus: { scopeKind: 'unit', unitRef: 'part-2', sectionRefs: ['s1', 's2'] },
+    }));
+    expect(mayCrossBoundary(out)).toBe(true);
+    expect(insertParams()).toEqual({
+      scopeKind: 'unit', sectionRef: null, unitRef: 'part-2', rangeFrom: null, rangeTo: null,
+    });
+  });
+
+  it('a range names both bounds, and they travel as a pair', async () => {
+    const out = await establishDisclosureBoundary(boundaryArgs({
+      locus: { scopeKind: 'range', fromSectionRef: 's1', toSectionRef: 's4', sectionRefs: ['s1', 's2', 's3', 's4'] },
+    }));
+    expect(mayCrossBoundary(out)).toBe(true);
+    expect(insertParams()).toEqual({
+      scopeKind: 'range', sectionRef: null, unitRef: null, rangeFrom: 's1', rangeTo: 's4',
+    });
+  });
+
+  it('an evidence_set records that a composite crossing occurred, and no member of it', async () => {
+    const out = await establishDisclosureBoundary(boundaryArgs({
+      locus: { scopeKind: 'evidence_set', members: ['section a', 'passage b 0 10'] },
+    }));
+    expect(mayCrossBoundary(out)).toBe(true);
+    expect(insertParams()).toEqual({
+      scopeKind: 'evidence_set', sectionRef: null, unitRef: null, rangeFrom: null, rangeTo: null,
+    });
+    const insert = calls.find(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))!;
+    expect(JSON.stringify(insert.params)).not.toContain('passage b');
+  });
+
+  it('a passage still refuses to record its containing section', async () => {
+    const out = await establishDisclosureBoundary(boundaryArgs());
+    expect(mayCrossBoundary(out)).toBe(true);
+    expect(insertParams().sectionRef).toBeNull();
+  });
+
+  it('may_cross carries the capability - the only thing that can load the Work', async () => {
+    const out = await establishDisclosureBoundary(boundaryArgs());
+    expect(mayCrossBoundary(out)).toBe(true);
+    if (!mayCrossBoundary(out)) throw new Error('unreachable');
+    expect(isMintedAuthority(out.authority)).toBe(true);
   });
 });

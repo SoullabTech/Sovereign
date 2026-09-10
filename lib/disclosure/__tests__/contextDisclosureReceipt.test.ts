@@ -73,7 +73,14 @@ const matchingRow = () => ({
   id: 'r1', member_id: 'm-1', request_ref: 'req-1',
   boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
   participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
-  section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
+  section_ref: null,
+  /* ADDENDUM-01/02 columns. The reconciliation reads the WHOLE immutable
+     identity, so a fixture row missing them reports `identity_mismatch` for
+     `undefined !== null` — a fixture gap, not a behaviour change. The law this
+     block protects is unchanged: an exact existing receipt is not fresh
+     authority. */
+  unit_ref: null, range_from_ref: null, range_to_ref: null,
+  authorized_by: 'member', gesture: 'ask_maia',
   policy_version: DISCLOSURE_POLICY_VERSION, state: 'attempted',
 });
 
