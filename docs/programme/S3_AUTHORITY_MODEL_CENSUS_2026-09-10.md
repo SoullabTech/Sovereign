@@ -219,8 +219,8 @@ S3 PATH      the seam does not exist
 no canonical authority object exists              NOT TRIGGERED
 multiple competing prose-authority mechanisms     NOT TRIGGERED — see below
 receipt and authority same durable object         NOT TRIGGERED
-scope cannot distinguish passage from section     ⚠️ PARTIAL — Q6
-freshness has no executable representation        ⚠️ PARTIAL — Q4
+scope cannot distinguish passage from section     ⚠️ PARTIAL — Q6 → STOP REMAINS
+freshness has no executable representation        ⚠️ PARTIAL — Q4 → STOP RELEASED
 authority checked only after prose loaded         NOT TRIGGERED in Focus
                                                   ⛔ NEVER CHECKED in the S3 path
 ```
@@ -235,17 +235,163 @@ stop instruction. Neither is a defect in the canonical model; both are places
 where the model's guarantee is *structural* rather than *represented*, and the
 remediation may need one of them made explicit.
 
+⭐ **Both were ruled on by the founder the same day — see the next section.** Q4
+is settled (structural freshness accepted; no artefact to be invented). Q6
+remains a hard stop and its reason is sharpened there: the defect is not a
+missing field on the authority object but a missing *participant* in the
+authority decision.
+
+---
+
+## Founder rulings on the two PARTIAL stops — 2026-09-10
+
+```text
+Q4   STRUCTURAL FRESHNESS ACCEPTED.
+     No durable freshness artefact required while authority is
+     non-portable and invocation-bound.
+
+Q6   HARD STOP REMAINS.
+     Passage authority must distinguish the actual passage authorized.
+     Representation not yet selected.
+```
+
+### Q4 — STOP RELEASED
+
+Freshness is enforced structurally, not by expiry metadata:
+
+```text
+establish authority
+      ↓
+may_cross exists only inside this invocation
+      ↓
+load happens in this invocation
+      ↓
+authority disappears with the call
+```
+
+⛔ **Do NOT add `expires_at`, persistence, refresh logic, or a reusable
+authority token merely to make freshness testable.** That would weaken the
+design to satisfy a test.
+
+**Ratified law:** *Fresh authority means authority established for the present
+crossing and incapable of surviving that crossing as authority.*
+
+⭐ **F5 is amended accordingly.** A "stale `may_cross`" object that production
+cannot construct must NOT be fabricated for testing. F5 tests the structural
+properties instead:
+
+```text
+F5-A  no prior receipt can reconstruct may_cross
+F5-B  may_cross cannot be supplied by the caller
+F5-C  may_cross cannot be loaded from persistence
+F5-D  body loading is reachable only inside the invocation in which
+      establishDisclosureBoundary returned may_cross
+F5-E  failure/refusal from that invocation cannot fall through to load
+```
+
+⚠️ **Reopening condition:** if some future architecture makes authority portable
+across a request/process boundary, freshness governance reopens at that moment.
+
+### Q6 — STOP REMAINS, and the reason is sharpened
+
+⛔ The defect is **not** that `BoundaryOutcome` lacks `range`. `BoundaryOutcome`
+does not need to become a portable bag of authorization claims. The defect is
+**earlier**: the thing that distinguishes this passage from another passage never
+participates in establishing authority.
+
+```text
+passage request
+     ↓
+establishDisclosureBoundary(workRef, scopeKind='passage', sectionRef)
+     ↓            ← the passage itself is absent here
+may_cross
+     ↓
+req.range → assembler → slice
+             ← the assembler knows the passage; the authority decision does not
+```
+
+⭐ **Proximity does not cure this.** That authority and assembly happen
+microseconds apart from the same `req` protects against token substitution. It
+does not establish that the member authorized *these particular authored
+characters*.
+
+**Prior ruling survives:** *passage authority may not silently become section
+authority.* Therefore Q6 is NOT to be resolved by declaring that `passage` means
+whatever the assembler happens to slice from the authorized section.
+
+**Ratified invariants (representation NOT yet selected):**
+
+```text
+Two different passages in the same Work must not be indistinguishable to the
+disclosure authority merely because both say scopeKind='passage'.
+
+Authority for passage A must provide zero authority for authored characters
+belonging only to passage B.
+```
+
+The shape indicated — not ruled — is a normalized disclosure scope carrying the
+**exact subject of disclosure**, driving both `establishDisclosureBoundary` and
+the authorized load. For a passage the exact subject may be a range, a stable
+evidence locator, a digest-bound selector, or another representation already
+native to the manuscript model. ⛔ **Not selected here.**
+
+### F7 becomes behavioural
+
+```text
+F7-A  Given two distinct passages A and B in the same Work / structural
+      context, authority established for A → A may cross · B may NOT cross.
+
+F7-B  Changing the downstream passage selector after authority has been
+      established cannot change what authored characters are permitted
+      to cross.
+
+F7-C  The evidence/receipt for a completed passage crossing must identify
+      the crossing sufficiently to distinguish it from a different passage
+      crossing, WITHOUT becoming reusable authority.
+```
+
+⭐ F7-C preserves **receipt ≠ authority**.
+
+### Next authorized act — READ-ONLY LOAD-SCOPE CENSUS
+
+One narrow question, surfaced indirectly by this census:
+
+> When a passage is authorized, what authored characters does
+> `loadRevisionContent` actually bring across the protected load boundary
+> before `recoverEvidence` slices them?
+
+If it loads the entire revision and the constitutional boundary is genuinely
+*before authored characters are loaded*, there is a second scope problem:
+
+```text
+passage authority → whole revision loaded → passage later sliced
+```
+
+— passage-scoped at cognition, but not at the protected load boundary.
+
+⛔ **Do not assume lawful or unlawful from function names.** Trace exactly what
+`loadRevisionContent` returns and exactly which boundary is being protected.
+
 ---
 
 ## Standing
 
 ```text
-AUTHORITY MODEL          CENSUSED
-FIXTURES                 NOT BUILT — four states are unrepresentable
-TESTS                    NOT AUTHORED
-REPAIR                   NOT IMPLEMENTED
-TWO PARTIAL STOPS        reported for ruling (Q4 freshness · Q6 passage extent)
+AUTHORITY CENSUS         COMPLETE
+Q4 FRESHNESS             SETTLED — invocation-bound freshness accepted
+                         no TTL / token invention
+Q6 PASSAGE               HARD STOP — nominal passage scope insufficient
+                         exact passage binding required
+NEXT ACT                 READ-ONLY LOAD-SCOPE CENSUS
+S3 IMPLEMENTATION        NOT YET AUTHORIZED
+F1–F7 TEST AUTHORING     NOT YET
+FIXTURES                 NOT BUILT
 A / C                    HELD
+#1277 D9                 UNTOUCHED · DRAFT
 FOCUS WITNESS            UNSPENT
 PRODUCTION               UNTOUCHED
 ```
+
+⭐ *The current Focus authority model is unusually strong in time, but
+potentially too coarse in space. Preserve the first; resolve the second before
+using it to repair S3.*
