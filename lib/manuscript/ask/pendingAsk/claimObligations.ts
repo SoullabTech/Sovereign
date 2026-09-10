@@ -22,6 +22,7 @@
 
 import {
   claimAcquired,
+  type AuthorizationActId,
   type ClaimOutcome,
   type Interleaving,
   type PendingAskClaimant,
@@ -82,11 +83,19 @@ const PENDING = {
   threadId: 't-1', readingId: 'r-1', observationKey: 'o-1',
 } as const;
 
+/**
+ * ⭐ ONE PHYSICAL PRESS. A transport retry reuses `ACT`; a member consciously
+ * authorizing again mints something like `OTHER_ACT`. The two are the whole
+ * reason `act_already_processed` exists as a separate answer.
+ */
+const ACT = 'act-one-physical-press-0001';
+const OTHER_ACT = 'act-a-different-press-0002';
+
 const deps = (claimant: PendingAskClaimant, opts: { boundary?: 'may_cross' | 'refused' } = {}): ResumeDeps => {
   const trace: ResumeStep[] = [];
   return {
     claimant: {
-      async claim(ref) { trace.push('claim'); return claimant.claim(ref); },
+      async claim(ref, actId) { trace.push('claim'); return claimant.claim(ref, actId); },
       async recordCompleted(ref) { return claimant.recordCompleted(ref); },
     },
     async establishBoundary() { trace.push('boundary'); const r = opts.boundary ?? 'may_cross'; if (r === 'may_cross') trace.push('may_cross'); return r; },
@@ -127,33 +136,46 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
         betweenReadAndWrite: async () => {
           if (raced) return;
           raced = true;
-          second = claimant.claim(PENDING.ref);
+          second = claimant.claim(PENDING.ref, ACT);
           await second;
         },
       },
     });
-    const first = await claimant.claim(PENDING.ref);
-    const other = second ? await second : await claimant.claim(PENDING.ref);
+    const first = await claimant.claim(PENDING.ref, ACT);
+    const other = second ? await second : await claimant.claim(PENDING.ref, ACT);
     const winners = [first, other].filter(claimAcquired).length;
     out.push(winners === 1
       ? ok('C1', 'exactly one concurrent claim acquired')
       : bad('C1', `${winners} concurrent claims acquired; exactly 1 required`));
   }
 
-  /* C2 · REPLAY REFUSED — sequential second claim. */
+  /* C2 · A DIFFERENT ACT reaching for a spent claim. */
   {
     const claimant = c.make(seedOne);
-    await claimant.claim(PENDING.ref);
-    const again = await claimant.claim(PENDING.ref);
+    await claimant.claim(PENDING.ref, ACT);
+    const again = await claimant.claim(PENDING.ref, OTHER_ACT);
     out.push(again.kind === 'already_consumed'
-      ? ok('C2', 'a replayed claim reports already_consumed')
-      : bad('C2', `a replayed claim reported '${again.kind}'`));
+      ? ok('C2', 'a different act finds the claim already consumed')
+      : bad('C2', `a different act reported '${again.kind}'`));
+  }
+
+  /* ⭐⭐ C2b · THE SAME PRESS, ARRIVING TWICE — and it must not be called a
+     reuse. Same prohibition, different truth: a transport retry is not an
+     attempt to spend an authorization again. An implementation that maps both
+     replay classes to `already_consumed` fails HERE and nowhere else. */
+  {
+    const claimant = c.make(seedOne);
+    await claimant.claim(PENDING.ref, ACT);
+    const same = await claimant.claim(PENDING.ref, ACT);
+    out.push(same.kind === 'act_already_processed'
+      ? ok('C2b', 'the same act arriving twice reports act_already_processed')
+      : bad('C2b', `the same act reported '${same.kind}' — a retry of one press is not a reuse`));
   }
 
   /* C3 · EXPIRED IS ITS OWN ANSWER — never collapsed into consumed or unknown. */
   {
     const claimant = c.make({ pending: [], expired: [PENDING.ref] });
-    const o = await claimant.claim(PENDING.ref);
+    const o = await claimant.claim(PENDING.ref, ACT);
     out.push(o.kind === 'expired'
       ? ok('C3', 'an expired pending Ask reports expired')
       : bad('C3', `an expired pending Ask reported '${o.kind}'`));
@@ -162,7 +184,7 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
   /* C4 · UNKNOWN IS ITS OWN ANSWER. */
   {
     const claimant = c.make({ pending: [], expired: [] });
-    const o = await claimant.claim('never-existed');
+    const o = await claimant.claim('never-existed', ACT);
     out.push(o.kind === 'unknown'
       ? ok('C4', 'an absent pending Ask reports unknown')
       : bad('C4', `an absent pending Ask reported '${o.kind}'`));
@@ -172,7 +194,7 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
      database fact, not proof that another request consumed this Ask. */
   {
     const claimant = c.make({ ...seedOne, faulted: true });
-    const o = await claimant.claim(PENDING.ref);
+    const o = await claimant.claim(PENDING.ref, ACT);
     out.push(o.kind === 'unavailable'
       ? ok('C5', 'a substrate fault reports unavailable')
       : bad('C5', `a substrate fault reported '${o.kind}' — a fault must never masquerade as a replay`));
@@ -181,8 +203,8 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
   /* C6 · NO CONSUMED → PENDING. Consumed then never completed still refuses. */
   {
     const claimant = c.make(seedOne);
-    await claimant.claim(PENDING.ref);
-    const third = await claimant.claim(PENDING.ref);
+    await claimant.claim(PENDING.ref, ACT);
+    const third = await claimant.claim(PENDING.ref, ACT);
     out.push(!claimAcquired(third)
       ? ok('C6', 'a consumed-but-incomplete Ask is never re-acquired')
       : bad('C6', 'a consumed Ask returned to pending — a fresh member act is required'));
@@ -191,12 +213,16 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
   /* C7 · LOST-RESPONSE RECOVERY — completed and incomplete stay distinguishable. */
   {
     const a = c.make(seedOne);
-    await a.claim(PENDING.ref);
-    const beforeCompletion = await a.claim(PENDING.ref);
+    await a.claim(PENDING.ref, ACT);
+    /* ⭐ The lost-response case IS the same act retrying, so the truthful kind
+       here is `act_already_processed`; what must survive is the COMPLETION,
+       which is what tells the member whether their answer exists. */
+    const beforeCompletion = await a.claim(PENDING.ref, ACT);
     await a.recordCompleted(PENDING.ref);
-    const afterCompletion = await a.claim(PENDING.ref);
-    const good = beforeCompletion.kind === 'already_consumed' && beforeCompletion.completion === 'incomplete'
-      && afterCompletion.kind === 'already_consumed' && afterCompletion.completion === 'completed';
+    const afterCompletion = await a.claim(PENDING.ref, ACT);
+    const spent = (o: ClaimOutcome) => o.kind === 'act_already_processed' || o.kind === 'already_consumed';
+    const good = spent(beforeCompletion) && (beforeCompletion as { completion?: string }).completion === 'incomplete'
+      && spent(afterCompletion) && (afterCompletion as { completion?: string }).completion === 'completed';
     out.push(good
       ? ok('C7', 'completed and incomplete consumption are distinguishable')
       : bad('C7', 'a retry cannot tell a completed crossing from an incomplete one'));
@@ -205,7 +231,7 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
   /* ⭐ C8 · NO PERMISSION IN THE OUTCOME. A claim yields identity, never a grant. */
   {
     const claimant = c.make(seedOne);
-    const o = await claimant.claim(PENDING.ref);
+    const o = await claimant.claim(PENDING.ref, ACT);
     const keys = JSON.stringify(o).toLowerCase();
     const leaked = ['maycross', 'may_cross', 'disclosureid', 'receiptid', 'authorized',
       'permission', 'sectionid', 'sectionref', 'scopekind', 'prose', 'passage']
@@ -230,7 +256,7 @@ export async function runClaimObligations(c: ClaimCandidate): Promise<Obligation
   /* ⭐⭐ O2 · A LOSER REACHES NOTHING. Four operations stay unreachable. */
   {
     const claimant = c.make(seedOne);
-    await claimant.claim(PENDING.ref);            // the winner, elsewhere
+    await claimant.claim(PENDING.ref, ACT);            // the winner, elsewhere
     const d = deps(claimant);
     const r = await c.resume(PENDING.ref, d);     // the replay
     const forbidden = (['boundary', 'may_cross', 'load', 'receipt'] as ResumeStep[])

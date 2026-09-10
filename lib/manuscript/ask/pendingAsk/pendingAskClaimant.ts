@@ -43,7 +43,7 @@
 
 import { query as canonicalQuery } from '@/lib/db/postgres';
 import type {
-  ClaimOutcome, PendingAskClaimant, PendingAskRef,
+  AuthorizationActId, ClaimOutcome, PendingAskClaimant, PendingAskRef,
 } from './claimContract';
 
 /**
@@ -71,17 +71,23 @@ const canonicalExecutor: SqlExecutor = {
  */
 const CLAIM = `
   UPDATE pending_ask_claims
-     SET consumed_at = now()
+     SET consumed_at = now(), consumed_by_act = $2
    WHERE ref = $1
      AND consumed_at IS NULL
      AND expires_at > now()
   RETURNING member_id, manuscript_id, thread_id, reading_id, observation_key`;
 
 /** Why the claim did not win — read AFTER the mutation, never before it. */
+/**
+ * ⭐ The consuming act is read back so a replay can be described truthfully.
+ * Compared server-side against the incoming id; the caller never sees the stored
+ * value, because who spent a claim is not information a losing caller is owed.
+ */
 const CLASSIFY = `
   SELECT consumed_at IS NOT NULL AS consumed,
          completed_at IS NOT NULL AS completed,
-         expires_at <= now()      AS is_expired
+         expires_at <= now()      AS is_expired,
+         consumed_by_act          AS consumed_by_act
     FROM pending_ask_claims
    WHERE ref = $1`;
 
@@ -94,7 +100,10 @@ type ClaimRow = {
   member_id: string; manuscript_id: string; thread_id: string;
   reading_id: string; observation_key: string;
 };
-type ClassifyRow = { consumed: boolean; completed: boolean; is_expired: boolean };
+type ClassifyRow = {
+  consumed: boolean; completed: boolean; is_expired: boolean;
+  consumed_by_act: string | null;
+};
 
 /** Serialization failure · deadlock · a transaction already aborted by one. */
 const isConcurrencyFault = (e: unknown): boolean => {
@@ -105,12 +114,19 @@ const isConcurrencyFault = (e: unknown): boolean => {
 export function createPendingAskClaimant(
   exec: SqlExecutor = canonicalExecutor,
 ): PendingAskClaimant {
-  const classify = async (ref: PendingAskRef): Promise<ClaimOutcome> => {
+  const classify = async (ref: PendingAskRef, actId: AuthorizationActId): Promise<ClaimOutcome> => {
     const r = await exec.query<ClassifyRow>(CLASSIFY, [ref]);
     const row = r.rows[0];
     if (!row) return { kind: 'unknown' };
     if (row.consumed) {
-      return { kind: 'already_consumed', completion: row.completed ? 'completed' : 'incomplete' };
+      const completion = row.completed ? 'completed' as const : 'incomplete' as const;
+      /* ⭐⭐ THE SAME PRESS, ARRIVING TWICE. A transport retry is not an attempt
+         to reuse a spent authorization, and saying so would tell the member
+         something false about their own act. ⛔ It is still refused: same
+         boundary, same load, same receipt — none of them. */
+      return row.consumed_by_act === actId
+        ? { kind: 'act_already_processed', completion }
+        : { kind: 'already_consumed', completion };
     }
     if (row.is_expired) return { kind: 'expired' };
     /* Still pending, yet the mutation matched nothing. ⛔ Do NOT invent a
@@ -119,9 +135,9 @@ export function createPendingAskClaimant(
   };
 
   return {
-    async claim(ref: PendingAskRef): Promise<ClaimOutcome> {
+    async claim(ref: PendingAskRef, actId: AuthorizationActId): Promise<ClaimOutcome> {
       try {
-        const claimed = await exec.query<ClaimRow>(CLAIM, [ref]);
+        const claimed = await exec.query<ClaimRow>(CLAIM, [ref, actId]);
         const row = claimed.rows[0];
         if (row) {
           return {
@@ -141,14 +157,14 @@ export function createPendingAskClaimant(
           return { kind: 'unavailable', reason: 'claim statement failed' };
         }
         try {
-          return await classify(ref);
+          return await classify(ref, actId);
         } catch {
           return { kind: 'unavailable', reason: 'state could not be established after a concurrency fault' };
         }
       }
 
       try {
-        return await classify(ref);
+        return await classify(ref, actId);
       } catch {
         return { kind: 'unavailable', reason: 'state could not be established' };
       }

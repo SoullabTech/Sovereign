@@ -35,6 +35,10 @@ const READING = '44444444-4444-4444-4444-444444444444';
 /** The CHECK requires >= 32 characters: an opaque ref, not a counter. */
 const pad = (s: string) => `${s}-${'0'.repeat(Math.max(0, 40 - s.length))}`;
 
+/** ⭐ Two distinct physical presses. Their difference is the whole of D4/D5. */
+const ACT_A = 'act-press-alpha-00000001';
+const ACT_B = 'act-press-beta-000000002';
+
 let admin: Client;
 
 const exec = (c: Client): SqlExecutor => ({
@@ -80,6 +84,9 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
       INSERT INTO ask_threads VALUES ($3) ON CONFLICT DO NOTHING;`
       .replace(/\$1/g, `'${MEMBER}'`).replace(/\$2/g, `'${WORK}'`).replace(/\$3/g, `'${THREAD}'`));
     await admin.query(readFileSync(MIGRATION, 'utf8'));
+    /* ⭐ The consuming-act amendment is part of the substrate under test. */
+    await admin.query(readFileSync(
+      join(ROOT, 'database', 'migrations', '20260910000003_pending_ask_consuming_act.sql'), 'utf8'));
   });
 
   afterAll(async () => { await admin?.end(); });
@@ -101,7 +108,7 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
         };
         const inner = createPendingAskClaimant(s.faulted ? faulting : exec(admin));
         return {
-          async claim(ref) { await ready; return inner.claim(map(ref)); },
+          async claim(ref, actId) { await ready; return inner.claim(map(ref), actId); },
           async recordCompleted(ref) { await ready; return inner.recordCompleted(map(ref)); },
         };
       },
@@ -117,7 +124,7 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
       },
     };
     const results = await runClaimObligations(candidate);
-    expect(results).toHaveLength(10);
+    expect(results).toHaveLength(11);
     expect(failedObligations(results)).toEqual([]);
   });
 
@@ -131,7 +138,7 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
       Array.from({ length: 8 }, async () => { const c = new Client({ connectionString: URL }); await c.connect(); return c; }));
     try {
       const outcomes = await Promise.all(
-        clients.map((c) => createPendingAskClaimant(exec(c)).claim(ref)));
+        clients.map((c) => createPendingAskClaimant(exec(c)).claim(ref, `act-${Math.random().toString(36).slice(2)}-race`)));
       const winners = outcomes.filter(claimAcquired);
       const consumed = outcomes.filter((o) => o.kind === 'already_consumed');
       expect(winners).toHaveLength(1);
@@ -151,13 +158,13 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
 
     const first = new Client({ connectionString: URL });
     await first.connect();
-    const won = await createPendingAskClaimant(exec(first)).claim(ref);
+    const won = await createPendingAskClaimant(exec(first)).claim(ref, ACT_A);
     await first.end();
     expect(claimAcquired(won)).toBe(true);
 
     const later = new Client({ connectionString: URL });
     await later.connect();
-    const seen = await createPendingAskClaimant(exec(later)).claim(ref);
+    const seen = await createPendingAskClaimant(exec(later)).claim(ref, ACT_B);
     await later.end();
     expect(seen.kind).toBe('already_consumed');
     if (seen.kind === 'already_consumed') expect(seen.completion).toBe('incomplete');
@@ -175,10 +182,10 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
     try {
       await a.query('BEGIN ISOLATION LEVEL REPEATABLE READ');
       await b.query('BEGIN ISOLATION LEVEL REPEATABLE READ');
-      const first = await createPendingAskClaimant(exec(a)).claim(ref);
+      const first = await createPendingAskClaimant(exec(a)).claim(ref, ACT_A);
       expect(claimAcquired(first)).toBe(true);
 
-      const second = createPendingAskClaimant(exec(b)).claim(ref);
+      const second = createPendingAskClaimant(exec(b)).claim(ref, ACT_B);
       await a.query('COMMIT');
       const outcome: ClaimOutcome = await second;
 
@@ -201,8 +208,8 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
         WHERE table_name = 'pending_ask_claims' ORDER BY column_name`);
     const columns = r.rows.map((x) => x.column_name);
     expect(columns).toEqual([
-      'completed_at', 'consumed_at', 'created_at', 'expires_at', 'manuscript_id',
-      'member_id', 'observation_key', 'reading_id', 'ref', 'thread_id',
+      'completed_at', 'consumed_at', 'consumed_by_act', 'created_at', 'expires_at',
+      'manuscript_id', 'member_id', 'observation_key', 'reading_id', 'ref', 'thread_id',
     ]);
     for (const forbidden of ['section_id', 'section_ref', 'authorized', 'scope_kind',
       'disclosure_id', 'may_cross', 'consent', 'permission', 'body', 'text', 'prose']) {
@@ -210,10 +217,53 @@ d('S3 · P1 · pending_ask_claims — the real substrate', () => {
     }
   });
 
+  /* ── ⭐⭐ D4/D5 · THE TWO REPLAY CLASSES, ON THE REAL TABLE ───────────────── */
+
+  it('D4 · the same act arriving twice is act_already_processed', async () => {
+    const ref = pad(`same-act-${Date.now()}`);
+    await seed(ref);
+    const c = createPendingAskClaimant(exec(admin));
+    const won = await c.claim(ref, ACT_A);
+    expect(claimAcquired(won)).toBe(true);
+    const again = await c.claim(ref, ACT_A);
+    expect(again.kind).toBe('act_already_processed');
+  });
+
+  it('D5 · a different act finds it already_consumed', async () => {
+    const ref = pad(`other-act-${Date.now()}`);
+    await seed(ref);
+    const c = createPendingAskClaimant(exec(admin));
+    await c.claim(ref, ACT_A);
+    const other = await c.claim(ref, ACT_B);
+    expect(other.kind).toBe('already_consumed');
+  });
+
+  it('D6 · the winner\'s act is recorded, and never re-attributed', async () => {
+    const ref = pad(`attribution-${Date.now()}`);
+    await seed(ref);
+    await createPendingAskClaimant(exec(admin)).claim(ref, ACT_A);
+    const stored = await admin.query<{ consumed_by_act: string }>(
+      `SELECT consumed_by_act FROM pending_ask_claims WHERE ref = $1`, [ref]);
+    expect(stored.rows[0].consumed_by_act).toBe(ACT_A);
+    await expect(
+      admin.query(`UPDATE pending_ask_claims SET consumed_by_act = $2 WHERE ref = $1`, [ref, ACT_B]),
+    ).rejects.toThrow(/never re-attributed/i);
+  });
+
+  it('D7 · consumption and its act cannot diverge', async () => {
+    const ref = pad(`diverge-${Date.now()}`);
+    await seed(ref);
+    /* ⛔ An act recorded against an unconsumed claim is a state the protocol
+       cannot describe, and the database refuses to hold it. */
+    await expect(
+      admin.query(`UPDATE pending_ask_claims SET consumed_by_act = $2 WHERE ref = $1`, [ref, ACT_A]),
+    ).rejects.toThrow(/act_with_consumption/i);
+  });
+
   it('a consumed claim can never be returned to pending', async () => {
     const ref = pad(`forward-${Date.now()}`);
     await seed(ref);
-    await createPendingAskClaimant(exec(admin)).claim(ref);
+    await createPendingAskClaimant(exec(admin)).claim(ref, ACT_A);
     await expect(
       admin.query(`UPDATE pending_ask_claims SET consumed_at = NULL WHERE ref = $1`, [ref]),
     ).rejects.toThrow(/already consumed/i);

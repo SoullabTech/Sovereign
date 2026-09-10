@@ -38,6 +38,9 @@ if (!URL) {
 const ROOT = join(__dirname, '..', '..');
 const M = (f: string) => readFileSync(join(ROOT, 'database', 'migrations', f), 'utf8');
 const PENDING = '20260910000001_pending_ask_claims.sql';
+/** ⭐ The consuming-act amendment. Learned from FOCUS-WITNESS-01, after the
+ *  original migration was accepted — so acceptance is re-run, not assumed. */
+const CONSUMING_ACT = '20260910000003_pending_ask_consuming_act.sql';
 const BOUNDARY = '20260910000002_context_disclosure_boundary_developmental.sql';
 
 const results: { id: string; ok: boolean; detail: string }[] = [];
@@ -119,6 +122,9 @@ async function main() {
   const forward = await refusal(M(PENDING));
   check('A2', forward === null, forward ?? 'pending_ask_claims applies to a fresh database');
 
+  const amend = await refusal(M(CONSUMING_ACT));
+  check('A2b', amend === null, amend ?? 'the consuming-act amendment applies on top of it');
+
   /* ⭐ The pre-existing row is written BEFORE the widening, so the widening has
      something real to be validated against. */
   const pre = await seedReceipt('d-focus-1', FOCUS, 'req-focus-1');
@@ -131,9 +137,8 @@ async function main() {
   const cols = (await c.query<{ column_name: string }>(
     `SELECT column_name FROM information_schema.columns
       WHERE table_name='pending_ask_claims' ORDER BY column_name`)).rows.map((r) => r.column_name);
-  const expected = ['completed_at','consumed_at','created_at','expires_at','manuscript_id',
-    'member_id','observation_key','ping_placeholder','reading_id','ref','thread_id']
-    .filter((x) => x !== 'ping_placeholder');
+  const expected = ['completed_at','consumed_at','consumed_by_act','created_at','expires_at',
+    'manuscript_id','member_id','observation_key','reading_id','ref','thread_id'];
   check('B1', JSON.stringify(cols) === JSON.stringify(expected),
     `columns: ${cols.join(', ')}`);
 
@@ -163,18 +168,55 @@ async function main() {
     orphanCompletion ? 'a completion cannot exist without the claim that produced it' : 'an orphan completion was ACCEPTED');
 
   /* ── C · pending_ask_claims · TRIGGERS ──────────────────────────────────── */
+  /* ── ⭐⭐ THE CONSUMING ACT ─────────────────────────────────────────────── */
+  {
+    const r = ref('act-attribution-');
+    await c.query(
+      `INSERT INTO pending_ask_claims (ref, member_id, manuscript_id, thread_id, reading_id, observation_key, expires_at)
+       VALUES ($1,$2,$3,$4,$5,'o', now() + interval '30 min')`, [r, MEMBER, WORK, THREAD, READING]);
+
+    const orphanAct = await refusal(
+      `UPDATE pending_ask_claims SET consumed_by_act = 'act-orphaned-00001' WHERE ref = $1`, [r]);
+    check('B6', orphanAct !== null && /act_with_consumption/.test(orphanAct),
+      orphanAct ? 'an act cannot be recorded against an unconsumed claim' : 'an ORPHAN act was accepted');
+
+    const shortAct = await refusal(
+      `UPDATE pending_ask_claims SET consumed_at = now(), consumed_by_act = 'tiny' WHERE ref = $1`, [r]);
+    check('B7', shortAct !== null && /act_shape/.test(shortAct),
+      shortAct ? 'a low-entropy act id is refused' : 'a 4-character act id was ACCEPTED');
+
+    await c.query(
+      `UPDATE pending_ask_claims SET consumed_at = now(), consumed_by_act = $2 WHERE ref = $1`,
+      [r, 'act-press-alpha-00000001']);
+    const reattribute = await refusal(
+      `UPDATE pending_ask_claims SET consumed_by_act = 'act-press-beta-000000002' WHERE ref = $1`, [r]);
+    check('C7a', reattribute !== null && /never re-attributed/i.test(reattribute),
+      reattribute ? 'the consuming act is never re-attributed' : 'the consuming act was REWRITTEN');
+
+    /* ⛔ And the amendment introduced no permission, scope or content column —
+       re-asserted here because B2 ran before the amendment existed. */
+    const after = (await c.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name='pending_ask_claims'`)).rows
+      .map((x) => x.column_name);
+    const stillBanned = ['section_id','section_ref','sections','authorized','scope_kind',
+      'disclosure_id','may_cross','consent','permission','grant','body','text','prose','passage']
+      .filter((b) => after.includes(b));
+    check('B8', stillBanned.length === 0,
+      stillBanned.length ? `amendment introduced ${stillBanned.join(', ')}` : 'the amendment introduced no permission-bearing column');
+  }
+
   const live = ref('live-claim-');
   await c.query(
     `INSERT INTO pending_ask_claims (ref, member_id, manuscript_id, thread_id, reading_id, observation_key, expires_at)
      VALUES ($1,$2,$3,$4,$5,'o', now() + interval '30 min')`, [live, MEMBER, WORK, THREAD, READING]);
 
   const claimed = await c.query(
-    `UPDATE pending_ask_claims SET consumed_at = now()
+    `UPDATE pending_ask_claims SET consumed_at = now(), consumed_by_act = 'act-press-alpha-00000001'
       WHERE ref = $1 AND consumed_at IS NULL AND expires_at > now() RETURNING ref`, [live]);
   check('C1', claimed.rowCount === 1, 'the atomic claim wins once');
 
   const second = await c.query(
-    `UPDATE pending_ask_claims SET consumed_at = now()
+    `UPDATE pending_ask_claims SET consumed_at = now(), consumed_by_act = 'act-press-beta-000000002'
       WHERE ref = $1 AND consumed_at IS NULL AND expires_at > now() RETURNING ref`, [live]);
   check('C2', second.rowCount === 0, 'a second claim matches no row');
 
@@ -196,17 +238,18 @@ async function main() {
      VALUES ($1,$2,$3,$4,$5,'o', now() - interval '60 min', now() - interval '5 min')`,
     [expired, MEMBER, WORK, THREAD, READING]);
   const expiredClaim = await c.query(
-    `UPDATE pending_ask_claims SET consumed_at = now()
+    `UPDATE pending_ask_claims SET consumed_at = now(), consumed_by_act = 'act-press-alpha-00000001'
       WHERE ref = $1 AND consumed_at IS NULL AND expires_at > now() RETURNING ref`, [expired]);
   check('C6', expiredClaim.rowCount === 0, 'an expired resume cannot be claimed');
 
   /* ── D · IDEMPOTENCE AND ROLLBACK ───────────────────────────────────────── */
   const again = await refusal(M(PENDING));
-  check('D1', again === null, again ?? 'the pending migration re-applies without error');
+  const againAmend = again === null ? await refusal(M(CONSUMING_ACT)) : again;
+  check('D1', againAmend === null, againAmend ?? 'both pending migrations re-apply without error');
 
   const rowsBefore = (await c.query(`SELECT count(*)::int AS n FROM pending_ask_claims`)).rows[0].n;
   await c.query(`DROP TABLE pending_ask_claims; DROP FUNCTION IF EXISTS pending_ask_claims_forward_only();`);
-  const reapply = await refusal(M(PENDING));
+  const reapply = (await refusal(M(PENDING))) ?? (await refusal(M(CONSUMING_ACT)));
   const rowsAfter = (await c.query(`SELECT count(*)::int AS n FROM pending_ask_claims`)).rows[0].n;
   check('D2', reapply === null && rowsAfter === 0 && rowsBefore > 0,
     `rollback rehearsed: ${rowsBefore} row(s) discarded, table rebuilt clean`);

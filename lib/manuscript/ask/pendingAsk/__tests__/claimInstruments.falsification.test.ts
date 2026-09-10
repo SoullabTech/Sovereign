@@ -30,24 +30,35 @@ import {
 type Seed = Parameters<ClaimCandidate['make']>[0];
 type Row = { memberId: string; manuscriptId: string; threadId: string;
              readingId: string; observationKey: string;
-             consumed: boolean; completed: boolean; expired: boolean };
+             consumed: boolean; completed: boolean; expired: boolean;
+             /** ⭐ Which physical act spent this claim. Never returned to a caller. */
+             consumedByAct: string | null };
 
 const rows = (seed: Seed): Map<PendingAskRef, Row> => {
   const m = new Map<PendingAskRef, Row>();
-  for (const p of seed.pending) m.set(p.ref, { ...p, consumed: false, completed: false, expired: false });
+  for (const p of seed.pending) m.set(p.ref, { ...p, consumed: false, completed: false, expired: false, consumedByAct: null });
   for (const r of seed.expired) {
     m.set(r, { memberId: 'm-1', manuscriptId: 'w-1', threadId: 't-1', readingId: 'r-1',
-               observationKey: 'o-1', consumed: false, completed: false, expired: true });
+               observationKey: 'o-1', consumed: false, completed: false, expired: true, consumedByAct: null });
   }
   return m;
 };
 
-const consumedOutcome = (row: Row): ClaimOutcome =>
-  ({ kind: 'already_consumed', completion: row.completed ? 'completed' : 'incomplete' });
+/**
+ * ⭐⭐ The one place the two replay classes are told apart. Same prohibition,
+ * different truth: a retry of one press is not an attempt to reuse a spent
+ * authorization, and calling it one tells the member something false.
+ */
+const consumedOutcome = (row: Row, actId: string): ClaimOutcome => {
+  const completion = row.completed ? 'completed' as const : 'incomplete' as const;
+  return row.consumedByAct === actId
+    ? { kind: 'act_already_processed', completion }
+    : { kind: 'already_consumed', completion };
+};
 
-const classify = (row: Row | undefined): ClaimOutcome | null => {
+const classify = (row: Row | undefined, actId: string): ClaimOutcome | null => {
   if (!row) return { kind: 'unknown' };
-  if (row.consumed) return consumedOutcome(row);
+  if (row.consumed) return consumedOutcome(row, actId);
   if (row.expired) return { kind: 'expired' };
   return null;
 };
@@ -57,15 +68,16 @@ const classify = (row: Row | undefined): ClaimOutcome | null => {
 const lawfulClaimant = (seed: Seed): PendingAskClaimant => {
   const db = rows(seed);
   return {
-    async claim(ref) {
+    async claim(ref, actId) {
       if (seed.faulted) return { kind: 'unavailable', reason: 'substrate fault' };
       // ⭐ Read and write with NO await between them: the mutation is the claim.
       // The database equivalent is `UPDATE … WHERE ref = $1 AND consumed_at IS
       // NULL AND expires_at > NOW() RETURNING …` — the predicate IS "still pending".
       const row = db.get(ref);
-      const refusal = classify(row);
+      const refusal = classify(row, actId);
       if (refusal) return refusal;
       row!.consumed = true;
+      row!.consumedByAct = actId;
       return { kind: 'claimed', coordinates: {
         memberId: row!.memberId, manuscriptId: row!.manuscriptId, threadId: row!.threadId,
         readingId: row!.readingId, observationKey: row!.observationKey } };
@@ -92,13 +104,14 @@ const readThenWrite = (seed: Seed): PendingAskClaimant => {
   const db = rows(seed);
   const il: Interleaving | undefined = seed.interleaving;
   return {
-    async claim(ref) {
+    async claim(ref, actId) {
       if (seed.faulted) return { kind: 'unavailable', reason: 'substrate fault' };
       const row = db.get(ref);
-      const refusal = classify(row);
+      const refusal = classify(row, actId);
       if (refusal) return refusal;
       await il?.betweenReadAndWrite?.();          // ⛔ the race window, made deterministic
       row!.consumed = true;
+      row!.consumedByAct = actId;
       return { kind: 'claimed', coordinates: {
         memberId: row!.memberId, manuscriptId: row!.manuscriptId, threadId: row!.threadId,
         readingId: row!.readingId, observationKey: row!.observationKey } };
@@ -111,7 +124,7 @@ const readThenWrite = (seed: Seed): PendingAskClaimant => {
 const neverConsumes = (seed: Seed): PendingAskClaimant => {
   const db = rows(seed);
   return {
-    async claim(ref) {
+    async claim(ref, _actId) {
       if (seed.faulted) return { kind: 'unavailable', reason: 'substrate fault' };
       const row = db.get(ref);
       if (!row) return { kind: 'unknown' };
@@ -128,9 +141,9 @@ const neverConsumes = (seed: Seed): PendingAskClaimant => {
 const faultAsReplay = (seed: Seed): PendingAskClaimant => {
   const inner = lawfulClaimant({ ...seed, faulted: false });
   return {
-    async claim(ref) {
+    async claim(ref, actId) {
       if (seed.faulted) return { kind: 'already_consumed', completion: 'incomplete' };
-      return inner.claim(ref);
+      return inner.claim(ref, actId);
     },
     recordCompleted: inner.recordCompleted,
   };
@@ -140,8 +153,8 @@ const faultAsReplay = (seed: Seed): PendingAskClaimant => {
 const carriesPermission = (seed: Seed): PendingAskClaimant => {
   const inner = lawfulClaimant(seed);
   return {
-    async claim(ref) {
-      const o = await inner.claim(ref);
+    async claim(ref, actId) {
+      const o = await inner.claim(ref, actId);
       if (!claimAcquired(o)) return o;
       return { ...o, coordinates: { ...o.coordinates, sectionId: 'sec-7' } } as unknown as ClaimOutcome;
     },
@@ -172,13 +185,33 @@ const losersStillLoad: ResumeRunner = async (ref, d) => {
 /* ── the falsification ────────────────────────────────────────────────────── */
 
 describe('S3 · P1 · pending-Ask claim instruments', () => {
-  it('⭐ DISCRIMINATES: the lawful reference passes all ten obligations', async () => {
+  it('⭐ DISCRIMINATES: the lawful reference passes every obligation', async () => {
     const results = await runClaimObligations(LAWFUL);
-    expect(results).toHaveLength(10);
+    expect(results).toHaveLength(11);
     expect(failedObligations(results)).toEqual([]);
   });
 
+/**
+ * ⛔ V7 · COLLAPSES THE TWO REPLAY CLASSES. Every prohibition still holds — it
+ * refuses, nothing crosses — and it tells the member their single press was an
+ * attempt to reuse a spent authorization. ⭐ The instrument must catch a lie that
+ * permits nothing.
+ */
+const collapsesReplayClasses = (seed: Seed): PendingAskClaimant => {
+  const inner = lawfulClaimant(seed);
+  return {
+    async claim(ref, actId) {
+      const o = await inner.claim(ref, actId);
+      return o.kind === 'act_already_processed'
+        ? { kind: 'already_consumed', completion: o.completion } : o;
+    },
+    recordCompleted: inner.recordCompleted,
+  };
+};
+
   const variants: { name: string; candidate: ClaimCandidate; mustFail: string }[] = [
+    { name: 'V7 · reports the same press as a reuse',
+      candidate: { make: collapsesReplayClasses, resume: lawfulResume }, mustFail: 'C2b' },
     { name: 'V1 · SELECT-then-UPDATE loses the race',
       candidate: { make: readThenWrite, resume: lawfulResume }, mustFail: 'C1' },
     { name: 'V2 · recognises continuity but never consumes',
@@ -202,6 +235,6 @@ describe('S3 · P1 · pending-Ask claim instruments', () => {
     const named = new Set(variants.map((v) => v.mustFail));
     // C3/C4/C6/C7 are covered transitively by V2 (never consumes) and V1 (races);
     // this assertion holds the NAMED set honest rather than claiming full coverage.
-    expect([...named].sort()).toEqual(['C1', 'C2', 'C5', 'C8', 'O1', 'O2']);
+    expect([...named].sort()).toEqual(['C1', 'C2', 'C2b', 'C5', 'C8', 'O1', 'O2']);
   });
 });

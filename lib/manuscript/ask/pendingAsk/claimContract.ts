@@ -76,7 +76,22 @@ export type ConsumedCompletion = 'completed' | 'incomplete';
 export type ClaimOutcome =
   /** ⭐ The ONLY outcome under which the resume may proceed toward a boundary. */
   | { readonly kind: 'claimed'; readonly coordinates: PendingAskCoordinates }
-  /** This resume was already consumed. `completion` serves lost-response recovery. */
+  /**
+   * ⭐⭐ THE SAME HUMAN PRESS, ARRIVING TWICE — a transport retry, a lost
+   * response, a double-click inside one interaction.
+   *
+   * ⛔ It is NOT `already_consumed`, and conflating them tells the member they
+   * tried to reuse a spent authorization when they only pressed once. F1k's
+   * reasoning, applied here: only the surface that watched the press knows
+   * whether this is that press again, so the surface names the act and the
+   * substrate remembers which act spent the claim.
+   *
+   * ⛔ Reaches no boundary, no load, no cognition, no new receipt — exactly like
+   * `already_consumed`. The distinction is in what the member is TOLD, never in
+   * what is permitted.
+   */
+  | { readonly kind: 'act_already_processed'; readonly completion: ConsumedCompletion }
+  /** Consumed by a DIFFERENT act. `completion` serves lost-response recovery. */
   | { readonly kind: 'already_consumed'; readonly completion: ConsumedCompletion }
   /** The pending window closed. Continuity hygiene, not an authority judgement. */
   | { readonly kind: 'expired' }
@@ -114,9 +129,30 @@ export type RefusedPendingField =
  * rejected in `joinWithInviteWithClient`: *the authority is the MUTATION, not a
  * precheck.*
  */
+/**
+ * ⭐ The identity of ONE physical authorization act.
+ *
+ *   one press → one actId · transport retry → the SAME actId
+ *   a member consciously authorizing again → a NEW actId
+ *
+ * ⛔ Act identity, never authority. Possessing an actId permits nothing; it only
+ * lets a replay be described truthfully.
+ */
+export type AuthorizationActId = string;
+
+/** Bounded exactly as the Focus route bounds its own act ids. */
+export const isUsableActId = (v: unknown): v is AuthorizationActId =>
+  typeof v === 'string' && v.trim().length >= 8 && v.trim().length <= 200;
+
 export interface PendingAskClaimant {
-  /** Atomically claim the right to resume. ⭐ At most one caller may win. */
-  claim(ref: PendingAskRef): Promise<ClaimOutcome>;
+  /**
+   * Atomically claim the right to resume. ⭐ At most one caller may win.
+   *
+   * `actId` names the physical act. It is recorded WITH the consumption so a
+   * later request carrying the same id can be told apart from a different act
+   * reaching for a spent claim.
+   */
+  claim(ref: PendingAskRef, actId: AuthorizationActId): Promise<ClaimOutcome>;
   /** Record that the claimed invocation reached a completed crossing. */
   recordCompleted(ref: PendingAskRef): Promise<void>;
 }
