@@ -212,32 +212,195 @@ in `recoverEvidence` depends on having the whole revision to hash.** ⛔ Narrowi
 W1 and preserving integrity verification are in tension. **Not resolved here; not
 designed around.** Reported for ruling.
 
+⭐ **RULED THE SAME DAY — THE TENSION DISSOLVES.** W1 and W2 are different
+boundaries and were never required to match. A wider trusted retrieval performed
+for integrity is lawful; the constitutional line is what may leave that envelope.
+See the rulings section below. ⛔ Digest verification is NOT to be weakened to
+narrow W1.
+
+---
+
+## Founder rulings on this census — 2026-09-10
+
+### The central correction: W1 and W2 are DIFFERENT BOUNDARIES
+
+⛔ **It would be a mistake to require the database read to have exactly the same
+width as what MAIA is allowed to receive.** They serve different purposes:
+
+```text
+W1 — TRUSTED RETRIEVAL
+     DB → application process
+     may sometimes need a wider envelope for integrity / recovery
+
+W2 — COGNITION DISCLOSURE
+     application process → model context
+     must be exactly bounded by what the member authorized
+```
+
+⛔ The law is **NOT** *"passage authority means only passage characters may ever
+be read from storage."* That would force the destruction of whole-revision digest
+verification merely to make the widths look identical.
+
+**Ratified law:**
+
+> A lawful disclosure crossing may retrieve a wider trusted envelope when that
+> wider read is technically necessary to verify and recover the authorized
+> material, provided **nothing outside the authorized disclosure scope can
+> proceed into cognition, persistence, or another disclosure consumer**.
+
+```text
+passage authorized
+      ↓
+trusted process may retrieve what integrity verification requires
+      ↓
+verify / recover
+      ↓
+ONLY authorized passage
+      ↓
+cognition
+```
+
+⭐ **The wider W1 read does not silently become wider authority.** This resolves
+the `recoverEvidence` tension reported in this census's hard-stop section: the
+tension was real, and it dissolves because the two widths were never required to
+match.
+
+### The developmental whole-revision read is NOT a second defect
+
+```text
+developmental Ask
+  W1    whole revision
+  W2    selected evidence refs
+  AUTH  none          ← the constitutional defect
+```
+
+⭐ **There was no authority to overrun.** The defect is `AUTH = none`, not
+"whole revision loaded under passage authority."
+
+⛔ **Do NOT expand S3 into a least-read remediation.** Fixing disclosure
+authority and redesigning revision recovery are different jobs.
+
+### Q6 RECLASSIFIED — still open, different kind
+
+The load-scope census establishes that Q6 is **not a W1 leakage defect**. It is
+an **authority-description defect**:
+
+```text
+authority distinguishes:   whole_work · section · "passage" within a section
+authority CANNOT distinguish:   passage A from passage B
+                                inside the same structural envelope
+```
+
+> `passage` currently claims a precision the disclosure authority cannot itself
+> represent.
+
+⭐ The section-wide W1 does not cause that. **The absence of passage identity at
+the authority boundary causes it.** The earlier law survives unchanged:
+*passage authority may not silently mean section authority.*
+
+### ⛔ DO NOT PUT `range` INTO `BoundaryOutcome` YET
+
+This census strengthens the reason not to. `may_cross` is an **ephemeral
+control-flow capability**. Turning it into `{ work, section, start, end, digest,
+… }` would begin converting the capability into exactly the portable
+authorization token the architecture has deliberately avoided — and which Q4's
+ruling just protected.
+
+### F7 amended — it governs W2, not raw DB width
+
+```text
+F7-A  Authority granted for passage A cannot permit passage B to enter
+      cognition.
+
+F7-B  Changing the passage selector downstream after authorization cannot
+      change the characters permitted into cognition.
+
+F7-C  The completed crossing evidence distinguishes A from B sufficiently
+      to prove which crossing occurred.
+
+F7-D  A wider W1 retrieval performed solely for verification does not
+      authorize any additional characters at W2.
+```
+
+⭐ **F7-D is what this census discovered**, stated as law.
+
+### The other two findings stay separate — no scope creep
+
+**Broken canonical `assembleFocus`** — ⛔ do NOT repair it in S3. The unmerged
+custody repair becomes an **explicit dependency**:
+
+```text
+FOCUS ASSEMBLER CUSTODY    separate existing lane · not absorbed into S3
+
+before S3 implementation depends on assembleFocus:
+    custody disposition must be settled
+```
+
+Otherwise the new disclosure repair would knowingly be built on an assembler
+already established to be wrong.
+
+**`loadRevisionContent` custody** — recorded, ⛔ **not silently solved here**.
+The loader trusts caller-derived custody, and another lane has already rejected
+that pattern, which is why it is worth preserving as an architectural
+observation. But SEL-0 found an **authorization** defect, not a loader-ownership
+exploit.
+
+### Next authorized act — PASSAGE-IDENTITY CENSUS (read-only)
+
+⛔ **No design.** The question:
+
+> What does this manuscript system already use to identify a passage stably
+> enough that the disclosure decision and the disclosed characters can both refer
+> to the same thing?
+
+Look for existing: `range` · `AskAnchor` / selection anchor · `EvidenceRef` ·
+revision-relative offsets · digest-bound references · passage identifiers ·
+selection objects.
+
+Trace **three places separately**:
+
+```text
+what the member is asked to authorize
+what establishDisclosureBoundary receives
+what ultimately selects characters for cognition
+```
+
+⭐ **Those three must denote the same passage — even if `BoundaryOutcome` itself
+carries none of them.**
+
 ---
 
 ## Standing
 
 ```text
-LOAD-SCOPE CENSUS        COMPLETE
-W1 · Lane A canonical    ZERO — unrepaired assembler, nothing ever crossed
-W1 · Lane A repaired     SECTION under passage scope
-W1 · Lane B              WHOLE REVISION, under no authority
-W2 · both lanes          equals the authorized/scoped extent
-SECOND SCOPE PROBLEM     NOT as posed — the lanes fail differently
-NEW FINDING              W1 extent has never been declared anywhere
-NEW FINDING              custody at loadRevisionContent is derived, not enforced
-TENSION FOR RULING       narrowing W1 vs. digest verification
+#1279 AUTHORITY CENSUS     OPEN · Class C
+LOAD-SCOPE CENSUS          COMPLETE · this record · separate Class C PR
 
-Q6 PASSAGE               STILL A HARD STOP — representation not selected
-S3 IMPLEMENTATION        NOT YET AUTHORIZED
-F1–F7 TEST AUTHORING     NOT YET
-FIXTURES                 NOT BUILT
-A / C                    HELD
-#1277 D9                 UNTOUCHED · DRAFT
-#1279 AUTHORITY CENSUS   OPEN · record only
-FOCUS WITNESS            UNSPENT
-PRODUCTION               UNTOUCHED
+W1                         trusted retrieval envelope
+W2                         authorized cognition disclosure
+W1 ≠ W2                    RATIFIED — a wider integrity-required retrieval is
+                           NOT, by itself, a widening of disclosure authority
+
+WHOLE-REVISION RECOVERY    not itself an S3 defect
+                           may remain where integrity requires it
+
+Q4 FRESHNESS               CLOSED
+Q6 PASSAGE                 STILL OPEN — reclassified as an authority-identity
+                           problem, NOT a W1 over-read
+
+NEXT ACT                   PASSAGE-IDENTITY CENSUS · read-only only
+
+S3 IMPLEMENTATION          NOT AUTHORIZED
+F1–F7 IMPLEMENTATION       NOT AUTHORIZED
+FOCUS ASSEMBLER CUSTODY    separate dependency · settle before S3 depends on it
+LOADER CUSTODY             recorded observation · no repair here
+
+A / C                      HELD
+#1277 D9                   UNTOUCHED · DRAFT
+FOCUS WITNESS              UNSPENT
+PRODUCTION                 UNTOUCHED
 ```
 
-⭐ *Focus is coarser than its vocabulary. The developmental lane is not coarse —
-it is ungoverned. One is a naming defect; the other is an absence. Repairing them
-with a single rule would fix neither honestly.*
+⭐ *We no longer need to choose between integrity and least disclosure. A wider
+trusted read can serve integrity; the constitutional boundary is what is
+permitted to leave that trusted envelope and enter cognition.*
