@@ -915,6 +915,102 @@ member becoming the mapper.**
 directly applicable where recurrence accumulates: **confidence, retrieval,
 promotion.** Recorded in the charter beside compel-vs-permit.
 
+## V7.13 — ⚠️ CORRECTION: "once apt, now insufficient" is NOT unfakeable
+
+**Founder, 2026-09-10.** Jarvis called the revision signal *"the hardest to fake"*
+and said it *"requires perspective the map didn't give."* **Overstated.**
+
+> **MAIA could itself teach the member to narrate development that way.**
+
+⛔ So the evidence is **not the sentence** *"the map was useful then; I see it
+differently now."* It is whether the revision:
+
+```text
+1  ORIGINATES sufficiently from the member's PRESENT ENCOUNTER
+2  ACTUALLY REORGANIZES the accumulated map
+```
+
+⭐ **That is GF-6 applied to the recognition signal itself** — the manufacture loop
+reaching the very evidence meant to escape it. Every candidate signal in this record
+is subject to the same test, and none is self-authenticating.
+
+## V7.14 — ⭐⭐⭐ DIACHRONIC SELF-AUTHORSHIP
+
+The construct V7 needs for its second problem.
+
+### Three kinds of revision, which a longitudinal system must distinguish
+
+```text
+INVALIDATION              "What I said then was factually wrong."
+REFRAMING                 "The event happened as recorded, but I understand its
+                          significance differently now."
+⭐ DEVELOPMENTAL           "That interpretation genuinely FIT what I could perceive
+   SUPERSESSION            THEN. I can now perceive more, so it is no longer
+                           SUFFICIENT."
+```
+
+**Worked:**
+
+```text
+THEN                     "I am stuck."
+
+INVALIDATION             "I wasn't stuck. I described it inaccurately."
+REFRAMING                "I did feel stuck, but now I understand what was
+                          happening as grief."
+⭐ SUPERSESSION           "'Stuck' was the best account I had then. Now I can
+                          recognize the process as incubation."
+```
+
+> ⭐⭐⭐ **Only supersession explicitly preserves THE DEVELOPMENT OF KNOWING
+> ITSELF** — and it is the only one that does not convert every later insight into
+> a correction of an earlier mistake.
+
+⛔ **Three different epistemic histories.** A representation that stores only the
+current reading cannot tell them apart, and the difference between them **is** the
+developmental information (V7.10, interpretive versioning).
+
+## V7.15 — The third instrument, and the conditionality criterion
+
+```text
+⭐ ERASE / CONTRADICT / CONTAIN
+   does the new understanding ERASE the old one, CONTRADICT it, or PLACE IT INSIDE
+   A LARGER UNDERSTANDING?
+```
+
+> **The earlier map was not false. It was partial.** *That is what a spiral means
+> epistemically.*
+
+And the criterion it produces for MAIA:
+
+> ## **Greater longitudinal intelligence should produce more CONDITIONALITY and DIFFERENTIATION, not merely stronger generalization. More data should permit greater NUANCE, not greater CERTAINTY.**
+
+⛔ **If three years of knowing someone makes MAIA MORE likely to say "you do X,"
+something is going wrong.** ⭐ A remarkable inversion of conventional
+personalization — and one V7 should test the developmental traditions against,
+since several may assume the opposite.
+
+## V7.16 — V7's two developments, stated explicitly
+
+```text
+CAPACITY ACQUISITION       what can the person now notice, differentiate, express
+                           or navigate that previously required SUPPORT?
+
+⭐ PERSPECTIVE              what can the person now understand differently about
+   REORGANIZATION           their own history — INCLUDING EARLIER UNDERSTANDINGS
+                            THEMSELVES?
+```
+
+> ⭐⭐ **The second is not transfer. It is a change in the STRUCTURE FROM WHICH the
+> person understands themselves.**
+
+## V7.17 — The final safeguard
+
+> **A developmental revision should be allowed to change MAIA'S UNDERSTANDING more
+> than it changes the HISTORICAL RECORD.**
+
+⭐ The temporal counterpart to the person-primary ontology: **history stable enough
+to witness development; interpretation plastic enough to permit it.**
+
 ---
 
 ## 6. ⛔ Standing
@@ -1031,3 +1127,27 @@ promotion.** Recorded in the charter beside compel-vs-permit.
   architecture does not stabilize a person; it stabilizes enough history for the
   person's changing relationship to that history to remain visible** — continuity
   without captivity, development without erasure.
+- **2026-09-10 · V7 DEEPENED (founder)** — ⚠️ **CORRECTION: "once apt, now
+  insufficient" is NOT unfakeable** (Jarvis overstated it as *"hardest to fake"*) —
+  **MAIA could teach the member to narrate development that way**, so the evidence
+  is not the sentence but whether the revision **originates from the present
+  encounter** and **actually reorganizes the accumulated map**; ⭐ **that is GF-6
+  reaching the very evidence meant to escape it, and no candidate signal is
+  self-authenticating.** ⭐⭐⭐ **DIACHRONIC SELF-AUTHORSHIP** with three kinds of
+  revision a longitudinal system must distinguish — **invalidation** (*I described
+  it inaccurately*) · **reframing** (*it happened as recorded; its significance is
+  different*) · ⭐ **developmental supersession** (*that interpretation genuinely fit
+  what I could perceive then; I can now perceive more, so it is no longer
+  sufficient*) — **only supersession preserves the development of knowing itself**,
+  and it is the only one that does not convert every later insight into a correction
+  of an earlier mistake. ⭐ **Third instrument: does the new understanding ERASE,
+  CONTRADICT, or CONTAIN the old one?** — *the earlier map was not false, it was
+  partial; that is what a spiral means epistemically.* ⭐⭐⭐ **CONDITIONALITY
+  CRITERION: greater longitudinal intelligence should produce more conditionality
+  and differentiation, not stronger generalization — more data should permit greater
+  NUANCE, not greater CERTAINTY**; ⛔ if three years of knowing someone makes MAIA
+  more likely to say *"you do X,"* something is going wrong. **V7's two developments
+  made explicit: capacity acquisition** and ⭐ **perspective reorganization** — *not
+  transfer, but a change in the structure from which the person understands
+  themselves.* **Final safeguard: a developmental revision should change MAIA'S
+  UNDERSTANDING more than it changes the HISTORICAL RECORD.**
