@@ -807,6 +807,114 @@ recurrence CANNOT settle  what the present event MEANS
 ⭐ *Keeps memory useful without making memory sovereign.* Recorded in the charter as
 DECIDE trap **T-8**.
 
+## V7.9 — ⚠️ CORRECTION: AI does not create this problem
+
+**Founder, 2026-09-10.** A Jarvis remark implied the accumulated-interpretation
+problem was historically unprecedented (*"no human helper holds five timestamped
+records of what you called your own experience"*). **Refused, and the correction
+protects the research claim.**
+
+> **Longitudinal AI memory does not create the problem of accumulated
+> interpretation.** Human relationships, therapy, education and clinical records
+> have always carried prior understandings forward.
+>
+> **What AI changes is the PERSISTENCE, GRANULARITY, RETRIEVABILITY and AUTOMATED
+> WEIGHTING of those interpretations** — making the problem **more systematic and
+> potentially self-reinforcing**, not historically unprecedented.
+
+⭐ **This matters for V7's credibility**: the traditions V7 is about to consult have
+faced this, and a claim of novelty would both overreach and forfeit their answers.
+
+### The V7 problem, stated precisely
+
+> **How can a developmental memory preserve continuity strongly enough to support
+> recognition while remaining plastic enough for present recognition to reorganize
+> the meaning of that continuity?**
+
+## V7.10 — ⭐⭐⭐ INTERPRETIVE VERSIONING
+
+⛔ **An EPISTEMIC REQUIREMENT, not a database design.** No schema is chosen here.
+
+A longitudinal account contains **at least three histories**, and ⛔ **they must
+never collapse:**
+
+```text
+EVENT HISTORY          what happened
+INTERPRETATION HISTORY what the member and/or MAIA understood it to mean at
+                       different times
+CURRENT ORIENTATION    what those events are understood to mean NOW
+```
+
+### Worked example
+
+```text
+2026-02  EVENT
+         Repeatedly remained with the decision without acting.
+
+2026-02  THEN-MEANING
+         Member: "I feel stuck."
+
+2026-06  REVISED MEANING
+         Member: "I think I was incubating something I couldn't yet articulate."
+
+2026-09  CURRENT ORIENTATION
+         Prior 'stuckness' is no longer treated as settled developmental failure;
+         the history remains available as part of how the understanding changed.
+```
+
+> ⭐⭐⭐ **The developmental information is not just either interpretation. The
+> TRANSFORMATION from `stuck` to `incubating` is itself part of the person's
+> developmental history.**
+>
+> **So memory should not merely remember what the person knows. It needs to
+> preserve HOW KNOWING CHANGED.**
+
+⚠️ **Cross-lane echo, recorded and ⛔ NOT adjudicated:** AIN's
+`TEMPORAL_MEMORY_DIRECTION_2026-09-06` (Cat 1, held) already carries adjacent
+structure — episode `occurred_at` versus assertion `valid_from`/`valid_to` on
+different objects, and **succession carried by the successor via `supersedes`,
+with `superseded_by` derived and never stored.** That is interpretive versioning's
+nearest existing neighbour in AIN. ⛔ Whether it suffices is **not** established
+here and belongs to SD-01 / the Episodic Phase 2 spec, not to V7.
+
+## V7.11 — ⭐⭐ A harder test than transfer
+
+Much developmental literature asks whether someone can **perform independently** or
+**transfer a skill.** V7's second problem asks something different:
+
+> **Can a person become capable of revising the very framework through which
+> earlier experience was understood?**
+
+⭐ That is **developmental REORGANIZATION**, not skill acquisition — and V7 must not
+let the transfer literature answer it by substitution.
+
+### ⭐⭐⭐ The resulting recognition signal — possibly the strongest yet
+
+> **A member-authored revision that changes the interpretation of earlier patterns
+> WITHOUT DENYING THEIR HISTORICAL OCCURRENCE.**
+
+```text
+"The map was useful then. I see the terrain differently now."
+```
+
+⛔ **Qualitatively different from agreement, recall, or even independent
+noticing.** It requires enough perspective to hold a past understanding as *once
+apt* rather than *wrong* — and it may be the clearest available instance of **the
+member becoming the mapper.**
+
+## V7.12 — Candidate instrument carried to SD-01
+
+> **RECURRENCE INCREASES RELEVANCE, NOT AUTHORITY.**
+
+```text
+✅ recurrence → ATTENTION WEIGHT
+⛔ recurrence → MEANING AUTHORITY
+```
+
+⭐ Separates useful longitudinal intelligence from Temporal Majority Rule, and is
+directly applicable where recurrence accumulates: **confidence, retrieval,
+promotion.** Recorded in the charter beside compel-vs-permit.
+
 ---
 
 ## 6. ⛔ Standing
@@ -895,3 +1003,31 @@ DECIDE trap **T-8**.
   encounters differently, and **that may be the developmental event, not noise.**
   Maps onto the spiral: **Fire₂ can illuminate the whole prior turn differently.**
   ⛔ Trap carried: **Temporal Majority Rule** (charter DECIDE trap T-8).
+- **2026-09-10 · V7 PRECISION (founder)** — ⚠️ **CORRECTION: AI does not create the
+  accumulated-interpretation problem.** Human relationships, therapy, education and
+  clinical records have always carried prior understandings forward; **AI changes
+  persistence, granularity, retrievability and automated weighting**, making it
+  *more systematic and potentially self-reinforcing*, ⛔ **not unprecedented** — a
+  Jarvis remark implying novelty is refused, and the correction protects V7's
+  credibility with the very traditions it is about to consult. Problem stated
+  precisely: *how can a developmental memory preserve continuity strongly enough to
+  support recognition while remaining plastic enough for present recognition to
+  reorganize the meaning of that continuity?* ⭐⭐⭐ **INTERPRETIVE VERSIONING** as an
+  **epistemic requirement, not a database design** — three histories that must never
+  collapse: **event history · interpretation history · current orientation**; ⭐⭐⭐
+  *the transformation from `stuck` to `incubating` is itself part of the
+  developmental history*, so **memory must preserve HOW KNOWING CHANGED**, not only
+  what the person knows. ⚠️ Cross-lane echo recorded, not adjudicated:
+  `TEMPORAL_MEMORY_DIRECTION_2026-09-06` already carries `supersedes` with
+  `superseded_by` derived and never stored. ⭐⭐ **A harder test than transfer:** *can
+  a person revise the very framework through which earlier experience was
+  understood?* — **developmental reorganization, not skill acquisition**, and V7 must
+  not let the transfer literature answer it by substitution. ⭐⭐⭐ **Strongest
+  recognition signal yet: a member-authored revision that changes the interpretation
+  of earlier patterns without denying their historical occurrence** — *"the map was
+  useful then; I see the terrain differently now"* — holding a past understanding as
+  **once apt** rather than **wrong**. ⭐⭐ Instrument to SD-01: **recurrence increases
+  RELEVANCE, not AUTHORITY.** ⭐ And the ambition restated: **a good memory
+  architecture does not stabilize a person; it stabilizes enough history for the
+  person's changing relationship to that history to remain visible** — continuity
+  without captivity, development without erasure.

@@ -2836,6 +2836,32 @@ T-8  ⭐⭐ TEMPORAL MAJORITY RULE                     SP-FR-00 across time
 
 > ⭐ **T-8 keeps memory useful without making memory sovereign.**
 
+### ⭐⭐⭐ T-8's operative instrument — RECURRENCE INCREASES RELEVANCE, NOT AUTHORITY
+
+**Founder, 2026-09-10.** Carried as a **candidate instrument**, ⛔ not a schema
+decision.
+
+```text
+✅ recurrence  →  ATTENTION WEIGHT
+⛔ recurrence  →  MEANING AUTHORITY
+```
+
+> If something happened five times, that makes it **more reasonable for MAIA to
+> attend to it.** It does **not** make the old interpretation **five times more
+> entitled to govern the sixth encounter.**
+
+⭐⭐ **This cleanly separates useful longitudinal intelligence from Temporal
+Majority Rule**, and it is directly applicable when SD-01 examines **confidence,
+retrieval and promotion** — the three places recurrence currently accumulates.
+
+⭐ It joins **compel-vs-permit** (inherited from canon) as one of the lane's two
+sharpest one-line instruments:
+
+```text
+COMPEL / PERMIT           does the evidence COMPEL this reading, or merely PERMIT it?
+RELEVANCE / AUTHORITY     does recurrence earn ATTENTION, or claim MEANING?
+```
+
 ## 3s. ⭐⭐⭐ DOCTRINE RECONCILIATION (founder ruling, 2026-09-10)
 
 Three classes. ⛔ **Nothing in class 1 may be presented as new Spiralogic doctrine;
@@ -3181,6 +3207,27 @@ already happened.** A member may not only notice a new process — they may sudd
 
 > ⭐⭐⭐ **That is not noise corrupting the longitudinal map. That may be THE
 > DEVELOPMENTAL EVENT.**
+
+### ⭐⭐ The spiral restated, with significance alive
+
+```text
+⛔ NOT   experience → insight → STORED INSIGHT → next experience
+
+⭐ BUT   experience → provisional meaning → further living → new recognition
+         → REINTERPRETATION OF PRIOR MEANING → changed future participation
+```
+
+> **The past remains actual, but its significance is ALIVE.**
+
+⭐ And the consequence for what memory is for:
+
+> ## **A good memory architecture does not stabilize a PERSON. It stabilizes enough HISTORY for the person's CHANGING RELATIONSHIP TO THAT HISTORY to remain visible.**
+>
+> **Continuity without captivity. Development without erasure.**
+
+⚠️ *A very different ambition from conventional personalization* — and a different
+success condition: not a more accurate account of the member, but an account
+plastic enough to show how their understanding moved.
 
 ## 4. The process under test — frozen as amended
 
