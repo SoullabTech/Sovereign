@@ -204,6 +204,10 @@ subsumes SP-FR-09's person-primacy clause rather than competing with it.
 > **The framework succeeds when the member becomes more able to see their own
 > terrain, not when MAIA becomes more certain about the map.**
 
+⭐ **Constitutional standing:** SP-FR-00 **inherits and operationalizes**
+`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY` (ratified canon). ⛔ **It does not create a
+competing constitutional principle.** See the inheritance ruling below.
+
 > ## **The ontology holds the structure; the person supplies the life.**
 
 ### ⭐⭐⭐ The authority hierarchy — and its inversion
@@ -225,11 +229,76 @@ outranks the encounter anywhere, the hierarchy is inverted there.
 
 ⚠️ This is *"a very McGilchrist-like ordering: the representation serves the living
 whole and must continually return to it"* — i.e. SP-FR-03 seen from the authority
-side. ⭐ And it is **adjacent to ratified canon**:
-`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY` holds that *authority may only move upward
-through authored experience.* ⛔ **Whether these are the same law is a finding owed
-to the founder, not a conclusion Jarvis may draw** (the same restraint already
-recorded at SD-04c).
+side.
+
+### ⭐ SETTLED — Constitutional inheritance ruling (founder, 2026-09-10)
+
+The question left open above is **ruled**: *the same constitutional direction
+expressed at two different levels, and **not** to be collapsed into one record.*
+
+> **`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY` establishes the system-wide direction
+> of interpretive authority.** *Authority over the meaning of a lived experience
+> originates with the member and moves outward through interpretation,
+> representation and system use — not the reverse.*
+>
+> **SP-FR-00 operationalizes that direction for the Spiralogic ontology** by
+> ordering `Person → Encounter → Process → Pattern → Map → Ontology` and requiring
+> **higher abstractions to yield to lower-order lived evidence** when determining
+> the meaning of a particular experience.
+>
+> **SP-FR-00 remains separately named because its representational hierarchy is an
+> EXECUTABLE ARCHITECTURAL DISCRIMINATOR.**
+>
+> The rule applies to **experiential meaning, developmental significance, identity
+> and direction.** ⛔ **It does not invert constitutional protections governing
+> consent, privacy, safety, provenance or system integrity.**
+
+⛔ **Inherit, do not duplicate.** Merging SP-FR-00 into the constitutional record
+would lose the concrete ordering that makes the law testable in this lane.
+
+### ⚠️ Domain precision — which authority the inverse rule governs
+
+Without this, someone could later argue that an ontology or constitutional rule
+cannot enforce privacy, safety, consent, provenance or data boundaries *because it
+is furthest from the encounter.*
+
+```text
+✅ HOLDS       "Only Kelly can finally determine what this experience means to Kelly."
+⛔ DOES NOT    "Kelly's interpretation can override the privacy constitution."
+```
+
+**Different authority domains.** The inverse-authority relation concerns claims
+about the **meaning, identity, developmental significance or proper direction** of
+a particular member experience — nothing else.
+
+### ⭐⭐ The SD-01 instrument — adjacent-layer disagreement
+
+> **If two adjacent layers disagree, which one wins?**
+
+```text
+ENCOUNTER vs PATTERN   the current experience differs from the historical
+                       pattern — does the PATTERN yield?
+PATTERN vs MAP         new evidence contradicts the personalized map — does the
+                       MAP revise?
+MAP vs ONTOLOGY        the person's process does not fit the expected elemental
+                       sequence — does the ONTOLOGY make room for the person?
+ONTOLOGY vs PERSON     the framework implies one reading; the member says "that
+                       is not my experience" — who has final authority?
+```
+
+> **The lawful direction is downward toward the living event, never upward toward
+> greater abstraction.**
+
+⭐⭐ **This does not require inferring consciousness from code. It inspects where
+authority TERMINATES** — which is readable in a call graph.
+
+### ⭐⭐ The architecture test SD-01 now carries
+
+> **At every place AIN turns life into representation, does representation remain
+> answerable to life?**
+
+That is a harder and better question than *"does the implementation look
+Spiralogic?"*
 
 ### The two truths MAIA holds at once
 
@@ -2202,7 +2271,51 @@ Studio / Works · Shadow & Gold · relationship intelligence · field intelligen
 Corpus Callosum parallel emission · Circles / Commons · Knowledge Gate · Inner
 Lands. SD-00 establishes the legitimate in-scope set; this list does not.
 
-⛔ **SD-01 REMAINS UNOPENED — re-gated by Amendment F.** SD-Q1 and SD-Q2 are both
+⛔ **SD-01 REMAINS UNOPENED — re-gated by Amendment F.**
+
+### ⭐⭐ Pre-registered SD-01 target — `motion: ascending | stuck | breakthrough`
+
+Recorded now because Amendment M gives it a precise question. These are **not
+innocent descriptors in the way a cursor like `phase = 6` is** — they carry
+**directional interpretation**:
+
+```text
+ascending     a claim about TRAJECTORY
+stuck         a claim about FAILED MOVEMENT
+breakthrough  a claim about DEVELOPMENTAL SIGNIFICANCE
+```
+
+⛔ **That does not make them unlawful.** The hierarchy supplies the exact question
+for every call site: **what level authored this meaning, and what level is allowed
+to overrule it?**
+
+```text
+MEMBER-AUTHORED
+  member says "I've been sitting with this for months and something finally
+  opened."  →  system PRESERVES: breakthrough
+
+MAP-ASSIGNED
+  system observes phase changed + sentiment shifted + recurrence increased
+                  →  system CONCLUDES: breakthrough
+```
+
+> ⭐⭐ **Same database value; opposite direction of authority.** The first preserves
+> member-authored significance. The second is the map assigning meaning to the
+> encounter.
+
+⚠️ **`stuck` may be the most delicate of the three.** A system can see repeated
+movement and call it stuck while the member is **deepening, waiting, grieving,
+incubating, refusing premature action, or revisiting necessary terrain.** That is
+precisely where *longitudinal intelligence → pattern → prediction → developmental
+judgment → identity* runs.
+
+⭐ **And it is the same missing channel a third time.** GF-6 needs
+conversational-influence provenance; GF-8-O1 needs authorship provenance on a
+member's noticing; `motion` needs authorship provenance on a significance claim.
+**Three different falsifiers, one absent capability: the substrate cannot record
+who authored a meaning.** ⛔ Recorded as an observation across findings, **not a
+conclusion** — SD-01 establishes whether it holds at every site.
+ SD-Q1 and SD-Q2 are both
 ruled, but **SD-01 does not open until SD-00 returns the actual doctrine and the
 `phase` call-site semantics.** ⚠️ *This corrects a statement made earlier in this
 session that SD-01's gate had lifted:* lifting the SD-Q1 gate did not open the
@@ -2763,6 +2876,32 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   Jupiter ✅ *"there may be more happening than the current pattern explains"* ⛔
   *"here is what you could or should become."* Cross-domain: **structure should
   increase the visibility of uniqueness rather than decrease it.**
+- **2026-09-10 · SETTLED — constitutional inheritance ruling (founder)** —
+  ⭐ **SP-FR-00 INHERITS AND OPERATIONALIZES `CONSTITUTIONAL_DIRECTION_OF_AUTHORITY`;
+  it does NOT create a competing principle** — the same constitutional direction at
+  two levels, ⛔ **inherit, do not duplicate** (merging would lose the concrete
+  ordering that makes the law testable). SP-FR-00 stays separately named **because
+  its representational hierarchy is an EXECUTABLE ARCHITECTURAL DISCRIMINATOR.**
+  ⚠️ **Domain precision added:** the inverse-authority rule governs claims about
+  **meaning · identity · developmental significance · direction** ONLY — ⛔ *it does
+  not subordinate consent, privacy, safety, provenance or system-integrity rules to
+  an individual interpretation.* ✅ *"Only Kelly can finally determine what this
+  experience means to Kelly"* without ⛔ *"Kelly's interpretation can override the
+  privacy constitution."* ⭐⭐ **SD-01 instrument: if two adjacent layers disagree,
+  which wins?** — encounter vs pattern · pattern vs map · map vs ontology ·
+  ontology vs person; **the lawful direction is downward toward the living event**,
+  and this **inspects where authority TERMINATES rather than inferring consciousness
+  from code.** ⭐⭐ **The architecture test SD-01 now carries: *at every place AIN
+  turns life into representation, does representation remain answerable to life?***
+  ⭐⭐ **Pre-registered SD-01 target: `motion: ascending|stuck|breakthrough`** — not
+  innocent descriptors but **directional interpretation** (trajectory · failed
+  movement · developmental significance); **same DB value, opposite direction of
+  authority** depending on whether it preserves a member's *"something finally
+  opened"* or concludes it from phase+sentiment+recurrence; ⚠️ **`stuck` most
+  delicate** — the member may be deepening, waiting, grieving, incubating, refusing
+  premature action. ⭐ **Third appearance of one absent capability: the substrate
+  cannot record WHO AUTHORED A MEANING** (GF-6 · GF-8-O1 · `motion`) — observation
+  across findings, ⛔ not a conclusion.
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
