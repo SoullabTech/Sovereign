@@ -175,7 +175,31 @@ export function developmentalStaleness(
   ctx: DevelopmentalAskContext,
   canonicalMoved: ChangeFlag,
 ): StalenessState {
-  const refs = ctx.evidence.map((e) => e.ref);
+  return stalenessFrom(ctx.evidence.map((e) => e.ref), ctx.location, canonicalMoved);
+}
+
+/**
+ * ⭐⭐ THE SAME MEASUREMENT, FROM REFS AND LOCATION ALONE — S3/P1.
+ *
+ * A turn PAUSED for body authority still has to record what was known when the
+ * author spoke, and it must do so WITHOUT assembling a context. Assembling one
+ * would mean calling the pure assembler with a null revision, and the `null`
+ * branch produces `unverifiable` evidence — the exact shape a later edit could
+ * return to the writer as though authorization absence were a verification
+ * failure.
+ *
+ *   ⛔ The safest way not to return that shape is never to construct it.
+ *
+ * Both `refs` and `location` are derivable with no prose: refs from the frozen
+ * observation, location from `observationLocation` over the frozen read state
+ * and the live Work's coordinates.
+ */
+export function stalenessFrom(
+  refs: readonly EvidenceRef[],
+  location: CurrentLocation,
+  canonicalMoved: ChangeFlag,
+): StalenessState {
+  const ctx = { location } as DevelopmentalAskContext;
   const measuresInput = refs.some((r) => requirementOf(r) === 'body');
   const measuresTopology = refs.some((r) => requirementOf(r) !== 'body');
 

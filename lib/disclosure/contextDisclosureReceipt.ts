@@ -68,7 +68,20 @@ export type DisclosureSourceClass = 'work';
 export type DisclosureParticipationBasis = 'member_invoked';
 
 /** The only boundary constituted in v1. */
-export type DisclosureBoundary = 'writers_studio.focus->maia_cognition';
+export type DisclosureBoundary =
+  | 'writers_studio.focus->maia_cognition'
+  /**
+   * S3 · P1 — the developmental Ask's section-scoped body crossing.
+   *
+   * ⭐ A SECOND BOUNDARY, NOT A SECOND MEANING FOR THE FIRST. Recording a
+   * developmental body crossing as `focus->maia_cognition` would make the
+   * receipt describe a crossing that did not happen at the boundary it names,
+   * and an auditor could no longer tell which governed seam was exercised.
+   *
+   * ⛔ Widening this axis is a governed migration, as the table's own comment
+   * requires: `20260910000002_context_disclosure_boundary_developmental.sql`.
+   */
+  | 'writers_studio.ask->maia_developmental';
 
 /** The SHAPE of the selection — never its location. */
 export type DisclosureScopeKind = 'whole_work' | 'section' | 'passage';

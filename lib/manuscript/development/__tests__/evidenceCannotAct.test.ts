@@ -94,7 +94,13 @@ describe('the developmental-evidence substrate cannot act', () => {
        observation — a member's own act, addressed to the reading. It is not an
        evidence table either, so naming it here keeps this claim exact rather
        than weakening it. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$/;
+    /* S3/P1 (2026-09-10) widens `context_disclosure_receipts.boundary` by one
+       value so a developmental body crossing is recorded at its OWN seam rather
+       than under Focus's. It alters an ACCOUNTABILITY table's CHECK — it adds no
+       column, stores no evidence, and gives the evidence object no schema. Named
+       here for the same reason as the three above: to keep this claim exact
+       rather than to weaken it. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$|^20260910000002_context_disclosure_boundary_developmental\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
