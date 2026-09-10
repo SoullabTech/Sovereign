@@ -241,6 +241,17 @@ MAIA discovers prose is actually needed
     ↓
 MAIA names the boundary, in place, in WRITE
     "I need to read the relevant passage to answer that faithfully."
+    ⛔⛔ SUPERSEDED 2026-09-10 by founder ruling. The lawful exemplar is:
+    "I need to read the relevant SECTION to answer that faithfully."
+    — and "sections", plural, where several are genuinely required.
+
+    SUPERSEDED because passage authority was subsequently established to be
+    unimplemented (S3_PASSAGE_IDENTITY_CENSUS_2026-09-10.md, Q6 disposition).
+    The writer-facing language must name the actual scope being authorized.
+
+    ⭐ The original sentence is kept verbatim above, not deleted: it WAS
+    ratified, and pretending otherwise would erase the epistemic history
+    rather than record the correction.
     ↓
 the native one-act disclosure gesture for THIS question / THIS crossing
     ↓
@@ -271,6 +282,15 @@ F4  old receipt present              → cannot authorize a NEW load
 F5  failed / stale / invalid auth    → cannot degrade to ownership-only disclosure
 F6  digest verification failure      → authored text does not enter cognition
 F7  passage authority                → cannot silently broaden into section
+    ⛔ SUPERSEDED FOR THE S3 LANE 2026-09-10. Not a live S3 acceptance
+    obligation: passage is not implementable authority, so no positive
+    passage implementation exists for this falsifier to be red against.
+    History retained, never deleted.
+    LIVE REPLACEMENT — the section-bound W2 obligation:
+      section S authorized → characters derived from S may enter W2
+      characters outside S → zero authority to enter cognition
+      wider W1 integrity retrieval → does NOT widen W2 authority
+    (see S3_LOAD_SCOPE_CENSUS F7-D and S3-DESIGN-01 §9)
 ```
 
 ⛔ **The remediation is not complete because the Focus function appears in the
