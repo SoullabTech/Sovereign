@@ -1013,6 +1013,133 @@ to witness development; interpretation plastic enough to permit it.**
 
 ---
 
+# DR-01 — FROM RECOGNITION TO CAPACITY  ·  research flow OPENED
+
+```
+OPENED     founder act, 2026-09-10
+CONTAINER  this record. ⛔ NOT a new lane — opening one would duplicate the
+           separation just established.
+STATUS     ACTIVE RESEARCH FLOW. V7's work proceeds as DR-01.
+STANDING   ⛔ STILL NO IMPLEMENTATION STANDING.
+SPIRALOGIC ⛔ charter stays FROZEN; SD-01 stays GATED and stays in that lane.
+```
+
+> ## Governing question
+>
+> **How can MAIA participate in a member recognizing their own developmental
+> process such that the recognition becomes increasingly SELF-AUTHORED CAPACITY
+> rather than AGREEMENT, ASSIMILATION, DEPENDENCE, or SYSTEM-OWNED KNOWLEDGE?**
+
+## The four movements
+
+### DR-01A — Capacity acquisition
+
+```text
+STUDY   SDT · Vygotsky / scaffolding · metacognition · mentalization ·
+        transformative learning
+ASK     How does SUPPORTED RECOGNITION become APPROPRIATED CAPACITY?
+```
+
+### DR-01B — Developmental revision
+
+```text
+STUDY   how established traditions handle REINTERPRETATION OF ACCUMULATED
+        SELF-UNDERSTANDING
+ASK     How can "stuck" become "incubating" WITHOUT either erasing the earlier
+        experience OR letting the earlier interpretation remain sovereign?
+```
+
+### DR-01C — Relational mediation
+
+```text
+STUDY   Gendlin · participatory sense-making · dialogical / intersubjective
+        traditions
+ASK     What can GENUINELY EMERGE through relationship while preserving WHO MEANT
+        WHAT and preventing the HELPER FROM OWNING THE RESULT?
+```
+
+### DR-01D — Human–AI comparison  ·  ⛔ ONLY AFTER A–C
+
+```text
+COMPARE those mechanisms against AI assistance · overreliance · homogenization ·
+        personalization · memory · cognitive forcing
+ASK     Which mechanisms SURVIVE translation into an AI relationship, and which
+        become DANGEROUS because AI is PERSISTENT, SCALABLE, GENERATIVE and
+        COMPUTATIONALLY ACCUMULATIVE?
+```
+
+> ⛔⛔ **THE SEQUENCING IS THE METHOD: do NOT start with AI literature and retrofit
+> human development around it.**
+
+⭐ That ordering is what keeps DR-01D a *comparison* rather than a *justification* —
+and it is the same discipline SD-00B observes by reading canon before importing
+today's synthesis backward.
+
+---
+
+# HELD — candidate future architecture lane
+
+```
+NAME       JARVIS-RELATIONAL-MEANING-LIFECYCLE-01
+           (alternative considered: JARVIS-MEANING-CARRIAGE-ARCHITECTURE-01)
+STATUS     ⛔ HELD. Opens ONLY after reconciliation establishes what is inherited,
+           what is new, and what is actually required.
+```
+
+> **Subject (cross-domain): how does a meaning move from encounter →
+> interpretation → member response → memory → recurrence → revision → retrieval
+> WITHOUT losing AUTHORSHIP, EPISTEMIC STATUS, RELATIONAL HISTORY, or PRESENT
+> CORRIGIBILITY?**
+
+Would be inherited by: **Spiralogic · Writer's Studio · relational intelligence ·
+memory · Shadow & Gold · future developmental domains.**
+
+⭐ **Rationale for eventually splitting it out:** *meaning carriage is becoming
+obviously NOT a Spiralogic-specific implementation problem.* ⛔ **But opening it
+before the research / reconciliation gate would be premature design.**
+
+---
+
+# ⛔ DO NOT OPEN
+
+```text
+⛔ Mercury implementation lane
+⛔ recognition schema lane
+⛔ member-noticing feature lane
+⛔ relational-third storage lane
+```
+
+**Why no Mercury lane:** Mercury is currently an **architectural function and
+doctrine inside existing work.** A dedicated lane *"would almost certainly start
+annexing provenance, memory, Air, Aether, relationship intelligence and
+developmental recognition — the exact conceptual expansion we froze."*
+
+**Why no implementation lane for member-noticing, relational memory, meaning
+provenance or recognition storage:** ⛔ **we do not yet know what the smallest
+legitimate primitive is.**
+
+**Why SD-01 is not split out:** its pipeline question still belongs to the
+Spiralogic alignment journey — *does AIN carry living distinctions through
+inference, memory, recurrence and retrieval, or compress them into easier system
+knowledge?*
+
+---
+
+# ⭐⭐ The two questions, and why they must not share a lane
+
+```text
+RESEARCH QUESTION       how does RECOGNITION become CAPACITY?
+                        → DR-01, here
+
+ARCHITECTURE QUESTION   how does MEANING SURVIVE THE TRIP through AIN without
+                        being compressed into BIOGRAPHY?
+                        → the held lane, later
+```
+
+> **Related — but they should not be solved in the same lane.**
+
+---
+
 ## 6. ⛔ Standing
 
 - ⛔ **No implementation standing.** No schema, surface, protocol, metric, repair,
@@ -1151,3 +1278,31 @@ to witness development; interpretation plastic enough to permit it.**
   transfer, but a change in the structure from which the person understands
   themselves.* **Final safeguard: a developmental revision should change MAIA'S
   UNDERSTANDING more than it changes the HISTORICAL RECORD.**
+- **2026-09-10 · DR-01 OPENED (founder act)** — *From Recognition to Capacity*, as
+  an **active research flow inside this record**, ⛔ **not a new lane** (opening one
+  would duplicate the separation just established). Governing question: **how can
+  MAIA participate in a member recognizing their own developmental process such that
+  recognition becomes increasingly SELF-AUTHORED CAPACITY rather than agreement,
+  assimilation, dependence or system-owned knowledge?** Four movements: **DR-01A**
+  capacity acquisition (SDT · Vygotsky/scaffolding · metacognition · mentalization ·
+  transformative learning) · **DR-01B** developmental revision (*how does "stuck"
+  become "incubating" without erasing the earlier experience or letting the earlier
+  interpretation remain sovereign?*) · **DR-01C** relational mediation (Gendlin ·
+  participatory sense-making · dialogical/intersubjective) · **DR-01D** human–AI
+  comparison, ⛔ **ONLY AFTER A–C** — *which mechanisms survive translation into an
+  AI relationship, and which become dangerous because AI is persistent, scalable,
+  generative and computationally accumulative?* ⛔⛔ **THE SEQUENCING IS THE METHOD:
+  do not start with AI literature and retrofit human development around it.**
+  ⛔ **HELD: `JARVIS-RELATIONAL-MEANING-LIFECYCLE-01`** as a candidate future
+  cross-domain architecture lane — *how does a meaning move from encounter through
+  interpretation, response, memory, recurrence, revision and retrieval without
+  losing authorship, epistemic status, relational history or present
+  corrigibility?* — opening **only after reconciliation**; *meaning carriage is
+  becoming obviously not a Spiralogic-specific problem, but opening it now would be
+  premature design.* ⛔ **DO NOT OPEN:** Mercury implementation lane (*it would annex
+  provenance, memory, Air, Aether, relationship intelligence and developmental
+  recognition — the exact expansion we froze*) · recognition schema lane ·
+  member-noticing feature lane · relational-third storage lane — ⛔ **we do not yet
+  know what the smallest legitimate primitive is.** SD-01 stays in the Spiralogic
+  lane. ⭐⭐ **Two questions, not one lane: how recognition becomes CAPACITY (here)
+  versus how meaning survives the TRIP through AIN (held).**
