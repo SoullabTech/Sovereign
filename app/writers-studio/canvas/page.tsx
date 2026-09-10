@@ -155,6 +155,18 @@ type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
  */
 const WRITE_TREATMENT = 'C' as const;
 
+/**
+ * ⭐ THE ORDINARY GEOMETRY OF WRITE, FIXED. Canonical opened a Work that has
+ * sections with its outline shown (`sections.length > 0`) and MAIA present
+ * (defaulted true), so this is the measure a writer actually had — not the
+ * widest the field could ever be, and not the narrowest.
+ *
+ * Materials is deliberately ABSENT: in the room it is a Workbench orbit at the
+ * bottom, so it takes no width from the manuscript at all. Canonical narrowed
+ * the field to 33.973% when Materials opened; under R1 it no longer does.
+ */
+const ORDINARY_COLUMNS = ['rail', 'outlinePanel', 'writingField', 'maiaPanel'] as const;
+
 const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
 
 /* Named, and no longer the default export: `useSearchParams()` reads route
@@ -424,19 +436,41 @@ function CanvasRoom() {
      Materials yields its right-hand column before the outline does, and
      before the field gives up its measure (YIELDS_BEFORE). It is not deleted
      — PRESENT_AT_COMPACT keeps it — it simply cannot hold a column here. */
-  const columnsShown = useMemo(() => {
-    const cols: Array<keyof StudioLayout> = ['rail'];
-    if (outlineOpen) cols.push('outlinePanel');
-    cols.push('writingField');
-    if (maiaOpen) cols.push('maiaPanel');
-    /* Reserved while conversing even though Materials is not drawn: MAIA takes
-       that share, so the writing field keeps EXACTLY its measured width.
-       Opening a conversation must never shrink the manuscript — that is the
-       whole point of speaking with MAIA beside the Work rather than instead
-       of it. */
-    if ((materialsOpen || conversationOpen) && !compact) cols.push('materialsPanel');
-    return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
-  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, compact]);
+  /**
+   * ⭐⭐ R1 · A — THE COLUMN SET IS CONSTANT, SO THE MEASURE NEVER MOVES.
+   * Founder ruling, 2026-09-10.
+   *
+   * ⛔ THE DEFECT THIS REPLACES, AND HOW IT HID. This list used to grow and
+   * shrink with `outlineOpen` / `maiaOpen` / `materialsOpen` / `conversationOpen`,
+   * and `writingFieldLayout` divides the notional width among whatever is in it.
+   * So the manuscript's own percentage moved with the panels:
+   *
+   *     rail + field                        68.088%
+   *     + outline                           52.054%
+   *     + outline + maia    ← ORDINARY      41.293%
+   *     + outline + maia + materials        33.973%
+   *
+   * Toggling MAIA from the header re-wrapped the writer's paragraphs. The first
+   * R1 repair made `aperture()` constant and asserted that the field's STYLE
+   * expression named no orbit state — which it does not, and never did. The
+   * dependency was one level up, in `L`. An assertion that inspects the wrong
+   * place reports clean and proves nothing.
+   *
+   * ⭐ R1 · B — BASELINE CONTINUITY. The constant chosen is not an arbitrary
+   * safe number: it is EXACTLY canonical's ordinary arrival geometry, where a
+   * Work with sections opens with its outline and MAIA present. State
+   * invariance bought by quietly narrowing the writer's page would be the
+   * supporting UI consuming the Work continuously instead of intermittently —
+   * formally invariant, substantively worse.
+   *
+   * ⛔ Do not make this depend on anything again. `apertureIsIndependentOfOrbits`
+   * cannot catch a regression here, because the dependency would be in `L`.
+   * `shellProjection` pins the number itself against writingFieldLayout.
+   */
+  const columnsShown = useMemo(
+    () => ORDINARY_COLUMNS,
+    [],
+  );
 
   /* Resolved at a large notional width and expressed as percentages, so the
      MEASURED ratio holds at every viewport and nothing reads `window` during

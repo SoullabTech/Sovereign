@@ -498,6 +498,73 @@ describe('the handoff contract carries identity both ways', () => {
    * seeking help. That is the defect, and neither mechanism may be relaxed
    * into "the aperture narrows a little".
    */
+  /**
+   * ⭐⭐ R1 · B — BASELINE CONTINUITY. Founder ruling, 2026-09-10.
+   *
+   * State invariance alone is not the law. An implementation could satisfy
+   * `apertureIsIndependentOfOrbits()` perfectly by making the Work 400px wide
+   * forever — formally state-independent, substantively absurd. So the NUMBER
+   * is pinned, not merely its constancy.
+   *
+   * The constant must be canonical's ORDINARY arrival geometry: a Work with
+   * sections opened its outline (`sections.length > 0`) and MAIA was present by
+   * default. That is the measure the writer actually had before D9, and D9 may
+   * not silently change it in order to stop it from moving.
+   *
+   * ⛔ THIS GUARD EXISTS BECAUSE THE FIRST R1 REPAIR PASSED WHILE VIOLATING R1.
+   * That repair asserted the field's STYLE expression named no orbit state —
+   * true, and irrelevant: the dependency was in `columnsShown`, one level up,
+   * feeding `writingFieldLayout`. Toggling MAIA still re-wrapped the writer's
+   * paragraphs. A check pointed at the wrong place reports clean.
+   */
+  it('R1 · B — the fixed measure IS canonical’s ordinary arrival geometry', () => {
+    const N = 100000;
+    /* What canonical produced on arrival for a Work with sections. */
+    const canonical = writingFieldLayout(N, ['rail', 'outlinePanel', 'writingField', 'maiaPanel'] as never);
+    /* What D9 fixes it at. */
+    expect(page).toContain("const ORDINARY_COLUMNS = ['rail', 'outlinePanel', 'writingField', 'maiaPanel'] as const");
+    expect(page).toMatch(/const columnsShown = useMemo\(\s*\(\) => ORDINARY_COLUMNS,\s*\[\],\s*\)/);
+    expect(canonical.writingField / N).toBeCloseTo(0.41293, 4);
+
+    /**
+     * ⛔⛔ AND THE PERCENTAGE MUST BE OF THE ROOM, NOT OF WHAT THE ORBITS LEFT.
+     *
+     * The first version of this guard compared writingFieldLayout(N, X) with
+     * writingFieldLayout(N, X) — the same call twice. It was a tautology, it
+     * could not fail, and it passed while the manuscript rendered at ~401px
+     * against canonical's ~694px, because the Work sat inside a container the
+     * aperture had already shrunk by the full reserved extent.
+     *
+     * A measured percentage is only a measure of something. So what is asserted
+     * is the containing block: the Work's ancestor in the room applies NO inset
+     * derived from the aperture. Orbits are pinned; they do not narrow the box
+     * the manuscript is measured against.
+     */
+    const room = fs.readFileSync(
+      path.join(__dirname, '..', 'field', 'FieldRoom.tsx'), 'utf8');
+    const ap = room.slice(room.indexOf('data-field-aperture'));
+    const style = ap.slice(0, ap.indexOf('}}'));
+    for (const inset of ['paddingLeft', 'paddingRight', 'paddingBottom', 'a.left', 'a.right', 'a.bottom']) {
+      expect(style).not.toContain(inset);
+    }
+  });
+
+  /**
+   * ⛔ AND THE DEPENDENCY MAY NOT COME BACK. The column set is what feeds the
+   * arithmetic; if it ever reads an orbit's state again, the manuscript
+   * re-measures no matter how constant the aperture is.
+   */
+  it('R1 · A — the column set reads no orbit state', () => {
+    const decl = page.slice(page.indexOf('const columnsShown'));
+    /* To the end of the declaration only — the first `;` that closes it. A
+       looser slice runs on into unrelated code and this guard would pass or
+       fail on whatever happened to follow. */
+    const body = decl.slice(0, decl.indexOf(');') + 2);
+    for (const state of ['outlineOpen', 'maiaOpen', 'materialsOpen', 'conversationOpen', 'compact']) {
+      expect(body).not.toContain(state);
+    }
+  });
+
   it('keeps the manuscript at its measured width while conversing', () => {
     /* The field's width expression may not mention any orbit's state. */
     const field = page.slice(page.indexOf('data-panel-role="writing-field"'));

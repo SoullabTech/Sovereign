@@ -29,7 +29,6 @@ import {
   RAIL_REM,
   WORKBENCH_BOTTOM_REM,
   WORKBENCH_REM,
-  aperture,
   maiaBox,
   stripBox,
   structureBox,
@@ -85,7 +84,6 @@ export default function FieldRoom({
     setOpen((o) => ({ ...o, [k]: !o[k] }));
   }, []);
 
-  const a = useMemo(() => aperture(open), [open]);
   const strip = useMemo(() => stripBox(open), [open]);
   /* The one gesture that opens her. Handed to the strip rather than performed
      by it, so the room stays the only thing that decides where a capability
@@ -156,10 +154,30 @@ export default function FieldRoom({
           a panel, because no orbit participates in layout. */}
       <div
         data-field-aperture
+        /**
+         * ⭐⭐ R1 · B — THE WORK IS MEASURED AGAINST THE ROOM, NOT AGAINST WHAT
+         * THE ORBITS LEFT OVER. Founder ruling, 2026-09-10.
+         *
+         * ⛔ THE DEFECT THIS REPLACES. These insets used to be padding, so the
+         * Work's containing block shrank by the full reserved extent before its
+         * measured percentage was applied. The token was canonical's exactly —
+         * and the manuscript came out at ~401px where canonical gave ~694px at
+         * a 1680 viewport. State invariance had been bought by consuming the
+         * writer's page continuously instead of intermittently:
+         *
+         *     Reserve orbit space permanently by taking it from the Work
+         *
+         * is not what "the room recomposes around the Work" means.
+         *
+         * ⭐ The aperture now describes ONLY where orbits are pinned. The Work
+         * spans the room and takes its own measured share of it, so its width
+         * is identical to what it was before D9 and identical for every orbit
+         * state. Orbits are out of flow around and over the surrounding field —
+         * never over the Work, because its measure leaves them room.
+         */
         style={{
-          paddingLeft: a.left, paddingRight: a.right, paddingBottom: a.bottom,
           height: '100%', display: 'flex', flexDirection: 'column',
-          transition: 'padding 160ms ease',
+          alignItems: 'center', justifyContent: 'stretch',
         }}
       >
         {/* ⛔ NO SECOND MASTHEAD. This room used to render the Work's name in
