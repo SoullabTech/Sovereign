@@ -16,6 +16,10 @@
 
 import { query } from '../../lib/db/postgres';
 import { assembleFocus } from '../../lib/writers-studio/assembleFocus';
+import { establishDisclosureBoundary, mayCrossBoundary } from '../../lib/disclosure/disclosureBoundary';
+import { readDisclosed, type DisclosureLocus } from '../../lib/disclosure/disclosureAuthority';
+import { actIdentifiers } from '../../lib/disclosure/actIdentity';
+import { TurnPosture } from '../../lib/sanctuary/turnPosture';
 
 const MEMBER = '11111111-1111-1111-1111-111111111111';
 const OTHER  = '22222222-2222-2222-2222-222222222222';
@@ -32,6 +36,10 @@ const DRAFT_2  = 'DRAFT TWO: the lamp was never the point.';
 /* An emoji before the selection: UTF-16 code units vs code points diverge here. */
 const DRAFT_EMOJI = '🌊 the tide came in and the sentence changed';
 
+/** One run, one set of acts, so repeated cases never collide as idempotent replays. */
+const RUN = process.env.FOCUS_CONTRACT_RUN ?? Math.random().toString(36).slice(2, 10);
+let act = 0;
+
 let pass = 0, fail = 0;
 const w = (label: string, ok: boolean, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${ok || !detail ? '' : `\n        ${detail}`}`);
@@ -44,8 +52,12 @@ const w = (label: string, ok: boolean, detail = '') => {
  * valuable than a green fake schema.
  */
 async function requireSchema() {
+  /* ⭐ The disclosure substrate is now a PREREQUISITE, not a subject: authority
+     must come through the canonical boundary, and that boundary writes a consent
+     row and a receipt before it will hand back a capability. */
   const need = ['member_manuscripts', 'manuscript_sections',
-                'manuscript_working_drafts', 'manuscript_draft_sections'];
+                'manuscript_working_drafts', 'manuscript_draft_sections',
+                'runtime_consent_state', 'context_disclosure_receipts'];
   const t = await query<{ table_name: string }>(
     `SELECT table_name FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = ANY($1::text[])`, [need]);
@@ -55,6 +67,17 @@ async function requireSchema() {
     `SELECT column_name FROM information_schema.columns
       WHERE table_name = 'manuscript_working_drafts' AND column_name = 'section_addressable_at'`, []);
   if (gate.rows.length === 0) missing.push('manuscript_working_drafts.section_addressable_at');
+
+  /* The ADDENDUM-01 vocabulary. A database predating it can still satisfy every
+     assertion below, which is exactly why its absence must be named rather than
+     tolerated: this witness would then be reading a schema older than its subject. */
+  const vocab = await query<{ column_name: string }>(
+    `SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'context_disclosure_receipts'
+        AND column_name = ANY($1::text[])`, [['unit_ref', 'range_from_ref', 'range_to_ref']]);
+  for (const c of ['unit_ref', 'range_from_ref', 'range_to_ref']) {
+    if (!vocab.rows.some(r => r.column_name === c)) missing.push(`context_disclosure_receipts.${c}`);
+  }
 
   if (missing.length) {
     console.error(
@@ -128,6 +151,43 @@ async function seedWork(memberId: string, addressable: boolean, sections: string
   return { manuscriptId, draftId, sectionIds: ids };
 }
 
+/**
+ * ⭐⭐ AUTHORITY COMES THROUGH THE CANONICAL BOUNDARY, NOT AROUND IT.
+ *
+ * This witness adjudicates the ASSEMBLER's read authority against a real schema.
+ * The capability is a prerequisite of reaching the assembler at all — so it is
+ * established here the way production establishes it, and never minted directly.
+ * `mintDisclosureAuthority` is the boundary's alone; a witness that called it
+ * would be proving the assembler against an authority no request could obtain.
+ *
+ * ⛔ What this deliberately does NOT re-prove: absence, mismatch, spend and
+ * evidence-set exactness. F1a-F1e and F1o hold those behaviorally. Duplicating
+ * them here would make this witness about the capability rather than about the
+ * one thing only it can prove — that the real SQL reads the right relations.
+ */
+async function disclose(
+  memberId: string, workRef: string, locus: DisclosureLocus,
+): Promise<string | null> {
+  const { requestId, disclosureId } = actIdentifiers(`focus-contract-${RUN}-${++act}`);
+  const boundary = await establishDisclosureBoundary({
+    requestId, posture: TurnPosture.resolve({ userId: memberId }), memberId,
+    sessionId: null, disclosureId,
+    boundary: 'manuscript_prose->maia_cognition',
+    sourceClass: 'work', participationBasis: 'member_invoked',
+    workRef, locus, gesture: 'ask_maia',
+  });
+  if (!mayCrossBoundary(boundary)) {
+    /* The boundary is SETUP here. If it refuses, the instrument cannot reach its
+       subject, and reporting a failed assertion would blame the assembler for the
+       harness. That distinction is the whole reason this is a hard stop. */
+    console.error(`\n⛔ THE BOUNDARY REFUSED (${boundary.kind}) — the witness never reached the assembler.\n` +
+      '   This is an instrument fault, not an assembler verdict.\n');
+    process.exit(1);
+  }
+  const content = await assembleFocus({ authority: boundary.authority, memberId, workRef, locus });
+  return content === null ? null : readDisclosed(content);
+}
+
 async function main() {
   await requireSchema();
   await seedMembers();
@@ -135,7 +195,7 @@ async function main() {
   const work = await seedWork(MEMBER, true, [DRAFT_1, DRAFT_2, DRAFT_EMOJI]);
 
   // ── the Work is the DRAFT, never the Source
-  const whole = await assembleFocus({ memberId: MEMBER, workRef: work.manuscriptId, scopeKind: 'whole_work' });
+  const whole = await disclose(MEMBER, work.manuscriptId, { scopeKind: 'whole_work' });
   w('draft differs from Source → draft wins', !!whole && whole.includes(DRAFT_1) && !whole.includes(SOURCE_1),
     `got: ${String(whole).slice(0, 80)}`);
   w('Source is never the payload', !!whole && !whole.includes('SOURCE'));
@@ -168,43 +228,45 @@ async function main() {
     `assembled ${Buffer.byteLength(String(whole), 'utf8')} bytes`);
 
   // ── section identity is DRAFT-section identity
-  const section = await assembleFocus({
-    memberId: MEMBER, workRef: work.manuscriptId, scopeKind: 'section', sectionRef: work.sectionIds[1] });
+  const section = await disclose(MEMBER, work.manuscriptId,
+    { scopeKind: 'section', sectionRef: work.sectionIds[1] });
   w('section id is draft-section identity', section === DRAFT_2, `got: ${String(section)}`);
 
   const sourceIds = await query<{ id: string }>(
     `SELECT id FROM manuscript_sections ORDER BY position`, []);
-  const bySourceId = await assembleFocus({
-    memberId: MEMBER, workRef: work.manuscriptId, scopeKind: 'section', sectionRef: sourceIds.rows[0].id });
+  const bySourceId = await disclose(MEMBER, work.manuscriptId,
+    { scopeKind: 'section', sectionRef: sourceIds.rows[0].id });
   w('a SOURCE section id is not a valid locator', bySourceId === null, `got: ${String(bySourceId)}`);
 
   // ── the addressability gate
   const unaddressable = await seedWork(MEMBER, false, [DRAFT_1]);
-  const gated = await assembleFocus({
-    memberId: MEMBER, workRef: unaddressable.manuscriptId, scopeKind: 'whole_work' });
+  const gated = await disclose(MEMBER, unaddressable.manuscriptId, { scopeKind: 'whole_work' });
   w('addressability predicate holds → un-addressable draft yields no Work', gated === null,
     `got: ${String(gated)}`);
 
   // ── ownership
-  const wrongMember = await assembleFocus({
-    memberId: OTHER, workRef: work.manuscriptId, scopeKind: 'whole_work' });
+  const wrongMember = await disclose(OTHER, work.manuscriptId, { scopeKind: 'whole_work' });
   w('wrong member → no Work', wrongMember === null, `got: ${String(wrongMember)}`);
-  const wrongMemberSection = await assembleFocus({
-    memberId: OTHER, workRef: work.manuscriptId, scopeKind: 'section', sectionRef: work.sectionIds[0] });
+  const wrongMemberSection = await disclose(OTHER, work.manuscriptId,
+    { scopeKind: 'section', sectionRef: work.sectionIds[0] });
   w('wrong member → no section, even with a real locator', wrongMemberSection === null);
 
   // ── ⭐ passage offsets in the browser's coordinate system
   const emojiText = DRAFT_EMOJI;
   const start = emojiText.indexOf('tide');           // UTF-16 code-unit offset, as a textarea reports
   const end = start + 'tide came in'.length;
-  const passage = await assembleFocus({
-    memberId: MEMBER, workRef: work.manuscriptId, scopeKind: 'passage',
-    sectionRef: work.sectionIds[2], range: { start, end } });
+  const passage = await disclose(MEMBER, work.manuscriptId,
+    { scopeKind: 'passage', sectionRef: work.sectionIds[2], range: { start, end } });
   w('emoji before selection → exact selected text', passage === 'tide came in',
     `got: ${JSON.stringify(passage)} — code-point slicing yields ${JSON.stringify([...emojiText].slice(start, end).join(''))}`);
 
-  const noLocator = await assembleFocus({
-    memberId: MEMBER, workRef: work.manuscriptId, scopeKind: 'passage', range: { start, end } });
+  /* ⭐ THE LAW MOVED UPSTREAM, SO IT IS PROVED TWICE. `DisclosureLocus` no longer
+     admits a passage without its section, and `focusCrossing` refuses to build
+     one before any authority exists. The cast asserts the assembler ALSO still
+     refuses at runtime: a type is a compile-time promise, and this witness exists
+     because compile-time promises about database reads have been wrong before. */
+  const noLocator = await disclose(MEMBER, work.manuscriptId,
+    { scopeKind: 'passage', range: { start, end } } as unknown as DisclosureLocus);
   w('passage without a locator cannot be assembled', noLocator === null);
 
   console.log(`\n${pass} passed · ${fail} failed`);
