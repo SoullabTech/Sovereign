@@ -211,20 +211,37 @@ export type StructuredOutcome =
  * partially implement this interface — it does not implement it.
  */
 /**
- * ⭐⭐ THE HANDOFF SIGNAL. Not a callback for progress or telemetry: the one
- * moment a disclosure receipt may lawfully move `attempted → crossed`.
+ * ⭐⭐ SEAM-ORIGINATED DISPATCH OBSERVATION.
  *
- *   The receipt is evidence of disclosure, not of successful inference.
- *   Response success is not disclosure evidence — handoff is.
+ *   An architectural seam may expose what happened without giving the caller
+ *   authority over what happens.
  *
- * ⛔ A PROVIDER MUST CALL IT IMMEDIATELY BEFORE DISPATCH AND NOWHERE ELSE.
- * Entering `execute` is not a handoff — a provider can still refuse, and its
- * client can still fail to construct, after that point. Signalling early would
- * record a crossing for prose that never left the process; signalling late (on
- * the response) would record no crossing for prose that did.
+ * ⛔ NOT A CALLER HOOK. This emitter is constructed by the ROUTER and handed
+ * down; no caller supplies it, and nothing passed through it can select a
+ * provider, model, mode, retry or request parameter. Information flows OUT of
+ * the seam; behaviour does not flow in.
+ *
+ * ⛔ A PROVIDER MUST EMIT IMMEDIATELY BEFORE DISPATCH AND NOWHERE ELSE. Entering
+ * `execute` is not a handoff — the client can still fail to construct and
+ * parameters can still fail to build after that point. Emitting early would
+ * record a crossing for material that never left the process; emitting on the
+ * response would record none for material that did.
  */
-export interface StructuredHooks {
-  readonly onHandoff?: () => void;
+export type DispatchObserver = () => void;
+
+/**
+ * One structured inference, observed.
+ *
+ * ⭐ ONE INVOCATION HAS AT MOST ONE PROVIDER HANDOFF. The router selects a single
+ * provider and a failure stops there — no second provider, no degraded text
+ * path — so a boolean is truthful under the architecture actually governed here.
+ * ⛔ If provider fallback or multiple dispatches per invocation are ever
+ * introduced, that work must reopen this seam rather than reinterpret `handoff`.
+ */
+export interface ObservedStructuredRun {
+  /** True when dispatch occurred; false when the run ended before it. Never rejects. */
+  readonly handoff: Promise<boolean>;
+  readonly result: Promise<StructuredOutcome>;
 }
 
 export interface StructuredProvider {
@@ -237,5 +254,10 @@ export interface StructuredProvider {
    * guarantee by saying nothing. `false` is a lawful answer; silence is not.
    */
   enforcesInputSchema: boolean;
-  execute(req: StructuredRequest, hooks?: StructuredHooks): Promise<StructuredResult>;
+  /**
+   * `observe` is supplied by the seam, never by a caller. A provider that cannot
+   * identify its own post-preflight dispatch point cannot honour the observation
+   * contract, and says so by not emitting rather than by guessing.
+   */
+  execute(req: StructuredRequest, observe?: DispatchObserver): Promise<StructuredResult>;
 }

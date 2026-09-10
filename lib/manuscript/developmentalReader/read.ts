@@ -23,7 +23,7 @@
  * identity and no row (A1). Minting identity and freezing are BUILD-07C.
  */
 
-import { runStructured } from '../../ai/structured/router';
+import { runStructuredObserved } from '../../ai/structured/router';
 import type { StructuredBlock } from '../../ai/structured/types';
 import { bindEvidence } from '../development/bind';
 import type { NonEmptyArray } from '../development/evidenceRef';
@@ -100,7 +100,7 @@ export async function readDevelopmentally(
   if (!valid.ok) return refused(valid.refusal, valid.detail, valid.index);
 
   const tool = readerTool();
-  const outcome = await runStructured({
+  const run = runStructuredObserved({
     model,
     maxTokens,
     system: READER_SYSTEM,
@@ -109,7 +109,12 @@ export async function readDevelopmentally(
     toolChoice: { type: 'any' },
     messages: [{ role: 'user', content: renderRequest(request) }],
     execution: { completion: 'long-running' },
-  }, { onHandoff: opts.onHandoff });
+  });
+      /* ⭐ The seam EMITS the observation; this reader only forwards it. Nothing
+         passed outward can steer the inference — `runStructuredObserved` takes
+         the request and nothing else. */
+  void run.handoff.then((crossed) => { if (crossed) opts.onHandoff?.(); });
+  const outcome = await run.result;
 
   if (!outcome.ok) {
     /* AIN-STRUCTURED-INFERENCE-SEAM-01 amendment, 2026-09-08. The seam gained a

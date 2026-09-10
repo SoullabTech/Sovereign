@@ -38,7 +38,8 @@
 import type { InferenceMode } from '../types';
 import { resolveStructuredMode } from './policy';
 import type {
-  StructuredOutcome, StructuredProvider, StructuredRequest, StructuredHooks,
+  DispatchObserver, ObservedStructuredRun,
+  StructuredOutcome, StructuredProvider, StructuredRequest,
 } from './types';
 
 /** Modes in which an external structured provider is authorized. */
@@ -64,13 +65,48 @@ async function defaultProvider(): Promise<StructuredProvider> {
  */
 export async function runStructured(
   req: StructuredRequest,
-  hooks?: StructuredHooks,
 ): Promise<StructuredOutcome> {
-  const policy = resolveStructuredMode();
-  if (!policy.ok) {
-    return { ok: false, refusal: policy.refusal, detail: policy.detail };
-  }
-  return route(req, policy.mode, hooks);
+  /* ⭐ ONE ARGUMENT, STILL. Observation is additive and optional; an ordinary
+     caller needs no lifecycle knowledge and gains no new obligation. */
+  return runStructuredObserved(req).result;
+}
+
+/**
+ * THE OBSERVED FORM. Same inference, same policy, same provider law — and one
+ * additional seam-originated fact the caller could not truthfully observe for
+ * itself: whether the request actually left the process.
+ *
+ *   ⛔ The caller passes nothing. `handoff` is emitted by the seam and consumed
+ *   by whoever needs it; nothing about it can steer what the seam does.
+ *
+ * ⭐ WHY THIS EXISTS AT ALL. `StructuredResult.provenance` already reports what
+ * happened, but only once a result exists. A consumer that must record the
+ * moment of dispatch — before awaiting generation, and truthfully when
+ * generation later fails — cannot be served by a post-result field.
+ *
+ * `handoff` NEVER REJECTS: it resolves true at dispatch, or false when the run
+ * ended before reaching it. A refusal, an unconstructable client, a throw in
+ * preflight — all are `false`, which is the honest answer to *did it cross?*
+ */
+export function runStructuredObserved(req: StructuredRequest): ObservedStructuredRun {
+  let signalled = false;
+  let settle!: (v: boolean) => void;
+  const handoff = new Promise<boolean>((r) => { settle = r; });
+  const observe: DispatchObserver = () => {
+    /* One-shot. A provider that emitted twice would be describing an
+       architecture this seam does not have. */
+    if (!signalled) { signalled = true; settle(true); }
+  };
+
+  const result = (async (): Promise<StructuredOutcome> => {
+    const policy = resolveStructuredMode();
+    if (!policy.ok) {
+      return { ok: false, refusal: policy.refusal, detail: policy.detail };
+    }
+    return route(req, policy.mode, observe);
+  })().finally(() => { if (!signalled) settle(false); });
+
+  return { handoff, result };
 }
 
 /**
@@ -90,7 +126,7 @@ export async function runStructured(
 async function route(
   req: StructuredRequest,
   mode: InferenceMode,
-  hooks?: StructuredHooks,
+  observe?: DispatchObserver,
 ): Promise<StructuredOutcome> {
   if (!EXTERNAL_AUTHORIZED.includes(mode)) {
     if (LOCAL_STRUCTURED_PROVIDER === null) {
@@ -103,7 +139,7 @@ async function route(
         detail: `mode=${mode}: no local provider can honour a structured contract`,
       };
     }
-    return execute(LOCAL_STRUCTURED_PROVIDER, req, hooks);
+    return execute(LOCAL_STRUCTURED_PROVIDER, req, observe);
   }
 
   let p: StructuredProvider;
@@ -112,11 +148,11 @@ async function route(
   } catch (err) {
     return { ok: false, refusal: 'not_configured', detail: String(err) };
   }
-  return execute(p, req, hooks);
+  return execute(p, req, observe);
 }
 
 async function execute(
-  provider: StructuredProvider, req: StructuredRequest, hooks?: StructuredHooks,
+  provider: StructuredProvider, req: StructuredRequest, observe?: DispatchObserver,
 ): Promise<StructuredOutcome> {
   /* BEFORE COGNITION. A caller that required provider-enforced schema
      conformance asked for a guarantee, not for a request that will probably
@@ -135,7 +171,7 @@ async function execute(
   }
 
   try {
-    return { ok: true, result: await provider.execute(req, hooks) };
+    return { ok: true, result: await provider.execute(req, observe) };
   } catch (err) {
     /* THE FAILURE STOPS HERE. No second provider, no local text path, no
        degraded template. A structured request that could not be served exactly

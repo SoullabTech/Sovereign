@@ -30,7 +30,7 @@
  */
 
 import { createHash } from 'crypto';
-import { runStructured } from '../../ai/structured/router';
+import { runStructuredObserved } from '../../ai/structured/router';
 import type { StructuredBlock, StructuredMessage } from '../../ai/structured/types';
 import type { DevelopmentalAskContext, EvidenceView } from './developmentalContext';
 import { labelsFor, type AuthorFacingLabels } from './developmentalLabels';
@@ -209,10 +209,12 @@ export async function askMaiaDevelopmental(
   try {
     /* NO `tools` KEY, and no `execution`. The field is OMITTED rather than set
        to undefined, so nothing reaches the wire for a provider to enable. */
-    const outcome = await runStructured(
-      { model, maxTokens: opts.maxTokens ?? 1200, system, messages },
-      { onHandoff: opts.onHandoff },
-    );
+      /* ⭐ The seam EMITS the observation; this reader only forwards it. Nothing
+         passed outward can steer the inference — `runStructuredObserved` takes
+         the request and nothing else. */
+      const run = runStructuredObserved({ model, maxTokens: opts.maxTokens ?? 1200, system, messages });
+    void run.handoff.then((crossed) => { if (crossed) opts.onHandoff?.(); });
+    const outcome = await run.result;
     if (!outcome.ok) return { ok: false, refusal: 'unreachable' };
     const text = outcome.result.content
       .filter((b): b is Extract<StructuredBlock, { type: 'text' }> => b.type === 'text')

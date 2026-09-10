@@ -1,6 +1,10 @@
 /**
  * F1f / F1g - THE HANDOFF MEASURES DISPATCH.
  *
+ * Against the AMENDED seam: the observer is seam-originated. These tests hand it
+ * to the provider directly because that is where the emission contract lives;
+ * no production caller passes one.
+ *
  * Together these two prove the hook is neither "entered the function" nor
  * "an answer came back". One test asserts the signal fires when the request
  * leaves and the result then fails; the other asserts it does NOT fire when the
@@ -42,7 +46,7 @@ describe('F1f - dispatch occurred, result then failed: still crossed', () => {
     const provider = anthropicStructuredProvider({ client: dispatchesThenRejects() as never });
 
     await expect(
-      provider.execute(REQ, { onHandoff: () => { handed = true; } }),
+      provider.execute(REQ, () => { handed = true; }),
     ).rejects.toThrow(/529/);
 
     // THE WORK CROSSED. A failure after dispatch does not un-send it, so a
@@ -53,7 +57,7 @@ describe('F1f - dispatch occurred, result then failed: still crossed', () => {
   it('fires exactly once on the ordinary path', async () => {
     let count = 0;
     const provider = anthropicStructuredProvider({ client: dispatchesAndAnswers() as never });
-    await provider.execute(REQ, { onHandoff: () => { count += 1; } });
+    await provider.execute(REQ, () => { count += 1; });
     expect(count).toBe(1);
   });
 });
@@ -73,7 +77,7 @@ describe('F1g - pre-handoff failure is not a crossing', () => {
     }) as StructuredRequest;
 
     await expect(
-      provider.execute(broken as never, { onHandoff: () => { handed = true; } }),
+      provider.execute(broken as never, () => { handed = true; }),
     ).rejects.toThrow();
 
     // NO SIGNAL. A receipt observing this stays `attempted`, which is true:
@@ -88,7 +92,7 @@ describe('F1g - pre-handoff failure is not a crossing', () => {
     } as never);
 
     await expect(
-      provider.execute(REQ, { onHandoff: () => { handed = true; } }),
+      provider.execute(REQ, () => { handed = true; }),
     ).rejects.toThrow(/API_KEY/);
 
     expect(handed).toBe(false);

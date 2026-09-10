@@ -10,7 +10,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { resolveStructuredMode } from '../policy';
-import { runStructured } from '../router';
+import { runStructured, runStructuredObserved } from '../router';
 import type { StructuredRequest } from '../types';
 
 const req: StructuredRequest = {
@@ -40,6 +40,35 @@ describe('structured v1 effective policy', () => {
 describe('the production API does not accept a mode', () => {
   it('runStructured takes exactly one parameter', () => {
     expect(runStructured.length).toBe(1);
+  });
+
+  /**
+   * GOVERNED AMENDMENT — the observational door, admitted deliberately.
+   *
+   * The seam may expose what happened without giving the caller authority over
+   * what happens. `runStructuredObserved` is that exposure, and it is held to the
+   * SAME arity law for the same reason: a second parameter is where a mode, a
+   * provider, a retry policy or a caller callback would eventually arrive.
+   */
+  it('runStructuredObserved takes exactly one parameter', () => {
+    expect(runStructuredObserved.length).toBe(1);
+  });
+
+  it('the observed door emits an observation and accepts no behaviour', async () => {
+    /* Structural, not cosmetic: it hands back a handoff and a result, and there
+       is nowhere in its signature for the caller to influence either. */
+    const prev = process.env.MAIA_INFERENCE_MODE;
+    process.env.MAIA_INFERENCE_MODE = 'sovereign';
+    try {
+      const run = runStructuredObserved(req);
+      // Refused before any provider — so nothing was dispatched, and the seam
+      // says so rather than leaving the observer waiting.
+      await expect(run.handoff).resolves.toBe(false);
+      expect((await run.result).ok).toBe(false);
+    } finally {
+      if (prev === undefined) delete process.env.MAIA_INFERENCE_MODE;
+      else process.env.MAIA_INFERENCE_MODE = prev;
+    }
   });
 
   it('an explicitly sovereign deployment refuses, without reaching Anthropic', async () => {
@@ -80,10 +109,16 @@ describe('the production API does not accept a mode', () => {
     const src = readFileSync(join(__dirname, '..', 'router.ts'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
-    /* Exactly two exports: the production entry point and a null constant. */
+    /* THREE governed exports, since the amendment: the production entry point,
+       its observational form, and a null constant.
+       ⭐ An exhaustive allowlist is not a ban on evolution. It means every new
+       door must itself be constitutionally admitted — this one was, and adding a
+       fourth still requires an amendment rather than a test edit. */
     const exported = [...src.matchAll(/^export\s+(?:async\s+)?(?:function|const|let|var|class)\s+(\w+)/gm)]
       .map((m) => m[1]).sort();
-    expect(exported).toEqual(['LOCAL_STRUCTURED_PROVIDER', 'runStructured']);
+    expect(exported).toEqual([
+      'LOCAL_STRUCTURED_PROVIDER', 'runStructured', 'runStructuredObserved',
+    ]);
 
     /* And no export re-surfaces one under another name. */
     expect(src).not.toMatch(/^export\s*\{/m);
@@ -94,6 +129,14 @@ describe('the production API does not accept a mode', () => {
     expect(exportedSignatures).not.toMatch(/InferenceMode/);
     expect(exportedSignatures).not.toMatch(/\bmode\b/);
     expect(exportedSignatures).not.toMatch(/StructuredProvider\s*\}/);
+
+    /* ⭐ AND THE NEWLY ADMITTED DOOR MAY NOT BECOME A POLICY SIDE-CHANNEL. The
+       observational form must not acquire a callback, hook or observer parameter:
+       information leaves the seam, behaviour does not enter it. */
+    expect(exportedSignatures).not.toMatch(/\bhooks?\b/i);
+    expect(exportedSignatures).not.toMatch(/\bcallback\b/i);
+    expect(exportedSignatures).not.toMatch(/\bobserve\b/);
+    expect(exportedSignatures).not.toMatch(/=>/);
   });
 
   it('the removed seam is gone from the code, not merely renamed', () => {

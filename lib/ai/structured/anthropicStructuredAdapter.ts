@@ -21,7 +21,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { deriveModelAgreement } from './types';
 import type { ProviderName } from '../types';
 import type {
-  StructuredBlock, StructuredHooks, StructuredProvider, StructuredRequest, StructuredResult,
+  DispatchObserver, StructuredBlock, StructuredProvider, StructuredRequest, StructuredResult,
 } from './types';
 
 /** Exported for the equivalence tests: the exact params that go up the wire. */
@@ -94,7 +94,7 @@ export function anthropicStructuredProvider(
     /* Declared, not inferred. Anthropic constrains generation to the tool schema
        when the tool asks for it, so this provider can honour the guarantee. */
     enforcesInputSchema: true,
-    async execute(req: StructuredRequest, hooks?: StructuredHooks): Promise<StructuredResult> {
+    async execute(req: StructuredRequest, observe?: DispatchObserver): Promise<StructuredResult> {
       const client = opts.client ?? new Anthropic();
       const params = toAnthropicParams(req);
       const t0 = Date.now();
@@ -110,7 +110,7 @@ export function anthropicStructuredProvider(
          those can still fail: `new Anthropic()` throws without a key, and the
          router turns that into `provider_unavailable`. Signalling at `execute`
          entry would therefore record a crossing for prose that never left. */
-      hooks?.onHandoff?.();
+      observe?.();
 
       const message = req.execution?.completion === 'long-running'
         ? await (client.messages.stream(params as never)).finalMessage()
