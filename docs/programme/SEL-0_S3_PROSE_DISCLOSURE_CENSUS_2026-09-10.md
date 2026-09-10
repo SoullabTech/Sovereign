@@ -189,6 +189,69 @@ requirementOf(ref)
 ⛔ Authorization logic does not enter `assembleDevelopmentalContext`. An
 assembler that authorizes is an assembler that can be asked to authorize.
 
+### ⭐⭐ THE FOUR RESULT STATES — ratified 2026-09-10
+
+The repair must keep these distinct. Collapsing any two is the defect wearing a
+fix's clothes.
+
+```text
+STRUCTURE_SUFFICIENT
+    no prose load · answer normally · no prose-disclosure receipt
+
+BODY_AUTHORITY_REQUIRED
+    body necessary · authority absent · no prose load
+    ⛔ and no model answer pretending completion
+
+BODY_AUTHORIZED
+    fresh authority established · prose may load · verification proceeds
+    cognition may receive authorized characters
+
+BODY_UNVERIFIABLE
+    authority EXISTED · the requested evidence cannot be faithfully recovered
+```
+
+⛔ **`COULD NOT BE VERIFIED` IS RESERVED FOR VERIFICATION FAILURE.** The path
+today has exactly one shape for absent evidence, and the cheapest possible repair
+is to route an unauthorized crossing into it. That would make these
+indistinguishable to the writer:
+
+```text
+UNAUTHORIZED   "I was not permitted to read the required prose."
+UNVERIFIABLE   "I was permitted, but could not recover or verify it."
+```
+
+⭐ *Authorization answers "may I read it?". Verification answers "is this actually
+the material I claim it is?". Neither substitutes for the other, and a system
+that reports one as the other has told the member something false about their own
+boundary.*
+
+⛔ **AND SILENT DEGRADATION IS PROHIBITED.** If `requirementOf` says body is
+required, answering anyway from the observation alone hollows out the word
+*required*. The absence of prose must change the RESULT, not merely the quality
+of the answer.
+
+### What the writer experiences — ruled
+
+Not an error page. Not a trip to Focus. Not a mysterious refusal.
+
+```text
+writer asks
+    ↓
+MAIA discovers prose is actually needed
+    ↓
+MAIA names the boundary, in place, in WRITE
+    "I need to read the relevant passage to answer that faithfully."
+    ↓
+the native one-act disclosure gesture for THIS question / THIS crossing
+    ↓
+writer permits it, or declines and Ask ends there — nothing loads
+    ↓
+the writer never leaves the Work
+```
+
+⛔ No generic permission system. No Focus destination. No reusable session
+authority. The gesture is scoped to the crossing that provoked it.
+
 ### Falsifiers (ratified, not yet built)
 
 Each must be shown **red against the known S3 behaviour** and **green against the
@@ -196,7 +259,12 @@ repair** — a regression test is evidence only if the defective implementation
 fails it.
 
 ```text
-F1  body required + no authority     → loadRevisionContent NEVER runs
+F1  body required + no authority
+      · loadRevisionContent is never called
+      · authored characters never enter cognition
+      · the result is BODY_AUTHORITY_REQUIRED
+      · ⛔ it cannot masquerade as evidence-recovery failure
+      · no completed-crossing receipt is created
 F2  structure / heading evidence     → prose never loads; no prose receipt minted
 F3  fresh lawful authority           → body may load; characters may cross
 F4  old receipt present              → cannot authorize a NEW load
@@ -248,5 +316,8 @@ REMEDIATION              AUTHORIZED — separate Class B lane, canonical subject
 AUTHORITY                MUST precede the first prose load
 ASSEMBLER                REMAINS PURE
 RECEIPT                  evidence of a completed crossing, never reusable authority
+F1 MEMBER EXPERIENCE     in-place AUTHORITY REQUIRED · never leaves the Work
+SILENT DEGRADATION       PROHIBITED
+COULD NOT BE VERIFIED    RESERVED for verification failure
 FIXES IN THIS ACT        NONE
 ```
