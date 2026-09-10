@@ -2997,6 +2997,32 @@ UNRESOLVED / DEPENDS ON MISSING AUTHORITY
 ⛔ **So that the remaining ~60 files can actually CHANGE our classification rather
 than merely supply quotations for conclusions already reached.**
 
+## 3t. Adjacent research lane — `JARVIS-DEVELOPMENTAL-RECOGNITION-RESEARCH-01`
+
+**Founder act, 2026-09-10.** Record:
+`docs/programme/JARVIS-DEVELOPMENTAL-RECOGNITION-RESEARCH-01_2026-09-10.md`.
+
+> **Assertion disciplines MAIA. Recognition develops the member. Relationship
+> mediates between them.** ⭐ They require **different directions of authority** —
+> so AIN must not "balance" them by making MAIA equally good at both.
+
+⛔ **Deliberately NOT part of SD-00B**, so that census stays clean enough to
+discover what canon already says. ⛔ **No implementation standing.** ⛔ **Nothing
+in it is a lane finding**, and its external sources were **not read in this
+session.**
+
+Two formulations from it bear directly on this charter, recorded as **candidate**:
+
+```text
+⭐⭐⭐ MEMBER SOVEREIGNTY DOES NOT MEAN MEMBER OMNISCIENCE.
+      MAIA MAY LEAD ATTENTION. SHE MAY NOT LEAD MEANING.
+```
+
+⭐ And one external literature is GF-8's empirical cousin: **Self-Determination
+Theory's introjection** — something internalized but not owned, which *looks like*
+integration from outside. That is GF-8's discriminator with a mature literature
+behind it.
+
 ## 4. The process under test — frozen as amended
 
 Nouns are shorthand for verbs throughout. Under SP-FR-01 the verb is the
@@ -4170,6 +4196,32 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   IN CANON · DOMAIN EXTENSION · NEW DOCTRINE · UNRESOLVED/MISSING AUTHORITY, **so
   the remaining ~60 files can change classifications rather than supply quotations
   for conclusions already reached.**
+- **2026-09-10 · ADJACENT LANE OPENED (founder act)** —
+  `JARVIS-DEVELOPMENTAL-RECOGNITION-RESEARCH-01`, external research record, ⛔ **no
+  implementation standing, deliberately NOT part of SD-00B.** Central finding:
+  **assertion disciplines MAIA · recognition develops the member · relationship
+  mediates** — *different directions of authority, so do not "balance" them by
+  making MAIA equally good at both.* ⭐⭐⭐ **Member sovereignty does not mean member
+  omniscience — MAIA may LEAD ATTENTION, she may not LEAD MEANING.** Candidate
+  doctrine **Developmental Recognition**: *agreement with MAIA's interpretation is
+  not itself evidence of recognition*; significance rises with **translation ·
+  modification/rejection · unprompted recognition · transfer across contexts ·
+  greater freedom inside the process · distinctions that revise the map.**
+  ⭐ **SDT's introjection is GF-8's empirical cousin** (internalized but not owned,
+  indistinguishable from integration from outside). ⭐ **Recognition needs
+  different evidence from agreement** — six evidentiary classes, the strongest
+  being *noticing before MAIA introduces it · spontaneous recognition in another
+  context · a distinction that exceeds the map.* ⚠️ **Self-interpretation ≠
+  phenomenological noticing** (*"I always avoid conflict"* vs *"my chest tightened
+  and I immediately explained it away"*) — and SD-01 must check whether
+  `explicit_statement` distinguishes them. ⭐ **Intentional friction may be
+  developmentally necessary** — *smooth UX and developmental UX are not the same*;
+  forcing functions reduce overreliance and **users like them less**, a trade-off
+  AIN's first non-negotiable has **already decided**. ⚠️ **`Healthy Disappearance`
+  has external support (scaffolding withdrawal) while its internal authority stays
+  UNRESOLVED** — the clean question is *is MAIA doing less because the member can
+  now do more?* ⛔ No finding, no schema, no protocol; sources named by the founder
+  and **not read in this session.**
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**
