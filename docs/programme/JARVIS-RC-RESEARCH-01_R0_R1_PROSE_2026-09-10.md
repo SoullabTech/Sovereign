@@ -384,3 +384,163 @@ implementation            NOT AUTHORIZED
 dependency changes        NOT AUTHORIZED
 PRODUCTION                UNTOUCHED
 ```
+
+---
+
+# Addendum 2 — R1 READ · Sundial
+
+```
+Sundial   github.com/sundial-org/sundial-desktop
+          74ddb42f9430ff8c7bb83e18137b009760bc7d9a
+          2026-09-02T21:38:10-07:00 · Apache-2.0
+          Next.js + Yjs CRDT · read only, NOT run (per founder ruling)
+```
+
+Question this pass was run against: **how is `conversation turn → exact edit →
+human decision` preserved while the document keeps changing?**
+
+## ⭐⭐ S-2 — THE FINDING THAT SHOULD CHANGE OUR SHAPE
+
+The whole diff payload is **keyed by the assistant message**:
+
+```ts
+TurnEditsResponse = {
+  assistantMessageId: string      // the primary addressing key
+  files: TurnEditFile[]
+  acceptedFrom?: AcceptedSuggestion | null
+}
+```
+
+Edits are fetched, cached, kept and undone **by `assistantMessageId`**. And Prose
+does the same thing independently: `provenanceMessageId` alongside
+`provenanceConversationId`.
+
+⚠️ **Ours is thread-level, not turn-level.** `manuscript_revision_proposals.thread_id`
+answers *which conversation*, and cannot answer *which turn*. In a thread where the
+writer asks three times for successively subtler versions — **exactly the loop the
+founder described as the powerful one** — `thread_id` cannot distinguish P1 from P2
+from P3's origin.
+
+⭐ **Two independent implementations both key on the message, not the thread.**
+Recommendation: add `thread_message_id` beside `thread_id` in R1, while the table is
+still unwritten. ⛔ Not a decision — but it is far cheaper now than after rows exist,
+and §7's rule (persist the full shape so R2 needs no backfill) applies.
+
+## 🔴 S-1 — REFUSE · applied-vs-pending is decided PER FILE, by policy, not by the member
+
+```ts
+/** How THIS file's edits landed — 'suggest' files are pending action items
+ *  (accept/discard); 'edit' files are already applied (revertable). Decided
+ *  per file, not per turn (a suggest turn can hold forced-direct rows). */
+editMode?: 'edit' | 'suggest'
+```
+
+The verbs elsewhere are **Keep / Undo**, not Accept / Reject — because the edit has
+often *already landed* and the human decision is whether to retain it.
+
+⛔ **A "suggest" turn can contain forced-direct rows that already applied.** The
+writer, having made one request, cannot know from the request whether the Work
+changed. That is the precise inversion of RC-07:
+
+```
+SUNDIAL    default applied; the human decides whether to KEEP
+SOULLAB    default not applied; only the writer's explicit act changes the Work
+```
+
+**REFUSE the model.** This is the single largest authority divergence found in the
+census, and it is invisible from the README.
+
+## 🔴 S-7 — REFUSE · a missing decision defaults to *accepted*
+
+```ts
+/** How the review landed. Omitted on older payloads — treat as 'accepted'. */
+decision?: 'accepted' | 'rejected'
+```
+
+⭐ **This is a live specimen of the defect our attribution-grain discriminator was
+designed to prevent.** A schema that grew a decision field later must now guess what
+older rows meant — and it guesses toward the *more permissive* value. Under RC-02
+absence must be **representable, not inferred**, and never inferred toward the
+reading that claims more.
+
+Direct validation of the `attribution_grain` field and of §7's "persist the full
+shape now" rule.
+
+## ⭐⭐ S-3 — LEARN FROM · they had to migrate chunk identity, and are carrying the scar
+
+```
+legacyId?: string
+  the pre-content-hash POSITIONAL id (`chunk-<n>-<oldStart>-<newStart>-…`).
+  Decision replay matches it too, so decisions recorded before the id format
+  changed keep resolving — "for chunks whose positions haven't since shifted,
+  the only ones the old positional scheme matched anyway". Transitional.
+```
+
+⭐ **A lived demonstration of RC-06b.** Positional identity does not survive the
+document changing; once *decisions* are recorded against it, the identity scheme
+cannot be replaced cleanly — only carried, with a caveat that it works precisely
+where it was never broken.
+
+We chose `(id, revision, digest)` before any row exists. **This is what the
+alternative costs.**
+
+## ⭐ S-4 — ADAPT · decisions are events, replayed; not decorations
+
+`diff.chunk_kept` / `diff.chunk_undone` are recorded events, and review state is
+reconstructed by **replaying decisions against chunk ids**. That is A-3 done right,
+in an independent codebase: history is durable truth, the rendered chunk is
+projection.
+
+## ⭐ S-6 — LEARN FROM · un-reviewability is represented, never hidden
+
+Oversized files surface *"with `chunks: []` and a size-only notice — instead of
+vanishing silently."* Binary blobs are *"chunkless and not reviewable"*, synthesized
+from an attributed lifecycle event.
+
+Our named-refusal discipline, arrived at independently, and the direct analogue of
+`unmeasured`: **the honest answer to "I cannot review this" is a represented state,
+not an absence.**
+
+## S-5 — note · canonicalization precedes diffing
+
+`canonicalizeContentText` strips NUL and canonicalizes markdown before diffing.
+Fine as a *display* input. ⛔ Caution for us: if we ever canonicalize for rendering,
+the canonical form must never become the **identity** — our digests are over the
+frozen text as authored.
+
+## S-8 — ADAPT · scope restriction on the review surface
+
+`restrictToPaths` exists so a scoped Review panel *"can't show or act on files
+outside the scope"* — the cache still holds the full turn; only the view and its
+bulk actions are constrained. Close cousin of our section-scoped receipts.
+
+⚠️ But `Keep all` / `Undo all` remain, so **A-5 stands**: bulk verbs recur in every
+system examined.
+
+## Verdicts · Sundial
+
+```
+ADAPT        edit addressed by the assistant message  -> S-2, change our shape
+ADAPT        decisions as replayed events             -> S-4
+ADAPT        scope restriction on the review surface  -> S-8
+LEARN FROM   positional identity migration scar       -> S-3, validates RC-06b
+LEARN FROM   represented un-reviewability             -> S-6
+REFUSE       per-file applied-vs-pending by policy    -> S-1
+REFUSE       missing decision defaults to accepted    -> S-7
+REFUSE       Keep all / Undo all                      -> A-5
+```
+
+## Standing
+
+```
+R1 SUNDIAL SOURCE       DONE (read only; not run, per ruling)
+R2 SUNDIAL ARCHAEOLOGY  NOT STARTED
+R1 remaining            codemirror-ai · prosemirror-suggestion-mode ·
+                        @codemirror/merge · jsdiff · FineEdit · CoEdIT
+
+OPEN QUESTION FOR FOUNDER
+  add `thread_message_id` to the R1 proposal table now?  (S-2)
+
+implementation          NOT AUTHORIZED
+PRODUCTION              UNTOUCHED
+```
