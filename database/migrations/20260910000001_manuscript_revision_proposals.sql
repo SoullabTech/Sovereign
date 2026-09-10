@@ -51,6 +51,29 @@
 --     only NULLs into all three, so no row can be admitted that the future FK
 --     would reject.
 --
+--   - RC-08 — THE PRODUCER TURN, NOT MERELY THE CONVERSATION. `thread_id` alone
+--     answers "which conversation"; it cannot answer "which act of MAIA". In the
+--     loop this lane exists to serve -- ask, "too strong", ask again -- one
+--     thread holds P1, P2, P3 with no way to tell which turn produced which.
+--     `(thread_id, produced_in_turn_index)` references `ask_turns` by its own
+--     PRIMARY KEY, so no second identity vocabulary is invented: the
+--     conversation substrate is already append-only and already numbers its
+--     turns. Several proposals MAY share one producer turn; their ids
+--     distinguish them.
+--
+--   - ⚠️ FREEZING AND `ON DELETE SET NULL` ARE IN DIRECT CONFLICT, AND THE NAIVE
+--     COMBINATION WOULD MAKE IMMUTABILITY DEFEAT MEMBER ERASURE. `ON DELETE SET
+--     NULL` performs an UPDATE; a trigger that refuses every change to the
+--     producer reference would therefore REFUSE THE THREAD DELETION ITSELF.
+--     The rule is not "never changes" but MONOTONIC SEVERANCE:
+--       value -> NULL              ALLOWED   the member deleted the thread;
+--                                            lineage is severed, not ghosted
+--       NULL -> value              REFUSED   a proposal cannot acquire an
+--                                            origin it never had
+--       value -> different value   REFUSED   a proposal cannot be reassigned
+--                                            to a different act of MAIA
+--     `thread_id` obeys the same rule, for the same reason.
+--
 --   - NO AUTHORITY IS CONFERRED. A row here grants no may_cross, no
 --     body-reading permission, no consent, no application authority and no
 --     standing permission to MAIA. The S3 disclosure that licensed the reading
@@ -71,9 +94,18 @@ CREATE TABLE IF NOT EXISTS manuscript_revision_proposals (
   section_id uuid NOT NULL REFERENCES manuscript_draft_sections(id) ON DELETE CASCADE,
   member_id uuid NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
 
-  -- The conversation it arose in. Nullable: a proposal outlives the thread's
-  -- deletion as a historical fact, but is never orphaned from its Work.
-  thread_id uuid REFERENCES ask_threads(id) ON DELETE SET NULL,
+  -- The exact MAIA turn that produced this proposal (RC-08). Nullable together:
+  -- a proposal outlives the thread's deletion as a historical fact, but is never
+  -- orphaned from its Work.
+  --
+  -- ⛔ `thread_id` deliberately carries NO independent FK to `ask_threads`. Two
+  -- FK actions on the same column is a way for a row to satisfy one and violate
+  -- the other. Integrity is transitive instead: the composite FK guarantees the
+  -- TURN exists, and `ask_turns.thread_id` already guarantees the thread does.
+  -- A proposal claiming conversational origin points at an actual turn, not
+  -- merely at an existing thread.
+  thread_id uuid,
+  produced_in_turn_index integer CHECK (produced_in_turn_index >= 0),
 
   created_at timestamptz NOT NULL DEFAULT now(),
 
@@ -123,13 +155,21 @@ CREATE TABLE IF NOT EXISTS manuscript_revision_proposals (
 
   -- origin is not a label that can disagree with the reference it describes.
   CONSTRAINT manuscript_revision_proposals_candidate_origin_agrees
-    CHECK ((origin = 'candidate') = (derived_from_candidate_id IS NOT NULL))
+    CHECK ((origin = 'candidate') = (derived_from_candidate_id IS NOT NULL)),
+
+  -- A thread without a turn names no act; a turn without a thread names nothing.
+  CONSTRAINT manuscript_revision_proposals_producer_turn_complete
+    CHECK ((thread_id IS NULL) = (produced_in_turn_index IS NULL)),
+
+  CONSTRAINT manuscript_revision_proposals_producer_turn_fk
+    FOREIGN KEY (thread_id, produced_in_turn_index)
+    REFERENCES ask_turns(thread_id, turn_index) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_manuscript_revision_proposals_section
   ON manuscript_revision_proposals(section_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_manuscript_revision_proposals_thread
-  ON manuscript_revision_proposals(thread_id, created_at DESC);
+  ON manuscript_revision_proposals(thread_id, produced_in_turn_index, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_manuscript_revision_proposals_draft
   ON manuscript_revision_proposals(draft_id, created_at DESC);
 
@@ -158,6 +198,23 @@ BEGIN
       'revision proposal % is immutable in what was proposed and what it was proposed from: what the system proposed cannot be revised after the fact',
       OLD.id;
   END IF;
+
+  /* RC-08 producer turn: MONOTONIC SEVERANCE, not immutability.
+     Severing to NULL is how a member's thread deletion reaches this row, and a
+     rule that refused it would make this table block the deletion. Acquiring or
+     changing a producer turn is refused: a proposal cannot gain an origin it
+     never had, nor be reassigned to a different act of MAIA. */
+  IF (OLD.thread_id IS NOT NULL AND NEW.thread_id IS NOT NULL
+       AND NEW.thread_id IS DISTINCT FROM OLD.thread_id)
+     OR (OLD.produced_in_turn_index IS NOT NULL AND NEW.produced_in_turn_index IS NOT NULL
+       AND NEW.produced_in_turn_index IS DISTINCT FROM OLD.produced_in_turn_index)
+     OR (OLD.thread_id IS NULL AND NEW.thread_id IS NOT NULL)
+     OR (OLD.produced_in_turn_index IS NULL AND NEW.produced_in_turn_index IS NOT NULL) THEN
+    RAISE EXCEPTION
+      'revision proposal % cannot be reassigned to a different producer turn; a producer turn may only be severed (RC-08)',
+      OLD.id;
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -180,6 +237,8 @@ COMMENT ON COLUMN manuscript_revision_proposals.origin IS
   'work = proposed against the Work under S3 disclosure. candidate = proposed against the writer''s own candidate (RC-04); R1 produces only work.';
 COMMENT ON COLUMN manuscript_revision_proposals.derived_from_candidate_id IS
   'RC-06b. With _revision and _digest, identifies the exact candidate revision MAIA saw. NULL for origin=work. Composite FK to revision_candidate_revisions lands with R2.';
+COMMENT ON COLUMN manuscript_revision_proposals.produced_in_turn_index IS
+  'RC-08. With thread_id, the exact MAIA turn that produced this proposal, referencing ask_turns by its own primary key. May only be severed to NULL, never reassigned.';
 COMMENT ON COLUMN manuscript_revision_proposals.declined_at IS
   'The writer said no. NOT frozen. Rejection is a recorded act, not an absence (RC-03).';
 

@@ -373,6 +373,93 @@ silently settle them, and implementation beyond R1 is not generally authorized.*
 
 ---
 
+## RC-08 — Proposal ↔ exact conversation turn
+
+**Ruled 2026-09-10**, on finding S-2 of `JARVIS-RC-RESEARCH-01` (Sundial keys its
+diff payload by `assistantMessageId`; Prose independently carries
+`provenanceMessageId`).
+
+> ⭐ **Every proposal produced in a developmental conversation must identify the
+> exact MAIA turn in which it was produced. Conversation identity alone is
+> insufficient provenance.**
+
+⛔ **`thread_message_id` REFUSED — it would duplicate identity.** `ask_turns` is
+already append-only and already keyed `PRIMARY KEY (thread_id, turn_index)`;
+`appendTurn()` returns that index. Inventing a second UUID vocabulary adds a
+second thing to keep true.
+
+```
+thread_id + produced_in_turn_index  ->  ask_turns(thread_id, turn_index)
+```
+
+```
+Author: "tighten this"          MAIA turn 4  -> P1
+Author: "too strong"            MAIA turn 6  -> P2, P3, P4
+Author: "P3, but less polished" MAIA turn 8  -> P5
+```
+
+Several proposals MAY share one producer turn; their ids distinguish them. What is
+gained is a permanent answer to **which exact act of MAIA produced this proposal** —
+which `thread_id` alone can never give.
+
+### Required shape (amended into the unapplied R1 migration, not a later one)
+
+```
+produced_in_turn_index integer CHECK (>= 0)
+(thread_id, produced_in_turn_index)   both NULL or both present
+FOREIGN KEY (thread_id, produced_in_turn_index)
+  REFERENCES ask_turns(thread_id, turn_index) ON DELETE SET NULL
+```
+
+⛔ **`thread_id`'s independent FK to `ask_threads` is REMOVED, not kept alongside.**
+Two FK actions on one column is a way for a row to satisfy one and violate the
+other. Integrity is transitive: the composite FK guarantees the turn exists, and
+`ask_turns.thread_id` already guarantees the thread does. *A proposal claiming
+conversational origin should point to an actual turn, not merely an existing
+thread.*
+
+Deletion principle preserved: member deletes thread → turns cascade away →
+**proposal survives**, `thread_id` and `produced_in_turn_index` become NULL.
+Lineage is **severed rather than ghosted.**
+
+### ⚠️ IMPLEMENTATION FINDING — freezing and `ON DELETE SET NULL` are in direct conflict
+
+The ruling asks for the producer turn to be frozen. **Taken literally that would
+have made this table refuse thread deletion**, because `ON DELETE SET NULL`
+performs an UPDATE and the freeze trigger would raise on it — immutability
+defeating member erasure, the exact failure RC-06b warns against.
+
+⭐ **The rule is therefore MONOTONIC SEVERANCE, not immutability:**
+
+```
+value -> NULL              ALLOWED   the member deleted the thread
+NULL  -> value             REFUSED   a proposal cannot acquire an origin
+                                     it never had
+value -> different value   REFUSED   a proposal cannot be reassigned to a
+                                     different act of MAIA
+```
+
+This satisfies the ruling's intent exactly — *reassignment* is what must be
+impossible, and severance is what deletion legitimately does.
+
+### Write boundary, when generation lands
+
+```
+BEGIN
+  append MAIA turn  -> obtain turn_index
+  insert P1 referencing that exact turn
+COMMIT
+```
+
+If either fails, neither becomes historical fact. Otherwise the conversation can
+say something was proposed while no proposal exists, or the inverse.
+
+⛔ **`requested_by_turn_index` NOT added.** The producing turn answers the finding.
+If branching or non-linear replies arrive, an explicit `in_response_to` relation is
+additive then — **not a conversation graph prebuilt today.**
+
+---
+
 ## RC-07 — The capability rule (product)
 
 **Ruled 2026-09-10, on a live Develop-room transcript.** The writer asked *"Do we
@@ -538,6 +625,8 @@ RC-06b candidate identity   RATIFIED — append-only revisions,
                             identity = id + revision + digest,
                             pairing enforced by composite FK
 RC-07 capability rule       RATIFIED
+RC-08 exact producer turn   RATIFIED — amended into the unapplied migration
+                            monotonic severance, not immutability
 R1 proposal migration       UNBLOCKED
 constitutional rule         RATIFIED
 DESIGN                      RECORDED
