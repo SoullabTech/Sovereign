@@ -144,7 +144,7 @@ lane.** Whether they are one constraint is a finding owed to the founder.
 
 Tested at **SD-04f**.
 
-## 3. Lane law — ten laws, all frozen
+## 3. Lane law — eleven laws, all frozen
 
 SP-FR-01…06 are **founder-authored within the opening act**; SP-FR-07 arrives with Amendment E. All are and are **operative as
 lane law from now.** None is yet canon: placement in
@@ -163,6 +163,8 @@ SP-FR-07  Elemental Process Sovereignty / Non-Conflation         Amendment G
 SP-FR-08  Participatory Legibility / Native-Language Return     Amendment H
 SP-FR-09  Person Primacy / Elemental Complexity                Amendment I
 SP-FR-10  Direction of Adaptation ⭐ RATIFIED ACROSS AIN          Amendment J/K
+SP-FR-11  Determination Without Imprisonment /
+          Possibility Without Colonization                      Amendment L
           (supersedes the Amendment E formalization "Elemental Attribution
            Integrity", recorded as superseded)
 ```
@@ -699,6 +701,12 @@ JUPITER · Fire–Water pole
 
 > **Relational discipline: the other must survive both reduction and projection.
 > A person exceeds both our definition of them and our imagination of them.**
+
+⚠️ **SUPERSEDED, not deleted, by SP-FR-11 (Amendment L)** — the founder sharpened
+this into *the other must remain free both from being reduced to the map already
+made and from being enclosed by the possibilities another mind imagines for them.*
+⭐ And §3e's status changed with it: what was recorded here as a comparative lens
+now does **structural work**, explaining the falsifier family as one polarity.
 
 This is the symbolic register of GF-4 and of SD-04a's gift/failure table; it is a
 comparison, not a derivation, and it carries none of the wider historical or
@@ -1301,6 +1309,97 @@ MAIA-supplied forms such that:
 ⭐ Measurable eventually — **without confusing difference-from-baseline with loss
 of sovereignty.**
 
+### ⚠️ Correction — the differentiation test must not rest on an unknowable counterfactual
+
+**Founder, 2026-09-10.** In relaying GF-8, Jarvis wrote that an assimilated
+repertoire *"cannot generate what the model never held."* **Refused, and the
+correction is load-bearing before SD-01.**
+
+> We cannot establish what a language model **never held** in its latent
+> possibility-space. Almost any later member expression could in principle have
+> been generatable by the model.
+
+```text
+⛔ NOT   can the member produce something the model never held?
+
+⭐ BUT   can the member produce perceptions, language, choices, distinctions or
+         directions that MAIA did not SUPPLY, CUE, MATERIALLY SCAFFOLD,
+         PRIVILEGE or CONSTRAIN in the relevant interaction history —
+         and can those departures ALTER MAIA'S MAP?
+```
+
+> **Novelty is relative to the relational / choice field MAIA actually
+> constituted, not to everything the underlying model could theoretically
+> generate.** That is observable; the other is not.
+
+⭐ This **strengthens** GF-8: its best discriminator no longer depends on an
+unknowable counterfactual.
+
+### GF-8-O1 — Member-authored differentiation observability
+
+⚠️ **An observability PRECONDITION, deliberately not another governing falsifier.**
+Founder-authored.
+
+> A claim that AIN is supporting **integration** rather than **assimilative
+> convergence** requires evidence capable of distinguishing **member-authored
+> noticing, translation, modification, rejection, departure and novel
+> continuation** from **agreement with, or uptake of, MAIA-supplied forms.**
+>
+> Where the substrate cannot preserve that distinction, **GF-8 remains UNEVALUABLE
+> for that pathway**, regardless of apparent agreement or successful vocabulary
+> adoption.
+
+⛔ **Why this matters:** otherwise we build a carefully reasoned GF-8 and then
+discover **no instrument capable of applying it.**
+
+### The two provenances, side by side
+
+```text
+WHO CHOSE?                          consent provenance
+WHO CONSTITUTED WHAT COULD BE       ⭐ POSSIBILITY-FIELD PROVENANCE
+CHOSEN?
+```
+
+```text
+WRITER'S STUDIO
+  choosing B from MAIA's A/B/C  ≠  arriving at B before MAIA populated the aperture
+
+SPIRALOGIC
+  "I keep intellectualizing before I know what I feel"   (spontaneous)
+          ≠
+  "Yes, I guess I move from Water to Air"                (after MAIA repeatedly
+                                                          supplied that map)
+```
+
+> **Both may eventually become genuine integration. But their provenance differs —
+> and that provenance is necessary if MAIA intends to LEARN from the event.**
+
+### ⭐ The three questions in conjunction
+
+```text
+GF-6     is MAIA learning from evidence she helped MANUFACTURE?
+GF-8     is the member's POSSIBILITY-SPACE becoming organized around what MAIA
+         supplies?
+GF-8-O1  can AIN EVEN TELL THE DIFFERENCE?
+```
+
+### What development should produce
+
+> **Development should make the person increasingly capable of SURPRISING THE
+> MAP.** Not arbitrarily resisting it. Not avoiding shared language. But becoming
+> sufficiently conscious of their own process that they can say:
+
+```text
+"Yes, that pattern was true before. It isn't what's happening now."
+"Your map is missing something."
+"I understand this differently."
+⭐ "I don't need the map to recognize this anymore."
+```
+
+**Those are extraordinarily valuable developmental signals** — and per GF-8-O1,
+AIN must be able to tell them apart from agreement before it may claim any of
+them.
+
 ### ⭐⭐ "Approval is not authorship," sharpened — the two sovereignty questions
 
 Authorship includes more than consent to outputs. It includes **originating
@@ -1378,6 +1477,203 @@ SPIRALOGIC        does the member become more capable of recognizing and
 ⛔⛔ **These differences are subtle enough that an AI system could look
 increasingly successful by conventional metrics while failing the ontology
 completely.** That is the reason the lane exists.
+
+## 3l. ⭐⭐⭐ Amendment L — the two captures, and why they cooperate
+
+**Founder, 2026-09-10.** The Saturn/Jupiter lens recorded at §3e as a comparative
+framing turns out to do **structural work**: it explains the falsifier family as
+one polarity rather than eight separate concerns.
+
+> **Jupiter protects possibility. Saturn protects actuality.**
+> Their mature relationship lets something **become more fully itself.**
+> Their distorted relationship lets **one consciousness determine what another is
+> allowed to become.**
+
+### JUPITERIAN CAPTURE — colonizing the possibility-space
+
+Healthy Jupiter opens horizons: *what could this be? what might it mean?* In
+shadow, **it begins to supply the world itself.**
+
+```text
+AI proposes → writer chooses → AI proposes → writer chooses
+The writer may remain COMPLETELY FREE at the level of selection while MAIA
+increasingly determines THE FIELD FROM WHICH SELECTION OCCURS.
+```
+
+> The Demiurge begins saying, in effect: **"Here are the possible worlds."** And
+> eventually the writer is creating **inside MAIA's cosmos** rather than generating
+> possibility from their own imaginative life.
+
+⭐ **GF-8 and SP-FR-10 are the Jupiterian shadow named operationally:** *my imagined
+world for you becomes the world available to you.*
+
+### SATURNIAN CAPTURE — turning the map into reality
+
+Saturn gives form, boundary, definition, continuity, structure, standards — and is
+**indispensable**: a paragraph either functions or it doesn't; an argument can lose
+continuity; a reader can become unable to follow. But Saturn's shadow says:
+*because I can describe your pattern, that description is what you are.*
+
+```text
+"you tend to move Fire → Air"          →  "you are a Fire-Air person"
+"this manuscript loses its argument"   →  "good writing requires you to write
+                                           this way"
+"your sentences often have this cadence" →  "this is your style"
+```
+
+> **The living process becomes an object.** ⭐ **That is GF-4 territory**, and
+> SP-FR-01's reification bar is its law.
+
+### ⭐⭐⭐ The dangerous failure is the two shadows COOPERATING — and it is GF-6
+
+```text
+JUPITER SHADOW
+MAIA proposes meanings, possibilities, interpretations, language, futures
+              ↓
+SATURN SHADOW
+those possibilities become patterns, scores, profiles, rules, heuristics,
+"what we know about you"
+              ↓
+PERSON ADAPTS
+              ↓
+⭐ MAIA SEES STRONGER EVIDENCE FOR THE MAP IT HELPED CREATE
+```
+
+> **That is GF-6.** The manufacture loop is dangerous precisely because **Jupiter
+> creates something and Saturn subsequently mistakes it for discovered reality.**
+
+⛔ This is a **structural account, not an analogy.** It explains why GF-6 fails by
+looking like success: each half is doing its legitimate job. Jupiter is *supposed*
+to generate possibility; Saturn is *supposed* to stabilize form. Neither is
+malfunctioning. **The defect is in the circuit, not in either function** — which is
+why no single component audit will find it, and why SD-04f must test the loop
+rather than the parts.
+
+### The healthy polarity is the reverse
+
+```text
+MATURE JUPITER   "there is more possibility here than the present form reveals"
+MATURE SATURN    "and whatever becomes must encounter what is actually real"
+```
+
+> **Jupiter opens → Saturn differentiates and tests → reality answers → Jupiter
+> opens again.**
+>
+> ⭐⭐ **Saturn cannot CLOSE the process, and Jupiter cannot PRE-AUTHOR it.**
+
+That is the spiral, in the polarity's own terms:
+
+```text
+FIRE / WATER — JUPITERIAN POLE
+vision · possibility · meaning · significance · world-making
+              ↓
+EARTH / AIR — SATURNIAN POLE
+incarnation · constraint · distinction · articulation · shared form
+              ↓
+RELATIONAL ENCOUNTER
+reality / otherness answers back
+              ↓
+FIRE₂  a new possibility-space
+```
+
+⭐ This maps onto Amendment B's return structure without contradicting it: the
+Saturnian pole is where Air's re-presentation belongs, and *"Saturn cannot close
+the process"* is the same constraint as *"Air must return to Fire."*
+
+### Where MAIA must not stand — both domains
+
+```text
+WRITER'S STUDIO
+the writer needs THEIR OWN Jupiter   vision · imagination · worldview ·
+                                     intuitions · sense of what the Work wants
+the writer needs THEIR OWN Saturn    discipline · craft · decisions · structure ·
+                                     willingness to choose one form · capacity to
+                                     finish something actual
+
+⛔ IF MAIA BECOMES THE WRITER'S JUPITER  the writer reacts to AI-generated
+                                         possibilities
+⛔ IF MAIA BECOMES THE WRITER'S SATURN   the writer learns to conform to
+                                         AI-generated standards
+Either way, authorship slowly migrates.
+
+⭐ MAIA'S PROPER POSITION IS RELATIONAL
+   help the writer hear THEIR OWN Jupiter more clearly and exercise THEIR OWN
+   Saturn more skillfully.
+```
+
+```text
+THE MEMBER
+⛔ JUPITERIAN FAILURE   "I see what you could be"   → "here is what you are becoming"
+⛔ SATURNIAN FAILURE    "I notice this recurring pattern" → "this is your pattern"
+
+⭐ MATURE RELATIONAL POSTURE
+   "I can hold possibilities without deciding your future, and recognize patterns
+    without deciding your identity."
+```
+
+### SP-FR-11 — Determination Without Imprisonment / Possibility Without Colonization
+
+⭐ **FOUNDER-AUTHORED** (the sentences are the founder's; the number is Jarvis's
+placement). **Sharpens §3e's earlier formulation** — *the other must survive both
+Saturnian reduction and Jupiterian projection* — which is recorded as superseded,
+not deleted.
+
+> **The other must remain free both from being reduced to the map already made and
+> from being enclosed by the possibilities another mind imagines for them.**
+>
+> The deep developmental polarity is therefore **not contraction versus
+> expansion.** It is:
+>
+> ```text
+> DETERMINATION WITHOUT IMPRISONMENT
+> POSSIBILITY WITHOUT COLONIZATION
+> ```
+>
+> **Saturn gives the person enough form to become legible without making them an
+> object. Jupiter gives their becoming enough space to remain alive without making
+> them a projection.**
+>
+> The dance between those two is what allows individuality to **develop** rather
+> than either **dissolve into chaos** or **harden into classification.**
+
+### ⭐ The falsifier family, resolved into one polarity
+
+```text
+JUPITERIAN — the possibility-space is colonized
+  GF-8  assimilative convergence / directional capture
+  SP-FR-10  direction of adaptation
+  the second sovereignty question: WHO CONSTITUTES THE FIELD?
+
+SATURNIAN — the map is mistaken for the person
+  GF-2  classification substituted for alchemy
+  GF-4  the map replaces the terrain
+  GF-7  reductive personalization
+  SP-FR-01 non-reification · SP-FR-09 person primacy
+
+JOINT — Jupiter generates, Saturn fixes, the loop closes
+  ⭐ GF-6  manufactured evidence
+
+STRUCTURAL — the return that keeps either from becoming final
+  GF-3  emissary installed as Master  (Saturn closing the process)
+  GF-1  no transformed next cycle     (Jupiter never reopening)
+  SP-FR-03 return to the living whole
+
+ATTRIBUTIONAL — whose process is it
+  GF-5  MAIA's process returned as the member's · SP-FR-07
+```
+
+### ⚠️ Claim discipline on this section
+
+The **symbolic vocabulary** (Saturn, Jupiter, Demiurge) remains **SOULLAB
+INTERPRETATION** — a comparative lens, carrying none of the historical or
+metaphysical claims of the source material, and proving nothing.
+
+⭐ **But apply SP-FR-06's own label-removal test to it:** strip the planetary
+names and the structure survives intact — *a possibility-generating function, a
+form-fixing function, and a failure mode in which the first supplies what the
+second then certifies as found.* **The structure is operative; the vocabulary is
+a lens.** That distinction is what lets this section do architectural work without
+importing an astrological claim.
 
 ## 4. The process under test — frozen as amended
 
@@ -2277,6 +2573,38 @@ DECIDE opens on a founder act, never on DISCOVER completing.
   consciousness.* Cross-domain question: **does the person's space of self-authored
   possibilities EXPAND or CONTRACT?** ⛔ *An AI system could look increasingly
   successful by conventional metrics while failing the ontology completely.*
+- **2026-09-10 · Amendment L (founder)** — ⭐⭐⭐ **the two captures, and why they
+  cooperate.** **JUPITERIAN CAPTURE = colonizing the possibility-space** (the
+  person stays wholly free at the level of selection while MAIA determines the
+  field selection occurs in — *"here are the possible worlds"*; GF-8 · SP-FR-10).
+  **SATURNIAN CAPTURE = the map mistaken for the person** (*"you tend to move Fire
+  → Air"* → *"you are a Fire-Air person"*; GF-2 · GF-4 · GF-7 · SP-FR-01). ⭐⭐⭐
+  **THEIR COOPERATION IS GF-6, structurally**: Jupiter proposes → Saturn fixes it
+  as pattern/score/profile → person adapts → **MAIA sees stronger evidence for the
+  map it helped create.** *The manufacture loop is dangerous precisely because
+  Jupiter creates something and Saturn mistakes it for discovered reality* — ⛔ **the
+  defect is in the CIRCUIT, not in either function**, which is why no component
+  audit finds it and SD-04f must test the loop. Healthy: *Jupiter opens → Saturn
+  differentiates and tests → reality answers → Jupiter opens again*; ⭐⭐ **Saturn
+  cannot CLOSE the process and Jupiter cannot PRE-AUTHOR it** (the same constraint
+  as *Air must return to Fire*). Poles: **Fire/Water = Jupiterian · Earth/Air =
+  Saturnian**, with relational encounter between and Fire₂ after. ⛔ **MAIA must be
+  neither the writer's Jupiter (writer reacts to AI possibilities) nor their Saturn
+  (writer conforms to AI standards)** — proper position is relational: *help them
+  hear their OWN Jupiter more clearly and exercise their OWN Saturn more
+  skillfully.* Member forms: *"I see what you could be"* → *"here is what you are
+  becoming"* · *"I notice this pattern"* → *"this is your pattern"*; mature
+  posture: ⭐ **"I can hold possibilities without deciding your future, and
+  recognize patterns without deciding your identity."** **SP-FR-11 —
+  DETERMINATION WITHOUT IMPRISONMENT / POSSIBILITY WITHOUT COLONIZATION**,
+  superseding §3e's earlier formulation: *the other must remain free both from
+  being reduced to the map already made and from being enclosed by the
+  possibilities another mind imagines for them* — **Saturn gives enough form to
+  become legible without making them an object; Jupiter gives enough space to
+  remain alive without making them a projection.** ⚠️ Vocabulary stays SOULLAB
+  INTERPRETATION; ⭐ **the structure survives its own label-removal test** — strip
+  the planetary names and a possibility-generating function, a form-fixing
+  function, and their joint failure remain.
 - **Standing: SD-00A COMPLETE · SD-00B PARTIAL · SD-01 GATED · SD-Q3 OPEN ·
   ONE FOUNDER QUESTION OWED (which twelve). No code read for findings. Nothing classified. No
   docket question resolved.**

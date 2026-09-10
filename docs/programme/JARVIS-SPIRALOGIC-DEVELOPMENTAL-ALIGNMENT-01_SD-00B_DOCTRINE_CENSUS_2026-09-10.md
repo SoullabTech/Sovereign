@@ -495,3 +495,221 @@ the first is canonical.** Amendment G is genuinely new.
   the elemental agents' code was not read. ⛔ One founder question now precedes
   SD-01: **which twelve is Spiralogic?** ⚠️ The charter's claim that the
   Master–Emissary mapping had no prior trace is corrected at B6.
+
+---
+
+# SD-00B · CONTINUATION — the member-noticing question put to canon
+
+```
+RUN       2026-09-10, continued under the founder's instruction to determine
+          whether member-authored noticing, differentiation or map-transcendence
+          ALREADY EXISTS AS DOCTRINE even though the substrate appears not to
+          represent it.
+```
+
+## ⚠️ C0 — Scope correction: the canon corpus is 77 files, not 23
+
+SD-00B's residue list was built on a **grep for "spiralogic" mentions (23 files)**,
+not on the canon corpus. `ls docs/canon/*.md` returns **77**. Files never
+enumerated in this census include `THE_MEMBERS_WORLD_IS_PRIMARY.md`,
+`THE_GOVERNING_UNCERTAINTY.md`, `THREE_AUTHORITY_CHAINS.md`,
+`VERIFICATION_STATES.md`, `RECOGNITION_INTEGRITY.md`, `THE_CLEARING.md`,
+`THE_HOUSE.md`, `SESSION_ROOM_LIVING_ENCOUNTER.md`,
+`THE_SACRED_AND_ITS_ARCHITECTURE.md`, and
+`WRITER_STUDIO_AUTHOR_STUDIO_DISTINCTION_2026-08-04.md`.
+
+⛔ **SD-00B is therefore further from authority-complete than its own residue
+section claimed.** Recorded as a correction, not amended away.
+
+## ⭐⭐⭐ C1 — `Healthy Disappearance` is cited as canon by six canon documents and the document does not exist
+
+```
+CITED BY
+  RIGHT_TO_REMAIN_UNPOSSESSED.md:207   "[Healthy Disappearance] — the trajectory
+                                        this canon's non-pursuit enables"
+  SPIRAL_CONTINUITY_ENGINE.md:218      "Healthy Disappearance — reflection that
+                                        does not recentralize the system"
+  TRANSPARENT_ENCHANTMENT.md:7         listed alongside Sacred Mirror,
+                                        Interpretive Dialogue, Non-Totalizing
+                                        Coherence "as a structural protection"
+  TRANSPARENT_ENCHANTMENT.md:153       "the trajectory of attention this canon's
+                                        voice supports"
+  SACREDNESS_AS_ARCHITECTURAL_ORIENTATION.md:65, :166
+
+SEARCHED   find . -iname "*healthy*disappear*"   → NO FILE ANYWHERE
+```
+
+> ⭐⭐⭐ **The doctrine that names the decreasing-dependence trajectory — the exact
+> thing SP-FR-04's map-dependence direction, Amendment D, GF-4's direction test and
+> GF-8 all rest on — is cited as canon by six canon documents and is written
+> nowhere.**
+
+⛔ **Classified: LOAD-BEARING CANONICAL ABSENCE.** The same shape CLAUDE.md already
+records for `WISDOM_IS_RECOVERED.md` ("the canon cited by the original spec does
+not exist in the repo"), but with higher stakes: six canonical texts delegate the
+trajectory claim to it.
+
+⚠️ **What this does NOT establish:** that the doctrine was never authored (it may
+exist outside the repo, in memory artifacts, or under another name), or that the
+citing documents are wrong. It establishes that **the trajectory canon cannot
+currently be read.**
+
+⚠️ `Anamnesis as Metric` is cited the same way. `ANAMNESIS.md` exists in
+`data/ain/source/` — **source corpus, not canon** — plus `lib/anamnesis/*` and
+four `RelationshipAnamnesis*` modules. Authority mismatch, not absence. Not
+traced.
+
+## ⭐⭐ C2 — `THE_MEMBERS_WORLD_IS_PRIMARY.md` — SP-FR-09's ancestor, and it is NOT RATIFIED
+
+```
+AUTHORITY  ⚠️ CANON CANDIDATE. Founder-authored 2026-07-31. Its own header:
+           "becomes ratified canon ONLY through an explicit act of authorization …
+            Writing it here is preparation (additive); it changes the governing
+            status of no other text and AUTHORIZES NO IMPLEMENTATION until
+            ratified."
+SCOPE      every member-facing surface — copy, UI, onboarding, navigation,
+           interactions, MAIA's conversation, notifications, empty states,
+           confirmations, error messages. "First applied in the Work Studio."
+TYPE       "a constitutional article of identity and orientation … It grants no
+           capability."
+```
+
+Propositions:
+
+> *"The Studio speaks from the member's world, never from its own."*
+> **"The member experiences their work. The platform recedes."**
+
+**The disappearing craft:** *"Every mature craft eventually learns to disappear
+behind the thing it serves. For a violin maker, it is the music. For a potter, it
+is the meal. For the Work Studio, it is the creator's work."* — *"to serve the
+relationship between the creator and the work — not to become another participant
+competing for attention."*
+
+⭐ **This is SP-FR-09 (person primacy) and Amendment J's Writer's Studio posture,
+already authored in July, at the interface layer.** ⚠️ **And it is a candidate, not
+canon** — so the lane must not cite it as governing.
+
+⭐ **Its constitutional boundary is worth recording in full**, because it is the
+structure the charter's own claim-discipline needs: the principle **yields** where
+the system must speak truthfully as itself — **consent · honesty · refusal ·
+security · provenance** — and *"the boundary is not an escape hatch from the
+principle — it is the seam that keeps the principle from being turned into
+concealment."*
+
+## C3 — The decreasing-centrality direction IS in ratified canon, as a design test
+
+`MAIA_CANON_v1.1.md:315-316`, the sovereignty check:
+
+```
+2. Does this push life outward into the world?
+3. Does this reduce the system's psychological centrality over time?
+```
+
+⭐ **Amendment D's decreasing-dependence direction is canonical** — as a **test
+applied to features**, not as a signal recorded about a member. ⚠️ That distinction
+is the finding: *canon asks the builder whether centrality decreases; nothing asks
+the substrate to observe whether it did.*
+
+## C4 — Declaration outranks inference (ratified)
+
+`MAIA_SOVEREIGNTY_INVARIANTS.md:188, :204`:
+
+> **"Member-declared significance outranks system-inferred significance and corpus
+> intelligence."**
+> *"MAIA honors what the member declares meaningful, not decides meaning on their
+> behalf."*
+
+⭐ A **ranking rule**, ratified. It settles precedence in a conflict. ⚠️ It does
+**not** require that a member's own noticing be **recorded**, nor that the system
+be able to tell a declaration from an agreement — which is precisely GF-8-O1's
+gap.
+
+## C5 — `INTERFACE_HUMILITY` — GF-3 in one canonical sentence
+
+Quoted in `THE_MEMBERS_WORLD_IS_PRIMARY.md`:
+
+> **"the system may observe and propose; it may not conclude."**
+
+⭐ The tightest canonical statement of SP-FR-03 / GF-3 found anywhere. ⛔ The file
+itself (132 lines) was **not read**; this is its quotation by another document.
+
+## ⭐⭐⭐ C6 — The answer to the founder's question
+
+> *"The remaining doctrine census needs to tell us whether member-authored
+> noticing, differentiation or map-transcendence already exists as doctrine even
+> though the substrate appears not to represent it. That distinction — doctrine
+> says it matters / architecture cannot presently see it — could become one of the
+> central findings of the entire journey."*
+
+**The answer is three-valued, and it is not the simple version.**
+
+```
+✅ DOCTRINE SAYS THE PERSON IS PRIMARY
+   member-declared significance outranks system inference        (RATIFIED, C4)
+   the member experiences their work, the platform recedes       (CANDIDATE, C2)
+   the system may observe and propose; it may not conclude       (RATIFIED, C5)
+   member declaration GATES elevation into continuity            (RATIFIED, B1/P3)
+
+✅ DOCTRINE SAYS CENTRALITY SHOULD DECREASE
+   "does this reduce the system's psychological centrality over time?"
+                                                     (RATIFIED as a DESIGN TEST, C3)
+   Healthy Disappearance — the named trajectory       (⛔ CITED 6×, DOCUMENT ABSENT, C1)
+
+❌ DOCTRINE DOES NOT NAME MEMBER-AUTHORED NOTICING AS A DEVELOPMENTAL SIGNAL
+   Nothing found that asks the system to RECOGNIZE, PRESERVE or LEARN FROM the
+   member's own noticing of their own process — no requirement that the member be
+   able to record it, no requirement that the system distinguish a member-authored
+   recognition from agreement with MAIA's framing, and no account of
+   map-transcendence as an outcome.
+
+❌ AND THE ARCHITECTURE CANNOT SEE IT                            (SD-00A §3)
+```
+
+> ⭐⭐⭐ **So the central finding is sharper than "doctrine says it matters /
+> architecture cannot see it."**
+>
+> **Doctrine protects the member's authority over meaning — comprehensively,
+> repeatedly, and in ratified form. It does not ask the system to witness the
+> member's developing capacity. Member noticing is canonically a PERMISSION, never
+> a SIGNAL.**
+>
+> **Amendment G is therefore genuinely new doctrine, not an unimplemented
+> canonical requirement** — which confirms, and narrows, the negative finding in
+> §9. The gap is not that AIN failed to build something canon required. It is that
+> **canon built a careful theory of the member's sovereignty and no theory of the
+> member's development becoming visible.**
+
+⛔ **And per GF-8-O1 this is exactly why GF-8 is currently unevaluable**: neither
+doctrine nor substrate supplies the discriminator between integration and
+assimilation. ⚠️ ⛔ **NOT established:** that members are not developing; that
+assimilation occurs; that GF-8 has failed. SD-01 may still find architecture
+through which self-noticing becomes legible without a dedicated surface.
+
+## C7 — Residue after the continuation
+
+```
+· 77 canon files; approximately 7 read substantively, 2 partially, the rest
+  unread or keyword-only
+· Healthy Disappearance — whether it exists outside docs/canon/ (memory
+  artifacts, other repos, another name): NOT ESTABLISHED
+· INTERFACE_HUMILITY · RECOGNITION_INTEGRITY · RIGHT_TO_REMAIN_UNPOSSESSED ·
+  THE_GOVERNING_UNCERTAINTY · THREE_AUTHORITY_CHAINS · VERIFICATION_STATES ·
+  TRANSPARENT_ENCHANTMENT · SACREDNESS_AS_ARCHITECTURAL_ORIENTATION — all
+  cited here only through quotation or keyword, NOT READ
+· whether THE_MEMBERS_WORLD_IS_PRIMARY was ever ratified after 2026-07-31:
+  NOT ESTABLISHED from this census
+· the four McGilchrist corpus files: still LOCATED, NOT READ
+· "which twelve is Spiralogic": still a founder question
+· SD-Q3: still open; lib/agents/elemental/* still not read
+```
+
+## Stage log — continuation
+
+- **2026-09-10 — SD-00B CONTINUED, still PARTIAL.** ⚠️ Scope corrected: **77 canon
+  files, not 23.** ⭐⭐⭐ `Healthy Disappearance` — the decreasing-dependence
+  trajectory canon — is **cited by six canon documents and does not exist as a
+  document**. ⭐⭐ `THE_MEMBERS_WORLD_IS_PRIMARY` is **SP-FR-09's July ancestor and
+  is a CANDIDATE, not ratified.** ⭐⭐⭐ Central finding stated: **doctrine makes
+  member noticing a PERMISSION, never a SIGNAL** — so Amendment G is genuinely new
+  doctrine rather than an unimplemented canonical requirement, and GF-8 is
+  unevaluable for want of a discriminator in **both** doctrine and substrate.

@@ -179,6 +179,28 @@ AFFORDANCE FOR THE MEMBER NOTICING THEMSELF  ⭐ NONE LOCATED
 AFFORDANCE FOR CORRECTING MAIA'S NOTICING    present and unusually strong
 ```
 
+### ⭐ FOUNDER CLASSIFICATION, 2026-09-10 — this is more than an affordance gap
+
+> *"I would not leave all of this for SD-01."*
+
+```text
+ESTABLISHED      No explicit member-originated process-noticing affordance was
+                 found in the censused substrate.
+
+CONSEQUENCE      Agreement, vocabulary uptake, confirmation and recurrence alone
+                 CANNOT DISCRIMINATE INTEGRATION FROM ASSIMILATION.
+
+STATUS           ⭐ GF-8 EVALUABILITY EXPOSURE  (see GF-8-O1 in the charter)
+
+NOT ESTABLISHED  that members are not integrating
+                 that assimilation is occurring
+                 that GF-8 has failed
+```
+
+⚠️ **Stronger than "an affordance absence," still inside the epistemic ceiling.**
+SD-01 may yet discover existing architecture through which self-noticing becomes
+legible despite the absence of a dedicated surface — that remains open.
+
 ⛔ **This is an affordance gap relative to the stated purpose, NOT a developmental
 failure.** §5's ceiling forbids the stronger claim: this census cannot establish
 that members are not developing, only that **if the member's own noticing is the
