@@ -5,6 +5,8 @@
  *     What the server authorizes is determined INDEPENDENTLY.
  */
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { labelFor } from '../sectionRecognition';
 import { __parseAuthorizeActForTest } from '@/app/api/sovereign/manuscripts/[id]/ask/route';
 
@@ -31,6 +33,41 @@ describe('heading and label stay separate', () => {
   it('⛔ a label is never a UUID', () => {
     const label = labelFor(null, 11);
     expect(label).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/i);
+  });
+});
+
+/**
+ * ⛔ A PROPOSED TITLE IS NOT THE MEMBER'S WORD FOR THEIR OWN DIVISION.
+ *
+ * `manuscript_structure_units` admits `origin = 'proposed'` so that adopting a
+ * proposal later is an INSERT with provenance rather than a migration — and that
+ * table's own rule is that proposed rows cannot render as the Work's structure.
+ * A section whose ONLY unit is proposed therefore has no authored heading, and
+ * MAIA's suggestion must not be handed back to the writer as though they had
+ * named it themselves.
+ *
+ * ⭐ The exclusion is on the JOIN, not in a WHERE clause. This asserts the
+ * consequence of that choice: the SECTION survives with a positional label,
+ * rather than disappearing from a response the member is being asked to act on.
+ */
+describe('a proposed structure title never becomes a heading', () => {
+  const RECOGNITION = readFileSync(
+    join(__dirname, '..', 'sectionRecognition.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+  it("⛔ the query excludes proposed units, and does so on the JOIN", () => {
+    expect(RECOGNITION).toMatch(/LEFT JOIN manuscript_structure_units[\s\S]{0,80}origin <> 'proposed'/);
+    /* ⛔ If this moved into a WHERE clause the section itself would vanish. */
+    expect(RECOGNITION).not.toMatch(/WHERE[\s\S]{0,120}origin <> 'proposed'/);
+  });
+
+  it("⭐ a section with no authored title still gets a positional label", () => {
+    /* The heading is null; the label is never absent and never a UUID. */
+    expect(labelFor(null, 3)).toBe('Section 4');
+  });
+
+  it('⛔ recognition never selects section text', () => {
+    expect(RECOGNITION).not.toMatch(/SELECT[\s\S]{0,200}s\.text/);
   });
 });
 

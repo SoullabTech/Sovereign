@@ -56,7 +56,24 @@ export interface PendingAskCoordinates {
   readonly observationKey: string;
 }
 
-/** Whether the invocation that consumed the claim reached a completed crossing. */
+/**
+ * Whether the invocation that consumed the claim reached a completed crossing.
+ *
+ * ⭐⭐ TWO SEPARATE FACTS, AND THEY MUST NOT BE COLLAPSED.
+ *
+ *   the KIND      what happened to the AUTHORIZATION ACT
+ *                 · act_already_processed — this same press, arriving again
+ *                 · already_consumed      — a different act spent the claim
+ *
+ *   `completion`  whether that already-processed act produced an ANSWER
+ *                 · completed  — the crossing finished
+ *                 · incomplete — it did not
+ *
+ * ⛔ `act_already_processed` implies NEITHER success nor failure of the original
+ * Ask. A member whose press is recognised has learned only that it was
+ * recognised; whether their answer exists is the other half, and a surface that
+ * reads the kind alone would tell them something it does not know.
+ */
 export type ConsumedCompletion = 'completed' | 'incomplete';
 
 /**
