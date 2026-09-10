@@ -27,6 +27,7 @@
  * re-derived (INV-20).
  */
 
+import { readDisclosed, type DisclosedContent } from '@/lib/disclosure/disclosureAuthority';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 import { fingerprintStructureRows } from '@/lib/manuscript/structure/structureDigest';
 import {
@@ -83,11 +84,24 @@ const refuseRecover = (refusal: RecoverRefusal, detail: string): RecoverResult =
  * UTF-16 indices; on astral text it returns a lone surrogate — prose the
  * member never wrote, in the one path whose whole purpose is exactness.
  */
+/**
+ * ⭐⭐ CAPABILITY-BOUND SINCE ADDENDUM-01. The third argument is no longer a
+ * string a caller could obtain any way it liked: `DisclosedContent` exists only
+ * as the output of an authorized load, so possessing one is itself evidence that
+ * a matching capability was spent for it.
+ *
+ * ⛔ The `revision_content_required` refusal is UNCHANGED and is now also the
+ * unauthorized path's behaviour: no capability → no content → this refusal →
+ * MAIA is told the evidence cannot be verified and receives no text. The
+ * fail-closed behaviour was already here; what is new is that nothing can reach
+ * the prose without the capability that makes it lawful.
+ */
 export function recoverEvidence(
   ref: EvidenceRef,
   readState: DevelopmentalReadState,
-  revisionContent: string | null,
+  disclosed: DisclosedContent | null,
 ): RecoverResult {
+  const revisionContent = disclosed === null ? null : readDisclosed(disclosed);
   switch (ref.kind) {
     case 'section':
     case 'passage': {

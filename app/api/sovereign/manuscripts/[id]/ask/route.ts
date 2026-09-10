@@ -39,7 +39,13 @@ import {
   assembleDevelopmentalContext, developmentalStaleness,
 } from '@/lib/manuscript/ask/developmentalContext';
 import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReader';
-import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
+import { loadRevisionContentForCognition, loadLiveWork } from '@/lib/manuscript/development/capture';
+import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { actIdentifiers, isUsableActId } from '@/lib/disclosure/actIdentity';
+import { bodyBearingRefs, disclosureMemberKey } from '@/lib/manuscript/development/evidenceRef';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import type { DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
 import { parseSelectionCommission, type SelectionCommission } from '@/lib/manuscript/ask/selectionCommission';
 import { selectDevelopmental } from '@/lib/manuscript/ask/developmentalSelector';
 /* THE BOUNDARY SEAM, AND NOT THE STANDING STORE. This route does not import
@@ -208,6 +214,19 @@ export async function POST(
   }
   const body = raw as Record<string, unknown>;
 
+  /**
+   * ⭐⭐ ACT IDENTITY IS THE CALLER'S, BECAUSE THE CLASSIFICATION IS THE CALLER'S.
+   * Only the surface that watched the writer ask knows whether this invocation is
+   * that ask again or a new one. Deriving it here per request would make every
+   * transport replay a fresh disclosure act — the defect the Focus route carried.
+   */
+  const actId = body.actId;
+  if (!isUsableActId(actId)) {
+    return NextResponse.json(
+      { refusal: 'malformed', detail: 'actId — one stable id per writer act, reused verbatim on retry' },
+      { status: 400 });
+  }
+
   const question = typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) return NextResponse.json({ refusal: 'malformed', detail: 'question' }, { status: 400 });
   if (question.length > MAX_QUESTION) {
@@ -231,7 +250,7 @@ export async function POST(
   const commission = threadId || anchor ? null : parseSelectionCommission(body.selectionCommission);
   if (commission) {
     return developmentalSelectionTurn({
-      manuscriptId: id, memberId, commission, question,
+      manuscriptId: id, memberId, commission, question, actId,
     });
   }
 
@@ -255,7 +274,7 @@ export async function POST(
      `loadFrozenDevelopmentalReading`. */
   if (effectiveAnchor.on === 'observation') {
     return developmentalTurn({
-      manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question,
+      manuscriptId: id, memberId, anchor: effectiveAnchor, existing, question, actId,
     });
   }
 
@@ -417,8 +436,10 @@ async function developmentalTurn(input: {
   anchor: Extract<AskAnchor, { on: 'observation' }>;
   existing: Awaited<ReturnType<typeof loadThread>>;
   question: string;
+  /** ⭐ The writer's act, named by the surface that saw it. Never invented here. */
+  actId: string;
 }) {
-  const { manuscriptId, memberId, anchor, existing, question } = input;
+  const { manuscriptId, memberId, anchor, existing, question, actId } = input;
 
   const reading = await loadFrozenDevelopmentalReading(manuscriptId, anchor.readingId, memberId);
   const check = checkObservationAnchor(anchor, reading);
@@ -440,11 +461,62 @@ async function developmentalTurn(input: {
   }
   const canonicalAtOpen = existing ? existing.canonicalAtOpen : canonicalNow!;
 
+  /* ⭐⭐ THE DISCLOSURE BOUNDARY. This observation's prose-bearing evidence is
+     what will cross, so the authority is established — and the receipt minted —
+     BEFORE any authored character is loaded for cognition.
+
+     ⛔ ONE HANDOFF IS ONE ACT. Several refs, possibly non-adjacent, are ONE
+     disclosure with `scope_kind = evidence_set`, never N receipts. The capability
+     knows exact membership because applicability is enforced at the load; the
+     receipt records only that the composite disclosure occurred.
+
+     ⭐ Membership is canonical and order-independent — authority answers what may
+     cross. The live `evidenceRefs` array keeps its own order for rendering,
+     because ordering answers how what crossed is presented. */
+  const proseRefs = bodyBearingRefs(observation.evidenceRefs);
+  const members = proseRefs.map(disclosureMemberKey).filter((k): k is string => k !== null);
+
+  const locus: DisclosureLocus | null =
+    members.length === 0
+      ? null
+      : members.length === 1 && proseRefs[0].kind === 'section'
+        ? { scopeKind: 'section', sectionRef: proseRefs[0].sectionId }
+        : members.length === 1 && proseRefs[0].kind === 'passage'
+          ? { scopeKind: 'passage', sectionRef: proseRefs[0].sectionId, range: proseRefs[0].range }
+          : { scopeKind: 'evidence_set', members };
+
+  const { requestId, disclosureId } = actIdentifiers(actId);
+  const posture = TurnPosture.resolve({ userId: memberId });
+
+  /* An observation resting on no prose discloses nothing — it reaches cognition
+     as observation and refusal, exactly as an unverifiable ref already does. No
+     boundary is established for a crossing that does not occur. */
+  const boundary = locus === null ? null : await establishDisclosureBoundary({
+    requestId, posture, memberId, sessionId: null, disclosureId,
+    boundary: 'manuscript_prose->maia_cognition',
+    sourceClass: 'work',
+    participationBasis: 'member_invoked',
+    workRef: manuscriptId,
+    locus,
+    gesture: 'ask_maia',
+  });
+
+  if (boundary !== null && !mayCrossBoundary(boundary)) {
+    /* ⛔ NO SCOPE SUBSTITUTION. The turn does not quietly proceed without the
+       evidence it was supposed to rest on — that would be MAIA reasoning about a
+       passage she was refused. */
+    return NextResponse.json({ refusal: 'disclosure_unavailable' }, { status: 503 });
+  }
+
   /* The revision the reading FROZE, not the newest. `recoverEvidence` verifies
      it against the frozen digest before slicing, so a wrong or moved revision
      yields a refusal and no text — never a substitution. */
-  const revisionContent = await loadRevisionContent(
-    reading!.readState.draftId, reading!.readState.revisionNumber);
+  const disclosure = boundary === null ? null : await loadRevisionContentForCognition(
+    boundary.authority,
+    { memberId, workRef: manuscriptId, locus: locus! },
+    reading!.readState.draftId, reading!.readState.revisionNumber,
+  );
+  const revisionContent = disclosure?.kind === 'disclosed' ? disclosure.content : null;
   const now = await loadLiveWork(manuscriptId, memberId);
 
   const ctx = assembleDevelopmentalContext({
@@ -551,8 +623,9 @@ async function developmentalSelectionTurn(input: {
   memberId: string;
   commission: SelectionCommission;
   question: string;
+  actId: string;
 }) {
-  const { manuscriptId, memberId, commission, question } = input;
+  const { manuscriptId, memberId, commission, question, actId } = input;
 
   const reading = await loadFrozenDevelopmentalReading(
     manuscriptId, commission.readingId, memberId);
@@ -638,6 +711,7 @@ async function developmentalSelectionTurn(input: {
   const turn = await developmentalTurn({
     manuscriptId,
     memberId,
+    actId,
     anchor: { on: 'observation', readingId: reading.id, observationKey: chosen },
     existing: null,
     question,

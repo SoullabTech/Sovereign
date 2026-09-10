@@ -18,7 +18,11 @@
  * two tables.
  */
 
-import { captureEvidence, loadRevisionContent } from '../development/capture';
+import { captureEvidence, loadRevisionContentForCognition } from '../development/capture';
+import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
+import { actIdentifiers } from '@/lib/disclosure/actIdentity';
+import type { DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
+import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { recoverEvidence } from '../development/resolve';
 import type { DevelopmentalLens, RecoveredBody } from '../developmentalReader/contract';
 import { readDevelopmentally, type ReadOptions } from '../developmentalReader/read';
@@ -35,6 +39,16 @@ export interface CommissionInput {
   /** Section ids to read at body depth (INV-18: per reading). */
   bodyScope: readonly string[];
   withStructure: boolean;
+  /**
+   * ⭐ The writer's commissioned scope, as they named it — `whole`, one section,
+   * a division, or a bounded run. Built at the route from `ReadingScope`, never
+   * inferred here from `bodyScope`: a three-section body could be a division or
+   * a range or a whole small Work, and the disclosure scope names the ACT the
+   * writer authorized, not the geometry of what happened to cross.
+   */
+  locus: DisclosureLocus;
+  /** ⭐ The writer's act, named by the surface that saw it. Never invented here. */
+  actId: string;
 }
 
 export type CommissionStage = 'capture' | 'recover' | 'read' | 'classify' | 'freeze' | 'store';
@@ -47,13 +61,37 @@ const refused = (stage: CommissionStage, refusal: string, detail: string): Commi
   ({ outcome: 'refused', stage, refusal, detail });
 
 export async function commissionReading(input: CommissionInput, opts: ReadOptions = {}): Promise<CommissionOutcome> {
-  const { manuscriptId, memberId, lens, bodyScope, withStructure } = input;
+  const { manuscriptId, memberId, lens, bodyScope, withStructure, locus, actId } = input;
 
   const cap = await captureEvidence(manuscriptId, memberId, { bodyScope, withStructure });
   if (!cap.ok) return refused('capture', cap.refusal, cap.detail);
   const evidence = cap.value;
 
-  const content = await loadRevisionContent(evidence.readState.draftId, evidence.readState.revisionNumber);
+  /* ⭐⭐ THE DISCLOSURE BOUNDARY, before a single authored character is loaded
+     for cognition. One commission is ONE handoff and therefore ONE act, however
+     many sections its body contains — never N section receipts. */
+  const { requestId, disclosureId } = actIdentifiers(actId);
+  const boundary = await establishDisclosureBoundary({
+    requestId, posture: TurnPosture.resolve({ userId: memberId }),
+    memberId, sessionId: null, disclosureId,
+    boundary: 'manuscript_prose->maia_cognition',
+    sourceClass: 'work',
+    participationBasis: 'member_invoked',
+    workRef: manuscriptId,
+    locus,
+    gesture: 'commission_reading',
+  });
+  if (!mayCrossBoundary(boundary)) {
+    /* ⛔ No authority, no reading. The commission is refused rather than served
+       from a Work the system had no standing to read to MAIA. */
+    return refused('recover', 'disclosure_unavailable', 'the disclosure boundary could not be established');
+  }
+
+  const disclosure = await loadRevisionContentForCognition(
+    boundary.authority,
+    { memberId, workRef: manuscriptId, locus },
+    evidence.readState.draftId, evidence.readState.revisionNumber);
+  const content = disclosure.kind === 'disclosed' ? disclosure.content : null;
   if (content === null) return refused('recover', 'revision_content_required', `revision ${evidence.readState.revisionNumber} of draft ${evidence.readState.draftId} is absent`);
   const recovered: RecoveredBody[] = [];
   for (const sectionId of bodyScope) {

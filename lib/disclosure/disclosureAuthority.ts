@@ -50,7 +50,22 @@ export type DisclosureLocus =
   /** One authored division and the sections it lawfully holds, in document order. */
   | { readonly scopeKind: 'unit'; readonly unitRef: string; readonly sectionRefs: readonly string[] }
   /** One bounded contiguous run. The bounds ARE its identity; the members prove the run. */
-  | { readonly scopeKind: 'range'; readonly fromSectionRef: string; readonly toSectionRef: string; readonly sectionRefs: readonly string[] };
+  | { readonly scopeKind: 'range'; readonly fromSectionRef: string; readonly toSectionRef: string; readonly sectionRefs: readonly string[] }
+  /**
+   * ADDENDUM-02 · the prose-bearing evidence of one developmental observation.
+   *
+   * ⭐ `members` are OPAQUE canonical identity strings, derived by the consumer
+   * that owns the evidence vocabulary. This module deliberately knows nothing
+   * about `EvidenceRef`: keying belongs where the type is defined, and importing
+   * the manuscript model here would let a disclosure primitive drift with it.
+   *
+   * ⭐⭐ AUTHORITY ANSWERS WHAT MAY CROSS; ORDERING ANSWERS HOW WHAT CROSSED IS
+   * PRESENTED. They are not the same question — so membership is compared
+   * order-independently, while the live evidence array keeps its own sequence for
+   * rendering. Same scope does not therefore mean same act: if order changes the
+   * prompt, act identity may still distinguish the two.
+   */
+  | { readonly scopeKind: 'evidence_set'; readonly members: readonly string[] };
 
 /** What a capability authorizes, and what a load must match. */
 export interface DisclosureRequest {
@@ -136,6 +151,27 @@ const sameOrder = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
 /**
+ * Order-independent MULTISET equality.
+ *
+ * ⛔ NOT `new Set()`. Nothing in the evidence contract guarantees that an
+ * observation cannot rest on the same reference twice, and collapsing duplicates
+ * would manufacture a uniqueness guarantee the repository never made — quietly
+ * letting `[A, A, C]` be satisfied by an authority over `[A, C]`. If uniqueness
+ * is established later this degenerates to ordinary set comparison on its own.
+ */
+const sameMultiset = (a: readonly string[], b: readonly string[]) => {
+  if (a.length !== b.length) return false;
+  const counts = new Map<string, number>();
+  for (const v of a) counts.set(v, (counts.get(v) ?? 0) + 1);
+  for (const v of b) {
+    const n = counts.get(v);
+    if (!n) return false;
+    counts.set(v, n - 1);
+  }
+  return true;
+};
+
+/**
  * APPLICABILITY. Exact match, never containment: authority over a division does
  * not authorize an arbitrary subset of it, because the disclosed thing is the
  * division as commissioned, not whichever sections a later caller asked for.
@@ -162,6 +198,10 @@ function locusMatches(granted: DisclosureLocus, requested: DisclosureLocus): boo
       return granted.fromSectionRef === r.fromSectionRef
         && granted.toSectionRef === r.toSectionRef
         && sameOrder(granted.sectionRefs, r.sectionRefs);
+    }
+    case 'evidence_set': {
+      const r = requested as Extract<DisclosureLocus, { scopeKind: 'evidence_set' }>;
+      return sameMultiset(granted.members, r.members);
     }
   }
 }

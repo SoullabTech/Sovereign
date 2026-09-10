@@ -78,7 +78,13 @@ export type DisclosureBoundary =
 export type DisclosureScopeKind =
   | 'whole_work' | 'section' | 'passage'
   /** ADDENDUM-01. One authored division · one bounded contiguous run. Each is ONE act. */
-  | 'unit' | 'range';
+  | 'unit' | 'range'
+  /**
+   * ADDENDUM-02. The prose-bearing evidence of ONE developmental observation,
+   * disclosed together in one handoff. ⛔ Carries no locator: the capability knows
+   * exact membership, the receipt does not, and that asymmetry is the point.
+   */
+  | 'evidence_set';
 
 /**
  * The writer gesture that authorized the crossing. Closed vocabulary: the kind

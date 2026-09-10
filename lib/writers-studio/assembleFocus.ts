@@ -57,10 +57,14 @@ const ADDRESSABLE_DRAFT = `
  *   trustworthy type afterward.
  */
 export const assembleFocus: FocusAssembler = async ({ authority, memberId, workRef, locus }) => {
-  // ⛔ Focus offers three shapes. `unit` and `range` are the commissioned
-  // reading's scopes and have their own loader; refusing them here keeps one
-  // capability vocabulary without letting one consumer read another's material.
-  if (locus.scopeKind === 'unit' || locus.scopeKind === 'range') return null;
+  // ⛔ Focus offers exactly three shapes. `unit`/`range` belong to the
+  // commissioned reading and `evidence_set` to the developmental Ask; each has
+  // its own loader. Refusing them here keeps ONE capability vocabulary without
+  // letting one consumer read material authorized for another — an allowlist, so
+  // a scope added later is refused until someone decides Focus may serve it.
+  if (locus.scopeKind !== 'whole_work' && locus.scopeKind !== 'section' && locus.scopeKind !== 'passage') {
+    return null;
+  }
 
   const outcome = await discloseUnder(authority, { memberId, workRef, locus }, async () => {
    try {

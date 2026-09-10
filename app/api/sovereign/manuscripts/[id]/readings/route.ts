@@ -31,6 +31,8 @@ import { query } from '@/lib/db/postgres';
 import { isDevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
 import { commissionReading, type CommissionStage } from '@/lib/manuscript/developmentalReading/commission';
 import { listReadings } from '@/lib/manuscript/developmentalReading/store';
+import { isUsableActId } from '@/lib/disclosure/actIdentity';
+import type { DisclosureLocus } from '@/lib/disclosure/disclosureAuthority';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,6 +145,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch {
     return NextResponse.json({ refusal: 'malformed' }, { status: 400 });
   }
+  /** ⭐ One stable id per commissioned reading; reused verbatim on a transport retry. */
+  const actId = (body as { actId?: unknown } | null)?.actId;
+  if (!isUsableActId(actId)) {
+    return NextResponse.json({ refusal: 'malformed', detail: 'actId' }, { status: 400 });
+  }
   const lens = (body as { lens?: unknown } | null)?.lens;
   if (!isDevelopmentalLens(lens)) {
     return NextResponse.json({ refusal: 'invalid_lens' }, { status: 400 });
@@ -154,7 +161,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
      Absent `scope` means the whole work, which is what every existing caller
      asked for and still gets. */
-  const ALLOWED = new Set(['lens', 'scope']);
+  const ALLOWED = new Set(['lens', 'scope', 'actId']);
   const keys = Object.keys((body as object) ?? {});
   const foreign = keys.filter((k) => !ALLOWED.has(k));
   if (foreign.length > 0) {
@@ -193,7 +200,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const bodyScope = [...resolved.bodyScope];
   const withStructure = await hasAuthoredStructure(manuscriptId, memberId);
 
-  const outcome = await commissionReading({ manuscriptId, memberId, lens, bodyScope, withStructure });
+  /* ⭐ The writer's scope, carried as the disclosure locus. Each shape keeps its
+     own name: a division is `unit`, a bounded run is `range`, and neither is
+     flattened into `whole_work` merely because both resolve to several sections. */
+  const locus: DisclosureLocus =
+    scope.kind === 'whole' ? { scopeKind: 'whole_work' }
+    : scope.kind === 'section' ? { scopeKind: 'section', sectionRef: scope.sectionId }
+    : scope.kind === 'unit' ? { scopeKind: 'unit', unitRef: scope.unitId, sectionRefs: bodyScope }
+    : { scopeKind: 'range', fromSectionRef: scope.fromSectionId, toSectionRef: scope.toSectionId, sectionRefs: bodyScope };
+
+  const outcome = await commissionReading({
+    manuscriptId, memberId, lens, bodyScope, withStructure, locus, actId,
+  });
   if (outcome.outcome === 'refused') {
     return NextResponse.json(
       { refusal: outcome.refusal, stage: outcome.stage, detail: outcome.detail },

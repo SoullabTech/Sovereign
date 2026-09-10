@@ -141,3 +141,26 @@ COMMENT ON COLUMN context_disclosure_receipts.range_to_ref IS
 'ADDENDUM-01: last section of the disclosed contiguous run. Paired with range_from_ref; one bound alone is not a truthful range.';
 
 COMMIT;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ADDENDUM-02 · `evidence_set`.
+--
+-- One Ask turn discloses the prose-bearing evidence refs of ONE developmental
+-- observation, and those may be several and non-adjacent by design. That is one
+-- handoff and therefore ONE act — not N receipts, and not `unit`/`range`, whose
+-- meanings are the writer's own structural choices.
+--
+--   The disclosure scope names the act the writer authorized, not merely the
+--   geometry of the characters that happened to cross.
+--
+-- ⛔ NO LOCATOR COLUMN, DELIBERATELY. The runtime capability knows exact
+-- membership because applicability is enforced at the load. Serializing that
+-- membership here would make the receipt a replay recipe — a durable row from
+-- which authority could be reconstructed — which is precisely what 11b forbids.
+-- The receipt proves the composite disclosure occurred; it is not its manifest.
+ALTER TABLE context_disclosure_receipts
+  DROP CONSTRAINT IF EXISTS context_disclosure_receipts_scope_kind_check;
+
+ALTER TABLE context_disclosure_receipts
+  ADD CONSTRAINT context_disclosure_receipts_scope_kind_check
+  CHECK (scope_kind IN ('whole_work', 'section', 'passage', 'unit', 'range', 'evidence_set'));

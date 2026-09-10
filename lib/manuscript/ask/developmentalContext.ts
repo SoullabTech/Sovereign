@@ -37,6 +37,7 @@ import type { DevelopmentalReadState } from '../development/readState';
 import type { LiveWork } from '../development/resolve';
 import { requirementOf } from '../development/evidenceRef';
 import type { ChangeFlag, StalenessState } from './staleness';
+import type { DisclosedContent } from '@/lib/disclosure/disclosureAuthority';
 
 /**
  * One reference, as MAIA may see it.
@@ -104,7 +105,7 @@ export interface DevelopmentalAskContext {
 export function assembleDevelopmentalContext(input: {
   reading: DevelopmentalReading;
   observation: DevelopmentalObservation;
-  revisionContent: string | null;
+  revisionContent: DisclosedContent | null;
   now: LiveWork;
 }): DevelopmentalAskContext {
   const { reading, observation, revisionContent, now } = input;

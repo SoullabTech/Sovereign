@@ -23,6 +23,10 @@
  */
 
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
+import {
+  discloseUnder,
+  type DisclosureAuthority, type DisclosureRequest, type DiscloseOutcome,
+} from '@/lib/disclosure/disclosureAuthority';
 import type { RevisionSectionRange } from '@/lib/manuscript/draftSections';
 import type { CanonicalMemberRow, CanonicalUnitRow } from '@/lib/manuscript/structure/structureDigest';
 import {
@@ -161,6 +165,26 @@ export async function captureEvidence(
 }
 
 /** The content of one immutable revision, for `recoverEvidence`. Null when absent. */
+/**
+ * ⭐⭐ THE COGNITION-BOUND LOAD. The only lawful way to obtain revision prose for
+ * MAIA, and it is not reachable without a matching capability: the query below
+ * runs INSIDE `discloseUnder`, after provenance, freshness and exact locus match
+ * all hold.
+ *
+ * ⛔ `loadRevisionContent` remains available and ungated for integrity work —
+ * possession of plaintext is not disclosure. What changed is that nothing on the
+ * cognition path may call it: `recoverEvidence` now consumes `DisclosedContent`,
+ * which only this function can produce.
+ */
+export async function loadRevisionContentForCognition(
+  authority: DisclosureAuthority,
+  request: DisclosureRequest,
+  draftId: string,
+  revisionNumber: number,
+): Promise<DiscloseOutcome> {
+  return discloseUnder(authority, request, () => loadRevisionContent(draftId, revisionNumber));
+}
+
 export async function loadRevisionContent(
   draftId: string,
   revisionNumber: number,

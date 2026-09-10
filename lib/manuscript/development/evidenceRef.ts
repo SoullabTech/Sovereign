@@ -124,6 +124,34 @@ export function requirementOf(ref: EvidenceRef): EvidenceRequirement {
   }
 }
 
+/**
+ * ADDENDUM-02 · the disclosure identity of ONE prose-bearing reference.
+ *
+ * ⭐ DERIVED FROM THE REF'S OWN IDENTITY FIELDS — no new equivalence semantics.
+ * Two different passages of one section stay different; a passage never collapses
+ * into its section; structural and position refs have no key because they
+ * disclose nothing. `\u0000` separates fields so no id can forge a boundary.
+ *
+ * ⛔ NOT A DIGEST OF THE WORK. These are locators the system already holds, not
+ * a fingerprint of authored characters — the thing `RefusedReceiptField` refuses.
+ * They live in runtime authority and never in a receipt.
+ */
+export function disclosureMemberKey(ref: EvidenceRef): string | null {
+  switch (ref.kind) {
+    case 'section':
+      return `section\u0000${ref.sectionId}`;
+    case 'passage':
+      return `passage\u0000${ref.sectionId}\u0000${ref.range.start}\u0000${ref.range.end}`;
+    default:
+      return null;
+  }
+}
+
+/** The prose-bearing refs of an observation, in their original order. */
+export function bodyBearingRefs(refs: readonly EvidenceRef[]): readonly EvidenceRef[] {
+  return refs.filter((r) => requirementOf(r) === 'body');
+}
+
 export function isStructural(ref: EvidenceRef): ref is StructuralEvidenceRef {
   return requirementOf(ref) === 'structure';
 }
