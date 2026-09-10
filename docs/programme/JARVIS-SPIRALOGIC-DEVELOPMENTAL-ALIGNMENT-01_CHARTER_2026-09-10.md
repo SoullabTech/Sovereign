@@ -2821,7 +2821,20 @@ T-6  PRESERVE DISAGREEMENT                          Amendment R
 T-7  SCOPE IS CONSTITUTIONAL                        SP-FR-12
      a relational memory changes how MAIA meets THIS member and never becomes a
      rule about members
+
+T-8  ⭐⭐ TEMPORAL MAJORITY RULE                     SP-FR-00 across time
+     repeated past interpretations do NOT acquire authority over present meaning
+     merely by recurrence.
+       recurrence CAN justify      attention · a question · preserving a pattern
+                                   hypothesis
+       recurrence CANNOT settle    what the present event MEANS
+     and the repair must not overshoot: revise the MAP without rewriting the PAST
+     — historical fidelity · present sovereignty · revision without erasure.
+     Future retrieval carries BOTH the old reading and its revision; no old
+     interpretation becomes destiny.
 ```
+
+> ⭐ **T-8 keeps memory useful without making memory sovereign.**
 
 ## 3s. ⭐⭐⭐ DOCTRINE RECONCILIATION (founder ruling, 2026-09-10)
 
@@ -3090,6 +3103,84 @@ whole still governing what the present encounter is allowed to mean. **Provenanc
 answers "where did this come from." It does not answer "may the past outrank
 today."** ⛔ Recorded as a distinct requirement; **not a finding, and SD-01's to
 test.**
+
+### ⭐⭐⭐ The temporal discriminator — revise the map without rewriting the past
+
+**Founder, 2026-09-10.** The requirement above has a twin danger on each side, and
+naming only one of them produces the other:
+
+```text
+⛔ "the present outranks the accumulated account"  → implemented as AMNESIA
+⛔ "memory preserves history"                      → implemented as DETERMINISM
+```
+
+**Neither is right.** The lawful form is three-part:
+
+```text
+HISTORICAL FIDELITY    preserve what was actually said, noticed, inferred,
+                       rejected or believed AT THE TIME
+PRESENT SOVEREIGNTY    the current encounter has authority over what those prior
+                       patterns MEAN NOW
+REVISION WITHOUT       a new recognition may SUPERSEDE an old map without
+ERASURE                FALSIFYING OR DELETING the history from which that map arose
+```
+
+> ⭐ **The present must be able to revise the MAP without rewriting the PAST.**
+> That is the authority hierarchy's temporal equivalent.
+
+### The worked case
+
+```text
+LAWFULLY REMEMBERED   "Six months ago, the member described this as stuckness."
+LAWFULLY ACCEPTED     "Looking back, I don't think I was stuck at all. I was
+                       incubating."
+```
+
+> ⭐⭐ **What changes is not the historical record. What changes is the CURRENT
+> INTERPRETATION of the history.**
+
+### ⛔⛔ And what this means for `motion` — temporal majority rule
+
+```text
+5 prior "stuck" records
+        ↓
+current encounter says "this was gestation"
+        ↓
+⛔ system weights RECURRENCE over PRESENT RECOGNITION
+```
+
+> ⛔⛔ **That is SP-FR-00 INVERTED ACROSS TIME** — repeated historical labels
+> functioning as a vote.
+
+The lawful direction:
+
+```text
+past observations REMAIN PRESERVED
+        ↓
+current encounter MAY REINTERPRET them
+        ↓
+map revises
+        ↓
+future retrieval CARRIES BOTH
+        ↓
+⭐ NO OLD INTERPRETATION BECOMES DESTINY
+```
+
+### ⭐⭐⭐ What this adds to the spiral itself
+
+The charter's apostrophe said the next Fire **carries** the history of the previous
+passage. This is stronger:
+
+> **The return does not merely produce Fire₂. Fire₂ can ILLUMINATE THE WHOLE PRIOR
+> TURN OF THE SPIRAL DIFFERENTLY.**
+
+⭐ **And therefore: development is not merely accumulation.** Sometimes development
+consists precisely in **becoming capable of revising the meaning of what has
+already happened.** A member may not only notice a new process — they may suddenly
+**understand ten old encounters differently.**
+
+> ⭐⭐⭐ **That is not noise corrupting the longitudinal map. That may be THE
+> DEVELOPMENTAL EVENT.**
 
 ## 4. The process under test — frozen as amended
 
@@ -3521,6 +3612,13 @@ MAP-ASSIGNED
 > ⭐⭐ **Same database value; opposite direction of authority.** The first preserves
 > member-authored significance. The second is the map assigning meaning to the
 > encounter.
+
+⭐⭐ **And a third case, from the temporal discriminator:** five prior `stuck`
+records versus a present *"that was gestation, not stuckness"* — if recurrence
+outweighs the present recognition, the stored history has become **a vote on what
+the member's past meant.** ⛔ **Whether any retrieval or confidence path weights
+recurrence against a present reinterpretation is an SD-01 question** (DECIDE trap
+T-8).
 
 ⚠️ **`stuck` may be the most delicate of the three.** A system can see repeated
 movement and call it stuck while the member is **deepening, waiting, grieving,

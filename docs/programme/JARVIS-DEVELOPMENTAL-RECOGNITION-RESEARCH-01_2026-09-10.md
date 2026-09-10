@@ -730,6 +730,83 @@ recurrence, the past increasingly governing the present.
 accumulated account** — not only how capacity grows, but how a tradition lets a
 present moment overturn a settled understanding of the person.
 
+## V7.8 — ⭐⭐⭐ V7 has TWO complementary problems, not one
+
+**Founder, 2026-09-10.** The research question as first narrowed covered only half
+of it.
+
+```text
+1  CAPACITY ACQUISITION
+   how does SUPPORTED SEEING become the member's OWN CAPACITY?
+
+2  ⭐ DEVELOPMENTAL REVISION
+   how does NEW SEEING legitimately REORGANIZE THE ACCUMULATED UNDERSTANDING of
+   the person?
+```
+
+> ⭐⭐ **Those two together are much closer to a true epistemology of developmental
+> recognition than either independence or introspective accuracy alone.**
+
+### The second research question
+
+> **How do mature developmental traditions preserve continuity of identity and
+> learning while allowing present experience to revise the accumulated account —
+> without either erasing history or becoming captive to it?**
+
+⭐ **Likely more important than simple "fading of support"** (V7.4's candidate
+dimension list is therefore incomplete as first written).
+
+### The temporal discriminator V7 must carry
+
+```text
+HISTORICAL FIDELITY    preserve what was actually said, noticed, inferred,
+                       rejected or believed AT THE TIME
+PRESENT SOVEREIGNTY    the current encounter has authority over what those prior
+                       patterns MEAN NOW
+REVISION WITHOUT       a new recognition may supersede an old map without
+ERASURE                falsifying or deleting the history it arose from
+```
+
+> ⭐ **The present must be able to revise the MAP without rewriting the PAST.**
+
+⛔ Naming only one side produces the other failure: *present outranks accumulated*
+implemented as **amnesia**; *memory preserves history* implemented as
+**determinism**.
+
+### ⭐⭐ A new candidate recognition signal — and a strong one
+
+```text
+⛔ NOT ONLY   "did the member notice something new?"
+⭐ BUT        "did their new seeing alter WHAT PRIOR PATTERNS ARE NOW UNDERSTOOD
+              TO MEAN?"
+```
+
+> **Can the member revise the accumulated account in a way that REORGANIZES FUTURE
+> ORIENTATION?**
+
+⭐⭐ A very sophisticated form of recognition — and it maps onto the spiral: **the
+return does not merely produce Fire₂; Fire₂ can illuminate the whole prior turn
+differently.**
+
+⭐⭐⭐ **Which means: development is not merely accumulation.** Sometimes it consists
+precisely in becoming capable of **revising the meaning of what has already
+happened.** A member may not only notice a new process — they may **understand ten
+old encounters differently.** *That is not noise corrupting the longitudinal map.
+That may be the developmental event.*
+
+### ⛔ Trap carried into V7 — Temporal Majority Rule
+
+> **Repeated past interpretations do not acquire authority over present meaning
+> merely by recurrence.**
+
+```text
+recurrence CAN justify    attention · a question · preserving a pattern hypothesis
+recurrence CANNOT settle  what the present event MEANS
+```
+
+⭐ *Keeps memory useful without making memory sovereign.* Recorded in the charter as
+DECIDE trap **T-8**.
+
 ---
 
 ## 6. ⛔ Standing
@@ -801,3 +878,20 @@ present moment overturn a settled understanding of the person.
   from MAIA's certainty · fidelity protects **the encounter** from MAIA's
   representation · recognition protects **the member's becoming** from dependence
   on MAIA's seeing.
+- **2026-09-10 · V7 SCOPE EXTENDED (founder)** — ⭐⭐⭐ **V7 has TWO complementary
+  problems**: **capacity acquisition** (how supported seeing becomes the member's
+  own) and ⭐ **developmental revision** (how new seeing legitimately reorganizes
+  the accumulated understanding of the person). Second research question added:
+  *how do mature traditions preserve continuity of identity and learning while
+  allowing present experience to revise the accumulated account — without erasing
+  history or becoming captive to it?* — ⭐ **likely more important than fading of
+  support.** **Temporal discriminator:** historical fidelity · present sovereignty ·
+  **revision without erasure** — *revise the MAP without rewriting the PAST*; ⛔
+  naming one side alone yields **amnesia** or **determinism**. ⭐⭐ **New candidate
+  recognition signal: can the member revise the accumulated account in a way that
+  reorganizes future orientation?** — not only *did they notice something new* but
+  *did their new seeing alter what prior patterns are now understood to mean.*
+  ⭐⭐⭐ **Development is not merely accumulation** — a member may understand ten old
+  encounters differently, and **that may be the developmental event, not noise.**
+  Maps onto the spiral: **Fire₂ can illuminate the whole prior turn differently.**
+  ⛔ Trap carried: **Temporal Majority Rule** (charter DECIDE trap T-8).
