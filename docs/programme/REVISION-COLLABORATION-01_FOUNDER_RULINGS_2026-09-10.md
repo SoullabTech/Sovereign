@@ -442,6 +442,24 @@ value -> different value   REFUSED   a proposal cannot be reassigned to a
 This satisfies the ruling's intent exactly — *reassignment* is what must be
 impossible, and severance is what deletion legitimately does.
 
+### ⚠️ Semantic note — what a severed NULL means, and what it must never be read as
+
+⛔ **After erasure, `NULL` must NEVER later be interpreted as "this proposal never
+had conversational provenance."** It means only that **the reference is no longer
+available.**
+
+If a later feature genuinely needs to distinguish *never linked* from *link
+intentionally severed*, that distinction gets **its own explicit state then** — it
+is never reconstructed from `NULL`.
+
+⭐ **This is the same lesson as Sundial's `decision?: 'accepted' | 'rejected'`
+defaulting to `accepted` on older rows** (finding S-7): a field whose absence is
+later *interpreted* will be interpreted toward whatever the reader finds
+convenient. Absence is representable or it is guessed.
+
+⛔ Not a reason to reopen the migration now. Recorded so the reading is fixed
+before any code depends on it.
+
 ### Write boundary, when generation lands
 
 ```

@@ -544,3 +544,140 @@ OPEN QUESTION FOR FOUNDER
 implementation          NOT AUTHORIZED
 PRODUCTION              UNTOUCHED
 ```
+
+---
+
+# Addendum 3 — R2 · Sundial archaeology
+
+Run against the five axes the founder named. Two are decisive; two are **NOT
+ESTABLISHED** and are recorded as such rather than inferred.
+
+## ⭐⭐ S-9 — AXIS 3 (overlap / identity). The most valuable paragraph in the census.
+
+`lib/workspace/turn-edits.ts:303-325` is a complete, honest account of the identity
+problem, arrived at independently:
+
+```
+Chunk ids are CONTENT-derived, not position-derived. A position-encoded id
+(`chunk-N-oldStart-newStart-…`) shifts whenever an unrelated line above is
+added/removed, which orphans the chunk's decision and makes an
+already-resolved chunk re-render as pending.
+
+The sole ambiguity is identical changed content in the same file (e.g. the
+same word fixed in two paragraphs); ONLY those colliding chunks get a
+discriminator, and it's their surrounding context — order-independent, unlike
+a positional occurrence index, which would renumber when an identical edit is
+inserted above a kept one and LAND THE KEPT DECISION ON THE WRONG
+(UNREVIEWED) CHUNK.
+```
+
+⭐ **They independently discovered F-P2's failure mode — a decision landing on the
+wrong recurrence — and engineered against it.** Prose ships the bug; Sundial named
+it and designed around it. The census has now seen both halves of the same defect.
+
+### And their chosen failure direction is ours
+
+```
+Accepted residual: when a chunk that WAS unique gains an identical-content
+twin later in the run, its id flips … so a prior keep RE-PENDS (IT NEVER
+AUTO-ACCEPTS THE TWIN).
+```
+
+⭐ **When identity becomes ambiguous, the safe direction is back to needing a human
+decision.** That is `unmeasured` → refuse, reached independently by another team.
+
+### ⭐⭐ And they name the complete fix — which we already have
+
+```
+This is irreducible for a *derived* id — NO CONTENT-BASED ID CAN BE STABLE
+AGAINST BOTH nearby-context changes AND identical-content insertions; we pick
+this (rarer) corner. THE COMPLETE FIX IS A PERSISTENT STORED CHUNK ID, a
+larger change tracked separately.
+```
+
+That is a proof sketch that **derived identity cannot be sufficient**, from a team
+that lived it. Their named complete fix is a *persistent stored id*.
+
+**We already have it.** `manuscript_draft_sections.id` is a stored uuid under
+`UNIQUE (draft_id, position)`; RC-06b's `(id, revision, digest)` is stored, not
+derived. **Soullab is already at the state Sundial describes as "a larger change
+tracked separately."**
+
+⚠️ And the founder's own manuscript is the pathological input for the derived
+approach: deliberate repetition throughout, which is precisely "identical changed
+content in the same file" at scale.
+
+## 🔴 S-10 — AXIS 5 (bulk). REFUSE, and it is worse than the API shape suggested.
+
+```ts
+const keepAllSuggestions = useCallback(
+  () => { suggestions.forEach((s) => void keepEntry(s)); }, …)
+const undoAllSuggestions = useCallback(
+  () => { suggestions.forEach((s) => void undoEntry(s)); }, …)
+```
+
+`forEach` + `void`: **fire-and-forget over N items — no `await`, no error handling,
+no ordering, no atomicity.** A partial failure leaves an arbitrary subset applied
+and **nothing records which**.
+
+⭐ This answers the founder's question *"what not to do if we ever introduce batch
+acceptance"* concretely: **A-5 is not merely about an omitted identifier meaning
+wildcard. A batch verb whose implementation is an unawaited loop is not a decision
+at all — it is N independent races.** If batch acceptance is ever added it must be
+one transaction over an enumerated set, each member individually current.
+
+## S-11 — AXIS 1 (decision replay). Confirmed derived, not stored.
+
+Chunks are always **built** as `status: 'pending'` (`turn-edits.ts:357`); `kept` /
+`undone` are reached by **replaying `diff.chunk_kept` / `diff.chunk_undone`
+events** against chunk ids. History is the event stream; the chunk's status is a
+projection of it.
+
+⭐ Confirms A-3 / S-4 in an independent codebase, and matches the principle *the
+renderer never owns a proposal.*
+
+⛔ **NOT ESTABLISHED:** whether a decision event is itself immutable, and whether a
+later event can reverse an earlier one. Not readable from the client-side sources
+examined. Recorded as unknown.
+
+## ⛔ NOT ESTABLISHED — axes 2 and 4
+
+```
+AXIS 2  source changes between proposal and review, when the content-hash
+        identity no longer matches
+        -> S-9 covers the IDENTITY consequence (re-pend). Whether the diff is
+           rebuilt, rebased or refused is NOT established from these sources.
+
+AXIS 4  what happens to edit provenance when `assistantMessageId` disappears
+        -> NOT ESTABLISHED. The client-side search surfaced no deletion path.
+           This is the axis directly comparable to RC-08 monotonic severance,
+           so it is the one most worth resolving — it needs the server routes,
+           which are not in the paths read.
+```
+
+⚠️ Recorded as unknown rather than guessed. **The comparison to RC-08 is exactly
+where an inferred answer would be most tempting and most misleading.**
+
+## Verdicts · Sundial archaeology
+
+```
+VALIDATES OURS   ambiguity re-pends, never auto-accepts        S-9
+VALIDATES OURS   persistent stored id is the complete fix      S-9
+VALIDATES OURS   decisions replayed; status is projection      S-11
+REFUSE           bulk verbs as unawaited loops                 S-10
+OPEN             decision-event immutability                   S-11
+OPEN             diff behaviour on identity mismatch           axis 2
+OPEN             provenance on turn deletion                   axis 4
+```
+
+## Standing
+
+```
+R1 PROSE · SUNDIAL      DONE
+R2 PROSE                SUBSTANTIALLY DONE
+R2 SUNDIAL              DONE for 3 of 5 axes; 2 NOT ESTABLISHED
+R1 remaining            codemirror-ai · prosemirror-suggestion-mode ·
+                        @codemirror/merge · jsdiff · FineEdit · CoEdIT
+implementation          NOT AUTHORIZED
+PRODUCTION              UNTOUCHED
+```
