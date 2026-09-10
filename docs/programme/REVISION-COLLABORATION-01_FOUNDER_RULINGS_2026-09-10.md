@@ -246,13 +246,89 @@ its history.
 historical evidence, or collapses to a reference once adopted. **The RC-06 test is
 what decides it, not convenience.**
 
-### RC-06b — Candidate state needs a trustworthy identity
+### RC-06b — Candidate identity ⭐ RATIFIED 2026-09-10
+
+> **A MODIFY candidate has a stable identity plus an append-only revision
+> history. Any proposal made against a candidate must identify the exact
+> candidate revision it saw, not merely the candidate.**
+
+```
+lawful      (candidate_id, revision_number, digest)
+NOT         candidate_id
+```
+
+**Why.** A writer keeps changing their candidate while discussing it:
+
+```
+C1 r1 -> writer edits -> C1 r2 -> asks MAIA -> P2 based on C1 r2
+                                            -> writer edits -> C1 r3
+```
+
+If P2 records only `candidate_id = C1`, *what wording was MAIA responding to?* has
+no truthful answer. **A frozen digest alone proves the candidate subsequently
+changed but cannot recover the state MAIA actually saw. The revision history can.**
+
+### Required shape — the Work's versioning law, applied to candidates
+
+```
+revision_candidate
+    stable identity / lifecycle
+
+revision_candidate_revisions
+    candidate_id · revision_number · body · digest
+    created_at · authored_by member
+    UNIQUE (candidate_id, revision_number)
+```
+
+**Candidate prose is never edited in place** — a writer change appends revision
+N+1. Earlier candidate revisions are immutable under ordinary operation.
+
+⚠️ **Immutability must not become an excuse to defeat member erasure rights.**
+Governed erasure remains a separate lifecycle obligation (RC-05 condition 6).
+
+A monotonic `current_revision_number` pointer on the identity is lawful if useful:
+**advancing a pointer does not rewrite historical prose.**
+
+### The reference must be enforced, not disciplined
+
+A proposal against a candidate carries `derived_from_candidate_id` ·
+`_revision` · `_digest`. ⭐ **The database relationship should make it impossible
+to point to a revision number with the wrong digest — not merely depend on
+application discipline.**
+
+Mechanism: `UNIQUE (candidate_id, revision_number, digest)` on the revisions
+table, with the proposal's three columns as a **composite foreign key** onto that
+triple. A mismatched pairing is then unrepresentable rather than merely incorrect.
+
+Existing recovery and staleness logic then operates honestly, never fuzzy:
+
+```
+same candidate revision + digest    current
+later candidate revision exists     superseded
+cannot establish the relationship   unmeasured
+```
+
+### ⛔ One boundary
+
+```
+canonical Work revisions    authority over the manuscript
+candidate revisions         authority over this unfinished candidate
+```
+
+Different authored objects. **This does not turn the candidate into another
+Work.** Before application the candidate revision store is that prose's sole
+authoritative home; application later changes that relationship — **which is why
+RC-06a stays open and is not silently settled by this ruling.**
+
+---
+
+### RC-06b — original statement of the problem (retained)
 
 If MAIA makes P2 against C1 before C1 is applied, **P2 must identify the exact
 candidate state it saw.** A candidate cannot be a mutable blob whose prior state
 disappears while downstream proposals still claim to derive from it.
 
-⛔ **This blocks part of the R1 migration shape.** Under design §7, R1 must persist
+⛔ *(As first recorded — now resolved by the ratification above.)* **This blocks part of the R1 migration shape.** Under design §7, R1 must persist
 the full proposal shape so R2 needs no backfill — and a proposal's reference to a
 candidate is then **not an id but a triple**: `(candidateId, candidateRevision,
 digest)`. Choosing wrong now means migrating history later.
@@ -294,6 +370,76 @@ WORK@R18
 ⭐ **R1 is UNBLOCKED by this ruling** — RC-05 settles the only §9 item identified as
 blocking it. ⛔ **The other four open design acts remain open; this ruling does not
 silently settle them, and implementation beyond R1 is not generally authorized.**
+
+---
+
+## RC-07 — The capability rule (product)
+
+**Ruled 2026-09-10, on a live Develop-room transcript.** The writer asked *"Do we
+need to adjust the languaging of any iteration to make it flow better? Offer ideas
+to revise them to work best."* — and the system had nowhere to go. It could only
+produce more chat.
+
+> ⭐ **When a writer explicitly asks MAIA to edit, revise, tighten, adjust,
+> rewrite, or offer alternative language, MAIA must be able to return concrete
+> revision proposals against the authorized text — not merely advice about what
+> might be changed.**
+>
+> ⭐ **Every proposal remains a proposal until the writer accepts or modifies it.
+> Only the writer's explicit application changes the Work.**
+
+### The intended exchange, in place
+
+Proposals appear **inside the conversation the writer is already in**. Observation,
+discussion, permission and proposed revisions belong together.
+
+```
+SECTION 13 — A Vivid Dream and a New Understanding
+
+MAIA suggests:
+  [proposed revised wording]
+
+Why:
+  Keeps the first waking resolved and lets the later Aether waking
+  carry the unanswered question.
+
+[Accept]   [Revise]   [Leave it]
+```
+
+```
+ACCEPT     approved revision, ready to apply through the governed WRITE path
+           ⛔ still does not silently overwrite the Work
+
+REVISE     the proposal opens as the writer's editable candidate
+             MAIA'S PROPOSAL   immutable original suggestion
+             YOUR VERSION      editable
+           then [Apply to Work]
+
+LEAVE IT   proposal preserved, Work unchanged (RC-03)
+
+KEEP TALKING   "keep the first exactly as it is; give me three subtler
+               versions of the second" -> NEW proposals (RC-04), never
+               modifications of her old proposal and never changes to
+               the writer's candidate
+```
+
+Only when the writer wants to work directly in the manuscript does the transition
+become `Work on this →`, opening WRITE at the section **with the conversation
+continuing beside them**.
+
+### The build order this fixes
+
+```
+DISCUSS                  BUILT
+ASK FOR REVISION         UNDERSTOOD by MAIA already
+GENERATE PROPOSALS       BUILD
+REVISE A PROPOSAL        BUILD
+ACCEPT / LEAVE           BUILD
+APPLY TO WORK            BUILD
+CONTINUE SAME CONVO      BUILD
+```
+
+⛔ **The next visible implementation is not another permission improvement.**
 
 ---
 
@@ -388,7 +534,11 @@ RC-01 .. RC-04              RATIFIED
 RC-05 candidate storage     AUTHORIZED (rationale amended by RC-06)
 RC-06 one authoritative home  RATIFIED
 RC-06a post-apply rule      OPEN — requires an act
-RC-06b candidate identity   OPEN — blocks part of the R1 migration shape
+RC-06b candidate identity   RATIFIED — append-only revisions,
+                            identity = id + revision + digest,
+                            pairing enforced by composite FK
+RC-07 capability rule       RATIFIED
+R1 proposal migration       UNBLOCKED
 constitutional rule         RATIFIED
 DESIGN                      RECORDED
 R1                          UNBLOCKED — authorized to proceed
