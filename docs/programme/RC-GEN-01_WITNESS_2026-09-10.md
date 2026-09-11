@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUNS 1-7 FAILED · RUN 8 ⛔ AWAITING RULING
+3A-S   semantic witness        ⛔ RUNS 1-8 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -451,7 +451,82 @@ CONSTITUTIVE EDGE
 ⚠️ **One of the two ruled drifts is verbatim unchanged.** Recorded as a fact, not as
 a conclusion about whether the law failed to reach it.
 
-⛔ 3A-S AWAITING RULING on run 8. 3A NOT PASSED. 3D CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 8: **FAIL**
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### What holds
+
+No node collapse, no dropped edge. *"The shift in how he saw things that came out
+of that change"* keeps the perceptual shift distinct **and** relates it as resulting
+from the relational change. *"was a meaningful development in"* is faithful to the
+constitutive relation.
+
+### 🔴 Both forms the run-7 law was written to catch, in one proposal
+
+```
+importance -> magnitude
+  "significant transformation" -> "large change"
+  `large` asserts magnitude. `significant` can mean important, consequential
+  or noteworthy while being SUBTLE in magnitude.
+
+process -> deliberate / agentive participation
+  "ongoing process of integration"
+    -> "the process of integration he was already engaged in"
+  `already` is defensible as temporal continuity. `engaged in` is not
+  neutral: it adds that he was actively undertaking it.
+```
+
+### ⭐⭐ THE FRAMING CORRECTION — this is NOT an eighth failure class
+
+⛔ **The sequence must not be recorded as eight distinct classes.**
+
+```
+1  invention
+2  semantic collapse
+3  teleological coloring
+4  semantic collapse regression
+5  dropped edge
+6  node substitution
+7  node-property drift
+8  node-property drift PERSISTS
+```
+
+> ⭐ **Run 8 is the FIRST DIRECT TEST of the run-7 property-preservation repair, and
+> it shows that repair has not closed the class.**
+
+⭐ *"The new law has not yet produced a passing inference — but the specimen is now
+testing it exactly where intended."*
+
+### ⚠️ ENGINEERING OBSERVATION — this failure differs in kind from the first seven
+
+⛔ **Not a ruling, and no repair is made on it.** Through run 7, every failure was
+something the instruction **did not yet say**. Run 8 is the first where **the
+instruction already forbids the exact failure, in nearly the exact words** — *"do
+not turn importance into magnitude"* and *"a process into a deliberate effort"* —
+**and the failure occurred anyway.**
+
+Three readings are available and the evidence does not separate them:
+
+```
+the law does not reach the phrase   ·  `large` is not read as a magnitude claim
+·  "brought about a large change" is produced as a unit before the
+   constraint is consulted
+```
+
+⛔ **No further clause is added.** Every prior repair supplied something absent;
+another statement of a rule already present would be a different act, and one the
+evidence does not yet justify. **A second data point against the unchanged run-7
+law is worth more than an eighth wording.**
+
+### Specimen 2 — PASS, eighth consecutive
+
+**Restraint is not the unsettled capability.** The unresolved issue remains faithful
+transformation under semantic simplification.
 
 ## 3A-S — RUN 7 · evidence of record
 
