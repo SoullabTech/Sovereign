@@ -2035,3 +2035,102 @@ so it was tested against the thing it must still refuse.
 **Standing: terse corpus FROZEN/UNTOUCHED · adjudication COMPLETE/UNTOUCHED ·
 DeBERTa phase 3 NOT RUN · phase 3 evidence UNSPENT · defect REPAIRED IN
 INSTRUMENT ONLY.**
+
+---
+
+## ⭐⭐ PHASE 3 RESULT — THE EFFECT REAPPEARS UNDER THE ECOLOGICAL CONDITION (2026-09-11)
+
+```text
+⭐ PRIMARY — adjudicator-confirmed neutral·plausible (n=39)
+  possibility PRESERVED     30/39 = 77%   95% CI [62%, 87%]
+  ⛔ promoted to entailment   8/39 = 21%   95% CI [11%, 36%]
+  called contradiction        1/39 =  3%
+
+  SENSITIVITY (excluding 8 hard-to-label)  23/31 = 74%   difference −2.7 pp
+  CONTROLS   entailed 10/10 = 100%   ·   contradicted 10/10 = 100%
+```
+
+**Predeclared reading 2 fires:** *abundant open cases **and** preservation drops
+→ the overcommit reappears under the ecological condition.*
+
+| | preserved | |
+|---|---|---|
+| phase 2, determinate premises | 29/30 = **97%** | |
+| phase 3, terse natural premises | 30/39 = **77%** | **p = 0.035** |
+
+⛔ **And it is NOT general degradation.** Within the same corpus and the same run:
+
+```text
+controls (entailed + contradicted)   20/20 = 100%
+the open class                       30/39 =  77%       p = 0.022
+```
+
+> ⭐⭐ **Falsehood detection is perfect. Restraint fails one time in five.** The
+> distinction the founder named — *"falsehood detection is easier than restraint
+> in the face of plausible inference"* — is now demonstrated **inside a single
+> corpus**, where it cannot be a composition artifact between corpora. Phase 2's
+> fourth predeclared reading did not fire there; it fires here.
+
+⚠️ **The difficulty of the cases is not what is driving it.** Excluding the eight
+items the adjudicator found hard to label moves the rate by **−2.7 points** —
+the wrong direction for "the errors are just the ambiguous ones", and far too
+small to carry that explanation.
+
+⛔ **What this does NOT establish**: that implicitness caused the drop. Brevity,
+sibling removal and single-hypothesis presentation moved together. The claim is
+**exactly** the predeclared one — *performance changes under the natural terse
+single-hypothesis condition* — and no more.
+
+### ⭐ The adjudicator's predeclared mechanism — partially hit
+
+It predicted, before any model ran, that **hedges, quantifiers and reported-speech
+frames** would be read past. Two of the eight promotions are squarely that:
+
+- **U01** — *"**Marcus said** he'd swing by after work"* → *"Marcus will come round
+  in the evening."* ⭐ **reported-speech frame**, exactly as predicted.
+- **U48** — *"**Half** the rowing club drinks in the Fox…"* → *"Priya rows with the
+  club."* ⭐ **quantifier**, exactly as predicted.
+
+**Six are not.** They are something else, and it is the thing T078 was.
+
+### ⛔ T078 NOW HAS COMPANY — and I must not be the one who says so
+
+```text
+U23  [causation]  gave up coffee in February · sleeping much better now
+                  -> quitting coffee is what improved his sleep
+U53  [causation]  took the job in Perth · six months later the marriage was over
+                  -> the move ended the marriage
+U39  [dev.change] since the surgery she's been walking to the shop and back
+                  -> she has recovered from the surgery
+U59  [dev.change] used to ask about every joint · now he just gets on with it
+                  -> he has become competent at the work
+U35  [identity]   the man who fixed our boiler turned up at the neighbours'
+                  -> he worked on the neighbours' boiler
+U07  [role]       whenever the servers go down it's Bilal fixing them at 2am
+                  -> Bilal is responsible for the servers
+```
+
+**Source gives A and B; commonsense makes C plausible; the verifier promotes C.**
+Every one is a *post hoc*, a completion, or a role inferred from a habit — none is
+a linguistic boundary failure.
+
+⚠️ **The domain rows agree without being asked to**: `causation 2/4 promoted` and
+`developmental change 2/4 promoted` are the two worst domains, and they supply
+four of the eight. ⛔ n=4 each — directional, not a finding.
+
+⛔⛔ **BUT THE CLASSIFICATION ABOVE IS MINE, AND I HOLD THE HYPOTHESIS.** Deciding
+which promotions are "world-knowledge completion" is exactly the judgement this
+lane has repeatedly taken out of the hands of the party who wants an answer. **A
+class named by its proponent is not a class.**
+
+**Proposed, not taken:** a blind classification of the **nine** promoted cases —
+these eight plus T078 — by an independent party given only premise, hypothesis
+and a neutral question (*what kind of step did the reader have to take?*), with no
+category list supplied and no knowledge that a class is being proposed. If
+independent categories converge on the same grouping, the class is real. ⛔ **If I
+supply the category names, the result is worthless.**
+
+**Standing: overcommit REAL under ecological conditions (p=0.035) · specific to
+the open class within one corpus (p=0.022) · not explained by case difficulty
+(−2.7 pp) · explicitness NOT established as cause · world-knowledge completion
+has 6 new candidates and NO independent classification · production UNTOUCHED.**
