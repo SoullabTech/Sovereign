@@ -34,6 +34,12 @@ import {
 } from '@/lib/voice/dispatchProvenance';
 import { classifyRecognitionEnd, RAPID_END_LOOP_THRESHOLD } from '@/lib/voice/rapidEndPolicy';
 import {
+  acceptPartial,
+  composeTurnText,
+  emptyTurnAccumulator,
+  type TurnAccumulatorState,
+} from '@/lib/voice/turnAccumulator';
+import {
   TURN_COMPLETE_RECOVERABLE,
   shouldNormalizeToIdle,
   restartPolicy,
@@ -345,6 +351,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStreamRef = useRef<MediaStream | null>(null);
   const lastSpeechTime = useRef<number>(0); // 0 = no speech detected yet (NOT Date.now() which causes false positives)
   const accumulatedTranscript = useRef<string>("");
+  // Repair Two (RUNTIME-01 E19): native partials are folded into committed
+  // segments + live partial so a recognizer segment reset cannot discard
+  // speech already captured. `accumulatedTranscript` stays the canonical
+  // composed text every existing send path reads.
+  const nativeTurnRef = useRef<TurnAccumulatorState>(emptyTurnAccumulator());
   const isProcessingRef = useRef(false);
   const isSpeakingRef = useRef(false); // Track isSpeaking via ref to avoid stale closures
   const isListeningRef = useRef(false); // Track isListening via ref to avoid stale closures
@@ -2895,6 +2906,45 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         }
 
         // Set up listener for partial results
+        // Repair Two: the ONLY turn-close authorities on the native path are
+        // the silence timers (this one and the audio-level one below). The
+        // recognizer's own `stopped` event is not one — see the listeningState
+        // handler. Same 2500 ms as before; nothing about the value changed.
+        const armNativeFallbackSilenceTimer = () => {
+          if (nativeSilenceTimerRef.current) {
+            clearTimeout(nativeSilenceTimerRef.current);
+          }
+          nativeSilenceTimerRef.current = setTimeout(() => {
+            const finalTranscript = accumulatedTranscript.current.trim();
+            if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
+              logVoiceEvent('ios_voice_final_result_received', {
+                source: 'partial_silence_timeout_2500ms',
+                transcriptLength: finalTranscript.length,
+              });
+              console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
+              addDebug('⏱️ Auto-submit (2.5s silence)');
+              accumulatedTranscript.current = '';
+              nativeTurnRef.current = emptyTurnAccumulator();
+              isProcessingRef.current = true;
+              setIsRecording(false);
+              isRecordingRef.current = false;
+              witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
+              onTranscript(finalTranscript);
+              // Stop native recognition
+              NativeSpeechRecognition.stop().catch(() => {});
+            }
+            nativeSilenceTimerRef.current = null;
+          }, 2500); // 2.5s of no partials = end of speech
+        };
+        // Repair Two: a restart (post-stop, post-backoff) arrives here with
+        // the timer just cleared above. If a turn is still pending — text was
+        // held at a recognizer `stopped` boundary — re-arm the same fallback
+        // timer so the held text is closed by the member's silence, never
+        // left orphaned by the restart that cleared its timer.
+        if (accumulatedTranscript.current.trim()) {
+          armNativeFallbackSilenceTimer();
+        }
+
         addDebug('📡 Setting up partialResults listener...');
         nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
           if (data.matches && data.matches.length > 0) {
@@ -2914,39 +2964,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // 🔥 FIX: Reset restart counter when user actually speaks - prevents stopping during valid conversation
             consecutiveRestartCount.current = 0;
 
-            // Send interim transcript
+            // Repair Two: fold the partial into the turn instead of replacing
+            // the buffer. A send path clears `accumulatedTranscript`; that is
+            // the signal that a new turn has begun, so the segment buffer
+            // starts fresh too.
+            if (!accumulatedTranscript.current) {
+              nativeTurnRef.current = emptyTurnAccumulator();
+            }
+            const turnBefore = nativeTurnRef.current;
+            nativeTurnRef.current = acceptPartial(turnBefore, transcript);
+            if (nativeTurnRef.current.committed.length > turnBefore.committed.length) {
+              const carried = turnBefore.live.trim();
+              logVoiceEvent('ios_voice_segment_carried', {
+                carriedChars: carried.length,
+                committedSegments: nativeTurnRef.current.committed.length,
+              });
+              console.log('🧷 [Native] Recognizer segment reset — carrying', carried.length, 'chars forward, not discarding');
+            }
+            const turnText = composeTurnText(nativeTurnRef.current);
+
+            // Send interim transcript (the whole turn so far, not just the live segment)
             if (onInterimTranscript) {
-              onInterimTranscript(transcript);
+              onInterimTranscript(turnText);
             }
 
             // Accumulate transcript
-            accumulatedTranscript.current = transcript;
+            accumulatedTranscript.current = turnText;
 
             // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
             // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
-            if (nativeSilenceTimerRef.current) {
-              clearTimeout(nativeSilenceTimerRef.current);
-            }
-            nativeSilenceTimerRef.current = setTimeout(() => {
-              const finalTranscript = accumulatedTranscript.current.trim();
-              if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
-                logVoiceEvent('ios_voice_final_result_received', {
-                  source: 'partial_silence_timeout_2500ms',
-                  transcriptLength: finalTranscript.length,
-                });
-                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
-                addDebug('⏱️ Auto-submit (2.5s silence)');
-                accumulatedTranscript.current = '';
-                isProcessingRef.current = true;
-                setIsRecording(false);
-                isRecordingRef.current = false;
-                witnessDispatch('native_silence', 'silence_timer', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-                onTranscript(finalTranscript);
-                // Stop native recognition
-                NativeSpeechRecognition.stop().catch(() => {});
-              }
-              nativeSilenceTimerRef.current = null;
-            }, 2500); // 2.5s of no partials = end of speech
+            armNativeFallbackSilenceTimer();
           } else {
             logVoiceEvent('ios_voice_result_empty');
             addDebug('⚠️ partialResults fired but no matches');
@@ -3035,6 +3082,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   }
                   console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
                   accumulatedTranscript.current = '';
+                  nativeTurnRef.current = emptyTurnAccumulator();
                   isProcessingRef.current = true;
                   setIsRecording(false);
                   isRecordingRef.current = false;
@@ -3089,15 +3137,21 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // wantsContinuousConversationRef persists the user's intent to continue conversation
             const wantsToListen = isListeningRef.current || wantsContinuousConversationRef.current;
 
-            // Process accumulated transcript (only if we were actively listening)
+            // Repair Two (RUNTIME-01 E19): a recognizer stop is NOT a turn
+            // close. The text captured so far stays in the buffer; the silence
+            // timers (2.5 s no-partials / 1.5 s audio-level) remain the only
+            // authorities that send it, and a member stop (`stopListening`)
+            // still sends explicitly. If a stop arrives with text pending and
+            // no timer armed, arm the same fallback timer rather than sending
+            // here, so the member's pause — not the recognizer's boundary —
+            // decides when the turn is over.
             if (isListeningRef.current && accumulatedTranscript.current.trim()) {
-              const finalTranscript = accumulatedTranscript.current.trim();
-              console.log('✅ [Native] Final transcript:', finalTranscript);
-              accumulatedTranscript.current = '';
-              setIsRecording(false);
-              isRecordingRef.current = false;
-              witnessDispatch('native_stop', 'native_stop', finalTranscript, recognitionEpochRef.current, turnCommitIdRef.current);
-              onTranscript(finalTranscript);
+              const pendingChars = accumulatedTranscript.current.trim().length;
+              logVoiceEvent('ios_voice_stop_held_pending_turn', { pendingChars });
+              console.log('🧷 [Native] Recognizer stopped with', pendingChars, 'chars pending — holding; silence timer closes the turn');
+              if (!nativeSilenceTimerRef.current) {
+                armNativeFallbackSilenceTimer();
+              }
             }
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation

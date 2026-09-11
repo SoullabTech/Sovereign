@@ -128,6 +128,21 @@ export type VoiceDiagEvent =
   | 'ios_voice_result_empty'
   | 'ios_voice_error'
   | 'ios_voice_listening_stopped'
+  // IOS-CONVERSATION-RUNTIME-01 · Repair Two (E19, 2026-09-11): turn-close
+  // authority moved off the recognizer boundary. Both events report an
+  // observed recognizer boundary that the web layer now survives instead of
+  // treating as the end of the member's turn.
+  //
+  //   ios_voice_segment_carried        the recognizer re-segmented inside one
+  //                                    task (E16.1); the previous partial was
+  //                                    committed and carried forward, not
+  //                                    discarded
+  //   ios_voice_stop_held_pending_turn a `stopped` state arrived with text
+  //                                    pending; the turn was held for the
+  //                                    silence timer instead of being sent
+  //                                    at the recognizer's boundary
+  | 'ios_voice_segment_carried'
+  | 'ios_voice_stop_held_pending_turn'
 
   // ── VOICE-CAPTURE-01B-OBS dispatch provenance ───────────────────────────
   // `processAccumulatedTranscript` is one of EIGHT `onTranscript(...)` call

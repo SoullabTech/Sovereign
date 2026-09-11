@@ -98,8 +98,10 @@ describe('VOICE-CAPTURE-01B-OBS — every send boundary is witnessed', () => {
 
   it('finds the send boundaries non-trivially', () => {
     // Guards the test itself: a regex that matched nothing would make the
-    // contract below vacuously true. The 64c2b7c07 census found 8.
-    expect(invocationLineNumbers().length).toBeGreaterThanOrEqual(8);
+    // contract below vacuously true. The 64c2b7c07 census found 8; Repair Two
+    // (RUNTIME-01 E19, 2026-09-11) removed the `native_stop` send path — a
+    // recognizer stop no longer closes the turn — so the floor is 7.
+    expect(invocationLineNumbers().length).toBeGreaterThanOrEqual(7);
   });
 
   it('precedes EVERY onTranscript invocation with its OWN witnessDispatch', () => {
