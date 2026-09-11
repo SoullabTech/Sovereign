@@ -2588,3 +2588,128 @@ X3                role swap REJECTED — every noun and verb occurs in the sourc
 
 ⛔ **Standing unchanged: no result · evidence gate HELD · B HELD · A→B→C→D HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐ VERIFIER PROBE — RUN · BOTH VERIFIERS · READINGS ONLY
+
+`2026-09-11T08:24Z`, founder's machine, two isolated venvs.
+`DeBERTa-v3-large-mnli-fever-anli-ling-wanli` (transformers 5.17) ·
+`vectara/hallucination_evaluation_model` (transformers 4.57, its own environment).
+Raw JSON on the founder's machine: `verifier-probe-20260911T0824{11,44}.json`.
+`id2label` read from config: `{0: entailment, 1: neutral, 2: contradiction}`.
+
+```
+CASE                 EXPECTED        DeBERTa                 HHEM
+N1-AS-ACTIVE         not_entailed    neutral          ok     0.3053   ok
+N2-AS-UNDERGO        not_entailed    entailment      MISS    0.8733  MISS
+N3-FRAGMENT          not_entailed    neutral          ok     0.3147   ok
+N4-ASSOCIATION       not_entailed    neutral          ok     0.1969   ok
+N5-MENTION           not_entailed    neutral          ok     0.1830   ok
+N6-DENIAL            not_entailed    contradiction    ok     0.0581   ok
+P1-EXPLICIT          entailed        entailment       ok     0.8849   ok
+P2-DOING             entailed        entailment       ok     0.2475  MISS
+P3-UNDERGO           entailed        entailment       ok     0.7675   ok
+P4-UNDERGO-2         entailed        entailment       ok     0.8195   ok
+X1-MIXED-ACTIVE      entailed        entailment       ok     0.2528  MISS
+X2-MIXED-UNDERGO     entailed        entailment       ok     0.8931   ok
+X3-MIXED-WRONG-WAY   not_entailed    contradiction    ok     0.0762   ok
+
+                     DeBERTa   asserted 6/6   abstained 6/7
+                     HHEM      asserted 4/6   abstained 6/7
+```
+
+### ⭐ N3 vs P1 — THE CENTRAL DISCRIMINATOR · BOTH SPLIT IT
+
+```
+N3  "his ongoing process of integration"        -> participates
+      DeBERTa  neutral        HHEM  0.3147
+P1  "He actively participated in the integration process."  -> participates
+      DeBERTa  entailment     HHEM  0.8849         margin 0.5702
+```
+
+### ⭐⭐ N1 — THE EXACT EDGE THE ANALYSER EMITTED · BOTH REJECT IT
+
+Both verifiers, given the real source sentence and the real hypothesis A asserted,
+return **not entailed**. ⭐ **On the precise case where the generative analyser
+overcommitted, two independently trained models do not.**
+
+### ⭐ THE TWO HARDEST NEGATIVES, AND BOTH ARE CATEGORICAL, NOT MARGINAL
+
+```
+N6  explicit denial   DeBERTa CONTRADICTION   HHEM 0.0581  (lowest of all 13)
+X3  role swap         DeBERTa CONTRADICTION   HHEM 0.0762
+```
+
+⭐ X3 is the case where **every noun and verb occurs in the source and only the
+relation is wrong.** Both reject it decisively, and DeBERTa reaches for
+`contradiction` rather than `neutral` on both — the founder's stated ideal for N6,
+met, and met on X3 as well.
+
+### ⚠️ HHEM'S THREE MISSES ARE A PATTERN, NOT A TALLY
+
+```
+P2  "She ran every trial in the study herself"  -> participates in the study   0.2475
+X1  "Ravi chaired the first hearing"            -> participates in the hearing 0.2528
+```
+
+⚠️ **Both are ACTIVE participation requiring one short inferential step, and HHEM
+scores them like negatives** — in the same band as N1 (0.3053) and N3 (0.3147), which
+are the cases it is supposed to reject. ⛔ **It does not separate "did the work" from
+"was merely nearby".** Its passive/undergo cases (P3 0.7675 · P4 0.8195 · X2 0.8931)
+are strong. DeBERTa takes all four.
+
+⚠️ HHEM's load also reported `t5.transformer.encoder.embed_tokens.weight | MISSING —
+newly initialized`, on both attempts. ⛔ Its numbers are recorded **with that
+qualification attached**, not laundered into a clean comparison.
+
+### ⛔⛔ N2 — THE SHARED MISS, AND IT MAY BE THE FIXTURE, NOT THE VERIFIERS
+
+```
+SOURCE      "...facilitated a significant transformation in his relational orientation..."
+HYPOTHESIS  "He undergoes the transformation."
+EXPECTED    not_entailed
+DeBERTa     entailment      HHEM  0.8733
+```
+
+⭐ **Two models with different architectures, different training tasks and different
+training data agree confidently — and disagree with my frozen expectation.** Where
+they disagree with each other elsewhere, here they do not.
+
+⛔ **I am not resolving this, and I am specifically not editing the fixture.** Two
+readings are open and they are not equivalent:
+
+```
+(a) both verifiers share a blind spot on "a transformation IN his X" -> "he undergoes it"
+(b) ordinary English does license it, and the frozen expectation is wrong
+```
+
+⛔⛔ **Changing N2's expected value after seeing two models disagree with it is
+tuning the test to the answer — the same act the threshold discipline forbids,
+performed on the fixture instead of the cut.** If the expectation moves, it moves by a
+founder ruling on the semantics, recorded as its own act, and the original
+expectation stays visible in the record.
+
+⚠️ Note the asymmetry that makes this live rather than academic: **the founder's A-S
+rubric ruled BOTH edges unlicensed**, `undergoes` included. So a ruling for (b) would
+narrow the A-S finding to the `actively_participates_in` edge alone — **it would not
+overturn A-S**, because N1 fails independently and both verifiers agree it does.
+
+### ⛔ WHAT THIS PROBE DOES NOT ESTABLISH
+
+```
+13 cases, written by me, AFTER seeing A-S fail.
+General English, not MAIA's prose, not a Work, not a real revision.
+repeat=1 — no determinism data, and per the founder's correction none was needed.
+```
+
+⛔ **It is not a performance claim, not a benchmark, and not a decision that either
+model becomes MAIA's gate.** It answers exactly the question that was asked:
+
+> ⭐⭐ **Does an independently trained verifier possess the distinction that our
+> generative analyser lacks?**
+>
+> On the central discriminator (N3 vs P1), on the actual failure (N1), and on the
+> hardest negative (X3): **DeBERTa does, on all thirteen but the shared N2. HHEM does
+> on the negatives and is weak on inferred active participation.**
+
+⛔ **Standing unchanged: no MAIA integration · evidence gate HELD · analyzer/3
+UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
