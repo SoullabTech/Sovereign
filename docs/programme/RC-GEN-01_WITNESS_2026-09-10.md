@@ -3763,3 +3763,94 @@ signal.** ⛔ Unmeasured.
 ⛔ **Standing unchanged: nothing built this turn · calibration UNMEASURED · MiniCheck
 NOT RUN · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — CALIBRATION BEFORE MiniCheck · AND THE QUESTION CHANGES
+
+> ⛔ **Not "how accurate is DeBERTa?" but "DOES DeBERTa KNOW WHEN IT MIGHT BE WRONG?"**
+
+```
+CONTINUITY     prevents amnesia
+CORRIGIBILITY  prevents rigidity
+STEWARDSHIP    prevents the system overriding the person
+OPENNESS       prevents premature closure
+```
+
+> ⭐ **The UNRESOLVED band is not an error state. It is the space in which openness
+> remains possible.**
+
+⭐ **Order ruled:** calibration first. *MiniCheck tells us whether another witness sees
+differently; calibration tells us something more fundamental about the witness we
+already have — whether its certainty bears any reliable relationship to its
+correctness.* That determines whether `UNRESOLVED` **can be grounded partly in
+confidence, or must be grounded in something richer than confidence alone.**
+
+### ⭐⭐ THE SUBTLE POSSIBILITY, AND MY INSTRUMENT COULD NOT SEE IT
+
+> *"Even if absolute confidence is poor, PATTERNS of confidence may still carry
+> information."*
+
+```
+ordinary relational inference    well calibrated
+satellite-modifier cases         confidently wrong
+temporal widening                confidently wrong
+explicit contradiction           very well calibrated
+```
+
+⛔ **A global mean cannot detect that.** A verifier well calibrated on ordinary
+inference and confidently wrong on modifier cases would read as *mediocre and unusable*
+on one number, and **be usable** once the regime is named. The instrument now reports
+**by `group` and by `family`**, flags any regime whose misses average ≥ 0.90 as
+`⛔ CONFIDENTLY WRONG`, and flags regimes where misses are materially more hesitant.
+
+⭐ **Falsified against exactly the founder's hypothesis as a stub** — one regime
+correct at 0.93, another wrong at 0.94. Global gap reads `0.010 · NO GLOBAL SIGNAL`;
+the regime table names the guilty regime immediately. ⭐ *The stub proves the
+instrument can see the thing that was invisible to it an hour ago.*
+
+### ⛔⛔ AND A CONFLATION I HAD BUILT IN, NOW SEPARATED
+
+```
+CONFIDENCE      max(probs)       how sure the model is OF ITS LABEL
+DECISION VAR    p(entailment)    how far the evidence leans TOWARD ENTAILMENT
+```
+
+⛔ **These are not the same and a band is drawn on the second.** A model can be `0.97`
+sure of `contradiction` — maximal confidence, minimal p(entail). My first version
+reported only the first and would have answered the wrong question with a confident
+number. **Both are now reported, and each miss prints both.**
+
+### ⭐ UNRESOLVED BAND SWEEP — A READING THAT PROPOSES NOTHING
+
+For several widths, what the band would **hold** (misses) against what it would
+**sacrifice** (correct verdicts pulled into UNRESOLVED).
+
+⛔ **It recommends no width.** A width chosen from these very numbers is fitted to
+them, which is the threshold rule applied to the band. And the instrument says the
+degenerate case out loud:
+
+> ⛔ **A band that holds every miss by sacrificing every verdict has not created an
+> UNRESOLVED state — it has abolished the other two.**
+
+### ⛔ THE SAFETY-ARCHITECTURE CRITIQUE, RECORDED AS DOCTRINE
+
+> **A lot of AI safety architecture implicitly tries to eliminate the middle.
+> Everything must eventually become either accepted or rejected. But living
+> understanding often needs:**
+>
+> ⭐ ***"I have reason to think this, but I do not yet know enough to make it part of
+> what I take to be settled."***
+>
+> **That is not indecision. It is an epistemic capacity.**
+
+### To run — on the JSONs already on the founder's machine
+
+```
+python3 scripts/verifier-probe/probe.py --calibration verifier-probe-*.json
+```
+
+⛔ No model loads. Nothing downloads. It reads the frozen runs that already exist.
+⭐ Pass **all** the result files at once so the regime breakdown spans every set.
+
+⛔ **Standing: calibration instrument READY · calibration UNMEASURED · MiniCheck WIRED
+and DEFERRED BY RULING · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED ·
+B HELD · production UNTOUCHED.**

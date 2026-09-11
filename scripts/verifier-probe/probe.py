@@ -385,49 +385,107 @@ def calibration(paths):
     if not rows:
         sys.exit('no rows found')
 
-    def confidence(r):
+    def decision_var(r):
+        """
+        ⭐⭐ THE VARIABLE AN UNRESOLVED BAND WOULD ACTUALLY BE DRAWN ON.
+
+        ⛔ NOT THE SAME AS CONFIDENCE, AND CONFLATING THEM WOULD ANSWER THE WRONG
+        QUESTION. `max(probs)` says how sure the model is OF ITS LABEL. A band is
+        drawn on how far the evidence leans TOWARD ENTAILMENT — p(entailment) for an
+        NLI head, the support score for a score-based verifier. A model can be 0.97
+        sure of `contradiction`, which is maximal confidence and minimal p(entail).
+        """
         sc = r.get('scores') or {}
-        # NLI: confidence is the winning probability.
-        probs = [v for k, v in sc.items()
-                 if isinstance(v, (int, float)) and k not in ('threshold',)]
         if 'threshold' in sc:
-            # score-based verifiers: distance from the frozen cut, rescaled to [0,1]
+            key = next((k for k in sc if k != 'threshold'), None)
+            return sc[key] if key else None
+        for k in sc:
+            if 'entail' in k.lower():
+                return sc[k]
+        return None
+
+    def confidence(r):
+        """How sure the model is of the label it chose."""
+        sc = r.get('scores') or {}
+        if 'threshold' in sc:
             key = next((k for k in sc if k != 'threshold'), None)
             return abs(sc[key] - sc['threshold']) * 2 if key else None
+        probs = [v for v in sc.values() if isinstance(v, (int, float))]
         return max(probs) if probs else None
 
-    print('CALIBRATION — confidence on hits vs misses')
+    mean = lambda xs: sum(xs) / len(xs) if xs else float('nan')
+
+    print('CALIBRATION — does certainty bear any relationship to correctness?')
     print('⛔ Read from already-frozen runs. No model was loaded.\n')
+
     for v in sorted({r['verifier'] for r in rows}):
-        sub = [r for r in rows if r['verifier'] == v]
-        hits = [(confidence(r), r) for r in sub if r['observed'] == r['expected']]
-        miss = [(confidence(r), r) for r in sub if r['observed'] != r['expected']]
-        hits = [(c, r) for c, r in hits if c is not None]
-        miss = [(c, r) for c, r in miss if c is not None]
-        if not hits and not miss:
+        sub = [r for r in rows if r['verifier'] == v and confidence(r) is not None]
+        if not sub:
             print(f'  {v}: no probabilities recorded'); continue
-        mean = lambda xs: sum(c for c, _ in xs) / len(xs) if xs else float('nan')
+        hits = [r for r in sub if r['observed'] == r['expected']]
+        miss = [r for r in sub if r['observed'] != r['expected']]
         print(f'  {v}   sets {sorted({r["_set"] for r in sub})}')
-        print(f'    hits    n={len(hits):<3} mean confidence {mean(hits):.3f}'
-              + (f'  min {min(c for c, _ in hits):.3f}' if hits else ''))
-        print(f'    misses  n={len(miss):<3} mean confidence {mean(miss):.3f}'
-              + (f'  min {min(c for c, _ in miss):.3f}' if miss else ''))
-        # ⛔ key= is load-bearing: on tied confidences a bare sort falls through to
-        # comparing the row dicts and raises. Tied confidences are not an edge case
-        # here — they are what an OVERCONFIDENT verifier produces, i.e. exactly the
-        # result this function exists to detect. The falsifier hit it on the first run.
-        for c, r in sorted(miss, key=lambda t: t[0], reverse=True):
-            print(f'      {r["id"]:<6} {r["_set"]:<10} wrong at {c:.3f}  {r["raw_label"]}')
+        print(f'    hits    n={len(hits):<3} mean confidence {mean([confidence(r) for r in hits]):.3f}')
+        print(f'    misses  n={len(miss):<3} mean confidence {mean([confidence(r) for r in miss]):.3f}')
+        for r in sorted(miss, key=confidence, reverse=True):
+            dv = decision_var(r)
+            print(f'      {r["id"]:<6} {r["_set"]:<10} wrong · confidence {confidence(r):.3f}'
+                  + (f' · p(entail) {dv:.3f}' if dv is not None else ''))
+
         if hits and miss:
-            gap = mean(hits) - mean(miss)
+            gap = mean([confidence(r) for r in hits]) - mean([confidence(r) for r in miss])
             print(f'    -> misses are {abs(gap):.3f} '
                   f'{"LESS" if gap > 0 else "MORE"} confident than hits on average')
             if gap <= 0.05:
-                print('    ⛔ NO USABLE SIGNAL — the model is as sure when wrong as when')
-                print('       right. No abstention band can be built on this.')
+                print('    ⛔ NO GLOBAL SIGNAL — as sure when wrong as when right.')
+                print('       ⭐ But read the REGIME breakdown before concluding: absolute')
+                print('       confidence can be useless while confidence-per-regime is not.')
             else:
-                print('    ⭐ A band may be available. ⛔ Choosing one is a separate,')
-                print('       predeclared calibration act on separate material.')
+                print('    ⭐ A global band may be available.')
+
+        # ⭐⭐ BY REGIME. The founder's hypothesis: the useful signal may not be
+        # "score = uncertainty" but "score interpreted in light of WHAT KIND of
+        # proposition is being judged". ⛔ A global mean cannot see that, and a
+        # verifier that is well calibrated on ordinary inference and CONFIDENTLY
+        # WRONG on satellite-modifier cases would look mediocre and be usable.
+        for axis in ('group', 'family'):
+            keys = sorted({r.get(axis) for r in sub if r.get(axis)})
+            if not keys or len(keys) > 12:
+                continue
+            print(f'\n    ⭐ BY {axis.upper()}')
+            for k in keys:
+                ks = [r for r in sub if r.get(axis) == k]
+                kh = [confidence(r) for r in ks if r['observed'] == r['expected']]
+                km = [confidence(r) for r in ks if r['observed'] != r['expected']]
+                flag = ''
+                if km and mean(km) >= 0.90:
+                    flag = '  ⛔ CONFIDENTLY WRONG'
+                elif km and kh and mean(kh) - mean(km) > 0.15:
+                    flag = '  ⭐ misses are hesitant'
+                fmt = lambda xs: f'{mean(xs):.3f}' if xs else '  -  '
+                print(f'      {k:<26} hits {len(kh):>2} @ {fmt(kh)}'
+                      f'   misses {len(km):>2} @ {fmt(km)}{flag}')
+
+        # ⭐ BAND SWEEP — the cost of an UNRESOLVED band, at several widths.
+        # ⛔ THIS PROPOSES NOTHING. It reports what each width would capture and what
+        # it would sacrifice. Choosing a width is a separate, predeclared act on
+        # separate material, and a width chosen from THESE numbers is fitted to them.
+        dvs = [(decision_var(r), r) for r in sub if decision_var(r) is not None]
+        if dvs:
+            print('\n    ⭐ UNRESOLVED BAND SWEEP  (reading only — proposes nothing)')
+            print('      width   misses held   correct verdicts sacrificed')
+            for hi in (0.60, 0.70, 0.80, 0.90, 0.95):
+                lo = 1 - hi
+                inband = [(d, r) for d, r in dvs if lo < d < hi]
+                held = sum(1 for _, r in inband if r['observed'] != r['expected'])
+                sacrificed = sum(1 for _, r in inband if r['observed'] == r['expected'])
+                tot_miss = sum(1 for _, r in dvs if r['observed'] != r['expected'])
+                print(f'      {lo:.2f}-{hi:.2f}   {held}/{tot_miss:<10}  {sacrificed}/{len(dvs) - tot_miss}')
+            print('      ⛔ A band that holds every miss by sacrificing every verdict')
+            print('         has not created an UNRESOLVED state — it has abolished the')
+            print('         other two.')
+        print()
+
     print('\n⛔ NOT SELF-JUDGED. A reading, not a verdict.')
 
 
