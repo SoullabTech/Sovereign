@@ -23,6 +23,8 @@
  *   export default function generateStaticParams() {}  → false (binding is `default`)
  *   export type { generateStaticParams } from './p'    → false (erased at runtime)
  *   export { type generateStaticParams } from './p'    → false (erased at runtime)
+ *   export declare function generateStaticParams()     → false (ambient, erased)
+ *   export declare const generateStaticParams: …       → false (ambient, erased)
  *
  * Deliberately NOT resolved: `export * from './x'` (would require following
  * the module graph). Such a page reports false and falls through to the
@@ -41,20 +43,27 @@ import ts from 'typescript';
 export const GENERATE_STATIC_PARAMS = 'generateStaticParams';
 
 /**
- * True iff the node carries `export` but NOT `default`.
+ * True iff the node carries `export` and NEITHER `default` NOR `declare`.
  *
- * `export default function generateStaticParams() {}` exports a binding
- * named `default`; the local function name is invisible to importers and to
- * Next.js. Counting it would recreate the substring defect in AST clothing
- * (review finding on PR #1284, 2026-09-11).
+ *   ExportKeyword    required
+ *   DefaultKeyword   → false  (`export default function generateStaticParams`
+ *                              exports a binding named `default`; the local
+ *                              name is invisible to importers and to Next.js)
+ *   DeclareKeyword   → false  (`export declare function generateStaticParams`
+ *                              is an ambient declaration — erased at runtime,
+ *                              no binding exists)
+ *
+ * Either leak would recreate the substring defect in AST clothing
+ * (review findings on PR #1284, 2026-09-11).
  */
-function hasNamedExportModifier(node: ts.Node): boolean {
+function hasNamedRuntimeExportModifier(node: ts.Node): boolean {
   const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
   if (!modifiers) return false;
   let isExport = false;
   for (const m of modifiers) {
     if (m.kind === ts.SyntaxKind.ExportKeyword) isExport = true;
     if (m.kind === ts.SyntaxKind.DefaultKeyword) return false;
+    if (m.kind === ts.SyntaxKind.DeclareKeyword) return false;
   }
   return isExport;
 }
@@ -89,7 +98,7 @@ export function exportsGenerateStaticParams(
     // export function generateStaticParams() / export async function ...
     // (`export default function generateStaticParams` is NOT a named export.)
     if (ts.isFunctionDeclaration(stmt)) {
-      if (hasNamedExportModifier(stmt) && stmt.name?.text === GENERATE_STATIC_PARAMS) {
+      if (hasNamedRuntimeExportModifier(stmt) && stmt.name?.text === GENERATE_STATIC_PARAMS) {
         return true;
       }
       continue;
@@ -97,7 +106,7 @@ export function exportsGenerateStaticParams(
 
     // export const generateStaticParams = ...  (also let/var, destructuring)
     if (ts.isVariableStatement(stmt)) {
-      if (!hasNamedExportModifier(stmt)) continue;
+      if (!hasNamedRuntimeExportModifier(stmt)) continue;
       const names: string[] = [];
       for (const decl of stmt.declarationList.declarations) {
         bindingNames(decl.name, names);

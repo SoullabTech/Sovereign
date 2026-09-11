@@ -79,6 +79,18 @@ describe('exportsGenerateStaticParams — export-shaped but not a named runtime 
     const src = `export { type generateStaticParams } from './params';\nexport default function P() { return null; }\n`;
     expect(exportsGenerateStaticParams(src)).toBe(false);
   });
+
+  // Second re-review finding: ambient declarations carry `export` and no
+  // `default`, so the first correction still let them through.
+  it('export declare function generateStaticParams is ambient — no runtime binding', () => {
+    const src = `export declare function generateStaticParams(): unknown[];\nexport default function P() { return null; }\n`;
+    expect(exportsGenerateStaticParams(src)).toBe(false);
+  });
+
+  it('export declare const generateStaticParams is ambient — no runtime binding', () => {
+    const src = `export declare const generateStaticParams: () => unknown[];\nexport default function P() { return null; }\n`;
+    expect(exportsGenerateStaticParams(src)).toBe(false);
+  });
 });
 
 describe('exportsGenerateStaticParams — real exports count', () => {
