@@ -538,6 +538,57 @@ and ⛔ **no mock, no provider bypass, and no reuse of an agent or session crede
 
 ---
 
+## 9.4 ⭐⭐ FIRST LIVE RESULT — WITNESS A **FIRED**, EMISSION PROVEN, ATTEMPT 1
+
+**Founder-run 2026-09-11T20:53:11Z · run `56e9375c` · `maia_consciousness` ·
+manuscript `19039a86…` · draft `a8c996f6…` rev 5 · 262 sections · 385,948 code points ·
+FULL scope 262/262 at body depth.**
+
+```json
+{"runId":"56e9375c","at":"2026-09-11T20:53:11.859Z","kind":"attempt","condition":"FULL",
+ "lens":"development","attempt":1,"outcome":"refused",
+ "refusal":"non_conclusion_inapplicable","detailNamesTag":true,
+ "claims":0,"taggedSpans":[],"otherTags":[]}
+```
+
+⭐ **A live model, reading the whole Work at full body-depth coverage, emitted
+`across-unread-span` on a claim whose derived span was empty — and the host refused the entire
+output.** That is the `o8` defect reproduced under the new law, by the law.
+
+⭐⭐ **`detailNamesTag: true` is what makes it a PASS rather than an INDETERMINATE.** The refusal's
+own detail names the tag, so emission is **proven from the trace** rather than inferred from the
+refusal code. *The repair the founder's pre-run condition forced, twelve hours before the run,
+is the reason this line means anything.*
+
+### 9.4.1 ⚠️ THE PREDICTION WAS WRONG, AND THE DIRECTION MATTERS
+
+**Recorded because the design said the opposite:** §9.2 called A *opportunistic* and warned it might
+never be obtainable; the pre-run note said *"A is the long shot."* **It fired on the first
+full-coverage reading.**
+
+> ⭐ **Frequency, as observed and not more: 1 of 1 full-coverage readings emitted the false
+> limitation.** ⛔ **n = 1. That is not a rate.** It establishes that the emission is not rare enough
+> to need hunting — nothing beyond that, and the minimum-n discipline forbids more.
+
+### 9.4.2 ⛔ B AND C ARE NOT EXERCISED — THE RUN DID NOT COMPLETE
+
+The PARTIAL condition never ran; no verdict block printed. **Under the ratified acceptance
+hierarchy, B and C are REQUIRED and A is not.**
+
+```text
+A   FIRED (emission proven)          ⭐ the negative side is closed
+B   NOT EXERCISED                    ⛔ REQUIRED — the load-bearing positive side
+C   NOT EXERCISED                    ⛔ REQUIRED — the scope guard
+→   MODEL/HOST COMPOSITION: NOT witnessed on either required side
+```
+
+⚠️ **A firing does not carry B.** Without B the law is shown able to **reject** and nothing more —
+the founder's own words, and they hold exactly as written now that A has landed. **The run must be
+completed**; the ledger is append-only, so this attempt is preserved and a second run adds to it
+rather than replacing it.
+
+---
+
 ## 10 · ⛔ STANDING
 
 ```text
@@ -559,10 +610,10 @@ HOST LAW                     CLOSED
 MODEL/HOST COMPOSITION       UNWITNESSED
 witness instrument           ACCEPTED (founder, 2026-09-11) · emission-proof defect repaired
                              before the run · append-only attempt ledger built
-live-model witness           AUTHORIZED · ⛔ NOT YET RUN
-  A                          opportunistic · ⛔ NOT required to occur on demand
-  B                          LOAD-BEARING · REQUIRED for acceptance
-  C                          scope guard · REQUIRED
+live-model witness           RUN, INCOMPLETE (run 56e9375c, 2026-09-11T20:53Z)
+  A                          ⭐ FIRED · emission PROVEN (detailNamesTag true) · attempt 1
+  B                          ⛔ NOT EXERCISED · LOAD-BEARING · REQUIRED
+  C                          ⛔ NOT EXERCISED · scope guard · REQUIRED
 append-only ledger           REQUIRED — an unwritable ledger stops the run
 mock / bypass                FORBIDDEN
 prompt steering              FORBIDDEN
