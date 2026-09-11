@@ -140,7 +140,7 @@ The UI renders what the kernel says is true. `setMicEnabled(false)` is a request
 ```text
 turnCommitted { sessionId, turnId, text, evidence[], startedAt, committedAt }
       → CognitionBridge → the canonical MAIA route (convergence at handleTextMessage; commitOracleTurn seam unchanged)
-      ← response stream (text/tokens) → SpeechSynthesizer adapter → kernel OutputRenderer
+      ← response stream (text/tokens) → SpeechSynthesizer adapter → `OutputController` (stream identity, cancellable)
 ```
 
 Voice keeps a different capture path and the same mind (Deep-Intelligence Gate). The bridge carries committed text and declared interaction-control features only (VOICE-18); it carries no raw audio into cognition and no cognition into audio authority.
