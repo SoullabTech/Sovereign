@@ -1072,3 +1072,74 @@ In your final message report: the output path, the counts per domain, and any
 triple where you found the plausible-but-unlicensed member genuinely hard to
 keep on the right side of the line.
 ```
+
+---
+
+## PHASE 2 — PREDECLARED READINGS, committed before the corpus was seen (2026-09-11)
+
+> ⭐⭐ **THE RESEARCH QUESTION: *Can the verifier preserve possibility as
+> possibility?*** Cleaner than "can it detect unsupported claims", because that is
+> no longer quite the problem. The verifier is good at falsehood and poor at
+> restraint.
+
+### ⛔ CORRECTION ACCEPTED — 41% is a historical reference, not a threshold
+
+I wrote that phase 2 had *"41% as the figure it has to beat"*. **That was wrong
+and it is the precise drift this lane exists to catch**: it converts a
+retrospective descriptive estimate into a pass mark, and a test with a pass mark
+invites the result rather than measuring it. The stage-1 figure came from **17
+cases scraped out of six corpora built to ask a different question**. Its own 95%
+interval is `[22%, 64%]` — wide enough that "beating" it would have been nearly
+meaningless in either direction.
+
+**The primary result stands alone**, with a Wilson interval (honest at n=30 where
+the normal approximation is not):
+
+```text
+possibility PRESERVED (neutral)     k/30   95% CI
+⛔ promoted to `entailment`          k/30   95% CI
+other misclassification             k/30   95% CI
+```
+
+`7/17` prints beneath it, labelled *historical reference · NOT a threshold · NOT
+compared*. The reporter is written so the comparison cannot be made accidentally.
+
+### The four readings, fixed in advance
+
+| if | then |
+|---|---|
+| DeBERTa again promotes a large share to `entailment` | ⭐ **`possible → known` is prospectively CONFIRMED** as a real failure mode |
+| most remain `neutral` | the earlier 59% promotion rate was **corpus-composition dependent** |
+| results vary sharply by domain | the finding is **regime-specific overcommit**, not a general neutral failure |
+| contradictions handled well while plausible-neutral are not | ⭐⭐ **the distinction is confirmed: falsehood detection is easier than restraint in the face of plausible inference** |
+
+⛔ **Committed before the corpus was read, so whichever arrives is a result rather
+than a reading.**
+
+### Reporting discipline carried into the instrument
+
+- **n=3 per domain stays directional.** No domain is promoted into a finding from
+  three examples; the reporter prints `(n<5 — directional)` on every such row.
+- **`time` is quarantined, not averaged in.** It carries the prompt's worked
+  example, so its row prints `⚠️ SEEDED BY THE PROMPT EXAMPLE`, and the **nine
+  unseeded domains are pooled separately as the stronger generalization
+  evidence**.
+- **The contrast block reports contradicted and entailed accuracy beside the
+  primary**, because the fourth reading above needs all three classes visible at
+  once.
+
+### ⚠️ ONE WEAKNESS I AM NOT HIDING, and what I intend to do about it
+
+In stage 1 the ground truth came from an adjudicator **independent of whoever
+wrote the cases**. In phase 2 the author supplies its own `expected_three_way`
+labels — **author and labeller are the same party**. Blindness to model output is
+intact, so labels cannot be tuned to a verifier; but a mislabelled
+plausible-neutral case has nothing to catch it.
+
+**Intended repair, unless the founder stops it:** once the corpus is frozen, a
+**second blind adjudicator** reviews the 30 plausible-neutral members only,
+applying both tests — *could this be false while every word of the premise stays
+true?* and *would an ordinary reader assume it?* Disagreements are **recorded, not
+repaired**, and the primary result is reported **twice**: over all 30, and over the
+subset both parties accept. ⛔ If the two numbers differ materially, that
+difference is itself the finding about how hard this class is to construct.
