@@ -366,9 +366,35 @@ def against(paths):
                     uc = lambda ac, bc: sum(1 for _, v in unrouted
                                             if v[a]['correct'] == ac and v[b]['correct'] == bc)
                     u_res, u_blind = uc(False, True), uc(False, False)
+                    u_pres, u_disr = uc(True, True), uc(True, False)
                     print(f'\n  COMPLEMENT — the {len(unrouted)} cases the detector did NOT route')
-                    print(f'    {a} wrong there: {u_res + u_blind}'
-                          f'   of which {b} got {u_res} RIGHT')
+                    print(f'                        {b} right   {b} wrong')
+                    print(f'    {a} wrong         {u_res:^11}{u_blind:^11}')
+                    print(f'    {a} right         {u_pres:^11}{u_disr:^11}')
+                    # ⭐ HOW MANY OF THIS VERIFIER'S ERRORS DOES THE REGIME CONTAIN?
+                    # If nearly all of them, the inside/outside comparison below is
+                    # underpowered BY THE DETECTOR'S OWN SUCCESS — there is barely an
+                    # outside left to compare against. That is a fact about coverage,
+                    # ⛔ not a defect in the test and not a licence to skip it.
+                    err_in, err_out = rescued + shared_blind, u_res + u_blind
+                    if err_in + err_out:
+                        print(f'    -> the risk regime contains {err_in} of {a}\'s '
+                              f'{err_in + err_out} errors '
+                              f'({err_in / (err_in + err_out):.0%}), at a cost of '
+                              f'{preserved + disrupted} of its '
+                              f'{preserved + disrupted + u_pres + u_disr} correct answers')
+                    # ⭐⭐ WHAT IS AGREEMENT WORTH? Two verifiers agreeing is the thing
+                    # a majority vote would trust. Inside the risk regime they can be
+                    # jointly wrong — and a wrong answer that two witnesses agree on is
+                    # WORSE than one witness's wrong answer, because it arrives with
+                    # manufactured corroboration.
+                    for label, rr, ww in (('INSIDE  the risk regime', preserved, shared_blind),
+                                          ('OUTSIDE the risk regime', u_pres, u_blind)):
+                        if rr + ww >= MIN_N:
+                            print(f'    agreement precision {label}  {rr}/{rr + ww} '
+                                  f'= {rr / (rr + ww):.0%}')
+                        elif rr + ww:
+                            print(f'    agreement precision {label}  n={rr + ww} — too few')
                     if u_res + u_blind and rescued + shared_blind:
                         inside = rescued / (rescued + shared_blind)
                         outside = u_res / (u_res + u_blind)

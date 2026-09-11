@@ -4667,3 +4667,69 @@ outside the risk regime, and draws no comparison unless both sides carry n ≥ 5
 **Standing: MiniCheck RUN · mixed case · partial dependence at p = 0.02 ·
 complement UNMEASURED · UNRESOLVED over majority voting, on this evidence ·
 detector rule unchanged · nothing authorized · production UNTOUCHED.**
+
+---
+
+## The complement — what the routed table could not say (2026-09-11)
+
+The complement ran on the same result files, no re-scoring. **DeBERTa × MiniCheck,
+90 shared cases:**
+
+```
+  routed   (44)                     unrouted (46)
+                mc right  mc wrong              mc right  mc wrong
+  deberta wrong    9        10       deberta wrong   2        1
+  deberta right   21         4       deberta right  ...      ...
+```
+
+⭐ **The risk regime contains 19 of DeBERTa's 22 errors — 86% — at a cost of 25
+of its 68 correct answers (37%).** That is the founder's `37 of 81` arithmetic
+recomputed on the shared 90, and it is the cleanest statement of the detector's
+behaviour yet: **it very nearly partitions DeBERTa's errors into the routed
+set.**
+
+⛔ **And it makes the inside-versus-outside comparison unanswerable — by the
+detector's own success.** Only 3 DeBERTa errors survive outside the regime, so
+the guard correctly refused to draw the comparison (`47%` inside vs `67%`
+outside, n=3). **That is not a defect in the test.** It does, however, settle
+the question the complement was built to ask, in a way a rate comparison would
+not have: the detector is not *selecting* rescuable errors out of a wider pool —
+there is almost no wider pool. **It is covering them.**
+
+### ⛔ The deferral arithmetic, which is not flattering to the router
+
+If the routed set were resolved by deferring to MiniCheck:
+
+| architecture | correct of 90 |
+|---|---|
+| DeBERTa alone | 68 |
+| MiniCheck alone | 73 |
+| detector routes → defer to MiniCheck | **73** |
+
+**Identical.** On this corpus the router buys **no accuracy** over simply always
+asking MiniCheck; what it buys is not calling the second model on 46 of 90
+cases. ⛔ *A router justified by compute is a different claim from a router
+justified by judgment, and only the second was ever on the table.*
+
+⭐ **This does not touch the founder's actual ruling**, which was the detector as
+an **`UNRESOLVED` router** — not as a deferral mechanism. Under that reading the
+measured trade is: **19 of 22 DeBERTa errors prevented from hardening, at the
+cost of withholding 25 correct claims** pending another kind of attention. That
+trade stands on the numbers above.
+
+### ⭐⭐ Agreement is worth less inside the regime — the finding that decides voting
+
+Inside the routed set the two verifiers agree on 31 of 44 cases, and **10 of
+those 31 agreements are jointly wrong: agreement precision 68%.** A wrong answer
+that two witnesses agree on is **worse** than one witness's wrong answer,
+because it arrives carrying manufactured corroboration.
+
+This is the same conclusion the Fisher test reached (p = 0.0204, partial
+dependence) arriving by a second route, and together they close the question the
+challenger was brought in to answer: ⛔ **majority voting is not available
+here.** Not because the second witness is weak — it rescued 9 — but because the
+cases where the first is untrustworthy are also the cases where agreement
+between them means least.
+
+**Standing unchanged: nothing authorized · no gate · no production component ·
+detector rule `18608a18…` untouched.**
