@@ -1448,3 +1448,88 @@ lane's `AudioSessionManager.swift` edit compiled in but **unregistered**
 only. Record: switch position (ring/silent) before the first turn ·
 audible on turn 1 and turn 2 (yes/no each) · Account Settings footer
 line + Native App Build line (expected footer commit `5846a0824`).
+
+### E20 · 2026-09-11 · Repair Two IMPLEMENTED in isolation — turn-close authority moved off the recognizer boundary; NOT yet built, NOT yet on the phone
+
+**Branch:** `claude/ios-runtime-01-repair-two-turn-close` · commit
+`3d5b0db94` on top of `a3305b0ae` (export-mirror tooling, cherry-picked
+from `0debe8b09`) on top of `clean-main-no-secrets` tip `e1c6f527b`.
+**No native change. No registration. `AudioSessionManager.swift`,
+`MAIABridgeViewController.swift`, `Main.storyboard`, the pbxproj and
+`ttsWithFallback.ts` untouched.** A build from this branch is the
+unrepaired native (registration absent) plus Repair Two on the web side.
+
+**What was repaired — defect (c) only.**
+
+1. `lib/voice/turnAccumulator.ts` (new, pure, no timers, no I/O). The
+   turn is held as `committed` segments plus the `live` partial.
+   `acceptPartial()` treats a partial as a **segment reset** only when it
+   drops to at most half the previous partial's word count AND starts on
+   a different word; on a reset the previous partial is committed, never
+   discarded. An ordinary shortening revision (`so that that's` →
+   `so that's`) is not a reset; a growing partial is never a reset; a
+   previous partial under three words is never committed.
+2. `partialResults` handler in `components/voice/ContinuousConversation.tsx`
+   folds each partial through `acceptPartial()` and writes the composed
+   whole turn to `accumulatedTranscript`; the interim line shows the whole
+   turn so far. A reset logs `ios_voice_segment_carried { carriedChars,
+   committedSegments }` and prints `🧷 [Native] Recognizer segment reset —
+   carrying N chars forward, not discarding`. The pre-repair shape
+   (`accumulatedTranscript.current = transcript`, the line that discarded
+   537 characters in E16.1) is gone and pinned gone.
+3. `listeningState` `stopped` no longer sends the turn. The `native_stop`
+   dispatch path is removed. Text pending at a recognizer stop is **held**
+   for the silence timer; if no timer is armed, the same fallback timer is
+   armed. Logs `ios_voice_stop_held_pending_turn { pendingChars }`.
+4. The native start prologue clears the pending silence timer (it always
+   did). A post-stop restart therefore arrived with held text and no
+   timer. Repair Two re-arms the same fallback timer at native start when
+   a turn is pending, so the restart cannot orphan what was held. Without
+   this the hold in (3) would have been defeated by the very restart that
+   follows every `stopped`.
+5. The fallback timer is factored into `armNativeFallbackSilenceTimer()`
+   with the **same 2500 ms**; the 1500 ms audio-level timer is untouched.
+   **No timeout value changed**, as ruled. The silence timers are now the
+   only turn-close authorities on the native path, plus the member's own
+   stop (`stopListening`, `manual_stop`), which still sends explicitly.
+6. `lib/voice/voiceDiagnostics.ts`: the two event names added to the
+   closed union, documented as observed recognizer boundaries the web
+   layer now survives.
+
+**What is NOT claimed.** Nothing on this branch touches (a) output
+silence / H-SILENT or (b) competing capture ownership — the ≥4 restart
+drivers, the pre-emptive stop, the alternating Bottom/Front route
+configuration, the stale task callback (E16.5/E17), or the post-conflict
+digital-zero input (E18). If the storm still stands the mic down after a
+reply, Repair Two is not what failed; it only guarantees that whatever
+was captured before that point is not thrown away by a recognizer
+boundary. It also does not change how MAIA's reply is produced or
+rendered.
+
+**Gates (run on the branch, 2026-09-11):**
+
+| Gate | Result |
+|---|---|
+| `__tests__/voice-turn-close-authority.test.ts` (new) | 13/13 — includes the E16.1 reproduction (long segment → `And` → tail; whole turn survives), the not-a-reset cases, source-shape pins (fold via `acceptPartial`, `stopped` sends nothing, restart re-arms, `native_silence`/`native_audio_silence` seams intact), and the 2500/1500 literal pins |
+| `voice-capture-01b-dispatch-provenance` | green; invocation floor lowered 8 → 7 with a dated note because the `native_stop` send is removed (one fewer `onTranscript(` site, each still preceded by its own `witnessDispatch(`) |
+| `voice-non-degradation` · `voice-transcript-commit` · `voice-capture-01a-latch-release` | green — 60/60 across the five suites |
+| `npm run check:no-supabase` | clean |
+| `npm run typecheck` | 229 errors vs baseline 239. The gate reports ONE new diagnostic, `app/wisdom-keepers/sacred-texts/page.tsx:207` (`"contemplative"` not assignable). It reproduces identically with this branch's changes stashed, so it is pre-existing on the base tip `e1c6f527b`, not introduced here. Not repaired on this branch — outside the ruling |
+
+**Acceptance on the phone (owed, founder-side; after the A/B control per
+E19):** build from the Repair Two branch
+(`CAPACITOR_MODE=beta scripts/build-ios-static.sh build && CAPACITOR_MODE=beta npx cap sync ios`,
+then Xcode Run with the console attached), speak one long utterance past
+the ~30 s point at which E7/E16.1 cut, and read: `🧷 [Native] Recognizer
+segment reset — carrying N chars forward` on the reset, the interim line
+continuing to show the whole turn, and `ios_voice_final_result_received
+… transcriptLength` on the silence close being the whole turn rather than
+the tail. The pass condition is the member's whole utterance reaching
+MAIA once. The fail condition is any recognizer boundary still deciding
+the turn. Both are legitimate outcomes; the record takes whichever
+happens.
+
+**Standing after E20:** A/B control still owed on the phone (defect a) ·
+Repair Two implemented and pushed, unbuilt, unwitnessed (defect c) ·
+defect (b) recorded, no repair authorized · S1–S4 deferred · silent
+switch and Account Settings footer lines still unwitnessed.
