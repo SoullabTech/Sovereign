@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { recordContactControlProof } from '@/lib/access/contactControlProof';
 import { query } from '@/lib/db/postgres';
 
 export async function POST(request: NextRequest) {
@@ -58,6 +59,14 @@ export async function POST(request: NextRequest) {
        WHERE id = $1`,
       [member.id]
     );
+
+    // MEMBER-ACCESS-01 P-1 — observation only, after the flow has completed.
+    void recordContactControlProof({
+      memberId: String(member.id),
+      contact: String(member.email),
+      mechanism: 'email_verification_token',
+      observedBy: 'POST /api/members/verify-email',
+    });
 
     console.log(`[VerifyEmail] Email verified for ${member.username} (${member.email})`);
 
@@ -118,6 +127,14 @@ export async function GET(request: NextRequest) {
      WHERE id = $1`,
     [member.id]
   );
+
+  // MEMBER-ACCESS-01 P-1 — observation only, after the flow has completed.
+  void recordContactControlProof({
+    memberId: String(member.id),
+    contact: String(member.email),
+    mechanism: 'email_verification_token',
+    observedBy: 'GET /api/members/verify-email',
+  });
 
   console.log(`[VerifyEmail] Email verified via link for ${member.username}`);
 

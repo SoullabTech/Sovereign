@@ -26,6 +26,7 @@ import {
 import { createSession } from '@/lib/auth/serverSessions';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
+import { recordContactControlProof } from '@/lib/access/contactControlProof';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/email-code/verify';
@@ -139,6 +140,18 @@ export async function POST(request: NextRequest) {
       console.log('[EMAIL-CODE/verify] New email verified');
       return NextResponse.json({ success: true, verified: true, email: normalizedEmail });
     }
+
+    // MEMBER-ACCESS-01 P-1 — observation only.
+    // Placed HERE and nowhere earlier: the atomic claim above is the moment control
+    // is actually proven, so an abandoned or wrong-code ceremony reaches this line
+    // never. Fire-and-forget so it cannot add latency to a sign-in; the recorder
+    // swallows its own failures and counts them out of band.
+    void recordContactControlProof({
+      memberId,
+      contact: normalizedEmail,
+      mechanism: 'email_code',
+      observedBy: ENDPOINT,
+    });
 
     // Existing member — create a session and report destination.
     const memberResult = await safeQuery(

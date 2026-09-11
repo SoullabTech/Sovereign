@@ -26,6 +26,7 @@ import {
 } from '@/lib/auth/rateLimiter';
 import { createSession } from '@/lib/auth/serverSessions';
 import { getNextOnboardingStep } from '@/lib/onboarding/state';
+import { recordContactControlProof } from '@/lib/access/contactControlProof';
 import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/magic-link';
@@ -305,6 +306,22 @@ export async function GET(request: NextRequest) {
        RETURNING id, email, member_id`,
       [token]
     );
+
+    if (!claimResult.error && claimResult.rows.length > 0) {
+      // MEMBER-ACCESS-01 P-1 — observation only. The claim above both redeems the
+      // link and stamps used_at, so this is the one place a click is proven.
+      const claimed = claimResult.rows[0];
+      const claimedMemberId = claimed.member_id as string | null;
+      const claimedEmail = claimed.email as string | null;
+      if (claimedMemberId && claimedEmail) {
+        void recordContactControlProof({
+          memberId: claimedMemberId,
+          contact: claimedEmail,
+          mechanism: 'magic_link',
+          observedBy: 'GET /api/members/magic-link',
+        });
+      }
+    }
 
     if (claimResult.error || claimResult.rows.length === 0) {
       // Distinguish already-used from expired for human-readable errors

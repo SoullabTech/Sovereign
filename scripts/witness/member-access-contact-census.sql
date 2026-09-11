@@ -126,3 +126,28 @@ FROM ev;
 \echo 'pop_C is the B3 cohort denominator: one-time assisted enrolment may be'
 \echo 'required before any legacy door retires. pop_B must be reconciled without'
 \echo 'guessing. Neither number authorizes any change.'
+
+\echo ''
+\echo '=================== CENSUS C · P-1 PROOF-OF-CONTROL EVIDENCE ==================='
+\echo 'Added Stage 7A. Empty until P-1 is deployed and members sign in normally.'
+\echo 'This is the number expected to RISE on its own, with no member asked to act.'
+
+SELECT
+  count(DISTINCT member_id)                                                AS members_with_any_proof,
+  count(*)                                                                 AS proof_events_total,
+  count(*) FILTER (WHERE mechanism = 'email_code')                         AS via_email_code,
+  count(*) FILTER (WHERE mechanism = 'magic_link')                         AS via_magic_link,
+  count(*) FILTER (WHERE mechanism = 'email_verification_token')           AS via_token_link,
+  count(*) FILTER (WHERE contact_fingerprint IS NULL)                      AS rows_without_contact_attribution,
+  min(observed_at)                                                         AS first_observed,
+  max(observed_at)                                                         AS last_observed
+FROM contact_control_proofs;
+
+\echo ''
+\echo 'rows_without_contact_attribution > 0 means EMAIL_LEDGER_FINGERPRINT_KEY was'
+\echo 'unset when those rows were written. The proof about the MEMBER still stands;'
+\echo 'only the contact-level join is missing. Not a failure — a named limit.'
+\echo ''
+\echo 'AND THE COUNT THAT MUST TRAVEL WITH THESE NUMBERS: proof writes are'
+\echo 'best-effort and under-report. Read proofWriteFailuresTotal() from the'
+\echo 'running container alongside this table, or report the figures as a FLOOR.'
