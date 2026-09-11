@@ -4930,3 +4930,76 @@ frames as **detect → ask → record**, and the answer is governed by
 can close what no quantity of model agreement can.
 
 **Rule digest unchanged — `18608a18…`.**
+
+---
+
+## ⛔ THE BLIND TEST DOES NOT SUPPORT THE RULING IT WAS MEANT TO CONFIRM (2026-09-11)
+
+`--only detector-blind`, 22 shared cases, the one corpus the detector never saw.
+
+**What generalized:** coverage. The regime holds **7 of DeBERTa's 9 errors (78%)**
+at a cost of **3 of its 13 correct answers (23%)** — consistent with the pooled
+86% / 37%.
+
+⛔ **What did not:**
+
+**(1) The ruling's load-bearing contrast is UNMEASURED, not confirmed.**
+Agreement precision inside the regime is `n=4 — too few`. Outside it is 9/9.
+The `68% vs 98%` on which the closure-risk role rests **could not be computed on
+blind material**. Not falsified. Unmeasured — and a central role should not rest
+on a number that only exists where the rule was written.
+
+**(2) The dependence finding is a COMPOSITION EFFECT, and this is my error to
+correct.** I reported `p = 9.03e-05` as *"global dependence demonstrated, and
+more strongly than inside the routed regime."* Split by whether the detector had
+seen the corpus:
+
+| | MiniCheck acc. where DeBERTa WRONG | where RIGHT | p |
+|---|---|---|---|
+| the three SEEN sets | 4/13 = **31%** | 51/55 = 93% | **8e-06** |
+| `detector-blind` (UNSEEN) | 7/9 = **78%** | 11/13 = 85% | **1.0000** |
+
+**The entire dependence signal comes from the three corpora the detector was
+written against. On the one unseen set there is no detectable dependence at
+all.** ⛔ *A pooled p is an average, and averaging corpora built for different
+purposes can manufacture a signal that belongs to the construction rather than
+to the verifiers.* My "global" claim was pooled, and pooled was doing the work.
+The instrument now prints **unconditional dependence per set** so a pooled p can
+never again be read without seeing whether every set agrees with it.
+
+**(3) And the hypothesis the ruling rejected looks supported on blind material.**
+Of 7 routed DeBERTa errors MiniCheck rescued **5 — 71%**, against **33%** on the
+seen sets. (Fisher `p = 0.17` — the direction is consistent with the dependence
+split, the sample is too small to carry it alone.) On the temporal/boundary
+regime, where DeBERTa collapses to 3/12, MiniCheck held 10/12 and **rescued most
+of what DeBERTa lost**. That is what a useful second witness looks like.
+
+### The reading, stated no more strongly than the evidence
+
+⚠️ The three seen sets include the **modifier** corpus, which was built *from
+DeBERTa's observed failures* — adversarial to DeBERTa by construction. Items
+built to break one model may break its relatives. So the honest formulation:
+
+> ⭐ **`NOT SUPPORTED` for the MiniCheck-selector hypothesis was established on
+> corpora adversarial to DeBERTa. On the one corpus that was not, it looks
+> supported.** The rejection may be a fact about how the evidence was built.
+
+⛔ **This does not overturn the closure-risk ruling** — coverage generalized, and
+nothing here shows agreement inside the regime is safe. It does mean the ruling's
+two empirical supports (the agreement contrast and the dependence result) are
+**weaker than recorded**, and both should be re-examined per set before the rename
+hardens.
+
+⛔ **Recorded as a challenge to a ruling made hours earlier, not as a
+correction of it.** The founder rules; this is the evidence arriving after.
+
+**Owed, in order:** (i) run the per-set dependence block on the full result set —
+one command, no re-scoring — to see whether the seen-set dependence is uniform or
+carried by the adversarial `modifier` corpus alone; (ii) **new blind material in
+the temporal regime**, because every number in (3) rests on 7 routed errors.
+
+```zsh
+python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
+```
+
+**Rule digest unchanged — `18608a18…`.**

@@ -268,6 +268,46 @@ def against(paths, only=None):
                       f"errors flagged {sum(r['risk'] for r in wrong)}/{len(wrong)}   "
                       f"correct flagged {sum(r['risk'] for r in right)}/{len(right)}")
 
+    # ⛔⛔ COMPOSITION. Every pooled dependence number in this record is an
+    # average over corpora that were built for DIFFERENT purposes — three of them
+    # by pressing on distinctions the FIRST verifier was already known to fail.
+    # Pooling those with a set built for another purpose can manufacture a
+    # dependence signal that belongs to the construction, not to the verifiers.
+    # ⭐ This block splits it, so a pooled p can never again be read without
+    # seeing whether every set agrees with it.
+    by_pair = {}
+    for r in rows:
+        by_pair.setdefault((r['set'], r['id']), {})[r['verifier']] = r
+    vs = sorted({r['verifier'] for r in rows})
+    printed_header = False
+    for i, a in enumerate(vs):
+        for b in vs[i + 1:]:
+            per = []
+            for st in sorted({k[0] for k in by_pair}):
+                sh = [v for k, v in by_pair.items()
+                      if k[0] == st and a in v and b in v]
+                if not sh:
+                    continue
+                c = lambda ac, bc: sum(1 for v in sh if v[a]['correct'] == ac
+                                       and v[b]['correct'] == bc)
+                res, blind_, pres, disr = (c(False, True), c(False, False),
+                                           c(True, True), c(True, False))
+                if not (res + blind_) or not (pres + disr):
+                    continue
+                pv = fisher_exact_2x2(res, blind_, pres, disr)
+                per.append((st, res + blind_, res / (res + blind_),
+                            pres / (pres + disr), pv))
+            if len(per) < 2:
+                continue
+            if not printed_header:
+                print('\n⭐ UNCONDITIONAL DEPENDENCE, PER SET — a pooled p is an average')
+                printed_header = True
+            print(f'   {a} -> {b}')
+            for st, n_err, aw, ar, pv in per:
+                flag = '⚠️ n<5' if n_err < 5 else ('⛔ dependent' if pv < 0.05 else 'no signal')
+                print(f'     {st:<16} acc|wrong {aw:>4.0%}  acc|right {ar:>4.0%}  '
+                      f'p={pv:<8.4f} errs={n_err:<3} {flag}')
+
     for v in sorted({r['verifier'] for r in rows}):
         sub = [r for r in rows if r['verifier'] == v]
         seen = {}
