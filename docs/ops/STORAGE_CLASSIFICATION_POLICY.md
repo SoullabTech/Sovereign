@@ -110,6 +110,48 @@ to discover approved checkout roots, classify active/dirty/protected trees, and
 reclaim only regenerable artifacts from inactive ones — never source, and never
 the checkout itself, without separate authority.
 
+### Synchronization is not custody
+
+A synchronized copy is not an independent backup when the same mechanism that
+creates or maintains the copy can also propagate deletion, corruption, or
+replacement.
+
+**Rule: no synchronized or mirrored copy may satisfy a custody requirement by
+itself.**
+
+Before removing the last independently controlled local copy of durable data:
+
+1. Create an independent copy on a **separately controlled storage substrate**.
+2. Verify the copy is complete using an appropriate integrity witness — file
+   count, hashes, manifest equality, playback/readability, or equivalent.
+3. Only after verification may synchronization be disabled, local storage
+   reclaimed, or the original removed.
+
+Applies to cloud-synchronized application data, mirrored working directories,
+temporary git checkouts, and any replica whose lifecycle stays coupled to its
+source. **Synchronized ≠ backed up. Mirrored ≠ independently recoverable.**
+
+Worked example — Voice Memos (2026-09-11). iCloud sync makes recordings appear
+on every device, and permanently deleting one removes it everywhere; no
+optimize-and-evict path exists, so the only way to stop paying local storage is
+to leave the sync. The ordering is therefore load-bearing, because disabling
+sync can itself prompt removal of the local copies:
+
+```
+export → verify independent custody → disable sync → reclaim local
+```
+
+Step 2 is the analogue of SHA equality: "the export appeared to work" is the
+same claim as "Everything up-to-date", and neither is proof. Count the exported
+files against the app's own count and spot-check readability on the oldest.
+Skipping it makes the cleanup the event that tests whether synchronization was
+a backup.
+
+Messages is the contrasting case: an optimize/offload path does exist, so the
+correct operation is to let macOS evict local attachments rather than to export
+and delete. Deleting a conversation with Messages in iCloud enabled propagates
+to every synced device.
+
 ### Custody classes: "a git checkout" is not one thing
 
 Three classes, each with a different failure mode:
