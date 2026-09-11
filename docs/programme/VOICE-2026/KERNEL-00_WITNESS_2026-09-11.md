@@ -3,7 +3,7 @@
 **Lane:** VOICE-2026 · KERNEL-00 · **Subject:** `488e0666c` (`488e0666cfe7501cb55df14bc12dc416f4f7bd5d`)
 **Law:** `ARCH-01/06_KERNEL-00_ACCEPTANCE_LAW.md` (K00-01…18, thresholds ratified ×6, unchanged)
 **Runbook:** `KERNEL-00_RUNBOOK_2026-09-11.md` §3 (procedure) · §4 (this template)
-**Result:** **FAIL AT ENTRY** — the organism did not enter conversation. Reproduced on every attempt. Two findings (K00-W1, K00-W2). Thresholds untouched. Architecture untouched. No repair performed.
+**Result:** **FAIL AT ENTRY** — the organism did not enter conversation. Reproduced on every attempt. Two findings (K00-W1, K00-W2). Thresholds untouched. Architecture untouched. No repair performed. **Record SEALED 2026-09-11 17:06 (founder attestation + human-only fields filled).**
 
 > A failure is evidence. This record keeps what the organism did, what iOS said, and what the kernel could not say for itself.
 
@@ -167,16 +167,18 @@ Journal: §0 checkpoint attached above (`kernel00-K00-3585a3c7-1789152361.jsonl`
 
 Manual interventions: 0 (no conversation window existed).
 
-Microphone permission (human-only facts — not to be inferred, not to be changed on the device):
+Microphone permission (human-only facts, founder-reported 17:06, device not changed):
 
 ```text
 1. microphone permission dialog on any Enter attempt
-   UNKNOWN until the founder confirms yes / no
-   (if not recalled, UNKNOWN is the recorded value — never a forced answer)
+   NOT RECALLED — founder: "I don't think a permission popup happened"
+   (recorded as the founder's recollection, not as a fact about the device)
 
 2. Settings → Apps → VoiceKernel K00 → Microphone
-   UNKNOWN until the founder reports ON / OFF / no toggle shown
+   TOGGLE PRESENT · ON   (screenshot 17:06; Cellular Data also ON; no other permissions listed)
 ```
+
+Reading: a Microphone toggle exists only after the app has requested access, and ON means the grant stood at the time of reading. So at 17:06 the harness held microphone permission. Whether the grant preceded the four crashes or was answered unnoticed during one of them is not established by these two facts. What they do establish: the 0 Hz input format at generation 2 is not explained by a denied microphone, which keeps K00-W1 on the configuration-change timing and guard, as read in §2.
 
 Device state at 17:0x, read from the Studio: VoiceKernelHarness resident and running on the unlocked phone (not crashed at that moment).
 
@@ -234,7 +236,7 @@ Sequence ruled: seal witness → open PRE-WITNESS-02 → repair only the entry s
 
 **Founder attestation — 2026-09-11:** *I witnessed KERNEL-00 fail at entry on the iPhone as recorded here; the failure was reproduced without repair or threshold change, and I attest that this record fairly represents what occurred.*
 
-**Seal status: ATTESTED · NOT SEALED** — two human-only fields (§4 microphone permission) remain UNKNOWN pending the founder's report. PRE-WITNESS-02 is not drafted until they are filled and the record is sealed.
+**Seal status: SEALED — 2026-09-11 17:06.** Attested; both human-only fields filled from the founder's report. Under the ruling above, PRE-WITNESS-02 is OPEN from this seal.
 
 ---
 
