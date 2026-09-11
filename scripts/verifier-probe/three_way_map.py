@@ -43,6 +43,12 @@ def main():
     ap.add_argument('results', nargs='+', metavar='verifier-probe-*.json')
     a = ap.parse_args()
 
+    if not Path(a.adjudication).exists():
+        sys.exit(f'three-way ground truth not present at {a.adjudication}\n'
+                 '  The blind adjudication has not been produced and committed yet.\n'
+                 '  ⛔ Nothing is wrong with the results you have — this instrument\n'
+                 '     simply has one of its two inputs missing, and it will not\n'
+                 '     substitute a guess for it.')
     adj_doc = json.load(open(a.adjudication))
     adj = {(c['set'], c['id']): c for c in adj_doc['cases']}
     print(f"three-way ground truth   {len(adj)} cases")
