@@ -777,3 +777,32 @@ Reconciliation: the ruling's 253 MiB figure predates the E6→E8 cleanup;
 after it the Mac reported 7.2 GiB free and the export at `0debe8b09`
 succeeded. The remaining authorized items (updater caches, gradle,
 puppeteer, and the second-tier caches) are what reach the 10 GB target.
+
+### E9 · 2026-09-11 · shared-phone confound named — two lanes, one bundle id
+
+A parallel session (not this lane) reports a web bundle stamped
+`13d2f25a9`, a succeeded archive, and an install retry with `--no-sync`
+that is no longer running; the phone still shows `life.soullab.maia`
+1.2.0 (2511). Recorded here because **the phone is one device with one
+bundle id**: whichever lane installs last overwrites the other, and the
+witness of this lane's registration repair is only valid if the installed
+artefact is this lane's (`~/voice-runtime01-dd/…/App.app`, web bundle
+`0debe8b09`).
+
+Two facts for both lanes:
+
+- **Build 2511 does not distinguish builds.** The repair branch, the
+  witness branch and the default branch all declare
+  `CURRENT_PROJECT_VERSION = 2511`. The only on-device discriminator is the
+  Account Settings footer's bundled commit (`5846a0824` = ENGINE-01 witness
+  build still installed; `0debe8b09` = this lane's repair build;
+  `13d2f25a9` = the other lane's bundle).
+- **This lane has not installed anything yet.** Every `devicectl install`
+  so far failed before an `.app` existed (E6), and the launches that
+  followed relaunched the old app. The export and sync at `0debe8b09`
+  succeeded (E8); native build + install are pending on the founder's
+  disk-space ruling (≥ 10 GB; 9.0 GiB at last reading).
+
+Founder's standing for the Keep question is preserved: do not test Keep on
+the stale client. Ordering of installs on the shared phone is the founder's
+call and must be recorded per install with the footer commit.
