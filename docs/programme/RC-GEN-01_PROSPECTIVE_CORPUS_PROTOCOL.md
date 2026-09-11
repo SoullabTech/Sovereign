@@ -1463,3 +1463,99 @@ else in the lane. ⛔ Not used to weight, filter or exclude anything.
 
 **Step 4 holds: no corpus edits. The fixture keeps `8461d8c7…`. DeBERTa runs
 next.**
+
+---
+
+## ⭐⭐ PHASE 2 RESULT — the verifier preserves possibility, on this corpus (2026-09-11)
+
+```text
+⭐ PRIMARY — plausible-but-unlicensed claims (n=30)
+  possibility PRESERVED (neutral)   29/30 = 97%   95% CI [83%, 99%]
+  ⛔ promoted to `entailment`        1/30 =  3%   95% CI [ 1%, 17%]
+  other misclassification           0/30 =  0%   95% CI [ 0%, 11%]
+
+SENSITIVITY (29 independently accepted)  28/29 = 97%   difference −0.1 pp
+LABEL ROBUSTNESS  disputed 1/30 — T042, retained in the primary
+
+CONTRAST   contradicted → `contradiction`  30/30 = 100%
+           entailed     → `entailment`     30/30 = 100%
+
+NINE UNSEEDED DOMAINS                      26/27 =  96%   95% CI [82%, 99%]
+```
+
+**DeBERTa scored 89 of 90.** Every entailment, every contradiction, and 29 of 30
+plausible-but-unlicensed claims left open as `neutral`.
+
+### Which predeclarations fired — stated against the list committed beforehand
+
+| predeclared reading | fired? |
+|---|---|
+| promotes a large share → `possible → known` **confirmed** | ⛔ **NO** |
+| most remain `neutral` → the 59% was **corpus-composition dependent** | ⭐ **YES** |
+| sharp variation by domain → **regime-specific overcommit** | ⚠️ not assessable — every domain is 3/3 or 2/3 at n=3 |
+| contradictions handled well while plausible-neutral are not | ⛔ **NO** — *both* are handled well |
+
+⭐ **Reading 2 fires, and it is the one that reorganizes the lane.** Stage 1's
+`7/17 = 41%` preserved and phase 2's `29/30 = 97%` are not two scores of the same
+thing — `p = 3.4e-05` — they are **two different populations**. ⛔ That comparison
+is not a grade and 41% remains no threshold; the difference is simply what
+*licenses* the composition-dependence reading, which is exactly what it was
+predeclared to do.
+
+**So the 59% promotion rate belongs to the corpora that produced it** — above all
+to `M 5/5`, satellite-modifier constructions I wrote by pressing on DeBERTa's
+observed failures. Against 30 naturally-authored plausible neutrals across ten
+domains, the overcommit **does not appear**.
+
+⭐ **One earlier claim survives intact**: the error remains **directional**. Zero of
+the 30 were called `contradiction`. When this verifier errs on a tempting claim it
+errs toward *believed* — it simply almost never errs here.
+
+### ⚠️ AND I WILL NOT LET THIS RESULT STAND WITHOUT NAMING ITS MOST LIKELY ARTIFACT
+
+89/90 on a corpus purpose-built to be hard should provoke a question, not a
+celebration. **A structural hypothesis, testable and not yet tested:**
+
+> ⭐ **The triple design may make premises unusually explicit.** A premise must
+> support a crisp entailment **and** a crisp contradiction **and** a genuine
+> neutral. That forces it to be determinate — to state its own limits plainly.
+> A premise engineered to that standard leaves far less room for a reader, or a
+> model, to over-infer.
+
+Stage 1's plausible neutrals came from premises written for a **binary** task,
+often terse, where what the premise did *not* say was left implicit. **Terseness
+may be the active ingredient in the phenomenon, and the triple design may have
+engineered it out.**
+
+⛔ **This is raised as a distinct testable claim, NOT as a qualifier that softens
+the result.** The result is the result: on this material, of this construction,
+the verifier preserved possibility 29 times in 30. ⚠️ What is not established is
+that it would do so on premises that are *natural and underspecified* — which is
+what MAIA will actually meet, since people do not speak in determinate triples.
+
+**The lawful test, should the founder want it:** a corpus of the same ten domains
+where each premise is written **once, terse, for one hypothesis only** — no
+sibling members to make it explicit — with the three-way label adjudicated blind
+as here. If preservation stays high, composition-dependence is confirmed broadly.
+If it collapses, ⭐ **the active variable is premise explicitness, not domain and
+not temporal language** — and that would be the sharpest finding the lane has
+produced.
+
+### The single miss, T078 — `tiverton-apple-crop`, causation
+
+```text
+premise     The Tiverton orchard lost most of its apple crop that year; a late
+            frost in May had killed the blossom.
+hypothesis  The Tiverton orchard finished that year out of pocket.
+```
+
+The author's own note: *"A ruined crop sounds like a ruinous year, though
+insurance, stored fruit or a higher price on what survived could have carried the
+orchard through."* ⭐ **A world-knowledge inference, not a linguistic one** — and
+the only one of 30 that the verifier took. `causation` is the one domain below
+3/3, at 2/3, ⛔ n=3 and directional only.
+
+**Standing: possibility PRESERVED 29/30 prospectively · the 41%/59% stage-1
+figures are COMPOSITION-DEPENDENT, not general · error direction still toward
+belief · premise-explicitness artifact OPEN and untested · production
+UNTOUCHED.**
