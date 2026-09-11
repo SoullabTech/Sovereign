@@ -682,3 +682,104 @@ In your final message report: the output path, how many cases you classified,
 the counts of contradicted / neutral-plausible / neutral-implausible, any
 disagreements you flagged, and anything you found genuinely hard to call.
 ```
+
+---
+
+## STAGE 1 — THE ADJUDICATION LANDED. Composition first, before any model. (2026-09-11)
+
+```text
+file        scripts/verifier-probe/three-way-adjudication.json
+sha256      aec8f1a52313c4df35a61521206d37003ee9f16100fb6d1dc19efe37ef4f894c
+classified  78 — every `not_entailed` case across the six fixtures, none missing,
+            none extra, ids unique, every case carries a reason
+adjudicator fresh subagent, blind to all machine output; 8 tool calls, all reads
+            of the six fixture files plus its own write
+```
+
+| | count | share |
+|---|---|---|
+| **contradicted** | **51** | 65% |
+| **neutral · plausible** ⭐ | **17** | 22% |
+| neutral · arbitrary | 10 | 13% |
+| **frozen labels challenged** | **0** | — |
+
+⛔ **Zero disagreements.** The adjudicator found no frozen `not_entailed` label it
+thought was wrong. The record-don't-repair path was available and unused.
+
+### ⭐⭐ The founder's conditional fired
+
+> *"If the adjudication comes back showing that most current negatives are
+> contradictions, then we'll know immediately why the prospective corpus looked
+> so good and why a dedicated phase-2 corpus is necessary."*
+
+**It does, and the concentration is worse than the pooled 65%:**
+
+> **`prospective` is 19 of 20 contradictions.** Its negatives are built by
+> stating a limit and then denying it — *only*, *never*, *the rest of the year*, a
+> named other post-holder. **It is a contradiction-detection set, not a
+> neutrality set.** Its single real neutral is **X30**.
+
+⭐ **This is now established by an independent blind adjudicator rather than by me
+after the fact.** It was flagged by the corpus's own author before any model ran,
+predicted as the explanation when the primary question failed, and is now
+confirmed by a third party that never saw a model output. **DeBERTa's 39/40 was
+scored against the easy class.**
+
+### ⛔ The class we care about is nearly absent from everything authored blind
+
+The 17 plausible neutrals, located: `M3–M7` (5) · `N1/N3/N4/N5` (4) ·
+`B01/B05/B14` (3) · `D07/D22` (2) · `S04/S11` (2) · `X30` (1).
+
+> **The two corpora built WITHOUT reference to DeBERTa's weakness — `prospective`
+> and `detector-blind` — contain 1 and 2 plausible neutrals respectively.** The
+> class clusters in the corpora I constructed by pressing on the original A-S
+> shape: possession, mention, bounded instance.
+
+⚠️ **The honest reading, which is neither a debunk nor a vindication:** the class
+is **real but rare in naturally-authored prose**, and my adversarial construction
+was selecting for it without either of us having a name for what it was selecting.
+That is why it cannot be studied by writing more natural text — ⭐ **phase 2 must
+construct the class deliberately**, which is exactly what the founder's triple
+design does.
+
+### ⚠️ AND IT CHALLENGES A RATIFIED READING — satellite-boundary loss
+
+> *"The modifier M/V split does not track contradicted/neutral the way the group
+> labels imply. All eight V cases are contradicted, but so are **M1, M2, M8** —
+> because `until the lease ended`, `before moving inland` and `before the funding
+> was cut` name a **terminating event**, not merely a bound. The genuinely neutral
+> M cases are the pure counts and dates (**M3–M7**). So 'satellite modifier'
+> contains two different logical kinds."*
+
+⛔ **The `M` group was never one thing.** DeBERTa scored `M 1/8` against
+`V 7/8` — the contrast the founder ratified as *satellite-boundary loss*. If its
+seven M failures fall on **M3–M7** (the neutrals) the phenomenon survives under a
+**better name**: it is a *neutral-regime* failure, not a *satellite* one. If they
+fall across both kinds, **the satellite framing dissolves** and something else is
+going on. ⭐ **`three_way_map.py` settles this, from data already on disk.**
+
+### Hard calls, recorded verbatim — evidence about the items
+
+> **B07** ("watched from the public gallery") — called contradicted on the grounds
+> that the public gallery is definitionally the non-participant position, but it
+> is **pragmatic exclusion, not logical**.
+> **B12** — deliberately called *neutral*: an accident causing a change does not
+> exclude the person taking part in it. The sharpest case for *"the premise
+> supplies an external cause"* vs *"the premise fills the slot with someone
+> else."*
+> **B09 / B15 / B03** (role reversals) — contradicted **only** under the
+> assumption that premise and hypothesis describe the same scene; read as
+> independent claims they would be neutral.
+> **S11** (`several` → bare plural) — neutral rather than contradicted, since the
+> scalar implicature is defeasible.
+> **M4 vs D09** (`during the trial period` vs `for one season`) — nearly the same
+> shape; **split on plausibility, not on kind.**
+> **N6** — contradicted despite a past/present tense mismatch that, read strictly,
+> leaves the present open.
+
+⭐ **Four of these turn on whether premise and hypothesis describe the same
+scene** — a co-reference assumption nobody in this lane has stated, and one the
+phase-2 triple design will have to fix explicitly, since the same sentence pair
+is contradicted under one reading and neutral under the other.
+
+**Composition established. No model output has been joined yet.**

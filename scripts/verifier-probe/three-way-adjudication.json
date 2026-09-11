@@ -1,0 +1,631 @@
+{
+  "adjudicator": "Claude Opus 5, reading the six fixture files only, with no access to any machine judgements",
+  "adjudication_date": "2026-09-11",
+  "method": "For each case labelled not_entailed I asked one question first: if the premise is true, must the hypothesis be false? I called it CONTRADICTED when the premise assigns the same slot elsewhere (role reversal, a named other office-holder, an explicit closure or denial, a stated exclusion) or when the natural reading of the premise makes the hypothesis false. I called it NEUTRAL when the premise merely fails to reach the hypothesis and a world in which the hypothesis is true is still consistent with the premise. For neutrals I then asked whether a careful but ordinary reader, given only the premise, would expect the hypothesis to be true; a real inferential pull (possession, association, a genuine but narrower role, a bounded instance of the same act) counts as plausible, while an arbitrary or unrelated widening does not. I deliberately did not use contradiction for cases where the premise only supplies an external cause or an unrelated role, since a cause outside the person does not exclude the person's own involvement.",
+  "cases": [
+    {
+      "set": "fixtures.json",
+      "id": "N1-AS-ACTIVE",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "The integration is said to be his and ongoing, which invites the reader to assume he takes part, but no role is stated and none is excluded.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "fixtures.json",
+      "id": "N3-FRAGMENT",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "A bare possessive names whose process it is and nothing else; active participation is neither given nor ruled out, but possession pulls toward it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "fixtures.json",
+      "id": "N4-ASSOCIATION",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Temporal co-location with a recovery that is his makes participation a natural assumption without establishing it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "fixtures.json",
+      "id": "N5-MENTION",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Appearing throughout a merger report strongly suggests involvement but is consistent with being only a subject of the record.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "fixtures.json",
+      "id": "N6-DENIAL",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Taking no part in the negotiation makes active participation in it false (the present-tense hypothesis is read as the same negotiation).",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "fixtures.json",
+      "id": "X3-MIXED-WRONG-WAY",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The hypothesis explicitly denies he chaired the first hearing, which the premise asserts.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B01",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "The grief is hers and sustained, which tempts a reader toward participation, but the premise assigns her no role in it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B03",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The premise makes the storm the cause and the footbridge the thing that collapsed, so the storm is not what undergoes the collapse.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B05",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Recording with the quartet three times is consistent with membership and with being an outside collaborator; the repetition makes membership tempting.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B07",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The public gallery is the non-participant position at a negotiation, so watching from it excludes being an active party to it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B09",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The premise makes the seedlings the thing acted upon; the hypothesis reverses the direction of effect.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B12",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "The accident being the cause of the change does not exclude his taking part in it, but nothing in the premise pulls a reader toward his active involvement.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B14",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Being read into committee minutes is compatible with active participation and with being merely referred to; it invites the stronger reading.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B15",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "In the scene described the inspector is the questioner and the foreman the questioned; the hypothesis puts the inspector in the wrong slot.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B17",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Declining to sit on the board makes board membership false.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B19",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Joining next spring entails he is not a member now.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B21",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The premise closes the interval at his injury, so the present-tense claim that he rows with the crew is false.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "blind-v1",
+      "id": "B22",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "A process participating in its own product is unsupported rather than denied, and nothing in the premise makes it appealing.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S01",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The bakery closed in 2019, so Imre cannot presently manage it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S03",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Serving on the lifeboat is placed before a move inland, which ends it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S04",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Two covered shifts this year neither establish nor exclude a standing arrangement, and the fact that she has done it invites the habitual reading.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S06",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "Being invited to sit in leaves membership open but reads as a guest, so nothing pulls a reader toward belonging.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S08",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "Being listed among contributors leaves editorship possible but a catalogue that names her as a contributor gives no pull toward editor.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S09",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The premise names a different person as the archivist, so Mira is not the archivist.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S11",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "The bare plural can be read as the whole set or as a generic statement about trees lost; under the weaker reading it holds, so it is not excluded, and it reads naturally.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S13",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "One failure neither establishes nor rules out a dispositional fault, and a single Tuesday would not lead a reader to expect failure at every firing.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S15",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "A summer intention does not exclude some earlier repainting but gives no reason to believe one occurred.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S17",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Delivery is still to come in March, so the depot does not have the engines.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S19",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "Ability leaves the practice open, and the reading room is an unlicensed detail nothing in the premise suggests.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "scope-v1",
+      "id": "S21",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "Supplying timber is consistent with also building boats but reads as a supplier's trade rather than a boatbuilder's.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M1",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The lease ended, closing the interval, so she does not run the shop now.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V1",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "\"No longer\" states the present negation directly.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M2",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Piloting is placed before a move inland, which ends it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V2",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Retirement from piloting makes the present-tense claim false.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M3",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Two appearances last season do not settle whether she is a current player, and having played for the side makes the claim tempting.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V3",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Giving it up ends the relation.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M4",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "A trial period bounds what is reported without stating that he stopped, and the reader easily carries it forward.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V4",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "\"Stopped\" negates the present relation outright.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M5",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "A past date reports one year and says nothing about since; continuation is easy to assume and not excluded.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V5",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Resigning the keepership ends the maintenance relation.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M6",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Three printings neither establish nor exclude that she prints it as a standing matter.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V6",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Ceasing to print makes the present-tense claim false.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M7",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Conducting on one Tuesday is consistent with being the band's conductor and with a one-off, and the first reading is the tempting one.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V7",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "\"Used to\" carries the implication that he no longer does.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "M8",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Her teaching is placed before the funding was cut, which on the natural reading ended it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "modifier-v1",
+      "id": "V8",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Leaving the language exchange ends the teaching relation there.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D01",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The estate's sale closes the interval, so he does not tend the vineyard now.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D03",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Running the tea house is placed before a move to the coast, which ends it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D05",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Joining after the fire excludes having worked there before it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D07",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Three occasions neither establish nor exclude a standing role, and the count invites reading her as the walk's leader.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D09",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "One completed season leaves a present stint possible but gives a reader no reason to expect one.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D11",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The post is being advertised and she is standing in, so she does not hold it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D13",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Parting ways last autumn ends the working relation.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D15",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "A conditional future neither establishes nor excludes the habit, and the premise presupposes she is the one who opens it.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D17",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Her wrist giving out closes the interval, so she does not climb with the team now.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D19",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Turning to cabinetmaking supersedes the bookbinding identity the hypothesis asserts.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D21",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The new director's arrival closes the interval of her keeping the logs.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "detector-blind-v1",
+      "id": "D22",
+      "three_way": "neutral",
+      "plausible": true,
+      "reason": "Two stand-in occasions leave a presenting role open and make it easy to assume.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X02",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Outside May to September the crossing is by arrangement only, so there is no seven o'clock January ferry.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X04",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The rest of the week holds only white and wholemeal, so the rye is not baked every day.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X06",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "He is named as a locum covering another vet's leave, which excludes his being the permanent vet.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X08",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The Sunday use is twice a year, which makes every Sunday false.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X10",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Last April the pots were lit on three nights, not on every April night.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X12",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Four days is not four months.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X14",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "Femi is identified as her cousin, which excludes brother.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X16",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "He has never worked a day shift there, so he does not guard the wing in the afternoons.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X18",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The heater comes on only under eight degrees, so it does not run regardless of temperature.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X20",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "She returned in February and has raced without trouble since, so she is not currently injured.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X22",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The premise names Colin Frey as the chairman and Ruth as standing in for him.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X24",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The restoration was finished in spring 2022 and the lamp relit, so it is not still going on.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X26",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "She attended as a guest of the friend who had enrolled, which places the enrolment with the friend and not with her.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X28",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "In the years between the two floods the gauge never reached the flood mark, so flooding is not a most-years event.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X30",
+      "three_way": "neutral",
+      "plausible": false,
+      "reason": "An apprenticeship followed by her own kiln neither establishes nor excludes a later partnership, and nothing suggests one.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X32",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The pickers are taken on for a fortnight and five people work the vines the rest of the year.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X34",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "After eleven at night the street has no service until morning, so there is none at three.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X36",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The volumes must stay in the building and access needs written permission, so no reader may take one home.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X38",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The boat is still hauled out awaiting a gearbox that has not arrived, so it is not repaired and fishing.",
+      "disagrees_with_expected": false
+    },
+    {
+      "set": "prospective",
+      "id": "X40",
+      "three_way": "contradicted",
+      "plausible": null,
+      "reason": "The school's own music lessons are given by Miss Kettering and he is a visiting tutor, so he is not the school's music teacher.",
+      "disagrees_with_expected": false
+    }
+  ]
+}
