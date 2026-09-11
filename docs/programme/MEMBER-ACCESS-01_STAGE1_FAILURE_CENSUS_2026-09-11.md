@@ -17,6 +17,13 @@ ABANDONED · UNKNOWN.
 
 ## 1 · FAILURES — witnessed or attributable
 
+> ⚠️ **On the Resend rows (F1, F2, F7).** They are **historical evidence of an
+> architectural weakness, never an input to the future architecture** (charter §12).
+> The finding is not *Resend is bad* — it is that **a transport failure was allowed
+> to masquerade as successful authentication progress.** Read them for that shape,
+> and do not carry vendor particulars into Stage 4.
+
+
 ### F1 · Quota refusal reported as retryable — 2026-08-24
 **Boundary** DELIVERY + TRUTH · **Rescue** ENGINEERING REPAIR · **Visibility** misleading
 Resend returned `429 monthly_quota_exceeded`; the product told the member the code
@@ -131,7 +138,7 @@ LIFECYCLE 2 · IDENTITY 1 · RECOVERY 1 · SESSION 0.**
 
 ```
 FR-A  TRUTH          the surface reports intent as outcome        F1 F3 F4 F5 F8
-FR-B  DELIVERY       one vendor is a single point of access       F1 F2 F7
+FR-B  MASQUERADE     delivery state reported as auth progress     F1 F2 F7
 FR-C  MULTIPLICITY   account state depends on the door used       F6 · stalled cohort
 FR-D  UNPROVEN       merged ≠ deployed; no audit substrate        R3 R4 U1
 ```
@@ -141,6 +148,13 @@ The recurring shape is not "login broke" — it is *the system telling the membe
 something untrue about what just happened*: mail that never left reported as sent,
 a ceremony offered that cannot complete, *Begin* shown to a returning member, a
 valid credential refused by the wrong form, a provider's JSON shown as guidance.
+
+**FR-B is not vendor-dependence.** Restated 2026-09-11 under the mail boundary:
+a second provider with the same coupling fails identically, and a self-hosted MTA
+fails *more* quietly because the invoice that detected F7 no longer arrives. The
+fracture is the **coupling** — authentication treating "handed to a transport" as
+"the member can now proceed". It is FR-A one layer down, which is why the two
+together account for six of the eight failures.
 
 **Stage 0's multiplicity is confirmed as a cause, but a secondary one.** It surfaces
 as FR-C and as the ROUTING half of FR-A: with ten doors, the surface cannot know

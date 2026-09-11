@@ -37,6 +37,14 @@ withdrawn ruling. The question is:
 > **What authentication architecture produces the lowest cognitive burden and
 > highest recoverability while maintaining strong security and sovereignty?**
 
+Sharpened 2026-09-11, once the mail boundary was drawn (§12). Not *"what should
+replace Resend for login codes?"* — that question builds the next authentication
+architecture around the quirks of the next vendor. Instead:
+
+> **How little should a world-class Soullab authentication system need email in the
+> first place — and where email is genuinely required, how do we make its transport
+> sovereign, observable and replaceable?**
+
 ## 4 · Experiential requirements — declared BEFORE any implementation is read
 
 A member should never have to wonder: *Do I have an account? Am I supposed to have
@@ -140,3 +148,61 @@ member must not have to hunt for their door.
 was there. ⛔ No door changed before Stage 6. ⛔ No production change before
 Stage 8. ⛔ No candidate chosen from feature count. ⛔ A stage does not open because
 the previous one looks finished; it opens on a founder act.
+
+---
+
+## 12 · Lane boundary — MEMBER-ACCESS-01 ⇄ MAIL-xx
+
+**Founder ruling 2026-09-11.** Two systems, loosely coupled, meeting at a narrow
+contract. MEMBER-ACCESS-01 must not become the mail-server project.
+
+```
+MEMBER ACCESS                          MAIL TRANSPORT
+Who are you?                           How does a message leave Soullab?
+How do you prove it?      requests     Was it accepted?
+How do you get back in?   ─────────▶   Was it delivered?
+Where do you land?        delivery     Did it fail? Can we retry?
+```
+
+**The contract, and the whole of it:**
+
+```
+sendChallenge()    →  accepted | rejected
+delivery status    →  queued | delivered | bounced | failed
+failure            →  observable, honest, recoverable
+```
+
+Beneath that interface Soullab may change transport, self-host, add failover — all
+without rebuilding authentication.
+
+### The two rules
+
+> **MEMBER ACCESS:** *email is a delivery channel, not the foundation of identity.*
+>
+> **MAIL:** *changing the mail transport must not change how a member understands or
+> uses Soullab.*
+
+### Consequences that bind Stage 4 candidates
+
+- A transport outage must **never** produce "code sent" when it was not.
+- Account creation must not leave a member in an incoherent state when delivery fails.
+- A delivery failure must not corrupt identity state.
+- **A returning member holding a stronger authenticator — a passkey — should not
+  depend on email at all.** This is a design target, and it is the concrete meaning
+  of *how little should authentication need email*.
+
+### How the Resend incidents are to be read
+
+They stay in Stage 1 as **historical evidence of an architectural weakness**, and
+they are **not** inputs to the future architecture. The enduring finding is not
+*Resend is bad*:
+
+```
+transport failure → delivery unavailable → UI reported success
+                  → member waited for mail that did not exist
+                  → access failed silently
+```
+
+> **A transport failure was allowed to masquerade as successful authentication
+> progress.** The replacement must make that impossible — not by choosing a better
+> vendor, but by refusing to let delivery state be reported as authentication state.
