@@ -58,6 +58,13 @@ import MaterialsDrawer from './MaterialsDrawer';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
+import FieldRoom from '../field/FieldRoom';
+import { parseTreatment } from '../field/fieldTreatments';
+import { useHeldFocus } from '../field/useHeldFocus';
+import FocusStrip from '../field/FocusStrip';
+import FocusOverlay from '../field/FocusOverlay';
+import { focusPaint } from '../field/focusPaint';
+import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
 import MaiaColumn from './MaiaColumn';
@@ -446,6 +453,59 @@ function CanvasRoom() {
 
   const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
   const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
+
+  /**
+   * ── THE DESIGN STUDY ──────────────────────────────────────────────────────
+   *
+   * `?field=A|B|C` renders the recovered Field + Orbit room around this same
+   * substrate. ABSENT MEANS ABSENT: with no parameter, or an unrecognised one,
+   * every line below runs exactly as it did and no member sees any difference.
+   * The study surface is reachable only by explicitly asking for it.
+   *
+   * ⛔ The room is a SHELL. It receives the pieces this page has already
+   * resolved — the same session, the same writing, the same outline rows, the
+   * same conversation — and decides only where they sit. Nothing about the
+   * engine is re-derived here, because re-deriving it is how a room quietly
+   * becomes a second implementation of the thing it was supposed to wrap.
+   */
+  const fieldTreatment = parseTreatment(searchParams?.get('field') ?? null);
+
+  /**
+   * The held focus. Called unconditionally, as every hook must be, and inert
+   * until the writer frames something — with no Work resolved it has no
+   * sections to read and captures nothing.
+   */
+  const focusSections = useMemo(
+    () => (writing?.sections ?? []).map((s) => ({
+      id: s.id, position: s.position, heading: s.heading ?? null,
+    })),
+    [writing],
+  );
+  const focusBodyOf = useCallback(
+    (sectionId: string) => writing?.bodyOf(sectionId) ?? '',
+    [writing],
+  );
+  const held = useHeldFocus(focusSections, focusBodyOf);
+
+  /**
+   * The focus, drawn where the writer put it. Built here because it needs both
+   * the held focus and the treatment under study; handed to the surface as a
+   * read-only mark and nothing else.
+   */
+  const renderSectionOverlay = useCallback((sectionId: string, body: string) => {
+    const f = held.focus;
+    if (!f || !fieldTreatment || !f.sectionIds.includes(sectionId)) return null;
+    const first = f.sectionIds[0] === sectionId;
+    const last = f.sectionIds[f.sectionIds.length - 1] === sectionId;
+    return (
+      <FocusOverlay
+        body={body}
+        start={first ? f.start : 0}
+        end={last ? f.end : body.length}
+        paint={focusPaint(resolveMark(TREATMENTS[fieldTreatment], 'focus'))}
+      />
+    );
+  }, [held.focus, fieldTreatment]);
   const named = Boolean(work?.title ?? manuscript?.title);
 
   /* 📖 WS2-03D — Conversations opens HERE.
@@ -551,6 +611,92 @@ function CanvasRoom() {
       )}
     </>
   );
+
+  if (fieldTreatment) {
+    return (
+      <FieldRoom
+        treatment={fieldTreatment}
+        title={headline}
+        note={named ? null : UNTITLED_EXPRESSION}
+        workRef={held.rootRef}
+        focus={held.focus
+          ? ({ openMaia }) => (
+            <FocusStrip
+              focus={held.focus!}
+              sections={focusSections}
+              bodyOf={focusBodyOf}
+              canWiden={held.canWiden}
+              canNarrow={held.canNarrow}
+              onWiden={held.widen}
+              onNarrow={held.narrow}
+              onRelease={held.release}
+              /* EXPLICIT ONLY. The gesture opens her and leaves the focus
+                 standing beside the conversation; it sends nothing. */
+              onAsk={openMaia}
+            />
+          )
+          : undefined}
+        structure={
+          /* THE SAME ROWS, THE SAME NAMESPACE RULE. In section_aware the rows
+             are manuscript_draft_sections ids and carry navigation; otherwise
+             they are the immutable Source and carry none. The room does not get
+             to relax that — a column that looks wired and misses every click is
+             the same defect wherever it is drawn. */
+          writeMount.mount === 'sections' && writing && manuscript?.id ? (
+            <StructuredOutline
+              manuscriptId={manuscript.id}
+              sections={writeMount.rows}
+              activeId={outlinePlace(session, writing)}
+              statusOf={writing.statusOf}
+              onSelect={outlineSelect(session, writing, setJumpTo)}
+            />
+          ) : null
+        }
+        maia={
+          /* The existing Canvas conversation, unchanged and unimproved. It does
+             not go through CanonicalTurn, and this room does not pretend
+             otherwise. */
+          work && manuscript ? (
+            <StudioConversation
+              work={work}
+              manuscriptId={manuscript.id}
+              conversationId={conversationId}
+              onClose={() => undefined}
+            />
+          ) : (
+            <MaiaColumn context={workContext} />
+          )
+        }
+        workbench={
+          <WorkDrawer
+            works={works}
+            unitedWork={work}
+            manuscript={manuscript ? { id: manuscript.id, title: manuscript.title } : null}
+            manuscriptLabel={manuscriptLabel}
+            onChanged={reloadWorks}
+          />
+        }
+        work={
+          <FieldBody
+            writeMount={writeMount}
+            witnessDelayMs={witnessDelayMs}
+            onWriting={setWriting}
+            onSession={setSession}
+            jumpTo={jumpTo}
+            onJumpHandled={() => setJumpTo(null)}
+            listPhase={listPhase}
+            resolution={resolution}
+            manuscript={manuscript}
+            onPick={(id) => setRequested(id)}
+            onMeta={setDraftMeta}
+            onCheckpointed={() => setHistoryKey((k) => k + 1)}
+            onWriteAuthorityChanged={refreshWriteState}
+            renderSectionOverlay={renderSectionOverlay}
+          />
+        }
+      />
+    );
+  }
 
   return (
     <WriterStudioShell
@@ -959,6 +1105,7 @@ function FieldBody({
   onSession,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -977,6 +1124,8 @@ function FieldBody({
   onSession?: (s: ManuscriptSession | null) => void;
   jumpTo?: string | null;
   onJumpHandled?: () => void;
+  /** Presentation only — see WholeManuscriptSurface's seam. */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1118,6 +1267,7 @@ function FieldBody({
         {(session) => (
           <SectionSurfaceBridge
             session={session}
+            renderSectionOverlay={renderSectionOverlay}
             onWriting={onWriting}
             onSession={onSession}
             manuscriptId={manuscript.id}
@@ -1187,6 +1337,7 @@ function SectionSurfaceBridge({
   onCheckpointed,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
@@ -1195,6 +1346,7 @@ function SectionSurfaceBridge({
   onCheckpointed?: () => void;
   jumpTo?: string | null;
   onJumpHandled?: () => void;
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1255,6 +1407,7 @@ function SectionSurfaceBridge({
           jumpTo={jumpTo}
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
+          renderSectionOverlay={renderSectionOverlay}
         />
       ) : (
         <SectionWritingSurface
