@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-8 FAILED (founder rulings)
+3A-S   semantic witness        RUNS 1-8 FAILED · RUN 9 ⛔ AWAITING RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,58 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 9 · CONTROLLED RERUN · evidence of record
+
+⭐ **NOTHING WAS CHANGED.** Same checkout `e684edcbd`, same prompt, same fixtures,
+same rubric — the only commits since run 8 are records. This run exists to give the
+unchanged run-7 law a second data point rather than to give it an eighth wording.
+
+**Protocol: 0 failed** on both specimens. Specimen 2: **ninth consecutive
+`no_change`**.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience brought about a large change in how he related
+> to the natural world, and the change in how he saw things that came out of it was
+> a significant step in the process of integration he was already engaged in."
+
+### Observations — ⛔ NOT a ruling
+
+```
+⚠️ THE TWO RULED DRIFTS REPRODUCED VERBATIM, UNDER AN UNCHANGED PROMPT
+
+  "a large change"        runs 7, 8, 9   — character-identical, three times
+  "already engaged in"    runs 8, 9      — character-identical, twice
+
+⭐ THE DEGREE WORDS HAVE BEEN PERMUTED, which is new
+  SOURCE   "SIGNIFICANT transformation" ... "MEANINGFUL development"
+  run 8    "large change"               ... "meaningful development"
+  run 9    "large change"               ... "SIGNIFICANT step"
+
+  `significant` now appears in the proposal — attached to the SECOND node,
+  where the source has `meaningful`, while the first node keeps `large`
+  where the source has `significant`. The source's own word is present and
+  on the wrong node.
+
+  And "development" -> "step". A step is a discrete unit of a sequence;
+  whether that is a property the source gave the node is the founder's
+  ruling. It is also the first reappearance of "step" since run 3's
+  "step forward", now without a direction word.
+
+STRUCTURE
+  run 8    two sentences
+  run 9    one sentence joined by "and"; the resulting edge ("that came
+           out of it") survives the join
+```
+
+⭐ **What the control establishes, and what it does not.** Two phrases the founder
+ruled as drifts reproduced **character-identically** under an unchanged prompt. That
+weakens the "variance" reading of run 8 considerably. It does **not** by itself
+distinguish *the law does not reach these phrases* from *`large` is not read as a
+magnitude claim* — ⛔ and this record does not choose between them.
+
+⛔ 3A-S AWAITING RULING on run 9. 3A NOT PASSED. 3D CLOSED.
 
 ## 3A-S — RUN 8 · evidence of record
 
