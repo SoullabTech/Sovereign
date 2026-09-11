@@ -198,3 +198,72 @@ The following build commands failed:
 	Building project VoiceKernelHarness with scheme VoiceKernelHarness
 (1 failure)
 ```
+
+---
+
+## Supplementary same-SHA environment/compile probes
+
+These do **not** replace any of the five predeclared outputs above. They were run afterward on the same detached `eef487422` worktree to distinguish environment/provisioning blockers from source defects. No tracked source was changed.
+
+### A. Source gate rerun with the repository's already-installed dependencies mounted
+
+```text
+jest-haste-map: Haste module naming collision: maia-desktop
+  The following files share their name; please adjust your hasteImpl:
+    * <rootDir>/desktop-app/package.json
+    * <rootDir>/maia-desktop/package.json
+
+PASS __tests__/voice-kernel-00-source-gates.test.ts
+  KERNEL-00 · K00-01 / VOICE-01 — one hardware sovereign
+    ✓ only AudioSessionAuthority.swift touches AVAudioSession (1 ms)
+    ✓ AudioSessionAuthority is iOS-only by construction and journals every mutation (1 ms)
+  KERNEL-00 · K00-16 — nothing else is in the build
+    ✓ no forbidden symbol appears in kernel or harness source (1 ms)
+    ✓ the package has no dependencies and the harness is not a member of ios/App
+  KERNEL-00 · VOICE-10 — output has identity and a cancellable lifetime
+    ✓ the graph schedules only under an OutputStreamID and exposes cancel(id) (1 ms)
+    ✓ the kernel journals every cancel with frames rendered and cancel latency
+  KERNEL-00 · VOICE-06 / -15 / -16 — one recovery owner, bounded, journalled
+    ✓ only HealthSupervisor verdicts reach requestRecovery, and the schedule is the ratified one
+    ✓ stale callbacks are gated by generation and journalled, never acted on (1 ms)
+  KERNEL-00 · VOICE-07 — the harness is a projection
+    ✓ HarnessModel holds no voice state and reduces only kernel snapshots
+    ✓ the view displays "listening" only via the snapshot rule, never from a local flag
+
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        0.397 s
+Ran all test suites matching /__tests__\/voice-kernel-00-source-gates.test.ts/i.
+```
+
+**Result:** PASS · 10/10. The original `ts-jest` failure was an environment artifact of the clean worktree, not a red source gate.
+
+### B. Generic iOS compile with code signing disabled
+
+Command:
+
+```bash
+xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
+```
+
+The full output is preserved at `/tmp/k00-xcodebuild-nosign.txt` on the Mac Studio for this session. The decisive compiler excerpt is:
+
+```text
+/tmp/k00-mac-compile-eef487422/ios/VoiceKernelHarness/Harness/HarnessModel.swift:75:27: error: actor-isolated property 'recorder' can not be referenced from the main actor
+        let text = kernel.recorder.exportJSONL()
+                          ^
+VoiceKernel.VoiceKernel.recorder:2:12: note: property declared here
+public let recorder: VoiceKernel.FlightRecorder}
+           ^
+/tmp/k00-mac-compile-eef487422/ios/VoiceKernelHarness/Harness/HarnessModel.swift:76:29: error: actor-isolated property 'recorder' can not be referenced from the main actor
+        let events = kernel.recorder.snapshot()
+                            ^
+VoiceKernel.VoiceKernel.recorder:2:12: note: property declared here
+public let recorder: VoiceKernel.FlightRecorder}
+           ^
+
+** BUILD FAILED **
+```
+
+**Classification:** named compile defect, bounded for PRE-WITNESS-01. The harness must request journal export/snapshot through an actor-isolated `VoiceKernel` method (or equivalent lawful boundary); it may not reach actor-owned state directly. This is compile custody, not architecture redesign.
