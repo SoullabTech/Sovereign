@@ -11,8 +11,8 @@ anywhere in this slice.**
 3A-S   semantic witness        ⛔ NOT WITNESSED
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
 3C-1   invocation identity     DONE · 17/17 · known-bad discriminated
-3C-2   result recovery         NOT BUILT
-3C     idempotency             NOT PASSED
+3C-2   result recovery         DONE · C1-C6 · 25 checks · 0 failed
+3C     idempotency             PASSED
 3D     end-to-end              CLOSED — and BINARY, never "partially open"
 ```
 
@@ -105,7 +105,45 @@ classified as a **CONFLICT**. An honest retry refused as a different act.
 > **An idempotency key that breaks under re-serialization protects nothing, and an
 > identity bound to the wire can fail in both directions at once.**
 
-## ⛔ Still owed before 3C passes
+## 3C-2 — receipt and recovery · 25 passed · 0 failed
+
+Thirteen real migrations, disposable PostgreSQL 16, torn down.
+
+**Identity is bound at claim; outcome is bound at completion.** `request_digest`
+lands atomically with `consumed_by_act`, so a second presentation is classifiable
+**while the original is still in flight**. `outcome_kind` + `produced_in_turn_index`
++ `completed_at` land inside the act transaction, so there is no state where the act
+is committed and its receipt is absent.
+
+```
+C1  exactly one historical act · cognition called once
+C2  replay · ⭐ cognition count REMAINS 1 · turns unchanged · proposals
+    unchanged · ⭐ recovered outcome SEMANTICALLY EQUAL to the historical act
+C3  ⭐ HARD CONFLICT · no new inference · original unchanged · the verdict
+    carries neither `completed` nor `already_consumed`
+C4  a new actId is allowed and performs a new act
+C5  same canonical digest -> lawful replay
+C6  no_change recovers POSITIVELY from the receipt, not from absence
+    proposals receipt + missing proposal -> HARD RECOVERY FAILURE,
+      ⛔ never downgraded to no_change
+    no_change receipt + attached proposal -> HARD RECOVERY FAILURE
+    consumed-but-uncompleted is `incomplete`, visibly not a replay
+    ⭐ the SCHEMA refuses completion without receipt evidence
+```
+
+⚠️ **Honest qualification on C5 at the database level.** The witness's C5 presents a
+shallow copy, which is not a genuinely different serialization — it confirms that a
+matching digest replays lawfully, and no more. **Digest invariance under
+re-serialization is proven in the unit suite** (`revision-invocation-identity`:
+section reorder, key reorder, deep JSON round-trip), where the known-bad
+`sha256(JSON.stringify(...))` fails all three. The two together cover C5; neither
+does alone.
+
+⛔ **Inference is stubbed by a counter, deliberately.** C2's claim is about the
+CALLER CONTRACT — that a replay never reaches cognition — not about what a model
+would say. A real provider here would prove less, not more.
+
+## Previously owed, now discharged
 
 ```
 3C-2  the caller-level retry contract must RETURN the historical result,
