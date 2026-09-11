@@ -891,3 +891,38 @@ native runtime trace on healthy turn  PENDING (Xcode console)
 same S1–S4 voice walk                 PENDING (not yet reported)
 Account Settings footer = 0debe8b09   PENDING (not yet reported)
 ```
+
+### E12 · 2026-09-11 ≈23:20 · founder: "it's back to glitchy again" — stall observed on the repaired build
+
+Founder, live, on the build installed at 23:14 (E10/E11; UIKit confirms
+`App.MAIABridgeViewController` is the live root VC). Reported as: the
+speak→listen stall is occurring again. No S1–S4 lines, no footer line, no
+long-utterance / long-reply result yet.
+
+**Reading (pre-declared in E5 / §7.2, applied without inference beyond it):**
+
+```text
+stall remains
+→ C′ remains true historically
+→ native path is now (structurally) active
+→ capture the new failure and locate it
+→ do not infer that registration "failed"
+```
+
+Two things are still unproven and must not be assumed: (a) that the
+footer reads `0debe8b09` (the parallel lane shares the phone, E9); (b) that
+`capacitorDidLoad()` actually executed and `prepareForSpeaking` /
+`prepareForListening` now reach Swift — `log collect` cannot show this
+(E11). The §7.2 third possibility is now in play and is exactly what the
+next capture must separate: with the old `AudioSessionManager.swift`
+teardown finally executing on every reply, the native full teardown and
+the community recognizer are two owners of one session (Invariant 3.1
+unmet by the current code, by design of the current code).
+
+**Instrument for the next capture: the Xcode debug console.** It shows
+Swift `NSLog` and the WebView's forwarded `console.log` in one stream, so
+one stalled reply yields: the registration line at launch, the
+`[VoiceController]` JS-side call and its result, the
+`[AudioSessionManager]` Swift-side transition lines, and any errors,
+in order. Record for that run: `INSTALL METHOD: Xcode Run (Debug)`, same
+source `0debe8b09`.
