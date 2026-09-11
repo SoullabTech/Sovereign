@@ -3553,3 +3553,105 @@ Both without stewardship           -> CONTROL
 ⛔ **Standing: boundary check BUILT as an instrument, NOT AUTHORIZED as a component ·
 MiniCheck WIRED, NOT RUN · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED ·
 B HELD · production UNTOUCHED.**
+
+## ⭐⭐⭐ DOCTRINE — DIALECTICAL UNDERSTANDING · AND THE STANDARD THAT REPLACES ACCURACY
+
+> ⭐ **Human communication is rarely the transfer of finished truth from one perfect
+> mind to another. It is a RECALIBRATION PROCESS.**
+>
+> I say what I currently understand · you respond from your experience · something in
+> my model of you changes · you revise your understanding of me · **meaning becomes
+> more accurate through the exchange.**
+
+```
+I think I understand.
+      ↓  You correct me.
+      ↓  I recognize the difference.
+      ↓  I revise what I hold.
+      ↓  I remember the correction.
+      ↓  Future understanding starts from there.
+```
+
+⛔ **The failure is not making an imperfect inference. The failure is REIFYING it** —
+turning a provisional understanding into an unquestionable fact.
+
+### ⭐ CANDIDATE CONSTITUTIONAL SENTENCES
+
+> **MAIA does not seek infallibility. She seeks increasingly faithful understanding
+> through corrigible relationship.**
+>
+> **Understanding is allowed to evolve. Correction is part of continuity, not a
+> failure of it.**
+
+### ⭐⭐ THE VERIFIER'S JOB, RESTATED
+
+⛔ Not to make MAIA epistemically sterile. To help distinguish:
+
+```
+what can be held FIRMLY
+what should be held PROVISIONALLY
+what needs CLARIFICATION
+what has already been CORRECTED
+```
+
+⭐ *That leaves room for genuine dialogue.*
+
+### ⭐⭐ RAW ACCURACY HIDES ALMOST EVERYTHING
+
+```
+90% on easy questions                        not impressive
+90% on subtle interpretive judgments         remarkable
+90% where the 10% are harmless & corrected   > 99% with rare rigid failures
+90% + CALIBRATION                            >> 90% with total certainty
+90% + CORRIGIBILITY                          stronger still — conversation
+                                             repairs the remaining 10%
+```
+
+> ⭐⭐ **The target is not perfect cognition. It is EXCELLENT COGNITION EMBEDDED IN AN
+> EXCELLENT CORRECTION PROCESS.** Highly competent, appropriately uncertain, easy to
+> correct, capable of learning from correction without losing continuity. ⭐ *A human
+> like that would be exceptionally trustworthy.*
+
+⭐ And in relational work, *"I may be reading this too strongly — is that actually true
+for you?"* can be **more intelligent than being marginally more accurate while
+pretending certainty.**
+
+## ⚠️ WHICH EXPOSES SOMETHING WE HAVE NEVER MEASURED — AND CAN, WITHOUT A NEW RUN
+
+⛔ **Every reading in this lane has been `argmax` ONLY.** A label was right or wrong;
+**the probability behind it was recorded and never looked at.** Calibration is named as
+a decisive criterion and has not once been examined.
+
+⭐ **It needs no new run.** Every probe output already carries the full distribution.
+`probe.py --calibration RESULT.json …` reads the frozen runs already on the founder's
+machine and reports confidence on hits versus misses, naming each miss and what it was
+sure of.
+
+```
+misses clustered near the decision boundary
+        ⭐ an UNRESOLVED band is available — the middle state that lets uncertainty
+           survive instead of being forced into truth or falsehood
+
+misses at the SAME confidence as hits
+        ⛔ NO USABLE SIGNAL. The model offers nothing about its own reliability,
+           and no threshold, abstention band or routing rule can be built on it.
+```
+
+⛔ **Choosing a band is a separate, predeclared calibration act on separate material.**
+The instrument refuses to propose one; it reports the gap and stops.
+
+⚠️ **Falsified against two stubs** — a calibrated verifier (misses 0.42 less confident)
+and an overconfident one (0.01) — and the overconfident stub **found a real bug on its
+first run**: tied confidences fell through to comparing row dicts and raised. ⭐ *Ties
+are not an edge case here — they are exactly what an overconfident verifier produces,
+which is the result the function exists to detect.* Fixed with an explicit sort key.
+
+### To run, on the JSONs already on the founder's machine
+
+```
+python3 scripts/verifier-probe/probe.py --calibration verifier-probe-*.json
+```
+
+⛔ **Standing: calibration UNMEASURED · MiniCheck NOT RUN · INLI OPENED · boundary
+check an INSTRUMENT not a component · evidence gate HELD · analyzer/3 UNTOUCHED ·
+B HELD · production UNTOUCHED.**

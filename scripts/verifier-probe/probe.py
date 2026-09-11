@@ -356,6 +356,81 @@ def compare(paths):
     print('\n⛔ NOT SELF-JUDGED. Correlation is a reading, not a verdict.')
 
 
+def calibration(paths):
+    """
+    ⭐⭐ CALIBRATION — is the verifier CONFIDENT when it is WRONG?
+
+    ⛔ EVERY READING SO FAR HAS BEEN argmax ONLY. A label was right or wrong and the
+    probability behind it was recorded and never looked at. But the founder's
+    criterion is explicit: *90% plus good calibration is much more valuable than 90%
+    with total certainty*, and calibration is the difference between a verifier that
+    can say "I may be reading this too strongly" and one that cannot.
+
+    ⭐ THIS NEEDS NO NEW RUN. Every probe output already carries the full probability
+    distribution. The question can be answered retrospectively, on the frozen runs
+    that have already happened.
+
+    ⛔ WHAT WOULD BE BAD NEWS: misses at the SAME confidence as hits. Then the model
+    has no signal to offer about its own reliability, and no threshold, abstention
+    band or routing rule can be built on it.
+    ⭐ WHAT WOULD BE GOOD NEWS: misses clustered nearer the decision boundary. Then an
+    UNRESOLVED band is available — the middle state that lets uncertainty survive
+    instead of being forced into truth or falsehood.
+    """
+    rows = []
+    for path in paths:
+        d = json.loads(Path(path).read_text())
+        for r in d.get('rows', []):
+            rows.append({**r, '_set': d.get('set', '?')})
+    if not rows:
+        sys.exit('no rows found')
+
+    def confidence(r):
+        sc = r.get('scores') or {}
+        # NLI: confidence is the winning probability.
+        probs = [v for k, v in sc.items()
+                 if isinstance(v, (int, float)) and k not in ('threshold',)]
+        if 'threshold' in sc:
+            # score-based verifiers: distance from the frozen cut, rescaled to [0,1]
+            key = next((k for k in sc if k != 'threshold'), None)
+            return abs(sc[key] - sc['threshold']) * 2 if key else None
+        return max(probs) if probs else None
+
+    print('CALIBRATION — confidence on hits vs misses')
+    print('⛔ Read from already-frozen runs. No model was loaded.\n')
+    for v in sorted({r['verifier'] for r in rows}):
+        sub = [r for r in rows if r['verifier'] == v]
+        hits = [(confidence(r), r) for r in sub if r['observed'] == r['expected']]
+        miss = [(confidence(r), r) for r in sub if r['observed'] != r['expected']]
+        hits = [(c, r) for c, r in hits if c is not None]
+        miss = [(c, r) for c, r in miss if c is not None]
+        if not hits and not miss:
+            print(f'  {v}: no probabilities recorded'); continue
+        mean = lambda xs: sum(c for c, _ in xs) / len(xs) if xs else float('nan')
+        print(f'  {v}   sets {sorted({r["_set"] for r in sub})}')
+        print(f'    hits    n={len(hits):<3} mean confidence {mean(hits):.3f}'
+              + (f'  min {min(c for c, _ in hits):.3f}' if hits else ''))
+        print(f'    misses  n={len(miss):<3} mean confidence {mean(miss):.3f}'
+              + (f'  min {min(c for c, _ in miss):.3f}' if miss else ''))
+        # ⛔ key= is load-bearing: on tied confidences a bare sort falls through to
+        # comparing the row dicts and raises. Tied confidences are not an edge case
+        # here — they are what an OVERCONFIDENT verifier produces, i.e. exactly the
+        # result this function exists to detect. The falsifier hit it on the first run.
+        for c, r in sorted(miss, key=lambda t: t[0], reverse=True):
+            print(f'      {r["id"]:<6} {r["_set"]:<10} wrong at {c:.3f}  {r["raw_label"]}')
+        if hits and miss:
+            gap = mean(hits) - mean(miss)
+            print(f'    -> misses are {abs(gap):.3f} '
+                  f'{"LESS" if gap > 0 else "MORE"} confident than hits on average')
+            if gap <= 0.05:
+                print('    ⛔ NO USABLE SIGNAL — the model is as sure when wrong as when')
+                print('       right. No abstention band can be built on this.')
+            else:
+                print('    ⭐ A band may be available. ⛔ Choosing one is a separate,')
+                print('       predeclared calibration act on separate material.')
+    print('\n⛔ NOT SELF-JUDGED. A reading, not a verdict.')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', choices=['deberta', 'hhem', 'minicheck', 'both', 'all'],
@@ -368,10 +443,15 @@ def main():
     ap.add_argument('--out', default='')
     ap.add_argument('--compare', nargs='+', metavar='RESULT.json',
                     help='correlate errors across saved runs of the SAME frozen set')
+    ap.add_argument('--calibration', nargs='+', metavar='RESULT.json',
+                    help='confidence on hits vs misses, from already-frozen runs')
     a = ap.parse_args()
 
     if a.compare:
         compare(a.compare)
+        return
+    if a.calibration:
+        calibration(a.calibration)
         return
 
     cases, digest = load_cases(a.which)
