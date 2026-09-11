@@ -2836,3 +2836,119 @@ its `embed_tokens | MISSING` load warning.
 
 ⛔ **Standing: blind set FROZEN and NOT RUN · evidence gate HELD · analyzer/3
 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐⭐ BLIND VALIDATION — RUN · DeBERTa 20/22 · HHEM 14/22 · READINGS ONLY
+
+`2026-09-11T08:39Z` · set `blind` · fixtures sha256
+`a8fc9a92f428c9af05a65e054c3519aac829fe81108562d162d60fa2e4a1cb3e` — **verified by
+the founder with `shasum` before the run AND printed by the probe in its own header.**
+⭐ The set that ran is provably the set that was frozen.
+
+```
+                       DeBERTa            HHEM
+licensed assertions     10/10              7/10
+unlicensed abstentions  10/12              7/12
+FAMILIES CARRIED         8/10              3/10
+```
+
+### ⭐ DETERMINISM — SETTLED EMPIRICALLY, NOT ASSUMED
+
+DeBERTa was run **twice, identically**: `…083924.json` and `…083939.json`, **every
+case identical, every label identical**. ⭐ The founder's correction is confirmed on
+this material: an NLI classifier in eval mode is deterministic, and repeats are not a
+robustness test. ⛔ *The fixture variations are.*
+
+### ⭐⭐ DeBERTa — 8 OF 10 FAMILIES CARRIED, AND THE TWO MISSES ARE ONE PATTERN
+
+```
+ok    affected-by-vs-acting-upon            ok    observing-vs-participating
+MISS  association-vs-membership             ok    possession-vs-participation
+ok    explicit-role-vs-inferred-role        ok    property-change-vs-person-participation
+ok    negation                              ok    swapped-subject-object
+MISS  temporality                           ok    undergoing-vs-causing
+```
+
+```
+B05  "He has recorded with the quartet three times."
+     -> "He is a member of the quartet."          expected not_entailed · got ENTAILMENT
+B21  "He rowed with the crew until his injury in March."
+     -> "He rows with the crew."                  expected not_entailed · got ENTAILMENT
+```
+
+⭐⭐ **BOTH MISSES ARE THE SAME ERROR: A BOUNDED RELATION UPGRADED TO AN UNBOUNDED
+ONE.** B05 takes partial association to full membership; B21 takes past participation
+to present participation. ⛔ **It is not two accidental gaps — it is one disposition**,
+and it is precisely the disposition that would let a stale or over-scoped claim
+survive a gate. The per-family report is what made it visible; a `20/22` would not
+have.
+
+### ⭐ AND THE POSITIVE COLUMN IS PERFECT — conservatism is ruled out
+
+`10/10` licensed. ⛔ **DeBERTa cannot be passing the negatives by abstaining**, which
+was the trap the whole design guards. On the two decisive pairs it splits cleanly:
+
+```
+B11  "His handwriting undergoes a change."        ENTAILMENT      ⭐ the N2 ruling
+B12  "He actively participates in the change."    CONTRADICTION   ⭐ the N1 failure
+     — same premise, opposite verdicts, on material A-S never touched
+
+B15  "The inspector undergoes questioning."       CONTRADICTION   role swap rejected
+B16  "The foreman undergoes questioning."         ENTAILMENT      same premise
+B18  "declined to sit on the board but agreed to advise it" -> advises  ENTAILMENT
+     ⭐ negation did not suppress the assertion beside it
+```
+
+⚠️ **One characteristic to note before anyone builds on it:** DeBERTa reached
+`contradiction` for **7 of its 10 correct negatives**, B12 among them. For B12,
+`neutral` is arguably the truer label — the premise does not deny his participation,
+it simply does not assert it. ⛔ **The verdict is right and the strength is arguably
+over-strong**, which matters if a gate were ever to read `contradiction` as *"the
+candidate asserts the opposite"*. Recorded now, before it can be relied on.
+
+### ⛔⛔ HHEM — 3 OF 10 FAMILIES · AND THE A-S SET WAS FLATTERING IT
+
+```
+                  A-S-derived        blind
+HHEM                10/13 (77%)     14/22 (64%)     families 3/10
+DeBERTa             12/13 (92%)     20/22 (91%)     families 8/10
+```
+
+⭐⭐ **DeBERTa holds its rate on blind material; HHEM drops.** That is direct evidence
+that the first probe's fixtures — **written by me, after seeing A-S fail** — were
+easier than they should have been, and that the blind set was worth building.
+
+⛔ **HHEM's blind misses are in the epistemically decisive families**, at confident
+scores:
+
+```
+B15  role swap, "The inspector undergoes questioning."      0.8769  ENTAILED
+B21  ceased participation -> present tense                  0.9167  ENTAILED
+B05  collaboration -> membership                            0.8648  ENTAILED
+B19  "will join next spring" -> is a member                  0.8022  ENTAILED
+B03  the causer as patient                                  0.5392  ENTAILED
+```
+
+⚠️ And a fragility worth naming: **B09 scored `0.4983`** — correct by **0.0017**
+against the frozen `0.5` cut. ⛔ **The threshold is NOT being moved**, per the ruling;
+the margin is recorded as a property of the instrument, not repaired into one.
+
+⛔ Every HHEM number still carries its load warning:
+`t5.transformer.encoder.embed_tokens.weight | MISSING — newly initialized`.
+
+### ⛔ WHAT THE BLIND RUN DOES AND DOES NOT ESTABLISH
+
+⭐ **It establishes that the distinction survives material it was not built from.**
+The B11/B12 pair reproduces the exact A-S reading — *undergoing a change* licensed,
+*actively participating in it* not — in a domain, with a person and a premise that
+have nothing to do with the source.
+
+⛔ **It does not establish** that DeBERTa is ready to gate MAIA's prose. 22 English
+sentences are not a Work. And the two misses are a real, named disposition, not noise.
+
+> ⭐ **The finding, stated exactly:** an independently trained verifier holds the
+> distinction the generative analyser lacked, **across blind material, in 8 of 10
+> distinction families, with a perfect licensed column** — and its failures are
+> concentrated in one describable behaviour: **bounded → unbounded**.
+
+⛔ **Standing: no ruling taken · no fixture edited · no threshold moved · evidence gate
+HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
