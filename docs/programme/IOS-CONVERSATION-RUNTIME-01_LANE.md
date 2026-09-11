@@ -200,7 +200,46 @@ Then — and only then — the SpeechAnalyzer comparison
 
 ## 9 · Evidence log
 
-*(empty — awaiting the calibrated capture, predecessor §13.4)*
+### E1 · 2026-09-11 · first unified-log archive from the phone — instrument PARTIALLY calibrated, no classification yet
+
+**Instrument.** `sudo log collect --device --start "2026-09-10 21:10:00"` on
+the Mac (phone on USB) → `~/voice-witness-logs/phone2.logarchive`, covering
+≈21:10 → ≈22:16 device time, which contains the §12.11 turns (screenshots
+21:18, 21:24). The earlier `--last 20m` archive (21:55–22:15) held no voice
+activity and is not evidence either way.
+
+**Result.**
+
+| query | count | meaning |
+|---|---|---|
+| `eventMessage CONTAINS[c] "AudioSessionManager" OR "teardown" OR "prepareFor"` | 172 lines, **0** from MAIA's native plugin | all matches are Apple processes (`cameracaptured`, `passd`, `CommCenter`, `corespeechd`) or WebKit `HTMLMediaElement::prepareForLoad` inside the App process |
+| `process == "App" AND (coreaudio ∨ speech ∨ AVAudioSession)` | **18,387** | the app's Apple-side audio-session and speech traffic in the window is fully visible |
+
+**What this does and does not establish.**
+
+- The archive covers the turns and the phone persisted the app's Apple
+  audio/speech logging. The instrument is not blind to the app's audio path.
+- **Not one `[AudioSessionManager] …` line exists in the window** — not in
+  a healthy turn, not in the stall. Two readings remain open and the next
+  command separates them: (i) MAIA's `NSLog` output from the main binary
+  is not persisted in this archive (then this instrument is D for MAIA's
+  native lines specifically); (ii) the native `prepareForSpeaking` /
+  `prepareForListening` were never invoked on the live path in any turn —
+  which, if true, would mean the web wrapper's call never reaches the
+  plugin and the predecessor's native edit is not on the executed path at
+  all. Neither is inferred yet.
+- WebKit `HTMLMediaElement::prepareForLoad … gesture = 1` lines from the
+  App process cluster at 21:14:30, 21:14:41, 21:21:41, 21:34:43–49 — the
+  web layer creating/loading audio elements. Recorded, not interpreted.
+
+**Calibration step still required** (predecessor §13.3: absence needs a
+calibrated instrument): count lines whose *sender* is MAIA's own binary
+(`App.debug.dylib` in a Debug build, or `App.app/App`). If that count is
+>0, `NSLog` is persisted and the absence of `[AudioSessionManager]` lines is
+admissible. If 0, MAIA-native lines are invisible to `log collect` and the
+Xcode console is the instrument for them.
+
+**Classification: NONE YET.**
 
 ## 10 · Governance
 
