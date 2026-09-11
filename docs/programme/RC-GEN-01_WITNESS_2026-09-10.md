@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUNS 1-8 FAILED · RUN 9 ⛔ AWAITING RULING
+3A-S   semantic witness        ⛔ RUNS 1-9 FAILED · PROMPT LEVER EXHAUSTED
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -451,7 +451,90 @@ weakens the "variance" reading of run 8 considerably. It does **not** by itself
 distinguish *the law does not reach these phrases* from *`large` is not read as a
 magnitude claim* — ⛔ and this record does not choose between them.
 
-⛔ 3A-S AWAITING RULING on run 9. 3A NOT PASSED. 3D CLOSED.
+## ⭐⭐ FOUNDER RULING — run 9: **FAIL**, and it changes the ARCHITECTURAL reading
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+Causal geometry basically intact. **Four property findings:**
+
+1. **`significant transformation` → `large change`, identical to run 8.** *"No longer
+   evidence that the prompt simply lacked the right rule."*
+2. ⭐ **A PROPERTY MIGRATES TO THE WRONG NODE.** Source: `SIGNIFICANT` transformation
+   … `MEANINGFUL` development. Run 9: `LARGE` change … `SIGNIFICANT` step.
+   > **Preserving the inventory of concepts is insufficient if their properties are
+   > reassigned.**
+3. **`development` → `step`** imports a staged, directional progression the source
+   does not require — milder than run 3's *step forward*, same family.
+4. **`engaged in`** still attributes active participation the source does not state.
+
+### ⭐⭐ THE THREE-EVENT SEQUENCE — the third is qualitatively different
+
+```
+run 7   node-property drift DISCOVERED
+run 8   node-property drift PERSISTS after explicit repair
+run 9   node-property drift REPRODUCES under an UNCHANGED prompt
+```
+
+> ⭐ **The model can state the preservation law, can often preserve the graph, and
+> can still spontaneously redistribute or intensify properties while rewriting.**
+
+### ⛔ ARCHITECTURAL RULING — do NOT add a tenth clause
+
+*"Rephrasing it again risks turning the prompt into an increasingly elaborate
+semantic lint rulebook without demonstrating that the model can reliably apply the
+rules simultaneously."*
+
+**The next experiment asks whether semantic fidelity needs a SEPARATE OPERATION,
+rather than hoping generation performs transformation and verification in one act:**
+
+```
+SOURCE
+  -> derive semantic graph / invariants
+  -> generate candidate revision
+  -> compare candidate against the SOURCE-DERIVED invariants
+  -> proposal admitted only if preservation holds
+```
+
+⛔ **Explicitly NOT another model subjectively grading prose, and NOT the `reason`
+field as evidence.** Invariants are derived **before** rewriting and constrain the
+output **afterwards**. Generation and fidelity-checking become separate
+responsibilities.
+
+### ⚠️ THE CRUX, surfaced before any design — ⛔ not decided here
+
+**If the same model derives the invariants AND generates the revision, the check is
+self-assessment** — the `reason`-field problem at a larger scale, and that field has
+misreported fidelity in three separate rulings.
+
+What appears to make the separation real, and what does not:
+
+```
+REAL SEPARATION                        NOT A SEPARATION
+invariants derived from the SOURCE     invariants derived from, or after,
+ALONE, before any candidate exists       seeing the candidate
+frozen, then never revisited           re-derived or "refined" at check time
+the comparison is MECHANICAL —         the comparison is a judgement about
+does each named invariant appear         whether the revision "feels faithful"
+  in the candidate, yes or no
+a failed check REFUSES the proposal    a failed check asks for a rewrite and
+  (or returns the candidate to the       silently accepts the second attempt
+  member as unverified)
+```
+
+⭐ **The falsifiable question the design must answer: can a check derived from the
+source alone catch `large change` — which no run's own `reason` ever flagged?** If
+it cannot, the separation is decorative.
+
+⛔ Nothing built. **Awaiting the founder's direction on the crux.**
+
+### Specimen 2 — ninth consecutive `no_change`
+
+**Restraint is strongly evidenced.** The remaining gate is narrowly about semantic
+conservation during transformation.
 
 ## 3A-S — RUN 8 · evidence of record
 
