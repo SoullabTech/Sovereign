@@ -16,6 +16,19 @@ anywhere in this slice.**
 3D     end-to-end              CLOSED — and BINARY, never "partially open"
 ```
 
+## ⚠️ Housekeeping corrections
+
+**Migration number collision (mine).** `20260910000001` was already taken by
+`pending_ask_claims`. The revision-proposal migration is renamed
+**`20260910000004_manuscript_revision_proposals.sql`**. Safe: it is unapplied
+everywhere, and `20260910000002`/`0003` were already in use.
+
+**Record date.** This file was first named `…_2026-09-11.md` because the container
+clock is UTC (`2026-09-11 00:16 UTC` at the time of writing) while the founder's
+working day was still 2026-09-10. ⭐ **The lane's convention is the founder's
+working day**, which is what every sibling record uses; renamed to match. Recorded
+rather than silently fixed, because a witness filename is a date claim.
+
 ## ⚠️ Count correction
 
 The 3B commit message (`02f940044`) says **19 checks**. **The executed witness

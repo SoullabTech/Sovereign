@@ -1,6 +1,6 @@
 # RC R1 — proposal schema witness
 
-Falsifiers for `database/migrations/20260910000001_manuscript_revision_proposals.sql`,
+Falsifiers for `database/migrations/20260910000004_manuscript_revision_proposals.sql`,
 run against a **disposable** cluster. Never point these at a database anyone uses.
 
 ```bash
@@ -9,7 +9,7 @@ pg_ctl -D /tmp/rcpg/data -o '-p 5599 -k /tmp/rcpg' -l /tmp/rcpg/log start
 psql -h /tmp/rcpg -p 5599 -U rc -d postgres -v ON_ERROR_STOP=1 \
   -f scripts/witness/rc-r1/00-fk-prerequisites.sql
 psql -h /tmp/rcpg -p 5599 -U rc -d postgres -v ON_ERROR_STOP=1 \
-  -f database/migrations/20260910000001_manuscript_revision_proposals.sql
+  -f database/migrations/20260910000004_manuscript_revision_proposals.sql
 psql -h /tmp/rcpg -p 5599 -U rc -d postgres \
   -f scripts/witness/rc-r1/01-proposal-schema-falsifiers.sql
 ```
