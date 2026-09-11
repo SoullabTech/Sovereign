@@ -395,6 +395,42 @@ def against(paths):
                                   f'= {rr / (rr + ww):.0%}')
                         elif rr + ww:
                             print(f'    agreement precision {label}  n={rr + ww} — too few')
+                    # ⭐ THE DISRUPTION AXIS. Rescue is conditional on the first
+                    # verifier being WRONG, which is rare outside the regime and so
+                    # usually unanswerable. Disruption is conditional on it being
+                    # RIGHT — a far larger population on both sides, so this half of
+                    # the comparison is normally the half that CAN be answered.
+                    for label, ok, bad in (('INSIDE ', preserved, disrupted),
+                                           ('OUTSIDE', u_pres, u_disr)):
+                        if ok + bad >= MIN_N:
+                            print(f'    disruption rate {label} {bad}/{ok + bad} '
+                                  f'= {bad / (ok + bad):.0%}')
+                        elif ok + bad:
+                            print(f'    disruption rate {label} n={ok + bad} — too few')
+
+                # ⭐⭐ UNCONDITIONAL — the founder's scope caveat, made measurable.
+                # The routed table is computed on a sample the detector SELECTED for
+                # particular linguistic regimes, so it characterizes dependence INSIDE
+                # that selection and nothing wider. This table uses every shared case,
+                # selected by nothing, and is what speaks to dependence in general.
+                # ⛔ Still only across THIS corpus, which was itself built to press on
+                # hard distinctions — it is not a claim about text at large.
+                gc = lambda ac, bc: sum(1 for _, v in shared
+                                        if v[a]['correct'] == ac and v[b]['correct'] == bc)
+                g_res, g_blind, g_pres, g_disr = (gc(False, True), gc(False, False),
+                                                  gc(True, True), gc(True, False))
+                if min(g_res + g_blind, g_pres + g_disr) >= MIN_N:
+                    gp = fisher_exact_2x2(g_res, g_blind, g_pres, g_disr)
+                    print(f'\n  UNCONDITIONAL — all {len(shared)} shared cases, no selection')
+                    print(f'                        {b} right   {b} wrong')
+                    print(f'    {a} wrong         {g_res:^11}{g_blind:^11}')
+                    print(f'    {a} right         {g_pres:^11}{g_disr:^11}')
+                    print(f'    {b} accuracy where {a} is WRONG  '
+                          f'{g_res / (g_res + g_blind):.0%}')
+                    print(f'    {b} accuracy where {a} is RIGHT  '
+                          f'{g_pres / (g_pres + g_disr):.0%}')
+                    print(f'    Fisher exact, two-sided  p = {gp:.2e}' if gp < 1e-3
+                          else f'    Fisher exact, two-sided  p = {gp:.4f}')
                     if u_res + u_blind and rescued + shared_blind:
                         inside = rescued / (rescued + shared_blind)
                         outside = u_res / (u_res + u_blind)

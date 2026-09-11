@@ -4733,3 +4733,73 @@ between them means least.
 
 **Standing unchanged: nothing authorized · no gate · no production component ·
 detector rule `18608a18…` untouched.**
+
+---
+
+## The founder's open question, answered on the axis that has the n (2026-09-11)
+
+The ruling asked for four numbers: MiniCheck's **rescue** rate inside versus
+outside the detector regime, and its **disruption** rate inside versus outside.
+Only one of those pairs is answerable, and which one is answerable is itself the
+finding.
+
+| | INSIDE the regime | OUTSIDE | n |
+|---|---|---|---|
+| rescue (DeBERTa wrong → MiniCheck right) | 9/19 = 47% | 2/3 = 67% | ⛔ **3 outside — unanswerable** |
+| **disruption** (DeBERTa right → MiniCheck wrong) | **4/25 = 16%** | **2/43 = 5%** | ✅ 25 and 43 |
+| **agreement precision** | **21/31 = 68%** | **41/42 = 98%** | ✅ 31 and 42 |
+
+⭐ **Rescue cannot be compared, because the detector already contains 19 of
+DeBERTa's 22 errors.** There is no outside population left. The guard refuses the
+comparison and is right to; the nominal `47% vs 67%` is noise at n=3 and must not
+be quoted.
+
+⭐⭐ **Disruption and agreement can be compared, and they answer the architectural
+question from the other side.** Inside the regime MiniCheck disrupts correct
+DeBERTa answers **3.4× more often**, and agreement between the two is worth **68%
+instead of 98%**. So the regime is not a place where MiniCheck is *unusually
+good*. It is a place where **both** verifiers degrade and MiniCheck degrades
+less.
+
+**The precise formulation the evidence supports:**
+
+> ⭐ The detector finds where DeBERTa specifically **fails** — not where MiniCheck
+> specifically **succeeds**.
+
+Against the founder's three predeclared outcomes this is closest to the second —
+*the router may be unnecessary for choosing when to consult MiniCheck* — but it
+does **not** falsify routing, because under `UNRESOLVED` semantics the router's
+job was never to pick a winner. A regime where agreement is worth 68% is exactly
+a regime that should not close. ⛔ The router's value now rests on **error
+coverage (86%)**, not on MiniCheck's differential usefulness, and that is a
+narrower claim than the one it started with.
+
+### The Fisher scope caveat, made measurable
+
+The founder is right that `p = 0.0204` characterizes dependence **inside a sample
+the detector selected**. The instrument now also prints the **unconditional**
+table over every shared case, selected by nothing:
+
+```
+  UNCONDITIONAL — all 90 shared cases
+                        minicheck right   minicheck wrong
+    deberta wrong            11                11
+    deberta right            62                 6
+    minicheck accuracy where deberta is WRONG   50%
+    minicheck accuracy where deberta is RIGHT   91%
+    Fisher exact, two-sided  p = 9.03e-05
+```
+
+⭐ **Global dependence is therefore not merely "not yet characterized" — it is
+demonstrated, and more strongly than inside the routed regime.** On the unrouted
+cases alone the same test is p = 0.187 (n too small to carry anything).
+
+⛔ **Scope, preserved exactly**: this is dependence across *this corpus*, which
+was itself built to press on hard distinctions. It is **not** a claim about the
+verifiers' dependence on text at large, and it does not become one by being
+computed over an unselected subset of a selected corpus.
+
+**Standing: complementarity SUPPORTED · independence PARTIAL, now demonstrated
+unconditionally · majority voting REJECTED · MiniCheck modifier mechanism
+UNRESOLVED, guard intact · detector value = ERROR COVERAGE, not differential
+usefulness · `UNRESOLVED` LOAD-BEARING · production UNTOUCHED.**
