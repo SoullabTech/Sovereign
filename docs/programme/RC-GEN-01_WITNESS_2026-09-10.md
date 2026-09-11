@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-4 FAILED (run 4 = REGRESSION)
+3A-S   semantic witness        RUNS 1-4 FAILED · RUN 5 ⛔ AWAITING RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,53 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 5 · evidence of record
+
+**Checkout `b460eac85`** (simultaneity law live), credential from line 2,
+`--require-cognition`. **Protocol: 0 failed** on both specimens.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience changed how he related to the natural world,
+> and it changed it a great deal. The change in how he saw things was itself a part
+> of the process of integration he was still going through, and it mattered to that
+> process."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage is already fully concrete: a kettle clicking off, water
+> poured over coffee grounds, a named actor. There is no abstraction to reduce. Any
+> revision would have to add detail the text does not state — the temperature, her
+> mood, the reason for the pause, the kind of coffee — which would be invention
+> rather than concreteness. The two short sentences also carry a deliberate flatness
+> and sequence (the click, then the pour) that added specificity would dilute."
+
+Zero proposals. **Fifth consecutive `no_change`.**
+
+### Observations for the ruling — ⛔ NOT a ruling
+
+```
+NEW IN RUN 5
+  "and it changed it a great deal"   recovers the degree marker
+                                     "significant", absent from runs 1-4
+  "was itself a part of the process" constitutive relation retained
+  "and it mattered to that process"  ALSO present — the run-2 phrase
+                                     ruled a weakening, here alongside
+                                     the constitutive claim rather than
+                                     replacing it
+
+UNCHANGED FROM RUN 4
+  "The change in how he saw things"  the perspective shift is INTRODUCED
+                                     rather than stated as resulting from
+                                     the relational change. "That" became
+                                     "The", which alters the anaphora but
+                                     the source's "resulting" relation is
+                                     still not written.
+```
+
+⛔ Whether run 5 discharges R2, R3 and R4 is the founder's ruling. 3A-S AWAITING
+RULING; 3A NOT PASSED; 3D CLOSED.
 
 ## 3A-S — RUN 4 (witnessed) · FOUNDER RULING: **FAIL** — and it is a REGRESSION
 
