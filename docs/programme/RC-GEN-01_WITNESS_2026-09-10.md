@@ -8,7 +8,8 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUN 1 FAILED (founder ruling 2026-09-10)
+3A-S   semantic witness        RUN 2 · ⛔ AWAITING FOUNDER RULING
+                              (run 1 FAILED — founder ruling 2026-09-10)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -148,6 +149,63 @@ embellishment) because it would add material without solving the named problem.
 ⛔ **Repair at the inference instruction / semantic-constraint layer ONLY.** Then
 rerun **the same specimens**. ⛔ **The test is not improved to help the model
 pass** — the failure has already named what the next inference must learn.
+
+## 3A-S — RUN 2 · evidence of record
+
+**Founder's Mac Studio, checkout `b93dff6fb`**, real credential, `--require-cognition`.
+Repair since run 1 was the **instruction layer only**; the specimen fixtures are
+frozen byte-for-byte by `__tests__/revision-specimen-fixtures.test.ts`, so this is
+a rerun of the same test rather than an easier one.
+
+### Protocol, on live output: **0 failed** (both specimens)
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience changed how he related to the natural world,
+> and that change in how he saw things mattered to the work of integration he was
+> still doing."
+>
+> **reason:** "Replaces the abstract nominal phrasing (\"facilitated a significant
+> transformation in his relational orientation,\" \"constituted a meaningful
+> development in his ongoing process\") with plain verbs and everyday words, while
+> keeping both claims — the change in relation to nature, and its significance to
+> his continuing integration — intact. The passage does not say what the dream
+> contained or what he did afterward, so no specifics are invented."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage isn't abstract at all — it's already two plain, physical
+> actions: a kettle clicking off and water poured over coffee grounds. Every noun is
+> a concrete object and every verb is an observable event. Any \"more concrete\"
+> revision would have to invent detail the text doesn't supply (the smell, the
+> weight of the kettle, Mara's state of mind, the kind of coffee, the time of day),
+> which would add content rather than clarify expression. The clipped rhythm of the
+> two short sentences is also doing work; padding them would dilute it. The existing
+> language is stronger than anything I could substitute."
+
+Zero proposals. **No regression against run 1's PASS.**
+
+### Textual comparison at the two ruled substitutions
+
+⛔ **OBSERVATIONS, NOT A RULING.** Recorded because the founder's ruling named two
+specific losses and a later reader will want the comparison in one place.
+
+```
+SOURCE     "transformation in his relational orientation toward the natural world"
+run 1      "he began to see the natural world differently"        ruled: FAIL
+run 2      "changed how he related to the natural world"
+
+SOURCE     "the resulting shift in perspective"
+run 1      (absorbed into the above)                              ruled: FAIL
+run 2      "that change in how he saw things"
+
+SOURCE     "his ongoing process of integration"
+run 1      "putting himself back together"                        ruled: FAIL
+run 2      "the work of integration he was still doing"
+```
+
+⛔ **Whether run 2 discharges R3 and R4 is the founder's ruling.** 3A-S remains
+AWAITING RULING; 3A remains NOT PASSED; 3D remains CLOSED.
 
 ## ⚠️ Housekeeping corrections
 
