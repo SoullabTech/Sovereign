@@ -470,3 +470,100 @@ control this corpus lacked, discovered by its own author in advance.
 **Standing: H1 closure-risk FAILED BLIND · H2 challenger-router UNSUPPORTED HERE
 · detector cost 55% on natural material · neutral/contradiction identified as the
 uncontrolled variable · production UNTOUCHED.**
+
+---
+
+## FOUNDER RULING ON THE PROSPECTIVE RESULT — 2026-09-11
+
+```text
+DeBERTa useful verifier                 STRONGLY SUPPORTED
+MiniCheck complementary verifier        SUPPORTED
+MiniCheck more conservative             SUPPORTED
+DeBERTa confidence as uncertainty       NOT SUPPORTED
+
+deterministic detector can identify
+boundary language                       SUPPORTED
+detector as general closure-risk signal WITHDRAWN
+
+agreement unsafe inside detector regime NOT REPLICATED
+prospective result                      100% inside / 94% outside
+
+earlier temporal/scope weakness         REAL
+but narrower than previously framed     YES
+
+UNRESOLVED as epistemic state           STILL VALID
+specific detector as its trigger        NO
+```
+
+⭐ **The detector is renamed by what it demonstrably does: a BOUNDARY-LANGUAGE
+DETECTOR, not an epistemic-risk detector.** It reliably notices time, scope,
+condition and frequency markers — and the presence of those markers does not by
+itself make an inference unsafe. That is the whole of the 55% routing cost on
+legitimate claims, stated as a property rather than a defect.
+
+⛔ **The earlier `68% / 98%` result remains legitimate DISCOVERY evidence. It did
+not reproduce prospectively, and so it does not authorize an architectural
+role.** The process ran as designed: seen corpora → pattern → hypothesis →
+prospective blind corpus → pattern does not reproduce → **role not promoted.**
+
+⚠️ **And `39/40` does not mean the temporal problem is solved.** The founder's
+narrower statement, which the evidence supports and the looser one does not:
+
+> Natural temporal language does not itself break DeBERTa. The failure is
+> concentrated in subtler cases where the source establishes a relation and the
+> hypothesis quietly **drops or widens a boundary without directly contradicting
+> the source.**
+
+## NEXT PHASE — the distinction that was being collapsed
+
+The target is no longer "temporal language". It is one contrast:
+
+```text
+CONTRADICTED            "She stopped working there in 2020."
+                     -> "She still works there."             ⛔ easy
+
+NEUTRAL-BUT-PLAUSIBLE   "She worked there during the summer."
+                     -> "She works there."                   ⭐ the hard case
+```
+
+The second is harder *because the hypothesis can be plausible without being
+licensed* — and it is the one that matters:
+
+> ⭐⭐ **The most dangerous mistake is often not believing something false. It is
+> treating something merely possible as something known.**
+
+A phase-2 corpus should therefore label **three** states —
+`ENTAILED · CONTRADICTED · NEUTRAL` — rather than collapsing the latter two into
+`not_entailed`.
+
+### ⛔ A structural constraint the founder should know BEFORE designing it
+
+**MiniCheck cannot answer this question.** Its output is a single support score
+in `[0,1]`; its entire expressible vocabulary is *supported / not supported*. It
+has **no way to distinguish contradicted from neutral**, so on a three-way corpus
+it can only ever collapse the very distinction the corpus exists to isolate.
+
+| verifier | native output | can express the phase-2 distinction? |
+|---|---|---|
+| DeBERTa | `entailment · neutral · contradiction` | ⭐ **yes, natively** |
+| MiniCheck | one support score | ⛔ **no** |
+| HHEM | one consistency score | ⛔ **no** |
+
+**Consequence for the design:** DeBERTa becomes the primary instrument of phase 2
+rather than the subject of it, and MiniCheck can serve only as a second opinion on
+the binary axis. ⛔ A three-way agreement study between these two is **not
+constructible**, and should not be planned.
+
+### ⭐ What can be recovered from existing runs without breaking any freeze
+
+`probe.py` already records DeBERTa's three-way output as `raw_label` in **every**
+result file ever produced by this lane. So DeBERTa's neutral-vs-contradiction
+behaviour on all five corpora is **already on disk** and needs no re-run.
+
+What is missing is three-way **ground truth**, which the frozen fixtures do not
+carry. ⛔ It must not be added to them — editing a fixture breaks its hash and
+every result recorded against it. The lawful form is a **separate adjudication
+file** mapping `case id → contradicted | neutral`, leaving `expected` untouched,
+authored by someone other than the party holding the hypothesis.
+
+⛔ **Not authorized here. Recorded as the available next act, not taken.**
