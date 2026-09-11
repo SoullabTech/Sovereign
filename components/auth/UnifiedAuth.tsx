@@ -188,6 +188,15 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
   // Otherwise the arrival intent decides. A returning member opens on password;
   // someone joining opens on email.
+  //
+  // ⚠️ OPEN (2026-09-11): this strands the email-code population. /signin is where
+  // code-flow members are sent — by recovery instructions and by us — and those
+  // accounts hold a generated password the member has never seen, so they meet a
+  // form they cannot fill. Observed: an operator holding a valid 6-digit code typed
+  // it into the password field and was refused by the wrong form. 5 of the 7
+  // stalled accounts sit at the step straight after account creation. Not changed
+  // here: entryMode.test.ts records the opposite defect and the founder decides
+  // which population the door opens for.
   const [phase, setPhase] = useState<Phase>(
     preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
   );
@@ -502,8 +511,20 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
         body: JSON.stringify({ username: username.toLowerCase().trim(), password }),
       });
       const text = await res.text();
-      if (!res.ok) { setError(text || `Sign in failed (${res.status})`); setIsLoading(false); return; }
-      const data = text ? JSON.parse(text) : {};
+      // Never surface the raw body. It was being set verbatim, so a member saw the
+      // literal string {"error":"Invalid username or password"} — braces, quotes and
+      // all — in the error slot (screenshot, 2026-09-11). Parse first, fall back to
+      // a sentence, and only then to a status.
+      let data: any = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (!res.ok) {
+        setError(
+          (typeof data?.error === 'string' && data.error) ||
+          (res.status === 401 ? 'That username and password did not match.' : `Sign in failed (${res.status})`)
+        );
+        setIsLoading(false);
+        return;
+      }
       const memberId = data?.memberId || data?.member?.id || data?.id;
       if (!memberId) { setError('Sign in succeeded but memberId missing.'); setIsLoading(false); return; }
       storeSession({
