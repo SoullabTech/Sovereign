@@ -62,6 +62,8 @@ SETS = {
     # ⭐ PROSPECTIVE — authored blind, frozen at sha256 8f58c353…, classified only
     # after freezing. ⛔ The one corpus that may authorize an architectural role.
     'prospective': Path(__file__).with_name('fixtures-prospective.json'),
+    # ⭐ PHASE 2 — triples, frozen at sha256 8461d8c7…, three-way ground truth
+    'triples': Path(__file__).with_name('fixtures-triples.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'

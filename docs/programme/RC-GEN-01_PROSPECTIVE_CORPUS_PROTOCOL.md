@@ -1206,3 +1206,55 @@ evidence speaks without another threshold creeping in.
 ⭐ **That makes two pass marks removed from this phase in one exchange** — the
 `41%` "to beat", and now this one. Both were mine, and both entered as ordinary
 phrasing rather than as decisions, which is how thresholds usually get in.
+
+---
+
+## PHASE 2 CORPUS — FROZEN, step 1 of the locked procedure (2026-09-11)
+
+```text
+fixture path         scripts/verifier-probe/fixtures-triples.json
+fixture sha256       8461d8c78b8c78df2435d62e419c8969c924d2e4a634bb040a9f6c9976f454a4
+cases                90  ·  ids T001..T090 contiguous
+three-way            30 entailed · 30 contradicted · 30 neutral_plausible
+binary collapse      30 entailed · 60 not_entailed        (verified correct)
+families             30, every one of size 3, members adjacent
+                     premise AND domain shared within each triple
+                     exactly one of each kind per triple
+domains              9 items in each of the ten — exactly balanced
+why_plausible        present on exactly the 30 neutral members, null elsewhere
+author               fresh subagent; prompt committed BEFORE the run
+author tool calls    2
+```
+
+**Structure verified, content untouched.** No sentence edited, no case removed,
+no label changed.
+
+### The author's hard calls — recorded verbatim, evidence about the items
+
+> **T039 (frequency, `vance-lido-swims`)** — *"goes on no days other than Mondays
+> and Thursdays."* A scalar-implicature case; a reader who treats the list as
+> exhaustive will feel it is entailed. I kept the premise as a plain report of
+> what he has done rather than *"swims only on…"*, so nothing in the wording
+> closes the list. **Still the most arguable item in the set.**
+>
+> **T075 (causation, `alderney-hotel-flood`)** — *"It was the cold that made the
+> main burst."* I had to place the cold snap as a time adverbial rather than an
+> explanation; *"burst in the frost"* would have tipped it toward entailed.
+>
+> **T021 (identity, `delacroix-watercolours`)** — my first draft could be read
+> straight off the habitual *"marks her work with"*. Too close to entailed, so I
+> replaced it with the professional-status inference.
+>
+> **T060 (emotional state, `doyle-collie-towpath`)** — *"was grieving"* is almost
+> irresistible, and I deliberately left an innocent alternative available. I think
+> it holds, but it is **the strongest pull toward entailed among the emotional
+> items.**
+
+⭐ **Four self-flagged items — T039 · T075 · T021 · T060 — named before any model
+or adjudicator saw them.** The second adjudicator's independent verdict on these
+four is now a **predeclared check on the author's own calibration**, not a
+finding chosen after the fact.
+
+⚠️ **T039 is the one to watch.** If the second adjudicator reclassifies it
+`entailed`, the author's own reservation was correct and the record already says
+so.

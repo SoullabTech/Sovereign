@@ -33,6 +33,7 @@ SETS = {
     'as-derived': 'fixtures.json',
     'detector-blind': 'fixtures-detector.json',
     'prospective': 'fixtures-prospective.json',
+    'triples': 'fixtures-triples.json',
     'blind': 'fixtures-blind.json',
     'scope': 'fixtures-scope.json',
     'modifier': 'fixtures-modifier.json',
