@@ -167,7 +167,18 @@ Journal: §0 checkpoint attached above (`kernel00-K00-3585a3c7-1789152361.jsonl`
 
 Manual interventions: 0 (no conversation window existed).
 
-Microphone permission (human-only facts, **PENDING founder**): (1) did a permission dialog appear on any Enter attempt — ___ ; (2) Settings → Apps → VoiceKernel K00 → Microphone: ON / OFF / no toggle — ___ . Not to be changed.
+Microphone permission (human-only facts — not to be inferred, not to be changed on the device):
+
+```text
+1. microphone permission dialog on any Enter attempt
+   UNKNOWN until the founder confirms yes / no
+   (if not recalled, UNKNOWN is the recorded value — never a forced answer)
+
+2. Settings → Apps → VoiceKernel K00 → Microphone
+   UNKNOWN until the founder reports ON / OFF / no toggle shown
+```
+
+Device state at 17:0x, read from the Studio: VoiceKernelHarness resident and running on the unlocked phone (not crashed at that moment).
 
 ---
 
@@ -221,7 +232,9 @@ whose violated preconditions abort the process.
 
 Sequence ruled: seal witness → open PRE-WITNESS-02 → repair only the entry seam → compile gates → rerun the same KERNEL-00 witness. Nothing else moves. Not yet ruled: whether the implementation is guard-only, deferred configuration recovery, or both. PRE-WITNESS-02 falsifies those alternatives against the observed sequence before choosing. Then the same device witness is rerun from Enter under the unchanged runbook. §20.1 of the research blueprint ("begin with the higher-level engine path; move lower only if it cannot meet the gates") is not triggered by this record: the defect is sequencing and guard within the higher-level path, not a demonstrated ceiling of it.
 
-Founder attestation: ___
+**Founder attestation — 2026-09-11:** *I witnessed KERNEL-00 fail at entry on the iPhone as recorded here; the failure was reproduced without repair or threshold change, and I attest that this record fairly represents what occurred.*
+
+**Seal status: ATTESTED · NOT SEALED** — two human-only fields (§4 microphone permission) remain UNKNOWN pending the founder's report. PRE-WITNESS-02 is not drafted until they are filled and the record is sealed.
 
 ---
 
