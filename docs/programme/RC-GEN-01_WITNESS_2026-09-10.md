@@ -1870,3 +1870,126 @@ analyzer/3   SV-4 repaired subject   (does not exist)
 
 ⛔ Do not quietly mutate `/2`. The discriminator is evidence for a ruling, not the
 ruling. A1's prompt repair stays **HELD** until participation ontology is settled.
+
+## ⭐⭐ `analyzer/3` — SV-4 REPAIR BUILT · V3-1…V3-7 PASS · FALSIFIED
+
+**Founder ruling.** SV-4 CLOSED · relational participation RATIFIED · `analyzer/2`
+FROZEN as a historical subject · `analyzer/3` authorized to build · A1's prompt
+repair DISSOLVED · A2 CLOSED by SV-2 · A-S/C-S/AC-1/AC-2 to be re-witnessed · B and
+A→B→C→D HELD.
+
+```
+node property `agency`      REMOVED
+active_participation        -> relation  actively_participates_in
+undergone                   -> relation  undergoes
+not_applicable              NOT ADDED anywhere
+```
+
+### ⭐⭐ THE REQUIRED REFINEMENT — TYPED ENDPOINTS, ENFORCED AT ADMISSION
+
+⛔ **Adding the two relation names as unrestricted edges would have moved the
+category error from a property into an edge and called it repaired.**
+
+```
+entity  --actively_participates_in--> event | process     ACCEPT
+entity  --undergoes----------------> event | process      ACCEPT
+event   --undergoes----------------> process              REFUSE
+process --actively_participates_in--> event               REFUSE
+entity  --undergoes----------------> entity               REFUSE
+```
+
+⭐ **Criterion 4 is now STRUCTURAL**: the error is inadmissible, not less likely.
+`unspecified` is not an eligible endpoint in either position — *an analyser that
+cannot say what kind of thing a node is has no standing to assert that it
+participates.* ⛔ A bad edge is **REFUSED, never dropped or re-kinded**: a boundary
+that silently removed it would hand D a graph the admission layer partly authored.
+
+⚠️ **The repair is BOUNDED.** The other six relations stay unconstrained, as in v2.
+Endpoint typing for them is a separate adequacy question and is not decided here.
+
+### V3-1 … V3-7 — `__tests__/revision-analyzer3-acceptance.test.ts` · 27 checks
+
+```
+V3-1  no node property `agency`; refused at every kind and every legacy value;
+      nothing substituted under another name; no `not_applicable`      PASS
+V3-2  actively_participates_in admitted only entity -> event|process   PASS
+V3-3  undergoes admitted only entity -> event|process                  PASS
+      (both exhaustive over all 36 kind pairs — 2 legal, 34 refused)
+V3-4  neutral participation = NO participation edge                    PASS
+V3-5  mixed: one entity, two differently-kinded edges, properties {}   PASS
+V3-6  event/process as participation subject -> malformed              PASS
+V3-7  analyzer/2 evidence intact; analyzer/3 newly pinned              PASS
+```
+
+### ⭐ FALSIFIED AGAINST FOUR KNOWN-BADS — each red in the right place
+
+```
+endpoint typing NOT enforced           5 failed   V3-2 · V3-3 · V3-6
+agency added ALONGSIDE, not instead    5 failed   V3-1 · V3-4
+subject widened to event|process       5 failed   V3-2 · V3-3 · V3-6
+analyzer/2 mutated in place            2 failed   V3-7
+```
+
+### ⛔⛔ WL-1 CAUGHT IN THIS RUN — TWO LEGACY ASSERTIONS WENT GREEN FOR THE WRONG REASON
+
+After the repair, two node-level assertions in the SV-4 discriminator still passed
+**while exercising nothing about participation**: one because two node `kind`s
+differed, the other because a symmetric graph returned `correspondence_ambiguous`.
+`compareConservation` no longer compares `agency`, so nothing there was being tested.
+
+⭐ **Repaired by relocating the claim, not by patching the assertion.** The legacy
+claims were always claims about **representability** — what v2's vocabulary could and
+could not say — so they are asserted against a **frozen literal record of v2** and
+never through a live comparator that no longer holds the dimension. The relational
+half runs live, and its criterion-1 case was rebuilt to differ **only** in edge kind,
+so it cannot pass structurally.
+
+> **A witness is a reading at a time. Evidence asserted against live code decays, or
+> worse, quietly re-describes itself as the code moves.**
+
+### ⚠️ ONE CONSEQUENCE, RECORDED AND NOT DESIGNED AROUND
+
+The run-8/9 drift *"ongoing process" → "he was already engaged in"* was an
+`added_property` under v2. Under v3 participation is an edge from the **person**, so
+detection moves from the property pass to the **structure pass** — and a structural
+difference short-circuits alignment. ⛔ **The verdict is unchanged (both refuse), but
+an added participation edge and a property drift are no longer reported in one
+findings list.** Granularity is lost when both occur together.
+
+### ⭐ A1 RECLASSIFIED, NOT EXONERATED
+
+> **A1 was an analyser overcommit made possible and encouraged by an inadequate
+> ontology. The observed failure remains real; the proposed prompt repair is
+> withdrawn because the schema repair removes the category in which the error
+> occurred.**
+
+⛔ The prompt therefore contains **no prohibition**: it never says *don't say
+undergone*, never names `agency`, and no `do not say/use/write` instruction survives
+(asserted). It states the ontology — *participation holds between someone and what
+happens* — and says absence is the representation where no claim is made.
+
+### ⭐ THE VERSION LINE STAYS HONEST
+
+```
+analyzer/1   A-S FAIL  (A1 overcommit · A2 representational inadequacy)
+analyzer/2   SV-2 repair · SV-3 discriminator · SV-4 exposed
+             ⛔ FROZEN · provider witness NEVER COMPLETED
+analyzer/3   SV-4 repair — participation ontology
+```
+
+### ⭐ THE FIRST CLEAN PROOF IS THE A-S RERUN, AND THE HARNESS NOW NAMES IT
+
+The A-S rubric in `scripts/witness/rc-gen-01/analyzers.ts` was rewritten: the source
+does **not** say the person actively participates in or undergoes the integration or
+the transformation, so **the correct graph carries NO PARTICIPATION EDGE AT ALL.**
+
+> ⛔ **A participation edge appearing merely to replace the old `agency` field is A1
+> in a new syntax, and A-S FAILS.** That rerun is what distinguishes an ontology
+> repair from a rename.
+
+**Gates:** jest `249 passed · 249 total` (10 suites) · typecheck `no regressions`.
+Commit `5a1d5aafd`.
+
+⛔ **Standing: `analyzer/3` BUILT · deterministic acceptance PASS · provider witness
+NOT RUN · A-S / C-S / AC-1 / AC-2 OWED against v3 · B HELD · A→B→C→D HELD ·
+migrations `20260910000004` and `20260910000005` UNAPPLIED · production UNTOUCHED.**
