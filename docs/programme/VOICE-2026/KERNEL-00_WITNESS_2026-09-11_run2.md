@@ -45,7 +45,13 @@ App installed:
 |---|---|---|---|---|
 | 1 | 19:54:05 | `devicectl device process launch … life.soullab.voicekernel.k00` | **REFUSED before the process existed**: `CoreDeviceError 10002` → `FBSOpenApplicationServiceErrorDomain error 1` → `SBMainWorkspace … Locked ("Unable to launch … because the device was not, or could not be, unlocked")` · `FBSOpenApplicationErrorDomain error 7` | **Operator condition** (screen locked). No process, no session mutation, no journal, nothing spent. Not a kernel event. |
 
-Next: unlock the phone, rerun the same launch command, then the §0-style pre-enter checkpoint (liveness · append · export) **before** any Enter.
+| 2 | 19:56:13 | same `devicectl … process launch` | **REFUSED, identical**: `10002` → `FBSOpenApplicationServiceErrorDomain 1` → `SBMainWorkspace … Locked` · `FBSOpenApplicationErrorDomain 7`, request `0x93a1` | **Operator condition again** (screen still locked at the moment of the request). No process, nothing spent. |
+
+`devicectl device info crashes … | grep -iE "VoiceKernel|k00"` at 19:56 → **empty**. Consistent with no run-2 process having existed. (It also did not list the run-1 reports under those names — where those three reports now live remains unrecorded.)
+
+A signed `xcodebuild … BUILD SUCCEEDED` tail appears in the founder's terminal scrollback immediately before attempt 2. Whether that was a fresh build after the 19:54 install, or the 19:49 build's output re-shown, is not established from the paste. If a rebuild occurred, the installed bundle (19:54) and the DerivedData bundle may differ; the dylib UUID must be re-read with `dwarfdump --uuid` and, if it differs from `1AEBEE45-…`, the app reinstalled before launch so that §1 names the bundle that actually runs.
+
+Next: unlock the phone **and keep it unlocked** (Settings → Display & Brightness → Auto-Lock → Never for the duration of the witness; the runbook's 60-minute session requires it anyway), then launch — either by the same `devicectl` command while the screen is unlocked, or by tapping the `VoiceKernel K00` icon on the Home Screen (a lawful launcher; the record names whichever was used). Then the pre-enter checkpoint (liveness · append · export) **before** any Enter.
 
 ## 5. Pre-enter checkpoint — PENDING
 ## 6. Enter conversation — PENDING (the observation of record is the exported journal, then any device crash report; a report must list dylib UUID `1AEBEE45-…`)
