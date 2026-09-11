@@ -5,7 +5,8 @@
 **Branch:** `claude/jolly-lamport-r6oh8x`
 **Authority:** founder (Kelly Nezat). Jarvis may not infer rulings, lift gates, or amend doctrine.
 **Rulings:** **RC-FR-01** ratified 2026-09-10 (§12) — the DISCOVER/DECIDE boundary on empirical method ·
-**RC-FR-02** ratified 2026-09-10 (§13) — the programme's ontological posture, the locus axis, and E1–E4.
+**RC-FR-02** ratified 2026-09-10 (§13) — the programme's ontological posture, the locus axis, and E1–E4 ·
+**RC-FR-03** ratified 2026-09-11 (§13.5) — the E3-epistemic / E3-ontological distinction.
 **Trigger:** an external research field is independently encountering phenomena for which this
 architecture already holds vocabulary — self/other, relation, field, agency, continuity,
 elicitation, encounter, and uncertainty about interiority. The precipitating public account
@@ -440,7 +441,7 @@ the answer before DISCOVER has begun.
 discrimination it would require **named**. An observation that does not separate them **separates
 none of them**, and is logged as OPEN QUESTION.
 
-### 13.5 ⚠️ Registered sub-distinction inside E3 (Jarvis addition — founder acceptance owed)
+### 13.5 ⭐ RC-FR-03 — the E3-epistemic / E3-ontological distinction (ACCEPTED, founder, 2026-09-11)
 
 **E3 as worded is ambiguous between two claims of very different strength**, and the ambiguity is
 load-bearing because E3 is the explanation most likely to be reached for — it *sounds* modest while
@@ -451,8 +452,12 @@ potentially smuggling in irreducibility:
   phenomenon itself, and already most of the way to E4).
 
 ⛔ A finding stated as E3 without saying which one it is has **not been stated.** RC-02 must carry
-this on the Distinction Register. ⚠️ **Recorded as a Jarvis addition, not a founder ruling** — subject
-to acceptance, amendment, or rejection.
+this on the Distinction Register.
+
+**⭐ RATIFIED as RC-FR-03** (founder, 2026-09-11) — accepted as stated, on the ground that it *closes a
+genuine conceptual loophole*: **"both contributed and it cannot usefully be assigned" can quietly
+smuggle irreducibility into what sounds like epistemic modesty.** The distinction is binding on every
+RC output from here: **E3 is not a statable finding; E3-epistemic and E3-ontological are.**
 
 ### 13.6 What this changes for MAIA's identity
 
