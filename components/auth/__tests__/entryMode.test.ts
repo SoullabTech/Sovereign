@@ -33,9 +33,33 @@ describe('each route declares why the person arrived', () => {
   });
 });
 
+// SUPERSEDED 2026-09-11 — FOUNDER RULING. Both doors open on email.
+//
+// The header above is kept verbatim. The earlier ruling is not stale and was not
+// wrong on its own terms: /signin really was asking returning members for an email
+// address. It is superseded ON ITS PREMISE — it assumed a population for whom
+// password was a valid universal entry mode. Production now contains email-code
+// members who have never possessed a password. The premise is false, so the ruling
+// falls with it.
+//
+// IDENTITY FIRST; AUTHENTICATION METHOD SECOND. The door asks who is entering
+// before presuming how they authenticate.
+//
+// Observed 2026-09-11: an operator holding a valid 6-digit code typed it into the
+// password field and was correctly refused by the wrong form — the interface
+// contradicting the authentication model. 5 of the 7 stalled accounts sit at the
+// step straight after account creation.
+//
+// The general rule this defends, beyond this screen:
+//     never ask a member for a credential the system has never established
+//     with them.
 describe('the intent decides the opening phase', () => {
-  it('/signin opens on password', () => {
-    expect(COMPONENT).toMatch(/mode === 'signin' \? 'password' : 'email'/);
+  it('both doors open on email', () => {
+    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password' : 'email'/);
+  });
+
+  it('no route opens straight onto a password form', () => {
+    expect(COMPONENT).not.toMatch(/mode === 'signin' \? 'password'/);
   });
 
   it('the component accepts and forwards the mode', () => {
@@ -45,8 +69,44 @@ describe('the intent decides the opening phase', () => {
 
   // ?verified= and ?u= name a specific person mid-flow and must still win, or a
   // magic-link return would be bounced to a password form.
-  it('an explicit deep-link still outranks the mode', () => {
-    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password' : mode/);
+  it('an explicit deep-link still outranks the default', () => {
+    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password'/);
+  });
+});
+
+// Two constraints ride with the 2026-09-11 ruling. Asking for identity first
+// creates a new opportunity to leak — the email step now happens for everyone —
+// and a new way to strand the password population if their door gets demoted to a
+// footnote. Both are asserted here so the ruling cannot be half-implemented.
+describe('the constraints that ride with identity-first', () => {
+  const sendCode = COMPONENT.slice(
+    COMPONENT.indexOf('async function sendCode'),
+    COMPONENT.indexOf('async function verifyCode')
+  );
+
+  it('the send step is there', () => {
+    expect(sendCode.length).toBeGreaterThan(200);
+  });
+
+  // The API returns an identical body either way (asserted server-side in
+  // app/api/members/email-code/__tests__/route.test.ts). This keeps the CLIENT
+  // from reintroducing the distinction by reading a field the server may one day
+  // start sending, or by branching its own way to the code screen.
+  it('reveals nothing about whether the account already exists', () => {
+    expect(sendCode).not.toMatch(/isExistingMember|alreadyAMember|data\??\.(exists|member)/);
+    expect(sendCode).toContain("setPhase('code')");
+    expect(sendCode.match(/setPhase\(/g) ?? []).toHaveLength(1);
+  });
+
+  // Established password members lost their default opening to this ruling. They
+  // must not also lose their door to a 12px link — the 2026-08-24 regression.
+  it('an established password member does not have to hunt', () => {
+    const emailPhase = COMPONENT.slice(
+      COMPONENT.indexOf('Sign in with username and password') - 2000,
+      COMPONENT.indexOf('Sign in with username and password')
+    );
+    expect(emailPhase).toMatch(/sendBlocked \? primaryBtn : outlineBtn/);
+    expect(COMPONENT).toContain('Sign in with username and password');
   });
 });
 

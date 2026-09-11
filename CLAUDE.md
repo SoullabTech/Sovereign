@@ -277,6 +277,9 @@ The onboarding journey happens exactly once per member — whether beta testers 
 4. **No shortcuts** — Each step must be completed in sequence
 5. **Returning users** — `/signin` for existing members to sign in each session
 6. **New user link** — `/signin` includes amber "New to Soullab? Begin Journey" link → `/begin`
+7. **Identity first; authentication method second** (founder ruling 2026-09-11) — `/signin` and `/signup` both open on EMAIL. The door asks *who* is entering before presuming *how* they authenticate; email leads to the path that fits that member (code, or password where one exists). This expressly supersedes the 2026-08 entry-intent ruling that opened `/signin` on password — superseded **on its premise**, not its reasoning: it assumed password was a valid universal entry mode, and production contains email-code members who have never possessed a password. Two constraints ride with it, asserted in `components/auth/__tests__/entryMode.test.ts`: the email step must not reveal whether an account exists, and an established password member must not have to hunt for their door.
+
+   **The general rule, which outlives this screen:** *never ask a member for a credential the system has never established with them.* A member who authenticates by email code being shown a password form is the interface contradicting the authentication model — the defect class this rule exists to prevent, wherever it next appears.
 
 ### Pages
 

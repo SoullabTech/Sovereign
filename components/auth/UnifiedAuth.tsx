@@ -186,19 +186,34 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const usernameParam = searchParams?.get('u') || '';
 
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
-  // Otherwise the arrival intent decides. A returning member opens on password;
-  // someone joining opens on email.
   //
-  // ⚠️ OPEN (2026-09-11): this strands the email-code population. /signin is where
-  // code-flow members are sent — by recovery instructions and by us — and those
-  // accounts hold a generated password the member has never seen, so they meet a
-  // form they cannot fill. Observed: an operator holding a valid 6-digit code typed
-  // it into the password field and was refused by the wrong form. 5 of the 7
-  // stalled accounts sit at the step straight after account creation. Not changed
-  // here: entryMode.test.ts records the opposite defect and the founder decides
-  // which population the door opens for.
+  // Everyone else opens on EMAIL, /signin and /signup alike.
+  //
+  // IDENTITY FIRST; AUTHENTICATION METHOD SECOND. The door asks WHO is entering
+  // before it presumes HOW they authenticate. Email, then the path that fits that
+  // member — code, or password where one exists.
+  //
+  // FOUNDER RULING 2026-09-11, expressly superseding the 2026-08 entry-intent
+  // ruling that had /signin open on password. That ruling is preserved in
+  // entryMode.test.ts rather than erased; it is superseded on its premise, not its
+  // reasoning: it assumed a population for whom password was a valid universal
+  // entry mode. Production now contains email-code members who have never
+  // possessed a password. The premise is false, so the ruling falls.
+  //
+  // Observed 2026-09-11: an operator holding a valid 6-digit code typed it into the
+  // password field and was correctly refused by the wrong form. 5 of the 7 stalled
+  // accounts sit at the step straight after account creation.
+  //
+  // THE GENERAL RULE, which is the part that outlives this screen:
+  //
+  //     Never ask a member for a credential the system has never established
+  //     with them.
+  //
+  // Two constraints ride with this ruling and are asserted in entryMode.test.ts:
+  // the email step must not reveal whether an account exists, and an established
+  // password member must not have to hunt for their door.
   const [phase, setPhase] = useState<Phase>(
-    preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
+    preVerified ? 'name' : usernameParam ? 'password' : 'email'
   );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
