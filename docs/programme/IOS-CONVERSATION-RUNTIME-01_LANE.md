@@ -340,3 +340,39 @@ runtime proof pending. (4) clock times pending.
 `capJSON['packageClassList'] = classList;` — the CLI assigns the list
 from the npm plugins it detects, replacing whatever `capacitor.config.ts`
 declared. Confirmed: the declared in-app classes cannot survive a sync.
+
+### E3 · 2026-09-11 · closure from the installed artefact itself
+
+Mac, relayed, no phone interaction, on the exact `.app` that `devicectl`
+installed (§12.10 of the predecessor):
+
+| check | result |
+|---|---|
+| `App.app/capacitor.config.json` — occurrences of `AudioSessionManager` | **0** |
+| `App.app/capacitor.config.json` — `packageClassList` | the same 13 names as E2; no `AudioSessionManager`, no `VoiceController` |
+| `strings App.app/App.debug.dylib \| grep -c AudioSessionManager` | **25** — the Swift class is compiled into the binary |
+| `@capacitor/cli/dist/util/iosplugin.js:53` | `capJSON['packageClassList'] = classList;` — the list is CLI-generated |
+| main checkout's generated config, Aug 27 | also 0 — pre-lane build likewise unregistered |
+
+**Chain.** The code is in the app. The loader's list never carries its
+name. No other registration path exists in the app target. Therefore the
+native `AudioSessionManager` plugin is never instantiated by the Capacitor
+bridge in this build, and (Aug 27 data point) was not in the pre-lane
+build either. `prepareForListening` / `prepareForSpeaking` from the web
+layer reject; the wrapper returns `false`; the conversation proceeds
+without any native audio-session governance. Whatever governs the session
+on `/maia` is WebKit plus `@capacitor-community/speech-recognition`.
+
+One optional confirmation remains: the Capacitor iOS runtime reading
+`packageClassList` at bridge start. The pod is consumed via `:path`, so
+it lives under `node_modules/@capacitor/ios`, not `Pods/`. A live console
+showing the "not implemented" rejection is now confirmation, not a gate.
+
+**Classification proposed for the founder's ruling: C′** — no act,
+healthy or stalled, reaches MAIA's native audio layer, because the layer
+is not loaded. Attribution consequence unchanged from E2: the predecessor's
+Swift edit is not on the executed path and cannot be the cause of the
+stall; the locus is the web/TTS playback lifecycle and the community
+recognizer's ownership of the session. The clock times for the 21:1x
+turns were not recorded by the founder; the WebKit `prepareForLoad`
+clusters (E1) stand in as the timeline.
