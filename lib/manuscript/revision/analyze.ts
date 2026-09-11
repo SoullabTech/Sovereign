@@ -28,8 +28,8 @@
 
 import { runStructured } from '../../ai/structured/router';
 import { logAskDiagnostic, sanitizeCause, requestIdOf } from '../ask/askDiagnostics';
-import type { SemanticGraph, SemanticNode, SemanticEdge, NodeKind } from './semanticGraph';
-import { PARTICIPATION_EDGE_KINDS } from './semanticGraph';
+import type { SemanticGraph, SemanticNode, SemanticEdge, EdgeKind, NodeKind } from './semanticGraph';
+import { EDGE_KINDS, PARTICIPATION_EDGE_KINDS } from './semanticGraph';
 
 /**
  * ⛔ VERSION IS EVIDENCE. A schema repair creates a NEW SUBJECT; the prior failure
@@ -74,8 +74,13 @@ const KINDS: readonly NodeKind[] = ['event', 'state', 'process', 'relation', 'en
  * between a participant and what they participate in, never a trait the
  * participant carries.
  */
-const RELATIONS = ['causes', 'results_in', 'constitutes', 'qualifies', 'within',
-  'distinct_from', 'has_object', ...PARTICIPATION_EDGE_KINDS];
+/**
+ * ⛔ NO PRIVATE RELATION LIST. `EDGE_KINDS` in `semanticGraph.ts` is the only
+ * declaration of what relations exist; the tool schema and the admission boundary
+ * both read it, so the provider-facing vocabulary and the comparator's type cannot
+ * drift apart. An earlier draft kept a second copy here, and it silently lost
+ * `has_object` on the way into the comparator's type.
+ */
 
 /**
  * ⭐⭐ TYPED ENDPOINTS, ENFORCED AT ADMISSION — NOT DESCRIBED IN THE PROMPT.
@@ -161,7 +166,7 @@ export const analyzerToolSchema: Record<string, unknown> = {
         properties: {
           from: { type: 'string', description: 'local_id' },
           to: { type: 'string', description: 'local_id' },
-          relation: { type: 'string', enum: RELATIONS },
+          relation: { type: 'string', enum: EDGE_KINDS },
         },
       },
     },
@@ -219,6 +224,10 @@ export type AnalysisResult =
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** ⛔ A real narrowing, so no cast is needed downstream to make the types agree. */
+const isEdgeKind = (v: unknown): v is EdgeKind =>
+  typeof v === 'string' && (EDGE_KINDS as readonly string[]).includes(v);
 
 /**
  * Admit a tool input into the comparator's own types, or REFUSE it.
@@ -296,10 +305,10 @@ export function admitAnalysis(input: unknown): AnalysisResult {
     if (!isRecord(e)) return { ok: false, refusal: 'malformed', detail: 'edge is not an object' };
     const extraEdge = extraKey(e, EDGE_KEYS);
     if (extraEdge) return { ok: false, refusal: 'malformed', detail: `unexpected edge field ${extraEdge}` };
-    if (typeof e.from !== 'string' || typeof e.to !== 'string'
-        || typeof e.relation !== 'string' || !RELATIONS.includes(e.relation)) {
+    if (typeof e.from !== 'string' || typeof e.to !== 'string' || !isEdgeKind(e.relation)) {
       return { ok: false, refusal: 'malformed', detail: 'malformed edge' };
     }
+    const relation: EdgeKind = e.relation;
     const from = index.get(e.from); const to = index.get(e.to);
     if (from === undefined || to === undefined) {
       return { ok: false, refusal: 'malformed', detail: 'edge names an unknown node' };
@@ -309,20 +318,22 @@ export function admitAnalysis(input: unknown): AnalysisResult {
        subject is not an entity, or whose object is not something that happens, is
        refused outright; it is never silently dropped or re-kinded, because either
        would hand D a graph the admission layer partly authored. */
-    const endpoints = RELATION_ENDPOINTS[e.relation];
+    const endpoints = RELATION_ENDPOINTS[relation];
     if (endpoints) {
       const fromKind = nodes[from].kind ?? 'unspecified';
       const toKind = nodes[to].kind ?? 'unspecified';
       if (!endpoints.from.includes(fromKind)) {
         return { ok: false, refusal: 'malformed',
-          detail: `${e.relation} cannot have a ${fromKind} as its subject` };
+          detail: `${relation} cannot have a ${fromKind} as its subject` };
       }
       if (!endpoints.to.includes(toKind)) {
         return { ok: false, refusal: 'malformed',
-          detail: `${e.relation} cannot have a ${toKind} as its object` };
+          detail: `${relation} cannot have a ${toKind} as its object` };
       }
     }
-    edges.push({ from, to, kind: e.relation as SemanticEdge['kind'] });
+    /* ⭐ NO CAST. `isEdgeKind` narrowed it, so the admitted value IS an EdgeKind —
+       the boundary now says only what it has actually verified. */
+    edges.push({ from, to, kind: relation });
   }
 
   return { ok: true, graph: { nodes, edges } };

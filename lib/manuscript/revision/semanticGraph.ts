@@ -111,11 +111,45 @@ export type PropertyValue =
  * `not_applicable` and no `unspecified` participation, because participation is no
  * longer a dimension a node is obliged to answer for.
  */
-export type ParticipationEdgeKind = 'actively_participates_in' | 'undergoes';
+/**
+ * ⭐⭐ ONE CANONICAL RUNTIME LIST, AND THE TYPE IS DERIVED FROM IT.
+ *
+ * ⛔ THIS IS A REPAIR OF A BOUNDARY LIE. The analyser admitted `has_object` — the
+ * SV-2 repair for A2 — and then cast it into an `EdgeKind` that did not contain it.
+ * The program was saying *"I have verified this is a valid semantic edge; now cast
+ * it into a type that says it is not."* Nothing failed, because the cast silenced
+ * exactly the check that would have caught it.
+ *
+ * ⚠️ AND IT WOULD HAVE FAILED AT THE WORST MOMENT. The first v3 source witness may
+ * legitimately need `has_object` to represent an orientation directed at something —
+ * so the run that finally expresses A2 correctly is the run the type system was
+ * quietly denying.
+ *
+ * ⭐ A vocabulary maintained in two places is a vocabulary that will diverge. The
+ * list below is the only declaration of what relations exist; the type, the
+ * analyser's tool schema, and the admission boundary all read it.
+ *
+ * ⛔ THE ENDPOINT LAWS STAY SEPARATE (`RELATION_ENDPOINTS`, in `analyze.ts`). This
+ * list says WHAT RELATIONS EXIST; that table says WHICH OF THEM CARRY STRUCTURAL
+ * ENDPOINT LAWS. Only the two participation relations do, and folding the two
+ * concerns together would make an unconstrained relation indistinguishable from one
+ * whose constraints were forgotten.
+ */
+export const EDGE_KINDS = [
+  'causes',
+  'results_in',
+  'constitutes',
+  'qualifies',
+  'within',
+  'distinct_from',
+  'has_object',
+  'actively_participates_in',
+  'undergoes',
+] as const;
 
-export type EdgeKind =
-  | 'causes' | 'results_in' | 'constitutes' | 'qualifies' | 'within' | 'distinct_from'
-  | ParticipationEdgeKind;
+export type EdgeKind = typeof EDGE_KINDS[number];
+
+export type ParticipationEdgeKind = 'actively_participates_in' | 'undergoes';
 
 /**
  * ⭐ STRUCTURAL / IDENTITY-BEARING. May participate in alignment, because it says
@@ -181,6 +215,10 @@ const PROPERTIES: readonly PropertyName[] = [
 export const PARTICIPATION_EDGE_KINDS: readonly ParticipationEdgeKind[] = [
   'actively_participates_in', 'undergoes',
 ];
+
+/** ⛔ Compile-time proof that every participation relation is a declared relation. */
+const _participationIsDeclared: readonly EdgeKind[] = PARTICIPATION_EDGE_KINDS;
+void _participationIsDeclared;
 
 /** `unspecified` and absence are the same claim: the source did not commit. */
 const valueOf = (n: SemanticNode | undefined, p: PropertyName): PropertyValue =>

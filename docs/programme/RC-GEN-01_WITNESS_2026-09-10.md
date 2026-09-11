@@ -1993,3 +1993,97 @@ Commit `5a1d5aafd`.
 ⛔ **Standing: `analyzer/3` BUILT · deterministic acceptance PASS · provider witness
 NOT RUN · A-S / C-S / AC-1 / AC-2 OWED against v3 · B HELD · A→B→C→D HELD ·
 migrations `20260910000004` and `20260910000005` UNAPPLIED · production UNTOUCHED.**
+
+## ⛔⛔ EDGE VOCABULARY COHERENCE — a BOUNDARY LIE, found by the founder before A-S
+
+**Founder ruling.** `analyzer/3` SV-4 repair PASS · typed participation endpoints PASS
+· historical v2 preservation PASS · A-S rubric PASS · **edge vocabulary coherence
+FAIL** · provider witness HELD on this alone.
+
+### The defect
+
+`analyze.ts` admitted `has_object` from its own private `RELATIONS` list, then wrote:
+
+```ts
+edges.push({ from, to, kind: e.relation as SemanticEdge['kind'] });
+```
+
+— casting it into an `EdgeKind` that **did not contain `has_object`**.
+
+> ⛔ *"I have verified this is a valid semantic edge; now cast it into a type that
+> says it is not valid."*
+
+⚠️ **It would have failed at the worst possible moment.** `has_object` is the SV-2
+repair for A2. The first v3 source graph that finally expresses A2 correctly —
+*orientation toward the natural world* — is the one the type system was quietly
+denying. Found **before** A-S, not during it.
+
+⭐ **The cast silenced exactly the check that would have caught the divergence.** A
+vocabulary maintained in two places will diverge; a cast is how the divergence stays
+invisible.
+
+### The repair — one canonical list, type derived from it
+
+```ts
+export const EDGE_KINDS = [ ...nine relations... ] as const;
+export type EdgeKind = typeof EDGE_KINDS[number];
+```
+
+```
+EDGE_KINDS           WHAT RELATIONS EXIST        (semanticGraph.ts — sole declaration)
+RELATION_ENDPOINTS   WHICH CARRY ENDPOINT LAWS   (analyze.ts — the two participation
+                                                  relations, and only those)
+```
+
+⛔ The two concerns stay separate. Folding them together would make an
+**unconstrained** relation indistinguishable from one whose constraints were
+**forgotten**.
+
+⭐ **No private list and NO CAST remain.** `isEdgeKind` is a real type predicate, so
+the admitted value *is* an `EdgeKind` — the boundary now says only what it has
+actually verified. A compile-time line also proves every participation relation is a
+declared relation.
+
+### E-1 … E-5 — 7 further checks, `revision-analyzer3-acceptance.test.ts`
+
+```
+E-1   schema relation enum === canonical EDGE_KINDS, identically ordered   PASS
+E-2   has_object present in EDGE_KINDS                                     PASS
+E-3   a lawful has_object edge is admitted AND SURVIVES into the graph     PASS
+E-3b  every canonical relation admits under some lawful geometry           PASS
+E-4   participation endpoint constraints still apply; existing != constrained PASS
+E-5   no private relation list AND no cast back into the comparator's type PASS
+      an unknown relation is still refused — the set did not open          PASS
+```
+
+### ⭐ FALSIFIED — three known-bads, each red in the right place
+
+```
+has_object removed from EDGE_KINDS                    2 failed   E-2 · E-3
+⭐ THE ORIGINAL DEFECT, faithfully reconstructed       3 failed   E-1 · E-2 · E-5
+   (private list carrying has_object · EdgeKind without it · cast restored)
+participation endpoints silently widened              4 failed   E-4 + V3-2/V3-3
+```
+
+⚠️ **E-3 PASSED under the original defect** — the cast made it work at runtime, which
+is precisely why a behavioural check alone could never have found this. **E-1 and E-5
+are the discriminating obligations**, and they are about the *contract*, not the
+behaviour.
+
+⚠️ A first attempt at the reconstruction failed to compile and reported `0 total`.
+That is a red, but an **uninformative** one — it proves nothing about discrimination.
+Rebuilt so the known-bad actually runs. ⛔ *A suite that cannot compile has not
+falsified anything.*
+
+### ⭐ NO `analyzer/4` — the provider-facing surface is PROVEN unchanged
+
+The serialized tool schema and the system prompt were dumped at the previous commit
+and at the repair, and **diffed byte-for-byte: identical.** ⛔ Asserted from a diff,
+not from reading the diff of the source. The repair changes an internal type/runtime
+contract; it changes nothing `analyzer/3` can express, so the version is not spent.
+
+**Gates:** jest `256 passed · 256 total` (10 suites) · typecheck `no regressions`.
+
+⛔ **Standing: edge vocabulary coherence CLOSED · `analyzer/3` contract clean ·
+provider witness RELEASED (A-S · C-good · C-large · C-migration · AC-1 · AC-2, owed
+against `RC-GEN-01/analyzer/3`) · B HELD · A→B→C→D HELD · production UNTOUCHED.**

@@ -14,7 +14,7 @@ import {
   admitAnalysis, analyzerToolSchema, analyzerSystemPrompt,
   ANALYZER_VERSION, RELATION_ENDPOINTS,
 } from '../lib/manuscript/revision/analyze';
-import { PARTICIPATION_EDGE_KINDS } from '../lib/manuscript/revision/semanticGraph';
+import { EDGE_KINDS, PARTICIPATION_EDGE_KINDS } from '../lib/manuscript/revision/semanticGraph';
 
 const n = (local_id: string, kind: string, properties: Record<string, string> = {}) =>
   ({ local_id, kind, properties });
@@ -230,5 +230,94 @@ describe('⛔ the prompt does not teach the analyser to avoid a word', () => {
 
   it('⭐ and says absence is the representation when no claim is made', () => {
     expect(p).toContain('there is simply no such');
+  });
+});
+
+/* ── E-1 … E-5 — edge vocabulary coherence ────────────────────────────────── */
+
+/**
+ * ⛔⛔ THE DEFECT THIS CLOSES WAS A BOUNDARY LIE, NOT A MISSING STRING.
+ *
+ * `admitAnalysis` verified a relation against its own private list and then cast the
+ * result into the comparator's `EdgeKind` — a type that did not contain `has_object`.
+ * The cast silenced exactly the check that would have caught the divergence.
+ *
+ * ⚠️ AND IT WOULD HAVE FAILED AT THE WORST MOMENT: `has_object` is the SV-2 repair
+ * for A2, so the first v3 source graph that finally expresses A2 correctly is the one
+ * the type system was quietly denying. Caught before A-S, not during it.
+ *
+ * ⛔ The repair is ONE canonical list with the type derived from it — not a second
+ * string in a second place. A vocabulary maintained twice is a vocabulary that will
+ * diverge again.
+ */
+describe('E-1 … E-5 · edge vocabulary coherence — one list, type derived from it', () => {
+  it('E-1 · the tool schema relation enum IS the canonical list, identically ordered', () => {
+    expect(schemaRelations).toEqual([...EDGE_KINDS]);
+  });
+
+  it('E-2 · `has_object` is present in the canonical list', () => {
+    expect(EDGE_KINDS).toContain('has_object');
+  });
+
+  it('E-3 · admitAnalysis accepts a lawful has_object edge, and it SURVIVES into the graph', () => {
+    /* The A2 shape: an orientation directed at something. */
+    const r = admitAnalysis({
+      nodes: [n('orientation', 'relation'), n('world', 'entity')],
+      edges: [e('orientation', 'world', 'has_object')],
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) throw new Error('unreachable');
+    /* ⭐ Not merely admitted — the kind arrives at D intact. */
+    expect(r.graph.edges).toEqual([{ from: 0, to: 1, kind: 'has_object' }]);
+  });
+
+  it('E-3b · every canonical relation admits under some lawful geometry', () => {
+    for (const relation of EDGE_KINDS) {
+      const participation = (PARTICIPATION_EDGE_KINDS as readonly string[]).includes(relation);
+      const r = admitAnalysis({
+        nodes: [n('a', participation ? 'entity' : 'state'), n('b', 'event')],
+        edges: [e('a', 'b', relation)],
+      });
+      expect(r.ok).toBe(true);
+      if (!r.ok) throw new Error('unreachable');
+      expect(r.graph.edges[0].kind).toBe(relation);
+    }
+  });
+
+  it('E-4 · participation endpoint constraints still apply after canonicalization', () => {
+    for (const relation of PARTICIPATION_EDGE_KINDS) {
+      expect(admitAnalysis({
+        nodes: [n('a', 'process'), n('b', 'event')], edges: [e('a', 'b', relation)],
+      })).toMatchObject({ ok: false, refusal: 'malformed' });
+      expect(admitAnalysis({
+        nodes: [n('a', 'entity'), n('b', 'state')], edges: [e('a', 'b', relation)],
+      })).toMatchObject({ ok: false, refusal: 'malformed' });
+    }
+    /* ⛔ And the two concerns stay separate: existing is not the same as constrained. */
+    for (const relation of EDGE_KINDS) {
+      const constrained = Object.prototype.hasOwnProperty.call(RELATION_ENDPOINTS, relation);
+      expect(constrained).toBe((PARTICIPATION_EDGE_KINDS as readonly string[]).includes(relation));
+    }
+  });
+
+  it('E-5 · no private second relation list remains in analyze.ts', () => {
+    const src = require('fs').readFileSync(
+      require('path').join(__dirname, '../lib/manuscript/revision/analyze.ts'), 'utf8');
+    /* No array literal of relation names, and no local RELATIONS binding. */
+    expect(src).not.toMatch(/\b(const|let|var)\s+RELATIONS\b/);
+    for (const relation of EDGE_KINDS) {
+      expect(src).not.toContain(`'${relation}'`);
+    }
+    /* ⛔ AND NO CAST BACK INTO THE COMPARATOR'S TYPE. The boundary must say only
+       what it has verified; a cast is how the original divergence stayed invisible. */
+    expect(src).not.toMatch(/as\s+SemanticEdge\['kind'\]/);
+    expect(src).not.toMatch(/as\s+EdgeKind\b/);
+  });
+
+  it('⛔ an unknown relation is still refused — canonicalization did not open the set', () => {
+    expect(admitAnalysis({
+      nodes: [n('a', 'state'), n('b', 'event')],
+      edges: [e('a', 'b', 'reminds_one_of')],
+    })).toMatchObject({ ok: false, refusal: 'malformed' });
   });
 });
