@@ -44,6 +44,10 @@ def band(k, n, label):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--adjudication2', metavar='FILE',
+                    help='second blind adjudication over the plausible-neutral '
+                         'members; enables the SENSITIVITY and LABEL ROBUSTNESS '
+                         'blocks. ⛔ It never replaces the primary.')
     ap.add_argument('--fixtures',
                     default=str(Path(__file__).with_name('fixtures-triples.json')))
     ap.add_argument('results', nargs='+', metavar='verifier-probe-*.json')
@@ -85,6 +89,39 @@ def main():
     print('    ⛔ 17 cases scraped from corpora built for another question.'
           ' This run\n       is the first prospective measurement and is not'
           ' being scored against it.')
+
+    # ---- SENSITIVITY — never a replacement for the primary ----------------
+    # ⛔⛔ THE PRIMARY IS ALL 30, EXACTLY AS FROZEN. If the consensus subset were
+    # allowed to become the headline, independent adjudication would quietly turn
+    # into a way of SELECTING cases after the corpus was frozen — which is the
+    # one thing the freeze exists to prevent. The subset is a sensitivity check
+    # and is labelled as one.
+    # ⛔ No threshold is declared for when the two rates "differ materially".
+    # Both rates, both intervals, the gap and the disputed ids are printed, and
+    # the evidence speaks without another pass mark creeping in.
+    if a.adjudication2:
+        ad = {c['id']: c for c in json.load(open(a.adjudication2))['cases']}
+        acc = {i: r for i, r in pn.items() if ad.get(i, {}).get('accepted')}
+        dis = sorted(i for i in pn if not ad.get(i, {}).get('accepted'))
+        ac = collections.Counter(r.get('raw_label', '?') for r in acc.values())
+        print(f'\n{"=" * 74}\nSENSITIVITY — independently accepted as'
+              f' neutral·plausible')
+        print(band(ac['neutral'], len(acc), 'possibility preserved'))
+        print(band(ac['entailment'], len(acc), 'promoted to `entailment`'))
+        if n and len(acc):
+            gap = ac['neutral'] / len(acc) * 100 - calls['neutral'] / n * 100
+            print(f'\n  primary {calls["neutral"]}/{n} = {calls["neutral"] / n:.0%}'
+                  f'   ·   sensitivity {ac["neutral"]}/{len(acc)}'
+                  f' = {ac["neutral"] / len(acc):.0%}'
+                  f'   ·   difference {gap:+.1f} pp')
+        print(f'\n  LABEL ROBUSTNESS  disputed {len(dis)}/{n}')
+        if dis:
+            print(f'    {", ".join(dis)}')
+            hard = [i for i in dis if ad.get(i, {}).get('hard_to_call')]
+            if hard:
+                print(f'    flagged hard to call: {", ".join(hard)}')
+        print('\n  ⛔ The primary above is the result. This block says how stable'
+              ' that\n     result is to a second reader, and nothing more.')
 
     # ---- the other two classes, for the contrast that matters -------------
     print(f'\n{"=" * 74}\nCONTRAST — how the other two classes fared')

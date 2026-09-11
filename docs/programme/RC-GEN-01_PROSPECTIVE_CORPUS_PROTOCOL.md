@@ -1143,3 +1143,66 @@ true?* and *would an ordinary reader assume it?* Disagreements are **recorded, n
 repaired**, and the primary result is reported **twice**: over all 30, and over the
 subset both parties accept. ⛔ If the two numbers differ materially, that
 difference is itself the finding about how hard this class is to construct.
+
+---
+
+## SECOND BLIND ADJUDICATOR — authorized, with the test corrected (2026-09-11)
+
+### ⛔ My two-part test was wrong. The corrected test has THREE parts.
+
+*"Could this be false while every word of the premise stays true?"* separates
+**entailed from not-entailed** — and nothing else. It does not distinguish
+neutral from contradicted, which is the distinction this entire phase exists to
+measure. A contradiction passes it cleanly.
+
+**The corrected test. All three must hold:**
+
+```text
+NOT ENTAILED     could H be FALSE while every word of the premise stays true?
+NOT CONTRADICTED could H be TRUE  while every word of the premise stays true?
+PLAUSIBLE        would an ordinary reader reasonably be tempted to infer H?
+                                    ↓
+                          NEUTRAL · PLAUSIBLE
+```
+
+> ⭐⭐ **It may be true. It may be false. The evidence does not decide. Yet the
+> mind is tempted to decide anyway.** *That is exactly the territory `UNRESOLVED`
+> exists to protect.*
+
+### Locked procedure
+
+```text
+1. corpus frozen + hashed
+2. second adjudicator prompt committed
+3. adjudicator sees ONLY the 30 proposed plausible-neutral items
+4. no model outputs · no stage-1 rates · no detector rules
+5. each item: accepted | reclassified · rationale · hard-to-call flag
+6. ⛔ NOTHING in the corpus is edited
+7. DeBERTa runs afterward
+```
+
+### ⛔ THE PRIMARY IS ALL 30, EXACTLY AS FROZEN
+
+```text
+PRIMARY        all authored plausible-neutral cases      k/30 neutral
+SENSITIVITY    independently accepted as neutral·plausible  k/n neutral
+LABEL ROBUSTNESS   disputed                              d/30  + ids
+```
+
+If the consensus subset were allowed to become the headline, **independent
+adjudication would quietly become a way of selecting cases after the corpus was
+frozen** — the one thing the freeze exists to prevent. The subset is a
+sensitivity check and the reporter labels it as one.
+
+### ⛔ CORRECTION — "differ materially" is withdrawn
+
+I wrote that if the two numbers *"differ materially, that difference is itself
+the finding."* **Withdrawn.** *Materially* is an undeclared pass mark, and it
+would have been declared after seeing the numbers — the worst possible ordering.
+The reporter prints **both rates · both Wilson intervals · the percentage-point
+difference · the disputed count · the disputed ids** and draws no verdict. The
+evidence speaks without another threshold creeping in.
+
+⭐ **That makes two pass marks removed from this phase in one exchange** — the
+`41%` "to beat", and now this one. Both were mine, and both entered as ordinary
+phrasing rather than as decisions, which is how thresholds usually get in.
