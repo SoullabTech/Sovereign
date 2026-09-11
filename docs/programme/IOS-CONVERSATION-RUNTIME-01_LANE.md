@@ -806,3 +806,38 @@ Two facts for both lanes:
 Founder's standing for the Keep question is preserved: do not test Keep on
 the stale client. Ordering of installs on the shared phone is the founder's
 call and must be recorded per install with the footer commit.
+
+### E10 · 2026-09-11 23:14 · repair build compiled, installed and launched on the phone
+
+Mac, relayed. Worktree `/Users/soullab/maia-runtime-01` on
+`claude/ios-runtime-01-audiosession-registration` at `0debe8b09`
+(native subject and web bundle are the same SHA).
+
+```text
+pod install            complete (15 dependencies, 23 pods)
+xcodebuild (Debug)     ** BUILD SUCCEEDED **
+strings App.debug.dylib | grep -c MAIABridgeViewController    3
+Info.plist             1.2.0 / 2511
+bundled capacitor.config.json packageClassList mentions AudioSessionManager   0   (expected — registration no longer depends on it)
+devicectl install      App installed · bundleID life.soullab.maia
+                       installationURL …/Bundle/Application/AB2CDB3F-CAC9-4AE3-844F-BAB188C1725D/App.app/
+                       (new container; the E3 witness build was CF6A0A75-…)
+devicectl launch       Launched
+```
+
+Acceptance table (§7.3) so far:
+
+```text
+AudioSessionManager compiled          YES  (E3: 25 hits; this build: subclass present, 3 hits)
+AudioSessionManager registered        PENDING — the launch NSLog line is the proof
+cap sync does not erase registration  YES  (E8: sync ran; storyboard + Swift untouched by it)
+web prepareForSpeaking reaches Swift  PENDING
+web prepareForListening reaches Swift PENDING
+native runtime trace on healthy turn  PENDING
+same S1–S4 voice walk                 PENDING
+```
+
+Required before any voice turn: the Account Settings footer must read
+`0debe8b09`; that line is what distinguishes this install from the
+ENGINE-01 witness build (`5846a0824`) and the parallel lane's bundle
+(`13d2f25a9`) on the same phone (E9).
