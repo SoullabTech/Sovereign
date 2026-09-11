@@ -944,6 +944,18 @@ Now refuses: unknown kind · **missing** kind · missing `properties` · missing
 A legitimate one-node analysis sends `"edges": []`; **the boundary does not
 manufacture it.**
 
+### ⚠️ A DISCIPLINE FAILURE OF MINE, TWICE NOW
+
+I pushed `76d73a29d` and `9b979ad19` with failing tests. Both times the gate ran
+and I read the **typecheck** line while the **jest** line sat directly above it.
+Both were trivially fixable — stale assertions my own edit had invalidated — and
+that is exactly what makes the pattern worth recording: *a green line adjacent to a
+red one is not a green run.*
+
+⭐ **The rule I am holding myself to: the test result is READ LAST and ALONE,
+immediately before the commit — never as one line in a block of output I am
+scanning for something else.**
+
 ### ⚠️ A guard defect of mine, fixed and recorded
 
 The leak check used substring matching and failed on **`pass` inside `passage`** —

@@ -197,8 +197,10 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
 });
 
 describe('provenance', () => {
-  it('the analyser version is pinned', () => {
-    expect(ANALYZER_VERSION).toBe('RC-GEN-01/analyzer/1');
+  it('the analyser version is pinned — v2 after the SV-2 schema repair', () => {
+    /* ⛔ Version is EVIDENCE. v1 owns the A-S failure permanently; a schema change
+       creates a new subject rather than editing the old one's record. */
+    expect(ANALYZER_VERSION).toBe('RC-GEN-01/analyzer/2');
     expect(ANALYZER_TOOL_NAME).toBe('semantic_graph');
   });
 });
