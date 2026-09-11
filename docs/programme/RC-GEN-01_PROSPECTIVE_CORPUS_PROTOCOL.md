@@ -2592,3 +2592,90 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report only: the output path, how many kinds you named,
 and how many items you left unorganized.
 ```
+
+---
+
+## ⛔⛔ CLUSTERING RESULT — NO CLASS ESTABLISHED (2026-09-11)
+
+```text
+clustering   scripts/verifier-probe/inference-step-clustering.json
+sha256       e8d3100a28150b30a1662d5067b06c2c095d8909189745bf062745b0ae75b2cf
+frozen       BEFORE the key was opened — the order is in the commit history,
+             not merely asserted
+6 kinds      sizes 4 · 3 · 3 · 2 · 2 · 2   +   2 unorganized
+```
+
+**The clusterer's own names, verbatim. ⛔ Not renamed, not mapped onto any term,
+not reworded to sound more theoretically satisfying.**
+
+| kind | suspects | controls | n |
+|---|---|---|---|
+| The state behind the behaviour | 1 | 3 | 4 |
+| Two things side by side made into a cause | 2 | 1 | 3 |
+| Purpose read into an activity | 1 | 2 | 3 |
+| One narrow fact widened to the whole | 2 | 0 | 2 |
+| The outcome the sentence stops short of | 1 | 1 | 2 |
+| Sharing a place taken for something stronger | 1 | 1 | 2 |
+| *(unorganized)* | 1 | 1 | 2 |
+
+⛔ **EVERY kind is below the n≥5 floor. Not one supports a claim.**
+
+### The omnibus test — one test, so no cell can be cherry-picked
+
+```text
+observed majority-purity   12/18
+p (200,000 label shuffles)  0.870
+```
+
+Six underpowered cells invite picking the flattering one. A single statistic
+fixed before the cells were read does not. **The clustering does not track
+suspect/control status at all**, and `p = 0.87` is not a near miss — it is
+almost exactly what random labels produce.
+
+### THE RULING — predeclared, applied without reinterpretation
+
+> ⛔ **NO CLASS ESTABLISHED.** The independent descriptions did not generate a
+> distinction that this evidence can test. **"World-knowledge completion" is NOT
+> supported.**
+
+⚠️ **It is also not retired**, and the difference matters. Retirement was reserved
+for *equally common among controls*; what happened instead is *no stable
+organization at a testable scale*. ⭐ **The directional hint does point at "too
+broad"** — controls appear in five of the six kinds, and the two kinds that most
+resemble the causal reading I proposed hold **1 suspect / 3 controls** and **2
+suspects / 1 control**. ⛔ **At n=4 and n=3 that is an observation, not a finding,
+and it is recorded as an observation.**
+
+### ⛔ What I am NOT doing, and it is the whole discipline of this result
+
+The temptation is exact and I can name it: *"Two things side by side made into a
+cause"* (2/3 suspect) and *"One narrow fact widened to the whole"* (2/2 suspect)
+could be pooled into something that would look like a causal-completion class at
+4/5. **That is inventing the ontology after seeing the key** — the precise act
+the founder forbade before the clusterer ran. ⛔ **Not done. The clusterer divided
+where the material divided, and the material did not divide that way.**
+
+⭐ **My six-case reading from the phase-3 result — causation, recovery,
+competence, role, identity as one family — does not survive this test.** An
+independent party describing the same items, blind, split them across four
+different kinds and put controls alongside them. **The family was mine, not the
+material's.**
+
+### The clusterer's confidence note, verbatim
+
+> *The first three kinds feel firm — the descriptions themselves repeat the
+> wording that defines them. The three pairs are weaker: C16 sits between
+> purpose-reading and the outcome pair because it does both, C18 could be read as
+> widening rather than as location overlap, and C12 was the closest of the
+> state-behind-behaviour items to the causal kind since its description also
+> speaks of locating a cause. C02 (a hedge dropped) and C10 (a repeated practice
+> restated as a formal role) are left out because neither move appears anywhere
+> else in the eighteen.*
+
+⭐ **Three firm kinds and three weak pairs, said plainly by the party that made
+them.** Even the firm three carry n=4, n=3, n=3.
+
+**Standing: the overcommit is REAL and prospectively measured (21% of plausible
+neutrals) · WHAT KIND of inferential move produces it is UNKNOWN · world-knowledge
+completion NOT SUPPORTED and NOT RETIRED · 18 items is too few to answer this and
+a larger set would be the only honest route · production UNTOUCHED.**
