@@ -619,3 +619,61 @@ task, not done here.
 **Status.** REPAIR PUSHED (`4551a56ed`) — NOT YET BUILT — NOT INSTALLED —
 phone still on the pre-repair build — blocked on (1) Mac disk space,
 (2) a ruling on the export blocker.
+
+### E7 · 2026-09-11 · two further lifecycle observations on the unrepaired build (founder)
+
+Same pre-repair build on the phone (NATIVE `73d0df30d`, WEB `5846a0824`).
+Founder, verbatim in substance:
+
+1. *"I am getting cut off if I talk too long and it simply starts to live
+   transcribe at the new point, cutting off all I said before."* — a long
+   member utterance is not carried whole: at some point the recognizer
+   restarts and the transcript continues from the new point, discarding
+   the earlier text. Founder ask: *live transcription scrolling so I can
+   see it is still attending.*
+2. *"MAIA is also getting cut off in her spoken aspect — part way through
+   what she has written she gets timed out."* — the spoken reply stops
+   before the written reply ends.
+3. Founder proposal: *"extend both time spaces."*
+
+**Recorded as baseline evidence, not as new requests for repair.** Both
+are turn-lifecycle failures of exactly the class §2 names (`HUMAN SPEAKS →
+TURN CLOSES` and `MAIA SPEAKS → SPEECH ENDS`), observed with the native
+gatekeeper unregistered (C′), so they belong to the WebKit + community
+recognizer baseline.
+
+**Candidate mechanisms (named, not attributed):**
+
+- (1) `@capacitor-community/speech-recognition` on iOS wraps
+  `SFSpeechRecognizer`, whose per-request sessions are bounded; the live
+  path consumes `partialResults` in `components/voice/ContinuousConversation.tsx`
+  (~2899). If the plugin restarts its request, `matches` begins again from
+  the new segment; whether the app concatenates across a restart is the
+  question. This is the transcript-accumulation seam that
+  `lib/voice/recognition/humanTurnAuthority.ts` (predecessor lane) was
+  written to own — recognizer finality must never close or reset the
+  member's turn.
+- (2) Three candidates on the speaking side, all in `OracleConversation.tsx`:
+  the playback timeouts (`audio.duration + 30` s, ~2416; fixed timeouts
+  ~2200/~2324), the echo-suppression / mic-resume cooldown after streaming
+  chunks (~5687–5738), and barge-in (~2871, default OFF for beta). A fourth
+  is the two-owner problem itself: the recognizer re-arming and re-taking
+  the audio session while playback is still running.
+
+**Requirements harvested for §3 (design, not yet authorized):**
+
+- R-A · **Visible attention.** While the member speaks, the live transcript
+  scrolls on screen; silence from the UI is never the only signal.
+- R-B · **No silent reset.** A recognizer restart may never discard already
+  captured text; the turn is closed by the member or by `humanTurnAuthority`,
+  not by the recognizer's session length (Invariant 3.6 generalized to the
+  listening side).
+- R-C · **Speech completes or fails visibly.** A spoken reply either plays
+  to the end of the written reply or the UI shows that it stopped and why
+  (Invariant 3.3, 3.7).
+
+**Ruling boundary on "extend both time spaces".** Held. E5 does not
+authorize timeout or watchdog changes, and lengthening a timeout before the
+locus is known is the mitigation the founder refused for the stall. The
+proposal is preserved here as a candidate for the §6 step 3 rebuild, where
+timeouts become explicit bounded transitions rather than tunables.
