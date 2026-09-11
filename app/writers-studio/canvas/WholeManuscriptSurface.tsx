@@ -49,6 +49,7 @@ import {
 import { BOUNDARY_NOTE, isBoundaryGesture } from '@/lib/writersStudio/sectionBoundary';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
+import { revealWithin } from './revealWithin';
 
 /** Sections kept alive beyond each edge of the viewport. */
 const OVERSCAN = 3;
@@ -290,7 +291,7 @@ export const WholeManuscriptSurface = forwardRef<
     if (!pendingScroll) return;
     const node = shells.current.get(pendingScroll);
     if (!node) return; /* not mounted yet — the next commit will bring it */
-    node.scrollIntoView({ block: 'start' });
+    revealWithin(node, 'start');
     setPendingScroll(null);
   }, [pendingScroll, mounted]);
 

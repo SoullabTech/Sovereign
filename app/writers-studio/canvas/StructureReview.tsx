@@ -79,6 +79,7 @@ import type {
 } from '@/lib/manuscript/structure/interpret';
 import AskMaia from './AskMaia';
 import type { AskAnchor } from '@/lib/manuscript/ask/anchor';
+import { revealWithin } from './revealWithin';
 
 /** Prose measure. Long lines cost comprehension; this is the usual 65–75ch. */
 const MEASURE = '70ch';
@@ -455,8 +456,10 @@ export default function StructureReview({
               are the only things on the page nobody else can do. */
         orientation={
           <Orientation view={view} syn={syn}
-            onGoToQuestions={() => questionsRef.current?.scrollIntoView(
-              { behavior: 'smooth', block: 'start' })} />
+            onGoToQuestions={() => {
+              const el = questionsRef.current;
+              if (el) revealWithin(el, 'start', 'smooth');
+            }} />
         } />
 
       <Coverage view={view} />

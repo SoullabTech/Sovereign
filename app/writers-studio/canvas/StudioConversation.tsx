@@ -9,6 +9,7 @@ import { useMemberIdentity } from '../useMemberIdentity';
 import { useManuscriptKeeps } from '../useManuscriptKeeps';
 import { handoffToMaia } from '../workContext';
 import type { LivingWork } from '../useLivingWorks';
+import { revealWithin } from './revealWithin';
 
 /**
  * WS2-03D — mini MAIA. A companion at the writer's table.
@@ -114,7 +115,8 @@ export default function StudioConversation({
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
+    const el = endRef.current;
+    if (el) revealWithin(el, 'end');
   }, [turns, sending]);
 
   const send = async () => {

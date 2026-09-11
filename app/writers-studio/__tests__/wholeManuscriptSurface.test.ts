@@ -65,9 +65,15 @@ describe('the rail mounts before it scrolls', () => {
   });
 
   it('never scrolls to a node that does not exist yet', () => {
+    /* The obligation is unchanged; only the name of the call is. `scrollIntoView`
+       became `revealWithin` on 2026-09-11, because scrollIntoView moves every
+       scrollable ancestor and took the whole window with it. The guard must
+       still precede whichever call does the scrolling, so this asserts the
+       ORDER against the call actually present rather than against a name. */
     const layout = block(SRC, 'useLayoutEffect(', 'setPendingScroll(null);');
     expect(layout).toMatch(/if \(!node\) return;/);
-    expect(layout.indexOf('if (!node) return;')).toBeLessThan(layout.indexOf('scrollIntoView'));
+    expect(layout).toMatch(/revealWithin\(node/);
+    expect(layout.indexOf('if (!node) return;')).toBeLessThan(layout.indexOf('revealWithin(node'));
   });
 });
 
