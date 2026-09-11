@@ -57,11 +57,18 @@ SETS = {
     'as-derived': Path(__file__).with_name('fixtures.json'),
     'blind': Path(__file__).with_name('fixtures-blind.json'),
     'scope': Path(__file__).with_name('fixtures-scope.json'),
+    'modifier': Path(__file__).with_name('fixtures-modifier.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'
 DEBERTA_BASE = 'MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli'
 HHEM = 'vectara/hallucination_evaluation_model'
+MINICHECK = 'flan-t5-large'   # MiniCheck-Flan-T5-Large, ~770M
+
+# MiniCheck returns a support probability in [0,1], like HHEM. Same reporting rule:
+# the cut is for display, every raw score is recorded, and moving it after seeing
+# answers is tuning to the test.
+MINICHECK_THRESHOLD = 0.5
 
 # HHEM returns a consistency score in [0,1]. This is a REPORTING threshold only —
 # it is printed alongside the raw score and every raw score is recorded, so a
@@ -118,6 +125,7 @@ def run_deberta(cases, repeat, small):
             observed = 'entailed' if 'entail' in top else 'not_entailed'
             rows.append(dict(verifier='deberta', run=r + 1, id=c['id'],
                              role=c.get('role', ''), family=c.get('family', ''),
+                             group=c.get('group', ''),
                              premise=c['premise'], hypothesis=c['hypothesis'],
                              expected=c['expected'], observed=observed,
                              raw_label=top, scores=scored))
@@ -135,11 +143,53 @@ def run_hhem(cases, repeat):
             observed = 'entailed' if score >= HHEM_THRESHOLD else 'not_entailed'
             rows.append(dict(verifier='hhem', run=r + 1, id=c['id'],
                              role=c.get('role', ''), family=c.get('family', ''),
+                             group=c.get('group', ''),
                              premise=c['premise'], hypothesis=c['hypothesis'],
                              expected=c['expected'], observed=observed,
                              raw_label=f'score={score:.4f}',
                              scores={'consistency': round(score, 4),
                                      'threshold': HHEM_THRESHOLD}))
+    return rows
+
+
+def run_minicheck(cases, repeat):
+    """
+    ⭐ THE CHALLENGER. MiniCheck is trained for GROUNDED FACT CHECKING — "is this claim
+    supported by this document?" — rather than generic NLI. Different task, different
+    training data, different architecture family.
+
+    ⛔⛔ THE POINT IS NOT A BETTER SCORE. It is ERROR INDEPENDENCE. Two models that
+    fail on the same examples are one epistemic witness wearing two shirts, and the
+    whole reason for bringing in a verifier at all was that the generative analyser
+    could not witness itself. ⭐ So the interesting output is not MiniCheck's total —
+    it is WHICH cases it misses, compared against DeBERTa's five.
+
+    ⛔ It runs the EXACT frozen corpora, unchanged, by their recorded hashes. A
+    challenger evaluated on different material answers a different question.
+
+    ⚠️ API NOT VERIFIED FROM THIS ENVIRONMENT — written against the published
+    interface and never executed here. If the call shape is wrong, this verifier is
+    reported as NOT RUN and every other verifier still reports, by the isolation
+    repair. ⛔ A first-run failure here is a packaging fact, NOT a result about
+    MiniCheck, and must not be recorded as one.
+    """
+    from minicheck.minicheck import MiniCheck
+    print(f'  loading MiniCheck {MINICHECK} ...', flush=True)
+    scorer = MiniCheck(model_name=MINICHECK)
+    rows = []
+    for c in cases:
+        for r in range(repeat):
+            _, probs, _, _ = scorer.score(docs=[c['premise']], claims=[c['hypothesis']])
+            score = float(probs[0])
+            observed = 'entailed' if score >= MINICHECK_THRESHOLD else 'not_entailed'
+            rows.append(dict(verifier='minicheck', run=r + 1, id=c['id'],
+                             role=c.get('role', ''), family=c.get('family', ''),
+                             group=c.get('group', ''),
+                             premise=c['premise'], hypothesis=c['hypothesis'],
+                             expected=c['expected'], observed=observed,
+                             raw_label=f'score={score:.4f}',
+                             scores={'support': round(score, 4),
+                                     'threshold': MINICHECK_THRESHOLD}))
     return rows
 
 
@@ -189,13 +239,56 @@ def report(rows):
             obs = {r['observed'] for r in sub if r['id'] == cid}
             if len(obs) > 1:
                 print(f'  ⚠️ UNSTABLE across repeats: {cid} -> {sorted(obs)}')
+        # ⭐⭐ THE MODIFIER-BOUNDARY DISCRIMINATOR. Only meaningful when the set
+        # carries M/V/P groups. M and V state the SAME limitation two ways, so the
+        # gap between them IS the hypothesis. ⛔ Printed as two columns and never
+        # summed: a combined number would answer a question nobody asked.
+        if any(r.get('group') for r in sub):
+            print('\n  ⭐ MODIFIER-BOUNDARY DISCRIMINATOR')
+            g = {}
+            for name, label in (('M', 'satellite modifier'), ('V', 'main verb'),
+                                ('P', 'licensed control')):
+                rs = [r for r in sub if r.get('group') == name]
+                ok = sum(r['observed'] == r['expected'] for r in rs)
+                g[name] = (ok, len(rs))
+                print(f"    {name}  {label:<22} {ok}/{len(rs)} correct")
+            if g['P'][0] < g['P'][1]:
+                print('    ⛔ P IS NOT PERFECT — the verifier went conservative and')
+                print('       NO negative column here means anything. Read nothing else.')
+            else:
+                mo, mt = g['M']; vo, vt = g['V']
+                print(f"    -> M {mo}/{mt} vs V {vo}/{vt} · the gap IS the hypothesis")
+                print('    ⛔ NOT A VERDICT. The founder rules on whether the gap is material.')
+
+    verifiers = sorted({r['verifier'] for r in rows})
+    if len(verifiers) > 1:
+        # ⭐⭐ ERROR CORRELATION, NOT A SCOREBOARD. "Separation is not independence"
+        # was established about two stages of ONE model; the same test has to be
+        # applied to two different models before either can be called a second
+        # witness. ⛔ Shared misses are the number that matters, and a challenger
+        # with a better total but identical failures has added nothing.
+        print('\n  ⭐ ERROR CORRELATION  (shared misses are what disqualify a witness)')
+        miss = {v: {r['id'] for r in rows
+                    if r['verifier'] == v and r['observed'] != r['expected']}
+                for v in verifiers}
+        for v in verifiers:
+            print(f"    {v:<12} misses {sorted(miss[v]) or 'none'}")
+        for i, a_ in enumerate(verifiers):
+            for b_ in verifiers[i + 1:]:
+                both = sorted(miss[a_] & miss[b_])
+                only_a = sorted(miss[a_] - miss[b_])
+                only_b = sorted(miss[b_] - miss[a_])
+                print(f"    {a_} vs {b_}:  shared {both or 'none'} · "
+                      f"only {a_} {only_a or 'none'} · only {b_} {only_b or 'none'}")
+
     print('\n' + '=' * 78)
     print('⛔ NOT SELF-JUDGED. These are readings, not a verdict.')
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--model', choices=['deberta', 'hhem', 'both'], default='deberta')
+    ap.add_argument('--model', choices=['deberta', 'hhem', 'minicheck', 'both', 'all'],
+                    default='deberta')
     ap.add_argument('--repeat', type=int, default=1,
                     help='confirms deterministic execution only; not a robustness test')
     ap.add_argument('--small', action='store_true', help='DeBERTa base instead of large')
@@ -226,9 +319,11 @@ def main():
     # Measured evidence was discarded by an unrelated packaging error.
     rows, failures = [], []
     plan = ([('deberta', lambda: run_deberta(cases, a.repeat, a.small))]
-            if a.model in ('deberta', 'both') else [])
+            if a.model in ('deberta', 'both', 'all') else [])
     plan += ([('hhem', lambda: run_hhem(cases, a.repeat))]
-             if a.model in ('hhem', 'both') else [])
+             if a.model in ('hhem', 'both', 'all') else [])
+    plan += ([('minicheck', lambda: run_minicheck(cases, a.repeat))]
+             if a.model in ('minicheck', 'all') else [])
 
     for name, fn in plan:
         try:
@@ -247,6 +342,7 @@ def main():
         {'set': a.which,
          'fixtures_sha256': digest,
          'hhem_threshold_frozen_at': HHEM_THRESHOLD,
+         'minicheck_threshold_frozen_at': MINICHECK_THRESHOLD,
          'threshold_note': 'A REPORTING cut only. Raw scores are recorded. Changing it '
                            'after seeing these answers is tuning to the test; it must be '
                            'a separate calibration act on separate material.',

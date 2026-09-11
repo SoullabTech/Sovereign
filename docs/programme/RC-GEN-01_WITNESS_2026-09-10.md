@@ -3176,3 +3176,109 @@ A set built around that shape specifically would be the test, and it has not bee
 
 ⛔ Standing: **no ruling taken · no fixture edited · no threshold moved · evidence gate
 HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐⭐ THE RESEARCH PROGRAMME OPENS — THREE ACTS AUTHORIZED, NOT TWELVE
+
+> ⭐ **What this is really about:** how an intelligent system distinguishes **meaning
+> from warrant** — not *"what does this seem to mean?"* but *"what am I entitled to
+> treat as true?"*
+
+Twelve directions named; **three authorized now**, deliberately:
+
+```
+1  MODIFIER-BOUNDARY FALSIFICATION   ⭐ BUILT · FROZEN · NOT RUN
+2  MiniCheck CHALLENGER              ⭐ WIRED · NOT RUN
+3  INLI — explicit vs implied        ⛔ OPENED · NO WORK DONE (reading, not code)
+```
+
+⛔ **Act 1 comes before anything architectural** — *it tells us exactly what kind of
+verifier we actually have.*
+
+### ⭐ ACT 1 — MINIMAL PAIRS · `fixtures-modifier.json` · 24 cases · 8 triples
+
+```
+sha256  99ce2dda3a050c52f016e62ed6c78765452ae142e70fe5e1f322032908dbbb50
+```
+
+⛔ **This set measures nothing. It exists to FALSIFY one sentence.** In each triple the
+**same subject, same relation and same hypothesis** appear three times, differing only
+in **where the limitation lives**:
+
+```
+M  satellite modifier   "Odile ran the tailor's shop UNTIL the lease ended."
+V  main verb            "Odile NO LONGER RUNS the tailor's shop."
+P  licensed control     "Odile took over the shop in 2014 and RUNS IT STILL."
+                        -> all three ask: "Odile runs the tailor's shop."
+```
+
+⭐ **The prediction is IN the frozen file**, with the falsification conditions:
+
+```
+hypothesis survives    M fails materially more than V, and P is near-perfect
+refuted NARROW         M and V both pass — the five earlier misses need another cause
+refuted BROAD          M and V both fail — the encoding is irrelevant, it is
+                       cessation in general
+UNREADABLE             P fails — the verifier went conservative and NO negative
+                       column means anything
+```
+
+⛔ **A hypothesis recorded only after seeing the result is not a hypothesis.** The
+probe prints the M/V/P comparison and refuses to read the negatives at all when P is
+imperfect.
+
+⭐ **P deliberately carries modifiers too** (`in 2014`, `still`, `on Wednesdays`) — so
+a verifier cannot pass by treating *any* modifier as a refusal signal. ⭐ **M5 is the
+weakest signal in the group on purpose** (`maintained the mountain hut in 2019` — a
+bare past date), so the set has internal gradation rather than eight copies of `until`.
+
+### ⭐ ACT 2 — MiniCheck WIRED · `--model minicheck` · `--model all`
+
+MiniCheck-Flan-T5-Large: trained for **grounded fact checking** — *is this claim
+supported by this document?* — rather than generic NLI. Different task, different
+training data, different architecture family.
+
+> ⛔⛔ **THE POINT IS NOT A BETTER SCORE. IT IS ERROR INDEPENDENCE.**
+> *Two models that fail on the same examples are one epistemic witness wearing two
+> shirts.*
+
+⭐ So the probe now prints an **ERROR CORRELATION** block whenever more than one
+verifier runs: each verifier's miss set, then **shared / only-A / only-B** for every
+pair. ⛔ **A challenger with a better total and identical failures has added nothing**,
+and the totals would hide that.
+
+⭐ It runs **the exact frozen corpora, unchanged, by their recorded hashes.** A
+challenger evaluated on different material answers a different question.
+
+⚠️ **THE MiniCheck API IS NOT VERIFIED FROM THIS ENVIRONMENT** — written against the
+published interface and never executed here. ⛔ If the call shape is wrong it reports
+as `NOT RUN`, every other verifier still reports (the isolation repair), and **a
+first-run failure is a packaging fact, NOT a result about MiniCheck.** It must not be
+recorded as one. `pip install minicheck` in its own venv.
+
+### ⛔ ACT 3 — INLI: OPENED, NO WORK DONE
+
+The `EXPLICITLY STATED · IMPLIED · INTERPRETATION · UNSUPPORTED · CONTRADICTED`
+vocabulary is the sleeper finding — *a way out of the false choice between a
+literal-minded MAIA and an imaginative one.* ⛔ **I have written nothing about INLI**:
+I cannot read the dataset from here, and a summary composed from memory would be
+exactly the overcommit this lane exists to catch. **Recorded as the open lane it is.**
+
+### ⚠️ AND A DEFECT OF MINE, IN THE INSTRUMENT, THIS TURN
+
+Adding the `group` field I ran one edit twice against the same first occurrence,
+producing `group=` **as a repeated keyword argument** — `SyntaxError`, caught
+immediately by the parse check. ⚠️ Worth recording because it is the **fourth**
+time a mechanical edit in this lane has broken a harness, and each time the guard
+caught it rather than a run. ⭐ *The guards are load-bearing, not ceremonial.*
+
+### To run
+
+```
+python3 scripts/verifier-probe/probe.py --set modifier --model deberta
+```
+
+⛔ DeBERTa untouched. Read the **M vs V** line, and read it **only if P is 8/8**.
+
+⛔ **Standing: modifier set FROZEN and NOT RUN · MiniCheck WIRED and NOT RUN · INLI
+OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD ·
+production UNTOUCHED.**
