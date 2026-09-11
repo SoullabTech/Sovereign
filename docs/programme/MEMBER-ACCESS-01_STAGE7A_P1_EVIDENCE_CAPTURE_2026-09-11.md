@@ -7,6 +7,13 @@
 > contact, record that fact durably **without changing whether the member is
 > admitted, what they see, or how they authenticate.**
 
+> ⏱ **Timestamp convention.** All dates in this record are **UTC**, matching this
+> repository's commit timestamps. The founder's local clock is UTC−7, so a reading
+> stamped `2026-09-11T01:2xZ` occurred on the evening of **2026-09-10 local**. Both
+> are the same moment. ⛔ Do not "correct" these to the local date — that would
+> desynchronise the prose from the commits it describes, which is the discrepancy
+> the convention exists to prevent.
+
 ---
 
 ## 1 · Why this is the first migration task
