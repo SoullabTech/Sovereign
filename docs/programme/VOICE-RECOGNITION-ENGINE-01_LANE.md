@@ -1640,3 +1640,35 @@ repair** — in the successor lane, not here.
 NATIVE CANDIDATE NOT ADJUDICATED — successor lane
 `IOS-CONVERSATION-RUNTIME-01` opened as a lane document (no build
 authorized in it yet) — calibrated capture pending.
+
+### 13.6 Custody confirmation (founder, 2026-09-11)
+
+`68aec32a9` is a **custody record, not a repair branch.** Nothing further
+is written to `claude/voice-recognition-acceptance-witness-ffeadt` except
+future evidence that belongs to the suspended witness itself. The
+successor lane starts only after the calibrated capture yields A, B, C or
+D, and whatever is fixed next is not a continuation of the recognition
+experiment: it is a repair to the conversation runtime, discovered because
+the recognition witness exposed it, on a fresh branch from the default
+branch.
+
+```text
+VOICE-RECOGNITION-ENGINE-01
+SUSPENDED
+native candidate NOT ADJUDICATED
+branch frozen as record
+
+IOS-CONVERSATION-RUNTIME-01
+record opened
+no build authorized
+no repair authorized
+
+NEXT
+positive-control Console capture
+→ reproduce stall
+→ three orb taps
+→ elapsed recovery time
+→ classify A/B/C/D
+→ authorize exactly one locus-specific repair
+→ fresh branch from default
+```
