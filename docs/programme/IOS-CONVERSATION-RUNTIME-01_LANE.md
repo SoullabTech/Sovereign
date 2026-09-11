@@ -572,3 +572,50 @@ HEALTHY TURN:       prepareForListening lines / prepareForSpeaking lines / teard
 S1..S4:             PASS / FAIL each, ×N passes
 STALL:              disappeared / remains / changed shape (describe)
 ```
+
+### E6 · 2026-09-11 · first Mac attempt at §7.4 — BLOCKED before any install; nothing new on the phone
+
+Relayed from the Mac, worktree `/Users/soullab/maia-runtime-01` at
+`4551a56ed`.
+
+**Two blockers, both outside this repair.**
+
+1. **Mac disk full.** `ENOSPC: no space left on device` hit the webpack
+   cache during `next build`, then `pod install` (`Errno::ENOSPC … fcopyfile`
+   while copying `Capacitor (8.0.2)`), then `log collect`. Consequences:
+   no Pods → `xcodebuild` failed → no `.app` → `strings` 0 →
+   `devicectl install` failed (`file doesn't exist`). The `devicectl launch`
+   that followed **launched the previous build already on the phone**
+   (NATIVE `73d0df30d`, WEB `5846a0824`). **The repair has not been
+   installed.** The runtime01 log archive is corrupt (written during ENOSPC)
+   and is not evidence.
+2. **Static export of `clean-main-no-secrets` is broken independently of
+   this branch.** `next build` under `output: 'export'` fails:
+   `Page "/reflections/[id]" is missing "generateStaticParams()"`.
+   `app/reflections/[id]/page.tsx` is a `'use client'` page on a dynamic
+   segment, added by `a0dc55571` (2026-09-04, "move reflections out of Lab
+   Tools"). That commit added `'/reflections'` to `WEB_ONLY_PREFIXES` in
+   `lib/mobile/mobileAllowlist.ts` (lines 163–170, with a comment that
+   expects `capacitor-patch-routes.sh` to strip the route) but did **not**
+   add the mirror entry `"app/reflections"` to `MOBILE_EXCLUDED_DIRS` in
+   `scripts/capacitor-patch-routes.sh` (line 482, whose own comment reads
+   *"Mirrors WEB_ONLY_PREFIXES … keep in sync"*). The script's dynamic-page
+   scanner also failed to flag the page as `client + dynamic` for a reason
+   not yet established. Net effect: **every iOS static bundle built from
+   main since 2026-09-04 fails at export.** The witness bundle of the
+   predecessor (`5846a0824`) built because its base predates that commit.
+   Not caused by, and not fixable within, the authorized repair.
+
+**Side observation.** `next build` rewrote the tracked `next-env.d.ts`
+(shows as ` M`); it is Next's own regeneration, not a change to commit —
+`git checkout next-env.d.ts` in the worktree.
+
+**Proposed, for ruling:** a separate one-line tooling commit adding
+`"app/reflections"` to `MOBILE_EXCLUDED_DIRS`, restoring the sync the
+script's comment mandates. Without it no acceptance build is possible
+from main. The deeper drift (a hand-mirrored list) is queued as its own
+task, not done here.
+
+**Status.** REPAIR PUSHED (`4551a56ed`) — NOT YET BUILT — NOT INSTALLED —
+phone still on the pre-repair build — blocked on (1) Mac disk space,
+(2) a ruling on the export blocker.
