@@ -190,3 +190,68 @@ search; instructed not to infer what any downstream program looks for.
 disagreements are recorded openly in this document rather than silently fixed.
 The corpus is hashed and committed, and only then does the frozen detector
 classify inside/outside.
+
+---
+
+## FREEZE CONDITIONS — founder, 2026-09-11, recorded while the author was still running
+
+⛔ **Nothing downstream gets to improve the corpus after the author returns it.**
+
+1. **Preserve the author's output verbatim** — awkward sentences, uncertainty, and
+   cases the reviewer personally dislikes included.
+2. **Author-side uncertainty is recorded SEPARATELY from the expected label.** If
+   the author says a case was hard to judge, *that is evidence about the item, not
+   grounds to rewrite it.*
+3. ⛔ **No case is removed for seeming too easy, too strange, or likely to fall
+   outside the regime.** *The detector has not earned the right to shape its own
+   validation distribution.*
+4. **Order of operations, binding:**
+   `hash the corpus` → `reveal the detector classification` → `run DeBERTa and
+   MiniCheck` → **`--primary` FIRST** → only then any secondary analysis.
+5. **Underpowered means UNMEASURED.** Fewer than 8 agreements inside is not
+   "promising", not "directionally supportive", not "almost enough". The first
+   corpus **remains intact as evidence** and a **second independently authored
+   prospective corpus** is the lawful next act — never a top-up of this one.
+
+### ⭐ Difficulty is an outcome, not an authoring instruction
+
+The author is asked for **natural** cases within the seven semantic categories —
+not difficult ones. This is what keeps the corpus from quietly becoming a second
+adversarial benchmark for DeBERTa, which is precisely what compromised the
+`modifier` set's evidentiary value.
+
+### ⚠️ My own audit of the committed prompt against that principle
+
+The prompt was committed before the run so it could be audited; the first audit
+is mine, and two clauses in it bear on the distribution. Neither asks for
+difficulty, and both are disclosed here rather than left to be found:
+
+- *"No ambiguity: a careful reader must agree with each label without argument.
+  If you cannot make a case unambiguous, write a different case."* — a constraint
+  on **clarity of ground truth**, which is required for any label to be
+  trustworthy. It does exert selection: cases whose correct label is genuinely
+  contestable are excluded by construction. ⚠️ **The corpus therefore cannot speak
+  to genuinely borderline material**, and no result from it should be read as if
+  it could.
+- *"The two hypotheses in a pair should differ as little as possible while
+  differing in exactly one of the seven aspects."* — a **matched-pair** control,
+  standard for isolating a single variable. ⚠️ A minimal pair is by construction
+  harder than a loosely matched one, so this does raise average difficulty — but
+  it raises it **symmetrically across all seven categories**, with no reference to
+  any verifier's known weakness. That is the distinction that matters against
+  `modifier`, which was built from DeBERTa's observed failures specifically.
+
+⛔ **Neither clause is being changed.** The prompt is frozen and the author has
+run against it; editing it now would destroy the property the early commit
+created.
+
+### Every outcome is informative — which is why this is a good experiment
+
+| outcome | consequence |
+|---|---|
+| inside agreement precision materially lower | closure-risk hypothesis gains **blind** support |
+| similar inside and outside | closure-risk interpretation **weakens** |
+| MiniCheck rescues disproportionately inside | **challenger-router** strengthens |
+| fewer than 8 agreements inside | **no architectural conclusion at all** |
+
+*An experiment with multiple ways to tell us we were wrong.*

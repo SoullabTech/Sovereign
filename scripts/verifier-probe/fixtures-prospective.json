@@ -1,0 +1,335 @@
+{
+  "set": "prospective",
+  "note": "I wrote each premise first as a plain sentence of the kind you'd meet in a profile, notice or letter, then drew one hypothesis strictly from what it says and a near-twin that quietly enlarges a single aspect — a once into an always, a stand-in into a post-holder, an attendance into a membership.",
+  "categories": [
+    "time",
+    "frequency",
+    "duration",
+    "condition",
+    "role",
+    "relationship",
+    "state"
+  ],
+  "cases": [
+    {
+      "id": "X01",
+      "family": "harbour-ferry-timetable",
+      "origin": "prospective",
+      "premise": "The Kilvarra passenger ferry runs across the sound every morning at seven, from May through to the end of September. Outside those months the crossing is made by arrangement only.",
+      "hypothesis": "There is a seven o'clock ferry from Kilvarra in July.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X02",
+      "family": "harbour-ferry-timetable",
+      "origin": "prospective",
+      "premise": "The Kilvarra passenger ferry runs across the sound every morning at seven, from May through to the end of September. Outside those months the crossing is made by arrangement only.",
+      "hypothesis": "There is a seven o'clock ferry from Kilvarra in January.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X03",
+      "family": "bakery-saturday-loaf",
+      "origin": "prospective",
+      "premise": "Odette Marchand bakes the rye sourdough on Saturdays, and it is usually sold out by mid-morning. The rest of the week the shelves hold only white and wholemeal.",
+      "hypothesis": "Odette bakes rye sourdough on Saturdays.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X04",
+      "family": "bakery-saturday-loaf",
+      "origin": "prospective",
+      "premise": "Odette Marchand bakes the rye sourdough on Saturdays, and it is usually sold out by mid-morning. The rest of the week the shelves hold only white and wholemeal.",
+      "hypothesis": "Odette bakes rye sourdough every day.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X05",
+      "family": "locum-vet-practice",
+      "origin": "prospective",
+      "premise": "While Dr Iyer was on leave last autumn, a locum named Tobias Renn covered the small-animal clinic in Stroud for six weeks.",
+      "hypothesis": "Tobias Renn worked at the Stroud clinic last autumn.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X06",
+      "family": "locum-vet-practice",
+      "origin": "prospective",
+      "premise": "While Dr Iyer was on leave last autumn, a locum named Tobias Renn covered the small-animal clinic in Stroud for six weeks.",
+      "hypothesis": "Tobias Renn is the permanent vet at the Stroud clinic.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X07",
+      "family": "choir-rehearsal-hall",
+      "origin": "prospective",
+      "premise": "The Ashwood Community Choir rents the parish hall on Thursday evenings. Twice a year, before the winter and summer concerts, they also take the hall on a Sunday afternoon.",
+      "hypothesis": "The choir uses the parish hall on some Sundays.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X08",
+      "family": "choir-rehearsal-hall",
+      "origin": "prospective",
+      "premise": "The Ashwood Community Choir rents the parish hall on Thursday evenings. Twice a year, before the winter and summer concerts, they also take the hall on a Sunday afternoon.",
+      "hypothesis": "The choir uses the parish hall every Sunday.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X09",
+      "family": "orchard-frost-warning",
+      "origin": "prospective",
+      "premise": "If the temperature drops below minus two overnight, the Hallenbeck orchard lights its smudge pots among the apple rows. Last April it did so on three nights.",
+      "hypothesis": "The orchard lights its smudge pots when the night falls below minus two.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X10",
+      "family": "orchard-frost-warning",
+      "origin": "prospective",
+      "premise": "If the temperature drops below minus two overnight, the Hallenbeck orchard lights its smudge pots among the apple rows. Last April it did so on three nights.",
+      "hypothesis": "The orchard lights its smudge pots on every April night.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X11",
+      "family": "letter-from-tromso",
+      "origin": "prospective",
+      "premise": "Dear Ma — we reached Tromsø on the ninth and stayed four days before the boat took us north again. The light was strange the whole time.",
+      "hypothesis": "The writer spent four days in Tromsø.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X12",
+      "family": "letter-from-tromso",
+      "origin": "prospective",
+      "premise": "Dear Ma — we reached Tromsø on the ninth and stayed four days before the boat took us north again. The light was strange the whole time.",
+      "hypothesis": "The writer spent four months in Tromsø.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X13",
+      "family": "cousin-at-the-wedding",
+      "origin": "prospective",
+      "premise": "Marguerite Okonjo travelled down from Leeds for the wedding of her cousin Femi, whom she had not seen since they were children.",
+      "hypothesis": "Femi is Marguerite's cousin.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X14",
+      "family": "cousin-at-the-wedding",
+      "origin": "prospective",
+      "premise": "Marguerite Okonjo travelled down from Leeds for the wedding of her cousin Femi, whom she had not seen since they were children.",
+      "hypothesis": "Femi is Marguerite's brother.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X15",
+      "family": "museum-night-guard",
+      "origin": "prospective",
+      "premise": "Salvatore Pinto has guarded the east wing of the Bellamare Museum at night for eleven years. He has never worked a day shift there.",
+      "hypothesis": "Salvatore guards the museum's east wing at night.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X16",
+      "family": "museum-night-guard",
+      "origin": "prospective",
+      "premise": "Salvatore Pinto has guarded the east wing of the Bellamare Museum at night for eleven years. He has never worked a day shift there.",
+      "hypothesis": "Salvatore guards the museum's east wing in the afternoons.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X17",
+      "family": "greenhouse-heater-rule",
+      "origin": "prospective",
+      "premise": "The heater in the Larkspur Nursery greenhouse switches on only when the internal thermometer reads under eight degrees. It stayed off through the whole of last week.",
+      "hypothesis": "The heater comes on when the greenhouse falls under eight degrees.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X18",
+      "family": "greenhouse-heater-rule",
+      "origin": "prospective",
+      "premise": "The heater in the Larkspur Nursery greenhouse switches on only when the internal thermometer reads under eight degrees. It stayed off through the whole of last week.",
+      "hypothesis": "The heater runs regardless of the greenhouse temperature.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X19",
+      "family": "sprinter-injury-season",
+      "origin": "prospective",
+      "premise": "A torn hamstring kept the sprinter Delia Fontaine out of competition for most of last season. She returned to the track in February and has raced without trouble since.",
+      "hypothesis": "Delia Fontaine was injured last season.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X20",
+      "family": "sprinter-injury-season",
+      "origin": "prospective",
+      "premise": "A torn hamstring kept the sprinter Delia Fontaine out of competition for most of last season. She returned to the track in February and has raced without trouble since.",
+      "hypothesis": "Delia Fontaine is currently injured.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X21",
+      "family": "committee-stand-in-chair",
+      "origin": "prospective",
+      "premise": "At the March meeting of the Drovers' Lane Residents' Committee, Ruth Enderby took the chair because the chairman, Colin Frey, was unwell.",
+      "hypothesis": "Ruth Enderby chaired the March meeting.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X22",
+      "family": "committee-stand-in-chair",
+      "origin": "prospective",
+      "premise": "At the March meeting of the Drovers' Lane Residents' Committee, Ruth Enderby took the chair because the chairman, Colin Frey, was unwell.",
+      "hypothesis": "Ruth Enderby is the chairman of the committee.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X23",
+      "family": "lighthouse-restoration",
+      "origin": "prospective",
+      "premise": "Restoration of the Cape Meldrum lighthouse began in 2019 and was finished in the spring of 2022. The lamp was relit that June.",
+      "hypothesis": "The restoration took about three years.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X24",
+      "family": "lighthouse-restoration",
+      "origin": "prospective",
+      "premise": "Restoration of the Cape Meldrum lighthouse began in 2019 and was finished in the spring of 2022. The lamp was relit that June.",
+      "hypothesis": "The restoration is still going on.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X25",
+      "family": "cookery-class-visitor",
+      "origin": "prospective",
+      "premise": "Hana Belhadj attended two of the Tuesday cookery classes at the Ferndale Institute as a guest of a friend who had enrolled for the term.",
+      "hypothesis": "Hana attended some of the cookery classes.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X26",
+      "family": "cookery-class-visitor",
+      "origin": "prospective",
+      "premise": "Hana Belhadj attended two of the Tuesday cookery classes at the Ferndale Institute as a guest of a friend who had enrolled for the term.",
+      "hypothesis": "Hana was enrolled in the cookery course.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X27",
+      "family": "river-gauge-flooding",
+      "origin": "prospective",
+      "premise": "The Teviot at Calderbridge burst its banks in the storms of 2013 and again in 2021. In the years between, the gauge never reached the flood mark.",
+      "hypothesis": "The river has flooded at Calderbridge more than once.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X28",
+      "family": "river-gauge-flooding",
+      "origin": "prospective",
+      "premise": "The Teviot at Calderbridge burst its banks in the storms of 2013 and again in 2021. In the years between, the gauge never reached the flood mark.",
+      "hypothesis": "The river floods at Calderbridge most years.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X29",
+      "family": "pottery-apprentice",
+      "origin": "prospective",
+      "premise": "Before setting up her own kiln in Bantry, Niamh Corrigan spent two years apprenticed to the potter Arne Sundqvist, learning to throw large vessels.",
+      "hypothesis": "Niamh was Arne Sundqvist's apprentice.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X30",
+      "family": "pottery-apprentice",
+      "origin": "prospective",
+      "premise": "Before setting up her own kiln in Bantry, Niamh Corrigan spent two years apprenticed to the potter Arne Sundqvist, learning to throw large vessels.",
+      "hypothesis": "Arne Sundqvist was Niamh's business partner.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X31",
+      "family": "vineyard-harvest-hands",
+      "origin": "prospective",
+      "premise": "At the Domaine Garrigou the harvest is brought in by hand each September, with thirty or so pickers taken on for the fortnight. The rest of the year five people work the vines.",
+      "hypothesis": "The domaine takes on extra pickers for the September harvest.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X32",
+      "family": "vineyard-harvest-hands",
+      "origin": "prospective",
+      "premise": "At the Domaine Garrigou the harvest is brought in by hand each September, with thirty or so pickers taken on for the fortnight. The rest of the year five people work the vines.",
+      "hypothesis": "The domaine employs thirty pickers all year round.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X33",
+      "family": "night-bus-route",
+      "origin": "prospective",
+      "premise": "The number 12 bus serves Halloran Street between six in the morning and eleven at night. After that the street has no service until morning.",
+      "hypothesis": "The number 12 serves Halloran Street at nine in the evening.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X34",
+      "family": "night-bus-route",
+      "origin": "prospective",
+      "premise": "The number 12 bus serves Halloran Street between six in the morning and eleven at night. After that the street has no service until morning.",
+      "hypothesis": "The number 12 serves Halloran Street at three in the morning.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X35",
+      "family": "library-book-condition",
+      "origin": "prospective",
+      "premise": "Readers at the Pembury Subscription Library may borrow from the rare-book room only with a librarian's written permission, and the volumes must stay in the building.",
+      "hypothesis": "Borrowing from the rare-book room requires a librarian's written permission.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X36",
+      "family": "library-book-condition",
+      "origin": "prospective",
+      "premise": "Readers at the Pembury Subscription Library may borrow from the rare-book room only with a librarian's written permission, and the volumes must stay in the building.",
+      "hypothesis": "Any reader may take a rare volume home.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X37",
+      "family": "boatyard-repair-status",
+      "origin": "prospective",
+      "premise": "The trawler Mary Vane has been hauled out at Quinlan's boatyard since August, waiting on a new gearbox that has not yet arrived from Aberdeen.",
+      "hypothesis": "The Mary Vane is out of the water at the boatyard.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X38",
+      "family": "boatyard-repair-status",
+      "origin": "prospective",
+      "premise": "The trawler Mary Vane has been hauled out at Quinlan's boatyard since August, waiting on a new gearbox that has not yet arrived from Aberdeen.",
+      "hypothesis": "The Mary Vane has been repaired and is fishing again.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "X39",
+      "family": "school-visiting-tutor",
+      "origin": "prospective",
+      "premise": "Every Wednesday a visiting tutor, Mr Oyelaran, comes to Thornhill Primary to take the violin group. The school's own music lessons are given by Miss Kettering.",
+      "hypothesis": "Mr Oyelaran teaches the violin group at Thornhill Primary.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X40",
+      "family": "school-visiting-tutor",
+      "origin": "prospective",
+      "premise": "Every Wednesday a visiting tutor, Mr Oyelaran, comes to Thornhill Primary to take the violin group. The school's own music lessons are given by Miss Kettering.",
+      "hypothesis": "Mr Oyelaran is the school's music teacher.",
+      "expected": "not_entailed"
+    }
+  ]
+}
