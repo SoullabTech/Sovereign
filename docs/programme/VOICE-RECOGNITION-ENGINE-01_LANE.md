@@ -782,14 +782,19 @@ The only path that reaches the page without building anything is
   `registerPlugin`, so if the native bridge is absent the Probe fails with
   "not implemented" and the A/B cannot even start. A Probe that returns
   `engineSelected` is therefore proof the bridge is real in that build.
-- The Swift binary is identical in both modes; only the web-asset source
-  and `capacitor.config.json` differ. Record the mode on every evidence line.
+- The native source subject and native build configuration are unchanged;
+  dev mode changes the WebView content source and Capacitor configuration.
+  (Binary identity across the two Xcode runs is not claimed — it was not
+  hashed.) Record the mode on every evidence line.
 
 **Ruling requested (founder):** accept dev-mode bridge evidence for steps 3–4
 (Probe, A/B), with the mode recorded — or hold those steps until the P12
 replacement diagnostic exists (a build act, refused under §8). Recommendation:
 accept; the `/maia` smoke stays on the beta bundle so the shared-seam claim
 remains production-faithful.
+
+*Ruled 2026-09-11 — see §12.7. The runbook below is superseded by the
+§12.7 sequence where the two differ; §12.7 governs.*
 
 #### Step 1–2 · Install the beta bundle, run the `/maia` smoke
 
@@ -859,3 +864,104 @@ On the device: sign in on the dev origin, open `/voice-controller-test`.
 Bring back the raw lines; adjudication happens in §10.2 vocabulary and is
 recorded as §13 by the remote session. No source change accompanies it.
 
+### 12.7 Founder ruling — dev-mode evidence admissibility, two-layer record, frozen sequence — 2026-09-11
+
+**Ruling (verbatim core).** *ACCEPT dev-mode bridge evidence for Steps 3–4.
+Do not wait for a P12 replacement diagnostic.* The Step 1 correction stands:
+a fresh worktree needs the web bundle generated before installation. Record
+the web layer separately from the native subject.
+
+```text
+RULING
+Dev-mode evidence is admissible for Probe + native A/B.
+
+BOUNDARY
+It establishes native-candidate behavior only.
+It does NOT establish production integration,
+production routing, static-beta availability,
+or that normal /maia is using VoiceController.
+```
+
+**Wording correction (applied to §12.6).** The record does not say the Swift
+binary is identical in both modes — that would require hashing the
+executable and was not done. It says: *the native source subject and native
+build configuration are unchanged; dev mode changes the WebView content
+source and Capacitor configuration.*
+
+**Rationale preserved.** The lane's governing question (§10) is narrower than
+production integration: *is the new native subsystem a viable candidate.*
+The `/maia` smoke asks whether the shared Swift seam (the
+`AudioSessionManager.swift` teardown edit) damaged today's product; the
+native A/B asks whether the new subsystem merits integration. Those are two
+questions with two evidence surfaces. Waiting for a native-shell diagnostic
+would require new construction in a frozen lane and would not answer a
+different scientific question — the Probe is already falsifiable
+(`not implemented` / `web` without bridge / wrong engine resolved = FAIL).
+Dev-mode evidence may decide native-candidate viability; it may not be
+promoted into evidence of production integration.
+
+**Two-layer evidence header (required on the §13 record).**
+
+```text
+NATIVE SUBJECT: 73d0df30d
+WEB BUNDLE: beta static export at <actual SHA>
+APP VERSION:
+BUILD:
+DEVICE:
+iOS:
+XCODE:
+SDK:
+LOCALE:
+INSTALL METHOD:
+```
+
+The native subject is the Swift source + Xcode configuration at `73d0df30d`
+(unchanged through `2bfdc9d38` and this record — docs only). The web bundle
+is whatever `npm run ios:bundle` produced from the checked-out SHA; record
+the SHA actually built, not the one intended.
+
+**Frozen sequence (founder, 2026-09-11) — supersedes §12.5 / §12.6 ordering.
+Each step is a STOP on failure.**
+
+1. Build the beta static bundle from the exact witness subject
+   (`npm run ios:bundle` on the checked-out branch tip; `/maia` in,
+   `/voice-controller-test` out by design — §12.6 finding).
+2. Install on the physical iPhone (Xcode Run, Debug; no build-number bump).
+3. Record both layers using the header above.
+4. Run `/maia` shared-seam smoke S1–S4 (§11.6) on that beta bundle.
+   Record `LIVE PATH SMOKE: PASS / FAIL`, one line per step.
+5. Any failure → **STOP.** Classify before anything else; no dev mode.
+6. Only after PASS: re-sync into Capacitor dev mode on the **same native
+   source** (`CAPACITOR_MODE=dev … npx cap sync ios`, Run again on the same
+   device; commands in §12.6 Step 3–4). No source change; no plist change;
+   an ATS exception would be a change, not a witness → STOP and record.
+7. Record `MODE: CAPACITOR DEV` on **every** Probe / A-B evidence line.
+8. Run the Probe for `baseline` → `modern` → `dictation`: requested engine ·
+   `engineSelected` · availability flags · locale support · selection reason.
+9. If the Probe says `not implemented`, reports `web` without the bridge,
+   resolves the wrong engine (modern reported, legacy executed), or otherwise
+   cannot prove `VoiceController` is native → **STOP.**
+10. If the Probe passes: frozen A/B on the same phone — baseline → modern →
+    baseline → modern; same passage, room, distance; F1–F10 per run; O1–O6.
+11. Adjudicate **only** in §10.2 vocabulary:
+    `NATIVE CANDIDATE REJECTED | NATIVE CANDIDATE EXPERIMENTAL | PRODUCTION INTEGRATION RECOMMENDED`.
+    Even the last is a STOP, not an authorization (§10.3).
+12. Restore / discard the dev-mode generated state afterward
+    (`capacitor.config.json`, synced `ios/App/App/public`, any
+    `CAPACITOR_MODE` residue). **Nothing from dev mode gets committed as
+    product configuration.** `git status` on `ios/` must show no dev-mode
+    residue before §13 is written.
+
+**Evidence labelling rule.** Steps 4–5 evidence carries
+`WEB BUNDLE: beta static export at <SHA>` and speaks to the shared seam on
+today's product. Steps 8–10 evidence carries `MODE: CAPACITOR DEV` and
+speaks to native-candidate viability only. A §13 sentence that cites
+dev-mode evidence for a production-integration, production-routing,
+static-beta-availability, or `/maia`-uses-`VoiceController` claim is
+inadmissible by this ruling.
+
+**Status after this record.** SECOND NATIVE COMPILE COMPLETE — O1
+PROVISIONALLY PASS — DEV-MODE EVIDENCE RULED ADMISSIBLE (BOUNDED) — INSTALL +
+SMOKE PENDING. §13 is reserved for the adjudication and is the Mac's
+evidence to produce; the remote session records it, relayed, and adds no
+source change.
