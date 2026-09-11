@@ -926,3 +926,67 @@ one stalled reply yields: the registration line at launch, the
 `[AudioSessionManager]` Swift-side transition lines, and any errors,
 in order. Record for that run: `INSTALL METHOD: Xcode Run (Debug)`, same
 source `0debe8b09`.
+
+### E13 · 2026-09-11 · Xcode console at launch — registration PROVEN on the live device
+
+`INSTALL METHOD: Xcode Run (Debug)` from
+`/Users/soullab/maia-runtime-01/ios/App/App.xcworkspace`, branch
+`claude/ios-runtime-01-audiosession-registration`, destination "Kelly
+Nezat's iPhone". This is a **new install and a new container**
+(`BFAC52F7-6D2C-4164-AB3A-22B50F6AC8EC`), distinct from the `devicectl`
+install of E10 (`AB2CDB3F-…`). Native source subject unchanged; the web
+bundle under `ios/App/App/public` is the one synced in E10 (expected
+`0debe8b09`) — **footer not yet read, so the bundle SHA is still
+unwitnessed for this run**. Bundle fingerprint visible in the capture:
+chunk `3224-b67c0e15ebd0990a.js`.
+
+**Console, first lines after process start (verbatim order):**
+
+```text
+`UIScene` lifecycle will soon be required. Failure to adopt will result in an assert in the future.
+Reading from public effective user settings.
+Could not create a sandbox extension for '/var/containers/Bundle/Application/BFAC52F7-6D2C-4164-AB3A-22B50F6AC8EC/App.app'
+[MAIABridgeViewController] registered in-app plugin: AudioSessionManager
+⚡️  Loading app at capacitor://localhost...
+⚡️  JS Eval error A JavaScript exception occurred
+```
+
+**Finding.** The registration `NSLog` fires **before** the bridge loads
+the web view — the position `capacitorDidLoad()` occupies. Combined with
+E11 (UIKit names `App.MAIABridgeViewController` as the root VC) this
+closes the registration question on-device: the subclass is instantiated,
+`capacitorDidLoad()` executes, and `AudioSessionManager` is handed to the
+bridge. **`log collect` was blind to this line (E11); the Xcode console is
+not.** The instrument is calibrated for Swift `NSLog` from this process.
+
+Also in the launch capture, recorded and not interpreted: the flags line
+reports `"VOICE_V2":true,"IOS_VOICE_NATIVE":true`; `SpeechRecognition
+available → {"available":true}` and `checkPermissions → granted`; identity
+parity `aligned`; the `JS Eval error A JavaScript exception occurred` line
+at first load is **unclassified** (it precedes the layout script and has
+no stack; whether it predates this build is unknown and is not this
+lane's question). No `[VoiceController]` and no `[AudioSessionManager]`
+lines yet — **no voice turn had been taken**, so their absence here is
+expected and is evidence of nothing.
+
+**Acceptance table after E13 (status column is this lane's, the verbatim
+table in §7.3 is the founder's):**
+
+```text
+AudioSessionManager compiled          YES   (E10: BUILD SUCCEEDED, strings 3 hits)
+AudioSessionManager registered        YES   (E13: registration NSLog on device)
+cap sync does not erase registration  YES   (E10: sync ran after the edit; E13 line survives it)
+web prepareForSpeaking call           reaches Swift   PENDING — needs one spoken reply
+web prepareForListening call          reaches Swift   PENDING — needs one listen re-entry
+native runtime trace                  visible on healthy turn   PENDING
+same S1–S4 voice walk                 performed   PENDING
+```
+
+**Owed for E14 (one capture, no filter):** the console from the first
+voice turn through a stall — expected on a healthy reply:
+`[AudioSessionManager] prepareForSpeaking called, previous state: …` →
+teardown lines → `Category set to playback/spokenAudio` → `Session
+activated for speaking`, and on mic re-entry the `prepareForListening`
+sequence; plus the Account Settings footer and Native App Build lines,
+S1–S4 one line each, one long utterance and one long reply. No source
+change is authorized by anything in E13.
