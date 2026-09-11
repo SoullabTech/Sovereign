@@ -706,13 +706,72 @@ BAD PARAPHRASE    same inventory · same node count · ONE property reassigned R
 ⭐ And **reordering does not launder a real defect** — the run-8/9 candidate
 shuffled is still refused.
 
+## ⭐ A-P and C-P — analyser PROTOCOL built · 25 falsifiers
+
+**Founder contract frozen before building.** `lib/manuscript/revision/analyze.ts`.
+
+```
+A sees the SOURCE, never the candidate.
+C sees the CANDIDATE, never the source.
+D sees the GRAPHS, never prose.
+B does not participate in deciding whether B succeeded.
+```
+
+### ⛔ The separation is STRUCTURAL, not prompt discipline
+
+```
+ONE shared prompt body      the only thing that differs between A and C is
+                            WHICH passage the caller hands in
+the signatures accept       analyzeSource(source) · analyzeCandidate(candidate)
+  no second passage         neither CAN receive the other's text
+the prompt names no         whole-word guard: candidate · revision · rewrite ·
+  comparison at all           writer · proposal · compare · original · pass ·
+                              fail · faithful
+it states outright          "There is no other passage."
+                            "no right answer you are being measured against"
+```
+
+### ⛔ The schema cannot express a judgement
+
+`additionalProperties: false` at **every** level; property values are a **closed
+enum**; and a falsifier asserts none of `faithful` · `should_pass` · `similarity` ·
+`score` · `advice` · `verdict` · `fidelity` is representable. **Nine runs of
+`reason` claiming a fidelity the wording did not have is why this is structural
+rather than instructed.**
+
+### ⭐ `unspecified` is taught as an ANSWER
+
+*"Unspecified is an answer, and the most common correct one."* Plus the three
+confusions every failed run made, as law rather than examples: **Importance is not
+size. Continuation is not effort. Change is not improvement.**
+
+### ⚠️ `kind` constrained, because it carries correspondence authority
+
+*"Two passages that say the same thing in different words should yield the same
+kinds — it describes the role, not the phrasing."* If synonymous expression changes
+`kind`, it has become a hidden lexical matcher, and **that must fail A/C acceptance
+rather than masquerade as semantic mismatch downstream** (AC-1).
+
+### ⚠️ A guard defect of mine, fixed and recorded
+
+The leak check used substring matching and failed on **`pass` inside `passage`** —
+the same crudeness that produced a false leak on `integration` inside
+`developmental` in the generation guard. Now whole-word. **A guard that cannot tell
+a word from a syllable is not a guard**, and this is the second time that exact
+shape has appeared.
+
 ```
 comparator (step D)        PASSED · 33 falsifiers
 SV-1 adequacy              RATIFIED · known-bad preserved
 node correspondence        STRUCTURE-ONLY alignment
                            positional RULED OUT · property tie-breaking REJECTED
-analyser prompts A and C   NOT BUILT
-analyser witnesses         NOT WITNESSED
+A-P · C-P protocol         BUILT · 25 falsifiers
+A-S source graph witness   ⛔ NOT WITNESSED
+C-S candidate witnesses    ⛔ NOT WITNESSED  (C-good · C-large · C-migration)
+AC-1 equivalent-paraphrase
+     decomposition compat  ⛔ REQUIRED · NOT WITNESSED
+AC-2 repeated-input
+     structural stability  ⛔ REQUIRED · NOT WITNESSED
 B generation integration   HELD
 full A->B->C->D witness    HELD
 ```
