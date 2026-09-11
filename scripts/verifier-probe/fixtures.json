@@ -1,0 +1,113 @@
+{
+  "note": "RC-GEN-01 verifier probe. ONE question: can an existing verifier reliably tell ASSOCIATED WITH from ACTUALLY PARTICIPATES IN? No MAIA integration, no graph changes, no orchestration.",
+  "expected_values": {
+    "entailed": "the premise commits to the hypothesis",
+    "not_entailed": "the premise does not commit (neutral) OR denies it (contradiction)"
+  },
+  "cases": [
+    {
+      "id": "N1-AS-ACTIVE",
+      "role": "negative",
+      "origin": "THE ACTUAL A-S FAILURE. Verbatim source; hypothesis is the edge A emitted.",
+      "premise": "The experience facilitated a significant transformation in his relational orientation toward the natural world, and the resulting shift in perspective constituted a meaningful development in his ongoing process of integration.",
+      "hypothesis": "He actively participates in the process of integration.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "N2-AS-UNDERGO",
+      "role": "negative",
+      "origin": "THE ACTUAL A-S FAILURE. The second edge A emitted.",
+      "premise": "The experience facilitated a significant transformation in his relational orientation toward the natural world, and the resulting shift in perspective constituted a meaningful development in his ongoing process of integration.",
+      "hypothesis": "He undergoes the transformation.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "N3-FRAGMENT",
+      "role": "negative",
+      "origin": "The possessive phrase alone — the minimal form of the failure.",
+      "premise": "his ongoing process of integration",
+      "hypothesis": "He actively participates in the integration.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "N4-ASSOCIATION",
+      "role": "negative",
+      "origin": "Independently written. Temporal co-location plus possession, no stated role.",
+      "premise": "The letter reached him in the middle of his long recovery.",
+      "hypothesis": "He actively participates in the recovery.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "N5-MENTION",
+      "role": "negative",
+      "origin": "Independently written. Being named in a document is not taking part in the thing documented.",
+      "premise": "Her name appears throughout the report on the merger.",
+      "hypothesis": "She actively participates in the merger.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "N6-DENIAL",
+      "role": "negative-control",
+      "origin": "Explicit denial. If a verifier cannot separate this from N1-N5 it is answering a coarser question than we need.",
+      "premise": "He took no part in the negotiation.",
+      "hypothesis": "He actively participates in the negotiation.",
+      "expected": "not_entailed"
+    },
+    {
+      "id": "P1-EXPLICIT",
+      "role": "positive",
+      "origin": "The founder's explicit control, minimally different from N3 in wording and maximally different in commitment.",
+      "premise": "He actively participated in the integration process.",
+      "hypothesis": "He actively participates in the integration.",
+      "expected": "entailed"
+    },
+    {
+      "id": "P2-DOING",
+      "role": "positive",
+      "origin": "Independently written. Participation stated as action, not as the word 'participate'.",
+      "premise": "She ran every trial in the study herself, adjusting the apparatus between runs.",
+      "hypothesis": "She actively participates in the study.",
+      "expected": "entailed"
+    },
+    {
+      "id": "P3-UNDERGO",
+      "role": "positive",
+      "origin": "Independently written. The passive role, explicitly licensed.",
+      "premise": "He was sedated throughout the operation.",
+      "hypothesis": "He undergoes the operation.",
+      "expected": "entailed"
+    },
+    {
+      "id": "P4-UNDERGO-2",
+      "role": "positive",
+      "origin": "Independently written. Passive role stated in the active voice from the other party.",
+      "premise": "The committee questioned her for three hours.",
+      "hypothesis": "She undergoes questioning.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X1-MIXED-ACTIVE",
+      "role": "positive",
+      "origin": "SV-4 shape, fresh words. One person, two roles. Tests selectivity WITHIN one premise.",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi actively participates in the first hearing.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X2-MIXED-UNDERGO",
+      "role": "positive",
+      "origin": "Same premise as X1, the other role. A verifier that scores these identically has not discriminated.",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi undergoes cross-examination at the second hearing.",
+      "expected": "entailed"
+    },
+    {
+      "id": "X3-MIXED-WRONG-WAY",
+      "role": "negative",
+      "origin": "Same premise, roles SWAPPED. The hardest case: every content word is licensed, the relation is not.",
+      "premise": "Ravi chaired the first hearing and was cross-examined at the second.",
+      "hypothesis": "Ravi undergoes the first hearing as its subject rather than its chair.",
+      "expected": "not_entailed"
+    }
+  ]
+}

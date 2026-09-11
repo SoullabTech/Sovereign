@@ -2294,3 +2294,211 @@ production          UNTOUCHED
 exhausted nine runs ago for generation; whether it is exhausted for *analysis* is a
 founder question, and the answer bears directly on whether a separated-analyser
 architecture can work at all when both analysers share the generator's disposition.
+
+## ⭐⭐ FOUNDER RULING ON A-S — A1 SPLIT · CAUSAL CLAUSE WITHDRAWN · SEPARATION ≠ INDEPENDENCE
+
+### ⭐ A1 SPLITS IN TWO, AND ONLY ONE HALF WAS REPAIRED
+
+```
+A1a  CATEGORY ERROR          ⭐ FIXED
+     analyzer/1   transformation.agency = undergone
+     analyzer/3   person --undergoes--> transformation
+     The ontology repair genuinely accomplished something.
+
+A1b  EPISTEMIC OVERCOMMIT    ⛔ NOT FIXED
+     "his ongoing process of integration"
+       -> person --actively_participates_in--> integration
+     ⛔ NO LONGER AN ONTOLOGY PROBLEM. An ENTAILMENT DISCIPLINE problem.
+```
+
+⛔ **The stronger causal statement is FORMALLY WITHDRAWN.** That ontology inadequacy
+was *materially producing* the overcommit predicted that repairing the ontology would
+reduce it. It did not. **The evidence no longer supports the clause.**
+
+```
+ontology repaired  ->  category placement repaired  ->  unsupported assertion PERSISTS
+```
+
+### ⭐⭐⭐ THE SENTENCE TO PRESERVE
+
+> ⛔⛔ **SEPARATION IS NOT INDEPENDENCE.**
+>
+> A separated analyser does not acquire epistemic independence merely by being
+> separated. The same model can carry the same completion pressure through both
+> roles.
+
+Empirically, not theoretically:
+
+```
+A            person --actively_participates_in--> integration
+C-large      person --actively_participates_in--> integration
+C-migration  person --actively_participates_in--> integration
+```
+
+### ⭐⭐ WHAT D MAY CLAIM — RECLASSIFIED
+
+```
+A ≠ C   ->  evidence of DIFFERENTIAL DRIFT
+A = C   ->  absence of differential drift
+            ⛔ NOT evidence of SOURCE FIDELITY
+```
+
+> ⛔ **D IS A DRIFT DETECTOR, NOT A TRUTH DETECTOR.** Agreement between two instances
+> of the same disposition cannot function as independent corroboration.
+
+⚠️ This does not make D useless. It bounds what a D admission is allowed to mean, and
+it is why proceeding to B now would **manufacture the appearance of corroboration
+exactly where there is none.**
+
+### ⭐ AC-2 — THE BOUNDARY WORKED; IT CANNOT REACH THE REAL QUESTION
+
+```
+actively_participates_in -> state      REFUSED
+actively_participates_in -> relation   REFUSED
+```
+
+⭐ Malformed claims refused rather than laundered into legal ones. But two
+**independent** dimensions of instability are now visible:
+
+```
+1  whether participation is WARRANTED AT ALL     <- the epistemic question
+2  what the alleged participation ATTACHES TO    <- the schema question
+
+the schema can police 2.   ⛔ it cannot decide 1.
+```
+
+### ⛔ THE PROMPT LEVER IS NOT YET EXHAUSTED FOR ANALYSIS
+
+Generation and analysis are different cognitive tasks — generation constructs a
+plausible continuation; analysis can be asked a much narrower question: *what
+propositions does this source actually license?* ⛔ **Exhaustion in generation does
+not logically establish exhaustion in analysis.**
+
+⭐ **ONE bounded hypothesis, not another nine-run spiral:**
+
+> **Can the analyser distinguish ASSOCIATION WITH a process from PARTICIPATION IN
+> that process, while still emitting participation when the source explicitly
+> licenses it?**
+
+⛔⛔ **THE TEST MAY NOT MERELY SUPPRESS PARTICIPATION.** Otherwise the easy "fix" is
+*never emit a participation edge*, and A-S passes for the wrong reason. The analyser
+must demonstrate **SELECTIVITY**, not conservatism:
+
+```
+unsupported  ->  ABSTAIN
+supported    ->  ASSERT
+```
+
+If a bounded analysis-specific instruction cannot produce that discrimination
+reliably, the lever is exhausted for analysis too — and the consequence is
+architectural: **two analysers sharing one model disposition cannot be treated as
+independent epistemic witnesses merely because they occupy separate stages.** Where
+independence would then come from (model heterogeneity · an entailment-specific
+verifier · evidence-bound admission) is a later decision. ⛔ **A-S does not authorize
+designing it now.**
+
+### ⚠️ PROVENANCE, STATED WITHOUT OVERSTATEMENT
+
+```
+A-S semantic criterion   ⛔ WITNESSED · FAILED
+full run provenance      ⚠️ IMPERFECT
+```
+
+Run 1's tree cleanliness is unrecoverable and the harness printed a stale SHA, so it
+is **not a pristine reproducibility witness for the release environment**. It **is**
+sufficient for the semantic finding: it reached the real provider and produced the
+output under test. ⭐ *The missing cleanliness evidence cannot transform those two
+edges into source-supported propositions.*
+
+> ⭐⭐ **We repaired the ontology and discovered that the ontology had been masking a
+> deeper epistemic behaviour. That is exactly what a good falsification sequence is
+> supposed to reveal.**
+
+## ⭐ NEXT ACT — VERIFIER PROBE · BUILT · NOT RUN
+
+**Founder ruling, narrowing twice in one turn.** The first message gave an
+evidence-first architecture (proposition extraction → entailment gate → ontology →
+graph) and named candidate off-the-shelf verifiers. The second **narrowed it to the
+smallest possible falsification**:
+
+```
+NOW      simple local falsification      <- this
+THEN     evaluation run over a matrix
+LATER    MAIA architecture integration
+```
+
+> ⛔ *"No graph changes. No MAIA integration. No orchestration."*
+
+### ⚠️ AND I HAD ALREADY BUILT THE THING THAT WAS RULED OUT
+
+Before the narrowing arrived I wrote `lib/manuscript/revision/evidence.ts` — the
+evidence/entailment gate, span verification, the promotion rule. ⛔ **That is a graph
+change and a MAIA integration.** Moved off the production path to
+`docs/programme/held/EVIDENCE_GATE_DRAFT_NOT_AUTHORIZED.ts`, **disclosed rather than
+quietly kept**. It is a draft under a ruling that has not been made.
+
+⭐ One observation from writing it is worth keeping, because it bounds what the
+evidence step can ever claim: **span verification catches FABRICATED evidence; it does
+NOT catch MISJUDGED entailment.** A-S's actual failure survives it — *"his ongoing
+process of integration"* is a **real span**, and citing it for
+`actively_participates_in` is a true citation of a phrase that does not license the
+claim. That is precisely why the entailment judgement needs independence from
+somewhere other than prompt role, and why this probe is the right next act.
+
+### THE ONE QUESTION
+
+> **Can an existing verifier reliably tell ASSOCIATED WITH a process from ACTUALLY
+> PARTICIPATES IN that process?**
+
+### The instrument — `scripts/verifier-probe/`
+
+`fixtures.json` · `probe.py`. Imports nothing from MAIA. Records exactly the four
+fields ruled: source text · proposed edge as a sentence · result/score · expected.
+
+```
+13 cases    6 positive (expect entailed)   7 negative (expect not_entailed)
+
+N1 · N2   ⭐ THE ACTUAL A-S FAILURE — verbatim source, and the two edges A emitted
+N3        the possessive fragment alone, the minimal form
+N4 · N5   independently written association: temporal co-location · being named
+N6        explicit denial — a control: a verifier that cannot separate this from
+          N1-N5 is answering a coarser question than we need
+P1        the founder's explicit control
+P2 · P3 · P4  independently written: participation as action · two passive roles
+X1 · X2 · X3  ⭐ SV-4 shape, fresh words, ONE premise: "Ravi chaired the first
+          hearing and was cross-examined at the second." Both roles must come back
+          right, and X3 SWAPS them — every content word licensed, the relation not.
+```
+
+### ⛔ Three disciplines built into the instrument
+
+**Label order is read from the model config, never hard-coded.** NLI checkpoints do
+not agree on whether index 0 is entailment. A probe that assumed one would report
+**the exact opposite finding with no error**. It refuses to report at all if no
+entailment label is present.
+
+**The two directions are never summed.** `asserted when licensed` and `abstained when
+unlicensed` are printed separately, and zero on the positive side prints a loud
+refusal — *blanket refusal is not selectivity, and a perfect negative column then
+means nothing*. This is the founder's own trap, enforced mechanically.
+
+**Repeats are checked for stability**, because A-S produced legal participation
+endpoints on one run and illegal ones on the next from the same passage.
+
+HHEM's threshold is a **reporting** cut only: every raw score is recorded, so a
+different cut can be applied to the same evidence without re-running.
+
+⛔ **NOT RUN. No model weights here, and the probe is local by design — sovereignty,
+no external API.** Dry run verified the fixtures load and print; nothing was measured.
+
+```
+python3 scripts/verifier-probe/probe.py --dry-run
+pip install torch transformers sentencepiece
+python3 scripts/verifier-probe/probe.py --model both --repeat 3
+```
+
+⚠️ **Check disk first** — the founder's volume was at 98% earlier today. DeBERTa-v3
+**large** ~1.7 GB (`--small` swaps to base, ~0.4 GB) · HHEM ~0.5 GB.
+
+⛔ **Standing unchanged: analyzer/3 UNTOUCHED · evidence gate HELD and unauthorized ·
+B HELD · A→B→C→D HELD · production UNTOUCHED.**
