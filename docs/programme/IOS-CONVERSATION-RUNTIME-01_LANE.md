@@ -677,3 +677,67 @@ authorize timeout or watchdog changes, and lengthening a timeout before the
 locus is known is the mitigation the founder refused for the stall. The
 proposal is preserved here as a candidate for the §6 step 3 rebuild, where
 timeouts become explicit bounded transitions rather than tunables.
+
+### E8 · 2026-09-11 · Keep exception during the long walk — classified as client/server version skew; disk-space custody ruling; export unblocked
+
+**Founder ruling on the Keep failure** (observed by the founder during the
+>5-minute conversation on the pre-repair build; not observed by the remote
+session; recorded from the founder's message):
+
+```text
+KEEP FAILURE
+
+SERVER CONTRACT        CURRENT · returns { draft }
+OLD CLIENT CONTRACT    expects { capsule.id }
+OBSERVED ERROR         undefined is not an object (evaluating 'n.capsule.id')
+                       MATCHES OLD CLIENT EXACTLY
+
+CLASSIFICATION         CLIENT/SERVER VERSION SKEW
+MAIA COGNITION         NOT IMPLICATED
+KEEP DATA              no evidence of loss
+CODE REPAIR            NOT INDICATED YET
+```
+
+Repo check (this branch): `2f42cca3c` (2026-08-28, "KEEP-OPEN-NONPERSISTENT-01:
+opening Keep writes nothing") is the repair; `OracleConversation.tsx` ~4687
+states that `data.capsule` is deliberately undefined on the opening path,
+and `data.capsule.id` survives only on the confirm path (~4803–4806).
+Consistent with the founder's fingerprint. **The voice loop holding for
+more than five minutes before an unrelated Keep UI contract failure ended
+the walk is preserved as positive runtime evidence on its own; the Keep
+exception does not contaminate the voice result.**
+
+Founder's tightening: build `2511` proves native identity, not the age of
+the bundled JavaScript (web assets can be re-synced without a bump). The
+two lines that settle it come from Account Settings on the phone — the
+**Native App Build** field (Capacitor `App.getInfo()`, `AccountSettings.tsx`
+~1934; `Web / Not native` if PWA) and the footer's bundled `BUILD_STAMP`
+commit + date (the `v1.1` prefix is a literal, E2). Requested; pending.
+
+**Disk-space custody ruling (founder), and what had already happened.**
+Order authorized: (1) witness worktree `.next` — AUTHORIZED; (2) Xcode
+DerivedData — CONDITIONAL on preserving the exact witnessed `.app` if it
+lives there; (3) `~/Library/Caches` — targeted only; (4) `/private/tmp` —
+HOLD, inspect first; (5) source / `.git` / `node_modules` / logarchives /
+witnessed app — HOLD. The founder's message cites 235 MiB free; that
+predates the cleanup. Reconciliation with what was deleted before the
+ruling arrived (E6 → this entry):
+
+| deleted | status against the ruling |
+|---|---|
+| `.next` in the three worktrees (≈5.3 GB) | authorized (1) |
+| `~/Library/Developer/Xcode/DerivedData` (2.0 GB) | condition (2) is **met**: the witnessed `.app` (E3, NATIVE `73d0df30d`) lives in `~/voice-witness-dd` (a separate `-derivedDataPath`, 647 MB), untouched; the repair build uses `~/voice-runtime01-dd` |
+| `~/Library/Caches/CocoaPods` (8 MB) | regenerable developer cache, within (3) |
+| `/private/tmp`, source, `.git`, `node_modules`, `phone2.logarchive`, `~/voice-witness-dd` | not touched |
+
+Free space after cleanup: 7.2 GiB. Evidence custody intact:
+`~/voice-witness-dd/Build/Products/Debug-iphoneos/App.app`,
+`~/voice-witness-logs/phone2.logarchive`, `capture2.txt`.
+
+**Export unblocked.** With `0debe8b09` checked out (the worktree had been
+on a detached HEAD at `4551a56ed`, which is why the first two re-runs
+failed identically), `build-ios-static.sh` logged
+`Excluded (web-only): app/reflections`, exported 503 pages with `/maia`
+present, and `cap sync` completed: bundled `packageClassList` still omits
+the plugin (expected, `0`), storyboard carries `MAIABridgeViewController`
+(`1`), tree clean. Native build + install + device witness: pending.
