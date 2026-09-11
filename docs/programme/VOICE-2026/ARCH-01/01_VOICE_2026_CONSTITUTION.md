@@ -1,6 +1,6 @@
-# The Voice 2026 Constitution — CANDIDATE
+# The Voice 2026 Constitution — RATIFIED
 
-**Act:** ARCH-01 · artifact 1 · 2026-09-11 · **Status:** CANDIDATE, awaiting founder ratification as a set (see `00_README.md` §2) — except VOICE-10, VOICE-17, VOICE-19 and VOICE-20, whose statements are already **RULED** by founder acts recorded in `00_README.md` §2a.
+**Act:** ARCH-01 · artifact 1 · 2026-09-11 · **Status:** **RATIFIED — founder act, 2026-09-11** (`00_README.md` §2b): *VOICE-01 through VOICE-20 are RATIFIED as the Voice 2026 Constitution*, with two amendments recorded in place below (VOICE-14 causal gate; VOICE-18 turn-continuity retention). VOICE-10, -17, -19, -20 were ruled earlier the same day (§2a).
 
 Twenty articles — eighteen from the research (§6) and two from founder rulings on the census (F2; the JARVIS distinction). Each carries: the **statement** (research §6, verbatim in substance); the **evidence** that made it necessary (census, by part and section); the **falsifier** — the observable event that proves the article violated; and the **gate** that would catch it. Gate kinds: **S** = automated source gate (a test that fails on the code shape) · **D** = device gate (a predeclared on-device witness) · **P** = policy gate (a configuration/runtime check). *Every article must be falsifiable or it is not law.*
 
@@ -90,7 +90,17 @@ The constitution governs the new organism (`VoiceKernel` and everything on the i
 **Statement.** A fixed silence threshold may contribute to a turn decision but cannot be the sole definition of human completion.
 **Evidence.** 2500 / 1500 / 3500 / 10000 ms literals as sole closers (P4 §3); the research's human-timing evidence (§11).
 **Falsifier.** A `turnCommitted` whose evidence list contains only an elapsed-silence item.
-**Gate.** S — the commit event's evidence list is typed and must carry ≥ 2 evidence kinds, or an explicit member gesture; D — the reflective-pause falsifier (research §14.3): *a person pauses for several seconds, continues the same thought, and MAIA does not seize the floor.*
+**Gate — AMENDED by the founder act (2026-09-11).** *A turn may not be committed solely because a silence duration elapsed. A non-silence completion signal or explicit member gesture must participate in the causal basis for commitment.* S — the commit event's typed evidence list is rejected if its only item is an elapsed-silence record. The earlier "≥ 2 evidence kinds" wording is withdrawn: it could reject a very good acoustic/semantic turn model merely for being one highly informative source, legislating today's model architecture into tomorrow's.
+
+```text
+silence alone                          → NEVER sufficient
+silence + semantic completion          → potentially sufficient
+silence + acoustic completion          → potentially sufficient
+semantic/acoustic turn model alone     → potentially sufficient, if its declared policy allows it
+explicit "send / done / stop" gesture  → sufficient
+```
+
+D — the reflective-pause falsifier (research §14.3): *a person pauses for several seconds, continues the same thought, and MAIA does not seize the floor.*
 
 ### VOICE-15 — No unbounded retries
 **Statement.** Every recovery attempt carries a generation ID, retry budget, backoff, and terminal degraded state visible to the member.
@@ -114,7 +124,7 @@ The constitution governs the new organism (`VoiceKernel` and everything on the i
 **Statement.** Raw audio is ephemeral by default. Derived prosodic or affective features require an explicit purpose and retention policy; they must not quietly become personality/mental-state surveillance.
 **Evidence.** Sovereignty Invariants and the growth-obligation check (CLAUDE.md): every capability increase owes provenance, restraint and transparency; research §11.3, §20.5.
 **Falsifier.** Raw PCM persisted beyond the turn without a declared purpose; a prosodic feature stored or forwarded to cognition without an entry in the policy's retention table.
-**Gate.** P — policy §5 retention table; S — the `CognitionBridge` payload type carries committed text and declared interaction-control features only.
+**Gate.** P — policy §5 retention table, **as amended by the founder act**: recognizer partials and segments are ephemeral; *the human turn must survive them* — the runtime keeps the minimum turn-scoped continuity state needed to preserve the complete uncommitted turn across segmentation, recognizer replacement or recovery, and persists nothing beyond the turn unless canonical memory law independently permits the committed text. S — the `CognitionBridge` payload type carries committed text and declared interaction-control features only.
 
 ### VOICE-19 — Capture custody is granted, never acquired — **RULED (founder F2, 2026-09-11)**
 **Statement.** *No feature may independently acquire conversational microphone custody. Capture is granted only through the single voice authority.* A feature that needs audio (the composer, a journal, a lab) requests a bounded capture from the kernel; it never opens its own engine, recorder, or `AVAudioSession` regime.

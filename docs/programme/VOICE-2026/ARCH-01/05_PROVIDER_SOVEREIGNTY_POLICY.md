@@ -1,6 +1,6 @@
-# Provider & Sovereignty Policy — CANDIDATE
+# Provider & Sovereignty Policy — RATIFIED
 
-**Act:** ARCH-01 · artifact 5 · 2026-09-11 · **Status:** CANDIDATE.
+**Act:** ARCH-01 · artifact 5 · 2026-09-11 · **Status:** **RATIFIED — founder act, 2026-09-11** (`00_README.md` §2b item 3), with the §5 transcript-retention row amended in place.
 **Law it implements:** VOICE-11, VOICE-17, VOICE-18; CLAUDE.md *MAIA Sovereignty* ("never use OpenAI or other cloud AI providers"; "voice: local TTS/STT or browser APIs only"); Sanctuary invariants.
 
 > *Sovereignty is a routing invariant, not a mission statement.* (research §13)
@@ -53,7 +53,7 @@ The `thirdPartyCloud` row is the executable form of the vow. It is not a prefere
 |---|---|---|
 | Raw PCM (input) | ephemeral; buffer lifetime only | any persistence needs a declared purpose, a member-visible consent, and a TTL |
 | Raw PCM (output) | ephemeral | same |
-| Transcript hypotheses (partials) | ephemeral; last partial only for continuity | never stored |
+| Transcript hypotheses and recognizer segments — **AMENDED by the founder act** | ephemeral. *The runtime may retain the minimum turn-scoped continuity state required to preserve the complete uncommitted human turn across segmentation, recognizer replacement, or recovery.* (The earlier "last partial only" wording is withdrawn: it recreated the E16.1 mistake.) | never persisted beyond the turn unless existing member-authorized canonical memory law independently permits the resulting committed text |
 | Committed member text | passes to canonical MAIA under existing memory consent | governed by Sanctuary / memory rules, not by this policy |
 | Interaction-control features (VAD score, pause length, overlap flags) | ephemeral; journalled as timing only | may reach `TurnCoordinator` / `InterruptionController`; never cognition |
 | Prosodic / affective features | **not derived** in Voice 2026 v0 | a future derivation needs its own purpose statement, retention row and founder act; it may never be used for personality or mental-state inference (research §20.5; Sovereignty Invariants) |
@@ -71,7 +71,17 @@ The `thirdPartyCloud` row is the executable form of the vow. It is not a prefere
 
 ## 7. Migration consequence (binds `MIGRATE-01`)
 
-`MIGRATE-01` cannot be accepted while any reachable spoken-output path on `/maia` iOS resolves to a `thirdPartyCloud` provider. The current default (`/api/voice/openai-tts` → OpenAI unless flags + archetype) is therefore a **migration prerequisite**, not a patch to make now: the route's Kokoro path is a candidate `ownedServer` adapter for BENCH-01, and until an allowed adapter passes BENCH-01 the honest production state under this policy is *degraded voice, text continuity*. Whether that interim is acceptable is a founder call recorded in `00_README.md` §2 (it is the sharp edge of D5).
+`MIGRATE-01` cannot be accepted while any reachable spoken-output path on `/maia` iOS resolves to a `thirdPartyCloud` provider. The current default (`/api/voice/openai-tts` → OpenAI unless flags + archetype) is therefore a **migration prerequisite**, not a patch to make now: the route's Kokoro path is a candidate `ownedServer` adapter for BENCH-01.
+
+**RATIFIED (founder, 2026-09-11):** *Until an allowed voice adapter qualifies through BENCH-01, degraded voice with intact text continuity is the lawful production posture. Availability does not outrank sovereignty. A speech failure may reduce modality; it may not silently change custody.*
+
+```text
+sovereign TTS available    → speak
+sovereign TTS unavailable  → VOICE DEGRADED + text remains available
+never                      → "just use OpenAI"
+```
+
+Legacy boundary: this does not turn ARCH-01 into a repair of the frozen runtime — E19/E20 may still exercise the old system as evidence. But once Voice 2026 provider policy governs a production path, that path may not continue using OpenAI TTS merely because BENCH-01 has not finished. That is what fail-closed means.
 
 ## 8. What this policy does not decide
 

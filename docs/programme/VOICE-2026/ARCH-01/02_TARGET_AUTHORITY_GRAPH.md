@@ -1,6 +1,6 @@
-# Target Authority Graph — CANDIDATE
+# Target Authority Graph — RATIFIED
 
-**Act:** ARCH-01 · artifact 2 · 2026-09-11 · **Status:** CANDIDATE.
+**Act:** ARCH-01 · artifact 2 · 2026-09-11 · **Status:** **RATIFIED** with ARCH-01 (founder act, `00_README.md` §2b).
 
 The census (§2) drew the *actual* authority graph and found overlapping authority at every node. This artifact draws the *target* graph so that each of the four authority questions has exactly one answer. Components are named as in the research (§5); the graph is about **who may**, not about code structure.
 

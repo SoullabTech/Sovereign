@@ -1,6 +1,6 @@
-# Migration Boundary — CANDIDATE
+# Migration Boundary — RATIFIED
 
-**Act:** ARCH-01 · artifact 4 · 2026-09-11 · **Status:** the four label sets in §1–§4 are **RATIFIED (founder, 2026-09-11)** with one refinement — recognizers, TTS engines, VAD, semantic/acoustic turn models, diagnostics and transport are **ADAPT**: *instruments feeding the runtime, not authorities governing it*. The per-item reconciliation and §5–§6 remain CANDIDATE.
+**Act:** ARCH-01 · artifact 4 · 2026-09-11 · **Status:** the four label sets in §1–§4 are **RATIFIED (founder, 2026-09-11)** with one refinement — recognizers, TTS engines, VAD, semantic/acoustic turn models, diagnostics and transport are **ADAPT**: *instruments feeding the runtime, not authorities governing it*. The per-item reconciliation and §5–§6 are RATIFIED with ARCH-01 (founder act, `00_README.md` §2b).
 
 Labels (charter §9): **KEEP** concept and implementation survive · **ADAPT** concept survives, implementation changes · **REPLACE** responsibility survives, owner changes · **REMOVE** the responsibility should no longer exist. The census (§4) proposed dispositions per subsystem; the research (§16) proposed them per responsibility. This artifact reconciles the two into one boundary. Where they differ, the row says so.
 

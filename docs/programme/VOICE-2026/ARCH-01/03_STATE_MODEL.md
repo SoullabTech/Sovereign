@@ -1,6 +1,6 @@
-# Orthogonal State Model — CANDIDATE
+# Orthogonal State Model — RATIFIED
 
-**Act:** ARCH-01 · artifact 3 · 2026-09-11 · **Status:** CANDIDATE.
+**Act:** ARCH-01 · artifact 3 · 2026-09-11 · **Status:** **RATIFIED** with ARCH-01 (founder act, `00_README.md` §2b). Turn custody (§1, §3) is bound by the amended VOICE-18 retention rule: partials and segments are ephemeral; the human turn survives them.
 
 The legacy runtime compressed several truths into booleans and refs — `isListening`, `isRecording`, `micState`, `nativeStatusRef`, `isMuted`, `isSpeaking`, four in-flight latches, three mode flags (census P4 §4a) — and no single place knew the whole state. Voice 2026 keeps **four orthogonal dimensions** — physical, conversational, turn, output (founder, 2026-09-11) — plus one **generation counter**, each with one writer. Two rules bind the whole model: **there is no giant `isListening` boolean**, and **no model event may masquerade as system state** — a recognizer final, a VAD stop, a synthesizer EOF are evidence records, never state transitions.
 

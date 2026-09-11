@@ -2,7 +2,7 @@
 
 **Act:** `ARCH-01` — *ratify architecture before source changes* (charter §5; research §21).
 **Branch:** `claude/voice-2026-census-01` · **Date:** 2026-09-11
-**Status:** DRAFTED FOR RATIFICATION · no production code · nothing here is law until a founder act says so.
+**Status:** **RATIFIED — founder act, 2026-09-11** (§2b), with three narrow amendments recorded in place (VOICE-14 causal gate · turn-continuity retention · K00-06 duplex gate + K00-11 Bluetooth wording). No production code. **KERNEL-00 is NOT open** — ratifying what shall be built is not the same act as authorizing someone to start building it.
 
 **Inputs of record**
 
@@ -36,18 +36,20 @@ Ratification is also **falsification-first** (founder, 2026-09-11: *"only when t
 
 Recommended by the research §22 and by the founder's 2026-09-11 message. Column three is edited only by a founder act.
 
+> **D1–D10 RATIFIED, founder, 2026-09-11.** Together they define the architectural standing of Voice 2026. They are not independent suggestions to be selectively weakened during implementation.
+
 | ID | Decision | Status |
 |---|---|---|
-| D1 | Native `VoiceKernel` is the sole iOS conversational audio authority. | PROPOSED |
-| D2 | The WebView does not own iOS conversational capture or playback. | PROPOSED |
-| D3 | Canonical MAIA cognition remains separate from voice infrastructure. | PROPOSED |
-| D4 | Exactly one `TurnCoordinator` commits human turns. | PROPOSED |
-| D5 | Speech providers/models are adapters governed by executable sovereignty policy. | PROPOSED |
-| D6 | The runtime supports local and sovereign-server deployment profiles from one architecture. | PROPOSED |
-| D7 | Full-duplex speech models are a planned experimental backend, not the production constitution. | PROPOSED |
-| D8 | The legacy runtime is frozen after bounded witness work (E19/E20) and is not incrementally transformed into `VoiceKernel`. | PROPOSED (E21 already rules the freeze; D8 adds "not transformed into") |
-| D9 | `KERNEL-00` precedes model selection (`BENCH-01`) and MAIA reconnection (`BRIDGE-01`). | PROPOSED |
-| D10 | Runtime health is physical/observable, not inferred from component booleans. | PROPOSED |
+| D1 | Native `VoiceKernel` is the sole iOS conversational audio authority. | **RATIFIED** (2026-09-11) |
+| D2 | The WebView does not own iOS conversational capture or playback. | **RATIFIED** (2026-09-11) |
+| D3 | Canonical MAIA cognition remains separate from voice infrastructure. | **RATIFIED** (2026-09-11) |
+| D4 | Exactly one `TurnCoordinator` commits human turns. | **RATIFIED** (2026-09-11) |
+| D5 | Speech providers/models are adapters governed by executable sovereignty policy. | **RATIFIED** (2026-09-11) |
+| D6 | The runtime supports local and sovereign-server deployment profiles from one architecture. | **RATIFIED** (2026-09-11) |
+| D7 | Full-duplex speech models are a planned experimental backend, not the production constitution. | **RATIFIED** (2026-09-11) |
+| D8 | The legacy runtime is frozen after bounded witness work (E19/E20) and is not incrementally transformed into `VoiceKernel`. | **RATIFIED** (2026-09-11) |
+| D9 | `KERNEL-00` precedes model selection (`BENCH-01`) and MAIA reconnection (`BRIDGE-01`). | **RATIFIED** (2026-09-11) |
+| D10 | Runtime health is physical/observable, not inferred from component booleans. | **RATIFIED** (2026-09-11) |
 
 ## 2a. Founder acts recorded 2026-09-11 (after CENSUS-01 assembly) — RULED
 
@@ -66,6 +68,30 @@ Verbatim substance; these are law for the future architecture from this date. Th
 | **JARVIS layer** | Designing MAIA's auditory and vocal nervous system is a JARVIS flow; the resulting `VoiceKernel` is not JARVIS. **JARVIS stays out of the realtime audio path**: ONE VoiceKernel · ONE SessionAuthority · ONE TurnCoordinator · ONE OutputController — no committee, no agent negotiation. VOICE-2026 is named a canonical JARVIS collaboration exemplar. | New article VOICE-20; `../JARVIS_EXEMPLAR_NOTE_2026-09-11.md` |
 
 **D1–D10 status after these acts:** substantively covered (D1/D2 by F2 and VOICE-19/20; D4 by the ratified REPLACE of turn commitment; D5 by F1; D8 by E21 + the ratified boundary; D10 by F3/VOICE-08), but **not yet ratified as a set by number**. The ledger in §2 stays PROPOSED until a founder act names them.
+
+## 2b. Founder Act — ARCH-01 (2026-09-11, on the package at `e3190db16`)
+
+Recorded verbatim in substance. Three narrow amendments; no design cycle reopened.
+
+1. **D1–D10 — RATIFIED AS A SET** (§2). D8 closes the temptation to "evolve" the legacy implementation into the new one; D9 preserves the order — prove the physical organism before choosing models or reconnecting MAIA; D10 establishes physical observation, not `isListening`-style belief, as runtime truth.
+2. **Constitution — RATIFIED WITH TWO AMENDMENTS.** *VOICE-01 through VOICE-20 are RATIFIED as the Voice 2026 Constitution.* (a) **VOICE-14**: the law stands (*silence is evidence, never a verdict by itself*); the source gate "≥ 2 evidence kinds, or an explicit member gesture" is replaced — *a turn may not be committed solely because a silence duration elapsed; a non-silence completion signal or explicit member gesture must participate in the causal basis for commitment* — so a single highly informative acoustic/semantic turn model is not rejected by fiat and today's model architecture is not legislated into tomorrow's. (b) **VOICE-18 / provider retention**: the phrase "ephemeral; last partial only for continuity" does not survive — it is perilously close to the conceptual mistake that produced E16.1. Replaced by: *transcript hypotheses and recognizer segments are ephemeral; the runtime may retain the minimum turn-scoped continuity state required to preserve the complete uncommitted human turn across segmentation, recognizer replacement, or recovery; it is never persisted beyond the turn unless existing member-authorized canonical memory law independently permits the resulting committed text.* Recognizer partials and segments are ephemeral; **the human turn must survive them.**
+3. **Provider §7 — RATIFIED: degraded voice + text continuity.** *Until an allowed voice adapter qualifies through BENCH-01, degraded voice with intact text continuity is the lawful production posture. Availability does not outrank sovereignty. A speech failure may reduce modality; it may not silently change custody.* Legacy boundary: this does not turn ARCH-01 into a repair of the frozen runtime; E19/E20 may still exercise the old system as evidence; but once Voice 2026 provider policy governs a production path, **that path may not continue using OpenAI TTS merely because BENCH-01 has not finished** — that is what fail-closed means.
+4. **KERNEL-00 thresholds — six of seven RATIFIED exactly as written** (entry ≤ 1 500 ms · digital-zero detection ≤ 2 000 ms · output-stall detection ≤ 1 000 ms · cancel ≤ 100 ms · recovery 3/fault/60 s at 500/1 000/2 000 ms · 60 min / ≥ 50 cycles / routes / interruptions / reset). They are first constitutional ceilings and **may not later be loosened because an implementation misses them.** **Duplex residual — AMENDED**: the harness-declared tolerance was circular; K00-06 now proves *duplex physiology* (input callbacks continue, input does not collapse to digital zero, input/output health independently observable; echo coupling measured and recorded per route), and quantitative echo-suppression qualification moves to KERNEL-01/BENCH-01. **K00-11 Bluetooth — clarified**: exercise speaker ↔ receiver and every Bluetooth topology the OS admits on the witness device; at least one Bluetooth transition when compatible hardware is available; unsupported combinations are platform capability, not recovery failures — but once a route is admitted, *manual mic tap needed after route change = FAIL*, no softness.
+5. **Standing after these acts:**
+
+```text
+CENSUS-01       CLOSED / ASSEMBLED
+F1–F4           RULED
+D1–D10          RATIFIED
+VOICE-01…20     RATIFIED · with VOICE-14 causal-gate amendment
+MIGRATION       RATIFIED dispositions
+PROVIDER LAW    RATIFIED · fail closed → degraded voice + text continuity
+K00 THRESHOLDS  RATIFIED · except duplex acoustic-quality gate moved downstream
+ARCH-01         RATIFIED · these exact amendments recorded (this commit)
+KERNEL-00       NOT YET OPEN
+```
+
+6. **KERNEL-00 is not opened by this act.** Not because more research is required — it is not — but because *ratifying what shall be built is not the same act as authorizing someone to start building it.* The next founder act can be exactly: **"ARCH-01 stands ratified. Open KERNEL-00 under the ratified acceptance law. No STT, no TTS, no Web audio, no MAIA, no legacy voice components. Prove the physical organism first."** At that point the research/design phase is finished, and the JARVIS boundary is clean: inquiry → assembly → differentiation → synthesis → ratification are complete; the next phase is bounded execution against predeclared law, not more ideation.
 
 ## 3. Supersessions this package introduces (for the record)
 

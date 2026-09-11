@@ -1,6 +1,6 @@
-# KERNEL-00 Acceptance Law — CANDIDATE
+# KERNEL-00 Acceptance Law — RATIFIED · KERNEL-00 NOT OPEN
 
-**Act:** ARCH-01 · artifact 6 · 2026-09-11 · **Status:** CANDIDATE. Becomes law by founder act; `KERNEL-00` itself opens by a **separate** founder act after ratification.
+**Act:** ARCH-01 · artifact 6 · 2026-09-11 · **Status:** **RATIFIED — founder act, 2026-09-11** (`00_README.md` §2b item 4): six of seven thresholds ratified exactly as written; K00-06 amended to duplex physiology; K00-11 Bluetooth wording clarified. **`KERNEL-00` is NOT open** — it opens only by a separate founder act ("ARCH-01 stands ratified. Open KERNEL-00 under the ratified acceptance law. No STT, no TTS, no Web audio, no MAIA, no legacy voice components. Prove the physical organism first.").
 
 `KERNEL-00` is the first code of Voice 2026: the **physical audio organism**, and nothing else. It exists to prove that one native owner can keep a duplex-capable session alive through listening, playback, cancellation, route changes, interruptions, media-services resets and long sessions, without a manual microphone tap and without any recognizer, synthesizer, model, WebView audio, or MAIA in the build.
 
@@ -25,12 +25,12 @@ The law follows FR-14's discipline (JARVIS-CIRCLES-01): *PASS = 0 failed AND eve
 | K00-03 | **Zero configuration mutations during the conversation.** Across the whole run, no category/mode/options/preferred-rate change occurs between enter and leave except an act stamped `route_recovery` or `interruption_recovery`. | any unstamped mutation | D |
 | K00-04 | **Input flow is observable and healthy.** Input callback cadence, frame counts and RMS/peak are journalled; `inputFlow` reaches `healthy` after enter and stays there through every listen/play cycle absent an injected fault. | cadence gaps or `unknown` persisting past the entry window | D |
 | K00-05 | **Known PCM renders through native output and is cancellable by handle.** Every play yields a handle; a cancel stops rendering within the cancel window; `outputFlow` shows `rendering → idle`. | play without handle; frames rendered after the window; `outputFlow` stuck | D |
-| K00-06 | **Duplex holds.** While PCM renders, input callbacks continue with plausible energy (not digital zero) and voice processing keeps the rendered signal out of the input beyond the residual tail. | input dies during output; input mirrors output beyond tolerance | D |
+| K00-06 | **Duplex physiology holds — AMENDED by the founder act.** *During native output rendering, input callbacks continue without interruption, input does not collapse to digital zero, and input/output physical health remain independently observable. Echo coupling is measured and recorded for every tested route, but quantitative acoustic echo-suppression qualification belongs to KERNEL-01 / BENCH-01 rather than being invented before a device baseline exists.* | input callbacks stop or gap during output; input collapses to digital zero; input/output health not separately observable; echo coupling not recorded for a tested route | D |
 | K00-07 | **Dead input is detected.** With the harness injecting digital-zero input frames, `HealthSupervisor` marks `inputFlow = dead` within the detection window and requests recovery. | `healthy` persists; no request; detection late | D |
 | K00-08 | **Stalled output is detected.** With the harness stalling the render callback, `outputFlow = stalled` within the window and recovery is requested. | as above | D |
 | K00-09 | **Recovery is generation-safe.** Every recovery increments the generation; callbacks from the previous generation (the harness holds and fires one late) are journalled and dropped and change nothing. | a stale callback stops/starts/reconfigures anything | D |
 | K00-10 | **Recovery is bounded.** Under a persistent injected fault, attempts follow the declared schedule, stop at the budget, and end in `degraded` with the cause displayed on the harness; no further attempts occur. | attempts beyond budget; schedule violated; no visible degraded state | D |
-| K00-11 | **Route change survives.** Switching speaker ↔ receiver ↔ Bluetooth (HFP and A2DP) during a cycle produces a `route_changed` record, an `AudioSessionAuthority` act, and `inputFlow`/`outputFlow` back to healthy without a manual tap. | a manual tap needed; flow dead after the switch; unstamped mutation | D |
+| K00-11 | **Route change survives — CLARIFIED by the founder act.** *Exercise speaker ↔ receiver and every Bluetooth input/output topology the OS admits on the witness device. At least one Bluetooth route transition is required when compatible hardware is available. Unsupported route combinations are recorded as platform capability, not treated as runtime recovery failures.* Each admitted transition produces a `route_changed` record, an `AudioSessionAuthority` act, and `inputFlow`/`outputFlow` back to healthy without a manual tap. | **once a route is admitted: a manual mic tap needed after the change = FAIL**, no softness; flow dead after the switch; unstamped mutation | D |
 | K00-12 | **Interruption survives.** An incoming call / Siri / another app's audio produces `audioSession = interrupted` then `active`, with flow restored without a manual tap. | as above | D |
 | K00-13 | **Media-services reset survives.** A simulated or real reset produces `resetting → active` and a rebuilt graph under a new generation, flow restored. | flow dead after reset; old generation still live | D |
 | K00-14 | **Background / lock policy is explicit.** Lock and background events produce the declared behaviour (hold or release, per the policy chosen for KERNEL-00) and the journal says which. | undeclared behaviour; session silently lost | D |
@@ -39,19 +39,19 @@ The law follows FR-14's discipline (JARVIS-CIRCLES-01): *PASS = 0 failed AND eve
 | K00-17 | **The trace replays.** The run's journal replays into the state machine (`03_STATE_MODEL.md` §2) with no orphan transition and answers *what observation caused this act, and which generation* for every automatic act. | an orphan; an unanswerable act | D |
 | K00-18 | **The UI is a projection.** The harness page shows only `voice.*` event state; it holds no local voice state; it never displays "listening" without `inputFlow = healthy`. | a local state write; a display not traceable to an event | S + D |
 
-## 3. Thresholds — PROPOSED, ratified with this law
+## 3. Thresholds — RATIFIED (founder act, 2026-09-11)
 
-| Parameter | Proposed value | Rationale |
+| Parameter | Value | Ruling · rationale |
 |---|---|---|
-| Entry window (enter → `inputFlow = healthy`) | ≤ 1 500 ms | covers session activation + voice-processing engine start; measured, not tuned |
-| Dead-input detection window (K00-07) | ≤ 2 000 ms of digital zero | E18's condition was discovered ~69 s late; two seconds is the first number that makes VOICE-08 real without false alarms on a quiet room (noise floor ≠ digital zero — SURVEY-01 §8's three-way classification) |
-| Stalled-output detection window (K00-08) | ≤ 1 000 ms without a render callback while `rendering` | |
-| Cancel window (K00-05) | ≤ 100 ms from `cancel(handle)` to last rendered frame | |
-| Recovery schedule (K00-10) | budget 3 attempts per fault class per 60 s; backoff 500 / 1 000 / 2 000 ms; then `degraded` | replaces the legacy 800/1500/2500 with a real ceiling; values are policy, not scattered literals |
-| Endurance run (K00-15) | 60 minutes · ≥ 50 listen/play cycles · ≥ 3 route changes · ≥ 2 interruptions · 1 reset | research §14.5 uses 60 min / 100 turns for the *full* organism; KERNEL-00 has no turns, so cycles stand in |
-| Duplex residual (K00-06) | rendered signal in input ≤ the level the harness declares as its echo tolerance, with the residual-tail gate ≤ 800 ms | SURVEY-01 §2 reports a 500–800 ms AEC tail; the number is measured on device, not assumed |
+| Entry window (enter → `inputFlow = healthy`) | ≤ 1 500 ms | **RATIFIED** · covers session activation + voice-processing engine start; measured, not tuned |
+| Dead-input detection window (K00-07) | ≤ 2 000 ms of digital zero | **RATIFIED** · E18's condition was discovered ~69 s late; two seconds is the first number that makes VOICE-08 real without false alarms on a quiet room (noise floor ≠ digital zero — SURVEY-01 §8's three-way classification) |
+| Stalled-output detection window (K00-08) | ≤ 1 000 ms without a render callback while `rendering` | **RATIFIED** |
+| Cancel window (K00-05) | ≤ 100 ms from `cancel(handle)` to last rendered frame | **RATIFIED** |
+| Recovery schedule (K00-10) | budget 3 attempts per fault class per 60 s; backoff 500 / 1 000 / 2 000 ms; then `degraded` | **RATIFIED** · replaces the legacy 800/1500/2500 with a real ceiling; values are policy, not scattered literals |
+| Endurance run (K00-15) | 60 minutes · ≥ 50 listen/play cycles · ≥ 3 route changes · ≥ 2 interruptions · 1 reset | **RATIFIED** · research §14.5 uses 60 min / 100 turns for the *full* organism; KERNEL-00 has no turns, so cycles stand in |
+| Duplex residual (K00-06) | *(withdrawn)* — the harness-declared tolerance was circular: a failing implementation could define its own acceptance line | **AMENDED** · KERNEL-00 records echo coupling per route as a measurement; the quantitative gate is set in KERNEL-01 / BENCH-01 from that device baseline (SURVEY-01 §2's 500–800 ms tail is a reference, not a threshold) |
 
-Any threshold changed after ratification is a founder act with a recorded reason; a threshold is never loosened to make a run pass.
+The six ratified values are first constitutional ceilings, not claims of the fastest possible numbers — and **they may not later be loosened because an implementation misses them.** Any change is a founder act with a recorded reason.
 
 ## 4. Fault-injection matrix (harness controls)
 
