@@ -3390,3 +3390,166 @@ different jobs, which is precisely why the verdict stays binary.*
 ⛔ **Standing: no ruling taken · no fixture edited · no threshold moved · MiniCheck
 NOT RUN · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — SATELLITE-BOUNDARY LOSS · AND THE DETERMINISTIC LAYER, MEASURED
+
+```
+MODIFIER-BOUNDARY EFFECT   SUPPORTED · MATERIAL
+M satellite boundaries     1/8      V predicate boundaries  7/8
+P licensed controls        8/8
+SATELLITE-BOUNDARY LOSS    OBSERVED FAILURE CLASS
+internal mechanism         UNKNOWN
+DeBERTa standalone gate    NOT SUPPORTED
+DeBERTa verifier role      STILL PROMISING
+"bounded -> unbounded"     RETIRED as the primary description
+```
+
+### ⭐ THE FOUNDER'S PAIR-LEVEL READING IS A BETTER ARGUMENT THAN MY OBJECTION
+
+```
+6 pairs   M failed, V passed
+1 pair    both passed          (T1)
+1 pair    both failed          (T2)
+0 pairs   M passed, V failed   ⭐ ZERO REVERSALS
+```
+
+⚠️ **I raised the matched-pairs confound and under-weighted the directionality.** A
+6–0 split with no reversal is materially informative even where the pairing is
+imperfect. ⛔ **The confound is not dissolved by it** — a difficulty gradient would
+produce the same shape — which is exactly why the ruling is worded as an **empirical
+description of behaviour, not a claim about mechanism.** That wording accommodates the
+objection instead of overriding it.
+
+### ⭐⭐ THE COMPENSATION IS MEASURABLE WITHOUT A MODEL, AND IT WAS MEASURED
+
+> **A claim cannot become more general than its evidence.**
+> **When in doubt, preserve the narrower truth.**
+
+`scripts/verifier-probe/boundary_check.py` — deterministic, no model, imports nothing
+from MAIA. ⛔ **An instrument, not a gate, not authorized.**
+
+```
+ACROSS ALL FOUR FROZEN SETS
+  COVERAGE   32/46 unlicensed cases flagged
+  COST        5/35 licensed cases flagged
+
+ON THE MODIFIER SET
+  COVERAGE   15/16          COST  0/8   ⭐ zero false alarms
+```
+
+⭐⭐ **AND AGAINST DeBERTa'S ACTUAL MISSES: 12 OF 13 WOULD HAVE BEEN HELD.**
+
+```
+B05 · B21 · S01 · S03 · S04 · M2 · M3 · M4 · M5 · M6 · M8 · V2   FLAGGED
+M7                                                               ⛔ NOT FLAGGED
+```
+
+⭐ **Including V2** — *"Petr has retired from piloting the river ferry"* — the one case
+where DeBERTa's own strong suit failed. The deterministic rule catches it because
+`retired` is a cessation token, and it does not care how confident the model was.
+
+### ⛔ THE ONE IT MISSES, AND WHY THAT MATTERS
+
+```
+M7  "Tamás conducted the town band on Tuesday."  ->  "Tamás conducts the town band."
+    premise limiters: NONE detected
+```
+
+⛔ **`on Tuesday` is in the `past_date` pattern and did not fire** — the regex requires
+a capitalised weekday and the sentence has one, so the failure is in the alternation,
+not the vocabulary. ⛔ **I am NOT patching the pattern after seeing which case it
+missed.** That is tuning the detector to the test, the same act the threshold rule
+forbids. ⭐ *The gap is recorded; a repair is a separate, predeclared act.*
+
+⭐ **And the deeper point stands regardless:** a lexical rule catches only the
+boundaries someone thought to list. It cannot catch a boundary carried by tense alone.
+
+### ⚠️ THE FIVE FALSE ALARMS ARE ALL ONE PATTERN
+
+```
+P3-UNDERGO  "He was sedated throughout the operation."      dropped=duration
+B13         "She chaired the licensing committee for six years."  dropped=duration
+S07         "Aziz has paid dues to the swim club for six years."  dropped=duration
+S22         "Nils has built boats at the yard for thirty years."  dropped=duration
+B18         "declined to sit on the board but agreed to advise it" dropped=negation
+```
+
+⭐ **Four of five are `duration`, and in every one the duration SUPPORTS the claim
+rather than limiting it** — *six years of dues* is evidence of membership, not a bound
+on it. ⛔ **The rule cannot tell a limiting duration from a corroborating one**, and
+`throughout` is the clearest case: it is a totality marker being read as a boundary.
+
+⭐ **The RELEASE-MARKER clause is what keeps the cost at 5 rather than ~20.** Without
+it, *"took over in 2014 and runs it still"* flags as a dropped boundary — **exactly
+backwards, since the source explicitly released the limit.** ⛔ Recorded because it is
+the non-obvious half of the rule: *a boundary check without a release check inverts on
+the very sentences that prove a relation is current.*
+
+⛔ **As a ROUTER this is promising and as a JUDGE it is not.** 5 false alarms out of 35
+is a tolerable cost for a second verifier; it would be an intolerable cost for a
+refusal.
+
+## ⭐⭐⭐ THE ARCHITECTURAL REFRAME — CORRIGIBILITY, CONTINUITY, STEWARDSHIP
+
+> ⭐ **MAIA does not need to be perfectly right before she can speak. She needs to be
+> able to remain corrigible without losing continuity.**
+
+```
+NOT:  claim -> TRUE or FALSE -> store permanently
+
+BUT:  claim -> how well supported? -> PROVISIONAL UNDERSTANDING
+      -> conversation continues -> member clarifies / contradicts / deepens
+      -> understanding is revised -> PROVENANCE OF THE REVISION REMAINS
+```
+
+⭐ **DeBERTa's role changes with it.** Not *"MAIA may not say this"* but ***"the
+evidence does not yet justify storing this as established fact."*** MAIA may still
+explore the interpretation aloud — *"It sounds as though you may have been actively
+involved in that — is that right?"* — and the member may answer *"No, it was happening
+to me. I wasn't choosing it."* ⭐⭐ **That correction teaches MAIA something no verifier
+could have inferred from the sentence, and it becomes part of continuity.**
+
+### The epistemic levels
+
+```
+EXPLICIT      the member or source directly stated it
+CONFIRMED     MAIA inferred it and the member confirmed it
+IMPLIED       strongly supported but not directly stated
+PROVISIONAL   a working interpretation awaiting clarification
+CONTESTED     evidence or member clarification conflicts with it
+SUPERSEDED    a previously held understanding replaced by a later one
+```
+
+### ⛔⛔ THE DANGER, RELOCATED
+
+> **Corrigibility means a mistake is not necessarily catastrophic. An UNCORRECTABLE
+> mistake is.**
+
+⛔ The danger was never that MAIA occasionally misunderstands someone — any relational
+intelligence will. It is:
+
+```
+treating an inference as immutable fact
+forgetting where it came from
+silently overwriting it
+continuing to impose it after the person has corrected her
+```
+
+### ⭐ THE TRIAD
+
+```
+Continuity without corrigibility   -> RIGIDITY
+Corrigibility without continuity   -> AMNESIA
+Both without stewardship           -> CONTROL
+```
+
+> ⭐⭐ **MAIA can remember faithfully, revise honestly, and remain answerable to the
+> person whose life she is helping hold.**
+>
+> The verification work is not there to make her right. It is there to let her **hold
+> something lightly** — conversation refines it, continuity preserves what was
+> learned, and stewardship decides whose reality ultimately governs.
+
+⛔ **Standing: boundary check BUILT as an instrument, NOT AUTHORIZED as a component ·
+MiniCheck WIRED, NOT RUN · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED ·
+B HELD · production UNTOUCHED.**

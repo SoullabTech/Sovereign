@@ -285,6 +285,77 @@ def report(rows):
     print('⛔ NOT SELF-JUDGED. These are readings, not a verdict.')
 
 
+def compare(paths):
+    """
+    ⭐⭐ ERROR CORRELATION ACROSS SEPARATE RUNS.
+
+    ⛔ THE IN-PROCESS CORRELATION BLOCK CANNOT REACH THE CASE THAT MATTERS MOST.
+    MiniCheck and HHEM need transformers 4.x; the DeBERTa environment runs 5.x. So
+    the challenger CANNOT run in the same process as the incumbent, and `--model all`
+    is unavailable for exactly the comparison the challenger exists to make. Without
+    this, two runs produce two totals and no correlation — which is the one number
+    that decides whether a second verifier is a second WITNESS.
+
+    ⛔ IT REFUSES TO CORRELATE ACROSS DIFFERENT MATERIAL. Both runs must carry the
+    same `fixtures_sha256`. Comparing misses across different sets would produce a
+    confident, meaningless answer.
+    """
+    loaded = []
+    for path in paths:
+        d = json.loads(Path(path).read_text())
+        if 'rows' not in d:
+            sys.exit(f'{path}: not a probe output file')
+        loaded.append((path, d))
+
+    digests = {d.get('fixtures_sha256') for _, d in loaded}
+    if len(digests) != 1 or None in digests:
+        print('⛔ REFUSING TO CORRELATE — the runs are not on the same frozen set:')
+        for path, d in loaded:
+            print(f"   {d.get('set', '?'):<12} {d.get('fixtures_sha256', '(none)')}  {path}")
+        sys.exit(1)
+
+    sets = {d.get('set') for _, d in loaded}
+    print(f"ERROR CORRELATION · set={sets.pop()} · sha256 {digests.pop()}")
+    for path, d in loaded:
+        print(f"   {path}")
+
+    miss, seen, total = {}, {}, {}
+    for _, d in loaded:
+        for r in d['rows']:
+            v = r['verifier']
+            total[v] = total.get(v, 0) + 1
+            seen.setdefault(v, set()).add(r['id'])
+            if r['observed'] != r['expected']:
+                miss.setdefault(v, set()).add(r['id'])
+            else:
+                miss.setdefault(v, set())
+
+    vs = sorted(miss)
+    print()
+    for v in vs:
+        print(f"   {v:<12} {total[v] - len(miss[v])}/{total[v]} correct · "
+              f"misses {sorted(miss[v]) or 'none'}")
+
+    print('\n   ⭐ SHARED MISSES ARE WHAT DISQUALIFY A SECOND WITNESS')
+    for i, a in enumerate(vs):
+        for b in vs[i + 1:]:
+            if seen[a] != seen[b]:
+                print(f'   ⛔ {a} vs {b}: different case coverage — not comparable')
+                continue
+            both, only_a, only_b = sorted(miss[a] & miss[b]), sorted(miss[a] - miss[b]), sorted(miss[b] - miss[a])
+            agree = len(seen[a]) - len(miss[a] ^ miss[b])
+            print(f"   {a} vs {b}")
+            print(f"      shared misses   {both or 'none'}")
+            print(f"      only {a:<10} {only_a or 'none'}")
+            print(f"      only {b:<10} {only_b or 'none'}")
+            print(f"      verdicts agree on {agree}/{len(seen[a])} cases")
+            if both and not (only_a or only_b):
+                print('      ⛔ IDENTICAL FAILURES — one witness in two shirts.')
+            elif not both:
+                print('      ⭐ NO SHARED MISS on this set — errors are disjoint here.')
+    print('\n⛔ NOT SELF-JUDGED. Correlation is a reading, not a verdict.')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', choices=['deberta', 'hhem', 'minicheck', 'both', 'all'],
@@ -295,7 +366,13 @@ def main():
     ap.add_argument('--dry-run', action='store_true', help='print fixtures, load no model')
     ap.add_argument('--set', dest='which', choices=sorted(SETS), default='as-derived')
     ap.add_argument('--out', default='')
+    ap.add_argument('--compare', nargs='+', metavar='RESULT.json',
+                    help='correlate errors across saved runs of the SAME frozen set')
     a = ap.parse_args()
+
+    if a.compare:
+        compare(a.compare)
+        return
 
     cases, digest = load_cases(a.which)
     print(f'RC-GEN-01 VERIFIER PROBE · set={a.which} · {len(cases)} cases · repeat={a.repeat}')
