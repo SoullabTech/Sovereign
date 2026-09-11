@@ -108,3 +108,85 @@ primary one.
    hypothesis from evidence that never saw it, the separation itself becomes part
    of the science.* The unseen corpus is a **distinct evidentiary class**, not
    another row in an aggregate.
+
+---
+
+## AUTHORSHIP — founder act, 2026-09-11: fresh subagent, prompt recorded
+
+Founder chose a fresh subagent over authoring it himself, on the grounds that
+this conversation had already exposed him to specific limiter forms. A true
+third party is reserved for **confirmatory replication if this set produces an
+architecture-changing result** — not spent now.
+
+⛔ **This prompt was committed BEFORE the subagent ran.** That ordering is the
+whole point: a prompt recorded after seeing the corpus proves nothing. Audit it
+for leaked trigger vocabulary — it names only the founder's seven semantic
+categories and contains no limiter or release term.
+
+```text
+Write a set of 20 PAIRS of short factual test items in natural English — 40 items
+total. Each item is a PREMISE (one or two sentences of ordinary prose) and a
+HYPOTHESIS (one short sentence). Each hypothesis is labelled by whether the
+premise actually supports it.
+
+Each PAIR shares one premise and has:
+  - one hypothesis the premise genuinely supports        -> expected "entailed"
+  - one closely matched hypothesis that goes beyond what the premise supports,
+    by overstating one of these aspects:
+        time · frequency · duration · condition · role · relationship · state
+                                                          -> expected "not_entailed"
+
+Requirements:
+  - Write NATURAL English. Write the premise first, as though it came from an
+    ordinary profile, news item, letter or biography — not as a test item.
+  - The two hypotheses in a pair should differ as little as possible while
+    differing in exactly one of the seven aspects above.
+  - Twenty DIFFERENT domains and twenty different sets of people. Invent names
+    and places freely. Vary sentence structure — do not use one template.
+  - No ambiguity: a careful reader must agree with each label without argument.
+    If you cannot make a case unambiguous, write a different case.
+  - Do not write about AI, models, verification, entailment or testing.
+
+Output ONE JSON file to the path you are given, shaped exactly like this:
+
+{
+  "set": "prospective",
+  "note": "<one sentence you write on how you approached it>",
+  "categories": [ "<the aspect names you actually used>" ],
+  "cases": [
+    {
+      "id": "X01",
+      "family": "<short kebab-case name for the pair, same for both members>",
+      "origin": "prospective",
+      "premise": "...",
+      "hypothesis": "...",
+      "expected": "entailed" | "not_entailed"
+    }
+  ]
+}
+
+Ids X01..X40. The two members of a pair share a "family" and sit next to each
+other. Exactly 20 "entailed" and 20 "not_entailed".
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Do NOT read any file under scripts/verifier-probe/ other than writing your
+    own output file. Do not read any existing fixtures, any Python in that
+    directory, or any document under docs/programme/. If you open one by
+    accident, say so plainly in your final message.
+  - Do not search the repository for this task. You need nothing from it.
+  - Write from your own sense of English. Do not try to infer what any
+    downstream program is looking for; there is no pattern to match and
+    guessing at one would ruin the result.
+
+In your final message, report: the output path, the number of cases, and
+anything you had to judge or were unsure about.
+```
+
+**Constraints carried into the run:** no access to `boundary_check.py`,
+`LIMITERS`, `RELEASES`, previous fixtures, or detector outputs; no repository
+search; instructed not to infer what any downstream program looks for.
+
+**Post-authoring discipline (binding on me):** I do not edit its sentences. Label
+disagreements are recorded openly in this document rather than silently fixed.
+The corpus is hashed and committed, and only then does the frozen detector
+classify inside/outside.
