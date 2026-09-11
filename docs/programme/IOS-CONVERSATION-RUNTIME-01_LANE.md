@@ -1119,3 +1119,132 @@ the phone with no console; nothing in the app changes. Next run: stop,
 ⌘R, confirm the registration line, take **two short turns only** and
 paste before attempting a long session. Silent switch to ring for the
 next run (control; E14 obs. 3). Acceptance table unchanged from E14.
+
+### E16 · 2026-09-11 ≈08:35–08:38 local · third run — long-utterance drop WITNESSED, `prepareForListening` is NOT on the live path, and the post-TTS mic re-entry storm captured with the debugger attached
+
+`INSTALL METHOD: Xcode Run (Debug)`, third container of the day
+(`E8767748-D980-4534-9755-9F2F8113E3C1`), web session `ln1skg9o`, server
+`builtAt 2026-09-11T12:36:42Z`. Registration line present at launch again.
+Bundle SHA still unwitnessed (footer owed). Console paste is continuous
+from process start to mid-loop; it ends before any recovery, so **the
+outcome of this run is not in the record.**
+
+**E16.1 — the long-utterance drop, in the console.** One continuous
+utterance grew to 537 characters over ~40 s of partials (`Hi Maya I'm
+looking forward … not being cut off`). Then, with **no** `[SR] Stop
+called`, **no** `listeningState: stopped`, **no** `Stopping -`, no
+`Cleanup`, and no new `=== Build 77` start, the recognizer's next partial
+was:
+
+```text
+[SR] Transcript: Hi Maya … and that I'm not being cut off isFinal: false
+[SR] Transcript: Hi Maya … so that's a good sign so I'm gonna talk … cut off isFinal: false   ← revised, still not final
+[SR] Transcript: And isFinal: false                                                             ← new segment, same task
+```
+
+The web side's partialResults handler replaces the accumulated transcript
+with each partial, so the 537 characters were **discarded**, and the 2.5 s
+silence timer then auto-submitted only the 60-character tail
+(`And so far it's looking up there goes it cut off right there`,
+`charCount 60`, `dispatchId 1`). MAIA answered the tail. **This is E7 R-A
+with its mechanism now on the record: the recognizer segmented the
+utterance inside one task without signalling a boundary, and the web
+layer holds no memory across segments.** No source change authorized;
+this is the unruled "repair two".
+
+**E16.2 — `prepareForSpeaking` reaches Swift again; audio audible.**
+Same Swift sequence as E14 (`previous state: idle` → teardown →
+`.playback/.spokenAudio` → activated → `success:true`). TTS 198,528 bytes,
+12.4 s, `✅ [iOS] Audio output confirmed`, `MAIA finished speaking - 12.4s`.
+So the speak side is reproducible, and the silent-switch confound of E14
+did not recur on this turn.
+
+**E16.3 — the listen re-entry never calls `prepareForListening`, by
+design.** The full capture has no `[VoiceController] Preparing for
+listening` and no `AudioSessionManager prepareForListening` anywhere.
+Reason is in source: `components/voice/ContinuousConversation.tsx:3288`
+carries the note *"Do NOT call VoiceController.prepareForListening() here!
+The @capacitor-community/speech-recognition plugin configures its own
+audio session with .voiceChat mode. Calling our AudioSessionManager first
+causes a conflict (we use .measurement mode) that makes recognition stop
+immediately."* The only callers are `lib/voice/capacitorRecorder.ts:131`
+and `lib/voice/providers/IOSNativeVoiceProvider.ts:79`, neither on the
+`/maia` path. **Acceptance row ruling:** the row cannot be YES or NO on
+this build — the web does not issue the call on the live path. The bridge
+itself is proven by the speak side. Recorded as `NOT CALLED (live path,
+by design)`. Consequence for §4: the gatekeeper owns the speak transition
+and nothing owns the listen transition; the community plugin sets
+`.playAndRecord/.voiceChat` itself on every start.
+
+**E16.4 — the mic re-entry storm (the stall's shape, debugger attached).**
+After playback: `Maia finished speaking` → `[NON-STREAM] releasing mic` →
+`hands-free, auto-resuming mic in 600ms` **and** `[Native] … auto-restarting
+in 800ms` **and** `[NON-STREAM] Mic restart check (attempt 1…8)` **and**
+`[onend] Will restart recognition after 300ms` (`lifecycle … gen 1…7`).
+At least four restart drivers were live at once. Every `startListening`
+begins with a pre-emptive `SpeechRecognition stop`, so each driver's start
+tears down the previous driver's just-started engine (`Idle stop within
+108ms / 356ms / 911ms grace period`). The recognizer engine started and
+died **seven times in ~15 s**, each time with:
+
+```text
+[SR] ✅ Engine started - listening
+…
+[SR] Recognition error: No speech detected
+[SR] Stopping - error: true isFinal: false
+```
+
+At the first re-entry WebKit's content process also logged
+`AudioSession::beginInterruption but session is already interrupted!` —
+the Web Audio owner being interrupted by the recognizer's activation.
+Across the seven starts the plugin's route dump alternated between
+`selectedDataSource = Bottom · ioBuffer 0.01` and `selectedDataSource =
+Front · ioBuffer 0.0026666`, i.e. **the session's configuration was
+flipping between two owners' settings from one start to the next**. Input
+levels stayed at noise floor (≈0.0015) throughout; whether the member was
+speaking during this stretch is not recorded.
+
+**E16.5 — code-consistent explanation for the instant "No speech
+detected" (hypothesis, not a ruling).** In
+`node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift:135-168`
+the recognition-task callback stops `self.audioEngine`, nils the request
+and task, and emits `stopped` on **any** error, with **no check that the
+callback belongs to the current task**. `stop()` (`:231`) calls
+`endAudio()` but leaves the task alive; `cleanup()` (`:215`) cancels it.
+So a `stop` → `start` pair in quick succession lets the *previous* task's
+completion (`No speech detected` after `endAudio()` on a silent tail)
+arrive **after** the new engine has started, and the callback then stops
+the **new** engine and reports `stopped` — which the web layer's restart
+drivers answer with another stop/start pair. This matches the observed
+sub-second deaths and the E14 double-`stopped` after a single stop
+(`Restart counter incremented to 1` then `2`). It is a hypothesis until
+instrumented; it is recorded because it is the first candidate mechanism
+that explains both the flapping and why time alone "resolves" it (the
+drivers exhaust their attempts and stop fighting). No change authorized:
+the plugin is npm-vendored and outside this lane's one repair.
+
+**Acceptance table after E16:**
+
+```text
+AudioSessionManager compiled          YES   (E10)
+AudioSessionManager registered        YES   (E13, E16 launch)
+cap sync does not erase registration  YES   (E10/E13)
+web prepareForSpeaking call           reaches Swift   YES   (E14, E16.2)
+web prepareForListening call          NOT CALLED on the live path, by design (E16.3)
+native runtime trace                  visible on healthy turn   YES   (E14, E16.2)
+same S1–S4 voice walk                 performed   PENDING
+```
+
+**Standing after E16:** the repair did what it was authorized to do — the
+gatekeeper is registered, reached, and its trace is visible. The stall
+remains, and its shape is now on the record with the native side active:
+*a recognizer segmenting silently, a web layer with several competing
+re-entry drivers, a plugin whose callback cannot tell an old task from a
+new one, and three session owners (gatekeeper `.playback`, plugin
+`.playAndRecord/.voiceChat`, WebKit content process).* Every item is an
+input to §4/§5; none is a repair request here.
+
+**Owed for E17:** what the phone showed during E16.4 and whether/when the
+mic came back · whether the member was speaking during that stretch ·
+silent-switch position for this run · Account Settings footer + Native
+App Build lines · S1–S4 one line each.
