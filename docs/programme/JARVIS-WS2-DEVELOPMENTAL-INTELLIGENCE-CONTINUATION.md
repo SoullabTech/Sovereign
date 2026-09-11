@@ -268,6 +268,26 @@ blind-integrity fact on a different axis entirely. Conflating the two is what le
 exposure survive the compatibility gate. **SEL-0B must query prior discussion as a
 blind-integrity predicate, not merely as an optional selector input.**
 
+### The two-axis test — reusable, not SEL-0-specific
+
+Every corpus-construction gate must ask both, independently:
+
+```text
+SELECTOR INPUT    Does this field help choose or rank within the corpus?
+BLIND INTEGRITY   Has this item already been discussed, interpreted, framed,
+                  or otherwise exposed to the founder / reviewer?
+```
+
+A field can answer *no* to the first and *yes* to the second and still be
+**disqualifying**. Step 4 asked only the first, found `ask_threads` non-essential to
+ranking, and excluded it — which is why a structurally perfect corpus
+(`0 dismissed · 0 superseded · 0 unmeasured`) still had to be retired.
+
+> ### A corpus can be eligible and still not be blind.
+
+**The failure was not corpus quality. It was contamination.** Eligibility and independence
+are separate properties, and a gate that measures one says nothing about the other.
+
 **The Step-4 MISMATCH is kept as history, not rewritten.** It was real:
 `sel-0/SEL-0_STEP4_FIXTURE_COMPATIBILITY_2026-09-08.md` records a fixture that could not
 express the ratified boundary, and that document stands unedited. It was resolved by the
