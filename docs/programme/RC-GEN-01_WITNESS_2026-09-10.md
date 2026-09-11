@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-5 FAILED (founder rulings)
+3A-S   semantic witness        RUNS 1-5 FAILED · RUN 6 ⛔ AWAITING RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,56 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 6 · evidence of record
+
+**Checkout `049d1836d`** (structural framing live), `--require-cognition`.
+**Protocol: 0 failed** on both specimens.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience brought about a large change in how he related
+> to the natural world. That change in how he saw things then produced a shift in
+> perspective, and that shift was a meaningful part of the process of integration he
+> was still going through."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage is already fully concrete: two physical actions with
+> specific objects (kettle clicking off, water poured over coffee grounds), a named
+> agent, and no abstraction to reduce. Any revision would have to add sensory
+> detail, interiority, or timing that the text does not state — inventing rather
+> than clarifying. The existing sentences are plainer and more exact than anything a
+> rewrite could offer."
+
+Zero proposals. **Sixth consecutive `no_change`.**
+
+### Observations for the ruling — ⛔ NOT a ruling
+
+```
+EDGES NOW EXPLICIT, all three, for the first time
+  "brought about"        experience -> relational change
+  "then produced"        that change -> shift in perspective
+  "was a meaningful
+   part of"              shift -> constitutes the development, within
+                         the ongoing process
+
+"meaningful" PRESERVED LITERALLY — not traded for a directional word
+
+⚠️ BUT THE MIDDLE NODE CARRIES RUN 4's PHRASE
+  "That change in how he saw things then produced a shift in perspective"
+  The antecedent of "That change" is the RELATIONAL change, and it is
+  then apposed as "in how he saw things" — run 4's collapse wording —
+  before producing a FURTHER "shift in perspective". Whether that
+  re-labels the relational node as perceptual, or merely reads
+  redundantly, is the founder's ruling.
+
+⚠️ "a large change" for "significant transformation"
+  magnitude again — the same reservation the founder recorded about
+  run 5's "a great deal", and did not need to decide then.
+```
+
+⛔ 3A-S AWAITING RULING on run 6. 3A NOT PASSED. 3D CLOSED.
 
 ## 3A-S — RUN 5 · evidence of record
 
