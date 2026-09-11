@@ -476,6 +476,40 @@ unrecorded attempt is exactly what the discipline exists to prevent.
 ⛔ **Forbidden by the same ruling, and none of it is in the script:** changing the prompt to elicit
 the tag · rewriting the Work between attempts to encourage it · discarding non-exercised runs.
 
+### 9.2c ⭐⭐ THE ACCEPTANCE HIERARCHY — founder ruling, 2026-09-11
+
+**The three witnesses are NOT equal**, and collapsing them into *"all green"* would let an
+**unobtainable negative block a positive that was actually obtained.**
+
+| | | required? |
+|---|---|---|
+| **B · LOAD-BEARING** | lawful span · tag emitted · reading **admitted** · tag **survives unchanged** | ⭐ **REQUIRED** for live compositional acceptance |
+| **C · SCOPE GUARD** | an unrelated lawful non-conclusion survives at full coverage — proving the repair did not become a blanket filter | ⭐ **REQUIRED** |
+| **A · OPPORTUNISTIC** | if exercised, must prove emission from the refusal detail and refuse the whole output | ⛔ **NOT required to occur on demand** |
+
+⭐ **Therefore this is a real, acceptable result and not a partial failure:**
+
+```text
+A   NOT EXERCISED
+B   ADMITTED_AND_RETAINED
+C   ADMITTED
+→   live-model composition WITNESSED on its load-bearing positive side,
+    with A explicitly remaining UNEXERCISED rather than pretending it passed.
+    If A later fires naturally, that closes the negative side too.
+```
+
+⚠️ **THE CAUTION THAT APPLIES EQUALLY TO B:** choosing partial coverage makes the tag **lawful**; it
+does not **force** the model to use it. A `NOT EXERCISED` B is a **re-run, never a repair** —
+⛔ no prompt steering, no manuscript surgery, no helping the witness happen.
+
+⛔ **`INDETERMINATE` blocks even though A is optional.** It means a reading was refused as
+inapplicable *without* the detail naming the tag — today unreachable. If it ever happens, the code
+has moved under the instrument and **the instrument can no longer tell what it is looking at.** That
+state is never waved through.
+
+**Exit codes follow the hierarchy:** `0` required sides met, A may remain unexercised · `1` violated
+· `3` a required side not exercised, or indeterminate.
+
 ### 9.3 · What the instrument does and does not do
 
 ```text
@@ -526,9 +560,10 @@ MODEL/HOST COMPOSITION       UNWITNESSED
 witness instrument           ACCEPTED (founder, 2026-09-11) · emission-proof defect repaired
                              before the run · append-only attempt ledger built
 live-model witness           AUTHORIZED · ⛔ NOT YET RUN
-  A                          opportunistic
-  B                          load-bearing positive witness
-  C                          collateral-scope guard
+  A                          opportunistic · ⛔ NOT required to occur on demand
+  B                          LOAD-BEARING · REQUIRED for acceptance
+  C                          scope guard · REQUIRED
+append-only ledger           REQUIRED — an unwritable ledger stops the run
 mock / bypass                FORBIDDEN
 prompt steering              FORBIDDEN
 three leftovers              REPORTED, NOT ABSORBED — canonicalFidelity (other lane) ·
@@ -546,5 +581,9 @@ deploy                       HELD
 > ⭐⭐ **The host may constrain what becomes knowledge without teaching the model to manufacture the
 > condition that proves the constraint works.** — founder, 2026-09-11
 > *That separation is exactly why this witness is credible.*
+>
+> ⭐⭐ **When admission destroys the offending object, the refusal trace becomes evidence. A witness
+> must prove what that trace says, not infer what probably produced it.** — founder, 2026-09-11
+> *Preserved because it will matter again as more epistemic admission laws are added.*
 
 ⛔ **Deploy is not authorized by this record.**

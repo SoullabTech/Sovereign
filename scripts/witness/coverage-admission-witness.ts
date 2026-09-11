@@ -349,22 +349,66 @@ async function main() {
     sections: topology.length,
   });
 
+  /* ⭐⭐ THE ACCEPTANCE HIERARCHY — founder ruling, 2026-09-11. The three
+     witnesses are NOT equal, and collapsing them into "all green" would make
+     an unobtainable negative block a positive that was actually obtained.
+
+       B  LOAD-BEARING   lawful span · tag emitted · admitted · tag survives
+                         → REQUIRED for live compositional acceptance
+       C  SCOPE GUARD    an unrelated lawful non-conclusion survives at full
+                         coverage → REQUIRED; proves the repair did not become
+                         a blanket filter
+       A  OPPORTUNISTIC  valuable, ⛔ NOT required to occur on demand. If it
+                         fires it must prove emission from the refusal detail.
+
+     ⭐ So `A NOT EXERCISED · B ADMITTED_AND_RETAINED · C ADMITTED` is a REAL
+     result: witnessed on the load-bearing positive side, with A explicitly
+     remaining unexercised rather than pretending it passed.
+
+     ⚠️ B depends on emission too. Choosing partial coverage makes the tag
+     LAWFUL; it does not force the model to use it. A `NOT EXERCISED` B is
+     therefore a re-run, never a repair — ⛔ no prompt steering, no manuscript
+     surgery, no helping the witness happen. */
   const all: Verdict[] = [aVerdict, bVerdict, cVerdict];
   const violated = all.includes('VIOLATED');
-  const unexercised = all.includes('NOT EXERCISED') || all.includes('INDETERMINATE');
+  const bRequiredMet = bVerdict === 'ADMITTED_AND_RETAINED';
+  const cRequiredMet = cVerdict === 'ADMITTED';
+  /* ⛔ INDETERMINATE blocks even though A is optional: it means a reading was
+     refused as inapplicable WITHOUT the detail naming the tag, which today is
+     unreachable. If it ever happens, the code moved under the instrument and
+     the instrument can no longer tell what it is looking at. That state is
+     never waved through. */
+  const aBlocks = aVerdict === 'INDETERMINATE';
+
   say('');
-  say(violated
-    ? '  MODEL/HOST COMPOSITION   🔴 VIOLATED — deploy stays held and the finding is the result.'
-    : unexercised
-      ? '  MODEL/HOST COMPOSITION   ⛔ NOT FULLY WITNESSED — a witness that did not exercise the law\n'
-        + '                           has established nothing about it. Re-run, or record NOT WITNESSED.'
-      : '  MODEL/HOST COMPOSITION   ⭐ WITNESSED on all three sides.');
+  if (violated) {
+    say('  MODEL/HOST COMPOSITION   🔴 VIOLATED — deploy stays held and the finding is the result.');
+  } else if (aBlocks) {
+    say('  MODEL/HOST COMPOSITION   ⛔ INDETERMINATE — the instrument can no longer prove what the');
+    say('                           refusal says. Do not judge this run; reconcile the instrument');
+    say('                           with the refusal vocabulary first.');
+  } else if (!bRequiredMet || !cRequiredMet) {
+    say('  MODEL/HOST COMPOSITION   ⛔ NOT WITNESSED on a REQUIRED side —');
+    if (!bRequiredMet) say(`                           B (load-bearing) is ${bVerdict}`);
+    if (!cRequiredMet) say(`                           C (scope guard)   is ${cVerdict}`);
+    say('                           Record the attempt, change nothing, run again later.');
+  } else if (aVerdict === 'FIRED') {
+    say('  MODEL/HOST COMPOSITION   ⭐ WITNESSED on both sides — B and C pass, A fired with');
+    say('                           emission proven from the refusal detail.');
+  } else {
+    say('  MODEL/HOST COMPOSITION   ⭐ WITNESSED on the LOAD-BEARING POSITIVE SIDE — B and C pass.');
+    say('                           ⛔ A remains NOT EXERCISED. It has not passed and must never be');
+    say('                              reported as though it had. If it later fires naturally, that');
+    say('                              closes the negative side too.');
+  }
   say('  DEPLOY                   HELD — this script authorizes nothing.');
   say(`  ATTEMPT LEDGER           ${LEDGER}  ·  run ${RUN_ID}`);
   say('                           ⛔ Append-only. Report every attempt, never only the\n'
     + '                              exercised one — the rate is part of the result.\n');
 
-  process.exit(violated ? 1 : unexercised ? 3 : 0);
+  /* 0 = required sides met (A may remain unexercised) · 1 = violated ·
+     3 = a required side not exercised, or the instrument is indeterminate. */
+  process.exit(violated ? 1 : (aBlocks || !bRequiredMet || !cRequiredMet) ? 3 : 0);
 }
 
 main().catch((e) => { console.error('\n⛔ WITNESS ABORTED\n', e); process.exit(2); });
