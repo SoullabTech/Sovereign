@@ -64,6 +64,8 @@ SETS = {
     'prospective': Path(__file__).with_name('fixtures-prospective.json'),
     # ⭐ PHASE 2 — triples, frozen at sha256 8461d8c7…, three-way ground truth
     'triples': Path(__file__).with_name('fixtures-triples.json'),
+    # ⭐ PHASE 3 — terse natural premises, frozen at sha256 d6f1bfb0…
+    'terse': Path(__file__).with_name('fixtures-terse.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'

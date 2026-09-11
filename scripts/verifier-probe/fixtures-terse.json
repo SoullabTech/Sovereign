@@ -1,0 +1,501 @@
+{
+  "set": "terse",
+  "note": "I wrote each premise as a line I could imagine overhearing or reading in a message, then chose one hypothesis that a reader would be tempted by, and only afterwards recorded what I thought the premise actually settled.",
+  "domains": [
+    "time",
+    "relationship",
+    "identity",
+    "role",
+    "frequency",
+    "intention",
+    "emotional state",
+    "membership",
+    "causation",
+    "developmental change"
+  ],
+  "cases": [
+    {
+      "id": "U01",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "Marcus said he'd swing by after work, so don't lock the back gate.",
+      "hypothesis": "Marcus will come round in the evening.",
+      "intended": "open",
+      "note": "After work is a strong hint but says nothing about when his work ends."
+    },
+    {
+      "id": "U02",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "Her brother Toby lent us the van for the whole weekend, no questions asked.",
+      "hypothesis": "Toby is her brother.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U03",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "Rita hasn't touched her dinner and she's been upstairs since four.",
+      "hypothesis": "Rita is upset about something.",
+      "intended": "open"
+    },
+    {
+      "id": "U04",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "Vik has never in his life cooked a meal for another person.",
+      "hypothesis": "Vik cooks for his mother most Sundays.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U05",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "There's a Bennett on the plaque in the church and Gran swears he's one of ours.",
+      "hypothesis": "The Bennett named on the plaque is a relative of Gran's.",
+      "intended": "open"
+    },
+    {
+      "id": "U06",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "We switched to the Italian flour last month and the bread's been coming out better.",
+      "hypothesis": "The change of flour is what improved the bread.",
+      "intended": "open"
+    },
+    {
+      "id": "U07",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "Whenever the servers go down it's Bilal fixing them at two in the morning.",
+      "hypothesis": "Bilal is the person responsible for the servers.",
+      "intended": "open"
+    },
+    {
+      "id": "U08",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "Sorry, I only got back from Lisbon last night and I'm still half asleep.",
+      "hypothesis": "The speaker was in Lisbon before last night.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U09",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "Tomas was at the union meeting on Thursday, sitting at the back taking notes.",
+      "hypothesis": "Tomas is a member of the union.",
+      "intended": "open"
+    },
+    {
+      "id": "U10",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "Jonah's talking in whole sentences now and about half of them are questions.",
+      "hypothesis": "Jonah is picking up language faster than most children his age.",
+      "intended": "open"
+    },
+    {
+      "id": "U11",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "Dev's been scrolling through flats in Sheffield on his phone all week.",
+      "hypothesis": "Dev intends to move to Sheffield.",
+      "intended": "open"
+    },
+    {
+      "id": "U12",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "I was furious with Cal all evening and I'm not proud of how I spoke to him.",
+      "hypothesis": "The speaker was angry at Cal that evening.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U13",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "I ran into Greg's ex at the market and honestly she looked great.",
+      "hypothesis": "Greg and the woman separated on bad terms.",
+      "intended": "open"
+    },
+    {
+      "id": "U14",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "The fire had nothing to do with the wiring — it started in the bin out the back.",
+      "hypothesis": "Faulty wiring caused the fire.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U15",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "That's Delia in the blue coat, the one who wrote the letter to the council.",
+      "hypothesis": "Delia wrote the letter to the council.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U16",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "Joyce is down at the pool most mornings before the rest of us are even up.",
+      "hypothesis": "Joyce swims every day.",
+      "intended": "open"
+    },
+    {
+      "id": "U17",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "Ines isn't the manager, she just answers his phone when he's out on deliveries.",
+      "hypothesis": "Ines manages the shop.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U18",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "Otto couldn't do a length last summer and on Saturday he swam four hundred metres.",
+      "hypothesis": "Otto's swimming has improved since last summer.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U19",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "You see Anneke at every allotment working party, always with her own fork.",
+      "hypothesis": "Anneke has a plot on the allotment.",
+      "intended": "open"
+    },
+    {
+      "id": "U20",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "We moved into the Ardrey Street flat the week they finally switched the fountain back on.",
+      "hypothesis": "They moved in during the summer.",
+      "intended": "open"
+    },
+    {
+      "id": "U21",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "I'm handing in my notice on Monday — the letter's already written and printed.",
+      "hypothesis": "The speaker means to leave the job.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U22",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "Grandad laughed the whole way through the film and then went very quiet in the car.",
+      "hypothesis": "Something in the film had troubled him.",
+      "intended": "open"
+    },
+    {
+      "id": "U23",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "Ade gave up coffee back in February and he's sleeping much better now.",
+      "hypothesis": "Quitting coffee is what improved Ade's sleep.",
+      "intended": "open"
+    },
+    {
+      "id": "U24",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "Hana keeps texting me about the cabin thing even though I told her I was busy.",
+      "hypothesis": "Hana and the speaker are friends.",
+      "intended": "open"
+    },
+    {
+      "id": "U25",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "Everyone at the yard calls him Doc, though I don't think that's actually his name.",
+      "hypothesis": "The man's name is not Doc.",
+      "intended": "open",
+      "note": "The speaker only reports a belief, so I called it open, though it reads close to settled."
+    },
+    {
+      "id": "U26",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "We have the same argument about the thermostat every single winter, without fail.",
+      "hypothesis": "That argument has happened more than once.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U27",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "Karen does the books for the bakery and about half the ordering as well.",
+      "hypothesis": "Karen is one of the bakery's owners.",
+      "intended": "open"
+    },
+    {
+      "id": "U28",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "I joined the choir in March and I haven't missed a single rehearsal since.",
+      "hypothesis": "The speaker belongs to the choir.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U29",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "Her handwriting is exactly what it was at fourteen, not a stroke of it different.",
+      "hypothesis": "Her handwriting has changed a great deal since she was fourteen.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U30",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "I've never once been late to that class, not in three years of Tuesdays.",
+      "hypothesis": "She arrived late to that class one evening last winter.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U31",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "She asked me twice what I thought of the ring in the window at Harlow's.",
+      "hypothesis": "She is planning to propose to someone.",
+      "intended": "open"
+    },
+    {
+      "id": "U32",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "Honestly I wasn't nervous at all before the recital, it was strange how calm I felt.",
+      "hypothesis": "She was anxious in the run-up to the recital.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U33",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "The pipe burst because we left the heating off for a fortnight while we were away.",
+      "hypothesis": "The heating being off led to the pipe bursting.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U34",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "Priya and I have never actually met — it's been six years of email and nothing else.",
+      "hypothesis": "Priya and the writer met at a conference last year.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U35",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "The bloke who sorted our boiler turned up again on Tuesday, over at the neighbours'.",
+      "hypothesis": "The same man worked on the neighbours' boiler.",
+      "intended": "open"
+    },
+    {
+      "id": "U36",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "I see Fareed at the bus stop now and then and we nod at each other.",
+      "hypothesis": "Fareed catches the same bus as the speaker.",
+      "intended": "open"
+    },
+    {
+      "id": "U37",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "Theo was up the front of the meeting handing out the agenda to everyone.",
+      "hypothesis": "Theo was the one running the meeting.",
+      "intended": "open"
+    },
+    {
+      "id": "U38",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "Neither of the Haldane boys belongs to the club, and that's the whole grievance.",
+      "hypothesis": "The elder Haldane boy is a member of the club.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U39",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "Since the surgery Bea's been walking down to the shop and back on her own.",
+      "hypothesis": "Bea has recovered from the surgery.",
+      "intended": "open"
+    },
+    {
+      "id": "U40",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "Nina went into the hospital on Tuesday and nobody's heard a word since.",
+      "hypothesis": "Nina is still in the hospital.",
+      "intended": "open"
+    },
+    {
+      "id": "U41",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "I've no plans to sell the boat — people keep asking and the answer's still no.",
+      "hypothesis": "He is trying to sell the boat.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U42",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "Yusuf keeps telling everyone he's completely fine about the results.",
+      "hypothesis": "Yusuf is disappointed about the results.",
+      "intended": "open"
+    },
+    {
+      "id": "U43",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "The shop's been busier every week since they finished the roadworks on Brill Street.",
+      "hypothesis": "Finishing the roadworks is what brought the customers back.",
+      "intended": "open"
+    },
+    {
+      "id": "U44",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "We've lived next to the Okonkwos eleven years and I still don't know their first names.",
+      "hypothesis": "The Okonkwos are unfriendly people.",
+      "intended": "open"
+    },
+    {
+      "id": "U45",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "The woman who gave her name as Rosa at the shelter wasn't Rosa at all.",
+      "hypothesis": "The woman at the shelter was named Rosa.",
+      "intended": "contradicted"
+    },
+    {
+      "id": "U46",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "The band have played the Anchor twice already this month.",
+      "hypothesis": "The band play the Anchor regularly.",
+      "intended": "open"
+    },
+    {
+      "id": "U47",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "The new fellow shadowed Aunty Fern all week on the delivery round.",
+      "hypothesis": "The new fellow is being trained to take the round over.",
+      "intended": "open"
+    },
+    {
+      "id": "U48",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "Half the rowing club drinks in the Fox on a Friday and Priya's always in there.",
+      "hypothesis": "Priya rows with the club.",
+      "intended": "open"
+    },
+    {
+      "id": "U49",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "Ravi's finally stopped slamming the door every time he's told no.",
+      "hypothesis": "Ravi is growing out of his tempers.",
+      "intended": "open"
+    },
+    {
+      "id": "U50",
+      "domain": "time",
+      "origin": "terse",
+      "premise": "Dad always did the crossword before anyone else in the house was up.",
+      "hypothesis": "Dad no longer does the crossword.",
+      "intended": "open",
+      "note": "The past tense invites the reading, but it may just be narration about a past period."
+    },
+    {
+      "id": "U51",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "Owen's started running again and this time he went and bought proper shoes.",
+      "hypothesis": "Owen means to keep the running up.",
+      "intended": "open"
+    },
+    {
+      "id": "U52",
+      "domain": "emotional state",
+      "origin": "terse",
+      "premise": "Ellie cried when they read her name out at the ceremony.",
+      "hypothesis": "Ellie was happy.",
+      "intended": "open"
+    },
+    {
+      "id": "U53",
+      "domain": "causation",
+      "origin": "terse",
+      "premise": "Marcy took the job in Perth and six months later the marriage was over.",
+      "hypothesis": "The move to Perth ended the marriage.",
+      "intended": "open"
+    },
+    {
+      "id": "U54",
+      "domain": "relationship",
+      "origin": "terse",
+      "premise": "Sam brought someone to the wedding and never introduced her to a single one of us.",
+      "hypothesis": "Sam is seeing the woman he brought.",
+      "intended": "open"
+    },
+    {
+      "id": "U55",
+      "domain": "identity",
+      "origin": "terse",
+      "premise": "I got a friend request from a Marta Ilves and the photo looks like my old flatmate.",
+      "hypothesis": "Marta Ilves is the speaker's former flatmate.",
+      "intended": "open"
+    },
+    {
+      "id": "U56",
+      "domain": "frequency",
+      "origin": "terse",
+      "premise": "Mum rings on Sundays, mostly.",
+      "hypothesis": "Mum rang this past Sunday.",
+      "intended": "open"
+    },
+    {
+      "id": "U57",
+      "domain": "role",
+      "origin": "terse",
+      "premise": "As chair of the residents' committee I'm the one who has to sign off the fence.",
+      "hypothesis": "The speaker chairs the residents' committee.",
+      "intended": "entailed"
+    },
+    {
+      "id": "U58",
+      "domain": "membership",
+      "origin": "terse",
+      "premise": "They've put Callum's photo up in the hall with all the old team pictures.",
+      "hypothesis": "Callum played for the team.",
+      "intended": "open"
+    },
+    {
+      "id": "U59",
+      "domain": "developmental change",
+      "origin": "terse",
+      "premise": "The lad Terry took on used to ask me about every joint, now he just gets on with it.",
+      "hypothesis": "The lad has become competent at the work.",
+      "intended": "open"
+    },
+    {
+      "id": "U60",
+      "domain": "intention",
+      "origin": "terse",
+      "premise": "Lena signed up for the Portuguese class and then paid for the whole year upfront.",
+      "hypothesis": "Lena is planning a trip to Portugal.",
+      "intended": "open"
+    }
+  ]
+}

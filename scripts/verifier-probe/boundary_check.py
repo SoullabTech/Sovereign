@@ -34,6 +34,7 @@ SETS = {
     'detector-blind': 'fixtures-detector.json',
     'prospective': 'fixtures-prospective.json',
     'triples': 'fixtures-triples.json',
+    'terse': 'fixtures-terse.json',
     'blind': 'fixtures-blind.json',
     'scope': 'fixtures-scope.json',
     'modifier': 'fixtures-modifier.json',

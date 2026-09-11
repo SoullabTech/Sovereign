@@ -1715,3 +1715,57 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report: the output path, the counts per domain and per
 intended kind, and any item where you were unsure what you had written.
 ```
+
+---
+
+## PHASE 3 CORPUS — FROZEN (2026-09-11)
+
+```text
+fixture path      scripts/verifier-probe/fixtures-terse.json
+fixture sha256    d6f1bfb08abbb49b6b213998fde0d83dd7dffc2716611f090057f075890e2728
+cases             60 · ids U01..U60 contiguous · 60 unique premises
+intended          40 open · 10 entailed · 10 contradicted   (NOT the answer key)
+domains           6 items in each of the ten — exactly balanced
+interleaving      kinds and domains not grouped (verified on the head of the file)
+author            fresh subagent · ZERO repository reads · 1 tool call
+```
+
+**Structure verified, content untouched.**
+
+### ⭐⭐ MANIPULATION CHECK — the variable phase 3 changes, measured before any model ran
+
+| | phase 2 triples | phase 3 terse |
+|---|---|---|
+| premise length, mean | **20.5 words** | **14.2 words** |
+| median | 20.0 | 14.0 |
+| range | 13–29 | 5–19 |
+| premises with a second clause (`.` or `;`) | **9/30** | **0/60** |
+
+⭐ **The manipulation took.** Phase 3's premises are a third shorter and not one
+of them carries a second clause, where nearly a third of phase 2's did. This is
+recorded **now, before any result**, because a "terse" corpus that was not
+actually terse would have made the whole phase unreadable — and it would have
+been tempting to discover that only after seeing a number that disappointed.
+
+⛔ **It measures brevity, which is what was manipulated. It does not measure
+underspecification, which is what is hypothesized to matter** — those are
+different, and the second is what the adjudicator's labels will indirectly reveal.
+
+### The author's own uncertainty — verbatim, and NOT operative
+
+> **U25** (identity) — *"Everyone at the yard calls him Doc, though I don't think
+> that's actually his name."* The premise reports only a belief, so I marked it
+> open, but it reads close to settled.
+> **U50** (time) — *"Dad always did the crossword before anyone else in the house
+> was up."* The past tense strongly invites *"he no longer does it"*, but it may
+> just be narration of a past period.
+> **U01** (time) — *"after work"* makes evening very likely; I judged it not
+> settled.
+> Two further borderline opens without notes: **U40** (Nina in hospital, *"nobody's
+> heard a word since"* → still there) and **U39** (Bea walking to the shop →
+> *"recovered"*).
+
+⛔ **`intended` is a calibration record, not ground truth.** The independent
+adjudicator has not seen it and will not. Where the two disagree, that disagreement
+is data about how hard the class is to author terse — **and it is exactly what
+phase 2 could not measure, because there the author labelled its own work.**
