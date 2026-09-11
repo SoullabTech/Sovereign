@@ -533,6 +533,37 @@ def calibration(paths):
             print('         other two.')
         print()
 
+    # ⭐⭐ CURRENT ADJUDICATED VIEW — kept SEPARATE from the historical run record.
+    # ⛔ The founder's instruction: do not rewrite history; distinguish the two. The
+    # per-run numbers above are what actually happened, duplicates and all. This is
+    # what the same evidence says once each set is counted ONCE and every founder
+    # adjudication is applied.
+    print('  ' + '-' * 70)
+    print('  ⭐ CURRENT ADJUDICATED VIEW — each set counted once, rulings applied')
+    print('  ⛔ The block above is the HISTORICAL RUN RECORD and is not superseded.')
+    first_file = {}
+    for r in rows:
+        key = (r['verifier'], r['_set'])
+        first_file.setdefault(key, r['_path'])
+    uniq = [r for r in rows if first_file[(r['verifier'], r['_set'])] == r['_path']]
+    dropped = len(rows) - len(uniq)
+    if dropped:
+        print(f'    ⚠️ {dropped} rows set aside as repeat runs of a set already counted')
+    for v in sorted({r['verifier'] for r in uniq}):
+        sub = [r for r in uniq if r['verifier'] == v]
+        by_set = collections.defaultdict(lambda: [0, 0])
+        for r in sub:
+            by_set[r['_set']][1] += 1
+            by_set[r['_set']][0] += (r['observed'] == r['expected'])
+        tot_ok = sum(a for a, _ in by_set.values())
+        tot_n = sum(b for _, b in by_set.values())
+        print(f'    {v}')
+        for st in sorted(by_set):
+            ok, n = by_set[st]
+            print(f'      {st:<14} {ok}/{n}')
+        print(f'      {"UNIQUE TOTAL":<14} {tot_ok}/{tot_n}   misses {tot_n - tot_ok}')
+    print('    ⛔ The total is less important than WHERE the misses occur.')
+
     print('\n⛔ NOT SELF-JUDGED. A reading, not a verdict.')
 
 

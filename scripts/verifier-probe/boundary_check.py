@@ -129,10 +129,95 @@ DEBERTA_MISSES = {
 }
 
 
+def against(paths):
+    """
+    ⭐⭐ THE QUESTION THE CALIBRATION RUN LEFT OPEN:
+
+        Can a simple deterministic detector reliably recognize the situations in
+        which DeBERTa is CONFIDENTLY UNSAFE?
+
+    ⛔ IF YES, DeBERTa DOES NOT HAVE TO KNOW THAT IT SHOULD BE UNCERTAIN. THE
+    ARCHITECTURE CAN KNOW. That is the whole point: the modifier regime is where the
+    model is wrong at 0.99, so nothing it reports about itself can rescue it — but a
+    lexical rule cannot be talked out of noticing `until 2019`.
+
+    ⛔ The cross-tab is by CONFIDENCE × CORRECTNESS × FLAG, never a single number. A
+    detector that flags everything scores perfectly on the cell that matters and is
+    useless.
+    """
+    fixtures = {}
+    for name, fn in SETS.items():
+        for c in json.loads(Path(__file__).with_name(fn).read_text())['cases']:
+            fixtures[c['id']] = c
+
+    CONF = 0.90   # ⛔ frozen here, not chosen from the answers below
+    rows = []
+    for path in paths:
+        d = json.loads(Path(path).read_text())
+        for r in d.get('rows', []):
+            c = fixtures.get(r['id'])
+            if not c:
+                continue
+            sc = r.get('scores') or {}
+            if 'threshold' in sc:
+                key = next((k for k in sc if k != 'threshold'), None)
+                conf = abs(sc[key] - sc['threshold']) * 2 if key else None
+            else:
+                vals = [v for v in sc.values() if isinstance(v, (int, float))]
+                conf = max(vals) if vals else None
+            if conf is None:
+                continue
+            risk, _ = boundary_risk(c['premise'], c['hypothesis'])
+            rows.append({'verifier': r['verifier'], 'id': r['id'],
+                         'set': d.get('set', '?'), 'conf': conf, 'risk': risk,
+                         # ⛔ ground truth from the CURRENT fixture, not the saved row
+                         'correct': r['observed'] == c['expected']})
+
+    if not rows:
+        sys.exit('no usable rows — pass probe result JSON files')
+
+    for v in sorted({r['verifier'] for r in rows}):
+        sub = [r for r in rows if r['verifier'] == v]
+        seen = {}
+        for r in sub:                      # one entry per (set,id): repeats collapse
+            seen[(r['set'], r['id'])] = r
+        sub = list(seen.values())
+        cells = {}
+        for conf_hi in (True, False):
+            for correct in (False, True):
+                g = [r for r in sub if (r['conf'] >= CONF) == conf_hi
+                     and r['correct'] == correct]
+                cells[(conf_hi, correct)] = (sum(r['risk'] for r in g), len(g))
+        print(f'\n{"=" * 74}\nBOUNDARY DETECTOR vs {v}   '
+              f'(confidence cut frozen at {CONF})')
+        print('                              flagged / total')
+        print(f"  ⛔ CONFIDENT AND WRONG        "
+              f"{cells[(True, False)][0]}/{cells[(True, False)][1]}"
+              f"     <- the cell that decides it")
+        print(f"     confident and right       {cells[(True, True)][0]}/{cells[(True, True)][1]}"
+              f"     <- cost: these get held too")
+        print(f"     hesitant and wrong        {cells[(False, False)][0]}/{cells[(False, False)][1]}")
+        print(f"     hesitant and right        {cells[(False, True)][0]}/{cells[(False, True)][1]}")
+        cw, cwn = cells[(True, False)]
+        cr, crn = cells[(True, True)]
+        if cwn:
+            print(f"\n  -> {cw} of {cwn} confidently-wrong answers would be HELD by a rule")
+            print(f"     that consults no probability at all")
+        if crn and cr == crn:
+            print('  ⛔ AND IT FLAGS EVERY CONFIDENT CORRECT ANSWER TOO — no discrimination.')
+    print('\n⛔ NOT A GATE. NOT AUTHORIZED. A measurement, not a component.')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--set', dest='which', choices=sorted(SETS), default=None)
+    ap.add_argument('--against', nargs='+', metavar='RESULT.json',
+                    help='cross-tab the detector against a verifier\'s confidence')
     a = ap.parse_args()
+
+    if a.against:
+        against(a.against)
+        return
 
     which = [a.which] if a.which else ['as-derived', 'blind', 'scope', 'modifier']
     tot_cov = tot_neg = tot_cost = tot_pos = 0

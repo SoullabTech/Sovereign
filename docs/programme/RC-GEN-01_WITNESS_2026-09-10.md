@@ -3973,3 +3973,123 @@ print DeBERTa's full family table across all three sets.
 leading alternative · MiniCheck NOW THE DECIDING EXPERIMENT (independence, not
 accuracy) · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — GLOBAL BAND NOT SAFE · REGIME PREDICTS DANGER BETTER THAN CONFIDENCE
+
+```
+GLOBAL CONFIDENCE SIGNAL     EXISTS STATISTICALLY
+GLOBAL UNRESOLVED BAND       NOT SAFE
+```
+
+⭐ *Those are not contradictory.* ⛔ **Where DeBERTa has its known weakness, it does not
+know that it is weak.**
+
+```
+SATELLITE BOUNDARY   7/8 wrong · wrong confidence ≈ .953
+MAIN-VERB BOUNDARY   7/8 right · one miss ≈ .666
+LICENSED CONTROLS    8/8 right · confidence ≈ .998
+```
+
+⭐ **The research direction changes shape:**
+
+```
+NOT   how confident is DeBERTa? -> UNRESOLVED?
+
+BUT   what kind of proposition is this?
+      -> does it activate a KNOWN FAILURE REGIME?
+      -> what does DeBERTa say?
+      -> do independent witnesses agree?
+      -> VERIFIED / UNRESOLVED / REFUSED
+```
+
+### ⭐⭐⭐ THE DOCTRINE LINE THIS RUN EARNED EMPIRICALLY
+
+> **Openness cannot depend upon felt uncertainty alone. A system must also know the
+> conditions under which its certainty is unreliable.**
+
+⛔ **Uncertainty is not necessarily something the thinker experiences internally.**
+Humans are enormously confident and wrong constantly, because they do not recognise
+the frame in which their reasoning fails. So corrigibility cannot rest on *"how
+uncertain do I feel?"* — it needs *"what conditions am I reasoning under, and what do I
+know about the limits of my own way of knowing?"* ⭐ **That is metacognition, and it is
+architectural rather than introspective.**
+
+⭐ `UNRESOLVED` is therefore **not** *"the AI isn't confident."* It is:
+
+> **The whole epistemic situation does not yet warrant closure.**
+
+### ⭐ HOUSEKEEPING RULED — TWO VIEWS, NEITHER SUPERSEDING THE OTHER
+
+⛔ *Do not rewrite history; distinguish the two.*
+
+```
+HISTORICAL RUN RECORD          what actually happened, duplicates and all
+CURRENT ADJUDICATED CALIBRATION each set counted once, every ruling applied
+```
+
+`--calibration` now prints both. The founder's expected unique picture, to check
+against:
+
+```
+as-derived 13/13 · blind 20/22 · scope 19/22 · modifier 16/24
+UNIQUE TOTAL 68/81 · misses 13
+```
+
+⛔ **The total is less important than where the misses occur** — printed as such.
+
+## ⭐⭐ ACT 2 BUILT — `boundary_check.py --against RESULT.json`
+
+The founder's question, made measurable:
+
+> **Can a simple deterministic detector reliably recognize the situations in which
+> DeBERTa is confidently unsafe?**
+>
+> ⭐ **If yes, DeBERTa does not have to know that it should be uncertain. THE
+> ARCHITECTURE CAN KNOW.**
+
+```
+source     "managed the bakery until 2019"
+candidate  "manages the bakery"
+detector   SOURCE QUALIFIER LOST
+DeBERTa    .997 ENTAILMENT
+           -> combined epistemic status  UNRESOLVED
+```
+
+⭐ *Powerful precisely because the deterministic layer cannot be talked out of noticing
+`until 2019`.*
+
+⛔ **The output is a CROSS-TAB, never a single number**, because a detector that flags
+everything scores perfectly on the one cell that matters:
+
+```
+⛔ CONFIDENT AND WRONG    flagged/total   <- the cell that decides it
+   confident and right    flagged/total   <- the cost: these are held too
+   hesitant and wrong     flagged/total
+   hesitant and right     flagged/total
+```
+
+⛔ Confidence cut **frozen at 0.90 in the file**, not chosen from the answers. Ground
+truth read from the **current** fixtures, so the N2 adjudication applies. Repeat runs
+of a set collapse to one entry per `(set, id)`.
+
+### ⚠️ AND A SELF-TEST THAT IS NOT EVIDENCE, DELETED RATHER THAN KEPT
+
+To check the mechanism I reconstructed the modifier run from the transcript — but the
+calibration output only gives confidences for the **misses**, so I **assigned `0.96` to
+every hit**. ⛔ The `confident and right` column was therefore **manufactured by my own
+guess**, and the whole file is worthless as evidence. ⭐ **Deleted, and recorded here
+rather than quietly dropped.** The mechanism is verified; the numbers are not results
+and must not be cited. **Only a run against the founder's real JSON produces the cost
+column.**
+
+### To run — both costless, no model, nothing downloads
+
+```
+python3 scripts/verifier-probe/probe.py --calibration verifier-probe-*.json
+python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
+```
+
+⛔ **Standing: MiniCheck NOW THE DECIDING EXPERIMENT — on the frozen modifier corpus,
+and the question is whether it misses M2–M8 too · boundary cross-tab READY, NOT RUN ·
+INLI AFTER the witnesses · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
+production UNTOUCHED.**
