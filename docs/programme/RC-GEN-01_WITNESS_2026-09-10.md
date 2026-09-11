@@ -5003,3 +5003,67 @@ python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
 ```
 
 **Rule digest unchanged — `18608a18…`.**
+
+---
+
+## ⛔⛔ THE DEPENDENCE RESULT IS CARRIED BY ONE ADVERSARIAL CORPUS (2026-09-11)
+
+Per-set unconditional dependence, DeBERTa → MiniCheck:
+
+```
+  blind            acc|wrong   0%  acc|right  95%  p=0.0130   errs=2   ⚠️ n<5
+  detector-blind   acc|wrong  78%  acc|right  85%  p=1.0000   errs=9   no signal
+  modifier         acc|wrong  38%  acc|right  94%  p=0.0069   errs=8   ⛔ dependent
+  scope            acc|wrong  33%  acc|right  89%  p=0.0727   errs=3   ⚠️ n<5
+```
+
+⭐ **Exactly two sets carry enough errors to say anything — `modifier` (8) and
+`detector-blind` (9) — and they say opposite things.** 38% against 78%;
+`p = 0.0069` against `p = 1.0000`. The pooled `p = 9.03e-05` is not a summary of
+consistent evidence. **It is an average of two sets that disagree, and the one
+that carries the signal is the corpus built from DeBERTa's own observed
+failures.**
+
+⚠️ **`blind` prints `p = 0.0130` on TWO errors.** Nominally significant, and the
+guard refuses it. This is the founder's own warning arriving as data: *a
+particular observation wearing a verdict's clothes.* It must not be counted
+toward the pooled figure's credibility, and the pooled figure's credibility is
+what is now in question.
+
+### What this does to the standing table
+
+| line | as ruled | on this evidence |
+|---|---|---|
+| MiniCheck independence | PARTIAL / CORRELATED | ⛔ **correlated on adversarially-built material; NO signal on the one non-adversarial set with enough errors** |
+| detector as MiniCheck selector | NOT SUPPORTED | ⛔ **established on adversarial corpora; looks SUPPORTED where it is not** |
+| majority voting | REJECTED | ⚠️ **rejection rests partly on a dependence result that has not survived splitting** |
+
+⛔ **Not overturned — the founder rules.** But the empirical basis named in the
+ruling is now known to be composition-dependent, and *a result that reverses when
+you split it by corpus was never a result about the verifiers.*
+
+### The one number that decides whether the rename holds
+
+The closure-risk role rests on **agreement precision 68% inside vs 98%
+outside**, pooled. The dependence figure beside it turned out to be carried by
+`modifier` alone. **The agreement figure has not yet been split the same way**,
+and it is subject to exactly the same effect. The instrument now prints it per
+set:
+
+```zsh
+python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
+```
+
+Three outcomes, predeclared before the run:
+
+- **Held across sets** → the closure-risk rename stands on its own evidence.
+- **Carried by `modifier`** → the rename rests on a corpus built to break
+  DeBERTa, and `detector-blind` already shows agreement inside the regime at
+  n=4 with 2 of 4 right. The role would need new blind temporal material before
+  it hardens.
+- **Too few inside per set** → the contrast exists only pooled, which is the
+  weakest of the three and the hardest to argue from.
+
+⛔ **Predeclared so that whichever comes back is a result rather than a reading.**
+
+**Rule digest unchanged — `18608a18…`.**

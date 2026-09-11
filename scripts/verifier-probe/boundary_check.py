@@ -186,6 +186,9 @@ DEBERTA_MISSES = {
 }
 
 
+MIN_N_SET = 5   # the same floor the pooled tables use, applied per set
+
+
 def against(paths, only=None):
     """
     ⭐⭐ THE QUESTION THE CALIBRATION RUN LEFT OPEN:
@@ -295,18 +298,33 @@ def against(paths, only=None):
                 if not (res + blind_) or not (pres + disr):
                     continue
                 pv = fisher_exact_2x2(res, blind_, pres, disr)
+                # ⭐ AND the closure ruling's headline, per set: agreement
+                # precision inside vs outside the risk regime. The pooled
+                # 68%/98% is subject to exactly the composition effect the
+                # dependence figure turned out to have, and must be split the
+                # same way before it can carry an architectural role.
+                ag = lambda routed_: (
+                    sum(1 for v in sh if bool(v[a]['risk']) == routed_
+                        and v[a]['correct'] and v[b]['correct']),
+                    sum(1 for v in sh if bool(v[a]['risk']) == routed_
+                        and not v[a]['correct'] and not v[b]['correct']))
                 per.append((st, res + blind_, res / (res + blind_),
-                            pres / (pres + disr), pv))
+                            pres / (pres + disr), pv, ag(True), ag(False)))
             if len(per) < 2:
                 continue
             if not printed_header:
                 print('\n⭐ UNCONDITIONAL DEPENDENCE, PER SET — a pooled p is an average')
                 printed_header = True
             print(f'   {a} -> {b}')
-            for st, n_err, aw, ar, pv in per:
+            for st, n_err, aw, ar, pv, ag_in, ag_out in per:
                 flag = '⚠️ n<5' if n_err < 5 else ('⛔ dependent' if pv < 0.05 else 'no signal')
                 print(f'     {st:<16} acc|wrong {aw:>4.0%}  acc|right {ar:>4.0%}  '
                       f'p={pv:<8.4f} errs={n_err:<3} {flag}')
+                fmt = lambda t: (f'{t[0]}/{t[0] + t[1]} = {t[0] / (t[0] + t[1]):.0%}'
+                                 if t[0] + t[1] >= MIN_N_SET
+                                 else f'n={t[0] + t[1]} — too few')
+                print(f'     {"":<16} agreement precision  INSIDE {fmt(ag_in):<16}'
+                      f'  OUTSIDE {fmt(ag_out)}')
 
     for v in sorted({r['verifier'] for r in rows}):
         sub = [r for r in rows if r['verifier'] == v]
