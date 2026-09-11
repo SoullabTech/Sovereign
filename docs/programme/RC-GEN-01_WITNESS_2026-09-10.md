@@ -3282,3 +3282,111 @@ python3 scripts/verifier-probe/probe.py --set modifier --model deberta
 ⛔ **Standing: modifier set FROZEN and NOT RUN · MiniCheck WIRED and NOT RUN · INLI
 OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐ MODIFIER-BOUNDARY RUN · M 1/8 · V 7/8 · P 8/8 — AND MY SET IS CONFOUNDED
+
+`2026-09-11T08:58Z` · set `modifier` · sha256 `99ce2dda…` verified before the run and
+printed back by the probe.
+
+```
+M  satellite modifier   1/8      ⛔ 7 of 8 returned ENTAILMENT
+V  main verb            7/8      ⭐ 6 of 7 correct returned CONTRADICTION
+P  licensed control     8/8      ⭐ readable — conservatism ruled out
+```
+
+⭐ **P 8/8 matters more than it looks.** Every licensed control carries a modifier of
+its own — `in 2014 … still`, `on the morning crossing`, `in every fixture`, `weekly`,
+`through each winter`, `each Friday`, `at every concert`, `on Wednesdays`. ⛔ **So the
+failure is NOT "any modifier triggers refusal", and it is not "any modifier is
+ignored" either.** It is specific to a *limiting* modifier.
+
+### ⛔⛔ THE HEADLINE OVERSTATES THE CASE, AND THE FAULT IS MINE
+
+⛔ **I called these minimal pairs. Only three of the eight are.** A minimal pair
+requires M and V to express **the same limitation** two ways. They do not:
+
+```
+T1  "ran ... until the lease ended"        / "no longer runs"          ⭐ MATCHED
+T2  "piloted ... before moving inland"     / "has retired from"        ⭐ MATCHED
+T8  "taught ... before the funding was cut"/ "left"                    ⭐ MATCHED
+
+T4  "kept bees during the trial period"    / "stopped keeping"         ~ near
+T5  "maintained ... in 2019"               / "resigned as keeper"      ~ near
+T7  "conducted ... on Tuesday"             / "used to conduct"         ~ near
+
+T3  "played twice last season"             / "gave up playing"         ⛔ NOT MATCHED
+T6  "printed ... three times"              / "ceased printing"         ⛔ NOT MATCHED
+```
+
+⛔ **T3 and T6 pit a FREQUENCY inference against an explicit CESSATION verb** — a
+harder task against an easier one. That is not the hypothesis being tested; it is a
+difficulty gradient wearing the hypothesis's clothes.
+
+### ⭐ ON THE THREE STRICTLY MATCHED TRIPLES, THE GAP LARGELY DISAPPEARS
+
+```
+T1   M ok  (contradiction)   V ok  (contradiction)
+T2   M MISS                  V MISS      ⛔ BOTH fail — the counterexample in the set
+T8   M MISS                  V ok  (neutral)
+
+                 M 1/3        V 2/3      ⛔ one case of difference, at n=3
+```
+
+⛔ **That is not material, and I will not present the 1/8 vs 7/8 as though it were.**
+⚠️ **V2 is the sharpest single fact here:** *"Petr has retired from piloting the river
+ferry."* → `ENTAILMENT`. A cessation stated in the main verb, in the clearest possible
+terms, read as licensing the present tense. ⛔ **The hypothesis predicted V would be
+safe. On T2 it was not.**
+
+### ⭐⭐ WHAT THE RUN DOES ESTABLISH — TWO FINDINGS, SEPARATED
+
+**(a) EXPLICIT CESSATION IN THE MAIN VERB IS HANDLED WELL.** `no longer` · `gave up` ·
+`stopped` · `resigned as` · `ceased` · `used to` · `left` — **7/8, six of them as
+`contradiction`.** Not merely failing to find entailment: actively finding
+incompatibility.
+
+**(b) ⛔ A BOUNDED PAST EVENT DOES NOT BLOCK PRESENT-TENSE GENERALISATION.** 7 of 8 M
+cases returned **`entailment`** — the model affirmatively concluded the present-tense
+claim follows.
+
+```
+"Hana played for the cricket side twice last season."
+        -> "Hana plays for the cricket side."            ENTAILMENT
+"Sunniva printed the town's broadsheet three times."
+        -> "Sunniva prints the town's broadsheet."       ENTAILMENT
+"Tamás conducted the town band on Tuesday."
+        -> "Tamás conducts the town band."               ENTAILMENT
+```
+
+⭐⭐ **This is stronger than "it drops a modifier."** It is generalising a bounded past
+occurrence into a standing present property — **exactly the operation that would turn
+"she attended the group twice" into "she belongs to the group"** in a memory that
+persists. ⛔ **And it holds independently of whether my M/V pairing was fair**, because
+it is a property of the M cases alone.
+
+### ⛔ WHAT IS NOT SETTLED
+
+⛔ **Whether the encoding of the boundary is the cause remains OPEN.** The matched
+subset is 3 triples and splits 1/3 vs 2/3. The frozen prediction's "survives"
+condition is met on the headline and **NOT met on the only cases that could test it
+cleanly.**
+
+⛔ **I am not re-scoring the set, not dropping T3/T6, and not re-framing the prediction
+after the fact.** The set ran as frozen and the result stands as recorded. The design
+flaw is mine and is recorded beside it.
+
+⭐ **What a repaired set would need:** every M expressing *exactly* the limitation its
+V expresses — cessation only, no frequency, no bare dates — and enough triples that
+`n` can carry a conclusion. ⛔ **Not built. Not authorized.**
+
+### ⚠️ AND ONE MORE TIME, THE LABEL CAUTION EARNS ITSELF
+
+V returned `contradiction` six times for *"no longer runs"*-type premises, where the
+premise genuinely **is** incompatible with the hypothesis — so here the label is apt.
+⛔ **That does not license reading `contradiction` as denial in general**; blind B12
+returned it where the premise merely failed to assert. ⭐ *The same label is doing two
+different jobs, which is precisely why the verdict stays binary.*
+
+⛔ **Standing: no ruling taken · no fixture edited · no threshold moved · MiniCheck
+NOT RUN · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
+production UNTOUCHED.**
