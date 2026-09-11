@@ -188,7 +188,7 @@ describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
     expect(p).toContain('Fidelity is the constraint; plainness is the goal');
   });
   it('⭐ names the failure mode: obeying one constraint by breaking another', () => {
-    expect(p).toContain('not a list to satisfy one at a time');
+    expect(p).toContain('not constraints to satisfy one at a time');
     expect(p).toContain('traded one loss for');
   });
   it('requires a check against the source BEFORE answering', () => {
@@ -197,7 +197,7 @@ describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
   });
   it('enumerates every axis a run has lost so far, plus their absences', () => {
     expect(p).toContain('what each one is in relation TO');
-    expect(p).toContain('every causal or consequential relation');
+    expect(p).toContain('every relation the source draws between them');
     expect(p).toContain('every degree of significance');
     expect(p).toContain('including their absence');
     expect(p).toContain('including the absence of one');
@@ -237,11 +237,24 @@ describe('⭐ the structural framing — a passage is a structure (run 5 FAIL)',
 describe('⛔ the prompt teaches the LAW, never the fixture', () => {
   /* Rendered with NO sections, so the authorized prose cannot mask a leak. */
   const bare = revisionSystemPrompt([]);
-  it('contains none of the specimen fixture\'s vocabulary', () => {
-    for (const w of ['integration', 'perspective', 'natural world', 'kettle',
-                     'coffee', 'Mara', 'relational orientation', 'step forward']) {
+  it('contains no fixture SENTENCE or phrase from either specimen', () => {
+    for (const w of ['perspective', 'natural world', 'kettle', 'coffee', 'Mara',
+                     'relational orientation', 'step forward', 'working through']) {
       expect(bare.toLowerCase()).not.toContain(w.toLowerCase());
     }
+  });
+
+  /* ⚠️ KNOWN EXPOSURE, recorded rather than hidden. Two of the founder-ratified
+     valence pairs — `ongoing is not struggling` and `integration is not repair` —
+     use specimen 1's own vocabulary. They were authored as the RULING on run 3,
+     so they are not edited here; the exposure is flagged in the witness record
+     for a founder decision. This assertion states exactly what is true today,
+     so the guard cannot silently rot into covering it. */
+  it('⚠️ the only fixture words present are the two in the ratified valence pairs', () => {
+    const leaks = ['integration', 'ongoing'].filter((w) => bare.toLowerCase().includes(w));
+    expect(leaks.sort()).toEqual(['integration', 'ongoing']);
+    expect(bare).toContain('integration is not  repair');
+    expect(bare).toContain('ongoing      is not  struggling');
   });
   it('contains no worked example of any passage\'s structure', () => {
     expect(bare).not.toContain('->');

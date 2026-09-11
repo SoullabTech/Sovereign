@@ -506,6 +506,29 @@ that law is already among the things the system must preserve.
 >
 > **Plainness may alter the vocabulary. It may not drop an edge.**
 
+### ⚠️ OPEN — a teaching-to-the-test exposure in the ratified valence pairs
+
+Building the anti-teaching guard surfaced this rather than assuming it away. **Two
+of the run-3 valence pairs use specimen 1's own vocabulary:**
+
+```
+ongoing      is not  struggling
+integration  is not  repair
+```
+
+⛔ **Not edited here.** They were authored as the founder's ruling on run 3, and
+silently generalizing a ruling is worse than naming the exposure.
+
+**Why it may not matter:** the pairs forbid *adding* those readings; they do not
+supply a wording MAIA could copy, and the failures since run 3 have been elsewhere.
+**Why it might:** a specimen whose vocabulary appears in the instruction is no
+longer fully independent of it, and run 5 did preserve `integration` cleanly.
+
+⭐ **The falsifier now asserts exactly this and no more** — that `integration` and
+`ongoing` are *the only* fixture words in the prompt — so the guard cannot rot into
+quietly covering a future leak. A founder ruling decides whether to generalize the
+two pairs.
+
 ### Specimen 2 — PASS, fifth consecutive live run
 
 **The unresolved capability is faithful transformation. It is not restraint.**
