@@ -56,7 +56,13 @@ artifact             SAME-SOURCE REBUILD — signed CLI build from the witness c
 install / launch     xcrun devicectl device install app / process launch (device A0736AC8-793B-516F-AC72-C076DB6CEE38) — "Launched application with life.soullab.voicekernel.k00"
 Xcode GUI build      FAILED before this run with exactly one error: Signing for "VoiceKernelHarness" requires a development team.
                      (generated .xcodeproj carries no team; project.yml deliberately sets none) — operator evidence, not a kernel defect
-                     A later GUI Run with a team selected attached the debugger to a fourth attempt; binary replacement NOT EVIDENCED
+launch provenance    (founder correction, verbatim)
+                       run 1 launch        devicectl
+                       run 2 launch        Xcode debugger
+                       crash binary        UUID matched signed CLI artifact
+                       binary replacement  not established
+                       subject             488e0666c
+                     "Xcode" here means launched/debugged under Xcode only; the claim that Xcode replaced the CLI binary is NOT established.
 iOS / device         iOS 18.7 · Kelly Nezat's iPhone
 route hardware       built-in only exercised (Pi8 present in the room, never reached)
 legacy process       device process list checked immediately after launch: only VoiceKernelHarness present; no MAIA/Capacitor App process
@@ -171,7 +177,7 @@ Microphone permission (human-only facts, **PENDING founder**): (1) did a permiss
 KERNEL-00 DEVICE WITNESS
 
 subject             488e0666c
-artifact            signed CLI binary (UUID 81D0C25C-73C9-39BE-B617-CF1020D0A9A4)
+artifact            signed CLI binary (UUID 81D0C25C-73C9-39BE-B617-CF1020D0A9A4) · binary replacement not established
 entry               FAIL
 reproduced          4 attempts (3 device crash reports + 1 debugger-captured)
 termination         SIGABRT / Objective-C exception
@@ -181,18 +187,39 @@ architecture        UNCHANGED
 repair              NONE
 ```
 
-**Founder ruling (2026-09-11): open PRE-WITNESS-02, only after this record is sealed.** *This failure does not argue for another architecture. It argues for repairing the first physical seam where the architecture met iOS.* Bounded to:
+**Founder ruling (2026-09-11): PRE-WITNESS-02 OPEN — only after this record is sealed. Not KERNEL-01. Not a new architecture. Not a lower-level audio-stack migration.** *This failure does not argue for another architecture. It argues for repairing the first physical seam where the architecture met iOS.* Bounded to:
 
 ```text
-ENTRY SEAM ONLY
-1. an invalid input format must never reach installTap
-2. a configuration change during entry may not synchronously build a new generation against an unready hardware format
-3. the failure must become journalable and flow through the existing bounded recovery policy
-4. NSException must be made unreachable by precondition — not "caught" with Swift do/catch
-5. no STT · 6. no TTS · 7. no thresholds changed · 8. no provider work · 9. no architecture amendment
+PRE-WITNESS-02 — K00 ENTRY SEAM
+
+PURPOSE
+Make entry and configuration recovery survivable and journalable
+without changing the ratified architecture or thresholds.
+
+IN SCOPE
+1. Validate input format before every input-tap installation.
+2. An invalid format must never reach AVAudioNode.installTap.
+3. Invalid/unready format becomes a journaled graph-start/rebuild failure.
+4. That failure enters the existing bounded RecoveryPolicy.
+5. Resolve configuration-change behavior while floor == entering:
+      rebuild now
+      defer/wait
+      or another bounded state transition
+   by falsification against the witnessed sequence.
+6. Preserve generation custody and one-engine-per-generation law.
+
+OUT OF SCOPE
+STT · TTS · providers · turn detection · BENCH-01 · BRIDGE-01 · MIGRATE-01
+threshold changes · architecture amendment · legacy repair · lower-level AudioUnit migration
+
+PRINCIPLE
+Do not try to catch NSException. Make the invalid call unreachable.
+The kernel's Swift recovery architecture is useful only if every expected platform
+condition is converted into a Swift-visible, journalable state before calling an API
+whose violated preconditions abort the process.
 ```
 
-Not yet ruled: whether the implementation is guard-only, deferred configuration recovery, or both. PRE-WITNESS-02 falsifies those alternatives against the observed sequence before choosing. Then the same device witness is rerun from Enter under the unchanged runbook. §20.1 of the research blueprint ("begin with the higher-level engine path; move lower only if it cannot meet the gates") is not triggered by this record: the defect is sequencing and guard within the higher-level path, not a demonstrated ceiling of it.
+Sequence ruled: seal witness → open PRE-WITNESS-02 → repair only the entry seam → compile gates → rerun the same KERNEL-00 witness. Nothing else moves. Not yet ruled: whether the implementation is guard-only, deferred configuration recovery, or both. PRE-WITNESS-02 falsifies those alternatives against the observed sequence before choosing. Then the same device witness is rerun from Enter under the unchanged runbook. §20.1 of the research blueprint ("begin with the higher-level engine path; move lower only if it cannot meet the gates") is not triggered by this record: the defect is sequencing and guard within the higher-level path, not a demonstrated ceiling of it.
 
 Founder attestation: ___
 
