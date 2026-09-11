@@ -1533,3 +1533,93 @@ happens.
 Repair Two implemented and pushed, unbuilt, unwitnessed (defect c) ·
 defect (b) recorded, no repair authorized · S1–S4 deferred · silent
 switch and Account Settings footer lines still unwitnessed.
+
+### E21 · 2026-09-11 · FOUNDER RULINGS REVISED after E18–E20 — sequence FROZEN; defect-driven development on this runtime CLOSES after E19/E20; `VOICE-2026` opened, census first
+
+**Founder reading of E18 (verbatim substance).** E18 looks less like "a
+few voice bugs" and more like an old architectural model revealing its
+limits. Two years of incremental growth — browser capture, recognizer
+lifecycle, native audio management, TTS, turn timers, WebView state, and
+protections added around each — produced a system in which recognition,
+audio hardware, turn-taking, playback and UI state are entangled. The 37
+restarts are the picture: components successfully doing what they think
+they own while the conversation as a whole collapses. *Multiple concepts
+negotiating custody of one physical organism.*
+
+**On E20 specifically.** The clean isolation of one semantic defect
+inside the old runtime is NOT evidence that the architecture should be
+cleaned progressively; it shows a controlled baseline can be held while a
+successor is designed. **Architectural note on Repair Two:** re-arming the
+2500 ms timer when native recognition starts is acceptable as an interim
+legacy repair but must not become a principle of Voice 2026 — in the
+future runtime, recognition starting or restarting has no authority over
+whether a human turn remains alive; that the re-arm is needed is itself
+evidence of the coupling to remove.
+
+**Sequence, frozen:**
+
+1. **E19 — historical A/B.** Run the preserved pre-registration build.
+   Record ONLY: switch position · MAIA audible turn 1 / turn 2 · Account
+   Settings footer · Native App Build. One historical causal question.
+2. **E20 — Repair Two witness.** Build `3d5b0db94` and perform the one
+   long-utterance test. Judge ONLY whether the complete utterance survives
+   recognizer segmentation and closes intact. Mic recovery, output
+   audibility, the restart storm and route behaviour are NOT Repair Two
+   outcomes and are not judged there.
+3. **Then defect-driven development on this runtime CLOSES.** Even if E19
+   or E20 exposes another problem, it is recorded, not repaired — no
+   Repair Three. The existing runtime becomes a **legacy reference
+   implementation and evidence source**.
+4. **Open `VOICE-2026 / CENSUS-01`, read-only.** Output: a map of the
+   *executable* system — every owner of `AVAudioSession`, capture,
+   playback, STT lifecycle, TTS lifecycle, turn closure, timers, WebView
+   media, interruption recovery, routing and UI state; for each, who can
+   start it, stop it, restart it and change its configuration. The
+   intended architecture is not the subject; the executable one is.
+5. **In parallel, a contemporary architecture survey** — not "how do we
+   fix this code" but "how would we build MAIA voice today": native iOS
+   conversational-audio primitives, WebView/Capacitor boundaries,
+   voice-processing I/O, current Apple speech APIs, sovereign/local STT
+   and TTS, streaming recognition, interruption/barge-in,
+   Bluetooth/routing, background/interruption recovery, modern realtime
+   conversational architectures.
+6. **Target architecture before code.** Three artifacts are required
+   before implementation: an **authority graph**, a **conversation state
+   machine**, and a **migration boundary** showing which pieces of
+   canonical MAIA survive unchanged and which voice infrastructure is
+   retired. *We are not redesigning MAIA cognition. We are designing a new
+   sensory/motor system around it.*
+
+**The question changes.** The old programme asked *why didn't the
+microphone come back?* Voice 2026 asks: *what is the smallest coherent
+organism capable of hearing, speaking, remaining present, surviving
+interruption, and carrying an uninterrupted human turn — and how should
+canonical MAIA connect to it?*
+
+**First principle for the new architecture, taken from E18:** *a
+subsystem may report itself healthy while the organism is dead.*
+`engine = started` plus digital zero is the exact case. Voice 2026 cannot
+define health through component state; it needs end-to-end physiological
+invariants — actual input energy, actual rendered output, stable route,
+coherent session ownership, active turn continuity, recovery without
+human intervention.
+
+**Central architectural shift (founder):** *voice is not STT + TTS; voice
+is a persistent conversational audio runtime.* One native authority owns
+`AVAudioSession` category/mode/activation, route, microphone and output
+lifecycle for the lifetime of the conversation; STT and TTS consume or
+produce streams and own no hardware; the WebView expresses intention
+(`startConversation / stopConversation / mute / interrupt`) and receives
+events; a separate turn manager decides turn state, so recognizer
+restart, recognizer finalization, silence timeout and audio-engine
+restart are each *not* a turn end. Draft invariants VOICE-01…VOICE-08 and
+the reference-organism plan (`/voice-kernel-test`, no MAIA, 50 turns /
+30 min / zero ownership conflicts, then switch · route · lock ·
+interruption · killed-STT/network/TTS) are carried into the VOICE-2026
+charter as founder-proposed candidates, not ratified law.
+
+**Lane action.** This lane's remaining acts are E19 and E20 only. The
+Repair Two branch stays at `3d5b0db94`, unmerged, for the E20 witness.
+VOICE-2026 opens on its own branch with charter + CENSUS-01; nothing in
+it is production code. Defects surfaced after this point are recorded in
+this lane doc as evidence for the census, never repaired.
