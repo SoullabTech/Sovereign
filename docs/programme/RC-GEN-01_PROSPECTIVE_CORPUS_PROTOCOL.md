@@ -1347,3 +1347,52 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report: the output path, how many you accepted, the
 verdicts you assigned to any you rejected, and which ones you found hardest.
 ```
+
+---
+
+## PRESERVED IN THE RECORD — founder, before the adjudicator returned (2026-09-11)
+
+**The freeze:** 90 cases · 30 matched triples · 30/30/30 three-way balance ·
+balanced across all ten domains · one shared premise per triple · **no content
+edits after structural validation**.
+
+**The blindness:** no labels · no author rationale · no siblings · no domain · no
+model outputs · no earlier corpus results.
+
+> ⭐ **So the second adjudicator is genuinely judging *"does this premise leave the
+> hypothesis open, or does it actually settle it?"* — not reverse-engineering the
+> intended answer.**
+
+### ⛔ TWO INVARIANTS, both now enforced in code
+
+**1. A disputed item STAYS in the primary result, even when the adjudicator
+rejects it.** Otherwise sensitivity analysis quietly becomes post-hoc case
+selection — the freeze defeated from the other end. `phase2_report.py` computes
+the primary from the frozen fixture alone and the adjudication file cannot
+subtract from it; the reporter prints the invariant on every run so it is visible
+rather than trusted.
+
+**2. The four author-flagged cases are CASEWISE, never a rate.** `T039 · T075 ·
+T021 · T060`. With four items a percentage would be exactly the defect this lane
+has already caught four times — a particular observation wearing a verdict's
+clothes. The reporter names each one and prints the independent verdict beside
+it, and divides nothing.
+
+Either outcome is informative and both are predeclared: **one reclassified is
+evidence about author calibration; all four surviving is evidence too.**
+
+### Sequence from here — no further design changes warranted
+
+```text
+1. adjudicator returns
+2. structural validation ONLY
+3. freeze adjudication + hash
+4. ⛔ no corpus edits
+5. run DeBERTa
+6. report — PRIMARY (all 30) · SENSITIVITY (accepted subset)
+            · LABEL ROBUSTNESS (disputed count + ids)
+            · Wilson intervals and the raw percentage-point gap, no verdict
+```
+
+> ⭐⭐ **The experiment is finally aimed directly at the question: *can the verifier
+> preserve possibility as possibility?***

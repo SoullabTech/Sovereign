@@ -1,0 +1,307 @@
+{
+  "adjudicator": "Independent adjudicator working only from the 30 stripped premise/hypothesis pairs, with no access to labels, corpora or prior judgements",
+  "adjudication_date": "2026-09-11",
+  "method": "For each item I first tried to construct a concrete world in which every word of the premise holds and the hypothesis is false (test 1), then a world in which every word holds and the hypothesis is true (test 2), treating the premise strictly as written rather than as a story with an implied continuation. Only if both worlds were available did I ask whether an ordinary reader, on a first reading, would feel an immediate pull toward the hypothesis (test 3) — an inference I had to construct by argument rather than feel was counted as arbitrary, not plausible.",
+  "cases": [
+    {
+      "id": "T003",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The premise is confined to the winter of 2019; the hours could have changed since, or not. The reader's default is that a bakery keeps its hours.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T006",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Nothing in the submission date fixes how long the work took, but the word 'thesis' carries a strong default of multi-year work.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T009",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "'Until last April' bounds the end of the twice-daily service, not its beginning; it could have started in 2019 or in 1950. 'Cut back' invites the reader to assume a long-standing service.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T012",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "'Siblings' in ordinary use covers half- and step-siblings raised together, so full shared parentage is not entailed, though it is the reader's default reading.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T015",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Eleven years of neighbourly cat-sitting is compatible with cool, purely practical relations and equally with friendship; the reader will lean to friendship.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T018",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The correspondence is all the premise asserts about those twenty years, so a meeting is neither required nor excluded. I hesitated on temptation: the emphasis on letters can equally suggest a relationship conducted only by post.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T021",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Amateurs sign and mark their work too, so professional status is open either way; the personal maker's mark pulls the reader toward 'professional' immediately.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T024",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "A retired magistrate could write crime novels wholly from imagination or research; the premise mentions the bench precisely where a reader will connect it to the books.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T027",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Twins may be fraternal and unalike, and habitual confusion at races is an added fact the premise does not touch. I hesitated on test 3 — 'often mistaken at races' is a narrative embellishment — but the word 'twin' does raise resemblance directly.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T030",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "He could report to a practice manager or owner rather than the senior dentist; the explicit mention of no clinical training invites the reader to place him under a clinician.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T033",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Programming and rehearsing do not entail conducting the concerts — a guest or deputy conductor is possible — but 'directs the choir' makes the inference nearly automatic.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T036",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "A site engineer, project manager or client's representative could outrank a foreman; 'foreman who signed off' nonetheless reads as top authority on site.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T039",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The premise states two days he swims, not an exclusive list, and the hypothesis is about going to the lido at all, which he could do on other days without swimming. I hesitated because the exhaustivity implicature is strong enough that some would read it as entailed.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T042",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": false,
+      "accepted": false,
+      "verdict": "neutral_arbitrary",
+      "rationale": "Other towns' markets are neither required nor excluded, but the premise's whole emphasis is fidelity to one Thursday market; the 'they must trade elsewhere too' path is an economic argument I had to build rather than a pull a first reader feels. Genuinely close.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T045",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "A practice partner or locum could cover the same farms, so exclusivity is open; 'usually to the farms north of the village' tempts the reader to make her the only one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T048",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Listing a house and hoping to move settles nothing about the outcome, and 'nearer their daughter' need not mean Cork itself; readers routinely complete the intention.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T051",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "An application says nothing about its result; the sympathetic framing of his ambition makes a reader expect he got it.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T054",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The letter is drafted with an intention and a precondition; it may or may not have been sent. 'Meaning to' both invites completion and faintly hints at failure, which is why the item sits in the middle.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T057",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Nerves before do not fix the feeling after — he might have been mortified or elated instead of relieved — but relief is the reader's default sequel.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T060",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "She may simply have had no dog to walk, or have been relieved; grief is an inner state the premise never asserts, and one the reader supplies at once.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T063",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Overwhelming emotion at the arrival is compatible with a return that was sudden or unhoped-for, as well as with long anticipation, which is what the reader will assume.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T066",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Paying a subscription is precisely what a lapsed member also does, so frequency of rowing is open; membership still tempts the reader to picture her on the water.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T069",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "High membership does not entail employer recognition or a bargaining role, and does not exclude it; the reader slides from 'nearly all are members' to 'the union negotiates for them'.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T072",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Being there since 2005 makes him a founding member, not necessarily the founder; the distinction is exactly the one an ordinary reader collapses.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T075",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The cold snap is given as temporal setting, not cause — corrosion, age or traffic load could be responsible — but readers convert the coincidence into causation readily.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T078",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Insurance, other crops or reserves could keep the year solvent; losing most of a crop nonetheless reads straight to a financial loss.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T081",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The chafing could follow later movement, a repair, a missing clip or ordinary wear, so faulty original installation is one candidate among several the reader is drawn to first.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T084",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Rapid progress can come without any extra support; the dramatic change is just the kind of thing readers attribute to intervention.",
+      "hard_to_call": false
+    },
+    {
+      "id": "T087",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "The premise gives growth but no source; incomers could be from anywhere, or the growth partly internal. I hesitated because 'the nearby city' is presupposed rather than given, but the premise does not deny one, and commuter-belt expansion is the reader's first thought.",
+      "hard_to_call": true
+    },
+    {
+      "id": "T090",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "accepted": true,
+      "verdict": "neutral_plausible",
+      "rationale": "Walking a corridor unaided is a long way short of full recovery yet consistent with it; the arc of the sentence invites the reader to finish the story as complete recovery.",
+      "hard_to_call": false
+    }
+  ]
+}

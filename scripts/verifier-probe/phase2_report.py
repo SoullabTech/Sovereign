@@ -21,6 +21,11 @@ from pathlib import Path
 
 HISTORICAL = (7, 17)          # stage 1, retrospective, descriptive only
 SEEDED_DOMAIN = 'time'        # the prompt's worked example lives here
+# ⭐ CASEWISE, NEVER A RATE. Four items the CORPUS AUTHOR flagged as hard before
+# any adjudicator or model existed. With n=4 a percentage would be a particular
+# observation wearing a verdict's clothes; the independent verdict on each is
+# reported one by one and nothing is divided.
+AUTHOR_FLAGGED = ('T039', 'T075', 'T021', 'T060')
 MIN_N_DOMAIN = 5
 
 
@@ -122,6 +127,20 @@ def main():
                 print(f'    flagged hard to call: {", ".join(hard)}')
         print('\n  ⛔ The primary above is the result. This block says how stable'
               ' that\n     result is to a second reader, and nothing more.')
+        print('  ⛔ Every disputed item REMAINS in the primary. Dropping one would'
+              '\n     turn sensitivity analysis into post-hoc case selection.')
+
+        # ⭐ The author's four, casewise. No rate is computed from four items.
+        print(f'\n  AUTHOR-FLAGGED HARD CASES — casewise, not a rate')
+        for i in AUTHOR_FLAGGED:
+            v = ad.get(i)
+            if not v:
+                print(f'    {i}  ⚠️ not present in the adjudication')
+                continue
+            mark = 'author concern NOT shared' if v.get('accepted') else \
+                   '⭐ author concern SHARED'
+            hc = ' · adjudicator also hesitated' if v.get('hard_to_call') else ''
+            print(f'    {i}  {v.get("verdict", "?"):<18} {mark}{hc}')
 
     # ---- the other two classes, for the contrast that matters -------------
     print(f'\n{"=" * 74}\nCONTRAST — how the other two classes fared')
