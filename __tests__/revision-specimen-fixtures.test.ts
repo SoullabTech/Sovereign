@@ -21,11 +21,19 @@ const SRC = readFileSync(join(__dirname, '../scripts/witness/rc-gen-01/specimens
  * an instrument that reads prose about a file is not an instrument that reads
  * the file.
  */
-describe('the witness harness actually parses', () => {
-  it('⭐ specimens.ts is syntactically valid TypeScript', () => {
-    const { transformSync } = require('esbuild');
-    expect(() => transformSync(SRC, { loader: 'ts' })).not.toThrow();
-  });
+describe('the witness harnesses actually parse', () => {
+  const { transformSync } = require('esbuild');
+  const read = (f: string) =>
+    readFileSync(join(__dirname, `../scripts/witness/rc-gen-01/${f}`), 'utf8');
+
+  /* ⚠️ THIRD OCCURRENCE OF THIS DEFECT. Backticks inside a template literal have
+     now broken a witness twice (specimens.ts, analyzers.ts) and the guard covered
+     only the first. A parse guard that names ONE file is not a parse guard for the
+     harness; it is a parse guard for the file someone remembered. */
+  it.each(['specimens.ts', 'analyzers.ts', 'persistence.ts', 'idempotency.ts'])(
+    '⭐ %s is syntactically valid TypeScript', (file) => {
+      expect(() => transformSync(read(file), { loader: 'ts' })).not.toThrow();
+    });
 });
 
 describe('specimen fixtures are frozen across reruns', () => {
