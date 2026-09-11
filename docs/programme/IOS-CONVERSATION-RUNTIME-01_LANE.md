@@ -1389,3 +1389,62 @@ was meant to gate remains multi-owner and self-defeating. Still owed
 before E19: footer + Native App Build (three runs, still unwitnessed) ·
 silent-switch position for this run · S1–S4 · founder ruling on the A/B
 control (E16 correction) · founder ruling on repair two.
+
+### E19 · 2026-09-11 · FOUNDER RULINGS on E16–E18 (verbatim substance) — sequence fixed, three defects kept separate
+
+1. **A/B control — YES.** Install the preserved unrepaired build from
+   `~/voice-witness-dd` with `devicectl`; two short turns; question
+   deliberately narrow: *is MAIA audible on the preserved build?*
+   Audible there + silent on E18 → registering the gatekeeper becomes a
+   strong causal suspect for systematic output silence. Silent there too
+   → the output failure predates that repair and is not attributed to
+   the gatekeeper. Do this **before** more witness time on the repaired
+   build.
+2. **Repair Two — YES, authorized.** Move turn-close authority off the
+   recognizer boundary so a recognizer/segment reset cannot throw away
+   speech already captured. **Do not change timeout values.** Keep it
+   causally separate from the owner fight: it addresses turn integrity
+   across recognizer resets; it does **not** claim to repair the
+   37-restart storm, the alternating route configuration, or the
+   post-conflict digital zero — those remain their own defect.
+3. **Silent switch — UNWITNESSED** for the E18 run. Not to be inferred
+   from inaudibility; the capture does not establish the physical
+   switch state.
+4. **Account Settings footer / Native App Build — still UNWITNESSED.**
+   The earlier device-level readout (app 1.2.0 / build 2511) is not the
+   two lines inside Account Settings; capture those exact two lines next
+   time the app is open, never substitute the device readout.
+5. **S1–S4 — DEFER.** E18 already establishes a materially broken
+   conversational state; another broad pass adds little until the A/B
+   control and Repair Two are resolved.
+
+**Sequence held:** A/B preserved build → record audibility +
+silent-switch position → implement Repair Two in isolation → build →
+return to focused acceptance.
+
+**Boundary:** E18 is not an omnibus "voice fix". It exposed at least
+three distinguishable problems — **(a) output silence, (b) competing
+capture ownership, (c) turn-close / segment authority** — and they are
+kept separate so that what fixes what stays knowable.
+
+**Lane action on (c):** Repair Two is implemented on its own branch,
+`claude/ios-runtime-01-repair-two-turn-close`, cut from
+`clean-main-no-secrets` and carrying only the export-mirror tooling
+commit (`0debe8b09`, needed for any static export from main) plus the
+Repair Two commits — **no native change, no registration**. A build from
+it therefore tests (c) without (a)/(b) in the picture; the founder may
+combine branches later by ruling. Record of the repair: E20.
+
+**A/B runbook (Mac, no trailing comments on any line):**
+
+```bash
+xcrun devicectl device install app --device A0736AC8-793B-516F-AC72-C076DB6CEE38 ~/voice-witness-dd/Build/Products/Debug-iphoneos/App.app
+xcrun devicectl device process launch --device A0736AC8-793B-516F-AC72-C076DB6CEE38 life.soullab.maia
+```
+
+Identity of that `.app` (E3/E9): NATIVE `73d0df30d` — the recognition
+lane's `AudioSessionManager.swift` edit compiled in but **unregistered**
+(inert, C′); WEB `5846a0824`. The variable under test is registration
+only. Record: switch position (ring/silent) before the first turn ·
+audible on turn 1 and turn 2 (yes/no each) · Account Settings footer
+line + Native App Build line (expected footer commit `5846a0824`).
