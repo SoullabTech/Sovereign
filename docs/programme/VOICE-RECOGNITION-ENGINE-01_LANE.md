@@ -1054,3 +1054,73 @@ and is not addressed here.
 COMPLETE — O1 PROVISIONALLY PASS — DEV-MODE EVIDENCE RULED ADMISSIBLE
 (BOUNDED) — **STEP 1 RETRY PENDING (corrected command)**. No native source,
 plist, or routing change. The failure is the runbook's, recorded as such.
+
+### 12.9 Step 1 retry — beta static export SUCCEEDED — web bundle at `5846a0824` — 2026-09-11
+
+**Evidence provenance.** Founder's Mac Studio terminal, relayed. Witness
+worktree `/Users/soullab/maia-ds01-witness`.
+
+**Actual SHA consumed: `5846a0824`, not `c756eb412`.** The
+`git reset --hard origin/… # now c756eb412` line failed with
+`fatal: Cannot do hard reset with paths.` — the founder's interactive zsh
+does not treat a trailing `#` as a comment, so `#`, `now`, `c756eb412`
+were passed as pathspecs. HEAD stayed at `5846a0824`; `git status --short`
+was empty. The build therefore ran on `5846a0824`. The delta
+`5846a0824..c756eb412` is `CLAUDE.md` + this lane doc only (docs, 2 files),
+so the web bundle content is what `c756eb412` would have produced; the
+record nonetheless carries the SHA actually consumed, per §12.7.
+The same zsh behaviour mangled the final `open … # Run on the iPhone, Debug`
+line (`open` received the comment words as file arguments and reported them
+missing). Whether the workspace still opened is not in the transcript.
+**Runbook lesson, remote-owned: no trailing `#` comments on any line the
+Mac will paste.** Commands below carry none.
+
+**What succeeded.**
+
+```text
+patch:   930 API routes, middleware.ts, pages/, 47 web-only dirs, 31 dynamic pages moved out
+         — includes "Excluded (web-only): app/voice-controller-test"   (§12.6 finding confirmed live)
+build:   next build, output:'export', 498 HTML pages, /maia 91.8 kB present
+         warning only: @capacitor-community/contacts unresolved (studio/clients/import; pre-existing, unrelated)
+revert:  all backups restored, 0 generateStaticParams patches to revert
+sync:    web assets → ios/App/App/public, capacitor.config.json written, pod install ran,
+         13 Capacitor plugins incl. @capacitor-community/speech-recognition@7.0.1
+status:  git status --short empty after sync (public/ and capacitor.config.json are gitignored;
+         Podfile.lock unchanged)
+```
+
+`VoiceController` does not appear in the plugin list and is not expected to:
+it is an in-app Swift plugin registered via `registerPlugin`, not an npm
+Capacitor package. The Probe, not the sync log, is what proves it is bound.
+
+**Step 1 = PASS (web layer).** Step 2 (install) has not happened yet; the
+transcript ends at the `open` error.
+
+**Two-layer header, pre-filled where the repo already knows the value.**
+`APP VERSION` is `CFBundleShortVersionString` = `MARKETING_VERSION` in the
+pbxproj; `BUILD` is `CFBundleVersion` = `$(CURRENT_PROJECT_VERSION)` in the
+pbxproj (repo value 2511, §4). Record what Xcode / the device actually
+shows; if it differs from the repo value, that is fastlane's out-of-git
+plist write (§9) and the observed value wins.
+
+```text
+NATIVE SUBJECT: 73d0df30d
+WEB BUNDLE: beta static export at 5846a0824
+APP VERSION: 1.2.0 (repo)  →  observed:
+BUILD: 2511 (repo)  →  observed:
+DEVICE:
+iOS:
+XCODE: 17C529 (from the §12 compile log)  →  confirm
+SDK: iPhoneOS26.2 (from the §12 compile log)  →  confirm
+LOCALE:
+INSTALL METHOD: Xcode Run (Debug)
+```
+
+**Next (Mac).** Confirm Xcode has the workspace open (re-run
+`open ios/App/App.xcworkspace` if not), select the iPhone, scheme `App`,
+Debug, Run. Do not bump the build number. Then `/maia` S1–S4 on the beta
+bundle, one line per step, `LIVE PATH SMOKE: PASS / FAIL`. Any FAIL → STOP;
+no dev mode.
+
+**Status after this record.** STEP 1 PASS (WEB BUNDLE 5846a0824) — INSTALL
+PENDING — `/maia` S1–S4 PENDING.
