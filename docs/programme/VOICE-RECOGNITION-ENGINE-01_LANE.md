@@ -1304,3 +1304,30 @@ transition; a clean log with a silent reply pushes it to the web/TTS side.
 **Status after this record.** LIVE PATH SMOKE: FAIL (INTERMITTENT) —
 STOP — ATTRIBUTION OPEN — no dev mode, no Probe, no A/B, no repair. §13 not
 written.
+
+**Screenshot addendum (founder, 21:18 device time).** `/maia` on the
+installed artefact. Visible: the orb in `TAP TO SPEAK` (mic idle) directly
+after a MAIA reply — the "did not return to listening" state, captured.
+Transcript shows two spoken member turns transcribed and two MAIA replies
+rendered as text; whether either reply was voiced is not visible in a
+still. Status bar shows the **silent-mode (bell-slash) indicator**: the
+ring/silent switch was on silent during the smoke. That is a candidate
+mechanism for an intermittent silent reply that costs nothing to test:
+WebView audio honours the silent switch unless the native session category
+is `.playback`/`.playAndRecord` at the moment playback starts, and
+`prepareForSpeaking` sets that category asynchronously right before TTS.
+A race there would present exactly as "sometimes voiced, sometimes not."
+It would sit in the session-transition code (`AudioSessionManager.swift:137-145`),
+which the lane did **not** change — but the teardown that precedes it is
+the lane's edit, so it neither clears nor convicts the seam on its own.
+**Discriminating test, no construction:** flip the ringer to loud, repeat
+S1–S4 five times. If silent replies stop, the mechanism is category timing
+versus the silent switch; if they continue, it is not. Also visible: the
+composer row shows only `Text`; the always-visible "MAIA voice: On/Off"
+control that `__tests__/voice-response-toggle-mobile.test.ts` expects is
+absent in this bundle — that test's pre-existing failure (§9) is now
+observed on device, so the member cannot glance whether voice reply is on
+(it defaults on). MAIA's own line "Seems stable now though — you're coming
+through fine" is conversational, not evidence: she has no access to the
+audio path's state. Attribution remains OPEN; the question in §12.11
+stands.
