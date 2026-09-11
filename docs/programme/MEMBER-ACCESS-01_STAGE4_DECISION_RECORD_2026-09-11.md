@@ -241,6 +241,30 @@ rather than a product.
    artifact the target removes** — new members should have *no* password rather than
    an unseen one. ⛔ Not authorized here; recorded so it is not mistaken for the
    target state it currently imitates.
+
+   ⚠️ **Precision (founder):** the current email-code flow is **not merely
+   "passwordless-looking" — it actively creates a hidden password credential.** The
+   distinction matters: a flow that omits a password and a flow that manufactures an
+   invisible one look identical to the member and are opposites in the record.
+
+   ### 3.2 · The ruling in its strongest form
+
+   > **Passwords are legacy authenticators for existing members, not a required
+   > property of a Soullab identity. Retirement happens per member, on evidence of
+   > another working route into the same identity.**
+
+   ```
+   NEW MEMBER      identity created → email control proved → passkey offered/preferred
+                   → email recovery available → NO password credential created
+
+   EXISTING        existing password preserved → alternative access proven
+                   → password may later retire FOR THAT MEMBER
+   ```
+
+   ⭐ **The conceptual shift this completes:** *identity is durable; authenticators
+   are replaceable. A password is one authenticator, never the account itself.* That
+   is I-1 stated from the credential side, and it is why "delete passwords" was never
+   the right question.
 4. **`x-member-id` retirement** — the target is one session authority with two
    representations; the retirement path is not designed.
 5. **Framework dependency** in the auth path under B — self-hosted and MIT, but a
