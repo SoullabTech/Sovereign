@@ -22,12 +22,32 @@
  * says the change is important but not necessarily large" has drifted back into
  * interpretation, and the comparison would then need another semantic judgement.
  *
- * ⚠️ NODE CORRESPONDENCE IS POSITIONAL, AND THAT IS A DELIBERATE CHOICE. The two
- * analysers never see each other, so their labels differ by construction
- * (`relational_transformation` vs `relational_change`). Matching by label would
- * require deciding whether those name the same thing — exactly the judgement this
- * design exists to remove. Nodes are emitted in order of appearance and compared
- * by position; a difference in count is itself a finding.
+ * ⚠️ NODE CORRESPONDENCE IS BY DETERMINISTIC ALIGNMENT, NOT BY LABEL AND NOT BY
+ * POSITION.
+ *
+ *   BY LABEL    would require deciding whether `relational_transformation` and
+ *               `relational_change` name the same thing — the judgement this
+ *               design exists to remove.
+ *   BY POSITION would compare SERIALISATION GEOMETRY, not semantic geometry. A
+ *               faithful revision may reorder its expression, and two independent
+ *               analysers emitting in textual encounter order would then disagree
+ *               about nodes that correspond perfectly. An earlier draft of this
+ *               module did exactly that; the founder refused to ratify it.
+ *
+ * ⭐ Alignment is found by EDGE TOPOLOGY, exhaustively, then properties are
+ * compared under that alignment.
+ *
+ * ⚠️ THIS IS A DELIBERATE REFINEMENT OF THE RULED DESIGN, AND THE REASON MATTERS.
+ * The ruling said to find an isomorphism preserving node properties AND edges. But
+ * a defective candidate has NO property-preserving isomorphism — so that criterion
+ * collapses every defect into one undifferentiated "semantic mismatch", losing
+ * exactly the detailed findings (`added_property`, `reassigned_property`) that make
+ * this architecture worth building. Aligning on TOPOLOGY answers "which node is
+ * which"; comparing properties afterwards answers "what changed". Both stay
+ * judgement-free.
+ *
+ * ⛔ AMBIGUITY IS REPORTED, NEVER GUESSED. Where more than one alignment survives,
+ * the verdict says so rather than choosing.
  */
 
 export type PropertyName =
@@ -85,7 +105,16 @@ export type ConservationFinding =
 
 export type ConservationVerdict =
   | { admitted: true }
-  | { admitted: false; refusal: 'revision_not_semantically_conservative'; findings: readonly ConservationFinding[] };
+  | { admitted: false; refusal: 'revision_not_semantically_conservative'; findings: readonly ConservationFinding[] }
+  /** ⛔ More than one alignment survives. The comparator does NOT choose. */
+  | { admitted: false; refusal: 'correspondence_ambiguous'; alignments: number }
+  /** No alignment exists: the edge topologies are not the same shape. */
+  | { admitted: false; refusal: 'structure_mismatch'; findings: readonly ConservationFinding[] }
+  /** Beyond the exhaustive bound. Refuses rather than approximating. */
+  | { admitted: false; refusal: 'graph_too_large'; nodes: number };
+
+/** Exhaustive permutation is fine at this size and far easier to audit. */
+export const MAX_ALIGNABLE_NODES = 8;
 
 const PROPERTIES: readonly PropertyName[] = [
   'significance', 'meaningfulness', 'magnitude', 'valence', 'direction',
@@ -110,51 +139,106 @@ export function compareConservation(
   source: SemanticGraph,
   candidate: SemanticGraph,
 ): ConservationVerdict {
-  const findings: ConservationFinding[] = [];
-
   if (source.nodes.length !== candidate.nodes.length) {
-    findings.push({ kind: 'node_count', source: source.nodes.length, candidate: candidate.nodes.length });
+    return {
+      admitted: false,
+      refusal: 'structure_mismatch',
+      findings: [{ kind: 'node_count', source: source.nodes.length, candidate: candidate.nodes.length }],
+    };
+  }
+  if (source.nodes.length > MAX_ALIGNABLE_NODES) {
+    return { admitted: false, refusal: 'graph_too_large', nodes: source.nodes.length };
   }
 
-  const n = Math.min(source.nodes.length, candidate.nodes.length);
-  for (let i = 0; i < n; i++) {
+  const n = source.nodes.length;
+  const sourceEdges = new Set(source.edges.map((e) => `${e.from}>${e.to}:${e.kind}`));
+
+  /* A mapping sends CANDIDATE index -> SOURCE index. It is topology-valid when the
+     candidate's edges, rewritten through it, are exactly the source's edges. */
+  const valid: number[][] = [];
+  const perm: number[] = [];
+  const used = new Array<boolean>(n).fill(false);
+  const walk = (): void => {
+    if (perm.length === n) {
+      if (candidate.edges.length !== source.edges.length) return;
+      for (const e of candidate.edges) {
+        if (!sourceEdges.has(`${perm[e.from]}>${perm[e.to]}:${e.kind}`)) return;
+      }
+      valid.push([...perm]);
+      return;
+    }
+    for (let i = 0; i < n; i++) {
+      if (used[i]) continue;
+      used[i] = true; perm.push(i);
+      walk();
+      perm.pop(); used[i] = false;
+    }
+  };
+  walk();
+
+  if (valid.length === 0) {
+    /* No alignment: report the edge differences under the identity mapping, which
+       is diagnostic only and is named as such in the refusal kind. */
+    const findings: ConservationFinding[] = [];
+    const cKeys = new Set(candidate.edges.map((e) => `${e.from}>${e.to}`));
+    for (const e of source.edges) {
+      const match = candidate.edges.find((x) => x.from === e.from && x.to === e.to);
+      if (!match) findings.push({ kind: 'dropped_edge', edge: e });
+      else if (match.kind !== e.kind) {
+        findings.push({ kind: 'changed_edge_kind', from: e.from, to: e.to, source: e.kind, candidate: match.kind });
+      }
+    }
+    for (const e of candidate.edges) {
+      if (!source.edges.some((x) => x.from === e.from && x.to === e.to)) {
+        findings.push({ kind: 'added_edge', edge: e });
+      }
+    }
+    return { admitted: false, refusal: 'structure_mismatch', findings };
+  }
+
+  /* Several topology-valid alignments can exist when the graph has automorphisms.
+     Prefer the one that also preserves properties — if exactly one does, it is the
+     intended correspondence and no judgement was required to find it. */
+  const propertyPreserving = valid.filter((m) =>
+    m.every((si, ci) => PROPERTIES.every((p) =>
+      valueOf(candidate.nodes[ci], p) === valueOf(source.nodes[si], p))));
+
+  let mapping: number[];
+  if (propertyPreserving.length === 1) mapping = propertyPreserving[0];
+  else if (propertyPreserving.length > 1) return { admitted: true };
+  else if (valid.length === 1) mapping = valid[0];
+  else return { admitted: false, refusal: 'correspondence_ambiguous', alignments: valid.length };
+
+  const findings: ConservationFinding[] = [];
+  for (let ci = 0; ci < n; ci++) {
+    const si = mapping[ci];
     for (const p of PROPERTIES) {
-      const s = valueOf(source.nodes[i], p);
-      const c = valueOf(candidate.nodes[i], p);
-      if (s === c) continue;
-      if (s === 'unspecified') findings.push({ kind: 'added_property', node: i, property: p, candidate: c });
-      else if (c === 'unspecified') findings.push({ kind: 'dropped_property', node: i, property: p, source: s });
-      else findings.push({ kind: 'changed_property', node: i, property: p, source: s, candidate: c });
+      const sv = valueOf(source.nodes[si], p);
+      const cv = valueOf(candidate.nodes[ci], p);
+      if (sv === cv) continue;
+      if (sv === 'unspecified') findings.push({ kind: 'added_property', node: si, property: p, candidate: cv });
+      else if (cv === 'unspecified') findings.push({ kind: 'dropped_property', node: si, property: p, source: sv });
+      else findings.push({ kind: 'changed_property', node: si, property: p, source: sv, candidate: cv });
     }
   }
 
-  /* Reassignment: the same (property, value) leaves one node and appears on
-     another. Reported IN ADDITION to the add/drop pair, because "moved" is a
-     different fact about the Work than "lost here" and "invented there". */
+  /* ⭐ Reassignment: a (property, value) the source asserted on one node appears on
+     a DIFFERENT node in the candidate. Reported IN ADDITION to the drop/add pair,
+     because "moved" is a different fact about the Work than "lost here" and
+     "invented there" — and it is the finding no per-phrase rule can reach. */
   for (const p of PROPERTIES) {
-    for (let i = 0; i < n; i++) {
-      const s = valueOf(source.nodes[i], p);
-      if (s === 'unspecified' || valueOf(candidate.nodes[i], p) === s) continue;
-      for (let j = 0; j < n; j++) {
-        if (j === i) continue;
-        if (valueOf(candidate.nodes[j], p) === s && valueOf(source.nodes[j], p) !== s) {
-          findings.push({ kind: 'reassigned_property', property: p, value: s, sourceNode: i, candidateNode: j });
+    for (let ci = 0; ci < n; ci++) {
+      const si = mapping[ci];
+      const sv = valueOf(source.nodes[si], p);
+      if (sv === 'unspecified' || valueOf(candidate.nodes[ci], p) === sv) continue;
+      for (let cj = 0; cj < n; cj++) {
+        if (cj === ci) continue;
+        const sj = mapping[cj];
+        if (valueOf(candidate.nodes[cj], p) === sv && valueOf(source.nodes[sj], p) !== sv) {
+          findings.push({ kind: 'reassigned_property', property: p, value: sv, sourceNode: si, candidateNode: sj });
         }
       }
     }
-  }
-
-  const cEdges = new Map(candidate.edges.map((e) => [edgeKey(e), e]));
-  const sEdges = new Map(source.edges.map((e) => [edgeKey(e), e]));
-  for (const e of source.edges) {
-    const match = cEdges.get(edgeKey(e));
-    if (!match) findings.push({ kind: 'dropped_edge', edge: e });
-    else if (match.kind !== e.kind) {
-      findings.push({ kind: 'changed_edge_kind', from: e.from, to: e.to, source: e.kind, candidate: match.kind });
-    }
-  }
-  for (const e of candidate.edges) {
-    if (!sEdges.has(edgeKey(e))) findings.push({ kind: 'added_edge', edge: e });
   }
 
   return findings.length === 0

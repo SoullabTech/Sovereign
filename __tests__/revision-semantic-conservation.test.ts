@@ -188,3 +188,123 @@ describe('SC-5 · SC-6 — the comparator is deterministic and self-contained', 
     }
   });
 });
+
+/* ── founder rulings after the design gate ──────────────────────────────────── */
+
+/** Reorder a graph's node array without changing the graph it denotes. */
+function reorder(g: SemanticGraph, order: readonly number[]): SemanticGraph {
+  const pos = new Map(order.map((old, neu) => [old, neu]));
+  return {
+    nodes: order.map((old) => g.nodes[old]),
+    edges: g.edges.map((e) => ({ ...e, from: pos.get(e.from)!, to: pos.get(e.to)! })),
+  };
+}
+
+describe('⭐⭐ node correspondence is NOT positional (founder refused to ratify it)', () => {
+  it('⭐ the SAME graph in a DIFFERENT node order is ADMITTED', () => {
+    /* A faithful revision may reorder its expression. Two independent analysers
+       emitting in textual encounter order would then disagree about nodes that
+       correspond perfectly. A positional comparator reports corruption here. */
+    const shuffled = reorder(SOURCE, [4, 0, 3, 1, 2]);
+    expect(compareConservation(SOURCE, shuffled)).toEqual({ admitted: true });
+  });
+
+  it('a full reversal is ADMITTED', () => {
+    expect(compareConservation(SOURCE, reorder(SOURCE, [4, 3, 2, 1, 0]))).toEqual({ admitted: true });
+  });
+
+  it('⛔ and reordering does NOT launder a real defect', () => {
+    const v = compareConservation(SOURCE, reorder(RUN_8_9, [4, 0, 3, 1, 2]));
+    expect(v.admitted).toBe(false);
+  });
+});
+
+describe('⭐ the metamorphic pair — distribution, not textual resemblance', () => {
+  it('GOOD PARAPHRASE — different labels, different order, same semantics -> ADMIT', () => {
+    const good: SemanticGraph = reorder({
+      nodes: SOURCE.nodes.map((n, i) => ({ label: `renamed_${i}`, properties: n.properties })),
+      edges: SOURCE.edges,
+    }, [2, 4, 1, 3, 0]);
+    expect(compareConservation(SOURCE, good)).toEqual({ admitted: true });
+  });
+
+  it('⭐ BAD PARAPHRASE — same inventory, same node count, ONE property reassigned -> REFUSE', () => {
+    /* The vocabulary is entirely the source's own. Only the DISTRIBUTION moved. */
+    const bad: SemanticGraph = {
+      nodes: SOURCE.nodes.map((n, i) =>
+        i === 1 ? { ...n, properties: { ...n.properties, significance: 'unspecified' as const } }
+        : i === 2 ? { ...n, properties: { ...n.properties, significance: 'asserted' as const } }
+        : n),
+      edges: SOURCE.edges,
+    };
+    const v = compareConservation(SOURCE, bad);
+    expect(v.admitted).toBe(false);
+    if (v.admitted || v.refusal !== 'revision_not_semantically_conservative') throw new Error('wrong refusal');
+    expect(kinds(v.findings)).toContain('reassigned_property');
+  });
+});
+
+describe('⛔ SV-1 REPRESENTATIONAL ADEQUACY — the known-bad that must be preserved', () => {
+  /**
+   * ⭐ A semantic-conservation system can only conserve distinctions its
+   * representation can express. This is the schema's own acceptance criterion,
+   * and being CLOSED does not satisfy it.
+   *
+   * The known-bad is the first draft of this module's vocabulary, which collapsed
+   * the source's two distinct degree words — SIGNIFICANT transformation and
+   * MEANINGFUL development — into one `significance` property.
+   */
+  const flatten = (g: SemanticGraph): SemanticGraph => ({
+    nodes: g.nodes.map((n) => {
+      const { meaningfulness, ...rest } = n.properties;
+      return { ...n, properties: meaningfulness ? { ...rest, significance: meaningfulness } : n.properties };
+    }),
+    edges: g.edges,
+  });
+
+  const RUN_9 = {
+    ...RUN_8_9,
+    nodes: RUN_8_9.nodes.map((n, i) =>
+      i === 1 ? { ...n, properties: { magnitude: 'high' as const } }
+      : i === 3 ? { label: n.label, properties: { significance: 'asserted' as const } }
+      : n),
+  };
+
+  it('⭐ the ADEQUATE vocabulary reports the migration', () => {
+    const v = compareConservation(SOURCE, RUN_9);
+    if (v.admitted || v.refusal !== 'revision_not_semantically_conservative') throw new Error('unreachable');
+    expect(kinds(v.findings)).toContain('reassigned_property');
+  });
+
+  it('⛔ the FLATTENED vocabulary loses it — the migration becomes invisible', () => {
+    const v = compareConservation(flatten(SOURCE), flatten(RUN_9));
+    const lost = v.admitted || !('findings' in v) ||
+      !kinds(v.findings as ConservationFinding[]).includes('reassigned_property');
+    expect(lost).toBe(true);
+  });
+});
+
+describe('ambiguity is reported, never guessed', () => {
+  it('⭐ a symmetric graph with no distinguishing properties refuses as ambiguous', () => {
+    /* Two nodes, one edge each way: two topology-valid alignments, neither
+       distinguishable by properties. The comparator must NOT pick one. */
+    const sym: SemanticGraph = {
+      nodes: [{ label: 'a', properties: {} }, { label: 'b', properties: {} }],
+      edges: [{ from: 0, to: 1, kind: 'distinct_from' }, { from: 1, to: 0, kind: 'distinct_from' }],
+    };
+    const other: SemanticGraph = {
+      nodes: [{ label: 'x', properties: { magnitude: 'high' } }, { label: 'y', properties: {} }],
+      edges: sym.edges,
+    };
+    const v = compareConservation(sym, other);
+    expect(v.admitted).toBe(false);
+    if (v.admitted) throw new Error('unreachable');
+    expect(v.refusal).toBe('correspondence_ambiguous');
+  });
+
+  it('a differing node count refuses as structure_mismatch, not ambiguity', () => {
+    const v = compareConservation(SOURCE, { nodes: SOURCE.nodes.slice(0, 4), edges: SOURCE.edges.slice(0, 3) });
+    if (v.admitted) throw new Error('unreachable');
+    expect(v.refusal).toBe('structure_mismatch');
+  });
+});

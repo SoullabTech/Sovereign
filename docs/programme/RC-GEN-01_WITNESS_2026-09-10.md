@@ -604,11 +604,73 @@ It proves the **comparator** rejects the real candidate **given correct graphs**
 ⛔ **Whether the ANALYSERS produce correct graphs from real prose is a separate
 provider witness and is NOT established.** The analysers are not built.
 
+## ⭐ TWO FOUNDER RULINGS AFTER THE GATE — both applied
+
+### SV-1 · REPRESENTATIONAL ADEQUACY, ratified
+
+> **A semantic-conservation system can only conserve distinctions its
+> representation is capable of expressing.** If the source draws a distinction
+> relevant to fidelity, the graph must represent it without collapsing it into
+> another property. **Failure to represent a source distinction is a SCHEMA
+> failure, not analyser discretion.**
+
+⭐ **The known-bad is preserved as a falsifier.** The flattened vocabulary — the two
+degree words collapsed into one `significance` — is applied to the same source and
+the same run-9 candidate, and the test asserts **the migration becomes invisible.**
+Closure is what makes comparison mechanical; closure is also what can make a
+distinction disappear before comparison.
+
+### ⛔ POSITIONAL CORRESPONDENCE — REFUSED, and replaced
+
+*"Position is also semantic information you haven't established as invariant. A
+perfectly faithful revision could reorder the expression while preserving exactly
+the same semantic graph."* Correct, and my draft would have reported corruption
+there.
+
+Replaced with **deterministic alignment by EDGE TOPOLOGY**, exhaustive over
+permutations (bounded at `MAX_ALIGNABLE_NODES = 8`; beyond it the comparator
+refuses rather than approximating).
+
 ```
-SC-1..SC-6 · SC-7..SC-11   comparator half  PASSED · 17/17
-analyser prompts           NOT BUILT
-analyser witness           NOT WITNESSED
+exactly one alignment        compare properties under it
+several, one preserves
+  properties                 that is the intended correspondence — no judgement
+several, none distinguishes  ⛔ `correspondence_ambiguous` — the comparator
+                               does NOT choose
+no alignment                 `structure_mismatch`
 ```
+
+⚠️ **ONE DELIBERATE REFINEMENT OF THE RULED DESIGN, disclosed.** The ruling said to
+find an isomorphism preserving node properties **and** edges. But a defective
+candidate has **no** property-preserving isomorphism — so that criterion collapses
+every defect into one undifferentiated *semantic mismatch*, losing precisely the
+`added_property` and `reassigned_property` findings that make this architecture
+worth building. **Alignment on topology answers *which node is which*; comparing
+properties afterwards answers *what changed*.** Both remain judgement-free.
+⛔ Reversible if the founder disagrees.
+
+### The metamorphic pair, added
+
+```
+GOOD PARAPHRASE   different labels · different node order · same semantics   ADMIT
+BAD PARAPHRASE    same inventory · same node count · ONE property reassigned REFUSE
+```
+
+⭐ And **reordering does not launder a real defect** — the run-8/9 candidate
+shuffled is still refused.
+
+```
+comparator (step D)        PASSED · 26 falsifiers
+SV-1 adequacy              RATIFIED · known-bad preserved
+node correspondence        alignment-based, positional RULED OUT
+analyser prompts A and C   NOT BUILT
+analyser witnesses         NOT WITNESSED
+B generation integration   HELD
+full A->B->C->D witness    HELD
+```
+
+⛔ **Per the ruling, A and C are witnessed INDEPENDENTLY before any end-to-end run** —
+otherwise a failure again has multiple possible causes.
 
 ### Specimen 2 — ninth consecutive `no_change`
 
