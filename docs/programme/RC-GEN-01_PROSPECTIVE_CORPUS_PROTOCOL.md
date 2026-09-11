@@ -1559,3 +1559,159 @@ the only one of 30 that the verifier took. `causation` is the one domain below
 figures are COMPOSITION-DEPENDENT, not general · error direction still toward
 belief · premise-explicitness artifact OPEN and untested · production
 UNTOUCHED.**
+
+---
+
+## PHASE 3 AUTHORIZED — natural terse premises (founder, 2026-09-11)
+
+```text
+possible → known as general DeBERTa defect     REJECTED
+plausible-neutral preservation, determinate
+  prose                                        STRONGLY SUPPORTED
+stage-1 overcommit                             REAL / CORPUS-SPECIFIC
+premise explicitness as active variable        PLAUSIBLE / UNTESTED
+natural underspecification as risk regime      NEXT TEST
+world-knowledge completion                     OBSERVED · T078
+                                               NOT YET A CLASS
+UNRESOLVED                                     STILL VALID
+validated automatic trigger                    NONE
+production                                     UNTOUCHED
+```
+
+> ⭐⭐ **Possibility itself is not what defeats the verifier. The question may be
+> whether the evidence clearly marks the edges of what is known.** *Human beings
+> almost never speak with all those edges marked.*
+
+The question is no longer *can DeBERTa preserve possibility* — on explicit,
+well-bounded prose it plainly can. It is: **can it preserve possibility when
+human language leaves its boundaries implicit?** That is MAIA's actual
+environment.
+
+### ⛔ NOT a causal test of explicitness — and the sequencing that keeps it honest
+
+```text
+PHASE 2   determinate triple premises        → neutral preserved 29/30
+PHASE 3   natural terse single-hypothesis    → NEXT
+IF it drops:  matched terse vs expanded      → isolate explicitness causally
+```
+
+If performance falls we may say only: **the effect reappears under natural
+underspecified prose.** Phase 3 changes several things at once — brevity, single
+hypothesis, no sibling pressure — so ⛔ *it cannot attribute the change to any
+one of them.* A matched-pair experiment comes after, or we would be changing two
+things and then pretending to know which mattered.
+
+### T078 STAYS — and it names a possible second failure class
+
+⛔ **Not repaired, not removed.** The premise gives crop loss, frost, dead
+blossom; the model supplies *therefore financial loss*. **Not a linguistic
+boundary failure — commonsense knowledge outrunning textual warrant.**
+
+Recorded as **world-knowledge completion · OBSERVED · NOT YET A CLASS** (n=1).
+For MAIA this may matter as much as temporal inference, and it is a different
+mechanism from anything the lane has measured.
+
+### ⭐ Design change: the three-way label is assigned INDEPENDENTLY, not by the author
+
+In phase 2 the author supplied its own labels. Phase 3 separates the two roles
+completely, per the founder's *"three-way label assigned independently"*:
+
+```text
+1. author writes 60 items, marks only what it INTENDED   → frozen + hashed
+2. independent adjudicator labels ALL 60 three-way       → frozen + hashed
+3. the ADJUDICATOR's labels are the operative ground truth
+4. the author's intent is kept as a calibration record and is NOT operative
+5. DeBERTa runs
+```
+
+⚠️ **Intended mix is 40 open · 10 entailed · 10 contradicted, deliberately
+over-providing the open class**: phase 2 saw 29 of 30 survive independent review,
+but terse premises should be harder to keep open, so 40 intended protects the
+primary's n against a lower acceptance rate. ⛔ **Whatever the adjudicator
+accepts is what the primary is computed on — the number is not topped up
+afterward.**
+
+**Blindness:** fresh subagent, reads **no file in the repository at all**. The
+prompt describes natural brevity as *"a line from a message, a remark in
+conversation"* and asks for one sentence of about twenty words. ⛔ **It never
+instructs the author to leave boundaries implicit** — that would engineer the
+opposite artifact. The brevity constraint produces underspecification the way
+speech does, or it does not, and that is part of what is being observed.
+
+⛔ **Prompt committed BEFORE the author ran.**
+
+```text
+Write 60 short test items. Each item is a PREMISE and a single HYPOTHESIS.
+
+THE PREMISE IS THE POINT OF THIS TASK. Write it as ONE sentence of at most about
+twenty words, of the kind a person would actually say or write in passing — a
+line from a message, a remark in conversation, a sentence from a letter or a
+short profile. Write what someone would really have said. Do not expand it,
+qualify it, or add a second sentence to tidy up what it leaves open. If it reads
+like something composed for a test, rewrite it until it sounds like something
+overheard.
+
+Each item gets exactly ONE hypothesis — a short sentence about the same people
+and the same situation. Never give a premise more than one hypothesis, and never
+reuse a premise.
+
+Write items of three kinds. Mark which kind you intended:
+
+  intended_entailed         10 items. The premise establishes the hypothesis;
+                            a careful reader must accept it.
+
+  intended_contradicted     10 items. If the premise is true the hypothesis is
+                            false.
+
+  intended_open             40 items. The hypothesis is compatible with the
+                            premise and TEMPTING — a reasonable reader would
+                            think it probably true — but the premise does not
+                            settle it. It could be true; it could be false.
+
+Spread all 60 across these ten domains, six items in each:
+
+  time · relationship · identity · role · frequency · intention ·
+  emotional state · membership · causation · developmental change
+
+Requirements:
+  - Sixty different situations and sixty different sets of people. Invent names
+    and places freely. Vary sentence structure — no template.
+  - Premise and hypothesis always concern the same people and the same
+    situation. Make the referent clear in the wording rather than assuming it.
+  - Do not write about AI, models, verification, entailment or testing.
+  - ⛔ Your `intended` marks are a record of what you were aiming at. They are
+    NOT the answer key — someone else will label these independently. So do not
+    write toward a label; write the sentence a person would have written, then
+    say what you think it is.
+
+Output ONE JSON file to the path you are given:
+
+{
+  "set": "terse",
+  "note": "<one sentence on how you approached it>",
+  "domains": [ ... the ten ... ],
+  "cases": [
+    {
+      "id": "U01",
+      "domain": "<one of the ten>",
+      "origin": "terse",
+      "premise": "...",
+      "hypothesis": "...",
+      "intended": "entailed" | "contradicted" | "open",
+      "note": "<optional: one sentence if you hesitated>"
+    }
+  ]
+}
+
+Ids U01..U60, in any order you like — do not group them by kind.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO file in this repository. Not fixtures, not .py, nothing under docs/,
+    nothing beginning with `verifier-probe-`. They contain earlier corpora,
+    machine judgements and prior results; any of them would ruin this task.
+  - Do not search the repository. You need nothing from it.
+  - Write from your own ear for English. There is no pattern to match.
+
+In your final message report: the output path, the counts per domain and per
+intended kind, and any item where you were unsure what you had written.
+```
