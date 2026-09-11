@@ -10,6 +10,24 @@ by the founder; **no value below is inferred.**
 > are the same moment. ⛔ Do not "correct" these to the local date — that would
 > desynchronise the prose from the commits it describes, which is the discrepancy
 > the convention exists to prevent.
+>
+> **Durable form for any future stamp in this lane — dual, never rewritten:**
+>
+> ```
+> 2026-09-11T01:29Z (2026-09-10 18:29 local)
+> ```
+>
+> The UTC value preserves correspondence with Git and container chronology; the
+> parenthetical local value preserves human chronology. A reader reconciles both
+> without "fixing" either.
+>
+> **Governing rule (founder, 2026-09-11):**
+> > **Timestamp disagreement is not established until clock basis is normalized.**
+>
+> It generalises past dates: two readings are not in conflict until they are
+> expressed on one basis. The 2026-09-07 schema-drift finding is the same law with
+> a different unit — a container's `Created` and a deploy's swap were never in
+> disagreement, they were never on one basis.
 
 ---
 
