@@ -324,8 +324,68 @@ The relationship gets RICHER.
 
 ---
 
+## ⭐ STANDING OF RECORD — ⚠️ corrected 2026-09-11
+
+⚠️ **Correction of characterization, not an amendment.** The programme was described
+in session as *"closed."* **It is not. It is FROZEN AT A DELIBERATE RESEARCH GATE.**
+
+```text
+CLOSED
+  Mercury lane
+  recognition schema
+  member-noticing feature
+  relational-third storage
+
+HELD
+  JARVIS-RELATIONAL-MEANING-LIFECYCLE-01
+  → not being built or advanced
+
+ACTIVE / NEXT
+  SD-00B          canon reading
+  DR-01A          external research
+
+GATE
+  Stage 3 reconciliation
+  → no synthesis until the evidence is gathered
+
+FROZEN
+  new laws
+  new falsifiers
+  new guardrails
+  new conceptual architecture
+
+PARALLEL
+  Writer's Studio under G-2
+  → anything it solves stays Writer's-Studio-local
+     unless later explicitly elevated
+```
+
+> **The theorizing lane stopped. The research needed to test it is still open.**
+
+⛔⛔ **And the lifecycle architecture is HELD, not an active implementation lane.
+NOTHING in this programme has authorized code, schema, UI or deployment.**
+
+```text
+NEXT MOVE IS EVIDENCE, NOT ARCHITECTURE
+SD-00B → DR-01 A/B/C → Stage 3 reconciliation
+```
+
+⭐ **Only after Stage 3 would it make sense to ask whether
+`JARVIS-RELATIONAL-MEANING-LIFECYCLE-01` should reopen.**
+
 ## Stage log
 
+- **2026-09-11 · STANDING CORRECTED (founder)** — the programme is **NOT "closed";
+  it is FROZEN AT A DELIBERATE RESEARCH GATE.** Taxonomy of record added above:
+  **CLOSED** (Mercury lane · recognition schema · member-noticing feature ·
+  relational-third storage) · **HELD** (`JARVIS-RELATIONAL-MEANING-LIFECYCLE-01`, not
+  being built or advanced) · **ACTIVE/NEXT** (SD-00B · DR-01A) · **GATE** (Stage 3,
+  no synthesis before the evidence) · **FROZEN** (new laws · falsifiers · guardrails ·
+  conceptual architecture) · **PARALLEL** (Writer's Studio under G-2). ⭐ *The
+  theorizing lane stopped; the research needed to test it is still open.* ⛔⛔ **The
+  lifecycle architecture is HELD, not an active implementation lane — nothing in this
+  programme has authorized code, schema, UI or deployment.** ⚠️ Recorded as a
+  correction of characterization, **not an amendment**; the legislative freeze holds.
 - **2026-09-10 · G-1 and G-2 LANDED (founder ruling)** — two **programme-governance
   constraints**, placed here rather than in the frozen charter because they govern
   **how streams relate**, not what AIN may believe. **G-1 research-stream
