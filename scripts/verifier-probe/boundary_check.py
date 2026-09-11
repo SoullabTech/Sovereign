@@ -186,7 +186,7 @@ DEBERTA_MISSES = {
 }
 
 
-def against(paths):
+def against(paths, only=None):
     """
     ⭐⭐ THE QUESTION THE CALIBRATION RUN LEFT OPEN:
 
@@ -229,6 +229,18 @@ def against(paths):
                          'set': d.get('set', '?'), 'conf': conf, 'risk': risk,
                          # ⛔ ground truth from the CURRENT fixture, not the saved row
                          'correct': r['observed'] == c['expected']})
+
+    if only:
+        # ⭐ The closure-risk role rests on ONE contrast (agreement precision inside
+        # vs outside the regime), and that contrast has so far been computed over
+        # corpora the detector was written against. Restricting to `detector-blind`
+        # is the only blind test of the NEW claim available without new material.
+        # ⛔ It is a smaller sample, and a result here does not become general by
+        # being blind.
+        rows = [r for r in rows if r['set'] == only]
+        print(f'⭐ RESTRICTED to set `{only}` — {len(rows)} verifier-judgements')
+        if not rows:
+            sys.exit(f'no rows for set `{only}` in these files')
 
     if not rows:
         sys.exit('no usable rows — pass probe result JSON files')
@@ -486,11 +498,17 @@ def main():
     ap.add_argument('--set', dest='which', choices=sorted(SETS), default=None)
     ap.add_argument('--against', nargs='+', metavar='RESULT.json',
                     help='cross-tab the detector against a verifier\'s confidence')
+    ap.add_argument('--only', metavar='SET', choices=sorted(SETS),
+                    help='restrict --against to one corpus (use `detector-blind` '
+                         'to test the closure-risk claim on material the detector '
+                         'never saw)')
     a = ap.parse_args()
 
     if a.against:
-        against(a.against)
+        against(a.against, only=a.only)
         return
+    if a.only:
+        sys.exit('--only applies to --against')
 
     which = [a.which] if a.which else ['as-derived', 'blind', 'scope', 'modifier']
     tot_cov = tot_neg = tot_cost = tot_pos = 0

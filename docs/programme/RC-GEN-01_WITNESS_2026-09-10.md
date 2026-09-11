@@ -4850,3 +4850,83 @@ nearly all the errors, which is coverage, not a shortage of data.
 *A heading is a claim about what a number is.*
 
 **Rule digest unchanged — `18608a18…`.**
+
+---
+
+## FOUNDER RULING — the detector is a CLOSURE-RISK DETECTOR (2026-09-11)
+
+```text
+BOUNDARY DETECTOR GENERALIZATION       SUPPORTED
+
+detector as judge                      NO
+detector as refusal mechanism          NO
+detector as MiniCheck selector         NOT SUPPORTED
+
+detector as CLOSURE-RISK ROUTER        SUPPORTED
+
+MiniCheck complementarity              SUPPORTED
+MiniCheck independence                 PARTIAL / CORRELATED
+
+majority voting                        REJECTED
+model agreement inside risk regime     INSUFFICIENT FOR CLOSURE
+
+agreement precision
+  inside risk regime                   68%
+  outside risk regime                  98%
+  corpus-specific
+
+UNRESOLVED                             LOAD-BEARING
+```
+
+The conceptual rename is the substance of the ruling: the detector is **not** a
+second-witness router but an **epistemic closure detector**. It does not say
+*send this to the better model*; it says ***in this kind of case, even two models
+agreeing is not enough reason to close.*** The second-witness hypothesis is
+**NOT SUPPORTED** and is recorded as such — MiniCheck's disruption rate inside
+the regime (16%) against outside (5%) shows the detector finds where the
+epistemic problem is harder, not where MiniCheck is stronger.
+
+⭐ **And the value is explicitly not accuracy.** `DeBERTa 68/90 · MiniCheck 73/90
+· route-and-defer 73/90` — the router adds nothing to automatic accuracy over
+always asking MiniCheck. Its value is **preventing premature certainty**: 19 of
+DeBERTa's 22 errors identified before they harden, at the cost of holding 25 of
+68 correct claims. *That is what `UNRESOLVED` is for.*
+
+`UNRESOLVED` under this ruling does not mean low confidence, model disagreement,
+or ignorance. It means **the epistemic situation does not justify turning this
+understanding into settled knowledge yet** — and it can hold while both verifiers
+say YES at high confidence, because the architecture knows both become unreliable
+in precisely this kind of sentence. **Architectural metacognition**, carried by
+the tetrad: continuity remembers *why* it stayed open, corrigibility lets later
+information change it, stewardship keeps it from being imposed as fact, openness
+leaves room for reality to disclose something else.
+
+### ⛔ The one obligation this ruling creates, and it is unmet
+
+The closure-risk role rests on a single contrast — **agreement precision 68%
+inside vs 98% outside** — and that contrast has so far been computed over corpora
+the detector was **written against**. The `detector-blind` set is the one corpus
+it never saw, and the new claim has **not** been tested there alone.
+
+`--only <set>` now restricts `--against` to a single corpus, so the ruling's
+load-bearing number can be re-derived on blind material from the existing result
+files, without re-scoring anything:
+
+```zsh
+python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json --only detector-blind
+```
+
+⛔ **Recorded as OWED, not as done.** A smaller sample, and a result does not
+become general by being blind. But a role this central should not stand only on
+the material that suggested it.
+
+### Next research layer (founder): what lawfully resolves an `UNRESOLVED`?
+
+Opened, not begun, and explicitly **not** a hunt for a third verifier. Noted for
+whoever takes it: this is the same question the temporal-memory direction already
+frames as **detect → ask → record**, and the answer is governed by
+`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY` rather than by any confidence measure —
+*resolution is an authority question, not a probability one.* A member's own word
+can close what no quantity of model agreement can.
+
+**Rule digest unchanged — `18608a18…`.**
