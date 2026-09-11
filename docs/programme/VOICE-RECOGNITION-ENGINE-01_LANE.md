@@ -1202,3 +1202,105 @@ repo's. Then `/maia` S1–S4 on the phone.
 **Status after this record.** STEP 1 PASS (WEB 5846a0824) — STEP 2 PASS
 (INSTALLED, xcodebuild + devicectl) — LAUNCH RETRY PENDING (device locked) —
 `/maia` S1–S4 PENDING.
+
+### 12.11 `/maia` shared-seam smoke — LIVE PATH SMOKE: FAIL (intermittent) — STOP — 2026-09-11
+
+**Evidence provenance.** Founder on the phone, relayed in four messages
+(≈21:15–21:30). Installed artefact of §12.10 (NATIVE SUBJECT `73d0df30d`,
+WEB BUNDLE `5846a0824`, APP 1.2.0, BUILD 2511, iOS 26.6.1). Nothing was
+changed on the device between the messages; the remote session cannot
+reach it and pushed nothing to it.
+
+```text
+LIVE PATH SMOKE: FAIL
+S1: PASS   mic started
+S2: PASS   phrase transcribed ("she heard me")
+S3: FAIL   reply rendered WITHOUT spoken audio; mic did NOT return to listening
+S4: FAIL   not reached in that pass
+later:     "she came back" — a subsequent pass returned to listening
+later:     "still glitchy" / "listening glitching" — recurs
+founder:   "this is reoccurring with this build"
+LOCALE:    not recorded
+```
+
+The behaviour is **intermittent**, not deterministic. That changes what
+can be concluded: a single pass cannot be attributed; only a
+same-phone comparison against a build without the lane's native change can.
+
+**Classification (no repair; §12.7 step 5).**
+
+*The lane's native edit is on the live path at every reply.* This was the
+bounded exposure named in §10, and the smoke is what it was for. The chain,
+none of it changed by the lane on the web side:
+
+- `lib/audio/ttsWithFallback.ts:44-46` and `components/OracleConversation.tsx:1977`
+  call `VoiceController.prepareForSpeaking()` before MAIA speaks;
+  `prepareForListening()` before the mic resumes.
+- `lib/voice/AudioSessionManager.ts` binds those to the native
+  `AudioSessionManager` Capacitor plugin (`registerPlugin`, line 67).
+- Native `prepareForSpeaking` / `prepareForListening`
+  (`AudioSessionManager.swift:114`, `:51`) each call
+  `performFullTeardown()` (`:127`, `:64`) and then re-set category and
+  activate the session.
+- `performFullTeardown()` is one of the two methods the lane edited.
+
+*The native delta on that path is narrow.* Full diff `a4305f4d6..73d0df30d`
+of `AudioSessionManager.swift` (73 lines, six hunks):
+
+1. `import Speech` removed; recognizer/request/task fields replaced by a
+   weak `RecognitionTeardownHandle` and an `inputTapInstalled` flag.
+2. `performFullTeardown()`: recognition cancel now goes through the handle
+   (nil on the live path, so a no-op — as the old fields were also nil on
+   the live path, which never used `createRecognitionRequest`).
+3. `performFullTeardown()`: `engine.inputNode.removeTap(onBus: 0)` was
+   unconditional; it is now guarded by `inputTapInstalled`, which is never
+   true on the live path. **Behavioural difference on the live path: the
+   old code touched `engine.inputNode` on every teardown (accessing the
+   property instantiates the input node); the new code does not.**
+4. `createRecognitionRequest()` → `installInputTap(consumer:)`;
+   `setRecognitionTask` → `setActiveRecognition`. Neither is called on the
+   live path.
+
+Item 3 is the only live-path behavioural difference, and it removes a side
+effect rather than adding one. It is not obviously a cause of "no spoken
+reply, no mic resume"; it is also not excluded, because AVAudioEngine
+node graph state across `stop()`/`reset()` is exactly the kind of thing
+that produces intermittent audio-session behaviour. The classification
+therefore cannot be closed from the source alone.
+
+*What is not the cause:* `enableVoiceInChat` defaults to `true` on a fresh
+install (`OracleConversation.tsx:972-978`), so a wiped localStorage does
+not silence her. The lane touched no web file on this path
+(`ttsWithFallback.ts`, `lib/voice/AudioSessionManager.ts`,
+`OracleConversation.tsx`, `ContinuousConversation.tsx`: zero diff). The
+`IOSNativeVoiceProvider` / `MAIAVoiceProvider` changes are instantiated only
+by `app/voice-controller-test/page.tsx`, which is not in this bundle.
+
+**The one question that decides attribution.** *Did this same behaviour —
+reply without voice, mic not returning, intermittently — occur on the
+previously installed build (TestFlight 2511/2515, before today's install)?*
+
+- **Yes, it did** → pre-existing live-path flakiness; the lane's seam is
+  not shown to have damaged the product; the smoke is recorded FAIL for the
+  product and NOT ATTRIBUTED to the lane; the founder may rule whether the
+  Probe / A-B proceed on a known-flaky baseline.
+- **No, it did not** → the lane's `AudioSessionManager.swift` edit is the
+  prime suspect; §13 records `NATIVE CANDIDATE` unadjudicated and the seam
+  as SUSPECT; any repair or revert of that file is a build act needing a
+  ruling (§8).
+- **Unknown** → the discriminating experiment is a same-phone reinstall of
+  the pre-lane build and the same S1–S4. Confounded by the older web
+  bundle, but it is the only comparison available without construction.
+
+**Evidence that would sharpen either branch, no construction.** Native
+logs during a glitch. On the Mac, with the phone connected: Console.app →
+the iPhone → filter `AudioSessionManager`. The edited teardown logs
+`Performing full teardown…`, `Active recognition cancelled`, `Input tap
+removed`, then the prepare methods log their category/activation outcome.
+A failed `setActive` / `setCategory` on the `prepareForSpeaking` path at
+the moment of a silent reply would localize the fault to the session
+transition; a clean log with a silent reply pushes it to the web/TTS side.
+
+**Status after this record.** LIVE PATH SMOKE: FAIL (INTERMITTENT) —
+STOP — ATTRIBUTION OPEN — no dev mode, no Probe, no A/B, no repair. §13 not
+written.
