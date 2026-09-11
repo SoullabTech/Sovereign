@@ -104,15 +104,23 @@ const A_S_RUBRIC = `
     ongoing temporality      represented
     significance             on the correct node
     meaningfulness           on the correct node
-    magnitude · valence · direction · agency    UNSPECIFIED
-  ⛔ If A invents high / positive / active_participation, A-S FAILS IMMEDIATELY
-     and nothing downstream is consulted.`;
+    magnitude · valence · direction         UNSPECIFIED
+  ⭐⭐ analyzer/3 · SV-4 — THE PARTICIPATION READING IS THE FIRST CLEAN PROOF
+     THAT THE ONTOLOGY REPAIR REMOVED A1 RATHER THAN RENAMING IT.
+     The source does NOT say the person actively participates in or undergoes
+     the integration or the transformation. So the correct graph carries
+     NO PARTICIPATION EDGE AT ALL.
+  ⛔ A participation edge appearing merely to replace the old agency field is
+     A1 in a new syntax, and A-S FAILS. Absence is the answer, not silence.
+  ⛔ If A invents high / positive, or asserts participation the source does not,
+     A-S FAILS IMMEDIATELY and nothing downstream is consulted.`;
 
 const C_S_RUBRIC = `
   C-S — RUBRIC (human ruling required)
   Does each candidate graph DESCRIBE what its passage asserts?
   ⛔ C must not call anything wrong. It has no source and no expectation.
-     It should simply record e.g. magnitude / agency / where a property sits.`;
+     It should simply record e.g. magnitude, temporality, where a property sits,
+     and who takes part in what.`;
 
 const AC_1_RUBRIC = `
   AC-1 — RUBRIC (human ruling required)

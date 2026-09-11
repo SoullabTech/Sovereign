@@ -74,7 +74,7 @@ export type PropertyName =
    * design gate, from the founder's own worked example.
    */
   | 'significance' | 'meaningfulness' | 'magnitude' | 'valence' | 'direction'
-  | 'agency' | 'temporality' | 'modality' | 'polarity';
+  | 'temporality' | 'modality' | 'polarity';
 
 export type PropertyValue =
   | 'unspecified'
@@ -82,12 +82,40 @@ export type PropertyValue =
   | 'low' | 'high'
   | 'positive' | 'negative'
   | 'forward' | 'none'
-  | 'active_participation' | 'undergone'
   | 'ongoing' | 'complete'
   | 'certain' | 'possible';
 
+/**
+ * ⭐⭐ SV-4 (analyzer/3) — PARTICIPATION IS A RELATION, NOT A NODE PROPERTY.
+ *
+ * `agency` was an intrinsic node property with values `active_participation` and
+ * `undergone`. The SV-4 discriminator established that it cannot represent an
+ * ordinary mixed sentence — *"Lena performed the test and later underwent the
+ * procedure"* — because Lena is ONE node carrying ONE intrinsic value, and the two
+ * readings are irreconcilable. Adding a `both` value would have widened an enum to
+ * paper over a misplaced dimension.
+ *
+ * ⭐ A person is not *agentive*. A person ACTS IN this and UNDERGOES that. The
+ * dimension belongs between an entity and an event, which is exactly where these
+ * two relations put it.
+ *
+ * ⛔ THE OLD CATEGORY ERROR IS NOW UNREPRESENTABLE RATHER THAN MERELY DISCOURAGED.
+ * A-S v1 wrote `agency = undergone` onto a TRANSFORMATION node; a transformation
+ * does not act or undergo. Under analyzer/3 an event has no participation field to
+ * fill in wrongly, and the admission boundary refuses a participation edge whose
+ * endpoints are not `entity -> event | process`. The repair does not detect that
+ * error — it removes the place where it could be written.
+ *
+ * ⛔ AND NOTHING REPLACES IT. Where the source makes no participation claim, the
+ * correct representation is the ABSENCE of a participation edge. There is no
+ * `not_applicable` and no `unspecified` participation, because participation is no
+ * longer a dimension a node is obliged to answer for.
+ */
+export type ParticipationEdgeKind = 'actively_participates_in' | 'undergoes';
+
 export type EdgeKind =
-  | 'causes' | 'results_in' | 'constitutes' | 'qualifies' | 'within' | 'distinct_from';
+  | 'causes' | 'results_in' | 'constitutes' | 'qualifies' | 'within' | 'distinct_from'
+  | ParticipationEdgeKind;
 
 /**
  * ⭐ STRUCTURAL / IDENTITY-BEARING. May participate in alignment, because it says
@@ -141,7 +169,17 @@ export const MAX_ALIGNABLE_NODES = 8;
 
 const PROPERTIES: readonly PropertyName[] = [
   'significance', 'meaningfulness', 'magnitude', 'valence', 'direction',
-  'agency', 'temporality', 'modality', 'polarity',
+  'temporality', 'modality', 'polarity',
+];
+
+/**
+ * ⭐ Participation is compared as EDGE TOPOLOGY, by the same machinery as every
+ * other relation — so a candidate that ADDS participation the source left neutral
+ * changes the edge set and cannot align. It is detected as an added EDGE rather
+ * than as an added property, and no participation-specific comparison rule exists.
+ */
+export const PARTICIPATION_EDGE_KINDS: readonly ParticipationEdgeKind[] = [
+  'actively_participates_in', 'undergoes',
 ];
 
 /** `unspecified` and absence are the same claim: the source did not commit. */

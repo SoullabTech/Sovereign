@@ -29,15 +29,30 @@
 import { runStructured } from '../../ai/structured/router';
 import { logAskDiagnostic, sanitizeCause, requestIdOf } from '../ask/askDiagnostics';
 import type { SemanticGraph, SemanticNode, SemanticEdge, NodeKind } from './semanticGraph';
+import { PARTICIPATION_EDGE_KINDS } from './semanticGraph';
 
 /**
- * ⛔ VERSION IS EVIDENCE. `analyzer/1` owns the A-S failure permanently:
- *   A1 analyser overcommit (agency = undergone where the source commits to none)
- *   A2 representational inadequacy (no relation could express directedness)
- * A schema repair creates a NEW SUBJECT. The v1 failure is not overwritten, and
- * A-S / C-S / AC-1 / AC-2 must all be witnessed again against v2.
+ * ⛔ VERSION IS EVIDENCE. A schema repair creates a NEW SUBJECT; the prior failure
+ * is never overwritten, and A-S / C-S / AC-1 / AC-2 are witnessed again each time.
+ *
+ *   analyzer/1   A-S FAILED
+ *                  A1 analyser overcommit  (participation asserted where the
+ *                                           source commits to none)
+ *                  A2 representational inadequacy (no relation for directedness)
+ *   analyzer/2   SV-2 repair (`has_object`) · SV-3 discriminator · SV-4 exposed
+ *                  ⛔ FROZEN · historical subject · provider witness never completed
+ *   analyzer/3   SV-4 repair — participation ontology
+ *
+ * ⭐ A1 IS NOW BETTER UNDERSTOOD, AND ITS REMEDY CHANGED. A1 was a real analyser
+ * overcommit — that observation stands. But SV-4 showed the analyser was also being
+ * asked to populate a BADLY LOCATED semantic dimension: a question that did not
+ * apply to the node it was describing, in a closed domain where the tempting answer
+ * was the only non-silent one. ⛔ The proposed prompt repair is WITHDRAWN, not
+ * because A1 was not an analyser error, but because the schema repair removes the
+ * category in which the error occurred. We do not teach the analyser to abstain
+ * harder from a field that no longer exists.
  */
-export const ANALYZER_VERSION = 'RC-GEN-01/analyzer/2';
+export const ANALYZER_VERSION = 'RC-GEN-01/analyzer/3';
 export const ANALYZER_TOOL_NAME = 'semantic_graph';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
@@ -53,9 +68,43 @@ const KINDS: readonly NodeKind[] = ['event', 'state', 'process', 'relation', 'en
  * ⛔ GENERAL, NEVER FIXTURE-SHAPED. `has_object` carries attention toward a sound,
  * hostility toward a stranger, an orientation toward a landscape. Adding anything
  * named for this specimen would be teaching the test.
+ *
+ * ⭐⭐ SV-4 RELATION ADEQUACY (analyzer/3). `actively_participates_in` and
+ * `undergoes` REPLACE the node property `agency`. Participation is a relation
+ * between a participant and what they participate in, never a trait the
+ * participant carries.
  */
 const RELATIONS = ['causes', 'results_in', 'constitutes', 'qualifies', 'within',
-  'distinct_from', 'has_object'];
+  'distinct_from', 'has_object', ...PARTICIPATION_EDGE_KINDS];
+
+/**
+ * ⭐⭐ TYPED ENDPOINTS, ENFORCED AT ADMISSION — NOT DESCRIBED IN THE PROMPT.
+ *
+ * ⛔ Adding the two relation names alone would have moved the category error from a
+ * property into an edge and called it repaired: `departure --undergoes--> journey`
+ * would still be expressible. The founder's ruling is that criterion 4 must be
+ * STRUCTURAL — the error inadmissible, not merely less likely.
+ *
+ *   entity  --actively_participates_in--> event | process     ACCEPT
+ *   entity  --undergoes----------------> event | process      ACCEPT
+ *   event   --undergoes----------------> process              REFUSE
+ *   process --actively_participates_in--> event               REFUSE
+ *   entity  --undergoes----------------> entity               REFUSE
+ *
+ * ⛔ `unspecified` IS NOT AN ELIGIBLE ENDPOINT. An analyser that cannot say what
+ * kind of thing a node is has no standing to assert that it participates.
+ *
+ * ⚠️ Relations absent from this table are unconstrained, as they were in v2. The
+ * repair is bounded to the dimension SV-4 ruled on; widening endpoint typing to the
+ * other six relations is a separate adequacy question and is not decided here.
+ */
+const PARTICIPANT_KINDS: readonly NodeKind[] = ['entity'];
+const PARTICIPATED_IN_KINDS: readonly NodeKind[] = ['event', 'process'];
+
+export const RELATION_ENDPOINTS: Readonly<Record<string,
+  { readonly from: readonly NodeKind[]; readonly to: readonly NodeKind[] }>> =
+  Object.fromEntries(PARTICIPATION_EDGE_KINDS.map((r) =>
+    [r, { from: PARTICIPANT_KINDS, to: PARTICIPATED_IN_KINDS }]));
 /**
  * ⭐ PER-PROPERTY DOMAINS. A value legal for one semantic dimension is not
  * automatically legal for another.
@@ -71,7 +120,10 @@ const PROPERTY_DOMAINS: Readonly<Record<string, readonly string[]>> = {
   magnitude:      ['unspecified', 'low', 'high'],
   valence:        ['unspecified', 'positive', 'negative'],
   direction:      ['unspecified', 'forward', 'none'],
-  agency:         ['unspecified', 'active_participation', 'undergone'],
+  /* ⛔ `agency` REMOVED in analyzer/3 — SV-4. Participation is now an EDGE; see
+     RELATION_ENDPOINTS. There is deliberately no replacement property, and no
+     `not_applicable` value anywhere: the absence of a participation edge IS the
+     representation of a source that makes no participation claim. */
   temporality:    ['unspecified', 'ongoing', 'complete'],
   modality:       ['unspecified', 'certain', 'possible'],
   polarity:       ['unspecified', 'asserted', 'negated'],
@@ -132,11 +184,21 @@ export function analyzerSystemPrompt(): string {
     'NODES are the distinct things the passage asserts: events, states, processes,',
     'relations, entities. EDGES are what the passage says holds BETWEEN them —',
     'what causes what, what results from what, what constitutes what, what qualifies',
-    'what, what lies within what.',
+    'what, what lies within what, what something is directed at, and who takes part',
+    'in what.',
+    '',
+    'PARTICIPATION IS SOMETHING THAT HOLDS BETWEEN SOMEONE AND WHAT HAPPENS, not a',
+    'quality someone has. Where the passage says a person acted in something, that is',
+    'an edge from that person to that event or process; where it says something was',
+    'done to them, that is a different edge, in the same place. The same person can',
+    'take part in two things in two different ways, and each is its own edge.',
+    '',
+    'Where the passage does not say how anyone took part, there is simply no such',
+    'edge. Nothing else needs to be recorded in its place.',
     '',
     '⛔ RECORD ONLY WHAT THE PASSAGE COMMITS TO.',
-    'Where the passage does not say whether something is large, good, deliberate,',
-    'certain, finished or directed, that property is UNSPECIFIED. Unspecified is an',
+    'Where the passage does not say whether something is large, good, certain,',
+    'finished or directed, that property is UNSPECIFIED. Unspecified is an',
     'answer, and the most common correct one. Do not infer a property because it',
     'would be a natural reading; record it only where the passage asserts it.',
     '',
@@ -241,6 +303,24 @@ export function admitAnalysis(input: unknown): AnalysisResult {
     const from = index.get(e.from); const to = index.get(e.to);
     if (from === undefined || to === undefined) {
       return { ok: false, refusal: 'malformed', detail: 'edge names an unknown node' };
+    }
+    /* ⭐⭐ SV-4 ENDPOINT TYPING. Structural, at the boundary — so the old category
+       error is INADMISSIBLE rather than discouraged. A participation edge whose
+       subject is not an entity, or whose object is not something that happens, is
+       refused outright; it is never silently dropped or re-kinded, because either
+       would hand D a graph the admission layer partly authored. */
+    const endpoints = RELATION_ENDPOINTS[e.relation];
+    if (endpoints) {
+      const fromKind = nodes[from].kind ?? 'unspecified';
+      const toKind = nodes[to].kind ?? 'unspecified';
+      if (!endpoints.from.includes(fromKind)) {
+        return { ok: false, refusal: 'malformed',
+          detail: `${e.relation} cannot have a ${fromKind} as its subject` };
+      }
+      if (!endpoints.to.includes(toKind)) {
+        return { ok: false, refusal: 'malformed',
+          detail: `${e.relation} cannot have a ${toKind} as its object` };
+      }
     }
     edges.push({ from, to, kind: e.relation as SemanticEdge['kind'] });
   }

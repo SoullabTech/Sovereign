@@ -162,7 +162,9 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
   describe('⭐ PER-PROPERTY DOMAINS — legal for one dimension is not legal for another', () => {
     it.each([
       ['magnitude = ongoing', { magnitude: 'ongoing' }],
-      ['agency = positive', { agency: 'positive' }],
+      ['agency = positive — the property is GONE in v3', { agency: 'positive' }],
+      ['⭐ agency = active_participation — v2\'s legal value, now unrepresentable',
+        { agency: 'active_participation' }],
       ['temporality = high', { temporality: 'high' }],
       ['significance = active_participation', { significance: 'active_participation' }],
       ['valence = asserted', { valence: 'asserted' }],
@@ -174,12 +176,11 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
 
     it.each([
       ['magnitude = high', { magnitude: 'high' }],
-      ['agency = active_participation', { agency: 'active_participation' }],
       ['temporality = ongoing', { temporality: 'ongoing' }],
       ['significance = asserted', { significance: 'asserted' }],
       ['every property = unspecified', Object.fromEntries(
         ['significance','meaningfulness','magnitude','valence','direction',
-         'agency','temporality','modality','polarity'].map((k) => [k, 'unspecified']))],
+         'temporality','modality','polarity'].map((k) => [k, 'unspecified']))],
     ])('admits %s', (_label, properties) => {
       expect(admitAnalysis({ nodes: [node({ properties })], edges: [] }).ok).toBe(true);
     });
@@ -187,7 +188,7 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
     it('⭐ the SCHEMA carries the per-property domains, not one global enum', () => {
       const props = (analyzerToolSchema.properties as any).nodes.items.properties.properties.properties;
       expect(props.magnitude.enum).toEqual(['unspecified', 'low', 'high']);
-      expect(props.agency.enum).toEqual(['unspecified', 'active_participation', 'undergone']);
+      expect(props.direction.enum).toEqual(['unspecified', 'forward', 'none']);
       expect(props.magnitude.enum).not.toContain('ongoing');
       expect(props.temporality.enum).not.toContain('high');
     });
@@ -197,10 +198,10 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
 });
 
 describe('provenance', () => {
-  it('the analyser version is pinned — v2 after the SV-2 schema repair', () => {
+  it('the analyser version is pinned — v3 after the SV-4 participation repair', () => {
     /* ⛔ Version is EVIDENCE. v1 owns the A-S failure permanently; a schema change
        creates a new subject rather than editing the old one's record. */
-    expect(ANALYZER_VERSION).toBe('RC-GEN-01/analyzer/2');
+    expect(ANALYZER_VERSION).toBe('RC-GEN-01/analyzer/3');
     expect(ANALYZER_TOOL_NAME).toBe('semantic_graph');
   });
 });

@@ -27,7 +27,7 @@ const SOURCE: SemanticGraph = {
     { label: 'shift_in_perspective', properties: { valence: 'unspecified' } },
     { label: 'development', properties: { meaningfulness: 'asserted', direction: 'unspecified' } },
     { label: 'process_of_integration',
-      properties: { temporality: 'ongoing', agency: 'unspecified', valence: 'unspecified' } },
+      properties: { temporality: 'ongoing', valence: 'unspecified' } },
   ],
   edges: [
     { from: 0, to: 1, kind: 'causes' },
@@ -47,7 +47,7 @@ const RUN_8_9: SemanticGraph = {
     { label: 'shift_in_seeing', properties: {} },
     { label: 'development', properties: { meaningfulness: 'asserted' } },
     { label: 'process_of_integration',
-      properties: { temporality: 'ongoing', agency: 'active_participation' } },
+      properties: { temporality: 'ongoing' } },
   ],
   edges: [
     { from: 0, to: 1, kind: 'causes' },
@@ -78,10 +78,44 @@ describe('⭐⭐ THE DESIGN GATE — the real run-8/9 candidate must be REFUSED'
       { kind: 'dropped_property', node: 1, property: 'significance', source: 'asserted' });
   });
 
-  it('⭐ catches `ongoing process` -> `he was already engaged in` as ADDED agency', () => {
-    if (v.admitted) throw new Error('unreachable');
-    expect(v.findings).toContainEqual(
-      { kind: 'added_property', node: 4, property: 'agency', candidate: 'active_participation' });
+  /**
+   * ⭐⭐ SV-4 CHANGED HOW THIS DRIFT IS CAUGHT, AND THE CHANGE IS WORTH NAMING.
+   *
+   * Under analyzer/2 the run-8/9 drift `ongoing process` -> `he was already engaged
+   * in` was an ADDED PROPERTY on node 4 (`agency = active_participation`). Under
+   * analyzer/3 participation is not a property of the process at all — it is an edge
+   * from the PERSON to it, and the person is a node in his own right.
+   *
+   * ⚠️ SO THE DETECTION MOVES FROM THE PROPERTY PASS TO THE STRUCTURE PASS, and
+   * that has a real consequence: a structural difference short-circuits alignment,
+   * so an added participation edge and a property drift are no longer reported in
+   * one findings list. The VERDICT is unchanged — both refuse — but the findings are
+   * less granular when both occur together. ⛔ Recorded as a consequence of the
+   * ruling, not designed around.
+   */
+  it('⭐ the run-8/9 participation drift is caught as an ADDED EDGE, not a property', () => {
+    const withParticipant = (participates: boolean): SemanticGraph => ({
+      nodes: [
+        { label: 'person', kind: 'entity', properties: {} },
+        { label: 'process_of_integration', kind: 'process', properties: { temporality: 'ongoing' } },
+      ],
+      edges: participates
+        ? [{ from: 0, to: 1, kind: 'actively_participates_in' }]
+        : [],
+    });
+    /* The source says the process is ongoing and HIS. It does not say he was
+       already engaged in it. The candidate says he was. */
+    const drift = compareConservation(withParticipant(false), withParticipant(true));
+    expect(drift.admitted).toBe(false);
+    if (drift.admitted) throw new Error('unreachable');
+    expect(drift.refusal).toBe('structure_mismatch');
+    expect(kinds((drift as Extract<typeof drift, { findings: readonly ConservationFinding[] }>).findings))
+      .toContain('added_edge');
+  });
+
+  it('⛔ and the process itself carries no participation property to drift', () => {
+    expect(SOURCE.nodes[4].properties).not.toHaveProperty('agency');
+    expect(RUN_8_9.nodes[4].properties).not.toHaveProperty('agency');
   });
 
   it('names the refusal exactly', () => {
