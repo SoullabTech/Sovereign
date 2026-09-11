@@ -741,3 +741,39 @@ failed identically), `build-ios-static.sh` logged
 present, and `cap sync` completed: bundled `packageClassList` still omits
 the plugin (expected, `0`), storyboard carries `MAIABridgeViewController`
 (`1`), tree clean. Native build + install + device witness: pending.
+
+**E8 addendum — two further founder rulings (same evening).**
+
+*Keep failure — PROVISIONAL until the phone identifies itself.* Stale
+client bundle / contract mismatch is favoured over any MAIA cognition or
+voice defect, but the diagnosis is not closed until Account Settings says
+whether the walk ran in the **native app** (then confirm the installed
+build in Account Settings or TestFlight; a fresh iOS bundle would carry the
+current contract) or in a **home-screen PWA** (no meaningful native build
+number; the cached web bundle / service worker is the suspect and a native
+rebuild would fix nothing). **Do not change the Keep route**: today's client
+already dropped the `capsule.id` assumption; accommodating an obsolete
+client server-side would reintroduce historical contract behaviour.
+Founder sequence: A delete authorized caches → B verify ≥ 10 GB free →
+C identify phone (native/PWA, exact displayed build) → D confirm stale
+client → E finish #1284 governance (another lane) → F build/install a fresh
+iOS bundle only if native → G re-test Keep with no server change.
+
+*Disk — second ruling, from a separate inspection of the Mac.* Authorized
+now: worktree `.next/` caches; `~/Library/Developer/Xcode/DerivedData/`;
+updater caches (Claude Desktop / Loom / Proton Mail `ShipIt`, ≈2.1 GB);
+`~/.gradle/caches/` (1.4 GB); `~/.cache/puppeteer/` (1.0 GB). If more is
+needed: `~/Library/Caches/Google/` (1.6 GB), `~/Library/Caches/electron/`
+(305 MB), `~/Library/Caches/Homebrew/` (109 MB), `~/Library/Caches/node-gyp/`
+(62 MB). **Target ≥ 10 GB free before the next iOS build.** DO NOT clear
+`/private/tmp` wholesale — it holds registered git worktrees and governed
+witness environments (including a ≈2.3 GB `mail03-founder-closure`
+worktree). KEEP `~/Library/Developer/Xcode/iOS DeviceSupport` (5.7 GB): it
+is the support image for the very device under witness (iPhone17,2 /
+iOS 26.6.1). Hold: git worktrees, repo source, `.git`, shared
+`node_modules`, `Podfile`/`Podfile.lock`, voice witness artefacts.
+
+Reconciliation: the ruling's 253 MiB figure predates the E6→E8 cleanup;
+after it the Mac reported 7.2 GiB free and the export at `0debe8b09`
+succeeded. The remaining authorized items (updater caches, gradle,
+puppeteer, and the second-tier caches) are what reach the 10 GB target.
