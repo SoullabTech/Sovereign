@@ -63,3 +63,24 @@ device act           NOT AUTHORIZED until the founder accepts this record
 ```
 
 A green MAC-COMPILE-03 authorizes exactly one thing: installing `728924819` and rerunning the KERNEL-00 witness **from Enter conversation** under candidate A (rebuild-now with the precondition), recording whatever the organism does into `KERNEL-00_WITNESS_<date>_run2.md`. Thresholds unchanged. Candidate B/C not implemented. Both outcomes legitimate.
+
+## 5. Artifact provenance for the device rerun (founder-read, 2026-09-11 ~20:55)
+
+```
+UUID: 81D0C25C-73C9-39BE-B617-CF1020D0A9A4 (arm64) …/VoiceKernelHarness.app/VoiceKernelHarness
+UUID: 1AEBEE45-BF4E-3D6E-9D3A-69CFA6E4218A (arm64) …/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+Identifier=life.soullab.voicekernel.k00
+TeamIdentifier=ZVK2X646Z2
+```
+
+**Finding — the main executable's UUID is build-invariant; it is not the kernel.** `81D0C25C-…` is byte-identical to the run-1 artifact UUID recorded in `KERNEL-00_WITNESS_2026-09-11.md` §1, although the kernel sources changed between `488e0666c` and `728924819`. The build log explains it: Xcode links the app's main binary as a **stub executor** (`ConstructStubExecutorLinkFileList … libPreviewsJITStubExecutor.a`, entry `___debug_blank_executor_main`, `-reproducible`, with the debug-dylib path embedded by `-sectcreate`), and links every line of kernel and harness code into **`VoiceKernelHarness.debug.dylib`**. Same stub inputs, same DerivedData path → same UUID. The code the phone runs is identified by the **dylib** UUID.
+
+Consequences, recorded rather than argued away:
+
+- **Run 2 binding = `1AEBEE45-BF4E-3D6E-9D3A-69CFA6E4218A`.** Any device crash report for run 2 must list `VoiceKernelHarness.debug.dylib` with this UUID in its binary images. A report listing a different dylib UUID is a different binary. The main-executable UUID proves nothing about which kernel ran.
+- **Run 1's provenance claim is weaker than written.** "Mach-O UUID `81D0C25C-…` matches all three device crash reports" bound the crashes to the *stub*, which every local build of this project shares — CLI and GUI alike. It therefore did **not** discriminate the CLI artifact from a possible Xcode GUI build, which is exactly the question the record left as "binary replacement by Xcode NOT established". That verdict stands; the evidence cited for the match is now known to be non-discriminating. Corrected in place in the witness record (§1), not erased. The three run-1 `.ips` reports still carry the run-1 dylib UUID in their binary-image lists; reading it would (a) name the run-1 code identity for the record and (b) prove by inequality that run 2 runs new code. Owed as a read, not a rebuild.
+- **Non-crash outcome has no in-journal binding.** The flight recorder does not journal the build identity, so a run-2 journal that shows the organism surviving Enter is bound to this artifact only by the `devicectl install` transcript and timestamps. Journalling a build identity is outside the accepted §3 scope; recorded as an observability gap for a later plan, not done now.
+
+**Device state before install (founder-read):** `devicectl … processes | grep -iE "maia|voicekernel|App$"` → empty. No legacy `/maia` process, no resident harness process.
+
+**Unrelated file noticed in the same terminal:** `docs/programme/witness/coverage-admission-attempts.jsonl` now exists in the Mac Studio checkout with one line (`runId 56e9375c`, `2026-09-11T20:53:11Z`, `condition FULL`, `lens development`, `outcome refused`). Written by another lane, after this compile; not on `claude/voice-2026-census-01`; not part of VOICE-2026. Noted so it is not mistaken for kernel evidence.
