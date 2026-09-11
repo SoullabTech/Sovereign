@@ -1248,3 +1248,50 @@ input to §4/§5; none is a repair request here.
 mic came back · whether the member was speaking during that stretch ·
 silent-switch position for this run · Account Settings footer + Native
 App Build lines · S1–S4 one line each.
+
+### E16 · CORRECTION (founder, same session) — MAIA was NOT audible on the E16.2 reply
+
+E16.2 above read `✅ [iOS] Audio output confirmed` as audibility. **Founder:
+"MAIA was not audible."** The line is emitted by the web page's analyser on
+its own Web Audio graph — it witnesses signal *inside WebKit's graph*, not
+sound at the speaker. **Retract "audio audible" in E16.2; keep the log
+line as what it is: graph activity.** The instrument cannot distinguish
+audible from silent output and must not be cited for audibility again.
+
+**Tally on the repaired build, member-reported:** E14 reply — no voice
+(`No audio output detected`, silent switch on) · E15 replies — no voice
+(uncaptured) · E16.2 reply — no voice (graph active, 12.4 s "played").
+**Three of three inaudible.** On the pre-repair build voice was
+intermittently audible (E4 "working after 5 rounds", E12 session). This
+is a difference in the member-facing outcome that coincides with the
+repair and must be named, not absorbed.
+
+**Code-consistent hypothesis H-SILENT (not a ruling):** the gatekeeper's
+`prepareForSpeaking` runs `setActive(false, .notifyOthersOnDeactivation)`
+→ category change → `setActive(true)` in the **app** process. Web Audio
+renders in the **WebContent** process, which holds its own WebKit-managed
+audio session. The only WebKit session line in the whole capture is
+`AudioSession::beginInterruption but session is already interrupted!`,
+logged at the first recognizer start *after* playback — i.e. WebKit's
+session was **already in the interrupted state throughout the reply**. A
+Web Audio graph rendering into an interrupted session produces exactly
+what was observed: analyser sees samples, speaker emits nothing. If true,
+activating the gatekeeper turned an intermittent silence into a
+systematic one — which is the §7.2 "third possibility" landing on the
+speak side, not the listen side.
+
+**A control exists without any source change.** The unrepaired build
+witnessed in `VOICE-RECOGNITION-ENGINE-01` is preserved at
+`~/voice-witness-dd` (`.app`, E6/E8 custody). Installing it with
+`devicectl`, same phone, silent switch on ring, two short turns, and
+reporting audibility gives the A/B the hypothesis needs: (A) unrepaired
+build audible on ≥1 of 2 replies, (B) repaired build inaudible on 2 of 2.
+Both builds carry the same web bundle only if the footer says so — read
+the footer on each. ⛔ Not run; founder's call. Nothing here authorizes
+editing `AudioSessionManager.swift`, removing the registration, or
+touching `ttsWithFallback.ts`.
+
+**Acceptance table:** unchanged in rows; the "native runtime trace"
+row remains YES (the trace is visible), but the lane records alongside it
+that the traced transition coincides with inaudible playback on every
+captured turn.
