@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUNS 1-5 FAILED · RUN 6 ⛔ AWAITING RULING
+3A-S   semantic witness        ⛔ RUNS 1-6 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -449,7 +449,70 @@ EDGES NOW EXPLICIT, all three, for the first time
   run 5's "a great deal", and did not need to decide then.
 ```
 
-⛔ 3A-S AWAITING RULING on run 6. 3A NOT PASSED. 3D CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 6: **FAIL**
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### ⭐ The structural repair WORKED
+
+All three edges present — `brought about` · `then produced` · `was ... part of`.
+No teleological coloring. *"Plainness may not drop an edge"* did its job.
+
+### 🔴 What fails: NODE IDENTITY
+
+> "a large change in **how he related to the natural world**. **That change in how
+> he saw things** then produced a shift in perspective…"
+
+The relational change is referred back to as *"that change in how he saw things"* —
+**perspective-language applied to the node that must stay relational.**
+
+```
+SOURCE    RELATIONSHIP changes -> PERSPECTIVE shifts
+RUN 6     RELATIONSHIP changes -> same change REDESCRIBED as how he saw
+                               -> PERSPECTIVE shifts
+```
+
+> ⭐⭐ **A graph can preserve all its edges and still alter the meaning if it
+> changes the identity of the nodes.**
+
+### Second R3 concern, recorded not decided
+
+`significant transformation` → `large change`. *Significant* can mean important,
+consequential or noteworthy; *large* asserts magnitude — another dimension the
+source did not necessarily specify. **Not needed for the gate**, recorded so the
+next repair does not remove one distortion while preserving the other.
+
+### The six-run sequence
+
+```
+run 1  invention · run 2  collapse · run 3  teleological coloring
+run 4  collapse regression · run 5  edge dropped
+run 6  edge preserved, NODE IDENTITY altered
+```
+
+### ⭐ RULED — the run-3 exposure is closed: remove fixture vocabulary
+
+*"Keeping exact fixture vocabulary in the prompt weakens the independence of the
+specimen, even if those phrases are not intended as answers."* `ongoing ≠
+struggling` and `integration ≠ repair` are **removed from the production
+instruction**; the principles they instantiate are already general.
+
+⚠️ **EXTENDED BEYOND THE TWO NAMED, AND FLAGGED:** `meaningful ≠ positive` and
+`development ≠ improvement` are fixture vocabulary by the identical test, so they
+were removed too. Replaced with non-fixture pairs of the same shape. **Reversible
+if the founder disagrees.**
+
+⚠️ **Two documented exclusions**, asserted explicitly so the guard cannot rot:
+`developmental` (MAIA's ROLE in this product, not the fixture's noun) and `process`
+(generic English needed to say what a node can be).
+
+### Specimen 2 — PASS, sixth consecutive
+
+⛔ 3A remains NOT PASSED. 3D remains CLOSED.
 
 ## 3A-S — RUN 5 · evidence of record
 

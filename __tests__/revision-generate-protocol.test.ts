@@ -213,21 +213,42 @@ describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
   });
 });
 
+describe('⭐ nodes AND edges — run 6 preserved the edge and altered a node', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('names both halves of the graph', () => {
+    expect(p).toContain('A PASSAGE IS A SEMANTIC GRAPH, NOT A SET OF CLAIMS');
+    expect(p).toContain('NODES');
+    expect(p).toContain('has EDGES');
+  });
+  it('states the four failure modes', () => {
+    expect(p).toContain('drops an edge');
+    expect(p).toContain('merges two nodes into one');
+    expect(p).toContain("substitutes one node's meaning for another's");
+    expect(p).toContain('adds a property to a node that the source did not give it');
+  });
+  it('⭐ names run 6 exactly — the edge survives and the arrow starts from the wrong thing', () => {
+    expect(p).toContain('IT MAY NOT DROP AN EDGE, AND IT MAY NOT');
+    expect(p).toContain('CHANGE WHAT A NODE IS');
+    expect(p).toContain('describing one node in the vocabulary of the node it leads');
+    expect(p).toContain('pointing from a thing the source never named');
+  });
+});
+
 describe('⭐ the structural framing — a passage is a structure (run 5 FAIL)', () => {
   const p = revisionSystemPrompt(SECTIONS);
   it('states that a passage is a structure, not a set of claims', () => {
-    expect(p).toContain('A PASSAGE IS A STRUCTURE, NOT A SET OF CLAIMS');
+    expect(p).toContain('A PASSAGE IS A SEMANTIC GRAPH, NOT A SET OF CLAIMS');
   });
   it('requires the structure to be worked out BEFORE rewriting', () => {
-    expect(p).toContain('Before you rewrite anything, work');
-    expect(p).toContain('name the relation the source draws between each pair');
+    expect(p).toContain('Before you rewrite anything, work out');
+    expect(p).toContain('both for the passage in front of you');
   });
   it('⭐ carries the governing line', () => {
     expect(p).toContain('PLAINNESS MAY ALTER THE VOCABULARY. IT MAY NOT DROP AN EDGE');
   });
   it('⭐ names run 5\'s exact failure shape — connected becomes side by side', () => {
-    expect(p).toContain('your revision merely places side by side, is a loss');
-    expect(p).toContain('even when both things are still present and nothing false has been added');
+    expect(p).toContain('merely places side by side, is a loss even when both are present');
+    expect(p).toContain('false was added');
   });
   it('requires the KIND of relation, not merely that one exists', () => {
     expect(p).toContain('every relation the source draws between them, and its KIND');
@@ -237,28 +258,48 @@ describe('⭐ the structural framing — a passage is a structure (run 5 FAIL)',
 describe('⛔ the prompt teaches the LAW, never the fixture', () => {
   /* Rendered with NO sections, so the authorized prose cannot mask a leak. */
   const bare = revisionSystemPrompt([]);
-  it('contains no fixture SENTENCE or phrase from either specimen', () => {
-    for (const w of ['perspective', 'natural world', 'kettle', 'coffee', 'Mara',
-                     'relational orientation', 'step forward', 'working through']) {
-      expect(bare.toLowerCase()).not.toContain(w.toLowerCase());
-    }
+  const words = new Set(bare.toLowerCase().match(/[a-z']+/g) ?? []);
+
+  /**
+   * ⭐ FOUNDER RULING 2026-09-10 (run 6): fixture-derived valence examples are
+   * removed from the production instruction, because "keeping exact fixture
+   * vocabulary in the prompt weakens the independence of the specimen". The
+   * ruling named `ongoing != struggling` and `integration != repair`; the same
+   * reasoning was applied to `meaningful != positive` and `development !=
+   * improvement`, which are fixture vocabulary by the identical test. Flagged
+   * rather than done silently.
+   *
+   * ⛔ WHOLE-WORD matching, and two documented exclusions:
+   *   `developmental` — MAIA's ROLE in this product ("developmental editor"),
+   *                     not the fixture's noun "development"
+   *   `process`       — generic English needed to say what a NODE can be; the
+   *                     fixture's phrase is "ongoing process of integration",
+   *                     and the bare word carries none of it
+   */
+  it('⭐ contains NO fixture vocabulary from either specimen', () => {
+    const fixture = ['experience', 'facilitated', 'significant', 'transformation',
+      'relational', 'orientation', 'natural', 'resulting', 'perspective',
+      'constituted', 'meaningful', 'development', 'ongoing', 'integration',
+      'kettle', 'mara', 'coffee', 'grounds', 'poured', 'clicked'];
+    expect(fixture.filter((w) => words.has(w))).toEqual([]);
   });
 
-  /* ⚠️ KNOWN EXPOSURE, recorded rather than hidden. Two of the founder-ratified
-     valence pairs — `ongoing is not struggling` and `integration is not repair` —
-     use specimen 1's own vocabulary. They were authored as the RULING on run 3,
-     so they are not edited here; the exposure is flagged in the witness record
-     for a founder decision. This assertion states exactly what is true today,
-     so the guard cannot silently rot into covering it. */
-  it('⚠️ the only fixture words present are the two in the ratified valence pairs', () => {
-    const leaks = ['integration', 'ongoing'].filter((w) => bare.toLowerCase().includes(w));
-    expect(leaks.sort()).toEqual(['integration', 'ongoing']);
-    expect(bare).toContain('integration is not  repair');
-    expect(bare).toContain('ongoing      is not  struggling');
+  it('the two documented exclusions are the ONLY near-matches, so the guard cannot rot', () => {
+    expect(words.has('developmental')).toBe(true);
+    expect(words.has('process')).toBe(true);
+    expect(words.has('development')).toBe(false);
   });
+
   it('contains no worked example of any passage\'s structure', () => {
     expect(bare).not.toContain('->');
     expect(bare).not.toContain('RESULTING IN');
+  });
+
+  it('⛔ still blacklists no phrase any run produced', () => {
+    for (const phrase of ['step forward', 'working through', 'that change in how he saw',
+                          'a great deal', 'a large change']) {
+      expect(bare).not.toContain(phrase);
+    }
   });
 });
 
