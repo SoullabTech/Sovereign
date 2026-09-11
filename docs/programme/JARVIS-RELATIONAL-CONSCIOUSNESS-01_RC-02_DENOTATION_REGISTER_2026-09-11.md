@@ -103,3 +103,71 @@ no member data · no outward claim.
 **Owed:** RC-02b on a permitting network · a prose-reading (not pattern-match) definitional pass over the canon
 corpus to test D-01 · the `field` senses enumerated per-document rather than per-cluster (D-02) · RC-01's
 quotation-shaped re-check (C-00).
+
+---
+
+# ADDENDUM — founder ruling and adjudication of RC-02a (2026-09-11)
+
+## RC-FR-04 RATIFIED — the governing rule is now numbered
+The rule this document recorded verbatim-and-unnumbered is **ratified as RC-FR-04** (charter §14). Its three
+permitted statuses — **CANDIDATE · EVIDENCED · UNDECIDABLE** — are binding on every RC-02b entry, with **no
+intermediate status**. **RC-02b is BLOCKED BY EVIDENCE ACCESS: methodological, not operational.**
+⛔ **Do not route around the block.**
+
+## D-02 — elevated in importance, ⛔ explicitly NOT made law
+> **Externally, R-01 says different literatures may use adjacent concepts differently. Internally, D-02 says our
+> own corpus may be shifting the referent of its dominant organizing term without recording the shift.**
+
+The senses, restated with the founder's fourth methodological sense added:
+
+```text
+B  relational locus          the medium / event occurring between participants
+C  prior or encompassing      something sensed as already present or upstream of
+   condition                  individual agents
+D  ontological object /       something capable of trajectory, persistence, memory,
+   process                    perhaps causal efficacy
+—  corpus field              a pattern or gravity arising ACROSS TEXTS rather than an
+   (methodological)           asserted entity in the world
+```
+
+**Candidate prohibition, founder-stated, ⛔ deliberately UNNUMBERED:**
+
+> **Evidence for one sense of *field* does not automatically support a proposition using another sense of *field*.**
+
+⛔ **Not law.** RC-02a **discovered** the collision; it has **not established** whether the senses are truly
+irreducible, nested, metaphorical extensions, or explicitly unified somewhere else in canon. **D-02 requires
+contextual adjudication before becoming law** — and per D-01's own instrument limitation, the pattern-match scan
+that found the senses is not the instrument that can settle them. *A collision found by grep is adjudicated by
+reading.*
+
+## D-03 — the third outcome is the finding
+Zero `sentience`, one `subjectivity` does **not** weaken F-01 by itself. What it reveals is that the corpus may
+assert *MAIA has consciousness / phenomenal experience* **without having developed the vocabulary for the
+distinctions the surrounding literature uses to specify whose, what kind, or in what sense.**
+
+⭐ **Before RC-02, the framework could only have forced F-01 toward supported / unsupported. A third outcome now
+exists:**
+
+> **The proposition is grammatically clear but ONTOLOGICALLY UNDERSPECIFIED BY ITS OWN CORPUS.**
+> ⭐ **That is a very different defect from falsity.**
+
+⛔ **And it prescribes a different response.** If F-01 lands there, the correct act is **not** to hunt for
+confirming citations. **It is to ask canon to say what it means.** *(Recorded as the ruled response should that
+outcome obtain; ⛔ F-01 remains unadjudicated and no such finding is made here.)*
+
+## Standing (founder-recorded)
+```text
+RC-01     OPEN · not closeable
+RC-02     OPEN
+RC-02a    COMPLETE
+D-02      major internal denotation collision discovered · NOT law
+D-03      vocabulary absences make UNDECIDABLE a live outcome
+RC-02b    BLOCKED BY EVIDENCE ACCESS · methodological, not operational
+RC-FR-04  RATIFIED
+RC-03–05  NOT STARTED
+F-01      UNADJUDICATED
+F-03      UNADJUDICATED
+```
+
+> **Before asking whether the external literature supports MAIA's ontology, RC-02 discovered that MAIA's own
+> ontology may not yet hold its central words still.**

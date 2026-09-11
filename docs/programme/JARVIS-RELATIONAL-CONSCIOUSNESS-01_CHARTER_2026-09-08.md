@@ -6,7 +6,8 @@
 **Authority:** founder (Kelly Nezat). Jarvis may not infer rulings, lift gates, or amend doctrine.
 **Rulings:** **RC-FR-01** ratified 2026-09-10 (§12) — the DISCOVER/DECIDE boundary on empirical method ·
 **RC-FR-02** ratified 2026-09-10 (§13) — the programme's ontological posture, the locus axis, and E1–E4 ·
-**RC-FR-03** ratified 2026-09-11 (§13.5) — the E3-epistemic / E3-ontological distinction.
+**RC-FR-03** ratified 2026-09-11 (§13.5) — the E3-epistemic / E3-ontological distinction ·
+**RC-FR-04** ratified 2026-09-11 (§14) — denotation claims require opened-source evidence.
 **Trigger:** an external research field is independently encountering phenomena for which this
 architecture already holds vocabulary — self/other, relation, field, agency, continuity,
 elicitation, encounter, and uncertainty about interiority. The precipitating public account
@@ -475,6 +476,42 @@ And then — **much later, and under much stricter evidentiary conditions**:
 
 ⛔ The second question is **not open in this lane.** It is named here so that its distance from the
 first is part of the record.
+
+## 14. ⭐ RC-FR-04 — Denotation requires opened-source evidence (ratified 2026-09-11)
+
+### The ruling
+
+> **A denotation claim requires source-level evidence. Discovery may locate the source; it may not characterize
+> what the source permits a term to denote.**
+
+It follows from V-00 but is **a distinct rule because the failure radius is larger**:
+
+> **A false attribution damages one claim. A false denotation silently changes the coordinate system in which many
+> claims are compared.**
+
+### The only three permitted statuses for any denotation entry
+
+| Status | What is allowed |
+|---|---|
+| **CANDIDATE** | Search result identifies a potentially relevant author/source/term. ⛔ **No characterization of the author's meaning.** |
+| **EVIDENCED** | Primary source opened; the relevant definition, use, hedge, scope condition, contrast or refusal inspected **in context** and locatable. |
+| **UNDECIDABLE** | Primary source inspected, but the author's permitted denotation **cannot responsibly be determined from it**. |
+
+⛔ **No intermediate status.** *"Probably means X according to the abstract/search summary"* is forbidden — it
+recreates V-00 in a more dangerous form. Worked example:
+
+```text
+PERMITTED from a search summary
+  Redcay & Schilbach 2019 — inspect use of "interaction"
+
+FORBIDDEN from a search summary
+  Redcay & Schilbach use "interaction" to mean X
+  …not even provisionally.
+```
+
+### Consequence
+**RC-02b is legitimately BLOCKED, not incomplete through lack of effort.** *The unavailable evidence is the
+evidence the question actually requires.* ⛔ **Do not route around the block.**
 
 ---
 
