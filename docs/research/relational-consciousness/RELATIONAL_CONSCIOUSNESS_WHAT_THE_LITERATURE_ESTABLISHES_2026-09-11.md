@@ -6,10 +6,45 @@
 > **Evidentiary basis:** founder source-inspection pass of 2026-09-11 (RC-02b). Nodes N-01…N-08, N-11
 > source-inspected; **N-09 body copy-admissibility gated (OQ-01)**; **N-10 (Spezzano 1995) primary-source-gated**,
 > as §10 of the paper itself states.
-> ⛔ **Placement:** held in the internal research spine. **NOT placed in `docs/community-library/`**, which is
-> served to members by `app/api/library/article/route.ts`; charter §7.5 bars outward publication from this lane.
-> Moving it there is a founder act. See the commit message and the lane record.
-> **Standing at time of writing:** RC-01 OPEN (not closeable) · RC-02b ACTIVE · F-01 / F-03 UNADJUDICATED.
+>
+> ## ⛔ PLACEMENT — RULED, founder, 2026-09-11: HOLD INTERNAL. NO MOVE AUTHORIZED.
+> **`docs/community-library/` is a PUBLISHING SURFACE**, read and served to members by
+> `app/api/library/article/route.ts`. **Moving this file there would be an outward publication act, not filing or
+> organization**, and **charter §7.5 controls that surface.** ⛔ **MEMBER PUBLICATION: NOT AUTHORIZED.**
+>
+> ⛔ **§7.5 was NOT carved out or scoped for this document, deliberately** — *"that would be backwards
+> governance. The fact that the paper is careful, hedged, and unusually disciplined is evidence that it may
+> eventually deserve publication. It is not evidence that the publication prohibition should be weakened while
+> the evidentiary work beneath it is still unfinished."*
+>
+> ⭐ **The governing reason, founder, recorded verbatim so that whoever finds this file knows why it is held and
+> not merely that it is:**
+> > **A paper whose argument warns against premature attribution should not itself be published ahead of the
+> > evidentiary sequence that gives its claims standing.**
+>
+> *That is not aesthetic consistency. It is the lane applying its own epistemic standard to itself.*
+>
+> ### The publication gate — reconsider only after ALL of:
+> ```text
+> RC-01     closeable                          ⛔ currently OPEN, not closeable (V-00)
+> N-10      source-inspected (Spezzano 1995)   ⛔ currently PRIMARY-SOURCE-GATED
+> F-01      adjudicated                        ⛔ currently UNADJUDICATED
+>
+> and, as FOUNDER GOVERNANCE RECOMMENDATION — ⛔ explicitly NOT a claim about what §7.5 already says:
+> RC-02b    resolved far enough that its outcome can no longer materially
+>           change this paper's claim state
+> ```
+> ### The act, when the gate opens
+> ```text
+> REVIEW PAPER AGAINST SETTLED RECORD → CLASSIFY CLAIM STATE → DECIDE MEMBER PUBLICATION
+>                                     → ONLY THEN move into docs/community-library/
+> ```
+> **This provenance block stays.** It distinguishes authored synthesis · stage · claim state · source-inspected
+> nodes · source-gated nodes · publication status. It may be removed or converted to member-facing provenance
+> **if and when publication is authorized** — not before.
+>
+> **Standing at time of writing:** RC-01 OPEN (not closeable) · RC-02b ACTIVE · F-01 / F-03 UNADJUDICATED ·
+> N-09 / N-10 SOURCE-GATED · §7.5 CONTROLS.
 
 # Relational Consciousness
 
