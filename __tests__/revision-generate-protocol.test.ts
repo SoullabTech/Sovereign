@@ -155,6 +155,32 @@ describe('⭐ the geometry repair — relations, not only claims (3A-S run 2 FAI
   });
 });
 
+describe('⭐ the valence repair — no teleology the source did not state (run 3 FAIL)', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('names the obligation', () => {
+    expect(p).toContain('DO NOT ADD VALENCE, DIRECTION, TELEOLOGY OR PSYCHOLOGICAL CONDITION');
+  });
+  it('says a plainer word can still claim more', () => {
+    expect(p).toContain('A word can be plainer and still claim more');
+  });
+  it('separates significance from approval, and change from progress', () => {
+    expect(p).toContain('Significance is not approval');
+    expect(p).toContain('Change is not improvement');
+  });
+  it('⭐ refuses the blacklist reading explicitly', () => {
+    expect(p).toContain('examples of a SHAPE, not a list of forbidden words');
+    expect(p).toContain('does my wording assert a direction, a value');
+  });
+  it('requires neutrality where the source is neutral', () => {
+    expect(p).toContain('If the source is neutral about');
+    expect(p).toContain('your revision must be neutral too');
+  });
+  it('⛔ does NOT blacklist the phrase that failed run 3', () => {
+    expect(p).not.toContain('step forward');
+    expect(p).not.toContain('working through');
+  });
+});
+
 describe('provenance', () => {
   it('the asker version is pinned so a proposal records which contract produced it', () => {
     expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');

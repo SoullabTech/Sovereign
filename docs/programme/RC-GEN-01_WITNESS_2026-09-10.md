@@ -8,8 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUN 3 · ⛔ AWAITING FOUNDER RULING
-                              (runs 1 and 2 FAILED — founder rulings)
+3A-S   semantic witness        ⛔ RUNS 1, 2 AND 3 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -327,7 +326,80 @@ NEW IN RUN 3, not present in the source and not previously ruled on:
                R3 loss or an R4 intervention is the founder's ruling.
 ```
 
-⛔ 3A-S remains AWAITING RULING on run 3. 3A NOT PASSED. 3D CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 3: **FAIL**
+
+⭐ **The stale ruling was withdrawn by the founder: *"my previous ruling was stale
+because I evaluated run 2 language, not run 3."*** The flag above held.
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### Both prior failures are genuinely repaired
+
+```
+SOURCE   change in relationship -> resulting shift in perspective
+                                -> development WITHIN integration
+RUN 3    changed how he related -> "in turn" -> shifted his perspective
+                                -> "was ... in the integration"
+```
+
+Relation is no longer collapsed into perception, and the shift is constitutive
+again rather than merely something that "mattered to" the process.
+
+### 🔴 The new loss — teleological coloring
+
+```
+SOURCE   "a meaningful development"
+RUN 3    "a real step forward"
+```
+
+*"Step forward"* adds **direction** (FORWARD) and **valence** (POSITIVE /
+PROGRESSIVE). *"Meaningful development"* establishes significance and change — **it
+does not establish progress, improvement or linear advancement.** A development in
+integration could be difficult, destabilizing, recursive, or meaningful precisely
+because it complicates something. *"Real"* adds a further intensification, asserting
+the advancement as genuine.
+
+> ⭐ **A plainer substitute cannot smuggle evaluative direction into a source that
+> supplied only significance.**
+
+Ruled under **R3, not R4** — the intervention is not unrelated; it concerns exactly
+the source claim, and changes it.
+
+### ⚠️ Watch item, deliberately NOT today's failure
+
+`"the integration he was still working through"` for `"ongoing process of
+integration"`. *"Working through"* can imply struggle or active psychological
+labour. **Close enough not to fail on, and recorded because it shows where this can
+keep migrating if the rule becomes merely "don't say step forward."**
+
+### The principle
+
+```
+Do not add VALENCE, DIRECTION, TELEOLOGY or PSYCHOLOGICAL CONDITION that
+the authorized text does not state.
+
+meaningful  ≠ positive        development ≠ improvement
+change      ≠ progress        ongoing     ≠ struggling
+integration ≠ repair
+```
+
+⛔ **The next repair must NOT blacklist the phrase.** The specimen stays
+byte-identical.
+
+### What the three runs have shown
+
+```
+run 1   exposed INVENTION
+run 2   exposed SEMANTIC COLLAPSE
+run 3   exposed TELEOLOGICAL COLORING
+```
+
+⭐ Each repair narrows the distance between *better prose* and the harder standard:
+**better expression of precisely this meaning.**
 
 ## ⚠️ Harness defect between run 2 and run 3 (mine)
 
