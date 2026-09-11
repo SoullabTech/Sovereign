@@ -109,6 +109,8 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
     ],
     edges: [{ from: 'a', to: 'b', relation: 'causes' }],
   };
+  const node = (over: Record<string, unknown> = {}) =>
+    ({ local_id: 'a', kind: 'event', properties: {}, ...over });
 
   it('admits a well-formed analysis and resolves local ids to indices', () => {
     const r = admitAnalysis(ok);
@@ -128,24 +130,70 @@ describe('admitAnalysis — admits or refuses, never coerces', () => {
     ['not an object', 'a string'],
     ['no nodes', { nodes: [], edges: [] }],
     ['a node without local_id', { nodes: [{ kind: 'event', properties: {} }], edges: [] }],
-    ['duplicate local_id', { nodes: [{ local_id: 'a', properties: {} }, { local_id: 'a', properties: {} }], edges: [] }],
-    ['an unknown property', { nodes: [{ local_id: 'a', properties: { vibe: 'high' } }], edges: [] }],
-    ['an unknown property VALUE', { nodes: [{ local_id: 'a', properties: { magnitude: 'enormous' } }], edges: [] }],
-    ['an unknown relation', { nodes: [{ local_id: 'a', properties: {} }], edges: [{ from: 'a', to: 'a', relation: 'vibes_with' }] }],
-    ['an edge naming an unknown node', { nodes: [{ local_id: 'a', properties: {} }], edges: [{ from: 'a', to: 'z', relation: 'causes' }] }],
+    ['duplicate local_id', { nodes: [node(), node()], edges: [] }],
+    ['an unknown property', { nodes: [node({ properties: { vibe: 'high' } })], edges: [] }],
+    ['an unknown relation', { nodes: [node()], edges: [{ from: 'a', to: 'a', relation: 'vibes_with' }] }],
+    ['an edge naming an unknown node', { nodes: [node()], edges: [{ from: 'a', to: 'z', relation: 'causes' }] }],
   ])('refuses %s', (_label, input) => {
     expect(admitAnalysis(input)).toMatchObject({ ok: false, refusal: 'malformed' });
   });
 
-  it('an unknown kind degrades to `unspecified` rather than being invented', () => {
-    const r = admitAnalysis({ nodes: [{ local_id: 'a', kind: 'vibe', properties: {} }], edges: [] });
-    if (!r.ok) throw new Error('unreachable');
-    expect(r.graph.nodes[0].kind).toBe('unspecified');
+  describe('⛔ NON-COERCIVE ADMISSION — the last boundary before D obeys its own contract', () => {
+    /* ⚠️ An earlier draft SAID "never coerces" and coerced three ways. A malformed
+       analysis silently became a plausible graph, so D would have compared two
+       graphs one of which the admission layer partly invented. */
+    it.each([
+      ['an UNKNOWN kind (was: degraded to unspecified)', { nodes: [node({ kind: 'vibe' })], edges: [] }],
+      ['a MISSING kind', { nodes: [{ local_id: 'a', properties: {} }], edges: [] }],
+      ['a MISSING properties object (was: became {})', { nodes: [{ local_id: 'a', kind: 'event' }], edges: [] }],
+      ['MISSING edges (was: became [])', { nodes: [node()] }],
+      ['an extra TOP-LEVEL field', { nodes: [node()], edges: [], faithful: true }],
+      ['an extra NODE field', { nodes: [node({ confidence: 0.9 })], edges: [] }],
+      ['an extra EDGE field', { nodes: [node()], edges: [{ from: 'a', to: 'a', relation: 'causes', note: 'x' }] }],
+    ])('refuses %s', (_label, input) => {
+      expect(admitAnalysis(input)).toMatchObject({ ok: false, refusal: 'malformed' });
+    });
+
+    it('⭐ a legitimate one-node analysis sends edges: [] and is admitted', () => {
+      expect(admitAnalysis({ nodes: [node()], edges: [] }).ok).toBe(true);
+    });
   });
 
-  it('a graph with no edges is admissible — a one-node passage has none', () => {
-    expect(admitAnalysis({ nodes: [{ local_id: 'a', properties: {} }] }).ok).toBe(true);
+  describe('⭐ PER-PROPERTY DOMAINS — legal for one dimension is not legal for another', () => {
+    it.each([
+      ['magnitude = ongoing', { magnitude: 'ongoing' }],
+      ['agency = positive', { agency: 'positive' }],
+      ['temporality = high', { temporality: 'high' }],
+      ['significance = active_participation', { significance: 'active_participation' }],
+      ['valence = asserted', { valence: 'asserted' }],
+      ['modality = forward', { modality: 'forward' }],
+    ])('refuses %s', (_label, properties) => {
+      expect(admitAnalysis({ nodes: [node({ properties })], edges: [] }))
+        .toMatchObject({ ok: false, refusal: 'malformed' });
+    });
+
+    it.each([
+      ['magnitude = high', { magnitude: 'high' }],
+      ['agency = active_participation', { agency: 'active_participation' }],
+      ['temporality = ongoing', { temporality: 'ongoing' }],
+      ['significance = asserted', { significance: 'asserted' }],
+      ['every property = unspecified', Object.fromEntries(
+        ['significance','meaningfulness','magnitude','valence','direction',
+         'agency','temporality','modality','polarity'].map((k) => [k, 'unspecified']))],
+    ])('admits %s', (_label, properties) => {
+      expect(admitAnalysis({ nodes: [node({ properties })], edges: [] }).ok).toBe(true);
+    });
+
+    it('⭐ the SCHEMA carries the per-property domains, not one global enum', () => {
+      const props = (analyzerToolSchema.properties as any).nodes.items.properties.properties.properties;
+      expect(props.magnitude.enum).toEqual(['unspecified', 'low', 'high']);
+      expect(props.agency.enum).toEqual(['unspecified', 'active_participation', 'undergone']);
+      expect(props.magnitude.enum).not.toContain('ongoing');
+      expect(props.temporality.enum).not.toContain('high');
+    });
   });
+
+
 });
 
 describe('provenance', () => {

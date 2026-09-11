@@ -37,11 +37,27 @@ const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
 
 const KINDS: readonly NodeKind[] = ['event', 'state', 'process', 'relation', 'entity', 'unspecified'];
 const RELATIONS = ['causes', 'results_in', 'constitutes', 'qualifies', 'within', 'distinct_from'];
-const PROPERTY_NAMES = ['significance', 'meaningfulness', 'magnitude', 'valence',
-  'direction', 'agency', 'temporality', 'modality', 'polarity'];
-const PROPERTY_VALUES = ['unspecified', 'asserted', 'negated', 'low', 'high', 'positive',
-  'negative', 'forward', 'none', 'active_participation', 'undergone', 'ongoing',
-  'complete', 'certain', 'possible'];
+/**
+ * ⭐ PER-PROPERTY DOMAINS. A value legal for one semantic dimension is not
+ * automatically legal for another.
+ *
+ * ⚠️ An earlier draft gave every property the SAME global enum, so the schema
+ * admitted `magnitude = ongoing`, `agency = positive`, `temporality = high`. Closure
+ * was present; TYPING was not, and a closed vocabulary that can state nonsense
+ * offers the comparator no protection at all.
+ */
+const PROPERTY_DOMAINS: Readonly<Record<string, readonly string[]>> = {
+  significance:   ['unspecified', 'asserted', 'negated'],
+  meaningfulness: ['unspecified', 'asserted', 'negated'],
+  magnitude:      ['unspecified', 'low', 'high'],
+  valence:        ['unspecified', 'positive', 'negative'],
+  direction:      ['unspecified', 'forward', 'none'],
+  agency:         ['unspecified', 'active_participation', 'undergone'],
+  temporality:    ['unspecified', 'ongoing', 'complete'],
+  modality:       ['unspecified', 'certain', 'possible'],
+  polarity:       ['unspecified', 'asserted', 'negated'],
+};
+const PROPERTY_NAMES = Object.keys(PROPERTY_DOMAINS);
 
 export const analyzerToolSchema: Record<string, unknown> = {
   type: 'object',
@@ -60,8 +76,8 @@ export const analyzerToolSchema: Record<string, unknown> = {
           properties: {
             type: 'object', additionalProperties: false,
             description: 'Only what the passage ASSERTS. Omit, or say unspecified, where it does not commit.',
-            properties: Object.fromEntries(PROPERTY_NAMES.map((n) =>
-              [n, { type: 'string', enum: PROPERTY_VALUES }])),
+            properties: Object.fromEntries(Object.entries(PROPERTY_DOMAINS).map(
+              ([n, domain]) => [n, { type: 'string', enum: domain }])),
           },
         },
       },
@@ -123,40 +139,83 @@ export type AnalysisResult =
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** Admit a tool input into the comparator's own types. NEVER coerces. */
+/**
+ * Admit a tool input into the comparator's own types, or REFUSE it.
+ *
+ * ⛔ THIS IS THE LAST TRUSTWORTHY BOUNDARY BEFORE D. The structured router returns
+ * the provider's result; it performs no second semantic validation. So this
+ * function must obey its own contract.
+ *
+ * ⚠️ AN EARLIER DRAFT SAID "NEVER COERCES" AND COERCED THREE WAYS — an unknown
+ * `kind` became `unspecified`, missing `properties` became `{}`, missing `edges`
+ * became `[]` — and it enforced none of the schema's `additionalProperties: false`
+ * independently. A malformed analysis was silently normalised into a plausible
+ * graph, which is the most dangerous possible failure here: D would then compare
+ * two graphs, one of which was partly invented by the admission layer.
+ *
+ * A legitimate one-node analysis sends `"edges": []`. The boundary does not
+ * manufacture it.
+ */
+const NODE_KEYS = new Set(['local_id', 'kind', 'properties']);
+const EDGE_KEYS = new Set(['from', 'to', 'relation']);
+const TOP_KEYS = new Set(['nodes', 'edges']);
+
+const extraKey = (o: Record<string, unknown>, allowed: ReadonlySet<string>): string | null => {
+  for (const k of Object.keys(o)) if (!allowed.has(k)) return k;
+  return null;
+};
+
 export function admitAnalysis(input: unknown): AnalysisResult {
   if (!isRecord(input)) return { ok: false, refusal: 'malformed', detail: 'not an object' };
+
+  const extraTop = extraKey(input, TOP_KEYS);
+  if (extraTop) return { ok: false, refusal: 'malformed', detail: `unexpected field ${extraTop}` };
+
   const rawNodes = input.nodes;
-  const rawEdges = input.edges ?? [];
+  const rawEdges = input.edges;
   if (!Array.isArray(rawNodes) || rawNodes.length === 0) {
     return { ok: false, refusal: 'malformed', detail: 'nodes absent or empty' };
   }
-  if (!Array.isArray(rawEdges)) return { ok: false, refusal: 'malformed', detail: 'edges is not an array' };
+  /* ⛔ Absent edges is not an empty edge set. It is an incomplete answer. */
+  if (!Array.isArray(rawEdges)) return { ok: false, refusal: 'malformed', detail: 'edges absent or not an array' };
 
   const index = new Map<string, number>();
   const nodes: SemanticNode[] = [];
   for (const n of rawNodes) {
-    if (!isRecord(n) || typeof n.local_id !== 'string' || !n.local_id) {
+    if (!isRecord(n)) return { ok: false, refusal: 'malformed', detail: 'node is not an object' };
+    const extraNode = extraKey(n, NODE_KEYS);
+    if (extraNode) return { ok: false, refusal: 'malformed', detail: `unexpected node field ${extraNode}` };
+    if (typeof n.local_id !== 'string' || !n.local_id) {
       return { ok: false, refusal: 'malformed', detail: 'node without a local_id' };
     }
     if (index.has(n.local_id)) {
       return { ok: false, refusal: 'malformed', detail: `duplicate local_id ${n.local_id}` };
     }
-    const kind = typeof n.kind === 'string' && (KINDS as readonly string[]).includes(n.kind)
-      ? (n.kind as NodeKind) : 'unspecified';
-    const props = isRecord(n.properties) ? n.properties : {};
-    for (const [k, v] of Object.entries(props)) {
-      if (!PROPERTY_NAMES.includes(k) || typeof v !== 'string' || !PROPERTY_VALUES.includes(v)) {
-        return { ok: false, refusal: 'malformed', detail: `unknown property ${k}` };
+    /* ⛔ An unknown kind is refused, never degraded. `kind` participates in
+       correspondence, so inventing one would invent an identity. */
+    if (typeof n.kind !== 'string' || !(KINDS as readonly string[]).includes(n.kind)) {
+      return { ok: false, refusal: 'malformed', detail: `node ${n.local_id}: unknown or missing kind` };
+    }
+    if (!isRecord(n.properties)) {
+      return { ok: false, refusal: 'malformed', detail: `node ${n.local_id}: properties absent` };
+    }
+    for (const [k, v] of Object.entries(n.properties)) {
+      const domain = PROPERTY_DOMAINS[k];
+      if (!domain) return { ok: false, refusal: 'malformed', detail: `unknown property ${k}` };
+      if (typeof v !== 'string' || !domain.includes(v)) {
+        return { ok: false, refusal: 'malformed', detail: `${k} cannot be ${String(v)}` };
       }
     }
     index.set(n.local_id, nodes.length);
-    nodes.push({ label: n.local_id, kind, properties: props as SemanticNode['properties'] });
+    nodes.push({ label: n.local_id, kind: n.kind as NodeKind, properties: n.properties as SemanticNode['properties'] });
   }
 
   const edges: SemanticEdge[] = [];
   for (const e of rawEdges) {
-    if (!isRecord(e) || typeof e.from !== 'string' || typeof e.to !== 'string'
+    if (!isRecord(e)) return { ok: false, refusal: 'malformed', detail: 'edge is not an object' };
+    const extraEdge = extraKey(e, EDGE_KEYS);
+    if (extraEdge) return { ok: false, refusal: 'malformed', detail: `unexpected edge field ${extraEdge}` };
+    if (typeof e.from !== 'string' || typeof e.to !== 'string'
         || typeof e.relation !== 'string' || !RELATIONS.includes(e.relation)) {
       return { ok: false, refusal: 'malformed', detail: 'malformed edge' };
     }

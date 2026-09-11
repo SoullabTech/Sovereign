@@ -752,6 +752,49 @@ kinds — it describes the role, not the phrasing."* If synonymous expression ch
 `kind`, it has become a hidden lexical matcher, and **that must fail A/C acceptance
 rather than masquerade as semantic mismatch downstream** (AC-1).
 
+### ⛔⛔ TWO BOUNDARY DEFECTS FOUND BY FOUNDER REVIEW — both repaired
+
+#### 1. Closure without TYPING
+
+Every property shared ONE global value enum, so the schema admitted:
+
+```
+magnitude = ongoing · agency = positive · temporality = high
+significance = active_participation · valence = asserted
+```
+
+⭐ **A closed vocabulary that can state nonsense offers the comparator no
+protection at all.** Replaced with **per-property domains** — *a value legal for
+one semantic dimension is not automatically legal for another* — carried in the
+tool schema itself, with falsifiers on both sides (six nonsense pairs refused, five
+legal ones admitted).
+
+#### 2. `admitAnalysis` SAID "NEVER coerces" AND COERCED THREE WAYS
+
+```
+unknown kind        -> became `unspecified`
+missing properties  -> became {}
+missing edges       -> became []
+```
+
+…and it enforced none of the schema's `additionalProperties: false` independently.
+
+⚠️ **My comment asserted a property the code did not have** — the same shape as the
+`reason` field asserting a fidelity the wording did not have, which this whole
+architecture exists to stop trusting.
+
+⭐ **This is the last trustworthy boundary before D.** The structured router returns
+the provider's result and performs no second semantic validation, so a malformed
+analysis was being **silently normalised into a plausible graph** — after which D
+would compare two graphs, **one of them partly invented by the admission layer**.
+That is the most dangerous failure available here, because it produces a confident
+verdict about something nobody wrote.
+
+Now refuses: unknown kind · **missing** kind · missing `properties` · missing
+`edges` · extra field at top level, node level or edge level · wrong-domain value.
+A legitimate one-node analysis sends `"edges": []`; **the boundary does not
+manufacture it.**
+
 ### ⚠️ A guard defect of mine, fixed and recorded
 
 The leak check used substring matching and failed on **`pass` inside `passage`** —
@@ -765,7 +808,9 @@ comparator (step D)        PASSED · 33 falsifiers
 SV-1 adequacy              RATIFIED · known-bad preserved
 node correspondence        STRUCTURE-ONLY alignment
                            positional RULED OUT · property tie-breaking REJECTED
-A-P · C-P protocol         BUILT · 25 falsifiers
+A-P · C-P protocol         BUILT · 42 falsifiers
+                           property-domain typing CLOSED
+                           non-coercive admission CLOSED
 A-S source graph witness   ⛔ NOT WITNESSED
 C-S candidate witnesses    ⛔ NOT WITNESSED  (C-good · C-large · C-migration)
 AC-1 equivalent-paraphrase
