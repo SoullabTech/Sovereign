@@ -79,11 +79,19 @@ Rollback images and tags (`maia-sovereign:current` / `:previous` / `:<sha>` —
   surfacing later. Run `sync; sleep 10; df -h /System/Volumes/Data` before
   concluding a cut failed — otherwise the lag drives escalation to riskier cuts
   that were never needed.
-- **Clone extents.** APFS clones (Finder copies, `cp -c`) share copy-on-write
-  extents. N apparent copies of a 2.65 GB file may occupy 2.65 GB in total, and
-  deleting N-1 of them frees nothing. Compare `du -sh` per file against
-  `du -ch ... | tail -1` before planning around apparent duplication. This is a
-  *different* mechanism from delayed reclamation, though the symptom matches.
+- **Clone extents, and why `du` cannot see them.** APFS clones (Finder copies,
+  `cp -c`) share copy-on-write extents, and **`du` counts shared extents against
+  every file that references them**. So `du` cannot distinguish three distinct
+  2.65 GB files from three clones of one — both report ~8 GB. Summing sizes to
+  "prove" files are distinct is invalid reasoning.
+  Measured 2026-09-11: the Messages `TemporaryItems` tree measured ~10 GB by
+  `du`, containing three same-named 2.65 GB movie copies. Clearing the entire
+  tree returned **~1 GiB**. The `du` figure was an upper bound, not a prediction.
+  **Treat every `du` total as a ceiling on reclaimable space, never an estimate**
+  — especially before committing to an expensive operation (a long archive, an
+  export-and-verify pass) justified by the size it reports. Only deletion
+  measures unique occupancy. This is a *different* mechanism from delayed
+  reclamation, though the symptom matches.
 - **Container-wide `df`.** `df` on `/System/Volumes/Data` reports `Size` as the
   whole APFS container but `Used` as that volume's share, so used + available need
   not equal size. A large gap points at sibling volumes, purgeable space, or
