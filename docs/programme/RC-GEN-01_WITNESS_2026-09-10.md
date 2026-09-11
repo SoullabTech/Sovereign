@@ -4509,3 +4509,66 @@ correct   pip install "minicheck @ git+https://github.com/Liyan06/MiniCheck.git@
 ⭐ **Both are recorded as packaging facts.** ⛔ The challenger has still never run, and
 **"NOT RUN" must not drift into "did not do well"** as attempts accumulate. The
 isolation repair is what keeps every other verifier reporting through all of this.
+
+---
+
+## MiniCheck, packaging hop five — `punkt_tab` (2026-09-11)
+
+**The install is now correct and the import path was right.** The founder's run
+confirmed the installed layout:
+
+```
+/Users/soullab/minicheck-venv/lib/python3.12/site-packages/minicheck
+['__init__.py', '__pycache__', 'inference.py', 'minicheck.py', 'utils.py']
+```
+
+so `from minicheck.minicheck import MiniCheck` was correct, the 56 kB PyPI
+`minicheck` 0.4.0 was indeed a name collision, and the plain GitHub install
+(no `[llm]` extra — my error, now twice confirmed) is the right one on macOS.
+`accelerate` installed. The FLAN-T5-Large checkpoint downloaded (3.13 GB).
+
+**The failure then moved inside MiniCheck's own inference path**, which is
+progress of a kind — it is no longer about finding the package:
+
+```
+⛔ minicheck: NOT RUN — LookupError: Resource 'punkt_tab' not found.
+   Attempted to load 'tokenizers/punkt_tab/english/'
+```
+
+MiniCheck sentence-splits the document with NLTK before scoring. Its install
+auto-downloaded `punkt`; NLTK ≥ 3.8.2 wants `punkt_tab`. All four MiniCheck
+runs (`…093647` modifier · `…093721` blind · `…093723` scope · `…093726`
+detector-blind) recorded **NOT RUN**, and the isolation repair held — every
+other verifier kept reporting throughout, and nothing was written down as a
+result about MiniCheck.
+
+**Repair landed in the instrument**, not in the runbook: `_ensure_nltk_punkt()`
+provisions the tokenizer resource before the scorer is built. It touches no
+threshold, no fixture and no judgment — *the failure it clears is packaging,
+not epistemics.*
+
+⚠️ **This is the fifth packaging hop.** Standing commitment holds: if
+`punkt_tab` does not clear it, MiniCheck is reported as **environmentally
+unreachable** and the lane stops spending disk on it, rather than trying a
+sixth variation.
+
+### The `--against` readings in that session are STALE — do not cite them
+
+The founder pulled at 09:23 and got `507ff3501`; `79f61ba40` and `62a3c4741`
+were pushed after that pull. So every `--against` table in that transcript ran
+the **pre-repair** `boundary_check.py` (`file sha256 6c5a8958…`), which means:
+
+- it printed a **file** hash where the repaired script prints the **rule**
+  digest (`18608a18…`) — the file hash moves when reporting changes, the rule
+  does not;
+- it **aggregated seen and unseen sets into one figure** (`9/12` confidently
+  wrong), mixing known-corpus discrimination with generalization — two
+  different questions, one number;
+- it still printed `⛔ NOT INDEPENDENT` off **n=2**, the exact n-defect the
+  founder named.
+
+The repaired script prints the rule digest, breaks results down **by set**
+(marking `detector-blind` as the only UNSEEN one), collapses repeated runs of
+the same `(set, id)`, and holds the independence verdict until the cell is big
+enough to carry it. ⛔ The `9/12` figure is not the detector's blind-set result
+and must not be quoted as one.

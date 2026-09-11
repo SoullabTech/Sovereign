@@ -153,6 +153,29 @@ def run_hhem(cases, repeat):
     return rows
 
 
+def _ensure_nltk_punkt():
+    """
+    MiniCheck sentence-splits the document with NLTK before scoring. Its install
+    auto-downloads `punkt`; NLTK >= 3.8.2 asks for `punkt_tab` instead, so a correct
+    install still dies inside inference with a LookupError.
+
+    ⛔ THIS PROVISIONS A TOKENIZER RESOURCE. It does not touch a threshold, a
+    fixture, or any judgment — the failure it clears is packaging, not epistemics.
+    Silent on the happy path; says what it did when it actually downloads.
+    """
+    import nltk
+    for res in ('punkt_tab', 'punkt'):
+        try:
+            nltk.data.find(f'tokenizers/{res}')
+        except LookupError:
+            print(f'  nltk: downloading {res} (sentence splitter, not a model) ...',
+                  flush=True)
+            try:
+                nltk.download(res, quiet=True)
+            except Exception as e:                 # offline, or resource renamed again
+                print(f'  nltk: could not fetch {res} — {type(e).__name__}: {e}')
+
+
 def run_minicheck(cases, repeat):
     """
     ⭐ THE CHALLENGER. MiniCheck is trained for GROUNDED FACT CHECKING — "is this claim
@@ -175,6 +198,7 @@ def run_minicheck(cases, repeat):
     MiniCheck, and must not be recorded as one.
     """
     from minicheck.minicheck import MiniCheck
+    _ensure_nltk_punkt()
     print(f'  loading MiniCheck {MINICHECK} ...', flush=True)
     scorer = MiniCheck(model_name=MINICHECK)
     rows = []
