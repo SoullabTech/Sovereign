@@ -377,13 +377,52 @@ def calibration(paths):
     UNRESOLVED band is available — the middle state that lets uncertainty survive
     instead of being forced into truth or falsehood.
     """
-    rows = []
+    # ⛔⛔ GROUND TRUTH IS RE-DERIVED FROM THE CURRENT FIXTURES, NOT TRUSTED FROM THE
+    # SAVED ROW. A result file freezes the expectation AS IT STOOD AT RUN TIME, and
+    # N2's expectation was later adjudicated from not_entailed to entailed. Reading
+    # the saved value scores N2 as a miss that the founder has ruled correct — the
+    # instrument would be contradicting a ruling with arithmetic. Drift is REPORTED,
+    # never silently applied.
+    truth, adjudicated = {}, []
+    for name, fn in SETS.items():
+        try:
+            for c in json.loads(Path(fn if Path(fn).exists()
+                                     else Path(__file__).with_name(Path(fn).name)
+                                     ).read_text())['cases']:
+                truth[c['id']] = c['expected']
+        except Exception:
+            pass
+
+    rows, dupes = [], collections.Counter()
     for path in paths:
         d = json.loads(Path(path).read_text())
+        st = d.get('set', '?')
+        dupes[(st, tuple(sorted({r['verifier'] for r in d.get('rows', [])})))] += 1
         for r in d.get('rows', []):
-            rows.append({**r, '_set': d.get('set', '?')})
+            cur = truth.get(r['id'])
+            if cur is not None and cur != r['expected']:
+                adjudicated.append((r['id'], r['expected'], cur))
+                r = {**r, 'expected': cur}
+            rows.append({**r, '_set': st, '_path': path})
     if not rows:
         sys.exit('no rows found')
+
+    # ⚠️ Running the SAME set twice double-weights it in every average.
+    repeated = [k for k, n in dupes.items() if n > 1]
+    if repeated:
+        print('⚠️ THE SAME SET APPEARS MORE THAN ONCE — it is double-weighted below:')
+        for (st, vs), n in dupes.items():
+            if n > 1:
+                print(f'     {st} · {"/".join(vs)} · {n} runs')
+        print('   ⛔ Not de-duplicated automatically: two runs of one set is a fact')
+        print('      about the evidence, and dropping one silently would hide it.\n')
+    if adjudicated:
+        seen = sorted(set(adjudicated))
+        print('⚠️ GROUND TRUTH RE-DERIVED FROM CURRENT FIXTURES (a founder adjudication')
+        print('   post-dates these runs). Scored against the CURRENT expectation:')
+        for cid, old, new in seen:
+            print(f'     {cid}: recorded {old} -> ruled {new}')
+        print()
 
     def decision_var(r):
         """
@@ -450,7 +489,15 @@ def calibration(paths):
         # WRONG on satellite-modifier cases would look mediocre and be usable.
         for axis in ('group', 'family'):
             keys = sorted({r.get(axis) for r in sub if r.get(axis)})
-            if not keys or len(keys) > 12:
+            # ⛔ An earlier cap of 12 silently SUPPRESSED the family table whenever
+            # more than one set was passed — i.e. exactly when it was most useful.
+            # A breakdown that hides itself on the interesting input is not a
+            # breakdown. Families with a single case are dropped instead: one case
+            # cannot show a calibration pattern.
+            if not keys:
+                continue
+            keys = [k for k in keys if sum(1 for r in sub if r.get(axis) == k) > 1]
+            if not keys:
                 continue
             print(f'\n    ⭐ BY {axis.upper()}')
             for k in keys:

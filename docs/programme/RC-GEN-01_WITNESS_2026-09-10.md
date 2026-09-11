@@ -3854,3 +3854,122 @@ python3 scripts/verifier-probe/probe.py --calibration verifier-probe-*.json
 ⛔ **Standing: calibration instrument READY · calibration UNMEASURED · MiniCheck WIRED
 and DEFERRED BY RULING · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED ·
 B HELD · production UNTOUCHED.**
+
+## ⭐⭐⭐ CALIBRATION — RUN · CONFIDENCE IS **INVERTED** IN THE FAILING REGIME
+
+`2026-09-11` · read from five frozen result files. ⛔ No model loaded.
+
+### ⭐⭐ THE FINDING, AND IT SURVIVES EVERY ARTIFACT BELOW
+
+```
+BY GROUP (modifier set)
+  M   satellite modifier   hits 1 @ 0.617    misses 7 @ 0.953   ⛔ CONFIDENTLY WRONG
+  V   main verb            hits 7 @ 0.923    misses 1 @ 0.666   ⭐ miss is hesitant
+  P   licensed control     hits 8 @ 0.998    misses 0
+```
+
+> ⛔⛔ **IN THE MODIFIER REGIME, CONFIDENCE IS ANTI-CORRELATED WITH CORRECTNESS.** The
+> seven wrong answers average **0.953**. The one right answer sits at **0.617**. ⭐
+> *Higher confidence there means MORE likely wrong, not less.*
+
+⛔ **This is worse than "poorly calibrated."** A poorly calibrated verifier gives you
+noise. **An inverted one gives you a signal pointing the wrong way**, and any rule that
+trusted high confidence would preferentially admit exactly the class of error we built
+three sets to characterise.
+
+### ⛔⛔ THE GLOBAL NUMBER SAYS THE OPPOSITE, AND IT IS AN ARTIFACT OF MIXING REGIMES
+
+```
+GLOBAL   hits 0.955 · misses 0.839 · gap 0.116 · "a global band may be available"
+```
+
+⛔ **False comfort.** The gap exists only because the hesitant misses (`S01` 0.529 ·
+`B21` 0.551 · `V2` 0.666) are averaged together with the confident ones (`S03` 0.997 ·
+`M2` 0.997 · `M6`/`M7` 0.995 · `M3` 0.993 · `M5` 0.990 · `M4` 0.987).
+
+⭐ **The founder predicted precisely this shape** — *"absolute confidence poor,
+patterns of confidence still informative"* — and the run delivered its sharper form:
+**the global reading is not merely uninformative, it is misleading.**
+
+### ⛔⛔ AND THE BAND SWEEP SHOWS THE BAND WOULD CATCH THE WRONG ERRORS
+
+```
+0.40-0.60    3/16 misses held    1/87 sacrificed
+0.30-0.70    4/16                4/87
+0.20-0.80    5/16                6/87
+0.10-0.90    8/16                8/87
+0.05-0.95    9/16               13/87
+```
+
+⛔ **No width ever reaches the seven modifier misses** — they sit at 0.99, outside
+every band. A band catches `S01`, `B21`, `V2`: the errors that were **nearly right
+anyway.**
+
+> ⛔⛔ **A CONFIDENCE BAND HERE WOULD MANUFACTURE THE APPEARANCE OF SAFETY. It would
+> hold the near-misses and wave through the systematic ones.** ⭐ That is the worst
+> possible property for a safeguard: it looks like it is working precisely where it is
+> not.
+
+⭐ **So the founder's second branch is the live one:** `UNRESOLVED` **cannot be
+grounded in DeBERTa's confidence.** It must come from somewhere richer — **disagreement
+between independent witnesses, the boundary detector, explicit-vs-implied
+classification, or conversational clarification.**
+
+⭐ And the boundary detector is now the strongest available candidate: it held **12 of
+13** of these misses **without consulting a probability at all** — including every one
+of the confident seven, because *a lexical rule does not care how sure the model was.*
+
+### ⭐ HHEM, for completeness
+
+```
+GLOBAL  hits 0.605 · misses 0.575 · gap 0.030   ⛔ NO GLOBAL SIGNAL
+```
+
+⚠️ `B13` is **confidently wrong on the LICENSED side** — p(support) `0.106`, confidence
+`0.788`, on a claim the source does license. ⛔ **A restrictive error made with
+conviction**, which is the one direction DeBERTa has never once erred in.
+
+## ⚠️ THREE ARTIFACTS IN THE ACCOUNTING — TWO ARE MINE, ALL NOW REPAIRED
+
+**1 ⛔ N2 WAS SCORED AS A MISS AGAINST A RULING THAT SAYS IT IS CORRECT.** The saved
+result files freeze the expectation **as it stood at run time**, and N2's expectation
+was adjudicated afterwards. ⛔ *The instrument was contradicting a founder ruling with
+arithmetic.* Ground truth is now **re-derived from the current fixtures by id**, and
+the drift is **printed, never silently applied**:
+
+```
+N2-AS-UNDERGO: recorded not_entailed -> ruled entailed
+```
+
+⭐ DeBERTa's true miss count on this evidence is **15, not 16**; HHEM's is **10, not
+11**.
+
+**2 ⚠️ THE BLIND SET WAS RUN TWICE AND IS DOUBLE-WEIGHTED** — `B05` and `B21` each
+appear twice, so blind contributes 44 of 103 DeBERTa rows. ⛔ **Not de-duplicated
+automatically:** two runs of one set is a fact about the evidence, and dropping one
+silently would hide it. It is now detected and announced.
+
+**3 ⛔ DeBERTa'S FAMILY TABLE WAS SUPPRESSED BY MY OWN CAP.** I capped the breakdown at
+12 keys; across three sets there are 28 families, so **the table hid itself on exactly
+the input where it mattered most** — and HHEM's showed only because it had fewer.
+⭐ *A breakdown that disappears on the interesting input is not a breakdown.* Cap
+removed; single-case families are dropped instead, since one case cannot show a
+pattern.
+
+⛔ **The headline finding touches none of these.** The modifier set ran once, contains
+no N2, and the group table was never suppressed. **M misses at 0.953 against a single
+hit at 0.617 stands exactly as read.**
+
+### Re-run the analysis (costless — no model, nothing downloads)
+
+```
+python3 scripts/verifier-probe/probe.py --calibration verifier-probe-*.json
+```
+
+⭐ It will now announce the N2 adjudication, announce the duplicate blind run, and
+print DeBERTa's full family table across all three sets.
+
+⛔ **Standing: confidence-grounded UNRESOLVED NOT SUPPORTED · boundary detector the
+leading alternative · MiniCheck NOW THE DECIDING EXPERIMENT (independence, not
+accuracy) · INLI OPENED · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
+production UNTOUCHED.**
