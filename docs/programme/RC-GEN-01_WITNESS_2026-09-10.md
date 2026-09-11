@@ -1797,3 +1797,76 @@ question   "Is this passage too abstract? Change it only if it needs to be
 
 A proposal is now **unnecessary intervention**, not taste — the precise test of
 *authorization is not an invitation to intervene.*
+
+## ⭐⭐ SV-4 DISCRIMINATOR — RUN · node-level `agency` FAILS · relational participation PASSES
+
+**Authorized act (founder):** *"SV-4 discriminator — use non-fixture sentences and
+require the representation to distinguish all four... If node-level `agency` cannot
+satisfy those cleanly but participation relations can, remove `agency` from node
+properties rather than adding more values to it. That would be a genuine schema
+repair, not prompt tuning."*
+
+Instrument: `__tests__/revision-sv4-participation.test.ts` — **12 passed · 12 total**.
+
+⛔ **The production schema is UNTOUCHED.** The relational form is cast in locally
+inside the test so the discriminator can be run **before** the repair is authorized:
+
+```ts
+const REL = {
+  actively_participates_in: 'actively_participates_in' as unknown as SemanticEdge['kind'],
+  undergoes:                'undergoes'                as unknown as SemanticEdge['kind'],
+};
+```
+
+### The four fixtures — non-fixture prose, not reused from A-S
+
+```
+ACTIVE     "Lena deliberately worked through the calculation."
+PASSIVE    "Lena underwent the scan while unconscious."
+NEUTRAL    "The healing process continued for several weeks."
+MIXED      "Lena performed the test and later underwent the procedure."
+```
+
+### Result against the founder's five criteria
+
+```
+1  active vs passive distinguishable          node-level ✓   relational ✓
+2  neutral representable WITHOUT a claim      node-level ✓   relational ✓
+3  ⭐ MIXED representable, no contradiction    node-level ⛔   relational ✓
+4  ⭐ participation never attaches to an EVENT node-level ⛔   relational ✓
+5  D detects an ADDED participation claim     node-level ✓   relational ✓
+```
+
+### ⭐ Criterion 3 is the deciding one
+
+*"Lena performed the test and later underwent the procedure."*
+
+⛔ **Node-level cannot represent it.** Lena is **one** node; `agency` is **one**
+intrinsic property; the two readings are irreconcilable and there is no `both` /
+`mixed` value. Adding one would be the enum-widening the founder refused.
+
+⭐ **Relational represents it without strain**: one entity node, **two
+differently-kinded edges** to two different events, and
+`m.nodes[0].properties === {}` — **no intrinsic participation property at all.**
+
+> **Participation is a relation between an entity and an event, not a trait of the
+> entity.** A person is not *agentive*; a person *acts in this* and *undergoes that*.
+
+### ⭐ Criterion 4 — the A-S v1 category error becomes UNREPRESENTABLE
+
+Node-level **admits** `transformation.agency = undergone` — the exact error A-S v1
+committed. Relational makes it impossible to state: events carry no participation
+property, so there is no field to fill in wrongly. ⭐ **The repair does not detect
+the category error; it removes the place where it could be written.**
+
+### ⛔ REPAIR NOT AUTHORIZED · `analyzer/2` NOT MUTATED
+
+Per the founder's versioning ruling, changing this creates **`analyzer/3`**:
+
+```
+analyzer/2   SV-2 + SV-3 subject · provider witness NOT completed
+analyzer/3   SV-4 repaired subject   (does not exist)
+```
+
+⛔ Do not quietly mutate `/2`. The discriminator is evidence for a ruling, not the
+ruling. A1's prompt repair stays **HELD** until participation ontology is settled.
