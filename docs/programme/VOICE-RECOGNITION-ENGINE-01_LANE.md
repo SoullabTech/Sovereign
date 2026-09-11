@@ -1498,3 +1498,23 @@ reply never emitted `AUDIO_ENDED`/`AUDIO_FAILED` (§12.11 handler at
 clears it — which is also what "resolves itself with time" would look like.
 (b) is a TTS/web-side locus. Instruction issued: capture the stuck state
 now, before killing the app.
+
+**Settings screenshot (founder, 21:24 device time).** The in-app Settings
+footer reads `v1.1 (5846a0824) • 2026-09-11 • https://soullab…`, and the
+Settings page carries the P12 note *"Voice Controller Test — unavailable on
+device … On-device voice diagnostic is unmet (P12)."*
+
+- **`5846a0824` is now confirmed from the artefact itself** — the web
+  bundle's `BUILD_STAMP.commit`, inlined at build time — not only from the
+  Mac transcript. WEB BUNDLE provenance is closed.
+- **The `v1.1` label is not evidence.** `components/account/AccountSettings.tsx:2944`
+  renders the literal string `v1.1 (` and interpolates only the commit and
+  date; it never reads `BUILD_STAMP.version`, which this bundle does carry
+  as `1.2.0` (`NEXT_PUBLIC_VERSION` is stamped in `next.config.js` since
+  `425c11ecc`). The plist (`1.2.0` / `2511`, §12.10) remains the APP
+  VERSION / BUILD authority. Pre-existing display defect, outside this
+  lane; queued as a separate task, not touched here.
+- The P12 note on device confirms, from the running bundle, what §12.6
+  found in the patch script: the diagnostic surface is absent by design.
+- Status bar still shows the silent-mode indicator at 21:24; the ringer
+  has not yet been set to loud for the runs ordered in §12.12.
