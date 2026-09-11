@@ -504,10 +504,18 @@ def calibration(paths):
                 ks = [r for r in sub if r.get(axis) == k]
                 kh = [confidence(r) for r in ks if r['observed'] == r['expected']]
                 km = [confidence(r) for r in ks if r['observed'] != r['expected']]
+                # ⛔⛔ A FLAG ON ONE CASE IS NOT A PATTERN. The first version flagged
+                # any regime whose misses averaged >= 0.90, and with one miss that is
+                # simply that case's confidence wearing a verdict's clothes. Five
+                # families were flagged CONFIDENTLY WRONG on n=1 in the first real
+                # run. The threshold is on EVIDENCE, not on the number.
+                MIN_N = 3
                 flag = ''
-                if km and mean(km) >= 0.90:
+                if len(km) < MIN_N:
+                    flag = f'  (n={len(km)} — too few to flag)' if km else ''
+                elif mean(km) >= 0.90:
                     flag = '  ⛔ CONFIDENTLY WRONG'
-                elif km and kh and mean(kh) - mean(km) > 0.15:
+                elif kh and mean(kh) - mean(km) > 0.15:
                     flag = '  ⭐ misses are hesitant'
                 fmt = lambda xs: f'{mean(xs):.3f}' if xs else '  -  '
                 print(f'      {k:<26} hits {len(kh):>2} @ {fmt(kh)}'

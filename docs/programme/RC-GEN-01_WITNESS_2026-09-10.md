@@ -4093,3 +4093,111 @@ python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
 and the question is whether it misses M2–M8 too · boundary cross-tab READY, NOT RUN ·
 INLI AFTER the witnesses · evidence gate HELD · analyzer/3 UNTOUCHED · B HELD ·
 production UNTOUCHED.**
+
+## ⭐⭐⭐ BOUNDARY DETECTOR × CONFIDENCE — RUN · THE ARCHITECTURE CAN KNOW WHAT THE MODEL CANNOT
+
+`2026-09-11` at `4ad7f801a`, seven frozen result files. ⛔ No model loaded.
+
+```
+BOUNDARY DETECTOR vs deberta        (confidence cut frozen at 0.90)
+  ⛔ CONFIDENT AND WRONG    6/7      <- the cell that decides it
+     confident and right   18/59     <- the cost
+     hesitant and wrong     6/6
+     hesitant and right     7/9
+```
+
+> ⭐⭐ **SIX OF THE SEVEN ANSWERS DeBERTa GOT WRONG AT ≥ 0.90 CONFIDENCE WOULD BE HELD
+> BY A RULE THAT READS NO PROBABILITY AT ALL.** ⭐ Twelve of thirteen misses overall.
+
+⛔ **This is the founder's hypothesis confirmed at the exact point it mattered.** The
+modifier regime is where the model is wrong at 0.99, so **nothing it reports about
+itself can rescue it** — and a lexical rule cannot be talked out of noticing
+`until 2019`.
+
+> ⭐ **DeBERTa does not have to know that it should be uncertain. THE ARCHITECTURE
+> KNOWS.**
+
+### ⚠️ AND THE COST IS REAL — 25 OF 68 CORRECT VERDICTS WOULD ALSO BE HELD
+
+```
+18/59 confident-and-right  +  7/9 hesitant-and-right   =  25/68  (37%)
+```
+
+⛔ **Over a third of correct verdicts routed to UNRESOLVED.** ⭐ For a **router** —
+send these to a second witness — that is a defensible price. ⛔ For a **refusal** it
+is not: a third of warranted claims would never become knowledge. **The cross-tab is
+why that trade is visible instead of hidden inside a single coverage number.**
+
+⛔ **The one confident miss it does not hold is `M7`** — `on Tuesday`, the regex gap
+recorded earlier and **still not patched**, because patching a pattern to cover the
+case it was seen to miss is fitting the detector to the test.
+
+### ⛔⛔ HHEM — THE DECISIVE CELL IS EMPTY, AND MY INSTRUMENT MISREAD IT
+
+```
+⛔ CONFIDENT AND WRONG   0/0
+   confident and right   1/1      ⛔ "FLAGS EVERY CONFIDENT CORRECT ANSWER — no discrimination"
+```
+
+⚠️ **That warning fired on a single case.** HHEM's confidence metric is distance from
+its own threshold, which tops out at `0.833` across every run — **so it has no
+confident answers at all at the 0.90 cut**, right or wrong.
+
+⛔ **My instrument stated a property of the detector on the strength of n=1.** Repaired:
+the "no discrimination" verdict now needs `n ≥ 5`, and an **empty decisive cell is
+announced as empty** — *this table says nothing about the detector for this verifier;
+it says the verifier is never confident when wrong.*
+
+### ⛔⛔ THE SAME n=1 DEFECT IN THE CALIBRATION FAMILY TABLE
+
+Five families were flagged `⛔ CONFIDENTLY WRONG` on **one miss each** — `T3` `T4` `T5`
+`T6` `T7`. ⛔ **With a single miss, the flag is that case's confidence wearing a
+verdict's clothes.** Repaired: flags require `n ≥ 3`, and smaller cells now print
+`(n=1 — too few to flag)` rather than a verdict.
+
+⭐ **Only the `BY GROUP` reading carries weight**, and it does:
+`M · 7 misses @ 0.953 against 1 hit @ 0.617`.
+
+### ⭐ A PATTERN I WAS ABOUT TO ASSERT, CHECKED AND REJECTED
+
+The family table looked like it split by limiter type — cessation hesitant, frequency
+and dates confident. ⛔ **It does not:**
+
+```
+M2  0.997   cessation via `before`   "...for eleven years before moving inland."
+M8  0.713   cessation via `before`   "...before the funding was cut."
+```
+
+⛔ **Same limiter, same construction, opposite confidence.** ⭐ Checked before writing
+it down, and recorded as rejected rather than left unstated — *a tidy pattern is
+exactly the kind of claim this lane exists to refuse.*
+
+### ⭐ THE ADJUDICATED VIEW REPRODUCES THE FOUNDER'S ARITHMETIC EXACTLY
+
+```
+deberta   as-derived 13/13 · blind 20/22 · scope 19/22 · modifier 16/24
+          UNIQUE TOTAL 68/81 · misses 13        ⭐ exactly as predicted
+hhem      UNIQUE TOTAL 25/35 · misses 10
+⚠️ 22 rows set aside as repeat runs · HISTORICAL RECORD NOT SUPERSEDED
+```
+
+⭐ N2 now scores as a **hit** for both verifiers under the ruling, and the drift is
+printed rather than silently applied. DeBERTa's global gap moved `0.116 → 0.122`.
+
+### ⛔ WHAT THIS SETTLES, AND WHAT IT DOES NOT
+
+```
+UNRESOLVED grounded in DeBERTa's confidence        ⛔ NOT SUPPORTED
+UNRESOLVED grounded in a deterministic regime      ⭐ SUPPORTED, at a 37% routing cost
+the detector as a ROUTER                           ⭐ promising
+the detector as a JUDGE                            ⛔ not supported
+```
+
+⛔ **It does not establish that the 37% is acceptable** — that is a founder ruling, and
+it depends entirely on what the second witness costs. ⭐ **Which makes MiniCheck's
+independence the live question**: if the second witness is cheap and its errors are
+disjoint, a 37% routing cost buys a great deal. If its errors are shared, the routing
+is expense without protection.
+
+⛔ **Standing: MiniCheck THE DECIDING EXPERIMENT · INLI after the witnesses · evidence
+gate HELD · analyzer/3 UNTOUCHED · B HELD · production UNTOUCHED.**

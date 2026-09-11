@@ -203,8 +203,17 @@ def against(paths):
         if cwn:
             print(f"\n  -> {cw} of {cwn} confidently-wrong answers would be HELD by a rule")
             print(f"     that consults no probability at all")
-        if crn and cr == crn:
+        # ⛔ The 'no discrimination' verdict needs a cell big enough to carry it.
+        # On HHEM's first real run this fired on 1/1 — a warning about a single case,
+        # stated as a property of the detector.
+        if crn >= 5 and cr == crn:
             print('  ⛔ AND IT FLAGS EVERY CONFIDENT CORRECT ANSWER TOO — no discrimination.')
+        elif crn and cr == crn:
+            print(f'  ⚠️ flags every confident-correct case, but n={crn} — too few to conclude.')
+        if cwn == 0:
+            print('  ⚠️ NO CONFIDENTLY-WRONG CASES AT ALL at this cut. The decisive cell is')
+            print('     EMPTY, so this table says nothing about the detector for this')
+            print('     verifier — it says the verifier is never confident when wrong.')
     print('\n⛔ NOT A GATE. NOT AUTHORIZED. A measurement, not a component.')
 
 
