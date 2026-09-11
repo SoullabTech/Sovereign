@@ -50,7 +50,18 @@ def main():
                  '     simply has one of its two inputs missing, and it will not\n'
                  '     substitute a guess for it.')
     adj_doc = json.load(open(a.adjudication))
-    adj = {(c['set'], c['id']): c for c in adj_doc['cases']}
+    # ⛔⛔ JOIN ON `id`, NOT ON (set, id).
+    # The first version keyed on the set name and SILENTLY dropped five of six
+    # corpora, because the adjudicator filled `set` from each fixture's own
+    # field (`blind-v1`, `modifier-v1`, …) while the probe records the SETS key
+    # (`blind`, `modifier`, …). It then printed "NO plausible-neutral cases in
+    # this material at all — that is itself the finding" on the strength of a
+    # failed join. Ids are disjoint across every corpus (N·B·S·M·D·X prefixes),
+    # so the id alone is the safe key — and coverage is now asserted below
+    # rather than assumed.
+    adj = {c['id']: c for c in adj_doc['cases']}
+    if len(adj) != len(adj_doc['cases']):
+        sys.exit('adjudication contains duplicate ids — cannot join safely')
     print(f"three-way ground truth   {len(adj)} cases")
     print(f"  adjudicator            {adj_doc.get('adjudicator', '?')}")
     dis = [k for k, v in adj.items() if v.get('disagrees_with_expected')]
@@ -62,7 +73,7 @@ def main():
         d = json.load(open(p))
         st = d.get('set', '?')
         for r in d.get('rows', d.get('results', [])):
-            k = (st, r['id'])
+            k = r['id']
             if k in adj:
                 rows.append((k, r))
     if not rows:
@@ -71,7 +82,19 @@ def main():
     seen = {}
     for k, r in rows:                       # collapse repeat runs of the same case
         seen[(k, r['verifier'])] = r
-    print(f"joined                   {len(seen)} verifier-judgements\n")
+    # ⭐ COVERAGE IS ASSERTED, NOT ASSUMED. An absence claim is only as wide as
+    # the join behind it, and a silent join failure reads exactly like a finding.
+    joined_ids = {k for (k, _) in seen}
+    missing = sorted(set(adj) - joined_ids)
+    print(f"joined                   {len(seen)} verifier-judgements"
+          f" over {len(joined_ids)}/{len(adj)} adjudicated cases")
+    if missing:
+        print(f"  ⚠️ {len(missing)} adjudicated cases have NO result row:"
+              f" {', '.join(missing[:12])}{' …' if len(missing) > 12 else ''}")
+        print('     Either those corpora were not run, or their result files were'
+              ' not passed.')
+    cov = len(joined_ids) / len(adj)
+    print()
 
     # ---- DeBERTa, three-way against three-way -----------------------------
     deb = {k: r for (k, v), r in seen.items() if v == 'deberta'}
@@ -104,11 +127,16 @@ def main():
             if dang['contradiction']:
                 print(f"     ⚠️ and {dang['contradiction']} called `contradiction`, which"
                       f" is right for the wrong reason")
+        elif cov >= 0.95:
+            print('\n  ⚠️ NO plausible-neutral cases among the joined material, and'
+                  '\n     the join covers essentially all of it. The corpora were'
+                  ' built for a\n     different question and do not contain the one'
+                  ' phase 2 is about.\n     That absence IS the finding.')
         else:
-            print('\n  ⚠️ NO plausible-neutral cases in this material at all. The'
-                  ' corpora\n     were built for a different question and do not'
-                  ' contain the one\n     phase 2 is about. That is itself the'
-                  ' finding.')
+            print(f'\n  ⛔ No plausible-neutral cases among the JOINED cases — but the'
+                  f'\n     join covers only {cov:.0%} of the adjudication, so this is'
+                  f' NOT an\n     absence in the material. Pass the missing result'
+                  f' files.')
 
         # per set — the composition lesson, applied before anyone asks
         print('\n  PER SET (a pooled figure is an average)')

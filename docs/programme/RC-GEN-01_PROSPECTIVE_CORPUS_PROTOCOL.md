@@ -783,3 +783,57 @@ phase-2 triple design will have to fix explicitly, since the same sentence pair
 is contradicted under one reading and neutral under the other.
 
 **Composition established. No model output has been joined yet.**
+
+---
+
+## ⛔⛔ INSTRUMENT DEFECT — the map printed a finding that was a failed join (2026-09-11)
+
+The first run of `three_way_map.py` printed:
+
+```text
+joined                   40 verifier-judgements
+  ⚠️ NO plausible-neutral cases in this material at all. The corpora
+     were built for a different question and do not contain the one
+     phase 2 is about. That is itself the finding.
+```
+
+**That is false, and it is my defect.** I keyed the join on `(set, id)`. The
+adjudicator filled `set` from each fixture's own field — `blind-v1`,
+`scope-v1`, `modifier-v1`, `detector-blind-v1` — while the probe records the
+`SETS` key: `blind`, `scope`, `modifier`, `detector-blind`. **Only `prospective`
+matched, because it is the one corpus whose two spellings coincide.** Five of six
+corpora dropped out silently, carrying **16 of the 17 plausible neutrals** with
+them.
+
+⛔ **The severity is not the mismatch. It is that the instrument announced an
+absence it had manufactured**, in the register of a result — *"that is itself the
+finding"* — on material it had never looked at. This lane exists to catch exactly
+that move, and my own instrument made it.
+
+⚠️ **`joined 40` was the tell, and it was printed.** A reader who multiplied 20
+cases by 2 verifiers would have caught it. The instrument should not have
+required that of its reader.
+
+### Repair
+
+- **Join on `id` alone.** Ids are disjoint across every corpus by prefix
+  (`N · B · S · V · M · D · X`, verified: 78 ids, all unique), so the set name was
+  never needed as a key — it was only ever a chance to disagree with itself.
+- **Coverage is asserted, not assumed.** The run now prints
+  `joined N verifier-judgements over X/78 adjudicated cases` and names the
+  unmatched ids.
+- ⭐ **An absence claim is scoped to its join.** "No plausible-neutral cases in
+  this material" now prints **only when coverage is ≥95%**. Below that it prints
+  *"no plausible-neutral cases among the JOINED cases — the join covers only N%,
+  so this is NOT an absence in the material"*.
+
+> ⭐⭐ **An absence claim is only as wide as the join behind it, and a silent join
+> failure reads exactly like a finding.**
+
+### What the first run did legitimately establish
+
+Its one true row, for `prospective` only, and consistent with everything already
+recorded: of its 19 contradictions DeBERTa called **17 `contradiction`**, one
+`neutral`, one `entailment` (X22). Its single arbitrary neutral (X30) it called
+`neutral`. ⛔ Nothing about plausible neutrals was measured, because none were
+joined.
