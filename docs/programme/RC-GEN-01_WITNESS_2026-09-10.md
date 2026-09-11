@@ -8,7 +8,8 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1 AND 2 FAILED (founder rulings)
+3A-S   semantic witness        RUN 3 · ⛔ AWAITING FOUNDER RULING
+                              (runs 1 and 2 FAILED — founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -267,6 +268,66 @@ claims … intact". Both times the authoritative wording compressed a distinctio
 
 *"It is doing exactly what a good acceptance specimen should do: the first repair
 eliminated the obvious failure and exposed the subtler one beneath it."*
+
+## 3A-S — RUN 3 · evidence of record
+
+**Founder's Mac Studio, checkout `169a6f195`**, real credential, `--require-cognition`.
+Repair since run 2 was the **geometry clause**, instruction layer only. Fixtures
+frozen; harness parse-guarded.
+
+### Protocol, on live output: **0 failed** (both specimens)
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience changed how he related to the natural world.
+> That change in turn shifted his perspective, and the shift was a real step
+> forward in the integration he was still working through."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage is already fully concrete: two physical actions, named
+> agent, specific objects (kettle, water, coffee grounds), plain verbs, no
+> abstraction to reduce. Any \"more concrete\" revision would have to invent detail
+> the text doesn't contain — the smell, the temperature, Mara's state of mind, the
+> time of day, how she felt about it — which would add meaning rather than clarify
+> it. The clipped two-sentence rhythm is also doing deliberate work here;
+> elaborating it would slow a deliberately spare moment."
+
+Zero proposals. **Third consecutive `no_change` on this fixture.**
+
+### 🔴 THE RULING PASTED WITH RUN 3 DESCRIBES RUN 2, NOT RUN 3
+
+⛔ **It is NOT recorded as the ruling on run 3.** The text quotes:
+
+```
+"and that change in how he saw things mattered…"       ← RUN 2 wording
+"constituted a meaningful development in" -> "mattered to"  ← RUN 2 loss
+```
+
+**Neither phrase appears in run 3's output.** Run 3 produced two sentences, an
+explicit `in turn`, and `was a real step forward in`. *A ruling that cites wording
+the run did not produce cannot be a ruling on that run* — and this programme's own
+discipline is that the executed evidence is the authority.
+
+### Observations for the ruling that is owed — ⛔ NOT a ruling
+
+```
+RUN 2 LOSS 1   "that change in how he saw things"  — relation identified
+               with perspective, one sentence
+RUN 3          "That change in turn shifted his perspective." — separate
+               sentence, explicit causal connective
+
+RUN 2 LOSS 2   "mattered to the work of integration"  — significance relation
+RUN 3          "was a real step forward in the integration" — a
+               constitutive "was ... in"
+
+NEW IN RUN 3, not present in the source and not previously ruled on:
+               "a real step forward" supplies VALENCE and DIRECTION that
+               "a meaningful development" does not carry. Whether that is an
+               R3 loss or an R4 intervention is the founder's ruling.
+```
+
+⛔ 3A-S remains AWAITING RULING on run 3. 3A NOT PASSED. 3D CLOSED.
 
 ## ⚠️ Harness defect between run 2 and run 3 (mine)
 
