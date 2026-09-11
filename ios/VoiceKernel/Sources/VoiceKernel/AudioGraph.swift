@@ -31,6 +31,36 @@ public struct RenderStats: Sendable, Equatable {
     public var synthetic: Bool
 }
 
+/// PRE-WITNESS-02 §3.1: the only way `start` refuses. A Swift error thrown
+/// BEFORE any input tap exists, so the invalid `installTap` call is
+/// unreachable rather than caught. There is no NSException machinery in this
+/// package; the source gate asserts that.
+public enum AudioGraphError: Error, CustomStringConvertible, Equatable {
+    case invalidInputFormat(sampleRate: Double, channels: Int)
+    public var description: String {
+        switch self {
+        case .invalidInputFormat(let sr, let ch): return "invalidInputFormat(sampleRate: \(sr), channels: \(ch))"
+        }
+    }
+}
+
+/// The input node's format as observed at one instant, in plain numbers so it
+/// can be journalled (§3.4) and validated (§3.1) without AVFoundation.
+public struct InputFormatObservation: Sendable, Equatable {
+    public var sampleRate: Double
+    public var channels: Int
+    public init(sampleRate: Double, channels: Int) { self.sampleRate = sampleRate; self.channels = channels }
+
+    /// Pure precondition (§3.1): a format the hardware has not yet resolved
+    /// (0 Hz, 0 channels — the witnessed 2026-09-11 state) is invalid.
+    public var isValid: Bool { sampleRate > 0 && channels > 0 }
+
+    /// Throws `AudioGraphError.invalidInputFormat` unless `isValid`.
+    public func requireValid() throws {
+        guard isValid else { throw AudioGraphError.invalidInputFormat(sampleRate: sampleRate, channels: channels) }
+    }
+}
+
 public final class AudioGraph: @unchecked Sendable {
     public let generation: Int
     private let engine = AVAudioEngine()
@@ -44,6 +74,8 @@ public final class AudioGraph: @unchecked Sendable {
     private var renderedFramesForActive: Int64 = 0
     private var lastNonSilentAtMs: Int64?
     private var frozen: RenderStats?            // synthetic stall (P6)
+    private var lastInputFormat: InputFormatObservation?   // §3.4
+    private var startedAtMs: Int64?                        // §3.4 generation age
     private var clock: () -> Int64 = MonotonicClock.nowMs
 
     /// The format every output buffer must be in. Mono 48 kHz float; the mixer
@@ -72,6 +104,11 @@ public final class AudioGraph: @unchecked Sendable {
         engine.connect(player, to: engine.mainMixerNode, format: outputFormat)
 
         let inFormat = input.outputFormat(forBus: 0)
+        // §3.1 precondition: validated BEFORE the tap. If the hardware format
+        // is unresolved this throws and `installTap` below is never reached.
+        let observed = InputFormatObservation(sampleRate: inFormat.sampleRate, channels: Int(inFormat.channelCount))
+        lock.lock(); lastInputFormat = observed; lock.unlock()
+        try observed.requireValid()
         let gen = generation
         input.installTap(onBus: 0, bufferSize: 1024, format: inFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
@@ -102,6 +139,27 @@ public final class AudioGraph: @unchecked Sendable {
 
         engine.prepare()
         try engine.start()
+        lock.lock(); startedAtMs = clock(); lock.unlock()
+    }
+
+    /// §3.4 seam evidence: the input node's format as the engine reports it
+    /// right now (a query, never a mutation; it cannot raise).
+    public func currentInputFormat() -> InputFormatObservation {
+        let f = engine.inputNode.outputFormat(forBus: 0)
+        return InputFormatObservation(sampleRate: f.sampleRate, channels: Int(f.channelCount))
+    }
+
+    /// The format observed by the last `start` attempt (valid or refused).
+    public func inputFormatAtStart() -> InputFormatObservation? {
+        lock.lock(); defer { lock.unlock() }
+        return lastInputFormat
+    }
+
+    /// Milliseconds since this generation's engine started; nil if it never did.
+    public func ageMs(now: Int64) -> Int64? {
+        lock.lock(); defer { lock.unlock() }
+        guard let s = startedAtMs else { return nil }
+        return now - s
     }
 
     public func stop() {

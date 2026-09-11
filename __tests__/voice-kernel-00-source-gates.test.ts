@@ -181,6 +181,50 @@ describe('KERNEL-00 · PRE-WITNESS-01 — causal, longitudinal, replayable recor
   });
 });
 
+describe('KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not exception handling', () => {
+  // K00-W1: `installTap` was reached with a 0 Hz input format. The repair is a
+  // Swift-level validity check that makes the invalid call unreachable.
+  it('a validity check lexically precedes every input-node installTap(onBus: 0 (§3.1)', () => {
+    const f = swift.find((p) => p.endsWith('AudioGraph.swift'))!;
+    const body = bodies.get(f)!;
+    const taps = [...body.matchAll(/(\w+)\.installTap\(onBus: 0/g)];
+    expect(taps.length).toBeGreaterThan(0);
+    const inputTaps = taps.filter((m) => m[1] !== 'player');
+    expect(inputTaps.length).toBeGreaterThan(0);
+    for (const m of inputTaps) {
+      const before = body.slice(0, m.index!);
+      const guardAt = before.lastIndexOf('.requireValid()');
+      expect(guardAt).toBeGreaterThan(-1);
+      // the guard is a `try` — a refused format leaves `start` before the tap
+      const guardLine = before.slice(before.lastIndexOf('\n', guardAt) + 1, guardAt);
+      expect(guardLine).toMatch(/\btry \w+$/);
+    }
+    // the pure precondition itself: rate > 0 AND channels > 0
+    expect(body).toMatch(/var isValid: Bool \{ sampleRate > 0 && channels > 0 \}/);
+    expect(body).toMatch(/case invalidInputFormat\(sampleRate: Double, channels: Int\)/);
+  });
+  it('no NSException / ExceptionCatcher / objc_try construct exists anywhere in the package (§3.1)', () => {
+    const offenders: string[] = [];
+    for (const [f, body] of bodies) {
+      if (/NSException|ExceptionCatcher|objc_try|@try\b|NS_DURING|objc_exception/.test(body)) offenders.push(rel(f));
+    }
+    // Objective-C bridging files would be the other way in; the package has none.
+    const objc = files.filter((f) => /\.(m|mm|h)$/.test(f));
+    expect(objc).toEqual([]);
+    expect(offenders).toEqual([]);
+  });
+  it('a refused build and every configuration change journal the observed input format and generation age (§3.4)', () => {
+    const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+    expect(k).toMatch(/"graph_start_refused"/);
+    expect(k).toMatch(/inputSampleRate/);
+    expect(k).toMatch(/inputChannels/);
+    expect(k).toMatch(/generationAgeMs/);
+    // the config-change observation carries the format at the instant iOS posted it
+    const cc = k.slice(k.indexOf('func handleConfigurationChange'), k.indexOf('"engine_configuration_changed"'));
+    expect(cc).toMatch(/currentInputFormat\(\)/);
+  });
+});
+
 describe('KERNEL-00 · VOICE-07 — the harness is a projection', () => {
   it('HarnessModel holds no voice state and reduces only kernel snapshots', () => {
     const f = swift.find((p) => p.endsWith('HarnessModel.swift'))!;

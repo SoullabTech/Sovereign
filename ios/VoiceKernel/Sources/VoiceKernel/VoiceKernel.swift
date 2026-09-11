@@ -89,6 +89,10 @@ public actor VoiceKernel {
             s.startObserving()
             try startGraph(generation: g, cause: "enterConversation", causeSeq: configured)
         } catch {
+            // PRE-WITNESS-02 §3.3: reviewed, not widened. A generation-1 refusal
+            // (now journalled as graph_start_refused) still degrades without a
+            // recovery attempt; whether it should enter RecoveryPolicy is
+            // decided by the plan's §4 evidence, not here.
             let err = journal("VoiceKernel", "error", cause: "enterConversation_failed", causeSeq: cmd, evidence: ["error": "\(error)"])
             transition(to: .degraded, cause: "enterConversation_failed", causeSeq: err)
             publish()
@@ -233,12 +237,27 @@ public actor VoiceKernel {
     // MARK: - graph lifecycle
 
     private func startGraph(generation g: Int, cause: String, causeSeq: Int?) throws {
+        // §3.4: how long the generation being replaced actually lived.
+        let priorAge = graph.flatMap { $0.ageMs(now: clock()) }
+        let priorGen = graph?.generation
         graph?.stop()
         let ag = AudioGraph(generation: g)
         ag.onInput = { [weak self] o in Task { await self?.handleInput(o) } }
         ag.onStreamComplete = { [weak self] id, gen in Task { await self?.handleStreamComplete(id, generation: gen) } }
         ag.onConfigurationChange = { [weak self] gen in Task { await self?.handleConfigurationChange(generation: gen) } }
-        try ag.start(voiceProcessing: snap.voiceProcessingEnabled, clock: clock)
+        do {
+            try ag.start(voiceProcessing: snap.voiceProcessingEnabled, clock: clock)
+        } catch {
+            // §3.1/§3.2: a refused build. Journal the format the precondition
+            // saw, then let the error take the road that already exists
+            // (rebuildGraph → graph_rebuild_failed → RecoveryPolicy, or
+            // enterConversation_failed for generation 1). No new recovery logic.
+            var ev = ["error": "\(error)", "generation": String(g)]
+            ev.merge(formatEvidence(ag.inputFormatAtStart())) { a, _ in a }
+            ev.merge(ageEvidence(priorGeneration: priorGen, priorAgeMs: priorAge)) { a, _ in a }
+            journal("VoiceKernel", "graph_start_refused", cause: cause, causeSeq: causeSeq, evidence: ev)
+            throw error
+        }
         graph = ag
         ag.setSyntheticStall(snap.faults.stallOutput)
         snap.generation = g
@@ -252,8 +271,23 @@ public actor VoiceKernel {
         session?.setGeneration(g)
         snap.route = session?.currentRoute() ?? snap.route
         #endif
-        journal("VoiceKernel", "graph_started", cause: cause, causeSeq: causeSeq,
-                evidence: ["voiceProcessing": String(snap.voiceProcessingEnabled), "engineRunning": String(ag.isRunning)])
+        var started = ["voiceProcessing": String(snap.voiceProcessingEnabled), "engineRunning": String(ag.isRunning),
+                       "generationAgeMs": "0"]
+        started.merge(formatEvidence(ag.inputFormatAtStart())) { a, _ in a }
+        started.merge(ageEvidence(priorGeneration: priorGen, priorAgeMs: priorAge)) { a, _ in a }
+        journal("VoiceKernel", "graph_started", cause: cause, causeSeq: causeSeq, evidence: started)
+    }
+
+    // §3.4 seam evidence (additive fields; K00-17 record coherence).
+    private func formatEvidence(_ f: InputFormatObservation?) -> [String: String] {
+        guard let f = f else { return [:] }
+        return ["inputSampleRate": String(f.sampleRate), "inputChannels": String(f.channels), "inputFormatValid": String(f.isValid)]
+    }
+    private func ageEvidence(priorGeneration: Int?, priorAgeMs: Int64?) -> [String: String] {
+        var ev: [String: String] = [:]
+        if let g = priorGeneration { ev["priorGeneration"] = String(g) }
+        if let a = priorAgeMs { ev["priorGenerationAgeMs"] = String(a) }
+        return ev
     }
 
     // MARK: - observations
@@ -360,7 +394,12 @@ public actor VoiceKernel {
         }
         // Rebuild-not-resume (SURVEY-01 §7): a new generation under the SAME
         // session configuration. This is a route recovery act, stamped as such.
-        let obs = journal("VoiceKernel", "engine_configuration_changed", cause: "os_configuration_change")
+        var ev: [String: String] = [:]
+        if let g = graph {
+            ev.merge(formatEvidence(g.currentInputFormat())) { a, _ in a }     // §3.4: the format at the instant iOS posted
+            if let age = g.ageMs(now: clock()) { ev["generationAgeMs"] = String(age) }
+        }
+        let obs = journal("VoiceKernel", "engine_configuration_changed", cause: "os_configuration_change", evidence: ev)
         lastObservationSeq = obs
         rebuildGraph(cause: "route_recovery", causeSeq: obs)
     }

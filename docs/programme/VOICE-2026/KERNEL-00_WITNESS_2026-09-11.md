@@ -63,7 +63,10 @@ launch provenance    (founder correction, verbatim)
                        binary replacement  not established
                        subject             488e0666c
                      "Xcode" here means launched/debugged under Xcode only; the claim that Xcode replaced the CLI binary is NOT established.
-iOS / device         iOS 18.7 · Kelly Nezat's iPhone
+iOS / device         iPhone 16 Pro Max · iOS 26.6.1 (23G83) Beta  [founder-read from the connected device after the seal; the
+                     earlier "iOS 18.7" here was the WebKit user-agent string from the legacy captures, not the OS — corrected in
+                     place, not erased. Xcode's team label "Kelly Nezat" IS team ZVK2X646Z2 (Individual, isFreeProvisioningTeam=0),
+                     per Xcode's stored account metadata read by the founder; the label is not evidence, DEVELOPMENT_TEAM is.]
 route hardware       built-in only exercised (Pi8 present in the room, never reached)
 legacy process       device process list checked immediately after launch: only VoiceKernelHarness present; no MAIA/Capacitor App process
 ```

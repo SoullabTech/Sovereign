@@ -248,3 +248,30 @@ final class SnapshotRulesTests: XCTestCase {
         XCTAssertFalse(s.displaysListening)
     }
 }
+
+// PRE-WITNESS-02 §3.5 — the entry-seam precondition (K00-W1). The witnessed
+// failure was `installTap` reached with a 0 Hz / 0-channel input format. The
+// check is pure so it can be believed without a device; that it runs BEFORE
+// the tap is pinned lexically by the repo source gate.
+final class InputFormatPreconditionTests: XCTestCase {
+    func testResolvedHardwareFormatIsValid() {
+        XCTAssertTrue(InputFormatObservation(sampleRate: 48_000, channels: 1).isValid)
+        XCTAssertNoThrow(try InputFormatObservation(sampleRate: 16_000, channels: 2).requireValid())
+    }
+
+    func testTheWitnessedZeroHertzFormatIsInvalid() {
+        // 2026-09-11 device witness: `outf<1 ch, 0 Hz> inf<1 ch, 0 Hz>`.
+        XCTAssertFalse(InputFormatObservation(sampleRate: 0, channels: 1).isValid)
+        XCTAssertFalse(InputFormatObservation(sampleRate: 48_000, channels: 0).isValid)
+        XCTAssertFalse(InputFormatObservation(sampleRate: 0, channels: 0).isValid)
+        XCTAssertFalse(InputFormatObservation(sampleRate: -1, channels: 1).isValid)
+    }
+
+    func testInvalidFormatThrowsASwiftErrorCarryingTheObservedNumbers() {
+        // §3.1: a Swift error, thrown before any tap — never an NSException.
+        XCTAssertThrowsError(try InputFormatObservation(sampleRate: 0, channels: 1).requireValid()) { error in
+            XCTAssertEqual(error as? AudioGraphError, .invalidInputFormat(sampleRate: 0, channels: 1))
+            XCTAssertEqual("\(error)", "invalidInputFormat(sampleRate: 0.0, channels: 1)")
+        }
+    }
+}
