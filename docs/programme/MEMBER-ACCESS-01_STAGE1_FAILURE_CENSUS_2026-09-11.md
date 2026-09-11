@@ -97,10 +97,21 @@ Repaired `b8e17336`, **undeployed**.
   `audit_logs` as absent in production with ten `logAuthEvent` callers lacking
   durable substrate. A migration `20260828000001_audit_logs.sql` now exists in the
   repository; **whether it is applied in production is UNVERIFIED.**
-- **R5 · Open-relay / takeover primitive.** `send-verification` accepts
-  `{memberId, email}` unauthenticated, writes the caller-supplied address onto the
-  member row, then sends to it — arbitrary destination **and** an email-rewrite
-  takeover primitive. Code-shape; the running state is unread here.
+- **R5 · Open-relay / takeover primitive — ⭐ CORRECTED 2026-09-11: ALREADY REPAIRED.**
+  As first written this row described `send-verification` as *currently* accepting
+  `{memberId, email}` unauthenticated and writing the caller-supplied address onto
+  the member row. **That was a reading of the 2026-09-07 triage note, not of the
+  code.** The repair landed the same day (**MAIL-03 containment**, route header in
+  `app/api/members/send-verification/route.ts`): the destination is now read from
+  the member record, a body `email` is at most an assertion to be checked, **the
+  route no longer writes `members.email` at all**, and both IP and member are rate
+  limited. The row is kept and corrected rather than deleted — *a triage note
+  describes the moment it was written, and inferring present state from it is the
+  `NOT OBSERVED` / `OBSERVED EMPTY` confusion this census warns about in §4.*
+  **Residual, deliberately:** the endpoint is still reachable without a session,
+  because registration calls it server-side before one exists; blast radius is
+  bounded to mail to an address already on file, within rate limits. Admission
+  control for that path is MAIL-04, not this lane.
 
 ---
 

@@ -72,15 +72,25 @@ Two separately documented facts, read together for the first time here:
 1. `app/api/auth/signin/google/callback/route.ts:170` — OAuth **joins on email**:
    `SELECT id … FROM members WHERE email = $1`. Found → link; not found → create.
    **Email is the identity join key.**
-2. `send-verification` (Stage 1 R5) accepts `{memberId, email}` **unauthenticated**
-   and **writes the caller-supplied address onto the member row**.
+2. `send-verification` **did** accept `{memberId, email}` unauthenticated and write
+   the caller-supplied address onto the member row — **until MAIL-03 containment
+   closed it on 2026-09-07.** ⭐ **CORRECTED 2026-09-11: the instance is CLOSED.**
 
 > **Rewriting a member's *contact address* silently rewrites their *identifier*, and
-> the identifier is what a later social sign-in joins on.** Adding a session check
-> to one route closes the instance. **Only separating the roles closes the class.**
+> the identifier is what a later social sign-in joins on.**
 
-⚠️ Recorded as a **composed RISK**, not an incident: no evidence it has been
-exercised. It is listed because Stage 3 is where such compositions become visible.
+⚠️ **The chain is HISTORICAL, not live**, and is kept because the *class* is what
+Stage 3 exists to name. Three things survive the repair:
+
+- **Fact 1 stands unchanged.** OAuth still joins identity on `members.email`. Email
+  is still the identity join key, and that is a live property of the system.
+- **The repair proves the distinction rather than removing the need for it.** Its own
+  header reasons in exactly these terms — *"changing a member's address is a separate
+  authenticated act that must confirm to the OLD address first, and it does not live
+  behind a send endpoint."* **That is I-9 already being practised by one route.** The
+  gap is that it is a local discipline, not a system property.
+- **One route closed is not the class closed.** Any future write to `members.email`
+  inherits the same power, because the column still carries five roles.
 
 ### 2.2 · Not all bad news
 
