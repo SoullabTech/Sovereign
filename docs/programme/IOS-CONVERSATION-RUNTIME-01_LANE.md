@@ -1689,3 +1689,9 @@ H-SILENT remains a hypothesis for E19 to test.
 (Repair Two witness, judged narrowly) · registration repair = evidence,
 not fix · no further repair on this runtime · the lane closes on the
 E19/E20 record and hands its evidence to VOICE-2026.
+
+### E23 · 2026-09-11 · Registered-arm runtime witness: competing audio/recognition authority under Bluetooth HFP (Pi8)
+
+Full evidence and classification are recorded in `VOICE-2026/CENSUS-01 §3.4` at census-lane commit `a639a1d6c`. Registration arm of E19: WITNESSED · strong positive. Pre-registration arm: UNSPENT · DEFERRED. No legacy repair authorized.
+
+**Lane standing after E23:** E19 registered arm WITNESSED (E23) · E19 pre-registration arm DEFERRED (founder ruling) · E20 owed · no further repair on this runtime · evidence handed to VOICE-2026.
