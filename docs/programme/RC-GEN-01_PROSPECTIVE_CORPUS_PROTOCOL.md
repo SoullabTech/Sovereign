@@ -369,3 +369,104 @@ withholds closure rather than refusing the claim.
 
 **Coverage (10/20) and cost (11/20) are secondary questions 1 and 2. The primary
 question is untouched and remains unanswered until both verifiers run.**
+
+---
+
+## ⛔ PRIMARY RESULT — MEASURED, AND THE CLOSURE-RISK HYPOTHESIS FAILS IT (2026-09-11)
+
+```text
+PRIMARY QUESTION — agreement precision, 40 shared cases
+  INSIDE   19/19 = 100%
+  OUTSIDE  16/17 =  94%
+  difference  +5.9 percentage points
+  Fisher exact, two-sided  p = 0.4722
+  ⭐ MEASURED — 19 agreements inside, at or above the floor of 8.
+```
+
+Against the predeclared table this is the second row — *agreement precision
+similar inside and outside* — except that the sign is **inverted**: agreement
+inside the regime was nominally **more** reliable, not less.
+
+> ⛔ **H1 — CLOSURE-RISK DETECTOR: FAILS its blind test.** The claim that
+> agreement is less trustworthy inside the detector regime is **not supported on
+> prospectively authored material.** The floor was met; the answer is a result,
+> not an absence of one.
+
+⭐ **The pooled `68% vs 98%` contrast did not survive contact with a corpus
+authored without reference to any verifier's weakness.** Three seen corpora
+agreed on it; the one that never saw the hypothesis does not.
+
+### H2 fares no better here
+
+| | |
+|---|---|
+| DeBERTa | **39/40** — 20/20 licensed, 19/20 unlicensed |
+| MiniCheck | 35/40 — 16/20 licensed, 19/20 unlicensed |
+| MiniCheck **rescues** | **0** — DeBERTa's single error (X22) is MiniCheck's error too |
+| MiniCheck **disruptions** | **4** licensed claims DeBERTa got right (X01 · X13 · X23 · X33) |
+
+⛔ **On this corpus MiniCheck is strictly worse and rescues nothing.** The
+challenger-router hypothesis gains no support here either.
+
+⛔ **And the detector's cost stands at 11 of 20 licensed claims routed, for a
+verifier that made one error in forty.**
+
+### ⚠️ WHY the corpus came out this way — predeclared, not invented afterward
+
+DeBERTa's raw labels on the twenty unlicensed cases:
+
+```text
+contradiction 17   ·   neutral 2   ·   entailment 1
+```
+
+Against `detector-blind`, where DeBERTa returned `entailment` on **9 of 12**
+unlicensed cases. **This corpus's unlicensed members are overwhelmingly
+CONTRADICTED by their premise, not merely UNSUPPORTED by it** — and contradiction
+is the signal an NLI model is most directly trained to emit.
+
+⭐⭐ **The author flagged exactly this before any model ran** (X20 · X24 · X38 ·
+X04 · X08, recorded verbatim above at freeze time). It is therefore a
+**predeclared explanation**, not a post-hoc rescue of a failed hypothesis.
+
+⭐ **The sharpest formulation the evidence supports — and a design constraint
+nobody had articulated:**
+
+> **DeBERTa's temporal/scope collapse lives in the NEUTRAL regime, not the
+> CONTRADICTION regime.** An unlicensed claim that the premise *contradicts* is
+> easy. An unlicensed claim the premise merely *fails to support* is where the
+> failure lives. **A corpus that does not hold the neutral/contradiction
+> distinction fixed cannot test any hypothesis about that regime.**
+
+⚠️ **A consistent observation, at n=2 and reported as an observation:** the only
+two unlicensed cases DeBERTa judged **neutral** rather than contradiction — X28
+and X30 — are **both inside the risk regime**. Its single outright error, X22,
+is **outside** it. Two cases decide nothing; the direction is recorded because it
+was not arranged.
+
+### ⛔ What is NOT permitted to follow
+
+- ⛔ **No top-up.** The corpus stands intact as evidence, exactly as ruled.
+- ⛔ **No detector edit, no regex addition, no threshold change.** Rule digest
+  remains `18608a18…`.
+- ⛔ **The failure is not reinterpreted as a success.** H1 failed a fair,
+  predeclared, adequately-powered test of the question as posed.
+
+⭐ **What the corpus did establish, and it is not nothing:** on natural,
+unambiguous prose across the seven categories, **DeBERTa is 39/40 and the
+detector routes 55% of licensed claims for no measurable benefit.** Every
+architecture considered in this lane was calibrated on constructed adversarial
+material; on naturally authored material the problem the architecture exists to
+solve **largely did not occur.**
+
+### The lawful next act, if the founder wants one
+
+A second prospective corpus, independently authored, with **one** added
+constraint and no others: **the unlicensed member must be UNSUPPORTED by its
+premise, never CONTRADICTED by it.** That is a constraint on the semantic
+relation, ⛔ not on vocabulary, not on any verifier's weakness, and not on the
+detector — so it does not reintroduce adversarial construction. It is the
+control this corpus lacked, discovered by its own author in advance.
+
+**Standing: H1 closure-risk FAILED BLIND · H2 challenger-router UNSUPPORTED HERE
+· detector cost 55% on natural material · neutral/contradiction identified as the
+uncontrolled variable · production UNTOUCHED.**
