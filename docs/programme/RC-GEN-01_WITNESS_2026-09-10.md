@@ -529,7 +529,86 @@ a failed check REFUSES the proposal    a failed check asks for a rewrite and
 source alone catch `large change` — which no run's own `reason` ever flagged?** If
 it cannot, the separation is decorative.
 
-⛔ Nothing built. **Awaiting the founder's direction on the crux.**
+## ⭐ FOUNDER RULING — separate source-only call, and analyse the candidate independently
+
+*"A same-call plan can still become: understand source → write candidate →
+reinterpret prior understanding so candidate fits. That is not enough separation
+for a gate whose failure mode is already confident self-description of fidelity that
+the wording does not possess."*
+
+```
+A  SOURCE ANALYSIS     source only · no candidate · no rewrite task   -> Gs
+B  GENERATION          source + request + Gs                          -> C
+C  CANDIDATE ANALYSIS  candidate only · no source · no verdict        -> Gc
+D  COMPARISON          Gs vs Gc, DETERMINISTIC                        -> admit / refuse
+```
+
+⭐ **The independence is INFORMATION separation, not model-brand separation.** Same
+model is acceptable. The source analyser never sees the candidate; the candidate
+analyser never sees the source; neither decides admission; the comparator is
+deterministic.
+
+⛔ **Closed typed vocabulary, never prose** — an extractor emitting *"the passage
+says the change is important but not necessarily large"* has drifted back into
+interpretation, and the comparison would then need another semantic judgement.
+
+⛔ **SC-11: a mismatch REFUSES**, surfaced as `revision_not_semantically_conservative`.
+No automatic second attempt — *"otherwise the verifier quietly becomes an iterative
+optimiser and the acceptance boundary disappears."* A new intentional invocation may
+try again; that is different from laundering attempt two through the same act.
+
+## ⭐⭐ THE DESIGN GATE — PASSED (comparator half)
+
+**17 falsifiers.** `lib/manuscript/revision/semanticGraph.ts` — no model, no
+provider, no prompt; the test asserts the module imports none.
+
+```
+⭐ the REAL run-8/9 candidate is REFUSED from a graph derived solely from the source
+   "significant transformation" -> "large change"
+      added_property   node 1  magnitude=high
+      dropped_property node 1  significance=asserted
+   "ongoing process" -> "he was already engaged in"
+      added_property   node 4  agency=active_participation
+
+⭐ SC-10 the run-9 MIGRATION is reported as `reassigned_property`, distinctly
+   from the drop/add pair — the finding no per-phrase rule can reach
+
+SC-8  dropped edge fails · changed edge KIND fails
+SC-9  merged nodes fail (node_count)
+SC-11 the verdict carries no retry/regenerate/revise affordance — asserted
+      by a regex over the serialised verdict
+      an identical graph is ADMITTED — the gate is not "always refuse"
+      DIFFERENT LABELS with identical structure are ADMITTED — the analysers
+      never see each other, so label mismatch must never be a finding
+```
+
+### ⚠️ A DEFECT FOUND WHILE BUILDING THE GATE — in the vocabulary, not the comparator
+
+The first draft collapsed the source's two distinct degree words —
+*significant* transformation and *meaningful* development — into one
+`significance` property. **The run-9 migration then became UNREPRESENTABLE**: both
+nodes carried the same property in the source, so moving it between them produced no
+finding, and the comparator admitted it.
+
+⭐ **The founder's own worked example had them separate** (`relational_change.significance`
+· `integration_development.meaningfulness`); flattening them was mine. Now two
+properties, with the reason recorded in the type itself.
+
+> **A closed vocabulary that cannot represent a distinction the source draws will
+> silently admit its loss.** That is the vocabulary's acceptance criterion, and it is
+> not satisfied by being closed.
+
+### ⛔ WHAT THIS GATE DOES NOT ESTABLISH
+
+It proves the **comparator** rejects the real candidate **given correct graphs**.
+⛔ **Whether the ANALYSERS produce correct graphs from real prose is a separate
+provider witness and is NOT established.** The analysers are not built.
+
+```
+SC-1..SC-6 · SC-7..SC-11   comparator half  PASSED · 17/17
+analyser prompts           NOT BUILT
+analyser witness           NOT WITNESSED
+```
 
 ### Specimen 2 — ninth consecutive `no_change`
 
