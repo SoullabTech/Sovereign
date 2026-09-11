@@ -386,3 +386,13 @@ wrote; the list omits the plugin; the plugin is never registered.
 **Chain closed at every link: CLI → generated config → bundled config →
 runtime loader → binary contains the unloaded class.** Awaiting the
 founder's ruling on C′.
+
+### E4 · 2026-09-11 · founder observation — "it's working now after 5 rounds"
+
+Same installed artefact, nothing changed on the device or in source. After
+about five turns the voice loop is voicing replies and returning to
+listening. Recorded as stated. Consistent with the predecessor §12.12
+characterization ("resolves itself with time") and with a warm-up-shaped
+fault on the web/TTS side; not evidence of repair, since none was applied,
+and not evidence against C′. The stall is intermittent; a working stretch
+is expected within the same session.
