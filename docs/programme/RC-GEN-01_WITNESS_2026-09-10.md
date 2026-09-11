@@ -761,7 +761,14 @@ does not exist. As a schema failure it is fixed by extending the relation
 vocabulary, and the SV-1 known-bad already establishes what happens when the
 schema cannot hold a distinction: **it disappears before comparison.**
 
-⛔ Not repaired. Recorded for a founder ruling on the reclassification.
+⭐ **RULED: RECLASSIFIED.** *"No prompt instruction can manufacture a legal relation
+that the schema does not admit. Blaming A there would violate the very
+representational-adequacy law the architecture already ratified."*
+
+```
+A1  analyser overcommit          STANDS
+A2  missing directed relation    SCHEMA FAILURE · SV-1
+```
 
 ### ⚠️ A1, second observation — the DOMAIN may invite the overcommit
 
@@ -789,6 +796,64 @@ is **A/C semantic extraction accuracy, not D.**
 **The separation worked.** D was never allowed to launder an inaccurate source graph
 into an authoritative fidelity verdict. *That is exactly why A had to be witnessed
 independently before D.*
+
+## ⭐ SV-2 · SV-3 — bounded schema adequacy repair → `analyzer/2`
+
+⛔ **Prompt tuning HELD.** Only the representation was touched.
+
+### ⛔ VERSION IS EVIDENCE
+
+`RC-GEN-01/analyzer/1` owns the A-S failure permanently. A schema repair creates a
+**new subject**: `analyzer/2`. **A-S, C-S, AC-1 and AC-2 must all be witnessed again
+against v2; the v1 failure is not overwritten.**
+
+### ⭐ SV-2 RELATION ADEQUACY — `has_object` added
+
+General, never fixture-shaped. Falsified on the founder's three non-fixture cases —
+attention toward a sound · hostility toward a stranger · orientation toward a
+landscape — and a test asserts no relation name mentions this specimen.
+
+⭐ **The v1 gap is now a DISTINCTION rather than the only expressible option**: a
+graph joining a relation node to its object, and the v1 shape with both nodes and no
+edge, are compared and **refused as different**.
+
+### ⭐ SV-3 DISCRIMINATOR — the agency dimension HOLDS all three, unforced
+
+```
+ACTIVE    "He deliberately worked on integrating the experience."  active_participation
+PASSIVE   "He underwent the procedure while unconscious."          undergone
+NEUTRAL   "Integration continued over the following months."       unspecified / omitted
+```
+
+All three representable · **mutually distinguishable by the comparator** · and
+neutral is expressible **without choosing a participation role**, because omitting
+the property is legal.
+
+⭐ **So the schema does not force the commitment. Under the founder's own
+conditional — *"If yes, retain the domain and A1 remains purely analyzer error"* —
+A1 stands as analyser error.** ⛔ The repair for it is a prompt act, and prompt
+tuning is held.
+
+### ⚠️ SV-4 — A THIRD ADEQUACY GAP, found while running the SV-3 discriminator
+
+⭐ **The schema lets ANY property attach to ANY node kind.**
+
+In A-S v1, `agency` was attached to the **transformation** node. But a
+transformation does not act or undergo — **the person does.** The dimension may not
+apply to that node at all, and the schema gave the analyser no way to say so: its
+only options were to pick a participation role or to omit a property that was never
+applicable.
+
+> ⛔ **`unspecified` and `not applicable` are DIFFERENT CLAIMS.** *"The source does
+> not say whether he participated"* is not *"participation is not a property of this
+> node."* Collapsing them is the same shape as SV-1.
+
+⚠️ **This may be the actual root of A1** — the analyser was asked a question that
+did not apply to the node it was describing, and a closed domain with no *not
+applicable* value makes the tempting answer the only non-silent one.
+
+⛔ **NOT REPAIRED.** Surfaced for a founder ruling: the repair is a schema change,
+and the authorized acts were SV-2 and SV-3 only.
 
 ## ⭐ A-P and C-P — analyser PROTOCOL built · 25 falsifiers
 

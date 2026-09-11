@@ -30,13 +30,32 @@ import { runStructured } from '../../ai/structured/router';
 import { logAskDiagnostic, sanitizeCause, requestIdOf } from '../ask/askDiagnostics';
 import type { SemanticGraph, SemanticNode, SemanticEdge, NodeKind } from './semanticGraph';
 
-export const ANALYZER_VERSION = 'RC-GEN-01/analyzer/1';
+/**
+ * ⛔ VERSION IS EVIDENCE. `analyzer/1` owns the A-S failure permanently:
+ *   A1 analyser overcommit (agency = undergone where the source commits to none)
+ *   A2 representational inadequacy (no relation could express directedness)
+ * A schema repair creates a NEW SUBJECT. The v1 failure is not overwritten, and
+ * A-S / C-S / AC-1 / AC-2 must all be witnessed again against v2.
+ */
+export const ANALYZER_VERSION = 'RC-GEN-01/analyzer/2';
 export const ANALYZER_TOOL_NAME = 'semantic_graph';
 
 const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
 
 const KINDS: readonly NodeKind[] = ['event', 'state', 'process', 'relation', 'entity', 'unspecified'];
-const RELATIONS = ['causes', 'results_in', 'constitutes', 'qualifies', 'within', 'distinct_from'];
+/**
+ * ⭐ SV-2 RELATION ADEQUACY (analyzer/2). `has_object` was added because A-S v1
+ * found a source distinction the vocabulary could not hold: an orientation is
+ * directed AT something, and nothing in causes/results_in/constitutes/qualifies/
+ * within/distinct_from can say so. Under SV-1 that is a schema failure, and no
+ * prompt instruction can manufacture a relation the schema does not admit.
+ *
+ * ⛔ GENERAL, NEVER FIXTURE-SHAPED. `has_object` carries attention toward a sound,
+ * hostility toward a stranger, an orientation toward a landscape. Adding anything
+ * named for this specimen would be teaching the test.
+ */
+const RELATIONS = ['causes', 'results_in', 'constitutes', 'qualifies', 'within',
+  'distinct_from', 'has_object'];
 /**
  * ⭐ PER-PROPERTY DOMAINS. A value legal for one semantic dimension is not
  * automatically legal for another.
