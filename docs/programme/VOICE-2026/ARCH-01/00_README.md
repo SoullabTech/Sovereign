@@ -107,6 +107,8 @@ The question: *can one native authority keep MAIA's physical auditory/vocal appa
 
 **`MAC-COMPILE-01` recorded (founder, 2026-09-11, on exactly `eef487422`; `../KERNEL-00_MAC-COMPILE-01_2026-09-11.md`):** `swift build` PASS · `swift test` 1 FAIL (C1, the sliding-window test) · source gate PASS · `xcodegen` PASS · unsigned iOS compile 2 errors (C2, actor isolation of `kernel.recorder`) · signed compile blocked behind them · `.allowBluetooth` deprecated (C3). Native viability established; three bounded compile-era fixes named. **PRE-WITNESS-01 EXECUTED** on the lane branch after that record: P1–P8 + C1–C3, instrumentation and record only — the law's thresholds and named set unchanged (K00-02, K00-05 metric and K00-17 clarified in place). **The new SHA is not compiled and not witnessed; it earns itself independently on the Mac (build · test · gate · xcodegen · unsigned · signed), and only on all-green does the device witness HOLD lift.**
 
+**`MAC-COMPILE-02` recorded (founder, 2026-09-11, on exactly `488e0666c`; `../KERNEL-00_MAC-COMPILE-02_2026-09-11.md`):** `swift build` PASS · `swift test` 17/17 · source gate 13/13 · `xcodegen` PASS · unsigned iOS compile PASS · signed device build PASS. **DEVICE WITNESS HOLD LIFTED** by the standing rule; **witness READY · UNSPENT** — nothing installed or launched. Architecture unchanged; BENCH-01 / BRIDGE-01 / MIGRATE-01 remain closed. Next bounded act: install `488e0666c` on the iPhone and execute the KERNEL-00 device witness under the ratified runbook, recording whatever the organism actually does.
+
 ## 3. Supersessions this package introduces (for the record)
 
 | Earlier text | Superseded by | Note |
