@@ -1,0 +1,95 @@
+{
+  "note": "Eighteen items as premise and hypothesis only. No original ids, no domains, no labels, no model outputs, no indication of which items are which. Order shuffled.",
+  "items": [
+    {
+      "id": "C01",
+      "premise": "The lad Terry took on used to ask me about every joint, now he just gets on with it.",
+      "hypothesis": "The lad has become competent at the work."
+    },
+    {
+      "id": "C02",
+      "premise": "Everyone at the yard calls him Doc, though I don't think that's actually his name.",
+      "hypothesis": "The man's name is not Doc."
+    },
+    {
+      "id": "C03",
+      "premise": "Tom\u00e1s Iglesias applied for the joinery apprenticeship at Hallward & Sons because he wants a workshop of his own one day.",
+      "hypothesis": "Hallward & Sons gave Tom\u00e1s the apprenticeship."
+    },
+    {
+      "id": "C04",
+      "premise": "The bloke who sorted our boiler turned up again on Tuesday, over at the neighbours'.",
+      "hypothesis": "The same man worked on the neighbours' boiler."
+    },
+    {
+      "id": "C05",
+      "premise": "Half the rowing club drinks in the Fox on a Friday and Priya's always in there.",
+      "hypothesis": "Priya rows with the club."
+    },
+    {
+      "id": "C06",
+      "premise": "Dev's been scrolling through flats in Sheffield on his phone all week.",
+      "hypothesis": "Dev intends to move to Sheffield."
+    },
+    {
+      "id": "C07",
+      "premise": "Marcus said he'd swing by after work, so don't lock the back gate.",
+      "hypothesis": "Marcus will come round in the evening."
+    },
+    {
+      "id": "C08",
+      "premise": "Sam brought someone to the wedding and never introduced her to a single one of us.",
+      "hypothesis": "Sam is seeing the woman he brought."
+    },
+    {
+      "id": "C09",
+      "premise": "Marcy took the job in Perth and six months later the marriage was over.",
+      "hypothesis": "The move to Perth ended the marriage."
+    },
+    {
+      "id": "C10",
+      "premise": "Whenever the servers go down it's Bilal fixing them at two in the morning.",
+      "hypothesis": "Bilal is the person responsible for the servers."
+    },
+    {
+      "id": "C11",
+      "premise": "The Tiverton orchard lost most of its apple crop that year; a late frost in May had killed the blossom.",
+      "hypothesis": "The Tiverton orchard finished that year out of pocket."
+    },
+    {
+      "id": "C12",
+      "premise": "We've lived next to the Okonkwos eleven years and I still don't know their first names.",
+      "hypothesis": "The Okonkwos are unfriendly people."
+    },
+    {
+      "id": "C13",
+      "premise": "Rita hasn't touched her dinner and she's been upstairs since four.",
+      "hypothesis": "Rita is upset about something."
+    },
+    {
+      "id": "C14",
+      "premise": "Ade gave up coffee back in February and he's sleeping much better now.",
+      "hypothesis": "Quitting coffee is what improved Ade's sleep."
+    },
+    {
+      "id": "C15",
+      "premise": "Since the surgery Bea's been walking down to the shop and back on her own.",
+      "hypothesis": "Bea has recovered from the surgery."
+    },
+    {
+      "id": "C16",
+      "premise": "The new fellow shadowed Aunty Fern all week on the delivery round.",
+      "hypothesis": "The new fellow is being trained to take the round over."
+    },
+    {
+      "id": "C17",
+      "premise": "We switched to the Italian flour last month and the bread's been coming out better.",
+      "hypothesis": "The change of flour is what improved the bread."
+    },
+    {
+      "id": "C18",
+      "premise": "I see Fareed at the bus stop now and then and we nod at each other.",
+      "hypothesis": "Fareed catches the same bus as the speaker."
+    }
+  ]
+}

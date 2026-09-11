@@ -2134,3 +2134,118 @@ supply the category names, the result is worthless.**
 the open class within one corpus (p=0.022) · not explained by case difficulty
 (−2.7 pp) · explicitness NOT established as cause · world-knowledge completion
 has 6 new candidates and NO independent classification · production UNTOUCHED.**
+
+---
+
+## BLIND INFERENCE-STEP CLASSIFICATION — authorized, step 1 of 2 (2026-09-11)
+
+```text
+BLIND INFERENCE-TYPE CLASSIFICATION     AUTHORIZED
+9 promoted cases                        YES
+9 preserved-neutral decoys              YES
+category list supplied                  NO
+model results supplied                  NO
+free-text classification first          YES
+blind clustering second                 YES
+production / architecture changes       NO
+```
+
+⭐ **The decoys are the founder's addition and they change what can be
+concluded.** Classifying only the nine errors invites an annotator to
+manufacture a commonality from the single fact that every item was selected for
+being wrong. With controls mixed in, the question becomes the stronger one:
+***is there a kind of inferential move that disproportionately characterises the
+promoted errors rather than ordinary plausible reasoning the verifier handled
+correctly?*** If the same descriptions are equally common among the preserved
+cases, the name is too broad and is abandoned.
+
+### ⚠️ TWO DEFECTS IN MY OWN DRAW, CAUGHT BEFORE IT RAN
+
+**1. Provenance would have leaked.** T078 comes from the **triples** corpus
+(longer, determinate premises); the other eight promotions are **terse**. Nine
+decoys drawn only from terse would have made corpus style correlate with error
+status. Decoys are drawn **8 terse + 1 triples** — the same 8:1 split as the
+suspect group.
+
+**2. My first decoy pool was wrong, and it drew a contaminated control.** I
+defined it as *"neutral·plausible and not promoted"*, which admitted **U52** —
+the one case DeBERTa called `contradiction`. ⛔ **That is an error too, just a
+different one**, and it would have sat in the control group as though it were a
+success. The pool is now *correctly preserved* (called `neutral`), 30 cases,
+with U52 explicitly excluded and the exclusion recorded in the key.
+
+```text
+items file   scripts/verifier-probe/inference-step-items.json
+key file     scripts/verifier-probe/inference-step-key.json   ⛔ NOT given to the classifier
+seed         20260911   (recorded so the draw is reproducible and auditable)
+decoys       U03 U06 U11 U25 U36 U44 U47 U52-excluded … + one triples case
+blinding     no original ids · no domains · no labels · no model outputs ·
+             no group marks · order shuffled
+```
+
+### The prompt asks one question and forbids the rest
+
+> *"What inferential step, if any, is required to get from the premise to the
+> hypothesis?"*
+
+No category list. No rating. No grouping. And explicitly: ⛔ *"These items were
+not assembled to illustrate anything. Do not try to work out why they were
+chosen or what they have in common — looking for a pattern would destroy the
+result."*
+
+⭐ **Checked mechanically before the run**: the prompt contains none of *world
+knowledge · completion · causal · overcommit · promoted · preserved · error ·
+neutral · entail · class · cluster*.
+
+**Step 2 — blind clustering — is a SEPARATE act on the frozen descriptions, and
+is not authorized by this.**
+
+```text
+Read exactly one file:
+
+  scripts/verifier-probe/inference-step-items.json
+
+It holds 18 items. Each is a PREMISE — one or two sentences of ordinary prose —
+and a HYPOTHESIS, a short sentence about the same situation.
+
+For each item, answer one question in your own words:
+
+    What inferential step, if any, is required to get from the premise to the
+    hypothesis?
+
+Describe the step. Do not judge whether the hypothesis is true, supported,
+warranted or reasonable. Do not rate anything. Do not sort the items into
+groups, and do not invent names for kinds of items — just say, item by item,
+what a reader would have to do in their head to get from the one sentence to
+the other. If the answer is "nothing, it simply restates part of the premise",
+say that.
+
+Write two or three sentences per item. Be concrete about the specific step in
+that specific item rather than reaching for a general term.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "classifier": "<describe yourself in a few words>",
+  "date": "2026-09-11",
+  "method": "<two or three sentences on how you approached it>",
+  "items": [
+    { "id": "C01", "inferential_step": "<your description>" }
+  ]
+}
+
+All 18, in the order given.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. Not the fixtures, not any .py, nothing under docs/,
+    nothing beginning with `verifier-probe-` or `inference-step-key`. Any of
+    them would ruin this task.
+  - Do not search the repository.
+  - These items were not assembled to illustrate anything. Do not try to work
+    out why they were chosen or what they have in common — describing each one
+    on its own terms is the entire task, and looking for a pattern would
+    destroy the result.
+
+In your final message report only: the output path and the number of items
+described.
+```
