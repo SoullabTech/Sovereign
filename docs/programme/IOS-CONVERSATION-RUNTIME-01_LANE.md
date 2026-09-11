@@ -1099,3 +1099,23 @@ teardown → `Category set to playandrecord/measurement` → `Session
 activated for listening` → `SpeechRecognition start`), the ~30 s cut
 segment, S1–S4 one line each, one long reply, any stall, and the Account
 Settings footer + Native App Build lines. No source change authorized.
+
+### E15 · 2026-09-11 ≈08:28–08:34 local · stall observed, NOT captured — debugger was not attached
+
+Founder took further turns after the first reply (screenshots 08:29: long
+utterance cut at ~30 s, tape restarted; 08:34: two MAIA replies delivered
+as text, no voice, state `thinking` with no stop control, silent-mode
+indicator on). Founder: "thinking seems stuck but the words come up
+immediately but no voice", then "I didn't notice console running with this
+last round". The full console re-paste ends at the same line as E14
+(`Saved 3 messages`, ≈08:27:45), so **the Xcode debug session had ended
+before the listen re-entry of the first turn and before every later
+turn.** The 08:34 stall therefore has **no console evidence** and is
+recorded as an observation only, with the same pre-declared reading as
+E12 (native path now active; capture the failure; infer nothing).
+
+Instrument note: an app that outlives its debug session keeps running on
+the phone with no console; nothing in the app changes. Next run: stop,
+⌘R, confirm the registration line, take **two short turns only** and
+paste before attempting a long session. Silent switch to ring for the
+next run (control; E14 obs. 3). Acceptance table unchanged from E14.
