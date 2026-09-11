@@ -107,12 +107,28 @@ is a callback the application supplies; absent it, the flow errors rather than
 pretending. This is charter §12's contract already implemented by a candidate —
 authentication asks for delivery and the application owns transport.
 
-⚠️ **But the contract is thinner than §12 requires.** What was read is
-`accepted | rejected` at call time. §12 also demands
-`queued | delivered | bounced | failed` **after** the call. Whether any candidate
-models post-acceptance delivery state is **UNANSWERED** — and it is precisely the
-gap that produced **FR-B**. Carry to Stage 3 as a distinction question, not a
-feature request.
+⚠️ **CORRECTED 2026-09-11 (founder): the delivery contract is TWO layers, and the
+auth system is only owed the first.** Asking an auth framework for recipient-delivery
+truth would select Soullab's identity architecture on which project happens to
+contain the fanciest SMTP subsystem.
+
+```
+AUTH  →  REQUEST STATE          MAIL  →  DELIVERY LEDGER
+        created                         accepted by transport
+        queued                          delivered
+        submission attempted            temporary failure
+        accepted | rejected             permanent bounce · complaint
+                                        expired · unknown
+```
+
+**MEMBER-ACCESS-01 demands a good delivery SEAM and the request layer** — enough
+that the system can never say *"we sent it"* when no message exists. **MAIL-xx owns
+deliverability truth.** A candidate is tested on the seam, never on its SMTP stack.
+
+⚠️ And one precision that survives into both layers: **"sent" means the transport
+accepted the handoff. It does not prove a mailbox received anything.** An SMTP server
+accepting a message and a member seeing it are different events, and collapsing them
+is FR-B in miniature.
 
 ## 4 · Attempting to DISPROVE the provisional hypothesis
 
@@ -161,9 +177,27 @@ the dominant term in migration cost. `NOT READ`; Stage 2 remainder.
 ### D5 · "One session authority" meets Capacitor — **CONSTRAINT, NOT REFUTATION**
 
 `SameSite=Lax` cookies are not sent from the iOS WebView; Soullab uses `x-member-id`
-via `apiFetch()` (CLAUDE.md trap). **Any candidate must support header-based session
-carriage on native**, or iOS members lose the door. This is a named filter for
-Stage 4, and it eliminates any candidate that assumes browser cookies.
+via `apiFetch()` (CLAUDE.md trap).
+
+⚠️ **CORRECTED 2026-09-11 (founder).** The test was written as *"eliminates any
+candidate that assumes browser cookies"*, which is too blunt — it would wrongly
+eliminate systems whose **browser** flow uses cookies while their **API** flow issues
+a bearer token. The test is **native-session competence**, not cookie abstinence:
+
+> **Eliminated: any candidate that cannot provide a first-class native/API session
+> path independent of browser-cookie semantics.**
+
+The preferred Stage 4 shape follows from this, and it is strictly better than
+carrying `x-member-id` forever as a parallel notion of identity:
+
+```
+WEB     secure cookie  ─┐
+                        ├─▶  SAME SESSION AUTHORITY  ─▶  SAME MEMBER
+NATIVE  session token  ─┘
+```
+
+`x-member-id` is a **parallel identity concept**, and under the governing criterion
+(*fewer concepts*) retiring it is part of the product value.
 
 ### D6 · The eight cannot be migrated by a flag — **REINFORCES the hypothesis**
 
@@ -181,16 +215,162 @@ research.
 D3 and D5 are binding constraints on any candidate. D1 is the decision Stage 4 must
 actually make.
 
-## 5 · Standing
+## 5 · The other four, read at source — **NOT SCORED** (founder: finish reading first)
+
+Answers only. No ranking, no recommendation.
+
+### Ory Kratos — `SOURCE-READ`
+
+| test | finding |
+|---|---|
+| **Identity** | ✅ Structural. **13 credential types** hang off the identity: `password · oidc · totp · lookup_secret · webauthn · code · passkey · profile · saml · deviceauthn · identifier_first · link_recovery · code_recovery` (`identity/credentials.go:91-149`) |
+| **Credential truth** | ✅ Credentials are **records**. No capability flag observed — F4's state is unrepresentable |
+| **Session authority** | ✅ One `Session` model carrying **AMR** — *"a list of authentication methods used to issue this session"* — plus AAL (`session/session.go:77-153`) |
+| **Native** | ✅ `Session.Token` is a bearer token distinct from the cookie (`session.go:151`) — **passes the corrected D5** |
+| **Recovery** | `code` strategy spans **login · recovery · registration · verification** in one mechanism (`selfservice/strategy/code/`) |
+| **Doorway** | ⭐ **`idfirst` is a first-class, configurable login strategy** (`selfservice/strategy/idfirst/`, `SelfServiceLoginFlowIdentifierFirstEnabled`). *Identity first, authentication method second* is not a pattern to build — it is a supported flow |
+| **Mail seam** | ✅ `courier` has **both `smtp_channel.go` and `http_channel.go`** — Soullab can own delivery over HTTP **without forking the core** |
+| **Failure truth** | ⚠️ Four states: `Queued · Processing · Sent · Abandoned` (`courier/message.go:26-29`). **Layer 1 only** — exactly as predicted. "Sent" = handed to transport |
+| **Observability** | Durable courier records with retry counts; session AMR is itself an auth-event record |
+| **Operational weight** | A separate Go service |
+
+### SuperTokens — `SOURCE-READ`
+
+| test | finding |
+|---|---|
+| **Identity** | ✅ Shared `authRecipe` layer beneath per-method recipes: `emailpassword · passwordless · webauthn · mfa · oauth · saml` |
+| **Credential truth** | ⭐ **`webauthn` IS in core** (`io/supertokens/webauthn`, plus its own web API) — an earlier doubt in this pass was wrong |
+| **Session authority** | One session model, **access + refresh token** (`io/supertokens/session/`) |
+| **Native** | ✅ Token-based by construction — **passes corrected D5** without a cookie/native split |
+| **Mail seam** | ⭐ **No SMTP in core at all.** Delivery is entirely the application's — the cleanest seam of the four |
+| **Failure truth** | Seam only; no ledger. Layer 1 by the application's own implementation |
+| **Observability** | `auditlog` is a core module |
+| **Migration** | ⭐ **`bulkimport` exists as a core concern** — the only candidate where import is a named subsystem |
+| **Operational weight** | Core service (Java) + backend SDK + frontend SDK — three moving parts |
+
+### ZITADEL — `SOURCE-READ`
+
+| test | finding |
+|---|---|
+| **Identity / credential truth** | Passkeys and WebAuthn are first-class domain objects (`internal/domain/human_web_auth_n.go`, `user_v2_passkey.go`) |
+| **Observability** | ⭐ **Event-sourced core** (`internal/eventstore/` — aggregates, events); notification is built on **projections**. The strongest observability substrate of the four, and directly answers FR-D |
+| **Mail seam** | `internal/notification/` with `channels · senders · handlers · messages` |
+| **Failure truth** | Not established in this pass — `NOT READ` at the state-machine level |
+| **Operational weight** | Full identity platform; heaviest of the self-hostable Go options |
+
+### Keycloak — `SOURCE-READ` (partial) + `FOUNDER-CITED`
+
+| test | finding |
+|---|---|
+| **Identity / credential truth** | ✅ Credentials are separate records behind an SPI: `CredentialModel · CredentialProvider · CredentialInputValidator · UserCredentialStore` |
+| **Native** | OIDC bearer tokens — passes corrected D5 |
+| **Failure truth** | ⚠️ `DefaultEmailSenderProvider` calls `transport.sendMessage()` and returns success or throws `EmailException` (`FOUNDER-CITED`). **SMTP submission truth only** — no recipient-delivery state machine |
+| **Operational weight** | JVM; heaviest of all candidates |
+
+### What the four reads establish jointly
+
+1. ⭐ **The founder's identity ≠ authenticator hypothesis is not novel — it is the
+   consensus.** All four model credentials as records against a durable identity.
+   **Soullab's `has_webauthn` flag is the anomaly, not the design.**
+2. ⭐ **No candidate provides layer-2 delivery truth**, and the best of them (Kratos)
+   stops precisely at "handed to transport." This **confirms the charter §12
+   split** rather than exposing a gap: deliverability belongs to MAIA's mail lane.
+3. **Native-session competence is universal** once D5 is stated correctly. It
+   eliminates nobody — which is why the correction mattered.
+4. **Kratos answers the doorway question directly** with `idfirst`.
+
+## 6 · 🔴 MIGRATION IS AN ACCEPTANCE CONDITION, NOT A PHASE
+
+**Founder ruling 2026-09-11**, and it changes what the candidates are tested for:
+
+> **No architecture wins if its migration experience is worse than the system it
+> replaces.** That may eliminate otherwise elegant solutions.
+
+> **Migrate the system around the member, not the member around the system.**
+
+Both populations must improve **simultaneously**:
 
 ```
-STAGE 2   OPEN · PARTIAL
-  READ AT SOURCE     Better Auth
-  NOT READ           Ory Kratos · ZITADEL · SuperTokens · Keycloak
-  BLOCKED            web.dev · pages.nist.gov (network egress)
-  UNANSWERED         post-acceptance delivery state in any candidate
-                     what mature systems do for passkey-only recovery
+EXISTING   "I came back and it just worked."
+NEW        "I joined and never had to understand the authentication system."
+```
+
+The dangerous outcome is a cleaner architecture bought with current members' pain.
+
+### 6.1 · Existing-member invariants (binding)
+
+- No mass password reset · No forced new account creation
+- **No duplicate identities because someone used a different sign-in method**
+- No loss of profile, history, memory, programme state or permissions
+- Existing password members still enter by password **during** migration
+- Existing OTP members still enter by email code
+- Retained Apple/Google members are not locked out mid-transition
+- **A stronger authenticator is offered once safely inside — never a migration
+  ceremony at the front door.** Passkey enrollment reads as *"make returning easier
+  with Face ID"*, never *"your account has changed; fix it now"*
+- **Recovery must work before any old path is retired**
+
+### 6.2 · Progressive migration, not a cutover
+
+```
+1  new architecture alongside a compatibility layer
+2  existing member signs in with whatever already works
+3  once safely authenticated, link/migrate that credential to the durable identity
+4  offer the preferred future authenticator
+5  verify recovery works
+6  retire a legacy path only when nobody depends on it
+```
+
+> **Compatibility is temporary; identity continuity is permanent.** Legacy plumbing
+> behind the scenes is tolerable. A member *experiencing* that plumbing is not.
+
+### 6.3 · Migration acceptance suite — every population, before anything goes live
+
+```
+returning password member · returning email-code member · Apple member
+Google member · existing passkey member · broken has_webauthn member (the eight)
+partially onboarded member · member returning after 6 months · member on a new phone
+member who lost the old device · new member joining for the first time
+```
+
+Each must end at **the same person, the same account, the same history, safely
+inside.** And **half-failed migration must be tested explicitly** — the answer may
+not be *"Kelly fixes the database."* That is the rescue-cost metric from Stage 1
+appearing as a design requirement.
+
+### 6.4 · New members inherit none of it
+
+```
+INVITATION / JOIN → identify yourself → verify once → ONE Soullab identity
+   → onboarding → offer easiest strong return method → inside
+```
+
+They should never learn that Soullab had ten creation paths and seventeen session
+minters.
+
+## 7 · Standing
+
+```
+STAGE 2   SOURCE READING COMPLETE · NOT SCORED
+  READ AT SOURCE     Better Auth · Ory Kratos · SuperTokens · ZITADEL · Keycloak
+  BLOCKED            web.dev · pages.nist.gov (network egress; founder citations stand)
+  NOT ESTABLISHED    ZITADEL notification state machine
+                     what mature systems do for passkey-only recovery on a new device
+  UNRESOLVED         D1 — the recovery node. Stage 4 decides; Stage 2 must not.
+
+NEXT   stop Stage 2 · compare architectures (Stage 3 distinctions, then Stage 4)
 
 DO NOT (founder, honoured): choose vendor · rewrite auth · activate email-first
                             migrate members · delete social auth · change WebAuthn state
+                            score candidates before comparison
 ```
+
+### The comparison criteria, as they now stand
+
+Eleven tests (§5) plus three criteria that can each eliminate on their own:
+
+1. **Fewer concepts** — judged on **retirement power**: which of the 10 creators,
+   17 session minters, 39 auth modules and `x-member-id` actually disappear.
+2. **Migration experience** — §6. No architecture wins if migration is worse than
+   what it replaces.
+3. **Sovereignty** — no identity provider in the path; the D1 recovery decision.
