@@ -2163,3 +2163,134 @@ pointed at, and **a dirty tree is reported as dirty** — the evidence then atta
 no commit, which is a fact the ruling needs rather than one to suppress. It caught its
 own uncommitted state on the first run. Also: `MAIA_INFERENCE_MODE` set-to-empty now
 prints `''` rather than `(unset)`; they are different claims.
+
+## ⛔⛔ A-S ON `analyzer/3` — WITNESSED · FAILED
+
+⚠️ **TWO RUNS ARE IN THE FOUNDER'S TRANSCRIPT AND ONLY ONE IS EVIDENCE.**
+
+```
+RUN 1   at 65c105d79 · provider REACHED · 4 real graphs · THIS IS THE EVIDENCE
+RUN 2   at be03befcc · 401 authentication_error on every call · evidence of NOTHING
+```
+
+⛔ **Run 2's nine failures are MY ERROR, not a finding.** I told the founder to
+extract the credential with `head -1`; `.env.local` holds **three** keys and the
+valid one is **line 2** — the founder's own earlier extraction used `sed -n '2p'`.
+
+> ⚠️ **AND THE LENGTH CHECK DID NOT CATCH IT.** `${#ANTHROPIC_API_KEY}` printed
+> `108`, exactly the expected length, because a *wrong* key is the same length as a
+> right one. **The length check rules out the concatenation defect and nothing else.
+> It is necessary, not sufficient**, and I presented it as though it were both.
+
+⚠️ **Run 1's provenance line is the STALE LITERAL** (`subject frozen at a087e3167`) —
+it ran before the harness repair. Its SHA is established by the `git pull` output
+immediately above it (`b9615f1c5..65c105d79`), **not** by the harness. Tree
+cleanliness at run 1 is **UNKNOWN and unrecoverable**; run 2 showed the tree carrying
+seven untracked scratch entries, all `??`.
+
+### The source, verbatim
+
+> *"The experience facilitated a significant transformation in his relational
+> orientation toward the natural world, and the resulting shift in perspective
+> constituted a meaningful development in his **ongoing process of integration**."*
+
+⭐ **"his" is POSSESSIVE, not participatory.** The passage does not say he acted in
+the integration, and does not say he underwent the transformation — the
+transformation is *in his orientation*.
+
+### ⛔ A-S · what A emitted — 8 nodes, and TWO participation edges
+
+```
+person --undergoes---------------→ transformation
+person --actively_participates_in→ integration
+```
+
+⛔ **Both are the predeclared failure.** The rubric, written and frozen before the
+run: *"the correct graph carries NO PARTICIPATION EDGE AT ALL … a participation edge
+appearing merely to replace the old agency field is A1 in a new syntax, and A-S
+FAILS."*
+
+⭐⭐ **AND THE SECOND EDGE IS THE RUN-8/9 DRIFT ITSELF.** `actively_participates_in →
+integration` is exactly *"the process of integration he was already engaged in"* —
+the invented participation this entire architecture was built to catch. **The source
+analyser asserted it.**
+
+### ⭐⭐ THE FINDING THAT MATTERS MOST — THE OVERCOMMIT SURVIVED THE REPAIR
+
+```
+analyzer/1   transformation.agency = undergone      (a PROCESS is the subject)
+analyzer/3   person --undergoes--> transformation   (the PERSON is the subject)
+```
+
+⭐ **The category error is genuinely fixed** — the subject is now the person, and the
+endpoint typing makes the v1 shape inadmissible. ⛔ **The OVERCOMMIT is unchanged.**
+The dimension moved to where it belongs; the disposition to assert it where the
+source commits to nothing did not move at all.
+
+> ⛔⛔ **This partially FALSIFIES the reclassification recorded above.** A1 was
+> recorded as *"an analyser overcommit made possible and encouraged by an inadequate
+> ontology"* — which predicts that removing the inadequacy would reduce the
+> overcommit. **It did not.** A1 is a defect of its own, and the schema repair does
+> not touch it. The reclassification's second clause is withdrawn; its first clause
+> — that A1 was a real analyser overcommit — is now more strongly evidenced, not
+> less.
+
+### ⛔⛔ AND THE OVERCOMMIT CANCELS THE DETECTOR
+
+```
+A(source)      person --actively_participates_in--> integration
+C-large        person --actively_participates_in--> integration
+C-migration    person --actively_participates_in--> integration
+```
+
+⛔ **The drift D exists to catch is now present on BOTH sides, so D cannot report it
+as added.** An overcommitting source analyser does not merely produce a wrong source
+graph — **it silently disarms the comparator for exactly the defect it was built to
+find.** The separation architecture assumed A's errors would be independent of B's;
+here they coincide, because both are the same model answering the same temptation.
+
+### AC-1 — ONTOLOGY INSTABILITY, per the frozen rubric
+
+```
+D(A(source), C(C-good)) = structure_mismatch · node_count source 8 · candidate 7
+```
+
+The rubric: *"If A chose N nodes and C chose N +/- 1 … record ANALYZER / ONTOLOGY
+INSTABILITY and stop before B."* This is exactly N+1. ⛔ **AC-1 does not pass.**
+
+### AC-2 — NOT EVALUABLE · and it exposes instability in the participation reading
+
+Both second runs were **refused at admission**:
+
+```
+A second run   malformed — actively_participates_in cannot have a STATE as its object
+C second run   malformed — actively_participates_in cannot have a RELATION as its object
+```
+
+⭐ **The endpoint typing worked exactly as ruled — refusing, never normalizing.** That
+is V3-2/V3-3/V3-6 firing on live provider output rather than on a fixture.
+
+⛔ **But the consequence is that structural stability CANNOT BE DEMONSTRATED**, and
+the reason is itself a finding: **the same passage produced legal participation
+endpoints on run 1 and ILLEGAL ones on run 2.** The participation reading is not
+merely overcommitted; it is unstable about what kind of thing can even be
+participated in.
+
+### Standing after this witness
+
+```
+A-S                 ⛔ WITNESSED · FAILED  (predeclared criterion, first read)
+C-S                 not ruled — A-S gates it
+AC-1                ⛔ ONTOLOGY INSTABILITY per the frozen rubric
+AC-2                ⛔ NOT EVALUABLE — both second runs refused at admission
+SV-4 repair         HOLDS — category error fixed, endpoint typing enforced live
+A1                  ⛔ NOT REMOVED BY THE SCHEMA REPAIR · reclassification amended
+B                   HELD
+A→B→C→D             HELD
+production          UNTOUCHED
+```
+
+⛔ **No repair authorized. Reported, not designed around.** The prompt lever was ruled
+exhausted nine runs ago for generation; whether it is exhausted for *analysis* is a
+founder question, and the answer bears directly on whether a separated-analyser
+architecture can work at all when both analysers share the generator's disposition.
