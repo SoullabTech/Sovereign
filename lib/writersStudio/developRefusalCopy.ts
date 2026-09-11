@@ -56,3 +56,25 @@ export function causeLine(axes: RefusalAxes): string | null {
   if (axes.completion === 'truncated') return CAUSE_TRUNCATED;
   return CAUSE_UNKNOWN_LINE;
 }
+
+
+/**
+ * The cause line, or nothing, for a sentence that has already been chosen.
+ *
+ * ⛔ TWO EXPLANATORY AUTHORITIES MUST NOT RENDER AT ONCE. `refusalSentence`
+ * answers named refusals with a complete sentence that states its own cause —
+ * "This work has changed since the last version you kept…". The cause line was
+ * written to accompany the NEUTRAL outcome, which deliberately names no
+ * culprit. Rendered beneath a named sentence it does not add a second fact; it
+ * contradicts the first, and in production it said the cause was undetermined
+ * directly below a sentence determining it.
+ *
+ * The neutral sentence is identified by identity with `OUTCOME_SENTENCE`
+ * rather than by re-deciding which refusals are named. A second copy of that
+ * branch could drift out of step with the first; this cannot, because it is
+ * the same value.
+ */
+export function causeLineFor(sentence: string, axes: RefusalAxes): string | null {
+  if (sentence !== OUTCOME_SENTENCE) return null;
+  return causeLine(axes);
+}

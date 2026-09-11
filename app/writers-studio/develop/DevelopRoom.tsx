@@ -24,7 +24,7 @@
  * reading. The only act is: ask for a new reading, under one lens.
  */
 
-import { OUTCOME_SENTENCE, causeLine } from '@/lib/writersStudio/developRefusalCopy';
+import { OUTCOME_SENTENCE, causeLineFor } from '@/lib/writersStudio/developRefusalCopy';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -87,7 +87,7 @@ const INVOCATION_SENTENCE =
  * it, small, because a refusal is a fact about the machine and the member is
  * entitled to the fact — but the sentence is the half that matters.
  */
-function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
+export function refusalSentence(o: Extract<CommissionOutcome, { ok: false }>): string {
   if (o.refusal === 'unauthorized') return 'You are signed out. Nothing has changed.';
   if (o.refusal === 'unreachable') return 'The Studio could not be reached. Nothing has changed.';
   /* NOTHING RAN. Availability and configuration failures are named by refusal
@@ -825,9 +825,9 @@ export default function DevelopRoom({
                       always true, the cause sometimes is not knowable, and
                       folding them into one sentence is what made the old copy
                       assert something it had not established. */}
-                  {causeLine(commission.outcome) && (
+                  {causeLineFor(refusalSentence(commission.outcome), commission.outcome) && (
                     <p className="text-[12.5px] leading-relaxed opacity-55 mt-1" data-develop-cause>
-                      {causeLine(commission.outcome)}
+                      {causeLineFor(refusalSentence(commission.outcome), commission.outcome)}
                     </p>
                   )}
                   {commission.outcome.refusal === 'revision_not_current' && (
