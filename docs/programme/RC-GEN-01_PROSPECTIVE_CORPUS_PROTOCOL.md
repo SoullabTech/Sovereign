@@ -2315,3 +2315,27 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report only: the output path and the number of items
 described.
 ```
+
+---
+
+## STANDING — founder, while the annotator runs (2026-09-11)
+
+```text
+blind inference annotation          RUNNING
+blind descriptions                  NOT YET FROZEN
+clustering                          NOT AUTHORIZED
+epistemic-verification architecture UNTOUCHED
+production                          UNTOUCHED
+```
+
+**The next lawful act is one thing only: freeze the 18 descriptions verbatim and
+stop. ⛔ Do not interpret them.**
+
+The future question — *separately authorized, not now* — is whether those
+descriptions contain **recurring distinctions without our having supplied the
+distinctions beforehand.**
+
+⭐ **The prompt-cleaning episode is recorded as methodologically useful in its own
+right**: benign vocabulary hits were treated as contamination rather than
+explained away after detection. *An instrument consulted only until it disagrees
+is not an instrument.*
