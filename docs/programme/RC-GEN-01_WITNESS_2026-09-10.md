@@ -268,6 +268,28 @@ claims … intact". Both times the authoritative wording compressed a distinctio
 *"It is doing exactly what a good acceptance specimen should do: the first repair
 eliminated the obvious failure and exposed the subtler one beneath it."*
 
+## ⚠️ Harness defect between run 2 and run 3 (mine)
+
+The rubric edit that added the *"reason is not evidence"* warning put **backticks
+inside a template literal**, breaking `specimens.ts` at parse time. The founder hit
+it instead of run 3.
+
+⭐ **The instrument could not catch it, and the reason generalizes.** The
+fixture-freeze suite reads the file **as text** and asserts substrings, so every
+assertion still passed against a file that would not parse. **A source-SCANNING
+instrument cannot see whether the file it scans is valid** — the same class as the
+C21 false positive in the Circles lane, where a prose ban was matched inside prose
+documenting its own compliance.
+
+**Repair:** backticks removed from the rubric text, and the suite now transforms
+the source with esbuild before asserting anything. Verified to discriminate — with
+the bad line restored, 2 of 7 fail; with it fixed, 84 pass.
+
+**And the discipline failure was mine, not the instrument's:** the script runs in
+the development container and reports `NOT WITNESSED` in about a second, which is
+sufficient proof that it parses. I did not run it after editing it. *An edit to a
+witness is an edit to the evidence path, and it gets executed before it is pushed.*
+
 ## ⚠️ Housekeeping corrections
 
 **Migration number collision (mine).** `20260910000001` was already taken by

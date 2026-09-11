@@ -96,7 +96,7 @@ function reportProtocol(r: RevisionResult, expectedSectionId: string, name: stri
 
 const RUBRIC_PROPOSAL = `
   3A-S SPECIMEN 1 — RUBRIC (human ruling required)
-  ⛔ RULE ON `proposedText` ALONE. The `reason` field is NOT evidence of
+  ⛔ RULE ON proposedText ALONE. The reason field is NOT evidence of
      fidelity — twice it has asserted that both claims were kept while the
      wording compressed a distinction.
   PASS only if ALL hold:

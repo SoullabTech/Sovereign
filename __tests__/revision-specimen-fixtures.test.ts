@@ -12,6 +12,22 @@ import { join } from 'path';
 
 const SRC = readFileSync(join(__dirname, '../scripts/witness/rc-gen-01/specimens.ts'), 'utf8');
 
+/**
+ * ⚠️ WHY THIS FIRST TEST EXISTS. A source-SCANNING instrument cannot see whether
+ * the file it scans is valid. On 2026-09-10 a rubric edit put backticks inside a
+ * template literal and broke `specimens.ts` at parse time; every text assertion
+ * below still passed, and the defect surfaced only when the founder ran the
+ * witness. The same class as the C21 false positive found in the Circles lane:
+ * an instrument that reads prose about a file is not an instrument that reads
+ * the file.
+ */
+describe('the witness harness actually parses', () => {
+  it('⭐ specimens.ts is syntactically valid TypeScript', () => {
+    const { transformSync } = require('esbuild');
+    expect(() => transformSync(SRC, { loader: 'ts' })).not.toThrow();
+  });
+});
+
 describe('specimen fixtures are frozen across reruns', () => {
   it('specimen 1 — the abstract passage is unchanged', () => {
     expect(SRC).toContain('The experience facilitated a significant transformation in his relational ');
@@ -32,7 +48,7 @@ describe('specimen fixtures are frozen across reruns', () => {
   });
 
   it('⭐ the rubric warns the human ruler that `reason` is not evidence', () => {
-    expect(SRC).toContain('RULE ON `proposedText` ALONE');
+    expect(SRC).toContain('RULE ON proposedText ALONE');
     expect(SRC).toContain('is NOT evidence of');
   });
 
