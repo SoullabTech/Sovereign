@@ -205,7 +205,42 @@ rather than a product.
 1. **D1 awaits founder ruling.** §4 is a recommendation.
 2. **Whether social login is retained** — undecided. *That it must LINK and never
    CREATE* is settled (Stage 3).
-3. **Whether passwords ultimately retire** — undecided; M-4 governs the sequence.
+3. ~~**Whether passwords ultimately retire** — undecided~~ → ⭐ **RULED, founder,
+   2026-09-11T01:5xZ (2026-09-10 18:5x local). PASSWORDS FADE OUT; THEY ARE NOT
+   ABOLISHED.**
+
+   ```
+   NEW MEMBERS      passkey preferred · email code = universal bootstrap + recovery floor
+                    password NOT required and NOT the primary path
+
+   EXISTING         existing password keeps working THROUGHOUT migration
+                    passkey may become preferred · email code added where verified
+                    retirement ONLY once that member is proven to have another
+                    working way back into the SAME identity
+   ```
+
+   **No mass reset. No forced account recreation. No "everyone must set up a passkey
+   now."** Long term a password is a **legacy authenticator**, not part of the
+   ordinary Soullab experience: the returning member sees *Welcome back → Continue*.
+
+   ⛔ **Password removal is NOT authorized.** Stage 7A establishes trustworthy
+   evidence and nothing else. **A password retires per-member, on evidence, never
+   per-population** — M-4 and M-8 unchanged and now naming the credential.
+
+   ### 3.1 · ⚠️ Consequence — today's new members already have an invisible password
+
+   `UnifiedAuth.completeSignup` calls `generatePassword()` and `register-email`
+   **requires** one (`if (!email || !username || !password) → 400`). So an
+   email-code account is created **with a password the member never sees.**
+
+   That is not a detail. **It is the artifact that made the password door a trap**:
+   Stage 5 B1 stranded an operator holding a valid code at a form asking for a
+   credential that existed, belonged to them, and had never been shown to them.
+
+   ⭐ Under this ruling the generated-invisible password is **itself a legacy
+   artifact the target removes** — new members should have *no* password rather than
+   an unseen one. ⛔ Not authorized here; recorded so it is not mistaken for the
+   target state it currently imitates.
 4. **`x-member-id` retirement** — the target is one session authority with two
    representations; the retirement path is not designed.
 5. **Framework dependency** in the auth path under B — self-hosted and MIT, but a
