@@ -837,3 +837,81 @@ recorded: of its 19 contradictions DeBERTa called **17 `contradiction`**, one
 `neutral`, one `entailment` (X22). Its single arbitrary neutral (X30) it called
 `neutral`. ⛔ Nothing about plausible neutrals was measured, because none were
 joined.
+
+---
+
+## ⭐⭐ STAGE 1 RESULT — the failure is MONOTONE IN PLAUSIBILITY (2026-09-11)
+
+`joined 168 verifier-judgements over 78/78 adjudicated cases` — full coverage.
+
+```text
+DeBERTa's own 3-way call against blind 3-way ground truth
+  ground truth         -> entailment   neutral  contradiction
+  contradicted                    12         2             37    (n=51)
+  neutral·plausible               10         7              0    (n=17)
+  neutral·arbitrary                1         6              3    (n=10)
+```
+
+**Read the `entailment` column downward. It is ordered by temptation:**
+
+| ground truth | called `entailment` | |
+|---|---|---|
+| neutral · **arbitrary** | 1/10 = **10%** | nothing pulls a reader toward it |
+| **contradicted** | 12/51 = **24%** | the premise rules it out |
+| neutral · **plausible** ⭐ | **10/17 = 59%** | compatible, tempting, unlicensed |
+
+> ⭐⭐ **The more plausible an unlicensed claim is, the more often the verifier
+> asserts it.** Not a weakness at temporal language. A weakness *proportional to
+> how believable the unwarranted claim is* — which is the exact shape of
+> **mistaking what is possible for what is known**, measured for the first time
+> in this lane on its own terms.
+
+⭐ **And the error is DIRECTIONAL, not confusion**: of the 17 plausible neutrals,
+**zero** were called `contradiction`. The verifier never mistakes a tempting
+claim for a false one. It moves it toward *believed*, in one direction only.
+
+⚠️ **Descriptive.** Six corpora built for a binary question, 17 cases in the
+class, pooled. ⛔ It cannot promote anything — it says what phase 2 must measure.
+
+### ⭐ The satellite question is settled — under a better name
+
+Per set, `M` is the only row meeting the n floor: **`M entailment 5/5`.** Those
+five are exactly `M3–M7`, the cases the blind adjudicator identified as the
+**genuinely neutral** members of the modifier group, `M1/M2/M8` having been
+contradictions all along.
+
+> **"Satellite-boundary loss" does not survive as a mechanism. What survives, and
+> is sharper, is that the `M` material was dense in the plausible-neutral class —
+> and DeBERTa called every one of them entailed.** The satellite/verb contrast was
+> tracking the neutral/contradiction distinction without either of us seeing it.
+
+⛔ The founder's caution when he ratified that reading — *"not as a claim about
+DeBERTa's internal mechanism"* — is what kept this correctable. The description
+is replaced; nothing built on it has to be unwound.
+
+### ⚠️ The binary verifiers look better here — and the comparison is not yet valid
+
+```text
+hhem       called supported  1/7  = 14%
+minicheck  called supported  5/13 = 38%
+deberta    called entailed  10/17 = 59%
+```
+
+⛔ **Three different exams.** 7, 13 and 17 *different* cases. MiniCheck's
+conservatism — which cost it four licensed claims on `prospective` — may be an
+asset precisely here, but **these totals cannot support a sentence containing the
+word "better".** The instrument now prints a **head-to-head restricted to cases
+every verifier judged**, plus the count asserted by all of them, which is where
+no second opinion exists at all. Not yet run.
+
+### One more row worth naming
+
+**DeBERTa called 12 of 51 outright contradictions `entailment` — 24%.** Against
+the `prospective` corpus alone it called 17 of 19 correctly. ⚠️ Consistent with
+the contradiction cells being easy in natural prose and hard in the constructed
+adversarial sets; ⛔ not established, and not the question phase 2 is about.
+
+**Standing: plausible-neutral collapse MEASURED DESCRIPTIVELY at 59% · monotone
+in plausibility · directional toward entailment · satellite framing RETIRED,
+replaced by the neutral-regime description · cross-verifier comparison NOT YET
+VALID · production UNTOUCHED.**
