@@ -1623,3 +1623,69 @@ Repair Two branch stays at `3d5b0db94`, unmerged, for the E20 witness.
 VOICE-2026 opens on its own branch with charter + CENSUS-01; nothing in
 it is production code. Defects surfaced after this point are recorded in
 this lane doc as evidence for the census, never repaired.
+
+### E22 · 2026-09-11 · FOUNDER RULINGS on CENSUS-01 findings that change this lane's standing (F2, F4) — registration is NOT an isolated repair; E19/E20 are overlay evidence
+
+Recorded here because two of the founder acts made on the VOICE-2026
+census (record of acts: `docs/programme/VOICE-2026/ARCH-01/00_README.md`
+§2a) bear directly on this lane.
+
+**F2 — the gatekeeper registration exposes the composer microphone.**
+CENSUS-01 (P1 §2.4.4, P5 #2) found that the composer mic chain on
+`/maia` (`ModernTextInput` → `useVoiceInput` → `capacitorRecorder`) runs
+`VoiceController.prepareForListening` (`.measurement`) and then
+`capacitor-voice-recorder` (`.playAndRecord`, default mode) with no stop
+of the community engine anywhere in the chain — and that today the tap
+dies at the **unregistered** gatekeeper. Registering `AudioSessionManager`
+(this lane's repair, `4551a56ed`) therefore opens that chain: a second
+custody actor, reachable from chat mode. **Ruling: do not register it as
+an isolated repair.** Registration is not merely "make the plugin
+available"; it is effectively "enable another actor capable of taking
+microphone/session custody". The rule ratified for the future
+architecture: *no feature may independently acquire conversational
+microphone custody; capture is granted only through the single voice
+authority* (VOICE-19). **Standing of this branch after F2:** the
+registration repair remains **evidence** (E13/E14 proved the mechanism
+and made the native trace visible for the first time) and remains the
+build under which E16–E18 were witnessed; it is **not** to be merged,
+deployed, or adopted as a fix. E19 still runs on the preserved
+pre-registration build as the historical A/B control.
+
+**F4 — `MAIABridgeViewController` history.** The census found the same
+subclass was added and reverted on 2026-03-03 (`abdbf858c` →
+`835e176c5`, "broke Capacitor bridge"); the revert body says the file was
+never added to the Xcode project, so the class could not be instantiated
+and the WebView never initialised — a pbxproj omission, not a bridge
+defect. This lane's repair did update the pbxproj and registration was
+proven on device (E13). **Ruling: evidence, not constraint** — *the
+historical revert supplies no negative evidence against a native
+VoiceKernel or bridge controller.* Kept in provenance; not carried as
+technical debt.
+
+**E19 / E20 — standing after CENSUS-01.** Both still run; they belong to
+the evidentiary record and sharpen the census failure graph (§3.4). They
+are **overlay evidence, not a gate** on whether Voice 2026 needs a new
+substrate: even perfect results cannot change four session writers,
+eleven start authorities, competing turn closure, uncancellable output,
+nonexistent native interruption handling, split WebKit/native custody,
+or the absence of one authoritative state. They reopen the architectural
+conclusion only if they falsify one of its premises.
+
+**What the census explained about this lane's own witnesses.** E18's 37
+generations resolve as one deterministic interaction (census §3.3): one
+`isSpeaking=false` fans out to six restart requests; each restart kills
+the engine before it; the killed engine's task callback (no task
+identity — E16.5 confirmed at source, P1 #9) kills the one after; the
+two ceilings are reset by the loop itself; the only exit is the WEB
+`onend` 45 s inactivity guard — so a web `SpeechRecognition` was running
+inside the WebView alongside the native plugin (D4 has no native guard);
+the exit parks the mic without stopping the native engine. The route
+alternation `Bottom/0.01 ↔ Front/0.0026666` is the plugin's
+`setPreferredIOBufferDuration(0.01)` against **128 frames ÷ 48 kHz =
+WebKit's render quantum** — two session owners taking turns [inference].
+H-SILENT remains a hypothesis for E19 to test.
+
+**Lane standing after E22:** E19 owed (historical control) · E20 owed
+(Repair Two witness, judged narrowly) · registration repair = evidence,
+not fix · no further repair on this runtime · the lane closes on the
+E19/E20 record and hands its evidence to VOICE-2026.
