@@ -2249,3 +2249,69 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report only: the output path and the number of items
 described.
 ```
+
+### The prompt, cleaned of leading vocabulary in three passes
+
+⭐ **My own mechanical check flagged my own prompt three times, and I took its
+word each time rather than justifying an exception.**
+
+1. `class` — from the output field `"classifier"`. Renamed to `described_by`.
+   *An instrument that flags and is then overridden by its author is the pattern
+   this lane distrusts; the field name cost nothing to change.*
+2. `pattern` — appearing only in the **prohibition** *"looking for a pattern
+   would destroy the result"*. ⛔ A prohibition can prime the thing it forbids.
+   Rephrased without the word.
+3. `group` — in *"do not sort the items into groups"*. Same reasoning, same fix.
+
+**Final check clean against**: world knowledge · completion · causal ·
+overcommit · promoted · preserved · error · neutral · entail · class · cluster ·
+pattern · group · categor · commonality · taxonom.
+
+```text
+Read exactly one file:
+
+  scripts/verifier-probe/inference-step-items.json
+
+It holds 18 items. Each is a PREMISE — one or two sentences of ordinary prose —
+and a HYPOTHESIS, a short sentence about the same situation.
+
+For each item, answer one question in your own words:
+
+    What inferential step, if any, is required to get from the premise to the
+    hypothesis?
+
+Describe the step. Do not judge whether the hypothesis is true, supported,
+warranted or reasonable. Do not rate anything. Do not sort the items, and do not
+invent names for kinds of items — just say, item by item, what a reader would
+have to do in their head to get from the one sentence to the other. If the answer is "nothing, it simply restates part of the premise",
+say that.
+
+Write two or three sentences per item. Be concrete about the specific step in
+that specific item rather than reaching for a general term.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "described_by": "<describe yourself in a few words>",
+  "date": "2026-09-11",
+  "method": "<two or three sentences on how you approached it>",
+  "items": [
+    { "id": "C01", "inferential_step": "<your description>" }
+  ]
+}
+
+All 18, in the order given.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. Not the fixtures, not any .py, nothing under docs/,
+    nothing beginning with `verifier-probe-` or `inference-step-key`. Any of
+    them would ruin this task.
+  - Do not search the repository.
+  - These items were not assembled to illustrate anything. Do not try to work
+    out why they were chosen or what they might share. Describing each one on
+    its own terms is the entire task; anything you inferred about the set as a
+    whole would corrupt what this is for.
+
+In your final message report only: the output path and the number of items
+described.
+```
