@@ -9,12 +9,31 @@ anywhere in this slice.**
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
 3A-S   semantic witness        ⛔ NOT WITNESSED
+3A     inference contract      ⛔ NOT PASSED
+
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
+
 3C-1   invocation identity     DONE · 17/17 · known-bad discriminated
-3C-2   result recovery         DONE · C1-C6 · 25 checks · 0 failed
+3C-2   receipt + recovery      DONE · C1-C6 · 25 checks · 0 failed
 3C     idempotency             PASSED
+
 3D     end-to-end              CLOSED — and BINARY, never "partially open"
+                               sole blocker: 3A-S
+
+schema 00004 proposals         UNAPPLIED
+       00005 receipt           UNAPPLIED
+prod                           UNTOUCHED
+Work                           NO MUTATION PATH
 ```
+
+⭐ **The governing sentence: 3B and 3C have passed independently. 3A-P has passed;
+3A-S remains the SOLE outstanding prerequisite to 3D.**
+
+⚠️ **An earlier phrasing in this session said "A, B and C have each passed
+independently." That was too strong and is corrected here.** 3A-P passing is not 3A
+passing. A later reader could otherwise infer that the inference contract was
+already accepted and that the semantic witness was supplementary. **It is the
+prerequisite, not a supplement.**
 
 ## ⚠️ Housekeeping corrections
 
