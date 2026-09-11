@@ -61,6 +61,29 @@ RELEASES = r"\b(still|since|ever since|continues?|ongoing|each|every|always|" \
            r"has been|have been|to this day)\b"
 
 
+def rule_digest():
+    """
+    ⭐⭐ THE FROZEN THING IS THE RULE, NOT THE FILE.
+
+    ⛔ I RECORDED A FREEZE HASH THAT NEVER MATCHED THE COMMITTED FILE. `c45d9f62…`
+    was computed BEFORE the `detector-blind` set entry, the self-hash and the
+    conditional table were added; the committed file hashed `6c5a8958…`, which is what
+    the founder's run printed. Anyone checking the freeze would have found a mismatch
+    and had no way to know which was authoritative.
+
+    ⭐ THE REPAIR IS NOT A CORRECTED FILE HASH — it is hashing the right thing. The
+    detection RULE is `LIMITERS` + `RELEASES` + the two functions that use them.
+    Reporting can be improved without touching it, and the freeze must survive that or
+    it will simply be broken again the next time a table needs a column.
+
+    ⛔ IF THIS DIGEST CHANGES, THE DETECTOR CHANGED AND EVERY PRIOR RESULT IS STALE.
+    """
+    import hashlib, inspect
+    parts = [repr(sorted(LIMITERS.items())), repr(RELEASES),
+             inspect.getsource(limiters_in), inspect.getsource(boundary_risk)]
+    return hashlib.sha256('\n'.join(parts).encode()).hexdigest()
+
+
 def detector_digest():
     """
     ⛔⛔ THE DETECTOR IS FROZEN BY HASH, AND IT PRINTS ITS OWN.
@@ -192,7 +215,29 @@ def against(paths):
     if not rows:
         sys.exit('no usable rows — pass probe result JSON files')
 
-    print(f'DETECTOR sha256 {detector_digest()}')
+    print(f'DETECTOR RULE sha256 {rule_digest()}')
+    print(f'  (file sha256 {detector_digest()} — changes with reporting; the RULE is')
+    print(f'   what is frozen, and a change to it invalidates every prior result)')
+
+    # ⛔⛔ PER SET, NOT JUST AGGREGATED. The detector was WRITTEN AFTER seeing the
+    # failures in the earlier sets, so mixing them with `detector-blind` mixes
+    # known-corpus discrimination with generalization and reports one number for two
+    # different questions. The aggregate hid the only figure that answers the
+    # founder's question.
+    sets = sorted({r['set'] for r in rows})
+    if len(sets) > 1:
+        print('\n⭐ BY SET — `detector-blind` is the ONLY one the detector had not seen')
+        for st in sets:
+            for v in sorted({r['verifier'] for r in rows if r['set'] == st}):
+                g = {(r['set'], r['id']): r for r in rows
+                     if r['set'] == st and r['verifier'] == v}.values()
+                wrong = [r for r in g if not r['correct']]
+                right = [r for r in g if r['correct']]
+                seen = 'UNSEEN ⭐' if st == 'detector-blind' else 'seen'
+                print(f"   {st:<16} {v:<10} {seen:<9} "
+                      f"errors flagged {sum(r['risk'] for r in wrong)}/{len(wrong)}   "
+                      f"correct flagged {sum(r['risk'] for r in right)}/{len(right)}")
+
     for v in sorted({r['verifier'] for r in rows}):
         sub = [r for r in rows if r['verifier'] == v]
         seen = {}
@@ -272,9 +317,18 @@ def against(paths):
                 if preserved + disrupted:
                     print(f'  -> of {preserved + disrupted} routed cases {a} got RIGHT, '
                           f'{b} PRESERVED {preserved} and DISRUPTED {disrupted}')
-                if shared_blind and not rescued:
+                # ⛔⛔ THIRD OCCURRENCE OF THE SAME DEFECT IN MY OWN INSTRUMENTS.
+                # This printed "NOT INDEPENDENT" on n=2. Two cases cannot establish
+                # that two models share a blind spot — it is the particular
+                # observation turned into a general claim, which is the exact
+                # epistemic sin this lane studies.
+                MIN_N = 5
+                if shared_blind and not rescued and shared_blind + rescued >= MIN_N:
                     print('  ⛔ NOT INDEPENDENT on this evidence — the second witness fails')
                     print('     exactly where the first does. Routing buys nothing here.')
+                elif shared_blind and not rescued:
+                    print(f'  ⚠️ no rescues, but only {shared_blind + rescued} routed errors'
+                          f' were shared — TOO FEW to conclude anything about independence.')
 
     print('\n⛔ NOT A GATE. NOT AUTHORIZED. A measurement, not a component.')
 

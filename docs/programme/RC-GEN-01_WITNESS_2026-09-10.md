@@ -4345,3 +4345,137 @@ python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
 ⛔ **Standing: detector + corpus FROZEN, blind validation OWED · MiniCheck independence
 THE DECIDING TEST · HHEM DEPRIORITIZED · evidence gate HELD · analyzer/3 UNTOUCHED ·
 B HELD · production UNTOUCHED.**
+
+## ⭐⭐⭐ BLIND DETECTOR VALIDATION — RUN · THE DETECTOR GENERALIZES · DeBERTa COLLAPSES
+
+`2026-09-11T09:26Z` · corpus sha `2873d1fb…` verified before the run.
+
+### ⛔⛔ FIRST: DeBERTa ON FRESH TEMPORAL/SCOPE MATERIAL
+
+```
+licensed     10/10          ⭐ FIFTH consecutive perfect positive column (45/45 across five sets)
+unlicensed    3/12          ⛔ COLLAPSE
+families      3/10 carried  (after · before · ended-relationship)
+```
+
+⛔ **Nine misses: `D01 D07 D09 D11 D15 D17 D19 D21 D22`.** ⚠️ This corpus is targeted —
+**every negative is a boundary widening** — so a low score is expected. **The magnitude
+is not:** blind gave `10/12`, scope `9/12`, this gives `3/12`. ⭐ **The blind set
+carried only two temporal negatives; this one carries twelve, and the weakness scales
+with exposure.**
+
+### ⚠️ AND A NEAR-IDENTICAL PAIR ACROSS TWO SETS GIVES OPPOSITE VERDICTS
+
+```
+S09  "Mira is COVERING the archive desk WHILE THE ARCHIVIST IS ON LEAVE."
+     -> "Mira is the archivist."        CONTRADICTION   ⭐ correct
+D11  "Runa is STANDING IN as harbourmaster WHILE THE POST IS ADVERTISED."
+     -> "Runa is the harbourmaster."    ENTAILMENT      ⛔ wrong
+```
+
+⭐ The one structural difference: **S09 names an incumbent** (*the archivist*), D11 does
+not. ⛔ **Offered as an observation, not a mechanism** — two cases, and this lane has
+already rejected one tidy explanation on exactly this kind of evidence.
+
+## ⭐⭐⭐ THE DETECTOR — ON MATERIAL IT HAD NEVER SEEN
+
+```
+DeBERTa's 9 BLIND misses flagged        7/9
+cost on this set                        2/10 licensed flagged
+unlicensed coverage                     8/12
+```
+
+> ⭐⭐ **THE COST IS LOWER ON UNSEEN MATERIAL (20%) THAN ON THE CORPUS THAT INSPIRED IT
+> (37%)** — which is the opposite of what over-fitting looks like.
+
+⭐⭐ **AND THE TWO IT MISSES ARE THE TWO I PREDECLARED IN THE CORPUS DESIGN:**
+
+```
+D09  "for one season"        the duration pattern lists years|months|weeks|days, not seasons
+D22  "on two occasions"      ⛔ named in the frozen corpus as a limiter the vocabulary
+                             does not list — deliberately not added
+```
+
+> ⭐⭐⭐ **THE DETECTOR GENERALIZES TO NEW DOMAINS BUT NOT TO NEW LIMITER VOCABULARY.**
+> That is a precise, falsifiable characterisation rather than a score — and it says
+> exactly what a lexical rule can and cannot be trusted to do.
+
+⭐ **The two false positives are the known corroborating class** — `D08` *"three times
+a week"* and `D20` *"for thirty years"*, both licensed. ⭐ **`D16` (`unless the hail is
+heavy`) was NOT flagged**, because the release clause fired on `each`. *The release
+check earned its keep again on material it had not seen.*
+
+⛔ **`M7` remains unpatched, and `D09`/`D22` will not be patched either.** Fitting the
+vocabulary to the cases it was seen to miss is how a detector stops measuring anything.
+
+## ⛔⛔ THREE DEFECTS IN MY OWN INSTRUMENTS — INCLUDING A BROKEN FREEZE
+
+**1 ⛔⛔ I RECORDED A FREEZE HASH THAT NEVER MATCHED THE COMMITTED FILE.**
+
+```
+recorded as frozen   c45d9f62…   computed BEFORE three later edits
+founder's run showed 6c5a8958…   the actual committed file
+```
+
+⛔ **Anyone checking the freeze would have found a mismatch and no way to know which
+was authoritative.** ⭐ **The repair is not a corrected file hash — it is hashing the
+right thing.** The detector now reports a **RULE digest** over `LIMITERS` + `RELEASES`
++ the two functions that use them:
+
+```
+RULE sha256  18608a18a0a681b212d9b0052c8238e3c543f3203e1a6633dd4520f04696ad86
+```
+
+⭐ **Verified by `git diff` that the detection rule was never edited** across any of
+those commits — only reporting moved. ⛔ **If the RULE digest changes, every prior
+result is stale.** Reporting may improve without breaking the freeze; the rule may not.
+
+**2 ⛔ `--against` AGGREGATED ALL SETS AND HID THE ONLY NUMBER THAT ANSWERED THE
+QUESTION.** The founder's run showed `9/12 confident-and-wrong` **across seen and
+unseen material mixed together** — known-corpus discrimination and generalization
+reported as one figure. Now broken out per set, with `detector-blind` marked `UNSEEN`.
+
+**3 ⛔ THE CONDITIONAL TABLE PRINTED `NOT INDEPENDENT` ON n=2.** ⚠️ **Third occurrence
+of the same defect in my instruments** — n=1 on the HHEM cross-tab, n=1 on the
+calibration families, now n=2 here. ⛔ *My instrumentation keeps committing the sin the
+lane studies: turning a particular observation into a general claim.* Guard added
+(`n ≥ 5`); below it the table now says **too few to conclude**.
+
+⭐ **The HHEM conditional table is therefore WITHDRAWN as a finding** — `0 rescued / 2
+shared` says nothing, and HHEM is deprioritized regardless.
+
+## ⛔ MiniCheck — NOT RUN, AND THE PACKAGE MAY BE THE WRONG ONE
+
+```
+ModuleNotFoundError: No module named 'minicheck.minicheck'
+```
+
+⚠️ `pip install minicheck` fetched **PyPI `minicheck` 0.4.0 — a 56 kB wheel with NO
+dependencies.** The MiniCheck of the paper is a research repo that stands on torch and
+transformers. ⛔ **A package that installs nothing cannot be a 770M-parameter fact
+checker**, so this is very likely **an unrelated project that happens to own the name.**
+
+⛔ **NOT a result about MiniCheck.** ⭐ It is also a reminder worth keeping: *an
+install that succeeds is not evidence that the right thing was installed.*
+
+Correct source is the research repo:
+
+```
+pip install "minicheck[llm] @ git+https://github.com/Liyan06/MiniCheck.git@main"
+python3 -c "import minicheck, inspect, pathlib; print(pathlib.Path(inspect.getfile(minicheck)).parent)"
+```
+
+⛔ **Inspect what landed before trusting it**, and if the import path differs from
+`minicheck.minicheck`, say so rather than letting me guess a second time.
+
+### Standing
+
+```
+DETECTOR BLIND GENERALIZATION    ⭐ SUPPORTED — 7/9 errors held, 2/10 cost, UNSEEN material
+DETECTOR FAILURE MODE            ⭐ CHARACTERISED — new domains yes, new limiter words no
+DeBERTa on temporal/scope        ⛔ 3/12 — much weaker than earlier sets suggested
+DeBERTa licensed recall          ⭐ 45/45 across five sets
+HHEM conditional finding         ⛔ WITHDRAWN (n=2)
+MiniCheck                        ⛔ NOT RUN — wrong package, very likely name collision
+evidence gate HELD · analyzer/3 UNTOUCHED · B HELD · production UNTOUCHED
+```
