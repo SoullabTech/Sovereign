@@ -567,3 +567,118 @@ file** mapping `case id → contradicted | neutral`, leaving `expected` untouche
 authored by someone other than the party holding the hypothesis.
 
 ⛔ **Not authorized here. Recorded as the available next act, not taken.**
+
+---
+
+## PHASE 2 · STAGE 1 — retrospective three-way adjudication (2026-09-11)
+
+```text
+binary verifier programme             INCOMPLETE FOR CORE QUESTION
+DeBERTa three-way output              AVAILABLE
+MiniCheck three-way role              NOT CONSTRUCTIBLE
+HHEM three-way role                   NOT CONSTRUCTIBLE
+frozen fixtures                       UNTOUCHED
+three-way ground truth                MISSING
+retrospective adjudication            NEXT DESCRIPTIVE ACT
+prospective 3-way corpus              NEXT CONFIRMATORY ACT
+core target                           PLAUSIBLE ≠ KNOWN
+UNRESOLVED                            VALID EPISTEMIC STATE
+validated trigger                     NONE YET
+production                            UNTOUCHED
+```
+
+> ⭐⭐ **The danger is not merely believing what is false. It is mistaking what is
+> possible for what is known.**
+
+⚠️ **Stage 1 is DESCRIPTIVE, not confirmatory.** The five corpora were not built
+for this question. What it produces is a map for designing phase 2 — never
+evidence for a phase-2 conclusion.
+
+**Adjudicator: a fresh subagent, blind to every machine judgement.** It may read
+the six fixture files and nothing else — no `.py`, nothing under `docs/`, and
+above all no `verifier-probe-*.json`, which carry the model outputs this
+adjudication will later be compared against. ⛔ **Fixtures are not edited.**
+Output is a separate file; `expected` is untouched everywhere.
+
+⭐ **One addition beyond the founder's schema**: for neutral cases the adjudicator
+also marks `plausible` — *would a reasonable reader, given only the premise,
+think the hypothesis probably true?* That isolates **NEUTRAL-BUT-PLAUSIBLE** from
+merely arbitrary neutral, which is the whole distinction phase 2 is about, and it
+costs nothing to collect now.
+
+Disagreement with a frozen label is **recorded, never acted on**
+(`disagrees_with_expected`).
+
+⛔ **Prompt committed BEFORE the adjudicator ran**, on the same reasoning as the
+corpus author's: a prompt recorded afterwards proves nothing.
+
+```text
+You are sub-classifying items that have ALREADY been judged. You are not
+re-judging them and you cannot change any existing label.
+
+Read these files, and only these:
+  scripts/verifier-probe/fixtures.json
+  scripts/verifier-probe/fixtures-blind.json
+  scripts/verifier-probe/fixtures-scope.json
+  scripts/verifier-probe/fixtures-modifier.json
+  scripts/verifier-probe/fixtures-detector.json
+  scripts/verifier-probe/fixtures-prospective.json
+
+Each contains cases with a PREMISE, a HYPOTHESIS, and a frozen label `expected`
+of either "entailed" or "not_entailed".
+
+For EVERY case whose `expected` is "not_entailed", decide which of two kinds it
+is. Ignore every case whose `expected` is "entailed" — do not include them.
+
+  CONTRADICTED — if the premise is true, the hypothesis is FALSE. The premise
+                 rules the hypothesis out.
+
+  NEUTRAL      — the premise neither establishes the hypothesis nor rules it
+                 out. The hypothesis could be true, or false, and either would
+                 be consistent with the premise.
+
+Then, for NEUTRAL cases only, add one further judgement:
+
+  plausible: true   — a reasonable reader, given only the premise, would think
+                      the hypothesis is probably true. It is tempting. It simply
+                      is not established.
+  plausible: false  — the hypothesis is merely unrelated or arbitrary; nothing
+                      in the premise pulls a reader toward believing it.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "adjudicator": "<describe yourself in a few words>",
+  "adjudication_date": "2026-09-11",
+  "method": "<two or three sentences on how you decided>",
+  "cases": [
+    {
+      "set": "<which fixture file, by its `set` field>",
+      "id": "<case id>",
+      "three_way": "contradicted" | "neutral",
+      "plausible": true | false | null,
+      "reason": "<one short sentence>",
+      "disagrees_with_expected": false
+    }
+  ]
+}
+
+`plausible` is null for contradicted cases.
+
+If you believe a case's frozen `expected` label is simply WRONG — that the
+premise actually does support the hypothesis — do NOT change anything. Set
+`disagrees_with_expected` to true, still give your best three_way value, and say
+why in `reason`. Disagreements are recorded, never acted on.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. In particular do not open any .py file, anything under
+    docs/, or any file whose name begins with `verifier-probe-`. Those contain
+    machine judgements and reading them would ruin this task.
+  - Do not search the repository beyond the six files listed.
+  - Decide from the text in front of you. There is no pattern to match and no
+    downstream program to satisfy.
+
+In your final message report: the output path, how many cases you classified,
+the counts of contradicted / neutral-plausible / neutral-implausible, any
+disagreements you flagged, and anything you found genuinely hard to call.
+```
