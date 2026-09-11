@@ -1,0 +1,54 @@
+# VOICE-2026 · KERNEL-00 harness — XcodeGen spec.
+#
+# A SEPARATE app target, deliberately not a member of ios/App. K00-16 ("nothing
+# else is in the build") is satisfied by construction: no Capacitor, no
+# CocoaPods, no @capacitor-community/speech-recognition, no
+# AudioSessionManager.swift / VoiceController.swift, no WebView, no network.
+#
+# Generate on the Mac Studio (once XcodeGen is installed: `brew install xcodegen`):
+#   cd ios/VoiceKernelHarness && xcodegen generate && open VoiceKernelHarness.xcodeproj
+# Then set your signing team on the target and Run (Debug) on the device with
+# the console attached. Runbook: docs/programme/VOICE-2026/KERNEL-00_RUNBOOK_2026-09-11.md
+name: VoiceKernelHarness
+options:
+  bundleIdPrefix: life.soullab
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+packages:
+  VoiceKernel:
+    path: ../VoiceKernel
+targets:
+  VoiceKernelHarness:
+    type: application
+    platform: iOS
+    sources:
+      - path: Harness
+    dependencies:
+      - package: VoiceKernel
+        product: VoiceKernel
+    info:
+      path: Harness/Info.plist
+      properties:
+        CFBundleDisplayName: VoiceKernel K00
+        CFBundleShortVersionString: "0.0.1"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        # The harness is a different bundle id from MAIA (life.soullab.maia) so
+        # the "shared phone, one bundle id" confound (RUNTIME-01 E9) cannot recur.
+        NSMicrophoneUsageDescription: "KERNEL-00 witness: proves one native authority can keep the microphone and speaker alive, observable, cancellable and recoverable. No speech is recognized, stored, or transmitted."
+        # K00-14 declared background policy for KERNEL-00: HOLD. The session is
+        # kept while backgrounded/locked so the organism can be observed across
+        # lock/unlock. Whether MAIA should hold in production is a later ruling.
+        UIBackgroundModes:
+          - audio
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.k00
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic

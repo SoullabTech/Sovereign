@@ -93,6 +93,16 @@ KERNEL-00       NOT YET OPEN
 
 6. **KERNEL-00 is not opened by this act.** Not because more research is required — it is not — but because *ratifying what shall be built is not the same act as authorizing someone to start building it.* The next founder act can be exactly: **"ARCH-01 stands ratified. Open KERNEL-00 under the ratified acceptance law. No STT, no TTS, no Web audio, no MAIA, no legacy voice components. Prove the physical organism first."** At that point the research/design phase is finished, and the JARVIS boundary is clean: inquiry → assembly → differentiation → synthesis → ratification are complete; the next phase is bounded execution against predeclared law, not more ideation.
 
+## 2c. Founder Act — Open KERNEL-00 (2026-09-11)
+
+> **KERNEL-00 is OPEN under the ratified Voice 2026 acceptance law.** Build only the physical conversational audio organism: `VoiceKernel`, `AudioSessionAuthority`, duplex native audio graph, `HealthSupervisor`, `StateProjection`, flight recorder, and the bounded native test harness. No STT, no TTS, no Web audio, no canonical MAIA, no legacy voice components, and no network egress. Nothing beyond the ratified K00 obligations is authorized.
+
+Explicit boundaries (founder): no model selection — BENCH-01 closed · no `/maia` integration — BRIDGE-01 closed · no legacy cleanup or migration — MIGRATE-01 closed · no "helpful" additions (VAD, turn detection, transcription, synthetic speech, semantic state, JARVIS logic) · no threshold tuning to obtain green; the ratified ceilings stand · a failure is evidence — if `AVAudioEngine` voice processing cannot satisfy K00-06/K00-11, record the failure before considering the separately witnessed lower Voice-I/O path · E19/E20 remain overlay evidence and do not block KERNEL-00.
+
+The question: *can one native authority keep MAIA's physical auditory/vocal apparatus alive, observable, cancellable, and recoverable for an entire conversation?* Nothing about intelligence yet. First prove that the body can hear and speak without fighting itself.
+
+**Execution record:** source written 2026-09-11 in `ios/VoiceKernel/` (package) and `ios/VoiceKernelHarness/` (separate app target, bundle `life.soullab.voicekernel.k00`); runbook `../KERNEL-00_RUNBOOK_2026-09-11.md`; source gate `__tests__/voice-kernel-00-source-gates.test.ts`. **Not compiled** (no Swift toolchain in the authoring environment) · **not witnessed**. The witness is the founder's, on device, per the runbook.
+
 ## 3. Supersessions this package introduces (for the record)
 
 | Earlier text | Superseded by | Note |
