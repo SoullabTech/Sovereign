@@ -1,0 +1,547 @@
+{
+  "adjudicator": "Claude Opus 5, working blind from premise/hypothesis pairs alone",
+  "adjudication_date": "2026-09-11",
+  "method": "For each pair I first asked whether a world could satisfy every word of the premise while the hypothesis was false (test 1), then whether a world could satisfy the premise with the hypothesis true (test 2), treating reported speech, hedges, quantifiers like 'most'/'mostly', and mere temporal sequence as leaving things open rather than settling them. Only if both held did I ask whether an ordinary hearer would feel pulled toward the hypothesis (test 3). I read names and pronouns as coreferring with the obvious speaker where the premise gave no competing referent, but I refused to import world-knowledge causation, social roles, or motives that the words never state.",
+  "cases": [
+    {
+      "id": "U01",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise reports what Marcus said, not what he will do, and 'after work' need not fall in the evening. Both stay open, and the inference is the natural one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U02",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "'Her brother Toby' asserts the relation as part of naming him; the hypothesis cannot be false while the premise stands.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U03",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Untouched dinner and time upstairs are consistent with illness, absorption or sleep; the premise names no feeling. The upset reading is the one a hearer reaches for.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U04",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Never in his life cooked a meal for another person' excludes cooking for his mother on Sundays.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U05",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise asserts only that Gran swears it; a sworn family claim can be wrong. It is exactly the inference the sentence invites.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U06",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Two facts placed side by side — a change and an improvement — do not assert that one produced the other, but the juxtaposition strongly invites it.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U07",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Being the one who always fixes them is not the same as holding responsibility for them; he could be the only competent volunteer. The inference is tempting all the same.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U08",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "'Got back from Lisbon last night' cannot be true unless the speaker was in Lisbon beforehand.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U09",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Sitting at the back taking notes is as consistent with a reporter, an observer or management as with a member; attendance is not membership. Readers will assume membership anyway.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U10",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "No age and no comparison class appear anywhere in the premise, so nothing settles a comparison with other children; the admiring report still tempts a hearer toward precocity.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U11",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Browsing flats is compatible with idle curiosity, research for someone else, or a fantasy; intention is never stated. The inference is the obvious one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U12",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "'I was furious with Cal all evening' states the hypothesis in other words.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U13",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": false,
+      "three_way": "neutral_arbitrary",
+      "rationale": "The premise reports a chance meeting and her appearance and says nothing whatever about how the relationship ended; 'bad terms' is one of many equally unsupported possibilities, and nothing in the words pulls toward it.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U14",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "The premise denies any involvement of the wiring and names a different origin.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U15",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "The identifying clause 'the one who wrote the letter to the council' attaches that act to Delia as part of picking her out.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U16",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "'Most mornings' explicitly falls short of every day, and being at the pool is not necessarily swimming; yet daily swimming is compatible with the premise and is what a hearer takes away.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U17",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "The premise denies outright that Ines is the manager and assigns the role to someone else.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U18",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "Unable to complete one length then, four hundred metres now, is improvement between those two points by the plain meaning of the words.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U19",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Turning up to working parties with her own fork is fully consistent with a helper, neighbour or waiting-list volunteer holding no plot. The inference is natural.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U20",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "A fountain switched back on dates the move to warm weather at best, and spring fits 'finally' at least as well as summer; the season is never named. A reader still leans to summer.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U21",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "Handing in one's notice is by definition the act of leaving, and the premise states it as a settled plan with the letter already printed.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U22",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Going quiet afterwards has many causes — tiredness, an unrelated thought — and the premise names none. The troubled reading is the tempting one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U23",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise records a change and a later improvement without claiming a link; the causal reading is nonetheless what the sentence invites.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U24",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Persistent texting is equally consistent with a relative, colleague or acquaintance, and the mild irritation cuts slightly against friendship. Readers will still assume it.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U25",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "'I don't think that's actually his name' is a hedged belief, not an assertion that it isn't; the speaker could be wrong. The hedge still points the hearer that way.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U26",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "'Every single winter, without fail' asserts repeated occurrence, which is more than once.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U27",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Bookkeeping and ordering are ordinary employee or contractor duties and say nothing about ownership; the breadth of the role nonetheless tempts a reader toward a stake in the business.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U28",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "Having joined in March and attended every rehearsal since asserts current membership.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U29",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Not a stroke of it different' excludes a great deal of change.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U30",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "Never once late in three years excludes a late arrival last winter; I read the third-person hypothesis as referring to the same speaker, which is the only sensible reading available.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U31",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Asking twice about a ring is at least as consistent with wanting it herself or hinting as with proposing to anyone; the premise names no intention. The proposal reading is still a recognisable temptation.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U32",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Wasn't nervous at all' before the recital excludes anxiety in the run-up to it.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U33",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "The premise states the causal relation outright with 'because'; the hypothesis restates it.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U34",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Never actually met' over six years excludes meeting at a conference last year.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U35",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise places the same man at the neighbours' house but says nothing about what he did there; he might have been fitting a shower or visiting. The boiler reading is strongly invited.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U36",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Sharing a stop occasionally is consistent with different routes or opposite directions; no bus is identified. Readers assume the same bus anyway.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U37",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Distributing the agenda at the front is as much a secretary's or helper's task as a chair's; the premise assigns no authority. The inference is the tempting one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U38",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Neither of the Haldane boys belongs' covers the elder boy explicitly.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U39",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Walking to the shop unaided shows progress, not completed recovery, which the premise never claims. A hearer will nonetheless take it as recovery.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U40",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Silence since Tuesday is exactly the absence of information about her whereabouts; she may have been discharged. The natural reading is that she is still in.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U41",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "The speaker denies any plan to sell and reports refusing askers; taking the third-person hypothesis to be about that same speaker, it is excluded.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U42",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise reports only what Yusuf keeps saying, which leaves his actual state open in either direction; the repetition tempts a hearer toward protesting too much.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U43",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "'Since' marks time, not cause, and the increase could have other sources; the causal reading is the one the sentence invites.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U44",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Not knowing their names after eleven years is as consistent with the speaker's own reserve as with the neighbours' coldness, and no behaviour of theirs is described. A reader is still tempted to blame them.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U45",
+      "not_entailed": true,
+      "not_contradicted": false,
+      "plausible": false,
+      "three_way": "contradicted",
+      "rationale": "'Wasn't Rosa at all' denies that the name was hers.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U46",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Twice in one month is compatible with a one-off residency or a first booking; regularity is a pattern over time the premise does not establish. 'Already' pulls a hearer toward it.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U47",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Shadowing for a week could be induction, cover, or familiarisation without any handover; the premise states no plan. Taking over is the obvious guess.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U48",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "That half the club drinks there and Priya is always there does not put Priya in the club; the pub has other customers. The overlap is very tempting all the same.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U49",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "One stopped behaviour is not a developmental trend and could reflect a rule, a mood or fear rather than maturing. The inference is the natural family reading.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U50",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The past tense describes a past habit without asserting it has ended; he may still do it. The tense nonetheless strongly implies discontinuation.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U51",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Buying shoes shows current investment, not future intention, and 'again' hints at past lapses; intention is never stated. The inference is the one being invited.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U52",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Crying at a ceremony is compatible with relief, grief, overwhelm or embarrassment; the premise names no emotion. Happiness is what a reader assumes.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U53",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "The premise gives a sequence of two events, not a cause, and does not even say the household moved. The causal reading is strongly invited.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U54",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "A guest may be a sister, a friend or a colleague, and the lack of introductions is if anything odd for a partner; nothing states a relationship. Readers read her as a date.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U55",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "'Looks like' is a resemblance judgement about a photo, which is exactly the sort of thing that turns out wrong. The identification is the tempting inference.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U56",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "'Mostly' explicitly admits exceptions, and this past Sunday could be one; the premise never mentions it. A hearer will still expect the call happened.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U57",
+      "not_entailed": false,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "entailed",
+      "rationale": "'As chair of the residents' committee' asserts the speaker's office as the ground of the claim.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U58",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "A photo hung among team pictures could honour a coach, a groundsman, a benefactor or someone who died; playing is never stated. The inference is the obvious one.",
+      "hard_to_call": false
+    },
+    {
+      "id": "U59",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Ceasing to ask shows changed behaviour, which could be confidence without skill or reluctance to ask; competence is not asserted. The intended reading is very tempting.",
+      "hard_to_call": true
+    },
+    {
+      "id": "U60",
+      "not_entailed": true,
+      "not_contradicted": true,
+      "plausible": true,
+      "three_way": "neutral_plausible",
+      "rationale": "Committing to a year of lessons shows seriousness about the language, not a destination, and Portuguese is spoken well beyond Portugal; no trip is mentioned. The inference still tempts.",
+      "hard_to_call": true
+    }
+  ]
+}

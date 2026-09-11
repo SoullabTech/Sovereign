@@ -1879,3 +1879,98 @@ backtick substitution — line 17 reads *"is a calibration record"*. **Not amend
 the founder pulls this branch with `--ff-only`, and a force-push would break his
 next pull mid-experiment for a cosmetic fix. The protocol text above is correct
 and this note is the repair.
+
+---
+
+# ⭐⭐ PHASE 3 TESTS ECOLOGICAL ROBUSTNESS, NOT A CAUSAL MECHANISM.
+
+*Brevity, sibling removal and single-hypothesis presentation moved together.
+Nothing here can establish that implicitness caused anything.*
+
+## PHASE 3 ADJUDICATION — FROZEN, before DeBERTa ran (2026-09-11)
+
+```text
+file        scripts/verifier-probe/terse-adjudication.json
+sha256      6b0315964f47876444be145b682b35a43383685570a2f3045f3116358d0fa878
+cases       60, ids in order, every test field agreeing with its label
+labels      39 neutral_plausible · 10 entailed · 10 contradicted
+            ·  1 neutral_arbitrary  (U13)
+hard_to_call 13 — U10 U13 U16 U20 U21 U27 U30 U31 U32 U41 U44 U59 U60
+```
+
+### ⭐⭐ AUTHOR CALIBRATION — 60 / 60
+
+**The independent adjudicator's entailed and contradicted id lists are identical
+to the author's intent, and 39 of 40 intended-open cases were confirmed open.**
+The single difference is `U13`, moved to `neutral_arbitrary` — still open, just
+not tempting.
+
+> **Terse ordinary speech DID generate epistemic openness**, and a writer aiming
+> at it hit it 39 times in 40. That answers the predeclared *"few intended-open
+> cases survive"* branch: **it does not fire.** The primary class is abundant —
+> n=39 against phase 2's n=30.
+
+⛔ **This is author calibration, not verifier performance**, and the two must not
+be run together.
+
+### ⚠️ THREE CONTRADICTED CONTROLS ARE CONTESTED BY THEIR OWN ADJUDICATOR
+
+```text
+U30  "I've never once been late to that class, not in three years of Tuesdays."
+     -> She arrived late to that class one evening last winter.
+U32  "Honestly I wasn't nervous at all before the recital..."
+     -> She was anxious in the run-up to the recital.
+U41  "I've no plans to sell the boat — people keep asking..."
+     -> He is trying to sell the boat.
+```
+
+First-person premise against third-person hypothesis. The adjudicator took the
+coreferential reading and labelled them `contradicted`, flagging plainly: ***"that
+was a decision, not a reading."*** ⛔ **A verifier that declines to fix the
+referent is not obviously wrong**, so the contradiction control must be read with
+these three in view. The reporter prints them beside their DeBERTa call.
+
+### ⭐ A MECHANISM PREDECLARED BY THE ADJUDICATOR, BEFORE ANY MODEL RAN
+
+> *"The hedges (`I don't think`, `Gran swears`), quantifiers (`most`, `mostly`,
+> `half`) and reported-speech frames (`Marcus said`, `Yusuf keeps telling
+> everyone`) were consistently the hinge, and **reading past them to what the
+> speaker probably meant would have flipped a good number of the 39 neutrals into
+> entailments.**"*
+
+⭐ **That is a testable prediction of exactly where and how the verifier will err,
+made by a party that never saw a model output.** If DeBERTa promotes, the
+promoted cases can be checked one by one against it.
+
+### The author's five, casewise — ZERO overlap with the adjudicator's thirteen
+
+`U25 · U50 · U01 · U40 · U39` — **not one appears in the adjudicator's
+hard-to-call list.** In phase 2 the two parties shared one item (T039); here they
+share none. ⛔ **Five cases, no rate.** The observation is that the two readers
+locate difficulty in different places, which is the second time this lane has seen
+it and is now worth watching rather than concluding.
+
+### Reporting discipline, enforced in `phase3_report.py`
+
+- ⛔ **NO OVERALL ACCURACY FIGURE IS PRINTED.** The 40/10/10 prevalence was
+  designed; an overall number would describe the design. Entailed and
+  contradicted are **controls**, labelled as such.
+- **PRIMARY** = all 39 adjudicator-confirmed neutral·plausible.
+  **SENSITIVITY** = the same minus hard-to-label items, with n, rate, Wilson
+  interval, percentage-point gap and the ids — ⛔ *shown, never removed*, and no
+  threshold for "material".
+- **Author calibration matrix printed as counts only.** No score.
+- **Every promoted case is printed in full** for casewise inspection against the
+  hedge/quantifier/reported-speech prediction and against **T078's
+  world-knowledge completion**, which stays an observation until enough examples
+  support a class.
+- Domains descriptive only.
+
+### The four predeclared interpretations, unchanged
+
+| | |
+|---|---|
+| abundant open cases **and** preserved well | phase 2 generalizes to terse natural prose |
+| abundant open cases **and** preservation drops | ⭐ the overcommit reappears under the ecological condition |
+| few intended-open survive adjudication | ⛔ **already excluded — 39/40 survived** |
+| hard-to-label cases dominate the errors | the task boundary itself is the real issue |
