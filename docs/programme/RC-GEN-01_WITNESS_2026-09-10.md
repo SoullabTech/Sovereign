@@ -4479,3 +4479,33 @@ HHEM conditional finding         ⛔ WITHDRAWN (n=2)
 MiniCheck                        ⛔ NOT RUN — wrong package, very likely name collision
 evidence gate HELD · analyzer/3 UNTOUCHED · B HELD · production UNTOUCHED
 ```
+
+### ⛔ MiniCheck — SECOND PACKAGING FAILURE, AND THE SECOND ONE IS MINE
+
+```
+ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device
+  ... while installing build dependencies for vllm
+```
+
+⛔ **I told the founder to install `minicheck[llm]`.** The `[llm]` extra pulls **vLLM**,
+a GPU serving stack that is **not needed to run the FLAN-T5 checkpoint at all**. pip
+then walked backwards through ten vLLM releases — each a 35–40 MB source tarball,
+every one rejected for a `+cpu` version-metadata mismatch — before trying to build
+`0.21.0` from source with its own torch 2.11, cmake and ninja. **That is what filled
+the disk.**
+
+```
+correct   pip install "minicheck @ git+https://github.com/Liyan06/MiniCheck.git@main"
+⛔ wrong  pip install "minicheck[llm] @ ..."        <- pulls vLLM, builds from source
+```
+
+⚠️ **Two MiniCheck failures now, neither of them a result about MiniCheck:**
+
+```
+1  PyPI `minicheck` 0.4.0 — a 56 kB wheel with no dependencies · NAME COLLISION
+2  the `[llm]` extra — vLLM source build · MY ERROR, and it cost the disk
+```
+
+⭐ **Both are recorded as packaging facts.** ⛔ The challenger has still never run, and
+**"NOT RUN" must not drift into "did not do well"** as attempts accumulate. The
+isolation repair is what keeps every other verifier reporting through all of this.
