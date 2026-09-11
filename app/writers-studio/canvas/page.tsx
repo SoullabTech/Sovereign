@@ -55,6 +55,13 @@ import {
 import type { SectionWriting } from '@/lib/writersStudio/useSectionWriting';
 import WorkDrawer from './WorkDrawer';
 import MaterialsDrawer from './MaterialsDrawer';
+import FieldRoom from '../field/FieldRoom';
+import FocusStrip from '../field/FocusStrip';
+import FocusOverlay from '../field/FocusOverlay';
+import { useHeldFocus } from '../field/useHeldFocus';
+import { focusPaint } from '../field/focusPaint';
+import { resolveWorkMeasure } from '../field/fieldAperture';
+import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import ManuscriptOutline, { useManuscriptSections } from './ManuscriptOutline';
 import { confirmSectionBreaks, SECTION_BREAKS_COPY } from '@/lib/writersStudio/confirmSectionBreaks';
 import StructuredOutline from './StructuredOutline';
@@ -132,6 +139,35 @@ import StudioLowerBand from './StudioLowerBand';
 type ColumnId = 'outline' | 'maia' | 'materials' | 'conversation';
 
 /** Rail destinations this room satisfies in place rather than by navigation. */
+/**
+ * ⭐ ONE TREATMENT, RULED. The design study offered three ways of keeping
+ * location, focus and thread visually distinct; `?field=A|B|C` selected between
+ * them and was a STUDY MECHANISM, never a product entry.
+ *
+ * C is the ruling (founder, 2026-09-10): location stays quiet in the rail,
+ * Focus alone is framed inside the Work, and the thread stays in MAIA's orbit.
+ * B was refused because it washes the manuscript itself to say where you are —
+ * a mark on the writing for a reason that has nothing to do with the writing.
+ *
+ * ⛔ Not a prop, not a parameter, not a preference. A writer choosing between
+ * three grammars for the same three meanings is the study leaking into the
+ * product, and the falsifier the study existed to answer is only meaningful
+ * once one answer is chosen.
+ */
+const WRITE_TREATMENT = 'C' as const;
+
+/**
+ * ⭐ THE ORDINARY GEOMETRY OF WRITE, FIXED. Canonical opened a Work that has
+ * sections with its outline shown (`sections.length > 0`) and MAIA present
+ * (defaulted true), so this is the measure a writer actually had — not the
+ * widest the field could ever be, and not the narrowest.
+ *
+ * Materials is deliberately ABSENT: in the room it is a Workbench orbit at the
+ * bottom, so it takes no width from the manuscript at all. Canonical narrowed
+ * the field to 33.973% when Materials opened; under R1 it no longer does.
+ */
+const ORDINARY_COLUMNS = ['rail', 'outlinePanel', 'writingField', 'maiaPanel'] as const;
+
 const SATISFIED_IN_ROOM = ['materials', 'structure', 'versions', 'conversations'] as const;
 
 /* Named, and no longer the default export: `useSearchParams()` reads route
@@ -401,19 +437,41 @@ function CanvasRoom() {
      Materials yields its right-hand column before the outline does, and
      before the field gives up its measure (YIELDS_BEFORE). It is not deleted
      — PRESENT_AT_COMPACT keeps it — it simply cannot hold a column here. */
-  const columnsShown = useMemo(() => {
-    const cols: Array<keyof StudioLayout> = ['rail'];
-    if (outlineOpen) cols.push('outlinePanel');
-    cols.push('writingField');
-    if (maiaOpen) cols.push('maiaPanel');
-    /* Reserved while conversing even though Materials is not drawn: MAIA takes
-       that share, so the writing field keeps EXACTLY its measured width.
-       Opening a conversation must never shrink the manuscript — that is the
-       whole point of speaking with MAIA beside the Work rather than instead
-       of it. */
-    if ((materialsOpen || conversationOpen) && !compact) cols.push('materialsPanel');
-    return cols as Array<'rail' | 'outlinePanel' | 'writingField' | 'maiaPanel' | 'materialsPanel'>;
-  }, [outlineOpen, maiaOpen, materialsOpen, conversationOpen, compact]);
+  /**
+   * ⭐⭐ R1 · A — THE COLUMN SET IS CONSTANT, SO THE MEASURE NEVER MOVES.
+   * Founder ruling, 2026-09-10.
+   *
+   * ⛔ THE DEFECT THIS REPLACES, AND HOW IT HID. This list used to grow and
+   * shrink with `outlineOpen` / `maiaOpen` / `materialsOpen` / `conversationOpen`,
+   * and `writingFieldLayout` divides the notional width among whatever is in it.
+   * So the manuscript's own percentage moved with the panels:
+   *
+   *     rail + field                        68.088%
+   *     + outline                           52.054%
+   *     + outline + maia    ← ORDINARY      41.293%
+   *     + outline + maia + materials        33.973%
+   *
+   * Toggling MAIA from the header re-wrapped the writer's paragraphs. The first
+   * R1 repair made `aperture()` constant and asserted that the field's STYLE
+   * expression named no orbit state — which it does not, and never did. The
+   * dependency was one level up, in `L`. An assertion that inspects the wrong
+   * place reports clean and proves nothing.
+   *
+   * ⭐ R1 · B — BASELINE CONTINUITY. The constant chosen is not an arbitrary
+   * safe number: it is EXACTLY canonical's ordinary arrival geometry, where a
+   * Work with sections opens with its outline and MAIA present. State
+   * invariance bought by quietly narrowing the writer's page would be the
+   * supporting UI consuming the Work continuously instead of intermittently —
+   * formally invariant, substantively worse.
+   *
+   * ⛔ Do not make this depend on anything again. `apertureIsIndependentOfOrbits`
+   * cannot catch a regression here, because the dependency would be in `L`.
+   * `shellProjection` pins the number itself against writingFieldLayout.
+   */
+  const columnsShown = useMemo(
+    () => ORDINARY_COLUMNS,
+    [],
+  );
 
   /* Resolved at a large notional width and expressed as percentages, so the
      MEASURED ratio holds at every viewport and nothing reads `window` during
@@ -445,6 +503,67 @@ function CanvasRoom() {
   }
 
   const manuscriptLabel = manuscript ? (manuscript.title ?? UNTITLED_EXPRESSION) : '';
+
+  /**
+   * ── THE HELD FOCUS ────────────────────────────────────────────────────────
+   *
+   * What the writer has framed for attention. Called unconditionally, as every
+   * hook must be, and inert until they frame something — with no Work resolved
+   * it has no sections to read and captures nothing.
+   *
+   * ⛔ IT TRANSMITS NOTHING. The focus is held, painted and carried beside the
+   * conversation; it is not sent anywhere. Handing it to a boundary is
+   * FOCUS-PRODUCER's work and is out of scope for this lane.
+   */
+  const focusSections = useMemo(
+    () => (writing?.sections ?? []).map((sec) => ({
+      id: sec.id, position: sec.position, heading: sec.heading ?? null,
+    })),
+    [writing],
+  );
+  const focusBodyOf = useCallback(
+    (sectionId: string) => writing?.bodyOf(sectionId) ?? '',
+    [writing],
+  );
+  const held = useHeldFocus(focusSections, focusBodyOf);
+
+  /**
+   * ⭐ R1 — ONE GOVERNED MEASURE, SHARED WITH ITS ACCEPTANCE.
+   *
+   * The share comes from the measured table; `resolveWorkMeasure` turns it into
+   * the Work's actual geometry and is what `fieldAperture`'s behavioural suite
+   * exercises. The orbit state is deliberately not passed: nothing about which
+   * panels are open may reach this number.
+   */
+  const workMeasure = useMemo(() => {
+    /* ⭐ THE UI CALLS THE GOVERNED FUNCTION. Computing the share inline here
+       would recreate production arithmetic that the acceptance also recreates,
+       and the two would agree by coincidence — which is how the first R1
+       instrument came to be a tautology. Resolved against 100 units so the
+       result is directly the percentage the ratio must hold at every viewport. */
+    const m = resolveWorkMeasure(100, L.writingField / NOTIONAL, compact);
+    return { pct: m.widthPx, compact };
+  }, [L.writingField, compact]);
+
+  /**
+   * The focus, drawn where the writer put it. Built here because it needs both
+   * the held focus and the ruled treatment; handed to the substrate as a
+   * read-only mark and nothing else.
+   */
+  const renderSectionOverlay = useCallback((sectionId: string, body: string) => {
+    const f = held.focus;
+    if (!f || !f.sectionIds.includes(sectionId)) return null;
+    const first = f.sectionIds[0] === sectionId;
+    const last = f.sectionIds[f.sectionIds.length - 1] === sectionId;
+    return (
+      <FocusOverlay
+        body={body}
+        start={first ? f.start : 0}
+        end={last ? f.end : body.length}
+        paint={focusPaint(resolveMark(TREATMENTS[WRITE_TREATMENT], 'focus'))}
+      />
+    );
+  }, [held.focus]);
   const headline = work?.title ?? (manuscript ? manuscriptLabel : 'Writer’s Studio');
   const named = Boolean(work?.title ?? manuscript?.title);
 
@@ -571,86 +690,104 @@ function CanvasRoom() {
       compact={compact}
     >
 
-        <StudioShellRail
-          hasManuscript={Boolean(manuscript)}
-          counts={railCounts}
-          satisfiedInRoom={manuscript ? SATISFIED_IN_ROOM : []}
-          manuscriptId={manuscript?.id ?? null}
-          current="manuscript"
-          openPanels={[
-            ...(materialsOpen ? ['materials'] : []),
-            ...(outlineOpen ? ['structure'] : []),
-            ...(bandOpen ? ['versions'] : []),
-            ...(conversationOpen ? ['conversations'] : []),
-          ]}
-          onSelect={(d) => {
-            if (d.id === 'materials') summon('materials');
-            if (d.id === 'structure') summon('outline');
-            if (d.id === 'versions') setBandOpen(true);
-            if (d.id === 'conversations') {
-              summon('conversation');
-              summon('maia');
-            }
-          }}
-          lead={
-            <>
-              {/* WS-WORK-VISUAL-01 — the Work's own image, present while the
-                  writer is actually writing.
+      {/* ══ WRITE'S INTERIOR — THE FIELD + ORBIT ROOM ════════════════════════
+          ⭐ THE ROOM IS THE INTERIOR, NOT A SECOND SHELL. The wordmark, the
+          Work's name, the mode bar, the header controls and the lower band
+          belong to the Studio and persist across WRITE and DEVELOP. Only what
+          sits inside changes. An earlier form of this room returned INSTEAD of
+          <WriterStudioShell>, which would have given WRITE one environment and
+          DEVELOP another — the second destination this integration exists to
+          eliminate.
 
-                  It sits in the RAIL, which is the surrounding field: beside
-                  the manuscript column, never behind or beneath editable
-                  prose, where it would trade the writer's legibility for the
-                  room's atmosphere. The manuscript stays exactly as stable as
-                  it was; the image belongs to what is around it.
+          ── EVERY LIVE CAPABILITY, ACCOUNTED FOR ────────────────────────────
+          Nothing that worked before may vanish because the visual shell
+          changed. `SATISFIED_IN_ROOM` names what WRITE actually satisfied:
 
-                  Nothing appears when no image was chosen — a Work without one
-                  is complete, and the rail simply begins at "This work". */}
-              <WritingFieldVisual workId={work?.id ?? null} title={work?.title ?? null} />
-            <button
-              type="button"
-              onClick={() => setWorkOpen((v) => !v)}
-              aria-expanded={workOpen}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                background: workOpen ? GROUND.active : 'transparent',
-                border: `1px solid ${workOpen ? GOLD.edge : RULE.soft}`,
-                borderRadius: RADIUS.base,
-                padding: `${SPACE.tight + 1}px ${SPACE.base}px`,
-                marginBottom: SPACE.comfortable,
-                cursor: 'pointer',
-              }}
-            >
-              <StudioText role="navItem" as="span" tone={workOpen ? 'primary' : 'secondary'}>
-                This work
-              </StudioText>
-            </button>
-            </>
-          }
-          style={{
-            width: compact ? '100%' : pct(L.rail),
-            flexShrink: 0,
-            borderRadius: RADIUS.panel,
-            /* WS2-03B correction 2 — the rail is a rounded column here, not a
-               flush edge, so its right-only hairline had nothing to divide.
-               It joins the quiet chrome; the writing field keeps the only
-               visible border in the row. */
-            border: `1px solid ${RULE.quiet}`,
-            borderRight: `1px solid ${RULE.quiet}`,
-          }}
-        />
+            structure      → the Struct orbit
+            conversations  → the MAIA orbit
+            materials      → the Workbench orbit  (with Work declarations)
+            versions       → the Studio's lower band, untouched
 
-        {/* The Work drawer — identity and declarations, member-authored. It is
-            not a column in 04 and is not invented as one: it opens from the
-            rail's head into the outline's place. */}
-        {workOpen && (
-          <StudioPanel
-            role="manuscript-outline"
-            label="This work"
-            onDismiss={() => setWorkOpen(false)}
-            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
-          >
+          and outside the room, unchanged in the shell: Work identity and the
+          mode bar, Appearance, word count, and Home by the wordmark. Export
+          moves into Workbench rather than disappearing with the old rail.
+
+          Notes, Goals and the rail's Tools were already rendered `unavailable`
+          — spans with no href, `aria-disabled`, dimmed. They have no substrate.
+          Removing chrome that promised nothing is honesty, not loss.
+
+          ⛔ NO AUTHORITY MOVES HERE. Write authority, autosave, section
+          identity, revisions, navigation and provenance are exactly what they
+          were: this is a relocation of already-resolved pieces, and the room
+          re-derives none of them. */}
+      <FieldRoom
+        treatment={WRITE_TREATMENT}
+        /* The shell already names the Work. The room takes no title, so no
+           second masthead can appear for the same manuscript. */
+        title=""
+        workRef={held.rootRef}
+        focus={held.focus
+          ? ({ openMaia }) => (
+            <FocusStrip
+              focus={held.focus!}
+              sections={focusSections}
+              bodyOf={focusBodyOf}
+              canWiden={held.canWiden}
+              canNarrow={held.canNarrow}
+              onWiden={held.widen}
+              onNarrow={held.narrow}
+              onRelease={held.release}
+              /* EXPLICIT ONLY, AND IT SENDS NOTHING. The gesture opens her and
+                 leaves the focus standing beside the conversation. Carrying it
+                 across a boundary is FOCUS-PRODUCER's lane. */
+              onAsk={openMaia}
+            />
+          )
+          : undefined}
+        structure={
+          /* THE SAME ROWS, THE SAME NAMESPACE RULE. In section_aware the rows
+             are manuscript_draft_sections ids and carry navigation; otherwise
+             they are the immutable Source and carry none. The room does not get
+             to relax that — an outline that looks wired and misses every click
+             is the same defect wherever it is drawn. */
+          writeMount.mount === 'sections' && writing && manuscript?.id ? (
+            <StructuredOutline
+              manuscriptId={manuscript.id}
+              sections={writeMount.rows}
+              activeId={outlinePlace(session, writing)}
+              statusOf={writing.statusOf}
+              onSelect={outlineSelect(session, writing, setJumpTo)}
+            />
+          ) : (
+            /* Source rows, and therefore NO navigation props — the namespace
+               rule holds inside the room exactly as it did beside it. */
+            <ManuscriptOutline
+              manuscriptId={manuscript?.id ?? null}
+              phase={sectionsPhase}
+              sections={sections}
+            />
+          )
+        }
+        maia={
+          work && manuscript ? (
+            <StudioConversation
+              work={work}
+              manuscriptId={manuscript.id}
+              conversationId={conversationId}
+              /* The orbit is the dismissal. Closing it hides the panel and
+                 never unmounts the exchange, so reopening returns to the same
+                 conversation id. */
+              onClose={() => undefined}
+            />
+          ) : (
+            <MaiaColumn context={workContext} />
+          )
+        }
+        workbench={
+          /* WHERE THE SURROUNDING CAPABILITIES LAND. Work declarations and
+             Materials both lived in the old rail; both are live and both keep
+             working. Export keeps its route rather than losing its door. */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE.roomy, minHeight: 0 }}>
             <WorkDrawer
               works={works}
               unitedWork={work}
@@ -658,207 +795,81 @@ function CanvasRoom() {
               manuscriptLabel={manuscriptLabel}
               onChanged={reloadWorks}
             />
-          </StudioPanel>
-        )}
-
-        {/* WS2-05B - a reading of this Work, in the manuscript column's place.
-            THE SAME PANEL ROLE, RELABELLED. No seventh panel is invented: the
-            contract's roles are read from the two reference architectures, and
-            neither shows one for this. A proposal is ABOUT the manuscript
-            column, so it takes that column's place and its label says which of
-            the two the member is looking at.
-            READ AND REVIEW ONLY. There is no adoption endpoint to reach from
-            here, so leaving the room leaves the Work exactly as it was. */}
-        {!workOpen && outlineOpen && readingId && manuscript?.id && (
-          <StudioPanel
-            role="manuscript-outline"
-            label="A reading"
-            onDismiss={() => setReadingId(null)}
-            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
-          >
-            <StructureReview manuscriptId={manuscript.id} proposalId={readingId} />
-          </StudioPanel>
-        )}
-
-        {!workOpen && outlineOpen && !readingId && (
-          <StudioPanel
-            role="manuscript-outline"
-            label="Manuscript"
-            onDismiss={() => dismiss('outline')}
-            style={{ width: compact ? '100%' : pct(L.outlinePanel), flexShrink: 0 }}
-          >
-            {/* ONE NAMESPACE AT A TIME. In section_aware the rows are
-                manuscript_draft_sections ids and carry navigation; in every
-                other mode they are the immutable Source and carry none.
-                Combining Source rows with navigation callbacks would produce a
-                column that looks wired and misses every click. */}
-            {writeMount.mount === 'sections' && writing && manuscript?.id ? (
-              /* WS2-05A — the same navigable rows, grouped by whatever the
-                 member has authored. With no divisions yet it renders exactly
-                 the flat list this column has always shown; unplaced sections
-                 are never hidden. */
-              <>
-                <StructuredOutline
-                  manuscriptId={manuscript.id}
-                  sections={writeMount.rows}
-                  activeId={outlinePlace(session, writing)}
-                  statusOf={writing.statusOf}
-                  onSelect={outlineSelect(session, writing, setJumpTo)}
-                />
-                {/* Renders NOTHING when no reading exists. The absence of an
-                    interpreter must look like absence, not like an offer. */}
-                <ReadingsEntry manuscriptId={manuscript.id} onOpen={setReadingId} />
-              </>
-            ) : writeMount.mount === 'sections' && writing ? (
-              <ManuscriptOutline
-                manuscriptId={manuscript?.id ?? null}
-                phase="ready"
-                sections={writeMount.rows}
-                activeId={outlinePlace(session, writing)}
-                statusOf={writing.statusOf}
-                onSelect={outlineSelect(session, writing, setJumpTo)}
-              />
-            ) : (
-              <>
-                {/* WS2-NAV-01 — rows here are NOT clickable, because this draft is
-                    not section-addressable yet. Previously that was silent: the
-                    outline rendered as an ordinary list that simply did nothing.
-                    It now says what it is and offers the act that changes it. */}
-                <ManuscriptOutline
-                  manuscriptId={manuscript?.id ?? null}
-                  phase={sectionsPhase}
-                  sections={sections}
-                />
-                {/* R1 — `worktable` collapses THREE server states, and only one of
-                    them can convert. planConversion() refuses unless the draft is
-                    byte-identical to the source-derived partition, so offering the
-                    act on `continuous_unprovable` would show a button structurally
-                    incapable of succeeding, and `no_draft` has nothing to convert.
-                    The gate is therefore the WRITE STATE, not the mount. */}
-                {writeMount.mount === 'worktable' && (
-                  <div
-                    style={{ marginTop: SPACE.comfortable, maxWidth: '34ch' }}
-                    data-outline-state="unconverted"
-                  >
-                    {/* The server's own reason, when it has one, comes first —
-                        it is more specific than anything written here. */}
-                    <StudioText role="metadata" style={{ marginBottom: SPACE.tight }}>
-                      {writeMount.notice?.title ?? SECTION_BREAKS_COPY.title}
-                    </StudioText>
-                    <StudioText role="quiet">
-                      {writeMount.notice?.body
-                        ?? (writeState?.mode === 'continuous'
-                              ? SECTION_BREAKS_COPY.body
-                              : SECTION_BREAKS_COPY.bodyNotConvertible)}
-                    </StudioText>
-                    {writeState?.mode === 'continuous' && (
-                    <button
-                      type="button"
-                      onClick={onConfirmSectionBreaks}
-                      disabled={confirming || !manuscript?.id}
-                      data-action="confirm-section-breaks"
-                      style={{
-                        marginTop: SPACE.tight,
-                        padding: '8px 14px',
-                        background: 'transparent',
-                        border: `1px solid ${RULE.soft}`,
-                        borderRadius: 6,
-                        color: 'inherit',
-                        font: 'inherit',
-                        cursor: confirming ? 'default' : 'pointer',
-                        opacity: confirming ? 0.6 : 1,
-                      }}
-                    >
-                      {confirming ? SECTION_BREAKS_COPY.working : SECTION_BREAKS_COPY.action}
-                    </button>
-                    )}
-                    {confirmError && (
-                      <StudioText role="quiet" style={{ marginTop: SPACE.tight }}>
-                        {confirmError}
-                      </StudioText>
-                    )}
-                  </div>
-                )}
-              </>
+            <MaterialsDrawer
+              work={work ?? (works.length === 1 ? works[0] : null)}
+              manuscript={manuscript}
+              manuscripts={manuscripts}
+              onChanged={reloadWorks}
+            />
+            {manuscript && (
+              <Link
+                href={`/writers-studio/canvas/export?m=${manuscript.id}`}
+                data-workbench-export
+                style={{ color: INK.secondary, textDecoration: 'none', fontSize: 12 }}
+              >
+                Export
+              </Link>
             )}
-          </StudioPanel>
-        )}
+          </div>
+        }
+        work={
+          /* ── THE MEMBER'S OWN SURFACE, CARRIED INTO THE ROOM ──────────────
+             ⭐ APPEARANCE MUST STILL REACH THE MANUSCRIPT. These tokens are the
+             page the writer chose, and the ink declared here is what makes
+             "the ink belongs to the material, not the room" true in the
+             cascade: an element that merely inherits colour resolves against
+             the dark Studio shell instead. The old interior declared them on
+             its writing-field <main>; that element is gone, so they are
+             declared here, on the Work itself.
 
-        {/* ══ THE WRITING FIELD — the largest, quietest surface ══════════
+             ⛔ `--ws-bg` is deliberately never among them — that is the page
+             gradient behind the whole Studio, and a writing surface able to
+             repaint the room is exactly the leak this design prevents.
 
-            WS-CANVAS-MATERIAL-01. The Studio is the room; this is the page.
-
-            The chosen material is applied HERE, as CSS custom properties on
-            this one element. A custom property set on an element reaches that
-            element and its descendants and nothing else, so Paper repaints the
-            prose, its hairlines and its insets together — and cannot reach the
-            rails, MAIA, the outline, the dock, the header or the shell. Not by
-            convention; by the cascade. No component inside the field knows
-            this exists, because they all already read these token names.
-
-            Dark emits {} — it is the absence of an override, so the field
-            inherits whatever room the writer chose. `--ws-bg` is deliberately
-            never among these: that is the page gradient behind the whole
-            Studio, and a writing surface able to repaint the room would be
-            exactly the leak this design exists to prevent. */}
-        <main
-          data-panel-role="writing-field"
-          data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
-          style={{
-            ...canvasSurfaceVars,
-            /* The page's ink, stated on the page itself.
-               Setting the variables is not enough on its own: an element that
-               inherits its colour, or one that was written before these tokens
-               existed, resolves against whatever ancestor last declared one —
-               and that ancestor is the dark Studio shell. Declaring it HERE
-               makes the writing field the nearest answer for everything inside
-               it, which is what "the ink belongs to the material, not the
-               room" has to mean in the cascade. */
-            color: INK.primary,
-            width: compact ? '100%' : pct(L.writingField),
-            flexShrink: 0,
-            minWidth: compact ? 0 : MEASURE.fieldMinWidth,
-            minHeight: compact ? '60vh' : 0,
-            background: GROUND.field,
-            border: `1px solid ${RULE.soft}`,
-            borderRadius: RADIUS.panel,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto',
-          }}
-        >
+             What is NOT carried over: width, flexShrink and minWidth. Those
+             were the old column's measure. The room's aperture owns the Work's
+             box now, and two things computing one width is how they disagree. */
           <div
+            data-panel-role="writing-field"
+            data-canvas-surface={canvasSurfaceVars['--ws-ground-field'] ? 'material' : 'studio'}
             style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: 0,
-              width: '100%',
-              maxWidth: `${MEASURE.prose}ch`,
-              margin: '0 auto',
-              /* WS2-03B correction 2. The manuscript is the centre of gravity
-                 and was reading as one pane among four. Its measure and its
-                 column width are unchanged — MEASURE.prose and the geometry
-                 are measured values and not this correction's to move. What
-                 it gets is air: the field breathes where the panels do not. */
-              padding: `${SPACE.band}px ${MEASURE.roomGutter}px ${SPACE.generous}px`,
+              ...canvasSurfaceVars,
+              color: INK.primary,
+              /* ⭐⭐ R1 — THE MEASURED COLUMN, UNCHANGED BY ANY ORBIT.
+                 Founder ruling 2026-09-10: the Work's measured width and its
+                 resulting line reflow are invariant. This is the explicit width
+                 WS2-02B requires — never a flex remainder, and never derived
+                 from what happens to be open. Opening MAIA and watching your
+                 paragraphs acquire new line breaks is conversation physically
+                 perturbing the writing it is about. */
+              /* ⭐ THE GOVERNED MEASURE. `resolveWorkMeasure` is the one
+                 computation; the R1 acceptance calls this same function rather
+                 than recreating its arithmetic, so a test cannot agree with
+                 production by coincidence. Expressed as a percentage because
+                 the ratio must hold at every viewport without reading
+                 `window` during render. */
+              width: workMeasure.compact ? '100%' : `${workMeasure.pct.toFixed(4)}%`,
+              flexShrink: 0,
+              minWidth: compact ? 0 : MEASURE.fieldMinWidth,
+              background: GROUND.field,
+              border: `1px solid ${RULE.soft}`,
+              borderRadius: RADIUS.panel,
+              display: 'flex', flexDirection: 'column',
+              /* ⛔ NEVER `flex: 1`. That is the WS2-02B defect by another name:
+                 a field whose width is whatever the row had left over. The
+                 explicit width above is the measure; height fills the room. */
+              minHeight: compact ? '60vh' : 0,
+              height: '100%',
+              overflow: 'auto',
             }}
           >
-            {/* ⛔ The one place a stylesheet beats an inline style here, and
-                the reason is the same one recorded in globals.css on
-                2026-07-31: the writer's own prose rendered near-black on the
-                espresso ground while every piece of surrounding chrome
-                rendered cream — the software more visible than the work. The
-                inverse happened on Paper, 2026-09-07: the page turned and the
-                prose stayed the room's colour, leaving a founder unable to
-                read their own book.
-
-                These two elements ARE the member's words — the read-only
-                <pre> and the editable <textarea> of the section surface. They
-                take the page's ink unconditionally, because a writing surface
-                whose text might not follow it is not a writing surface. Scoped
-                to [data-canvas-surface='material'], so Dark is untouched and
-                nothing outside the writing field can be reached at all. */}
+            {/* ⭐ THE TEXT ITSELF, NOT ONLY ITS CONTAINER. The variables above
+                are inherited, but a <pre> or <textarea> written before those
+                tokens existed — or one a browser gives its own default fill to
+                — resolves against something else. These two rules are what make
+                the member's words actually take the page they chose, and the
+                `-webkit-text-fill-color` line is not redundant: WebKit ignores
+                `color` on a textarea without it. */}
             <style>{`
               [data-canvas-surface='material'] pre,
               [data-canvas-surface='material'] textarea {
@@ -869,76 +880,25 @@ function CanvasRoom() {
                 background: var(--ws-ground-active);
               }
             `}</style>
-            <FieldBody
-              writeMount={writeMount}
-              witnessDelayMs={witnessDelayMs}
-              onWriting={setWriting}
-              onSession={setSession}
-              jumpTo={jumpTo}
-              onJumpHandled={() => setJumpTo(null)}
-              listPhase={listPhase}
-              resolution={resolution}
-              manuscript={manuscript}
-              onPick={(id) => setRequested(id)}
-              onMeta={setDraftMeta}
-              onCheckpointed={() => setHistoryKey((k) => k + 1)}
-              onWriteAuthorityChanged={refreshWriteState}
-            />
+          <FieldBody
+            writeMount={writeMount}
+            witnessDelayMs={witnessDelayMs}
+            onWriting={setWriting}
+            onSession={setSession}
+            jumpTo={jumpTo}
+            onJumpHandled={() => setJumpTo(null)}
+            listPhase={listPhase}
+            resolution={resolution}
+            manuscript={manuscript}
+            onPick={(id) => setRequested(id)}
+            onMeta={setDraftMeta}
+            onCheckpointed={() => setHistoryKey((k) => k + 1)}
+            onWriteAuthorityChanged={refreshWriteState}
+            renderSectionOverlay={renderSectionOverlay}
+          />
           </div>
-        </main>
-
-        {maiaOpen && (
-          <StudioPanel
-            role="maia"
-            label={conversationOpen ? 'MAIA · conversation' : 'MAIA'}
-            onDismiss={() => {
-              /* Dismissing the region closes the conversation with it. The
-                 exchange itself is not lost — reopening within this page
-                 continues the same conversation id. */
-              dismiss('maia');
-              dismiss('conversation');
-            }}
-            style={{
-              width: compact
-                ? '100%'
-                : conversationOpen
-                  ? pct(L.maiaPanel + L.materialsPanel + L.gutter)
-                  : pct(L.maiaPanel),
-              flexShrink: 0,
-            }}
-          >
-            {conversationOpen && work && manuscript ? (
-              <StudioConversation
-                work={work}
-                manuscriptId={manuscript.id}
-                conversationId={conversationId}
-                /* Puts her away without ending the exchange: the panel is
-                   hidden by `dismiss`, never unmounted, so calling her forward
-                   again returns to the same conversation. */
-                onClose={() => dismiss('conversation')}
-              />
-            ) : (
-              <MaiaColumn context={workContext} />
-            )}
-          </StudioPanel>
-        )}
-
-        {materialsOpen && !conversationOpen && !compact && (
-          <StudioPanel
-            role="materials"
-            label="Materials"
-            count={declaredMaterials || undefined}
-            onDismiss={() => dismiss('materials')}
-            style={{ width: pct(L.materialsPanel), flexShrink: 0 }}
-          >
-            <MaterialsDrawer
-              work={work ?? (works.length === 1 ? works[0] : null)}
-              manuscript={manuscript}
-              manuscripts={manuscripts}
-              onChanged={reloadWorks}
-            />
-          </StudioPanel>
-        )}
+        }
+      />
     </WriterStudioShell>
   );
 }
@@ -959,6 +919,7 @@ function FieldBody({
   onSession,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -968,6 +929,12 @@ function FieldBody({
   onCheckpointed: () => void;
   /** NAV-03 — the write authority moved; re-read what the server now says. */
   onWriteAuthorityChanged: () => void;
+  /**
+   * A read-only mark the room draws over a section's text — the writer's own
+   * held focus. Forwarded to the substrate untouched; it confers no authority
+   * and this component neither reads nor interprets it.
+   */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
   /** What the server said to mount. Resolved above; never guessed here. */
   writeMount: WriteMount;
   witnessDelayMs?: number;
@@ -1124,6 +1091,7 @@ function FieldBody({
             onCheckpointed={onCheckpointed}
             jumpTo={jumpTo}
             onJumpHandled={onJumpHandled}
+            renderSectionOverlay={renderSectionOverlay}
           />
         )}
       </SectionWritingSession>
@@ -1187,6 +1155,7 @@ function SectionSurfaceBridge({
   onCheckpointed,
   jumpTo,
   onJumpHandled,
+  renderSectionOverlay,
 }: {
   session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
@@ -1195,6 +1164,8 @@ function SectionSurfaceBridge({
   onCheckpointed?: () => void;
   jumpTo?: string | null;
   onJumpHandled?: () => void;
+  /** Forwarded to the whole-manuscript surface untouched. Read-only mark only. */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1255,6 +1226,7 @@ function SectionSurfaceBridge({
           jumpTo={jumpTo}
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
+          renderSectionOverlay={renderSectionOverlay}
         />
       ) : (
         <SectionWritingSurface
