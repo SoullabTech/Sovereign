@@ -2339,3 +2339,51 @@ distinctions beforehand.**
 right**: benign vocabulary hits were treated as contamination rather than
 explained away after detection. *An instrument consulted only until it disagrees
 is not an instrument.*
+
+---
+
+## BLIND INFERENCE-STEP DESCRIPTIONS — FROZEN, NOT INTERPRETED (2026-09-11)
+
+```text
+file        scripts/verifier-probe/inference-step-descriptions.json
+sha256      6a7e37bfcef43e2bbc3d016fb7e1043f731cf825f6cb809b8f4586bd15be9c5f
+items       18 · ids C01..C18 in the order given · every one non-empty
+length      51 / 63 / 86 words (min / median / max) — the two-or-three-sentence
+            instruction was followed
+annotator   fresh subagent · 2 tool calls · read only the items file
+```
+
+⛔ **NOT INTERPRETED. The founder's instruction was to freeze and stop, and this
+is where it stops.**
+
+### ⭐ Validated by SHAPE ONLY — the descriptions were not read
+
+Counts, ids, ordering, non-emptiness and word lengths were checked. **The text of
+the descriptions was never printed and has not been read by me.**
+
+That is deliberate and it buys something specific: the eventual clustering must be
+performed by an independent party, and **whoever checks that the clustering was
+honest must not already know what the descriptions say.** Reading them now would
+spend that position for nothing — the validation did not require it.
+
+*A party who has read the evidence cannot later audit how it was grouped.*
+
+### What remains, and what it is not
+
+| | |
+|---|---|
+| descriptions | ⭐ **FROZEN** |
+| clustering | ⛔ **NOT AUTHORIZED** |
+| join to the key | ⛔ **NOT PERFORMED** — the key exists and has not been used |
+| any claim about a failure class | ⛔ **NONE** |
+
+The question that a separately authorized clustering act would ask, unchanged
+from before the annotator ran:
+
+> **Do these descriptions contain recurring distinctions, without our having
+> supplied the distinctions beforehand — and if so, is any such grouping
+> concentrated among the nine suspect items rather than the nine controls?**
+
+⛔ **If the same descriptions turn out equally common among the correctly
+preserved cases, "world-knowledge completion" is too broad a name and is
+abandoned.** That outcome remains as live as the other.
