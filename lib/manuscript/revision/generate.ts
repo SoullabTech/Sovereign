@@ -43,7 +43,7 @@ export interface RevisionOptions {
   maxTokens?: number;
 }
 
-const DEFAULT_MODEL = 'claude-opus-5';
+const DEFAULT_MODEL = process.env.MAIA_ASK_MODEL || 'claude-opus-5';
 
 /**
  * ⭐ The whole system prompt, assembled in ONE place, so a falsifier reads exactly
