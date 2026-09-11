@@ -3063,3 +3063,116 @@ curiosity, not a comparison.
 
 ⛔ **Standing: scope set FROZEN and NOT RUN · evidence gate HELD · analyzer/3
 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐⭐ SCOPE FALSIFICATION — RUN · DeBERTa 19/22 · THE DEFECT IS NARROWER THAN ITS NAME
+
+`2026-09-11T08:45Z` · set `scope` · fixtures sha256
+`51e10d22e41f9570016f25c9b1568dfb1b520db2b516202c4914290a82b78252` — **verified by the
+founder with `shasum` before the run and printed back by the probe.**
+
+```
+licensed assertions     10/10
+unlicensed abstentions   9/12
+FAMILIES CARRIED          8/10
+```
+
+### ⛔ THE THREE MISSES
+
+```
+S01  "Imre managed the bakery until it closed in 2019."
+     -> "Imre manages the bakery."                          ENTAILMENT
+S03  "Bea served on the lifeboat for a decade before moving inland."
+     -> "Bea serves on the lifeboat."                        ENTAILMENT
+S04  "Dara has covered the night shift twice this year."
+     -> "Dara works the night shift."                        ENTAILMENT
+```
+
+```
+MISS  past-to-present            0/2   ⛔ BOTH negatives, including the harder one
+MISS  occasional-to-habitual     0/1   ⚠️ NEW — did not appear on the blind set
+ok    participation-to-membership 2/2  ⭐ INCLUDING the hard case built to break it
+ok    temporary-to-permanent · some-to-all · one-event-to-enduring-trait
+ok    intention-to-action · future-to-present · capability-to-behaviour
+ok    association-to-identity
+```
+
+### ⭐⭐ THE HEADLINE IS NOT THE COUNT — IT IS THAT `BOUNDED -> UNBOUNDED` IS TOO BROAD A NAME
+
+`8/10` families both times, but **a different eight.**
+
+```
+                              blind        scope
+participation-to-membership   MISS         ⭐ ok  2/2   (incl. the harder S08)
+past-to-present               MISS 1/2     ⛔ MISS 0/2
+occasional-to-habitual        (not tested) ⚠️ MISS 0/1
+```
+
+⭐ **`participation-to-membership` REPAIRED ITSELF on fresh material**, and on the
+case built specifically to break it: **S08** — *"The catalogue lists her among the
+contributors to the atlas."* → *"She is one of the atlas's editors."* — returned
+`neutral`, correctly, where a **real recorded role** is widened into a larger one.
+
+⛔ **So blind B05 was CASE-SPECIFIC, not family-wide.** A verifier that failed
+membership-widening as a class would have failed S06 and S08 too. It did not.
+
+### ⭐⭐⭐ ALL FIVE MISSES ACROSS ALL THREE SETS SHARE ONE SHAPE
+
+```
+B05  "has recorded with the quartet  three times"
+B21  "rowed with the crew            until his injury in March"
+S01  "managed the bakery             until it closed in 2019"
+S03  "served on the lifeboat         before moving inland"
+S04  "has covered the night shift    twice this year"
+```
+
+> ⭐⭐ **THE RELATION IS ASSERTED IN THE MAIN CLAUSE AND THE LIMIT IS CARRIED BY A
+> SATELLITE MODIFIER — `until` · `before` · `twice` · `three times` — AND THE MODIFIER
+> IS NOT CARRIED INTO THE HYPOTHESIS.**
+
+⭐ **And the boundaries it DOES respect are the ones carried by the main verb itself:**
+
+```
+S15  "intends to repaint"     modal in the main verb        ok  (not_entailed)
+S17  "will take delivery"     modal in the main verb        ok  (contradiction)
+S19  "can read Old Norse"     modal in the main verb        ok  (neutral)
+S09  "is covering ... while"  the relation IS the stand-in  ok  (contradiction)
+S11  "Several of the ..."     quantifier on the subject     ok  (neutral)
+```
+
+⛔ **That is a much more useful finding than "it widens scope."** The failure is not
+about scope in general — it is about **where in the sentence the boundary lives.** A
+limit expressed as the verb's own modality survives; a limit appended to an asserted
+relation is dropped.
+
+⚠️ **B05 is the one that does not fit cleanly:** it widens the RELATION as well as the
+scope (`recorded with` → `is a member of`), so it is frequency-bounded **and**
+relation-widened. Recorded as a partial fit, not folded in to make the pattern
+tidier.
+
+### ⭐ THE POSITIVE COLUMN IS NOW PERFECT ACROSS THREE INDEPENDENT SETS
+
+```
+as-derived (post-adjudication)   7/7 licensed    6/6 unlicensed    13/13
+blind                           10/10 licensed  10/12 unlicensed   20/22
+scope                           10/10 licensed   9/12 unlicensed   19/22
+                          ⭐    27/27 licensed  25/30 unlicensed
+```
+
+⛔ **27 licensed claims, 27 asserted, across three sets two of which were built to
+break it.** Conservatism is not merely unlikely — it is ruled out three times over.
+⭐ **And every one of the five misses is in the same direction: it asserts where it
+should abstain. It has never once refused a claim the source licensed.**
+
+⚠️ For a gate, that asymmetry is the whole safety question and it points the wrong
+way: **this verifier's errors are permissive, not restrictive.** A permissive
+verifier admits an unsupported claim; a restrictive one only loses a supported one.
+⛔ Recorded as the property that any integration ruling has to price in.
+
+### ⛔ WHAT THIS RUN DOES NOT SETTLE
+
+⛔ It does not establish that the modifier reading is the mechanism — it is a
+description of five cases, consistent across three sets, and **not itself falsified**.
+A set built around that shape specifically would be the test, and it has not been run.
+
+⛔ Standing: **no ruling taken · no fixture edited · no threshold moved · evidence gate
+HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
