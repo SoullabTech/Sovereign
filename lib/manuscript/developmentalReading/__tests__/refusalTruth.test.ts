@@ -70,7 +70,12 @@ describe('R-1 · the two axes are independent', () => {
   });
 
   it('absence-shaped failures follow the completion; affirmative ones do not', () => {
-    for (const affirmative of ['claim_unbindable', 'foreign_field', 'non_conclusion_unknown', 'read_request_attempted']) {
+    /* `non_conclusion_inapplicable` joined the affirmative set with the
+       2026-09-11 admission law: truncation removes text, it cannot ADD a
+       limitation the evidence does not license, so a cut-off response that
+       carries an inapplicable tag carried it before it was cut. */
+    for (const affirmative of ['claim_unbindable', 'foreign_field', 'non_conclusion_unknown',
+                               'non_conclusion_inapplicable', 'read_request_attempted']) {
       expect(`${affirmative} truncated: ${attributionOf(affirmative, 'truncated')}`)
         .toBe(`${affirmative} truncated: contract_violation`);
     }

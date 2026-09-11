@@ -73,9 +73,27 @@ async function main() {
   };
   const ID = readerIdentity('witness-model');
   const call = (input: unknown, name = TOOL_NAME) => ({ type: 'tool_use' as const, id: 't', name, input });
+  /* ⚠️ 2026-09-11 — this fixture carried the very defect the coverage-derived
+     admission law catches, and so did the jest fixture beside it: refs s0..s1,
+     a scope that reads both at body depth, and an `across-unread-span`
+     limitation over a span with no unread section in it. Two independent
+     instruments asserting the same untruth — so the defect the founder found
+     in o8 was never only in o8.
+
+     Re-pointed, not loosened: `author-intent` is structurally always
+     applicable, and the unread-span tag is exercised where it is LAWFUL in
+     `spanning()` below. */
   const claim = (over: Record<string, unknown> = {}) => ({
     text: 'The lantern in s0 is not mentioned in s1.',
     refs: [{ kind: 'section', sectionId: 's0' }, { kind: 'section', sectionId: 's1' }],
+    doesNotEstablish: ['author-intent'],
+    ...over,
+  });
+  /* A claim whose own span reaches s2/s3, unread at body depth under this
+     scope — the case in which the limitation is true and must be admitted. */
+  const spanning = (over: Record<string, unknown> = {}) => ({
+    text: 'What begins early is taken up again later in the sequence.',
+    refs: [{ kind: 'section-run', sectionIds: ['s0', 's1', 's2', 's3'] }],
     doesNotEstablish: ['across-unread-span'],
     ...over,
   });
@@ -171,6 +189,13 @@ async function main() {
     const missing = resultFromBlocks([call({ outcome: 'claims', claims: [claim({ doesNotEstablish: [] })] })], req, ID);
     const unknown = resultFromBlocks([call({ outcome: 'claims', claims: [claim({ doesNotEstablish: ['not-sure'] })] })], req, ID);
     check('F9 empty doesNotEstablish → non_conclusion_missing; foreign value → non_conclusion_unknown', refusalOf(missing) === 'non_conclusion_missing' && refusalOf(unknown) === 'non_conclusion_unknown');
+    /* COVERAGE-DERIVED ADMISSION · founder ruling 2026-09-11. Per CLAIM, never
+       per reading: under this one scope the same reading lawfully holds a true
+       unread-span limitation and refuses a false one. */
+    const lawful = resultFromBlocks([call({ outcome: 'claims', claims: [spanning()] })], req, ID);
+    const false_ = resultFromBlocks([call({ outcome: 'claims', claims: [claim({ doesNotEstablish: ['across-unread-span'] })] })], req, ID);
+    check('F9b across-unread-span admitted where the claim spans unread material', lawful.outcome === 'claims');
+    check('F9c across-unread-span over a fully-read span → non_conclusion_inapplicable, whole result', refusalOf(false_) === 'non_conclusion_inapplicable');
     const schema = JSON.stringify(readerTool().input_schema);
     check('F9 the eight ratified values are in the tool schema and the prompt verbatim', DEVELOPMENTAL_NON_CONCLUSIONS.length === 8 && DEVELOPMENTAL_NON_CONCLUSIONS.every((v) => schema.includes(`"${v}"`) && READER_SYSTEM.includes(v)));
   }

@@ -257,20 +257,135 @@ passed only by the actual repair.**
 
 ---
 
-## 7 · ⛔ STANDING
+## 7 · IMPLEMENTED — founder ruling on the fork, 2026-09-11
+
+**⚖️ RULED: REFUSE THE WHOLE OUTPUT (disposition A).**
+
+> **`across-unread-span` may be admitted only when the claim's derived unread span is non-empty.**
+> **Not reading-wide coverage. Not prompt instruction. Not model discretion.**
+
+⛔ **Excluded by the same ruling:** silently stripping the tag · substituting another non-conclusion ·
+dropping only the claim · weakening the non-empty `doesNotEstablish` invariant.
+
+⭐ **Founder's reasoning on claim-level partial refusal — NOT YET, not never:** *it is proportionate,
+but introduces a new partial-admission semantic where some claims of a reading disappear while the
+reading survives. That is a real architectural mechanism and needs its own design, provenance and
+witness. It should not hitchhike on this repair.*
+
+### 7.1 ⭐ THE DISPOSITION WAS ALREADY WRITTEN INTO THE MODULE
+
+`read.ts`'s own header carried the reasoning before the ruling was made:
+
+> *ONE UNPROVABLE REF REFUSES THE WHOLE RESULT. A result is never returned with the bindable subset
+> (F8): a reading whose claims were quietly thinned is a different reading from the one the model
+> made, under the same name.*
+
+⭐ **The repair is F8 at the other end** — F8 forbids thinning the claims; this forbids thinning what
+a claim says it does not establish. ⚠️ **And the asymmetry that makes this one worse is worth
+stating: a dropped ref is detectable downstream; a dropped limitation is not.**
+
+### 7.2 · What landed
+
+| file | change |
+|---|---|
+| `lib/manuscript/developmentalReader/contract.ts` | `non_conclusion_inapplicable` added to `DevelopmentalReaderRefusal`, and to `AFFIRMATIVE_VIOLATIONS` — truncation removes text, it cannot ADD a limitation the evidence does not license, so a cut-off response carrying an inapplicable tag carried it before it was cut |
+| `lib/manuscript/developmentalReader/read.ts` | the check, inside the existing per-claim bind loop; `unreadSpan` imported; the F8 note extended |
+| `lib/manuscript/developmentalReader/__tests__/coverageAdmission.test.ts` | **new** — N1–N8 plus the fixture's own premises and the R-1 attribution case · **17 checks** |
+| `lib/manuscript/developmentalReading/__tests__/refusalTruth.test.ts` | the new refusal added to the affirmative-violation enumeration |
+| `scripts/ws2-07b-reader-gate-a.ts` | fixture re-pointed; **F9b** and **F9c** added |
+
+⛔ **Untouched, and asserted by N6/N7/N8:** `render.ts` · `READER_SYSTEM` · the tool schema ·
+`DEVELOPMENTAL_NON_CONCLUSIONS` · `NON_CONCLUSION_MEANING` · `unreadSpan()` itself.
+
+### 7.3 ⭐⭐ THE FINDING THE REPAIR PRODUCED — the defect was in TWO instruments, not in `o8`
+
+**Both test fixtures carried the very untruth the law catches.** Each defined a default claim with
+refs `[s0, s1]`, under a scope that reads both at body depth, carrying `across-unread-span`:
 
 ```text
-ruling                              RECORDED (founder, 2026-09-11)
-predicate                           EXISTS — unreadSpan(), bind.ts:171, tested, UNCALLED in the pipeline
-seam                                IDENTIFIED — read.ts:93-99, inside the existing bind loop
-general law across all eight        ⛔ NOT MECHANIZABLE — 1 decidable · 3 always-applicable ·
-                                    4 need epistemic rulings
-disposition on refusal (A/B/C)      ⛔ FOUNDER'S, NOT CHOSEN HERE
-falsifiers                          PREDECLARED, unrun
-code                                UNCHANGED — no repair implemented
-prompt contract                     UNTOUCHED
-vocabulary                          UNTOUCHED
-deploy                              NOT AUTHORIZED
+lib/manuscript/developmentalReader/__tests__/contract.test.ts   goodClaim()
+scripts/ws2-07b-reader-gate-a.ts                                claim()
 ```
 
-⛔ **This record authorizes no code.** The repair opens on a disposition ruling for §5.
+⚠️ **The jest fixture carried a second untruth beside it**: its prose read *"The lantern introduced
+in s0 returns in s3 with nothing between"* — a claim spanning s0..s3 whose refs reached only
+s0..s1. **A span claim without a spanning ref, disclaiming a span it never covered.**
+
+> ⭐⭐ **So the defect the founder found in `o8` was never only in `o8`. Two independent instruments
+> had been asserting the same false limitation, and 233 passing tests did not see it — because
+> nothing was checking whether the limitation was TRUE, only whether it was SPELLED correctly.**
+
+⛔ **Both were RE-POINTED, not loosened.** `author-intent` is structurally always applicable and is
+now the default; the unread-span tag is exercised where it is lawful, over refs that genuinely span
+unread material (`spanningClaim()` / `spanning()`). ⭐ **No assertion was weakened to make the repair
+pass** — the standing rule from §24.5 of the prototype record, applied.
+
+### 7.4 · Mutation proof — the instrument can fail, and it locates rather than reacts
+
+| mutation | verdict | which falsifiers |
+|---|---|---|
+| ⭐ **reading-scope check** (`every section is body`) instead of per-claim | **2 failed** | **N3 only** — and **N1 PASSES**, exactly as the design predicted |
+| ⭐ **strip the tag** instead of refusing (the excluded disposition C) | **4 failed** | N1 · N3 |
+| ⭐ **delete the tag from the vocabulary** (passes N1 by destroying a true limitation) | **9 failed** | N2 · N3 · N5 · N6 · N7 |
+| unmutated | **17 passed · 0 failed** | — |
+
+⭐⭐ **The first row is the one that matters.** The reading-scope impostor passes N1 and fails only
+N3, both of N3's cases and nothing else — *the instrument names the defect instead of merely
+reacting to it.* ⚠️ **And it confirms the design's warning: N1 alone would have certified the wrong
+implementation.**
+
+### 7.5 · Gates
+
+```text
+coverageAdmission (N1–N8 + premises + attribution)   17 passed · 0 failed
+3 mutations red · unmutated green                    proved
+manuscript · writersStudio · disclosure ·
+  writers-studio                                     1,668 passed · 1 failed
+    ⚠️ the 1 failure is lib/manuscript/ask/bodyGate/__tests__/canonicalFidelity.test.ts,
+       a different lane. VERIFIED IDENTICAL on the pre-change tree — pre-existing,
+       not caused here, and not repaired here.
+ws2-07b-reader-gate-a                                38 checks · 2 failures
+    ⚠️ BOTH PRE-EXISTING and verified identical on the pre-change tree
+       (before: 36 checks · 2 failures; the 2 added are F9b/F9c, both green).
+       Both are STALE INSTRUMENT assertions predating ratified rulings:
+         F5  asserts the 60,000 code-point ceiling — raised to 500,000 (founder, 2026-09-07)
+         F17 asserts DEVELOPMENTAL-READER-01 — the reader is READER-05
+       ⛔ REPORTED, NOT FIXED. Re-pointing them would certify rulings this lane
+          was not asked to certify.
+ws2-07c / ws2-07d                                    NOT RUN — require a DATABASE_URL
+                                                     scratch database; none available here
+typecheck                                            229 vs baseline 239 · 0 regressions
+check:no-supabase                                    clean
+```
+
+⛔ **NOT RUN, and owed before any claim about live behaviour:** a reading against a real model. Every
+falsifier above is post-seam and pure. ⭐ *An admission law verified only against fixture blocks is a
+claim about the host loop, not about what a reader emits.*
+
+---
+
+## 8 · ⛔ STANDING
+
+```text
+ACROSS-UNREAD-SPAN LAW       RULED
+predicate                    existing unreadSpan(bound, evidence)   ⛔ unchanged
+granularity                  per claim
+
+inapplicable tag             REFUSES OUTPUT
+strip / rewrite              FORBIDDEN
+claim-level partial refusal  NOT AUTHORIZED
+
+other non-conclusions        UNCHANGED
+general prerequisite system  NOT AUTHORIZED
+
+implementation               ⭐ LANDED · 17 falsifiers green · 3 mutations red
+prompt contract              UNTOUCHED
+vocabulary                   UNTOUCHED
+live-model witness           ⛔ NOT RUN
+deploy                       HELD
+```
+
+> ⭐⭐ **The system must not describe an epistemic condition merely because its vocabulary permits
+> the description. The condition must actually obtain.** — founder, 2026-09-11
+
+⛔ **Deploy is not authorized by this record.**

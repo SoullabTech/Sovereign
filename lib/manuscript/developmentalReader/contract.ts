@@ -291,7 +291,28 @@ export type DevelopmentalReaderRefusal =
   | 'empty_claim_text'
   | 'claim_unbindable'
   | 'non_conclusion_missing'
-  | 'non_conclusion_unknown';
+  | 'non_conclusion_unknown'
+  /* ── COVERAGE-DERIVED ADMISSION · founder ruling 2026-09-11 ─────────────
+     A non-conclusion from the vocabulary, proposed for a claim whose
+     prerequisite epistemic condition is known not to obtain.
+
+       ⭐ Do not state an epistemic limitation whose prerequisite condition
+         is known not to exist.
+
+     Today exactly one non-conclusion has a prerequisite the runtime can
+     decide: `across-unread-span` requires an unread interval, and
+     `unreadSpan()` (07A, INV-9) derives whether one exists WITHIN THE
+     CLAIM'S OWN SPAN. Empty span + tag present = a statement about this
+     reading's conditions that is false.
+
+     ⛔ The other seven are untouched. `author-intent`, `reader-effect` and
+     `editorial-consequence` are structurally always applicable; the
+     remaining four have prerequisites that are epistemic rulings, not
+     runtime facts — inventing predicates for them would be this very
+     defect, committed by the repair for it. In particular FULL COVERAGE
+     DOES NOT AUTHORIZE WHOLE-WORK CLAIMS: `whole-work-pattern` must never
+     be derived mechanically from 262/262. */
+  | 'non_conclusion_inapplicable';
 
 /**
  * WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R-1 — TWO AXES, NOT ONE.
@@ -371,6 +392,10 @@ const AFFIRMATIVE_VIOLATIONS: ReadonlySet<string> = new Set<DevelopmentalReaderR
   'claim_unbindable',
   'foreign_field',
   'non_conclusion_unknown',
+  /* Present and wrong in the same sense as its neighbours: truncation removes
+     text, it cannot ADD a limitation the evidence does not license. A cut-off
+     response that carries an inapplicable tag carried it before it was cut. */
+  'non_conclusion_inapplicable',
   'read_request_attempted',
 ]);
 

@@ -25,7 +25,7 @@
 
 import { runStructured } from '../../ai/structured/router';
 import type { StructuredBlock } from '../../ai/structured/types';
-import { bindEvidence } from '../development/bind';
+import { bindEvidence, unreadSpan } from '../development/bind';
 import type { NonEmptyArray } from '../development/evidenceRef';
 import type { ReaderIdentity } from '../structure/readerProvenance';
 import {
@@ -75,6 +75,15 @@ function classifyCause(result: {
  * ONE UNPROVABLE REF REFUSES THE WHOLE RESULT. A result is never returned with
  * the bindable subset (F8): a reading whose claims were quietly thinned is a
  * different reading from the one the model made, under the same name.
+ *
+ * ONE INAPPLICABLE NON-CONCLUSION REFUSES THE WHOLE RESULT, for the same
+ * reason at the other end. F8 forbids thinning the claims; this forbids
+ * thinning what a claim says it does not establish. A reading returned with
+ * one limitation silently removed is likewise a different reading under the
+ * same name — and unlike a dropped ref, a dropped limitation is invisible
+ * downstream. ⛔ Claim-level partial refusal is NOT authorized: admitting some
+ * claims of a reading while discarding others is a new semantic that needs its
+ * own design, provenance and witness, and must not hitchhike on this repair.
  */
 export function resultFromBlocks(
   blocks: readonly StructuredBlock[],
@@ -94,6 +103,24 @@ export function resultFromBlocks(
     const bound = bindEvidence(c.refs, request.evidence);
     if (!bound.ok) {
       return refused('claim_unbindable', `claims[${i}] ${bound.refusal}: ${bound.detail}`, i, cause);
+    }
+    /* COVERAGE-DERIVED ADMISSION · founder ruling 2026-09-11.
+       `across-unread-span` says "absence or continuity across an unread
+       interval is not established". Whether such an interval exists is a
+       SYSTEM FACT, not the model's interpretation — and the runtime already
+       derives it. A tag proposed where the span is empty is false about this
+       reading's own conditions, so it is refused rather than stripped:
+       stripping would rewrite the model's epistemic claim after generation
+       and hand the member something the reader did not return.
+
+       ⭐ PER CLAIM, never per reading. A partially-read Work lawfully
+       contains both claims the tag fits and claims it does not; only the
+       claim's own derived span can tell them apart. `unreadSpan` requires
+       `BoundEvidence`, which is why the check lives here and not in parse. */
+    if (c.doesNotEstablish.includes('across-unread-span')
+        && unreadSpan(bound.value, request.evidence).length === 0) {
+      return refused('non_conclusion_inapplicable',
+        `claims[${i}] carries "across-unread-span" but spans no unread section`, i, cause);
     }
     claims.push({ text: c.text, refs: bound.value.refs, doesNotEstablish: c.doesNotEstablish });
   }

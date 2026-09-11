@@ -52,9 +52,34 @@ const IDENTITY = readerIdentity('claude-test-model');
 const call = (input: unknown, name = TOOL_NAME): StructuredBlock =>
   ({ type: 'tool_use', id: 't1', name, input });
 
+/*
+ * ⚠️ THE FIXTURE ITSELF CARRIED THE DEFECT the 2026-09-11 admission law
+ * catches, and that is worth recording rather than quietly editing away.
+ *
+ * It read: text 'The lantern introduced in s0 returns in s3 with nothing
+ * between', refs [s0, s1], doesNotEstablish ['across-unread-span',
+ * 'author-intent']. Two untruths in one object — a claim whose PROSE spans
+ * s0..s3 while its REFS reach only s0..s1, and an unread-span limitation on a
+ * span (s0..s1) that the default scope reads at body depth in full.
+ *
+ * Repaired so the claim says what its evidence supports and disclaims only
+ * what is actually in doubt. `author-intent` is structurally always
+ * applicable, so it is the safe default; tests that exercise the unread-span
+ * tag supply it explicitly, over refs that genuinely span unread material.
+ */
 const goodClaim = (over: Record<string, unknown> = {}) => ({
-  text: 'The lantern introduced in s0 returns in s3 with nothing between.',
+  text: 'The thread introduced in s0 is still carried in s1.',
   refs: [{ kind: 'section', sectionId: 's0' }, { kind: 'section', sectionId: 's1' }],
+  doesNotEstablish: ['author-intent'],
+  ...over,
+});
+
+/* A claim whose span genuinely reaches unread material: the run binds over
+   position-depth sections (order-derived evidence), and s2/s3 are unread at
+   body depth in the default scope. `across-unread-span` is LAWFUL here. */
+const spanningClaim = (over: Record<string, unknown> = {}) => ({
+  text: 'What is introduced early is taken up again at the end of the sequence.',
+  refs: [{ kind: 'section-run', sectionIds: ['s0', 's1', 's2', 's3'] }],
   doesNotEstablish: ['across-unread-span', 'author-intent'],
   ...over,
 });
