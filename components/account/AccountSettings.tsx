@@ -2941,7 +2941,7 @@ export function AccountSettings() {
       {/* Build Info Footer - subtle version stamp */}
       <div className="mt-12 pt-6 border-t border-white/10 text-center">
         <p className="text-[10px] text-stone-300 font-mono">
-          v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
+          v{BUILD_STAMP.version} ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
           {Capacitor.isNativePlatform() && (
             <span className="ml-2">• {apiBaseUrl()}</span>
           )}
