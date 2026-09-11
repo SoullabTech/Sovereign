@@ -8,8 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUN 2 · ⛔ AWAITING FOUNDER RULING
-                              (run 1 FAILED — founder ruling 2026-09-10)
+3A-S   semantic witness        ⛔ RUNS 1 AND 2 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -204,8 +203,70 @@ run 1      "putting himself back together"                        ruled: FAIL
 run 2      "the work of integration he was still doing"
 ```
 
-⛔ **Whether run 2 discharges R3 and R4 is the founder's ruling.** 3A-S remains
-AWAITING RULING; 3A remains NOT PASSED; 3D remains CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 2: **FAIL**
+
+```
+SPECIMEN 1   FAIL      R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS      cleanly
+3A-S         FAIL   ·   3A NOT PASSED   ·   3D REMAINS CLOSED
+```
+
+**Both run-1 losses are repaired.** `relational orientation -> how he related` is
+faithful; `ongoing process of integration -> the work of integration he was still
+doing` invents no prior condition.
+
+⭐ **The failure has changed category. It is no longer a concreteness failure; it
+is a PRECISION-OF-TRANSFORMATION failure.**
+
+### The remaining collapse
+
+```
+SOURCE GEOMETRY
+  transformation in relational orientation
+        | RESULTING IN
+  shift in perspective
+        | CONSTITUTING
+  meaningful development in ongoing integration
+
+RUN 2 GEOMETRY
+  changed how he related
+        =  ("that change in how he saw things")
+        | MATTERED TO
+  integration
+```
+
+**Two distinct losses:**
+
+1. *"that change"* **identifies the relational change WITH the change in
+   perspective.** The source makes the perspective shift *result from* the
+   relational transformation; the proposal makes them one thing. Subtler than run
+   1, but the same distinction, still partially collapsed.
+
+2. *"constituted a meaningful development in"* → *"mattered to"*. **A constitutive
+   relation weakened to a significance relation.** The source says the shift *was
+   part of* the development; the proposal says only that it *had significance for*
+   it.
+
+The founder's illustration of the geometry that must survive — ⛔ **not a
+replacement proposal, and not to be used as one**:
+
+> "The experience changed how he related to the natural world. That change also
+> shifted his perspective, and the shift became a meaningful part of his ongoing
+> integration."
+
+### ⭐⭐ RATIFIED — `reason` is permanently outside the semantic acceptance path
+
+**Twice now** the explanation has asserted fidelity the wording did not deliver:
+run 1 claimed it preserved "the passage's two claims"; run 2 claimed it kept "both
+claims … intact". Both times the authoritative wording compressed a distinction.
+
+> **The model's explanation cannot be evidence of semantic fidelity. The proposed
+> wording itself is the evidence.**
+
+### ⛔ The specimen is NOT changed
+
+*"It is doing exactly what a good acceptance specimen should do: the first repair
+eliminated the obvious failure and exposed the subtler one beneath it."*
 
 ## ⚠️ Housekeeping corrections
 

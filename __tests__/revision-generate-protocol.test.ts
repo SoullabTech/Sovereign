@@ -131,6 +131,30 @@ describe('⭐ the R3 repair — concreteness may not be purchased by substitutio
   });
 });
 
+describe('⭐ the geometry repair — relations, not only claims (3A-S run 2 FAIL)', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('names the obligation', () => {
+    expect(p).toContain('PRESERVE THE RELATIONS BETWEEN CLAIMS, NOT ONLY THE CLAIMS THEMSELVES');
+  });
+  it('says that keeping every claim while flattening relations is still a loss', () => {
+    expect(p).toContain('flattening the');
+    expect(p).toContain('relations between them is still a loss of meaning');
+  });
+  it('forbids equating a result with its cause — the "that change" collapse', () => {
+    expect(p).toContain('RESULTS FROM another, do not write them as the same thing');
+  });
+  it('forbids weakening a constitutive relation — the "mattered to" loss', () => {
+    expect(p).toContain('IS PART OF a process, do not weaken it to merely mattering');
+  });
+  it('constrains the demonstrative that caused the collapse', () => {
+    expect(p).toContain('must point at exactly one thing');
+    expect(p).toContain('keep them distinguished');
+  });
+  it('⭐ permits two sentences rather than forcing the geometry into one', () => {
+    expect(p).toContain('Two sentences that keep the geometry beat one');
+  });
+});
+
 describe('provenance', () => {
   it('the asker version is pinned so a proposal records which contract produced it', () => {
     expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');

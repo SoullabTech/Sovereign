@@ -31,6 +31,11 @@ describe('specimen fixtures are frozen across reruns', () => {
     expect(SRC).toContain('Is this passage too abstract? Change it only if it needs to be made more concrete.');
   });
 
+  it('⭐ the rubric warns the human ruler that `reason` is not evidence', () => {
+    expect(SRC).toContain('RULE ON `proposedText` ALONE');
+    expect(SRC).toContain('is NOT evidence of');
+  });
+
   it('⭐ the harness still refuses to judge the semantic rubrics', () => {
     expect(SRC).toContain('NOT SELF-JUDGED');
     expect(SRC).toContain('RUBRIC (human ruling required)');
