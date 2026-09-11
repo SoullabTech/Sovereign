@@ -1295,3 +1295,34 @@ touching `ttsWithFallback.ts`.
 row remains YES (the trace is visible), but the lane records alongside it
 that the traced transition coincides with inaudible playback on every
 captured turn.
+
+### E17 (partial) · 2026-09-11 · founder: "it showed listening glitching mostly off"; stale plugin callback after listener teardown
+
+Founder, on the E16 run: the phone's state indicator showed *listening*
+flickering and mostly off during the E16.4 storm — the member-facing face
+of the seven engine starts/deaths. Screenshot of the Xcode console tail
+(debugger still attached, "Running App on Kelly Nezat's iPhone"):
+
+```text
+⚡️  [log] - 🎤 Native recorder available: true status: GRANTED
+⚡️  [log] - 🎤 Native voice recorder init complete
+⚡️  [log] - [voice-diag] ios_voice_listening_stopped {"status":"stopped","session":"ln1skg9o", …}
+⚡️  [log] - 🔊 [Native] State: stopped
+⚡️  To Native ->  SpeechRecognition removeListener 75063557 / 75063558 / 75063559
+⚡️  [log] - 🔴 [Native] Recognition stopped
+⚡️  To Native ->  SpeechRecognition removeAllListeners 75063560
+⚡️  [log] - 🧹 [Native] All listeners cleaned up
+[SR] Recognition error: No speech detected
+[SR] Stopping - error: true isFinal: false
+```
+
+Two readings, both recorded without inference beyond them: (1) the
+component tore its recognizer listeners down (navigation or unmount — the
+`Native recorder available` lines suggest another surface initialising
+`capacitorRecorder`); (2) **after** `removeAllListeners`, the plugin's
+task callback still fired `No speech detected` and ran its stop path —
+a recognition task completing after its owner has gone, which is the
+E16.5 shape (callback without task identity) observed once more.
+Still owed for E17: whether the mic returned and when · whether the
+member was speaking during the storm · silent-switch position · footer +
+Native App Build · S1–S4 · ruling on the A/B control (E16 correction).
