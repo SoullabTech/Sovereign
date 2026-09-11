@@ -376,3 +376,13 @@ stall; the locus is the web/TTS playback lifecycle and the community
 recognizer's ownership of the session. The clock times for the 21:1x
 turns were not recorded by the founder; the WebKit `prepareForLoad`
 clusters (E1) stand in as the timeline.
+
+**E3 optional confirmation received.** Capacitor iOS runtime,
+`node_modules/@capacitor/ios/Capacitor/Capacitor/CapacitorBridge.swift:313`:
+`for plugin in registrationList.packageClassList { … }` — the bridge
+registers exactly the classes named in that list (line 9:
+`let packageClassList: Set<String>`). The loader reads the list the CLI
+wrote; the list omits the plugin; the plugin is never registered.
+**Chain closed at every link: CLI → generated config → bundled config →
+runtime loader → binary contains the unloaded class.** Awaiting the
+founder's ruling on C′.
