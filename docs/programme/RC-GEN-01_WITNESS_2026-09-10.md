@@ -4201,3 +4201,147 @@ is expense without protection.
 
 ⛔ **Standing: MiniCheck THE DECIDING EXPERIMENT · INLI after the witnesses · evidence
 gate HELD · analyzer/3 UNTOUCHED · B HELD · production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — ROUTER PROVISIONALLY YES · AND AN ARITHMETIC CORRECTION I OWED
+
+```
+detector as JUDGE                  ⛔ NO — would withhold too many supported claims
+detector as REFUSAL                ⛔ NO — same reason
+detector as UNRESOLVED ROUTER      ⭐ PROVISIONALLY YES
+M7 regex patch                     ⛔ DO NOT FIT
+HHEM                               ⛔ DEPRIORITIZE
+```
+
+### ⚠️ MY FRAMING UNDERSTATED THE ROUTING LOAD
+
+⛔ **I reported `25/68 correct verdicts · 37%` and stopped there.** The founder's
+correction:
+
+```
+25 of 68 CORRECT judgments routed          = 37% of the correct ones
+37 of 81 CLAIMS routed  (25 + 12 errors)   = 46% OF EVERYTHING
+```
+
+> ⭐ **"This is a fairly active router, not a tiny exception path."**
+
+⛔ **Both numbers are true and only one of them describes the system's behaviour.**
+Quoting the denominator that flatters the instrument is the same error class this lane
+studies — *a figure more favourable than its evidence.* Recorded with both denominators
+from here.
+
+### ⭐ WHY ROUTING SURVIVES A COST THAT WOULD KILL A REFUSAL
+
+> ⭐⭐ **Routing is reversible. The claim remains available.** It says only: *this
+> proposition needs another kind of attention before hardening into durable knowledge.*
+
+```
+preserve the interpretation · don't harden it into canonical fact yet
+perhaps consult another verifier · perhaps ask the member when it becomes relevant
+```
+
+⭐ **The design optimises for SAFE OPENNESS, not maximal automatic throughput** — which
+is why a false positive costs attention rather than knowledge.
+
+⛔ **And 46% is acceptable for the RESEARCH stage only** — *not as a permanent
+production cost without knowing what happens after routing.*
+
+### ⭐ THE CONCEPTUAL RESULT
+
+> **Metacognition does not have to mean the model introspecting itself.**
+>
+> ```
+> THE SYSTEM KNOWS  ->  this model  ->  has this demonstrated strength
+>                                   ->  and this demonstrated blind spot
+> ```
+>
+> ⭐ *Much more trustworthy than asking an LLM how confident it feels.*
+
+### ⭐ AND THE METHOD NOTE THE FOUNDER RETURNED
+
+> *"Requiring minimum n before announcing CONFIDENTLY WRONG is important. Otherwise
+> your instrumentation starts committing the same epistemic sin we're studying:
+> **turning a particular observation into a general claim.**"*
+
+⭐ And on the rejected `before` hypothesis: *"You tested the attractive explanation
+before canonizing it and it failed. **That is the method working.**"*
+
+## ⭐⭐ BOTH SIDES NOW FROZEN — CORPUS AND DETECTOR
+
+⛔ *Otherwise we could unconsciously keep improving the detector against every miss
+until it perfectly recognizes the corpus that taught us what to look for.*
+
+```
+CORPUS    fixtures-detector.json
+          sha256 2873d1fbb38db850bafc2bc17a0438ca47de2ccf85879d8e325c3177eaccfc38
+DETECTOR  boundary_check.py
+          sha256 c45d9f6272fb5cd14f2dfa0a5d3cb8f65576270ec95ed5b373ea3f66ad2d0251
+```
+
+⭐ **The detector now prints its own hash on every run.** *A frozen corpus testing a
+moving detector proves nothing; both sides must be pinned and each must be able to say
+which version it was.*
+
+### The blind detector corpus — 22 cases · 10 categories · both directions each
+
+```
+until · before · after · frequency · duration · temporary-role
+ended-relationship · conditional-state · interrupted-participation · changing-identity
+```
+
+⭐⭐ **SEVEN OF THE TEN LICENSED CASES DELIBERATELY CARRY LIMITING LANGUAGE**, because
+an honest false-positive cost can only be measured where limiters appear in *both*
+directions:
+
+```
+D04  "has run the tea house SINCE BEFORE the bypass was built"   `before`, licensed
+D08  "leads the dawn walk THREE TIMES A WEEK"                    `three times`, licensed
+D16  "opens the glasshouse each morning UNLESS the hail is heavy" a condition that
+                                                                 qualifies without cancelling
+D18  "climbs with the team, though she SAT OUT two months"       interruption, licensed
+D10  "for ELEVEN SEASONS and shows no sign of stopping"          duration that corroborates
+```
+
+⭐ **Two cases carry limiters the detector's vocabulary does not list** — `D13`
+*"parted ways"* and `D22` *"on two occasions"*. ⛔ **Deliberately not added to the
+patterns.** They are the honest test of whether the rule generalises or only recognises
+the words it was given.
+
+⚠️ **Lexical overlap with earlier sets was trimmed before freezing** (`frost` → `hail`,
+`shoulder` → `wrist`). The remaining shared words are the **limiter tokens themselves**
+— `until` `before` `since` `three times` `while` `unless` — which is unavoidable,
+since the categories *are* those words.
+
+## ⭐⭐ MiniCheck's JOB, MADE MECHANICAL — `--against A.json B.json`
+
+> ⛔ **Not "is MiniCheck accurate?"** The routed cases are going somewhere. **The
+> question is whether they reach a witness with COMPLEMENTARY errors, or another
+> equally unreliable machine.**
+
+```
+CONDITIONAL TABLE — detector-routed cases only
+                        minicheck right   minicheck wrong
+  deberta wrong              ?                 ?      <- ⭐ RESCUED / ⛔ SHARED BLIND SPOT
+  deberta right              ?                 ?      <- preserved / ⛔ DISRUPTED
+```
+
+⭐ **Falsified against two stubs** — a complementary witness (4 rescued, 0 shared) and
+a shared blind spot (0 rescued, 4 shared, which prints *"NOT INDEPENDENT on this
+evidence — the second witness fails exactly where the first does. Routing buys nothing
+here."*).
+
+⛔ **MiniCheck runs the ENTIRE frozen corpus unchanged**, not only the cases we hope it
+will fix.
+
+### To run
+
+```
+python3 scripts/verifier-probe/probe.py --set detector-blind --model deberta
+python3 -m venv ~/minicheck-venv && source ~/minicheck-venv/bin/activate
+pip install minicheck
+python3 scripts/verifier-probe/probe.py --set modifier --model minicheck
+python3 scripts/verifier-probe/boundary_check.py --against verifier-probe-*.json
+```
+
+⛔ **Standing: detector + corpus FROZEN, blind validation OWED · MiniCheck independence
+THE DECIDING TEST · HHEM DEPRIORITIZED · evidence gate HELD · analyzer/3 UNTOUCHED ·
+B HELD · production UNTOUCHED.**

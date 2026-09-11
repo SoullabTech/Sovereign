@@ -58,6 +58,7 @@ SETS = {
     'blind': Path(__file__).with_name('fixtures-blind.json'),
     'scope': Path(__file__).with_name('fixtures-scope.json'),
     'modifier': Path(__file__).with_name('fixtures-modifier.json'),
+    'detector-blind': Path(__file__).with_name('fixtures-detector.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'

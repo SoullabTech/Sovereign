@@ -31,6 +31,7 @@ from pathlib import Path
 
 SETS = {
     'as-derived': 'fixtures.json',
+    'detector-blind': 'fixtures-detector.json',
     'blind': 'fixtures-blind.json',
     'scope': 'fixtures-scope.json',
     'modifier': 'fixtures-modifier.json',
@@ -58,6 +59,21 @@ LIMITERS = {
 # a dropped boundary, which is exactly backwards: the source RELEASED the limit.
 RELEASES = r"\b(still|since|ever since|continues?|ongoing|each|every|always|" \
            r"has been|have been|to this day)\b"
+
+
+def detector_digest():
+    """
+    ⛔⛔ THE DETECTOR IS FROZEN BY HASH, AND IT PRINTS ITS OWN.
+
+    The founder's instruction: freeze it before testing it further, *otherwise we
+    could unconsciously keep improving the detector against every miss until it
+    perfectly recognizes the corpus that taught us what to look for.*
+
+    ⭐ A frozen corpus tests a moving detector and proves nothing. BOTH sides of the
+    experiment must be pinned, and each must be able to say which version it was.
+    """
+    import hashlib
+    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 
 def limiters_in(text):
@@ -176,6 +192,7 @@ def against(paths):
     if not rows:
         sys.exit('no usable rows — pass probe result JSON files')
 
+    print(f'DETECTOR sha256 {detector_digest()}')
     for v in sorted({r['verifier'] for r in rows}):
         sub = [r for r in rows if r['verifier'] == v]
         seen = {}
@@ -214,6 +231,51 @@ def against(paths):
             print('  ⚠️ NO CONFIDENTLY-WRONG CASES AT ALL at this cut. The decisive cell is')
             print('     EMPTY, so this table says nothing about the detector for this')
             print('     verifier — it says the verifier is never confident when wrong.')
+    # ⭐⭐ THE CONDITIONAL TABLE — the founder's precise question, and the only one
+    # that decides whether routing is worth its cost.
+    #
+    # ⛔ NOT "is MiniCheck accurate?" The 37 routed cases are going SOMEWHERE. The
+    # question is whether they are being sent to a witness with COMPLEMENTARY errors
+    # or thrown into another equally unreliable machine.
+    #
+    #   desirable   DeBERTa wrong inside the risk regime -> the other is disproportionately RIGHT
+    #   desirable   detector routes a correct DeBERTa answer -> the other PRESERVES it
+    #   ⛔ bad      both wrong on the same cases -> not independent; the deterministic
+    #               layer becomes much more important and routing buys nothing
+    verifiers = sorted({r['verifier'] for r in rows})
+    if len(verifiers) >= 2:
+        by = {}
+        for r in rows:
+            by.setdefault((r['set'], r['id']), {})[r['verifier']] = r
+        for i, a in enumerate(verifiers):
+            for b in verifiers[i + 1:]:
+                shared = [(k, v) for k, v in by.items() if a in v and b in v]
+                routed = [(k, v) for k, v in shared if v[a]['risk']]
+                if not routed:
+                    print(f'\n⚠️ {a} vs {b}: no shared ROUTED cases — nothing to condition on.')
+                    continue
+                cell = lambda ac, bc: sum(1 for _, v in routed
+                                          if v[a]['correct'] == ac and v[b]['correct'] == bc)
+                print(f'\n{"=" * 74}')
+                print(f'CONDITIONAL TABLE — {len(routed)} DETECTOR-ROUTED cases only')
+                print(f'  (shared coverage: {len(shared)} cases seen by both {a} and {b})')
+                print(f'\n                        {b} right   {b} wrong')
+                print(f'  {a} wrong           {cell(False, True):^11}{cell(False, False):^11}'
+                      f'  <- ⭐ RESCUED / ⛔ SHARED BLIND SPOT')
+                print(f'  {a} right           {cell(True, True):^11}{cell(True, False):^11}'
+                      f'  <- preserved / ⛔ DISRUPTED')
+                rescued, shared_blind = cell(False, True), cell(False, False)
+                preserved, disrupted = cell(True, True), cell(True, False)
+                if rescued + shared_blind:
+                    print(f'\n  -> of {rescued + shared_blind} routed cases {a} got WRONG, '
+                          f'{b} got {rescued} RIGHT')
+                if preserved + disrupted:
+                    print(f'  -> of {preserved + disrupted} routed cases {a} got RIGHT, '
+                          f'{b} PRESERVED {preserved} and DISRUPTED {disrupted}')
+                if shared_blind and not rescued:
+                    print('  ⛔ NOT INDEPENDENT on this evidence — the second witness fails')
+                    print('     exactly where the first does. Routing buys nothing here.')
+
     print('\n⛔ NOT A GATE. NOT AUTHORIZED. A measurement, not a component.')
 
 
