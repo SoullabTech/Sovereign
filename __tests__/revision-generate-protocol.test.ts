@@ -213,6 +213,42 @@ describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
   });
 });
 
+describe('⭐ the structural framing — a passage is a structure (run 5 FAIL)', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('states that a passage is a structure, not a set of claims', () => {
+    expect(p).toContain('A PASSAGE IS A STRUCTURE, NOT A SET OF CLAIMS');
+  });
+  it('requires the structure to be worked out BEFORE rewriting', () => {
+    expect(p).toContain('Before you rewrite anything, work');
+    expect(p).toContain('name the relation the source draws between each pair');
+  });
+  it('⭐ carries the governing line', () => {
+    expect(p).toContain('PLAINNESS MAY ALTER THE VOCABULARY. IT MAY NOT DROP AN EDGE');
+  });
+  it('⭐ names run 5\'s exact failure shape — connected becomes side by side', () => {
+    expect(p).toContain('your revision merely places side by side, is a loss');
+    expect(p).toContain('even when both things are still present and nothing false has been added');
+  });
+  it('requires the KIND of relation, not merely that one exists', () => {
+    expect(p).toContain('every relation the source draws between them, and its KIND');
+  });
+});
+
+describe('⛔ the prompt teaches the LAW, never the fixture', () => {
+  /* Rendered with NO sections, so the authorized prose cannot mask a leak. */
+  const bare = revisionSystemPrompt([]);
+  it('contains none of the specimen fixture\'s vocabulary', () => {
+    for (const w of ['integration', 'perspective', 'natural world', 'kettle',
+                     'coffee', 'Mara', 'relational orientation', 'step forward']) {
+      expect(bare.toLowerCase()).not.toContain(w.toLowerCase());
+    }
+  });
+  it('contains no worked example of any passage\'s structure', () => {
+    expect(bare).not.toContain('->');
+    expect(bare).not.toContain('RESULTING IN');
+  });
+});
+
 describe('provenance', () => {
   it('the asker version is pinned so a proposal records which contract produced it', () => {
     expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');

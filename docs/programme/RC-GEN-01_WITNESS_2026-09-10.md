@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUNS 1-4 FAILED · RUN 5 ⛔ AWAITING RULING
+3A-S   semantic witness        ⛔ RUNS 1-5 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -445,8 +445,70 @@ UNCHANGED FROM RUN 4
                                      still not written.
 ```
 
-⛔ Whether run 5 discharges R2, R3 and R4 is the founder's ruling. 3A-S AWAITING
-RULING; 3A NOT PASSED; 3D CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 5: **FAIL**, and a DISTINCT failure
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### ⛔ NOT another semantic-collapse regression
+
+Run 4's *"**That** change in how he saw things"* actively **identified** the two
+changes. Run 5's *"**The** change…"* removes that identification. **The two
+distinctions now survive.**
+
+### 🔴 What fails: the EDGE between them
+
+```
+SOURCE          change in relationship
+                       | RESULTING IN
+                shift in perspective
+
+RUN 5           change in relationship
+                shift in perspective        (both present · no relation stated)
+```
+
+**The nodes survived; the edge did not.**
+
+### Portions explicitly NOT failed
+
+- `"was itself a part of the process of integration"` — correctly restores the
+  constitutive relation.
+- `"and it mattered to that process"` — **no longer the run-2 defect**, because it
+  appears *alongside* the constitutive claim rather than replacing it, and
+  plausibly carries some of *meaningful*.
+- `"and it changed it a great deal"` for *significant transformation* — **the
+  founder is unpersuaded** (ambiguous `it`/`it`; *significant* is not only
+  magnitude) **but did not need it to decide**: the missing edge already fails R3.
+
+### ⭐⭐ The five-run sequence, precisely
+
+```
+run 1   FAIL · invention
+run 2   FAIL · semantic collapse
+run 3   FAIL · teleological coloring
+run 4   FAIL · semantic collapse regression
+run 5   FAIL · causal relation dropped
+```
+
+⭐ **We are no longer discovering that the model lacks the individual rules. It has
+demonstrated each of them at different moments.** The unmet requirement is
+simultaneous preservation of the whole semantic structure.
+
+⛔ **Do not add "remember to preserve causal relations" as another local clause** —
+that law is already among the things the system must preserve.
+
+> ⭐ **Before rewriting, MAIA must hold the source as a RELATIONAL STRUCTURE — not
+> merely as a set of claims — and the proposed wording must preserve that structure
+> simultaneously.**
+>
+> **Plainness may alter the vocabulary. It may not drop an edge.**
+
+### Specimen 2 — PASS, fifth consecutive live run
+
+**The unresolved capability is faithful transformation. It is not restraint.**
 
 ## 3A-S — RUN 4 (witnessed) · FOUNDER RULING: **FAIL** — and it is a REGRESSION
 
