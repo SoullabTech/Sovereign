@@ -46,7 +46,21 @@ psql_t() {
 NEW_EMAIL="${1:-}"; EXISTING_EMAIL="${2:-}"
 
 hdr '0 · Arguments'
-[ -n "$NEW_EMAIL" ] || die "usage: $0 <NEW_TEST_EMAIL> [EXISTING_MEMBER_EMAIL]"
+# Addresses are ASKED FOR, not passed, when absent. A documented invocation line
+# containing a stand-in address gets pasted verbatim — and a stand-in written as
+# <your-address> is worse still, because the shell reads the angle brackets as a
+# redirect and the run dies before any check. Nothing to substitute, nothing to
+# get wrong: run the script bare and answer it.
+if [ -z "$NEW_EMAIL" ]; then
+  [ -t 0 ] || die 'no NEW_TEST_EMAIL argument and not a terminal — cannot ask'
+  printf 'New test address (an inbox you can open, not yet a member): '
+  read -r NEW_EMAIL
+fi
+if [ -z "$EXISTING_EMAIL" ] && [ -t 0 ]; then
+  printf 'An EXISTING member address for the enumeration check (blank to skip): '
+  read -r EXISTING_EMAIL
+fi
+[ -n "$NEW_EMAIL" ] || die 'no address given'
 # A blacklist of placeholder spellings loses every time a new one is written.
 # The only reliable guard is the operator confirming the address OUT LOUD, so
 # the check is confirmation, not pattern matching. WITNESS_YES=1 skips it for
