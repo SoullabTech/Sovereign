@@ -20,6 +20,9 @@
  *   export { generateStaticParams } from './params'    → true
  *   // ... generateStaticParams ... (comment / string)  → false
  *   function generateStaticParams() {} (not exported)  → false
+ *   export default function generateStaticParams() {}  → false (binding is `default`)
+ *   export type { generateStaticParams } from './p'    → false (erased at runtime)
+ *   export { type generateStaticParams } from './p'    → false (erased at runtime)
  *
  * Deliberately NOT resolved: `export * from './x'` (would require following
  * the module graph). Such a page reports false and falls through to the
@@ -37,9 +40,23 @@ import ts from 'typescript';
 
 export const GENERATE_STATIC_PARAMS = 'generateStaticParams';
 
-function hasExportModifier(node: ts.Node): boolean {
+/**
+ * True iff the node carries `export` but NOT `default`.
+ *
+ * `export default function generateStaticParams() {}` exports a binding
+ * named `default`; the local function name is invisible to importers and to
+ * Next.js. Counting it would recreate the substring defect in AST clothing
+ * (review finding on PR #1284, 2026-09-11).
+ */
+function hasNamedExportModifier(node: ts.Node): boolean {
   const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
-  return !!modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword);
+  if (!modifiers) return false;
+  let isExport = false;
+  for (const m of modifiers) {
+    if (m.kind === ts.SyntaxKind.ExportKeyword) isExport = true;
+    if (m.kind === ts.SyntaxKind.DefaultKeyword) return false;
+  }
+  return isExport;
 }
 
 function bindingNames(name: ts.BindingName, out: string[]): void {
@@ -70,8 +87,9 @@ export function exportsGenerateStaticParams(
 
   for (const stmt of sf.statements) {
     // export function generateStaticParams() / export async function ...
+    // (`export default function generateStaticParams` is NOT a named export.)
     if (ts.isFunctionDeclaration(stmt)) {
-      if (hasExportModifier(stmt) && stmt.name?.text === GENERATE_STATIC_PARAMS) {
+      if (hasNamedExportModifier(stmt) && stmt.name?.text === GENERATE_STATIC_PARAMS) {
         return true;
       }
       continue;
@@ -79,7 +97,7 @@ export function exportsGenerateStaticParams(
 
     // export const generateStaticParams = ...  (also let/var, destructuring)
     if (ts.isVariableStatement(stmt)) {
-      if (!hasExportModifier(stmt)) continue;
+      if (!hasNamedExportModifier(stmt)) continue;
       const names: string[] = [];
       for (const decl of stmt.declarationList.declarations) {
         bindingNames(decl.name, names);
@@ -90,10 +108,14 @@ export function exportsGenerateStaticParams(
 
     // export { generateStaticParams } / export { x as generateStaticParams }
     // with or without a `from` clause.
+    // Type-only exports (`export type { … }` / `export { type … }`) are
+    // erased at runtime: Next.js finds no function. They must not count.
     if (ts.isExportDeclaration(stmt)) {
+      if (stmt.isTypeOnly) continue;
       const clause = stmt.exportClause;
       if (clause && ts.isNamedExports(clause)) {
         for (const el of clause.elements) {
+          if (el.isTypeOnly) continue;
           // el.name is the EXPORTED name (Identifier or string literal).
           if (el.name.text === GENERATE_STATIC_PARAMS) return true;
         }

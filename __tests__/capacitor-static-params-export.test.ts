@@ -58,6 +58,29 @@ describe('exportsGenerateStaticParams — prose does not count', () => {
   });
 });
 
+/**
+ * Review finding on PR #1284 (2026-09-11): the first classifier accepted two
+ * export-SHAPED forms that produce no runtime binding named
+ * generateStaticParams. Both would have recreated the substring defect —
+ * "source looks export-ish → route called compatible → Next finds nothing".
+ */
+describe('exportsGenerateStaticParams — export-shaped but not a named runtime export', () => {
+  it('export default function generateStaticParams exports `default`, not the name', () => {
+    const src = `export default function generateStaticParams() { return []; }\n`;
+    expect(exportsGenerateStaticParams(src)).toBe(false);
+  });
+
+  it('export type { generateStaticParams } is erased at runtime', () => {
+    const src = `export type { generateStaticParams } from './params';\nexport default function P() { return null; }\n`;
+    expect(exportsGenerateStaticParams(src)).toBe(false);
+  });
+
+  it('export { type generateStaticParams } is erased at runtime', () => {
+    const src = `export { type generateStaticParams } from './params';\nexport default function P() { return null; }\n`;
+    expect(exportsGenerateStaticParams(src)).toBe(false);
+  });
+});
+
 describe('exportsGenerateStaticParams — real exports count', () => {
   const shapes: Array<[string, string]> = [
     ['export function', `export function generateStaticParams() { return []; }`],
