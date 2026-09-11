@@ -123,16 +123,101 @@ resilience metrics.
 ⛔ **None of this is authorized here.** They are prerequisites recorded so Stage 7
 does not discover them.
 
+## 5.1 · Founder refinement 2026-09-11 — the prerequisites are TEMPORAL, not boolean
+
+> **Do not create another boolean called `deliverable`. Deliverability is temporal
+> evidence, not a permanent property. A mailbox that worked six months ago can fail
+> tomorrow.**
+
+**I-18 (new).** *Deliverability is an event history, never a stored property.* Any
+column asserting an address is reachable is asserting something no system can know
+in advance.
+
+The corrected target for the prerequisites:
+
+```
+CONTACT              an address attached to a durable member identity
+
+VERIFICATION EVENT   we proved control of this contact
+                     at this TIME, by this MECHANISM
+
+DELIVERY EVENT       accepted / delivered / bounced / failed / unknown
+                     at this TIME
+
+RECOVERABILITY       DERIVED from currently usable authenticators
+                     and recovery paths
+```
+
+### P-1 refined — one durable fact, many mechanisms
+A successful **email-code login** and a **redeemed magic link** must both be able to
+produce the *same* durable fact: **this member proved control of this contact, at
+this time, by this mechanism.** Today `email_verified` accidentally means *"passed
+through one particular route"*; that must stop being authoritative.
+
+### P-2 refined — evidence belongs to the CONTACT, not the member
+The privacy-safe join point is a **contact id** — not a raw address, and not
+necessarily `members.id`:
+
+```
+member → member_contact → mail / verification events
+```
+
+The ledger stays privacy-conscious and can still answer *"what happened when we tried
+to reach this recovery contact?"* ⛔ **And a provider's `accepted` still never becomes
+`delivered`.**
+
+### P-3 refined — ⭐ recoverability must be DERIVED, and the reason is F4
+
+> *"I would be wary of a manually maintained `recoverable = true`. That is exactly how
+> `has_webauthn = true` with zero credentials happened."*
+
+```
+RECOVERABLE IF   usable passkey exists
+              OR usable legacy credential exists
+              OR verified recovery contact exists AND a mail path is available
+              OR independent recovery credential exists
+```
+
+⭐ **This is I-2 arriving at a fourth site.** *Capability is derived from
+authoritative substrate, never duplicated into a flag.* The eight broken accounts are
+no longer only a defect to repair — they are **the worked example that predicts the
+next flag before it is written.**
+
+### Correction to §2 — `used_at` is evidence, not a design
+`magic_link_tokens.used_at` is excellent evidence of a **historical verification
+event**. ⛔ **It must not become the future verification database.** Its accidental
+usefulness tells us **what event the future system needs to record deliberately** —
+that is its whole contribution, and reading it as a design would be building on an
+artifact of one route, which is the same error as `email_verified`.
+
+### Why this pass was necessary at all
+`used = true` looked semantically obvious and had **three causes**. Had it simply been
+counted, **Stage 7 would have been built on fabricated certainty.** That is the
+argument for the census gate in one line.
+
 ## 6 · Standing
 
 ```
-CENSUS SCRIPT   written · read-only · not yet run (no production access from this session)
-FINDING         production cannot distinguish verified from deliverable;
-                the evidence model itself is a Stage 7 prerequisite
-NEW             P-1 · P-2 · P-3 recorded, none authorized
+STAGE 6            COMPLETE · QUALIFIED YES
+EVIDENCE MODEL     INSUFFICIENT — explicitly established, not suspected
 
-⛔ STAGE 7 HELD · no schema · no code · no migration · no vendor · no auth change
+P-1  contact verification    REQUIRED · NOT DESIGNED
+P-2  delivery evidence       REQUIRED · NOT DESIGNED
+P-3  recoverability state    REQUIRED · NOT DESIGNED   (derived, never stored)
+I-18 deliverability is temporal evidence, never a stored property
+
+STAGE 7            HELD
+NEXT               run the read-only production census from the Mac Studio
+
+⛔ IMPLEMENTATION · SCHEMA CHANGE · MIGRATION · AUTH CHANGE · VENDOR — ALL NO
 ```
+
+⭐ **On reading the census when it runs:** the important thing is **not whether a
+column prints `0`.** It is whether **each number has an honest epistemic meaning** —
+which of `OBSERVED`, `OBSERVED EMPTY` and `NOT OBSERVED` it is. `s6` is printed
+precisely to make that distinction unavoidable.
+
+> **A floor whose load-bearing property is unmeasurable is a floor on faith.**
 
 **To run:**
 
