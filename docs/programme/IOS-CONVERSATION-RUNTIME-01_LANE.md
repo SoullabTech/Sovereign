@@ -325,3 +325,13 @@ CLI; (2) Safari Web Inspector on the phone, one turn, console filtered
 `VoiceController`, expecting the "not implemented on ios" rejection;
 (3) clock times of the healthy turn, the stall, and the recovery for the
 record.
+
+**E2 confirmations received (Mac, relayed).** (2) The main checkout's
+generated `ios/App/App/capacitor.config.json`, dated **Aug 27 10:59** —
+a sync from before the predecessor lane existed — also contains **0**
+occurrences of `AudioSessionManager`. The plugin was unregistered in that
+earlier build too; the "inert since introduction" inference now has a
+second data point. (1) `grep packageClassList` in
+`@capacitor/cli/dist/ios/update.js` returned nothing; the list is written
+elsewhere in the CLI — a broader grep is requested. (3) Web Inspector
+runtime proof pending. (4) clock times pending.
