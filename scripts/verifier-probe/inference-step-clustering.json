@@ -1,0 +1,39 @@
+{
+  "clustered_by": "Claude, working only from the eighteen description texts",
+  "date": "2026-09-11",
+  "method": "I read each description for the move it says the reader must make, in its own words, and set the eighteen side by side looking for wordings that repeated. Three groupings named themselves almost verbatim: descriptions that say two things are placed together with no link stated and the hypothesis makes one the cause; descriptions that say an unstated state, ability, trait or relationship is named as what lies behind the reported behaviour, usually with rival candidates listed; and descriptions that say purpose or intent is read into an activity or a presence. Two smaller pairs held up on the same test (a later event supplied past where the sentence stops; a narrow fact widened into the whole), and one pair rests on both descriptions ending in the same formula about location overlap being converted into something stronger. I considered and rejected a single large 'the hypothesis claims more than the premise' bin, which would have been true of all eighteen and therefore said nothing, and I declined to force the hedge-dropping item and the de-facto-practice-to-formal-role item into any group, since neither move recurs anywhere else in the set.",
+  "kinds": [
+    {
+      "name": "Two things side by side made into a cause",
+      "what_it_is": "The premise puts two events or changes together in time without connecting them; the hypothesis names the first as what produced the second. Each description notes that the timing is doing all the work and that other explanations were available.",
+      "members": ["C09", "C14", "C17"]
+    },
+    {
+      "name": "The state behind the behaviour",
+      "what_it_is": "The premise reports observable behaviour or a situation; the hypothesis names an unstated inner fact about a person — a skill, a mood, a disposition, a relationship — as what is behind it. The descriptions typically list the other states that would fit the same observations equally well.",
+      "members": ["C01", "C08", "C12", "C13"]
+    },
+    {
+      "name": "Purpose read into an activity",
+      "what_it_is": "The premise records only what someone was doing or where they were; the hypothesis supplies the point of it — why they were browsing, why they were next door, why they were shadowing. The descriptions each set out the innocent or different purposes the activity would equally support.",
+      "members": ["C04", "C06", "C16"]
+    },
+    {
+      "name": "The outcome the sentence stops short of",
+      "what_it_is": "The premise gives an earlier step — an application made, an intention stated — and the hypothesis asserts the later event it leads to, which the premise never reaches. The reader has to supply the follow-through.",
+      "members": ["C03", "C07"]
+    },
+    {
+      "name": "One narrow fact widened to the whole",
+      "what_it_is": "The premise gives a single demonstrated particular; the hypothesis restates it as a claim about the whole condition or the whole year, which requires bringing in everything the sentence does not say.",
+      "members": ["C11", "C15"]
+    },
+    {
+      "name": "Sharing a place taken for something stronger",
+      "what_it_is": "The premise puts people in the same location; the hypothesis converts that overlap into a stronger shared fact — belonging to the club, boarding the same service — that being in the same place does not establish.",
+      "members": ["C05", "C18"]
+    }
+  ],
+  "unorganized": ["C02", "C10"],
+  "confidence_note": "The first three kinds feel firm — the descriptions themselves repeat the wording that defines them. The three pairs are weaker: C16 sits between purpose-reading and the outcome pair because it does both (reads intent into shadowing, then projects a handover), C18 could be read as widening rather than as location overlap, and C12 was the closest of the state-behind-behaviour items to the causal kind since its description also speaks of locating a cause. C02 (a hedge dropped) and C10 (a repeated practice restated as a formal role) are left out because neither move appears anywhere else in the eighteen."
+}
