@@ -1166,15 +1166,21 @@ two lines (`no such file or directory: IDENTIFIER`). No side effect.
 ```text
 NATIVE SUBJECT: 73d0df30d
 WEB BUNDLE: beta static export at 5846a0824
-APP VERSION:      pending — read from the installed artefact (command in §12.10 next)
-BUILD:            pending — same
+APP VERSION:      1.2.0    (PlistBuddy on the installed .app — observed 2026-09-11 21:12)
+BUILD:            2511     (same source; equals the repo's CURRENT_PROJECT_VERSION — the out-of-git
+                            "2515" of §9 is NOT what is under witness; fastlane never touched this worktree)
 DEVICE:           iPhone 16 Pro Max (iPhone17,2)
-iOS:              pending — devicectl device info details
+iOS:              26.6.1 (23G83)   (devicectl device info details)
 XCODE:            26.3 (17C529)
 SDK:              iPhoneOS 26.2
 LOCALE:           pending — device Settings
 INSTALL METHOD:   xcodebuild + devicectl (Debug)
 ```
+
+Second launch attempt (21:12:34) returned the identical `Locked` refusal.
+Still not a STOP: the phone must be unlocked at the moment the request
+lands, or the app is opened from the icon on the phone, which is
+equivalent for the witness (same installed artefact, same web bundle).
 
 **Next (Mac, no trailing comments on any line).** Unlock the phone, then:
 
