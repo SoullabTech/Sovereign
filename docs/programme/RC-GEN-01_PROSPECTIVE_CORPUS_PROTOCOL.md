@@ -316,3 +316,56 @@ easier on a verifier than one built entirely of neutrals — contradiction is th
 signal an NLI model is most directly trained to emit. ⚠️ If unlicensed
 performance comes back high, **that is a candidate explanation to test, not a
 result to celebrate**, and it was flagged by the author before any model ran.
+
+---
+
+## CLASSIFICATION REVEALED — after the freeze commit, 2026-09-11
+
+Detector rule `18608a18…`, unchanged, applied to the frozen corpus:
+
+```text
+routed        21 / 40
+  unlicensed  10 / 20   <- COVERAGE
+  licensed    11 / 20   <- COST, every one a false alarm
+
+pairs         both members routed  10
+              neither routed        9
+              SPLIT                 1
+```
+
+⭐ **Not a manufactured split.** 21/40 emerged from natural prose meeting a frozen
+rule; nobody balanced it. The corpus was authored without sight of the regexes
+and the detector saw it only after the hash was committed.
+
+⭐⭐ **Adequately powered, on the face of it.** 21 routed cases means the primary
+question's inside cell can hold up to 21 agreements against a floor of 8 —
+where `detector-blind` routed 10 and yielded only 4. ⛔ *Can* hold. The
+agreements are not counted until both verifiers have run.
+
+⚠️ **19 of 20 pairs route together.** Because a pair shares its premise, the
+detector is responding almost entirely to the **premise**, not to the difference
+between the two hypotheses — the one thing that distinguishes a licensed claim
+from an overreaching one. **One pair in twenty splits.** That is a fact about
+what the rule keys on, and it is the mechanism behind the cost figure below.
+
+### ⛔ A secondary result is already visible, and it is unflattering
+
+**The detector routes 11 of 20 licensed claims — 55%.** Against `detector-blind`'s
+3/13 (23%) and the pooled 25/68 (37%), this is the **highest false-alarm rate
+recorded in the lane**, and it comes from the only corpus authored without
+reference to any verifier's weakness.
+
+The plain reading: **natural prose about time, frequency, duration, condition,
+role, relationship and state contains limiter vocabulary whether or not the claim
+drawn from it overreaches.** Earlier corpora, built by pressing on distinctions,
+concentrated that vocabulary in the unlicensed members. This one does not, and
+the cost rises accordingly.
+
+⛔ **Reported now precisely because it is unflattering** — a secondary result may
+never substitute for the primary one, and this one cannot be mistaken for
+support. ⚠️ It is also not yet the whole cost picture: what a routed licensed
+claim costs depends on what routing *does*, and under `UNRESOLVED` semantics it
+withholds closure rather than refusing the claim.
+
+**Coverage (10/20) and cost (11/20) are secondary questions 1 and 2. The primary
+question is untouched and remains unanswered until both verifiers run.**
