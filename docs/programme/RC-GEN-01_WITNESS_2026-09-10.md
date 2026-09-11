@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUN 2026-09-10 · ⛔ AWAITING FOUNDER RULING
+3A-S   semantic witness        ⛔ RUN 1 FAILED (founder ruling 2026-09-10)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -86,8 +86,68 @@ check and the no-smuggling rule all held against a real completion.
 > restraint here reads as a choice, and it's doing more work than an embellished
 > version would."
 
-Zero proposals. ⛔ **Whether this discharges the restraint rubric is the founder's
-ruling, not the harness's and not this record's.**
+Zero proposals.
+
+## ⭐ FOUNDER RULING — 3A-S run 1: **FAIL**
+
+```
+SPECIMEN 1   FAIL
+SPECIMEN 2   PASS
+3A-S         FAIL
+3A           NOT PASSED
+3D           REMAINS CLOSED
+```
+
+⭐ **A useful failure: the architecture worked; the SEMANTIC judgement exposed a
+narrower cognition defect.** Nothing in the envelope, persistence, idempotency or
+tool contract is implicated — they did their jobs, and protocol was 0 failed.
+
+### Specimen 1 — FAIL on R3
+
+```
+R1  addresses the target              PASS
+R2  reduces abstraction               PASS
+R3  preserves the underlying claim    FAIL
+R4  no unrelated intervention         not needed for the ruling; concern noted
+```
+
+**Two semantic substitutions:**
+
+```
+"transformation in his relational orientation toward the natural world"
+  -> "he began to see the natural world differently"
+     ⛔ RELATIONSHIP COLLAPSED INTO PERCEPTION. The source separately mentions
+        a "shift in perspective", so two distinguishable claims became one.
+
+"his ongoing process of integration"
+  -> "putting himself back together"
+     ⛔ INTRODUCES A PRIOR CONDITION OF BROKENNESS the source does not
+        establish. Integration does not necessarily mean repair from damage.
+```
+
+⭐ **This is exactly what R3 exists to prevent: concretization cannot purchase
+vividness by altering ontology or adding biography.** The model's own `reason`
+claimed it preserved "the passage's two claims" — **the authoritative wording did
+not.** A reason that describes a fidelity the text does not have is why the rubric
+rules on the *wording*, never on the explanation.
+
+### Specimen 2 — PASS on all three
+
+MAIA named the dimension asked about, found no defect within it, and **explicitly
+considered and rejected the tempting adjacent intervention** (sensory
+embellishment) because it would add material without solving the named problem.
+
+> ⭐ **Authorization is not an invitation to intervene** — demonstrated, not
+> asserted.
+
+### The defect, precisely
+
+> **MAIA can concretize by compression, but has not yet shown that it can
+> concretize WITHOUT semantic substitution.**
+
+⛔ **Repair at the inference instruction / semantic-constraint layer ONLY.** Then
+rerun **the same specimens**. ⛔ **The test is not improved to help the model
+pass** — the failure has already named what the next inference must learn.
 
 ## ⚠️ Housekeeping corrections
 

@@ -108,6 +108,29 @@ describe('⭐ voice is protected in the instruction, not only in review', () => 
   });
 });
 
+describe('⭐ the R3 repair — concreteness may not be purchased by substitution', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('names the hard limit', () => {
+    expect(p).toContain('MAKING PROSE CONCRETE HAS A HARD LIMIT');
+  });
+  it('forbids each substitution the 3A-S run 1 failure exhibited', () => {
+    expect(p).toContain('narrowing, collapsing, dramatizing, psychologizing');
+    expect(p).toContain('not present in the authorized text');
+  });
+  it('forbids collapsing two claims into one — the relational/perception loss', () => {
+    expect(p).toContain('Two distinct');
+    expect(p).toContain('must not become one');
+  });
+  it('forbids implying a history or condition the passage does not state — the "putting himself back together" loss', () => {
+    expect(p).toContain('implies a');
+    expect(p).toContain('the passage does not state');
+  });
+  it('⭐ offers the lawful exit: plainer and faithful over vivid and altered', () => {
+    expect(p).toContain('PRESERVE ITS MEANING IN PLAINER LANGUAGE');
+    expect(p).toContain('Plainer and faithful is a better answer than vivid and altered');
+  });
+});
+
 describe('provenance', () => {
   it('the asker version is pinned so a proposal records which contract produced it', () => {
     expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');
