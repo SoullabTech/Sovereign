@@ -33,33 +33,37 @@ describe('each route declares why the person arrived', () => {
   });
 });
 
-// SUPERSEDED 2026-09-11 — FOUNDER RULING. Both doors open on email.
+// ⚠️ NOT SUPERSEDED — the challenge to this ruling is OPEN, lane AUTH-DOOR-01.
 //
-// The header above is kept verbatim. The earlier ruling is not stale and was not
-// wrong on its own terms: /signin really was asking returning members for an email
-// address. It is superseded ON ITS PREMISE — it assumed a population for whom
-// password was a valid universal entry mode. Production now contains email-code
-// members who have never possessed a password. The premise is false, so the ruling
-// falls with it.
+// On 2026-09-11 the ruling above was superseded by a founder ruling for email-first
+// and then WITHDRAWN the same day, unreleased, pending an auth-architecture
+// research spike. The original ruling therefore still stands and these assertions
+// still hold. Recorded here rather than left silent so a reader does not mistake
+// "unchanged" for "unexamined".
 //
-// IDENTITY FIRST; AUTHENTICATION METHOD SECOND. The door asks who is entering
-// before presuming how they authenticate.
+// The charge against it: it assumed a population for whom password was a valid
+// universal entry mode, and production contains email-code members who have never
+// possessed a password. Observed — an operator holding a valid 6-digit code typed
+// it into the password field and was correctly refused by the wrong form.
 //
-// Observed 2026-09-11: an operator holding a valid 6-digit code typed it into the
-// password field and was correctly refused by the wrong form — the interface
-// contradicting the authentication model. 5 of the 7 stalled accounts sit at the
-// step straight after account creation.
+// What the spike is weighing is not password-first vs email-first. Email-OTP-first
+// would replace one presumption with a kinder presumption. The candidate is
+// identity/credential-aware: recognise the member, then offer the strongest
+// authenticator they can actually use.
 //
-// The general rule this defends, beyond this screen:
+// The constraint below is settled and binds every candidate:
 //     never ask a member for a credential the system has never established
 //     with them.
 describe('the intent decides the opening phase', () => {
-  it('both doors open on email', () => {
-    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password' : 'email'/);
+  it('/signin opens on password', () => {
+    expect(COMPONENT).toMatch(/mode === 'signin' \? 'password' : 'email'/);
   });
 
-  it('no route opens straight onto a password form', () => {
-    expect(COMPONENT).not.toMatch(/mode === 'signin' \? 'password'/);
+  // The open challenge must stay visible in the source, or the next reader repairs
+  // the door as a drive-by and the spike adjudicates a decision already taken.
+  it('carries the open AUTH-DOOR-01 challenge next to the decision', () => {
+    expect(COMPONENT).toContain('AUTH-DOOR-01');
+    expect(COMPONENT).toContain('credential the system has never established');
   });
 
   it('the component accepts and forwards the mode', () => {
@@ -69,8 +73,8 @@ describe('the intent decides the opening phase', () => {
 
   // ?verified= and ?u= name a specific person mid-flow and must still win, or a
   // magic-link return would be bounced to a password form.
-  it('an explicit deep-link still outranks the default', () => {
-    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password'/);
+  it('an explicit deep-link still outranks the mode', () => {
+    expect(COMPONENT).toMatch(/preVerified \? 'name' : usernameParam \? 'password' : mode/);
   });
 });
 

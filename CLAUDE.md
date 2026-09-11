@@ -277,24 +277,11 @@ The onboarding journey happens exactly once per member — whether beta testers 
 4. **No shortcuts** — Each step must be completed in sequence
 5. **Returning users** — `/signin` for existing members to sign in each session
 6. **New user link** — `/signin` includes amber "New to Soullab? Begin Journey" link → `/begin`
-7. **Identity first; authentication method second** (founder ruling 2026-09-11) — `/signin` and `/signup` both open on EMAIL. The door asks *who* is entering before presuming *how* they authenticate; email leads to the path that fits that member (code, or password where one exists). This expressly supersedes the 2026-08 entry-intent ruling that opened `/signin` on password — superseded **on its premise**, not its reasoning: it assumed password was a valid universal entry mode, and production contains email-code members who have never possessed a password. Two constraints ride with it, asserted in `components/auth/__tests__/entryMode.test.ts`: the email step must not reveal whether an account exists, and an established password member must not have to hunt for their door.
+7. **Never ask a member for a credential the system has never established with them** (founder rule, 2026-09-11) — SETTLED, and binds every candidate door. A member who authenticates by email code being shown a password form is the interface contradicting the authentication model. The rule is general: it applies wherever a surface presumes a credential rather than establishing one.
 
-   **The general rule, which outlives this screen:** *never ask a member for a credential the system has never established with them.* A member who authenticates by email code being shown a password form is the interface contradicting the authentication model — the defect class this rule exists to prevent, wherever it next appears.
+   ⚠️ **The DOORWAY GEOMETRY is OPEN — lane `AUTH-DOOR-01`.** `/signin` currently opens on password (2026-08 entry-intent ruling, `components/auth/__tests__/entryMode.test.ts`), which violates the rule above for the email-code population. An email-first ruling was made, implemented and **withdrawn the same day, unreleased** — email-OTP-first replaces one presumption with a kinder presumption rather than removing it. The candidate under research is **identity/credential-aware**: recognise the member, then offer the strongest authenticator they can actually use — passkey/WebAuthn preferred (the only phishing-resistant option per NIST SP 800-63B and OWASP; passwords and manually-entered OTPs are both phishing-vulnerable), existing password where one exists, email OTP as the universal bootstrap and recovery path.
 
-### Pages
-
-- `/signin` — Returning user sign in (amber link to `/begin` for new users)
-- `/begin` — Landing page with Holoflower and "Begin Journey" button
-- `/test-elemental` — `SacredSoulInduction` (passkey/password) then `ElementalOrientation`
-- `/faq` — `FAQSection` component
-- `/onboarding` — `CompleteWelcomeFlow` (preferences)
-- `/maia` — Main app
-
-### Completion Flag
-
-Stored in both:
-- Server-side: `members.onboarded = true` (PostgreSQL)
-- Client-side: `localStorage.beta_user.onboarded = true` (session cache)
+   **Standing:** spike NOT RUN · geometry NOT RULED · no door changed · production untouched. Evidence so far: 5 of 7 stalled accounts sit at the step straight after account creation; an operator holding a valid 6-digit code was refused by the password form (2026-09-11). ⛔ Do not repair the door as a drive-by — that would adjudicate the lane by edit.
 
 ## Members System (Cross-Device Recognition)
 

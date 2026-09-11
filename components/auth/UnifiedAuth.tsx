@@ -186,34 +186,36 @@ function UnifiedAuthInner({ mode = 'signup' }: { mode?: AuthMode }) {
   const usernameParam = searchParams?.get('u') || '';
 
   // `?verified=` and `?u=` still win — they name a specific person mid-flow.
+  // Otherwise the arrival intent decides. A returning member opens on password;
+  // someone joining opens on email.
   //
-  // Everyone else opens on EMAIL, /signin and /signup alike.
+  // ⚠️ OPEN DEFECT, NOT YET REPAIRED — AUTH-DOOR-01.
   //
-  // IDENTITY FIRST; AUTHENTICATION METHOD SECOND. The door asks WHO is entering
-  // before it presumes HOW they authenticate. Email, then the path that fits that
-  // member — code, or password where one exists.
+  // This presumes a credential some members never received. /signin is where
+  // email-code members are sent, by recovery instructions and by us, and those
+  // accounts hold a generated password the member has never seen. Observed
+  // 2026-09-11: an operator holding a valid 6-digit code typed it into the password
+  // field and was correctly refused by the wrong form — the interface contradicting
+  // the authentication model. 5 of the 7 stalled accounts sit at the step straight
+  // after account creation.
   //
-  // FOUNDER RULING 2026-09-11, expressly superseding the 2026-08 entry-intent
-  // ruling that had /signin open on password. That ruling is preserved in
-  // entryMode.test.ts rather than erased; it is superseded on its premise, not its
-  // reasoning: it assumed a population for whom password was a valid universal
-  // entry mode. Production now contains email-code members who have never
-  // possessed a password. The premise is false, so the ruling falls.
-  //
-  // Observed 2026-09-11: an operator holding a valid 6-digit code typed it into the
-  // password field and was correctly refused by the wrong form. 5 of the 7 stalled
-  // accounts sit at the step straight after account creation.
-  //
-  // THE GENERAL RULE, which is the part that outlives this screen:
+  // The CONSTRAINT is settled and is not waiting on the spike:
   //
   //     Never ask a member for a credential the system has never established
   //     with them.
   //
-  // Two constraints ride with this ruling and are asserted in entryMode.test.ts:
-  // the email step must not reveal whether an account exists, and an established
-  // password member must not have to hunt for their door.
+  // The GEOMETRY is not settled. Email-first was implemented on 2026-09-11 and
+  // then WITHDRAWN the same day, unreleased: the founder holds it lightly pending
+  // an auth-architecture research spike, because the strongest answer may be
+  // identity/credential-aware — recognise the member, then offer the strongest
+  // authenticator they can actually use (passkey/WebAuthn preferred as phishing-
+  // resistant per NIST SP 800-63B and OWASP, password where one exists, email OTP
+  // as the universal bootstrap and recovery path). Email-OTP-first would be a
+  // second presumption replacing the first, merely a kinder one.
+  //
+  // Do NOT change this line as a drive-by. It is a ruled lane: AUTH-DOOR-01.
   const [phase, setPhase] = useState<Phase>(
-    preVerified ? 'name' : usernameParam ? 'password' : 'email'
+    preVerified ? 'name' : usernameParam ? 'password' : mode === 'signin' ? 'password' : 'email'
   );
   const [email, setEmail] = useState(emailParam);
   const [code, setCode] = useState('');
