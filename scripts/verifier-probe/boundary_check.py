@@ -32,6 +32,7 @@ from pathlib import Path
 SETS = {
     'as-derived': 'fixtures.json',
     'detector-blind': 'fixtures-detector.json',
+    'prospective': 'fixtures-prospective.json',
     'blind': 'fixtures-blind.json',
     'scope': 'fixtures-scope.json',
     'modifier': 'fixtures-modifier.json',

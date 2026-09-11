@@ -255,3 +255,64 @@ created.
 | fewer than 8 agreements inside | **no architectural conclusion at all** |
 
 *An experiment with multiple ways to tell us we were wrong.*
+
+---
+
+## FROZEN — 2026-09-11
+
+```text
+fixture path            scripts/verifier-probe/fixtures-prospective.json
+fixture sha256          8f58c3532d1431c069594e195bdb313b8b69b71b22d1d988f11fe31df18cc640
+cases                   40  ·  20 entailed / 20 not_entailed
+families                20, every one of size 2, pair members adjacent
+                        premise shared within each pair; one member each label
+ids                     X01..X40, contiguous
+categories used         time ×3 · frequency ×4 · duration ×2 · condition ×3
+                        role ×3 · relationship ×2 · state ×3
+author                  fresh subagent, prompt committed at 915874fe4 BEFORE the run
+author tool calls       1 — the write of its own output file
+DETECTOR RULE sha256    18608a18a0a681b212d9b0052c8238e3c543f3203e1a6633dd4520f04696ad86
+```
+
+**Structure verified, content untouched.** No sentence was edited, no case
+removed, no label changed. Validation was counts and shape only.
+
+### Author-side uncertainty — recorded VERBATIM, separate from the labels
+
+⛔ Per the freeze conditions these are **evidence about the items, not grounds to
+rewrite them**. Nothing below was acted on.
+
+> **X20 (sprinter, state).** The premise says she returned in February and "has
+> raced without trouble since," so "currently injured" is contradicted rather
+> than merely unsupported. I treated contradiction as a legitimate species of
+> `not_entailed`; if the downstream distinction is three-way (entail / contradict
+> / neutral) this item, and X24 and X38 with it, would land in the contradiction
+> bucket rather than the neutral one. Several of the frequency items (X04, X08)
+> are likewise contradicted outright, not just unsupported.
+>
+> **X34 (night bus, time).** "After that the street has no service until morning"
+> is what makes three in the morning unambiguous; without that second sentence a
+> reader could have argued the first sentence only described a span of listed
+> departures.
+>
+> **X26 (cookery class, relationship).** Attendance as a friend's guest is the
+> whole hinge — I added "as a guest of a friend who had enrolled" so that
+> non-enrolment is stated by contrast rather than inferred from silence.
+>
+> **X32 (vineyard, duration/frequency).** This pair leans on two aspects at once
+> if read loosely; I anchored it on duration ("for the fortnight" vs "all year
+> round") and kept the year-round headcount in the premise so the contrast is
+> explicit.
+>
+> **Domains and names** are all invented; any resemblance to real places (Tromsø,
+> Stroud, Aberdeen, Leeds) is geographic scenery only, with no factual claim
+> attached that a reader would need outside knowledge to check.
+
+⭐ **The X20 note matters for reading the result.** Both verifiers reduce to a
+binary here (DeBERTa's `contradiction` and `neutral` both map to
+`not_entailed`), so the labels are correct as frozen. But a corpus whose
+unlicensed members are partly **contradictions** rather than **neutrals** is
+easier on a verifier than one built entirely of neutrals — contradiction is the
+signal an NLI model is most directly trained to emit. ⚠️ If unlicensed
+performance comes back high, **that is a candidate explanation to test, not a
+result to celebrate**, and it was flagged by the author before any model ran.

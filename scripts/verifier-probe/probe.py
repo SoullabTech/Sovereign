@@ -59,6 +59,9 @@ SETS = {
     'scope': Path(__file__).with_name('fixtures-scope.json'),
     'modifier': Path(__file__).with_name('fixtures-modifier.json'),
     'detector-blind': Path(__file__).with_name('fixtures-detector.json'),
+    # ⭐ PROSPECTIVE — authored blind, frozen at sha256 8f58c353…, classified only
+    # after freezing. ⛔ The one corpus that may authorize an architectural role.
+    'prospective': Path(__file__).with_name('fixtures-prospective.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'
