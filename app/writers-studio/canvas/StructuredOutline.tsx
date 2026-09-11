@@ -53,6 +53,7 @@ import {
 } from '@/lib/writersStudio/structureClient';
 import { orderOutline, type OutlineEntry } from '@/lib/writersStudio/outlineOrder';
 import type { ManuscriptSection, OutlineSectionStatus } from './ManuscriptOutline';
+import { revealWithin } from './revealWithin';
 
 const STATUS_MARK: Record<OutlineSectionStatus, { glyph: string; label: string } | null> = {
   clean: null,
@@ -166,7 +167,7 @@ export default function StructuredOutline({
     const el = activeRow.current;
     if (!el) return;
     revealed.current = true;
-    el.scrollIntoView({ block: 'center' });
+    revealWithin(el, 'center');
   }, [activeId, ordered]);
 
   const row = (s: ManuscriptSection, depth: number) => {
