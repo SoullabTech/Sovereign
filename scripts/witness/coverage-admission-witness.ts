@@ -71,12 +71,52 @@ import {
   type DevelopmentalLens, type DevelopmentalReaderRequest, type RecoveredBody,
 } from '@/lib/manuscript/developmentalReader/contract';
 import { readDevelopmentally } from '@/lib/manuscript/developmentalReader/read';
+import { appendFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
+import { randomUUID } from 'crypto';
 
 const TAG = 'across-unread-span';
 
-type Verdict = 'FIRED' | 'ADMITTED_AND_RETAINED' | 'ADMITTED' | 'NOT EXERCISED' | 'VIOLATED';
+type Verdict = 'FIRED' | 'ADMITTED_AND_RETAINED' | 'ADMITTED'
+  | 'NOT EXERCISED' | 'INDETERMINATE' | 'VIOLATED';
 
 const env = (k: string) => process.env[k]?.trim() || '';
+
+/**
+ * ⭐⭐ THE RE-RUN LEDGER — founder ruling, 2026-09-11.
+ *
+ * A and B depend on what a live model happens to emit, so repeated attempts
+ * are legitimate. ⛔ What is not legitimate is reporting only the attempt that
+ * worked. The ledger is APPEND-ONLY and every attempt lands in it, exercised
+ * or not:
+ *
+ *     attempt 1  NOT EXERCISED
+ *     attempt 2  NOT EXERCISED
+ *     attempt 3  EXERCISED · PASS
+ *
+ * ⭐ That preserves the difference between the EXISTENCE of lawful composition
+ * and the FREQUENCY of the model behaviour that exercises it. One exercised
+ * run out of nine is still a pass for A — and it is also a fact about how
+ * rarely the condition arises, which a single reported run would erase.
+ *
+ * ⛔ Also forbidden by the same ruling, and none of it is in this script:
+ * changing the prompt to elicit the tag · rewriting the Work between attempts
+ * to encourage it · discarding non-exercised runs.
+ */
+const LEDGER = env('WITNESS_LEDGER') || 'docs/programme/witness/coverage-admission-attempts.jsonl';
+const RUN_ID = randomUUID().slice(0, 8);
+
+function record(entry: Record<string, unknown>) {
+  try {
+    mkdirSync(dirname(LEDGER), { recursive: true });
+    appendFileSync(LEDGER, `${JSON.stringify({ runId: RUN_ID, at: new Date().toISOString(), ...entry })}\n`, 'utf8');
+  } catch (e) {
+    /* ⛔ A ledger that cannot be written is not a reason to run unrecorded. */
+    stop(`the attempt ledger could not be written to ${LEDGER}: ${(e as Error).message}`,
+      'Set WITNESS_LEDGER to a writable path. An unrecorded attempt is exactly what the ' +
+      're-run discipline exists to prevent.');
+  }
+}
 const lines: string[] = [];
 const say = (s = '') => { lines.push(s); console.log(s); };
 
@@ -152,6 +192,9 @@ interface Reading {
   lens: DevelopmentalLens;
   outcome: string;
   refusal?: string;
+  detail?: string;
+  /** ⭐ Whether the REFUSAL ITSELF names the tag. See `emissionProven` below. */
+  detailNamesTag?: boolean;
   /** Claims that carried the tag, with their own derived span length. */
   tagged: { index: number; spanLen: number; retained: boolean }[];
   /** Non-conclusions admitted on this reading, other than the tag. */
@@ -166,9 +209,21 @@ async function readOnce(condition: 'FULL' | 'PARTIAL', evidence: DevelopmentalEv
 
   if (result.outcome === 'refused') {
     r.refusal = result.refusal;
-    /* A refusal carries no claims, so the span that caused it cannot be
-       re-derived here. The refusal DETAIL names the claim index, and that is
-       the evidence — the host already proved the span was empty. */
+    r.detail = result.detail;
+    /* ⭐⭐ EMISSION MUST BE PROVEN, NEVER INFERRED FROM A REFUSAL.
+       Once the law fires, the offending claim never becomes an admitted
+       result — so the refusal is the only surviving trace of what the model
+       said. The witness therefore requires the refusal's own DETAIL to name
+       the tag verbatim, rather than treating `non_conclusion_inapplicable`
+       as a proxy for emission.
+
+       ⚠️ Today that code is raised in exactly one place and only inside the
+       `across-unread-span` branch, so the two coincide. That coincidence is
+       a fact about today's implementation, not a law: the moment a second
+       inapplicable predicate is ruled, a refusal code alone would start
+       over-claiming, silently. Reading the detail makes the instrument
+       survive that change instead of quietly inheriting it. */
+    r.detailNamesTag = result.detail.includes(TAG);
     return r;
   }
   if (result.outcome !== 'claims') return r;
@@ -224,6 +279,14 @@ async function main() {
       const lens = lenses[i % lenses.length];
       const r = await readOnce(condition, evidence, lens);
       readings.push(r);
+      record({
+        kind: 'attempt', condition, lens, attempt: i + 1,
+        outcome: r.outcome, refusal: r.refusal ?? null,
+        detailNamesTag: r.detailNamesTag ?? null,
+        claims: r.claimCount,
+        taggedSpans: r.tagged.map((t) => t.spanLen),
+        otherTags: r.otherTags,
+      });
       const tags = r.tagged.length
         ? r.tagged.map((t) => `claim ${t.index} span=${t.spanLen}`).join(' · ')
         : '—';
@@ -234,9 +297,15 @@ async function main() {
 
   /* ── A ─────────────────────────────────────────────────────────────────── */
   const fullReadings = readings.filter((r) => r.condition === 'FULL');
-  const aFired = fullReadings.filter((r) => r.refusal === 'non_conclusion_inapplicable');
+  const aInapplicable = fullReadings.filter((r) => r.refusal === 'non_conclusion_inapplicable');
+  /* PASS requires the tag to be OBSERVED, not assumed from the refusal code. */
+  const aFired = aInapplicable.filter((r) => r.detailNamesTag);
+  const aUnnamed = aInapplicable.filter((r) => !r.detailNamesTag);
   const aViolated = fullReadings.filter((r) => r.tagged.some((t) => t.spanLen === 0));
-  const aVerdict: Verdict = aViolated.length ? 'VIOLATED' : aFired.length ? 'FIRED' : 'NOT EXERCISED';
+  const aVerdict: Verdict = aViolated.length ? 'VIOLATED'
+    : aFired.length ? 'FIRED'
+      : aUnnamed.length ? 'INDETERMINATE'
+        : 'NOT EXERCISED';
 
   /* ── B ─────────────────────────────────────────────────────────────────── */
   const partialReadings = readings.filter((r) => r.condition === 'PARTIAL');
@@ -256,6 +325,10 @@ async function main() {
     '      ⛔ No full-coverage reading emitted the tag. The law was NOT EXERCISED in live\n'
     + '         composition. This is neither a pass nor a failure; the emission is the model\'s\n'
     + '         and cannot be requested without manufacturing the observation.');
+  if (aVerdict === 'INDETERMINATE') say(
+    '      ⛔ A reading was refused as non_conclusion_inapplicable, but its detail does NOT name\n'
+    + `         "${TAG}". Emission is therefore UNPROVEN — the refusal may belong to another\n`
+    + '         predicate. ⛔ This is not an A pass and must not be recorded as one.');
   if (aVerdict === 'VIOLATED') say('      🔴 A claim with an EMPTY span was ADMITTED carrying the tag. The host law did not fire.');
 
   say(`  B · partial coverage, real span, tag emitted      ${bVerdict}`);
@@ -268,9 +341,17 @@ async function main() {
   say(`  C · unaffected non-conclusions at full coverage   ${cVerdict}`);
   say(`      admitted unchanged: ${cTags.length ? cTags.join(', ') : '—'}`);
 
+  record({
+    kind: 'verdict', A: aVerdict, B: bVerdict, C: cVerdict,
+    fullReadings: fullReadings.length, partialReadings: partialReadings.length,
+    aFired: aFired.length, bLawful: bLawful.length, cTags,
+    draftId: shape.readState.draftId, revision: shape.readState.revisionNumber,
+    sections: topology.length,
+  });
+
   const all: Verdict[] = [aVerdict, bVerdict, cVerdict];
   const violated = all.includes('VIOLATED');
-  const unexercised = all.includes('NOT EXERCISED');
+  const unexercised = all.includes('NOT EXERCISED') || all.includes('INDETERMINATE');
   say('');
   say(violated
     ? '  MODEL/HOST COMPOSITION   🔴 VIOLATED — deploy stays held and the finding is the result.'
@@ -278,7 +359,10 @@ async function main() {
       ? '  MODEL/HOST COMPOSITION   ⛔ NOT FULLY WITNESSED — a witness that did not exercise the law\n'
         + '                           has established nothing about it. Re-run, or record NOT WITNESSED.'
       : '  MODEL/HOST COMPOSITION   ⭐ WITNESSED on all three sides.');
-  say('  DEPLOY                   HELD — this script authorizes nothing.\n');
+  say('  DEPLOY                   HELD — this script authorizes nothing.');
+  say(`  ATTEMPT LEDGER           ${LEDGER}  ·  run ${RUN_ID}`);
+  say('                           ⛔ Append-only. Report every attempt, never only the\n'
+    + '                              exercised one — the rate is part of the result.\n');
 
   process.exit(violated ? 1 : unexercised ? 3 : 0);
 }

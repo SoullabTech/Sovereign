@@ -422,6 +422,60 @@ occurs. It does not follow that it occurs on demand.**
 `doesNotEstablish` is required non-empty, so any admitted full-coverage reading necessarily carries
 at least one non-conclusion, and at full coverage it cannot be the tag.
 
+### 9.2a 🔴 DEFECT FOUND BY THE FOUNDER'S PRE-RUN CONDITION — emission was being INFERRED
+
+**Founder, 2026-09-11, before the run was spent:** *A must have either access to the pre-admission
+model output, or a refusal result that explicitly identifies `across-unread-span` as the violated
+condition. It may not infer emission merely because the reading was refused.*
+
+⭐ **The instrument was keying A on the refusal CODE**, `non_conclusion_inapplicable`. That code is
+raised in exactly one place today, inside the `across-unread-span` branch, **so the two coincide and
+the check would have passed.**
+
+> ⚠️ **But that coincidence is a fact about today's implementation, not a law.** The moment a second
+> inapplicable predicate is ruled — and §3 names four candidates — the refusal code would stop
+> identifying the tag, and the witness would begin **over-claiming silently, with no test failing.**
+
+⭐ **Repaired before the run**: the refusal's own `detail` names the tag verbatim
+(`claims[i] carries "across-unread-span" but spans no unread section`), and A now requires that
+string. A fourth verdict was added rather than folded into the others:
+
+```text
+FIRED           refused AND the detail names the tag        → emission PROVEN
+INDETERMINATE   refused as inapplicable, detail does NOT
+                name the tag                                → emission UNPROVEN;
+                                                              ⛔ NOT an A pass
+NOT EXERCISED   no full-coverage reading emitted the tag
+VIOLATED        empty span ADMITTED carrying the tag
+```
+
+⭐ **Why this matters beyond the bug: once the law fires, the offending claim never becomes an
+admitted result** — the refusal is the only surviving trace of what the model said. **An instrument
+that reads that trace loosely is guessing about the very emission it exists to observe.**
+
+### 9.2b ⭐⭐ THE RE-RUN LEDGER — founder ruling
+
+**A and B depend on what a live model happens to emit, so repeated attempts are legitimate.**
+⛔ **Reporting only the attempt that worked is not.**
+
+```text
+attempt 1  NOT EXERCISED
+attempt 2  NOT EXERCISED
+attempt 3  EXERCISED · PASS
+```
+
+> ⭐ **That preserves the difference between the EXISTENCE of lawful composition and the FREQUENCY of
+> the model behaviour that exercises it.** One exercised run in nine is still a pass for A — *and it
+> is also a fact about how rarely the condition arises, which a single reported run would erase.*
+
+**Built:** an append-only JSONL ledger (`WITNESS_LEDGER`, default
+`docs/programme/witness/coverage-admission-attempts.jsonl`), one line per attempt plus one per
+verdict, each stamped with a run id. ⛔ **A ledger that cannot be written stops the run** — an
+unrecorded attempt is exactly what the discipline exists to prevent.
+
+⛔ **Forbidden by the same ruling, and none of it is in the script:** changing the prompt to elicit
+the tag · rewriting the Work between attempts to encourage it · discarding non-exercised runs.
+
 ### 9.3 · What the instrument does and does not do
 
 ```text
@@ -469,8 +523,14 @@ prompt contract              UNTOUCHED
 vocabulary                   UNTOUCHED
 HOST LAW                     CLOSED
 MODEL/HOST COMPOSITION       UNWITNESSED
-witness instrument           BUILT · scripts/witness/coverage-admission-witness.ts
-                             ⛔ NOT RUN — needs a real credential and a real Work
+witness instrument           ACCEPTED (founder, 2026-09-11) · emission-proof defect repaired
+                             before the run · append-only attempt ledger built
+live-model witness           AUTHORIZED · ⛔ NOT YET RUN
+  A                          opportunistic
+  B                          load-bearing positive witness
+  C                          collateral-scope guard
+mock / bypass                FORBIDDEN
+prompt steering              FORBIDDEN
 three leftovers              REPORTED, NOT ABSORBED — canonicalFidelity (other lane) ·
                              ws2-07b F5/F17 (stale against later ratified rulings;
                              re-pointing would spend a different acceptance question) ·
@@ -482,5 +542,9 @@ deploy                       HELD
 
 > ⭐⭐ **The system must not describe an epistemic condition merely because its vocabulary permits
 > the description. The condition must actually obtain.** — founder, 2026-09-11
+>
+> ⭐⭐ **The host may constrain what becomes knowledge without teaching the model to manufacture the
+> condition that proves the constraint works.** — founder, 2026-09-11
+> *That separation is exactly why this witness is credible.*
 
 ⛔ **Deploy is not authorized by this record.**
