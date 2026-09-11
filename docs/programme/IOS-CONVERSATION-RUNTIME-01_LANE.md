@@ -250,3 +250,78 @@ Xcode console is the instrument for them.
   outranks the system's belief about its own state. No feature in this lane
   may make the orb less responsive to the member than it is today.
 - **Claim discipline**: nothing in this document is Live. §2–§5 are Design.
+
+### E2 · 2026-09-11 · calibration result — MAIA's native audio plugin is NOT REGISTERED in the installed build
+
+**Sender calibration (Mac, relayed).** Lines in the archive whose sender is
+MAIA's own binary (`App.debug.dylib` / `App.app/App`): **0** (header only).
+So the archive holds nothing emitted by MAIA's native code at all — healthy
+turn or stalled turn. By the letter of predecessor §13.3 that alone is
+reading **D** for MAIA-native lines. The next artefact explains the zero.
+
+**Installed build's Capacitor config (Mac, relayed).**
+`/Users/soullab/maia-ds01-witness/ios/App/App/capacitor.config.json` —
+the file `cap sync` generated for the build that went onto the phone —
+carries this `packageClassList`:
+
+```text
+SignInWithApple, BluetoothLe, SpeechRecognition, AppPlugin, ClipboardPlugin,
+FilesystemPlugin, HapticsPlugin, LocalNotificationsPlugin, SharePlugin,
+SplashScreenPlugin, StatusBarPlugin, GoogleAuth, VoiceRecorder
+```
+
+**`AudioSessionManager` and `VoiceController` are absent**, although
+`capacitor.config.ts` (line 39) declares both, with the comment *"Custom iOS
+plugins that need explicit registration."* The CLI regenerates
+`packageClassList` from the installed npm plugins at every sync and the
+in-app classes are dropped.
+
+**Repo-side facts (this checkout).**
+
+- Capacitor core/iOS is `^8.0.2`. `AudioSessionManager.swift` was
+  introduced in `1fa816177` (2026-01-21) on `^6.1.2`. From Capacitor 5
+  onward an in-app Swift plugin is loaded only if it is named in the
+  generated `packageClassList` or registered in a `CAPBridgeViewController`
+  subclass.
+- `Main.storyboard` uses the stock `CAPBridgeViewController`; no subclass,
+  no `registerPluginInstance`, no `capacitorDidLoad` in `ios/App/App`.
+- No legacy Objective-C `CAP_PLUGIN` registration exists for it.
+- The web wrapper `lib/voice/AudioSessionManager.ts` catches the rejection,
+  logs `[VoiceController] prepareForSpeaking error:` to the *web* console,
+  returns `false`, and `OracleConversation.tsx` (~1977) continues to TTS
+  regardless (`prepareForSpeaking timed out — continuing`).
+
+**Finding.** In the installed build (NATIVE SUBJECT `73d0df30d`, WEB
+`5846a0824`) the native `AudioSessionManager` plugin — the self-described
+"iOS Audio Session Gatekeeper" — is not registered with the Capacitor
+bridge. `prepareForSpeaking` / `prepareForListening` never reach Swift.
+`performFullTeardown()` never runs. The audio session on the live path is
+governed only by WebKit's media playback and by
+`@capacitor-community/speech-recognition`. The periodic
+`AVAudioSession … Activated session 0x6ff68` lines (every ≈0.7 s / ≈2.3 s
+from 21:14:42) are that plugin and WebKit, not MAIA's native code.
+
+**Consequence for attribution (proposed, founder rules).**
+
+- The predecessor's `AudioSessionManager.swift` edit is **not executed** on
+  the live path of the witnessed build. It cannot be the cause of the
+  stall. The shared-seam question of ENGINE-01 §12.11 is answered for this
+  build: the seam is inert, not damaged.
+- Because the generated list is rewritten on every sync, the plugin has
+  most probably been unregistered in every synced build since its
+  introduction (inference; a historical `capacitor.config.json` would
+  confirm). The prior symptom family (§1) occurred with the gatekeeper
+  inert.
+- Proposed classification: **C′** — no act, healthy or stalled, reaches
+  MAIA's native audio layer, because that layer is not registered. Locus:
+  web / TTS playback lifecycle and the community recognizer's session
+  ownership. Not A (no native transition to fail), not B (no native
+  transition completed), not the letter of D (the zero is explained
+  structurally).
+
+**Confirmations requested before the ruling (no construction):**
+(1) CLI source on the Mac showing `packageClassList` is written by the
+CLI; (2) Safari Web Inspector on the phone, one turn, console filtered
+`VoiceController`, expecting the "not implemented on ios" rejection;
+(3) clock times of the healthy turn, the stall, and the recovery for the
+record.
