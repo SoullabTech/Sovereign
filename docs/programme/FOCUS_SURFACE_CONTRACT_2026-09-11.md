@@ -1664,7 +1664,42 @@ transcription, not advocacy.
 
 ---
 
-# 13 · STANDING
+# 13 · FOUNDER RULING — 2026-09-11
+
+**This contract is ACCEPTED at `cd4aa97cc` as the governing design record, and its gate result is
+accepted with it.**
+
+```text
+FOCUS Surface Contract    ACCEPTED
+gate                      NO
+JSX                       HELD
+route enablement          HELD
+production                UNTOUCHED
+```
+
+> ⭐⭐ **The twelve unresolved decisions are not implementation details. They are
+> product/constitutional decisions.**
+
+**The four structural ones are to be ruled before any surface code, in this order:**
+
+```text
+1  U4   Focus data model        single aperture vs Primary + Related
+2  U2   continuity              what survives reload: Focus · transcript · thread
+3  U1   commission relationship visible indicator vs excluded from v1
+4  U6   small-screen embodiment how §23.2's "do not cover the Work" survives
+                                below ~1180px and on touch
+```
+
+⭐ **Founder: their rulings may collapse some of the remaining eight automatically.** ⛔ **No JSX
+until then.**
+
+⚠️ **This ruling accepts the contract as the governing record; it does NOT ratify each clause's
+status assignment as beyond revision.** A clause marked BINDING here is binding because its source
+record ratified it — ⛔ never because this contract said so.
+
+---
+
+# 14 · STANDING
 
 ```text
 FOCUS substrate            IN PRODUCTION BUILD (5f65038d2)
@@ -1684,4 +1719,5 @@ route enablement           HELD
 production                 UNTOUCHED
 ```
 
-⛔ **This document authorizes nothing.** It states what an authorization would have to cover.
+⛔ **This document authorizes no code.** It states what an authorization would have to cover, and
+it is now the record against which that authorization will be written.
