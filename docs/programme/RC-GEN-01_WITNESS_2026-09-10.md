@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1, 2 AND 3 FAILED (founder rulings)
+3A-S   semantic witness        ⛔ RUNS 1-3 FAILED · RUN 4 NOT WITNESSED (401)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,50 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 4 · ⛔ NOT WITNESSED (environment, not protocol, not semantics)
+
+Checkout `7b6fe36b2`. **No cognition occurred.** Both specimens refused
+`unreachable` on a provider `401 authentication_error`.
+
+⛔ **This is NOT a semantic result and NOT a rubric FAIL.** The four criteria were
+never reached. `PROTOCOL: 2 failed` is the harness correctly reporting that no
+outcome was admitted — the envelope, the admitter and the instruction layer were
+never exercised.
+
+### ⭐⭐ THE DIAGNOSTIC SEAM REPAIR PAID OFF, IN THE FIELD, TODAY
+
+```
+[MAIA/ask] structured-refusal stage=structured_inference
+  refusal=provider_unavailable model=claude-opus-5 request_id=(none)
+  cause=401 {"type":"error","error":{"type":"authentication_error",
+             "message":"API key is invalid."}}
+```
+
+**Before this morning's repair the operator would have seen the single word
+`unreachable` and nothing else** — which is precisely what cost the Step 7
+afternoon, when a doubled key produced a 217-character header and the failure was
+indistinguishable from ten other causes.
+
+The line shows exactly what the repair promised: the router's own refusal identity
+(`provider_unavailable`), the pinned model, and the provider's real message,
+**bounded and credential-free** — the sanitizer left the 401 body intact because it
+contains no key material and is under the cap.
+
+⭐ **A repair authorized on the argument that "proposal generation will hit the same
+boundary" hit that boundary on its fourth run and was legible in one line.**
+
+### Triage, and what it is NOT
+
+`.env.local` holds **three** `ANTHROPIC_API_KEY` lines. The export takes `head -1`.
+Runs 1-3 succeeded in a shell where the credential was already exported; run 4 was a
+**fresh terminal**, so it re-derived the value and **the first line is not a valid
+key**.
+
+⛔ **Not the doubled-key defect from Step 7** — that produced a 217-char header and
+curl error 43. This is a well-formed key the provider rejects: `401`, not a
+transport error. Different failure, correctly distinguished by the very field that
+was being discarded before.
 
 ## ⚠️ Harness defect between run 2 and run 3 (mine)
 
