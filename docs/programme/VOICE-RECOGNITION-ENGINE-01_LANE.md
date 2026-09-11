@@ -1484,3 +1484,17 @@ it is left alone because the ruling orders the native control first.
 ATTRIBUTION UNRESOLVED — PRE-LANE CONTROL A ORDERED (native `a4305f4d6`,
 web `5846a0824`) — Console capture on both runs — NO REVERT AUTHORIZED —
 §13 not written.
+
+**Addendum (founder, live, after §12.12):** *"Tap To Speak does nothing."*
+The stuck state is harder than "did not auto-return": a manual tap on the
+orb does not start the mic either. Recorded as **S4: FAIL (hard)** for that
+pass. Two mechanisms fit, and the Console capture separates them without
+construction: (a) the tap reaches native — `prepareForListening` is logged
+and its `setCategory`/`setActive` fails or the recognizer never starts →
+native session transition, seam-adjacent; (b) nothing reaches native on
+the tap → the web state machine is still in "speaking" because the silent
+reply never emitted `AUDIO_ENDED`/`AUDIO_FAILED` (§12.11 handler at
+`OracleConversation.tsx` ~2551), so the orb ignores input until a timeout
+clears it — which is also what "resolves itself with time" would look like.
+(b) is a TTS/web-side locus. Instruction issued: capture the stuck state
+now, before killing the app.
