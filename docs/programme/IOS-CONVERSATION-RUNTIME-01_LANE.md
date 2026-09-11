@@ -1326,3 +1326,66 @@ E16.5 shape (callback without task identity) observed once more.
 Still owed for E17: whether the mic returned and when · whether the
 member was speaking during the storm · silent-switch position · footer +
 Native App Build · S1–S4 · ruling on the A/B control (E16 correction).
+
+### E18 · 2026-09-11 · full E16 console to the end — the storm does not recover; it stands down at 69 s with the microphone delivering digital zero
+
+Same run as E16/E17 (`E8767748-…`, session `ln1skg9o`), now complete
+from process start to the founder's next tap. Supersedes the "outcome
+unknown" line in E16.
+
+**E18.1 — duration and shape.** The post-TTS re-entry storm ran from
+`speech: 23s` to `speech: 69s` — **≈46 s, 37 recognizer generations**
+(`lifecycle … gen 1` → `gen 37`), every one ending in `[SR] Recognition
+error: No speech detected` within 0.34–1.9 s of `Engine started`. The
+route dump **strictly alternated** between two configurations on
+successive starts — `selectedDataSource = Bottom · ioBuffer 0.01` and
+`selectedDataSource = Front · ioBuffer 0.0026666` — for the whole run,
+i.e. two owners' session settings taking turns, never converging.
+
+**E18.2 — how it ended: not recovery, stand-down.**
+
+```text
+🔕 [onend] No recent activity (69s since speech, 46s since MAIA) - stopping
+   (User can tap mic to restart when ready to speak)
+🩺 [liveness] Capture loss detected: inactivity (LISTENING_STOOD_DOWN)
+🔄 [MicState] LISTENING → ERROR (via capture_loss_inactivity)
+🎙️ [voice-status] info LISTENING_STOOD_DOWN (recoverable=true)
+```
+
+The mic did **not** come back on its own in this run. The web layer's
+inactivity guard ended the storm by declaring capture lost and parking
+the mic in a stood-down state that requires a member tap. This is a
+different exit from the 90/120 s `[voice:watchdog]` recovery witnessed in
+the ENGINE-01 smoke (§13); both are time-based exits from the same
+fight, neither is a repair of it.
+
+**E18.3 — after the stand-down the surviving engine heard nothing at
+all.** One plugin engine remained running with no listener. Its level
+callbacks then reported `8.786141371316603e-43` on every tick and
+`[SR] Audio peak: 2.93e-43 ⚠️ SILENT` — **denormal-float zero, not the
+room's noise floor** (≈0.0015 during normal listening in the same run).
+The input tap was delivering all-zero buffers: the microphone path was
+dead at the audio-unit level, with the engine "started" and the session
+nominally `.playAndRecord/.voiceChat`. This is the first direct evidence
+of what the session is left in after the owners fight: **an active
+engine on a silent input.** It is consistent with H-SILENT (E16
+correction) operating in the other direction — the session that the
+gatekeeper deactivated and re-categorised, then the plugin re-configured
+twice over, ends with neither output (E16.2, inaudible) nor input
+(here). Recorded as observation plus code-consistent reading; no
+mechanism is claimed.
+
+**E18.4 — the tail.** The founder's next action (`stopListening called
+(internal)` → `Using native voice recorder` → `VoiceRecorder
+hasAudioRecordingPermission` → listener teardown) is the E17 tail; the
+stale `No speech detected` after `All listeners cleaned up` closes the
+run.
+
+**Standing after E18.** Member-facing outcome of the repaired build on
+this run: one reply text delivered, inaudible; one long utterance
+truncated to its tail; then 46 s of flicker ending in a parked mic. The
+gatekeeper is registered, reached and traced (rows YES); the runtime it
+was meant to gate remains multi-owner and self-defeating. Still owed
+before E19: footer + Native App Build (three runs, still unwitnessed) ·
+silent-switch position for this run · S1–S4 · founder ruling on the A/B
+control (E16 correction) · founder ruling on repair two.
