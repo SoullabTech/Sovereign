@@ -841,3 +841,53 @@ Required before any voice turn: the Account Settings footer must read
 `0debe8b09`; that line is what distinguishes this install from the
 ENGINE-01 witness build (`5846a0824`) and the parallel lane's bundle
 (`13d2f25a9`) on the same phone (E9).
+
+### E11 · 2026-09-11 23:05 / 23:15 · the subclass is the live root view controller; `log collect` confirmed blind to MAIA's NSLog
+
+Two installs of the repair build landed (23:01 → container `7FCB536E-…`,
+23:05 → `E5E5416E-…`, 23:14 → `AB2CDB3F-…`; the last is the one running).
+`log collect --last 20m` after the 23:14 launch, filtered on
+`AudioSessionManager OR MAIABridgeViewController`, returned exactly two
+matches, both UIKit scene-state dumps (`Sd` type), one per launched process:
+
+```text
+23:05:45  App[48088]  … orientationVC = <App.MAIABridgeViewController: 0x10a6b4000>
+23:15:26  App[48176]  … orientationVC = <App.MAIABridgeViewController: 0x1086b0000>
+```
+
+**What this proves.** UIKit itself reports that the window's root view
+controller is `App.MAIABridgeViewController` in both processes. The
+storyboard change took effect at runtime; the subclass is the bridge
+controller that Capacitor drives, and `capacitorDidLoad()` is the hook
+`CAPBridgeViewController` calls on that instance after bridge setup. This
+is the strongest evidence available from `log collect` that the
+registration code path is live.
+
+**What it does not prove, and why.** The NSLog line the subclass emits at
+registration (`[MAIABridgeViewController] registered in-app plugin:
+AudioSessionManager`) is **absent**, as are any `[AudioSessionManager]`
+lines. Combined with E2 (zero lines from the app binary as sender across
+18,387 Apple-side audio lines), this closes the instrument question:
+**`log collect` does not persist this app's NSLog output.** Reading D for
+MAIA-native lines is now calibrated rather than assumed — the class is
+provably live, and its log line still does not appear. The "registered:
+YES" and "reaches Swift" rows therefore need a live console, not an
+archive: **Xcode's debug console** (Run from
+`/Users/soullab/maia-runtime-01/ios/App/App.xcworkspace`), which also
+forwards the WebView's `console.log`, so the JS side
+(`[VoiceController] Preparing for speaking…` and its success/failure)
+and the Swift side appear in one stream. Console.app live streaming is the
+alternative.
+
+Acceptance table after E11:
+
+```text
+AudioSessionManager compiled          YES
+AudioSessionManager registered        STRUCTURALLY YES (subclass is the live bridge VC) · direct log line PENDING (Xcode console)
+cap sync does not erase registration  YES
+web prepareForSpeaking reaches Swift  PENDING (Xcode console)
+web prepareForListening reaches Swift PENDING (Xcode console)
+native runtime trace on healthy turn  PENDING (Xcode console)
+same S1–S4 voice walk                 PENDING (not yet reported)
+Account Settings footer = 0debe8b09   PENDING (not yet reported)
+```
