@@ -4803,3 +4803,50 @@ computed over an unselected subset of a selected corpus.
 unconditionally · majority voting REJECTED · MiniCheck modifier mechanism
 UNRESOLVED, guard intact · detector value = ERROR COVERAGE, not differential
 usefulness · `UNRESOLVED` LOAD-BEARING · production UNTOUCHED.**
+
+---
+
+## The third pairing, and the reading it forces (2026-09-11)
+
+The founder's run printed the unconditional table for **two** pairings, not one.
+Set side by side they say the same thing three times:
+
+| pairing | second verifier's accuracy where first is RIGHT | where first is WRONG | p |
+|---|---|---|---|
+| DeBERTa → MiniCheck | 91% | 50% | 9.03e-05 |
+| HHEM → MiniCheck | 100% | 62% | 0.0364 |
+| DeBERTa → HHEM (routed, n=2 errors) | — | — | ⛔ too few |
+
+⭐⭐ **Two independent pairings, in the same direction, at conventional
+significance.** MiniCheck is markedly worse on the cases DeBERTa gets wrong *and*
+on the cases HHEM gets wrong — and those are not the same cases by construction.
+
+**The reading this forces is about the items, not the models:** difficulty is
+largely a **property of the claim**, shared across three differently-trained
+verifiers. That is the mechanism underneath every dependence number in this
+record, and it is why *adding witnesses does not buy independence* — a harder
+item is harder for all of them.
+
+⛔ **Scope, held:** third pairing, same corpus. A common difficulty dimension
+*across these 90 constructed cases* is not a claim about a common difficulty
+dimension in language. And `p = 0.0364` on 22 shared cases with 8 errors is
+suggestive corroboration, not a second proof.
+
+⭐ **What it means for the architecture** — it strengthens `UNRESOLVED` and
+weakens every voting scheme, including ones not yet proposed: if the cases where
+one witness fails are structurally hard for all of them, then a quorum of
+verifiers is a quorum of the same weakness. *The remedy for a hard claim is not
+more verifiers; it is not closing.*
+
+### One reporting defect, found in my own output and repaired
+
+The rescue-rate lines were printing **under the `UNCONDITIONAL` heading**, after
+the Fisher line — an inside/outside complement statistic positioned as though it
+were a property of the unselected table. Nothing computed was wrong; the
+attribution was. Moved into the complement block where it belongs, and the n<5
+message now says *why* the comparison is usually unavailable: the regime holds
+nearly all the errors, which is coverage, not a shortage of data.
+
+*A heading is a claim about what a number is.*
+
+**Rule digest unchanged — `18608a18…`.**

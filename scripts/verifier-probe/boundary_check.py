@@ -388,6 +388,32 @@ def against(paths):
                     # jointly wrong — and a wrong answer that two witnesses agree on is
                     # WORSE than one witness's wrong answer, because it arrives with
                     # manufactured corroboration.
+                    # ⛔ RESCUE BELONGS HERE, not under UNCONDITIONAL, where it was
+                    # printing after the Fisher line and reading as a property of the
+                    # unselected table. An inside/outside rate is a COMPLEMENT
+                    # statistic; a heading is a claim about what a number is.
+                    if u_res + u_blind and rescued + shared_blind:
+                        inside = rescued / (rescued + shared_blind)
+                        outside = u_res / (u_res + u_blind)
+                        print(f'    rescue rate INSIDE  {rescued}/{rescued + shared_blind}'
+                              f' = {inside:.0%}')
+                        print(f'    rescue rate OUTSIDE {u_res}/{u_res + u_blind}'
+                              f' = {outside:.0%}')
+                        if rescued + shared_blind >= MIN_N and u_res + u_blind >= MIN_N:
+                            if inside > outside:
+                                print('    -> routing SELECTS rescuable errors: the second witness')
+                                print('       does better exactly where the first is untrustworthy.')
+                            else:
+                                print('    ⛔ routing does NOT select rescuable errors. The second')
+                                print('       witness is no better inside the regime than outside,')
+                                print('       so this buys nothing the router was supposed to buy.')
+                        else:
+                            print('    ⚠️ rescue is conditional on the FIRST verifier being wrong,'
+                                  ' and one')
+                            print('       side has fewer than 5 such cases — no comparison drawn.'
+                                  ' Often this')
+                            print('       is the regime holding nearly all the errors, not a'
+                                  ' shortage of data.')
                     for label, rr, ww in (('INSIDE  the risk regime', preserved, shared_blind),
                                           ('OUTSIDE the risk regime', u_pres, u_blind)):
                         if rr + ww >= MIN_N:
@@ -431,23 +457,6 @@ def against(paths):
                           f'{g_pres / (g_pres + g_disr):.0%}')
                     print(f'    Fisher exact, two-sided  p = {gp:.2e}' if gp < 1e-3
                           else f'    Fisher exact, two-sided  p = {gp:.4f}')
-                    if u_res + u_blind and rescued + shared_blind:
-                        inside = rescued / (rescued + shared_blind)
-                        outside = u_res / (u_res + u_blind)
-                        print(f'    rescue rate INSIDE the risk regime  {rescued}/'
-                              f'{rescued + shared_blind} = {inside:.0%}')
-                        print(f'    rescue rate OUTSIDE it              {u_res}/'
-                              f'{u_res + u_blind} = {outside:.0%}')
-                        if rescued + shared_blind >= MIN_N and u_res + u_blind >= MIN_N:
-                            if inside > outside:
-                                print('    -> routing SELECTS rescuable errors: the second witness')
-                                print('       does better exactly where the first is untrustworthy.')
-                            else:
-                                print('    ⛔ routing does NOT select rescuable errors. The second')
-                                print('       witness is no better inside the regime than outside,')
-                                print('       so this buys nothing the router was supposed to buy.')
-                        else:
-                            print('    ⚠️ one side has fewer than 5 errors — no comparison drawn.')
 
                 # ⭐ ARE THE ERRORS INDEPENDENT? If they were, the second witness's
                 # accuracy would not depend on whether the first was right. Fisher's
