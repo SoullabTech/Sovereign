@@ -237,3 +237,111 @@ deploy     HELD · NOT DONE
 > ⭐⭐ **"We looked and do not know" is not the same statement as "we never looked,
 > because the process stopped before that question existed."** The type knew.
 > The route did not. Now both do.
+
+
+---
+
+## ⭐⭐ THE REUSABLE FAILURE CLASS — founder, 2026-09-11
+
+```text
+semantic distinction exists in the domain model
+        ↓
+transport / default normalizes two states together
+        ↓
+UI becomes epistemically false
+```
+
+> ## Do not normalize absence into uncertainty.
+>
+> **absent** — this question never became applicable
+> **unknown** — this question was applicable, but remained unanswered
+
+⛔ **This is not a Writer's Studio finding.** Any `?? DEFAULT` at a boundary is a
+candidate: the default is written to make a type total, and it silently answers a
+question the system was never in a position to ask. The domain model here had the
+distinction; a single coalesce at the wire destroyed it; and the surface then
+stated something false in the member's own language.
+
+⚠️ **Where to look for the same shape elsewhere**: any optional field made
+required at a transport boundary, any `?? 'unknown'`, any enum whose vocabulary
+contains a value meaning *"we don't know"* that is also used as a fallback for
+*"not applicable"*.
+
+---
+
+## RUNTIME WITNESS — the original 409, on a real server
+
+⛔ **NOT YET RUN. Deploy is held behind it.** Everything below the wire is
+falsified by tests; **the one link they do not touch is the JSX call site** —
+that the panel calls `causeLineFor(refusalSentence(...), ...)` and not the old
+`causeLine(...)`. A render is the only honest witness of that.
+
+**The panel carries its own instrumentation**, which is what makes this
+observable without reading code:
+
+```text
+data-develop-refused      the refusal code
+data-develop-completion   present ONLY when the axis was sent
+data-develop-attribution  present ONLY when the axis was sent
+data-develop-cause        present ONLY when a cause line rendered
+```
+
+### Reproduce
+
+1. Open a Work in **Writer's Studio → Develop** whose draft has changed since
+   the last kept version — the `revision_not_current` state. *(The observed case:
+   `soullab.life/writers-studio/develop?m=848bbd74-d1ad-41a4-bfe0-238c34763e03`.)*
+2. Choose any lens and **Ask MAIA to read this developmentally**.
+3. Confirm in the Network panel: `POST …/readings` → **409**.
+
+### Observe — five assertions, each one a thing the defect did
+
+```text
+1. the response body has NO `completion` and NO `attribution` key
+      (before: both present as "unknown")
+2. exactly ONE refusal paragraph renders
+3. it is the named sentence — "This work has changed since the last version
+   you kept…"
+4. ⭐ NO element with [data-develop-cause] exists
+      (before: "The Studio could not determine the cause.")
+5. NO [data-develop-completion] / [data-develop-attribution] attribute exists
+      on the panel
+```
+
+One line in the console checks 2, 4 and 5 together:
+
+```js
+({ panels: document.querySelectorAll('[data-develop-refused]').length,
+   cause:  document.querySelectorAll('[data-develop-cause]').length,
+   axes:   document.querySelectorAll('[data-develop-completion],[data-develop-attribution]').length })
+// expected: { panels: 1, cause: 0, axes: 0 }
+```
+
+### And the case that must NOT have changed — O-3 still speaks
+
+A refusal that **did** reach a model response and learned nothing must still say
+so. On such a refusal:
+
+```text
+the neutral outcome sentence renders
+AND [data-develop-cause] IS present, reading
+   "The Studio could not determine the cause."
+```
+
+⛔ **If the cause line has disappeared there too, the repair has gone too far and
+O-3 has been silently broken.** That is the failure mode this witness exists to
+catch, and it is the reason the witness has two halves rather than one.
+
+### No troubleshooting during the witness
+
+Record what happens. ⛔ **A failure is recorded, not rescued and re-run** —
+a witness that was intervened in is not a witness.
+
+```text
+code repair          CLOSED
+boundary falsifiers  PASS  (7/7, 4 red against the defect)
+surface regressions  PASS  (969/969)
+typecheck            PASS  (no regressions)
+runtime witness      NOT RUN
+deploy               HELD behind it
+```
