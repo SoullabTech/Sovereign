@@ -1,0 +1,77 @@
+{
+  "note": "Eighteen free-text descriptions, each of one item. Nothing else \u2014 no source text, no labels, no provenance, no indication of what the items were or why these eighteen.",
+  "descriptions": [
+    {
+      "id": "C01",
+      "description": "The premise reports a change in what the lad does: he used to ask about every joint and now works without asking. To reach the hypothesis the reader has to treat the stopping of questions as evidence of an internal change, skill, rather than of anything else that could stop someone asking, such as being brushed off, losing confidence about bothering people, or working on simpler joints now. So the step is from an observed behavioural change to an attributed acquired ability behind it."
+    },
+    {
+      "id": "C02",
+      "description": "The premise already contains the claim in its second clause, but framed as the speaker's tentative belief, 'I don't think that's actually his name'. The hypothesis states the same content flatly as a fact about the man. The step is dropping the speaker's hedge and speaking in the speaker's stead about the world, not adding any new content."
+    },
+    {
+      "id": "C03",
+      "description": "The premise says only that Tomas applied and gives his motive for applying. The hypothesis is about a later event on the firm's side, their decision to grant the apprenticeship, which the premise never touches. The reader has to supply the outcome of the application out of nothing in the sentence."
+    },
+    {
+      "id": "C04",
+      "description": "The premise says the man who had fixed the speaker's boiler showed up next door on Tuesday; it says where he was, not what he did there. To get to the hypothesis the reader carries his previous line of work over to this visit and assumes the neighbours had him in for the same reason, rather than for a different job, a quote, a social call, or his own errand. Identifying him as the same man is given; what he did there is the added part."
+    },
+    {
+      "id": "C05",
+      "description": "The premise gives a fact about club members going to the Fox and a separate fact about Priya being in the Fox. Getting to the hypothesis means running the first relation backwards, from 'many rowers drink here' to 'a regular drinker here is a rower', when the pub presumably serves plenty of people with no connection to the club. The reader has to convert overlap of location into membership of the club."
+    },
+    {
+      "id": "C06",
+      "description": "The premise records an activity, a week of looking at Sheffield flat listings on a phone. The hypothesis converts that into a settled intention to move there. The reader has to read purpose into the browsing and to make it Dev's own move, rather than idle looking, research for a friend or relative, price-checking, or a possibility he has not decided on."
+    },
+    {
+      "id": "C07",
+      "description": "The premise reports what Marcus said he would do and the speaker acting on it. The hypothesis turns the reported intention into a prediction that he actually will come, which means trusting him to follow through. There is also a small wording step, reading 'after work' as the evening, which holds for ordinary daytime hours but is an added assumption about his shift."
+    },
+    {
+      "id": "C08",
+      "description": "The premise gives two facts: Sam brought a woman as his guest and did not introduce her to anyone. The hypothesis fills in the unstated relationship between them as romantic, which the premise leaves entirely open, she could be a sister, a colleague, a friend who needed a plus-one. The reader treats bringing-a-date-and-keeping-her-apart as the pattern that best explains both facts."
+    },
+    {
+      "id": "C09",
+      "description": "The premise lays out two events in order, Marcy taking the Perth job and the marriage ending six months afterwards, with no link stated between them. The hypothesis names the first as what ended the second. The step is turning the sequence and closeness in time into a causal claim, when the job could have been a symptom of trouble already there, or unrelated to it."
+    },
+    {
+      "id": "C10",
+      "description": "The premise describes who in fact does the work whenever the servers fail, always Bilal, at two in the morning. The hypothesis restates this as his being the person responsible for the servers, which reads a formal role or ownership out of a repeated de facto practice. The reader has to decide that 'responsible' is earned by who actually turns out, rather than by whose job it is on paper, since someone could be doing this precisely because nobody has been assigned it."
+    },
+    {
+      "id": "C11",
+      "description": "The premise is about a physical loss, the frost killing the blossom and most of the apple crop that year. The hypothesis is about the orchard's finances at year's end. Getting there means bringing in everything the sentence does not say, other income or crops, insurance, reserves, how much cost was avoided by not harvesting, and converting a lost crop into a net loss of money."
+    },
+    {
+      "id": "C12",
+      "description": "The premise reports a state of affairs that involves both parties, eleven years of proximity with no first names exchanged; it does not say who did or did not make an approach. The hypothesis assigns a character trait to one side, the Okonkwos, alone. The reader has to locate the cause of the distance in the neighbours' disposition rather than in the speaker's, in shift patterns, or in mutual reticence."
+    },
+    {
+      "id": "C13",
+      "description": "The premise gives two observable things, an untouched dinner and staying upstairs since four. The hypothesis names a mental state that would explain both. The reader has to pick 'upset' out of the other states that would fit the same two behaviours, such as being ill, being absorbed in something, or having eaten earlier."
+    },
+    {
+      "id": "C14",
+      "description": "The premise puts two changes side by side, giving up coffee in February and sleeping better since. The hypothesis singles out the first as the thing that produced the second. The reader has to promote the pairing into a cause, setting aside other things that may have changed over the same months and the possibility that the sleep improved for its own reasons."
+    },
+    {
+      "id": "C15",
+      "description": "The premise gives one regained capacity since the operation, walking to the shop and back unaccompanied. The hypothesis widens this to recovery from the surgery as a whole. The step is generalising from a single demonstrated ability to a complete return to health, when someone can manage a short walk while still healing or still limited in other ways."
+    },
+    {
+      "id": "C16",
+      "description": "The premise says only that the new man spent the week accompanying Aunty Fern on her round. The hypothesis supplies both the purpose of that arrangement, training, and a further plan, that he will take the round over from her. The reader has to read intent into shadowing and then project a handover that the premise never mentions, as opposed to his learning the route to cover it occasionally or to work it alongside her."
+    },
+    {
+      "id": "C17",
+      "description": "The premise reports a change of flour last month and better bread since then, without connecting them. The hypothesis asserts the flour as the reason for the improvement. The reader has to rule in that one change among everything else that may have differed over the month, the baker's practice, the oven, the weather, and treat the timing as causal."
+    },
+    {
+      "id": "C18",
+      "description": "The premise places the speaker and Fareed at the same bus stop on occasion, nodding at each other. The hypothesis says he catches the same bus. A single stop can serve several routes and both directions, so the reader has to go from sharing the waiting place to boarding the same service, which the premise does not record."
+    }
+  ]
+}

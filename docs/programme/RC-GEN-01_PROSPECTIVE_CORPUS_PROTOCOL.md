@@ -2387,3 +2387,110 @@ from before the annotator ran:
 ⛔ **If the same descriptions turn out equally common among the correctly
 preserved cases, "world-knowledge completion" is too broad a name and is
 abandoned.** That outcome remains as live as the other.
+
+---
+
+## BLIND CLUSTERING — authorized, prompt committed before the run (2026-09-11)
+
+```text
+NOW   frozen descriptions → independent blind clustering → freeze clustering
+      → reveal the suspect/control key → test enrichment
+      → class SUPPORTED / NARROWED / RETIRED
+THEN  matched terse ↔ expanded causal experiment
+NOT NOW  new verifier · production gate · evidence integration · regex repair
+         · Writers Studio refusal repair
+```
+
+⭐⭐ **The clusterer must not invent the ontology before seeing the material. The
+whole point is to discover whether the independent descriptions themselves
+generate a meaningful distinction.**
+
+**What it sees:** `inference-step-for-clustering.json` — 18 ids and 18
+descriptions. ⛔ **Nothing else.** Not the key, not the premise/hypothesis pairs,
+not suspect/control status, not domains, not any model output, and not the phrase
+*world-knowledge completion*. ⚠️ **The annotator's own `method` statement was
+dropped too** — it describes how that party approached the task and could seed a
+division.
+
+⭐ **"No stable clustering" is built in as a legitimate result**, in the prompt's
+own words: *"If the eighteen descriptions do not divide in any way that the
+material itself supports, say so and return nothing — that is a legitimate result
+and not a failure."* And: ***"An organization you had to reach for is worse than
+none."*** ⛔ Without that, a clusterer asked to find kinds will find kinds.
+
+**Checked mechanically**: the prompt contains none of *world knowledge ·
+completion · causal · overcommit · promoted · preserved · error · neutral ·
+entail · verifier · model · correct · suspect · control · commonsense · temporal
+· failure*.
+
+### The ruling that follows, fixed now rather than after the counts
+
+| | |
+|---|---|
+| a recurring kind concentrated among the nine suspects | ⭐ **candidate failure class** |
+| equally common among the nine controls | ⛔ **too broad — retire the name** |
+| no stable clustering at all | ⛔ **no class established** |
+| any cell too small | ⛔ **no claim from it** |
+
+⛔ **The key is opened only AFTER the clustering is frozen and hashed.**
+
+```text
+Read exactly one file:
+
+  scripts/verifier-probe/inference-step-for-clustering.json
+
+It holds 18 short descriptions, C01 to C18. Each describes the step a reader
+would have to take to get from one sentence to another. You are not being shown
+those sentences, and you do not need them.
+
+Your task:
+
+    Organize these descriptions into recurring kinds of inferential step, only
+    where the distinctions arise naturally from the material.
+
+Do not force every item somewhere. Singletons are allowed. Leaving items
+unorganized is allowed, and is the right answer when nothing recurring is
+actually there. If the eighteen descriptions do not divide in any way that the
+material itself supports, say so and return nothing — that is a legitimate
+result and not a failure.
+
+Give each recurring kind a short descriptive name, drawn from what the
+descriptions actually say rather than from any vocabulary you bring to them, and
+list its member ids.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "clustered_by": "<describe yourself in a few words>",
+  "date": "2026-09-11",
+  "method": "<three or four sentences on how you arrived at these divisions,
+              including anything you considered and rejected>",
+  "kinds": [
+    {
+      "name": "<short descriptive name>",
+      "what_it_is": "<one or two sentences>",
+      "members": ["C01", "C07"]
+    }
+  ],
+  "unorganized": ["C05"],
+  "confidence_note": "<one or two sentences: how firm do these divisions feel,
+                      and which items were closest to falling elsewhere>"
+}
+
+Every id must appear exactly once, across `kinds` and `unorganized` together.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. Not any .py, nothing under docs/, nothing beginning
+    with `verifier-probe-`, `inference-step-key`, `inference-step-items`,
+    `fixtures-` or `inference-step-descriptions`. Any of them would ruin this
+    task.
+  - Do not search the repository.
+  - Do not try to work out where these descriptions came from or why these
+    eighteen. Whatever you inferred about the set's origin would corrupt what
+    this is for.
+  - Divide only where the descriptions themselves divide. An organization you
+    had to reach for is worse than none.
+
+In your final message report only: the output path, how many kinds you named,
+and how many items you left unorganized.
+```
