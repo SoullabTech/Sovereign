@@ -364,7 +364,93 @@ claim about the host loop, not about what a reader emits.*
 
 ---
 
-## 8 · ⛔ STANDING
+## 8 · ⭐⭐ THE METHODOLOGICAL FINDING — preserved by founder ruling, 2026-09-11
+
+> ⭐⭐ **Tests can enforce vocabulary correctness while carrying false examples of the very epistemic
+> condition they claim to test.**
+
+**Both instruments passed every check they had, because nothing was checking whether the limitation
+was TRUE — only whether it was SPELLED correctly.** 233 tests and a 36-check gate script stood over
+two fixtures that each asserted an unread-span limitation across a span with no unread section in it.
+
+⭐ **The `s0..s3` prose with refs reaching only `s1` is the instructive half**, and it is not stale
+wording:
+
+```text
+claim span   ≠   evidence span
+```
+
+> ⭐⭐ **A disclaimer about unread material cannot be trusted merely because the prose sounds
+> span-like.** The limitation is a statement about the EVIDENCE, and the evidence is the refs.
+
+⭐ **The law has therefore already paid for itself twice, before any live turn.**
+
+---
+
+## 9 · THE LIVE-MODEL WITNESS — BUILT, ⛔ NOT RUN
+
+**Founder ruling: three witnesses, and the third is not optional.**
+Instrument: `scripts/witness/coverage-admission-witness.ts`.
+
+```text
+A  FULL COVERAGE · tag emitted · claim's unreadSpan EMPTY
+   → EXPECTED: the whole reading refused. Not silently repaired.
+
+B  PARTIAL COVERAGE · tag emitted · claim's unreadSpan NON-EMPTY
+   → EXPECTED: reading ADMITTED and the limitation RETAINED
+   ⭐ The second half is the half that matters. Without it we have shown
+     only that the new law can REJECT.
+
+C  FULL COVERAGE · an unaffected non-conclusion
+   → EXPECTED: admitted unchanged — proving full coverage became neither
+     blanket permission nor blanket refusal.
+```
+
+### 9.1 ⛔ THE PROMPT IS NOT TOUCHED AND NOTHING IS ASKED OF THE MODEL
+
+**The script chooses COVERAGE — a system fact — and reads what comes back.** ⛔ Steering a reading
+toward emitting the tag would manufacture the observation the witness exists to find, and the result
+would be *a fixture wearing a live model's clothes*.
+
+### 9.2 ⭐ CONSEQUENCE: WITNESS A IS OPPORTUNISTIC AND MAY NOT BE OBTAINABLE
+
+⚠️ **If no full-coverage reading emits the tag, A returns `NOT EXERCISED`** — a first-class result,
+never a pass and never a skip; the run exits `3`. ⭐ **The founder's own `o8` shows the emission
+occurs. It does not follow that it occurs on demand.**
+
+⭐ **C, by contrast, is nearly automatic and that is a property of the contract, not luck**:
+`doesNotEstablish` is required non-empty, so any admitted full-coverage reading necessarily carries
+at least one non-conclusion, and at full coverage it cannot be the tag.
+
+### 9.3 · What the instrument does and does not do
+
+```text
+READ-ONLY          captureEvidence — one REPEATABLE READ transaction, ownership
+                   in the predicate; loadRevisionContent — one SELECT.
+                   ⛔ creates nothing · renames nothing · deletes nothing.
+                   ⭐ Deliberately unlike the walk-12 fault injection, which was
+                     written for a disposable cluster and wedged a live dev
+                     database on 2026-09-10.
+NO MEMBER PROSE    section counts · code-point totals · claim counts · tag names ·
+                   span lengths · refusal names. ⛔ never a sentence of the Work,
+                   never a claim's text.
+INDEPENDENT SPAN   admitted tagged claims are RE-BOUND and their span re-derived
+                   by the witness, so it measures rather than trusting the code
+                   under test to report on itself.
+```
+
+**Two 2026-09-10 environment defects made structural rather than remembered:** it reads
+`DATABASE_URL` itself and never shells out to `psql` (which reads `PG*`), and it **refuses a
+whitespace-bearing `ANTHROPIC_API_KEY` before doing anything** — the two-appended-lines defect that
+`grep | cut` glued into a 217-char value and that surfaced twice as the single word `unreachable`.
+
+⛔ **Smoke-tested to its refusal boundaries only** (both preflight paths fire, exit 2). **The
+witness itself is NOT RUN**: it needs `ANTHROPIC_API_KEY` through the normal environment mechanism,
+and ⛔ **no mock, no provider bypass, and no reuse of an agent or session credential.**
+
+---
+
+## 10 · ⛔ STANDING
 
 ```text
 ACROSS-UNREAD-SPAN LAW       RULED
@@ -381,7 +467,16 @@ general prerequisite system  NOT AUTHORIZED
 implementation               ⭐ LANDED · 17 falsifiers green · 3 mutations red
 prompt contract              UNTOUCHED
 vocabulary                   UNTOUCHED
-live-model witness           ⛔ NOT RUN
+HOST LAW                     CLOSED
+MODEL/HOST COMPOSITION       UNWITNESSED
+witness instrument           BUILT · scripts/witness/coverage-admission-witness.ts
+                             ⛔ NOT RUN — needs a real credential and a real Work
+three leftovers              REPORTED, NOT ABSORBED — canonicalFidelity (other lane) ·
+                             ws2-07b F5/F17 (stale against later ratified rulings;
+                             re-pointing would spend a different acceptance question) ·
+                             ws2-07c/07d (no scratch DB; absence of execution stays visible)
+other four predicates        ⛔ NOT BROADENED — the narrow repair is justified precisely
+                             because unreadSpan() already exists as an exact derived fact
 deploy                       HELD
 ```
 
