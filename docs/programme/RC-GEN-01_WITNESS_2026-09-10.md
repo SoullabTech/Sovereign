@@ -2713,3 +2713,126 @@ model becomes MAIA's gate.** It answers exactly the question that was asked:
 
 ⛔ **Standing unchanged: no MAIA integration · evidence gate HELD · analyzer/3
 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — HYPOTHESIS SUPPORTED · N2 WITHDRAWN · A-S NARROWED TO N1
+
+```
+SPECIALIZED VERIFICATION HYPOTHESIS    SUPPORTED
+DeBERTa CANDIDACY                      PROVISIONAL
+HHEM                                   INTERESTING · NOT CLEAN ENOUGH YET
+N2 NEGATIVE EXPECTATION                WITHDRAWN
+A-S FAILURE                            NARROWED TO N1
+EVIDENCE GATE                          HELD
+MAIA INTEGRATION                       NOT AUTHORIZED
+B                                      HELD
+PRODUCTION                             UNTOUCHED
+```
+
+### ⭐ N2 — ADJUDICATED, ORIGINAL PRESERVED
+
+```
+N2 original expectation   NOT ENTAILED
+N2 adjudication           EXPECTATION WITHDRAWN
+New ruling                ENTAILED
+Reason                    the transformation is explicitly predicated of an ASPECT
+                          of the person, and `undergoes` carries NO active-agency
+                          commitment
+```
+
+Written into `fixtures.json` as `expected_original` beside the new `expected`, with
+the reasoning inline. ⛔ **Not erased.**
+
+> ⭐ *"This isn't changing the answer so the model passes. It's discovering that the
+> fixture itself conflated undergoing change with actively participating in a
+> process."*
+
+### ⭐⭐ THE FINDING THAT REORGANISES THE LANE
+
+> **`undergoes` and `participates` were never the same epistemic problem. The probe
+> separated them.**
+
+A-S reread under the ruling:
+
+```
+person --undergoes---------------> transformation    ⭐ LICENSED
+person --actively_participates_in-> integration      ⛔ UNLICENSED
+```
+
+⛔ **A-S still FAILS — but for ONE precise reason rather than two**, and the reason is
+named: *possessive process → active participation*. ⭐ The ontology repair fixed the
+category error **and produced one legitimate relation**. What remained broken was the
+unsupported leap, and only that.
+
+### Recalculated under the ruling
+
+```
+                         DeBERTa       HHEM
+licensed assertions         7/7          5/7
+unlicensed abstentions      6/6          6/6
+```
+
+⛔ **13/13 on this probe is not a benchmark and not proof.** It is enough to justify
+further falsification and nothing more.
+
+## ⭐ BLIND VALIDATION SET — FROZEN · NOT RUN
+
+`scripts/verifier-probe/fixtures-blind.json` · **22 cases · 10 families**
+
+```
+sha256  a8fc9a92f428c9af05a65e054c3519aac829fe81108562d162d60fa2e4a1cb3e
+```
+
+⭐ **The hash is printed by the probe on every run and written into every output
+file.** A frozen set that cannot be shown to be the set that ran is not frozen — it is
+merely asserted to be.
+
+⛔ **NOT DERIVED FROM A-S.** No person, domain, sentence or fixture word from the
+source, the candidates, or the A-S-derived probe appears in it.
+
+### ⭐ EVERY FAMILY CARRIES BOTH DIRECTIONS — the anti-conservatism structure, per family
+
+```
+possession-vs-participation                +1 -2      observing-vs-participating       +1 -1
+undergoing-vs-causing                      +1 -1      affected-by-vs-acting-upon       +1 -1
+association-vs-membership                  +1 -1      explicit-role-vs-inferred-role   +1 -1
+property-change-vs-person-participation    +1 -1      swapped-subject-object           +1 -1
+negation                                   +1 -1      temporality                      +1 -2
+                                                      TOTAL  10 licensed · 12 unlicensed
+```
+
+⛔ **A family is only carried when BOTH directions are right**, and the probe now
+reports per family. A global tally hid exactly this: **HHEM's three misses were one
+pattern, not three accidents** — inferred active participation — and a column of
+totals said nothing about it.
+
+### The cases that decide it
+
+```
+B11 · B12   ⭐ THE RULING ITSELF, on material A-S never touched. One premise —
+            "The accident changed his handwriting permanently." — asked both ways:
+            "His handwriting undergoes a change."      LICENSED
+            "He actively participates in the change."  UNLICENSED
+B15 · B16   role swap: every content word licensed, only the assignment wrong
+B13         HHEM's known weak spot on fresh material (role stated as a job title)
+B18         ⭐ negation AND assertion in one sentence — "declined to sit on the board
+            but agreed to advise it". A verifier that lets the refusal suppress the
+            whole sentence fails here, and a conservative one cannot hide.
+B21         ceased participation: past premise, present hypothesis
+B22         a process as participant in its own product — the v1 category error, in a
+            family with nothing to do with A-S
+```
+
+### To run
+
+```
+source ~/verifier-probe-venv/bin/activate
+export HF_HOME=~/verifier-probe-models
+python3 scripts/verifier-probe/probe.py --set blind --model deberta
+```
+
+⛔ **DeBERTa UNTOUCHED — no threshold change, no prompt, no fixture edit after
+seeing any result.** HHEM optionally afterwards from `~/hhem-venv`, still qualified by
+its `embed_tokens | MISSING` load warning.
+
+⛔ **Standing: blind set FROZEN and NOT RUN · evidence gate HELD · analyzer/3
+UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**

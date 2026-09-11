@@ -19,12 +19,14 @@
       "origin": "THE ACTUAL A-S FAILURE. The second edge A emitted.",
       "premise": "The experience facilitated a significant transformation in his relational orientation toward the natural world, and the resulting shift in perspective constituted a meaningful development in his ongoing process of integration.",
       "hypothesis": "He undergoes the transformation.",
-      "expected": "not_entailed"
+      "expected": "entailed",
+      "expected_original": "not_entailed",
+      "adjudication": "FOUNDER RULING 2026-09-11. ORIGINAL EXPECTATION not_entailed \u2014 WITHDRAWN, NOT ERASED. Ruling: ENTAILED. Reason: the transformation is explicitly predicated of an aspect of the person, and \"undergoes\" carries no active-agency commitment. This is not changing the answer so the model passes \u2014 the fixture itself conflated UNDERGOING A CHANGE with ACTIVELY PARTICIPATING IN A PROCESS. Both verifiers agreed against the original expectation where they disagreed with each other elsewhere."
     },
     {
       "id": "N3-FRAGMENT",
       "role": "negative",
-      "origin": "The possessive phrase alone — the minimal form of the failure.",
+      "origin": "The possessive phrase alone \u2014 the minimal form of the failure.",
       "premise": "his ongoing process of integration",
       "hypothesis": "He actively participates in the integration.",
       "expected": "not_entailed"
@@ -109,5 +111,6 @@
       "hypothesis": "Ravi undergoes the first hearing as its subject rather than its chair.",
       "expected": "not_entailed"
     }
-  ]
+  ],
+  "n2_adjudication_note": "N2 is the one expectation that moved, and it moved by founder ruling AFTER the run, with the original preserved in expected_original. Consequence: the A-S failure narrows from two edges to one \u2014 `undergoes transformation` LICENSED, `actively_participates_in integration` UNLICENSED. A-S still FAILS, for one precise reason rather than two."
 }
