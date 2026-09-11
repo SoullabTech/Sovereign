@@ -706,6 +706,90 @@ BAD PARAPHRASE    same inventory · same node count · ONE property reassigned R
 ⭐ And **reordering does not launder a real defect** — the run-8/9 candidate
 shuffled is still refused.
 
+## ⛔ A-S — WITNESSED AND FAILED (founder ruling)
+
+Subject `a087e3167`, harness `b9615f1c5`.
+
+```
+A-S     FAIL
+C-S     evidence captured in part · NOT RULED
+AC-1    NOT REACHED
+AC-2    NOT REACHED
+B       HELD        A->B->C->D   HELD
+```
+
+⭐ **The frozen rule did its job**: *if A invents a commitment, A-S fails
+immediately and nothing downstream is consulted.* The capture ends at
+`C-migration`; **no rerun is needed to complete AC-1/AC-2, because they are not
+adjudicated once A-S has failed.**
+
+### 🔴 A1 — source property OVERCOMMIT
+
+```
+A emitted    transformation.agency = undergone
+rubric       agency UNSPECIFIED, alongside magnitude · valence · direction
+```
+
+⭐ **The analyser itself added a commitment the source did not make** — the exact
+failure class this architecture was built to detect, now found in the detector.
+
+### 🔴 A2 — the relation is missing · ⚠️ AND I WOULD RECLASSIFY IT
+
+The founder recorded A2 as a **source relation omission by A**: `orientation` and
+`natural_world` both present, but *"orientation toward the natural world"* not
+structurally encoded.
+
+⛔ **The finding is right; the attribution is not. A COULD NOT HAVE ENCODED IT.**
+
+```
+the relation vocabulary available to A, in full:
+  causes · results_in · constitutes · qualifies · within · distinct_from
+
+nothing in it can express DIRECTEDNESS — "toward", "about",
+"has as its object". The edge A is faulted for omitting was
+UNREPRESENTABLE.
+```
+
+⭐ **Under SV-1, that is a SCHEMA failure, not analyser discretion** — the founder's
+own ratified law: *"If the source draws a distinction relevant to fidelity, the
+semantic graph must be able to represent that distinction… Failure to represent a
+source distinction is a SCHEMA failure, not analyser discretion."*
+
+**Why the distinction decides the repair:** as analyser inaccuracy, A2 would be
+fixed by instructing A better — and no instruction can produce an edge kind that
+does not exist. As a schema failure it is fixed by extending the relation
+vocabulary, and the SV-1 known-bad already establishes what happens when the
+schema cannot hold a distinction: **it disappears before comparison.**
+
+⛔ Not repaired. Recorded for a founder ruling on the reclassification.
+
+### ⚠️ A1, second observation — the DOMAIN may invite the overcommit
+
+```
+agency: ['unspecified', 'active_participation', 'undergone']
+```
+
+`undergone` is a value the schema OFFERS for a passive reading. So `unspecified`
+competes with two committing options rather than being the residual one. ⛔ Not a
+defence of A1 — the source does not commit either way, and A did — but it is a
+schema-shape question the repair should consider rather than treat as settled.
+
+### C observation, NON-GOVERNING
+
+C-good's graph carries `significance = asserted` on the change node **and both**
+`significance` and `meaningfulness` on the development node. ⭐ **The analyser
+appears to duplicate/migrate a property inside the very representation built to
+detect property migration.**
+
+⛔ Not promoted while A-S is failed. Retained as evidence that the present problem
+is **A/C semantic extraction accuracy, not D.**
+
+### ⭐ What this failure proves about the architecture
+
+**The separation worked.** D was never allowed to launder an inaccurate source graph
+into an authoritative fidelity verdict. *That is exactly why A had to be witnessed
+independently before D.*
+
 ## ⭐ A-P and C-P — analyser PROTOCOL built · 25 falsifiers
 
 **Founder contract frozen before building.** `lib/manuscript/revision/analyze.ts`.
@@ -811,12 +895,9 @@ node correspondence        STRUCTURE-ONLY alignment
 A-P · C-P protocol         BUILT · 42 falsifiers
                            property-domain typing CLOSED
                            non-coercive admission CLOSED
-A-S source graph witness   ⛔ NOT WITNESSED
-C-S candidate witnesses    ⛔ NOT WITNESSED  (C-good · C-large · C-migration)
-AC-1 equivalent-paraphrase
-     decomposition compat  ⛔ REQUIRED · NOT WITNESSED
-AC-2 repeated-input
-     structural stability  ⛔ REQUIRED · NOT WITNESSED
+A-S source graph witness   ⛔ WITNESSED · FAILED (founder ruling)
+C-S candidate witnesses    partial evidence · NOT RULED (A-S gates it)
+AC-1 / AC-2                ⛔ NOT REACHED
 B generation integration   HELD
 full A->B->C->D witness    HELD
 ```
