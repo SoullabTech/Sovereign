@@ -48,6 +48,20 @@
  *
  * ⛔ AMBIGUITY IS REPORTED, NEVER GUESSED. Where more than one alignment survives,
  * the verdict says so rather than choosing.
+ *
+ * ⛔⛔ ASSERTED SEMANTICS MAY NEVER CHOOSE THEIR OWN MAPPING. An earlier draft let a
+ * property-preserving alignment break a tie — which lets the comparator use the very
+ * thing it exists to test to decide which node is which. In a symmetric graph a
+ * property MIGRATION can then be explained away by swapping the mapping: the answer
+ * helps define the test by which it passes. (That draft was worse still: with several
+ * property-preserving alignments it returned ADMITTED without comparing anything.)
+ *
+ * The two families are therefore separated in the schema and may not leak:
+ *
+ *   STRUCTURE / IDENTITY   `kind`, edge topology, edge direction
+ *                          -> MAY determine correspondence
+ *   ASSERTED SEMANTICS     `properties`
+ *                          -> evaluated UNDER a correspondence, never chooses one
  */
 
 export type PropertyName =
@@ -75,9 +89,18 @@ export type PropertyValue =
 export type EdgeKind =
   | 'causes' | 'results_in' | 'constitutes' | 'qualifies' | 'within' | 'distinct_from';
 
+/**
+ * ⭐ STRUCTURAL / IDENTITY-BEARING. May participate in alignment, because it says
+ * what KIND of thing a node is rather than what the source asserted ABOUT it.
+ */
+export type NodeKind = 'event' | 'state' | 'process' | 'relation' | 'entity' | 'unspecified';
+
 export interface SemanticNode {
-  /** The analyser's own label. NEVER compared across graphs. */
+  /** The analyser's own label. ⛔ NEVER compared across graphs, diagnostic only. */
   label: string;
+  /** Structural. Participates in correspondence. */
+  kind?: NodeKind;
+  /** ⛔ ASSERTED SEMANTICS. Evaluated under a correspondence; never chooses one. */
   properties: Partial<Record<PropertyName, PropertyValue>>;
 }
 
@@ -153,8 +176,9 @@ export function compareConservation(
   const n = source.nodes.length;
   const sourceEdges = new Set(source.edges.map((e) => `${e.from}>${e.to}:${e.kind}`));
 
-  /* A mapping sends CANDIDATE index -> SOURCE index. It is topology-valid when the
-     candidate's edges, rewritten through it, are exactly the source's edges. */
+  /* A mapping sends CANDIDATE index -> SOURCE index. It is STRUCTURALLY admissible
+     when node kinds agree and the candidate's edges, rewritten through it, are
+     exactly the source's edges. ⛔ `properties` is not consulted here at all. */
   const valid: number[][] = [];
   const perm: number[] = [];
   const used = new Array<boolean>(n).fill(false);
@@ -169,6 +193,9 @@ export function compareConservation(
     }
     for (let i = 0; i < n; i++) {
       if (used[i]) continue;
+      const sk = source.nodes[i].kind ?? 'unspecified';
+      const ck = candidate.nodes[perm.length].kind ?? 'unspecified';
+      if (sk !== ck) continue;
       used[i] = true; perm.push(i);
       walk();
       perm.pop(); used[i] = false;
@@ -196,18 +223,14 @@ export function compareConservation(
     return { admitted: false, refusal: 'structure_mismatch', findings };
   }
 
-  /* Several topology-valid alignments can exist when the graph has automorphisms.
-     Prefer the one that also preserves properties — if exactly one does, it is the
-     intended correspondence and no judgement was required to find it. */
-  const propertyPreserving = valid.filter((m) =>
-    m.every((si, ci) => PROPERTIES.every((p) =>
-      valueOf(candidate.nodes[ci], p) === valueOf(source.nodes[si], p))));
-
-  let mapping: number[];
-  if (propertyPreserving.length === 1) mapping = propertyPreserving[0];
-  else if (propertyPreserving.length > 1) return { admitted: true };
-  else if (valid.length === 1) mapping = valid[0];
-  else return { admitted: false, refusal: 'correspondence_ambiguous', alignments: valid.length };
+  /* ⛔ NO TIE-BREAKING BY ASSERTED SEMANTICS. More than one structurally admissible
+     alignment means identity is genuinely undetermined by structure, and the honest
+     verdict is to say so. Letting properties choose would let a migration be
+     explained away by swapping the mapping. */
+  if (valid.length > 1) {
+    return { admitted: false, refusal: 'correspondence_ambiguous', alignments: valid.length };
+  }
+  const mapping = valid[0];
 
   const findings: ConservationFinding[] = [];
   for (let ci = 0; ci < n; ci++) {

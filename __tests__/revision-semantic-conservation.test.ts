@@ -308,3 +308,95 @@ describe('ambiguity is reported, never guessed', () => {
     expect(v.refusal).toBe('structure_mismatch');
   });
 });
+
+describe('⭐⭐ THE SYMMETRY FALSIFIER — asserted semantics may never choose their own mapping', () => {
+  /**
+   * Two topology-equivalent nodes. The source asserts a property on node 1; the
+   * candidate asserts it on node 2. A comparator that breaks the tie by
+   * property-preservation will pick the swapped mapping, find everything lines
+   * up, and ADMIT — laundering the exact migration this architecture exists to
+   * catch. The answer would have defined the test by which it passed.
+   */
+  const symSource: SemanticGraph = {
+    nodes: [
+      { label: 'hub', properties: {} },
+      { label: 'a', properties: { significance: 'asserted' } },
+      { label: 'b', properties: {} },
+    ],
+    edges: [
+      { from: 0, to: 1, kind: 'causes' },
+      { from: 0, to: 2, kind: 'causes' },
+    ],
+  };
+  /* Same structure; the property has moved from node 1 to node 2. */
+  const symMigrated: SemanticGraph = {
+    nodes: [
+      { label: 'hub', properties: {} },
+      { label: 'a', properties: {} },
+      { label: 'b', properties: { significance: 'asserted' } },
+    ],
+    edges: symSource.edges,
+  };
+
+  it('⛔ NEVER ADMITS by swapping the correspondence', () => {
+    const v = compareConservation(symSource, symMigrated);
+    expect(v.admitted).toBe(false);
+  });
+
+  it('⭐ reports correspondence_ambiguous — structure alone cannot say which is which', () => {
+    const v = compareConservation(symSource, symMigrated);
+    if (v.admitted) throw new Error('unreachable');
+    expect(v.refusal).toBe('correspondence_ambiguous');
+  });
+
+  it('⭐ and when an INDEPENDENT STRUCTURAL anchor makes identity determinate, it reports the migration', () => {
+    /* `kind` is structural/identity-bearing, so it may disambiguate. The asserted
+       semantics still play no part in choosing the mapping. */
+    const anchoredSource: SemanticGraph = {
+      nodes: [
+        { label: 'hub', kind: 'event', properties: {} },
+        { label: 'a', kind: 'state', properties: { significance: 'asserted' } },
+        { label: 'b', kind: 'process', properties: {} },
+      ],
+      edges: symSource.edges,
+    };
+    const anchoredMigrated: SemanticGraph = {
+      nodes: [
+        { label: 'hub', kind: 'event', properties: {} },
+        { label: 'a', kind: 'state', properties: {} },
+        { label: 'b', kind: 'process', properties: { significance: 'asserted' } },
+      ],
+      edges: symSource.edges,
+    };
+    const v = compareConservation(anchoredSource, anchoredMigrated);
+    if (v.admitted || v.refusal !== 'revision_not_semantically_conservative') throw new Error('wrong verdict');
+    expect(kinds(v.findings)).toContain('reassigned_property');
+  });
+
+  it('⛔ a property-preserving swap is STILL not admitted where structure is symmetric', () => {
+    /* The strongest form: the candidate is a perfect relabelling under a swapped
+       mapping. A tie-breaking comparator admits this. Ours refuses. */
+    const v = compareConservation(symSource, symMigrated);
+    expect(JSON.stringify(v)).not.toContain('"admitted":true');
+  });
+});
+
+describe('⛔ structural identity and asserted semantics are separated in the SCHEMA', () => {
+  const src = require('fs').readFileSync(
+    require('path').join(__dirname, '../lib/manuscript/revision/semanticGraph.ts'), 'utf8');
+
+  it('`kind` is documented as structural and may determine correspondence', () => {
+    expect(src).toContain('STRUCTURAL / IDENTITY-BEARING');
+  });
+
+  it('⭐ `properties` is documented as never choosing a correspondence', () => {
+    expect(src).toContain('ASSERTED SEMANTICS');
+    expect(src).toContain('never chooses one');
+  });
+
+  it('⛔ the alignment search does not read `properties` at all', () => {
+    const search = src.slice(src.indexOf('const walk ='), src.indexOf('walk();\n\n'));
+    expect(search).not.toContain('properties');
+    expect(search).not.toContain('valueOf');
+  });
+});

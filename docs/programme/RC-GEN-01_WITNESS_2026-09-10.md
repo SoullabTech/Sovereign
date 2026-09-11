@@ -649,6 +649,53 @@ worth building. **Alignment on topology answers *which node is which*; comparing
 properties afterwards answers *what changed*.** Both remain judgement-free.
 ⛔ Reversible if the founder disagrees.
 
+### ⛔⛔ PROPERTY-BASED TIE-BREAKING — REJECTED (founder), and it was worse than described
+
+*"If properties participate in choosing the correspondence, the comparator can use
+the very thing it is supposed to test to decide which node is which. In a symmetric
+graph, a property migration could be explained away by swapping the node mapping…
+the answer helps define the test by which it passes."*
+
+⚠️ **And the draft was worse than the ruling assumed.** With SEVERAL
+property-preserving alignments it returned `admitted: true` **without comparing
+anything at all.**
+
+**Correspondence is now determined by STRUCTURE ONLY:**
+
+```
+STRUCTURE / IDENTITY   `kind`, edge topology, edge direction
+                         -> MAY determine correspondence
+ASSERTED SEMANTICS     `properties`
+                         -> evaluated UNDER a correspondence, NEVER chooses one
+```
+
+```
+exactly one structurally admissible mapping   compare properties under it
+more than one                                 correspondence_ambiguous
+none                                          structure_mismatch
+```
+
+⭐ `kind` (`event | state | process | relation | entity`) is introduced as the
+identity-bearing structural attribute the ruling anticipated, **separated in the
+type from the properties under evaluation**, with a falsifier asserting the
+alignment search reads neither `properties` nor `valueOf`.
+
+### ⭐⭐ THE SYMMETRY FALSIFIER — required by the ruling, and it discriminates
+
+```
+two topology-equivalent nodes
+source:     significance asserted on node 1
+candidate:  significance asserted on node 2
+
+OURS           correspondence_ambiguous — never admitted by swapping
+KNOWN-BAD      admitted = true, "chose the property-preserving mapping"
+```
+
+⭐ **And when an independent STRUCTURAL anchor makes identity determinate** — the
+same graph with distinct `kind`s — **the migration IS reported** as
+`reassigned_property`. Structure decides who is who; semantics decide what changed;
+neither borrows the other's authority.
+
 ### The metamorphic pair, added
 
 ```
@@ -660,9 +707,10 @@ BAD PARAPHRASE    same inventory · same node count · ONE property reassigned R
 shuffled is still refused.
 
 ```
-comparator (step D)        PASSED · 26 falsifiers
+comparator (step D)        PASSED · 33 falsifiers
 SV-1 adequacy              RATIFIED · known-bad preserved
-node correspondence        alignment-based, positional RULED OUT
+node correspondence        STRUCTURE-ONLY alignment
+                           positional RULED OUT · property tie-breaking REJECTED
 analyser prompts A and C   NOT BUILT
 analyser witnesses         NOT WITNESSED
 B generation integration   HELD
