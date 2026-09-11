@@ -2087,3 +2087,79 @@ contract; it changes nothing `analyzer/3` can express, so the version is not spe
 ⛔ **Standing: edge vocabulary coherence CLOSED · `analyzer/3` contract clean ·
 provider witness RELEASED (A-S · C-good · C-large · C-migration · AC-1 · AC-2, owed
 against `RC-GEN-01/analyzer/3`) · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐ FOUNDER RULING — edge vocabulary CLOSED · provider witness RELEASED
+
+```
+EDGE VOCABULARY       CLOSED at 65c105d79
+ANALYZER CONTRACT     /3 CLEAN · analyzer/3 remains the correct version
+PROVIDER WITNESS      RELEASED
+OWED                  A-S · C-good · C-large · C-migration · AC-1 · AC-2
+HELD                  B · A→B→C→D · production
+```
+
+### ⭐ THE LAW THE FALSIFICATION ESTABLISHED
+
+> ⛔⛔ **RUNTIME CORRECTNESS IS NOT CONTRACT CORRECTNESS.**
+
+The cast preserved apparently correct behaviour while defeating the type/admission
+claim, so **a behavioural-only acceptance regime would have certified the broken
+implementation.** The three known-bads are strong because they discriminate different
+failure *classes*, not because they turn the suite red:
+
+```
+remove has_object from EDGE_KINDS   declaration/schema coherence is enforced
+reconstruct the cast defect         the boundary cannot pretend to have verified
+widen participation endpoints       vocabulary membership does not grant
+                                    semantic admissibility
+```
+
+⭐ **And on the `0 total` run:** a compilation failure is evidence that *something*
+broke; it does not establish that the intended falsifier discriminates the defect.
+**Rebuilding the mutation until the suite actually executes is what makes the evidence
+admissible.**
+
+### ⭐ WHY NO `analyzer/4`
+
+Identical serialized tool schema + identical system prompt ⇒ **the provider has been
+given no new expressive contract.** What changed is internal declaration truth →
+runtime predicate truth → admission truth. A version bump would falsely imply a
+provider-contract change that did not occur.
+
+### ⭐⭐ THE A-S ACCEPTANCE CRITERION, SHARPENED BY THE FOUNDER
+
+Not *"does the new ontology work?"* but:
+
+> ⭐ **Can the analyser tolerate an ABSENT relation when the source licenses none?**
+
+```
+person ─────X────→ integration
+       no licensed participation relation
+```
+
+⛔ The lawful answer for A-S is **not a replacement for the removed `agency` field. It
+is silence.** If the model emits a participation edge merely because the graph feels
+incomplete without one, the architecture has preserved the old epistemic error beneath
+a new vocabulary — **A1 in new syntax**, and A-S FAILS.
+
+> ⭐⭐ **The deeper question the provider witness now tests: does the analyser
+> represent what the source WARRANTS, or does it complete an ONTOLOGY-SHAPED PICTURE?**
+> That is far more consequential than whether `has_object` survives serialization.
+
+⛔ **No further architecture work is justified before that witness.** The next evidence
+comes from the real model, through the normal provider path, with
+`RC-GEN-01/analyzer/3` visibly printed by the harness.
+
+### ⚠️ HARNESS PROVENANCE DEFECT — REPAIRED BEFORE HANDOVER
+
+`scripts/witness/rc-gen-01/analyzers.ts` printed `subject frozen at a087e3167` as a
+**literal**. It went stale three commits later while still announcing itself as the
+frozen subject — *an instrument asserting a provenance it was not running*, and it
+would have stamped that false SHA onto the v3 witness record.
+
+⭐ The subject is now **read at run time** (`git rev-parse` + `git status --porcelain`),
+printed above the credential gate so even a `NOT WITNESSED` run records what it was
+pointed at, and **a dirty tree is reported as dirty** — the evidence then attaches to
+no commit, which is a fact the ruling needs rather than one to suppress. It caught its
+own uncommitted state on the first run. Also: `MAIA_INFERENCE_MODE` set-to-empty now
+prints `''` rather than `(unset)`; they are different claims.

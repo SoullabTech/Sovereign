@@ -1,7 +1,10 @@
 /**
  * RC-GEN-01 · A-S · C-S · AC-1 · AC-2 — the analyser witnesses.
  *
- * SUBJECT FROZEN AT `a087e3167`. ⛔ No prompt or schema change while this evidence
+ * ⛔ THE SUBJECT IS READ AT RUN TIME, NEVER HARD-CODED. An earlier draft printed a
+ * literal SHA, and it went stale three commits later while still announcing itself
+ * as the frozen subject — an instrument asserting a provenance it was not running.
+ * ⛔ No prompt or schema change while this evidence
  * is being collected.
  *
  * ⛔ THIS HARNESS DOES NOT JUDGE SEMANTICS, AND MUST NOT LEARN TO. It reports what
@@ -140,16 +143,34 @@ const AC_2_RUBRIC = `
      representation has not been demonstrated.`;
 
 async function main(): Promise<void> {
+  /* ⛔ Provenance is READ, not asserted. A dirty tree is reported as dirty: the
+     evidence then attaches to no commit, and that is a fact the ruling needs. */
+  const git = (args: string) => {
+    try {
+      return require('child_process').execSync(`git ${args}`, { encoding: 'utf8' }).trim();
+    } catch { return '(unavailable)'; }
+  };
+  const head = git('rev-parse --short HEAD');
+  const dirty = git('status --porcelain');
+  console.log(`\nA-S / C-S / AC-1 / AC-2`);
+  console.log(`SUBJECT          ${head}${dirty === '' ? '' : '  ⚠️ WORKING TREE NOT CLEAN'}`);
+  console.log(`ANALYZER_VERSION ${ANALYZER_VERSION}`);
+  console.log(`MODEL            ${MODEL}`);
+  if (dirty !== '' && dirty !== '(unavailable)') {
+    console.log('\n⚠️ The tree differs from any commit, so this evidence attaches to no SHA.');
+    console.log(dirty.split('\n').map((l) => `     ${l}`).join('\n'));
+  }
+  console.log('');
+
   const mode = process.env.MAIA_INFERENCE_MODE;
   if (!process.env.ANTHROPIC_API_KEY || mode === 'local_only' || mode === 'sovereign') {
     console.log('\n⛔ A-S / C-S / AC-1 / AC-2: NOT WITNESSED');
     console.log(`   credential present: ${Boolean(process.env.ANTHROPIC_API_KEY)}`);
-    console.log(`   MAIA_INFERENCE_MODE: ${mode ?? '(unset)'}`);
+    console.log(`   MAIA_INFERENCE_MODE: ${mode === undefined ? '(unset)' : `'${mode}'`}`);
     console.log('   Not a skip, not a pass.');
     process.exit(REQUIRE ? 1 : 0);
   }
 
-  console.log(`A-S / C-S / AC-1 / AC-2 — subject frozen at a087e3167\n`);
 
   /* ── A-S ── */
   header('A', 'the source passage');
