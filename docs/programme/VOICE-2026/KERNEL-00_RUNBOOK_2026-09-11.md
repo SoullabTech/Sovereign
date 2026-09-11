@@ -2,7 +2,9 @@
 
 **Act:** `KERNEL-00` — OPEN by founder act 2026-09-11 under the ratified acceptance law (`ARCH-01/06_KERNEL-00_ACCEPTANCE_LAW.md`).
 **Branch:** `claude/voice-2026-census-01` · **Code:** `ios/VoiceKernel/` (Swift package) · `ios/VoiceKernelHarness/` (harness app spec + sources).
-**Status:** SOURCE WRITTEN · **NOT COMPILED** (no Swift toolchain in the authoring environment) · **NOT WITNESSED**.
+**Status:** SOURCE WRITTEN at `eef487422` · **NOT COMPILED** · **NOT WITNESSED**.
+
+> ⛔ **Founder ruling 2026-09-11:** RUN `MAC-COMPILE-01` against **exactly `eef487422`** (§2 of this runbook; record verbatim). **HOLD the device witness (§3)** until the bounded `PRE-WITNESS-01` instrumentation repair lands as a new SHA — see `PRE-WITNESS-01_PLAN_2026-09-11.md`. Do not start the 60-minute witness because it compiles.
 
 > The question KERNEL-00 must answer is deliberately small: *can one native authority keep MAIA's physical auditory/vocal apparatus alive, observable, cancellable, and recoverable for an entire conversation?* Nothing about intelligence. Nothing about whether her voice sounds beautiful. First prove that the body can hear and speak without fighting itself.
 
