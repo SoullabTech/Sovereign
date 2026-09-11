@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-3 FAILED · RUN 4 NOT WITNESSED (401)
+3A-S   semantic witness        ⛔ RUNS 1-4 FAILED (run 4 = REGRESSION)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -401,7 +401,83 @@ run 3   exposed TELEOLOGICAL COLORING
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
 
-## 3A-S — RUN 4 · ⛔ NOT WITNESSED (environment, not protocol, not semantics)
+## 3A-S — RUN 4 (witnessed) · FOUNDER RULING: **FAIL** — and it is a REGRESSION
+
+Second attempt, credential taken from line 2 rather than `head -1`. Protocol **0
+failed**. Both specimens produced real cognition.
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### ⭐ The valence repair worked
+
+No *"step forward"*, no improvement, struggle, repair, or any directional or
+psychological condition the source did not supply. **And `"was itself part of the
+process of integration"` restores the constitutive relation that run 2 had weakened
+to `"mattered to"`** — while `"and it mattered"` carries the source's *meaningful*
+without forcing positive valence.
+
+### 🔴 But R3 fails — and it is the RUN 2 defect returning
+
+> "The experience changed how he related to the natural world. **That change in how
+> he saw things** was itself part of the process of integration he was still going
+> through, and it mattered."
+
+The antecedent of *"that change"* is the **relational** change; the sentence then
+redescribes it as *"how he saw things."* Relationship and perspective are one change
+again.
+
+```
+SOURCE   RELATION changes -> PERSPECTIVE shifts   (two, related)
+RUN 4    RELATION changes  =  "that change in how he saw things"   (one)
+```
+
+### ⭐⭐ THE FINDING THAT MATTERS — repairing one axis REOPENED another
+
+```
+run 1   FAIL · invention
+run 2   FAIL · semantic collapse
+run 3   FAIL · teleological coloring
+run 4   FAIL · semantic collapse, REGRESSED
+```
+
+⛔ **This is not the discovery of an ever-finer fourth defect.** The system has
+demonstrated that **satisfying one established constraint can violate another
+already repaired.** Run 3 held the geometry and lost on valence; run 4 held valence
+and lost the geometry.
+
+⛔ **Therefore: do NOT add another clause aimed at this sentence.** The question is
+no longer *teach it one more prohibition* but **can the instruction make every
+already-established constraint hold SIMULTANEOUSLY?**
+
+### ⭐ `reason` excluded — supported a third time
+
+The reason claims *"keeping the two distinct claims and their relation"* while the
+wording collapses them. **The model can correctly articulate the law it is
+violating.** Three for three.
+
+### Specimen 2 — PASS, fourth consecutive
+
+Restraint has survived four real provider runs and three instruction changes. **The
+unresolved problem is entirely faithful transformation, not the capacity to
+refrain.**
+
+### Environment note
+
+```
+line 21  len=108  fp=a13214d0     <- invalid; this is what head -1 took
+line 22  len=108  fp=f251e1c6
+line 23  len=108  fp=f251e1c6     <- IDENTICAL to line 22
+```
+
+Three keys, two of them duplicates of each other, and the stale one first. ⛔ **The
+Step 7 duplication is still in the file.** Not this lane's to repair; recorded so
+the next operator does not rediscover it.
+
+## (superseded) RUN 4 first attempt · ⛔ NOT WITNESSED (401)
 
 Checkout `7b6fe36b2`. **No cognition occurred.** Both specimens refused
 `unreachable` on a provider `401 authentication_error`.

@@ -181,6 +181,38 @@ describe('⭐ the valence repair — no teleology the source did not state (run 
   });
 });
 
+describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('subordinates plainness to fidelity, and says which is the constraint', () => {
+    expect(p).toContain('PLAINNESS IS SUBORDINATE TO FIDELITY');
+    expect(p).toContain('Fidelity is the constraint; plainness is the goal');
+  });
+  it('⭐ names the failure mode: obeying one constraint by breaking another', () => {
+    expect(p).toContain('not a list to satisfy one at a time');
+    expect(p).toContain('traded one loss for');
+  });
+  it('requires a check against the source BEFORE answering', () => {
+    expect(p).toContain('Before you answer, read your proposal against the source');
+    expect(p).toContain('survive together');
+  });
+  it('enumerates every axis a run has lost so far, plus their absences', () => {
+    expect(p).toContain('what each one is in relation TO');
+    expect(p).toContain('every causal or consequential relation');
+    expect(p).toContain('every degree of significance');
+    expect(p).toContain('including their absence');
+    expect(p).toContain('including the absence of one');
+  });
+  it('⭐ gives the tie-break explicitly rather than leaving it implied', () => {
+    expect(p).toContain('keep them all and');
+    expect(p).toContain('make it less plain');
+  });
+  it('⛔ still does not blacklist any phrase a run produced', () => {
+    for (const phrase of ['step forward', 'working through', 'that change in how he saw']) {
+      expect(p).not.toContain(phrase);
+    }
+  });
+});
+
 describe('provenance', () => {
   it('the asker version is pinned so a proposal records which contract produced it', () => {
     expect(REVISION_ASKER_VERSION).toBe('RC-GEN-01/1');
