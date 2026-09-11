@@ -1396,3 +1396,70 @@ evidence about author calibration; all four surviving is evidence too.**
 
 > ⭐⭐ **The experiment is finally aimed directly at the question: *can the verifier
 > preserve possibility as possibility?***
+
+---
+
+## SECOND ADJUDICATION — FROZEN, step 3 (2026-09-11)
+
+```text
+file        scripts/verifier-probe/triples-adjudication-2.json
+sha256      e0ba204190ce202ef7a6ff180e09275b5d1ef770a34b8061d01d8f526ac7852d
+cases       30, ids matching the review items in order
+accepted    29 / 30 as neutral·plausible
+verdicts    29 neutral_plausible · 1 neutral_arbitrary
+internal    `accepted` is true exactly when all three tests pass, and `verdict`
+            is neutral_plausible exactly when accepted — both verified
+```
+
+### ⭐⭐ THE STRONGEST RESULT HERE IS A ZERO
+
+```text
+failed test 1 (could be false while premise true)  —  NONE
+failed test 2 (could be true  while premise true)  —  NONE
+failed test 3 (would tempt an ordinary reader)     —  T042
+```
+
+**Not one of the 30 was entailed or contradicted.** An independent reader,
+holding no label, no rationale, no sibling and no domain, found the author's
+neutral construction sound on the two logical tests in **every single case**. The
+class that six earlier corpora could barely populate — 17 cases pooled across all
+of them — has been constructed deliberately and it holds.
+
+⛔ **The single rejection is `T042`, and it fails only test 3**: *"passes tests 1
+and 2 cleanly, but the premise's entire emphasis is fidelity to ONE Thursday
+market; the route to 'they must trade elsewhere too' is an economic argument I
+had to construct, not a pull a first reader feels."* Not a logical error —
+**insufficiently tempting**. It is `neutral_arbitrary`, the class stage 1 measured
+at 1/10 promotion.
+
+⛔ **T042 REMAINS IN THE PRIMARY**, per the invariant.
+
+### The author's four, casewise — and the two parties disagreed about WHERE the difficulty was
+
+| item | author's concern | independent verdict |
+|---|---|---|
+| T039 | *"the most arguable item in the set"* | **accepted** · ⭐ adjudicator also hesitated |
+| T075 | had to keep the cold as a time adverbial | **accepted** · no hesitation |
+| T021 | rewrote a draft that read off the habitual | **accepted** · no hesitation |
+| T060 | *"the strongest pull toward entailed"* | **accepted** · no hesitation |
+
+⭐ **All four survived — and the one item the adjudicator rejected was not among
+them.** The finding is not a rate; it is that **the two readers' senses of
+difficulty point in opposite directions**. The author worried about items drifting
+toward **entailed** — too easy to infer. The independent reader rejected one for
+being **not tempting enough** — too hard to infer. Both are ways of missing the
+class, from opposite sides, and neither party anticipated the other's.
+
+⚠️ **Only `T039` was flagged by both**, and the adjudicator's reasoning is
+independent of the author's: it held the item on the grounds that the premise
+lists days without saying *"only"*, **and** that the hypothesis concerns *going to*
+the lido, which is possible without swimming — a second argument the author never
+made.
+
+**8 of 30 flagged `hard_to_call`**: `T012 · T018 · T027 · T039 · T042 · T051 ·
+T066 · T087`. ⚠️ Recorded as a property of the material — this class is hard to
+construct and hard to verify, which is consistent with its scarcity everywhere
+else in the lane. ⛔ Not used to weight, filter or exclude anything.
+
+**Step 4 holds: no corpus edits. The fixture keeps `8461d8c7…`. DeBERTa runs
+next.**
