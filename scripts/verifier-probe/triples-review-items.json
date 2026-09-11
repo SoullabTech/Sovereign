@@ -1,0 +1,155 @@
+{
+  "note": "The 30 items proposed as neutral-plausible, stripped to premise and hypothesis. No label, no author rationale, no sibling members, no domain \u2014 nothing that could anchor a second reading.",
+  "items": [
+    {
+      "id": "T003",
+      "premise": "The bakery on Wren Street opened its doors at five every morning through the winter of 2019.",
+      "hypothesis": "The Wren Street bakery still opens at five in the morning."
+    },
+    {
+      "id": "T006",
+      "premise": "Nadia handed in her thesis on the last Friday of March, a full two weeks before her department's deadline.",
+      "hypothesis": "Nadia had been working on that thesis for more than a year."
+    },
+    {
+      "id": "T009",
+      "premise": "Until last April the ferry to Kestrel Island ran twice a day; since then it has run on Saturdays only.",
+      "hypothesis": "The twice-daily crossing to Kestrel Island had been running for many years before it was cut back."
+    },
+    {
+      "id": "T012",
+      "premise": "Theo and Ruth Okonkwo are siblings who grew up in the same house in Leeds; Ruth is four years older than Theo.",
+      "hypothesis": "Theo and Ruth have the same mother and the same father."
+    },
+    {
+      "id": "T015",
+      "premise": "For eleven years Dolores Marchetti lived next door to the Farrells, and she looked after their cat whenever they went away.",
+      "hypothesis": "Dolores Marchetti and the Farrells were friends."
+    },
+    {
+      "id": "T018",
+      "premise": "Ingrid Vance wrote to her old schoolteacher, Mr. Osei, every Christmas for twenty years, and he wrote back each time.",
+      "hypothesis": "Ingrid Vance and Mr. Osei met in person at least once during those twenty years."
+    },
+    {
+      "id": "T021",
+      "premise": "The watercolours hanging in the hallway were painted by Amira Delacroix, who marks her work with a small blue heron.",
+      "hypothesis": "Amira Delacroix paints professionally."
+    },
+    {
+      "id": "T024",
+      "premise": "The crime novels published under the name Rowan Ash were all written by Beatriz Alonso, a retired magistrate from Seville.",
+      "hypothesis": "Beatriz Alonso drew on her years on the bench when she wrote those novels."
+    },
+    {
+      "id": "T027",
+      "premise": "The runner who crossed the line first in the Saltcoats ten-mile was Priya Raman; her twin sister Meena came ninth.",
+      "hypothesis": "The two Raman sisters are often mistaken for one another at races."
+    },
+    {
+      "id": "T030",
+      "premise": "Since 2021 Devon Achebe has run the scheduling desk at the Northgate dental clinic, although he has no clinical training of any kind.",
+      "hypothesis": "Devon Achebe answers to the clinic's senior dentist."
+    },
+    {
+      "id": "T033",
+      "premise": "Hannah Wexler directs the Barrow Vale community choir: she picks the programme each season and takes the Tuesday rehearsals.",
+      "hypothesis": "Hannah Wexler stands in front of the Barrow Vale choir at its concerts."
+    },
+    {
+      "id": "T036",
+      "premise": "On the Ellisfield bridge project, Marta Kubik was the foreman who signed off each day's concrete pours.",
+      "hypothesis": "Marta Kubik was the most senior person on the Ellisfield site."
+    },
+    {
+      "id": "T039",
+      "premise": "Since he retired, Gerald Vance has swum at the lido on Mondays and Thursdays.",
+      "hypothesis": "Gerald Vance goes to the lido on no days other than Mondays and Thursdays."
+    },
+    {
+      "id": "T042",
+      "premise": "The Okarie family has kept a vegetable stall at the Thursday market in Ashcombe for six years, missing only the weeks when the market itself was cancelled.",
+      "hypothesis": "The Okaries also sell their vegetables at markets in other towns."
+    },
+    {
+      "id": "T045",
+      "premise": "Dr. Solveig Haugen is called out at night perhaps three or four times a month, usually to the farms north of the village.",
+      "hypothesis": "Dr. Haugen is the only doctor serving the farms north of the village."
+    },
+    {
+      "id": "T048",
+      "premise": "The Brennans put their house on Calder Road up for sale in September, hoping to settle nearer their daughter in Cork.",
+      "hypothesis": "The Brennans have since moved to Cork."
+    },
+    {
+      "id": "T051",
+      "premise": "Tom\u00e1s Iglesias applied for the joinery apprenticeship at Hallward & Sons because he wants a workshop of his own one day.",
+      "hypothesis": "Hallward & Sons gave Tom\u00e1s the apprenticeship."
+    },
+    {
+      "id": "T054",
+      "premise": "Miriam Stanek drafted a long letter of complaint to the water company, meaning to send it once she had collected her neighbours' signatures.",
+      "hypothesis": "The letter reached the water company in the end."
+    },
+    {
+      "id": "T057",
+      "premise": "Ayo Bankole was visibly nervous before he gave the graduation address, stopping twice to steady his hands.",
+      "hypothesis": "Ayo Bankole felt relieved once the address was behind him."
+    },
+    {
+      "id": "T060",
+      "premise": "When her old collie died in February, Frances Doyle gave up her usual walks along the towpath.",
+      "hypothesis": "Frances Doyle was grieving for the collie."
+    },
+    {
+      "id": "T063",
+      "premise": "Karel Novak laughed and wept at once when his brother came through into the arrivals hall at Ostrava after eleven years abroad.",
+      "hypothesis": "Karel Novak had been counting the days until his brother came home."
+    },
+    {
+      "id": "T066",
+      "premise": "Paula Ferreira joined the Kettlebridge rowing club in 2018 and still pays her subscription every January.",
+      "hypothesis": "Paula Ferreira rows with the Kettlebridge club most weekends."
+    },
+    {
+      "id": "T069",
+      "premise": "Every driver at the Arden depot except two belongs to the transport union.",
+      "hypothesis": "The transport union bargains over pay on behalf of the Arden drivers."
+    },
+    {
+      "id": "T072",
+      "premise": "The Thursday book group at Milford library has nine members, one of them Owen Blaise, who has been with it since it began in 2005.",
+      "hypothesis": "Owen Blaise founded the Milford book group."
+    },
+    {
+      "id": "T075",
+      "premise": "The basement of the Alderney Hotel flooded after a water main burst under the street outside during January's cold snap.",
+      "hypothesis": "It was the cold that made the water main burst."
+    },
+    {
+      "id": "T078",
+      "premise": "The Tiverton orchard lost most of its apple crop that year; a late frost in May had killed the blossom.",
+      "hypothesis": "The Tiverton orchard finished that year out of pocket."
+    },
+    {
+      "id": "T081",
+      "premise": "The fire in the trawler's engine room started when a fuel line chafed through where it ran against a bracket.",
+      "hypothesis": "The fuel line had been run incorrectly when the engine was installed."
+    },
+    {
+      "id": "T084",
+      "premise": "At six, Jonah Whitlock could not get through a sentence unaided; by the end of the following year he was working his way through chapter books on his own.",
+      "hypothesis": "Jonah Whitlock was given extra help with his reading during that year."
+    },
+    {
+      "id": "T087",
+      "premise": "Marrowfield was a village of four hundred people in 1970; today some nine thousand live there and the old lanes have disappeared under new estates.",
+      "hypothesis": "Most of Marrowfield's growth came from people moving out of the nearby city."
+    },
+    {
+      "id": "T090",
+      "premise": "After the accident Sefton Mbeki could not stand without help; eight months later he walked the length of the hospital corridor on his own.",
+      "hypothesis": "Sefton Mbeki made a full recovery from his injuries."
+    }
+  ]
+}

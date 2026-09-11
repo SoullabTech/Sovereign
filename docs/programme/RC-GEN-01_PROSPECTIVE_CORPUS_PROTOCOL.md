@@ -1258,3 +1258,92 @@ finding chosen after the fact.
 ⚠️ **T039 is the one to watch.** If the second adjudicator reclassifies it
 `entailed`, the author's own reservation was correct and the record already says
 so.
+
+---
+
+## SECOND ADJUDICATOR — prompt committed, step 2 (2026-09-11)
+
+**What it sees:** `triples-review-items.json` — the 30 proposed items reduced to
+`id · premise · hypothesis`. ⛔ **No label, no `why_plausible`, no sibling
+members, no domain.** The author's reasoning is the strongest available anchor
+and is withheld; the siblings would reveal the intended three-way structure.
+
+**Corpus untouched** — the review file is derived, and the frozen fixture keeps
+its hash `8461d8c7…`.
+
+⛔ **Prompt committed BEFORE the adjudicator ran.**
+
+```text
+Read exactly one file:
+
+  scripts/verifier-probe/triples-review-items.json
+
+It holds 30 items, each a PREMISE and a HYPOTHESIS. Someone has proposed that
+every one of them stands in a particular relation to its premise. Your job is to
+check that claim independently, item by item.
+
+The relation being claimed is NEUTRAL AND PLAUSIBLE. An item qualifies only if
+ALL THREE of these hold:
+
+  1. NOT ENTAILED      Could the hypothesis be FALSE while every word of the
+                       premise remains true?
+
+  2. NOT CONTRADICTED  Could the hypothesis be TRUE while every word of the
+                       premise remains true?
+
+  3. PLAUSIBLE         Would an ordinary reader reasonably be tempted to infer
+                       the hypothesis from the premise?
+
+All three, or it does not qualify. Test them separately and in that order —
+(1) alone only tells you it is not entailed, and a flat contradiction passes it.
+
+The shape you are looking for:
+
+    the premise permits the hypothesis to be TRUE
+    the premise permits the hypothesis to be FALSE
+    an ordinary reader may still be tempted to infer it
+
+If an item fails, say what it actually is: "entailed" (test 1 fails),
+"contradicted" (test 2 fails), or "neutral_arbitrary" (tests 1 and 2 hold but
+nothing would tempt a reader — test 3 fails).
+
+Write ONE JSON file to the path you are given:
+
+{
+  "adjudicator": "<describe yourself in a few words>",
+  "adjudication_date": "2026-09-11",
+  "method": "<two or three sentences on how you applied the three tests>",
+  "cases": [
+    {
+      "id": "T0xx",
+      "not_entailed": true | false,
+      "not_contradicted": true | false,
+      "plausible": true | false,
+      "accepted": true | false,
+      "verdict": "neutral_plausible" | "entailed" | "contradicted"
+                 | "neutral_arbitrary",
+      "rationale": "<one or two sentences>",
+      "hard_to_call": true | false
+    }
+  ]
+}
+
+`accepted` is true only when all three test fields are true, and `verdict` is
+"neutral_plausible" exactly then. Include all 30, in the order given.
+
+Set `hard_to_call` true wherever you genuinely hesitated, whichever way you
+finally went. A hesitation you record is more useful than a clean answer you
+are not sure of.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. Not the fixtures, not any .py, nothing under docs/,
+    nothing whose name begins with `verifier-probe-`. They contain the proposed
+    labels, earlier corpora, machine judgements and prior rates; any of them
+    would ruin this task.
+  - Do not search the repository.
+  - Judge from the text in front of you. Nothing downstream is being satisfied
+    and there is no pattern to match.
+
+In your final message report: the output path, how many you accepted, the
+verdicts you assigned to any you rejected, and which ones you found hardest.
+```
