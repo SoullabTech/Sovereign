@@ -1,0 +1,305 @@
+{
+  "note": "All 60 items, reduced to premise and hypothesis. No intended label, no domain, no author note \u2014 nothing that could anchor an independent reading.",
+  "items": [
+    {
+      "id": "U01",
+      "premise": "Marcus said he'd swing by after work, so don't lock the back gate.",
+      "hypothesis": "Marcus will come round in the evening."
+    },
+    {
+      "id": "U02",
+      "premise": "Her brother Toby lent us the van for the whole weekend, no questions asked.",
+      "hypothesis": "Toby is her brother."
+    },
+    {
+      "id": "U03",
+      "premise": "Rita hasn't touched her dinner and she's been upstairs since four.",
+      "hypothesis": "Rita is upset about something."
+    },
+    {
+      "id": "U04",
+      "premise": "Vik has never in his life cooked a meal for another person.",
+      "hypothesis": "Vik cooks for his mother most Sundays."
+    },
+    {
+      "id": "U05",
+      "premise": "There's a Bennett on the plaque in the church and Gran swears he's one of ours.",
+      "hypothesis": "The Bennett named on the plaque is a relative of Gran's."
+    },
+    {
+      "id": "U06",
+      "premise": "We switched to the Italian flour last month and the bread's been coming out better.",
+      "hypothesis": "The change of flour is what improved the bread."
+    },
+    {
+      "id": "U07",
+      "premise": "Whenever the servers go down it's Bilal fixing them at two in the morning.",
+      "hypothesis": "Bilal is the person responsible for the servers."
+    },
+    {
+      "id": "U08",
+      "premise": "Sorry, I only got back from Lisbon last night and I'm still half asleep.",
+      "hypothesis": "The speaker was in Lisbon before last night."
+    },
+    {
+      "id": "U09",
+      "premise": "Tomas was at the union meeting on Thursday, sitting at the back taking notes.",
+      "hypothesis": "Tomas is a member of the union."
+    },
+    {
+      "id": "U10",
+      "premise": "Jonah's talking in whole sentences now and about half of them are questions.",
+      "hypothesis": "Jonah is picking up language faster than most children his age."
+    },
+    {
+      "id": "U11",
+      "premise": "Dev's been scrolling through flats in Sheffield on his phone all week.",
+      "hypothesis": "Dev intends to move to Sheffield."
+    },
+    {
+      "id": "U12",
+      "premise": "I was furious with Cal all evening and I'm not proud of how I spoke to him.",
+      "hypothesis": "The speaker was angry at Cal that evening."
+    },
+    {
+      "id": "U13",
+      "premise": "I ran into Greg's ex at the market and honestly she looked great.",
+      "hypothesis": "Greg and the woman separated on bad terms."
+    },
+    {
+      "id": "U14",
+      "premise": "The fire had nothing to do with the wiring \u2014 it started in the bin out the back.",
+      "hypothesis": "Faulty wiring caused the fire."
+    },
+    {
+      "id": "U15",
+      "premise": "That's Delia in the blue coat, the one who wrote the letter to the council.",
+      "hypothesis": "Delia wrote the letter to the council."
+    },
+    {
+      "id": "U16",
+      "premise": "Joyce is down at the pool most mornings before the rest of us are even up.",
+      "hypothesis": "Joyce swims every day."
+    },
+    {
+      "id": "U17",
+      "premise": "Ines isn't the manager, she just answers his phone when he's out on deliveries.",
+      "hypothesis": "Ines manages the shop."
+    },
+    {
+      "id": "U18",
+      "premise": "Otto couldn't do a length last summer and on Saturday he swam four hundred metres.",
+      "hypothesis": "Otto's swimming has improved since last summer."
+    },
+    {
+      "id": "U19",
+      "premise": "You see Anneke at every allotment working party, always with her own fork.",
+      "hypothesis": "Anneke has a plot on the allotment."
+    },
+    {
+      "id": "U20",
+      "premise": "We moved into the Ardrey Street flat the week they finally switched the fountain back on.",
+      "hypothesis": "They moved in during the summer."
+    },
+    {
+      "id": "U21",
+      "premise": "I'm handing in my notice on Monday \u2014 the letter's already written and printed.",
+      "hypothesis": "The speaker means to leave the job."
+    },
+    {
+      "id": "U22",
+      "premise": "Grandad laughed the whole way through the film and then went very quiet in the car.",
+      "hypothesis": "Something in the film had troubled him."
+    },
+    {
+      "id": "U23",
+      "premise": "Ade gave up coffee back in February and he's sleeping much better now.",
+      "hypothesis": "Quitting coffee is what improved Ade's sleep."
+    },
+    {
+      "id": "U24",
+      "premise": "Hana keeps texting me about the cabin thing even though I told her I was busy.",
+      "hypothesis": "Hana and the speaker are friends."
+    },
+    {
+      "id": "U25",
+      "premise": "Everyone at the yard calls him Doc, though I don't think that's actually his name.",
+      "hypothesis": "The man's name is not Doc."
+    },
+    {
+      "id": "U26",
+      "premise": "We have the same argument about the thermostat every single winter, without fail.",
+      "hypothesis": "That argument has happened more than once."
+    },
+    {
+      "id": "U27",
+      "premise": "Karen does the books for the bakery and about half the ordering as well.",
+      "hypothesis": "Karen is one of the bakery's owners."
+    },
+    {
+      "id": "U28",
+      "premise": "I joined the choir in March and I haven't missed a single rehearsal since.",
+      "hypothesis": "The speaker belongs to the choir."
+    },
+    {
+      "id": "U29",
+      "premise": "Her handwriting is exactly what it was at fourteen, not a stroke of it different.",
+      "hypothesis": "Her handwriting has changed a great deal since she was fourteen."
+    },
+    {
+      "id": "U30",
+      "premise": "I've never once been late to that class, not in three years of Tuesdays.",
+      "hypothesis": "She arrived late to that class one evening last winter."
+    },
+    {
+      "id": "U31",
+      "premise": "She asked me twice what I thought of the ring in the window at Harlow's.",
+      "hypothesis": "She is planning to propose to someone."
+    },
+    {
+      "id": "U32",
+      "premise": "Honestly I wasn't nervous at all before the recital, it was strange how calm I felt.",
+      "hypothesis": "She was anxious in the run-up to the recital."
+    },
+    {
+      "id": "U33",
+      "premise": "The pipe burst because we left the heating off for a fortnight while we were away.",
+      "hypothesis": "The heating being off led to the pipe bursting."
+    },
+    {
+      "id": "U34",
+      "premise": "Priya and I have never actually met \u2014 it's been six years of email and nothing else.",
+      "hypothesis": "Priya and the writer met at a conference last year."
+    },
+    {
+      "id": "U35",
+      "premise": "The bloke who sorted our boiler turned up again on Tuesday, over at the neighbours'.",
+      "hypothesis": "The same man worked on the neighbours' boiler."
+    },
+    {
+      "id": "U36",
+      "premise": "I see Fareed at the bus stop now and then and we nod at each other.",
+      "hypothesis": "Fareed catches the same bus as the speaker."
+    },
+    {
+      "id": "U37",
+      "premise": "Theo was up the front of the meeting handing out the agenda to everyone.",
+      "hypothesis": "Theo was the one running the meeting."
+    },
+    {
+      "id": "U38",
+      "premise": "Neither of the Haldane boys belongs to the club, and that's the whole grievance.",
+      "hypothesis": "The elder Haldane boy is a member of the club."
+    },
+    {
+      "id": "U39",
+      "premise": "Since the surgery Bea's been walking down to the shop and back on her own.",
+      "hypothesis": "Bea has recovered from the surgery."
+    },
+    {
+      "id": "U40",
+      "premise": "Nina went into the hospital on Tuesday and nobody's heard a word since.",
+      "hypothesis": "Nina is still in the hospital."
+    },
+    {
+      "id": "U41",
+      "premise": "I've no plans to sell the boat \u2014 people keep asking and the answer's still no.",
+      "hypothesis": "He is trying to sell the boat."
+    },
+    {
+      "id": "U42",
+      "premise": "Yusuf keeps telling everyone he's completely fine about the results.",
+      "hypothesis": "Yusuf is disappointed about the results."
+    },
+    {
+      "id": "U43",
+      "premise": "The shop's been busier every week since they finished the roadworks on Brill Street.",
+      "hypothesis": "Finishing the roadworks is what brought the customers back."
+    },
+    {
+      "id": "U44",
+      "premise": "We've lived next to the Okonkwos eleven years and I still don't know their first names.",
+      "hypothesis": "The Okonkwos are unfriendly people."
+    },
+    {
+      "id": "U45",
+      "premise": "The woman who gave her name as Rosa at the shelter wasn't Rosa at all.",
+      "hypothesis": "The woman at the shelter was named Rosa."
+    },
+    {
+      "id": "U46",
+      "premise": "The band have played the Anchor twice already this month.",
+      "hypothesis": "The band play the Anchor regularly."
+    },
+    {
+      "id": "U47",
+      "premise": "The new fellow shadowed Aunty Fern all week on the delivery round.",
+      "hypothesis": "The new fellow is being trained to take the round over."
+    },
+    {
+      "id": "U48",
+      "premise": "Half the rowing club drinks in the Fox on a Friday and Priya's always in there.",
+      "hypothesis": "Priya rows with the club."
+    },
+    {
+      "id": "U49",
+      "premise": "Ravi's finally stopped slamming the door every time he's told no.",
+      "hypothesis": "Ravi is growing out of his tempers."
+    },
+    {
+      "id": "U50",
+      "premise": "Dad always did the crossword before anyone else in the house was up.",
+      "hypothesis": "Dad no longer does the crossword."
+    },
+    {
+      "id": "U51",
+      "premise": "Owen's started running again and this time he went and bought proper shoes.",
+      "hypothesis": "Owen means to keep the running up."
+    },
+    {
+      "id": "U52",
+      "premise": "Ellie cried when they read her name out at the ceremony.",
+      "hypothesis": "Ellie was happy."
+    },
+    {
+      "id": "U53",
+      "premise": "Marcy took the job in Perth and six months later the marriage was over.",
+      "hypothesis": "The move to Perth ended the marriage."
+    },
+    {
+      "id": "U54",
+      "premise": "Sam brought someone to the wedding and never introduced her to a single one of us.",
+      "hypothesis": "Sam is seeing the woman he brought."
+    },
+    {
+      "id": "U55",
+      "premise": "I got a friend request from a Marta Ilves and the photo looks like my old flatmate.",
+      "hypothesis": "Marta Ilves is the speaker's former flatmate."
+    },
+    {
+      "id": "U56",
+      "premise": "Mum rings on Sundays, mostly.",
+      "hypothesis": "Mum rang this past Sunday."
+    },
+    {
+      "id": "U57",
+      "premise": "As chair of the residents' committee I'm the one who has to sign off the fence.",
+      "hypothesis": "The speaker chairs the residents' committee."
+    },
+    {
+      "id": "U58",
+      "premise": "They've put Callum's photo up in the hall with all the old team pictures.",
+      "hypothesis": "Callum played for the team."
+    },
+    {
+      "id": "U59",
+      "premise": "The lad Terry took on used to ask me about every joint, now he just gets on with it.",
+      "hypothesis": "The lad has become competent at the work."
+    },
+    {
+      "id": "U60",
+      "premise": "Lena signed up for the Portuguese class and then paid for the whole year upfront.",
+      "hypothesis": "Lena is planning a trip to Portugal."
+    }
+  ]
+}

@@ -1769,3 +1769,113 @@ different, and the second is what the adjudicator's labels will indirectly revea
 adjudicator has not seen it and will not. Where the two disagree, that disagreement
 is data about how hard the class is to author terse — **and it is exactly what
 phase 2 could not measure, because there the author labelled its own work.**
+
+---
+
+## PHASE 3 ADJUDICATOR — prompt committed before the run (2026-09-11)
+
+**Sees** `terse-review-items.json`: all 60 items as `id · premise · hypothesis`.
+⛔ **No `intended`, no domain, no author note.** It assigns the labels rather than
+checking someone else's, so its output **is** the ground truth for this corpus.
+
+⭐ **One instruction is load-bearing and is quoted here because it is the phase-3
+question in miniature:**
+
+> *"Judge what the words in front of you actually establish — not what the
+> speaker probably meant, and not what is probably true in the world. If a
+> premise leaves something open because it simply never says it, that is open,
+> however obvious the answer feels."*
+
+⚠️ That instruction is given to the **human-standard reader**, not to the
+verifier. If the adjudicator itself finds terse premises hard to hold open, that
+is a finding about the *task*, not about DeBERTa — and the prompt asks it
+directly whether any premise was so short it felt like guessing rather than
+judging. ⛔ **A corpus the careful reader cannot label is not a corpus the
+verifier can be scored against**, and we would need to know that before reading
+any rate.
+
+**Corpus untouched** — the review file is derived; the fixture keeps
+`d6f1bfb0…`.
+
+⛔ **Prompt committed BEFORE the adjudicator ran.**
+
+```text
+Read exactly one file:
+
+  scripts/verifier-probe/terse-review-items.json
+
+It holds 60 items, each a PREMISE and a HYPOTHESIS. Nobody has told you what any
+of them is. Decide, for each one, what relation the hypothesis stands in to its
+premise. Your labels are the ground truth for this corpus.
+
+Apply three tests, separately and in this order:
+
+  1. NOT ENTAILED      Could the hypothesis be FALSE while every word of the
+                       premise remains true?
+
+  2. NOT CONTRADICTED  Could the hypothesis be TRUE while every word of the
+                       premise remains true?
+
+  3. PLAUSIBLE         Would an ordinary reader reasonably be tempted to infer
+                       the hypothesis from the premise?
+
+Then label:
+
+  entailed            test 1 fails — the premise settles it as true
+  contradicted        test 2 fails — the premise settles it as false
+  neutral_plausible   1, 2 and 3 all hold — open, and tempting
+  neutral_arbitrary   1 and 2 hold, 3 fails — open, and nothing pulls a reader
+                      toward it
+
+Test 1 alone is passed by a flat contradiction, so do not stop there.
+
+The premises are SHORT and written the way people actually speak. Judge what the
+words in front of you actually establish — not what the speaker probably meant,
+and not what is probably true in the world. If a premise leaves something open
+because it simply never says it, that is open, however obvious the answer feels.
+That distinction is the entire point of this task.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "adjudicator": "<describe yourself in a few words>",
+  "adjudication_date": "2026-09-11",
+  "method": "<two or three sentences on how you applied the three tests>",
+  "cases": [
+    {
+      "id": "U01",
+      "not_entailed": true | false,
+      "not_contradicted": true | false,
+      "plausible": true | false,
+      "three_way": "entailed" | "contradicted" | "neutral_plausible"
+                   | "neutral_arbitrary",
+      "rationale": "<one or two sentences>",
+      "hard_to_call": true | false
+    }
+  ]
+}
+
+All 60, in the order given. The three test fields must agree with the label you
+assign.
+
+Set `hard_to_call` true wherever you genuinely hesitated, whichever way you
+finally went.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file. Not the fixtures, not any .py, nothing under docs/,
+    nothing beginning with `verifier-probe-`. They contain the author's intended
+    labels, earlier corpora, machine judgements and prior rates; any of them
+    would ruin this task.
+  - Do not search the repository.
+  - Judge from the text in front of you.
+
+In your final message report: the output path, the counts per label, which items
+you found hardest, and whether any premise was so short that you felt you were
+guessing rather than judging.
+```
+
+⚠️ **Housekeeping**: the previous commit's body lost the word `intended` to shell
+backtick substitution — line 17 reads *"is a calibration record"*. **Not amended**:
+the founder pulls this branch with `--ff-only`, and a force-push would break his
+next pull mid-experiment for a cosmetic fix. The protocol text above is correct
+and this note is the repair.
