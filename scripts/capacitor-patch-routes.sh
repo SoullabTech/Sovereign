@@ -548,6 +548,11 @@ MOBILE_EXCLUDED_DIRS=(
     # WEB_ONLY is deliberately NOT claimed — this says nothing about its web
     # lifecycle, only that no native surface can reach it.
     "app/the-beginning"
+    # Reflections (a0dc55571, 2026-09-04): declared web-only in
+    # lib/mobile/mobileAllowlist.ts WEB_ONLY_PREFIXES but never mirrored here;
+    # app/reflections/[id]/page.tsx is a client component on a dynamic segment
+    # and broke every static export from main until this entry (RUNTIME-01 E6).
+    "app/reflections"
     # VoiceController smoke test (P12). ⚠ READ THE REASON — it is not the usual one.
     #
     # This route is NOT web-only, and the diagnostic is NOT obsolete. It is
