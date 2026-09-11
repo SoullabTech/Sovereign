@@ -765,7 +765,7 @@ this session advances the witness.
 static-export exclusion list of `scripts/capacitor-patch-routes.sh` (P12
 founder ruling 2026-08-16: `requireFounder()` reads the server session;
 `output:'export'` cannot prerender it; the security boundary wins). So a
-normal beta bundle (`npm run ios:bundle` → static `out/`) **does not contain
+normal beta bundle (`scripts/build-ios-static.sh` → static `out/`) **does not contain
 the Probe / A/B surface at all.** The `/maia` smoke is unaffected (`/maia`
 is in the bundle). P12 already names this state: *ON-DEVICE VOICE
 DIAGNOSTIC = UNMET*, replacement is a separate design lane, not authorized.
@@ -805,7 +805,8 @@ git checkout claude/voice-recognition-acceptance-witness-ffeadt
 git rev-parse --short HEAD                      # expect c5ed0ed96 (record) — Swift unchanged since 73d0df30d
 git status --short -- ios/App/App.xcodeproj ios/App/App/Info.plist   # must be clean
 
-npm run ios:bundle                              # static export (beta) + cap sync ios  — /maia in, test page out
+CAPACITOR_MODE=beta scripts/build-ios-static.sh build   # patch routes → static export → revert  (NOT `npm run ios:bundle` — §12.8)
+CAPACITOR_MODE=beta npx cap sync ios                     # /maia in, /voice-controller-test out by design
 cd ios/App && pod install && open App.xcworkspace
 ```
 
@@ -917,14 +918,15 @@ INSTALL METHOD:
 
 The native subject is the Swift source + Xcode configuration at `73d0df30d`
 (unchanged through `2bfdc9d38` and this record — docs only). The web bundle
-is whatever `npm run ios:bundle` produced from the checked-out SHA; record
+is whatever `scripts/build-ios-static.sh` produced from the checked-out SHA; record
 the SHA actually built, not the one intended.
 
 **Frozen sequence (founder, 2026-09-11) — supersedes §12.5 / §12.6 ordering.
 Each step is a STOP on failure.**
 
 1. Build the beta static bundle from the exact witness subject
-   (`npm run ios:bundle` on the checked-out branch tip; `/maia` in,
+   (`CAPACITOR_MODE=beta scripts/build-ios-static.sh build && CAPACITOR_MODE=beta npx cap sync ios`
+   on the checked-out branch tip — not `npm run ios:bundle`, see §12.8; `/maia` in,
    `/voice-controller-test` out by design — §12.6 finding).
 2. Install on the physical iPhone (Xcode Run, Debug; no build-number bump).
 3. Record both layers using the header above.
@@ -965,3 +967,90 @@ PROVISIONALLY PASS — DEV-MODE EVIDENCE RULED ADMISSIBLE (BOUNDED) — INSTALL 
 SMOKE PENDING. §13 is reserved for the adjudication and is the Mac's
 evidence to produce; the remote session records it, relayed, and adds no
 source change.
+
+### 12.8 Step 1 attempt — beta bundle build FAILED — runbook error, not subject — 2026-09-11
+
+**Evidence provenance.** Founder's Mac Studio terminal, relayed. Witness
+worktree `/Users/soullab/maia-ds01-witness`, reset hard to
+`origin/claude/voice-recognition-acceptance-witness-ffeadt` = `5846a0824`,
+`git status --short` clean. Native subject unchanged: `73d0df30d`.
+
+**What happened.** `npm run ios:bundle` ran `next build` under
+`output: 'export'` and died at *Collecting page data*:
+
+```text
+Error: export const dynamic = "force-static"/export const revalidate not configured
+  on route "/api/member-tools" with "output: export"
+  (same for /api/auth/microsoft/{calendars,callback,status}, /api/auth/session/step-up/status)
+> Build error occurred
+[Error: Failed to collect page data for /api/member-tools]
+```
+
+`npx cap sync ios` therefore never ran (`npm run build && npx cap sync ios`).
+`pod install` ran afterwards because the founder's command chain did not
+stop on the failure; it succeeded and changes nothing (pods were already
+installed for the §12 compile). No web bundle was produced; nothing was
+installed. **Step 1 = FAIL → STOP**, as the sequence requires.
+
+**Classification: runbook error in §12.6 / §12.7 (remote-authored), not a
+subject defect and not route drift.**
+
+- `package.json`'s `ios:bundle` script (introduced `1fa816177`, 2026-01-21,
+  never referenced by any doc before §12.6) is `CAPACITOR_BUILD=1
+  CAPACITOR_MODE=beta … npm run build && npx cap sync ios`. It does **not**
+  invoke `scripts/capacitor-patch-routes.sh`, which is what moves `app/api`
+  (930 route files, 858 `force-dynamic`) and the other export-incompatible
+  surfaces out of the tree before a static export. Without the patch a
+  static export of this repo cannot succeed; `next build` reports only the
+  first batch of failures, which is why five routes are named rather than
+  858. The five are old (`member-tools` 2026-02-04, `step-up/status`
+  2026-01-21) and untouched by this lane.
+- Every working iOS pipeline in the repo runs the patch first:
+  `scripts/build-ios.sh` (patch → build → revert → `cap sync` →
+  `xcodebuild archive`), `scripts/build-ios-static.sh` (patch → build →
+  revert → `cap copy`), `scripts/ios/build.sh`. The §12.6 runbook named the
+  one entry point that skips it. That is the remote session's error.
+- `capacitor.config.ts` defaults `CAPACITOR_MODE` to `beta`, so a beta
+  config is produced whether or not the variable is set; setting it
+  explicitly only makes `BUILD_STAMP.buildMode` read `beta` rather than
+  `capacitor`. Set it, so the recorded WEB BUNDLE line is unambiguous.
+
+**Corrected Step 1 (replaces the `ios:bundle` line in §12.6 / §12.7; those
+lines are patched in this record).** From the witness worktree, clean tree:
+
+```bash
+cd /Users/soullab/maia-ds01-witness
+git rev-parse --short HEAD && git status --short          # expect 5846a0824, clean
+CAPACITOR_MODE=beta scripts/build-ios-static.sh build     # rm -rf .next out → patch → next build → revert
+CAPACITOR_MODE=beta npx cap sync ios                      # web assets + capacitor.config.json into ios/App/App/public
+git status --short                                        # must be clean again (patch reverted; out/ .next/ ignored)
+open ios/App/App.xcworkspace                              # Run (⌘R) on the iPhone, scheme App, Debug
+```
+
+`build-ios-static.sh` is chosen over `build-ios.sh debug` because it ends at
+the web export; it does not `xcodebuild archive`, does not touch the build
+number, and has no side effects beyond `out/` and `ios/App/App/public`.
+If the script reports a stale `.capacitor-*-backup` directory, run
+`scripts/capacitor-patch-routes.sh revert` first and re-run; do not delete
+the directory by hand.
+
+The two-layer header is unchanged. `WEB BUNDLE: beta static export at
+<actual SHA>` records the SHA that `build-ios-static.sh` actually consumed
+(`5846a0824` if the branch has not moved).
+
+**Side effects on the Mac to check before continuing (hygiene, not
+witness).** The same terminal session ran, in the **main checkout**
+`/Users/soullab/MAIA-SOVEREIGN`, `npm install` (after a `cd` to a
+non-existent `/tmp/voice-witness-73d0df30` failed) — "added 2445 packages,
+removed 1963" — and `pod install` in its `ios/App`. Neither touches the
+witness worktree, but the main checkout's `node_modules` and possibly
+`ios/App/Podfile.lock` have moved. Run `git status --short` there before
+the next deploy or the next lane that builds from it. The RC-GEN-01
+specimen script failure in the same transcript (`specimens.ts:99` syntax
+error on `claude/s3-implementation`) belongs to that lane, not this one,
+and is not addressed here.
+
+**Status after this record.** Unchanged in substance: SECOND NATIVE COMPILE
+COMPLETE — O1 PROVISIONALLY PASS — DEV-MODE EVIDENCE RULED ADMISSIBLE
+(BOUNDED) — **STEP 1 RETRY PENDING (corrected command)**. No native source,
+plist, or routing change. The failure is the runbook's, recorded as such.
