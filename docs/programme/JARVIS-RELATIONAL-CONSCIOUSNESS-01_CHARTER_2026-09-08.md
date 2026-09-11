@@ -509,9 +509,19 @@ FORBIDDEN from a search summary
   …not even provisionally.
 ```
 
+### Precision on what counts as source-level (founder, 2026-09-11)
+An **author manuscript or repository copy counts as source-level evidence** when its bibliographic identity can
+be verified against the publication — same authors, title, DOI/publication identity, and substantive text.
+⛔ **A publisher abstract can evidence what the abstract itself says. It cannot license a denotation claim whose
+relevant qualifications live elsewhere in the article.**
+
+### Access is adjudicated per source, never per neighbourhood
+A source whose text cannot be retrieved is recorded **`CANDIDATE · ACCESS BLOCKED`**. ⛔ **It does not inherit the
+evidentiary status of neighbouring accessible papers.**
+
 ### Consequence
-**RC-02b is legitimately BLOCKED, not incomplete through lack of effort.** *The unavailable evidence is the
-evidence the question actually requires.* ⛔ **Do not route around the block.**
+When access fails, the stage is **legitimately blocked, not incomplete through lack of effort** — *the unavailable
+evidence is the evidence the question actually requires.* ⛔ **Do not route around the block.**
 
 ---
 
