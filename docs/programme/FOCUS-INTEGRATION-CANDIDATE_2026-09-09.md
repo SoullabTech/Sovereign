@@ -130,3 +130,57 @@ lane bleed, and the two consequences that must appear in the PR body are recorde
 above (§1.2 manifest gap, §3.1 deletion posture).
 
 ⛔ Merge and deploy remain unauthorized.
+
+---
+
+## 6 · Runtime attribution — production-container probe (2026-09-10)
+
+*Standing update only. This is runtime attribution, not a FOCUS acceptance
+witness: no Focus crossing was exercised, and the formal human witness remains
+clean and unspent. Evidence: the founder's Mac Studio terminal against minisforum.*
+
+The CMT-01 M2 live witness (see `CMT-01_M0-M2_WITNESS_2026-09-03.md`, section
+"M2 LIVE WITNESS — ACCEPTED (2026-09-10)") established the production runtime
+SHA independently: container `GIT_COMMIT` read as `5f65038d2` and all 49
+canonical-turn manifests in the window carried the same value. `5f65038d2` is
+the merge of PR #1276 — this candidate. A read-only probe of the same container
+then established the capability state.
+
+```text
+FOCUS CODE IN CANONICAL       YES
+                              PR #1276 → 5f65038d2 (clean-main-no-secrets)
+
+FOCUS CODE DEPLOYED           YES
+                              production container GIT_COMMIT 5f65038d2
+                              Created 2026-09-09T23:58:30Z · DEPLOY_LANE=deploy-lane
+                              witnessed 2026-09-10
+
+FOCUS CAPABILITY ACTIVE       NO
+                              WRITERS_STUDIO_FOCUS_ENABLED unset
+                              in both the running container (printenv) and
+                              /home/soullab/MAIA-SOVEREIGN/.env.production
+                              app/api/writers-studio/focus/route.ts therefore returns 404
+
+FORMAL FOCUS WITNESS          UNSPENT
+                              cannot be spent until the flag is deliberately
+                              enabled through a governed deploy
+```
+
+**FOCUS is deployed and dormant.**
+
+Governance distinction preserved: **deployment of capability code does not
+constitute activation of the capability.** Enabling `WRITERS_STUDIO_FOCUS_ENABLED`
+is a separate governed act, and it requires a deployment or restart through the
+deploy lane because the container consumes its environment at start. The route's
+off-state is a 404, not a 403, so an unauthorized caller learns nothing about what
+exists behind it; that is the state production is in today.
+
+Nothing in this section changes §5. Merge has happened (PR #1276); activation
+has not, and remains unauthorized here.
+
+Cross-lane note, held for the record and not acted on:
+
+```text
+VOICE-RECOGNITION-ENGINE-01   PARKED at 73d0df30
+                              Mac compile 2 pending
+```
