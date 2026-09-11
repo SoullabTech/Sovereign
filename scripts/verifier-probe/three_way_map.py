@@ -166,6 +166,37 @@ def main():
               + (f' = {wrong / len(sub):.0%}' if len(sub) >= 5
                  else f'  ⚠️ n={len(sub)} — too few to read as a rate'))
 
+    # ⭐⭐ HEAD TO HEAD ON THE SHARED SUBSET ONLY.
+    # The blocks above score each verifier on whatever plausible-neutral cases it
+    # happened to see — 17, 13 and 7 different cases. Comparing those totals
+    # compares three different exams. ⛔ Only cases every verifier judged can
+    # support a sentence with the word "better" in it.
+    vs = sorted({v for (_, v) in seen})
+    if len(vs) >= 2:
+        by = {}
+        for (k, v), r in seen.items():
+            if bucket(adj[k]) == DANGEROUS:
+                by.setdefault(k, {})[v] = r
+        shared = {k: m for k, m in by.items() if len(m) == len(vs)}
+        print(f"\n{'=' * 74}")
+        print(f'HEAD TO HEAD — plausible-but-unlicensed seen by ALL of {", ".join(vs)}')
+        if not shared:
+            print('  ⚠️ no plausible-neutral case was judged by every verifier —'
+                  ' the totals\n     above are three different exams and must not be'
+                  ' compared.')
+        else:
+            print(f'  {len(shared)} shared cases'
+                  + ('  ⚠️ n<5 — not a rate' if len(shared) < 5 else ''))
+            for v in vs:
+                bad = sum(1 for m in shared.values()
+                          if m[v]['observed'] == 'entailed')
+                print(f'    {v:<12} asserted {bad}/{len(shared)}'
+                      + (f' = {bad / len(shared):.0%}' if len(shared) >= 5 else ''))
+            allw = sum(1 for m in shared.values()
+                       if all(m[v]['observed'] == 'entailed' for v in vs))
+            print(f'    ⛔ asserted by EVERY verifier: {allw}/{len(shared)}'
+                  '  <- no second opinion available here')
+
     print('\n⛔ DESCRIPTIVE. NOT A GATE. NOT AUTHORIZED. This maps the territory'
           ' for a\n   prospective corpus; it cannot promote or retire anything by'
           ' itself.')
