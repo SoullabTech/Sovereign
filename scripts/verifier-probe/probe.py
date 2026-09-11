@@ -84,6 +84,18 @@ MINICHECK_THRESHOLD = 0.5
 HHEM_THRESHOLD = 0.5
 
 
+# ⛔⛔ SETS WHOSE GROUND TRUTH LIVES OUTSIDE THE FIXTURE.
+# Phase 3 deliberately denies the corpus author any operative label: the author
+# writes text, an INDEPENDENT adjudicator assigns the three-way truth, and the
+# reporter joins them only AFTER inference. This probe therefore runs these sets
+# UNSCORED — it produces evidence and judges nothing.
+#
+# ⛔ The membership is DECLARED here, never inferred from a missing `expected`
+# field. A corpus that silently lost its labels must fail loudly, not quietly
+# become unscored.
+UNSCORED_SETS = {'terse'}
+
+
 def load_cases(which):
     path = SETS[which]
     raw = path.read_bytes()
@@ -92,7 +104,9 @@ def load_cases(which):
     ids = [c['id'] for c in cases]
     assert len(set(ids)) == len(ids), 'duplicate fixture id'
     for c in cases:
-        assert c['expected'] in ('entailed', 'not_entailed'), c['id']
+        assert c.get('premise') and c.get('hypothesis'), c['id']
+        if which not in UNSCORED_SETS:
+            assert c['expected'] in ('entailed', 'not_entailed'), c['id']
     # ⭐ The fixture file's own hash goes into the output. A frozen set that cannot
     # be shown to be the set that ran is not frozen — it is merely asserted to be.
     return cases, hashlib.sha256(raw).hexdigest()
@@ -135,7 +149,7 @@ def run_deberta(cases, repeat, small):
                              role=c.get('role', ''), family=c.get('family', ''),
                              group=c.get('group', ''),
                              premise=c['premise'], hypothesis=c['hypothesis'],
-                             expected=c['expected'], observed=observed,
+                             expected=c.get('expected'), observed=observed,
                              raw_label=top, scores=scored))
     return rows
 
@@ -153,7 +167,7 @@ def run_hhem(cases, repeat):
                              role=c.get('role', ''), family=c.get('family', ''),
                              group=c.get('group', ''),
                              premise=c['premise'], hypothesis=c['hypothesis'],
-                             expected=c['expected'], observed=observed,
+                             expected=c.get('expected'), observed=observed,
                              raw_label=f'score={score:.4f}',
                              scores={'consistency': round(score, 4),
                                      'threshold': HHEM_THRESHOLD}))
@@ -218,7 +232,7 @@ def run_minicheck(cases, repeat):
                              role=c.get('role', ''), family=c.get('family', ''),
                              group=c.get('group', ''),
                              premise=c['premise'], hypothesis=c['hypothesis'],
-                             expected=c['expected'], observed=observed,
+                             expected=c.get('expected'), observed=observed,
                              raw_label=f'score={score:.4f}',
                              scores={'support': round(score, 4),
                                      'threshold': MINICHECK_THRESHOLD}))
@@ -227,6 +241,25 @@ def run_minicheck(cases, repeat):
 
 def report(rows):
     print('\n' + '=' * 78)
+    unscored = any(r.get('expected') is None for r in rows)
+    if unscored:
+        # ⛔ NOT A SCORE. The fixture carries no answer key by design; MATCH,
+        # licensed/unlicensed totals and family verdicts are all withheld
+        # because computing them would require inventing the truth this
+        # experiment deliberately sources elsewhere.
+        print(f"{'CASE':<20} {'RUN':<4} {'OBSERVED':<14} RAW")
+        print('-' * 78)
+        for r in rows:
+            print(f"{r['id']:<20} {r['run']:<4} {r['observed']:<14} "
+                  f"{r.get('raw_label', '')}")
+        print('\n  ⛔ UNSCORED SET — no MATCH column, no totals, no family'
+              ' verdicts.')
+        print('     Ground truth is held by an independent adjudication and is'
+              ' joined')
+        print('     by the phase reporter AFTER inference. This run produces'
+              ' evidence;')
+        print('     it judges nothing.')
+        return
     hdr = f"{'CASE':<20} {'RUN':<4} {'EXPECTED':<14} {'OBSERVED':<14} {'MATCH':<6} RAW"
     for verifier in sorted({r['verifier'] for r in rows}):
         sub = [r for r in rows if r['verifier'] == verifier]
@@ -633,8 +666,15 @@ def main():
     cases, digest = load_cases(a.which)
     print(f'RC-GEN-01 VERIFIER PROBE · set={a.which} · {len(cases)} cases · repeat={a.repeat}')
     print(f'  fixtures sha256  {digest}')
-    print(f'  positive (expect entailed)      {sum(c["expected"] == "entailed" for c in cases)}')
-    print(f'  negative (expect not_entailed)  {sum(c["expected"] == "not_entailed" for c in cases)}')
+    if a.which in UNSCORED_SETS:
+        print('  ⛔ UNSCORED — ground truth is external to this fixture and is'
+              ' applied')
+        print('     by the phase reporter after inference.')
+    else:
+        print(f'  positive (expect entailed)      '
+              f'{sum(c["expected"] == "entailed" for c in cases)}')
+        print(f'  negative (expect not_entailed)  '
+              f'{sum(c["expected"] == "not_entailed" for c in cases)}')
 
     if a.dry_run:
         for c in cases:

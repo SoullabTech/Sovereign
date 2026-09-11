@@ -1974,3 +1974,64 @@ it and is now worth watching rather than concluding.
 | abundant open cases **and** preservation drops | ⭐ the overcommit reappears under the ecological condition |
 | few intended-open survive adjudication | ⛔ **already excluded — 39/40 survived** |
 | hard-to-label cases dominate the errors | the task boundary itself is the real issue |
+
+---
+
+## ⛔ DEFECT — the probe retained a binary-fixture assumption (2026-09-11)
+
+```text
+KeyError: 'expected'      probe.py:95
+no DeBERTa judgements over the terse corpus in these files
+```
+
+**Founder diagnosis, adopted verbatim:**
+
+> *Phase-3 inference instrument retained a binary-fixture assumption incompatible
+> with independently adjudicated ground truth.*
+
+⛔ **Not a model problem. Not a fixture problem. Nothing was scored and no
+evidence was spent.** `fixtures-terse.json` correctly carries no `expected`
+field — phase 3 denies the corpus author any operative label by design — and the
+probe demanded one because every earlier set had had one.
+
+⭐ **This is the experiment's own architecture asserting itself against an
+instrument that predated it.** Phase 3 separates *generation of evidence* from
+*judgment of evidence*; the probe tried to collapse them back together by
+requiring the fixture to carry its own answer key.
+
+### Repair — instrument only, corpus untouched
+
+⛔ **`expected` was NOT added to the frozen fixture.** Both hashes verified
+unchanged after the repair: `d6f1bfb0…` and `6b031596…`.
+
+```text
+AUTHOR CORPUS ──────────→ DeBERTa sees text only
+                               │
+INDEPENDENT ADJUDICATION ──────┴──→ reporter joins AFTER inference
+```
+
+- `UNSCORED_SETS = {'terse'}` — **declared in the instrument, never inferred from
+  a missing field.** ⭐ A corpus that silently lost its labels must fail loudly,
+  not quietly become unscored. That distinction is the difference between a
+  deliberate design and an undetected data-loss bug.
+- For an unscored set the probe prints `CASE · RUN · OBSERVED · RAW` and
+  **withholds the MATCH column, the licensed/unlicensed totals and the family
+  verdicts** — computing any of them would require inventing the truth this
+  experiment sources elsewhere.
+- The header prints `⛔ UNSCORED` in place of the positive/negative counts.
+
+### Falsified, not merely fixed
+
+```text
+terse loads unscored, 60 cases, digest d6f1bfb0…        ✅
+terse carries no `expected` field at all                ✅
+scored sets still validated: triples · prospective · blind  ✅
+⭐ a SCORED set with `expected` removed STILL FAILS LOUDLY   ✅
+```
+
+The last line is the one that matters: the repair widens what the probe accepts,
+so it was tested against the thing it must still refuse.
+
+**Standing: terse corpus FROZEN/UNTOUCHED · adjudication COMPLETE/UNTOUCHED ·
+DeBERTa phase 3 NOT RUN · phase 3 evidence UNSPENT · defect REPAIRED IN
+INSTRUMENT ONLY.**
