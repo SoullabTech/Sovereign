@@ -13,7 +13,9 @@ ARCHITECTURE         NOT REOPENED
 PRE-WITNESS FIXES    BOUNDED INSTRUMENTATION ONLY  (after the compile is recorded; new SHA)
 ```
 
-**Status of this document:** PLAN. Nothing in it is applied. The Swift sources at `eef487422` are frozen until `MAC-COMPILE-01` is recorded. Do not install `eef487422` and start the 60-minute witness because it compiles.
+**Status of this document:** **EXECUTED** (2026-09-11). `MAC-COMPILE-01` was recorded on exactly `eef487422` (`KERNEL-00_MAC-COMPILE-01_2026-09-11.md`, founder), after which the founder authorized execution: P1–P8 plus the three compile-era fixes **C1** (the 60-second sliding-window test asserted per-fault-class budgets wrongly — test corrected, `RecoveryPolicy` untouched), **C2** (harness reached actor-isolated `kernel.recorder` — export now goes through `VoiceKernel.exportJournalJSONL()` / `journalEvents()`, recorder private), **C3** (`.allowBluetooth` → `.allowBluetoothHFP`). Applied on `claude/voice-2026-census-01`; the applying commit is the new SHA. **The new SHA has NOT been compiled** — it earns itself independently (`swift build` · `swift test` · source gate · `xcodegen` · unsigned iOS compile · signed/device compile); the device witness HOLD lifts only when all are green and recorded. Source gate on this tree: `13/13`.
+
+**What was applied, by finding:** P1 law header → OPEN · P2 K00-02 clarified in the law (one member-caused activation + one deactivation; OS-forced re-activations lawful only when stamped `interruption_recovery` / `media_services_reset_recovery`) · P3 `AudioSessionAuthority.mutate()` journals each of `session_category_set` / `session_preferred_sample_rate_set` / `session_preferred_io_buffer_set` / `session_activated` / `session_deactivated` / `session_output_override` with `outcome` · P4 one `input_health_sample` + one `output_render_sample` per second · P5 render tap on the player node; `stream_cancel_measured { cancelIssuedAtMs, lastNonSilentRenderedAtMs, cancelToSilenceMs, withinRatifiedWindow }`; `cancelLatencyMs` retired · P6 synthetic stall freezes the render-observation seam (`AudioGraph.setSyntheticStall`), records stamped `synthetic` · P7 `overrideOutput(speaker:)` in the authority only (`.speaker` / `.none`), harness **Speaker / System default** buttons, `app_lifecycle` records, runbook step 11 = Settings → Developer → Reset Media Services · P8 `seq` on every record, `causeSeq` on every automatic act, `StateReplayer` fails on `brokenCausality`. No threshold, no architecture, no STT/TTS/MAIA, no network.
 
 ---
 
@@ -50,8 +52,8 @@ Record all five outputs **verbatim** in `KERNEL-00_MAC-COMPILE-01_<date>.md` wit
 ```text
 eef487422
    ├── MAC-COMPILE-01 (founder, Mac Studio) → KERNEL-00_MAC-COMPILE-01_<date>.md, verbatim
-   ├── bounded PRE-WITNESS-01 repair (P1–P8 above; plus any compile fixes, each named)
-   ├── source gate + swift test + xcodegen + Xcode compile again → NEW SHA recorded
+   ├── bounded PRE-WITNESS-01 repair (P1–P8 above; plus C1–C3, named)      ← DONE, this SHA
+   ├── source gate (13/13 here) + swift build/test + xcodegen + unsigned + signed compile → NEW SHA recorded   ← OWED (founder, Mac)
    └── DEVICE WITNESS under the ratified law (runbook), on the new SHA
 ```
 

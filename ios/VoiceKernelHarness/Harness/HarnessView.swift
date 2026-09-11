@@ -10,6 +10,7 @@ struct HarnessView: View {
             List {
                 stateSection
                 healthSection
+                routeSection
                 outputSection
                 faultsSection
                 witnessSection
@@ -60,8 +61,6 @@ struct HarnessView: View {
             row("session", s.audioSession.rawValue)
             row("inputFlow", s.inputFlow.rawValue, tint: s.inputFlow == .healthy ? .green : (s.inputFlow == .dead ? .red : .orange))
             row("outputFlow", s.outputFlow.rawValue)
-            row("route", "\(s.route.output) ← \(s.route.input)\(s.route.inputDataSource.map { " (\($0))" } ?? "")")
-            row("sr / io", "\(Int(s.route.sampleRate ?? 0)) Hz · \(String(format: "%.2f", s.route.ioBufferDurationMs ?? 0)) ms")
             row("input rms / peak", String(format: "%.5f / %.5f", s.lastInputRms, s.lastInputPeak))
             row("callbacks (gen)", "\(s.inputCallbacksInGeneration)")
             row("recovery", "gen \(s.recovery.generation) · attempts \(s.recovery.attemptsInWindow)/\(s.recovery.budget)\(s.recovery.lastFaultClass.map { " · \($0)" } ?? "")")
@@ -72,6 +71,20 @@ struct HarnessView: View {
         }
     }
 
+    private var routeSection: some View {
+        Section("Route (K00-11) — authority-owned override") {
+            row("route", "\(s.route.output) ← \(s.route.input)\(s.route.inputDataSource.map { " (\($0))" } ?? "")")
+            row("sr / io", "\(Int(s.route.sampleRate ?? 0)) Hz · \(String(format: "%.2f", s.route.ioBufferDurationMs ?? 0)) ms")
+            row("override", s.outputOverrideSpeaker ? "speaker" : "system default")
+            HStack {
+                Button("Speaker") { m.routeToSpeaker() }
+                Button("System default") { m.routeToSystemDefault() }
+            }.buttonStyle(.bordered).disabled(s.floor == .idle)
+            Text("Bluetooth: connect/disconnect the device itself; each admitted transition must recover with no manual tap.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
     private var outputSection: some View {
         Section("Output streams (every stream has an identity)") {
             HStack {
@@ -79,6 +92,9 @@ struct HarnessView: View {
                     .disabled(s.floor != .listening || !s.outputEnabled)
                 Button("Cancel active") { m.cancelActive() }.buttonStyle(.bordered)
                     .disabled(!s.streams.contains { $0.state == .rendering })
+            }
+            if let c = s.lastCancelToSilenceMs {
+                row("last cancel → silence", "\(c) ms", tint: c <= 100 ? .green : .red)
             }
             ForEach(s.streams.suffix(5).reversed(), id: \.id) { st in
                 HStack {
@@ -92,9 +108,9 @@ struct HarnessView: View {
     }
 
     private var faultsSection: some View {
-        Section("Fault injection (K00 §4)") {
+        Section("Fault injection (K00 §4) — synthetic, labelled in the journal") {
             Toggle("Digital-zero input (K00-07)", isOn: $m.faults.digitalZeroInput)
-            Toggle("Stall output progress (K00-08)", isOn: $m.faults.stallOutput)
+            Toggle("Stall output progress at the observation seam (K00-08)", isOn: $m.faults.stallOutput)
             Toggle("Hold one callback, fire after recovery (K00-09)", isOn: $m.faults.holdStaleCallback)
             Toggle("Persistent fault (K00-10)", isOn: $m.faults.persistentFault)
             Button("Apply faults") { m.applyFaults() }.buttonStyle(.bordered)
@@ -111,7 +127,7 @@ struct HarnessView: View {
             row("manual interventions", "\(s.manualInterventions)", tint: s.manualInterventions == 0 ? .green : .red)
             row("journal events", "\(s.journalCount)")
             if let r = m.replayReport {
-                row("replay", r.passes ? "PASS · \(r.transitions) transitions · \(r.staleCallbacksDropped) stale dropped · gens \(r.generationsSeen.sorted())" : "FAIL · \(r.orphanTransitions.count) orphans · \(r.unattributedActs.count) unattributed",
+                row("replay", r.passes ? "PASS · \(r.transitions) transitions · \(r.staleCallbacksDropped) stale dropped · gens \(r.generationsSeen.sorted())" : "FAIL · \(r.orphanTransitions.count) orphans · \(r.unattributedActs.count) unattributed · \(r.brokenCausality.count) broken causality",
                     tint: r.passes ? .green : .red)
             }
             Button("Record manual intervention (honesty)") { m.manualIntervention() }

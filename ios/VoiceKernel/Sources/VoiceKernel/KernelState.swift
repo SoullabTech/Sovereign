@@ -93,6 +93,10 @@ public struct KernelSnapshot: Codable, Sendable, Equatable {
     public var lastCause: String?
     public var manualInterventions: Int
     public var journalCount: Int
+    /// PRE-WITNESS-01 P7a: authority-owned output override (`overrideOutputAudioPort`).
+    public var outputOverrideSpeaker: Bool
+    /// PRE-WITNESS-01 P5: last measured `cancel(handle) → last non-silent rendered frame` (ms).
+    public var lastCancelToSilenceMs: Int64?
 
     public init(session: String) {
         self.session = session
@@ -113,6 +117,8 @@ public struct KernelSnapshot: Codable, Sendable, Equatable {
         lastCause = nil
         manualInterventions = 0
         journalCount = 0
+        outputOverrideSpeaker = false
+        lastCancelToSilenceMs = nil
     }
 
     /// Projection rule 3: "listening" only from floor AND physical input health.

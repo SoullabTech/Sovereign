@@ -11,27 +11,45 @@
 // rendering for that identity (VOICE-10, ruled F3). KERNEL-00 renders one
 // stream at a time.
 //
-// Realtime note: the input tap runs on the audio thread. It does arithmetic
-// and hands a small value struct to a non-realtime callback; the kernel hops
-// to its actor. This is bounded and adequate for KERNEL-00; a lock-free ring
-// is a KERNEL-01 refinement, not a law.
+// PRE-WITNESS-01: a tap on the player node observes what is actually rendered
+// (P5) — cumulative frames and the monotonic time of the last non-silent
+// buffer — so `cancel(handle) → last rendered frame` is measured rather than
+// inferred from a function call's duration. The synthetic output stall (P6)
+// freezes THIS observation seam, so supervisor, snapshot and journal agree.
+//
+// Realtime note: both taps run on the audio thread. They do arithmetic and
+// hand small value structs on; the kernel hops to its actor. Bounded and
+// adequate for KERNEL-00; a lock-free ring is a KERNEL-01 refinement.
 import Foundation
 import AVFoundation
+
+public struct RenderStats: Sendable, Equatable {
+    public var streamId: OutputStreamID
+    public var framesRendered: Int64
+    public var framesScheduled: Int64
+    public var lastNonSilentRenderedAtMs: Int64?
+    public var synthetic: Bool
+}
 
 public final class AudioGraph: @unchecked Sendable {
     public let generation: Int
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
-    private var tapInstalled = false
+    private var inputTapInstalled = false
+    private var renderTapInstalled = false
     private var configObserver: NSObjectProtocol?
     private let lock = NSLock()
     private var activeStream: OutputStreamID?
     private var activeFrames: Int64 = 0
-    private var lastRendered: Int64 = 0
+    private var renderedFramesForActive: Int64 = 0
+    private var lastNonSilentAtMs: Int64?
+    private var frozen: RenderStats?            // synthetic stall (P6)
+    private var clock: () -> Int64 = MonotonicClock.nowMs
 
     /// The format every output buffer must be in. Mono 48 kHz float; the mixer
     /// converts to the hardware format.
     public let outputFormat: AVAudioFormat
+    private let silencePeak: Float = 1e-7
 
     public var onInput: ((InputObservation) -> Void)?
     public var onStreamComplete: ((OutputStreamID, Int) -> Void)?          // (stream, generation)
@@ -45,6 +63,7 @@ public final class AudioGraph: @unchecked Sendable {
     public var isRunning: Bool { engine.isRunning }
 
     public func start(voiceProcessing: Bool, clock: @escaping () -> Int64 = MonotonicClock.nowMs) throws {
+        self.clock = clock
         let input = engine.inputNode
         // Must be set before the engine starts; global to both IO nodes (SURVEY-01 §2).
         try input.setVoiceProcessingEnabled(voiceProcessing)
@@ -56,25 +75,24 @@ public final class AudioGraph: @unchecked Sendable {
         let gen = generation
         input.installTap(onBus: 0, bufferSize: 1024, format: inFormat) { [weak self] buffer, _ in
             guard let self = self else { return }
-            let frames = Int(buffer.frameLength)
-            var peak: Float = 0
-            var sumSq: Float = 0
-            if let ch = buffer.floatChannelData, buffer.format.channelCount > 0 {
-                let n = Int(buffer.frameLength)
-                let p = ch[0]
-                var i = 0
-                while i < n {
-                    let v = p[i]
-                    let a = abs(v)
-                    if a > peak { peak = a }
-                    sumSq += v * v
-                    i += 1
-                }
-            }
-            let rms = frames > 0 ? (sumSq / Float(frames)).squareRoot() : 0
+            let (frames, rms, peak) = Self.measure(buffer)
             self.onInput?(InputObservation(generation: gen, timeMs: clock(), frames: frames, rms: rms, peak: peak))
         }
-        tapInstalled = true
+        inputTapInstalled = true
+
+        // Render observation (P5): what the player node actually emits.
+        player.installTap(onBus: 0, bufferSize: 1024, format: outputFormat) { [weak self] buffer, _ in
+            guard let self = self else { return }
+            let (frames, _, peak) = Self.measure(buffer)
+            let now = clock()
+            self.lock.lock()
+            if self.activeStream != nil {
+                self.renderedFramesForActive = min(self.activeFrames, self.renderedFramesForActive + Int64(frames))
+            }
+            if peak > self.silencePeak { self.lastNonSilentAtMs = now }
+            self.lock.unlock()
+        }
+        renderTapInstalled = true
 
         configObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
@@ -88,23 +106,43 @@ public final class AudioGraph: @unchecked Sendable {
 
     public func stop() {
         if let o = configObserver { NotificationCenter.default.removeObserver(o); configObserver = nil }
-        if tapInstalled { engine.inputNode.removeTap(onBus: 0); tapInstalled = false }
+        if inputTapInstalled { engine.inputNode.removeTap(onBus: 0); inputTapInstalled = false }
+        if renderTapInstalled { player.removeTap(onBus: 0); renderTapInstalled = false }
         player.stop()
         engine.stop()
-        lock.lock(); activeStream = nil; lock.unlock()
+        lock.lock(); activeStream = nil; frozen = nil; lock.unlock()
+    }
+
+    private static func measure(_ buffer: AVAudioPCMBuffer) -> (Int, Float, Float) {
+        let frames = Int(buffer.frameLength)
+        var peak: Float = 0
+        var sumSq: Float = 0
+        if let ch = buffer.floatChannelData, buffer.format.channelCount > 0 {
+            let p = ch[0]
+            var i = 0
+            while i < frames {
+                let v = p[i]
+                let a = abs(v)
+                if a > peak { peak = a }
+                sumSq += v * v
+                i += 1
+            }
+        }
+        let rms = frames > 0 ? (sumSq / Float(frames)).squareRoot() : 0
+        return (frames, rms, peak)
     }
 
     // MARK: output with identity
 
-    /// Schedule PCM for rendering under a new stream identity. Returns the id
-    /// and the number of frames scheduled. Completion fires when the data has
-    /// been RENDERED (not merely consumed) — `.dataRendered`.
+    /// Schedule PCM for rendering under a new stream identity. Returns the
+    /// number of frames scheduled. Completion fires when the data has been
+    /// RENDERED (not merely consumed) — `.dataRendered`.
     public func schedule(_ buffer: AVAudioPCMBuffer, as id: OutputStreamID) -> Int64 {
         let frames = Int64(buffer.frameLength)
         lock.lock()
         activeStream = id
         activeFrames = frames
-        lastRendered = 0
+        renderedFramesForActive = 0
         lock.unlock()
         let gen = generation
         player.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataRendered) { [weak self] _ in
@@ -119,18 +157,35 @@ public final class AudioGraph: @unchecked Sendable {
         return frames
     }
 
-    /// Frames rendered so far for the active stream, from the node's own clock.
-    public func renderedFrames() -> (OutputStreamID, Int64, Int64)? {
-        lock.lock()
-        guard let id = activeStream else { lock.unlock(); return nil }
-        let total = activeFrames
-        lock.unlock()
-        guard let nt = player.lastRenderTime, let pt = player.playerTime(forNodeTime: nt) else {
-            return (id, lastRendered, total)
+    /// Render progress for the active stream, from the render tap. Under a
+    /// synthetic stall (P6) the frozen value is returned and marked so.
+    public func renderStats() -> RenderStats? {
+        lock.lock(); defer { lock.unlock() }
+        if let f = frozen { return f }
+        guard let id = activeStream else { return nil }
+        return RenderStats(streamId: id, framesRendered: renderedFramesForActive, framesScheduled: activeFrames,
+                           lastNonSilentRenderedAtMs: lastNonSilentAtMs, synthetic: false)
+    }
+
+    /// Synthetic output stall at the observation seam (P6): progress appears to
+    /// stop for every observer at once. The audio keeps rendering; that is why
+    /// it is labelled synthetic in every record it produces.
+    public func setSyntheticStall(_ on: Bool) {
+        lock.lock(); defer { lock.unlock() }
+        if on, frozen == nil, let id = activeStream {
+            frozen = RenderStats(streamId: id, framesRendered: renderedFramesForActive, framesScheduled: activeFrames,
+                                 lastNonSilentRenderedAtMs: lastNonSilentAtMs, synthetic: true)
+        } else if on, frozen == nil {
+            frozen = RenderStats(streamId: OutputStreamID("synthetic"), framesRendered: 0, framesScheduled: 0,
+                                 lastNonSilentRenderedAtMs: nil, synthetic: true)
         }
-        let rendered = max(0, min(total, Int64(pt.sampleTime)))
-        lock.lock(); lastRendered = rendered; lock.unlock()
-        return (id, rendered, total)
+        if !on { frozen = nil }
+    }
+
+    /// Time of the last non-silent buffer the player node emitted (P5).
+    public func lastNonSilentRenderedAtMs() -> Int64? {
+        lock.lock(); defer { lock.unlock() }
+        return lastNonSilentAtMs
     }
 
     /// Cancel the identified stream. Returns frames rendered at cancel, or nil
@@ -138,9 +193,9 @@ public final class AudioGraph: @unchecked Sendable {
     public func cancel(_ id: OutputStreamID) -> Int64? {
         lock.lock()
         guard activeStream == id else { lock.unlock(); return nil }
+        let rendered = renderedFramesForActive
+        activeStream = nil
         lock.unlock()
-        let rendered = renderedFrames()?.1 ?? 0
-        lock.lock(); activeStream = nil; lock.unlock()
         player.stop()   // drops the scheduled buffers; `activeStream` is already nil so a late completion is ignored
         return rendered
     }

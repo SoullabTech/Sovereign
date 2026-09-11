@@ -2,14 +2,16 @@
 //
 // THE ONLY FILE in the Voice 2026 organism permitted to mutate AVAudioSession:
 // category · mode · options · active/inactive · preferred sample rate and IO
-// buffer · route policy · and to observe interruption / route change /
-// media-services reset. The repo source gate
+// buffer · output route override · and to observe interruption / route change
+// / media-services reset. The repo source gate
 // (__tests__/voice-kernel-00-source-gates.test.ts) fails if any other file
 // under ios/VoiceKernel or ios/VoiceKernelHarness touches these APIs.
 //
-// It acts only on a VoiceKernel decision and journals every mutation with its
-// cause (VOICE-04, VOICE-16). It never starts an engine, never installs a tap,
-// never renders. iOS only by construction.
+// It acts only on a VoiceKernel decision and journals EVERY mutation
+// individually with its outcome and its causal parent (PRE-WITNESS-01 P3, P8),
+// so a failure halfway through a configuration is visible as exactly the
+// mutation that failed. It never starts an engine, never installs a tap, never
+// renders. iOS only by construction.
 #if os(iOS)
 import Foundation
 import AVFoundation
@@ -21,6 +23,13 @@ public enum SessionEvent: Sendable, Equatable {
     case mediaServicesReset
 }
 
+public enum SessionMutationError: Error, CustomStringConvertible {
+    case failed(step: String, underlying: String)
+    public var description: String {
+        switch self { case .failed(let s, let u): return "\(s): \(u)" }
+    }
+}
+
 public final class AudioSessionAuthority: @unchecked Sendable {
     private let session = AVAudioSession.sharedInstance()
     private let recorder: FlightRecorder
@@ -28,8 +37,10 @@ public final class AudioSessionAuthority: @unchecked Sendable {
     private let lock = NSLock()
     private var _generation: Int = 0
 
-    /// Delivered on an arbitrary thread; the kernel hops to its actor.
-    public var onEvent: ((SessionEvent) -> Void)?
+    /// Delivered on an arbitrary thread with the seq of the observation record
+    /// that describes the OS event; the kernel hops to its actor and uses that
+    /// seq as the causal parent of whatever it does next.
+    public var onEvent: ((SessionEvent, Int) -> Void)?
 
     public init(recorder: FlightRecorder) {
         self.recorder = recorder
@@ -42,34 +53,83 @@ public final class AudioSessionAuthority: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }; return _generation
     }
 
+    // MARK: individually witnessed mutations (P3)
+
+    /// Performs one mutation, journals its outcome, rethrows on failure so the
+    /// caller stops at exactly the step that failed.
+    @discardableResult
+    private func mutate(_ step: String, cause: String, causeSeq: Int?, evidence: [String: String] = [:],
+                        _ body: () throws -> Void) throws -> Int {
+        do {
+            try body()
+            var ev = evidence; ev["outcome"] = "ok"
+            return recorder.record(generation: generation, component: "AudioSessionAuthority", event: step,
+                                   cause: cause, causeSeq: causeSeq, evidence: ev).seq
+        } catch {
+            var ev = evidence; ev["outcome"] = "error"; ev["error"] = "\(error)"
+            recorder.record(generation: generation, component: "AudioSessionAuthority", event: step,
+                            cause: cause, causeSeq: causeSeq, evidence: ev)
+            throw SessionMutationError.failed(step: step, underlying: "\(error)")
+        }
+    }
+
     // MARK: the conversation session (VOICE-04: one coherent session for listen and speak)
 
-    /// Configure once per conversation (or on an interruption/reset recovery,
+    /// Configure once per conversation (or on an interruption / reset recovery,
     /// stamped as such). `.playAndRecord` + `.voiceChat`: two-way voice, keeps
     /// playing with the Ring/Silent switch engaged (SURVEY-01 §1). Options are
     /// deliberately NOT `.mixWithOthers` — a conversation owns its session.
-    public func configureForConversation(cause: String) throws {
+    /// `.allowBluetoothHFP` is the current SDK name (MAC-COMPILE-01, C3).
+    /// Returns the seq of the summary record.
+    @discardableResult
+    public func configureForConversation(cause: String, causeSeq: Int?) throws -> Int {
         let before = describe()
-        try session.setCategory(.playAndRecord, mode: .voiceChat,
-                                options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP])
-        try session.setPreferredSampleRate(48_000)
-        try session.setPreferredIOBufferDuration(0.010)
-        try session.setActive(true, options: [])
+        let s1 = try mutate("session_category_set", cause: cause, causeSeq: causeSeq,
+                            evidence: ["category": "playAndRecord", "mode": "voiceChat",
+                                       "options": "defaultToSpeaker,allowBluetoothHFP,allowBluetoothA2DP"]) {
+            try session.setCategory(.playAndRecord, mode: .voiceChat,
+                                    options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP])
+        }
+        let s2 = try mutate("session_preferred_sample_rate_set", cause: cause, causeSeq: s1,
+                            evidence: ["preferred": "48000"]) {
+            try session.setPreferredSampleRate(48_000)
+        }
+        let s3 = try mutate("session_preferred_io_buffer_set", cause: cause, causeSeq: s2,
+                            evidence: ["preferredSeconds": "0.010"]) {
+            try session.setPreferredIOBufferDuration(0.010)
+        }
+        let s4 = try mutate("session_activated", cause: cause, causeSeq: s3) {
+            try session.setActive(true, options: [])
+        }
         let after = describe()
-        recorder.record(generation: generation, component: "AudioSessionAuthority", event: "session_configured",
-                        from: before, to: after, cause: cause,
-                        evidence: ["category": "playAndRecord", "mode": "voiceChat",
-                                   "options": "defaultToSpeaker,allowBluetooth,allowBluetoothA2DP",
-                                   "preferredSampleRate": "48000", "preferredIOBufferDuration": "0.010",
-                                   "actualSampleRate": String(session.sampleRate),
-                                   "actualIOBufferDuration": String(session.ioBufferDuration)])
+        return recorder.record(generation: generation, component: "AudioSessionAuthority", event: "session_configured",
+                               from: before, to: after, cause: cause, causeSeq: s4,
+                               evidence: ["actualSampleRate": String(session.sampleRate),
+                                          "actualIOBufferDuration": String(session.ioBufferDuration),
+                                          "steps": "\(s1),\(s2),\(s3),\(s4)"]).seq
     }
 
-    public func release(cause: String) throws {
+    @discardableResult
+    public func release(cause: String, causeSeq: Int?) throws -> Int {
         let before = describe()
-        try session.setActive(false, options: [.notifyOthersOnDeactivation])
-        recorder.record(generation: generation, component: "AudioSessionAuthority", event: "session_released",
-                        from: before, to: "inactive", cause: cause)
+        let s = try mutate("session_deactivated", cause: cause, causeSeq: causeSeq) {
+            try session.setActive(false, options: [.notifyOthersOnDeactivation])
+        }
+        return recorder.record(generation: generation, component: "AudioSessionAuthority", event: "session_released",
+                               from: before, to: "inactive", cause: cause, causeSeq: s).seq
+    }
+
+    /// K00-11 route exercise (P7a). `.speaker` is supported with `.playAndRecord`;
+    /// `.none` restores the system default (with `.defaultToSpeaker` in the
+    /// category options that default is the speaker rather than the receiver).
+    @discardableResult
+    public func overrideOutput(speaker: Bool, cause: String, causeSeq: Int?) throws -> Int {
+        let before = describe()
+        let s = try mutate("session_output_override", cause: cause, causeSeq: causeSeq,
+                           evidence: ["port": speaker ? "speaker" : "none", "before": before]) {
+            try session.overrideOutputAudioPort(speaker ? .speaker : .none)
+        }
+        return s
     }
 
     // MARK: route (observable first-class state — research §3.3)
@@ -107,7 +167,7 @@ public final class AudioSessionAuthority: @unchecked Sendable {
         }
     }
 
-    // MARK: observers (K00-11 · K00-12 · K00-13)
+    // MARK: observers (K00-11 · K00-12 · K00-13) — each OS event is an observation record
 
     public func startObserving() {
         stopObserving()
@@ -118,18 +178,18 @@ public final class AudioSessionAuthority: @unchecked Sendable {
                   let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
             switch type {
             case .began:
-                self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
-                                     event: "interruption_began", cause: "os_interruption")
-                self.onEvent?(.interruptionBegan)
+                let seq = self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
+                                               event: "interruption_began", cause: "os_interruption").seq
+                self.onEvent?(.interruptionBegan, seq)
             case .ended:
                 var resume = false
                 if let o = n.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt {
                     resume = AVAudioSession.InterruptionOptions(rawValue: o).contains(.shouldResume)
                 }
-                self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
-                                     event: "interruption_ended", cause: "os_interruption",
-                                     evidence: ["shouldResume": String(resume)])
-                self.onEvent?(.interruptionEnded(shouldResume: resume))
+                let seq = self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
+                                               event: "interruption_ended", cause: "os_interruption",
+                                               evidence: ["shouldResume": String(resume)]).seq
+                self.onEvent?(.interruptionEnded(shouldResume: resume), seq)
             @unknown default:
                 break
             }
@@ -139,18 +199,18 @@ public final class AudioSessionAuthority: @unchecked Sendable {
             let raw = n.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt ?? 0
             let reason = Self.reasonName(AVAudioSession.RouteChangeReason(rawValue: raw))
             let route = self.currentRoute()
-            self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
-                                 event: "route_changed", to: "\(route.output)/\(route.input)", cause: reason,
-                                 evidence: ["inputDataSource": route.inputDataSource ?? "-",
-                                            "ioBufferDurationMs": String(route.ioBufferDurationMs ?? -1),
-                                            "sampleRate": String(route.sampleRate ?? -1)])
-            self.onEvent?(.routeChanged(reason: reason, route: route))
+            let seq = self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
+                                           event: "route_changed", to: "\(route.output)/\(route.input)", cause: reason,
+                                           evidence: ["inputDataSource": route.inputDataSource ?? "-",
+                                                      "ioBufferDurationMs": String(route.ioBufferDurationMs ?? -1),
+                                                      "sampleRate": String(route.sampleRate ?? -1)]).seq
+            self.onEvent?(.routeChanged(reason: reason, route: route), seq)
         })
         observers.append(nc.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: nil) { [weak self] _ in
             guard let self = self else { return }
-            self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
-                                 event: "media_services_reset", cause: "os_media_services_reset")
-            self.onEvent?(.mediaServicesReset)
+            let seq = self.recorder.record(generation: self.generation, component: "AudioSessionAuthority",
+                                           event: "media_services_reset", cause: "os_media_services_reset").seq
+            self.onEvent?(.mediaServicesReset, seq)
         })
     }
 

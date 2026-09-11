@@ -2,8 +2,9 @@
 //   cd ios/VoiceKernel && swift test
 // These exercise the parts of the organism that need no device: the
 // supervisor's windows (K00-07/08), the recovery budget and backoff (K00-10),
-// generation gating (K00-09), and trace replay (K00-17). They are not the
-// device witness; they are the reason the device witness can be believed.
+// generation gating (K00-09), and trace replay with causal parents (K00-17).
+// They are not the device witness; they are the reason the device witness can
+// be believed.
 import XCTest
 @testable import VoiceKernel
 
@@ -105,12 +106,21 @@ final class RecoveryPolicyTests: XCTestCase {
         XCTAssertEqual(attempts, 3)
     }
 
-    func testBudgetIsPerFaultClassAndPerWindow() {
+    func testBudgetIsPerFaultClassAndSlidesOverSixtySeconds() {
+        // C1 (MAC-COMPILE-01): the window is SLIDING, not epoch-based. Attempts
+        // at 0 / 1 000 / 2 000 ms: at 61 000 ms the 2 000 ms attempt is only
+        // 59 s old and still counts; at 62 001 ms all three have aged out.
         var p = RecoveryPolicy()
         for t in [0, 1_000, 2_000] { _ = p.decide(faultClass: "input_dead", nowMs: Int64(t)) }
         guard case .retry = p.decide(faultClass: "output_stalled", nowMs: 3_000) else { return XCTFail("other class has its own budget") }
         guard case .degraded = p.decide(faultClass: "input_dead", nowMs: 4_000) else { return XCTFail() }
-        guard case .retry(_, 1, _) = p.decide(faultClass: "input_dead", nowMs: 61_000) else { return XCTFail("window rolls at 60 s") }
+        // 60 001 ms: the attempt at 0 has aged out; 1 000 and 2 000 remain → 2 in window → a retry is allowed as attempt 3.
+        XCTAssertEqual(p.attemptsInWindow(faultClass: "input_dead", nowMs: 60_001), 2)
+        guard case .retry(_, 3, _) = p.decide(faultClass: "input_dead", nowMs: 60_001) else { return XCTFail("sliding window: 2 remain, so attempt 3 is lawful") }
+        // Now attempts at 1 000, 2 000, 60 001 are in window → the next decide before 61 001 must degrade.
+        guard case .degraded = p.decide(faultClass: "input_dead", nowMs: 60_500) else { return XCTFail("3 in window → degraded") }
+        // At 122 002 ms every attempt (latest 60 001) is ≥ 60 s old → fresh attempt 1.
+        guard case .retry(_, 1, _) = p.decide(faultClass: "input_dead", nowMs: 122_002) else { return XCTFail("window fully aged out") }
     }
 
     func testGenerationsAreMonotonicAcrossReasons() {
@@ -125,24 +135,41 @@ final class RecoveryPolicyTests: XCTestCase {
 }
 
 final class ReplayTests: XCTestCase {
-    private func ev(_ gen: Int, _ event: String, from: String? = nil, to: String? = nil, cause: String? = "c") -> JournalEvent {
-        JournalEvent(session: "t", generation: gen, timeMonotonicMs: 0, component: "x", event: event, from: from, to: to, cause: cause)
+    private func ev(_ seq: Int, _ gen: Int, _ event: String, from: String? = nil, to: String? = nil,
+                    cause: String? = "c", causeSeq: Int? = nil) -> JournalEvent {
+        JournalEvent(seq: seq, session: "t", generation: gen, timeMonotonicMs: Int64(seq), component: "x", event: event,
+                     from: from, to: to, cause: cause, causeSeq: causeSeq)
     }
 
-    func testLawfulRunReplaysClean() {
+    func testLawfulCausalRunReplaysClean() {
         let events = [
-            ev(1, "floor_transition", from: "idle", to: "entering"),
-            ev(1, "session_configured", cause: "enterConversation"),
-            ev(1, "floor_transition", from: "entering", to: "listening"),
-            ev(1, "floor_transition", from: "listening", to: "maiaSpeaking"),
-            ev(1, "stream_cancelled", cause: "command:cancel"),
-            ev(1, "floor_transition", from: "maiaSpeaking", to: "listening"),
-            ev(1, "recovery_requested", cause: "input_dead"),
-            ev(1, "floor_transition", from: "listening", to: "recovering"),
-            ev(2, "graph_rebuilt", cause: "recovery:input_dead"),
-            ev(1, "stale_callback_dropped", cause: "generation_mismatch"),
-            ev(2, "floor_transition", from: "recovering", to: "listening"),
-            ev(2, "floor_transition", from: "listening", to: "idle"),
+            ev(1, 1, "command", cause: "enterConversation"),
+            ev(2, 1, "floor_transition", from: "idle", to: "entering", causeSeq: 1),
+            ev(3, 1, "session_category_set", cause: "enterConversation", causeSeq: 1),
+            ev(4, 1, "session_activated", cause: "enterConversation", causeSeq: 3),
+            ev(5, 1, "session_configured", cause: "enterConversation", causeSeq: 4),
+            ev(6, 1, "graph_started", cause: "enterConversation", causeSeq: 5),
+            ev(7, 1, "input_flow", from: "unknown", to: "healthy", cause: "observation"),
+            ev(8, 1, "floor_transition", from: "entering", to: "listening", causeSeq: 7),
+            ev(9, 1, "command", cause: "playTone"),
+            ev(10, 1, "stream_scheduled", cause: "command:playTone", causeSeq: 9),
+            ev(11, 1, "floor_transition", from: "listening", to: "maiaSpeaking", causeSeq: 10),
+            ev(12, 1, "command", cause: "cancel"),
+            ev(13, 1, "stream_cancelled", cause: "command:cancel", causeSeq: 12),
+            ev(14, 1, "floor_transition", from: "maiaSpeaking", to: "listening", causeSeq: 13),
+            ev(15, 1, "stream_cancel_measured", cause: "render_tap", causeSeq: 13),
+            ev(16, 1, "input_health_sample", cause: "sample"),
+            ev(17, 1, "recovery_requested", cause: "input_dead", causeSeq: 16),
+            ev(18, 1, "recovery_scheduled", cause: "input_dead", causeSeq: 17),
+            ev(19, 1, "floor_transition", from: "listening", to: "recovering", causeSeq: 18),
+            ev(20, 1, "recovery_started", cause: "input_dead", causeSeq: 18),
+            ev(21, 2, "graph_started", cause: "recovery:input_dead", causeSeq: 20),
+            ev(22, 2, "graph_rebuilt", cause: "recovery:input_dead", causeSeq: 20),
+            ev(23, 2, "stale_callback_dropped", cause: "generation_mismatch"),
+            ev(24, 2, "input_flow", from: "unknown", to: "healthy", cause: "observation"),
+            ev(25, 2, "floor_transition", from: "recovering", to: "listening", causeSeq: 24),
+            ev(26, 2, "command", cause: "leaveConversation"),
+            ev(27, 2, "floor_transition", from: "listening", to: "idle", causeSeq: 26),
         ]
         let r = StateReplayer.replay(events)
         XCTAssertTrue(r.passes, "\(r)")
@@ -154,8 +181,9 @@ final class ReplayTests: XCTestCase {
 
     func testOrphanTransitionFails() {
         let r = StateReplayer.replay([
-            ev(1, "floor_transition", from: "idle", to: "entering"),
-            ev(1, "floor_transition", from: "listening", to: "maiaSpeaking"),   // from ≠ current
+            ev(1, 1, "command", cause: "enterConversation"),
+            ev(2, 1, "floor_transition", from: "idle", to: "entering", causeSeq: 1),
+            ev(3, 1, "floor_transition", from: "listening", to: "maiaSpeaking", causeSeq: 1),   // from ≠ current
         ])
         XCTAssertFalse(r.passes)
         XCTAssertEqual(r.orphanTransitions.count, 1)
@@ -163,24 +191,48 @@ final class ReplayTests: XCTestCase {
 
     func testUnlawfulEdgeFails() {
         let r = StateReplayer.replay([
-            ev(1, "floor_transition", from: "idle", to: "maiaSpeaking"),   // no such edge
+            ev(1, 1, "command", cause: "x"),
+            ev(2, 1, "floor_transition", from: "idle", to: "maiaSpeaking", causeSeq: 1),   // no such edge
         ])
         XCTAssertFalse(r.passes)
     }
 
-    func testAutomaticActWithoutCauseFails() {
-        let r = StateReplayer.replay([ev(1, "graph_rebuilt", cause: nil)])
+    func testAutomaticActWithoutCauseOrParentFails() {
+        XCTAssertFalse(StateReplayer.replay([ev(1, 1, "graph_rebuilt", cause: nil, causeSeq: nil)]).passes)
+        let r = StateReplayer.replay([ev(1, 1, "graph_rebuilt", cause: "recovery", causeSeq: nil)])
         XCTAssertFalse(r.passes)
         XCTAssertEqual(r.unattributedActs.count, 1)
     }
 
-    func testJournalRoundTripsThroughJSONL() {
+    func testCausalParentMustExistPrecedeAndNotComeFromALaterGeneration() {
+        // parent seq does not exist
+        var r = StateReplayer.replay([ev(1, 1, "graph_rebuilt", cause: "recovery", causeSeq: 99)])
+        XCTAssertEqual(r.brokenCausality.count, 1)
+        // parent comes after the act
+        r = StateReplayer.replay([
+            ev(1, 1, "graph_rebuilt", cause: "recovery", causeSeq: 2),
+            ev(2, 1, "recovery_started", cause: "recovery", causeSeq: 1),
+        ])
+        XCTAssertGreaterThanOrEqual(r.brokenCausality.count, 1)
+        // parent belongs to a LATER generation than the act it supposedly caused
+        r = StateReplayer.replay([
+            ev(1, 3, "input_flow", from: "unknown", to: "dead", cause: "observation"),
+            ev(2, 2, "recovery_requested", cause: "input_dead", causeSeq: 1),
+        ])
+        XCTAssertEqual(r.brokenCausality.count, 1)
+    }
+
+    func testJournalAssignsMonotonicSeqAndRoundTripsThroughJSONL() {
         var t: Int64 = 0
         let rec = FlightRecorder(session: "rt", clock: { t += 1; return t })
-        rec.record(generation: 1, component: "VoiceKernel", event: "floor_transition", from: "idle", to: "entering", cause: "enterConversation")
-        rec.record(generation: 1, component: "AudioSessionAuthority", event: "session_configured", cause: "enterConversation", evidence: ["category": "playAndRecord"])
+        let a = rec.record(generation: 1, component: "VoiceKernel", event: "command", cause: "enterConversation")
+        let b = rec.record(generation: 1, component: "VoiceKernel", event: "floor_transition", from: "idle", to: "entering",
+                           cause: "enterConversation", causeSeq: a.seq)
+        XCTAssertEqual([a.seq, b.seq], [1, 2])
+        XCTAssertEqual(b.causeSeq, 1)
         let back = FlightRecorder.importJSONL(rec.exportJSONL())
         XCTAssertEqual(back, rec.snapshot())
+        XCTAssertTrue(StateReplayer.replay(back).passes)
     }
 }
 

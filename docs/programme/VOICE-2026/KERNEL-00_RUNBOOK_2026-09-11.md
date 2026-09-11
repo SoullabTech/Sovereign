@@ -2,9 +2,9 @@
 
 **Act:** `KERNEL-00` — OPEN by founder act 2026-09-11 under the ratified acceptance law (`ARCH-01/06_KERNEL-00_ACCEPTANCE_LAW.md`).
 **Branch:** `claude/voice-2026-census-01` · **Code:** `ios/VoiceKernel/` (Swift package) · `ios/VoiceKernelHarness/` (harness app spec + sources).
-**Status:** SOURCE WRITTEN at `eef487422` · **NOT COMPILED** · **NOT WITNESSED**.
+**Status:** SOURCE WRITTEN at `eef487422` · `MAC-COMPILE-01` RECORDED on `eef487422` (`KERNEL-00_MAC-COMPILE-01_2026-09-11.md`) · **PRE-WITNESS-01 APPLIED** (P1–P8 + C1–C3; this SHA) · **NEW SHA NOT YET COMPILED** · **NOT WITNESSED**.
 
-> ⛔ **Founder ruling 2026-09-11:** RUN `MAC-COMPILE-01` against **exactly `eef487422`** (§2 of this runbook; record verbatim). **HOLD the device witness (§3)** until the bounded `PRE-WITNESS-01` instrumentation repair lands as a new SHA — see `PRE-WITNESS-01_PLAN_2026-09-11.md`. Do not start the 60-minute witness because it compiles.
+> ⛔ **Founder ruling 2026-09-11:** `MAC-COMPILE-01` ran on exactly `eef487422` and is recorded. **The device witness (§3) stays on HOLD** until the PRE-WITNESS-01 SHA earns itself independently: `swift build` · `swift test` · source gate · `xcodegen generate` · unsigned iOS compile · signed/device compile — all green, recorded verbatim in a second compile record. Only then does the HOLD lift. Do not start the 60-minute witness because it compiles.
 
 > The question KERNEL-00 must answer is deliberately small: *can one native authority keep MAIA's physical auditory/vocal apparatus alive, observable, cancellable, and recoverable for an entire conversation?* Nothing about intelligence. Nothing about whether her voice sounds beautiful. First prove that the body can hear and speak without fighting itself.
 
@@ -63,21 +63,21 @@ Every step: read the harness state, read the console, and after the run export t
 |---|---|---|---|
 | 0 | `swift test` | all green | pure logic |
 | 0b | `npx jest __tests__/voice-kernel-00-source-gates.test.ts` (Mac) | all green | K00-01, K00-16 |
-| 1 | Tap **Enter conversation** | `session active`, `inputFlow healthy` within the entry window, floor `listening`, one `session_configured` in the journal | K00-02, K00-04 |
-| 2 | Speak, stay quiet, speak | rms/peak move; quiet reads `healthy` (noise floor), never `dead` | K00-04 |
+| 1 | Tap **Enter conversation** | `session active`, `inputFlow healthy` within the entry window, floor `listening`; the journal shows the mutation chain `session_category_set → session_preferred_sample_rate_set → session_preferred_io_buffer_set → session_activated` each with `outcome ok`, then one `session_configured` summary — all with cause `enter_conversation` | K00-02, K00-04 |
+| 2 | Speak, stay quiet, speak | rms/peak move; quiet reads `healthy` (noise floor), never `dead`; the journal carries one `input_health_sample` per second (callbacks, frames, rms/peak min·max·mean, classification) for the whole run — the longitudinal evidence, not the last value | K00-04 |
 | 3 | **Play 3 s tone** ×5, letting each complete | floor `maiaSpeaking` → `listening`; stream `complete` with frames rendered = scheduled; **input callbacks continue during the tone and rms does not collapse to zero**; the journal has no session mutation | K00-03, K00-05, K00-06 |
 | 3b | Note, for the current route, the input rms during the tone vs silence | recorded as echo coupling (measurement, not gate) | K00-06 |
-| 4 | Play tone, **Cancel active** mid-tone | stream `cancelled`, `cancelLatencyMs` ≤ 100 in the journal, audible stop | K00-05 |
+| 4 | Play tone, **Cancel active** mid-tone | stream `cancelled`, then (≈300 ms later) `stream_cancel_measured` with `cancelToSilenceMs` ≤ 100 and `withinRatifiedWindow true`; the harness row *last cancel → silence* reads green; audible stop | K00-05 |
 | 5 | Faults → **Digital-zero input** → Apply | within ≤ 2 000 ms: `inputFlow dead`, `recovery_requested input_dead`, `recovering`, then `graph_rebuilt` with generation+1; clear the fault → `listening` returns without a tap | K00-07, K00-09 |
-| 6 | Faults → **Stall output** → Apply → Play tone | within ≤ 1 000 ms: `outputFlow stalled`, `stream_failed`, recovery; clear the fault | K00-08 |
+| 6 | Faults → **Stall output** → Apply → Play tone | within ≤ 1 000 ms: `outputFlow stalled`, `stream_failed`, recovery; the frozen `output_render_sample` records are stamped `synthetic true` and the harness stream counter stops with them (the stall is injected at the observation seam, so supervisor, snapshot and journal agree); clear the fault | K00-08 |
 | 7 | Faults → **Hold one callback** → Apply → then trigger a recovery (step 5) | after `graph_rebuilt`, one `stale_callback_dropped` with `callbackGeneration < current`; nothing else changes | K00-09 |
 | 8 | Faults → **Persistent fault** → Apply | three recoveries at 500 / 1 000 / 2 000 ms, then `degraded` with cause and attempts 3/3 displayed; no fourth attempt; **Re-enter** restores | K00-10, K00-15 |
-| 9 | Route: switch speaker ↔ receiver (hold to ear / away), connect/disconnect each Bluetooth device the OS admits | each transition: `route_changed`, `engine_configuration_changed`, `graph_rebuilt`, then `healthy` **with no manual tap**; the route line shows the new path and data source; unsupported topologies recorded as platform capability | K00-11 |
+| 9 | Route: **Speaker** / **System default** buttons (authority-owned `overrideOutputAudioPort(.speaker | .none)` → `session_output_override` in the journal), then hold to ear / away, then connect/disconnect each Bluetooth device the OS admits | each transition: `route_changed`, `engine_configuration_changed`, `graph_rebuilt`, then `healthy` **with no manual tap**; the route line shows the new path and data source; unsupported topologies recorded as platform capability | K00-11 |
 | 10 | Incoming call / Siri / another app's audio, then return | `interruption_began` → `recovering`; on end `interruption_recovery`, `session_configured (interruption_recovery)`, `graph_rebuilt`, `listening` — no tap | K00-12 |
-| 11 | Media-services reset (Settings → trigger via another audio app crash if available; else record as not exercisable on this device) | `media_services_reset` → `resetting` → `session_configured (media_services_reset_recovery)` → `graph_rebuilt` → `listening` | K00-13 |
-| 12 | Lock / unlock; background / foreground | declared HOLD behaviour observed; journal says which | K00-14 |
+| 11 | Media-services reset: on the witness device, **Settings → Developer → Reset Media Services** (the Developer menu appears once the device has been used with Xcode) — this is exercisable, not optional | `media_services_reset` → `resetting` → `session_activated` + `session_configured` stamped `media_services_reset_recovery` → `graph_rebuilt` (generation+1) → `listening`, no tap | K00-13 |
+| 12 | Lock / unlock; background / foreground | `app_lifecycle` records (`willResignActive`, `didEnterBackground`, `willEnterForeground`, `didBecomeActive`, protected-data events) bracket what the session and flows did; declared HOLD behaviour observed; the journal, not memory, says which | K00-14 |
 | 13 | Endurance: 60 min, ≥ 50 cycles, ≥ 3 route changes, ≥ 2 interruptions, 1 reset; **manual interventions must read 0** | counters on the harness; export at the end | K00-15 |
-| 14 | Export journal | `replay PASS · N transitions · stale dropped · gens […]` on the harness; the `.jsonl` attached to the record | K00-17 |
+| 14 | Export journal | `replay PASS · N transitions · stale dropped · gens […]` on the harness (FAIL names orphans · unattributed acts · broken causality — an automatic act whose `causeSeq` is missing, later, absent or from a later generation); the `.jsonl` attached to the record | K00-17 |
 | 15 | Throughout | the harness never shows "listening" without `inputFlow healthy` | K00-18 |
 
 **K00-06 / K00-11 on the voice-processing path.** If the `AVAudioEngine` voice-processing path cannot satisfy K00-06 or K00-11, record the FAIL with the journal before considering the lower Voice-I/O path; that second run is a **new** witness, not a retry (law §5).
@@ -87,7 +87,7 @@ Every step: read the harness state, read the console, and after the run export t
 ```text
 Build identity: native SHA · Xcode · iOS · device · route hardware available
 Compile: swift build / swift test / xcodegen / Xcode build — outputs verbatim
-Checklist: K00-01 … K00-18 — PASS / FAIL / NOT EXERCISABLE (with reason), one line of evidence each
+Checklist: K00-01 … K00-18 — PASS / FAIL, one line of evidence each (K00-13 is exercisable via Settings → Developer → Reset Media Services; "NOT EXERCISABLE" is admitted only for a route topology the OS does not offer on the witness device, recorded as platform capability)
 Thresholds used: the ratified six; K00-06 coupling measurements per route
 Journal: attached .jsonl; replay report line
 Manual interventions: count (must be 0 for K00-15)

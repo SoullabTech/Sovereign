@@ -1,11 +1,15 @@
 // KERNEL-00 · flight recorder (VOICE-16: causal observability is built in).
 //
 // Every automatic state-changing act answers: what observation caused this
-// act, and which generation did the observation belong to? If a record cannot
-// answer that, the act should not exist in the runtime.
+// act, and which generation did the observation belong to? PRE-WITNESS-01 (P8)
+// made that answer structural: every record carries a monotonic `seq`, and
+// every automatic act carries `causeSeq` — the seq of the observation (or
+// command) that caused it. Replay verifies the chain instead of inferring it
+// from a cause string.
 import Foundation
 
 public struct JournalEvent: Codable, Sendable, Equatable {
+    public var seq: Int              // monotonic per session, assigned by the recorder
     public var session: String
     public var turn: Int?            // always nil in KERNEL-00 — there are no turns yet
     public var generation: Int
@@ -15,11 +19,13 @@ public struct JournalEvent: Codable, Sendable, Equatable {
     public var from: String?
     public var to: String?
     public var cause: String?
+    public var causeSeq: Int?        // the record that caused this one (required on automatic acts)
     public var evidence: [String: String]
 
-    public init(session: String, turn: Int? = nil, generation: Int, timeMonotonicMs: Int64,
+    public init(seq: Int, session: String, turn: Int? = nil, generation: Int, timeMonotonicMs: Int64,
                 component: String, event: String, from: String? = nil, to: String? = nil,
-                cause: String? = nil, evidence: [String: String] = [:]) {
+                cause: String? = nil, causeSeq: Int? = nil, evidence: [String: String] = [:]) {
+        self.seq = seq
         self.session = session
         self.turn = turn
         self.generation = generation
@@ -29,6 +35,7 @@ public struct JournalEvent: Codable, Sendable, Equatable {
         self.from = from
         self.to = to
         self.cause = cause
+        self.causeSeq = causeSeq
         self.evidence = evidence
     }
 }
@@ -48,6 +55,7 @@ public final class FlightRecorder: @unchecked Sendable {
     public let session: String
     private let lock = NSLock()
     private var events: [JournalEvent] = []
+    private var nextSeq: Int = 1
     private let clock: () -> Int64
     private let cap: Int
 
@@ -57,14 +65,19 @@ public final class FlightRecorder: @unchecked Sendable {
         self.clock = clock
     }
 
+    /// Records one event and returns it (with its assigned `seq`). Callers
+    /// that perform an automatic act pass `causeSeq` = the seq of the record
+    /// that caused it.
     @discardableResult
     public func record(generation: Int, component: String, event: String,
                        from: String? = nil, to: String? = nil, cause: String? = nil,
-                       evidence: [String: String] = [:]) -> JournalEvent {
-        let e = JournalEvent(session: session, generation: generation, timeMonotonicMs: clock(),
-                             component: component, event: event, from: from, to: to,
-                             cause: cause, evidence: evidence)
+                       causeSeq: Int? = nil, evidence: [String: String] = [:]) -> JournalEvent {
         lock.lock()
+        let seq = nextSeq
+        nextSeq += 1
+        let e = JournalEvent(seq: seq, session: session, generation: generation, timeMonotonicMs: clock(),
+                             component: component, event: event, from: from, to: to,
+                             cause: cause, causeSeq: causeSeq, evidence: evidence)
         if events.count < cap { events.append(e) }
         lock.unlock()
         return e
