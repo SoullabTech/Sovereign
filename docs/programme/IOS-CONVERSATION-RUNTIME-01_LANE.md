@@ -990,3 +990,112 @@ activated for speaking`, and on mic re-entry the `prepareForListening`
 sequence; plus the Account Settings footer and Native App Build lines,
 S1–S4 one line each, one long utterance and one long reply. No source
 change is authorized by anything in E13.
+
+### E14 · 2026-09-11 · first voice turn on the repaired build — `prepareForSpeaking` REACHES SWIFT; native trace VISIBLE
+
+Same run as E13 (Xcode Run (Debug), container `BFAC52F7-…`). Turn: member
+"Good morning my dear friend Maya" → FAST tier, `turnId 175332`,
+`processingTimeMs 2985`, route `sovereign/app/maia/list`, server
+`builtAt 2026-09-11T12:27:35Z`. Founder pasted the console from the
+response through the start of TTS playback; the paste begins mid-JSON and
+ends at `Saved 3 messages`, so **the listen re-entry after playback is
+not in this capture** (see "still owed").
+
+**The seam, verbatim, in order (JS → bridge → Swift → bridge → JS):**
+
+```text
+⚡️  [log] - 📱 [iOS] Preparing audio session for speaking...
+⚡️  [log] - [VoiceController] Preparing for speaking...
+⚡️  To Native ->  AudioSessionManager prepareForSpeaking 131386435
+[AudioSessionManager] prepareForSpeaking called, previous state: idle
+[AudioSessionManager] Performing full teardown...
+[AudioSessionManager] Full teardown complete
+[AudioSessionManager] Session deactivated
+[AudioSessionManager] Category set to playback/spokenAudio
+[AudioSessionManager] Session activated for speaking
+⚡️  TO JS {"state":"speaking","success":true}
+⚡️  To Native ->  SpeechRecognition stop 131386436
+…
+⚡️  [log] - [VoiceController] Ready to speak
+⚡️  [log] - ✅ [iOS] Audio session ready for speaking
+```
+
+**Rows closed by this capture:** `web prepareForSpeaking call → reaches
+Swift: YES` · `native runtime trace → visible on healthy turn: YES` (the
+full teardown → deactivate → `.playback/.spokenAudio` → activate sequence
+executed and resolved `success:true` in the same turn). This is the first
+time in the app's history that this Swift code has run on the live `/maia`
+path (E2/E3/E5).
+
+**Observations recorded, not interpreted (each is an input to the
+coordinator design, none is a repair request):**
+
+1. **Ordering at the speak transition.** `prepareForSpeaking` (native
+   full teardown + `setActive(false)` + category change + `setActive(true)`)
+   ran and resolved **before** `SpeechRecognition stop` was sent to the
+   community recognizer (`[SR] Stop called` → `{"status":"stopped"}`
+   arrives after `TO JS {"state":"speaking"}`). Two owners acted on one
+   session in sequence: the app's `AVAudioSession` was deactivated and
+   re-categorised underneath a recognizer that was still running. This
+   is Invariant 3.1 (one owner) unmet by the current code, now actually
+   executing — the §7.2 third possibility made concrete.
+2. **`[Native] Restart counter incremented to 3`** on the same stop —
+   the web-side restart accounting treated the deliberate stop-for-speech
+   as a restart-worthy stop. Recorded; whether that counter later gates
+   re-entry is a question for the full capture.
+3. **TTS path:** OpenAI-provider MP3 fetched via CapacitorHttp
+   (`content-length 57216`, `x-tts-fallback: 0`), decoded 3.6 s, played
+   through Web Audio in the WebContent process (`WebContent[48832]`).
+   Immediately after start: `⚠️ [iOS] No audio output detected - check
+   mute switch or volume`, and a WebContent-side
+   `AudioComponentRegistrar … Connection init failed` error. The phone's
+   status bar shows the silent-mode indicator in the same-time screenshot.
+   **Whether audible speech occurred on this turn was not reported.**
+   Note for the geometry (§4): the category set natively is
+   `.playback`, which ignores the silent switch for the app process —
+   but playback here is Web Audio inside WebKit's content process, whose
+   relationship to the host app's session is exactly what the coordinator
+   must own. Not adjudicated here.
+4. **`📝 [Turn] MAIA turn committed to transcript {"reason":"voice_tts_watchdog"}`**
+   — the 6 s `VOICE_TRANSCRIPT_WATCHDOG_MS` seam (2026-09-07 fix) fired.
+   Fetch ≈3 s + decode + 3.6 s playback exceeds 6 s, so on this turn the
+   watchdog commit is the expected path, **not evidence of a hung
+   `maiaSpeak`**. The words reached the transcript (screenshot confirms).
+5. Route metadata: `"voiceRequested":false`, `"voiceEnabled":false`,
+   `promptBlockChars 17018`, `memoryHealth.conversational: ok` — cognition
+   path unchanged by this lane, as required by the non-degradation gate.
+
+**Founder observation, same session (screenshot 08:29 local):** during a
+long utterance MAIA "cut me off at around 30 seconds"; the interim tape
+had scrolled (the 2026-09-07 tail-pinned tape working as built) and then
+**restarted live transcription from empty**; the first ~30 s do not appear
+as a submitted turn on screen. This is E7 R-A reproduced on the repaired
+build. **Pre-declared reading holds:** registration does not touch the
+turn-close authority; this belongs to the unruled "repair two"
+(`ContinuousConversation.tsx` turn-close off the recognizer boundary).
+The console segment around that cut is owed and will decide whether the
+session end came from the recognizer (`listeningState: stopped` with no
+prior silence-timer line) or from the 2.5 s silence timer, and whether a
+turn was submitted (an `apiFetch POST … /maia/list` right after) or the
+text was dropped.
+
+**Acceptance table after E14:**
+
+```text
+AudioSessionManager compiled          YES   (E10)
+AudioSessionManager registered        YES   (E13)
+cap sync does not erase registration  YES   (E10/E13)
+web prepareForSpeaking call           reaches Swift   YES   (E14)
+web prepareForListening call          reaches Swift   PENDING — listen re-entry not in this paste
+native runtime trace                  visible on healthy turn   YES   (E14, speak side)
+same S1–S4 voice walk                 performed   PENDING
+```
+
+**Still owed for E15:** the console from `Saved 3 messages` onward —
+the end-of-playback → `prepareForListening` sequence (expected:
+`[VoiceController] Preparing for listening...` → `To Native ->
+AudioSessionManager prepareForListening` → `previous state: speaking` →
+teardown → `Category set to playandrecord/measurement` → `Session
+activated for listening` → `SpeechRecognition start`), the ~30 s cut
+segment, S1–S4 one line each, one long reply, any stall, and the Account
+Settings footer + Native App Build lines. No source change authorized.
