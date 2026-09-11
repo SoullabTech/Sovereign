@@ -758,3 +758,104 @@ Continues from §11.7 step 4. Order is fixed; each step is a STOP on failure.
 
 The next evidence in this lane comes from the device, relayed. Nothing in
 this session advances the witness.
+
+### 12.6 Mac runbook for the frozen sequence — and one surface gap found while writing it
+
+**Finding (repo-side, 2026-09-11).** `app/voice-controller-test` is in the
+static-export exclusion list of `scripts/capacitor-patch-routes.sh` (P12
+founder ruling 2026-08-16: `requireFounder()` reads the server session;
+`output:'export'` cannot prerender it; the security boundary wins). So a
+normal beta bundle (`npm run ios:bundle` → static `out/`) **does not contain
+the Probe / A/B surface at all.** The `/maia` smoke is unaffected (`/maia`
+is in the bundle). P12 already names this state: *ON-DEVICE VOICE
+DIAGNOSTIC = UNMET*, replacement is a separate design lane, not authorized.
+
+The only path that reaches the page without building anything is
+**Capacitor dev mode** (`CAPACITOR_MODE=dev`, `server.url` → the Mac's
+`next dev`), which the repo already supports via
+`scripts/mobile-fast-lane.sh`. Two caveats the record must carry:
+
+- `docs/engineering/MOBILE_CONVERSATION_VERIFICATION_LOOP.md` §1 classes
+  dev mode as the *fast lane* and says native-plugin claims are out of its
+  scope because `getPlatform()` "can report `web`". The Probe is the
+  arbiter here: `IOSNativeVoiceProvider` binds `VoiceController` through
+  `registerPlugin`, so if the native bridge is absent the Probe fails with
+  "not implemented" and the A/B cannot even start. A Probe that returns
+  `engineSelected` is therefore proof the bridge is real in that build.
+- The Swift binary is identical in both modes; only the web-asset source
+  and `capacitor.config.json` differ. Record the mode on every evidence line.
+
+**Ruling requested (founder):** accept dev-mode bridge evidence for steps 3–4
+(Probe, A/B), with the mode recorded — or hold those steps until the P12
+replacement diagnostic exists (a build act, refused under §8). Recommendation:
+accept; the `/maia` smoke stays on the beta bundle so the shared-seam claim
+remains production-faithful.
+
+#### Step 1–2 · Install the beta bundle, run the `/maia` smoke
+
+```bash
+cd ~/MAIA-SOVEREIGN   # or the worktree that already compiled 73d0df30d
+git fetch origin claude/voice-recognition-acceptance-witness-ffeadt
+git checkout claude/voice-recognition-acceptance-witness-ffeadt
+git rev-parse --short HEAD                      # expect c5ed0ed96 (record) — Swift unchanged since 73d0df30d
+git status --short -- ios/App/App.xcodeproj ios/App/App/Info.plist   # must be clean
+
+npm run ios:bundle                              # static export (beta) + cap sync ios  — /maia in, test page out
+cd ios/App && pod install && open App.xcworkspace
+```
+
+In Xcode: select the connected iPhone as destination, scheme `App`, Debug,
+signing automatic (team `ZVK2X646Z2`), **Run** (⌘R). Do not bump the build
+number; whatever `CFBundleVersion` the plist carries is the one to record.
+Record: SHA · app version · build number · device · iOS · Xcode · SDK ·
+locale · install method = `Xcode Run (Debug)`.
+
+Then on the device, signed in as usual, on `/maia`:
+
+| S1 | start the mic | starts; community recognizer runs |
+| S2 | speak a short phrase | transcription as before |
+| S3 | stop / complete the lifecycle | no crash, no hung audio session |
+| S4 | start the mic again | second capture starts |
+
+Record `LIVE PATH SMOKE: PASS / FAIL` with one line per step. **FAIL → stop.**
+Attach the Xcode console lines around the failure (look for
+`AudioSessionManager` teardown / activation messages).
+
+#### Step 3–4 · Dev-mode bundle for Probe and A/B (only after S1–S4 PASS and the ruling above)
+
+Terminal A (dev server, same LAN as the phone; founder allowlist must be set
+or the page 403s by design):
+
+```bash
+cd ~/MAIA-SOVEREIGN
+FOUNDER_MEMBER_IDS=<your member uuid> \
+NEXT_PUBLIC_API_BASE_URL=http://$(ipconfig getifaddr en0):3000 \
+scripts/mobile-fast-lane.sh              # prints SHA / LAN URL; runs `next dev`
+```
+
+Terminal B (re-sync the shell to point at that server; native code untouched):
+
+```bash
+CAPACITOR_MODE=dev CAPACITOR_DEV_SERVER_URL=http://$(ipconfig getifaddr en0):3000 npx cap sync ios
+open ios/App/App.xcworkspace              # Run (⌘R) again on the same device
+```
+
+If the WebView shows a blank page or a transport-security error on the http
+LAN URL, stop and record it: `Info.plist` carries no
+`NSAppTransportSecurity` exception, and adding one is a change, not a witness.
+
+On the device: sign in on the dev origin, open `/voice-controller-test`.
+
+- **Probe** with `baseline`, then `modern`, then `dictation`. Record for each:
+  requested engine · `engineSelected` · availability flags · locale support ·
+  selection reason. Modern reporting `modern` while resolving to legacy is a
+  FAIL of the Probe, not a pass.
+- **A/B**: same passage, same room, same distance; baseline → modern →
+  baseline → modern. Per run record F1–F10 from the page (finalized segments,
+  stall events, pause survival, assembled utterance at MAIA close-turn).
+
+#### Step 5–6 · Adjudicate, record
+
+Bring back the raw lines; adjudication happens in §10.2 vocabulary and is
+recorded as §13 by the remote session. No source change accompanies it.
+
