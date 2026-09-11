@@ -915,3 +915,160 @@ adversarial sets; ⛔ not established, and not the question phase 2 is about.
 in plausibility · directional toward entailment · satellite framing RETIRED,
 replaced by the neutral-regime description · cross-verifier comparison NOT YET
 VALID · production UNTOUCHED.**
+
+---
+
+## PHASE 2 AUTHORIZED — prospective three-way validation (founder, 2026-09-11)
+
+```text
+CORE EPISTEMIC TARGET
+plausible ≠ known                         CONFIRMED AS REAL TARGET
+DeBERTa on plausible-neutral
+  neutral                                 7/17
+  false entailment                        10/17
+DeBERTa as automatic UNRESOLVED trigger   NOT SUFFICIENT
+existing three-way map                    DESCRIPTIVE
+prospective three-way validation          AUTHORIZED NEXT
+MiniCheck/HHEM three-way role             NOT CONSTRUCTIBLE
+frozen fixtures                           UNTOUCHED
+production                                UNTOUCHED
+```
+
+> ⭐⭐ **MAIA's hardest epistemic problem may not be detecting lies or
+> contradictions. It may be resisting the seductive inference — the thing that
+> fits beautifully, may even be true, but has not yet been earned as knowledge.**
+> *That is where openness and corrigibility stop being philosophy and become
+> technical necessities.*
+
+⭐ **The founder's refusal to over-generalize is recorded as part of the result**:
+the plausible-neutral errors are **not evenly distributed** (`M 5/5 · D 3/3 ·
+S 1/2 · B 1/3 · N 0/4`). The claim is **not** "DeBERTa always confuses
+plausibility with entailment" — it plainly does not. It is that **certain forms of
+plausible inference strongly elicit overcommit and others do not**, and which
+forms is a phase-2 question.
+
+### The head-to-head is unanswerable on existing material — confirmed
+
+```text
+HEAD TO HEAD — seen by ALL of deberta, hhem, minicheck
+  3 shared cases  ⚠️ n<5 — not a rate
+    deberta 1/3 · hhem 1/3 · minicheck 1/3
+    ⛔ asserted by EVERY verifier: 1/3
+```
+
+⛔ **Three cases. The ranking `14% · 38% · 59%` cannot be drawn**, exactly as the
+founder ruled. DeBERTa remains the proper three-way instrument; whether a second
+binary witness helps resist overcommit is a later question with its own corpus.
+
+### Sizing, and the precision it buys
+
+**30 triples · 3 per domain · 90 items · 30 plausible-neutral cases.** Stage 1
+measured the class on 17 pooled cases from corpora built for another question;
+30 purpose-built cases roughly halve the interval and give each domain a row of
+3 — ⚠️ **below the n≥5 floor per domain**, so *domain-level* rows will be
+directional only and the pooled 30 is the measured figure. Deliberate: ten
+domains at n≥5 each would need 50 triples and a far longer authoring run, and the
+primary question is pooled.
+
+### Blindness — and ONE disclosed seeding
+
+Author: a fresh subagent. **May** know the three-way distinction (it cannot write
+triples otherwise). **May not** read `scripts/verifier-probe/*` or `docs/**` —
+which is where every earlier corpus, every machine judgement, and the 59% result
+live.
+
+⚠️ **DISCLOSED SEEDING.** The prompt carries one worked example, and it is the
+founder's own, in the **`time`** domain. **`time` is therefore the one seeded
+domain**; the author is told not to reuse its shape, but its row must be read with
+that caveat. The other nine are clean. ⛔ Recorded here rather than left to be
+found — the alternative was an unexplained triple structure, which would have
+produced a worse corpus.
+
+⛔ **Prompt committed BEFORE the author runs.**
+
+```text
+Write 30 TRIPLES of short factual test items in natural English — 90 items total.
+
+A triple is one PREMISE (one or two sentences of ordinary prose) and THREE
+hypotheses about it, one of each kind:
+
+  ENTAILED            The premise establishes it. A careful reader must accept it.
+
+  CONTRADICTED        If the premise is true, this is false. The premise rules
+                      it out.
+
+  PLAUSIBLE-BUT-      Compatible with the premise, and TEMPTING — a reasonable
+  UNLICENSED          reader would think it probably true — but the premise does
+                      not actually establish it. It could be true; it could be
+                      false; nothing in the premise settles it.
+
+The third kind is the whole point of this exercise, and it is the hard one to
+write. Test each one by asking: "could this be false while every word of the
+premise stays true?" If the answer is no, it is not this kind. And: "would an
+ordinary reader assume it?" If the answer is no, it is merely arbitrary, which is
+also not this kind. It must pass BOTH.
+
+WORKED EXAMPLE — note it uses the `time` domain; do not reuse its shape:
+
+  PREMISE        She worked at the clinic during the summer.
+  ENTAILED       She worked at the clinic that summer.
+  CONTRADICTED   She did not work at the clinic that summer.
+  PLAUSIBLE      She still works at the clinic.
+
+Write THREE triples in each of these ten domains:
+
+  time · relationship · identity · role · frequency · intention ·
+  emotional state · membership · causation · developmental change
+
+Requirements:
+  - Write NATURAL English. The premise should read like ordinary prose from a
+    profile, letter, news item or biography — not like a test item.
+  - Thirty different situations, thirty different sets of people. Invent names
+    and places freely. Vary sentence structure.
+  - Within a triple, keep wording and domain tightly controlled. The ONLY thing
+    that should differ between the three hypotheses is the epistemic relation.
+  - Premise and hypothesis always describe THE SAME situation and the same
+    people. Do not write a pair that could be read as two unrelated claims —
+    state the referent explicitly rather than relying on the reader assuming it.
+  - No ambiguity: a careful reader must agree with each label without argument.
+    If you cannot make one unambiguous, write a different triple.
+  - Do not write about AI, models, verification, entailment or testing.
+
+Output ONE JSON file to the path you are given:
+
+{
+  "set": "triples",
+  "note": "<one sentence on how you approached it>",
+  "domains": [ ... the ten ... ],
+  "cases": [
+    {
+      "id": "T001",
+      "family": "<short kebab-case name, same for all three members>",
+      "domain": "<one of the ten>",
+      "origin": "triples",
+      "premise": "...",
+      "hypothesis": "...",
+      "expected_three_way": "entailed" | "contradicted" | "neutral_plausible",
+      "expected": "entailed" | "not_entailed",
+      "why_plausible": "<for neutral_plausible only: one sentence on what makes
+                        a reader want to believe it. null otherwise>"
+    }
+  ]
+}
+
+Ids T001..T090, the three members of a family adjacent and sharing `family` and
+`domain`. `expected` is the binary collapse: "entailed" for entailed, and
+"not_entailed" for BOTH of the other two.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Do NOT read any file under scripts/verifier-probe/ other than writing your
+    own output file, and nothing under docs/. Those contain earlier corpora,
+    machine judgements and analysis. Reading any of them would ruin this task.
+  - Do not search the repository. You need nothing from it.
+  - Write from your own sense of English. There is no pattern to match and no
+    downstream program to satisfy; guessing at one would ruin the result.
+
+In your final message report: the output path, the counts per domain, and any
+triple where you found the plausible-but-unlicensed member genuinely hard to
+keep on the right side of the line.
+```
