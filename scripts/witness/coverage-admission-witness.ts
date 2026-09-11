@@ -137,6 +137,19 @@ function preflight() {
     stop('WITNESS_MANUSCRIPT_ID and WITNESS_MEMBER_ID are both required',
       'Ownership is in the capture predicate: a manuscript belonging to another member is ' +
       'indistinguishable from one that does not exist.');
+  /* ⭐ Shape-check the ids HERE rather than letting Postgres reject them.
+     An id that is not a uuid reached `readDraft` as a bound parameter and came
+     back as a raw `22P02` stack trace — the boundary could not be diagnosed
+     from its own output, which is the 2026-09-10 `unreachable` finding in
+     miniature. A preflight that names the offending value costs nothing and
+     turns an aborted run into a NOT RUN with a remedy. */
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  for (const k of ['WITNESS_MANUSCRIPT_ID', 'WITNESS_MEMBER_ID']) {
+    if (!UUID.test(env(k))) stop(`${k} is not a uuid: ${JSON.stringify(env(k))}`,
+      'Use the two ids the lookup query returned, as a MATCHING PAIR from one row — the member ' +
+      'owns that manuscript, and a mismatched pair is indistinguishable from a manuscript that ' +
+      'does not exist.');
+  }
 
   const key = env('ANTHROPIC_API_KEY');
   if (!key) stop('ANTHROPIC_API_KEY is not set',
@@ -266,7 +279,16 @@ async function main() {
 
   const bodyOf = (e: DevelopmentalEvidence) => Object.values(e.coverage.sections).filter((d) => d === 'body').length;
   say(`  draft           ${shape.readState.draftId}  rev ${shape.readState.revisionNumber}`);
+  const corpusChars = [...(await requestFor(full, 'development')).req.recovered]
+    .reduce((n, r) => n + [...r.text].length, 0);
   say(`  sections        ${topology.length}`);
+  say(`  corpus          ${corpusChars} code points at full body depth`);
+  /* ⚠️ Recorded so a later NOT EXERCISED is attributable to the corpus rather
+     than read as a fact about the model. A thin Work gives a spanning claim
+     little to span. */
+  if (corpusChars < 5_000) say(
+    `  ⚠️ THIN CORPUS — ${corpusChars} code points. NOT EXERCISED on A or B is much more likely\n`
+    + '     here, and if it happens it is a fact about this Work, not about the model.');
   say(`  FULL scope      ${bodyOf(full)} / ${topology.length} at body depth`);
   say(`  PARTIAL scope   ${bodyOf(partial)} / ${topology.length} at body depth`);
   say(`  lenses          ${lenses.join(', ')}    runs per condition  ${runs}`);
@@ -346,7 +368,7 @@ async function main() {
     fullReadings: fullReadings.length, partialReadings: partialReadings.length,
     aFired: aFired.length, bLawful: bLawful.length, cTags,
     draftId: shape.readState.draftId, revision: shape.readState.revisionNumber,
-    sections: topology.length,
+    sections: topology.length, corpusCodePoints: corpusChars,
   });
 
   /* ⭐⭐ THE ACCEPTANCE HIERARCHY — founder ruling, 2026-09-11. The three
