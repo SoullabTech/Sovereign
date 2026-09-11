@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-7 FAILED (founder rulings)
+3A-S   semantic witness        RUNS 1-7 FAILED · RUN 8 ⛔ AWAITING RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,58 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 8 · evidence of record
+
+**Checkout `e684edcbd`** (degree-of-commitment law live), `--require-cognition`.
+**Protocol: 0 failed** on both specimens.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience brought about a large change in how he related
+> to the natural world. The shift in how he saw things that came out of that change
+> was a meaningful development in the process of integration he was already engaged
+> in."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage is already fully concrete: two physical events in
+> sequence — the kettle switching off, and Mara pouring water over coffee grounds —
+> stated in plain, specific nouns and verbs with no abstraction to reduce. Any
+> revision would have to invent detail the text does not supply (temperature,
+> vessel, her manner, her state of mind, how the two acts relate beyond succession),
+> which would add nodes and valence the source withholds. The existing sentences are
+> stronger than anything I could substitute for them."
+
+Zero proposals. **Eighth consecutive `no_change`.**
+
+### Observations for the ruling — ⛔ NOT a ruling
+
+```
+AGAINST RUN 7's TWO RULED DRIFTS
+
+  "significant transformation"
+    run 7   "large change"          ruled FAIL (importance -> magnitude)
+    run 8   "large change"          ⚠️ IDENTICAL — UNCHANGED
+
+  "ongoing process of integration"
+    run 7   "the integration he was still working through"   ruled FAIL
+    run 8   "the process of integration he was already engaged in"
+            "process" is now preserved literally;
+            "still working through" became "already engaged in"
+            ⚠️ whether "engaged in" still asserts agentive participation
+               the source does not state is the founder's ruling
+
+CONSTITUTIVE EDGE
+  run 7   "counted as a meaningful development"
+  run 8   "WAS a meaningful development in the process"
+          closer to the source's "constituted ... in"
+```
+
+⚠️ **One of the two ruled drifts is verbatim unchanged.** Recorded as a fact, not as
+a conclusion about whether the law failed to reach it.
+
+⛔ 3A-S AWAITING RULING on run 8. 3A NOT PASSED. 3D CLOSED.
 
 ## 3A-S — RUN 7 · evidence of record
 
