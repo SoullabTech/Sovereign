@@ -157,7 +157,7 @@ maiaSpeak resolves
         0.01 s       = the plugin's setPreferredIOBufferDuration(0.01)          P1 #2
         0.0026666 s  = 128 frames ÷ 48 000 Hz = WebKit's Web Audio render quantum   [inf: arithmetic exact; attribution to WebKit not witnessed]
         → two owners alternately winning the session, one per generation
-  ↓ exit: web onend inactivity — no speech AND no MAIA audio end within 45 000 ms   P2 #23
+  ↓ exit: web onend inactivity — no speech AND no MAIA audio end within 45 000 ms   P2 #23   ⚠ qualified by §3.4 E23 — in the registered Pi8 witness this guard did not terminate the interaction within the captured interval
         E18: "69s since speech, 46s since MAIA" → 46 s > 45 s → handleCaptureLoss('inactivity')
         → LISTENING_STOOD_DOWN · MicState ERROR · isListening=false · wantsContinuous=false → D1/D2 silenced · mic parked   P2 F5
         → handleCaptureLoss does NOT stop the native engine
@@ -166,9 +166,64 @@ maiaSpeak resolves
 
 **Reading.** Not 37 bugs. One transition fans out to six restart authorities; each restart kills the engine before it, the killed engine's task kills the one after it, the two ceilings that could stop the loop are structurally reset by the loop itself, the only exit is a web-path inactivity guard that was never meant for native, and the exit leaves a native engine running on nothing. The alternating route configuration is the two session owners taking turns. **The storm is the architecture executing correctly.**
 
-### 3.4 E19 / E20 overlay — pending
+### 3.4 E19 / E20 overlay — E23 recorded (founder act, 2026-09-11)
 
-E19 (A/B on the preserved pre-registration build) decides whether the repaired-build silence is the gatekeeper flip (§3.2 repaired branch) — the census locates the mechanism, the device decides the attribution. E20 (Repair Two witness) tests §3.1 only. Neither is run; this section is completed when they are.
+E19 (A/B on the preserved pre-registration build) decides whether the repaired-build silence is the gatekeeper flip (§3.2 repaired branch) — the census locates the mechanism, the device decides the attribution. E20 (Repair Two witness) tests §3.1 only. E20 is not run. **E19's registered arm is now witnessed (E23 below); its pre-registration arm is DEFERRED by founder ruling** — useful later for the historical causal increment (*did registering the gatekeeper materially worsen this exact Pi8 sequence?*), no longer needed to justify the replacement architecture, and not a block on KERNEL-00.
+
+```text
+E19 REGISTERED ARM      WITNESSED · STRONG POSITIVE   (E23)
+E19 PRE-REG ARM         UNSPENT · DEFERRED
+E19 A/B                 HISTORICALLY INCOMPLETE
+LEGACY REPAIR           FORBIDDEN / NONE
+```
+
+#### E23 — Registered-arm runtime witness: competing audio/recognition authority under Bluetooth HFP (Pi8)
+
+**Source:** Xcode console capture, 2026-09-11 ≈15:57–16:00Z, scheme `claude/ios-runtime-01-audiosession-registration` run from Xcode on the founder's iPhone (iOS 18.7), speech plugin "Build 77 — VoiceChat Mode", web bundle stamp `2026-01-31_pwa_voice_v3`, flags `VOICE_V2 · IOS_VOICE_NATIVE`. Founder-supplied; ≈2 minutes of console plus a second frame at speech-age 99 s. Classified by founder ruling; **recorded, not repaired** (charter §0). The RUNTIME-01 lane ledger (E13–E22) lives on the registration branch; this entry is the census overlay and does not edit that ledger.
+
+**Evidence classes (founder-ruled; keep the line):**
+
+```text
+WITNESS-PROVEN
+  registration active            "[MAIABridgeViewController] registered in-app plugin: AudioSessionManager" at launch
+  Pi8 Bluetooth HFP route        INPUT and OUTPUT = BluetoothHFP "Pi8" on every native start; built-in mic listed as available only
+  native recognizer starts       "[SR] ✅ Engine started - listening", category playAndRecord / mode voiceChat, 16 kHz, on-device recognition YES
+  OpenAI TTS header              /api/voice/openai-tts response carries x-tts-provider: openai (ruling F1 live on this build)
+  gatekeeper teardown/flip       prepareForSpeaking → "Performing full teardown" → "Session deactivated" → "Category set to playback/spokenAudio" → "Session activated for speaking"
+  Web Speech lifecycle active    web SpeechRecognition in the WebView: voice_transcribe_error aborted · onend restart every 300 ms · "Fresh recognition object (onend_restart, gen 1 … gen 18)"
+  restart / no-speech cycle      ≥18 native cycles in ≈25 s: start → started → "Recognition error: No speech detected" within 0.6–1.8 s → stopped → restart
+  voice-recorder path reached    after cycle 18: "stopListening called (internal)" → "Using native voice recorder (capacitor-voice-recorder)" → VoiceRecorder hasAudioRecordingPermission
+  WebKit session contention      WebContent: "AudioSession::beginInterruption but session is already interrupted!"
+  first turn intact              "Hi can you hear me" dispatched by the 2500 ms silence timer; the native_stop duplicate 42 ms later discarded; MAIA replied; the 2026-09-07 transcript seam committed the turn by watchdog (speak path 6.8 s)
+
+INFERRED
+  which competing owner imposes the 2.875 ms IO buffer   (alternates with the plugin's 0.01; the plugin never asks for 2.875 ms — a second owner exists; 0.002875 s does not reduce cleanly to a 128-frame quantum at 44.1 or 48 kHz, so the §3.3 WebKit attribution stays an inference)
+  Bluetooth/SCO reopen timing as the mechanism            (playback category drops the HFP input link; voiceChat must reopen it; the recognizer starts before audio arrives; "No speech detected"; the restart flips the session again)
+  whether Bluetooth amplifies rather than originates      (decidable without code: same sequence on the built-in route)
+```
+
+**Ruling wording for the gatekeeper finding (preserves the ratified F1–F4 numbering — this is the split session-authority / gatekeeper finding, ruling **F2**, census §5 **F3**; it is NOT ruling F3, which is output cancellability):** *The registered gatekeeper is witnessed as an active `AVAudioSession` writer on the live path: before TTS it tears down the current session, deactivates it, changes category to `playback/spokenAudio`, and reactivates.*
+
+**Then the competing runtime becomes visible.** While the native recognizer reports `playAndRecord / voiceChat`, WebContent reports that an audio-session interruption is already in progress. The web recognition lifecycle independently reaches generation 18 while the native path is also cycling; at cycle 18 the log proceeds into the native voice-recorder permission path. Strong runtime corroboration of §2.1, §2.5 and §3.3.
+
+**Two overlay qualifications of §3.3 (recorded, causes unresolved):**
+
+1. **"The 45 s inactivity guard is the only exit" — qualified.** In the registered Pi8 witness that guard did not terminate the observed interaction within the captured interval: the second console frame shows the cycle continuing at `speech: 99s` with `conversation_alive: true`. Either its predicate was not satisfied / not armed on this build, or activity generated by the competing restart system continually refreshed it. **Do not choose between these yet.**
+2. **The grace-period exemption suppresses the failure it was meant to protect.** Every stop in the loop is logged "Idle stop within N ms grace period — not counting as failure" with N from 1 ms to 1167 ms, and every start logs "Restart counter reset to 0 (mic is live)". A stop 1 ms after start is exempted as benign. *The mechanism intended to suppress false failure counting can suppress the failure being measured.* **Preserved as a Voice 2026 anti-pattern:** a recovery ceiling may never be reset by the act it is counting (cf. VOICE-06/-15/-16; K00-10 fault-class budgets are windowed by wall clock, not by successful starts).
+
+**Member-visible symptom:** after MAIA's first spoken reply she never hears the member again; the mic indicator flickers with each cycle. Class: E18 re-entry storm, Bluetooth HFP variant. No legacy remedy exists; Repair Two (turn close) does not address it.
+
+**KERNEL-00 consequence (founder ruling):** the Pi8 is a **named K00-11 route**, not "some Bluetooth device". The witness exercises at least `built-in → Pi8 HFP → built-in → Pi8 again`, and while output renders on the Pi8, K00-06 must show input callbacks continuing without collapse to digital zero. The comparison this sets up:
+
+```text
+LEGACY + Pi8                      VOICEKERNEL + Pi8
+  multiple session owners           one session owner
+  category transitions per turn     persistent conversational category
+  recognizer restart storm          no recognizer at all
+  input health never observed       duplex physiology observed
+```
+
+If KERNEL-00 survives the same physical route cleanly, that is stronger evidence than any further legacy repair could provide. **Next substantive act: the KERNEL-00 device witness.** The old organism is left alone.
 
 ---
 
@@ -245,7 +300,7 @@ Carried from the parts; each is answerable by a specific instrument, none by mor
 | # | Question | Instrument |
 |---|---|---|
 | Q1 | Does the shipped WKWebView expose `webkitSpeechRecognition` / `getUserMedia` (decides F4 and Quick Journal concurrency)? | one device run with web `voice_recognition_*` events and native `listeningState` side by side |
-| Q2 | Is the repaired-build silence the gatekeeper flip (§3.2)? | E19 A/B, already ruled |
+| Q2 | Is the repaired-build silence the gatekeeper flip (§3.2)? | E19 A/B, already ruled — registered arm WITNESSED (E23, §3.4); pre-registration arm DEFERRED by founder ruling |
 | Q3 | Does the whole utterance survive re-segmentation under Repair Two? | E20, already ruled |
 | Q4 | What does WebKit's content process do to the shared session when Web Audio starts under the plugin's session; what is the session state before the first `start()`? | native session diagnostics read at those moments (the gatekeeper's `getAudioDiagnostics` exists but is only read on failure) |
 | Q5 | Which arrives first on a spoken turn: the plugin `stop()` or `prepareForSpeaking`? | E14 witnessed teardown first; a timestamped trace settles it per run |
