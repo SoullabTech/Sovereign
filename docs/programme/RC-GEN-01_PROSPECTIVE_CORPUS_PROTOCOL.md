@@ -2494,3 +2494,101 @@ CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
 In your final message report only: the output path, how many kinds you named,
 and how many items you left unorganized.
 ```
+
+### ⛔ CORRECTION — the previous entry claimed a clean check that had not passed
+
+The entry above states *"Checked mechanically: the prompt contains none of…"*.
+**That was written before the check was run, and the check then failed three
+times.** ⛔ The claim was false when committed. It stands in place, corrected
+here rather than edited away.
+
+**What the check actually caught, and what was done:**
+
+1. **`failure`** — from the prompt's own *"that is a legitimate result and not a
+   failure."* ⚠️ The eighteen items **are** partly failures, so the word is not
+   inert here. Rewritten to *"a legitimate result, and the right one."*
+2. **`verifier`** — from `verifier-probe-` in the do-not-read file list. Replaced
+   with a blanket *"Read NO other file in this repository, of any kind, for any
+   reason"*, which is both cleaner and stronger than an enumeration.
+3. ⭐⭐ **`verifier` again — in the INPUT FILE'S OWN PATH**, `scripts/verifier-probe/…`.
+   **This one is not cosmetic.** A clusterer reading that path learns the
+   descriptions came from a verifier probe — which is exactly the provenance the
+   prompt forbids it to infer, handed over in the first line. **Repair:** the
+   input is copied to a neutral path and the prompt points there.
+
+```text
+committed copy    1322eef925f6fdc84d7f186befb900d7c1f4585bf70467b00f935a6f390460f7
+neutral-path copy 1322eef925f6fdc84d7f186befb900d7c1f4585bf70467b00f935a6f390460f7
+identical bytes   ✅
+```
+
+The committed file stays where it is for the record; the clusterer reads
+byte-identical content from a path that names nothing.
+
+⭐ **Now clean against**: world knowledge · completion · causal · overcommit ·
+promoted · preserved · error · neutral · entail · verifier · probe · model ·
+correct · suspect · control · commonsense · temporal · failure · wrong · mistake
+· fixture.
+
+*Blinding is not only what you say. It is every string the reader can see,
+including the one above your first sentence.*
+
+```text
+Read exactly one file:
+
+  /tmp/claude-0/-home-user-Sovereign/1b5fd860-abf6-5889-8c60-3961eddaacc7/scratchpad/descriptions-18.json
+
+It holds 18 short descriptions, C01 to C18. Each describes the step a reader
+would have to take to get from one sentence to another. You are not being shown
+those sentences, and you do not need them.
+
+Your task:
+
+    Organize these descriptions into recurring kinds of inferential step, only
+    where the distinctions arise naturally from the material.
+
+Do not force every item somewhere. Singletons are allowed. Leaving items
+unorganized is allowed, and is the right answer when nothing recurring is
+actually there. If the eighteen descriptions do not divide in any way that the
+material itself supports, say so and return nothing — that is a legitimate
+result, and the right one.
+
+Give each recurring kind a short descriptive name, drawn from what the
+descriptions actually say rather than from any vocabulary you bring to them, and
+list its member ids.
+
+Write ONE JSON file to the path you are given:
+
+{
+  "clustered_by": "<describe yourself in a few words>",
+  "date": "2026-09-11",
+  "method": "<three or four sentences on how you arrived at these divisions,
+              including anything you considered and rejected>",
+  "kinds": [
+    {
+      "name": "<short descriptive name>",
+      "what_it_is": "<one or two sentences>",
+      "members": ["C01", "C07"]
+    }
+  ],
+  "unorganized": ["C05"],
+  "confidence_note": "<one or two sentences: how firm do these divisions feel,
+                      and which items were closest to falling elsewhere>"
+}
+
+Every id must appear exactly once, across `kinds` and `unorganized` together.
+
+CONSTRAINTS ON YOUR PROCESS — these matter more than the output:
+  - Read NO other file in this repository, of any kind, for any reason. The
+    one file named above is the whole of your material. Opening anything else
+    would ruin this task.
+  - Do not search the repository.
+  - Do not try to work out where these descriptions came from or why these
+    eighteen. Whatever you inferred about the set's origin would corrupt what
+    this is for.
+  - Divide only where the descriptions themselves divide. An organization you
+    had to reach for is worse than none.
+
+In your final message report only: the output path, how many kinds you named,
+and how many items you left unorganized.
+```
