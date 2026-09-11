@@ -213,6 +213,29 @@ describe('⭐ the simultaneity law — run 4 regressed a repaired axis', () => {
   });
 });
 
+describe('⭐ degree of commitment — run 7 preserved the graph and drifted the properties', () => {
+  const p = revisionSystemPrompt(SECTIONS);
+  it('states that a node carries exactly what the source claimed', () => {
+    expect(p).toContain('EVERY NODE CARRIES EXACTLY AS MUCH AS THE SOURCE CLAIMED FOR IT');
+  });
+  it('names the four drifts', () => {
+    expect(p).toContain('importance into magnitude, possibility into certainty');
+    expect(p).toContain('deliberate effort, or a description into an evaluation');
+  });
+  it('⭐ carries the governing line', () => {
+    expect(p).toContain('A PLAINER WORD IS NOT FAITHFUL IF IT IS MORE');
+    expect(p).toContain('SPECIFIC THAN THE SOURCE');
+  });
+  it('requires openness to survive', () => {
+    expect(p).toContain('Where the source leaves');
+    expect(p).toContain('leave it open');
+  });
+  it('⛔ teaches the law without either run-7 example', () => {
+    expect(p).not.toContain('large change');
+    expect(p).not.toContain('working through');
+  });
+});
+
 describe('⭐ nodes AND edges — run 6 preserved the edge and altered a node', () => {
   const p = revisionSystemPrompt(SECTIONS);
   it('names both halves of the graph', () => {

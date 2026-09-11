@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        RUNS 1-6 FAILED · RUN 7 ⛔ AWAITING RULING
+3A-S   semantic witness        ⛔ RUNS 1-7 FAILED (founder rulings)
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -451,7 +451,78 @@ CONSTITUTIVE EDGE
      psychological labour, recorded then as "close enough not to fail on"
 ```
 
-⛔ 3A-S AWAITING RULING on run 7. 3A NOT PASSED. 3D CLOSED.
+## ⭐ FOUNDER RULING — 3A-S run 7: **FAIL** — closest yet
+
+```
+SPECIMEN 1   R1 PASS · R2 PASS · R3 FAIL · R4 PASS
+SPECIMEN 2   PASS
+3A-S FAIL  ·  3A NOT PASSED  ·  3D CLOSED
+```
+
+### ⭐ The graph now holds
+
+```
+experience -> brought about -> change in relation to natural world
+           -> came out of that change -> shift in perspective
+           -> counted as -> meaningful development -> within -> ongoing integration
+```
+
+**Run 5's dropped edge and run 6's node substitution are BOTH repaired.**
+*"The shift in how he saw things"* is clearly a second node resulting from the
+relational change.
+
+### 🔴 What fails: NODE PROPERTIES DRIFT
+
+```
+SOURCE   "significant transformation"
+RUN 7    "large change"
+         significance is not magnitude. Important · consequential ·
+         noteworthy — the source never commits to SIZE.
+
+SOURCE   "ongoing process of integration"
+RUN 7    "integration he was still working through"
+         "still" carries ongoing correctly. "he was working through" adds
+         AGENTIVE PSYCHOLOGICAL LABOUR. A process can occur without the
+         text saying he is consciously undertaking it.
+```
+
+⭐ **The structural repair did its job and exposed the next thing: preserving node
+identity also requires preserving the source's DEGREE OF COMMITMENT about each
+node's properties.**
+
+### Explicitly NOT failed
+
+- *"The shift in how he saw things that came out of that change"* — clunky,
+  **semantically faithful enough**; the distinct node and the resulting relation
+  both survive.
+- *"counted as a meaningful development"* — weaker and more classificatory than
+  *constituted*, but it still says the shift **qualifies as** the development rather
+  than merely influencing it. **Not a gate failure.**
+
+### The law, sharpened — ⛔ NOT by adding examples
+
+> **Preserve not only each node and edge, but the source's exact degree of
+> commitment to every property. Do not turn importance into magnitude, possibility
+> into certainty, process into deliberate effort, or description into evaluation.**
+>
+> ⭐ **A plainer word is not faithful if it is more specific than the source.**
+
+⛔ `significant ≠ large` and `ongoing ≠ working through` are **NOT added to the
+prompt** — that would start teaching the fixture again. A falsifier asserts both
+phrases are absent.
+
+### ⭐ The fixture-vocabulary removal is ratified, and it strengthens this run
+
+*"The model was not handed the vocabulary of the answer, and the specimen is again
+genuinely adversarial."* The extension to all four pairs stands.
+
+### Specimen 2 — PASS, seventh consecutive
+
+```
+runs 1-6   invention · collapse · valence · collapse regression ·
+           dropped edge · node substitution
+run 7      graph preserved, NODE PROPERTIES drift
+```
 
 ## 3A-S — RUN 6 · evidence of record
 
