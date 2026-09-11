@@ -56,6 +56,7 @@ from pathlib import Path
 SETS = {
     'as-derived': Path(__file__).with_name('fixtures.json'),
     'blind': Path(__file__).with_name('fixtures-blind.json'),
+    'scope': Path(__file__).with_name('fixtures-scope.json'),
 }
 
 DEBERTA_LARGE = 'MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli'
@@ -105,6 +106,15 @@ def run_deberta(cases, repeat, small):
                 probs = torch.softmax(model(**enc).logits[0], dim=-1).tolist()
             scored = {id2label[i]: round(p, 4) for i, p in enumerate(probs)}
             top = max(scored, key=scored.get)
+            # ⛔⛔ THE VERDICT IS BINARY: ENTAILED vs NOT ENTAILED.
+            # `neutral` and `contradiction` are RECORDED DIAGNOSTICS ONLY and are
+            # kept in `scores` and `raw_label`. ⛔ NEITHER MAY EVER BE READ AS "the
+            # source says the opposite" — on the blind set DeBERTa returned
+            # `contradiction` for 7 of its 10 correct negatives, including B12,
+            # where `neutral` is the truer label: the premise does not deny the
+            # claim, it simply does not assert it. A later reader who collapses
+            # `contradiction` into denial would build on a distinction the model
+            # is not making. Founder ruling, 2026-09-11.
             observed = 'entailed' if 'entail' in top else 'not_entailed'
             rows.append(dict(verifier='deberta', run=r + 1, id=c['id'],
                              role=c.get('role', ''), family=c.get('family', ''),

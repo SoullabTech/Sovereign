@@ -2952,3 +2952,114 @@ sentences are not a Work. And the two misses are a real, named disposition, not 
 
 ⛔ **Standing: no ruling taken · no fixture edited · no threshold moved · evidence gate
 HELD · analyzer/3 UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⭐⭐ FOUNDER RULING — HYPOTHESIS SUPPORTED · DeBERTa PROVISIONAL LEAD · HHEM DROPPED
+
+```
+SPECIALIZED VERIFIER HYPOTHESIS     SUPPORTED
+DeBERTa                              PROVISIONAL LEAD · NOT GATE-READY
+HHEM                                 NOT SUITABLE AS PRIMARY
+BLIND GENERALIZATION                 8/10 FAMILIES
+LICENSED-CLAIM RECALL                10/10
+KNOWN GAP                            BOUNDED -> UNBOUNDED DRIFT
+EVIDENCE GATE                        HELD
+ANALYZER/3                           UNTOUCHED
+B                                    HELD
+PRODUCTION                           UNTOUCHED
+```
+
+⭐ **The `undergoes` / `participates` distinction is now INDEPENDENTLY SUPPORTED** —
+B11/B12 reproduced it outside the original domain, so the N2 adjudication stands on
+more than one reading.
+
+### ⭐⭐ THE DEFECT HAS A NAME — `BOUNDED -> UNBOUNDED ENTAILMENT DRIFT`
+
+> **The model correctly understands the basic relation and silently widens its scope.**
+
+```
+recorded with quartet three times     ≠  is a member of quartet
+rowed with crew until injury          ≠  rows with crew
+```
+
+⛔ **Why this is the dangerous failure for MAIA specifically:** it is corrosive rather
+than dramatic. Each widening is small and no single reading looks wrong.
+
+```
+past           -> present
+sometimes      -> generally
+participated   -> member
+temporary      -> enduring
+one instance   -> stable property
+```
+
+⛔ **In a long-lived semantic graph these accumulate silently.** A claim that was true
+of a moment becomes a standing fact about a person, and nothing in the record says
+when it widened.
+
+### ⛔⛔ IMPLEMENTATION LAW — `contradiction` IS A DIAGNOSTIC, NEVER A SEMANTIC CLAIM
+
+```
+THE VERDICT      ENTAILED   vs   NOT ENTAILED
+RECORDED ONLY    neutral    ·    contradiction
+```
+
+⛔ **Neither may ever be read as "the source explicitly says the opposite."** Blind
+B12 is the demonstration: DeBERTa returned `contradiction` where the premise does not
+deny the claim at all — it simply does not assert it. It returned `contradiction` for
+**7 of its 10 correct negatives**, so the label is not tracking denial.
+
+⭐ **Written into `probe.py` at the line that computes the verdict**, with the reason,
+so a later reader cannot "improve" it into a distinction the model is not making.
+
+## ⭐ SCOPE FALSIFICATION SET — FROZEN · NOT RUN
+
+`scripts/verifier-probe/fixtures-scope.json` · **22 cases · 10 families**
+
+```
+sha256  51e10d22e41f9570016f25c9b1568dfb1b520db2b516202c4914290a82b78252
+```
+
+⛔ **This is not a general accuracy set.** It is built to break DeBERTa **at its
+characterized boundary**, on fresh material. ⭐ *That is the difference between "91%
+accuracy" and a known epistemic limit tested directly.*
+
+```
+past-to-present               +1 -2      intention-to-action           +1 -1
+occasional-to-habitual        +1 -1      future-to-present             +1 -1
+participation-to-membership   +1 -2      capability-to-behaviour       +1 -1
+temporary-to-permanent        +1 -1      association-to-identity       +1 -1
+some-to-all                   +1 -1      one-event-to-enduring-trait   +1 -1
+                                         TOTAL  10 licensed · 12 unlicensed
+```
+
+⭐ **The two CONFIRMED gaps carry an extra negative each** — `past-to-present` and
+`participation-to-membership` — including a harder second case in both:
+
+```
+S03  "Bea served on the lifeboat for a decade before moving inland."
+     long duration, so the past reads substantial and the cessation is subordinate
+S08  "The catalogue lists her among the contributors to the atlas." -> editor
+     a REAL recorded role widened to a different and larger one
+```
+
+⛔ **Every family still carries both directions**, so conservatism cannot pass: a
+verifier that answers `not_entailed` to everything fails all ten licensed cases.
+
+⚠️ **No content-domain overlap with either earlier set** — checked mechanically. The
+only shared words are temporal and quantitative (`until`, `since`, `every`, `three`,
+`years`), which is unavoidable given what the set is about.
+
+### To run
+
+```
+source ~/verifier-probe-venv/bin/activate
+export HF_HOME=~/verifier-probe-models
+python3 scripts/verifier-probe/probe.py --set scope --model deberta
+```
+
+⛔ **DeBERTa untouched. No threshold, no prompt, no fixture edit after any result.**
+HHEM is dropped as primary and needs no run here; if it is run at all it is a
+curiosity, not a comparison.
+
+⛔ **Standing: scope set FROZEN and NOT RUN · evidence gate HELD · analyzer/3
+UNTOUCHED · B HELD · A→B→C→D HELD · production UNTOUCHED.**
