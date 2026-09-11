@@ -4572,3 +4572,98 @@ The repaired script prints the rule digest, breaks results down **by set**
 the same `(set, id)`, and holds the independence verdict until the cell is big
 enough to carry it. ⛔ The `9/12` figure is not the detector's blind-set result
 and must not be quoted as one.
+
+---
+
+## MiniCheck RAN — the challenger result (2026-09-11)
+
+`punkt_tab` cleared it on the fifth hop. MiniCheck `flan-t5-large` scored all four
+frozen corpora **unchanged**, each hash verified at load:
+`modifier 99ce2dda…` · `blind a8fc9a92…` · `scope 51e10d22…` ·
+`detector-blind 2873d1fb…`. Records `…094226` · `…094230` · `…094233` · `…094236`.
+
+### Side by side, per set — licensed asserted / unlicensed refused
+
+| set | DeBERTa licensed | MiniCheck licensed | DeBERTa unlicensed | MiniCheck unlicensed |
+|---|---|---|---|---|
+| modifier | 8/8 | 7/8 | 8/16 | **11/16** |
+| blind | 10/10 | 9/10 | 10/12 | 10/12 |
+| scope | 10/10 | 10/10 | 9/12 | 8/12 |
+| **detector-blind** | 10/10 | 8/10 | **3/12** | **10/12** |
+| **total** | **38/38** | 34/38 | 30/52 | **39/52** |
+
+⭐ **The regime that breaks DeBERTa does not break MiniCheck the same way.** On the
+temporal/satellite-boundary set DeBERTa held 3 of 12 unlicensed claims; MiniCheck
+held 10. That is the single most consequential number in this run.
+
+⛔ **It is not free, and the trade is the honest headline**: MiniCheck asserted
+34 of 38 licensed claims where DeBERTa asserted all 38. Across the shared 90
+cases: DeBERTa 68 correct, MiniCheck 73 — MiniCheck buys 9 additional refusals
+of unlicensed claims with 4 refusals of licensed ones. Part of its gain is a
+**lower assertion rate**, and a total alone cannot separate that from
+discrimination.
+
+⚠️ **The modifier discriminator does not carry for MiniCheck.** Its control
+column is 7/8, not 8/8 — so the probe's own frozen guard fired: *P IS NOT
+PERFECT — the verifier went conservative and NO negative column here means
+anything.* MiniCheck's `M 3/8` vs `V 8/8` therefore **must not** be read as
+reproducing satellite-boundary loss. The guard is not relaxed because the
+result would be convenient if it were.
+
+### The conditional table — the founder's predeclared question
+
+44 detector-routed cases of 90 shared with DeBERTa:
+
+```
+                      minicheck right   minicheck wrong
+  deberta wrong             9                10        <- RESCUED / SHARED BLIND SPOT
+  deberta right            21                 4        <- preserved / DISRUPTED
+```
+
+Against the three predeclared outcomes this is **the MIXED case**, and the
+founder predeclared its implication: *"Then we probably need `UNRESOLVED` rather
+than majority voting."* It is neither the best case (rescue is 47%, not
+"usually") nor the bad case (9 real rescues, not a shared failure).
+
+⭐ **And the errors are measurably correlated.** MiniCheck is 84% accurate on
+routed cases DeBERTa got right and 47% on routed cases DeBERTa got wrong —
+Fisher exact two-sided **p = 0.0205**. Two independent witnesses would show no
+such dependence. So: **partially dependent — real rescues, and a shared blind
+spot underneath them.** Majority voting over two partially dependent witnesses
+manufactures agreement; it does not earn it.
+
+### ⛔ The gap in my own instrument — the routed table cannot answer the question alone
+
+The 2×2 above was computed only inside the routed set, so it cannot distinguish
+
+- *the detector **selects** cases the second witness can rescue* — which justifies routing, from
+- *the second witness is simply better everywhere* — which says ask both always and **delete the router**.
+
+Those recommend different architectures and the printed evidence does not
+separate them. The instrument now prints the **complement** — the same table on
+the cases the detector did NOT route — with the rescue rate inside versus
+outside the risk regime, and draws no comparison unless both sides carry n ≥ 5.
+**Not yet measured. The conditional reading above stands only until it is.**
+
+### Instrument repairs in this commit
+
+- **Fourth occurrence of the minimum-n defect, in a cell I had not guarded**:
+  the decisive `CONFIDENT AND WRONG` cell printed `1/1` for MiniCheck as though
+  it were a rate. Now warned below n=5.
+- `fisher_exact_2x2` written out in the standard library only, so every number
+  the instrument prints stays countable by hand.
+- ⭐ **The rule digest is unchanged — `18608a18…`.** Reporting changed; the
+  frozen rule did not, so no prior detector result is invalidated.
+
+### Two readings NOT taken
+
+- **MiniCheck has 1 confident error to DeBERTa's 12** — but the two confidences
+  are differently derived (`|score − 0.5| × 2` against a softmax maximum). That
+  is a scale artifact until MiniCheck has had the same band sweep, and it is
+  **not** a calibration claim.
+- Two `BY SET` rows print `?` — result files written before the probe recorded
+  its set. Hygiene, not a finding; they are the as-derived runs.
+
+**Standing: MiniCheck RUN · mixed case · partial dependence at p = 0.02 ·
+complement UNMEASURED · UNRESOLVED over majority voting, on this evidence ·
+detector rule unchanged · nothing authorized · production UNTOUCHED.**

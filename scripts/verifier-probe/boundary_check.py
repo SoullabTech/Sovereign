@@ -61,6 +61,24 @@ RELEASES = r"\b(still|since|ever since|continues?|ongoing|each|every|always|" \
            r"has been|have been|to this day)\b"
 
 
+def fisher_exact_2x2(a, b, c, d):
+    """
+    Two-sided Fisher exact test on [[a, b], [c, d]]. Written out rather than
+    imported so the instrument keeps no dependency beyond the standard library —
+    every other number it prints is countable by hand, and this one should be
+    reproducible the same way.
+    """
+    from math import comb
+    n = a + b + c + d
+    r1, r2, c1 = a + b, c + d, a + c
+    if not (r1 and r2 and c1 and (n - c1)):
+        return 1.0
+    pr = lambda x: comb(r1, x) * comb(r2, c1 - x) / comb(n, c1)
+    obs = pr(a)
+    return min(1.0, sum(pr(x) for x in range(max(0, c1 - r2), min(r1, c1) + 1)
+                        if pr(x) <= obs + 1e-12))
+
+
 def rule_digest():
     """
     ⭐⭐ THE FROZEN THING IS THE RULE, NOT THE FILE.
@@ -265,6 +283,12 @@ def against(paths):
         if cwn:
             print(f"\n  -> {cw} of {cwn} confidently-wrong answers would be HELD by a rule")
             print(f"     that consults no probability at all")
+            # ⛔ FOURTH OCCURRENCE OF THE SAME DEFECT, in a cell I had not guarded.
+            # On MiniCheck's first run this cell was 1/1 and printed as though it
+            # were a finding. A ratio out of one case is a particular observation
+            # wearing a verdict's clothes.
+            if cwn < 5:
+                print(f"  ⚠️ n={cwn} — TOO FEW confidently-wrong cases to read this as a rate.")
         # ⛔ The 'no discrimination' verdict needs a cell big enough to carry it.
         # On HHEM's first real run this fired on 1/1 — a warning about a single case,
         # stated as a property of the detector.
@@ -329,6 +353,59 @@ def against(paths):
                 elif shared_blind and not rescued:
                     print(f'  ⚠️ no rescues, but only {shared_blind + rescued} routed errors'
                           f' were shared — TOO FEW to conclude anything about independence.')
+
+                # ⭐⭐ THE COMPLEMENT — the gap in my own instrument.
+                # The routed table alone cannot distinguish "the detector SELECTS
+                # cases the second witness can rescue" from "the second witness is
+                # simply better, everywhere". Those recommend different
+                # architectures: the first justifies routing, the second says ask
+                # both always and drop the router. The only way to tell is to run
+                # the same table on the cases the detector did NOT route.
+                unrouted = [(k, v) for k, v in shared if not v[a]['risk']]
+                if unrouted:
+                    uc = lambda ac, bc: sum(1 for _, v in unrouted
+                                            if v[a]['correct'] == ac and v[b]['correct'] == bc)
+                    u_res, u_blind = uc(False, True), uc(False, False)
+                    print(f'\n  COMPLEMENT — the {len(unrouted)} cases the detector did NOT route')
+                    print(f'    {a} wrong there: {u_res + u_blind}'
+                          f'   of which {b} got {u_res} RIGHT')
+                    if u_res + u_blind and rescued + shared_blind:
+                        inside = rescued / (rescued + shared_blind)
+                        outside = u_res / (u_res + u_blind)
+                        print(f'    rescue rate INSIDE the risk regime  {rescued}/'
+                              f'{rescued + shared_blind} = {inside:.0%}')
+                        print(f'    rescue rate OUTSIDE it              {u_res}/'
+                              f'{u_res + u_blind} = {outside:.0%}')
+                        if rescued + shared_blind >= MIN_N and u_res + u_blind >= MIN_N:
+                            if inside > outside:
+                                print('    -> routing SELECTS rescuable errors: the second witness')
+                                print('       does better exactly where the first is untrustworthy.')
+                            else:
+                                print('    ⛔ routing does NOT select rescuable errors. The second')
+                                print('       witness is no better inside the regime than outside,')
+                                print('       so this buys nothing the router was supposed to buy.')
+                        else:
+                            print('    ⚠️ one side has fewer than 5 errors — no comparison drawn.')
+
+                # ⭐ ARE THE ERRORS INDEPENDENT? If they were, the second witness's
+                # accuracy would not depend on whether the first was right. Fisher's
+                # exact on the routed 2x2 answers exactly that, and a small p means
+                # the blind spots OVERLAP — partial dependence, not two free
+                # witnesses. ⛔ This tests correlation only. It says nothing about
+                # which verifier is better, and nothing about production.
+                if min(rescued + shared_blind, preserved + disrupted) >= MIN_N:
+                    pv = fisher_exact_2x2(rescued, shared_blind, preserved, disrupted)
+                    acc_w = rescued / (rescued + shared_blind)
+                    acc_r = preserved / (preserved + disrupted)
+                    print(f'\n  ERROR INDEPENDENCE (Fisher exact, two-sided)  p = {pv:.4f}')
+                    print(f'    {b} accuracy where {a} is WRONG  {acc_w:.0%}')
+                    print(f'    {b} accuracy where {a} is RIGHT  {acc_r:.0%}')
+                    if pv < 0.05 and acc_w < acc_r:
+                        print(f'    ⛔ PARTIALLY DEPENDENT — {b} is significantly worse on exactly')
+                        print(f'       the cases {a} fails. Real rescues, shared blind spots too.')
+                    elif pv >= 0.05:
+                        print('    -> no detectable correlation at this n. NOT proof of')
+                        print('       independence — absence of evidence at this sample size.')
 
     print('\n⛔ NOT A GATE. NOT AUTHORIZED. A measurement, not a component.')
 
