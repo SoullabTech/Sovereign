@@ -1124,3 +1124,70 @@ no dev mode.
 
 **Status after this record.** STEP 1 PASS (WEB BUNDLE 5846a0824) — INSTALL
 PENDING — `/maia` S1–S4 PENDING.
+
+### 12.10 Step 2 — installed on the iPhone via xcodebuild + devicectl — launch pending (device locked) — 2026-09-11
+
+**Evidence provenance.** Founder's Mac Studio terminal, relayed. Worktree
+`/Users/soullab/maia-ds01-witness`, HEAD `5846a0824`, native subject
+`73d0df30d`, web bundle from §12.9.
+
+**Toolchain (observed, supersedes the inferred values in §12.9).**
+
+```text
+xcodebuild -version:  Xcode 26.3, Build version 17C529
+SDK:                  iPhoneOS 26.2 (from the §12 compile log; unchanged toolchain)
+device:               iPhone 16 Pro Max (iPhone17,2), CoreDevice A0736AC8…, state available (paired)
+```
+
+**Build (third native compile of the same subject).**
+`xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug
+-destination generic/platform=iOS -allowProvisioningUpdates
+-derivedDataPath ~/voice-witness-dd build` → `** BUILD SUCCEEDED **`. No
+signing or project-setting prompt was reported. Derived data lives outside
+the repo on purpose (`ios/App/build` would break the next `pod install`).
+
+**Install.** `xcrun devicectl device install app` → `App installed:
+bundleID life.soullab.maia`, installation URL under
+`/private/var/containers/Bundle/Application/CF6A0A75-…`. **Step 2 = PASS.**
+`INSTALL METHOD: xcodebuild + devicectl (Debug)`.
+
+**Launch attempt.** `xcrun devicectl device process launch … life.soullab.maia`
+→ `FBSOpenApplicationErrorDomain error 7 … Locked ("Unable to launch …
+because the device was not, or could not be, unlocked")`. This is the
+phone's lock screen, not the app and not the subject. Not a STOP. Retry
+after unlocking, or tap the icon.
+
+A first paste of the install/launch lines still carried the `<IDENTIFIER>`
+placeholder; zsh read `<` and `>` as redirections and ran nothing for those
+two lines (`no such file or directory: IDENTIFIER`). No side effect.
+
+**Header state.**
+
+```text
+NATIVE SUBJECT: 73d0df30d
+WEB BUNDLE: beta static export at 5846a0824
+APP VERSION:      pending — read from the installed artefact (command in §12.10 next)
+BUILD:            pending — same
+DEVICE:           iPhone 16 Pro Max (iPhone17,2)
+iOS:              pending — devicectl device info details
+XCODE:            26.3 (17C529)
+SDK:              iPhoneOS 26.2
+LOCALE:           pending — device Settings
+INSTALL METHOD:   xcodebuild + devicectl (Debug)
+```
+
+**Next (Mac, no trailing comments on any line).** Unlock the phone, then:
+
+```bash
+xcrun devicectl device process launch --device A0736AC8-793B-516F-AC72-C076DB6CEE38 life.soullab.maia
+/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' -c 'Print :CFBundleVersion' ~/voice-witness-dd/Build/Products/Debug-iphoneos/App.app/Info.plist
+xcrun devicectl device info details --device A0736AC8-793B-516F-AC72-C076DB6CEE38 2>/dev/null | grep -iE 'osVersionNumber|osBuildUpdate|name:' | head -5
+```
+
+The PlistBuddy line reads APP VERSION and BUILD from the exact `.app` that
+was installed, so those two header values are the artefact's, not the
+repo's. Then `/maia` S1–S4 on the phone.
+
+**Status after this record.** STEP 1 PASS (WEB 5846a0824) — STEP 2 PASS
+(INSTALLED, xcodebuild + devicectl) — LAUNCH RETRY PENDING (device locked) —
+`/maia` S1–S4 PENDING.
