@@ -44,7 +44,14 @@ describe('develop surface — what it may reach', () => {
        refusal that kept nothing, reaches no database and no reader behaviour,
        and cannot produce, alter or reveal a reading. The gate this test exists
        to hold — the surface may not perform the read — is untouched by it. */
-    const allowed = new Set(['contract', 'store', 'assess', 'commission', 'scope', 'refusalRecord']);
+    /* `refusalAxes` joined for WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R3, on the
+       same terms as `scope`: it is PURE, imports only the reader's contract for
+       types, and carries no behaviour. It shapes two cause axes so that
+       structural absence and epistemic unknown cannot be flattened into each
+       other at the wire. Reaching it cannot reach anything else, and the gate
+       this test holds — the surface may not perform the read — is untouched. */
+    const allowed = new Set(['contract', 'store', 'assess', 'commission', 'scope',
+                             'refusalRecord', 'refusalAxes']);
     for (const [name, rel] of Object.entries(FILES)) {
       for (const spec of importsOf(read(rel))) {
         const m = READING_UNIT.exec(spec);

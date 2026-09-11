@@ -55,8 +55,12 @@ export interface RefusalRecord {
   detailKind: string | null;
   claimIndex: number | null;
   refIndex: number | null;
-  completion: RefusalCause['completion'];
-  attribution: RefusalCause['attribution'];
+  /* Null where no causal inquiry occurred — a capture or recover refusal never
+     reached a model response. Distinct from `'unknown'`, which means the
+     question was live and went unanswered. The operator reading this record
+     must be able to tell those apart (O-3 · O-4). */
+  completion: RefusalCause['completion'] | null;
+  attribution: RefusalCause['attribution'] | null;
   stopReason: string | null;
   inputTokens: number | null;
   outputTokens: number | null;

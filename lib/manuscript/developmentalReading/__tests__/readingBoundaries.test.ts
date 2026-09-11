@@ -34,6 +34,13 @@ const ALLOWED: Record<string, RegExp[]> = {
      strongest statement this file can make about it, and it is the reason the
      law can be falsified without a browser or a book. */
   'scope.ts': [],
+  /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01 · R3. Pure shaping of the two cause axes at
+     the route boundary, so that "no inquiry occurred" and "the inquiry found
+     nothing" cannot be flattened into each other. It imports the reader's
+     CONTRACT for types and nothing else — no database, no filesystem, no reader
+     behaviour. An admission this narrow is what lets the boundary be falsified
+     without a request, a model or a book. */
+  'refusalAxes.ts': [/^\.\.\/developmentalReader\/contract$/],
   'commission.ts': [/^\.\/(classify|contract|freeze|store)$/, /^\.\.\/development\/(capture|resolve)$/, /^\.\.\/developmentalReader\/(contract|read)$/],
   /* WS-DEVELOP-REFUSAL-TRUTH-OBS-01. Operator telemetry for a refusal that
      kept nothing. It reaches the filesystem and the reader's CONTRACT (types

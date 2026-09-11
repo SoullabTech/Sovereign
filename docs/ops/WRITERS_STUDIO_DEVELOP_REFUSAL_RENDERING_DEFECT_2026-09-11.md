@@ -158,3 +158,82 @@ O-3 reading  title vs falsifier — FOUNDER QUESTION, unresolved
 REPAIR 3     PROPOSED, not built — pre-inference stages send no axes
 deploy       NOT DONE · NOT REQUESTED
 ```
+
+
+---
+
+## REPAIR 3 — LANDED. Absence and unknown are distinct statements again.
+
+### ⭐ The domain layer already said so. Only the route disagreed.
+
+```ts
+/* WS-DEVELOP-REFUSAL-TRUTH-OBS-01. Present only where a model response
+   existed to classify; a capture or recover refusal never reached one. */
+cause?: RefusalCause          // commission.ts:46
+```
+
+**The distinction the founder ruled for was already constituted, in this lane's
+own type, eight days before the defect was seen.** `cause` is optional, and
+absent exactly where no causal inquiry occurred. ⛔ **One line in the route
+erased it** — `outcome.cause ?? CAUSE_UNKNOWN` — and that single default is the
+whole of the production defect.
+
+### The repair
+
+- **The default is gone.** `const cause = outcome.cause ?? null`.
+- **New pure seam** `lib/manuscript/developmentalReading/refusalAxes.ts`:
+  `axesForWire` **omits** absent axes rather than sending `unknown`, and
+  `axesForRecord` writes `null`. The client already drops keys it did not
+  receive, so absence arrives at the surface as absence and `causeLine`'s
+  original `undefined` guard fires — **with O-3 untouched**.
+- **`RefusalRecord.completion` / `.attribution` are nullable**, matching the
+  convention already in that interface (`readerVersion: string | null`,
+  *"Null when no response existed to attribute"*). An operator reading a record
+  months later can still tell which question was never asked from which went
+  unanswered (O-4).
+
+⭐ **No change to `causeLine`. No change to O-3. No copy written.**
+
+### Falsifiers — `refusalAxes.test.ts`, 7/7
+
+```text
+R3-1 capture-stage refusal, no cause   → absence preserved
+R3-2 capture-stage refusal             → must NOT become CAUSE_UNKNOWN
+R3-3 sought but unresolved             → CAUSE_UNKNOWN, and stays so
+R3-4 known cause                       → preserved exactly
+R3-5 round-trip                        → absent stays absent, unknown stays unknown
+     end-to-end  capture + no cause    → named sentence only, no cause line
+     end-to-end  neutral + CAUSE_UNKNOWN → OUTCOME_SENTENCE + CAUSE_UNKNOWN_LINE
+```
+
+⭐ **Falsified against the pre-repair default: 4 of 7 go red**, and the three
+that stay green are exactly R3-3, R3-4 and the **O-3 composition** — the cases
+the repair must not disturb. *The O-3 protection and the absence protection live
+in the same file on purpose: they must never be repaired into each other.*
+
+### ⚠️ TWO ARCHITECTURE GUARDS FIRED, AND THEY WERE RIGHT
+
+Adding a module to the reading unit broke `readingBoundaries.test.ts` (*"is a
+known module"*) and `developSurfaceCannotAct.test.ts` (*"reaches the reading
+unit on its durable side only"*). **Neither was a defect in the repair.** A new
+module must be **admitted deliberately**, with its import allow-list declared,
+rather than appearing silently inside a boundary that exists to be narrow.
+
+`refusalAxes` is admitted on the same terms as `scope`: **pure**, importing only
+the reader's contract for types, carrying no behaviour. Reaching it cannot reach
+anything else, and the gate those tests hold — *the surface may not perform the
+read* — is untouched.
+
+```text
+REPAIR 1   REJECTED — conflicts with O-3
+REPAIR 2   RATIFIED · landed
+REPAIR 3   LANDED — root semantic repair
+O-3        RETAINED, scope clarified: epistemic unknown only
+tests      969/969 green across the Writer's Studio + reading surface
+typecheck  no regressions
+deploy     HELD · NOT DONE
+```
+
+> ⭐⭐ **"We looked and do not know" is not the same statement as "we never looked,
+> because the process stopped before that question existed."** The type knew.
+> The route did not. Now both do.

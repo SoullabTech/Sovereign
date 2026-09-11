@@ -32,7 +32,7 @@ import { isDevelopmentalLens } from '@/lib/manuscript/developmentalReader/contra
 import { commissionReading, type CommissionStage } from '@/lib/manuscript/developmentalReading/commission';
 import { listReadings } from '@/lib/manuscript/developmentalReading/store';
 import { normalizeDetail, recordRefusal } from '@/lib/manuscript/developmentalReading/refusalRecord';
-import { CAUSE_UNKNOWN } from '@/lib/manuscript/developmentalReader/contract';
+import { axesForRecord, axesForWire } from '@/lib/manuscript/developmentalReading/refusalAxes';
 
 export const dynamic = 'force-dynamic';
 
@@ -203,21 +203,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
        `detail` itself never reaches disk. Not awaited: the member's refusal
        does not wait on telemetry, and `recordRefusal` never throws. */
     const { detailKind, claimIndex, refIndex } = normalizeDetail(outcome.detail);
-    const cause = outcome.cause ?? CAUSE_UNKNOWN;
+    /* ⛔ NO DEFAULT. `cause` is absent exactly where no causal inquiry occurred —
+       a capture or recover refusal never reached a model response, so there is
+       no completion to report and no attribution to make. Defaulting it to
+       CAUSE_UNKNOWN said "we do not know the cause" where the truth is "cause
+       determination never occurred", and the surface then printed the former
+       beneath a sentence that had already named the latter. O-3 governs the
+       epistemic unknown; it does not govern structural absence. */
+    const cause = outcome.cause ?? null;
     void recordRefusal({
       timestamp: new Date().toISOString(),
       manuscriptId, lens, stage: outcome.stage, refusal: outcome.refusal,
       detailKind, claimIndex, refIndex,
-      completion: cause.completion, attribution: cause.attribution,
-      stopReason: cause.stopReason,
-      inputTokens: cause.inputTokens, outputTokens: cause.outputTokens,
-      readerVersion: cause.readerVersion, promptHash: cause.promptHash,
+      ...axesForRecord(cause),
     });
     return NextResponse.json(
       { refusal: outcome.refusal, stage: outcome.stage, detail: outcome.detail,
         /* The two axes reach the surface so the member's sentence can be chosen
-           from what is known, rather than from the stage alone (O-2, O-3). */
-        completion: cause.completion, attribution: cause.attribution },
+           from what is known, rather than from the stage alone (O-2, O-3) — and
+           they are OMITTED, not sent as `unknown`, where no inquiry occurred.
+           The client drops absent keys, so the surface receives absence as
+           absence and says nothing rather than inventing an unknown. */
+        ...axesForWire(cause) },
       { status: statusFor(outcome.stage, outcome.refusal) });
   }
   const { reading } = outcome;
