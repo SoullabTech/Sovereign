@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ RUNS 1-6 FAILED (founder rulings)
+3A-S   semantic witness        RUNS 1-6 FAILED · RUN 7 ⛔ AWAITING RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -400,6 +400,58 @@ run 3   exposed TELEOLOGICAL COLORING
 
 ⭐ Each repair narrows the distance between *better prose* and the harder standard:
 **better expression of precisely this meaning.**
+
+## 3A-S — RUN 7 · evidence of record
+
+**Checkout `908906e8a`** (nodes-and-edges law live; fixture vocabulary removed),
+`--require-cognition`. **Protocol: 0 failed** on both specimens.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "The experience brought about a large change in how he related
+> to the natural world. The shift in how he saw things that came out of that change
+> counted as a meaningful development in the integration he was still working
+> through."
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage is already fully concrete: two named physical events in
+> sequence — the kettle clicking off, and Mara pouring the water over the grounds —
+> with no abstraction to reduce. Any \"more concrete\" version would have to invent
+> detail the source does not give (the kind of coffee, the vessel, her manner or
+> mood, how the water was poured), which would add nodes and psychological or
+> valence content the text withholds. The restraint here is doing work: the passage
+> reports action without interpreting it, and the plain declarative rhythm is the
+> writer's own. There is nothing to make plainer without making it longer and less
+> exact."
+
+Zero proposals. **Seventh consecutive `no_change`.**
+
+### Observations for the ruling — ⛔ NOT a ruling
+
+```
+NODE IDENTITY, the run-6 failure
+  run 6   "That change in how he saw things then produced a shift in
+           perspective"  — the RELATIONAL node redescribed as perceptual
+  run 7   "The shift in how he saw things THAT CAME OUT OF THAT CHANGE"
+          — "that change" is now the antecedent of a resulting relation,
+          and the shift is named as a separate thing arising from it
+
+CONSTITUTIVE EDGE
+  "counted as a meaningful development in the integration"
+  "meaningful development" preserved literally
+
+⚠️ TWO PREVIOUSLY RECORDED, NEVER-DECIDED CONCERNS ARE BOTH PRESENT
+  "a large change" for "significant transformation"
+     the magnitude-for-importance trade the founder noted on runs 5 and 6
+     and did not need to decide either time
+
+  "the integration he was still working through"
+     the run-3 WATCH ITEM — "working through" can imply struggle or active
+     psychological labour, recorded then as "close enough not to fail on"
+```
+
+⛔ 3A-S AWAITING RULING on run 7. 3A NOT PASSED. 3D CLOSED.
 
 ## 3A-S — RUN 6 · evidence of record
 
