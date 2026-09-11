@@ -1182,6 +1182,11 @@ Still not a STOP: the phone must be unlocked at the moment the request
 lands, or the app is opened from the icon on the phone, which is
 equivalent for the witness (same installed artefact, same web bundle).
 
+**Launched (21:14:22).** Third attempt with the phone unlocked:
+`Launched application with life.soullab.maia bundle identifier.` The
+installed artefact is running on the device. Step 2 complete in full.
+`/maia` S1–S4 next.
+
 **Next (Mac, no trailing comments on any line).** Unlock the phone, then:
 
 ```bash
