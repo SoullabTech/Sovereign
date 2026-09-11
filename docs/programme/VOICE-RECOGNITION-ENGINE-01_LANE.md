@@ -1331,3 +1331,156 @@ observed on device, so the member cannot glance whether voice reply is on
 through fine" is conversational, not evidence: she has no access to the
 audio path's state. Attribution remains OPEN; the question in §12.11
 stands.
+
+### 12.12 Founder ruling on the smoke FAIL — UNKNOWN branch — pre-lane control build ordered — 2026-09-11
+
+**Founder characterization added to the evidence:** *"it tends to resolve
+itself with time."* Recorded as stated. A fault that settles with time
+after launch is the shape of a warm-up (session, network, or TTS backend),
+not of a deterministic per-transition regression — but that is a shape,
+not an attribution.
+
+**Ruling (verbatim).**
+
+```text
+PRE-EXISTING SYMPTOM FAMILY      YES
+
+SAME FAILURE ON SAME PHONE
+BEFORE TODAY'S INSTALL           UNKNOWN
+
+LIVE PATH SMOKE                  FAIL
+
+PROBE / A-B                      STOPPED
+
+ATTRIBUTION                      UNRESOLVED
+```
+
+Founder's grounds: prior iOS voice-loop testing recorded MAIA speaking on
+one turn and the next mic sitting at "Listening…" indefinitely; earlier
+materials record no-audio replies, failures to re-arm, and post-TTS
+transition problems; an August 30 engineering note dealt with a response
+completing without audio and the consequences for re-arming. So the
+symptom family is not new to `73d0df30d`. But there is no clean evidence
+that this exact intermittent combination occurred on the immediately
+previous build on this iPhone 16 Pro Max, and the earlier "2515" evidence
+has provenance problems (§9) and may not be used to exonerate the seam.
+**The right ruling is UNKNOWN, not "yes."**
+
+**Ordered next act.** Reinstall a pre-lane control build on the same phone
+and run exactly the same S1–S4. **Do not repair anything first. No revert
+is authorized.** Capture Console.app → iPhone → filter `AudioSessionManager`
+during **both** runs. If the silent-reply / stuck-mic event coincides with
+an audio-session transition failure, attribution to the shared native seam
+strengthens materially. If the native transition logs are clean while
+speech disappears, attention shifts to the TTS / web side.
+
+**Control design (remote, for the founder to pick).**
+
+The pre-lane native state is the lane branch's merge base
+`a4305f4d6` (merge of PR #1177, 2026-09-02): no `ios/App/App/Recognition/`,
+`AudioSessionManager.swift` still owns `SFSpeechAudioBufferRecognitionRequest`,
+`VoiceController.swift` not in the pbxproj Sources. Verified from the tree.
+
+| | native | web bundle | what it isolates |
+|---|---|---|---|
+| **Control A — hybrid (recommended)** | `a4305f4d6` | `5846a0824` (the exact `out/` already built in the witness worktree) | the native seam alone; web layer byte-identical to the lane run |
+| Control B — pure | `a4305f4d6` | `a4305f4d6` | both layers older; web confound remains |
+
+Control A is clean because the only web files the lane changed
+(`lib/voice/providers/IOSNativeVoiceProvider.ts`,
+`lib/voice/contract/MAIAVoiceProvider.ts`,
+`lib/voice/recognition/humanTurnAuthority.ts`) are imported solely by
+`app/voice-controller-test/page.tsx`, which is not in the bundle. The
+`/maia` path talks to native through `lib/voice/AudioSessionManager.ts`
+(`prepareForListening` / `prepareForSpeaking`), unchanged by the lane and
+present in both native states. Control A is a hybrid artefact that never
+existed as a commit; its record therefore carries both SHAs explicitly and
+is admissible only as a **control**, never as a subject.
+
+**Runbook — Control A (Mac; no trailing comments on any line; the witness
+worktree is not modified).** First, while the lane build is still on the
+phone, do the lane run with logs (see *Capture* below). Then:
+
+```bash
+cd /Users/soullab/MAIA-SOVEREIGN
+git worktree add /Users/soullab/maia-control-a4305f4d6 a4305f4d6
+cd /Users/soullab/maia-control-a4305f4d6
+git rev-parse --short HEAD
+grep -c VoiceController.swift ios/App/App.xcodeproj/project.pbxproj
+ls ios/App/App/Recognition 2>&1 | head -1
+npm ci
+ls /Users/soullab/maia-ds01-witness/out/maia.html
+rm -rf out
+cp -R /Users/soullab/maia-ds01-witness/out out
+CAPACITOR_MODE=beta npx cap sync ios
+diff -rq /Users/soullab/maia-ds01-witness/ios/App/App/public ios/App/App/public && echo WEB LAYER IDENTICAL
+cd ios/App
+pod install
+xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -destination generic/platform=iOS -allowProvisioningUpdates -derivedDataPath ~/voice-control-dd build 2>&1 | tail -3
+/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' -c 'Print :CFBundleVersion' ~/voice-control-dd/Build/Products/Debug-iphoneos/App.app/Info.plist
+xcrun devicectl device install app --device A0736AC8-793B-516F-AC72-C076DB6CEE38 ~/voice-control-dd/Build/Products/Debug-iphoneos/App.app
+xcrun devicectl device process launch --device A0736AC8-793B-516F-AC72-C076DB6CEE38 life.soullab.maia
+```
+
+Expectations: HEAD `a4305f4d6`; `grep -c` → `0`; `ls Recognition` → "No
+such file"; `WEB LAYER IDENTICAL` printed (if not, STOP — the control is
+not clean); `** BUILD SUCCEEDED **`; the install replaces the lane build
+(same bundle id). The lane build survives at
+`~/voice-witness-dd/Build/Products/Debug-iphoneos/App.app` and reinstalls
+with the §12.10 `devicectl` line if needed. If `npm ci` or `pod install`
+fail at `a4305f4d6`, STOP and relay; do not patch the control.
+
+**Capture (both runs, identical procedure).** Ringer set to **loud** for
+both runs, so the silent-switch mechanism of §12.11 is held constant.
+Console.app on the Mac → sidebar → the iPhone → *Start streaming* → search
+`AudioSessionManager`. Then on the phone, `/maia`, five passes of S1–S4,
+each pass a fresh mic start after the previous reply. After the run,
+select all matching lines → copy → save as
+`~/voice-witness-logs/lane-73d0df30d.txt` and
+`~/voice-witness-logs/control-a4305f4d6.txt`. Optional second channel for
+the web side (beta config has `webContentsDebuggingEnabled`): Safari →
+Develop → the iPhone → the MAIA WebView → Console, filter `VoiceController`
+and `TTS`; save alongside.
+
+**Record format, one block per run.**
+
+```text
+RUN:            LANE | CONTROL A
+NATIVE SUBJECT: 73d0df30d | a4305f4d6
+WEB BUNDLE:     5846a0824
+RINGER:         loud
+PASSES:         5
+REPLIES VOICED: n/5
+MIC RETURNED:   n/5
+FIRST PASS AFTER LAUNCH: voiced / silent · mic returned / stuck
+TIME-TO-SETTLE: (if it "resolved itself", after how many passes / minutes)
+CONSOLE:        file · lines around each silent reply pasted verbatim
+```
+
+**Reading the result (pre-declared, so the reading is not fitted to the
+outcome).**
+
+- Control A clean (5/5 voiced, 5/5 returned) and lane intermittent → the
+  native seam is implicated; §13 records the seam SUSPECT and the founder
+  rules on revert/repair as a build act (§8).
+- Control A intermittent in the same way → the seam is not shown to have
+  changed the product; the smoke FAIL belongs to the product baseline;
+  founder rules whether Probe / A-B may proceed on a known-flaky baseline.
+- Both clean over 5 passes → the earlier failure was not reproduced; run
+  10 more passes on the lane build before concluding anything.
+- Console shows a `setCategory` / `setActive` error under
+  `prepareForSpeaking` at the moment of a silent reply, in either run →
+  the transition is the locus regardless of attribution.
+
+**Not pursued here.** `lib/audio/ttsWithFallback.ts` posts to
+`/api/voice/sesame` with a 10 s timeout and then falls back to browser
+`speechSynthesis`; no route at that path exists in the repo tree
+(`app/api/voice/sesame/route.ts` absent), and production TTS is Kokoro by
+compose. Whether `/maia`'s voice mode uses that helper at all was not
+traced. It is noted because "resolves with time" fits a TTS warm-up, and
+it is left alone because the ruling orders the native control first.
+
+**Status after this record.** LIVE PATH SMOKE: FAIL (INTERMITTENT) — STOP —
+ATTRIBUTION UNRESOLVED — PRE-LANE CONTROL A ORDERED (native `a4305f4d6`,
+web `5846a0824`) — Console capture on both runs — NO REVERT AUTHORIZED —
+§13 not written.
