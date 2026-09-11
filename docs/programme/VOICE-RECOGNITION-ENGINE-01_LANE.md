@@ -1518,3 +1518,125 @@ device … On-device voice diagnostic is unmet (P12)."*
   found in the patch script: the diagnostic surface is absent by design.
 - Status bar still shows the silent-mode indicator at 21:24; the ringer
   has not yet been set to loud for the runs ordered in §12.12.
+
+## 13 · Witness halted — founder ruling 2026-09-11 — lane SUSPENDED pending `IOS-CONVERSATION-RUNTIME-01`
+
+### 13.1 Ruling (verbatim standing)
+
+```text
+VOICE-RECOGNITION-ENGINE-01
+
+LIVE PATH SMOKE     FAIL
+S1                  PASS
+S2                  PASS
+S3                  FAIL · intermittent
+S4                  FAIL when stranded
+PROBE               NOT RUN
+A/B                 NOT RUN
+REPAIR              NOT AUTHORIZED IN THIS LANE
+```
+
+```text
+LIVE PATH SMOKE        FAIL
+FAILURE                intermittent speak→listen lifecycle stall
+RECOVERY               watchdog-driven, not spontaneous
+ATTRIBUTION            unresolved
+
+SOURCE CHANGE          NO
+WEB MITIGATION         NO
+NATIVE REVERT          NO
+PROBE / A-B            NO
+```
+
+Founder: *"Do not keep pushing the recognition witness through a broken
+conversation lifecycle."* The defect is a **conversation-lifecycle
+failure**, not primarily a transcription-quality failure: MAIA can be
+stranded between speaking and listening and is later returned to listening
+by the 90 s / 120 s watchdog (§12.12), not by spontaneous recovery. The
+actual failure remains underneath the watchdog.
+
+The lane branch changed more than the recognizer — `AudioSessionManager.swift`,
+`VoiceController.swift`, the native provider, the recognition boundary. The
+pre-lane comparison (§12.12 Control A) would confirm the audio/session seam
+is among the changed surfaces; it would not by itself establish which
+surface causes the glitch. **Control A is held, not executed.** It may be
+revived by the successor lane as an attribution instrument.
+
+**Option 2 of the remote proposal (shorten the iOS watchdog, re-arm on
+playback failure) is refused for now**: it would make the product less
+painful while potentially masking a root failure that is, for the first
+time, reproducible on the phone. Separately preserved: even after the root
+cause is repaired, a 90–120 s stranded-state watchdog is too long for a
+conversational product — a resilience ruling for later, not now.
+
+### 13.2 Terminal state of this lane
+
+In §10.2 vocabulary the native candidate is **NOT ADJUDICATED**. The
+witness did not reach the Probe. O1 (native viability, compile) stands
+provisionally PASS from §12; O2–O6 were never reached. `legacy_until_witnessed`
+and production recognition routing are unchanged. No dev mode was entered;
+there is no dev-mode state to restore. The lane build (§12.10) remains
+installed on the phone and is the instrument for the capture below.
+
+**The SpeechAnalyzer comparison resumes only after `IOS-CONVERSATION-RUNTIME-01`
+passes its acceptance** (`docs/programme/IOS-CONVERSATION-RUNTIME-01_LANE.md` §5).
+Founder: *"Right now we're testing a better ear inside a body that still
+occasionally forgets how to breathe."*
+
+### 13.3 Correction to the §12.11 / §12.12 inference — absence needs a calibrated instrument
+
+The remote record proposed "no `AudioSessionManager` lines on the stuck-state
+taps → web locus." Founder correction, adopted: **a native error is strong
+positive evidence; the absence of lines is evidence only if the native
+transitions are first shown to be observable in Console at the chosen
+filter and level.** Otherwise "no lines" may mean "that code path emits
+nothing we can see." A screenshot with no live iPhone stream is not
+admissible for web-vs-native attribution.
+
+### 13.4 Next act — the calibrated Console capture (no source change)
+
+Ringer **loud**. Console.app on the Mac → sidebar → the iPhone → *Start
+streaming* → search `AudioSessionManager`. Confirm the stream is live
+(lines scrolling for other processes before the filter is applied).
+
+1. **Positive control while healthy.** On `/maia`, one known-good
+   listen → speak → listen transition. Confirm native lines appear
+   (`prepareForListening`, `Performing full teardown`, category /
+   activation lines, `prepareForSpeaking`). If none appear → reading **D**;
+   stop, the instrument is non-diagnostic; try Console's *Action → Include
+   Info Messages / Include Debug Messages*, then repeat the positive control.
+2. **Reproduce the stuck state** (reply rendered, no sound, orb ignores
+   input).
+3. **While stuck, tap the orb three times**, a few seconds apart.
+4. **Read the result:**
+
+```text
+A. prepareForSpeaking / activation / category error
+   → native-session locus strongly supported
+
+B. native transition logs appear clean,
+   but playback never begins/completes
+   → web/TTS playback-completion locus favored
+
+C. positive control proves logging works,
+   but stuck-state orb taps produce no native transition
+   → web state machine is swallowing the act before native
+
+D. no logs even during positive control
+   → capture is non-diagnostic; do not infer web
+```
+
+Save the full filtered stream as `~/voice-witness-logs/capture-73d0df30d.txt`
+and paste the lines around the positive control and around the three taps
+verbatim. Record with it: ringer state, whether the stuck reply had text,
+time from reply to recovery (watchdog signature ≈ 90–120 s).
+
+**After the capture, the founder authorizes exactly one locus-specific
+repair** — in the successor lane, not here.
+
+### 13.5 Status
+
+`VOICE-RECOGNITION-ENGINE-01` — **SUSPENDED** — LIVE PATH SMOKE FAIL —
+NATIVE CANDIDATE NOT ADJUDICATED — successor lane
+`IOS-CONVERSATION-RUNTIME-01` opened as a lane document (no build
+authorized in it yet) — calibrated capture pending.
