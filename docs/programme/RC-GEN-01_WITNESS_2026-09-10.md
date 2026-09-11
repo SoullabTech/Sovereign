@@ -5067,3 +5067,69 @@ Three outcomes, predeclared before the run:
 ⛔ **Predeclared so that whichever comes back is a result rather than a reading.**
 
 **Rule digest unchanged — `18608a18…`.**
+
+---
+
+## THE PREDECLARED TEST RETURNED — outcome 1, with one qualification (2026-09-11)
+
+Agreement precision inside vs outside the risk regime, per set, DeBERTa → MiniCheck:
+
+| set | INSIDE | OUTSIDE | gap | p (this set alone) |
+|---|---|---|---|---|
+| blind | 5/7 = 71% | 14/14 = 100% | 29 | 0.100 |
+| modifier | 8/12 = 67% | 7/8 = 88% | 21 | 0.603 |
+| scope | 6/8 = 75% | 11/11 = 100% | 25 | 0.164 |
+| `detector-blind` | ⚠️ n=4 | 9/9 = 100% | — | — |
+| **three seen sets pooled** | **19/27 = 70%** | **32/33 = 97%** | **27** | **0.0079** |
+
+⭐ **This is predeclared outcome 1 — held across sets — and it is NOT carried by
+`modifier`.** `modifier` shows the *smallest* gap of the three. The contrast that
+the closure-risk rename rests on survives exactly the split that destroyed the
+dependence result beside it.
+
+⚠️ **The qualification, and it matters: no single set is individually
+significant** (0.100 · 0.603 · 0.164). Significance arrives only on pooling. So
+the honest claim is **direction consistent across three corpora, significant only
+in aggregate** — not three independent confirmations.
+
+### ⭐⭐ Why pooling is legitimate here and was not legitimate there
+
+Having just refused a pooled `p`, I have to say precisely why I am accepting one:
+
+- The **dependence** figure pooled sets that **disagreed in direction** — 38%
+  against 78%, one at `p=0.0069` and the other at `p=1.0000`. Pooling averaged
+  away a contradiction and produced a number no constituent set supported.
+- The **agreement** figure pools sets that **agree in direction** — 71/100,
+  67/88, 75/100 — each underpowered alone. Pooling aggregates consistent
+  evidence.
+
+*Pooling homogeneous effects concentrates evidence; pooling heterogeneous
+effects manufactures it.* ⛔ The rule is not "pooled figures are suspect" — it is
+**"never read a pooled figure without the split beside it."**
+
+### Where this leaves the ruling
+
+⭐ **The closure-risk rename stands — on one of its two stated supports, not
+both.**
+
+| support named in the ruling | status |
+|---|---|
+| agreement precision 68% inside vs 98% outside | ⭐ **HOLDS** — direction consistent across three corpora, pooled p = 0.0079, not modifier-carried |
+| MiniCheck error dependence | ⛔ **DOES NOT HOLD** — carried by `modifier` alone, `p = 1.0000` on the one non-adversarial set |
+
+That the ruling survives the loss of one support is worth stating plainly: the
+rename was right, and partly for a different reason than the one given.
+
+⛔ **The remaining gap is exact and unchanged in kind**: the contrast is
+**unmeasured on non-adversarial material.** `detector-blind` puts only 4
+agreements inside the regime. Three corpora the detector was written against
+agree; the one it was not cannot speak.
+
+**Owed — and now sizable:** new blind temporal material of roughly **30–40
+cases** of `detector-blind`'s composition, which at its observed routing rate
+(10 of 22) would put **6–8 agreements inside the regime** — enough for the
+contrast to be measured, not merely pooled into. ⛔ Until then the closure-risk
+role is supported by evidence from corpora that were built against the verifier
+it protects against, which is suggestive and is not the same thing.
+
+**Rule digest unchanged — `18608a18…`.**
