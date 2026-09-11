@@ -2502,3 +2502,89 @@ python3 scripts/verifier-probe/probe.py --model both --repeat 3
 
 ⛔ **Standing unchanged: analyzer/3 UNTOUCHED · evidence gate HELD and unauthorized ·
 B HELD · A→B→C→D HELD · production UNTOUCHED.**
+
+## ⚠️ VERIFIER PROBE — FIRST ATTEMPT · NO RESULT · TWO DEFECTS, BOTH MINE
+
+### ⭐ FOUNDER CORRECTION — `--repeat` WAS THE WRONG INSTRUMENT AND I MISDESCRIBED IT
+
+> *"`--repeat 3` does not really test the same instability you saw in A-S. The
+> provider analyzer is generative… DeBERTa/HHEM-style classifiers, when running
+> normally in evaluation mode, should generally give the same score for the same
+> input. So repeats can confirm deterministic execution, but not meaningful semantic
+> robustness. Your N1–N6 / P1–P4 / X1–X3 variations are the real robustness test."*
+
+⛔ **Accepted, and the script said otherwise in writing.** It claimed repeats probe
+*"the instability A-S exposed."* They cannot: A-S's instability is generative
+sampling, and an NLI classifier in eval mode is deterministic. **Corrected in the
+file** — repeats now say what they are (execution determinism), default is 1, and the
+fixture variations are named as the robustness test.
+
+### ⛔ SCRIPT DEFECT — ONE VERIFIER'S CRASH DESTROYED THE OTHER'S MEASURED RESULTS
+
+DeBERTa loaded, printed its label map, and **computed every row**. Then HHEM raised on
+load and the traceback took the process down **before `report()` ran and before
+anything was written**.
+
+> ⛔ **Measured evidence was discarded by an unrelated packaging error.** Repaired:
+> each verifier runs isolated, a failure is recorded as `NOT RUN` and printed as
+> **ABSENT, not negative**, and whatever did run is still reported and written.
+
+### ⚠️ HHEM — PACKAGING INCOMPATIBILITY, NOT A RESULT
+
+```
+transformers 5.17.0
+HHEMv2ForSequenceClassification has no attribute 'all_tied_weights_keys'
+   (did you mean '_tied_weights_keys'?)
+```
+
+HHEM-2.1-Open ships **remote code written against transformers 4.x**. ⛔ **This says
+nothing whatever about whether HHEM can make the distinction.** It runs from its own
+environment with `transformers<5`.
+
+⚠️ Also logged on load, and worth knowing before any HHEM result is trusted:
+`t5.transformer.encoder.embed_tokens.weight | MISSING — newly initialized`.
+
+### ⭐ ONE FACT WAS ESTABLISHED AND IT MATTERS
+
+```
+id2label (read from config): {0: 'entailment', 1: 'neutral', 2: 'contradiction'}
+```
+
+⭐ The label map was **read, not assumed**, and it is the order the probe would have
+guessed — but that is luck, not method. The guard did its job: had this checkpoint
+ordered them differently, the probe would still have been right.
+
+### ⛔ THRESHOLD DISCIPLINE, RATIFIED BEFORE ANY NUMBER EXISTS
+
+> *"Do not tune the threshold after seeing these 13 answers just to make them pass.
+> Record raw scores first. If a threshold needs changing, that should become a
+> separate calibration act with separate material."*
+
+Frozen at `0.5`, and now **stamped into the output file** alongside every raw score,
+so a later cut cannot be quietly applied to the same evidence and called the original
+finding.
+
+### ⭐ THE QUESTION, AS THE FOUNDER RESTATED IT
+
+> ⭐⭐ **Does an independently trained verifier possess the distinction that our
+> generative analyser lacks?**
+>
+> ⛔ NOT *"should this become MAIA's entailment gate?"* — that is a later question.
+>
+> **YES** → a credible source of epistemic independence, worth investigating.
+> **NO**  → equally useful: an off-the-shelf entailment classifier will not solve
+> A1b, **and we learned it without contaminating MAIA.**
+
+### Reading order, frozen before the run
+
+```
+negatives N1-N5   must NOT be entailed
+N6 denial         ideally CONTRADICTION, not merely low entailment
+positives P1-P4   must be entailed
+X1 · X2           both licensed roles recognised
+X3                role swap REJECTED — every noun and verb occurs in the source
+⭐ N3 vs P1        the cleanest central discriminator
+```
+
+⛔ **Standing unchanged: no result · evidence gate HELD · B HELD · A→B→C→D HELD ·
+production UNTOUCHED.**

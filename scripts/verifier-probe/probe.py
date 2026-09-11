@@ -17,11 +17,27 @@ IT DOES NOT RULE. It prints a tally and stops. The verdict is the founder's.
     python3 scripts/verifier-probe/probe.py --dry-run        # fixtures only, no model
     python3 scripts/verifier-probe/probe.py --model deberta
     python3 scripts/verifier-probe/probe.py --model hhem
-    python3 scripts/verifier-probe/probe.py --model both --repeat 3
+    python3 scripts/verifier-probe/probe.py --model both
 
 Install (local, self-hosted, no external API — CPU is fine at this size):
 
     pip install torch transformers sentencepiece
+
+⚠️ HHEM-2.1-Open ships REMOTE CODE written against transformers 4.x. Under
+transformers 5.x it dies in `mark_tied_weights_as_initialized` with
+`'HHEMv2ForSequenceClassification' object has no attribute 'all_tied_weights_keys'`.
+That is a packaging incompatibility, NOT a result about the model. Run HHEM from its
+own environment:
+
+    python3 -m venv ~/hhem-venv && source ~/hhem-venv/bin/activate
+    pip install torch "transformers<5" sentencepiece
+    python3 scripts/verifier-probe/probe.py --model hhem
+
+⛔ `--repeat` CONFIRMS DETERMINISTIC EXECUTION AND NOTHING MORE. An NLI classifier in
+eval mode returns the same score for the same input, so repeats are not a robustness
+test — an earlier version of this file claimed they probed the instability A-S showed
+in the generative analyser, and that claim was wrong. THE FIXTURE VARIATIONS
+(N1-N6 / P1-P4 / X1-X3) ARE THE ROBUSTNESS TEST. Default is 1.
 
 Disk footprint, worth checking first given the volume was at 98%:
 
@@ -132,7 +148,7 @@ def report(rows):
         if pos_ok == 0:
             print('  ⛔ ZERO on the positive side. Blanket refusal is not selectivity,')
             print('     and a perfect negative column here means nothing.')
-        # Stability across repeats — the instability A-S exposed.
+        # Execution determinism across repeats. ⛔ NOT a semantic robustness claim.
         for cid in sorted({r['id'] for r in sub}):
             obs = {r['observed'] for r in sub if r['id'] == cid}
             if len(obs) > 1:
@@ -144,7 +160,8 @@ def report(rows):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', choices=['deberta', 'hhem', 'both'], default='deberta')
-    ap.add_argument('--repeat', type=int, default=1)
+    ap.add_argument('--repeat', type=int, default=1,
+                    help='confirms deterministic execution only; not a robustness test')
     ap.add_argument('--small', action='store_true', help='DeBERTa base instead of large')
     ap.add_argument('--dry-run', action='store_true', help='print fixtures, load no model')
     ap.add_argument('--out', default='')
@@ -164,15 +181,36 @@ def main():
         print('\n⛔ DRY RUN — no model was loaded and nothing was measured.')
         return
 
-    rows = []
-    if a.model in ('deberta', 'both'):
-        rows += run_deberta(cases, a.repeat, a.small)
-    if a.model in ('hhem', 'both'):
-        rows += run_hhem(cases, a.repeat)
+    # ⛔ A FAILURE IN ONE VERIFIER MUST NOT DESTROY THE OTHER'S COMPLETED RESULTS.
+    # The first real run computed every DeBERTa row, then HHEM raised on load and the
+    # traceback took the whole process down before anything was reported or written.
+    # Measured evidence was discarded by an unrelated packaging error.
+    rows, failures = [], []
+    plan = ([('deberta', lambda: run_deberta(cases, a.repeat, a.small))]
+            if a.model in ('deberta', 'both') else [])
+    plan += ([('hhem', lambda: run_hhem(cases, a.repeat))]
+             if a.model in ('hhem', 'both') else [])
+
+    for name, fn in plan:
+        try:
+            rows += fn()
+        except Exception as exc:  # noqa: BLE001 — recorded, never swallowed
+            failures.append((name, f'{type(exc).__name__}: {exc}'))
+            print(f'\n⛔ {name}: NOT RUN — {type(exc).__name__}: {exc}', file=sys.stderr)
 
     report(rows)
+    if failures:
+        print('\n⛔ VERIFIERS THAT DID NOT RUN — these are ABSENT, not negative:')
+        for name, why in failures:
+            print(f'   {name}: {why}')
     out = a.out or f'verifier-probe-{time.strftime("%Y%m%dT%H%M%S")}.json'
-    Path(out).write_text(json.dumps(rows, indent=2))
+    Path(out).write_text(json.dumps(
+        {'hhem_threshold_frozen_at': HHEM_THRESHOLD,
+         'threshold_note': 'A REPORTING cut only. Raw scores are recorded. Changing it '
+                           'after seeing these answers is tuning to the test; it must be '
+                           'a separate calibration act on separate material.',
+         'not_run': [{'verifier': n, 'error': e} for n, e in failures],
+         'rows': rows}, indent=2))
     print(f'\nrecorded: {out}')
 
 
