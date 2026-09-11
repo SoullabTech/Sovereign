@@ -8,7 +8,7 @@ anywhere in this slice.**
 
 ```
 3A-P   protocol                DONE · 16/16 · unit suites green
-3A-S   semantic witness        ⛔ NOT WITNESSED
+3A-S   semantic witness        RUN 2026-09-10 · ⛔ AWAITING FOUNDER RULING
 3A     inference contract      ⛔ NOT PASSED
 
 3B     atomic persistence      DONE · 20 checks · 0 failed · real migrations
@@ -34,6 +34,60 @@ independently." That was too strong and is corrected here.** 3A-P passing is not
 passing. A later reader could otherwise infer that the inference contract was
 already accepted and that the semantic witness was supplementary. **It is the
 prerequisite, not a supplement.**
+
+## 3A-S — the run · evidence of record
+
+**Founder's Mac Studio, 2026-09-10, checkout `c4818b043`** (fast-forwarded from
+`785dab0de`), real credential through the normal environment mechanism,
+`MAIA_INFERENCE_MODE` unset, `--require-cognition`.
+
+⛔ **This section records WHAT WAS RETURNED. It rules on nothing.** The semantic
+rubrics are the founder's to apply; the harness printed them and declined to judge.
+
+### Protocol, on live output: **0 failed**
+
+```
+SPECIMEN 1   an outcome was admitted (exactly one authoritative tool call)
+             at least one concrete proposal
+             every proposal targets the authorized section
+             every proposal carries replacement wording
+             every proposal carries a reason
+
+SPECIMEN 2   an outcome was admitted (exactly one authoritative tool call)
+             no_change carries a reason
+             no proposed wording smuggled into no_change
+```
+
+⭐ **3A-P is now validated against LIVE provider output, not synthetic blocks.** The
+forced tool contract, the exactly-one envelope, the admitter's section-authorization
+check and the no-smuggling rule all held against a real completion.
+
+### Specimen 1 — returned `proposals`
+
+> **proposedText:** "After the dream, he began to see the natural world
+> differently, and that change in how he saw it became part of how he was putting
+> himself back together."
+>
+> **reason:** "Replaces the nominalized abstractions (\"facilitated a significant
+> transformation in his relational orientation,\" \"constituted a meaningful
+> development in his ongoing process of integration\") with plain verbs and
+> concrete subjects, while preserving the passage's two claims: the dream changed
+> how he related to nature, and that change mattered to his integration."
+
+`sectionId` as authorized. One proposal, one section.
+
+### Specimen 2 — returned `no_change`
+
+> **reason:** "The passage isn't abstract at all — it's two declarative sentences
+> made entirely of concrete nouns and physical actions: a kettle, a click, water,
+> coffee grounds, a named person pouring. There is no abstraction to reduce. Adding
+> sensory detail (steam, smell, the sound of the pour) would not fix a problem; it
+> would pad a deliberately spare beat and slow the rhythm you've established. The
+> restraint here reads as a choice, and it's doing more work than an embellished
+> version would."
+
+Zero proposals. ⛔ **Whether this discharges the restraint rubric is the founder's
+ruling, not the harness's and not this record's.**
 
 ## ⚠️ Housekeeping corrections
 
