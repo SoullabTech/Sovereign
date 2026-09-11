@@ -16,6 +16,7 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A8D0001526012001000D30F9 /* AudioSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0001426012001000D30F9 /* AudioSessionManager.swift */; };
+		A8D0001626012001000D30F9 /* MAIABridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D0001726012001000D30F9 /* MAIABridgeViewController.swift */; };
 		F62F429C2F120A4B00ECB456 /* HandwritingOCR.swift in Sources */ = {isa = PBXBuildFile; fileRef = F62F429B2F120A4B00ECB456 /* HandwritingOCR.swift */; };
 /* End PBXBuildFile section */
 
@@ -32,6 +33,7 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		8FF0D3AF03E2CD738EA3C1A4 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8D0001426012001000D30F9 /* AudioSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionManager.swift; sourceTree = "<group>"; };
+		A8D0001726012001000D30F9 /* MAIABridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MAIABridgeViewController.swift; sourceTree = "<group>"; };
 		C61E77B2422257CC0F2BC081 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		F62F429B2F120A4B00ECB456 /* HandwritingOCR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HandwritingOCR.swift; path = App/HandwritingOCR.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -73,6 +75,7 @@
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				A8D0001426012001000D30F9 /* AudioSessionManager.swift */,
+				A8D0001726012001000D30F9 /* MAIABridgeViewController.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -220,6 +223,7 @@
 				F62F429C2F120A4B00ECB456 /* HandwritingOCR.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				A8D0001526012001000D30F9 /* AudioSessionManager.swift in Sources */,
+				A8D0001626012001000D30F9 /* MAIABridgeViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
