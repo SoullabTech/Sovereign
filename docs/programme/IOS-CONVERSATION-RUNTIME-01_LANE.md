@@ -335,3 +335,8 @@ second data point. (1) `grep packageClassList` in
 `@capacitor/cli/dist/ios/update.js` returned nothing; the list is written
 elsewhere in the CLI — a broader grep is requested. (3) Web Inspector
 runtime proof pending. (4) clock times pending.
+
+**E2 confirmation (1) received.** `@capacitor/cli/dist/util/iosplugin.js:53`:
+`capJSON['packageClassList'] = classList;` — the CLI assigns the list
+from the npm plugins it detects, replacing whatever `capacitor.config.ts`
+declared. Confirmed: the declared in-app classes cannot survive a sync.
