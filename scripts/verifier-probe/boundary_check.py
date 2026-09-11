@@ -189,7 +189,7 @@ DEBERTA_MISSES = {
 MIN_N_SET = 5   # the same floor the pooled tables use, applied per set
 
 
-def against(paths, only=None):
+def against(paths, only=None, primary=False):
     """
     ⭐⭐ THE QUESTION THE CALIBRATION RUN LEFT OPEN:
 
@@ -247,6 +247,46 @@ def against(paths, only=None):
 
     if not rows:
         sys.exit('no usable rows — pass probe result JSON files')
+
+    if primary:
+        # ⭐⭐ THE PREDECLARED PRIMARY QUESTION, ALONE.
+        #   "When DeBERTa and MiniCheck agree, is that agreement less often correct
+        #    INSIDE the frozen detector regime than outside it?"
+        # ⛔ Printed by itself so a strong SECONDARY result can never stand in for a
+        # failed primary one. Founder floor: fewer than 8 agreements inside and the
+        # answer is UNMEASURED, however attractive the percentage looks.
+        PRIMARY_FLOOR = 8
+        pair = {}
+        for r in rows:
+            pair.setdefault((r['set'], r['id']), {})[r['verifier']] = r
+        a, b = 'deberta', 'minicheck'
+        sh = [v for v in pair.values() if a in v and b in v]
+        agr = lambda inside: [v for v in sh if bool(v[a]['risk']) is inside
+                              and v[a]['correct'] == v[b]['correct']]
+        print(f'DETECTOR RULE sha256 {rule_digest()}')
+        print(f'\nPRIMARY QUESTION — agreement precision, {len(sh)} shared cases')
+        cells = {}
+        for label, inside in (('INSIDE ', True), ('OUTSIDE', False)):
+            g = agr(inside)
+            ok = sum(1 for v in g if v[a]['correct'])
+            cells[inside] = (ok, len(g))
+            print(f'  {label}  {ok}/{len(g)}'
+                  + (f' = {ok / len(g):.0%}' if g else ' — no agreements'))
+        (oi, ni), (oo, no) = cells[True], cells[False]
+        if ni and no:
+            print(f'  difference  {oi / ni * 100 - oo / no * 100:+.1f} percentage points')
+            print(f'  Fisher exact, two-sided  p = '
+                  f'{fisher_exact_2x2(oi, ni - oi, oo, no - oo):.4f}')
+        if ni < PRIMARY_FLOOR:
+            print(f'\n  ⛔ UNMEASURED — {ni} agreements inside, floor is {PRIMARY_FLOOR}.')
+            print('     The percentage above is not a result. Do not top the corpus up.')
+        else:
+            print(f'\n  ⭐ MEASURED — {ni} agreements inside, at or above the floor of'
+                  f' {PRIMARY_FLOOR}.')
+        print('\n⛔ SECONDARY questions are reported by a separate run without'
+              ' --primary,')
+        print('   and none of them substitutes for this one.')
+        return
 
     print(f'DETECTOR RULE sha256 {rule_digest()}')
     print(f'  (file sha256 {detector_digest()} — changes with reporting; the RULE is')
@@ -556,6 +596,10 @@ def main():
     ap.add_argument('--set', dest='which', choices=sorted(SETS), default=None)
     ap.add_argument('--against', nargs='+', metavar='RESULT.json',
                     help='cross-tab the detector against a verifier\'s confidence')
+    ap.add_argument('--primary', action='store_true',
+                    help='report ONLY the predeclared primary question (agreement '
+                         'precision inside vs outside), so a secondary result cannot '
+                         'stand in for a failed primary one')
     ap.add_argument('--only', metavar='SET', choices=sorted(SETS),
                     help='restrict --against to one corpus (use `detector-blind` '
                          'to test the closure-risk claim on material the detector '
@@ -563,7 +607,7 @@ def main():
     a = ap.parse_args()
 
     if a.against:
-        against(a.against, only=a.only)
+        against(a.against, only=a.only, primary=a.primary)
         return
     if a.only:
         sys.exit('--only applies to --against')
