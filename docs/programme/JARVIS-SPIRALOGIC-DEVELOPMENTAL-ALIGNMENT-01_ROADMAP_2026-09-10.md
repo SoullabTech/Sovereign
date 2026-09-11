@@ -324,10 +324,82 @@ The relationship gets RICHER.
 
 ---
 
-## ⭐ STANDING OF RECORD — ⚠️ corrected 2026-09-11
+## ⭐⭐ STANDING OF RECORD — current as of 2026-09-11
 
-⚠️ **Correction of characterization, not an amendment.** The programme was described
-in session as *"closed."* **It is not. It is FROZEN AT A DELIBERATE RESEARCH GATE.**
+> ### **THE PROGRAMME IS OPEN.**
+
+```text
+PROGRAMME               OPEN
+
+THEORIZING TRACK        STOPPED
+                        its conceptual work is RETAINED in the record
+                        but it is no longer ADVANCING
+
+RESEARCH TRACKS         OPEN
+                        the work capable of TESTING / CHALLENGING the conceptual
+                        record has not yet run its course
+
+LIFECYCLE ARCHITECTURE  HELD
+                        not active · not implementation authority
+
+CODE / SCHEMA / UI      ⛔ NOT AUTHORIZED
+DEPLOYMENT              ⛔ NOT AUTHORIZED
+
+NEXT                    SD-00B
+                          ↓
+                        DR-01 A / B / C
+                          ↓
+                        Stage 3 synthesis
+
+AFTER STAGE 3           decide whether the held theorizing lane has EARNED reason
+                        to reopen
+```
+
+### The two shortest orientations to the whole state
+
+> **The theorizing lane stopped. The research needed to test it is still open.**
+>
+> ## **HELD is not ACTIVE.**
+
+⭐⭐ **The second is doing real governance work.** Without it, the richness of thirteen
+laws and a nine-stage lifecycle produces exactly the wrong inference — *"we have
+designed the architecture, therefore we should build it."* What the record actually
+says is:
+
+> **We have preserved a sufficiently precise candidate architecture that future
+> evidence can CONTRADICT, REVISE, REOPEN, or LEAVE DORMANT.**
+
+⭐ *A much stronger scientific posture than a design.*
+
+### ⭐⭐ What Stage 3 therefore means
+
+> **Stage 3 is NOT merely the next developmental phase of the theory. It is the FIRST
+> LEGITIMATE POINT at which the currently separated evidence streams can be brought
+> into relation WITHOUT THE THEORY TRACK SHAPING WHAT THEY ARE ALLOWED TO FIND.**
+
+⭐ That is **G-1's purpose stated at the level of the gate** — research-stream
+independence is not a procedural nicety; it is what makes Stage 3 capable of
+returning something the theory did not already contain.
+
+### ⚠️ Withdrawn by the founder, 2026-09-11
+
+> *"I would withdraw my previous statement that RC-00 is simply 'the next thing.'"*
+
+⛔ Recorded as stated. ⚠️ **`RC-00` does not appear anywhere in this lane's record**,
+so this session supplies no content for it; the withdrawal is preserved without
+interpretation. **The operative sequence is the one above:**
+`SD-00B → DR-01 A/B/C → Stage 3 → only then reconsider the held lane.`
+
+### ⚠️ Superseded in place — the previous framing of this section
+
+The 2026-09-11 correction first described the programme as **"FROZEN AT A DELIBERATE
+RESEARCH GATE."** ⚠️ **That is superseded**: it collapsed two different things — *the
+theorizing lane stopping* and *the programme being closed or frozen*. **The programme
+is OPEN; only the theorizing track is stopped.** Kept rather than deleted, per the
+lane's own discipline.
+
+⭐ The founder's assessment of that repair: *"`a7aa7480` is not bookkeeping. It repairs
+the programme's causal geometry."*
 
 ```text
 CLOSED
@@ -375,8 +447,26 @@ SD-00B → DR-01 A/B/C → Stage 3 reconciliation
 
 ## Stage log
 
-- **2026-09-11 · STANDING CORRECTED (founder)** — the programme is **NOT "closed";
-  it is FROZEN AT A DELIBERATE RESEARCH GATE.** Taxonomy of record added above:
+- **2026-09-11 · STANDING SUPERSEDED AGAIN (founder)** — ⭐ **THE PROGRAMME IS OPEN.**
+  The prior same-day framing (*"frozen at a deliberate research gate"*) is
+  **superseded in place**: it collapsed *the theorizing lane stopping* with *the
+  programme being frozen*. Current state: **PROGRAMME OPEN · THEORIZING TRACK STOPPED**
+  (conceptual work retained, not advancing) **· RESEARCH TRACKS OPEN · LIFECYCLE
+  ARCHITECTURE HELD · CODE/SCHEMA/UI ⛔ NOT AUTHORIZED · DEPLOYMENT ⛔ NOT
+  AUTHORIZED.** Two shortest orientations: *the theorizing lane stopped, the research
+  needed to test it is still open* and ⭐ **HELD is not ACTIVE** — without which
+  thirteen laws and a nine-stage lifecycle produce the wrong inference, *"we designed
+  it, therefore we should build it."* What the record says instead: **we have preserved
+  a sufficiently precise candidate architecture that future evidence can contradict,
+  revise, reopen or leave dormant** — *a stronger scientific posture than a design.*
+  ⭐⭐ **Stage 3 reframed: not the next phase of the theory, but the FIRST LEGITIMATE
+  POINT at which the separated evidence streams can be related WITHOUT THE THEORY
+  TRACK SHAPING WHAT THEY MAY FIND** — G-1's purpose at the level of the gate.
+  ⚠️ Founder withdrawal recorded as stated: *"RC-00 is simply the next thing"* is
+  withdrawn; ⛔ `RC-00` appears nowhere in this lane's record and this session supplies
+  no content for it.
+- **2026-09-11 · STANDING CORRECTED (founder)** — ⚠️ SUPERSEDED by the entry above.
+  Said the programme is **NOT "closed" but FROZEN AT A DELIBERATE RESEARCH GATE.** Taxonomy of record added above:
   **CLOSED** (Mercury lane · recognition schema · member-noticing feature ·
   relational-third storage) · **HELD** (`JARVIS-RELATIONAL-MEANING-LIFECYCLE-01`, not
   being built or advanced) · **ACTIVE/NEXT** (SD-00B · DR-01A) · **GATE** (Stage 3,
