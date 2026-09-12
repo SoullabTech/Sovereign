@@ -95,7 +95,27 @@ seq 30  engine_configuration_changed  gen 4 · age 288
 seq 33  graph_started gen 5 … seq 78 graph_started gen 14     — the same pair, eleven more times
 ```
 
-Every generation from 3 to 14 follows one shape: `route_changed` (input data source `-`) → `graph_started` (`engineRunning: false`, format valid 48 kHz, voice processing on) → `route_changed` (data source `Bottom`) → `engine_configuration_changed` 134–509 ms later → `rebuildGraph(cause: route_recovery)` → next generation. **Fourteen generations in 9.3 s, still going at export.** No `input_health_sample` in the whole journal; zero input callbacks in any generation (`callbacks (gen) 0`); floor `recovering` from seq 17 onward and never `listening`. RecoveryPolicy attempts spent: **1** (the gen-2 refusal). The other eleven rebuilds spent nothing, because the route-recovery path does not consult the policy.
+Every generation from 3 to 14 follows one shape: `route_changed` (input data source `-`) → `graph_started` (`engineRunning: false`, format valid 48 kHz, voice processing on) → `route_changed` (data source `Bottom`) → `engine_configuration_changed` 134–509 ms later → `rebuildGraph(cause: route_recovery)` → next generation. **Fourteen generations in 9.3 s, still going at export; the same session was later seen at generation 487 (§6b).** No `input_health_sample` in the whole journal; zero input callbacks in any generation (`callbacks (gen) 0`); floor `recovering` from seq 17 onward and never `listening`. RecoveryPolicy attempts spent: **1** (the gen-2 refusal). The other eleven rebuilds spent nothing, because the route-recovery path does not consult the policy.
+
+### 6b. Second Enter, session `K00-248d5aa6` — the loop reproduced, and the organism was seen LISTENING inside it
+
+Phone at **10:32** (screenshot): session `K00-983b2f79` still running — **`generation 487` · `recovering` · `cause: route_recovery` · session active · callbacks 0 · `attempts 1/3 · graph_rebuild_failed`** — about 480 generations in ~6 minutes, ≈1.3 generations per second, unbounded, the recording indicator lit the whole time. No `Leave` had been pressed (no `session_deactivated` in any journal). The founder then relaunched (how, not yet stated) and pressed Enter again → session **`K00-248d5aa6`**, exported at 10:33 showing `generation 30 · recovering · rms/peak 0.00027 / 0.00180`. Journal preserved verbatim as `KERNEL-00_WITNESS_2026-09-11_run2_K00-248d5aa6.jsonl`: **287 records, 34 s after Enter, 52 generations, 51 `graph_started` (all `engineRunning: false`, all formats valid except the one gen-2 refusal, identical to session 2), 50 `engine_configuration_changed` at 135–543 ms of generation age, 103 `route_changed`.** Same shape, same rate, one budgeted attempt (gen 2), fifty unbudgeted route rebuilds.
+
+**New in this session — input flowed, and the supervisor did its job when it was allowed to:**
+
+```
+seq 50  gen 8   input_flow unknown → suspect   frames 4800 rms 0.0 peak 0.0          (first buffer: digital zero)
+seq 51  gen 8   input_flow suspect → healthy   rms 5.1e-4 peak 3.1e-3               (noise floor ≠ digital zero — three-way classification live)
+seq 52  gen 8   floor recovering → LISTENING   cause recovery_flow_reobserved
+seq 57  gen 9   floor listening → recovering   cause route_recovery                  (630 ms later; the loop took it back)
+seq 64–65 gen 10  healthy → LISTENING · seq 71 gen 11 → recovering  (635 ms)
+seq 88–89 gen 14  healthy → LISTENING · seq 97 gen 15 → recovering  (778 ms)
+seq 153–155 gen 26 suspect → healthy → LISTENING · seq 161 gen 27 → recovering  (630 ms)
+```
+
+Four of fifty-two generations received input callbacks (4800-frame batches, real microphone energy: peak up to 0.0115). In each, the HealthSupervisor classified correctly, `displaysListening` became true, and the floor reached **listening** — for 630–778 ms, until the next configuration change rebuilt the graph. **The organism can listen. The loop will not let it.** K00-03 remains FAIL (listening was never reached within 1500 ms of Enter, and never held), but the reason is now isolated to K00-W3 alone: session custody, format, supervisor, recovery budget and projection all behaved lawfully in the windows the loop left them.
+
+Xcode screenshots received alongside: the Xcode project window is the stale `488e066 (detached)` GUI project with Team `None` and yesterday's failed build — it played no part in run 2 (CLI build · `devicectl` install · icon launch). The Devices window confirms iOS 26.6.1 (23G83) · iPhone 16 Pro Max · identifier `00008140-00163D9922E0801C` · installed `VoiceKernel K00` v1 (`life.soullab.voicekernel.k00`) beside `Soullab 2511` (`life.soullab.maia`, the legacy app, not running). **Open Recent Logs** in that window is the crash-report route for the owed run-1 dylib UUID.
 
 ## 7. Findings
 
@@ -132,7 +152,7 @@ H1 (harness export latch) stands as recorded below, unrepaired.
 
 ```
 SUBJECT              728924819 (dylib 1AEBEE45-…)
-ENTER                EXECUTED once (session K00-983b2f79) · SURVIVED · LOOPING · never listening
+ENTER                EXECUTED twice (K00-983b2f79 → gen 487 · K00-248d5aa6 → gen 52) · SURVIVED both · LOOPING · listening reached 4× for ≤ 778 ms, never held
 PRE-WITNESS-02 §3    MET (guard exercised at gen 2; failure journalled; RecoveryPolicy road taken)
 K00-W1 crash         CLOSED
 K00-W2 unrecordable  CLOSED
