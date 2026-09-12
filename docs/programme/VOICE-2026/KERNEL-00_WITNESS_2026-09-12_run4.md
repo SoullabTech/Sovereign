@@ -1,6 +1,6 @@
 # KERNEL-00 · DEVICE WITNESS · RUN 4 — 2026-09-12
 
-**Status: OPEN — 4a VERIFIED (`K00-fe6593f4`: F1 FALSIFIED, F2 CONFIRMED — the VP-enabled engine never runs; refined B and one-shot C behaved as accepted) · 4b VERIFIED (K00-03 PASS under the VP-OFF control) · 4a-2 (W4 under VP ON) NOT yet measured · awaiting founder attestation and the B2/B3 ruling.**
+**Status: ATTESTED 2026-09-12 (§9; W4 under VP ON excluded, separately owed). 4a VERIFIED (`K00-fe6593f4`: F1 FALSIFIED, F2 CONFIRMED — the VP-enabled engine never runs; refined B and one-shot C behaved as accepted) · 4b VERIFIED (K00-03 PASS under the VP-OFF control) · 4a-2 (W4 under VP ON) NOT yet measured · awaiting founder attestation and the B2/B3 ruling.**
 **Subject:** `35b0f61d0` (PRE-WITNESS-04, accepted with two amendments). Compile of record: `KERNEL-00_MAC-COMPILE-05_2026-09-12.md` — GREEN (build · test 29/29 · gate 25/25 · xcodegen · unsigned · signed).
 **Question (plan §1/§4):** after iOS performs the VP reconfiguration and the kernel now does nothing to the graph, does the existing generation settle into a live input? **F1** callbacks arrive on the same generation within the entry window → listening. **F2** none; `entry_timeout`; `engineRunning: false` in the samples → the change stops the engine (founder fork B2/B3, neither implemented). **F3** `engineRunning: true`, zero callbacks → the tap is dead. Plus **W4 under VP ON**: Leave within ~2 s of Enter → only `stale_callback_dropped not_in_conversation` after `session_released`, floor idle, zero orphans.
 **Device:** iPhone 16 Pro Max · iOS 26.6.1 (23G83) Beta · `A0736AC8-793B-516F-AC72-C076DB6CEE38`.
@@ -197,3 +197,19 @@ CRASH LOGS           only the three run-1 reports exist; no death in runs 2–4
 B2 / B3              RESERVED — founder ruling owed on this evidence
 OWED                 4a-2 · 3a/3b/dd33d8f4 files attached HERE for hash verification (they exist in the founder's other workspace and on the Studio) · protocol fields · attestation · B2/B3 ruling
 ```
+
+## 9. Founder attestation (verbatim) and rulings — 2026-09-12
+
+> Founder attestation — 2026-09-12: I witnessed Run 4 as recorded. With voice processing ON, the kernel correctly deferred the expected reconfiguration but the VP-enabled engine never became running, produced no input callbacks, and ultimately degraded through the existing HealthSupervisor entry-timeout and RecoveryPolicy budget. With voice processing OFF, the same runtime reached healthy input, entered listening in generation 1, and remained stable. I attest that the Run-4 record fairly represents what occurred.
+
+**Not attested by this act:** W4 under VP ON — 4a-2 remains separately owed (force-quit → icon launch → VP ON → Enter → Leave within 2 s → 3 s → Export). It answers only *can an in-flight VP/configuration event do anything after the member has left?* and stays separate from B3 work.
+
+**Rulings:**
+- **F3 — NOT the observed shape.** (`engineRunning` was never true under VP ON.)
+- **B2 — HOLD.** Do not implement restart-in-place: (1) there is no successfully running VP engine to resume; (2) restarting after the notification attacks the downstream symptom; (3) once health has declared recovery necessary, B2 collides with the ratified rebuild-not-resume rule. Reserved as a possible future architecture amendment only if later evidence makes it necessary.
+- **B3 — OPEN as the next bounded investigation.** *Can we arrange voice-processing initialization so the first engine start actually takes?* Upstream of everything repaired so far. **PRE-WITNESS-05 plan AUTHORIZED, plan only; no behavioural source change until the plan is accepted; its first act is instrumentation, not another attempted fix** — instrument the exact sequence: session configured · session activated · engine created · VP enable begins / returns · input format before VP · input format after VP · tap installation · engine.prepare · engine.start enters / returns · engine.isRunning immediately · engine.isRunning at short observations afterward · AVAudioEngineConfigurationChange · first input callback — to find where VP ON diverges from VP OFF before deciding how to reorder anything. Then the plan may name alternative B3 orderings as experiments, tested one at a time, without changing thresholds, recovery law, session ownership, or architecture.
+- **Core physical finding (founder wording):** *VP OFF → engine starts and listens. VP ON → engine never becomes running.* We are no longer debugging recovery; we have reached the startup seam between Apple's voice-processing mode and the first viable audio engine.
+
+**Hashes founder-verified against `~/Desktop/k00-tmp` (files still to be attached to this session for independent verification):** `K00-18f515e1` `81b2412773f83a1d2fe6721f35669742be8d28f5fb767debc3a9d01217264661` · `K00-24694629` `c93b19d85774a29292c198773b5966c8f47cf7e09441ef10bd4551647a1110d0` · `K00-dd33d8f4` `ea86d63a8f7ca473d4f52128d60db84256637f09a7363cf115456dc3f338c808` (225 bytes = one lifecycle record; not a truncation). The `curl`/Postgres lines seen in the same terminal are Writer's Studio evidence and stay out of this record.
+
+Standing: W1/W2 CLOSED · W3 BOUNDED · VP discriminator DECISIVE · F1 FALSIFIED · F2 CONFIRMED · F3 not observed · B2 HOLD · B3 NEXT · PRE-WITNESS-05 PLAN AUTHORIZED, NO CODE · W4 VP-ON STILL OWED · architecture UNCHANGED · thresholds UNCHANGED.
