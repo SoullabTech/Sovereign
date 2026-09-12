@@ -1,4 +1,4 @@
-# KERNEL-00 · DEVICE WITNESS · RUN 6 — 2026-09-12 — P5-B0 removal control — OPEN
+# KERNEL-00 · DEVICE WITNESS · RUN 6 — 2026-09-12 — P5-B0 removal control — EXECUTED · VERIFIED · MIXED (awaiting attestation)
 
 **Question:** is the Phase-A pre-VP `input.outputFormat(forBus: 0)` read the cause of the VP-ON engine becoming running on this device/runtime (P5-F1)? Plan and predeclared decision table: `PRE-WITNESS-05_P5-B0_2026-09-12.md` §4.
 
@@ -38,6 +38,57 @@ mixed VP-ON sessions                     → NONDETERMINISM; stop causal narrowi
 
 Not opened: E1–E4 · B2 · thresholds · recovery law · any further `AudioGraph.start()` change.
 
-## 5. Sessions — OWED
+## 5. Sessions — RECEIVED, HASHED, VERIFIED
 
-(6a · 6b · 6a-2 · W4 in-flight — filled on receipt, each hashed and preserved beside this record.)
+Every journal carries a 13-step generation-1 trace with **no `input_format_before_vp`** — the P5-B0 subject is confirmed from the evidence itself. Files preserved beside this record:
+
+| Session | File | Records | SHA-256 |
+|---|---|---|---|
+| 6a · VP ON | `KERNEL-00_WITNESS_2026-09-12_run6a_K00-d2780a55_vpON.jsonl` | 58 | `6040cf07fc8691108dbb551dff8d95369b8f0baa2adf0a8ea20e7eeec7bd7858` |
+| 6b · VP OFF | `KERNEL-00_WITNESS_2026-09-12_run6b_K00-1962f04b_vpOFF.jsonl` | 91 | `411f123741b650d1ce043612d2ed860aac293ad7237699d4538928e04cd2c9f4` |
+| 6a-2 · VP ON | `KERNEL-00_WITNESS_2026-09-12_run6a-2_K00-3328bd74_vpON.jsonl` | 144 | `a181d62ba448cad6a5761e32b6ebdd4539c1f9d55de3afea3af475362a32780d` |
+| W4 in-flight · VP ON | `KERNEL-00_WITNESS_2026-09-12_run6W4_K00-55471e75_vpON.jsonl` | 45 | `2612253796b5c011840228b3291ed79e6167e6720ca138505b35c6818d0de0f9` |
+
+### 6a — VP ON — `K00-d2780a55` — LISTENED
+`vp_enable_return` 136 ms, readBack true, `route_changed` inside the call · `start_return` ok 156 ms (329 total) · **`is_running_immediate` TRUE · `graph_started` engineRunning TRUE** · one `voice_processing_reconfiguration` at 4 ms, deferred, engine stays running · first callback +95 ms · **listening 555 ms after Enter** · 10/10 running ticks through 1048 ms · gen 1 held 21.4 s at 10–11 callbacks/s, every sample `healthy` · exported in conversation.
+
+### 6b — VP OFF — `K00-1962f04b` — control LISTENED; then an UNPLANNED OS INTERRUPTION, recovered lawfully
+`setVoiceProcessing false` journalled pre-Enter · `vp_enable_return` 0 ms, readBack false · engine running at start · first callback +98 ms · **listening 330 ms** · gen 1 held 20 s. **At 20.46 s after Enter, `interruption_began` (`os_interruption`)** — not in the protocol; cause UNKNOWN unless the founder states it. The kernel: floor `listening → recovering` (health suspended) · route `none/none` at 44.1 kHz · a sample with `engineRunning: false` during the interruption · `interruption_ended shouldResume: true` at +1.12 s · re-activation **stamped `interruption_recovery`** (category · rate · IO buffer · `session_activated` — the lawful OS-forced re-activation under the P2 clarification of K00-02) · **generation 2 rebuilt, not resumed** · engine running at start · first callback +94 ms · **`recovering → listening` 308 ms after re-activation, 1.43 s after the interruption ended** · 5/5 running ticks to export. This is the first time the interruption path (K00-12 shape) has been exercised on the device. It is recorded as **observed under an unplanned event**, not as a K00-12 protocol pass — the runbook step was not run.
+
+### 6a-2 — VP ON — `K00-3328bd74` — DID NOT LISTEN IN GENERATION 1; reached listening at generation 4 through the existing policy
+Pre-Enter the founder toggled VP OFF then ON (both journalled; VP ON at Enter). `vp_enable_return` 97 ms, readBack true, `route_changed` inside · `start_return` ok 143 ms (294 total) · **`is_running_immediate` FALSE · `graph_started` engineRunning FALSE** — the run-2/3/4 failure shape, on this subject · `voice_processing_reconfiguration` at 120 ms, deferred · zero callbacks · 0/10 running ticks · `input_health_sample` `inputFlow: unknown` · **`entry_timeout` at 1566 ms → recovery attempt 1 → gen 2 built 500 ms later inside a reconfiguration window → `graph_start_refused invalidInputFormat(0.0 Hz, 1 ch)`** (§3 guard, exactly as in run 2) → `graph_rebuild_failed` attempt 1 (six `input_dead` requests coalesced during the backoff, as in run 3) → **gen 3: `is_running_immediate` TRUE at start return, but `graph_started` 353 ms later reads engineRunning FALSE, zero callbacks** — a shape not seen before on this device (F2 was sharpened as "nothing ever ran"; in gen 3 something was running at start return and was not running 353 ms later, before any callback; the 353 ms gap between the two reads is itself unusual, other generations read ≤ 5 ms apart) → gen-3 change #1 classified VP (deferred), change #2 correctly refused the VP classification → `route_configuration_change` → `configuration_change` attempt 1 → **gen 4: engine running, first callback +2 ms, `suspect → healthy`, `recovering → listening` at 5.22 s after Enter** · gen 4 held 10.5 s to export at 10–13 callbacks/s. Three fault classes each spent attempt 1 of their own budget; K00-10 bounded; no orphan. **Generation-1 entry FAILED (ratified entry window 1500 ms); the organism reached listening later by lawful recovery — the first VP-ON failed entry on this device to end in listening rather than `degraded`.**
+
+### W4 in-flight — VP ON — `K00-55471e75` — exit clean; the ≤ 2 s condition NOT MET a third time
+Listening at 443 ms (gen 1, engine running, deferred VP change at 2 ms). **Leave at 3.57 s after Enter** (attempts: 10.8 s · 9.85 s · 3.57 s). One `session_deactivated`, `session_released`, `listening → idle` by the Leave chain; **nothing after `session_released`**. The generation had been healthy for 3.1 s at Leave; the deferred-reconfiguration window (closed at 2 ms) was not stressed. Exit clean; in-flight condition unexercised.
+
+## 6. The predeclared table, applied
+
+```
+6a    VP ON   gen-1 engine RUNNING · listening 555 ms                     → LISTENED
+6a-2  VP ON   gen-1 engine NOT RUNNING · entry_timeout · listening only at gen 4 (5.22 s) → DID NOT LISTEN (gen 1)
+→ MIXED VP-ON RESULTS → NONDETERMINISM → causal narrowing STOPS → NO MECHANISM CLAIM
+```
+
+Neither cell of the pre-VP-read question is reached: the read is **not established as causal** (6a took without it) and **not falsified as a sufficient cause** (6a-2 did not take without it). The ruling that governs is the third row: investigate nondeterminism first.
+
+**Tally kept as a tally, not an inference (small samples):** VP-ON generation-1 starts that took — run-2/3/4 builds: 0 of ≥ 15 · Phase-A subject `4596b9bdb`: 5 of 5 · P5-B0 subject `24a6fcfa1`: 2 of 3 (6a, W4 took; 6a-2 did not).
+
+## 7. Observations (kept as observations)
+
+- **O1** The gen-3 `is_running_immediate TRUE → graph_started FALSE` reading in 6a-2 is new evidence for the F2 question: at least once on this device, a VP-enabled `start()` returned with the engine running and the engine was not running 353 ms later with zero callbacks. Whether that is "started then stopped" or a read artefact of the 353 ms actor gap is **not determinable from this journal**.
+- **O2** In 6a-2 the bounded recovery reached listening by traversing three fault classes (`entry_timeout` → `graph_rebuild_failed` → `configuration_change`), each within its own budget. That is lawful under the ratified per-class policy; whether a member-facing 5.2 s entry is acceptable is a K00-03 threshold question and the threshold is not loosened here.
+- **O3** The 6b interruption is the first device evidence for the interruption/re-activation law (P2) and rebuild-not-resume under interruption; its cause is not in the journal.
+- **O4** Every VP-ON `setVoiceProcessingEnabled` call on this subject still posts `route_changed` from inside the call (93–237 ms), on every generation, taking or not.
+
+## 8. Standing after run 6 (awaiting founder attestation)
+
+```
+SUBJECT              24a6fcfa1 · dylib CC0D3604-…
+6a   VP ON           LISTENED (gen 1, 555 ms, held 21 s)
+6b   VP OFF          control LISTENED (330 ms); unplanned OS interruption at 20.5 s → lawful interruption_recovery → gen 2 listening 1.43 s later
+6a-2 VP ON           gen-1 FAILED (engine not running, entry_timeout) → refused 0 Hz gen 2 → gen 3 ran-then-not → gen 4 LISTENING at 5.22 s
+W4   in-flight       exit clean · Leave at 3.57 s (≤ 2 s NOT met, third attempt)
+TABLE                MIXED → NONDETERMINISM → causal narrowing STOPPED · mechanism UNKNOWN · pre-VP read neither causal nor falsified
+E1–E4                HELD · B2 HOLD · thresholds UNCHANGED · architecture UNCHANGED · NO CODE
+OWED                 founder attestation · 6b interruption cause (UNKNOWN unless stated) · founder ruling on how nondeterminism is investigated · protocol fields UNKNOWN
+```
