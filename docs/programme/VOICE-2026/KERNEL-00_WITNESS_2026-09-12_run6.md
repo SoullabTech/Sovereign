@@ -134,7 +134,7 @@ Classification vocabulary is closed to the founder's four: `gen-1 listen` · `fa
 
 | Stage | # | Session | Records | SHA-256 | Class | Note |
 |---|---|---|---|---|---|---|
-| 1 | 1 | — | | | | |
+| 1 | 1 | `K00-c187e547` (`…_run6S1-1_K00-c187e547_vpON.jsonl`) | 65 | `96fa0460c4e3c974d2e7109ce5eb900aa382e49b9f7352b21f70f91416ca617c` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 124 ms · first callback +91 ms · listening 533 ms · 10/10 running ticks · gen 1 held 28.6 s · no recovery · 13-step trace, no pre-VP read |
 | 1 | 2 | — | | | | |
 | 1 | 3 | — | | | | |
 | 1 | 4 | — | | | | |
