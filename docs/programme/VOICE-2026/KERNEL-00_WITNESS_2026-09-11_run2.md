@@ -16,7 +16,7 @@ codesign          Identifier=life.soullab.voicekernel.k00 · TeamIdentifier=ZVK2
 identity          Apple Development: Kelly Nezat (N9DTF6434L) · profile "iOS Team Provisioning Profile: *"
 ```
 
-Run-1 code identity (the dylib UUID inside the three 16:2x `.ips` reports) is still **UNREAD**: the reports are not under `~/Library/Logs/CrashReporter/MobileDevice/` on the Mac Studio (`zsh: no matches found`). Where the founder pulled them from earlier is not recorded. Owed; does not block this run.
+Dylib UUID **re-read after launch, unchanged: `1AEBEE45-BF4E-3D6E-9D3A-69CFA6E4218A`** — the installed bundle is this one. Run-1 code identity (the dylib UUID inside the three 16:2x `.ips` reports) is still **UNREAD**: the reports are not under `~/Library/Logs/CrashReporter/MobileDevice/` on the Mac Studio (`zsh: no matches found`). Where the founder pulled them from earlier is not recorded. Owed; does not block this run.
 
 ## 2. Pre-install device state
 
@@ -47,7 +47,7 @@ App installed:
 
 | 2 | 19:56:13 | same `devicectl … process launch` | **REFUSED, identical**: `10002` → `FBSOpenApplicationServiceErrorDomain 1` → `SBMainWorkspace … Locked` · `FBSOpenApplicationErrorDomain 7`, request `0x93a1` | **Operator condition again** (screen still locked at the moment of the request). No process, nothing spent. |
 
-`devicectl device info crashes … | grep -iE "VoiceKernel|k00"` at 19:56 → **empty (filtered; raw output NOT preserved)**. A filtered empty cannot distinguish "no VoiceKernel/k00 crash listed" from "`devicectl` itself failed and its error text did not match the filter" (founder caution, adopted). Consistent with no run-2 process having existed, but not proof of it. From here on the crash query is run with the raw capture kept: `… 2>&1 | tee /tmp/maia-device-crashes.txt | grep -iE "VoiceKernel|k00" | head -50`, and an empty filtered result is followed by `tail -50 /tmp/maia-device-crashes.txt` before it is read as anything. (It also did not list the run-1 reports under those names — where those three reports now live remains unrecorded.)
+⛔ **VOID — every `devicectl device info crashes …` query in this run (19:56 and later) was a FAILED COMMAND, not an empty result.** With the raw output preserved (`tee /tmp/maia-device-crashes.txt`, founder's method) the tool answered: `Error: Unknown option '--device'` / `Usage: devicectl device info [--verbose] … <subcommand>` — `crashes` is not a `devicectl device info` subcommand; this session invented it. The `grep` filter hid the failure on every earlier run. **No crash query has been executed in run 2.** The "consistent with no run-2 process" reading above is withdrawn. Device crash reports are read the way run 1 read them (founder: Xcode → Window → Devices and Simulators → View Device Logs, or on the phone Settings → Privacy & Security → Analytics & Improvements → Analytics Data → `VoiceKernelHarness-<date>.ips`), never through a `devicectl` verb this record has not seen succeed.
 
 A signed `xcodebuild … BUILD SUCCEEDED` tail appears in the founder's terminal scrollback immediately before attempt 2. Whether that was a fresh build after the 19:54 install, or the 19:49 build's output re-shown, is not established from the paste. If a rebuild occurred, the installed bundle (19:54) and the DerivedData bundle may differ; the dylib UUID must be re-read with `dwarfdump --uuid` and, if it differs from `1AEBEE45-…`, the app reinstalled before launch so that §1 names the bundle that actually runs.
 
