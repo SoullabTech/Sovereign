@@ -228,8 +228,15 @@ export default function FocusSetPanel({
           onKeyDown={(e) => { if (e.key === 'Enter' && canAsk) void send(); }}
           placeholder="Ask MAIA about these places…"
           data-focus-ask-input
-          className="flex-1 min-w-[12rem] border px-2 py-1 bg-transparent"
-          style={{ borderColor: PRESS.ruleSoft }}
+          /* ⛔ FOUND IN THE FOUNDER WITNESS, 2026-09-12. This carried no `color`,
+             and an <input> does not inherit one — browsers apply their own
+             default, which is black. On the Press ground (#1A1513) the writer's
+             own question was invisible as they typed it: the field looked
+             broken, and the only visible trace was Chrome's spellcheck
+             underline beneath text nobody could read.
+             ⭐ A control that takes the member's words must state its ink. */
+          className="flex-1 min-w-[12rem] border px-2 py-1 bg-transparent placeholder:opacity-45"
+          style={{ borderColor: PRESS.ruleSoft, color: PRESS.text }}
         />
         <button
           type="button"
