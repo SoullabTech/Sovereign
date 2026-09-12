@@ -53,6 +53,14 @@ struct HarnessView: View {
                 Text("DEGRADED — \(d) · attempts \(s.recovery.attemptsInWindow)/\(s.recovery.budget). Text channel would remain available.")
                     .foregroundStyle(.red)
             }
+            // PRE-WITNESS-03 C — the causal discriminator, set BEFORE Enter only.
+            // Projection of the kernel's setting; the kernel refuses and journals a
+            // change attempted in conversation, and the button is inert then too.
+            Button(s.voiceProcessingEnabled ? "Voice processing: ON (default)" : "Voice processing: OFF (control run)") {
+                m.toggleVoiceProcessing()
+            }
+            .buttonStyle(.bordered)
+            .disabled(s.floor != .idle)
         }
     }
 

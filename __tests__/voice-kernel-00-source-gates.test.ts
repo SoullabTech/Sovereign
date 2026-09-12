@@ -146,8 +146,9 @@ describe('KERNEL-00 · VOICE-06 / -15 / -16 — one recovery owner, bounded, jou
   it('only HealthSupervisor verdicts reach requestRecovery, and the schedule is the ratified one', () => {
     const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
     const calls = k.match(/(?<!func )requestRecovery\(faultClass:/g) ?? [];
-    // evaluate() has three verdict arms + the rebuild-failed path; nothing else may call it.
-    expect(calls.length).toBeLessThanOrEqual(4);
+    // evaluate() has three verdict arms + the rebuild-failed path + (PRE-WITNESS-03 B,
+    // founder-authorized) the configuration-change path; nothing else may call it.
+    expect(calls.length).toBeLessThanOrEqual(5);
     const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
     expect(r).toMatch(/budgetPerWindow: Int = 3/);
     expect(r).toMatch(/windowMs: Int64 = 60_000/);
@@ -222,6 +223,52 @@ describe('KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not 
     // the config-change observation carries the format at the instant iOS posted it
     const cc = k.slice(k.indexOf('func handleConfigurationChange'), k.indexOf('"engine_configuration_changed"'));
     expect(cc).toMatch(/currentInputFormat\(\)/);
+  });
+});
+
+describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-guarded, bounded, never a direct rebuild', () => {
+  const k = () => bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+  const handler = () => {
+    const body = k();
+    const start = body.indexOf('func handleConfigurationChange');
+    expect(start).toBeGreaterThan(-1);
+    const next = body.indexOf('private func', start + 10);
+    return body.slice(start, next === -1 ? undefined : next);
+  };
+  it('D: a configuration-change handler never directly invokes rebuildGraph, and the route_recovery cause is gone', () => {
+    expect(handler()).not.toMatch(/rebuildGraph\(/);
+    expect(k()).not.toMatch(/rebuildGraph\(cause: "route_recovery"/);
+  });
+  it('B: a configuration change reaches the graph only through the existing RecoveryPolicy as its own fault class', () => {
+    expect(handler()).toMatch(/requestRecovery\(faultClass: "configuration_change"/);
+    expect(handler()).toMatch(/"recovery_requested", cause: "configuration_change"/);
+    // no new budget: RecoveryPolicy is untouched by this plan
+    const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
+    expect(r).toMatch(/budgetPerWindow: Int = 3/);
+    expect(r).not.toMatch(/configuration_change/);
+  });
+  it('A: a notification after exit is journalled and dropped before any generation or graph exists', () => {
+    const h = handler();
+    const guardAt = h.indexOf('guard inConversation else');
+    expect(guardAt).toBeGreaterThan(-1);
+    expect(h.slice(guardAt, guardAt + 400)).toMatch(/"stale_callback_dropped", cause: "not_in_conversation"/);
+    // the exit guard precedes every other act in the handler
+    expect(guardAt).toBeLessThan(h.indexOf('"engine_configuration_changed"'));
+    expect(guardAt).toBeLessThan(h.indexOf('requestRecovery('));
+  });
+  it('C: voice processing is a journalled, pre-Enter-only kernel command; the harness only projects it', () => {
+    const body = k();
+    const fn = body.slice(body.indexOf('func setVoiceProcessing'), body.indexOf('func setMicEnabled'));
+    expect(fn).toMatch(/guard !inConversation else/);
+    expect(fn).toMatch(/"command_refused"/);
+    expect(fn).toMatch(/"voice_processing_set"/);
+    expect(fn).toMatch(/snap\.voiceProcessingEnabled = on/);
+    const view = bodies.get(swift.find((p) => p.endsWith('HarnessView.swift'))!)!;
+    expect(view).toMatch(/s\.voiceProcessingEnabled \?/);
+    expect(view).toMatch(/toggleVoiceProcessing\(\)[\s\S]{0,120}\.disabled\(s\.floor != \.idle\)/);
+    expect(view).not.toMatch(/@State private var voiceProcessing/);
+    const model = bodies.get(swift.find((p) => p.endsWith('HarnessModel.swift'))!)!;
+    expect(model).toMatch(/kernel\.setVoiceProcessing\(!snapshot\.voiceProcessingEnabled\)/);
   });
 });
 

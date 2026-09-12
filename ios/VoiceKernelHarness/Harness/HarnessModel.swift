@@ -92,6 +92,9 @@ final class HarnessModel: ObservableObject {
         guard let s = snapshot.streams.last(where: { $0.state == .rendering }) else { return }
         Task { await kernel.cancel(s.id) }
     }
+    /// PRE-WITNESS-03 C: pre-Enter voice-processing control. Reads the kernel's
+    /// snapshot, asks the kernel; holds nothing itself (VOICE-07).
+    func toggleVoiceProcessing() { Task { await kernel.setVoiceProcessing(!snapshot.voiceProcessingEnabled) } }
     func toggleMic() { Task { await kernel.setMicEnabled(!snapshot.micEnabled) } }
     func toggleOutput() { Task { await kernel.setOutputEnabled(!snapshot.outputEnabled) } }
     func routeToSpeaker() { Task { await kernel.setOutputOverride(speaker: true) } }

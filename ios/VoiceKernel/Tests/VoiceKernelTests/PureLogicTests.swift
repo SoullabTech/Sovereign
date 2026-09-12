@@ -275,3 +275,35 @@ final class InputFormatPreconditionTests: XCTestCase {
         }
     }
 }
+
+// PRE-WITNESS-03 §B / §A — the configuration-change seam is bounded and exit-guarded.
+// The kernel itself needs a device; these pin the two pure laws it now relies on.
+final class ConfigurationChangeSeamTests: XCTestCase {
+    func testConfigurationChangeIsBoundedByTheSameRatifiedBudget() {
+        // K00-W3: 584 unbudgeted rebuilds in 6.2 min. Under RecoveryPolicy the
+        // class `configuration_change` gets exactly the ratified ceiling —
+        // 3 per 60 s at 500 / 1000 / 2000 ms — then degrades. No new budget.
+        var p = RecoveryPolicy()
+        guard case .retry(500, 1, _) = p.decide(faultClass: "configuration_change", nowMs: 0) else { return XCTFail() }
+        guard case .retry(1_000, 2, _) = p.decide(faultClass: "configuration_change", nowMs: 700) else { return XCTFail() }
+        guard case .retry(2_000, 3, _) = p.decide(faultClass: "configuration_change", nowMs: 2_000) else { return XCTFail() }
+        guard case .degraded("configuration_change", 3) = p.decide(faultClass: "configuration_change", nowMs: 4_500) else {
+            return XCTFail("the fourth reaction inside the window must degrade, not rebuild")
+        }
+    }
+
+    func testPostExitRecoveryEdgeIsAnOrphan() {
+        // K00-W4: after leaveConversation the floor is idle; a rebuild reaction
+        // then moved it idle → recovering. The replayer must reject that edge
+        // (it did on the device: "1 orphans"). This pins the law the exit
+        // guard now enforces upstream.
+        let r = StateReplayer.replay([
+            ev(1, 1, "command", cause: "leaveConversation"),
+            ev(2, 1, "floor_transition", from: "recovering", to: "idle", causeSeq: 1),
+            ev(3, 1, "floor_transition", from: "idle", to: "recovering", causeSeq: 2),   // the W4 edge
+        ])
+        XCTAssertFalse(r.passes)
+        XCTAssertEqual(r.orphanTransitions.count, 1)
+        XCTAssertEqual(r.orphanTransitions.first?.seq, 3)
+    }
+}

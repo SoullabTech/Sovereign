@@ -129,6 +129,26 @@ public actor VoiceKernel {
         publish()
     }
 
+    /// PRE-WITNESS-03 C — harness-only, pre-Enter voice-processing control.
+    /// Default stays ON. The setting is journalled; in conversation it is
+    /// refused (also journalled) — the causal discriminator is set before
+    /// Enter, never mid-encounter. Architecture unchanged: the graph still
+    /// receives `snap.voiceProcessingEnabled` exactly as before.
+    public func setVoiceProcessing(_ on: Bool) {
+        let cmd = journal("VoiceKernel", "command", cause: "setVoiceProcessing",
+                          evidence: ["requested": String(on), "inConversation": String(inConversation)])
+        guard !inConversation else {
+            journal("VoiceKernel", "command_refused", cause: "setVoiceProcessing_in_conversation", causeSeq: cmd,
+                    evidence: ["voiceProcessing": String(snap.voiceProcessingEnabled)])
+            publish()
+            return
+        }
+        snap.voiceProcessingEnabled = on
+        journal("VoiceKernel", "voice_processing_set", cause: "setVoiceProcessing", causeSeq: cmd,
+                evidence: ["voiceProcessing": String(on)])
+        publish()
+    }
+
     public func setMicEnabled(_ on: Bool) {
         journal("VoiceKernel", "command", cause: on ? "setMicEnabled(true)" : "setMicEnabled(false)")
         snap.micEnabled = on
@@ -387,13 +407,21 @@ public actor VoiceKernel {
     }
 
     private func handleConfigurationChange(generation gen: Int) {
+        // PRE-WITNESS-03 A — exit guard. A notification that lands after the
+        // member left (K00-W4: one was in flight from the stopped engine) is
+        // evidence, never an act: journalled, dropped, no generation, no
+        // graph, floor stays where the member left it.
+        guard inConversation else {
+            lastObservationSeq = journal("VoiceKernel", "stale_callback_dropped", cause: "not_in_conversation",
+                                         evidence: ["kind": "configurationChange", "callbackGeneration": String(gen),
+                                                    "floor": "\(snap.floor)"])
+            return
+        }
         guard gen == snap.generation else {
             lastObservationSeq = journal("VoiceKernel", "stale_callback_dropped", cause: "generation_mismatch",
                                          evidence: ["kind": "configurationChange", "callbackGeneration": String(gen)])
             return
         }
-        // Rebuild-not-resume (SURVEY-01 §7): a new generation under the SAME
-        // session configuration. This is a route recovery act, stamped as such.
         var ev: [String: String] = [:]
         if let g = graph {
             ev.merge(formatEvidence(g.currentInputFormat())) { a, _ in a }     // §3.4: the format at the instant iOS posted
@@ -401,7 +429,14 @@ public actor VoiceKernel {
         }
         let obs = journal("VoiceKernel", "engine_configuration_changed", cause: "os_configuration_change", evidence: ev)
         lastObservationSeq = obs
-        rebuildGraph(cause: "route_recovery", causeSeq: obs)
+        // PRE-WITNESS-03 B/D — no direct rebuild (K00-W3: the direct path was
+        // unbounded and self-provoking). A configuration change is a fault
+        // class under the existing RecoveryPolicy, so the ratified
+        // 3-per-fault-class / 60 s ceiling governs it and exhaustion degrades.
+        // Whether it SHOULD be a fault at all is the B/C question the
+        // VP-off control journal decides; this makes the answer measurable.
+        let req = journal("HealthSupervisor", "recovery_requested", cause: "configuration_change", causeSeq: obs)
+        requestRecovery(faultClass: "configuration_change", causeSeq: req)
     }
 
     #if os(iOS)
@@ -507,7 +542,12 @@ public actor VoiceKernel {
     }
 
     private func requestRecovery(faultClass: String, causeSeq: Int) {
-        guard pendingRecovery == nil else { return }   // one recovery in flight per generation (VOICE-06)
+        guard pendingRecovery == nil else {              // one recovery in flight per generation (VOICE-06)
+            // Record coherence (K00-17): the request is coalesced into the pending one, and the journal says so.
+            journal("VoiceKernel", "recovery_request_coalesced", cause: faultClass, causeSeq: causeSeq,
+                    evidence: ["pending": snap.recovery.lastFaultClass ?? "-"])
+            return
+        }
         let now = clock()
         let decision = recovery.decide(faultClass: faultClass, nowMs: now)
         snap.recovery.lastFaultClass = faultClass
