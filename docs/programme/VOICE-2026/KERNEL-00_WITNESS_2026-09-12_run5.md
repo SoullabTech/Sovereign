@@ -117,3 +117,34 @@ REPRODUCIBILITY      2 VP-ON sessions on this subject (5a, W4) — both listened
 B2                   HOLD · B3 open · E1–E4 hypotheses only · nothing selected
 OWED                 founder attestation · founder ruling on the removal control (one read removed, else identical) · deliberate repeat of 5a ×2 (no code) · protocol fields
 ```
+
+## 10. Founder attestation and rulings — 2026-09-12 (verbatim, no code)
+
+**Attestation (founder, verbatim):**
+
+> Founder attestation — 2026-09-12: I witnessed Run 5 as recorded. On the Phase-A instrumentation subject, voice processing ON reached and held listening in generation 1, as did the VP-OFF control. This differs from every earlier VP-ON subject, where the engine failed to become running. I attest that the Run-5 record fairly represents what occurred, including that the mechanism by which the instrumentation changed the result remains inferred, not established.
+
+**RUN 5 ATTESTED.** Protocol fields not stated by the founder remain `UNKNOWN`; nothing is reconstructed from the journals.
+
+**Rulings (founder, same act):**
+
+1. **Reproducibility sessions — AUTHORIZED NOW, NO CODE.** Two fresh VP-ON sessions on the unchanged subject `4596b9bdb` (dylib `11A057AA-…`): force-quit → launch from icon → Voice processing ON → Enter conversation once → hold ≈ 15 s → Export. Each is its own session; neither is combined with the W4 test below. Decision: both listen → the run-5 VP-ON outcome is **reproducible** and the removal control is unblocked; any session fails to listen → **nondeterminism is investigated first** and no removal control runs.
+2. **P5-B0 — pre-VP format-read removal control — SELECTED as the first Phase-B experiment, ahead of E1–E4. Execution CONDITIONAL on ruling 1.** Subject: identical to `4596b9bdb` except that the single `input.outputFormat(forBus: 0)` read placed before `setVoiceProcessingEnabled` is **removed**. Everything else is kept: all other Phase-A tracing, the later format reads, the timing reads, the entry guard, the recovery law, thresholds, the mutating call order. One SHA, one compile record, device run VP ON plus VP OFF control. Decision table, predeclared: **VP ON fails again** → the read is strongly causal; the initialization dependency is promoted from inference to finding. **VP ON still listens** → the read is falsified as a sufficient cause; the mechanism remains open. **Mixed** → nondeterminism; no mechanism claim.
+3. **W4 under VP ON — fresh in-flight exit test AUTHORIZED** on the unchanged subject: force-quit → icon → Voice processing ON → Enter → Leave within 2 s → wait 3 s → Export. Not combined with the reproducibility sessions. Fills the W4-under-VP-ON gap owed since run 3 (the run-5 W4 attempt left at 10.8 s and did not meet the in-flight condition).
+4. **E1–E4 HELD, NOT SELECTED.** They are downstream of the P5-B0 question.
+5. **B2 HOLD** unchanged. **B3** remains the broader investigation; P5-B0 is its first bounded step.
+6. **Mechanism: UNKNOWN.** P5-F1 is CONFIRMED AS AN INSTRUMENT EFFECT; the pre-VP read is a candidate cause only until ruling 2's table decides.
+7. The three earlier journals (`18f515e1`, `24694629`, `dd33d8f4`) exist in the founder's workspace; attachment here for independent hash verification remains owed and non-blocking.
+
+**Standing after this act:**
+
+```
+RUN 5                ATTESTED (founder, verbatim above) · VP ON PASS · VP OFF PASS
+P5-F1                CONFIRMED AS INSTRUMENT EFFECT · mechanism UNKNOWN (pre-VP read = candidate only)
+REPRO ×2 (VP ON)     AUTHORIZED · NO CODE · journals owed
+W4 in-flight (VP ON) AUTHORIZED · NO CODE · journal owed
+P5-B0                SELECTED · CONDITIONAL on both repro sessions listening · NOT IMPLEMENTED
+E1–E4                HELD · NOT SELECTED
+B2                   HOLD · B3 OPEN
+ARCHITECTURE         UNCHANGED · thresholds UNCHANGED · STT/TTS NOT AUTHORIZED
+```
