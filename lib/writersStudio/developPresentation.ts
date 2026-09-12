@@ -24,8 +24,13 @@ import type { DevelopmentalReadState } from '../manuscript/development/readState
 import type { CurrentLocation, Moved } from '../manuscript/development/resolve';
 import type { DevelopmentalLens, DevelopmentalNonConclusion } from '../manuscript/developmentalReader/contract';
 import { NON_CONCLUSION_MEANING } from '../manuscript/developmentalReader/contract';
-import type { DevelopmentalObservation, DevelopmentalPhenomenon, DevelopmentalReading } from '../manuscript/developmentalReading/contract';
-import { PHENOMENON_LABEL } from '../manuscript/developmentalReading/contract';
+import type {
+  DevelopmentalObservation,
+  DevelopmentalPhenomenon,
+  DevelopmentalReading,
+  PhenomenonDefinition,
+} from '../manuscript/developmentalReading/contract';
+import { PHENOMENON_DEFINITION, PHENOMENON_LABEL, isPhenomenon } from '../manuscript/developmentalReading/contract';
 import type { ReadingAssessment } from '../manuscript/developmentalReading/assess';
 
 /* ── the closed vocabularies, in member language ─────────────────────── */
@@ -71,6 +76,22 @@ export const LENS_ORDER: readonly DevelopmentalLens[] =
   ['development', 'structure', 'continuity', 'arc', 'voice', 'coherence', 'reader'];
 
 export const phenomenonLabel = (p: DevelopmentalPhenomenon): string => PHENOMENON_LABEL[p];
+
+/**
+ * The ratified meaning of the phenomenon, carried through from the contract
+ * BY REFERENCE so the surface can explain the word it just used.
+ *
+ * RENAISSANCE TEST 3. A member-visible label that presumes literary training —
+ * `positional asymmetry`, `register shift`, `term drift` — teaches nothing on
+ * its own; five of the eight do. The definitions were already authored
+ * (WS2-07-F1, founder act 2026-09-04) and were reaching the classifier alone.
+ * The repair is render-only: the same object, now also reachable by the member.
+ *
+ * ⛔ Never paraphrase it here or in JSX. The classifier and the writer must be
+ * told the same thing, or the word means two things.
+ */
+export const phenomenonMeaning = (p: DevelopmentalPhenomenon): PhenomenonDefinition =>
+  PHENOMENON_DEFINITION[p];
 
 /** Member-facing name for the non-conclusion, then its ratified meaning. */
 export function limitLine(n: DevelopmentalNonConclusion): { name: string; meaning: string } {
@@ -211,6 +232,8 @@ export interface ObservationView {
    *  observation stands on its own. */
   phenomenon?: DevelopmentalPhenomenon;
   phenomenonLabel?: string;
+  /** The contract's own definition, present exactly when the label is (Test 3). */
+  phenomenonMeaning?: PhenomenonDefinition;
   evidence: string[];
   limits: { name: string; meaning: string }[];
   dependsOnStructure: boolean;
@@ -230,8 +253,15 @@ export function observationView(
     key: o.key,
     observation: o.observation,
     lens: o.lens,
-    ...(o.phenomenon !== undefined
-      ? { phenomenon: o.phenomenon, phenomenonLabel: phenomenonLabel(o.phenomenon) }
+    // A name the family does not hold gets NO label and NO explanation. The
+    // surface never invents copy for a phenomenon it cannot recognise, and a
+    // label the member cannot have explained is not shown at all.
+    ...(isPhenomenon(o.phenomenon)
+      ? {
+          phenomenon: o.phenomenon,
+          phenomenonLabel: phenomenonLabel(o.phenomenon),
+          phenomenonMeaning: phenomenonMeaning(o.phenomenon),
+        }
       : {}),
     evidence: o.evidenceRefs.map((r) => describeRef(r, readState, sections)),
     limits: o.doesNotEstablish.map(limitLine),

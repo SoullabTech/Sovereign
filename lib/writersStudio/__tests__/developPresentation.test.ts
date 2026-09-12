@@ -12,10 +12,10 @@ import type { DevelopmentalReading } from '../../manuscript/developmentalReading
 import type { ReadingAssessment } from '../../manuscript/developmentalReading/assess';
 import {
   LENS_MEANING, LENS_ORDER, STATE_LABEL, STATE_SENTENCE, coverageSummary, describeMoved, describeRef,
-  frozenPosition, limitLine, observationView, readingView, sectionLabel,
+  frozenPosition, limitLine, observationView, phenomenonMeaning, readingView, sectionLabel,
 } from '../developPresentation';
 import { DEVELOPMENTAL_LENSES, NON_CONCLUSION_MEANING } from '../../manuscript/developmentalReader/contract';
-import { DEVELOPMENTAL_PHENOMENA } from '../../manuscript/developmentalReading/contract';
+import { DEVELOPMENTAL_PHENOMENA, PHENOMENON_DEFINITION } from '../../manuscript/developmentalReading/contract';
 
 const { evidence } = evidenceAtRev1({ withStructure: true });
 const readState = evidence.readState;
@@ -151,5 +151,58 @@ describe('the reading is presented whole and in order', () => {
     for (const l of DEVELOPMENTAL_LENSES) expect(LENS_MEANING[l].length).toBeGreaterThan(0);
     for (const n of Object.keys(NON_CONCLUSION_MEANING)) expect(limitLine(n as never).meaning.length).toBeGreaterThan(0);
     expect(DEVELOPMENTAL_PHENOMENA).toHaveLength(8);
+  });
+});
+
+/**
+ * RENAISSANCE TEST 3 — the member must never be required to already know the
+ * vocabulary MAIA is using to help them learn.
+ *
+ * Five of the eight labels presume literary training. Their definitions were
+ * authored a week earlier (WS2-07-F1) and reached only the classifier. These
+ * falsify the presentation half of the repair: the meaning travels BY
+ * REFERENCE, it is present exactly when the label is, and a name the family
+ * does not hold receives neither.
+ */
+describe('a phenomenon label carries its own definition', () => {
+  it('every phenomenon in the family has a meaning, and it is the contract object itself', () => {
+    for (const p of DEVELOPMENTAL_PHENOMENA) {
+      expect(phenomenonMeaning(p)).toBe(PHENOMENON_DEFINITION[p]);
+      expect(PHENOMENON_DEFINITION[p].is.length).toBeGreaterThan(0);
+      expect(PHENOMENON_DEFINITION[p].isNot.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('the view carries the meaning beside the label, unparaphrased', () => {
+    const v = observationView(reading().observations[1], assessment.observations.o2!, readState, SECTIONS);
+    expect(v.phenomenonLabel).toBe('positional asymmetry');
+    expect(v.phenomenonMeaning).toBe(PHENOMENON_DEFINITION['positional-asymmetry']);
+  });
+
+  it('label and meaning are present or absent TOGETHER — never a word without its definition', () => {
+    for (const p of [...DEVELOPMENTAL_PHENOMENA, undefined]) {
+      const o = { ...reading().observations[0], phenomenon: p as never };
+      const v = observationView(o, { state: 'current' }, readState, SECTIONS);
+      expect(v.phenomenonLabel === undefined).toBe(v.phenomenonMeaning === undefined);
+      expect(v.phenomenonLabel === undefined).toBe(p === undefined);
+    }
+  });
+
+  it('an unrecognised phenomenon gets NO label and NO invented explanation', () => {
+    for (const bogus of ['', 'Recurrence', 'recurrence ', 'cadence', 'unknown', 'positional_asymmetry']) {
+      const o = { ...reading().observations[0], phenomenon: bogus as never };
+      const v = observationView(o, { state: 'current' }, readState, SECTIONS);
+      expect(v.phenomenon).toBeUndefined();
+      expect(v.phenomenonLabel).toBeUndefined();
+      expect(v.phenomenonMeaning).toBeUndefined();
+      expect(v.observation).toBe(VERBATIM);
+    }
+  });
+
+  it('explaining the word changes nothing about the observation it sits beside', () => {
+    const v = observationView(reading().observations[0], assessment.observations.o1!, readState, SECTIONS);
+    expect(v.observation).toBe(VERBATIM);
+    expect(v.evidence).toHaveLength(2);
+    expect(v.state).toBe('superseded');
   });
 });

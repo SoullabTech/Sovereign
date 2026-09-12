@@ -25,7 +25,7 @@
  */
 
 import { OUTCOME_SENTENCE, causeLineFor } from '@/lib/writersStudio/developRefusalCopy';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DevelopmentalLens } from '@/lib/manuscript/developmentalReader/contract';
@@ -974,6 +974,12 @@ function Observation({
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
 }) {
   const [talking, setTalking] = useState(false);
+  const [meaning, setMeaning] = useState(false);
+  const meaningTrigger = useRef<HTMLButtonElement | null>(null);
+  const meaningId = `phenomenon-meaning-${o.key}`;
+  // Closing returns the writer to the word they asked about, not to the top of
+  // the room: the trigger sits ABOVE the panel, so nothing they were reading moves.
+  const closeMeaning = () => { setMeaning(false); meaningTrigger.current?.focus(); };
   return (
     <li
       data-observation-key={o.key}
@@ -983,10 +989,53 @@ function Observation({
     >
       <p className="text-[11px] tracking-[0.15em] uppercase opacity-45 mb-2 flex flex-wrap gap-x-3 gap-y-1">
         <span style={{ color: PRESS.accent, opacity: 0.9 }}>{o.key}</span>
-        <span>{o.phenomenonLabel}</span>
+        {o.phenomenonLabel && (o.phenomenonMeaning ? (
+          <button
+            ref={meaningTrigger}
+            type="button"
+            onClick={() => (meaning ? closeMeaning() : setMeaning(true))}
+            aria-expanded={meaning}
+            aria-controls={meaningId}
+            data-phenomenon-trigger={o.phenomenon}
+            className="uppercase underline decoration-dotted underline-offset-4 hover:opacity-90"
+          >
+            {o.phenomenonLabel}
+            <span aria-hidden className="ml-1 opacity-70 no-underline">{meaning ? '×' : '?'}</span>
+            <span className="sr-only"> — what this means</span>
+          </button>
+        ) : (
+          <span>{o.phenomenonLabel}</span>
+        ))}
         {o.dependsOnStructure && <span className="opacity-70">rests on your structure</span>}
         <StateChip state={o.state} label={o.stateLabel} />
       </p>
+
+      {/* The contract's own words, never a paraphrase of them (Test 3). */}
+      {meaning && o.phenomenonMeaning && (
+        <div
+          id={meaningId}
+          data-phenomenon-meaning={o.phenomenon}
+          onKeyDown={(e) => { if (e.key === 'Escape') closeMeaning(); }}
+          className="mb-3 border-l pl-3 text-[12.5px] leading-relaxed opacity-70"
+          style={{ borderColor: PRESS.ruleSoft }}
+        >
+          <p>
+            <span className="uppercase tracking-[0.15em] text-[10.5px] opacity-70 mr-2">is</span>
+            {o.phenomenonMeaning.is}
+          </p>
+          <p className="mt-1">
+            <span className="uppercase tracking-[0.15em] text-[10.5px] opacity-70 mr-2">is not</span>
+            {o.phenomenonMeaning.isNot}
+          </p>
+          <button
+            type="button"
+            onClick={closeMeaning}
+            className="mt-2 uppercase tracking-[0.15em] text-[10.5px] opacity-60 hover:opacity-90"
+          >
+            Close
+          </button>
+        </div>
+      )}
 
       {/* VERBATIM. pre-wrap so what MAIA wrote is what is shown, spaces and all. */}
       <p
