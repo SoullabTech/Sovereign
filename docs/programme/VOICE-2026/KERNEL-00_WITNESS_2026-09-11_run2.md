@@ -1,6 +1,6 @@
 # KERNEL-00 · DEVICE WITNESS · RUN 2 — 2026-09-11
 
-**Status: OPEN — Enter EXECUTED · organism SURVIVED ENTRY · never reached listening · self-provoked rebuild loop (K00-W3) · awaiting founder attestation + ruling.**
+**Status: SEALED — 2026-09-12 (founder attestation §9). Enter EXECUTED · SURVIVED ENTRY · listening reached, never held · K00-W3 + K00-W4 CONFIRMED · PRE-WITNESS-03 OPEN (§10).**
 **Subject SHA:** `728924819` (PRE-WITNESS-02 §3 applied; plan `6566ace40` accepted as written).
 **Compile of record:** `KERNEL-00_MAC-COMPILE-03_2026-09-11.md` — GREEN (build · test 20/20 · gate 16/16 · xcodegen · unsigned · signed).
 **Question this run answers:** with an invalid input format made unreachable at `installTap` (§3.1) and every refused build journalled into the existing RecoveryPolicy road (§3.2/§3.4), does the organism survive **Enter conversation** on this device — and what does the journal show at the entry seam (plan §4, candidate A first)?
@@ -193,3 +193,82 @@ K00-03               FAIL · K00-10 exercised once, not governing the loop · K0
 THRESHOLDS           UNCHANGED · ARCHITECTURE UNCHANGED · CANDIDATE B/C NOT AUTHORIZED · REPAIR NONE
 RECORD               OPEN — awaiting founder attestation and ruling
 ```
+
+## 9. Founder attestation (verbatim)
+
+> Founder attestation — 2026-09-12: I witnessed KERNEL-00 survive entry without crashing, intermittently reach listening, and then enter an unbounded configuration-change/rebuild loop; I also witnessed Leave deactivate and release the session while one already-in-flight configuration-change reaction outlived the member's exit. I attest that the run-2 record fairly represents what occurred.
+
+**Protocol fields — founder ruling: not filled from inference.** Each is `UNKNOWN` until the founder states it:
+
+```
+launches by icon tap       UNKNOWN (founder confirmation required)
+debugger never attached    UNKNOWN (founder confirmation required)
+Enter once per session     UNKNOWN (founder confirmation required)
+10:26–10:33 action         UNKNOWN (founder recollection required)
+Apply faults never tapped  UNKNOWN (founder confirmation required; harness bookkeeping shows manual interventions 0, which is a different counter)
+run-1 debug.dylib UUID     UNRESOLVED — stays so until an actual run-1 .ips binary-images line supplies it (non-blocking)
+```
+
+## 10. Founder ruling — PRE-WITNESS-03 OPEN (verbatim scope)
+
+Architecture NOT reopened. W3 and W4 are a bounded defect in the configuration-change / route-recovery seam.
+
+```text
+PRE-WITNESS-03 — CONFIGURATION-CHANGE / ROUTE-RECOVERY SEAM
+
+A. EXIT GUARD
+   If inConversation == false:
+   - configuration-change notifications are journalled and dropped
+   - no generation is created
+   - no graph is built
+   - floor remains idle
+
+B. BOUNDED ROUTE RECOVERY
+   AVAudioEngineConfigurationChange may no longer call
+   rebuildGraph(route_recovery) directly.
+
+   Any configuration-change rebuild that is treated as a fault/recovery
+   must pass through the existing RecoveryPolicy and therefore the
+   ratified 3-per-fault-class / 60 s ceiling.
+
+C. VP CONTROL
+   Add a harness-only, pre-Enter voice-processing ON/OFF control.
+   - default remains ON
+   - setting is journalled
+   - it does not alter architecture
+   - run OFF once as the causal discriminator required by
+     PRE-WITNESS-02 §4
+
+D. DIRECT-REBUILD SOURCE GATE
+   A configuration-change handler may not directly invoke rebuildGraph.
+   The unbounded path must become structurally impossible.
+```
+
+Not authorized yet: candidate B deferral · candidate C reclassification · threshold changes · new recovery budgets · STT/TTS/providers · turn work · lower-level AudioUnit migration · architecture amendment · legacy repair. **H1 HELD out of PRE-WITNESS-03** (real harness bug with a workable bypass; not to be mixed into a causal audio experiment).
+
+Acceptance conditions (verbatim):
+
+```text
+EXIT
+session_released
+→ no later graph_started / graph_rebuilt
+→ floor remains idle
+
+RECOVERY
+configuration-change reactions cannot generate indefinitely
+→ bounded by existing RecoveryPolicy
+→ budget exhaustion yields degraded
+
+VP OFF CONTROL
+if repeated configuration changes disappear:
+    local evidence supports VP-induced reconfiguration
+if they continue:
+    VP attribution is falsified
+
+NO B/C DECISION
+until that control journal exists
+```
+
+Founder's subtle point, preserved: *if the VP-on run now consumes the recovery budget on every ordinary entry, that is not success merely because it eventually degrades. It proves the path is bounded, but also confirms that an expected lifecycle event is being misclassified as a fault. That would be the evidence needed to rule on B/C.*
+
+Standing: KERNEL-00 RUN 2 ATTESTED · W3 CONFIRMED · W4 CONFIRMED · PRE-WITNESS-03 OPEN (A + B + C + D) · H1 HELD · B/C NOT YET CHOSEN · next: implement the bounded seam → compile gates → VP-OFF control run → the journal decides B/C.
