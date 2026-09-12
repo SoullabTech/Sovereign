@@ -61,7 +61,7 @@ run_test(){ # $1 = test method
 failure_signature(){ # $1 = sample log
   if grep -q 'Timed out while enabling automation mode' "$1"; then echo "runner could not enable automation mode on the device (Settings → Developer → Enable UI Automation / device locked or passcode prompt)"; return; fi
   if grep -q 'DRIVER/INFRASTRUCTURE FAILURE: ' "$1"; then grep -o 'DRIVER/INFRASTRUCTURE FAILURE: [^"]*' "$1" | head -1 | sed 's/^DRIVER\/INFRASTRUCTURE FAILURE: //'; return; fi
-  if grep -q 'Failed to not hittable: Icon' "$1"; then echo "Mode I: icon 'VoiceKernel K00' present in the SpringBoard hierarchy but not hittable (zero frame) — not on the visible Home Screen page"; return; fi
+  if grep -qE 'Failed to not hittable: Icon|none hittable' "$1"; then echo "Mode I: icon 'VoiceKernel K00' present in the SpringBoard hierarchy but not hittable (zero frame) — not on the visible Home Screen page"; return; fi
   if grep -q 'error: -\[DriverUITests' "$1"; then grep -o 'error: -\[DriverUITests[^\n]*' "$1" | head -1 | cut -c1-220; return; fi
   echo "no new journal in tmp/ after the invocation"
 }

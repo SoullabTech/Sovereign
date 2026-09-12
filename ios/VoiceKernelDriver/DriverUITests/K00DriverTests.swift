@@ -92,17 +92,24 @@ final class K00DriverTests: XCTestCase {
             app.launch()
         default:
             // Primary mode: SpringBoard icon tap — the nearest reproduction of the manual act.
+            // Two Home presses: the first leaves whatever is in front, the second returns SpringBoard to
+            // its first page. Mode I is still one SpringBoard icon tap; this only makes the page determinate.
+            XCUIDevice.shared.press(.home)
+            Thread.sleep(forTimeInterval: 0.5)
             XCUIDevice.shared.press(.home)
             let sb = springboard
             sb.activate()
-            let icon = sb.icons[Self.harnessIconLabel]
-            guard icon.waitForExistence(timeout: 5) else {
+            let matches = sb.icons.matching(NSPredicate(format: "label == %@", Self.harnessIconLabel))
+            guard matches.firstMatch.waitForExistence(timeout: 5) else {
                 return driverFail("icon '\(Self.harnessIconLabel)' not found on the current Home Screen page")
             }
-            // CALIBRATION-01: the icon existed in the hierarchy with a zero frame (another page or the App
-            // Library) and tap() failed as "not hittable". Name that state; the driver does not go looking.
-            guard icon.isHittable else {
-                return driverFail("icon '\(Self.harnessIconLabel)' present but not hittable (frame \(icon.frame)) — not on the visible Home Screen page")
+            // CALIBRATION-01/-03: SpringBoard can expose several elements with this label (a page icon, the
+            // App Library entry, a Spotlight suggestion); the first match had a zero frame and tap() refused it.
+            // Take the one that is actually on screen; if none is, name the state — the driver does not go looking.
+            let all = matches.allElementsBoundByIndex
+            guard let icon = all.first(where: { $0.isHittable }) else {
+                let frames = all.map { "\($0.frame)" }.joined(separator: " · ")
+                return driverFail("icon '\(Self.harnessIconLabel)' present \(all.count)× but none hittable (frames \(frames)) — not on the visible Home Screen page")
             }
             icon.tap()
         }
