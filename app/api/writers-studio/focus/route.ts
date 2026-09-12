@@ -92,11 +92,16 @@ export async function POST(request: NextRequest) {
   const parsed: FocusMemberScope[] = [];
   for (const m of scopes) {
     if (!m || typeof m !== 'object') break;
-    const { focusMemberId, sectionRef, range, readable } = m as Record<string, unknown>;
+    const { focusMemberId, sectionRef, range, readable, withheldAs } = m as Record<string, unknown>;
     if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
     parsed.push({
       focusMemberId, sectionRef,
       readable: readable !== false,
+      /* ⛔ Read only for a withheld member, and only from the closed pair. An
+         unrecognised value falls to `unverified`, which withholds. */
+      ...(readable === false && (withheldAs === 'unverified' || withheldAs === 'unavailable')
+        ? { withheldAs }
+        : {}),
       ...(range && typeof range === 'object'
         ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
         : {}),

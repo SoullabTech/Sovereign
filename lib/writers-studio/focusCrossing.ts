@@ -81,6 +81,16 @@ export interface FocusMemberScope {
    * from anchor currency; the crossing obeys it and reads nothing.
    */
   readonly readable: boolean;
+  /**
+   * How the surface is presenting a WITHHELD member, so MAIA is told the
+   * truthful reason rather than one generic one — "needs confirmation" and "no
+   * longer in the work" are different facts about the writer's attention.
+   *
+   * ⛔ CONSULTED ONLY WHEN `readable` IS FALSE. It can narrow what MAIA is told
+   * and can never widen what she is given: the client is presentation, not
+   * authority, so withholding is the only direction its account is trusted in.
+   */
+  readonly withheldAs?: 'unverified' | 'unavailable';
 }
 
 /**
@@ -240,7 +250,7 @@ export async function performFocusCrossing(
     participation = focusParticipation({
       members: req.members.map((m, i) => {
         const content = bodies.get(m.focusMemberId);
-        const status: FocusMemberStatus = !m.readable ? 'unverified'
+        const status: FocusMemberStatus = !m.readable ? (m.withheldAs ?? 'unverified')
           : content === undefined ? 'unavailable' : 'readable';
         return {
           focusMemberId: m.focusMemberId, ordinal: i + 1, sectionRef: m.sectionRef,

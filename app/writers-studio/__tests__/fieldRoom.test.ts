@@ -5,6 +5,24 @@ import { TYPE } from '../studioTheme';
 const FIELD = path.join(__dirname, '..', 'field');
 const files = () =>
   fs.readdirSync(FIELD).filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
+
+/**
+ * ⭐⭐ THE ONE FILE IN THIS DIRECTORY THAT MAY CROSS, named rather than excluded.
+ *
+ * These obligations were written when `field/` held only the recovered
+ * prototype surface, whose law is that the room is a SHELL and holds no
+ * cognition of its own. That law is unchanged and still protects every file
+ * here. What changed is that the founder authorized ONE gesture — Ask MAIA on
+ * the Focus Set panel — to reach the constituted crossing at
+ * `/api/writers-studio/focus`.
+ *
+ * ⛔ SO THIS IS AN ALLOWLIST OF ONE, NOT A DIRECTORY EXEMPTION. A new file here
+ * that acquires `apiFetch` or a POST still goes RED, which is the whole point:
+ * "the panel is authorized" must not decay into "field/ is no longer guarded".
+ * The assertion below fails if this list ever grows without a ruling behind it.
+ */
+const AUTHORIZED_TO_CROSS = ['FocusSetPanel.tsx'];
+const shellFiles = () => files().filter((f) => !AUTHORIZED_TO_CROSS.includes(f));
 const raw = (f: string) => fs.readFileSync(path.join(FIELD, f), 'utf8');
 /** Prose explains the rules and therefore quotes the banned words. Assertions
  *  about what the CODE does must read the code, not the rationale beside it. */
@@ -62,8 +80,13 @@ describe('the Field room', () => {
    * own, canned or otherwise — the Ask MAIA gesture reaches the existing Canvas
    * conversation path, and improving that path is a different lane.
    */
+  it('the authorized crossing is exactly one named file', () => {
+    expect(AUTHORIZED_TO_CROSS).toEqual(['FocusSetPanel.tsx']);
+    for (const f of AUTHORIZED_TO_CROSS) expect(files()).toContain(f);
+  });
+
   it('carries no cognition of its own', () => {
-    for (const f of files()) {
+    for (const f of shellFiles()) {
       const src = strip(raw(f));
       expect(src).not.toContain('respond(');
       expect(src).not.toContain('provisional(');
@@ -130,13 +153,19 @@ describe('the held focus increment, at its boundaries', () => {
    * because the writer selected text. The gesture is the writer's.
    */
   it('sends nothing and opens nothing on its own', () => {
-    for (const f of files()) {
+    for (const f of shellFiles()) {
       const src = strip(raw(f));
       expect(src).not.toMatch(/method:\s*'POST'/);
       expect(src).not.toContain('/api/');
     }
     /* The strip receives the act; it does not perform it. */
     expect(strip(raw('FocusStrip.tsx'))).toContain('onAsk: () => void');
+    /* ⭐ And the one authorized file reaches ONLY the constituted boundary —
+       never a second route, never a model, never a write. */
+    const authorized = strip(raw('FocusSetPanel.tsx'));
+    const routes = [...authorized.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]);
+    expect(routes).toEqual(['/api/writers-studio/focus']);
+    expect(authorized).not.toMatch(/getMaiaResponse|anthropic|saveSection/i);
   });
 
   /** No new persistence and no new memory destination. */

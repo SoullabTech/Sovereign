@@ -658,6 +658,11 @@ function CanvasRoom() {
           set={focusSet}
           onSet={setChosen}
           onRelease={() => { setChosen(null); setFocusDismissed(true); }}
+          /* The same conversation this room is already holding, and the Work the
+             origin named. ⛔ Absent either one, the gesture is simply not
+             offered — it is never sent against a Work the room cannot name. */
+          sessionId={conversationId}
+          workRef={request.kind === 'origin' ? request.origin.manuscriptId : manuscript?.id ?? null}
         />
       )}
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}

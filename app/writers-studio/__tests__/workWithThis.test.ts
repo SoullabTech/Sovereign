@@ -344,14 +344,35 @@ describe('W2 · W3 · W4 — it rereads nothing, calls no model, writes nothing'
     }
   });
 
-  it('⭐ the door does NOT reach the MAIA crossing — the two boundaries stay apart', () => {
-    // `Work with this` is narrower than the eventual crossing by construction:
-    // neither the door nor the set panel knows the crossing's route exists.
-    for (const src of [door, panel]) {
-      expect(src).not.toMatch(/api\/writers-studio\/focus/);
-      expect(src).not.toMatch(/work_with_this|ask_maia|widen_focus/);
-    }
-    expect(panel).not.toMatch(/Ask MAIA/i);
+  /**
+   * ⭐⭐ NARROWED, NOT WEAKENED — and the narrowing is the whole point.
+   *
+   * This obligation used to assert that NEITHER the door nor the set panel knew
+   * the crossing's route existed. That was correct for the `Work with this`
+   * act, where no crossing was authorized anywhere in the flow.
+   *
+   * The founder has since authorized the Ask MAIA gesture ON THE PANEL. The
+   * DOOR's narrowness is unchanged and is what this obligation exists for:
+   * navigation must never be able to acquire a crossing's authority by sitting
+   * next to one. A member arriving from Develop has crossed nothing; they have
+   * only arrived somewhere a separate, deliberate act is possible.
+   *
+   * ⛔ So the door is asserted harder than before, not less: it may not name the
+   * route, the gestures, or the panel's sender.
+   */
+  it('⭐ the DOOR does not reach the MAIA crossing — arriving is not asking', () => {
+    expect(door).not.toMatch(/api\/writers-studio\/focus/);
+    expect(door).not.toMatch(/work_with_this|ask_maia|widen_focus/);
+    expect(door).not.toMatch(/askRequestBody|askReducer|apiFetch/);
+  });
+
+  it('⛔ and the panel does not cross merely because a Focus Set arrived', () => {
+    // The gesture is a separate deliberate act: a press, with a question in it.
+    expect(panel).toMatch(/onClick=\{\(\) => void send\(\)\}/);
+    expect(panel).toMatch(/ask\.trim\(\)\.length > 0/);
+    // ⛔ Nothing sends on mount, on arrival, or on choosing a member.
+    expect(panel).not.toMatch(/useEffect\([^)]*send/);
+    expect(panel).not.toMatch(/onSet=[^}]*send|send\(\).*withActive/);
   });
 });
 
@@ -388,7 +409,15 @@ describe('W10 — returning to Develop shows the reading unchanged', () => {
   });
 
   it('the set panel changes no text and offers no repair', () => {
-    expect(panel).not.toMatch(/onChange|contentEditable|textarea/i);
+    /* ⭐ The panel now holds ONE input — the writer's question to MAIA — so a
+       bare `onChange` ban would fail on the question box. The obligation is
+       about the WORK: no editor, no manuscript field, no write path. */
+    expect(panel).not.toMatch(/contentEditable|<textarea/i);
     expect(panel).not.toMatch(/re-?locate|repair|fix it/i);
+    expect(panel).not.toMatch(/saveSection|beginDraft|writeState/i);
+    /* The only thing the writer can type into is their own question. */
+    const inputs = [...panel.matchAll(/<input\b/g)];
+    expect(inputs).toHaveLength(1);
+    expect(panel).toMatch(/data-focus-ask-input/);
   });
 });
