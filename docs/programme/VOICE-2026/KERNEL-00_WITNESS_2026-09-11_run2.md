@@ -1,6 +1,6 @@
 # KERNEL-00 · DEVICE WITNESS · RUN 2 — 2026-09-11
 
-**Status: OPEN — installed · LAUNCHED (attempt 3) · harness idle on screen · pre-enter checkpoint PENDING · Enter NOT YET PRESSED.**
+**Status: OPEN — installed · LAUNCHED (attempt 3) · harness idle on screen · pre-enter checkpoint FROZEN (K00-c9bdd9a0) · Enter NOT YET PRESSED.**
 **Subject SHA:** `728924819` (PRE-WITNESS-02 §3 applied; plan `6566ace40` accepted as written).
 **Compile of record:** `KERNEL-00_MAC-COMPILE-03_2026-09-11.md` — GREEN (build · test 20/20 · gate 16/16 · xcodegen · unsigned · signed).
 **Question this run answers:** with an invalid input format made unreachable at `installTap` (§3.1) and every refused build journalled into the existing RecoveryPolicy road (§3.2/§3.4), does the organism survive **Enter conversation** on this device — and what does the journal show at the entry seam (plan §4, candidate A first)?
@@ -57,7 +57,19 @@ A signed `xcodebuild … BUILD SUCCEEDED` tail appears in the founder's terminal
 
 (Previously written before attempt 3, kept for the record:) Next: unlock the phone **and keep it unlocked** (Settings → Display & Brightness → Auto-Lock → Never for the duration of the witness; the runbook's 60-minute session requires it anyway), then launch — either by the same `devicectl` command while the screen is unlocked, or by tapping the `VoiceKernel K00` icon on the Home Screen (a lawful launcher; the record names whichever was used). Then the pre-enter checkpoint (liveness · append · export) **before** any Enter.
 
-## 5. Pre-enter checkpoint — PENDING
+## 5. Pre-enter checkpoint — FROZEN (session `K00-c9bdd9a0`)
+
+Two exports received, byte-identical (`kernel00-K00-c9bdd9a0-1789222918.jsonl`, and a second export of the same file). Identical content under the same session id means the same process and **no Enter between them**. Verbatim:
+
+```
+{"cause":"didBecomeActive","component":"Harness","event":"app_lifecycle","evidence":{"audioSession":"inactive","floor":"idle","inputFlow":"unknown"},"generation":0,"seq":1,"session":"K00-c9bdd9a0","timeMonotonicMs":836087877}
+{"cause":"willResignActive","component":"Harness","event":"app_lifecycle","evidence":{"audioSession":"inactive","floor":"idle","inputFlow":"unknown"},"generation":0,"seq":2,"session":"K00-c9bdd9a0","timeMonotonicMs":836121432}
+{"cause":"didBecomeActive","component":"Harness","event":"app_lifecycle","evidence":{"audioSession":"inactive","floor":"idle","inputFlow":"unknown"},"generation":0,"seq":3,"session":"K00-c9bdd9a0","timeMonotonicMs":836196591}
+```
+
+Same shape as run 1 §0: liveness PROVEN (recorder alive, `seq` monotonic 1→3), append PROVEN (the resign/active pair is the export share-sheet round-trip, ~34 ms out, ~75 ms back), export PROVEN (non-destructive — the second export reproduces the first exactly). **Zero session mutations before the member act**: `audioSession: inactive` on every record, `generation 0`, no `session_*`, no `command`. K00-01 = pre-enter purity holds; K00-16 consistent; neither spent. The 1,789,222,918 in the filename is the export's epoch-seconds clock.
+
+**Enter NOT YET PRESSED at the time of both exports.**
 ## 6. Enter conversation — PENDING (the observation of record is the exported journal, then any device crash report; a report must list dylib UUID `1AEBEE45-…`)
 ## 7. Findings — PENDING
-## 8. Standing — OPEN · INSTALLED · LAUNCHED · IDLE ON SCREEN · NOTHING SPENT
+## 8. Standing — OPEN · INSTALLED · LAUNCHED · PRE-ENTER CHECKPOINT FROZEN · ENTER NOT YET PRESSED · NOTHING SPENT
