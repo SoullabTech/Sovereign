@@ -1,0 +1,129 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-12 14:44:35.704 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:44:35.707 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:44:35.806 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-12 14:44:35.971 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:44:36.170 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:44:37.603367-0400 DriverUITests-Runner[55301:12606370] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-12 14:44:38.071.
+Test Suite 'DriverUITests.xctest' started at 2026-09-12 14:44:38.072.
+Test Suite 'K00DriverTests' started at 2026-09-12 14:44:38.072.
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' started.
+    t =     0.00s Start Test at 2026-09-12 14:44:38.073
+    t =     0.02s Set Up
+    t =     0.02s Open life.soullab.voicekernel.k00
+    t =     0.02s     Launch life.soullab.voicekernel.k00
+    t =     0.11s         Setting up automation session
+2026-09-12 14:44:38.240 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     0.21s         Wait for life.soullab.voicekernel.k00 to idle
+    t =     1.33s Wait for life.soullab.voicekernel.k00 to become Running Foreground
+    t =     1.33s Waiting 10.0s for "Enter conversation" Button to exist
+    t =     2.36s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     2.36s         Checking existence of `"Enter conversation" Button`
+    t =     2.45s Checking existence of `"Voice processing: ON (default)" Button`
+    t =     2.48s Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     2.81s Waiting 3.0s for "Voice processing: ON (default)" Button to exist
+    t =     3.82s     Checking `Expect predicate `existsNoRetry == 1` for object "Voice processing: ON (default)" Button`
+    t =     3.83s         Checking existence of `"Voice processing: ON (default)" Button`
+    t =     3.89s Waiting 5.0s for "Enter conversation" Button to exist
+    t =     4.92s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     4.92s         Checking existence of `"Enter conversation" Button`
+    t =     4.98s Tap "Enter conversation" Button
+    t =     4.98s     Wait for life.soullab.voicekernel.k00 to idle
+    t =     4.99s     Find the "Enter conversation" Button
+    t =     5.02s     Check for interrupting elements affecting "Enter conversation" Button
+    t =     5.07s     Synthesize event
+    t =     5.37s     Wait for life.soullab.voicekernel.k00 to idle
+    t =    20.39s Waiting 5.0s for "Export journal" Button to exist
+    t =    21.42s     Checking `Expect predicate `existsNoRetry == 1` for object "Export journal" Button`
+    t =    21.42s         Checking existence of `"Export journal" Button`
+    t =    21.47s Tap "Export journal" Button
+    t =    21.48s     Wait for life.soullab.voicekernel.k00 to idle
+    t =    21.48s     Find the "Export journal" Button
+    t =    21.51s     Check for interrupting elements affecting "Export journal" Button
+    t =    21.55s         Wait for com.apple.springboard to idle
+    t =    21.63s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.64s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.67s     Found 1 interrupting element:
+    t =    21.67s         Find the "NotificationShortLookView" BannerNotification
+    t =    21.70s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.70s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.71s "NotificationShortLookView" BannerNotification from Application 'com.apple.springboard'
+    t =    21.71s     Invoking UI interruption monitors for "NotificationShortLookView" BannerNotification from Application 'com.apple.springboard'
+    t =    21.71s         Find the "NotificationShortLookView" BannerNotification
+    t =    21.73s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.74s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.74s Default interruption handler ignoring non-alert type element "NotificationShortLookView" BannerNotification.
+    t =    21.74s         Find the "NotificationShortLookView" BannerNotification
+    t =    21.77s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.77s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    21.78s         Default interruption handler waiting for banner notification to expire/automatically dismiss
+    t =    21.78s             Waiting 15.0s for "NotificationShortLookView" BannerNotification to not exist
+    t =    22.80s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    22.80s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    22.86s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    22.87s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    22.87s                     Capturing element debug description
+    t =    22.88s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    22.97s                         Find: Descendants matching type BannerNotification
+    t =    22.98s                         Find: Identity Binding
+    t =    22.98s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    23.06s                         Find: Descendants matching type BannerNotification
+    t =    23.06s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    23.87s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    23.87s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    23.97s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    23.98s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    23.98s                     Capturing element debug description
+    t =    23.98s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    24.18s                         Find: Descendants matching type BannerNotification
+    t =    24.18s                         Find: Identity Binding
+    t =    24.18s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    24.29s                         Find: Descendants matching type BannerNotification
+    t =    24.29s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    24.80s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    24.80s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    24.84s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    24.84s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    24.85s                     Capturing element debug description
+    t =    24.86s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    24.92s                         Find: Descendants matching type BannerNotification
+    t =    24.93s                         Find: Identity Binding
+    t =    24.93s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    24.99s                         Find: Descendants matching type BannerNotification
+    t =    25.00s                         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =    25.78s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    25.78s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    25.83s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    25.84s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =    25.85s         Verifying handling...
+    t =    25.91s Confirmed successful handling of interrupting element
+    t =    25.91s     Synthesize event
+    t =    26.21s     Wait for life.soullab.voicekernel.k00 to idle
+    t =    28.43s Terminate life.soullab.voicekernel.k00:55302
+    t =    29.52s Wait for life.soullab.voicekernel.k00 to become Not Running
+    t =    29.52s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' passed (29.603 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-12 14:45:07.676.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.603 (29.604) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-12 14:45:07.683.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.603 (29.611) seconds
+Test Suite 'Selected tests' passed at 2026-09-12 14:45:07.692.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.603 (29.621) seconds
+2026-09-12 14:45:07.752 xcodebuild[48280:26214584] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:45:07.997 xcodebuild[48280:26214584] [MT] IDETestOperationsObserverDebug: 32.025 elapsed -- Testing started completed.
+2026-09-12 14:45:07.997 xcodebuild[48280:26214584] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-12 14:45:07.997 xcodebuild[48280:26214584] [MT] IDETestOperationsObserverDebug: 32.025 sec, +32.025 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-deldsfeqqvgonyezbtezivlhoyyc/Logs/Test/Test-DriverUITests-2026.09.12_14-44-35--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
