@@ -55,6 +55,8 @@ run_test(){ # $1 = test method
   python3 "$ROOT/scripts/witness/k00-ledger.py" --header /dev/null 2>/dev/null | head -2
 } > "$LEDGER"
 
+log "xcodegen generate (driver project only; gitignored, regenerated per checkout)"
+( cd "$ROOT/ios/VoiceKernelDriver" && xcodegen generate ) > "$LEDGER_DIR/xcodegen.log" 2>&1 || { log "DRIVER/INFRASTRUCTURE FAILURE: xcodegen generate failed (see xcodegen.log)"; exit 3; }
 log "build-for-testing (driver only; the harness is untouched)"
 xcodebuild build-for-testing -project "$PROJ" -scheme DriverUITests -destination "id=$XDEST" -derivedDataPath "$DD" DEVELOPMENT_TEAM="${K00_TEAM:-ZVK2X646Z2}" > "$LEDGER_DIR/build-for-testing.log" 2>&1 || { log "DRIVER/INFRASTRUCTURE FAILURE: build-for-testing failed (see build-for-testing.log)"; exit 3; }
 XCTESTRUN="$(ls -t "$DD"/Build/Products/*.xctestrun | head -1)"; log "xctestrun: $XCTESTRUN"
