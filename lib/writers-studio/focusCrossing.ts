@@ -49,6 +49,9 @@ import type { MemberIdentity } from '@/lib/maia/canonical-turn';
 import {
   focusParticipation, type FocusMemberStatus, type FocusParticipation,
 } from './focusParticipation';
+import {
+  completeFocusCrossingAct, openFocusCrossingAct, type FocusActMember,
+} from './focusCrossingAct';
 
 /**
  * Reads ONE authorized member. ⛔ Called only after that member's `may_cross`.
@@ -138,6 +141,13 @@ export type FocusCrossingResult = {
   readonly boundary: BoundaryOutcome;
   /** What MAIA was actually given, so the surface can say it too. */
   readonly participation: FocusParticipation | null;
+  /**
+   * ⛔ `contradiction` is NOT a failure of the crossing — it is the record
+   * refusing to let one actId describe two different acts. The crossing did not
+   * happen, and the reason is that the request disagreed with the act it
+   * claimed to be retrying.
+   */
+  readonly act: 'opened' | 'continued' | 'contradiction' | 'unrecorded' | null;
 };
 
 export async function performFocusCrossing(
@@ -146,7 +156,8 @@ export async function performFocusCrossing(
 ): Promise<FocusCrossingResult> {
   const refused = (b: BoundaryOutcome, p?: FocusDisclosurePresentation): FocusCrossingResult => ({
     presentation: p ?? presentBoundaryOutcome(b),
-    response: null, disclosureIds: [], disclosureId: null, boundary: b, participation: null,
+    response: null, disclosureIds: [], disclosureId: null, boundary: b,
+    participation: null, act: null,
   });
   const unavailable: BoundaryOutcome = { kind: 'receipt_refused', outcome: { kind: 'unavailable' } };
 
@@ -250,7 +261,43 @@ export async function performFocusCrossing(
      crossing did not. */
   if (participation.readable === 0) return refused(unavailable);
 
-  // ── 3 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
+  /* ── ⭐⭐ 3 · THE WRITER'S ACT, RECORDED BEFORE THE TURN.
+     Without this the system can perform the right crossing and be unable to
+     answer, afterwards, what the crossing was OF — which is exactly what a
+     RevisionProposal will need to point back to.
+
+     ⭐ It is opened HERE, after the participation is settled and before any
+     cognition, so the record describes the attention as it actually stood at
+     the moment of asking.
+
+     ⛔ A CONTRADICTION STOPS THE CROSSING. One actId describing two different
+     acts is not a retry, and continuing would produce a MAIA turn whose
+     provenance says something the writer never asked. Receipts stay
+     `attempted`, which is truthful: authorization existed, the crossing did not. */
+  const actMembers: FocusActMember[] = participation.members.map((m) => ({
+    focusMemberId: m.focusMemberId,
+    ordinal: m.ordinal,
+    currencyState: m.status === 'readable' ? 'current' : m.status,
+    bodyAvailable: m.bodyAvailable,
+    disclosureReceiptId: m.bodyAvailable
+      ? established.find((e) => e.member.focusMemberId === m.focusMemberId)?.disclosureId ?? null
+      : null,
+  }));
+  const act = await openFocusCrossingAct({
+    actId: req.actId, memberId: req.memberId, workId: req.workRef,
+    members: actMembers, activeMemberId: req.activeMemberId,
+  });
+  if (act.kind === 'contradiction' || act.kind === 'refused') {
+    return { ...refused(unavailable), act: 'contradiction' };
+  }
+  if (act.kind === 'unavailable') {
+    /* ⛔ An unrecordable act must not become an unrecorded crossing. The record
+       is the only thing that can later say what was attended to, and a turn
+       produced without it is a turn nothing can account for. */
+    return { ...refused(unavailable), act: 'unrecorded' };
+  }
+
+  // ── 4 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
   const prepared = await deps.prepare({
     identity: req.identity,
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
@@ -258,7 +305,7 @@ export async function performFocusCrossing(
   });
   if (!prepared) return refused(unavailable);
 
-  // ── 4 · THE HANDOFF. ⭐ F8 · ONE gesture, ONE canonical turn — not one per
+  // ── 5 · THE HANDOFF. ⭐ F8 · ONE gesture, ONE canonical turn — not one per
   // member. Generation BEGINS here; the promise is deliberately not awaited yet,
   // so the receipts are confirmed at the moment of crossing.
   const { handoff, result: generating } = deps.generate(prepared, {
@@ -290,7 +337,12 @@ export async function performFocusCrossing(
     else confirmedIds.push(disclosureId);
   }
 
-  // ── 5 · Only now await generation. A failure here leaves truthful `crossed` rows.
+  /* ⭐ A8/A9 · the act names the ONE turn it produced. A second, different turn
+     on this act refuses — which is how the record stays able to say that this
+     conversation was this gesture's conversation. */
+  await completeFocusCrossingAct(req.actId, prepared.turn.turnId);
+
+  // ── 6 · Only now await generation. A failure here leaves truthful `crossed` rows.
   const result = await generating;
 
   return {
@@ -300,5 +352,6 @@ export async function performFocusCrossing(
     disclosureId: confirmedIds[0] ?? null,
     boundary,
     participation,
+    act: act.kind === 'opened' ? 'opened' : 'continued',
   };
 }

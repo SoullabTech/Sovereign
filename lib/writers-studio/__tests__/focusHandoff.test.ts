@@ -12,8 +12,46 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 const calls: { sql: string; params: unknown[] }[] = [];
 let consentPresent = false;
+
+/* ⭐ STEP 2B/ACT · the crossing now records the writer's act before the handoff,
+   so these harnesses must model the act tables. ⛔ The act store is NOT injected:
+   it is wired directly, exactly as the receipt store is, so that no alternate
+   provenance path can be substituted for it. The instrument follows the
+   implementation; the implementation does not open a seam for the instrument. */
+const actRows: { acts: any[]; members: any[] } = { acts: [], members: [] };
+const actQuery = (sql: string, params: unknown[] = []) => {
+  if (/INSERT INTO focus_crossing_acts/.test(sql)) {
+    if (actRows.acts.some((a) => a.act_id === params[0])) return { rows: [], rowCount: 0 };
+    actRows.acts.push({ act_id: params[0], member_id: params[1], work_id: params[2],
+      active_member_id: params[3] ?? null, canonical_turn_id: null });
+    return { rows: [{ act_id: params[0] }], rowCount: 1 };
+  }
+  if (/INSERT INTO focus_crossing_act_members/.test(sql)) {
+    actRows.members.push({ act_id: params[0], focus_member_id: params[1], ordinal: params[2],
+      currency_state: params[3], body_available: params[4], disclosure_receipt_id: params[5] ?? null });
+    return { rows: [], rowCount: 1 };
+  }
+  if (/FROM focus_crossing_act_members\b/.test(sql)) {
+    return { rows: actRows.members.filter((m) => m.act_id === params[0]), rowCount: 0 };
+  }
+  if (/FROM focus_crossing_acts\b/.test(sql)) {
+    const a = actRows.acts.find((x) => x.act_id === params[0]);
+    return { rows: a ? [a] : [], rowCount: a ? 1 : 0 };
+  }
+  if (/UPDATE focus_crossing_acts/.test(sql)) {
+    const a = actRows.acts.find((x) => x.act_id === params[1]);
+    if (a && a.canonical_turn_id === null) { a.canonical_turn_id = params[0]; return { rows: [], rowCount: 1 }; }
+    return { rows: [], rowCount: 0 };
+  }
+  return null;
+};
+
 jest.mock('@/lib/db/postgres', () => ({
+  transaction: jest.fn(async (cb: (tx: { query: (s: string, p?: unknown[]) => unknown }) => Promise<unknown>) =>
+    cb({ query: async (s: string, p: unknown[] = []) => actQuery(s, p) ?? { rows: [], rowCount: 0 } })),
   query: jest.fn(async (sql: string, params: unknown[] = []) => {
+    const act = actQuery(sql, params);
+    if (act) return act;
     calls.push({ sql, params });
     if (/runtime_consent_state/.test(sql)) {
       if (/INSERT/.test(sql)) { consentPresent = true; return { rows: [{ request_id: params[0] }], rowCount: 1 }; }
@@ -48,6 +86,7 @@ const req = (over: Record<string, unknown> = {}) => ({
 const confirms = () => calls.filter(c => /UPDATE context_disclosure_receipts/.test(c.sql));
 
 beforeEach(() => {
+  actRows.acts.length = 0; actRows.members.length = 0;
   calls.length = 0; consentPresent = false;
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
