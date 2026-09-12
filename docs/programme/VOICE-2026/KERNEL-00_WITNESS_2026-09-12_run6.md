@@ -1,4 +1,4 @@
-# KERNEL-00 · DEVICE WITNESS · RUN 6 — 2026-09-12 — P5-B0 removal control — EXECUTED · VERIFIED · MIXED (awaiting attestation)
+# KERNEL-00 · DEVICE WITNESS · RUN 6 — 2026-09-12 — P5-B0 removal control — EXECUTED · VERIFIED · MIXED · ATTESTED
 
 **Question:** is the Phase-A pre-VP `input.outputFormat(forBus: 0)` read the cause of the VP-ON engine becoming running on this device/runtime (P5-F1)? Plan and predeclared decision table: `PRE-WITNESS-05_P5-B0_2026-09-12.md` §4.
 
@@ -80,7 +80,7 @@ Neither cell of the pre-VP-read question is reached: the read is **not establish
 - **O3** The 6b interruption is the first device evidence for the interruption/re-activation law (P2) and rebuild-not-resume under interruption; its cause is not in the journal.
 - **O4** Every VP-ON `setVoiceProcessingEnabled` call on this subject still posts `route_changed` from inside the call (93–237 ms), on every generation, taking or not.
 
-## 8. Standing after run 6 (awaiting founder attestation)
+## 8. Standing after run 6 (superseded by §9)
 
 ```
 SUBJECT              24a6fcfa1 · dylib CC0D3604-…
@@ -92,3 +92,55 @@ TABLE                MIXED → NONDETERMINISM → causal narrowing STOPPED · me
 E1–E4                HELD · B2 HOLD · thresholds UNCHANGED · architecture UNCHANGED · NO CODE
 OWED                 founder attestation · 6b interruption cause (UNKNOWN unless stated) · founder ruling on how nondeterminism is investigated · protocol fields UNKNOWN
 ```
+
+## 9. Founder attestation and rulings — 2026-09-12 (verbatim, no code)
+
+**Attestation (founder, verbatim):**
+
+> Founder attestation — 2026-09-12: I witnessed Run 6 as recorded. On the P5-B0 subject, voice processing ON produced mixed cold-start behavior: one session reached and held listening in generation 1, while another failed entry in generation 1 and reached listening only through bounded recovery. The VP-OFF control reached listening normally and later recovered lawfully from an unplanned interruption. I attest that the record fairly represents what occurred. Run 6 establishes nondeterminism on this subject; it does not establish a causal mechanism.
+
+**RUN 6 ATTESTED. NONDETERMINISM ESTABLISHED on `24a6fcfa1`. Mechanism NOT established.**
+
+**Rulings (founder, same act):**
+
+1. **6b interruption cause — UNKNOWN.** Founder does not know whether it was a call, Siri, a notification, a system event, or something else. **No cause is to be inferred.** The only finding: a real interruption occurred and the governed rebuild path recovered from it.
+2. **Nondeterminism investigation — NO CODE. Three stages, in order:**
+   - **Stage 1:** five additional cold VP-ON sessions on the currently installed `24a6fcfa1` (dylib `CC0D3604-…`). Each classified **only** as one of: `gen-1 listen` · `failure then recovery` · `failure then degradation` · `other observed shape`.
+   - **Stage 2:** reinstall the **exact same signed P5-B0 artifact** (same source, same dylib identity), then three more cold VP-ON sessions — separating source behaviour from possible install/runtime-state effects.
+   - **Stage 3, conditional:** only if those eight sessions continue to show a coherent mixed distribution, reinstall Phase A `4596b9bdb` and run five cold VP-ON sessions for comparison. Even then, a difference in rates establishes **at most a possible probabilistic influence** of the pre-VP read, never deterministic causation.
+3. **W4 manual protocol — CLOSED AS UNEXERCISABLE.** Three attempts (≈10.8 s · 9.85 s · 3.57 s) show the ≤ 2 s manual witness is not a reliable human test. Recorded:
+   ```
+   W4 manual protocol     CLOSED · UNEXERCISABLE
+   W4 exact condition     UNMEASURED · NOT PASS · NOT FAIL
+   ```
+   If that exact condition later remains required for KERNEL-00 acceptance, it gets a **separately authorized deterministic harness instrument**. That instrument is **NOT authorized now**.
+4. The question has changed, in the founder's words: from *"which startup line fixes Apple?"* to *"what hidden runtime state makes the same governed startup sometimes live and sometimes fail?"*
+
+**Standing after this act:**
+
+```
+RUN 6                   ATTESTED
+P5-B0                   MIXED · NONDETERMINISM ESTABLISHED · mechanism NOT established
+6b interruption cause   UNKNOWN (no inference)
+W4 manual protocol      CLOSED · UNEXERCISABLE · exact condition UNMEASURED (not pass, not fail); deterministic instrument NOT authorized
+VOICEKERNEL CODE        FROZEN · E1–E4 HELD · B2 HOLD · STT/TTS OUT OF SCOPE · THRESHOLDS UNCHANGED · ARCHITECTURE UNCHANGED
+NEXT (no code)          Stage 1: 5 × cold VP-ON on installed 24a6fcfa1 → Stage 2: reinstall the identical signed artifact, 3 × cold VP-ON
+                        → Stage 3 only if a coherent mixed distribution persists: reinstall 4596b9bdb, 5 × cold VP-ON (rates ≠ causation)
+```
+
+## 10. Nondeterminism investigation — session ledger (filled on receipt)
+
+Classification vocabulary is closed to the founder's four: `gen-1 listen` · `failure then recovery` · `failure then degradation` · `other observed shape`.
+
+| Stage | # | Session | Records | SHA-256 | Class | Note |
+|---|---|---|---|---|---|---|
+| 1 | 1 | — | | | | |
+| 1 | 2 | — | | | | |
+| 1 | 3 | — | | | | |
+| 1 | 4 | — | | | | |
+| 1 | 5 | — | | | | |
+| 2 (after reinstall; dylib must read `CC0D3604-…`) | 1 | — | | | | |
+| 2 | 2 | — | | | | |
+| 2 | 3 | — | | | | |
+
+Prior on this subject, for the ledger's context: 6a `gen-1 listen` · W4 `gen-1 listen` · 6a-2 `failure then recovery`.
