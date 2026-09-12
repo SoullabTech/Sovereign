@@ -1,6 +1,6 @@
 # KERNEL-00 · DEVICE WITNESS · RUN 3 — 2026-09-12
 
-**Status: OPEN — 3a and 3b EXECUTED (founder-reported; journal files not yet in the record) · A REJECTED · B REQUIRED (refined) · C premise SUPPORTED · W4 under VP ON NOT MEASURED.**
+**Status: ATTESTED 2026-09-12 (§9) · journal files NOT YET IN THE RECORD (founder confirms both exist intact: `kernel00-K00-18f515e1-1789225392.jsonl`, `kernel00-K00-24694629-1789225445.jsonl`; to be preserved verbatim and re-read here on receipt) · A REJECTED · B REQUIRED (refined) · C premise SUPPORTED · W4 under VP ON NOT MEASURED (final for this run; no rerun to fill it).**
 **Subject:** kernel `32047f9f5` (PRE-WITNESS-03 A+B+C+D) at tested SHA `e5046059e` (C4/C5 tests-only). Compile of record: `KERNEL-00_MAC-COMPILE-04_2026-09-12.md` — GREEN (build · test 22/22 · gate 20/20 · xcodegen · unsigned · signed).
 **Question this run answers (founder acceptance conditions, run-2 record §10):** EXIT — after `session_released`, no later `graph_started`/`graph_rebuilt`, floor stays idle · RECOVERY — configuration-change reactions bounded by the existing RecoveryPolicy, exhaustion → `degraded` · VP OFF CONTROL — do the repeated `engine_configuration_changed` disappear (local evidence for VP-induced reconfiguration) or continue (VP attribution falsified) · NO B/C DECISION until that control journal exists.
 **Device:** iPhone 16 Pro Max · iOS 26.6.1 (23G83) Beta · `A0736AC8-793B-516F-AC72-C076DB6CEE38`. Voice processing default ON.
@@ -78,6 +78,15 @@ A                    REJECTED for normal operation (kept as safety)
 B                    REQUIRED, refined (defer → observe settle → rebuild only on health evidence)
 C                    causal premise SUPPORTED · naming deferred to the next plan
 W4 under VP ON       NOT MEASURED
-RECORD               OPEN — owed: the run-3 journal files (verbatim beside this record), any 3a post-Leave export, protocol fields
-NEXT                 bounded plan for B (refined) + C (naming), for founder acceptance; no code before it
+RECORD               ATTESTED · journal files owed to this record (verification pending) · 3a post-Leave export: NONE EXISTS (founder) · protocol fields UNKNOWN (final)
+NEXT                 PRE-WITNESS-04 plan DRAFTED (founder-authorized, plan only) → founder acceptance → code
 ```
+
+## 9. Founder attestation (verbatim) and closing rulings
+
+> Founder attestation — 2026-09-12: I witnessed Run 3 as recorded: with voice processing ON the kernel remained bounded but degraded under repeated configuration-change recovery; with voice processing OFF it reached and held listening and exited cleanly. I attest that the run-3 record fairly represents what occurred.
+
+- **3a post-Leave export: none was uploaded.** W4 under VP ON = **NOT MEASURED** for run 3, by ruling; no rerun merely to fill it — folded into the next authorized witness.
+- **Journal files:** the founder confirms both exact files exist intact (`kernel00-K00-18f515e1-1789225392.jsonl` · `kernel00-K00-24694629-1789225445.jsonl`). They are to be attached to this session, preserved beside this record, and re-read independently; §5/§6 move from founder-reported to verified only then.
+- **Protocol fields, runs 2 and 3 — `UNKNOWN` (final unless the founder states them):** launches by icon tap · debugger never attached · Enter once per session · 10:26–10:33 action · Apply faults never tapped. Not inferred from journals.
+- **PRE-WITNESS-04: draft AUTHORIZED, plan only, no code.** Scope exactly: refined B · C vocabulary · W4 VP-ON exit measurement folded into the next witness. → `PRE-WITNESS-04_PLAN_2026-09-12.md`.
