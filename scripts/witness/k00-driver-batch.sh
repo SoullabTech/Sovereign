@@ -111,7 +111,7 @@ for i in $(seq 1 "$N"); do
     echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | in-test state check found the harness running; sample invalid, not repaired |" >> "$LEDGER"; continue
   fi
   if grep -q 'DRIVER/INFRASTRUCTURE FAILURE' "$LEDGER_DIR/sample-$i-xcodebuild.log" || [ -z "$NEW" ]; then
-    WHY="$(failure_signature "$LEDGER_DIR/sample-$i-xcodebuild.log")"
+    WHY="$(failure_signature "$LEDGER_DIR/sample-$i-xcodebuild.log" | tr -d '\r')"   # xcodebuild emits CR inside XCTest failure lines
     echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | $WHY (rc=$RC · wall $((T1-T0)) s) |" >> "$LEDGER"; continue
   fi
   for f in $NEW; do
