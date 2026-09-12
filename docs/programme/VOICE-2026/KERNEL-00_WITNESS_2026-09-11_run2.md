@@ -117,7 +117,35 @@ Four of fifty-two generations received input callbacks (4800-frame batches, real
 
 Xcode screenshots received alongside: the Xcode project window is the stale `488e066 (detached)` GUI project with Team `None` and yesterday's failed build — it played no part in run 2 (CLI build · `devicectl` install · icon launch). The Devices window confirms iOS 26.6.1 (23G83) · iPhone 16 Pro Max · identifier `00008140-00163D9922E0801C` · installed `VoiceKernel K00` v1 (`life.soullab.voicekernel.k00`) beside `Soullab 2511` (`life.soullab.maia`, the legacy app, not running). **Open Recent Logs** in that window is the crash-report route for the owed run-1 dylib UUID.
 
-## 7. Findings
+### 6c. Leave — the exit seam works, and the loop outlives it (sessions `K00-248d5aa6` full export · `K00-73b1c610`)
+
+Full export of `K00-248d5aa6` (2994 records, replaces the 287-record partial beside this file): **6.2 min after Enter · 584 generations · 583 `graph_started` (580 `engineRunning: false`, 3 `true`) · 583 `engine_configuration_changed` at 122–700 ms of generation age (mean 307) · 1166 `route_changed` · input in 16 generations · floor reached `listening` 12 times, never held · no `input_health_sample` ever.** Harness bookkeeping at 10:40 (screenshot): elapsed 7.0 min · cycles complete 0 · route changes 782 · interruptions 0 · media resets 0 · **manual interventions 0** · journal events 3000 · **replay FAIL · 1 orphan · 0 unattributed · 0 broken causality**.
+
+**Leave (K00-02 exit, VOICE-06 member authority) — HELD as a session act:**
+
+```
+seq 2981  command leaveConversation                       gen 583
+seq 2983  session_deactivated  ok        (causeSeq 2981)  — exactly one, as the law requires
+seq 2984  session_released     PlayAndRecord/VoiceChat … → inactive
+seq 2985  floor recovering → idle
+```
+
+The same shape in `K00-73b1c610` (263 records, 30.7 s, 50 generations, no input this time): `leaveConversation` → `session_deactivated ok` → `session_released` → `recovering → idle`, and that export ends there, clean.
+
+**K00-W4 — NEW · the loop outlives Leave.** In `K00-248d5aa6`, the records after the floor went idle:
+
+```
+seq 2986  engine_configuration_changed  os_configuration_change   (no format evidence — `graph` was already nil)
+seq 2987  graph_started  gen 584  cause route_recovery  engineRunning TRUE  format valid   ← a new engine built AFTER session_released
+seq 2988  graph_rebuilt  gen 584
+seq 2989  floor_transition  idle → recovering                                          ← THE REPLAY ORPHAN (unlawful edge)
+seq 2990  engine_configuration_changed  gen 584  age 122
+seq 2991  graph_start_refused  gen 585  invalidInputFormat(0.0 Hz, 1 ch)               (the session is inactive now — the guard holds)
+seq 2992–2994  error graph_rebuild_failed → recovery_requested → recovery_scheduled 500 ms attempt 1 nextGeneration 586
+```
+
+Cause, read from source: `leaveConversation` cancels `pendingRecovery`, stops the tick, stops the graph, releases the session and clears `inConversation` — but `handleConfigurationChange` guards only on generation (`gen == snap.generation`, still 583) and **not on `inConversation`**, so a change notification already in flight from generation 583's stopped engine was honoured after exit and `rebuildGraph` built generation 584 against a released session. The recovery it then scheduled is dropped by the `inConversation` guard on the recovery path (`VoiceKernel.swift:536`), which is why the harness settled at 3000 events rather than looping on — the budget path is guarded, the route path is not. Member-facing: the organism acted for ~900 ms after the member said stop. Session custody was NOT re-taken (no `session_activated` after release — K00-01/K00-02 hold); the engine was. Same seam family as W3: the route-recovery path is the one path with no owner check, no budget and no exit guard.
+
 
 **PRE-WITNESS-02 §3 — MET, EXACTLY AS PLANNED.** K00-W1 as a *crash* is closed: the invalid format (0 Hz on generation 2's fresh engine, built inside the reconfiguration window) was refused by the precondition before `installTap`, thrown as a Swift error, journalled with the format it saw (`graph_start_refused`), routed through the existing `graph_rebuild_failed` → `recovery_requested` → `recovery_scheduled` road, and the RecoveryPolicy's 500 ms first backoff was honoured to within 15 ms. K00-W2 is closed: the failure is in the journal, with evidence. The recorder outlived its own fault. **The process did not die on any Enter.**
 
@@ -125,12 +153,14 @@ Xcode screenshots received alongside: the Xcode project window is the stale `488
 
 **On §4 A/B/C.** Candidate A (rebuild-now + guard) was tested first, as ruled: it prevents death and it does not prevent the loop. The gen-2 refusal shows the 0 Hz belongs to a *fresh engine created inside the window* — that is candidate B's premise, and B would remove that one refusal; it would not by itself stop a loop that each valid start re-provokes. C (reclassify the change as an observation rather than a recovery trigger) is the one that speaks to K00-W3 directly. **No candidate is chosen here.** Both B and C remain NOT AUTHORIZED; the evidence for the founder's ruling is above.
 
+**K00-W4 (see §6c).** Post-exit configuration change honoured; generation 584 built after `session_released`; `idle → recovering` = the replay orphan (K00-17 FAIL on this session for exactly one edge, and the replayer caught it — the instrument worked). Not repaired.
+
 **Checklist (K00-01…18) as measured in this run**
 
 | Law | Result | Evidence |
 |---|---|---|
 | K00-01 one session mutator | HELD | only `AudioSessionAuthority` records mutate; kernel/harness none |
-| K00-02 one activation on entry | HELD | exactly one `session_activated` (seq 7); every later session record is a `route_changed` observation |
+| K00-02 one activation on entry, one deactivation on exit | HELD | one `session_activated` (seq 7); on Leave one `session_deactivated` + `session_released` (both sessions); no re-activation after release |
 | K00-03 entering → listening ≤ 1500 ms | **FAIL** | never `listening`; `recovering` from seq 17 |
 | K00-04 physiology | NOT MEASURABLE | zero callbacks, no samples |
 | K00-05/06 output / duplex | NOT REACHED | |
@@ -140,7 +170,7 @@ Xcode screenshots received alongside: the Xcode project window is the stale `488
 | K00-11 route | built-in only this run | |
 | K00-12–15 | NOT REACHED | |
 | K00-16 nothing else in build | CONSISTENT | |
-| K00-17 replayable causality | HELD | every automatic act carries `causeSeq` (config changes are observations) |
+| K00-17 replayable causality | **FAIL on one edge** (K00-248d5aa6): `idle → recovering` after Leave = 1 orphan; 0 unattributed · 0 broken causality; every automatic act carries `causeSeq` | the replayer caught it — the instrument is sound; the edge is W4 |
 | K00-18 | NOT REACHED | |
 
 H1 (harness export latch) stands as recorded below, unrepaired.
@@ -156,8 +186,10 @@ ENTER                EXECUTED twice (K00-983b2f79 → gen 487 · K00-248d5aa6 �
 PRE-WITNESS-02 §3    MET (guard exercised at gen 2; failure journalled; RecoveryPolicy road taken)
 K00-W1 crash         CLOSED
 K00-W2 unrecordable  CLOSED
-K00-W3 NEW           self-provoked, unbounded route-recovery rebuild loop (E18 shape inside the kernel)
-K00-03               FAIL · K00-10 exercised once, not governing the loop
+K00-W3 NEW           self-provoked, unbounded route-recovery rebuild loop (E18 shape inside the kernel) — 584 gen / 6.2 min
+K00-W4 NEW           the route-recovery path outlives Leave (engine rebuilt after session_released; idle→recovering orphan)
+LEAVE                HELD as a session act (one deactivation, release, idle) in both sessions
+K00-03               FAIL · K00-10 exercised once, not governing the loop · K00-17 FAIL on the one W4 edge
 THRESHOLDS           UNCHANGED · ARCHITECTURE UNCHANGED · CANDIDATE B/C NOT AUTHORIZED · REPAIR NONE
 RECORD               OPEN — awaiting founder attestation and ruling
 ```
