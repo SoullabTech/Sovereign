@@ -160,6 +160,6 @@ Cumulative on 24a6fcfa1   gen-1 VP-ON starts that took: 6 of 8  (6a · W4 · S1-
 
 **Observation O5 (kept as observation):** in S1-3 the "running at start return, not running shortly after, zero callbacks" reading appeared in **generation 1** (TRUE at +351 ms, FALSE at +385 ms) and again in generation 4 (TRUE → FALSE 178 ms later). With 6a-2's gen 3 that is three instances of O1's shape. Earlier gen-1 failures (runs 2–4, 6a-2) read FALSE at both points. No mechanism is read into this.
 
-**Protocol note:** S1-3 was exported ≈ 4.7 s after Enter, before the ~15 s hold; whether that was deliberate is recorded as the founder states it. The session remains in the ledger as received.
+**Protocol note (founder: "I just did it fast"):** the Stage 1 holds were shorter than the ~15 s protocol — S1-3 exported at ≈ 4.7 s (mid-recovery, outcome unobserved), S1-2 at 8.7 s, S1-4 at 7.7 s, S1-5 at 10.8 s, S1-1 at 28.6 s. Founder-stated cause: speed, not a deliberate truncation. Generation-1 classification is unaffected (it is decided within the first ~1.5 s); only S1-3's post-failure outcome was lost to the early export. Sessions remain in the ledger as received.
 
 **Stage 2 is now reachable per the founder's sequencing:** reinstall the identical signed P5-B0 artifact (the same DerivedData product; the dylib must still read `CC0D3604-7902-373E-A2BB-2C093D9BF804`), record the install output and the post-install `installed / running` state, then three cold VP-ON sessions.
