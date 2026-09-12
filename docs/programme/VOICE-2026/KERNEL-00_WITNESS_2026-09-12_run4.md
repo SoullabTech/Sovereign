@@ -80,6 +80,12 @@ seq 37–40 leaveConversation → session_deactivated ok (once) → session_rele
 
 **Verified reading:** identical to 3b in kind and cleaner in instrumentation: with VP OFF the engine reports `engineRunning: true` immediately at start, input flows within a third of a second, listening holds in generation 1 for the whole session, and Leave is exactly one deactivation. No configuration change of any kind. **K00-03 PASS under the VP-OFF control** (not the production posture; a control).
 
+### 6b. H2 — journal export fails after a VP-ON Enter on the run-4 build (founder-reported; mechanism UNKNOWN)
+
+Founder: *"Testing with ON doesn't allow me to create and send journal."* A fresh idle session (`K00-5f2c9cb1`, 1 record, `didBecomeActive` only, preserved as `…_run4_K00-5f2c9cb1_idle-export-control.jsonl`) exported and arrived normally, so export works while the kernel is idle. On the PRE-WITNESS-03 build, VP-ON sessions exported normally (3a, and `K00-b0066fcf` which reached this record). On the run-4 build, after a VP-ON Enter, the founder cannot produce/send the journal. Whether the share sheet never appears, appears without a usable file, or the transfer fails is not yet described. **Not repaired; not in any authorized scope; recorded as H2 beside H1.** Consequence: the in-memory recorder's only egress is the harness export, so until H2 is understood the VP-ON F2/F3 question has no on-device route through the sheet.
+
+**Recovery route that needs no code:** `HarnessModel.exportJournal()` writes `kernel00-<session>-<epoch>.jsonl` to `FileManager.default.temporaryDirectory` **before** presenting the sheet. Every Export tapped under VP ON therefore most likely wrote its file into the app container's `tmp/`. Xcode → Window → Devices and Simulators → the iPhone → Installed Apps → `VoiceKernel K00` → `⋯` → **Download Container…** yields an `.xcappdata` bundle; the files are under `AppData/tmp/`. Any file there whose records carry `"voiceProcessing":"true"` together with `"classification"` is a run-4 VP-ON session. iOS may purge `tmp/` under storage pressure or after a long idle, so the download should be done before anything else on the phone.
+
 ## 7. Findings (provisional until the 4a-1 journal arrives or is declared lost)
 
 - **F1 is falsified with VP ON** (screenshot): deferral alone did not let the existing generation settle into a live input; the supervisor's entry window expired and its own verdict drove recovery, three times, to `degraded` under `entry_timeout`.
@@ -95,5 +101,5 @@ SUBJECT              35b0f61d0 · dylib 37A27138-…
 RUN 4b (VP OFF)      VERIFIED · K00-03 PASS (control) · clean Leave
 RUN 4a-1 (VP ON)     EXECUTED · JOURNAL NOT EXPORTED · screenshot: degraded budget_exhausted:entry_timeout · gen 9 · F1 FALSIFIED · F2/F3 UNDECIDED
 RUN 4a-2 (W4, VP ON) NOT YET RUN
-OWED                 4a-1 journal (re-export if the process is alive; else NOT MEASURED) · 4a-2 · run-3 hashed files · protocol fields
+OWED                 4a-1 journal via container download (AppData/tmp) — else NOT MEASURED · 4a-2 (export via the same route) · H2 description · run-3 hashed files · protocol fields
 ```
