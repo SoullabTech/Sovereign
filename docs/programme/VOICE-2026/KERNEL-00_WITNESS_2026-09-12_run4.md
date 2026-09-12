@@ -160,6 +160,12 @@ Counts: 5 `graph_started` (every one `engineRunning: false`), 6 `engine_configur
 
 **B2 / B3:** still reserved. This file is the evidence the fork was waiting for: the deferred VP-enabled engine never runs, so "observe settlement" cannot succeed on this runtime; the question becomes whether a second start on the same engine after the change would run (B2, which per Amendment 2 conflicts with rebuild-not-resume once recovery is declared — and here recovery is declared by the supervisor 1.5 s later) or whether VP must be arranged before the first start so the start takes (B3). **Nothing here authorizes either; the ruling is the founder's.**
 
+### 5c. Which 4a session is which (so nothing is inferred)
+
+Two VP-ON sessions exist on the run-4 build. **(i)** the 11:26 session on the screenshot (§5: generation 9, `degraded budget_exhausted:entry_timeout`) — its journal was never written (§6c) and its process was later replaced; it stays **screenshot-only, NOT MEASURED as a journal**. **(ii)** `K00-fe6593f4` (§5b), the H2-discriminator session at 11:38, exported and verified — this is the run-4a VP-ON measurement of record. The founder's process listing shows a live `VoiceKernelHarness`; per the founder's own caution, the listing does not establish which session that process is, and the record does not infer it.
+
+**Run-1 code identity — CLOSED (founder-read):** `VoiceKernelHarness.debug.dylib` `DC6A68E9-F3A0-3427-871D-555CE7FAFD7A` from the 16:23:49 report; recorded in the run-1 witness §1.
+
 ## 7b. Crash-log domain (founder, `devicectl … --domain-type systemCrashLogs`, raw preserved in `/tmp/k00-crashlogs.txt`)
 
 ```
@@ -189,5 +195,5 @@ W4 under VP ON       NOT MEASURED (4a-2 owed)
 H2                   intermittent, not reproduced on the discriminator run; mechanism unknown; not repaired
 CRASH LOGS           only the three run-1 reports exist; no death in runs 2–4
 B2 / B3              RESERVED — founder ruling owed on this evidence
-OWED                 4a-2 · run-1 .ips dylib UUID (copy + grep) · 3a/3b/dd33d8f4 files attached here · protocol fields · attestation
+OWED                 4a-2 · 3a/3b/dd33d8f4 files attached HERE for hash verification (they exist in the founder's other workspace and on the Studio) · protocol fields · attestation · B2/B3 ruling
 ```
