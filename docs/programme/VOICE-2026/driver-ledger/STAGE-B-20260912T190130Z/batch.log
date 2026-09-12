@@ -1,0 +1,26 @@
+[19:01:31] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[19:01:31] build-for-testing (driver only; the harness is untouched)
+[19:01:32] xctestrun: /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[19:01:32] sample 1/30 — precondition
+[19:01:32] sample 1/30 — driver (testOneSample, mode L)
+[19:02:05] sample 1 ledgered: kernel00-K00-c3c4333d-1789239717.jsonl
+[19:02:05] sample 2/30 — precondition
+[19:02:05] sample 2/30 — driver (testOneSample, mode L)
+[19:02:37] sample 2 ledgered: kernel00-K00-e7376ee7-1789239750.jsonl
+[19:02:37] sample 3/30 — precondition
+[19:02:37] sample 3/30 — driver (testOneSample, mode L)
+[19:03:10] sample 3 ledgered: kernel00-K00-9fc34c4b-1789239782.jsonl
+[19:03:10] sample 4/30 — precondition
+[19:03:10] sample 4/30 — driver (testOneSample, mode L)
+[19:03:42] sample 4 ledgered: kernel00-K00-c7385590-1789239815.jsonl
+[19:03:42] sample 5/30 — precondition
+[19:03:42] sample 5/30 — driver (testOneSample, mode L)
+[19:04:15] sample 5 ledgered: kernel00-K00-a7d20733-1789239847.jsonl
+[19:04:15] sample 6/30 — precondition
+[19:04:15] sample 6/30 — driver (testOneSample, mode L)
+[19:04:47] sample 6 ledgered: kernel00-K00-029de96a-1789239880.jsonl
+[19:04:47] sample 7/30 — precondition
+[19:04:48] sample 7/30 — driver (testOneSample, mode L)
+[19:05:20] sample 7 ledgered: kernel00-K00-7368ad1a-1789239912.jsonl
+[19:05:20] sample 8/30 — precondition
+[19:05:20] sample 8/30 — driver (testOneSample, mode L)
