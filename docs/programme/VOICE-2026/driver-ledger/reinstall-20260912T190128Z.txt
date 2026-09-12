@@ -1,0 +1,19 @@
+# reinstall 20260912T190128Z
+## dylib uuid (local product, BEFORE install)
+UUID: CC0D3604-7902-373E-A2BB-2C093D9BF804 (arm64) /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelHarness-afqjfcjktctgkjbejscivlpbxqtc/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## codesign
+Identifier=life.soullab.voicekernel.k00
+TeamIdentifier=ZVK2X646Z2
+## install
+15:01:28  Acquired tunnel connection to device.
+15:01:28  Enabling developer disk image services.
+15:01:28  Acquired usage assertion.
+App installed:
+• bundleID: life.soullab.voicekernel.k00
+• installationURL: file:///private/var/containers/Bundle/Application/47A3FE4A-6768-4A0F-A633-487E134A8B5D/VoiceKernelHarness.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 42158240-DA3F-491F-8B75-F106CD31316A
+• databaseSequenceNumber: 4608
+• options: 
+## post-install processes (harness must be absent)
+(no VoiceKernelHarness process)
