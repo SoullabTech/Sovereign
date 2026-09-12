@@ -53,6 +53,7 @@ targets:
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES   # MAC-COMPILE-08 attempt 1: the test bundle had no Info.plist and could not be signed
         TEST_TARGET_NAME: DriverHost
 schemes:
   DriverUITests:
