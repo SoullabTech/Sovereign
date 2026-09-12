@@ -71,5 +71,8 @@ Same shape as run 1 §0: liveness PROVEN (recorder alive, `seq` monotonic 1→3)
 
 **Enter NOT YET PRESSED at the time of both exports.**
 ## 6. Enter conversation — PENDING (the observation of record is the exported journal, then any device crash report; a report must list dylib UUID `1AEBEE45-…`)
-## 7. Findings — PENDING
+## 7. Findings
+
+**H1 — harness export sheet re-presents itself (harness, not kernel).** After the first Export, the share sheet reappears in front of the screen on every view update, so the member cannot reach **Enter conversation** (founder, phone clock 10:26: "it keeps pushing this in front of screen before I can choose"; the offered file is still 678 bytes = the three pre-enter records, session `K00-c9bdd9a0`, so Enter has not registered). Cause, read from source `HarnessView.swift:24`: `.sheet(item: Binding(get: { m.exportURL.map(ExportItem.init) }, set: { _ in }))` — the setter is a no-op, so dismissal never clears `HarnessModel.exportURL`; the dismissal itself causes `willResignActive`/`didBecomeActive`, which publish a snapshot, which re-renders, which re-presents. VOICE-07 is not violated (the harness still holds no voice state), but the projection has a latch. Run 1 passed through this by timing. **Not repaired in this run** — a harness-only fix (clear `exportURL` on dismiss) is outside the accepted §3 scope and would require a new SHA and compile; it changes no kernel behaviour and no witness meaning. Work-around for this run: relaunch the harness and press Enter **before** any Export (the pre-enter checkpoint is already frozen in §5, so a second one is not needed); export only after Enter, and hand the file off (Save to Files / AirDrop) from the first sheet that appears.
+
 ## 8. Standing — OPEN · INSTALLED · LAUNCHED · PRE-ENTER CHECKPOINT FROZEN · ENTER NOT YET PRESSED · NOTHING SPENT
