@@ -49,8 +49,10 @@ log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
 list_journals(){ xcrun devicectl device info files --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --subdirectory tmp 2>/dev/null | grep -oE 'kernel00-[A-Za-z0-9-]+-[0-9]+\.jsonl' | sort -u; }
 pull_journal(){ xcrun devicectl device copy from --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --source "tmp/$1" --destination "$LEDGER_DIR/journals/$1" >/dev/null 2>&1; }
+# xcodebuild (26.x) accepts exactly: -collect-test-diagnostics on-failure|never. CALIBRATION-02 died at
+# argument parsing (rc=64, wall 0 s ×3) on the wrong value "off" — C-D3, an orchestration defect.
 DIAG_FLAGS=""
-if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics off"; fi
+if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics never"; fi
 run_test(){ # $1 = test method
   TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" \
   xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
@@ -96,6 +98,13 @@ for i in $(seq 1 "$N"); do
   fi
   log "sample $i/$N — driver ($TEST, mode $MODE)"
   T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
+  if grep -q '^xcodebuild: error:' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
+    # The invocation itself was refused (usage/destination/xctestrun) — nothing reached the device. Burning N rows
+    # on the same refusal is not a batch; abort as infrastructure at the first one.
+    WHY="$(grep -m1 '^xcodebuild: error:' "$LEDGER_DIR/sample-$i-xcodebuild.log" | cut -c1-200)"
+    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | invocation refused before the device was reached: $WHY (rc=$RC); batch ABORTED |" >> "$LEDGER"
+    log "ABORT: xcodebuild refused the invocation ($WHY); infrastructure failure recorded"; exit 6
+  fi
   grep -q 'Failure collecting diagnostics from devices: Timed out' "$LEDGER_DIR/sample-$i-xcodebuild.log" && log "sample $i: xcodebuild spent its 600 s diagnostics-collection timeout after the run (wall $((T1-T0)) s)"
   AFTER="$(list_journals)"; NEW="$(comm -13 <(echo "$BEFORE") <(echo "$AFTER"))"; BEFORE="$AFTER"
   if grep -q 'PRECONDITION-FAILED' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
