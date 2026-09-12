@@ -10,7 +10,10 @@ now" instruction is superseded by the W3 evidence.*
 ```text
 FOCUS-W3   coordinate space         REPAIRED · ACCEPTED
 FOCUS-W4   range_precedes_body      REAL FINDING · refusal is the law
-FOCUS-W2   act-record conflation    OPEN · not repaired · not normalized
+           confirmation instrument  FAILED then REPAIRED · see §5d
+FOCUS-W2   act-record conflation    CONFIRMED LIVE · §5b · not repaired
+FOCUS-W5   withheld member spoken   OBSERVED · awaiting ruling · §5c
+new Act 3                           UNSPENT · act count still 1
 production                          UNTOUCHED
 ```
 
@@ -169,6 +172,112 @@ explicit methodological ratification → canon`. This is the second step and no
 further. R0 in `lib/writers-studio/__tests__/focusPassage.test.ts` is its local
 expression; the law is recorded here so it is neither buried as an
 implementation detail nor promoted on a single observation.
+
+## 5b. FOCUS-W2 — CONFIRMED LIVE, and worse than recorded
+
+Read from the witness database, act `d7cb7317` (`working_draft_version 34`,
+created 12:53:37, the **pre-repair** crossing):
+
+```text
+ordinal  member  currency_state  body_available  has_receipt
+   1       f1     current             t              t
+   2       f2     unavailable         f              f
+   3       f3     current             t              t
+   4       f4     current             t              t
+   5       f5     current             t              t
+```
+
+⭐ **Five receipts exist for that act, not four.** One was established and never
+crossed, and the position query names it:
+
+```text
+.347968  crossed    cd816b2b   position 44  →  §45
+.383418  attempted  1e58bb81   position 55  →  §56   ⛔ never crossed
+.438133  crossed    c9234752   position 56  →  §57
+.444455  crossed    6313036b   position 57  →  §58
+.447127  crossed    70f8c7fd   position 61  →  §62
+```
+
+⛔ **So §56 REACHED a disclosure boundary, and the read then failed.**
+`currency_state = 'unavailable'` was written *from that read failure* — for a
+section that is plainly still in the Work, at position 55, and that had just
+been given a boundary. `unavailable` means *the section is no longer in the
+Work*; the truth was `range_out_of_bounds`, the pre-repair overflow.
+
+Two durable records also disagree: the act says f2 `has_receipt = f`, while a
+receipt row for f2's attempt exists. **The act record cannot answer "was a
+boundary established for f2?"**
+
+⚠️ `position` is 0-indexed — the writer's §45 is position 44. The confirmation
+instrument now prints `§N` as the writer names it, for the same reason.
+
+## 5c. FOCUS-W5 — a withheld member is absent from disclosure and present in the conversation
+
+**OBSERVED · NOT RULED · NOT REPAIRED.**
+
+In the same pre-repair act, MAIA received **no character of §56** (`f2` above).
+In the conversation seeded by that crossing she nonetheless wrote:
+
+> *"Section 56 gives the same sequence again and attaches meanings to it —
+> dampness as spiritual distraction, the flames as a change in energy under
+> challenge…"*
+
+and, of the Focus Set:
+
+> *"the five places I actually saw"*
+
+She saw four. The panel correctly said four. The run's load-bearing
+recommendation — *what section 56 is for* — rests on the member she was not
+given.
+
+⭐ **The defect is not that she mentioned §56.** Membership MUST reach her: she
+has to know a place is in focus and withheld, or she cannot say so. The defect
+is that content claims about a withheld member are indistinguishable, to the
+writer, from content claims about a disclosed one — and she narrates both in the
+voice of having read them.
+
+Whether that paragraph was drawn from the observation text (grounded in the
+finding) or invented cannot be told from the surface, and **that
+indistinguishability is the finding.**
+
+⛔ This is a cognition-surface finding, not a geometry one. It will survive the
+FOCUS-W3 repair and reappear in the new witness unless something changes
+upstream of the prompt. It is recorded here awaiting a founder ruling; nothing
+is designed around it.
+
+## 5d. Candidate lane law — the authoritative read seam
+
+The FOCUS-W4 confirmation instrument **failed on its first run**, and failed
+instructively. It issued its own SELECT over
+`manuscript_draft_sections JOIN manuscript_working_drafts JOIN manuscripts` and
+asked for `s.heading`. Three things were wrong at once: there is no
+`manuscripts` table, `manuscript_draft_sections` has no `heading` column (the
+heading is on the Source row, through `source_section_id`), and ownership is
+`manuscript_working_drafts.member_id`.
+
+⛔ **The wrong SQL is the small half.** Founder, 2026-09-12:
+
+> **If an authoritative read seam already exists, a witness that reimplements
+> the read is itself a new source of disagreement.**
+
+`loadEditableSections` already owns the member-scoped current-draft read and the
+Source-heading join, and Canvas, the preflight and the Ask all go through it.
+The repair was therefore not better SQL — it was **no SQL**. The instrument now
+consumes that seam, loading only the anchored sections.
+
+```text
+STATUS      candidate lane law
+ORIGIN      FOCUS-W4 instrument failure, 2026-09-12
+SCOPE       prospective only
+PROMOTION   canon only after:
+            (a) an independent lane reproduces the class, or
+            (b) founder explicitly ratifies it as programme-wide methodology
+```
+
+⭐ Same family as §5's calibration law and as FOCUS-W3 itself: **a second
+implementation of a thing that must agree is a defect generator.** Three
+instances now — the geometry, the fixture, the read. None is promoted to canon
+on that basis; recorded so the pattern is visible when a fourth arrives.
 
 ## 6. Next
 

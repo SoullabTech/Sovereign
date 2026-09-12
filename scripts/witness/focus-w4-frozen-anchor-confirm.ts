@@ -44,11 +44,10 @@
  * other kind: there is no model call here.
  */
 
-import { query } from '@/lib/db/postgres';
 import { loadFrozenDevelopmentalReading } from '@/lib/manuscript/ask/frozenDevelopmentalReading';
 import { focusAnchorsFor } from '@/lib/writersStudio/focusAnchors';
 import { resolveFocusPassage } from '@/lib/writers-studio/focusPassage';
-import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import { loadEditableSections, splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import { codePointLength } from '@/lib/manuscript/draftSections';
 import { sha256 } from '@/lib/manuscript/development/readState';
 
@@ -89,17 +88,38 @@ async function main() {
   console.log(`OBSERVATION  ${observationKey}  ·  ${anchors.length} anchor(s) declared`);
   console.log('');
 
-  /* ⭐ The CURRENT Working Draft, by the same ownership the Canvas renders it
-     under. Read here only to measure — nothing is returned to anyone. */
-  const rows = await query<{ id: string; heading: string | null; text: string }>(
-    `SELECT s.id, s.heading, s.text
-       FROM manuscript_draft_sections s
-       JOIN manuscript_working_drafts d ON d.id = s.draft_id
-       JOIN manuscripts m ON m.id = d.manuscript_id
-      WHERE d.manuscript_id = $1 AND m.member_id = $2`,
-    [workRef, memberId],
-  );
-  const live = new Map(rows.rows.map((r) => [r.id, r]));
+  /**
+   * ⭐⭐ THE AUTHORITATIVE CURRENT-DRAFT SEAM, NOT A SECOND COPY OF IT.
+   *
+   * ⛔ FOUNDER FINDING, 2026-09-12 — this instrument's first version FAILED
+   * here, and failed instructively. It issued its own SELECT over
+   * `manuscript_draft_sections JOIN manuscript_working_drafts JOIN manuscripts`
+   * and asked for `s.heading`. Three things were wrong at once: there is no
+   * `manuscripts` table, `manuscript_draft_sections` has no `heading` column
+   * (the heading lives on the Source row, reached through `source_section_id`),
+   * and ownership is `manuscript_working_drafts.member_id`.
+   *
+   * But the SQL being wrong is the small half. The large half:
+   *
+   *   If an authoritative read seam already exists, a witness that
+   *   reimplements the read is itself a new source of disagreement.
+   *
+   * `loadEditableSections` already owns the member-scoped current-draft read
+   * and the Source-heading join, and Canvas, the preflight and the Ask all go
+   * through it. A confirmation reading the Work by another path could agree
+   * with itself and disagree with the server — the same class as FOCUS-W3, and
+   * the same class as re-deriving the geometry here would have been. The repair
+   * is therefore not better SQL. It is no SQL.
+   *
+   * ⛔ Only the anchored sections are loaded — the confirmation reads exactly
+   * the places the observation cited, never the whole Work.
+   */
+  const anchorIds = [...new Set(anchors.map((a) => a.sectionId))];
+  const draft = await loadEditableSections(workRef, memberId, anchorIds);
+  const live = new Map(draft.sections.map((s) => [s.id, s]));
+  console.log(`DRAFT        ${draft.draftId}  ·  version ${draft.version}`);
+  console.log(`SECTIONS     ${live.size} of ${anchorIds.length} anchored section(s) present`);
+  console.log('');
 
   for (const a of anchors) {
     const row = live.get(a.sectionId);
@@ -107,24 +127,30 @@ async function main() {
 
     if (!row) { console.log(`${short}  ${a.kind.padEnd(7)}  SECTION NOT IN THE CURRENT DRAFT`); continue; }
 
-    const split = splitStoredSection(row.text, row.heading);
-    const storedCp = codePointLength(row.text);
+    /* ⭐ `position` is 0-indexed, so the writer's "§45" is position 44. Printed
+       as the writer names it, because a confirmation whose section labels do
+       not match how the founder reads them invites exactly the off-by-one this
+       lane has already spent an afternoon on. */
+    const asWritten = `§${row.position + 1}`;
+
+    const split = splitStoredSection(row.storedText, row.heading);
+    const storedCp = codePointLength(row.storedText);
     const prefixCp = split ? codePointLength(split.headingPrefix) : null;
     const bodyCp = split ? codePointLength(split.body) : null;
     const frozen = reading.readState.sections[a.sectionId];
-    const unchanged = frozen ? sha256(row.text) === frozen.digest : null;
+    const unchanged = frozen ? sha256(row.storedText) === frozen.digest : null;
 
     if (a.kind === 'section') {
-      console.log(`${short}  section  whole  ·  stored ${storedCp}  ·  digest ${unchanged === null ? 'no frozen state' : unchanged ? 'unchanged' : 'CHANGED'}`);
+      console.log(`${short}  ${asWritten}  section  whole  ·  stored ${storedCp}  ·  digest ${unchanged === null ? 'no frozen state' : unchanged ? 'unchanged' : 'CHANGED'}`);
       continue;
     }
 
-    const r = resolveFocusPassage({ storedText: row.text, heading: row.heading, range: a.range });
+    const r = resolveFocusPassage({ storedText: row.storedText, heading: row.heading, range: a.range });
     const translated = prefixCp === null ? null
       : `${a.range.start - prefixCp}–${a.range.end - prefixCp}`;
 
     console.log(
-      `${short}  passage  ${a.range.space}  ${a.range.start}–${a.range.end}\n`
+      `${short}  ${asWritten}  passage  ${a.range.space}  ${a.range.start}–${a.range.end}\n`
       + `          stored ${storedCp} · prefix ${prefixCp ?? '—'} · body ${bodyCp ?? '—'}\n`
       + `          translated ${translated ?? '—'}  →  ${r.ok ? 'PROJECTABLE' : `REFUSED · ${r.refusal}`}\n`
       + `          digest ${unchanged === null ? 'no frozen state' : unchanged ? 'unchanged' : 'CHANGED'}`,
@@ -149,10 +175,11 @@ async function main() {
   for (const a of anchors) {
     const row = live.get(a.sectionId);
     if (!row) { refusals.push(`${a.sectionId.slice(0, 8)} section absent`); continue; }
+    const label = `§${row.position + 1}`;
     if (a.kind === 'section') { readable += 1; continue; }
-    const r = resolveFocusPassage({ storedText: row.text, heading: row.heading, range: a.range });
+    const r = resolveFocusPassage({ storedText: row.storedText, heading: row.heading, range: a.range });
     if (r.ok) readable += 1;
-    else refusals.push(`${a.sectionId.slice(0, 8)} ${r.refusal}`);
+    else refusals.push(`${label} ${r.refusal}`);
   }
   console.log(`DECLARED           ${anchors.length}`);
   console.log(`EXPECTED READABLE  ${readable} of ${anchors.length}`);
