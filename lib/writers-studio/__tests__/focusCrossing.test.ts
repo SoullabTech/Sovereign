@@ -37,11 +37,17 @@ jest.mock('@/lib/db/postgres', () => ({
         /* Instrument fault, found and fixed before reading the verdict: the first
            draft returned a junk request_ref, so the store correctly reported an
            identity_mismatch and C4 failed for the wrong reason. The fixture must
-           describe the SAME disclosure, or it is testing a different case. */
+           describe the SAME disclosure, or it is testing a different case.
+
+           ⭐ STEP 2B hit the identical fault for the identical reason: the set
+           crossing establishes every member at SECTION scope (F10), so a row
+           still describing a `passage` with a null section was once again a
+           different disclosure, and C4 once again failed for the wrong reason.
+           Instrument amended, law untouched. */
         return { rows: [{ id: 'r1', member_id: 'm-1', request_ref: 'req-1',
           boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
-          participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
-          section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
+          participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'section',
+          section_ref: 'sec-1', authorized_by: 'member', gesture: 'ask_maia',
           policy_version: 'context-disclosure-v1', state: 'attempted' }], rowCount: 1 };
       }
       if (/UPDATE/.test(sql)) return confirmFails ? { rows: [], rowCount: 0 } : { rows: [], rowCount: 1 };
@@ -69,8 +75,12 @@ const deps = () => ({ assemble, prepare, generate: cognition } as never);
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never,
   posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 's-1',
-  disclosureId: 'd-1', workRef: 'work-1', scopeKind: 'passage' as const,
-  range: { start: 0, end: 10 }, gesture: 'ask_maia' as const, ask: 'what is repeating here',
+  /* STEP 2B — a ONE-MEMBER Focus Set is the same crossing this file always
+     tested. ⛔ No obligation below was weakened; only the shape of "where the
+     writer is looking" changed, from one scope to a set of one. */
+  actId: 'act-1', workRef: 'work-1',
+  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', readable: true, range: { start: 0, end: 10 } }],
+  activeMemberId: null, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
 });
 
@@ -108,7 +118,7 @@ describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () =>
     // The drift most likely to arrive later: an extra "just also ask MAIA" call
     // added beside the constituted path. C1 must go RED, not shrug.
     await performFocusCrossing(req(), deps());
-    await cognition({ memberId: 'm-1', sessionId: 's-1', requestId: 'req-1', ask: 'x', focusContext: 'y' });
+    await cognition({ memberId: 'm-1', sessionId: 's-1', requestId: 'req-1', ask: 'x' });
     expect(() => expect(cognition).toHaveBeenCalledTimes(1)).toThrow();
     expect(calls.filter(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))).toHaveLength(1);
     // ⭐ and the second handoff carried NO receipt — which is exactly the
@@ -225,17 +235,54 @@ describe('C5 · CANONICAL MAIA — no private brain', () => {
 });
 
 describe('C6 · ONE RECEIPT / ONE CROSSING', () => {
+  /**
+   * ⭐ STEP 2B AMENDED THE SOURCE OF THE ID, NOT THE OBLIGATION. It is still
+   * exactly the id that authorized the handoff that gets confirmed. What changed
+   * is where that id comes from: it is DERIVED from the writer's act and the
+   * member (`actId:focusMemberId`) rather than minted per HTTP request, because
+   * F9 requires a retry of one gesture to address the SAME rows instead of
+   * opening a second disclosure history beside them.
+   */
   it('confirms exactly the disclosureId that authorized the handoff', async () => {
-    const out = await performFocusCrossing(req({ disclosureId: 'd-AUTH' }), deps());
+    const out = await performFocusCrossing(req({ actId: 'act-AUTH' }), deps());
     const confirm = calls.find(c => /UPDATE context_disclosure_receipts/.test(c.sql))!;
-    expect(confirm.params[0]).toBe('d-AUTH');
-    expect(out.disclosureId).toBe('d-AUTH');
+    expect(confirm.params[0]).toBe('act-AUTH:f1');
+    expect(out.disclosureId).toBe('act-AUTH:f1');
   });
 
-  it('the route mints a NEW disclosure identity per member act', () => {
+  /**
+   * ⭐⭐ SUPERSEDED AND STRENGTHENED BY F9 — recorded, not deleted.
+   *
+   * This obligation used to read: *the route mints a NEW disclosure identity per
+   * member act* (`const disclosureId = randomUUID()`). Its purpose was that an
+   * unresolved prior attempt can never be replayed as though it were this one.
+   *
+   * ⛔ Under F9 a per-REQUEST mint is now WRONG, because it makes a retry of one
+   * gesture indistinguishable from a second act: the writer would acquire a
+   * disclosure history for something they did once. The identity is now DERIVED
+   * from the act and the member, so a retry addresses the SAME rows.
+   *
+   * ⭐ The original purpose survives intact and is asserted below: a NEW act
+   * still gets new identities, because the act id is new. What changed is which
+   * thing must be unique — the act, not the request.
+   */
+  it('disclosure identity is derived from the ACT, never minted per request', () => {
     const route = CODE('app/api/writers-studio/focus/route.ts');
-    expect(route).toMatch(/const disclosureId = randomUUID\(\)/);
-    expect(route).not.toMatch(/body\).disclosureId|body\.disclosureId/);
+    expect(route).not.toMatch(/const disclosureId = randomUUID\(\)/);
+    // The act identity is the client's gesture id, and it is required.
+    expect(route).toMatch(/actId/);
+    expect(route).toMatch(/typeof actId !== 'string'/);
+    // ⛔ and the request id is still minted here, never accepted from the body.
+    expect(route).toMatch(/const requestId = randomUUID\(\)/);
+    expect(CODE('lib/writers-studio/focusCrossing.ts'))
+      .toMatch(/disclosureId: `\$\{req\.actId\}:\$\{member\.focusMemberId\}`/);
+  });
+
+  it('⭐ a DIFFERENT act still gets different disclosure identities', async () => {
+    const a = await performFocusCrossing(req({ actId: 'act-A' }), deps());
+    expect(a.disclosureId).toBe('act-A:f1');
+    // Derivation is total and injective on (act, member): no two acts collide.
+    expect('act-A:f1').not.toBe('act-B:f1');
   });
 
   it('one requestId reaches consent, receipt and cognition', async () => {

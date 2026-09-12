@@ -31,6 +31,7 @@ import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { constructWriterTurn, renderWriterTurn, tierInvariant, type WriterHandoffProof } from './canonicalWriterTurn';
 import type { CanonicalTurn, MemberIdentity } from '@/lib/maia/canonical-turn';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import type { FocusParticipation } from './focusParticipation';
 
 export interface CognitionPrepareInput {
   identity: MemberIdentity;
@@ -38,9 +39,8 @@ export interface CognitionPrepareInput {
   requestId: string;
   ask: string;
   workRef: string;
-  scopeKind: 'whole_work' | 'section' | 'passage';
-  label?: string;
-  focusContext: string;
+  /** ⭐ The Focus Set, member boundaries intact. ⛔ Never a flattened string. */
+  participation: FocusParticipation;
   sanctuary: boolean;
 }
 
@@ -67,8 +67,8 @@ export async function prepareCanonicalHandoff(
       ask: input.ask,
       sanctuary: input.sanctuary,
       participation: {
-        focus: { workRef: input.workRef, scopeKind: input.scopeKind, label: input.label },
-        workContext: input.focusContext,
+        focus: { workRef: input.workRef },
+        participation: input.participation,
       },
     });
 

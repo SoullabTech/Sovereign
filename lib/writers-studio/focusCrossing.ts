@@ -46,8 +46,17 @@ import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
 import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
 import type { MemberIdentity } from '@/lib/maia/canonical-turn';
+import {
+  focusParticipation, type FocusMemberStatus, type FocusParticipation,
+} from './focusParticipation';
 
-/** Reads the authorized Work. ⛔ Called ONLY after `may_cross`. */
+/**
+ * Reads ONE authorized member. ⛔ Called only after that member's `may_cross`.
+ *
+ * ⭐ ONE MEMBER, ONE CALL, ONE RESULT — never a joined blob. A member whose body
+ * cannot be read returns null and becomes `unavailable` in the participation:
+ * the writer still declared attention there, so the member does not vanish.
+ */
 export interface FocusAssembler {
   (ref: {
     memberId: string; workRef: string;
@@ -55,6 +64,20 @@ export interface FocusAssembler {
     /** The writer's selection. Carried in the REQUEST; never in the receipt. */
     range?: { start: number; end: number };
   }): Promise<string | null>;
+}
+
+/** One declared place in the writer's attention, as the route received it. */
+export interface FocusMemberScope {
+  readonly focusMemberId: string;
+  readonly sectionRef: string;
+  /** Present for a passage member; absent for a whole-section member. */
+  readonly range?: { start: number; end: number };
+  /**
+   * ⭐ Ruled 2026-09-12: an `unverified` anchor's CURRENT TEXT must not cross.
+   * Such a member is declared to MAIA and never read. The route decides this
+   * from anchor currency; the crossing obeys it and reads nothing.
+   */
+  readonly readable: boolean;
 }
 
 /**
@@ -73,18 +96,34 @@ export interface CanonicalCognitionPort {
 }
 
 export interface FocusCrossingRequest {
+  /** ⭐ ONE HTTP request. A retry mints a new one; it does NOT make a new act. */
   requestId: string;
+  /**
+   * ⭐⭐ THE WRITER'S GESTURE, durable across retries.
+   *
+   *   one writer gesture → one act identity → N member disclosures
+   *     → one canonical MAIA handoff
+   *
+   * ⛔ NOT MINTED HERE. A crossing that minted its own act identity would make
+   * a retried request look like a second act, and the writer would acquire a
+   * disclosure history for an act they performed once.
+   */
+  actId: string;
   /** ⭐ Minted by `resolveCanonicalIdentity` at the route. A raw id is refused
    *  by `constructCanonicalTurn`, and rightly: one identity truth, not two. */
   identity: MemberIdentity;
   posture: TurnPosture;
   memberId: string;
   sessionId: string;
-  disclosureId: string;
   workRef: string;
-  scopeKind: DisclosureScopeKind;
-  sectionRef?: string;
-  range?: { start: number; end: number };
+  /** The declared attention. ⛔ Every member crosses at SECTION scope or not at all. */
+  members: readonly FocusMemberScope[];
+  /**
+   * Which member is in hand. ⛔ Confers NO additional disclosure authority — it
+   * lives on the act, never on a receipt, because a receipt answers what
+   * material was authorized to cross and this answers what we are acting on.
+   */
+  activeMemberId: string | null;
   gesture: DisclosureGesture;
   ask: string;
 }
@@ -92,106 +131,174 @@ export interface FocusCrossingRequest {
 export type FocusCrossingResult = {
   readonly presentation: FocusDisclosurePresentation;
   readonly response: string | null;
-  /** ⭐ The id that authorized the handoff — and, when confirmed, the one confirmed. */
+  /** ⭐ The ids that authorized the handoff — and, when confirmed, the ones confirmed. */
+  readonly disclosureIds: readonly string[];
+  /** Retained for the single-member shape the surface still reads. */
   readonly disclosureId: string | null;
   readonly boundary: BoundaryOutcome;
+  /** What MAIA was actually given, so the surface can say it too. */
+  readonly participation: FocusParticipation | null;
 };
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,
   deps: { assemble: FocusAssembler; prepare: CanonicalCognitionPort['prepare']; generate: CanonicalCognitionPort['generate'] },
 ): Promise<FocusCrossingResult> {
-  // ── 1 · THE ONE BOUNDARY. Consent precondition, then receipt, then permission.
-  const boundary = await establishDisclosureBoundary({
-    requestId: req.requestId,
-    posture: req.posture,
-    memberId: req.memberId,
-    sessionId: req.sessionId,
-    disclosure: {
-      disclosureId: req.disclosureId,
-      boundary: 'writers_studio.focus->maia_cognition',
-      sourceClass: 'work',
-      participationBasis: 'member_invoked',
-      sourceRef: req.workRef,
-      scopeKind: req.scopeKind,
-      sectionRef: req.sectionRef,
-      gesture: req.gesture,
-    },
+  const refused = (b: BoundaryOutcome, p?: FocusDisclosurePresentation): FocusCrossingResult => ({
+    presentation: p ?? presentBoundaryOutcome(b),
+    response: null, disclosureIds: [], disclosureId: null, boundary: b, participation: null,
   });
+  const unavailable: BoundaryOutcome = { kind: 'receipt_refused', outcome: { kind: 'unavailable' } };
 
-  if (!mayCrossBoundary(boundary)) {
-    // ⛔ C4 · NO SCOPE SUBSTITUTION. Every refusal returns a §3a state and
-    // nothing else happens — no Work is read, no cognition is called, and an
-    // ordinary-scope request is NOT silently performed in its place.
-    return {
-      presentation: presentBoundaryOutcome(boundary),
-      response: null, disclosureId: null, boundary,
-    };
+  /* ── 1 · ⭐⭐ EVERY BOUNDARY BEFORE ANY BODY IS READ.
+     Ported verbatim in law from the developmental Ask path, which has walked it
+     green. Boundary establishment is NOT disclosure completion: a boundary that
+     succeeds inside a multi-boundary attempt stays `attempted` until the ONE
+     authorized handoff occurs, so a later refusal never promotes an earlier
+     success. Those attempted rows are truthful evidence that a crossing may
+     have occurred and was not confirmed.
+
+     ⛔ ONE SERVING REQUEST FOR THE WHOLE EXECUTION. Every member's receipt
+     shares `req.requestId`, so an auditor grouping by it sees ONE member act
+     carrying N independently section-scoped crossings. That is not a
+     multi-member authority token: authority stays member-scoped, and what is
+     shared is the request, never the permission.
+
+     ⛔ AND ONLY READABLE MEMBERS ACQUIRE A BOUNDARY. An `unverified` member is
+     declared attention, not authorized content: establishing a boundary for one
+     would mint a receipt for material the ruling says must not cross. */
+  const established: { member: FocusMemberScope; disclosureId: string }[] = [];
+  let first: BoundaryOutcome | null = null;
+
+  for (const member of req.members) {
+    if (!member.readable) continue;
+    const boundary = await establishDisclosureBoundary({
+      requestId: req.requestId,
+      posture: req.posture,
+      memberId: req.memberId,
+      sessionId: req.sessionId,
+      disclosure: {
+        /* ⭐ A NEW disclosure identity per member per act — never reused, so an
+           unresolved prior attempt can never be replayed as though it were this
+           one. ⛔ Minted by the ROUTE, not here: see `FocusMemberScope`. */
+        disclosureId: `${req.actId}:${member.focusMemberId}`,
+        boundary: 'writers_studio.focus->maia_cognition',
+        sourceClass: 'work',
+        participationBasis: 'member_invoked',
+        sourceRef: req.workRef,
+        /* ⛔ F10 · SECTION SCOPE, ALWAYS. `whole_work` is gone from this path:
+           a distributed Focus Set performed as one whole-Work disclosure is
+           silent authority widening wearing the shape of convenience. */
+        scopeKind: 'section',
+        sectionRef: member.sectionRef,
+        gesture: req.gesture,
+      },
+    });
+    first ??= boundary;
+    if (!mayCrossBoundary(boundary)) {
+      /* ⛔ C4 · NO SCOPE SUBSTITUTION, and now also NO PARTIAL SET. One member
+         refused refuses the crossing: proceeding with the rest would silently
+         narrow the writer's declared attention to whatever happened to be
+         permitted, which is the widening defect in its mirror. */
+      return refused(boundary);
+    }
+    established.push({ member, disclosureId: boundary.disclosureId });
   }
 
-  // ── 2 · ONLY NOW is the Work read. C2 depends on this ordering.
-  const focusContext = await deps.assemble({
-    memberId: req.memberId, workRef: req.workRef,
-    scopeKind: req.scopeKind, sectionRef: req.sectionRef, range: req.range,
-  });
+  const boundary = first ?? unavailable;
 
-  if (!focusContext) {
-    // The authorized Work could not be read. The receipt stays `attempted`,
-    // which is the truthful state: authorization existed, the crossing did not.
-    // ⛔ Never confirmed — nothing was handed to cognition.
-    return {
-      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
-      response: null, disclosureId: null, boundary,
-    };
+  /* ── 2 · ONLY NOW are the bodies read. C2 depends on this ordering.
+     One call per member — ⛔ never a joined read, because a joined read has no
+     member boundaries to lose them at. */
+  const bodies = new Map<string, string>();
+  for (const { member } of established) {
+    const text = await deps.assemble({
+      memberId: req.memberId, workRef: req.workRef,
+      scopeKind: 'section', sectionRef: member.sectionRef, range: member.range,
+    });
+    if (text !== null) bodies.set(member.focusMemberId, text);
   }
+
+  /* ⭐⭐ THE PARTICIPATION — five memberships, three bodies, and MAIA told both.
+     A member declared but not read does not disappear here; it becomes
+     `unverified` (the writer's anchor needs confirming) or `unavailable` (it
+     was authorized and could not be read). Either way its existence crosses and
+     its content does not. */
+  let participation: FocusParticipation;
+  try {
+    participation = focusParticipation({
+      members: req.members.map((m, i) => {
+        const content = bodies.get(m.focusMemberId);
+        const status: FocusMemberStatus = !m.readable ? 'unverified'
+          : content === undefined ? 'unavailable' : 'readable';
+        return {
+          focusMemberId: m.focusMemberId, ordinal: i + 1, sectionRef: m.sectionRef,
+          status, active: false, bodyAvailable: content !== undefined,
+          ...(status === 'readable' ? { content } : {}),
+        };
+      }),
+      activeMemberId: req.activeMemberId,
+    });
+  } catch {
+    /* ⛔ The participation contract refuses rather than repairs, and so does
+       this. A set that cannot be constructed truthfully is not crossed at all. */
+    return refused(unavailable);
+  }
+
+  /* ⛔ Nothing readable means nothing to hand over. The receipts stay
+     `attempted`, which is the truthful state: authorization existed, the
+     crossing did not. */
+  if (participation.readable === 0) return refused(unavailable);
 
   // ── 3 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
   const prepared = await deps.prepare({
     identity: req.identity,
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
-    workRef: req.workRef, scopeKind: req.scopeKind, label: req.sectionRef,
-    focusContext, sanctuary: req.posture.sanctuary,
+    workRef: req.workRef, participation, sanctuary: req.posture.sanctuary,
   });
-  if (!prepared) {
-    // ⛔ Construction, adjudication or rendering failed → NO HANDOFF, NO CONFIRM.
-    // The receipt stays `attempted`: authorization existed, the crossing did not.
-    return {
-      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
-      response: null, disclosureId: null, boundary,
-    };
-  }
+  if (!prepared) return refused(unavailable);
 
-  // ── 4 · THE HANDOFF. Generation BEGINS here; the promise is deliberately not
-  // awaited yet, so the receipt is confirmed at the moment of crossing.
+  // ── 4 · THE HANDOFF. ⭐ F8 · ONE gesture, ONE canonical turn — not one per
+  // member. Generation BEGINS here; the promise is deliberately not awaited yet,
+  // so the receipts are confirmed at the moment of crossing.
   const { handoff, result: generating } = deps.generate(prepared, {
     memberId: req.memberId, sessionId: req.sessionId,
     requestId: req.requestId, ask: req.ask, posture: req.posture,
   });
 
-  // ⭐ H1 · Wait for the TRUE handoff — the response-producing call being invoked,
-  // not this service being entered. A refusal, an early responder or a throw
-  // before the model resolves this false.
+  // ⭐ H1 · Wait for the TRUE handoff — the response-producing call being invoked.
   const crossed = await handoff;
   if (!crossed) {
-    // ⛔ No crossing, therefore no confirmation. The receipt stays `attempted`.
     void generating;
-    return {
-      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
-      response: null, disclosureId: null, boundary,
-    };
+    return refused(unavailable);
   }
 
-  // ⭐ C3/C6 · Confirm the id that authorized THIS handoff, because the admitted
-  // Work entered the response-producing path — not because an answer came back.
-  const confirmed = await confirmDisclosureCrossed(boundary.disclosureId);
+  /* ⭐ C3/C6 · ONE HANDOFF HAPPENED, so every member scope it carried is now
+     genuinely crossed. N receipts, one execution — the receipts record WHICH
+     scopes crossed, and authorize nothing else.
+     ⛔ Only the members whose bodies actually reached the producer are
+     confirmed: an authorized member whose read failed never crossed. */
+  const confirmedIds: string[] = [];
+  let allConfirmed = true;
+  for (const { member, disclosureId } of established) {
+    if (!bodies.has(member.focusMemberId)) continue;
+    const ok = await confirmDisclosureCrossed(disclosureId);
+    /* ⛔ A confirmation that did not take is not silently dropped: the crossing
+       DID occur, and a receipt that failed to record it is a gap in the
+       evidence, which the presentation must not describe as a clean crossing. */
+    if (!ok) allConfirmed = false;
+    else confirmedIds.push(disclosureId);
+  }
 
-  // ── 6 · Only now await generation. A failure here leaves a truthful `crossed`.
+  // ── 5 · Only now await generation. A failure here leaves truthful `crossed` rows.
   const result = await generating;
 
   return {
-    presentation: presentCrossing(confirmed),
+    presentation: presentCrossing(allConfirmed && confirmedIds.length > 0),
     response: result.ok ? result.response ?? null : null,
-    disclosureId: boundary.disclosureId,
+    disclosureIds: confirmedIds,
+    disclosureId: confirmedIds[0] ?? null,
     boundary,
+    participation,
   };
 }

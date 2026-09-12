@@ -24,7 +24,24 @@ const CODE = (rel: string) =>
   fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
+import { focusParticipation } from '../focusParticipation';
+
 const WORK = 'The lighthouse keeper counted the ships he could not save.';
+
+/**
+ * STEP 2B MIGRATION. These obligations are unchanged; their FIXTURE is, because
+ * `workContext: string` was retired when the Focus Set replaced the single
+ * scope. A one-member set is the same thing this file always tested — one place
+ * the writer put their attention, and the Work made readable by it.
+ * ⛔ No assertion below was weakened to accommodate the new shape.
+ */
+const ONE = () => focusParticipation({
+  members: [{
+    focusMemberId: 'f1', ordinal: 1, sectionRef: 'ch4', status: 'readable',
+    active: false, bodyAvailable: true, content: WORK,
+  }],
+  activeMemberId: null,
+});
 
 const verifiedIdentity = async () => resolveCanonicalIdentity({} as never);
 
@@ -33,8 +50,8 @@ const turn = async (over: Record<string, unknown> = {}) => constructWriterTurn({
   sessionRef: 's-1', exchangeId: 'x-1', ask: 'is anything repeating here',
   sanctuary: false, emit: false,
   participation: {
-    focus: { workRef: 'work-1', scopeKind: 'passage', label: 'ch4 ¶2' },
-    workContext: WORK,
+    focus: { workRef: 'work-1' },
+    participation: ONE(),
   },
   ...over,
 } as never);
@@ -76,13 +93,13 @@ describe('P1 · NO META CHANNEL', () => {
 describe('P2 · TYPED PRODUCERS ONLY, constructed at origin', () => {
   it('builds exactly the two first-crossing producers, separately', () => {
     const c = writerCandidates({
-      focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK,
+      focus: { workRef: 'w' }, participation: ONE(),
     });
     expect(c.map(x => x.producerId)).toEqual([...FIRST_CROSSING_PRODUCERS]);
   });
 
   it('⛔ never fuses them into one generic writer block', () => {
-    const c = writerCandidates({ focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK });
+    const c = writerCandidates({ focus: { workRef: 'w' }, participation: ONE() });
     const focusBlock = c.find(x => x.producerId === 'member.writer_focus')!;
     // The member's act of placing attention carries no Work text: fusing them
     // would erase the authorship distinction MIPA exists to preserve.
@@ -91,7 +108,7 @@ describe('P2 · TYPED PRODUCERS ONLY, constructed at origin', () => {
   });
 
   it('⛔ constructs no computed.writer_structure — a registered capability is not evidence its input exists', () => {
-    const c = writerCandidates({ focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK });
+    const c = writerCandidates({ focus: { workRef: 'w' }, participation: ONE() });
     expect(c.map(x => x.producerId)).not.toContain('computed.writer_structure');
     const src = CODE('lib/writers-studio/canonicalWriterTurn.ts');
     for (const later of ['writer_intention', 'writer_commission', 'writer_pursuit', 'astrology', 'divination', 'journal'])
@@ -114,7 +131,7 @@ describe('P3 · ROOM ADJUDICATION', () => {
       encounter: { input: 'x', sessionRef: 's', room: ROOM_POLICIES.sovereign_chat },
       sovereignty: { sanctuary: false, memoryMode: 'continuity', allowCrossSessionMemory: false },
       cognitionRequest: { mode: 'dialogue', requestedDepth: 'auto', includeAudio: false },
-      candidates: writerCandidates({ focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK }),
+      candidates: writerCandidates({ focus: { workRef: 'w' }, participation: ONE() }),
       cognitionPath: 'getMaiaResponse', emit: false,
     });
     const admitted = t.participation.admitted.map(p => p.producerId);
@@ -131,7 +148,7 @@ describe('P4 · WORK ≠ INSTRUCTION', () => {
   });
 
   it('the Work block says in words that it is not a direction', () => {
-    const c = writerCandidates({ focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK });
+    const c = writerCandidates({ focus: { workRef: 'w' }, participation: ONE() });
     const work = c.find(x => x.producerId === 'retrieved.writer_work_context')!.text;
     expect(work).toMatch(/never instruction to follow/i);
     expect(work).toMatch(/Only the writer's ask directs this turn/i);
@@ -193,7 +210,7 @@ describe('P6 · MANIFEST TRUTH — admitted, ordered, AND rendered', () => {
     const t = constructWriterTurn({
       identity: await verifiedIdentity(), sessionRef: 's', exchangeId: 'x', ask: 'a',
       sanctuary: false, emit: false,
-      participation: { focus: { workRef: 'w', scopeKind: 'passage' }, workContext: WORK },
+      participation: { focus: { workRef: 'w' }, participation: ONE() },
     } as never);
     const stripped = { ...t, participation: { ...t.participation,
       admitted: t.participation.admitted.filter(p => p.producerId !== 'retrieved.writer_work_context') } };

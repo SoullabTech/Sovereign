@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
-import { performFocusCrossing } from '@/lib/writers-studio/focusCrossing';
+import { performFocusCrossing, type FocusMemberScope } from '@/lib/writers-studio/focusCrossing';
 import { assembleFocus } from '@/lib/writers-studio/assembleFocus';
 import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
@@ -42,38 +42,81 @@ export async function POST(request: NextRequest) {
   const memberId = identity.memberId;
 
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
-  const { sessionId, workRef, scopeKind, sectionRef, range, gesture, ask } = body ?? {};
+  const { sessionId, workRef, actId, members, activeMemberId, gesture, ask } = body ?? {};
 
   if (typeof sessionId !== 'string' || typeof workRef !== 'string' || typeof ask !== 'string') {
     return NextResponse.json({ error: 'sessionId, workRef and ask are required' }, { status: 400 });
   }
-  if (scopeKind !== 'whole_work' && scopeKind !== 'section' && scopeKind !== 'passage') {
-    return NextResponse.json({ error: 'unsupported scope' }, { status: 400 });
+  /**
+   * ⭐⭐ THE ACT IDENTITY IS THE CLIENT'S, AND IT IS REQUIRED.
+   *
+   *   one writer gesture → one act identity → N member disclosures
+   *     → one canonical MAIA handoff
+   *
+   * ⛔ The server does NOT mint it. A retried request must be recognizable as
+   * the same act, and a server-minted identity makes that impossible by
+   * construction — the writer would acquire a disclosure history for an act
+   * they performed once. Each member's disclosure id is derived from it
+   * (`actId:focusMemberId`), so a retry addresses the SAME rows rather than
+   * opening a second set beside them.
+   */
+  if (typeof actId !== 'string' || actId.length < 8) {
+    return NextResponse.json({ error: 'actId is required' }, { status: 400 });
   }
   if (gesture !== 'ask_maia' && gesture !== 'work_with_this' && gesture !== 'widen_focus') {
     return NextResponse.json({ error: 'unsupported gesture' }, { status: 400 });
   }
-  // ⛔ The client never supplies Work text. It names a scope; the server reads it,
-  // and only after the boundary authorizes. A caller-supplied passage would make
-  // the boundary decorative.
-  if (typeof (body as Record<string, unknown>).focusText === 'string') {
-    return NextResponse.json({ error: 'Work text is read server-side, never supplied' }, { status: 400 });
+  /* ⛔ The client never supplies Work text. It names places; the server reads
+     them, and only after the boundary authorizes each one. A caller-supplied
+     passage would make the boundary decorative. */
+  for (const forbidden of ['focusText', 'content', 'bodies']) {
+    if (typeof (body as Record<string, unknown>)[forbidden] === 'string') {
+      return NextResponse.json({ error: 'Work text is read server-side, never supplied' }, { status: 400 });
+    }
   }
 
-  // ⭐ ONE identity, minted here at the boundary and carried through consent,
-  // receipt and cognition. Never regenerated downstream.
+  /**
+   * The declared attention. ⭐ `readable` is the ANCHOR CURRENCY the client
+   * resolved against the current Work — a member whose anchor is `unverified`
+   * is declared here and never read.
+   *
+   * ⛔ The client asserting `readable: true` buys it nothing beyond an attempt:
+   * the boundary still has to authorize the section, and the server still has
+   * to succeed in reading it. `readable: false` is the only assertion that is
+   * load-bearing, and it can only ever WITHHOLD.
+   */
+  const scopes = Array.isArray(members) ? members : [];
+  if (!scopes.length) {
+    return NextResponse.json({ error: 'at least one focus member is required' }, { status: 400 });
+  }
+  const parsed: FocusMemberScope[] = [];
+  for (const m of scopes) {
+    if (!m || typeof m !== 'object') break;
+    const { focusMemberId, sectionRef, range, readable } = m as Record<string, unknown>;
+    if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
+    parsed.push({
+      focusMemberId, sectionRef,
+      readable: readable !== false,
+      ...(range && typeof range === 'object'
+        ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
+        : {}),
+    });
+  }
+  if (parsed.length !== scopes.length) {
+    return NextResponse.json({ error: 'a focus member was not readable as one' }, { status: 400 });
+  }
+  if (activeMemberId !== null && activeMemberId !== undefined && typeof activeMemberId !== 'string') {
+    return NextResponse.json({ error: 'activeMemberId must be a member id or null' }, { status: 400 });
+  }
+
+  // ⭐ ONE serving request. Every member's receipt shares it, so an auditor
+  // grouping by it sees ONE member act carrying N section-scoped crossings.
   const requestId = randomUUID();
-  // ⭐ A NEW disclosure identity per member act — never reused, so an unresolved
-  // prior attempt can never be replayed as though it were this one.
-  const disclosureId = randomUUID();
 
   const result = await performFocusCrossing(
     {
-      requestId, identity, posture: TurnPosture.resolve(body), memberId, sessionId,
-      disclosureId, workRef, scopeKind,
-      sectionRef: typeof sectionRef === 'string' ? sectionRef : undefined,
-      range: range && typeof range === 'object'
-        ? { start: Number((range as any).start), end: Number((range as any).end) } : undefined,
+      requestId, actId, identity, posture: TurnPosture.resolve(body), memberId, sessionId,
+      workRef, members: parsed, activeMemberId: (activeMemberId as string | null) ?? null,
       gesture, ask,
     },
     { assemble: assembleFocus, prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration },
@@ -85,5 +128,19 @@ export async function POST(request: NextRequest) {
     message: result.presentation.message,
     actions: result.presentation.actions,
     response: result.response,
+    /* ⭐ The surface is told what MAIA was told: how many places the writer
+       declared and how many she could actually read. A writer who asked about
+       five places and got an answer about three is entitled to know that. */
+    focus: result.participation
+      ? {
+          total: result.participation.total,
+          readable: result.participation.readable,
+          activeMemberId: result.participation.activeMemberId,
+          members: result.participation.members.map((m) => ({
+            focusMemberId: m.focusMemberId, ordinal: m.ordinal,
+            status: m.status, bodyAvailable: m.bodyAvailable, active: m.active,
+          })),
+        }
+      : null,
   });
 }

@@ -39,8 +39,9 @@ const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as n
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never, posture: TurnPosture.resolve({}),
-  memberId: 'm-1', sessionId: 's-1', disclosureId: 'd-1', workRef: 'work-1',
-  scopeKind: 'passage' as const, gesture: 'ask_maia' as const, ask: 'what is repeating',
+  memberId: 'm-1', sessionId: 's-1', actId: 'act-1', workRef: 'work-1',
+  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', readable: true }],
+  activeMemberId: null, gesture: 'ask_maia' as const, ask: 'what is repeating',
   ...over,
 });
 
