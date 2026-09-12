@@ -1,0 +1,53 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-12 14:30:08.670 xcodebuild[44563:26176606] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:30:08.674 xcodebuild[44563:26176606] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-12 14:30:08.937 xcodebuild[44563:26176606] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:30:10.663853-0400 DriverUITests-Runner[55228:12585823] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-12 14:30:11.117.
+Test Suite 'DriverUITests.xctest' started at 2026-09-12 14:30:11.117.
+Test Suite 'K00DriverTests' started at 2026-09-12 14:30:11.117.
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' started.
+    t =     0.00s Start Test at 2026-09-12 14:30:11.118
+    t =     0.02s Set Up
+    t =     0.02s Pressing Home button
+2026-09-12 14:30:11.251 xcodebuild[44563:26176606] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     0.50s Open com.apple.springboard
+    t =     0.50s     Activate com.apple.springboard
+    t =     0.50s         Wait for com.apple.springboard to idle
+    t =     0.51s Waiting 5.0s for "VoiceKernel K00" Icon to exist
+    t =     1.60s     Checking `Expect predicate `existsNoRetry == 1` for object "VoiceKernel K00" Icon`
+    t =     1.60s         Checking existence of `"VoiceKernel K00" Icon`
+    t =     1.77s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     1.77s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     1.89s Find the "VoiceKernel K00" Icon
+    t =     2.01s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.02s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.03s Find the "VoiceKernel K00" Icon
+    t =     2.13s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.13s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+/tmp/voice-driver-01/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift:150: error: -[DriverUITests.K00DriverTests testOneSample] : failed - DRIVER/INFRASTRUCTURE FAILURE: icon 'VoiceKernel K00' present but not hittable (frame (0.0, 0.0, 0.0, 0.0)) — not on the visible Home Screen page
+    t =     2.16s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' failed (2.206 seconds).
+Test Suite 'K00DriverTests' failed at 2026-09-12 14:30:13.325.
+	 Executed 1 test, with 1 failure (0 unexpected) in 2.206 (2.207) seconds
+Test Suite 'DriverUITests.xctest' failed at 2026-09-12 14:30:13.326.
+	 Executed 1 test, with 1 failure (0 unexpected) in 2.206 (2.209) seconds
+Test Suite 'Selected tests' failed at 2026-09-12 14:30:13.328.
+	 Executed 1 test, with 1 failure (0 unexpected) in 2.206 (2.211) seconds
+2026-09-12 14:30:13.397 xcodebuild[44563:26176606] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 14:30:14.120 xcodebuild[44563:26176606] [MT] IDETestOperationsObserverDebug: 5.182 elapsed -- Testing started completed.
+2026-09-12 14:30:14.120 xcodebuild[44563:26176606] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-12 14:30:14.120 xcodebuild[44563:26176606] [MT] IDETestOperationsObserverDebug: 5.182 sec, +5.182 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-fqhuasbwmfwaxaetrligixrniqvq/Logs/Test/Test-DriverUITests-2026.09.12_14-30-08--0400.xcresult
+
+** TEST EXECUTE FAILED **
+
+Testing started

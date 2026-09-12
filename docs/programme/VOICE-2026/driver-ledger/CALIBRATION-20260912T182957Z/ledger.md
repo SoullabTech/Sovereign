@@ -1,0 +1,13 @@
+# DRIVER-01 batch — CALIBRATION — 20260912T182957Z
+
+stratum=AUTOMATED-COLD-ICON · N=3 · vp=on · mode=I · hold=15s · w4=off · subject=p5b0 · device=A0736AC8-793B-516F-AC72-C076DB6CEE38 · xcodeDest=00008140-00163D9922E0801C
+installed harness identity (the app under test is NOT rebuilt by this batch):
+```
+VoiceKernel K00        life.soullab.voicekernel.k00                       0.0.1     1             
+```
+
+| Stratum | # | Mode | Session | Records | SHA-256 | Class | Evidence |
+|---|---|---|---|---|---|---|---|
+| AUTOMATED-COLD-ICON | 1 | I | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | icon 'VoiceKernel K00' present but not hittable (frame (0.0, 0.0, 0.0, 0.0)) — not on the visible Home Screen page (rc=65 · wall 7 s) |
+| AUTOMATED-COLD-ICON | 2 | I | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | icon 'VoiceKernel K00' present but not hittable (frame (0.0, 0.0, 0.0, 0.0)) — not on the visible Home Screen page (rc=65 · wall 6 s) |
+| AUTOMATED-COLD-ICON | 3 | I | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | icon 'VoiceKernel K00' present but not hittable (frame (0.0, 0.0, 0.0, 0.0)) — not on the visible Home Screen page (rc=65 · wall 6 s) |
