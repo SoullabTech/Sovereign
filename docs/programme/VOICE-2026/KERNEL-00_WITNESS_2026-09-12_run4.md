@@ -164,7 +164,7 @@ Counts: 5 `graph_started` (every one `engineRunning: false`), 6 `engine_configur
 
 Two VP-ON sessions exist on the run-4 build. **(i)** the 11:26 session on the screenshot (§5: generation 9, `degraded budget_exhausted:entry_timeout`) — its journal was never written (§6c) and its process was later replaced; it stays **screenshot-only, NOT MEASURED as a journal**. **(ii)** `K00-fe6593f4` (§5b), the H2-discriminator session at 11:38, exported and verified — this is the run-4a VP-ON measurement of record. The founder's process listing shows a live `VoiceKernelHarness`; per the founder's own caution, the listing does not establish which session that process is, and the record does not infer it.
 
-**Run-1 code identity — CLOSED (founder-read):** `VoiceKernelHarness.debug.dylib` `DC6A68E9-F3A0-3427-871D-555CE7FAFD7A` from the 16:23:49 report; recorded in the run-1 witness §1.
+**Run-1 code identity — CLOSED, VERIFIED on the Studio** from the 16:23:49 report's `usedImages`: stub `81d0c25c-…` · `VoiceKernelHarness.debug.dylib` `dc6a68e9-f3a0-3427-871d-555ce7fafd7a` (arm64); recorded in the run-1 witness §1. The stub UUID matching the run-1 record while the dylib differs from every later build is the complete provenance picture the 11th could not give.
 
 ## 7b. Crash-log domain (founder, `devicectl … --domain-type systemCrashLogs`, raw preserved in `/tmp/k00-crashlogs.txt`)
 
