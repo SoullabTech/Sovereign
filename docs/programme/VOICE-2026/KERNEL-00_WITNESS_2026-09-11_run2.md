@@ -1,6 +1,6 @@
 # KERNEL-00 · DEVICE WITNESS · RUN 2 — 2026-09-11
 
-**Status: OPEN — installed, not yet launched.**
+**Status: OPEN — installed · LAUNCHED (attempt 3) · harness idle on screen · pre-enter checkpoint PENDING · Enter NOT YET PRESSED.**
 **Subject SHA:** `728924819` (PRE-WITNESS-02 §3 applied; plan `6566ace40` accepted as written).
 **Compile of record:** `KERNEL-00_MAC-COMPILE-03_2026-09-11.md` — GREEN (build · test 20/20 · gate 16/16 · xcodegen · unsigned · signed).
 **Question this run answers:** with an invalid input format made unreachable at `installTap` (§3.1) and every refused build journalled into the existing RecoveryPolicy road (§3.2/§3.4), does the organism survive **Enter conversation** on this device — and what does the journal show at the entry seam (plan §4, candidate A first)?
@@ -51,9 +51,13 @@ App installed:
 
 A signed `xcodebuild … BUILD SUCCEEDED` tail appears in the founder's terminal scrollback immediately before attempt 2. Whether that was a fresh build after the 19:54 install, or the 19:49 build's output re-shown, is not established from the paste. If a rebuild occurred, the installed bundle (19:54) and the DerivedData bundle may differ; the dylib UUID must be re-read with `dwarfdump --uuid` and, if it differs from `1AEBEE45-…`, the app reinstalled before launch so that §1 names the bundle that actually runs.
 
-Next: unlock the phone **and keep it unlocked** (Settings → Display & Brightness → Auto-Lock → Never for the duration of the witness; the runbook's 60-minute session requires it anyway), then launch — either by the same `devicectl` command while the screen is unlocked, or by tapping the `VoiceKernel K00` icon on the Home Screen (a lawful launcher; the record names whichever was used). Then the pre-enter checkpoint (liveness · append · export) **before** any Enter.
+| 3 | phone clock **10:20** (screenshot) | **launcher NOT STATED by the founder** — presumed Home Screen tap after unlocking; to be confirmed in one line | **LAUNCHED.** Harness on screen: `VoiceKernel · K00` · Floor `idle` · `generation 0` · `session inactive` · `inputFlow unknown` · `outputFlow idle` · rms/peak `0.00000 / 0.00000` · `callbacks (gen) 0` · `recovery gen 0 · attempts 0/3` · `Mic: enabled` · `Output: enabled`. Pre-enter state identical in shape to run 1 §0. **Nothing spent.** |
+
+`dwarfdump --uuid "$APP/VoiceKernelHarness.debug.dylib"` in a fresh shell failed with `error: /VoiceKernelHarness.debug.dylib: No such file or directory` — `$APP` was unset in that shell, so the path collapsed to `/VoiceKernelHarness.debug.dylib`. Not evidence about the bundle. The dylib UUID re-read is still owed with the full path (§1 binding stands as `1AEBEE45-…` from the pre-install read until then).
+
+(Previously written before attempt 3, kept for the record:) Next: unlock the phone **and keep it unlocked** (Settings → Display & Brightness → Auto-Lock → Never for the duration of the witness; the runbook's 60-minute session requires it anyway), then launch — either by the same `devicectl` command while the screen is unlocked, or by tapping the `VoiceKernel K00` icon on the Home Screen (a lawful launcher; the record names whichever was used). Then the pre-enter checkpoint (liveness · append · export) **before** any Enter.
 
 ## 5. Pre-enter checkpoint — PENDING
 ## 6. Enter conversation — PENDING (the observation of record is the exported journal, then any device crash report; a report must list dylib UUID `1AEBEE45-…`)
 ## 7. Findings — PENDING
-## 8. Standing — OPEN · INSTALLED · NOT LAUNCHED
+## 8. Standing — OPEN · INSTALLED · LAUNCHED · IDLE ON SCREEN · NOTHING SPENT
