@@ -189,6 +189,22 @@ final class ReplayTests: XCTestCase {
         XCTAssertEqual(r.orphanTransitions.count, 1)
     }
 
+    // PRE-WITNESS-03 §A (K00-W4): moved here because `ev` is this class's helper (C4, MAC-COMPILE-04).
+    func testPostExitRecoveryEdgeIsAnOrphan() {
+        // K00-W4: after leaveConversation the floor is idle; a rebuild reaction
+        // then moved it idle → recovering. The replayer must reject that edge
+        // (it did on the device: "1 orphans"). This pins the law the exit
+        // guard now enforces upstream.
+        let r = StateReplayer.replay([
+            ev(1, 1, "command", cause: "leaveConversation"),
+            ev(2, 1, "floor_transition", from: "recovering", to: "idle", causeSeq: 1),
+            ev(3, 1, "floor_transition", from: "idle", to: "recovering", causeSeq: 2),   // the W4 edge
+        ])
+        XCTAssertFalse(r.passes)
+        XCTAssertEqual(r.orphanTransitions.count, 1)
+        XCTAssertEqual(r.orphanTransitions.first?.seq, 3)
+    }
+
     func testUnlawfulEdgeFails() {
         let r = StateReplayer.replay([
             ev(1, 1, "command", cause: "x"),
@@ -276,8 +292,8 @@ final class InputFormatPreconditionTests: XCTestCase {
     }
 }
 
-// PRE-WITNESS-03 §B / §A — the configuration-change seam is bounded and exit-guarded.
-// The kernel itself needs a device; these pin the two pure laws it now relies on.
+// PRE-WITNESS-03 §B — the configuration-change seam is bounded by the ratified budget.
+// (§A's replay law, testPostExitRecoveryEdgeIsAnOrphan, lives in ReplayTests.)
 final class ConfigurationChangeSeamTests: XCTestCase {
     func testConfigurationChangeIsBoundedByTheSameRatifiedBudget() {
         // K00-W3: 584 unbudgeted rebuilds in 6.2 min. Under RecoveryPolicy the
@@ -292,18 +308,4 @@ final class ConfigurationChangeSeamTests: XCTestCase {
         }
     }
 
-    func testPostExitRecoveryEdgeIsAnOrphan() {
-        // K00-W4: after leaveConversation the floor is idle; a rebuild reaction
-        // then moved it idle → recovering. The replayer must reject that edge
-        // (it did on the device: "1 orphans"). This pins the law the exit
-        // guard now enforces upstream.
-        let r = StateReplayer.replay([
-            ev(1, 1, "command", cause: "leaveConversation"),
-            ev(2, 1, "floor_transition", from: "recovering", to: "idle", causeSeq: 1),
-            ev(3, 1, "floor_transition", from: "idle", to: "recovering", causeSeq: 2),   // the W4 edge
-        ])
-        XCTAssertFalse(r.passes)
-        XCTAssertEqual(r.orphanTransitions.count, 1)
-        XCTAssertEqual(r.orphanTransitions.first?.seq, 3)
-    }
 }
