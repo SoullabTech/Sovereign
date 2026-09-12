@@ -216,7 +216,168 @@ act, and `topology_change_requires_explicit_command` has no counterpart in code 
 
 ---
 
-## 12 · ⛔ STANDING
+## 13 · ⭐⭐ THE FIVE EPISTEMIC LAYERS — founder, 2026-09-12
+
+**Sharper than §2, and it is the architecture.** The campfire exchange produced each of these in
+order, and collapsing any two would destroy the thing that made the exchange good:
+
+```text
+DEVELOPMENTAL OBSERVATION   immutable, evidence-bound reading
+                            ⭐ "This is what I saw when I read version 7."
+AUTHOR INTENT               new information supplied by the writer
+                            ⛔ does NOT mutate o1, and is never retroactive evidence
+CRAFT REASONING             MAIA's contestable professional judgment
+                            ⛔ never becomes "what the reading established"
+REVISION PROPOSAL           a proposed intervention, not a fact
+MANUSCRIPT CHANGE           a writer-authorized act
+```
+
+⭐ **MAIA did three sophisticated things right in that exchange and then hit an artificial wall.**
+She preserved the original reading rather than pretending the later intention had been known; she
+accepted new intent without rewriting history; and she shifted into craft reasoning explicitly,
+giving a real principle — *a recurring focal point earns its recurrence through what stays fixed and
+what moves.* **Then: "I can't make any of these changes — that's yours to do."** ⛔ **That wall is
+the product defect. It is not rigor; rigor is the part above it.**
+
+## 14 · 🔴 THE ARCHITECTURAL WARNING — founder, 2026-09-12
+
+> ⛔ **Do NOT simply give `DEVELOPMENTAL-READER-05` write access. That would collapse several
+> valuable boundaries.**
+
+```text
+DEVELOP    sees and names patterns · evidence-bound · the historical reading stays FROZEN
+   ↓ Work with this
+FOCUS      current Work + the observation + writer intent
+           discussion · teaching · options · recommendations
+   ↓ agreed proposal
+REVISION   exact staged transformation · diff + rationale + provenance
+   ↓ explicit approval
+WORK       new current revision
+   ↓
+           ⭐ MAIA rereads what actually exists NOW
+```
+
+⭐ **That structure buys both things most systems trade against each other: epistemic rigor AND
+creative usefulness.**
+
+## 15 · ⭐ "WORK WITH THIS" — the missing gesture, on the observation
+
+```text
+Ask MAIA           help me understand this finding
+Work with this     I want to REVISE the Work in relation to this finding
+```
+
+The observation is carried as **origin**, not as current evidence:
+
+```text
+Working from
+  o1 · recurrence · Developmental Reading · Version 7 · Sections 45, 56, 57, 58, 62
+```
+
+⭐ **And before proposing language MAIA rereads the current manuscript, because the observation may
+now be stale.** That answers the reading's own closing line — *"whether the chapters can each carry
+a distinct fire is something only a fresh reading of the Work could tell you."* **So let her reread
+it.**
+
+## 16 · ⭐⭐ TWO APPROVALS, NOT ONE
+
+```text
+1  "Yes, make that change."     authorizes MAIA to PREPARE the edit
+2  "Accept changes."            authorizes the edit to become part of the Work
+```
+
+⭐ **The second step shows exactly what will happen before anything is committed.** Between them sits
+`Review proposed changes` → the real manuscript diff → `Accept changes · Edit proposal · Reject ·
+Ask MAIA`. *"Keep the first paragraph, but make the other changes"* regenerates the staged edit.
+**Nothing has touched the Work.**
+
+## 17 · The eight operations — MAIA performs editorial work, not commentary
+
+```text
+REPLACE   rewrite a sentence / paragraph / section
+INSERT    add a transition, example, scene, explanation, heading
+DELETE    remove redundancy or agreed material
+MOVE      relocate a paragraph or section
+SPLIT     divide a paragraph or section
+MERGE     combine material
+REORDER   change structural sequence
+RETAIN    ⭐ explicitly preserve material while revising around it
+```
+
+⭐ **`RETAIN` is the one that is easy to miss and matters most** — *"keep my paragraph about the
+rain"* is an instruction, and a system with no way to represent it will quietly lose the thing the
+writer asked to keep.
+
+## 18 · 🔴 THE HARD INVARIANT
+
+> ⭐⭐ **MAIA may never silently alter authored material.**
+
+```text
+READ      with lawful context
+ADVISE    freely
+PROPOSE   freely
+STAGE     after agreement
+WRITE     only after explicit member approval
+```
+
+**Every applied change preserves:** what text changed · what MAIA proposed · what the member
+actually approved · what version it was based on · why · the resulting new revision · **the ability
+to restore the previous version.**
+
+⭐ **That is collaborative editing without an autonomous ghostwriter.**
+
+## 19 · ⭐⭐ THE V1 ACCEPTANCE SPECIMEN — the campfire case, end to end
+
+**Pre-authored, before anything is built, so the result has nothing to negotiate with:**
+
+> **Starting from `o1`, can Kelly explain the artistic intention, learn something useful about
+> recurrence, negotiate a solution with MAIA, have MAIA stage the corresponding changes in the real
+> manuscript, approve them, and then continue the conversation against the newly revised Work —
+> without the original developmental observation ever being rewritten or misrepresented?**
+
+⛔ **Success is NOT "MAIA gives good advice."** Success is that the Work changes by an authorized act
+and **the next MAIA turn reads the changed manuscript.**
+
+⭐ **And the reciprocal half is part of it.** When the writer says *"actually that exact sentence is
+the one I want repeated every time,"* MAIA revises her recommendation — *let that sentence be the
+ritual threshold and make the material around it more distinct* — and what she has learned is
+`PROJECT INTENT: an exact sentence is a deliberate recurring threshold`, ⛔ **never
+`Kelly accidentally repeats sentences`.**
+
+## 20 · The decision record, as the founder wrote it
+
+```text
+WHY WE CHANGED IT
+  Intent           recurring campfire as phenomenological threshold
+  Problem          large blocks of repeated description obscured experiential difference
+  Craft principle  keep the ritual invariant small enough for the changing
+                   experience to remain perceptible
+  Decision         preserve one exact threshold sentence; differentiate the sensory
+                   and phenomenological material around it
+  Writer judgment  the recurrence should feel ritual, not merely familiar
+```
+
+> ⭐⭐ **Vastly richer than a Git-style revision history. It is the history of the Work becoming
+> itself.**
+
+---
+
+## 21 · STEP 1 — DONE
+
+```text
+branch        claude/ws-field-focus-recovery
+base          origin/clean-main-no-secrets (e1c6f527b)
+recovered     6 commits · 18 files · all clean, no conflicts
+scroll rule   revealWithin carried · 4 call sites · 0 scrollIntoView
+guard         navigationPreserved re-pointed UNDER THE SCROLL LANE'S AUTHORITY,
+              exactly as its own header instructs — never by the recovery lane
+gates         524 tests · 0 failed · typecheck no regressions · no-supabase clean
+not done      onAsk not repointed · flag untouched · not redesigned · not deployed
+```
+
+---
+
+## 22 · ⛔ STANDING
 
 ```text
 target                          RULED — continuous writer-controlled revision relationship
@@ -224,7 +385,8 @@ V1 six capabilities             RULED
 authority model R/A/S/W         RULED
 proposal ≠ finding              RULED
 RevisionProposal shape          RULED as a shape · ⛔ no schema authored
-#1275 join                      ⛔ NOT YET AUTHORIZED
+#1275 recovery (Step 1)         ⭐ DONE — claude/ws-field-focus-recovery
+Step 2 join (onAsk)             ⛔ NOT YET AUTHORIZED
 RevisionProposal build          ⛔ NOT AUTHORIZED
 §5.3 provenance ruling          ⛔ OWED, gates capability 4–6
 deploy                          HELD
