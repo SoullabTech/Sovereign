@@ -112,13 +112,23 @@ const draftFor = (ids: string[]) => ({
   },
 });
 
-/** Five declared places; three of them lawfully readable. */
+/**
+ * Five declared places; three of them lawfully readable.
+ *
+ * ⭐ MIGRATED IN PLACE, FOCUS-W5, 2026-09-12 — and the migration is the finding.
+ * f3 and f5 used to carry `sectionRef: 's57'` / `'s62'` while carrying no body,
+ * and F1 below asserted that EVERY member's section id appeared in the rendered
+ * text. That assertion required the defect: it made naming a withheld place a
+ * passing condition. The obligation it was protecting — five memberships
+ * rendered, three bodies — is preserved below in the form that does not also
+ * demand the leak.
+ */
 const FIVE: FocusParticipationMember[] = [
   { focusMemberId: 'f1', ordinal: 1, sectionRef: 's45', status: 'readable', active: false, bodyAvailable: true, content: 'The fire was already lit.' },
   { focusMemberId: 'f2', ordinal: 2, sectionRef: 's56', status: 'readable', active: true, bodyAvailable: true, content: 'Someone had banked it.' },
-  { focusMemberId: 'f3', ordinal: 3, sectionRef: 's57', status: 'unverified', active: false, bodyAvailable: false },
+  { focusMemberId: 'f3', ordinal: 3, status: 'unverified', active: false, bodyAvailable: false },
   { focusMemberId: 'f4', ordinal: 4, sectionRef: 's58', status: 'readable', active: false, bodyAvailable: true, content: 'By morning the stones were cold.' },
-  { focusMemberId: 'f5', ordinal: 5, sectionRef: 's62', status: 'unavailable', active: false, bodyAvailable: false },
+  { focusMemberId: 'f5', ordinal: 5, status: 'unavailable', active: false, bodyAvailable: false },
 ];
 
 const part = () => focusParticipation({ members: FIVE, activeMemberId: 'f2' });
@@ -147,7 +157,14 @@ describe('F1 — five Focus members with three lawful bodies', () => {
     expect(proof).not.toBeNull();
     const text = writerCandidates({ focus: { workRef: 'w-1' }, participation: part() })
       .map((c) => c.text).join('\n');
-    for (const m of FIVE) expect(text).toContain(m.sectionRef);
+    /* ⭐ ALL FIVE ARE NAMED — by the identity a member HAS, which for a
+       withheld one is its focus-local F-number, not a section id. */
+    for (const m of FIVE) expect(text).toContain(`F${m.ordinal}`);
+    for (const m of FIVE.filter((x) => x.status === 'readable')) {
+      expect(text).toContain(m.sectionRef!);
+    }
+    /* ⛔ W5 · and the two withheld places are not named anywhere. */
+    for (const ref of ['s57', 's62']) expect(text).not.toContain(ref);
     expect(text).toContain('The fire was already lit.');
     expect(text).not.toContain('cold again');
   });
@@ -317,7 +334,7 @@ describe('F7 — two members concatenated into one string fails', () => {
       // The body appears, and it appears attributed to its own place.
       const at = text.indexOf(m.content!);
       expect(at).toBeGreaterThan(-1);
-      expect(text.slice(Math.max(0, at - 220), at)).toContain(m.sectionRef);
+      expect(text.slice(Math.max(0, at - 220), at)).toContain(m.sectionRef!);
     }
   });
 
@@ -476,6 +493,11 @@ describe('P13 — the client is not authoritative about why a member is withheld
     activeMemberId: null, gesture: 'ask_maia', ask: 'q',
   } as FocusCrossingRequest);
 
+  /** The request's own mapping, for reading the observed participation back. */
+  const BY_MEMBER: Record<string, string> = {
+    f1: 's-readable', f2: 's-still-there', f3: 's-deleted',
+  };
+
   /** Captures the participation the crossing built, at the moment of handoff. */
   async function crossWith(presentIds: string[]) {
     let seen: { members: { sectionRef: string; status: string }[] } | null = null;
@@ -487,7 +509,12 @@ describe('P13 — the client is not authoritative about why a member is withheld
       readDraft: async ({ sectionRefs }) => draftFor(sectionRefs as string[]),
       prepare: async (input) => {
         seen = {
-          members: input.participation.members.map((m) => ({ sectionRef: m.sectionRef, status: m.status })),
+          /* ⛔ W5 · a withheld member no longer HAS a sectionRef in the
+             participation, so this observer keys on focus-local identity and
+             maps back through the request, the way an auditor would. */
+          members: input.participation.members.map((m) => ({
+            sectionRef: m.sectionRef ?? BY_MEMBER[m.focusMemberId], status: m.status,
+          })),
         };
         return null;
       },
@@ -547,6 +574,35 @@ describe('P13 — the client is not authoritative about why a member is withheld
       path.join(__dirname, '..', 'focusPresence.ts'), 'utf8'));
     // On error it returns every id it was asked about, so nothing is reported deleted.
     expect(probe).toMatch(/return new Set\(sectionRefs\);/);
+  });
+
+  /* ══ ⭐⭐ W5 · OBSERVED AT THE PRODUCER, NOT ASSERTED OVER A FIXTURE ══════
+     The pure-contract falsifiers in `focusWithheldMember.test.ts` build their
+     own compliant members, so they cannot notice a CROSSING that hands the
+     identity over unconditionally. This one runs the real crossing and looks
+     at what it actually built. ⛔ Without it the W5 gate is calibrated only
+     against itself. */
+  it('⭐⭐ W5 · the crossing gives withheld members NO section identity', async () => {
+    let seen: readonly { focusMemberId: string; sectionRef?: string; status: string }[] = [];
+    await performFocusCrossing(withheldReq(), {
+      presence: async () => new Set(['s-still-there']),
+      readDraft: async ({ sectionRefs }) => draftFor(
+        (sectionRefs as string[]).filter((r) => r === 's-readable'),
+      ),
+      resolveCurrency: currencyFor(['s-readable']),
+      prepare: async (input: { participation: { members: readonly never[] } }) => {
+        seen = input.participation.members;
+        return { turn: { turnId: 't' }, proof: {} } as never;
+      },
+      generate: async () => ({ handoff: Promise.resolve(), result: Promise.resolve({}) }),
+    } as never);
+
+    const by = (id: string) => seen.find((m) => m.focusMemberId === id)!;
+    expect(by('f1').sectionRef).toBe('s-readable');
+    expect(by('f2').sectionRef).toBeUndefined();
+    expect(by('f3').sectionRef).toBeUndefined();
+    expect(by('f2').status).toBe('unverified');
+    expect(by('f3').status).toBe('unavailable');
   });
 
   it('⛔ the probe reads existence only — never a column that could carry prose', () => {

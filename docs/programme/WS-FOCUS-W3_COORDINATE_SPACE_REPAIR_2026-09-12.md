@@ -12,7 +12,8 @@ FOCUS-W3   coordinate space         REPAIRED · ACCEPTED
 FOCUS-W4   range_precedes_body      REAL FINDING · refusal is the law
            confirmation instrument  FAILED then REPAIRED · see §5d
 FOCUS-W2   act-record conflation    CONFIRMED LIVE · §5b · not repaired
-FOCUS-W5   withheld member spoken   OBSERVED · awaiting ruling · §5c
+FOCUS-W5   withheld member spoken   RULED + REPAIRED · §5c · W5-1…W5-10 green
+FOCUS-W4   confirmation at source   PASS · 4 of 5 · §5e
 new Act 3                           UNSPENT · act count still 1
 production                          UNTOUCHED
 ```
@@ -213,7 +214,8 @@ instrument now prints `§N` as the writer names it, for the same reason.
 
 ## 5c. FOCUS-W5 — a withheld member is absent from disclosure and present in the conversation
 
-**OBSERVED · NOT RULED · NOT REPAIRED.**
+**RULED AND REPAIRED, founder act 2026-09-12.** The finding as observed is kept
+below unchanged; the ruling and the repair follow it.
 
 In the same pre-repair act, MAIA received **no character of §56** (`f2` above).
 In the conversation seeded by that crossing she nonetheless wrote:
@@ -279,10 +281,129 @@ implementation of a thing that must agree is a defect generator.** Three
 instances now — the geometry, the fixture, the read. None is promoted to canon
 on that basis; recorded so the pattern is visible when a fourth arrives.
 
+## 5e. FOCUS-W4 — CONFIRMED AT SOURCE
+
+Run by the founder on the repaired instrument at `77b4fef98`, twice, identically:
+
+```text
+READING   3f692e22   REVISION 7   DRAFT 48ccfc89   DRAFT VER 34
+
+§45  60–1700   stored 2874 · prefix 41 · body 2833   →  19–1659   PROJECTABLE
+§56  22–1692   stored 1692 · prefix 23 · body 1669   →  -1–1669   REFUSED range_precedes_body
+§57  whole section                                                 digest unchanged
+§58  whole section                                                 digest unchanged
+§62  22–400    stored  887 · prefix 20 · body  867   →   2–380    PROJECTABLE
+
+DECLARED 5 · EXPECTED READABLE 4 of 5 · withheld §56 range_precedes_body
+```
+
+⭐ Every number matches the session reconstruction exactly, so the reconstruction
+is now evidence. §56's frozen anchor really does begin one code point inside its
+separator.
+
+⭐⭐ **ALL FIVE DIGESTS UNCHANGED, AT DRAFT VERSION 34 — the same version as the
+failed act.** The Work has not moved since revision 7, so the new witness is a
+CONTROLLED comparison: same Work, same anchors, same digests, and the repairs as
+the only delta. That property is rare and should not be spent casually.
+
+## 5f. FOCUS-W5 — the ruling, and the structural repair
+
+> **A withheld Focus member may remain present as attention, but Focus may not
+> supply enough identity or semantics for MAIA to present claims about its
+> current content as though she read it.**
+
+⛔ **Stronger prose in the prompt is NOT an adequate repair.** The pre-W5 prompt
+already told her a member with no passage was material she had not been given.
+She did it anyway. So the repair is structural.
+
+For a withheld member, Focus cognition may carry `focus-local identity ·
+ordinal · state · active false · bodyAvailable false`. It may not carry
+`current body · range · summary · semantic description · digest-derived
+description · current-content claim` — **and, per the Q1 authority rule, not the
+section identity either.** Section identity travels only under a lawful
+structure authority; Focus membership does not confer it.
+
+```text
+READABLE MEMBER   F1 + section identity + authorized body
+WITHHELD MEMBER   F2 + ordinal + withheld state
+                  NO section identity from the Focus producer · NO body
+```
+
+⛔ The server and the durable act still hold the real identity for provenance.
+This governs what enters response-producing cognition.
+
+**Prior lawful knowledge is not erased.** If a separately admitted source — an
+earlier developmental reading — bears on the withheld place, MAIA may say so,
+**with the provenance explicit**: *the earlier reading described it as X, and I
+could not check that against the current passage.* The defect W5 names is
+**source collapse**, not recall.
+
+Implemented as: `sectionRef` present **iff** `status === 'readable'`, enforced in
+`focusParticipation()` in both directions (a withheld member carrying one is
+refused; a readable member lacking one is refused, because an unattributed
+passage is what F7 forbids), the crossing supplying it only on the readable
+branch, and the membership sentence carrying the attribution instruction.
+
+```text
+W5-1   withheld member reaches cognition as membership              PASS
+W5-2   no Focus-authorized sectionRef · id appears nowhere          PASS
+W5-3   no body / range / summary / semantic description             PASS
+W5-4   readable members keep distinct identity and bodies           PASS
+W5-5   rendering still states total 5 and readable 4                PASS
+W5-6   removing the withheld member entirely FAILS                  PASS
+W5-7   reintroducing its sectionRef FAILS                           PASS
+W5-8   separately admitted material stays attributable              PASS
+W5-9   withheld material not described as current, unsourced        PASS
+W5-10  MUTATION · identity without a body → RED                     PASS
+```
+
+Mutation-proofed — all red, control green:
+
+| # | known-bad implementation | failures |
+|---|---|---|
+| N1 | FOCUS-W5 itself — withheld member keeps its identity | 4 |
+| N3 | absence as the repair — withheld members dropped | 10 |
+| N4 | the source-attribution instruction removed | 3 |
+
+⚠️ **N1 first scored 3, and the gap was my own instrument.** The pure-contract
+falsifiers build compliant members, so they cannot notice a PRODUCER that hands
+the identity over unconditionally — the gate was calibrated against itself. A
+producer-level obligation now runs the real crossing and inspects what it built
+(`focusSetCrossing.test.ts`, P13 section). **The §5 calibration law, applied to
+the instrument written to enforce §5c.**
+
+⭐ **A pre-existing falsifier asserted the defect.** `focusSetCrossing.test.ts`
+F1 required EVERY member's section id to appear in the rendered text, withheld
+included — naming a withheld place was a passing condition. Migrated in place
+with the supersession recorded: all five members are still named, by the
+identity each one HAS.
+
+## 5g. W2 as a free acceptance check
+
+Under the repair the chain is: §56 is present and unprojectable → currency
+`needs_confirmation` (R11) → not `mayDisclose` → **no boundary, no receipt** →
+status `unverified` → act row `currency_state = 'unverified'`. The table's CHECK
+already admits exactly `current | unverified | unavailable`, so no migration.
+
+The old act's `unavailable` came from the last branch — a member that WAS
+authorized, got a boundary, and whose read then failed. That path is now
+unreachable for §56.
+
+```text
+NEW ACT 3 · §56 ACCEPTANCE
+f2.currency_state      unverified          ⛔ if 'unavailable', W2 remains live
+f2.body_available      false
+f2.receipted           false
+receipts for the act   exactly 4, all crossed
+                       ⛔ ZERO attempted-never-crossed rows
+```
+
+⛔ The old act `d7cb7317` stays untouched as historical evidence of the defect.
+
 ## 6. Next
 
 ```text
-1  one read-only confirmation of the frozen anchors
+1  DONE · read-only confirmation of the frozen anchors — PASS, 4 of 5
      DATABASE_URL=… npx tsx scripts/witness/focus-w4-frozen-anchor-confirm.ts \
        --work <manuscriptId> --reading <readingId> --member <memberId> --observation o1
    every statement a SELECT · no act · no receipt · no model call

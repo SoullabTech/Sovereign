@@ -58,11 +58,29 @@ export interface FocusParticipationMember {
   /** 1-based position in the set, as the writer declared it. */
   readonly ordinal: number;
   /**
-   * The section this member stands in. Travels because the section identity is
-   * what the disclosure receipt is scoped to and what MAIA must be able to
-   * distinguish §45 from §62 by. ⛔ It is an identity, not a description.
+   * The section this member stands in.
+   *
+   * ⭐⭐ PRESENT IF AND ONLY IF `status === 'readable'` — FOUNDER RULING,
+   * FOCUS-W5, 2026-09-12. Enforced below, not merely documented.
+   *
+   * It travels for a READABLE member because the receipt is scoped to that
+   * section and MAIA must be able to tell §45 from §62 when she attributes a
+   * passage. ⛔ It does NOT travel for a withheld one:
+   *
+   *   ATTENTION MEMBERSHIP  ≠  CONTENT DISCLOSURE
+   *
+   * Section identity may travel only under a lawful structure authority; Focus
+   * membership does not confer it. Given the identity of a place she was not
+   * given, MAIA can and did speak about that place's current content as though
+   * she had read it — the source collapse FOCUS-W5 names. Withholding the body
+   * while handing over the name is the shape that produced
+   * *"Section 56 gives the same sequence again…"* about a section no boundary
+   * ever disclosed.
+   *
+   * ⛔ The server and the durable act still hold the real section identity for
+   * provenance. This rule governs what enters response-producing cognition.
    */
-  readonly sectionRef: string;
+  readonly sectionRef?: string;
   readonly status: FocusMemberStatus;
   /** Derived from the set's activeMemberId. ⛔ Never accepted from the member. */
   readonly active: boolean;
@@ -118,6 +136,21 @@ export function focusParticipation(input: FocusParticipationInput): FocusPartici
     if (m.bodyAvailable !== hasContent) {
       throw new Error('focus participation: bodyAvailable disagrees with content');
     }
+
+    /* ⭐⭐ W5 · THE SECOND HARD REFUSAL, and it binds in BOTH directions.
+       A withheld member carrying its section identity is the defect; a
+       readable member without one cannot have its passage attributed, and an
+       unattributed passage is what F7 forbids. */
+    const hasRef = m.sectionRef !== undefined;
+    if (m.status !== 'readable' && hasRef) {
+      throw new Error(
+        `focus participation: a ${m.status} member carries a section identity`
+        + ' — membership is not disclosure, and a withheld place is not named',
+      );
+    }
+    if (m.status === 'readable' && !hasRef) {
+      throw new Error('focus participation: a readable member carries no section identity');
+    }
   }
 
   if (activeMemberId !== null) {
@@ -133,7 +166,8 @@ export function focusParticipation(input: FocusParticipationInput): FocusPartici
   const resolved = members.map<FocusParticipationMember>((m, i) => ({
     focusMemberId: m.focusMemberId,
     ordinal: i + 1,
-    sectionRef: m.sectionRef,
+    /* ⛔ Carried only where the refusal above already proved it lawful. */
+    ...(m.sectionRef !== undefined ? { sectionRef: m.sectionRef } : {}),
     status: m.status,
     active: activeMemberId !== null && m.focusMemberId === activeMemberId,
     bodyAvailable: m.content !== undefined,
@@ -150,8 +184,10 @@ export function focusParticipation(input: FocusParticipationInput): FocusPartici
 
 const STATUS_NOTE: Readonly<Record<FocusMemberStatus, string>> = {
   readable: 'current text, which you can read below',
-  unverified: 'an anchor that needs the writer’s confirmation before it can be treated as current text',
-  unavailable: 'a place whose current text could not be made available to you',
+  unverified: 'an anchor that needs the writer’s confirmation before it can be treated as current text.'
+    + ' You have not been given it, and you do not know which section it is.',
+  unavailable: 'a place whose current text could not be made available to you.'
+    + ' You have not been given it, and you do not know which section it is.',
 };
 
 /**
@@ -167,7 +203,18 @@ export function renderFocusMembership(p: FocusParticipation): string {
     : `The writer is working across ${places}. You can read ${p.readable} of ${p.total};`
       + ` ${unread} cannot be read in this turn.`
       + ' ⛔ This is a partial view of their attention, and you must not treat the'
-      + ` ${p.readable} you can see as the whole of it.`;
+      + ` ${p.readable} you can see as the whole of it.`
+      /* ⭐⭐ W5-9 · SOURCE COLLAPSE, NAMED. The structural repair already
+         withholds the identity; this forbids the remaining move — speaking
+         about a withheld place from some other source as though it were the
+         current Work. Prior lawful knowledge is not erased, but it must be
+         attributed, because the writer cannot otherwise tell which of your
+         claims rest on their prose. */
+      + ' ⛔ You have not read the withheld place(s) in this turn and you are not'
+      + ' told which sections they are. Do not describe what they currently say.'
+      + ' If something you were given elsewhere — an earlier developmental'
+      + ' reading, for instance — bears on one of them, say so and say that you'
+      + ' could not check it against the current Work.';
   const target = p.activeMemberId === null
     ? 'They have not yet chosen which of these places they are acting on.'
     : `They are working on ${p.members.find((m) => m.active)?.sectionRef ?? 'one of these places'} right now`
@@ -175,11 +222,21 @@ export function renderFocusMembership(p: FocusParticipation): string {
   return `${head} ${target}`;
 }
 
-/** One line per member: identity, place, state. ⛔ Never a description of prose. */
+/**
+ * One line per member: identity, place, state. ⛔ Never a description of prose.
+ *
+ * ⭐ W5 · A WITHHELD MEMBER IS LISTED AND NOT NAMED. It keeps its focus-local
+ * identity and its ordinal — it must remain visibly part of the writer's
+ * attention, because deleting it would make a partial view look complete — and
+ * it carries no section identity at all.
+ */
 export function renderFocusMembers(p: FocusParticipation): string {
   return p.members
-    .map((m) => `  F${m.ordinal} · ${m.sectionRef}${m.active ? '  ← working on this' : ''}`
-      + `\n        ${STATUS_NOTE[m.status]}`)
+    .map((m) => {
+      const place = m.sectionRef ?? 'a place in this Work that is withheld from you in this turn';
+      return `  F${m.ordinal} · ${place}${m.active ? '  ← working on this' : ''}`
+        + `\n        ${STATUS_NOTE[m.status]}`;
+    })
     .join('\n');
 }
 

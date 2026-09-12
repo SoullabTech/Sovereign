@@ -395,10 +395,15 @@ export async function performFocusCrossing(
         const status: FocusMemberStatus = !mayDisclose(c)
           ? (c === 'unavailable' || !present.has(m.sectionRef) ? 'unavailable' : 'unverified')
           : content === undefined ? 'unavailable' : 'readable';
+        /* ⭐⭐ W5 · THE SECTION IDENTITY TRAVELS ONLY WITH THE BODY.
+           `m.sectionRef` is still the real identity here, and the act record
+           and the presence probe above still use it — this decides only what
+           enters response-producing cognition. A withheld member crosses as
+           membership: focus-local identity, ordinal, state. Not as a name. */
         return {
-          focusMemberId: m.focusMemberId, ordinal: i + 1, sectionRef: m.sectionRef,
+          focusMemberId: m.focusMemberId, ordinal: i + 1,
+          ...(status === 'readable' ? { sectionRef: m.sectionRef, content } : {}),
           status, active: false, bodyAvailable: content !== undefined,
-          ...(status === 'readable' ? { content } : {}),
         };
       }),
       activeMemberId: req.activeMemberId,
