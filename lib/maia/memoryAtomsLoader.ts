@@ -84,7 +84,11 @@ export type MemoryAtomSourceType =
   | 'change'
   | 'session_excerpt'
   | 'spontaneous'
-  | 'practitioner_observation';
+  | 'practitioner_observation'
+  // Registry pointer to session_captures.id. Content stays encrypted at the
+  // source; body is always NULL, so a promoted capture surfaces as title +
+  // provenance only (see the body-nulling in the row mapper below).
+  | 'capture';
 
 export type MemoryScope = 'personal' | 'colab' | 'client' | 'encounter';
 
