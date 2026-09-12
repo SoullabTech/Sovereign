@@ -1,0 +1,8 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /private/tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj -scheme DriverUITests -destination id=00008140-00163D9922E0801C -derivedDataPath /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived DEVELOPMENT_TEAM=ZVK2X646Z2
+
+Build settings from command line:
+    DEVELOPMENT_TEAM = ZVK2X646Z2
+
+2026-09-12 13:32:12.954 xcodebuild[37960:26068354] Writing error result bundle to /var/folders/_l/jnp2qzr17j73n3q0yr1vym2c0000gn/T/ResultBundle_2026-12-09_13-32-0012.xcresult
+xcodebuild: error: '/private/tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj' does not exist.

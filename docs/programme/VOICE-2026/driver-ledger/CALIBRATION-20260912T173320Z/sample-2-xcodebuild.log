@@ -1,0 +1,86 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-12 13:44:34.724 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:44:34.727 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:44:34.827 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-12 13:44:34.980 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:44:36.915171-0400 DriverUITests-Runner[55126:12561848] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-12 13:44:37.874.
+Test Suite 'DriverUITests.xctest' started at 2026-09-12 13:44:37.874.
+Test Suite 'K00DriverTests' started at 2026-09-12 13:44:37.874.
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' started.
+    t =     0.00s Start Test at 2026-09-12 13:44:37.875
+    t =     0.04s Set Up
+    t =     0.05s Pressing Home button
+2026-09-12 13:44:38.076 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     0.62s Open com.apple.springboard
+    t =     0.62s     Activate com.apple.springboard
+    t =     0.62s         Wait for com.apple.springboard to idle
+    t =     0.64s Waiting 5.0s for "VoiceKernel K00" Icon to exist
+    t =     1.66s     Checking `Expect predicate `existsNoRetry == 1` for object "VoiceKernel K00" Icon`
+    t =     1.66s         Checking existence of `"VoiceKernel K00" Icon`
+    t =     1.86s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     1.86s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     1.87s Tap "VoiceKernel K00" Icon
+    t =     1.87s     Wait for com.apple.springboard to idle
+    t =     1.88s     Find the "VoiceKernel K00" Icon
+    t =     1.99s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     1.99s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.00s     Check for interrupting elements affecting "VoiceKernel K00" Icon
+    t =     2.09s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.10s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     2.11s     Synthesize event
+    t =     2.11s         Failed: Not hittable: Icon, {{0.0, 0.0}, {0.0, 0.0}}, identifier: 'VoiceKernel K00', label: 'VoiceKernel K00'
+    t =     2.11s         Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =     3.36s     Retrying `Tap "VoiceKernel K00" Icon` (attempt #2)
+    t =     3.36s         Wait for com.apple.springboard to idle
+    t =     3.37s         Find the "VoiceKernel K00" Icon
+    t =     3.51s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     3.52s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     3.53s         Check for interrupting elements affecting "VoiceKernel K00" Icon
+    t =     3.62s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     3.63s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     3.64s         Synthesize event
+    t =     3.65s             Failed: Not hittable: Icon, {{0.0, 0.0}, {0.0, 0.0}}, identifier: 'VoiceKernel K00', label: 'VoiceKernel K00'
+    t =     3.65s             Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =     4.88s     Retrying `Tap "VoiceKernel K00" Icon` (attempt #3)
+    t =     4.88s         Wait for com.apple.springboard to idle
+    t =     4.89s         Find the "VoiceKernel K00" Icon
+    t =     5.04s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     5.05s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     5.06s         Check for interrupting elements affecting "VoiceKernel K00" Icon
+    t =     5.15s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     5.16s Ignoring failure to get hierarchy for remote element in process 52580 (Error getting main window kAXErrorServerNotFound)
+    t =     5.18s         Synthesize event
+    t =     5.18s             Failed: Not hittable: Icon, {{0.0, 0.0}, {0.0, 0.0}}, identifier: 'VoiceKernel K00', label: 'VoiceKernel K00'
+    t =     5.18s             Requesting snapshot of accessibility hierarchy for app with pid 35
+    t =     5.42s Requesting snapshot of accessibility hierarchy for app with pid 35
+/tmp/voice-driver-01/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift:102: error: -[DriverUITests.K00DriverTests testOneSample] : Failed to not hittable: Icon, {{0.0, 0.0}, {0.0, 0.0}}, identifier: 'VoiceKernel K00', label: 'VoiceKernel K00'
+    t =     5.77s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' failed (5.795 seconds).
+Test Suite 'K00DriverTests' failed at 2026-09-12 13:44:43.670.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.795 (5.796) seconds
+Test Suite 'DriverUITests.xctest' failed at 2026-09-12 13:44:43.670.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.795 (5.796) seconds
+Test Suite 'Selected tests' failed at 2026-09-12 13:44:43.670.
+	 Executed 1 test, with 1 failure (0 unexpected) in 5.795 (5.797) seconds
+2026-09-12 13:44:43.796 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:47:08.370 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:47:11.699 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:47:17.822 xcodebuild[39226:26096810] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-12 13:54:44.225 xcodebuild[39226:26097115]  IDETestOperationsObserverDebug: Failure collecting diagnostics from devices: Timed out after 600.0 seconds while waiting for a response from the invoked process
+2026-09-12 13:54:44.247 xcodebuild[39226:26096810] [MT] IDETestOperationsObserverDebug: 609.265 elapsed -- Testing started completed.
+2026-09-12 13:54:44.247 xcodebuild[39226:26096810] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-12 13:54:44.247 xcodebuild[39226:26096810] [MT] IDETestOperationsObserverDebug: 609.265 sec, +609.265 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-flkeniidvztthzbzlxyddkbhvrfz/Logs/Test/Test-DriverUITests-2026.09.12_13-44-34--0400.xcresult
+
+** TEST EXECUTE FAILED **
+
+Testing started

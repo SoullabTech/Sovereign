@@ -1,0 +1,2 @@
+[17:30:56] build-for-testing (driver only; the harness is untouched)
+[17:30:57] DRIVER/INFRASTRUCTURE FAILURE: build-for-testing failed (see build-for-testing.log)

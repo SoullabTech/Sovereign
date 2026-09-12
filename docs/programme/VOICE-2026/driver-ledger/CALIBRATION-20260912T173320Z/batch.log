@@ -1,0 +1,10 @@
+[17:33:20] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[17:33:20] build-for-testing (driver only; the harness is untouched)
+[17:33:25] xctestrun: /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[17:33:26] sample 1/3 — precondition
+[17:33:26] sample 1/3 — driver (testOneSample, mode I)
+[17:44:34] sample 2/3 — precondition
+[17:44:34] sample 2/3 — driver (testOneSample, mode I)
+[17:54:44] sample 3/3 — precondition
+[17:54:44] sample 3/3 — driver (testOneSample, mode I)
+[18:04:54] batch complete — /private/tmp/voice-driver-01/docs/programme/VOICE-2026/driver-ledger/CALIBRATION-20260912T173320Z/ledger.md

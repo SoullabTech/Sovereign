@@ -1,0 +1,724 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /private/tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj -scheme DriverUITests -destination id=00008140-00163D9922E0801C -derivedDataPath /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived DEVELOPMENT_TEAM=ZVK2X646Z2
+
+Build settings from command line:
+    DEVELOPMENT_TEAM = ZVK2X646Z2
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'DriverUITests' in project 'VoiceKernelDriver'
+        ➜ Explicit dependency on target 'DriverHost' in project 'VoiceKernelDriver'
+    Target 'DriverHost' in project 'VoiceKernelDriver' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: af5356e8764190e57e10750e6d91ea47
+Build description path: /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/XCBuildData/af5356e8764190e57e10750e6d91ea47.xcbuilddata
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products
+
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+CreateBuildDirectory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    builtin-create-build-directory /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/VoiceKernelDriver-450d5ee07790ea55984dc2c5681c04c4-VFS-iphoneos/all-product-headers.yaml
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/VoiceKernelDriver-450d5ee07790ea55984dc2c5681c04c4-VFS-iphoneos/all-product-headers.yaml
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-non-framework-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/Entitlements.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/Entitlements.plist
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-non-framework-target-headers.hmap (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt
+
+MkDir /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+WriteAuxiliaryFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/Entitlements.plist (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    write-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/Entitlements.plist
+
+MkDir /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+ProcessProductPackaging "" /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "ZVK2X646Z2.life.soullab.voicekernel.driverhost";
+    "com.apple.developer.team-identifier" = ZVK2X646Z2;
+    "get-task-allow" = 1;
+}
+    
+    builtin-productPackagingUtility -entitlements -format xml -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent
+
+ProcessProductPackaging /Users/soullab/Library/Developer/Xcode/UserData/Provisioning\ Profiles/08a653d1-5ec3-4206-84fd-991a5fcc11c2.mobileprovision /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/embedded.mobileprovision (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-productPackagingUtility /Users/soullab/Library/Developer/Xcode/UserData/Provisioning\ Profiles/08a653d1-5ec3-4206-84fd-991a5fcc11c2.mobileprovision -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/embedded.mobileprovision
+
+ProcessProductPackagingDER /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent.der (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /usr/bin/derq query -f xml -i /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent.der --raw
+
+ProcessInfoPlistFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverHost/Info.plist (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-infoPlistUtility /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverHost/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist
+
+Ld /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -install_name @rpath/DriverHost.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat -Xlinker -no_adhoc_codesign -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib
+
+SwiftDriver DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_float-A7UAIXIQ2LHWBJW4CA773UFNR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/ptrcheck-BCKOK6MABE2Y33H1VZ9M0YWHB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/DeveloperToolsSupport-8YRRHJMSDECBRPP6JCJYZWWPU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_stddef-CHUKNB5SO3PSNULLXDA5T9BW9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_SwiftConcurrencyShims-1X2KH443G9CURTZ33UQZB5HBQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_AvailabilityInternal-EHSWE47A3BTG5D5G1YFQPGF9U.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_stdarg-D54IPDB4UCOLE8HDJZHL4IE9I.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_stdbool-BA3F2IH7N985N4UOPMMH29BBU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/SwiftShims-3AWHP1D4R4G0ABAYYR2NNJ9PT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/ptrauth-6HHKOC2JOEDF06170P5GLY6UC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_DarwinFoundation1-AT3WUMZWLJGZCREN51Z4DMCNX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_DarwinFoundation2-BIUEUNQT7EULGXX7A0LMXKOVV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_limits-AY4NOFPXGRFV4SEEPIA5FSMT2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_stdint-1EZVU49QSAF49Z9DV8DIWZOLF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_tgmath-6UA0ILTHK2WPKSI0H2KIK6TQ3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/sys_types-4A884U5QBK6PMVWH0CE23X67W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_intrinsics-63HY5PRY8NA0P4XIVGNC2M15E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_DarwinFoundation3-10UOJ14PEXXIHOMXEVZHCTE7D.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_stdatomic-3A358E4DLQRG2XZW3EAC07F39.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/_Builtin_inttypes-AO8UDP8R1YBWL9PSV05N1JPFX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Darwin-AWGDVN4GM1496FMPBGI23ZNF9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/simd-EGAU907R6A53PHXYS8IM8M9UQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/ObjectiveC-7DDG9FYH8S2T4Q03K4DD5G0NE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/MachO-7U4CVMI6WJKEBNSOLR7S4OSU0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/os_object-D55GX4VYPYVZPC4E4YSIZQCZH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/os_workgroup-3JUAAHRR97BH752RZ8B1JFONK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Dispatch-ENP2SXT7B1J48SW3VJ0ZL1P7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Spatial-A1XWM3QVX196Q9WSZB0MEWSAX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/XPC-2UXY98U6XKWYG4BRQ9F8G4BVS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreFoundation-3NZKKHOC7BH5GG8L7N9ZZY0FQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/os-3823LGE7O18LPSQAW5KHBLMFS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreGraphics-3PP6AJHLYUS52WV3GV0ECFYZA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Security-4T6FSZ3A92OKNT85TKT55C43W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CFNetwork-5M6TYPW67MZSGEAAOLHQK45KN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Foundation-AQROQHYWCEDTXWDG0UOIH4NFD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/ImageIO-EOWXC8ENTEU0WCD0YPX7GVPGT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreText-8WDI7CIYQ52SBFQ8YPUV8GWUY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/FileProvider-EWK7FZ9GITFK67K8ZKK6O8CTO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/UIUtilities-12O9JLU7DX3O6QNVQE0A0P57V.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreData-15P5BYA6WWI4IBHJIR44QRL6W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/OSLog-5U2RXPYKXFJNGI44W8WJK0TI7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/UserNotifications-9AR6T6RW1N78D2XVOEVRG2H30.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreTransferable-DJSLAYEBNQNY4UZ1H1ZKIQBMM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/DataDetection-CF1GMEVHL9DJ3M22OCFDTKTWD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/UniformTypeIdentifiers-D71D7Y4T90F4BCTKXQKO3EWGN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Symbols-CEWKPML3ZHW6W5MUZ0T27NV1Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/IOSurface-6G32UM0DV36539EFYUIDVIFLS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Accessibility-XNULB4XTTKQ1AWMQCABLV2AV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Metal-C7ELIU9JENRNHR1A0OS70VZEF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/OpenGLES-D0J7UB7Q0Q948MP7GHDOQ7D3D.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreVideo-51BE0VYWFNMIO2R58NMR1XVSF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/CoreImage-CSVK2JZJD9ZSTJF2WI6T98EHH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/QuartzCore-2PDEQSZKW8K3P20KO8B99CAK1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/SwiftUICore-5H3R73EDVZYIWCTQ60O4JXBYT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/UIKit-293I6P7MF9EFW0LHB2XSXOEFQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/SwiftUI-63M2RZPYQNU7B674RQWDR9PT4.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ DriverHost (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+
+SwiftCompile normal arm64 Compiling\ DriverHostApp.swift /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+SwiftCompile normal arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverHost/DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for DriverHost (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation\ Requirements DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/DriverHost-Swift.h /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-swiftHeaderTool -arch arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/DriverHost-Swift.h
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftdoc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftdoc (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftdoc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.abi.json /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.abi.json (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.abi.json /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftmodule /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftsourceinfo (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftsourceinfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+ProcessProductPackaging /Users/soullab/Library/Developer/Xcode/UserData/Provisioning\ Profiles/08a653d1-5ec3-4206-84fd-991a5fcc11c2.mobileprovision /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/embedded.mobileprovision (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-productPackagingUtility /Users/soullab/Library/Developer/Xcode/UserData/Provisioning\ Profiles/08a653d1-5ec3-4206-84fd-991a5fcc11c2.mobileprovision -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/embedded.mobileprovision
+
+ProcessProductPackaging "" /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "ZVK2X646Z2.life.soullab.voicekernel.driver.xctest.xctrunner";
+    "com.apple.developer.team-identifier" = ZVK2X646Z2;
+    "get-task-allow" = 1;
+    "keychain-access-groups" =     (
+        "ZVK2X646Z2.life.soullab.voicekernel.driver.xctest.xctrunner"
+    );
+}
+    
+    builtin-productPackagingUtility -entitlements -format xml -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent
+
+ProcessProductPackagingDER /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent.der (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /usr/bin/derq query -f xml -i /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent.der --raw
+
+SwiftDriver DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-DKCH0SX7O2KF7ADLP86XGMNP3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-EEMASZZEFMILNLPZIX041P680.pcm
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCUIAutomation-22O5XEOGT1YD1.swiftmodule
+
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/XCTest-1PIEDCPGL227C.swiftmodule
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+
+SwiftCompile normal arm64 Compiling\ K00DriverTests.swift /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftCompile normal arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation\ Requirements DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/DriverUITests-Swift.h /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-swiftHeaderTool -arch arm64 /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/DriverUITests-Swift.h
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftdoc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftdoc (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftdoc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftmodule /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.abi.json /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.abi.json (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.abi.json /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftsourceinfo (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftsourceinfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling K00DriverTests.swift (in target 'DriverUITests' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation DriverUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverUITests -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling DriverHostApp.swift (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+SwiftDriver\ Compilation DriverHost normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DriverHost -Onone -enforce-exclusivity\=checked @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -parse-as-library -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -sdk-module-cache-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-generated-files.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-own-target-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-project-headers.hmap -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources-normal/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources/arm64 -Xcc -I/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-Swift.h -working-directory /tmp/voice-driver-01/ios/VoiceKernelDriver -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -filelist /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.LinkFileList -install_name @rpath/DriverHost.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.swiftmodule @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -Xlinker -no_adhoc_codesign -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    construct-stub-executor-link-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'DriverHost' from project 'VoiceKernelDriver')
+
+Ld /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost normal (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost-ExecutorLinkFileList-normal-arm64.txt /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib -Xlinker -no_adhoc_codesign -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost
+
+CopySwiftLibs /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-swiftStdLibTool --copy --verbose --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --scan-executable /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Frameworks --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/PlugIns --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/SystemExtensions --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name DriverHost --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.driverhost --output /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app --target-triple arm64-apple-ios16.0 --binary-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost --dependency-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost_dependency_info.dat --stringsdata-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftFileList --metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList --static-metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/Objects-normal/arm64/DriverHost.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-12 13:33:25.290 appintentsmetadataprocessor[38154:26071885] Starting appintentsmetadataprocessor export
+2026-09-12 13:33:25.291 appintentsmetadataprocessor[38154:26071885] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Info.plist --temp-dir-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/ssu --bundle-id life.soullab.voicekernel.driverhost --product-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app --extracted-metadata-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/Metadata.appintents --metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.DependencyMetadataFileList --archive-ssu-assets
+2026-09-12 13:33:25.306 appintentsnltrainingprocessor[38155:26071888] Parsing options for appintentsnltrainingprocessor
+2026-09-12 13:33:25.307 appintentsnltrainingprocessor[38155:26071888] No AppShortcuts found - Skipping.
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/DriverHost.debug.dylib
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app/__preview.dylib
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --entitlements /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverHost.build/DriverHost.app.xcent --timestamp\=none --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+RegisterExecutionPolicyException /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-RegisterExecutionPolicyException /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+Validate /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-validationUtility /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app (in target 'DriverHost' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /usr/bin/touch -c /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverHost.app
+
+ProcessInfoPlistFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-infoPlistUtility /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/empty-DriverUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ProductTypeInfoPlistAdditions.plist -requiredArchitecture arm64 -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist
+
+Ld /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests normal (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -filelist /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.swiftmodule @/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests-linker-args.resp -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -Xlinker -no_adhoc_codesign -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests
+
+CopySwiftLibs /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-swiftStdLibTool --copy --verbose --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --scan-executable /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Frameworks --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/PlugIns --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/SystemExtensions --scan-folder /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+ExtractAppIntentsMetadata (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name DriverUITests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.driver.xctest --output /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest --target-triple arm64-apple-ios16.0 --binary-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests --dependency-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests_dependency_info.dat --stringsdata-file /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftFileList --metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList --static-metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/Objects-normal/arm64/DriverUITests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-12 13:33:25.556 appintentsmetadataprocessor[38163:26071926] Starting appintentsmetadataprocessor export
+2026-09-12 13:33:25.557 appintentsmetadataprocessor[38163:26071926] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+GenerateDSYMFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest.dSYM /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/DriverUITests -o /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest.dSYM
+
+AppIntentsSSUTraining (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist --temp-dir-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/ssu --bundle-id life.soullab.voicekernel.driver.xctest --product-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest --extracted-metadata-path /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Metadata.appintents --metadata-file-list /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.DependencyMetadataFileList --archive-ssu-assets
+2026-09-12 13:33:25.568 appintentsnltrainingprocessor[38165:26071928] Parsing options for appintentsnltrainingprocessor
+2026-09-12 13:33:25.569 appintentsnltrainingprocessor[38165:26071928] No AppShortcuts found - Skipping.
+
+CopyPlistFile /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Info.plist /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copyPlist --validate --convert xml1 --macro-expansion WRAPPEDPRODUCTNAME DriverUITests-Runner --macro-expansion WRAPPEDPRODUCTBUNDLEIDENTIFIER life.soullab.voicekernel.driver.xctest.xctrunner --macro-expansion TESTPRODUCTNAME DriverUITests --macro-expansion TESTPRODUCTBUNDLEIDENTIFIER life.soullab.voicekernel.driver.xctest --copy-value UIDeviceFamily /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest/Info.plist --outdir /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app -- /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/Info.plist
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PkgInfo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/PkgInfo /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUIAutomation.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCUIAutomation.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCUIAutomation.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestSupport.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestSupport.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/libXCTestSwiftSupport.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestCore.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestCore.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTestCore.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTest.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+CopyAndPreserveArchs /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Xcode/Agents/XCTRunner.app/XCTRunner -output /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/DriverUITests-Runner -extract arm64
+
+MkDir /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /bin/mkdir -p /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUnit.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCUnit.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCUnit.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTAutomationSupport.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/XCTAutomationSupport.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+Copy /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/Testing.framework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/Testing.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks/Testing.framework /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/libXCTestSwiftSupport.dylib (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/libXCTestSwiftSupport.dylib
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/libXCTestSwiftSupport.dylib: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUnit.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUnit.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUnit.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestSupport.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestSupport.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTest.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTest.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTest.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTAutomationSupport.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTAutomationSupport.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTAutomationSupport.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestCore.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestCore.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCTestCore.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUIAutomation.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUIAutomation.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/XCUIAutomation.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/Testing.framework (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --timestamp\=none --preserve-metadata\=identifier,entitlements,flags --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/Testing.framework
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/Frameworks/Testing.framework: replacing existing signature
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --entitlements /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+RegisterExecutionPolicyException /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    builtin-RegisterExecutionPolicyException /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+Touch /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    /usr/bin/touch -c /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app/PlugIns/DriverUITests.xctest
+
+CodeSign /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app (in target 'DriverUITests' from project 'VoiceKernelDriver')
+    cd /tmp/voice-driver-01/ios/VoiceKernelDriver
+    
+    Signing Identity:     "Apple Development: Kelly Nezat (N9DTF6434L)"
+    Provisioning Profile: "iOS Team Provisioning Profile: *"
+                          (08a653d1-5ec3-4206-84fd-991a5fcc11c2)
+    
+    /usr/bin/codesign --force --sign 42E2C8D83763966C9411E9622B92872D0D3885B4 --entitlements /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Intermediates.noindex/VoiceKernelDriver.build/Debug-iphoneos/DriverUITests.build/DriverUITests.xctest.xcent --timestamp\=none --generate-entitlement-der /tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app
+/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/Debug-iphoneos/DriverUITests-Runner.app: replacing existing signature
+
+** TEST BUILD SUCCEEDED **
+
