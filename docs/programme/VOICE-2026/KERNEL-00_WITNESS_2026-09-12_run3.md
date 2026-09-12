@@ -48,6 +48,33 @@ Founder's reading, verbatim in substance (58 records): *Enter → gen 1 starts �
 
 Founder's reading (39 records, cumulative through Leave): before Enter `voice_processing_set = false`; gen 1 · 48 kHz · `engineRunning = true`; **NO `engine_configuration_changed`, NO `recovery_requested`, NO `recovery_scheduled`, NO rebuild, NO generation change**; input healthy ≈333 ms after Enter; `entering → listening`; generation 1 held with continuous real microphone callbacks and energy samples for > 20 s; Leave → `session_deactivated` exactly once → `session_released` exactly once → `listening → idle`; nothing after.
 
+### 6d. Additional VP-ON session on the PRE-WITNESS-03 build — `K00-b0066fcf` — RECEIVED AND VERIFIED HERE
+
+A journal arrived in this session on 2026-09-12 (`kernel00-K00-b0066fcf-1789226572.jsonl`, SHA-256 `408b964a9bd68affd2f87efd31940599cd6c1d41b8fb076de03c19afbf971e9b`). It is **neither** of the two hashed run-3 files. Its records carry no `classification` field and no `configuration_change_deferred`, so it was produced by the **PRE-WITNESS-03 build (`e5046059e`, dylib `F00F11D4-…`)**, ≈19 minutes after 3b by the export clock — a third VP-ON session, founder-run, not previously in the record. Preserved verbatim as `KERNEL-00_WITNESS_2026-09-12_run3_K00-b0066fcf_vpON_pw03build.jsonl`. Read line by line here:
+
+```
+seq 2   enterConversation                                            t=839876868
+seq 10  graph_started gen 1 · 48 kHz valid · VP true · engineRunning false
+seq 11  engine_configuration_changed  age 125 ms · format VALID
+seq 13  recovery_scheduled configuration_change attempt 1 · 500 ms · next gen 2
+seq 17  graph_start_refused gen 2  invalidInputFormat(0.0 Hz)     ← §3.1 guard (fresh engine inside the window)
+seq 21  recovery_scheduled graph_rebuild_failed attempt 1 · 500 ms · next gen 3
+seq 26  graph_started gen 3 · valid · engineRunning false
+seq 29  engine_configuration_changed  age 289
+seq 31  recovery_scheduled configuration_change attempt 2 · 1000 ms · next gen 4
+seq 36  graph_started gen 4 · valid · engineRunning false
+seq 38  engine_configuration_changed  age 462
+seq 40  recovery_scheduled configuration_change attempt 3 · 2000 ms · next gen 5
+seq 42  recovery_requested entry_timeout  waitedMs 1518   → seq 43 recovery_request_coalesced (pending configuration_change)
+seq 45  recovery_requested input_dead  engineRunning false · sinceMs 2045 → coalesced · seq 47 again at 2146 → coalesced
+seq 51  graph_started gen 5 · valid · engineRunning false
+seq 54  engine_configuration_changed  age 293
+seq 56  DEGRADED attempts 3 / budget 3 · seq 57 floor recovering → degraded          6.84 s after Enter
+seq 23/32/41/44/58–61  input_health_sample  callbacks 0 in every window (inputFlow unknown → dead → unknown)
+```
+
+**Verified reading, this session:** identical in shape to the founder's reading of 3a (`K00-18f515e1`): bounded exactly as coded, `degraded` ≈6.8 s after Enter, zero input callbacks in any generation, every VP-ON start followed by a change on unchanged ports (data source `-` ↔ `Bottom`). Two details the founder's 3a summary did not state and this file establishes: (i) the per-second `input_health_sample` DID emit once generations lived ≥ 1 s — the P4 instrument works; (ii) the HealthSupervisor's own verdicts fired during the 2000 ms backoff (`entry_timeout` at 1518 ms, `input_dead` at 2045 ms with `engineRunning: false`) and were correctly coalesced into the pending configuration-change recovery — the supervisor is alive and the coalescing line is doing its job. **No Leave in this file.** It corroborates §5; it does not replace the two hashed files, which remain owed.
+
 ## 7. Findings and founder ruling (2026-09-12, verbatim in substance)
 
 **Causal finding, on this exact iPhone / build / runtime:** VP ON → repeated configuration change after every graph start; VP OFF → configuration changes disappear completely and the same graph reaches and holds listening. An intervention on the suspected variable, not a correlation. Supports voice-processing initialization as the causal discriminator on this device/runtime; **does not justify an Apple-universal claim**; VP OFF remains a control, not the production answer.
