@@ -137,10 +137,29 @@ Classification vocabulary is closed to the founder's four: `gen-1 listen` · `fa
 | 1 | 1 | `K00-c187e547` (`…_run6S1-1_K00-c187e547_vpON.jsonl`) | 65 | `96fa0460c4e3c974d2e7109ce5eb900aa382e49b9f7352b21f70f91416ca617c` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 124 ms · first callback +91 ms · listening 533 ms · 10/10 running ticks · gen 1 held 28.6 s · no recovery · 13-step trace, no pre-VP read |
 | 1 | 2 | `K00-a54bc8ee` (`…_run6S1-2_K00-a54bc8ee_vpON.jsonl`) | 46 | `42033ac5ecbd69e56efe64454be01294a2ae97857ebf8509c349e9c6c55a241d` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 89 ms · first callback +97 ms · listening 439 ms · 10/10 running ticks · gen 1 held 8.7 s to export · no recovery |
 | 1 | 3 | `K00-be40c1cb` (`…_run6S1-3_K00-be40c1cb_vpON.jsonl`) | 111 | `f82fd8a5b944a11b010572463a4ea1b3c9c1dcb9f156c9843ad6032407e2d3d7` | **other observed shape** (gen-1 FAILURE; final outcome UNOBSERVED — exported at 4.71 s, mid-recovery) | gen 1: `is_running_immediate` TRUE at start return, `graph_started` engineRunning FALSE 34 ms later, 0 callbacks, entry_timeout 1509 ms → gen 2 refused 0 Hz → gen 3 isRunning FALSE, VP change deferred, change #2 route → gen 4 isRunning TRUE then FALSE 178 ms later, 0 callbacks; journal ends 11 ms into gen 4, floor `recovering`. Neither listening nor degraded reached before export. |
-| 1 | 4 | — | | | | |
-| 1 | 5 | — | | | | |
+| 1 | 4 | `K00-330a0a3d` (`…_run6S1-4_K00-330a0a3d_vpON.jsonl`) | 45 | `3d7a9c894cdb6d4bb0b11cbf126428aaed250deff3dca92484cff1447e903e99` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 96 ms · first callback +96 ms · listening 447 ms · 10/10 running ticks · gen 1 held 7.7 s to export · no recovery |
+| 1 | 5 | `K00-916ed35a` (`…_run6S1-5_K00-916ed35a_vpON.jsonl`) | 48 | `8fd60d255d2d6f3ce77fa22e02c495761ff47f138f40f907cb47f3a69715242f` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 88 ms · first callback +98 ms · listening 433 ms · 10/10 running ticks · gen 1 held 10.8 s to export · no recovery |
 | 2 (after reinstall; dylib must read `CC0D3604-…`) | 1 | — | | | | |
 | 2 | 2 | — | | | | |
 | 2 | 3 | — | | | | |
 
 Prior on this subject, for the ledger's context: 6a `gen-1 listen` · W4 `gen-1 listen` · 6a-2 `failure then recovery`.
+
+### Stage 1 — CLOSED (5 of 5 received, 2026-09-12)
+
+```
+S1-1  gen-1 listen            (533 ms)
+S1-2  gen-1 listen            (439 ms)
+S1-3  other observed shape    gen-1 FAILURE; exported at 4.71 s mid-recovery; final outcome UNOBSERVED (neither listening nor degraded)
+S1-4  gen-1 listen            (447 ms)
+S1-5  gen-1 listen            (433 ms)
+
+Stage 1 distribution      4 gen-1 listen · 1 gen-1 failure (outcome unobserved) · 0 failure-then-degradation observed
+Cumulative on 24a6fcfa1   gen-1 VP-ON starts that took: 6 of 8  (6a · W4 · S1-1 · S1-2 · S1-4 · S1-5 took; 6a-2 · S1-3 did not)
+```
+
+**Observation O5 (kept as observation):** in S1-3 the "running at start return, not running shortly after, zero callbacks" reading appeared in **generation 1** (TRUE at +351 ms, FALSE at +385 ms) and again in generation 4 (TRUE → FALSE 178 ms later). With 6a-2's gen 3 that is three instances of O1's shape. Earlier gen-1 failures (runs 2–4, 6a-2) read FALSE at both points. No mechanism is read into this.
+
+**Protocol note:** S1-3 was exported ≈ 4.7 s after Enter, before the ~15 s hold; whether that was deliberate is recorded as the founder states it. The session remains in the ledger as received.
+
+**Stage 2 is now reachable per the founder's sequencing:** reinstall the identical signed P5-B0 artifact (the same DerivedData product; the dylib must still read `CC0D3604-7902-373E-A2BB-2C093D9BF804`), record the install output and the post-install `installed / running` state, then three cold VP-ON sessions.
