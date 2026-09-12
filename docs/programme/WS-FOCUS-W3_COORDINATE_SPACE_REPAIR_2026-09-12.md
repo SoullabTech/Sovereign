@@ -400,6 +400,122 @@ receipts for the act   exactly 4, all crossed
 
 ⛔ The old act `d7cb7317` stays untouched as historical evidence of the defect.
 
+## 5h. The authority boundary — founder ruling, 2026-09-12
+
+Modeling solutions against the manuscript is **allowed**. Changing the
+manuscript is **held**. The boundary is not *MAIA may not rewrite*; it is:
+
+> **MAIA may rewrite freely as an explicitly hypothetical editorial model.
+> Nothing becomes the Work until the writer deliberately crosses the acceptance
+> boundary.**
+
+```text
+READ / FOCUS CURRENT WORK      allowed      STAGE AS EXECUTABLE CHANGE   held
+DISCUSS WHAT MAIA SEES         allowed      APPLY TO MANUSCRIPT          held
+TEACH THE CRAFT QUESTION       allowed      WRITE AUTHORITY              held
+MODEL MULTIPLE SOLUTIONS       allowed
+SHOW FULL REWRITE EXAMPLES     allowed
+COMPARE CONSEQUENCES           allowed
+RECOMMEND A DIRECTION          allowed
+REFINE WITH THE WRITER         allowed
+REACH AN EDITORIAL DECISION    allowed
+```
+
+⭐⭐ **THREE LEVELS, NOT TWO** — and the middle one is the continuity layer:
+
+```text
+1  EXPLORATION        "What might work?"
+2  EDITORIAL DECISION "This is what we have decided should happen."
+3  REVISION PROPOSAL  "Here is the exact executable change that implements it."
+```
+
+An editorial **decision** can exist before the write machinery does, and is the
+thing that must outlive the conversation that produced it. When
+`RevisionProposal` exists, MAIA does not rethink the editorial question — she
+asks *how do I faithfully implement the decision we already made, in the current
+manuscript?*
+
+⛔ **A modeled solution and a RevisionProposal are DIFFERENT OBJECTS.** A model
+says *here is one way this passage could work if we make the decision we are
+discussing.* A proposal says *this exact change, against this exact manuscript
+version, is prepared for acceptance and execution.* Every model must carry the
+label **MODEL — NOT THE MANUSCRIPT**.
+
+### ⚠️ The rule binds the engineering session too
+
+This session has **never read the manuscript**. Everything it knows about §45 is
+o1's *description* of §45. A rewrite modeled from here would be a claim about
+text never read — FOCUS-W5's source collapse, committed by the builder rather
+than by MAIA. **Modeling belongs in the Studio, with the disclosed bodies under
+a receipt.** The law does not exempt the session that wrote it.
+
+### Two engineering consequences
+
+**(a) The decision store is NOT held and is buildable today.** It writes to a
+decision record, never to the Work — no proposal, no staged diff, no mutation,
+no write authority. Without it, every decision reached during exploration lives
+in a chat transcript. It is also where the **editorial** relation between
+observations is AUTHORED — the edge §5i forbids computing.
+
+**(b) *The manuscript teaches the proposal language* needs an instrument.**
+Exploration should record which operations it actually reached for — replace ·
+delete · insert · move · merge · split · reorder · rename · retain — or the
+`RevisionProposal` schema gets invented from imagination anyway, and the
+exploration's one durable engineering output is lost.
+
+## 5i. Two dependency kinds, never one
+
+```text
+STRUCTURAL   two observations rest on the same section.
+             o4∩o5 = §64 · o5∩o22 = {§64, §69} · o1∩o22 = ∅
+             COMPUTABLE. When a section changes, every observation resting
+             on it is evidence-stale — decided by digest, never by opinion.
+             This is what locateCurrent and the readState digests already do.
+
+EDITORIAL    a decision's principle governs a later decision.
+             "the campfire is a deliberate refrain" → how o4 is read.
+             NOT COMPUTABLE. Authored by the writer, or proposed and confirmed.
+```
+
+⛔ Conflating them is the `canvasIdentity` class again. o1 and o22 share **no**
+sections: derived from overlap alone the edge is missed; derived from MAIA's
+judgment alone the edges are invented. **Both kinds, named separately, or
+neither.** An inferred editorial principle applied silently to observation 17 is
+the system deciding what the book is.
+
+⭐ The editorial state the engine accumulates — *what the writer means · what
+they refuse · what is settled · what is unresolved*, with *the writer's statement
+overrides and MAIA's impression asks* — is **not new memory architecture.** It is
+the **Authority × Time** decomposition (`docs/research/human-experience/frameworks/memory/AUTHORITY_X_TIME_2026-09-06.md`)
+and R7b, applied to a Work instead of a person, and it already carries the
+succession semantics that *change her model, do not argue from the previous
+interpretation forever* requires.
+
+## 5j. o26 — closed as an investigation
+
+```text
+present in the Work at v34        yes · §23 chars 1378–1390 · would reach print
+entered the working draft         between 2026-08-30 14:02 and 2026-09-07 17:30 EDT
+first captured                    revision 7 — the revision MAIA read
+§23 prose across rev 6 → 7        BYTE-IDENTICAL · only the token was appended
+the rest of the Work in that window   −44 chars before §23 · ~−301 after
+other occurrences in 174 sections none — singleton
+disposition                       DELETE before print
+attribution                       UNKNOWN · non-blocking
+```
+
+⛔ **A revision dates CAPTURE, NOT AUTHORSHIP.** Keeping a version snapshots the
+draft as it already stands; the draft carries no per-edit history. Reading
+revision 7's timestamp as the moment of writing is the same error as reading a
+container's `Created` as a deploy's swap — already recorded once in this project,
+on 2026-09-07, and not repeated here.
+
+⭐ **The answer came from the append-only revision store, not from reading the
+prose.** No amount of craft reasoning would have produced it. So for the
+integrity class of observations MAIA needs **revision history as evidence**, not
+only current text: *when did this arrive, and what else arrived with it* is a
+question with a cheap answer that changes the disposition.
+
 ## 6. Next
 
 ```text
