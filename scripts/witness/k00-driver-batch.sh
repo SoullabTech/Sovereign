@@ -112,7 +112,17 @@ for i in $(seq 1 "$N"); do
   fi
   if grep -q 'DRIVER/INFRASTRUCTURE FAILURE' "$LEDGER_DIR/sample-$i-xcodebuild.log" || [ -z "$NEW" ]; then
     WHY="$(failure_signature "$LEDGER_DIR/sample-$i-xcodebuild.log" | tr -d '\r')"   # xcodebuild emits CR inside XCTest failure lines
-    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | $WHY (rc=$RC · wall $((T1-T0)) s) |" >> "$LEDGER"; continue
+    # Stage A sample 9: the harness had exported before the driver failed on terminate, and this branch
+    # abandoned that journal on the device. An infrastructure row is never a sample, but evidence the
+    # organism wrote is pulled and kept beside the row, hashed, under journals/not-a-sample/.
+    KEPT=""
+    for f in $NEW; do
+      mkdir -p "$LEDGER_DIR/journals/not-a-sample"
+      if xcrun devicectl device copy from --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --source "tmp/$f" --destination "$LEDGER_DIR/journals/not-a-sample/$f" >/dev/null 2>&1; then
+        KEPT="$KEPT journal preserved, not a sample: $f sha256=$(shasum -a 256 "$LEDGER_DIR/journals/not-a-sample/$f" | cut -c1-16)…;"
+      else KEPT="$KEPT journal $f could not be copied;"; fi
+    done
+    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | $WHY (rc=$RC · wall $((T1-T0)) s)${KEPT:+ ·$KEPT} |" >> "$LEDGER"; continue
   fi
   for f in $NEW; do
     pull_journal "$f" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | journal $f could not be copied from the container |" >> "$LEDGER"; continue; }
