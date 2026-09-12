@@ -380,3 +380,18 @@ final class ConfigurationChangeClassifierTests: XCTestCase {
         XCTAssertEqual(ConfigurationChangeClassifier.classify(input(suspended: true)), .routeConfigurationChange)
     }
 }
+
+// PRE-WITNESS-05 Phase A — the startup-seam trace is a closed, ordered set of
+// observation steps. The kernel journals them as `graph_start_trace`; the
+// device trace (VP ON vs VP OFF) is what names the first divergent seam.
+final class StartTraceTests: XCTestCase {
+    func testTheTraceNamesExactlyTheThirteenSeamsPlusEngineCreated() {
+        let steps = AudioGraph.StartTraceStep.allCases.map(\.rawValue)
+        XCTAssertEqual(steps, [
+            "engine_created", "input_format_before_vp", "vp_enable_begin", "vp_enable_return",
+            "output_connected", "input_format_after_vp", "input_tap_installed", "render_tap_installed",
+            "observer_installed", "prepare_begin", "prepare_return", "start_begin", "start_return",
+            "is_running_immediate",
+        ], "the set is closed and ordered as the calls happen; a reorder here is a reorder in the graph")
+    }
+}

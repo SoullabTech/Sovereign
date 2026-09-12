@@ -327,6 +327,67 @@ describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified o
   });
 });
 
+describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating startup order unchanged, added calls read-only, no new timer', () => {
+  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+  const startBody = () => {
+    const g = graph();
+    const a = g.indexOf('public func start(voiceProcessing');
+    const b = g.indexOf('public func stop()');
+    expect(a).toBeGreaterThan(-1); expect(b).toBeGreaterThan(a);
+    return g.slice(a, b);
+  };
+  it('the MUTATING startup call order is unchanged from 35b0f61d0', () => {
+    const body = startBody();
+    const order = [
+      /setVoiceProcessingEnabled\(/, /engine\.attach\(/, /engine\.connect\(/, /\.requireValid\(\)/,
+      /input\.installTap\(/, /player\.installTap\(/, /addObserver\(/, /engine\.prepare\(\)/, /engine\.start\(\)/,
+    ];
+    let last = -1;
+    for (const re of order) {
+      const m = re.exec(body);
+      expect(m).not.toBeNull();
+      expect(m!.index).toBeGreaterThan(last);
+      last = m!.index;
+    }
+    // each mutating call appears exactly once (no duplicated start/tap/prepare)
+    for (const re of [/setVoiceProcessingEnabled\(/g, /engine\.prepare\(\)/g, /engine\.start\(\)/g, /input\.installTap\(/g, /player\.installTap\(/g]) {
+      expect((body.match(re) ?? []).length).toBe(1);
+    }
+  });
+  it('ADDED calls are observation/read-only or journal instrumentation only; NO new timer · mutation · recovery act · configuration act', () => {
+    const body = startBody();
+    // forbidden anywhere in start(): timers, sleeps, session/config mutation, stops/resets, recovery
+    expect(body).not.toMatch(/Task\.sleep|Timer|DispatchQueue|usleep|sleep\(/);
+    expect(body).not.toMatch(/AVAudioSession|setActive|setCategory|setPreferred|overrideOutput/);
+    expect(body).not.toMatch(/engine\.stop\(|engine\.reset\(|disconnect|detach\(|removeTap|requestRecovery|rebuildGraph/);
+    // the added reads are exactly these
+    expect(body).toMatch(/input\.outputFormat\(forBus: 0\)[\s\S]*trace\(\.inputFormatBeforeVP/);
+    expect(body).toMatch(/String\(input\.isVoiceProcessingEnabled\)/);
+    expect(body).toMatch(/trace\(\.isRunningImmediate, \["engineRunning": String\(engine\.isRunning\)\]\)/);
+    // every trace step is emitted in the graph, and the enum is closed at 14
+    const steps = [...graph().matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
+    expect(steps.length).toBe(14);
+    for (const st of steps) {
+      const c = st.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase()).replace('Vp', 'VP');
+      expect(body).toContain(`trace(.${c}`);
+    }
+  });
+  it('the kernel observes isRunning on the EXISTING tick only (no new timer) and journals the first callback per generation', () => {
+    const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+    const tick = k.slice(k.indexOf('private func tick()'), k.indexOf('private func evaluate()') === -1 ? undefined : k.indexOf('private func evaluate()'));
+    expect(tick).toMatch(/"engine_running_observed"/);
+    expect(tick).toMatch(/msSinceStartReturn/);
+    expect(tick).toMatch(/if ms >= 1_000 \{ runningObservationDone = true \}/);
+    expect((k.match(/"engine_running_observed"/g) ?? []).length).toBe(1);
+    expect((k.match(/Task\.sleep\(/g) ?? []).length).toBe(3);   // tick · recovery backoff · re-enter delay — unchanged
+    expect(k).toMatch(/"first_input_callback"/);
+    expect(k).toMatch(/"graph_start_trace"/);
+    // caller set still closed; policy untouched
+    const classes = [...k.matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
+    expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
+  });
+});
+
 describe('KERNEL-00 · VOICE-07 — the harness is a projection', () => {
   it('HarnessModel holds no voice state and reduces only kernel snapshots', () => {
     const f = swift.find((p) => p.endsWith('HarnessModel.swift'))!;

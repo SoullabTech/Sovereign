@@ -94,16 +94,53 @@ public final class AudioGraph: @unchecked Sendable {
 
     public var isRunning: Bool { engine.isRunning }
 
-    public func start(voiceProcessing: Bool, clock: @escaping () -> Int64 = MonotonicClock.nowMs) throws {
+    /// PRE-WITNESS-05 Phase A — the closed set of startup seams the trace names.
+    /// Observation only: no call in `start` is reordered, added-as-mutation, or
+    /// removed. The kernel journals each step as `graph_start_trace`.
+    public enum StartTraceStep: String, CaseIterable, Sendable {
+        case engineCreated = "engine_created"
+        case inputFormatBeforeVP = "input_format_before_vp"
+        case vpEnableBegin = "vp_enable_begin"
+        case vpEnableReturn = "vp_enable_return"
+        case outputConnected = "output_connected"
+        case inputFormatAfterVP = "input_format_after_vp"
+        case inputTapInstalled = "input_tap_installed"
+        case renderTapInstalled = "render_tap_installed"
+        case observerInstalled = "observer_installed"
+        case prepareBegin = "prepare_begin"
+        case prepareReturn = "prepare_return"
+        case startBegin = "start_begin"
+        case startReturn = "start_return"
+        case isRunningImmediate = "is_running_immediate"
+    }
+
+    public func start(voiceProcessing: Bool, clock: @escaping () -> Int64 = MonotonicClock.nowMs,
+                      trace: (StartTraceStep, [String: String]) -> Void = { _, _ in }) throws {
         self.clock = clock
+        let t0 = clock()
         let input = engine.inputNode
+        trace(.engineCreated, ["voiceProcessingRequested": String(voiceProcessing)])
+        // Phase A observation (read-only): the input node's format BEFORE voice processing is set.
+        let before = input.outputFormat(forBus: 0)
+        trace(.inputFormatBeforeVP, ["sampleRate": String(before.sampleRate), "channels": String(before.channelCount)])
         // Must be set before the engine starts; global to both IO nodes (SURVEY-01 §2).
-        try input.setVoiceProcessingEnabled(voiceProcessing)
+        trace(.vpEnableBegin, [:])
+        let vpT = clock()
+        do {
+            try input.setVoiceProcessingEnabled(voiceProcessing)
+        } catch {
+            trace(.vpEnableReturn, ["outcome": "error", "error": "\(error)", "elapsedMs": String(clock() - vpT)])
+            throw error
+        }
+        trace(.vpEnableReturn, ["outcome": "ok", "elapsedMs": String(clock() - vpT),
+                                "readBack": String(input.isVoiceProcessingEnabled)])
 
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: outputFormat)
+        trace(.outputConnected, [:])
 
         let inFormat = input.outputFormat(forBus: 0)
+        trace(.inputFormatAfterVP, ["sampleRate": String(inFormat.sampleRate), "channels": String(inFormat.channelCount)])
         // §3.1 precondition: validated BEFORE the tap. If the hardware format
         // is unresolved this throws and `installTap` below is never reached.
         let observed = InputFormatObservation(sampleRate: inFormat.sampleRate, channels: Int(inFormat.channelCount))
@@ -116,6 +153,7 @@ public final class AudioGraph: @unchecked Sendable {
             self.onInput?(InputObservation(generation: gen, timeMs: clock(), frames: frames, rms: rms, peak: peak))
         }
         inputTapInstalled = true
+        trace(.inputTapInstalled, [:])
 
         // Render observation (P5): what the player node actually emits.
         player.installTap(onBus: 0, bufferSize: 1024, format: outputFormat) { [weak self] buffer, _ in
@@ -130,16 +168,30 @@ public final class AudioGraph: @unchecked Sendable {
             self.lock.unlock()
         }
         renderTapInstalled = true
+        trace(.renderTapInstalled, [:])
 
         configObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
             guard let self = self else { return }
             self.onConfigurationChange?(self.generation)
         }
+        trace(.observerInstalled, [:])
 
+        trace(.prepareBegin, [:])
+        let pT = clock()
         engine.prepare()
-        try engine.start()
+        trace(.prepareReturn, ["elapsedMs": String(clock() - pT)])
+        trace(.startBegin, [:])
+        let sT = clock()
+        do {
+            try engine.start()
+        } catch {
+            trace(.startReturn, ["outcome": "error", "error": "\(error)", "elapsedMs": String(clock() - sT)])
+            throw error
+        }
+        trace(.startReturn, ["outcome": "ok", "elapsedMs": String(clock() - sT), "totalMs": String(clock() - t0)])
         lock.lock(); startedAtMs = clock(); lock.unlock()
+        trace(.isRunningImmediate, ["engineRunning": String(engine.isRunning)])
     }
 
     /// §3.4 seam evidence: the input node's format as the engine reports it

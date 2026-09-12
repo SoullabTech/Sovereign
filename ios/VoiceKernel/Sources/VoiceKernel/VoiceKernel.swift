@@ -49,6 +49,15 @@ public actor VoiceKernel {
     private var configChangeOrdinal = 0
     private var callbacksSinceChange = 0
 
+    /// PRE-WITNESS-05 Phase A (founder amendment 1): after `start_return`,
+    /// `engine.isRunning` is observed on every EXISTING ~100 ms tick until at
+    /// least 1000 ms have elapsed — no new timer; the record carries the actual
+    /// `msSinceStartReturn`, never a nominal value. Plus the first input
+    /// callback per generation.
+    private var startReturnedAtMs: Int64?
+    private var runningObservationDone = true
+    private var firstCallbackSeen = true
+
     /// Physiology sampling (P4): bounded, aggregated once per second.
     private struct InputAggregate {
         var callbacks = 0; var frames = 0
@@ -274,7 +283,13 @@ public actor VoiceKernel {
         ag.onStreamComplete = { [weak self] id, gen in Task { await self?.handleStreamComplete(id, generation: gen) } }
         ag.onConfigurationChange = { [weak self] gen in Task { await self?.handleConfigurationChange(generation: gen) } }
         do {
-            try ag.start(voiceProcessing: snap.voiceProcessingEnabled, clock: clock)
+            try ag.start(voiceProcessing: snap.voiceProcessingEnabled, clock: clock) { step, ev in
+                // Phase A: one journal record per startup seam, in the order it happened.
+                var e = ev
+                e["step"] = step.rawValue
+                e["generation"] = String(g)
+                journal("AudioGraph", "graph_start_trace", cause: cause, causeSeq: causeSeq, evidence: e)
+            }
         } catch {
             // §3.1/§3.2: a refused build. Journal the format the precondition
             // saw, then let the error take the road that already exists
@@ -299,6 +314,10 @@ public actor VoiceKernel {
         session?.setGeneration(g)
         snap.route = session?.currentRoute() ?? snap.route
         #endif
+        // Phase A: arm the post-start observations for this generation.
+        startReturnedAtMs = clock()
+        runningObservationDone = false
+        firstCallbackSeen = false
         // §2.1: one expected VP-associated change per VP-enabled generation.
         vpExpectationPending = snap.voiceProcessingEnabled
         routeAtStart = snap.route
@@ -356,6 +375,13 @@ public actor VoiceKernel {
                                                                           "frames": String(o.frames), "synthetic": String(synthetic)])
         }
         callbacksSinceChange += 1
+        if !firstCallbackSeen {
+            firstCallbackSeen = true
+            lastObservationSeq = journal("AudioGraph", "first_input_callback", cause: "observation",
+                                         evidence: ["generation": String(snap.generation),
+                                                    "msSinceStartReturn": startReturnedAtMs.map { String(clock() - $0) } ?? "-",
+                                                    "frames": String(raw.frames)])
+        }
         if vpExpectationPending && snap.inputFlow == .healthy {
             // §2.1: the generation became healthy without the expected change — retire it,
             // so a later same-route change is never mistaken for the VP one.
@@ -568,6 +594,14 @@ public actor VoiceKernel {
             if let i = snap.streams.firstIndex(where: { $0.id == r.streamId }), snap.streams[i].state == .rendering {
                 snap.streams[i].framesRendered = r.framesRendered
             }
+        }
+        if let g = graph, let t = startReturnedAtMs, !runningObservationDone {
+            let ms = now - t
+            lastObservationSeq = journal("AudioGraph", "engine_running_observed", cause: "tick",
+                                         evidence: ["generation": String(snap.generation), "msSinceStartReturn": String(ms),
+                                                    "engineRunning": String(g.isRunning),
+                                                    "callbacksSoFar": String(snap.inputCallbacksInGeneration)])
+            if ms >= 1_000 { runningObservationDone = true }
         }
         sampleIfDue(now: now)
         evaluate()
