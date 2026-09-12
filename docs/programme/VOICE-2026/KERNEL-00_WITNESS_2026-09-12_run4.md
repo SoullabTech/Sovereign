@@ -86,6 +86,33 @@ Founder: *"Testing with ON doesn't allow me to create and send journal."* A fres
 
 **Recovery route that needs no code:** `HarnessModel.exportJournal()` writes `kernel00-<session>-<epoch>.jsonl` to `FileManager.default.temporaryDirectory` **before** presenting the sheet. Every Export tapped under VP ON therefore most likely wrote its file into the app container's `tmp/`. Xcode → Window → Devices and Simulators → the iPhone → Installed Apps → `VoiceKernel K00` → `⋯` → **Download Container…** yields an `.xcappdata` bundle; the files are under `AppData/tmp/`. Any file there whose records carry `"voiceProcessing":"true"` together with `"classification"` is a run-4 VP-ON session. iOS may purge `tmp/` under storage pressure or after a long idle, so the download should be done before anything else on the phone.
 
+### 6c. The app container's `tmp/` listed and copied (founder, 11:35, `devicectl … --domain-type appDataContainer`)
+
+Xcode's Download Container failed on `.com.apple.mobile_container_manager.metadata.plist` (`CoreDeviceError 7000`, "The specified file could not be transferred") and discarded the bundle. `xcrun devicectl device info files … --domain-type appDataContainer --domain-identifier life.soullab.voicekernel.k00 --subdirectory tmp` (help text confirmed the verb and options first) listed **12 files**, and `devicectl device copy from` brought all of them to `~/Desktop/k00-tmp` (`File received from Device`). Verbatim listing:
+
+```
+kernel00-K00-18f515e1-1789225392.jsonl   16 KB    9/12 11:03   ← run 3a (VP ON, PW-03 build) — the hashed file
+kernel00-K00-24694629-1789225445.jsonl   14 KB    9/12 11:04   ← run 3b (VP OFF, PW-03 build) — the hashed file
+kernel00-K00-248d5aa6-1789223647.jsonl   81 KB    9/12 10:34   ← run 2 (partial export, in record)
+kernel00-K00-248d5aa6-1789223989.jsonl   865 KB   9/12 10:39   ← run 2 (full export, in record)
+kernel00-K00-3585a3c7-1789152361.jsonl   678 B    9/11 14:46   ← run 1 pre-enter checkpoint (in record)
+kernel00-K00-533addf9-1789226767.jsonl   16 KB    9/12 11:26   ← run 4b (VP OFF, run-4 build) — in record, verified
+kernel00-K00-5f2c9cb1-1789226936.jsonl   225 B    9/12 11:28   ← idle export control (in record)
+kernel00-K00-73b1c610-1789224075.jsonl   75 KB    9/12 10:41   ← run 2 (in record)
+kernel00-K00-983b2f79-1789223298.jsonl   22 KB    9/12 10:28   ← run 2 (in record)
+kernel00-K00-b0066fcf-1789226572.jsonl   17 KB    9/12 11:22   ← VP ON, PW-03 build (in record, verified)
+kernel00-K00-c9bdd9a0-1789222918.jsonl   678 B    9/12 10:21   ← run 2 pre-enter checkpoint (in record)
+kernel00-K00-dd33d8f4-1789158225.jsonl   225 B    9/11 16:23   ← run 1: a one-record export at 16:23 — NOT previously in the record
+```
+
+**Finding — there is NO run-4 VP-ON journal file at all.** Every VP-ON session on the run-4 build (the 11:26 degraded session on the screenshot, and any 4a-2 attempt) left nothing in `tmp/`. `HarnessModel.exportJournal()` writes the file only after `await kernel.exportJournalJSONL()` returns; a missing file therefore means the export never reached the write — either the Export tap never dispatched, or the actor call never returned. **H2 is upstream of the share sheet.** This sharpens H2 from "could not send" to "no file was produced", and it raises a question the record cannot yet answer: whether the kernel actor is responsive after a VP-ON session on the run-4 build reaches `degraded` (the projection on screen was published before that point and proves nothing about the actor afterwards). Not repaired; not in any authorized scope; discriminable without code (§6d).
+
+### 6d. Discriminator for H2 (no code; founder act, when convenient)
+
+Force-quit → launch → VP ON → Enter → wait until `degraded` shows → tap Export **once** → wait 10 s → on the Studio: `xcrun devicectl device info processes … | grep -i voicekernel` (is the process alive?) and the `tmp` listing above (did a new `kernel00-*.jsonl` appear?). Three outcomes: file appears → the sheet is the problem (H1-class), attach the file; no file, process alive → the actor did not return (a kernel finding, to be named); no file, process gone → a death, read by the Devices-window crash route. Plus one sentence on what the screen does when Export is tapped. The same act, with Leave-within-2-s before the Export, is 4a-2's W4 measurement.
+
+**Also reachable now:** `devicectl … --domain-type systemCrashLogs` exists in the help text — the run-1 `.ips` reports (and any run-4 death) may be listable/copyable there (identifier requirements per the help, not guessed).
+
 ## 7. Findings (provisional until the 4a-1 journal arrives or is declared lost)
 
 - **F1 is falsified with VP ON** (screenshot): deferral alone did not let the existing generation settle into a live input; the supervisor's entry window expired and its own verdict drove recovery, three times, to `degraded` under `entry_timeout`.
