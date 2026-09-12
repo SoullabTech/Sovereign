@@ -465,3 +465,4 @@ audit-logs/
 # DRIVER-01 — generated Xcode project and per-batch derived data (never committed)
 ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj/
 ios/VoiceKernelDriver/.derived/
+ios/VoiceKernelDriver/DriverHost/Info.plist
