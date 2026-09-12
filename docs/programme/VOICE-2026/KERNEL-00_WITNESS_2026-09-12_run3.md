@@ -105,7 +105,7 @@ A                    REJECTED for normal operation (kept as safety)
 B                    REQUIRED, refined (defer → observe settle → rebuild only on health evidence)
 C                    causal premise SUPPORTED · naming deferred to the next plan
 W4 under VP ON       NOT MEASURED
-RECORD               ATTESTED · journal files owed to this record (verification pending) · 3a post-Leave export: NONE EXISTS (founder) · protocol fields UNKNOWN (final)
+RECORD               ATTESTED · journal files: founder-held, founder-hash-verified in the founder's workspace (ruling 2026-09-12: no longer owed to the remote session; NOT in the repo — the hashes above are the record) · 3a post-Leave export: NONE EXISTS (founder) · protocol fields UNKNOWN (final)
 NEXT                 PRE-WITNESS-04 plan DRAFTED (founder-authorized, plan only) → founder acceptance → code
 ```
 

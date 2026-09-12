@@ -134,7 +134,7 @@ OWED                 founder attestation · founder ruling on the removal contro
 4. **E1–E4 HELD, NOT SELECTED.** They are downstream of the P5-B0 question.
 5. **B2 HOLD** unchanged. **B3** remains the broader investigation; P5-B0 is its first bounded step.
 6. **Mechanism: UNKNOWN.** P5-F1 is CONFIRMED AS AN INSTRUMENT EFFECT; the pre-VP read is a candidate cause only until ruling 2's table decides.
-7. The three earlier journals (`18f515e1`, `24694629`, `dd33d8f4`) exist in the founder's workspace; attachment here for independent hash verification remains owed and non-blocking.
+7. **Corrected by the founder, same day:** the three earlier journals (`K00-18f515e1` VP ON · `K00-24694629` VP OFF · `K00-dd33d8f4` one-record checkpoint) are present in the founder's workspace and hash-verified there. **They are no longer owed to this session.** The remote session never received the files; the run-3 record carries the founder-verified hashes as the evidence of record, and the files are not in the repository. Stated as it is, not inflated into receipt.
 
 **Standing after this act:**
 
