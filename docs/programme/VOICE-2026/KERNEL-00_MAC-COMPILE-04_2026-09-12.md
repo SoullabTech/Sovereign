@@ -31,9 +31,18 @@
 
 **C5 repair:** the trace now walks a lawful prefix (`enterConversation` → `idle→entering` → `recovery_scheduled configuration_change` → `entering→recovering` → `leaveConversation` → `recovering→idle`) before the W4 edge `idle→recovering`; expected exactly one orphan at seq 7. Tests only; kernel and harness sources unchanged again.
 
-## Pass 3 — OWED on the C5 SHA
+## Pass 3 — subject `e5046059e` (10:57 local) — GREEN
 
-Expected: `Executed 22 tests, with 0 failures` · gate 20/20 · two `BUILD SUCCEEDED` · one known warning · dylib UUID `F00F11D4-…` (unchanged, since no compiled source moved).
+| Step | Result | Evidence (verbatim) |
+|---|---|---|
+| `git rev-parse --short HEAD` | `e5046059e` | |
+| `swift build` | PASS | `Build complete! (0.10s)` |
+| `swift test` | **PASS 22/22** | `Executed 22 tests, with 0 failures (0 unexpected)` (suites 1 · 7 · 3 · 3 · 7 · 1 — `ReplayTests` now 7 incl. the W4 orphan test; `ConfigurationChangeSeamTests` 1; `InputFormatPreconditionTests` 3) |
+| source gate | PASS 20/20 | `Tests: 20 passed, 20 total` |
+| `xcodegen generate` | PASS | `Created project at …/VoiceKernelHarness.xcodeproj` |
+| unsigned iOS compile | PASS | one known warning (`try?` unused, unchanged by ruling) · `** BUILD SUCCEEDED **` |
+| signed device build | PASS | `Apple Development: Kelly Nezat (N9DTF6434L)` ×3 · `** BUILD SUCCEEDED **` |
+| debug dylib UUID | **`F00F11D4-E589-3F06-9919-5609C11DF6C3`** | identical across passes 1–3: C4 and C5 touched tests only, as claimed |
 
 ## Standing
 
@@ -42,6 +51,8 @@ PASS 1 (32047f9f5)   build PASS · test FAIL C4 (test scope) · gate 20/20 · xc
 C4                   REPAIRED at 1435122de (tests only)
 PASS 2 (1435122de)   build PASS · test FAIL C5 (test trace, replayer correct) · gate 20/20 · unsigned PASS · signed PASS · dylib F00F11D4 unchanged
 C5                   REPAIRED (tests only)
-PASS 3               OWED
-DEVICE ACT           NOT AUTHORIZED until pass 3 is green and the founder accepts this record
+PASS 3 (e5046059e)   GREEN — build · test 22/22 · gate 20/20 · xcodegen · unsigned · signed · dylib F00F11D4 (unchanged)
+MAC-COMPILE-04       GREEN — awaiting founder acceptance
+RUN-3 BINDING        debug dylib F00F11D4-E589-3F06-9919-5609C11DF6C3 (main executable = build-invariant stub, not evidence)
+DEVICE ACT           NOT AUTHORIZED until the founder accepts this record
 ```
