@@ -23,5 +23,8 @@
 MAC-COMPILE-07       GREEN — build · test 30/30 · gate 32/32 · xcodegen · unsigned + signed BUILD SUCCEEDED · one known warning
                      two pre-compile refusals recorded (destination id given as the devicectl id — instruction defect; wrong cwd) — no compile occurred on either; not kernel evidence
 RUN-6 BINDING        debug dylib CC0D3604-7902-373E-A2BB-2C093D9BF804
-DEVICE ACT           NOT AUTHORIZED until the founder accepts this record (install = acceptance by conduct, as before)
+FOUNDER ACCEPTANCE   GIVEN (explicit: record read, AudioGraph.swift delta inspected against 4596b9bdb, "Accepted") AND by conduct (signed artifact installed)
+                     signing: Apple Development: Kelly Nezat (N9DTF6434L) · iOS Team Provisioning Profile: * (08a653d1-…) · TeamIdentifier ZVK2X646Z2 · Identifier life.soullab.voicekernel.k00
+                     install: bundle container 977ED940-4F17-4129-869D-0DA71BB3FC00 · databaseUUID 42158240-… · databaseSequenceNumber 4224 · post-install: installed, NOT running (cold process available)
+RUN 6                READY — 6a VP ON · 6b VP OFF · 6a-2 VP ON if 6a listens; predeclared table governs
 ```
