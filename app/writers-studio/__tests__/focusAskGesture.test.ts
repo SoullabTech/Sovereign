@@ -89,11 +89,29 @@ describe('P2 — an unreadable member is never shown as one MAIA will read', () 
     }
   });
 
-  it('the request marks them withheld, with the truthful reason', () => {
+  /**
+   * ⭐⭐ SUPERSEDED BY P13, and the supersession is a strengthening.
+   *
+   * This obligation used to read: *the request marks them withheld, WITH THE
+   * TRUTHFUL REASON* — the panel sent `withheldAs: 'unverified' | 'unavailable'`
+   * and the server consulted it when withholding.
+   *
+   * ⛔ Founder finding: that solved disclosure authority and left a smaller
+   * truthfulness hole beside it. A page open for an hour could tell MAIA a
+   * section had been deleted when it was merely unconfirmed, or the reverse.
+   * The client may PRESENT a reason; it may not be authoritative about one.
+   *
+   * ⭐ The hole is closed by DELETING the client's authority rather than
+   * validating it — a field that is validated is still a field that can be
+   * believed on a path someone forgets to validate. The panel now says only
+   * WHETHER a member is ready; the server establishes WHY it is not.
+   */
+  it('the request marks them withheld, and says nothing about why', () => {
     const body = askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', set: five(), ask: 'q' });
     const withheld = body.members.filter((m) => !m.readable);
     expect(withheld).toHaveLength(2);
-    expect(withheld.map((m) => m.withheldAs).sort()).toEqual(['unavailable', 'unverified']);
+    for (const m of withheld) expect(Object.keys(m).sort()).toEqual(['focusMemberId', 'readable', 'sectionRef']);
+    expect(JSON.stringify(body)).not.toMatch(/withheld|unverified|unavailable|gone|stale/);
   });
 
   it('⛔ a withheld member sends no offsets at all', () => {
@@ -249,10 +267,14 @@ describe('P10 — a client marking a stale member "ready" is not trusted', () =>
     expect(crossing).toMatch(/if \(!member\.readable\) continue;/);
   });
 
-  it('the withheld reason can only narrow what MAIA is told, never widen it', () => {
+  it('⭐ P13 · the route accepts no withheld reason at all — there is none to believe', () => {
     const route = strip(fs.readFileSync(
       path.join(__dirname, '..', '..', 'api', 'writers-studio', 'focus', 'route.ts'), 'utf8'));
-    expect(route).toMatch(/readable === false && \(withheldAs === 'unverified' \|\| withheldAs === 'unavailable'\)/);
+    expect(route).not.toMatch(/withheldAs/);
+    /* The panel still LABELS a withheld member for the writer — that is local
+       presentation and stays — but the label never leaves the browser. */
+    expect(panel).toMatch(/MEMBER_STATE_NOTE/);
+    expect(actSrc).not.toMatch(/withheldAs/);
   });
 
   it('⛔ the client never sends Work text, and the route refuses it if it tries', () => {

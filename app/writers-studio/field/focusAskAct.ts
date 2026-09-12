@@ -173,12 +173,6 @@ export interface AskRequestBody {
     range?: { start: number; end: number };
     /** ⛔ PRESENTATION. `true` buys an attempt; only `false` is authoritative. */
     readable: boolean;
-    /**
-     * How the panel is currently presenting a withheld member, so MAIA is told
-     * the truthful reason. ⛔ Used ONLY when `readable` is false: it can narrow
-     * what MAIA is told, never widen what she is given.
-     */
-    withheldAs?: 'unverified' | 'unavailable';
   }[];
   activeMemberId: string | null;
   gesture: 'ask_maia';
@@ -209,10 +203,10 @@ export function askRequestBody(input: {
            actually resolved; a withheld member sends no offsets at all. */
         ? { range: { start: m.focus!.start, end: m.focus!.end } }
         : {}),
+      /* ⛔ P13 · the panel says WHETHER a member is ready, never WHY it is not.
+         The panel's own labels ("needs confirmation", "no longer here") are
+         local presentation; the server establishes which is true for MAIA. */
       readable: isReady(m),
-      ...(isReady(m)
-        ? {}
-        : { withheldAs: m.state === 'unverified' ? ('unverified' as const) : ('unavailable' as const) }),
     })),
     activeMemberId: set.activeIndex === null ? null : `f${set.activeIndex + 1}`,
     gesture: 'ask_maia',

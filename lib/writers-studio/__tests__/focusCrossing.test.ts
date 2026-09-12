@@ -108,7 +108,7 @@ const cognition = jest.fn(() => {
   events.push('handoff');
   return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: true, response: 'MAIA reply' }) };
 });
-const deps = () => ({ assemble, prepare, generate: cognition } as never);
+const deps = () => ({ assemble, presence: async () => new Set<string>(), prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never,

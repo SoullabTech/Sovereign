@@ -10,6 +10,38 @@ import * as path from 'path';
 jest.mock('@/lib/auth/getMemberFromRequest', () => ({
   getMemberIdFromRequest: jest.fn(async () => 'member-witness'),
 }));
+
+/* ⛔ Instrument note. The P13 cases reach `prepare`, so the boundary, the
+   receipts and the ACT RECORD all have to succeed first — otherwise the
+   crossing refuses before cognition and the test passes vacuously by finding
+   nothing. (It did, at first: `seen` was null, which is the fail-closed
+   provenance rule working exactly as ruled.) This models a substrate that says
+   yes, so the assertions are about the participation and nothing else. */
+jest.mock('@/lib/db/postgres', () => {
+  const acts = new Map<string, { canonical_turn_id: string | null }>();
+  const run = async (sql: string, params: unknown[] = []) => {
+    if (/INSERT INTO focus_crossing_acts/.test(sql)) {
+      if (acts.has(params[0] as string)) return { rows: [], rowCount: 0 };
+      acts.set(params[0] as string, { canonical_turn_id: null });
+      return { rows: [{ act_id: params[0] }], rowCount: 1 };
+    }
+    if (/FROM focus_crossing_acts\b/.test(sql)) {
+      const a = acts.get(params[0] as string);
+      return { rows: a ? [{ act_id: params[0], member_id: 'm-1', work_id: 'w-1',
+        active_member_id: null, canonical_turn_id: a.canonical_turn_id }] : [], rowCount: a ? 1 : 0 };
+    }
+    if (/runtime_consent_state/.test(sql)) {
+      return /INSERT/.test(sql)
+        ? { rows: [{ request_id: params[0] }], rowCount: 1 }
+        : { rows: [], rowCount: 0 };
+    }
+    if (/context_disclosure_receipts/.test(sql)) {
+      return { rows: [{ id: 'r1' }], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 0 };
+  };
+  return { query: jest.fn(run), transaction: jest.fn(async (cb: never) => (cb as never as (t: unknown) => Promise<unknown>)({ query: run })) };
+});
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import {
   focusParticipation, renderFocusMembership, type FocusParticipationMember,
@@ -287,6 +319,7 @@ describe('F8 — one Focus gesture generates ONE canonical turn', () => {
     let prepared = 0;
     let generated = 0;
     await performFocusCrossing(req(), {
+      presence: async () => new Set<string>(),
       assemble: async () => null,
       prepare: async () => { prepared += 1; return null; },
       generate: () => { generated += 1; return { handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }; },
@@ -351,6 +384,7 @@ describe('F11 — no receipt crosses before every member is resolved', () => {
   it('a member whose boundary refuses stops the whole crossing — nothing confirmed', async () => {
     const confirmed: string[] = [];
     const out = await performFocusCrossing(req(), {
+      presence: async () => new Set<string>(),
       assemble: async () => { confirmed.push('assembled'); return 'text'; },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(true), result: Promise.resolve({ ok: true }) }),
@@ -364,6 +398,7 @@ describe('F12 — a member not declared in the Focus Set cannot appear in cognit
   it('the assembler is called only for declared members', async () => {
     const asked: string[] = [];
     await performFocusCrossing(req(), {
+      presence: async () => new Set<string>(),
       assemble: async ({ sectionRef }) => { asked.push(String(sectionRef)); return null; },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
@@ -381,5 +416,101 @@ describe('F12 — a member not declared in the Focus Set cannot appear in cognit
   it('ordinals are the set’s own, contiguous from one', () => {
     const p = part();
     expect(p.members.map((m) => m.ordinal)).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+/* ══ ⭐ P13 — the server establishes WHY a member was withheld ══════════════ */
+
+describe('P13 — the client is not authoritative about why a member is withheld', () => {
+  /* ⭐ Each crossing below is a SEPARATE deliberate act and gets its own
+     identity — which is also the act record's own law: the same actId arriving
+     twice is a retry, and a retry is not a second reading of the substrate. */
+  let n = 0;
+  const withheldReq = (): FocusCrossingRequest => ({
+    requestId: `req-${++n}`, actId: `act-p13-${n}`, identity: {} as never,
+    posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 'sess-1',
+    workRef: 'w-1',
+    members: [
+      { focusMemberId: 'f1', sectionRef: 's-readable', readable: true },
+      { focusMemberId: 'f2', sectionRef: 's-still-there', readable: false },
+      { focusMemberId: 'f3', sectionRef: 's-deleted', readable: false },
+    ],
+    activeMemberId: null, gesture: 'ask_maia', ask: 'q',
+  } as FocusCrossingRequest);
+
+  /** Captures the participation the crossing built, at the moment of handoff. */
+  async function crossWith(presentIds: string[]) {
+    let seen: { members: { sectionRef: string; status: string }[] } | null = null;
+    await performFocusCrossing(withheldReq(), {
+      presence: async () => new Set(presentIds),
+      assemble: async () => 'the readable body',
+      prepare: async (input) => {
+        seen = {
+          members: input.participation.members.map((m) => ({ sectionRef: m.sectionRef, status: m.status })),
+        };
+        return null;
+      },
+      generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
+    });
+    return seen;
+  }
+
+  it('a withheld member whose section is STILL THERE reaches MAIA as unverified', async () => {
+    const seen = await crossWith(['s-still-there']);
+    expect(seen!.members.find((m) => m.sectionRef === 's-still-there')!.status).toBe('unverified');
+  });
+
+  it('a withheld member whose section is GONE reaches MAIA as unavailable', async () => {
+    const seen = await crossWith(['s-still-there']);
+    expect(seen!.members.find((m) => m.sectionRef === 's-deleted')!.status).toBe('unavailable');
+  });
+
+  it('⭐ the same request yields the OPPOSITE states when the server sees otherwise', async () => {
+    const a = await crossWith(['s-still-there']);
+    const b = await crossWith(['s-deleted']);
+    const at = (s: typeof a, ref: string) => s!.members.find((m) => m.sectionRef === ref)!.status;
+    expect(at(a, 's-still-there')).toBe('unverified');
+    expect(at(b, 's-still-there')).toBe('unavailable');
+    expect(at(a, 's-deleted')).toBe('unavailable');
+    expect(at(b, 's-deleted')).toBe('unverified');
+    /* ⭐ The request never changed. Only the server's finding did — which is
+       exactly what "the client is not authoritative" has to mean. */
+  });
+
+  it('⛔ there is no withheld-reason field on the wire to be believed', () => {
+    expect(crossingSrc).not.toMatch(/withheldAs/);
+    const route = strip(fs.readFileSync(
+      path.join(__dirname, '..', '..', '..', 'app', 'api', 'writers-studio', 'focus', 'route.ts'), 'utf8'));
+    expect(route).not.toMatch(/withheldAs/);
+    const client = strip(fs.readFileSync(
+      path.join(__dirname, '..', '..', '..', 'app', 'writers-studio', 'field', 'focusAskAct.ts'), 'utf8'));
+    expect(client).not.toMatch(/withheldAs/);
+  });
+
+  it('⛔ presence is probed ONLY for withheld members — a readable body proves its own', async () => {
+    const probed: string[][] = [];
+    await performFocusCrossing(withheldReq(), {
+      presence: async ({ sectionRefs }) => { probed.push([...sectionRefs]); return new Set(); },
+      assemble: async () => 'body',
+      prepare: async () => null,
+      generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
+    });
+    expect(probed).toHaveLength(1);
+    expect(probed[0].sort()).toEqual(['s-deleted', 's-still-there']);
+    expect(probed[0]).not.toContain('s-readable');
+  });
+
+  it('⛔ an unknown presence is not an absence — the probe fails to the weaker truth', () => {
+    const probe = strip(fs.readFileSync(
+      path.join(__dirname, '..', 'focusPresence.ts'), 'utf8'));
+    // On error it returns every id it was asked about, so nothing is reported deleted.
+    expect(probe).toMatch(/return new Set\(sectionRefs\);/);
+  });
+
+  it('⛔ the probe reads existence only — never a column that could carry prose', () => {
+    const probe = fs.readFileSync(path.join(__dirname, '..', 'focusPresence.ts'), 'utf8');
+    const select = probe.slice(probe.indexOf('SELECT'), probe.indexOf('WHERE'));
+    expect(select).toMatch(/SELECT s\.id FROM/);
+    expect(select).not.toMatch(/body|heading|text|content|length/i);
   });
 });

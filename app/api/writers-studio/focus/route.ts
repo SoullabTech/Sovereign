@@ -21,6 +21,7 @@ import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing, type FocusMemberScope } from '@/lib/writers-studio/focusCrossing';
 import { assembleFocus } from '@/lib/writers-studio/assembleFocus';
+import { focusPresence } from '@/lib/writers-studio/focusPresence';
 import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
 export const dynamic = 'force-dynamic';
@@ -92,16 +93,14 @@ export async function POST(request: NextRequest) {
   const parsed: FocusMemberScope[] = [];
   for (const m of scopes) {
     if (!m || typeof m !== 'object') break;
-    const { focusMemberId, sectionRef, range, readable, withheldAs } = m as Record<string, unknown>;
+    const { focusMemberId, sectionRef, range, readable } = m as Record<string, unknown>;
     if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
     parsed.push({
       focusMemberId, sectionRef,
+      /* ⛔ P13 · `readable: false` withholds, absolutely. WHY it is withheld is
+         NOT read from the client: the server establishes that itself, so a
+         stale page cannot misreport a deleted section as an unconfirmed one. */
       readable: readable !== false,
-      /* ⛔ Read only for a withheld member, and only from the closed pair. An
-         unrecognised value falls to `unverified`, which withholds. */
-      ...(readable === false && (withheldAs === 'unverified' || withheldAs === 'unavailable')
-        ? { withheldAs }
-        : {}),
       ...(range && typeof range === 'object'
         ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
         : {}),
@@ -124,7 +123,10 @@ export async function POST(request: NextRequest) {
       workRef, members: parsed, activeMemberId: (activeMemberId as string | null) ?? null,
       gesture, ask,
     },
-    { assemble: assembleFocus, prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration },
+    {
+      assemble: assembleFocus, presence: focusPresence,
+      prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration,
+    },
   );
 
   // ⛔ Internal vocabulary never leaves: the §3a presentation is the contract.

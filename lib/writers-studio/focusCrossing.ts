@@ -52,6 +52,7 @@ import {
 import {
   completeFocusCrossingAct, openFocusCrossingAct, type FocusActMember,
 } from './focusCrossingAct';
+import type { FocusPresenceProbe } from './focusPresence';
 
 /**
  * Reads ONE authorized member. ⛔ Called only after that member's `may_cross`.
@@ -82,15 +83,12 @@ export interface FocusMemberScope {
    */
   readonly readable: boolean;
   /**
-   * How the surface is presenting a WITHHELD member, so MAIA is told the
-   * truthful reason rather than one generic one — "needs confirmation" and "no
-   * longer in the work" are different facts about the writer's attention.
-   *
-   * ⛔ CONSULTED ONLY WHEN `readable` IS FALSE. It can narrow what MAIA is told
-   * and can never widen what she is given: the client is presentation, not
-   * authority, so withholding is the only direction its account is trusted in.
+   * ⛔ P13 · THERE IS DELIBERATELY NO WITHHELD REASON HERE. The client may
+   * present "needs confirmation" or "no longer here"; it may not be
+   * authoritative about which is true. The server establishes that from the
+   * presence probe, so a stale page cannot tell MAIA a section was deleted when
+   * it was merely unconfirmed — or the reverse.
    */
-  readonly withheldAs?: 'unverified' | 'unavailable';
 }
 
 /**
@@ -162,7 +160,13 @@ export type FocusCrossingResult = {
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,
-  deps: { assemble: FocusAssembler; prepare: CanonicalCognitionPort['prepare']; generate: CanonicalCognitionPort['generate'] },
+  deps: {
+    assemble: FocusAssembler;
+    /** ⭐ P13 · the server's own answer to WHY a member was withheld. */
+    presence: FocusPresenceProbe;
+    prepare: CanonicalCognitionPort['prepare'];
+    generate: CanonicalCognitionPort['generate'];
+  },
 ): Promise<FocusCrossingResult> {
   const refused = (b: BoundaryOutcome, p?: FocusDisclosurePresentation): FocusCrossingResult => ({
     presentation: p ?? presentBoundaryOutcome(b),
@@ -245,12 +249,24 @@ export async function performFocusCrossing(
      `unverified` (the writer's anchor needs confirming) or `unavailable` (it
      was authorized and could not be read). Either way its existence crosses and
      its content does not. */
+  /* ⭐ P13 · WHY a withheld member is withheld, established HERE. Probed only
+     for the members that were actually withheld — a readable member's presence
+     is proven by the fact that its body was read. */
+  const withheldRefs = req.members.filter((m) => !m.readable).map((m) => m.sectionRef);
+  const present = withheldRefs.length
+    ? await deps.presence({ memberId: req.memberId, workRef: req.workRef, sectionRefs: withheldRefs })
+    : new Set<string>();
+
   let participation: FocusParticipation;
   try {
     participation = focusParticipation({
       members: req.members.map((m, i) => {
         const content = bodies.get(m.focusMemberId);
-        const status: FocusMemberStatus = !m.readable ? (m.withheldAs ?? 'unverified')
+        /* A withheld member whose section is STILL THERE is an anchor the
+           writer needs to confirm; one whose section is gone cannot be made
+           available at all. ⛔ Neither answer comes from the client. */
+        const status: FocusMemberStatus = !m.readable
+          ? (present.has(m.sectionRef) ? 'unverified' : 'unavailable')
           : content === undefined ? 'unavailable' : 'readable';
         return {
           focusMemberId: m.focusMemberId, ordinal: i + 1, sectionRef: m.sectionRef,
