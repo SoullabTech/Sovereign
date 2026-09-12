@@ -12,10 +12,11 @@
 | source gate | **PASS 32/32** | `Tests: 32 passed, 32 total` — P5-B0 block ×4 green |
 | `xcodegen generate` | PASS | `Created project at …/VoiceKernelHarness.xcodeproj` |
 | unsigned iOS compile | PASS | `VoiceKernel.swift:138:9: warning: result of 'try?' is unused` (known, unchanged) · `** BUILD SUCCEEDED **` |
-| signed device build | **NOT YET IN EVIDENCE** | the founder's paste ends at `Resolved source packages: VoiceKernel …` for the signed invocation; result line not received |
+| signed device build — attempt 1 | **FAILED PRE-COMPILE (instruction defect, not a kernel defect)** | `xcodebuild: error: Unable to find a device matching the provided destination specifier: { id:A0736AC8-793B-516F-AC72-C076DB6CEE38 }` — the instruction supplied the `devicectl` identifier; Xcode's destination id for the same phone is `00008140-00163D9922E0801C` (`name:Kelly Nezat’s iPhone`, listed in the error). Same mismatch as MAC-COMPILE-02 Appendix A; the remote session repeated it in its instruction. No compile occurred. |
+| signed device build — attempt 2 | OWED | rerun with `-destination 'id=00008140-00163D9922E0801C'` |
 | debug dylib UUID | **OWED** | run-6 binding |
 
 ```
-MAC-COMPILE-07       PARTIAL — build · test 30/30 · gate 32/32 · xcodegen · unsigned GREEN; signed build + dylib UUID owed
+MAC-COMPILE-07       PARTIAL — build · test 30/30 · gate 32/32 · xcodegen · unsigned GREEN; signed attempt 1 refused on a destination-id mismatch (instruction defect); attempt 2 + dylib UUID owed
 DEVICE ACT           NOT AUTHORIZED until the signed step is recorded and the founder accepts this record
 ```
