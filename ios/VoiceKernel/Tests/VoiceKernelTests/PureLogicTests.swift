@@ -194,15 +194,20 @@ final class ReplayTests: XCTestCase {
         // K00-W4: after leaveConversation the floor is idle; a rebuild reaction
         // then moved it idle → recovering. The replayer must reject that edge
         // (it did on the device: "1 orphans"). This pins the law the exit
-        // guard now enforces upstream.
+        // guard now enforces upstream. The replayer starts every trace at idle
+        // (C5, MAC-COMPILE-04), so the prefix walks a lawful path there first.
         let r = StateReplayer.replay([
-            ev(1, 1, "command", cause: "leaveConversation"),
-            ev(2, 1, "floor_transition", from: "recovering", to: "idle", causeSeq: 1),
-            ev(3, 1, "floor_transition", from: "idle", to: "recovering", causeSeq: 2),   // the W4 edge
+            ev(1, 1, "command", cause: "enterConversation"),
+            ev(2, 1, "floor_transition", from: "idle", to: "entering", causeSeq: 1),
+            ev(3, 1, "recovery_scheduled", cause: "configuration_change", causeSeq: 2),
+            ev(4, 1, "floor_transition", from: "entering", to: "recovering", causeSeq: 3),
+            ev(5, 1, "command", cause: "leaveConversation"),
+            ev(6, 1, "floor_transition", from: "recovering", to: "idle", causeSeq: 5),
+            ev(7, 1, "floor_transition", from: "idle", to: "recovering", causeSeq: 6),   // the W4 edge
         ])
         XCTAssertFalse(r.passes)
         XCTAssertEqual(r.orphanTransitions.count, 1)
-        XCTAssertEqual(r.orphanTransitions.first?.seq, 3)
+        XCTAssertEqual(r.orphanTransitions.first?.seq, 7)
     }
 
     func testUnlawfulEdgeFails() {
