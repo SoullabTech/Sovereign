@@ -53,24 +53,28 @@ import {
   completeFocusCrossingAct, openFocusCrossingAct, type FocusActMember,
 } from './focusCrossingAct';
 import type { FocusPresenceProbe } from './focusPresence';
+import {
+  bodyOfMember, type CurrentDraftReader, type DraftReadFailure,
+} from './currentDraftRead';
 
 /**
- * Reads ONE authorized member. ⛔ Called only after that member's `may_cross`.
+ * ⭐⭐ RETIRED 2026-09-12 — `FocusAssembler` is gone, and it is not coming back
+ * as a renamed version of itself.
  *
- * ⭐ ONE MEMBER, ONE CALL, ONE RESULT — never a joined blob. A member whose body
- * cannot be read returns null and becomes `unavailable` in the participation:
- * the writer still declared attention there, so the member does not vanish.
+ * It read `manuscript_sections.body` — the immutable SOURCE — while the Focus
+ * Set addresses `manuscript_draft_sections`. Act 3 of the founder witness
+ * failed on exactly that: four receipts `attempted`, zero crossings, and
+ * `in_source 0 / in_draft 2` on the witness database.
+ *
+ * Its replacement is `CurrentDraftReader`, and the difference is not the table.
+ * It is that the old contract read ONE MEMBER PER CALL, so nothing in the type
+ * system could stop two members of one act arriving from two draft versions.
+ * The reader takes every authorized id at once and answers with ONE snapshot:
+ *
+ *   a mixed-version Focus read is not refused — it is unrepresentable.
  */
-export interface FocusAssembler {
-  (ref: {
-    memberId: string; workRef: string;
-    scopeKind: DisclosureScopeKind; sectionRef?: string;
-    /** The writer's selection. Carried in the REQUEST; never in the receipt. */
-    range?: { start: number; end: number };
-  }): Promise<string | null>;
-}
 
-/** One declared place in the writer's attention, as the route received it. */
+/** One declared place in the writer's attention/** One declared place in the writer's attention, as the route received it. */
 export interface FocusMemberScope {
   readonly focusMemberId: string;
   readonly sectionRef: string;
@@ -156,12 +160,34 @@ export type FocusCrossingResult = {
    * claimed to be retrying.
    */
   readonly act: 'opened' | 'continued' | 'contradiction' | 'unrecorded' | null;
+  /**
+   * ⭐⭐ WHY nothing crossed, for the HOST — never for the member.
+   *
+   * The Act 3 witness returned one sentence for six distinct failures and no
+   * log named which. It was diagnosed by hand-querying disclosure receipts.
+   *   *An empty lookup is not a database error.*
+   *   *A body unavailable is not a boundary refused.*
+   * The member-facing §3a presentation is unchanged and stays calm.
+   */
+  readonly failure: CrossingFailure | null;
 };
+
+/** Host-facing cause. ⛔ Never rendered to a member. */
+export type CrossingFailure =
+  | DraftReadFailure
+  | 'boundary_refused'
+  | 'no_readable_members'
+  | 'participation_unconstructable'
+  | 'act_contradiction'
+  | 'act_unrecordable'
+  | 'handoff_not_prepared'
+  | 'handoff_failed';
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,
   deps: {
-    assemble: FocusAssembler;
+    /** ⭐ ONE snapshot of the current working draft, at one version. */
+    readDraft: CurrentDraftReader;
     /** ⭐ P13 · the server's own answer to WHY a member was withheld. */
     presence: FocusPresenceProbe;
     prepare: CanonicalCognitionPort['prepare'];
@@ -171,7 +197,7 @@ export async function performFocusCrossing(
   const refused = (b: BoundaryOutcome, p?: FocusDisclosurePresentation): FocusCrossingResult => ({
     presentation: p ?? presentBoundaryOutcome(b),
     response: null, disclosureIds: [], disclosureId: null, boundary: b,
-    participation: null, act: null,
+    participation: null, act: null, failure: null,
   });
   const unavailable: BoundaryOutcome = { kind: 'receipt_refused', outcome: { kind: 'unavailable' } };
 
@@ -225,23 +251,46 @@ export async function performFocusCrossing(
          refused refuses the crossing: proceeding with the rest would silently
          narrow the writer's declared attention to whatever happened to be
          permitted, which is the widening defect in its mirror. */
-      return refused(boundary);
+      return { ...refused(boundary), failure: 'boundary_refused' };
     }
     established.push({ member, disclosureId: boundary.disclosureId });
   }
 
   const boundary = first ?? unavailable;
 
-  /* ── 2 · ONLY NOW are the bodies read. C2 depends on this ordering.
-     One call per member — ⛔ never a joined read, because a joined read has no
-     member boundaries to lose them at. */
-  const bodies = new Map<string, string>();
-  for (const { member } of established) {
-    const text = await deps.assemble({
-      memberId: req.memberId, workRef: req.workRef,
-      scopeKind: 'section', sectionRef: member.sectionRef, range: member.range,
+  /* ── 2 · ONLY NOW is the Work read. C2 depends on this ordering.
+     ⭐⭐ ONE SNAPSHOT, ONE VERSION. Every authorized member's body comes from a
+     single read of the working draft at a single version, so "all members in
+     one act come from the same version" is structural rather than checked. And
+     ONLY the authorized ids are selected — a withheld member's body is never
+     loaded, not loaded and then discarded. */
+  const snapshot = await deps.readDraft({
+    memberId: req.memberId, workRef: req.workRef,
+    sectionRefs: established.map((e) => e.member.sectionRef),
+  });
+  if (!snapshot.ok) {
+    /* ⭐ TYPED, AND LOGGED. The witness that found the namespace defect had to
+       be diagnosed by hand-querying receipts because the old assembler returned
+       null on an empty result and logged only exceptions. */
+    console.error('[FOCUS] the current Work could not be read — nothing crossed', {
+      actId: req.actId, failure: snapshot.failure, members: req.members.length,
     });
-    if (text !== null) bodies.set(member.focusMemberId, text);
+    return { ...refused(unavailable), failure: snapshot.failure };
+  }
+
+  const bodies = new Map<string, string>();
+  const perMember: { focusMemberId: string; failure: DraftReadFailure }[] = [];
+  for (const { member } of established) {
+    const got = bodyOfMember(snapshot.snapshot, member.sectionRef, member.range);
+    if (got.ok) bodies.set(member.focusMemberId, got.body);
+    else perMember.push({ focusMemberId: member.focusMemberId, failure: got.failure });
+  }
+  if (perMember.length > 0) {
+    /* ⛔ Not fatal on its own: such a member becomes `unavailable` in the
+       participation and MAIA is told she cannot see it. But it is never silent. */
+    console.warn('[FOCUS] authorized members whose body could not be given', {
+      actId: req.actId, draftVersion: snapshot.snapshot.version, members: perMember,
+    });
   }
 
   /* ⭐⭐ THE PARTICIPATION — five memberships, three bodies, and MAIA told both.
@@ -276,16 +325,25 @@ export async function performFocusCrossing(
       }),
       activeMemberId: req.activeMemberId,
     });
-  } catch {
+  } catch (err) {
     /* ⛔ The participation contract refuses rather than repairs, and so does
        this. A set that cannot be constructed truthfully is not crossed at all. */
-    return refused(unavailable);
+    console.error('[FOCUS] the participation could not be constructed truthfully', {
+      actId: req.actId, error: err instanceof Error ? err.message : 'unknown',
+    });
+    return { ...refused(unavailable), failure: 'participation_unconstructable' };
   }
 
   /* ⛔ Nothing readable means nothing to hand over. The receipts stay
      `attempted`, which is the truthful state: authorization existed, the
      crossing did not. */
-  if (participation.readable === 0) return refused(unavailable);
+  if (participation.readable === 0) {
+    console.error('[FOCUS] no readable member — nothing to hand over', {
+      actId: req.actId, draftVersion: snapshot.snapshot.version,
+      declared: req.members.length, perMember,
+    });
+    return { ...refused(unavailable), failure: 'no_readable_members' };
+  }
 
   /* ── ⭐⭐ 3 · THE WRITER'S ACT, RECORDED BEFORE THE TURN.
      Without this the system can perform the right crossing and be unable to
@@ -312,15 +370,20 @@ export async function performFocusCrossing(
   const act = await openFocusCrossingAct({
     actId: req.actId, memberId: req.memberId, workId: req.workRef,
     members: actMembers, activeMemberId: req.activeMemberId,
+    /* ⭐ WHAT EXACT STATE OF THE MANUSCRIPT WAS MAIA LOOKING AT? Recorded with
+       the act, so a later RevisionProposal can refuse to apply itself to prose
+       it was not built against. */
+    workingDraftId: snapshot.snapshot.draftId,
+    workingDraftVersion: snapshot.snapshot.version,
   });
   if (act.kind === 'contradiction' || act.kind === 'refused') {
-    return { ...refused(unavailable), act: 'contradiction' };
+    return { ...refused(unavailable), act: 'contradiction', failure: 'act_contradiction' };
   }
   if (act.kind === 'unavailable') {
     /* ⛔ An unrecordable act must not become an unrecorded crossing. The record
        is the only thing that can later say what was attended to, and a turn
        produced without it is a turn nothing can account for. */
-    return { ...refused(unavailable), act: 'unrecorded' };
+    return { ...refused(unavailable), act: 'unrecorded', failure: 'act_unrecordable' };
   }
 
   // ── 4 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
@@ -329,7 +392,10 @@ export async function performFocusCrossing(
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
     workRef: req.workRef, participation, sanctuary: req.posture.sanctuary,
   });
-  if (!prepared) return refused(unavailable);
+  if (!prepared) {
+    console.error('[FOCUS] canonical construction produced no handoff', { actId: req.actId });
+    return { ...refused(unavailable), failure: 'handoff_not_prepared' };
+  }
 
   // ── 5 · THE HANDOFF. ⭐ F8 · ONE gesture, ONE canonical turn — not one per
   // member. Generation BEGINS here; the promise is deliberately not awaited yet,
@@ -343,7 +409,8 @@ export async function performFocusCrossing(
   const crossed = await handoff;
   if (!crossed) {
     void generating;
-    return refused(unavailable);
+    console.error('[FOCUS] the response-producing call never began', { actId: req.actId });
+    return { ...refused(unavailable), failure: 'handoff_failed' };
   }
 
   /* ⭐ C3/C6 · ONE HANDOFF HAPPENED, so every member scope it carried is now
@@ -379,5 +446,6 @@ export async function performFocusCrossing(
     boundary,
     participation,
     act: act.kind === 'opened' ? 'opened' : 'continued',
+    failure: null,
   };
 }

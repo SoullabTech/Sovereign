@@ -98,7 +98,26 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing } from '../focusCrossing';
 
 const events: string[] = [];
-const assemble = jest.fn(async () => { events.push('assemble'); return 'the selected paragraph'; });
+
+/**
+ * ⭐ WS-FOCUS-DRAFT-01 MIGRATION. `assemble` (one member, one call, from the
+ * SOURCE table) is retired; the crossing takes ONE snapshot of the current
+ * working draft at one version. Every obligation in this file is unchanged —
+ * only the shape of "the Work was read" is. ⛔ Nothing was weakened: C2's
+ * ordering, C1's singularity and H1's handoff truth all still bind.
+ */
+const draftSnapshot = (version = 37) => ({
+  ok: true as const,
+  snapshot: {
+    draftId: 'dddddddd-0000-4000-8000-000000000001',
+    version,
+    sections: new Map([['sec-1', {
+      id: 'sec-1', position: 0, heading: 'A HEADING',
+      body: 'the selected paragraph', editable: true,
+    }]]),
+  },
+});
+const readDraft = jest.fn(async () => { events.push('read'); return draftSnapshot(); });
 /* FOCUS-PRODUCER-01 made the port two-phase: prepare (construct · adjudicate ·
    render) then generate (the handoff). The receipt is confirmed between them. */
 const prepare = jest.fn(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
@@ -108,7 +127,7 @@ const cognition = jest.fn(() => {
   events.push('handoff');
   return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: true, response: 'MAIA reply' }) };
 });
-const deps = () => ({ assemble, presence: async () => new Set<string>(), prepare, generate: cognition } as never);
+const deps = () => ({ readDraft, presence: async () => new Set<string>(), prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never,
@@ -129,7 +148,8 @@ beforeEach(() => {
   actRows.acts.length = 0; actRows.members.length = 0;
   calls.length = 0; events.length = 0; consentPresent = false;
   receiptMode = 'ok'; confirmFails = false;
-  assemble.mockClear(); cognition.mockClear(); prepare.mockClear();
+  readDraft.mockClear(); cognition.mockClear(); prepare.mockClear();
+  readDraft.mockImplementation(async () => { events.push('read'); return draftSnapshot(); });
   prepare.mockImplementation(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -185,18 +205,18 @@ describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () =>
 });
 
 describe('C2 · ASSEMBLY ORDER — no Work text before may_cross', () => {
-  it('assembles only after the receipt is minted', async () => {
+  it('reads the Work only after the receipt is minted', async () => {
     await performFocusCrossing(req(), deps());
     const receiptIdx = calls.findIndex(c => /INSERT INTO context_disclosure_receipts/.test(c.sql));
     expect(receiptIdx).toBeGreaterThanOrEqual(0);
-    expect(events).toEqual(['assemble', 'prepare', 'handoff']);
-    expect(assemble).toHaveBeenCalledTimes(1);
+    expect(events).toEqual(['read', 'prepare', 'handoff']);
+    expect(readDraft).toHaveBeenCalledTimes(1);
   });
 
   it('⛔ reads nothing when the boundary refuses', async () => {
     receiptMode = 'down';
     const out = await performFocusCrossing(req(), deps());
-    expect(assemble).not.toHaveBeenCalled();
+    expect(readDraft).not.toHaveBeenCalled();
     expect(cognition).not.toHaveBeenCalled();
     expect(out.presentation.state).toBe('did_not_cross');
   });
@@ -213,7 +233,7 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
       events.push('handoff');
       return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: false }) };
     });
-    const out = await performFocusCrossing(req(), ({ assemble, prepare, generate: failing } as never));
+    const out = await performFocusCrossing(req(), ({ readDraft, presence: async () => new Set<string>(), prepare, generate: failing } as never));
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(true);
     expect(out.presentation.state).toBe('crossed_accounted');
     expect(out.response).toBeNull();
@@ -222,7 +242,13 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
 
   it('⛔ never confirms when the route fails before the handoff', async () => {
     const emptyAssemble = jest.fn(async () => null);
-    const out = await performFocusCrossing(req(), ({ assemble: emptyAssemble, prepare, generate: cognition } as never));
+    const out = await performFocusCrossing(req(), ({
+      readDraft: async () => ({ ok: true as const, snapshot: {
+        draftId: 'dddddddd-0000-4000-8000-000000000001', version: 37,
+        sections: new Map(),   /* the authorized section is not in the draft */
+      } }),
+      presence: async () => new Set<string>(), prepare, generate: cognition,
+    } as never));
     expect(cognition).not.toHaveBeenCalled();
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(false);
     expect(out.presentation.state).toBe('did_not_cross');
@@ -243,7 +269,7 @@ describe('C4 · NO SCOPE SUBSTITUTION', () => {
     const out = await performFocusCrossing(req(), deps());
     expect(out.presentation.state).toBe('prior_unresolved');
     expect(cognition).not.toHaveBeenCalled();
-    expect(assemble).not.toHaveBeenCalled();
+    expect(readDraft).not.toHaveBeenCalled();
     expect(out.presentation.actions).not.toContain('try_again');
   });
 

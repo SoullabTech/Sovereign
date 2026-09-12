@@ -13,6 +13,16 @@
  * it, because a field that is validated is still a field that can be believed
  * on a path someone forgets to validate.
  *
+ * ── ⭐ REPOINTED 2026-09-12 — N8 ────────────────────────────────────────────
+ *
+ * This probed `manuscript_sections` / `manuscripts`, which carried the SAME
+ * namespace defect that failed Act 3: the Focus Set addresses
+ * `manuscript_draft_sections`. A presence probe in the wrong namespace answers
+ * "deleted" for every section that exists, which is the most misleading thing
+ * it could say — and it would have said it confidently.
+ *
+ * Its law is unchanged: ids only, no body, no heading, no content expansion.
+ *
  * ── Why this is not a disclosure ───────────────────────────────────────────
  *
  * This reads EXISTENCE and OWNERSHIP. It selects section ids and nothing else:
@@ -37,10 +47,14 @@ export const focusPresence: FocusPresenceProbe = async ({ memberId, workRef, sec
   if (sectionRefs.length === 0) return new Set();
   try {
     // Ownership is part of the read, not a separate check a later edit could drop.
+    /* Ownership is proven through the working draft's own (manuscript_id,
+       member_id) — the same pair `loadEditableSections` and `saveSection` use.
+       ⛔ Still ids only: the join reaches the draft to prove custody, never to
+       read a column that could carry prose. */
     const r = await query<{ id: string }>(
-      `SELECT s.id FROM manuscript_sections s
-         JOIN manuscripts m ON m.id = s.manuscript_id
-        WHERE s.manuscript_id = $1 AND m.user_id = $2 AND s.id = ANY($3::uuid[])`,
+      `SELECT s.id FROM manuscript_draft_sections s
+         JOIN manuscript_working_drafts d ON d.id = s.draft_id
+        WHERE d.manuscript_id = $1 AND d.member_id = $2 AND s.id = ANY($3::uuid[])`,
       [workRef, memberId, sectionRefs],
     );
     return new Set(r.rows.map((x) => x.id));

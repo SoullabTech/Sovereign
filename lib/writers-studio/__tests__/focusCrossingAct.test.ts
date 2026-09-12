@@ -41,9 +41,12 @@ const run = async (sql: string, params: unknown[] = []) => {
       const [actId] = params as string[];
       const existing = (rows.acts as any[]).find((a) => a.act_id === actId);
       if (existing) return { rows: [existing], rowCount: 0 };
+      /* ⭐ WS-FOCUS-DRAFT-01: the act now records WHICH draft and version its
+         bodies came from, so the insert carries two more params. */
       const row = {
         act_id: params[0], member_id: params[1], work_id: params[2],
-        active_member_id: params[3] ?? null, canonical_turn_id: null, completed_at: null,
+        working_draft_id: params[3] ?? null, working_draft_version: params[4] ?? null,
+        active_member_id: params[5] ?? null, canonical_turn_id: null, completed_at: null,
       };
       (rows.acts as any[]).push(row);
       return { rows: [row], rowCount: 1 };
@@ -102,6 +105,9 @@ const storeSrc = strip(fs.readFileSync(path.join(__dirname, '..', 'focusCrossing
 const migration = fs.readFileSync(
   path.join(__dirname, '..', '..', '..', 'database', 'migrations',
     '20260912000001_focus_crossing_acts.sql'), 'utf8');
+const provenanceMigration = fs.readFileSync(
+  path.join(__dirname, '..', '..', '..', 'database', 'migrations',
+    '20260912000002_focus_act_draft_provenance.sql'), 'utf8');
 
 const FIVE = [
   { focusMemberId: 'f1', ordinal: 1, currencyState: 'current' as const, bodyAvailable: true, disclosureReceiptId: 'act-1:f1' },
@@ -113,6 +119,7 @@ const FIVE = [
 
 const open = (over: Record<string, unknown> = {}) => openFocusCrossingAct({
   actId: 'act-1', memberId: 'm-1', workId: 'w-1',
+  workingDraftId: 'dddddddd-0000-4000-8000-000000000001', workingDraftVersion: 37,
   members: FIVE, activeMemberId: 'f2', ...over,
 } as never);
 
@@ -312,9 +319,15 @@ describe('A10 — manuscript prose cannot enter the act record', () => {
    * So these scan COLUMN NAMES and SQL identifiers — the things that can
    * actually hold prose — never the words used to explain why they may not.
    */
-  const declaration = migration.replace(/--.*/g, '');
-  const columnNames = [...declaration.matchAll(/^\s{2,}([a-z_]+)\s+(text|uuid|integer|boolean|timestamptz)/gm)]
-    .map((m) => m[1]);
+  /* ⭐ The act's schema is now TWO migrations: the table, and the draft
+     provenance added after the Act 3 witness. A column list read from only the
+     first would fail the "writes only what is declared" obligation for a column
+     that IS declared — in the other file. */
+  const declaration = (migration + provenanceMigration).replace(/--.*/g, '');
+  const columnNames = [
+    ...declaration.matchAll(/^\s{2,}([a-z_]+)\s+(text|uuid|integer|boolean|timestamptz)/gm),
+    ...declaration.matchAll(/ADD COLUMN IF NOT EXISTS\s+([a-z_]+)\s+(text|uuid|integer|boolean|timestamptz)/g),
+  ].map((m) => m[1]);
 
   it('the schema declares no column that could hold Work text', () => {
     expect(columnNames.length).toBeGreaterThan(8);
@@ -396,6 +409,10 @@ describe('the auditor reconstruction, without consulting chat prose', () => {
     expect(act!.activeMemberId).toBe('f2');
     // one MAIA turn
     expect(act!.canonicalTurnId).toBe('turn-1');
+    /* ⭐ AND WHAT STATE OF THE MANUSCRIPT SHE READ. Without this the record
+       cannot answer "what was this advice about?" after the Work moves on. */
+    expect(act!.workingDraftId).toBe('dddddddd-0000-4000-8000-000000000001');
+    expect(act!.workingDraftVersion).toBe(37);
     // and why the other two could not be read — distinguishably
     expect(act!.members.find((m) => m.focusMemberId === 'f4')!.currencyState).toBe('unverified');
     expect(act!.members.find((m) => m.focusMemberId === 'f5')!.currencyState).toBe('unavailable');

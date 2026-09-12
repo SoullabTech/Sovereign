@@ -72,7 +72,26 @@ const CODE = (rel: string) =>
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const SVC = () => CODE('lib/sovereign/maiaService.ts');
 
-const assemble = jest.fn(async () => 'the selected paragraph');
+
+/**
+ * ⭐ WS-FOCUS-DRAFT-01 MIGRATION. `assemble` (one member, one call, from the
+ * SOURCE table) is retired; the crossing takes ONE snapshot of the current
+ * working draft at one version. Every obligation in this file is unchanged —
+ * only the shape of "the Work was read" is. ⛔ Nothing was weakened: C2's
+ * ordering, C1's singularity and H1's handoff truth all still bind.
+ */
+const draftSnapshot = (version = 37) => ({
+  ok: true as const,
+  snapshot: {
+    draftId: 'dddddddd-0000-4000-8000-000000000001',
+    version,
+    sections: new Map([['sec-1', {
+      id: 'sec-1', position: 0, heading: 'A HEADING',
+      body: 'the selected paragraph', editable: true,
+    }]]),
+  },
+});
+const readDraft = jest.fn(async () => draftSnapshot());
 const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as never));
 
 const req = (over: Record<string, unknown> = {}) => ({
@@ -99,7 +118,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: Promise.resolve(true),
       result: Promise.resolve({ ok: true, response: 'reply' }),
     }));
-    const out = await performFocusCrossing(req(), { assemble, prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(1);
     expect(out.presentation.state).toBe('crossed_accounted');
   });
@@ -111,7 +130,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: 'an answer produced without the Focus' }),
     }));
-    const out = await performFocusCrossing(req(), { assemble, prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(0);
     expect(out.presentation.state).toBe('did_not_cross');
     // ⭐ and the writer is NOT handed the bypass answer as though it were a Focus reply
@@ -128,7 +147,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: new Promise<boolean>(r => { release = r; }),
       result: Promise.resolve({ ok: true, response: 'reply' }),
     }));
-    const pending = performFocusCrossing(req(), { assemble, prepare, generate } as never);
+    const pending = performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     for (let i = 0; i < 20; i++) await Promise.resolve();
     expect(generate).toHaveBeenCalled();          // the call returned…
     expect(confirms()).toHaveLength(0);           // …and nothing was confirmed
@@ -172,7 +191,7 @@ describe('H2 · NO RESPONSE BYPASS', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: "Let's take the safest next step together." }),
     }));
-    const out = await performFocusCrossing(req(), { assemble, prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(0);
     expect(out.response).toBeNull();
   });
@@ -182,7 +201,7 @@ describe('H2 · NO RESPONSE BYPASS', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: 'bypass answer' }),
     }));
-    const out = await performFocusCrossing(req(), { assemble, prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     // The defect this gate exists for: a crossed receipt beside an answer the
     // Work never reached. Asserting the defective outcome must fail.
     expect(() => expect(out.presentation.state).toBe('crossed_accounted')).toThrow();
@@ -208,7 +227,7 @@ describe('H3 · POSTURE IDENTITY — one turn, one privacy posture', () => {
   it('the crossing carries the request posture into generation', async () => {
     const generate = jest.fn(() => ({ handoff: Promise.resolve(true), result: Promise.resolve({ ok: true }) }));
     const sanctuary = TurnPosture.resolve({ sanctuary: true });
-    await performFocusCrossing(req({ posture: sanctuary }), { assemble, prepare, generate } as never);
+    await performFocusCrossing(req({ posture: sanctuary }), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
     expect((generate as jest.Mock).mock.calls[0][1].posture).toBe(sanctuary);
     expect((prepare as jest.Mock).mock.calls.at(-1)![0].sanctuary).toBe(true);
   });

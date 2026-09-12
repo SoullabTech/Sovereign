@@ -79,6 +79,18 @@ const participationSrc = lib('focusParticipation.ts');
 
 const identity = async () => resolveCanonicalIdentity({} as never);
 
+/** One snapshot of the current working draft, holding exactly these sections. */
+const draftFor = (ids: string[]) => ({
+  ok: true as const,
+  snapshot: {
+    draftId: 'dddddddd-0000-4000-8000-000000000001',
+    version: 37,
+    sections: new Map(ids.map((id, i) => [id, {
+      id, position: i, heading: 'A HEADING', body: `the body of ${id}`, editable: true,
+    }])),
+  },
+});
+
 /** Five declared places; three of them lawfully readable. */
 const FIVE: FocusParticipationMember[] = [
   { focusMemberId: 'f1', ordinal: 1, sectionRef: 's45', status: 'readable', active: false, bodyAvailable: true, content: 'The fire was already lit.' },
@@ -320,7 +332,7 @@ describe('F8 — one Focus gesture generates ONE canonical turn', () => {
     let generated = 0;
     await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
-      assemble: async () => null,
+      readDraft: async () => ({ ok: false as const, failure: 'no_draft' as const }),
       prepare: async () => { prepared += 1; return null; },
       generate: () => { generated += 1; return { handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }; },
     });
@@ -367,7 +379,7 @@ describe('F10 — whole_work substitution for a distributed set fails', () => {
 describe('F11 — no receipt crosses before every member is resolved', () => {
   it('confirmation happens only after the one handoff', () => {
     const iEstablish = crossingSrc.indexOf('establishDisclosureBoundary');
-    const iAssemble = crossingSrc.indexOf('deps.assemble');
+    const iAssemble = crossingSrc.indexOf('deps.readDraft');
     const iHandoff = crossingSrc.indexOf('await handoff');
     /* ⛔ The IMPORT of confirmDisclosureCrossed is not its call site. Ordering
        is a fact about the body, so the search starts at the function. */
@@ -385,7 +397,7 @@ describe('F11 — no receipt crosses before every member is resolved', () => {
     const confirmed: string[] = [];
     const out = await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
-      assemble: async () => { confirmed.push('assembled'); return 'text'; },
+      readDraft: async () => { confirmed.push('read'); return draftFor(['sec-1']); },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(true), result: Promise.resolve({ ok: true }) }),
     });
@@ -399,7 +411,7 @@ describe('F12 — a member not declared in the Focus Set cannot appear in cognit
     const asked: string[] = [];
     await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
-      assemble: async ({ sectionRef }) => { asked.push(String(sectionRef)); return null; },
+      readDraft: async ({ sectionRefs }) => { asked.push(...sectionRefs); return draftFor([]); },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
     });
@@ -443,7 +455,7 @@ describe('P13 — the client is not authoritative about why a member is withheld
     let seen: { members: { sectionRef: string; status: string }[] } | null = null;
     await performFocusCrossing(withheldReq(), {
       presence: async () => new Set(presentIds),
-      assemble: async () => 'the readable body',
+      readDraft: async ({ sectionRefs }) => draftFor(sectionRefs as string[]),
       prepare: async (input) => {
         seen = {
           members: input.participation.members.map((m) => ({ sectionRef: m.sectionRef, status: m.status })),
@@ -491,7 +503,7 @@ describe('P13 — the client is not authoritative about why a member is withheld
     const probed: string[][] = [];
     await performFocusCrossing(withheldReq(), {
       presence: async ({ sectionRefs }) => { probed.push([...sectionRefs]); return new Set(); },
-      assemble: async () => 'body',
+      readDraft: async ({ sectionRefs }) => draftFor(sectionRefs as string[]),
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
     });

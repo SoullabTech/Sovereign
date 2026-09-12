@@ -102,7 +102,22 @@ export interface EditableSection {
 export async function loadEditableSections(
   manuscriptId: string,
   memberId: string,
-): Promise<{ sections: EditableSection[]; version: number } | null> {
+  /**
+   * ⭐ WS-FOCUS-DRAFT-01 — load only these draft-section ids.
+   *
+   * Added so the Focus crossing can read EXACTLY the sections a disclosure
+   * boundary authorized, rather than the whole draft, WITHOUT forking the body
+   * projection. `splitStoredSection` is the one authority on what the member's
+   * editable body is, and a second implementation of it beside this one would
+   * shift passage offsets by the heading prefix — silently, and only for
+   * sections whose heading is present.
+   *
+   *   MAIA reads exactly the same current section body the writer is seeing.
+   *
+   * ⛔ Omitting it is the existing whole-draft behaviour, unchanged.
+   */
+  onlyIds?: readonly string[],
+): Promise<{ draftId: string; sections: EditableSection[]; version: number } | null> {
   const { query } = await import('@/lib/db/postgres');
   const draft = await query<{ id: string; version: string; section_addressable_at: Date | null }>(
     `SELECT id, version, section_addressable_at FROM manuscript_working_drafts
@@ -113,9 +128,13 @@ export async function loadEditableSections(
     `SELECT s.id, s.position, s.text, ms.heading
        FROM manuscript_draft_sections s
        LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
-      WHERE s.draft_id = $1 ORDER BY s.position ASC`, [draft.rows[0].id]);
+      WHERE s.draft_id = $1
+        AND ($2::uuid[] IS NULL OR s.id = ANY($2::uuid[]))
+      ORDER BY s.position ASC`,
+    [draft.rows[0].id, onlyIds && onlyIds.length ? [...onlyIds] : null]);
 
   return {
+    draftId: draft.rows[0].id,
     version: Number(draft.rows[0].version),
     sections: rows.rows.map((r) => {
       const split = splitStoredSection(r.text, r.heading);

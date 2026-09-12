@@ -42,6 +42,17 @@ export interface FocusCrossingActRecord {
   readonly actId: string;
   readonly memberId: string;
   readonly workId: string;
+  /**
+   * ⭐ WHAT EXACT STATE OF THE MANUSCRIPT WAS MAIA LOOKING AT?
+   *
+   * Founder ruling 2026-09-12. Content-free provenance: the working draft and
+   * the version its bodies came from. This is what lets a later
+   * RevisionProposal refuse itself — *a proposal built against version 37 may
+   * not be silently applied to version 38.* Nullable only for acts recorded
+   * before this was added.
+   */
+  readonly workingDraftId: string | null;
+  readonly workingDraftVersion: number | null;
   readonly activeMemberId: string | null;
   readonly canonicalTurnId: string | null;
   readonly members: FocusActMember[];
@@ -51,6 +62,8 @@ export interface OpenFocusActInput {
   readonly actId: string;
   readonly memberId: string;
   readonly workId: string;
+  readonly workingDraftId: string;
+  readonly workingDraftVersion: number;
   readonly members: readonly FocusActMember[];
   readonly activeMemberId: string | null;
 }
@@ -112,6 +125,14 @@ function impossible(input: OpenFocusActInput): string | null {
 function differsFrom(stored: FocusCrossingActRecord, input: OpenFocusActInput): string | null {
   if (stored.memberId !== input.memberId) return 'it belongs to a different writer';
   if (stored.workId !== input.workId) return 'it named a different work';
+  /* ⭐ A retry that read a DIFFERENT draft version is not the same act: MAIA
+     would be reasoning from prose the first attempt never saw. */
+  if (stored.workingDraftId !== null && stored.workingDraftId !== input.workingDraftId) {
+    return 'it read a different working draft';
+  }
+  if (stored.workingDraftVersion !== null && stored.workingDraftVersion !== input.workingDraftVersion) {
+    return 'the work has changed since that act — a new version is a new act';
+  }
   if (stored.activeMemberId !== input.activeMemberId) {
     /* A4 · choosing a different place to work on is a NEW writer act. */
     return 'it named a different active target — a new choice is a new act';
@@ -130,9 +151,11 @@ function differsFrom(stored: FocusCrossingActRecord, input: OpenFocusActInput): 
 export async function readFocusCrossingAct(actId: string): Promise<FocusCrossingActRecord | null> {
   const a = await query<{
     act_id: string; member_id: string; work_id: string;
+    working_draft_id: string | null; working_draft_version: string | null;
     active_member_id: string | null; canonical_turn_id: string | null;
   }>(
-    `SELECT act_id, member_id, work_id, active_member_id, canonical_turn_id
+    `SELECT act_id, member_id, work_id, working_draft_id, working_draft_version,
+            active_member_id, canonical_turn_id
        FROM focus_crossing_acts WHERE act_id = $1`, [actId]);
   const row = a.rows[0];
   if (!row) return null;
@@ -146,6 +169,8 @@ export async function readFocusCrossingAct(actId: string): Promise<FocusCrossing
 
   return {
     actId: row.act_id, memberId: row.member_id, workId: row.work_id,
+    workingDraftId: row.working_draft_id,
+    workingDraftVersion: row.working_draft_version === null ? null : Number(row.working_draft_version),
     activeMemberId: row.active_member_id, canonicalTurnId: row.canonical_turn_id,
     members: m.rows.map((r) => ({
       focusMemberId: r.focus_member_id, ordinal: r.ordinal,
@@ -172,11 +197,13 @@ export async function openFocusCrossingAct(input: OpenFocusActInput): Promise<Op
        the single most misleading state this record could reach. */
     const opened = await transaction(async (tx) => {
       const ins = await tx.query(
-        `INSERT INTO focus_crossing_acts (act_id, member_id, work_id, active_member_id)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO focus_crossing_acts
+           (act_id, member_id, work_id, working_draft_id, working_draft_version, active_member_id)
+         VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (act_id) DO NOTHING
          RETURNING act_id`,
-        [input.actId, input.memberId, input.workId, input.activeMemberId],
+        [input.actId, input.memberId, input.workId,
+         input.workingDraftId, input.workingDraftVersion, input.activeMemberId],
       );
       if (ins.rowCount === 0) return false;
       for (const m of input.members) {
@@ -204,6 +231,8 @@ export async function openFocusCrossingAct(input: OpenFocusActInput): Promise<Op
       kind: 'opened',
       act: {
         actId: input.actId, memberId: input.memberId, workId: input.workId,
+        workingDraftId: input.workingDraftId,
+        workingDraftVersion: input.workingDraftVersion,
         activeMemberId: input.activeMemberId, canonicalTurnId: null,
         members: input.members.map((m) => ({ ...m })),
       },

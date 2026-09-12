@@ -20,7 +20,7 @@ import { randomUUID } from 'crypto';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing, type FocusMemberScope } from '@/lib/writers-studio/focusCrossing';
-import { assembleFocus } from '@/lib/writers-studio/assembleFocus';
+import { readCurrentDraft } from '@/lib/writers-studio/currentDraftRead';
 import { focusPresence } from '@/lib/writers-studio/focusPresence';
 import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       gesture, ask,
     },
     {
-      assemble: assembleFocus, presence: focusPresence,
+      readDraft: readCurrentDraft, presence: focusPresence,
       prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration,
     },
   );
