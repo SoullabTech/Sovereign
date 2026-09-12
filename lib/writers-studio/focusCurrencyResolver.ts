@@ -25,27 +25,19 @@
  * and no model.
  */
 
-import { loadLiveWork } from '@/lib/manuscript/development/capture';
 import { loadFrozenDevelopmentalReading } from '@/lib/manuscript/ask/frozenDevelopmentalReading';
+import { readCurrentDraft } from './currentDraftRead';
 import { memberRef } from '@/lib/privacy/memberRef';
 import { focusAnchorsFor, type FocusAnchor } from '@/lib/writersStudio/focusAnchors';
 import { resolveFocusCurrency, type FocusCurrency } from './focusCurrency';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 
 export interface CurrencyRequest {
   memberId: string;
   workRef: string;
   readingId: string;
   observationKey: string;
-  members: readonly { focusMemberId: string; sectionRef: string; range?: { start: number; end: number } }[];
-}
-
-/** The current working draft's version — the clock these answers are true of. */
-async function draftVersion(workRef: string, memberId: string): Promise<number | null> {
-  const { query } = await import('@/lib/db/postgres');
-  const r = await query<{ version: string }>(
-    `SELECT version FROM manuscript_working_drafts
-      WHERE manuscript_id = $1 AND member_id = $2`, [workRef, memberId]);
-  return r.rows[0] ? Number(r.rows[0].version) : null;
+  members: readonly { focusMemberId: string; sectionRef: string; range?: SpacedRange }[];
 }
 
 export async function focusCurrencyResolver(req: CurrencyRequest): Promise<FocusCurrency> {
@@ -76,7 +68,11 @@ export async function focusCurrencyResolver(req: CurrencyRequest): Promise<Focus
       const match = declared.find((a) => (
         a.sectionId === m.sectionRef
         && (a.kind === 'passage'
-          ? !!m.range && a.range.start === m.range.start && a.range.end === m.range.end
+          /* ⭐ The SPACE is part of the match. The same two numbers in another
+             space name a different span, and treating them as equal would be
+             FOCUS-W3 with extra steps. */
+          ? !!m.range && a.range.space === m.range.space
+            && a.range.start === m.range.start && a.range.end === m.range.end
           : !m.range)
       ));
       /* ⛔ A member the observation did not declare gets no currency of its own
@@ -85,13 +81,20 @@ export async function focusCurrencyResolver(req: CurrencyRequest): Promise<Focus
       if (match) anchors.push({ ...match, focusMemberId: m.focusMemberId });
     }
 
-    const [now, version] = await Promise.all([
-      loadLiveWork(req.workRef, req.memberId),
-      draftVersion(req.workRef, req.memberId),
-    ]);
+    /* ⭐⭐ ONE SNAPSHOT, THE SAME READER THE ASK USES. Currency and disclosure
+       cannot disagree about what the Work says if they read it the same way —
+       and the version comes back with it, so the answer names the state it
+       actually inspected rather than a version fetched separately. */
+    const snapshot = await readCurrentDraft({
+      memberId: req.memberId, workRef: req.workRef,
+      sectionRefs: req.members.map((m) => m.sectionRef),
+    });
 
     const resolved = resolveFocusCurrency({
-      anchors, readState: reading.readState, now, draftVersion: version,
+      anchors,
+      readState: reading.readState,
+      sections: snapshot.ok ? snapshot.snapshot.sections : null,
+      draftVersion: snapshot.ok ? snapshot.snapshot.version : null,
     });
 
     /* Members the observation never declared are carried through as unknown, so

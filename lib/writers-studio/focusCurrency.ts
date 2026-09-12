@@ -61,8 +61,9 @@
 
 import { sha256 } from '@/lib/manuscript/development/readState';
 import type { DevelopmentalReadState } from '@/lib/manuscript/development/readState';
-import type { LiveWork } from '@/lib/manuscript/development/resolve';
+import type { EditableSection } from '@/lib/manuscript/sections/saveSection';
 import type { FocusAnchor } from '@/lib/writersStudio/focusAnchors';
+import { passageIsProjectable } from './focusPassage';
 
 export type MemberCurrency =
   /** MAIA can be given this place. */
@@ -97,8 +98,12 @@ export interface CurrencyInput {
   readonly anchors: readonly (FocusAnchor & { focusMemberId: string })[];
   /** The reading the anchors came from. Null when it could not be loaded. */
   readonly readState: DevelopmentalReadState | null;
-  /** The Work as it stands now. `sections: null` means it could not be measured. */
-  readonly now: LiveWork;
+  /**
+   * The current sections, by id — the SAME snapshot the Ask will read bodies
+   * from. ⭐ Not a second load: currency and disclosure must not be able to
+   * disagree about what the Work says. Null means it could not be measured.
+   */
+  readonly sections: ReadonlyMap<string, EditableSection> | null;
   readonly draftVersion: number | null;
 }
 
@@ -108,12 +113,12 @@ export interface CurrencyInput {
  * in it is a unit-test failure rather than a 500 a member discovers.
  */
 export function resolveFocusCurrency(input: CurrencyInput): FocusCurrency {
-  const { anchors, readState, now, draftVersion } = input;
+  const { anchors, readState, sections, draftVersion } = input;
 
   /* ⛔ Nothing measurable → nothing claimed. `not_yet_known` for every member,
      and NO version: a resolution that names a version it did not inspect would
      be the false-currency claim in a new costume. */
-  if (now.sections === null || readState === null || draftVersion === null) {
+  if (sections === null || readState === null || draftVersion === null) {
     return {
       members: anchors.map((a) => ({
         focusMemberId: a.focusMemberId, sectionRef: a.sectionId, currency: 'not_yet_known' as const,
@@ -122,14 +127,12 @@ export function resolveFocusCurrency(input: CurrencyInput): FocusCurrency {
     };
   }
 
-  const live = new Map(now.sections.map((s) => [s.id, s.text]));
-
   return {
     resolvedAgainstDraftVersion: draftVersion,
     members: anchors.map((a) => ({
       focusMemberId: a.focusMemberId,
       sectionRef: a.sectionId,
-      currency: currencyOf(a, readState, live),
+      currency: currencyOf(a, readState, sections),
     })),
   };
 }
@@ -137,10 +140,11 @@ export function resolveFocusCurrency(input: CurrencyInput): FocusCurrency {
 function currencyOf(
   anchor: FocusAnchor,
   readState: DevelopmentalReadState,
-  live: ReadonlyMap<string, string>,
+  live: ReadonlyMap<string, EditableSection>,
 ): MemberCurrency {
-  const text = live.get(anchor.sectionId);
-  if (text === undefined) return 'unavailable';
+  const section = live.get(anchor.sectionId);
+  if (section === undefined) return 'unavailable';
+  const text = section.storedText;
 
   /* ⭐ A WHOLE-SECTION MEMBER NEEDS NO DIGEST. It carries no historical
      character coordinates, so there is nothing for a text change to invalidate:
@@ -159,7 +163,29 @@ function currencyOf(
      would differ for every section that has a heading, and every passage member
      would read `needs_confirmation` forever. The algorithm and the
      representation are both reused, never recreated. */
-  return sha256(text) === frozen.digest ? 'ready' : 'needs_confirmation';
+  if (sha256(text) !== frozen.digest) return 'needs_confirmation';
+
+  /**
+   * ⭐⭐ READINESS IS TWO THINGS, AND THE WITNESS PROVED WHY.
+   *
+   *   CURRENCY         the historical anchor still corresponds to the current
+   *                    section state — the digest above.
+   *   PROJECTABILITY   those coordinates can be faithfully mapped into the body
+   *                    MAIA will actually read.
+   *
+   * The preflight answered only the first and called §56 ready; the crossing
+   * answered the second and refused it. `panel: 5 ready · actual: 4 read`.
+   *
+   * ⛔ SO THE SAME RESOLVER ANSWERS BOTH, HERE. If the Ask would reject this
+   * passage on an unchanged snapshot, the preflight must not advertise it.
+   *
+   * ⛔ And an unprojectable passage is NOT `unavailable`: the section is plainly
+   * still in the Work. It needs the writer's confirmation, which is exactly
+   * what `needs_confirmation` means.
+   */
+  return passageIsProjectable({
+    storedText: text, heading: section.heading, range: anchor.range,
+  }) ? 'ready' : 'needs_confirmation';
 }
 
 /** Whether a resolution still describes the Work. ⛔ A stale one authorizes nothing. */

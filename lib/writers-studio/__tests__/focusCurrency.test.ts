@@ -7,6 +7,7 @@ import {
 } from '../focusCurrency';
 import type { DevelopmentalReadState } from '@/lib/manuscript/development/readState';
 import type { FocusAnchor } from '@/lib/writersStudio/focusAnchors';
+import type { EditableSection } from '@/lib/manuscript/sections/saveSection';
 
 /**
  * WS-FOCUS-CURRENCY-01 — C1–C14, predeclared by the founder BEFORE
@@ -68,23 +69,56 @@ const readState = (): DevelopmentalReadState => ({
   coverage: {} as never, inputFingerprint: 'f',
 } as unknown as DevelopmentalReadState);
 
+/**
+ * ⭐ THE PASSAGE ANCHORS NOW BEGIN AT THE BODY, and that migration is itself the
+ * finding. They used to be 0–5 — offsets that, read as STORED coordinates,
+ * begin inside the heading. Before FOCUS-W3 that was invisible, because the
+ * numbers were applied to the body regardless. Under the repair such an anchor
+ * resolves `needs_confirmation`, which is correct and is not what C3 is asking
+ * about. So the fixture names spans of the member's prose:
+ *
+ *   S1  prefix 20 → 20–25    S2  prefix 23 → 23–28
+ */
 const anchors = (): (FocusAnchor & { focusMemberId: string })[] => [
-  { focusMemberId: 'f1', kind: 'passage', sectionId: S1, range: { start: 0, end: 5 } },
-  { focusMemberId: 'f2', kind: 'passage', sectionId: S2, range: { start: 0, end: 5 } },
+  { focusMemberId: 'f1', kind: 'passage', sectionId: S1, range: { space: 'stored_section_text', start: 20, end: 25 } },
+  { focusMemberId: 'f2', kind: 'passage', sectionId: S2, range: { space: 'stored_section_text', start: 23, end: 28 } },
   { focusMemberId: 'f3', kind: 'section', sectionId: S3 },
   { focusMemberId: 'f4', kind: 'section', sectionId: S4 },
 ];
 
-/** The Work NOW: S1 untouched, S2 and S3 edited, S4 deleted. */
-const nowSections = [
-  { id: S1, text: AS_READ[S1] },
-  { id: S2, text: 'THE CAMPFIRE METAPHOR\n\nSomeone had banked it, carefully.' },
-  { id: S3, text: 'SUSTAINING THE FIRE\n\nBy dawn the stones had gone cold.' },
-];
+/**
+ * The Work NOW: S1 untouched, S2 and S3 edited, S4 deleted.
+ *
+ * ⭐ SUPERSEDED IN PLACE, WS-FOCUS-PASSAGE-01. This harness used to hand the
+ * resolver a `LiveWork` — `{ sections: [{id, text}], structure }` — loaded
+ * separately from the one the Ask would read. FOCUS-W3 closed that seam: the
+ * resolver now takes the SAME `EditableSection` snapshot the crossing reads
+ * bodies from, so currency and disclosure cannot disagree about what the Work
+ * says. The fixture is migrated rather than deleted: the cases below are the
+ * same cases, asked of the shape that now exists.
+ */
+const NOW: Record<string, string> = {
+  [S1]: AS_READ[S1],
+  [S2]: 'THE CAMPFIRE METAPHOR\n\nSomeone had banked it, carefully.',
+  [S3]: 'SUSTAINING THE FIRE\n\nBy dawn the stones had gone cold.',
+};
+
+const nowSections = (): ReadonlyMap<string, EditableSection> => new Map(
+  Object.entries(NOW).map(([id, text], i) => {
+    const at = text.indexOf('\n\n');
+    return [id, {
+      id, position: i + 1,
+      heading: text.slice(0, at),
+      storedText: text,
+      body: text.slice(at + 2),
+      editable: true,
+    } satisfies EditableSection];
+  }),
+);
 
 const resolve = (over: Partial<CurrencyInput> = {}) => resolveFocusCurrency({
   anchors: anchors(), readState: readState(),
-  now: { sections: nowSections, structure: null }, draftVersion: 37, ...over,
+  sections: nowSections(), draftVersion: 37, ...over,
 });
 const currencyOf = (r: ReturnType<typeof resolve>, id: string) =>
   r.members.find((m) => m.focusMemberId === id)!.currency;
@@ -130,9 +164,14 @@ describe('C2 — the exact digest algorithm and representation are reused', () =
        read `needs_confirmation` forever. */
     const withHeading = resolve();
     expect(currencyOf(withHeading, 'f1')).toBe('ready');
+    const bodyOnly = 'The fire was already lit.';
     const hashedBodyInstead = resolveFocusCurrency({
       anchors: anchors(), readState: readState(), draftVersion: 37,
-      now: { sections: [{ id: S1, text: 'The fire was already lit.' }], structure: null },
+      /* The same section as the Work holds it, minus the heading prefix: what
+         a digest over the BODY would have been taken across. */
+      sections: new Map([[S1, {
+        id: S1, position: 1, heading: null, storedText: bodyOnly, body: bodyOnly, editable: true,
+      } satisfies EditableSection]]),
     });
     expect(currencyOf(hashedBodyInstead, 'f1')).toBe('needs_confirmation');
   });
@@ -182,7 +221,7 @@ describe('C6 — an absent draft section is unavailable', () => {
 
 describe('C7 — a resolution failure is never reported as absence', () => {
   for (const [name, over] of [
-    ['unmeasurable Work', { now: { sections: null, structure: null } }],
+    ['unmeasurable Work', { sections: null }],
     ['no reading', { readState: null }],
     ['no draft version', { draftVersion: null }],
   ] as const) {
@@ -278,7 +317,7 @@ describe('C11 — a stale resolution authorizes nothing', () => {
   });
 
   it('an unresolved currency describes no version at all', () => {
-    const r = resolve({ now: { sections: null, structure: null } });
+    const r = resolve({ sections: null });
     expect(currencyStillDescribes(r, 37)).toBe(false);
     expect(currencyStillDescribes(r, null)).toBe(false);
   });

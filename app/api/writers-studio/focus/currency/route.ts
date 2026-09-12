@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { focusCurrencyResolver } from '@/lib/writers-studio/focusCurrencyResolver';
+import { spacedRange, type SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,19 +57,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'at least one focus member is required' }, { status: 400 });
   }
 
-  const parsed: { focusMemberId: string; sectionRef: string; range?: { start: number; end: number } }[] = [];
+  const parsed: { focusMemberId: string; sectionRef: string; range?: SpacedRange }[] = [];
   for (const m of scopes) {
     if (!m || typeof m !== 'object') break;
     const { focusMemberId, sectionRef, range } = m as Record<string, unknown>;
     if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
     parsed.push({
       focusMemberId, sectionRef,
-      ...(range && typeof range === 'object'
-        ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
-        : {}),
+      ...(range === undefined || range === null ? {} : { range: spacedRange(range) as never }),
     });
   }
-  if (parsed.length !== scopes.length) {
+  /* ⛔ R9 · same law as the crossing: a range with no recognised space is
+     refused here too, so the preflight cannot answer about a span it cannot
+     locate. */
+  if (parsed.length !== scopes.length || parsed.some((m) => m.range === null)) {
     return NextResponse.json({ error: 'a focus member could not be parsed' }, { status: 400 });
   }
 

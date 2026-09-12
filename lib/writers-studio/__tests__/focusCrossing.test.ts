@@ -113,6 +113,9 @@ const draftSnapshot = (version = 37) => ({
     version,
     sections: new Map([['sec-1', {
       id: 'sec-1', position: 0, heading: 'A HEADING',
+      /* ⭐ WS-FOCUS-PASSAGE-01 — the STORED representation, which is what the
+         passage resolver translates FROM. `body` is the projection of it. */
+      storedText: 'A HEADING\n\nthe selected paragraph',
       body: 'the selected paragraph', editable: true,
     }]]),
   },
@@ -147,7 +150,10 @@ const req = (over: Record<string, unknown> = {}) => ({
      tested. ⛔ No obligation below was weakened; only the shape of "where the
      writer is looking" changed, from one scope to a set of one. */
   actId: 'act-1', workRef: 'work-1', readingId: 'r-1', observationKey: 'o1',
-  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', range: { start: 0, end: 10 } }],
+  /* ⭐ Stored coordinates — prefix 11 (`A HEADING` + `\n\n`) — so this names
+     body 0–10, `the select`. Before FOCUS-W3 the same member was written 0–10
+     and silently meant something else. */
+  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', range: { space: 'stored_section_text', start: 11, end: 21 } }],
   activeMemberId: null, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
 });

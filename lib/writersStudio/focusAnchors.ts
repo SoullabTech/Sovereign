@@ -31,7 +31,8 @@
  * conversion's honesty is adjudicated. Nothing here converts anything.
  */
 
-import type { CodePointRange, EvidenceRef } from '../manuscript/development/evidenceRef';
+import type { EvidenceRef } from '../manuscript/development/evidenceRef';
+import type { SpacedRange } from '../manuscript/sections/coordinateSpace';
 
 /**
  * One place a Focus Set member will stand. Section-addressed by construction:
@@ -39,10 +40,14 @@ import type { CodePointRange, EvidenceRef } from '../manuscript/development/evid
  */
 export type FocusAnchor =
   | { kind: 'section'; sectionId: string }
-  | { kind: 'passage'; sectionId: string; range: CodePointRange };
+  | { kind: 'passage'; sectionId: string; range: SpacedRange };
 
 const keyOf = (a: FocusAnchor): string =>
-  a.kind === 'section' ? `s:${a.sectionId}` : `p:${a.sectionId}:${a.range.start}-${a.range.end}`;
+  a.kind === 'section'
+    ? `s:${a.sectionId}`
+    /* ⭐ The space is part of the identity: the same numbers in two spaces are
+       two different places, and deduplicating them together would merge them. */
+    : `p:${a.sectionId}:${a.range.space}:${a.range.start}-${a.range.end}`;
 
 /**
  * The anchors an observation declared, in the order it declared them.
@@ -66,7 +71,22 @@ export function focusAnchorsFor(refs: readonly EvidenceRef[]): FocusAnchor[] {
         push({ kind: 'section', sectionId: ref.sectionId });
         break;
       case 'passage':
-        push({ kind: 'passage', sectionId: ref.sectionId, range: { ...ref.range } });
+        /**
+         * ⭐⭐ THE SPACE IS STAMPED HERE, because this is where the knowledge is.
+         *
+         * `PassageRef.range` is documented as code points "RELATIVE TO THE
+         * SECTION AS READ" — the STORED text, heading prefix included. That
+         * fact lives in the evidence contract and nowhere downstream, so the
+         * lift out of evidence is the one honest place to record it.
+         *
+         * ⛔ FOCUS-W3 happened because this range travelled as a bare
+         * `{start,end}` and was applied to the projected body. An offset is
+         * meaningless without its text; from here it carries its text with it.
+         */
+        push({
+          kind: 'passage', sectionId: ref.sectionId,
+          range: { space: 'stored_section_text', start: ref.range.start, end: ref.range.end },
+        });
         break;
       /* A run names the sequence from first to last AS READ. Each named id is a
          declared place; the ids BETWEEN them are not named and are not added —

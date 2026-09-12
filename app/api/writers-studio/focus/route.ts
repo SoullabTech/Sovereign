@@ -23,6 +23,7 @@ import { performFocusCrossing, type FocusMemberScope } from '@/lib/writers-studi
 import { readCurrentDraft } from '@/lib/writers-studio/currentDraftRead';
 import { focusCurrencyResolver } from '@/lib/writers-studio/focusCurrencyResolver';
 import { focusPresence } from '@/lib/writers-studio/focusPresence';
+import { spacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
 export const dynamic = 'force-dynamic';
@@ -104,12 +105,12 @@ export async function POST(request: NextRequest) {
     if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
     parsed.push({
       focusMemberId, sectionRef,
-      ...(range && typeof range === 'object'
-        ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
-        : {}),
+      ...(range === undefined || range === null ? {} : { range: spacedRange(range) as never }),
     });
   }
-  if (parsed.length !== scopes.length) {
+  /* ⛔ R9 · A passage whose range does not say what text its offsets address is
+     refused, never assumed into a space. Assuming one is FOCUS-W3. */
+  if (parsed.length !== scopes.length || parsed.some((m) => m.range === null)) {
     return NextResponse.json({ error: 'a focus member could not be parsed' }, { status: 400 });
   }
   if (activeMemberId !== null && activeMemberId !== undefined && typeof activeMemberId !== 'string') {

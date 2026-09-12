@@ -46,8 +46,9 @@
  * by a separate check a later edit could drop.
  */
 
-import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 import { loadEditableSections, type EditableSection } from '@/lib/manuscript/sections/saveSection';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
+import { resolveFocusPassage } from './focusPassage';
 import { memberRef } from '@/lib/privacy/memberRef';
 
 /**
@@ -73,8 +74,24 @@ export type DraftReadFailure =
   | 'section_not_found'
   /** The section is present but this cut cannot project its body. */
   | 'section_not_projectable'
-  /** The passage range does not fit the current body. */
+  /** The passage range does not fit the current body, in its own space. */
   | 'range_out_of_bounds'
+  /**
+   * ⭐ The range begins inside the heading prefix, so it names no span of the
+   * member's body.
+   *
+   * ⛔ KEPT DISTINCT FROM `range_out_of_bounds` DELIBERATELY. The first draft
+   * of this repair folded the two together — both mean "no body" — and that is
+   * the conflation this project has now been bitten by twice: FOCUS-W2's
+   * `currency_state` cannot tell "the section is gone" from "the body could not
+   * be read", and the terminal-cognition failure of 2026-09-10 surfaced as the
+   * single word `unreachable` with its cause discarded. An anchor that starts
+   * inside its heading is a different fact about the evidence than one that
+   * runs off the end of the prose, and the two want different repairs.
+   */
+  | 'range_precedes_body'
+  /** ⭐ R9/R13 · the range did not say, or could not say, what text it addresses. */
+  | 'coordinate_space_unusable'
   /** The read itself threw. ⛔ Distinct from every case above. */
   | 'read_failed';
 
@@ -151,27 +168,42 @@ export type MemberBody =
 export function bodyOfMember(
   snapshot: DraftSnapshot,
   sectionRef: string,
-  range?: { start: number; end: number },
+  range?: SpacedRange,
 ): MemberBody {
   const section = snapshot.sections.get(sectionRef);
   if (!section) return { ok: false, failure: 'section_not_found' };
-  /* ⛔ A section this cut cannot split is returned WHOLE and read-only by the
-     writing surface. Offering it as Focus content would mean MAIA reading the
-     heading prefix as prose, and a passage range measured against the wrong
-     string. The writer sees it; MAIA does not get it as a body. */
-  if (!section.editable) return { ok: false, failure: 'section_not_projectable' };
 
   if (!range) {
+    /* ⛔ A section this cut cannot split is returned WHOLE and read-only by the
+       writing surface. Offering it as Focus content would mean MAIA reading the
+       heading prefix as prose. The writer sees it; MAIA does not get it. */
+    if (!section.editable) return { ok: false, failure: 'section_not_projectable' };
     return section.body.length > 0
       ? { ok: true, body: section.body }
       : { ok: false, failure: 'range_out_of_bounds' };
   }
 
-  const bounds = codePointBoundaries(section.body);
-  // `bounds` has one entry per code point plus a final index === body.length.
-  if (range.start < 0 || range.end <= range.start || range.end > bounds.length - 1) {
-    return { ok: false, failure: 'range_out_of_bounds' };
-  }
-  const text = section.body.slice(bounds[range.start], bounds[range.end]);
-  return text.length > 0 ? { ok: true, body: text } : { ok: false, failure: 'range_out_of_bounds' };
+  /* ⭐⭐ ONE AUTHORITY ON PASSAGE GEOMETRY. This used to slice `section.body`
+     with coordinates measured against the STORED text — FOCUS-W3 — and refused
+     only when the shift happened to overflow. §45 and §62 fit, and were handed
+     over shifted by the heading prefix, silently.
+
+     ⛔ The translation is NOT done here. It belongs to `resolveFocusPassage`,
+     which the preflight consumes too — so the preflight cannot advertise a
+     passage this would reject on an unchanged snapshot. */
+  const resolved = resolveFocusPassage({
+    storedText: section.storedText, heading: section.heading, range,
+  });
+  if (resolved.ok) return { ok: true, body: resolved.text };
+
+  return {
+    ok: false,
+    /* ⛔ EACH REFUSAL KEEPS ITS OWN NAME. Only the two space refusals — which
+       are the same fact said twice, "these offsets address text this resolver
+       cannot locate" — share one. */
+    failure: resolved.refusal === 'coordinate_space_unknown'
+      || resolved.refusal === 'coordinate_space_unsupported'
+      ? 'coordinate_space_unusable'
+      : resolved.refusal,
+  };
 }

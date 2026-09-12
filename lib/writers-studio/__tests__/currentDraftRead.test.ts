@@ -327,7 +327,11 @@ describe('the passage range is resolved in code points, not code units', () => {
     const r = await read([S2]);
     if (!r.ok) return;
     expect([...BODY2].length).not.toBe(BODY2.length);
-    const got = bodyOfMember(r.snapshot, S2, { start: 0, end: 30 });
+    /* ⭐ WS-FOCUS-PASSAGE-01 — the range now NAMES ITS SPACE. These offsets are
+       stored-section coordinates, as every developmental anchor is, so the
+       span they denote is body 0–30 after the 21-code-point prefix. The
+       obligation is unchanged: whole characters, never code units. */
+    const got = bodyOfMember(r.snapshot, S2, { space: 'stored_section_text', start: 21, end: 51 });
     expect(got).toEqual({ ok: true, body: [...BODY2].slice(0, 30).join('') });
     /* ⛔ The code-unit implementation would have cut here instead. */
     expect(got).not.toEqual({ ok: true, body: BODY2.slice(0, 30) });
@@ -336,10 +340,14 @@ describe('the passage range is resolved in code points, not code units', () => {
   it('an out-of-bounds range REFUSES and is never clamped', async () => {
     const r = await read([S1]);
     if (!r.ok) return;
-    expect(bodyOfMember(r.snapshot, S1, { start: 10, end: 99999 }))
+    expect(bodyOfMember(r.snapshot, S1, { space: 'stored_section_text', start: 30, end: 99999 }))
       .toEqual({ ok: false, failure: 'range_out_of_bounds' });
-    expect(bodyOfMember(r.snapshot, S1, { start: 9, end: 9 }))
+    expect(bodyOfMember(r.snapshot, S1, { space: 'stored_section_text', start: 29, end: 29 }))
       .toEqual({ ok: false, failure: 'range_out_of_bounds' });
+    /* ⛔ And a range that begins inside the heading prefix is refused rather
+       than nudged to the start of the body. */
+    expect(bodyOfMember(r.snapshot, S1, { space: 'stored_section_text', start: 10, end: 99 }))
+      .toEqual({ ok: false, failure: 'range_precedes_body' });
   });
 
   it('a whole-section member takes the whole current body', async () => {

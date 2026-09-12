@@ -53,6 +53,7 @@ import {
   completeFocusCrossingAct, openFocusCrossingAct, type FocusActMember,
 } from './focusCrossingAct';
 import type { FocusPresenceProbe } from './focusPresence';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import {
   currencyStillDescribes, mayDisclose, resolveFocusCurrency,
   type FocusCurrency, type MemberCurrency,
@@ -82,8 +83,14 @@ import {
 export interface FocusMemberScope {
   readonly focusMemberId: string;
   readonly sectionRef: string;
-  /** Present for a passage member; absent for a whole-section member. */
-  readonly range?: { start: number; end: number };
+  /**
+   * Present for a passage member; absent for a whole-section member.
+   *
+   * ⭐ It carries its COORDINATE SPACE. FOCUS-W3 was a bare `{start,end}`
+   * measured against the stored section text and applied to the projected body
+   * — an offset is meaningless without its text.
+   */
+  readonly range?: SpacedRange;
   /**
    * ⭐ Ruled 2026-09-12: an `unverified` anchor's CURRENT TEXT must not cross.
    * Such a member is declared to MAIA and never read. The route decides this
@@ -213,7 +220,8 @@ export type CrossingFailure =
   | 'act_unrecordable'
   | 'handoff_not_prepared'
   | 'handoff_failed'
-  | 'currency_stale';
+  | 'currency_stale'
+  | 'coordinate_space_unusable';
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,

@@ -60,12 +60,12 @@ describe('W5 — the Focus Set contains exactly the observation’s declared anc
   it('a section, a passage and a run yield their own places and no others', () => {
     const refs: EvidenceRef[] = [
       { kind: 'section', sectionId: S.a },
-      { kind: 'passage', sectionId: S.b, range: { start: 3, end: 40 } },
+      { kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 3, end: 40 } },
       { kind: 'section-run', sectionIds: [S.b, S.c] },
     ];
     expect(focusAnchorsFor(refs)).toEqual([
       { kind: 'section', sectionId: S.a },
-      { kind: 'passage', sectionId: S.b, range: { start: 3, end: 40 } },
+      { kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 3, end: 40 } },
       { kind: 'section', sectionId: S.b },
       { kind: 'section', sectionId: S.c },
     ]);
@@ -89,9 +89,9 @@ describe('W5 — the Focus Set contains exactly the observation’s declared anc
     const refs: EvidenceRef[] = [
       { kind: 'section', sectionId: S.a },
       { kind: 'section', sectionId: S.a },
-      { kind: 'passage', sectionId: S.a, range: { start: 0, end: 5 } },
-      { kind: 'passage', sectionId: S.a, range: { start: 6, end: 9 } },
-      { kind: 'passage', sectionId: S.a, range: { start: 0, end: 5 } },
+      { kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 0, end: 5 } },
+      { kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 6, end: 9 } },
+      { kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 0, end: 5 } },
     ];
     expect(focusAnchorsFor(refs)).toHaveLength(3);
   });
@@ -138,7 +138,7 @@ describe('W5 — the Focus Set contains exactly the observation’s declared anc
 describe('W11 — no authored manuscript text is serialized into the route', () => {
   const anchors: FocusAnchor[] = [
     { kind: 'section', sectionId: S.a },
-    { kind: 'passage', sectionId: S.b, range: { start: 3, end: 40 } },
+    { kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 3, end: 40 } },
   ];
   const href = workWithThisHref('/writers-studio/canvas', {
     manuscriptId: 'm-1', readingId: 'r-7', observationKey: 'o1',
@@ -218,7 +218,7 @@ describe('W6 — no edit target is inferred on arrival', () => {
   it('a five-place set arrives with no active target', () => {
     const set = seed([
       { kind: 'section', sectionId: S.a },
-      { kind: 'passage', sectionId: S.b, range: { start: 0, end: 4 } },
+      { kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 0, end: 4 } },
       { kind: 'section', sectionId: S.c },
     ]);
     expect(set.members).toHaveLength(3);
@@ -237,7 +237,7 @@ describe('W6 — no edit target is inferred on arrival', () => {
   });
 
   it('a member that cannot stand cannot become the edit target', () => {
-    const set = seed([{ kind: 'passage', sectionId: S.a, range: { start: 9000, end: 9001 } }]);
+    const set = seed([{ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 9000, end: 9001 } }]);
     expect(set.members[0].state).toBe('stale');
     expect(withActive(set, 0).activeIndex).toBeNull();
     expect(withActive(set, 42).activeIndex).toBeNull();
@@ -257,7 +257,7 @@ describe('W8 — members are resolved against the CURRENT Work, not copied blind
     // §b holds an astral character at code point 22; after it the two units diverge.
     const body = BODIES[S.b];
     expect([...body].length).not.toBe(body.length);
-    const set = seed([{ kind: 'passage', sectionId: S.b, range: { start: 0, end: 30 } }]);
+    const set = seed([{ kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 0, end: 30 } }]);
     expect(set.members[0].focus?.capturedText).toBe([...body].slice(0, 30).join(''));
     // The un-converted implementation would have cut here instead:
     expect(set.members[0].focus?.capturedText).not.toBe(body.slice(0, 30));
@@ -279,33 +279,33 @@ describe('W8 — members are resolved against the CURRENT Work, not copied blind
 
 describe('W9 — a stale historical range cannot silently relocate or widen', () => {
   it('a range past the end of the current section is STALE, and is not clamped', () => {
-    const set = seed([{ kind: 'passage', sectionId: S.a, range: { start: 10, end: 999 } }]);
+    const set = seed([{ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 10, end: 999 } }]);
     expect(set.members[0].state).toBe('stale');
     expect(set.members[0].focus).toBeNull();
     // Clamping to the section end would have produced a focus. It did not.
-    expect(set.members[0].anchor).toEqual({ kind: 'passage', sectionId: S.a, range: { start: 10, end: 999 } });
+    expect(set.members[0].anchor).toEqual({ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 10, end: 999 } });
   });
 
   it('a later kept version makes a fitting range UNVERIFIED — never current', () => {
-    const set = seed([{ kind: 'passage', sectionId: S.a, range: { start: 4, end: 8 } }], 7, 11);
+    const set = seed([{ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 4, end: 8 } }], 7, 11);
     expect(set.members[0].state).toBe('unverified');
     expect(set.members[0].focus).not.toBeNull();
   });
 
   it('an unknown current version cannot license a currency claim', () => {
-    const set = seed([{ kind: 'passage', sectionId: S.a, range: { start: 4, end: 8 } }], 7, null);
+    const set = seed([{ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 4, end: 8 } }], 7, null);
     expect(set.members[0].state).toBe('unverified');
   });
 
   it('the same version, and only then, is the claim CURRENT', () => {
-    const set = seed([{ kind: 'passage', sectionId: S.a, range: { start: 4, end: 8 } }], 7, 7);
+    const set = seed([{ kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 4, end: 8 } }], 7, 7);
     expect(set.members[0].state).toBe('current');
   });
 
   it('the historical anchor is never rewritten by resolution, in any state', () => {
     const anchors: FocusAnchor[] = [
-      { kind: 'passage', sectionId: S.a, range: { start: 4, end: 8 } },
-      { kind: 'passage', sectionId: S.a, range: { start: 10, end: 999 } },
+      { kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 4, end: 8 } },
+      { kind: 'passage', sectionId: S.a, range: { space: 'stored_section_text', start: 10, end: 999 } },
       { kind: 'section', sectionId: 'deleted-section' },
     ];
     const before = JSON.parse(JSON.stringify(anchors));
@@ -378,7 +378,7 @@ describe('W2 · W3 · W4 — it rereads nothing, calls no model, writes nothing'
 
 describe('W7 — the origin stays identifiable behind the Focus Set', () => {
   it('reading, observation, version and cited anchors all survive the trip', () => {
-    const anchors: FocusAnchor[] = [{ kind: 'passage', sectionId: S.b, range: { start: 3, end: 40 } }];
+    const anchors: FocusAnchor[] = [{ kind: 'passage', sectionId: S.b, range: { space: 'stored_section_text', start: 3, end: 40 } }];
     const href = workWithThisHref('/writers-studio/canvas', {
       manuscriptId: 'm-1', readingId: 'r-7', observationKey: 'o1',
       revisionNumber: 7, anchors, phenomenon: 'recurrence',

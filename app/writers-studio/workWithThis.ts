@@ -80,9 +80,25 @@ export interface WorkWithThisOrigin {
  */
 export function encodeAnchors(anchors: readonly FocusAnchor[]): string {
   return anchors
-    .map((a) => (a.kind === 'section'
-      ? a.sectionId
-      : `${a.sectionId}@${a.range.start}-${a.range.end}`))
+    .map((a) => {
+      if (a.kind === 'section') return a.sectionId;
+      /**
+       * ⛔⭐ THE FORMAT CARRIES ONE SPACE, AND SAYS SO RATHER THAN ASSUMING.
+       *
+       * Every anchor this door produces comes from developmental evidence,
+       * which is `stored_section_text`. A future producer — a passage selected
+       * directly in the Canvas, which is `projected_section_body` — must NOT be
+       * able to ride this format silently: the same two numbers in the other
+       * space name a different span, and nothing in the URL would say which.
+       * So it refuses here rather than encoding an ambiguity.
+       */
+      if (a.range.space !== 'stored_section_text') {
+        throw new Error(
+          `work with this: this door encodes stored-section coordinates only, not ${a.range.space}`,
+        );
+      }
+      return `${a.sectionId}@${a.range.start}-${a.range.end}`;
+    })
     .join(',');
 }
 
@@ -110,7 +126,12 @@ export function decodeAnchors(raw: string): FocusAnchor[] | null {
     const end = Number(span.slice(dash + 1));
     if (!Number.isInteger(start) || !Number.isInteger(end)) return null;
     if (start < 0 || end <= start) return null;
-    out.push({ kind: 'passage', sectionId, range: { start, end } });
+    /* ⭐ The space the format means, made explicit on the way back in — the
+       mirror of `encodeAnchors`' refusal. ⛔ Never inferred downstream. */
+    out.push({
+      kind: 'passage', sectionId,
+      range: { space: 'stored_section_text', start, end },
+    });
   }
   return out.length ? out : null;
 }

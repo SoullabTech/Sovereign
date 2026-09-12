@@ -79,6 +79,19 @@ export interface EditableSection {
   id: string;
   position: number;
   heading: string | null;
+  /**
+   * ⭐ WS-FOCUS-PASSAGE-01 — the STORED representation, prefix included.
+   *
+   * Developmental passage anchors are offsets into THIS string, not into
+   * `body`, and FOCUS-W3 was applying them to `body` anyway. The passage
+   * resolver needs both to translate between the two coordinate spaces.
+   *
+   * ⛔ SERVER-SIDE ONLY. `resolveDraftWriteState` strips it before the
+   * write-state response, because the writing surface has no use for a heading
+   * prefix and sending it would widen what leaves the server for no gain. The
+   * gate beside this file asserts the strip.
+   */
+  storedText: string;
   /** The member's editable text when `editable`; the whole opaque slice when not. */
   body: string;
   /**
@@ -142,6 +155,7 @@ export async function loadEditableSections(
         id: r.id,
         position: r.position,
         heading: r.heading,
+        storedText: r.text,
         /* A section whose shape this cut cannot split is shown whole and
            read-only rather than silently reinterpreted. */
         body: split ? split.body : r.text,
@@ -274,7 +288,13 @@ export async function resolveDraftWriteState(
 
   if (d.section_addressable_at !== null) {
     const loaded = await loadEditableSections(manuscriptId, memberId);
-    if (loaded) return { kind: 'section_aware', sections: loaded.sections, version: loaded.version };
+    if (loaded) {
+      /* ⛔ The stored representation does not leave the server. The surface
+         edits `body`; a heading prefix on the wire is surface it has no use
+         for. Focus reads `storedText` in-process, from the same load. */
+      const sections = loaded.sections.map(({ storedText: _stored, ...s }) => s as EditableSection);
+      return { kind: 'section_aware', sections, version: loaded.version };
+    }
     /* FAIL CLOSED. The draft IS section-addressable but its sections could not
        be loaded. Falling through to the classification below would answer
        `continuous` and hand a section-authoritative draft to the

@@ -39,6 +39,7 @@
  */
 
 import type { MemberCurrency } from '@/lib/writers-studio/focusCurrency';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import type { FocusMember, FocusSet } from './focusSet';
 
 /* ── what the server says about each place ────────────────────────────────── */
@@ -73,7 +74,7 @@ export function currencyDescribes(
  * canvasIdentity lesson: *a link is not a binding.*
  */
 export function focusMembersOf(set: FocusSet): {
-  focusMemberId: string; sectionRef: string; range?: { start: number; end: number };
+  focusMemberId: string; sectionRef: string; range?: SpacedRange;
 }[] {
   return set.members.map((m, i) => ({
     focusMemberId: `f${i + 1}`,
@@ -82,9 +83,10 @@ export function focusMembersOf(set: FocusSet): {
        ⛔ Never the panel's own re-resolution — the server compares them against
        the frozen reading, so a pre-resolved coordinate would be compared with
        itself. */
-    ...(m.anchor.kind === 'passage'
-      ? { range: { start: m.anchor.range.start, end: m.anchor.range.end } }
-      : {}),
+    /* ⭐ The range travels WITH its coordinate space. A bare {start,end} was
+       FOCUS-W3, and the server would have no way to know which text it
+       addresses. */
+    ...(m.anchor.kind === 'passage' ? { range: { ...m.anchor.range } } : {}),
   }));
 }
 
@@ -258,7 +260,7 @@ export interface AskRequestBody {
   members: {
     focusMemberId: string;
     sectionRef: string;
-    range?: { start: number; end: number };
+    range?: SpacedRange;
   }[];
   activeMemberId: string | null;
   gesture: 'ask_maia';
