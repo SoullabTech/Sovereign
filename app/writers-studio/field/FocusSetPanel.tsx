@@ -43,20 +43,37 @@
  * a manuscript disclosure.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { PRESS } from '../pressTheme';
+import { activeMember, withActive, type FocusMember, type FocusSet } from './focusSet';
 import {
-  MEMBER_STATE_NOTE, activeMember, withActive,
-  type FocusMember, type FocusSet,
-} from './focusSet';
-import {
-  IDLE, askReadiness, askReducer, askRequestBody, isReady, readinessLine, sawLine,
-  type AskAnswer, type AskPhase,
+  IDLE, askReadiness, askReducer, askRequestBody, currencyDescribes, focusMembersOf,
+  isReady, readinessLine, sawLine,
+  type AskAnswer, type AskPhase, type FocusCurrencyView,
 } from './focusAskAct';
+import type { MemberCurrency } from '@/lib/writers-studio/focusCurrency';
 
-const STATE_TONE: Record<FocusMember['state'], number> = {
-  current: 1, unverified: 0.75, stale: 0.5, gone: 0.4,
+/**
+ * ⭐ ONE GLYPH PER STATE, and the founder's UI finding repaired: `!` used to
+ * mean BOTH "needs confirmation" and "no longer here", which weakened exactly
+ * the distinction the architecture works to preserve underneath.
+ */
+const MARK: Record<MemberCurrency | 'checking', string> = {
+  ready: '✓', needs_confirmation: '?', unavailable: '×',
+  not_yet_known: '…', checking: '…',
+};
+const TONE: Record<MemberCurrency | 'checking', number> = {
+  ready: 1, needs_confirmation: 0.75, unavailable: 0.45,
+  not_yet_known: 0.55, checking: 0.55,
+};
+/** ⛔ Plain words. A writer never has to learn "currency state". */
+const NOTE: Record<MemberCurrency | 'checking', string> = {
+  ready: 'MAIA can read this',
+  needs_confirmation: 'this part of the work has changed — confirm it before MAIA reads it',
+  unavailable: 'this section is no longer in the work',
+  not_yet_known: 'MAIA could not check this one just now',
+  checking: 'checking…',
 };
 
 function memberName(m: FocusMember): string {
@@ -66,7 +83,7 @@ function memberName(m: FocusMember): string {
 }
 
 export default function FocusSetPanel({
-  set, onSet, onRelease, sessionId, workRef, readingId, observationKey,
+  set, onSet, onRelease, sessionId, workRef, readingId, observationKey, draftVersion,
 }: {
   set: FocusSet;
   onSet: (next: FocusSet) => void;
@@ -77,9 +94,13 @@ export default function FocusSetPanel({
   /** ⭐ The origin, so the SERVER can reach the frozen digests. */
   readingId?: string | null;
   observationKey?: string | null;
+  /** The draft version the Canvas is showing. ⛔ A preflight against another
+   *  version no longer describes the Work, and the panel returns to checking. */
+  draftVersion?: number | null;
 }) {
   const [openNotes, setOpenNotes] = useState(false);
   const [ask, setAsk] = useState('');
+  const [currency, setCurrency] = useState<FocusCurrencyView | null>(null);
   const [phase, setPhase] = useState<AskPhase>(IDLE);
   const [answer, setAnswer] = useState<AskAnswer | null>(null);
   /**
@@ -90,9 +111,52 @@ export default function FocusSetPanel({
    */
   const phaseRef = useRef<AskPhase>(IDLE);
   const active = activeMember(set);
-  const usable = set.members.filter((m) => m.focus !== null).length;
-  const unsure = set.members.filter((m) => m.state !== 'current').length;
-  const readiness = askReadiness(set);
+  /**
+   * ⭐⭐ THE PREFLIGHT. A read-only host operation that tells this panel what is
+   * true NOW: no MAIA, no receipt, no act, no prose, no digest.
+   *
+   * ⛔ Its answer is informative, never an authority. The Ask crossing resolves
+   * currency again for itself, so a panel holding a stale result cannot cause a
+   * disclosure — and a result that no longer describes the current draft is
+   * discarded here rather than shown.
+   */
+  const fresh = currencyDescribes(currency, draftVersion ?? null) ? currency : null;
+  const readiness = askReadiness(set, fresh);
+  const currencyAt = (i: number): MemberCurrency | undefined =>
+    fresh?.members[`f${i + 1}`];
+  const usable = readiness.ready;
+  const unsure = readiness.needConfirmation + readiness.absent + readiness.checking;
+
+  const membersKey = focusMembersOf(set).map((m) => m.focusMemberId).join(',');
+  useEffect(() => {
+    if (!workRef || !readingId || !observationKey) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch('/api/writers-studio/focus/currency', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            workRef, readingId, observationKey, members: focusMembersOf(set),
+          }),
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json() as {
+          resolvedAgainstDraftVersion: number | null;
+          members: { focusMemberId: string; currency: MemberCurrency }[];
+        };
+        setCurrency({
+          resolvedAgainstDraftVersion: data.resolvedAgainstDraftVersion,
+          members: Object.fromEntries(data.members.map((m) => [m.focusMemberId, m.currency])),
+        });
+      } catch {
+        /* ⛔ A preflight that failed claims nothing. `currency` stays null and
+           the panel says it is still checking — never ready, never gone. */
+      }
+    })();
+    return () => { cancelled = true; };
+    /* Re-asks when the Work moves: the previous answer described another draft. */
+  }, [workRef, readingId, observationKey, membersKey, draftVersion, set]);
   const canAsk = readiness.lawful && !!sessionId && !!workRef && !!readingId && !!observationKey
     && ask.trim().length > 0 && phase.phase !== 'asking';
 
@@ -112,7 +176,9 @@ export default function FocusSetPanel({
    */
   const send = useCallback(async () => {
     if (!sessionId || !workRef || !readingId || !observationKey) return;
-    if (!askReadiness(set).lawful) return;
+    /* ⛔ Re-checked at the moment of the press, from the SERVER's answer. A
+       readiness that has gone stale between render and click sends nothing. */
+    if (!askReadiness(set, fresh).lawful) return;
     const before = phaseRef.current;
     const minted = globalThis.crypto?.randomUUID?.() ?? `act-${Date.now()}-${Math.random()}`;
     const started = move({ kind: 'gesture', actId: minted });
@@ -138,7 +204,7 @@ export default function FocusSetPanel({
     } catch {
       move({ kind: 'refused', why: 'MAIA could not be reached just now. Nothing was sent.' });
     }
-  }, [sessionId, workRef, readingId, observationKey, set, ask, move]);
+  }, [sessionId, workRef, readingId, observationKey, set, ask, move, fresh]);
 
   return (
     <section
@@ -172,7 +238,8 @@ export default function FocusSetPanel({
       <ol className="mt-2 flex flex-wrap gap-2">
         {set.members.map((m, i) => {
           const chosen = set.activeIndex === i;
-          const usableMember = m.focus !== null;
+          /* ⛔ Choosing an edit target is choosing a place MAIA can be given. */
+          const usableMember = isReady(currencyAt(i)) && m.focus !== null;
           return (
             <li key={`${m.anchor.sectionId}-${i}`}>
               <button
@@ -182,17 +249,19 @@ export default function FocusSetPanel({
                 data-focus-member={String(i)}
                 data-focus-member-state={m.state}
                 onClick={() => onSet(withActive(set, chosen ? null : i))}
-                title={MEMBER_STATE_NOTE[m.state]}
+                title={NOTE[currencyAt(i) ?? 'checking']}
                 className="border px-2 py-1 rounded-sm"
                 style={{
                   borderColor: chosen ? PRESS.accent : PRESS.ruleSoft,
-                  opacity: STATE_TONE[m.state],
+                  opacity: TONE[currencyAt(i) ?? 'checking'],
                   cursor: usableMember ? 'pointer' : 'not-allowed',
                 }}
               >
-                <span aria-hidden className="mr-1 opacity-70">{isReady(m) ? '✓' : '!'}</span>
+                <span aria-hidden className="mr-1 opacity-70">{MARK[currencyAt(i) ?? 'checking']}</span>
                 {memberName(m)}
-                {!isReady(m) && <span className="sr-only"> — not ready for MAIA</span>}
+                {!isReady(currencyAt(i)) && (
+                  <span className="sr-only"> — {NOTE[currencyAt(i) ?? 'checking']}</span>
+                )}
               </button>
             </li>
           );
@@ -212,9 +281,9 @@ export default function FocusSetPanel({
           </button>
           {openNotes && (
             <ul className="mt-1 list-disc pl-4 opacity-60">
-              {set.members.map((m, i) => (m.state === 'current' ? null : (
+              {set.members.map((m, i) => (isReady(currencyAt(i)) ? null : (
                 <li key={i}>
-                  {memberName(m)} — {MEMBER_STATE_NOTE[m.state]}
+                  {memberName(m)} — {NOTE[currencyAt(i) ?? 'checking']}
                 </li>
               )))}
             </ul>

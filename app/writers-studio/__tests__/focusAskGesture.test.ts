@@ -6,6 +6,8 @@ import {
 } from '../field/focusAskAct';
 import { resolveFocusSet, withActive, type FocusSet } from '../field/focusSet';
 import type { FocusAnchor } from '@/lib/writersStudio/focusAnchors';
+import type { MemberCurrency } from '@/lib/writers-studio/focusCurrency';
+import type { FocusCurrencyView } from '../field/focusAskAct';
 
 /**
  * ASK MAIA — P1–P12, predeclared by the founder BEFORE implementation, plus the
@@ -30,6 +32,24 @@ const panel = strip(fs.readFileSync(
   path.join(__dirname, '..', 'field', 'FocusSetPanel.tsx'), 'utf8'));
 const actSrc = strip(fs.readFileSync(
   path.join(__dirname, '..', 'field', 'focusAskAct.ts'), 'utf8'));
+
+/**
+ * ⭐⭐ MIGRATED TO SERVER CURRENCY. These obligations are unchanged; WHERE
+ * readiness comes from is. The panel used to infer it from the reading's
+ * kept-revision number — a signal that says `current` for a section the writer
+ * rewrote this morning, because editing does not keep a version. It now renders
+ * the preflight's answer, and infers nothing.
+ *
+ * ⛔ No assertion below was weakened; the fixture simply says what the SERVER
+ * found instead of what the panel guessed.
+ */
+const CURRENCY = (over: Partial<Record<string, MemberCurrency>> = {}): FocusCurrencyView => ({
+  resolvedAgainstDraftVersion: 37,
+  members: {
+    f1: 'ready', f2: 'ready', f3: 'ready',
+    f4: 'needs_confirmation', f5: 'unavailable', ...over,
+  } as Record<string, MemberCurrency>,
+});
 
 const S = (n: number) => `aaaaaaaa-0000-4000-8000-00000000000${n}`;
 const SECTIONS = [1, 2, 3, 4, 5].map((n, i) => ({ id: S(n), position: i, heading: `Part ${n}` }));
@@ -60,11 +80,12 @@ function five(): FocusSet {
 
 describe('P1 — five members, three readable', () => {
   it('the surface says exactly 5 in focus / 3 ready / 1 needs confirmation / 1 gone', () => {
-    const r = askReadiness(five());
+    const r = askReadiness(five(), CURRENCY());
     expect(r.total).toBe(5);
     expect(r.ready).toBe(3);
     expect(r.needConfirmation).toBe(1);
     expect(r.absent).toBe(1);
+    expect(r.checking).toBe(0);
     const line = readinessLine(r);
     expect(line).toContain('5 places in focus');
     expect(line).toContain('3 ready for MAIA');
@@ -75,18 +96,21 @@ describe('P1 — five members, three readable', () => {
     const set = five();
     // The set never shrinks to what can be read.
     expect(set.members).toHaveLength(5);
-    expect(set.members.filter(isReady)).toHaveLength(3);
-    expect(readinessLine(askReadiness(set))).toMatch(/5 places/);
+    expect(askReadiness(set, CURRENCY()).ready).toBe(3);
+    expect(readinessLine(askReadiness(set, CURRENCY()))).toMatch(/5 places/);
   });
 });
 
 /* ══ P2 · an unreadable member is never presented as readable ══════════════ */
 
 describe('P2 — an unreadable member is never shown as one MAIA will read', () => {
-  it('only current members are ready', () => {
-    for (const m of five().members) {
-      expect(isReady(m)).toBe(m.state === 'current');
+  it('only what the SERVER calls ready is ready', () => {
+    for (const c of ['ready', 'needs_confirmation', 'unavailable', 'not_yet_known'] as const) {
+      expect(isReady(c)).toBe(c === 'ready');
     }
+    /* ⛔ And an unanswered member is not ready either — no answer is not an
+       answer, in either direction. */
+    expect(isReady(undefined)).toBe(false);
   });
 
   /**
@@ -161,8 +185,8 @@ describe('P3 — no active target is lawful', () => {
   it('Ask stays available before the writer chooses what to edit', () => {
     const set = five();
     expect(set.activeIndex).toBeNull();
-    expect(askReadiness(set).lawful).toBe(true);
-    expect(askReadiness(set).refusal).toBeNull();
+    expect(askReadiness(set, CURRENCY()).lawful).toBe(true);
+    expect(askReadiness(set, CURRENCY()).refusal).toBeNull();
   });
 
   it('and the request sends a null active member rather than inventing one', () => {
@@ -177,13 +201,13 @@ describe('P4 — an unreadable active target does not cross', () => {
        constructed directly — the readiness gate must hold even if some other
        path ever put the set there. */
     const set = { ...five(), activeIndex: 3 } as FocusSet;
-    const r = askReadiness(set);
+    const r = askReadiness(set, CURRENCY());
     expect(r.lawful).toBe(false);
     expect(r.refusal).toMatch(/cannot be read yet/i);
   });
 
   it('⛔ and it names no other place to ask about instead', () => {
-    const r = askReadiness({ ...five(), activeIndex: 3 } as FocusSet);
+    const r = askReadiness({ ...five(), activeIndex: 3 } as FocusSet, CURRENCY());
     expect(r.refusal).not.toMatch(/Part [0-9]|Section [0-9]/);
     expect(actSrc).not.toMatch(/activeIndex\s*=\s*.*findIndex\(.*isReady/);
   });
@@ -191,7 +215,7 @@ describe('P4 — an unreadable active target does not cross', () => {
   it('a readable active target is lawful', () => {
     const set = withActive(five(), 1);
     expect(set.activeIndex).toBe(1);
-    expect(askReadiness(set).lawful).toBe(true);
+    expect(askReadiness(set, CURRENCY()).lawful).toBe(true);
   });
 });
 
@@ -201,19 +225,21 @@ describe('P5 — zero readable members means no call', () => {
       anchors: [{ kind: 'passage', sectionId: S(1), range: { start: 9000, end: 9001 } }],
       originRevision: 7, currentRevision: 11, sections: SECTIONS, bodyOf, label: 'o1',
     });
-    const r = askReadiness(none);
+    const r = askReadiness(none, { resolvedAgainstDraftVersion: 37, members: { f1: 'needs_confirmation' } });
     expect(r.ready).toBe(0);
     expect(r.lawful).toBe(false);
     expect(r.refusal).toMatch(/none of these places/i);
   });
 
   it('an empty or absent set is unlawful and says so plainly', () => {
-    expect(askReadiness(null).lawful).toBe(false);
-    expect(askReadiness(null).refusal).toBe('There is nothing in focus yet.');
+    expect(askReadiness(null, CURRENCY()).lawful).toBe(false);
+    expect(askReadiness(null, CURRENCY()).refusal).toBe('There is nothing in focus yet.');
   });
 
   it('the panel will not send when readiness is unlawful', () => {
-    expect(panel).toMatch(/if \(!askReadiness\(set\)\.lawful\) return;/);
+    /* ⭐ Re-checked at the press, against the SERVER's fresh answer — a
+       readiness that went stale between render and click sends nothing. */
+    expect(panel).toMatch(/if \(!askReadiness\(set, fresh\)\.lawful\) return;/);
     expect(panel).toMatch(/disabled=\{!canAsk\}/);
   });
 });
@@ -297,9 +323,11 @@ describe('P10 — a client marking a stale member "ready" is not trusted', () =>
     const route = strip(fs.readFileSync(
       path.join(__dirname, '..', '..', 'api', 'writers-studio', 'focus', 'route.ts'), 'utf8'));
     expect(route).not.toMatch(/withheldAs/);
-    /* The panel still LABELS a withheld member for the writer — that is local
-       presentation and stays — but the label never leaves the browser. */
-    expect(panel).toMatch(/MEMBER_STATE_NOTE/);
+    /* ⭐ The panel still LABELS a withheld member for the writer — but the label
+       is now a rendering of the SERVER's word, not the panel's own verdict, and
+       it never leaves the browser. */
+    expect(panel).toMatch(/const NOTE: Record<MemberCurrency \| 'checking', string>/);
+    expect(panel).toMatch(/NOTE\[currencyAt\(i\) \?\? 'checking'\]/);
     expect(actSrc).not.toMatch(/withheldAs/);
   });
 
@@ -389,7 +417,7 @@ describe('the writer needs no vocabulary to know what MAIA can see', () => {
   });
 
   it('⭐ and it still tells the truth: ready and withheld are both named', () => {
-    const line = readinessLine(askReadiness(five()));
+    const line = readinessLine(askReadiness(five(), CURRENCY()));
     expect(line).toMatch(/ready/);
     expect(line).toMatch(/confirmation|no longer/);
   });

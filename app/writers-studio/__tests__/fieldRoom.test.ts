@@ -163,8 +163,11 @@ describe('the held focus increment, at its boundaries', () => {
     /* ⭐ And the one authorized file reaches ONLY the constituted boundary —
        never a second route, never a model, never a write. */
     const authorized = strip(raw('FocusSetPanel.tsx'));
-    const routes = [...authorized.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]);
-    expect(routes).toEqual(['/api/writers-studio/focus']);
+    const routes = [...authorized.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]).sort();
+    /* ⭐ TWO, and they are the two constituted Focus routes: the read-only
+       currency preflight, and the one crossing. ⛔ The allowlist grows only by
+       a ruling — a third route here goes red. */
+    expect(routes).toEqual(['/api/writers-studio/focus', '/api/writers-studio/focus/currency']);
     expect(authorized).not.toMatch(/getMaiaResponse|anthropic|saveSection/i);
   });
 

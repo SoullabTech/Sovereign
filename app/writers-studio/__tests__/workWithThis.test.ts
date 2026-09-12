@@ -412,8 +412,8 @@ describe('W10 — returning to Develop shows the reading unchanged', () => {
    */
   it('the destination never WRITES to the reading it came from', () => {
     expect(panel).not.toMatch(/standing|postStanding|\/readings?\//);
-    const routes = [...panel.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]);
-    expect(routes).toEqual(['/api/writers-studio/focus']);
+    const routes = [...panel.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]).sort();
+    expect(routes).toEqual(['/api/writers-studio/focus', '/api/writers-studio/focus/currency']);
   });
 
   it('the set panel changes no text and offers no repair', () => {

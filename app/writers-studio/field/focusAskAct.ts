@@ -38,7 +38,55 @@
  * what closes the gap between the two.
  */
 
+import type { MemberCurrency } from '@/lib/writers-studio/focusCurrency';
 import type { FocusMember, FocusSet } from './focusSet';
+
+/* ── what the server says about each place ────────────────────────────────── */
+
+/**
+ * The preflight's answer, as the panel holds it.
+ *
+ * ⭐ `resolvedAgainstDraftVersion` is a FRESHNESS MARKER, not a comparison: it
+ * says only which state of the Work these statuses were established against. If
+ * the Canvas has moved past it, the result no longer describes the Work and the
+ * panel returns to "checking" rather than keep advertising 2 of 5 as current.
+ */
+export interface FocusCurrencyView {
+  readonly resolvedAgainstDraftVersion: number | null;
+  readonly members: Readonly<Record<string, MemberCurrency>>;
+}
+
+/** ⛔ A result that does not describe the current draft authorizes nothing. */
+export function currencyDescribes(
+  currency: FocusCurrencyView | null, draftVersion: number | null,
+): boolean {
+  return currency !== null
+    && currency.resolvedAgainstDraftVersion !== null
+    && draftVersion !== null
+    && currency.resolvedAgainstDraftVersion === draftVersion;
+}
+
+/**
+ * ⭐⭐ ONE DEFINITION OF WHICH MEMBER IS WHICH, used by the preflight AND the
+ * Ask. Two independent derivations of `f1…fN` would eventually disagree, and
+ * the disagreement would look like a currency change rather than a bug — the
+ * canvasIdentity lesson: *a link is not a binding.*
+ */
+export function focusMembersOf(set: FocusSet): {
+  focusMemberId: string; sectionRef: string; range?: { start: number; end: number };
+}[] {
+  return set.members.map((m, i) => ({
+    focusMemberId: `f${i + 1}`,
+    sectionRef: m.anchor.sectionId,
+    /* ⭐ The HISTORICAL coordinates, exactly as the observation declared them.
+       ⛔ Never the panel's own re-resolution — the server compares them against
+       the frozen reading, so a pre-resolved coordinate would be compared with
+       itself. */
+    ...(m.anchor.kind === 'passage'
+      ? { range: { start: m.anchor.range.start, end: m.anchor.range.end } }
+      : {}),
+  }));
+}
 
 /* ── readiness, in the writer's language ──────────────────────────────────── */
 
@@ -51,6 +99,8 @@ export interface AskReadiness {
   needConfirmation: number;
   /** Places that are no longer in the Work, or cannot be shown. */
   absent: number;
+  /** ⛔ Places the server has not answered for yet. Never counted as either. */
+  checking: number;
   /** Whether Ask MAIA may be pressed at all. */
   lawful: boolean;
   /**
@@ -60,48 +110,76 @@ export interface AskReadiness {
   refusal: string | null;
 }
 
-/** A member MAIA will be able to read. ⛔ Only `current` qualifies. */
-export const isReady = (m: FocusMember): boolean => m.state === 'current' && m.focus !== null;
+/**
+ * ⭐⭐ READINESS IS THE SERVER'S ANSWER, NOT THE PANEL'S INFERENCE.
+ *
+ * This read `m.state === 'current'` — the panel's own comparison of the
+ * reading's kept-revision number against the latest kept revision. That signal
+ * is insufficient and we proved it: a writer can edit a section fifty times
+ * without keeping a version, and the comparison still says `current`. The panel
+ * could therefore mark a passage `✓ ready for MAIA` whose text they rewrote
+ * that morning.
+ *
+ * ⛔ So the panel no longer decides. It asks, and renders what it is told.
+ */
+export const isReady = (currency: MemberCurrency | undefined): boolean => currency === 'ready';
 
-export function askReadiness(set: FocusSet | null): AskReadiness {
+export function askReadiness(
+  set: FocusSet | null,
+  currency: FocusCurrencyView | null,
+): AskReadiness {
   if (!set || set.members.length === 0) {
     return {
-      total: 0, ready: 0, needConfirmation: 0, absent: 0, lawful: false,
+      total: 0, ready: 0, needConfirmation: 0, absent: 0, checking: 0, lawful: false,
       refusal: 'There is nothing in focus yet.',
     };
   }
-  const ready = set.members.filter(isReady).length;
-  const needConfirmation = set.members.filter((m) => m.state === 'unverified').length;
-  const absent = set.members.filter((m) => m.state === 'stale' || m.state === 'gone').length;
 
-  /* ⛔ P5 · nothing readable means no cognition call. MAIA cannot be asked
-     about places she cannot be given. */
+  const ids = focusMembersOf(set).map((m) => m.focusMemberId);
+  const at = (i: number): MemberCurrency | undefined => currency?.members[ids[i]];
+
+  /* ⛔ NO ANSWER YET IS NOT AN ANSWER. Before the preflight returns, the panel
+     claims nothing — not ready, and not gone. */
+  if (!currency) {
+    return {
+      total: set.members.length, ready: 0, needConfirmation: 0, absent: 0,
+      checking: set.members.length, lawful: false,
+      refusal: 'Checking which of these MAIA can read…',
+    };
+  }
+
+  const all = set.members.map((_, i) => at(i));
+  const ready = all.filter((c) => c === 'ready').length;
+  const needConfirmation = all.filter((c) => c === 'needs_confirmation').length;
+  const absent = all.filter((c) => c === 'unavailable').length;
+  const checking = all.filter((c) => c === undefined || c === 'not_yet_known').length;
+  const base = { total: set.members.length, ready, needConfirmation, absent, checking };
+
+  /* ⛔ P5 · nothing readable means no cognition call. */
   if (ready === 0) {
     return {
-      total: set.members.length, ready, needConfirmation, absent, lawful: false,
+      ...base, lawful: false,
       refusal: needConfirmation > 0
         ? 'None of these places can be read yet. Confirm an anchor first, and MAIA can look at it.'
-        : 'None of these places are in the work as it is now.',
+        : checking > 0
+          ? 'MAIA could not check these places just now.'
+          : 'None of these places are in the work as it is now.',
     };
   }
 
   /* ⛔ P4 · an unreadable active target does not cross, and NOTHING is
      substituted for it. Quietly asking about a different place than the one the
      writer said they were working on is the system deciding what they meant. */
-  const active = set.activeIndex === null ? null : set.members[set.activeIndex] ?? null;
-  if (active && !isReady(active)) {
+  if (set.activeIndex !== null && !isReady(at(set.activeIndex))) {
     return {
-      total: set.members.length, ready, needConfirmation, absent, lawful: false,
+      ...base, lawful: false,
       refusal: 'The place you are working on cannot be read yet. Confirm it, or choose another.',
     };
   }
 
   /* ⭐ P3 · no active target is LAWFUL. Declared attention exists before the
-     writer chooses what to edit (U4), and asking about all of it is an ordinary
-     thing to want. */
-  return {
-    total: set.members.length, ready, needConfirmation, absent, lawful: true, refusal: null,
-  };
+     writer chooses what to edit (U4). */
+  return { ...base, lawful: true, refusal: null };
 }
 
 /** The line the panel shows above the button. Plain words, no vocabulary. */
@@ -110,6 +188,9 @@ export function readinessLine(r: AskReadiness): string {
   if (r.ready > 0) parts.push(`${r.ready} ready for MAIA`);
   if (r.needConfirmation > 0) parts.push(`${r.needConfirmation} need${r.needConfirmation === 1 ? 's' : ''} confirmation`);
   if (r.absent > 0) parts.push(`${r.absent} no longer here`);
+  /* ⛔ An unanswered place is named as unanswered — never folded into a number
+     that would read as a finding. */
+  if (r.checking > 0) parts.push(`${r.checking} still being checked`);
   return parts.join(' · ');
 }
 
@@ -204,16 +285,7 @@ export function askRequestBody(input: {
     workRef: input.workRef,
     readingId: input.readingId,
     observationKey: input.observationKey,
-    members: set.members.map((m, i) => ({
-      focusMemberId: `f${i + 1}`,
-      sectionRef: m.anchor.sectionId,
-      /* ⭐ The HISTORICAL coordinates, exactly as the observation declared them.
-         ⛔ Not a claim that they are still current — the server resolves that
-         against the frozen digest, and only `ready` is ever given a body. */
-      ...(m.anchor.kind === 'passage'
-        ? { range: { start: m.anchor.range.start, end: m.anchor.range.end } }
-        : {}),
-    })),
+    members: focusMembersOf(set),
     activeMemberId: set.activeIndex === null ? null : `f${set.activeIndex + 1}`,
     gesture: 'ask_maia',
     ask: input.ask,

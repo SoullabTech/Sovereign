@@ -665,6 +665,9 @@ function CanvasRoom() {
           workRef={request.kind === 'origin' ? request.origin.manuscriptId : manuscript?.id ?? null}
           readingId={request.kind === 'origin' ? request.origin.readingId : null}
           observationKey={request.kind === 'origin' ? request.origin.observationKey : null}
+          /* The draft version the writing surface is showing — a preflight
+             against another version no longer describes this Work. */
+          draftVersion={writeMount.mount === 'sections' ? writeMount.version : null}
         />
       )}
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
