@@ -135,8 +135,8 @@ Classification vocabulary is closed to the founder's four: `gen-1 listen` · `fa
 | Stage | # | Session | Records | SHA-256 | Class | Note |
 |---|---|---|---|---|---|---|
 | 1 | 1 | `K00-c187e547` (`…_run6S1-1_K00-c187e547_vpON.jsonl`) | 65 | `96fa0460c4e3c974d2e7109ce5eb900aa382e49b9f7352b21f70f91416ca617c` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 124 ms · first callback +91 ms · listening 533 ms · 10/10 running ticks · gen 1 held 28.6 s · no recovery · 13-step trace, no pre-VP read |
-| 1 | 2 | — | | | | |
-| 1 | 3 | — | | | | |
+| 1 | 2 | `K00-a54bc8ee` (`…_run6S1-2_K00-a54bc8ee_vpON.jsonl`) | 46 | `42033ac5ecbd69e56efe64454be01294a2ae97857ebf8509c349e9c6c55a241d` | **gen-1 listen** | isRunning immediate TRUE · vp_enable 89 ms · first callback +97 ms · listening 439 ms · 10/10 running ticks · gen 1 held 8.7 s to export · no recovery |
+| 1 | 3 | `K00-be40c1cb` (`…_run6S1-3_K00-be40c1cb_vpON.jsonl`) | 111 | `f82fd8a5b944a11b010572463a4ea1b3c9c1dcb9f156c9843ad6032407e2d3d7` | **other observed shape** (gen-1 FAILURE; final outcome UNOBSERVED — exported at 4.71 s, mid-recovery) | gen 1: `is_running_immediate` TRUE at start return, `graph_started` engineRunning FALSE 34 ms later, 0 callbacks, entry_timeout 1509 ms → gen 2 refused 0 Hz → gen 3 isRunning FALSE, VP change deferred, change #2 route → gen 4 isRunning TRUE then FALSE 178 ms later, 0 callbacks; journal ends 11 ms into gen 4, floor `recovering`. Neither listening nor degraded reached before export. |
 | 1 | 4 | — | | | | |
 | 1 | 5 | — | | | | |
 | 2 (after reinstall; dylib must read `CC0D3604-…`) | 1 | — | | | | |
