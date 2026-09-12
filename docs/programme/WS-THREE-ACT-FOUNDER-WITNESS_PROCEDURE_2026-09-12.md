@@ -51,26 +51,48 @@ Expected: `maia_focus_witness`. ⛔ Anything else — most of all
 env | grep -E '^PG' || echo 'no PG* set — good'
 ```
 
-Then apply the schema this witness needs. The Focus lane's own migration is the
-last one; apply the ones it depends on first if this is a fresh database.
+⛔ **CORRECTED 2026-09-12 after the first attempt. The original instruction was
+wrong in two ways, and both were caught by the preflight rather than by the
+witness — which is what the preflight is for.**
+
+**(a) An empty database cannot serve this witness.** The original said to create
+an empty database and apply two migrations. But Act 1 needs a real Work, a real
+frozen reading and real observations: a two-table database cannot render Develop
+at all. The witness database must be a **disposable COPY of the local dev
+database**, not an empty shell.
+
+**(b) `20260909000001_context_disclosure_receipts.sql` has an unstated
+dependency.** It carries a foreign key to `runtime_consent_state`, which is
+created by `20260718000001_s5_provenance_substrate.sql`. Applied alone it fails
+with `relation "runtime_consent_state" does not exist`. The copy approach makes
+this moot — the dev database already has both.
+
+Stop the local dev server first: `createdb -T` requires the source database to
+have no other sessions.
 
 ```bash
-psql "postgresql://soullab@localhost:5432/maia_focus_witness" \
-  -v ON_ERROR_STOP=1 \
-  -f database/migrations/20260909000001_context_disclosure_receipts.sql \
-  -f database/migrations/20260912000001_focus_crossing_acts.sql
+dropdb --if-exists maia_focus_witness
+createdb -T maia_consciousness maia_focus_witness
 ```
 
-Prove the tables exist, and prove production does not have them:
+Prove the copy carries what the witness needs, and that it does NOT yet carry
+the new tables:
 
 ```bash
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" -c "\dt manuscript_sections"
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" -c "\dt runtime_consent_state"
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" -c "\dt context_disclosure_receipts"
 psql "postgresql://soullab@localhost:5432/maia_focus_witness" -c "\dt focus_crossing*"
-ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab maia_consciousness -c "\dt focus_crossing*"'
 ```
 
-Expected: two tables locally; **`Did not find any relation`** on minisforum.
-⛔ If production shows them, STOP — the migration reached somewhere it was never
-authorized to reach, and that is a finding, not a step.
+Want: the first three present, `focus_crossing*` **absent**. Then apply the one
+migration this lane authored:
+
+```bash
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" -v ON_ERROR_STOP=1 \
+  -f database/migrations/20260912000001_focus_crossing_acts.sql
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" -c "\dt focus_crossing*"
+```
 
 ### 0.2 · Prove there is exactly ONE valid `ANTHROPIC_API_KEY`
 
@@ -86,6 +108,20 @@ grep -c '^ANTHROPIC_API_KEY=' .env.local
 Expected: exactly `1`. If it is more, dedupe to one line **and restart the dev
 server afterwards** so it re-reads the file.
 
+⭐ **Found on the first attempt: THREE lines, each individually 108 characters.**
+Each looked valid; the file was not. Compare them without printing any value:
+
+```bash
+awk -F= '/^ANTHROPIC_API_KEY=/{print $2}' .env.local | while read -r k; do
+  printf '%s' "$k" | shasum -a 256 | cut -c1-8
+done
+```
+
+Identical hashes → the same key three times; keep any one line, delete the rest.
+Different hashes → **STOP**: the file holds different credentials and only a
+human knows which is current. ⛔ Note that dotenv takes the LAST occurrence in a
+file, so the key in use is not the first one anyone reads.
+
 Then prove the value's shape without ever printing it:
 
 ```bash
@@ -100,23 +136,53 @@ concatenation. A second line of output is two keys.
 
 ### 0.3 · The runtime
 
-```bash
-WRITERS_STUDIO_FOCUS_ENABLED=1 \
-DATABASE_URL="postgresql://soullab@localhost:5432/maia_focus_witness" \
-npm run dev -- -p 3100
+⛔ **CORRECTED. `npm run dev` CANNOT be pointed at the witness database.** The
+script is:
+
+```
+"dev": "env -u DATABASE_URL next dev -p ${PORT:-3000}"
 ```
 
-Prove the flag is actually on before spending the witness — with the flag off
-the route 404s (deliberately; it does not 403):
+`env -u DATABASE_URL` **deletes** the variable before Next starts, so a
+`DATABASE_URL=… npm run dev` prefix is silently discarded and the app connects
+to whatever `.env.local` names — the founder's working dev database. That is
+precisely the hazard that wedged a live database in the Step 7 lane, arriving by
+a different door.
+
+⭐ Bypass the wrapper and call Next directly, so the shell variable survives.
+Next's env loader does not override a variable already present in `process.env`,
+so the witness database wins over `.env.local`:
+
+```bash
+lsof -ti:3100 | xargs -r kill        # the port must actually be free
+WRITERS_STUDIO_FOCUS_ENABLED=1 \
+DATABASE_URL="postgresql://soullab@localhost:5432/maia_focus_witness" \
+npx next dev -p 3100
+```
+
+Prove the flag reached the process — with it off the route 404s (deliberately;
+it does not 403):
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:3100/api/writers-studio/focus
 ```
 
-Expected: `401` (authentication required — the route exists). ⛔ `404` means the
-flag did not reach the process; restart with it set, do not proceed.
+Expected `401`. ⛔ A `404` means either the flag did not reach the process **or
+an older server is still holding the port** — an EADDRINUSE that was scrolled
+past, answered by the stale process rather than the new one. Kill and restart;
+do not proceed on a 404.
 
----
+⭐ And prove the process is on the WITNESS database, not the dev one, before
+Act 1. Load a Work in Develop, then:
+
+```bash
+psql "postgresql://soullab@localhost:5432/maia_focus_witness" \
+  -c "SELECT count(*) FROM pg_stat_activity WHERE datname = 'maia_focus_witness';"
+```
+
+Expected: at least one connection. ⛔ Zero means the app is talking to a
+different database and the witness would write its act rows somewhere it was
+never authorized to.
 
 ## Act 1 — can the expertise be understood?
 
