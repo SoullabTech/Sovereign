@@ -66,14 +66,17 @@ function memberName(m: FocusMember): string {
 }
 
 export default function FocusSetPanel({
-  set, onSet, onRelease, sessionId, workRef,
+  set, onSet, onRelease, sessionId, workRef, readingId, observationKey,
 }: {
   set: FocusSet;
   onSet: (next: FocusSet) => void;
   onRelease: () => void;
-  /** Absent until the room knows both; the gesture is simply not offered. */
+  /** Absent until the room knows them; the gesture is simply not offered. */
   sessionId?: string | null;
   workRef?: string | null;
+  /** ⭐ The origin, so the SERVER can reach the frozen digests. */
+  readingId?: string | null;
+  observationKey?: string | null;
 }) {
   const [openNotes, setOpenNotes] = useState(false);
   const [ask, setAsk] = useState('');
@@ -90,7 +93,7 @@ export default function FocusSetPanel({
   const usable = set.members.filter((m) => m.focus !== null).length;
   const unsure = set.members.filter((m) => m.state !== 'current').length;
   const readiness = askReadiness(set);
-  const canAsk = readiness.lawful && !!sessionId && !!workRef
+  const canAsk = readiness.lawful && !!sessionId && !!workRef && !!readingId && !!observationKey
     && ask.trim().length > 0 && phase.phase !== 'asking';
 
   const move = useCallback((event: Parameters<typeof askReducer>[1]): AskPhase => {
@@ -108,7 +111,7 @@ export default function FocusSetPanel({
    * even when the Focus Set has not changed: asking again is a real second act.
    */
   const send = useCallback(async () => {
-    if (!sessionId || !workRef) return;
+    if (!sessionId || !workRef || !readingId || !observationKey) return;
     if (!askReadiness(set).lawful) return;
     const before = phaseRef.current;
     const minted = globalThis.crypto?.randomUUID?.() ?? `act-${Date.now()}-${Math.random()}`;
@@ -122,7 +125,9 @@ export default function FocusSetPanel({
       const res = await apiFetch('/api/writers-studio/focus', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(askRequestBody({ actId, sessionId, workRef, set, ask: ask.trim() })),
+        body: JSON.stringify(askRequestBody({
+          actId, sessionId, workRef, readingId, observationKey, set, ask: ask.trim(),
+        })),
       });
       if (!res.ok) {
         move({ kind: 'refused', why: 'MAIA could not be reached just now. Nothing was sent.' });
@@ -133,7 +138,7 @@ export default function FocusSetPanel({
     } catch {
       move({ kind: 'refused', why: 'MAIA could not be reached just now. Nothing was sent.' });
     }
-  }, [sessionId, workRef, set, ask, move]);
+  }, [sessionId, workRef, readingId, observationKey, set, ask, move]);
 
   return (
     <section

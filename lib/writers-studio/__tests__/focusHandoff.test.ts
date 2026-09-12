@@ -91,13 +91,25 @@ const draftSnapshot = (version = 37) => ({
     }]]),
   },
 });
+
+/* ⭐ WS-FOCUS-CURRENCY-01: the crossing now resolves currency itself, before any
+   boundary. These harnesses inject a resolver that finds everything current —
+   the obligations below are about the crossing, not about currency, and each
+   currency verdict has its own falsifiers in focusCurrency.test.ts. */
+const allReady = (version = 37) => async ({ members }: { members: readonly { focusMemberId: string; sectionRef: string }[] }) => ({
+  members: members.map((m) => ({
+    focusMemberId: m.focusMemberId, sectionRef: m.sectionRef, currency: 'ready' as const,
+  })),
+  resolvedAgainstDraftVersion: version,
+});
 const readDraft = jest.fn(async () => draftSnapshot());
 const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as never));
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never, posture: TurnPosture.resolve({}),
   memberId: 'm-1', sessionId: 's-1', actId: 'act-1', workRef: 'work-1',
-  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', readable: true }],
+  readingId: 'r-1', observationKey: 'o1',
+  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1' }],
   activeMemberId: null, gesture: 'ask_maia' as const, ask: 'what is repeating',
   ...over,
 });
@@ -118,7 +130,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: Promise.resolve(true),
       result: Promise.resolve({ ok: true, response: 'reply' }),
     }));
-    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(1);
     expect(out.presentation.state).toBe('crossed_accounted');
   });
@@ -130,7 +142,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: 'an answer produced without the Focus' }),
     }));
-    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(0);
     expect(out.presentation.state).toBe('did_not_cross');
     // ⭐ and the writer is NOT handed the bypass answer as though it were a Focus reply
@@ -147,7 +159,7 @@ describe('H1 · CONFIRM FOLLOWS THE TRUE HANDOFF', () => {
       handoff: new Promise<boolean>(r => { release = r; }),
       result: Promise.resolve({ ok: true, response: 'reply' }),
     }));
-    const pending = performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    const pending = performFocusCrossing(req(), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     for (let i = 0; i < 20; i++) await Promise.resolve();
     expect(generate).toHaveBeenCalled();          // the call returned…
     expect(confirms()).toHaveLength(0);           // …and nothing was confirmed
@@ -191,7 +203,7 @@ describe('H2 · NO RESPONSE BYPASS', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: "Let's take the safest next step together." }),
     }));
-    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     expect(confirms()).toHaveLength(0);
     expect(out.response).toBeNull();
   });
@@ -201,7 +213,7 @@ describe('H2 · NO RESPONSE BYPASS', () => {
       handoff: Promise.resolve(false),
       result: Promise.resolve({ ok: true, response: 'bypass answer' }),
     }));
-    const out = await performFocusCrossing(req(), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    const out = await performFocusCrossing(req(), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     // The defect this gate exists for: a crossed receipt beside an answer the
     // Work never reached. Asserting the defective outcome must fail.
     expect(() => expect(out.presentation.state).toBe('crossed_accounted')).toThrow();
@@ -227,7 +239,7 @@ describe('H3 · POSTURE IDENTITY — one turn, one privacy posture', () => {
   it('the crossing carries the request posture into generation', async () => {
     const generate = jest.fn(() => ({ handoff: Promise.resolve(true), result: Promise.resolve({ ok: true }) }));
     const sanctuary = TurnPosture.resolve({ sanctuary: true });
-    await performFocusCrossing(req({ posture: sanctuary }), { readDraft, presence: async () => new Set<string>(), prepare, generate } as never);
+    await performFocusCrossing(req({ posture: sanctuary }), { readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate } as never);
     expect((generate as jest.Mock).mock.calls[0][1].posture).toBe(sanctuary);
     expect((prepare as jest.Mock).mock.calls.at(-1)![0].sanctuary).toBe(true);
   });

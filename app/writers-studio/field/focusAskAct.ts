@@ -24,14 +24,18 @@
  * as fact. The reducer below is the only place an actId is minted, and it will
  * not mint one while an act is in flight: a double-click is one act.
  *
- * ── ⛔ THE CLIENT IS NOT A DISCLOSURE AUTHORITY ────────────────────────────
+ * ── ⛔ THE CLIENT IS NOT A DISCLOSURE AUTHORITY, AND NO LONGER CLAIMS TO BE ──
  *
- * Everything here is PRESENTATION. `ready` is what the panel currently shows,
- * not permission. The server establishes the lawful bodies itself, and if its
- * truth disagrees it wins or it refuses — no stale UI state authorizes a
- * manuscript disclosure. So `readable: true` from here buys nothing but an
- * attempt, while `readable: false` is honoured absolutely: withholding is the
- * only direction in which a client's account of currency can be trusted.
+ * Everything here is PRESENTATION. This once sent `readable: boolean` and the
+ * crossing honoured `false` absolutely — but honouring `true` as an ATTEMPT was
+ * still enough to make the server read current characters at historical
+ * offsets, which proves the characters exist and not that they are still the
+ * passage that was focused.
+ *
+ * ⭐ So the field is gone, not validated. The server resolves currency against
+ * the frozen digest, at Ask time, immediately before disclosure. What the panel
+ * shows is a preflight; what the Ask resolves is the authority. That is also
+ * what closes the gap between the two.
  */
 
 import type { FocusMember, FocusSet } from './focusSet';
@@ -167,12 +171,13 @@ export interface AskRequestBody {
   actId: string;
   sessionId: string;
   workRef: string;
+  /** ⭐ The origin reading — how the SERVER reaches the frozen digests. */
+  readingId: string;
+  observationKey: string;
   members: {
     focusMemberId: string;
     sectionRef: string;
     range?: { start: number; end: number };
-    /** ⛔ PRESENTATION. `true` buys an attempt; only `false` is authoritative. */
-    readable: boolean;
   }[];
   activeMemberId: string | null;
   gesture: 'ask_maia';
@@ -187,6 +192,8 @@ export function askRequestBody(input: {
   actId: string;
   sessionId: string;
   workRef: string;
+  readingId: string;
+  observationKey: string;
   set: FocusSet;
   ask: string;
 }): AskRequestBody {
@@ -195,18 +202,17 @@ export function askRequestBody(input: {
     actId: input.actId,
     sessionId: input.sessionId,
     workRef: input.workRef,
+    readingId: input.readingId,
+    observationKey: input.observationKey,
     members: set.members.map((m, i) => ({
       focusMemberId: `f${i + 1}`,
       sectionRef: m.anchor.sectionId,
-      ...(m.anchor.kind === 'passage' && isReady(m)
-        /* The range travels only for a member whose coordinates the panel
-           actually resolved; a withheld member sends no offsets at all. */
-        ? { range: { start: m.focus!.start, end: m.focus!.end } }
+      /* ⭐ The HISTORICAL coordinates, exactly as the observation declared them.
+         ⛔ Not a claim that they are still current — the server resolves that
+         against the frozen digest, and only `ready` is ever given a body. */
+      ...(m.anchor.kind === 'passage'
+        ? { range: { start: m.anchor.range.start, end: m.anchor.range.end } }
         : {}),
-      /* ⛔ P13 · the panel says WHETHER a member is ready, never WHY it is not.
-         The panel's own labels ("needs confirmation", "no longer here") are
-         local presentation; the server establishes which is true for MAIA. */
-      readable: isReady(m),
     })),
     activeMemberId: set.activeIndex === null ? null : `f${set.activeIndex + 1}`,
     gesture: 'ask_maia',

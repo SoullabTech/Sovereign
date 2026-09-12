@@ -80,6 +80,27 @@ const participationSrc = lib('focusParticipation.ts');
 const identity = async () => resolveCanonicalIdentity({} as never);
 
 /** One snapshot of the current working draft, holding exactly these sections. */
+
+/* ⭐ WS-FOCUS-CURRENCY-01: the crossing now resolves currency itself, before any
+   boundary. These harnesses inject a resolver that finds everything current —
+   the obligations below are about the crossing, not about currency, and each
+   currency verdict has its own falsifiers in focusCurrency.test.ts. */
+const allReady = (version = 37) => async ({ members }: { members: readonly { focusMemberId: string; sectionRef: string }[] }) => ({
+  members: members.map((m) => ({
+    focusMemberId: m.focusMemberId, sectionRef: m.sectionRef, currency: 'ready' as const,
+  })),
+  resolvedAgainstDraftVersion: version,
+});
+
+/** Only these section refs are `ready`; the rest withhold. */
+const currencyFor = (readyRefs: string[]) =>
+  async ({ members }: { members: readonly { focusMemberId: string; sectionRef: string }[] }) => ({
+    members: members.map((m) => ({
+      focusMemberId: m.focusMemberId, sectionRef: m.sectionRef,
+      currency: readyRefs.includes(m.sectionRef) ? ('ready' as const) : ('needs_confirmation' as const),
+    })),
+    resolvedAgainstDraftVersion: 37,
+  });
 const draftFor = (ids: string[]) => ({
   ok: true as const,
   snapshot: {
@@ -316,6 +337,7 @@ function req(over: Partial<FocusCrossingRequest> = {}): FocusCrossingRequest {
     requestId: 'req-1', actId: 'act-1', identity: {} as never,
     posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 'sess-1',
     workRef: 'w-1',
+    readingId: 'r-1', observationKey: 'o1',
     members: [
       { focusMemberId: 'f1', sectionRef: 's45' },
       { focusMemberId: 'f2', sectionRef: 's56' },
@@ -332,6 +354,7 @@ describe('F8 — one Focus gesture generates ONE canonical turn', () => {
     let generated = 0;
     await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
+      resolveCurrency: allReady(),
       readDraft: async () => ({ ok: false as const, failure: 'no_draft' as const }),
       prepare: async () => { prepared += 1; return null; },
       generate: () => { generated += 1; return { handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }; },
@@ -397,6 +420,7 @@ describe('F11 — no receipt crosses before every member is resolved', () => {
     const confirmed: string[] = [];
     const out = await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
+      resolveCurrency: allReady(),
       readDraft: async () => { confirmed.push('read'); return draftFor(['sec-1']); },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(true), result: Promise.resolve({ ok: true }) }),
@@ -411,6 +435,7 @@ describe('F12 — a member not declared in the Focus Set cannot appear in cognit
     const asked: string[] = [];
     await performFocusCrossing(req(), {
       presence: async () => new Set<string>(),
+      resolveCurrency: allReady(),
       readDraft: async ({ sectionRefs }) => { asked.push(...sectionRefs); return draftFor([]); },
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),
@@ -442,10 +467,11 @@ describe('P13 — the client is not authoritative about why a member is withheld
     requestId: `req-${++n}`, actId: `act-p13-${n}`, identity: {} as never,
     posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 'sess-1',
     workRef: 'w-1',
+    readingId: 'r-1', observationKey: 'o1',
     members: [
-      { focusMemberId: 'f1', sectionRef: 's-readable', readable: true },
-      { focusMemberId: 'f2', sectionRef: 's-still-there', readable: false },
-      { focusMemberId: 'f3', sectionRef: 's-deleted', readable: false },
+      { focusMemberId: 'f1', sectionRef: 's-readable' },
+      { focusMemberId: 'f2', sectionRef: 's-still-there' },
+      { focusMemberId: 'f3', sectionRef: 's-deleted' },
     ],
     activeMemberId: null, gesture: 'ask_maia', ask: 'q',
   } as FocusCrossingRequest);
@@ -455,6 +481,9 @@ describe('P13 — the client is not authoritative about why a member is withheld
     let seen: { members: { sectionRef: string; status: string }[] } | null = null;
     await performFocusCrossing(withheldReq(), {
       presence: async () => new Set(presentIds),
+      /* ⭐ Currency is fixed: only `s-readable` is ready. What VARIES is what
+         the server's presence probe finds — which is the whole point of P13. */
+      resolveCurrency: currencyFor(['s-readable']),
       readDraft: async ({ sectionRefs }) => draftFor(sectionRefs as string[]),
       prepare: async (input) => {
         seen = {
@@ -503,6 +532,7 @@ describe('P13 — the client is not authoritative about why a member is withheld
     const probed: string[][] = [];
     await performFocusCrossing(withheldReq(), {
       presence: async ({ sectionRefs }) => { probed.push([...sectionRefs]); return new Set(); },
+      resolveCurrency: currencyFor(['s-readable']),
       readDraft: async ({ sectionRefs }) => draftFor(sectionRefs as string[]),
       prepare: async () => null,
       generate: () => ({ handoff: Promise.resolve(false), result: Promise.resolve({ ok: false }) }),

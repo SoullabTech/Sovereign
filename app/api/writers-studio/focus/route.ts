@@ -21,6 +21,7 @@ import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing, type FocusMemberScope } from '@/lib/writers-studio/focusCrossing';
 import { readCurrentDraft } from '@/lib/writers-studio/currentDraftRead';
+import { focusCurrencyResolver } from '@/lib/writers-studio/focusCurrencyResolver';
 import { focusPresence } from '@/lib/writers-studio/focusPresence';
 import { prepareCanonicalHandoff, beginCanonicalGeneration } from '@/lib/writers-studio/writersStudioCognition';
 
@@ -43,7 +44,10 @@ export async function POST(request: NextRequest) {
   const memberId = identity.memberId;
 
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
-  const { sessionId, workRef, actId, members, activeMemberId, gesture, ask } = body ?? {};
+  const {
+    sessionId, workRef, actId, readingId, observationKey,
+    members, activeMemberId, gesture, ask,
+  } = body ?? {};
 
   if (typeof sessionId !== 'string' || typeof workRef !== 'string' || typeof ask !== 'string') {
     return NextResponse.json({ error: 'sessionId, workRef and ask are required' }, { status: 400 });
@@ -64,6 +68,11 @@ export async function POST(request: NextRequest) {
   if (typeof actId !== 'string' || actId.length < 8) {
     return NextResponse.json({ error: 'actId is required' }, { status: 400 });
   }
+  /* ⭐ The origin reading, so the SERVER can reach the frozen digests and
+     establish for itself whether each anchor still denotes current Work. */
+  if (typeof readingId !== 'string' || typeof observationKey !== 'string') {
+    return NextResponse.json({ error: 'readingId and observationKey are required' }, { status: 400 });
+  }
   if (gesture !== 'ask_maia' && gesture !== 'work_with_this' && gesture !== 'widen_focus') {
     return NextResponse.json({ error: 'unsupported gesture' }, { status: 400 });
   }
@@ -77,14 +86,12 @@ export async function POST(request: NextRequest) {
   }
 
   /**
-   * The declared attention. ⭐ `readable` is the ANCHOR CURRENCY the client
-   * resolved against the current Work — a member whose anchor is `unverified`
-   * is declared here and never read.
+   * The declared attention — identities and historical coordinates only.
    *
-   * ⛔ The client asserting `readable: true` buys it nothing beyond an attempt:
-   * the boundary still has to authorize the section, and the server still has
-   * to succeed in reading it. `readable: false` is the only assertion that is
-   * load-bearing, and it can only ever WITHHOLD.
+   * ⛔⭐ THE CLIENT ASSERTS NO READABILITY AT ALL. It names places; the server
+   * resolves, at Ask time, whether each historical anchor still denotes current
+   * Work — and only `ready` is given a body. A field the client has no
+   * authority to assert is not validated here; it does not exist.
    */
   const scopes = Array.isArray(members) ? members : [];
   if (!scopes.length) {
@@ -93,21 +100,17 @@ export async function POST(request: NextRequest) {
   const parsed: FocusMemberScope[] = [];
   for (const m of scopes) {
     if (!m || typeof m !== 'object') break;
-    const { focusMemberId, sectionRef, range, readable } = m as Record<string, unknown>;
+    const { focusMemberId, sectionRef, range } = m as Record<string, unknown>;
     if (typeof focusMemberId !== 'string' || typeof sectionRef !== 'string') break;
     parsed.push({
       focusMemberId, sectionRef,
-      /* ⛔ P13 · `readable: false` withholds, absolutely. WHY it is withheld is
-         NOT read from the client: the server establishes that itself, so a
-         stale page cannot misreport a deleted section as an unconfirmed one. */
-      readable: readable !== false,
       ...(range && typeof range === 'object'
         ? { range: { start: Number((range as any).start), end: Number((range as any).end) } }
         : {}),
     });
   }
   if (parsed.length !== scopes.length) {
-    return NextResponse.json({ error: 'a focus member was not readable as one' }, { status: 400 });
+    return NextResponse.json({ error: 'a focus member could not be parsed' }, { status: 400 });
   }
   if (activeMemberId !== null && activeMemberId !== undefined && typeof activeMemberId !== 'string') {
     return NextResponse.json({ error: 'activeMemberId must be a member id or null' }, { status: 400 });
@@ -120,11 +123,13 @@ export async function POST(request: NextRequest) {
   const result = await performFocusCrossing(
     {
       requestId, actId, identity, posture: TurnPosture.resolve(body), memberId, sessionId,
-      workRef, members: parsed, activeMemberId: (activeMemberId as string | null) ?? null,
+      workRef, readingId, observationKey,
+      members: parsed, activeMemberId: (activeMemberId as string | null) ?? null,
       gesture, ask,
     },
     {
-      readDraft: readCurrentDraft, presence: focusPresence,
+      readDraft: readCurrentDraft, resolveCurrency: focusCurrencyResolver,
+      presence: focusPresence,
       prepare: prepareCanonicalHandoff, generate: beginCanonicalGeneration,
     },
   );

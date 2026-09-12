@@ -127,7 +127,18 @@ const cognition = jest.fn(() => {
   events.push('handoff');
   return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: true, response: 'MAIA reply' }) };
 });
-const deps = () => ({ readDraft, presence: async () => new Set<string>(), prepare, generate: cognition } as never);
+
+/* ⭐ WS-FOCUS-CURRENCY-01: the crossing now resolves currency itself, before any
+   boundary. These harnesses inject a resolver that finds everything current —
+   the obligations below are about the crossing, not about currency, and each
+   currency verdict has its own falsifiers in focusCurrency.test.ts. */
+const allReady = (version = 37) => async ({ members }: { members: readonly { focusMemberId: string; sectionRef: string }[] }) => ({
+  members: members.map((m) => ({
+    focusMemberId: m.focusMemberId, sectionRef: m.sectionRef, currency: 'ready' as const,
+  })),
+  resolvedAgainstDraftVersion: version,
+});
+const deps = () => ({ readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
   requestId: 'req-1', identity: {} as never,
@@ -135,8 +146,8 @@ const req = (over: Record<string, unknown> = {}) => ({
   /* STEP 2B — a ONE-MEMBER Focus Set is the same crossing this file always
      tested. ⛔ No obligation below was weakened; only the shape of "where the
      writer is looking" changed, from one scope to a set of one. */
-  actId: 'act-1', workRef: 'work-1',
-  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', readable: true, range: { start: 0, end: 10 } }],
+  actId: 'act-1', workRef: 'work-1', readingId: 'r-1', observationKey: 'o1',
+  members: [{ focusMemberId: 'f1', sectionRef: 'sec-1', range: { start: 0, end: 10 } }],
   activeMemberId: null, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
 });
@@ -233,7 +244,7 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
       events.push('handoff');
       return { handoff: Promise.resolve(true), result: Promise.resolve({ ok: false }) };
     });
-    const out = await performFocusCrossing(req(), ({ readDraft, presence: async () => new Set<string>(), prepare, generate: failing } as never));
+    const out = await performFocusCrossing(req(), ({ readDraft, resolveCurrency: allReady(), presence: async () => new Set<string>(), prepare, generate: failing } as never));
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(true);
     expect(out.presentation.state).toBe('crossed_accounted');
     expect(out.response).toBeNull();
@@ -247,7 +258,8 @@ describe('C3 · HANDOFF TRUTH — the crossing is the handoff, not the answer', 
         draftId: 'dddddddd-0000-4000-8000-000000000001', version: 37,
         sections: new Map(),   /* the authorized section is not in the draft */
       } }),
-      presence: async () => new Set<string>(), prepare, generate: cognition,
+      resolveCurrency: allReady(), presence: async () => new Set<string>(),
+      prepare, generate: cognition,
     } as never));
     expect(cognition).not.toHaveBeenCalled();
     expect(calls.some(c => /UPDATE context_disclosure_receipts/.test(c.sql))).toBe(false);

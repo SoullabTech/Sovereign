@@ -404,8 +404,16 @@ describe('W10 — returning to Develop shows the reading unchanged', () => {
     expect(door).not.toMatch(/setState|useState|onStanding|postStanding/);
   });
 
-  it('the destination never posts to the reading it came from', () => {
-    expect(panel).not.toMatch(/readingId|observationKey|standing/);
+  /**
+   * ⭐ NARROWED, NOT WEAKENED. The panel now NAMES the reading — it must, so
+   * the server can reach the frozen digests and establish currency for itself.
+   * The obligation was never "the panel must not know the reading"; it was that
+   * going to Focus changes nothing about the reading it came from.
+   */
+  it('the destination never WRITES to the reading it came from', () => {
+    expect(panel).not.toMatch(/standing|postStanding|\/readings?\//);
+    const routes = [...panel.matchAll(/'(\/api\/[^']+)'/g)].map((m) => m[1]);
+    expect(routes).toEqual(['/api/writers-studio/focus']);
   });
 
   it('the set panel changes no text and offers no repair', () => {

@@ -663,6 +663,8 @@ function CanvasRoom() {
              offered — it is never sent against a Work the room cannot name. */
           sessionId={conversationId}
           workRef={request.kind === 'origin' ? request.origin.manuscriptId : manuscript?.id ?? null}
+          readingId={request.kind === 'origin' ? request.origin.readingId : null}
+          observationKey={request.kind === 'origin' ? request.origin.observationKey : null}
         />
       )}
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}

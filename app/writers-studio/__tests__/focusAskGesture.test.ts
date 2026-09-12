@@ -106,24 +106,49 @@ describe('P2 — an unreadable member is never shown as one MAIA will read', () 
    * believed on a path someone forgets to validate. The panel now says only
    * WHETHER a member is ready; the server establishes WHY it is not.
    */
-  it('the request marks them withheld, and says nothing about why', () => {
-    const body = askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', set: five(), ask: 'q' });
-    const withheld = body.members.filter((m) => !m.readable);
-    expect(withheld).toHaveLength(2);
-    for (const m of withheld) expect(Object.keys(m).sort()).toEqual(['focusMemberId', 'readable', 'sectionRef']);
-    expect(JSON.stringify(body)).not.toMatch(/withheld|unverified|unavailable|gone|stale/);
+  /**
+   * ⭐⭐ SUPERSEDED AGAIN, AND THIS IS THE END OF THE LINE FOR IT.
+   *
+   * v1: the panel sent `withheldAs` — the truthful REASON. Withdrawn by P13:
+   *     the client may present a reason, it may not be authoritative about one.
+   * v2: the panel sent `readable: boolean` — a claim, honoured as a withhold
+   *     and as an ATTEMPT. Withdrawn by C8: an attempt was still enough to make
+   *     the server read current characters at historical offsets, which proves
+   *     the characters exist and NOT that they are still the focused passage.
+   * v3: the panel sends NEITHER. It names places and their historical
+   *     coordinates; the server resolves currency against the frozen digest.
+   *
+   * Each step removed an authority rather than validating it.
+   */
+  it('the request carries NO readability claim, for any member', () => {
+    const body = askRequestBody({
+      actId: 'a', sessionId: 's', workRef: 'w', readingId: 'r', observationKey: 'o1',
+      set: five(), ask: 'q',
+    });
+    expect(body.members).toHaveLength(5);
+    for (const m of body.members) {
+      expect(Object.keys(m).sort().filter((k) => k !== 'range'))
+        .toEqual(['focusMemberId', 'sectionRef']);
+    }
+    expect(JSON.stringify(body)).not.toMatch(/readable|withheld|unverified|unavailable|gone|stale/);
   });
 
-  it('⛔ a withheld member sends no offsets at all', () => {
-    const body = askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', set: five(), ask: 'q' });
-    for (const m of body.members) {
-      if (!m.readable) expect(m.range).toBeUndefined();
-    }
+  it('⭐ historical coordinates travel exactly as the observation declared them', () => {
+    const body = askRequestBody({
+      actId: 'a', sessionId: 's', workRef: 'w', readingId: 'r', observationKey: 'o1',
+      set: five(), ask: 'q',
+    });
+    /* ⛔ From the ANCHOR, never from the panel's local resolution — the server
+       compares them against the frozen reading, so a coordinate the panel had
+       already re-resolved would be compared against itself. */
+    const passage = body.members.find((m) => m.range);
+    expect(passage!.range).toEqual({ start: 4, end: 12 });
+    expect(body.members.filter((m) => m.range)).toHaveLength(1);
   });
 
   it('⛔ and the request carries no Work prose', () => {
     const json = JSON.stringify(
-      askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', set: five(), ask: 'q' }));
+      askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', readingId: 'r', observationKey: 'o1', set: five(), ask: 'q' }));
     for (const body of Object.values(BODIES)) {
       for (const word of body.split(' ')) if (word.length > 5) expect(json).not.toContain(word);
     }
@@ -141,7 +166,7 @@ describe('P3 — no active target is lawful', () => {
   });
 
   it('and the request sends a null active member rather than inventing one', () => {
-    const body = askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', set: five(), ask: 'q' });
+    const body = askRequestBody({ actId: 'a', sessionId: 's', workRef: 'w', readingId: 'r', observationKey: 'o1', set: five(), ask: 'q' });
     expect(body.activeMemberId).toBeNull();
   });
 });
@@ -257,14 +282,15 @@ describe('P9 — a double submission does not become two writer acts', () => {
 /* ══ P10 — the client is not a disclosure authority ═══════════════════════ */
 
 describe('P10 — a client marking a stale member "ready" is not trusted', () => {
-  it('the server treats readable:true as an attempt, and readable:false as binding', () => {
+  it('⭐ SUPERSEDED BY C8 — the client no longer makes a claim to be trusted with', () => {
     const crossing = strip(fs.readFileSync(
       path.join(__dirname, '..', '..', '..', 'lib', 'writers-studio', 'focusCrossing.ts'), 'utf8'));
-    // A member the client called readable still has to survive the boundary AND
-    // the read; failing either makes it `unavailable`, never `readable`.
+    /* There is no `readable` to weigh. The server resolves currency and only
+       `ready` is given a body; a member that survives the boundary but whose
+       read fails is still `unavailable`, never `readable`. */
     expect(crossing).toMatch(/content === undefined \? 'unavailable' : 'readable'/);
-    // And a member the client withheld acquires no boundary at all.
-    expect(crossing).toMatch(/if \(!member\.readable\) continue;/);
+    expect(crossing).not.toMatch(/member\.readable/);
+    expect(crossing).toMatch(/if \(!mayDisclose\(currencyOf\.get\(member\.focusMemberId\)/);
   });
 
   it('⭐ P13 · the route accepts no withheld reason at all — there is none to believe', () => {

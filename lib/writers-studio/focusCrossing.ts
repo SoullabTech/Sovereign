@@ -54,6 +54,10 @@ import {
 } from './focusCrossingAct';
 import type { FocusPresenceProbe } from './focusPresence';
 import {
+  currencyStillDescribes, mayDisclose, resolveFocusCurrency,
+  type FocusCurrency, type MemberCurrency,
+} from './focusCurrency';
+import {
   bodyOfMember, type CurrentDraftReader, type DraftReadFailure,
 } from './currentDraftRead';
 
@@ -85,13 +89,20 @@ export interface FocusMemberScope {
    * Such a member is declared to MAIA and never read. The route decides this
    * from anchor currency; the crossing obeys it and reads nothing.
    */
-  readonly readable: boolean;
   /**
-   * ⛔ P13 · THERE IS DELIBERATELY NO WITHHELD REASON HERE. The client may
-   * present "needs confirmation" or "no longer here"; it may not be
-   * authoritative about which is true. The server establishes that from the
-   * presence probe, so a stale page cannot tell MAIA a section was deleted when
-   * it was merely unconfirmed — or the reverse.
+   * ⛔⭐ THERE IS DELIBERATELY NO `readable` HERE, AND NO WITHHELD REASON.
+   *
+   * This carried `readable: boolean`, and the crossing did `if (!member.readable)
+   * continue;` BEFORE establishing boundaries. `CurrentDraftReader` then proved
+   * those characters exist — it could not prove they are still the passage that
+   * was focused. A stale page could make the server read current characters at
+   * historical offsets and hand MAIA a passage the writer never framed.
+   *
+   * Same lesson as P13, one level up: *do not validate a field the client has
+   * no authority to assert — remove the authority.* Currency is resolved by the
+   * server, at Ask time, immediately before disclosure. The panel's preflight is
+   * informative; the Ask-time resolution is authoritative. That is also what
+   * closes the TOCTOU gap between the two.
    */
 }
 
@@ -108,6 +119,19 @@ export interface CanonicalCognitionPort {
     prepared: PreparedHandoff,
     input: { memberId: string; sessionId: string; requestId: string; ask: string; posture: TurnPosture },
   ) => { handoff: Promise<boolean>; result: Promise<{ ok: boolean; response?: string }> };
+}
+
+/**
+ * Resolves currency against the Work as it stands, and reports which draft
+ * version it inspected. ⛔ Injected so the falsifiers can observe it; the
+ * production wiring is the constituted resolver and nothing else.
+ */
+export interface FocusCurrencyResolver {
+  (ref: {
+    memberId: string; workRef: string;
+    readingId: string; observationKey: string;
+    members: readonly FocusMemberScope[];
+  }): Promise<FocusCurrency>;
 }
 
 export interface FocusCrossingRequest {
@@ -131,6 +155,13 @@ export interface FocusCrossingRequest {
   memberId: string;
   sessionId: string;
   workRef: string;
+  /**
+   * ⭐ The reading these anchors came from. The server needs it to reach the
+   * frozen digests — which is the only thing that can establish whether a
+   * historical passage anchor still denotes the same passage.
+   */
+  readingId: string;
+  observationKey: string;
   /** The declared attention. ⛔ Every member crosses at SECTION scope or not at all. */
   members: readonly FocusMemberScope[];
   /**
@@ -181,13 +212,20 @@ export type CrossingFailure =
   | 'act_contradiction'
   | 'act_unrecordable'
   | 'handoff_not_prepared'
-  | 'handoff_failed';
+  | 'handoff_failed'
+  | 'currency_stale';
 
 export async function performFocusCrossing(
   req: FocusCrossingRequest,
   deps: {
     /** ⭐ ONE snapshot of the current working draft, at one version. */
     readDraft: CurrentDraftReader;
+    /**
+     * ⭐⭐ The server's own answer to whether each historical anchor still
+     * denotes current Work. Resolved HERE, at Ask time — never taken from the
+     * client, and never trusted from an earlier panel preflight.
+     */
+    resolveCurrency: FocusCurrencyResolver;
     /** ⭐ P13 · the server's own answer to WHY a member was withheld. */
     presence: FocusPresenceProbe;
     prepare: CanonicalCognitionPort['prepare'];
@@ -218,11 +256,27 @@ export async function performFocusCrossing(
      ⛔ AND ONLY READABLE MEMBERS ACQUIRE A BOUNDARY. An `unverified` member is
      declared attention, not authorized content: establishing a boundary for one
      would mint a receipt for material the ruling says must not cross. */
+  /* ── ⭐⭐ 0 · CURRENCY, ESTABLISHED BY THE SERVER, BEFORE ANY BOUNDARY.
+     ⛔ Not read from the request, and not inherited from the panel's preflight.
+     A boundary minted for a member whose anchor no longer denotes the same
+     passage would be a receipt for a disclosure nobody asked for. */
+  const currency = await deps.resolveCurrency({
+    memberId: req.memberId, workRef: req.workRef,
+    readingId: req.readingId, observationKey: req.observationKey,
+    members: req.members,
+  });
+  const currencyOf = new Map<string, MemberCurrency>(
+    currency.members.map((m) => [m.focusMemberId, m.currency]),
+  );
+
   const established: { member: FocusMemberScope; disclosureId: string }[] = [];
   let first: BoundaryOutcome | null = null;
 
   for (const member of req.members) {
-    if (!member.readable) continue;
+    /* ⭐ ONLY `ready` MAY BE GIVEN A BODY. `needs_confirmation`, `unavailable`
+       and `not_yet_known` all withhold — and `not_yet_known` withholds because
+       failure to establish sameness is not evidence of sameness either. */
+    if (!mayDisclose(currencyOf.get(member.focusMemberId) ?? 'not_yet_known')) continue;
     const boundary = await establishDisclosureBoundary({
       requestId: req.requestId,
       posture: req.posture,
@@ -278,6 +332,19 @@ export async function performFocusCrossing(
     return { ...refused(unavailable), failure: snapshot.failure };
   }
 
+  /* ── ⭐⭐ NO MIXED TRUTH. Currency was resolved against one draft version; the
+     bodies came from another read. If the writer saved in between, the v37
+     answers do not describe v38 prose, and proceeding would disclose under a
+     currency nobody established. ⛔ Refuse; do not silently re-resolve. */
+  if (!currencyStillDescribes(currency, snapshot.snapshot.version)) {
+    console.error('[FOCUS] the Work moved between currency and read — nothing crossed', {
+      actId: req.actId,
+      resolvedAgainst: currency.resolvedAgainstDraftVersion,
+      readAt: snapshot.snapshot.version,
+    });
+    return { ...refused(unavailable), failure: 'currency_stale' };
+  }
+
   const bodies = new Map<string, string>();
   const perMember: { focusMemberId: string; failure: DraftReadFailure }[] = [];
   for (const { member } of established) {
@@ -301,7 +368,9 @@ export async function performFocusCrossing(
   /* ⭐ P13 · WHY a withheld member is withheld, established HERE. Probed only
      for the members that were actually withheld — a readable member's presence
      is proven by the fact that its body was read. */
-  const withheldRefs = req.members.filter((m) => !m.readable).map((m) => m.sectionRef);
+  const withheldRefs = req.members
+    .filter((m) => !mayDisclose(currencyOf.get(m.focusMemberId) ?? 'not_yet_known'))
+    .map((m) => m.sectionRef);
   const present = withheldRefs.length
     ? await deps.presence({ memberId: req.memberId, workRef: req.workRef, sectionRefs: withheldRefs })
     : new Set<string>();
@@ -314,8 +383,9 @@ export async function performFocusCrossing(
         /* A withheld member whose section is STILL THERE is an anchor the
            writer needs to confirm; one whose section is gone cannot be made
            available at all. ⛔ Neither answer comes from the client. */
-        const status: FocusMemberStatus = !m.readable
-          ? (present.has(m.sectionRef) ? 'unverified' : 'unavailable')
+        const c = currencyOf.get(m.focusMemberId) ?? 'not_yet_known';
+        const status: FocusMemberStatus = !mayDisclose(c)
+          ? (c === 'unavailable' || !present.has(m.sectionRef) ? 'unavailable' : 'unverified')
           : content === undefined ? 'unavailable' : 'readable';
         return {
           focusMemberId: m.focusMemberId, ordinal: i + 1, sectionRef: m.sectionRef,
