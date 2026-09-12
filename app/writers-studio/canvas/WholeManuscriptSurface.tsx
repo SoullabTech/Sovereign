@@ -104,6 +104,21 @@ export interface WholeManuscriptSurfaceProps {
    * the viewport covers.
    */
   onPlaceChange?: (sectionId: string) => void;
+  /**
+   * ⭐ A PRESENTATION SEAM, AND NOTHING MORE.
+   *
+   * A room may draw a read-only mark over a section's text — the writer's own
+   * held focus, and only that. What it returns is rendered behind the editor,
+   * inert and aria-hidden, and is given the section's CURRENT body so it can
+   * never disagree with what the writer is typing.
+   *
+   * ⛔ IT CONFERS NO AUTHORITY. The <textarea> remains the sole editable
+   * manuscript control. Nothing returned here participates in write authority,
+   * autosave, capture, eviction or section identity, and nothing here may
+   * scroll or navigate. A room that needed more than a mark would be asking for
+   * a different seam, and should be refused one.
+   */
+  renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
 }
 
 /** What the parent may ask of a mounted surface. */
@@ -125,7 +140,7 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange,
+  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, renderSectionOverlay,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -366,6 +381,11 @@ export const WholeManuscriptSurface = forwardRef<
               />
             )}
             {!isMounted ? null : section.editable ? (
+              /* The editor and its mark share one origin. `position: relative`
+                 only when a room actually draws — an unused seam changes
+                 nothing about how this surface renders. */
+              <div style={renderSectionOverlay ? { position: 'relative' } : undefined}>
+              {renderSectionOverlay?.(section.id, body)}
               <textarea
                 ref={(n) => { if (n) fields.current.set(section.id, n); }}
                 value={body}
@@ -387,8 +407,13 @@ export const WholeManuscriptSurface = forwardRef<
                   width: '100%', resize: 'none', border: 'none', outline: 'none',
                   background: 'transparent', font: 'inherit', lineHeight: 1.7,
                   color: 'inherit', overflow: 'hidden',
+                  /* Only when a mark is being drawn, so the mirror and the
+                     editor wrap identically. Absent a room that draws, this
+                     surface is byte-for-byte what it was. */
+                  ...(renderSectionOverlay ? { padding: 0, margin: 0 } : null),
                 }}
               />
+              </div>
             ) : (
               <StudioText role="prose" as="pre" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
                 {body}
