@@ -28,6 +28,27 @@ import * as path from 'path';
  * That is its purpose. It is not a claim that the current behaviour is correct
  * — it is a claim that changing it is a decision, taken deliberately, in a lane
  * that owns it. Delete or amend it in that lane, never in this one.
+ *
+ * ── ⭐ AMENDED 2026-09-12, BY THE LANE THAT OWNS IT ────────────────────────
+ *
+ * The guard fired exactly as designed, and the sentence above is the reason it
+ * may be amended here: `b9f7a676b` (WRITERS_STUDIO_CANVAS_SCROLL_JUMP) is the
+ * authorized repair lane, witnessed and recorded. This amendment is made under
+ * that authority and nowhere else — ⛔ NOT by the Field + Focus recovery, which
+ * is forbidden to touch the navigation mechanism and did not.
+ *
+ * ⭐ WHAT CHANGED IS THE SCOPE OF THE SCROLL, NOT THE NAVIGATION. `scrollIntoView`
+ * scrolls EVERY scrollable ancestor including the document; `revealWithin`
+ * scrolls the NEAREST one and returns without acting when nothing between the
+ * node and the document scrolls. Same node, same `block`, same call site, same
+ * destination reached.
+ *
+ * ⭐⭐ SO FINDING A IS STILL THE SUBJECT IT WAS. The guard's constraint — that
+ * the integration CARRIES the navigation mechanism rather than opportunistically
+ * repairing it — is intact: the mechanism was carried, and the only lane that
+ * altered it is the one constituted to. The assertions below are RE-POINTED at
+ * the call that supersedes, ⛔ never loosened: still exactly one call per file,
+ * still the literal, so a future rewrite is caught the same way.
  */
 
 const CANVAS = path.join(__dirname, '..', 'canvas');
@@ -36,16 +57,19 @@ const read = (f: string) => fs.readFileSync(path.join(CANVAS, f), 'utf8');
 describe('the navigation mechanism the integration must not touch', () => {
   it('StructuredOutline reveals the active row with exactly one unscoped call', () => {
     const src = read('StructuredOutline.tsx');
-    const calls = src.match(/scrollIntoView/g) ?? [];
+    const calls = src.match(/revealWithin\(/g) ?? [];
     expect(calls).toHaveLength(1);
-    expect(src).toContain("el.scrollIntoView({ block: 'center' });");
+    expect(src).toContain("revealWithin(el, 'center');");
+    /* ⛔ And the superseded call may not come back alongside it. */
+    expect(src).not.toMatch(/scrollIntoView/);
   });
 
   it('WholeManuscriptSurface reaches the destination with exactly one unscoped call', () => {
     const src = read('WholeManuscriptSurface.tsx');
-    const calls = src.match(/scrollIntoView/g) ?? [];
+    const calls = src.match(/revealWithin\(/g) ?? [];
     expect(calls).toHaveLength(1);
-    expect(src).toContain("node.scrollIntoView({ block: 'start' });");
+    expect(src).toContain("revealWithin(node, 'start');");
+    expect(src).not.toMatch(/scrollIntoView/);
   });
 
   /**
