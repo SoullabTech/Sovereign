@@ -41,6 +41,14 @@ public actor VoiceKernel {
     /// automatic act names the observation that caused it.
     private var lastObservationSeq: Int?
 
+    /// PRE-WITNESS-04 §2.1 — the one-shot VP-reconfiguration expectation and
+    /// the provenance needed to prove why a classification fired. Reset at
+    /// every graph start; consumed on the matched change; retired on healthy.
+    private var vpExpectationPending = false
+    private var routeAtStart: RouteState?
+    private var configChangeOrdinal = 0
+    private var callbacksSinceChange = 0
+
     /// Physiology sampling (P4): bounded, aggregated once per second.
     private struct InputAggregate {
         var callbacks = 0; var frames = 0
@@ -291,8 +299,14 @@ public actor VoiceKernel {
         session?.setGeneration(g)
         snap.route = session?.currentRoute() ?? snap.route
         #endif
+        // §2.1: one expected VP-associated change per VP-enabled generation.
+        vpExpectationPending = snap.voiceProcessingEnabled
+        routeAtStart = snap.route
+        configChangeOrdinal = 0
+        callbacksSinceChange = 0
         var started = ["voiceProcessing": String(snap.voiceProcessingEnabled), "engineRunning": String(ag.isRunning),
-                       "generationAgeMs": "0"]
+                       "generationAgeMs": "0", "vpReconfigurationExpected": String(vpExpectationPending),
+                       "routeAtStart": "\(snap.route.output)/\(snap.route.input)"]
         started.merge(formatEvidence(ag.inputFormatAtStart())) { a, _ in a }
         started.merge(ageEvidence(priorGeneration: priorGen, priorAgeMs: priorAge)) { a, _ in a }
         journal("VoiceKernel", "graph_started", cause: cause, causeSeq: causeSeq, evidence: started)
@@ -341,6 +355,14 @@ public actor VoiceKernel {
                                          cause: "observation", evidence: ["rms": String(o.rms), "peak": String(o.peak),
                                                                           "frames": String(o.frames), "synthetic": String(synthetic)])
         }
+        callbacksSinceChange += 1
+        if vpExpectationPending && snap.inputFlow == .healthy {
+            // §2.1: the generation became healthy without the expected change — retire it,
+            // so a later same-route change is never mistaken for the VP one.
+            vpExpectationPending = false
+            lastObservationSeq = journal("VoiceKernel", "vp_expectation_retired", cause: "generation_healthy",
+                                         causeSeq: lastObservationSeq, evidence: ["generation": String(snap.generation)])
+        }
         if snap.floor == .entering && snap.inputFlow == .healthy {
             transition(to: .listening, cause: "input_flow_healthy", causeSeq: lastObservationSeq)
         }
@@ -376,6 +398,9 @@ public actor VoiceKernel {
                                                 "digitalZero": String(a.digitalZero), "noiseFloor": String(a.noiseFloor),
                                                 "signal": String(a.signal), "inputFlow": snap.inputFlow.rawValue,
                                                 "route": "\(snap.route.output)/\(snap.route.input)",
+                                                "engineRunning": graph.map { String($0.isRunning) } ?? "-",
+                                                "callbacksSinceChange": String(callbacksSinceChange),
+                                                "vpReconfigurationExpected": String(vpExpectationPending),
                                                 "synthetic": String(snap.faults.digitalZeroInput || snap.faults.persistentFault)])
         if let g = graph, let r = g.renderStats() {
             lastObservationSeq = journal("OutputController", "output_render_sample", cause: "sample",
@@ -422,21 +447,53 @@ public actor VoiceKernel {
                                          evidence: ["kind": "configurationChange", "callbackGeneration": String(gen)])
             return
         }
-        var ev: [String: String] = [:]
+        configChangeOrdinal += 1
+        #if os(iOS)
+        let routeNow = session?.currentRoute()
+        #else
+        let routeNow: RouteState? = nil
+        #endif
+        let cls = ConfigurationChangeClassifier.classify(.init(
+            voiceProcessing: snap.voiceProcessingEnabled, expectationPending: vpExpectationPending,
+            ordinalInGeneration: configChangeOrdinal, routeAtStart: routeAtStart, routeNow: routeNow, suspended: suspended))
+        var ev: [String: String] = [
+            "classification": cls.rawValue,
+            "voiceProcessing": String(snap.voiceProcessingEnabled),
+            "vpReconfigurationExpected": String(vpExpectationPending),
+            "configurationChangeOrdinalInGeneration": String(configChangeOrdinal),
+            "routeAtStart": routeAtStart.map { "\($0.output)/\($0.input)" } ?? "-",
+            "routeNow": routeNow.map { "\($0.output)/\($0.input)" } ?? "-",
+            "dataSourceAtStart": routeAtStart?.inputDataSource ?? "-",
+            "dataSourceNow": routeNow?.inputDataSource ?? "-",
+            "callbacksSinceStart": String(snap.inputCallbacksInGeneration),
+        ]
         if let g = graph {
             ev.merge(formatEvidence(g.currentInputFormat())) { a, _ in a }     // §3.4: the format at the instant iOS posted
             if let age = g.ageMs(now: clock()) { ev["generationAgeMs"] = String(age) }
+            ev["engineRunning"] = String(g.isRunning)
         }
         let obs = journal("VoiceKernel", "engine_configuration_changed", cause: "os_configuration_change", evidence: ev)
         lastObservationSeq = obs
-        // PRE-WITNESS-03 B/D — no direct rebuild (K00-W3: the direct path was
-        // unbounded and self-provoking). A configuration change is a fault
-        // class under the existing RecoveryPolicy, so the ratified
-        // 3-per-fault-class / 60 s ceiling governs it and exhaustion degrades.
-        // Whether it SHOULD be a fault at all is the B/C question the
-        // VP-off control journal decides; this makes the answer measurable.
-        let req = journal("HealthSupervisor", "recovery_requested", cause: "configuration_change", causeSeq: obs)
-        requestRecovery(faultClass: "configuration_change", causeSeq: req)
+        callbacksSinceChange = 0
+        switch cls {
+        case .voiceProcessingReconfiguration:
+            // PRE-WITNESS-04 §2.2 (refined B) — classify → journal → defer →
+            // do nothing to the graph. The expectation is consumed here (one-shot).
+            // The existing HealthSupervisor decides what happens next with its
+            // ratified windows: input arrives → healthy → listening; nothing
+            // within the entry window → its own entry_timeout verdict → the
+            // existing RecoveryPolicy. No rebuild, delayed or otherwise.
+            vpExpectationPending = false
+            journal("VoiceKernel", "configuration_change_deferred", cause: cls.rawValue, causeSeq: obs,
+                    evidence: ["generation": String(snap.generation),
+                               "generationAgeMs": ev["generationAgeMs"] ?? "-",
+                               "engineRunning": ev["engineRunning"] ?? "-",
+                               "vpExpectationConsumed": "true"])
+        case .routeConfigurationChange:
+            // PRE-WITNESS-03 B/D — unchanged: bounded by the existing RecoveryPolicy.
+            let req = journal("HealthSupervisor", "recovery_requested", cause: "configuration_change", causeSeq: obs)
+            requestRecovery(faultClass: "configuration_change", causeSeq: req)
+        }
     }
 
     #if os(iOS)

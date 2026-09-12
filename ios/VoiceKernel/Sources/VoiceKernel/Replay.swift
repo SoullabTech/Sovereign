@@ -36,6 +36,7 @@ public enum StateReplayer {
     /// notifications, dropped stale callbacks) are not acts.
     public static let automaticActs: Set<String> = [
         "recovery_requested", "recovery_scheduled", "recovery_started", "graph_rebuilt", "graph_started",
+        "configuration_change_deferred",
         "session_configured", "session_released", "session_category_set", "session_preferred_sample_rate_set",
         "session_preferred_io_buffer_set", "session_activated", "session_deactivated", "session_output_override",
         "stream_scheduled", "stream_cancelled", "stream_failed", "stream_cancel_measured",

@@ -210,6 +210,25 @@ final class ReplayTests: XCTestCase {
         XCTAssertEqual(r.orphanTransitions.first?.seq, 7)
     }
 
+    // PRE-WITNESS-04 §2.2: the deferral is an ACT (the kernel decided not to rebuild) and
+    // must name the observation that caused it, or the replayer rejects the record.
+    func testConfigurationChangeDeferralMustBeAttributed() {
+        let good = StateReplayer.replay([
+            ev(1, 1, "command", cause: "enterConversation"),
+            ev(2, 1, "floor_transition", from: "idle", to: "entering", causeSeq: 1),
+            ev(3, 1, "engine_configuration_changed", cause: "os_configuration_change"),
+            ev(4, 1, "configuration_change_deferred", cause: "voice_processing_reconfiguration", causeSeq: 3),
+        ])
+        XCTAssertTrue(good.passes)
+        let bad = StateReplayer.replay([
+            ev(1, 1, "command", cause: "enterConversation"),
+            ev(2, 1, "floor_transition", from: "idle", to: "entering", causeSeq: 1),
+            ev(3, 1, "configuration_change_deferred", cause: "voice_processing_reconfiguration"),   // no causeSeq
+        ])
+        XCTAssertFalse(bad.passes)
+        XCTAssertEqual(bad.unattributedActs.count, 1)
+    }
+
     func testUnlawfulEdgeFails() {
         let r = StateReplayer.replay([
             ev(1, 1, "command", cause: "x"),
@@ -313,4 +332,51 @@ final class ConfigurationChangeSeamTests: XCTestCase {
         }
     }
 
+}
+
+// PRE-WITNESS-04 §2.1 (founder amendment 1) — the classifier is generation-scoped
+// and one-shot: exactly one expected VP-associated change per VP-enabled start,
+// on unchanged ports, with no interruption/reset in progress. Nothing else.
+final class ConfigurationChangeClassifierTests: XCTestCase {
+    private let builtIn = RouteState(output: "builtInSpeaker", input: "builtInMic", inputDataSource: "-")
+    private let builtInBottom = RouteState(output: "builtInSpeaker", input: "builtInMic", inputDataSource: "Bottom")
+    private let hfp = RouteState(output: "bluetoothHFP", input: "bluetoothHFP")
+
+    private func input(vp: Bool = true, pending: Bool = true, ordinal: Int = 1,
+                       start: RouteState? = nil, now: RouteState? = nil, suspended: Bool = false)
+        -> ConfigurationChangeClassifier.Input {
+        .init(voiceProcessing: vp, expectationPending: pending, ordinalInGeneration: ordinal,
+              routeAtStart: start ?? builtIn, routeNow: now ?? builtInBottom, suspended: suspended)
+    }
+
+    func testTheOneExpectedChangeAfterAVPStartIsClassifiedAsVPReconfiguration() {
+        // Run 3a shape: VP on · first change · same ports · data source `-` → `Bottom` (evidence, not identity).
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input()), .voiceProcessingReconfiguration)
+    }
+
+    func testDataSourceAlternationDoesNotChangeRouteIdentity() {
+        XCTAssertTrue(ConfigurationChangeClassifier.samePorts(builtIn, builtInBottom))
+        XCTAssertFalse(ConfigurationChangeClassifier.samePorts(builtIn, hfp))
+        XCTAssertFalse(ConfigurationChangeClassifier.samePorts(nil, builtIn))
+    }
+
+    func testSecondChangeInTheSameGenerationIsNotVP() {
+        // The expectation is consumed on the first match; a later same-route change is ordinary.
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: false, ordinal: 2)), .routeConfigurationChange)
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: true, ordinal: 2)), .routeConfigurationChange)
+    }
+
+    func testRealRouteChangeIsNeverVP() {
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(now: hfp)), .routeConfigurationChange)
+    }
+
+    func testVoiceProcessingOffIsNeverVP() {
+        // Run 3b: with VP off no change arrived at all; if one did, it is not the VP one.
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(vp: false)), .routeConfigurationChange)
+    }
+
+    func testRetiredExpectationAndSuspensionAreNeverVP() {
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: false)), .routeConfigurationChange)
+        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(suspended: true)), .routeConfigurationChange)
+    }
 }

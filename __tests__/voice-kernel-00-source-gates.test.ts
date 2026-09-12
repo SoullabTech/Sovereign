@@ -272,6 +272,61 @@ describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-
   });
 });
 
+describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified one-shot, deferred, and decided by the supervisor', () => {
+  const k = () => bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+  const handler = () => {
+    const body = k();
+    const start = body.indexOf('func handleConfigurationChange');
+    const next = body.indexOf('private func', start + 10);
+    return body.slice(start, next === -1 ? undefined : next);
+  };
+  it('C: classification is a pure, generation-scoped, one-shot function over ports (data source is evidence, not identity)', () => {
+    const c = bodies.get(swift.find((p) => p.endsWith('ConfigurationChange.swift'))!)!;
+    expect(c).toMatch(/case voiceProcessingReconfiguration = "voice_processing_reconfiguration"/);
+    expect(c).toMatch(/i\.voiceProcessing, i\.expectationPending, i\.ordinalInGeneration == 1, !i\.suspended/);
+    expect(c).toMatch(/a\.output == b\.output && a\.input == b\.input/);
+    expect(c).not.toMatch(/inputDataSource ==/);
+    // no timer, no threshold, no budget lives in the classifier
+    expect(c).not.toMatch(/Task\.sleep|DispatchQueue|Timer|Ms\b.*=\s*\d/);
+  });
+  it('B: the deferred branch consumes the expectation and touches neither the graph nor the recovery policy', () => {
+    const h = handler();
+    const deferred = h.slice(h.indexOf('case .voiceProcessingReconfiguration:'), h.indexOf('case .routeConfigurationChange:'));
+    expect(deferred.length).toBeGreaterThan(0);
+    expect(deferred).toMatch(/vpExpectationPending = false/);
+    expect(deferred).toMatch(/"configuration_change_deferred", cause: cls\.rawValue, causeSeq: obs/);
+    expect(deferred).not.toMatch(/rebuildGraph\(|requestRecovery\(|startGraph\(|Task \{|sleep/);
+    // the other branch is PRE-WITNESS-03's bounded path, unchanged
+    const other = h.slice(h.indexOf('case .routeConfigurationChange:'));
+    expect(other).toMatch(/requestRecovery\(faultClass: "configuration_change"/);
+  });
+  it('the expectation is armed only at a graph start and retired when the generation is healthy', () => {
+    const body = k();
+    expect(body).toMatch(/vpExpectationPending = snap\.voiceProcessingEnabled/);
+    expect(body).toMatch(/"vp_expectation_retired", cause: "generation_healthy"/);
+    expect((body.match(/vpExpectationPending = true/g) ?? []).length).toBe(0);
+  });
+  it('no new fault class, budget, timer or threshold: RecoveryPolicy and HealthSupervisor are byte-pinned and the caller set is closed', () => {
+    const classes = [...k().matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
+    expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
+    const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
+    expect(r).toMatch(/budgetPerWindow: Int = 3/); expect(r).toMatch(/windowMs: Int64 = 60_000/);
+    expect(r).toMatch(/backoffMs: \[Int64\] = \[500, 1_000, 2_000\]/);
+    const h = bodies.get(swift.find((p) => p.endsWith('HealthSupervisor.swift'))!)!;
+    expect(h).toMatch(/entryWindowMs: Int64 = 1_500/); expect(h).toMatch(/deadInputMs: Int64 = 2_000/);
+    const rep = bodies.get(swift.find((p) => p.endsWith('Replay.swift'))!)!;
+    expect(rep).toMatch(/"configuration_change_deferred"/);
+  });
+  it('§2.3: the observation and the samples carry the provenance that proves why C fired', () => {
+    const body = k();
+    for (const f of ['"classification"', 'vpReconfigurationExpected', 'configurationChangeOrdinalInGeneration', '"routeAtStart"', '"routeNow"', 'callbacksSinceChange', 'vpExpectationConsumed']) {
+      expect(body).toContain(f);
+    }
+    const sample = body.slice(body.indexOf('"input_health_sample"'), body.indexOf('"output_render_sample"'));
+    expect(sample).toMatch(/"engineRunning"/); expect(sample).toMatch(/"callbacksSinceChange"/);
+  });
+});
+
 describe('KERNEL-00 · VOICE-07 — the harness is a projection', () => {
   it('HarnessModel holds no voice state and reduces only kernel snapshots', () => {
     const f = swift.find((p) => p.endsWith('HarnessModel.swift'))!;
