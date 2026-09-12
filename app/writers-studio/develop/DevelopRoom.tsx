@@ -35,6 +35,7 @@ import { WriterStudioShell } from '../studio/WriterStudioShell';
 import { StudioShellRail } from '../studio/StudioRail';
 import { INK, RULE, SPACE } from '../studioTheme';
 import { canvasForManuscript } from '../canvasIdentity';
+import { workWithThisHref } from '../workWithThis';
 import { fetchWriteState, type WriteStateSection } from '@/lib/writersStudio/writeStateClient';
 import type { ReadingScope } from '@/lib/manuscript/developmentalReading/scope';
 import { DEVELOPMENTAL_READ_CEILING_CODE_POINTS } from '@/lib/manuscript/developmentalReader/contract';
@@ -944,6 +945,7 @@ function Reading({
               o={o}
               manuscriptId={manuscriptId}
               readingId={view.id}
+              revisionNumber={view.revisionNumber}
               standings={standings}
               onStanding={onStanding}
               onRefresh={onRefresh}
@@ -968,9 +970,10 @@ function Reading({
  * is what a writer comparing them would do.
  */
 function Observation({
-  o, manuscriptId, readingId, standings, onStanding, onRefresh,
+  o, manuscriptId, readingId, revisionNumber, standings, onStanding, onRefresh,
 }: {
-  o: ObservationView; manuscriptId: string; readingId: string; standings: StandingLookup;
+  o: ObservationView; manuscriptId: string; readingId: string; revisionNumber: number;
+  standings: StandingLookup;
   onStanding: (readingId: string, next: StandingWire) => void; onRefresh: () => void;
 }) {
   const [talking, setTalking] = useState(false);
@@ -1079,6 +1082,13 @@ function Observation({
         onRefresh={onRefresh}
       />
 
+      <WorkWithThis
+        o={o}
+        manuscriptId={manuscriptId}
+        readingId={readingId}
+        revisionNumber={revisionNumber}
+      />
+
       {talking ? (
         <ObservationDialogue
           manuscriptId={manuscriptId}
@@ -1102,6 +1112,57 @@ function Observation({
         </button>
       )}
     </li>
+  );
+}
+
+/* ── work with this ──────────────────────────────────────────────────── */
+
+/**
+ * WORK WITH THIS — the door out of a frozen finding and into the living Work.
+ *
+ * ⭐ IT IS A LINK. Not a handler that fetches, not a button that posts. That is
+ * not a stylistic choice: the gesture's whole meaning is "take me there", and
+ * the cheapest way to guarantee it never rereads, never calls a model and never
+ * writes is for there to be no code here that could. The falsifiers assert the
+ * absence structurally, on this component's source.
+ *
+ * ⛔ NOT OFFERED WITHOUT SOMEWHERE TO STAND. An observation resting only on
+ * authored structure cites divisions, not sections, and expanding a division
+ * into its sections would be the scope-widening `focusAnchors.ts` forbids. A
+ * door that led somewhere invented is worse than no door, so there is none —
+ * and the absence is a finding to carry back, not a gap to paper over.
+ *
+ * ⛔ A SUPERSEDED OBSERVATION STILL OPENS IT, deliberately. That the Work moved
+ * under a finding is the most ordinary reason a writer wants to go and look at
+ * it, and the destination marks every member that can no longer be vouched for.
+ * Refusing here would hide the case the two-anchor design exists to handle.
+ */
+function WorkWithThis({
+  o, manuscriptId, readingId, revisionNumber,
+}: {
+  o: ObservationView; manuscriptId: string; readingId: string; revisionNumber: number;
+}) {
+  if (!o.anchors.length) return null;
+  const places = o.anchors.length;
+  return (
+    <Link
+      href={workWithThisHref(CANVAS_HREF, {
+        manuscriptId,
+        readingId,
+        observationKey: o.key,
+        revisionNumber,
+        anchors: o.anchors,
+        phenomenon: o.phenomenon ?? null,
+      })}
+      data-work-with-this={o.key}
+      className="mt-3 mr-4 inline-block text-[12px] underline underline-offset-4"
+      style={{ color: PRESS.accent, opacity: 0.85 }}
+    >
+      work with this
+      <span className="ml-1 opacity-60">
+        — {places === 1 ? 'the place' : `the ${places} places`} it rests on, in your writing
+      </span>
+    </Link>
   );
 }
 

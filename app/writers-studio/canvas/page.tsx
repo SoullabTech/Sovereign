@@ -64,6 +64,9 @@ import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
 import { focusPaint } from '../field/focusPaint';
+import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
+import { resolveFocusSet, type FocusSet } from '../field/focusSet';
+import { requestedOrigin } from '../workWithThis';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
@@ -488,6 +491,54 @@ function CanvasRoom() {
   const held = useHeldFocus(focusSections, focusBodyOf);
 
   /**
+   * ── WORK WITH THIS, ARRIVING ──────────────────────────────────────────────
+   *
+   * A finding from a frozen developmental reading, resolved against the Work as
+   * it is NOW. ABSENT MEANS ABSENT: with no origin params this is `none` and
+   * every line below runs exactly as it did.
+   *
+   * ⛔ The origin's coordinates are HISTORICAL EVIDENCE about version N. They
+   * are resolved, never adopted: `resolveFocusSet` says per member whether the
+   * claim still holds, and marks the ones it cannot vouch for rather than
+   * relocating them. The observation stays true about what it read; the Focus
+   * stays true about what exists.
+   *
+   * ⛔ NOTHING IS CALLED. No reread, no model, no write. This is arithmetic
+   * over params and the sections this page had already loaded.
+   */
+  const request = useMemo(
+    () => (searchParams === null ? { kind: 'none' as const } : requestedOrigin(searchParams)),
+    [searchParams],
+  );
+  /* The kept version the Work stands at now — what makes a historical range's
+     currency DECIDABLE rather than assumed. Unknown stays unknown: it resolves
+     to `unverified`, never to `current`. */
+  const currentRevision = useMemo(
+    () => (revisions?.length ? Math.max(...revisions.map((r) => r.revisionNumber)) : null),
+    [revisions],
+  );
+  const seeded = useMemo<FocusSet | null>(() => {
+    if (request.kind !== 'origin') return null;
+    const o = request.origin;
+    return resolveFocusSet({
+      anchors: o.anchors,
+      originRevision: o.revisionNumber,
+      currentRevision,
+      sections: focusSections,
+      bodyOf: focusBodyOf,
+      /* Identity and closed vocabulary only — never authored prose. */
+      label: o.phenomenon ? `${o.observationKey} · ${o.phenomenon}` : o.observationKey,
+    });
+  }, [request, currentRevision, focusSections, focusBodyOf]);
+
+  /* ⭐ The writer's choice of edit target lives HERE, layered over the seed, so
+     that a re-resolution (the Work changed under them) cannot silently reassign
+     what they said they were working on. `null` until they say. */
+  const [chosen, setChosen] = useState<FocusSet | null>(null);
+  const [focusDismissed, setFocusDismissed] = useState(false);
+  const focusSet = chosen ?? seeded;
+
+  /**
    * The focus, drawn where the writer put it. Built here because it needs both
    * the held focus and the treatment under study; handed to the surface as a
    * read-only mark and nothing else.
@@ -594,6 +645,21 @@ function CanvasRoom() {
 
   const lowerBand = (
     <>
+      {/* ══ THE FOCUS SET ═══════════════════════════════════════════════
+          Where a finding carried in from Develop stands while the writer works
+          on it. It sits in the band rather than in the manuscript column: the
+          writing field keeps its measure, and the set is beside the work, not
+          on top of it. */}
+      {!focusDismissed && request.kind === 'malformed' && (
+        <FocusSetRefused why={request.why} onRelease={() => setFocusDismissed(true)} />
+      )}
+      {!focusDismissed && focusSet && (
+        <FocusSetPanel
+          set={focusSet}
+          onSet={setChosen}
+          onRelease={() => { setChosen(null); setFocusDismissed(true); }}
+        />
+      )}
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
       {bandOpen && manuscript && (
         <StudioLowerBand

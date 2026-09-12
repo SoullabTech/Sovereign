@@ -32,6 +32,7 @@ import type {
 } from '../manuscript/developmentalReading/contract';
 import { PHENOMENON_DEFINITION, PHENOMENON_LABEL, isPhenomenon } from '../manuscript/developmentalReading/contract';
 import type { ReadingAssessment } from '../manuscript/developmentalReading/assess';
+import { focusAnchorsFor, type FocusAnchor } from './focusAnchors';
 
 /* ── the closed vocabularies, in member language ─────────────────────── */
 
@@ -235,6 +236,15 @@ export interface ObservationView {
   /** The contract's own definition, present exactly when the label is (Test 3). */
   phenomenonMeaning?: PhenomenonDefinition;
   evidence: string[];
+  /**
+   * WORK WITH THIS — the same evidence, as IDENTITIES rather than sentences.
+   *
+   * `evidence` above is prose for a reader; these are the places themselves, so
+   * the door into the living Work can be built from what the observation
+   * DECLARED rather than from what its description happens to mention. Exactly
+   * the cited anchors; structural evidence yields none (focusAnchors.ts).
+   */
+  anchors: FocusAnchor[];
   limits: { name: string; meaning: string }[];
   dependsOnStructure: boolean;
   state: StateName;
@@ -264,6 +274,7 @@ export function observationView(
         }
       : {}),
     evidence: o.evidenceRefs.map((r) => describeRef(r, readState, sections)),
+    anchors: focusAnchorsFor(o.evidenceRefs),
     limits: o.doesNotEstablish.map(limitLine),
     dependsOnStructure: o.structureDependency.kind === 'authored-structure',
     state: loc.state,
