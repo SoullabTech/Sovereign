@@ -148,3 +148,43 @@ E1–E4                HELD · NOT SELECTED
 B2                   HOLD · B3 OPEN
 ARCHITECTURE         UNCHANGED · thresholds UNCHANGED · STT/TTS NOT AUTHORIZED
 ```
+
+## 11. Reproducibility sessions and the second W4 in-flight attempt — RECEIVED, HASHED, VERIFIED (2026-09-12, no code; subject unchanged `4596b9bdb`, dylib `11A057AA-…`)
+
+Three fresh cold-process sessions per §10 rulings 1 and 3 (force-quit → icon → VP ON → Enter …). The harness had been resident before repro #1 (founder, from the Studio); it was force-quit first. Files preserved beside this record:
+
+| Session | File | Records | SHA-256 |
+|---|---|---|---|
+| Repro #1 · VP ON | `KERNEL-00_WITNESS_2026-09-12_run5repro1_K00-89a13224_vpON.jsonl` | 61 | `f9ea66ecc8c758759af3eebf8180aa00d5a62565afb6f79ed4326de530d5a4e8` |
+| Repro #2 · VP ON | `KERNEL-00_WITNESS_2026-09-12_run5repro2_K00-42e53402_vpON.jsonl` | 61 | `3fe7b14df63999ee855081ce4d0dad0dfc4cfde9f2c7f144ee8ea150b3bae115` |
+| W4-2 · VP ON · exit | `KERNEL-00_WITNESS_2026-09-12_run5W4-2_K00-c8f13ca9_vpON.jsonl` | 52 | `1962868f14a7b7c96cdac71f9f35ec988c783c19b3000f95b0cdf1bf87e49b5d` |
+
+**Read (per session, from the journal):**
+
+| | Repro #1 | Repro #2 | W4-2 |
+|---|---|---|---|
+| `vp_enable_return` | 148 ms · readBack true · `route_changed` inside the call | 88 ms · readBack true · `route_changed` inside | 93 ms · readBack true · `route_changed` inside |
+| `start_return` | ok · 165 ms (total 358) | ok · 149 ms (273) | ok · 164 ms (286) |
+| `is_running_immediate` / `graph_started.engineRunning` | **TRUE / TRUE** | **TRUE / TRUE** | **TRUE / TRUE** |
+| configuration change | 1 · `voice_processing_reconfiguration` at 5 ms · deferred · engine stays running | 1 · at 3 ms · deferred | 1 · at 3 ms · deferred |
+| `first_input_callback` | 95 ms after start return | 97 ms | 97 ms |
+| floor → `listening` | **591 ms after Enter** | **439 ms** | **451 ms** |
+| `engine_running_observed` ticks | 10 · all TRUE through 1051 ms | 10 · all TRUE through 1035 ms | 10 · all TRUE through 1052 ms |
+| hold | gen 1 · 23.6 s · 10–11 callbacks/s · `healthy` every sample | gen 1 · 23.3 s · same | gen 1 · 9.8 s · same |
+| generations | 1 only | 1 only | 1 only |
+| exit | exported in conversation (protocol: no Leave) | same | Leave → one `session_deactivated` → `session_released` → `listening → idle` (causeSeq 49, lawful) · nothing after |
+
+**Verdicts (mechanical, per §10):**
+
+- **Repro #1: LISTENED and HELD. Repro #2: LISTENED and HELD.** With 5a and the run-5 W4 session, that is **five of five VP-ON sessions on this subject reaching and holding listening in generation 1**, the three today from a cold process by protocol. **The run-5 VP-ON outcome is REPRODUCIBLE. The instrument effect (P5-F1) is reproducible.** → per ruling 1, **P5-B0 is UNBLOCKED.**
+- **W4-2: exit clean; in-flight condition NOT MET a second time.** Leave landed 9.85 s after Enter, not within 2 s. One deactivation, one release, no record after `session_released` other than the Leave chain's own floor transition. The generation was fully settled at Leave, so the intended stress — Leave inside the entry / deferred-reconfiguration window — was again not exercised. Judged independently, as ruled: **no post-exit act observed · the ≤ 2 s condition remains unexercised · W4 under VP ON in-flight still OWED.** Recorded as a protocol deviation, not an organism finding.
+
+**Observations kept as observations, not findings:** (a) on all three sessions the `route_changed` notification is posted from inside the `setVoiceProcessingEnabled` call, as on 5a; (b) repro #1's `session_configured.from` shows the pre-entry IO buffer at `0.0213` while repro #2 and W4-2 show `0.0100` — process-external session state after the prior session's preferred-IO-buffer set; evidence only, no claim.
+
+```
+REPRO #1 (VP ON)     LISTENED · held 23.6 s gen 1
+REPRO #2 (VP ON)     LISTENED · held 23.3 s gen 1
+→ instrument effect REPRODUCIBLE (5/5 VP-ON sessions on 4596b9bdb)
+→ P5-B0 removal control MAY PROCEED (ruling 1 satisfied; ruling 2 executes)
+W4-2 (VP ON)         exit clean · Leave at 9.85 s (NOT ≤ 2 s, second deviation) · in-flight condition still unexercised · OWED
+```

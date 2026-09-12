@@ -95,11 +95,16 @@ public final class AudioGraph: @unchecked Sendable {
     public var isRunning: Bool { engine.isRunning }
 
     /// PRE-WITNESS-05 Phase A — the closed set of startup seams the trace names.
-    /// Observation only: no call in `start` is reordered, added-as-mutation, or
-    /// removed. The kernel journals each step as `graph_start_trace`.
+    /// Observation only: no call in `start` is reordered or added-as-mutation.
+    /// The kernel journals each step as `graph_start_trace`.
+    ///
+    /// P5-B0 (removal control, founder-selected 2026-09-12): the Phase-A read of the
+    /// input node's format BEFORE `setVoiceProcessingEnabled` — and only that read —
+    /// is REMOVED. The seam `input_format_before_vp` therefore no longer exists on
+    /// this subject and is absent from the set (13 steps). Everything else in
+    /// `start` is byte-for-byte the Phase-A subject `4596b9bdb`.
     public enum StartTraceStep: String, CaseIterable, Sendable {
         case engineCreated = "engine_created"
-        case inputFormatBeforeVP = "input_format_before_vp"
         case vpEnableBegin = "vp_enable_begin"
         case vpEnableReturn = "vp_enable_return"
         case outputConnected = "output_connected"
@@ -120,9 +125,10 @@ public final class AudioGraph: @unchecked Sendable {
         let t0 = clock()
         let input = engine.inputNode
         trace(.engineCreated, ["voiceProcessingRequested": String(voiceProcessing)])
-        // Phase A observation (read-only): the input node's format BEFORE voice processing is set.
-        let before = input.outputFormat(forBus: 0)
-        trace(.inputFormatBeforeVP, ["sampleRate": String(before.sampleRate), "channels": String(before.channelCount)])
+        // P5-B0: no read of the input node's format happens here. The Phase-A
+        // `input.outputFormat(forBus: 0)` that preceded `setVoiceProcessingEnabled`
+        // is the one candidate cause under test; the first touch of the input
+        // format on this subject is `input_format_after_vp` below, as in 35b0f61d0.
         // Must be set before the engine starts; global to both IO nodes (SURVEY-01 §2).
         trace(.vpEnableBegin, [:])
         let vpT = clock()

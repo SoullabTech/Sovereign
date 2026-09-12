@@ -385,10 +385,13 @@ final class ConfigurationChangeClassifierTests: XCTestCase {
 // observation steps. The kernel journals them as `graph_start_trace`; the
 // device trace (VP ON vs VP OFF) is what names the first divergent seam.
 final class StartTraceTests: XCTestCase {
-    func testTheTraceNamesExactlyTheThirteenSeamsPlusEngineCreated() {
+    // P5-B0: `input_format_before_vp` is deliberately absent — the pre-VP read is the
+    // removed candidate cause. The set is 13 steps on this subject.
+    func testTheTraceNamesExactlyTheTwelveSeamsPlusEngineCreatedWithNoPreVPFormatRead() {
         let steps = AudioGraph.StartTraceStep.allCases.map(\.rawValue)
+        XCTAssertFalse(steps.contains("input_format_before_vp"), "P5-B0 removed the pre-VP read; the seam must not exist")
         XCTAssertEqual(steps, [
-            "engine_created", "input_format_before_vp", "vp_enable_begin", "vp_enable_return",
+            "engine_created", "vp_enable_begin", "vp_enable_return",
             "output_connected", "input_format_after_vp", "input_tap_installed", "render_tap_installed",
             "observer_installed", "prepare_begin", "prepare_return", "start_begin", "start_return",
             "is_running_immediate",

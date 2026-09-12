@@ -360,13 +360,12 @@ describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating
     expect(body).not.toMatch(/Task\.sleep|Timer|DispatchQueue|usleep|sleep\(/);
     expect(body).not.toMatch(/AVAudioSession|setActive|setCategory|setPreferred|overrideOutput/);
     expect(body).not.toMatch(/engine\.stop\(|engine\.reset\(|disconnect|detach\(|removeTap|requestRecovery|rebuildGraph/);
-    // the added reads are exactly these
-    expect(body).toMatch(/input\.outputFormat\(forBus: 0\)[\s\S]*trace\(\.inputFormatBeforeVP/);
+    // the added reads are exactly these (P5-B0: the pre-VP format read is gone — see the P5-B0 block)
     expect(body).toMatch(/String\(input\.isVoiceProcessingEnabled\)/);
     expect(body).toMatch(/trace\(\.isRunningImmediate, \["engineRunning": String\(engine\.isRunning\)\]\)/);
-    // every trace step is emitted in the graph, and the enum is closed at 14
+    // every trace step is emitted in the graph, and the enum is closed at 13 (14 minus the removed seam)
     const steps = [...graph().matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
-    expect(steps.length).toBe(14);
+    expect(steps.length).toBe(13);
     for (const st of steps) {
       const c = st.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase()).replace('Vp', 'VP');
       expect(body).toContain(`trace(.${c}`);
@@ -385,6 +384,42 @@ describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating
     // caller set still closed; policy untouched
     const classes = [...k.matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
     expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
+  });
+});
+
+describe('KERNEL-00 · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP input-format read is gone and NOTHING else moved', () => {
+  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+  const startBody = () => {
+    const g = graph();
+    return g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('public func stop()'));
+  };
+  it('no input-format read of any kind precedes setVoiceProcessingEnabled inside start()', () => {
+    const body = startBody();
+    const vp = body.indexOf('setVoiceProcessingEnabled(');
+    expect(vp).toBeGreaterThan(-1);
+    const before = body.slice(0, vp);
+    expect(before).not.toMatch(/outputFormat\(|inputFormat\(|\.format\b|sampleRate|channelCount/);
+    expect(before).not.toMatch(/inputFormatBeforeVP|input_format_before_vp/);
+  });
+  it('exactly ONE input.outputFormat(forBus: 0) read remains in start(), after VP enable and before requireValid (the 35b0f61d0 position)', () => {
+    const body = startBody();
+    const reads = [...body.matchAll(/input\.outputFormat\(forBus: 0\)/g)].map((m) => m.index!);
+    expect(reads.length).toBe(1);
+    expect(reads[0]).toBeGreaterThan(body.indexOf('setVoiceProcessingEnabled('));
+    expect(reads[0]).toBeLessThan(body.indexOf('.requireValid()'));
+    expect(body).toMatch(/trace\(\.inputFormatAfterVP/);
+  });
+  it('the seam input_format_before_vp does not exist in any non-test kernel or harness source (comments stripped; the XCTest negative assertion is excluded by scope)', () => {
+    for (const f of swift.filter((p) => !p.includes('/Tests/'))) {
+      expect(bodies.get(f)!).not.toMatch(/input_format_before_vp|inputFormatBeforeVP/);
+    }
+  });
+  it('all other Phase-A reads are KEPT: VP read-back, isRunning immediate, elapsed-ms timing, after-VP format', () => {
+    const body = startBody();
+    expect(body).toMatch(/String\(input\.isVoiceProcessingEnabled\)/);
+    expect(body).toMatch(/trace\(\.isRunningImmediate, \["engineRunning": String\(engine\.isRunning\)\]\)/);
+    expect(body).toMatch(/"elapsedMs": String\(clock\(\) - vpT\)/);
+    expect(body).toMatch(/trace\(\.inputFormatAfterVP, \["sampleRate": String\(inFormat\.sampleRate\)/);
   });
 });
 
