@@ -1,0 +1,65 @@
+# VOICE-2026 · DRIVER-01 — automated on-device witness driver — XcodeGen spec.
+#
+# "Automate the witness, not the organism." (founder, 2026-09-12)
+#
+# This project builds TWO bundles and NEITHER is the app under test:
+#   DriverHost     an empty placeholder app that exists only so the UI-test bundle has a host
+#   DriverUITests  the XCUITest bundle that drives the ALREADY-INSTALLED harness by bundle id
+#
+# The app under test is the harness product already built from 24a6fcfa1 and installed on the
+# phone (life.soullab.voicekernel.k00, debug dylib CC0D3604-7902-373E-A2BB-2C093D9BF804). It is
+# not a dependency of this project, is not rebuilt by it, is not linked, and receives no launch
+# arguments, environment, hooks or debugger. The driver reaches it only through visible controls.
+#
+# Generate on the Mac Studio:  cd ios/VoiceKernelDriver && xcodegen generate
+name: VoiceKernelDriver
+options:
+  bundleIdPrefix: life.soullab
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+targets:
+  DriverHost:
+    type: application
+    platform: iOS
+    sources:
+      - path: DriverHost
+    info:
+      path: DriverHost/Info.plist
+      properties:
+        CFBundleDisplayName: K00 Driver Host
+        CFBundleShortVersionString: "0.0.1"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.driverhost
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+  DriverUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: DriverUITests
+    dependencies:
+      - target: DriverHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.driver.xctest
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+        TEST_TARGET_NAME: DriverHost
+schemes:
+  DriverUITests:
+    build:
+      targets:
+        DriverHost: all
+        DriverUITests: [test]
+    test:
+      targets:
+        - DriverUITests

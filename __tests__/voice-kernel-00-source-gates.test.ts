@@ -15,6 +15,7 @@
  * These scan source shape after stripping comments — a file must never fail
  * a gate because its own prose documents the behaviour the gate forbids.
  */
+import { createHash } from 'crypto';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
@@ -420,6 +421,54 @@ describe('KERNEL-00 · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP inpu
     expect(body).toMatch(/trace\(\.isRunningImmediate, \["engineRunning": String\(engine\.isRunning\)\]\)/);
     expect(body).toMatch(/"elapsedMs": String\(clock\(\) - vpT\)/);
     expect(body).toMatch(/trace\(\.inputFormatAfterVP, \["sampleRate": String\(inFormat\.sampleRate\)/);
+  });
+});
+
+describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', () => {
+  const DRIVER = join(process.cwd(), 'ios', 'VoiceKernelDriver');
+  const treeHash = (paths: string[]) => {
+    const files: string[] = [];
+    const walk = (p: string) => {
+      if (statSync(p).isFile()) { files.push(p); return; }
+      for (const e of readdirSync(p)) walk(join(p, e));
+    };
+    for (const p of paths) walk(p);
+    const h = createHash('sha256');
+    for (const f of files.sort()) { h.update(f.replace(process.cwd() + '/', '')); h.update('\0'); h.update(readFileSync(f)); h.update('\0'); }
+    return h.digest('hex');
+  };
+  it('the kernel and harness trees are byte-pinned at the P5-B0 subject 24a6fcfa1 (the app under test is never rebuilt for the driver)', () => {
+    expect(treeHash([join(PKG, 'Sources'), join(PKG, 'Tests'), join(PKG, 'Package.swift')])).toBe('3f746769236d7ee68b38bafa7dfa278032063c833c24d88b9d1ad343fe1c16a2');
+    expect(treeHash([join(HARNESS, 'Harness'), join(HARNESS, 'project.yml')])).toBe('3e718a09a23e6f5598e62162222310b3ee088ec6471f0e9656b9c16a9f00185c');
+  });
+  it('the driver is an external instrument: XCTest only, no VoiceKernel, no launch args/env on the app under test, no UserDefaults, no debugger hooks', () => {
+    const t = stripComments(readFileSync(join(DRIVER, 'DriverUITests', 'K00DriverTests.swift'), 'utf8'));   // prose bans are not code (the C21 lesson)
+    expect(t).toMatch(/^import XCTest$/m);
+    expect(t).not.toMatch(/import VoiceKernel|VoiceKernel\.|AudioGraph|HealthSupervisor|RecoveryPolicy|AudioSessionAuthority|FlightRecorder/);
+    expect(t).not.toMatch(/launchArguments|launchEnvironment|UserDefaults|dlopen|NSClassFromString/);
+    expect(t).toMatch(/XCUIApplication\(bundleIdentifier: Self\.harnessBundleID\)/);
+    expect(t).toMatch(/"life\.soullab\.voicekernel\.k00"/);
+    // control vocabulary is the harness's VISIBLE labels only
+    for (const l of ['Enter conversation', 'Leave', 'Export journal', 'Voice processing: ON (default)', 'Voice processing: OFF (control run)']) expect(t).toContain(`"${l}"`);
+    // cold precondition asserted; driver failures are named, never audio classes
+    expect(t).toMatch(/PRECONDITION-FAILED/);
+    expect(t).toMatch(/DRIVER\/INFRASTRUCTURE FAILURE/);
+    expect(t).toMatch(/state != \.notRunning/);
+    const y = readFileSync(join(DRIVER, 'project.yml'), 'utf8');
+    expect(y).not.toMatch(/packages:|VoiceKernel\b/);
+    expect(y).toMatch(/type: bundle\.ui-testing/);
+    expect(y).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.driverhost/);
+  });
+  it('the ledger classifier is closed to the four classes plus two non-audio rows, and never steers a batch', () => {
+    const l = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-ledger.py'), 'utf8');
+    for (const c of ["'gen-1 listen'", "'failure then recovery'", "'failure then degradation'", "'other observed shape'", "'DRIVER/INFRASTRUCTURE FAILURE'", "'SUBJECT-MISMATCH'"]) expect(l).toContain(c);
+    expect(l).toMatch(/no enterConversation in journal/);            // a never-entered harness is a driver row
+    expect(l).not.toMatch(/subprocess|os\.system|devicectl|xcodebuild/); // reads journals only
+    const b = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-driver-batch.sh'), 'utf8');
+    expect(b).toMatch(/harness_present\(\)/);                          // Mac-side cold check every sample
+    expect(b).toMatch(/for i in \$\(seq 1 "\$N"\)/);                     // declared N is finished
+    expect(b).toMatch(/test-without-building/);                       // one invocation per sample
+    expect(b).not.toMatch(/install app/);                             // a batch never reinstalls; k00-reinstall.sh is the explicit boundary
   });
 });
 
