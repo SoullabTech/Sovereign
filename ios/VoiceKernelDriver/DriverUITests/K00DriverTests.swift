@@ -99,6 +99,11 @@ final class K00DriverTests: XCTestCase {
             guard icon.waitForExistence(timeout: 5) else {
                 return driverFail("icon '\(Self.harnessIconLabel)' not found on the current Home Screen page")
             }
+            // CALIBRATION-01: the icon existed in the hierarchy with a zero frame (another page or the App
+            // Library) and tap() failed as "not hittable". Name that state; the driver does not go looking.
+            guard icon.isHittable else {
+                return driverFail("icon '\(Self.harnessIconLabel)' present but not hittable (frame \(icon.frame)) — not on the visible Home Screen page")
+            }
             icon.tap()
         }
         guard app.wait(for: .runningForeground, timeout: 15) else {

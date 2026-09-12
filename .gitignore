@@ -466,3 +466,5 @@ audit-logs/
 ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj/
 ios/VoiceKernelDriver/.derived/
 ios/VoiceKernelDriver/DriverHost/Info.plist
+# DRIVER-01 evidence custody: batch/sample/build logs under the witness ledger are records, not noise
+!docs/programme/VOICE-2026/driver-ledger/**/*.log

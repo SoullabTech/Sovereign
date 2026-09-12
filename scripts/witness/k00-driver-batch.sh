@@ -30,6 +30,18 @@ STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 LEDGER_DIR="${LEDGER_DIR:-$ROOT/docs/programme/VOICE-2026/driver-ledger/$STRATUM-$STAMP}"
 mkdir -p "$LEDGER_DIR/journals"
 LEDGER="$LEDGER_DIR/ledger.md"
+# One batch per device. CALIBRATION-01 (2026-09-12) had two batches driving the same iPhone at once
+# (173320Z and 173603Z); a second batch is refused here rather than allowed to contend for the runner.
+LOCK="$ROOT/docs/programme/VOICE-2026/driver-ledger/.device-$DEV.lock"
+exec 9>"$LOCK"
+if command -v flock >/dev/null 2>&1; then
+  flock -n 9 || { echo "DRIVER/INFRASTRUCTURE FAILURE: another batch already holds device $DEV ($LOCK); refusing to run two batches against one device" >&2; exit 5; }
+else
+  # macOS ships no flock(1): mkdir is the atomic fallback; the directory is removed on exit.
+  LOCKDIR="$LOCK.d"
+  mkdir "$LOCKDIR" 2>/dev/null || { echo "DRIVER/INFRASTRUCTURE FAILURE: another batch already holds device $DEV ($LOCKDIR exists); refusing to run two batches against one device" >&2; exit 5; }
+  trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT
+fi
 LABEL="AUTOMATED-COLD-$([ "$MODE" = "L" ] && echo LAUNCH || echo ICON)"
 TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
 
@@ -37,9 +49,19 @@ log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
 list_journals(){ xcrun devicectl device info files --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --subdirectory tmp 2>/dev/null | grep -oE 'kernel00-[A-Za-z0-9-]+-[0-9]+\.jsonl' | sort -u; }
 pull_journal(){ xcrun devicectl device copy from --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --source "tmp/$1" --destination "$LEDGER_DIR/journals/$1" >/dev/null 2>&1; }
+DIAG_FLAGS=""
+if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics off"; fi
 run_test(){ # $1 = test method
   TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" \
-  xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
+  xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
+}
+# Name the failure the runner actually reported, so the ledger row carries the signature and not only rc.
+failure_signature(){ # $1 = sample log
+  if grep -q 'Timed out while enabling automation mode' "$1"; then echo "runner could not enable automation mode on the device (Settings → Developer → Enable UI Automation / device locked or passcode prompt)"; return; fi
+  if grep -q 'DRIVER/INFRASTRUCTURE FAILURE: ' "$1"; then grep -o 'DRIVER/INFRASTRUCTURE FAILURE: [^"]*' "$1" | head -1 | sed 's/^DRIVER\/INFRASTRUCTURE FAILURE: //'; return; fi
+  if grep -q 'Failed to not hittable: Icon' "$1"; then echo "Mode I: icon 'VoiceKernel K00' present in the SpringBoard hierarchy but not hittable (zero frame) — not on the visible Home Screen page"; return; fi
+  if grep -q 'error: -\[DriverUITests' "$1"; then grep -o 'error: -\[DriverUITests[^\n]*' "$1" | head -1 | cut -c1-220; return; fi
+  echo "no new journal in tmp/ after the invocation"
 }
 
 {
@@ -73,14 +95,15 @@ for i in $(seq 1 "$N"); do
     fi
   fi
   log "sample $i/$N — driver ($TEST, mode $MODE)"
-  run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?
+  T0=$(date +%s); run_test "$TEST" > "$LEDGER_DIR/sample-$i-xcodebuild.log"; RC=$?; T1=$(date +%s)
+  grep -q 'Failure collecting diagnostics from devices: Timed out' "$LEDGER_DIR/sample-$i-xcodebuild.log" && log "sample $i: xcodebuild spent its 600 s diagnostics-collection timeout after the run (wall $((T1-T0)) s)"
   AFTER="$(list_journals)"; NEW="$(comm -13 <(echo "$BEFORE") <(echo "$AFTER"))"; BEFORE="$AFTER"
   if grep -q 'PRECONDITION-FAILED' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
     echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | in-test state check found the harness running; sample invalid, not repaired |" >> "$LEDGER"; continue
   fi
   if grep -q 'DRIVER/INFRASTRUCTURE FAILURE' "$LEDGER_DIR/sample-$i-xcodebuild.log" || [ -z "$NEW" ]; then
-    WHY="$(grep -o 'DRIVER/INFRASTRUCTURE FAILURE: [^"]*' "$LEDGER_DIR/sample-$i-xcodebuild.log" | head -1)"
-    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | ${WHY:-no new journal in tmp/ after the invocation (rc=$RC)} |" >> "$LEDGER"; continue
+    WHY="$(failure_signature "$LEDGER_DIR/sample-$i-xcodebuild.log")"
+    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | $WHY (rc=$RC · wall $((T1-T0)) s) |" >> "$LEDGER"; continue
   fi
   for f in $NEW; do
     pull_journal "$f" || { echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | journal $f could not be copied from the container |" >> "$LEDGER"; continue; }
