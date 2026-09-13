@@ -446,8 +446,10 @@ TERMINOLOGY               §10.6a "receipt" → "consumption", amended in place
 SPLIT                     ⭐ RATIFIED · founder 2026-09-13
 TRANSITION LAW            ⭐ TYPED EXECUTABLE SPEC · RULED · §6.3 · LANDED
 B-i  AUTHOR               ✅ DONE · tests/constitutional/s3/
-B-ii BUILD CANDIDATES     NEXT
-B-iii PROVE LETHALITY     then FREEZE (§6.4)
+B-ii BUILD CANDIDATES     ✅ DONE · 8 machines · candidates.ts
+B-iii MATRIX              ⭐ LETHAL · DISCRIMINATING · reference clean
+                          S3-CLASS-B_MATRIX_RESULT_2026-09-13.md
+FREEZE                    ⛔ NOT TAKEN — founder act (§6.4)
 B-iv IMPLEMENTATION       ⛔ BLOCKED UNTIL LETHALITY PROVED
 
 TEST CODE                 NOT AUTHORED
