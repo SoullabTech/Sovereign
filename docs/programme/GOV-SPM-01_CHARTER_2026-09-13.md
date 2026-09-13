@@ -92,6 +92,14 @@ discipline building SPM — is **not** (SPM charter §3.1). Same name, two roles
    ratification is the founder's
 ```
 
+> ⛔ **PINNED PROHIBITION (founder, 2026-09-13): finding that no canon exists does not authorize
+> GOV-SPM-01 to manufacture canon. Absence is a finding; constitution is a founder act.**
+
+⭐ **And the converse of the reciprocal test (§2), stated so both directions are on the record:**
+*if SPM can only make its model work by deciding who may use a claim or what MAIA may do with it,
+SPM has crossed into governance* — just as a governance rule that only works by changing a claim's
+origin, basis or status has crossed into SPM.
+
 ⚠️ **On the last line.** This lane exists because canonical custody is thin. ⛔ **Thin custody is not
 a vacancy to be filled by whoever noticed it.** GOV-SPM-01 authors the question, the option space and
 the consequences; **what becomes canon is a founder act.**
