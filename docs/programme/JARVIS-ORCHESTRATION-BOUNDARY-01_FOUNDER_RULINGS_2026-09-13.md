@@ -195,6 +195,147 @@ review time against any diff, which is what makes it a law rather than a prefere
 
 ---
 
+## 2c · FR-J2 — CMT-01 is the canonical participation boundary · **RULED: EXTENSION**
+
+> **The orchestration function extends CMT-01's governed producer/participation model. No
+> separate orchestration object is admitted.**
+>
+> **CMT-01 governs what material may participate in a MAIA-authored turn. It does not thereby
+> become the execution substrate for retrieval, research, model routing, bounded jobs, evidence
+> analysis, memory operations, or other capabilities. Those responsibilities may have their own
+> bounded implementations and contracts.**
+>
+> **When the output of any capability, model, tool, job, memory process, or specialized
+> intelligence may contribute to a member-facing MAIA turn, that material must cross the
+> canonical participation boundary before it can influence the rendered response. Nothing may
+> bypass that boundary by composing directly into MAIA.**
+>
+> **A capability is not a producer merely because it ran. A model is not a producer merely
+> because it reasoned. A job is not a producer merely because it completed. The
+> producer/participant is the classified material offered for participation in the turn.**
+
+⛔ **This ruling does not authorize CMT-01 M3, register any new producer, alter the registry,
+open a Writer's Studio lane, or authorize any new execution substrate.**
+
+### ⭐ The distinction that carries the ruling: admission boundary, not execution engine
+
+```text
+ADMITTED                                  REFUSED (god object)
+capability / model / tool / job           CMT-01
+          │ produces                       ├── runs research
+          ▼                                ├── routes models
+       MATERIAL                            ├── executes jobs
+          │ provenance + authority         ├── retrieves memory
+          │ + participation class          ├── maintains graphs
+          ▼                                └── adjudicates everything
+   CMT-01 / MIPA boundary
+   admitted / held / excluded
+          ▼
+   singular renderer → MAIA → member
+```
+
+⭐ It is a **constitutional extension of the participation contract, not an implementation
+expansion of CMT-01.** ⛔ No `lib/orchestration`. No universal manager. No separate object.
+
+### ⭐⭐ The law underneath
+
+> **Execution does not confer participation. Participation does not confer authority.**
+
+Two clauses, two different failure modes, joined to FR-J1:
+
+- A research agent may run and find twelve papers — **that does not mean twelve findings enter
+  MAIA's thought.**
+- A bounded Work sweep may generate thirty observations — **that does not make them
+  member-facing truth.**
+- A model may reason about the manuscript — **that does not make the model a voice in the
+  relationship.**
+
+⭐ CMT-01 decides what material is **eligible to participate**. It still does not decide what
+is **true**. That second clause is the same constraint FR-J1 places on the orchestration
+layer, now placed on the boundary itself — so the boundary cannot become the authority by
+virtue of being the gate.
+
+### What this settles for the not-yet-built substrates
+
+Bounded jobs stay **outside** CMT-01, and reach MAIA only as offered material:
+
+```text
+WHOLE-WORK JOB  commissioned → frozen → executes → produces findings → persists findings
+                                                                              │
+                                              later MAIA encounter · relevant finding offered
+                                                                              ▼
+                                                                          CMT-01
+```
+
+Identically for the future evidence graph (`research → evidence graph → retrieval → candidate
+material → CMT boundary → MAIA`) and for model routing. ⭐ **Background infrastructure can
+therefore scale independently without creating a second route into MAIA** — which is the
+scaling answer and the sovereignty answer in one move.
+
+### Falsifiers
+
+| | Fails FR-J2 when |
+|---|---|
+| **F-J2.1 · Bypass** | material produced by a tool, model, job, memory system, Studio analyzer, or research system can influence the rendered MAIA response **without crossing the canonical participation boundary** |
+| **F-J2.2 · God-object expansion** | CMT-01 gains a responsibility merely because *"orchestration needs to happen somewhere"*. Research execution, queues, routing, retrieval, dependency invalidation each require their own responsibility-based seam |
+| **F-J2.3 · Actor/material collapse** | every executing model, agent, tool or job is registered as a producer **merely because it executed**. What participates is classified material, not the machinery that produced it |
+
+```text
+WRONG                       RIGHT
+producer: GPT-6             external.research_finding
+producer: Scite             computed.work_observation
+producer: ResearchAgent     retrieved.author_ruling
+producer: ContradictionWorker   member.source_material
+```
+
+⭐ with **provenance** naming which machinery produced or retrieved it. That preserves the
+distinction D-J3 now needs: *source/provenance says where this came from; participation says
+what role it was allowed to have.*
+
+### ⭐⭐ Compliance census (`e1c6f527`) — F-J2.3 is **already satisfied in canonical**
+
+`lib/maia/canonical-turn/producerRegistry.ts` holds **50 producers across ten namespaces**:
+
+```text
+member. 10 · computed. 10 · retrieved. 5 · inferred. 5 · floor. 5 ·
+declared. 5 · house. 4 · practitioner. 3 · collective. 2 · system. 1
+```
+
+⭐ **Not one producer names a model, vendor, agent, worker or service.** Every id names
+*material*, and the prefix names *how that material came to be* — authored by the member,
+retrieved, computed, inferred, declared, or placed by the floor. The registry is already the
+founder's RIGHT column, built. FR-J2 ratifies an existing discipline rather than imposing a
+new one.
+
+⭐ **The prefix grammar is already a provenance-class vocabulary**, and D-J3 should begin from
+it rather than invent a parallel one — `retrieved.` vs `computed.` vs `inferred.` is precisely
+the *"what kind of knowing is this"* axis the provenance contract needs.
+
+### ⚠️ Correction to this lane's own earlier standing
+
+⛔ **Earlier documents in this lane (including §6 of the intake and the FR-J1/FR-J6 standing
+blocks) state "PRODUCERS REGISTERED — NONE". That is wrong as an absolute claim and is
+corrected here rather than deleted.**
+
+Writer's Studio producers **already exist in the registry**:
+
+```text
+floor.writer_role_boundary · member.writer_focus · retrieved.writer_work_context ·
+computed.writer_structure · member.writer_intention · member.writer_commission ·
+system.writer_pursued_observation
+```
+
+and `writers_studio` is a registered room. What is true is narrower and still holds:
+**this lane has registered nothing, and registers nothing by these rulings.** ⚠️ Also noted:
+the registry now holds 50 producers where the CMT-01 census recorded 38 — it has grown since.
+⛔ Nothing is inferred from that about M3, which remains unauthorized.
+
+*A standing line that overstates a gate is the same class of error as one that overstates a
+capability; the repair is to date it and correct it in place.*
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -202,8 +343,8 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 ```text
 1. D-J1 + D-J5          ── PERFORMED (this document)
 2. D-J6   naming        ── PERFORMED (FR-J6): no runtime proper name
-3. D-J2   extend CMT-01 ── NEXT. Does NOT authorize M3
-4. D-J3   one provenance contract (never a fourth trace)
+3. D-J2   extend CMT-01 ── PERFORMED (FR-J2): extension, admission boundary only
+4. D-J3   one provenance contract (never a fourth trace) ── NEXT
 5. D-J4   unreconciled disagreement
 6. D-J7   model/material routing as CONSENT law, before economics
 7. D-J8   inferred Work structure bound to existing authority law
@@ -275,7 +416,8 @@ D-J4, should be reconciled with it rather than authored beside it.
 | **D-J5** | ⭐ **RATIFIED** — bound as sibling to FR-J1 |
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). "Jarvis" stays the programme word permanently; the runtime layer gets no proper name. Falsifier: architecture-by-noun |
 | **D-J2** | ⭐ **NEXT ACT** — extend CMT-01's governed contract, or a separate orchestration object? ⛔ FR-J6 deliberately leaves this open and does not presuppose the object exists |
-| **D-J3 · D-J4 · D-J7 · D-J8** | OPEN, sequenced (§3) |
+| **D-J3** | ⭐ **NEXT ACT** — one provenance contract. ⭐ Begin from the registry's existing prefix grammar (`retrieved.` · `computed.` · `inferred.` · `declared.` · `member.`), not a parallel vocabulary |
+| **D-J4 · D-J7 · D-J8** | OPEN, sequenced (§3) |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -289,10 +431,14 @@ FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
 FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+FR-J2                  RULED — EXTENSION. Admission boundary, not execution substrate.
+                       Execution does not confer participation; participation does not
+                       confer authority. F-J2.1/2/3 attached
 RUNTIME NAME           SETTLED BY REFUSAL — none exists, none to be created
 CANON PLACEMENT        NOT PERFORMED (D-J15)
 CMT-01 M3              UNAUTHORIZED
-PRODUCERS REGISTERED   NONE
+PRODUCERS REGISTERED   NONE BY THIS LANE. ⚠️ NOT none overall — seven Writer's Studio
+                       producers already exist in canonical (corrected §2c)
 CODE / SCHEMA          UNTOUCHED
 ```
 

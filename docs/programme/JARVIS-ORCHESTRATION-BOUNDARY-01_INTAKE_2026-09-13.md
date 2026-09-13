@@ -1,8 +1,10 @@
 # JARVIS-ORCHESTRATION-BOUNDARY-01 — Intake, Census, and Founder Docket
 
 **Date:** 2026-09-13
-⭐ **SUPERSEDED IN PART — founder acts 2026-09-13.** D-J1 and D-J5 are RATIFIED; **D-J6 is
-RULED — the runtime layer gets NO proper name** (FR-J6). Rulings of record:
+⭐ **SUPERSEDED IN PART — founder acts 2026-09-13.** D-J1 · D-J5 RATIFIED · **D-J6 RULED** (no
+runtime proper name) · **D-J2 RULED** (extension; CMT-01 is an admission boundary, not an
+execution substrate). ⚠️ This intake's "no producer registered" standing is **corrected** in the
+rulings document §2c — seven Writer's Studio producers already exist in canonical. Rulings of record:
 `JARVIS-ORCHESTRATION-BOUNDARY-01_FOUNDER_RULINGS_2026-09-13.md`. This intake is kept verbatim
 as the census and docket it was; ⛔ its §1 candidate wording is no longer the operative text.
 
@@ -186,8 +188,8 @@ as a *runtime layer name* gives one word two referents in one repo. ⛔ Cheap to
 | # | Question |
 |---|---|
 | ~~**D-J1**~~ | ⭐ **RATIFIED (amended), 2026-09-13** — boundary ratified; runtime name withheld. See FR-J1 |
-| **D-J2** | ⭐ **NEXT ACT.** Is the Writer's Studio orchestration an **extension of CMT-01's producer/participation model**, or a separate orchestration object? ⛔ FR-J6 does not presuppose the object exists. ⛔ Still gated on M3, which this does not open |
-| **D-J3** | Is there **one provenance contract** across `selectionTrace` · `readerProvenance` · `canonical-turn/manifest`, or do the three remain subsystem-local? |
+| ~~**D-J2**~~ | ⭐ **RULED 2026-09-13 — EXTENSION** (FR-J2). No separate orchestration object. CMT-01 governs admission only; execution substrates keep their own bounded contracts. ⛔ M3 still unauthorized |
+| **D-J3** | ⭐ **NEXT ACT.** Is there **one provenance contract** across `selectionTrace` · `readerProvenance` · `canonical-turn/manifest`, or do the three remain subsystem-local? ⭐ Start from the registry's existing prefix grammar |
 | **D-J4** | Is **disagreement between producers** representable to the member (J-F4), and under whose authority is it resolved — never MAIA's alone? |
 | ~~**D-J5**~~ | ⭐ **RATIFIED, 2026-09-13**, bound as sibling to FR-J1 — *not surfaced by default; never concealed when asked*. "Unanswerable orchestration" is a named refusal. ⚠️ *materially participated* still needs definition, routed to D-J3 |
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). Not "Jarvis", and not a replacement for it. Falsifier: *"we need somewhere to put the orchestration layer"* is architecture-by-noun and fails |
