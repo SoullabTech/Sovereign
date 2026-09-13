@@ -342,7 +342,9 @@ U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspect
 U1 FIRST PASS      RUN on 36374edb - A1 TEST PASSING - A4 NOT DECISIVE - nothing GATED
 U1 SECOND PASS     RUN on 7f52f587 - 125 tests green - ZERO promotions
 U1 COMPLETE        9 suites - 160 tests green - TWO rows earned - nothing GATED
-U2 BROAD WALK      NOT AUTHORIZED - admissibility screen run - 1 of 7 forward
+U2 BROAD WALK      NOT AUTHORIZED - C-1..C-6 CLOSED
+U2 C-7             AUTHORIZED as a falsification witness - PROTOCOL FROZEN - NOT RUN
+C-7 EXECUTION      BLOCKED IN-SESSION - needs a founder act (identity/tier/terms/runner)
 STAGE RULE         the programme does not manufacture a next stage to satisfy its sequence
 HANDOFFS SENT      A4 guard - mobile.robustness x3 - repair NOT authorized by this lane
 MATRIX RULE        the matrix does not descend to meet the tests
@@ -395,6 +397,14 @@ experience* · *it could inspire MAIA* · *we should see how polished it feels.*
 
 **Screen run 2026-09-13** — `docs/programme/UARE-01_U2_ADMISSIBILITY_SCREEN_2026-09-13.md`:
 **7 candidates · 1 passes · 6 recommended for permanent closure.**
+
+**Founder ruling 2026-09-13: C-1…C-6 CLOSED. C-7 AUTHORIZED** — *a single falsification witness,
+not a product walkthrough.* Predeclared protocol, frozen before contact:
+`docs/programme/UARE-01_U2_C7_WITNESS_PROTOCOL_2026-09-13.md`. ⛔ **Text only · no voice sample ·
+minimal closed synthetic corpus · three predeclared outside-corpus prompts · no adaptive
+follow-up · least-expensive tier only if the behaviour under test requires it.** ⛔ **NOT YET RUN —
+execution needs a founder act** (protocol §8). **After C-7: STOP, classify, amend §4 if required,
+close U2.**
 
 ## 8 · The clean-room walkthrough — constraints before it is ever authorized
 
