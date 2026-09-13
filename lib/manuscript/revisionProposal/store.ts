@@ -33,7 +33,8 @@
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { saveSectionInTransaction, splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import {
-  applyExactlyOnce, type AcceptOutcome, type ProposalOperation, type RevisionProposal,
+  applyExactlyOnce, type AcceptOutcome, type ProposalOperation, type ProposalRefusal,
+  type RevisionProposal,
 } from './contract';
 
 interface Row {
@@ -182,5 +183,8 @@ export async function acceptRevision(
   }
 }
 
-const refuse = (reason: AcceptOutcome extends { outcome: 'refused'; reason: infer R } ? R : never) =>
-  ({ outcome: 'refused' as const, reason });
+/* ⛔ `AcceptOutcome extends { outcome: 'refused'; reason: infer R } ? R : never`
+   collapsed to `never`: the UNION does not extend that pattern as a whole, and
+   a non-generic conditional does not distribute. The type was clever and wrong,
+   and every refusal in this file failed to typecheck because of it. */
+const refuse = (reason: ProposalRefusal) => ({ outcome: 'refused' as const, reason });
