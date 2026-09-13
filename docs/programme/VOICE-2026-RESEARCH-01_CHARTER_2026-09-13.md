@@ -402,14 +402,17 @@ Binding rules:
 
 | # | Ruling owed | Blocks | Why it cannot be inferred |
 |---|---|---|---|
-| **FR-V1** | **ADR-012 — is TTS egress to a third party permitted, or is local-only TTS a hard sovereignty requirement?** (`docs/adr/012-openai-tts-production-status.md`, **Open/Deferred since 2026-07-07**) | BENCHMARK, and the meaning of Artifact 4 | If local-only is required, Kokoro/sherpa-onnx are the field and quality is constrained by it. If third-party is permitted, the comparison set and the whole sovereignty axis change. ⭐ **Benchmarking before this ruling measures the wrong field.** |
+| **FR-V1** ⭐ **RULED 2026-09-13 — GREEN / RESEARCH-ONLY (§14). BENCHMARK UNBLOCKED.** | **ADR-012 — is TTS egress to a third party permitted, or is local-only TTS a hard sovereignty requirement?** (`docs/adr/012-openai-tts-production-status.md`, **Open/Deferred since 2026-07-07**) | BENCHMARK, and the meaning of Artifact 4 | If local-only is required, Kokoro/sherpa-onnx are the field and quality is constrained by it. If third-party is permitted, the comparison set and the whole sovereignty axis change. ⭐ **Benchmarking before this ruling measures the wrong field.** |
 | **FR-V2** | Is **Architecture C in the listener form** admissible at all, or is the duplex frontier study-only for this cycle? | ARCHITECTURAL OPTIONS scope | §4 states the gate's consequence; whether MAIA *pursues* the admissible form is a founder choice, not a gate reading. |
 | **FR-V3** | Benchmark hardware + who runs it | BENCHMARK | Artifact 4 needs an iPhone, the minisforum, and possibly the Mac Studio. A remote session has none of them. **Predeclared founder-run**, as with the disposable-shadow verifier precedent. |
 | **FR-V4** | Does the census delta's read-only production log access (D-1) require a separate act? | CENSUS delta | 05_voice.md used **no** runtime access. D-1 would be the first. |
 
-⭐ **FR-V1 is the sequencing fact.** It is the oldest open decision in the voice subsystem, it has
-been deferred since July, and every downstream benchmark inherits its answer. Ruling it is the
-highest-leverage single act available to this lane.
+⭐ **FR-V1 was the sequencing fact.** It was the oldest open decision in the voice subsystem,
+deferred since July, and every downstream benchmark inherited its answer. ⭐ **RULED 2026-09-13 —
+see §14.** This paragraph is kept as the before-state, not as a current claim.
+
+⛔ **FR-V1's ruling does NOT resolve ADR-012.** ADR-012 governs *production* egress and remains
+**Open/Deferred**. §14 opens a sealed research boundary beside it and nothing else.
 
 ## 12. Success measures this lane optimizes for
 
@@ -433,9 +436,104 @@ This lane stops, and does not proceed to VOICE KERNEL, if any of the following h
 ---
 
 **Standing at opening:** CENSUS delta not started · LANDSCAPE not started · EXEMPLARS not started ·
-BENCHMARK not started (blocked on FR-V1, FR-V3) · ARCHITECTURAL OPTIONS not started ·
+BENCHMARK **UNBLOCKED** 2026-09-13 (FR-V1 ruled; FR-V3 hardware act still owed), not started ·
+ARCHITECTURAL OPTIONS not started ·
 FALSIFICATION not started · DECISION not open · VOICE KERNEL not opened · no code touched ·
 no dependency added · no deploy · no production access.
 
 > **Voice may have a different capture path; it may not have a different mind.**
 > This lane exists to make that survivable for another decade of speech models.
+
+---
+
+## 14. Founder rulings — 2026-09-13
+
+### FR-V1 — **RULED · GREEN / RESEARCH-ONLY**
+
+> **FR-V1 — Third-party speech egress may be used in isolated research benchmarking where no member
+> data, private Work, live MAIA dialogue, or production traffic is exposed. External systems are
+> measurement instruments, not members of MAIA's runtime architecture. Benchmark performance cannot
+> override the convergence-point boundary or authorize a second cognition path.**
+
+⛔ **This is not permission for production routing, member traffic, fallback use, or architectural
+adoption.** It opens a **sealed research boundary** and nothing else. ADR-012 remains Open/Deferred.
+
+**The purpose is epistemic.** We need the external performance ceiling, or we cannot tell whether a
+limitation belongs to our **architecture**, our **implementation**, or the **current sovereign model
+stack**. Those three have different repairs and are indistinguishable without a ceiling.
+
+⭐ **Benchmark the best external systems precisely because we may never use them.** They are
+measuring sticks. If sovereign MAIA is 600 ms behind the best external stack, that says one thing.
+If it is 3.5 seconds behind, that says another. **Without the ceiling we are optimizing in darkness.**
+
+#### Hard conditions (binding on Artifact 4)
+
+- **Synthetic, public, or deliberately authored benchmark material only.**
+- ⛔ No member voice recordings.
+- ⛔ No member transcripts or conversation turns.
+- ⛔ No private manuscript or materials.
+- ⛔ No production API path.
+- **Provider / model / version / settings recorded**, so every result is reproducible.
+- **Retention, training and privacy terms are part of the evidence record.** ⭐ A provider with
+  materially unsuitable terms **can be excluded even if its speech quality is excellent** — terms are
+  a benchmark axis, not a footnote.
+
+#### What external TTS can and cannot establish
+
+| Establishes (admissible as ceiling evidence) | Cannot establish |
+|---|---|
+| latency ceiling · naturalness ceiling · prosodic capability · streaming behaviour · interruption / re-entry characteristics · expressive range | ⛔ **architectural admissibility** |
+
+```text
+better latency
+better prosody
+better turn-taking
+better naturalness
+        │
+        └────── cannot compensate for ──────► SPINE VIOLATION
+```
+
+#### Architecture C, formalized by this ruling
+
+```text
+C-LISTENER
+capture / VAD / turn detection /
+prosody / backchannel timing
+      → ADMISSIBLE RESEARCH SPACE
+
+C-SPEAKER
+model hears + interprets + authors MAIA's response
+      → second cognition path
+      → RED
+```
+
+⛔ **No benchmark result can turn C-SPEAKER green.** §4 stands unamended; this ruling names its two
+halves so they can never again be discussed as one option.
+
+**Consequence:** `FR-V1 = RULED` · `BENCHMARK = UNBLOCKED` · `PRODUCTION EGRESS = NOT AUTHORIZED` ·
+`REPAIRS = OUT OF LANE`. FR-V2, FR-V3 and FR-V4 remain owed.
+
+### Branch ruling — lane separation
+
+⭐ **JWS-01 is separated to its own branch by founder act** (see
+`JWS-01_WRITERS_STUDIO_ECOSYSTEM_CAPABILITY_CENSUS_2026-09-13.md` §13). The two lanes hold
+**different authorities** — this one investigates one embodied subsystem and its admissible future
+architectures; JWS-01 investigates an external capability landscape for an entire product domain.
+**Shared branch ancestry beyond the common base is accidental authority transfer**, which the
+programme architecture exists to prevent.
+
+Ruled disposition, published history preserved rather than rewritten:
+
+```text
+                    COMMON BASE  e1c6f527
+                         │
+              ┌──────────┴──────────┐
+   claude/voice-2026-research   claude/jws-01-census
+         VOICE commit only        JWS commit only
+```
+
+⛔ **`claude/voice-2026-research-ici0ph` is SUPERSEDED AS A COMBINED STAGING BRANCH — DO NOT MERGE.**
+It is retained as historical evidence. **No force-push, no rewrite** — published history is not
+edited to make a graph pretty. The clean descendants are the merge subjects.
+
+**Standing after these rulings:** governance acts complete. *After this, the useful thing is evidence.*
