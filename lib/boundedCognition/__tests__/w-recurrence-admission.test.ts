@@ -132,6 +132,78 @@ describe('W-UNIFORMITY · regularity is not recurrence', () => {
   });
 });
 
+describe('W-TWO-UNIT · founder ruling 2026-09-13 — the pinned resolution boundary', () => {
+  /**
+   * HOLD THE LITERAL CONTRACT. Where exactly two units are read at body depth and
+   * the claimed element occurs in both, the truthful verdict is REGULARITY.
+   *
+   * This does NOT establish that recurrence cannot exist across two units. It
+   * establishes that the current evidence geometry — sectionId occurrences over
+   * section × position|body coverage — cannot distinguish recurrence from the
+   * ratified exclusion "a property holding uniformly across every unit read".
+   *
+   * An epistemic limit, not an ontological claim about the Work.
+   *
+   * PINNED so that a future "fix" cannot broaden the contract by treating
+   * `>= 2 separated units` as sufficient. Its neighbouring positive control sits
+   * directly below, keeping both predicates independently visible:
+   * separation is necessary; non-uniformity is also necessary.
+   */
+  it('2 body-read units, element in both → REGULARITY', () => {
+    expect(
+      admitRecurrence({
+        commissionedScope: SCOPE,
+        coverage: coverageOf(['s1', 's2']),
+        occurrences: at('s1', 's2'),
+        extent: 'coverage',
+      }).verdict,
+    ).toBe('REGULARITY');
+  });
+
+  it('NEIGHBOURING POSITIVE CONTROL — 3 body-read units, element in two → ADMISSIBLE', () => {
+    expect(
+      admitRecurrence({
+        commissionedScope: SCOPE,
+        coverage: coverageOf(['s1', 's2', 's3']),
+        occurrences: at('s1', 's3'),
+        extent: 'coverage',
+      }).verdict,
+    ).toBe('ADMISSIBLE');
+  });
+
+  it('the numerical floor is a CONSEQUENCE of the representation, not phenomenon law', () => {
+    // Same two occurrence units. Only the amount READ differs — which is exactly
+    // what the ruling says the verdict turns on.
+    const twoRead = admitRecurrence({
+      commissionedScope: SCOPE,
+      coverage: coverageOf(['s1', 's3']),
+      occurrences: at('s1', 's3'),
+      extent: 'coverage',
+    });
+    const threeRead = admitRecurrence({
+      commissionedScope: SCOPE,
+      coverage: coverageOf(['s1', 's2', 's3']),
+      occurrences: at('s1', 's3'),
+      extent: 'coverage',
+    });
+    expect(twoRead.verdict).toBe('REGULARITY');
+    expect(threeRead.verdict).toBe('ADMISSIBLE');
+  });
+
+  it('no third state exists to soften the refusal', () => {
+    const verdict = admitRecurrence({
+      commissionedScope: SCOPE,
+      coverage: coverageOf(['s1', 's2']),
+      occurrences: at('s1', 's2'),
+      extent: 'coverage',
+    }).verdict;
+    // POSSIBLE_RECURRENCE / LIKELY_RECURRENCE / RECURRENCE_PENDING are not verdicts.
+    expect(['ADMISSIBLE', 'PARTIAL_COVERAGE', 'REGULARITY', 'INSUFFICIENT_SEPARATION', 'EVIDENCE_OUTSIDE_COVERAGE'])
+      .toContain(verdict);
+    expect(verdict).toBe('REGULARITY');
+  });
+});
+
 describe('W-SEPARATION · two refs in an array are not two separated points', () => {
   it('two occurrences inside one covered unit are INSUFFICIENT_SEPARATION', () => {
     const sameUnit: RecurrenceCandidate = {
