@@ -128,7 +128,7 @@ Reading: both dirty entries are run 1's own footprint. At `4596b9bdb` the harnes
 
 C-D10 repair (instrument only): the worktree must be fresh (a pre-existing path is a STOP; the script never reuses or cleans a prior run); DerivedData lives outside the worktree at `<worktree>-derived`; the xcodegen footprint is recorded in the build record after `generate` instead of failing a later check; a `mkdir` lock refuses a concurrent run. Gate pins all three. Run 1's outcome decides the next act: if it completed through the UUID gate its record and product stand (run 2 touched nothing); if it did not, the repaired instrument runs once at a fresh path.
 
-## §11 Run 1 COMPLETED — UUID GATE: STOP (`build-20260913T173346Z`, founder-run; file owed via the ledger branch)
+## §11 Run 1 COMPLETED — UUID GATE: STOP (`build-20260913T173346Z`, founder-run; evidence files RECEIVED — §11.1)
 
 Run 1 ran to completion (the earlier paste had simply cut off at `swift build`). Verbatim, in order: all seven pins MATCH · xcodegen 2.46.0 recorded · worktree `/private/tmp/phase-a-repro-01` at `4596b9bdb`, 0 dirty entries · `swift build` complete (5.23 s) · `swift test` **Executed 30 tests, with 0 failures** · `xcodegen generate` OK · **unsigned `** BUILD SUCCEEDED **`**, unsigned dylib UUID `64EEC026-5F56-3706-BD2A-C5A6A20FC08B` · **signed `** BUILD SUCCEEDED **`** (destination `id=00008140-00163D9922E0801C`, team `ZVK2X646Z2`) · custody before any install: signed dylib UUID **`64EEC026-5F56-3706-BD2A-C5A6A20FC08B`** (unsigned = signed, as MAC-COMPILE-04/07 saw) · signed dylib SHA-256 `283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f` · per-file manifest 7 files, manifest SHA-256 `09e286b671358420b39d8bd20c89aac32249bf85c474a760adb4080729d112b1` · codesign `life.soullab.voicekernel.k00` / `ZVK2X646Z2` · app path `/private/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app` → **`## STOP — UUID GATE: signed dylib reads '64EEC026-…' ≠ expected 11A057AA-… — NO INSTALL; founder ruling required 3`** · *nothing installed; the device is untouched.*
 
@@ -144,3 +144,9 @@ Run 1 ran to completion (the earlier paste had simply cut off at `swift build`).
 3. **Hold PHASE-A-REPRO-01.**
 
 Standing: PINS PASS · BUILD PASS · CUSTODY RECORDED · **UUID GATE STOP** · NO INSTALL · DEVICE UNTOUCHED · founder ruling required.
+
+### §11.1 Evidence received and verified here (`4eb4870c7` on `feature/k00-driver-ledger`, cherry-picked as `d72b5802d`)
+
+Files under `docs/programme/VOICE-2026/driver-ledger/phase-a-repro-01/`: `build-20260913T173346Z.txt` (run 1; last line is the `## STOP — UUID GATE` refusal, exit 3) · `build-20260913T173434Z.txt` (run 2; last line `## STOP — worktree not clean`, nothing built) · `manifest-20260913T173346Z.sha256` (7 files: `Info.plist` · `PkgInfo` · `VoiceKernelHarness` · `VoiceKernelHarness.debug.dylib` · `_CodeSignature/CodeResources` · `__preview.dylib` · `embedded.mobileprovision`; SHA-256 of the manifest `09e286b6…` = the value in the run-1 record) · `xcodebuild-unsigned-20260913T173346Z.log` and `xcodebuild-signed-20260913T173346Z.log` (both contain `** BUILD SUCCEEDED **`). Read-only verification; no file edited. The custody chain the plan required (§3) is therefore in the repository, not only in the founder's paste.
+
+Standing unchanged: **UUID GATE STOP · NO INSTALL · DEVICE UNTOUCHED · founder ruling required** on the three options above. Nothing runs on the device until that ruling; a ruling for option 1 is executed by exactly two founder commands (one reinstall with `K00_EXPECT_UUID=64EEC026-5F56-3706-BD2A-C5A6A20FC08B`, then one batch `PHASE-A-REPRO-01 30 --mode L --subject phase-a`), verified here afterwards.
