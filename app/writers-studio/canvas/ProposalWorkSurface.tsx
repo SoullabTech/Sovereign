@@ -47,6 +47,7 @@
 
 import { useEffect, useRef } from 'react';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
+import { revealWithin } from './revealWithin';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
@@ -152,6 +153,16 @@ function Locus(
  * proposal jump makes. ONCE, keyed on the locus, so a writer who then reads
  * elsewhere in the section is not dragged back: being moved around your own
  * manuscript is its own kind of dispossession.
+ *
+ * ⛔ THROUGH `revealWithin`, NEVER `scrollIntoView`. The first build used the
+ * DOM call and broke a ban this room already carries: `scrollIntoView` scrolls
+ * EVERY scrollable ancestor, the document included, and founder-witnessed on
+ * 2026-09-11 that threw the Studio header and the left rail off the top of the
+ * screen. `revealWithin` moves the nearest scroller and nothing else.
+ *
+ * ⚠️ And my own PW-16 obligation asserted `scrollIntoView` BY NAME, so it
+ * pinned the violation rather than the property. The property is that opening a
+ * proposal reveals the locus without moving the room around it.
  */
 function useBringIntoView(key: string) {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -159,7 +170,7 @@ function useBringIntoView(key: string) {
   useEffect(() => {
     if (done.current === key || !ref.current) return;
     done.current = key;
-    ref.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    revealWithin(ref.current, 'center', 'smooth');
   }, [key]);
   return ref;
 }

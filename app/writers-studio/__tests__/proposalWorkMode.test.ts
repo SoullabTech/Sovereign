@@ -356,7 +356,14 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
   });
 
   it('PW-16 · opening the proposal brings the locus into view ONCE', () => {
-    expect(WORK_SURFACE).toContain('scrollIntoView');
+    /* ⛔ THIS ASSERTION USED TO PIN THE VIOLATION. It required `scrollIntoView`
+       by name — a call this room has banned since 2026-09-11, because it
+       scrolls every scrollable ancestor including the document and threw the
+       Studio header off-screen. Naming an API is not naming a property; the
+       property is that the locus is revealed through the room's own seam,
+       which moves the nearest scroller and nothing else. */
+    expect(WORK_SURFACE).toContain('revealWithin(');
+    expect(WORK_SURFACE).not.toContain('scrollIntoView');
     /* Keyed and spent, so a writer reading elsewhere is not dragged back. */
     expect(WORK_SURFACE).toMatch(/done\.current === key/);
     expect(WORK_SURFACE).toMatch(/done\.current = key/);
