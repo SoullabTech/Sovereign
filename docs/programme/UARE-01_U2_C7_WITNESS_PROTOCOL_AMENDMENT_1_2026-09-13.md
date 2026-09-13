@@ -4,6 +4,13 @@
 **Amends:** `docs/programme/UARE-01_U2_C7_WITNESS_PROTOCOL_2026-09-13.md`, frozen at **`d0157548`**.
 **Status:** ⛔ **PREDECLARED BEFORE CONTACT. NOT RUN. NO ACCOUNT. NO `[O]`.**
 
+> ⚠️ **Forward reference, added 2026-09-13 — this file's content is UNCHANGED.** §6's carryover
+> fallback is **superseded by Amendment 2**: the declared bias direction is **withdrawn** (its
+> direction was never established) and fresh-conversation isolation becomes a **validity
+> requirement** — carryover ⇒ C-7 stops, unrun. See
+> `docs/programme/UARE-01_U2_C7_WITNESS_PROTOCOL_AMENDMENT_2_2026-09-13.md`. §6 is left as written so
+> the record shows the proposal and its refutation.
+
 > ⛔ **`d0157548` is preserved as the originally frozen instrument.** Its corpus, its three primary
 > prompts and its A/B/C/UNCLASSIFIED scoring are **unchanged by this amendment**. This document adds
 > one calibration control and the rules for reading it. *A separately versioned amendment before
