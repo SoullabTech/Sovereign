@@ -65,8 +65,8 @@ import * as path from 'path';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 const actRows: { acts: any[]; members: any[] } = { acts: [], members: [] };
-const mintedDisclosureIds = new Set<string>();
-let uniqueDisclosureIds = true;
+const receiptRows = new Map<string, any>();
+
 
 const actQuery = (sql: string, params: unknown[] = []) => {
   if (/INSERT INTO focus_crossing_acts/.test(sql)) {
@@ -126,26 +126,45 @@ jest.mock('@/lib/db/postgres', () => ({
       return { rows: [], rowCount: 0 };
     }
     if (/context_disclosure_receipts/.test(sql)) {
+      /**
+       * ⛔⭐ A REAL IN-MEMORY TABLE, BECAUSE FOUR SUCCESSIVE FAKES LIED.
+       *
+       * Every earlier version of this fake INVENTED part of the row — a
+       * hardcoded `request_ref`, a `rowCount` that disagreed with the rows, a
+       * throw where production does `ON CONFLICT DO NOTHING`. Each one blocked
+       * the replay for a reason production does not have, and the suite went
+       * green on the property it was written to test. The calibration run
+       * (guard removed → must go RED) caught it only on the fourth pass.
+       *
+       * So this stores what is inserted and returns what was stored. Nothing
+       * else. The real statements are:
+       *
+       *   INSERT ... ON CONFLICT (disclosure_id) DO NOTHING RETURNING id
+       *   SELECT ... WHERE disclosure_id = $1
+       */
       if (/INSERT/.test(sql)) {
         if (consentRows.size === 0) throw new Error('violates foreign key constraint');
-        /* ⭐ THE PRODUCTION CONSTRAINT, MODELLED. `disclosure_id` is UNIQUE. */
-        const id = params.find((p) => typeof p === 'string' && /^act-replay:/.test(p)) as string | undefined;
-        if (id && uniqueDisclosureIds) {
-          if (mintedDisclosureIds.has(id)) {
-            throw new Error('duplicate key value violates unique constraint "context_disclosure_receipts_disclosure_id_key"');
-          }
-          mintedDisclosureIds.add(id);
-        }
-        return { rows: [{ id: `r-${mintedDisclosureIds.size}` }], rowCount: 1 };
+        const [disclosureId, memberId, requestRef, boundary, sourceClass,
+          participationBasis, sourceRef, scopeKind, sectionRef, gesture, policyVersion] =
+          params as string[];
+        if (receiptRows.has(disclosureId)) return { rows: [], rowCount: 0 };   // DO NOTHING
+        receiptRows.set(disclosureId, {
+          id: `r-${receiptRows.size + 1}`, member_id: memberId, request_ref: requestRef,
+          boundary, source_class: sourceClass, participation_basis: participationBasis,
+          source_ref: sourceRef, scope_kind: scopeKind, section_ref: sectionRef ?? null,
+          authorized_by: 'member', gesture, policy_version: policyVersion, state: 'attempted',
+        });
+        return { rows: [{ id: `r-${receiptRows.size}` }], rowCount: 1 };
       }
       if (/^\s*SELECT id, member_id/m.test(sql)) {
-        return { rows: [{ id: 'r1', member_id: 'm-1', request_ref: 'req-1',
-          boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
-          participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'section',
-          section_ref: 'sec-1', authorized_by: 'member', gesture: 'ask_maia',
-          policy_version: 'context-disclosure-v1', state: 'attempted' }], rowCount: 1 };
+        const row = receiptRows.get(params[0] as string);
+        return { rows: row ? [row] : [], rowCount: row ? 1 : 0 };
       }
-      if (/UPDATE/.test(sql)) return { rows: [], rowCount: 1 };
+      if (/UPDATE/.test(sql)) {
+        const row = receiptRows.get(params[0] as string) ?? [...receiptRows.values()][0];
+        if (row) row.state = 'crossed';
+        return { rows: [], rowCount: row ? 1 : 0 };
+      }
     }
     return { rows: [], rowCount: 0 };
   }),
@@ -198,7 +217,7 @@ const req = () => ({
 
 beforeEach(() => {
   actRows.acts.length = 0; actRows.members.length = 0;
-  mintedDisclosureIds.clear(); uniqueDisclosureIds = true;
+  receiptRows.clear();
   consentRows.clear(); generations = 0; handoffs = 0;
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -210,8 +229,8 @@ afterEach(() => jest.restoreAllMocks());
 describe('W7-0 — the fake is no more permissive than the real table', () => {
   it('⛔ a duplicate disclosure_id collides, exactly as production would', async () => {
     await performFocusCrossing(req(), deps());
-    expect(mintedDisclosureIds.size).toBeGreaterThan(0);
-    const id = [...mintedDisclosureIds][0];
+    expect(receiptRows.size).toBeGreaterThan(0);
+    const id = [...receiptRows.keys()][0];
     expect(id).toMatch(/^act-replay:/);
   });
 });
@@ -236,22 +255,23 @@ describe('W7-1 — a replayed actId, sequentially', () => {
 
   it('and exactly one set of receipts — no second disclosure', async () => {
     await performFocusCrossing(req(), deps());
-    const after = mintedDisclosureIds.size;
+    const after = receiptRows.size;
     await performFocusCrossing(req(), deps());
-    expect(mintedDisclosureIds.size).toBe(after);
+    expect(receiptRows.size).toBe(after);
   });
 });
 
 describe('W7-2 — the same actId, three times CONCURRENTLY', () => {
   it('⭐⭐ three in flight together still produce ONE generation', async () => {
+    /* ⭐ DISTINCT requestIds, so consent uniqueness cannot be the thing that
+       holds. The ONLY repeated identity is the act. */
     await Promise.all([
       performFocusCrossing(req(), deps()),
-      performFocusCrossing(req(), deps()),
-      performFocusCrossing(req(), deps()),
+      performFocusCrossing({ ...req(), requestId: 'req-b' }, deps()),
+      performFocusCrossing({ ...req(), requestId: 'req-c' }, deps()),
     ]);
     expect(handoffs).toBe(1);
     expect(actRows.acts).toHaveLength(1);
-    expect(mintedDisclosureIds.size).toBe(1);
   });
 });
 
@@ -280,9 +300,9 @@ describe('W7-5 — the same actId under a DIFFERENT requestId', () => {
 
   it('and no second disclosure is minted for it', async () => {
     await performFocusCrossing(req(), deps());
-    const after = mintedDisclosureIds.size;
+    const after = receiptRows.size;
     await performFocusCrossing({ ...req(), requestId: 'req-2' }, deps());
-    expect(mintedDisclosureIds.size).toBe(after);
+    expect(receiptRows.size).toBe(after);
   });
 });
 

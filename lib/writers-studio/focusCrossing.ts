@@ -218,6 +218,13 @@ export type CrossingFailure =
   | 'participation_unconstructable'
   | 'act_contradiction'
   | 'act_unrecordable'
+  /**
+   * ⭐⭐ FOCUS-W7 · this actId is already known, so this gesture has already
+   * thought. ⛔ NOT an error the member caused, and NOT a contradiction — the
+   * request agreed with the stored act in every respect. It simply arrived
+   * twice.
+   */
+  | 'act_already_processed'
   | 'handoff_not_prepared'
   | 'handoff_failed'
   | 'currency_stale'
@@ -466,6 +473,58 @@ export async function performFocusCrossing(
   });
   if (act.kind === 'contradiction' || act.kind === 'refused') {
     return { ...refused(unavailable), act: 'contradiction', failure: 'act_contradiction' };
+  }
+
+  /**
+   * ⭐⭐⭐ FOCUS-W7 · `continued` IS NON-GENERATIVE. FOUNDER RULING 2026-09-13.
+   *
+   *   One human act may cause at most one response-producing generation.
+   *
+   * ⛔ Not "one row". Not "one receipt set". And NOT "probably one generation,
+   * because a uniqueness constraint in another subsystem happens to collide
+   * first" — which is what this was until now, and nobody had decided it.
+   *
+   * ── ⛔ THE NAME LIES, SO READ THE MEANING ─────────────────────────────────
+   *
+   * `continued` does NOT mean *continue executing*. It means *this actId is
+   * already known*: the INSERT hit `ON CONFLICT (act_id) DO NOTHING` and what
+   * is stored agrees with what arrived. The crossing used to fall through here
+   * into `prepare` and `generate`, so a replay that got this far would think a
+   * second time under one recorded act.
+   *
+   * ── HOW THAT WAS PROVEN, since the test suite said otherwise ─────────────
+   *
+   * A probe with a permissive disclosure fake returned
+   * `act: continued · handoffs 2 · acts 1`. The suite was green because THREE
+   * separate fixture artifacts each blocked the replay earlier, and the fourth
+   * blocker — `disclosure_id = actId:memberId`, deterministic and UNIQUE — is
+   * the only one that exists in production. An accident, not a law.
+   *
+   * ── ⭐ DEFENCE IN DEPTH, and the order is deliberate ─────────────────────
+   *
+   *   boundary duplicate guard   safety layer
+   *   act `continued` guard      the cognitive-idempotency LAW
+   *
+   * Either may stop a replay. ⛔ Neither may be the accidental sole guarantee.
+   * The boundary is still established BEFORE the act is opened — that
+   * sequencing was proven for other reasons and is NOT reordered to make this
+   * tidier. The local guarantee is made true instead:
+   *
+   *   if execution reaches `continued`, cognition is impossible.
+   *
+   * ── ⛔ AND NO RESPONSE CACHE IS INVENTED HERE ────────────────────────────
+   *
+   * The priority is: never regenerate · reuse the original answer if a lawful
+   * retrieval seam already exists · otherwise fail closed with a typed status.
+   * A door census found NO seam keyed by `canonical_turn_id` — it appears only
+   * in the act record itself. So this fails closed, and a replay-recovery seam
+   * is a separate act, not a cache smuggled in to make retries elegant.
+   */
+  if (act.kind === 'continued') {
+    console.warn('[FOCUS] act already processed — no second generation', {
+      actId: req.actId, requestRef: req.requestId,
+    });
+    return { ...refused(unavailable), act: 'continued', failure: 'act_already_processed' };
   }
   if (act.kind === 'unavailable') {
     /* ⛔ An unrecordable act must not become an unrecorded crossing. The record
