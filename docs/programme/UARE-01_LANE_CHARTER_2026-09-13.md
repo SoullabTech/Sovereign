@@ -263,6 +263,18 @@ implementation inspection → named test → decisive assertion at the boundary 
 ⛔ **The occurrence register stays at 2/3.** Anticipating this failure is not committing it; the row
 fills only if a real U1 finding performs the promotion without the crossing.
 
+**The inversion criterion (founder, 2026-09-13) — how a body is inspected.** A test body can look
+boundary-shaped without deciding the boundary: it can invoke the right function but assert only a
+downstream value, use a fixture in which the prohibited path was impossible anyway, or mock away the
+very thing supposedly gated. So body inspection asks one question:
+
+> **If the claimed gate were removed or inverted, would this assertion be capable of failing?**
+
+⛔ This is an *inspection* criterion, not a demand for mutation testing. Its purpose is to stop
+*"read the body"* from becoming a more sophisticated version of *"read the test name."*
+
+**Result of the first application:** `docs/programme/UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md`.
+
 ## 6 · Custody
 
 ```text
@@ -288,6 +300,7 @@ U2 WALKTHROUGH    NOT AUTHORIZED
 CMT-01 DIFFERENCE ASYMMETRIC FINDING ONLY - NOT A DIFFERENTIATOR - M3 NOT OPENED HERE
 CANDIDATE CANARY   intra-document authority promotion (S0.1) - 2 occurrences - 3rd promotes it
 U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspection
+U1 FIRST PASS      RUN on 36374edb - A1 TEST PASSING - A4 NOT DECISIVE - nothing GATED
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
 FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
 
@@ -300,7 +313,7 @@ NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIR
 | Step | Name | Output | Authorization |
 | --- | --- | --- | --- |
 | **U0** | **INTAKE** | The founder's first pass, classified by evidence class. | ✅ done — this commit |
-| **U1** | **MAIA-SIDE COVERAGE SURVEY** | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
+| **U1** | **MAIA-SIDE COVERAGE SURVEY** — ✅ first pass RUN 2026-09-13 on `36374edb`, result recorded in `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md` | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
 | **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **requires a founder act** — see §8 |
 | **U3** | **DISCRIMINATION PASS** | Every finding classified `MODEL-OF-ME` / `OTHER-WHO-KNOWS-ME` / neutral-infrastructure. Neutral-infrastructure findings are the only ones eligible to become candidate design inputs without a doctrinal question attached. | ⛔ requires U1; U2 for [O]-dependent rows |
 | **U4** | **QUESTION HANDOFF** | One docket per owning lane (Voice · Anamnesis · Jarvis · Practitioner Studio · Writer's Studio), each a *question*, never a recommendation. | ⛔ founder ruling on which dockets open |

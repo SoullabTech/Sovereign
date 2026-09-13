@@ -88,6 +88,11 @@ implementation inspection → named test → decisive assertion at the boundary 
 only if an actual U1 finding promotes implementation appearance into stronger standing without the
 crossing.
 
+⭐ **U1 FIRST PASS RUN 2026-09-13 on `36374edb`** — 3 suites, 35 tests, all passing; bodies inspected
+against the inversion criterion. Result and every caveat: `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md`.
+⛔ **A green run is not `GATED`** — and none of A1–A5 executes the voice path; all assert over source
+text, so the A-block detects **source drift, not runtime regression.**
+
 ### Re-statement of A1–A5 under the new grammar
 
 ⚠️ A1–A5 were labelled **GATED** on 2026-09-13 under the previous legend, which defined that word as
@@ -102,17 +107,21 @@ assertion *bodies* were not audited, and no test was executed against a stated S
 
 ---
 
-## The matrix## The matrix
+## The matrix
+
+⛔ Every `NOT SURVEYED` row below stays `NOT SURVEYED` **even where U1 located a candidate test file** —
+a located file is not `TEST PRESENT`. The candidates are named in survey §3 so the next pass starts
+from them; ⛔ do not count them.
 
 ### Class A — turn record ⭐ (the non-negotiable class)
 
 | # | Condition | Coverage |
 | --- | --- | --- |
-| A1 | A spoken turn and a typed turn converge before MAIA cognition begins; nothing stands between the log line and canonical cognition. | **TEST PRESENT (by name)** — `__tests__/voice-non-degradation.test.ts` |
-| A2 | MAIA's turn is committed exactly once, from one seam, reached by every terminal path. | **TEST PRESENT (by name)** — `__tests__/voice-transcript-commit.test.ts` |
-| A3 | A stalled or failed TTS delays MAIA's words; it never erases them. | **TEST PRESENT (by name)** — same |
-| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | **TEST PRESENT (by name)** — same |
-| A5 | The text emitted and the transcript persisted are the same guarded value. | **TEST PRESENT (by name)** — `__tests__/r2-voice-continuity-contract.test.ts` |
+| A1 | A spoken turn and a typed turn converge before MAIA cognition begins; nothing stands between the log line and canonical cognition. | ⭐ **TEST PASSING** — `__tests__/voice-non-degradation.test.ts`, run on `36374edb`; ⛔ inverts *decisive* (its ⛔ cases mutate the source and assert rejection) |
+| A2 | MAIA's turn is committed exactly once, from one seam, reached by every terminal path. | **TEST PASSING (narrowed)** — `__tests__/voice-transcript-commit.test.ts`, run on `36374edb`. ⛔ *one seam / one append* decisive; *reached by every terminal path* **not** decisive (literal presence ≠ path coverage) |
+| A3 | A stalled or failed TTS delays MAIA's words; it never erases them. | **TEST PRESENT** — ⛔ not decisive: proves the watchdog is spelled in source, not that it arms or survives |
+| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | ⛔ **TEST PRESENT — ASSERTION NOT DECISIVE.** It bans one spelling (`isInVoiceMode && showVoiceText`); `showVoiceText && isInVoiceMode` or `if (showVoiceText)` passes while the boundary is violated. Recorded, ⛔ not repaired — survey §2 |
+| A5 | The text emitted and the transcript persisted are the same guarded value. | **TEST PRESENT** — `__tests__/r2-voice-continuity-contract.test.ts`; decisive against deletion at two named sites only |
 | A6 | Switching text ↔ voice mid-conversation produces one continuous conversation, not two. | **NOT SURVEYED** |
 | A7 | A reconnect resumes the same conversation; it never splits it into a second one. | **NOT SURVEYED** |
 | A8 | A message delivered in both channels appears once, not twice. | **NOT SURVEYED** |
