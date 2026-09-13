@@ -1,9 +1,10 @@
-# Soullab Strategic Exclusion Register — CANDIDATE (r4)
+# Soullab Strategic Exclusion Register — CANDIDATE (r5)
 
 ```text
-STATUS      CANDIDATE. 18 adjudication rulings applied (2026-09-13, r2+r3+r4);
-            14 resulting entries adjudicated; 16 entries remain open; 30 entries total.
-            Kernel-producing set: 13.
+STATUS      CANDIDATE. 26 adjudication rulings applied (2026-09-13, r2–r5);
+            18 resulting entries adjudicated; 9 open; 27 entries.
+            ⭐ Kernel-producing set: 6 — ALL ADJUDICATED.
+            NO UNRESOLVED STRATEGIC LEVEL ASSIGNMENTS REMAIN FROM THE RECOVERED CORPUS.
 RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder-from-memory
             composition; every entry CANDIDATE until adjudicated; do not draft the kernel.
             founder, 2026-09-13 (r2): three corrections, six adjudications, and the LEVEL
@@ -14,6 +15,9 @@ RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder
             founder, 2026-09-13 (r4): X-05 kept STRATEGIC with fields filled; X-09 and X-11
             releveled CONSTITUTIONAL; X-01B and X-10 releveled OPERATIONAL; F2 answered with a
             90-day stale backstop; X-29 given a distribution acceptance condition, no build.
+            founder, 2026-09-13 (r5): F9 reclassified and a prior founder statement corrected;
+            X-03 → CONSTITUTIONAL; X-06, X-14, X-17 → OPERATIONAL; X-20 merged; X-23, X-24
+            struck to their source system. The strategic queue is cleared.
 METHOD      Jarvis reconstruction from existing rulings. No new research. No external sweep.
 NOT A LANE  Strategic memory, not a programme lane. No build, no schema, no deploy.
 HANDOFF     UARE-01 exposed the question, does not own the answer, and stops here.
@@ -140,7 +144,7 @@ constitutional floor constrains strategy; it is not produced by it.**
 
 ---
 
-## 3 · Adjudicated entries (6)
+## 3 · Adjudicated entries (18)
 
 ### X-01A · Outsourced custody of member data, memory, or canonical cognition
 - **LEVEL** [F] CONSTITUTIONAL · **CLASS** [F] REFUSED
@@ -340,27 +344,85 @@ constitutional floor constrains strategy; it is not produced by it.**
 - **REOPEN CONDITION** [F] Constitutional/canonical amendment only.
 - **NOTE** [F] This ruling produced the second admission test in §1.
 
+### X-03 · Provider replaceability
+- **LEVEL** [F] **CONSTITUTIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] REFUSED
+- **RULING** [F] **X-03 carried the same category error X-02 once did.** The canon states *"providers are replaceable, governable infrastructure beneath MAIA's identity — never the identity itself,"* says explicitly the point is not OpenAI, and calls `check:no-openai` *"the first implementation of that policy, not the policy itself."*
+- **REFUSED ALTERNATIVE** [F] Any external model or provider becoming **load-bearing for MAIA's identity, authority, or canonical cognition** rather than remaining governable substrate.
+- **CURRENT GOVERNANCE** [F] — *enforcement, not principle:*
+  ```text
+  Anthropic / Ollama / Kokoro / Sesame / faster-whisper
+  provider-policy.json · sovereignRouter · check:no-openai
+
+  STATUS
+  Current enforcement and tier assignment,
+  not the constitutional principle itself.
+  ```
+- **NOTE** [F] Whether OpenAI someday qualifies for a production capability is a **governance question**; it does not amend the deeper rule.
+- **REOPEN CONDITION** [F] Constitutional/canonical amendment only.
+
+### X-06 · Build the Commons fresh
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] CHOSEN AGAINST
+- **RULING** [F] **Fails the second admission test.** The legacy substrate carries contribution tiers, points, counts and access gated by a measured cognitive level — *the very status mechanics the Circle constitution already forbids.* So *"reuse the existing status economy"* is not a legitimate strategic alternative.
+- **THE OPERATIONAL CHOICE** [F] Implement the ratified Commons without reusing incompatible legacy status mechanics.
+- **WHERE THE HIGHER CONTENT LIVES** [F] What the Commons *is* · equality of participation · no status economy · no access based on measured attributes. **"Build this implementation fresh" is a consequence of those rules, not a peer of them.**
+
+### X-14 · Anti-Drift Law freeze on generalized architecture
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] DEFERRED
+- **RULING** [F] *"Reversing the freeze when those gates clear would not mean Soullab changed strategy. It would mean the gate worked."*
+- **REOPEN CONDITION** [R] The source's three opening gates, verified verbatim — **(1)** Anti-Drift condition satisfied or explicitly waived after the Jondi walk; **(2)** provenance/custody adjudicated enough to distinguish reusable platform architecture from Larry-specific or licensed material (*"Abstraction and renaming never confer Soullab ownership; only adjudication does"*); **(3)** coupling census re-run reproducibly with method and transitive depth attached (*"The session-only numbers in §5 are orientation, not evidence"*).
+- **⛔ F2 SCOPE** [F] **Removed from the 90-day strategic backstop** — it already has an event-driven operational gate.
+- **⛔ DO NOT SMUGGLE** [F] *Build a reusable platform rather than encoding Larry permanently into the product* is a **different decision**, potentially strategic, and is not established by this freeze entry.
+
+### X-17 · Practitioner-wisdom implementation behind the BUILD GATE
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] DEFERRED
+- **RULING** [F] Same pattern as X-14. The seed is a stable long-term architecture; the gate governs **when implementation is allowed to exist**, which the record distinguishes explicitly from what must eventually exist. That is operational sequencing.
+- **REOPEN CONDITION** [R] The existing BUILD GATE — Larry IP inventory map, then the bounded six-month stewardship environment.
+- **⛔ DO NOT PROMOTE** [F] *Build the smallest real environment; let use earn the next capability* may eventually deserve its own strategic entry. **X-17 does not establish it.** Do not promote surrounding philosophy through a build gate.
+
+### X-20 · RFI / UFI — MERGED
+- **DISPOSITION** [F] **MERGED → X-16 (build) + X-21B (claim).** No independent reopen condition; no longer a numbered entry.
+- **WHY** [F] X-20 combined two questions already held separately: product/build (X-16, X-21A) and ontological claim (X-21B). *"Do not create a fourth version of the same hold."* Its build side inherits the activation and architecture gates; its claim side inherits Claim Ladder ascent.
+
+### X-23 · P1–P13 at rung 1 — STRUCK TO SOURCE
+- **DISPOSITION** [F] **STRUCK from the strategic exclusion register as a source-owned epistemic state.** Pointer: `docs/research/human-experience/CLAIM_LADDER.md`.
+- **WHY** [F] Rung position **is an epistemic state, not a strategy.** The ladder already defines advancement — research support → MAIA experiment → replication/witness → founder-authorized public claim — and states that nothing on rungs 1–4 is marketed. *"Publish the research as findings before it earns the evidence"* is not a legitimate strategic future.
+- **REOPEN CONDITION** [F] None needed. **The ladder is the transition mechanism.**
+
+### X-24 · Capacity transfer metric — STRUCK TO SOURCE
+- **DISPOSITION** [F] **STRUCK as a source-owned epistemic state.** Pointer: `CLAIM_LADDER.md` / Capacity Transfer programme.
+- **⚠ NOT X-23's CONDITION** [F] The two do **not** share a reopen condition — the answer to the r4 queue question:
+  ```text
+  X-23   has each proposition earned the next rung
+         applicable to its claim kind?
+  X-24   do we have a qualifying design capable of measuring
+         transfer from the practiced AI interaction into life
+         beyond the practiced task?
+  ```
+  **Different evidentiary burdens.** No public transfer claim is permitted before a qualifying measurement design exists.
+
 ---
 
-## 4 · Unadjudicated — STRATEGIC level (kernel-producing set)
+## 4 · The kernel-producing set — 6 entries, all adjudicated
 
-Entries r1 recovered, now levelled. **LEVEL is [J] unless marked.** Full field records are in
-git history at `1337d51a`; abbreviated here to keep the strategic set readable.
+⭐ **There are no unresolved strategic LEVEL assignments left from the recovered corpus.** Every
+entry that was open at r4 has been ruled: two to CONSTITUTIONAL, three to OPERATIONAL, one merged,
+two struck to their source system.
 
-| # | Choice | Alternative chosen against | Class | Source |
-|---|---|---|---|---|
-| **X-03** | Provider replaceability — *"no provider is load-bearing for who MAIA is"* | OpenAI in the production runtime | CHOSEN AGAINST (REFUSED in-prod, lab-gated otherwise) | `PROVIDER_GOVERNANCE.md`, canon 2026-07-07 |
-| **X-06** | Build the FR-02 Commons fresh | Reuse `community_*` — *"would import a status economy on day one"* | CHOSEN AGAINST | I0 census; D-I2 |
-| **X-14** | Anti-Drift Law freeze on generalized architecture | Extracting the Coaching Journey Template now | DEFERRED | Naming ruling 2026-09-04 |
-| **X-17** | Practitioner-wisdom work held behind the BUILD GATE | Continuing on design direction alone | DEFERRED | `UNIVERSAL_PRACTITIONER_SEED_2026-08-05.md` |
-| **X-20** | RFI / UFI not built, not claimed | Building or claiming them | UNPROVEN | Founder, 2026-05-24 |
-| **X-23** | P1–P13 held at rung 1; nothing on rungs 1–4 is marketed | Publishing the research as findings | UNPROVEN | `CLAIM_LADDER.md` |
-| **X-24** | Capacity transfer metric not claimed | Claiming measurable transfer | UNPROVEN | `CLAIM_LADDER.md` |
+| # | The choice | Class |
+|---|---|---|
+| **X-05** | Collective scale by multiplication rather than enlargement | CHOSEN AGAINST |
+| **X-16** | Memory/field capability activated arena-by-arena rather than wholesale | DEFERRED |
+| **X-19** | System inference does not silently acquire relational authority | DEFERRED |
+| **X-21A** | Field/coherence surfaces withheld until grounded in measurable substrate | DEFERRED |
+| **X-21B** | Ontological claims remain evidence-gated even after capability exists | UNPROVEN |
+| **X-29** | Member-first experience; practitioner-led initial distribution | CHOSEN AGAINST |
 
-**7 open entries.** With the 6 adjudicated STRATEGIC entries (X-05 · X-16 · X-19 · X-21A ·
-X-21B · X-29), the kernel-producing set totals **13** — down from 17. **A healthy contraction:**
-four entries left because they were a constitutional floor (X-09, X-11) or an implementation
-preference (X-01B, X-10) wearing strategic grammar.
+**Contraction across the run: 28 recovered → 17 → 13 → 6.** What survived is what F8 predicted —
+*what relational form we scale, how we reach people, where authority resides, what claims we
+withhold, and which viable futures we deliberately forgo.*
+
+⛔ **The kernel is NOT drafted here.** The sequencing rule holds: the Phase 1 whole-organism census
+completes first.
 
 ---
 
@@ -424,7 +486,9 @@ architecture can move while the criterion sits untouched.**
 4. Does the tradeoff look materially different now?
 
 No new lane. No automatic job. No strategy ceremony. **The 90 days is a stale-data backstop, not a
-cadence.** Currently in scope: X-16, X-19, X-21A, X-21B, X-20, X-23, X-24.
+cadence.** Currently in scope: **X-16, X-19, X-21A, X-21B** — the four STRATEGIC entries with future-facing
+reopen conditions. *(X-14 removed at r5: event-driven operational gate. X-20 merged; X-23, X-24
+struck to the Claim Ladder, which is their own transition mechanism.)*
 
 ### F9 (new) · The X-29 acceptance condition has a live candidate gap
 Verification of the mechanisms X-29 rests on, run before recording the ruling:
@@ -447,10 +511,34 @@ of the design intent, **not a ruled access model.** The authoritative boundary i
 architecture, not this grid"* (`NOW_WHAT_NAVIGATION_AND_ARRIVAL_ARCHITECTURE_2026-08-03.md`).
 
 **Consequence:** the acceptance condition's *"including through metadata and derived signals"*
-clause is **not a confirmation exercise**. The consent gate is real; the inference-channel
-guarantee is, on this reading, unlocated. ⛔ **Named, not repaired** — per the standing programme
-stop. The ruling stands unchanged and is arguably strengthened: this is exactly what the condition
-exists to catch.
+clause is **not a confirmation exercise**. ⛔ **Named, not repaired** — per the standing programme
+stop.
+
+#### F9 · CLASSIFIED (founder, r5)
+
+```text
+ASSURANCE GAP — NOT A DEMONSTRATED LEAK
+```
+
+⛔ **This does not establish that practitioners can currently infer private material.** It
+establishes something narrower and exactly stated:
+
+> **We cannot presently prove that they cannot, across the full practitioner surface.**
+
+**Founder correction of a founder statement** [F] — recorded here rather than deleted, on the same
+rule as C1–C4: the earlier claim that the stronger practitioner boundary *"already exists"* was
+**too strong.** What it rested on was a **historical August 3 draft specification** that
+explicitly authorized *design only, not implementation*, and whose three-way visibility assignment
+was **proposed and required ruling** — which is precisely the self-disclaimer Jarvis found. The
+absence-test idea in it (no inference through timestamps, counts, ordering, notifications,
+latency) is excellent **design intent, not current standing architecture.**
+
+⛔ **The August draft may be cited as historical design precedent. It may never be cited as
+evidence that the guarantee is live.**
+
+**Disposition:** X-29's acceptance condition stands; no repair authorized. When practitioner-led
+distribution is next eligible to expand, the owning lane must demonstrate the stronger boundary
+**across the whole reachable practitioner surface, including indirect signals.**
 
 ### F3 (corrected) · Tradeoffs are poorly recorded; reopen conditions are inconsistent
 **Counts, verified against r1 (`1337d51a`): of 24 entries carrying a REOPEN CONDITION, **18 are
@@ -528,19 +616,37 @@ level.**
 
 ---
 
-## 9 · Open for adjudication (24 entries)
+## 9 · What remains open
 
-Priority, in Jarvis's judgment:
+**9 entries**, none of them strategic: 5 OPERATIONAL (X-07 · X-08 · X-12 · X-18 · X-22) and 4
+CONSTITUTIONAL (X-25–X-28, pointers into `ANTI_FEATURES.md`). Their LEVEL assignments are still
+[J], but none is a candidate for the kernel.
 
-| # | Item | The question |
-|---|---|---|
-| 1 | **F9** | The inference-channel guarantee is unlocated. Does it exist somewhere Jarvis could not reach, or is it a real gap for the owning lane? **Only the founder can tell these apart.** |
-| 2 | **X-03, X-06** | The two highest-weight open strategic entries — provider replaceability and refusing an inherited status economy. |
-| 3 | **X-14, X-17** | Both DEFERRED behind gates (Jondi walk · Larry IP inventory). Now in F2's 90-day scope. |
-| 4 | **X-20, X-23, X-24** | The three UNPROVEN entries. Do they share one reopen condition — evidence — or three? |
-| 5 | **Remaining LEVELs** | 7 STRATEGIC / 5 OPERATIONAL still [J], and four constitutional entries have never been levelled by act. |
+**The one live obligation is F9** — an `ASSURANCE GAP — NOT A DEMONSTRATED LEAK`, owned by X-29's
+distribution acceptance condition. It is not a new strategy and authorizes no repair. It is the
+thing practitioner-led distribution must be able to survive before it expands beyond a witnessed
+specimen.
 
-**Repaired separately per §F5:** `CLAUDE.md:13` EC2 fossil — factual correction, committed apart
-from this register so it is independently reviewable and revertable.
+### Ledger
 
-**No entry above §3 has standing until adjudicated.**
+| | Count |
+|---|---|
+| Adjudication rulings applied (r2–r5) | **26** |
+| Entries adjudicated | **18** |
+| Open — OPERATIONAL | 5 |
+| Open — CONSTITUTIONAL | 4 |
+| **Open total** | **9** |
+| **Entries** | **27** |
+| Merged or struck to source | 3 (X-20 · X-23 · X-24) |
+| **Kernel-producing set** | **6 — all adjudicated** |
+
+### What this instrument did
+
+It separated **actual strategic choice** from three things that had been sharing a shelf with it:
+**constitution** (what Soullab will not become), **engineering sequence** (when implementation is
+allowed to exist), and **epistemic standing** (what the evidence currently licenses). The
+contraction from 28 recovered entries to 6 is the finding, not a loss — *most of what a repository
+records as a decision is not a choice among futures.*
+
+⛔ **No entry has standing beyond the rulings recorded in §3. The kernel is not drafted. The
+Phase 1 whole-organism census completes first.**
