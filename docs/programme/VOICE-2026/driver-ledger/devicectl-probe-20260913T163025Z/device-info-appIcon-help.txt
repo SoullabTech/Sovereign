@@ -1,0 +1,52 @@
+OVERVIEW: Request app icon generation from this device.
+
+This command searches for an app installed on this device and requests for its
+icon to be generated.
+
+USAGE: devicectl device info appIcon [<options>] --device <uuid|ecid|serial_number|udid|name|dns_name> --allow-placeholder <allow placeholder> --width <width> --height <height> --scale <scale>
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --app-bundle-id <app bundle identifier>
+                          Look for app icon information with the given
+                          application bundle identifier on device.
+        Note: If both app-bundle-id and app-path are provided, only app-path
+        will be used.
+  --app-path <app path>   Look for app icon information at the given
+                          application path on device.
+        Note: If both app-bundle-id and app-path are provided, only app-path
+        will be used.
+  --allow-placeholder <allow placeholder>
+                          Allow placeholder icons to be generated.
+        Note: Passing `true` will allow placeholder icons to be returned.
+        Allowing placeholder icons will ensure no I/O is done on device. If you
+        want to make sure you get the icon most accurate to your request --
+        which could use more resources on the device -- set this to `false`.
+  --width <width>         Request app icon generation with the specified width.
+  --height <height>       Request app icon generation with the specified height.
+  --scale <scale>         Request app icon generation with the specified scale.
+  --destination <destination>
+                          Write the image (in png format) to the provided file
+                          on the host device.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+

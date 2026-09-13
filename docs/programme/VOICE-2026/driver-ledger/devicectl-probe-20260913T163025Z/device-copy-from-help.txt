@@ -1,0 +1,56 @@
+OVERVIEW: Receive a file from the remote device.
+
+Copies data from the device, providing domain-specific information (see
+arguments below for more information).
+
+USAGE: devicectl device copy from --device <uuid|ecid|serial_number|udid|name|dns_name> --source <source> [--destination <destination>] [--user <user>] --domain-type <domain-type> [--domain-identifier <domain-identifier>] [--remove-existing-content <remove-existing-content>] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+FILE RECEIVE OPTIONS:
+  --source <source>       The item which should be received.
+
+BASE FILE TRANSFER OPTIONS:
+  --destination <destination>
+                          The location to which the item should be copied.
+  -u, --user <user>       The name of the user we should target. Only relevant
+                          for certain domains.
+  --domain-type <domain-type>
+                          The file service domain. Valid values are: temporary,
+                          appDataContainer, appGroupDataContainer,
+                          systemCrashLogs. You must specify a valid domain and
+                          identifier pair. Certain domains must be accompanied
+                          by an identifier that provides additional context.
+                          For example, if the domain is an app data container,
+                          the identifier is the bundle ID of the app. For
+                          temporary directories, the identifier is a unique
+                          client-provided string which is used to get your own
+                          space, separate from those of other clients.
+  --domain-identifier <domain-identifier>
+                          A unique string used to provide additional context to
+                          the domain.
+  -r, --remove-existing-content <remove-existing-content>
+                          Whether to remove files from the destination
+                          directory on the device. Only used when transferring
+                          directories. (default: false)
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+

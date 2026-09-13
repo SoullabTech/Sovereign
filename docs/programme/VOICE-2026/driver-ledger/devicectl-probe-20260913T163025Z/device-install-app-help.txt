@@ -1,0 +1,48 @@
+OVERVIEW: Installs an app.
+
+This command installs an app bundle (with a .app extension) on the device.
+
+USAGE: devicectl device install app --device <uuid|ecid|serial_number|udid|name|dns_name> <path> [--filter <filter>] [--sort-by <sort-by>] [--columns <columns> ...] [--hide-default-columns] [--hide-headers] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  <path>                  The path to the application to be installed on the
+                          device
+
+FILTERING OPTIONS:
+  --filter <filter>       An optional predicate used to filter the list of
+                          items shown.
+        The predicate is based on NSPredicate. The attribute name can be the
+        column's name from either the table-based output or a fully qualified
+        JSON field identifier from the JSON output.
+
+        E.g. `--filter "Name BEGINSWITH 'iPhone'"` or `--filter
+        "hardwareProperties.platform BEGINSWITH 'mac'`
+  --sort-by <sort-by>     If specified, a key path by which to sort results.
+  --columns <columns>     If specified, additional data columns to print.
+                          Specify '*' (in quotes) for all data columns.
+  --hide-default-columns  Hide default data columns and only print those
+                          specified with --columns.
+  --hide-headers          Hide data column headers.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+

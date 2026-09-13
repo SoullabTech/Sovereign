@@ -1,0 +1,40 @@
+OVERVIEW: Observe a Darwin notification on a device.
+
+Note that this command will wait for 300 seconds by default before exiting. You
+can override this by providing a different --timeout value.
+
+USAGE: devicectl device notification observe --device <uuid|ecid|serial_number|udid|name|dns_name> --name <name> ... [--session-timeout <session-timeout>] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --name <name>           The name of the Darwin notification.
+        This can be passed multiple times to observe multiple Darwin
+        notifications.
+  --session-timeout <session-timeout>
+                          Optional parameter for the amount of time (in
+                          seconds) to wait before exiting. Default: 300
+                          (default: 300)
+        Note that this is a separate parameter from, and must be less than, the
+        global --timeout.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
