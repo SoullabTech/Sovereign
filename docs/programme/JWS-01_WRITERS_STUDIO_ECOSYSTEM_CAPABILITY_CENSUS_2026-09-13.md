@@ -2,7 +2,8 @@
 
 **Opened:** 2026-09-13 (founder act)
 **Lane state:** **CENSUS ONLY.** No WS programme lane opened. No architecture change authorized.
-**Branch:** ⚠️ authored on `claude/voice-2026-research-ici0ph` — see §11, branch hygiene.
+**Branch:** `claude/jws-01-census` — separated by founder act 2026-09-13 (§13). ⛔ The combined
+staging branch `claude/voice-2026-research-ici0ph` is **SUPERSEDED — DO NOT MERGE.**
 **Authority:** founder (Kelly Nezat). Jarvis may discover, compare, test and recommend.
 **Base commit at opening:** `c90d95ea`
 
@@ -31,7 +32,8 @@ Here the equivalent would be: **naming a capability in a census is latent roadma
 > **Jarvis may discover, compare, test, and recommend. External capability discovery cannot itself
 > authorize adoption or alter Writer's Studio architecture.**
 
-Status: **RATIFIED for this lane** by the founder act opening it.
+Status: **RATIFIED for this lane** by the founder act opening it. ⭐ Reaffirmed 2026-09-13 (§13):
+**AUTO-ADOPTION FORBIDDEN.**
 
 ## 2. The lane's job
 
@@ -286,3 +288,114 @@ no WS code, schema or board state touched.
 > **Jarvis becomes Writer's Studio's continuous technological intelligence layer —
 > and a continuous intelligence layer that can change the architecture it observes
 > is not an intelligence layer. It is an unauthorized architect.**
+
+---
+
+## 13. Founder rulings — 2026-09-13
+
+### Lane separation — **RULED, REQUIRED**
+
+The two lanes hold **completely different authorities**:
+
+```text
+VOICE-2026        investigates one embodied subsystem
+                  and its admissible future architectures
+
+JWS-01            investigates the external capability landscape
+                  for an entire product domain
+```
+
+> Allowing them to share branch ancestry beyond their common starting point creates exactly the sort
+> of **accidental authority transfer** the programme architecture is designed to prevent.
+
+**Ruled disposition — published history preserved, not rewritten:**
+
+```text
+                    COMMON BASE  e1c6f527
+                         │
+              ┌──────────┴──────────┐
+   claude/voice-2026-research   claude/jws-01-census
+         VOICE commit only        JWS commit only
+```
+
+⛔ `claude/voice-2026-research-ici0ph` = **SUPERSEDED AS A COMBINED STAGING BRANCH — DO NOT MERGE.**
+Retained as historical evidence. **No force-push, no rewrite.** The clean descendants are the merge
+subjects. This branch is **single-writer** from here.
+
+### ARROW TEST — **RATIFIED**
+
+> It gives us a mechanical way of distinguishing innovation from philosophical contamination.
+
+```text
+SOURCE
+   ↓
+MAIA MAY NOTICE
+   ↓
+WRITER MAY RECOGNIZE
+   ↓
+WRITER MAY DECIDE
+   ↓
+WORK MAY CHANGE
+```
+
+An external capability is **not importable** if its implementation requires an unauthorized shortcut:
+
+```text
+SOURCE ──────────────────► WORK CHANGES          ⛔ REFUSED
+MAIA ────────────────────► WORK CHANGES          ⛔ REFUSED
+```
+
+⭐ **Ghostwriting fails structurally, rather than because we happen not to like ghostwriting.**
+That is a far more durable architectural test — it does not soften under a good demo, a strong
+quarter, or a persuasive vendor.
+
+### Capability dispositions — **RULED**
+
+| Candidate | Ruled disposition |
+|---|---|
+| **Capability inventory** | ⛔ **BIND TO THE EXISTING 25-ROW CENSUS.** No parallel inventory. |
+| **Whole Work Intelligence** | **EXISTING / PARTIAL** — A4.6 + A4.2, not a new capability |
+| **Research & Evidence Graph** | **PARTIAL — ⭐ CENSUS A4.8 FIRST.** *If `Authority × Time` plus typed, digest-verified `EvidenceRef` already supplies the epistemic substrate, then creating a parallel "research graph" because another product made research fashionable would actually **degrade** Writer's Studio.* ⛔ No Evidence Graph architecture may be proposed before A4.8 censuses the existing substrate. |
+| **Expression Pipeline** | **EXISTING / PARTIAL** — A4.13 |
+| **Authorial Voice Field** | **UNROWED — INVESTIGATE.** ⛔ **No capability row yet.** |
+| **Auto-adoption** | ⛔ **FORBIDDEN** |
+
+### Authorial Voice Field — the anomaly, and what it must earn
+
+It is the only genuinely unrowed candidate, and it sits precisely on the dangerous boundary between
+**perceiving the author** and **simulating the author**. It deserves investigation — **but not a
+capability row yet.** JWS-01 must earn the distinction first:
+
+```text
+MIRROR
+"This passage departs from patterns found elsewhere
+ in your writing."
+      → may belong in Writer's Studio
+
+GHOST
+"I have learned your voice and can now write as you."
+      → collides with the authorship architecture
+```
+
+⭐ Note the arrow test decides this without appeal to taste: MIRROR runs
+`MAIA MAY NOTICE → WRITER MAY RECOGNIZE → WRITER MAY DECIDE`, every arrow intact.
+GHOST runs `MAIA → WORK CHANGES`. **One is a perception; the other is an authorship substitution.**
+
+---
+
+**Standing after these rulings**
+
+```text
+LANE                   VALID
+OWN BRANCH             claude/jws-01-census — SEPARATED
+CAPABILITY INVENTORY   BIND TO EXISTING 25-ROW CENSUS
+WHOLE WORK             EXISTING / PARTIAL
+EVIDENCE GRAPH         PARTIAL — CENSUS A4.8 FIRST
+EXPRESSION             EXISTING / PARTIAL
+AUTHORIAL VOICE FIELD  UNROWED — INVESTIGATE
+ARROW TEST             RATIFIED
+AUTO-ADOPTION          FORBIDDEN
+E-01 (Chapter)         NOT FILED — first act of the lane
+```
+
+**Governance acts complete.** *After this, the useful thing is evidence.*
