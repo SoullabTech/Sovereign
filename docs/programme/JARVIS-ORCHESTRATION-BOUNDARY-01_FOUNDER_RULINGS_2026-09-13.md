@@ -674,6 +674,241 @@ require their own census, design, falsification and authorization.
 
 ---
 
+## 2f · FR-J7 — Model / Material Routing · **RULED: CONSENT PRECEDES SELECTION**
+
+> **Model routing is first an authorization decision and only afterward a capability,
+> performance, latency or cost decision.**
+>
+> **Before member material may be supplied to any inference process, the system must determine
+> which execution boundary is authorized for that material and purpose. Model selection occurs
+> only within the resulting authorized set. Neither a caller, capability, model, fallback path
+> nor optimization process may enlarge that set.**
+>
+> **A more capable, faster, cheaper or otherwise preferable model is not an authorized model
+> merely by virtue of being preferable.**
+
+### 1 · The governed object is the material crossing a boundary
+
+⛔ FR-J7 does not constitute a universal model router. It governs a relationship:
+
+```text
+MATERIAL + PURPOSE + CONSENT/CUSTODY + EXECUTION BOUNDARY
+                        ↓
+              AUTHORIZED MODEL SET
+                        ↓
+       capability / quality / latency / cost selection
+```
+
+```text
+NEVER FIRST   Which model should do this?
+ALWAYS FIRST  May this material cross that boundary for this purpose at all?
+```
+
+### 2 · Two execution-jurisdiction classes, sufficient at this stage
+
+**SOVEREIGN** — inference within infrastructure constitutionally designated as inside the
+controlled Soullab/member trust boundary. **EXTERNAL** — inference beyond that boundary through
+a third-party model or inference service.
+
+⭐ **Jurisdiction classes, not vendor names and not capability rankings.** A future architecture
+may distinguish further trust boundaries if an actual responsibility requires it; ⛔ FR-J7 does
+not manufacture categories in anticipation.
+
+### 3 · Material carries an egress disposition
+
+```text
+LOCAL_REQUIRED               external inference is not authorized
+EXTERNAL_PERMITTED           external inference authorized for the stated purpose
+NO_MEMBER_CONSENT_REQUIRED   not member-about/private material; no member authorization
+                             required for external processing
+```
+
+⛔ **Semantic states — not hereby authorized type names, fields, enums, columns or schema.**
+The system may implement the contract differently provided it can establish the same facts.
+
+### 4 · Transformation does not erase custody
+
+> **Derived material inherits the routing restriction of the material from which it was derived.**
+
+```text
+local-only journal      → summarize   → summary remains local-only
+local-only Work passage → embed/extract/analyse → derived representation remains local-only
+restricted + unrestricted → compose   → combined payload carries the MORE restrictive boundary
+```
+
+unless the materials remain **technically separable** and only the authorized subset crosses.
+
+⛔ Compression, paraphrase, embedding, summarization, anonymization-by-description, or
+conversion into an inference **must not become accidental declassification mechanisms.**
+⭐ A change in routing authority requires a **legitimate authorization act**, not a
+transformation operation.
+
+### 5 · Minimum necessary material
+
+Authorization to use an external model is **not** authorization to send everything available.
+
+```text
+RIGHT   task → determine necessary scope → resolve authorization for that scope → send bounded material
+WRONG   external model permitted → send member context → let the model decide what matters
+```
+
+⭐ Whole-Work access, memory, Studio materials, source libraries, conversations and surrounding
+member context remain **distinct scopes**. Permission for one does not silently authorize the
+others.
+
+### 6 · Mixed material obeys the most restrictive unresolved component
+
+Given `A EXTERNAL_PERMITTED` and `B LOCAL_REQUIRED`, exactly two lawful choices:
+
+```text
+1. execute the combined operation inside the sovereign boundary
+2. remove B completely and perform an external operation whose result does not depend upon B
+```
+
+⛔ It may not summarize, conceal, transform or indirectly encode B merely to make the external
+call possible.
+
+### 7 · The caller may request capability; it may not request permission
+
+A cognitive surface may request *structured reading · deep reasoning · research synthesis ·
+large-context analysis · creative generation*. ⛔ It may not thereby select a less restrictive
+execution jurisdiction.
+
+> **No caller-controlled flag, metadata field, model name, provider name, task label or
+> fallback request may increase the permitted egress of member material.** The routing
+> authority must be resolved **outside the caller's discretionary control.**
+
+### 8 · Fallback may contract permission; it may never expand it
+
+```text
+LAWFUL     authorized external → failure → authorized sovereign (operation still semantically valid)
+UNLAWFUL   LOCAL_REQUIRED → local unavailable → EXTERNAL   (without a new authorization act)
+```
+
+If no capable execution path exists inside the authorized set, the lawful result is **refusal ·
+degraded capability · deferred operation** — ⛔ never silent egress.
+
+> ⭐ **Availability does not create consent.**
+
+### 9 · Provider/model provenance remains mandatory
+
+For every completed model operation capable of contributing downstream, provenance must
+establish at minimum: **purpose/operation class · execution jurisdiction · actual provider ·
+actual model · material scope or scope reference · authorization basis · time/version.**
+
+⭐ Extends FR-J3. ⛔ It does not establish that the output is true — it establishes what
+execution occurred and under what authority. Where output later contributes to a MAIA turn,
+FR-J2 and FR-J3 remain controlling: *execution does not confer participation; participation
+does not confer authority; contribution does not establish effect.*
+
+### 10 · Economics comes last
+
+```text
+CONSENT / CUSTODY → AUTHORIZED EXECUTION SET → CAPABILITY FITNESS →
+QUALITY / LATENCY / AVAILABILITY → ECONOMICS
+```
+
+⛔ **never the reverse.** ⭐ **Cost optimization across unauthorized boundaries is not
+optimization; it is a consent violation.**
+
+### 11 · Status of `multiEngineOrchestrator`
+
+⛔ `lib/ai/multiEngineOrchestrator.ts` is **not constituted as the FR-J7 routing authority.**
+Its present responsibility is bounded local multi-model execution over Ollama models. Its
+pre-existing `Orchestrator` name is **not retroactively prohibited by FR-J6** and does not
+establish a central runtime actor. FR-J7 neither renames nor elevates it. If it handles member
+material it remains subject to the same material-authorization and provenance contract as any
+other inference implementation; its consensus/integration behaviour is separately governed by
+**FR-J4**.
+
+### 12 · ⭐⭐ Verified census (`e1c6f527`) — precedent, **not** blanket compliance
+
+**The stronger precedent, confirmed.** `lib/ai/structured/policy.ts` states it in its own
+header: **"THE CALLER DOES NOT CHOOSE."**
+
+```text
+the caller owns    model · system · messages · tools · token ceiling
+the platform owns  whether that provider is authorized HERE
+```
+
+⭐ It resolves mode from platform configuration in one place, no production caller can name a
+mode, and **an invalid mode is a refusal, never a default** — *"a typo in a deployment variable
+must not silently select the most permissive policy."* ⭐ **This is §7 of this ruling, already
+built, in one seam.** Modes: `primary | sovereign | local_only`.
+
+**The weaker path, confirmed.** `lib/ai/modelService.ts`:
+
+```text
+:53   TEXT_MODEL_PROVIDER = (process.env.MAIA_TEXT_PROVIDER as …) || 'anthropic'
+:79   Phase-1 sovereign routing guard — opt-in; if unset, the path below runs
+:127  if (TEXT_MODEL_PROVIDER === 'moonshot' || req.meta?.useKimi) …
+```
+
+⚠️ So with no inference mode set, the general text path **defaults to an external provider**,
+and **a caller-supplied `req.meta?.useKimi` selects a different external provider** — the exact
+shape §7 forbids and F-J7.2 names.
+
+⛔ **Recorded as a census finding, not a violation.** FR-J7 did not exist when that path was
+built, and the full consent-chain census has not been run. ⛔ **No repair authorized here.**
+
+**Data-minimization precedent (founder-read).** The manuscript structure reader constrains how
+much Work crosses an external inference boundary — headings first, prose only when specifically
+requested, hard scope ceilings — on the explicit recognition that each requested section is
+another piece of private Work leaving the machine. ⭐ That is §5 of this ruling, already built,
+in a second seam. *(Files present at `lib/manuscript/structure/`; the founder's reading is the
+evidence of record — Jarvis did not re-read them for this ruling.)*
+
+⭐ **Two partial precedents exist and are to be generalized.** ⛔ They do **not** establish that
+every current inference route satisfies FR-J7. A separate census is required before any such
+claim.
+
+### 13 · Falsifiers
+
+| | Fails FR-J7 when |
+|---|---|
+| **F-J7.1 · Consent-after-selection** | a model/provider is selected first and authorization checked afterward |
+| **F-J7.2 · Caller escalation** | a caller-controlled option moves member material to a less restrictive execution boundary |
+| **F-J7.3 · Fallback escalation** | provider failure causes material to cross a boundary it was not authorized to cross |
+| **F-J7.4 · Transformation laundering** | summarization, extraction, embedding, paraphrase or inference is treated as removing the source's routing restriction |
+| **F-J7.5 · Scope inflation** | authorization for one material scope is treated as authorization for surrounding Work, memory, sources, conversations or Studio material |
+| **F-J7.6 · Mixed-payload laundering** | restricted material influences an external request indirectly after being removed only cosmetically |
+| **F-J7.7 · Economics-first routing** | cost, latency, model quality, provider availability or context size enlarges the authorized execution set |
+| **F-J7.8 · Unanswerable execution** | a materially contributing model operation cannot answer which provider/model executed it and under what authorization basis |
+
+### 14 · Named refusals
+
+```text
+Availability does not create consent.
+Transformation does not erase custody.
+Capability does not create permission.
+Economics may choose within authority; economics may never define authority.
+```
+
+### 15 · What this ruling does not authorize
+
+```text
+⛔ no routing-table implementation   ⛔ no new consent schema      ⛔ no provider migration
+⛔ no model change                   ⛔ no member-setting UI        ⛔ no rename of multiEngineOrchestrator
+⛔ no inference that current runtime is compliant                  ⛔ no CMT-01 M3
+⛔ no Writer's Studio producer       ⛔ no bounded-job substrate
+```
+
+⭐ FR-J7 establishes **constitutional ordering and routing semantics only.** Implementation
+begins only after current routes, material scopes, consent bases and execution jurisdictions
+have been censused against it.
+
+### 16 · Carried forward, not decided
+
+⚠️ **`multiEngineOrchestrator`'s "consensus" is an FR-J4 question, not a D-J7 one.** Confirmed
+at `e1c6f527`: per-engine `weight` values, *"Build consensus if multiple engines responded"*,
+and a confidence figure — i.e. **selection of the highest-weighted response plus a bonus for
+multiplicity, without establishing agreement.** ⭐ Under FR-J4 that is a candidate
+**F-J4.2 (synthesis inflation)** shape. ⛔ **Not adjudicated here, and no repair smuggled into
+this ruling** — it deserves its own census.
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -684,8 +919,8 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 3. D-J2   extend CMT-01 ── PERFORMED (FR-J2): extension, admission boundary only
 4. D-J3   provenance ── PERFORMED (FR-J3): one semantic contract, many bounded traces
 5. D-J4   unreconciled disagreement ── PERFORMED (FR-J4): representable, never silently collapsed
-6. D-J7   model/material routing as CONSENT law, before economics ── NEXT
-7. D-J8   inferred Work structure bound to existing authority law
+6. D-J7   routing ── PERFORMED (FR-J7): consent precedes selection
+7. D-J8   inferred Work structure bound to existing authority law ── NEXT
 8. bounded-job / incremental-computation substrate
 ```
 
@@ -756,8 +991,8 @@ D-J4, should be reconciled with it rather than authored beside it.
 | **D-J2** | ⭐ **NEXT ACT** — extend CMT-01's governed contract, or a separate orchestration object? ⛔ FR-J6 deliberately leaves this open and does not presuppose the object exists |
 | ~~**D-J3**~~ | ⭐ **RULED 2026-09-13 — ONE SEMANTIC CONTRACT, MANY TRACES** (FR-J3). Four non-collapsible states; *materially participated* = CONTRIBUTED; effect usually UNKNOWN; `used` refused. ⚠️ The registry prefixes are ORIGIN CLASS, a different axis from process state — the D-J2 note is corrected in §2d |
 | ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Five qualifying conditions; refuses premature collapse AND false balance; synthesis is a new contribution, never an erasure. Named refusal: *consensus by machinery*. F-J4.1-5 |
-| **D-J7** | ⭐ **NEXT ACT** — model/material routing constituted as a CONSENT boundary before economics or performance |
-| **D-J8** | OPEN, sequenced (§3) |
+| ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Authorization first, then capability, then economics. Availability ≠ consent; transformation ≠ declassification. F-J7.1-8. ⚠️ `modelService` census finding recorded, not repaired |
+| **D-J8** | ⭐ **NEXT ACT** — inferred Work structure: perception without authoritative ontology |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -771,6 +1006,11 @@ FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
 FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+FR-J7                  RULED — consent precedes selection. Authorization → capability →
+                       economics, never the reverse. Caller may request capability, never
+                       permission. Fallback may contract permission, never expand it.
+                       F-J7.1-8. ⚠️ modelService default-external + req.meta.useKimi is a
+                       recorded CENSUS FINDING, not a violation; no repair authorized
 FR-J4                  RULED — substantive disagreement is representable and may not be
                        silently collapsed. Refuses premature collapse AND false balance.
                        Named refusal: consensus by machinery. F-J4.1-5. ⛔ No claim that

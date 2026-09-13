@@ -5,7 +5,7 @@
 runtime proper name) · **D-J2 RULED** (extension; CMT-01 is an admission boundary, not an
 execution substrate) · **D-J3 RULED** (one semantic provenance contract, many bounded traces;
 four non-collapsible states) · **D-J4 RULED** (disagreement representable, never silently
-collapsed). ⚠️ §2.3's "three traces" is **corrected to five** in the rulings
+collapsed) · **D-J7 RULED** (consent precedes selection). ⚠️ §2.3's "three traces" is **corrected to five** in the rulings
 document §2d. ⚠️ This intake's "no producer registered" standing is **corrected** in the
 rulings document §2c — seven Writer's Studio producers already exist in canonical. Rulings of record:
 `JARVIS-ORCHESTRATION-BOUNDARY-01_FOUNDER_RULINGS_2026-09-13.md`. This intake is kept verbatim
@@ -165,6 +165,13 @@ non-integrated remainder is not represented to the member. ⭐ Preserving unreco
 disagreement is the anti-collapse move (`DISCIPLINED_NON_COLLAPSE.md`) and is likely the
 single most MAIA-distinctive item in both intakes.
 
+⭐ **RULED 2026-09-13 (FR-J7) — this finding is now law.** Two verified precedents were found
+that the intake missed: `lib/ai/structured/policy.ts` already states *"THE CALLER DOES NOT
+CHOOSE"* and refuses on an invalid mode rather than defaulting to the most permissive one; the
+manuscript structure reader already minimizes how much Work crosses an external boundary. ⚠️
+The general `modelService` path is weaker — default external, and `req.meta?.useKimi` selects
+another external provider — **recorded as a census finding, not a violation, and not repaired.**
+
 **J-F5 — Model routing is a sovereignty surface, not an optimization.** Routing "private /
 sensitive task → sovereign local model" is a **consent-relevant** decision. Today
 `readerProvenance` records which model read a Work *after the fact*; nothing constitutes
@@ -196,8 +203,8 @@ as a *runtime layer name* gives one word two referents in one repo. ⛔ Cheap to
 | ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Binds `DISCIPLINED_NON_COLLAPSE.md`; five qualifying conditions; resolution authority is never synthesis |
 | ~~**D-J5**~~ | ⭐ **RATIFIED, 2026-09-13**, bound as sibling to FR-J1 — *not surfaced by default; never concealed when asked*. "Unanswerable orchestration" is a named refusal. ⚠️ *materially participated* still needs definition, routed to D-J3 |
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). Not "Jarvis", and not a replacement for it. Falsifier: *"we need somewhere to put the orchestration layer"* is architecture-by-noun and fails |
-| **D-J7** | ⭐ **NEXT ACT.** Model routing: what **classes of material** may reach what **classes of model**, and is that rule constituted *before* any routing table exists? (J-F5) ⚠️ `lib/ai/multiEngineOrchestrator.ts` already exists and must be adjudicated here (FR-J6 census) |
-| **D-J8** | Inferred ontology: ratify the four conditions in J-F3 (visibly derived · refusable · member override authoritative · never leverage) by binding to Invariant 16 + Authority × Time, authoring no new doctrine? |
+| ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Two jurisdiction classes, three egress dispositions, transformation does not erase custody. ⚠️ `multiEngineOrchestrator` is **not** the routing authority and its consensus behaviour is an FR-J4 question |
+| **D-J8** | ⭐ **NEXT ACT.** Inferred ontology: ratify the four conditions in J-F3 (visibly derived · refusable · member override authoritative · never leverage) by binding to Invariant 16 + Authority × Time, authoring no new doctrine? |
 
 ---
 
