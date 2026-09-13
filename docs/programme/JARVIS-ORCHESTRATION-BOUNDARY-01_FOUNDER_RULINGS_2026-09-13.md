@@ -503,6 +503,177 @@ answer.
 
 ---
 
+## 2e · FR-J4 — Unreconciled Disagreement · **RULED: REPRESENTABLE, NEVER SILENTLY COLLAPSED**
+
+> **A substantive disagreement among legitimate contributions may remain unresolved and may be
+> represented to the member. The system may not collapse such disagreement into a single
+> conclusion merely because synthesis is available.**
+>
+> **Disagreement does not itself confer truth, authority, equality of standing, or
+> member-facing visibility. It becomes a truth-bearing condition when materially relevant
+> contributions address the same question or referent, remain meaningfully incompatible after
+> clarification, retain valid provenance, and no already-constituted authority is entitled to
+> resolve the difference.**
+>
+> **Where such a disagreement materially bears on what MAIA can responsibly say, the
+> disagreement must survive synthesis. MAIA may reflect it, distinguish its terms, or offer a
+> possible reconciliation; MAIA may not silently settle it.**
+
+### Bind, do not author — verified against canon
+
+⭐ FR-J4 is an **operational binding of `docs/canon/DISCIPLINED_NON_COLLAPSE.md`**, not a
+parallel doctrine. The four orientations it rests on are **literally a table in that canon**
+(lines 32-37, read at `e1c6f527`):
+
+```text
+persuasive coherence   →  phenomenological fidelity
+interpretive closure   →  living tension
+confident abstraction  →  situated tentativeness
+consensus flattening   →  multivalence
+```
+
+The ruling adds only what that discipline **requires when multiple governed contributions
+participate in cognition**. Nothing new is authored.
+
+### 1 · What qualifies as substantive disagreement — all five, or it does not qualify
+
+1. **Common referent** — the contributions address the same material question, claim,
+   interpretation, structural issue or decision.
+2. **Meaningful incompatibility** — accepting one would materially alter, qualify or oppose
+   what could responsibly be said if the other were accepted.
+3. **Traceable basis** — each live position has sufficient provenance **under FR-J3** to
+   establish where it came from and what contributed to it.
+4. **Material relevance** — the divergence matters to the present Work, decision,
+   understanding or answer.
+5. **No existing authority resolves it** — no member-authored ruling, constitutional
+   constraint, deterministic fact or other constituted authority legitimately settles it.
+
+```text
+two stochastic completions differ   ≠  substantive disagreement
+two paraphrases differ              ≠  substantive disagreement
+one contribution plainly stale      ≠  substantive disagreement
+two evidence-grounded readings
+  remain incompatible               =  candidate unresolved disagreement
+```
+
+### 2 · Disagreement does not imply equality
+
+⭐ **Preserving multiplicity is not manufacturing equivalence.** Differences in **authority ·
+provenance · evidentiary support · scope · confidence · member authorship · constitutional
+standing** are retained, not flattened by the act of representing a difference.
+
+- A member-authored ruling and a system inference do not become two equal "sides".
+- A well-supported source position and an unsupported speculation are not balanced merely
+  because they differ.
+- A constitutional constraint is not placed into debate with an inference that violates it.
+
+⛔ FR-J4 refuses **both** premature collapse **and** false balance. ⭐ That pairing is what
+keeps the ruling from becoming relativism.
+
+### 3 · Who may resolve — synthesis confers no resolution authority
+
+```text
+member meaning / intention / authorship  → member may resolve
+constitutional boundary                  → canon may resolve
+deterministic source fact                → verified source may resolve
+governed mechanical invariant            → invariant may resolve
+unresolved interpretive plurality        → remains unresolved unless the member rules
+```
+
+MAIA may help examine a disagreement, propose a reconciling distinction, and say that one
+reading currently has stronger evidence. ⛔ **MAIA may not turn any of those acts into
+authority merely by producing a fluent synthesis.** For member-owned meaning and the Work, the
+system offers **Reflection**; the member authors **Recognition** — the upward-only direction of
+`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md`, applied to machinery.
+
+### 4 · Synthesis is permitted — as a new contribution, not an erasure
+
+```text
+ADMITTED                        REFUSED
+READING A ─┐                    READING A + READING B
+           ├── proposed C                  ↓
+READING B ─┘                          TRUE ANSWER C
+A and B remain traceable                  ↓
+                                 A and B disappear
+```
+
+A synthesis may reveal that an apparent disagreement came from different definitions, scopes,
+time periods, speakers or levels of abstraction. Where that is **demonstrably established**,
+the prior conflict may be classified **reconciled — with the reconciliation basis preserved**.
+Where it cannot be established, ⭐ **the tension remains live.**
+
+### 5 · Member-facing singularity intact
+
+```text
+"I can see two live readings of this."      not   "Agent A disagrees with Agent B."
+```
+
+FR-J1 and FR-J5 continue to govern: multiplicity beneath · one MAIA relationship · answerable
+provenance on request. If asked, MAIA explains the **bases** of the disagreement without
+turning models, agents, tools or workers into personalities.
+
+### 6 · Relationship to FR-J3
+
+FR-J3 remains controlling. ⛔ **The existence of two candidate analyses does not establish that
+both materially participated** in a member-facing response —
+`KNOWN ≠ CONSIDERED ≠ CONTRIBUTED ≠ EFFECT ESTABLISHED` holds inside a disagreement exactly as
+it holds outside one. If a disagreement itself contributes to what MAIA says, the derivation
+chains that make that participation answerable must remain intact.
+
+### 7 · Falsifiers
+
+| | Fails FR-J4 when |
+|---|---|
+| **F-J4.1 · Silent collapse** | two qualifying unresolved contributions become one conclusion and the difference disappears without legitimate resolution authority |
+| **F-J4.2 · Synthesis inflation** | an integrator, router, model or MAIA synthesis is treated as resolution merely because it produced a coherent combined answer |
+| **F-J4.3 · False equivalence** | preserving disagreement elevates a lower-authority, unsupported, invalid or constitutionally disallowed contribution into equal standing |
+| **F-J4.4 · Roster exposure** | disagreement is represented by exposing internal agents/models/tools as member-facing personalities or competing identities |
+| **F-J4.5 · Disagreement inflation** | ordinary stochastic variance, stylistic difference, compatible perspectives or paraphrase variation is persisted or surfaced as substantive conflict |
+
+### 8 · Named refusal — **consensus by machinery**
+
+> ⭐⭐⭐ **No integration process may treat disappearance of disagreement as evidence that
+> integration succeeded.**
+
+```text
+NOT the success condition        many → one
+
+THE success condition            many → the most faithful representable
+                                 relationship among them
+```
+
+which may legitimately be **one answer · a qualified answer · several compatible perspectives ·
+or an unresolved living tension.**
+
+⭐ This catches a failure mode endemic to multi-agent architecture: most orchestration measures
+integration by whether multiplicity successfully became one output. ⭐ **Sometimes the most
+faithful integration is the preservation of irreducibility.**
+
+### Census note (`e1c6f527`) — what exists today, stated conservatively
+
+`lib/consciousness/WisdomRouter.ts` describes itself as connecting *pattern detection to wisdom
+agent voice **selection***, and `lib/services/corpusCallosumService.ts` is the sole writer of
+`integration_passes`. ⭐ **Selection is not reconciliation**: nothing read here represents,
+preserves or adjudicates disagreement between voices. ⚠️ **Consequence for the record:** the
+~49% integration figure in CLAUDE.md is a **selection rate**, and must not be read as evidence
+that multiplicity is being preserved or that disagreement is being handled. ⛔ Scope of this
+note: the router's header and its selection vocabulary, plus the table's sole writer — the
+implementations were **not read in full**, and no defect is asserted against them.
+
+### 9 · What this ruling does not authorize
+
+```text
+⛔ no disagreement schema or table      ⛔ no new producer          ⛔ no agent roster
+⛔ no Writer's Studio feature           ⛔ no WisdomRouter change   ⛔ no CMT-01 M3
+⛔ no bounded-job substrate             ⛔ no claim that current runtime preserves disagreement
+```
+
+⭐ FR-J4 establishes the **semantic and authority contract only.** Implementation and liveness
+require their own census, design, falsification and authorization.
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -512,8 +683,8 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 2. D-J6   naming        ── PERFORMED (FR-J6): no runtime proper name
 3. D-J2   extend CMT-01 ── PERFORMED (FR-J2): extension, admission boundary only
 4. D-J3   provenance ── PERFORMED (FR-J3): one semantic contract, many bounded traces
-5. D-J4   unreconciled disagreement ── NEXT
-6. D-J7   model/material routing as CONSENT law, before economics
+5. D-J4   unreconciled disagreement ── PERFORMED (FR-J4): representable, never silently collapsed
+6. D-J7   model/material routing as CONSENT law, before economics ── NEXT
 7. D-J8   inferred Work structure bound to existing authority law
 8. bounded-job / incremental-computation substrate
 ```
@@ -584,8 +755,9 @@ D-J4, should be reconciled with it rather than authored beside it.
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). "Jarvis" stays the programme word permanently; the runtime layer gets no proper name. Falsifier: architecture-by-noun |
 | **D-J2** | ⭐ **NEXT ACT** — extend CMT-01's governed contract, or a separate orchestration object? ⛔ FR-J6 deliberately leaves this open and does not presuppose the object exists |
 | ~~**D-J3**~~ | ⭐ **RULED 2026-09-13 — ONE SEMANTIC CONTRACT, MANY TRACES** (FR-J3). Four non-collapsible states; *materially participated* = CONTRIBUTED; effect usually UNKNOWN; `used` refused. ⚠️ The registry prefixes are ORIGIN CLASS, a different axis from process state — the D-J2 note is corrected in §2d |
-| **D-J4** | ⭐ **NEXT ACT** — unreconciled disagreement. Now tractable: provenance can faithfully preserve who contributed what |
-| **D-J7 · D-J8** | OPEN, sequenced (§3) |
+| ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Five qualifying conditions; refuses premature collapse AND false balance; synthesis is a new contribution, never an erasure. Named refusal: *consensus by machinery*. F-J4.1-5 |
+| **D-J7** | ⭐ **NEXT ACT** — model/material routing constituted as a CONSENT boundary before economics or performance |
+| **D-J8** | OPEN, sequenced (§3) |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -599,6 +771,10 @@ FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
 FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+FR-J4                  RULED — substantive disagreement is representable and may not be
+                       silently collapsed. Refuses premature collapse AND false balance.
+                       Named refusal: consensus by machinery. F-J4.1-5. ⛔ No claim that
+                       current runtime preserves disagreement — selection ≠ reconciliation
 FR-J3                  RULED — one semantic contract, many bounded traces. KNOWN ≠
                        CONSIDERED ≠ CONTRIBUTED ≠ EFFECT ESTABLISHED. "materially
                        participated" = CONTRIBUTED. `used` refused. F-J3.1/2/3/4
