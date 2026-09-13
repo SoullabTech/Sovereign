@@ -1,11 +1,15 @@
-# Soullab Strategic Exclusion Register — CANDIDATE (r2)
+# Soullab Strategic Exclusion Register — CANDIDATE (r3)
 
 ```text
-STATUS      CANDIDATE. 6 entries adjudicated (2026-09-13). 24 remain unadjudicated.
+STATUS      CANDIDATE. 11 adjudication rulings applied (2026-09-13, r2+r3);
+            10 resulting entries adjudicated; 20 entries remain open; 30 entries total.
 RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder-from-memory
             composition; every entry CANDIDATE until adjudicated; do not draft the kernel.
             founder, 2026-09-13 (r2): three corrections, six adjudications, and the LEVEL
             discriminator. "Strategic memory is not the same thing as decision memory."
+            founder, 2026-09-13 (r3): cardinality repair (C4); F7 AUTHORED as X-29; X-15
+            releveled OPERATIONAL; X-19 elevated in wording, STRATEGIC retained; X-02
+            collapsed beneath X-01A as enforcement, not an independent decision.
 METHOD      Jarvis reconstruction from existing rulings. No new research. No external sweep.
 NOT A LANE  Strategic memory, not a programme lane. No build, no schema, no deploy.
 HANDOFF     UARE-01 exposed the question, does not own the answer, and stops here.
@@ -55,6 +59,26 @@ spec on the same day the freeze was declared:
 in May, never revisited, against a system that has moved substantially since. A condition nobody
 re-reads decays into a condition nobody can satisfy — a slower path to the same hardening, but a
 different repair: *review the criteria*, not *write some*.
+
+### C4 · Cardinality after the splits
+r2's header said *"6 entries adjudicated / 24 unadjudicated."* Splitting X-01 and X-21 turned 28
+recovered entries into 30 and 6 rulings into 7 resulting records. **Acts and resulting records are
+different counts and the register must not conflate them.**
+
+Ledger after r3 (5 further rulings):
+
+| | Count |
+|---|---|
+| Adjudication rulings applied (r2 + r3) | **11** |
+| Resulting entries adjudicated | **10** |
+| Open — STRATEGIC | 11 |
+| Open — OPERATIONAL | 5 |
+| Open — CONSTITUTIONAL | 4 |
+| **Open total** | **20** |
+| **Grand total** | **30** |
+
+The kernel-producing set is **17 entries** — 11 open plus 6 adjudicated at STRATEGIC level
+(X-01B · X-16 · X-19 · X-21A · X-21B · X-29).
 
 ---
 
@@ -114,6 +138,18 @@ strategic enough for this register.**
 - **TRADEOFF** [J] Full ops burden in-house: deploy-lane locks, provenance verification, no managed failover.
 - **REOPEN CONDITION** [F] Constitutional amendment only.
 - **RULING** [F] *"Sovereign custody is constitutional."*
+- **CURRENT ENFORCEMENT** [F] — *absorbed from r2's X-02, which is no longer a numbered entry:*
+  ```text
+  Local PostgreSQL · lib/db/postgres.ts
+  npm run check:no-supabase (pre-commit + CI)
+
+  STATUS
+  Implementation of X-01A, not the constitutional principle itself.
+  ```
+  **Why collapsed** [F]: *"A future technology could satisfy X-01A while looking nothing like
+  today's PostgreSQL stack. X-01A should survive such replacement."* Left standing alone, the
+  register would slowly convert **sovereign custody** into **this particular vendor is
+  metaphysically forbidden** — which are not equivalent.
 
 ### X-01B · Managed infrastructure for non-authoritative, non-member-data functions
 - **LEVEL** [F] STRATEGIC · **CLASS** [F] CHOSEN AGAINST FOR NOW (founder also offered UNDECIDED)
@@ -178,6 +214,64 @@ strategic enough for this register.**
 - **REOPEN CONDITION** [R] Evidence, via `CLAIM_LADDER` rung ascent — **not** by Episodic shipping.
 - **RULING** [F] *"That is cleaner than allowing 'Episodic shipped' to sound as though it licenses both product and ontology."*
 
+### X-29 · Member-first experience; practitioner-led initial distribution
+- **LEVEL** [F] STRATEGIC · **CLASS** [F] CHOSEN AGAINST
+- **⚠ PROVENANCE** [F] **AUTHORED, not recovered.** Per F7 this choice was operative in practice
+  and absent from the record. Every substantive field below is **founder-authored on the act that
+  accepts it** — none may later be re-marked [R]. *A choice authored today does not become a
+  choice that was always on the record.*
+- **CHOICE** [F] Build the human/member experience as the primary lived product, while entering
+  the market initially through practitioners who bring existing relationships, practices and
+  fields of service.
+- **ALTERNATIVE** [F] Direct-to-consumer acquisition as the primary initial distribution strategy.
+- **WHY** [F] Two axes that r1's proposed "practitioners first" would have collapsed:
+  ```text
+  BUILD / EXPERIENCE          member first
+  GO-TO-MARKET / DISTRIBUTION practitioner-led first
+  ```
+  **This is why "practitioners first" alone would have muddied the record rather than repaired
+  it.** The corpus supports the distinction: the Universal Practitioner Seed's settled sequence
+  opens with *"Ship the member field"* (step 1 of 5), and §"The reusable deployment pattern"
+  names **practitioner deployment** and **member deployment** as parallel kinds, not a priority
+  order.
+- **SOURCE** [F] Founder act, 2026-09-13, on finding F7. Supporting context (not authority):
+  `UNIVERSAL_PRACTITIONER_SEED_2026-08-05.md` §"DIRECTION SETTLED", §88.
+- **TRADEOFF** [F] Slower broad reach; practitioner sales and onboarding burden; heterogeneous
+  methods; **continual need to defend the member's sovereignty from practitioner authority.**
+- **REOPEN CONDITION** [F] Reconsider consumer-first distribution when the direct member
+  experience can independently sustain onboarding, continuity, consent, support and economic
+  viability **without introducing attachment or engagement incentives and without weakening
+  member sovereignty.**
+
+### X-15 · Circle authority stays founder-only
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [R] DEFERRED
+- **RULING** [F] **RELEVEL → OPERATIONAL.** Founder-only Circle access is a release-stage
+  membrane. *"Reversing that tomorrow would not change what Soullab is. It would mean I8 arrived."*
+- **WHERE THE STRATEGIC DECISION ACTUALLY SITS** [F] X-05 — *Circles scale through multiplication
+  rather than enlargement* — belongs in the kernel-producing layer. *"We haven't constituted the
+  Circle beta cohort yet"* does not.
+- **DISPOSITION** [F] Durable operational memory, retaining its I8 reopen condition. Leaves the
+  strategic set.
+
+### X-19 · System-inferred trust does not silently become relational authority
+- **LEVEL** [F] STRATEGIC *(retained)* · **CLASS** [F] DEFERRED — evidence-and-authority-gated
+- **RULING** [F] **Wording elevated from implementation to the relational-authority choice.** r2
+  recorded this as *"trust observations stay observation-only; Phase 3 affinity weighting not
+  wired"* — which reads operational. **What is actually at stake:** *may a system-inferred
+  judgment about trust quietly acquire authority over human relationship or affinity?*
+- **CHOICE** [F] System-inferred trust does not silently become relational authority.
+- **ALTERNATIVE** [F] Using inferred trust observations to weight affinity, matching, access,
+  recommendation or relational significance **without a new authority act.**
+- **WHY** [R] Trust observations are *"observation-only by design"*; any future wiring *"would
+  need category-gradient pass — system-inferred → non-form by default."*
+- **SOURCE** [R] `docs/canon/INTELLIGENCE_FIELD_ACCESS_MAP.md`.
+- **TRADEOFF** [J] Trust data accumulates unused.
+- **REOPEN CONDITION** [F] Only after the category-gradient question is resolved **and** the
+  proposed use establishes: whose authority the inference carries · how the person can inspect,
+  correct or refuse it · and why the system, rather than the human, is entitled to let it affect
+  relationship.
+- **NOTE** [F] *"Phase 3 affinity weighting is merely the current specimen."*
+
 ---
 
 ## 4 · Unadjudicated — STRATEGIC level (kernel-producing set)
@@ -194,24 +288,24 @@ git history at `1337d51a`; abbreviated here to keep the strategic set readable.
 | **X-10** | Delegation capped at a bounded primitive | Automatic classification, routing, swarms, automatic merging | CHOSEN AGAINST, evidence-gated | `AIN_DELEGATION_CONTROL_PLANE_2026-08-09.md` §9 |
 | **X-11** | A north star may not be strip-mined for near-term copy | Demoting Vision → Designed to ship it | REFUSED (representation) | `MARKETING_CLAIM_DISCIPLINE.md` |
 | **X-14** | Anti-Drift Law freeze on generalized architecture | Extracting the Coaching Journey Template now | DEFERRED | Naming ruling 2026-09-04 |
-| **X-15** | Circle authority stays founder-only | Constituting a member cohort now | DEFERRED (to I8) | I0 census; D-I3 |
 | **X-17** | Practitioner-wisdom work held behind the BUILD GATE | Continuing on design direction alone | DEFERRED | `UNIVERSAL_PRACTITIONER_SEED_2026-08-05.md` |
-| **X-19** | Trust observations stay observation-only | Phase 3 affinity weighting | DEFERRED | `INTELLIGENCE_FIELD_ACCESS_MAP.md` |
 | **X-20** | RFI / UFI not built, not claimed | Building or claiming them | UNPROVEN | Founder, 2026-05-24 |
 | **X-23** | P1–P13 held at rung 1; nothing on rungs 1–4 is marketed | Publishing the research as findings | UNPROVEN | `CLAIM_LADDER.md` |
 | **X-24** | Capacity transfer metric not claimed | Claiming measurable transfer | UNPROVEN | `CLAIM_LADDER.md` |
 
-**13 entries. This is the set the kernel may later be derived from.**
+**11 open entries.** With the 6 adjudicated STRATEGIC entries (X-01B · X-16 · X-19 · X-21A ·
+X-21B · X-29), the kernel-producing set totals **17**.
 
 ---
 
 ## 5 · Unadjudicated — OPERATIONAL level (excluded from the kernel)
 
 Recovered, real, worth keeping — and **not** answers to *what is Soullab choosing to become*.
+*(X-15 is now OPERATIONAL and adjudicated — recorded in §3, not here. X-02 is no longer a
+numbered entry; it lives beneath X-01A as current enforcement.)*
 
 | # | Decision | Why operational |
 |---|---|---|
-| X-02 | Local PostgreSQL; `check:no-supabase` | Vendor-specific enforcement of X-01A, not a separate choice |
 | X-07 | FR-18 guarded at the mutation, not by revoking the token | *"Excellent engineering — but it is not corporate strategy, even though it teaches us something profound about authority"* [F] |
 | X-08 | Reconcile forward on the I0.5 schema drift | Incident ruling |
 | X-12 | Structural retirement via 410 before deletion | Implementation pattern |
@@ -295,8 +389,22 @@ member ⊥ practitioner convergence ruling — **all of which presuppose practit
 ever ruling it.**
 
 Soullab's most consequential sequencing decision is operative in practice and absent from the
-record. It cannot be recovered; it can only be **authored**. That is a founder act, and it is
-arguably the first entry the kernel will need.
+record. It cannot be recovered; it can only be **authored**.
+
+**AUTHORED 2026-09-13 as X-29** — and the authoring corrected the finding's own framing. r2
+proposed the missing choice was *"practitioners first."* It is two-dimensional: **member-first
+experience, practitioner-led initial distribution.** The seed's settled sequence opens with
+*"Ship the member field,"* so a flat "practitioners first" would have recorded the opposite of
+what the corpus shows. **A gap named is not yet a gap correctly named.**
+
+### F8 (new) · Kernel value concentrates at one altitude
+Across 17 STRATEGIC entries, the ones carrying kernel weight are **not feature decisions**. They
+are choices about **who holds authority** (X-19, X-01A), **how Soullab reaches people** (X-29),
+**what kind of relationship scales** (X-05, X-10), and **which incentives it refuses to optimize
+for** (X-11, X-26). The r3 relevelings ran in both directions on exactly this test: X-15 fell out
+of the strategic set as a release-stage membrane, while X-19 stayed and was raised, because its
+specimen was operational but its question was not. **Altitude, not subject matter, decides the
+level.**
 
 ---
 
@@ -316,11 +424,11 @@ Priority, in Jarvis's judgment:
 
 | # | Item | The question |
 |---|---|---|
-| 1 | **F7** | Author "practitioners first" — or rule that it is not in fact the choice. The kernel has a hole here either way. |
-| 2 | **LEVEL assignments** | 13 STRATEGIC / 6 OPERATIONAL are [J]. X-15 and X-19 are the borderline calls; X-02 may belong under X-01A rather than standing alone. |
+| 1 | **X-05, X-11** | The two open entries that most directly foreclose a market position. Highest kernel weight, per F8. |
+| 2 | **X-01B** | CHOSEN AGAINST FOR NOW or UNDECIDED? The two produce different kernels. |
 | 3 | **F2 cadence** | X-16 and X-21A criteria are 116 days unread. On what cadence are reopen criteria reviewed? |
-| 4 | **X-05, X-11** | The two entries that most directly foreclose a market position. Highest kernel weight. |
-| 5 | **X-01B** | Is it CHOSEN AGAINST FOR NOW or UNDECIDED? The two produce different kernels. |
+| 4 | **Remaining LEVELs** | 11 STRATEGIC / 5 OPERATIONAL still [J]. X-10 and X-09 are the borderline calls now that X-15 and X-19 are ruled. |
+| 5 | **X-29 TRADEOFF** | *"Continual need to defend the member's sovereignty from practitioner authority"* is a standing cost with no named instrument. Does it need one? |
 
 **Repaired separately per §F5:** `CLAUDE.md:13` EC2 fossil — factual correction, committed apart
 from this register so it is independently reviewable and revertable.
