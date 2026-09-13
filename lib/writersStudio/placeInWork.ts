@@ -84,3 +84,50 @@ export function locationForSection(
   const q = params.toString();
   return q ? `${pathname}?${q}` : pathname;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EW-F1 / F1-1 · MOVING THE WRITER TO A PROPOSED CHANGE
+
+   FOUNDER-CAUGHT IN RUNTIME, 2026-09-13, on the first visit where the consent
+   panel mounted. The panel named Section 23; the Work beside it showed section
+   0, the copyright page. The writer was asked to authorize a change to a
+   passage they could not see — the exact condition EW-F1 exists to repair,
+   reproduced by the repair's own navigation.
+
+   ⭐⭐ THE MOVE IS VIEW-DEPENDENT, AND THE ROOM ALREADY KNEW THAT.
+
+   `outlineSelect` in the Canvas has routed by view since Whole view shipped,
+   and states the rule: in Whole view a rail click brings that part of the book
+   into view; in Section view moving the writer means opening the section,
+   which owns the single-editor switch and its capture seam. The proposal jump
+   was written against `jumpTo` alone — the Whole scroller — so in Section view
+   it reached a surface that is not on screen. Nothing moved, and nothing
+   complained.
+
+   ⭐ AND A MOVE THAT IS NOT YET POSSIBLE IS NOT A MOVE THAT HAPPENED.
+   `wait` exists so the caller's once-guard is spent by arrival rather than by
+   the first render after the server answered — in Section view the editor does
+   not exist yet at that moment. A guard against being dragged around your own
+   manuscript must not become a guard against arriving at all.
+
+   The decision lives here, as a value, so it can be falsified without a
+   browser. The room performs it; it does not decide it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export type ProposalMove =
+  /** Whole view: ask the surface to bring that part of the book into view. */
+  | { kind: 'scroll'; sectionId: string }
+  /** Section view: open that section in the single editor. */
+  | { kind: 'open'; sectionId: string }
+  /** The move cannot be performed yet. Do not spend a once-guard on this. */
+  | { kind: 'wait' };
+
+export function proposalMove(
+  view: 'section' | 'whole' | null,
+  sectionId: string | null,
+  editorReady: boolean,
+): ProposalMove {
+  if (!sectionId) return { kind: 'wait' };
+  if (view === 'whole') return { kind: 'scroll', sectionId };
+  return editorReady ? { kind: 'open', sectionId } : { kind: 'wait' };
+}

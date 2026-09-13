@@ -33,6 +33,7 @@ import {
   resolveManuscript,
   type ManuscriptResolution,
 } from '../canvasIdentity';
+import { proposalMove } from '@/lib/writersStudio/placeInWork';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
@@ -289,35 +290,6 @@ function CanvasRoom() {
   const proposalId = searchParams ? requestedProposalId(searchParams) : null;
   const proposed = useProposedChange(proposalId);
 
-  /**
-   * ⭐⭐ EW-F1 / F1-1 · A PROPOSAL MOVES THE VIEW TO THE EVIDENCE IT NAMES.
-   * It does not move the evidence.
-   *
-   * Opening a proposal is orientation authority, not manuscript authority.
-   * Making the writer hunt for the change would be worse than moving them: the
-   * system knows exactly what it is asking them to evaluate.
-   *
-   * ⭐ ONCE. `jumpTo` is a command that clears itself on arrival, so a writer
-   * who then reads elsewhere is not snapped back — being dragged around your
-   * own manuscript is its own kind of dispossession. `Show change` returns
-   * them when THEY ask.
-   *
-   * ⛔ The target comes from the SERVER's resolution of the proposal against
-   * the current Work, never from coordinates carried in the URL.
-   */
-  const proposalTarget = proposed.mount.state === 'ready'
-    && proposed.mount.preview.state === 'acceptable'
-    ? proposed.mount.preview.change : null;
-  const jumpedFor = useRef<string | null>(null);
-  const showProposedChange = useCallback(() => {
-    if (proposalTarget) setJumpTo(proposalTarget.sectionId);
-  }, [proposalTarget]);
-  useEffect(() => {
-    if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
-    jumpedFor.current = proposalTarget.sectionId;
-    setJumpTo(proposalTarget.sectionId);
-  }, [proposalTarget]);
-
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
   const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -329,6 +301,63 @@ function CanvasRoom() {
      single-editor seam and says nothing about where a Whole reader is. */
   const [session, setSession] = useState<ManuscriptSession | null>(null);
   const [jumpTo, setJumpTo] = useState<string | null>(null);
+
+  /**
+   * ⭐⭐ EW-F1 / F1-1 · A PROPOSAL MOVES THE VIEW TO THE EVIDENCE IT NAMES.
+   * It does not move the evidence.
+   *
+   * Opening a proposal is orientation authority, not manuscript authority.
+   * Making the writer hunt for the change would be worse than moving them: the
+   * system knows exactly what it is asking them to evaluate.
+   *
+   * ⭐⭐ THE MOVE IS VIEW-DEPENDENT, AND THE ROOM ALREADY SAID SO.
+   *
+   * FOUNDER-CAUGHT IN RUNTIME, 2026-09-13, on the first visit where the panel
+   * mounted at all. The panel named Section 23; the Work beside it showed
+   * section 0, the copyright page. The writer was asked to authorize a change
+   * to a passage they could not see — the precise condition EW-F1 was opened
+   * to repair, reproduced by the repair's own navigation.
+   *
+   * The cause: this used `setJumpTo` unconditionally. `jumpTo` is the WHOLE
+   * MANUSCRIPT scroll command. `outlineSelect`, thirty lines below, routes by
+   * view for exactly this reason and states the rule plainly — in Whole view a
+   * rail click brings that part of the book into view; in Section view moving
+   * the writer means `goToSection`, which owns the single-editor switch and
+   * its capture seam. In Section view a `jumpTo` reaches a scroller that is
+   * not on screen, so nothing moves and nothing complains.
+   *
+   * ⭐ ONCE, AND NOT BEFORE IT IS POSSIBLE. `jumpedFor` is spent only when a
+   * move actually happened. The old effect spent it on the first render where
+   * the server had answered, which in Section view is before `writing` exists:
+   * the once-guard was burned by a move that never occurred, and no later
+   * render could retry. A guard against being dragged around your own
+   * manuscript must not become a guard against arriving at all.
+   *
+   * ⛔ The target comes from the SERVER's resolution of the proposal against
+   * the current Work, never from coordinates carried in the URL.
+   */
+  const proposalTarget = proposed.mount.state === 'ready'
+    && proposed.mount.preview.state === 'acceptable'
+    ? proposed.mount.preview.change : null;
+
+  /** Performs the decision. Returns whether the writer was actually moved. */
+  const moveToProposal = useCallback((): boolean => {
+    const move = proposalMove(
+      session?.view ?? null, proposalTarget?.sectionId ?? null, writing !== null,
+    );
+    if (move.kind === 'wait') return false;
+    if (move.kind === 'scroll') { setJumpTo(move.sectionId); return true; }
+    writing?.goToSection(move.sectionId);
+    return true;
+  }, [proposalTarget, session?.view, writing]);
+
+  const jumpedFor = useRef<string | null>(null);
+  const showProposedChange = useCallback(() => { moveToProposal(); }, [moveToProposal]);
+  useEffect(() => {
+    if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
+    if (!moveToProposal()) return;
+    jumpedFor.current = proposalTarget.sectionId;
+  }, [proposalTarget, moveToProposal]);
 
   useEffect(() => {
     const id = manuscript?.id;

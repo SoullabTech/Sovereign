@@ -225,10 +225,32 @@ describe('F1-8 — ⭐ the target range carries its coordinate space', () => {
 });
 
 describe('F1-1 · F1-5 · F1-6 — orientation, once, and never the Work', () => {
-  it('⭐ a proposal jumps the view to its section ONCE', () => {
+  /**
+   * ⛔⭐ THIS TEST USED TO PIN THE DEFECT. It required
+   * `setJumpTo(proposalTarget.sectionId)` — the Whole-manuscript scroll
+   * command — and passed green while the founder, in Section view, was shown
+   * the copyright page beside a panel naming Section 23. A passing test is a
+   * specification, and this one specified the substitution.
+   *
+   * It is replaced by its inverse, the same way `canvasParamPin` replaced the
+   * assertion that pinned `manuscripts[0]`: the DECISION moved to
+   * `proposalMove`, where it is a value, and the room performs it.
+   */
+  it('⭐ a proposal moves the view to its section ONCE, in the view it is in', () => {
     const src = CODE(CANVAS);
-    expect(src).toMatch(/jumpedFor\.current === proposalTarget\.sectionId\) return/);
-    expect(src).toMatch(/setJumpTo\(proposalTarget\.sectionId\)/);
+    /* The once-guard is spent by ARRIVAL, never by the render that learned the
+       target — in Section view the editor does not exist at that moment. */
+    expect(src).toMatch(/if \(!moveToProposal\(\)\) return;\s*\n\s*jumpedFor\.current = proposalTarget\.sectionId;/);
+    /* The room performs the decision; it does not make it.
+       ⛔ SCOPED TO THE BLOCK. The first draft banned `session?.view === 'whole'`
+       across the whole file and failed on `outlineSelect`, which has routed
+       outline clicks by view since Whole view shipped and is correct. A ban
+       asserted over a file is the C21 shape; this asks whether THIS block
+       re-decides what `proposalMove` already decided. */
+    const block = src.match(/const moveToProposal = useCallback[\s\S]{0,600}?\}, \[proposalTarget, session\?\.view, writing\]\);/);
+    expect(block).not.toBeNull();
+    expect(block![0]).toMatch(/const move = proposalMove\(/);
+    expect(block![0]).not.toMatch(/=== 'whole'|=== 'section'/);
   });
 
   it('⭐ `Show change` returns attention when the WRITER asks', () => {
@@ -237,26 +259,37 @@ describe('F1-1 · F1-5 · F1-6 — orientation, once, and never the Work', () =>
     expect(CODE(SURFACE)).toMatch(/Show change/);
   });
 
-  it('⛔ F1-6 · navigation moves the viewport and never the manuscript', () => {
+  it('⛔ F1-6 · navigation moves the writer and never the manuscript', () => {
     /**
      * ⛔⭐ THE FIRST DRAFT ASSERTED PROXIMITY AND FAILED ON AN UNRELATED LINE:
      * `setWriting`, in a `useState` declaration that merely sits within 200
      * characters of a `proposalTarget` occurrence in a 1200-line file. A
      * proximity scan tests ADJACENCY, not behaviour — the C21 class again.
      *
-     * So this reads the two places the proposal path actually acts, and
-     * asserts that the ONLY thing either of them does is set a jump target.
+     * ⭐ AND ITS SECOND DRAFT WAS TOO NARROW IN THE OTHER DIRECTION. It
+     * required the blocks to do nothing but `setJumpTo`, which made the
+     * Whole-only jump a rule rather than a defect. In Section view moving the
+     * writer IS opening the section — the same act as clicking the outline,
+     * carrying the same capture seam. That is navigation, not authorship: it
+     * flushes what the writer already wrote where they already were, and
+     * touches nothing in the section the proposal names.
+     *
+     * So this asserts the boundary that actually matters: the proposal path
+     * may navigate, and may not write, accept, or reach the network.
      */
     const src = CODE(CANVAS);
-    const effect = src.match(/jumpedFor\.current = proposalTarget\.sectionId;[\s\S]{0,120}?\}, \[proposalTarget\]\);/);
-    const show = src.match(/const showProposedChange = useCallback\([\s\S]{0,200}?\}, \[proposalTarget\]\);/);
-    expect(effect).not.toBeNull();
+    const move = src.match(/const moveToProposal = useCallback[\s\S]{0,600}?\}, \[proposalTarget, session\?\.view, writing\]\);/);
+    const show = src.match(/const showProposedChange = useCallback\([\s\S]{0,200}?\);/);
+    expect(move).not.toBeNull();
     expect(show).not.toBeNull();
-    for (const block of [effect![0], show![0]]) {
-      expect(block).toMatch(/setJumpTo\(/);
-      /* ⛔ Nothing else. No save, no write-state change, no manuscript touch. */
-      expect(block).not.toMatch(/save|setWriting|setWriteState|mutate|apiFetch/i);
+    for (const block of [move![0], show![0]]) {
+      /* ⛔ Nothing but navigation. No save, no write-state change, no accept,
+         no manuscript mutation, no network. */
+      expect(block).not.toMatch(/save|setWriteState|mutate|apiFetch|accept/i);
     }
+    /* And the only two things the move performs are the two navigations. */
+    expect(move![0]).toMatch(/setJumpTo\(move\.sectionId\)/);
+    expect(move![0]).toMatch(/writing\?\.goToSection\(move\.sectionId\)/);
   });
 
   it('⛔ the target comes from the server, never from the URL', () => {

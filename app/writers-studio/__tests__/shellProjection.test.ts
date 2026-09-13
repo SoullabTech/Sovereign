@@ -389,7 +389,8 @@ describe('the current Work is declared, never inferred', () => {
     // A stored "last Work" is a second source of truth that can go stale
     // against a declaration the member has since withdrawn.
     expect(page).toContain('window.history.replaceState');
-    expect(page).toContain('canvasForManuscript');
+    /* Preserving, not rebuilding — see canvasParamPin for what rebuilding ate. */
+    expect(page).toContain('canvasLocationForManuscript');
     expect(page).not.toMatch(/localStorage|sessionStorage/);
   });
 
