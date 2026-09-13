@@ -404,7 +404,7 @@ Binding rules:
 |---|---|---|---|
 | **FR-V1** ⭐ **RULED 2026-09-13 — GREEN / RESEARCH-ONLY (§14). BENCHMARK UNBLOCKED.** | **ADR-012 — is TTS egress to a third party permitted, or is local-only TTS a hard sovereignty requirement?** (`docs/adr/012-openai-tts-production-status.md`, **Open/Deferred since 2026-07-07**) | BENCHMARK, and the meaning of Artifact 4 | If local-only is required, Kokoro/sherpa-onnx are the field and quality is constrained by it. If third-party is permitted, the comparison set and the whole sovereignty axis change. ⭐ **Benchmarking before this ruling measures the wrong field.** |
 | **FR-V2** | Is **Architecture C in the listener form** admissible at all, or is the duplex frontier study-only for this cycle? | ARCHITECTURAL OPTIONS scope | §4 states the gate's consequence; whether MAIA *pursues* the admissible form is a founder choice, not a gate reading. |
-| **FR-V3** | Benchmark hardware + who runs it | BENCHMARK | Artifact 4 needs an iPhone, the minisforum, and possibly the Mac Studio. A remote session has none of them. **Predeclared founder-run**, as with the disposable-shadow verifier precedent. |
+| **FR-V3** ⭐ **RULED 2026-09-13 — INSTRUMENT FROZEN (§15). No longer blocks Artifact 4.** | Benchmark hardware + who runs it | BENCHMARK | Artifact 4 needs an iPhone, the minisforum, and possibly the Mac Studio. A remote session has none of them. **Predeclared founder-run**, as with the disposable-shadow verifier precedent. |
 | **FR-V4** | Does the census delta's read-only production log access (D-1) require a separate act? | CENSUS delta | 05_voice.md used **no** runtime access. D-1 would be the first. |
 
 ⭐ **FR-V1 was the sequencing fact.** It was the oldest open decision in the voice subsystem,
@@ -436,7 +436,7 @@ This lane stops, and does not proceed to VOICE KERNEL, if any of the following h
 ---
 
 **Standing at opening:** CENSUS delta not started · LANDSCAPE not started · EXEMPLARS not started ·
-BENCHMARK **UNBLOCKED** 2026-09-13 (FR-V1 ruled; FR-V3 hardware act still owed), not started ·
+BENCHMARK **UNBLOCKED** 2026-09-13 (FR-V1 and FR-V3 ruled; instrument frozen), not started ·
 ARCHITECTURAL OPTIONS not started ·
 FALSIFICATION not started · DECISION not open · VOICE KERNEL not opened · no code touched ·
 no dependency added · no deploy · no production access.
@@ -537,3 +537,78 @@ It is retained as historical evidence. **No force-push, no rewrite** — publish
 edited to make a graph pretty. The clean descendants are the merge subjects.
 
 **Standing after these rulings:** governance acts complete. *After this, the useful thing is evidence.*
+
+---
+
+## 15. FR-V3 — **RULED · BENCHMARK INSTRUMENT FROZEN**
+
+**One orchestration authority · two canonical target surfaces · one infrastructure subject.**
+
+| Role | Authority |
+|---|---|
+| **Benchmark controller** | **Mac Studio M4** |
+| **Canonical mobile target** | **iPhone 16 Pro Max, physical device** |
+| **Desktop / edge target** | **Mac Studio M4** |
+| **Owned-server target** | the actual sovereign server hardware serving the tested path; **hardware facts captured at run time** |
+| Development / reproduction machine | MacBook Pro — reproduction only, ⛔ **not canonical benchmark authority** |
+| **Human witness** | Kelly, **perceptual judgments only** |
+| **Timing authority** | instrumented logs / harness — ⛔ **never a human stopwatch** |
+
+```text
+                    MAC STUDIO
+                 BENCHMARK HARNESS
+                       │
+          corpus · hashes · timestamps
+          provider calls · metadata
+                       │
+        ┌──────────────┼──────────────┐
+        ↓              ↓              ↓
+   iPHONE 16       MAC STUDIO      OWNED SERVER
+   physical        desktop/edge    server path
+   mobile path        path
+        │              │              │
+        └──────────────┼──────────────┘
+                       ↓
+                 RESULT RECORD
+```
+
+### Who actually runs it
+
+**The harness runs the benchmark. Kelly does not become the timing instrument.**
+
+| Machine-established (instrumentation only) | Human-established (Kelly) |
+|---|---|
+| TTFT · STT completion · turn-decision latency · cognition interval · synthesis start · **first audible sample** · total turn latency · RTF · dropouts | naturalness · intelligibility · emotional/prosodic fit · **conversational wrongness** · fatigue/annoyance · whether interruption and re-entry **feel human** |
+
+Under FR-V1, **the Mac Studio initiates the sealed synthetic external calls** and records
+provider/model/version/settings, timestamps, returned artifact hash, retention/training
+classification, and measurements.
+
+⭐ **The iPhone is not the arbitrary provider test machine.** It answers a different question:
+**what does MAIA's actual mobile embodiment cost?**
+
+### ⛔ FR-V3 prohibition — deployment-class parity
+
+> **No candidate may obtain a better benchmark score merely by being measured on more favorable
+> hardware than the architecture it would actually inhabit.**
+
+A server model is measured server-side. An on-device architecture gets the iPhone's **thermal,
+battery and latency reality**. A Mac-class local model gets Mac-class numbers. This yields
+**apples-to-apples within deployment class** rather than one meaningless leaderboard — and it
+forecloses the most likely way a benchmark lies: a mobile-destined model measured on a desktop.
+
+⚠️ **Provenance correction, recorded rather than smoothed over.** The ruling was stated as
+*preserving* "BENCH-01's existing rule that evidence must come from MAIA's actual target devices and
+infrastructure." **`BENCH-01` does not exist in this repository at `e1c6f527`** (searched `docs/`;
+no match for the identifier or the rule's wording). The rule is therefore recorded here as
+**constituted by FR-V3**, not inherited from a cited record. ⭐ If BENCH-01 exists outside the
+repository, it carries the **same filing obligation as E-01** — an uncited standing rule cannot
+govern an acceptance instrument.
+
+**Consequence:** `FR-V3 = RULED` · `INSTRUMENT = FROZEN` · **Artifact 4 no longer blocked.**
+`FR-V2` and `FR-V4` remain owed.
+
+⚠️ **Operational note for Layers 3 and 6.** The `Hugging_Face` and `Scholar_Gateway` connectors are
+**unauthorized in this environment** and cannot be reached from a non-interactive session. Model and
+literature survey work needs them authorized in claude.ai connector settings (or `/mcp` in an
+interactive session) before it can run. **Not a blocker on FR-V3; a blocker on Layers 3 and 6.**
