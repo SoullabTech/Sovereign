@@ -420,4 +420,31 @@ discharged by PASS. WARN / SKIP / MISSING never discharge.
 **SPEC v0.1 CANDIDATE · NOTHING RATIFIED · CENSUS NOT STARTED · NO SCHEMA AUTHORED ·
 NO MIGRATION · NO DEPLOY · NO ORCHESTRATOR BUILT · OPEN-1 BLOCKING.**
 
+---
+
+## 13. Laws established by this lane
+
+⭐ **`BW-LAW-1` — Authorization precedes materialization.** *(Ratified in-lane, founder,
+2026-09-13, from the BW-01 implementation.)*
+
+> **Authorization must precede materialization. Content retrieval may CONSUME authority; it may
+> never MANUFACTURE authority.**
+
+Operative test: *an authority primitive may depend on an ownership **predicate**; it must not depend
+on a content **loader**.*
+
+It separates three things that are not interchangeable — **IDENTITY** (who is acting?),
+**OWNERSHIP** (what may this identity access?), **CONSENT** (may this crossing occur?). Answering one
+of them with a mechanism built for another is *accidental authority composition*.
+
+Generalization, recorded as a direction and ⛔ **not authorized as a lane**:
+
+> **Data that names a thing must not silently become proof that one may act upon the thing.**
+
+⭐ **`BW-METHOD-1` — Security symmetry tests require symmetric preconditions.** A stateful fixture
+can manufacture apparent information leakage or conceal real leakage; *a difference caused by
+authorization state* and *a difference caused by disclosure behaviour* must remain distinguishable.
+
+Record: `JARVIS-ORCHESTRATION-CORE-01_BW01_FREEZE_RULING_2026-09-13.md`.
+
 > *The Work is present. The writer acts. Jarvis is the boundary that makes that safe.*
