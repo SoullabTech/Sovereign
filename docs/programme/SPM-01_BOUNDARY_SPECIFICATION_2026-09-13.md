@@ -1,7 +1,13 @@
 # SPM-01 — BOUNDARY SPECIFICATION
 
 **Date:** 2026-09-13 · **Programme:** `SPM-00` · **Authorized by:** founder ruling 2026-09-13.
-**Status:** ⛔ **SPECIFICATION ONLY — v0.1, NOT STABLE.** No schema, no migration, no storage design,
+**Status:** ⛔ **SUPERSEDED BY v0.2** (`SPM-01_BOUNDARY_SPECIFICATION_v0.2_2026-09-13.md`) — this
+file is preserved unedited as the withdrawn reading. ⚠️ **What v0.2 withdraws:** §3's nine claim
+kinds were **one flat taxonomy mixing origin with status**, so every status change would overwrite
+an origin (`system inferred` → `member confirmed` loses the inference). v0.2 decomposes into
+**ORIGIN (immutable) · BASIS · STATUS (mutable)**.
+
+**Original status line:** ⛔ **SPECIFICATION ONLY — v0.1, NOT STABLE.** No schema, no migration, no storage design,
 no implementation, no canon, no MAIA behaviour rules.
 
 ---
