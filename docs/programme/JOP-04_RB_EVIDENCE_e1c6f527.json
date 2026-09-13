@@ -8,7 +8,7 @@
   "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
   "subject_sha_short": "e1c6f527",
   "subject_role": "FROZEN_BASELINE",
-  "instrument_sha": "eb5030ac",
+  "instrument_sha": "232f2b87",
   "layer_b_capability": "git.rev_parse",
   "expectation_profile": "BASELINE MATRIX (immutable)",
   "calibration": "SUCCESS",
@@ -33,7 +33,7 @@
   "records": [
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
       "expected_state": "RED",
@@ -68,7 +68,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
       "expected_state": "RED",
@@ -111,7 +111,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
@@ -154,7 +154,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
@@ -195,7 +195,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
@@ -223,7 +223,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "PRECONDITION-UNMET",
@@ -264,7 +264,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
@@ -291,7 +291,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
@@ -329,7 +329,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -400,7 +400,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "eb5030ac",
+      "instrument_sha": "232f2b87",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -416,9 +416,9 @@
         },
         "provenance": "no task shape produced a non-routable state for a registered capability"
       },
-      "expected_state": "NOT-REACHED",
+      "expected_state": "PRECONDITION-UNMET",
       "expectation_profile": "BASELINE MATRIX (immutable)",
-      "observed_state": "NOT-REACHED",
+      "observed_state": "PRECONDITION-UNMET",
       "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-cal2.mjs → runCal2()",
@@ -428,7 +428,7 @@
       "evidence": {
         "reason": "no non-routable witness exists, so the anti-tautology check has nothing to evaluate"
       },
-      "note": "⛔ NOT-REACHED — never discharges; it did not run, and did not pass",
+      "note": "⛔ PRECONDITION-UNMET — never discharges; it did not run, and did not pass",
       "precondition_enforced": "PRECONDITION-UNMET"
     }
   ]
