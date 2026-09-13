@@ -144,15 +144,12 @@ export const FALSIFIERS = [
       // registration alone; after RB-6A it requires a declared eligibility.
       const declare = await loadEligibilityProducer(ctx.subjectDir);
       const { decision, how, eligibility_basis } = reachValidPlacement(ctx.mods, LAYER_B_CAPABILITY, declare);
-      const precondition = {
-        required: 'a valid executable placement (C0) reached through the subject production composition',
-        reached: reached(decision),
-        how_do_you_know: how,
-        witness: { lane: decision.execution_lane, status: decision.status, reason: decision.reason },
-        eligibility_basis,
-        fabricated: false,
-      };
-      if (!precondition.reached) {
+      const precondition = pre('REQUIRED', reached(decision) ? 'REACHED' : 'UNREACHED',
+        { requirement: 'a valid executable placement (C0) reached through the subject production composition',
+          witness: { lane: decision.execution_lane, status: decision.status, reason: decision.reason },
+          eligibility_basis, fabricated: false },
+        how);
+      if (precondition.state === 'UNREACHED') {
         return { observed: 'PRECONDITION-UNMET', precondition,
           evidence: { reason: 'no valid lane was reached, so authority could not be withheld against one' },
           note: '⛔ PRECONDITION-UNMET — the probe never obtained the state its frozen meaning requires' };
@@ -270,20 +267,14 @@ export const FALSIFIERS = [
         : ctx.mods.router.route({ capability: LAYER_B_CAPABILITY });
       const armAReached = reached(armA.decision);
       const armBReached = !reached(armBDecision);
-      const precondition = {
-        required: 'ARM A reaches a valid routing result AND ARM B reaches a non-routable/refused state, for the SAME registered capability',
-        reached: armAReached && armBReached,
-        how_do_you_know: armA.how + ' | arm B: ' + (declare ? 'declared eligibility UNSATISFIED' : 'no producer exists — no way to withhold routing for a registered capability'),
-        witness: {
-          arm_a: { lane: armA.decision.execution_lane, status: armA.decision.status },
-          arm_b: { lane: armBDecision.execution_lane, status: armBDecision.status },
-        },
-        arm_a_reached: armAReached,
-        arm_b_reached: armBReached,
-        capability_identity_constant: true,
-        fabricated: false,
-      };
-      if (!precondition.reached) {
+      const precondition = pre('REQUIRED', (armAReached && armBReached) ? 'REACHED' : 'UNREACHED',
+        { requirement: 'ARM A reaches a valid routing result AND ARM B reaches a non-routable/refused state, for the SAME registered capability',
+          witness: { arm_a: { lane: armA.decision.execution_lane, status: armA.decision.status },
+                     arm_b: { lane: armBDecision.execution_lane, status: armBDecision.status } },
+          arm_a_reached: armAReached, arm_b_reached: armBReached,
+          capability_identity_constant: true, fabricated: false },
+        armA.how + ' | arm B: ' + (declare ? 'declared eligibility UNSATISFIED' : 'no producer exists — no way to withhold routing for a registered capability'));
+      if (precondition.state === 'UNREACHED') {
         return { observed: 'PRECONDITION-UNMET', precondition,
           evidence: { reason: armBReached ? 'arm A did not reach a valid routing result' : 'arm B could not reach a non-routable state for a registered capability' },
           note: '⛔ PRECONDITION-UNMET — both arms are required, on one capability identity' };
