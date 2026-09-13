@@ -18,6 +18,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { materializeSubject, loadSubjectModules, instrumentSha, SUBJECT_SHA } from './rb-subject.mjs';
 import { FALSIFIERS, ipcCompositionTripwire, LAYER_B_CAPABILITY } from './rb-falsifiers.mjs';
+import { runCal2, CAL2_SPECIMEN } from './rb-cal2.mjs';
+
+/** Instrument lineage. ⛔ The amendment does not REPLACE 0b9aaec4; it descends from it. */
+const INSTRUMENT_LINEAGE = ['0b9aaec4'];
+/** Predeclared, frozen BEFORE the amended run. ⛔ Not editable after results. */
+const CAL2_PREDICTED_BASELINE = 'RED';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const NON_DISCHARGING = new Set(['UNINSTANTIATED', 'N/A']);
@@ -40,6 +46,8 @@ async function main() {
   console.log('='.repeat(78));
   console.log(`SUBJECT SHA     ${subject.shortSha}   (detached worktree, pristine, HEAD read back from checkout)`);
   console.log(`INSTRUMENT SHA  ${instrument_sha}   (harness judging it — separate identity)`);
+  console.log(`  lineage from  ${INSTRUMENT_LINEAGE.join(', ')}   (amendment descends from, never replaces)`);
+  console.log(`CAL-2 SPECIMEN  ${CAL2_SPECIMEN}   (same capability identity in every arm)`);
   console.log(`LAYER B CAP     ${LAYER_B_CAPABILITY}   (registered read capability only)`);
   console.log('');
 
@@ -83,6 +91,33 @@ async function main() {
       });
     }
 
+    // ── RB-CAL-2 · registration/routability discriminator (amendment) ──────
+    const cal2 = runCal2(mods, CAL2_SPECIMEN);
+    const cal2Calibration = cal2.headline === CAL2_PREDICTED_BASELINE ? 'MATCH' : 'MISMATCH';
+    if (cal2Calibration === 'MISMATCH') mismatches++;
+    if (cal2.headline !== 'RED') {
+      stop = `RB-CAL-2 was predicted RED and observed ${cal2.headline} — the amendment does not detect the coupling it was written to distinguish`;
+    }
+    for (const probe of [cal2.cal2a, cal2.cal2b]) {
+      records.push({
+        subject_sha: subject.resolvedSha,
+        instrument_sha,
+        instrument_lineage: INSTRUMENT_LINEAGE,
+        falsifier: probe.id,
+        statement: probe.label,
+        expected_state: probe.id === 'RB-CAL-2a' ? CAL2_PREDICTED_BASELINE : 'NOT-REACHED',
+        observed_state: probe.observed,
+        calibration: probe.id === 'RB-CAL-2a' ? cal2Calibration : (probe.observed === 'NOT-REACHED' ? 'MATCH' : 'MISMATCH'),
+        evidence_class: 'BEHAVIORAL',
+        evidence_location: 'scripts/jop04/rb-cal2.mjs → runCal2()',
+        layer: 'A (route() only — no execution)',
+        layer_b_capability: null,
+        discharge_state: probe.observed === 'NOT-REACHED' ? 'NON-DISCHARGING' : (probe.observed === 'GREEN' ? 'DISCHARGED-AT-BASELINE' : 'NOT-DISCHARGED'),
+        evidence: probe.evidence,
+        note: probe.note,
+      });
+    }
+
     const tripwire = ipcCompositionTripwire(mods.mainJsPath);
 
     // ── report ────────────────────────────────────────────────────────────
@@ -113,7 +148,9 @@ async function main() {
     if (stop) console.log(`\n⛔ STOP: ${stop}\n   No substrate work follows.`);
 
     const out = {
-      run: 'JOP-04 RB RED-before-GREEN calibration',
+      run: 'JOP-04 RB RED-before-GREEN calibration (amended — RB-CAL-2 added)',
+      instrument_lineage: INSTRUMENT_LINEAGE,
+      cal2_specimen: CAL2_SPECIMEN,
       subject_sha: subject.resolvedSha,
       subject_sha_short: subject.shortSha,
       instrument_sha,
