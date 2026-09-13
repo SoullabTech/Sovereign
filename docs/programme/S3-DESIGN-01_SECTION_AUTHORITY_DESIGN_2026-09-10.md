@@ -1434,9 +1434,13 @@ CLASS B                   B-i · B-ii · B-iii CLOSED · lethality + discriminat
                           established · freeze TAKEN
 B-iv                      AUTHORIZED · durable transition substrate census
                           COMPLETE (read-only)
-NEXT ACT                  B-iv DESIGN — ⛔ not opened
-                          storage design NOT TAKEN · migration NOT AUTHORIZED
-                          ⭐ a real DB concurrency witness is OWED
+B-iv DESIGN               ⭐ OPEN · DRAFTED — S3-B-IV_DESIGN_2026-09-13.md
+                          thesis: atomic claim + durable completion, keyed by
+                          FIRST-CLASS ACT IDENTITY · request id = correlation only
+                          two shapes competed · V2 RECOMMENDED, not taken
+NEXT ACT                  founder ruling on one/two tables
+                          then W-A real concurrent DB claim · W-B crash/recovery
+                          ⛔ migration NOT AUTHORIZED
 STORAGE DESIGN            CLOSED · §15 direction: transition law before schema
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
