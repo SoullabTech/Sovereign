@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { materializeSubject, loadSubjectModules, instrumentSha, SUBJECT_SHA } from './rb-subject.mjs';
 import { FALSIFIERS, ipcCompositionTripwire, LAYER_B_CAPABILITY } from './rb-falsifiers.mjs';
 import { runCal2, CAL2_SPECIMEN } from './rb-cal2.mjs';
+import { runCal3, ipcHostWitness, CAL3_SPECIMEN } from './rb-cal3.mjs';
 
 /** Instrument lineage. ⛔ The amendment does not REPLACE 0b9aaec4; it descends from it. */
 const INSTRUMENT_LINEAGE = ['0b9aaec4', '1ed81732'];
@@ -42,6 +43,9 @@ const PROFILES = {
       'RB-F6': 'PRECONDITION-UNMET',
       'RB-F7': 'N/A', 'RB-F8': 'GREEN',
       'RB-CAL-2a': 'RED', 'RB-CAL-2b': 'PRECONDITION-UNMET',
+      // RB-6B probes — CAL-3a is the new known-bad anchor.
+      'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
+      'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
     },
   },
   fd543df1: {
@@ -50,9 +54,30 @@ const PROFILES = {
       'RB-F1': 'GREEN', 'RB-F2': 'GREEN', 'RB-F3': 'RED', 'RB-F4': 'RED',
       'RB-F5': 'UNINSTANTIATED', 'RB-F6': 'RED', 'RB-F7': 'N/A', 'RB-F8': 'GREEN',
       'RB-CAL-2a': 'GREEN', 'RB-CAL-2b': 'GREEN',
+      // ⭐ RB-6B ANCHOR: a legitimate route still causes execution by itself.
+      'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
+      'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
     },
   },
 };
+
+/**
+ * RB-6B TARGET MATRIX — frozen BEFORE implementation. Not a profile yet: no
+ * RB-6B repair exists to judge. ⛔ RB-F4 must remain RED on a REACHED
+ * precondition; if it turns GREEN because the new boundary refuses
+ * "unclassified effect", the implementation crossed into the effect lane.
+ * The correct RB-6B refusal is `no constituted execution decision`.
+ */
+export const RB6B_TARGET = Object.freeze({
+  'RB-F1': 'GREEN', 'RB-F2': 'GREEN', 'RB-F3': 'GREEN', 'RB-F4': 'RED',
+  'RB-F5': 'nondischarging until a legitimate specimen exists',
+  'RB-F6': 'GREEN', 'RB-F7': 'N/A', 'RB-F8': 'GREEN',
+  'RB-CAL-2a': 'GREEN', 'RB-CAL-2b': 'GREEN',
+  'RB-CAL-3a': 'GREEN', 'RB-CAL-3b': 'GREEN',
+  'RB-CAL-3c': 'GREEN', 'RB-CAL-3d': 'GREEN',
+  'caller-forged execution authority': 'REFUSED / no execution',
+  'host-minted execution decision': 'execution possible',
+});
 /**
  * M1 MUTATION MATRIX — frozen BEFORE the mutant is built or run.
  * M1 reintroduces the SEMANTIC equivalent of `registered → routable`: the router
@@ -95,7 +120,7 @@ const M1_FULL_EXPECT = {
   'RB-CAL-2a': 'RED',              // no arm survives: oversize is preempted too
   'RB-CAL-2b': 'PRECONDITION-UNMET',
 };
-const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'INSTRUMENT_ERROR']);
+const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'INSTRUMENT_ERROR', 'HOST_WITNESS_UNAVAILABLE']);
 
 /**
  * RULING 1 (machine-enforced) — the runner refuses to emit GREEN when the
@@ -140,6 +165,7 @@ async function main() {
     ? process.argv[process.argv.indexOf('--subject') + 1]
     : SUBJECT_SHA;
   const isBaseline = subjectArg === SUBJECT_SHA;
+  const isCandidate = subjectArg === 'fd543df1';
   const profile = process.argv.includes('--m1full')
     ? { name: 'M1-FULL MUTATION MATRIX (frozen before the mutant was built)', expect: M1_FULL_EXPECT }
     : process.argv.includes('--m1')
@@ -244,6 +270,33 @@ async function main() {
       });
     }
 
+    // ── RB-6B · CAL-3 probes ─────────────────────────────────────────────
+    const cal3 = await runCal3(ctx, subject.dir, CAL3_SPECIMEN);
+    for (const probe of [cal3.cal3a, cal3.cal3b, cal3.cal3c, cal3.cal3d]) {
+      const enf = enforcePrecondition(probe.observed, probe.precondition);
+      // UNINSTANTIATED is a probe-declared state, not a precondition failure.
+      if (enf.overridden && probe.observed !== 'UNINSTANTIATED') probe.observed = enf.verdict;
+      const exp = profile.expect[probe.id];
+      if (probe.observed !== exp) mismatches++;
+      if (probe.id === 'RB-CAL-3a' && isCandidate && probe.observed !== 'RED') {
+        stop = `RB-CAL-3a was predicted RED on the RB-6A subject and observed ${probe.observed} — the instrument fails to see the defect C2, RB-F3 and RB-F6 already established`;
+      }
+      records.push({
+        subject_sha: subject.resolvedSha, instrument_sha, instrument_lineage: INSTRUMENT_LINEAGE,
+        falsifier: probe.id, statement: probe.label,
+        precondition: probe.precondition ?? null,
+        expected_state: exp, expectation_profile: profile.name,
+        observed_state: probe.observed,
+        calibration: probe.observed === exp ? 'MATCH' : 'MISMATCH',
+        evidence_class: 'BEHAVIORAL', evidence_location: 'scripts/jop04/rb-cal3.mjs → runCal3()',
+        layer: 'A/B (subject composition; ⛔ NOT the real IPC boundary)',
+        layer_b_capability: CAL3_SPECIMEN,
+        discharge_state: dischargeState(probe.observed),
+        evidence: probe.evidence, note: probe.note,
+      });
+    }
+    const hostWitness = ipcHostWitness(subject.dir);
+
     const tripwire = ipcCompositionTripwire(mods.mainJsPath);
 
     // ── report ────────────────────────────────────────────────────────────
@@ -257,6 +310,11 @@ async function main() {
     console.log('-'.repeat(78));
     for (const r of records) console.log(`${r.falsifier}  ${r.note}`);
 
+    console.log('');
+    console.log(`REAL IPC HOST WITNESS   ${hostWitness.observed}   (discharges nothing)`);
+    console.log(`  required path         ${hostWitness.required_path.join(' → ')}`);
+    console.log(`  ⛔ ${hostWitness.substitution_policy}`);
+    console.log(`  ⚠️  ${hostWitness.consequence}`);
     console.log('');
     console.log('STRUCTURAL TRIPWIRE — IPC composition (discharges nothing)');
     console.log(`  submit-task handler present   ${tripwire.submit_task_handler_present}`);
@@ -289,6 +347,8 @@ async function main() {
       mismatches,
       stop,
       ipc_structural_tripwire: tripwire,
+      real_ipc_host_witness: hostWitness,
+      rb6b_target_matrix: RB6B_TARGET,
       records,
     };
     writeFileSync(jsonAt, JSON.stringify(out, null, 2));
