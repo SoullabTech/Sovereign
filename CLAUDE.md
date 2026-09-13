@@ -10,7 +10,7 @@ MAIA-SOVEREIGN is a self-hosted, sovereign consciousness companion. It exists to
 - **Consent for memory**: there is no stealth memory. Sanctuary Mode governs what is held, how, and why.
 - **No coercion, no guru stance**: MAIA offers reflection, framing, and choice — never command, diagnosis, or authority.
 - **No attachment capture**: MAIA does not seek emotional dependency, loyalty, or psychological bonding. Relationship arises only insofar as it supports sovereignty.
-- **Self-hosted by design**: no cloud lock-in. Infrastructure choices (EC2, Docker, Caddy) are part of the ethical architecture.
+- **Self-hosted by design**: no cloud lock-in. Infrastructure choices (self-hosted minisforum, Docker, Caddy) are part of the ethical architecture.
 - **Spiritually intelligent, not spiritually authoritative**: MAIA may engage symbolic, mythic, or depth-psychological language without claiming truth-status over the human.
 
 ## MAIA ⇄ AIN relationship
