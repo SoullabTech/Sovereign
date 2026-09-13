@@ -1,8 +1,8 @@
 # JARVIS-ORCHESTRATION-BOUNDARY-01 — Intake, Census, and Founder Docket
 
 **Date:** 2026-09-13
-⭐ **SUPERSEDED IN PART — founder act 2026-09-13.** D-J1 and D-J5 are RATIFIED; the runtime
-name is withheld pending D-J6. Rulings of record:
+⭐ **SUPERSEDED IN PART — founder acts 2026-09-13.** D-J1 and D-J5 are RATIFIED; **D-J6 is
+RULED — the runtime layer gets NO proper name** (FR-J6). Rulings of record:
 `JARVIS-ORCHESTRATION-BOUNDARY-01_FOUNDER_RULINGS_2026-09-13.md`. This intake is kept verbatim
 as the census and docket it was; ⛔ its §1 candidate wording is no longer the operative text.
 
@@ -40,8 +40,10 @@ capabilities / models / agents     ├── Voice Agent
 Status: ⭐ **RATIFIED 2026-09-13 IN AMENDED FORM (FR-J1)** — the boundary is law; the runtime
 **name** is explicitly withheld pending D-J6, so that ratifying the law did not ratify its
 working title by accident. ⛔ Operative text is FR-J1 in the rulings document, not the wording
-above. ⛔ Until D-J6, "Jarvis" may not appear as a runtime identifier — module, type, table,
-column, log marker, env var, or member-facing string.
+above. ⛔ **Settled by FR-J6:** "Jarvis" is permanently the programme word; the runtime layer gets no
+proper name at all. It may appear in runtime code only as build provenance (a lane citation or
+a `registeredBy` value), never as a module, type, table, column, runtime identity, agent
+identity, or member-facing persona.
 
 ⭐ This is the most consequential item in either intake. It is not a feature; it is a
 **boundary condition on every future capability** in Writer's Studio and beyond. A feature
@@ -184,11 +186,11 @@ as a *runtime layer name* gives one word two referents in one repo. ⛔ Cheap to
 | # | Question |
 |---|---|
 | ~~**D-J1**~~ | ⭐ **RATIFIED (amended), 2026-09-13** — boundary ratified; runtime name withheld. See FR-J1 |
-| **D-J2** | Is the Writer's Studio Jarvis layer an **extension of CMT-01's producer/participation model**, or a separate orchestration object? (Jarvis recommends extension; ⛔ still gated on M3, which this does not open) |
+| **D-J2** | ⭐ **NEXT ACT.** Is the Writer's Studio orchestration an **extension of CMT-01's producer/participation model**, or a separate orchestration object? ⛔ FR-J6 does not presuppose the object exists. ⛔ Still gated on M3, which this does not open |
 | **D-J3** | Is there **one provenance contract** across `selectionTrace` · `readerProvenance` · `canonical-turn/manifest`, or do the three remain subsystem-local? |
 | **D-J4** | Is **disagreement between producers** representable to the member (J-F4), and under whose authority is it resolved — never MAIA's alone? |
 | ~~**D-J5**~~ | ⭐ **RATIFIED, 2026-09-13**, bound as sibling to FR-J1 — *not surfaced by default; never concealed when asked*. "Unanswerable orchestration" is a named refusal. ⚠️ *materially participated* still needs definition, routed to D-J3 |
-| **D-J6** | ⭐ **NEXT ACT (founder sequencing, FR-J-SEQ).** Naming: does "Jarvis" become a runtime layer name, or does the runtime layer get a different name to protect the programme word? Settle before the word reaches runtime code |
+| ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). Not "Jarvis", and not a replacement for it. Falsifier: *"we need somewhere to put the orchestration layer"* is architecture-by-noun and fails |
 | **D-J7** | Model routing: what **classes of material** may reach what **classes of model**, and is that rule constituted *before* any routing table exists? (J-F5) |
 | **D-J8** | Inferred ontology: ratify the four conditions in J-F3 (visibly derived · refusable · member override authoritative · never leverage) by binding to Invariant 16 + Authority × Time, authoring no new doctrine? |
 

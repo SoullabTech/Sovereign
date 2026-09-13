@@ -102,6 +102,97 @@ content-free manifest) is not obviously the same as *materially participated*. T
 belongs to D-J3 (the single provenance contract), where the three existing traces
 (`selectionTrace` · `readerProvenance` · `canonical-turn/manifest`) must agree on one answer.
 
+⭐ **Founder refinement, 2026-09-13 — at least four distinct states lurk inside the phrase and
+must not be collapsed casually:**
+
+```text
+KNOWN TO EXIST      ≠   CONSIDERED   ≠   USED / CONTRIBUTED   ≠   AFFECTED THE RESULT
+```
+
+They diverge exactly where it matters, because *"what did you use to reach this?"* and *"what
+was available to you?"* are different questions with different sovereignty weight. ⛔ Not
+defined here; D-J3 is the place.
+
+---
+
+## 2b · FR-J6 — Naming · **RULED: NO RUNTIME PROPER NAME**
+
+> **"Jarvis" remains exclusively the programme / build-intelligence word. The runtime
+> architecture governed by FR-J1 has no separate proper name at this stage. "The orchestration
+> layer" and "orchestration" are descriptive terms, not named entities.**
+>
+> **No umbrella module, service, schema object, database object, runtime identity, agent
+> identity, or member-facing persona is to be created merely to instantiate an
+> orchestration-layer name. Existing runtime components retain their existing names until
+> their architectural relationship is settled under D-J2.**
+>
+> **Functional identifiers may describe what a component actually does — participation,
+> adjudication, provenance, routing, jobs — but the descriptive vocabulary must not manufacture
+> a new central actor.**
+
+### The three-way separation now fixed
+
+```text
+JARVIS          programme / governed build intelligence
+MAIA            the singular relational identity
+orchestration   a runtime function/boundary — NOT another being
+```
+
+⭐⭐ **The architecture does not need another noun.** The founder's reasoning is recorded
+because it is the load-bearing part: naming the layer now — `Conductor`, `Nexus`,
+`Orchestrator`, anything — would invite the exact drift FR-J1 exists to prevent.
+
+```text
+MAIA  →  THE NEW THING  →  everything else
+```
+
+A named thing acquires APIs, authority, state, dashboards, and eventually a conceptual life of
+its own. ⛔ **FR-J6 therefore refuses to presuppose that an orchestration object exists at all** —
+that question is D-J2's, and this ruling deliberately does not settle it.
+
+### ⭐ The falsifier: architecture-by-noun
+
+A future change **fails FR-J6** if its justification reduces to:
+
+> *"We need somewhere to put the orchestration layer."*
+
+A component exists because a **specific responsibility** requires it —
+
+```text
+bounded-job lifecycle · provenance contract · participation adjudication ·
+model-material permission · dependency invalidation
+```
+
+— never because something called *the orchestrator* ought to exist. ⭐ This is testable at
+review time against any diff, which is what makes it a law rather than a preference.
+
+### Compliance census (`e1c6f527`) — read before assuming either compliance or breach
+
+- ⭐ **Every occurrence of "Jarvis" in runtime code today is already the ruled usage.** All
+  hits are lane citations in comments plus one provenance value —
+  `registeredBy: 'JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01'` in
+  `lib/maia/canonical-turn/producerRegistry.ts`. That names the **governing lane that
+  registered a producer**, i.e. build provenance, not a runtime actor. **Compliant, and
+  precedent for how the word may appear at all.**
+- ⚠️ **`Conductor` was never available**: `lib/voice/conductor.ts` already owns it (Bridge D
+  element/phase hysteresis). One of the candidate names the ruling declines was a collision
+  regardless.
+- ⚠️ **Three pre-existing `*Orchestrator` identifiers exist** — `lib/ai/multiEngineOrchestrator.ts`,
+  `lib/field/ResonanceFieldOrchestrator.ts`, `lib/consciousness/collective/CollectiveFieldOrchestrator.ts`.
+  ⛔ **FR-J6 does not retroactively condemn them**; it forbids creating a new central actor.
+  They are recorded because `multiEngineOrchestrator` sits squarely in **D-J7** territory
+  (model routing), and D-J7 must decide whether that is the seam to constitute or a legacy
+  name that would smuggle a central actor in through the back door. ⛔ Not decided here.
+
+### What FR-J6 does not settle
+
+```text
+⛔ whether a distinct orchestration object is needed at all        → D-J2
+⛔ whether CMT-01's contract is extended or something new is built → D-J2
+⛔ what any future component is called                             → its own responsibility
+```
+
+
 ---
 
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
@@ -110,8 +201,8 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 
 ```text
 1. D-J1 + D-J5          ── PERFORMED (this document)
-2. D-J6   naming        ── NEXT. Settle before the word reaches runtime code
-3. D-J2   extend CMT-01 ── does NOT authorize M3
+2. D-J6   naming        ── PERFORMED (FR-J6): no runtime proper name
+3. D-J2   extend CMT-01 ── NEXT. Does NOT authorize M3
 4. D-J3   one provenance contract (never a fourth trace)
 5. D-J4   unreconciled disagreement
 6. D-J7   model/material routing as CONSENT law, before economics
@@ -182,8 +273,9 @@ D-J4, should be reconciled with it rather than authored beside it.
 |---|---|
 | **D-J1** | ⭐ **RATIFIED (amended)** — boundary ratified, runtime name withheld |
 | **D-J5** | ⭐ **RATIFIED** — bound as sibling to FR-J1 |
-| **D-J6** | **NEXT ACT** — naming. ⛔ "Jarvis" barred from runtime identifiers until ruled |
-| **D-J2 · D-J3 · D-J4 · D-J7 · D-J8** | OPEN, sequenced (§3) |
+| ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). "Jarvis" stays the programme word permanently; the runtime layer gets no proper name. Falsifier: architecture-by-noun |
+| **D-J2** | ⭐ **NEXT ACT** — extend CMT-01's governed contract, or a separate orchestration object? ⛔ FR-J6 deliberately leaves this open and does not presuppose the object exists |
+| **D-J3 · D-J4 · D-J7 · D-J8** | OPEN, sequenced (§3) |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -196,7 +288,8 @@ D-J4, should be reconciled with it rather than authored beside it.
 FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
-RUNTIME NAME           UNRESOLVED — "Jarvis" barred from runtime identifiers
+FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+RUNTIME NAME           SETTLED BY REFUSAL — none exists, none to be created
 CANON PLACEMENT        NOT PERFORMED (D-J15)
 CMT-01 M3              UNAUTHORIZED
 PRODUCERS REGISTERED   NONE
