@@ -1,0 +1,126 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-fire-8cfa/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-13 12:55:52.279 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:55:52.282 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:55:52.382 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-13 12:55:52.613 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:55:52.817 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:55:54.986 xcodebuild[56948:27646677] [MT] Run Destination Preflight: The destination is not ready.
+Error Domain=com.apple.dt.deviceprep Code=-3 "Unlock Kelly Nezat’s iPhone to Continue" UserInfo={NSRecoveryAttempter=<_DVTErrorRecoveryHandler: 0x600000abfdc0>, NSLocalizedRecoveryOptions=(
+    "Cancel Testing"
+), NSLocalizedRecoverySuggestion=Xcode cannot launch DriverUITests on Kelly Nezat’s iPhone because the device is locked., DVTRecoveryBlockKey=<__NSMallocBlock__: 0x60000060f6c0>, NSLocalizedDescription=Unlock Kelly Nezat’s iPhone to Continue}
+2026-09-13 12:55:54.986 xcodebuild[56948:27646677] [MT] Run Destination Preflight: Waiting for the destination to become ready.
+2026-09-13 12:58:55.291 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:58:55.597 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:58:56.781 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:58:58.107 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:59:00.134 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:59:15.335 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 12:59:17.348 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 13:00:00.131 xcodebuild[56948:27646677] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-13 13:00:10.197 xcodebuild[56948:27667243]  IDELaunchReport: 41ba2f0ff63c0d80:41ba2f0ff63c0d80: Finished with error: An error occurred when reading or writing data.
+Domain: com.apple.dt.CoreDeviceError
+Code: 1010
+Failure Reason: Failed to get the file descriptor for one of process' standard streams.
+User Info: {
+    DVTErrorCreationDateKey = "2026-09-13 17:00:10 +0000";
+    IDERunOperationFailingWorker = IDELaunchCoreDeviceWorker;
+}
+--
+The operation couldn’t be completed. Socket is not connected
+Domain: NSPOSIXErrorDomain
+Code: 57
+Failure Reason: Socket is not connected
+--
+
+2026-09-13 13:00:10.197 xcodebuild[56948:27667243]  IDELaunchReport: 41ba2f0ff63c0d80:41ba2f0ff63c0d80: com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "00008140-00163D9922E0801C";
+    "device_isCoreDevice" = 1;
+    "device_model" = "iPhone17,2";
+    "device_osBuild" = "26.6.1 (23G83)";
+    "device_osBuild_monotonic" = 2306008300;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphoneos";
+    "device_platform_family" = 2;
+    "device_reality" = 1;
+    "device_thinningType" = "iPhone17,2";
+    "device_transport" = 1;
+    "launchSession_schemeCommand" = Test;
+    "launchSession_schemeCommand_enum" = 2;
+    "launchSession_targetArch" = arm64e;
+    "launchSession_targetArch_enum" = 7;
+    "operation_duration_ms" = 257353;
+    "operation_errorCode" = 57;
+    "operation_errorDomain" = "com.apple.dt.CoreDeviceError.1010.NSPOSIXErrorDomain";
+    "operation_errorWorker" = IDELaunchCoreDeviceWorker;
+    "operation_error_reportable" = 1;
+    "operation_name" = IDERunOperationWorkerGroup;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphoneos";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 0;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 1;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 64;
+    "param_lldbVersion_component_idx_1" = 0;
+    "param_lldbVersion_monotonic" = 170302360103;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphoneos26.2";
+    "sdk_osVersion" = "26.2";
+    "sdk_platformID" = 2;
+    "sdk_variant" = iphoneos;
+    "sdk_version_monotonic" = 2302005700;
+}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-fiudvxhuhjwdrvfycoutxevllyxy/Logs/Test/Test-DriverUITests-2026.09.13_12-55-52--0400.xcresult
+
+2026-09-13 13:00:10.481 xcodebuild[56948:27646677] [MT] IDETestOperationsObserverDebug: 257.867 elapsed -- Testing started completed.
+2026-09-13 13:00:10.482 xcodebuild[56948:27646677] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-13 13:00:10.482 xcodebuild[56948:27646677] [MT] IDETestOperationsObserverDebug: 257.867 sec, +257.867 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-fiudvxhuhjwdrvfycoutxevllyxy/Logs/Test/Test-DriverUITests-2026.09.13_12-55-52--0400.xcresult
+
+Testing failed:
+	An error occurred when reading or writing data.
+	DriverUITests-Runner encountered an error (Failed to install or launch the test runner. (Underlying Error: An error occurred when reading or writing data. Failed to get the file descriptor for one of process' standard streams. (Underlying Error: The operation couldn’t be completed. Socket is not connected)))
+
+** TEST EXECUTE FAILED **
+
+Testing started

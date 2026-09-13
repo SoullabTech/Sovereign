@@ -1,0 +1,4 @@
+12:40:23  Acquired tunnel connection to device.
+12:40:23  Enabling developer disk image services.
+12:40:23  Acquired usage assertion.
+0 files:

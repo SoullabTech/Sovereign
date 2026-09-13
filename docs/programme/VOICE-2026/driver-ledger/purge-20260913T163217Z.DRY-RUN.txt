@@ -1,0 +1,7 @@
+# purge 20260913T163217Z (DRY RUN — no write)
+archive: docs/programme/VOICE-2026/driver-ledger/container-archive/pre-purge-20260913T154847Z · expect-count: 154 · device: A0736AC8-793B-516F-AC72-C076DB6CEE38 · bundle: life.soullab.voicekernel.k00
+D: archive RECONCILED
+E: probe /private/tmp/voice-purge-094/docs/programme/VOICE-2026/driver-ledger/devicectl-probe-20260913T163025Z/ documents --remove-existing-content
+preimage: reported total=154 · file rows=154 · non-journal rows=0 · distinct journal rows=154
+preimage: PASS — tmp/ holds exactly the 154 reconciled journals and nothing else
+## DRY RUN COMPLETE — preimage gate would admit the purge; nothing written

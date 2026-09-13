@@ -1,0 +1,20 @@
+# purge 20260913T164023Z 
+archive: docs/programme/VOICE-2026/driver-ledger/container-archive/pre-purge-20260913T154847Z · expect-count: 154 · device: A0736AC8-793B-516F-AC72-C076DB6CEE38 · bundle: life.soullab.voicekernel.k00
+D: archive RECONCILED
+E: probe /private/tmp/voice-fire-8cfa/docs/programme/VOICE-2026/driver-ledger/devicectl-probe-20260913T163025Z/ documents --remove-existing-content
+preimage: reported total=154 · file rows=154 · non-journal rows=0 · distinct journal rows=154
+preimage: PASS — tmp/ holds exactly the 154 reconciled journals and nothing else
+F: devicectl device copy to --source /tmp/k00-empty.pE0rFR (empty) --destination tmp --remove-existing-content true
+12:40:23  Acquired tunnel connection to device.
+12:40:23  Enabling developer disk image services.
+12:40:23  Acquired usage assertion.
+File on Device
+Path: /private/var/mobile/Containers/Data/Application/D6E2764B-437C-4295-B42B-A798F6E2A36E/tmp
+URL Resources: Writable, Readable, Directory
+File Size: 64 bytes
+Last modification date: 9/13/26, 12:40 PM
+Permissions: UID: 501, GID: 501, Permissions: 493
+Extended Attributes: [:]
+F: rc=0
+H: post-purge reported total=0 · journal rows=0
+## PURGE VERIFIED — tmp/ reports zero files; 154 journals removed, all held in docs/programme/VOICE-2026/driver-ledger/container-archive/pre-purge-20260913T154847Z
