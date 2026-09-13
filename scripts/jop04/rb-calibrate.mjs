@@ -20,6 +20,7 @@ import { materializeSubject, loadSubjectModules, instrumentSha, SUBJECT_SHA } fr
 import { FALSIFIERS, ipcCompositionTripwire, LAYER_B_CAPABILITY } from './rb-falsifiers.mjs';
 import { runCal2, CAL2_SPECIMEN } from './rb-cal2.mjs';
 import { runCal3, ipcHostWitness, CAL3_SPECIMEN } from './rb-cal3.mjs';
+import { runCal4, symbolForCanary, routerSelfMintTripwire } from './rb-cal4.mjs';
 
 /** Instrument lineage. ⛔ The amendment does not REPLACE 0b9aaec4; it descends from it. */
 const INSTRUMENT_LINEAGE = ['0b9aaec4', '1ed81732'];
@@ -46,6 +47,9 @@ const PROFILES = {
       // RB-6B probes — CAL-3a is the new known-bad anchor.
       'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
       'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
+      // No identity-bearing module exists at baseline.
+      'RB-CAL-4a': 'PRECONDITION-UNMET', 'RB-CAL-4b': 'PRECONDITION-UNMET',
+      'RB-CAL-4c': 'PRECONDITION-UNMET', 'RB-CAL-4d': 'PRECONDITION-UNMET',
     },
   },
   fd543df1: {
@@ -57,6 +61,11 @@ const PROFILES = {
       // ⭐ RB-6B ANCHOR: a legitimate route still causes execution by itself.
       'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
       'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
+      // ⭐ THE HOST-BOUNDARY DEFECT, predicted from the founder-run witness:
+      'RB-CAL-4a': 'RED',     // legitimate cross-loader object REFUSED
+      'RB-CAL-4b': 'GREEN',   // same-lineage accepted — the brand works
+      'RB-CAL-4c': 'GREEN',   // unbranded lookalike refused — unforgeable
+      'RB-CAL-4d': 'RED',     // fresh router reloads reject the host's value
     },
   },
 };
@@ -295,6 +304,27 @@ async function main() {
         evidence: probe.evidence, note: probe.note,
       });
     }
+    // ── RB-CAL-4 · host-loader identity continuity ───────────────────────
+    const cal4 = await runCal4(subject.dir);
+    for (const probe of [cal4.cal4a, cal4.cal4b, cal4.cal4c, cal4.cal4d]) {
+      const enf = enforcePrecondition(probe.observed, probe.precondition);
+      if (enf.overridden) probe.observed = enf.verdict;
+      const exp = profile.expect[probe.id];
+      if (probe.observed !== exp) mismatches++;
+      records.push({
+        subject_sha: subject.resolvedSha, instrument_sha, instrument_lineage: INSTRUMENT_LINEAGE,
+        falsifier: probe.id, statement: probe.label, precondition: probe.precondition ?? null,
+        expected_state: exp, expectation_profile: profile.name, observed_state: probe.observed,
+        calibration: probe.observed === exp ? 'MATCH' : 'MISMATCH',
+        evidence_class: 'BEHAVIORAL', evidence_location: 'scripts/jop04/rb-cal4.mjs → runCal4()',
+        layer: 'A (PRODUCTION-SHAPED module loading)', layer_b_capability: null,
+        discharge_state: dischargeState(probe.observed),
+        evidence: probe.evidence, note: probe.note,
+      });
+    }
+    const canary = symbolForCanary(subject.dir);
+    const selfMint = routerSelfMintTripwire(subject.dir);
+
     const hostWitness = ipcHostWitness(subject.dir);
 
     const tripwire = ipcCompositionTripwire(mods.mainJsPath);
@@ -348,6 +378,8 @@ async function main() {
       stop,
       ipc_structural_tripwire: tripwire,
       real_ipc_host_witness: hostWitness,
+      symbol_for_canary: canary,
+      router_self_mint_tripwire: selfMint,
       rb6b_target_matrix: RB6B_TARGET,
       records,
     };
