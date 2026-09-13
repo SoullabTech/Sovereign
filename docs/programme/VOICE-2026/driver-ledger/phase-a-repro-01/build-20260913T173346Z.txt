@@ -1,0 +1,39 @@
+# PHASE-A-REPRO-01 build 20260913T173346Z · source 4596b9bdb · expected dylib UUID 11A057AA-4A3C-3CAE-8C28-E29792489459 · historical claim NONE
+## environment pins
+  MATCH     macOS: 15.7.8 (24G806)
+  MATCH     macOS build: 24G806
+  MATCH     Xcode: Xcode 26.3 Build version 17C529 
+  MATCH     Xcode build: Xcode 26.3 Build version 17C529 
+  MATCH     xcode-select: /Applications/Xcode.app/Contents/Developer
+  MATCH     Swift: swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
+  MATCH     iOS SDK: iphoneos26.2 
+  RECORD    xcodegen: Version: 2.46.0   (not pinned by the compile records; recorded)
+## source
+Preparing worktree (detached HEAD 4596b9bdb)
+Updating files:  74% (8780/11817)Updating files:  75% (8863/11817)Updating files:  76% (8981/11817)Updating files:  77% (9100/11817)Updating files:  78% (9218/11817)Updating files:  79% (9336/11817)Updating files:  80% (9454/11817)Updating files:  81% (9572/11817)Updating files:  82% (9690/11817)Updating files:  83% (9809/11817)Updating files:  84% (9927/11817)Updating files:  85% (10045/11817)Updating files:  86% (10163/11817)Updating files:  87% (10281/11817)Updating files:  88% (10399/11817)Updating files:  89% (10518/11817)Updating files:  90% (10636/11817)Updating files:  91% (10754/11817)Updating files:  92% (10872/11817)Updating files:  93% (10990/11817)Updating files:  94% (11108/11817)Updating files:  95% (11227/11817)Updating files:  96% (11345/11817)Updating files:  97% (11463/11817)Updating files:  98% (11581/11817)Updating files:  99% (11699/11817)Updating files: 100% (11817/11817)Updating files: 100% (11817/11817), done.
+HEAD is now at 4596b9bdb feat(voice-2026): PRE-WITNESS-05 Phase A (accepted with three founder amendments) — startup-seam trace instrumentation only: StartTraceStep (14 closed steps), graph_start_trace per step with read-only observations (format before/after VP, VP read-back, isRunning, elapsed ms), engine_running_observed on the existing tick through ≥1000 ms, first_input_callback per generation; mutating startup order unchanged and gated (NOT compiled)
+  HEAD: 4596b9bdb
+  dirty entries: 0
+## swift build / swift test (ios/VoiceKernel at 4596b9bdb)
+[13/13] Compiling VoiceKernel Replay.swift
+Build complete! (5.23s)
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.004 (0.006) seconds
+## DerivedData (fresh, dedicated): /private/tmp/phase-a-repro-01/.derived-phase-a-repro-01
+## xcodegen generate
+Created project at /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+## build UNSIGNED
+** BUILD SUCCEEDED **
+  unsigned dylib UUID: 64EEC026-5F56-3706-BD2A-C5A6A20FC08B
+## build SIGNED (destination id=00008140-00163D9922E0801C · team ZVK2X646Z2)
+** BUILD SUCCEEDED **
+## custody (signed product, BEFORE any install)
+  signed dylib UUID:   64EEC026-5F56-3706-BD2A-C5A6A20FC08B
+  signed dylib SHA-256: 283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f
+  app per-file manifest: /private/tmp/voice-repro-96e3/docs/programme/VOICE-2026/driver-ledger/phase-a-repro-01/manifest-20260913T173346Z.sha256 (7 files)
+  manifest SHA-256: 09e286b671358420b39d8bd20c89aac32249bf85c474a760adb4080729d112b1
+  Identifier=life.soullab.voicekernel.k00
+  TeamIdentifier=ZVK2X646Z2
+  app path: /private/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+## STOP — UUID GATE: signed dylib reads '64EEC026-5F56-3706-BD2A-C5A6A20FC08B' ≠ expected 11A057AA-4A3C-3CAE-8C28-E29792489459 — NO INSTALL; founder ruling required 3
+nothing installed; the device is untouched

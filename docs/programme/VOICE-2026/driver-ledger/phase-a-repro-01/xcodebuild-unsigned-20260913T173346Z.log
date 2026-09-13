@@ -1,0 +1,668 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination generic/platform=iOS CODE_SIGNING_ALLOWED=NO -derivedDataPath /private/tmp/phase-a-repro-01/.derived-phase-a-repro-01 build
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  VoiceKernel: /tmp/phase-a-repro-01/ios/VoiceKernel
+
+2026-09-13 13:34:04.935 xcodebuild[73588:27784659] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'VoiceKernelHarness' in project 'VoiceKernelHarness'
+        ➜ Explicit dependency on target 'VoiceKernel' in project 'VoiceKernel'
+    Target 'VoiceKernel' in project 'VoiceKernel'
+        ➜ Explicit dependency on target 'VoiceKernel' in project 'VoiceKernel'
+    Target 'VoiceKernel' in project 'VoiceKernel' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: fd80e627d18f5331ed10319d760ec905
+Build description path: /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/XCBuildData/fd80e627d18f5331ed10319d760ec905.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos
+
+CreateBuildDirectory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-create-build-directory /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json
+
+MkDir /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /bin/mkdir -p /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    write-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel.modulemap /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.modulemap /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos
+
+SwiftDriver VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ptrcheck-2QX0SOW5JLMG1MYUOPYWX7Y76.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_AvailabilityInternal-AMIZOBZ67DA1BRI3E4QPU6L9L.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_SwiftConcurrencyShims-192H0X5KNNVV7TD7ROBQNLF6H.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdbool-3Y6U056OJYOQECN5RZ8AM4ZP7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_float-14SBY92UKGPGKM13NNK1BQT51.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/SwiftShims-9PEF5P1CNYOJ2JO10T1K2EP4B.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdarg-6L9L1CRLEWPHWBEC89A6VOGEX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ptrauth-134EPIGAFKVEL8PBVFCGJJY47.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stddef-CRGIDT5L3ZQWXBPND1MY52OMK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation1-E7YK3TH95XNRA6OL546LKG90V.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation2-5SE65FFBOCBANTQE77IFN24A4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_limits-5XISSG1YXLXPWGI1KL24CZ35U.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/sys_types-4QXTMI3HBV1JT9PMCA2KKJVB6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_tgmath-7M0ZPU4NE7TV72G8XE8TM6BGW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdint-4XD16PHDFVKQJX7RY2URQ3MB7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation3-6Y74POXPV305HP2BYHADB072W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdatomic-4IQAZJ55G1XUDJZ4PIR4WNL2X.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_intrinsics-8V2AF3BV8T50OU0FD8YVYIIM6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_inttypes-4FB1PGDIHYUHT52Q4D1GOYVPR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Darwin-2YL8LHH4DCY7JD2SDNPF9H2U3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/simd-BAZZZSB6J7UGCNEGUTAPJ7Z4R.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ObjectiveC-4EJHURJ4R570J46W6HFJKVMFK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/MachO-37BV112D57DLIOP42668ZU8L2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os_object-92QSTNUGDY6C510FJ17DHT7IW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os_workgroup-A24VWYZUBDTLGU04YLGLNT3SA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Dispatch-6RY3ARL8TZ4HXXASEM0RQ4KRR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/dnssd-DDXITSHZ6Q0YHMM01IYAQE1IV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreFoundation-E2DG5TCY77O97MA4XTG0GUQ82.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/XPC-CXP5BSWEFTYXHS2W8VN5J75SC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os-71CGFNL58M2KV1OL5WS4JJUNQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Security-6N1G2K0MSDT19BE3KG7B5LUI5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CFNetwork-39SLRSXH8UDTIGLU1DXWT2ECB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreGraphics-7BSBEDKBGANCYX6NCROR6QDI2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreAudioTypes-4WFMXDEO6AY9IHL6Q72JYJ1Y9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreAudio-1GHC71L8NNU4N4RD2QUP0ZNMU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Foundation-1UJ41EPVP0WE4ZXKTDOJXWAYE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ImageIO-A4LWVS1N0BSAFQ6LJGTJ5I9ZC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Network-13L7URBB5MLXR0NHOC2B4JKKO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreMIDI-7VUEQTH2JULQCN4UZKXRSXYRO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/IOSurface-5AEOCFA22N67LBVY9WJJH36SQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/UniformTypeIdentifiers-7IWM7KJY1JOYQPRYEEW7G15Z9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Metal-8AZKQXA2CUQ0ER64B01BNE1BC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/OpenGLES-D49LRBP51AX3JVX6QUBCGX59G.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVRouting-B4022T1E1885GTKDZCIPQ8O16.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AudioToolbox-E2ZU0IJDF3OXV9YQTPK03JTNM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreVideo-BV7RRRF9WDLD7PIYHNOU03VPN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreImage-8ZG444PFBCUYH6YKIL9RTBO3I.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/QuartzCore-XNHD3KVQ2M7SMACAYJ4UN3RJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreMedia-82WFYZ0FFJ0ZNUPI0X9KWLUOQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVFAudio-3Z2XY98Z4IX11ARA9T4MWXIN5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/MediaToolbox-2CESM28NIQ0TY9RP3ISS0094Y.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVFoundation-8X2GT4VYWJV8NX841IQF9HGR.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ VoiceKernel (in target 'VoiceKernel' from project 'VoiceKernel')
+
+EmitSwiftModule normal arm64 (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Journal.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ RecoveryPolicy.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ VoiceKernel.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+/tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/VoiceKernel.swift:138:9: warning: result of 'try?' is unused
+        try? session?.release(cause: "leaveConversation", causeSeq: cmd)
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SwiftCompile normal arm64 Compiling\ HealthSupervisor.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ KernelState.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Replay.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ StateProjection.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AudioGraph.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ ConfigurationChange.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/ConfigurationChange.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/ConfigurationChange.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AudioSessionAuthority.swift /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernel/Sources/VoiceKernel/AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for VoiceKernel (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriver\ Compilation\ Requirements VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel-Swift.h /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-swiftHeaderTool -arch arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/GeneratedModuleMaps-iphoneos/VoiceKernel-Swift.h
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.abi.json /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.abi.json (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.abi.json /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftdoc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftdoc (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftdoc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftmodule /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftsourceinfo (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftsourceinfo /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriver VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdarg-A0A3G05RFSUXBS4RUGLY4M1NX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ptrauth-41M1KEKEKGHJT8P82UBOAZFXT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdbool-6KGVXKYVHE7OB4SDHHZ5N8MFL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_AvailabilityInternal-DJNB8V5ZBNYNGS4RKT3WRHJMF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stddef-3EVKD4JA599LF7M0Z0VRDNJ7K.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_SwiftConcurrencyShims-AX6FEUXKV3JCLDZ2V06QK0DLJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_float-9KC7MFUDQBID8DDX43E706BM7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/DeveloperToolsSupport-9MARBNF6WRGY5FIRJKLVA5LYJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ptrcheck-ZB5Q123ECG0M9P4DA3MJTH7W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/SwiftShims-CRB72ZJK6U1J0VGSI3UVQCTU7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation1-P24F5OF0RPA5LOS76VHY804C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_limits-5Q0AV5SMYSIQ9AJQDCICRHESJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation2-86WMP328K90KEVSI4HCHIUK0B.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/sys_types-9IKFKQNCJPERJ7UFR567C5JKO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdint-BR8SRU0R8PM2UGB6IVASP006W.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_tgmath-8PYD7BGPTTE5DTT759WG9KDBF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_DarwinFoundation3-AOCF3HN90A0FXS231NRH10B8O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_intrinsics-7QMHAJUTIK07D2FQSMJDWTCWY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_stdatomic-283416PCX09ITLBRR0YDZ90VD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/_Builtin_inttypes-9P1NP33SRL9LWF2ASYFD0Q39B.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Darwin-BJ3H78WU56IE38TL6UQPAPJIU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/simd-9N89IE2HFWNHA9MO87O0O7P0N.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ObjectiveC-9JVEJM2F5LITP03DYVP3DIVO8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/MachO-A1DN5IECT2LJ5KIZIYR297GF2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os_object-AOUZ811CZSZZJH391QLCJSECP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Spatial-1FM0N5ZH8TW5DTU9G5J6M1F61.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os_workgroup-8W1P2SUPD7Q95BFZX6NGZL4O5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Dispatch-9OFW9PSPNCLEVIQMW1XCCWYQK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/XPC-CLHGKN6KOZGH1IB4Q82MJZTPU.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreFoundation-7NXRIIDBOE9Q18T33GLV3E4VJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/dnssd-53ZG2DW9F38FRS7ML211YMKA3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/os-BV23K72CWRR8KVMT33YUSS50Y.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Security-952IWXAWJEM4DFWY2R64HAL1O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CFNetwork-AVRDRFU2XYKF8MQX728O5A0OK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreAudioTypes-9RVPQZXADD87IO23GKHADGCVL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreGraphics-3E0X5QXJ7YGYGHLSXTA9ATRIG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreAudio-EKPMSG86QCCJMW6QGH1F4PZLE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Foundation-2XLMA9MBEA13VN3RNVBBVYVLB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/ImageIO-GVLRUS1R91BUHOQ49DTIYMZ4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreText-3SBDMEHX2LDA4HJPMKCLLN08F.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling StateProjection.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ConfigurationChange.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling RecoveryPolicy.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Replay.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HealthSupervisor.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Journal.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling KernelState.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/OSLog-B7CQUI872HV8GRC26R4NJCL0C.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/UserNotifications-A54PM31D380H1KIONAHQY0AMC.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/IOSurface-CEP7SJ2WNS5D2L7KB13RKJJ7D.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Network-548J10C52TR97R5Q8RVMGJB6M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreData-8PBVN3O8H4LUVEVQ236ABZDFJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/FileProvider-1VCCGPJIYALB4S34AP0OXFPUB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/DataDetection-4RD5I9ETXU0F7EW44R9MY9Y13.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreMIDI-52TA9VOJ2KS9URFQ9P7VGEH0P.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/UniformTypeIdentifiers-E6RFXZ3BPQ7IIT42AHDMBHGK1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/UIUtilities-7TS5OXTQEZG07AJ47PCK4ODLR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreTransferable-1W1MOQPURKITH5FCPK438XE82.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Symbols-4OEYW38G65M3HTZSDKI3MZ514.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Accessibility-2399X9GHAK5KKGE8GF5TW8UL7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/OpenGLES-A5EX2DKXSXLTUJZML26WO8KHA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Metal-3K3ZDR5Y4BHZ14BIQLBENHLX8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVRouting-F0L86JX210NTRZ7116SQT14A1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AudioToolbox-5TLXBC3ZZJWPK8ZCJS451T38L.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreVideo-2OWHD6U537M23H02N9RIN261E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/QuartzCore-90A0SG1DVHR9JZNU79LBYMBR6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreImage-D6TRGUV7PXPOC9ARMZ1L64ERQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/CoreMedia-6APQ6K0CRK8RR733F2N8LBVFE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/SwiftUICore-B6JJB7LFRWBEKM51U8H14QAI4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/MediaToolbox-9SY0BNKBTV0OXUWB1EU1IGETV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVFAudio-29VG0HSI7TEK1SCZIEYFY1B00.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/UIKit-WQJPIU00PINEZCVHIOVPN49U.pcm
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioGraph.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioSessionAuthority.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriverJobDiscovery normal arm64 Compiling VoiceKernel.swift (in target 'VoiceKernel' from project 'VoiceKernel')
+
+SwiftDriver\ Compilation VoiceKernel normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernel -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -package-name voicekernel -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_const_extract_protocols.json -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness/VoiceKernelHarness.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/AVFoundation-DMYYUMH68WOG2I2P37IRJXTNR.pcm
+
+Ld /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.o normal (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -r -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/Developer/Library/Frameworks -filelist /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.LinkFileList -nostdlib -Xlinker -object_path_lto -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-linker-args.resp -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.o
+
+ExtractAppIntentsMetadata (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name VoiceKernel --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier voicekernel.VoiceKernel --output /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.appintents --target-triple arm64-apple-ios16.0 --binary-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.o --dependency-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel_dependency_info.dat --stringsdata-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftFileList --metadata-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyMetadataFileList --static-metadata-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/VoiceKernel.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.SwiftConstValuesFileList --force --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-13 13:34:09.196 appintentsmetadataprocessor[73740:27785361] Starting appintentsmetadataprocessor export
+2026-09-13 13:34:09.268 appintentsmetadataprocessor[73740:27785361] Extracted no relevant App Intents symbols, skipping writing output
+
+RegisterExecutionPolicyException /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.o (in target 'VoiceKernel' from project 'VoiceKernel')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernel
+    builtin-RegisterExecutionPolicyException /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernel.o
+
+Ld /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/__preview.dylib normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -install_name @rpath/VoiceKernelHarness.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/__preview.dylib
+
+ProcessInfoPlistFile /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/Info.plist (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-infoPlistUtility /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/SwiftUI-6TIH7U78U02DQL0A6CDLJUDKP.pcm
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ VoiceKernelHarness (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+EmitSwiftModule normal arm64 (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ HarnessView.swift /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ VoiceKernelHarnessApp.swift /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    
+
+SwiftCompile normal arm64 Compiling\ HarnessModel.swift /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftCompile normal arm64 /tmp/phase-a-repro-01/ios/VoiceKernelHarness/Harness/HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for VoiceKernelHarness (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriver\ Compilation\ Requirements VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/VoiceKernelHarness-Swift.h /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-swiftHeaderTool -arch arm64 /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/VoiceKernelHarness-Swift.h
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftmodule /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.abi.json /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.abi.json (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.abi.json /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftdoc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftdoc (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftdoc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftsourceinfo (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftsourceinfo /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling VoiceKernelHarnessApp.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HarnessModel.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriverJobDiscovery normal arm64 Compiling HarnessView.swift (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+SwiftDriver\ Compilation VoiceKernelHarness normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoiceKernelHarness -Onone -enforce-exclusivity\=checked @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios16.0 -g -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -c -j16 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/SDKStatCaches.noindex/iphoneos26.2-23C57-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -sdk-module-cache-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule -validate-clang-modules-once -clang-build-session-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/ModuleCache.noindex/Session.modulevalidation -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-generated-files.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-own-target-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness-09c65f5dfc7399442b67b093cd14845f-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-project-headers.hmap -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/include -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources-normal/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources/arm64 -Xcc -I/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-Swift.h -working-directory /tmp/phase-a-repro-01/ios/VoiceKernelHarness -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -filelist /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.LinkFileList -install_name @rpath/VoiceKernelHarness.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.swiftmodule @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness-linker-args.resp -Wl,-no_warn_duplicate_libraries -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib -Xlinker -add_ast_path -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel.swiftmodule @/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernel.build/Debug-iphoneos/VoiceKernel.build/Objects-normal/arm64/VoiceKernel-linker-args.resp
+
+ConstructStubExecutorLinkFileList /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    construct-stub-executor-link-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+
+Ld /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness normal (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -F/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness-ExecutorLinkFileList-normal-arm64.txt /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib -o /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness
+
+CopySwiftLibs /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib --scan-folder /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Frameworks --scan-folder /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/PlugIns --scan-folder /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/SystemExtensions --scan-folder /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name VoiceKernelHarness --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 16.0 --bundle-identifier life.soullab.voicekernel.k00 --output /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app --target-triple arm64-apple-ios16.0 --binary-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness --dependency-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness_dependency_info.dat --stringsdata-file /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftFileList --metadata-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList --static-metadata-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/Objects-normal/arm64/VoiceKernelHarness.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-09-13 13:34:10.796 appintentsmetadataprocessor[73753:27785457] Starting appintentsmetadataprocessor export
+2026-09-13 13:34:10.797 appintentsmetadataprocessor[73753:27785457] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+AppIntentsSSUTraining (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Info.plist --temp-dir-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/ssu --bundle-id life.soullab.voicekernel.k00 --product-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app --extracted-metadata-path /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/Metadata.appintents --metadata-file-list /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Intermediates.noindex/VoiceKernelHarness.build/Debug-iphoneos/VoiceKernelHarness.build/VoiceKernelHarness.DependencyMetadataFileList --archive-ssu-assets
+2026-09-13 13:34:10.811 appintentsnltrainingprocessor[73754:27785458] Parsing options for appintentsnltrainingprocessor
+2026-09-13 13:34:10.811 appintentsnltrainingprocessor[73754:27785458] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-RegisterExecutionPolicyException /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+Validate /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    builtin-validationUtility /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app (in target 'VoiceKernelHarness' from project 'VoiceKernelHarness')
+    cd /tmp/phase-a-repro-01/ios/VoiceKernelHarness
+    /usr/bin/touch -c /tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+
+** BUILD SUCCEEDED **
+

@@ -1,0 +1,16 @@
+# PHASE-A-REPRO-01 build 20260913T173434Z · source 4596b9bdb · expected dylib UUID 11A057AA-4A3C-3CAE-8C28-E29792489459 · historical claim NONE
+## environment pins
+  MATCH     macOS: 15.7.8 (24G806)
+  MATCH     macOS build: 24G806
+  MATCH     Xcode: Xcode 26.3 Build version 17C529 
+  MATCH     Xcode build: Xcode 26.3 Build version 17C529 
+  MATCH     xcode-select: /Applications/Xcode.app/Contents/Developer
+  MATCH     Swift: swift-driver version: 1.127.15 Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
+  MATCH     iOS SDK: iphoneos26.2 
+  RECORD    xcodegen: Version: 2.46.0   (not pinned by the compile records; recorded)
+## source
+  worktree exists: /private/tmp/phase-a-repro-01
+  HEAD: 4596b9bdb
+  dirty entries: 2
+## STOP — worktree not clean 6
+nothing installed; the device is untouched
