@@ -80,6 +80,13 @@ undetermined and the answer changes the key shape. Do not assume.
 
 ## 2. `JarvisExecutionContext`
 
+> ⛔ **SUPERSEDED IN PLACE by AMENDMENT A1 (2026-09-13)** — `JARVIS-ORCHESTRATION-CORE-01_AMENDMENT_A1_BOUND_WORK_SCOPE_2026-09-13.md`.
+> Founder naming ruling: the primitive BP-3 requires is **`BoundWorkScope`**, not this envelope.
+> `JarvisExecutionContext` is **reserved** for the later orchestration envelope and, if adopted,
+> **MUST contain a `BoundWorkScope`**; the raw `memberId` / `corpusId` / `workId` fields below
+> **may not substitute for it**. The section is kept as drafted, never as a current contract —
+> *a bag of strings inside a nicer-looking object is still BP-3.*
+
 Every flow receives the same non-optional envelope. This is the load-bearing type.
 
 ```ts
