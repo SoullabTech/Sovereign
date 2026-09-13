@@ -165,6 +165,38 @@ export type MemberBody =
  * MAIA a passage the writer never framed, and would do it most confidently
  * where the text had changed most.
  */
+/**
+ * ⭐⭐ FOCUS-W6 — the writer-facing name of a disclosed place.
+ *
+ * FOUNDER RULING 2026-09-13:
+ *
+ *   A disclosed place needs both a machine identity and a writer-facing name.
+ *   A withheld place gets membership identity only.
+ *
+ * Before this, cognition received `F5 · 70f8c7fd-bb9e-4a27-acf7-028f3721ee0b`
+ * while the writer's panel said *Section 62 · "THE GLOWING EMBERS"*. MAIA could
+ * keep the bodies distinct — F7's requirement — but could not NAME any of them,
+ * so every section name she had ever used came from the observation text. That
+ * is independent confirmation of the W5 mechanism, and it makes the final
+ * cognition witness ambiguous: distinct-place understanding and borrowed names
+ * would look the same.
+ *
+ * ⛔ IT COMES FROM THE SNAPSHOT, and from nothing else. Not the observation
+ * (historical), not the client (unauthoritative), not a second query (a second
+ * read is a second source of disagreement — the law this lane ratified when the
+ * confirmation instrument issued its own SQL). One read · one version · one
+ * label · one body.
+ *
+ * ⛔ AND IT NEVER INVENTS. A section with no heading is `Section 57`. A guessed
+ * title would be MAIA naming the writer's work for them.
+ */
+export function writerFacingLabel(section: EditableSection): string {
+  /* `position` is 0-indexed; the writer's §45 is position 44. */
+  const n = `Section ${section.position + 1}`;
+  const h = section.heading?.trim();
+  return h ? `${n} \u00b7 \u201c${h}\u201d` : n;
+}
+
 export function bodyOfMember(
   snapshot: DraftSnapshot,
   sectionRef: string,

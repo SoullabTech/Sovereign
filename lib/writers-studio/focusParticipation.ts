@@ -81,6 +81,19 @@ export interface FocusParticipationMember {
    * provenance. This rule governs what enters response-producing cognition.
    */
   readonly sectionRef?: string;
+  /**
+   * ⭐⭐ FOCUS-W6 — the place in the WRITER'S vocabulary. `Section 45 ·
+   * “PERSONAL ANECDOTE: TENDING THE CAMPFIRE”`.
+   *
+   * PRESENT IF AND ONLY IF `status === 'readable'`, on the same rule and for
+   * the same reason as `sectionRef`: a name is an identity. A withheld place
+   * gets membership only, so W5 stays intact.
+   *
+   * ⛔ Derived from the SNAPSHOT that supplied the body — `writerFacingLabel`
+   * over the same `EditableSection`. Never from the observation, never from the
+   * client, never from a second query.
+   */
+  readonly label?: string;
   readonly status: FocusMemberStatus;
   /** Derived from the set's activeMemberId. ⛔ Never accepted from the member. */
   readonly active: boolean;
@@ -151,6 +164,18 @@ export function focusParticipation(input: FocusParticipationInput): FocusPartici
     if (m.status === 'readable' && !hasRef) {
       throw new Error('focus participation: a readable member carries no section identity');
     }
+
+    /* ⭐ W6 · THE NAME BINDS EXACTLY AS THE IDENTITY DOES, both ways. */
+    const hasLabel = m.label !== undefined;
+    if (m.status !== 'readable' && hasLabel) {
+      throw new Error(
+        `focus participation: a ${m.status} member carries a place name`
+        + ' — a name is an identity, and a withheld place is not named',
+      );
+    }
+    if (m.status === 'readable' && !hasLabel) {
+      throw new Error('focus participation: a readable member carries no place name');
+    }
   }
 
   if (activeMemberId !== null) {
@@ -168,6 +193,7 @@ export function focusParticipation(input: FocusParticipationInput): FocusPartici
     ordinal: i + 1,
     /* ⛔ Carried only where the refusal above already proved it lawful. */
     ...(m.sectionRef !== undefined ? { sectionRef: m.sectionRef } : {}),
+    ...(m.label !== undefined ? { label: m.label } : {}),
     status: m.status,
     active: activeMemberId !== null && m.focusMemberId === activeMemberId,
     bodyAvailable: m.content !== undefined,
@@ -217,7 +243,8 @@ export function renderFocusMembership(p: FocusParticipation): string {
       + ' could not check it against the current Work.';
   const target = p.activeMemberId === null
     ? 'They have not yet chosen which of these places they are acting on.'
-    : `They are working on ${p.members.find((m) => m.active)?.sectionRef ?? 'one of these places'} right now`
+    /* ⭐ W6 · named the way the writer names it, never as a UUID. */
+    : `They are working on ${p.members.find((m) => m.active)?.label ?? 'one of these places'} right now`
       + ' — that is which place is in hand, not which place matters most.';
   return `${head} ${target}`;
 }
@@ -233,7 +260,7 @@ export function renderFocusMembership(p: FocusParticipation): string {
 export function renderFocusMembers(p: FocusParticipation): string {
   return p.members
     .map((m) => {
-      const place = m.sectionRef ?? 'a place in this Work that is withheld from you in this turn';
+      const place = m.label ?? 'a place in this Work that is withheld from you in this turn';
       return `  F${m.ordinal} · ${place}${m.active ? '  ← working on this' : ''}`
         + `\n        ${STATUS_NOTE[m.status]}`;
     })
@@ -250,6 +277,8 @@ export function renderFocusMembers(p: FocusParticipation): string {
 export function renderFocusBodies(p: FocusParticipation): string {
   return p.members
     .filter((m) => m.content !== undefined)
-    .map((m) => `[F${m.ordinal} · ${m.sectionRef}]\n${m.content}`)
+    /* ⛔ W6-8 · the body is attributed by NAME. A UUID here is what made every
+       section name MAIA ever used come from the observation instead. */
+    .map((m) => `[F${m.ordinal} · ${m.label}]\n${m.content}`)
     .join('\n\n');
 }

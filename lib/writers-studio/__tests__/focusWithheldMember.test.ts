@@ -52,8 +52,13 @@ const S = {
   s62: '70f8c7fd-bb9e-4a27-acf7-028f3721ee0b',
 };
 
-const readable = (id: string, ord: number, ref: string, content: string): FocusParticipationMember =>
-  ({ focusMemberId: id, ordinal: ord, sectionRef: ref, status: 'readable', active: false, bodyAvailable: true, content });
+/* ⭐ MIGRATED, FOCUS-W6 — a readable member now also carries its writer-facing
+   name. The W5 obligations below are unchanged: what binds is that a WITHHELD
+   member carries neither. */
+const readable = (
+  id: string, ord: number, ref: string, content: string, label = `Place ${ord}`,
+): FocusParticipationMember =>
+  ({ focusMemberId: id, ordinal: ord, sectionRef: ref, label, status: 'readable', active: false, bodyAvailable: true, content });
 
 /** ⭐ A withheld member is built WITHOUT a section identity. That is the law. */
 const withheld = (id: string, ord: number): FocusParticipationMember =>
@@ -116,6 +121,8 @@ describe('W5-3 — a withheld member carries no body, range, summary or descript
 
   it('⛔ the member type has no field a description could travel in', () => {
     const p = theSet();
+    /* ⛔ W6 keeps this list unchanged for a withheld member: no sectionRef,
+       and now no label either. A name is an identity. */
     expect(Object.keys(p.members.find((m) => m.focusMemberId === 'f2')!).sort())
       .toEqual(['active', 'bodyAvailable', 'focusMemberId', 'ordinal', 'status']);
   });
@@ -133,14 +140,19 @@ describe('W5-3 — a withheld member carries no body, range, summary or descript
 describe('W5-4 — readable members keep distinct identity and bodies', () => {
   it('each readable member is attributable to its own section', () => {
     const bodies = renderFocusBodies(theSet());
-    for (const ref of [S.s45, S.s57, S.s58, S.s62]) expect(bodies).toContain(ref);
+    /* ⭐ MIGRATED, FOCUS-W6 — attribution is now by the writer's NAME for the
+       place, not by its UUID. The obligation is unchanged and stronger: each
+       body must be separately attributable, and it now says so in language the
+       writer would recognise. */
+    for (const label of ['Place 1', 'Place 3', 'Place 4']) expect(bodies).toContain(label);
+    expect(new Set(['Place 1', 'Place 3', 'Place 4']).size).toBe(3);
     expect(bodies).toContain('the fire caught slowly');
     expect(bodies).toContain('this is the part I love most');
   });
 
   it('⛔ a readable member WITHOUT a section identity is refused — F7 attribution', () => {
     expect(() => theSet([
-      { focusMemberId: 'f1', ordinal: 1, status: 'readable', active: false, bodyAvailable: true, content: 'x' },
+      { focusMemberId: 'f1', ordinal: 1, label: 'Section 1', status: 'readable', active: false, bodyAvailable: true, content: 'x' },
     ])).toThrow(/readable member carries no section identity/);
   });
 });
@@ -196,7 +208,7 @@ describe('W5-7 — reintroducing the section identity through the producer FAILS
 
   it('⛔ and the crossing gives the identity ONLY on the readable branch', () => {
     const src = CODE('lib/writers-studio/focusCrossing.ts');
-    expect(src).toMatch(/status === 'readable' \? \{ sectionRef: m\.sectionRef, content \} : \{\}/);
+    expect(src).toMatch(/status === 'readable' && section[\s\S]{0,120}sectionRef: m\.sectionRef[\s\S]{0,60}content/);
     /* ⛔ The unconditional form that produced W5 must not return. */
     expect(src).not.toMatch(/ordinal: i \+ 1, sectionRef: m\.sectionRef/);
   });

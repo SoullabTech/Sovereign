@@ -14,7 +14,8 @@ FOCUS-W4   range_precedes_body      REAL FINDING · refusal is the law
 FOCUS-W2   act-record conflation    CONFIRMED LIVE · §5b · not repaired
 FOCUS-W5   withheld member spoken   RULED + REPAIRED · §5c · W5-1…W5-10 green
 FOCUS-W4   confirmation at source   PASS · 4 of 5 · §5e
-new Act 3                           UNSPENT · act count still 1
+FOCUS-W6   disclosed place unnamed      REPAIRED · §5k · W6-1…W6-9 green
+Act 3                               SPENT TWICE · acts 1 → 3 · §5l
 production                          UNTOUCHED
 ```
 
@@ -515,6 +516,124 @@ prose.** No amount of craft reasoning would have produced it. So for the
 integrity class of observations MAIA needs **revision history as evidence**, not
 only current text: *when did this arrive, and what else arrived with it* is a
 question with a cheap answer that changes the disposition.
+
+## 5k. FOCUS-W6 — the disclosed place had an identity but no name
+
+**FOUNDER RULING 2026-09-13.** Found while investigating a candidate finding
+that turned out to be nothing (see §5l), which is the only reason it was found
+at all.
+
+> **A disclosed place needs both a machine identity and a writer-facing name.
+> A withheld place gets membership identity only.**
+
+Cognition received `F5 · 70f8c7fd-bb9e-4a27-acf7-028f3721ee0b` while the
+writer's panel said *Section 62 · "THE GLOWING EMBERS"*. MAIA could keep the
+bodies distinct — all F7 ever required — and could not **name** one of them.
+
+⭐⭐ **THE CONSEQUENCE IS THE FINDING.** Focus has never given MAIA a section
+name, so **every section name she has ever used came from the observation
+text** — independent confirmation of the FOCUS-W5 mechanism, arrived at from the
+opposite direction. It would also have made the final cognition witness
+unreadable: *she preserved distinct-place understanding* and *she borrowed the
+names from the historical reading* would have looked identical.
+
+```text
+READABLE   F1 · Section 45 · “PERSONAL ANECDOTE: TENDING THE CAMPFIRE”
+WITHHELD   F2 · needs confirmation        ⛔ no number · no title · no prose
+```
+
+⛔ **The name comes from the snapshot that supplied the body.** Not the
+observation (historical), not the client (unauthoritative), not a second query —
+*a witness that reimplements the read is itself a new source of disagreement*
+(§5d), and a label is a read. One read · one version · one label · one body.
+⛔ **And it never invents**: no heading means `Section 57` and nothing more.
+
+```text
+W6-1  readable member carries the writer-facing current label       PASS
+W6-2  label and body from the same snapshot and version             PASS
+W6-3  readable members distinguishable by F identity AND name       PASS
+W6-4  withheld member gets no section number or title               PASS
+W6-5  withheld membership still reaches cognition                   PASS
+W6-6  durable provenance keeps the UUID the projection omits        PASS
+W6-7  heading absent → number only, never a guessed title           PASS
+W6-8  UUID-only rendering for readable bodies FAILS                 PASS
+W6-9  giving a withheld place its human name FAILS                  PASS
+```
+
+Mutation-proofed — all red, control green:
+
+| # | known-bad implementation | failures |
+|---|---|---|
+| V1 | FOCUS-W6 itself — bodies attributed by UUID | 3 |
+| V2 | a withheld member given its human name | 2 |
+| V3 | a title invented where no heading exists | 2 |
+| V4 | off-by-one — `position` used as the section number | 6 |
+| V5 | the label derived from the ordinal rather than the snapshot | 1 → **2** |
+
+⚠️ **V5 first scored 1 — a source assertion alone.** The same calibration gap as
+W5's N1: pure falsifiers build compliant members and cannot see a PRODUCER that
+derives the name from the wrong place. A producer-level obligation now runs the
+real crossing and asserts the label equals the snapshot's own position and
+heading. **Third instance of the §5 calibration law, caught by applying it
+deliberately this time rather than by accident.**
+
+⚠️ **The software delta for the final witness is amended honestly: W3 + W5 + W6,
+not W3 + W5.** The Work comparison is unaffected — same draft v34, same anchors,
+same digests, nothing written.
+
+## 5l. Act 3 — spent twice, and the record is not retrofitted
+
+```text
+d7cb7317   2026-09-12 12:53:37   active NULL   v34   the original failed act
+7f5b9e76   2026-09-12 15:57:49   active f3     v34   ⚠️ never reported at the time
+526d3a8c   2026-09-13 10:10:28   active f5     v34   today
+```
+
+⛔ **The count went 1 → 3, not 1 → 2.** The custody check that reported `acts = 1`
+was truthful when it ran; the 15:57 act came after it. **Recorded as it happened.**
+
+⭐⭐ **FOCUS-W2 IS REPAIRED, AND THIS IS THE WITNESS FOR IT:**
+
+```text
+                OLD d7cb7317              NEW 526d3a8c
+f2 · §56        unavailable               unverified       ⭐
+body_available  f                         f
+has_receipt     f                         f
+receipts        5 · one orphan attempted  4 · ALL crossed  ⭐⭐
+```
+
+The old act established a boundary for §56 at `.383418` and then wrote *the
+section is no longer in the Work* about a section at position 55. The new act
+refuses it at currency, **never establishes a boundary, and leaves no orphan
+row.** `7f5b9e76` shows the same shape — it held twice.
+
+**Active target persists** — `f3`, then `f5`, from the member's own click.
+
+⛔ **NOT EXERCISED, in either act:** triple-press idempotency (two separate acts
+hours apart, not three presses in one), and **all four cognition criteria** —
+both asks were about the interface, not the Work, so W3's framing was never put
+to her and W5's source collapse was never tested.
+
+⚠️ **A candidate finding was raised and WITHDRAWN.** MAIA's *"clicking §57 is the
+natural next step"* looked like the active target failing to reach cognition.
+The act record holds `f5`, and her sentence is explained by the ask itself — the
+pasted text described the pre-Ask screenshot in which nothing was chosen. She
+reasoned from what she was asked. **No defect. Withdrawn rather than left
+standing, and the investigation is what turned up W6.**
+
+### The one act still owed
+
+```text
+baseline                  acts = 3
+acceptance                acts → 4 · delta EXACTLY +1
+                          three presses · ONE act
+the ask                   a genuine editorial question
+W3   reasons from correctly framed §45 and §62
+W5   any §56 content distinguishes historical reading from current Work
+W6   names the four disclosed places in the writer's vocabulary
+P12  states unprompted that she has four of five
+CRAFT substantive alternatives, tradeoffs, a recommendation from the passages
+```
 
 ## 6. Next
 

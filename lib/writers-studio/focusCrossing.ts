@@ -59,7 +59,7 @@ import {
   type FocusCurrency, type MemberCurrency,
 } from './focusCurrency';
 import {
-  bodyOfMember, type CurrentDraftReader, type DraftReadFailure,
+  bodyOfMember, writerFacingLabel, type CurrentDraftReader, type DraftReadFailure,
 } from './currentDraftRead';
 
 /**
@@ -400,9 +400,14 @@ export async function performFocusCrossing(
            and the presence probe above still use it — this decides only what
            enters response-producing cognition. A withheld member crosses as
            membership: focus-local identity, ordinal, state. Not as a name. */
+        /* ⭐ W6 · the name comes from the SAME snapshot section that supplied
+           the body — one read, one version, one label. */
+        const section = snapshot.snapshot.sections.get(m.sectionRef);
         return {
           focusMemberId: m.focusMemberId, ordinal: i + 1,
-          ...(status === 'readable' ? { sectionRef: m.sectionRef, content } : {}),
+          ...(status === 'readable' && section
+            ? { sectionRef: m.sectionRef, label: writerFacingLabel(section), content }
+            : {}),
           status, active: false, bodyAvailable: content !== undefined,
         };
       }),

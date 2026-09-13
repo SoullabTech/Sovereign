@@ -37,7 +37,7 @@ const WORK = 'The lighthouse keeper counted the ships he could not save.';
  */
 const ONE = () => focusParticipation({
   members: [{
-    focusMemberId: 'f1', ordinal: 1, sectionRef: 'ch4', status: 'readable',
+    focusMemberId: 'f1', ordinal: 1, sectionRef: 'ch4', label: 'Section 4', status: 'readable',
     active: false, bodyAvailable: true, content: WORK,
   }],
   activeMemberId: null,

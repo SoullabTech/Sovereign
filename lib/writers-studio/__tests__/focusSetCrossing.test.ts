@@ -124,10 +124,10 @@ const draftFor = (ids: string[]) => ({
  * demand the leak.
  */
 const FIVE: FocusParticipationMember[] = [
-  { focusMemberId: 'f1', ordinal: 1, sectionRef: 's45', status: 'readable', active: false, bodyAvailable: true, content: 'The fire was already lit.' },
-  { focusMemberId: 'f2', ordinal: 2, sectionRef: 's56', status: 'readable', active: true, bodyAvailable: true, content: 'Someone had banked it.' },
+  { focusMemberId: 'f1', ordinal: 1, sectionRef: 's45', label: 'Section 45 · “THE SACRED FLAME”', status: 'readable', active: false, bodyAvailable: true, content: 'The fire was already lit.' },
+  { focusMemberId: 'f2', ordinal: 2, sectionRef: 's56', label: 'Section 56 · “THE CAMPFIRE METAPHOR”', status: 'readable', active: true, bodyAvailable: true, content: 'Someone had banked it.' },
   { focusMemberId: 'f3', ordinal: 3, status: 'unverified', active: false, bodyAvailable: false },
-  { focusMemberId: 'f4', ordinal: 4, sectionRef: 's58', status: 'readable', active: false, bodyAvailable: true, content: 'By morning the stones were cold.' },
+  { focusMemberId: 'f4', ordinal: 4, sectionRef: 's58', label: 'Section 58 · “SUSTAINING THE FIRE”', status: 'readable', active: false, bodyAvailable: true, content: 'By morning the stones were cold.' },
   { focusMemberId: 'f5', ordinal: 5, status: 'unavailable', active: false, bodyAvailable: false },
 ];
 
@@ -160,8 +160,12 @@ describe('F1 — five Focus members with three lawful bodies', () => {
     /* ⭐ ALL FIVE ARE NAMED — by the identity a member HAS, which for a
        withheld one is its focus-local F-number, not a section id. */
     for (const m of FIVE) expect(text).toContain(`F${m.ordinal}`);
+    /* ⭐ MIGRATED AGAIN, FOCUS-W6. A readable member is rendered by its
+       writer-facing NAME, not its UUID — that was the whole defect. Its
+       identity is still carried on the member for provenance; what reaches
+       cognition is the name. */
     for (const m of FIVE.filter((x) => x.status === 'readable')) {
-      expect(text).toContain(m.sectionRef!);
+      expect(text).toContain(m.label!);
     }
     /* ⛔ W5 · and the two withheld places are not named anywhere. */
     for (const ref of ['s57', 's62']) expect(text).not.toContain(ref);
@@ -227,11 +231,11 @@ describe('F3 — content supplied for an unreadable member is a hard refusal', (
 
   it('bodyAvailable disagreeing with content is refused in both directions', () => {
     expect(() => focusParticipation({
-      members: [{ focusMemberId: 'x', ordinal: 1, sectionRef: 's1', status: 'readable', active: false, bodyAvailable: true }],
+      members: [{ focusMemberId: 'x', ordinal: 1, sectionRef: 's1', label: 'Section 1', status: 'readable', active: false, bodyAvailable: true }],
       activeMemberId: null,
     })).toThrow();
     expect(() => focusParticipation({
-      members: [{ focusMemberId: 'x', ordinal: 1, sectionRef: 's1', status: 'readable', active: false, bodyAvailable: false, content: 'x' }],
+      members: [{ focusMemberId: 'x', ordinal: 1, sectionRef: 's1', label: 'Section 1', status: 'readable', active: false, bodyAvailable: false, content: 'x' }],
       activeMemberId: null,
     })).toThrow();
   });
@@ -334,14 +338,17 @@ describe('F7 — two members concatenated into one string fails', () => {
       // The body appears, and it appears attributed to its own place.
       const at = text.indexOf(m.content!);
       expect(at).toBeGreaterThan(-1);
-      expect(text.slice(Math.max(0, at - 220), at)).toContain(m.sectionRef!);
+      /* ⭐ MIGRATED, FOCUS-W6 — the body is attributed by the writer-facing
+         name. Before the repair MAIA was handed a UUID here and could keep the
+         bodies apart without being able to name any of them. */
+      expect(text.slice(Math.max(0, at - 220), at)).toContain(m.label!);
     }
   });
 
   it('the active target is distinguishable from the contextual members', () => {
     const text = writerCandidates({ focus: { workRef: 'w-1' }, participation: part() })
       .map((c) => c.text).join('\n');
-    const active = text.indexOf('s56');
+    const active = text.indexOf('Section 56 · “THE CAMPFIRE METAPHOR”');
     expect(active).toBeGreaterThan(-1);
     expect(text).toMatch(/working on|active/i);
   });
@@ -583,7 +590,7 @@ describe('P13 — the client is not authoritative about why a member is withheld
      at what it actually built. ⛔ Without it the W5 gate is calibrated only
      against itself. */
   it('⭐⭐ W5 · the crossing gives withheld members NO section identity', async () => {
-    let seen: readonly { focusMemberId: string; sectionRef?: string; status: string }[] = [];
+    let seen: readonly { focusMemberId: string; sectionRef?: string; label?: string; status: string }[] = [];
     await performFocusCrossing(withheldReq(), {
       presence: async () => new Set(['s-still-there']),
       readDraft: async ({ sectionRefs }) => draftFor(
@@ -599,6 +606,14 @@ describe('P13 — the client is not authoritative about why a member is withheld
 
     const by = (id: string) => seen.find((m) => m.focusMemberId === id)!;
     expect(by('f1').sectionRef).toBe('s-readable');
+    /* ⭐⭐ W6 · OBSERVED AT THE PRODUCER. The name must come from the SNAPSHOT
+       section — `draftFor` places the readable section at position 0 with
+       heading 'A HEADING', so the only lawful label is 'Section 1 · “A
+       HEADING”'. A label derived from the member's ordinal, the request or the
+       observation would differ here, and the pure falsifiers cannot see it. */
+    expect(by('f1').label).toBe('Section 1 · \u201cA HEADING\u201d');
+    expect(by('f2').label).toBeUndefined();
+    expect(by('f3').label).toBeUndefined();
     expect(by('f2').sectionRef).toBeUndefined();
     expect(by('f3').sectionRef).toBeUndefined();
     expect(by('f2').status).toBe('unverified');
