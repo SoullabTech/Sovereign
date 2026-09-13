@@ -44,6 +44,13 @@ overloaded with the turn-exceeding job meaning.*
 > **Do not generalize from the first substrate found. Generalize from the strongest
 > responsibility already proved.**
 
+⭐ **The defect underneath all five corrections is now recorded as a programme-method binding:**
+`BCS-M1_IDENTIFIER_CLAIM_DISCIPLINE_2026-09-13.md` — *a name is a claim; its semantic strength
+may not exceed what the evidence establishes.* Its preflight rule governs D-J9: **every proposed
+field, type, status, table or API verb must state the predicate its name claims before the
+design is accepted** — `finding · checkpoint · result · stale · cancelled · depends_on ·
+authorization_basis` first among them.
+
 The first pass found *a* queue and stopped. A responsibility-level sweep finds **four workers,
 three independent stale-job reapers, and one substrate materially stronger than the one this
 census nominated.**
@@ -343,3 +350,10 @@ D-J9          ⛔ NOT OPENED
 
 > **Do not generalize from the first substrate found. Generalize from the strongest
 > responsibility already proved.**
+
+⭐ **The defect underneath all five corrections is now recorded as a programme-method binding:**
+`BCS-M1_IDENTIFIER_CLAIM_DISCIPLINE_2026-09-13.md` — *a name is a claim; its semantic strength
+may not exceed what the evidence establishes.* Its preflight rule governs D-J9: **every proposed
+field, type, status, table or API verb must state the predicate its name claims before the
+design is accepted** — `finding · checkpoint · result · stale · cancelled · depends_on ·
+authorization_basis` first among them.

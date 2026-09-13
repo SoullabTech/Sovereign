@@ -1094,8 +1094,11 @@ FR-J8                  RULED — perception, never authority. Visibly derived ·
                        member override authoritative · never leverage. Named refusal:
                        ontology by accumulation. F-J8.1-4
 CONSTITUTIONAL SEQ     COMPLETE through D-J8
-STEP 8                 census RUN + AMENDED (BCS-C2). D-J9 NOT OPENED. Strongest queue
-                       precedent NOT finally selected. Real gap = EPISTEMIC dependency
+STEP 8                 census RUN + AMENDED (BCS-C2). Strongest queue precedent NOT finally
+                       selected. Real gap = EPISTEMIC dependency
+BCS-M1                 RECORDED — identifier claim discipline (method binding, not canon).
+                       A name is a claim. Preflight rule governs D-J9
+D-J9                   SAFE TO OPEN · NOT OPENED
 FR-J7                  RULED — consent precedes selection. Authorization → capability →
                        economics, never the reverse. Caller may request capability, never
                        permission. Fallback may contract permission, never expand it.
