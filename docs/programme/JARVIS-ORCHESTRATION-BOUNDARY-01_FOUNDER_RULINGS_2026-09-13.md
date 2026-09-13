@@ -336,6 +336,173 @@ capability; the repair is to date it and correct it in place.*
 
 ---
 
+## 2d · FR-J3 — Provenance · **RULED: ONE SEMANTIC CONTRACT, MANY TRACES**
+
+> **There is one semantic provenance contract across MAIA, but no universal provenance object,
+> store, service, or runtime actor is thereby authorized. Existing and future subsystems may
+> retain bounded traces appropriate to their responsibility, provided those traces use the same
+> meanings and can be truthfully correlated across a derivation chain.**
+>
+> **Provenance answers how material came to be and what happened to it. It does not establish
+> truth, authority, significance, or correctness.**
+
+⭐ **The contract unifies what the words mean, not where the records live.** ⛔ No
+`provenanceGodObject`, no `universal_provenance` table, no central provenance agent — which
+would be F-J2.2 (god-object expansion) arriving through the provenance door.
+
+### ⚠️ Census correction recorded before the ruling: there are **five** instruments, not three
+
+The docket named three. The founder's census found two more, and both are confirmed at
+`e1c6f527`:
+
+| Instrument | Responsibility | Confirmed |
+|---|---|---|
+| `lib/memory/MemoryBundle.ts` — `selectionTrace` | ranking + survival of a cutoff | ⭐ observational by its own comments |
+| `lib/manuscript/structure/readerProvenance.ts` | **execution attribution** — provider · actual model · promptHash · readerVersion · frozenAt | ⭐ not source selection, not causal influence |
+| `lib/maia/canonical-turn/manifest.ts` | content-free **participation** evidence | ⭐ |
+| ⭐ `lib/memory/provenance/turnMemoryProvenance.ts` | retrieval / context assembly — `requested` vs `returnedMaterial`, whether the bundle was consulted, which context origin supplied assembly | ⭐ **already refuses provenance-as-truth in its own header** (*"be read as proof that retrieved material is true"* — listed as a thing it must not be) |
+| ⭐ `lib/memory/stores/ConversationMemoryUsesStore.ts` | durable, provenance-adjacent rows in `conversation_memory_uses` | ⚠️ **the live exposure — see below** |
+
+⭐ These are **correctly bounded for different responsibilities and should remain different
+instruments.** Execution attribution, participation evidence, selection ranking and retrieval
+assembly are four different questions; one table answering all four would answer none of them
+honestly.
+
+### ⭐⭐ The confirmed F-J3.1 exposure, stated precisely
+
+`ConversationMemoryUsesStore.recordRetrievedCandidates()` writes **one row per retrieved
+memory, explicitly before compression and selection** — its own comment reads *"Call this right
+after the retriever returns candidates, BEFORE compression."* Those rows land in a table named
+`conversation_memory_uses`, and each candidate carries a field named **`usedAs`**.
+
+⛔ **So the promotion is structural, not merely nominal**: the table name *and* the field name
+both assert `used` over material whose established state is `KNOWN TO EXIST` / retrieved.
+Called from three sites — `lib/sovereign/maiaService.ts:863`, `lib/memory/MemoryBundle.ts:131`,
+`app/api/voice/stream-conversation/route.ts:1319`.
+
+⛔ **Consequence, binding now:** rows in `conversation_memory_uses` **may not be cited as
+evidence that memory contributed to, or affected, any response** merely because they live under
+`*_uses`. ⛔ **No rename is authorized today** — the ruling governs what may be claimed from the
+rows, not what the table is called.
+
+### The four non-collapsible states
+
+```text
+KNOWN TO EXIST  ≠  CONSIDERED  ≠  CONTRIBUTED  ≠  EFFECT ESTABLISHED
+```
+
+**No state implies the next.**
+
+**`KNOWN TO EXIST`** — a specific source, material item, derived artifact or candidate was
+established to exist within the authorized execution scope. ⛔ It does not mean the system
+evaluated it.
+
+**`CONSIDERED`** — that specific referent was actually evaluated for possible selection,
+participation or execution. ⭐ **Consideration of a producer *class* does not establish
+consideration of every material item potentially belonging to that class.** ⚠️ Named against
+the live implementation: the canonical manifest's `producersConsidered` is generated from the
+producers *registered for the room* — it is not a declaration that every possible piece of
+their material was inspected.
+
+**`CONTRIBUTED`** — the material, or a traceably derived representation of it, actually crossed
+an execution boundary as input to a process on the lineage producing the result.
+
+```text
+DIRECT     material → served cognition
+UPSTREAM   source → bounded analysis → finding → served cognition
+```
+
+⭐⭐ **This is the binding of FR-J5's phrase:** *materially participated* **= CONTRIBUTED,
+directly or through an intact derivation chain.* ⛔ It still does not mean the material changed
+the result.
+
+⚠️ **Current-state caveat:** CMT-01 is still **M2 / shadow**. An `ADMITTED` row in the shadow
+canonical-turn manifest therefore **does not establish contribution to the live served
+response** — the types themselves still describe M2 as shadow construction. ⛔ Until M3, the
+manifest is evidence about the shadow, not about what reached the member.
+
+**`EFFECT ESTABLISHED`** — there is valid evidence that the resulting artifact or response
+actually depended upon the contribution.
+
+> ⭐⭐⭐ **Supplying material to a generative model does not establish that the material
+> affected its output.**
+
+Normal model execution therefore usually yields:
+
+```text
+CONTRIBUTED         YES          not         CONTRIBUTED         YES
+EFFECT ESTABLISHED  UNKNOWN                  EFFECT ESTABLISHED  YES
+```
+
+A subsystem may establish effect **only** where it has a legitimate lineage or causal witness
+appropriate to that process. ⭐ Where effect cannot be established, **`unknown` is the truthful
+state — not false, and not assumed true.**
+
+The member-facing consequence, which is the point of the whole ruling:
+
+> *"That passage was supplied to the cognition that produced my response. I can establish that
+> it contributed to the context; I cannot establish that it changed the wording of my answer."*
+
+### The four axes that must never collapse
+
+```text
+ORIGIN CLASS     how did this material come to be?      member. retrieved. computed. inferred. declared.
+PROCESS STATE    what happened to it this time?         known · considered · contributed · effect
+PARTICIPATION    what role was it permitted to have?    admitted · held · excluded
+AUTHORITY        what may it mean / establish?          (never conferred by any of the above)
+```
+
+⭐ This corrects the D-J2 note that the registry prefixes could seed the provenance vocabulary:
+they are **valuable but answer a different question**. Origin class is not process state.
+
+```text
+inferred.     does NOT mean  considered
+retrieved.    does NOT mean  contributed
+ADMITTED      does NOT mean  authoritative
+CONTRIBUTED   does NOT mean  true
+CONTRIBUTED   does NOT mean  effect established
+```
+
+### ⛔ `used` is refused as canonical vocabulary
+
+> **`used` is not a canonical provenance state. An internal trace must use the strongest term
+> it actually establishes — retrieved · known · considered · selected · admitted · supplied ·
+> contributed · referenced · effect-established — and may not promote one into another for
+> convenience.**
+
+### Falsifiers
+
+| | Fails FR-J3 when |
+|---|---|
+| **F-J3.1 · Semantic promotion** | a retrieved/known item is recorded or reported as considered, contributed or influential without evidence for that stronger state |
+| **F-J3.2 · Causal inflation** | material being placed in a model/context is treated as proof that it affected the resulting response |
+| **F-J3.3 · Referent collapse** | consideration of a producer/source *class* is reported as consideration of every underlying item |
+| **F-J3.4 · Authority inflation** | any provenance state is treated as evidence that the material is true or authoritative |
+
+### Privacy discipline preserved
+
+Provenance instruments remain **observational and content-minimal**. ⛔ A provenance trace must
+not quietly become another memory source. ⭐ This is not new: the discipline is already explicit
+in both `turnMemoryProvenance` and the content-free canonical manifest, and the ruling preserves
+it rather than introducing it.
+
+### The member-answerability contract FR-J5 now has
+
+```text
+"What was available?"      → KNOWN TO EXIST
+"What did you consider?"   → CONSIDERED
+"What did you actually use?" → CONTRIBUTED  (direct + upstream lineage)
+"What changed your answer?" → EFFECT ESTABLISHED where provable;
+                              otherwise "I cannot establish that."
+```
+
+⭐ **This operationalizes FR-J5 without pretending to know more about model causality than we
+do** — which is the rare shape where the rigorous answer and the honest answer are the same
+answer.
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -344,8 +511,8 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 1. D-J1 + D-J5          ── PERFORMED (this document)
 2. D-J6   naming        ── PERFORMED (FR-J6): no runtime proper name
 3. D-J2   extend CMT-01 ── PERFORMED (FR-J2): extension, admission boundary only
-4. D-J3   one provenance contract (never a fourth trace) ── NEXT
-5. D-J4   unreconciled disagreement
+4. D-J3   provenance ── PERFORMED (FR-J3): one semantic contract, many bounded traces
+5. D-J4   unreconciled disagreement ── NEXT
 6. D-J7   model/material routing as CONSENT law, before economics
 7. D-J8   inferred Work structure bound to existing authority law
 8. bounded-job / incremental-computation substrate
@@ -416,8 +583,9 @@ D-J4, should be reconciled with it rather than authored beside it.
 | **D-J5** | ⭐ **RATIFIED** — bound as sibling to FR-J1 |
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). "Jarvis" stays the programme word permanently; the runtime layer gets no proper name. Falsifier: architecture-by-noun |
 | **D-J2** | ⭐ **NEXT ACT** — extend CMT-01's governed contract, or a separate orchestration object? ⛔ FR-J6 deliberately leaves this open and does not presuppose the object exists |
-| **D-J3** | ⭐ **NEXT ACT** — one provenance contract. ⭐ Begin from the registry's existing prefix grammar (`retrieved.` · `computed.` · `inferred.` · `declared.` · `member.`), not a parallel vocabulary |
-| **D-J4 · D-J7 · D-J8** | OPEN, sequenced (§3) |
+| ~~**D-J3**~~ | ⭐ **RULED 2026-09-13 — ONE SEMANTIC CONTRACT, MANY TRACES** (FR-J3). Four non-collapsible states; *materially participated* = CONTRIBUTED; effect usually UNKNOWN; `used` refused. ⚠️ The registry prefixes are ORIGIN CLASS, a different axis from process state — the D-J2 note is corrected in §2d |
+| **D-J4** | ⭐ **NEXT ACT** — unreconciled disagreement. Now tractable: provenance can faithfully preserve who contributed what |
+| **D-J7 · D-J8** | OPEN, sequenced (§3) |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -431,6 +599,11 @@ FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
 FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+FR-J3                  RULED — one semantic contract, many bounded traces. KNOWN ≠
+                       CONSIDERED ≠ CONTRIBUTED ≠ EFFECT ESTABLISHED. "materially
+                       participated" = CONTRIBUTED. `used` refused. F-J3.1/2/3/4
+PROVENANCE INSTRUMENTS FIVE, not three (corrected §2d). conversation_memory_uses rows
+                       may NOT be cited as contribution or effect. No rename authorized
 FR-J2                  RULED — EXTENSION. Admission boundary, not execution substrate.
                        Execution does not confer participation; participation does not
                        confer authority. F-J2.1/2/3 attached
