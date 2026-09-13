@@ -368,10 +368,64 @@ B-iv   only then is the real implementation written
 > built; a suite that has already killed seven wrong machines is the first thing
 > in this lane that could genuinely refuse the eighth.
 
-⚠️ **One decision this needs and does not make:** whether the transition law is
-written as prose-in-record or as a typed contract the falsifiers import. ⛔ A
-typed contract is closer to code and edges on step 10; prose keeps step 10 shut
-but leaves the suite bound to nothing checkable. **Founder act.**
+### ⭐ 6.3 · RULED — founder, 2026-09-13 · TYPED CONTRACT
+
+```text
+S3 CLASS-B TRANSITION CONTRACT
+FORM              typed · executable
+LOCATION          test/specification substrate
+RUNTIME AUTHORITY NONE          STORAGE AUTHORITY NONE
+
+MAY TYPE      member-act identity · claim semantics · replay semantics ·
+              completion identity · crossing cardinality · receipt cardinality ·
+              authority isolation · server-derived scope · observable outcomes
+
+⛔ MAY NOT    table shape · column names · status column or enum · TTL · expiry
+              implementation · locking strategy · transaction mechanism · what a
+              completion identity points at · the act reference's persistence
+              shape · boundary-vocabulary widening
+```
+
+> ⭐⭐ **Type the law at the boundary, not the machine behind it.**
+
+⛔ The shape that would trespass into step 10:
+
+```ts
+type PendingAsk = { status: 'pending' | 'consumed' | 'complete'; expiresAt: ... }
+```
+
+⭐ The lawful shape — what the falsifiers are permitted to see:
+
+```text
+ACT                 identity · intended section set
+OBSERVABLE RESULT   claim acquired / refused · crossings performed ·
+                    section receipts minted · completion identity returned ·
+                    replay permitted / refused
+```
+
+**Landed** — `tests/constitutional/s3/transitionContract.ts` and
+`tests/constitutional/s3/falsifiers.ts` (S3-F1…F7 · F9 · F10).
+⛔ S3-F8 is not in the suite: it is Class A, SPENT, and its evidence is a
+disposable-shadow witness, never a unit assertion.
+
+### ⭐⭐ 6.4 · THE FREEZE — founder, 2026-09-13
+
+Once B-iii establishes lethality, **the contract and the suite FREEZE before
+B-iv begins.**
+
+```text
+LAWFUL      implementation fails suite → repair the IMPLEMENTATION
+
+⛔ FORBIDDEN implementation fails suite → reinterpret the contract
+                                        → weaken the test
+```
+
+Any contract or falsifier change after B-iv begins requires **explicit
+reopening with evidence that the law or the instrument was wrong** — never that
+the implementation was inconvenient.
+
+> ⭐ *That keeps the eighth machine from quietly domesticating the seven tests
+> that killed its predecessors.*
 
 ---
 
@@ -390,10 +444,11 @@ RULINGS CARRIED           §15 Ruling 5 (cardinality) · Ruling 6 (completion)
 TERMINOLOGY               §10.6a "receipt" → "consumption", amended in place
 
 SPLIT                     ⭐ RATIFIED · founder 2026-09-13
-NEXT ACT                  CLASS B · §6 — B-i author · B-ii build the defeat
-                          candidates · B-iii prove the suite kills each
-                          ⛔ B-iv (real implementation) NOT AUTHORIZED
-OPEN                      transition law as prose or as typed contract — §6.2
+TRANSITION LAW            ⭐ TYPED EXECUTABLE SPEC · RULED · §6.3 · LANDED
+B-i  AUTHOR               ✅ DONE · tests/constitutional/s3/
+B-ii BUILD CANDIDATES     NEXT
+B-iii PROVE LETHALITY     then FREEZE (§6.4)
+B-iv IMPLEMENTATION       ⛔ BLOCKED UNTIL LETHALITY PROVED
 
 TEST CODE                 NOT AUTHORED
 STORAGE DESIGN            NOT OPENED
