@@ -8,7 +8,7 @@
   "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
   "subject_sha_short": "e1c6f527",
   "subject_role": "FROZEN_BASELINE",
-  "instrument_sha": "8a62ea93",
+  "instrument_sha": "795a0270",
   "layer_b_capability": "git.rev_parse",
   "expectation_profile": "BASELINE MATRIX (immutable)",
   "calibration": "SUCCESS",
@@ -24,7 +24,8 @@
     "RB-CAL-4a",
     "RB-CAL-4b",
     "RB-CAL-4c",
-    "RB-CAL-4d"
+    "RB-CAL-4d",
+    "RB-CAL-4e"
   ],
   "mismatches": 0,
   "stop": null,
@@ -62,6 +63,9 @@
     "id": "RB-TRIPWIRE-ROUTER-SELF-MINT",
     "readable": true,
     "router_calls_producer": false,
+    "router_binds_producer_locally": false,
+    "pure_re_export": false,
+    "scanned": "comment-stripped source",
     "evidence_class": "STRUCTURAL (supplementary; ⛔ discharges nothing)",
     "law": "the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A's original constitutional defect",
     "discharges": false
@@ -87,7 +91,7 @@
   "records": [
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
       "expected_state": "RED",
@@ -122,7 +126,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
       "expected_state": "RED",
@@ -165,7 +169,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
@@ -208,7 +212,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
@@ -249,7 +253,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
@@ -277,7 +281,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "PRECONDITION-UNMET",
@@ -318,7 +322,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
@@ -345,7 +349,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
@@ -383,7 +387,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -454,7 +458,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -487,7 +491,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -531,7 +535,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -574,7 +578,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -607,7 +611,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -640,7 +644,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -671,7 +675,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -702,7 +706,7 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -733,13 +737,44 @@
     },
     {
       "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-4d",
-      "statement": "reload stress — N fresh router instances",
+      "statement": "reload stability — N fresh authoritative router graphs all accept",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "identity_bearing_module_present": false
+        },
+        "provenance": "no routing-eligibility producer exists in this subject"
+      },
+      "expected_state": "PRECONDITION-UNMET",
+      "expectation_profile": "BASELINE MATRIX (immutable)",
+      "observed_state": "PRECONDITION-UNMET",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "there is no identity-bearing module whose continuity could fracture"
+      },
+      "note": "⛔ PRECONDITION-UNMET — no identity lineage exists to test"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4e",
+      "statement": "NON-AUTHORITATIVE LINEAGE control",
       "precondition": {
         "requirement": "REQUIRED",
         "state": "UNREACHED",

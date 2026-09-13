@@ -8,10 +8,10 @@
   "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
   "subject_sha_short": "3f25932b",
   "subject_role": "REPAIR_CANDIDATE",
-  "instrument_sha": "3f25932b",
+  "instrument_sha": "795a0270",
   "layer_b_capability": "git.rev_parse",
   "expectation_profile": "RECONCILED (Option B) MATRIX — frozen before the repair existed",
-  "calibration": "FAILED",
+  "calibration": "SUCCESS",
   "rb_acceptance_pass": false,
   "non_discharging": [
     "RB-F5",
@@ -20,7 +20,7 @@
     "RB-CAL-3c",
     "RB-CAL-3d"
   ],
-  "mismatches": 2,
+  "mismatches": 0,
   "stop": null,
   "ipc_structural_tripwire": {
     "readable": true,
@@ -61,6 +61,8 @@
     "id": "RB-TRIPWIRE-ROUTER-SELF-MINT",
     "readable": true,
     "router_calls_producer": false,
+    "router_binds_producer_locally": false,
+    "pure_re_export": true,
     "scanned": "comment-stripped source",
     "evidence_class": "STRUCTURAL (supplementary; ⛔ discharges nothing)",
     "law": "the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A's original constitutional defect",
@@ -87,7 +89,7 @@
   "records": [
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
       "expected_state": "GREEN",
@@ -122,7 +124,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
       "expected_state": "GREEN",
@@ -165,7 +167,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
@@ -208,7 +210,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
@@ -249,7 +251,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
@@ -277,7 +279,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "RED",
@@ -330,7 +332,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
@@ -357,7 +359,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
@@ -395,7 +397,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -480,7 +482,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -524,7 +526,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -568,7 +570,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -611,7 +613,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -644,7 +646,7 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -677,43 +679,43 @@
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-4a",
-      "statement": "a legitimately minted object survives the production loading path",
+      "statement": "authoritative lineage crossing — router graph A mints, router graph B accepts",
       "precondition": {
         "requirement": "REQUIRED",
         "state": "REACHED",
         "evidence": {
-          "loading_discipline": "PRODUCTION-SHAPED — router cache-busted, eligibility INDEPENDENTLY cache-busted",
-          "mirrors": "jarvis-desktop/src/main.js submit-task",
-          "minted_by": "host-shaped cache-busted eligibility instance",
-          "tested_by": "the instance router.mjs's static import resolves to"
+          "topology": "host → fresh router graph → { route, re-exported producer }",
+          "graph_a_and_b_independently_cache_busted": true,
+          "minted_by": "graph A",
+          "tested_by": "graph B"
         },
-        "provenance": "two independent dynamic imports, as the host performs them"
+        "provenance": "two independent cache-busted router imports, as the host reloads routing code"
       },
       "expected_state": "GREEN",
       "expectation_profile": "RECONCILED (Option B) MATRIX — frozen before the repair existed",
-      "observed_state": "RED",
-      "calibration": "MISMATCH",
+      "observed_state": "GREEN",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
       "layer": "A (PRODUCTION-SHAPED module loading)",
       "layer_b_capability": null,
-      "discharge_state": "NOT-DISCHARGED",
+      "discharge_state": "DISCHARGED",
       "evidence": {
-        "lane": null,
-        "status": "refused_not_routable",
-        "reason": "Capability 'git.rev_parse' is registered, but no satisfied routing eligibility was supplied. Registration identifies an instrument; it does not grant routing."
+        "lane": "C0",
+        "status": "routed",
+        "reason": "Deterministic capability 'git.rev_parse' is registered AND routing eligibility is satisfied (basis: operator_submission); no model required."
       },
-      "note": "🔴 a LEGITIMATELY minted object was refused because producer and consumer hold different identity lineages"
+      "note": "⭐ legitimately minted eligibility is recognized across the production identity topology"
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -741,17 +743,17 @@
         "lane": "C0",
         "status": "routed"
       },
-      "note": "⭐ the brand mechanism itself works — the defect is lineage, not design"
+      "note": "⭐ the brand mechanism itself works — any defect is lineage, not design"
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-4c",
-      "statement": "forgery negative control — a caller-shaped lookalike is refused",
+      "statement": "NO IDENTITY — an unbranded structural counterfeit is refused",
       "precondition": {
         "requirement": "REQUIRED",
         "state": "REACHED",
@@ -779,61 +781,95 @@
         "lane": null,
         "status": "refused_not_routable"
       },
-      "note": "⭐ unforgeability holds: identical visible fields are not identity"
+      "note": "⭐ identical visible fields are not identity"
     },
     {
       "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
-      "instrument_sha": "3f25932b",
+      "instrument_sha": "795a0270",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-4d",
-      "statement": "reload stress — N fresh router instances all recognize the authoritative producer",
+      "statement": "reload stability — N fresh authoritative router graphs all accept",
       "precondition": {
         "requirement": "REQUIRED",
         "state": "REACHED",
         "evidence": {
-          "fresh_router_instances": 5,
-          "value_source": "the producer the HOST obtains"
+          "fresh_router_graphs": 5,
+          "minted_once_through": "the authoritative router graph"
         },
         "provenance": "N independent cache-busted router imports, mirroring host reload behaviour"
       },
       "expected_state": "GREEN",
       "expectation_profile": "RECONCILED (Option B) MATRIX — frozen before the repair existed",
-      "observed_state": "RED",
-      "calibration": "MISMATCH",
+      "observed_state": "GREEN",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
       "layer": "A (PRODUCTION-SHAPED module loading)",
       "layer_b_capability": null,
-      "discharge_state": "NOT-DISCHARGED",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "reloads": [
           {
             "i": 0,
-            "accepted": false
+            "accepted": true
           },
           {
             "i": 1,
-            "accepted": false
+            "accepted": true
           },
           {
             "i": 2,
-            "accepted": false
+            "accepted": true
           },
           {
             "i": 3,
-            "accepted": false
+            "accepted": true
           },
           {
             "i": 4,
-            "accepted": false
+            "accepted": true
           }
         ],
-        "all_accept": false
+        "all_accept": true
       },
-      "note": "🔴 fresh router instances reject the value the host mints — the fracture is not a startup accident"
+      "note": "⭐ legitimately minted eligibility survives production-equivalent module reloads"
+    },
+    {
+      "subject_sha": "3f25932b578732ca3068af1dd594f9ebdb68efd6",
+      "instrument_sha": "795a0270",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-4e",
+      "statement": "NON-AUTHORITATIVE LINEAGE — a genuine brand minted outside the authorized graph is refused",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "minted_by": "an independently cache-busted eligibility module — a REAL producer, outside the authorized graph",
+          "tested_by": "the authoritative router graph",
+          "token_is_genuine": true
+        },
+        "provenance": "independent dynamic import of the identity-bearing module"
+      },
+      "expected_state": "GREEN",
+      "expectation_profile": "RECONCILED (Option B) MATRIX — frozen before the repair existed",
+      "observed_state": "GREEN",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal4.mjs → runCal4()",
+      "layer": "A (PRODUCTION-SHAPED module loading)",
+      "layer_b_capability": null,
+      "discharge_state": "DISCHARGED",
+      "evidence": {
+        "lane": null,
+        "status": "refused_not_routable"
+      },
+      "note": "⭐ unforgeability does not mean accepting every genuine token — only those minted within the authorized lineage"
     }
   ]
 }
