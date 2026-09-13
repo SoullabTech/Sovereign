@@ -4,6 +4,13 @@
 **Authority:** `docs/governance/JOP-04_EFFECT_SUBSTRATE_RULINGS_2026-09-13.md` — R1–R6 + **R7–R8**
 **Supersedes:** `…_SPECIFICATION_v0.1_2026-09-13.md` (retained, dated, not edited)
 
+> ⛔ **SUPERSEDED 2026-09-13 by v0.3** — `…_SPECIFICATION_v0.3_2026-09-13.md`. **R9** pins a refusal
+> ontology of six disjoint categories (adding `POLICY_REQUIREMENT_UNSATISFIED` and
+> `EXECUTION_REFUSED`) and **moves request narrowing to step 5, after authority comparison** —
+> this document's §6 ordering applied it earlier and is superseded. Directions **D1–D3** and
+> candidate law **C1** are added there. Retained verbatim; a superseded specification is dated,
+> not edited.
+
 > **Authorization makes an act eligible for execution. It does not execute the act.**
 > ⭐ **Language about an act never becomes authority over the act.**
 

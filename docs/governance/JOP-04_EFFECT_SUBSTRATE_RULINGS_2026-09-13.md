@@ -325,3 +325,141 @@ RECEIPT                 what actually happened
 ```
 
 > ⭐ **It prevents language about an act from becoming authority over the act.**
+
+---
+
+# R9 · D1–D3 · C1 — addendum
+
+**Date:** 2026-09-13 (same day) · **Authority:** founder · **Effect on v0.2:** ⚠️ SUPERSEDED → v0.3
+⚠️ **Mixed instrument.** R9 is ratified. D1–D3 are **directions** — a stated default with
+falsification owed, not yet law. C1 is an explicitly **candidate** derived law.
+
+## R9 — Refusal categories stay semantically disjoint, and the ordering is pinned
+
+**RULING: RATIFIED.** Refusal reasons correspond to **different propositions** and must not merge.
+
+| Reason | Proposition |
+|---|---|
+| `EFFECT_CLASSIFICATION_UNRESOLVED` | epistemic failure — we do not know what kind of act this is |
+| `CAPABILITY_CONTRACT_VIOLATION` | **declaration / registry failure — the platform's declared capability boundary is wrong** |
+| `POLICY_REQUIREMENT_UNSATISFIED` | a policy-derived obligation is unmet |
+| `NOT_AUTHORIZED` | we know what this is; granted authority is insufficient |
+| `REQUEST_CONSTRAINT_VIOLATION` | the caller asked to permit something narrower than this act |
+| `EXECUTION_REFUSED` | execution-specific refusal **after** admission |
+
+⭐ **`CAPABILITY_CONTRACT_VIOLATION` is evidence that the platform's declared boundary is wrong. It
+is ⛔ NOT evidence that a human declined permission.** Collapsing it into `NOT_AUTHORIZED` makes
+registry defects unauditable — they would be indistinguishable from ordinary denials in the record.
+
+`NOT_AUTHORIZED` vs `EFFECT_CLASSIFICATION_UNRESOLVED` cannot collapse **without creating false
+evidence**: the first asserts the act is known and authority insufficient; the second asserts the
+act is not yet known well enough to say what authority would suffice.
+
+### The pinned ordering
+
+```text
+1. classify
+2. verify capability contract
+3. derive policy obligations
+4. compare granted authority
+5. apply caller / request narrowing
+6. execute or refuse
+
+⛔ NOT:  permission supplied → try to decide whether that seems enough
+```
+
+⭐ **Request narrowing is step 5 — after authority comparison.** This is stronger than placing it
+earlier: the request cannot participate in obligation derivation or authority evaluation **even by
+timing**. It is a pure final veto.
+
+> *"That ordering may become one of the most consequential laws in the whole programme."*
+
+## D1 — Custody domains: `MEMBER_DATA` stays outside JARVIS jurisdiction · DIRECTION
+
+⛔ Do not create `custodyDomain = MEMBER_DATA` inside JARVIS **merely so JARVIS can say it is
+forbidden.** That still makes member data part of the operator's representational universe.
+
+```text
+JARVIS custody-domain vocabulary CONTAINS NO MEMBER_DATA DOMAIN
+```
+
+A capability requiring such reach therefore fails **before ordinary effect admission**, as
+**jurisdictional absence** — not as a policy flag.
+
+> **No authority object can grant JARVIS reach into a domain JARVIS does not possess.**
+
+This preserves the MAIA exclusion **structurally**. Falsifier owed, in the spirit of F16:
+`domain = MEMBER_DATA` + `authority = MAXIMAL` ⇒ **still impossible**.
+
+## D2 — Authorization expiry belongs to the canonical grant · DIRECTION
+
+```text
+AuthorityGrant { scope · effects · subject · issued_at · expires_at / consumption condition }
+```
+
+The invocation merely **presents or references** it. Same one-way rule:
+
+```text
+request may demand a SHORTER usable window
+⛔ request cannot extend the authority's canonical lifetime
+```
+
+⚠️ **Not yet decided:** whether authority is purely time-expiring, consumable, or both — different
+effect classes will probably require different lifetime semantics. Direction only:
+**the request cannot manufacture persistence of authority.**
+
+## D3 — `PARTIAL` is an outcome property, not an effect value · DIRECTION
+
+`PARTIAL` describes **execution completeness**, not effect identity. `observed_effect: PARTIAL` does
+not say what happened, and ⚠️ **launders epistemic uncertainty** — *"something happened, partly"* is
+dangerously close to a disguised `UNKNOWN`.
+
+```text
+observed_effect       known effect dimensions actually witnessed   (per axis)
+execution_completion  NONE | PARTIAL | COMPLETE
+```
+
+An effect dimension that cannot be established is `observed_effect.axis = UNKNOWN`, ⛔ never folded
+into `PARTIAL`. **Default ruling; worth falsifying before ratifying.**
+
+## C1 — CANDIDATE DERIVED LAW: one-way narrowing
+
+⚠️ **NOT CONSTITUTION.** Marked because it is *"showing up too consistently to be accidental."*
+
+```text
+request constraint           may only refuse more
+confirmation assertion       may only refuse more
+authorization expiry override may only shorten
+effect contract              may bound known classified effects · may not cure UNKNOWN
+```
+
+> **Untrusted or invocation-local inputs may narrow authority, but can never enlarge, create,
+> repair, or reinterpret authority.**
+
+Potentially governs: requested effects · confirmation · scope · duration · audience · destination ·
+budget · custody boundary.
+
+⛔ **Not elevated until the falsifiers earn it.**
+
+## F12 fixture — sequencing constraint
+
+⛔ **The test fixture must instantiate a ruled law, never quietly decide one.** The danger named:
+
+```text
+choose fixture → fixture implies ontology → ontology appears "proven" by test
+```
+
+Where F12 would depend on choosing between two plausible models, **run the independent falsifiers
+first**, then pin the fixture.
+
+```text
+F1–F14 → evidence → resolve remaining semantic questions → pin F12 fixture → complete adversarial set
+```
+
+— conditional on F15–F18 not themselves depending on the unresolved questions.
+
+## The pattern this establishes
+
+> ⭐ **Each layer is losing the ability to impersonate the layer above it. Classification cannot
+> pretend to be authority; authority cannot pretend to be jurisdiction; the request cannot pretend
+> to be either.**
