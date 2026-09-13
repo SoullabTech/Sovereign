@@ -19,6 +19,8 @@ M1  database/migrations/20260913000001_ask_authorization_acts.sql
 
 M2  database/migrations/20260913000002_disclosure_boundary_developmental_ask.sql
     exactly ONE boundary value added
+M2b database/migrations/20260913000003_disclosure_gesture_authorize_sections.sql
+    ⭐ RULED: `authorize_sections` · separate migration, ⛔ not folded into M2
 
 M3  lib/manuscript/ask/authorizationAct.ts
     mintAct · claimAct · recordCompletion · readAct
@@ -65,11 +67,27 @@ EXPIRY IS A PREDICATE     `expires_at` is unreachable once a consumption exists.
                              visible → AUTHORITY RESURRECTED
 ```
 
-⚠️ **ONE JUDGMENT CALL, FLAGGED.** Deletion cascading from the Work or the
-thread is permitted — once the Work is gone there is no Ask, no revision and no
-body, so nothing can be resurrected. Every other deletion path is refused by a
-**static guard rather than a trigger**, because a DELETE trigger strict enough to
-stop pruning would also break lawful Work deletion. ⭐ Founder attention invited.
+### ⭐ AMENDED 2026-09-13 — the judgment call was WRONG, and better than expected
+
+The first candidate refused non-cascade deletion with a **static guard**, on the
+reading that a DELETE trigger strict enough to stop pruning would also break
+lawful Work deletion. ⛔ That reading is withdrawn. PostgreSQL draws the
+distinction exactly:
+
+```text
+BEFORE DELETE on a child
+  parent still present  → direct / pruning DELETE → REFUSE
+  parent already gone   → lawful parent cascade   → ALLOW
+```
+
+So both tables now carry database guards, plus **BEFORE TRUNCATE refusals** —
+without which `TRUNCATE ask_authorization_consumptions` would bypass every
+row-level guard and resurrect every live authorization at once.
+
+⚠️ **G2's claim narrows accordingly**: it proves only that *ordinary repository
+code contains no deletion path*. ⛔ It no longer bears the constitutional
+guarantee alone. A row trigger cannot defeat the database owner and does not
+pretend to — privileged schema mutation stays governance territory.
 
 ## 4 · THE GUARDS, AND WHY THEY EXIST
 
@@ -79,10 +97,13 @@ nobody checks decays into prose**, so five guards check it:
 ```text
 G1  the act table declares none of: authorized · may_cross · consent ·
     section_id · section_ref · scope_kind
-G2  no DELETE on the substrate anywhere in lib/ app/ scripts/
+G2  no DELETE on the substrate in lib/ app/ scripts/   ⚠️ defence in depth only
 G3  the claim is ON CONFLICT DO NOTHING · no FOR UPDATE · no transaction()
 G4  completion_ref is not a foreign key · completed_at exists
 G5  M2 adds exactly one boundary value and touches no other vocabulary
+G6  M2b adds exactly one gesture value and touches no other vocabulary
+G7  both tables carry BEFORE DELETE + BEFORE TRUNCATE guards, and the DELETE
+    predicate is a PARENT-EXISTENCE test rather than a manifest or a flag
 ```
 
 ⭐ **Every scan strips comments first — the C21 lesson applied before it could
@@ -93,7 +114,7 @@ file for stating its own compliance.
 ## 5 · EVIDENCE
 
 ```text
-GUARDS                    5 / 5 pass
+GUARDS                    7 / 7 pass
 FROZEN TYPECHECK          PASS
 FROZEN MATRIX             LETHAL · DISCRIMINATING · reference clean
 FROZEN FILES vs 2255b60d  git diff --stat → EMPTY
@@ -106,15 +127,37 @@ the founder's run with real dependencies is the evidence of record.
 
 ## 6 · ⚠️⚠️ TWO THINGS OWED BEFORE THIS CAN BE USED
 
-### 6.1 · A gesture value is still missing
+### 6.1 · ⭐ CLOSED — the gesture is `authorize_sections`
 
-`context_disclosure_receipts.gesture` admits only
-`ask_maia · work_with_this · widen_focus`. The S3 act is **the member
-authorizing named sections**, which is none of them.
+> *The member explicitly authorized MAIA to read the named section set for this
+> single developmental Ask.*
 
-> ⛔ **M2 alone is NOT sufficient for a live crossing.** Adding the gesture
-> inside M2 would be exactly the accompanying vocabulary redesign that change was
-> separated to avoid. It is a separate governed act.
+⛔ It is **not** consent, standing permission, passage authority, or generic
+MAIA access. One gesture may yield N section-scoped receipts, each truthfully
+carrying it — **the gesture names the member's act, not the count of boundaries
+it caused.** Landed as its own migration (M2b), ⛔ not folded back into M2.
+
+### ⚠️ 6.1b · A COMPLETION-SEMANTIC DEFECT, FOUND IN REVIEW AND REPAIRED
+
+The first `recordCompletion()` carried `AND completed_at IS NULL`, so an
+already-completed row **never reached the monotonic trigger**. Three different
+situations therefore produced zero rows and were indistinguishable to a `void`
+return:
+
+```text
+same completion again          → 0 rows
+DIFFERENT completion           → 0 rows   ⛔ a contradiction, silently swallowed
+no consumption at all          → 0 rows
+```
+
+⭐ The safety invariant survived — no second completion was possible — **but the
+substrate did not truthfully distinguish the outcomes it claimed to
+distinguish.** Repaired: the predicate is dropped, `COALESCE` preserves the
+original timestamp, the trigger adjudicates, and the prior state is read in the
+same statement so one snapshot answers both questions. `recordCompletion()` now
+returns `recorded | already | conflict | no_consumption`.
+
+> ⛔ *Nothing happened* must never masquerade as *completion recorded.*
 
 ### 6.2 · The merge itself is a schema-deploy authorization
 
@@ -128,12 +171,18 @@ unrelated full deploy applies them*. **Do not merge ahead of W-A and W-B.**
 
 ```text
 CLASS-B FREEZE       INTACT @ 2255b60d · verified by diff, typecheck and matrix
-M1 · M2 · M3         CANDIDATE · non-canonical branch
-GUARDS               5 / 5
-GESTURE VALUE        ⚠️ OWED · separate governed act
+M1 · M2 · M2b · M3   CANDIDATE · non-canonical branch · AMENDED per review
+GUARDS               7 / 7
+GESTURE VALUE        ⭐ RULED `authorize_sections` · M2b landed
 W-A DB CONCURRENCY   OWED — independent connections racing one act
-W-B CRASH/RECOVERY   OWED — four cases: interrupted · lost response ·
-                     outcome deleted · unclaimed+expired
+W-B CRASH/RECOVERY   OWED · SIX cases (expanded by the review):
+                     1 claimed · died · no completion → interrupted, zero crossings
+                     2 completed · response lost → same completion identity
+                     3 completed · outcome deleted → completion fact survives
+                     4 unclaimed · expired → cannot claim, zero consumption
+                     5 delete custody → direct deletes REFUSED, lawful cascade removes both
+                     6 completion monotonicity → same idempotent · different REFUSED ·
+                       unclaimed cannot falsely report completion recorded
 ROUTE INTEGRATION    ⛔ NOT AUTHORIZED
 MERGE                ⛔ NOT AUTHORIZED — merge is schema-deploy authorization
 PRODUCTION           UNTOUCHED

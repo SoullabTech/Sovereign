@@ -23,6 +23,7 @@ import { join } from 'node:path';
 
 const M1 = 'database/migrations/20260913000001_ask_authorization_acts.sql';
 const M2 = 'database/migrations/20260913000002_disclosure_boundary_developmental_ask.sql';
+const M2B = 'database/migrations/20260913000003_disclosure_gesture_authorize_sections.sql';
 const CLAIMANT = 'lib/manuscript/ask/authorizationAct.ts';
 
 const stripSql = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ');
@@ -54,7 +55,13 @@ const G1: Guard = {
 
 const G2: Guard = {
   id: 'G2',
-  law: 'no pruning may delete these rows — a pruned consumption resurrects authority',
+  /**
+   * ⚠️ CLAIM NARROWED 2026-09-13. Deletion custody is now enforced by the §2b
+   * database triggers. This guard proves only that ORDINARY REPOSITORY CODE
+   * contains no deletion path — defence in depth, and ⛔ no longer the
+   * constitutional guarantee on its own.
+   */
+  law: 'ordinary repository code contains no deletion path (defence in depth)',
   run() {
     const roots = ['lib', 'app', 'scripts'];
     const hits: string[] = [];
@@ -118,7 +125,43 @@ const G5: Guard = {
   },
 };
 
-const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5];
+const G6: Guard = {
+  id: 'G6',
+  law: 'the gesture widening adds exactly one value and touches no other vocabulary',
+  run() {
+    const sql = stripSql(read(M2B));
+    const m = /gesture IN \(([\s\S]*?)\)/.exec(sql);
+    if (!m) return refuse('G6: the gesture CHECK could not be located');
+    const values = [...m[1]!.matchAll(/'([^']+)'/g)].map((x) => x[1]!);
+    if (values.length !== 4 || !values.includes('authorize_sections'))
+      refuse(`G6: expected the three existing gestures plus authorize_sections; saw ${values.join(' · ')}`);
+    for (const other of ['boundary', 'source_class', 'participation_basis', 'scope_kind', 'authorized_by'])
+      if (new RegExp(`ALTER[\\s\\S]{0,200}${other}`, 'i').test(sql))
+        refuse(`G6: the gesture migration also touches ${other}`);
+  },
+};
+
+const G7: Guard = {
+  id: 'G7',
+  law: 'deletion custody is enforced by the database, not by repository discipline',
+  run() {
+    const sql = stripSql(read(M1));
+    for (const t of ['ask_authorization_acts', 'ask_authorization_consumptions']) {
+      if (!new RegExp(`BEFORE DELETE ON ${t}`, 'i').test(sql))
+        refuse(`G7: ${t} has no BEFORE DELETE guard`);
+      if (!new RegExp(`BEFORE TRUNCATE ON ${t}`, 'i').test(sql))
+        refuse(`G7: ${t} has no BEFORE TRUNCATE refusal — TRUNCATE would bypass every row guard`);
+    }
+    // The predicate that separates pruning from a lawful cascade must be a
+    // PARENT-EXISTENCE test, not a manifest or a flag.
+    if (!/EXISTS \(SELECT 1 FROM ask_authorization_acts WHERE id = OLD\.act_id\)/i.test(sql))
+      refuse('G7: the consumption guard does not test for its parent act');
+    if (!/EXISTS \(SELECT 1 FROM member_manuscripts[\s\S]{0,200}EXISTS \(SELECT 1 FROM ask_threads/i.test(sql))
+      refuse('G7: the act guard does not test for both its Work and its thread');
+  },
+};
+
+const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5, G6, G7];
 
 let failed = 0;
 console.log('S3 M-PHASE SUBSTRATE GUARDS\n⛔ not part of the frozen Class-B suite\n');

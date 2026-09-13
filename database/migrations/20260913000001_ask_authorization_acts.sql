@@ -27,7 +27,14 @@
 BEGIN;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 1 · ACT IDENTITY — write-once. Coordinates and expiry. ⛔ NO permission.
+-- 1 · THE AUTHORIZATION OPPORTUNITY — write-once. Coordinates and expiry.
+--     ⛔ NO permission.
+--
+-- ⚠️ TERMINOLOGY, CORRECTED (founder, 2026-09-13). This row is minted at ACT 2,
+-- when the Ask reaches BODY_AUTHORITY_REQUIRED — which is BEFORE the member has
+-- done anything. So it is the identity of ONE SINGLE-USE AUTHORIZATION
+-- OPPORTUNITY, ⛔ never evidence that a member gesture has occurred. The
+-- consumption row below is the first durable fact that a human acted.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS ask_authorization_acts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -72,7 +79,9 @@ CREATE TRIGGER ask_authorization_acts_no_update
   FOR EACH ROW EXECUTE FUNCTION ask_authorization_acts_write_once();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2 · CONSUMPTION — created ONLY by the atomic claim. One per act.
+-- 2 · CONSUMPTION — created ONLY by the atomic claim. One per opportunity.
+--     ⭐ THE POSITIVE DURABLE FACT THAT THE MEMBER'S ACT-3 GESTURE CLAIMED THAT
+--       OPPORTUNITY. Before this row exists, no human has acted.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS ask_authorization_consumptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,6 +147,76 @@ CREATE TRIGGER ask_authorization_consumptions_monotonic_trigger
   FOR EACH ROW EXECUTE FUNCTION ask_authorization_consumptions_monotonic();
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 2b · DELETION CUSTODY — ENFORCED BY THE DATABASE, not by repository discipline.
+--
+-- ⭐ The distinction PostgreSQL can actually draw: in a BEFORE DELETE trigger on
+-- a child, a lawful PARENT CASCADE has already removed the parent, while a
+-- direct or pruning DELETE has not. So "refuse pruning" and "preserve lawful
+-- Work/thread cascade" are not in tension — they are one predicate.
+--
+--   DELETE consumption · parent act still present  → direct/pruning → REFUSE
+--                      · parent act already gone   → act cascade    → ALLOW
+--   DELETE act · Work AND thread still present     → direct         → REFUSE
+--              · Work OR thread already gone       → parent cascade → ALLOW
+--
+-- ⛔ AND BEFORE TRUNCATE ON BOTH, or `TRUNCATE ask_authorization_consumptions`
+-- would bypass every row-level guard and resurrect every live opportunity at once.
+--
+-- ⚠️ A row trigger cannot defeat the database owner, and does not pretend to.
+-- Privileged schema mutation stays governance territory.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION ask_authorization_consumptions_governed_delete() RETURNS trigger AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM ask_authorization_acts WHERE id = OLD.act_id) THEN
+    RAISE EXCEPTION
+      '[S3] DELETE refused — a consumption may be removed only by the cascade of its own act; deleting it directly would resurrect the authorization (act %)',
+      OLD.act_id;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS ask_authorization_consumptions_governed_delete_trigger ON ask_authorization_consumptions;
+CREATE TRIGGER ask_authorization_consumptions_governed_delete_trigger
+  BEFORE DELETE ON ask_authorization_consumptions
+  FOR EACH ROW EXECUTE FUNCTION ask_authorization_consumptions_governed_delete();
+
+CREATE OR REPLACE FUNCTION ask_authorization_acts_governed_delete() RETURNS trigger AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM member_manuscripts WHERE id = OLD.manuscript_id)
+     AND EXISTS (SELECT 1 FROM ask_threads WHERE id = OLD.thread_id) THEN
+    RAISE EXCEPTION
+      '[S3] DELETE refused — an authorization opportunity may be removed only by the cascade of its Work or its thread (act %)',
+      OLD.id;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS ask_authorization_acts_governed_delete_trigger ON ask_authorization_acts;
+CREATE TRIGGER ask_authorization_acts_governed_delete_trigger
+  BEFORE DELETE ON ask_authorization_acts
+  FOR EACH ROW EXECUTE FUNCTION ask_authorization_acts_governed_delete();
+
+CREATE OR REPLACE FUNCTION ask_authorization_refuse_truncate() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION
+    '[S3] TRUNCATE refused on % — it would bypass every row-level deletion guard and resurrect every live authorization at once',
+    TG_TABLE_NAME;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS ask_authorization_acts_no_truncate ON ask_authorization_acts;
+CREATE TRIGGER ask_authorization_acts_no_truncate
+  BEFORE TRUNCATE ON ask_authorization_acts
+  FOR EACH STATEMENT EXECUTE FUNCTION ask_authorization_refuse_truncate();
+
+DROP TRIGGER IF EXISTS ask_authorization_consumptions_no_truncate ON ask_authorization_consumptions;
+CREATE TRIGGER ask_authorization_consumptions_no_truncate
+  BEFORE TRUNCATE ON ask_authorization_consumptions
+  FOR EACH STATEMENT EXECUTE FUNCTION ask_authorization_refuse_truncate();
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 3 · DERIVED STATE. ⛔ There is no status column, and there must never be one.
 --
 --   act, no consumption            → PENDING      may compete for the claim
@@ -156,12 +235,11 @@ CREATE TRIGGER ask_authorization_consumptions_monotonic_trigger
 --   is unreachable once a consumption exists. Any future retention policy is a
 --   separately governed custody operation that must preserve non-resurrection.
 --
---   ⚠️ ONE JUDGMENT CALL, FLAGGED FOR FOUNDER ATTENTION: deletion cascading from
---   the Work (or from the member's own thread) is PERMITTED here, because once
---   the Work is gone there is no Ask, no revision and no body to cross, so no
---   authority can be resurrected. Every OTHER deletion path is refused by a
---   static guard rather than by a trigger — a DELETE trigger strict enough to
---   stop pruning would also break lawful Work deletion.
+--   ⭐ AMENDED 2026-09-13: this is now enforced by the §2b triggers, not by
+--   repository discipline. The earlier reading — that a DELETE trigger strict
+--   enough to stop pruning would also break lawful Work deletion — was WRONG:
+--   a child's BEFORE DELETE trigger can see whether its parent still exists, and
+--   that single predicate separates pruning from cascade exactly.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 COMMENT ON TABLE ask_authorization_acts IS

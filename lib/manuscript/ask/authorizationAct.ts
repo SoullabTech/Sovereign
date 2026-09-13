@@ -61,7 +61,13 @@ export type ClaimOutcome =
   /** No such act for this member, or the opportunity to claim it has passed. */
   | { readonly kind: 'unclaimable'; readonly reason: 'unknown_act' | 'expired' };
 
-/** ACT 2 — mint the identity of one paused Ask's authorization act. */
+/**
+ * ACT 2 — mint the identity of ONE SINGLE-USE AUTHORIZATION OPPORTUNITY.
+ *
+ * ⚠️ This runs at `BODY_AUTHORITY_REQUIRED`, BEFORE the member has done
+ * anything. ⛔ The row is therefore never evidence that a gesture occurred; the
+ * consumption is the first durable fact that a human acted.
+ */
 export async function mintAct(
   c: ActCoordinates, ttlMinutes: number,
 ): Promise<ActRef> {
@@ -130,24 +136,73 @@ export async function claimAct(
 }
 
 /**
- * Record the completion of a claimed act.
+ * The outcomes recording a completion can actually have.
+ *
+ * ⛔ `void` let all four look alike. *Nothing happened* must never masquerade as
+ * *completion recorded.*
+ */
+export type CompletionOutcome =
+  /** First completion for this consumption. */
+  | { readonly kind: 'recorded'; readonly completedAt: Date; readonly completionRef: string }
+  /** The same completion again — idempotent, and the ORIGINAL `completedAt` stands. */
+  | { readonly kind: 'already'; readonly completedAt: Date; readonly completionRef: string }
+  /** A DIFFERENT completion was offered. ⛔ Refused: a second completion is a second crossing. */
+  | { readonly kind: 'conflict' }
+  /** No consumption exists — the opportunity was never claimed, or is unknown. */
+  | { readonly kind: 'no_consumption' };
+
+/** The trigger's refusal, matched on its own marker. Coupled to the migration by design. */
+const CONFLICT = /\[S3\] a completion identity may not be replaced/;
+
+/**
+ * Record the completion of a claimed opportunity.
  *
  * ⭐ `completionRef` identifies the completed EXECUTION. ⛔ Never answer text,
  * never a digest of it: two runs of cognition can produce different words from
  * the same authority, so textual equivalence is neither necessary nor
- * sufficient. Re-recording the same completion is a no-op at the trigger;
- * recording a different one is refused, because a second completion would be a
- * second crossing.
+ * sufficient.
+ *
+ * ⚠️ THE UPDATE DELIBERATELY HAS NO `completed_at IS NULL` PREDICATE. With one,
+ * an already-completed row never reached the monotonic trigger, so a repeat, a
+ * CONFLICTING completion and an unclaimed act all produced zero rows and were
+ * indistinguishable. `COALESCE` preserves the original timestamp; the trigger
+ * decides whether a second completion is the same one or a contradiction.
+ *
+ * The prior state is read in the same statement, so one snapshot answers both
+ * "what is recorded now" and "was it already recorded".
  */
 export async function recordCompletion(
   ref: ActRef, completionRef: string,
-): Promise<void> {
-  await query(
-    `UPDATE ask_authorization_consumptions
-        SET completed_at = NOW(), completion_ref = $2
-      WHERE act_id = $1 AND completed_at IS NULL`,
-    [ref, completionRef],
-  );
+): Promise<CompletionOutcome> {
+  try {
+    const r = await query<{
+      completed_at: Date; completion_ref: string; was_completed: boolean;
+    }>(
+      `WITH prior AS (
+         SELECT act_id, completed_at IS NOT NULL AS was_completed
+           FROM ask_authorization_consumptions WHERE act_id = $1
+       ), upd AS (
+         UPDATE ask_authorization_consumptions
+            SET completed_at = COALESCE(completed_at, NOW()), completion_ref = $2
+          WHERE act_id = $1
+        RETURNING act_id, completed_at, completion_ref
+       )
+       SELECT upd.completed_at, upd.completion_ref, prior.was_completed
+         FROM upd JOIN prior USING (act_id)`,
+      [ref, completionRef],
+    );
+
+    const row = r.rows[0];
+    if (!row) return { kind: 'no_consumption' };
+    return {
+      kind: row.was_completed ? 'already' : 'recorded',
+      completedAt: row.completed_at,
+      completionRef: row.completion_ref,
+    };
+  } catch (e) {
+    if (e instanceof Error && CONFLICT.test(e.message)) return { kind: 'conflict' };
+    throw e;
+  }
 }
 
 /**
