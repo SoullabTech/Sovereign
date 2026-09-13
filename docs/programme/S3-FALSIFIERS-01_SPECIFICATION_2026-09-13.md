@@ -59,6 +59,24 @@ CLASS B   falsifies A PROTOCOL NOT YET BUILT
 
 ⛔ **Do not report a Class B red against canonical as "reproduced the defect".**
 
+### ⭐ RATIFIED — founder, 2026-09-13
+
+The split is law for this lane. ⭐ **The defeat candidates are what make the
+suite architectural rather than ceremonial** — each corresponds to something a
+competent engineer could quite reasonably build:
+
+```text
+request-id idempotency
+read-before-write
+prose equivalence
+per-section consumption
+regeneration instead of recovery
+"no completion" read as "permission remains"
+client-carried authorization
+```
+
+⛔ Without the split, *"RED first"* degrades into ritual rather than evidence.
+
 ---
 
 ## 2 · THE FALSIFIERS
@@ -181,7 +199,14 @@ the half-authorized permission §10.6a names and forbids: *never persist a
 half-authorized permission waiting to be reused.*
 
 ⭐ Note the asymmetry S3-F6 and S3-F7 pin together: **completion is recoverable;
-incompletion is not resumable.**
+incompletion is not resumable BY REPLAY OF THE MEMBER ACT** (§15 Ruling 6
+qualification, founder 2026-09-13).
+
+⚠️ **S3-F7 asserts about the member's replay path only.** It must NOT be written
+so broadly that it forbids a future, separately governed privileged recovery
+protocol — operator repair, deterministic continuation from a durable execution
+record, reconciliation. ⛔ The prohibition is on a mechanism that turns a retry
+into consent, never on recovery as such.
 
 ### ⭐ S3-F8 · KNOWN-BAD DEVELOPMENTAL PATH — THE ONLY CLASS A FALSIFIER
 
@@ -206,6 +231,11 @@ caller in the repository — Focus, not this route.
 ⛔ **If S3-F8 does not go red against canonical, stop.** Either the assertion is
 wrong or the route moved, and in both cases the rest of the set is built on a
 false premise.
+
+⭐ **Its witness is specified separately and strictly** —
+`S3-F8-WITNESS-01_PROCEDURE_2026-09-13.md`: three outcomes, ten stop conditions,
+two independent instruments, and the null-`revisionContent` trap that would
+otherwise let an empty fixture impersonate a refusal.
 
 ### S3-F9 · SERVER DERIVATION
 
@@ -311,9 +341,13 @@ RULINGS CARRIED           §15 Ruling 5 (cardinality) · Ruling 6 (completion)
                           · Ruling 7 (reuse the law, not the object)
 TERMINOLOGY               §10.6a "receipt" → "consumption", amended in place
 
-NEXT ACT                  RUN · S3-F8 against canonical · must go RED
-                          then author Class B falsifiers WITH their defeat
-                          candidates, and prove each defeat candidate fails
+SPLIT                     ⭐ RATIFIED · founder 2026-09-13
+NEXT ACT                  S3-F8-WITNESS-01 on a disposable shadow · UNSPENT
+                          → EXPECTED RED · or STOP · or INSTRUMENT FAILURE
+                          ⛔ a canonical block is NOT a green light — it stops
+                            the lane for reconciliation
+                          only then Class B falsifiers, each proved to kill
+                          its defeat candidate
 
 TEST CODE                 NOT AUTHORED
 STORAGE DESIGN            NOT OPENED

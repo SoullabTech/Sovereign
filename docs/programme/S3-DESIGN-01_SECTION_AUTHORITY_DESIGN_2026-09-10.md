@@ -1326,6 +1326,27 @@ Replay has exactly three lawful outcomes, and no fourth:
 request-id comparison. Not by prose comparison. Not by "it looks like the same
 question". Not because the first response was lost on the network.
 
+#### ⭐ QUALIFICATION — founder, 2026-09-13 · THE SCOPE OF THE INCOMPLETION LAW
+
+The law is **not** *"incomplete work can never be continued by any mechanism."*
+It is narrower, and the narrowness is deliberate:
+
+> **Incompletion is not resumable BY REPLAY OF THE MEMBER ACT.**
+
+```text
+member replay
+  claimed + incomplete   →  STOP / interrupted · a fresh member act is required
+
+privileged recovery protocol (⛔ NOT DESIGNED HERE, separately governed)
+  may inspect · may reconcile · may continue from a durable execution record
+  ⛔ may NEVER reinterpret a replay as authorization
+  ⛔ may NEVER mint new MEMBER authority
+```
+
+⭐ S3 forecloses the replay path, not the existence of operator repair,
+deterministic continuation, or reconciliation. **The prohibition is on a
+mechanism that turns a retry into consent — not on recovery as such.**
+
 ### Ruling 7 — REUSE THE LAW, NOT THE OBJECT
 
 The census found the right **pattern family** in `context_disclosure_receipts`:
@@ -1345,10 +1366,39 @@ are downstream and section-specific. The new substrate inherits the law.
 
 ```text
 7  pendingAskRef substrate census        ✅ CLOSED 2026-09-13
-8  FALSIFIER SPECIFICATION               ← current act
-9  run against KNOWN-BAD · prove RED for the intended reasons
-10 only then design storage / claim implementation
+8  falsifier specification               ✅ DELIVERED 2026-09-13
+9  ⭐ S3-F8 WITNESS · prove the intended RED   ← current act · UNSPENT
+10 only then open primitive / state-transition design
 ```
+
+### ⭐ DIRECTION FOR STEP 10 — recorded, ⛔ NOT OPENED
+
+⛔ **The first implementation artifact is NOT a table schema.** It is the state
+transition law, and the forbidden transitions written beside it:
+
+```text
+PENDING
+   │ atomic claim
+   ▼
+CLAIMED
+   │ canonical completion recorded
+   ▼
+COMPLETED
+
+FORBIDDEN
+  CLAIMED   → CLAIMED      via replay
+  COMPLETED → CLAIMED      via replay
+  COMPLETED → new result   via retry
+  request_id → authority
+  prose      → identity
+  client assertion → section authority
+```
+
+⭐ Then S3-F1–F7 / F9 / F10 attack candidate implementations **of that machine**.
+*The lane is no longer guessing what `pendingAskRef` should look like; it is
+establishing what no implementation of it will ever be allowed to mean.*
+
+⛔ Storage design remains CLOSED. This paragraph is direction, not authorization.
 
 ---
 
@@ -1372,8 +1422,12 @@ SUBSTRATE CENSUS          ✅ CLOSED 2026-09-13 — no existing object enforces
                           §10.6a; a dedicated opaque ref is JUSTIFIED and
                           NOT YET IMPLEMENTED
 
-NEXT ACT                  FALSIFIER SPECIFICATION (§15) — then run against
-                          known-bad and prove RED for the intended reasons
+FALSIFIER SPECIFICATION   ✅ DELIVERED 2026-09-13 · S3-F1…S3-F10
+                          Class A / Class B split RATIFIED (founder)
+
+NEXT ACT                  S3-F8 WITNESS on a disposable shadow · UNSPENT
+                          → prove the INTENDED red, or STOP
+STORAGE DESIGN            CLOSED · §15 direction: transition law before schema
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
                           BEFORE repair implementation
