@@ -198,14 +198,26 @@ real `MicSession`, starts it, asserts it is listening, simulates the interruptio
 expect(session).toBeDefined();
 ```
 
-**It cannot fail if pause is absent, broken, or inverted.** The comment says so in the file. This is
-the founder's named anti-pattern in its purest form — and it is the *"read the test name"* trap
-materialized in the repository: the name claims a boundary the body never approaches.
+⚠️ **Precision (founder correction, 2026-09-13).** An earlier wording here — *"a test that cannot
+fail"* — was too broad: this test can still fail if setup or event handling throws. **What cannot
+fail as a function of the claimed pause behavior is its decisive assertion.** The exact finding is:
 
-*"should handle Bluetooth handoff"* is weaker than it appears for a different reason: after
-dispatching `devicechange` it asserts `session.isListening()` is `true`, which is **also what a
-complete no-op produces** — the session was already listening. The assertion can fail only if the
-event *stops* listening, the opposite of the claim.
+> **The assertion cannot discriminate the named behavior.**
+
+That separates *a useless behavioral oracle* from *an unexecutable test*; this is the former. The
+comment states the gap in the file itself. It is the *"read the test name"* trap materialized in the
+repository: the name claims a boundary the body never approaches.
+
+*"should handle Bluetooth handoff"* is **no-op compatible**:
+
+```text
+claimed        Bluetooth handoff is handled
+asserted       isListening() remains true after `devicechange`
+counterexample the handler does nothing at all → still true → passes
+```
+
+It executes real code, and a no-op satisfies the supposed behavioral proof. The assertion can fail
+only if the event *stops* listening — the opposite of the claim.
 
 ⚠️ **Scoped precisely, not generalized:** only 1 of 31 `expect(...)` calls in that file is a
 `toBeDefined`/`toBeTruthy` tautology. **The file is not condemned; two named tests are.** ⛔ Not
@@ -237,5 +249,118 @@ stayed at `NOT SURVEYED` despite located, executing, passing tests. **125 green 
 promotions**, which is the correct result when the suites decide properties other than the ones
 claimed.
 
-> *The first pass found a gate that can be green while the defect returns. The second found a test
-> that cannot fail at all. Both were passing.*
+> *The first pass found a guard that can stay green while the defect returns. The second found an
+> assertion that stays green even when the named behavior is replaced by no behavior at all. Both
+> suites were passing.*
+>
+> **That is exactly why *"tests passed"* and *"the boundary is protected"* must remain different
+> statements.**
+
+---
+
+# U1 — THIRD PASS · remaining candidates · **U1 COMPLETE**
+
+**Authorized:** founder ruling 2026-09-13 (U1 completion). **SHA:** `7f52f587`. **Canary: 2/3.**
+
+## 12 · The decisiveness criterion, as applied
+
+Six questions per row (founder, 2026-09-13):
+
+```text
+1  What does the row claim?
+2  What property does the assertion actually decide?
+3  Does it execute real behavior, or inspect source?
+4  Would a no-op implementation still pass?
+5  Would an inversion of the claimed boundary fail?
+6  Has the qualifying test actually run on the named SHA?
+```
+
+⛔ **Conditions, not a taxonomy.** A behavioral test is then **no-op compatible**, **wrong grain**, or
+**decisive**; only the last can support a row. ⛔ No further axis is introduced — the survey did not
+need one.
+
+## 13 · ⚠️ A8's candidate was spurious — my own mapping corrected
+
+`webSpeechLifecycle` was listed as A8's candidate (*"a message delivered in both channels appears
+once, not twice"*). **It is not.** `grep -ni 'dedup|duplicate'` returns **zero matches in both the
+test and the module**; the original keyword sweep matched `idempot` — from *"attachDeviceChange is
+idempotent (no competing listeners)"*, which is about listener attachment, not message duplication.
+
+⛔ **A8 has no located candidate.** A candidate list built by keyword grep produced one false
+positive out of twelve; **that is the cost of naming candidates from names**, and it is the same
+error class the ladder exists to prevent, one level up.
+
+⭐ **Keep the three propositions separate** (founder, before reading): *duplicate detected* ≠
+*duplicate prevented* ≠ *exactly-once state transition*. Nothing in this survey establishes any of
+the three.
+
+## 14 · What `webSpeechLifecycle` actually is — the strongest suite found
+
+⭐ It carries **an inversion performed, not described**: *"control: the OLD reuse pattern zombies
+within a few turns (documents the bug)"* — the same discipline as A1's ⛔ probes, in a behavioral
+suite. Its other assertions are boundary-precise: *drops events from a superseded instance so they
+cannot mutate current state* · *an old instance restarted after a newer one exists cannot affect the
+session* · *discard() detaches handlers and aborts, so the instance emits nothing further* ·
+*devicechange tears down the live instance and returns to a recoverable IDLE* · *15 turns, including
+injected aborts, errors, and a device change mid-run*.
+
+⛔ **It still does not discharge A7.** It decides **recognition-instance lifecycle** — that a
+superseded STT instance cannot mutate current state. A7 claims **conversation continuity** — that a
+reconnect resumes the same conversation rather than splitting it. Adjacent, genuinely strong, and a
+different object. **Wrong grain, not weak evidence.**
+
+`rapidEndPolicy` is likewise decisive and boundary-precise — *an epoch exactly at the window is not
+rapid* · *one millisecond under the window is rapid* · *threshold is greater than one — one abort is
+never a loop* — and decides **restart-loop detection**, not B3's *trailing words survive*.
+
+## 15 · Finding C — `should configure iOS audio background mode`
+
+```js
+const requiredCapabilities = ['audio', 'fetch'];
+expect(requiredCapabilities).toContain('audio');
+```
+
+The array is defined three lines above the assertion. **The test touches no application code, reads
+no `Info.plist`, and would pass in an empty repository** — stricter than Finding A, where at least
+`MicSession` is exercised. B5 therefore joins C1–C4: ⛔ **NOT `TEST PRESENT`**.
+
+⚠️ **The defect is per-describe-block, not per-file.** *Battery Management* and *Wake Word False
+Positives* assert on real returned values and **do** discriminate. *Interruption Handling* and
+*Background Mode Compliance* are the two blocks at fault. Handed over:
+`docs/programme/UARE-01_MOBILE_ROBUSTNESS_VOICE_LANE_HANDOFF_2026-09-13.md`.
+
+## 16 · The matrix does not descend to meet the tests
+
+Founder, 2026-09-13 — recorded because it is the exact temptation the grain mismatch creates:
+
+> Renaming a row to the property its test happens to decide — *"buffer survives"* instead of *"the
+> same conversation resumes"* — would let **the instrument quietly redefine the product obligation
+> until the existing tests covered it.** A different but related form of evidence capture.
+
+```text
+ROW CLAIM               remains stable
+NARROWER PROPERTY       recorded beneath it
+COVERAGE                remains incomplete
+```
+
+**The matrix describes what matters. Tests earn their way up to it; the matrix does not descend to
+meet the tests.** ⛔ No row was reworded in this survey.
+
+## 17 · U1 final standing
+
+| | |
+| --- | --- |
+| Suites executed | 9 · **160 tests · all passing** on `36374edb` / `7f52f587` (docs-only delta) |
+| Promotions | **A1 `TEST PASSING`** · **A2 `TEST PASSING`, narrowed** — and nothing else |
+| A4 | `TEST PASSING — LEXICAL GUARD ONLY · BEHAVIORAL BOUNDARY NOT ESTABLISHED` |
+| Not `TEST PRESENT` (located · executed · non-deciding) | B5 · C1–C4 |
+| Wrong grain (decisive, narrower than the row) | A7 · B3 · D1 |
+| No candidate located | A6 · A8 · A9 · B1 (code only) · B2 · B4 · D2 · D3 |
+| Reached `GATED` | ⛔ **none** |
+| Canary | **2 / 3** |
+
+⛔ **U1 is complete and the coverage column is mostly still empty.** That is the honest result: nine
+passing suites, 160 green tests, and two rows earned. ⛔ No source repaired · no `[O]` · no product
+witnessed · no requirement authored · **U2 not authorized.**
+
+> *Three instrument defects, three lanes of evidence, zero rows talked into coverage.*

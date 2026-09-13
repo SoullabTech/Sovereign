@@ -88,6 +88,15 @@ implementation inspection → named test → decisive assertion at the boundary 
 only if an actual U1 finding promotes implementation appearance into stronger standing without the
 crossing.
 
+⭐ **DECISIVENESS IS A CONDITION, NOT AN AXIS** (founder, 2026-09-13): *a test cannot discharge a
+behavioral row merely because it executes real modules* — **would it fail if the handling were replaced
+with a no-op, or the boundary inverted?** Behavioral tests are then **no-op compatible** · **wrong
+grain** · **decisive**; only the last supports a row.
+
+⭐ **THE MATRIX DOES NOT DESCEND TO MEET THE TESTS.** ⛔ Never reword a row to the property its test
+happens to decide — that lets the instrument quietly redefine the product obligation until existing
+tests cover it. **Row claim stable · narrower property recorded beneath · coverage stays incomplete.**
+
 ⭐ **GUARD KIND is a second axis** (charter §5.1): a **lexical/source** guard fails on source drift; a
 **behavioral** guard fails on wrong behaviour. ⛔ **A lexical guard can never discharge a behavioral
 row.** Every row below carries its kind where established.
@@ -134,7 +143,7 @@ from them; ⛔ do not count them.
 | A5 | The text emitted and the transcript persisted are the same guarded value. | **TEST PRESENT** — `__tests__/r2-voice-continuity-contract.test.ts`; decisive against deletion at two named sites only |
 | A6 | Switching text ↔ voice mid-conversation produces one continuous conversation, not two. | **NOT SURVEYED** |
 | A7 | A reconnect resumes the same conversation; it never splits it into a second one. | **NOT SURVEYED** |
-| A8 | A message delivered in both channels appears once, not twice. | **NOT SURVEYED** |
+| A8 | A message delivered in both channels appears once, not twice. | **NOT SURVEYED** — ⚠️ its earlier candidate (`webSpeechLifecycle`) is **withdrawn**: zero `dedup`/`duplicate` matches in test or module; the keyword sweep had matched `idempot` from listener attachment. ⛔ **No candidate located.** Keep separate: *duplicate detected* ≠ *duplicate prevented* ≠ *exactly-once transition* |
 | A9 | The second turn works. Replies do not stop after the first. | **NOT SURVEYED** |
 
 ### Class B — capture and transport
@@ -153,7 +162,7 @@ from them; ⛔ do not count them.
 | # | Condition | Coverage |
 | --- | --- | --- |
 | C1 | Audio routes to the connected device (car, headset), not the handset speaker. | **NOT SURVEYED** |
-| — | *(C-class note)* `lib/voice/__tests__/mobile.robustness.test.ts` covers incoming call · Bluetooth handoff · resume · iOS background audio, executes real modules, and **passes**. 🔴 Two of its named tests **do not decide**: *"should pause on incoming call"* ends at `expect(session).toBeDefined()` with the comment *"In real implementation, would pause/resume"*; *"should handle Bluetooth handoff"* asserts a state a complete no-op also produces. ⛔ **NOT `TEST PRESENT`** — survey §9 | |
+| — | *(C-class note)* `lib/voice/__tests__/mobile.robustness.test.ts` covers incoming call · Bluetooth handoff · resume · iOS background audio, executes real modules, and **passes**. 🔴 **Three** of its named tests do not decide: *"pause on incoming call"* ends at `expect(session).toBeDefined()` (**the assertion cannot discriminate the named behavior** — it can still fail on a throw, so not *"cannot fail"*); *"Bluetooth handoff"* is **no-op compatible**; *"iOS audio background mode"* asserts over a literal array defined three lines above and **would pass in an empty repository**. ⚠️ Per-describe-block, not per-file: *Battery Management* and *Wake Word False Positives* **do** discriminate. ⛔ **NOT `TEST PRESENT`** — survey §9, §15; handed over: `UARE-01_MOBILE_ROBUSTNESS_VOICE_LANE_HANDOFF_2026-09-13.md` | |
 | C2 | Headphone disconnect is handled without dumping audio to speaker mid-turn. | **NOT SURVEYED** |
 | C3 | An incoming phone call suspends cleanly. | **NOT SURVEYED** |
 | C4 | The session resumes correctly after the call ends. | **NOT SURVEYED** |

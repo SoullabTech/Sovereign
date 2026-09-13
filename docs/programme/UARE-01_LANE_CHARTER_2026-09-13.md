@@ -316,7 +316,9 @@ CANDIDATE CANARY   intra-document authority promotion (S0.1) - 2 occurrences - 3
 U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspection
 U1 FIRST PASS      RUN on 36374edb - A1 TEST PASSING - A4 NOT DECISIVE - nothing GATED
 U1 SECOND PASS     RUN on 7f52f587 - 125 tests green - ZERO promotions
-A4 HANDOFF         AUTHORIZED AND SENT - repair NOT authorized by this lane
+U1 COMPLETE        9 suites - 160 tests green - TWO rows earned - nothing GATED
+HANDOFFS SENT      A4 guard - mobile.robustness x3 - repair NOT authorized by this lane
+MATRIX RULE        the matrix does not descend to meet the tests
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
 FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
 
@@ -329,7 +331,7 @@ NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIR
 | Step | Name | Output | Authorization |
 | --- | --- | --- | --- |
 | **U0** | **INTAKE** | The founder's first pass, classified by evidence class. | ✅ done — this commit |
-| **U1** | **MAIA-SIDE COVERAGE SURVEY** — ✅ first pass RUN 2026-09-13 on `36374edb`, result recorded in `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md` | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
+| **U1** | **MAIA-SIDE COVERAGE SURVEY** — ✅ **COMPLETE** 2026-09-13 (three passes, `36374edb`/`7f52f587`), result in `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md` | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
 | **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **requires a founder act** — see §8 |
 | **U3** | **DISCRIMINATION PASS** | Every finding classified `MODEL-OF-ME` / `OTHER-WHO-KNOWS-ME` / neutral-infrastructure. Neutral-infrastructure findings are the only ones eligible to become candidate design inputs without a doctrinal question attached. | ⛔ requires U1; U2 for [O]-dependent rows |
 | **U4** | **QUESTION HANDOFF** | One docket per owning lane (Voice · Anamnesis · Jarvis · Practitioner Studio · Writer's Studio), each a *question*, never a recommendation. | ⛔ founder ruling on which dockets open |
