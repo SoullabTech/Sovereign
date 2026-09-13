@@ -193,3 +193,52 @@ Lesson carried into the authorized run: the device must be awake and unlocked be
 ### §8.3 The authorized Stage B — procedure (nothing else changes)
 
 `k00-reinstall.sh` is the only reinstall path and writes the four artefacts the ruling asks for (dylib UUID before install · codesign · install with new sequence · post-install process check). Then one batch of 30, Mode L, on the instrument at `45bc66964`+, no reinstall inside it, all 30 finished. The ledger this produces is the first that can be read as Stage B.
+
+---
+
+## §9 THE AUTHORIZED STAGE B — `STAGE-B-20260913T145034Z` — EXECUTED, 30 of 30 finished, VERIFIED here
+
+### §9.1 Boundary (`reinstall-20260913T145025Z.txt`, performed after the §8 ruling)
+
+| ruling step | evidence | verdict |
+|---|---|---|
+| 1 reinstall the exact P5-B0 artifact | local product `VoiceKernelHarness.app`, codesign `life.soullab.voicekernel.k00` / `ZVK2X646Z2` | same signed bytes |
+| 2 dylib `CC0D3604-7902-373E-A2BB-2C093D9BF804` | `UUID: CC0D3604-7902-373E-A2BB-2C093D9BF804 (arm64)` read BEFORE install | MATCH |
+| 3 harness process absent | `(no VoiceKernelHarness process)` after install | ABSENT |
+| 4 new ledger / timestamp | batch started 14:50:35Z, 10 s after the install (seq **5208**, container `E0298249-…`); `last reinstall: 20260913T145025Z` in the ledger header | new boundary, zero launches before sample 1 |
+| 5 30 cold VP-ON, Mode L, repaired driver, no reinstall inside | `k00-driver-batch.sh STAGE-B 30 --mode L` on `6cfa331f7`; no `install app` in the batch | as ruled |
+| 6 finish all 30 regardless | 30 rows, batch complete 15:09:38Z (19 min) | finished |
+
+### §9.2 Result — 28 valid audio samples · 2 infrastructure rows
+
+| class | count |
+|---|---|
+| gen-1 listen | **15** |
+| failure then recovery | **10** (listening in gen 3–8, 3.8–13.8 s) |
+| failure then degradation | **1** |
+| other observed shape | **2** (still recovering at export, gen 8) |
+| DRIVER/INFRASTRUCTURE FAILURE | 2 (samples 1–2: `runner could not enable automation mode` — the device was not yet automatable when the batch began; the harness was never launched, so no organism event was lost; same shape as attempt 3's samples 1–4) |
+
+Sequence `--FFFFLFLFLLFLLLOFLLFLFFLLLLOL`. Verified here for all 28 journals: SHA-256 as ledgered · cold launch (`didBecomeActive` first, generation 0) · 13-step P5-B0 trace (no `input_format_before_vp`) · VP ON (`vp_enable_return readBack true`) · exactly one §3 0 Hz refusal per failed entry (13 refusals across 13 failures) · 0 media-services resets · 0 interruptions · max generation 8. Gen-1 listens landed at 409–441 ms after Enter. Recoveries: gen 3 ×2 (3.8 s) · gen 4 ×2 (6.8 s) · gen 5 (4.0 s) · gen 6 ×2 (6.7 / 12.3 s) · gen 7 (7.9 s) · gen 8 ×2 (4.0 / 13.8 s). The one degradation and the two still-recovering rows are K00-03 failures bounded by the existing policy; nothing looped, nothing died, no crash report (not re-read this session; no death has been seen since run 1).
+
+### §9.3 A beside B — the declared comparison, never pooled
+
+| | Stage A `…183944Z` (same install, seq 4224) | Stage B `…145034Z` (identical reinstall, seq 5208) |
+|---|---|---|
+| valid samples | 29 | 28 |
+| gen-1 listen | 14 | 15 |
+| failure then recovery | 9 | 10 |
+| failure then degradation | 6 | 1 |
+| other observed shape (recovering at export) | 0 | 2 |
+| infrastructure rows | 1 (driver terminate) | 2 (device not automatable at start) |
+| gen-1 listen latency | 419–517 ms (calibration + A) | 409–441 ms |
+| max generation | 7 | 8 |
+| refusals = failures | 15 = 15 | 13 = 13 |
+
+Read, descriptively: on both installs roughly half of the VP-ON cold starts took at generation 1 (14 of 29; 15 of 28) and every failure had the same shape. The reinstall did not change whether gen-1 takes. What differs is the tail of the failures: on A, 6 of 15 failures exhausted the budget inside the hold; on B, 1 of 13 did, and 2 more were still inside the budget at the 16 s export (generation 8 reached; had the hold been longer they would have resolved to listening or `budget_exhausted`). With N=30 per stratum that difference is not attributed to anything, and this record claims nothing from it; the stages are laid side by side as the ruling asked. The three PRE-AUTH batches (§2, §5.1, §8.2) show the same picture on the intervening install and are not counted.
+
+**Answer to the Stage-B question as stated in the ruling ("whether reinstalling the exact same artifact materially changes that distribution"): on the gen-1 axis, no; on the recovery-tail axis, the two stages differ (6/15 vs 1/13 degraded) at a sample size that cannot separate that from run-to-run variation. Founder reading owed.**
+
+### §9.4 Standing after Stage B
+
+Stage A CLOSED · Stage B EXECUTED and verified, acceptance = founder · PRE-AUTH batches preserved, not counted · Stage C (Phase-A `4596b9bdb`) HELD, founder decision · mechanism claim NONE · VoiceKernel and harness FROZEN at `24a6fcfa1` · instrument at `6cfa331f7` (C-D5/C-D6) · O6/O7 (gen-1 refusal, reset limbo) seen once each, in a PRE-AUTH batch, not repeated in A or B · H2 (export produced no file) seen once in attempt 3, not in A or B · container now holds ~130 exports; listing service held through the authorized run.
