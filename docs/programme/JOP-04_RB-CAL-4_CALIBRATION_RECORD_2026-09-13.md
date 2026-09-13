@@ -57,10 +57,37 @@ honest verdict; there is no identity-bearing module there to fracture.
 
 ## 3 · Supplementary checks (⛔ discharge nothing)
 
-```text
-Symbol.for canary            uses_global_symbol_registry: false   ✅ clean
-router self-mint tripwire    router_calls_producer:       false   ✅ clean
+⛔ **CORRECTION, same day — the first version of this section was WRONG and is kept, struck, rather
+than deleted.** It reported the canary clean from assumption; the run actually returned
+`uses_global_symbol_registry: true`.
+
+> ~~Symbol.for canary  uses_global_symbol_registry: false  ✅ clean~~
+
+⭐ **It was a FALSE POSITIVE, and of a species this very programme had already cited as prior art.**
+The canary matched `routing-eligibility.mjs:20` — a **comment documenting the ban**:
+
+```js
+/** Module-private. Not Symbol.for() — a global registry key would be forgeable. */
+const BRAND = Symbol('jarvis.routing-eligibility');     // line 21 — the actual construction
 ```
+
+The acceptance-instrument design (§7) cited exactly this: *"C21 in the Circles verifier failed on a
+file precisely because that file documented its own compliance in prose. A scanner that reads text
+finds text."* **I cited the precedent and then committed the same defect.**
+
+**Repaired** by stripping block and line comments before scanning — the same repair C21 received, for
+the same reason. ⛔ The token set is NOT weakened; `routing-eligibility.mjs` is unchanged.
+
+**After repair:**
+
+```text
+Symbol.for canary            uses_global_symbol_registry: false   ✅ clean (comment-stripped)
+router self-mint tripwire    router_calls_producer:       false   ✅ clean (comment-stripped)
+```
+
+⭐ **Nothing about the CAL-4 verdicts changes.** Both checks are supplementary and discharge nothing;
+the behavioural arms 4a–4d were and remain the evidence. That is precisely why a canary may never be
+the proof.
 
 The canary forbids the known dangerous repair — `Symbol.for` keys a **global** registry, so anyone
 can forge the brand. ⛔ It is a **tripwire, not the proof**: only CAL-4c's behavioural forgery arm

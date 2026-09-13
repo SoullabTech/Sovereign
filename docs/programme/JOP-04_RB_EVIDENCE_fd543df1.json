@@ -8,7 +8,7 @@
   "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
   "subject_sha_short": "fd543df1",
   "subject_role": "REPAIR_CANDIDATE",
-  "instrument_sha": "8a62ea93",
+  "instrument_sha": "1aff50a8",
   "layer_b_capability": "git.rev_parse",
   "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
   "calibration": "SUCCESS",
@@ -51,7 +51,8 @@
   "symbol_for_canary": {
     "id": "RB-CANARY-SYMBOL-FOR",
     "readable": true,
-    "uses_global_symbol_registry": true,
+    "uses_global_symbol_registry": false,
+    "scanned": "comment-stripped source — a file documenting the ban must not read as the ban being violated",
     "evidence_class": "CANARY (supplementary; ⛔ discharges nothing)",
     "why": "Symbol.for keys a GLOBAL registry — anyone can forge the brand. Restoring routability that way would trade a proven property for a convenience.",
     "discharges": false
@@ -60,6 +61,7 @@
     "id": "RB-TRIPWIRE-ROUTER-SELF-MINT",
     "readable": true,
     "router_calls_producer": false,
+    "scanned": "comment-stripped source",
     "evidence_class": "STRUCTURAL (supplementary; ⛔ discharges nothing)",
     "law": "the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A's original constitutional defect",
     "discharges": false
@@ -85,7 +87,7 @@
   "records": [
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
       "expected_state": "GREEN",
@@ -120,7 +122,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
       "expected_state": "GREEN",
@@ -163,7 +165,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
@@ -206,7 +208,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
@@ -247,7 +249,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
@@ -275,7 +277,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "RED",
@@ -328,7 +330,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
@@ -355,7 +357,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
@@ -393,7 +395,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -478,7 +480,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -522,7 +524,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -566,7 +568,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -609,7 +611,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -642,7 +644,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -675,7 +677,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -711,7 +713,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -743,7 +745,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -781,7 +783,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "8a62ea93",
+      "instrument_sha": "1aff50a8",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"

@@ -138,6 +138,13 @@ export async function runCal4(subjectDir) {
   return { cal4a, cal4b, cal4c, cal4d };
 }
 
+/** Strip block and line comments before scanning source. ⭐ Same discipline C21
+ *  has used since R4, and for the same reason: a prose ban must never read as
+ *  the banned behaviour returning. */
+function stripComments(src) {
+  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+}
+
 /**
  * SOURCE CANARY — ⛔ a tripwire, never the proof.
  * Forbids the known dangerous repair: a globally forgeable brand.
@@ -148,7 +155,8 @@ export function symbolForCanary(subjectDir) {
   return {
     id: 'RB-CANARY-SYMBOL-FOR',
     readable: true,
-    uses_global_symbol_registry: /Symbol\.for\s*\(/.test(src),
+    uses_global_symbol_registry: /Symbol\.for\s*\(/.test(stripComments(src)),
+    scanned: 'comment-stripped source — a file documenting the ban must not read as the ban being violated',
     evidence_class: 'CANARY (supplementary; ⛔ discharges nothing)',
     why: 'Symbol.for keys a GLOBAL registry — anyone can forge the brand. Restoring routability that way would trade a proven property for a convenience.',
     discharges: false,
@@ -167,7 +175,8 @@ export function routerSelfMintTripwire(subjectDir) {
   return {
     id: 'RB-TRIPWIRE-ROUTER-SELF-MINT',
     readable: true,
-    router_calls_producer: /declareRoutingEligibility\s*\(/.test(src),
+    router_calls_producer: /declareRoutingEligibility\s*\(/.test(stripComments(src)),
+    scanned: 'comment-stripped source',
     evidence_class: 'STRUCTURAL (supplementary; ⛔ discharges nothing)',
     law: 'the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A\'s original constitutional defect',
     discharges: false,
