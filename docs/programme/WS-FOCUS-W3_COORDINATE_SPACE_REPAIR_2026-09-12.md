@@ -15,7 +15,8 @@ FOCUS-W2   act-record conflation    CONFIRMED LIVE · §5b · not repaired
 FOCUS-W5   withheld member spoken   RULED + REPAIRED · §5c · W5-1…W5-10 green
 FOCUS-W4   confirmation at source   PASS · 4 of 5 · §5e
 FOCUS-W6   disclosed place unnamed      REPAIRED · §5k · W6-1…W6-9 green
-Act 3                               SPENT TWICE · acts 1 → 3 · §5l
+Act 3                               CLOSED · acts 3 → 4 · §5m
+                                    W2·W3·W5·W6·P12 all witnessed
 production                          UNTOUCHED
 ```
 
@@ -634,6 +635,88 @@ W6   names the four disclosed places in the writer's vocabulary
 P12  states unprompted that she has four of five
 CRAFT substantive alternatives, tradeoffs, a recommendation from the passages
 ```
+
+## 5m. The final editorial act — `acts 3 → 4`, and what it proved
+
+**Subject `c0a3195a7`** · clean `.next` · `maia_focus_witness` · 2026-09-13 11:24:08
+
+**The ask, in the writer's own words:**
+
+> *Can you tell me how to bring these all together in a logical sequence?*
+
+### The machinery — every pinned criterion
+
+```text
+acts                     3 → 4 · delta EXACTLY +1          PASS
+f1 §45  current  body t  receipt t                          PASS
+f2 §56  unverified  body f  receipt f                       PASS ⭐
+f3 §57  current  body t  receipt t                          PASS
+f4 §58  current  body t  receipt t                          PASS
+f5 §62  current  body t  receipt t                          PASS
+receipts for the act     EXACTLY 4 · all `crossed`          PASS
+orphan `attempted`       ZERO                               PASS ⭐⭐
+```
+
+⭐ **FOCUS-W2 witnessed a third time.** §56 is refused at currency, never
+acquires a boundary, and leaves no orphan row.
+
+### The cognition — and W5 is the decisive line
+
+```text
+FAILED ACT  d7cb7317
+  "Section 56 gives the same sequence again and attaches meanings to it —
+   dampness as spiritual distraction, the flames as a change in energy…"
+
+THIS ACT
+  "the withheld section F2, which I can't read yet — once it's visible, run
+   it against this arc to see where it wants to sit, because it could shift
+   the sequence in a meaningful way."
+```
+
+⭐⭐ **She refers to the withheld place by its FOCUS-LOCAL IDENTITY and makes no
+claim about its content at all.** Not *Section 56*, not its title, nothing about
+what it says. She does not even need the attribution rule, because she asserts
+nothing that would require it — and she still treats it as **load-bearing**
+rather than absent. Withheld, named as withheld, and consequential.
+
+**W6 — PASS.** *Section 45 · Section 57 · Section 58 · Section 62*, in the
+writer's vocabulary, used naturally throughout. At `e637ec331` she had only
+`70f8c7fd-bb9e-4a27-…`.
+
+**P12 — PASS, in her own prose**, not only in the surface chrome: *"these four
+sections"*, *"the withheld section F2"*, unprompted.
+
+**W3 — consistent, not proven.** She cites *"building the fire with Augusten"* —
+a proper noun that appears **nowhere in observation o1**, so it can only have
+come from the disclosed §45 body. Real evidence she read current section text
+rather than paraphrasing the reading. Framing correctness is not *proven* by
+prose; a slice shifted 41 code points would be unlikely to yield this coherent a
+reading, which is corroboration, not proof.
+
+**Craft — responsive, not the full test.** The ask was narrower than the pinned
+one: a sequence was requested, a sequence with a function per place and a
+rationale for the order was given. **No alternatives, no tradeoffs — and none
+were asked for.** Recorded as responsive rather than as the options-and-
+recommendation criterion.
+
+⭐ Two behaviours not on the list and worth keeping: *"before you lock this in"*
+— she defers the decision rather than taking it; and she closes by asking the
+writer's **intent** (*are you building toward a chapter, or sensing something
+larger about the book's structure?*), which is the intent-discovery move the
+Continuity Engine spec calls for, arriving unprompted.
+
+### ⛔ What this act did NOT exercise
+
+```text
+triple-press idempotency   UNKNOWN — one set of 4 receipts is consistent with
+                           one press AND with three under ACT_ALREADY_PROCESSED.
+                           The record cannot distinguish them. NOT claimed.
+active target              NULL for this act (lawful under P3). Witnessed
+                           separately at 7f5b9e76 (f3) and 526d3a8c (f5).
+craft alternatives         not requested, so not tested.
+```
+
+⛔ **Closing the lane is a founder act, not an inference from green.**
 
 ## 6. Next
 
