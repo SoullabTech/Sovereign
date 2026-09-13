@@ -225,3 +225,103 @@ WRITE HANDLER                        ⛔ NOT AUTHORIZED
 DISTRIBUTION OF MUTATING AUTHORITY   ⛔ BLOCKED on JOP-01 distribution closure
 MAIA RUNTIME                         ⛔ UNTOUCHED
 ```
+
+---
+
+# R7–R8 — addendum
+
+**Date:** 2026-09-13 (same day) · **Authority:** founder ruling · **Status:** RATIFIED
+**Adjudicates:** `JOP-04_EFFECT_SUBSTRATE_SPECIFICATION_v0.1` §7.1 and §7.3
+**Effect on v0.1:** ⚠️ **SUPERSEDED** — reissued as v0.2
+
+## R7 — Ratify the descriptive / obligation / payload split
+
+**RULING: RATIFIED.** The eight R3 properties do not share authority semantics and MUST NOT all be
+supplied or narrowed by the requesting packet.
+
+**A. Descriptive effect properties** — `mutation` · `custody` · `reversibility` · `idempotency` ·
+`externalization`. The registry declares the permitted ceiling; the effective invocation is
+**classified from trusted runtime facts**: capability identity, validated arguments, target,
+destination, execution context.
+
+⭐ **The refinement that matters.** This is **not** the law:
+
+```text
+request constraint ≤ classified effective effect ≤ capability effect contract
+```
+
+The law is:
+
+```text
+classified effective effect  ≤  capability effect contract
+```
+
+— while request constraints are **independently checked** against the classified invocation.
+
+> **A request cannot make an operation safer merely by describing it as safer.**
+
+A requester may constrain an operation to a narrower admissible subset where a defined partial order
+exists. ⛔ A requester may never authoritatively declare the effect classification. Admitting the
+request into the ordering chain lets a carefully phrased request creep back into being an effect
+declaration.
+
+**B. Derived obligations** — `authority requirement` · `confirmation requirement`. Not requestable.
+Computed from the effective descriptive vector + destination/environment policy + applicable
+governance. **May be strengthened by policy; ⛔ never weakened by the request.** Invalid by
+construction: `confirmation_requirement: NONE` when policy derives it as required;
+`authority_requirement: NONE` to defeat an otherwise applicable gate.
+
+**C. Payload properties** — `distribution eligibility` is a property of the **material**, neither an
+effect classification supplied by the capability nor an obligation chosen by the packet. Consulted
+by the outward-custody boundary. ⛔ A request cannot elevate it; absence or uncertainty is not
+permission.
+
+## R8 — UNKNOWN is non-executable at runtime
+
+**RULING: UNKNOWN MUST REFUSE OUTRIGHT BEFORE AUTHORIZATION.**
+
+`UNKNOWN` may be modeled as top/maximal for conservative **static** reasoning, proofs, or lattice
+analysis. ⛔ It MUST NOT behave as an ordinary maximal effect value **at the execution boundary**.
+
+```text
+UNKNOWN ≤ MAXIMAL_CAPABILITY_CONTRACT
+```
+
+must never become a route by which an unresolved classification executes.
+
+> An invocation whose authority-relevant effect cannot be classified is **not a maximally dangerous
+> authorized invocation**. It is an **unclassified invocation**, and execution is refused.
+
+```text
+REQUIRED           ⛔ FORBIDDEN
+static:  UNKNOWN ≈ TOP          UNKNOWN → convert to MAX
+runtime: UNKNOWN → REFUSE       → broad contract allows MAX → EXECUTE
+```
+
+The refusal SHOULD name classification uncertainty — `EFFECT_CLASSIFICATION_UNRESOLVED` — rather
+than falsely reporting `NOT_AUTHORIZED`, ⭐ **because the system does not yet know what authority
+would be sufficient.**
+
+### Also ratified in this addendum
+
+| Item | Ruling |
+|---|---|
+| **Incomparability** | RATIFIED. The system MUST NOT manufacture an ordering. Incomparability where execution requires comparison → `REFUSE`. ⛔ Categorically different from choosing whichever vector seems intuitively more dangerous. |
+| **Contract violation (F14)** | RATIFIED as load-bearing. `classified ≰ contract` is a capability-contract **defect**: REFUSE, ⛔ never clamp. Clamping converts *"this capability does more than it declares"* into *"pretend it only did what it declared"* — destroying the registry contract's evidentiary purpose. |
+| **Observation independence** | RATIFIED. A handler's return may establish `TOOL_REPORTED_OK`; it may **never** establish `OBSERVED_EFFECT`. ⭐ The observer need not be a different software service, but MUST be **epistemically independent of the execution claim being verified**. |
+| **F12** | Remains the correct acceptance condition. ⛔ Passing F12 does **not** prove write safety — it proves the effect architecture can enter the organism **without changing the organism's behavior**. That is the correct first gate. |
+
+## The separation this establishes
+
+```text
+CAPABILITY CONTRACT     what this instrument may do
+EFFECT CLASSIFIER       what this invocation actually entails
+REQUEST CONSTRAINT      what the caller is asking to permit
+PAYLOAD ELIGIBILITY     what may leave custody
+POLICY                  what obligations follow
+AUTHORITY               whether those obligations are satisfied
+EXECUTION DECISION      whether to act now
+RECEIPT                 what actually happened
+```
+
+> ⭐ **It prevents language about an act from becoming authority over the act.**

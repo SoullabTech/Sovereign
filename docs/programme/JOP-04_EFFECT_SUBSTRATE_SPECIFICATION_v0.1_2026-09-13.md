@@ -4,6 +4,12 @@
 **Authority:** `docs/governance/JOP-04_EFFECT_SUBSTRATE_RULINGS_2026-09-13.md` (R1–R6 + hard law)
 **Discharges:** the six specification items of that record's build order.
 
+> ⛔ **SUPERSEDED 2026-09-13 by v0.2** — `JOP-04_EFFECT_SUBSTRATE_SPECIFICATION_v0.2_2026-09-13.md`.
+> Rulings **R7–R8** ratified this document's §7.1 and §7.3 open questions **with one correction that
+> invalidates part of §1.1/§2.1**: the request constraint is **not** in the `≤` chain, and `UNKNOWN`
+> must **refuse at runtime** rather than resolve to maximal. Retained verbatim as the state of the
+> design before that correction — a superseded specification is dated, not edited.
+
 > **Authorization makes an act eligible for execution. It does not execute the act.**
 
 ⛔ No write handler is specified here. No capability gains an effect. This document defines contracts
