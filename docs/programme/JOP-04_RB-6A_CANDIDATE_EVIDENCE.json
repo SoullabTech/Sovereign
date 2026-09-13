@@ -8,16 +8,17 @@
   "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
   "subject_sha_short": "fd543df1",
   "subject_role": "REPAIR_CANDIDATE",
-  "instrument_sha": "fd543df1",
+  "instrument_sha": "30e59c33",
   "layer_b_capability": "git.rev_parse",
+  "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
   "calibration": "FAILED",
   "rb_acceptance_pass": false,
   "non_discharging": [
     "RB-F5",
     "RB-F7"
   ],
-  "mismatches": 6,
-  "stop": "RB-CAL-2 was predicted RED and observed GREEN — the amendment does not detect the coupling it was written to distinguish",
+  "mismatches": 1,
+  "stop": null,
   "ipc_structural_tripwire": {
     "readable": true,
     "submit_task_handler_present": true,
@@ -30,17 +31,19 @@
   "records": [
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
-      "expected_state": "RED",
+      "expected_state": "GREEN",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F1].run()",
       "layer": "A",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "capability": "git.rev_parse",
         "eligibility_state_supplied": null,
@@ -51,17 +54,19 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
-      "expected_state": "RED",
+      "expected_state": "GREEN",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F2].run()",
       "layer": "A",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "task_a": {
           "capability": "git.rev_parse",
@@ -81,42 +86,59 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
-      "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": {
+        "required": "a valid executable placement (C0) reached through the subject production composition",
+        "reached": true,
+        "how_do_you_know": "declared routing eligibility (subject producer), then route()",
+        "witness": {
+          "lane": "C0",
+          "status": "routed",
+          "reason": "Deterministic capability 'git.rev_parse' is registered AND routing eligibility is satisfied (basis: jop04_instrument_declaration); no model required."
+        },
+        "eligibility_basis": "jop04_instrument_declaration",
+        "fabricated": false
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F3].run()",
       "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
       "layer_b_capability": "git.rev_parse",
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "NOT-DISCHARGED",
       "evidence": {
-        "lane": null,
+        "lane": "C0",
         "authority_supplied": {
           "packet": null,
           "gate": null,
           "permission_envelope": null,
-          "actor": null
+          "actor": null,
+          "execution_authority": null
         },
-        "executed": false
+        "executed": true,
+        "error": null
       },
-      "note": "a valid lane did not by itself permit execution"
+      "note": "a valid lane was reached and execution occurred with zero invocation authority"
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "GREEN",
       "calibration": "MISMATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F4].run()",
       "layer": "A",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "registered_total": 15,
         "with_effect_declaration": 0,
@@ -129,10 +151,12 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "UNINSTANTIATED",
       "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
@@ -148,36 +172,62 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "RED",
-      "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": {
+        "required": "ARM A reaches a valid routing result AND ARM B reaches a non-routable/refused state, for the SAME registered capability",
+        "reached": true,
+        "how_do_you_know": "declared routing eligibility (subject producer), then route() | arm B: declared eligibility UNSATISFIED",
+        "witness": {
+          "arm_a": {
+            "lane": "C0",
+            "status": "routed"
+          },
+          "arm_b": {
+            "lane": null,
+            "status": "refused_not_routable"
+          }
+        },
+        "arm_a_reached": true,
+        "arm_b_reached": true,
+        "capability_identity_constant": true,
+        "fabricated": false
+      },
+      "observed_state": "RED",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F6].run()",
       "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
       "layer_b_capability": "git.rev_parse",
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "NOT-DISCHARGED",
       "evidence": {
-        "authority_state": "constant (none supplied in either arm)",
-        "arm_1": {
-          "lane": null,
-          "executed": false
+        "authority_state": "identical and absent in both arms",
+        "arm_a": {
+          "lane": "C0",
+          "executable": true,
+          "executes": true
         },
-        "arm_2": {
-          "lane": "C3",
-          "executed": false
-        }
+        "arm_b": {
+          "lane": null,
+          "status": "refused_not_routable",
+          "executable": false,
+          "executes": false
+        },
+        "only_variable": "routing condition"
       },
-      "note": "routing output did not alter whether the act was authorized"
+      "note": "varying only the routing condition decided whether the act could occur — the router still carries authority-making power"
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "N/A",
       "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
@@ -192,17 +242,19 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "precondition": null,
       "observed_state": "GREEN",
       "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F8].run()",
       "layer": "A",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "capability": "jop04.definitely_not_registered_xyz999",
         "routed_lane": "C3",
@@ -215,21 +267,22 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-2a",
       "statement": "registered ∧ ¬routable is reachable",
-      "expected_state": "RED",
+      "expected_state": "GREEN",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
       "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-cal2.mjs → runCal2()",
       "layer": "A (route() only — no execution)",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "capability": "git.rev_parse",
         "capability_identity_constant": true,
@@ -289,21 +342,22 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "fd543df1",
+      "instrument_sha": "30e59c33",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
       ],
       "falsifier": "RB-CAL-2b",
       "statement": "no-auto-manufacture — routing truth is not registry membership renamed",
-      "expected_state": "NOT-REACHED",
+      "expected_state": "GREEN",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
       "observed_state": "GREEN",
-      "calibration": "MISMATCH",
+      "calibration": "MATCH",
       "evidence_class": "BEHAVIORAL",
       "evidence_location": "scripts/jop04/rb-cal2.mjs → runCal2()",
       "layer": "A (route() only — no execution)",
       "layer_b_capability": null,
-      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "discharge_state": "DISCHARGED",
       "evidence": {
         "witness_non_routable_arm": "bare (no routing condition)",
         "produced_by": "router.route(...) — production entry point",
