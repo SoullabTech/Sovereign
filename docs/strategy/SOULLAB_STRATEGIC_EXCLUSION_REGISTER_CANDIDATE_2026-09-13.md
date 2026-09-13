@@ -1,7 +1,11 @@
 # Soullab Strategic Exclusion Register — CANDIDATE (r5)
 
 ```text
-STATUS      CANDIDATE. 26 adjudication rulings applied (2026-09-13, r2–r5);
+STATUS      ⭐ FROZEN — strategic recovery COMPLETE FOR NOW, not finished forever (founder,
+            2026-09-13). No further adjudication or restructuring. The Phase 1 whole-organism
+            census may show one of the six rests on a false assumption, or expose a major choice
+            the historical rulings never captured. That is why the kernel waits.
+            26 adjudication rulings applied (2026-09-13, r2–r5);
             18 resulting entries adjudicated; 9 open; 27 entries.
             ⭐ Kernel-producing set: 6 — ALL ADJUDICATED.
             NO UNRESOLVED STRATEGIC LEVEL ASSIGNMENTS REMAIN FROM THE RECOVERED CORPUS.
@@ -20,7 +24,9 @@ RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder
             struck to their source system. The strategic queue is cleared.
 METHOD      Jarvis reconstruction from existing rulings. No new research. No external sweep.
 NOT A LANE  Strategic memory, not a programme lane. No build, no schema, no deploy.
-HANDOFF     UARE-01 exposed the question, does not own the answer, and stops here.
+HANDOFF     UARE-01 exposed the question, does not own the answer, and stopped here.
+            ✅ CLOSED CLEAN: nothing Uare-derived remains as authority in the result. Every
+            entry rests on a founder ruling or a dated repository record.
 SEQUENCE    This register → adjudication → Phase 1 census completes → kernel drafted from the
             STRATEGIC level only → external challenge last. Market research challenges the
             strategy; it does not generate it.
@@ -120,6 +126,15 @@ If no, it is operating memory, not strategic memory.
 
 Corollary adopted with F3 below: **if no meaningful tradeoff exists, the item probably is not
 strategic enough for this register.**
+
+### The adjudication heuristic (founder, r5) — enforcement vs. principle
+
+The recurring error across X-02, X-03 and X-13. ⛔ **Deliberately not given its own document** —
+it is a question to ask, not an apparatus:
+
+> **When a rule names a vendor, library, gate, test, database, model, route or current
+> implementation, ask what higher principle would survive replacing that mechanism entirely.
+> If there is one, the implementation belongs underneath it.**
 
 ### The second admission test (founder, r4)
 
@@ -536,9 +551,26 @@ latency) is excellent **design intent, not current standing architecture.**
 ⛔ **The August draft may be cited as historical design precedent. It may never be cited as
 evidence that the guarantee is live.**
 
-**Disposition:** X-29's acceptance condition stands; no repair authorized. When practitioner-led
-distribution is next eligible to expand, the owning lane must demonstrate the stronger boundary
-**across the whole reachable practitioner surface, including indirect signals.**
+**Disposition:** X-29's acceptance condition stands; no repair authorized.
+
+#### F9 · operational interpretation — STRICT (founder, r5)
+
+⛔ **F9 authorizes no research, repair, schema, UI, or new privacy subsystem now.** It is an
+acceptance condition, not a work item. *This is what keeps X-29 from quietly becoming another
+architecture programme.*
+
+**Trigger:** the next authorized expansion of practitioner-led distribution — nothing sooner.
+
+**The question the owning lane must then answer, across the whole reachable practitioner surface:**
+
+> **Can a practitioner infer the existence, change, significance, or activity of member-private
+> material through content or indirect signals, absent an explicit member sharing act?**
+
+```text
+existing system passes      → nothing gets built
+it fails                    → the failure creates the repair question
+evidence incomplete         → expansion remains UNACCEPTED
+```
 
 ### F3 (corrected) · Tradeoffs are poorly recorded; reopen conditions are inconsistent
 **Counts, verified against r1 (`1337d51a`): of 24 entries carrying a REOPEN CONDITION, **18 are
