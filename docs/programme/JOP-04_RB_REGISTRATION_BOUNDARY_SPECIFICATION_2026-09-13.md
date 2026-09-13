@@ -1,6 +1,7 @@
 # JOP-04 · RB — Registration Boundary Specification
 
 **Authorized:** 2026-09-13 (founder act) · **Mode:** ⛔ **SPECIFICATION ONLY**
+⭐ **RB-F1…RB-F8 FROZEN 2026-09-13** (founder ruling, §7). ⛔ Implementation not authorized by that ruling.
 **Base:** `e1c6f527` · **Evidence:** C1 (`…_C1_CAPABILITY_ADMISSION_BOUNDARY_…`) · C2 (`…_C2_EXECUTION_SEAM_COMPLETION_CENSUS_…`)
 
 ⛔ **Do not alter `route()`, `runCapability()`, IPC, or the registry.** No implementation until the
@@ -153,7 +154,7 @@ registration  →  route grant  →  IPC execution  →  runCapability
 ⛔ The earlier prohibition (focused only on `runCapability(name, args, cwd)`) is **superseded in
 place**, not withdrawn: it was correct and too narrow.
 
-## 3 · Required falsifiers — to be FROZEN before implementation
+## 3 · Required falsifiers — ⭐ **FROZEN 2026-09-13** (see §7 for the ruling and frozen meanings)
 
 ⚠️ These are **specification-level** falsifiers. At implementation each becomes an executable
 obligation. ⭐ **Freezing them now means the implementation cannot renegotiate them** — the same
@@ -175,12 +176,14 @@ The architecture separates          registered ≠ executable
 without ever permitting             unregistered → executable
 ```
 
-⚠️ **RB-F7's cross-reference, recorded honestly.** The ruling states it *"complements F12 rather than
-replacing it."* No falsifier numbered F12 exists in this lane. The nearest identifiable referent is
-**C2 census question 12 (CANONICALITY)**, and RB-F7 does complement it: Q12 concerns whether
-equivalent *invocations* share a representation; RB-F7 concerns whether a changed *registration*
-representation alters a capability's semantics. ⛔ **Bound to C2-Q12 provisionally; a founder
-correction supersedes this reading.**
+⛔ **SUPERSEDED 2026-09-13 — the provisional binding below was WRONG.** Kept in place as the
+before-state, never as a current claim. **F12 refers to JOP-04 Effect Substrate Specification F12**,
+not to C2 question 12. See §7.2.
+
+> ~~RB-F7's cross-reference, recorded honestly. The ruling states it "complements F12 rather than
+> replacing it." No falsifier numbered F12 exists in this lane. The nearest identifiable referent is
+> C2 census question 12 (CANONICALITY)… Bound to C2-Q12 provisionally; a founder correction
+> supersedes this reading.~~
 
 ## 4 · Grant provenance — added to what JOP-04 must eventually answer
 
@@ -247,3 +250,165 @@ NO IMPLEMENTATION · NO EFFECT VOCABULARY · NO ExecutionPermit DESIGNED
 ```
 
 > **Capability registration declares what an instrument is. It never grants permission to use it.**
+
+---
+
+## 7 · ⭐ FOUNDER RULING — RB falsifiers FROZEN (2026-09-13)
+
+> **RB-F1 through RB-F8 are hereby FROZEN as the acceptance boundary for the Registration Boundary.**
+
+### 7.1 · The frozen meanings
+
+| # | Frozen meaning |
+|---|---|
+| **RB-F1** | **Registration is not execution.** Registration alone cannot produce an executable invocation. |
+| **RB-F2** | **Registry membership is not a lane grant.** `name ∈ CAPABILITIES` cannot by itself confer C0 or equivalent execution eligibility. |
+| **RB-F3** | **Lane selection is not authority.** Placement cannot satisfy authorization or execution-decision requirements. |
+| **RB-F4** | **Missing effect contract is not read-only.** Absence of classification cannot silently inherit safety. |
+| **RB-F5** | **Caller/packet cannot elevate registration semantics.** No task, packet, IPC payload, or caller assertion can manufacture execution eligibility. |
+| **RB-F6** | **Routing remains non-authoritative.** Routing determines placement/resource suitability only; it cannot constitute permission. |
+| **RB-F7** | **Existing read capability remains semantically read.** Re-expression of an existing read capability through the new registration model must not widen authority or behavior. Complements **JOP-04 Effect Substrate F12**. |
+| **RB-F8** | **Unregistered remains impossible.** Separating registration from execution must never create an alternate path by which an unknown capability can execute. |
+
+### The binding law, frozen with the set
+
+> **Registration is necessary and insufficient for execution.**
+
+⭐ **Both directions matter. This is the invariant:**
+
+```text
+unregistered
+    → NEVER executable
+
+registered
+    → NOT YET executable
+```
+
+### 7.2 · RB-F7 cross-reference — CORRECTED
+
+⛔ **The provisional binding to C2 question 12 is SUPERSEDED.** §3's note is marked in place.
+
+**F12 refers to JOP-04 Effect Substrate Specification F12** — the `git.rev_parse` acceptance
+condition already established:
+
+> **Re-express an existing harmless read capability through the new substrate with byte-identical
+> functional results, stable effect classification, no new authority, and no behavioral widening.**
+
+⭐ **Recorded verbatim here deliberately, so RB-F7 remains self-sufficient as a frozen falsifier
+regardless of what else is filed.**
+
+⚠️ **Filing obligation, and it is now load-bearing rather than hygienic.** The **JOP-04 Effect
+Substrate Specification is not in this repository** at `e1c6f527` — searched `docs/`; the only `F12`
+tokens belong to an unrelated lane (`WS2-07-BUILD-07B_READER_CONTRACT`). ⛔ **A frozen falsifier now
+cross-references a document that cannot be independently retrieved.** That is exactly the candidate
+law this lane recorded (instrument addendum, *Governance provenance*):
+
+> *No programme may derive binding authority from a governance artifact that the programme cannot
+> identify and independently retrieve.*
+
+⛔ **Not a blocker on the freeze** — F12's content is stated inline above, so RB-F7 stands on its own.
+**It is a blocker on treating the Effect Substrate Specification as inherited law.** Precedent for
+the repair is E-01: file the source, then let the record correct the claims.
+
+### 7.3 · Freeze semantics
+
+> **"Frozen" means an implementation does not get to reinterpret the falsifiers to fit itself.**
+
+If implementation reveals that one is impossible, ambiguous, or incomplete:
+
+```text
+STOP
+ ↓
+show the contradiction
+ ↓
+founder ruling / explicit amendment
+ ↓
+re-freeze
+ ↓
+resume implementation
+```
+
+⛔ **Not:**
+
+```text
+implementation behaves differently
+ ↓
+quietly soften the test
+```
+
+> ⭐ **A green suite produced by weakening a frozen falsifier is a failure of the lane.**
+
+### 7.4 · RB-6 — both conditions ratified as independent
+
+```text
+CONDITION A   registry membership → C0
+      AND
+CONDITION B   jarvis:submit-task executes C0 without separately constituted authority
+```
+
+**Both are presently true.** They are **independent** embargo conditions:
+
+```text
+clearing A does not clear B
+clearing B does not clear A
+```
+
+> **No effect-bearing capability may enter `CAPABILITIES` until both conditions have been
+> structurally defeated.**
+
+⛔ **And even after both are defeated, that does not itself authorize an effect-bearing capability.
+It merely removes the specific RB-6 embargo.** ⭐ The distinction matters: a removed embargo is the
+absence of one refusal, not the presence of a permission — the same shape as the ruling this whole
+boundary rests on.
+
+### 7.5 · The `route()` implication — frozen at the correct altitude
+
+**FROZEN:**
+
+```text
+Routing may not derive executable eligibility solely from registry membership.
+RB-3 implies route()'s present information is insufficient.
+```
+
+**NOT FROZEN:**
+
+```text
+RB-3 requires this exact new parameter/type.
+route(task, eligibility)
+```
+
+⭐ Prescribing a signature now would **make "eligibility" a particular object before the
+execution-authority work has established what it actually is** — designing ahead of evidence, which
+is the failure the censuses were run to avoid. The falsifier is preserved without the design.
+
+### 7.6 · Next act — RED before GREEN
+
+> The lane may move to **the smallest implementation design that makes RB-F1–F8 fail first on the
+> known-bad substrate, then pass after repair.**
+
+⭐ **The RED-before-GREEN proof is not ceremony here.** The current implementation **must fail RB-F2
+immediately at `router.mjs:33`** — `Object.prototype.hasOwnProperty.call(CAPABILITIES, task.capability)`
+→ `execution_lane: 'C0'` is precisely the coupling RB-F2 forbids.
+
+> ⛔ **If RB-F2 does not go RED against the present substrate, the instrument is wrong — not the
+> substrate.**
+
+That is the one falsifier whose failure is known in advance, which makes it the instrument's own
+calibration check.
+
+⛔ **Design authorized; implementation not authorized by that ruling.**
+
+---
+
+```text
+JOP-04 RB
+
+RB-F1…RB-F8          FROZEN
+RB-F7 XREF           CORRECTED → EFFECT SUBSTRATE F12 (content recorded inline;
+                     source document NOT IN REPOSITORY — filing obligation open)
+REGISTRATION LAW     NECESSARY · NOT SUFFICIENT
+RB-6 EMBARGO         ACTIVE · TWO INDEPENDENT CONDITIONS · BOTH TRUE
+route() SIGNATURE    UNDESIGNED
+IMPLEMENTATION       NOT YET AUTHORIZED
+NEXT                 RED-before-GREEN instrument design; RB-F2 must go RED at router.mjs:33
+```
