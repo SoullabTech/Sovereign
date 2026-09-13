@@ -65,6 +65,20 @@ import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
 import { focusPaint } from '../field/focusPaint';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
+
+/**
+ * ⚠️ OPEN QUESTION, RECORDED RATHER THAN DECIDED — EW-F2.
+ *
+ * A proposed change and a held focus currently draw the SAME mark. They do not
+ * mean the same thing: a focus is where the writer is looking; a proposal is
+ * what they are being asked to authorize. `fieldTreatments`' own falsifier says
+ * a mark must never leave the writer asking which meaning it carries.
+ *
+ * ⛔ A distinct treatment is a design act and is not invented here. For now the
+ * two cannot appear together — the proposal takes precedence — so the mark is
+ * never ambiguous ON SCREEN, only under-specified in the vocabulary.
+ */
+const PROPOSAL_MARK = 'A' as const;
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
@@ -599,7 +613,21 @@ function CanvasRoom() {
      * does not address — and it would be wrong only where the writer used an
      * astral character, which is the worst possible failure distribution.
      */
-    if (proposalTarget && proposalTarget.sectionId === sectionId && fieldTreatment) {
+    if (proposalTarget && proposalTarget.sectionId === sectionId) {
+      /**
+       * ⛔⭐ THE PROPOSAL MARK DOES NOT DEPEND ON THE FIELD STUDY.
+       *
+       * This branch required `fieldTreatment`, which `parseTreatment` returns
+       * as NULL unless `?field=A|B|C` is in the URL. A proposal URL carries no
+       * such parameter, so the writer would have arrived at the right section
+       * and seen NOTHING MARKED — and read that as the design failing rather
+       * than as a missing default.
+       *
+       * A study parameter may gate a study. It may not gate the evidence a
+       * member is being asked to consent to. So the mark always draws, and the
+       * study's choice is honoured when one is being run.
+       */
+      const treatment = fieldTreatment ?? PROPOSAL_MARK;
       const b = codePointBoundaries(body);
       const start = b[Math.min(proposalTarget.range.start, b.length - 1)];
       const end = b[Math.min(proposalTarget.range.end, b.length - 1)];
@@ -608,7 +636,7 @@ function CanvasRoom() {
           body={body}
           start={start}
           end={end}
-          paint={focusPaint(resolveMark(TREATMENTS[fieldTreatment], 'focus'))}
+          paint={focusPaint(resolveMark(TREATMENTS[treatment], 'focus'))}
         />
       );
     }

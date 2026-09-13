@@ -275,6 +275,21 @@ describe('F1-2 · F1-9 — marked in the Work, and only when it resolves', () =>
     expect(overlays).toBe(2);   // the proposal's, and the held focus's
   });
 
+  it('⭐⭐ F1-2 · the mark draws WITHOUT the field-study parameter', () => {
+    /**
+     * ⛔ CAUGHT BEFORE THE WITNESS, NOT BY IT. The branch required
+     * `fieldTreatment`, which is null unless `?field=A|B|C` is in the URL — and
+     * a proposal URL carries no such parameter. The writer would have arrived
+     * at the right section and seen nothing marked.
+     *
+     * A study parameter may gate a study. It may not gate the evidence a member
+     * is being asked to consent to.
+     */
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/const treatment = fieldTreatment \?\? PROPOSAL_MARK/);
+    expect(src).not.toMatch(/proposalTarget\.sectionId === sectionId && fieldTreatment/);
+  });
+
   it('⛔ F1-9 · no acceptable preview means no target and no gesture', () => {
     const src = CODE(CANVAS);
     expect(src).toMatch(/\? proposed\.mount\.preview\.change : null/);
