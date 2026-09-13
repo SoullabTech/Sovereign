@@ -3,7 +3,12 @@
 **Date:** 2026-09-13 · **Programme:** `SPM-00` · **Authorized by:** founder ruling 2026-09-13
 (conceptual refinement only).
 **Supersedes:** `SPM-01_BOUNDARY_SPECIFICATION_2026-09-13.md` (v0.1), preserved unedited.
-**Status:** ⛔ **SPECIFICATION ONLY — NOT STABLE.** No schema · no storage · no migration · no
+**Status:** ⛔ **SUPERSEDED BY v0.3** (`SPM-01_BOUNDARY_SPECIFICATION_v0.3_2026-09-13.md`) —
+preserved unedited. **v0.3 adds a PRE-CLAIM FORMATION BOUNDARY**: canon rules on what may be
+*formed*, and v0.2's object began at the claim. ⛔ v0.2's origin set, status set, rights matrix and
+standing rules are **unchanged** by v0.3 and remain current here.
+
+**Original status line:** ⛔ **SPECIFICATION ONLY — NOT STABLE.** No schema · no storage · no migration · no
 implementation · no D9 governance ruling.
 
 ---
