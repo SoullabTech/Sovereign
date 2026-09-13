@@ -211,6 +211,70 @@ describe('G · ABA — an obsolete claim cannot acquire Work', () => {
   });
 });
 
+describe('F′ · the claim is re-verified AT COMMIT, not only before acquisition', () => {
+  /**
+   * THE LOOPHOLE THIS CLOSES. Material acquisition takes time. A claim valid when
+   * the provider was called can be revoked while the processor runs. Without a
+   * second verification inside the commit transaction, an obsolete claimant could
+   * acquire genuine material and durably write lineage after losing authority.
+   *
+   * Step 5 established that old claim generations lose authority. Step 7 must not
+   * reopen it at the material boundary.
+   */
+  it('a claim revoked DURING processing cannot commit its checkpoint or lineage', async () => {
+    const e = await started();
+    const { provider, calls } = spyProvider();
+    const p = mutableProtection('external');
+    const client = await pool.connect();
+    try {
+      const r = await runFrozenSweepPartition(
+        client, e.id, 'worker-A', 1, 'external', p.provider, provider,
+        async () => {
+          // the processor is still running; the claim expires and is reaped
+          await pool.query(
+            `UPDATE recurrence_sweep_executions SET heartbeat_at = NOW() - interval '10 minutes' WHERE id = $1`,
+            [e.id]);
+          expect(await recoverExpiredClaims(pool, '30 seconds')).toBe(1);
+        },
+      );
+      expect(r.ok).toBe(false);
+      expect(!r.ok && r.refusal).toBe('not_running'); // the execution is back in the queue
+    } finally { client.release(); }
+
+    expect(calls).toEqual(['s1']); // the material WAS legitimately acquired
+    const cp = await pool.query<{ n: string }>(`SELECT count(*)::text AS n FROM recurrence_sweep_checkpoints`);
+    const li = await pool.query<{ n: string }>(`SELECT count(*)::text AS n FROM recurrence_sweep_checkpoint_inputs`);
+    expect([cp.rows[0].n, li.rows[0].n]).toEqual(['0', '0']); // ⭐ nothing durable survived it
+    expect((await loadExecution(pool, e.id))!.status).toBe('queued');
+  });
+
+  it('a later legitimate claim may then do the same unit', async () => {
+    const e = await started();
+    const { provider } = spyProvider();
+    const p = mutableProtection('external');
+    let client = await pool.connect();
+    try {
+      await runFrozenSweepPartition(client, e.id, 'worker-A', 1, 'external', p.provider, provider,
+        async () => {
+          await pool.query(
+            `UPDATE recurrence_sweep_executions SET heartbeat_at = NOW() - interval '10 minutes' WHERE id = $1`,
+            [e.id]);
+          await recoverExpiredClaims(pool, '30 seconds');
+        });
+    } finally { client.release(); }
+
+    const again = (await claimNextExecution(pool, 'worker-B'))!;
+    expect(again.attempts).toBe(2);
+    client = await pool.connect();
+    try {
+      const r = await runFrozenSweepPartition(client, e.id, 'worker-B', 2, 'external', p.provider, provider, noop);
+      expect(r.ok).toBe(true);
+    } finally { client.release(); }
+    const li = await pool.query<{ n: string }>(`SELECT count(*)::text AS n FROM recurrence_sweep_checkpoint_inputs`);
+    expect(li.rows[0].n).toBe('1'); // uncheckpointed work repeated, exactly as Step 6 ruled
+  });
+});
+
 describe('H/I/J/K · currency is derived, three-state, and inert', () => {
   async function withLineage() {
     const e = await started();

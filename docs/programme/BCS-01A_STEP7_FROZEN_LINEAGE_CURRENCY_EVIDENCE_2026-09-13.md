@@ -2,7 +2,16 @@
 
 **Date:** 2026-09-13 · **Branch:** `claude/bold-bohr-pmtynu` · **Base:** `dc46e41c`
 **Obligations:** P8 · P9 · first real material crossing for **P3** · owed **Step-4 M5** half
+**Authorized:** founder, 2026-09-13 — implementation order held as issued
 **Preflight:** `BCS-01A_STEP7_PREDICATE_PREFLIGHT_2026-09-13.md`
+
+```text
+AUTHORITY   commission + current protection      CUSTODY    FrozenSectionProvider
+LINEAGE     what frozen material actually crossed
+CHECKPOINT  successful execution unit            CURRENCY   comparison with Work-now
+```
+
+⛔ **None of those may stand in for another.** Each witness below tests one of them alone.
 
 > **Persist the frozen relation. Derive the current comparison.** ⛔ No recurrence discovery, no
 > observation path, no coverage producer, no CMT material.
@@ -47,6 +56,7 @@ acquired and discarded. That distinction is the whole point of putting permissio
 | **D · P3 first real wiring** | external permitted → `s1` acquired; protection contracts to sovereign **while the same execution is alive** → next acquisition `refused_by_current_protection`, **provider calls still `['s1']`**, checkpoint count still 1 |
 | **E · frozen ceiling** | sovereign commission + external request → `refused_by_frozen_ceiling`, **provider calls `[]`** |
 | **G · ABA** | after recovery, same worker string at attempt 2: old attempt-1 call → `not_claim_owner` with **provider calls `[]`**; attempt-2 call proceeds |
+| **F′ · claim re-verified AT COMMIT** | ⭐ see §3b | 
 | **H/I/J** | `unchanged` · `changed` · `unmeasured` (null reader **and** throwing reader) |
 | **K · inertness** | three measurements including a `changed` one: execution status unchanged, lineage byte-identical, execution count 1, commission count 1 |
 | **freeze integrity** | a **completed** execution legitimately reads `changed` after the live Work moves, and its lineage still names revision 7 — *the execution's subject is still the frozen revision it was commissioned for* |
@@ -56,7 +66,34 @@ acquired and discarded. That distinction is the whole point of putting permissio
 no longer exists on the module surface; the only insert path writes both tables in one
 transaction, asserted by reading that function's body.
 
-## 4 · Mutation evidence — ten bad implementations
+## 3b · ⭐⭐ F′ — the claim is re-verified at commit, not only before acquisition
+
+**The loophole this closes.** Material acquisition takes time. A claim valid when the provider was
+called can be revoked while the processor runs. Without a second verification **inside the commit
+transaction**, an obsolete claimant could acquire genuine material and durably write lineage after
+losing authority — reopening at the material boundary exactly what Step 5 closed at the claim
+boundary.
+
+```text
+claim valid → permission valid NOW → material acquired + verified → processor succeeds
+  → BEGIN · lock + RE-VERIFY claim · checkpoint · checkpoint_inputs · COMMIT
+```
+
+**Witnessed:** the processor itself ages the heartbeat and runs the reaper mid-flight. The
+material **was** legitimately acquired (`calls === ['s1']`), and yet:
+
+```text
+refusal                    not_running
+checkpoints                0
+checkpoint_inputs          0
+execution status           queued
+```
+
+⭐ And the successor case: a later legitimate claim (attempt 2, different worker) does the same
+unit and leaves **exactly one** lineage row — uncheckpointed work repeated, exactly as Step 6
+ruled, with no residue from the revoked claim.
+
+## 4 · Mutation evidence — eleven bad implementations
 
 ```text
 M1  lineage fabricated from plan metadata          → 2 failed, 17 passed
@@ -69,9 +106,35 @@ M7  bare `currency` column added                   → 2 failed, 17 passed
 M8  unavailable current digest reads as unchanged  → 3 failed, 101 passed
 M9  changed currency enqueues a recomputation      → 2 failed, 17 passed
 M10 integrity validation skipped                   → 5 failed, 14 passed
+M11 no claim re-verification at commit             → 2 failed, 21 passed
 
-RESTORED   9 suites · 106 tests · 106 passed
+RESTORED   9 suites · 108 tests · 108 passed
 ```
+
+### ⭐ R2 record — the two facts kept separate
+
+> **BAD EFFECT PROVED** — the mutant demonstrably performed the forbidden relation.
+> **WITNESS RED** — the intended instrument detected it.
+> ⛔ A mutation that only produces the second is not evidence; that is how a `WHERE false` mutant
+> gets mistaken for a strong instrument.
+
+| | Bad effect proved by | Witness RED |
+|---|---|---|
+| **M1** | lineage row written with `range 0..0` and the revision digest in place of the section digest | A · exact-lineage equality |
+| **M2** | runner signature gains a caller digest parameter | API-surface signature instrument |
+| **M3** | provider call recorded **after** protection contracted (`calls` grew past `['s1']`) | D · provider-call-count |
+| **M4** | execution-side `max_jurisdiction` column read in place of the commission's | read-path body instrument + E |
+| **M5** | checkpoint row exists with zero `checkpoint_inputs` rows | B/C · both-or-neither |
+| **M6** | `coverageFromLineage` present on the module surface | structural export check |
+| **M7** | `currency` column present in `information_schema` | schema allow-list |
+| **M8** | `null` reader returned `unchanged` | J · unmeasured |
+| **M9** | execution count rose from 1 to 2 after a measurement | K · inertness |
+| **M10** | forged digest accepted; checkpoint + lineage written | B/C · integrity refusals |
+| **M11** | ⭐ `r.ok === true` for a **revoked** claim, and a **second** lineage row for the same unit (`'1'` → `'2'`) | F′ · commit-time re-verification |
+
+⭐ **M11's bad effect is the sharpest in the set**: the revoked claimant's write *succeeded*, and
+the durable record then carried two lineage rows for one execution unit — the exact corruption the
+second verification exists to prevent.
 
 ⭐⭐ **M4 closes both halves of the Step-4 M5 obligation.** Step 4 proved the *schema* prohibition
 (a duplicate `max_jurisdiction` column REDs the witness). Step 7 adds the *read path*: an
@@ -109,8 +172,9 @@ no checkpoint-without-lineage export                        GREEN
 UNCHANGED · CHANGED · UNMEASURED                            GREEN
 currency/status orthogonality · currency creates nothing    GREEN
 no coverage derivation · no observation · no producer       GREEN
+claim re-verified at commit (F′)                            GREEN
 real PostgreSQL witness                                     GREEN
-M1–M10                                                      RED
+M1–M11                                                      RED
 ```
 
 ⭐ **Step 7 closes.**
