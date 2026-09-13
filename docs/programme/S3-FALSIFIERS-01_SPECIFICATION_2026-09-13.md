@@ -449,7 +449,10 @@ B-i  AUTHOR               ✅ DONE · tests/constitutional/s3/
 B-ii BUILD CANDIDATES     ✅ DONE · 8 machines · candidates.ts
 B-iii MATRIX              ⭐ LETHAL · DISCRIMINATING · reference clean
                           S3-CLASS-B_MATRIX_RESULT_2026-09-13.md
-FREEZE                    ⛔ NOT TAKEN — founder act (§6.4)
+FREEZE                    ⭐ TAKEN @ 2255b60d · S3-CLASS-B_FREEZE_2026-09-13.md
+                          reopening needs evidence the LAW or INSTRUMENT was wrong
+B-iv                      AUTHORIZED · substrate census COMPLETE
+                          storage design NOT TAKEN · migration NOT AUTHORIZED
 B-iv IMPLEMENTATION       ⛔ BLOCKED UNTIL LETHALITY PROVED
 
 TEST CODE                 NOT AUTHORED

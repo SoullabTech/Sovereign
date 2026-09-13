@@ -1429,11 +1429,14 @@ FALSIFIER SPECIFICATION   ✅ DELIVERED 2026-09-13 · S3-F1…S3-F10
 S3-F8 WITNESS             ✅ SPENT · EXPECTED RED ESTABLISHED at 833ec87f
                           canonical defect REPRODUCED
 
-TRANSITION LAW            ⭐ TYPED · RULED · observable semantics only
-CLASS B                   B-i AUTHORED · B-ii defeat candidates NEXT
-NEXT ACT                  build the defeat candidates · prove the suite kills
-                          each · then FREEZE contract + suite
-                          ⛔ implementation BLOCKED UNTIL LETHALITY PROVED
+TRANSITION LAW            ⭐ TYPED · RULED · FROZEN @ 2255b60d
+CLASS B                   B-i · B-ii · B-iii CLOSED · lethality + discrimination
+                          established · freeze TAKEN
+B-iv                      AUTHORIZED · durable transition substrate census
+                          COMPLETE (read-only)
+NEXT ACT                  B-iv DESIGN — ⛔ not opened
+                          storage design NOT TAKEN · migration NOT AUTHORIZED
+                          ⭐ a real DB concurrency witness is OWED
 STORAGE DESIGN            CLOSED · §15 direction: transition law before schema
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
