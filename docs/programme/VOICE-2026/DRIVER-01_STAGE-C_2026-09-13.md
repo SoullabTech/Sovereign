@@ -4,7 +4,7 @@ Lane: `VOICE-2026` · `KERNEL-00` · `DRIVER-01` · subject **`4596b9bdb`** (Pha
 
 Plan reference: `DRIVER-01_PLAN_2026-09-12.md` (D1–D5; §20–§22 for this stage). Stage A: `DRIVER-01_STAGE-A_2026-09-12.md` (CLOSED · ACCEPTED). Stage B: `DRIVER-01_STAGE-B_2026-09-12.md` (CLOSED · ACCEPTED).
 
-**Status of this record: STAGE C AUTHORIZED · PREPARED · NOT EXECUTED.** Nothing has been located, installed, or sampled. The custody gate (§2) decides whether the stage can begin at all.
+**Status of this record: STAGE C NOT EXECUTABLE — STOPPED AT THE CUSTODY GATE (C-1 locate, 2026-09-13T15:36:06Z).** The exact historical Phase-A binary (`11A057AA-4A3C-3CAE-8C28-E29792489459`) is not on the Mac under the searched roots; the only harness dylib present is the P5-B0 build (`CC0D3604-…`). Archive, reinstall and batch were not run. No rebuild. §6 holds the outcome; §8 the decisions this returns to the founder. *(Header replaced on the outcome; the superseded line read `STAGE C AUTHORIZED · PREPARED · NOT EXECUTED` and is preserved here.)*
 
 ---
 
@@ -58,10 +58,49 @@ Verification owed here after the run (as for A and B): SHA-256 as ledgered · co
 
 Archive mode is implemented (`k00-container-archive.sh`, §2 C-2; run again as `post-stage-c` after the batch). **Deletion is not implemented**: no `devicectl` verb for removing a file from an app container is known to this record, and a subcommand is never guessed (the voided `device info crashes` query is the precedent). Before any purge script is written, the founder runs and records `xcrun devicectl device --help` (and `… device info files --help`) into the ledger root; if no such verb exists, the deletion mechanism is a founder decision (e.g. uninstall as a boundary — which would also end this install's custody — or leaving the container as is), not a script.
 
-## §6 Result — OWED
+## §6 Result — NOT EXECUTABLE (custody gate C-1, founder-run, 2026-09-13)
 
-*(filled after execution: boundary table · 30 rows · A beside B beside C · reading per §4 · post-stage archive and manifest extension · deletion record or its refusal)*
+The founder ran exactly the locate step and nothing after it. Output verbatim (the file `locate-20260913T153606Z.txt` was written to the ledger root on the Mac and is owed to the repo via the ledger branch):
 
-## §7 Standing at the time of writing
+```text
+# locate 20260913T153606Z — expected dylib UUID 11A057AA-4A3C-3CAE-8C28-E29792489459
+
+other   CC0D3604-7902-373E-A2BB-2C093D9BF804
+mtime 2026-09-12T12:37:57
+/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelHarness-afqjfcjktctgkjbejscivlpbxqtc/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+
+## summary: 1 dylib(s) inspected, 0 matching 11A057AA-4A3C-3CAE-8C28-E29792489459
+## verdict: NOT FOUND — STOP. The exact historical binary is not on this Mac under the searched roots. Do not rebuild.
+```
+
+Founder statement, verbatim: *"Stage C stops at the custody gate. I ran only the locate step. … I did not proceed to the archive, reinstall, or 30-sample batch. The custody gate worked exactly as intended."*
+
+| field | value |
+|---|---|
+| STAGE C | NOT EXECUTABLE |
+| reason | exact historical Phase-A binary not found under DerivedData · Archives · `ios/` · the ledger worktree |
+| expected UUID | `11A057AA-4A3C-3CAE-8C28-E29792489459` |
+| found UUID | `CC0D3604-7902-373E-A2BB-2C093D9BF804` (P5-B0; mtime 2026-09-12 12:37:57 local = the MAC-COMPILE-07 signed build) |
+| rebuild | NOT AUTHORIZED, not performed |
+| archive (C-2) | NOT RUN |
+| reinstall (C-3) | NOT RUN |
+| Stage-C batch | NOT RUN |
+| device | untouched since the authorized Stage B (P5-B0 install, seq 5208) |
+
+What this establishes: one dylib exists on the Mac, and it is the P5-B0 product at the single product path both compiles wrote to; MAC-COMPILE-07 overwrote the Phase-A product in place on 2026-09-12. The record does not claim the binary exists nowhere (a Time Machine or other backup was not part of the searched roots and is not asserted either way); it claims the instrument of record found none, which is the STOP condition the ruling named.
+
+Consequence for the question Stage C was to answer (§1): unanswered. The AUTOMATED-COLD-LAUNCH stratum has no Phase-A row; the only Phase-A evidence remains the MANUAL-COLD sessions on `4596b9bdb` (run 5 + repro, 5/5 gen-1 listen), which are never pooled with A or B. The predeclared reading table (§4) is not applied.
+
+## §8 Returned to the founder — decisions, not recommendations
+
+1. **Stage C disposition.** CLOSED AS NOT EXECUTABLE on the historical binary (this record), or HELD pending a search of backups outside the searched roots (a founder act; the locate script accepts extra roots as trailing arguments).
+2. **A reproduction subject.** The ruling already names it: a rebuild of `4596b9bdb` is *a new reproduction subject and needs its own ruling*. One fact bears on that ruling and is recorded without steering it: MAC-COMPILE-04 observed the debug dylib UUID identical across three build passes of one SHA (`F00F11D4-…` ×3), so a rebuild of `4596b9bdb` on the same toolchain *may* read `11A057AA-…` again. If it did, the bytes would very probably be the historical bytes; it would still be a rebuild, and by the ruling still a new subject with its own label (never `STAGE-C` on the historical stratum) unless the founder rules that a UUID-identical rebuild is the same artifact. If it read a different UUID, the toolchain or inputs moved and identity is not claimable.
+3. **Housekeeping order.** The ruling sequenced deletion *after Stage C*. With Stage C not executable, the archive (authorized NOW, delete nothing) can still run at any time; whether deletion follows on the closed stage, waits on a reproduction subject, or is dropped is a founder call. The deletion verb remains unprobed.
+
+## §9 Standing
+
+STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED · **STAGE C NOT EXECUTABLE — custody gate STOP, historical binary absent, no rebuild** · reproduction subject NOT RULED · archive authorized, not yet run · deletion after Stage C: order returned to the founder · MECHANISM CLAIM NONE · VoiceKernel + harness FROZEN · B2 HOLD · E1–E4 HELD.
+
+## §7 Standing at the time of writing (superseded by §9)
 
 STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED (header amended) · **STAGE C AUTHORIZED, PREPARED, NOT EXECUTED — custody gate first** · HOUSEKEEPING archive now, delete after Stage C · MECHANISM CLAIM NONE · VoiceKernel + harness FROZEN (no source change for Stage C; the subject is a historical binary, not a build) · B2 HOLD · E1–E4 HELD · instrument changes this session are orchestration only: expected-UUID refusal in `k00-reinstall.sh`, C-D7 in the classifier (89 prior rows reclassified identically), `k00-locate-binding.sh`, `k00-container-archive.sh` (archive only).
