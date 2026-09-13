@@ -100,20 +100,24 @@ standing beyond "this is what we observed elsewhere."
 
 ## 5 · Evidence classes (mandatory tag on every claim)
 
-Adapted from the comparative-study instrument. The adaptation is the fourth class, which that study
-did not need: Uare's material is largely **vendor-authored**, so a category of claim exists here that
-is simultaneously primary-source and unfalsifiable from outside.
+Adapted from the comparative-study instrument, which needed only three classes. Two are added here.
+**[M]** exists because Uare's material is largely vendor-authored — a category of claim that is
+simultaneously primary-source and unfalsifiable from outside. **[E]** exists because the founder
+ruling of 2026-09-13 corrected a defect in the first draft of this table, which admitted the App
+Store release record as *Observed*. It is not. A vendor writing *"fixed X"* in its own release notes
+is documentation of a claim, not our observation of a behaviour.
 
 | Class | Meaning | How it may be used |
 | --- | --- | --- |
-| **[D] Documented** | Stated in Uare's own legal, pricing, support or release material — contractual or operational commitments they can be held to. | May ground a finding. Cite the document. |
-| **[O] Observed** | Seen in a runtime walkthrough or in the App Store release record — behaviour, not description. | May ground a finding. Cite the observation and its date. |
-| **[M] Marketing** | Vendor assertion about capability or philosophy, not independently checkable (*"trained only on you"*, *"you own your AI"*). | **Records what they claim, never what is true.** May ground a finding *about their claim*. May never ground a finding about their architecture. |
-| **[I] Interpretation** | Soullab's reading — philosophical, strategic, architectural. | Must be labelled as ours. May never be cited later as though it were [D] or [O]. |
+| **[D] Documented** | Uare's own legal, pricing, support, product or **release-note** material — statements they authored and can be held to. | May ground a finding. Cite the document. |
+| **[E] External report** | Independent press, App Store user reviews, third-party accounts. Not Soullab's observation and not Uare's authorship. | May ground a finding **about what is reported**. Weight by the reporter. |
+| **[O] Observed** | **Soullab witnessed this in the running product**, under a recorded clean-room method, on a dated build. Nothing else is [O]. | May ground a finding. Cite method, date, tier, platform, build. |
+| **[M] Marketing** | Vendor assertion about capability or philosophy, not independently established (*"trained only on you"*, *"you own your AI"*). | **Records what they claim, never what is true.** May ground a finding *about their claim*. May never ground a finding about their architecture. |
+| **[I] Interpretation** | Soullab's reading — philosophical, strategic, architectural. | Must be labelled as ours. May never be cited later as though it were [D], [E] or [O]. |
 
-**The first-pass record is almost entirely [D], [M] and [I].** There is at present **no [O]** — no one
-at Soullab has run the product. Any finding that requires [O] is explicitly marked *unverified* and
-may not ground a decision until step U2.
+⛔ **THERE IS NO [O] IN THIS LANE TODAY.** No one at Soullab has run the product. That is what makes
+**U2 meaningful: U2 creates the first Observed evidence, and nothing before it may claim the tag.**
+Any finding requiring [O] is marked *unverified* and may not ground a decision until then.
 
 ## 6 · Custody
 
@@ -130,7 +134,17 @@ docs/programme/UARE-01_VOICE_ACCEPTANCE_MATRIX_CANDIDATE_2026-09-13.md
 BRANCH
 claude/uare-ai-analysis-bm8azo
 
-STANDING
+STANDING (founder ruling 2026-09-13)
+U0                COMPLETE
+U1                OPEN / MAY PROCEED
+§0 AUTHORITY      CONFIRMED
+RECIPROCITY       CONFIRMED - UARE-01 LOCAL
+VOICE MATRIX      CONFIRMED CANDIDATE
+U2 WALKTHROUGH    NOT AUTHORIZED
+CMT-01 DIFFERENCE ASYMMETRIC FINDING ONLY - NOT A DIFFERENTIATOR - M3 NOT OPENED HERE
+PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
+FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
+
 NO CODE CHANGED · NO CANON CHANGED · NO SCHEMA CHANGED · NO CLAIM PUBLISHED
 NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIRD PARTY
 ```
@@ -140,7 +154,7 @@ NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIR
 | Step | Name | Output | Authorization |
 | --- | --- | --- | --- |
 | **U0** | **INTAKE** | The founder's first pass, classified by evidence class. | ✅ done — this commit |
-| **U1** | **MAIA-SIDE COVERAGE SURVEY** | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. | ✅ open — no founder act needed; read-only, internal |
+| **U1** | **MAIA-SIDE COVERAGE SURVEY** | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a tag from the five-class table — no finding may be recorded until its class is settled.** | ✅ open — no founder act needed; read-only, internal |
 | **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **requires a founder act** — see §8 |
 | **U3** | **DISCRIMINATION PASS** | Every finding classified `MODEL-OF-ME` / `OTHER-WHO-KNOWS-ME` / neutral-infrastructure. Neutral-infrastructure findings are the only ones eligible to become candidate design inputs without a doctrinal question attached. | ⛔ requires U1; U2 for [O]-dependent rows |
 | **U4** | **QUESTION HANDOFF** | One docket per owning lane (Voice · Anamnesis · Jarvis · Practitioner Studio · Writer's Studio), each a *question*, never a recommendation. | ⛔ founder ruling on which dockets open |
@@ -186,6 +200,11 @@ turns a research lane into a marketing lane. So:
 > may be recorded as a Soullab advantage unless Soullab currently passes the *stricter* form of the
 > same test, evidenced under `docs/canon/CLAIM_STATE_AUTHORITY.md`.
 
+⛔ **Scope: UARE-01 only.** Founder ruling 2026-09-13 confirmed the test *lane-local*. It is not
+universal Soullab claim doctrine and may not be cited as such — this lane cannot amend canon (§0).
+If it proves useful across several competitive studies, it travels upward by the ordinary authority
+path, not by having been written here first.
+
 Applied to this case: before "true portability" is ever an asserted Soullab advantage, someone must
 demonstrate a member leaving with memory graph, provenance, developmental history and member
 intelligence in an open, independently usable form. Self-hosting is a genuine and material
@@ -199,14 +218,18 @@ person** — which is what canonical cognition plus the memory/provenance bounda
 
 ## 10 · Standing prohibitions
 
-- No Uare terminology in MAIA code, schema, prompt, UI or doctrine.
-- No fidelity/completeness percentage over a human being, ever. A number asserting a person is
-  *n%* modeled is an epistemic claim we cannot support and would not want to be able to support.
-- No practitioner-visible member conversation by default. Uare's subscription terms state a
-  Professional can view conversations subscribers have with their Individual AI [D]; if Soullab ever
-  approaches practitioner surfaces, member-private and explicitly-shared must be structurally
-  distinct, not policy-distinct.
-- No public comparison, deck slide, podcast line or landing-page sentence out of this lane. Route
+These bind **this lane**. Where a prohibition looks like it should be a universal product law, that is
+a separate question for the owning constitutional or design lane — ⛔ **a competitive-research lane
+does not establish doctrine, even doctrine it is confident about** (§4).
+
+- **No Uare terminology** in MAIA code, schema, prompt, UI or doctrine.
+- **UARE-01 may not propose, import, transfer or recommend a human-completeness / fidelity
+  percentage.** A number asserting a person is *n%* modeled is an epistemic claim we cannot support.
+  ⛔ The broader prohibition — *no such metric anywhere in Soullab, ever* — is not established here;
+  it belongs to the owning constitutional lane, and this lane may only pose it as a question.
+- **No requirement authored here.** Findings about another company's privacy or authority model are
+  handed to the owning lane **as a question**, never as a specification. See §4 and study §8.
+- **No public comparison**, deck slide, podcast line or landing-page sentence out of this lane. Route
   through claim discipline or not at all.
 
 ## 11 · Output typing

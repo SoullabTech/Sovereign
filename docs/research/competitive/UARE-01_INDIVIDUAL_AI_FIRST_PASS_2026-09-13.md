@@ -3,7 +3,8 @@
 **Date:** 2026-09-13
 **Lane:** `UARE-01` (`docs/programme/UARE-01_LANE_CHARTER_2026-09-13.md`)
 **Author of the first pass:** founder (Kelly)
-**Status:** U0 INTAKE. Evidence of record for the lane. **No [O] evidence exists yet.**
+**Status:** U0 INTAKE. Evidence of record for the lane. ⛔ **No [O] evidence exists yet.**
+**Revised:** 2026-09-13, founder ruling — evidence taxonomy corrected (see §0). No finding withdrawn; three re-tagged, one re-worded (§6), two converted from requirement to question (§7, §8).
 
 ---
 
@@ -13,14 +14,22 @@ Per charter §5. Every claim carries a tag.
 
 | Class | Meaning | Use |
 | --- | --- | --- |
-| **[D] Documented** | Uare's own legal / pricing / support / release material. | May ground a finding. |
-| **[O] Observed** | Runtime or release-record behaviour. | May ground a finding. |
-| **[M] Marketing** | Vendor assertion, not checkable from outside. | Records their *claim*, never a fact about their architecture. |
-| **[I] Interpretation** | Soullab's reading. | Ours. Never later cited as [D] or [O]. |
+| **[D] Documented** | Uare's own legal / pricing / support / product / **release-note** material. | May ground a finding. |
+| **[E] External report** | Independent press, App Store user reviews, third-party accounts. | May ground a finding *about what is reported*. |
+| **[O] Observed** | **Soullab witnessed it in the running product**, recorded method, dated build. Nothing else. | May ground a finding. |
+| **[M] Marketing** | Vendor assertion, not independently established. | Records their *claim*, never a fact about their architecture. |
+| **[I] Interpretation** | Soullab's reading. | Ours. Never later cited as [D], [E] or [O]. |
+
+⚠️ **Correction of record, founder ruling 2026-09-13.** The first draft of this table admitted the App
+Store release record as **[O] Observed** while simultaneously stating no [O] existed. Both could not
+be true. A vendor writing *"fixed X"* in its own release notes is **[D]** — documentation of a claim
+they authored — not our observation of a behaviour. User reviews are **[E]**. The three affected rows
+are re-tagged below; no finding is withdrawn, and the §6 inference survives in a weaker, exact form.
 
 **Known limitations of this pass, recorded so they cannot be forgotten:**
 
-1. **No one at Soullab has used the product.** Everything below is desk research. There is no [O].
+1. **No one at Soullab has used the product.** Everything below is desk research. ⛔ **There is no
+   [O], anywhere in this document.** That is not a caveat — it is the reason U2 exists.
 2. **Instagram was throttled**, so no post-by-post grid audit was possible; social positioning is
    therefore under-sampled relative to legal and product material.
 3. **Vendor material dominates.** Most of what is knowable about their architecture is knowable only
@@ -30,7 +39,7 @@ Per charter §5. Every claim carries a tag.
    observations. Re-read before citing after 2026-12.
 
 **What would upgrade this document:** a clean-room walkthrough under the charter §8 constraints
-(step U2) converting the [M] rows into [O] or into refuted.
+(step U2) — the only act that can produce [O], converting [M] and [D] rows into observed or refuted.
 
 ---
 
@@ -118,7 +127,7 @@ This is the lane's primary discriminator (charter §3) and every subsequent obse
 through it.
 
 **[I]** There is also a market signal here, not only a philosophical one. An App Store reviewer called
-the premise *"Very Black Mirror"* while still rating the vision positively [O, public review]. The
+the premise *"Very Black Mirror"* while still rating the vision positively [E, App Store user review]. The
 resistance is to **"we copied you."** There appears to be materially less resistance to **"something
 has come to know you."** Substitution anxiety and encounter are different psychological offers.
 
@@ -130,7 +139,9 @@ dimension** [D, support material].
 
 **[I]** The *principle* is excellent: the member can perceive that the system is learning something
 about them, instead of memory being invisible magic. **The metric is not.** "We understand your psyche
-74%" is an epistemic claim about a person that no one can support. Charter §10 prohibits it.
+74%" is an epistemic claim about a person that no one can support. ⛔ **Charter §10 prohibits UARE-01
+from proposing, importing or recommending such a metric.** Whether Soullab bans it *everywhere,
+permanently* is a doctrinal question this lane may pose and may not answer.
 
 **[I]** The MAIA-shaped version — Cat 1, held — is a living map of what MAIA currently has *evidence*
 for, in qualitative bands (rich / emerging / provisional / sparse / unexplored), where every item
@@ -152,7 +163,7 @@ behalf.
 
 ### 5.3 Source chips
 August release added **tappable source chips beneath answers when the AI answers from the member's
-documents** [O, App Store release record].
+documents** [D, Uare release notes].
 
 **[I]** Right instinct, directly aligned with work already underway. Not *"MAIA remembers this"* but
 *"MAIA remembers this **because…**"* — provenance reachable on demand, without polluting the
@@ -161,7 +172,7 @@ conversational surface. Cat 1, held; the substrate for it partly exists.
 ## 6 · The mobile voice failure surface — the most immediately useful finding
 
 Their App Store version history documents successive fixes across July–September for a specific,
-recognizable class of defect [O, release record].
+recognizable class of defect [D, Uare release notes].
 
 | Uare repair | Class | MAIA relevance |
 | --- | --- | --- |
@@ -183,15 +194,22 @@ recognizable class of defect [O, release record].
 
 **⭐ The load-bearing observation.** Four of those rows are not transport bugs. *Replies stopping after
 first turn · text↔voice switching · conversation splitting on reconnect · message duplication* are all
-failures of **the record of the turn**, not of audio. They are the same failure family as MAIA's own
-2026-09-07 voice-silence defect, where the transcript append lived inside the TTS success branch and a
-stalled `maiaSpeak` erased MAIA's words entirely.
+failures of **the record of the turn**, not of audio.
 
-**[I]** Two independent production teams hit the same class of defect from opposite directions. That
-is corroboration that the coupling of *the turn* to *the audio path* is a structural attractor in
-voice products, not a local mistake. It is the strongest available external support for the
-non-degradation gate's discipline (`docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md`)
-and for the single commit seam that repair introduced.
+⚠️ **Stated to the exact strength of the evidence** (founder ruling 2026-09-13; the earlier wording,
+*"two independent production teams hit the same class of defect"*, over-claimed by treating vendor
+release notes as observation):
+
+> **MAIA directly exhibited this defect family** — 2026-09-07, the transcript append living inside the
+> TTS success branch, a stalled `maiaSpeak` erasing MAIA's words entirely. **Uare's published release
+> history [D] independently documents fixes belonging to the same family.** We have not observed those
+> failures or their repairs.
+
+**[I]** From that asymmetric pair — one witnessed defect, one documented set of vendor repairs — the
+inference is: *coupling the turn to the audio path is a recurring structural attractor in
+conversational voice systems, not a local mistake.* That is external support for the non-degradation
+gate's discipline (`docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md`) and for the single
+commit seam the repair introduced. It is strong enough as stated and does not need inflating.
 
 **[I]** The remaining rows — echo, barge-in, routing, backgrounding, reconnect — are **sensory
 infrastructure**, explicitly free to change under the gate. They are therefore the cleanest possible
@@ -224,9 +242,25 @@ not:
 
 **[I]** Specialist intelligences do not become alternate authors of MAIA. That convergence-and-authority
 constraint is exactly what `CMT-01` (canonical MAIA turn: closed producer registry, participation
-adjudication, one renderer) was built to hold. We have found no public description of Uare solving,
-or attempting, the equivalent. **This is a genuine open question to pose to the Jarvis lane, not a
-claimed advantage** — absence from their public material is not evidence of absence from their system.
+adjudication, one renderer) was built to hold.
+
+⭐ **ASYMMETRIC FINDING — the exact claim, founder ruling 2026-09-13:**
+
+> `CMT-01` provides named evidence that Soullab treats multi-producer authority and convergence as an
+> explicit architectural problem. **No equivalent mechanism was found in the Uare public corpus
+> examined.** This establishes a difference in *publicly evidenced architecture* — **not** a
+> difference in actual capability.
+
+⛔ **Not defensible and not to be written:** *"Uare doesn't solve agent authority"* · *"MAIA solves it
+and Uare doesn't"* · *"this is a Soullab competitive advantage."* The inspection asymmetry is total —
+we can read our own repository, tests, registry, adjudication and standing; we can read only what they
+chose to publish. **Absence from their marketing is not absence from their system.**
+
+⛔ **And CMT-01 M3 is NOT opened by this finding.** Advancing internal architecture in order to earn a
+competitive comparison would be §0's failure in its most subtle form: *competitor observation →
+desire for a differentiator → internal work accelerated.* CMT-01 advances when MAIA's own programme
+evidence and a founder act require it. If M3 later reaches its standing, this comparison may be
+revisited then — never the other way round.
 
 ## 8 · The practitioner economy — and one substantive privacy divergence
 
@@ -244,11 +278,19 @@ shared in them** [D].
 
 **[I]** For coaching, reflection or depth work this changes the relational field completely. A member
 may believe they are *privately exploring something with an intelligence*, when structurally they are
-*talking to their coach's AI, which their coach can later read.* Our position must be structural, not
-policy-level: member-private space and explicitly-shared practitioner material must be different
-things in the schema, not different settings on the same thing. **[I]** Under the reciprocity test
-(charter §9) this is recorded as a design requirement on us, not as a contrast we may assert publicly
-until our own boundary is evidenced.
+*talking to their coach's AI, which their coach can later read.*
+
+⚠️ **Converted from requirement to question, founder ruling 2026-09-13.** The earlier wording here
+("our position **must** be structural, not policy-level") authored a specification. Under charter §4
+this lane has no such standing — it raises questions; the owning lane adjudicates them. The handoff is:
+
+> **Question for Practitioner Studio.** Is member-private material structurally distinct from
+> explicitly practitioner-shared material, such that no policy or configuration mistake can collapse
+> the two? Practitioner Studio determines whether that property already exists in canon and schema,
+> needs adjudication, or is the wrong frame entirely.
+
+**[I]** And under the reciprocity test (charter §9) it is not a contrast we may assert publicly until
+our own boundary is evidenced.
 
 ## 9 · Writer's Studio
 
@@ -310,11 +352,14 @@ descriptive understanding · psyche / soma / relationship / meaning rather than 
 
 ## Appendix A — public sources consulted (2026-09-13)
 
-Vendor material: uare.ai platform & pricing · blog (*The Creation of U*, *AI Clone vs Chatbot*, *Best
+⚠️ Re-tagged per §0: Uare-authored release notes are **[D]**; App Store user reviews and press are
+**[E]**; nothing here is **[O]**.
+
+Vendor material [D]: uare.ai platform & pricing · blog (*The Creation of U*, *AI Clone vs Chatbot*, *Best
 AI Tool for Writers*, seed announcement) · privacy policy · terms of service · subscription, credits &
-creator monetization terms · featurebase support articles (*The Human Life Model*). Third-party: App
-Store listing and version history for uare.ai · TechCrunch coverage of the Eternos → Uare pivot and
-$10.3M raise.
+creator monetization terms · featurebase support articles (*The Human Life Model*) · **App Store
+release notes and version history** (Uare-authored). Third-party [E]: App Store user reviews ·
+TechCrunch coverage of the Eternos → Uare pivot and $10.3M raise.
 
 **Not consulted / not obtainable in this pass:** the running product · Instagram grid (throttled) ·
 any non-public technical material.

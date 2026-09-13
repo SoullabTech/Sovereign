@@ -1,9 +1,10 @@
 # UARE-01 — MAIA Voice Acceptance Matrix — CANDIDATE
 
 **Date:** 2026-09-13
-**Lane:** `UARE-01` · **Status:** ⛔ **CANDIDATE INSTRUMENT. NOT RATIFIED. NOT A GATE.**
-**Derived from:** the Uare mobile defect log (first-pass study §6), reclassified against MAIA's own
-voice canon. It is **not** a copy of a competitor's QA list.
+**Lane:** `UARE-01` · **Status:** ⛔ **CANDIDATE INSTRUMENT. NOT RATIFIED. NOT A GATE.** Confirmed as a candidate, founder
+ruling 2026-09-13 — confirmation of the *instrument's standing as a candidate*, not of its rows.
+**Derived from:** Uare's published mobile release notes [D] (first-pass study §6), reclassified against
+MAIA's own voice canon. It is **not** a copy of a competitor's QA list.
 
 ---
 
@@ -23,9 +24,13 @@ different mind.* So these rows carry no doctrinal risk: they describe conditions
 never what MAIA should think. The one class that is **not** infrastructure — the turn-record rows,
 marked ⭐ — is included precisely because it is where the gate already lives.
 
-**The corroboration.** MAIA's 2026-09-07 voice-silence defect and four rows of Uare's shipped defect
-log are the same failure family: *the record of the turn coupled to the audio path.* Two independent
-teams, opposite origins, same attractor. That is the evidence that this surface is real.
+**The corroboration, at the exact strength of the evidence** (repaired per founder ruling 2026-09-13):
+**MAIA directly exhibited this defect family** (2026-09-07 — the transcript append inside the TTS
+success branch). **Uare's published release notes [D] independently document fixes belonging to the
+same family.** ⛔ We have observed none of theirs; vendor release notes are documentation, not our
+observation. From that asymmetric pair the inference is **[I]**: *coupling the turn to the audio path
+is a recurring structural attractor in conversational voice systems.* That is why this surface is
+worth naming — and it is enough as stated.
 
 ---
 
