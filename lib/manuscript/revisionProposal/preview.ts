@@ -24,19 +24,37 @@
 
 import { query } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import { applyExactlyOnce, type ProposalRefusal } from './contract';
 import { readProposal } from './store';
 
-/** How much of the member's own prose frames the change, in code points. */
-const CONTEXT = 140;
-
+/**
+ * ⭐⭐ EW-F1 · WHAT THE PANEL IS TOLD — coordinates and a decision, NO PROSE.
+ *
+ * The first version shipped `removed`, `contextBefore` and `contextAfter`: a
+ * 140-code-point window, cut mid-word, rendered in a twenty-character gutter
+ * beside a manuscript pane showing a different part of the book. The founder
+ * could see the change and could not LOCATE it — *"I'm trusting edits I don't
+ * understand."*
+ *
+ *   Evidence belongs in the Work. Decision belongs in the panel.
+ *
+ * ⭐ AND THIS TRANSPORTS LESS OF THE MEMBER'S WORK THAN BEFORE, not more. The
+ * writer reads their own manuscript in the surface that already had authority
+ * to render it; the consent channel names a range and carries no prose at all.
+ *
+ * ⛔ THE RANGE NAMES ITS SPACE. FOCUS-W3 cost this programme two days because
+ * offsets travelled without saying what text they addressed. `projected_section_body`
+ * means the member's editable body — heading prefix already removed — in CODE
+ * POINTS.
+ */
 export interface StagedChange {
   /** `Section 23 · “THE SPIRALING PATH…”` — the writer's own vocabulary. */
   readonly sectionLabel: string;
-  /** Exactly the characters that would go. */
-  readonly removed: string;
-  readonly contextBefore: string;
-  readonly contextAfter: string;
+  /** Where to mark, in the Work. ⛔ Not what it says. */
+  readonly sectionId: string;
+  readonly range: SpacedRange;
+  readonly operation: 'delete_exact_text';
   /** ⛔ Always 1 in this cut. Multi-change proposals are not built. */
   readonly changeCount: number;
 }
@@ -52,9 +70,6 @@ export type ProposalPreview =
    */
   | { readonly state: 'no_longer_matches'; readonly proposalId: string; readonly reason: ProposalRefusal }
   | { readonly state: 'unknown' };
-
-const slice = (s: string, from: number, to: number) =>
-  [...s].slice(Math.max(0, from), to).join('');
 
 export async function previewProposal(
   memberId: string, proposalId: string,
@@ -94,7 +109,9 @@ export async function previewProposal(
     split.body, proposal.expectedText, proposal.replacementText);
   if (!applied.ok) return no(applied.reason);
 
-  /* The frame around the change, taken from the member's own body. */
+  /* ⭐ WHERE, in code points into the projected body. `applyExactlyOnce` has
+     already established there is exactly one, so this index is unambiguous by
+     the time it is computed. */
   const at = [...split.body.slice(0, split.body.indexOf(proposal.expectedText))].length;
   const heading = s.rows[0].heading?.trim();
   return {
@@ -105,10 +122,13 @@ export async function previewProposal(
       sectionLabel: heading
         ? `Section ${s.rows[0].position + 1} · “${heading}”`
         : `Section ${s.rows[0].position + 1}`,
-      removed: proposal.expectedText,
-      contextBefore: slice(split.body, at - CONTEXT, at),
-      contextAfter: slice(split.body, at + [...proposal.expectedText].length,
-        at + [...proposal.expectedText].length + CONTEXT),
+      sectionId: proposal.targetSectionId,
+      range: {
+        space: 'projected_section_body',
+        start: at,
+        end: at + [...proposal.expectedText].length,
+      },
+      operation: 'delete_exact_text',
       changeCount: 1,
     },
   };

@@ -25,14 +25,17 @@
 
 import { useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { SERIF } from './pressTheme';
 import { SANS } from './studioTheme';
 
+/**
+ * ⭐⭐ EW-F1 · NO MANUSCRIPT PROSE LIVES HERE. Coordinates and a decision.
+ * The Work shows what is changing; this panel says what is being asked.
+ */
 interface StagedChange {
   sectionLabel: string;
-  removed: string;
-  contextBefore: string;
-  contextAfter: string;
+  sectionId: string;
+  range: { space: string; start: number; end: number };
+  operation: 'delete_exact_text';
   changeCount: number;
 }
 
@@ -58,7 +61,7 @@ const WHY: Record<string, string> = {
 };
 
 export default function ProposedChange(
-  { preview, onAccepted, onDismiss }: {
+  { preview, onAccepted, onDismiss, onShowChange }: {
     preview: ProposalPreview;
     onAccepted?: (version: number) => void;
     /**
@@ -70,6 +73,15 @@ export default function ProposedChange(
      * because a button happened to need a handler.
      */
     onDismiss?: () => void;
+    /**
+     * ⭐ EW-F1/F1-5 · return attention to the marked passage.
+     *
+     * The view is moved ONCE when the proposal arrives. If the writer then
+     * reads elsewhere they are not snapped back — being dragged around your own
+     * manuscript is its own kind of dispossession — so this brings them back
+     * when THEY ask.
+     */
+    onShowChange?: () => void;
   },
 ) {
   const [state, setState] = useState<'idle' | 'accepting' | 'accepted' | 'refused'>('idle');
@@ -128,15 +140,14 @@ export default function ProposedChange(
       <h2 style={title}>Proposed change</h2>
       <p style={{ ...line, opacity: 0.8 }}>{change.sectionLabel}</p>
 
-      <p style={{ ...line, marginTop: 18 }}>Remove:</p>
-      <pre style={removed}>{change.removed}</pre>
+      {/* ⭐ What kind of change, not what it says. The passage itself is
+          marked in the manuscript beside this, where the writer can read it
+          at reading width with everything they authored around it. */}
+      <p style={{ ...line, marginTop: 16 }}>Remove one exact passage.</p>
 
-      <p style={{ ...line, marginTop: 18, opacity: 0.8 }}>In place:</p>
-      <pre style={frame}>
-        {change.contextBefore}
-        <span style={strike}>{change.removed}</span>
-        {change.contextAfter}
-      </pre>
+      <button type="button" onClick={() => onShowChange?.()} style={{ ...quiet, marginTop: 14 }}>
+        Show change
+      </button>
 
       <p style={{ ...line, marginTop: 18 }}>
         This will make {change.changeCount} change
@@ -178,18 +189,6 @@ const title: React.CSSProperties = {
 };
 const line: React.CSSProperties = {
   font: `400 14px/1.6 ${SANS}`, color: '#E8E0D5', margin: '10px 0 0',
-};
-const frame: React.CSSProperties = {
-  font: `400 13px/1.7 ${SERIF}`, color: 'rgba(232,224,213,0.82)',
-  whiteSpace: 'pre-wrap', margin: '8px 0 0', padding: '12px 14px',
-  background: 'rgba(0,0,0,0.22)', borderRadius: 2, overflowX: 'auto',
-};
-const removed: React.CSSProperties = {
-  ...frame, color: '#E8E0D5', background: 'rgba(201,123,90,0.14)',
-};
-const strike: React.CSSProperties = {
-  textDecoration: 'line-through', color: '#C97B5A',
-  background: 'rgba(201,123,90,0.16)',
 };
 const quiet: React.CSSProperties = {
   font: `500 12px/1 ${SANS}`, letterSpacing: '0.1em', textTransform: 'uppercase',

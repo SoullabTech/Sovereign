@@ -451,15 +451,35 @@ describe('CS-9 — an unknown proposal is indistinguishable from another member�
   });
 });
 
-describe('the staged diff shows the member their own Work', () => {
-  it('⭐ names the place in the writer’s vocabulary and frames the removal', async () => {
+describe('F1-4 — the staged change names a PLACE, and carries no prose', () => {
+  /**
+   * ⭐ SUPERSEDED IN PLACE BY EW-F1. This test used to assert that the preview
+   * carried `removed` and a `contextBefore` containing the member's prose —
+   * i.e. it asserted the defect. The founder could see the change and could not
+   * locate it: *"I'm trusting edits I don't understand."*
+   *
+   * The obligation it was protecting — the writer must be shown WHICH place —
+   * is preserved, in the form that does not also copy the Work into a panel.
+   */
+  it('⭐⭐ coordinates and a label · NOT ONE CHARACTER of the manuscript', async () => {
     const p = await propose();
     const preview = await previewProposal(M, p.id);
     expect(preview.state).toBe('acceptable');
     expect(preview.change.sectionLabel).toBe(`Section 23 · \u201c${HEADING}\u201d`);
-    expect(preview.change.removed).toBe(TOKEN);
+    expect(preview.change.sectionId).toBe(S23);
     expect(preview.change.changeCount).toBe(1);
-    /* ⛔ The frame is the member's own prose, not a description of it. */
-    expect(preview.change.contextBefore).toContain('CHAPTER 3');
+    expect(preview.change.operation).toBe('delete_exact_text');
+
+    /* ⭐ The range names its space, in CODE POINTS into the projected body. */
+    expect(preview.change.range.space).toBe('projected_section_body');
+    const body = sectionText().slice(`${HEADING}\n\n`.length);
+    expect([...body].slice(preview.change.range.start, preview.change.range.end).join(''))
+      .toBe(TOKEN);
+
+    /* ⛔⭐ THE LAW: nothing the panel receives is the member's writing. */
+    expect(JSON.stringify(preview)).not.toContain(TOKEN);
+    expect(JSON.stringify(preview)).not.toContain('CHAPTER 3');
+    expect(Object.keys(preview.change).sort()).toEqual(
+      ['changeCount', 'operation', 'range', 'sectionId', 'sectionLabel']);
   });
 });

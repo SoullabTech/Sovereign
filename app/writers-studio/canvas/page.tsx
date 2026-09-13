@@ -64,6 +64,7 @@ import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
 import { focusPaint } from '../field/focusPaint';
+import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
@@ -267,6 +268,35 @@ function CanvasRoom() {
      server serves it; the routes 404 unless the write flag is constituted. */
   const proposalId = searchParams ? requestedProposalId(searchParams) : null;
   const proposed = useProposedChange(proposalId);
+
+  /**
+   * ⭐⭐ EW-F1 / F1-1 · A PROPOSAL MOVES THE VIEW TO THE EVIDENCE IT NAMES.
+   * It does not move the evidence.
+   *
+   * Opening a proposal is orientation authority, not manuscript authority.
+   * Making the writer hunt for the change would be worse than moving them: the
+   * system knows exactly what it is asking them to evaluate.
+   *
+   * ⭐ ONCE. `jumpTo` is a command that clears itself on arrival, so a writer
+   * who then reads elsewhere is not snapped back — being dragged around your
+   * own manuscript is its own kind of dispossession. `Show change` returns
+   * them when THEY ask.
+   *
+   * ⛔ The target comes from the SERVER's resolution of the proposal against
+   * the current Work, never from coordinates carried in the URL.
+   */
+  const proposalTarget = proposed.mount.state === 'ready'
+    && proposed.mount.preview.state === 'acceptable'
+    ? proposed.mount.preview.change : null;
+  const jumpedFor = useRef<string | null>(null);
+  const showProposedChange = useCallback(() => {
+    if (proposalTarget) setJumpTo(proposalTarget.sectionId);
+  }, [proposalTarget]);
+  useEffect(() => {
+    if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
+    jumpedFor.current = proposalTarget.sectionId;
+    setJumpTo(proposalTarget.sectionId);
+  }, [proposalTarget]);
 
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
@@ -553,6 +583,35 @@ function CanvasRoom() {
    * read-only mark and nothing else.
    */
   const renderSectionOverlay = useCallback((sectionId: string, body: string) => {
+    /**
+     * ⭐⭐ EW-F1 / F1-2 · THE PROPOSED CHANGE IS MARKED IN THE WORK, through the
+     * overlay the Focus lane already owns. Not a second marking mechanism, and
+     * not a copy of the prose in a side panel.
+     *
+     * ⭐ IT TAKES PRECEDENCE over a held focus. A held focus is where the writer
+     * was looking; a proposal is what they are being asked to authorize. Drawing
+     * both would make the decisive mark one of two identical outlines.
+     *
+     * ⛔⭐ THE UNITS CHANGE HERE, AND IT IS DELIBERATE AND VISIBLE.
+     * `projected_section_body` offsets are CODE POINTS. `FocusOverlay` clamps
+     * with `body.length`, so it indexes UTF-16 CODE UNITS. Handing one to the
+     * other unconverted is FOCUS-W3 exactly — a range applied to a space it
+     * does not address — and it would be wrong only where the writer used an
+     * astral character, which is the worst possible failure distribution.
+     */
+    if (proposalTarget && proposalTarget.sectionId === sectionId && fieldTreatment) {
+      const b = codePointBoundaries(body);
+      const start = b[Math.min(proposalTarget.range.start, b.length - 1)];
+      const end = b[Math.min(proposalTarget.range.end, b.length - 1)];
+      return (
+        <FocusOverlay
+          body={body}
+          start={start}
+          end={end}
+          paint={focusPaint(resolveMark(TREATMENTS[fieldTreatment], 'focus'))}
+        />
+      );
+    }
     const f = held.focus;
     if (!f || !fieldTreatment || !f.sectionIds.includes(sectionId)) return null;
     const first = f.sectionIds[0] === sectionId;
@@ -565,7 +624,7 @@ function CanvasRoom() {
         paint={focusPaint(resolveMark(TREATMENTS[fieldTreatment], 'focus'))}
       />
     );
-  }, [held.focus, fieldTreatment]);
+  }, [held.focus, fieldTreatment, proposalTarget]);
   const named = Boolean(work?.title ?? manuscript?.title);
 
   /* 📖 WS2-03D — Conversations opens HERE.
@@ -754,6 +813,7 @@ function CanvasRoom() {
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
+                onShowChange={showProposedChange}
               />
             ) : (
               <MaiaColumn context={workContext} />
@@ -1162,6 +1222,7 @@ function CanvasRoom() {
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
+                onShowChange={showProposedChange}
               />
             ) : (
               <MaiaColumn context={workContext} />

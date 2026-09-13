@@ -171,3 +171,113 @@ describe('CS-11 — after acceptance the UI rereads the Work FROM the Work', () 
     expect(CODE(CANVAS)).toMatch(/proposed\.mount\.state === 'ready'/);
   });
 });
+
+/* ══ EW-F1 · F1-1 … F1-9 — informed consent ═══════════════════════════ */
+
+const PREVIEW_SRC = 'lib/manuscript/revisionProposal/preview.ts';
+
+describe('F1-4 — ⭐⭐ the panel carries NO manuscript prose', () => {
+  it('the preview transports coordinates and a decision, never text', () => {
+    const src = CODE(PREVIEW_SRC);
+    for (const f of [/contextBefore/, /contextAfter/, /readonly removed/, /replacementText:/]) {
+      expect(src).not.toMatch(f);
+    }
+    expect(src).toMatch(/readonly sectionId: string/);
+    expect(src).toMatch(/readonly range: SpacedRange/);
+  });
+
+  it('⛔ and the panel renders no prose field', () => {
+    const src = CODE(SURFACE);
+    for (const f of [/change\.removed/, /change\.contextBefore/, /change\.contextAfter/]) {
+      expect(src).not.toMatch(f);
+    }
+    expect(src).toMatch(/Remove one exact passage/);
+  });
+
+  it('⭐ so the consent channel carries LESS of the Work than before', () => {
+    /**
+     * ⛔ THE FIRST DRAFT BANNED `split.body.slice` OVER THE WHOLE FILE and
+     * failed — on the line that computes the OFFSET of the match. That is not
+     * prose transport, it is arithmetic, and a ban on a string pattern cannot
+     * tell the two apart. The law is about what the preview RETURNS, and the
+     * behavioural assertion in revisionProposal.test.ts owns it.
+     */
+    const src = CODE(PREVIEW_SRC);
+    expect(src).not.toMatch(/removed:\s*proposal\.expectedText/);
+    expect(src).not.toMatch(/contextBefore:|contextAfter:/);
+  });
+});
+
+describe('F1-8 — ⭐ the target range carries its coordinate space', () => {
+  it('projected_section_body, explicitly', () => {
+    expect(CODE(PREVIEW_SRC)).toMatch(/space: 'projected_section_body'/);
+  });
+
+  it('⛔⭐ and the units change is explicit where it meets the overlay', () => {
+    /* projected_section_body offsets are CODE POINTS; FocusOverlay clamps with
+       body.length and therefore indexes UTF-16 CODE UNITS. Unconverted, that is
+       FOCUS-W3 again — and wrong only where the writer used an astral
+       character, the worst possible failure distribution. */
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/codePointBoundaries\(body\)/);
+    expect(src).not.toMatch(/start=\{proposalTarget\.range\.start\}/);
+  });
+});
+
+describe('F1-1 · F1-5 · F1-6 — orientation, once, and never the Work', () => {
+  it('⭐ a proposal jumps the view to its section ONCE', () => {
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/jumpedFor\.current === proposalTarget\.sectionId\) return/);
+    expect(src).toMatch(/setJumpTo\(proposalTarget\.sectionId\)/);
+  });
+
+  it('⭐ `Show change` returns attention when the WRITER asks', () => {
+    expect(CODE(CANVAS)).toMatch(/const showProposedChange = useCallback/);
+    expect(CODE(SURFACE)).toMatch(/onShowChange\?\.\(\)/);
+    expect(CODE(SURFACE)).toMatch(/Show change/);
+  });
+
+  it('⛔ F1-6 · navigation moves the viewport and never the manuscript', () => {
+    /**
+     * ⛔⭐ THE FIRST DRAFT ASSERTED PROXIMITY AND FAILED ON AN UNRELATED LINE:
+     * `setWriting`, in a `useState` declaration that merely sits within 200
+     * characters of a `proposalTarget` occurrence in a 1200-line file. A
+     * proximity scan tests ADJACENCY, not behaviour — the C21 class again.
+     *
+     * So this reads the two places the proposal path actually acts, and
+     * asserts that the ONLY thing either of them does is set a jump target.
+     */
+    const src = CODE(CANVAS);
+    const effect = src.match(/jumpedFor\.current = proposalTarget\.sectionId;[\s\S]{0,120}?\}, \[proposalTarget\]\);/);
+    const show = src.match(/const showProposedChange = useCallback\([\s\S]{0,200}?\}, \[proposalTarget\]\);/);
+    expect(effect).not.toBeNull();
+    expect(show).not.toBeNull();
+    for (const block of [effect![0], show![0]]) {
+      expect(block).toMatch(/setJumpTo\(/);
+      /* ⛔ Nothing else. No save, no write-state change, no manuscript touch. */
+      expect(block).not.toMatch(/save|setWriting|setWriteState|mutate|apiFetch/i);
+    }
+  });
+
+  it('⛔ the target comes from the server, never from the URL', () => {
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/proposed\.mount\.preview\.state === 'acceptable'/);
+    expect(src).not.toMatch(/searchParams[\s\S]{0,80}(start|end|range)/);
+  });
+});
+
+describe('F1-2 · F1-9 — marked in the Work, and only when it resolves', () => {
+  it('⭐⭐ the mark is drawn through the overlay the Focus lane owns', () => {
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/proposalTarget\.sectionId === sectionId[\s\S]{0,400}<FocusOverlay/);
+    /* ⛔ Not a second marking mechanism. */
+    const overlays = (src.match(/<FocusOverlay/g) ?? []).length;
+    expect(overlays).toBe(2);   // the proposal's, and the held focus's
+  });
+
+  it('⛔ F1-9 · no acceptable preview means no target and no gesture', () => {
+    const src = CODE(CANVAS);
+    expect(src).toMatch(/\? proposed\.mount\.preview\.change : null/);
+    expect(CODE(SURFACE)).toMatch(/disabled=\{!mayAccept\(preview\)/);
+  });
+});
