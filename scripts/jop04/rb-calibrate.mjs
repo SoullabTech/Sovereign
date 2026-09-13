@@ -53,6 +53,27 @@ const PROFILES = {
     },
   },
 };
+/**
+ * M1 MUTATION MATRIX — frozen BEFORE the mutant is built or run.
+ * M1 reintroduces the SEMANTIC equivalent of `registered → routable`: the router
+ * manufactures a routing eligibility from registry membership, overriding what the
+ * caller declared. ⛔ Not the literal old line — the falsifiers must bite on the
+ * CLASS, not on a spelling.
+ */
+const M1_EXPECT = {
+  'RB-F1': 'RED',              // registration alone executes again
+  'RB-F2': 'RED',              // membership alone decides the lane again
+  'RB-F3': 'RED',              // unchanged — lane reachable, authority still absent
+  'RB-F4': 'RED',              // unchanged — absence of contract still accepted
+  'RB-F5': 'UNINSTANTIATED',
+  // arm B cannot reach a non-routable state: the mutation OVERRIDES an explicitly
+  // unsatisfied declaration, so both arms route. PRECONDITION-UNMET, not GREEN.
+  'RB-F6': 'PRECONDITION-UNMET',
+  'RB-F7': 'N/A',
+  'RB-F8': 'GREEN',            // ⛔ MUST HOLD — a mutation may not widen execution authority
+  'RB-CAL-2a': 'RED',          // no task shape leaves a registered capability non-routable
+  'RB-CAL-2b': 'NOT-REACHED',  // nothing to evaluate once 2a is RED
+};
 const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'NOT-REACHED', 'INSTRUMENT_ERROR']);
 
 /**
@@ -98,7 +119,9 @@ async function main() {
     ? process.argv[process.argv.indexOf('--subject') + 1]
     : SUBJECT_SHA;
   const isBaseline = subjectArg === SUBJECT_SHA;
-  const profile = PROFILES[subjectArg];
+  const profile = process.argv.includes('--m1')
+    ? { name: 'M1 MUTATION MATRIX (frozen before the mutant was built)', expect: M1_EXPECT }
+    : PROFILES[subjectArg];
   if (!profile) {
     console.error(`⛔ no frozen expectation profile for subject '${subjectArg}'. A matrix must be FROZEN BEFORE the run; the runner may never infer one.`);
     process.exitCode = 2; return;
