@@ -39,12 +39,18 @@ async function main() {
     ? process.argv[process.argv.indexOf('--json') + 1]
     : path.join(REPO_ROOT, 'docs', 'programme', 'JOP-04_RB_CALIBRATION_EVIDENCE.json');
 
+  // ⛔ Subject identity is explicit. Default is the frozen baseline; a repair
+  //    candidate must be NAMED, never inherited from "whatever HEAD is now".
+  const subjectArg = process.argv.includes('--subject')
+    ? process.argv[process.argv.indexOf('--subject') + 1]
+    : SUBJECT_SHA;
+  const isBaseline = subjectArg === SUBJECT_SHA;
   const instrument_sha = instrumentSha(REPO_ROOT);
-  const subject = materializeSubject(REPO_ROOT, SUBJECT_SHA);
+  const subject = materializeSubject(REPO_ROOT, subjectArg);
 
   console.log('JOP-04 RB — RED-before-GREEN CALIBRATION');
   console.log('='.repeat(78));
-  console.log(`SUBJECT SHA     ${subject.shortSha}   (detached worktree, pristine, HEAD read back from checkout)`);
+  console.log(`SUBJECT SHA     ${subject.shortSha}   ${isBaseline ? '(FROZEN BASELINE — detached worktree, pristine, HEAD read back)' : '(REPAIR CANDIDATE — detached worktree, pristine, HEAD read back)'}`);
   console.log(`INSTRUMENT SHA  ${instrument_sha}   (harness judging it — separate identity)`);
   console.log(`  lineage from  ${INSTRUMENT_LINEAGE.join(', ')}   (amendment descends from, never replaces)`);
   console.log(`CAL-2 SPECIMEN  ${CAL2_SPECIMEN}   (same capability identity in every arm)`);
@@ -153,6 +159,7 @@ async function main() {
       cal2_specimen: CAL2_SPECIMEN,
       subject_sha: subject.resolvedSha,
       subject_sha_short: subject.shortSha,
+      subject_role: isBaseline ? 'FROZEN_BASELINE' : 'REPAIR_CANDIDATE',
       instrument_sha,
       layer_b_capability: LAYER_B_CAPABILITY,
       calibration: calibrationSuccess ? 'SUCCESS' : 'FAILED',
