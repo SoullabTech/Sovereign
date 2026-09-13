@@ -21,7 +21,7 @@ import { FALSIFIERS, ipcCompositionTripwire, LAYER_B_CAPABILITY } from './rb-fal
 import { runCal2, CAL2_SPECIMEN } from './rb-cal2.mjs';
 
 /** Instrument lineage. ⛔ The amendment does not REPLACE 0b9aaec4; it descends from it. */
-const INSTRUMENT_LINEAGE = ['0b9aaec4'];
+const INSTRUMENT_LINEAGE = ['0b9aaec4', '1ed81732'];
 /** Predeclared, frozen BEFORE the amended run. ⛔ Not editable after results. */
 const CAL2_PREDICTED_BASELINE = 'RED';
 
@@ -92,7 +92,7 @@ async function main() {
     }
 
     // ── RB-CAL-2 · registration/routability discriminator (amendment) ──────
-    const cal2 = runCal2(mods, CAL2_SPECIMEN);
+    const cal2 = await runCal2(mods, subject.dir, CAL2_SPECIMEN);
     const cal2Calibration = cal2.headline === CAL2_PREDICTED_BASELINE ? 'MATCH' : 'MISMATCH';
     if (cal2Calibration === 'MISMATCH') mismatches++;
     if (cal2.headline !== 'RED') {

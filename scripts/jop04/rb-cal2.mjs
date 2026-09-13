@@ -3,79 +3,85 @@
  *
  * PROPOSITION
  *   For a registered capability, withholding the separately required routing
- *   condition must make NON-ROUTABILITY REACHABLE.
+ *   condition must make NON-ROUTABILITY REACHABLE — through the REAL routing
+ *   composition, never merely constructible inside this harness.
  *
- * ⛔ The probe must NOT prescribe how routing eligibility is represented.
- *    `route(task, eligibility)` remains UNDESIGNED (RB-3 freeze). The probe
- *    therefore tests the SEMANTIC DISTINCTION, not a signature.
+ * ⛔ Does not prescribe a signature. Probes the SEMANTIC DISTINCTION.
+ * ⛔ Tolerates the pre-repair substrate: if no eligibility module exists, the
+ *    probe records that and returns RED / NOT-REACHED rather than crashing.
  *
- * ⭐ FOUNDER SHARPENING (2026-09-13) — the state must be reachable through the
- *    REAL routing composition, not merely constructible inside a test harness:
- *
- *      registered → caller always manufactures eligibility → routable
- *
- *    is a DISGUISED COUPLING and must not produce GREEN.
- *
- * THE DISCRIMINANT IS NOT  registered vs unknown           (RB-F8 covers that)
- * THE DISCRIMINANT IS      same registered capability,
- *                          same capability identity,
- *                          ONLY routing eligibility differs.
+ * CAL-2a  is `registered ∧ ¬routable` REACHABLE?
+ * CAL-2b  NO-AUTO-MANUFACTURE — is the routing condition's truth something
+ *         other than registry membership wearing another field name?
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 export const CAL2_SPECIMEN = 'git.rev_parse';
+const EXECUTABLE_PLACEMENTS = new Set(['C0']);
+const isExecutable = (d) => EXECUTABLE_PLACEMENTS.has(d.execution_lane);
 
-/**
- * Task shapes reachable through the production entry point. Every arm is an
- * ORDINARY task object — the only thing a real caller can vary. ⛔ Nothing here
- * reaches around route()'s public input or mutates the registry.
- */
-function probeArms(capability) {
-  return [
-    { label: 'bare', task: { capability } },
-    { label: 'bounded_for_local:false', task: { capability, bounded_for_local: false } },
-    { label: 'bounded_for_local:true', task: { capability, bounded_for_local: true } },
-    { label: 'oversized input_chars', task: { capability, bounded_for_local: true, input_chars: 1_000_000 } },
-    // Plausible eligibility-shaped fields a caller MIGHT use to withhold routing
-    // consideration. If the substrate ignores them, the caller cannot withhold.
-    { label: 'routing_eligibility:false', task: { capability, routing_eligibility: false } },
-    { label: 'eligible:false', task: { capability, eligible: false } },
-    { label: 'routable:false', task: { capability, routable: false } },
-    { label: 'routing_condition:unsatisfied', task: { capability, routing_condition: 'unsatisfied' } },
-  ];
+/** Load the subject's routing-eligibility producer, if the repair created one. */
+async function loadEligibility(subjectDir) {
+  const p = path.join(subjectDir, 'scripts', 'builder', 'routing-eligibility.mjs');
+  try { return { present: true, mod: await import(`file://${p}`) }; }
+  catch { return { present: false, mod: null }; }
 }
 
-const EXECUTABLE_PLACEMENTS = new Set(['C0']);
+export async function runCal2({ router, mainJsPath }, subjectDir, capability = CAL2_SPECIMEN) {
+  const elig = await loadEligibility(subjectDir);
+  const call = (task, second) => {
+    try { return second === undefined ? router.route(task) : router.route(task, second); }
+    catch (e) { return { execution_lane: null, status: 'threw', reason: e.message }; }
+  };
 
-/**
- * CAL-2a — is `registered ∧ ¬routable` REACHABLE for the same capability?
- * CAL-2b — no-auto-manufacture: was that reachability produced through the
- *          production entry point using only task-shaped input?
- */
-export function runCal2({ router }, capability = CAL2_SPECIMEN) {
-  const arms = probeArms(capability).map(({ label, task }) => {
-    const decision = router.route(task);
-    return {
-      arm: label,
-      lane: decision.execution_lane,
-      status: decision.status,
-      executable_placement: EXECUTABLE_PLACEMENTS.has(decision.execution_lane),
-    };
+  const arms = [];
+  const push = (label, decision, meta = {}) => arms.push({
+    arm: label, lane: decision.execution_lane, status: decision.status,
+    executable_placement: isExecutable(decision), ...meta,
   });
 
-  const nonRoutableArms = arms.filter((a) => !a.executable_placement);
-  const reachable = nonRoutableArms.length > 0;
+  // ── ordinary task shapes: nothing but a task object reaches route() ───────
+  push('bare (no routing condition)', call({ capability }));
+  push('bounded_for_local:true', call({ capability, bounded_for_local: true }));
+  push('oversized input_chars', call({ capability, bounded_for_local: true, input_chars: 1_000_000 }));
+  push('caller asserts routing_eligibility:false', call({ capability, routing_eligibility: false }));
 
-  // CAL-2a: RED when non-routability is UNREACHABLE for a registered capability.
+  // ── FORGERY ARM — a plain object claiming to be a routing condition ──────
+  // The BoundEvidence law: a privileged object cannot become privileged
+  // because a caller says that it is.
+  const forged = call({ capability }, { satisfied: true, basis: 'forged-by-caller' });
+  push('FORGED unbranded { satisfied: true }', forged, { forgery: true });
+
+  // ── declared arms — only available once the repair creates the producer ──
+  let declaredSatisfied = null, declaredUnsatisfied = null, declaredBasis = null;
+  if (elig.present && typeof elig.mod.declareRoutingEligibility === 'function') {
+    const yes = elig.mod.declareRoutingEligibility({
+      satisfied: true, basis: 'operator_submission', declared_by: 'jop04-instrument',
+    });
+    const no = elig.mod.declareRoutingEligibility({
+      satisfied: false, basis: 'operator_submission', declared_by: 'jop04-instrument',
+    });
+    declaredBasis = yes.basis;
+    declaredSatisfied = call({ capability }, yes);
+    declaredUnsatisfied = call({ capability }, no);
+    push('declared routing condition SATISFIED', declaredSatisfied, { declared: true });
+    push('declared routing condition UNSATISFIED', declaredUnsatisfied, { declared: true });
+  }
+
+  const nonRoutable = arms.filter((a) => !a.executable_placement);
+  const reachable = nonRoutable.length > 0;
+
   const cal2a = {
     id: 'RB-CAL-2a',
     label: 'registered ∧ ¬routable is reachable',
     observed: reachable ? 'GREEN' : 'RED',
     evidence: {
-      capability,
-      capability_identity_constant: true,
+      capability, capability_identity_constant: true,
+      eligibility_producer_present: elig.present,
       arms,
-      arms_yielding_executable_placement: arms.length - nonRoutableArms.length,
-      arms_yielding_non_routable: nonRoutableArms.length,
+      arms_executable: arms.length - nonRoutable.length,
+      arms_non_routable: nonRoutable.length,
       reachable,
     },
     note: reachable
@@ -83,30 +89,55 @@ export function runCal2({ router }, capability = CAL2_SPECIMEN) {
       : 'no task shape reachable through route() made a registered capability non-routable — registration alone still determines placement',
   };
 
-  // CAL-2b: the anti-tautology check. Only evaluable once 2a is GREEN.
-  const cal2b = reachable
-    ? {
+  // ── CAL-2b · no-auto-manufacture ─────────────────────────────────────────
+  if (!reachable) {
+    return {
+      cal2a,
+      cal2b: {
         id: 'RB-CAL-2b',
-        label: 'no-auto-manufacture — non-routability reached via the production entry point',
-        observed: 'GREEN',
-        evidence: {
-          witness_arm: nonRoutableArms[0].arm,
-          produced_by: 'router.route(task) — ordinary task object only',
-          harness_internal_injection: false,
-          registry_modified: false,
-          capability_unregistered: false,
-        },
-        note: 'the non-routable witness was produced by the production entry point with task-shaped input only',
-      }
-    : {
-        id: 'RB-CAL-2b',
-        label: 'no-auto-manufacture — non-routability reached via the production entry point',
+        label: 'no-auto-manufacture — routing truth is not registry membership renamed',
         observed: 'NOT-REACHED',
-        evidence: {
-          reason: 'no non-routable witness exists, so the anti-tautology check has nothing to evaluate',
-        },
+        evidence: { reason: 'no non-routable witness exists, so the anti-tautology check has nothing to evaluate' },
         note: '⛔ NOT-REACHED — never discharges; it did not run, and did not pass',
-      };
+      },
+      headline: cal2a.observed,
+    };
+  }
 
-  return { cal2a, cal2b, headline: cal2a.observed };
+  // STRUCTURAL tripwire — does the production caller derive the fact from the registry?
+  let callerSrc = '';
+  try { callerSrc = readFileSync(mainJsPath, 'utf8'); } catch { /* recorded below */ }
+  const registryDerivedInCaller = /CAPABILITIES\s*\[[^\]]+\]\s*\?|hasOwnProperty[\s\S]{0,80}(routing|eligib)/i.test(callerSrc);
+
+  const forgeryRefused = !forged || !isExecutable(forged);
+  const bothStatesShown = !!declaredSatisfied && isExecutable(declaredSatisfied)
+    && !!declaredUnsatisfied && !isExecutable(declaredUnsatisfied);
+  const pass = forgeryRefused && bothStatesShown && !registryDerivedInCaller;
+
+  return {
+    cal2a,
+    cal2b: {
+      id: 'RB-CAL-2b',
+      label: 'no-auto-manufacture — routing truth is not registry membership renamed',
+      observed: pass ? 'GREEN' : 'RED',
+      evidence: {
+        witness_non_routable_arm: nonRoutable[0].arm,
+        produced_by: 'router.route(...) — production entry point',
+        harness_internal_injection: false,
+        registry_modified: false,
+        capability_unregistered: false,
+        forgery_refused: forgeryRefused,
+        forged_arm_lane: forged.execution_lane,
+        both_states_shown_same_capability: bothStatesShown,
+        declared_basis: declaredBasis,
+        caller_derives_condition_from_registry: registryDerivedInCaller,
+        caller_scan_class: 'STRUCTURAL (supplementary; does not discharge on its own)',
+      },
+      note: pass
+        ? 'both states reached for one capability; an unbranded assertion was refused; the caller does not derive the condition from the registry'
+        : '⛔ the routing condition can be manufactured — forgery accepted, or both states not shown, or the caller derives it from CAPABILITIES',
+      limitation: 'provenance is proven up to UNFORGEABILITY plus a DECLARED basis. A caller that computes a satisfied condition from membership and declares an honest-looking basis is caught only by the structural scan.',
+    },
+    headline: cal2a.observed,
+  };
 }
