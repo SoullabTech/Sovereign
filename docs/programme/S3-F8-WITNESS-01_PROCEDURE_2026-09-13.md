@@ -69,6 +69,51 @@ lib/manuscript/development/capture.ts:164
 
 ---
 
+## 3a · EXECUTION DISCIPLINES — founder, 2026-09-13
+
+⛔ **Not new rulings. How the run is conducted so its record survives.**
+
+### D1 · PIN THE SHA · the operation, not the line
+
+The witnessed SHA is named in the record, and the boundary is cited as **the
+SELECT corresponding to this semantic operation at that SHA** — the revision-body
+read performed by `loadRevisionContent` on the developmental Ask path.
+
+⛔ `capture.ts:164` is orientation for a reader today, **never the identity of
+the evidence**. Line numbers drift; a record anchored to one becomes unreadable
+the moment an unrelated edit lands above it.
+
+### D2 · INSTRUMENTATION STAYS OBSERVATIONAL
+
+Nothing added for the witness may:
+
+```text
+⛔ establish disclosure authority
+⛔ alter branching
+⛔ populate a receipt
+⛔ otherwise change the behaviour being measured
+```
+
+⭐ *A witness that perturbs its subject reports on itself.* Statement logging and
+post-hoc queries observe; a shim that calls `establishDisclosureBoundary` to
+"check" would manufacture the very authority whose absence is the finding.
+
+### D3 · RECORD PRESENCE, NOT CONTENT
+
+The decisive facts are booleans, and the record carries only booleans:
+
+```text
+revision_read_issued                      = true
+nonempty_recovered_body_reached_cognition = true
+developmental_receipt_minted              = false
+```
+
+⛔ No authored excerpt. No fingerprint. No digest. No offset. ⭐ **The full result
+is expressible without a single authored character**, which is the test that the
+record is content-free by construction rather than by carefulness.
+
+---
+
 ## 4 · FIXTURE — and the trap it must avoid
 
 ```text
@@ -122,6 +167,26 @@ SELECT count(*) FROM context_disclosure_receipts;   -- expected: 0
 none. It is meaningful ONLY alongside 5.1 + 5.2, which is precisely why all
 three are required.
 
+### ⭐⭐ 5.4 · THE DECISIVE CHAIN
+
+```text
+non-empty committed revision exists
+        ↓
+body-scoped observation requested
+        ↓
+working_draft_revisions body SELECT executes
+        ↓
+recovered authored body reaches cognition
+        ↓
+no valid disclosure authority existed
+        ↓
+S3-F8 RED
+```
+
+⛔ **Anything short of that whole chain is one of the other two outcomes** —
+canonical block → reconciliation, or instrument failure → no evidence. There is
+no partial RED.
+
 ---
 
 ## 6 · STOP CONDITIONS — any one voids the run
@@ -164,12 +229,14 @@ before.
 ## 8 · WHAT A RESULT RECORD MUST STATE
 
 ```text
-the SHA witnessed
-the three outcomes, and which one occurred
-the fixture's guarantee that revision content was NON-NULL and body-scoped
-both instruments, independently reported
-the receipt count
-⛔ and, on anything but the expected RED, NO claim about S3 whatsoever
+the SHA witnessed                          (D1)
+which of the three outcomes occurred
+the fixture's guarantee: revision content NON-NULL and observation body-scoped
+revision_read_issued                       (5.2)
+nonempty_recovered_body_reached_cognition  (5.1)
+developmental_receipt_minted               (5.3)
+⛔ booleans only — no excerpt, fingerprint, digest or offset  (D3)
+⛔ on anything but the expected RED, NO claim about S3 whatsoever
 ```
 
 ---
@@ -178,6 +245,7 @@ the receipt count
 
 ```text
 S3-F8-WITNESS-01     SPECIFIED · ⛔ UNSPENT
+EXECUTION DISCIPLINE D1 SHA-pinned · D2 observational · D3 presence-only
 CLASS A              this is the lane's only genuine known-bad reproduction
 CLASS B              blocked behind it — S3-F1…F7, F9, F10 specified,
                      defeat candidates pinned, implementation NOT AUTHORIZED
