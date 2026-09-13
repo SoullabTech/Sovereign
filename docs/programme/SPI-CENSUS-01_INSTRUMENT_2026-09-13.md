@@ -1,7 +1,7 @@
 # SPI-CENSUS-01 — CENSUS INSTRUMENT
 
 **Date:** 2026-09-13 · **Lane:** `SPI-CENSUS-01` (charter: `SPI-CENSUS-01_CHARTER_2026-09-13.md`).
-**Status:** ⛔ **INSTRUMENT DEFINED. CENSUS NOT YET RUN.**
+**Status:** ⛔ **INSTRUMENT DEFINED. CENSUS RUN 2026-09-13 · LANE CLOSED** — map `…_MAP_2026-09-13.md`, disposition `…_DISPOSITION_2026-09-13.md`.
 
 ---
 
@@ -13,7 +13,12 @@ Three rules, in order of how easily they are broken:
    test establish that something **exists**, never that it is live. Charter §4.
 2. **`ABSENT` means "not found in the declared scope."** Every row names the refs searched.
    Charter §6.
-3. **Finding a gap is not authority to fill it.** The census records; it does not repair, design, or
+3. ⚠️ **`ABSENT` may not rest on a single lexical search** (founder ruling, 2026-09-13). A
+   consequential absence needs multiple independent searches or direct enumeration of the
+   namespace — `grep vocabulary absent ≠ capability absent`. Earned by the C3 export miss (§5).
+4. **The census is bounded.** ⛔ Uninspected refs are a **disclosed ceiling, not unfinished work**;
+   reopen inspection only where a consequential row still turns on the uncertainty.
+5. **Finding a gap is not authority to fill it.** The census records; it does not repair, design, or
    constitute. Charter §2.
 
 ## 2 · The thirteen dimensions
