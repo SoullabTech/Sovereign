@@ -290,6 +290,17 @@ idempotent (no competing listeners)"*, which is about listener attachment, not m
 positive out of twelve; **that is the cost of naming candidates from names**, and it is the same
 error class the ladder exists to prevent, one level up.
 
+⛔ **This is not occurrence 3** (founder, 2026-09-13). The sequence ran *keyword sweep → candidate
+association → body inspection → association falsified → candidate withdrawn*. **Nothing was promoted
+into a finding or a stronger evidence class** — the discipline succeeded. The counterfactual names
+what occurrence 3 would have been:
+
+> Had the matrix acquired **`A8 — TEST PRESENT`** from the `idempotent` keyword **without inspection**,
+> that would be occurrence 3.
+
+⛔ Per the founder's earlier ruling, **no "near miss" row is added to the register** — a register whose
+value depends on counting actual instances of one mechanism must not be diluted with near misses.
+
 ⭐ **Keep the three propositions separate** (founder, before reading): *duplicate detected* ≠
 *duplicate prevented* ≠ *exactly-once state transition*. Nothing in this survey establishes any of
 the three.
@@ -323,6 +334,13 @@ expect(requiredCapabilities).toContain('audio');
 The array is defined three lines above the assertion. **The test touches no application code, reads
 no `Info.plist`, and would pass in an empty repository** — stricter than Finding A, where at least
 `MicSession` is exercised. B5 therefore joins C1–C4: ⛔ **NOT `TEST PRESENT`**.
+
+⭐ **Named narrowly (founder, 2026-09-13), and deliberately not generalized:**
+
+> **Repository-independent self-assertion** — the test proves a property of **test-authored data**,
+> not a property of the application.
+
+⛔ **One instance is enough to record and hand over; not enough to build another taxonomy around.**
 
 ⚠️ **The defect is per-describe-block, not per-file.** *Battery Management* and *Wake Word False
 Positives* assert on real returned values and **do** discriminate. *Interruption Handling* and
@@ -364,3 +382,7 @@ passing suites, 160 green tests, and two rows earned. ⛔ No source repaired · 
 witnessed · no requirement authored · **U2 not authorized.**
 
 > *Three instrument defects, three lanes of evidence, zero rows talked into coverage.*
+
+**Next act is NOT U2.** Founder ruling 2026-09-13: the broad walkthrough is not authorized; U1's
+completion does not open it. See the admissibility screen —
+`docs/programme/UARE-01_U2_ADMISSIBILITY_SCREEN_2026-09-13.md`.

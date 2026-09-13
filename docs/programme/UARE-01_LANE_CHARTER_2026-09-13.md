@@ -109,6 +109,31 @@ roadmap, inference becoming observation, observation becoming requirement, desir
 becoming architecture work — and generalizing correctly is not the same as having earned
 constitutional standing. It stays here until the lane earns it, by the same rule it states.
 
+### What U1 demonstrated — ⛔ lane-local, not a testing doctrine
+
+U1 found **three distinct mechanisms by which green outruns evidence**, plus a fourth problem that is
+not about greenness at all:
+
+```text
+LEXICAL GREEN            the defect may return under a different spelling
+NON-DISCRIMINATING GREEN the named behavior may be absent; the assertion still passes
+SELF-AUTHORED GREEN      the test proves data it constructed itself
+                         ("repository-independent self-assertion" — a property of
+                          test-authored data, not a property of the application)
+
+WRONG GRAIN              real behavioral evidence, for a narrower proposition
+                         than the product claim
+```
+
+```text
+160 passing tests   ≠   160 protected boundaries
+```
+
+⛔ **This is methodological knowledge, not doctrine.** Per §10, a lane does not declare a universal
+testing discipline because it discovered one. If Soullab wants this applied elsewhere, **it needs its
+own authority crossing** — which is the rule this lane has been enforcing on itself all day, applied
+to its own most useful output.
+
 ### Occurrence register
 
 | # | Date | Form | What promoted itself | Disposition |
@@ -317,6 +342,8 @@ U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspect
 U1 FIRST PASS      RUN on 36374edb - A1 TEST PASSING - A4 NOT DECISIVE - nothing GATED
 U1 SECOND PASS     RUN on 7f52f587 - 125 tests green - ZERO promotions
 U1 COMPLETE        9 suites - 160 tests green - TWO rows earned - nothing GATED
+U2 BROAD WALK      NOT AUTHORIZED - admissibility screen run - 1 of 7 forward
+STAGE RULE         the programme does not manufacture a next stage to satisfy its sequence
 HANDOFFS SENT      A4 guard - mobile.robustness x3 - repair NOT authorized by this lane
 MATRIX RULE        the matrix does not descend to meet the tests
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
@@ -332,12 +359,42 @@ NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIR
 | --- | --- | --- | --- |
 | **U0** | **INTAKE** | The founder's first pass, classified by evidence class. | ✅ done — this commit |
 | **U1** | **MAIA-SIDE COVERAGE SURVEY** — ✅ **COMPLETE** 2026-09-13 (three passes, `36374edb`/`7f52f587`), result in `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md` | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
-| **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **requires a founder act** — see §8 |
+| **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **BROAD WALKTHROUGH NOT AUTHORIZED** (founder, 2026-09-13). Gated behind the **§7.1 admissibility screen** — run 2026-09-13, one candidate forward, six closed. A founder act on that candidate is required; §8's constraints then still apply. |
 | **U3** | **DISCRIMINATION PASS** | Every finding classified `MODEL-OF-ME` / `OTHER-WHO-KNOWS-ME` / neutral-infrastructure. Neutral-infrastructure findings are the only ones eligible to become candidate design inputs without a doctrinal question attached. | ⛔ requires U1; U2 for [O]-dependent rows |
 | **U4** | **QUESTION HANDOFF** | One docket per owning lane (Voice · Anamnesis · Jarvis · Practitioner Studio · Writer's Studio), each a *question*, never a recommendation. | ⛔ founder ruling on which dockets open |
 | **U5** | **STANDING WATCH** | Periodic re-read: release notes, pricing, legal terms, funding. Diff against this record. | ⛔ not opened |
 
-**U1 may proceed. U2 and beyond may not.**
+**U1 is COMPLETE. U2 and beyond may not proceed.**
+
+### 7.1 · The U2 admissibility screen
+
+> **The programme does not manufacture a next stage merely to satisfy its own sequence.**
+
+U1 completing does not open U2. The governing question is no longer *when do we walk the product* but
+**what unresolved proposition actually requires Uare to be observed running?** A generic competitor
+walkthrough is tourism: interesting observations, no discriminating question, and an enormous
+temptation to convert novelty into internal requirements — ⛔ §0's failure mode operating at programme
+scale rather than inside a document.
+
+Every proposed U2 observation carries five fields:
+
+| Field | Question |
+| --- | --- |
+| **Unresolved proposition** | What precisely do we still not know? |
+| **Evidence gap** | Why can `[D]`, `[E]`, existing research or inference not settle it? |
+| **Discriminating observation** | What would we observe that separates the competing possibilities? |
+| **Competitive consequence** | What conclusion *in UARE-01* changes depending on the answer? |
+| **Jurisdiction check** | Can the result stay competitive evidence rather than becoming an internal MAIA requirement? |
+
+> ⛔ **If no proposed observation passes all five, U2 closes unrun.** That is a legitimate outcome.
+> **There is no obligation to manufacture `[O]` merely because the taxonomy contains `[O]`.**
+
+⛔ **Invalid justifications**, named so they cannot be smuggled in: *we haven't looked at the product
+yet* · *it would complete the study* · *we might notice something useful* · *we need firsthand
+experience* · *it could inspire MAIA* · *we should see how polished it feels.*
+
+**Screen run 2026-09-13** — `docs/programme/UARE-01_U2_ADMISSIBILITY_SCREEN_2026-09-13.md`:
+**7 candidates · 1 passes · 6 recommended for permanent closure.**
 
 ## 8 · The clean-room walkthrough — constraints before it is ever authorized
 
