@@ -71,6 +71,27 @@ const PROFILES = {
 };
 
 /**
+ * RECONCILED (Option B) MATRIX — frozen BEFORE the repair commit exists.
+ * Identical to the RB-6A candidate matrix except CAL-4a and CAL-4d.
+ * ⭐ The important result is the CONJUNCTION:
+ *      legitimate production-shaped value  ACCEPTED   (4a GREEN)
+ *      caller-forged lookalike             REJECTED   (4c GREEN)
+ * ⛔ If 4a goes GREEN by making 4c RED, the repair FAILS.
+ * ⛔ If 4d stays RED, the repair still depends on accidental module reuse and FAILS.
+ */
+const RECONCILED_EXPECT = {
+  'RB-F1': 'GREEN', 'RB-F2': 'GREEN', 'RB-F3': 'RED', 'RB-F4': 'RED',
+  'RB-F5': 'UNINSTANTIATED', 'RB-F6': 'RED', 'RB-F7': 'N/A', 'RB-F8': 'GREEN',
+  'RB-CAL-2a': 'GREEN', 'RB-CAL-2b': 'GREEN',
+  'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
+  'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
+  'RB-CAL-4a': 'GREEN',   // ⭐ legitimate cross-loader object now recognized
+  'RB-CAL-4b': 'GREEN',
+  'RB-CAL-4c': 'GREEN',   // ⭐ forgery still refused — the conjunction
+  'RB-CAL-4d': 'GREEN',   // ⭐ survives N fresh router reloads
+};
+
+/**
  * RB-6B TARGET MATRIX — frozen BEFORE implementation. Not a profile yet: no
  * RB-6B repair exists to judge. ⛔ RB-F4 must remain RED on a REACHED
  * precondition; if it turns GREEN because the new boundary refuses
@@ -175,7 +196,9 @@ async function main() {
     : SUBJECT_SHA;
   const isBaseline = subjectArg === SUBJECT_SHA;
   const isCandidate = subjectArg === 'fd543df1';
-  const profile = process.argv.includes('--m1full')
+  const profile = process.argv.includes('--reconciled')
+    ? { name: 'RECONCILED (Option B) MATRIX — frozen before the repair existed', expect: RECONCILED_EXPECT }
+    : process.argv.includes('--m1full')
     ? { name: 'M1-FULL MUTATION MATRIX (frozen before the mutant was built)', expect: M1_FULL_EXPECT }
     : process.argv.includes('--m1')
     ? { name: 'M1 MUTATION MATRIX (frozen before the mutant was built)', expect: M1_EXPECT }
