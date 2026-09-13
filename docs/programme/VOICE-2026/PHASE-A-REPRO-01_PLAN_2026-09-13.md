@@ -96,3 +96,20 @@ Laid side by side, never pooled: Stage A (14/29) · Stage B (15/28) · P5B0-POST
 ## §7 What this plan does not authorize
 
 Building anything (the plan is accepted first) · installing anything · calling any result "Stage C" or "historical" · pooling strata · a second reinstall inside either stage · repairing the organism · a rebuild whose UUID differs from `11A057AA-…` reaching the device.
+
+## §8 ACCEPTED (founder, 2026-09-13) — with the housekeeping mechanism of the Stage-C record §11
+
+Founder, verbatim: *"I read the complete plan at `9fcd532f3`. The experimental design is accepted: source condition `4596b9bdb` · explicitly new reproduction subject · no historical-artifact claim · MAC-COMPILE-06 environment pinned · fresh dedicated DerivedData · unsigned → signed build sequence · signed dylib SHA-256 plus per-file app manifest captured before installation · UUID must equal `11A057AA-4A3C-3CAE-8C28-E29792489459` · UUID mismatch → STOP before install · cleaned-container P5-B0 matched control comes first · Mode L, VP ON, fixed N=30 · reproduction N=30 only after the control is completed and read · strata remain separate; no causal/mechanism claim manufactured."*
+
+Load-bearing sequencing, verbatim:
+
+```text
+PLAN                    ACCEPTED
+HOUSEKEEPING            archive PASS
+PURGE                   authorized as above · must verify tmp = 0
+NEXT                    P5B0-POSTCLEAN-CONTROL · N=30
+PHASE-A BUILD           STILL HELD until post-clean control finishes and is read
+PHASE-A-REPRO-01 BUILD  only then
+```
+
+*"That preserves the plan's strongest move: we do not build the answer before we know what cleaning the container did to the control."* Nothing is built until the control is read; the §2–§4 build steps are executed only on a further founder act after that reading.

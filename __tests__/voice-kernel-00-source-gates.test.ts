@@ -480,9 +480,20 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(a).toMatch(/NOTHING DELETED/);
     const pg = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-purge.sh'), 'utf8');
     const pgExec = pg.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
-    expect(pgExec).toMatch(/RECONCILED/);                               // step D gate present
-    expect(pgExec).toMatch(/devicectl-probe-/);                         // step E gate present
-    expect(pgExec).not.toMatch(/devicectl[^\n]*\b(delete|remove|rm)\b/); // no deletion verb until one is read from the probe
+    // founder ruling 2026-09-13: the only mechanism is the documented `copy to … --remove-existing-content true` from an
+    // EMPTY source, admitted only behind the exact preimage gate; never `uninstall`, never another app-data location.
+    expect(pgExec).not.toMatch(/uninstall/);
+    expect(pgExec).not.toMatch(/devicectl[^\n]*\b(delete|rm)\b/);
+    const copyTo = pgExec.indexOf('devicectl device copy to');
+    expect(copyTo).toBeGreaterThan(0);
+    expect(pgExec.indexOf('RECONCILED')).toBeLessThan(copyTo);          // D before F
+    expect(pgExec.indexOf('devicectl-probe-')).toBeLessThan(copyTo);    // E before F
+    expect(pgExec.indexOf('comm -3')).toBeLessThan(copyTo);             // exact-set preimage before F
+    expect(pgExec.indexOf('DRY RUN COMPLETE')).toBeLessThan(copyTo);    // dry-run exits before F
+    const mech = pgExec.split('\n').filter((l) => /--remove-existing-content/.test(l) && !/^\s*say\b|grep/.test(l));
+    expect(mech).toHaveLength(1);                                        // exactly one mutation line
+    expect(mech[0]).toMatch(/--source "\$EMPTY".*--destination tmp/);   // empty source, tmp only
+    expect(pgExec).toMatch(/PURGE UNVERIFIED/);                          // H fails closed
   });
 });
 
