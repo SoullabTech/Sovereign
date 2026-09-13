@@ -14,9 +14,16 @@ xcrun devicectl device info --help > "$OUT/device-info-help.txt" 2>&1
 xcrun devicectl device copy --help > "$OUT/device-copy-help.txt" 2>&1
 # every verb the top two help pages list is expanded one level, so a delete/remove verb — if the tool has one — is
 # captured with its documented arguments rather than inferred.
-grep -oE '^\s{2,}[a-z][a-z-]+' "$OUT/device-help.txt" | tr -d ' ' | sort -u | while read -r v; do
+# C-D8 (2026-09-13): the first probe expanded ONE level and missed `device copy to --help`, the only page that documents
+# --remove-existing-content; the purge gate then refused at step E (correctly). Two levels are captured now.
+subs(){ awk '/^SUBCOMMANDS:/{f=1;next} f && /^[[:space:]]{2,}[a-z][a-z-]+/ {print $1} f && /^[[:space:]]*$/ {if (seen) exit; seen=1}' "$1" | sort -u; }
+subs "$OUT/device-help.txt" | while read -r v; do
   xcrun devicectl device "$v" --help > "$OUT/device-$v-help.txt" 2>&1
+  subs "$OUT/device-$v-help.txt" | while read -r w; do
+    xcrun devicectl device "$v" "$w" --help > "$OUT/device-$v-$w-help.txt" 2>&1
+  done
 done
-{ echo "## verbs mentioning delete/remove/rm/unlink/erase (documentation text, not an implementation):"
+{ echo "## pages captured: $(ls "$OUT"/*.txt | wc -l | tr -d ' ')"; echo "## copy-to documents --remove-existing-content: $(grep -q -- '--remove-existing-content' "$OUT/device-copy-to-help.txt" 2>/dev/null && echo YES || echo NO)"
+  echo "## verbs mentioning delete/remove/rm/unlink/erase (documentation text, not an implementation):"
   grep -rniE 'delete|remove|unlink|erase|\brm\b' "$OUT"/*.txt | sed 's#'"$OUT"'/##' || echo "(none found in the captured help pages)"; } | tee "$OUT/SUMMARY.txt"
 echo "probe written: $OUT"
