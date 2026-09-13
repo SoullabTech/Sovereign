@@ -4,6 +4,12 @@
 falsification witness, not a product walkthrough.*
 **Status:** ⛔ **PREDECLARED AND FROZEN. NOT RUN. NO ACCOUNT CREATED. NO CONTACT WITH THE PRODUCT.**
 
+> ⚠️ **Forward reference, added 2026-09-13 — this file's protocol content is UNCHANGED.** The open
+> question in §5 was ruled on: one in-corpus calibration control is authorized, as a separately
+> versioned amendment before contact. **Read this file together with**
+> `docs/programme/UARE-01_U2_C7_WITNESS_PROTOCOL_AMENDMENT_1_2026-09-13.md`. The frozen instrument
+> of record is this file at commit **`d0157548`**; nothing here is edited to match the amendment.
+
 > **Predeclaration is a condition of the instrument, not a formality.** Everything below — corpus,
 > prompts, scoring rule — is fixed *before* any contact with Uare. ⛔ **Nothing in this document may be
 > revised after the first observation.** If it proves wrong, the run is void and re-declared; it is
@@ -112,6 +118,11 @@ steel to carbon?"*) would separate them.
 ⛔ **Not added.** The founder specified three predeclared outside-corpus prompts and no adaptive
 follow-up; adding a fourth changes the authorized instrument. **Raised for ruling before the run**,
 per the lane's standing practice of surfacing rather than silently repairing.
+
+⭐ **RULED 2026-09-13: control AUTHORIZED** — see Amendment 1. ⛔ **This section is left exactly as
+written**, including its recommendation of *"why do you prefer steel to carbon?"*, which the amendment
+**withdraws**: the frozen corpus supplies the preference but not its reason, so that question is partly
+outside-corpus. *The record shows the proposal and its refutation, not a tidied result.*
 
 ## 6 · Evidence custody
 

@@ -344,6 +344,7 @@ U1 SECOND PASS     RUN on 7f52f587 - 125 tests green - ZERO promotions
 U1 COMPLETE        9 suites - 160 tests green - TWO rows earned - nothing GATED
 U2 BROAD WALK      NOT AUTHORIZED - C-1..C-6 CLOSED
 U2 C-7             AUTHORIZED as a falsification witness - PROTOCOL FROZEN - NOT RUN
+C-7 AMENDMENT 1    in-corpus calibration control - scored separately - frozen file UNEDITED
 C-7 EXECUTION      BLOCKED IN-SESSION - needs a founder act (identity/tier/terms/runner)
 STAGE RULE         the programme does not manufacture a next stage to satisfy its sequence
 HANDOFFS SENT      A4 guard - mobile.robustness x3 - repair NOT authorized by this lane
