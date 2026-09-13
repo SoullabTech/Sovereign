@@ -69,6 +69,16 @@ def classify(rows, w4=False, subject='p5b0'):
     fc = [r['evidence']['msSinceStartReturn'] for r in rows if r['event'] == 'first_input_callback' and r['generation'] == 1]
     ev['firstCallbackMs'] = fc[0] if fc else '-'
     listens = [r for r in rows if r['event'] == 'floor_transition' and r['to'] == 'listening']
+    # C-D9 (founder ruling 2026-09-13, O9): two EVIDENCE fields, pinned definitions, classes untouched.
+    #   listeningHeldAtExport: listening was reached AND the authoritative floor immediately at export (the last
+    #                          floor_transition in the journal) is still listening.
+    #   listeningLostLater:    listening was reached AND a later floor_transition leaves listening before export.
+    # Not mutually exclusive (lose then regain → both true). Continuity is never inferred from heldAtExport alone.
+    if listens:
+        floors_all = [r['to'] for r in rows if r['event'] == 'floor_transition']
+        first_i = floors_all.index('listening')
+        ev['listeningHeldAtExport'] = floors_all[-1] == 'listening'
+        ev['listeningLostLater'] = any(f != 'listening' for f in floors_all[first_i + 1:])
     recov = [r for r in rows if r['event'] == 'recovery_requested']
     degraded = any(r.get('to') == 'degraded' for r in rows if r['event'] == 'floor_transition')
     gens = sorted({r['generation'] for r in rows})

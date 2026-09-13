@@ -63,3 +63,24 @@ Plan §5 step 1 is finished and read; step 2 (build `PHASE-A-REPRO-01` per plan 
 ## §8 Standing
 
 PURGE VERIFIED (154 archived, tmp/ = 0) · P5B0-POSTCLEAN-CONTROL EXECUTED · VERIFIED · READ (16/29 gen-1) · O9 recorded · PHASE-A-REPRO-01 BUILD HELD → eligible on founder act · VoiceKernel + harness FROZEN · mechanism NONE · B2 HOLD · E1–E4 HELD.
+
+## §5.1 C-D9 — O9 fields ADMITTED (founder, 2026-09-13); retrospective derivation from the journals only
+
+Ruling, verbatim: *"ADMIT the two fields as evidence … with definitions pinned before retrospective calculation. `listeningHeldAtExport`: true iff listening was reached AND the authoritative floor/state immediately at export is still listening. `listeningLostLater`: true iff listening was reached AND after that first listening state, a later authoritative floor transition leaves listening before export. Important: these are not mutually exclusive. … Do not infer continuity merely from `listeningHeldAtExport`. CLASSIFICATION UNCHANGED · K00 PASS/FAIL LAW UNCHANGED · RECOVERY POLICY UNCHANGED · THRESHOLDS UNCHANGED · MECHANISM CLAIM NONE. … retrospectively derive the two fields across A, B, and the post-clean control, from the journals only, and record the result as C-D9 evidence enrichment. Do not reclassify any row."*
+
+Instrument: `k00-ledger.py` now emits both fields in the evidence column (authoritative floor at export = the journal's last `floor_transition`; a journal that never reached listening carries neither). Regression: all 118 ledgered rows across A, authorized B, attempts 1 and 3, and the control classify identically. No produced ledger was edited; the enrichment is this table, derived here from the journals:
+
+| stratum · class | n | heldAtExport | lostLater | both (lost, regained) | never reached |
+|---|---|---|---|---|---|
+| **A** gen-1 listen | 14 | 14 | 0 | 0 | 0 |
+| A failure then recovery | 9 | 5 | 4 | 0 | 0 |
+| A failure then degradation | 6 | – | – | – | 6 |
+| **B** gen-1 listen | 15 | 15 | 0 | 0 | 0 |
+| B failure then recovery | 10 | 5 | 5 | 0 | 0 |
+| B degradation · other | 1 · 2 | – | – | – | 3 |
+| **Control** gen-1 listen | 16 | 16 | 0 | 0 | 0 |
+| Control failure then recovery | 6 | 1 | 5 | 0 | 0 |
+| Control degradation · other | 3 · 4 | – | – | – | 7 |
+| *(PRE-AUTH attempt 3, observational, not counted)* recovery | 9 | 8 | 3 | **2** | 0 |
+
+Read descriptively: every gen-1 listen on every stratum held to export; recovered listening held in 5/9 · 5/10 · 1/6; the only lose-then-regain rows (both fields true) are two in the PRE-AUTH attempt-3 batch, which is why the fields are not mutually exclusive. Founder framing carried as the open question, not a defect theory: *"the problem may not only be whether a failed start can recover into listening; it may also be whether recovered listening is stable once reached."* Nothing repaired; nothing authorized by this section.

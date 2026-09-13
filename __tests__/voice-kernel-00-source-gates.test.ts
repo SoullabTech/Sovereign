@@ -463,6 +463,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     const l = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-ledger.py'), 'utf8');
     for (const c of ["'gen-1 listen'", "'failure then recovery'", "'failure then degradation'", "'other observed shape'", "'DRIVER/INFRASTRUCTURE FAILURE'", "'SUBJECT-MISMATCH'"]) expect(l).toContain(c);
     expect(l).toMatch(/no enterConversation in journal/);            // a never-entered harness is a driver row
+    expect(l).toMatch(/listeningHeldAtExport/); expect(l).toMatch(/listeningLostLater/); // C-D9 evidence fields (classes unchanged)
     expect(l).not.toMatch(/subprocess|os\.system|devicectl|xcodebuild/); // reads journals only
     const b = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-driver-batch.sh'), 'utf8');
     expect(b).toMatch(/harness_present\(\)/);                          // Mac-side cold check every sample
@@ -494,6 +495,13 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(mech).toHaveLength(1);                                        // exactly one mutation line
     expect(mech[0]).toMatch(/--source "\$EMPTY".*--destination tmp/);   // empty source, tmp only
     expect(pgExec).toMatch(/PURGE UNVERIFIED/);                          // H fails closed
+    const pb = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-phase-a-repro-build.sh'), 'utf8');
+    const pbExec = pb.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(pbExec).not.toMatch(/install app/);                         // build only; k00-reinstall.sh is the only install path
+    expect(pb).toMatch(/11A057AA-4A3C-3CAE-8C28-E29792489459/);        // the UUID gate is pinned
+    expect(pb).toMatch(/SRC_SHA="4596b9bdb"/);                         // the source is pinned
+    expect(pb).toMatch(/-derivedDataPath "\$DD"/);                     // fresh, dedicated DerivedData
+    expect(pbExec.indexOf('MISMATCH')).toBeLessThan(pbExec.indexOf('xcodebuild -project'));  // pins before any build
   });
 });
 
