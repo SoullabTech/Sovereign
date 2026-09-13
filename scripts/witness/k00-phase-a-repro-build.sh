@@ -3,6 +3,12 @@
 # BUILD ONLY. This script never installs. Custody is written BEFORE any install is possible.
 #
 #   usage: scripts/witness/k00-phase-a-repro-build.sh [<worktree-dir>]      (default /private/tmp/phase-a-repro-01)
+#   C-D10 (2026-09-13): the first execution tripped its own cleanliness check on a second run — `xcodegen generate` at
+#   4596b9bdb rewrites the TRACKED Harness/Info.plist (project.yml `info: path:`), and DerivedData lived inside the
+#   worktree. Now: the worktree must be FRESH (a pre-existing path is a STOP — never reused, never cleaned by this
+#   script; prior runs are evidence), DerivedData lives OUTSIDE the worktree (<worktree>-derived), the xcodegen
+#   footprint is recorded (`git status` after generate) instead of failing a later check, and a mkdir lock refuses
+#   a concurrent second run (two builds into one DerivedData would corrupt the artifact).
 #
 #   1. verify every environment pin (MAC-COMPILE-06 as pinned in the plan §2) — any MISMATCH → STOP before building (exit 5)
 #   2. fresh detached worktree at exactly 4596b9bdb, clean tree, swift build + swift test recorded
@@ -35,19 +41,26 @@ SV="$(swift --version 2>&1 | head -1)"; pin "Swift" "swiftlang-6.2.4.1.4 clang-1
 pin "iOS SDK" "iphoneos26.2" "$(xcodebuild -showsdks 2>/dev/null | grep -oE 'iphoneos[0-9.]+' | sort -u | tr '\n' ' ')"
 say "  RECORD    xcodegen: $(xcodegen --version 2>&1 | head -1)   (not pinned by the compile records; recorded)"
 [ "$MIS" -eq 0 ] || stop "$MIS environment pin(s) MISMATCH — return the mismatch to the founder; not built" 5
-# 2. worktree at the exact SHA
+# 2. worktree at the exact SHA — FRESH only; a concurrent run is refused
+LOCK="$WT.lock"; mkdir "$LOCK" 2>/dev/null || stop "another build holds $LOCK (a concurrent run into the same worktree/DerivedData is refused); if no build is running, that lock is stale evidence of an interrupted run — founder act to remove it" 8
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 say "## source"
-if [ -d "$WT/.git" ] || [ -f "$WT/.git" ]; then say "  worktree exists: $WT"; else git -C "$ROOT" worktree add --detach "$WT" "$SRC_SHA" >>"$REC" 2>&1 || stop "worktree add failed" 6; fi
+[ -e "$WT" ] && stop "worktree path already exists: $WT — this script never reuses or cleans a prior run (its contents are evidence); pass a fresh path" 6
+git -C "$ROOT" worktree add --detach "$WT" "$SRC_SHA" >>"$REC" 2>&1 || stop "worktree add failed" 6
 HEAD="$(git -C "$WT" rev-parse --short=9 HEAD)"; say "  HEAD: $HEAD"
 [[ "$HEAD" == "$SRC_SHA"* ]] || stop "worktree HEAD $HEAD is not $SRC_SHA" 6
 DIRTY="$(git -C "$WT" status --porcelain | wc -l | tr -d ' ')"; say "  dirty entries: $DIRTY"; [ "$DIRTY" -eq 0 ] || stop "worktree not clean" 6
 say "## swift build / swift test (ios/VoiceKernel at $SRC_SHA)"
 ( cd "$WT/ios/VoiceKernel" && swift build 2>&1 | tail -2 && swift test 2>&1 | grep -E "Executed|error" | tail -2 ) | tee -a "$REC"
 # 3. builds into a dedicated DerivedData
-DD="$WT/.derived-phase-a-repro-01"; APP="$DD/Build/Products/Debug-iphoneos/VoiceKernelHarness.app"; DYL="$APP/VoiceKernelHarness.debug.dylib"
-say "## DerivedData (fresh, dedicated): $DD"
+DD="$WT-derived"; APP="$DD/Build/Products/Debug-iphoneos/VoiceKernelHarness.app"; DYL="$APP/VoiceKernelHarness.debug.dylib"
+[ -e "$DD" ] && stop "DerivedData path already exists: $DD — never reused; pass a fresh worktree path" 6
+say "## DerivedData (fresh, dedicated, OUTSIDE the worktree): $DD"
 cd "$WT/ios/VoiceKernelHarness" || stop "harness dir missing" 6
 say "## xcodegen generate"; xcodegen generate 2>&1 | tail -1 | tee -a "$REC"
+say "## worktree footprint after xcodegen (project.yml \`info: path: Harness/Info.plist\` regenerates a tracked file — recorded, expected; MAC-COMPILE-06 ran the same step)"
+git -C "$WT" status --porcelain | sed 's/^/  /' | tee -a "$REC"
+git -C "$WT" diff --stat | tail -1 | sed 's/^/  /' | tee -a "$REC"
 say "## build UNSIGNED"
 xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness -destination generic/platform=iOS CODE_SIGNING_ALLOWED=NO -derivedDataPath "$DD" build > "$OUT/xcodebuild-unsigned-$STAMP.log" 2>&1
 grep -E "\*\* BUILD (SUCCEEDED|FAILED) \*\*" "$OUT/xcodebuild-unsigned-$STAMP.log" | tee -a "$REC"

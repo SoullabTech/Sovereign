@@ -501,6 +501,9 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(pb).toMatch(/11A057AA-4A3C-3CAE-8C28-E29792489459/);        // the UUID gate is pinned
     expect(pb).toMatch(/SRC_SHA="4596b9bdb"/);                         // the source is pinned
     expect(pb).toMatch(/-derivedDataPath "\$DD"/);                     // fresh, dedicated DerivedData
+    expect(pb).toMatch(/DD="\$WT-derived"/);                            // C-D10: DerivedData outside the worktree
+    expect(pbExec).toMatch(/\[ -e "\$WT" \] && stop/);                   // C-D10: a pre-existing worktree is a STOP, never reused or cleaned
+    expect(pbExec).toMatch(/mkdir "\$LOCK"/);                             // C-D10: concurrent run refused
     expect(pbExec.indexOf('MISMATCH')).toBeLessThan(pbExec.indexOf('xcodebuild -project'));  // pins before any build
   });
 });
