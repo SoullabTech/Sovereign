@@ -729,17 +729,20 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   const routerPath = path.join(currentRoot(), 'scripts', 'builder', 'router.mjs');
   const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
 
-  const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
+  // JOP-04 RB-6A host-brand reconciliation (Option B): BOTH the router and the
+  // eligibility producer come from ONE cache-busted router graph, so the object
+  // is minted and tested through a single identity lineage. Importing the
+  // producer separately created a second module instance with a second private
+  // brand, and every legitimate eligibility was refused at the real boundary.
+  const { route, declareRoutingEligibility } = await import(`file://${routerPath}?t=${Date.now()}`);
 
-  // JOP-04 RB-6A — routing eligibility is TRANSPORTED from the submission, never
-  // manufactured from registry membership. A task that declares nothing is not
-  // routable, however well registered its capability is.
-  const eligPath = path.join(currentRoot(), 'scripts', 'builder', 'routing-eligibility.mjs');
+  // Routing eligibility is TRANSPORTED from the submission, never manufactured
+  // from registry membership. A task that declares nothing is not routable,
+  // however well registered its capability is.
   let routingEligibility = null;
   try {
-    const { declareRoutingEligibility } = await import(`file://${eligPath}?t=${Date.now()}`);
     const declared = task && typeof task.routing === 'object' && task.routing !== null ? task.routing : null;
-    if (declared) {
+    if (declared && typeof declareRoutingEligibility === 'function') {
       routingEligibility = declareRoutingEligibility({
         satisfied: declared.satisfied === true,
         basis: typeof declared.basis === 'string' && declared.basis.trim() ? declared.basis : 'operator_submission',
@@ -747,7 +750,7 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
       });
     }
   } catch {
-    // No producer on this checkout, or a refused basis. Either way: not routable.
+    // A refused basis, or no producer on this checkout. Either way: not routable.
     routingEligibility = null;
   }
 

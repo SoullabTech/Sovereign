@@ -13,6 +13,20 @@
 import { CAPABILITIES } from './deterministic.mjs';
 import { isRoutable } from './routing-eligibility.mjs';
 
+// ── JOP-04 RB-6A · host-brand reconciliation (Option B) ──────────────────────
+// The producer and the consumer of routing eligibility must obtain their private
+// identity from ONE authoritative module lineage BY CONSTRUCTION — not by a
+// loading convention. `isRoutable` above and the producer below resolve to the
+// SAME static specifier, so a host that imports this graph mints and tests
+// through one lineage however this module itself was loaded.
+//
+// ⭐ This is a PURE RE-EXPORT: the producer is never bound into this module's
+//    scope. The router therefore CANNOT self-mint — structurally, not by
+//    discipline. The law it upholds:
+//        router MAY expose the trusted producer to the host
+//        router MAY NOT use that producer to authorize its own routing decision
+export { declareRoutingEligibility } from './routing-eligibility.mjs';
+
 export const COST_CLASS = { C0: 'deterministic', C1: 'local_model', C3: 'frontier_model' };
 
 // Alpha bound: keep local-worker packets small enough that a 65536-token
