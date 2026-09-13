@@ -252,3 +252,30 @@ choose.**
 > *The broken button is the observed entrance. Where authorship changes hands is the
 > responsibility — and today it changes hands with the writer unable to touch what
 > they are ruling on.*
+
+---
+
+## 9 · Addendum — custody corroborated, and the witness harness already exists
+
+A second, independent sweep grepped **all four labels across 2,737 refs** (every
+remote head, under both remote namespaces). It returned **no branch and no file
+outside the EDITORIAL-WRITE-01A set**, which is the same answer the
+`ProposedChange.tsx` existence check gave by a different method. ⭐ Custody stands:
+**one branch, `claude/s3-implementation`.**
+
+Every EW-specific file resolves on that branch alone (2 refs = the one branch seen
+through two remote namespaces, not two branches):
+
+- `app/writers-studio/__tests__/consentSurface.test.ts`
+- `app/writers-studio/__tests__/proposalWorkMode.test.ts`
+- `scripts/witness/editorial-write-01-propose-o26.ts`
+
+⭐ **Step 9 does not need a new harness.** `scripts/witness/editorial-write-01-propose-o26.ts`
+already stages a real proposal (commit `9ca89fc544`, *"create the o26 proposal, and
+change nothing"*), and `consentSurface.test.ts` already binds the panel's obligations.
+Whatever the founder rules in §8, the behavioural witness extends existing
+instruments rather than inventing rivals to them.
+
+⛔ `lib/writersStudio/placeInWork.ts` exists on 283 refs, but only as the ordinary
+placement module; it carries the proposal vocabulary **only** on
+`claude/s3-implementation`. Its breadth is not evidence the lane is broader.
