@@ -16,8 +16,19 @@ let consentPresent = false;
 let receiptMode: 'ok' | 'conflict_attempted' | 'down' = 'ok';
 let confirmFails = false;
 
+const MEMBER_ID = '55555555-5555-4555-8555-555555555555';
+const WORK_ID = '66666666-6666-4666-8666-666666666666';
+/* ⭐ A1 · the crossing now requires a MINTED identity. These fixtures previously
+   passed `{} as never` and the Work was still read — BP-3, visible in the test
+   suite itself. Authority came from `req.memberId`, never from the identity. */
+let worksOwned = true;
+jest.mock('@/lib/auth/getMemberFromRequest', () => ({
+  getMemberIdFromRequest: jest.fn(async () => MEMBER_ID),
+}));
+
 jest.mock('@/lib/db/postgres', () => ({
   query: jest.fn(async (sql: string, params: unknown[] = []) => {
+    if (/member_manuscripts/.test(sql)) return { rows: worksOwned ? [{ '?column?': 1 }] : [], rowCount: worksOwned ? 1 : 0 };
     calls.push({ sql, params });
     if (/runtime_consent_state/.test(sql)) {
       if (/INSERT/.test(sql)) {
@@ -38,9 +49,9 @@ jest.mock('@/lib/db/postgres', () => ({
            draft returned a junk request_ref, so the store correctly reported an
            identity_mismatch and C4 failed for the wrong reason. The fixture must
            describe the SAME disclosure, or it is testing a different case. */
-        return { rows: [{ id: 'r1', member_id: 'm-1', request_ref: 'req-1',
+        return { rows: [{ id: 'r1', member_id: MEMBER_ID, request_ref: 'req-1',
           boundary: 'writers_studio.focus->maia_cognition', source_class: 'work',
-          participation_basis: 'member_invoked', source_ref: 'work-1', scope_kind: 'passage',
+          participation_basis: 'member_invoked', source_ref: WORK_ID, scope_kind: 'passage',
           section_ref: null, authorized_by: 'member', gesture: 'ask_maia',
           policy_version: 'context-disclosure-v1', state: 'attempted' }], rowCount: 1 };
       }
@@ -52,6 +63,14 @@ jest.mock('@/lib/db/postgres', () => ({
 
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import { performFocusCrossing } from '../focusCrossing';
+import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn/identity';
+import type { MemberIdentity } from '@/lib/maia/canonical-turn';
+
+let MINTED_IDENTITY: MemberIdentity;
+beforeAll(async () => {
+  MINTED_IDENTITY = await resolveCanonicalIdentity({ headers: new Headers() } as never);
+});
+
 
 const events: string[] = [];
 const assemble = jest.fn(async () => { events.push('assemble'); return 'the selected paragraph'; });
@@ -67,9 +86,9 @@ const cognition = jest.fn(() => {
 const deps = () => ({ assemble, prepare, generate: cognition } as never);
 
 const req = (over: Record<string, unknown> = {}) => ({
-  requestId: 'req-1', identity: {} as never,
-  posture: TurnPosture.resolve({}), memberId: 'm-1', sessionId: 's-1',
-  disclosureId: 'd-1', workRef: 'work-1', scopeKind: 'passage' as const,
+  requestId: 'req-1', identity: MINTED_IDENTITY,
+  posture: TurnPosture.resolve({}), memberId: MEMBER_ID, sessionId: 's-1',
+  disclosureId: 'd-1', workRef: WORK_ID, scopeKind: 'passage' as const,
   range: { start: 0, end: 10 }, gesture: 'ask_maia' as const, ask: 'what is repeating here',
   ...over,
 });
@@ -108,7 +127,7 @@ describe('C1 · BOUNDARY SINGULARITY — exactly once, not at least once', () =>
     // The drift most likely to arrive later: an extra "just also ask MAIA" call
     // added beside the constituted path. C1 must go RED, not shrug.
     await performFocusCrossing(req(), deps());
-    await cognition({ memberId: 'm-1', sessionId: 's-1', requestId: 'req-1', ask: 'x', focusContext: 'y' });
+    await cognition({ memberId: MEMBER_ID, sessionId: 's-1', requestId: 'req-1', ask: 'x', focusContext: 'y' });
     expect(() => expect(cognition).toHaveBeenCalledTimes(1)).toThrow();
     expect(calls.filter(c => /INSERT INTO context_disclosure_receipts/.test(c.sql))).toHaveLength(1);
     // ⭐ and the second handoff carried NO receipt — which is exactly the
@@ -262,6 +281,50 @@ describe('the lane stays narrow — one source class, one basis, one boundary', 
     for (const later of ['journal', 'keep', 'astrolog', 'iching', 'i_ching', 'tarot', 'divination', 'ambient']) {
       expect(c.toLowerCase()).not.toContain(later);
     }
+  });
+
+  /* ── A1 · BOUND WORK SCOPE at the crossing ──────────────────────────────
+     ⭐ These assert the primitive where it actually runs, not only in its own
+     unit test. Before A1 the crossing read the Work whenever consent allowed;
+     ownership lived only in the assembler's SQL predicate. */
+
+  it('C7 · an unowned Work is refused BEFORE the assembler is reached', async () => {
+    worksOwned = false;
+    const d = deps();
+    const r = await performFocusCrossing(req(), d);
+    expect((d.assemble as jest.Mock)).not.toHaveBeenCalled();
+    expect(r.response).toBeNull();
+    expect(r.disclosureId).toBeNull();
+    worksOwned = true;
+  });
+
+  it('C8 · BW-AUTH-3 · an unowned Work and an unreadable Work present IDENTICALLY', async () => {
+    /* ⚠️ Both crossings must start from IDENTICAL preconditions. The first draft
+       ran them back to back and the consent row from the first turned the second
+       into a replay — a fixture artifact that looked exactly like a disclosure
+       divergence. Reset between them, or the test measures mock state. */
+    worksOwned = false;
+    const unowned = await performFocusCrossing(req(), deps());
+
+    calls.length = 0; events.length = 0; consentPresent = false;
+    worksOwned = true;
+
+    const d = deps();
+    (d.assemble as jest.Mock).mockResolvedValue(null);   // authorized, but nothing read
+    const unreadable = await performFocusCrossing(req(), d);
+
+    expect(JSON.stringify(unowned.presentation)).toBe(JSON.stringify(unreadable.presentation));
+    expect(unowned.response).toBe(unreadable.response);
+    expect(unowned.disclosureId).toBe(unreadable.disclosureId);
+  });
+
+  it('C9 · the bound scope is never receipted, logged or returned', async () => {
+    worksOwned = true;
+    const r = await performFocusCrossing(req(), deps());
+    /* BW-AUTH-2 · process-local. Nothing that leaves this function carries it. */
+    expect(JSON.stringify(r)).not.toContain('minted');
+    const receiptWrites = calls.filter(c => /context_disclosure_receipts/.test(c.sql));
+    for (const w of receiptWrites) expect(JSON.stringify(w.params)).not.toContain('minted');
   });
 
   it('the route is off by default and 404s rather than 403s', () => {

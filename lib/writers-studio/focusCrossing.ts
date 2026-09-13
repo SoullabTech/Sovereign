@@ -46,11 +46,22 @@ import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
 import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
 import type { MemberIdentity } from '@/lib/maia/canonical-turn';
+import { bindWorkScope, type BoundWorkScope } from '@/lib/jarvis/boundWorkScope';
 
-/** Reads the authorized Work. ⛔ Called ONLY after `may_cross`. */
+/**
+ * Reads the authorized Work. ⛔ Called ONLY after `may_cross` AND after the Work
+ * scope is bound.
+ *
+ * ⭐ A1/BP-3 · IT TAKES A `BoundWorkScope`, NOT `memberId` + `workRef`. The pair
+ * of strings could be supplied by any caller; the scope cannot be constructed
+ * without a minted identity and a successful ownership read. The assembler's own
+ * `AND member_id = $2` predicate STAYS — binding the authority does not make
+ * defence in depth redundant, and removing it would be a repair this act does
+ * not authorize.
+ */
 export interface FocusAssembler {
   (ref: {
-    memberId: string; workRef: string;
+    scope: BoundWorkScope;
     scopeKind: DisclosureScopeKind; sectionRef?: string;
     /** The writer's selection. Carried in the REQUEST; never in the receipt. */
     range?: { start: number; end: number };
@@ -129,9 +140,26 @@ export async function performFocusCrossing(
     };
   }
 
-  // ── 2 · ONLY NOW is the Work read. C2 depends on this ordering.
+  // ── 2 · BIND THE WORK AUTHORITY (A1 · BP-3). Until this line the Work was
+  // addressed by a pair of strings; from here it is addressed by a capability
+  // that could not be constructed without a minted identity and an ownership
+  // read. ⛔ The scope is process-local (BW-AUTH-2) and is never receipted,
+  // logged, queued or returned.
+  const scope = await bindWorkScope(req.identity, req.workRef);
+  if (!scope.ok) {
+    // ⭐ BW-AUTH-3 · NO EXISTENCE ORACLE. This returns the SAME presentation as
+    // an authorized-but-unreadable Work below. A caller cannot learn from the
+    // outcome whether the Work is absent, someone else's, or merely unavailable.
+    // The receipt stays `attempted` — truthfully: no Work crossed.
+    return {
+      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
+      response: null, disclosureId: null, boundary,
+    };
+  }
+
+  // ── 3 · ONLY NOW is the Work read. C2 depends on this ordering.
   const focusContext = await deps.assemble({
-    memberId: req.memberId, workRef: req.workRef,
+    scope: scope.value,
     scopeKind: req.scopeKind, sectionRef: req.sectionRef, range: req.range,
   });
 
@@ -145,7 +173,7 @@ export async function performFocusCrossing(
     };
   }
 
-  // ── 3 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
+  // ── 4 · CONSTRUCT · ADJUDICATE · RENDER. Everything before the model.
   const prepared = await deps.prepare({
     identity: req.identity,
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,

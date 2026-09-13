@@ -12,8 +12,19 @@ import { TurnPosture } from '@/lib/sanctuary/turnPosture';
 
 const calls: { sql: string; params: unknown[] }[] = [];
 let consentPresent = false;
+const MEMBER_ID = '55555555-5555-4555-8555-555555555555';
+const WORK_ID = '66666666-6666-4666-8666-666666666666';
+/* ⭐ A1 · the crossing now requires a MINTED identity. These fixtures previously
+   passed `{} as never` and the Work was still read — BP-3, visible in the test
+   suite itself. Authority came from `req.memberId`, never from the identity. */
+let worksOwned = true;
+jest.mock('@/lib/auth/getMemberFromRequest', () => ({
+  getMemberIdFromRequest: jest.fn(async () => MEMBER_ID),
+}));
+
 jest.mock('@/lib/db/postgres', () => ({
   query: jest.fn(async (sql: string, params: unknown[] = []) => {
+    if (/member_manuscripts/.test(sql)) return { rows: worksOwned ? [{ '?column?': 1 }] : [], rowCount: worksOwned ? 1 : 0 };
     calls.push({ sql, params });
     if (/runtime_consent_state/.test(sql)) {
       if (/INSERT/.test(sql)) { consentPresent = true; return { rows: [{ request_id: params[0] }], rowCount: 1 }; }
@@ -28,6 +39,14 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 import { performFocusCrossing } from '../focusCrossing';
+import { resolveCanonicalIdentity } from '@/lib/maia/canonical-turn/identity';
+import type { MemberIdentity } from '@/lib/maia/canonical-turn';
+
+let MINTED_IDENTITY: MemberIdentity;
+beforeAll(async () => {
+  MINTED_IDENTITY = await resolveCanonicalIdentity({ headers: new Headers() } as never);
+});
+
 
 const CODE = (rel: string) =>
   fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
@@ -38,8 +57,8 @@ const assemble = jest.fn(async () => 'the selected paragraph');
 const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as never));
 
 const req = (over: Record<string, unknown> = {}) => ({
-  requestId: 'req-1', identity: {} as never, posture: TurnPosture.resolve({}),
-  memberId: 'm-1', sessionId: 's-1', disclosureId: 'd-1', workRef: 'work-1',
+  requestId: 'req-1', identity: MINTED_IDENTITY, posture: TurnPosture.resolve({}),
+  memberId: MEMBER_ID, sessionId: 's-1', disclosureId: 'd-1', workRef: WORK_ID,
   scopeKind: 'passage' as const, gesture: 'ask_maia' as const, ask: 'what is repeating',
   ...over,
 });

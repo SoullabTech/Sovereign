@@ -10,7 +10,10 @@ import { query } from '@/lib/db/postgres';
 import { memberRef } from '@/lib/privacy/memberRef';
 import type { FocusAssembler } from './focusCrossing';
 
-export const assembleFocus: FocusAssembler = async ({ memberId, workRef, scopeKind, sectionRef, range }) => {
+export const assembleFocus: FocusAssembler = async ({ scope, scopeKind, sectionRef, range }) => {
+  /* ⭐ Identifiers DERIVED FROM AN ALREADY-BOUND SCOPE (A1 use law). They cannot
+     establish authority themselves; the scope already did. */
+  const { memberId, workRef } = scope;
   try {
     // Ownership is part of the read, not a separate check a later edit could drop.
     if (scopeKind === 'whole_work') {
