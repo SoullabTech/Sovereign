@@ -5,13 +5,14 @@
  * WITHOUT any of them becoming coverage, an observation, or a finding.
  */
 
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
+import { sha256 } from '../frozenSectionProvider';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
   createCommission, enqueueExecution, claimNextExecution, completeExecution,
-  failExecution, recordCheckpoint, firstUnfinishedPartition, listPartitions,
-  runNextRecurrenceSweepPartition, recoverExpiredClaims, loadExecution,
+  failExecution, recordCheckpointWithInputs, firstUnfinishedPartition, listPartitions,
+  runFrozenSweepPartition, recoverExpiredClaims, loadExecution,
   type NewCommission, type ExecutionRow, type PartitionRow,
 } from '../recurrenceSweepStore';
 
@@ -19,6 +20,7 @@ const MIGRATIONS = [
   '20260913000001_recurrence_sweep_execution.sql',
   '20260913000002_recurrence_sweep_claim_recovery.sql',
   '20260913000003_recurrence_sweep_checkpoints.sql',
+  '20260913000004_recurrence_sweep_checkpoint_inputs.sql',
 ].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: process.env.BCS_TEST_DATABASE_URL });
@@ -33,6 +35,38 @@ const COMMISSION: NewCommission = {
   scopeFingerprint: 'fp-abc',
   maxJurisdiction: 'sovereign',
 };
+
+/**
+ * STEP-7 RESTATEMENT: the bare checkpoint path is no longer exported, so this
+ * witness drives the material-crossing runner with a fixture provider. The Step-6
+ * claims are unchanged — only the seam they run through is.
+ */
+const PERMISSIVE = { currentMaxJurisdiction: () => 'sovereign' as const };
+const fixtureProvider = {
+  acquire: async (r: { sectionId: string; revisionNumber: number }) => {
+    const text = `body of ${r.sectionId}`;
+    return {
+      text,
+      sectionId: r.sectionId,
+      revisionDigest: 'sha256:frozen-rev-7',
+      state: {
+        revisionNumber: r.revisionNumber,
+        range: { start: 0, end: [...text].length },
+        digest: sha256(text),
+      },
+    };
+  },
+};
+const runUnit = (
+  client: PoolClient,
+  executionId: string,
+  worker: string,
+  attempt: number,
+  process: (p: PartitionRow, text: string) => Promise<void>,
+) =>
+  runFrozenSweepPartition(
+    client, executionId, worker, attempt, 'sovereign', PERMISSIVE, fixtureProvider, process,
+  );
 
 const ageHeartbeat = (id: string) =>
   pool.query(`UPDATE recurrence_sweep_executions SET heartbeat_at = NOW() - interval '10 minutes' WHERE id = $1`, [id]);
@@ -73,7 +107,7 @@ describe('checkpoint follows successful computation, never precedes it', () => {
     const client = await pool.connect();
     try {
       await expect(
-        runNextRecurrenceSweepPartition(client, e.id, 'worker-A', e.attempts, async () => {
+        runUnit(client, e.id, 'worker-A', e.attempts, async () => {
           throw new Error('unit failed');
         }),
       ).rejects.toThrow('unit failed');
@@ -88,7 +122,7 @@ describe('checkpoint follows successful computation, never precedes it', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      const skip = await recordCheckpoint(client, e.id, parts[2].id, 'worker-A', e.attempts);
+      const skip = await recordCheckpointWithInputs(client, e.id, parts[2].id, 'worker-A', e.attempts, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
       expect(skip.ok).toBe(false);
       expect(!skip.ok && skip.refusal).toBe('partition_not_next');
     } finally { client.release(); }
@@ -99,8 +133,8 @@ describe('THE RESUME WITNESS — checkpointed work survives, uncheckpointed work
   it('s1 once, s2 twice, s3 once', async () => {
     const e = await started();
     const seen: string[] = [];
-    const ok: (p: PartitionRow) => Promise<void> = async (p) => { seen.push(p.section_id); };
-    const boom: (p: PartitionRow) => Promise<void> = async (p) => {
+    const ok = async (p: PartitionRow) => { seen.push(p.section_id); };
+    const boom = async (p: PartitionRow) => {
       seen.push(p.section_id);
       throw new Error('lost');
     };
@@ -108,9 +142,9 @@ describe('THE RESUME WITNESS — checkpointed work survives, uncheckpointed work
     // attempt 1: s1 succeeds and checkpoints; s2 runs and throws before checkpoint
     let client = await pool.connect();
     try {
-      await runNextRecurrenceSweepPartition(client, e.id, 'worker-A', 1, ok);
+      await runUnit(client, e.id, 'worker-A', 1, ok);
       await expect(
-        runNextRecurrenceSweepPartition(client, e.id, 'worker-A', 1, boom),
+        runUnit(client, e.id, 'worker-A', 1, boom),
       ).rejects.toThrow('lost');
     } finally { client.release(); }
 
@@ -129,9 +163,9 @@ describe('THE RESUME WITNESS — checkpointed work survives, uncheckpointed work
     expect(again.attempts).toBe(2);
     client = await pool.connect();
     try {
-      const r1 = await runNextRecurrenceSweepPartition(client, e.id, 'worker-B', 2, ok);
+      const r1 = await runUnit(client, e.id, 'worker-B', 2, ok);
       expect(r1.ok && r1.value.partition.section_id).toBe('s2');
-      const r2 = await runNextRecurrenceSweepPartition(client, e.id, 'worker-B', 2, ok);
+      const r2 = await runUnit(client, e.id, 'worker-B', 2, ok);
       expect(r2.ok && r2.value.partition.section_id).toBe('s3');
     } finally { client.release(); }
 
@@ -151,11 +185,11 @@ describe('checkpoint ownership inherits the Step-5 claim generation', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      const stale = await recordCheckpoint(client, e.id, parts[0].id, 'worker-A', 1);
+      const stale = await recordCheckpointWithInputs(client, e.id, parts[0].id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
       expect(stale.ok).toBe(false);
       expect(!stale.ok && stale.refusal).toBe('not_claim_owner');
 
-      const current = await recordCheckpoint(client, e.id, parts[0].id, 'worker-A', 2);
+      const current = await recordCheckpointWithInputs(client, e.id, parts[0].id, 'worker-A', 2, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
       expect(current.ok).toBe(true);
     } finally { client.release(); }
   });
@@ -168,7 +202,7 @@ describe('checkpoint ownership inherits the Step-5 claim generation', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      const late = await recordCheckpoint(client, e.id, parts[0].id, 'worker-A', 1);
+      const late = await recordCheckpointWithInputs(client, e.id, parts[0].id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
       expect(late.ok).toBe(false);
       expect(!late.ok && late.refusal).toBe('not_running');
     } finally { client.release(); }
@@ -179,7 +213,7 @@ describe('checkpoint ownership inherits the Step-5 claim generation', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      expect((await recordCheckpoint(client, e.id, parts[0].id, 'worker-A', 1)).ok).toBe(true);
+      expect((await recordCheckpointWithInputs(client, e.id, parts[0].id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' })).ok).toBe(true);
     } finally { client.release(); }
 
     await ageHeartbeat(e.id);
@@ -194,7 +228,7 @@ describe('checkpoint progress is not lifecycle completion', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      await recordCheckpoint(client, e.id, parts[0].id, 'worker-A', 1);
+      await recordCheckpointWithInputs(client, e.id, parts[0].id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
     } finally { client.release(); }
 
     const early = await completeExecution(pool, e.id, 'worker-A', 1);
@@ -207,7 +241,7 @@ describe('checkpoint progress is not lifecycle completion', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      for (const p of parts) await recordCheckpoint(client, e.id, p.id, 'worker-A', 1);
+      for (const p of parts) await recordCheckpointWithInputs(client, e.id, p.id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
     } finally { client.release(); }
 
     expect((await loadExecution(pool, e.id))!.status).toBe('running'); // progress ≠ terminus
@@ -228,7 +262,7 @@ describe('a checkpoint is not coverage, and not an observation', () => {
     const parts = await listPartitions(pool, e.id);
     const client = await pool.connect();
     try {
-      for (const p of parts) await recordCheckpoint(client, e.id, p.id, 'worker-A', 1);
+      for (const p of parts) await recordCheckpointWithInputs(client, e.id, p.id, 'worker-A', 1, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
     } finally { client.release(); }
     await completeExecution(pool, e.id, 'worker-A', 1);
 
@@ -238,6 +272,7 @@ describe('a checkpoint is not coverage, and not an observation', () => {
     );
     expect(rows.map((r) => r.table_name).sort()).toEqual([
       'recurrence_sweep_cancel_requests',
+      'recurrence_sweep_checkpoint_inputs',
       'recurrence_sweep_checkpoints',
       'recurrence_sweep_commissions',
       'recurrence_sweep_executions',

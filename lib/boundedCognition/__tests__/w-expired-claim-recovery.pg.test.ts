@@ -11,7 +11,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   listPartitions,
-  recordCheckpoint,
+  recordCheckpointWithInputs,
   createCommission,
   enqueueExecution,
   claimNextExecution,
@@ -29,6 +29,7 @@ const MIGRATIONS = [
   '20260913000001_recurrence_sweep_execution.sql',
   '20260913000002_recurrence_sweep_claim_recovery.sql',
   '20260913000003_recurrence_sweep_checkpoints.sql',
+  '20260913000004_recurrence_sweep_checkpoint_inputs.sql',
 ].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: process.env.BCS_TEST_DATABASE_URL });
@@ -49,7 +50,7 @@ async function checkpointAll(executionId: string, worker: string, attempt: numbe
   const client = await pool.connect();
   try {
     for (const p of await listPartitions(pool, executionId)) {
-      const r = await recordCheckpoint(client, executionId, p.id, worker, attempt);
+      const r = await recordCheckpointWithInputs(client, executionId, p.id, worker, attempt, { rangeStart: 0, rangeEnd: 1, frozenDigest: 'd-fixture' });
       if (!r.ok) throw new Error(`fixture checkpoint: ${r.refusal}`);
     }
   } finally {

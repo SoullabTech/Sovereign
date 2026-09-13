@@ -16,6 +16,13 @@
  */
 
 import type { PoolClient, QueryResultRow } from 'pg';
+import { permitCrossing, type ExecutionJurisdiction, type ProtectionProvider } from './permission';
+import { measureCurrency, type Currency } from './currency';
+import {
+  validateFrozenMaterial,
+  type FrozenSectionProvider,
+  type IntegrityRefusal,
+} from './frozenSectionProvider';
 
 export type Jurisdiction = 'sovereign' | 'external';
 export type SweepStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -480,12 +487,36 @@ export async function listPartitions(
  * ⛔ A proving-workload constraint, not a general law against future parallel
  * cognition — and success here does not authorize it.
  */
-export async function recordCheckpoint(
+/**
+ * Record that one bounded execution unit completed, TOGETHER WITH the frozen input
+ * supplied to it. One transaction: both commit, or neither does.
+ *
+ * ⛔ THERE IS NO EXPORTED CHECKPOINT-WITHOUT-LINEAGE PATH (Step 7 §13). The bare
+ * insert is not factored out as a public seam, because an external caller able to
+ * reach it could create a checkpoint whose frozen input is unrecoverable.
+ *
+ * SERIALIZED AGAINST EXPIRED-CLAIM RECOVERY: the execution row is locked before the
+ * claim is verified, so no checkpoint can commit after the claim that authorized it
+ * was revoked.
+ *
+ * CLAIM GENERATION AUTHORIZES THE WRITE (Step 5): worker equality is not enough
+ * once reaping exists.
+ *
+ * PREFIX-SHAPED: only the earliest unfinished partition may be checkpointed.
+ */
+export interface FrozenInputRecord {
+  readonly rangeStart: number;
+  readonly rangeEnd: number;
+  readonly frozenDigest: string;
+}
+
+export async function recordCheckpointWithInputs(
   client: PoolClient,
   executionId: string,
   partitionId: string,
   worker: string,
   expectedAttempt: number,
+  inputs: FrozenInputRecord,
 ): Promise<StoreResult<{ partitionId: string }>> {
   try {
     await client.query('BEGIN');
@@ -536,6 +567,13 @@ export async function recordCheckpoint(
       `INSERT INTO recurrence_sweep_checkpoints (partition_id) VALUES ($1)`,
       [partitionId],
     );
+    // Same transaction. A lineage failure rolls the checkpoint back with it.
+    await client.query(
+      `INSERT INTO recurrence_sweep_checkpoint_inputs
+         (partition_id, range_start, range_end, frozen_digest)
+       VALUES ($1,$2,$3,$4)`,
+      [partitionId, inputs.rangeStart, inputs.rangeEnd, inputs.frozenDigest],
+    );
     await client.query('COMMIT');
     return { ok: true, value: { partitionId } };
   } catch (err) {
@@ -544,31 +582,168 @@ export async function recordCheckpoint(
   }
 }
 
-/** What a partition processor is given. No prose, no model, no interpretation. */
-export type PartitionProcessor = (partition: PartitionRow) => Promise<void>;
+/**
+ * What a partition processor is given: partition identity and EPHEMERAL frozen
+ * text. It returns no cognition — no observation, no occurrence set, no model call,
+ * no classifier. Step 7 proves only that exact frozen material crossed into the
+ * successful computation.
+ */
+export type PartitionProcessor = (
+  partition: PartitionRow,
+  frozenText: string,
+) => Promise<void>;
+
+export type MaterialRefusal =
+  | StoreRefusal
+  | IntegrityRefusal
+  | 'refused_by_frozen_ceiling'
+  | 'refused_by_current_protection';
 
 /**
- * Perform exactly ONE execution unit, then checkpoint it.
+ * Perform ONE execution unit against real frozen Work material, then checkpoint it
+ * together with its frozen input lineage.
  *
- * ORDER IS THE CORE P6 FALSIFIER: compute, and only on success record the
- * checkpoint. If the processor throws or refuses, no checkpoint exists and the
- * unit remains unfinished — the system may repeat work it cannot prove completed,
- * and may never skip work because an old process probably completed it.
- * Durability, not likelihood, licenses resume.
+ * ORDER IS THE LAW HERE:
+ *   1 verify the current claim incarnation      (Step 5 fencing reaches material custody)
+ *   2 resolve authority FROM THE COMMISSION     (never an execution-side copy)
+ *   3 permitCrossing BEFORE acquisition         (a refusal means the provider is never called)
+ *   4 acquire · 5 validate integrity · 6 process · 7 checkpoint + lineage atomically
+ *
+ * A refusal at 1–3 leaves provider call count at zero: the material was never
+ * acquired, not acquired and discarded.
  */
-export async function runNextRecurrenceSweepPartition(
+export async function runFrozenSweepPartition(
   client: PoolClient,
   executionId: string,
   worker: string,
   expectedAttempt: number,
+  requested: ExecutionJurisdiction,
+  protection: ProtectionProvider,
+  provider: FrozenSectionProvider,
   process: PartitionProcessor,
-): Promise<StoreResult<{ partition: PartitionRow }>> {
+): Promise<StoreResult<{ partition: PartitionRow }> | { ok: false; refusal: MaterialRefusal }> {
+  const { rows } = await client.query<{
+    status: SweepStatus; claimed_by: string | null; attempts: number;
+    commission_id: string; draft_id: string; revision_number: number;
+    revision_digest: string; max_jurisdiction: ExecutionJurisdiction;
+  }>(
+    `SELECT e.status, e.claimed_by, e.attempts, e.commission_id,
+            m.draft_id, m.revision_number, m.revision_digest, m.max_jurisdiction
+       FROM recurrence_sweep_executions e
+       JOIN recurrence_sweep_commissions m ON m.id = e.commission_id
+      WHERE e.id = $1`,
+    [executionId],
+  );
+  if (!rows[0]) return { ok: false, refusal: 'execution_not_found' };
+  const row = rows[0];
+
+  if (row.status !== 'running') return { ok: false, refusal: 'not_running' };
+  if (row.claimed_by !== worker || row.attempts !== expectedAttempt) {
+    return { ok: false, refusal: 'not_claim_owner' };
+  }
+
+  // Authority follows commission_id. There is no execution-side copy to read.
+  const verdict = permitCrossing(
+    requested,
+    { commissionId: row.commission_id, maxJurisdiction: row.max_jurisdiction },
+    protection,
+  );
+  if (!verdict.ok) return { ok: false, refusal: verdict.refusal };
+
   const next = await firstUnfinishedPartition(client as unknown as Queryable, executionId);
   if (!next) return { ok: false, refusal: 'no_unfinished_partition' };
 
-  await process(next); // throws → no checkpoint → unit stays unfinished
+  const material = await provider.acquire({
+    draftId: row.draft_id,
+    revisionNumber: row.revision_number,
+    sectionId: next.section_id,
+  });
 
-  const cp = await recordCheckpoint(client, executionId, next.id, worker, expectedAttempt);
+  const integrity = validateFrozenMaterial(
+    material,
+    { draftId: row.draft_id, revisionNumber: row.revision_number, revisionDigest: row.revision_digest },
+    next.section_id,
+  );
+  if (!integrity.ok) return { ok: false, refusal: integrity.refusal };
+
+  await process(next, material.text); // throws → no checkpoint, no lineage
+
+  const cp = await recordCheckpointWithInputs(client, executionId, next.id, worker, expectedAttempt, {
+    rangeStart: material.state.range.start,
+    rangeEnd: material.state.range.end,
+    frozenDigest: material.state.digest,
+  });
   if (!cp.ok) return cp;
   return { ok: true, value: { partition: next } };
+}
+
+/* ── typed lineage loader ─────────────────────────────────────────────────── */
+
+export interface FrozenSectionLineage {
+  evidenceRef: { kind: 'section'; sectionId: string };
+  manuscriptId: string;
+  draftId: string;
+  revisionNumber: number;
+  revisionDigest: string;
+  range: { start: number; end: number };
+  frozenDigest: string;
+}
+
+/**
+ * Reconstruct the exact relation for one checkpoint. Every identity resolves
+ * through checkpoint → partition → execution → commission; none is duplicated on
+ * the lineage row. ⛔ No prose, no authority, no causal language.
+ */
+export async function loadCheckpointLineage(
+  db: Queryable,
+  partitionId: string,
+): Promise<FrozenSectionLineage | null> {
+  const { rows } = await db.query<{
+    section_id: string; manuscript_id: string; draft_id: string;
+    revision_number: number; revision_digest: string;
+    range_start: number; range_end: number; frozen_digest: string;
+  }>(
+    `SELECT p.section_id, m.manuscript_id, m.draft_id, m.revision_number, m.revision_digest,
+            i.range_start, i.range_end, i.frozen_digest
+       FROM recurrence_sweep_checkpoint_inputs i
+       JOIN recurrence_sweep_partitions p  ON p.id = i.partition_id
+       JOIN recurrence_sweep_executions e  ON e.id = p.execution_id
+       JOIN recurrence_sweep_commissions m ON m.id = e.commission_id
+      WHERE i.partition_id = $1`,
+    [partitionId],
+  );
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    evidenceRef: { kind: 'section', sectionId: r.section_id },
+    manuscriptId: r.manuscript_id,
+    draftId: r.draft_id,
+    revisionNumber: r.revision_number,
+    revisionDigest: r.revision_digest,
+    range: { start: r.range_start, end: r.range_end },
+    frozenDigest: r.frozen_digest,
+  };
+}
+
+/**
+ * Currency of one checkpoint's frozen input against the Work AS IT IS NOW.
+ *
+ * ⭐ DERIVED, NEVER STORED — no currency/stale/is_current column exists, so nothing
+ * can drift from the Work. Reuses the Step-2 three-state rule rather than
+ * re-deriving it.
+ *
+ * ⛔ Measuring changes nothing: no lifecycle transition, no requeue, no enqueue.
+ * Staleness is a reason to recompute, never permission (FR-J9 §10).
+ */
+export async function measureCheckpointInputCurrency(
+  db: Queryable,
+  partitionId: string,
+  currentDigest: (sectionId: string) => string | null,
+): Promise<Currency> {
+  const lineage = await loadCheckpointLineage(db, partitionId);
+  if (!lineage) return 'unmeasured';
+  return measureCurrency(
+    [{ evidenceRef: lineage.evidenceRef.sectionId, frozenDigest: lineage.frozenDigest }],
+    currentDigest,
+  );
 }
