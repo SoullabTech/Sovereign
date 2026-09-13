@@ -195,23 +195,29 @@ export async function claimNextExecution(
 }
 
 /**
- * Liveness from the CURRENT claimant only. A different worker may not refresh
- * another's claim, and a terminal execution may not heartbeat.
+ * Liveness from the CURRENT claim incarnation only.
  *
- * This records liveness truthfully; it reaps nothing. Crash recovery is the next
- * responsibility and is not smuggled in here.
+ * ⭐ STEP 5: `claimed_by` alone is no longer sufficient ownership evidence. Once
+ * expired-claim recovery exists, the SAME worker string can hold a LATER claim,
+ * so every worker-owned operation must also match the attempt generation — the
+ * ABA guard. `attempts` is that generation: a successful claim increments it
+ * atomically, so the number returned by `claimNextExecution` identifies one claim
+ * incarnation. No separate claim_token column is introduced.
+ *
+ * This records liveness truthfully; it reaps nothing.
  */
 export async function heartbeat(
   db: Queryable,
   executionId: string,
   worker: string,
+  expectedAttempt: number,
 ): Promise<StoreResult<ExecutionRow>> {
   const { rows } = await db.query<ExecutionRow>(
     `UPDATE recurrence_sweep_executions
         SET heartbeat_at = NOW()
-      WHERE id = $1 AND status = 'running' AND claimed_by = $2
+      WHERE id = $1 AND status = 'running' AND claimed_by = $2 AND attempts = $3
       RETURNING ${EXEC_COLS}`,
-    [executionId, worker],
+    [executionId, worker, expectedAttempt],
   );
   if (rows[0]) return { ok: true, value: rows[0] };
   return { ok: false, refusal: 'not_claim_owner' };
@@ -221,26 +227,33 @@ async function terminate(
   db: Queryable,
   executionId: string,
   worker: string,
+  expectedAttempt: number,
   status: 'completed' | 'failed',
 ): Promise<StoreResult<ExecutionRow>> {
   const { rows } = await db.query<ExecutionRow>(
     `UPDATE recurrence_sweep_executions
-        SET status = $3, finished_at = NOW()
-      WHERE id = $1 AND status = 'running' AND claimed_by = $2
+        SET status = $4, finished_at = NOW(),
+            claimed_by = NULL, claimed_at = NULL, heartbeat_at = NULL
+      WHERE id = $1 AND status = 'running' AND claimed_by = $2 AND attempts = $3
       RETURNING ${EXEC_COLS}`,
-    [executionId, worker, status],
+    [executionId, worker, expectedAttempt, status],
   );
   if (rows[0]) return { ok: true, value: rows[0] };
   return { ok: false, refusal: 'not_running' };
 }
 
-/** Normal execution terminus against the frozen scope. */
-export const completeExecution = (db: Queryable, id: string, worker: string) =>
-  terminate(db, id, worker, 'completed');
+/**
+ * Normal execution terminus against the frozen scope.
+ * ⭐ STEP 5 REPAIR: clears the current-claim fields. They describe the CURRENT
+ * claim; leaving them populated on a terminal row would widen their meaning into
+ * "historical last claim" by convenience (BCS-M1).
+ */
+export const completeExecution = (db: Queryable, id: string, worker: string, attempt: number) =>
+  terminate(db, id, worker, attempt, 'completed');
 
 /** Terminated without its normal terminus, and not by an accepted cancellation. */
-export const failExecution = (db: Queryable, id: string, worker: string) =>
-  terminate(db, id, worker, 'failed');
+export const failExecution = (db: Queryable, id: string, worker: string, attempt: number) =>
+  terminate(db, id, worker, attempt, 'failed');
 
 export interface CancelRequestInput {
   requestedBy: string;
@@ -295,11 +308,12 @@ export async function observeCancellation(
   client: PoolClient,
   executionId: string,
   worker: string,
+  expectedAttempt: number,
 ): Promise<StoreResult<ExecutionRow>> {
   try {
     await client.query('BEGIN');
-    const cur = await client.query<{ status: SweepStatus; claimed_by: string | null }>(
-      `SELECT status, claimed_by FROM recurrence_sweep_executions WHERE id = $1 FOR UPDATE`,
+    const cur = await client.query<{ status: SweepStatus; claimed_by: string | null; attempts: number }>(
+      `SELECT status, claimed_by, attempts FROM recurrence_sweep_executions WHERE id = $1 FOR UPDATE`,
       [executionId],
     );
     if (!cur.rows[0]) {
@@ -310,7 +324,7 @@ export async function observeCancellation(
       await client.query('ROLLBACK');
       return { ok: false, refusal: cur.rows[0].status === 'queued' ? 'not_running' : 'already_terminal' };
     }
-    if (cur.rows[0].claimed_by !== worker) {
+    if (cur.rows[0].claimed_by !== worker || cur.rows[0].attempts !== expectedAttempt) {
       await client.query('ROLLBACK');
       return { ok: false, refusal: 'not_claim_owner' };
     }
@@ -324,7 +338,8 @@ export async function observeCancellation(
     }
     const upd = await client.query<ExecutionRow>(
       `UPDATE recurrence_sweep_executions
-          SET status = 'cancelled', finished_at = NOW()
+          SET status = 'cancelled', finished_at = NOW(),
+              claimed_by = NULL, claimed_at = NULL, heartbeat_at = NULL
         WHERE id = $1
         RETURNING ${EXEC_COLS}`,
       [executionId],
@@ -346,4 +361,22 @@ export async function loadExecution(
     [executionId],
   );
   return rows[0] ?? null;
+}
+
+/**
+ * Invoke expired-claim recovery. The decision, the clock and the concurrency all
+ * live in the database function; this is only the caller.
+ *
+ * Returns the number of executions whose claim was revoked — requeued where
+ * attempts remain, failed where the budget is exhausted.
+ */
+export async function recoverExpiredClaims(
+  db: Queryable,
+  expiry: string,
+): Promise<number> {
+  const { rows } = await db.query<{ n: number }>(
+    `SELECT fn_recover_expired_recurrence_sweep_claims($1::interval) AS n`,
+    [expiry],
+  );
+  return Number(rows[0].n);
 }

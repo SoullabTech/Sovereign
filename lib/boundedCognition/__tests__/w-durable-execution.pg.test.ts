@@ -24,10 +24,10 @@ import {
 } from '../recurrenceSweepStore';
 
 const CONN = process.env.BCS_TEST_DATABASE_URL;
-const MIGRATION = path.join(
-  __dirname,
-  '../../../database/migrations/20260913000001_recurrence_sweep_execution.sql',
-);
+const MIGRATIONS = [
+  '20260913000001_recurrence_sweep_execution.sql',
+  '20260913000002_recurrence_sweep_claim_recovery.sql',
+].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: CONN });
 
@@ -43,7 +43,7 @@ const COMMISSION: NewCommission = {
 };
 
 beforeAll(async () => {
-  await pool.query(fs.readFileSync(MIGRATION, 'utf8'));
+  for (const m of MIGRATIONS) await pool.query(fs.readFileSync(m, 'utf8'));
 });
 
 beforeEach(async () => {
@@ -160,14 +160,14 @@ describe('D · heartbeat belongs to the current claimant', () => {
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
 
-    expect((await heartbeat(pool, claimed.id, 'worker-A')).ok).toBe(true);
+    expect((await heartbeat(pool, claimed.id, 'worker-A', claimed.attempts)).ok).toBe(true);
 
-    const foreign = await heartbeat(pool, claimed.id, 'worker-B');
+    const foreign = await heartbeat(pool, claimed.id, 'worker-B', claimed.attempts);
     expect(foreign.ok).toBe(false);
     expect(!foreign.ok && foreign.refusal).toBe('not_claim_owner');
 
-    await completeExecution(pool, claimed.id, 'worker-A');
-    expect((await heartbeat(pool, claimed.id, 'worker-A')).ok).toBe(false);
+    await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
+    expect((await heartbeat(pool, claimed.id, 'worker-A', claimed.attempts)).ok).toBe(false);
   });
 });
 
@@ -177,7 +177,7 @@ describe('E/F · terminal states', () => {
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
 
-    const done = await completeExecution(pool, claimed.id, 'worker-A');
+    const done = await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
     expect(done.ok && done.value.status).toBe('completed');
     expect(done.ok && done.value.finished_at).not.toBeNull();
     expect(await claimNextExecution(pool, 'worker-B')).toBeNull();
@@ -188,7 +188,7 @@ describe('E/F · terminal states', () => {
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
 
-    const failed = await failExecution(pool, claimed.id, 'worker-A');
+    const failed = await failExecution(pool, claimed.id, 'worker-A', claimed.attempts);
     expect(failed.ok && failed.value.status).toBe('failed');
     expect(failed.ok && failed.value.finished_at).not.toBeNull();
     expect(await claimNextExecution(pool, 'worker-B')).toBeNull();
@@ -198,7 +198,7 @@ describe('E/F · terminal states', () => {
     const c = await createCommission(pool, COMMISSION);
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
-    await completeExecution(pool, claimed.id, 'worker-A');
+    await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
 
     const { rows } = await pool.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
@@ -245,11 +245,11 @@ describe('G · cancellation — the durable interval (P7)', () => {
     try {
       await recordCancelRequest(client, claimed.id, { requestedBy: 'member:m1', authority: 'member' });
 
-      const foreign = await observeCancellation(client, claimed.id, 'worker-B');
+      const foreign = await observeCancellation(client, claimed.id, 'worker-B', claimed.attempts);
       expect(foreign.ok).toBe(false);
       expect(!foreign.ok && foreign.refusal).toBe('not_claim_owner');
 
-      const done = await observeCancellation(client, claimed.id, 'worker-A');
+      const done = await observeCancellation(client, claimed.id, 'worker-A', claimed.attempts);
       expect(done.ok && done.value.status).toBe('cancelled');
       expect(done.ok && done.value.finished_at).not.toBeNull();
     } finally {
@@ -264,7 +264,7 @@ describe('G · cancellation — the durable interval (P7)', () => {
 
     const client = await pool.connect();
     try {
-      const r = await observeCancellation(client, claimed.id, 'worker-A');
+      const r = await observeCancellation(client, claimed.id, 'worker-A', claimed.attempts);
       expect(r.ok).toBe(false);
       expect(!r.ok && r.refusal).toBe('no_cancel_request');
     } finally {
@@ -276,7 +276,7 @@ describe('G · cancellation — the durable interval (P7)', () => {
     const c = await createCommission(pool, COMMISSION);
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
-    await completeExecution(pool, claimed.id, 'worker-A');
+    await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
 
     const client = await pool.connect();
     try {
