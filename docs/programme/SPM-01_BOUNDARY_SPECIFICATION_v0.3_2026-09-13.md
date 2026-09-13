@@ -73,9 +73,23 @@ time                                any reconstructible paraphrase
 decision provenance                 enough to re-derive it
 ```
 
-⚠️ **Open:** whether *category + time + decision provenance* is itself sometimes re-derivable in
-context — a refusal register with one entry, at one moment, in a narrow category, may identify what
-was refused. ⛔ Recorded, not solved.
+⚠️ **ADDENDUM 2026-09-13 (founder) — the requirement is stronger than "do not store the
+proposition":**
+
+> ⭐ **A non-formation record must not contain enough contextual information to reconstruct the
+> proposition it exists to prove was never formed.**
+
+Even `rule · category · time` can reveal it in context. ⭐ **The refusal evidence is itself an
+information-leakage problem** — the audit trail protecting the member becomes a channel for the thing
+it protects them from. ⛔ **Solution open**; coarse timestamps, opaque category references,
+aggregation and restricted audit custody are implementation choices and premature. Registered as
+**F3** in `SPM-00_FLAGGED_ITEMS_2026-09-13.md`.
+
+⚠️ **Note on versioning (this is an addendum, not v0.4).** Nothing above is withdrawn — the
+requirement is *sharpened*. ⭐ **Proposed answer to the open procedural question, for founder ruling:
+a new version file when something is WITHDRAWN; a dated in-place addendum when something is only
+SHARPENED.** That keeps withdrawals visible — the reason the practice exists — without one file per
+refinement. ⛔ Proposed, not adopted.
 
 ### 3.2 · Jurisdiction across the gate
 
