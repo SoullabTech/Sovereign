@@ -1,8 +1,9 @@
-# Soullab Strategic Exclusion Register — CANDIDATE (r3)
+# Soullab Strategic Exclusion Register — CANDIDATE (r4)
 
 ```text
-STATUS      CANDIDATE. 11 adjudication rulings applied (2026-09-13, r2+r3);
-            10 resulting entries adjudicated; 20 entries remain open; 30 entries total.
+STATUS      CANDIDATE. 18 adjudication rulings applied (2026-09-13, r2+r3+r4);
+            14 resulting entries adjudicated; 16 entries remain open; 30 entries total.
+            Kernel-producing set: 13.
 RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder-from-memory
             composition; every entry CANDIDATE until adjudicated; do not draft the kernel.
             founder, 2026-09-13 (r2): three corrections, six adjudications, and the LEVEL
@@ -10,6 +11,9 @@ RULED BY    founder, 2026-09-13 (opening): read-only reconstruction, not founder
             founder, 2026-09-13 (r3): cardinality repair (C4); F7 AUTHORED as X-29; X-15
             releveled OPERATIONAL; X-19 elevated in wording, STRATEGIC retained; X-02
             collapsed beneath X-01A as enforcement, not an independent decision.
+            founder, 2026-09-13 (r4): X-05 kept STRATEGIC with fields filled; X-09 and X-11
+            releveled CONSTITUTIONAL; X-01B and X-10 releveled OPERATIONAL; F2 answered with a
+            90-day stale backstop; X-29 given a distribution acceptance condition, no build.
 METHOD      Jarvis reconstruction from existing rulings. No new research. No external sweep.
 NOT A LANE  Strategic memory, not a programme lane. No build, no schema, no deploy.
 HANDOFF     UARE-01 exposed the question, does not own the answer, and stops here.
@@ -113,6 +117,15 @@ If no, it is operating memory, not strategic memory.
 Corollary adopted with F3 below: **if no meaningful tradeoff exists, the item probably is not
 strategic enough for this register.**
 
+### The second admission test (founder, r4)
+
+> **A strategic alternative must be a future Soullab could legitimately choose.**
+
+This is what separates X-11 from X-29. *"Should we enter through practitioners or consumers?"* is a
+real fork. *"Should we tell tomorrow's story as if it were today's?"* is not — it is an honesty
+boundary wearing the grammar of a choice. **Consequence does not make something strategy: a
+constitutional floor constrains strategy; it is not produced by it.**
+
 ---
 
 ## 2 · Field provenance
@@ -152,7 +165,13 @@ strategic enough for this register.**
   metaphysically forbidden** — which are not equivalent.
 
 ### X-01B · Managed infrastructure for non-authoritative, non-member-data functions
-- **LEVEL** [F] STRATEGIC · **CLASS** [F] CHOSEN AGAINST FOR NOW (founder also offered UNDECIDED)
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC, r4)* · **CLASS** [F] current preference
+- **RULING** [F] **The admission test dissolves the CHOSEN-AGAINST-vs-UNDECIDED question r3 left open.** Putting a public logo on a CDN tomorrow would not materially change Soullab's human promise or sovereignty posture, provided the implementation respects privacy and authority boundaries. So no artificial strategic decision about CDN usage is forced; **each actual managed-service proposal is evaluated on its merits.** Preserves the distinction the r3 collapse recovered:
+  ```text
+  PRINCIPLE        sovereign custody
+       ≠
+  IMPLEMENTATION   minisforum + PostgreSQL + Caddy forever
+  ```
 - **CHOICE** [F] Self-host these too, for now.
 - **ALTERNATIVE** [F] A CDN or managed service for public, non-member-data assets.
 - **WHY** [F] *"A CDN serving a public logo is not morally equivalent to putting Anamnesis into somebody else's database. Don't let 'self-hosted' become topology fundamentalism."*
@@ -242,6 +261,24 @@ strategic enough for this register.**
   experience can independently sustain onboarding, continuity, consent, support and economic
   viability **without introducing attachment or engagement incentives and without weakening
   member sovereignty.**
+- **DISTRIBUTION ACCEPTANCE CONDITION** [F] — *not a build authorization.* The tradeoff above is
+  **not** "we must invent a member-sovereignty mechanism." Mechanisms exist. It is that
+  **practitioner-led distribution continually creates pressure on an already-established
+  sovereignty boundary, so every practitioner deployment has to prove that boundary survives the
+  deployment.**
+
+  > **Before any practitioner-led deployment expands beyond a witnessed specimen, demonstrate
+  > that member-private material remains unavailable to the practitioner absent an explicit
+  > member sharing act — including through metadata and derived signals — and that the member's
+  > own MAIA relationship remains structurally independent of the practitioner relationship.**
+
+  ```text
+  existing architecture passes  → no build
+  coverage incomplete           → owning lane receives the defect
+  new guard required            → separate authorization
+  ```
+  ⛔ **Finding a gap is not permission to repair it.** See F9 — this condition already has a live
+  candidate gap, which is why it is a condition and not a formality.
 
 ### X-15 · Circle authority stays founder-only
 - **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [R] DEFERRED
@@ -272,6 +309,37 @@ strategic enough for this register.**
   relationship.
 - **NOTE** [F] *"Phase 3 affinity weighting is merely the current specimen."*
 
+### X-05 · Circles scale by multiplication, not enlargement
+- **LEVEL** [F] STRATEGIC *(kept)* · **CLASS** [F] CHOSEN AGAINST
+- **RULING** [F] **One of the strongest genuine strategic choices in the register.** FR-10 does not say the current implementation happens to use small groups; it says **collective scale itself** should proceed by multiplication and nesting rather than making one relational field absorb unlimited complexity. *"Reversing it would change what kind of social architecture Soullab is creating."*
+- **CHOICE** [R] Collective scale through multiplication and nesting of small fields.
+- **ALTERNATIVE** [R] Enlarging a single relational field.
+- **WHY** [R] *"Enlargement increasingly makes recognizability, participation, facilitation, differentiation and repair difficult to preserve."*
+- **SOURCE** [R] FR-10, 2026-09-06.
+- **TRADEOFF** [F] Gives up economies of scale, audience density, large-group network effects, simpler administration, and the familiar "one big community" model. Multiplication creates coordination and constellation complexity.
+- **REOPEN CONDITION** [F] ⛔ **Not** *"a Circle with 500 people seems to work"* — headcount is explicitly not the law. Reopen only on evidence that enlargement can preserve **all five properties FR-10 names** — recognizability, participation, facilitation, differentiation, repair — **without** introducing status mechanics, centralized authority, or relational anonymity. Any change then requires an explicit amendment to FR-10.
+
+### X-09 · Voice may not have a different mind
+- **LEVEL** [F] **CONSTITUTIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] REFUSED
+- **RULING** [F] The source is not a preference and never was. Verified at the top of the canon: *"**Status:** standing ruling and **hard acceptance gate**, founder, 2026-08-31. **Not a preference.** … **There is no reduced voice version of MAIA.**"* And: *"RED means Desktop voice does not ship."*
+- **REFUSED ALTERNATIVE** [F] — *narrowed:* **response-producing voice cognition that bypasses or substitutes for canonical MAIA cognition** — the canon's *"thinner, cheaper, generic, stateless, or otherwise reduced conversation path."*
+- **⛔ CORRECTION to r2/r3** [F] Do **not** describe alternative capture, STT or TTS as chosen against. The same canon explicitly permits those to differ and evolve freely: *STT/TTS are sensory infrastructure.* r2's "CHOSEN AGAINST at the capture boundary" was wrong and is withdrawn.
+- **SOURCE** [R] `docs/canon/MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md`; pinned by `__tests__/voice-non-degradation.test.ts`.
+- **REOPEN CONDITION** [F] Constitutional/canonical amendment only.
+
+### X-10 · Delegation capped at a bounded primitive
+- **LEVEL** [F] **OPERATIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] DEFERRED
+- **RULING** [F] As recovered, X-10 is *manual task and model selection until the bounded primitive generates enough evidence to justify automating it* — **an internal Builder OS sequencing choice.** Its own source scopes automatic classification out *for this unit*, reopening on evidence plus a separate authorization. **Do not feed it to the kernel.**
+- **⚠ WHY THE HIGHER PRINCIPLE IS NOT RE-ENTERED HERE** [F] The authority firewall — *delegates execute under authority; they do not create authority* (no delegate may establish constitutional architecture, member authority, consent, confidentiality, provenance, security boundaries, founder rulings or ontology) — **is serious and is already represented elsewhere.** Duplicating it as a new strategy entry would let one principle accrue several homes and drift between them.
+- **SOURCE** [R] `AIN_DELEGATION_CONTROL_PLANE_2026-08-09.md` §9.
+
+### X-11 · A north star may not be strip-mined
+- **LEVEL** [F] **CONSTITUTIONAL** *(releveled from STRATEGIC)* · **CLASS** [F] REFUSED
+- **RULING** [F] The alternative is not a legitimate strategic future. Relabeling a Vision story as Designed to make it saleable now is **representation discipline**, governing every outward statement — an honesty boundary, not a fork. *"It has enormous market consequences, yes. But consequence does not make something strategy."*
+- **SOURCE** [R] `MARKETING_CLAIM_DISCIPLINE.md` §True-North Preservation.
+- **REOPEN CONDITION** [F] Constitutional/canonical amendment only.
+- **NOTE** [F] This ruling produced the second admission test in §1.
+
 ---
 
 ## 4 · Unadjudicated — STRATEGIC level (kernel-producing set)
@@ -282,19 +350,17 @@ git history at `1337d51a`; abbreviated here to keep the strategic set readable.
 | # | Choice | Alternative chosen against | Class | Source |
 |---|---|---|---|---|
 | **X-03** | Provider replaceability — *"no provider is load-bearing for who MAIA is"* | OpenAI in the production runtime | CHOSEN AGAINST (REFUSED in-prod, lab-gated otherwise) | `PROVIDER_GOVERNANCE.md`, canon 2026-07-07 |
-| **X-05** | Circles scale by multiplication, not enlargement | Enlarging a single relational field | CHOSEN AGAINST | FR-10, 2026-09-06 |
 | **X-06** | Build the FR-02 Commons fresh | Reuse `community_*` — *"would import a status economy on day one"* | CHOSEN AGAINST | I0 census; D-I2 |
-| **X-09** | *"Voice may have a different capture path; it may not have a different mind"* | A voice-optimized cognition path | REFUSED at cognition, CHOSEN AGAINST at capture | `MAIA_CONVERSATIONAL_INTELLIGENCE_NON_DEGRADATION.md` |
-| **X-10** | Delegation capped at a bounded primitive | Automatic classification, routing, swarms, automatic merging | CHOSEN AGAINST, evidence-gated | `AIN_DELEGATION_CONTROL_PLANE_2026-08-09.md` §9 |
-| **X-11** | A north star may not be strip-mined for near-term copy | Demoting Vision → Designed to ship it | REFUSED (representation) | `MARKETING_CLAIM_DISCIPLINE.md` |
 | **X-14** | Anti-Drift Law freeze on generalized architecture | Extracting the Coaching Journey Template now | DEFERRED | Naming ruling 2026-09-04 |
 | **X-17** | Practitioner-wisdom work held behind the BUILD GATE | Continuing on design direction alone | DEFERRED | `UNIVERSAL_PRACTITIONER_SEED_2026-08-05.md` |
 | **X-20** | RFI / UFI not built, not claimed | Building or claiming them | UNPROVEN | Founder, 2026-05-24 |
 | **X-23** | P1–P13 held at rung 1; nothing on rungs 1–4 is marketed | Publishing the research as findings | UNPROVEN | `CLAIM_LADDER.md` |
 | **X-24** | Capacity transfer metric not claimed | Claiming measurable transfer | UNPROVEN | `CLAIM_LADDER.md` |
 
-**11 open entries.** With the 6 adjudicated STRATEGIC entries (X-01B · X-16 · X-19 · X-21A ·
-X-21B · X-29), the kernel-producing set totals **17**.
+**7 open entries.** With the 6 adjudicated STRATEGIC entries (X-05 · X-16 · X-19 · X-21A ·
+X-21B · X-29), the kernel-producing set totals **13** — down from 17. **A healthy contraction:**
+four entries left because they were a constitutional floor (X-09, X-11) or an implementation
+preference (X-01B, X-10) wearing strategic grammar.
 
 ---
 
@@ -341,6 +407,50 @@ existed only scattered across 20+ source documents until this sweep.
 See C3. X-16's criteria are explicit, enumerated, and **116 days old without revisit**. The old
 observation-phase freeze hardened because it had *no* exit; X-16 and X-21A can harden because
 theirs is *unread*. Different failure, different repair: review the criteria on a cadence.
+
+### F2 · RULED (r4) — 90-day stale backstop, review without authorization
+The error was never lack of criteria. X-16's are unusually good. **The problem is that
+architecture can move while the criterion sits untouched.**
+
+> **Every STRATEGIC DEFERRED or UNPROVEN entry with a future-facing reopen condition is reviewed
+> when a named upstream condition materially changes, or after 90 days without review, whichever
+> comes first.**
+
+⛔ **Review does not reopen the item and authorizes nothing.** It asks only four questions:
+
+1. Does this criterion still describe the real architecture?
+2. Has one of its conditions already been satisfied, or become obsolete?
+3. Is the original reason for the hold still true?
+4. Does the tradeoff look materially different now?
+
+No new lane. No automatic job. No strategy ceremony. **The 90 days is a stale-data backstop, not a
+cadence.** Currently in scope: X-16, X-19, X-21A, X-21B, X-20, X-23, X-24.
+
+### F9 (new) · The X-29 acceptance condition has a live candidate gap
+Verification of the mechanisms X-29 rests on, run before recording the ruling:
+
+**Present and verified.** `can_be_shown_to_practitioner` defaults FALSE and moves only by an
+explicit per-thread member gesture (`NW_D00_EXISTING_PRODUCT_CENSUS_2026-08-26.md`); render
+evidence records *"Every row: `can_be_shown_to_practitioner = false`"*; UI trust copy is backed by
+a real absence — *"Your practitioner cannot see your positions — **there is no read for**"*
+(`position/page.tsx:190`).
+
+**Not located.** The stronger half — client-private material *unrecoverable by construction*, and
+a practitioner unable to **infer its existence** through timestamps, counts, ordering,
+notifications, suggested actions or latency — **could not be found in this repository.** (The
+phrase "unrecoverable by construction" does occur, in `CRP-001-C3-BINDING-RECORD.md`, but about a
+git artifact's provenance ceiling — an unrelated context, matched coincidentally.) Nor was
+"predates and outlives" located.
+
+**And the one three-way visibility table found disclaims itself**: *"⚠️ This table is descriptive
+of the design intent, **not a ruled access model.** The authoritative boundary is the consent
+architecture, not this grid"* (`NOW_WHAT_NAVIGATION_AND_ARRIVAL_ARCHITECTURE_2026-08-03.md`).
+
+**Consequence:** the acceptance condition's *"including through metadata and derived signals"*
+clause is **not a confirmation exercise**. The consent gate is real; the inference-channel
+guarantee is, on this reading, unlocated. ⛔ **Named, not repaired** — per the standing programme
+stop. The ruling stands unchanged and is arguably strengthened: this is exactly what the condition
+exists to catch.
 
 ### F3 (corrected) · Tradeoffs are poorly recorded; reopen conditions are inconsistent
 **Counts, verified against r1 (`1337d51a`): of 24 entries carrying a REOPEN CONDITION, **18 are
@@ -424,11 +534,11 @@ Priority, in Jarvis's judgment:
 
 | # | Item | The question |
 |---|---|---|
-| 1 | **X-05, X-11** | The two open entries that most directly foreclose a market position. Highest kernel weight, per F8. |
-| 2 | **X-01B** | CHOSEN AGAINST FOR NOW or UNDECIDED? The two produce different kernels. |
-| 3 | **F2 cadence** | X-16 and X-21A criteria are 116 days unread. On what cadence are reopen criteria reviewed? |
-| 4 | **Remaining LEVELs** | 11 STRATEGIC / 5 OPERATIONAL still [J]. X-10 and X-09 are the borderline calls now that X-15 and X-19 are ruled. |
-| 5 | **X-29 TRADEOFF** | *"Continual need to defend the member's sovereignty from practitioner authority"* is a standing cost with no named instrument. Does it need one? |
+| 1 | **F9** | The inference-channel guarantee is unlocated. Does it exist somewhere Jarvis could not reach, or is it a real gap for the owning lane? **Only the founder can tell these apart.** |
+| 2 | **X-03, X-06** | The two highest-weight open strategic entries — provider replaceability and refusing an inherited status economy. |
+| 3 | **X-14, X-17** | Both DEFERRED behind gates (Jondi walk · Larry IP inventory). Now in F2's 90-day scope. |
+| 4 | **X-20, X-23, X-24** | The three UNPROVEN entries. Do they share one reopen condition — evidence — or three? |
+| 5 | **Remaining LEVELs** | 7 STRATEGIC / 5 OPERATIONAL still [J], and four constitutional entries have never been levelled by act. |
 
 **Repaired separately per §F5:** `CLAUDE.md:13` EC2 fossil — factual correction, committed apart
 from this register so it is independently reviewable and revertable.
