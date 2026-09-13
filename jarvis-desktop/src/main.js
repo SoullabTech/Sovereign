@@ -730,7 +730,28 @@ ipcMain.handle('jarvis:submit-task', async (_evt, task) => {
   const detPath = path.join(currentRoot(), 'scripts', 'builder', 'deterministic.mjs');
 
   const { route } = await import(`file://${routerPath}?t=${Date.now()}`);
-  const decision = route(task);
+
+  // JOP-04 RB-6A — routing eligibility is TRANSPORTED from the submission, never
+  // manufactured from registry membership. A task that declares nothing is not
+  // routable, however well registered its capability is.
+  const eligPath = path.join(currentRoot(), 'scripts', 'builder', 'routing-eligibility.mjs');
+  let routingEligibility = null;
+  try {
+    const { declareRoutingEligibility } = await import(`file://${eligPath}?t=${Date.now()}`);
+    const declared = task && typeof task.routing === 'object' && task.routing !== null ? task.routing : null;
+    if (declared) {
+      routingEligibility = declareRoutingEligibility({
+        satisfied: declared.satisfied === true,
+        basis: typeof declared.basis === 'string' && declared.basis.trim() ? declared.basis : 'operator_submission',
+        declared_by: 'jarvis-desktop:submit-task',
+      });
+    }
+  } catch {
+    // No producer on this checkout, or a refused basis. Either way: not routable.
+    routingEligibility = null;
+  }
+
+  const decision = route(task, routingEligibility);
 
   const response = {
     task: task,

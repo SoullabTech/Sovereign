@@ -11,6 +11,7 @@
 // else escalates. No C2 lane exists at this stage (no Kimi/DeepSeek/GPT-OSS
 // dependency for Alpha).
 import { CAPABILITIES } from './deterministic.mjs';
+import { isRoutable } from './routing-eligibility.mjs';
 
 export const COST_CLASS = { C0: 'deterministic', C1: 'local_model', C3: 'frontier_model' };
 
@@ -27,20 +28,18 @@ export const C1_MAX_INPUT_CHARS = 4000;
  * @param {string} [task.capability] - a name to check against deterministic.mjs's CAPABILITIES
  * @param {boolean} [task.bounded_for_local] - caller asserts the task is small and local-worker-shaped
  * @param {number} [task.input_chars] - size of the actual input, checked against C1_MAX_INPUT_CHARS
- * @returns {{execution_lane: 'C0'|'C1'|'C3', cost_class: string, reason: string, task: object, status: 'routed', verification_required: boolean}}
+ * @param {object} [routingEligibility] - JOP-04 RB-6A. The one fact routing needs that it
+ *   CANNOT derive from the registry. Produced by routing-eligibility.mjs and unforgeable by
+ *   assertion. Absent or unsatisfied ⇒ a REGISTERED capability is NOT ROUTABLE.
+ *   ⛔ This is placement eligibility, never execution authority (RB-6B).
+ * @returns {{execution_lane: 'C0'|'C1'|'C3'|null, cost_class: string|null, reason: string, task: object, status: string, verification_required: boolean}}
  */
-export function route(task) {
-  if (task.capability && Object.prototype.hasOwnProperty.call(CAPABILITIES, task.capability)) {
-    return {
-      execution_lane: 'C0',
-      cost_class: COST_CLASS.C0,
-      reason: `Deterministic capability '${task.capability}' is registered; no model required.`,
-      task,
-      status: 'routed',
-      verification_required: true,
-    };
-  }
-
+export function route(task, routingEligibility) {
+  // ── ROUTING JUDGMENT ─────────────────────────────────────────────────────
+  // JOP-04 RB-6A: the router's own refusals are evaluated BEFORE any placement
+  // grant. Registration must not preempt routing judgment — previously a
+  // registered name returned C0 above this point and never reached the
+  // router's one legitimate refusal.
   if (task.bounded_for_local === true) {
     const size = task.input_chars ?? 0;
     if (size > C1_MAX_INPUT_CHARS) {
@@ -56,6 +55,32 @@ export function route(task) {
         verification_required: false,
       };
     }
+  }
+
+  // Registration is NECESSARY and INSUFFICIENT. Membership identifies the
+  // instrument; it confers no placement.
+  if (task.capability && Object.prototype.hasOwnProperty.call(CAPABILITIES, task.capability)) {
+    if (!isRoutable(routingEligibility)) {
+      return {
+        execution_lane: null,
+        cost_class: null,
+        reason: `Capability '${task.capability}' is registered, but no satisfied routing eligibility was supplied. Registration identifies an instrument; it does not grant routing.`,
+        task,
+        status: 'refused_not_routable',
+        verification_required: false,
+      };
+    }
+    return {
+      execution_lane: 'C0',
+      cost_class: COST_CLASS.C0,
+      reason: `Deterministic capability '${task.capability}' is registered AND routing eligibility is satisfied (basis: ${routingEligibility.basis}); no model required.`,
+      task,
+      status: 'routed',
+      verification_required: true,
+    };
+  }
+
+  if (task.bounded_for_local === true) {
     return {
       execution_lane: 'C1',
       cost_class: COST_CLASS.C1,

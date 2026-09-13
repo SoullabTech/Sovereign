@@ -7,6 +7,10 @@
 // (the DOM-free logic the renderer calls). Nothing is re-implemented for the
 // test, so a divergence between console and registry would fail here.
 import { CAPABILITIES } from '../deterministic.mjs';
+import { declareRoutingEligibility } from '../routing-eligibility.mjs';
+
+// JOP-04 RB-6A: C0 placement now requires a declared routing eligibility.
+const DECLARED_ELIGIBILITY = declareRoutingEligibility({ satisfied: true, basis: 'c0_explorer_proof_fixture', declared_by: 'desktop-c0-explorer-proof' });
 import { route } from '../router.mjs';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -141,12 +145,12 @@ console.log('\n==================== E — malformed Advanced JSON rejected befor
 console.log('\n==================== F — existing execution path preserved ====================');
 {
   const out = CF.validateSubmission({ manifest, capabilityName: 'inventory.routes', mode: 'structured', rawValues: { dir: 'app/api' } });
-  const decision = route(out.task);
+  const decision = route(out.task, DECLARED_ELIGIBILITY);
   report('validated task routes to C0 through the canonical router', decision.execution_lane === 'C0', decision.reason);
   report('router still verification_required', decision.verification_required === true);
 
   const mainJs = code('main.js');
-  report('main.js still routes every submitted task through router.mjs', mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task);'));
+  report('main.js still routes every submitted task through router.mjs', mainJs.includes("'router.mjs'") && mainJs.includes('const decision = route(task, routingEligibility);'));
   // The root is read through currentRoot() rather than a REPO_ROOT const now,
   // so Preferences can rebind the substrate without relaunching. Still pinned
   // exactly: what matters is that C0 executes via runCapability against the
