@@ -1,0 +1,2 @@
+## verbs mentioning delete/remove/rm/unlink/erase (documentation text, not an implementation):
+(none found in the captured help pages)

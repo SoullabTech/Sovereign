@@ -1,0 +1,37 @@
+OVERVIEW: Reboot a device.
+
+This command reboots a device.
+
+USAGE: devicectl device reboot --device <uuid|ecid|serial_number|udid|name|dns_name> [--style <style>] [--wait-for-device] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --style <style>         The reboot style to use. Either 'full' or 'userspace'
+                          can be requested. By default, a full reboot is
+                          performed. (default: full)
+  -w, --wait-for-device   Whether the command should wait for the device to
+                          become available again after rebooting. This option
+                          is supported only for devices which are physically
+                          connected to the host.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
