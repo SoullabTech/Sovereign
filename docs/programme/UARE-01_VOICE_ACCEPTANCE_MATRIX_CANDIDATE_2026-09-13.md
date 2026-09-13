@@ -34,30 +34,85 @@ worth naming — and it is enough as stated.
 
 ---
 
-## Coverage column — honesty statement
+## Coverage column — the U1 evidence ladder
 
-Coverage below was established by a **filename-and-assertion-name survey**, not a behavioural audit.
+**Founder ruling 2026-09-13.** The coverage column is where this lane's canary (charter §0.1) is most
+likely to fire, in its epistemic form: *an implementation that looks right, read as a boundary that is
+enforced.* The grammar below exists to make that promotion impossible to perform quietly.
 
-- **GATED** — a named test asserts it; the assertion names were read.
-- **CODE PRESENT, UNGATED** — implementation exists; no acceptance test was found for it.
-- **NOT SURVEYED** — no claim either way. This is the honest majority.
+```text
+CODE PRESENT  ≠  GATE PRESENT  ≠  GATE ASSERTED  ≠  GATE WITNESSED
+```
 
-⛔ **`NOT SURVEYED` does not mean absent.** Establishing the real coverage column is lane step **U1**
-and is the first work this document asks for.
+A file can contain all the right nouns, branches and refusal logic and still prove only that **an
+implementation exists**. It does not prove the boundary is enforced.
+
+> **U1 discipline.** Implementation inspection may establish **CODE PRESENT**. ⛔ **It may never
+> establish GATED.** `GATED` requires a named test whose assertion actually crosses the relevant
+> boundary and distinguishes admission from refusal.
+
+| State | What it means | What establishes it |
+| --- | --- | --- |
+| **NOT SURVEYED** | No claim either way. | — |
+| **CODE PRESENT** | Source implementing the condition exists. | Inspection. **Stops here.** |
+| **TEST PRESENT** | A named test directly asserts the boundary. | The assertion is read and *does* distinguish admission from refusal. |
+| **TEST PASSING** | That test has run successfully **on a stated SHA**. | An executed run, SHA named. |
+| **OBSERVED `[O]`** | Witnessed in the running product under the lane's method. | ⛔ U2 only. Not reachable at U1. |
+
+**`TEST PRESENT` ≠ `TEST PASSING` ≠ `[O]`.** This guards the subtler variant: *there is a test file,
+therefore the gate is proven* — when the test either does not assert the decisive thing, or has never
+run against the build under study.
+
+**The assertion must fit the claim, not a fixed shape.** Demanding a read assertion universally would
+couple the rule to one implementation form. Instead: a **read** gate proves the read cannot occur
+without the condition; a **write** gate proves the mutation is refused; a **visibility** property
+proves presence or absence under the relevant state.
+
+### The U1 trap, in its pure form
+
+```text
+weak state      "This code appears to check X."
+                        ↓   nothing external happens
+strong state    "X is gated."
+```
+
+That is **occurrence 3** if a U1 finding ever records it. The required crossing:
+
+```text
+implementation inspection → named test → decisive assertion at the boundary → successful execution on identified code
+```
+
+**No crossing, no promotion.**
+
+⛔ **The occurrence register stays at 2/3.** Anticipating a failure is not committing it. The row fills
+only if an actual U1 finding promotes implementation appearance into stronger standing without the
+crossing.
+
+### Re-statement of A1–A5 under the new grammar
+
+⚠️ A1–A5 were labelled **GATED** on 2026-09-13 under the previous legend, which defined that word as
+*"a named test asserts it; the assertion names were read."* The method was disclosed and the term was
+defined at the strength of the evidence, so this is **not** a fourth instance of the canary — it is a
+term whose definition has since been tightened, and the rows are re-stated in the new vocabulary
+rather than left carrying a word that now means more than was established.
+
+**What was actually done:** assertion *names* were read from the test files. **What was not done:** the
+assertion *bodies* were not audited, and no test was executed against a stated SHA. So A1–A5 are
+**TEST PRESENT (by name)** — and closing the name-versus-body gap, then running them, is U1 work.
 
 ---
 
-## The matrix
+## The matrix## The matrix
 
 ### Class A — turn record ⭐ (the non-negotiable class)
 
 | # | Condition | Coverage |
 | --- | --- | --- |
-| A1 | A spoken turn and a typed turn converge before MAIA cognition begins; nothing stands between the log line and canonical cognition. | **GATED** — `__tests__/voice-non-degradation.test.ts` |
-| A2 | MAIA's turn is committed exactly once, from one seam, reached by every terminal path. | **GATED** — `__tests__/voice-transcript-commit.test.ts` |
-| A3 | A stalled or failed TTS delays MAIA's words; it never erases them. | **GATED** — same |
-| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | **GATED** — same |
-| A5 | The text emitted and the transcript persisted are the same guarded value. | **GATED** — `__tests__/r2-voice-continuity-contract.test.ts` |
+| A1 | A spoken turn and a typed turn converge before MAIA cognition begins; nothing stands between the log line and canonical cognition. | **TEST PRESENT (by name)** — `__tests__/voice-non-degradation.test.ts` |
+| A2 | MAIA's turn is committed exactly once, from one seam, reached by every terminal path. | **TEST PRESENT (by name)** — `__tests__/voice-transcript-commit.test.ts` |
+| A3 | A stalled or failed TTS delays MAIA's words; it never erases them. | **TEST PRESENT (by name)** — same |
+| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | **TEST PRESENT (by name)** — same |
+| A5 | The text emitted and the transcript persisted are the same guarded value. | **TEST PRESENT (by name)** — `__tests__/r2-voice-continuity-contract.test.ts` |
 | A6 | Switching text ↔ voice mid-conversation produces one continuous conversation, not two. | **NOT SURVEYED** |
 | A7 | A reconnect resumes the same conversation; it never splits it into a second one. | **NOT SURVEYED** |
 | A8 | A message delivered in both channels appears once, not twice. | **NOT SURVEYED** |
@@ -112,7 +167,9 @@ Required by the Anchor for anything touching voice or user-facing behaviour. Ans
 
 ## What adoption would require
 
-1. **U1** — replace every `NOT SURVEYED` with a real finding. Some will already be covered.
+1. **U1** — replace every `NOT SURVEYED` with a real finding, each carrying a state from the ladder
+   above. Audit the A1–A5 assertion bodies and run them on a named SHA. Some rows will already be
+   covered; ⛔ none may reach `GATED` from inspection alone.
 2. Founder ruling on which classes are **blocking** for a voice release and which are recorded debt.
    **[I]** Class A is the only class that plausibly blocks; it is the only class where failure costs
    MAIA's own record of what she said.

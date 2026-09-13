@@ -219,6 +219,50 @@ is documentation of a claim, not our observation of a behaviour.
 **U2 meaningful: U2 creates the first Observed evidence, and nothing before it may claim the tag.**
 Any finding requiring [O] is marked *unverified* and may not ground a decision until then.
 
+### 5.1 · The U1 ladder — evidence classes for MAIA-side findings
+
+The five classes above govern claims **about Uare**. They do not govern claims **about MAIA**, and U1
+is entirely the second kind. Founder ruling 2026-09-13 sets that grammar, because the coverage survey
+is where §0.1's canary is most likely to fire in its epistemic form: *an implementation that looks
+right, read as a boundary that is enforced.*
+
+```text
+CODE PRESENT  ≠  GATE PRESENT  ≠  GATE ASSERTED  ≠  GATE WITNESSED
+```
+
+> **U1 discipline.** Implementation inspection may establish **CODE PRESENT**. ⛔ **It may never
+> establish GATED.** `GATED` requires a named test whose assertion actually crosses the relevant
+> boundary and distinguishes admission from refusal.
+
+| State | Established by |
+| --- | --- |
+| **NOT SURVEYED** | — (no claim either way) |
+| **CODE PRESENT** | inspection — **stops here** |
+| **TEST PRESENT** | a named test whose read assertion distinguishes admission from refusal |
+| **TEST PASSING** | that test executed successfully, **SHA named** |
+| **OBSERVED `[O]`** | ⛔ U2 only — unreachable at U1 |
+
+**`TEST PRESENT` ≠ `TEST PASSING` ≠ `[O]`** — guarding the subtler variant, *there is a test file,
+therefore the gate is proven*, when the test either does not assert the decisive thing or has never
+run against the build under study.
+
+**The assertion must fit the claim, not a fixed shape.** A universal demand for a read assertion would
+couple the rule to one implementation form. A **read** gate proves the read cannot occur without the
+condition; a **write** gate proves the mutation is refused; a **visibility** property proves presence
+or absence under the relevant state.
+
+**Required crossing, and the trap it closes:**
+
+```text
+weak    "this code appears to check X"   →   strong   "X is gated"
+                    ↑ nothing external happens — that is occurrence 3
+
+implementation inspection → named test → decisive assertion at the boundary → successful execution on identified code
+```
+
+⛔ **The occurrence register stays at 2/3.** Anticipating this failure is not committing it; the row
+fills only if a real U1 finding performs the promotion without the crossing.
+
 ## 6 · Custody
 
 ```text
@@ -243,6 +287,7 @@ VOICE MATRIX      CONFIRMED CANDIDATE
 U2 WALKTHROUGH    NOT AUTHORIZED
 CMT-01 DIFFERENCE ASYMMETRIC FINDING ONLY - NOT A DIFFERENTIATOR - M3 NOT OPENED HERE
 CANDIDATE CANARY   intra-document authority promotion (S0.1) - 2 occurrences - 3rd promotes it
+U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspection
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
 FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
 
@@ -255,7 +300,7 @@ NO ACCOUNT CREATED · NO PAYMENT MADE · NO SOULLAB MATERIAL DISCLOSED TO A THIR
 | Step | Name | Output | Authorization |
 | --- | --- | --- | --- |
 | **U0** | **INTAKE** | The founder's first pass, classified by evidence class. | ✅ done — this commit |
-| **U1** | **MAIA-SIDE COVERAGE SURVEY** | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a tag from the five-class table — no finding may be recorded until its class is settled.** | ✅ open — no founder act needed; read-only, internal |
+| **U1** | **MAIA-SIDE COVERAGE SURVEY** | For each transferable observation, what does MAIA *already* have? Grep-and-test level, honest about what was not surveyed. Begins with the voice matrix's coverage column. **Every U1 finding carries a state from the §5.1 ladder — no finding may be recorded until its state is settled, and none may reach `GATED` from inspection alone.** | ✅ open — no founder act needed; read-only, internal |
 | **U2** | **CLEAN-ROOM WALKTHROUGH** | Runtime observation → the first [O] evidence. | ⛔ **requires a founder act** — see §8 |
 | **U3** | **DISCRIMINATION PASS** | Every finding classified `MODEL-OF-ME` / `OTHER-WHO-KNOWS-ME` / neutral-infrastructure. Neutral-infrastructure findings are the only ones eligible to become candidate design inputs without a doctrinal question attached. | ⛔ requires U1; U2 for [O]-dependent rows |
 | **U4** | **QUESTION HANDOFF** | One docket per owning lane (Voice · Anamnesis · Jarvis · Practitioner Studio · Writer's Studio), each a *question*, never a recommendation. | ⛔ founder ruling on which dockets open |
