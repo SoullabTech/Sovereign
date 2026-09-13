@@ -328,11 +328,59 @@ a function with itself*).
 
 ---
 
+## 6 · THE CLASS B PHASE — entered 2026-09-13
+
+⭐ **S3-F8 is SPENT and the expected RED is established** at witnessed SHA
+`833ec87f` (`S3-F8-WITNESS-01_RESULT_2026-09-13.md`, recorded on
+`chore/s3-f8-witness-record-20260913` as `41d7d6f7`, whose parent IS the
+witnessed SHA). The Class A block on Class B is **DISCHARGED**.
+
+⛔ **That discharges a block. It authorizes no implementation.**
+
+### 6.1 · The dependency Class B actually has
+
+A Class B falsifier needs something to call, and the `PENDING → CLAIMED →
+COMPLETED` machine does not exist. ⛔ Waiting for it would mean writing the
+suite against a live implementation — **the exact failure Ruling 3 forbids.**
+
+### 6.2 · ⭐⭐ THE ORDER THAT RESOLVES IT
+
+```text
+B-i    author S3-F1…F7 · F9 · F10 against the TRANSITION LAW's contract,
+       not against any storage · runnable against ANY candidate
+
+B-ii   BUILD each named DEFEAT CANDIDATE as a disposable stub
+       — the read-then-write precheck, the request-keyed idempotency,
+         the prose comparison, the per-section consumption,
+         the regenerating retry, the absence-as-permission reader,
+         the { ref, sectionId, authorized: true } durable shape
+
+B-iii  demonstrate THE SUITE KILLS EACH ONE
+       ⛔ a defeat candidate that survives means the suite is not lethal,
+         and the suite is repaired — never the candidate
+
+B-iv   only then is the real implementation written
+       — to a suite already PROVEN lethal
+```
+
+> ⭐ **Lethality becomes a precondition of the implementation rather than a hope
+> about it.** A suite written after the thing it guards can only confirm what was
+> built; a suite that has already killed seven wrong machines is the first thing
+> in this lane that could genuinely refuse the eighth.
+
+⚠️ **One decision this needs and does not make:** whether the transition law is
+written as prose-in-record or as a typed contract the falsifiers import. ⛔ A
+typed contract is closer to code and edges on step 10; prose keeps step 10 shut
+but leaves the suite bound to nothing checkable. **Founder act.**
+
+---
+
 ## Standing
 
 ```text
 FALSIFIER SPECIFICATION   COMPLETE · S3-F1 … S3-F10 + identity fixture
-CLASS A                   S3-F8 only — the sole genuine known-bad reproduction
+CLASS A                   ⭐ S3-F8 SPENT · EXPECTED RED ESTABLISHED at 833ec87f
+                          canonical defect REPRODUCED · block on Class B DISCHARGED
 CLASS B                   nine falsifiers, each carrying a DEFEAT CANDIDATE
                           ⭐ the defeat candidate IS the evidence where
                             known-bad RED would be vacuous
@@ -342,12 +390,10 @@ RULINGS CARRIED           §15 Ruling 5 (cardinality) · Ruling 6 (completion)
 TERMINOLOGY               §10.6a "receipt" → "consumption", amended in place
 
 SPLIT                     ⭐ RATIFIED · founder 2026-09-13
-NEXT ACT                  S3-F8-WITNESS-01 on a disposable shadow · UNSPENT
-                          → EXPECTED RED · or STOP · or INSTRUMENT FAILURE
-                          ⛔ a canonical block is NOT a green light — it stops
-                            the lane for reconciliation
-                          only then Class B falsifiers, each proved to kill
-                          its defeat candidate
+NEXT ACT                  CLASS B · §6 — B-i author · B-ii build the defeat
+                          candidates · B-iii prove the suite kills each
+                          ⛔ B-iv (real implementation) NOT AUTHORIZED
+OPEN                      transition law as prose or as typed contract — §6.2
 
 TEST CODE                 NOT AUTHORED
 STORAGE DESIGN            NOT OPENED

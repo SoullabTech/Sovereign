@@ -1367,8 +1367,9 @@ are downstream and section-specific. The new substrate inherits the law.
 ```text
 7  pendingAskRef substrate census        ✅ CLOSED 2026-09-13
 8  falsifier specification               ✅ DELIVERED 2026-09-13
-9  ⭐ S3-F8 WITNESS · prove the intended RED   ← current act · UNSPENT
-10 only then open primitive / state-transition design
+9  S3-F8 witness · the intended RED   ✅ SPENT 2026-09-13 · ESTABLISHED
+10 CLASS B · author · build the defeat candidates · prove the suite lethal
+11 only then the real primitive / state-transition implementation
 ```
 
 ### ⭐ DIRECTION FOR STEP 10 — recorded, ⛔ NOT OPENED
@@ -1425,8 +1426,11 @@ SUBSTRATE CENSUS          ✅ CLOSED 2026-09-13 — no existing object enforces
 FALSIFIER SPECIFICATION   ✅ DELIVERED 2026-09-13 · S3-F1…S3-F10
                           Class A / Class B split RATIFIED (founder)
 
-NEXT ACT                  S3-F8 WITNESS on a disposable shadow · UNSPENT
-                          → prove the INTENDED red, or STOP
+S3-F8 WITNESS             ✅ SPENT · EXPECTED RED ESTABLISHED at 833ec87f
+                          canonical defect REPRODUCED
+
+NEXT ACT                  CLASS B phase · falsifier spec §6
+                          ⛔ implementation NOT AUTHORIZED
 STORAGE DESIGN            CLOSED · §15 direction: transition law before schema
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
