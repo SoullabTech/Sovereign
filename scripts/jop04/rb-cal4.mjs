@@ -18,6 +18,23 @@
  * ⭐ THIS PROBE REPRODUCES THE PRODUCTION LOADING DISCIPLINE, not the favourable
  *    test discipline. Every earlier probe minted and tested inside one module
  *    graph and therefore passed a fractured system.
+ *
+ * ⭐⭐ IDENTITY PRINCIPLE (frozen 2026-09-13, post-Option-B):
+ *   Unforgeability does not require every GENUINE token to be accepted. It
+ *   requires acceptance ONLY of tokens minted within the AUTHORIZED identity
+ *   lineage. Option B does not make independently instantiated brands
+ *   interoperable — it removes independent instantiation from the authorized
+ *   production lineage.
+ *
+ * THE AUTHORITATIVE TOPOLOGY under Option B:
+ *   host → fresh router graph → { route, re-exported producer }
+ *                                     ↓
+ *                          one static identity-bearing dependency
+ *
+ * ⛔ "production-shaped" is NOT derived from host source. A future broken host
+ *    must never be able to teach its own judge that the breakage is correct.
+ *    The architectural contract is stated here; the structural canary only asks
+ *    whether the host still conforms; the real IPC witness is the final truth.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -47,44 +64,56 @@ export async function runCal4(subjectDir) {
       cal4a: unmet('RB-CAL-4a', 'legitimate CROSS-LOADER object is recognized'),
       cal4b: unmet('RB-CAL-4b', 'same-lineage positive control'),
       cal4c: unmet('RB-CAL-4c', 'forgery negative control'),
-      cal4d: unmet('RB-CAL-4d', 'reload stress — N fresh router instances'),
+      cal4d: unmet('RB-CAL-4d', 'reload stability — N fresh authoritative router graphs all accept'),
+      cal4e: unmet('RB-CAL-4e', 'NON-AUTHORITATIVE LINEAGE control'),
     };
   }
 
-  // ── HOST-SHAPED LOADING, exactly as jarvis-desktop/src/main.js does ───────
-  //    router cache-busted; eligibility INDEPENDENTLY cache-busted.
-  const hostRouter = await import(url(subjectDir, ROUTER_REL, true));
-  const hostMinted = hostElig.declareRoutingEligibility({
-    satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-host-shaped',
+  // ── Does an AUTHORITATIVE lineage exist? (Option B: router re-exports it) ─
+  const hostRouterA = await import(url(subjectDir, ROUTER_REL, true));
+  const authoritative = typeof hostRouterA.declareRoutingEligibility === 'function';
+  const noAuthority = (id, label) => ({
+    id, label, observed: 'PRECONDITION-UNMET',
+    precondition: { requirement: 'REQUIRED', state: 'UNREACHED',
+      evidence: { router_re_exports_producer: false },
+      provenance: 'the router does not expose the producer, so no authoritative lineage exists to mint within' },
+    evidence: { reason: 'the authoritative identity topology this probe is specified against does not exist in this subject' },
+    note: '⛔ PRECONDITION-UNMET — no authoritative lineage; the historical pre-repair specimens remain the record for that topology',
   });
-  const crossDecision = hostRouter.route({ capability: CAPABILITY }, hostMinted);
 
-  const cal4a = {
-    id: 'RB-CAL-4a',
-    label: 'a legitimately minted object survives the production loading path',
-    observed: accepted(crossDecision) ? 'GREEN' : 'RED',
-    precondition: {
-      requirement: 'REQUIRED', state: 'REACHED',
-      evidence: {
-        loading_discipline: 'PRODUCTION-SHAPED — router cache-busted, eligibility INDEPENDENTLY cache-busted',
-        mirrors: 'jarvis-desktop/src/main.js submit-task',
-        minted_by: 'host-shaped cache-busted eligibility instance',
-        tested_by: "the instance router.mjs's static import resolves to",
-      },
-      provenance: 'two independent dynamic imports, as the host performs them',
-    },
-    evidence: { lane: crossDecision.execution_lane, status: crossDecision.status, reason: crossDecision.reason },
-    note: accepted(crossDecision)
-      ? 'a legitimately minted object crossed the production loading path and was recognized'
-      : '🔴 a LEGITIMATELY minted object was refused because producer and consumer hold different identity lineages',
-  };
+  // ── CAL-4a · AUTHORITATIVE LINEAGE CROSSING ──────────────────────────────
+  //    mint through router graph A → test through router graph B (independent
+  //    cache-busted instances) → must ACCEPT.
+  let cal4a;
+  if (!authoritative) {
+    cal4a = noAuthority('RB-CAL-4a', 'authoritative lineage crossing — router graph A mints, router graph B accepts');
+  } else {
+    const hostRouterB = await import(url(subjectDir, ROUTER_REL, true));
+    const mintedA = hostRouterA.declareRoutingEligibility({
+      satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-graph-A',
+    });
+    const dec = hostRouterB.route({ capability: CAPABILITY }, mintedA);
+    cal4a = {
+      id: 'RB-CAL-4a',
+      label: 'authoritative lineage crossing — router graph A mints, router graph B accepts',
+      observed: accepted(dec) ? 'GREEN' : 'RED',
+      precondition: { requirement: 'REQUIRED', state: 'REACHED',
+        evidence: { topology: 'host → fresh router graph → { route, re-exported producer }',
+          graph_a_and_b_independently_cache_busted: true, minted_by: 'graph A', tested_by: 'graph B' },
+        provenance: 'two independent cache-busted router imports, as the host reloads routing code' },
+      evidence: { lane: dec.execution_lane, status: dec.status, reason: dec.reason },
+      note: accepted(dec)
+        ? '⭐ legitimately minted eligibility is recognized across the production identity topology'
+        : '🔴 a value minted in the authoritative lineage was refused by another instance of it',
+    };
+  }
 
-  // ── SAME-LINEAGE POSITIVE CONTROL — the brand itself works ────────────────
-  const lineageElig = await import(url(subjectDir, ELIG_REL, false)); // the instance router resolves to
+  // ── CAL-4b · same-lineage positive control ───────────────────────────────
+  const lineageElig = await import(url(subjectDir, ELIG_REL, false));
   const sameMinted = lineageElig.declareRoutingEligibility({
     satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-same-lineage',
   });
-  const sameDecision = hostRouter.route({ capability: CAPABILITY }, sameMinted);
+  const sameDecision = hostRouterA.route({ capability: CAPABILITY }, sameMinted);
   const cal4b = {
     id: 'RB-CAL-4b',
     label: 'same-lineage positive control — mint and test through one identity lineage',
@@ -94,16 +123,16 @@ export async function runCal4(subjectDir) {
       provenance: 'single identity lineage by construction' },
     evidence: { lane: sameDecision.execution_lane, status: sameDecision.status },
     note: accepted(sameDecision)
-      ? '⭐ the brand mechanism itself works — the defect is lineage, not design'
+      ? '⭐ the brand mechanism itself works — any defect is lineage, not design'
       : 'the brand rejects even a same-lineage object — the mechanism itself is broken',
   };
 
-  // ── FORGERY NEGATIVE CONTROL — identical VISIBLE fields, no lineage ───────
+  // ── CAL-4c · NO IDENTITY — structural counterfeit ────────────────────────
   const forged = { satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-forgery', declared_at: new Date().toISOString() };
-  const forgedDecision = hostRouter.route({ capability: CAPABILITY }, forged);
+  const forgedDecision = hostRouterA.route({ capability: CAPABILITY }, forged);
   const cal4c = {
     id: 'RB-CAL-4c',
-    label: 'forgery negative control — a caller-shaped lookalike is refused',
+    label: 'NO IDENTITY — an unbranded structural counterfeit is refused',
     observed: accepted(forgedDecision) ? 'RED' : 'GREEN',
     precondition: { requirement: 'REQUIRED', state: 'REACHED',
       evidence: { forged_fields: Object.keys(forged), matches_visible_shape_of_legitimate_object: true },
@@ -111,31 +140,67 @@ export async function runCal4(subjectDir) {
     evidence: { lane: forgedDecision.execution_lane, status: forgedDecision.status },
     note: accepted(forgedDecision)
       ? '🔴 an unbranded lookalike was accepted — unforgeability lost'
-      : '⭐ unforgeability holds: identical visible fields are not identity',
+      : '⭐ identical visible fields are not identity',
   };
 
-  // ── RELOAD STRESS — the host deliberately reloads routing code ────────────
-  const N = 5;
-  const reloads = [];
-  for (let i = 0; i < N; i++) {
-    const r = await import(url(subjectDir, ROUTER_REL, true));
-    reloads.push({ i, accepted: accepted(r.route({ capability: CAPABILITY }, hostMinted)) });
+  // ── CAL-4d · reload stability within the authoritative lineage ───────────
+  let cal4d;
+  if (!authoritative) {
+    cal4d = noAuthority('RB-CAL-4d', 'reload stability — N fresh authoritative router graphs all accept');
+  } else {
+    const minted = hostRouterA.declareRoutingEligibility({
+      satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-reload',
+    });
+    const N = 5;
+    const reloads = [];
+    for (let i = 0; i < N; i++) {
+      const r = await import(url(subjectDir, ROUTER_REL, true));
+      reloads.push({ i, accepted: accepted(r.route({ capability: CAPABILITY }, minted)) });
+    }
+    const allAccept = reloads.every((r) => r.accepted);
+    cal4d = {
+      id: 'RB-CAL-4d',
+      label: 'reload stability — N fresh authoritative router graphs all accept',
+      observed: allAccept ? 'GREEN' : 'RED',
+      precondition: { requirement: 'REQUIRED', state: 'REACHED',
+        evidence: { fresh_router_graphs: N, minted_once_through: 'the authoritative router graph' },
+        provenance: 'N independent cache-busted router imports, mirroring host reload behaviour' },
+      evidence: { reloads, all_accept: allAccept },
+      note: allAccept
+        ? '⭐ legitimately minted eligibility survives production-equivalent module reloads'
+        : '🔴 fresh authoritative graphs reject a value minted within the lineage',
+    };
   }
-  const allAccept = reloads.every((r) => r.accepted);
-  const cal4d = {
-    id: 'RB-CAL-4d',
-    label: 'reload stress — N fresh router instances all recognize the authoritative producer',
-    observed: allAccept ? 'GREEN' : 'RED',
-    precondition: { requirement: 'REQUIRED', state: 'REACHED',
-      evidence: { fresh_router_instances: N, value_source: 'the producer the HOST obtains' },
-      provenance: 'N independent cache-busted router imports, mirroring host reload behaviour' },
-    evidence: { reloads, all_accept: allAccept },
-    note: allAccept
-      ? 'the repair survives host reload behaviour, not merely one startup'
-      : '🔴 fresh router instances reject the value the host mints — the fracture is not a startup accident',
-  };
 
-  return { cal4a, cal4b, cal4c, cal4d };
+  // ── CAL-4e · NON-AUTHORITATIVE LINEAGE CONTROL ───────────────────────────
+  //    ⭐ The pre-repair specimen, repurposed. Genuinely branded, minted OUTSIDE
+  //    the authorized graph → must be REFUSED. ⛔ "non-authoritative", not
+  //    "stale": the defect is provenance of identity, not age.
+  let cal4e;
+  if (!authoritative) {
+    cal4e = noAuthority('RB-CAL-4e', 'NON-AUTHORITATIVE LINEAGE — a genuine brand minted outside the authorized graph is refused');
+  } else {
+    const outsideElig = await import(url(subjectDir, ELIG_REL, true));
+    const outsideMinted = outsideElig.declareRoutingEligibility({
+      satisfied: true, basis: 'operator_submission', declared_by: 'rb-cal4-non-authoritative',
+    });
+    const dec = hostRouterA.route({ capability: CAPABILITY }, outsideMinted);
+    cal4e = {
+      id: 'RB-CAL-4e',
+      label: 'NON-AUTHORITATIVE LINEAGE — a genuine brand minted outside the authorized graph is refused',
+      observed: accepted(dec) ? 'RED' : 'GREEN',
+      precondition: { requirement: 'REQUIRED', state: 'REACHED',
+        evidence: { minted_by: 'an independently cache-busted eligibility module — a REAL producer, outside the authorized graph',
+          tested_by: 'the authoritative router graph', token_is_genuine: true },
+        provenance: 'independent dynamic import of the identity-bearing module' },
+      evidence: { lane: dec.execution_lane, status: dec.status },
+      note: accepted(dec)
+        ? '🔴 a token minted outside the authorized lineage was accepted — the lineage boundary is not enforced'
+        : '⭐ unforgeability does not mean accepting every genuine token — only those minted within the authorized lineage',
+    };
+  }
+
+  return { cal4a, cal4b, cal4c, cal4d, cal4e };
 }
 
 /** Strip block and line comments before scanning source. ⭐ Same discipline C21
@@ -176,6 +241,8 @@ export function routerSelfMintTripwire(subjectDir) {
     id: 'RB-TRIPWIRE-ROUTER-SELF-MINT',
     readable: true,
     router_calls_producer: /declareRoutingEligibility\s*\(/.test(stripComments(src)),
+    router_binds_producer_locally: /import\s*\{[^}]*declareRoutingEligibility[^}]*\}\s*from/.test(stripComments(src)),
+    pure_re_export: /export\s*\{\s*declareRoutingEligibility\s*\}\s*from/.test(stripComments(src)),
     scanned: 'comment-stripped source',
     evidence_class: 'STRUCTURAL (supplementary; ⛔ discharges nothing)',
     law: 'the router may make the producer AVAILABLE to the trusted host; it may never mint from facts it derives itself — that would repair the lineage fracture while reintroducing RB-6A\'s original constitutional defect',

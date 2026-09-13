@@ -50,6 +50,7 @@ const PROFILES = {
       // No identity-bearing module exists at baseline.
       'RB-CAL-4a': 'PRECONDITION-UNMET', 'RB-CAL-4b': 'PRECONDITION-UNMET',
       'RB-CAL-4c': 'PRECONDITION-UNMET', 'RB-CAL-4d': 'PRECONDITION-UNMET',
+      'RB-CAL-4e': 'PRECONDITION-UNMET',
     },
   },
   fd543df1: {
@@ -62,10 +63,15 @@ const PROFILES = {
       'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
       'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
       // ⭐ THE HOST-BOUNDARY DEFECT, predicted from the founder-run witness:
-      'RB-CAL-4a': 'RED',     // legitimate cross-loader object REFUSED
+      // ⭐ RE-SPECIFIED 2026-09-13: 4a/4d/4e are defined against the AUTHORITATIVE
+      // topology (router re-exports the producer), which fd543df1 does not have.
+      // ⛔ The historical OLD CAL-4a/4d RED results stand as CORRECT for the
+      //    former production topology and are NOT rewritten as mistakes.
+      'RB-CAL-4a': 'PRECONDITION-UNMET',
       'RB-CAL-4b': 'GREEN',   // same-lineage accepted — the brand works
       'RB-CAL-4c': 'GREEN',   // unbranded lookalike refused — unforgeable
-      'RB-CAL-4d': 'RED',     // fresh router reloads reject the host's value
+      'RB-CAL-4d': 'PRECONDITION-UNMET',
+      'RB-CAL-4e': 'PRECONDITION-UNMET',
     },
   },
 };
@@ -85,10 +91,12 @@ const RECONCILED_EXPECT = {
   'RB-CAL-2a': 'GREEN', 'RB-CAL-2b': 'GREEN',
   'RB-CAL-3a': 'RED', 'RB-CAL-3b': 'UNINSTANTIATED',
   'RB-CAL-3c': 'UNINSTANTIATED', 'RB-CAL-3d': 'UNINSTANTIATED',
-  'RB-CAL-4a': 'GREEN',   // ⭐ legitimate cross-loader object now recognized
-  'RB-CAL-4b': 'GREEN',
-  'RB-CAL-4c': 'GREEN',   // ⭐ forgery still refused — the conjunction
-  'RB-CAL-4d': 'GREEN',   // ⭐ survives N fresh router reloads
+  // ⭐ THE THREE-WAY DISCRIMINATION Option B actually enforces:
+  'RB-CAL-4a': 'GREEN',   // AUTHORITATIVE lineage, graph A → graph B  → ACCEPT
+  'RB-CAL-4b': 'GREEN',   // same lineage                              → ACCEPT
+  'RB-CAL-4c': 'GREEN',   // NO identity (structural counterfeit)      → REFUSE
+  'RB-CAL-4d': 'GREEN',   // survives N fresh authoritative reloads
+  'RB-CAL-4e': 'GREEN',   // WRONG lineage (genuine brand, outside)    → REFUSE
 };
 
 /**
@@ -329,7 +337,7 @@ async function main() {
     }
     // ── RB-CAL-4 · host-loader identity continuity ───────────────────────
     const cal4 = await runCal4(subject.dir);
-    for (const probe of [cal4.cal4a, cal4.cal4b, cal4.cal4c, cal4.cal4d]) {
+    for (const probe of [cal4.cal4a, cal4.cal4b, cal4.cal4c, cal4.cal4d, cal4.cal4e]) {
       const enf = enforcePrecondition(probe.observed, probe.precondition);
       if (enf.overridden) probe.observed = enf.verdict;
       const exp = profile.expect[probe.id];
