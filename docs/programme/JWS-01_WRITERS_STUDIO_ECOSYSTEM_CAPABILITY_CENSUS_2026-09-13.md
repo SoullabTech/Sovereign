@@ -1,7 +1,7 @@
 # JWS-01 — Writer's Studio Ecosystem & Capability Census — Programme Charter
 
 **Opened:** 2026-09-13 (founder act)
-**Lane state:** **CENSUS ONLY.** No WS programme lane opened. No architecture change authorized.
+**Lane state:** **CENSUS ONLY — RUNNING.** E-01 filed 2026-09-13. No WS programme lane opened. No architecture change authorized.
 **Branch:** `claude/jws-01-census` — separated by founder act 2026-09-13 (§13). ⛔ The combined
 staging branch `claude/voice-2026-research-ici0ph` is **SUPERSEDED — DO NOT MERGE.**
 **Authority:** founder (Kelly Nezat). Jarvis may discover, compare, test and recommend.
@@ -120,7 +120,7 @@ external evidence attached.** Reading them as new would author duplicates of wor
 
 | Candidate name | Already on the board as | Current state | What the census actually adds |
 |---|---|---|---|
-| **Whole Work Intelligence** | A4.6 structure-aware lenses (continuity · sequencing · arc) + A4.2 living manuscripts | DESIGNED + PARTIAL | Chapter evidences that cross-work inspection is commercially viable at manuscript scale. Dependency (authoritative Work Structure) was **satisfied 2026-09-02** (`27729b31e`). The row waits on authorization, not on substrate. |
+| **Whole Work Intelligence** | A4.6 structure-aware lenses (continuity · sequencing · arc) + A4.2 living manuscripts | DESIGNED + PARTIAL | ⭐ **CORRECTED BY E-01 §2b.** Chapter evidences that **book-scale continuity is commercially valuable**; it is **not** evidence for our perception/diagnostic architecture — Chapter enforces continuity by controlling generation, which is a manufacturing tolerance, not a reading. **JWS's own capability.** Dependency (authoritative Work Structure) was **satisfied 2026-09-02** (`27729b31e`). The row waits on authorization, not on substrate. |
 | **Research & Evidence Graph** | A4.8 memory with provenance — *eight kinds of knowing* | **UNVERIFIED / TO CENSUS** — board: *"never censused as **one** provenance model"* | ⭐ The gap is a **census**, not a build. See §6. |
 | **Authorial Voice Field** | closest is A4.15 human authorship made visible | UNVERIFIED / TO CENSUS | ⚠️ The only candidate with **no clean row**. Genuinely a gap — and the one most at risk of importing philosophy (§7). |
 | **Expression Pipeline** | A4.13 expression & publishing support | PARTIAL | ⛔ Board already carries the correct framing: *"a lecture is not a book in bullets — re-expression, not export."* |
@@ -226,10 +226,20 @@ systems · citation engines.
 architectural ideas are genuinely absent from Writer's Studio*, not to produce a complete market map.
 A SaaS feature checklist is a failure output — the lane is looking for things at the level of §6.
 
-⛔ **The Chapter analysis is not in this repository.** It is the founder's document and currently
-exists outside the record. **First act of this lane: file it as census record E-01** with its
-primary sources, so every downstream claim has an artifact behind it. Until then, every statement
-in this charter about Chapter is sourced to the founder's message of 2026-09-13 and is **Class B**.
+⭐ **E-01 FILED 2026-09-13** — `JWS-01_CENSUS/E-01_CHAPTER_2026-09-13.md`, Source Class A
+(first-party product, policy, terms and publisher material, read by the founder). Chapter claims in
+this charter are no longer Class B.
+
+⛔ **Standing method constraint, ratified by E-01 §0 and generalized to every product in this
+scope:** the lane is limited to **public product claims · published documentation · policies and
+terms · publicly observable workflows · legitimately available artifacts.** **No adversarial
+instrumentation of any censused product** — Chapter's Terms prohibit benchmarking competing AI
+systems and reverse-engineering its models or prompts, and the arrow test runs on a product's own
+description of what it does anyway. Each record states the terms position it read; a prohibition is
+read per product, never inherited.
+
+⚠️ The **preliminary Chapter analysis** remains unfiled. When filed it is **partly superseded** by
+E-01 §2 and its unsupported rows are **marked superseded in place, never deleted.**
 
 ## 10. Evidence and claim discipline
 
@@ -355,7 +365,7 @@ quarter, or a persuasive vendor.
 |---|---|
 | **Capability inventory** | ⛔ **BIND TO THE EXISTING 25-ROW CENSUS.** No parallel inventory. |
 | **Whole Work Intelligence** | **EXISTING / PARTIAL** — A4.6 + A4.2, not a new capability |
-| **Research & Evidence Graph** | **PARTIAL — ⭐ CENSUS A4.8 FIRST.** *If `Authority × Time` plus typed, digest-verified `EvidenceRef` already supplies the epistemic substrate, then creating a parallel "research graph" because another product made research fashionable would actually **degrade** Writer's Studio.* ⛔ No Evidence Graph architecture may be proposed before A4.8 censuses the existing substrate. |
+| **Research & Evidence Graph** | **PARTIAL — ⭐ CENSUS A4.8 FIRST.** ⭐ **STRENGTHENED BY E-01 §2a:** Chapter has no primary-source research engine, no citation-grounded verification and no provenance graph — its own guide hands verification back to the author. There was never anything here to borrow. *If `Authority × Time` plus typed, digest-verified `EvidenceRef` already supplies the epistemic substrate, then creating a parallel "research graph" because another product made research fashionable would actually **degrade** Writer's Studio.* ⛔ No Evidence Graph architecture may be proposed before A4.8 censuses the existing substrate. |
 | **Expression Pipeline** | **EXISTING / PARTIAL** — A4.13 |
 | **Authorial Voice Field** | **UNROWED — INVESTIGATE.** ⛔ **No capability row yet.** |
 | **Auto-adoption** | ⛔ **FORBIDDEN** |
@@ -395,7 +405,10 @@ EXPRESSION             EXISTING / PARTIAL
 AUTHORIAL VOICE FIELD  UNROWED — INVESTIGATE
 ARROW TEST             RATIFIED
 AUTO-ADOPTION          FORBIDDEN
-E-01 (Chapter)         NOT FILED — first act of the lane
+E-01 (Chapter)         FILED 2026-09-13 · Class A · GHOST FORM → ARROW TEST FAIL
+METHOD CONSTRAINT      PUBLIC MATERIAL ONLY — NO ADVERSARIAL INSTRUMENTATION
+WHOLE WORK PROVENANCE  CORRECTED — JWS's own capability, not adapted from Chapter
+PRELIMINARY ANALYSIS   UNFILED · PARTLY SUPERSEDED BY E-01 §2
 ```
 
 **Governance acts complete.** *After this, the useful thing is evidence.*
