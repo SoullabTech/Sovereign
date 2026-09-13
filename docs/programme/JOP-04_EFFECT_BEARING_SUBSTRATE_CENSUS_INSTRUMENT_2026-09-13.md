@@ -218,3 +218,157 @@ graph** (Living Spiral R2) · no change to Desktop custody or the read capabilit
 (§6), and the capability-registry binding question the charter §4 leaves open.
 
 > **Observation is not authority. Capability is not permission. Permission is not an effect.**
+
+---
+
+# Addendum — founder refinements, 2026-09-13
+
+## C1 · First census obligation — locate the capability registry, do not presume it
+
+> **Determine whether "capability registry / gateway" denotes one canonical object, a composition of
+> existing objects, or merely prior conversational shorthand.**
+
+⛔ **Do not privilege the noun.** Trace the actual authority path and map each arrow to an artifact:
+
+```text
+capability declared
+      ↓
+capability selected
+      ↓
+arguments validated
+      ↓
+governance admitted/refused
+      ↓
+packet constrained
+      ↓
+execution dispatched
+      ↓
+result/receipt persisted
+```
+
+Three legitimate outcomes:
+
+```text
+A. ONE OBJECT      a canonical registry/gateway actually exists
+B. COMPOSITE       the function exists, but authority is distributed
+                   across several canonical modules
+C. NO SUCH SUBSTRATE   the term was an architectural abstraction,
+                       not repository truth
+```
+
+⛔ **If B is true, do not manufacture a new registry merely to make the old language true.
+Name the composition accurately first.**
+
+**Result: `JOP-04_C1_CAPABILITY_ADMISSION_BOUNDARY_2026-09-13.md`.**
+
+## §5b promotion — the scalar risk ladder is already under pressure
+
+The ladder's own crossings falsify a monotonic severity model:
+
+```text
+local mutation
+     ↓
+REMOTE BRANCH      ← custody / externality crossing
+     ↓
+DRAFT PR           ← audience / public crossing
+     ↓
+merge
+```
+
+**Risk does not monotonically increase with procedural lateness.** A draft PR may disclose
+externally while remaining operationally reversible. A merge may be *less public* than the PR
+creation that preceded it, yet *more consequential to canonical state*.
+
+That supports treating effect-bearing authority as a **vector** —
+
+```text
+MUTATION · REVERSIBILITY · EXTERNALITY · AUDIENCE ·
+CUSTODY · FINANCIAL CONSEQUENCE · CANONICALITY
+```
+
+— rather than an ordering:
+
+```text
+⛔ READ < DRAFT < WRITE < SEND < PUBLISH < DELETE
+```
+
+⛔ **The vector is NOT ruled. The census must earn it.** §5b has produced a strong falsifier against
+the simple ladder; a falsifier is not a replacement. ⭐ Note `CANONICALITY` is a dimension the §3
+provisional set does **not** contain — first evidence that the probe set is incomplete.
+
+## Intent binding — transfer the law, not the mechanism
+
+`BoundEvidence` is excellent prior art **for the shape only**. The transferable principle:
+
+> **A privileged object cannot become privileged because a caller says that it is.**
+
+```text
+evidence (raw material)          intent / authority inputs
+   ↓ bindEvidence(...)              ↓ canonical binding operation
+BoundEvidence                    BoundAuthority   ← possible future
+```
+
+⛔ **Resist importing the whole mechanism.** Evidence binding and action authorization differ in at
+least three ways: **authority may expire · authority may be consumed · authority may be scoped to a
+particular effect.** None has an analogue in evidence binding, which is timeless, re-readable and
+unscoped.
+
+⭐ **So the census question is not "can we reuse `bind.ts`?" It is:**
+
+> **Which unforgeability properties of `BoundEvidence` are general laws, and which are
+> manuscript-specific implementation choices?**
+
+## Governance provenance — candidate general law
+
+The failure mode found in charter §7, stated generally:
+
+```text
+Programme B says: "I inherit ruling X from document A."
+But document A is not present, addressable, or independently inspectable.
+Therefore: inheritance is ASSERTED, not REPRODUCIBLE.
+```
+
+⭐ **A provenance defect even when the inherited ruling happens to be correct.**
+
+**Candidate law — ⛔ NOT RATIFIED, and deliberately not JOP-04's to ratify:**
+
+> **No programme may derive binding authority from a governance artifact that the programme cannot
+> identify and independently retrieve.**
+
+⚠️ **Not** *"everything discussed must be committed"* — that would be excessive and would make
+conversation itself a filing burden. The narrower line:
+
+```text
+conversation / research / proposal        MAY INFORM
+binding governance                        MUST RESOLVE TO INSPECTABLE CUSTODY
+```
+
+**Precedent for the repair is E-01**, not a new doctrine: file the source, then let the record
+correct the claims.
+
+## The shared constitutional form — deeper than analogy
+
+```text
+PERCEPTION
+    ↓
+INTERPRETATION / PROPOSAL
+    ↓
+HUMAN AUTHORITY
+    ↓
+CONSEQUENCE
+```
+
+Writer's Studio protects the crossing between **recognition and alteration of the Work**.
+JOP protects the crossing between **proposal and alteration of the world**.
+
+The dangerous shortcut is identical in both:
+
+```text
+system has enough information
+        therefore
+system has authority
+```
+
+⛔ **It does not. Knowledge of what could be done is not permission to do it.**
+
+⭐ **That is the shared constitutional form worth inheriting — not shared implementation.**
