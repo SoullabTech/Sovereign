@@ -73,12 +73,18 @@ const run = async (sql: string, params: unknown[] = []) => {
   }
   if (/INSERT INTO manuscript_revision_proposals/.test(sql)) {
     const [memberId, workId, draftId, baseVersion, targetSectionId,
-      expected, replacement, chain] = params as never[];
+      expected, replacement, chain, authority] = params as never[];
     const row = {
       id: `p-${db.proposals.length + 1}`, member_id: memberId, work_id: workId,
       draft_id: draftId, base_version: baseVersion, operation: 'delete_exact_text',
       target_section_id: targetSectionId, expected_text: expected,
       replacement_text: replacement, decision_chain_id: chain,
+      /* ⭐ EW-F1a MODELLED, NOT ASSUMED. A fake must model the
+         implementation's DEPENDENCIES — not enforce its obligations on its
+         behalf, and not omit them either. Left out, every proposal hydrated
+         with an undefined authority and refused `inspection_only`, which
+         looked like nine acceptance laws breaking at once. */
+      execution_authority: authority,
       created_at: new Date('2026-09-13T13:00:00Z'), accepted_at: null, resulting_version: null,
     };
     db.proposals.push(row);
@@ -89,6 +95,12 @@ const run = async (sql: string, params: unknown[] = []) => {
     const p = db.proposals.find((x) => x.id === id && x.member_id === memberId
       && x.accepted_at === null);
     if (!p) return { rows: [], rowCount: 0 };
+    /* ⭐ `mrp_inspection_only_never_accepted`, modelled. The schema makes an
+       accepted inspection-only row unrepresentable; a fake that let one exist
+       would be a fake where the last line of defence silently does not. */
+    if (p.execution_authority !== 'member_acceptance') {
+      throw new Error('mrp_inspection_only_never_accepted');
+    }
     /* ⭐ The CHECK, modelled: both together or the row is invalid. */
     p.accepted_at = new Date('2026-09-13T13:05:00Z'); p.resulting_version = version;
     return { rows: [p], rowCount: 1 };
@@ -143,7 +155,16 @@ const seed = (body = BODY) => {
   statements = []; failNextSectionUpdate = false;
 };
 
+/**
+ * ⭐ EW-F1a · EVERY ACCEPTANCE TEST NOW DECLARES THAT ITS PROPOSAL WAS ALLOWED
+ * TO CROSS. Creation defaults to `inspection_only`, so these fixtures went red
+ * the moment the authority landed — which is the default working. A test about
+ * what acceptance does must SAY that acceptance was permitted; it may not
+ * inherit that permission from a default, because the whole finding was that
+ * permission had been inherited from a conversation.
+ */
 const propose = () => store.proposeRevision(M, {
+  executionAuthority: 'member_acceptance',
   workId: W, draftId: DRAFT, baseVersion: 34, targetSectionId: S23,
   expectedText: TOKEN, replacementText: '',
 });

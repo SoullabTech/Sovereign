@@ -33,8 +33,8 @@
 import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { saveSectionInTransaction, splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import {
-  applyExactlyOnce, type AcceptOutcome, type ProposalOperation, type ProposalRefusal,
-  type RevisionProposal,
+  applyExactlyOnce, mayCrossIntoTheWork, type AcceptOutcome, type ExecutionAuthority,
+  type ProposalOperation, type ProposalRefusal, type RevisionProposal,
 } from './contract';
 
 interface Row {
@@ -43,6 +43,7 @@ interface Row {
   expected_text: string; replacement_text: string;
   decision_chain_id: string | null; created_at: Date;
   accepted_at: Date | null; resulting_version: number | null;
+  execution_authority: ExecutionAuthority;
 }
 
 const hydrate = (r: Row): RevisionProposal => ({
@@ -52,13 +53,20 @@ const hydrate = (r: Row): RevisionProposal => ({
   decisionChainId: r.decision_chain_id, createdAt: r.created_at.toISOString(),
   acceptedAt: r.accepted_at ? r.accepted_at.toISOString() : null,
   resultingVersion: r.resulting_version === null ? null : Number(r.resulting_version),
+  executionAuthority: r.execution_authority,
 });
 
 const COLUMNS = `id, work_id, draft_id, base_version, operation, target_section_id,
                  expected_text, replacement_text, decision_chain_id, created_at,
-                 accepted_at, resulting_version`;
+                 accepted_at, resulting_version, execution_authority`;
 
 export interface ProposeInput {
+  /**
+   * ⭐ What this proposal may do, fixed at creation and immutable thereafter.
+   * Omitted means `inspection_only`: creating something that can cross into the
+   * Work is an act somebody performs on purpose.
+   */
+  readonly executionAuthority?: ExecutionAuthority;
   readonly workId: string;
   readonly draftId: string;
   readonly baseVersion: number;
@@ -80,11 +88,13 @@ export async function proposeRevision(
   const r = await query<Row>(
     `INSERT INTO manuscript_revision_proposals
        (member_id, work_id, draft_id, base_version, operation, target_section_id,
-        expected_text, replacement_text, decision_chain_id)
-     VALUES ($1, $2, $3, $4, 'delete_exact_text', $5, $6, $7, $8)
+        expected_text, replacement_text, decision_chain_id, execution_authority)
+     VALUES ($1, $2, $3, $4, 'delete_exact_text', $5, $6, $7, $8, $9)
      RETURNING ${COLUMNS}`,
     [memberId, input.workId, input.draftId, input.baseVersion, input.targetSectionId,
-      input.expectedText, input.replacementText, input.decisionChainId ?? null]);
+      input.expectedText, input.replacementText, input.decisionChainId ?? null,
+      /* ⛔ FAIL SAFE. An absent authority is the one that cannot write. */
+      input.executionAuthority ?? 'inspection_only']);
   return hydrate(r.rows[0]);
 }
 
@@ -124,6 +134,26 @@ export async function acceptRevision(
           WHERE id = $1 AND member_id = $2 FOR UPDATE`, [proposalId, memberId]);
       if (p.rows.length === 0) return refuse('proposal_unknown');
       const proposal = hydrate(p.rows[0]);
+
+      /* ⭐⭐ EW-F1a · BEFORE ANY OTHER QUESTION: WAS THIS EVER ALLOWED TO CROSS?
+         Every check below asks whether the change still FITS the Work. This one
+         asks whether the proposal was ever authorized to change it at all, and
+         it comes first because a proposal staged for inspection must refuse
+         identically whether or not the Work has moved — a refusal that depended
+         on the manuscript would leak facts about the manuscript, and would go
+         quiet the moment the Work happened to line up.
+
+         ⛔ THE UI HIDING THE CONTROL IS NOT THE PROTECTION. This is one of
+         three independent refusals: the control is absent, this boundary
+         refuses, and `mrp_inspection_only_never_accepted` makes an accepted
+         inspection-only row unrepresentable. Twice on 2026-09-13 a proposal
+         staged for inspection was accepted and the manuscript moved; the second
+         has no authorial act anywhere in the record. A promise between people
+         is not a constraint. */
+      if (!mayCrossIntoTheWork(proposal.executionAuthority)) {
+        return refuse('inspection_only');
+      }
+
       /* ⭐ A proposal authorizes one change, once. */
       if (proposal.acceptedAt !== null) return refuse('already_accepted');
 

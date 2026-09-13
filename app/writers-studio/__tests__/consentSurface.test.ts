@@ -84,10 +84,25 @@ describe('CS-7 — the surface does not exist until it is constituted', () => {
 });
 
 describe('CS-8 — the gesture exists in exactly one state', () => {
-  it('⭐ ACCEPT CHANGES is disabled unless the preview is acceptable', () => {
+  it('⭐ ACCEPT CHANGES exists only where acceptance is possible', () => {
+    /**
+     * ⭐⭐ RESTATED AT EW-F1a, AND THE RESTATEMENT IS THE FINDING.
+     *
+     * This required the control to be DISABLED unless the preview was
+     * acceptable. Both halves were too weak. `acceptable` means the change
+     * still FITS the Work — it never meant the proposal was ALLOWED to make
+     * it; and a disabled control keeps its place in the layout, still draws
+     * the eye, and is one defect away from live. On 2026-09-13 a proposal
+     * staged for inspection was accepted twice, the second with no authorial
+     * act anywhere in the record, while that button sat enabled beside
+     * everything else the writer was doing.
+     *
+     * The gesture that cannot be performed does not appear.
+     */
     const src = CODE(SURFACE);
-    expect(src).toMatch(/const mayAccept = \(p: ProposalPreview\) => p\.state === 'acceptable'/);
-    expect(src).toMatch(/disabled=\{!mayAccept\(preview\)/);
+    expect(src).toMatch(/p\.state === 'acceptable'[\s\S]{0,80}executionAuthority === 'member_acceptance'/);
+    expect(src).toMatch(/\{mayAccept\(preview\) && \(/);
+    expect(src).not.toMatch(/disabled=\{!mayAccept/);
   });
 
   it('⛔ and the surface offers no retry or repair when it no longer matches', () => {
@@ -326,6 +341,8 @@ describe('F1-2 · F1-9 — marked in the Work, and only when it resolves', () =>
   it('⛔ F1-9 · no acceptable preview means no target and no gesture', () => {
     const src = CODE(CANVAS);
     expect(src).toMatch(/\? proposed\.mount\.preview\.change : null/);
-    expect(CODE(SURFACE)).toMatch(/disabled=\{!mayAccept\(preview\)/);
+    /* EW-F1a: absent, not disabled — see CS-8 for why the disabled form was
+       too weak to be the obligation. */
+    expect(CODE(SURFACE)).toMatch(/\{mayAccept\(preview\) && \(/);
   });
 });

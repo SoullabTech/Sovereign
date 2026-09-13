@@ -28,6 +28,8 @@ export interface RevisionProposal {
   /** ⛔ Written WITH `resultingVersion`, never before it. */
   readonly acceptedAt: string | null;
   readonly resultingVersion: number | null;
+  /** ⭐ What this proposal may do. Fixed at creation; immutable thereafter. */
+  readonly executionAuthority: ExecutionAuthority;
 }
 
 export type ProposalRefusal =
@@ -51,8 +53,33 @@ export type ProposalRefusal =
    * member's behalf and calling it their authorization.
    */
   | 'expected_text_ambiguous'
+  /**
+   * ⭐⭐ EW-F1a · THIS PROPOSAL MAY NOT CROSS INTO THE WORK.
+   *
+   * Staged for inspection. Not a failure of the change, not a statement about
+   * the Work — a statement about what this proposal was ever authorized to do.
+   *
+   * ⛔ It is NOT promotable. If the editorial idea should become executable
+   * that is a new proposal in a recorded relationship to this one, never the
+   * quiet relabelling of an authority the member never granted.
+   */
+  | 'inspection_only'
   | 'write_failed'
   | 'malformed';
+
+/**
+ * What a proposal is permitted to do, fixed when it is created.
+ *
+ * ⭐ THE DEFAULT IS THE SAFE ONE, in the schema and here. A proposal nobody
+ * deliberately marked executable is not executable — because "this one is only
+ * for looking at" was, until EW-F1a, a promise between people rather than a
+ * property of the thing, and it gave way twice in one afternoon.
+ */
+export type ExecutionAuthority = 'inspection_only' | 'member_acceptance';
+
+export function mayCrossIntoTheWork(a: ExecutionAuthority): boolean {
+  return a === 'member_acceptance';
+}
 
 export type AcceptOutcome =
   | { readonly outcome: 'accepted'; readonly proposal: RevisionProposal }

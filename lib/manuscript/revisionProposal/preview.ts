@@ -25,7 +25,9 @@
 import { query } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
-import { applyExactlyOnce, type ProposalRefusal } from './contract';
+import {
+  applyExactlyOnce, type ExecutionAuthority, type ProposalRefusal,
+} from './contract';
 import { readProposal } from './store';
 
 /**
@@ -61,7 +63,17 @@ export interface StagedChange {
 
 export type ProposalPreview =
   /** ⭐ The ONLY state in which the accept gesture may be offered. */
-  | { readonly state: 'acceptable'; readonly proposalId: string; readonly change: StagedChange }
+  | {
+      readonly state: 'acceptable'; readonly proposalId: string;
+      readonly change: StagedChange;
+      /**
+       * ⭐ EW-F1a · WHAT THIS PROPOSAL MAY DO. `acceptable` means the change
+       * still FITS the Work — it never meant the proposal is allowed to make
+       * it. Those were the same question until a proposal staged for inspection
+       * was accepted twice in one afternoon.
+       */
+      readonly executionAuthority: ExecutionAuthority;
+    }
   /** Already spent. A proposal authorizes one change, once. */
   | { readonly state: 'already_accepted'; readonly proposalId: string; readonly resultingVersion: number }
   /**
@@ -117,6 +129,7 @@ export async function previewProposal(
   return {
     state: 'acceptable',
     proposalId,
+    executionAuthority: proposal.executionAuthority,
     change: {
       /* `position` is 0-indexed; the writer's §23 is position 22. */
       sectionLabel: heading

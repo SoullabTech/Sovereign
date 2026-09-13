@@ -116,7 +116,20 @@ async function main() {
     return;
   }
 
+  /* ⭐⭐ EW-F1a · INSPECTION-ONLY BY DEFAULT, AND EXECUTABLE ONLY ON PURPOSE.
+     Twice on 2026-09-13 a proposal staged by this script for inspection was
+     accepted and the manuscript moved. The protection is now a property of the
+     row — refused at the accept boundary and unrepresentable in the schema —
+     but the DEFAULT belongs here too: a witness fixture is for looking at, and
+     making one that can rewrite the Work takes a flag somebody typed. */
+  const executable = has('--executable');
+  console.log('authority        ', executable ? 'member_acceptance' : 'inspection_only');
+  if (executable) {
+    console.log('⚠️  THIS PROPOSAL CAN CHANGE THE MANUSCRIPT IF ACCEPTED.');
+  }
+
   const proposal = await proposeRevision(draft.member_id, {
+    executionAuthority: executable ? 'member_acceptance' : 'inspection_only',
     workId: MANUSCRIPT,
     draftId: draft.id,
     baseVersion: Number(draft.version),
@@ -130,7 +143,12 @@ async function main() {
   console.log('proposal        ', proposal.id);
   console.log('base version    ', proposal.baseVersion);
   console.log('accepted_at     ', proposal.acceptedAt);
-  console.log('\nOpen, and DO NOT ACCEPT:');
+  console.log('authority       ', proposal.executionAuthority);
+  console.log(
+    proposal.executionAuthority === 'inspection_only'
+      ? '\n⛔ Inspection only. No control can apply this, and the accept boundary refuses it.'
+      : '\n⚠️  Executable. Accepting this WILL change the manuscript.');
+  console.log('\nOpen:');
   console.log(`  http://localhost:3100/writers-studio/canvas?m=${MANUSCRIPT}&proposal=${proposal.id}`);
   console.log('\nThe manuscript is unchanged. Version is still', draft.version);
 }

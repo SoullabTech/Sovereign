@@ -40,18 +40,43 @@ interface StagedChange {
 }
 
 export type ProposalPreview =
-  | { state: 'acceptable'; proposalId: string; change: StagedChange }
+  | {
+      state: 'acceptable'; proposalId: string; change: StagedChange;
+      executionAuthority: 'inspection_only' | 'member_acceptance';
+    }
   | { state: 'already_accepted'; proposalId: string; resultingVersion: number }
   | { state: 'no_longer_matches'; proposalId: string; reason: string };
 
-/** ⛔ The ONE state in which the gesture exists at all. */
-const mayAccept = (p: ProposalPreview) => p.state === 'acceptable';
+/**
+ * ⛔ THE ONE STATE IN WHICH THE GESTURE EXISTS AT ALL.
+ *
+ * ⭐⭐ EW-F1a WIDENED THIS, AND THE WIDENING IS THE POINT. `acceptable` means
+ * the change still FITS the Work. It never meant the proposal was ALLOWED to
+ * make it — and those were the same question until a proposal staged for
+ * inspection was accepted twice on 2026-09-13, the second with no authorial
+ * act anywhere in the record.
+ *
+ * ⛔ AND THIS IS NOT THE PROTECTION. It is the third of three independent
+ * refusals — the control is absent here, `acceptRevision` refuses at the
+ * boundary that writes, and `mrp_inspection_only_never_accepted` makes an
+ * accepted inspection-only row unrepresentable. A UI that hides a button is a
+ * courtesy; only the other two are constraints.
+ */
+const mayAccept = (p: ProposalPreview) =>
+  p.state === 'acceptable' && p.executionAuthority === 'member_acceptance';
+
+/** Staged for looking at. Say so, rather than showing a dead control. */
+const isInspectionOnly = (p: ProposalPreview) =>
+  p.state === 'acceptable' && p.executionAuthority === 'inspection_only';
 
 /**
  * ⭐ The writer's language, not the system's. `stale_base` is true and useless;
  * what the writer needs to know is that the Work moved under the proposal.
  */
 const WHY: Record<string, string> = {
+  /* ⭐ Not "could not be made" — nothing about the Work refused it. */
+  inspection_only:
+    'This proposal was staged for inspection and cannot be applied to your manuscript.',
   stale_base: 'Your manuscript has changed since this was prepared, so it no longer describes an exact change.',
   expected_text_absent: 'The text this would remove is no longer there.',
   expected_text_ambiguous: 'That text now appears more than once, so this no longer names one exact place.',
@@ -154,6 +179,17 @@ export default function ProposedChange(
         {change.changeCount === 1 ? '' : 's'} to the manuscript.
       </p>
 
+      {/* ⭐⭐ EW-F1a · SAY WHAT THIS PROPOSAL IS FOR, rather than showing a dead
+          control. A greyed-out ACCEPT still asserts that accepting is the thing
+          you would do here; an absent one, with a sentence, says what is
+          actually true — this was staged to be looked at. */}
+      {isInspectionOnly(preview) && (
+        <p style={line}>
+          This proposal is for inspection. It cannot be applied to your
+          manuscript, and no control here will apply it.
+        </p>
+      )}
+
       {state === 'refused' && <p style={{ ...line, color: '#C97B5A' }}>{refusal}</p>}
 
       <div style={{ display: 'flex', gap: 14, marginTop: 22, flexWrap: 'wrap' }}>
@@ -166,14 +202,23 @@ export default function ProposedChange(
         >
           Keep unchanged
         </button>
-        <button
-          type="button"
-          onClick={accept}
-          disabled={!mayAccept(preview) || state === 'accepting'}
-          style={loud}
-        >
-          {state === 'accepting' ? 'ACCEPTING…' : 'ACCEPT CHANGES'}
-        </button>
+        {/* ⛔ ABSENT, NOT DISABLED. A disabled control is still a control: it
+            keeps its place in the layout, it is still the thing the eye lands
+            on, and it is one defect away from being live. On 2026-09-13 a
+            proposal staged for inspection was accepted twice — the second time
+            with no authorial act anywhere in the record — while the button sat
+            enabled beside everything else the writer was doing. The gesture
+            that cannot be performed does not appear. */}
+        {mayAccept(preview) && (
+          <button
+            type="button"
+            onClick={accept}
+            disabled={state === 'accepting'}
+            style={loud}
+          >
+            {state === 'accepting' ? 'ACCEPTING…' : 'ACCEPT CHANGES'}
+          </button>
+        )}
       </div>
     </section>
   );
