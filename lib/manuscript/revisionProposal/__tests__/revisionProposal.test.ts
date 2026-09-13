@@ -112,6 +112,8 @@ jest.mock('@/lib/db/postgres', () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const store = require('../store');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { previewProposal, mayAccept } = require('../preview');
 import { applyExactlyOnce, occurrences } from '../contract';
 
 const CODE = (rel: string) => fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
@@ -367,5 +369,97 @@ describe('o26 — the first lawful manuscript change', () => {
     await store.acceptRevision(M, p.id);
     expect(before.length - sectionText().length).toBe(TOKEN.length);
     expect(version()).toBe(35);
+  });
+});
+
+/* ══ CS-3 · CS-4 · CS-5 · CS-6 — the consent surface, behaviourally ═════ */
+
+describe('CS-3 — the preview and the acceptance consume the SAME guard', () => {
+  it('⭐⭐ the surface cannot advertise acceptable where acceptance refuses', async () => {
+    /* Two occurrences: acceptance refuses as ambiguous, so the preview must
+       refuse identically. FOCUS-W3 was exactly this defect one layer up — a
+       panel saying five places were ready while the crossing could read four. */
+    seed(`${BODY}\nand again ${TOKEN}\n`);
+    const p = await propose();
+    const preview = await previewProposal(M, p.id);
+    const accept = await store.acceptRevision(M, p.id);
+    expect(preview.state).toBe('no_longer_matches');
+    expect(preview.reason).toBe('expected_text_ambiguous');
+    expect(accept).toEqual({ outcome: 'refused', reason: 'expected_text_ambiguous' });
+  });
+
+  it('⛔ the preview does not re-implement the guard', () => {
+    const src = CODE('lib/manuscript/revisionProposal/preview.ts');
+    expect(src).toMatch(/applyExactlyOnce\(/);
+    expect(src).not.toMatch(/indexOf\(proposal\.expectedText\)\s*===\s*-1/);
+    expect(src).not.toMatch(/occurrences\(/);
+  });
+});
+
+describe('CS-4 — a proposal that no longer matches offers NO gesture', () => {
+  it('a moved Work previews as no_longer_matches, and mayAccept is false', async () => {
+    const p = await propose();
+    db.drafts[0].version = 35;
+    const preview = await previewProposal(M, p.id);
+    expect(preview).toEqual({ state: 'no_longer_matches', proposalId: p.id, reason: 'stale_base' });
+    expect(mayAccept(preview)).toBe(false);
+  });
+
+  it('⭐ and the token gone at an UNCHANGED version is still no gesture', async () => {
+    const p = await propose();
+    db.sections[0].text = `${HEADING}\n\nprose with no token\n`;
+    const preview = await previewProposal(M, p.id);
+    expect(preview.reason).toBe('expected_text_absent');
+    expect(mayAccept(preview)).toBe(false);
+  });
+});
+
+describe('CS-5 — ⛔ the preview NEVER computes an alternative', () => {
+  it('a mismatch yields a refusal and nothing resembling a change', async () => {
+    const p = await propose();
+    db.drafts[0].version = 35;
+    const preview = await previewProposal(M, p.id);
+    expect(preview).not.toHaveProperty('change');
+    expect(JSON.stringify(preview)).not.toContain(TOKEN);
+  });
+
+  it('⛔ nothing in the preview relocates, widens or regenerates', () => {
+    const src = CODE('lib/manuscript/revisionProposal/preview.ts');
+    for (const f of [/replace\(/, /RegExp/, /trim\(\)\.includes/, /fuzzy/i, /nearest/i]) {
+      expect(src).not.toMatch(f);
+    }
+  });
+});
+
+describe('CS-6 — an accepted proposal previews as accepted, not acceptable', () => {
+  it('⭐ the gesture is gone once it has been used', async () => {
+    const p = await propose();
+    await store.acceptRevision(M, p.id);
+    const preview = await previewProposal(M, p.id);
+    expect(preview.state).toBe('already_accepted');
+    expect(preview.resultingVersion).toBe(35);
+    expect(mayAccept(preview)).toBe(false);
+  });
+});
+
+describe('CS-9 — an unknown proposal is indistinguishable from another member’s', () => {
+  it('both preview as unknown', async () => {
+    const p = await propose();
+    expect(await previewProposal('ffffffff-0000-4000-8000-00000000000f', p.id))
+      .toEqual({ state: 'unknown' });
+    expect(await previewProposal(M, 'p-nope')).toEqual({ state: 'unknown' });
+  });
+});
+
+describe('the staged diff shows the member their own Work', () => {
+  it('⭐ names the place in the writer’s vocabulary and frames the removal', async () => {
+    const p = await propose();
+    const preview = await previewProposal(M, p.id);
+    expect(preview.state).toBe('acceptable');
+    expect(preview.change.sectionLabel).toBe(`Section 23 · \u201c${HEADING}\u201d`);
+    expect(preview.change.removed).toBe(TOKEN);
+    expect(preview.change.changeCount).toBe(1);
+    /* ⛔ The frame is the member's own prose, not a description of it. */
+    expect(preview.change.contextBefore).toContain('CHAPTER 3');
   });
 });
