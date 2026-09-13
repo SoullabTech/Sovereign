@@ -94,7 +94,15 @@ describe('the developmental-evidence substrate cannot act', () => {
        observation — a member's own act, addressed to the reading. It is not an
        evidence table either, so naming it here keeps this claim exact rather
        than weakening it. */
-    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$/;
+    /* BCS-01A (2026-09-13) stores a bounded-cognition RECURRENCE OBSERVATION after
+       it passes the recurrence admission law — a different unit's durable output,
+       reached through commission → execution → partition → checkpoint → frozen
+       input lineage. It is not BUILD-07A developmental-evidence substrate schema;
+       the evidence substrate remains schema-free. Named here rather than renamed:
+       `_observations` is the truthful name for what that table holds, and renaming
+       a file to evade a lexical filter would make the architecture less legible in
+       order to satisfy the instrument. */
+    const OTHER_UNITS_SCHEMA = /^20260904000001_developmental_readings\.sql$|^20260904000002_developmental_reading_contract_v2\.sql$|^20260906000001_developmental_observation_standing\.sql$|^20260913000005_recurrence_sweep_observations\.sql$/;
     const migrations = readdirSync(join(ROOT, 'database', 'migrations'));
     expect(migrations.filter((f) => f >= '20260903' && !OTHER_UNITS_SCHEMA.test(f)
       && /develop|evidence|reading|observation/i.test(f))).toEqual([]);
