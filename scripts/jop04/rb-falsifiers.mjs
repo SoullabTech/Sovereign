@@ -51,6 +51,11 @@ function reachValidPlacement({ router }, capability, declare) {
 }
 
 const reached = (decision) => decision.execution_lane === 'C0';
+
+/** Every probe returns one of these. ⛔ `null` is an INSTRUMENT_ERROR, never a pass. */
+export function pre(requirement, state, evidence, provenance) {
+  return { requirement, state, evidence, provenance };
+}
 const UNREGISTERED = 'jop04.definitely_not_registered_xyz999';
 
 /**
@@ -78,11 +83,15 @@ export const FALSIFIERS = [
     predicted: 'RED',
     evidenceClass: 'BEHAVIORAL',
     run(ctx) {
-      // No eligibility state is withheld because none exists to withhold — that is the finding.
+      // No eligibility state is supplied — registration ALONE is the specimen.
       const run = composeSubjectChain(ctx.mods, ctx.subjectDir, { capability: LAYER_B_CAPABILITY });
       const observed = run.executed ? 'RED' : 'GREEN';
       return {
         observed,
+        precondition: pre('REQUIRED', 'REACHED',
+          { capability_registered: true, registration_alone_path_exercised: true,
+            route_decision: { lane: run.decision.execution_lane, status: run.decision.status } },
+          'route() called with an ordinary task carrying only a registered capability name; nothing else supplied'),
         evidence: {
           capability: LAYER_B_CAPABILITY,
           eligibility_state_supplied: null,
@@ -108,6 +117,10 @@ export const FALSIFIERS = [
       const membershipDecidesLane = a.execution_lane === 'C0' && b.execution_lane !== 'C0';
       return {
         observed: membershipDecidesLane ? 'RED' : 'GREEN',
+        precondition: pre('REQUIRED', (a && b) ? 'REACHED' : 'UNREACHED',
+          { both_tasks_presented_to_real_router: Boolean(a && b),
+            routing_judgment_observed: { a: a.status, b: b.status } },
+          'router.route() invoked directly on the subject module for both arms'),
         evidence: {
           task_a: { capability: LAYER_B_CAPABILITY, registered: true, lane: a.execution_lane, reason: a.reason },
           task_b: { capability: UNREGISTERED, registered: false, lane: b.execution_lane, reason: b.reason },
@@ -169,30 +182,54 @@ export const FALSIFIERS = [
     statement: 'Missing effect contract is not read-only. Absence of classification cannot inherit safety.',
     predicted: 'RED',
     evidenceClass: 'BEHAVIORAL',
-    run(ctx) {
+    layerB: true,
+    async run(ctx) {
       const reg = ctx.mods.deterministic.CAPABILITIES;
       const names = Object.keys(reg);
-      const declared = names.filter((n) => {
+      const hasDecl = (n) => {
         const e = reg[n];
-        return e && (e.effect !== undefined || e.effect_contract !== undefined || e.mutation !== undefined);
-      });
-      const undeclared = names.filter((n) => !declared.includes(n));
-      // Is an undeclared entry nonetheless executable?
-      const run = composeSubjectChain(ctx.mods, ctx.subjectDir, { capability: LAYER_B_CAPABILITY });
-      const undeclaredExecuted = undeclared.includes(LAYER_B_CAPABILITY) && run.executed;
-      return {
-        observed: undeclaredExecuted ? 'RED' : 'GREEN',
-        evidence: {
+        return Boolean(e) && (e.effect !== undefined || e.effect_contract !== undefined || e.mutation !== undefined);
+      };
+      const undeclared = names.filter((n) => !hasDecl(n));
+      const probeUndeclared = !hasDecl(LAYER_B_CAPABILITY);
+
+      // PRECONDITION — the undeclared capability must be LEGITIMATELY ROUTED.
+      // ⛔ Absence of an effect contract can only be shown insufficient if the
+      //    invocation was otherwise eligible.
+      const declare = await loadEligibilityProducer(ctx.subjectDir);
+      const { decision, how, eligibility_basis } = reachValidPlacement(ctx.mods, LAYER_B_CAPABILITY, declare);
+      const precondition = pre('REQUIRED', (probeUndeclared && reached(decision)) ? 'REACHED' : 'UNREACHED',
+        { probe_capability: LAYER_B_CAPABILITY,
+          probe_has_effect_declaration: !probeUndeclared,
           registered_total: names.length,
-          with_effect_declaration: declared.length,
+          with_effect_declaration: names.length - undeclared.length,
           without_effect_declaration: undeclared.length,
-          probe_capability: LAYER_B_CAPABILITY,
-          probe_has_declaration: declared.includes(LAYER_B_CAPABILITY),
-          probe_executed: run.executed,
+          route_witness: { lane: decision.execution_lane, status: decision.status },
+          eligibility_basis },
+        how);
+      if (precondition.state === 'UNREACHED') {
+        return { observed: 'PRECONDITION-UNMET', precondition,
+          evidence: { reason: probeUndeclared
+            ? 'the undeclared capability was not legitimately routed, so missing classification was never tested'
+            : 'the probe capability now carries an effect declaration; a different undeclared specimen is required' },
+          note: '⛔ PRECONDITION-UNMET — absence of classification can only be tested on an otherwise-eligible invocation' };
+      }
+      let executed = false, error = null;
+      try { ctx.mods.deterministic.runCapability(LAYER_B_CAPABILITY, {}, ctx.subjectDir); executed = true; }
+      catch (e) { error = e.message; }
+      return {
+        observed: executed ? 'RED' : 'GREEN',
+        precondition,
+        evidence: {
+          effect_declaration_present: false,
+          otherwise_eligible: true,
+          executed, error,
+          question: 'did absence of an effect contract prevent execution?',
+          answer: executed ? 'no' : 'yes',
         },
-        note: undeclaredExecuted
-          ? 'a capability carrying no effect declaration executed — absence of classification inherited safety'
-          : 'an undeclared capability did not execute',
+        note: executed
+          ? 'an otherwise-eligible invocation executed with NO effect declaration — absence was accepted as sufficient'
+          : 'execution was refused while classification was unresolved',
       };
     },
   },
@@ -205,6 +242,9 @@ export const FALSIFIERS = [
     run() {
       return {
         observed: 'UNINSTANTIATED',
+        precondition: pre('NOT_REQUIRED', 'N/A',
+          { rationale: 'frozen in the probe specification: no legitimate specimen exists, so there is no state to reach' },
+          'RB spec §5 — structurally frozen, deliberately uninstantiated'),
         evidence: {
           reason: 'the repaired request shape does not exist; no legitimate specimen can be constructed',
           forbidden_substitute: 'inventing a legacy RED by asserting a self-grant the census never showed',
@@ -275,6 +315,9 @@ export const FALSIFIERS = [
     run() {
       return {
         observed: 'N/A',
+        precondition: pre('NOT_REQUIRED', 'N/A',
+          { rationale: 'frozen in the probe specification: the obligation does not yet apply' },
+          'RB spec §5 — not applicable until re-expression exists'),
         evidence: { reason: 'requires re-expression through the new registration model, which does not exist' },
         note: 'not applicable at this baseline — ⛔ never discharges',
       };
@@ -300,6 +343,11 @@ export const FALSIFIERS = [
       const impossible = !routedToExecutable && seamRefused && !chain.executed;
       return {
         observed: impossible ? 'GREEN' : 'RED',
+        precondition: pre('REQUIRED', 'REACHED',
+          { unknown_name_presented_to_router: true, unknown_name_presented_to_seam: true,
+            router_witness: { lane: decision.execution_lane, status: decision.status },
+            seam_witness: seamError },
+          'unregistered name passed to the subject router AND to runCapability directly'),
         evidence: {
           capability: UNREGISTERED,
           routed_lane: decision.execution_lane,

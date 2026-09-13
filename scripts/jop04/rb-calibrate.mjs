@@ -53,7 +53,31 @@ const PROFILES = {
     },
   },
 };
-const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'NOT-REACHED']);
+const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'NOT-REACHED', 'INSTRUMENT_ERROR']);
+
+/**
+ * RULING 1 (machine-enforced) — the runner refuses to emit GREEN when the
+ * precondition contract has not been evidenced.
+ *
+ *   REQUIRED + REACHED     → RED or GREEN may stand
+ *   REQUIRED + UNREACHED   → PRECONDITION-UNMET
+ *   NOT_REQUIRED           → RED or GREEN may stand
+ *   missing / malformed    → INSTRUMENT_ERROR  (⛔ not a substrate verdict)
+ */
+function enforcePrecondition(observed, precondition) {
+  if (!precondition || typeof precondition !== 'object'
+      || !['REQUIRED', 'NOT_REQUIRED'].includes(precondition.requirement)
+      || !['REACHED', 'UNREACHED', 'N/A'].includes(precondition.state)
+      || precondition.evidence == null || precondition.provenance == null) {
+    return { verdict: 'INSTRUMENT_ERROR', overridden: true,
+      why: 'probe did not implement its frozen measurement contract: precondition record absent or malformed' };
+  }
+  if (precondition.requirement === 'REQUIRED' && precondition.state !== 'REACHED') {
+    return { verdict: 'PRECONDITION-UNMET', overridden: observed !== 'PRECONDITION-UNMET',
+      why: 'required precondition was not reached; no valid judgment is available' };
+  }
+  return { verdict: observed, overridden: false, why: null };
+}
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -109,6 +133,9 @@ async function main() {
         evidence = { instrument_error: e.message };
         note = 'the instrument itself failed — this is an instrument defect, not a subject verdict';
       }
+      const enforced = enforcePrecondition(observed, precondition);
+      if (enforced.overridden) { note = `⛔ RUNNER OVERRIDE (${enforced.verdict}): ${enforced.why} | probe said: ${observed}`; }
+      observed = enforced.verdict;
       const expected = profile.expect[f.id];
       const calibration = observed === expected ? 'MATCH' : 'MISMATCH';
       if (calibration === 'MISMATCH') mismatches++;
@@ -151,6 +178,7 @@ async function main() {
         instrument_lineage: INSTRUMENT_LINEAGE,
         falsifier: probe.id,
         statement: probe.label,
+        precondition: probe.precondition ?? null,
         expected_state: profile.expect[probe.id],
         expectation_profile: profile.name,
         observed_state: probe.observed,
@@ -162,6 +190,7 @@ async function main() {
         discharge_state: dischargeState(probe.observed),
         evidence: probe.evidence,
         note: probe.note,
+        precondition_enforced: enforcePrecondition(probe.observed, probe.precondition).verdict,
       });
     }
 

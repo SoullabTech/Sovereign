@@ -76,6 +76,11 @@ export async function runCal2({ router, mainJsPath }, subjectDir, capability = C
     id: 'RB-CAL-2a',
     label: 'registered ∧ ¬routable is reachable',
     observed: reachable ? 'GREEN' : 'RED',
+    precondition: {
+      requirement: 'REQUIRED', state: arms.length > 0 ? 'REACHED' : 'UNREACHED',
+      evidence: { registered_capability_exercised_through_production_routing_entry: true, arms_presented: arms.length },
+      provenance: 'every arm is an ordinary task object passed to the subject router.route(); no harness-internal state',
+    },
     evidence: {
       capability, capability_identity_constant: true,
       eligibility_producer_present: elig.present,
@@ -97,6 +102,11 @@ export async function runCal2({ router, mainJsPath }, subjectDir, capability = C
         id: 'RB-CAL-2b',
         label: 'no-auto-manufacture — routing truth is not registry membership renamed',
         observed: 'NOT-REACHED',
+        precondition: {
+          requirement: 'REQUIRED', state: 'UNREACHED',
+          evidence: { registered_and_routable_reached: true, registered_and_non_routable_reached: false },
+          provenance: 'no task shape produced a non-routable state for a registered capability',
+        },
         evidence: { reason: 'no non-routable witness exists, so the anti-tautology check has nothing to evaluate' },
         note: '⛔ NOT-REACHED — never discharges; it did not run, and did not pass',
       },
@@ -120,6 +130,15 @@ export async function runCal2({ router, mainJsPath }, subjectDir, capability = C
       id: 'RB-CAL-2b',
       label: 'no-auto-manufacture — routing truth is not registry membership renamed',
       observed: pass ? 'GREEN' : 'RED',
+      precondition: {
+        requirement: 'REQUIRED', state: bothStatesShown ? 'REACHED' : 'UNREACHED',
+        evidence: {
+          registered_and_routable_reached: Boolean(declaredSatisfied && isExecutable(declaredSatisfied)),
+          registered_and_non_routable_reached: Boolean(declaredUnsatisfied && !isExecutable(declaredUnsatisfied)),
+          routing_condition_provenance: declaredBasis,
+        },
+        provenance: 'both states obtained through the subject router with a declared eligibility from the subject producer',
+      },
       evidence: {
         witness_non_routable_arm: nonRoutable[0].arm,
         produced_by: 'router.route(...) — production entry point',
