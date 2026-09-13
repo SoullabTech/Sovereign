@@ -26,7 +26,6 @@ import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundl
 import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
-import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
 import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ain/knowledge/RetrievalService';
 import { computeFacetDecision, type FacetDecisionPacket } from '@/lib/consciousness/FacetDecisionLoop';
 import { logAgentRun, logIntegrationPass } from '@/lib/services/corpusCallosumService';
@@ -437,33 +436,30 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     console.log('📦 [MemoryBundle] Skipped - ephemeral mode');
   }
 
-  // 🌐 MCP CONTEXT: Gather real-time context from external data sources
-  let mcpEnrichment: OracleContextEnrichment | null = null;
-  try {
-    const mcpStartTime = Date.now();
-    const mcpIntegration = getMCPConsciousnessIntegration();
-    mcpEnrichment = await mcpIntegration.generateOracleEnrichment(userId, message);
-    layerTimings['mcp-context'] = Date.now() - mcpStartTime;
-
-    if (mcpEnrichment.contextBlock) {
-      console.log(`🌐 [MCPContext] Enrichment gathered: ${mcpEnrichment.contextBlock.length} chars`);
-      if (mcpEnrichment.biometricCorrelation) {
-        console.log(`   Health: ${mcpEnrichment.biometricCorrelation.energyState} energy, ${mcpEnrichment.biometricCorrelation.sleepQuality} sleep`);
-      }
-      if (mcpEnrichment.timingGuidance) {
-        console.log(`   Schedule: ${mcpEnrichment.timingGuidance.suggestedPace} pace suggested`);
-      }
-      if (mcpEnrichment.taskContext) {
-        console.log(`   Tasks: ${mcpEnrichment.taskContext.workloadLevel} workload, ${mcpEnrichment.taskContext.highPriorityCount} urgent`);
-      }
-      layersSuccessful.push('mcp-context');
-    } else {
-      console.log('🌐 [MCPContext] No external sources available');
-    }
-  } catch (error) {
-    console.warn('[MCPContext] Context gathering failed (continuing without):', error);
-    layersFailed.push('mcp-context');
-  }
+  // QUARANTINED - MCP member-context acquisition.
+  // JARVIS-SOVEREIGN-ACTION-SUBSTRATE-01, founder ruling 2026-09-13.
+  //
+  // This site acquired Apple Health biometrics, calendar timing, task workload and
+  // "consciousness markers" for a member on EVERY turn, and attached them to the
+  // cognition context. There was no consent gate on that crossing.
+  //
+  // It reached no member: the fields had no readers, the npx transports cannot resolve
+  // in the production container, and no MCP server was ever registered. None of that is
+  // a boundary. Dormancy is not sovereignty - a path nobody currently consumes is still
+  // a path, and one added read would have activated it with no architectural decision.
+  //
+  // Two boundaries govern this crossing, and neither is built:
+  //   ACQUISITION - may Soullab obtain this information for this turn?
+  //   ADMISSION   - may this information participate in MAIA cognition?
+  // Connecting a health or calendar source is not consent to read it every turn.
+  //
+  // Refused structurally by:
+  //   tests/constitutional/refusal-registry/refusal-32-external-member-context-admission.ts
+  // Census:
+  //   docs/programme/JARVIS-SOVEREIGN-ACTION-SUBSTRATE-01_MCP_CENSUS_2026-09-13.md
+  //
+  // lib/mcp/** is untouched, inert legacy. Do NOT re-wire it into cognition without an
+  // authorized acquisition/admission path.
 
   // 📚 AIN KNOWLEDGE: Retrieve mode-aware wisdom from embedded source texts
   // Maps mode to domain filters: care→therapeutic, talk→jungian/philosophy, divination→astrology/enneagram
@@ -526,14 +522,6 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           relationshipSnapshot: memoryBundle.relationshipSnapshot,  // 📊 For context tracking
           encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
           breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
-        } : undefined,
-        // 🌐 MCP CONTEXT: External data source enrichment
-        mcpContext: mcpEnrichment?.contextBlock || undefined,
-        mcpEnrichment: mcpEnrichment ? {
-          biometricCorrelation: mcpEnrichment.biometricCorrelation,
-          timingGuidance: mcpEnrichment.timingGuidance,
-          taskContext: mcpEnrichment.taskContext,
-          consciousnessMarkers: mcpEnrichment.consciousnessMarkers,
         } : undefined,
         // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded sources
         ainKnowledgeContext: ainKnowledgeContext || undefined,

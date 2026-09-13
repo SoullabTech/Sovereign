@@ -57,15 +57,52 @@ The founder's containment clause — *"explicitly scoped so it cannot alter MAIA
 - **old psychological authority — DO NOT SALVAGE.** Confirmed by name: `awareness-detect.ts`, `knowledge-gate.ts`, `evolution-guidance.ts` (`ain_guidance`), `collective-insight.ts`. These assert developmental state *about a member* and must be adjudicated against Invariant 16 (Constitutional Direction of Authority) and `refusal-16-developmental-state-shaping-guard.ts` before any re-registration.
 - ⭐ **ADDITION — `lib/mcp/integrations/*ConsciousnessIntegration.ts` inherits the same suspicion.** These name themselves as consciousness inference over calendar, health and task data. The proposal's salvage list did not cover them because it did not know they existed.
 
-## 5. Open founder questions (not decided here)
+## 5. Founder ruling and remediation (2026-09-13)
 
-- **Q1 — Containment.** Does the lane's first act **quarantine** the `maiaOrchestrator:440–465` enrichment call (making the "cannot alter MAIA cognition" scope structurally true), or leave it untouched as inert legacy (scope true only by accident)?
+⭐ **Q1 RULED: QUARANTINE FIRST.** Founder act, same day, with the law **sharpened** — the census had framed the refusal around MCP; the ruling refused that framing as too narrow:
+
+> **No externally acquired member-specific context may be acquired for, attached to, or admitted into MAIA cognition without an explicit authorized acquisition/admission path.**
+
+⭐ **TWO BOUNDARIES, HELD SEPARATE — this is the substantive content of the ruling:**
+
+| | Question |
+|---|---|
+| **ACQUISITION** | May Soullab obtain this information *for this turn*? |
+| **ADMISSION** | May this information *participate in MAIA cognition*? |
+
+*Consent to connect Apple Health is not consent to read it on every conversational turn.* Collapsing the two would let a technical connector stand in for an admission authority.
+
+⛔ **The zero-consumer finding was refused as a defence.** Founder: *"Dormancy is not sovereignty. A path nobody currently consumes is still a path."* The census's own de-escalating fact — `mcpContext` has no readers — establishes only that the path is **dormant downstream, not absent upstream**. A single added `use(context.mcpContext)` would have activated a member-data ingress **with no architectural decision required**. That is precisely the latent-activation shape the constitutional work exists to eliminate. `currently nobody reads it` is contingent; `cannot enter` is a boundary. They are different assurances.
+
+⭐ **Mirror finding:** this is the inward twin of the outward custody boundary. Information crossing **outward** needs custody; member-specific information crossing **inward** needs **admission authority**, not merely a technical connector.
+
+### What was done
+
+1. **Crossing cut.** `lib/consciousness/maiaOrchestrator.ts` — the `generateOracleEnrichment(userId, message)` acquisition block and the `mcpContext` / `mcpEnrichment` admission assignments removed, along with the `@/lib/mcp/integrations` import. A quarantine comment stands at the site recording why, and forbidding re-wiring without an authorized path.
+2. **Law named.** `tests/constitutional/refusal-registry/refusal-32-external-member-context-admission.ts`, registered in the harness index. Written about **the crossing, not about MCP** — MCP was the instance. Three assertions over four cognition-assembly modules: substrate import (acquisition), per-turn enrichment call (acquisition), external-context field on the cognition context (admission). Comment-stripping applied before scanning, per the C21/R26 discipline — *a quarantine comment necessarily names the thing it quarantines, and a detector that scans prose fails on the file precisely because that file documents its own compliance.*
+
+### Evidence
+
+- **Refusal registry: `107 passed · 0 failed · 0 warned` (24 refusals).** R32 PASS.
+- ⭐ **R32 falsified in all three assertions independently**, each reverted after: substrate re-import → RED; `generateOracleEnrichment(` call → RED; `mcpContext:` field → RED; clean tree → GREEN. *A refusal that has never gone red proves nothing.*
+- ⚠️ **A first falsification attempt was a no-op and was discarded, not counted** — its injection anchor (`const startTime = Date.now();`) does not exist in the file, so two "passes" were the detector never being asked. Caught by checking the anchor, re-run against a verified one. Recorded because the failure mode is the one the harness's own `DetectorDefect` doctrine names: an instrument that answers by not asking.
+- `npm run check:no-supabase` — clean.
+- ⚠️ **`npm run typecheck` gate is RED, and was RED before this change.** Two `tsconfig.ship.json` diagnostics (TS5101 `downlevelIteration`, TS5107 `moduleResolution=node10`, both TypeScript-7 deprecations) reproduce identically on the stashed clean tree. **Not caused by this diff; not repaired by it either** — an unrelated toolchain finding, unowned, now visible.
+- **Coverage delta owned by this change: `COVERAGE LOST (7)`** — the five `lib/mcp/adapters/*` and two `lib/mcp/integrations/*` files left the `tsconfig.ship.json` program while remaining on disk. ⭐ **This is the intended consequence and is itself evidence the crossing is severed**: the cognition program no longer reaches `lib/mcp` by any import edge. ⛔ **NOT re-baselined.** Re-baselining is a governed act, and the baseline cannot be moved here without also absorbing the two unrelated new diagnostics. That ruling is the founder's, not this session's.
+
+### Bounded — what was deliberately NOT done
+
+⛔ MCP not redesigned · ⛔ no consent UX built · ⛔ `lib/mcp/**` untouched and undeleted (quarantine is not deletion) · ⛔ Apple Health and the other adapters NOT folded into the action lane · ⛔ no server registered · ⛔ no acquisition/admission path designed · ⛔ production unread.
+
+## 5b. Still open (not decided here)
 - **Q2 — Default-on posture.** Do the four `!== 'false'` defaults get inverted to explicit opt-in as a standalone hygiene act, independent of the lane?
 - **Q3 — Refusal coverage.** Should "no MCP-sourced member data reaches MAIA cognition without a named consent gate" become refusal-32, before any adapter work?
 
 ## 6. Standing
 
-**LANE NOT OPENED · NO CODE CHANGED · NO SERVER REGISTERED · NO ADAPTER BUILT · NO DEPLOY · PRODUCTION UNREAD.**
+**LANE NOT OPENED · CROSSING QUARANTINED · R32 RATIFIED AND FALSIFIED · NO SERVER REGISTERED · NO ADAPTER BUILT · NO ACQUISITION/ADMISSION PATH DESIGNED · NO DEPLOY · PRODUCTION UNREAD.**
+
+Action-substrate work resumes only now that the latent cognition ingress is structurally inert — *not* because it was inert already.
 
 Classification is deliberately conservative: nothing here is called a violation whose semantics were never constituted. An unconsumed variable is not a disclosure; a default-on flag with no working transport is not an active channel. **But neither is a defence — it is an absence of consequence, not an absence of authority.**
 
