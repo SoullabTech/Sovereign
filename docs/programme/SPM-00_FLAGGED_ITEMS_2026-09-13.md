@@ -47,6 +47,11 @@ ratification.**
 
 **Owner:** founder. **Disposition:** record the mismatch exactly; change nothing on either side.
 
+⚠️ **Blocking condition, stated precisely (founder, 2026-09-13):** F2 **does not block SPM-01
+stabilization** — ⛔ **unless some pending ruling turns out to depend on S5 having *canonical*
+rather than *candidate* standing.** If M1/M2 or G1/G2 come back resting on S5's authority level,
+F2 becomes blocking at that moment and not before.
+
 ## F3 · Non-formation record re-derivability — **REQUIREMENT SHARPENED, SOLUTION OPEN**
 
 v0.3 §3.1 forbade storing the refused proposition. **That is not sufficient.** Even a minimal record:
@@ -110,8 +115,8 @@ F4  relational tempo invariant      EXTERNAL · owner unassigned · open
 ⛔ **None of these is a stabilization dependency for SPM-01 v0.3.** Those remain exactly two: **Memory
 M1/M2**, and **GOV G1/G2 residual**. ⛔ **Substrate mapping does not open.**
 
-> **Sovereignty is not merely the right to inspect or erase the model. It includes the right for
-> certain models of the person never to come into existence at all.**
+> **Sovereignty includes not only control over information after it exists, but protection against
+> certain representations ever acquiring existence as beliefs about the person.**
 >
 > ⭐ *That is no longer philosophy. It is becoming the organizing law of the personal-model
 > architecture.*

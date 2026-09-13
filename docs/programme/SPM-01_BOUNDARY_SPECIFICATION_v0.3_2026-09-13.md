@@ -85,11 +85,16 @@ it protects them from. ⛔ **Solution open**; coarse timestamps, opaque category
 aggregation and restricted audit custody are implementation choices and premature. Registered as
 **F3** in `SPM-00_FLAGGED_ITEMS_2026-09-13.md`.
 
-⚠️ **Note on versioning (this is an addendum, not v0.4).** Nothing above is withdrawn — the
-requirement is *sharpened*. ⭐ **Proposed answer to the open procedural question, for founder ruling:
-a new version file when something is WITHDRAWN; a dated in-place addendum when something is only
-SHARPENED.** That keeps withdrawals visible — the reason the practice exists — without one file per
-refinement. ⛔ Proposed, not adopted.
+⚠️ **Note on versioning (this is an addendum, not v0.4) — RULED 2026-09-13, charter §6.**
+SPM proposed *new version only on withdrawal*; the founder **refined it to a stronger test**:
+
+> **New version when OPERATIVE MEANING changes. Dated addendum when meaning is only clarified or
+> evidenced more precisely.**
+
+⭐ Stronger because **a specification can gain a new obligation without withdrawing anything** — and
+the weaker rule would have let requirements accumulate inside a version number that implied they were
+not there. **This addendum qualifies:** it sharpens the leakage implication of an already-present
+non-formation law and changes neither the claim object nor the formation gate.
 
 ### 3.2 · Jurisdiction across the gate
 
