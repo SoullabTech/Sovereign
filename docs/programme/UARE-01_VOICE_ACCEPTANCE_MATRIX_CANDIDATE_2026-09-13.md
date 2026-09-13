@@ -88,6 +88,10 @@ implementation inspection → named test → decisive assertion at the boundary 
 only if an actual U1 finding promotes implementation appearance into stronger standing without the
 crossing.
 
+⭐ **GUARD KIND is a second axis** (charter §5.1): a **lexical/source** guard fails on source drift; a
+**behavioral** guard fails on wrong behaviour. ⛔ **A lexical guard can never discharge a behavioral
+row.** Every row below carries its kind where established.
+
 ⭐ **U1 FIRST PASS RUN 2026-09-13 on `36374edb`** — 3 suites, 35 tests, all passing; bodies inspected
 against the inversion criterion. Result and every caveat: `UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md`.
 ⛔ **A green run is not `GATED`** — and none of A1–A5 executes the voice path; all assert over source
@@ -109,6 +113,12 @@ assertion *bodies* were not audited, and no test was executed against a stated S
 
 ## The matrix
 
+⭐ **U1 SECOND PASS RUN on `7f52f587`** — `lib/voice/__tests__/` — **6 suites · 125 tests · all passing ·
+ZERO promotions.** Those suites are **behavioral** (they import and execute real modules) and decide
+real values, but each decides a **narrower property than the row claims**; under *never widen a test's
+claim from its name*, the rows do not move. ⛔ **The grain mismatch is NOT resolved by restating the
+rows** — fitting a claim to the instrument found is the canary's mechanism running backwards. Survey §10.
+
 ⛔ Every `NOT SURVEYED` row below stays `NOT SURVEYED` **even where U1 located a candidate test file** —
 a located file is not `TEST PRESENT`. The candidates are named in survey §3 so the next pass starts
 from them; ⛔ do not count them.
@@ -120,7 +130,7 @@ from them; ⛔ do not count them.
 | A1 | A spoken turn and a typed turn converge before MAIA cognition begins; nothing stands between the log line and canonical cognition. | ⭐ **TEST PASSING** — `__tests__/voice-non-degradation.test.ts`, run on `36374edb`; ⛔ inverts *decisive* (its ⛔ cases mutate the source and assert rejection) |
 | A2 | MAIA's turn is committed exactly once, from one seam, reached by every terminal path. | **TEST PASSING (narrowed)** — `__tests__/voice-transcript-commit.test.ts`, run on `36374edb`. ⛔ *one seam / one append* decisive; *reached by every terminal path* **not** decisive (literal presence ≠ path coverage) |
 | A3 | A stalled or failed TTS delays MAIA's words; it never erases them. | **TEST PRESENT** — ⛔ not decisive: proves the watchdog is spelled in source, not that it arms or survives |
-| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | ⛔ **TEST PRESENT — ASSERTION NOT DECISIVE.** It bans one spelling (`isInVoiceMode && showVoiceText`); `showVoiceText && isInVoiceMode` or `if (showVoiceText)` passes while the boundary is violated. Recorded, ⛔ not repaired — survey §2 |
+| A4 | Commit is independent of any render preference (`showVoiceText`), so no display setting can decide what MAIA remembers saying. | 🔴 **TEST PASSING — LEXICAL GUARD ONLY · BEHAVIORAL BOUNDARY NOT ESTABLISHED.** The test ran and passed; ⛔ it does **not** establish the boundary it is named for. It bans one spelling (`isInVoiceMode && showVoiceText`); `showVoiceText && isInVoiceMode`, `if (showVoiceText)` or any derived boolean passes while the dependency returns. ⛔ Not repaired — **handed to the owning voice lane**: `UARE-01_A4_VOICE_LANE_HANDOFF_2026-09-13.md` |
 | A5 | The text emitted and the transcript persisted are the same guarded value. | **TEST PRESENT** — `__tests__/r2-voice-continuity-contract.test.ts`; decisive against deletion at two named sites only |
 | A6 | Switching text ↔ voice mid-conversation produces one continuous conversation, not two. | **NOT SURVEYED** |
 | A7 | A reconnect resumes the same conversation; it never splits it into a second one. | **NOT SURVEYED** |
@@ -143,6 +153,7 @@ from them; ⛔ do not count them.
 | # | Condition | Coverage |
 | --- | --- | --- |
 | C1 | Audio routes to the connected device (car, headset), not the handset speaker. | **NOT SURVEYED** |
+| — | *(C-class note)* `lib/voice/__tests__/mobile.robustness.test.ts` covers incoming call · Bluetooth handoff · resume · iOS background audio, executes real modules, and **passes**. 🔴 Two of its named tests **do not decide**: *"should pause on incoming call"* ends at `expect(session).toBeDefined()` with the comment *"In real implementation, would pause/resume"*; *"should handle Bluetooth handoff"* asserts a state a complete no-op also produces. ⛔ **NOT `TEST PRESENT`** — survey §9 | |
 | C2 | Headphone disconnect is handled without dumping audio to speaker mid-turn. | **NOT SURVEYED** |
 | C3 | An incoming phone call suspends cleanly. | **NOT SURVEYED** |
 | C4 | The session resumes correctly after the call ends. | **NOT SURVEYED** |

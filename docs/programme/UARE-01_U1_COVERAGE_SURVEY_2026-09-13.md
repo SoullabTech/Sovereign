@@ -148,3 +148,94 @@ non-decisiveness recorded; twelve rows held at `NOT SURVEYED` despite located ca
 
 > *The survey found the gate written to prevent a defect's return can be green while it returns. That
 > is what the ladder was built to surface, and finding it is the instrument working, not failing.*
+
+---
+
+# U1 — SECOND PASS · `lib/voice/__tests__/`
+
+**Authorized:** founder ruling 2026-09-13 (U1 continuation). **SHA:** `7f52f587` — docs-only delta from
+`36374edb`; **no source changed between them.** **Canary: 2/3, unchanged.**
+
+## 7 · Execution
+
+```
+npx jest --config jest.config.js \
+  lib/voice/__tests__/{restartAuthority,utteranceTail,micLiveness,
+                       conversationContinuityBuffer,webSpeechLifecycle,rapidEndPolicy}.test.ts
+
+Test Suites: 6 passed, 6 total
+Tests:       125 passed, 125 total
+```
+
+## 8 · ⭐ The instrument-class finding
+
+**These are a different class of instrument from the A-block, and a stronger one.** Every file
+inspected imports the real module and executes it — `../restartAuthority`, `../utteranceTail`,
+`../micLiveness`, `../conversationContinuityBuffer`, `../webSpeechLifecycle`, `../rapidEndPolicy`,
+and `mobile.robustness` imports `../micSession`, `../wakeWord`, `../guardrails`. They assert on
+returned decision values (`d.allowed`, `d.reason`, `s.tailAtRisk`, `s.interimOutstanding`, `v.dead`,
+`v.cause`) rather than on source text.
+
+So the repository holds **both** guard kinds, and the distinction is now load-bearing:
+
+```text
+LEXICAL / SOURCE GUARD     reads the file as text; fails on source drift
+BEHAVIORAL GUARD           executes the unit; fails on wrong behaviour
+```
+
+⛔ **Neither is superior in general** — a source guard is the right tool for *"the mind may not be
+substituted"*, which is a structural law. But a row's claim decides which kind can discharge it, and
+**a lexical guard can never discharge a behavioral row.** That is exactly A4's defect (§2, handoff).
+
+## 9 · 🔴 The second finding — a test whose body asserts nothing it is named for
+
+`lib/voice/__tests__/mobile.robustness.test.ts`, *"should pause on incoming call"*. It constructs a
+real `MicSession`, starts it, asserts it is listening, simulates the interruption
+(`visibilitychange` → `visibilityState: 'hidden'`), and then its final assertion is:
+
+```js
+// In real implementation, would pause/resume
+expect(session).toBeDefined();
+```
+
+**It cannot fail if pause is absent, broken, or inverted.** The comment says so in the file. This is
+the founder's named anti-pattern in its purest form — and it is the *"read the test name"* trap
+materialized in the repository: the name claims a boundary the body never approaches.
+
+*"should handle Bluetooth handoff"* is weaker than it appears for a different reason: after
+dispatching `devicechange` it asserts `session.isListening()` is `true`, which is **also what a
+complete no-op produces** — the session was already listening. The assertion can fail only if the
+event *stops* listening, the opposite of the claim.
+
+⚠️ **Scoped precisely, not generalized:** only 1 of 31 `expect(...)` calls in that file is a
+`toBeDefined`/`toBeTruthy` tautology. **The file is not condemned; two named tests are.** ⛔ Not
+repaired — U1 records.
+
+## 10 · Rows — what was and was not earned
+
+⭐ **Grain mismatch, recorded and not resolved.** Each behavioral suite decides a **narrower**
+property than the matrix row claims. Under *"never widen a test's claim from its name"*, the rows
+therefore **do not reach `TEST PRESENT`** — what is established is recorded beside them instead.
+
+| Row | What the suite actually decides (passing, `7f52f587`) | Row state |
+| --- | --- | --- |
+| A7 reconnect continuity | `conversationContinuityBuffer` decides buffer retention and ordering; `restartAuthority` decides whether a restart is `allowed` and why | **NOT SURVEYED** — narrower than *"a reconnect resumes the same conversation"* |
+| A8 no duplication | `webSpeechLifecycle` passes; ⛔ its dedup assertions were **not** read | **NOT SURVEYED** |
+| B3 endpointing | `utteranceTail` decides `tailAtRisk` / `interimOutstanding`; `rapidEndPolicy` passes | **NOT SURVEYED** — tail-risk detection ≠ *"trailing words survive"* |
+| B5 backgrounding | `mobile.robustness` iOS background-audio-mode test not read | **NOT SURVEYED** |
+| C1–C4 device / interruption | 🔴 located, executed, **non-deciding** (§9) | ⛔ **NOT `TEST PRESENT`** — assertion does not decide |
+| D1 stale UI state | `micLiveness` decides `dead` / `cause` / `silentForMs` | **NOT SURVEYED** — liveness detection is the substrate, not the UI-state claim |
+
+⛔ **The grain mismatch is not resolved by restating the rows.** Editing a row to fit the evidence
+found would be fitting the claim to the instrument — the canary's mechanism running backwards. The
+rows stand as written; the mismatch is a finding for the founder.
+
+## 11 · Canary — 2/3, unchanged
+
+Nothing was promoted. Two rows moved **down** from an implied to an explicit non-deciding state; six
+stayed at `NOT SURVEYED` despite located, executing, passing tests. **125 green tests produced zero
+promotions**, which is the correct result when the suites decide properties other than the ones
+claimed.
+
+> *The first pass found a gate that can be green while the defect returns. The second found a test
+> that cannot fail at all. Both were passing.*

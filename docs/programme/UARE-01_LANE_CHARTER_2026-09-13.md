@@ -273,7 +273,21 @@ very thing supposedly gated. So body inspection asks one question:
 ⛔ This is an *inspection* criterion, not a demand for mutation testing. Its purpose is to stop
 *"read the body"* from becoming a more sophisticated version of *"read the test name."*
 
+**Guard kind — a second axis, orthogonal to the ladder** (founder ruling 2026-09-13, U1 continuation:
+*distinguish lexical/source guards from behavioral guards*):
+
+```text
+LEXICAL / SOURCE GUARD     reads the file as text; fails on source drift
+BEHAVIORAL GUARD           executes the unit; fails on wrong behaviour
+```
+
+⛔ **Neither is superior in general.** A source guard is the right instrument for a structural law —
+*the mind may not be substituted* — and is why the non-degradation gate can be stated as law at all.
+But **the row's claim decides which kind can discharge it, and a lexical guard can never discharge a
+behavioral row.** Every finding records its guard kind alongside its ladder state.
+
 **Result of the first application:** `docs/programme/UARE-01_U1_COVERAGE_SURVEY_2026-09-13.md`.
+**A4 cross-lane finding:** `docs/programme/UARE-01_A4_VOICE_LANE_HANDOFF_2026-09-13.md`.
 
 ## 6 · Custody
 
@@ -301,6 +315,8 @@ CMT-01 DIFFERENCE ASYMMETRIC FINDING ONLY - NOT A DIFFERENTIATOR - M3 NOT OPENED
 CANDIDATE CANARY   intra-document authority promotion (S0.1) - 2 occurrences - 3rd promotes it
 U1 LADDER          S5.1 - CODE PRESENT from inspection; GATED never from inspection
 U1 FIRST PASS      RUN on 36374edb - A1 TEST PASSING - A4 NOT DECISIVE - nothing GATED
+U1 SECOND PASS     RUN on 7f52f587 - 125 tests green - ZERO promotions
+A4 HANDOFF         AUTHORIZED AND SENT - repair NOT authorized by this lane
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
 FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
 
