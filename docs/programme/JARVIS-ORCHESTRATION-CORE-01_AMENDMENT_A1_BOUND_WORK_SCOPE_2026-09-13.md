@@ -4,6 +4,18 @@
 **Amends**: SPEC v0.1 §2, which is **superseded in place** — kept, not deleted, and marked.
 **Status**: ⛔ **CANDIDATE — NOT RATIFIED. NO IMPLEMENTATION.** Specification and falsifiers only.
 
+> ### ⭐ REVISION R1 — founder ruling, 2026-09-13 (same day)
+>
+> **A1 stands.** Three changes, all tightenings:
+> 1. **Inheritance is additive, not a choice.** R1 corrects §3's framing: `BoundEvidence` and
+>    `MemberIdentity` each prove a *different* property `BoundWorkScope` needs. See §3.5.
+> 2. **Non-portability is now doctrine** (`BW-AUTH-2`), and it **corrects a loose justification**
+>    in the original §3.1 — see §3.6.
+> 3. **Derivation consumes the minted identity OBJECT**, never an extracted branded string
+>    (`BW-AUTH-1`). BW-F4, BW-F5 and BW-F7 tightened accordingly.
+>
+> The one-crossing candidate and its falsifiers are **AUTHORIZED** by the same ruling.
+
 **Naming ruling (founder)**: this primitive is `BoundWorkScope`. `JarvisExecutionContext` is
 **reserved** for the later orchestration envelope and, if adopted, **MUST contain a
 `BoundWorkScope`**. Raw member/work identifiers inside an execution-context object may not
@@ -21,6 +33,8 @@ BP-1 and BP-2 may later become consumers of the same primitive. ⛔ **BP-4 is a 
 capability-admission bypass and is not folded into this act** — `runStructured(req)` is not
 primarily a tenant-scope problem; it is the Work-layer sibling of what `producerRegistry` +
 `adjudicateParticipation()` already solved for canonical conversation, and it needs its own act.
+
+⛔ **The lane is not widened.** This candidate answers exactly one narrow question: *can possession of Work authority become structurally different from possession of identifiers?* If the answer is yes at the focus crossing, the primitive is proved and generalization is a later act. That keeps the test epistemically clean — success tells you why, failure tells you where the abstraction was wrong.
 
 **OPEN-1 untouched.** `BoundWorkScope` establishes tenant/Work **authority**, not semantic identity
 through revision. *Authority proves permission; identity proves continuity.* J9 remains PROPOSED and
@@ -136,11 +150,90 @@ They converge on one posture — *authority is minted, never asserted* — imple
 ways for three different questions. Convergence is the design intent; equivalence is not a current
 fact.
 
+### 3.5 ⭐ R1 — the inheritance is ADDITIVE
+
+R1 corrects the framing of §3.1. "`MemberIdentity` has the stronger mechanism" is true and
+insufficient. The two proofs establish **different properties**, and `BoundWorkScope` needs both:
+
+```
+BoundWorkScope
+    = BoundEvidence's   object-specific binding semantics
+    + MemberIdentity's  two-lock authority semantics
+    + BoundEvidence's   proof destruction at serialization
+```
+
+| From `BoundEvidence` | From `MemberIdentity` |
+|---|---|
+| proof bound to a particular object / reference | compile-time unforgeability (branded) |
+| explicit typed refusal | runtime provenance through private minting |
+| fixed refusal precedence | immutable minted objects (`Object.freeze`) |
+| ⭐ **proof destruction at serialization** | ⭐ runtime discrimination: *looks like authority* vs *was minted* |
+
+Neither alone is sufficient. A value with only the type lock cannot tell a revived object from a
+minted one; a value with only the runtime lock has no principled account of what happens when it is
+written down. ⛔ §3.1's table stands as a comparison and is **no longer the inheritance decision**.
+
+### 3.6 ⭐ R1 — correction to a justification in §3.1
+
+§3.1 argued for the runtime lock on the grounds that *"Work authority crosses more boundaries than
+evidence binding does — job payloads, queues, caches, any future envelope."*
+
+**The mechanism was right; the reason was backwards.** Those boundaries are exactly the ones a
+`BoundWorkScope` **must not cross**. The `WeakSet` is not a defence that lets authority survive
+serialization — it is **the enforcement that makes serialization destroy it**: a revived object is a
+different object and is not in the set. R1 restates the reason: the runtime lock exists *so that
+crossing a boundary loses the proof*, and `BW-AUTH-2` makes that normative rather than incidental.
+
+*A serialized capability is no longer the same capability.*
+
+```
+request → verified MemberIdentity → authorization read → mint BoundWorkScope
+   │
+   ├── same execution boundary ────────────→ scope remains usable
+   │
+   └── serialize / queue / cache / IPC ────→ PROOF LOST
+                                              → untrusted claim
+                                              → reverify + remint
+```
+
+A queue may carry a `WorkScopeClaim` or a `WorkReference`. ⛔ It may never carry a
+`BoundWorkScope`. The receiving side establishes fresh identity and authorization and mints anew.
+**The capability is ephemeral; the claim may travel.** This is what makes the primitive survive
+replay, stale authorization, copied capabilities, revocation and cross-worker provenance — questions
+a portable capability would eventually force and could not answer.
+
 ### 3.4 Composition consequence
 
-Because `VerifiedMemberId` is already branded, `BoundWorkScope` composes from the **verified identity
-value**, not from `memberId: string`. BW-F2 is then closed by the type system rather than by a
-runtime check: there is no way to spell the minting input using a client-supplied string.
+Because `VerifiedMemberId` is already branded, `BoundWorkScope` composes from the verified identity,
+not from `memberId: string`. ⚠️ **R1 makes the exact form load-bearing** — and it is the subtle trap
+A1's own discovery implies:
+
+```ts
+bindWorkScope(identity: MemberIdentity, workRef: WorkRef)   //  ⭐ correct
+  → internally: if (!isMintedIdentity(identity)) refuse(...)
+
+bindWorkScope(memberId: VerifiedMemberId, workRef: WorkRef) //  ⛔ WRONG
+```
+
+The brand proves **how the value was typed**. The private `WeakSet` proves **how the authority
+object was created**. Extracting the branded string and passing *that* to the binder discards the
+runtime half of the proof at the exact moment it matters. **The child capability derives from the
+parent capability, not from data extracted out of it.**
+
+---
+
+## 3.7 Candidate doctrine — `BW-AUTH-1 … 3` (R1, founder wording)
+
+**BW-AUTH-1 — Derived authority.** A `BoundWorkScope` may be minted only from a **presently minted
+`MemberIdentity`**, never from a raw or merely branded member identifier.
+
+**BW-AUTH-2 — Non-portability.** A `BoundWorkScope` is **process-local authority**. Serialization,
+persistence, queueing, caching, IPC, or reconstruction **destroys its authority**. Such boundaries
+may carry only non-authoritative claims or references, which require fresh adjudication and minting
+at consumption.
+
+**BW-AUTH-3 — No existence oracle.** Failure to bind a Work exposes **no member-visible
+information** distinguishing absence from lack of authority.
 
 ---
 
@@ -155,10 +248,10 @@ by PASS. WARN / SKIP / MISSING never discharge.
 | **BW-F1** | **Wrong string is not authority.** A caller possessing arbitrary valid-looking member and Work identifiers cannot thereby construct a valid `BoundWorkScope`. | Minting requires a verified identity value and a successful authorization read; neither is expressible from literals |
 | **BW-F2** | **Client identity cannot mint scope.** Client-supplied member identity cannot participate in minting Work authority. | Inherited structurally: the minting input is the branded verified identity (§3.4). A header, body field or cookie claim has no path to that type |
 | **BW-F3** | **No raw-scope substitute.** A plain object structurally resembling the scope cannot be accepted as the bound authority. | Two locks: nominal type (compile) + minted-set predicate (runtime). ⭐ Strictly stronger than `BoundEvidence`, which has only the first |
-| **BW-F4** | **Ownership failure produces no capability.** A verified member requesting another member's Work receives no usable bound scope — **and learns nothing**: the refusal must be indistinguishable from a nonexistent Work | Refusal vocabulary carries no Work-existence signal; asserted by a test that the unauthorized and nonexistent cases produce byte-identical refusals |
-| **BW-F5** | **Work-scoped exports cannot regress to raw tenant authority.** A static guard detects newly introduced Work-scoped APIs whose authorization depends on a raw `memberId: string` | Signature scan over `lib/manuscript/**` + `lib/writers-studio/**`, in the manner of `readerCannotBypass.test.ts`. ⚠️ **The guard must begin with the 30 existing raw-`memberId` exports on a named, dated exception list** — a guard that fails on day one is deleted on day one; a guard whose exception list can grow silently is decorative. **The list may shrink without review and may not grow without one** |
+| **BW-F4** | **Ownership failure produces no capability, and no existence oracle** (`BW-AUTH-3`). The member-visible boundary must not distinguish *does not exist* from *exists but belongs to somebody else* — equality across **status · error code · response shape · member-visible message**, not prose alone. Internal telemetry may distinguish; that information stays server-side | ⭐ **R1 goes further than the ruling permits it to**: the binder's ownership read is a single `SELECT 1 … WHERE id = $1 AND member_id = $2`, which **cannot** tell the two cases apart, and the binder deliberately does not issue a second query to acquire the distinction. *An oracle you never built cannot leak.* One external code `WORK_SCOPE_UNAVAILABLE`; internal reason `not_found_or_unauthorized`, undivided |
+| **BW-F5** | **Work-scoped exports cannot regress to raw tenant authority.** A static guard detects newly introduced Work-scoped APIs whose authorization depends on a raw `memberId: string` | Signature scan in the manner of `readerCannotBypass.test.ts`, over a named, dated exception list of the existing raw-`memberId` exports. ⭐ **R1 fixes the item shape** — an entry is `{ symbol, path, admitted, reason }`, never a bare path, so the baseline cannot blur into a permission system. The law: *existing exception disappears → PASS · existing exception remains → PASS · **new raw-`memberId` Work-scoped export appears → FAIL** · new exception added → explicit review*. **Shrinks without review; never grows without one** |
 | **BW-F6** | **Serialization does not manufacture authority.** JSON, database payloads, request bodies or reconstructed objects cannot manufacture a new valid `BoundWorkScope` | The runtime lock is a module-private `WeakSet`: a deserialized object is a different object and is not in it. A round-trip test asserts the reconstructed value is refused |
-| **BW-F7** | **Binder cardinality is closed.** The repo has an explicitly enumerable set of modules permitted to mint. Adding a minting seam is review-visible and falsifiable | ⭐ **Precedent already shipped**: `scripts/ws2-07b-reader-gate-a.ts:119` asserts `bindUsers.length === 1 && bindUsers[0] === 'read.ts'` — cardinality as an assertion, not a convention. `BoundWorkScope` states its permitted minters as a named list and fails on any unlisted importer |
+| **BW-F7** | **Binder cardinality is closed** — ⭐ **R1: the invariant is *exactly one authorized minting authority exists*, NOT *exactly one textual use of `bindWorkScope`*.** | Precedent shipped (`ws2-07b-reader-gate-a.ts:119` asserts `bindUsers.length === 1`), but a textual count is defeated by `export { bindWorkScope } from …`, by `const anotherBinder = bindWorkScope`, or by a wrapper that merely relocates minting. ⛔ **The falsifier must include an adversarial alias / re-export / wrapper attempt; if that turns the test green, the test is measuring syntax rather than authority.** Caught now rather than later |
 
 ### Falsifier relationships worth stating
 
@@ -208,7 +301,7 @@ is at the wrong layer — **adjudicated then, never pre-chosen.**
 
 ## 6. Standing
 
-**AMENDMENT A1 CANDIDATE · NOT RATIFIED · NO IMPLEMENTATION · NO SCHEMA · NO MIGRATION · NO ROUTE
+**AMENDMENT A1 + R1 · ⭐ R1 RULED AND CANDIDATE AUTHORIZED (founder, 2026-09-13) · NO SCHEMA · NO MIGRATION · NO ROUTE
 REPAIR · NO SIGNATURE MIGRATION · NO ORCHESTRATOR · NO BRANCH-GATE WORK · BP-1/BP-2/BP-3/BP-4 ALL
 STILL OPEN · OPEN-1 UNTOUCHED · J9 PROPOSED AND BLOCKING FOR OPEN-1 · `JarvisExecutionContext`
 RESERVED, UNDEFINED, AND MAY NOT EXIST WITHOUT A `BoundWorkScope` INSIDE IT.**
