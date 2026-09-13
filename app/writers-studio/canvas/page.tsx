@@ -65,7 +65,7 @@ import { parseTreatment } from '../field/fieldTreatments';
 import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
-import ProposalWorkSurface from './ProposalWorkSurface';
+import ProposalWorkSurface, { ProposalEvidenceInWork } from './ProposalWorkSurface';
 import { focusPaint } from '../field/focusPaint';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 
@@ -1523,6 +1523,23 @@ function FieldBody({
             /* ⛔ PW-6 · REAL PROSE, NOT A MIRROR. And ⛔ PW-3: this is offered
                for ONE section id — the one the server resolved — so no other
                section can be rendered by it even if it asked. */
+            /* ⭐ TWO RENDERERS, ONE RESOLUTION. Section view gets the working
+               surface; Whole view gets evidence and a door. Both are built from
+               the SAME server-resolved target, so the two views cannot disagree
+               about what is proposed or where. */
+            renderProposalEvidence={target ? (sectionId, onWorkWithChange) => {
+              if (sectionId !== target.sectionId) return null;
+              const section = engineMount.sections.find((x) => x.id === sectionId);
+              if (!section) return null;
+              return (
+                <ProposalEvidenceInWork
+                  body={section.body}
+                  range={target.range}
+                  replacementText={target.replacementText}
+                  onWorkWithChange={onWorkWithChange}
+                />
+              );
+            } : undefined}
             renderProposalWork={target ? (sectionId) => {
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
@@ -1601,6 +1618,7 @@ function SectionSurfaceBridge({
   onJumpHandled,
   renderSectionOverlay,
   renderProposalWork,
+  renderProposalEvidence,
 }: {
   session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
@@ -1611,6 +1629,8 @@ function SectionSurfaceBridge({
   onJumpHandled?: () => void;
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
   renderProposalWork?: (sectionId: string) => React.ReactNode;
+  renderProposalEvidence?: (
+    sectionId: string, onWorkWithChange: () => void) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1672,12 +1692,21 @@ function SectionSurfaceBridge({
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
           renderSectionOverlay={renderSectionOverlay}
-          /* ⛔ STEP 2 SCOPE: the CURRENT/PROPOSED panel is mounted in Section
-             view, where the writer works the proposal. Whole view still honours
-             PW-1 — it mounts no editor for a section under proposal authority —
-             but it is not made into a second proposal surface here. The founder
-             ruled that no mode change may be forced; making Whole the place the
-             work happens would force one by the back door. */
+          /* ⭐ THE SAME SURFACE, IN BOTH VIEWS. An earlier draft of step 2
+             scoped this to Section view on my own reasoning, and the founder's
+             first runtime witness found what that cost: in Whole view the
+             target rendered as bare prose — no mark, no reason — which also
+             silently retired the EW-F1 mark Whole view already drew. Authority
+             is a property of the SECTION; the reason for it must be legible
+             wherever the section appears. */
+          /* ⛔ PW-11 · THE DOOR, NOT A PUSH. The view changes only when the
+             member clicks it, through the room's ONE view-change seam — which
+             captures every mounted editor before leaving Whole. A proposal
+             never moves the writer between modes on its own. */
+          renderProposalEvidence={(sectionId) => renderProposalEvidence?.(
+            sectionId,
+            () => changeView('section', () => whole.current?.captureMountedBeforeLeave()),
+          )}
         />
       ) : (
         <SectionWritingSurface

@@ -1,45 +1,51 @@
 /**
  * EW-F2 · STEP 2 — THE PROPOSAL WORKING SURFACE.
  *
- * ⭐⭐ WHY THIS IS NOT `FocusOverlay`.
+ * ⭐⭐ THE LAW THIS FILE IS, in the founder's words:
  *
- * The overlay exists for ONE reason: text inside a `<textarea>` cannot be
- * styled, so a mark has to be painted as a transparent lockstep copy behind the
- * control. Every cost it carries — matching metrics exactly, `padding: 0` on
- * the editor, the code-point/code-unit boundary that cost this programme two
- * days at FOCUS-W3 — is a cost of that constraint.
+ *   The Work is the comparison surface. The proposal is rendered into it
+ *   without yet becoming it.
  *
- * Proposal work mode REMOVES the constraint. Here the manuscript is read-only
- * reference, there is no textarea to mirror, and the marked text can simply be
- * real spans in real prose. The census said this plainly and the founder ruled
- * it: reuse the visual language, not the workaround.
+ * ── THE TWO SHAPES THAT FAILED, BOTH RECORDED ─────────────────────────────
  *
- * ⛔ PW-6 · NO TEXTAREA AND NO MIRROR IN THIS FILE.
- * ⛔ PW-1 · Mounting this is how the manuscript-writing control is absent. It
- *    is not disabled, not read-only-attributed, not styled differently — the
- *    room mounts this INSTEAD, because the persistence authority is different.
- * ⛔ PW-4 · Nothing here writes. There is no save, no queue, no fetch.
+ * EW-F1 shipped a DETACHED EXCERPT: a 140-code-point window, cut mid-word, in
+ * a narrow gutter, with no manuscript around it. The founder could not tell
+ * what he was authorizing.
  *
- * ── WHAT IS SHOWN, AND WHERE IT COMES FROM ────────────────────────────────
+ * Step 2's first build over-corrected into DUPLICATE FULL SECTIONS: CURRENT,
+ * then PROPOSED, each 1334 characters, with the changed passage a thousand
+ * characters down in both. "That is better yet I still don't know what was
+ * changed." Comparing meant scrolling the section twice.
  *
- * CURRENT is the Work's own text, unmodified, with the proposal's range marked.
- * PROPOSED is that same text with the range replaced by the staged content.
- * Both are DERIVED here from one string — the body the Work already holds —
- * so the two panels cannot disagree with the manuscript or with each other.
- * No prose travels from the server for this; a second copy would be a second
- * thing that can be stale, which is the whole EW-F1 finding.
+ * ⛔ NEITHER SHOWS THE CHANGE, and the failure is not too little context versus
+ * too much. It is that BOTH MAKE THE WRITER PERFORM THE COMPARISON. That is not
+ * informed consent; it is visual diff work outsourced to the person whose
+ * consent is being asked for.
  *
- * ⛔ `range` is `projected_section_body` CODE POINTS. `String.slice` indexes
- * CODE UNITS. The conversion is explicit and is the only arithmetic in the
- * file — unconverted, this is FOCUS-W3 again, wrong only where the writer used
- * an astral character, which is the worst possible failure distribution.
+ * ── WHAT THIS RENDERS ─────────────────────────────────────────────────────
  *
- * STEP 2 SCOPE. Read-only. The staged text is not editable here and there is no
- * Revise control: those are steps 3 and 5, and building them early would put an
- * authoring surface in front of a succession substrate that does not exist yet.
+ * The section body ONCE, in normal reading flow, with the proposed change
+ * embedded at the exact locus. Retained text and text proposed to leave are
+ * visibly distinguished. The locus is brought into view when the proposal
+ * opens, so "what changes?" is answerable at a glance and the surrounding
+ * prose is still there to read.
+ *
+ * ⛔ AND THE AUTHORITIES STAY SEPARATE. What is drawn here is PROPOSAL STATE,
+ * never manuscript state. The body is read-only reference; the treatment is a
+ * staged visualization; only ACCEPT crosses into the Work. That distinction
+ * carries the weight at step 3, when the proposed wording becomes editable.
+ *
+ * ⛔ NO MIRROR. S-05: the overlay exists only because text inside a textarea
+ * cannot be styled. There is no textarea here, so the mark is real spans in
+ * real prose.
+ *
+ * ⛔ NO CONTROLS. Keep unchanged and ACCEPT CHANGES live in the panel, which
+ * owns the decision. Duplicating them here would put the irreversible act in
+ * two places.
  */
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
@@ -55,7 +61,13 @@ export interface ProposalWorkSurfaceProps {
   sectionLabel: string;
 }
 
-/** Code points → code units, once, explicitly. */
+/**
+ * Code points → code units, once, explicitly.
+ *
+ * ⛔ `range` is `projected_section_body` CODE POINTS; `String.slice` indexes
+ * CODE UNITS. Unconverted this is FOCUS-W3 again — wrong only where the writer
+ * used an astral character, the worst possible failure distribution.
+ */
 function units(body: string, range: SpacedRange): { a: number; b: number } {
   const bounds = codePointBoundaries(body);
   const last = bounds.length - 1;
@@ -72,6 +84,7 @@ const PROSE = {
   margin: 0,
 };
 
+/** Text proposed to leave. Struck AND tinted: strike alone reads as emphasis. */
 const REMOVED = {
   textDecoration: 'line-through',
   textDecorationThickness: '1px',
@@ -80,22 +93,75 @@ const REMOVED = {
   borderRadius: 2,
 };
 
+/** Text proposed to arrive. Present for replacement and insertion. */
 const ADDED = {
   background: 'rgba(120, 160, 110, 0.22)',
   borderRadius: 2,
 };
 
-function Panel(
-  { label, children }: { label: string; children: React.ReactNode },
+/**
+ * ⭐ THE BRACKETS · THE CHANGE HAS EDGES, AND THEY ARE VISIBLE.
+ *
+ * Founder-asked after seeing the marked prose: brackets around the changed area
+ * "to make it a truly direct interaction". A tint and a strike say THAT
+ * something changed; brackets say exactly WHERE it starts and stops. At a short
+ * mid-sentence span — 23 characters inside 1334 — that boundary is the whole
+ * question, and a strikethrough alone leaves the writer inferring it from
+ * where the line crosses the glyphs.
+ *
+ * ⛔ NOT INTERACTIVE IN STEP 2. They mark the edges of an authored range that
+ * the writer cannot yet move; making them draggable would be an authoring
+ * gesture, and authoring arrives at step 3 with the succession substrate that
+ * can record who moved what. Drawn here so the boundary is legible now.
+ */
+const BRACKET = {
+  opacity: 0.55,
+  fontWeight: 600,
+  /* ⛔ Never struck. The bracket is the system speaking about the change; the
+     struck text is the writer's prose. Striking the bracket would read as the
+     bracket itself being removed. */
+  textDecoration: 'none',
+};
+
+/**
+ * The proposed change at its locus: what leaves, what arrives, and where it
+ * begins and ends. One definition, so Section view and Whole view cannot drift
+ * into two different visual languages for the same fact.
+ */
+function Locus(
+  { leaving, arriving, innerRef }: {
+    leaving: string;
+    arriving: string;
+    innerRef?: React.Ref<HTMLSpanElement>;
+  },
 ) {
   return (
-    <div style={{ marginBottom: SPACE.base }}>
-      <StudioText role="metadata" style={{ marginBottom: SPACE.snug, letterSpacing: '0.08em' }}>
-        {label}
-      </StudioText>
-      <div style={{ ...PROSE, color: INK.primary }}>{children}</div>
-    </div>
+    <span ref={innerRef}>
+      <span style={BRACKET}>[</span>
+      {leaving ? <span style={REMOVED}>{leaving}</span> : null}
+      {arriving ? <span style={ADDED}>{arriving}</span> : null}
+      <span style={BRACKET}>]</span>
+    </span>
   );
+}
+
+/**
+ * ⭐ PW-16 · THE LOCUS COMES INTO VIEW, ONCE.
+ *
+ * Orientation authority, not manuscript authority — the same distinction the
+ * proposal jump makes. ONCE, keyed on the locus, so a writer who then reads
+ * elsewhere in the section is not dragged back: being moved around your own
+ * manuscript is its own kind of dispossession.
+ */
+function useBringIntoView(key: string) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const done = useRef<string | null>(null);
+  useEffect(() => {
+    if (done.current === key || !ref.current) return;
+    done.current = key;
+    ref.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [key]);
+  return ref;
 }
 
 export default function ProposalWorkSurface(
@@ -103,12 +169,10 @@ export default function ProposalWorkSurface(
 ) {
   /* ⛔ A surface that cannot state the space it was handed refuses to draw.
      There is no default coordinate space anywhere in this system. */
-  if (range.space !== 'projected_section_body') return null;
-
-  const { a, b } = units(body, range);
-  const before = body.slice(0, a);
-  const marked = body.slice(a, b);
-  const after = body.slice(b);
+  const ok = range.space === 'projected_section_body';
+  const { a, b } = units(body, ok ? range : { ...range, start: 0, end: 0 });
+  const locus = useBringIntoView(`${sectionLabel}:${a}:${b}`);
+  if (!ok) return null;
 
   return (
     <section
@@ -120,25 +184,96 @@ export default function ProposalWorkSurface(
         border: `1px solid ${RULE.soft}`,
       }}
     >
-      {/* ⭐ PW-5 · THE REASON IS SAID, not left to be inferred from the absence
-          of a text box. "Cannot be edited" would be the one sentence most
-          likely to mislead here: the writer IS working — on the proposal. */}
-      <StudioText role="metadata" style={{ marginBottom: SPACE.base }}>
-        You are working a proposed change here. This section of the manuscript
-        is read-only while you do. Nothing is written until you accept.
+      {/* ⭐ PW-14/PW-19 · THE BODY, ONCE, IN NORMAL READING FLOW. The prose
+          above and below the change stays exactly where the writer expects it;
+          there is no second copy of the section to compare against and no
+          excerpt detached from it. */}
+      <div style={{ ...PROSE, color: INK.primary }}>
+        {body.slice(0, a)}
+        {/* ⭐ PW-15/PW-17 · AT THE EXACT LOCUS, and retained text is visibly
+            distinguished from text proposed to leave. */}
+        <Locus
+          innerRef={locus}
+          leaving={body.slice(a, b)}
+          arriving={replacementText}
+        />
+        {body.slice(b)}
+      </div>
+
+      {/* ⭐ PW-5 · AND IT SAYS WHAT IS TRUE. "Cannot be edited" would be the one
+          sentence most likely to mislead here: the writer IS working — on the
+          proposal, not on the manuscript. */}
+      <StudioText role="metadata" style={{ marginTop: SPACE.base }}>
+        You’re working with a proposed change. This wording is not in your
+        manuscript yet, and nothing is written until you accept.
       </StudioText>
-
-      <Panel label="CURRENT">
-        {before}
-        <span style={REMOVED}>{marked}</span>
-        {after}
-      </Panel>
-
-      <Panel label="PROPOSED">
-        {before}
-        {replacementText ? <span style={ADDED}>{replacementText}</span> : null}
-        {after}
-      </Panel>
     </section>
+  );
+}
+
+/**
+ * ⭐⭐ WHOLE VIEW · TRUTHFUL EVIDENCE, NOT A SECOND EDITING AUTHORITY.
+ *
+ * FOUNDER RULING, after the runtime witness found step 2's regression:
+ *
+ *   Authority may differ by mode. Truth about that authority may not.
+ *
+ * "Do not force a mode change" never meant "evidence only exists in one mode".
+ * Scoping the proposal to Section view left Whole view rendering the target as
+ * bare prose — which ALSO silently retired the EW-F1 mark Whole had drawn since
+ * that lane closed, because the overlay lives only in the editable branch. Two
+ * cross-view obligations broke at once: EW-F1 (the writer can locate the
+ * proposed change in the Work) and PW-5 (a suspended write authority says why).
+ *
+ * ⛔ PW-13 · NOT THE WORKING SURFACE. No accept, no staged text, no controls.
+ * Whole view states what is true and offers a door; Section view is where the
+ * work happens, and the door is taken only when the member asks — PW-11.
+ */
+export function ProposalEvidenceInWork(
+  { body, range, replacementText, onWorkWithChange }: {
+    body: string;
+    range: SpacedRange;
+    replacementText: string;
+    onWorkWithChange?: () => void;
+  },
+) {
+  if (range.space !== 'projected_section_body') return null;
+  const { a, b } = units(body, range);
+
+  return (
+    <div>
+      {/* ⭐ PW-9/PW-12 · THE EXACT RANGE, LOCATED IN THE WORK — not "this
+          section has a proposal". For a replacement the proposed text is marked
+          beside the removal, so the proposed STATE is legible here too. */}
+      <div style={{ ...PROSE, color: INK.primary }}>
+        {body.slice(0, a)}
+        <Locus leaving={body.slice(a, b)} arriving={replacementText} />
+        {body.slice(b)}
+      </div>
+
+      <div style={{
+        marginTop: SPACE.snug, display: 'flex',
+        gap: SPACE.base, alignItems: 'baseline', flexWrap: 'wrap',
+      }}>
+        {/* ⭐ PW-8 · A section that quietly stops being writable, with nothing
+            saying why, is the confusion PW-5 exists to prevent. */}
+        <StudioText role="metadata">
+          This section is being worked as a proposed change.
+        </StudioText>
+        {onWorkWithChange ? (
+          <button
+            type="button"
+            onClick={onWorkWithChange}
+            style={{
+              background: 'transparent', border: 'none', padding: 0,
+              cursor: 'pointer', font: 'inherit', color: 'inherit',
+              textDecoration: 'underline', textUnderlineOffset: 4,
+            }}
+          >
+            <StudioText role="metadata" as="span">Work with this change</StudioText>
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }

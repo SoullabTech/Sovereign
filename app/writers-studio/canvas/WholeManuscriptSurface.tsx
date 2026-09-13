@@ -120,6 +120,12 @@ export interface WholeManuscriptSurfaceProps {
    * a different seam, and should be refused one.
    */
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
+  /**
+   * ⭐ EVIDENCE, not the working surface — PW-13. Whole view states what is
+   * true about a section a proposal owns and offers a door; it is not a second
+   * editing authority.
+   */
+  renderProposalEvidence?: (sectionId: string) => React.ReactNode;
 }
 
 /** What the parent may ask of a mounted surface. */
@@ -142,6 +148,7 @@ export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
   writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, renderSectionOverlay,
+  renderProposalEvidence,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -383,8 +390,26 @@ export const WholeManuscriptSurface = forwardRef<
             )}
             {/* ⛔ PW-1 HOLDS IN BOTH VIEWS. A section under proposal authority
                 mounts no manuscript editor here either — the suspension is a
-                property of the section, not of which surface is on screen. */}
-            {!isMounted ? null : ownsManuscriptWrite(section.authority) ? (
+                property of the section, not of which surface is on screen.
+
+                ⭐⭐ AND SO DOES PW-5, WHICH IS WHY THIS BRANCH EXISTS.
+                FOUNDER-CAUGHT IN RUNTIME. Step 2 first scoped the proposal
+                surface to Section view. In Whole view the target then fell
+                through to read-only prose — which silently removed the EW-F1
+                MARK that Whole view had drawn since that lane closed, because
+                the overlay lives only in the editable branch. The writer saw
+                the passage, unmarked, with nothing saying a proposal owned it
+                and nothing saying why the section had stopped being writable.
+
+                ⛔ Rendering the proposal in both views is NOT the forced mode
+                change the founder ruled against: that ruling is about not
+                moving the writer between views. A section's authority is a
+                property of the section, so the reason for it must be legible
+                wherever the section appears. */}
+            {!isMounted ? null
+             : section.authority === 'proposal_work'
+             ? (renderProposalEvidence?.(section.id) ?? null)
+             : ownsManuscriptWrite(section.authority) ? (
               /* The editor and its mark share one origin. `position: relative`
                  only when a room actually draws — an unused seam changes
                  nothing about how this surface renders. */

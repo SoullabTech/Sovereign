@@ -27,6 +27,8 @@ const ROOM = CODE('canvas/page.tsx');
 const SECTION_SURFACE = CODE('canvas/SectionWritingSurface.tsx');
 const WHOLE_SURFACE = CODE('canvas/WholeManuscriptSurface.tsx');
 const WORK_SURFACE = CODE('canvas/ProposalWorkSurface.tsx');
+const WORK_RAW = require('node:fs').readFileSync(
+  require('node:path').join(__dirname, '..', 'canvas', 'ProposalWorkSurface.tsx'), 'utf8');
 const ROUTE = readFileSync(
   join(__dirname, '..', '..', 'api', 'sovereign', 'manuscripts', '[id]',
        'write-state', 'route.ts'), 'utf8')
@@ -77,13 +79,17 @@ describe('PW-1 · the target section mounts no manuscript-writing control', () =
    * connection.
    */
   it('⭐ the renderer actually REACHES the surface that calls it', () => {
-    const bridge = ROOM.match(/<SectionSurfaceBridge[\s\S]*?\/>/);
+    /* ⚠️ The first draft extracted each element with a non-greedy match to the
+       first `/>`. That worked until the bridge gained a render prop containing
+       nested JSX, at which point the match truncated BEFORE the prop it was
+       checking — a guard that silently stops reading the thing it guards.
+       `SectionWritingSurface` has no nested JSX so it still extracts cleanly;
+       the bridge is asserted by span instead. */
     const surface = ROOM.match(/<SectionWritingSurface[\s\S]*?\/>/);
-    expect(bridge).not.toBeNull();
     expect(surface).not.toBeNull();
-    for (const el of [bridge![0], surface![0]]) {
-      expect(el).toContain('renderProposalWork=');
-    }
+    expect(surface![0]).toContain('renderProposalWork=');
+    expect(ROOM).toMatch(/<SectionSurfaceBridge[\s\S]{0,4000}renderProposalWork=\{target \?/);
+    expect(ROOM).toMatch(/<SectionSurfaceBridge[\s\S]{0,4000}renderProposalEvidence=\{target \?/);
   });
 
   it('⛔ and nothing declares it without passing or calling it', () => {
@@ -191,7 +197,12 @@ describe('PW-5 · the reason is explicit, never inferred from !editable', () => 
   });
 
   it('and the surface SAYS it rather than showing a disabled editor', () => {
-    expect(WORK_SURFACE).toMatch(/read-only while you do/);
+    /* The property, not the wording: it says the proposed text is NOT in the
+       manuscript and that acceptance is what writes — and it never says the
+       section "cannot be edited", which is the sentence most likely to mislead
+       someone who is, in fact, working. */
+    expect(WORK_SURFACE).toMatch(/not in your\s+manuscript yet/);
+    expect(WORK_SURFACE).toMatch(/nothing is written until you accept/);
     expect(WORK_SURFACE).not.toMatch(/cannot be edited/);
   });
 });
@@ -246,5 +257,134 @@ describe('PW-7 · editing elsewhere may stale the proposal; never a silent rebas
     });
     expect(m.mount).toBe('sections');
     expect(sectionEngine(m)?.target).toBeNull();
+  });
+});
+
+
+/**
+ * ⭐⭐ PW-8 … PW-19 — the obligations the founder pinned after the runtime
+ * witness, in two groups.
+ *
+ * CROSS-VIEW TRUTH (PW-8…PW-13). *Authority may differ by mode. Truth about
+ * that authority may not.* Step 2 first scoped the proposal to Section view,
+ * which left Whole view showing the target as bare prose — and silently retired
+ * the EW-F1 mark Whole had drawn since that lane closed, because the overlay
+ * lives only in the editable branch.
+ *
+ * THE COMPARISON IS THE SYSTEM'S WORK (PW-14…PW-19). EW-F1 shipped a detached
+ * excerpt; step 2's first build shipped duplicate full sections. Neither shows
+ * the change: both make the writer perform the comparison. That is not informed
+ * consent — it is visual diff work outsourced to the person being asked to
+ * consent.
+ */
+describe('PW-8 … PW-13 · Whole view is truthful evidence, not a second authority', () => {
+  const EVIDENCE = WORK_SURFACE.slice(WORK_SURFACE.indexOf('ProposalEvidenceInWork'));
+
+  it('PW-8 · the reason is stated in Whole view, not only in Section', () => {
+    expect(EVIDENCE).toMatch(/being worked as a proposed change/);
+  });
+
+  it('PW-9 · Whole view locates the exact range, not merely the section', () => {
+    expect(EVIDENCE).toContain('body.slice(0, a)');
+    expect(EVIDENCE).toContain('<Locus');
+    expect(EVIDENCE).toContain('body.slice(b)');
+  });
+
+  it('PW-10 · and mounts no manuscript-writing control for the target', () => {
+    expect(EVIDENCE).not.toMatch(/<textarea|contentEditable/);
+    expect(WHOLE_SURFACE).toMatch(/authority === 'proposal_work'/);
+    /* The proposal branch must precede the editable branch, or the target
+       falls through into a textarea. */
+    expect(WHOLE_SURFACE.indexOf("authority === 'proposal_work'"))
+      .toBeLessThan(WHOLE_SURFACE.indexOf('<textarea'));
+  });
+
+  it('PW-11 · the door is taken only when the member asks', () => {
+    /* The view change is an onClick, routed through the room's one
+       view-change seam — never an effect, never automatic. */
+    expect(EVIDENCE).toMatch(/onClick=\{onWorkWithChange\}/);
+    expect(EVIDENCE).not.toMatch(/useEffect/);
+    expect(ROOM).toMatch(/renderProposalEvidence\?\.\([\s\S]{0,200}changeView\('section'/);
+  });
+
+  it('PW-12 · the mark exists whether or not the target would otherwise edit', () => {
+    /* ⛔ THE REGRESSION, PINNED. The mark used to live only in the editable
+       branch, so a section becoming proposal-owned silently lost it. */
+    const proposalAt = WHOLE_SURFACE.indexOf("authority === 'proposal_work'");
+    const editableAt = WHOLE_SURFACE.indexOf('ownsManuscriptWrite(section.authority)');
+    expect(proposalAt).toBeGreaterThan(-1);
+    expect(editableAt).toBeGreaterThan(proposalAt);
+  });
+
+  it('PW-13 · Whole view carries no accept and no staged authoring', () => {
+    expect(EVIDENCE).not.toMatch(/accept|ACCEPT|staged|save/i);
+  });
+
+  it('⭐ and both views are built from ONE server resolution', () => {
+    /* Two renderers, one `target`. They cannot disagree about what is proposed
+       or where, because neither derives it. */
+    const evidence = ROOM.match(/renderProposalEvidence=\{target \?[\s\S]*?\} : undefined\}/);
+    const work = ROOM.match(/renderProposalWork=\{target \?[\s\S]*?\} : undefined\}/);
+    expect(evidence).not.toBeNull();
+    expect(work).not.toBeNull();
+    for (const r of [evidence![0], work![0]]) {
+      expect(r).toContain('target.range');
+      expect(r).toContain('sectionId !== target.sectionId');
+    }
+  });
+});
+
+describe('PW-14 … PW-19 · the system performs the comparison', () => {
+  const SURFACE = WORK_SURFACE.slice(
+    WORK_SURFACE.indexOf('export default function ProposalWorkSurface'),
+    WORK_SURFACE.indexOf('export function ProposalEvidenceInWork'));
+
+  it('PW-14/PW-18 · the body is rendered exactly once — no duplicate blocks', () => {
+    /* ⛔ THE SHAPE THAT SHIPPED AND FAILED: CURRENT then PROPOSED, each the
+       whole 1334-character section, the change a thousand characters down in
+       both. One body: one `slice(0, a)` and one `slice(b)`. */
+    expect((SURFACE.match(/body\.slice\(0, a\)/g) ?? [])).toHaveLength(1);
+    expect((SURFACE.match(/body\.slice\(b\)/g) ?? [])).toHaveLength(1);
+    expect(SURFACE).not.toMatch(/CURRENT|PROPOSED|WOULD READ|THIS SENTENCE/);
+  });
+
+  it('PW-15/PW-17 · the change is at the locus, and leaving text is distinguished', () => {
+    expect(SURFACE).toContain('<Locus');
+    expect(WORK_SURFACE).toMatch(/textDecoration: 'line-through'/);
+    /* Struck AND tinted — a strike alone reads as emphasis. */
+    expect(WORK_SURFACE).toMatch(/REMOVED = \{[\s\S]*?background:/);
+  });
+
+  it('PW-16 · opening the proposal brings the locus into view ONCE', () => {
+    expect(WORK_SURFACE).toContain('scrollIntoView');
+    /* Keyed and spent, so a writer reading elsewhere is not dragged back. */
+    expect(WORK_SURFACE).toMatch(/done\.current === key/);
+    expect(WORK_SURFACE).toMatch(/done\.current = key/);
+  });
+
+  it('PW-19 · the surrounding prose stays in normal reading flow', () => {
+    /* Not an excerpt: the text before and after the change is the real body,
+       sliced at the locus and nowhere else. */
+    expect(SURFACE).toContain('body.slice(0, a)');
+    expect(SURFACE).toContain('body.slice(b)');
+    expect(SURFACE).not.toMatch(/sentenceAround|excerpt|window/i);
+  });
+
+  it('⭐ the change has visible edges', () => {
+    /* Founder-asked. A tint says THAT something changed; brackets say exactly
+       where it starts and stops — which at 23 characters inside 1334 is the
+       whole question. */
+    expect(WORK_RAW).toMatch(/<span style=\{BRACKET\}>\[<\/span>/);
+    expect(WORK_RAW).toMatch(/<span style=\{BRACKET\}>\]<\/span>/);
+    /* ⛔ The bracket is the system speaking; striking it would read as the
+       bracket itself being removed. */
+    expect(WORK_SURFACE).toMatch(/BRACKET = \{[\s\S]*?textDecoration: 'none'/);
+  });
+
+  it('⛔ one visual language, both views', () => {
+    /* `Locus` is defined once and used by both surfaces, so Section and Whole
+       cannot drift into two vocabularies for the same fact. */
+    expect((WORK_SURFACE.match(/function Locus\(/g) ?? [])).toHaveLength(1);
+    expect((WORK_SURFACE.match(/<Locus/g) ?? [])).toHaveLength(2);
   });
 });
