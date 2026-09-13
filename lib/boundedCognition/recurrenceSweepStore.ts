@@ -69,6 +69,11 @@ export interface ExecutionRow {
 
 export type StoreRefusal =
   | 'commission_already_executed'
+  | 'scope_not_partitionable'
+  | 'incomplete_partitions'
+  | 'no_unfinished_partition'
+  | 'partition_not_next'
+  | 'partition_not_in_execution'
   | 'commission_not_found'
   | 'execution_not_found'
   | 'not_running'
@@ -146,15 +151,35 @@ export async function enqueueExecution(
   maxAttempts = 3,
 ): Promise<StoreResult<ExecutionRow>> {
   try {
+    // ONE DATABASE ACT. An interrupted two-statement version could leave a durable
+    // execution with no frozen partition set, so the plan is derived in the same
+    // statement that creates the execution — and fails with it.
     const { rows } = await db.query<ExecutionRow>(
-      `INSERT INTO recurrence_sweep_executions (commission_id, requested_by, max_attempts)
-       VALUES ($1,$2,$3)
-       RETURNING ${EXEC_COLS}`,
+      `WITH created AS (
+         INSERT INTO recurrence_sweep_executions (commission_id, requested_by, max_attempts)
+         VALUES ($1,$2,$3)
+         RETURNING ${EXEC_COLS}
+       ),
+       plan AS (
+         INSERT INTO recurrence_sweep_partitions (execution_id, ordinal, section_id)
+         SELECT c.id, s.ord - 1, s.section_id
+           FROM created c
+           JOIN recurrence_sweep_commissions m ON m.id = c.commission_id
+           CROSS JOIN LATERAL unnest(m.body_scope_section_ids) WITH ORDINALITY AS s(section_id, ord)
+         RETURNING 1
+       )
+       SELECT ${EXEC_COLS}, (SELECT count(*) FROM plan) AS planned FROM created`,
       [commissionId, requestedBy, maxAttempts],
     );
     return { ok: true, value: rows[0] };
   } catch (e) {
     const code = (e as { code?: string }).code;
+    const constraint = (e as { constraint?: string }).constraint;
+    // A scope that cannot yield disjoint partitions refuses rather than being
+    // silently deduplicated — that would change the frozen scope to obtain a plan.
+    if (code === '23505' && constraint === 'recurrence_sweep_partitions_section_unique') {
+      return { ok: false, refusal: 'scope_not_partitionable' };
+    }
     if (code === '23505') return { ok: false, refusal: 'commission_already_executed' };
     if (code === '23503') return { ok: false, refusal: 'commission_not_found' };
     throw e;
@@ -244,12 +269,27 @@ async function terminate(
 
 /**
  * Normal execution terminus against the frozen scope.
- * ⭐ STEP 5 REPAIR: clears the current-claim fields. They describe the CURRENT
- * claim; leaving them populated on a terminal row would widen their meaning into
- * "historical last claim" by convenience (BCS-M1).
+ *
+ * ⭐ STEP 5 REPAIR: clears the current-claim fields — they describe the CURRENT
+ * claim, and leaving them on a terminal row would widen them into "historical last
+ * claim" by convenience (BCS-M1).
+ *
+ * ⭐ STEP 6 REFINEMENT: once a partitioned computation exists, completing with
+ * unfinished partitions would make `completed` FALSE under its own predicate
+ * ("reached its normal execution terminus against its frozen scope"). Normal
+ * completion therefore requires every partition checkpointed. `failExecution` and
+ * `observeCancellation` are non-normal terminal paths and keep no such condition.
  */
-export const completeExecution = (db: Queryable, id: string, worker: string, attempt: number) =>
-  terminate(db, id, worker, attempt, 'completed');
+export async function completeExecution(
+  db: Queryable,
+  id: string,
+  worker: string,
+  attempt: number,
+): Promise<StoreResult<ExecutionRow>> {
+  const unfinished = await firstUnfinishedPartition(db, id);
+  if (unfinished) return { ok: false, refusal: 'incomplete_partitions' };
+  return terminate(db, id, worker, attempt, 'completed');
+}
 
 /** Terminated without its normal terminus, and not by an accepted cancellation. */
 export const failExecution = (db: Queryable, id: string, worker: string, attempt: number) =>
@@ -379,4 +419,156 @@ export async function recoverExpiredClaims(
     [expiry],
   );
   return Number(rows[0].n);
+}
+
+/* ── Step 6 · partitions and checkpoints ─────────────────────────────────── */
+
+export interface PartitionRow {
+  id: string;
+  execution_id: string;
+  ordinal: number;
+  section_id: string;
+}
+
+/**
+ * The earliest partition with no durable checkpoint. DERIVED, never stored: no
+ * `progress`, no `last_completed_partition`, no `next_partition`, no
+ * `completed_count`. The database already has the facts, and a second mutable
+ * truth would drift from them.
+ */
+export async function firstUnfinishedPartition(
+  db: Queryable,
+  executionId: string,
+): Promise<PartitionRow | null> {
+  const { rows } = await db.query<PartitionRow>(
+    `SELECT p.id, p.execution_id, p.ordinal, p.section_id
+       FROM recurrence_sweep_partitions p
+       LEFT JOIN recurrence_sweep_checkpoints c ON c.partition_id = p.id
+      WHERE p.execution_id = $1 AND c.partition_id IS NULL
+      ORDER BY p.ordinal
+      LIMIT 1`,
+    [executionId],
+  );
+  return rows[0] ?? null;
+}
+
+export async function listPartitions(
+  db: Queryable,
+  executionId: string,
+): Promise<PartitionRow[]> {
+  const { rows } = await db.query<PartitionRow>(
+    `SELECT id, execution_id, ordinal, section_id FROM recurrence_sweep_partitions
+      WHERE execution_id = $1 ORDER BY ordinal`,
+    [executionId],
+  );
+  return rows;
+}
+
+/**
+ * Record that one bounded execution unit completed.
+ *
+ * SERIALIZED AGAINST EXPIRED-CLAIM RECOVERY. The execution row is locked before
+ * the claim is verified and the checkpoint inserted, so there is no lawful outcome
+ * in which a checkpoint commits after the claim that authorized it was revoked.
+ *
+ * CLAIM GENERATION AUTHORIZES THE WRITE (Step 5): worker string equality is not
+ * enough once reaping exists.
+ *
+ * PREFIX-SHAPED for this proving workload: only the earliest unfinished partition
+ * may be checkpointed, which gives the charter geometry (completed 0…N, resume at
+ * N+1) and stops a caller manufacturing progress by checkpointing a later unit.
+ * ⛔ A proving-workload constraint, not a general law against future parallel
+ * cognition — and success here does not authorize it.
+ */
+export async function recordCheckpoint(
+  client: PoolClient,
+  executionId: string,
+  partitionId: string,
+  worker: string,
+  expectedAttempt: number,
+): Promise<StoreResult<{ partitionId: string }>> {
+  try {
+    await client.query('BEGIN');
+    const cur = await client.query<{ status: SweepStatus; claimed_by: string | null; attempts: number }>(
+      `SELECT status, claimed_by, attempts FROM recurrence_sweep_executions
+        WHERE id = $1 FOR UPDATE`,
+      [executionId],
+    );
+    if (!cur.rows[0]) {
+      await client.query('ROLLBACK');
+      return { ok: false, refusal: 'execution_not_found' };
+    }
+    const e = cur.rows[0];
+    if (e.status !== 'running') {
+      await client.query('ROLLBACK');
+      return { ok: false, refusal: 'not_running' };
+    }
+    if (e.claimed_by !== worker || e.attempts !== expectedAttempt) {
+      await client.query('ROLLBACK');
+      return { ok: false, refusal: 'not_claim_owner' };
+    }
+
+    const next = await client.query<PartitionRow>(
+      `SELECT p.id, p.execution_id, p.ordinal, p.section_id
+         FROM recurrence_sweep_partitions p
+         LEFT JOIN recurrence_sweep_checkpoints c ON c.partition_id = p.id
+        WHERE p.execution_id = $1 AND c.partition_id IS NULL
+        ORDER BY p.ordinal LIMIT 1`,
+      [executionId],
+    );
+    if (!next.rows[0]) {
+      await client.query('ROLLBACK');
+      return { ok: false, refusal: 'no_unfinished_partition' };
+    }
+    if (next.rows[0].id !== partitionId) {
+      await client.query('ROLLBACK');
+      const owned = await client.query(
+        `SELECT 1 FROM recurrence_sweep_partitions WHERE id = $1 AND execution_id = $2`,
+        [partitionId, executionId],
+      );
+      return {
+        ok: false,
+        refusal: owned.rowCount === 0 ? 'partition_not_in_execution' : 'partition_not_next',
+      };
+    }
+
+    await client.query(
+      `INSERT INTO recurrence_sweep_checkpoints (partition_id) VALUES ($1)`,
+      [partitionId],
+    );
+    await client.query('COMMIT');
+    return { ok: true, value: { partitionId } };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  }
+}
+
+/** What a partition processor is given. No prose, no model, no interpretation. */
+export type PartitionProcessor = (partition: PartitionRow) => Promise<void>;
+
+/**
+ * Perform exactly ONE execution unit, then checkpoint it.
+ *
+ * ORDER IS THE CORE P6 FALSIFIER: compute, and only on success record the
+ * checkpoint. If the processor throws or refuses, no checkpoint exists and the
+ * unit remains unfinished — the system may repeat work it cannot prove completed,
+ * and may never skip work because an old process probably completed it.
+ * Durability, not likelihood, licenses resume.
+ */
+export async function runNextRecurrenceSweepPartition(
+  client: PoolClient,
+  executionId: string,
+  worker: string,
+  expectedAttempt: number,
+  process: PartitionProcessor,
+): Promise<StoreResult<{ partition: PartitionRow }>> {
+  const next = await firstUnfinishedPartition(client as unknown as Queryable, executionId);
+  if (!next) return { ok: false, refusal: 'no_unfinished_partition' };
+
+  await process(next); // throws → no checkpoint → unit stays unfinished
+
+  const cp = await recordCheckpoint(client, executionId, next.id, worker, expectedAttempt);
+  if (!cp.ok) return cp;
+  return { ok: true, value: { partition: next } };
 }

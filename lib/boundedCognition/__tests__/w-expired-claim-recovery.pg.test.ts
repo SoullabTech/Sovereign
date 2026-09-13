@@ -10,6 +10,8 @@ import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+  listPartitions,
+  recordCheckpoint,
   createCommission,
   enqueueExecution,
   claimNextExecution,
@@ -26,6 +28,7 @@ import {
 const MIGRATIONS = [
   '20260913000001_recurrence_sweep_execution.sql',
   '20260913000002_recurrence_sweep_claim_recovery.sql',
+  '20260913000003_recurrence_sweep_checkpoints.sql',
 ].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: process.env.BCS_TEST_DATABASE_URL });
@@ -40,6 +43,19 @@ const COMMISSION: NewCommission = {
   scopeFingerprint: 'fp-abc',
   maxJurisdiction: 'sovereign',
 };
+
+/** Step-6 refinement: normal completion requires every partition checkpointed. */
+async function checkpointAll(executionId: string, worker: string, attempt: number) {
+  const client = await pool.connect();
+  try {
+    for (const p of await listPartitions(pool, executionId)) {
+      const r = await recordCheckpoint(client, executionId, p.id, worker, attempt);
+      if (!r.ok) throw new Error(`fixture checkpoint: ${r.refusal}`);
+    }
+  } finally {
+    client.release();
+  }
+}
 
 /** Backdate the liveness signal. Nothing about the worker process changes. */
 const ageHeartbeat = (id: string, ago: string) =>
@@ -127,6 +143,7 @@ describe('D · ABA — an obsolete claim identity cannot mutate a later incarnat
     const staleBeat = await heartbeat(pool, first.id, 'worker-A', 1);
     expect(staleBeat.ok).toBe(false);
 
+    await checkpointAll(first.id, 'worker-A', 2);
     const current = await completeExecution(pool, first.id, 'worker-A', 2);
     expect(current.ok).toBe(true);
     expect(current.ok && current.value.status).toBe('completed');
@@ -234,6 +251,7 @@ describe('H · concurrent recovery affects an expired claim exactly once', () =>
 describe('I/J · recovery touches nothing it should not', () => {
   it('terminal executions are never recovered', async () => {
     const e = await claimed();
+    await checkpointAll(e.id, 'worker-A', e.attempts);
     await completeExecution(pool, e.id, 'worker-A', e.attempts);
     await pool.query(
       `UPDATE recurrence_sweep_executions SET finished_at = NOW() - interval '1 day' WHERE id = $1`,
@@ -266,6 +284,7 @@ describe('I/J · recovery touches nothing it should not', () => {
 describe('K · the lifecycle invariant is enforced by the database', () => {
   it('a terminal row may not retain current-claim fields', async () => {
     const e = await claimed();
+    await checkpointAll(e.id, 'worker-A', e.attempts);
     await completeExecution(pool, e.id, 'worker-A', e.attempts);
     await expect(
       pool.query(`UPDATE recurrence_sweep_executions SET claimed_by = 'ghost' WHERE id = $1`, [e.id]),

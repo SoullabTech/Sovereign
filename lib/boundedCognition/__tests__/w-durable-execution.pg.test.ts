@@ -9,6 +9,8 @@ import { Pool } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+  listPartitions,
+  recordCheckpoint,
   createCommission,
   loadCommission,
   commissionIsUnconsumed,
@@ -27,6 +29,7 @@ const CONN = process.env.BCS_TEST_DATABASE_URL;
 const MIGRATIONS = [
   '20260913000001_recurrence_sweep_execution.sql',
   '20260913000002_recurrence_sweep_claim_recovery.sql',
+  '20260913000003_recurrence_sweep_checkpoints.sql',
 ].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: CONN });
@@ -53,6 +56,23 @@ beforeEach(async () => {
 afterAll(async () => {
   await pool.end();
 });
+
+/**
+ * STEP-6 REFINEMENT applied to the Step-4 witness: normal completion now requires
+ * every partition checkpointed, because otherwise `completed` would be false under
+ * its own predicate. The Step-4 assertions are restated, not weakened.
+ */
+async function checkpointAll(executionId: string, worker: string, attempt: number) {
+  const client = await pool.connect();
+  try {
+    for (const p of await listPartitions(pool, executionId)) {
+      const r = await recordCheckpoint(client, executionId, p.id, worker, attempt);
+      if (!r.ok) throw new Error(`fixture checkpoint: ${r.refusal}`);
+    }
+  } finally {
+    client.release();
+  }
+}
 
 describe('A · commission is the authority root and is independently observable (P1, P2)', () => {
   it('writes and reads back the exact frozen identity, with no execution yet', async () => {
@@ -166,6 +186,7 @@ describe('D · heartbeat belongs to the current claimant', () => {
     expect(foreign.ok).toBe(false);
     expect(!foreign.ok && foreign.refusal).toBe('not_claim_owner');
 
+    await checkpointAll(claimed.id, 'worker-A', claimed.attempts);
     await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
     expect((await heartbeat(pool, claimed.id, 'worker-A', claimed.attempts)).ok).toBe(false);
   });
@@ -177,6 +198,7 @@ describe('E/F · terminal states', () => {
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
 
+    await checkpointAll(claimed.id, 'worker-A', claimed.attempts);
     const done = await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
     expect(done.ok && done.value.status).toBe('completed');
     expect(done.ok && done.value.finished_at).not.toBeNull();
@@ -198,17 +220,22 @@ describe('E/F · terminal states', () => {
     const c = await createCommission(pool, COMMISSION);
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
+    await checkpointAll(claimed.id, 'worker-A', claimed.attempts);
     await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
 
     const { rows } = await pool.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
         WHERE table_schema = 'public' AND table_name LIKE 'recurrence_sweep%'`,
     );
-    // execution ≠ participation; completion ≠ finding
+    // execution ≠ participation; completion ≠ finding. Step 6 added partitions and
+    // checkpoints — both execution facts. Still no observation, coverage, lineage
+    // or currency table exists.
     expect(rows.map((r) => r.table_name).sort()).toEqual([
       'recurrence_sweep_cancel_requests',
+      'recurrence_sweep_checkpoints',
       'recurrence_sweep_commissions',
       'recurrence_sweep_executions',
+      'recurrence_sweep_partitions',
     ]);
   });
 });
@@ -276,6 +303,7 @@ describe('G · cancellation — the durable interval (P7)', () => {
     const c = await createCommission(pool, COMMISSION);
     await enqueueExecution(pool, c.id, 'member:m1');
     const claimed = (await claimNextExecution(pool, 'worker-A'))!;
+    await checkpointAll(claimed.id, 'worker-A', claimed.attempts);
     await completeExecution(pool, claimed.id, 'worker-A', claimed.attempts);
 
     const client = await pool.connect();
