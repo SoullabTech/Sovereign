@@ -67,6 +67,9 @@ import { focusPaint } from '../field/focusPaint';
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
+import { requestedProposalId } from '../canvasIdentity';
+import ProposedChange from '../ProposedChange';
+import { useProposedChange } from '../useProposedChange';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
 import ReadingsEntry from './ReadingsEntry';
@@ -258,6 +261,12 @@ function CanvasRoom() {
   const work = currentWork(workContext);
 
   const { phase: sectionsPhase, sections } = useManuscriptSections(manuscript?.id ?? null);
+
+  /* ⭐ EDITORIAL-WRITE-01A — one proposal, pointed at by id, shown beside the
+     Work it would change. ⛔ Nothing appears unless the URL names one AND the
+     server serves it; the routes 404 unless the write flag is constituted. */
+  const proposalId = searchParams ? requestedProposalId(searchParams) : null;
+  const proposed = useProposedChange(proposalId);
 
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
@@ -740,7 +749,15 @@ function CanvasRoom() {
               onClose={() => undefined}
             />
           ) : (
-            <MaiaColumn context={workContext} />
+            proposed.mount.state === 'ready' ? (
+              <ProposedChange
+                preview={proposed.mount.preview}
+                onAccepted={proposed.accepted}
+                onDismiss={proposed.dismiss}
+              />
+            ) : (
+              <MaiaColumn context={workContext} />
+            )
           )
         }
         workbench={
@@ -1140,7 +1157,15 @@ function CanvasRoom() {
                 onClose={() => dismiss('conversation')}
               />
             ) : (
+              proposed.mount.state === 'ready' ? (
+              <ProposedChange
+                preview={proposed.mount.preview}
+                onAccepted={proposed.accepted}
+                onDismiss={proposed.dismiss}
+              />
+            ) : (
               <MaiaColumn context={workContext} />
+            )
             )}
           </StudioPanel>
         )}

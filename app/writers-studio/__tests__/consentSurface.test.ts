@@ -108,3 +108,66 @@ describe('CS-8 — the gesture exists in exactly one state', () => {
     expect(calls[0]).toContain('/accept');
   });
 });
+
+/* ══ CS-10 · CS-11 — the narrow mount in the real Canvas ═══════════════ */
+
+const CANVAS = 'app/writers-studio/canvas/page.tsx';
+const MOUNT = 'app/writers-studio/useProposedChange.ts';
+const IDENTITY = 'app/writers-studio/canvasIdentity.ts';
+
+describe('CS-10 — ONE proposal enters the existing workspace', () => {
+  it('⭐ the Canvas is pointed at it by ID, through the shared param contract', () => {
+    const canvas = CODE(CANVAS);
+    expect(canvas).toMatch(/requestedProposalId\(searchParams\)/);
+    /* ⛔ The param name is never inlined — the producer's and the consumer's
+       must not be able to drift apart. A link is not a binding. */
+    expect(canvas).not.toMatch(/get\(['"]proposal['"]\)/);
+    expect(CODE(IDENTITY)).toMatch(/CANVAS_PROPOSAL_PARAM = 'proposal'/);
+  });
+
+  it('⛔ no proposal inbox, no new mode, no generic changes system', () => {
+    const canvas = CODE(CANVAS);
+    for (const f of [/proposals\.map/, /ProposalList/, /ChangesPanel/, /pendingProposals/]) {
+      expect(canvas).not.toMatch(f);
+    }
+  });
+
+  it('⛔ the URL carries an id and nothing that could describe the change', () => {
+    const src = CODE(IDENTITY) + CODE(MOUNT);
+    for (const f of [/expectedText/, /replacementText/, /targetSection/, /baseVersion/]) {
+      expect(src).not.toMatch(f);
+    }
+  });
+});
+
+describe('CS-11 — after acceptance the UI rereads the Work FROM the Work', () => {
+  it('⭐⭐ the displayed manuscript is never patched from the accept response', () => {
+    const src = CODE(MOUNT);
+    expect(src).toMatch(/window\.location\.reload\(\)/);
+    /* ⛔ Nothing takes prose from the reply and puts it on the screen. */
+    for (const f of [/setSections\(/, /setText\(/, /applied/, /newBody/]) {
+      expect(src).not.toMatch(f);
+    }
+  });
+
+  it('⭐ the proposal id stays in the URL, so the confirmation is itself a reread', () => {
+    const src = CODE(MOUNT);
+    /* The preview is fetched again after the reload and the SERVER reports
+       already_accepted — the member's confirmation comes from the record, not
+       from the reply to their click. */
+    expect(src).not.toMatch(/delete\s*\(?searchParams|params\.delete\(/);
+  });
+
+  it('⭐ `Keep unchanged` is local only and changes no proposal state', () => {
+    const src = CODE(MOUNT);
+    expect(src).toMatch(/const dismiss = useCallback\(\(\) => setMount\(\{ state: 'none' \}\)/);
+    /* ⛔ Durable rejection is a different thing and needs its own ruling. */
+    expect(src).not.toMatch(/reject|decline|dismissed_at/i);
+  });
+
+  it('⛔ an unserved proposal does not render an empty surface', () => {
+    const src = CODE(MOUNT);
+    expect(src).toMatch(/if \(!res\.ok\) return setMount\(\{ state: 'unavailable' \}\)/);
+    expect(CODE(CANVAS)).toMatch(/proposed\.mount\.state === 'ready'/);
+  });
+});

@@ -21,6 +21,26 @@
 export const CANVAS_MANUSCRIPT_PARAM = 'm';
 
 /**
+ * EDITORIAL-WRITE-01A — one proposal, pointed at by id.
+ *
+ * ⭐ IT LIVES HERE FOR THE SAME REASON `m` DOES. The producer's parameter name
+ * and the consumer's must not be able to drift apart; a link is not a binding.
+ *
+ * ⛔ AND IT CARRIES ONLY AN ID. Not the target, not the version, not the text.
+ * The server loads the durable proposal and owns every other fact — a URL that
+ * could describe the change would be a URL that could author one.
+ */
+export const CANVAS_PROPOSAL_PARAM = 'proposal';
+
+/** The proposal this visit is pointed at, if any. */
+export function requestedProposalId(
+  params: { get(name: string): string | null },
+): string | null {
+  const v = params.get(CANVAS_PROPOSAL_PARAM);
+  return v && v.length > 0 ? v : null;
+}
+
+/**
  * The Canvas, opened on a specific manuscript.
  * `base` may already carry a query string, so the separator is derived.
  */

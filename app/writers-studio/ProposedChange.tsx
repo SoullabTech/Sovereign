@@ -58,7 +58,19 @@ const WHY: Record<string, string> = {
 };
 
 export default function ProposedChange(
-  { preview, onAccepted }: { preview: ProposalPreview; onAccepted?: (version: number) => void },
+  { preview, onAccepted, onDismiss }: {
+    preview: ProposalPreview;
+    onAccepted?: (version: number) => void;
+    /**
+     * ⭐ `Keep unchanged` is LOCAL ONLY in this cut. It closes the surface,
+     * writes nothing, and changes no proposal state.
+     *
+     * ⛔ Durable rejection — "this proposal was declined" as history — is a
+     * different thing and needs its own ruling. It is not smuggled in here
+     * because a button happened to need a handler.
+     */
+    onDismiss?: () => void;
+  },
 ) {
   const [state, setState] = useState<'idle' | 'accepting' | 'accepted' | 'refused'>('idle');
   const [refusal, setRefusal] = useState<string | null>(null);
@@ -135,7 +147,12 @@ export default function ProposedChange(
 
       <div style={{ display: 'flex', gap: 14, marginTop: 22, flexWrap: 'wrap' }}>
         {/* ⭐ The unchanged Work is the default, and it is named as a choice. */}
-        <button type="button" style={quiet} disabled={state === 'accepting'}>
+        <button
+          type="button"
+          onClick={() => onDismiss?.()}
+          style={quiet}
+          disabled={state === 'accepting'}
+        >
           Keep unchanged
         </button>
         <button
