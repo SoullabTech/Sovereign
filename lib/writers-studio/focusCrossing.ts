@@ -41,7 +41,8 @@
 
 import { establishDisclosureBoundary, mayCrossBoundary, type BoundaryOutcome } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
-import { presentBoundaryOutcome, presentCrossing, type FocusDisclosurePresentation } from './focusDisclosureSurface';
+import { presentBoundaryOutcome, presentCrossing, presentMaterialization, type FocusDisclosurePresentation } from './focusDisclosureSurface';
+import type { FocusMaterialization } from './focusMaterialization';
 import type { TurnPosture } from '@/lib/sanctuary/turnPosture';
 import type { DisclosureScopeKind, DisclosureGesture } from '@/lib/disclosure/contextDisclosureReceipt';
 import type { CognitionPrepareInput, PreparedHandoff } from './writersStudioCognition';
@@ -65,7 +66,7 @@ export interface FocusAssembler {
     scopeKind: DisclosureScopeKind; sectionRef?: string;
     /** The writer's selection. Carried in the REQUEST; never in the receipt. */
     range?: { start: number; end: number };
-  }): Promise<string | null>;
+  }): Promise<FocusMaterialization>;
 }
 
 /**
@@ -163,12 +164,21 @@ export async function performFocusCrossing(
     scopeKind: req.scopeKind, sectionRef: req.sectionRef, range: req.range,
   });
 
-  if (!focusContext) {
-    // The authorized Work could not be read. The receipt stays `attempted`,
-    // which is the truthful state: authorization existed, the crossing did not.
-    // ⛔ Never confirmed — nothing was handed to cognition.
+  /* ⛔ An assembler that returns nothing at all is a CONTRACT VIOLATION, not an
+     empty Work and not a refusal. Classified rather than crashed — and rather
+     than silently treated as absence, which is the entire defect BW-03 exists to
+     remove. Unreachable through the types; reachable through a stale caller. */
+  const materialized: FocusMaterialization = focusContext
+    ?? { kind: 'invariant_failed', detail: { stage: 'shape', error: 'assembler returned no outcome' } };
+
+  if (materialized.kind !== 'loaded') {
+    /* ⭐ BW-03 · AUTHORITY WAS ESTABLISHED AND MATERIALIZATION DID NOT SUCCEED.
+       That is a DIFFERENT TRUTH from the pre-authority refusal above, and the
+       writer is no longer told the same thing. The receipt stays `attempted` —
+       truthfully: authorization existed, the crossing did not. Nothing was
+       handed to cognition, so it is never confirmed. */
     return {
-      presentation: presentBoundaryOutcome({ kind: 'receipt_refused', outcome: { kind: 'unavailable' } }),
+      presentation: presentMaterialization(materialized),
       response: null, disclosureId: null, boundary,
     };
   }
@@ -178,7 +188,7 @@ export async function performFocusCrossing(
     identity: req.identity,
     sessionId: req.sessionId, requestId: req.requestId, ask: req.ask,
     workRef: req.workRef, scopeKind: req.scopeKind, label: req.sectionRef,
-    focusContext, sanctuary: req.posture.sanctuary,
+    focusContext: materialized.content, sanctuary: req.posture.sanctuary,
   });
   if (!prepared) {
     // ⛔ Construction, adjudication or rendering failed → NO HANDOFF, NO CONFIRM.

@@ -73,7 +73,7 @@ beforeAll(async () => {
 
 
 const events: string[] = [];
-const assemble = jest.fn(async () => { events.push('assemble'); return 'the selected paragraph'; });
+const assemble = jest.fn(async () => { events.push('assemble'); return { kind: 'loaded', content: 'the selected paragraph' }; });
 /* FOCUS-PRODUCER-01 made the port two-phase: prepare (construct · adjudicate ·
    render) then generate (the handoff). The receipt is confirmed between them. */
 const prepare = jest.fn(async () => { events.push('prepare'); return { turn: { turnId: 't-1' }, proof: {} } as never; });
@@ -298,24 +298,43 @@ describe('the lane stays narrow — one source class, one basis, one boundary', 
     worksOwned = true;
   });
 
-  it('C8 · BW-AUTH-3 · an unowned Work and an unreadable Work present IDENTICALLY', async () => {
-    /* ⚠️ Both crossings must start from IDENTICAL preconditions. The first draft
-       ran them back to back and the consent row from the first turned the second
-       into a replay — a fixture artifact that looked exactly like a disclosure
-       divergence. Reset between them, or the test measures mock state. */
+  it('C8 · BW-AUTH-3 · two PRE-AUTHORITY cases present identically', async () => {
+    /* ⚠️ SUPERSEDED IN MEANING BY BW-03, and kept rather than deleted. The first
+       version of this test asserted that an unowned Work and an UNREADABLE Work
+       present identically. That was the conservative reading under A1, and BW-03
+       rules it wrong: once authority is established the system has already proved
+       this member may access this Work, so an honest load failure discloses
+       nothing about anyone else's resource. The symmetry obligation belongs
+       strictly BEFORE the authority line — which is what this now asserts. */
     worksOwned = false;
     const unowned = await performFocusCrossing(req(), deps());
 
     calls.length = 0; events.length = 0; consentPresent = false;
+
+    const absent = await performFocusCrossing(req({ workRef: '77777777-7777-4777-8777-777777777777' }), deps());
     worksOwned = true;
 
-    const d = deps();
-    (d.assemble as jest.Mock).mockResolvedValue(null);   // authorized, but nothing read
-    const unreadable = await performFocusCrossing(req(), d);
+    expect(JSON.stringify(unowned.presentation)).toBe(JSON.stringify(absent.presentation));
+    expect(unowned.disclosureId).toBe(absent.disclosureId);
+  });
 
-    expect(JSON.stringify(unowned.presentation)).toBe(JSON.stringify(unreadable.presentation));
-    expect(unowned.response).toBe(unreadable.response);
-    expect(unowned.disclosureId).toBe(unreadable.disclosureId);
+  it('C8b · BW-03 · a POST-AUTHORITY materialization failure presents DIFFERENTLY', async () => {
+    worksOwned = true;
+    const dFail = deps();
+    (dFail.assemble as jest.Mock).mockResolvedValue({
+      kind: 'materialization_failed', detail: { stage: 'query', error: 'relation "x" does not exist' },
+    });
+    const failed = await performFocusCrossing(req(), dFail);
+
+    calls.length = 0; events.length = 0; consentPresent = false;
+    worksOwned = false;
+    const unowned = await performFocusCrossing(req(), deps());
+    worksOwned = true;
+
+    expect(failed.presentation.message).not.toBe(unowned.presentation.message);
+    /* ⛔ And it never claims the Work is empty — that is a different true answer. */
+    expect(failed.presentation.message).not.toMatch(/nothing written/i);
+    expect(failed.response).toBeNull();
   });
 
   it('C9 · the bound scope is never receipted, logged or returned', async () => {

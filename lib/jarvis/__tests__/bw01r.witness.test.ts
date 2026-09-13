@@ -218,15 +218,62 @@ run('BW-01R · runtime witness — Work authority geometry on the real focus pat
         ORDER BY s.position ASC`, [WORK_A, A.id]);
     expect(real.rows[0].body).toContain('The sentence the witness reads.');
 
-    /* Consequence, stated as a fact rather than an inference: `assembleFocus`
-       catches the throw and returns null, so an AUTHORIZED focus is reported
-       as unavailable. The crossing has never been able to read a Work. */
+    record('W7 SCHEMA FACT', '`manuscripts`.`user_id` absent · real shape is `member_manuscripts`.`member_id`');
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     BW-03 · CLASS-C FAILURE SEMANTICS.
+     ⭐ W7 is the NEGATIVE CONTROL. These run FIRST against the deliberately
+     broken query, and again after the repair. A mechanism that cannot be shown
+     failing loudly on a known-bad input has not been shown to work. */
+
+  it('W8 · a materialization fault is classified, never collapsed to absence', async () => {
     const bound = await bindWorkScope(idA, WORK_A);
-    const assembled = await assembleFocus({
-      scope: (bound as { ok: true; value: never }).value,
-      scopeKind: 'whole_work',
+    const m = await assembleFocus({
+      scope: (bound as { ok: true; value: never }).value, scopeKind: 'whole_work',
     } as never);
-    expect(assembled).toBeNull();
-    record('W7 PRE-EXISTING DEFECT', 'assembleFocus joins `manuscripts`.`user_id` — table absent; real shape is `member_manuscripts`.`member_id`');
+
+    /* ⛔ The three prohibitions BW-03 exists to enforce. */
+    expect(m).not.toBeNull();                       // must NOT return null
+    expect(m.kind).not.toBe('unavailable');          // must NOT be the binder's word
+    expect(['loaded', 'empty', 'materialization_failed', 'invariant_failed']).toContain(m.kind);
+
+    const mode = process.env.BW03_EXPECT ?? 'known_bad';
+    if (mode === 'known_bad') {
+      expect(m.kind).toBe('materialization_failed');
+      expect((m as { detail: { error: string } }).detail.error).toMatch(/relation "manuscripts" does not exist/);
+      record('W8 KNOWN-BAD', `kind=${m.kind} · stage=${(m as { detail: { stage: string } }).detail.stage} · operator sees the exact schema fault`);
+    } else {
+      expect(m.kind).toBe('loaded');
+      expect((m as { content: string }).content).toContain('The sentence the witness reads.');
+      record('W8 REPAIRED', `kind=${m.kind} · content materialized`);
+    }
+  });
+
+  it('W9 · post-authority failure does NOT resemble a foreign or absent Work', async () => {
+    const dFail = deps();
+    const failed = await performFocusCrossing(crossing(idA, WORK_A), dFail as never);
+    const dForeign = deps();
+    const foreign = await performFocusCrossing(crossing(idB, WORK_A), dForeign as never);
+
+    if ((process.env.BW03_EXPECT ?? 'known_bad') === 'known_bad') {
+      /* ⭐ THE BW-03 PROPERTY. Before this act both were the same sentence. */
+      expect(JSON.stringify(failed.presentation)).not.toBe(JSON.stringify(foreign.presentation));
+      expect(failed.presentation.message).not.toBe(foreign.presentation.message);
+      record('W9 KNOWN-BAD', 'post-authority failure is DISTINGUISHABLE from pre-authority refusal');
+    } else {
+      expect((dFail.prepare as unknown as jest.Mock)).toHaveBeenCalled();
+      record('W9 REPAIRED', 'authorized focus reaches cognition');
+    }
+    /* Both runs: nothing crossed on the refused path, and no Work was handed over. */
+    expect(foreign.disclosureId).toBeNull();
+    expect((dForeign.prepare as unknown as jest.Mock)).not.toHaveBeenCalled();
+  });
+
+  it('W10 · PRE-AUTHORITY symmetry is UNCHANGED by BW-03 (AUTH-04 still holds)', async () => {
+    const foreign = await performFocusCrossing(crossing(idB, WORK_A), deps() as never);
+    const absent = await performFocusCrossing(crossing(idA, WORK_NOWHERE), deps() as never);
+    expect(JSON.stringify(foreign.presentation)).toBe(JSON.stringify(absent.presentation));
+    record('W10 pre-authority symmetry', 'foreign ≡ absent — loudness did not leak backwards');
   });
 });

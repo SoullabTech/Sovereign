@@ -24,6 +24,7 @@
  */
 
 import type { BoundaryOutcome } from '@/lib/disclosure/disclosureBoundary';
+import type { FocusMaterialization } from './focusMaterialization';
 
 /** What the writer may do next. A closed vocabulary — each is a MEMBER ACT. */
 export type FocusAction =
@@ -69,6 +70,14 @@ export interface FocusDisclosurePresentation {
 }
 
 const COPY = {
+  /* ⭐ BW-03 · POST-AUTHORITY. The system has already proved this member may
+     access this Work, so naming the Work's existence discloses nothing. Saying
+     "nothing is there" instead would be a false statement about the member's
+     own world. */
+  materialization_failed:
+    "Your Focus is there, but I couldn't load it just now. Nothing from it was sent.",
+  materialization_empty:
+    "There's nothing written in this Focus yet. Nothing was sent.",
   did_not_cross:
     "I couldn't bring this Focus into MAIA just now. Nothing from this Focus was sent.",
   did_not_cross_unsafe:
@@ -161,6 +170,36 @@ export function presentBoundaryOutcome(outcome: BoundaryOutcome): FocusDisclosur
  * integrity problem, not the writer's mistake, and the answer must not
  * masquerade as fully accounted for.
  */
+/**
+ * ⭐ BW-03 · The presentation of a POST-AUTHORITY outcome.
+ *
+ * `state` remains `did_not_cross` — truthfully, nothing crossed. What changes is
+ * that the writer is no longer told the same thing as an unauthorized caller.
+ *
+ * ⛔ This function is unreachable before authority: it takes a materialization
+ * outcome, and a materialization outcome cannot be produced without a
+ * `BoundWorkScope` (`BW-LAW-2`).
+ */
+export function presentMaterialization(
+  m: Exclude<FocusMaterialization, { kind: 'loaded' }>,
+): FocusDisclosurePresentation {
+  if (m.kind === 'empty') {
+    return {
+      state: 'did_not_cross', message: COPY.materialization_empty,
+      actions: ['continue_without_focus'],
+      severity: 'none', mayClaimNothingSent: true,
+    };
+  }
+  /* materialization_failed · invariant_failed — the writer sees one honest
+     sentence; the operator already has the exact fault in the server log. */
+  return {
+    state: 'did_not_cross', message: COPY.materialization_failed,
+    actions: ['try_again', 'continue_without_focus'],
+    severity: m.kind === 'invariant_failed' ? 'integrity_anomaly' : 'infrastructure',
+    mayClaimNothingSent: true,
+  };
+}
+
 export function presentCrossing(confirmed: boolean): FocusDisclosurePresentation {
   return confirmed
     ? { state: 'crossed_accounted', message: null, actions: [], severity: 'none', mayClaimNothingSent: false }

@@ -53,7 +53,7 @@ const CODE = (rel: string) =>
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const SVC = () => CODE('lib/sovereign/maiaService.ts');
 
-const assemble = jest.fn(async () => 'the selected paragraph');
+const assemble = jest.fn(async () => ({ kind: 'loaded', content: 'the selected paragraph' }));
 const prepare = jest.fn(async () => ({ turn: { turnId: 't-1' }, proof: {} } as never));
 
 const req = (over: Record<string, unknown> = {}) => ({
