@@ -167,6 +167,22 @@ export async function loadEditableSections(
 
 /**
  * Save one section. ONE logical save, ONE transaction, ONE version increment.
+ *
+ * ⭐ THIS IS NOW A WRAPPER, AND THE BEHAVIOUR IS UNCHANGED. The body moved to
+ * `saveSectionInTransaction` so that an authority which must bind its own
+ * decision to this mutation — RevisionProposal acceptance — can run both on ONE
+ * client, inside ONE transaction.
+ *
+ * ⛔ WHY IT COULD NOT SIMPLY BE CALLED FROM INSIDE ANOTHER TRANSACTION:
+ * `transaction()` takes a NEW client from the pool. Calling this from within an
+ * outer transaction would put the mutation on a different connection, outside
+ * the caller's BEGIN — so a rollback would not undo it. That is exactly the
+ * defect caught in the D1 witness, where a pooled `query('BEGIN')` made the
+ * rollback a fiction.
+ *
+ * ⛔ AND IT IS NOT A SECOND WRITE PATH. It is the same implementation, exposed
+ * at its proper transactional seam. A duplicated read inside one transaction is
+ * acceptable; a duplicated UPDATE is not.
  */
 export async function saveSection(
   manuscriptId: string,
@@ -175,7 +191,28 @@ export async function saveSection(
   body: string,
   baseVersion: number,
 ): Promise<SaveResult> {
-  return transaction(async (tx: TransactionClient) => {
+  return transaction((tx: TransactionClient) =>
+    saveSectionInTransaction(tx, manuscriptId, memberId, draftSectionId, body, baseVersion));
+}
+
+/**
+ * The mutation itself, on a caller-supplied client.
+ *
+ * ⛔ IT KNOWS NOTHING OF PROPOSALS. Expected text, single-use acceptance and
+ * proposal locking are AUTHORIZATION, and they stay with the authority that
+ * owns them. This owns the manuscript lock, the version discipline, the section
+ * mutation, the content derivation and the one version increment — and nothing
+ * else is taught to it.
+ */
+export async function saveSectionInTransaction(
+  tx: TransactionClient,
+  manuscriptId: string,
+  memberId: string,
+  draftSectionId: string,
+  body: string,
+  baseVersion: number,
+): Promise<SaveResult> {
+  {
     const draftRes = await tx.query<{
       id: string; version: string; section_addressable_at: Date | null;
     }>(
@@ -232,7 +269,7 @@ export async function saveSection(
       version: Number(updated.rows[0].version),
       sectionChars: newText.length,
     };
-  });
+  }
 }
 
 /* ────────────────────────────────────────────────────────────────────────
