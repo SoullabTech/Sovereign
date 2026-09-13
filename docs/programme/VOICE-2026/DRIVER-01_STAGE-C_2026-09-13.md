@@ -4,7 +4,7 @@ Lane: `VOICE-2026` · `KERNEL-00` · `DRIVER-01` · subject **`4596b9bdb`** (Pha
 
 Plan reference: `DRIVER-01_PLAN_2026-09-12.md` (D1–D5; §20–§22 for this stage). Stage A: `DRIVER-01_STAGE-A_2026-09-12.md` (CLOSED · ACCEPTED). Stage B: `DRIVER-01_STAGE-B_2026-09-12.md` (CLOSED · ACCEPTED).
 
-**Status of this record: STAGE C NOT EXECUTABLE — STOPPED AT THE CUSTODY GATE (C-1 locate, 2026-09-13T15:36:06Z).** The exact historical Phase-A binary (`11A057AA-4A3C-3CAE-8C28-E29792489459`) is not on the Mac under the searched roots; the only harness dylib present is the P5-B0 build (`CC0D3604-…`). Archive, reinstall and batch were not run. No rebuild. §6 holds the outcome; §8 the decisions this returns to the founder. *(Header replaced on the outcome; the superseded line read `STAGE C AUTHORIZED · PREPARED · NOT EXECUTED` and is preserved here.)*
+**Status of this record: HISTORICAL STAGE C — CLOSED · NOT EXECUTABLE (founder ruling 2026-09-13, §10).** Stopped at the custody gate (C-1 locate, 2026-09-13T15:36:06Z); question UNANSWERED; not held open for a backup search; a rebuild is not a substitute and gets its own provenance (`PHASE-A-REPRO-01`, plan only). *(Earlier header line, preserved: "STAGE C NOT EXECUTABLE — STOPPED AT THE CUSTODY GATE (C-1 locate, 2026-09-13T15:36:06Z).")* The exact historical Phase-A binary (`11A057AA-4A3C-3CAE-8C28-E29792489459`) is not on the Mac under the searched roots; the only harness dylib present is the P5-B0 build (`CC0D3604-…`). Archive, reinstall and batch were not run. No rebuild. §6 holds the outcome; §8 the decisions this returns to the founder. *(Header replaced on the outcome; the superseded line read `STAGE C AUTHORIZED · PREPARED · NOT EXECUTED` and is preserved here.)*
 
 ---
 
@@ -104,3 +104,21 @@ STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED · **STAGE C NOT EXECUT
 ## §7 Standing at the time of writing (superseded by §9)
 
 STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED (header amended) · **STAGE C AUTHORIZED, PREPARED, NOT EXECUTED — custody gate first** · HOUSEKEEPING archive now, delete after Stage C · MECHANISM CLAIM NONE · VoiceKernel + harness FROZEN (no source change for Stage C; the subject is a historical binary, not a build) · B2 HOLD · E1–E4 HELD · instrument changes this session are orchestration only: expected-UUID refusal in `k00-reinstall.sh`, C-D7 in the classifier (89 prior rows reclassified identically), `k00-locate-binding.sh`, `k00-container-archive.sh` (archive only).
+
+## §10 Founder ruling (2026-09-13) — historical Stage C CLOSED; reproduction is a different experiment
+
+Verbatim:
+
+> **1. Historical Stage C — CLOSED · NOT EXECUTABLE.** *Do not hold the lane open for an indefinite backup search. The exact historical artifact was not found under the declared search roots, so the historical Stage C ends there … If an actual backup later turns up, we can reopen the exact-artifact question from that concrete path. We do not keep the current programme waiting for one.*
+>
+> **2. Phase-A rebuild — NEW REPRODUCTION SUBJECT, not the historical artifact.** *I do not rule that matching the Mach-O UUID makes a rebuild "the same artifact." A matching UUID would be strong supporting evidence that the same source/toolchain produced the same linked image, but it is not our historical custody chain and it is not a cryptographic byte-for-byte comparison against the vanished binary. So: `4596b9bdb` may be rebuilt only as a separately named Phase-A reproduction subject. Authorize plan only for `PHASE-A-REPRO-01` (source SHA `4596b9bdb` · purpose: reproduce the Phase-A source condition · historical claim NONE). The plan should require the MAC-COMPILE-06 environment as closely as can be pinned … After build: if dylib UUID == 11A057AA-… → continue as PHASE-A-REPRO-01 → still a NEW subject; if dylib UUID differs → STOP before device installation → founder ruling again. Also record a SHA-256 of the rebuilt dylib and app bundle artifact now … I would not call a future result "Stage C." Keep the historical Stage C closed. The new experiment deserves its own provenance.*
+>
+> **3. Container housekeeping — ARCHIVE NOW; PURGE AUTHORIZED AFTER RECONCILIATION.** *… Proceed in this order: A. archive all kernel00-*.jsonl · B. SHA-256 manifest · C. reconcile remote names/count ↔ local names/count · D. require ARCHIVE RECONCILED · E. capture devicectl deletion-verb evidence · F. delete ONLY tmp/kernel00-*.jsonl · G. re-list container · H. record zero remaining journal exports. No deletion unless the archive says RECONCILED. And no guessed deletion command. Use the `devicectl device --help` probe first and implement only a documented verb exposed by the installed tool. Do not touch any other app-data files.*
+>
+> **One consequence for the reproduction experiment.** *Because housekeeping changes the app-data environment, a Phase-A reproduction should not be compared naïvely against Stage A/B as though nothing else changed. If we proceed with `PHASE-A-REPRO-01`, its plan should include a matched post-cleanup P5-B0 control before changing subjects … then the Phase-A reproduction under the same condition. That avoids trading one confound for another.*
+>
+> *The key distinction is now clean: we have lost the historical artifact, not the ability to reproduce the source condition. Those are different experiments and should stay different in the record.*
+
+Standing (founder, verbatim): STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED · STAGE C HISTORICAL CLOSED · NOT EXECUTABLE · historical question UNANSWERED · PHASE-A-REPRO-01 AUTHORIZED — PLAN ONLY · historical equivalence NOT CLAIMABLE · UUID match useful evidence, not custody identity · CONTAINER ARCHIVE AUTHORIZED NOW · CONTAINER PURGE AUTHORIZED after reconciliation + proven delete verb · VOICEKERNEL FROZEN · HARNESS FROZEN · B2 HOLD · E1–E4 HELD · MECHANISM CLAIM NONE.
+
+Applied: plan `PHASE-A-REPRO-01_PLAN_2026-09-13.md` (plan only, nothing built); housekeeping instruments per `DRIVER-01_PLAN_2026-09-12.md` §24 (archive unchanged; probe recorder; purge fail-closed until the probe is read and a documented verb is implemented).

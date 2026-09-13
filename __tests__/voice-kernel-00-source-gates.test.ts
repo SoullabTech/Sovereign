@@ -478,6 +478,11 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     const exec = a.split('\n').filter((l) => !/^\s*(#|echo\b|log\b|\{?\s*echo\b)/.test(l)).join('\n');
     expect(exec).not.toMatch(/\brm\s|devicectl[^\n]*\b(delete|remove)\b/);
     expect(a).toMatch(/NOTHING DELETED/);
+    const pg = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-purge.sh'), 'utf8');
+    const pgExec = pg.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(pgExec).toMatch(/RECONCILED/);                               // step D gate present
+    expect(pgExec).toMatch(/devicectl-probe-/);                         // step E gate present
+    expect(pgExec).not.toMatch(/devicectl[^\n]*\b(delete|remove|rm)\b/); // no deletion verb until one is read from the probe
   });
 });
 
