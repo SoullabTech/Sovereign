@@ -1,0 +1,89 @@
+[14:14:17] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[14:14:17] build-for-testing (driver only; the harness is untouched)
+[14:14:19] xctestrun: /private/tmp/voice-driver-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[14:14:19] sample 1/30 — precondition
+[14:14:19] sample 1/30 — driver (testOneSample, mode L)
+[14:15:27] sample 2/30 — precondition
+[14:15:27] sample 2/30 — driver (testOneSample, mode L)
+[14:16:30] sample 3/30 — precondition
+[14:16:30] sample 3/30 — driver (testOneSample, mode L)
+[14:17:34] sample 4/30 — precondition
+[14:17:34] sample 4/30 — driver (testOneSample, mode L)
+[14:18:37] sample 5/30 — precondition
+[14:18:37] sample 5/30 — driver (testOneSample, mode L)
+[14:19:39] sample 5 ledgered: kernel00-K00-fe58e9d1-1789309175.jsonl
+[14:19:39] sample 6/30 — precondition
+[14:19:39] sample 6/30 — driver (testOneSample, mode L)
+[14:20:09] sample 6 ledgered: kernel00-K00-64cfb66e-1789309204.jsonl
+[14:20:09] sample 7/30 — precondition
+[14:20:09] sample 7/30 — driver (testOneSample, mode L)
+[14:20:38] sample 7 ledgered: kernel00-K00-44dc2315-1789309233.jsonl
+[14:20:38] sample 8/30 — precondition
+[14:20:38] sample 8/30 — driver (testOneSample, mode L)
+[14:21:08] sample 8 ledgered: kernel00-K00-2ce2b4c2-1789309263.jsonl
+[14:21:08] sample 9/30 — precondition
+[14:21:08] sample 9/30 — driver (testOneSample, mode L)
+[14:21:39] sample 9 ledgered: kernel00-K00-267c49fe-1789309293.jsonl
+[14:21:39] sample 10/30 — precondition
+[14:21:39] sample 10/30 — driver (testOneSample, mode L)
+[14:22:11] sample 11/30 — precondition
+[14:22:11] sample 11/30 — driver (testOneSample, mode L)
+[14:30:08] sample 11 ledgered: kernel00-K00-9582c8ba-1789309802.jsonl
+[14:30:08] sample 12/30 — precondition
+[14:30:08] sample 12/30 — driver (testOneSample, mode L)
+[14:30:40] sample 12 ledgered: kernel00-K00-db75a282-1789309834.jsonl
+[14:30:40] sample 13/30 — precondition
+[14:30:40] sample 13/30 — driver (testOneSample, mode L)
+[14:31:11] sample 13 ledgered: kernel00-K00-de56cd7b-1789309865.jsonl
+[14:31:11] sample 14/30 — precondition
+[14:31:11] sample 14/30 — driver (testOneSample, mode L)
+[14:31:42] sample 14 ledgered: kernel00-K00-15980872-1789309896.jsonl
+[14:31:42] sample 15/30 — precondition
+[14:31:42] sample 15/30 — driver (testOneSample, mode L)
+[14:32:13] sample 15 ledgered: kernel00-K00-78a51e21-1789309927.jsonl
+[14:32:13] sample 16/30 — precondition
+[14:32:13] sample 16/30 — driver (testOneSample, mode L)
+[14:32:44] sample 16 ledgered: kernel00-K00-63e860ef-1789309958.jsonl
+[14:32:44] sample 17/30 — precondition
+[14:32:45] sample 17/30 — driver (testOneSample, mode L)
+[14:33:24] sample 17 ledgered: kernel00-K00-ad128267-1789309998.jsonl
+[14:33:24] sample 18/30 — precondition
+[14:33:25] sample 18/30 — driver (testOneSample, mode L)
+[14:33:56] sample 18 ledgered: kernel00-K00-91c7ec45-1789310030.jsonl
+[14:33:56] sample 19/30 — precondition
+[14:33:57] sample 19/30 — driver (testOneSample, mode L)
+[14:34:28] sample 19 ledgered: kernel00-K00-7bbb10e3-1789310061.jsonl
+[14:34:28] sample 20/30 — precondition
+[14:34:28] sample 20/30 — driver (testOneSample, mode L)
+[14:35:00] sample 20 ledgered: kernel00-K00-eb89f438-1789310093.jsonl
+[14:35:00] sample 21/30 — precondition
+[14:35:00] sample 21/30 — driver (testOneSample, mode L)
+[14:35:31] sample 21 ledgered: kernel00-K00-2f5c68b0-1789310124.jsonl
+[14:35:31] sample 22/30 — precondition
+[14:35:32] sample 22/30 — driver (testOneSample, mode L)
+[14:36:04] sample 22 ledgered: kernel00-K00-be4e0e41-1789310157.jsonl
+[14:36:04] sample 23/30 — precondition
+[14:36:04] sample 23/30 — driver (testOneSample, mode L)
+[14:36:37] sample 23 ledgered: kernel00-K00-ae76e2cb-1789310190.jsonl
+[14:36:37] sample 24/30 — precondition
+[14:36:37] sample 24/30 — driver (testOneSample, mode L)
+[14:37:09] sample 24 ledgered: kernel00-K00-6430f364-1789310221.jsonl
+[14:37:09] sample 25/30 — precondition
+[14:37:09] sample 25/30 — driver (testOneSample, mode L)
+[14:37:41] sample 25 ledgered: kernel00-K00-2e9adef7-1789310254.jsonl
+[14:37:41] sample 26/30 — precondition
+[14:37:41] sample 26/30 — driver (testOneSample, mode L)
+[14:38:13] sample 26 ledgered: kernel00-K00-6e095bb2-1789310286.jsonl
+[14:38:13] sample 27/30 — precondition
+[14:38:14] sample 27/30 — driver (testOneSample, mode L)
+[14:38:46] sample 27 ledgered: kernel00-K00-e4973a8c-1789310318.jsonl
+[14:38:46] sample 28/30 — precondition
+[14:38:46] sample 28/30 — driver (testOneSample, mode L)
+[14:39:18] sample 28 ledgered: kernel00-K00-967995c3-1789310351.jsonl
+[14:39:18] sample 29/30 — precondition
+[14:39:19] sample 29/30 — driver (testOneSample, mode L)
+[14:39:51] sample 29 ledgered: kernel00-K00-39aecb09-1789310383.jsonl
+[14:39:51] sample 30/30 — precondition
+[14:39:51] sample 30/30 — driver (testOneSample, mode L)
+[14:40:24] sample 30 ledgered: kernel00-K00-26b69efc-1789310416.jsonl
+[14:40:24] batch complete — /private/tmp/voice-driver-01/docs/programme/VOICE-2026/driver-ledger/STAGE-B-20260913T141415Z/ledger.md

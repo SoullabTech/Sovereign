@@ -146,3 +146,50 @@ Read: on both installs, about half of VP-ON cold starts take at generation 1 and
 2. **Container housekeeping** (§5.3): authorize an archive-then-delete script, or leave the container as is and accept that listing failures will recur under C-D5 as infrastructure rows.
 3. **O6/O7** are new device facts about the organism; nothing is repaired. The silent limbo after reset recovery (O7) is the one that touches the acceptance law (K00-10 bounded recovery) and should be named for PRE-WITNESS-06 scoping if it recurs, not repaired from one sample.
 4. Stage C (Phase-A `4596b9bdb`) stays a founder decision after A and B are read.
+
+---
+
+## §8 Founder ruling received (2026-09-13) — STAGE A CLOSED · everything so far is PRE-AUTH-STAGE-B · STAGE B AUTHORIZED NOW
+
+Founder, verbatim (composed on reading the Stage A record; it answers §4(1): the attempt-1 SIGTERM was the founder's own governance stop, not an unknown):
+
+> The sample-9 custody gap is closed correctly. `K00-edce7a4e` is the right file, its SHA-256 is `9e169b30…daf9`, and it remains not a sample even though its physiology was a clean gen-1 listen. Stage A therefore stays: 29 valid audio samples · 14 gen-1 listen · 9 failure → recovery · 6 failure → degradation · 1 DRIVER/INFRASTRUCTURE FAILURE.
+>
+> I read the full Stage A record. Stage A is accepted and CLOSED. The automated witness has done its job: it turned the hand-sampled nondeterminism into a measured phenomenon, while recovery stayed bounded and six sessions still lawfully demonstrated K00-03 failure.
+>
+> There is one governance issue I caught while reading it. Stage B had already started before this founder act. I found the reinstall record plus seven completed Stage-B rows, with another test invocation underway. Because the record explicitly said Stage B was held until I had read Stage A, those runs cannot silently become the authorized Stage B. I stopped the running Mac-side batch. No VoiceKernel or harness source was changed, and the harness process is not running now.
+>
+> Ruling on the premature Stage-B data — Keep everything. Delete nothing. Classify the already-produced material as: PRE-AUTH-STAGE-B · observational only · NOT COUNTED in Stage B. That includes the reinstall evidence and the completed journals. They may be useful later, but they are not part of the declared 30-sample Stage B.
+>
+> Founder act — Stage B AUTHORIZED NOW. Start it from zero, with a fresh reinstall boundary performed after this ruling: 1. reinstall exact same P5-B0 artifact · 2. verify dylib `CC0D3604-7902-373E-A2BB-2C093D9BF804` · 3. verify VoiceKernelHarness process absent · 4. new Stage-B ledger/timestamp · 5. run 30 cold VP-ON samples, Mode L, same repaired driver/orchestration, no reinstall inside the stage · 6. finish all 30 regardless of outcomes.
+>
+> Do not reuse the seven pre-authorization samples toward N=30. The current reinstall also does not count as the authorized Stage-B boundary because it predates this act and has already accumulated launches.
+>
+> STAGE A CLOSED · ACCEPTED · PRE-AUTH STAGE B PRESERVE · NOT COUNTED · STAGE B AUTHORIZED NOW · N 30 · MODE AUTOMATED-COLD-LAUNCH / L · AUT exact P5-B0 artifact · VOICEKERNEL FROZEN · HARNESS FROZEN · STAGE C HELD · MECHANISM CLAIM NONE.
+>
+> One thing Stage A makes especially clear: the system is not suffering a simple deterministic startup defect anymore. The identical startup can either establish real input or fail before the first callback, and that failure can either recover or exhaust its bounded budget. Stage B can now answer whether reinstalling the exact same artifact materially changes that distribution.
+
+### §8.1 Application
+
+The ruling's condition is a reinstall boundary **performed after the act and not yet launched**. Every batch to date ran on the 19:01:28Z reinstall (seq 4608), which predates the act and had accumulated 7 + 30 + 30 launches by the time the ruling reached this record. All three are therefore **PRE-AUTH-STAGE-B**, preserved and never counted, and marked in place with a `CLASSIFICATION.md` beside each ledger (the produced files are untouched):
+
+| batch | what it is now |
+|---|---|
+| `STAGE-B-20260912T190130Z` (attempt 1, 7 rows) | PRE-AUTH-STAGE-B; the SIGTERM at sample 8 = the founder's governance stop (§2 "source UNKNOWN" is resolved by this ruling) |
+| `STAGE-B-20260912T191955Z` (attempt 2, ledger invalid, 30 journals reconstructed §5.1) | PRE-AUTH-STAGE-B; O6/O7/O8 stand as observations |
+| `STAGE-B-20260913T141415Z` (attempt 3, first batch on the repaired instrument) | PRE-AUTH-STAGE-B; summarised in §8.2 |
+| `reinstall-20260912T190128Z.txt` | PRE-AUTH boundary, not the authorized one |
+
+The §7 question "standing of attempt 2" is answered by this ruling: not counted.
+
+### §8.2 Attempt 3 (`STAGE-B-20260913T141415Z`) — observational summary, not counted
+
+30 invocations on the repaired instrument (C-D5/C-D6 live): **25 valid samples · 5 infrastructure rows**. No listing flood — C-D5 held. Tally 10 gen-1 listen · 9 failure then recovery · 4 failure then degradation · 2 other observed shape (recovering at export, gen 8); sequence `----FLFLL-LLFFFOFFFFFFFLFLLLLO`. All 25 journals verified here: hash as ledgered, cold, VP on, no pre-VP read, 15 refusals across 15 failures, max generation 8, 0 resets, 0 interruptions.
+
+Infrastructure rows, both device-side: samples 1–4 `runner could not enable automation mode` (the phone was not automatable at batch start — asleep or locked — and woke at sample 5; the harness was never launched, so these are not samples by definition); sample 10 `no new journal` after a **passed** 26.6 s test (**H2 recurrence**: the harness ran and terminated but no export file appeared, and none surfaced later). Sample 11's `xcodebuild` stalled ~7.5 min before its test began (cause not read from the log); the sample itself is clean.
+
+Lesson carried into the authorized run: the device must be awake and unlocked before the batch starts; an infrastructure row at sample 1 costs a sample, not the batch.
+
+### §8.3 The authorized Stage B — procedure (nothing else changes)
+
+`k00-reinstall.sh` is the only reinstall path and writes the four artefacts the ruling asks for (dylib UUID before install · codesign · install with new sequence · post-install process check). Then one batch of 30, Mode L, on the instrument at `45bc66964`+, no reinstall inside it, all 30 finished. The ledger this produces is the first that can be read as Stage B.
