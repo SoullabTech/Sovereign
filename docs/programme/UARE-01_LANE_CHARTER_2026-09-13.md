@@ -31,6 +31,106 @@ Model.* The parallel to Spiralogic / elemental architecture is real and is exact
 their taxonomy would be corrosive — it would substitute a vendor's decomposition for our own and
 make the resemblance look like derivation.
 
+---
+
+## 0.1 · CANDIDATE TENDENCY — intra-document authority promotion
+
+**Status: CANDIDATE CANARY, recorded by founder ruling 2026-09-13. Not yet an established lane
+failure mode. Lane-local — this is not Soullab doctrine.**
+
+> **Candidate §0 tendency — intra-document authority promotion.** A research lane may generate
+> interpretations and questions. It may not allow an interpretation to acquire a stronger evidence
+> class, normative force, programme authority, or doctrinal status merely through repetition or
+> reformulation inside the same artifact. **Promotion requires a distinct evidentiary or authority
+> event appropriate to the target class.**
+
+### Why it is recorded after two occurrences rather than three
+
+Both repairs of 2026-09-13 are the same mechanism wearing different content. **Nothing external
+happened between the weaker state and the stronger one** — no new witness, no programme ruling, no
+founder act, no source of greater authority. **The document promoted its own output.**
+
+```text
+EPISTEMIC PROMOTION                     NORMATIVE PROMOTION
+inference → evidence category           observation / preference → requirement or doctrine
+
+occurrence 1                            occurrence 2
+Uare release history                    privacy interpretation
+  → treated as [O] observation            → "our position must be structural"
+```
+
+**Escalation rule:**
+
+```text
+2 occurrences  →  candidate tendency        ← we are here
+3rd occurrence →  established lane failure mode, promoted into §0 proper
+```
+
+Two instantiations are not universality. They are enough to make the next one recognizable, which is
+the whole purpose of a canary. ⛔ **Do not promote this to an established failure mode before a third
+independent occurrence** — that would be the tendency operating on the record of the tendency.
+
+### The test
+
+For any sentence whose standing has increased, ask:
+
+> **What happened between the weaker statement and the stronger one?**
+
+If the only answer is *we reasoned further* · *we rewrote it* · *it appears elsewhere in the
+document* · *the conclusion seems obvious* — **no authority transition occurred.** Revert the
+sentence to its earned standing.
+
+A legitimate promotion has an identifiable crossing:
+
+| Transition | Requires |
+| --- | --- |
+| `[D]` or `[E]` → `[O]` | actual Soullab observation of the running product |
+| `[I]` → doctrine | competent programme / founder adjudication |
+| question → requirement | authority belonging to that domain |
+| competitive finding → internal priority | independent programme evidence **and** an authorized act |
+
+### Two scales of the same pathology
+
+```text
+WITHIN A DOCUMENT          inference → evidence class → requirement
+BETWEEN PROGRAMMES         competitive observation → internal mandate
+```
+
+The second scale is why the CMT-01 ruling matters and why it is written as it is: *competitor
+observation → desire for a differentiator → internal work accelerated* is this same promotion error
+operating across programmes instead of within a file. Both erase a required authority boundary.
+
+### The broader formulation — held candidate, not constitutional
+
+> **No artifact may promote its own output into the authority required for its next step.**
+
+⛔ **Candidate only.** It generalizes correctly — research becoming doctrine, comparison becoming
+roadmap, inference becoming observation, observation becoming requirement, desire for differentiation
+becoming architecture work — and generalizing correctly is not the same as having earned
+constitutional standing. It stays here until the lane earns it, by the same rule it states.
+
+### Occurrence register
+
+| # | Date | Form | What promoted itself | Disposition |
+| --- | --- | --- | --- | --- |
+| 1 | 2026-09-13 | epistemic | Uare's release history recorded as `[O] Observed` | Repaired in `d4795729`; taxonomy rebuilt to five classes |
+| 2 | 2026-09-13 | normative | privacy interpretation stated as *"our position must be structural"* | Repaired in `d4795729`; returned to a question for Practitioner Studio |
+| 3 | — | — | *(a third independent occurrence promotes this section into §0 proper)* | — |
+
+**Note on this section's own standing.** Recording a candidate canary is itself a promotion — from
+*observed pattern* to *named tendency in the charter*. It is legitimate here precisely because a
+distinct authority event occurred: a founder ruling on 2026-09-13, which authored this text. That is
+the crossing the rule demands, and naming it keeps the record self-consistent.
+
+### Why the correction blocks stay
+
+The `[O]` contradiction and the practitioner overreach are preserved in place, quoted in their
+original wording, in the documents where they happened. ⛔ **Do not clean them up.** *A lane that
+records how it overreached is worth more than one whose documents merely look clean after revision* —
+and a canary with no visible instances is not a canary.
+
+---
+
 ## 1 · Purpose
 
 Establish, in one durable record, what an independently funded team building genuinely adjacent
@@ -142,6 +242,7 @@ RECIPROCITY       CONFIRMED - UARE-01 LOCAL
 VOICE MATRIX      CONFIRMED CANDIDATE
 U2 WALKTHROUGH    NOT AUTHORIZED
 CMT-01 DIFFERENCE ASYMMETRIC FINDING ONLY - NOT A DIFFERENTIATOR - M3 NOT OPENED HERE
+CANDIDATE CANARY   intra-document authority promotion (S0.1) - 2 occurrences - 3rd promotes it
 PRACTITIONER      HANDOFF AS QUESTION, NOT REQUIREMENT
 FIDELITY METRIC   PROHIBITED AS UARE-01 TRANSFER; BROADER DOCTRINE NOT ESTABLISHED HERE
 
