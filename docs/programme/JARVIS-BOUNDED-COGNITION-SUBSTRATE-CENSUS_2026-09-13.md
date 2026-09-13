@@ -126,6 +126,8 @@ EXECUTION DEPENDENCY   job B cannot execute until job A succeeds        ⭐ PRES
                        media_jobs.depends_on + recursive downstream propagation
 EPISTEMIC DEPENDENCY   finding F depended on evidence E as read at       🔴 ABSENT
                        frozen Work state R                               ← the real Step-8 gap
+⛔⛔ THE NAME "EPISTEMIC DEPENDENCY" IS SUPERSEDED — see §5 below. It promotes contribution
+   into causal effect, which FR-J3 forbids. The relation is FROZEN INPUT LINEAGE.
 ```
 
 ⛔ **`media_jobs.depends_on` must never be generalized into epistemic provenance.** It is
@@ -271,7 +273,7 @@ built; nothing joins them into an invalidation graph.
 | Partial-computation resume | 🔴 **ABSENT / NOT ESTABLISHED** | — | **Build** |
 | Cancellation | 🔴 **ABSENT** | — | **Build** (act + terminal state) |
 | Execution dependency | ⭐ **PRESENT** | `media_jobs.depends_on` + recursive propagation | **Reuse mechanics only** |
-| Epistemic dependency | 🔴 **ABSENT** | — | ⭐ **the real Step-8 gap**; halves exist unjoined |
+| Frozen input lineage *(was "epistemic dependency" — superseded §3b)* | 🔴 **ABSENT** | — | ⭐ **the real Step-8 gap**; halves exist unjoined |
 | Freeze | ⭐⭐ **PRESENT** | `commission · freeze · scope` | **Reuse wholesale** |
 | Digest / fingerprint | ⭐ **PRESENT** | three instruments | **Reuse** |
 | Three-state staleness | ⭐⭐ **PRESENT** | `ask/staleness.ts` | **Adopt the model** |
@@ -299,6 +301,44 @@ built; nothing joins them into an invalidation graph.
 
 ---
 
+## 3b · ⭐⭐ Supersession by FR-J9 — "epistemic dependency" → **frozen input lineage**
+
+⛔ **This census's own provisional name for the missing relation is refused**, by founder act
+opening D-J9 on 2026-09-13. Kept above, superseded here, never deleted.
+
+`EvidenceRef + frozen revision` proves that material was **supplied to / read by** an execution
+that produced an output. ⛔ It does **not** prove the output **causally depended** on it — and
+FR-J3 already rules `CONTRIBUTED ≠ EFFECT ESTABLISHED`.
+
+```text
+FROZEN INPUT LINEAGE   E@R contributed to the execution that produced F   ← what Step 8 needs
+EFFECT DEPENDENCY      a causal witness establishes F depended on E@R     ← only where establishable
+```
+
+⭐⭐ **BCS-M1 was recorded hours before this and caught it immediately** — the discipline's first
+application was to this lane's own vocabulary, which is the strongest available evidence that it
+is a working instrument rather than a slogan.
+
+⭐ Invalidation therefore runs on **conservative lineage**: a changed input may require
+re-evaluation even where no causal effect can be established.
+
+### The six design questions — ⭐ all answered by FR-J9, none by inventing a runtime object
+
+| # | Question | Answer (FR-J9 §) |
+|---|---|---|
+| 1 | Generalize `embedding_jobs`, or a sibling? | **Sibling; generalize responsibilities, not tables** (§5). ⛔ No table name chosen |
+| 2 | Where does authorization basis live? | **The frozen commission/scope reference** (§4). IDs on the execution record are indexing only — *index identity may duplicate the scope; authority may not* |
+| 3 | What is a partial finding? | ⛔ **The phrase is refused.** It is a **checkpoint** — execution progress, never epistemic standing (§6) |
+| 4 | Is cancellation a status or an act? | **Both, kept separate**: `CANCELLATION REQUESTED` (act) vs `CANCELLED` (actual early terminus) (§7) |
+| 5 | Member + Work identity direct, or by scope reference? | **Scope is authoritative**; duplicated ids operational only (§4) |
+| 6 | Do findings cross CMT-01, and as what producer class? | **Only when later offered** (§12); ⛔ **the job confers no producer class** — material is classified by what it is (§11) |
+
+⭐ Two protections carry the most weight: **lineage is not causality** (§1) and **invalidation is
+not authorization** (§10) — the second prevents the incremental architecture from becoming a
+standing permission to reprocess a writer's Work indefinitely.
+
+---
+
 ## 4 · Standing (revised, BCS-C2)
 
 ```text
@@ -307,7 +347,8 @@ CRASH RECOVERY               PRESENT  (3 reaper fns · heartbeats · 4 workers)
 PARTIAL-COMPUTATION RESUME   ABSENT / NOT ESTABLISHED
 CANCELLATION                 ABSENT
 EXECUTION DEPENDENCY         PRESENT  (media_jobs.depends_on)
-EPISTEMIC DEPENDENCY         ABSENT   ← the Step-8 gap
+FROZEN INPUT LINEAGE         ABSENT   ← the Step-8 gap (renamed from "epistemic
+                             dependency" by FR-J9 §1 — lineage is not causality)
 FREEZE                       PRESENT · reuse
 DIGEST                       PRESENT · reuse
 THREE-STATE STALENESS        PRESENT · reuse
@@ -318,7 +359,8 @@ CORRECTIONS   (1) intake §6.2 "no job substrate" — WRONG (§0)
               (3) media/summary workers as its consumers — FALSE (C2.1)
               (4) "resumability" as one property — WRONG (C2.2)
               (5) "dependency absent" — TOO BROAD (C2.3)
-D-J9          ⛔ NOT OPENED
+D-J9          ⭐ OPENED AND RULED (FR-J9) — all six design questions answered (§3b)
+              ⛔ implementation lane NOT opened · no schema · no worker · no lineage store
 ```
 
 ### ⛔ Still not authorized

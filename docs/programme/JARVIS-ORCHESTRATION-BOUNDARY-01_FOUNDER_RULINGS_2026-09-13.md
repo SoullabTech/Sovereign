@@ -990,6 +990,259 @@ than imposing a new one.
 
 ---
 
+## 2h · FR-J9 — Bounded Cognition Lifecycle Contract · **RULED: GENERALIZE PROVEN RESPONSIBILITIES; DO NOT CREATE A CENTRAL SUBSTRATE**
+
+> **Turn-exceeding cognition executes against an explicitly commissioned, frozen, authorized
+> scope. Execution may persist progress and produce durable outputs, but execution and
+> completion confer neither participation, authority, currency, nor producer identity.**
+>
+> **The lifecycle generalizes responsibilities already proved elsewhere; it does not create a
+> universal jobs service, orchestration object, or canonical job table.**
+
+### ⭐⭐⭐ 1 · Preflight correction — "epistemic dependency" is REFUSED as the default term
+
+BCS-M1 was recorded hours earlier and **immediately caught this lane's own provisional name.**
+
+An execution can establish:
+
+```text
+material E at frozen state R  →  supplied to / read by execution X  →  X produced output F
+```
+
+⭐ That is **frozen input lineage.** ⛔ It does **not** establish `F causally depended on E`,
+because FR-J3 already rules **`CONTRIBUTED ≠ EFFECT ESTABLISHED`.** Calling it *epistemic
+dependency* would promote contribution into causal effect — the exact class of error BCS-M1
+exists to stop.
+
+```text
+FROZEN INPUT LINEAGE   output F was produced by an execution to which E@R contributed   ← required
+EFFECT DEPENDENCY      a valid causal witness establishes F actually depended on E@R     ← only where establishable
+```
+
+⭐ **Invalidation requires conservative lineage, not invented causality.** A changed input may
+require an output to be re-evaluated **even when the system cannot establish that the change
+altered it.**
+
+### 2 · "Bounded cognition" states a property, not an object
+
+> A **bounded-cognition execution** is a turn-exceeding computation whose purpose, material
+> scope, authorization ceiling and frozen Work state are finite and recoverable.
+
+⛔ It implies no `BoundedCognitionService`, universal queue, single worker, single table, single
+producer or single model. FR-J6 and BCS-M1 continue to govern.
+
+### 3 · The lifecycle
+
+```text
+COMMISSION → SCOPE → FREEZE → EXECUTION ENQUEUED → CLAIMED / RUNNING
+                                                    ├── checkpoints
+                                                    ├── crash recovery
+                                                    ├── execution prerequisites
+                                                    └── cancellation may be requested
+  → COMPLETED / FAILED / CANCELLED → DURABLE OUTPUTS → frozen input lineage
+  → currency measurement → later retrieval / classification
+  → CMT-01 participation boundary → MAIA
+```
+
+⛔ **These nouns name different responsibilities. They are not one state machine merely because
+they appear in sequence.**
+
+### 4 · Commission and frozen scope are the authority root
+
+An execution record does not independently manufacture permission. Authority comes from a
+referenced **frozen commission/scope** establishing at minimum: *member/owner scope · Work scope
+· purpose · material scope · freeze identity · authorization basis · maximum permitted execution
+jurisdiction · commission time.*
+
+⭐ **Index identity may duplicate the scope. Authority may not.** Member/Work ids on execution
+records are for indexing, partitioning and lookup only.
+
+**Current protection can contract a frozen authorization.**
+
+```text
+effective permission  =  frozen authorization ceiling  ∩  current protection / revocation state
+```
+
+⭐ Current state may make the authorized set **smaller**; ⛔ never silently larger.
+
+> **Freeze preserves permission evidence; it does not defeat later revocation.**
+
+### 5 · Generalize responsibilities, not tables
+
+⛔ No existing domain table becomes the substrate merely because it contains useful mechanics.
+
+```text
+commission · freeze · scope                    ← manuscript developmental-reading discipline
+concurrent claim / worker identity / heartbeat
+attempt ceiling / priority / prerequisite      ← media-job precedent
+stale-claim recovery                           ← DB reaper precedent
+three-state currency / unmeasured              ← manuscript staleness discipline
+frozen input lineage                           ← EvidenceRef + frozen read state
+partial-computation checkpoints                ← NEW responsibility
+cancellation                                   ← NEW responsibility
+```
+
+⛔ D-J9 does not choose a table name, module name or storage layout.
+
+### 6 · Checkpoint means execution progress, not epistemic result
+
+⛔ The provisional phrase **"partial finding" is refused.**
+
+> A **checkpoint** establishes only: a bounded portion of the commissioned computation completed
+> successfully, and enough durable execution state exists to avoid unnecessarily repeating it.
+
+```text
+A checkpoint is NOT: a finding · a conclusion · a Work observation · a CMT producer ·
+                     member-facing material · proof of truth · a completed job
+```
+
+> ⭐ **Persistence for recovery does not confer epistemic standing. Checkpoint durability must
+> not become conversational eligibility.**
+
+Exposing meaningful partial *results* before terminal completion is a different object requiring
+its own classification, provenance, participation and authority treatment.
+
+### 7 · Cancellation is an act before it is a terminal fact
+
+```text
+CANCELLATION REQUESTED   a legitimate actor asked execution to stop
+CANCELLED                execution actually terminated early because that request was accepted
+```
+
+⛔ The system may not report `cancelled` merely because a request exists. The act stays
+answerable for **who/what authority · when · which execution**, and where appropriate the reason.
+
+⛔ A completed execution cannot truthfully be retroactively "cancelled" — withdrawal, deletion or
+retirement of completed outputs is a separate responsibility, **not decided here.**
+
+### 8 · Execution status and output currency are orthogonal
+
+> `completed` means: the commissioned computation reached its normal execution terminus against
+> its frozen scope.
+
+⛔ It does **not** mean currently accurate · relevant · unchanged · approved · member-facing ·
+authoritative.
+
+Currency is measured separately as `UNCHANGED | CHANGED | UNMEASURED` across the relevant
+independent dimensions. ⭐ **`UNMEASURED` remains a genuine state; a failure to measure currency
+may never become "current."**
+
+> **Execution terminus is historical fact. Currency is a comparison with now. Never collapse the
+> two.**
+
+### 9 · Frozen input lineage drives conservative invalidation
+
+```text
+OUTPUT
+  ├── input lineage → EvidenceRef @ frozen revision / range / digest
+  └── …
+```
+
+⭐ These edges establish **contribution to the execution lineage, not causal effect.** A changed
+referenced input may make currency `CHANGED`; an impossible comparison makes it `UNMEASURED`.
+⛔ It may not default to current.
+
+**Execution dependency remains separate.** `JOB B requires JOB A to complete` is
+execution/scheduling. If B actually consumes A's output, that consumption **additionally**
+creates frozen input lineage. ⛔ The prerequisite alone establishes no epistemic relation.
+
+### 10 · ⭐⭐ Invalidation does not authorize recomputation
+
+> **Staleness creates a reason to recompute; it does not create permission to recompute.**
+
+Re-execution requires either the original commission explicitly authorizing maintained/repeated
+computation within its scope, or a **new authorization act** — ⛔ particularly binding where
+recomputation would cause member material to cross an execution jurisdiction under **FR-J7**.
+
+### 11 · Outputs have no producer class by virtue of the job
+
+⛔ There is no `bounded_job.*`, `bounded_cognition.*` or `job.result` producer class. Material is
+classified by **what it actually is**:
+
+```text
+deterministic Work structure → computed material, where an existing contract truthfully fits
+interpretive Work observation → inferred material
+member-authored material retrieved during the job → remains member-authored / retrieved
+external scholarly evidence → external/retrieved evidence class as constituted
+```
+
+⭐ If no registered producer truthfully describes an output, **the output remains outside the CMT
+boundary** until a separate producer-registration act. **Completion confers durability, not
+participation.** FR-J2 remains controlling.
+
+### 12 · Completed outputs cross CMT-01 only when later offered
+
+```text
+completed execution → durable output → later task determines relevance → material classified
+  → offered to the participation boundary → ADMITTED / HELD / EXCLUDED → MAIA
+```
+
+⛔ Until CMT-01 M3 exists, **no shadow admission may be represented as contribution to the served
+response.**
+
+### 13 · FR-J3 applies across the lifecycle
+
+`KNOWN ≠ CONSIDERED ≠ CONTRIBUTED ≠ EFFECT ESTABLISHED` holds inside bounded cognition exactly as
+outside it. Execution provenance may establish provider · model · jurisdiction · scope · frozen
+inputs · completed units · outputs ⛔ **without thereby establishing truth or causal effect.**
+Where analyses remain substantively incompatible **FR-J4** applies — *completion does not require
+disagreement to disappear.* Where outputs infer structure or meaning **FR-J8** applies —
+*persistence and recomputation do not accumulate authority.*
+
+### 14 · Falsifiers
+
+| | Fails FR-J9 when |
+|---|---|
+| **F-J9.1 · Scope escape** | execution reads or processes material beyond the commissioned frozen scope |
+| **F-J9.2 · Revocation defeat** | a frozen authorization is treated as permission to ignore a later, more protective member state |
+| **F-J9.3 · Checkpoint promotion** | persisted progress becomes a finding, result, producer or member-facing contribution merely because it survived a restart |
+| **F-J9.4 · Status/currency collapse** | `completed` is used to assert an output remains current |
+| **F-J9.5 · Causal promotion** | frozen input lineage is reported as proof an input affected an output where no effect witness exists |
+| **F-J9.6 · Dependency collapse** | execution prerequisite and input lineage are treated as the same relation |
+| **F-J9.7 · Cancellation fiction** | a cancellation request is represented as `cancelled` before execution actually terminates |
+| **F-J9.8 · Actor/material collapse** | a generic producer identity is assigned to outputs because a bounded job produced them |
+| **F-J9.9 · Invalidation-as-authorization** | a changed or unmeasured result automatically causes new cognition outside the standing commission |
+| **F-J9.10 · Substrate absorption** | an existing domain-specific queue/table/service is enlarged into a universal cognition substrate merely because it contains reusable mechanics |
+
+### 15 · Named refusals
+
+```text
+Progress is not a finding.          Completion is not currency.
+Lineage is not causality.           Invalidation is not authorization.
+Freeze is not irrevocable consent.
+The job is machinery; the material carries the meaning.
+```
+
+### 16 · What D-J9 settles
+
+```text
+SIBLING IMPLEMENTATION   yes — generalize responsibilities, not an existing domain table
+AUTHORITY ROOT           frozen commission/scope reference
+CURRENT REVOCATION       may contract frozen permission; never expand it
+PARTIAL WORK             checkpoint, not finding
+CANCELLATION             request act + actual terminal state
+IDENTITY                 scope is authoritative; duplicated IDs only operational
+OUTPUT CURRENCY          independent of execution status
+INVALIDATION RELATION    frozen input lineage, not presumed causal dependency
+RECOMPUTATION            separately authorized
+CMT CROSSING             later offered material only
+PRODUCER CLASS           belongs to material, never the job
+```
+
+### 17 · What D-J9 does not authorize
+
+```text
+⛔ no schema      ⛔ no migration    ⛔ no table name   ⛔ no worker     ⛔ no API
+⛔ no queue impl  ⛔ no checkpoint format               ⛔ no dependency/lineage store
+⛔ no producer registration          ⛔ no CMT-01 M3    ⛔ no automatic Whole-Work sweep
+⛔ no implementation lane
+```
+
+⭐ FR-J9 establishes the **lifecycle and responsibility contract only.**
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -1076,7 +1329,7 @@ D-J4, should be reconciled with it rather than authored beside it.
 | ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Five qualifying conditions; refuses premature collapse AND false balance; synthesis is a new contribution, never an erasure. Named refusal: *consensus by machinery*. F-J4.1-5 |
 | ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Authorization first, then capability, then economics. Availability ≠ consent; transformation ≠ declassification. F-J7.1-8. ⚠️ `modelService` census finding recorded, not repaired |
 | ~~**D-J8**~~ | ⭐ **RULED 2026-09-13 — PERCEPTION, NEVER AUTHORITY** (FR-J8). Four conditions bound to Invariant 16 + Recognition Integrity + Authority × Time. *Inference may accumulate evidence; it may not accumulate authority.* F-J8.1-4 |
-| **STEP 8** | census RUN and **AMENDED (BCS-C2)**: six of nine responsibilities already proved in production code; the real gap is **epistemic dependency**. ⛔ **D-J9 NOT OPENED** · build not authorized |
+| ~~**D-J9**~~ | ⭐ **RULED 2026-09-13 — GENERALIZE PROVEN RESPONSIBILITIES; NO CENTRAL SUBSTRATE** (FR-J9). Answers all six census design questions without inventing a runtime object. ⛔ Implementation lane NOT opened |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -1097,8 +1350,11 @@ CONSTITUTIONAL SEQ     COMPLETE through D-J8
 STEP 8                 census RUN + AMENDED (BCS-C2). Strongest queue precedent NOT finally
                        selected. Real gap = EPISTEMIC dependency
 BCS-M1                 RECORDED — identifier claim discipline (method binding, not canon).
-                       A name is a claim. Preflight rule governs D-J9
-D-J9                   SAFE TO OPEN · NOT OPENED
+                       A name is a claim. ⭐ It caught "epistemic dependency" within hours
+FR-J9                  RULED — bounded cognition lifecycle contract. Generalize proven
+                       responsibilities; no central substrate. Lineage is not causality;
+                       invalidation is not authorization. F-J9.1-10. ⛔ No schema, no
+                       worker, no lineage store, no implementation lane
 FR-J7                  RULED — consent precedes selection. Authorization → capability →
                        economics, never the reverse. Caller may request capability, never
                        permission. Fallback may contract permission, never expand it.
