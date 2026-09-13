@@ -1,11 +1,20 @@
 /**
  * JOP-04 RB — frozen falsifiers RB-F1…RB-F8 as executable obligations.
  *
- * Verdict vocabulary
- *   RED             the forbidden property IS present — the falsifier fails
- *   GREEN           the required property holds
- *   UNINSTANTIATED  no legitimate specimen exists yet — ⛔ NEVER DISCHARGES
- *   N/A             not applicable at this baseline — ⛔ NEVER DISCHARGES
+ * Verdict vocabulary (RULING 1, 2026-09-13 — suite-wide precondition law)
+ *   GREEN               preconditions reached; forbidden condition absent
+ *   RED                 preconditions reached; forbidden condition present
+ *   PRECONDITION-UNMET  required test state was not reached — ⛔ NEVER DISCHARGES
+ *   UNINSTANTIATED      no legitimate specimen exists yet — ⛔ NEVER DISCHARGES
+ *   N/A                 obligation does not yet apply by frozen design — ⛔ NEVER DISCHARGES
+ *
+ * ⛔ ONLY GREEN DISCHARGES AN APPLICABLE FROZEN OBLIGATION.
+ * ⛔ PRECONDITION-UNMET ≠ GREEN. It is not a failure of the substrate; it is a
+ *    failure to obtain a valid judgment.
+ * ⛔ A test may not make its precondition trivially true by constructing the
+ *    thing it is supposed to witness. Every precondition carries evidentiary
+ *    provenance answering: HOW DO YOU KNOW? — the real decision object from the
+ *    subject's own composition, never an asserted flag.
  *
  * Evidence classes (design §7)
  *   BEHAVIORAL   observed behavior of the real composition
@@ -16,8 +25,32 @@
  *    never acquire the ability to drive the chain with an effect-bearing one.
  */
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 export const LAYER_B_CAPABILITY = 'git.rev_parse';
+
+/** Load the subject's routing-eligibility producer if the subject has one. */
+export async function loadEligibilityProducer(subjectDir) {
+  const p = path.join(subjectDir, 'scripts', 'builder', 'routing-eligibility.mjs');
+  try { return (await import(`file://${p}`)).declareRoutingEligibility ?? null; }
+  catch { return null; }
+}
+
+/**
+ * Reach a VALID EXECUTABLE PLACEMENT by the legitimate means the subject offers,
+ * and record HOW. ⛔ Never fabricates a lane.
+ */
+function reachValidPlacement({ router }, capability, declare) {
+  if (declare) {
+    const eligibility = declare({ satisfied: true, basis: 'jop04_instrument_declaration', declared_by: 'rb-falsifiers' });
+    const decision = router.route({ capability }, eligibility);
+    return { decision, how: 'declared routing eligibility (subject producer), then route()', eligibility_basis: eligibility.basis };
+  }
+  const decision = router.route({ capability });
+  return { decision, how: 'route() with an ordinary task — subject grants placement without a separate condition', eligibility_basis: null };
+}
+
+const reached = (decision) => decision.execution_lane === 'C0';
 const UNREGISTERED = 'jop04.definitely_not_registered_xyz999';
 
 /**
@@ -92,20 +125,42 @@ export const FALSIFIERS = [
     predicted: 'RED',
     evidenceClass: 'BEHAVIORAL',
     layerB: true,
-    run(ctx) {
-      // A valid routing result is supplied while ALL invocation authority is withheld.
-      const run = composeSubjectChain(ctx.mods, ctx.subjectDir, { capability: LAYER_B_CAPABILITY });
-      const observed = run.executed ? 'RED' : 'GREEN';
+    async run(ctx) {
+      // PRECONDITION — a valid executable placement must actually be REACHED,
+      // by the legitimate means the subject offers. Before RB-6A that was
+      // registration alone; after RB-6A it requires a declared eligibility.
+      const declare = await loadEligibilityProducer(ctx.subjectDir);
+      const { decision, how, eligibility_basis } = reachValidPlacement(ctx.mods, LAYER_B_CAPABILITY, declare);
+      const precondition = {
+        required: 'a valid executable placement (C0) reached through the subject production composition',
+        reached: reached(decision),
+        how_do_you_know: how,
+        witness: { lane: decision.execution_lane, status: decision.status, reason: decision.reason },
+        eligibility_basis,
+        fabricated: false,
+      };
+      if (!precondition.reached) {
+        return { observed: 'PRECONDITION-UNMET', precondition,
+          evidence: { reason: 'no valid lane was reached, so authority could not be withheld against one' },
+          note: '⛔ PRECONDITION-UNMET — the probe never obtained the state its frozen meaning requires' };
+      }
+      // Only now: withhold ALL invocation authority and observe execution.
+      let executed = false, error = null;
+      try {
+        ctx.mods.deterministic.runCapability(LAYER_B_CAPABILITY, {}, ctx.subjectDir);
+        executed = true;
+      } catch (e) { error = e.message; }
       return {
-        observed,
+        observed: executed ? 'RED' : 'GREEN',
+        precondition,
         evidence: {
-          lane: run.decision.execution_lane,
-          authority_supplied: { packet: null, gate: null, permission_envelope: null, actor: null },
-          executed: run.executed,
+          lane: decision.execution_lane,
+          authority_supplied: { packet: null, gate: null, permission_envelope: null, actor: null, execution_authority: null },
+          executed, error,
         },
-        note: run.executed
-          ? 'execution occurred with a valid lane and zero invocation authority'
-          : 'a valid lane did not by itself permit execution',
+        note: executed
+          ? 'a valid lane was reached and execution occurred with zero invocation authority'
+          : 'a valid lane was reached and execution was refused without invocation authority',
       };
     },
   },
@@ -164,21 +219,50 @@ export const FALSIFIERS = [
     predicted: 'RED',
     evidenceClass: 'BEHAVIORAL',
     layerB: true,
-    run(ctx) {
-      // Authority held constant (there is none). ONLY the routing output varies.
-      const routed = composeSubjectChain(ctx.mods, ctx.subjectDir, { capability: LAYER_B_CAPABILITY });
-      const unrouted = composeSubjectChain(ctx.mods, ctx.subjectDir, { capability: UNREGISTERED });
-      const routingDecidesExecution = routed.executed !== unrouted.executed;
-      return {
-        observed: routingDecidesExecution ? 'RED' : 'GREEN',
-        evidence: {
-          authority_state: 'constant (none supplied in either arm)',
-          arm_1: { lane: routed.decision.execution_lane, executed: routed.executed },
-          arm_2: { lane: unrouted.decision.execution_lane, executed: unrouted.executed },
+    async run(ctx) {
+      // Two arms, SAME registered capability, SAME (absent) authority state.
+      // ⛔ Not registered-vs-unknown — that is RB-F8's discriminant.
+      const declare = await loadEligibilityProducer(ctx.subjectDir);
+      const armA = reachValidPlacement(ctx.mods, LAYER_B_CAPABILITY, declare);
+      const armBDecision = declare
+        ? ctx.mods.router.route({ capability: LAYER_B_CAPABILITY },
+            declare({ satisfied: false, basis: 'jop04_instrument_declaration', declared_by: 'rb-falsifiers' }))
+        : ctx.mods.router.route({ capability: LAYER_B_CAPABILITY });
+      const armAReached = reached(armA.decision);
+      const armBReached = !reached(armBDecision);
+      const precondition = {
+        required: 'ARM A reaches a valid routing result AND ARM B reaches a non-routable/refused state, for the SAME registered capability',
+        reached: armAReached && armBReached,
+        how_do_you_know: armA.how + ' | arm B: ' + (declare ? 'declared eligibility UNSATISFIED' : 'no producer exists — no way to withhold routing for a registered capability'),
+        witness: {
+          arm_a: { lane: armA.decision.execution_lane, status: armA.decision.status },
+          arm_b: { lane: armBDecision.execution_lane, status: armBDecision.status },
         },
-        note: routingDecidesExecution
-          ? 'varying only the routing output changed whether the act occurred — the router carries authority-making power'
-          : 'routing output did not alter whether the act was authorized',
+        arm_a_reached: armAReached,
+        arm_b_reached: armBReached,
+        capability_identity_constant: true,
+        fabricated: false,
+      };
+      if (!precondition.reached) {
+        return { observed: 'PRECONDITION-UNMET', precondition,
+          evidence: { reason: armBReached ? 'arm A did not reach a valid routing result' : 'arm B could not reach a non-routable state for a registered capability' },
+          note: '⛔ PRECONDITION-UNMET — both arms are required, on one capability identity' };
+      }
+      // Authority state identical (absent) in both arms; only routing differs.
+      const execA = (() => { try { ctx.mods.deterministic.runCapability(LAYER_B_CAPABILITY, {}, ctx.subjectDir); return true; } catch { return false; } })();
+      const routingDecides = reached(armA.decision) !== reached(armBDecision) && execA;
+      return {
+        observed: routingDecides ? 'RED' : 'GREEN',
+        precondition,
+        evidence: {
+          authority_state: 'identical and absent in both arms',
+          arm_a: { lane: armA.decision.execution_lane, executable: true, executes: execA },
+          arm_b: { lane: armBDecision.execution_lane, status: armBDecision.status, executable: false, executes: false },
+          only_variable: 'routing condition',
+        },
+        note: routingDecides
+          ? 'varying only the routing condition decided whether the act could occur — the router still carries authority-making power'
+          : 'routing output did not decide whether the act was authorized',
       };
     },
   },

@@ -22,16 +22,45 @@ import { runCal2, CAL2_SPECIMEN } from './rb-cal2.mjs';
 
 /** Instrument lineage. ⛔ The amendment does not REPLACE 0b9aaec4; it descends from it. */
 const INSTRUMENT_LINEAGE = ['0b9aaec4', '1ed81732'];
-/** Predeclared, frozen BEFORE the amended run. ⛔ Not editable after results. */
-const CAL2_PREDICTED_BASELINE = 'RED';
+/**
+ * RULING 3 — named expectation profiles. ⛔ The runner is TOLD which matrix
+ * governs the subject. It may NEVER infer the expected matrix from observed
+ * outcomes, and the baseline matrix is never edited to fit a candidate.
+ */
+const PROFILES = {
+  e1c6f527: {
+    name: 'BASELINE MATRIX (immutable)',
+    expect: {
+      'RB-F1': 'RED', 'RB-F2': 'RED', 'RB-F3': 'RED', 'RB-F4': 'RED',
+      'RB-F5': 'UNINSTANTIATED',
+      // ⚠️ PREDECLARED CHANGE, frozen before this run: under the AMENDED F6
+      // specimen (same capability, only routing differs) arm B is UNREACHABLE at
+      // baseline — CAL-2a RED proves no task shape makes a registered capability
+      // non-routable. The old baseline RED was obtained by varying CAPABILITY
+      // IDENTITY, which is RB-F8's discriminant, not RB-F6's. Reported as a
+      // FINDING, not absorbed.
+      'RB-F6': 'PRECONDITION-UNMET',
+      'RB-F7': 'N/A', 'RB-F8': 'GREEN',
+      'RB-CAL-2a': 'RED', 'RB-CAL-2b': 'NOT-REACHED',
+    },
+  },
+  fd543df1: {
+    name: 'RB-6A CANDIDATE MATRIX (frozen before re-run)',
+    expect: {
+      'RB-F1': 'GREEN', 'RB-F2': 'GREEN', 'RB-F3': 'RED', 'RB-F4': 'RED',
+      'RB-F5': 'UNINSTANTIATED', 'RB-F6': 'RED', 'RB-F7': 'N/A', 'RB-F8': 'GREEN',
+      'RB-CAL-2a': 'GREEN', 'RB-CAL-2b': 'GREEN',
+    },
+  },
+};
+const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'NOT-REACHED']);
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const NON_DISCHARGING = new Set(['UNINSTANTIATED', 'N/A']);
 
-function dischargeState(f, observed) {
-  if (NON_DISCHARGING.has(observed)) return 'NON-DISCHARGING';
-  // At the legacy baseline a RED is the PREDICTED state, not a discharge.
-  return observed === 'GREEN' ? 'DISCHARGED-AT-BASELINE' : 'NOT-DISCHARGED';
+
+function dischargeState(observed) {
+  if (NEVER_DISCHARGES.has(observed)) return 'NON-DISCHARGING';
+  return observed === 'GREEN' ? 'DISCHARGED' : 'NOT-DISCHARGED';
 }
 
 async function main() {
@@ -45,6 +74,11 @@ async function main() {
     ? process.argv[process.argv.indexOf('--subject') + 1]
     : SUBJECT_SHA;
   const isBaseline = subjectArg === SUBJECT_SHA;
+  const profile = PROFILES[subjectArg];
+  if (!profile) {
+    console.error(`⛔ no frozen expectation profile for subject '${subjectArg}'. A matrix must be FROZEN BEFORE the run; the runner may never infer one.`);
+    process.exitCode = 2; return;
+  }
   const instrument_sha = instrumentSha(REPO_ROOT);
   const subject = materializeSubject(REPO_ROOT, subjectArg);
 
@@ -54,6 +88,7 @@ async function main() {
   console.log(`INSTRUMENT SHA  ${instrument_sha}   (harness judging it — separate identity)`);
   console.log(`  lineage from  ${INSTRUMENT_LINEAGE.join(', ')}   (amendment descends from, never replaces)`);
   console.log(`CAL-2 SPECIMEN  ${CAL2_SPECIMEN}   (same capability identity in every arm)`);
+  console.log(`PROFILE         ${profile.name}`);
   console.log(`LAYER B CAP     ${LAYER_B_CAPABILITY}   (registered read capability only)`);
   console.log('');
 
@@ -66,17 +101,18 @@ async function main() {
     const ctx = { mods, subjectDir: subject.dir };
 
     for (const f of FALSIFIERS) {
-      let observed, evidence, note;
+      let observed, evidence, note, precondition = null;
       try {
-        ({ observed, evidence, note } = f.run(ctx));
+        ({ observed, evidence, note, precondition = null } = await f.run(ctx));
       } catch (e) {
         observed = 'ERROR';
         evidence = { instrument_error: e.message };
         note = 'the instrument itself failed — this is an instrument defect, not a subject verdict';
       }
-      const calibration = observed === f.predicted ? 'MATCH' : 'MISMATCH';
+      const expected = profile.expect[f.id];
+      const calibration = observed === expected ? 'MATCH' : 'MISMATCH';
       if (calibration === 'MISMATCH') mismatches++;
-      if (f.calibrationAnchor && observed !== 'RED') {
+      if (f.calibrationAnchor && isBaseline && observed !== 'RED') {
         stop = `${f.id} was predicted RED and observed ${observed} — instrument invalid or census premise contradicted`;
       }
       records.push({
@@ -84,14 +120,16 @@ async function main() {
         instrument_sha,
         falsifier: f.id,
         statement: f.statement,
-        expected_state: f.predicted,
+        expected_state: expected,
+        expectation_profile: profile.name,
+        precondition,
         observed_state: observed,
         calibration,
         evidence_class: f.evidenceClass,
         evidence_location: `scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[${f.id}].run()`,
         layer: f.layerB ? 'B (route→runCapability composition; IPC hop NOT exercised)' : 'A',
         layer_b_capability: f.layerB ? LAYER_B_CAPABILITY : null,
-        discharge_state: dischargeState(f, observed),
+        discharge_state: dischargeState(observed),
         evidence,
         note,
       });
@@ -99,11 +137,13 @@ async function main() {
 
     // ── RB-CAL-2 · registration/routability discriminator (amendment) ──────
     const cal2 = await runCal2(mods, subject.dir, CAL2_SPECIMEN);
-    const cal2Calibration = cal2.headline === CAL2_PREDICTED_BASELINE ? 'MATCH' : 'MISMATCH';
+    const cal2Expected = profile.expect['RB-CAL-2a'];
+    const cal2Calibration = cal2.headline === cal2Expected ? 'MATCH' : 'MISMATCH';
     if (cal2Calibration === 'MISMATCH') mismatches++;
-    if (cal2.headline !== 'RED') {
-      stop = `RB-CAL-2 was predicted RED and observed ${cal2.headline} — the amendment does not detect the coupling it was written to distinguish`;
+    if (isBaseline && cal2.headline !== 'RED') {
+      stop = `RB-CAL-2 was predicted RED at baseline and observed ${cal2.headline} — the amendment does not detect the coupling it was written to distinguish`;
     }
+    if (cal2.cal2b.observed !== profile.expect['RB-CAL-2b']) mismatches++;
     for (const probe of [cal2.cal2a, cal2.cal2b]) {
       records.push({
         subject_sha: subject.resolvedSha,
@@ -111,14 +151,15 @@ async function main() {
         instrument_lineage: INSTRUMENT_LINEAGE,
         falsifier: probe.id,
         statement: probe.label,
-        expected_state: probe.id === 'RB-CAL-2a' ? CAL2_PREDICTED_BASELINE : 'NOT-REACHED',
+        expected_state: profile.expect[probe.id],
+        expectation_profile: profile.name,
         observed_state: probe.observed,
-        calibration: probe.id === 'RB-CAL-2a' ? cal2Calibration : (probe.observed === 'NOT-REACHED' ? 'MATCH' : 'MISMATCH'),
+        calibration: probe.observed === profile.expect[probe.id] ? 'MATCH' : 'MISMATCH',
         evidence_class: 'BEHAVIORAL',
         evidence_location: 'scripts/jop04/rb-cal2.mjs → runCal2()',
         layer: 'A (route() only — no execution)',
         layer_b_capability: null,
-        discharge_state: probe.observed === 'NOT-REACHED' ? 'NON-DISCHARGING' : (probe.observed === 'GREEN' ? 'DISCHARGED-AT-BASELINE' : 'NOT-DISCHARGED'),
+        discharge_state: dischargeState(probe.observed),
         evidence: probe.evidence,
         note: probe.note,
       });
@@ -162,6 +203,7 @@ async function main() {
       subject_role: isBaseline ? 'FROZEN_BASELINE' : 'REPAIR_CANDIDATE',
       instrument_sha,
       layer_b_capability: LAYER_B_CAPABILITY,
+      expectation_profile: profile.name,
       calibration: calibrationSuccess ? 'SUCCESS' : 'FAILED',
       rb_acceptance_pass: false,
       non_discharging: nonDischarging,
