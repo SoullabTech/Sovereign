@@ -94,7 +94,13 @@ describe('ordinary scrolling can advance the window', () => {
     expect(SRC).toMatch(/ref=\{\(n\) => \{ if \(n\) shells\.current\.set\(section\.id, n\);/);
     expect(SRC).toMatch(/data-whole-manuscript-mounted=\{isMounted \? 'true' : 'false'\}/);
     /* And the editor — not the shell — is what the window decides. */
-    expect(SRC).toContain('{!isMounted ? null : section.editable ? (');
+    /* EW-F2 step 2: `editable` became `authority`, because a boolean could not
+       tell "cannot be edited" apart from "is being worked as a proposal" (PW-5).
+       The property is unchanged and is what this states: the editor mounts only
+       for a section whose authority OWNS manuscript writing — never by default,
+       and never for an authority added later that nobody routed. */
+    expect(SRC).toContain('ownsManuscriptWrite(section.authority) ? (');
+    expect(SRC).not.toContain('section.editable');
   });
 
   it('an evicted section keeps the height it actually had', () => {

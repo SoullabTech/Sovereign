@@ -10,8 +10,15 @@
 import { captureOnLeave, resolveSectionStatus, retireQueue } from '../useSectionWriting';
 import { SectionSaveQueue } from '../sectionSaveQueue';
 
-const section = (id: string, body: string, editable = true) =>
-  ({ id, position: 0, heading: 'H', body, editable });
+const section = (id: string, body: string, writable = true) =>
+  ({
+    id, position: 0, heading: 'H', body,
+    /* Authority replaced the `editable` boolean at EW-F2 step 2. The fixture
+       keeps its boolean shorthand because these cases are about CAPTURE, not
+       about which authority owns the section — but it must produce a real
+       authority, or it stops modelling the implementation's dependency. */
+    authority: (writable ? 'manuscript_write' : 'unprojectable') as const,
+  });
 
 const quiet = () => new SectionSaveQueue(1, async () => ({ ok: true, version: 2 }));
 

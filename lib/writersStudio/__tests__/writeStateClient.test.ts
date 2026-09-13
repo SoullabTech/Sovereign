@@ -3,7 +3,7 @@ import { chooseMount, fetchWriteState, type WriteState } from '../writeStateClie
 const sectionAware: WriteState = {
   mode: 'section_aware', version: 7,
   rows: [{ id: 'draft-sec-0', position: 0, heading: 'One', chars: 3 }],
-  sections: [{ id: 'draft-sec-0', position: 0, heading: 'One', body: 'aaa', editable: true }],
+  sections: [{ id: 'draft-sec-0', position: 0, heading: 'One', body: 'aaa', authority: 'manuscript_write' as const }],
 };
 
 describe('chooseMount', () => {

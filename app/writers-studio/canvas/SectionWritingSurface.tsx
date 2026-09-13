@@ -34,6 +34,7 @@ import type { SaveFn } from '@/lib/writersStudio/sectionSaveQueue';
 import { GROUND, INK, RADIUS, RULE, SPACE } from '../studioTheme';
 import { checkpointServerDraft, newIdempotencyKey } from '@/app/press/manuscript/workingDraftClient';
 import { StudioText } from '../studio/StudioType';
+import { ownsManuscriptWrite } from '@/lib/writersStudio/sectionAuthority';
 
 export interface SectionWritingSurfaceProps {
   /** The shared writing session — see the header. */
@@ -42,6 +43,13 @@ export interface SectionWritingSurfaceProps {
   manuscriptId: string;
   /** Told after a version is kept, so the room's version list can refresh. */
   onCheckpointed?: () => void;
+  /**
+   * What to mount where the manuscript editor would be, when the server says a
+   * proposal owns this section. Absent in the ordinary case, and absent here is
+   * NOT a fallback to the editor — a section under proposal authority renders
+   * nothing rather than offering a write the server would refuse.
+   */
+  renderProposalWork?: (sectionId: string) => React.ReactNode;
 }
 
 /**
@@ -197,7 +205,7 @@ function KeepAVersion({
 }
 
 export default function SectionWritingSurface({
-  writing, manuscriptId, onCheckpointed,
+  writing, manuscriptId, onCheckpointed, renderProposalWork,
 }: SectionWritingSurfaceProps) {
   const fieldRef = useRef<HTMLTextAreaElement | null>(null);
   const activeId = writing.activeId;
@@ -253,7 +261,15 @@ export default function SectionWritingSurface({
         </StudioText>
       )}
 
-      {!active.editable ? (
+      {active.authority === 'proposal_work' ? (
+        /* ⛔ PW-1 · THE MANUSCRIPT-WRITING CONTROL IS NOT MOUNTED. Not
+           disabled, not read-only — absent, because a different authority owns
+           this section right now. The room supplies what stands in its place;
+           this surface does not know what a proposal is, exactly as its header
+           requires: it does not decide authority, it renders the one it is
+           given. */
+        renderProposalWork?.(active.id) ?? null
+      ) : !ownsManuscriptWrite(active.authority) ? (
         <div
           style={{
             padding: SPACE.base,

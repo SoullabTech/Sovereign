@@ -49,6 +49,7 @@ import { placeForMode } from '@/lib/writersStudio/manuscriptViewPlace';
 import SectionWritingSurface from './SectionWritingSurface';
 import {
   chooseMount,
+  sectionEngine,
   fetchWriteState,
   type WriteState,
   type WriteMount,
@@ -64,6 +65,7 @@ import { parseTreatment } from '../field/fieldTreatments';
 import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
+import ProposalWorkSurface from './ProposalWorkSurface';
 import { focusPaint } from '../field/focusPaint';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 
@@ -366,13 +368,19 @@ function CanvasRoom() {
     setWritePhase('loading');
     setWriteState(null);
     (async () => {
-      const r = await fetchWriteState(id, (url) => apiFetch(url));
+      /* ⛔ PW-2 · THE SELECTOR TRAVELS; THE CONCLUSION DOES NOT. The room sends
+         the proposal id and nothing else, and takes the resolved authority back
+         from the server. It never decides that a proposal makes a section
+         read-only. */
+      const r = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
       if (cancelled) return;
       setWritePhase(r.phase);
       setWriteState(r.state);
     })();
     return () => { cancelled = true; };
-  }, [manuscript?.id]);
+    /* The proposal is part of what the write state RESOLVES, so a change to
+       it re-asks the server rather than being reinterpreted here. */
+  }, [manuscript?.id, proposalId]);
 
   /* WS2-NAV-01 — the member act that makes a Work navigable.
 
@@ -391,10 +399,15 @@ function CanvasRoom() {
   const refreshWriteState = useCallback(async () => {
     const id = manuscript?.id;
     if (!id) return;
-    const refreshed = await fetchWriteState(id, (url) => apiFetch(url));
+    /* ⛔ THE SELECTOR TRAVELS ON EVERY READ, not only the first. This path is
+       "the single way this page re-reads write authority", and without the
+       proposal id it re-reads a DIFFERENT question — the room would drop out of
+       proposal work on the next conversion or draft creation, silently, and the
+       target section would quietly regain a manuscript editor. */
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
     setWritePhase(refreshed.phase);
     setWriteState(refreshed.state);
-  }, [manuscript?.id]);
+  }, [manuscript?.id, proposalId]);
 
   const onConfirmSectionBreaks = useCallback(async () => {
     const id = manuscript?.id;
@@ -415,6 +428,9 @@ function CanvasRoom() {
   }, [manuscript?.id, confirming, refreshWriteState]);
 
   const writeMount = chooseMount(writePhase, writeState);
+  /* ⭐ ONE READER for the two mounts that run the section engine. See
+     `sectionEngine` for why this is not six inline disjunctions. */
+  const engine = sectionEngine(writeMount);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
      a section can be seen still saving while the next opens. */
   const witnessDelayMs =
@@ -798,7 +814,7 @@ function CanvasRoom() {
           observationKey={request.kind === 'origin' ? request.origin.observationKey : null}
           /* The draft version the writing surface is showing — a preflight
              against another version no longer describes this Work. */
-          draftVersion={writeMount.mount === 'sections' ? writeMount.version : null}
+          draftVersion={engine ? engine.version : null}
         />
       )}
       {/* ══ LOWER BAND ══════════════════════════════════════════════════ */}
@@ -807,8 +823,8 @@ function CanvasRoom() {
           revisions={revisions}
           wordCount={draftMeta?.words ?? null}
           sectionCount={
-            writeMount.mount === 'sections'
-              ? writeMount.rows.length
+            engine
+              ? engine.rows.length
               : sectionsPhase === 'ready' ? sections.length : null
           }
           outlineOpen={outlineOpen}
@@ -849,10 +865,10 @@ function CanvasRoom() {
              they are the immutable Source and carry none. The room does not get
              to relax that — a column that looks wired and misses every click is
              the same defect wherever it is drawn. */
-          writeMount.mount === 'sections' && writing && manuscript?.id ? (
+          engine && writing && manuscript?.id ? (
             <StructuredOutline
               manuscriptId={manuscript.id}
-              sections={writeMount.rows}
+              sections={engine.rows}
               activeId={outlinePlace(session, writing)}
               statusOf={writing.statusOf}
               onSelect={outlineSelect(session, writing, setJumpTo)}
@@ -1054,7 +1070,7 @@ function CanvasRoom() {
                 other mode they are the immutable Source and carry none.
                 Combining Source rows with navigation callbacks would produce a
                 column that looks wired and misses every click. */}
-            {writeMount.mount === 'sections' && writing && manuscript?.id ? (
+            {engine && writing && manuscript?.id ? (
               /* WS2-05A — the same navigable rows, grouped by whatever the
                  member has authored. With no divisions yet it renders exactly
                  the flat list this column has always shown; unplaced sections
@@ -1062,7 +1078,7 @@ function CanvasRoom() {
               <>
                 <StructuredOutline
                   manuscriptId={manuscript.id}
-                  sections={writeMount.rows}
+                  sections={engine.rows}
                   activeId={outlinePlace(session, writing)}
                   statusOf={writing.statusOf}
                   onSelect={outlineSelect(session, writing, setJumpTo)}
@@ -1071,11 +1087,11 @@ function CanvasRoom() {
                     interpreter must look like absence, not like an offer. */}
                 <ReadingsEntry manuscriptId={manuscript.id} onOpen={setReadingId} />
               </>
-            ) : writeMount.mount === 'sections' && writing ? (
+            ) : engine && writing ? (
               <ManuscriptOutline
                 manuscriptId={manuscript?.id ?? null}
                 phase="ready"
-                sections={writeMount.rows}
+                sections={engine.rows}
                 activeId={outlinePlace(session, writing)}
                 statusOf={writing.statusOf}
                 onSelect={outlineSelect(session, writing, setJumpTo)}
@@ -1331,6 +1347,7 @@ function FieldBody({
   jumpTo,
   onJumpHandled,
   renderSectionOverlay,
+  renderProposalWork,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -1351,6 +1368,7 @@ function FieldBody({
   onJumpHandled?: () => void;
   /** Presentation only — see WholeManuscriptSurface's seam. */
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
+  renderProposalWork?: (sectionId: string) => React.ReactNode;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1481,12 +1499,17 @@ function FieldBody({
     );
   }
 
-  if (writeMount.mount === 'sections') {
+  /* ⭐ BOTH MOUNTS RUN THIS ENGINE, and they are still two mounts: the
+     persistence authority over one section differs, which `sectionEngine`
+     surfaces as `target` rather than as a mode the room has to remember. */
+  const engineMount = sectionEngine(writeMount);
+  if (engineMount) {
+    const target = engineMount.target;
     return (
       <SectionWritingSession
         manuscriptId={manuscript.id}
-        sections={writeMount.sections}
-        version={writeMount.version}
+        sections={engineMount.sections}
+        version={engineMount.version}
         witnessDelayMs={witnessDelayMs}
       >
         {(session) => (
@@ -1499,6 +1522,22 @@ function FieldBody({
             onCheckpointed={onCheckpointed}
             jumpTo={jumpTo}
             onJumpHandled={onJumpHandled}
+            /* ⛔ PW-6 · REAL PROSE, NOT A MIRROR. And ⛔ PW-3: this is offered
+               for ONE section id — the one the server resolved — so no other
+               section can be rendered by it even if it asked. */
+            renderProposalWork={target ? (sectionId) => {
+              if (sectionId !== target.sectionId) return null;
+              const section = engineMount.sections.find((x) => x.id === sectionId);
+              if (!section) return null;
+              return (
+                <ProposalWorkSurface
+                  body={section.body}
+                  range={target.range}
+                  replacementText={target.replacementText}
+                  sectionLabel={target.sectionLabel}
+                />
+              );
+            } : undefined}
           />
         )}
       </SectionWritingSession>
@@ -1563,6 +1602,7 @@ function SectionSurfaceBridge({
   jumpTo,
   onJumpHandled,
   renderSectionOverlay,
+  renderProposalWork,
 }: {
   session: ManuscriptSession;
   onWriting?: (w: SectionWriting | null) => void;
@@ -1572,6 +1612,7 @@ function SectionSurfaceBridge({
   jumpTo?: string | null;
   onJumpHandled?: () => void;
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
+  renderProposalWork?: (sectionId: string) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1633,6 +1674,12 @@ function SectionSurfaceBridge({
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
           renderSectionOverlay={renderSectionOverlay}
+          /* ⛔ STEP 2 SCOPE: the CURRENT/PROPOSED panel is mounted in Section
+             view, where the writer works the proposal. Whole view still honours
+             PW-1 — it mounts no editor for a section under proposal authority —
+             but it is not made into a second proposal surface here. The founder
+             ruled that no mode change may be forced; making Whole the place the
+             work happens would force one by the back door. */
         />
       ) : (
         <SectionWritingSurface

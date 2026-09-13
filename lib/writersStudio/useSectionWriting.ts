@@ -38,12 +38,19 @@ import { resolveInitialSection } from './placeInWork';
 import { SectionSaveQueue, type SaveFn, type SectionStatus } from './sectionSaveQueue';
 import { AUTOSAVE_DELAY_MS } from '@/app/press/manuscript/workingDraftClient';
 
+import { ownsManuscriptWrite, type SectionAuthority } from './sectionAuthority';
+
 export interface WritingSection {
   id: string;
   position: number;
   heading: string | null;
   body: string;
-  editable: boolean;
+  /**
+   * ⭐⭐ WHICH AUTHORITY OWNS THIS SECTION. Server-resolved; never widened
+   * here. This hook asks exactly one question of it — `ownsManuscriptWrite` —
+   * so an authority added later cannot reach the save queue by default.
+   */
+  authority: SectionAuthority;
 }
 
 export interface SectionWriting {
@@ -105,8 +112,11 @@ export function captureOnLeave(
    */
   persistedBody?: string,
 ): boolean {
-  /* A read-only section has no text of the member's to capture. */
-  if (!leaving?.editable) return false;
+  /* ⛔ A section this engine does not own has no manuscript text of the
+     member's to capture. That now covers proposal work as well as an
+     unprojectable section — for different reasons, with the same consequence:
+     these keystrokes are not the manuscript's. */
+  if (!leaving || !ownsManuscriptWrite(leaving.authority)) return false;
 
   /* Compare against what is already known — the pending/in-flight body if one
      exists, else what was last persisted, else the body the page loaded. */
@@ -318,7 +328,9 @@ export function useSectionWriting(
    */
   const editSection = useCallback((sectionId: string, body: string) => {
     const section = sectionsById.get(sectionId);
-    if (!section?.editable) return;
+    /* ⛔ PW-1/PW-4 · THE SAVE PATH IS CLOSED, not merely unmounted. A proposal
+       section that somehow reached this call still writes nothing. */
+    if (!section || !ownsManuscriptWrite(section.authority)) return;
     if (sectionId === activeId) visibleBody.current = body;
     staged.current.set(sectionId, body);
     setStagedTick((n) => n + 1);

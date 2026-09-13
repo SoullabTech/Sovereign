@@ -154,6 +154,8 @@ describe('scope — the repair touches nothing it was told not to', () => {
 
   it('adds no second navigation path — sections still mount through chooseMount', () => {
     const src = canvas();
-    expect(src).toMatch(/writeMount\.mount === 'sections'/);
+    /* Still exactly one path into the section engine — it is now named
+       `sectionEngine`, and covers both mounts that use it. */
+    expect(src).toMatch(/sectionEngine\(writeMount\)/);
   });
 });

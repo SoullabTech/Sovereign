@@ -8,8 +8,8 @@ import { navigableRows, rowsShareIdentityWith } from '../outlineRows';
 import type { EditableSection } from '@/lib/manuscript/sections/saveSection';
 
 const writeState: EditableSection[] = [
-  { id: 'draft-sec-0', position: 0, heading: 'Chapter One', body: 'aaa', editable: true },
-  { id: 'draft-sec-1', position: 1, heading: 'Chapter Two', body: 'bb', editable: true },
+  { id: 'draft-sec-0', position: 0, heading: 'Chapter One', body: 'aaa', authority: 'manuscript_write' as const },
+  { id: 'draft-sec-1', position: 1, heading: 'Chapter Two', body: 'bb', authority: 'manuscript_write' as const },
 ];
 
 /** What GET /api/sovereign/manuscripts/[id] returns — the Source identity. */

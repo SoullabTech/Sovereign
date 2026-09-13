@@ -17,6 +17,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDraftWriteState } from '@/lib/manuscript/sections/saveSection';
 import { navigableRows } from '@/lib/writersStudio/outlineRows';
+import { resolveProposalWork } from '@/lib/manuscript/revisionProposal/proposalWork';
+import {
+  authorityFromProjectability,
+  type SectionAuthority,
+} from '@/lib/writersStudio/sectionAuthority';
 import {
   sectionNavigationCopy,
   NAVIGATION_NOT_ACTIVE,
@@ -43,18 +48,41 @@ export async function GET(
          with any mode would be a claim about a draft we could not read. */
       return NextResponse.json({ mode: 'indeterminate' }, { status: 503 });
 
-    case 'section_aware':
+    case 'section_aware': {
+      /* ⛔ PW-2 · THE PROPOSAL PARAMETER IS A SELECTOR, NOT AN ASSERTION.
+         Everything it implies — ownership, target, range, whether the proposal
+         is still live — is resolved server-side against this authenticated
+         member. A browser that names a proposal it does not own, or one that
+         can no longer be accepted, gets the ordinary section state back and is
+         told nothing about why. */
+      const target = await resolveProposalWork(
+        memberId, req.nextUrl.searchParams.get('proposal'));
+
+      /* ⭐ PW-3 · SUSPENSION IS SCOPED TO THE TARGET. Every other section keeps
+         exactly the authority it already had. The boundary is never wider than
+         the member's actual proposal.
+         ⭐ PW-5 · AND THE REASON IS EXPLICIT. `editable` is a fact about
+         PROJECTABILITY and stays one; the authority is resolved beside it, so
+         the room never renders "cannot be edited" over a section the writer is
+         actively working. */
+      const authorityOf = (s: { id: string; editable: boolean }): SectionAuthority =>
+        target && target.sectionId === s.id
+          ? 'proposal_work'
+          : authorityFromProjectability(s.editable);
+
       return NextResponse.json({
-        mode: 'section_aware',
+        mode: target ? 'proposal_work' : 'section_aware',
         version: state.version,
-        /* Draft-section identity, and the editable flag the UI needs so it
-           never offers a gesture the server would refuse. */
+        /* Draft-section identity, and the resolved authority the UI renders so
+           it never offers a gesture the server would refuse. */
         rows: navigableRows(state.sections),
         sections: state.sections.map((s) => ({
           id: s.id, position: s.position, heading: s.heading,
-          body: s.body, editable: s.editable,
+          body: s.body, authority: authorityOf(s),
         })),
+        ...(target ? { target } : {}),
       });
+    }
 
     case 'continuous':
       /* Convertible, simply not converted yet. Almost nothing to say — there is

@@ -43,7 +43,12 @@ describe('the section outline and canvas share ONE session', () => {
     // Both must come from the same lifted object. Two useSectionWriting calls
     // would give the outline a different queue, active id and statuses — the
     // bug this file exists to make hard to reintroduce.
-    expect(page).toContain("writeMount.mount === 'sections' && writing");
+    /* EW-F2 step 2 added a SECOND mount that runs the same engine
+       (`proposal_work`). Six inline disjunctions would have been six chances to
+       forget the seventh, so the room reads both through one `sectionEngine`.
+       The property — the outline is fed only when a section engine is mounted —
+       is what this states. */
+    expect(page).toContain('engine && writing');
     expect(page).toContain('statusOf={writing.statusOf}');
     // WS-WHOLE-MANUSCRIPT-01. `activeId={writing.activeId}` and
     // `onSelect={writing.goToSection}` were pinned here directly until the
@@ -104,7 +109,7 @@ describe('one outline namespace at a time', () => {
   });
 
   it('the section outline is fed write-state rows, not Source sections', () => {
-    expect(page).toContain('sections={writeMount.rows}');
+    expect(page).toContain('sections={engine.rows}');
   });
 });
 

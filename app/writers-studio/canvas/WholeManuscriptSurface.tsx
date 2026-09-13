@@ -50,6 +50,7 @@ import { BOUNDARY_NOTE, isBoundaryGesture } from '@/lib/writersStudio/sectionBou
 import { INK, RULE, SPACE } from '../studioTheme';
 import { StudioText } from '../studio/StudioType';
 import { revealWithin } from './revealWithin';
+import { ownsManuscriptWrite } from '@/lib/writersStudio/sectionAuthority';
 
 /** Sections kept alive beyond each edge of the viewport. */
 const OVERSCAN = 3;
@@ -380,7 +381,10 @@ export const WholeManuscriptSurface = forwardRef<
                 }}
               />
             )}
-            {!isMounted ? null : section.editable ? (
+            {/* ⛔ PW-1 HOLDS IN BOTH VIEWS. A section under proposal authority
+                mounts no manuscript editor here either — the suspension is a
+                property of the section, not of which surface is on screen. */}
+            {!isMounted ? null : ownsManuscriptWrite(section.authority) ? (
               /* The editor and its mark share one origin. `position: relative`
                  only when a room actually draws — an unused seam changes
                  nothing about how this surface renders. */

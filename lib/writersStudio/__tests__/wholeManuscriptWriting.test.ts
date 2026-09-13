@@ -119,13 +119,17 @@ describe('the active section keeps its own contract', () => {
   });
 
   it('a read-only section is never staged', () => {
-    expect(fn('editSection')).toMatch(/if \(!section\?\.editable\) return;/);
+    /* PW-1/PW-4: the save path is CLOSED to a section this engine does not own,
+       not merely unmounted. Stated through the one predicate every such site
+       asks, so a fourth authority cannot reach the queue by defaulting true. */
+    expect(fn('editSection')).toMatch(/!ownsManuscriptWrite\(section\.authority\)/);
+    expect(fn('editSection')).not.toMatch(/\.editable/);
   });
 });
 
 describe('captureOnLeave — the semantics the unmount path reuses', () => {
   const section = (over: Partial<WritingSection> = {}): WritingSection => ({
-    id: 's1', position: 0, heading: null, body: 'as loaded', editable: true, ...over,
+    id: 's1', position: 0, heading: null, body: 'as loaded', authority: 'manuscript_write' as const, ...over,
   });
   const queue = (localBody: string | undefined = undefined) => {
     const enqueued: { id: string; body: string }[] = [];
@@ -153,7 +157,7 @@ describe('captureOnLeave — the semantics the unmount path reuses', () => {
 
   it('never captures from a read-only section', () => {
     const { q, enqueued } = queue();
-    expect(captureOnLeave(q, section({ editable: false }), 'edited', 'as loaded')).toBe(false);
+    expect(captureOnLeave(q, section({ authority: 'unprojectable' as const }), 'edited', 'as loaded')).toBe(false);
     expect(enqueued).toEqual([]);
   });
 });
