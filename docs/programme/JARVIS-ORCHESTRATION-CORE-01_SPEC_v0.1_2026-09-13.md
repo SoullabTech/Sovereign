@@ -447,4 +447,45 @@ authorization state* and *a difference caused by disclosure behaviour* must rema
 
 Record: `JARVIS-ORCHESTRATION-CORE-01_BW01_FREEZE_RULING_2026-09-13.md`.
 
+### 13.1 ⭐ AUTH-01 … AUTH-04 — generalized beyond Work (founder, 2026-09-13)
+
+`BW-LAW-1` is the Work-lane instance of a set the founder canonized one message later. **Recorded as
+the reconciliation it is**: BW-LAW-1 was ratified in-lane minutes earlier and is not renamed away —
+it is the same law at narrower scope.
+
+> **AUTH-01 — Authorization precedes materialization.** Retrieval of protected content may consume
+> established authority. Retrieval itself may not establish that authority.
+>
+> **AUTH-02 — Identifiers carry no authority.** Possession of a member identifier, resource
+> identifier, relationship identifier, or reference does not establish permission to act upon the
+> referenced entity.
+>
+> **AUTH-03 — Authority is derived and ephemeral.** Authority must be established from currently
+> valid identity, relationship/ownership, and applicable policy. Serialization destroys derived
+> authority unless a separately specified portable capability protocol explicitly exists.
+>
+> **AUTH-04 — Authorization cannot become an existence oracle.**
+
+**Five states the system must represent as distinct** — BW-01 found several had quietly collapsed:
+
+```
+IDENTITY              who is this?
+REFERENCE             what thing are we talking about?
+OWNERSHIP / RELATION  what relationship does this person have to the thing?
+CONSENT / POLICY      is this operation permitted under present conditions?
+AUTHORITY             may this operation actually occur now?
+      ↓
+CONTENT               what does the thing contain?          ← always last
+```
+
+⛔ **The laws govern more than Work without forcing everything into one type.** There is no
+`BoundEverythingScope` and none is authorized — *canonize the law before generalizing the
+primitive.* Where the same pattern may recur (recorded as direction, not lane): memory ids,
+practitioner relationships, session ids, file refs, connector accounts, revision refs, and agent
+action capability.
+
+> *Relationship does not imply entitlement. Knowledge does not imply permission. Capability must be
+> consciously derived.*
+
+
 > *The Work is present. The writer acts. Jarvis is the boundary that makes that safe.*
