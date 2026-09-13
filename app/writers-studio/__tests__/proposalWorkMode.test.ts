@@ -61,6 +61,40 @@ describe('PW-1 · the target section mounts no manuscript-writing control', () =
     expect(WHOLE_SURFACE).not.toContain('section.editable');
   });
 
+  /**
+   * ⭐⭐ THE WIRE, NOT JUST THE CONSUMER — A LINK IS NOT A BINDING.
+   *
+   * FOUNDER-CAUGHT IN RUNTIME. The room navigated to §23 and mounted no
+   * textarea, so PW-1's first half held; and the section was BLANK, because
+   * `renderProposalWork` was DECLARED at three hops and PASSED at one. Both
+   * forwarding lines were casualties of correcting an over-broad edit, and
+   * nothing noticed: the obligation below asserts what the surface does WHEN
+   * CALLED, and nothing asserted that anything calls it.
+   *
+   * That is the defect `canvasIdentity.ts` was written for, in a new costume —
+   * the producer's name and the consumer's agreeing while no value travels
+   * between them. An assertion about a consumer is not an assertion about a
+   * connection.
+   */
+  it('⭐ the renderer actually REACHES the surface that calls it', () => {
+    const bridge = ROOM.match(/<SectionSurfaceBridge[\s\S]*?\/>/);
+    const surface = ROOM.match(/<SectionWritingSurface[\s\S]*?\/>/);
+    expect(bridge).not.toBeNull();
+    expect(surface).not.toBeNull();
+    for (const el of [bridge![0], surface![0]]) {
+      expect(el).toContain('renderProposalWork=');
+    }
+  });
+
+  it('⛔ and nothing declares it without passing or calling it', () => {
+    /* A hop that receives the renderer and forwards nothing is exactly how the
+       blank section happened. Every declaration must be matched by a use. */
+    const declared = (ROOM.match(/^\s*renderProposalWork,$/gm) ?? []).length;
+    const passed = (ROOM.match(/renderProposalWork=\{/g) ?? []).length;
+    expect(declared).toBeGreaterThan(0);
+    expect(passed).toBeGreaterThanOrEqual(declared);
+  });
+
   it('⛔ absent a proposal renderer, the target renders nothing — never the editor', () => {
     /* `?? null`, not `?? <textarea>`. A missing renderer must not become a
        fallback that offers a write the server would refuse. */

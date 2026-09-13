@@ -1347,7 +1347,6 @@ function FieldBody({
   jumpTo,
   onJumpHandled,
   renderSectionOverlay,
-  renderProposalWork,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -1368,7 +1367,6 @@ function FieldBody({
   onJumpHandled?: () => void;
   /** Presentation only — see WholeManuscriptSurface's seam. */
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
-  renderProposalWork?: (sectionId: string) => React.ReactNode;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1686,6 +1684,7 @@ function SectionSurfaceBridge({
           writing={writing}
           manuscriptId={manuscriptId}
           onCheckpointed={onCheckpointed}
+          renderProposalWork={renderProposalWork}
         />
       )}
     </>
