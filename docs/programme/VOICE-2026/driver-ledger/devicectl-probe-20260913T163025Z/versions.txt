@@ -1,0 +1,4 @@
+# devicectl probe 20260913T163025Z
+506.7
+Xcode 26.3
+Build version 17C529

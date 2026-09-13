@@ -1,0 +1,15 @@
+## pages captured: 49
+## copy-to documents --remove-existing-content: YES
+## verbs mentioning delete/remove/rm/unlink/erase (documentation text, not an implementation):
+SUMMARY.txt:2:## copy-to documents --remove-existing-content: YES
+SUMMARY.txt:3:## verbs mentioning delete/remove/rm/unlink/erase (documentation text, not an implementation):
+device-copy-from-help.txt:6:USAGE: devicectl device copy from --device <uuid|ecid|serial_number|udid|name|dns_name> --source <source> [--destination <destination>] [--user <user>] --domain-type <domain-type> [--domain-identifier <domain-identifier>] [--remove-existing-content <remove-existing-content>] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+device-copy-from-help.txt:35:  -r, --remove-existing-content <remove-existing-content>
+device-copy-from-help.txt:36:                          Whether to remove files from the destination
+device-copy-to-help.txt:6:USAGE: devicectl device copy to --device <uuid|ecid|serial_number|udid|name|dns_name> --source <source> ... [--destination <destination>] [--user <user>] --domain-type <domain-type> [--domain-identifier <domain-identifier>] [--remove-existing-content <remove-existing-content>] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+device-copy-to-help.txt:37:  -r, --remove-existing-content <remove-existing-content>
+device-copy-to-help.txt:38:                          Whether to remove files from the destination
+device-info-apps-help.txt:18:                          Display apps that can be removed. (default:
+device-info-apps-help.txt:25:        On macOS, we consider apps that cannot be deleted without disabling SIP
+device-info-apps-help.txt:26:        or without re-blessing the signed system volume to be non-deleteable.
+device-uninstall-app-help.txt:3:This command removes an app from the device.

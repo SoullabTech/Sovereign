@@ -1,0 +1,39 @@
+OVERVIEW: Get information on the developer disk image services on the device.
+
+This command gets information about the developer disk image services on the
+device (if they are currently enabled).
+
+USAGE: devicectl device info ddiServices --device <uuid|ecid|serial_number|udid|name|dns_name> [--auto-mount-ddis] [--no-auto-mount-ddis] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --auto-mount-ddis/--no-auto-mount-ddis
+                          Checks if the device’s mounted DDI is current and
+                          updates it before retrieving the DDI metadata.
+                          (default: --auto-mount-ddis)
+        By default, the metadata will be retrieved. If this option is disabled,
+        the metadata will be whatever the current state of the DDI services
+        are, without updating or mounting the developer disk image on the
+        device.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+

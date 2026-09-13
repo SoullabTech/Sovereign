@@ -1,0 +1,36 @@
+OVERVIEW: Commands to interact with devices.
+
+Allows users to interact with devices that CoreDevice is aware of.
+
+USAGE: devicectl device [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>] <subcommand>
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  copy                    Copy files.
+  info                    Commands that provide information about a specific
+                          device
+  install                 Install content onto a device.
+  notification            Post and observe Darwin notifications on a device.
+  orientation             Control device orientation.
+  process                 Interact with processes on devices.
+  reboot                  Reboot a device.
+  sysdiagnose             Gather a sysdiagnose for a device.
+  uninstall               Uninstall content from a device.
+
+  See 'devicectl help device <subcommand>' for detailed help.

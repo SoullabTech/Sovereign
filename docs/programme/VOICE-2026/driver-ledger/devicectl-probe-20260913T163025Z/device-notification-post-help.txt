@@ -1,0 +1,32 @@
+OVERVIEW: Post a Darwin notification to a device.
+
+Posts a darwin notification with the given name to a device.
+
+USAGE: devicectl device notification post --device <uuid|ecid|serial_number|udid|name|dns_name> --name <name> ... [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --name <name>           The name of the Darwin notification.
+        This can be passed multiple times to post multiple Darwin notifications.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+

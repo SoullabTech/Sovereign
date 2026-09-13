@@ -1,0 +1,37 @@
+OVERVIEW: Commands that provide information about a specific device
+
+Provides access to device information like processes, installed roots,
+installed files, and other device state.
+
+USAGE: devicectl device info [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>] <subcommand>
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  appIcon                 Request app icon generation from this device.
+  apps                    List apps installed on the device.
+  authListing             Get the device's AuthListing identifiers.
+  ddiServices             Get information on the developer disk image services
+                          on the device.
+  details                 Get information about the current device.
+  displays                Get the device's current display information.
+  files                   List files on the device.
+  lockState               Get the current locked state of the device.
+  processes               List currently running processes on the device.
+
+  See 'devicectl help device info <subcommand>' for detailed help.

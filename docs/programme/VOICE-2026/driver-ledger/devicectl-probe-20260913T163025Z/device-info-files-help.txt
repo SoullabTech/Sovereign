@@ -1,0 +1,69 @@
+OVERVIEW: List files on the device.
+
+This command prints a list of the files at a specified path on the device.
+
+USAGE: devicectl device info files [<options>] --device <uuid|ecid|serial_number|udid|name|dns_name> --domain-type <domain-type>
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+FILE OPTIONS:
+  --username <username>   The username of the user we should target. Only
+                          relevant for certain domains.
+  --domain-type <domain-type>
+                          The file service domain. Valid values are: temporary,
+                          appDataContainer, appGroupDataContainer,
+                          systemCrashLogs. You must specify a valid domain and
+                          identifier pair. Certain domains must be accompanied
+                          by an identifier that provides additional context.
+                          For example, if the domain is an app data container,
+                          the identifier is the bundle ID of the app. For
+                          temporary directories, the identifier is a unique
+                          client-provided string which is used to get your own
+                          space, separate from those of other clients.
+  --domain-identifier <domain-identifier>
+                          A unique string used to provide additional context to
+                          the domain.
+
+COMMAND OPTIONS:
+  --subdirectory <subdirectory>
+                          A subdirectory within the domain. If not specified,
+                          defaults to the root.
+  -r, --recurse/--no-recurse
+                          Recurse into subdirectories.  (default: --recurse)
+
+FILTERING OPTIONS:
+  --filter <filter>       An optional predicate used to filter the list of
+                          items shown.
+        The predicate is based on NSPredicate. The attribute name can be the
+        column's name from either the table-based output or a fully qualified
+        JSON field identifier from the JSON output.
+
+        E.g. `--filter "Name BEGINSWITH 'iPhone'"` or `--filter
+        "hardwareProperties.platform BEGINSWITH 'mac'`
+  --sort-by <sort-by>     If specified, a key path by which to sort results.
+  --columns <columns>     If specified, additional data columns to print.
+                          Specify '*' (in quotes) for all data columns.
+  --hide-default-columns  Hide default data columns and only print those
+                          specified with --columns.
+  --hide-headers          Hide data column headers.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
