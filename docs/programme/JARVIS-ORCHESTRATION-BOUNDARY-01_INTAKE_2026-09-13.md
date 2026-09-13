@@ -5,7 +5,9 @@
 runtime proper name) · **D-J2 RULED** (extension; CMT-01 is an admission boundary, not an
 execution substrate) · **D-J3 RULED** (one semantic provenance contract, many bounded traces;
 four non-collapsible states) · **D-J4 RULED** (disagreement representable, never silently
-collapsed) · **D-J7 RULED** (consent precedes selection). ⚠️ §2.3's "three traces" is **corrected to five** in the rulings
+collapsed) · **D-J7 RULED** (consent precedes selection) ·
+**D-J8 RULED** (perception, never authority). ⚠️ §6.2's "no job substrate" is **WRONG** and is
+corrected in `JARVIS-BOUNDED-COGNITION-SUBSTRATE-CENSUS_2026-09-13.md` §0. ⚠️ §2.3's "three traces" is **corrected to five** in the rulings
 document §2d. ⚠️ This intake's "no producer registered" standing is **corrected** in the
 rulings document §2c — seven Writer's Studio producers already exist in canonical. Rulings of record:
 `JARVIS-ORCHESTRATION-BOUNDARY-01_FOUNDER_RULINGS_2026-09-13.md`. This intake is kept verbatim
@@ -204,7 +206,7 @@ as a *runtime layer name* gives one word two referents in one repo. ⛔ Cheap to
 | ~~**D-J5**~~ | ⭐ **RATIFIED, 2026-09-13**, bound as sibling to FR-J1 — *not surfaced by default; never concealed when asked*. "Unanswerable orchestration" is a named refusal. ⚠️ *materially participated* still needs definition, routed to D-J3 |
 | ~~**D-J6**~~ | ⭐ **RULED 2026-09-13 — NO RUNTIME PROPER NAME** (FR-J6). Not "Jarvis", and not a replacement for it. Falsifier: *"we need somewhere to put the orchestration layer"* is architecture-by-noun and fails |
 | ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Two jurisdiction classes, three egress dispositions, transformation does not erase custody. ⚠️ `multiEngineOrchestrator` is **not** the routing authority and its consensus behaviour is an FR-J4 question |
-| **D-J8** | ⭐ **NEXT ACT.** Inferred ontology: ratify the four conditions in J-F3 (visibly derived · refusable · member override authoritative · never leverage) by binding to Invariant 16 + Authority × Time, authoring no new doctrine? |
+| ~~**D-J8**~~ | ⭐ **RULED 2026-09-13 — PERCEPTION, NEVER AUTHORITY** (FR-J8). Ratified the four conditions in J-F3 (visibly derived · refusable · member override authoritative · never leverage) by binding to Invariant 16 + Authority × Time, authoring no new doctrine? |
 
 ---
 
@@ -252,6 +254,15 @@ latency tiers within one turn**, not the founder's *immediate vs deep* distincti
 
 🔴 **There is no job substrate** in `lib/` — no queue, no worker abstraction, no bounded-job
 model. `maia-comms-worker` is a deployed container for comms, not a general cognition lane.
+
+⛔⛔ **WRONG — CORRECTED 2026-09-13.** A durable DB-backed job queue exists and has existed:
+`lib/ai/EmbeddingQueueService.ts` over `embedding_jobs` (status `pending|processing|done|error`,
+`attempts`, `locked_at`, `completed_at`, `claimNext`/`markDone`/`markError`/`backlogCount`), with
+standalone workers in `scripts/`. The original search looked for a *name* (`lib/jobs`, BullMQ,
+pg-boss) instead of a *responsibility* — the inverse-drift failure CLAUDE.md names, committed
+here. Full correction and reuse verdicts:
+`JARVIS-BOUNDED-COGNITION-SUBSTRATE-CENSUS_2026-09-13.md`. **Kept verbatim as the error it was.**
+*Still true: FAST/CORE/DEEP must not be overloaded with the turn-exceeding job meaning.*
 
 ⛔ **Do not overload FAST/CORE/DEEP with the new meaning.** A Whole Work contradiction sweep
 is not a slower DEEP turn; it is a different object with a different lifecycle (commissioned ·
@@ -327,8 +338,8 @@ Episodic Phase 2). It should be routed there, not sold as a plan.
 | **D-J10** | Rename the proposed member layer — "corpus" is taken by canon (J-F9). Until renamed, ⛔ do not build it |
 | **D-J11** | Is the **invocation envelope** constituted as a sovereignty object before any implementation (J-F10)? |
 | **D-J12** | ⭐ Ratify **"we improve the instrument, not by consuming the corpus"**, including the signal boundary named in §6.5? |
-| **D-J13** | Is **bounded deep cognition** (commissioned · resumable · reportable · cancellable jobs) opened as its own substrate lane, with a name that is **not** DEEP (J-F8)? |
-| **D-J14** | Is **incremental invalidation** (L3) built on the three existing digests, or does it require a dependency representation that does not yet exist? |
+| **D-J13** | Is **bounded deep cognition** (commissioned · resumable · reportable · cancellable jobs) opened as its own substrate lane, with a name that is **not** DEEP (J-F8)? ⭐ Census now run — four of six primitive families already exist |
+| **D-J14** | Is **incremental invalidation** (L3) built on the three existing digests, or does it require a dependency representation that does not yet exist? ⭐ **Censused: both** — digests suffice for change detection; the dependency edge is absent but is `EvidenceRef` + frozen revision, unjoined |
 
 ---
 

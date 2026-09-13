@@ -909,6 +909,87 @@ this ruling** — it deserves its own census.
 
 ---
 
+## 2g · FR-J8 — Inferred Work Structure · **RULED: PERCEPTION, NEVER AUTHORITY**
+
+> **The system may infer entities, relationships, motifs, structure or other organization in a
+> Work only as visibly derived, refusable, revisable system perception.**
+>
+> **Persistence, recurrence, confidence, model agreement, graph position or downstream reuse do
+> not convert an inference into member-authored fact or authority.**
+>
+> **The member may reject, distinguish, merge, correct or adopt an inferred relation. Where the
+> member rules, that member-authored ruling is authoritative for its scope until the member
+> revises it.**
+>
+> **Unowned system inference may never be used as leverage to manufacture higher-order meaning,
+> Recognition, identity, or an authoritative account of what the Work "really is."**
+
+### Bind, do not author
+
+⭐ No ontology doctrine is added. FR-J8 binds inferred Work structure to
+`CONSTITUTIONAL_DIRECTION_OF_AUTHORITY.md` (Invariant 16), `RECOGNITION_INTEGRITY.md` —
+explicit keeping, resealability, evidence before pattern, truthful continuity rather than
+manufactured coherence — and the Authority × Time discipline.
+
+### The four conditions
+
+1. **Visibly derived** — system inference may never masquerade as member-authored or settled.
+   Its derivation remains answerable under FR-J3. ⭐ *"Visible" does not require permanent UI
+   exposure; it requires that origin not be concealed when the inference matters.*
+2. **Refusable** — the member may reject an inference. ⭐ Recalculation may notice the pattern
+   again, but **may not silently restore a refused inference as settled truth.**
+3. **Member override authoritative** — member correction, distinction, adoption or rejection
+   governs its scope. Later system perception may be offered as **new evidence, never as a
+   silent overwrite.**
+4. **Never leverage** — an unowned inference cannot gain authority by being repeated,
+   persisted, highly confident, model-agreed, central in a graph, or useful downstream.
+
+> ⭐⭐⭐ **Inference may accumulate evidence; it may not accumulate authority.**
+
+⭐ That sentence is the whole ruling in nine words, and it protects the system we actually want:
+**MAIA may become extraordinarily perceptive about a Work over years without gradually becoming
+the author of what the Work means.**
+
+### ⭐ Verified precedent (`e1c6f527`) — already built, in the manuscript reader
+
+`lib/manuscript/structure/review.ts` states the boundary in its own header:
+
+> *"…the member's copy of a proposal. `manuscript_structure_units` and
+> `manuscript_structure_members` are not imported, not written, not consulted.*
+> **Only adoption crosses that line."**
+
+⭐ A proposal lives in `proposalStore`, separate from the member's structure; ids are minted
+when the interpretation is **copied into the member's** structure, not before. **That is
+condition 3 already implemented** — the reader may perceive and propose, and only the member's
+adoption makes the reading real. ⭐ FR-J8 generalizes an existing technical discipline rather
+than imposing a new one.
+
+### Falsifiers
+
+| | Fails FR-J8 when |
+|---|---|
+| **F-J8.1 · Derivation erasure** | a system-derived relation is represented or consumed as authored or settled without preserving its derived status |
+| **F-J8.2 · Refusal erosion** | a member-refused inference becomes operative again merely because the system re-inferred it |
+| **F-J8.3 · Override inversion** | confidence, recency, repetition, model agreement, graph centrality or another machine signal supersedes a member ruling |
+| **F-J8.4 · Authority bootstrapping** | an unowned inference becomes leverage for Recognition, identity, authoritative meaning or authoritative Work structure |
+
+### Named refusal — **ontology by accumulation**
+
+> **Repeated perception does not become authorship.**
+
+### What this ruling does not authorize
+
+```text
+⛔ no Work entity graph or ontology store    ⛔ no extraction or relationship engine
+⛔ no graph UI        ⛔ no schema        ⛔ no new producer        ⛔ no CMT-01 M3
+⛔ no claim that the current runtime holds a Work ontology
+```
+
+⭐ FR-J8 establishes the **authority boundary only.**
+
+
+---
+
 ## 3 · FR-J-SEQ — Sequencing directive · **RULED**
 
 Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby performed.
@@ -920,8 +1001,11 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 4. D-J3   provenance ── PERFORMED (FR-J3): one semantic contract, many bounded traces
 5. D-J4   unreconciled disagreement ── PERFORMED (FR-J4): representable, never silently collapsed
 6. D-J7   routing ── PERFORMED (FR-J7): consent precedes selection
-7. D-J8   inferred Work structure bound to existing authority law ── NEXT
-8. bounded-job / incremental-computation substrate
+7. D-J8   inferred Work structure ── PERFORMED (FR-J8): perception, never authority
+8. bounded-job / incremental-computation substrate ── NEXT, and gated on a READ-ONLY
+                          SUBSTRATE CENSUS first (founder, 2026-09-13): what existing freeze,
+                          digest, invalidation, queue/worker, resumability and dependency
+                          primitives can be reused rather than creating another architecture
 ```
 
 ⭐ **The order is itself a ruling**: naming before code, consent before economics,
@@ -992,7 +1076,8 @@ D-J4, should be reconciled with it rather than authored beside it.
 | ~~**D-J3**~~ | ⭐ **RULED 2026-09-13 — ONE SEMANTIC CONTRACT, MANY TRACES** (FR-J3). Four non-collapsible states; *materially participated* = CONTRIBUTED; effect usually UNKNOWN; `used` refused. ⚠️ The registry prefixes are ORIGIN CLASS, a different axis from process state — the D-J2 note is corrected in §2d |
 | ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Five qualifying conditions; refuses premature collapse AND false balance; synthesis is a new contribution, never an erasure. Named refusal: *consensus by machinery*. F-J4.1-5 |
 | ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Authorization first, then capability, then economics. Availability ≠ consent; transformation ≠ declassification. F-J7.1-8. ⚠️ `modelService` census finding recorded, not repaired |
-| **D-J8** | ⭐ **NEXT ACT** — inferred Work structure: perception without authoritative ontology |
+| ~~**D-J8**~~ | ⭐ **RULED 2026-09-13 — PERCEPTION, NEVER AUTHORITY** (FR-J8). Four conditions bound to Invariant 16 + Recognition Integrity + Authority × Time. *Inference may accumulate evidence; it may not accumulate authority.* F-J8.1-4 |
+| **STEP 8** | ⭐ **NEXT** — bounded-job / incremental-computation substrate, **gated on a read-only substrate census** (founder). ⛔ Build not authorized |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -1006,6 +1091,10 @@ FR-J1                  RATIFIED (amended — boundary yes, name no)
 FR-J5                  RATIFIED (sibling; unanswerable orchestration is a named refusal)
 FR-J-SEQ               RULED
 FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme word only
+FR-J8                  RULED — perception, never authority. Visibly derived · refusable ·
+                       member override authoritative · never leverage. Named refusal:
+                       ontology by accumulation. F-J8.1-4
+CONSTITUTIONAL SEQ     COMPLETE through D-J8. Step 8 (bounded jobs) gated on census
 FR-J7                  RULED — consent precedes selection. Authorization → capability →
                        economics, never the reverse. Caller may request capability, never
                        permission. Fallback may contract permission, never expand it.
