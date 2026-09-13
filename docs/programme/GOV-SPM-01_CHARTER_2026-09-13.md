@@ -92,6 +92,20 @@ discipline building SPM — is **not** (SPM charter §3.1). Same name, two roles
    ratification is the founder's
 ```
 
+> ⛔ **PINNED METHODOLOGICAL LAW (founder, 2026-09-13): a filename or keyword non-match may
+> establish that a term was not found. It may NEVER by itself establish that a principle,
+> capability, or authority does not exist.** For constitutional claims: *lexical search is a
+> discovery instrument; full-text authority reading is substantive evidence.* ⛔ Independent of
+> UARE-01's canary.
+
+> ⭐ **`THREE_AUTHORITY_CHAINS` RULING (founder, 2026-09-13):** GOV-SPM-01 may continue, because at
+> present it is **documenting and reconciling** authority, not adding a governance mechanism. ⛔ It
+> **becomes** one the moment it creates machinery or authority that did not already exist.
+> **Authorized:** find · read · reconcile · identify conflicts and real gaps · document the
+> authority chains · prepare options. ⛔ **Not authorized:** invent a fourth authority chain · add
+> an enforcement mechanism · create a consent regime · ratify canon · operationalize a permission
+> layer.
+
 > ⛔ **PINNED PROHIBITION (founder, 2026-09-13): finding that no canon exists does not authorize
 > GOV-SPM-01 to manufacture canon. Absence is a finding; constitution is a founder act.**
 
