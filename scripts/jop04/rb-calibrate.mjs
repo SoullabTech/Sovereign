@@ -41,7 +41,7 @@ const PROFILES = {
       // FINDING, not absorbed.
       'RB-F6': 'PRECONDITION-UNMET',
       'RB-F7': 'N/A', 'RB-F8': 'GREEN',
-      'RB-CAL-2a': 'RED', 'RB-CAL-2b': 'NOT-REACHED',
+      'RB-CAL-2a': 'RED', 'RB-CAL-2b': 'PRECONDITION-UNMET',
     },
   },
   fd543df1: {
@@ -72,9 +72,30 @@ const M1_EXPECT = {
   'RB-F7': 'N/A',
   'RB-F8': 'GREEN',            // ⛔ MUST HOLD — a mutation may not widen execution authority
   'RB-CAL-2a': 'RED',          // no task shape leaves a registered capability non-routable
-  'RB-CAL-2b': 'NOT-REACHED',  // nothing to evaluate once 2a is RED
+  'RB-CAL-2b': 'PRECONDITION-UNMET',  // nothing to evaluate once 2a is RED
 };
-const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'NOT-REACHED', 'INSTRUMENT_ERROR']);
+// Ruling 1's ratified verdict set. ⛔ 'NOT-REACHED' was legacy vocabulary for the
+// same state and is migrated to PRECONDITION-UNMET — a rename, not a change of
+// expected outcome.
+/**
+ * M1-FULL MUTATION MATRIX — frozen BEFORE the mutant is built or run.
+ * M1-full reintroduces BOTH components of `registered → routable`:
+ *   COMPONENT A  registration manufactures routing eligibility
+ *   COMPONENT B  registration preempts the router's own judgment
+ * The two PRECONDITION-UNMET entries are intentional: the mutant DESTROYS the
+ * discriminating state those probes require. That is a correct mutation
+ * response, not an acceptance discharge.
+ */
+const M1_FULL_EXPECT = {
+  'RB-F1': 'RED', 'RB-F2': 'RED', 'RB-F3': 'RED', 'RB-F4': 'RED',
+  'RB-F5': 'UNINSTANTIATED',
+  'RB-F6': 'PRECONDITION-UNMET',   // arm B unreachable — preemption restored
+  'RB-F7': 'N/A',
+  'RB-F8': 'GREEN',                // ⛔ MUST HOLD
+  'RB-CAL-2a': 'RED',              // no arm survives: oversize is preempted too
+  'RB-CAL-2b': 'PRECONDITION-UNMET',
+};
+const NEVER_DISCHARGES = new Set(['PRECONDITION-UNMET', 'UNINSTANTIATED', 'N/A', 'INSTRUMENT_ERROR']);
 
 /**
  * RULING 1 (machine-enforced) — the runner refuses to emit GREEN when the
@@ -119,7 +140,9 @@ async function main() {
     ? process.argv[process.argv.indexOf('--subject') + 1]
     : SUBJECT_SHA;
   const isBaseline = subjectArg === SUBJECT_SHA;
-  const profile = process.argv.includes('--m1')
+  const profile = process.argv.includes('--m1full')
+    ? { name: 'M1-FULL MUTATION MATRIX (frozen before the mutant was built)', expect: M1_FULL_EXPECT }
+    : process.argv.includes('--m1')
     ? { name: 'M1 MUTATION MATRIX (frozen before the mutant was built)', expect: M1_EXPECT }
     : PROFILES[subjectArg];
   if (!profile) {
@@ -195,6 +218,10 @@ async function main() {
     }
     if (cal2.cal2b.observed !== profile.expect['RB-CAL-2b']) mismatches++;
     for (const probe of [cal2.cal2a, cal2.cal2b]) {
+      // Ruling 1 applies to EVERY probe, calibration probes included. This was
+      // missing: CAL-2a/2b bypassed enforcement entirely.
+      const enf = enforcePrecondition(probe.observed, probe.precondition);
+      if (enf.overridden) { probe.observed = enf.verdict; probe.note = `⛔ RUNNER OVERRIDE (${enf.verdict}): ${enf.why}`; }
       records.push({
         subject_sha: subject.resolvedSha,
         instrument_sha,

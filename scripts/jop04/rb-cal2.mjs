@@ -8,7 +8,7 @@
  *
  * ⛔ Does not prescribe a signature. Probes the SEMANTIC DISTINCTION.
  * ⛔ Tolerates the pre-repair substrate: if no eligibility module exists, the
- *    probe records that and returns RED / NOT-REACHED rather than crashing.
+ *    probe records that and returns RED / PRECONDITION-UNMET rather than crashing.
  *
  * CAL-2a  is `registered ∧ ¬routable` REACHABLE?
  * CAL-2b  NO-AUTO-MANUFACTURE — is the routing condition's truth something
@@ -101,14 +101,14 @@ export async function runCal2({ router, mainJsPath }, subjectDir, capability = C
       cal2b: {
         id: 'RB-CAL-2b',
         label: 'no-auto-manufacture — routing truth is not registry membership renamed',
-        observed: 'NOT-REACHED',
+        observed: 'PRECONDITION-UNMET',
         precondition: {
           requirement: 'REQUIRED', state: 'UNREACHED',
           evidence: { registered_and_routable_reached: true, registered_and_non_routable_reached: false },
           provenance: 'no task shape produced a non-routable state for a registered capability',
         },
         evidence: { reason: 'no non-routable witness exists, so the anti-tautology check has nothing to evaluate' },
-        note: '⛔ NOT-REACHED — never discharges; it did not run, and did not pass',
+        note: '⛔ PRECONDITION-UNMET — never discharges; it did not run, and did not pass',
       },
       headline: cal2a.observed,
     };
