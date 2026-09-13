@@ -8,14 +8,17 @@
   "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
   "subject_sha_short": "fd543df1",
   "subject_role": "REPAIR_CANDIDATE",
-  "instrument_sha": "5c9f5094",
+  "instrument_sha": "4267e12b",
   "layer_b_capability": "git.rev_parse",
   "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
   "calibration": "SUCCESS",
   "rb_acceptance_pass": false,
   "non_discharging": [
     "RB-F5",
-    "RB-F7"
+    "RB-F7",
+    "RB-CAL-3b",
+    "RB-CAL-3c",
+    "RB-CAL-3d"
   ],
   "mismatches": 0,
   "stop": null,
@@ -28,10 +31,45 @@
     "discharges": false,
     "note": "the IPC hop is NOT exercised (no Electron host). This records the consuming branch only and discharges nothing."
   },
+  "real_ipc_host_witness": {
+    "id": "RB-IPC-WITNESS",
+    "observed": "HOST_WITNESS_UNAVAILABLE",
+    "required_path": [
+      "renderer/request → ipcMain('jarvis:submit-task')",
+      "route()",
+      "C0 branch / successor",
+      "execution decision boundary",
+      "runCapability()"
+    ],
+    "capability_policy": "existing harmless registered read capability ONLY — ⛔ no effect-bearing capability, ever",
+    "electron_declared_in_subject": true,
+    "substitution_policy": "⛔ the simulated route()+runCapability() composition MUST NOT be substituted; it is exactly what cannot discharge RB-F3/RB-F6",
+    "consequence": "RB-6B cannot close GREEN until a founder-run host witness captures both pre- and post-repair semantics",
+    "discharges": false,
+    "_unused": false
+  },
+  "rb6b_target_matrix": {
+    "RB-F1": "GREEN",
+    "RB-F2": "GREEN",
+    "RB-F3": "GREEN",
+    "RB-F4": "RED",
+    "RB-F5": "nondischarging until a legitimate specimen exists",
+    "RB-F6": "GREEN",
+    "RB-F7": "N/A",
+    "RB-F8": "GREEN",
+    "RB-CAL-2a": "GREEN",
+    "RB-CAL-2b": "GREEN",
+    "RB-CAL-3a": "GREEN",
+    "RB-CAL-3b": "GREEN",
+    "RB-CAL-3c": "GREEN",
+    "RB-CAL-3d": "GREEN",
+    "caller-forged execution authority": "REFUSED / no execution",
+    "host-minted execution decision": "execution possible"
+  },
   "records": [
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F1",
       "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
       "expected_state": "GREEN",
@@ -66,7 +104,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F2",
       "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
       "expected_state": "GREEN",
@@ -109,7 +147,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F3",
       "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
       "expected_state": "RED",
@@ -152,7 +190,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F4",
       "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
       "expected_state": "RED",
@@ -193,7 +231,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F5",
       "statement": "Caller/packet cannot elevate registration semantics.",
       "expected_state": "UNINSTANTIATED",
@@ -221,7 +259,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F6",
       "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
       "expected_state": "RED",
@@ -274,7 +312,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F7",
       "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
       "expected_state": "N/A",
@@ -301,7 +339,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "falsifier": "RB-F8",
       "statement": "Unregistered remains impossible.",
       "expected_state": "GREEN",
@@ -339,7 +377,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -424,7 +462,7 @@
     },
     {
       "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
-      "instrument_sha": "5c9f5094",
+      "instrument_sha": "4267e12b",
       "instrument_lineage": [
         "0b9aaec4",
         "1ed81732"
@@ -465,6 +503,159 @@
       },
       "note": "both states reached for one capability; an unbranded assertion was refused; the caller does not derive the condition from the registry",
       "precondition_enforced": "GREEN"
+    },
+    {
+      "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
+      "instrument_sha": "4267e12b",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3a",
+      "statement": "a legitimate routing result is not by itself sufficient to cause execution",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "REACHED",
+        "evidence": {
+          "capability": "git.rev_parse",
+          "route_witness": {
+            "lane": "C0",
+            "status": "routed"
+          },
+          "independent_host_execution_decision_supplied": null
+        },
+        "provenance": "declared routing eligibility (subject producer) → route()"
+      },
+      "expected_state": "RED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "executed": true,
+        "error": null,
+        "execution_decision_boundary": {
+          "readable": true,
+          "c0_branch_found": true,
+          "statements_between_lane_test_and_seam": 3,
+          "any_decision_gate_between": false,
+          "evidence_class": "STRUCTURAL (supplementary; discharges nothing)"
+        }
+      },
+      "note": "a legitimately routed invocation executed with NO independent host execution decision"
+    },
+    {
+      "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
+      "instrument_sha": "4267e12b",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3b",
+      "statement": "same capability, same route — only the independent host execution decision differs",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "arm_a_reached": true,
+          "arm_a_result": "EXECUTED (defect)",
+          "arm_b_reached": false,
+          "arm_b_reason": "no host-minted execution decision mechanism exists in the subject"
+        },
+        "provenance": "ARM A observed through the subject composition; ARM B has no mechanism to observe"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "host_origin_contract": {
+          "disqualified": [
+            "a field on the submitted task (e.g. task.execution_authorized)",
+            "a nested object supplied through jarvis:submit-task",
+            "a branded object created in the renderer",
+            "a caller-supplied value merely rewrapped by main.js — mintPermit(task.callerSuppliedDecision)",
+            "any value whose truth is a function of the routing result alone"
+          ],
+          "required": "the decision depends on at least one fact the router did not produce and the caller could not supply"
+        }
+      },
+      "note": "⛔ UNINSTANTIATED — ARM B has no mechanism yet; ⛔ it was NOT fabricated to make the probe runnable"
+    },
+    {
+      "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
+      "instrument_sha": "4267e12b",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3c",
+      "statement": "caller-controlled data resembling execution authority cannot cause a routed invocation to execute",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "reason": "the repaired host-side authority form does not exist, so its closest caller-controlled counterfeit cannot be constructed"
+        },
+        "provenance": "frozen in the probe specification"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "forbidden_shortcut": "⛔ spraying arbitrary fields (approved:true, authorized:true) and calling that proof",
+        "when_instantiable": "once a real host-side authority form exists, the probe must attempt the CLOSEST caller-controlled counterfeit of THAT form",
+        "note": "this will likely become the first concrete specimen for RB-F5, which has remained abstract"
+      },
+      "note": "⛔ UNINSTANTIATED — a counterfeit must mirror a real shape; there is no shape yet"
+    },
+    {
+      "subject_sha": "fd543df1b43ab9a8d45a8bf374febc60257346a7",
+      "instrument_sha": "4267e12b",
+      "instrument_lineage": [
+        "0b9aaec4",
+        "1ed81732"
+      ],
+      "falsifier": "RB-CAL-3d",
+      "statement": "the host execution decision may not be auto-minted from the routing result",
+      "precondition": {
+        "requirement": "REQUIRED",
+        "state": "UNREACHED",
+        "evidence": {
+          "reason": "no host execution decision exists, so it cannot yet be shown to depend on a fact independent of the route"
+        },
+        "provenance": "frozen in the probe specification"
+      },
+      "expected_state": "UNINSTANTIATED",
+      "expectation_profile": "RB-6A CANDIDATE MATRIX (frozen before re-run)",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-cal3.mjs → runCal3()",
+      "layer": "A/B (subject composition; ⛔ NOT the real IPC boundary)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "counterfeit": "if (route.lane === 'C0') { decision = mintHostDecision() }",
+        "why_worthless": "⭐ technically host-minted and architecturally worthless — the truth of the decision is still a function of the route",
+        "required_when_instantiable": "withholding the decision must be REACHABLE while the same valid route is produced"
+      },
+      "note": "⛔ UNINSTANTIATED — host-minted is necessary and not sufficient; independence from the route is the real test"
     }
   ]
 }
