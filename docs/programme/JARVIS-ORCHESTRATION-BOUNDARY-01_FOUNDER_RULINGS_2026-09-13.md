@@ -1002,10 +1002,9 @@ Founder-ordered sequence of subsequent acts. ⛔ None of these is hereby perform
 5. D-J4   unreconciled disagreement ── PERFORMED (FR-J4): representable, never silently collapsed
 6. D-J7   routing ── PERFORMED (FR-J7): consent precedes selection
 7. D-J8   inferred Work structure ── PERFORMED (FR-J8): perception, never authority
-8. bounded-job / incremental-computation substrate ── NEXT, and gated on a READ-ONLY
-                          SUBSTRATE CENSUS first (founder, 2026-09-13): what existing freeze,
-                          digest, invalidation, queue/worker, resumability and dependency
-                          primitives can be reused rather than creating another architecture
+8. bounded-job / incremental-computation substrate ── census RUN, then AMENDED IN PLACE by
+                          founder act BCS-C2 (three falsified findings). ⛔ D-J9 NOT OPENED.
+                          Record: JARVIS-BOUNDED-COGNITION-SUBSTRATE-CENSUS_2026-09-13.md
 ```
 
 ⭐ **The order is itself a ruling**: naming before code, consent before economics,
@@ -1077,7 +1076,7 @@ D-J4, should be reconciled with it rather than authored beside it.
 | ~~**D-J4**~~ | ⭐ **RULED 2026-09-13 — REPRESENTABLE, NEVER SILENTLY COLLAPSED** (FR-J4). Five qualifying conditions; refuses premature collapse AND false balance; synthesis is a new contribution, never an erasure. Named refusal: *consensus by machinery*. F-J4.1-5 |
 | ~~**D-J7**~~ | ⭐ **RULED 2026-09-13 — CONSENT PRECEDES SELECTION** (FR-J7). Authorization first, then capability, then economics. Availability ≠ consent; transformation ≠ declassification. F-J7.1-8. ⚠️ `modelService` census finding recorded, not repaired |
 | ~~**D-J8**~~ | ⭐ **RULED 2026-09-13 — PERCEPTION, NEVER AUTHORITY** (FR-J8). Four conditions bound to Invariant 16 + Recognition Integrity + Authority × Time. *Inference may accumulate evidence; it may not accumulate authority.* F-J8.1-4 |
-| **STEP 8** | ⭐ **NEXT** — bounded-job / incremental-computation substrate, **gated on a read-only substrate census** (founder). ⛔ Build not authorized |
+| **STEP 8** | census RUN and **AMENDED (BCS-C2)**: six of nine responsibilities already proved in production code; the real gap is **epistemic dependency**. ⛔ **D-J9 NOT OPENED** · build not authorized |
 | **D-J9 … D-J14** | OPEN, unsequenced (scaling docket) |
 | **D-01 … D-12** | OPEN (companion intake) |
 | **D-J15** *(new)* | Where does FR-J1/FR-J5 live as canon — a new `docs/canon/` document, or an addition to `MAIA_SOVEREIGNTY_INVARIANTS.md` (Invariant 16 precedent)? ⛔ Jarvis does not place canon on its own act |
@@ -1094,7 +1093,9 @@ FR-J6                  RULED — NO runtime proper name; "Jarvis" = programme wo
 FR-J8                  RULED — perception, never authority. Visibly derived · refusable ·
                        member override authoritative · never leverage. Named refusal:
                        ontology by accumulation. F-J8.1-4
-CONSTITUTIONAL SEQ     COMPLETE through D-J8. Step 8 (bounded jobs) gated on census
+CONSTITUTIONAL SEQ     COMPLETE through D-J8
+STEP 8                 census RUN + AMENDED (BCS-C2). D-J9 NOT OPENED. Strongest queue
+                       precedent NOT finally selected. Real gap = EPISTEMIC dependency
 FR-J7                  RULED — consent precedes selection. Authorization → capability →
                        economics, never the reverse. Caller may request capability, never
                        permission. Fallback may contract permission, never expand it.

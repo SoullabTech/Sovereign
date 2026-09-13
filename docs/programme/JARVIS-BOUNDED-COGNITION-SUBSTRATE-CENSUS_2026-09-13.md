@@ -3,6 +3,9 @@
 **Date:** 2026-09-13 · **Branch:** `claude/bold-bohr-pmtynu` · **Base:** `e1c6f527`
 **Ordered by:** founder, 2026-09-13, as the gate on FR-J-SEQ step 8.
 **Standing:** ⛔ **READ-ONLY. BUILD NOT AUTHORIZED.** No code · no schema · no lane opened.
+⭐ **AMENDED IN PLACE 2026-09-13 by founder act BCS-C2** — a second responsibility-level
+inspection falsified three parts of the first pass. Amendments are marked **C2.x** and the
+falsified statements are kept, struck, never deleted. ⛔ **D-J9 NOT OPENED.**
 **Governing rulings:** FR-J1 · FR-J5 · FR-J6 · FR-J2 · FR-J3 · FR-J4 · FR-J7 · FR-J8
 (`JARVIS-ORCHESTRATION-BOUNDARY-01_FOUNDER_RULINGS_2026-09-13.md`)
 
@@ -34,9 +37,110 @@ overloaded with the turn-exceeding job meaning.*
 
 ---
 
+## 0b · BCS-C2 — Census Repair (founder act, 2026-09-13)
+
+⭐⭐ **The methodological lesson, now stronger than the first correction:**
+
+> **Do not generalize from the first substrate found. Generalize from the strongest
+> responsibility already proved.**
+
+The first pass found *a* queue and stopped. A responsibility-level sweep finds **four workers,
+three independent stale-job reapers, and one substrate materially stronger than the one this
+census nominated.**
+
+### ⛔ C2.1 · The queue precedent was wrong — two corrections
+
+~~*"QUEUE / WORKER — ⭐ STRONG PRECEDENT… `EmbeddingQueueService`"*~~ — **overstated.**
+Confirmed at `e1c6f527`, `claimNext()` selects `WHERE status = 'pending' AND attempts < $1`.
+⭐ It uses `FOR UPDATE SKIP LOCKED` and stamps `locked_at`, but **nothing in that service ever
+reclaims an abandoned `processing` row.** A lock timestamp plus an attempt counter does **not**
+establish abandoned-job reclamation.
+
+~~*"Consumers include `scripts/run-media-worker.ts`, `scripts/run-session-summary-worker.ts`"*~~
+— **false, and the error is instructive.** It came from grepping `claimNext|EmbeddingQueueService`
+and reading a **shared method name as a consumer relationship**. Those workers implement their
+own claim against their own tables. ⛔ Only `scripts/embedding_worker.ts` and
+`app/api/embeddings/backlog/route.ts` relate to that service.
+
+### ⭐⭐ The actual strongest precedent: `media_jobs` / `run-media-worker.ts`
+
+Migration `20260407100001_media_studio_build_a.sql`:
+
+```text
+status        queued | processing | done | failed | skipped   (CHECK)
+attempts · max_attempts        bounded retry
+claimed_by · claimed_at        worker identity + claim time
+heartbeat_at                   liveness
+depends_on  UUID → media_jobs  EXECUTION dependency (self-FK)
+is_critical · priority         scheduling + failure severity
+input_data · output_data JSONB records of what went in and came out
+queued_at · started_at · finished_at
+```
+
+Worker behaviour confirmed in `scripts/run-media-worker.ts`: **claim is dependency-aware**
+(*"claimable only if it has no `depends_on`, or its dependency is done"*), **recursive
+downstream failure propagation** (a recursive CTE marks dependents `skipped` with
+`last_error = 'upstream_critical_failure'`), a **heartbeat interval**, and a **stale-job reaper**
+calling the DB function `fn_requeue_stale_media_jobs($1::interval)`.
+
+### ⭐ Crash recovery is proved three times independently, in SQL
+
+```text
+fn_requeue_stale_media_jobs · fn_requeue_stale_comms_jobs · fn_requeue_stale_summary_jobs
+```
+
+Four workers exist: `run-media-worker.ts` · `run-session-summary-worker.ts` ·
+`run-comms-analysis-worker.ts` · `embedding_worker.ts`. `FOR UPDATE SKIP LOCKED` also appears in
+`lib/supervision/SupervisionStore.ts` and `lib/comms/DeliveryService.ts`.
+
+⭐ **Reaping lives in the database, not the worker** — a design choice worth carrying, since it
+survives any particular worker process dying.
+
+### ⛔ C2.2 · "Resumability" was two responsibilities under one word
+
+```text
+CRASH RECOVERY / RETRY      worker dies → stale claim returns to executable state   ⭐ PRESENT
+PARTIAL COMPUTATION RESUME  job did N of M units → restart continues at N+1         🔴 NOT ESTABLISHED
+```
+
+⛔ **Neither may be called "resumability" without the qualifier.** Crash recovery is **not**
+absent and is **not** merely implied by `EmbeddingQueueService` — it is proved three times, in
+three reaper functions, with heartbeats. Partial-computation resume is genuinely unestablished:
+no job substrate carries a checkpoint or progress column, and the `checkpoint|progress_` sweep
+returns only unrelated consciousness/scheduling modules.
+
+⭐ Also absent across every job substrate: **cancellation.** No `cancelled` status, no
+cancel-request column. The `cancel` sweep hits only scheduling, focus and membership domains.
+
+### ⛔ C2.3 · "Dependency is absent" was too broad
+
+```text
+EXECUTION DEPENDENCY   job B cannot execute until job A succeeds        ⭐ PRESENT
+                       media_jobs.depends_on + recursive downstream propagation
+EPISTEMIC DEPENDENCY   finding F depended on evidence E as read at       🔴 ABSENT
+                       frozen Work state R                               ← the real Step-8 gap
+```
+
+⛔ **`media_jobs.depends_on` must never be generalized into epistemic provenance.** It is
+precedent for **dependency mechanics** — self-FK, dependency-aware claim, recursive failure
+propagation — and is a different relation entirely. Sharing the word would be the same class of
+error as `conversation_memory_uses` (FR-J3) and as actor/material collapse (F-J2.3): *a name
+asserting a stronger relation than the thing establishes.*
+
+⭐ The epistemic candidate shape is unchanged, and both halves still exist unjoined:
+
+```text
+finding  ──depended upon──►  EvidenceRef  +  frozen revision / range / digest
+```
+
+---
+
 ## 1 · Findings by primitive family
 
-### 1.1 · QUEUE / WORKER — ⭐ **STRONG PRECEDENT, durable and DB-backed**
+### 1.1 · QUEUE / WORKER — ⚠️ **SUPERSEDED BY C2.1. Read §0b first.**
+
+*Kept as written. `EmbeddingQueueService` is a real durable queue and a valid precedent for
+claim-and-terminal-state; it is **not** the strongest one, and the consumer list below is wrong.*
 
 `lib/ai/EmbeddingQueueService.ts` + `embedding_jobs`:
 
@@ -124,7 +228,7 @@ a boolean.
 
 Adjacent: `lib/manuscript/ask/retry.ts`.
 
-### 1.5 · RESUMABILITY — ⚠️ **PARTIAL**
+### 1.5 · RESUMABILITY — ⚠️ **SUPERSEDED BY C2.2** — the word covered two responsibilities
 
 `claimNext()` + `attempts` + `locked_at` + `EMBEDDING_MAX_ATTEMPTS` give **crash-tolerant
 retry**: an abandoned claim is re-claimable and bounded. 🔴 **Not present:** resumption of a
@@ -134,7 +238,7 @@ continues), and no cancellation path — `status` admits no `cancelled`.
 ⚠️ For a Whole-Work sweep the difference is material: re-running a 300k-word analysis from zero
 after a failure is the cost profile step 8 exists to avoid.
 
-### 1.6 · DEPENDENCY — 🔴 **THE REAL GAP**
+### 1.6 · DEPENDENCY — ⚠️ **SUPERSEDED BY C2.3** — execution dependency exists; epistemic does not
 
 Nothing in `lib/` represents *"finding F depended on sections S1…Sn at revisions R1…Rn."*
 
@@ -151,24 +255,31 @@ built; nothing joins them into an invalidation graph.
 
 ## 2 · Summary table
 
-| Family | State | Reuse verdict |
-|---|---|---|
-| Queue / worker | ⭐ durable DB queue, live | **Generalize** — front and end of lifecycle missing |
-| Freeze | ⭐⭐ house discipline, tested | **Reuse wholesale** (`commission · freeze · scope`) |
-| Digest / fingerprint | ⭐ three instruments | **Reuse** — sufficient for change detection |
-| Invalidation / staleness | ⭐⭐ five-dimension three-state | **Adopt the model**, do not invent a boolean |
-| Resumability | ⚠️ retry yes, partial-resume no | **Extend** — partial findings + cancellation |
-| Dependency | 🔴 absent | **Build** — but from `EvidenceRef` + frozen revision |
+⭐ **Revised by BCS-C2. Nine responsibilities, not six families.**
 
-⭐⭐ **Four of six families are substantially present.** Step 8 is an **assembly and
-generalization problem**, not a new architecture — which is the same shape every census in this
-lane has produced.
+| Responsibility | State | Strongest precedent | Verdict |
+|---|---|---|---|
+| Queue / worker | ⭐ **PRESENT in several forms** | `media_jobs` / `run-media-worker.ts` | ⛔ strongest precedent **not finally selected** |
+| Crash recovery / retry | ⭐ **PRESENT** | three `fn_requeue_stale_*` fns + heartbeats | **Reuse** — reaping in SQL, not the worker |
+| Partial-computation resume | 🔴 **ABSENT / NOT ESTABLISHED** | — | **Build** |
+| Cancellation | 🔴 **ABSENT** | — | **Build** (act + terminal state) |
+| Execution dependency | ⭐ **PRESENT** | `media_jobs.depends_on` + recursive propagation | **Reuse mechanics only** |
+| Epistemic dependency | 🔴 **ABSENT** | — | ⭐ **the real Step-8 gap**; halves exist unjoined |
+| Freeze | ⭐⭐ **PRESENT** | `commission · freeze · scope` | **Reuse wholesale** |
+| Digest / fingerprint | ⭐ **PRESENT** | three instruments | **Reuse** |
+| Three-state staleness | ⭐⭐ **PRESENT** | `ask/staleness.ts` | **Adopt the model** |
+
+⭐⭐ **Six of nine responsibilities are already proved in production code.** Step 8 remains an
+**assembly and generalization problem** — but generalized from *several* proven implementations,
+⛔ never by mutating one embedding-specific table.
 
 ---
 
 ## 3 · Questions the census leaves for design (⛔ none answered here)
 
-1. Generalize `embedding_jobs`, or a sibling table with the same proven shape?
+1. ⭐ **Revised by C2.1:** not *"generalize `embedding_jobs`"* — which substrate's proven
+   responsibilities does a **sibling** bounded-cognition substrate inherit, and from which of
+   the four workers does each one come?
 2. Where does a job's **authorization basis** live (FR-J7 §9) — the job row, or a referenced
    scope object?
 3. What is a **partial finding**, and does it become visible before completion or only at
@@ -181,14 +292,54 @@ lane has produced.
 
 ---
 
-## 4 · Standing
+## 4 · Standing (revised, BCS-C2)
 
 ```text
-CENSUS               COMPLETE, READ-ONLY, at e1c6f527
-CORRECTION           intake §6.2 "no job substrate" — WRONG, corrected §0
-BUILD                NOT AUTHORIZED · no design accepted · no lane opened
-CODE / SCHEMA        UNTOUCHED
+QUEUE / WORKER               PRESENT in several forms; strongest precedent NOT FINALLY SELECTED
+CRASH RECOVERY               PRESENT  (3 reaper fns · heartbeats · 4 workers)
+PARTIAL-COMPUTATION RESUME   ABSENT / NOT ESTABLISHED
+CANCELLATION                 ABSENT
+EXECUTION DEPENDENCY         PRESENT  (media_jobs.depends_on)
+EPISTEMIC DEPENDENCY         ABSENT   ← the Step-8 gap
+FREEZE                       PRESENT · reuse
+DIGEST                       PRESENT · reuse
+THREE-STATE STALENESS        PRESENT · reuse
+
+CENSUS        AMENDED IN PLACE, READ-ONLY, at e1c6f527
+CORRECTIONS   (1) intake §6.2 "no job substrate" — WRONG (§0)
+              (2) EmbeddingQueueService as strongest precedent — WRONG (C2.1)
+              (3) media/summary workers as its consumers — FALSE (C2.1)
+              (4) "resumability" as one property — WRONG (C2.2)
+              (5) "dependency absent" — TOO BROAD (C2.3)
+D-J9          ⛔ NOT OPENED
 ```
 
-> **The bounded-job substrate is less missing than it looked.** What is genuinely absent is the
-> dependency edge — and both of its halves are already built and merely unjoined.
+### ⛔ Still not authorized
+
+```text
+⛔ no generic jobs table      ⛔ no bounded-cognition schema   ⛔ no producer registration
+⛔ no CMT-01 M3               ⛔ no dependency graph           ⛔ no worker
+⛔ no migration               ⛔ no implementation lane
+```
+
+### Founder directions carried forward as PROVISIONAL (⛔ not rulings — D-J9 is not open)
+
+- Generalize **behavior**, not `embedding_jobs`; inherit proven responsibilities from several
+  implementations.
+- Authorization and Work/member identity should converge on **one frozen commission/scope
+  reference**; IDs on the job are for indexing, authority comes from the frozen scope.
+- ⭐ A **partial finding is a checkpoint, not yet an epistemic result** — persistence for
+  resumption must not make it conversationally eligible.
+- **Cancellation is both an act and a terminal state**: the act preserves who/when/why,
+  `cancelled` is the lifecycle projection.
+- **Result freshness and job status stay orthogonal** — a job stays `completed` while its
+  results become `changed` / `unchanged` / `unmeasured` (§1.4's contract).
+- ⭐⭐ **The producer class belongs to the material, not the job.** FR-J2 already says this.
+  Completion confers no producer identity; `computed.writer_structure` exists for genuinely
+  computed structure, but forcing every bounded-job finding through one class would recreate
+  **actor/material collapse (F-J2.3) through the back door.** ⛔ **Step 8 should never have
+  "the bounded-job producer."** The job is machinery; each finding is classified by what it
+  actually is.
+
+> **Do not generalize from the first substrate found. Generalize from the strongest
+> responsibility already proved.**
