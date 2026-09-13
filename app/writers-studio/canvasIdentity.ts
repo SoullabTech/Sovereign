@@ -50,6 +50,37 @@ export function canvasForManuscript(base: string, manuscriptId: string | null): 
   return `${base}${sep}${CANVAS_MANUSCRIPT_PARAM}=${encodeURIComponent(manuscriptId)}`;
 }
 
+/**
+ * The Canvas, pinned to a manuscript WITHOUT discarding the rest of the visit.
+ *
+ * ⭐ EW-F1 FOLLOW-ON, FOUNDER-CAUGHT IN RUNTIME 2026-09-13. The pin effect used
+ * `canvasForManuscript(window.location.pathname, id)`, which builds a fresh
+ * query string from the pathname alone. Every other parameter the visit
+ * arrived with was silently dropped — including `proposal=`, so a link that
+ * pointed the writer at a staged change lost the change on first paint and the
+ * consent surface never mounted. The manuscript pin is the only rewriter in
+ * the room that did this; `locationForSection` has preserved the query string
+ * since it was written.
+ *
+ * ⛔ THE SHAPE OF THE DEFECT MATTERS MORE THAN THE PARAMETER IT ATE. A writer
+ * pinning ONE fact into the address bar must not thereby assert every other
+ * fact is absent. Absence is not an instruction — the same law the identity
+ * contract already states one function further down.
+ *
+ * Set, never rebuild. Mirrors `locationForSection` exactly, and for the same
+ * reason: these two effects run against the same address bar.
+ */
+export function canvasLocationForManuscript(
+  pathname: string,
+  search: string,
+  manuscriptId: string,
+): string {
+  const params = new URLSearchParams(search);
+  params.set(CANVAS_MANUSCRIPT_PARAM, manuscriptId);
+  const q = params.toString();
+  return q ? `${pathname}?${q}` : pathname;
+}
+
 /** Reads the requested manuscript identity out of a URL query string. */
 export function requestedManuscriptId(search: string): string | null {
   return new URLSearchParams(search).get(CANVAS_MANUSCRIPT_PARAM);

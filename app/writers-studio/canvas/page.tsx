@@ -27,7 +27,7 @@ import { StudioText } from '../studio/StudioType';
 import { IMPORT_HREF } from '../studioMap';
 import {
   adoptRouteIdentity,
-  canvasForManuscript,
+  canvasLocationForManuscript,
   requestedManuscriptId,
   requestedManuscriptIdFrom,
   resolveManuscript,
@@ -265,10 +265,16 @@ function CanvasRoom() {
     if (resolution.kind !== 'resolved') return;
     const id = resolution.manuscript.id;
     if (requestedManuscriptId(window.location.search) === id) return;
+    /* ⛔ PRESERVE THE REST OF THE VISIT. This used `canvasForManuscript`,
+       which builds a query string from the pathname alone — so pinning the
+       manuscript silently deleted every other parameter the writer arrived
+       with, `proposal=` included. Founder-caught in runtime, 2026-09-13. */
     window.history.replaceState(
       null,
       '',
-      canvasForManuscript(window.location.pathname, id),
+      canvasLocationForManuscript(
+        window.location.pathname, window.location.search, id,
+      ),
     );
   }, [resolution]);
 
