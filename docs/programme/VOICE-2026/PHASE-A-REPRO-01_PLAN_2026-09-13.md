@@ -150,3 +150,52 @@ Standing: PINS PASS · BUILD PASS · CUSTODY RECORDED · **UUID GATE STOP** · N
 Files under `docs/programme/VOICE-2026/driver-ledger/phase-a-repro-01/`: `build-20260913T173346Z.txt` (run 1; last line is the `## STOP — UUID GATE` refusal, exit 3) · `build-20260913T173434Z.txt` (run 2; last line `## STOP — worktree not clean`, nothing built) · `manifest-20260913T173346Z.sha256` (7 files: `Info.plist` · `PkgInfo` · `VoiceKernelHarness` · `VoiceKernelHarness.debug.dylib` · `_CodeSignature/CodeResources` · `__preview.dylib` · `embedded.mobileprovision`; SHA-256 of the manifest `09e286b6…` = the value in the run-1 record) · `xcodebuild-unsigned-20260913T173346Z.log` and `xcodebuild-signed-20260913T173346Z.log` (both contain `** BUILD SUCCEEDED **`). Read-only verification; no file edited. The custody chain the plan required (§3) is therefore in the repository, not only in the founder's paste.
 
 Standing unchanged: **UUID GATE STOP · NO INSTALL · DEVICE UNTOUCHED · founder ruling required** on the three options above. Nothing runs on the device until that ruling; a ruling for option 1 is executed by exactly two founder commands (one reinstall with `K00_EXPECT_UUID=64EEC026-5F56-3706-BD2A-C5A6A20FC08B`, then one batch `PHASE-A-REPRO-01 30 --mode L --subject phase-a`), verified here afterwards.
+
+## §12 FOUNDER RULING (2026-09-13) — run 1 ACCEPTED as REPRO SUBJECT R1 · install + N=30 AUTHORIZED · rebuild to chase the UUID PROHIBITED
+
+Verbatim standing from the ruling:
+
+```text
+RUN 1 BUILD              ACCEPTED AS REPRO SUBJECT R1
+RUN 2                     REFUSAL VALID · NO EFFECT ON R1
+
+HISTORICAL UUID MATCH     FAILED
+HISTORICAL EQUIVALENCE    NOT CLAIMED
+REBUILD TO CHASE UUID     PROHIBITED
+
+PHASE-A-REPRO-01-R1       AUTHORIZED TO INSTALL + RUN N=30
+VOICEKERNEL REPAIR        FROZEN
+B2                        HOLD
+E1–E4                     HELD
+MECHANISM CLAIM           NONE
+```
+
+**Reading (founder):** the Mach-O UUID is not a sufficient reproducibility identity for a rebuild of this source condition under what has actually been measured; earlier same-SHA UUID stability was evidence, not law. Repeatedly compiling `4596b9bdb` until one build happens to emit `11A057AA-…` would select an artifact after seeing the outcome — prohibited. The UUID mismatch means *not the historical binary*; it does not mean *not a valid reproduction of source SHA `4596b9bdb`*. The historical Phase-A artifact remains unavailable; the exact comparison remains CLOSED · NOT EXECUTABLE. PHASE-A-REPRO-01 continues as a **source-condition reproduction**.
+
+**Repro subject R1 (custody):**
+
+```text
+UUID        64EEC026-5F56-3706-BD2A-C5A6A20FC08B
+dylib SHA   283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f
+manifest    7 files · manifest SHA-256 09e286b671358420b39d8bd20c89aac32249bf85c474a760adb4080729d112b1
+product     /private/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+```
+
+**Pre-install custody re-establishment (ruling):** UUID, dylib SHA-256 and the 7-file manifest must verify unchanged against the product immediately before install; any mismatch → STOP, no install. Implemented as instrument only in `scripts/witness/k00-reinstall.sh`: `K00_EXPECT_DYLIB_SHA` and `K00_EXPECT_MANIFEST` join `K00_EXPECT_UUID`; all three are evaluated BEFORE the install verb; the manifest check requires every listed file to hash identically **and** the product's file set to equal the manifest's (an unlisted extra file refuses); any mismatch writes `reinstall-<stamp>.REFUSED.txt` and exits 3 with nothing installed. Shim-exercised here (match → install verb reached; SHA mismatch · extra file · modified file → REFUSED, exit 3). Gate 35/35 (pins: both env names, `shasum -a 256 -c`, `FILE-SET MISMATCH` before `install app`).
+
+**Execution (founder, two commands, no reinstall inside the 30):**
+
+```bash
+K00_EXPECT_UUID=64EEC026-5F56-3706-BD2A-C5A6A20FC08B \
+K00_EXPECT_DYLIB_SHA=283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f \
+K00_EXPECT_MANIFEST="$PWD/docs/programme/VOICE-2026/driver-ledger/phase-a-repro-01/manifest-20260913T173346Z.sha256" \
+scripts/witness/k00-reinstall.sh docs/programme/VOICE-2026/driver-ledger \
+/private/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+```
+
+```bash
+scripts/witness/k00-driver-batch.sh PHASE-A-REPRO-01 30 --mode L --subject phase-a
+```
+
+**Predeclared reading (unchanged from §6, now against the control):** P5B0-POSTCLEAN-CONTROL 16/29 gen-1 listen vs PHASE-A-REPRO-01-R1 N=30. Markedly different → the `4596b9bdb` source condition *may* affect startup physiology (never causation). About the same → the original 5/5 MANUAL-COLD Phase-A result loses substantial explanatory weight. Neither outcome makes the pre-VP format read a demonstrated mechanism. C-D9 fields (`listeningHeldAtExport` · `listeningLostLater`) travel with the stage as evidence only; classes unchanged. Strata never pooled.
+

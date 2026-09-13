@@ -473,6 +473,13 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     const r = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-reinstall.sh'), 'utf8');
     expect(r.indexOf('REFUSED')).toBeLessThan(r.indexOf('install app'));  // Stage-C custody gate: the UUID refusal is evaluated BEFORE the install verb
     expect(r).toMatch(/K00_EXPECT_UUID/);
+    // PHASE-A-REPRO-01 R1 custody (founder ruling 2026-09-13): dylib SHA-256 and the per-file manifest are re-verified
+    // BEFORE the install verb; any mismatch refuses (exit 3). The manifest check must also refuse an unlisted file.
+    expect(r).toMatch(/K00_EXPECT_DYLIB_SHA/);
+    expect(r).toMatch(/K00_EXPECT_MANIFEST/);
+    expect(r).toMatch(/shasum -a 256 -c "\$EXPECT_MAN"/);
+    expect(r).toMatch(/FILE-SET MISMATCH/);
+    expect(r.indexOf('FILE-SET MISMATCH')).toBeLessThan(r.indexOf('install app'));
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
