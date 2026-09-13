@@ -47,7 +47,17 @@ TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
 
 log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
-list_journals(){ xcrun devicectl device info files --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --subdirectory tmp 2>/dev/null | grep -oE 'kernel00-[A-Za-z0-9-]+-[0-9]+\.jsonl' | sort -u; }
+# C-D5 (Stage B attempt 2, 20260912T191955Z): the container listing can FAIL ("The system failed to get a list of files
+# on the remote device"). The old list_journals swallowed that failure and returned an EMPTY listing, which the batch then
+# read as "the container is empty": the failed sample was ledgered as "no new journal", BEFORE was overwritten with the
+# empty set, and the NEXT sample ledgered every journal in the container (79..101 rows per row) — the flood that
+# invalidated attempt 2. A failed listing is now distinguished from an empty one: it is retried, it never overwrites
+# BEFORE, and on persistent failure the sample is an infrastructure row whose journal stays on the device by name.
+LIST_RC=0
+list_journals(){ local out rc n; for n in 1 2 3; do
+  out="$(xcrun devicectl device info files --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --subdirectory tmp 2>&1)"; rc=$?
+  if [ $rc -eq 0 ] && ! grep -q 'ERROR' <<<"$out"; then LIST_RC=0; grep -oE 'kernel00-[A-Za-z0-9-]+-[0-9]+\.jsonl' <<<"$out" | sort -u; return 0; fi
+  sleep 3; done; LIST_RC=1; return 1; }
 pull_journal(){ xcrun devicectl device copy from --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --source "tmp/$1" --destination "$LEDGER_DIR/journals/$1" >/dev/null 2>&1; }
 # xcodebuild (26.x) accepts exactly: -collect-test-diagnostics on-failure|never. CALIBRATION-02 died at
 # argument parsing (rc=64, wall 0 s ×3) on the wrong value "off" — C-D3, an orchestration defect.
@@ -85,7 +95,7 @@ log "build-for-testing (driver only; the harness is untouched)"
 xcodebuild build-for-testing -project "$PROJ" -scheme DriverUITests -destination "id=$XDEST" -derivedDataPath "$DD" DEVELOPMENT_TEAM="${K00_TEAM:-ZVK2X646Z2}" > "$LEDGER_DIR/build-for-testing.log" 2>&1 || { log "DRIVER/INFRASTRUCTURE FAILURE: build-for-testing failed (see build-for-testing.log)"; exit 3; }
 XCTESTRUN="$(ls -t "$DD"/Build/Products/*.xctestrun | head -1)"; log "xctestrun: $XCTESTRUN"
 
-BEFORE="$(list_journals)"
+BEFORE="$(list_journals)" || { log "ABORT: the container listing failed three times before sample 1; nothing was sampled"; exit 7; }
 for i in $(seq 1 "$N"); do
   log "sample $i/$N — precondition"
   if harness_present; then
@@ -106,7 +116,18 @@ for i in $(seq 1 "$N"); do
     log "ABORT: xcodebuild refused the invocation ($WHY); infrastructure failure recorded"; exit 6
   fi
   grep -q 'Failure collecting diagnostics from devices: Timed out' "$LEDGER_DIR/sample-$i-xcodebuild.log" && log "sample $i: xcodebuild spent its 600 s diagnostics-collection timeout after the run (wall $((T1-T0)) s)"
-  AFTER="$(list_journals)"; NEW="$(comm -13 <(echo "$BEFORE") <(echo "$AFTER"))"; BEFORE="$AFTER"
+  AFTER="$(list_journals)"
+  if [ "$LIST_RC" -ne 0 ]; then   # C-D5: a failed listing is not an empty container; BEFORE is kept, the journal stays on the device
+    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | container listing failed three times after the invocation (rc=$RC · wall $((T1-T0)) s); the journal this invocation wrote, if any, remains on the device unpulled — custody by later listing, never counted |" >> "$LEDGER"
+    log "sample $i: container listing failed ×3 — infrastructure row, BEFORE snapshot kept"; continue
+  fi
+  NEW="$(comm -13 <(echo "$BEFORE") <(echo "$AFTER"))"; BEFORE="$AFTER"
+  if [ "$(wc -w <<<"$NEW")" -gt 1 ]; then   # C-D5: one invocation writes one journal; more than one is never ledgered as a sample
+    KEPT=""; mkdir -p "$LEDGER_DIR/journals/not-a-sample"
+    for f in $NEW; do xcrun devicectl device copy from --device "$DEV" --domain-type appDataContainer --domain-identifier "$BID" --source "tmp/$f" --destination "$LEDGER_DIR/journals/not-a-sample/$f" >/dev/null 2>&1 && KEPT="$KEPT $f;"; done
+    echo "| $LABEL | $i | $MODE | — | — | — | **DRIVER/INFRASTRUCTURE FAILURE** | $(wc -w <<<"$NEW") new journals after one invocation (rc=$RC · wall $((T1-T0)) s); preserved under journals/not-a-sample, none counted:$KEPT |" >> "$LEDGER"
+    log "sample $i: $(wc -w <<<"$NEW") new journals after one invocation — infrastructure row"; continue
+  fi
   if grep -q 'PRECONDITION-FAILED' "$LEDGER_DIR/sample-$i-xcodebuild.log"; then
     echo "| $LABEL | $i | $MODE | — | — | — | **PRECONDITION-FAILED** | in-test state check found the harness running; sample invalid, not repaired |" >> "$LEDGER"; continue
   fi

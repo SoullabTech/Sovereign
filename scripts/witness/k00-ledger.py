@@ -15,7 +15,13 @@ Prints one Markdown table row per file (and a header with --header). Changes not
 """
 import argparse, hashlib, json, os, sys
 
+P5B0_STEPS = ['engine_created', 'vp_enable_begin', 'vp_enable_return', 'output_connected', 'input_format_after_vp',
+              'input_tap_installed', 'render_tap_installed', 'observer_installed', 'prepare_begin', 'prepare_return',
+              'start_begin', 'start_return', 'is_running_immediate']
 SUBJECTS = {'p5b0': 13, 'phase-a': 14}   # gen-1 trace step count per known subject; P5-B0 has no input_format_before_vp
+# C-D6 (Stage B attempt 2 sample 5, K00-faf8fa3e): a §3 refusal AT GENERATION 1 lawfully ends the gen-1 trace at
+# input_format_after_vp (5 steps) with a gen-1 graph_start_refused. That is the subject behaving, not another subject;
+# the subject check accepts a proper prefix of the ordered step list only when that refusal record is present.
 
 def load(path):
     rows = []
@@ -42,8 +48,13 @@ def classify(rows, w4=False, subject='p5b0'):
         return 'DRIVER/INFRASTRUCTURE FAILURE', 'no enterConversation in journal (harness never entered)', ev, session
     t0 = enter[0]['timeMonotonicMs']
     steps1 = [r['evidence']['step'] for r in rows if r['event'] == 'graph_start_trace' and r['evidence'].get('generation') == '1']
-    if len(steps1) != expected or (subject == 'p5b0' and 'input_format_before_vp' in steps1) or (subject == 'phase-a' and 'input_format_before_vp' not in steps1):
+    refused1 = any(r['event'] == 'graph_start_refused' and r['evidence'].get('generation') == '1' for r in rows)
+    prefix_ok = subject == 'p5b0' and refused1 and 0 < len(steps1) < expected and steps1 == P5B0_STEPS[:len(steps1)] and steps1[-1] == 'input_format_after_vp'
+    if (len(steps1) != expected and not prefix_ok) or (subject == 'p5b0' and 'input_format_before_vp' in steps1) or (subject == 'phase-a' and 'input_format_before_vp' not in steps1):
         return 'SUBJECT-MISMATCH', f'gen-1 trace has {len(steps1)} steps; pre-VP read present={"input_format_before_vp" in steps1}', ev, session
+    if prefix_ok: ev['gen1Refused'] = True
+    resets = sum(1 for r in rows if r['event'] == 'media_services_reset')
+    if resets: ev['mediaServicesResets'] = resets
     cold = rows[0]['event'] == 'app_lifecycle' and rows[0]['cause'] == 'didBecomeActive' and rows[0]['generation'] == 0
     ev['cold'] = cold
     ir = [r['evidence']['engineRunning'] for r in rows if r['event'] == 'graph_start_trace' and r['evidence']['step'] == 'is_running_immediate' and r['evidence'].get('generation') == '1']
@@ -78,7 +89,8 @@ def classify(rows, w4=False, subject='p5b0'):
         return 'failure then recovery', f'listening first reached in generation {first["generation"]}', ev, session
     if degraded:
         return 'failure then degradation', 'floor reached degraded; no listening', ev, session
-    return 'other observed shape', f'no listening and no degraded by end of journal (hold {ev["holdS"]} s; last floor unknown)', ev, session
+    floors = [r.get('to') for r in rows if r['event'] == 'floor_transition']
+    return 'other observed shape', f'no listening and no degraded by end of journal (hold {ev["holdS"]} s; last floor {floors[-1] if floors else "unknown"})', ev, session
 
 def main():
     ap = argparse.ArgumentParser()
