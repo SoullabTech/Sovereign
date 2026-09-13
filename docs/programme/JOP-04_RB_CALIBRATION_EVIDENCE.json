@@ -1,0 +1,211 @@
+{
+  "run": "JOP-04 RB RED-before-GREEN calibration",
+  "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+  "subject_sha_short": "e1c6f527",
+  "instrument_sha": "0b9aaec4",
+  "layer_b_capability": "git.rev_parse",
+  "calibration": "SUCCESS",
+  "rb_acceptance_pass": false,
+  "non_discharging": [
+    "RB-F5",
+    "RB-F7"
+  ],
+  "mismatches": 0,
+  "stop": null,
+  "ipc_structural_tripwire": {
+    "readable": true,
+    "submit_task_handler_present": true,
+    "c0_branch_consumes_lane": true,
+    "calls_run_capability": true,
+    "evidence_class": "STRUCTURAL",
+    "discharges": false,
+    "note": "the IPC hop is NOT exercised (no Electron host). This records the consuming branch only and discharges nothing."
+  },
+  "records": [
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F1",
+      "statement": "Registration is not execution. Registration alone cannot produce an executable invocation.",
+      "expected_state": "RED",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F1].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "capability": "git.rev_parse",
+        "eligibility_state_supplied": null,
+        "executed": true,
+        "stdout_present": true
+      },
+      "note": "registration alone yielded an executed invocation; no eligibility state was supplied or required"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F2",
+      "statement": "Registry membership is not a lane grant. name ∈ CAPABILITIES cannot by itself confer C0.",
+      "expected_state": "RED",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F2].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "task_a": {
+          "capability": "git.rev_parse",
+          "registered": true,
+          "lane": "C0",
+          "reason": "Deterministic capability 'git.rev_parse' is registered; no model required."
+        },
+        "task_b": {
+          "capability": "jop04.definitely_not_registered_xyz999",
+          "registered": false,
+          "lane": "C3",
+          "reason": "No deterministic capability matched and task is not declared bounded-for-local; requires frontier-model reasoning."
+        },
+        "sole_differentiator": "registry membership"
+      },
+      "note": "membership is the sole causal differentiator of the C0 lane grant"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F3",
+      "statement": "Lane selection is not authority. Placement cannot satisfy authorization requirements.",
+      "expected_state": "RED",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F3].run()",
+      "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "lane": "C0",
+        "authority_supplied": {
+          "packet": null,
+          "gate": null,
+          "permission_envelope": null,
+          "actor": null
+        },
+        "executed": true
+      },
+      "note": "execution occurred with a valid lane and zero invocation authority"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F4",
+      "statement": "Missing effect contract is not read-only. Absence of classification cannot inherit safety.",
+      "expected_state": "RED",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F4].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "registered_total": 15,
+        "with_effect_declaration": 0,
+        "without_effect_declaration": 15,
+        "probe_capability": "git.rev_parse",
+        "probe_has_declaration": false,
+        "probe_executed": true
+      },
+      "note": "a capability carrying no effect declaration executed — absence of classification inherited safety"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F5",
+      "statement": "Caller/packet cannot elevate registration semantics.",
+      "expected_state": "UNINSTANTIATED",
+      "observed_state": "UNINSTANTIATED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F5].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "the repaired request shape does not exist; no legitimate specimen can be constructed",
+        "forbidden_substitute": "inventing a legacy RED by asserting a self-grant the census never showed"
+      },
+      "note": "structurally frozen, deliberately uninstantiated — ⛔ never discharges (FR-14)"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F6",
+      "statement": "Routing remains non-authoritative. The router may not possess authority-making power.",
+      "expected_state": "RED",
+      "observed_state": "RED",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F6].run()",
+      "layer": "B (route→runCapability composition; IPC hop NOT exercised)",
+      "layer_b_capability": "git.rev_parse",
+      "discharge_state": "NOT-DISCHARGED",
+      "evidence": {
+        "authority_state": "constant (none supplied in either arm)",
+        "arm_1": {
+          "lane": "C0",
+          "executed": true
+        },
+        "arm_2": {
+          "lane": "C3",
+          "executed": false
+        }
+      },
+      "note": "varying only the routing output changed whether the act occurred — the router carries authority-making power"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F7",
+      "statement": "Existing read capability remains semantically read (complements Effect Substrate F12, content inline in RB-F7).",
+      "expected_state": "N/A",
+      "observed_state": "N/A",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F7].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "NON-DISCHARGING",
+      "evidence": {
+        "reason": "requires re-expression through the new registration model, which does not exist"
+      },
+      "note": "not applicable at this baseline — ⛔ never discharges"
+    },
+    {
+      "subject_sha": "e1c6f527b4482e14848a1d6319aef55d47369aed",
+      "instrument_sha": "0b9aaec4",
+      "falsifier": "RB-F8",
+      "statement": "Unregistered remains impossible.",
+      "expected_state": "GREEN",
+      "observed_state": "GREEN",
+      "calibration": "MATCH",
+      "evidence_class": "BEHAVIORAL",
+      "evidence_location": "scripts/jop04/rb-falsifiers.mjs → FALSIFIERS[RB-F8].run()",
+      "layer": "A",
+      "layer_b_capability": null,
+      "discharge_state": "DISCHARGED-AT-BASELINE",
+      "evidence": {
+        "capability": "jop04.definitely_not_registered_xyz999",
+        "routed_lane": "C3",
+        "routed_to_executable_placement": false,
+        "seam_refused": true,
+        "seam_error": "Unknown capability: jop04.definitely_not_registered_xyz999",
+        "chain_executed": false
+      },
+      "note": "unregistered name reached neither executable placement nor the handler seam"
+    }
+  ]
+}
