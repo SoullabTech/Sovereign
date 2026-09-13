@@ -791,6 +791,24 @@ set, receive the explicit member act, establish a fresh boundary, and mint
 > **One explicit member authorization act may cause AT MOST ONE completed
 > authored-body crossing and AT MOST ONE completed-crossing receipt.**
 
+### ⚠️ AMENDED IN PLACE — founder, 2026-09-13 · see §15 Ruling 5
+
+⛔ **The word `receipt` in the sentence above is WRONG, and the substrate census
+proved it by colliding with §10.7 step 6.** The amended law:
+
+> **One explicit member authorization act may be CONSUMED at most once. One
+> successful consumption may produce ONE disclosure receipt for EACH
+> independently authorized section.**
+
+```text
+member act   → consumption        1 : ≤1
+consumption  → section receipts   1 : N
+```
+
+⭐ **Superseded, NOT deleted.** The original sentence conflated *permission to
+execute the member act* with *evidence that particular boundaries were crossed*.
+⛔ Two different things must never both be called `receipt`.
+
 ```text
 BODY_AUTHORITY_REQUIRED
         ↓  member authorizes
@@ -1253,6 +1271,87 @@ implement it.*
 
 ---
 
+## 15 · FOUNDER RULINGS — 2026-09-13
+
+Opened on `S3_PENDING_ASK_REF_SUBSTRATE_CENSUS_2026-09-13.md`, which closed the
+representation question and surfaced two items it was not entitled to decide.
+
+### Ruling 5 — CONSUMPTION AND DISCLOSURE RECEIPTS ARE DIFFERENT CARDINALITIES
+
+```text
+MEMBER ACT
+   │
+   └── 1 pendingAskRef
+           │
+           └── 0..1 consumption claim
+                    │
+                    ├── disclosure receipt: section A
+                    ├── disclosure receipt: section B
+                    └── ...
+```
+
+⛔ **`pendingAskRef` is NOT 1:N with receipts.** That would confuse permission to
+execute the member act with evidence that particular disclosure boundaries were
+crossed. The ref is 1:≤1 with a **consumption**; the consumption is 1:N with
+**section disclosure receipts**.
+
+⭐ **TERMINOLOGY CORRECTION OWED AND TAKEN**: §10.6a's "receipt" is amended in
+place above to **consumption**. ⛔ No implementation may proceed while two
+different objects are both called `receipt`.
+
+### Ruling 6 — COMPLETED OUTCOME RECOVERABLE, NEVER AUTHORITATIVE
+
+The OAuth precedent answers *"was it consumed?"* and leaves *"what did it
+become?"* unknown. That is insufficient under the lost-response case.
+
+```text
+pendingAskRef
+    status: pending | claimed | completed
+    member_act_identity
+    completion_ref?      ← canonical result identity, NEVER authored prose
+```
+
+> ⭐⭐ **`completion_ref` is evidence of what already happened. It can never
+> grant permission for something to happen.**
+
+Replay has exactly three lawful outcomes, and no fourth:
+
+| state | replay behaviour |
+|---|---|
+| `pending` | atomically claim, then execute |
+| `completed` | return/recover the existing canonical outcome |
+| `claimed` but incomplete | ⛔ **do not cross again** — recover a canonical result if one exists, else surface an interrupted/incomplete state |
+
+⛔ **A new HTTP request cannot renew the original member authority.** Not by
+request-id comparison. Not by prose comparison. Not by "it looks like the same
+question". Not because the first response was lost on the network.
+
+### Ruling 7 — REUSE THE LAW, NOT THE OBJECT
+
+The census found the right **pattern family** in `context_disclosure_receipts`:
+
+```text
+opaque identity
++ database-enforced uniqueness
++ atomic winner
++ idempotent observation
++ authority kept separate from observation
+```
+
+⛔ **Do not clone that table. Do not widen its `boundary` CHECK.** Its semantics
+are downstream and section-specific. The new substrate inherits the law.
+
+### The revised sequence
+
+```text
+7  pendingAskRef substrate census        ✅ CLOSED 2026-09-13
+8  FALSIFIER SPECIFICATION               ← current act
+9  run against KNOWN-BAD · prove RED for the intended reasons
+10 only then design storage / claim implementation
+```
+
+---
+
 ## Standing
 
 ```text
@@ -1269,9 +1368,12 @@ P1 CLAIM (§13)            "No authored BODY characters required by the Ask
                           body-disclosure authority."
                           ⛔ NOT "no authored characters" — that is false
 
-NEXT ACT                  pendingAskRef SUBSTRATE CENSUS · READ-ONLY
-                          decisive question: can two concurrent or replayed
-                          ACT 3 requests both get past consumption?
+SUBSTRATE CENSUS          ✅ CLOSED 2026-09-13 — no existing object enforces
+                          §10.6a; a dedicated opaque ref is JUSTIFIED and
+                          NOT YET IMPLEMENTED
+
+NEXT ACT                  FALSIFIER SPECIFICATION (§15) — then run against
+                          known-bad and prove RED for the intended reasons
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
                           BEFORE repair implementation

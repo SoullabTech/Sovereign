@@ -336,11 +336,17 @@ VERDICT                 NO EXISTING OBJECT SATISFIES §10.6a
                         dedicated opaque pendingAskRef PERMITTED
                         ⛔ not authorized to be written
 
-§5.1 CARDINALITY        ⚠️ OPEN · founder disposition owed
-COMPLETED-OUTCOME       ⚠️ OPEN · sub-question of §10.6a
+§5.1 CARDINALITY        ⭐ RULED same day — design doc §15 Ruling 5
+                        consumption 1:≤1 · consumption → receipts 1:N
+                        "receipt" in §10.6a amended in place to "consumption"
+COMPLETED-OUTCOME       ⭐ RULED same day — §15 Ruling 6
+                        completion_ref recoverable, NEVER authoritative
 BOUNDARY VOCABULARY     ⚠️ NOT WIDENED · separate governed migration
+                        ⭐ §15 Ruling 7 — reuse the LAW, not the OBJECT
 
-FALSIFIER AUTHORING     AUTHORIZED (Ruling 3) · not begun
+FALSIFIER AUTHORING     AUTHORIZED (Ruling 3)
+                        → SPECIFIED 2026-09-13:
+                          S3-FALSIFIERS-01_SPECIFICATION_2026-09-13.md
 IMPLEMENTATION          ⛔ STILL WAITING
 SOURCE                  UNCHANGED · no lib/ no app/ no database/
 FOCUS ASSEMBLER         UNTOUCHED · dependency did not appear
