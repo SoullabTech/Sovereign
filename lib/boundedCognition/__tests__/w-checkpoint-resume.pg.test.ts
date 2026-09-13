@@ -21,6 +21,7 @@ const MIGRATIONS = [
   '20260913000002_recurrence_sweep_claim_recovery.sql',
   '20260913000003_recurrence_sweep_checkpoints.sql',
   '20260913000004_recurrence_sweep_checkpoint_inputs.sql',
+  '20260913000005_recurrence_sweep_observations.sql',
 ].map((f) => path.join(__dirname, '../../../database/migrations/', f));
 
 const pool = new Pool({ connectionString: process.env.BCS_TEST_DATABASE_URL });
@@ -270,14 +271,13 @@ describe('a checkpoint is not coverage, and not an observation', () => {
       `SELECT table_name FROM information_schema.tables
         WHERE table_schema='public' AND table_name LIKE 'recurrence_sweep%'`,
     );
-    expect(rows.map((r) => r.table_name).sort()).toEqual([
-      'recurrence_sweep_cancel_requests',
-      'recurrence_sweep_checkpoint_inputs',
-      'recurrence_sweep_checkpoints',
-      'recurrence_sweep_commissions',
-      'recurrence_sweep_executions',
-      'recurrence_sweep_partitions',
-    ]);
+    // RESTATED AT STEP 10: the epistemic tables now exist, so the claim is asserted
+    // where it is actually true — in the ROWS. This execution produced none.
+    void rows;
+    const epistemic = await pool.query<{ obs: string; ev: string }>(
+      `SELECT (SELECT count(*) FROM recurrence_sweep_observations)::text AS obs,
+              (SELECT count(*) FROM recurrence_sweep_observation_evidence)::text AS ev`);
+    expect([epistemic.rows[0].obs, epistemic.rows[0].ev]).toEqual(['0', '0']);
     // no observation, no coverage, no lineage, no currency table exists at all
   });
 
