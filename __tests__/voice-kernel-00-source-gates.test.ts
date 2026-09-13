@@ -469,6 +469,15 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(b).toMatch(/for i in \$\(seq 1 "\$N"\)/);                     // declared N is finished
     expect(b).toMatch(/test-without-building/);                       // one invocation per sample
     expect(b).not.toMatch(/install app/);                             // a batch never reinstalls; k00-reinstall.sh is the explicit boundary
+    const r = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-reinstall.sh'), 'utf8');
+    expect(r.indexOf('REFUSED')).toBeLessThan(r.indexOf('install app'));  // Stage-C custody gate: the UUID refusal is evaluated BEFORE the install verb
+    expect(r).toMatch(/K00_EXPECT_UUID/);
+    const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
+    // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
+    // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
+    const exec = a.split('\n').filter((l) => !/^\s*(#|echo\b|log\b|\{?\s*echo\b)/.test(l)).join('\n');
+    expect(exec).not.toMatch(/\brm\s|devicectl[^\n]*\b(delete|remove)\b/);
+    expect(a).toMatch(/NOTHING DELETED/);
   });
 });
 

@@ -18,7 +18,12 @@ import argparse, hashlib, json, os, sys
 P5B0_STEPS = ['engine_created', 'vp_enable_begin', 'vp_enable_return', 'output_connected', 'input_format_after_vp',
               'input_tap_installed', 'render_tap_installed', 'observer_installed', 'prepare_begin', 'prepare_return',
               'start_begin', 'start_return', 'is_running_immediate']
+PHASE_A_STEPS = P5B0_STEPS[:1] + ['input_format_before_vp'] + P5B0_STEPS[1:]   # 4596b9bdb: the pre-VP read is step 2
+STEPS = {'p5b0': P5B0_STEPS, 'phase-a': PHASE_A_STEPS}
 SUBJECTS = {'p5b0': 13, 'phase-a': 14}   # gen-1 trace step count per known subject; P5-B0 has no input_format_before_vp
+# C-D7 (Stage C preparation, 2026-09-13): the C-D6 prefix acceptance was written for the P5-B0 list only; on the Phase-A
+# subject a lawful gen-1 refusal would have read SUBJECT-MISMATCH. The prefix is now taken from the subject's own ordered
+# list. P5-B0 rows are unaffected (same list, same rule).
 # C-D6 (Stage B attempt 2 sample 5, K00-faf8fa3e): a §3 refusal AT GENERATION 1 lawfully ends the gen-1 trace at
 # input_format_after_vp (5 steps) with a gen-1 graph_start_refused. That is the subject behaving, not another subject;
 # the subject check accepts a proper prefix of the ordered step list only when that refusal record is present.
@@ -49,7 +54,7 @@ def classify(rows, w4=False, subject='p5b0'):
     t0 = enter[0]['timeMonotonicMs']
     steps1 = [r['evidence']['step'] for r in rows if r['event'] == 'graph_start_trace' and r['evidence'].get('generation') == '1']
     refused1 = any(r['event'] == 'graph_start_refused' and r['evidence'].get('generation') == '1' for r in rows)
-    prefix_ok = subject == 'p5b0' and refused1 and 0 < len(steps1) < expected and steps1 == P5B0_STEPS[:len(steps1)] and steps1[-1] == 'input_format_after_vp'
+    prefix_ok = refused1 and 0 < len(steps1) < expected and steps1 == STEPS[subject][:len(steps1)] and steps1[-1] == 'input_format_after_vp'
     if (len(steps1) != expected and not prefix_ok) or (subject == 'p5b0' and 'input_format_before_vp' in steps1) or (subject == 'phase-a' and 'input_format_before_vp' not in steps1):
         return 'SUBJECT-MISMATCH', f'gen-1 trace has {len(steps1)} steps; pre-VP read present={"input_format_before_vp" in steps1}', ev, session
     if prefix_ok: ev['gen1Refused'] = True

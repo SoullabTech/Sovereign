@@ -4,7 +4,7 @@ Lane: `VOICE-2026` · `KERNEL-00` · `DRIVER-01` · subject `24a6fcfa1` (P5-B0, 
 
 Plan reference: `DRIVER-01_PLAN_2026-09-12.md` (D1–D5, §16 calibration accepted). Stage A record: `DRIVER-01_STAGE-A_2026-09-12.md`.
 
-**Status of this record: STAGE B NOT COMPLETE.** Attempt 1 was terminated externally at sample 8 of 30. Under D3 (N fixed before execution, no early stopping, the declared N is finished) a 7-sample batch is not Stage B and is not read as Stage B. Its rows are preserved here as an incomplete batch, never pooled with any other batch, and the disposition is a founder ruling (§4).
+**Status of this record: AUTHORIZED STAGE B COMPLETE · §9 — CLOSED · ACCEPTED (founder, 2026-09-13).** The authorized Stage B is `STAGE-B-20260913T145034Z` (§9): fresh post-ruling reinstall, 30 of 30 finished, 28 valid audio samples + 2 infrastructure rows, verified. Earlier incomplete / pre-authorization attempts (§2 attempt 1, §5 attempt 2, §8.2 attempt 3) are preserved below exactly as written, classified `PRE-AUTH-STAGE-B · observational only · NOT COUNTED` by the §8 ruling, and are never pooled with §9 or with Stage A. *(Header amended 2026-09-13 on the founder's acceptance; the amendment replaces only this status paragraph — the historical sections are not rewritten. The superseded paragraph is quoted in §9.5.)*
 
 ---
 
@@ -242,3 +242,11 @@ Read, descriptively: on both installs roughly half of the VP-ON cold starts took
 ### §9.4 Standing after Stage B
 
 Stage A CLOSED · Stage B EXECUTED and verified, acceptance = founder · PRE-AUTH batches preserved, not counted · Stage C (Phase-A `4596b9bdb`) HELD, founder decision · mechanism claim NONE · VoiceKernel and harness FROZEN at `24a6fcfa1` · instrument at `6cfa331f7` (C-D5/C-D6) · O6/O7 (gen-1 refusal, reset limbo) seen once each, in a PRE-AUTH batch, not repeated in A or B · H2 (export produced no file) seen once in attempt 3, not in A or B · container now holds ~130 exports; listing service held through the authorized run.
+
+### §9.5 Acceptance and header amendment (founder, 2026-09-13)
+
+Founder ruling, verbatim: *"Stage B — ACCEPTED, with one record amendment. … the document's opening still says 'STAGE B NOT COMPLETE' … Amend the top-level status to something like: AUTHORIZED STAGE B COMPLETE · §9 / Earlier incomplete/pre-authorization attempts preserved below. Do not rewrite those historical sections."* Reading of the reinstall effect, verbatim: *"gen-1 axis: no material change."*
+
+Superseded status paragraph, preserved here because a record does not lose what it once said: *"**Status of this record: STAGE B NOT COMPLETE.** Attempt 1 was terminated externally at sample 8 of 30. Under D3 (N fixed before execution, no early stopping, the declared N is finished) a 7-sample batch is not Stage B and is not read as Stage B. Its rows are preserved here as an incomplete batch, never pooled with any other batch, and the disposition is a founder ruling (§4)."* — true when written (attempt 1), superseded by §8 and §9.
+
+Standing after acceptance: STAGE A CLOSED · ACCEPTED · STAGE B CLOSED · ACCEPTED · reinstall effect on the gen-1 axis: no material change · Stage C AUTHORIZED by the same ruling (record `DRIVER-01_STAGE-C_2026-09-13.md`) · container housekeeping AUTHORIZED, archive now, delete after Stage C · mechanism claim NONE · VoiceKernel and harness FROZEN · B2 HOLD · E1–E4 HELD.
