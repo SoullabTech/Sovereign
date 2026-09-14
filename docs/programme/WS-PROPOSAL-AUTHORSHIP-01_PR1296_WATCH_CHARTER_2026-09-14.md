@@ -73,6 +73,30 @@ witness — ⛔ trading a verified chain for a green tick.
 
 ---
 
+## ⭐ The zero-check boundary (founder, 2026-09-14)
+
+```text
+"0 checks"  ⛔ does NOT mean FAILED CI
+            ⛔ does NOT mean PASSED CI
+```
+
+⭐ First watch reading: `mergeable_state = dirty` · `check_runs = 0` · no reviews · no comments.
+**Both are OBSERVATIONS, not defects to act on.**
+
+⚠️ If the PR settles into a **durable** zero-check state, that becomes **its own governance
+question** — *is CI evidence required before integration?* — and:
+
+```text
+⛔ NOT permission to alter the candidate
+⛔ NOT permission to manufacture a check run
+```
+
+⭐ The absence of evidence is a fact about the evidence, never a licence to create some. Same
+discipline the lane applied to the unrecoverable away-condition: ⭐ **an empty source is reported,
+not filled.**
+
+---
+
 ## Standing
 
 ```text
