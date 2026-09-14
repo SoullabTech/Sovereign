@@ -1,17 +1,37 @@
 # EW-F2 · Step 2 — proposal work mode · witness result
 
-**Status** EVIDENCE PRESENTED. Closure is a founder act and is not asserted here.
+**Status** ⭐ **STEP 2 CLOSED**, per the founder's standing ruling of
+2026-09-14: *"If that fresh witness passes, I rule Step 2 CLOSED."* It passed.
 
-⛔ **RUNTIME CUSTODY FOR `localhost:3100` IS UNKNOWN**, pending founder-side
-measurement. Every runtime row below is qualified by that: it records what the
-browser showed, not that the browser was serving a known commit. Custody does
-not block branch-local repair or falsification; it DOES block any acceptance,
-merge or deployment claim resting on that runtime. ⚠️ It must not be inferred
-from branch names, from process assumptions, or from a screenshot.
+## Runtime custody — the header these rows were missing
 
-⭐ The database rows and the `mrp_*` constraint failures below are NOT subject to
-that qualification — they were read directly from `maia_focus_witness` and do
-not depend on which code the dev server was running.
+```
+HEAD             0bd2b6578
+tracked diff     NONE  (app/writers-studio · lib/writersStudio ·
+                        lib/manuscript/revisionProposal · lib/manuscript/sections ·
+                        app/api/sovereign/manuscripts)
+server cwd       /Users/soullab/MAIA-SOVEREIGN
+server started   2026-09-13 22:08:05 local  ·  02:08:05Z
+captured         02:08:17Z
+verdict          CUSTODY: BOUNDED to 0bd2b6578
+```
+
+⭐ The script prints BOUNDED and explicitly refuses to close the start-order gap
+on its own. **The transcript closes it**: `git pull` reported `Already up to
+date` at `0bd2b6578`, and the server started twelve seconds later — so it cannot
+be serving modules the checkout has since replaced.
+
+⚠️ **Bounded, not proven, and the distinction is kept.** `next dev` does not
+stamp itself with a commit the way production does via `GIT_COMMIT`. Custody
+here is an inference from four facts, not a report from the process. Recorded as
+a known limit of the dev runtime.
+
+⛔ **The earlier, uncustodied browser observations are NOT relabelled.** They
+were made before this server instance existed and remain what they were. This
+witness replaces them rather than retroactively certifying them.
+
+⭐ The database rows and the `mrp_*` constraint failures below never depended on
+the browser and were never subject to the custody question.
 **Database** `maia_focus_witness` only. Production untouched; `maia_consciousness` untouched.
 **Proposal** `a734677d-bba9-4981-83ae-8b00d67d1a22` · base v40 · `inspection_only` ·
 `", fixated"` in §23 · fixture, **not** an editorial recommendation.
@@ -44,6 +64,23 @@ rows, because no inspection-only proposal existed yet. *A constraint that was
 never reached did not hold.*
 
 ### Runtime obligations
+
+### Re-witnessed under custody `0bd2b6578`
+
+```
+Section + Whole   locus, brackets, reason, NO accept control      PASS
+Show change       arrival → away → press → away → press again
+                  "it comes back" — both presses return          PASS
+census            174 sections · 173 manuscript_write ·
+                  1 proposal_work · and it is the resolved target PASS
+end state         40 · inspection_only · NULL · NULL · draft 40   PASS
+```
+
+⭐ The `Show change` row is the one obligation in step 2 that had never been seen
+in a browser. The behavioural suite proved it in jsdom; this is the founder
+watching it happen.
+
+### The obligations, as originally pinned
 
 ```
 PW-1   §23 mounts no manuscript-writing control            WITNESSED, both views
@@ -120,6 +157,7 @@ obligation as stated, rather than a sample consistent with it.
 ## Standing
 
 ```
+STEP 2                  CLOSED · 2026-09-14 · custody 0bd2b6578
 EW-F1a                  BUILT · database-witnessed · three independent refusals
 proposal work mode      BUILT · runtime-witnessed in both views
 PW-1 … PW-19            WITNESSED
@@ -133,7 +171,19 @@ production              UNTOUCHED
 
 ⛔ **Held, per the ruling:** editable staged proposal · successor-version chain ·
 `replace_exact_text` · Ask MAIA to revise · multi-change sets · MAIA's editorial
-rationale. All of it waits on staged-version succession, which is step 3.
+rationale. All of it waits on staged-version succession, which is step 3 — now
+open.
+
+⛔ **Explicitly OUTSIDE this closure act**, and unchanged by it:
+
+```
+v35 · v36        system acceptance REAL · authorial ratification UNRESOLVED
+                 not rewritten; ratify-or-repair is its own decision
+972adae6         open against base 34 · permanently stale · a dangling record
+                 from the first afternoon, harmless and unresolved
+schema           no migration authorized; the proposal/authorization split is
+                 named only, and needs its own lane and its own branch
+```
 
 > *The Work is the comparison surface. The proposal is rendered into it without
 > yet becoming it.*
