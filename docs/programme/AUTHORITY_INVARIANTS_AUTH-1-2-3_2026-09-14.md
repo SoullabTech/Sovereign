@@ -173,3 +173,76 @@ authorized: LOG-CAL   ≠   authorized: LOG-CAL + whatever privilege turns out t
 
 ⛔ A capability for one non-root sample must never imply `sudo log collect`. Elevation binds
 the exact command or privilege class, explicitly and narrowly.
+
+---
+
+# AUTH-4 — and the architecture stops here
+
+> **A constrained process cannot be the final authority on its own identity or compliance.**
+> In-process verification can detect mismatch and raise the cost of unauthorized execution,
+> but it cannot establish that the executing verifier is itself the authorized
+> implementation. Any claim of exact-code execution ultimately depends on an enforcement
+> boundary **outside that code.**
+
+⛔ This exists so a cryptographically sophisticated self-check is never later mistaken for
+closure.
+
+## Three assurance levels
+
+```
+LEVEL 1  SELF-ASSERTED              repo says it is authorized              INVALID
+LEVEL 2  EXTERNALLY LICENSED,       external capability exists;
+         INTERNALLY VERIFIED        repo verifies it                        H3 REMAINS
+LEVEL 3  AUTHORITY-HOLDER           the boundary holding authority
+         EXECUTES / PROXIES         also controls execution                 STRONGEST
+```
+
+⭐ Level 2 is worth having. It is vastly better than `K00_AUTHORIZED=1`, a sentinel file, or
+§7.5 declaring itself authorized. ⛔ **It must simply not be called something it is not.**
+
+## The corrected design position
+
+⛔ NOT: *signed capabilities solve AUTH-3.*
+
+⭐ **Signed capabilities materially strengthen AUTH-3 by making authorization unmintable by
+ordinary repository state, while leaving an acknowledged execution-identity residue, because
+the constrained code cannot finally attest itself.** Where that residue is unacceptable,
+authority must be **exercised through an independent execution boundary**, not delegated to
+the constrained process.
+
+## ⚠️ Where this lane actually sits TODAY
+
+⛔ The hierarchy above is a **target, not a description.** The Voice lane is at **LEVEL 1** —
+`09c1bd251f` asserted its own authorization and an instrument acted on it. The four
+lane-local corrections are what would move it to **Level 2**; nothing has yet.
+
+⛔ **Do not read this record as though the lane already had Level 2 properties.**
+
+## The terminal trust assumption, named
+
+Every authority chain ends in something taken as trusted. For this lane, at Level 2, that
+terminus is: **the founder's person, the OS security boundary of their machine, and wherever
+the signing key is anchored.** ⭐ Named here so it is a stated assumption rather than a
+hidden one. Adding another verifying layer would only move the terminus, never remove it.
+
+## ⛔ STOP
+
+**The authority architecture ends here for this lane.** Going further would turn a bounded,
+correct governance repair into an attempt to solve trust all the way down — which is its own
+kind of scope failure.
+
+Root stays orthogonal: `K00_LOG_CAL` cannot widen into `K00_LOG_CAL + root` because the
+first mechanism discovered root was necessary. ⛔ **That is authority expansion by runtime
+discovery — the same pattern as criterion expansion after observing evidence.**
+
+```
+lane                         FROZEN
+fresh post-amendment probe   NOT RUN
+calibration                  NOT RUN AGAIN
+sudo/root                    NOT AUTHORIZED
+mechanical repairs           VALID CODE FACTS
+§7.5 authorization           INVALID
+physiological LOG-CAL        UNSPENT
+12:17 attempt / R1 contact   SPENT
+H3 execution residue         ACKNOWLEDGED, NOT SOLVED
+```
