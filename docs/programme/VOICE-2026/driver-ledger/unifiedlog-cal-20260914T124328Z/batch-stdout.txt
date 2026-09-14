@@ -1,0 +1,8 @@
+[12:43:29] xcodegen generate (driver project only; gitignored, regenerated per checkout)
+[12:43:29] build-for-testing (driver only; the harness is untouched)
+[12:43:32] xctestrun: /private/tmp/voice-pass2-6801/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun
+[12:43:32] sample 1/1 — precondition
+[12:43:32] harness process present — attempting terminate-only via driver
+[12:43:39] sample 1/1 — driver (testOneSample, mode L)
+[12:44:10] sample 1 ledgered: kernel00-K00-6dbc2752-1789389844.jsonl
+[12:44:10] batch complete — /private/tmp/voice-pass2-6801/docs/programme/VOICE-2026/driver-ledger/LOG-CAL-20260914T124328Z/ledger.md
