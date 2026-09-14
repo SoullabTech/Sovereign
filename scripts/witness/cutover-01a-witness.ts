@@ -218,8 +218,17 @@ async function main() {
      Re-asserted as the behaviour: the TARGET ASSIGNMENT — the thing `mode` is
      computed from — may not consult locatability. What happens afterwards is a
      different decision with its own name. */
-  const resolution = ROUTE.slice(
-    ROUTE.indexOf('const focus ='), ROUTE.indexOf('const suspendsAt'));
+  /* ⚠️ AND IT WENT STALE ONCE, SILENTLY — W5-Z0, 2026-09-14. The anchor was
+     `const focus =`; W5-Z0 renamed that binding to `const requested =`, so
+     `indexOf` returned -1, `slice(-1, …)` produced an empty string, and the
+     regex could not fail. ⛔ A source pin whose ANCHOR can disappear is a pin
+     that reports PASS for a file it never read. The anchors are now asserted to
+     EXIST before the slice is judged — the vacuity is caught, not inherited. */
+  const from = ROUTE.indexOf('const requested =');
+  const to = ROUTE.indexOf('const suspendsAt');
+  eq('M-R6a · [SOURCE] the resolution block is actually locatable (anti-vacuity)',
+    from >= 0 && to > from, true);
+  const resolution = from >= 0 && to > from ? ROUTE.slice(from, to) : '\u0000SENTINEL location located';
   eq('M-R6 · [SOURCE] the TARGET is assigned from the READ alone, never from location',
     /located|location/.test(resolution), false);
   eq('M-R6b · [SOURCE] and `mode` is computed from the target, not from a range',

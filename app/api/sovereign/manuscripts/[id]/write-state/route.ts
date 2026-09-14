@@ -27,7 +27,9 @@ import {
 } from '@/lib/manuscript/proposalChain/proposalWorkTarget';
 /* ⛔ The param NAMES are never inlined here — the producer's spelling and the
    consumer's live in one contract, because a link is not a binding. */
-import { requestedProposalFocus } from '@/app/writers-studio/canvasIdentity';
+import { requestedChainSubject } from '@/app/writers-studio/canvasIdentity';
+import { readChainOnlySubject } from '@/lib/manuscript/proposalChain/editorialSubject';
+import type { EditorialWorkspaceSubject } from '@/lib/writersStudio/editorialWorkspace';
 import {
   authorityFromProjectability,
   type SectionAuthority,
@@ -89,21 +91,59 @@ export async function GET(
          conversation/presentation location are different facts that happen to
          agree while the Work is unchanged.
          ══════════════════════════════════════════════════════════════════ */
-      const focus = requestedProposalFocus(req.nextUrl.searchParams);
+      /* ══════════════════════════════════════════════════════════════════
+         ⭐⭐ W5-Z0 · THE SUBJECT AND THE TARGET ARE RESOLVED SEPARATELY.
+
+             editorialSubject   the identity of the editorial RELATIONSHIP
+             target             the exact candidate FORMULATION + projection
+
+         W3 had only the second, so the room's editorial identity was a
+         function of a candidate wording: no formulation, no relationship. W5
+         proved an Insight belongs to a CHAIN, so *"MAIA noticed this and
+         recommends changing nothing"* has to be expressible — and it cannot be
+         while the only door into the room is a proposed edit.
+
+         ⛔ CHAIN-ONLY IS NOT "SHOW ME THE HEAD". `readChainOnlySubject` admits
+         only a chain that holds NO versions; a chain with versions and no named
+         version is REFUSED rather than defaulted, because choosing one would
+         seat a formulation the writer never asked to see and undo CUTOVER-01A.
+
+         ⛔ AND EVERY REFUSAL IS SILENT AT THIS BOUNDARY — unknown, another
+         member's, corrupt, foreign-version, a chain belonging to a DIFFERENT
+         Work of the same writer, and `version_required` alike. The browser
+         receives the ordinary section state and is told nothing about a chain
+         it may not own.
+         ══════════════════════════════════════════════════════════════════ */
+      const requested = requestedChainSubject(req.nextUrl.searchParams);
 
       let target: LegacyProposalWorkTarget | ChainProposalWorkTarget | null = null;
-      if (focus) {
+      let editorialSubject: EditorialWorkspaceSubject | null = null;
+
+      if (requested && requested.versionId !== null) {
         /* ⭐ Located against the sections THIS RESPONSE IS RETURNING — never a
            second read that could disagree with the one the writer receives. */
         const r = await readProposalWorkTarget(
-          memberId, id, focus.chainId, focus.versionId, state.sections);
-        /* ⛔ A refusal is silent, exactly as PW-2 already required: unknown,
-           another member's, corrupt, foreign-version — and ⭐ a chain belonging
-           to a DIFFERENT Work of the same writer — all return the ordinary
-           section state and disclose nothing. The room is never told "that
-           chain belongs to another manuscript". */
+          memberId, id, requested.chainId, requested.versionId, state.sections);
         target = r.ok ? r.target : null;
+        /* ⭐⭐ THE SUBJECT COMES FROM THE RESOLVED TARGET, NEVER FROM THE
+           REQUEST. `requested.chainId` and `requested.versionId` are what the
+           browser ASKED for; `target` is what this server proved against this
+           member and this Work. Echoing the request would hand the room an
+           identity nothing had checked. */
+        if (r.ok) {
+          editorialSubject = {
+            kind: 'chain', chainId: r.target.chainId, focusedVersionId: r.target.versionId,
+          };
+        }
+      } else if (requested) {
+        /* ⛔ NO TARGET ON THIS PATH, AND THERE IS NOTHING TO PROJECT: a chain
+           with no versions has no candidate wording, so nothing is marked,
+           compared, suspended or authorized. The relationship still exists. */
+        const sub = await readChainOnlySubject(memberId, id, requested.chainId);
+        if (sub.ok) editorialSubject = sub.subject;
       } else {
+        /* The staged legacy path, untouched — it names a DIFFERENT object and
+           ⛔ acquires no editorial subject from this act. W7 retires it. */
         target = await resolveProposalWork(
           memberId, req.nextUrl.searchParams.get('proposal'));
       }
@@ -150,6 +190,7 @@ export async function GET(
           body: s.body, authority: authorityOf(s),
         })),
         ...(target ? { target } : {}),
+        ...(editorialSubject ? { editorialSubject } : {}),
       });
     }
 

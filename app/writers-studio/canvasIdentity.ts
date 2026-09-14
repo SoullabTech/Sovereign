@@ -52,14 +52,64 @@ export const CANVAS_PROPOSAL_PARAM = 'proposal';
 export const CANVAS_PROPOSAL_CHAIN_PARAM = 'proposalChain';
 export const CANVAS_PROPOSAL_VERSION_PARAM = 'proposalVersion';
 
-/** The chain + exact version this visit is pointed at. ⛔ Null unless BOTH. */
+/* ══════════════════════════════════════════════════════════════════════════
+   W5-Z0 · ⭐⭐ THE CHAIN IS THE SUBJECT; THE VERSION IS AN OPTIONAL FOCUS.
+
+   ⚠️ THE BLOCK ABOVE SAID "BOTH ARE REQUIRED", AND THE FOUNDER HAS NOW RULED
+   OTHERWISE (2026-09-14) ON A DISTINCTION W5 EARNED:
+
+       A proposal version is something the editorial relationship may be
+       FOCUSED ON. It is not what makes the editorial relationship EXIST.
+
+   W3 could treat the two as one because every editorial object then had a
+   formulation. W5's ontology falsified that: an Insight is MAIA noticing
+   something, and "I would change nothing here" is a first-class editorial
+   state rather than an awkward absence of an edit. A room that can only be
+   entered by naming a candidate wording cannot hold it.
+
+   ⛔ WHAT HAS *NOT* CHANGED, AND MUST NOT: naming a chain alone still never
+   means "show me the head". The read model's head default is a READING
+   convenience; inheriting it here would undo CUTOVER-01A, which exists so the
+   room always knows which authored formulation it is displaying. Chain-only is
+   lawful ONLY for a chain the server proves holds NO versions — see
+   `readChainOnlySubject`, which is where that proof lives.
+
+       proposalChain=C + proposalVersion=V   → chain C, exact focus V
+       proposalChain=C, no proposalVersion   → chain C, NO version focus
+       proposalVersion=V, no proposalChain   → ⛔ no editorial subject at all
+
+   ⛔ And the third row is structural, not a check: a version without a chain
+   cannot be expressed by the type this returns.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** What the URL asked for. ⛔ `versionId` null means NOT NAMED — never "head". */
+export interface RequestedChainSubject {
+  readonly chainId: string;
+  readonly versionId: string | null;
+}
+
+export function requestedChainSubject(
+  params: { get(name: string): string | null },
+): RequestedChainSubject | null {
+  const chainId = params.get(CANVAS_PROPOSAL_CHAIN_PARAM);
+  /* ⛔ No chain, no subject — whatever else the address bar carries. */
+  if (!chainId) return null;
+  const versionId = params.get(CANVAS_PROPOSAL_VERSION_PARAM);
+  return { chainId, versionId: versionId && versionId.length > 0 ? versionId : null };
+}
+
+/**
+ * The chain + exact version this visit is pointed at. ⛔ Null unless BOTH.
+ *
+ * ⭐ DERIVED from the one reader above rather than re-reading the parameters,
+ * so the two cannot drift into disagreeing about what the URL said.
+ */
 export function requestedProposalFocus(
   params: { get(name: string): string | null },
 ): { chainId: string; versionId: string } | null {
-  const chainId = params.get(CANVAS_PROPOSAL_CHAIN_PARAM);
-  const versionId = params.get(CANVAS_PROPOSAL_VERSION_PARAM);
-  if (!chainId || !versionId) return null;
-  return { chainId, versionId };
+  const s = requestedChainSubject(params);
+  if (!s || s.versionId === null) return null;
+  return { chainId: s.chainId, versionId: s.versionId };
 }
 
 /** The proposal this visit is pointed at, if any. */

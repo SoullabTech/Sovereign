@@ -8,10 +8,9 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import {
-  workspaceSubject, afterAppend,
-} from '@/lib/writersStudio/editorialWorkspace';
-import type { ProposalWorkTarget } from '@/lib/writersStudio/writeStateClient';
+import { afterAppend } from '@/lib/writersStudio/editorialWorkspace';
+import { editorialSubjectOf } from '@/lib/writersStudio/writeStateClient';
+import type { WriteState } from '@/lib/writersStudio/writeStateClient';
 
 const strip = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
@@ -20,57 +19,73 @@ const ROOM = read('app/writers-studio/canvas/page.tsx');
 const WS = read('app/writers-studio/EditorialWorkspace.tsx');
 const LAW = read('lib/writersStudio/editorialWorkspace.ts');
 
-const chainTarget = (located: boolean): ProposalWorkTarget => ({
-  chainId: 'C1', versionId: 'V3', sectionId: 'sec-1', sectionLabel: 'Before the water',
-  replacementText: ', quieter',
-  location: located
-    ? { located: true, range: { space: 'projected_section_body', start: 4, end: 12 } }
-    : { located: false, reason: 'expected_text_absent' },
+const chainState = (focusedVersionId: string | null): WriteState => ({
+  mode: 'section_aware', version: 41, rows: [], sections: [],
+  editorialSubject: { kind: 'chain', chainId: 'C1', focusedVersionId },
 });
-const legacyTarget = {
-  proposalId: 'old-1', sectionId: 'sec-1', sectionLabel: 'x',
-  range: { space: 'projected_section_body', start: 0, end: 2 },
-  operation: 'delete_exact_text', replacementText: '',
-} as unknown as ProposalWorkTarget;
+/** A legacy `proposal=` response: a target, and ⛔ no editorial subject. */
+const legacyState = {
+  mode: 'proposal_work', version: 41, rows: [], sections: [],
+  target: { proposalId: 'old-1', sectionId: 'sec-1', sectionLabel: 'x',
+            range: { space: 'projected_section_body', start: 0, end: 2 },
+            operation: 'delete_exact_text', replacementText: '' },
+} as unknown as WriteState;
 
-describe('W3 · law 1 — the subject comes from the resolved target', () => {
-  it('W3-1 · a resolved chain target mounts the workspace', () => {
-    expect(workspaceSubject(chainTarget(true)))
-      .toEqual({ kind: 'chain', chainId: 'C1', versionId: 'V3', located: true });
+/* ══════════════════════════════════════════════════════════════════════════
+   ⚠️ LAW 1 WAS SUPERSEDED BY A FOUNDER RULING, 2026-09-14 (W5-Z0), AND THESE
+   OBLIGATIONS ARE TRANSFERRED RATHER THAN DELETED.
+
+   W3 derived the subject in the browser from the resolved target
+   (`workspaceSubject(engine?.target)`). The ruling moved the decision to the
+   server, because a subject derived from a TARGET is a subject that cannot
+   exist without candidate wording — and W5 proved an Insight belongs to the
+   CHAIN. ⛔ The half of law 1 that mattered is UNCHANGED and is now stronger:
+   the room still never mounts from the URL; it mounts from a server resolution
+   one step further away from the URL than before.
+
+   W3-7 — *losing the exact locus does not erase the editorial relationship* —
+   has moved to the seam that now decides it, and is asserted in
+   `scripts/witness/w5-z0-witness.ts` (Z0-7i) against the route's own source,
+   which is where a regression would have to occur.
+   ══════════════════════════════════════════════════════════════════════════ */
+describe('W3 law 1 → W5-Z0 · the subject is resolved by the server', () => {
+  it('W3-1 · a resolved chain subject mounts the workspace', () => {
+    expect(editorialSubjectOf(chainState('V3')))
+      .toEqual({ kind: 'chain', chainId: 'C1', focusedVersionId: 'V3' });
   });
 
-  it('W3-2 · a resolved legacy target stays with the old path', () => {
-    expect(workspaceSubject(legacyTarget)).toEqual({ kind: 'legacy' });
+  it('Z0-2 · ⭐⭐ and a subject with NO focused version still mounts it', () => {
+    /* "MAIA noticed this and proposed no wording" is a first-class state. */
+    expect(editorialSubjectOf(chainState(null)))
+      .toEqual({ kind: 'chain', chainId: 'C1', focusedVersionId: null });
   });
 
-  it('no resolved target → no workspace and no panel', () => {
-    expect(workspaceSubject(null)).toBeNull();
-    expect(workspaceSubject(undefined)).toBeNull();
+  it('W3-2 · a legacy target stays with the old path and gains no subject', () => {
+    expect(editorialSubjectOf(legacyState)).toBeNull();
   });
 
-  it('W3-7 · ⭐⭐ location unavailable still mounts — the relationship survives', () => {
-    /* Losing the exact locus does not erase the editorial relationship. */
-    expect(workspaceSubject(chainTarget(false)))
-      .toEqual({ kind: 'chain', chainId: 'C1', versionId: 'V3', located: false });
+  it('no resolved subject → no workspace and no panel', () => {
+    expect(editorialSubjectOf(null)).toBeNull();
+    expect(editorialSubjectOf(undefined)).toBeNull();
   });
 
-  it('⛔ [SOURCE] the room mounts from the resolved target, never the raw URL', () => {
+  it('⛔ [SOURCE] the room mounts from the server resolution, never the raw URL', () => {
     /* ⚠️ A MUTANT SURVIVED THE FIRST WRITING OF THIS PIN. It banned a CALL
-       SHAPE — `workspaceSubject(searchParams|proposalFocus)` — and required the
-       substring `workspaceSubject(engine?.target)`. A mutant that kept that
-       call as a FALLBACK and constructed the subject inline from the URL
-       satisfied both. The fifth time in this session I have pinned a mechanism
-       where a behaviour was meant.
+       SHAPE and required a substring; a mutant that kept the call as a FALLBACK
+       and built the subject inline from the URL satisfied both.
 
-       ⭐ Re-asserted as the whole assignment: `subject` is derived from the
-       resolved target and from NOTHING ELSE, and the room never builds a
-       subject of its own. */
-    expect(ROOM).toMatch(/const subject = workspaceSubject\(engine\?\.target\);/);
+       ⭐ Re-asserted as the whole assignment: `subject` is the server's answer
+       and NOTHING ELSE, and the room never builds a subject of its own. */
+    expect(ROOM).toMatch(/const subject = editorialSubjectOf\(writeState\);/);
     expect((ROOM.match(/const subject\s*=/g) ?? []).length).toBe(1);
     expect(ROOM).not.toMatch(/kind: 'chain'/);
-    expect(ROOM).not.toMatch(/workspaceSubject\(\s*(searchParams|proposalFocus)/);
+    expect(ROOM).not.toMatch(/focusedVersionId:/);
     /* and the workspace cannot read query parameters even in principle */
     expect(WS).not.toMatch(/useSearchParams|searchParams|location\.search|URLSearchParams/);
+  });
+
+  it('⛔ [SOURCE] the law file names no target, so a subject cannot be derived from one', () => {
+    expect(LAW).not.toMatch(/ProposalWorkTarget/);
   });
 });
 
@@ -180,6 +195,14 @@ describe('W3 · ⛔ what the assembly must NOT have acquired', () => {
   it('W3-1 · ⛔ [SOURCE] the workspace and the legacy panel are mutually exclusive', () => {
     /* one visit gets one proposal subject, everywhere — including which
        surface renders */
-    expect(ROOM).toMatch(/subject\?\.kind === 'chain' \? \([\s\S]{0,400}?\) : proposed\.mount\.state === 'ready' \? \(/);
+    /* ⚠️ RE-ANCHORED FOR W5-Z0. The subject is now a single-kind object, so the
+       old `subject?.kind === 'chain'` spelling is gone; the OBLIGATION is
+       unchanged and is asserted at BOTH render sites, not just wherever the
+       first match happens to land. */
+    const sites = ROOM.match(
+      /subject \? \([\s\S]{0,400}?\) : proposed\.mount\.state === 'ready' \? \(/g) ?? [];
+    expect(sites.length).toBe(2);
+    /* ⛔ and the legacy panel is reachable from nowhere else in the room */
+    expect((ROOM.match(/<ProposedChange/g) ?? []).length).toBe(2);
   });
 });

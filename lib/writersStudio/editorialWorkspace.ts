@@ -10,52 +10,62 @@
  * a mutant survive 01A.2.
  */
 
-import type { ProposalWorkTarget } from './writeStateClient';
-
 /* ══════════════════════════════════════════════════════════════════════════
-   LAW 1 · ⭐⭐ THE SUBJECT COMES FROM THE RESOLVED TARGET, NEVER FROM THE URL.
+   LAW 1 · ⭐⭐ THE SUBJECT IS RESOLVED BY THE SERVER, NEVER BY THE URL.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * ⛔ THE WORKSPACE DOES NOT MOUNT BECAUSE `?proposalChain=C&proposalVersion=V`
- * EXISTS. It mounts because the write-state server RESOLVED that identity into
- * the current Work — which is the whole of what three cutover acts bought:
+ * ⭐⭐ W5-Z0 · THE EDITORIAL SUBJECT IS THE CHAIN. THE VERSION IS A FOCUS.
  *
- *     URL selector → write-state resolution → engine.target → workspace
+ * ── ⚠️ WHAT W3 GOT RIGHT, AND WHAT W5 FALSIFIED ───────────────────────────
  *
- * ⛔ A workspace that read the raw query parameters would let the wrong-Work
- * namespace defect reappear one layer above the mount, where 01A.1's binding
- * cannot see it.
+ * W3 derived this subject in the browser, from the resolved `ProposalWorkTarget`
+ * (`workspaceSubject(engine?.target)`), and that half was right and stays right:
+ * the room must never mount because `?proposalChain=C&proposalVersion=V` EXISTS.
+ * It mounts because the server RESOLVED that identity — including the 01A.1
+ * Work-namespace binding — against the manuscript in front of the writer.
+ *
+ * ⛔ WHAT W3 GOT WRONG WAS DERIVING IT FROM THE **TARGET**. A target is the
+ * projection of a CANDIDATE FORMULATION into the present Work. Making the
+ * editorial relationship a function of it means:
+ *
+ *     no candidate wording  →  no target  →  no editorial relationship
+ *
+ * which is R6 one more layer up: *"MAIA noticed this and recommends changing
+ * nothing"* becomes unrepresentable, because the only door into the room is a
+ * proposed edit. W5's ontology proved an Insight belongs to a CHAIN, not to a
+ * version, so the subject had to move down to the chain with it.
+ *
+ * ⭐ THE SUBJECT NOW ARRIVES ALREADY RESOLVED, IN THE WRITE-STATE RESPONSE —
+ * which is strictly further from the URL than W3's derivation was, not nearer.
+ * The room asks ONE question, `what editorial subject did the server resolve
+ * for this Work?`, rather than `do I have a proposal target, OR do I happen to
+ * hold a chain parameter?`. ⛔ Chain-only was NOT to be bolted on beside W3 as
+ * a second mounting rule (founder, 2026-09-14).
+ *
+ * ── ⭐ THE SEPARATION THIS BUYS ────────────────────────────────────────────
+ *
+ *     editorialSubject   the identity of the editorial RELATIONSHIP
+ *     target             the exact candidate FORMULATION + its projection
+ *
+ * `target` keeps everything that genuinely requires candidate wording — the
+ * mark, the replacement comparison, orientation, and proposal-work authority —
+ * and nothing else. ⛔ NO TARGET MEANS THERE IS NO CANDIDATE FORMULATION. It
+ * does not mean there is no editorial relationship.
+ *
+ * ⚠️ `located` is deliberately NOT carried here. W3's subject exposed it and
+ * the room never read it — marking and orientation both go through
+ * `markableRange`/`roomOrientation`, which read the target. A field on the
+ * MOUNT identity describing the MARK invites exactly the inference W3-7 forbids
+ * (*losing the exact locus does not erase the editorial relationship*), so the
+ * mount identity no longer carries it at all. The W3-7 obligation survives at
+ * the seam that now decides it: an unlocated target still yields a subject.
  */
-export type WorkspaceSubject =
-  | {
-      readonly kind: 'chain';
-      readonly chainId: string;
-      readonly versionId: string;
-      /**
-       * ⭐ Whether the exact place is provable in the Work AS IT IS NOW.
-       * ⛔ It gates the MARK, never the mount:
-       *     losing the exact locus does not erase the editorial relationship.
-       */
-      readonly located: boolean;
-    }
-  /** The staged old path, unchanged, until W7 retires it. */
-  | { readonly kind: 'legacy' }
-  | null;
-
-export function workspaceSubject(
-  target: ProposalWorkTarget | null | undefined,
-): WorkspaceSubject {
-  if (!target) return null;
-  /* The chain target is the one carrying a `location`; the legacy target is
-     the one carrying a bare `range`. ⛔ No translation between them. */
-  if (!('location' in target)) return { kind: 'legacy' };
-  return {
-    kind: 'chain',
-    chainId: target.chainId,
-    versionId: target.versionId,
-    located: target.location.located,
-  };
+export interface EditorialWorkspaceSubject {
+  readonly kind: 'chain';
+  readonly chainId: string;
+  /** ⛔ `null` means NO VERSION IS FOCUSED. It never means "the head". */
+  readonly focusedVersionId: string | null;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

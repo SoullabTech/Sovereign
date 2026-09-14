@@ -54,6 +54,7 @@ import {
   fetchWriteState,
   markableRange,
   roomOrientation,
+  editorialSubjectOf,
   proposalSelector,
   legacyProposalFor,
   type WriteState,
@@ -90,10 +91,10 @@ const PROPOSAL_MARK = 'A' as const;
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
-import { requestedProposalId, requestedProposalFocus, CANVAS_PROPOSAL_VERSION_PARAM } from '../canvasIdentity';
+import { requestedProposalId, requestedChainSubject, CANVAS_PROPOSAL_VERSION_PARAM } from '../canvasIdentity';
 import ProposedChange from '../ProposedChange';
 import { EditorialWorkspace } from '../EditorialWorkspace';
-import { workspaceSubject } from '@/lib/writersStudio/editorialWorkspace';
+
 import { useProposedChange } from '../useProposedChange';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
@@ -299,11 +300,13 @@ function CanvasRoom() {
   /* ⛔ THE RAW URL PARAMETER, and it governs nothing on its own. */
   const rawLegacyProposalId = searchParams ? requestedProposalId(searchParams) : null;
 
-  /* ⭐⭐ CUTOVER-01A — the room names a CHAIN and the EXACT VERSION it is
-     showing. ⛔ Both or neither: a chain alone would let the room display
-     whatever is newest and call it the thing the writer was sent to. */
-  const proposalFocus = useMemo(
-    () => (searchParams ? requestedProposalFocus(searchParams) : null),
+  /* ⭐⭐ CUTOVER-01A / W5-Z0 — the room names a CHAIN, and OPTIONALLY the exact
+     version it is showing. ⛔ A chain alone still never means "whatever is
+     newest": the server admits a version-less ask only for a chain that holds
+     no versions (`readChainOnlySubject`), and refuses otherwise. ⛔ A version
+     without a chain cannot even be expressed by what this returns. */
+  const chainRequest = useMemo(
+    () => (searchParams ? requestedChainSubject(searchParams) : null),
     [searchParams]);
 
   /* ⭐ ONE SELECTOR, chosen once. ⛔ Chain+version wins wherever both appear;
@@ -311,8 +314,8 @@ function CanvasRoom() {
      cutover is staged — which is the half of 01A's standing that 6fc919f7d
      silently stopped honouring. */
   const selector = useMemo(
-    () => proposalSelector(proposalFocus, rawLegacyProposalId),
-    [proposalFocus, rawLegacyProposalId]);
+    () => proposalSelector(chainRequest, rawLegacyProposalId),
+    [chainRequest, rawLegacyProposalId]);
 
   /* ⭐⭐ CUTOVER-01A.3 · THE WHOLE ROOM TAKES ONE SUBJECT, NOT JUST THE WORK.
      The legacy preview is fetched only when the selector actually resolved to
@@ -397,12 +400,14 @@ function CanvasRoom() {
      point inside would be motion without evidence. */
   const proposalTarget = roomOrientation(engine?.target);
 
-  /* ⭐⭐ W3 · THE WORKSPACE SUBJECT COMES FROM THE RESOLVED TARGET.
-     ⛔ Not from `?proposalChain=…`. The URL selector was resolved by the server
-     against THIS manuscript — including the 01A.1 Work-namespace binding — and
-     mounting from the raw parameters would let that defect reappear one layer
-     above the mount, where the binding cannot see it. */
-  const subject = workspaceSubject(engine?.target);
+  /* ⭐⭐ W5-Z0 · THE WORKSPACE SUBJECT IS WHAT THE SERVER RESOLVED.
+     ⛔ Not from `?proposalChain=…`, and ⛔ no longer derived from the TARGET
+     either. W3 read it off `engine?.target`, which made the editorial
+     relationship a function of a candidate formulation: no wording, no
+     relationship, and *"MAIA recommends changing nothing"* had nowhere to live.
+     The server now answers the identity question directly, so the room asks it
+     once and builds no subject of its own. */
+  const subject = editorialSubjectOf(writeState);
 
   /* Moves the room's subject to a newly authored version. ⭐ Set, never rebuild:
      every other parameter of the visit survives (the EW-F1 lesson). */
@@ -994,10 +999,10 @@ function CanvasRoom() {
               onClose={() => undefined}
             />
           ) : (
-            subject?.kind === 'chain' ? (
+            subject ? (
               <EditorialWorkspace
                 chainId={subject.chainId}
-                versionId={subject.versionId}
+                versionId={subject.focusedVersionId}
                 apiFetch={apiFetch}
                 onFocusVersion={focusVersion}
                 onWorkChanged={refreshWriteState}
@@ -1414,10 +1419,10 @@ function CanvasRoom() {
                 onClose={() => dismiss('conversation')}
               />
             ) : (
-              subject?.kind === 'chain' ? (
+              subject ? (
               <EditorialWorkspace
                 chainId={subject.chainId}
-                versionId={subject.versionId}
+                versionId={subject.focusedVersionId}
                 apiFetch={apiFetch}
                 onFocusVersion={focusVersion}
                 onWorkChanged={refreshWriteState}

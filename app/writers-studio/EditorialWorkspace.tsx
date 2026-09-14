@@ -10,8 +10,14 @@
  *     VersionComposer   W2 · member wording only
  *
  * ⛔ IT CREATES NO SECOND PROPOSAL IDENTITY. Its subject arrives already
- * resolved — see `workspaceSubject` — so the raw query parameters are not
- * readable from here even in principle.
+ * resolved BY THE SERVER — see `editorialSubjectOf` and the write-state route —
+ * so the raw query parameters are not readable from here even in principle.
+ *
+ * ⭐⭐ W5-Z0 · AND THE SUBJECT IS THE CHAIN. `versionId` may be null, which is
+ * *"MAIA noticed something here and proposed no wording"*: the exchange mounts,
+ * the original is shown, and there is simply nothing to compose against yet.
+ * ⛔ Whether a zero-version chain should offer the composer a ROOT version is a
+ * product ruling nobody has made, so this act does not quietly make it.
  *
  * ⛔ NO MAIA CONVERSATION (W4, and unlawful before W5). NO AUTHORIZATION, NO
  * DECISION CONTROL (W6). NO SECOND DIFF, EXCERPT OR LOCUS FINDER — the
@@ -35,8 +41,17 @@ export function EditorialWorkspace({
   chainId, versionId, apiFetch, onFocusVersion, onWorkChanged,
 }: {
   chainId: string;
-  /** ⭐ The EXACT focused version, resolved by the server. ⛔ Never the head. */
-  versionId: string;
+  /**
+   * ⭐ The EXACT focused version, resolved by the server. ⛔ Never the head.
+   *
+   * ⭐⭐ W5-Z0 · `null` MEANS NO VERSION IS FOCUSED — a chain the server proved
+   * holds none. ⛔ It never means "then use the head": the chain read defaults
+   * an omitted focus to the head as a reading convenience, and inheriting that
+   * here would seat a formulation the writer never asked to see. The request
+   * below therefore omits `version` entirely, and the response is REFUSED if it
+   * comes back focused anyway — a second, independent cut at the same default.
+   */
+  versionId: string | null;
   apiFetch: (url: string, init?: RequestInit) => Promise<Response>;
   /** Hands the new subject identity up; the room re-resolves from it. */
   onFocusVersion: (versionId: string) => void;
@@ -55,10 +70,20 @@ export function EditorialWorkspace({
       try {
         const res = await apiFetch(
           `/api/writers-studio/proposal-chains/${encodeURIComponent(chainId)}`
-          + `?version=${encodeURIComponent(versionId)}`);
+          + (versionId === null ? '' : `?version=${encodeURIComponent(versionId)}`));
         if (!live) return;
         if (!res.ok) { setPhase('error'); return; }
-        setChain((await res.json()) as ThreadInput);
+        const body = (await res.json()) as ThreadInput;
+        /* ⛔⭐ THE HEAD-DEFAULT CUT, ASSERTED AT THE ROOM'S OWN BOUNDARY. The
+           server already proved this chain holds no versions before it became
+           the subject; if a focused version arrives regardless, the two reads
+           disagree and this room will not choose between them. Refuse rather
+           than render whatever came back. */
+        if (versionId === null && body.focusedVersionId !== null) {
+          setPhase('error');
+          return;
+        }
+        setChain(body);
         setPhase('ready');
       } catch { if (live) setPhase('error'); }
     })();

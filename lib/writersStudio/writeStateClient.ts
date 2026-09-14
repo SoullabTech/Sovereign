@@ -26,6 +26,10 @@ import {
 import type { ProposalWorkTarget as ChainProposalWorkTarget } from '@/lib/manuscript/proposalChain/proposalWorkTarget';
 import type { ProposalWorkTarget as LegacyProposalWorkTarget } from '@/lib/manuscript/revisionProposal/proposalWork';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
+/* ⭐⭐ W5-Z0 · the identity of the editorial RELATIONSHIP, resolved by the
+   server and distinct from the candidate formulation `target` carries. */
+import type { EditorialWorkspaceSubject } from './editorialWorkspace';
+import type { RequestedChainSubject } from '@/app/writers-studio/canvasIdentity';
 
 /**
  * ⭐ The wire genuinely carries EITHER while the cutover is staged: `proposal=`
@@ -93,8 +97,24 @@ export interface WriteStateSection {
   authority: SectionAuthority;
 }
 
+/**
+ * ⭐⭐ W5-Z0 · THE TWO FACTS THE RESPONSE NOW CARRIES SEPARATELY.
+ *
+ *     editorialSubject   the identity of the editorial RELATIONSHIP
+ *     target             the exact candidate FORMULATION + its projection
+ *
+ * ⛔ THE ABSENCE OF `target` IS NOT THE ABSENCE OF A RELATIONSHIP. A chain that
+ * holds an observation and no candidate wording has a subject and no target,
+ * and the mode stays `section_aware` because nothing may be suspended,
+ * previewed, compared or authorized where no formulation exists.
+ *
+ * ⭐ Optional on BOTH modes on purpose: the legacy `proposal=` path resolves a
+ * target and NO subject (it names a different object, retired at W7), and the
+ * zero-version path resolves a subject and NO target. Neither implies the other.
+ */
 export type WriteState =
-  | { mode: 'section_aware'; version: number; rows: WriteStateRow[]; sections: WriteStateSection[] }
+  | { mode: 'section_aware'; version: number; rows: WriteStateRow[];
+      sections: WriteStateSection[]; editorialSubject?: EditorialWorkspaceSubject }
   /**
    * ⭐ A GENUINE MOUNT BOUNDARY, not a visual variant of the editor. `target`
    * is present exactly when the mode is this one, so the room cannot enter
@@ -115,7 +135,8 @@ export type WriteState =
    * never infer the second from the first.
    */
   | { mode: 'proposal_work'; version: number; rows: WriteStateRow[];
-      sections: WriteStateSection[]; target: ProposalWorkTarget }
+      sections: WriteStateSection[]; target: ProposalWorkTarget;
+      editorialSubject?: EditorialWorkspaceSubject }
   | { mode: 'continuous'; version: number; content: string; notice: { title: string; body: string } }
   | { mode: 'continuous_unprovable'; version: number; content: string; notice: { title: string; body: string } }
   | { mode: 'no_draft' };
@@ -198,6 +219,13 @@ export function chooseMount(
  */
 export type ProposalSelector =
   | { readonly kind: 'chain_version'; readonly chainId: string; readonly versionId: string }
+  /**
+   * ⭐⭐ W5-Z0 · THE CHAIN WITHOUT A FOCUS. ⛔ A THIRD KIND, not a nullable
+   * `versionId` on the first — a nullable field would let every consumer of
+   * `chain_version` silently start handling a case it was never written for,
+   * which is how the head default would creep back in.
+   */
+  | { readonly kind: 'chain_only'; readonly chainId: string }
   | { readonly kind: 'legacy'; readonly proposalId: string };
 
 /**
@@ -205,10 +233,16 @@ export type ProposalSelector =
  * one place that decides it rather than at each call site.
  */
 export function proposalSelector(
-  focus: { chainId: string; versionId: string } | null,
+  requested: RequestedChainSubject | null,
   legacyProposalId: string | null,
 ): ProposalSelector | null {
-  if (focus) return { kind: 'chain_version', chainId: focus.chainId, versionId: focus.versionId };
+  if (requested) {
+    return requested.versionId !== null
+      ? { kind: 'chain_version', chainId: requested.chainId, versionId: requested.versionId }
+      /* ⛔ The server decides whether a chain-only ask has a lawful subject —
+         see `readChainOnlySubject`. The client only forwards what was named. */
+      : { kind: 'chain_only', chainId: requested.chainId };
+  }
   if (legacyProposalId) return { kind: 'legacy', proposalId: legacyProposalId };
   return null;
 }
@@ -255,6 +289,11 @@ export async function fetchWriteState(
       : selector.kind === 'chain_version'
         ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(selector.chainId)}`
           + `&${CANVAS_PROPOSAL_VERSION_PARAM}=${encodeURIComponent(selector.versionId)}`
+      : selector.kind === 'chain_only'
+        /* ⛔ No `proposalVersion` at all — not an empty one. An empty parameter
+           is a named-but-blank focus, and the server would have to decide what
+           blank means. Absence is the only honest spelling of "none named". */
+        ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(selector.chainId)}`
         : `?${CANVAS_PROPOSAL_PARAM}=${encodeURIComponent(selector.proposalId)}`;
     const res = await fetcher(
       `/api/sovereign/manuscripts/${manuscriptId}/write-state${q}`);
@@ -295,4 +334,27 @@ export function sectionEngine(m: WriteMount): {
     return { version: m.version, rows: m.rows, sections: m.sections, target: m.target };
   }
   return null;
+}
+
+/**
+ * ⭐⭐ W5-Z0 · THE ONE QUESTION THE ROOM ASKS ABOUT EDITORIAL IDENTITY.
+ *
+ *     What editorial subject did the server resolve for this Work?
+ *
+ * ⛔ NOT `do I have a proposal target, or do I happen to hold a chain
+ * parameter?` — two questions with two answers is how a second mounting rule
+ * gets bolted on beside the first, and the founder ruled against exactly that
+ * (2026-09-14). There is one seam, it reads the server's answer, and it is
+ * reached from the write STATE rather than from the mount: which writing engine
+ * runs and whether an editorial relationship exists are independent facts.
+ *
+ * ⛔ It derives nothing. A response with no `editorialSubject` yields null even
+ * when a target is present — that is the legacy path, and it must keep its own
+ * panel rather than acquire a chain identity it does not have.
+ */
+export function editorialSubjectOf(
+  state: WriteState | null | undefined,
+): EditorialWorkspaceSubject | null {
+  if (!state) return null;
+  return 'editorialSubject' in state ? state.editorialSubject ?? null : null;
 }
