@@ -15,19 +15,36 @@ rulings remain owed before implementation can mean anything safely (§4).
 **The `PATTERN` role SPLITS. There is no single pattern language.**
 
 ```text
-GREP_PATTERN   consumed by git grep          repo.grep.pattern · repo.locate_symbol.symbol
-JS_REGEX       consumed by new RegExp(·)     verify.count_matches.pattern
+GREP_PATTERN   caller authors a grep expression      repo.grep.pattern
+SYMBOL         caller authors a literal identifier   repo.locate_symbol.symbol
+JS_REGEX       consumed by new RegExp(·)             verify.count_matches.pattern
 ```
+
+> ⭐ **SUPERSEDED IN PLACE — D6 RATIFIED 2026-09-14.** The original grouping (kept in the commit
+> history, corrected here) placed `repo.locate_symbol.symbol` under `GREP_PATTERN` **because its
+> handler calls `git grep`**. D6 rules that grouping wrong: ⛔ **execution engine does not determine
+> argument role.** The caller-facing taxonomy above is the authorized one.
 
 ⛔ Calling both `PATTERN` would hide a real semantic difference. **The role taxonomy is now TEN:**
 `PATH · PATHSPEC · REF · GREP_PATTERN · JS_REGEX · SYMBOL · ENUM · COUNT/LIMIT · BOOLEAN · FREE TEXT`.
 
-**`SYMBOL` is currently misnamed.** Its present runtime semantics are `GREP_PATTERN_FRAGMENT` —
+~~**`SYMBOL` is currently misnamed.** Its present runtime semantics are `GREP_PATTERN_FRAGMENT` —
 the value can alter the surrounding pattern. ⛔ **Do not silently fix that by escaping it until D6
-says a literal identifier is the intended act.**
+says a literal identifier is the intended act.**~~
+
+> ⭐ **D6 RATIFIED 2026-09-14 — `SYMBOL` is NOT misnamed. The runtime is.** The field is a
+> **literal symbol identifier**; the caller has **no regex authority**. F-C described the runtime
+> truthfully and is retained as provenance for the repair that is now owed — it is **not** authority to
+> redefine the public act. *A symbol is the thing being sought. It is not the program used to seek it.*
+> ⛔ The hold on escaping is **lifted as a question, not as an authorization**: D6 chooses the act, not
+> the mechanism, and **no handler repair is authorized by D6 alone.**
 
 **F-B's ambientness must eventually be ELIMINATED**, not merely declared: the contract should
 explicitly choose the grep language. ⛔ Which one is **D5**; that it must be chosen is ratified.
+⭐ **D5 RULED 2026-09-14: POSIX BRE, pinned by this contract, `REGISTRY_DEFINED`.** After D6 the law
+reaches `repo.locate_symbol` by a different route — not as a caller-facing dialect at all, but as the
+rule that **no ambient state may change what an invocation means**, whatever mechanism implements
+whole-symbol lookup.
 
 > ⭐ **`same registry request + different environment = potentially different meaning` violates the
 > whole goal of canonical execution.**
@@ -208,7 +225,13 @@ declared name and the semantic role disagree.
 
 | Field | Role | Accepted language | Canonical representation | Validation invariant | Execution consumer | Omission meaningful? | Delegated? |
 |---|---|---|---|---|---|---|---|
-| `symbol` | SYMBOL | 🔴 **de facto grep pattern fragment (F-C)** — **OPEN — D6** | **OPEN — D6** | required · string | **`\b${symbol}\b`** — derived, unescaped | n/a | 🔴 **yes — F-B** |
+| `symbol` | SYMBOL | ⭐ **literal symbol text** — caller has **NO regex authority** (**D6 RATIFIED**) | **caller term = the literal string**; any escaped/derived expression is **host-authored** and must not replace it | required · string — ⛔ **no invented identifier grammar (D6.5)** | today `\b${symbol}\b` derived **unescaped** — 🔴 **DEFECT (F-C), repair owed, not authorized by D6** | n/a | ⭐ **no** — `REGISTRY_DEFINED`, ambient config has no authority |
+
+> **Match policy is host-authored.** The handler adds the boundaries rather than asking the caller for
+> them — semantically correct even though the present implementation is unsafe. D6 ratifies **whole-symbol
+> lookup as capability semantics**; it does **not** ratify GNU `\b` as the required mechanism. Escaping +
+> regex boundaries, fixed-string search + boundary checking, or another proven-equivalent mechanism are
+> all admissible. **D6 chooses the act, not the mechanism.**
 
 ### `inventory.migrations` · `inventory.routes`
 
@@ -360,7 +383,9 @@ NEW FINDINGS
   F-C   SYMBOL is de facto a grep pattern fragment, interpolated unescaped
 
 RATIFIED                    PATTERN splits → GREP_PATTERN + JS_REGEX (taxonomy now 10)
-                            SYMBOL currently = GREP_PATTERN_FRAGMENT
+                            SYMBOL currently = GREP_PATTERN_FRAGMENT   ← ⭐ SUPERSEDED by D6:
+                              descriptive of the RUNTIME, never of the CONTRACT. SYMBOL is a
+                              literal identifier; the runtime is the defect (F-C).
                             F-B ambientness must be ELIMINATED, not just declared
 
 D4                          ⭐ RATIFIED — MODEL B · omission is caller-authored absence
@@ -369,15 +394,25 @@ DERIVED CONSEQUENCE         H1 re-classified: unrecorded host contribution, not 
                             canonicalization bug — smaller, safer repair shape
 D1                          ⭐ RATIFIED — literal identity ≠ selection authority
                             five arguments reclassify PATHSPEC → PATH (literal)
-REMAINING ORDER             D5 → D6 → D2 → D3
-LANE                        ⭐ OPEN — five rulings owed · D4 ≠ programme closure
+D5                          ⭐ RATIFIED — repo.grep.pattern = POSIX BRE, pinned
+                            per-capability languages permitted · ambient config NO AUTHORITY
+D6                          ⭐ RATIFIED — repo.locate_symbol.symbol = LITERAL SYMBOL
+                            caller has no regex authority · match policy is host-authored
+                            ⛔ execution engine does not determine argument role
+REMAINING ORDER             D2 → D3        ⚠️ two rulings owed, not five
+LANE                        ⭐ OPEN — D4 ≠ programme closure
 
 F-B DISPOSED BY D5          ambient dialect forbidden; language is REGISTRY_DEFINED (POSIX BRE)
 F-D NEW · OPEN              the two grep handlers disagree whether no-match is an OUTCOME or an
                             ERROR — repo.grep catches status===1, repo.locate_symbol throws.
                             Adjacent to D5 and NOT disposed by it.
+F-C DISPOSED BY D6          as a CONTRACT question. Retained as evidence of the current defect;
+                            the repair it argues for is owed and NOT authorized by D6.
 F-B EVIDENCE                absence of pinning PROVEN from source
-                            effective grep.patternType ⛔ UNOBSERVED
+                            effective grep.patternType ⭐ OBSERVED 2026-09-14 — UNSET at all four
+                            scopes → BRE here. ⚠️ The stale 'UNOBSERVED' line above it is corrected,
+                            not deleted: it was true when written. One machine, one day; the
+                            ambientness is what generalizes, and D5 has now removed its authority.
 
 NOTHING REPAIRED · NO HANDLER TOUCHED · RB-6B IMPLEMENTATION BLOCKED
 ```
