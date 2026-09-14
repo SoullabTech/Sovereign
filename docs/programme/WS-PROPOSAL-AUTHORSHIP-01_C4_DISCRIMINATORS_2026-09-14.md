@@ -567,9 +567,9 @@ P2     ⭐ ELECTED — the only lawful path. Cost recorded at the moment of choo
        ⭐ P2 does not repair missing provenance. It creates new provenance.
        predeclaration `…_P2_NEW_CELL_PREDECLARATION_2026-09-14.md` — Section 1 / position 0
        structural endpoint · pre-press screenshot as the act-condition record
-NEXT   ratify the P2 predeclaration → seal the NEW cell → THEN O1
-       ⚠️ O1's attachment point OPEN — R-a own runtime / R-b re-scope / R-c amend
-RUNTIME ⛔ UNTOUCHED until the P2 predeclaration is pinned
+       ✅ RATIFIED · P2-B controlled-second cell predeclared · O1 → R-a own runtime
+NEXT   1 P2 first cell · 2 seal · 3 P2-B · 4 seal · 5 fresh runtime · 6 O1 once · 7 adjudicate
+RUNTIME ⭐ UNBLOCKED for steps 1-6 only, in order
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 

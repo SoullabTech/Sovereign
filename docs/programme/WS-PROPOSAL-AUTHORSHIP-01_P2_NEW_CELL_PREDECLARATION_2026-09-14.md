@@ -137,7 +137,110 @@ press would observe the settle behaviour of the act we are trying to hold consta
    O1 is not the same press — AND it is not the NEXT press in the same runtime either.
 ```
 
-Three lawful resolutions, ⛔ none chosen here:
+### ⭐⭐ RULED (founder, 2026-09-14)
+
+```text
+P2    ✅ RATIFIED TO EXECUTE
+O1    → R-a · its own independently constructed fresh runtime
+R-b   ✅ WORTHWHILE — but as a SEPARATE PREDECLARED CELL (P2-B below)
+R-c   ⛔ REJECTED — it would destroy the variable O1 was designed to hold fixed
+```
+
+⭐ **R-a's cost buys exactly what C4 is about: a first asked return stays a first asked return.**
+O1 does **not** attach to the P2 runtime after the new cell is sealed; it attaches to a **second,
+independently constructed runtime** reproducing the same structural away-condition.
+
+```text
+O1 RUNTIME (R-a)
+  fresh load · ZERO prior SHOW CHANGE presses
+  automatic arrival settles
+  manually scroll to Section 1 / position 0
+  capture the pre-press provenance screenshot
+  press SHOW CHANGE exactly once
+  record the frozen THREE readings
+  stop
+```
+
+---
+
+## P2-B · CONTROLLED WHOLE / SECOND CELL — predeclared BEFORE any P2 result
+
+```text
+PURPOSE
+  Ask whether the historical FAIL → PASS pattern reproduces when BOTH invocations
+  have KNOWN PROVENANCE.
+
+PRECONDITION
+  the P2 new Whole/first cell has JUST been sealed in this runtime.
+
+ACT
+  1. Do not reload.
+  2. Manually scroll back to Section 1 / position 0.
+  3. Capture the same required endpoint screenshot:
+       Whole mode · Section 1 / position 0 visible ·
+       Section-23 proposal panel present · SHOW CHANGE available
+  4. Press SHOW CHANGE exactly once.  ⭐ This is the runtime's SECOND asked return.
+  5. Classify only: LOCUS-ADDRESSED | SECTION-ADDRESSED | INVALID
+  6. STOP.
+
+⛔ THIS IS NOT O1.
+⛔ No mechanism claim from this cell.
+```
+
+### What P2-B buys that the inherited evidence never could
+
+```text
+FIRST  asked return   known away-condition · known act provenance
+SECOND asked return   SAME known away-condition · same runtime · known provenance
+```
+
+```text
+reproduces SECTION → LOCUS   → invocation order becomes REAL EVIDENCE under controlled
+                                conditions, not an inherited coincidence
+does NOT reproduce           → the old first/second asymmetry becomes CONTEXT-DEPENDENT
+                                instead of silently authoritative
+```
+
+⭐ Either outcome is informative, which is what makes predeclaring it safe.
+
+### ⭐⭐ WHY P2-B MUST BE PINNED BEFORE P2 RUNS
+
+```text
+⛔ If P2-B were predeclared AFTER seeing P2's first result, taking it would be
+   OUTCOME-SELECTED EVIDENCE — a second observation chosen because the first tempted us.
+```
+
+⭐ **Predeclaration is what makes a follow-on observation evidence rather than a reaction.**
+Same discipline as the O1 interpretation matrix: fix the meaning of both outcomes before either
+exists.
+
+---
+
+## Authorized sequence
+
+```text
+1. P2 first cell — execute EXACTLY as pinned
+2. Seal its result
+3. P2-B second cell — ⭐ lawful ONLY because its predeclaration exists before step 1
+4. Seal its result
+5. FRESH RUNTIME
+6. R-a / O1 — reproduce the Section-1 construction, spend O1 ONCE
+7. STOP and adjudicate C4
+```
+
+⭐ Three acts, three objects, never collapsed:
+
+```text
+NEW FIRST CELL      does the defect occur under known provenance?
+CONTROLLED SECOND   does the first/second asymmetry reproduce under known provenance?
+O1 SETTLE           does the first asked return keep moving after it lands?
+```
+
+⭐ That separation is precisely what this lane has spent the day learning not to collapse.
+
+---
+
+### (Superseded) the three resolutions as originally offered
 
 ```text
 R-a  O1 GETS ITS OWN RUNTIME. Seal the new cell; then a SECOND fresh load, arrival, the same
@@ -160,13 +263,12 @@ R-c  AMEND O1's preconditions to admit a second press.
 
 ```text
 P1        ⛔ FORMALLY EXHAUSTED
-P2        ✅ ELECTED · this predeclaration READY FOR RATIFICATION
+P2        ✅ RATIFIED TO EXECUTE
+P2-B      ✅ PREDECLARED — pinned BEFORE any P2 result
+O1        ✅ frozen · R-a · SEPARATE FRESH RUNTIME (step 5-6)
+R-c       ⛔ REJECTED
 OLD FAIL  ⭐ SEALED · UNTOUCHED
 
-NEW CELL  first act after the predeclared Section-1 manual away-condition
-O1        ✅ frozen · attaches ONLY after the new cell is sealed
-          ⚠️ attachment point OPEN — R-a / R-b / R-c owed
-
-RUNTIME   ⛔ untouched until this predeclaration is pinned
+RUNTIME   ⭐ UNBLOCKED — may be touched ONLY for steps 1-6, in that order
 EDIT      ⛔ none          C4  ⛔ unresolved
 ```
