@@ -82,6 +82,7 @@
     "verify:deploy-provenance": "bash scripts/verify-deploy-provenance.sh",
     "verify:deploy-lock": "bash scripts/verify-deploy-lock-record.sh",
     "verify:migrate-fail-closed": "bash scripts/verify-migrate-fail-closed.sh",
+    "verify:s3-runbook": "bash scripts/verify-s3-schema-first-runbook.sh",
     "claude:env": "bash scripts/claude-env-setup.sh",
     "audit:sovereignty": "npx tsx scripts/audit-sovereignty.ts",
     "audit:typehealth": "npm run typecheck:full -- --pretty false > artifacts/typecheck-full.log 2>&1 || true && tsx scripts/audit-typehealth.ts",
