@@ -68,7 +68,8 @@ rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}
 want=['mediaserverd','coreaudiod','audiomxd','audioclocksyncd','audioaccessoryd']
 for w in want:
     hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]==w]
-    print(f"{w}: " + (" · ".join(f"pid {pid} {p}" for p,pid in hits) if hits else "NOT PRESENT"))
+    # Ruling A2 wording: absence is scoped to the object of evidence — the documented JSON window — never to the machine.
+    print(f"{w}: " + (" · ".join(f"PRESENT — witnessed by PID {pid} ({p})" for p,pid in hits) if hits else "NOT PRESENT IN THE DOCUMENTED JSON WINDOW"))
 print(f"(processes listed: {len(rows)})")
 PY
     fi

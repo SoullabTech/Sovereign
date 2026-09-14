@@ -483,7 +483,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     // PASS-2 daemon witness (founder ruling 2026-09-14): the batch snapshots mediaserverd/coreaudiod rows before each sample and
     // after export, records UNOBSERVABLE rather than substituting a mechanism, and never signals/terminates/kills a daemon.
     expect(b).toMatch(/daemon_snapshot "\$i" before/); expect(b).toMatch(/daemon_snapshot "\$i" after/);
-    expect(b).toMatch(/'mediaserverd','coreaudiod','audiomxd'/); expect(b).toMatch(/NOT PRESENT/); expect(b).toMatch(/UNOBSERVABLE/); expect(b).toMatch(/--json-output "\$js"/);  // ruled names always recorded (NOT PRESENT when absent); observed daemons by PID from the documented JSON
+    expect(b).toMatch(/'mediaserverd','coreaudiod','audiomxd'/); expect(b).toMatch(/NOT PRESENT IN THE DOCUMENTED JSON WINDOW/); expect(b).toMatch(/PRESENT — witnessed by PID/); expect(b).toMatch(/UNOBSERVABLE/); expect(b).toMatch(/--json-output "\$js"/);  // ruled names always recorded (NOT PRESENT when absent); observed daemons by PID from the documented JSON
     const bExec = b.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
     expect(bExec).not.toMatch(/process (signal|terminate|suspend)|\bkill\b|sendMemoryWarning/);
     // PASS-2 unified-log instruments: discovery captures help pages only; calibration is fail-closed on the probe, issues
