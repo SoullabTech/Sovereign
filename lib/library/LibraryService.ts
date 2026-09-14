@@ -16,6 +16,12 @@ import { generateLocalEmbedding } from '@/lib/memory/embeddings';
 import { generateWithKimi, isKimiAvailable } from '@/lib/ai/kimiClient';
 import { randomUUID } from 'crypto';
 import type { SpiralContext } from './dynamicRange';
+import {
+  admissionGateJoin,
+  isAdmissionScope,
+  DEFAULT_ADMISSION_SCOPE,
+  type AdmissionScope,
+} from './admissibility';
 
 // =============================================================================
 // TYPES
@@ -157,6 +163,39 @@ export const LIBRARY_TRIGGERS = [
 ];
 
 // =============================================================================
+// PLATFORM-ONLY SOURCE BOUNDARY
+// =============================================================================
+
+/**
+ * Structural ownership boundary for every read path in this service.
+ *
+ * `library_sources` is a MIXED-OWNERSHIP table by schema (migration
+ * 20260714000001_practitioner_program_platform.sql): it can hold house corpus
+ * rows AND practitioner-owned / vault-backed / field-scoped material. Before
+ * 2026-08-11 neither search path excluded the owned rows — harmless only
+ * because those columns are currently all NULL in production (0 practitioner,
+ * 0 vault, 0 field_slug). The first practitioner upload reaching
+ * `ingestion_status='completed'` would have made that material retrievable by
+ * every member.
+ *
+ * This predicate is a safety invariant, not a scope filter — it applies to ALL
+ * callers unconditionally. Retrieval SCOPE (e.g. the founder's Books-only
+ * ruling for member-facing conversation, 2026-08-11) is a separate, caller-
+ * supplied concern and must NOT be baked in here: admin/search/ingest surfaces
+ * legitimately read the whole house corpus.
+ *
+ * `field_slug` is included because on this table it denotes practitioner-field
+ * scoping (same migration), i.e. a non-NULL value means the source belongs to
+ * one practitioner's field — not the house.
+ *
+ * Findings: docs/architecture/ORIENTATION_AWARE_RETRIEVAL_PHASE1_2_FINDINGS_2026-08-11.md §4
+ */
+export const PLATFORM_ONLY_PREDICATE = `
+          AND s.practitioner_member_id IS NULL
+          AND s.vault_file_id IS NULL
+          AND s.field_slug IS NULL`;
+
+// =============================================================================
 // LIBRARY SERVICE CLASS
 // =============================================================================
 
@@ -250,11 +289,102 @@ export class LibraryService {
   /**
    * Semantic search using vector embeddings
    */
+  /**
+   * MEMBER-FACING WISDOM RETRIEVAL — admitted sources only.
+   *
+   * A separate method rather than an `admittedOnly` flag on search(), and that
+   * is deliberate. A default-off flag can be forgotten at the wire site; a
+   * default-on flag would break /api/library/search, ask-jeeves, stats, and the
+   * ingest/audit scripts, which legitimately read the whole house corpus. With a
+   * distinct entry point the member path cannot reach unadmitted material by
+   * omission — it would have to call a different method by name.
+   *
+   * Eligibility here is the conjunction of two independent boundaries:
+   *   - PLATFORM_ONLY_PREDICATE — universal ownership/safety invariant
+   *   - the admission gate      — source-version-specific AND purpose-specific
+   *
+   * Fails closed: a source with no admission row is `unreviewed` and is not
+   * returned. A source whose content changed since admission is not returned
+   * either, because the gate joins on checksum equality.
+   *
+   * ⚠️ Admission is not permission to reproduce. Each result carries the
+   * `use_constraint` of its admission; callers composing member-facing output
+   * must honour it, plus the two uniform runtime rules (no location-based or
+   * reconstruction requests; never surface raw chunks as output).
+   *
+   * Spec: docs/specs/HOUSE_SOURCE_ADMISSIBILITY_RECORD_PLAN_2026-08-11.md
+   */
+  async searchAdmitted(
+    queryText: string,
+    options: {
+      limit?: number;
+      sourceTypes?: string[];
+      scope?: AdmissionScope;
+      memberId?: string;
+      sessionId?: string;
+      spiralContext?: SpiralContext;
+    } = {}
+  ): Promise<LibraryContext> {
+    const {
+      limit = 5,
+      sourceTypes,
+      scope = DEFAULT_ADMISSION_SCOPE,
+      memberId,
+      sessionId,
+      spiralContext,
+    } = options;
+
+    // Never let an unvalidated string reach the gate: an unrecognised scope must
+    // fail closed rather than widen eligibility.
+    if (!isAdmissionScope(scope)) {
+      console.warn('[Library] searchAdmitted called with unknown scope; returning empty');
+      return { chunks: [], distillate: null, query: queryText, retrieval_mode: 'deep', total_sources_consulted: 0 };
+    }
+
+    const startTime = Date.now();
+    let chunks: LibrarySearchResult[] = [];
+
+    try {
+      chunks = await this.semanticSearch(queryText, limit, sourceTypes, spiralContext?.element, scope);
+
+      // Fallback is gated identically — see fullTextSearch.
+      if (chunks.length === 0) {
+        chunks = await this.fullTextSearch(queryText, limit, sourceTypes, scope);
+      }
+
+      await this.logSearch({
+        memberId,
+        sessionId,
+        queryText,
+        queryType: chunks.length > 0 ? 'semantic' : 'fulltext',
+        chunksReturned: chunks.length,
+        distillatesReturned: 0,
+        topSourceIds: [...new Set(chunks.map(c => c.source_id))],
+        searchDurationMs: Date.now() - startTime,
+      });
+
+      return {
+        chunks,
+        // No distillate: distillates are generated from source text and are not
+        // themselves admitted artifacts. Admitting a source does not admit a
+        // derivative of it.
+        distillate: null,
+        query: queryText,
+        retrieval_mode: 'deep',
+        total_sources_consulted: new Set(chunks.map(c => c.source_id)).size,
+      };
+    } catch (error) {
+      console.error('[Library] Admitted search error:', error);
+      return { chunks: [], distillate: null, query: queryText, retrieval_mode: 'deep', total_sources_consulted: 0 };
+    }
+  }
+
   private async semanticSearch(
     queryText: string,
     limit: number,
     sourceTypes?: string[],
-    elementBoost?: string
+    elementBoost?: string,
+    admittedScope?: AdmissionScope
   ): Promise<LibrarySearchResult[]> {
     try {
       // Generate embedding for query
@@ -271,6 +401,19 @@ export class LibraryService {
         ? `+ CASE WHEN c.meta->>'element' = '${elementBoost!.toLowerCase()}' THEN 0.15 WHEN c.meta->>'element_secondary' = '${elementBoost!.toLowerCase()}' THEN 0.08 ELSE 0 END`
         : '';
 
+      // Parameters are bound before the SQL is assembled so the placeholder
+      // indices stay correct as optional clauses come and go.
+      const params: any[] = [JSON.stringify(embedding)];
+      const sourceTypesParam = (sourceTypes && sourceTypes.length > 0)
+        ? `$${params.push(sourceTypes)}`
+        : null;
+      // Admission gate — member-facing compositional SCOPE, applied only when a
+      // caller asks for it by passing a scope (searchAdmitted). Distinct from
+      // PLATFORM_ONLY_PREDICATE, which is a safety invariant on every caller.
+      const admissionJoin = admittedScope
+        ? admissionGateJoin(`$${params.push(admittedScope)}`)
+        : '';
+
       // Build query with optional source type filter and element boost
       let sql = `
         SELECT
@@ -285,17 +428,15 @@ export class LibraryService {
           s.type as source_type,
           (1 - (c.embedding <=> $1::vector)) ${boostClause} as score
         FROM library_chunks c
-        JOIN library_sources s ON c.source_id = s.id
+        JOIN library_sources s ON c.source_id = s.id${admissionJoin}
         WHERE s.ingestion_status = 'completed'
           AND s.identity_valid IS DISTINCT FROM false
+          ${PLATFORM_ONLY_PREDICATE}
           AND c.embedding IS NOT NULL
       `;
 
-      const params: any[] = [JSON.stringify(embedding)];
-
-      if (sourceTypes && sourceTypes.length > 0) {
-        sql += ` AND s.type = ANY($2)`;
-        params.push(sourceTypes);
+      if (sourceTypesParam) {
+        sql += ` AND s.type = ANY(${sourceTypesParam})`;
       }
 
       sql += `
@@ -329,7 +470,8 @@ export class LibraryService {
   private async fullTextSearch(
     queryText: string,
     limit: number,
-    sourceTypes?: string[]
+    sourceTypes?: string[],
+    admittedScope?: AdmissionScope
   ): Promise<LibrarySearchResult[]> {
     try {
       // Prepare query for tsquery (simple word matching)
@@ -339,6 +481,20 @@ export class LibraryService {
         .join(' | ');
 
       if (!tsQuery) return [];
+
+      // Same parameter-before-SQL discipline as semanticSearch.
+      const params: any[] = [tsQuery];
+      const sourceTypesParam = (sourceTypes && sourceTypes.length > 0)
+        ? `$${params.push(sourceTypes)}`
+        : null;
+      // ⚠️ LOAD-BEARING: the fallback path must be gated IDENTICALLY to the
+      // semantic path. search() falls through to full-text whenever semantic
+      // returns nothing — precisely when a missing gate would go unnoticed. This
+      // is the same hole that existed in PLATFORM_ONLY_PREDICATE before
+      // 2026-08-11. A fallback that is not gated is an admission bypass.
+      const admissionJoin = admittedScope
+        ? admissionGateJoin(`$${params.push(admittedScope)}`)
+        : '';
 
       let sql = `
         SELECT
@@ -353,17 +509,15 @@ export class LibraryService {
           s.type as source_type,
           ts_rank(c.content_tsv, to_tsquery('english', $1)) as score
         FROM library_chunks c
-        JOIN library_sources s ON c.source_id = s.id
+        JOIN library_sources s ON c.source_id = s.id${admissionJoin}
         WHERE s.ingestion_status = 'completed'
           AND s.identity_valid IS DISTINCT FROM false
+          ${PLATFORM_ONLY_PREDICATE}
           AND c.content_tsv @@ to_tsquery('english', $1)
       `;
 
-      const params: any[] = [tsQuery];
-
-      if (sourceTypes && sourceTypes.length > 0) {
-        sql += ` AND s.type = ANY($2)`;
-        params.push(sourceTypes);
+      if (sourceTypesParam) {
+        sql += ` AND s.type = ANY(${sourceTypesParam})`;
       }
 
       sql += `
