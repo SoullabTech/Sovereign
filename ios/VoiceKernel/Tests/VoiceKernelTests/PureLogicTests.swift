@@ -359,16 +359,35 @@ final class RouteComparisonTests: XCTestCase {
 // The startup-seam trace is a closed, ordered set of observation steps. The
 // kernel journals them as `graph_start_trace` (Phase-A lineage; VPIO vocabulary).
 final class StartTraceTests: XCTestCase {
-    // VPIO-01: eleven Voice-Processing I/O seams, in the order the calls happen.
-    // No engine seam (vp_enable / attach / connect / tap / observer / prepare) exists
-    // on this subject; the precondition read (`input_format_read`) precedes any callback.
-    func testTheTraceNamesExactlyTheElevenVPIOSeamsInOrder() {
+    // VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication 2026-09-14): fourteen
+    // Voice-Processing I/O seams, in the order the calls happen. The format probe
+    // is VISIBLE: probe initialize → read → probe uninitialize → guard, all before
+    // any callback is armed; the real initialize/start follow only if the guard
+    // passed. No engine seam exists on this subject.
+    func testTheTraceNamesExactlyTheFourteenVPIO02SeamsInOrder() {
         let steps = AudioGraph.StartTraceStep.allCases.map(\.rawValue)
         XCTAssertEqual(steps, [
-            "unit_created", "io_enabled", "vp_properties_set", "input_format_read", "formats_set",
-            "callbacks_armed", "initialize_begin", "initialize_return", "start_begin", "start_return",
-            "is_running_immediate",
+            "unit_created", "io_enabled", "vp_properties_set",
+            "format_probe_initialize_begin", "format_probe_initialize_return", "input_format_read",
+            "format_probe_uninitialize_return",
+            "formats_set", "callbacks_armed", "initialize_begin", "initialize_return",
+            "start_begin", "start_return", "is_running_immediate",
         ], "the set is closed and ordered as the calls happen; a reorder here is a reorder in the substrate")
-        XCTAssertLessThan(steps.firstIndex(of: "input_format_read")!, steps.firstIndex(of: "callbacks_armed")!)
+        let at = { (s: String) -> Int in steps.firstIndex(of: s)! }
+        // the probe brackets the read
+        XCTAssertLessThan(at("format_probe_initialize_begin"), at("format_probe_initialize_return"))
+        XCTAssertLessThan(at("format_probe_initialize_return"), at("input_format_read"))
+        XCTAssertEqual(at("format_probe_uninitialize_return"), at("input_format_read") + 1, "uninitialize is the next seam after the read — before any reconfiguration")
+        // nothing is configured, armed, initialized or started until the probe has uninitialized
+        XCTAssertLessThan(at("format_probe_uninitialize_return"), at("formats_set"))
+        XCTAssertLessThan(at("formats_set"), at("callbacks_armed"))
+        XCTAssertLessThan(at("callbacks_armed"), at("initialize_begin"))
+        XCTAssertLessThan(at("initialize_return"), at("start_begin"))
+        XCTAssertEqual(steps.last, "is_running_immediate")
+        // a post-probe refusal truthfully ends at the uninitialize seam: nothing "started"
+        let refusalPrefix = Array(steps.prefix(through: at("format_probe_uninitialize_return")))
+        XCTAssertFalse(refusalPrefix.contains("start_begin"))
+        XCTAssertFalse(refusalPrefix.contains("initialize_begin"))
+        XCTAssertFalse(refusalPrefix.contains("callbacks_armed"))
     }
 }

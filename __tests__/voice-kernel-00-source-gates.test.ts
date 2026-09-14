@@ -147,7 +147,10 @@ describe('KERNEL-00 · K00-16 — nothing else is in the build', () => {
     const yml = readFileSync(join(HARNESS, 'project.yml'), 'utf8').replace(/^\s*#.*$/gm, '');
     expect(yml).not.toMatch(/Pods|Podfile|ios\/App\b|capacitor/i);
     // frozen exactly by the founder (VPIO-01 plan §8 item 3 / census §6): a distinct custody identity, never the K00 id.
-    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio01$/m);
+    // VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication 2026-09-14): a new subject, a new custody identity; the
+    // installed .vpio01 artifact is frozen evidence and is never re-used for a different subject.
+    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
+    expect(yml).not.toMatch(/vpio01/);
     expect(yml).not.toMatch(/life\.soullab\.voicekernel\.k00\b/);
   });
 });
@@ -238,10 +241,13 @@ describe('KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not 
       const guardLine = before.slice(before.lastIndexOf('\n', guardAt) + 1, guardAt);
       expect(guardLine).toMatch(/\btry \w+$/);
     }
-    // the hardware format is read from the unit (Input scope, element 1) BEFORE the guard, and the guard precedes initialize/start
-    expect(start.indexOf('readHardwareInputFormat(u)')).toBeLessThan(start.indexOf('.requireValid()'));
-    expect(start.indexOf('.requireValid()')).toBeLessThan(start.indexOf('AudioUnitInitialize(u)'));
-    expect(start.indexOf('AudioUnitInitialize(u)')).toBeLessThan(start.indexOf('AudioOutputUnitStart(u)'));
+    // VPIO-02: the hardware format is read from the unit (Input scope, element 1) on a PROBE-initialized unit, the probe
+    // is uninitialized BEFORE the guard can throw, and the guard precedes the real initialize and the start
+    expect(start.indexOf('AudioUnitInitialize(u)')).toBeLessThan(start.indexOf('readHardwareInputFormat(u)'));
+    expect(start.indexOf('readHardwareInputFormat(u)')).toBeLessThan(start.indexOf('AudioUnitUninitialize(u)'));
+    expect(start.indexOf('AudioUnitUninitialize(u)')).toBeLessThan(start.indexOf('.requireValid()'));
+    expect(start.indexOf('.requireValid()')).toBeLessThan(start.lastIndexOf('AudioUnitInitialize(u)'));
+    expect(start.lastIndexOf('AudioUnitInitialize(u)')).toBeLessThan(start.indexOf('AudioOutputUnitStart(u)'));
     // the pure precondition itself: rate > 0 AND channels > 0
     expect(body).toMatch(/var isValid: Bool \{ sampleRate > 0 && channels > 0 \}/);
     expect(body).toMatch(/case invalidInputFormat\(sampleRate: Double, channels: Int\)/);
@@ -516,11 +522,14 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     const start = g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
     const order = [
       /kAudioUnitSubType_VoiceProcessingIO/, /kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1,/, /kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0,/,
-      /kAUVoiceIOProperty_BypassVoiceProcessing/, /readHardwareInputFormat\(u\)/, /\.requireValid\(\)/,
+      /kAUVoiceIOProperty_BypassVoiceProcessing/,
+      // VPIO-02: probe initialize → read → probe uninitialize → guard (the probe is visible in the trace)
+      /trace\(\.formatProbeInitializeBegin, \[:\]\)/, /AudioUnitInitialize\(u\)/, /readHardwareInputFormat\(u\)/,
+      /AudioUnitUninitialize\(u\)/, /\.requireValid\(\)/,
       /kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,/, /kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,/,
       /kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 1,/, /kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0,/,
       /AudioUnitAddPropertyListener\(u, kAudioUnitProperty_StreamFormat, vpioFormatListener,/,
-      /AudioUnitInitialize\(u\)/, /AudioOutputUnitStart\(u\)/,
+      /trace\(\.initializeBegin, \[:\]\)/, /AudioOutputUnitStart\(u\)/,
     ];
     let last = -1;
     for (const re of order) {
@@ -529,7 +538,10 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
       expect(m!.index).toBeGreaterThan(last);
       last = m!.index;
     }
-    for (const re of [/AudioUnitInitialize\(u\)/g, /AudioOutputUnitStart\(u\)/g, /AudioUnitAddPropertyListener\(/g]) expect((start.match(re) ?? []).length).toBe(1);
+    // VPIO-02: exactly two initializes in start() (the probe and the real one), one probe uninitialize, one start, one listener
+    expect((start.match(/AudioUnitInitialize\(u\)/g) ?? []).length).toBe(2);
+    expect((start.match(/AudioUnitUninitialize\(u\)/g) ?? []).length).toBe(1);
+    for (const re of [/AudioOutputUnitStart\(u\)/g, /AudioUnitAddPropertyListener\(/g]) expect((start.match(re) ?? []).length).toBe(1);
     // the hardware read is the documented property on the input element's input scope
     expect(g).toMatch(/kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size\)/);
     // input is pulled by AudioUnitRender into an app-owned buffer; output is filled from the one scheduled stream
@@ -568,14 +580,15 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     expect(pull).toMatch(/guard Int\(frames\) <= inputScratch\.count else \{ return kAudio_ParamError \}/);
     expect(pull.indexOf('kAudio_ParamError')).toBeLessThan(pull.indexOf('AudioUnitRender('));
     expect(pull).toMatch(/AudioUnitRender\(u, flags, ts, bus, frames, &abl\)/);
-    // trace vocabulary unchanged: still the eleven seams, no new step for the read
-    expect([...g.matchAll(/case \w+ = "([a-z_]+)"/g)].length).toBe(11);
+    // trace vocabulary: the fourteen VPIO-02 seams, no extra step for the G9 read
+    expect([...g.matchAll(/case \w+ = "([a-z_]+)"/g)].length).toBe(14);
   });
-  it('the start trace names exactly the eleven VPIO seams, in order, and every step is emitted', () => {
+  it('the start trace names exactly the fourteen VPIO-02 seams, in order (the format probe visible), and every step is emitted', () => {
     const g = graph();
     const steps = [...g.matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
-    expect(steps).toEqual(['unit_created', 'io_enabled', 'vp_properties_set', 'input_format_read', 'formats_set', 'callbacks_armed',
-                           'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate']);
+    expect(steps).toEqual(['unit_created', 'io_enabled', 'vp_properties_set',
+                           'format_probe_initialize_begin', 'format_probe_initialize_return', 'input_format_read', 'format_probe_uninitialize_return',
+                           'formats_set', 'callbacks_armed', 'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate']);
     const start = g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
     for (const st of steps) {
       const c = st.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase()).replace('Vp', 'VP').replace('Io', 'IO');
@@ -643,11 +656,12 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
     expect(r).not.toMatch(/configuration_change|session_route_change/);
   });
-  it('the pure-logic tests follow the subject: RouteComparisonTests present, the classifier tests gone, the eleven-seam trace pinned', () => {
+  it('the pure-logic tests follow the subject: RouteComparisonTests present, the classifier tests gone, the fourteen-seam VPIO-02 trace pinned', () => {
     const t = bodies.get(swift.find((p) => p.endsWith('PureLogicTests.swift'))!)!;
     expect(t).toMatch(/final class RouteComparisonTests: XCTestCase/);
     expect(t).not.toMatch(/ConfigurationChangeClassifier/);
-    expect(t).toMatch(/func testTheTraceNamesExactlyTheElevenVPIOSeamsInOrder\(\)/);
+    expect(t).toMatch(/func testTheTraceNamesExactlyTheFourteenVPIO02SeamsInOrder\(\)/);
+    expect(t).not.toMatch(/ElevenVPIOSeams/);
   });
 });
 
@@ -855,20 +869,21 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
   });
 });
 
-describe('KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject plumbing; the organism does not move', () => {
+describe('KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject plumbing; the organism moves only inside the VPIO-02 envelope', () => {
   const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
   const execLines = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
   const VPIO = { bundle: 'life.soullab.voicekernel.vpio01', uuid: 'E8074AD1-D179-3267-A15C-142D033A9665',
                  dylib: '6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d',
                  exec: 'e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac',
                  manifest: '4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed' };
-  it('the organism is frozen at the compile subject 85e5e7154: kernel + harness trees byte-identical (source, tests, Package.swift, project.yml, Harness/*)', () => {
+  it('VPIO-02 envelope (founder adjudication 2026-09-14): relative to the VPIO-01 compile subject 85e5e7154, exactly AudioGraph.swift · PureLogicTests.swift · project.yml moved; kernel, authority, supervisor, policy, state, projection, journal, replay, Package.swift and every harness behavioural file are byte-identical; no file added under those roots', () => {
     const paths = ['ios/VoiceKernel/Sources', 'ios/VoiceKernel/Tests', 'ios/VoiceKernel/Package.swift', 'ios/VoiceKernelHarness/Harness', 'ios/VoiceKernelHarness/project.yml'];
+    const ENVELOPE = ['ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift', 'ios/VoiceKernel/Tests/VoiceKernelTests/PureLogicTests.swift', 'ios/VoiceKernelHarness/project.yml'];
     const listed = histList('85e5e7154', paths).sort();
     const moved: string[] = [];
     for (const p of listed) if (!histRaw('85e5e7154', p).equals(readFileSync(join(process.cwd(), p)))) moved.push(p);
-    expect(moved).toEqual([]);
-    // and the working tree adds no source file under those roots
+    expect(moved.sort()).toEqual(ENVELOPE);
+    // the working tree adds no source file under those roots
     const live = files.map(rel).filter((p) => paths.some((x) => p === x || p.startsWith(x + '/'))).sort();
     expect(live).toEqual(listed.filter((p) => /\.(swift|yml|plist)$/.test(p)));
   });
@@ -966,5 +981,72 @@ describe('KERNEL-00 · VOICE-07 — the harness is a projection', () => {
     const body = bodies.get(f)!;
     expect(body).toMatch(/s\.displaysListening/);
     expect(body).not.toMatch(/@State private var (listening|speaking)/);
+  });
+});
+
+// VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication 2026-09-14, F-W1 witness record §9 / plan §13.10).
+// The §3 law stands: an invalid input format is refused before the unit enters physical operation. What moved is
+// WHERE the guard earns its evidence: from a probe-initialized unit, uninitialized again before the guard can throw.
+describe('KERNEL-00 · VPIO-02 — the format probe lifecycle: initialize → read → uninitialize → guard, before anything is armed or started', () => {
+  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+  const startOf = (g: string) => g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
+  it('the probe brackets the read and is uninitialized before the guard, the client formats, any callback, the real initialize and the start', () => {
+    const start = startOf(graph());
+    const i = (re: RegExp, from = 0) => { const m = re.exec(start.slice(from)); expect(m).not.toBeNull(); return from + m!.index; };
+    const probeInit = i(/AudioUnitInitialize\(u\)/);
+    const read = i(/readHardwareInputFormat\(u\)/);
+    const probeUninit = i(/AudioUnitUninitialize\(u\)/);
+    const guard = i(/try hw\.requireValid\(\)/);
+    const formats = i(/kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,/);
+    const arm = i(/kAudioOutputUnitProperty_SetInputCallback/);
+    const realInit = start.lastIndexOf('AudioUnitInitialize(u)');
+    const startCall = i(/AudioOutputUnitStart\(u\)/);
+    expect([probeInit, read, probeUninit, guard, formats, arm, realInit, startCall]).toEqual([probeInit, read, probeUninit, guard, formats, arm, realInit, startCall].slice().sort((a, b) => a - b));
+    expect(probeInit).toBeLessThan(read); expect(read).toBeLessThan(probeUninit); expect(probeUninit).toBeLessThan(guard);
+    expect(guard).toBeLessThan(formats); expect(formats).toBeLessThan(arm); expect(arm).toBeLessThan(realInit); expect(realInit).toBeLessThan(startCall);
+    // the probe window mutates nothing and arms nothing: no set-property, no callback, no listener, no start inside it
+    const window = start.slice(probeInit, probeUninit);
+    expect(window).not.toMatch(/AudioUnitSetProperty|SetInputCallback|SetRenderCallback|AudioUnitAddPropertyListener|AudioOutputUnitStart/);
+    // a failed probe initialize returns its exact OSStatus BEFORE the read; a failed probe uninitialize returns its OSStatus BEFORE the guard
+    expect(start.slice(probeInit, read)).toMatch(/try Self\.check\(probeInit, step: "format_probe_initialize_return"\)/);
+    expect(start.slice(probeUninit, guard)).toMatch(/try Self\.check\(probeUninit, step: "format_probe_uninitialize_return"\)/);
+    // the guard is the inherited pure precondition, unchanged
+    expect(graph()).toMatch(/var isValid: Bool \{ sampleRate > 0 && channels > 0 \}/);
+  });
+  it('the read is still the documented property on (Input scope, element 1); the client format is set from the OBSERVED rate; no session-derived rate, no hard-coded rate, no alternate scope, no engine fallback, no retry', () => {
+    const g = graph(); const start = startOf(g);
+    expect(g).toMatch(/kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size\)/);
+    expect(start).toMatch(/var client = Self\.clientFormat\(sampleRate: hw\.sampleRate\)/);
+    // no fixed rate inside start() or the hardware read (the pre-existing `outputSampleRate` default field is not the guard's evidence)
+    const hwRead = g.slice(g.indexOf('private func readHardwareInputFormat('), g.indexOf('public func currentInputFormat()'));
+    expect(start + hwRead).not.toMatch(/AVAudioSession|AVAudioEngine|48_?000\b|44_?100\b/);
+    // an unreadable property yields the zero sentinel, which the guard refuses — never a substituted rate
+    expect(hwRead).toMatch(/guard st == noErr else \{ return InputFormatObservation\(sampleRate: 0, channels: 0\) \}/);
+    expect(start).not.toMatch(/\bwhile\b|\brepeat\b|for _ in|attempt|retry/);
+    expect((start.match(/readHardwareInputFormat\(u\)/g) ?? []).length).toBe(1);
+    expect((start.match(/AudioUnitInitialize\(u\)/g) ?? []).length).toBe(2);
+    expect((start.match(/AudioUnitUninitialize\(u\)/g) ?? []).length).toBe(1);
+  });
+  it('the three probe seams are traced with outcome/status/elapsed and the read is stamped afterProbeInitialize; a post-probe refusal ends at the uninitialize seam', () => {
+    const start = startOf(graph());
+    expect(start).toMatch(/trace\(\.formatProbeInitializeBegin, \[:\]\)/);
+    expect(start).toMatch(/trace\(\.formatProbeInitializeReturn, \["outcome": probeInit == noErr \? "ok" : "error", "status": String\(probeInit\), "elapsedMs":/);
+    expect(start).toMatch(/trace\(\.formatProbeUninitializeReturn, \["outcome": probeUninit == noErr \? "ok" : "error", "status": String\(probeUninit\), "elapsedMs":/);
+    expect(start).toMatch(/trace\(\.inputFormatRead, \["sampleRate": String\(hw\.sampleRate\), "channels": String\(hw\.channels\), "afterProbeInitialize": "true"\]\)/);
+    // order of trace emissions in the source mirrors the enum order
+    const order = ['formatProbeInitializeBegin', 'formatProbeInitializeReturn', 'inputFormatRead', 'formatProbeUninitializeReturn', 'formatsSet', 'callbacksArmed', 'initializeBegin'];
+    let last = -1;
+    for (const c of order) { const at = start.indexOf(`trace(.${c}`); expect(at).toBeGreaterThan(last); last = at; }
+  });
+  it('the custody identity is the new subject: bundle life.soullab.voicekernel.vpio02 · display name "VoiceKernel VPIO-02"; the frozen .vpio01 identity survives only in the VPIO-01 witness instrument and records', () => {
+    const yml = readFileSync(join(process.cwd(), 'ios/VoiceKernelHarness/project.yml'), 'utf8');
+    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio02$/m);
+    expect(yml).toMatch(/CFBundleDisplayName: VoiceKernel VPIO-02$/m);
+    const ymlExec = yml.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');   // prose is not identity (the C21 lesson)
+    expect(ymlExec).not.toMatch(/vpio01|VPIO-01/);
+    // the VPIO-01 witness instrument is untouched by this subject (instrument plumbing for vpio-02 is later witness work)
+    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-reinstall.sh', 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift']) {
+      expect(histRaw('de3efd3fb', p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+    }
   });
 });

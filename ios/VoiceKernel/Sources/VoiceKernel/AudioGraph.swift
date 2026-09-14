@@ -1,5 +1,12 @@
-// KERNEL-00 / VPIO-01 · the duplex physical I/O substrate on the lower
-// Voice Processing I/O path.
+// KERNEL-00 / VPIO-01 → VPIO-02 (FORMAT-RESOLUTION-01) · the duplex physical
+// I/O substrate on the lower Voice Processing I/O path.
+//
+// VPIO-02 (founder adjudication 2026-09-14, F-W1 witness record §9): the
+// VPIO-01 subject refused itself at generation 1 in 30 of 30 samples because
+// the §3 precondition read the stream format of a raw, not-yet-initialized
+// unit (0 Hz / 1 ch beside an active 48 kHz session). The §3 law stands; the
+// guard now earns its evidence from a PROBE lifecycle — initialize → read →
+// uninitialize — before anything is armed or started (see `start`).
 //
 // One Voice-Processing I/O audio unit per generation (Audio Toolbox
 // kAudioUnitType_Output / kAudioUnitSubType_VoiceProcessingIO — research
@@ -148,14 +155,17 @@ public final class AudioGraph: @unchecked Sendable {
         return st == noErr && running != 0
     }
 
-    /// VPIO-01 startup seams — the closed, ordered set the kernel journals as
+    /// VPIO-02 startup seams (14; the format probe is visible) — the closed, ordered set the kernel journals as
     /// `graph_start_trace`. Observation steps only; each names the call that
     /// just happened. Eleven steps on this subject.
     public enum StartTraceStep: String, CaseIterable, Sendable {
         case unitCreated = "unit_created"
         case ioEnabled = "io_enabled"
         case vpPropertiesSet = "vp_properties_set"
+        case formatProbeInitializeBegin = "format_probe_initialize_begin"
+        case formatProbeInitializeReturn = "format_probe_initialize_return"
         case inputFormatRead = "input_format_read"
+        case formatProbeUninitializeReturn = "format_probe_uninitialize_return"
         case formatsSet = "formats_set"
         case callbacksArmed = "callbacks_armed"
         case initializeBegin = "initialize_begin"
@@ -210,12 +220,31 @@ public final class AudioGraph: @unchecked Sendable {
                                  "elapsedMs": String(clock() - vpT)])
         try Self.check(bypassStatus, step: "vp_properties_set")
 
-        // §3.1 precondition: the hardware input format is read BEFORE any
-        // callback is armed. If the hardware has not resolved it, `start`
-        // refuses here and nothing below is reached.
+        // §3.1 precondition, VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication
+        // 2026-09-14): the hardware input format is still read BEFORE any
+        // callback is armed and refused if invalid — but it is read from a
+        // PROBE-INITIALIZED unit. The VPIO-01 witness falsified the assumption
+        // that a raw, not-yet-initialized unit's Input-scope/element-1 format
+        // is a truthful hardware witness (0 Hz / 1 ch, 30/30). Lifecycle:
+        // probe initialize → read → probe uninitialize → guard. The probe never
+        // starts the unit (no callback exists yet; AudioOutputUnitStart is not
+        // reached here) and uninitialize precedes any throw or reconfiguration,
+        // so a refusal leaves an UNINITIALIZED unit behind. A failed probe
+        // initialize returns its exact OSStatus. Not here by ruling: a
+        // session-derived rate, a hard-coded rate, an alternate scope, an
+        // engine fallback, a retry.
+        trace(.formatProbeInitializeBegin, [:])
+        let pT = clock()
+        let probeInit = AudioUnitInitialize(u)
+        trace(.formatProbeInitializeReturn, ["outcome": probeInit == noErr ? "ok" : "error", "status": String(probeInit), "elapsedMs": String(clock() - pT)])
+        try Self.check(probeInit, step: "format_probe_initialize_return")
         let hw = readHardwareInputFormat(u)
-        trace(.inputFormatRead, ["sampleRate": String(hw.sampleRate), "channels": String(hw.channels)])
+        trace(.inputFormatRead, ["sampleRate": String(hw.sampleRate), "channels": String(hw.channels), "afterProbeInitialize": "true"])
         lock.lock(); lastInputFormat = hw; lock.unlock()
+        let uT = clock()
+        let probeUninit = AudioUnitUninitialize(u)
+        trace(.formatProbeUninitializeReturn, ["outcome": probeUninit == noErr ? "ok" : "error", "status": String(probeUninit), "elapsedMs": String(clock() - uT)])
+        try Self.check(probeUninit, step: "format_probe_uninitialize_return")
         try hw.requireValid()
 
         // Client formats: mono float at the hardware rate, non-interleaved, on

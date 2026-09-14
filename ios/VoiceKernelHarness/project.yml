@@ -31,15 +31,17 @@ targets:
     info:
       path: Harness/Info.plist
       properties:
-        CFBundleDisplayName: VoiceKernel VPIO-01
+        CFBundleDisplayName: VoiceKernel VPIO-02
         CFBundleShortVersionString: "0.0.1"
         CFBundleVersion: "1"
         UILaunchScreen: {}
         # The harness is a different bundle id from MAIA (life.soullab.maia) so
         # the "shared phone, one bundle id" confound (RUNTIME-01 E9) cannot recur.
-        # VPIO-01 (founder ruling 2026-09-14): its own bundle id, frozen exactly as
-        # life.soullab.voicekernel.vpio01, so the device never holds two subjects
-        # under one identity; the historical K00/R1 install and container are untouched.
+        # VPIO-02 / FORMAT-RESOLUTION-01 (founder adjudication 2026-09-14): its own
+        # bundle id, frozen exactly as life.soullab.voicekernel.vpio02, so the device
+        # never holds two subjects under one identity; the installed .vpio01 artifact
+        # (VPIO-01, F-W1 FAIL 0/30) is frozen evidence and is never overwritten or
+        # uninstalled to make room; the historical K00/R1 install and container are untouched.
         NSMicrophoneUsageDescription: "KERNEL-00 witness: proves one native authority can keep the microphone and speaker alive, observable, cancellable and recoverable. No speech is recognized, stored, or transmitted."
         # K00-14 declared background policy for KERNEL-00: HOLD. The session is
         # kept while backgrounded/locked so the organism can be observed across
@@ -50,7 +52,7 @@ targets:
           - UIInterfaceOrientationPortrait
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.vpio01
+        PRODUCT_BUNDLE_IDENTIFIER: life.soullab.voicekernel.vpio02
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
