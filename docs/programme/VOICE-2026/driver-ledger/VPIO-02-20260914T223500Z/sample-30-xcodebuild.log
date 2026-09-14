@@ -1,0 +1,72 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/vpio02b-driver-compile-08483cfe4/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-14 18:57:13.209 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 18:57:13.212 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 18:57:13.316 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 18:57:13.582 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 18:57:13.768 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 18:57:15.504340-0400 DriverUITests-Runner[66672:14648446] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 18:57:15.980.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 18:57:15.981.
+Test Suite 'K00DriverTests' started at 2026-09-14 18:57:15.982.
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' started.
+    t =     0.00s Start Test at 2026-09-14 18:57:15.982
+    t =     0.02s Set Up
+    t =     0.03s Open life.soullab.voicekernel.vpio02
+    t =     0.03s     Launch life.soullab.voicekernel.vpio02
+    t =     0.10s         Setting up automation session
+    t =     0.19s         Wait for life.soullab.voicekernel.vpio02 to idle
+2026-09-14 18:57:16.271 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     1.29s Wait for life.soullab.voicekernel.vpio02 to become Running Foreground
+    t =     1.29s Waiting 10.0s for "Enter conversation" Button to exist
+    t =     2.30s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     2.30s         Checking existence of `"Enter conversation" Button`
+    t =     2.39s Checking existence of `"Voice processing: ON (default)" Button`
+    t =     2.42s Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     2.75s Waiting 3.0s for "Voice processing: ON (default)" Button to exist
+    t =     3.77s     Checking `Expect predicate `existsNoRetry == 1` for object "Voice processing: ON (default)" Button`
+    t =     3.78s         Checking existence of `"Voice processing: ON (default)" Button`
+    t =     3.84s Waiting 5.0s for "Enter conversation" Button to exist
+    t =     4.86s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     4.86s         Checking existence of `"Enter conversation" Button`
+    t =     4.92s Tap "Enter conversation" Button
+    t =     4.92s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =     4.93s     Find the "Enter conversation" Button
+    t =     4.97s     Check for interrupting elements affecting "Enter conversation" Button
+    t =     5.00s     Synthesize event
+    t =     5.30s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    20.32s Waiting 5.0s for "Export journal" Button to exist
+    t =    21.34s     Checking `Expect predicate `existsNoRetry == 1` for object "Export journal" Button`
+    t =    21.34s         Checking existence of `"Export journal" Button`
+    t =    21.39s Tap "Export journal" Button
+    t =    21.39s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    21.40s     Find the "Export journal" Button
+    t =    21.43s     Check for interrupting elements affecting "Export journal" Button
+    t =    21.47s     Synthesize event
+    t =    21.77s     Wait for life.soullab.voicekernel.vpio02 to idle
+    t =    23.98s Terminate life.soullab.voicekernel.vpio02:66673
+    t =    25.00s Wait for life.soullab.voicekernel.vpio02 to become Not Running
+    t =    25.00s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' passed (25.091 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-14 18:57:41.074.
+	 Executed 1 test, with 0 failures (0 unexpected) in 25.091 (25.093) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-14 18:57:41.076.
+	 Executed 1 test, with 0 failures (0 unexpected) in 25.091 (25.095) seconds
+Test Suite 'Selected tests' passed at 2026-09-14 18:57:41.078.
+	 Executed 1 test, with 0 failures (0 unexpected) in 25.091 (25.097) seconds
+2026-09-14 18:57:41.265 xcodebuild[74178:30025979] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 18:57:41.476 xcodebuild[74178:30025979] [MT] IDETestOperationsObserverDebug: 27.893 elapsed -- Testing started completed.
+2026-09-14 18:57:41.476 xcodebuild[74178:30025979] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 18:57:41.476 xcodebuild[74178:30025979] [MT] IDETestOperationsObserverDebug: 27.893 sec, +27.893 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-cucivqirvfyxsiblrnrftwylyees/Logs/Test/Test-DriverUITests-2026.09.14_18-57-13--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
