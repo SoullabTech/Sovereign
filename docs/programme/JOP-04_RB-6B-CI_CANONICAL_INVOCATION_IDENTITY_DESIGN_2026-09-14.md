@@ -103,6 +103,23 @@ alias mechanism exists — and none may be introduced by this work.**
 > ⛔ **Unknown aliases must not silently become equivalent.** If aliasing is ever added, two names
 > mapping to one capability must produce **one** act identity **explicitly**, never incidentally.
 
+> ## ⭐ R0 · RECONCILED TO D4 — 2026-09-14
+>
+> This design was written **before D4 was ratified**. D4 rules: **omission belongs to the caller;
+> default resolution belongs to the host.** Every claim below that treated a caller omission and an
+> explicit host-default value as **one act** is **superseded in place** — struck, never erased, with
+> the pre-D4 reading kept beneath it. ⛔ **This is a record consequence of D4, not a new semantic
+> ruling**, and no product code changes with it.
+>
+> ```text
+> H1 OLD            caller omission + explicit host-default value  → SAME canonical act
+> H1 D4-RATIFIED    caller omission + explicit value               → DIFFERENT canonical invocation
+>
+>                   caller omission  → caller_terms preserve ABSENCE
+>                                    → host resolves the effective value SEPARATELY
+>                                    → host_terms retain source=host_default
+> ```
+
 ## 4 · Argument identity — ⭐⭐ two hazards found in the registry
 
 ### H1 · Defaults are applied INSIDE handlers, invisible to the boundary
@@ -118,10 +135,26 @@ alias mechanism exists — and none may be introduced by this work.**
 
 `runCapability` forwards only the **supplied** keys. So:
 
-```text
+~~```text
 {}                and   { ref: 'HEAD' }
 two different REQUESTS  ·  one ACT
+```~~
+
+⭐ **SUPERSEDED BY D4.** They are **two DIFFERENT canonical invocations that presently share one
+effective execution.**
+
+```text
+{}                                        { ref: 'HEAD' }
+caller_terms: ref = UNSPECIFIED           caller_terms: ref = 'HEAD'   (caller-authored)
+host_terms:   ref = 'HEAD'
+              source = host_default
+→ DIFFERENT canonical invocations · SAME current effective execution ONLY
 ```
+
+⛔ **The hazard H1 names is real and unchanged** — the default is applied *inside the handler* and is
+therefore **an unrecorded host contribution**. ⭐ **What changed is the repair shape**: the defect is
+that the host's contribution is **invisible and unattributed**, NOT that two spellings need collapsing
+into one identity. *Collapsing them is now itself a defect (D3-F7 · D3.2).*
 
 > 🔴 **A digest over `validatedArgs` would bind `{}` while the handler performs `HEAD`.** That is
 > deliverable 9's failure, already present at this SHA.
@@ -194,7 +227,9 @@ act identity**.
 
 > ⛔ **A future rule change must not make an old decision silently mean something new.**
 
-⭐ Without a rule version, fixing H1 (folding defaults into canonical form) would **silently change
+⭐ Without a rule version, fixing H1 ~~(folding defaults into canonical form)~~ — ⛔ **that repair
+shape is SUPERSEDED BY D4; see §4. The ratified shape is *canonicalize only what the caller supplied,
+and resolve omissions into a separately-authored execution plan*** — would **silently change
 the meaning of every previously bound act identity**. Any bound identity must therefore carry the
 version of the rules that produced it, and a decision produced under one version must not be honoured
 under another without an explicit ruling.
@@ -212,13 +247,19 @@ same act, second occurrence        → SAME act / DIFFERENT occurrence
 **Concrete pairs from §4–§5, to be frozen with the corpus:**
 
 ```text
-git.rev_parse {}          vs  git.rev_parse { ref: 'HEAD' }      → SAME act      (H1)
+git.rev_parse {}          vs  git.rev_parse { ref: 'HEAD' }      ⛔ SUPERSEDED BY D4 —
+                                                                 DIFFERENT canonical invocations,
+                                                                 SAME current effective execution
 git.log { format: 'a' }   vs  git.log { format: 'b' }            ⛔ SUPERSEDED BY D2 —
                                                                  both INADMISSIBLE, not an
                                                                  equivalence pair; refuse, do
                                                                  not normalize (D2.6 · D2-F6)
 verify.file_exists './a/../b'  vs  verify.file_exists 'b'        → SAME act      (§5)
-repo.grep { max_results: 200 } vs repo.grep {}                    → SAME act      (H1)
+repo.grep { max_results: 200 } vs repo.grep {}                    ⛔ SUPERSEDED BY D4 + D3.2 —
+                                                                 DIFFERENT canonical invocations;
+                                                                 200 is source=host_default in the
+                                                                 second and caller-authored in the
+                                                                 first (D3-F7)
 git.rev_parse { ref: 'HEAD' }  vs  git.rev_parse { ref: 'HEAD~1' } → DIFFERENT
 same act in root A        vs  same act in root B                 → DIFFERENT     (§6)
 ```
@@ -239,9 +280,24 @@ The eventual implementation must establish one of:
 (b) an equally strong proof that the executed representation is exactly bound to the canonical act
 ```
 
-⭐ **(a) is the stronger and probably the smaller repair**: canonicalize before dispatch and let the
+~~⭐ **(a) is the stronger and probably the smaller repair**: canonicalize before dispatch and let the
 handler receive the canonical values — which incidentally repairs H1 and the §5 split at the same
-point. ⛔ **Not selected here.**
+point.~~ ⛔ **Not selected here.**
+
+> ⭐ **SUPERSEDED BY D4.** *"Canonicalize before dispatch and let the handler receive the canonical
+> values"* is the **pre-D4 repair shape**: it repairs H1 by folding the host's default into the
+> caller's canonical terms, which is exactly what D4 forbids. The ratified shape is:
+>
+> ```text
+> canonicalize ONLY what the caller supplied
+>   +
+> resolve omissions into a SEPARATELY-AUTHORED execution plan
+> ```
+>
+> ⛔ **If an inner execution-operation representation later treats the two effective operations alike,
+> that representation MAY NOT be the sole identity bound by authority** — the exact invocation must
+> still preserve caller-versus-host authorship. The §5 path-normalization question is untouched by
+> this correction and remains as written.
 
 ## 10 · Transferability falsifier
 
@@ -297,6 +353,10 @@ REQUEST OCCURRED
 TWO IDENTITIES        act ≠ occurrence · newRunId adequate for occurrence only
 CANONICALIZATION      HOST-SIDE · caller may not name its own act
 HAZARD H1             handler-applied defaults — a digest would bind {} and perform HEAD
+                      ⭐ RECLASSIFIED BY D4 (R0): the defect is an UNRECORDED HOST CONTRIBUTION,
+                      not a canonicalization collapse. Omission stays absent in caller_terms;
+                      the host default is recorded separately with source=host_default.
+                      ⛔ Folding defaults into canonical form is now itself a defect.
 HAZARD H2             git.log declares `format`, never uses it
                       ⭐ DISPOSED BY D2 — the field is NOT AUTHORIZED; the repair is removal
                       from the public language, not consumption (F-E disposed with it)
