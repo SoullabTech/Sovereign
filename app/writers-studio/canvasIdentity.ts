@@ -32,6 +32,36 @@ export const CANVAS_MANUSCRIPT_PARAM = 'm';
  */
 export const CANVAS_PROPOSAL_PARAM = 'proposal';
 
+/* ══════════════════════════════════════════════════════════════════════════
+   CUTOVER-01A · THE CANVAS NAMES A CHAIN **AND** THE EXACT VERSION
+
+   ⭐ BOTH ARE REQUIRED. The server read model may support "head as a reading
+   convenience", but the ROOM must know which authored formulation it is
+   displaying. A URL that named only a chain would put whatever is newest in
+   front of the writer and call it the thing they were sent to.
+
+   ⛔ STILL ONLY IDENTIFIERS. Not the target, not the wording, not the range —
+   a URL that could describe the change would be a URL that could author one.
+
+   ⛔ AND NO ADAPTER. `proposal=` above is a DIFFERENT selector naming a
+   DIFFERENT object; nothing here translates one into the other. The two
+   coexist while the cutover is staged, and the new pair takes precedence
+   wherever both appear.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export const CANVAS_PROPOSAL_CHAIN_PARAM = 'proposalChain';
+export const CANVAS_PROPOSAL_VERSION_PARAM = 'proposalVersion';
+
+/** The chain + exact version this visit is pointed at. ⛔ Null unless BOTH. */
+export function requestedProposalFocus(
+  params: { get(name: string): string | null },
+): { chainId: string; versionId: string } | null {
+  const chainId = params.get(CANVAS_PROPOSAL_CHAIN_PARAM);
+  const versionId = params.get(CANVAS_PROPOSAL_VERSION_PARAM);
+  if (!chainId || !versionId) return null;
+  return { chainId, versionId };
+}
+
 /** The proposal this visit is pointed at, if any. */
 export function requestedProposalId(
   params: { get(name: string): string | null },

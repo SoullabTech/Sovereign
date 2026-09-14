@@ -52,6 +52,7 @@ import {
   chooseMount,
   sectionEngine,
   fetchWriteState,
+  markableRange,
   type WriteState,
   type WriteMount,
 } from '@/lib/writersStudio/writeStateClient';
@@ -86,7 +87,7 @@ const PROPOSAL_MARK = 'A' as const;
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
-import { requestedProposalId } from '../canvasIdentity';
+import { requestedProposalId, requestedProposalFocus } from '../canvasIdentity';
 import ProposedChange from '../ProposedChange';
 import { useProposedChange } from '../useProposedChange';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
@@ -293,6 +294,13 @@ function CanvasRoom() {
   const proposalId = searchParams ? requestedProposalId(searchParams) : null;
   const proposed = useProposedChange(proposalId);
 
+  /* ⭐⭐ CUTOVER-01A — the room names a CHAIN and the EXACT VERSION it is
+     showing. ⛔ Both or neither: a chain alone would let the room display
+     whatever is newest and call it the thing the writer was sent to. */
+  const proposalFocus = useMemo(
+    () => (searchParams ? requestedProposalFocus(searchParams) : null),
+    [searchParams]);
+
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
   const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -393,7 +401,7 @@ function CanvasRoom() {
          the proposal id and nothing else, and takes the resolved authority back
          from the server. It never decides that a proposal makes a section
          read-only. */
-      const r = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
+      const r = await fetchWriteState(id, (url) => apiFetch(url), proposalFocus);
       if (cancelled) return;
       setWritePhase(r.phase);
       setWriteState(r.state);
@@ -401,7 +409,7 @@ function CanvasRoom() {
     return () => { cancelled = true; };
     /* The proposal is part of what the write state RESOLVES, so a change to
        it re-asks the server rather than being reinterpreted here. */
-  }, [manuscript?.id, proposalId]);
+  }, [manuscript?.id, proposalFocus]);
 
   /* WS2-NAV-01 — the member act that makes a Work navigable.
 
@@ -425,10 +433,10 @@ function CanvasRoom() {
        proposal id it re-reads a DIFFERENT question — the room would drop out of
        proposal work on the next conversion or draft creation, silently, and the
        target section would quietly regain a manuscript editor. */
-    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), proposalFocus);
     setWritePhase(refreshed.phase);
     setWriteState(refreshed.state);
-  }, [manuscript?.id, proposalId]);
+  }, [manuscript?.id, proposalFocus]);
 
   const onConfirmSectionBreaks = useCallback(async () => {
     const id = manuscript?.id;
@@ -465,7 +473,12 @@ function CanvasRoom() {
     if (!t) return null;
     const section = engine?.sections.find((x) => x.id === t.sectionId);
     if (!section) return null;
-    return sentenceComparison(section.body, t.range, t.replacementText);
+    /* ⛔ No range, no comparison — and that is NOT the conversation ending.
+       The formulation is still mounted and still discussable; what we decline
+       to do is point at a place in the Work we could not find. */
+    const range = markableRange(t);
+    if (!range) return null;
+    return sentenceComparison(section.body, range, t.replacementText);
   }, [engine]);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
      a section can be seen still saving while the next opens. */
@@ -1573,10 +1586,12 @@ function FieldBody({
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
               if (!section) return null;
+              const range = markableRange(target);
+              if (!range) return null;   /* ⛔ no mark, never a guessed one */
               return (
                 <ProposalEvidenceInWork
                   body={section.body}
-                  range={target.range}
+                  range={range}
                   replacementText={target.replacementText}
                   onWorkWithChange={onWorkWithChange}
                 />
@@ -1586,11 +1601,13 @@ function FieldBody({
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
               if (!section) return null;
+              const range = markableRange(target);
+              if (!range) return null;   /* ⛔ no mark, never a guessed one */
               return (
                 <ProposalWorkSurface
                   revealToken={revealToken}
                   body={section.body}
-                  range={target.range}
+                  range={range}
                   replacementText={target.replacementText}
                   sectionLabel={target.sectionLabel}
                 />

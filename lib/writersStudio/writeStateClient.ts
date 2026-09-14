@@ -13,7 +13,39 @@
  */
 
 import type { SectionAuthority } from './sectionAuthority';
-import type { ProposalWorkTarget } from '@/lib/manuscript/revisionProposal/proposalWork';
+/* ⛔ The param names come from the one identity contract — never inlined. */
+import {
+  CANVAS_PROPOSAL_CHAIN_PARAM,
+  CANVAS_PROPOSAL_VERSION_PARAM,
+} from '@/app/writers-studio/canvasIdentity';
+/* ⭐⭐ CUTOVER-01A · THE ROOM'S TARGET IS NOW THE CHAIN PROJECTION.
+   It carries `location`, which may be unavailable — and an unavailable
+   location NEVER means the proposal work is unavailable. The mount survives;
+   only the mark is withheld. */
+import type { ProposalWorkTarget as ChainProposalWorkTarget } from '@/lib/manuscript/proposalChain/proposalWorkTarget';
+import type { ProposalWorkTarget as LegacyProposalWorkTarget } from '@/lib/manuscript/revisionProposal/proposalWork';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
+
+/**
+ * ⭐ The wire genuinely carries EITHER while the cutover is staged: `proposal=`
+ * still resolves the legacy target, the new chain+version pair resolves the
+ * projection. ⛔ Typing this as only the new shape would be a lie about the
+ * response, and the room would narrow on a fact the server never promised.
+ */
+export type ProposalWorkTarget = LegacyProposalWorkTarget | ChainProposalWorkTarget;
+
+/**
+ * ⭐⭐ THE ONE PLACE THE ROOM ASKS "MAY I MARK THIS?".
+ *
+ * ⛔ `null` NEVER means the proposal work is gone — the mount is already
+ * decided by then. It means only that this exact place cannot be truthfully
+ * marked in the Work as it stands, so nothing is drawn and no "show me where"
+ * is offered. The conversation continues either way.
+ */
+export function markableRange(t: ProposalWorkTarget): SpacedRange | null {
+  if ('location' in t) return t.location.located ? t.location.range : null;
+  return t.range;
+}
 
 export interface WriteStateRow {
   id: string;
@@ -110,11 +142,19 @@ export function chooseMount(
 export async function fetchWriteState(
   manuscriptId: string,
   fetcher: (url: string) => Promise<Response>,
-  /** ⛔ PW-2 · A SELECTOR ONLY. The server resolves everything it implies. */
-  proposalId?: string | null,
+  /**
+   * ⛔ PW-2 · SELECTORS ONLY. The server resolves everything they imply.
+   * ⭐ CUTOVER-01A: chain + EXACT version, and BOTH are required — a chain
+   * alone would let the room display whatever is newest and call it the thing
+   * the writer was sent to.
+   */
+  focus?: { chainId: string; versionId: string } | null,
 ): Promise<{ phase: 'ready' | 'error'; state: WriteState | null }> {
   try {
-    const q = proposalId ? `?proposal=${encodeURIComponent(proposalId)}` : '';
+    const q = focus
+      ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(focus.chainId)}`
+        + `&${CANVAS_PROPOSAL_VERSION_PARAM}=${encodeURIComponent(focus.versionId)}`
+      : '';
     const res = await fetcher(
       `/api/sovereign/manuscripts/${manuscriptId}/write-state${q}`);
     if (res.status === 404) return { phase: 'ready', state: { mode: 'no_draft' } };
