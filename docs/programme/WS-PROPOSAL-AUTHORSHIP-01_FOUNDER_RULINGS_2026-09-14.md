@@ -164,19 +164,39 @@ OBSERVED            exact affected text VISIBLE
 makes the navigation behaviour **repeatable**, not a lucky scroll position — a stronger reading
 than a single PASS supports on its own.
 
-### The predeclared six-cell matrix (founder, from the walk context)
+### The predeclared six-cell matrix — COMPLETE (founder, 2026-09-14)
 
 ```text
-WHOLE-MANUSCRIPT ROW              SECTION-VIEW ROW
-  first asked return    FAIL        first asked return      [owed]
-  second asked return   PASS        second asked return     [owed]
-  passive scroll       [NEXT]       passive scroll          [owed]
+WHOLE-MANUSCRIPT ROW                       SECTION-VIEW ROW
+  first asked return    FAIL   SEALED       first asked return    PASS  FOUNDER-READ
+  second asked return   PASS   SEALED       second asked return   PASS  FOUNDER-READ
+  passive scroll        PASS   FOUNDER-READ passive scroll        PASS  FOUNDER-READ
 ```
+
+```text
+5 PASS · 1 FAIL · 0 owed
+```
+
+#### ⚠️ Provenance of the final four seals — recorded in place
+
+The last four cells are sealed on the **founder's personal observation in the live UI**, stated by
+the founder and accepted as such. ⛔ **No Jarvis observation exists or was ever offered:** this
+session has no reach to `localhost:3100`, said so before the walk, and every earlier cell was
+likewise recorded `FOUNDER-READ`. A relayed draft attributing a runtime observation to Jarvis is
+corrected here rather than carried:
+
+```text
+⛔ WRONG   the seal rests on an agent observation of the running UI
+✅ RIGHT   the seal rests on the FOUNDER's observation. That is sufficient. It is also the
+           only evidence there is.
+```
+
+⭐ The evidence class is the thing being protected, not the verdict. The verdicts stand.
 
 ⭐ The matrix is **predeclared**, not assembled after the fact. Cells are classified against it;
 it is not adjusted to fit what was observed.
 
-### ⭐ NEXT CELL — `Whole / passive scroll` · EXPECTED: **MUST STAY PUT**
+### `Whole / passive scroll` · EXPECTED: **MUST STAY PUT** — ✅ **PASS** (founder-read)
 
 ```text
 1. Stay in Whole manuscript.
@@ -203,6 +223,36 @@ whether the proposal-navigation mechanism pulls the canvas back unasked.
 ⭐ It is the falsifier for the repair the census recorded at §5: *the reveal guard was SPLIT into
 automatic acts vs voluntary acts.* A FAIL here says that split does not hold at runtime.
 
+### ⭐ Gate A disposition — the question the completed matrix now puts
+
+⛔ **Not ruled here.** The matrix is complete; the disposition is a founder act.
+
+What the matrix supports on its own, with no mechanism claim:
+
+```text
+The single FAIL is confined to ONE CELL — Whole / first asked return.
+Every other cell, in both views and both act-classes, PASSES.
+Positional sovereignty (passive scroll) holds in BOTH views.
+```
+
+⚠️ **One limit on reading that as localization.** The Section row was walked **after** the Whole
+row. So `Section / first` was not necessarily a *cold* first asked return in the sense
+`Whole / first` was. ⛔ The matrix therefore does **not** establish that the defect is
+Whole-view-specific rather than first-ever-invocation-specific. Both readings survive it.
+
+The disposition choices the charter allows:
+
+```text
+A  FALSIFIED → bounded repair, then close WS-PROPOSAL-INTERACTION-01
+B  NOT FALSIFIED → close on the row, carrying Whole / first as a recorded known defect
+C  ONE ADDITIONAL CELL → a cold Section / first, to separate the two surviving readings
+```
+
+⭐ C is the only option that buys new information, and it is one observation wide. ⛔ Jarvis
+recommends nothing here beyond naming that; the choice is the founder's.
+
+---
+
 ### ⛔ Sealing rule — a later PASS does not rewrite an earlier FAIL
 
 ```text
@@ -219,15 +269,16 @@ time.* The honest repair is to date it, never to edit it.
 ## Roadmap standing (precise)
 
 ```text
-LANE STATUS                        ⏳ OPEN · HELD AT WHOLE / PASSIVE SCROLL
-                                   ⛔ pinning a procedure does NOT satisfy a witness
-Writer's Studio interaction lane   ⏳ GATE A OPEN — six-cell browser witness in progress
+LANE STATUS                        ⏳ OPEN · AT GATE A DISPOSITION
+                                   ⛔ walk COMPLETE — do NOT rerun it
+Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
                                    Whole / first          SECTION-ADDRESSED — FAIL  [SEALED]
                                    Whole / second         LOCUS-ADDRESSED   — PASS  [SEALED]
-                                   Whole / passive scroll OWED ← CURRENT POSITION
-                                   Section / first        OWED
-                                   Section / second       OWED
-                                   Section / passive      OWED
+                                   Whole / passive scroll STAYED PUT        — PASS  [FOUNDER-READ]
+                                   Section / first        PASS  [FOUNDER-READ]
+                                   Section / second       PASS  [FOUNDER-READ]
+                                   Section / passive      PASS  [FOUNDER-READ]
+                                   NEXT → Gate A disposition (founder act, not more UI testing)
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
