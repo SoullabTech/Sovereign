@@ -80,3 +80,63 @@ MAP 4   ⛔ FAIL — re-running
 MAP 1   🔒 INTERMEDIATE   MAP 3   🔒 INTERMEDIATE   MAP 2   🟢 not returned
 P1-05   ⏸ CLOSED
 ```
+
+---
+
+## 4 · MAP 4 standing, as preserved
+
+```text
+MAP 4 · c190338e
+
+FINAL RETURNED
+ADJUDICATED
+
+Check 1   FAIL
+Check 2   PASS
+Check 3   PASS
+Check 4   PASS
+
+OVERALL   FAIL
+
+CAUSE
+  edge basis present
+  edge SYN standing absent
+
+DISPOSITION
+  identical-bounds re-run
+  original final preserved
+```
+
+⭐ The two things the failure separates, which are easy to conflate:
+
+```text
+EVIDENCE BASIS    why the edge exists
+SYN STANDING      what KIND OF CLAIM the edge is
+```
+
+A quoted basis can support an edge without telling a reader whether it is observed, derived,
+contradictory or unknown. ⭐ **So check 1 fails correctly even though the underlying edge evidence
+may be excellent** — and the record says so, rather than implying the edges are poor.
+
+⭐ Check 4's PASS is **meaningful, not vacuous**: the artifact *encountered* the dangerous
+vocabulary and used it **inside explicit prohibitions**, including the ordering/severity trap
+added to the gate while it was running.
+
+---
+
+## 5 · ⛔ What was NOT added, and why it matters
+
+⛔ **No new rule was created saying "every edge must visibly print `SYN-*` beside it."**
+
+The fixed gate requires that every drawn edge **carry an explicit SYN standing**. ⛔ It does not
+prescribe a rendering. The re-run must satisfy the **existing** contract; the lane ⛔ does not get
+to issue a new specification because one artifact failed.
+
+⭐ *That is what keeps the re-run genuinely IDENTICAL BOUNDS rather than quietly tightened after
+seeing the failure* — a gate that gains precision each time it fires is no longer the gate that
+was fixed before the evidence.
+
+⚠️ **Self-check on the re-run instruction:** it named the requirement, the vocabulary
+(`SYN-1`…`SYN-4`), and that `SYN-4` is a legitimate answer where standing is undetermined — ⛔ it
+prescribed **no format, no placement and no syntax.** Recorded so the claim of identical bounds is
+auditable rather than asserted.
