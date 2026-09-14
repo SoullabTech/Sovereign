@@ -418,3 +418,33 @@ Predeclared completion rule (agreed before the tail arrived): `driver batch rc =
 **Verification questions for the received files (questions, not findings):** (a) in the five `start_return < iounit_post < callback` rows, which generation's `first_input_callback` fell inside the +500 ms window — a miss has no gen-1 callback by class, so a gen-1 callback here would be a class/field disagreement to record, not reconcile; (b) whether the 6-vs-10 split aligns with the pass-1 M-a/M-b shapes (42/58 stall-with-`engineRunning` false vs 16/58 running-at-`graph_started`) — read from the transcripts, never assumed; (c) `anchor_agreement_ms` on all 30 (any `UNREADABLE` row is a missingness count, not a sample loss).
 
 **Standing after this section:** SEAM-01 EXECUTED (both blocks COMPLETE) · block-drift NONE DETECTED (p = 0.43) · partial pre-return signature RECORDED (6/16 misses, 0/14 takes) · verification here OWED on custody · F1/F2/F4/missingness/wall OWED · **next act is the founder's ruling on this reading** — no further batch, no perturbation (a perturbation is a new subject under its own authorization), no organism change, no repair, no mechanism claim. C-D17 runner count correction still owed (instrument only). AUTH-1/2/3 canon promotion remains separate.
+
+### 7.23 Founder ruling on §7.22 (2026-09-14): ACCEPTED WITH TWO CORRECTIONS · custody RECEIVED and RE-VERIFIED HERE · C-D18 · SEAM-01 CLOSED
+
+**Custody.** Founder commit `dea8b7c93` on `feature/k00-driver-ledger` (526 files: both blocks, both `.block.md`, both `.batch-stdout.txt`, `unifiedlog-SEAM-01-20260914T141516Z` without `device.logarchive`; founder-verified byte-for-byte against the seam worktree, `missing=[] · extra=[] · mismatch=[]`) → cherry-picked here as `43e85315e`. No `window-s*.json`, no archive (both gitignored). §7.22's "recorded, not verified here" is discharged by the following, all computed from the received files in this session:
+
+| item | received-file value | §7.22 / ruling |
+|---|---|---|
+| CONTROL numbered rows · ABORT lines | 30 · 0 | agrees |
+| LOGGED numbered rows · ABORT lines | 30 · 0 | agrees |
+| LOGGED takes / misses / infra | 14 / 16 / 0 | agrees |
+| CONTROL takes / misses / infra | 10 / 19 / 1 | agrees |
+| Fisher two-sided, LOGGED 14/30 vs CONTROL 10/29 | p = 0.43 → no block difference detected | agrees |
+| anchor agreement (30 seams) | 0 ms ×21 · 1 ms ×9 · >2 ms ×0 · UNREADABLE ×0 | agrees |
+| F1 `aurio_start_ms` | takes med 0 (0…2) · misses med 0 (0…1) · AUC 0.54 | no separation |
+| F2 `iounit_post_ms` | takes med 104 (101…107) · misses med 106 (100…302) · AUC 0.31 | partial |
+| F3 `iounit_post_vs_start_return_ms` | takes med −47 (−60…−41) · misses med −42 (−53…+151) · AUC 0.28 | agrees |
+| F4 `first_callback_vs_start_return_ms` | takes med 98 (95…101) · misses med 7980 (2047…13690) · AUC 0.00 · **absent in 6 misses, 0 takes** | downstream context |
+| F5 `iounit_posts_in_seam` | takes 1 ×14 · misses 1…9, med 3.5 · AUC 0.03 | downstream context |
+| missingness | F1/F2/F3/F5/F6 absent in 0/0; F4 absent in 0 takes / 6 misses (the degradation + still-recovering rows with no callback in the window) | frozen, now recorded |
+| late-post misses (F3 ≥ −1 ms) | samples **1 · 3 · 7 · 26 · 28 · 29** at +134 · +137 · +137 · +144 · +151 · +134 ms | 6/16 |
+| takes with `start_return<iounit_post` | 0 | 0/14 |
+| F6 on the six | `start_begin<aurio<start_return<iounit_post<callback` ×5 · `…<start_return<iounit_post` ×1 (sample 3) | agrees |
+
+**Correction 1 (founder) — applied to the reading, §7.22 text preserved.** The other ten misses all place the post before `start_return`; **nine lie inside the takes' observed F3 range (−60…−41 ms), one lies 3 ms beyond it — sample 16 at −38 ms**. §7.22's sentence "the other 10 misses sit inside the takes' F3 range" was too strong by that one sample. No predeclared categorical rule separates the ten from the takes, and none is coined now.
+
+**Correction 2 (founder) — the 6/10 split is not the M-a/M-b split.** Read here from the journals' gen-1 `graph_started` `evidence.engineRunning`: **M-a (false) = 11** — samples 1 · 2 · 3 · 7 · 14 · 15 · 16 · 24 · 26 · 28 · 29; **M-b (true) = 5** — samples 5 · 8 · 19 · 22 · 25. The six late-post misses are all M-a; the remaining ten are 5 M-a + 5 M-b. The seam experiment **refines M-a** (six of its eleven carry the late post; five do not); it does not reproduce the pass-1 dichotomy, and no new subtype is named after the fact. Verification question (a) closes: the five `…<iounit_post<callback` rows carry `first_input_callback` from generations **3 · 6 · 6 · 7 · 4** (samples 1 · 7 · 26 · 28 · 29); none is generation 1, so there is no class/field contradiction; sample 3 has no callback in the window. Question (c) closes: no `UNREADABLE` row.
+
+**C-D18 (reporting defect, this session's instrument).** The `--compare` line printed `median driver wall None s` for LOGGED and `6 s` for CONTROL: the reporter scraped `wall N s` from ledger evidence text, a string only infrastructure rows carry (CONTROL's one infra row = 6 s). From the authoritative `sample-timing.tsv`: **CONTROL median 29 s (6…37) · LOGGED median 29 s (28…29)**. Fisher and every seam field are unaffected. Repaired, instrument only: the reporter now reads wall from `sample-timing.tsv`; the produced `SEAM-LEDGER.md` and block records are not edited. **C-D17 repaired** in the same act: the block runner's summary line now counts numbered rows (header excluded). Neither correction touches a sample or reopens the experiment.
+
+**Final Pass-2 ruling (founder, in substance):** *a partial client-side correlating signature exists — in 6 of 16 misses and 0 of 14 takes the first configuration-change post occurs only after generation-1 `engine.start()` has returned; all six belong to the previously observed M-a miss shape, but five further M-a misses do not show it.* Localization and correlation only. Daemon causation NOT established · mechanism NOT established · all misses explained NO · `audiomxd` reopened NO · perturbation NOT AUTHORIZED · additional samples NOT AUTHORIZED · SEAM-01 sample budget 60/60 SPENT. **SEAM-01 CLOSED. Pass 2 closes as a measurement pass.** Next: the next Voice programme stage by founder act, not a mechanism hunt.

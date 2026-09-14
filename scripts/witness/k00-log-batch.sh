@@ -32,7 +32,7 @@ say "## block T0: $(date -u -r $T0_EPOCH +%Y-%m-%dT%H:%M:%SZ) (local $T0_LOCAL u
 say "## driver batch (verbatim): scripts/witness/k00-driver-batch.sh $LABEL-$BL $N --mode L --subject $SUBJECT --ledger $LD"
 "$ROOT/scripts/witness/k00-driver-batch.sh" "$LABEL-$BL" "$N" --mode L --subject "$SUBJECT" --ledger "$LD" > "$LEDGER_ROOT/$LABEL-$BL-$STAMP.batch-stdout.txt" 2>&1; BRC=$?
 T1_EPOCH=$(date +%s)
-say "## driver batch rc=$BRC · ledger $LD/ledger.md · rows $(grep -c '^| ' "$LD/ledger.md" 2>/dev/null || echo 0) · block T1: $(date -u -r $T1_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
+say "## driver batch rc=$BRC · ledger $LD/ledger.md · numbered rows $(grep -cE '^\| [^|]+\| [0-9]+ \|' "$LD/ledger.md" 2>/dev/null || echo 0) · block T1: $(date -u -r $T1_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
 [ -f "$LD/sample-timing.tsv" ] || { say "## STOP — no sample-timing.tsv: the batch recorded no per-sample windows; a logged block cannot be read (control block: rows stand)"; [ "$BLOCK" = control ] && exit 0 || exit 7; }
 [ "$BLOCK" = control ] && { say "## CONTROL block complete — no log(1) invocation (block-drift control under D-L1, not an observer-effect control)"; echo "block record: $REC"; exit 0; }
 UD="$LEDGER_ROOT/unifiedlog-$LABEL-$STAMP"; mkdir -p "$UD"

@@ -15,7 +15,17 @@ def rows_of(ledger_dir):
         c = [x.strip() for x in l.strip().strip('|').split('|')]
         if len(c) < 8 or not c[1].isdigit(): continue
         cls = c[6].strip('*'); m = re.search(r'\(`([^`]+\.jsonl)`\)', c[3])
-        out[int(c[1])] = {'class': cls, 'journal': m.group(1) if m else None, 'wall_s': (int(re.search(r'wall (\d+) s', c[7]).group(1)) if re.search(r'wall (\d+) s', c[7]) else None)}
+        out[int(c[1])] = {'class': cls, 'journal': m.group(1) if m else None, 'wall_s': None}
+    # C-D18 (2026-09-14): driver wall per sample comes from the batch's own sample-timing.tsv (i, t0 epoch s, t1 epoch s), the
+    # authoritative per-sample window; it was previously scraped as `wall N s` from ledger evidence text, a string only the
+    # infrastructure rows carry, which reported CONTROL as 6 s (one infra row) and LOGGED as None. Rows without a timing line stay None.
+    tp = os.path.join(ledger_dir, 'sample-timing.tsv')
+    if os.path.exists(tp):
+        for l in open(tp):
+            c = l.rstrip('\n').split('\t')
+            if len(c) >= 3 and c[0].strip().isdigit() and int(c[0]) in out:
+                try: out[int(c[0])]['wall_s'] = float(c[2]) - float(c[1])
+                except ValueError: pass
     return out
 def auc(a, b):   # rank separation of takes (a) vs misses (b), as in census pass 1; 0.5 = none
     if not a or not b: return None
@@ -29,7 +39,7 @@ if sys.argv[1] == '--compare':
     L, C = rows_of(sys.argv[2]), rows_of(sys.argv[3])
     def tally(R): 
         cls = collections.Counter(r['class'] for r in R.values()); t = cls[TAKE]; m = sum(cls[k] for k in MISS); i = len(R) - t - m
-        w = [r['wall_s'] for r in R.values() if r['wall_s']]
+        w = [r['wall_s'] for r in R.values() if r['wall_s'] is not None]
         return t, m, i, (statistics.median(w) if w else None)
     lt, lm, li, lw = tally(L); ct, cm, ci, cw = tally(C)
     print(f"## block-drift comparison (protocol §6; CONTROL = no log(1) invocation; NOT an observer-effect control under D-L1): LOGGED takes {lt} · misses {lm} · infra {li} · median driver wall {lw} s  ‖  CONTROL takes {ct} · misses {cm} · infra {ci} · median wall {cw} s")
