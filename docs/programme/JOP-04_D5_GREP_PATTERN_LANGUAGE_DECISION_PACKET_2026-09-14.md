@@ -366,3 +366,33 @@ LANE OPEN · IMPLEMENTATION ⛔ BLOCKED · HANDLERS TOUCHED 0
 
 ⭐ **D6 is cleaner than it was before D5:** the fact that `repo.locate_symbol` happens to call
 `git grep` no longer gets a vote in what a *symbol* is.
+
+---
+
+## 11 · Sealed-SHA rerun — the test the first witness could not pass
+
+```text
+SUBJECT/TREE   10f8bfd4   clean working tree, no uncommitted change
+D5 WITNESS     6 passed · 0 failed · exit 0
+D1 WITNESS     3 passed · 0 failed · exit 0
+```
+
+⭐ **The load-bearing observation is the number that MOVED.** Between the amended run at `e7b7b797`
+and this run at `10f8bfd4`, the D5 ruling and the witness-correction prose were added to the tree:
+
+```text
+E2  BRE / ERE / PCRE   total_files   13 → 14     more prose, more literal matches
+    fixed-strings      total_files    1 →  1
+    defining source    membership    UNCHANGED in every dialect
+    all four assertions             UNCHANGED · PASS
+```
+
+**The instrument absorbed new documentation of itself without changing its verdict.** That is exactly
+what the first version could not do, and it is the only evidence that the correction was real rather
+than a renumbering.
+
+> ⚠️ **Provenance of this section.** The runs were performed at `10f8bfd4` with a clean tree; this
+> record of them is necessarily written afterwards and lands in a later commit. The stamp is not the
+> witness — the witness is reproducible at `10f8bfd4` by anyone, and it is contamination-resistant by
+> construction, so a rerun at *this* commit must also pass. **If it does not, the instrument is wrong,
+> not the tree.**
