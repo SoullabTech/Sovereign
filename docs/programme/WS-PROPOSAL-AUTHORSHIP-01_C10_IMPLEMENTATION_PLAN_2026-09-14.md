@@ -14,6 +14,24 @@ STATUS      ⭐ PLAN ONLY — ⛔ NO CODE · ⛔ NO SCHEMA · ⛔ NO TEST WRITTE
    We ARE proving that an ACCIDENTAL PASS has acquired an EXPLICIT CAPABILITY behind it.
 ```
 
+```text
+⭐⭐ AND THE CAPABILITY IS NOT "PREFER THE LOCUS".
+    IT IS: A VOLUNTARY RETURN REMAINS OWED UNTIL THE LOCUS IS ACTUALLY ADDRESSED.
+```
+
+## 0 · ⚠️ Subject presence in this checkout — HALF THE SEAM IS ABSENT
+
+```text
+PRESENT   app/writers-studio/canvas/WholeManuscriptSurface.tsx
+          app/writers-studio/__tests__/wholeManuscriptSurface.test.ts
+ABSENT    ProposalEvidenceInWork · renderProposalEvidence · useBringIntoView
+          proposalWork · ProposedChange
+```
+
+⛔ **The C10 seam is only half-present here**, which also confirms this checkout is behind the
+Mac Studio subject. ⭐ **Q1–Q4, the falsifier, and the RED run are therefore FOUNDER-SIDE**, like
+every observation in this lane. Jarvis holds the plan and adjudicates what comes back.
+
 ---
 
 ## 1 · Subject and purpose
@@ -75,7 +93,12 @@ exposure of the affected wording was.*
    component threw — and then go GREEN after the repair FOR A DIFFERENT REASON.
    That pair proves nothing.
 
-✅ REQUIRED: the RED run must show the target RESOLVED, and resolved to the SECTION SHELL.
+✅ REQUIRED — the failing run must establish ALL THREE facts:
+     1. fixture VALID
+     2. exact proposal locus RENDERED / RESOLVABLE
+     3. actual reveal target = CONTAINING SECTION SHELL
+
+   Then the failure is genuinely WRONG TARGET — ⛔ not missing fixture, not failed mounting.
    "element not found" is NOT an acceptable RED.
 ```
 
@@ -84,13 +107,28 @@ before its RED counts.*
 
 ### The negative case — lethality, proven AFTER green
 
+⛔ A mutant that merely swaps the final target for the shell is **too easy**. It must mimic the
+**tempting wrong implementation**:
+
 ```text
-MUTANT   restore shell-only addressing in the repaired seam, long-section fixture unchanged
-EXPECT   ⭐ the capability test FAILS
+MUTANT
+  mount destination
+  if locus unavailable AT FIRST OPPORTUNITY:
+      reveal shell
+      ⛔ CONSUME the voluntary request
+
+EXPECT   ⭐ the capability falsifier FAILS
 ```
 
-⛔ Proves the test is lethal **to exactly the absence we found**, and guards it against later
-refactors quietly making it satisfiable by shell navigation again.
+⭐ This catches **both failure species**:
+
+```text
+1  permanently shell-only
+2  ⭐⭐ "try locus, silently degrade to shell"
+```
+
+⚠️ **The second is the dangerous one — it looks like the intended repair in code review.** A test
+that cannot tell it apart from the real capability is not a falsifier, it is a rubber stamp.
 
 ---
 
@@ -120,11 +158,54 @@ WHOLE     ⛔ the locus DOM EXISTS ONLY ONCE ITS SECTION IS MOUNTED, and the ask
 ```
 
 ⭐ So a Whole consumer firing on **token change** would run **before the node exists**. The
-candidate seam is therefore **the point where the shell is already resolved** — prefer the locus
-node when available, fall back to the shell otherwise.
+candidate seam is therefore **the point where the shell is already resolved.**
+
+### ⚠️⚠️ AMENDMENT (founder) — "fall back to the shell otherwise" is NOT SAFE as written
+
+⛔ Jarvis's candidate sentence — *prefer the locus node when available, fall back to the shell
+otherwise* — permits exactly the shape that earns nothing:
 
 ```text
-⛔ CANDIDATE ONLY. It stands or falls on Q1-Q4, which are read, not assumed.
+asked return → mount destination → locus not ready AT THIS INSTANT
+             → reveal shell → ⛔ MARK REQUEST COMPLETE
+```
+
+⭐ That **preserves the accidental mechanism with a best-effort locus enhancement.** It does not
+earn the capability. Current Whole navigation already reveals the shell and immediately clears
+`pendingScroll`; a fallback that discharges the request would simply re-describe today's behaviour.
+
+```text
+⭐⭐ VOLUNTARY RETURN COMPLETION — invariant, binding on Q1-Q4 and on the implementation
+
+  A voluntary Whole SHOW CHANGE request is NOT FULFILLED until the exact proposal locus
+  has been addressed.
+
+  The section shell MAY be used to:
+    • make the destination mountable
+    • orient the intermediate transition
+
+  ⛔ Shell reveal ALONE may not CONSUME / DISCHARGE the request.
+
+  If the locus is not yet registered:
+    the voluntary request REMAINS PENDING until it is, or the operation REFUSES EXPLICITLY.
+
+  ⛔ NO SILENT FALLBACK from exact-locus capability to today's shell-only behaviour.
+```
+
+### ⭐ Two properties, preserved simultaneously — the Whole equivalent of Section's split guard
+
+```text
+PERSISTENCE          the voluntary request SURVIVES THE MOUNT BOUNDARY until its locus exists
+ONE-SHOT SOVEREIGNTY once fulfilled, it is consumed EXACTLY ONCE and may not re-fire on
+                     remount · rerender · window recommit · ordinary scrolling
+```
+
+⭐ Section achieves both with `done.current` / `seenToken.current` over a **continuously mounted**
+locus. Whole needs both over a locus **that does not yet exist when the act occurs** — ⛔ so the
+same hook would collapse two different lifetimes. Same properties, different mechanism.
+
+```text
+⛔ CANDIDATE ONLY. It stands or falls on Q1-Q4, which are READ, not assumed.
 ```
 
 ### ⚠️⚠️ A guard must come WITH the capability — this is not scope widening
@@ -175,11 +256,21 @@ usual. Repository test debt is pre-existing and is not this repair's to fix.
 ## 5 · Standing
 
 ```text
-PLAN      ⭐ DRAFTED — awaiting founder ratification
-CODE      ⛔ NOT YET
-TEST      ⛔ not written · must demonstrate RED (for the right reason) BEFORE implementation
-BOUNDARY  C10 unchanged
-C4        ✅ discharged
-FR-W5     still governs every protected PASS
+PLAN      ✅ RATIFIED — with the VOLUNTARY RETURN COMPLETION amendment
+
+AUTHORIZED NEXT ACTS — ⛔ Q1-Q4 and implementation MUST NOT be combined into one act
+  1. Q1-Q4 ownership / lifetime READ
+  2. write the capability falsifier ONLY
+  3. run it against UNTOUCHED source
+  4. accept RED only if:  locus resolved · shell resolved · wrong target demonstrably = shell
+  5. ⭐ STOP and report the RED before implementation
+
+CODE      ⛔ implementation NOT authorized until a VALID RED exists
+BOUNDARY  C10 only
+FR-W5     fully governing
 OLD FAIL  ⭐ sealed · untouched
+LOCATION  ⭐ founder-side — half the seam is absent from this checkout (§0)
 ```
+
+⭐ **Reading the lifetime, writing the lethal test, and demonstrating the right RED come first so
+that the implementation has something CONCRETE TO ANSWER — rather than a design hypothesis.**
