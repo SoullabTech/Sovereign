@@ -1,0 +1,41 @@
+TRANSCRIPT=/private/tmp/VPIO-02-FIRST-INSTALL-02-20260914T220543Z.transcript.txt
+$ cd /private/tmp/vpio02b-driver-compile-08483cfe4
+/private/tmp/vpio02b-driver-compile-08483cfe4
+$ git rev-parse HEAD
+08483cfe4f6c3e98198805337ced99bae92ce911
+$ git diff --quiet 08483cfe4f6c3e98198805337ced99bae92ce911 -- scripts/witness/k00-reinstall.sh && echo instrument-identical
+instrument-identical
+$ shasum -a 256 docs/programme/VOICE-2026/KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.manifest.sha256
+1459283c175e243c90459b2724c2be7362cf6dd4c95c191bd15c443ec8b98410  docs/programme/VOICE-2026/KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.manifest.sha256
+$ test -d /private/tmp/vpio02-mac-compile-01-ac12dedf4-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app && echo product-present
+product-present
+1861
++zsh:34> scripts/witness/k00-reinstall.sh docs/programme/VOICE-2026/driver-ledger /private/tmp/vpio02-mac-compile-01-ac12dedf4-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+# reinstall 20260914T221040Z
+## subject: vpio-02 · bundle: life.soullab.voicekernel.vpio02
+## custody gate: bundle id life.soullab.voicekernel.vpio02 · executable SHA-256 9fe56504131e0b023162c62a6bd60541053b14262c9d3075a15a08dbe6c7805a · manifest self SHA-256 1459283c175e243c90459b2724c2be7362cf6dd4c95c191bd15c443ec8b98410 (7 files) — MATCH; installed-app state at first install: ABSENT; authority supplied at invocation: yes
+## custody gate: expected B346F448-A2A8-30DB-9683-B732A80D7899 — product reads B346F448-A2A8-30DB-9683-B732A80D7899 — MATCH
+## custody gate: dylib SHA-256 expected e963a23cd17fd12e273671023b01c74ea5fbc4e8a7fb22168a0cee2562bd66ec — product reads e963a23cd17fd12e273671023b01c74ea5fbc4e8a7fb22168a0cee2562bd66ec — MATCH
+## custody gate: manifest /private/tmp/vpio02b-driver-compile-08483cfe4/docs/programme/VOICE-2026/KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.manifest.sha256 (7 files) — every file hashes identically, file set identical — MATCH
+## dylib uuid (local product, BEFORE install)
+UUID: B346F448-A2A8-30DB-9683-B732A80D7899 (arm64) /private/tmp/vpio02-mac-compile-01-ac12dedf4-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## codesign
+Identifier=life.soullab.voicekernel.vpio02
+TeamIdentifier=ZVK2X646Z2
+## install
+18:10:41  Acquired tunnel connection to device.
+18:10:41  Enabling developer disk image services.
+18:10:41  Acquired usage assertion.
+App installed:
+? bundleID: life.soullab.voicekernel.vpio02
+? installationURL: file:///private/var/containers/Bundle/Application/E3B88028-A10F-46B1-AB27-CF0A1F83FB78/VoiceKernelHarness.app/
+? launchServicesIdentifier: unknown
+? databaseUUID: 42158240-DA3F-491F-8B75-F106CD31316A
+? databaseSequenceNumber: 6972
+? options: 
+## post-install processes (harness must be absent)
+(no VoiceKernelHarness process)
+reinstall artefacts written: docs/programme/VOICE-2026/driver-ledger/reinstall-20260914T221040Z.txt
++zsh:35> FI02_RC=0 
++zsh:36> set +x
+FIRST_INSTALL_02_EXIT_CODE=0
