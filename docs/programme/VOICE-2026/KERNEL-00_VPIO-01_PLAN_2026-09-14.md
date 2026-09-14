@@ -477,3 +477,61 @@ These bind the compiled external-witness instrument, unsigned and generic-platfo
 **Ten-step status:** 1–8 ✓ (§13.4) · **9 ✓ driver-only compile GREEN** · **10 ✓ record returned and in custody.** VPIO-01B witness preparation is therefore **instrument-ready**: ledger · driver · batch · reinstall carry the explicit subject table, the driver compiles, the reinstall gate is fail-closed against the pinned VPIO identity (`E8074AD1-…` · `6efe33b1…` · `e43dec66…` · `4710d9a6…`), and the just-in-time absence read sits inside the not-yet-authorized install act.
 
 **Standing after this section:** VPIO-01B instrument IMPLEMENTED at `de3efd3fb` · DRIVER-COMPILE-01 GREEN on that SHA · first-install absence read HELD (just-in-time, inside the future install act, never pre-run) · **VPIO install / launch / sample / N=30 NOT AUTHORIZED** · F-W1 UNSPENT (24/30 · 23/29 · 23/28 / ≤16/29 / between INDETERMINATE) · historical K00/R1 container UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. **The next act is the founder's, not this session's:** a ruling that opens the first VPIO install — `K00_SUBJECT=vpio-01 K00_EXEC_AUTHORITY=<supplied at invocation> k00-reinstall.sh <ledger-root> <the MAC-COMPILE-02 .app>` (custody MATCH → just-in-time absence read → one install verb) — and, separately, whether one `k00-driver-batch.sh VPIO-01 30 --mode L --subject vpio-01` follows. Compile green opens neither.
+
+### 13.6 FIRST-INSTALL-01 AUTHORIZED (founder ruling 2026-09-14) — install only · instrument transaction VERIFIED against the ruling · invocation PINNED · EXECUTION IS A MAC ACT (this session has no device) · record OWED
+
+**Ruling (founder, verbatim in substance):** one transaction with the compile-green instrument at `de3efd3fb`, subject `vpio-01`, on the existing MAC-COMPILE-02 product from `85e5e7154` — *custody verification → just-in-time installed-app read → `.vpio01` ABSENT → exactly ONE install → post-install process read → STOP.* Refusal semantics exact: PRESENT → STOP, no uninstall, no overwrite · UNREADABLE → STOP, absence not established · any custody field fails → STOP, no install. No rebuild of `85e5e7154` as a substitute. NOT authorized: VPIO launch · driver test invocation · journal pull · single physiological sample · N=30 · F-W1 (UNSPENT) · K00/R1 container (UNTOUCHED) · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 (CLOSED) · JOP-04 (UNTOUCHED). The founder re-verified the Mac artifact without touching the phone: bundle · UUID `E8074AD1-…` · dylib SHA `6efe33b1…` · executable SHA `e43dec66…` · manifest SHA `4710d9a6…` · 7/7 files MATCH.
+
+**Execution-authority input, recorded here as the ruling received (evidence of the act; per AUTH-3 it is an invocation input and is never reconstructed from this record):**
+
+```text
+FOUNDER-AUTH: VPIO-01 FIRST-INSTALL-01 only; use the de3efd3fb witness instrument with subject vpio-01 to verify the existing MAC-COMPILE-02 artifact from 85e5e7154 against bundle life.soullab.voicekernel.vpio01, dylib UUID E8074AD1-D179-3267-A15C-142D033A9665, dylib SHA-256 6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d, executable SHA-256 e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac, and the 7-file manifest SHA-256 4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed; then perform one just-in-time installed-app read; only if life.soullab.voicekernel.vpio01 is ABSENT install that exact artifact once; after installation read process state and stop. If custody mismatches, installed-app state is unreadable, or the VPIO bundle is already present, refuse and return without uninstall, overwrite, launch, test, journal pull, or sample. Historical K00/R1 is out of jurisdiction.
+```
+
+**Instrument transaction verified line by line against the ruling (`scripts/witness/k00-reinstall.sh`, byte-identical to `de3efd3fb` at `d2ec505a1`):**
+
+| ruling step | instrument | line(s) | device touched? |
+|---|---|---|---|
+| subject = vpio-01, no default bundle | `case "$SUBJECT"` → `VPIO_BID`; unknown → exit 2 | 22–33 | no |
+| product must exist | `[ -d "$APP" ]` else exit 2 | 39 | no |
+| custody reads on the local product | `dwarfdump --uuid` · `shasum` dylib · `shasum` executable · `plistlib` bundle id | 41–46 | no |
+| five pinned fields + conflicting `K00_EXPECT_*` = refusal | `PIN_REFUSE` (uuid/dylib-sha expectation conflicts · manifest required · manifest self-SHA · file count · executable-sha · bundle-id) | 48–60 | no |
+| manifest: every file hashes identically AND file set identical | `shasum -c` + `find`/`awk` set comparison → `MAN_RESULT` | 62–73 | no |
+| any custody field fails → STOP, no install | `REFUSE` → `.REFUSED.txt`, exit 3 | 75–94 | no |
+| just-in-time installed-app read | `xcrun devicectl device info apps` captured with `|| APPS_RC=$?` | 100 | read only |
+| UNREADABLE → STOP · PRESENT → STOP, no uninstall, no overwrite | `.REFUSED.txt`, exit 4 | 102–112 | no |
+| authority is an invocation input | `K00_EXEC_AUTHORITY` empty → `.HELD.txt`, exit 4, nothing installed | 114–120 | no |
+| record header + local codesign read | `codesign -dv` on the local product | 123–133 | no |
+| exactly ONE install | `xcrun devicectl device install app` — the only install verb in the file | 135 | **install** |
+| post-install process read, then stop | `devicectl device info processes` filtered for `VoiceKernelHarness` → artefact `reinstall-<stamp>.txt`, `.last-reinstall`, exit | 136–140 | read only |
+
+No `launch`, `test`, `xcodebuild`, `copy from`, journal or sample verb exists in the file (grep over non-comment, non-echo lines: the only `devicectl` verbs are `info apps`, `install app`, `info processes`). The transaction the instrument performs is exactly the authorized one, with the authority check sitting between ABSENT and the install verb. Under `set -euo pipefail`, a failing `install app` ends the artefact at that output (no `.last-reinstall` written); the ruling authorizes exactly one install, so a failed install verb is returned for ruling, never retried by the operator.
+
+**Manifest custody here:** the committed `docs/programme/VOICE-2026/KERNEL-00_VPIO-01_MAC-COMPILE-02_2026-09-14.manifest.sha256` hashes to exactly the pinned `4710d9a6…` in this container; the instrument self-hashes whatever copy is supplied, so the founder's worktree copy is accepted only if it is the same bytes.
+
+**Pinned invocation (Mac Studio, from a checkout whose `scripts/witness/k00-reinstall.sh` is byte-identical to `de3efd3fb`; `driver-ledger` keeps the custody artefact beside the historical reinstalls — its header names `subject: vpio-01 · bundle: life.soullab.voicekernel.vpio01`, so the lineage is distinguishable; any other directory is equally lawful):**
+
+```bash
+K00_SUBJECT=vpio-01 \
+K00_EXPECT_MANIFEST=/private/tmp/vpio-01b-driver-compile-record/docs/programme/VOICE-2026/KERNEL-00_VPIO-01_MAC-COMPILE-02_2026-09-14.manifest.sha256 \
+K00_EXEC_AUTHORITY='FOUNDER-AUTH: VPIO-01 FIRST-INSTALL-01 only; use the de3efd3fb witness instrument with subject vpio-01 to verify the existing MAC-COMPILE-02 artifact from 85e5e7154 against bundle life.soullab.voicekernel.vpio01, dylib UUID E8074AD1-D179-3267-A15C-142D033A9665, dylib SHA-256 6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d, executable SHA-256 e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac, and the 7-file manifest SHA-256 4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed; then perform one just-in-time installed-app read; only if life.soullab.voicekernel.vpio01 is ABSENT install that exact artifact once; after installation read process state and stop. If custody mismatches, installed-app state is unreadable, or the VPIO bundle is already present, refuse and return without uninstall, overwrite, launch, test, journal pull, or sample. Historical K00/R1 is out of jurisdiction.' \
+scripts/witness/k00-reinstall.sh docs/programme/VOICE-2026/driver-ledger \
+  /private/tmp/vpio-mac-compile-02-85e5e7154-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+```
+
+`K00_EXPECT_UUID` / `K00_EXPECT_DYLIB_SHA` may be supplied with the pinned values (accepted) or omitted (the pin applies); any other value is itself a refusal. The device id defaults to the paired phone's `devicectl` id (`K00_DEVICE` overrides).
+
+**Predeclared readings of the returned artefact:**
+
+| exit | artefact | meaning |
+|---|---|---|
+| 0 | `reinstall-<stamp>.txt` with the custody MATCH lines, `dwarfdump`, `codesign`, the install output, and `(no VoiceKernelHarness process)` | FIRST-INSTALL-01 DONE — the device holds `.vpio01` beside R1; nothing launched |
+| 3 | `reinstall-<stamp>.REFUSED.txt` (custody gate) | STOP · no install · founder ruling |
+| 4 | `reinstall-<stamp>.REFUSED.txt` (first-install precondition PRESENT / UNREADABLE) | STOP · device untouched · founder ruling |
+| 4 | `reinstall-<stamp>.HELD.txt` | authority not supplied at invocation · nothing installed |
+| 2 | no artefact | argument / product-path defect · nothing reached the device |
+| other | artefact ends at the install output | the one install verb failed · device state to be read by the founder before any ruling · no second attempt under this ruling |
+
+**Two limitations, stated:** (1) this session cannot execute the transaction — no `devicectl`, no phone in the container; the act is the founder's on the Mac, and the FIRST-INSTALL-01 record (custody result · just-in-time absence result · exact install output · post-install process state) is OWED from there, cherry-picked here, then read into §13.7. (2) The instrument records `authority supplied at invocation: yes`, not the string; the string travels in the founder's ruling and this section, not in the artefact — no instrument change, because the ruling pins the instrument at `de3efd3fb` exactly.
+
+**Standing after this section:** FIRST-INSTALL-01 AUTHORIZED · NOT YET EXECUTED · record OWED · launch / test / journal pull / sample / N=30 NOT AUTHORIZED · F-W1 UNSPENT · K00/R1 UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
