@@ -37,6 +37,7 @@
 // name (founder header check, iPhoneOS 26.2); none is guessed.
 import Foundation
 import AudioToolbox
+import CoreAudio
 
 public struct RenderStats: Sendable, Equatable {
     public var streamId: OutputStreamID

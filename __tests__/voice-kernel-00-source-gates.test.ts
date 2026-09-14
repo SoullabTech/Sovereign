@@ -502,9 +502,11 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     for (const [f, body] of bodies) {
       const imports = (body.match(/^import \w+/gm) ?? []).map((s) => s.replace('import ', ''));
       if (f.endsWith('AudioGraph.swift')) {
-        expect(imports.sort()).toEqual(['AudioToolbox', 'Foundation']);
+        // C-V1 (founder ruling 2026-09-14): the Swift overlay for UnsafeMutableAudioBufferListPointer lives in CoreAudio.
+        expect(imports.sort()).toEqual(['AudioToolbox', 'CoreAudio', 'Foundation']);
       } else {
         expect(imports).not.toContain('AudioToolbox');
+        expect(imports).not.toContain('CoreAudio');
         if (f.endsWith('VoiceKernel.swift')) expect(imports).not.toContain('AVFoundation');
       }
     }
