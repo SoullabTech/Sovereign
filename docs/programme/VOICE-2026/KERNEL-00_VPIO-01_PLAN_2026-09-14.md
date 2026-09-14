@@ -381,3 +381,13 @@ No install, launch, phone act or sample. **`5ca7851a8` is not a compile-green VP
 - Kernel · harness · tests · thresholds · trace vocabulary: untouched.
 
 **Standing:** MAC-COMPILE-01 (VPIO) RED · CLOSED on `5ca7851a8` · C-V1 NAMED · correction NOT AUTHORIZED, NOT WRITTEN · any correction = a new SHA that earns its own MAC-COMPILE · F-W1 UNSPENT · install / device act / N=30 NOT AUTHORIZED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
+
+### 12.8 C-V1 AUTHORIZED (founder, 2026-09-14) → CORRECTED at `85e5e7154` → MAC-COMPILE-02 AUTHORIZED on exactly that SHA
+
+Founder ruling: the compile established *symbol exists + Swift overlay exists in CoreAudio + source does not import CoreAudio = module-visibility defect* — not a new API choice, not an architectural expansion, not a workaround; walking the C buffer by hand remains NOT authorized.
+
+**Executed in the ruled order:** (1) `import CoreAudio` added beside `import AudioToolbox` in `AudioGraph.swift` — the only Swift change; `UnsafeMutableAudioBufferListPointer(ioData)` at line 361 unchanged, buffer logic unchanged, G9 unchanged, trace vocabulary unchanged, kernel / harness / tests / thresholds / authority / recovery unchanged. (2) Gate: `AudioGraph.swift` import set pinned to exactly `[AudioToolbox, CoreAudio, Foundation]`; `CoreAudio` and `AudioToolbox` forbidden in every other kernel/harness file (only the physical substrate names the lower audio stack). (3) Gate run alone and read: **45/45**. (4) Source + gate committed together as **`85e5e7154`** (2 files, +4 −1). (5) Working tree clean. (6) SHA named.
+
+**MAC-COMPILE-02 (VPIO) AUTHORIZED on exactly `85e5e7154`** — `swift build` · `swift test` · VPIO source gate · `xcodegen generate` · unsigned iOS build · signed iOS build; artifact identity (dylib UUID · dylib SHA-256 · app manifest · codesign/bundle identity) recorded only if the build actually produces it; any red step → STOP and return the exact defect, no opportunistic second correction inside the same compile act.
+
+**Standing:** `5ca7851a8` NOT a future compile subject · `85e5e7154` = compile subject · F-W1 UNSPENT · install / device act / N=30 NOT AUTHORIZED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
