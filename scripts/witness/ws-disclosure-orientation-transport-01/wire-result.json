@@ -1,0 +1,50 @@
+{
+  "fixture": {
+    "required": [
+      "zz-1946f69f-30eb-4e6a-b6ec-29158de59314",
+      "mm-a550e28c-9bab-4cfd-871d-833b959b2f60",
+      "aa-115fc924-da42-47ea-93b1-b5afc32fcaaa"
+    ],
+    "expectedOrdinals": {
+      "zz-1946f69f-30eb-4e6a-b6ec-29158de59314": 2,
+      "mm-a550e28c-9bab-4cfd-871d-833b959b2f60": 5,
+      "aa-115fc924-da42-47ea-93b1-b5afc32fcaaa": 9
+    }
+  },
+  "arm1": {
+    "status": 200,
+    "byteLength": 768,
+    "body": "{\"result\":\"BODY_AUTHORITY_REQUIRED\",\"threadId\":\"64443966-0303-44c3-9c7a-2ae8b2c4b2be\",\"pendingAskRef\":\"d861bd20-9a56-4098-bda5-172b369bb041\",\"workRef\":\"9e1e0e67-b7fd-4949-9c24-e1e277832de3\",\"sections\":[\"aa-115fc924-da42-47ea-93b1-b5afc32fcaaa\",\"mm-a550e28c-9bab-4cfd-871d-833b959b2f60\",\"zz-1946f69f-30eb-4e6a-b6ec-29158de59314\"],\"sectionOrientations\":[{\"sectionRef\":\"zz-1946f69f-30eb-4e6a-b6ec-29158de59314\",\"ordinal\":2},{\"sectionRef\":\"mm-a550e28c-9bab-4cfd-871d-833b959b2f60\",\"ordinal\":5},{\"sectionRef\":\"aa-115fc924-da42-47ea-93b1-b5afc32fcaaa\",\"ordinal\":9}],\"staleness\":{\"inputMoved\":{\"state\":\"unmeasured\"},\"topologyMoved\":{\"state\":\"unmeasured\"},\"reviewMoved\":{\"state\":\"unmeasured\"},\"readingSuperseded\":{\"state\":\"unmeasured\"},\"canonicalMoved\":{\"state\":\"unchanged\"}}}"
+  },
+  "arm2": {
+    "status": 200,
+    "byteLength": 509,
+    "body": "{\"result\":\"BODY_SCOPE_INCOMPLETE\",\"threadId\":\"64443966-0303-44c3-9c7a-2ae8b2c4b2be\",\"pendingAskRef\":\"d861bd20-9a56-4098-bda5-172b369bb041\",\"sections\":[\"aa-115fc924-da42-47ea-93b1-b5afc32fcaaa\",\"mm-a550e28c-9bab-4cfd-871d-833b959b2f60\",\"zz-1946f69f-30eb-4e6a-b6ec-29158de59314\"],\"sectionOrientations\":[{\"sectionRef\":\"zz-1946f69f-30eb-4e6a-b6ec-29158de59314\",\"ordinal\":2},{\"sectionRef\":\"mm-a550e28c-9bab-4cfd-871d-833b959b2f60\",\"ordinal\":5},{\"sectionRef\":\"aa-115fc924-da42-47ea-93b1-b5afc32fcaaa\",\"ordinal\":9}]}"
+  },
+  "arm3": {
+    "status": 500,
+    "byteLength": 66,
+    "body": "{\"refusal\":\"section_orientation_unavailable\",\"unlocatableCount\":1}",
+    "before": {
+      "ask_threads": 1,
+      "ask_turns": 1,
+      "ask_authorization_acts": 1,
+      "ask_authorization_consumptions": 0,
+      "context_disclosure_receipts": 0
+    },
+    "after": {
+      "ask_threads": 1,
+      "ask_turns": 1,
+      "ask_authorization_acts": 1,
+      "ask_authorization_consumptions": 0,
+      "context_disclosure_receipts": 0
+    },
+    "deltas": {
+      "ask_threads": 0,
+      "ask_turns": 0,
+      "ask_authorization_acts": 0,
+      "ask_authorization_consumptions": 0,
+      "context_disclosure_receipts": 0
+    }
+  }
+}

@@ -64,6 +64,7 @@ import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReade
 import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
 import { requirementOf, sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { deriveBodyRequirement, authorizationCovers } from '@/lib/manuscript/ask/bodyRequirement';
+import { deriveSectionOrientations } from '@/lib/manuscript/development/frozenOrientation';
 import { mintAct, claimAct, recordCompletionWithClient } from '@/lib/disclosure/authorizationAct';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
 import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
@@ -474,6 +475,25 @@ async function developmentalTurn(input: {
      resume. ⛔ The client's account never reaches this. */
   const bodyReq = deriveBodyRequirement(observation.evidenceRefs);
 
+  /* ⭐⭐ ORIENTATION BEFORE THE ASK. Where each required section SITS in the
+     frozen topology of THIS reading — derived from the same frozen state that
+     governs the pause, server-side, from the DERIVED required set only.
+
+     ⛔ FAIL CLOSED, AND BEFORE ANY MUTATION. A required identity that is not in
+     the frozen topology is not orientable, and an Ask that cannot locate the
+     section it proposes to request permission for is not entitled to request
+     it. No thread is opened, no opportunity minted, no act claimed. The refusal
+     carries a count and no identifier — a refusal is not an occasion to
+     disclose. */
+  const orientation = deriveSectionOrientations(
+    reading!.readState.sectionTopology, bodyReq.sections);
+  if (orientation.kind === 'unlocatable') {
+    return NextResponse.json({
+      refusal: 'section_orientation_unavailable',
+      unlocatableCount: orientation.unlocatableCount,
+    }, { status: 500 });
+  }
+
   const now = await loadLiveWork(manuscriptId, memberId);
 
   /* The packet as it stands WITHOUT body. This is the whole context on the
@@ -504,8 +524,15 @@ async function developmentalTurn(input: {
     initiatedBy: 'author',
   });
 
-  /* The author's words are recorded BEFORE anything else can fail, so a pause —
-     like a transport failure — loses the answer and never the question.
+  /* ⭐ AFTER STRUCTURAL PREFLIGHT HAS SUCCEEDED, the author's words are recorded
+     before any DOWNSTREAM pause, cognition or transport failure — so those lose
+     the answer and never the question.
+
+     ⛔ The scope matters and is narrower than it once read. A preflight refusal
+     above (no lawful body requirement to orient) happens BEFORE this point and
+     deliberately persists nothing: there is not yet a valid developmental Ask to
+     record, and creating conversational state to preserve prose would turn an
+     internal invariant failure into durable record.
      ⚠️ `isHeldRetry` decides only whether this is the SAME turn being re-sent.
      ⛔ It decides nothing constitutional: prose never gates authority here. */
   const priorTurns = existing?.turns ?? [];
@@ -540,6 +567,9 @@ async function developmentalTurn(input: {
          is authored disclosure, and whether returning one to its own author is a
          disclosure at all is PARKED, not decided here. */
       sections: bodyReq.sections,
+      /* ⭐ ADDITIVE. `sections` remains the authority identity array, untouched.
+         Orientation is presentation metadata, ordered by whole-Work ordinal. */
+      sectionOrientations: orientation.orientations,
       staleness,
     });
   }
@@ -559,6 +589,9 @@ async function developmentalTurn(input: {
       threadId: liveThreadId,
       pendingAskRef,
       sections: bodyReq.sections,
+      /* ⭐ THE SAME derivation as ACT 2, from the same frozen reading — so the
+         member is never told a section sits in two different places. */
+      sectionOrientations: orientation.orientations,
     });
   }
 
