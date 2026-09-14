@@ -531,7 +531,7 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     // the hardware read is the documented property on the input element's input scope
     expect(g).toMatch(/kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size\)/);
     // input is pulled by AudioUnitRender into an app-owned buffer; output is filled from the one scheduled stream
-    expect(g).toMatch(/AudioUnitRender\(u, flags, ts, bus, UInt32\(n\), &abl\)/);
+    expect(g).toMatch(/AudioUnitRender\(u, flags, ts, bus, frames, &abl\)/);
     expect(g).toMatch(/func pullInput\(/); expect(g).toMatch(/func render\(/); expect(g).toMatch(/func formatPropertyChanged\(/);
     // ioRunning = the unit's running property, read only (evidence, never health)
     expect(g).toMatch(/AudioUnitGetProperty\(u, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0, &running, &size\)/);
@@ -543,6 +543,31 @@ describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; th
     expect(stop.indexOf('AudioUnitUninitialize(u)')).toBeLessThan(stop.indexOf('AudioComponentInstanceDispose(u)'));
     // no timer · sleep · session act · recovery knowledge anywhere in the substrate (F-V5: no realtime mutation of policy)
     expect(g).not.toMatch(/Task\.sleep|Timer\b|DispatchQueue|usleep|sleep\(|requestRecovery|rebuildGraph|RecoveryPolicy|HealthSupervisor/);
+  });
+  it('G9 (founder header adjudication 2026-09-14): the input buffer is sized by the unit\'s MaximumFramesPerSlice, read after the formats and before any callback is armed; a larger request is refused, never truncated; no fixed capacity anywhere', () => {
+    const g = graph();
+    const start = g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
+    const read = start.indexOf('AudioUnitGetProperty(u, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maxFrames, &maxSize)');
+    expect(read).toBeGreaterThan(-1);
+    expect(read).toBeGreaterThan(start.lastIndexOf('step: "formats_set"'));                       // after the formats are established
+    expect(read).toBeLessThan(start.indexOf('kAudioOutputUnitProperty_SetInputCallback'));        // before any callback is armed
+    expect(read).toBeLessThan(start.indexOf('AudioUnitAddPropertyListener('));
+    const between = start.slice(read, start.indexOf('kAudioOutputUnitProperty_SetInputCallback'));
+    expect(between).toMatch(/try Self\.check\(maxStatus, step: "max_frames_read"\)/);              // unreadable → refusal
+    expect(between).toMatch(/guard maxFrames > 0 else \{ throw AudioGraphError\.invalidMaximumFramesPerSlice\(frames: maxFrames\) \}/);
+    expect(between).toMatch(/inputScratch = \[Float\]\(repeating: 0, count: Int\(maxFrames\)\)/);   // exactly that capacity
+    expect(start).toMatch(/"maximumFramesPerSlice": String\(maxFrames\)/);                          // recorded as startup evidence
+    expect(g).toMatch(/case invalidMaximumFramesPerSlice\(frames: UInt32\)/);
+    // no fixed capacity, no truncating min(...) anywhere in the substrate
+    expect(g).not.toMatch(/8_192|8192|min\(frames|min\(UInt32\(inputScratch|inputScratch\.count\)\)\)/);
+    expect(g).toMatch(/private var inputScratch: \[Float\] = \[\]/);
+    // the realtime pull renders exactly the requested frames or refuses with the SDK's parameter error
+    const pull = g.slice(g.indexOf('fileprivate func pullInput('), g.indexOf('fileprivate func render('));
+    expect(pull).toMatch(/guard Int\(frames\) <= inputScratch\.count else \{ return kAudio_ParamError \}/);
+    expect(pull.indexOf('kAudio_ParamError')).toBeLessThan(pull.indexOf('AudioUnitRender('));
+    expect(pull).toMatch(/AudioUnitRender\(u, flags, ts, bus, frames, &abl\)/);
+    // trace vocabulary unchanged: still the eleven seams, no new step for the read
+    expect([...g.matchAll(/case \w+ = "([a-z_]+)"/g)].length).toBe(11);
   });
   it('the start trace names exactly the eleven VPIO seams, in order, and every step is emitted', () => {
     const g = graph();

@@ -54,11 +54,15 @@ public enum AudioGraphError: Error, CustomStringConvertible, Equatable {
     case invalidInputFormat(sampleRate: Double, channels: Int)
     case unitUnavailable
     case unitError(step: String, status: Int32)
+    /// G9 (founder header adjudication 2026-09-14): the unit reported no usable
+    /// maximum render slice, so no input buffer can be sized truthfully.
+    case invalidMaximumFramesPerSlice(frames: UInt32)
     public var description: String {
         switch self {
         case .invalidInputFormat(let sr, let ch): return "invalidInputFormat(sampleRate: \(sr), channels: \(ch))"
         case .unitUnavailable: return "unitUnavailable"
         case .unitError(let step, let status): return "unitError(step: \(step), status: \(status))"
+        case .invalidMaximumFramesPerSlice(let f): return "invalidMaximumFramesPerSlice(frames: \(f))"
         }
     }
 }
@@ -115,7 +119,11 @@ public final class AudioGraph: @unchecked Sendable {
     private var lastInputFormat: InputFormatObservation?   // §3.4
     private var startedAtMs: Int64?                        // §3.4 generation age
     private var clock: () -> Int64 = MonotonicClock.nowMs
-    private var inputScratch: [Float] = Array(repeating: 0, count: 8_192)
+    // G9: sized in `start` to exactly the unit's kAudioUnitProperty_MaximumFramesPerSlice
+    // (read after the formats are established, before any callback is armed).
+    // Never a constant; a render request beyond it is refused, never truncated.
+    private var inputScratch: [Float] = []
+    private var maximumFramesPerSlice: UInt32 = 0
     private let silencePeak: Float = 1e-7
 
     /// The sample rate every output buffer must be in: the hardware rate the
@@ -220,6 +228,21 @@ public final class AudioGraph: @unchecked Sendable {
         try Self.check(inFmt, step: "formats_set")
         try Self.check(outFmt, step: "formats_set")
 
+        // G9 (founder header adjudication 2026-09-14): the maximum number of
+        // frames the unit will ask for in one render call is read from the unit
+        // (Global scope, UInt32, read/write) after the formats are established
+        // and BEFORE any callback is armed. The input scratch buffer is sized to
+        // exactly that; a zero or unreadable value refuses `start`.
+        var maxFrames: UInt32 = 0
+        var maxSize = UInt32(MemoryLayout<UInt32>.size)
+        let maxStatus = AudioUnitGetProperty(u, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global, 0, &maxFrames, &maxSize)
+        try Self.check(maxStatus, step: "max_frames_read")
+        guard maxFrames > 0 else { throw AudioGraphError.invalidMaximumFramesPerSlice(frames: maxFrames) }
+        lock.lock()
+        maximumFramesPerSlice = maxFrames
+        inputScratch = [Float](repeating: 0, count: Int(maxFrames))
+        lock.unlock()
+
         // Callbacks: pull input on element 1, fill output on element 0, observe
         // the hardware input format property. Armed only after the precondition.
         let refCon = Unmanaged.passUnretained(self).toOpaque()
@@ -230,7 +253,8 @@ public final class AudioGraph: @unchecked Sendable {
         let outCb = AudioUnitSetProperty(u, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &renderCb, cbSize)
         let lst = AudioUnitAddPropertyListener(u, kAudioUnitProperty_StreamFormat, vpioFormatListener, refCon)
         listenerInstalled = (lst == noErr)
-        trace(.callbacksArmed, ["inputCallbackStatus": String(inCb), "renderCallbackStatus": String(outCb), "listenerStatus": String(lst)])
+        trace(.callbacksArmed, ["inputCallbackStatus": String(inCb), "renderCallbackStatus": String(outCb), "listenerStatus": String(lst),
+                                "maximumFramesPerSlice": String(maxFrames), "inputScratchCapacity": String(inputScratch.count)])
         try Self.check(inCb, step: "callbacks_armed")
         try Self.check(outCb, step: "callbacks_armed")
 
@@ -310,7 +334,10 @@ public final class AudioGraph: @unchecked Sendable {
     fileprivate func pullInput(_ flags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, _ ts: UnsafePointer<AudioTimeStamp>,
                                _ bus: UInt32, _ frames: UInt32) -> OSStatus {
         guard let u = unit else { return noErr }
-        let n = Int(min(frames, UInt32(inputScratch.count)))
+        // G9: a request beyond the capacity the unit itself declared is refused
+        // (kAudio_ParamError), never silently rendered as a smaller request.
+        guard Int(frames) <= inputScratch.count else { return kAudio_ParamError }
+        let n = Int(frames)
         var status: OSStatus = noErr
         var observation: InputObservation?
         let gen = generation
@@ -319,7 +346,7 @@ public final class AudioGraph: @unchecked Sendable {
             var abl = AudioBufferList(mNumberBuffers: 1,
                                       mBuffers: AudioBuffer(mNumberChannels: 1, mDataByteSize: UInt32(n * 4),
                                                             mData: UnsafeMutableRawPointer(p.baseAddress)))
-            status = AudioUnitRender(u, flags, ts, bus, UInt32(n), &abl)
+            status = AudioUnitRender(u, flags, ts, bus, frames, &abl)
             if status == noErr, let base = p.baseAddress {
                 let (rms, peak) = Self.measure(base, n)
                 observation = InputObservation(generation: gen, timeMs: now, frames: n, rms: rms, peak: peak)
