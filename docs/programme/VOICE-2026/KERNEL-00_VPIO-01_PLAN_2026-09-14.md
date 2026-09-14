@@ -454,3 +454,26 @@ No default bundle anywhere: an unknown subject is refused (driver: thrown before
 1 implement ✓ · 2 gate obligations ✓ · 3 offline/synthetic VPIO tests ✓ (`--selftest` 13/13 + shim exercise) · 4 historical classifications unchanged ✓ (936/936 byte-identical) · 5 gate run and read ✓ 49/49 · 6 instrument + gate committed together ✓ · 7 tree clean ✓ · **8 instrument SHA = `de3efd3fb`** · **9 driver-only compile/build-for-testing — OWED, Mac act** (`xcodegen generate` + `xcodebuild build-for-testing` on the driver project only; may build the XCUITest instrument; may not invoke a test against the phone, install the VPIO app, launch it, or pull a VPIO journal) · 10 return the record — this section; the compile record is owed from the Mac.
 
 **Standing:** VPIO-01B instrument IMPLEMENTED at `de3efd3fb` · driver-only compile OWED · first-install absence read HELD (just-in-time, inside the future install act) · VPIO install / launch / sample / N=30 NOT AUTHORIZED · F-W1 UNSPENT · historical K00/R1 container UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
+
+### 13.5 DRIVER-COMPILE-01 (VPIO-01B) — GREEN on exactly `de3efd3fb` · step 9 discharged · step 10 returned · NOTHING ON THE PHONE OPENS
+
+**Act (founder, Mac Studio):** driver-only compile on exactly `de3efd3fb` (`de3efd3fbaf3e97f1dc6d6f9bf013ddfb0a6a2e8`) in a detached worktree with fresh DerivedData; Xcode 26.3 (`17C529`) · iPhoneOS SDK 26.2 · Swift 6.2.4 · XcodeGen 2.46.0. Record: `KERNEL-00_VPIO-01B_DRIVER-COMPILE-01_2026-09-14.md` (677 lines, raw outputs verbatim), delivered on `feature/vpio-01b-driver-compile-record-20260914` (`febd59a39`, one record-only commit on tip `a6590087a`) and cherry-picked here with `-x` → `c0d6c48be`. The record is not edited; this section reads it.
+
+**Verdict as recorded:** `xcodegen generate` PASS (ignored driver project only, no tracked footprint) · `xcodebuild build-for-testing` PASS on `-destination generic/platform=iOS` with `CODE_SIGNING_ALLOWED=NO` → DriverHost compiled · DriverUITests compiled · `** TEST BUILD SUCCEEDED **`. The build log names no `devicectl`, no `test-without-building`, no install verb, no `life.soullab.voicekernel.vpio01` app-under-test action; the phone was neither targeted nor contacted. Source custody after the act: HEAD `de3efd3fb`, worktree clean, organism byte-identical to `85e5e7154` (re-verified here at `c0d6c48be`: `git diff 85e5e7154 HEAD -- ios/VoiceKernel ios/VoiceKernelHarness` empty).
+
+**Instrument product custody (driver only — NOT organism identity, authorizes nothing):**
+
+```text
+xctestrun      SHA-256  7105c95ed047091bfc823c5d704f5dd8cc98257c9fde43927c69d83789657739
+DriverUITests  SHA-256  f8fe6048cbba28227859daf58451ff34015f9fc49ab9915e33f1b4cef004df71
+XCTRunner      SHA-256  6fa0f96700913280d0bb3ddd3b400d69bc2ea66592d97c4760a753d2dd701f41
+DriverHost     SHA-256  5779387686f49134baeee76cfc77f9d2bebd53e56cb59279b163b8dc640d479b
+```
+
+These bind the compiled external-witness instrument, unsigned and generic-platform; the artifact a future batch would actually run is whatever `k00-driver-batch.sh` builds per sample on the Mac (one `xcodebuild` per sample, by ruling D2), so these hashes are evidence that the instrument compiles at `de3efd3fb`, not the identity of any sample's runner.
+
+**Operator defect, recorded not repaired:** the single `xcodebuild` invocation carried the action token `build-for-testing` twice (immediately after `xcodebuild` and again as the final token), so Xcode emitted `** TEST BUILD SUCCEEDED **` twice in one invocation (record lines 631 and 656) — the second is the repeated incremental action of the same command. Command-construction defect; it ran no test, addressed no device, installed nothing, mutated no source; not rerun (a rerun would be a second act with nothing new to establish). The first success establishes compile viability; the second adds no claim.
+
+**Ten-step status:** 1–8 ✓ (§13.4) · **9 ✓ driver-only compile GREEN** · **10 ✓ record returned and in custody.** VPIO-01B witness preparation is therefore **instrument-ready**: ledger · driver · batch · reinstall carry the explicit subject table, the driver compiles, the reinstall gate is fail-closed against the pinned VPIO identity (`E8074AD1-…` · `6efe33b1…` · `e43dec66…` · `4710d9a6…`), and the just-in-time absence read sits inside the not-yet-authorized install act.
+
+**Standing after this section:** VPIO-01B instrument IMPLEMENTED at `de3efd3fb` · DRIVER-COMPILE-01 GREEN on that SHA · first-install absence read HELD (just-in-time, inside the future install act, never pre-run) · **VPIO install / launch / sample / N=30 NOT AUTHORIZED** · F-W1 UNSPENT (24/30 · 23/29 · 23/28 / ≤16/29 / between INDETERMINATE) · historical K00/R1 container UNTOUCHED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. **The next act is the founder's, not this session's:** a ruling that opens the first VPIO install — `K00_SUBJECT=vpio-01 K00_EXEC_AUTHORITY=<supplied at invocation> k00-reinstall.sh <ledger-root> <the MAC-COMPILE-02 .app>` (custody MATCH → just-in-time absence read → one install verb) — and, separately, whether one `k00-driver-batch.sh VPIO-01 30 --mode L --subject vpio-01` follows. Compile green opens neither.
