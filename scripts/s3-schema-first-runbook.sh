@@ -126,9 +126,28 @@ rb_recovery_required() {
 }
 
 # ⭐ THE ACT'S SCOPE, AS DATA. Sorted exactly as the runner's glob encounters it.
+#
+# ⚠️ CORRECTED 2026-09-14 (DEPLOYMENT-SAFETY-02A), after this guard refused the
+# first production invocation at c2cb81f2c. The act was authored expecting FIVE:
+# the three S3 migrations plus `20260121_trusted_colleagues.sql` and
+# `20260122_transcript_encryption.sql`, which a recorded production preflight had
+# reported as absent from the ledger. A founder read-only reconciliation showed
+# both are PRESENT, applied 2026-01-23 — eight months before this lane existed.
+#
+# ⛔ WHY THE EARLIER READ DISAGREED IS NOT ESTABLISHED, AND IS NOT INVENTED HERE.
+# Two explanations are logically open — the earlier preflight was wrong despite
+# its recorded output, or the database state was replaced between observations —
+# and nothing in evidence distinguishes them. The contradiction is recorded;
+# provenance for it is not manufactured.
+#
+# ⭐ No new compatibility census was needed: DEPLOYMENT-SAFETY-02 §3 classified M1,
+# M2 and M3 INDIVIDUALLY as backward-compatible with the live reader, so removing
+# two already-applied, independently-compatible files introduces no new hazard.
+#
+# ⛔⛔ THIS LIST IS THE LAW, AND THE LEDGER IS THE OBSERVATION. It was corrected by
+# a governed act with its own witness — never edited to match whatever production
+# happened to show. A future mismatch means STOP, not narrow.
 RB_EXPECTED_PENDING=(
-  20260121_trusted_colleagues.sql
-  20260122_transcript_encryption.sql
   20260913000001_ask_authorization_acts.sql
   20260913000002_disclosure_boundary_developmental_ask.sql
   20260913000003_disclosure_gesture_authorize_sections.sql

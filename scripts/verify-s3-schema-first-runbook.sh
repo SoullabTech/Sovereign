@@ -25,7 +25,16 @@ PASS=0; FAIL=0
 ok()  { echo "  ok:   $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
-FIVE='20260121_trusted_colleagues.sql
+# ⭐ The proved set, corrected 2026-09-14 (DEPLOYMENT-SAFETY-02A): production's
+# ledger already carries the two older filenames, applied 2026-01-23.
+PROVED='20260913000001_ask_authorization_acts.sql
+20260913000002_disclosure_boundary_developmental_ask.sql
+20260913000003_disclosure_gesture_authorize_sections.sql'
+
+# ⛔ The STALE five-file set the act was authored with. It must now be REFUSED —
+# a correction is only real if the superseded law is actively rejected rather
+# than quietly replaced.
+STALE_FIVE='20260121_trusted_colleagues.sql
 20260122_transcript_encryption.sql
 20260913000001_ask_authorization_acts.sql
 20260913000002_disclosure_boundary_developmental_ask.sql
@@ -90,7 +99,7 @@ echo "O1 RUNBOOK — falsification harness"
 echo ""
 
 # ── 1 · HAPPY PATH: order, custody, one SHA throughout ──────────────────────
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
 M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"; B="$(step_index "$T" build)"
 [ -n "$M" ] && [ -n "$S" ] && [ "$M" -lt "$S" ] \
   && ok "MIGRATE strictly precedes SWAP" || bad "migrate does not precede swap ($M vs $S)"
@@ -107,48 +116,70 @@ grep -q "^verify-running abc1234" <<<"$T" \
   && ok "the running container is verified against the SAME named SHA" || bad "running verify uses another SHA"
 
 # ── 2 · FAILURE PATHS ──────────────────────────────────────────────────────
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" migrate)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" migrate)"
 grep -q '^swap' <<<"$T" && bad "migration failure still swapped the reader" \
   || ok "migration failure → candidate reader NEVER becomes live"
 [ "$(code "$T")" != "0" ] && ok "migration failure exits non-zero" || bad "migration failure exited 0"
 
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" build)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" build)"
 { grep -q '^migrate' <<<"$T" || grep -q '^swap' <<<"$T"; } \
   && bad "build failure still migrated or swapped" \
   || ok "build failure → no migration and no swap"
 
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" swap)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" swap)"
 grep -q '^migrate' <<<"$T" && [ "$(code "$T")" != "0" ] \
   && ok "swap failure → non-zero, after a migration that already succeeded" || bad "swap failure path wrong"
 
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" verify-running)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" verify-running)"
 [ "$(code "$T")" != "0" ] && ok "post-swap provenance failure → non-zero" || bad "provenance failure exited 0"
 
-# ── 3 · ACT SCOPE — it refuses any other pending set ───────────────────────
-T="$(trace "$RUNBOOK" abc1234 "$FIVE
-20261001_something_else.sql" "")"
-{ grep -q '^migrate' <<<"$T" || grep -q '^swap' <<<"$T"; } \
-  && bad "a sixth pending file did not stop the act" \
-  || ok "ACT SCOPE: a sixth pending file refuses before any migration"
-T="$(trace "$RUNBOOK" abc1234 "20260913000001_ask_authorization_acts.sql" "")"
-grep -q '^migrate' <<<"$T" && bad "a narrower pending set was accepted" \
-  || ok "ACT SCOPE: a different pending set refuses — this is not a general path"
-T="$(trace "$RUNBOOK" "" "$FIVE" "")"
+# ── 3 · ACT SCOPE — exactly the proved three, and nothing else ─────────────
+# ⭐ The happy path is asserted elsewhere; here every NEIGHBOURING set is refused,
+# in both directions. A guard that only rejects "more" is half a guard — the first
+# production invocation was stopped by a set SMALLER than expected.
+scope_refuses() { # $1 label  $2 pending set
+  local T; T="$(trace "$RUNBOOK" abc1234 "$2" "")"
+  if grep -qE '^(build|migrate|swap|recovery-tag)' <<<"$T"; then
+    bad "ACT SCOPE: $1 did not stop the act"
+  else
+    ok "ACT SCOPE: $1 refuses before build, migration and swap"
+  fi
+}
+scope_refuses "a FOURTH pending migration" "$PROVED
+20261001_something_else.sql"
+scope_refuses "the STALE five-file set" "$STALE_FIVE"
+scope_refuses "a narrower set (two of three)" "20260913000001_ask_authorization_acts.sql
+20260913000002_disclosure_boundary_developmental_ask.sql"
+scope_refuses "a single file" "20260913000001_ask_authorization_acts.sql"
+scope_refuses "an EMPTY pending set" ""
+scope_refuses "the three plus one already-applied January name" "20260121_trusted_colleagues.sql
+$PROVED"
+
+# ⭐ And the corrected law is the one actually ENFORCED — read out of the runbook,
+# so this harness cannot pass against a stale expectation it carries itself.
+EXPECTED_IN_RUNBOOK="$(sed -n '/^RB_EXPECTED_PENDING=(/,/^)/p' "$RUNBOOK" | sed -n 's/^  \([0-9].*\.sql\)$/\1/p')"
+[ "$EXPECTED_IN_RUNBOOK" = "$PROVED" ] \
+  && ok "the runbook's own RB_EXPECTED_PENDING is exactly the proved three" \
+  || bad "the runbook expects a different set than this harness proves"
+grep -qE '20260121_trusted_colleagues|20260122_transcript_encryption' <<<"$EXPECTED_IN_RUNBOOK" \
+  && bad "an already-applied January filename is still in the act scope" \
+  || ok "neither already-applied January filename remains in the act scope"
+T="$(trace "$RUNBOOK" "" "$PROVED" "")"
 { grep -q '^materialize' <<<"$T" || grep -q '^lock' <<<"$T"; } \
   && bad "ran without a named candidate SHA" \
   || ok "no SHA → refuses before the lock; ⛔ no DEPLOY_ALLOW_HEAD escape"
 
 # ── 3b · SELF-PINNING: the runbook must be the CANDIDATE'S ─────────────────
-T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$FIVE" "")"
+T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$PROVED" "")"
 I="$(step_index "$T" pin)"; L="$(step_index "$T" lock)"
 [ -n "$I" ] && { [ -z "$L" ] || [ "$I" -lt "$L" ]; } \
   && ok "PIN: an unpinned invocation re-execs from the candidate BEFORE the lock" \
   || bad "an unpinned invocation proceeded without pinning itself"
-T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$FIVE" pin)"
+T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$PROVED" pin)"
 { grep -qE '^(migrate|swap|build)' <<<"$T"; } \
   && bad "a failed pin still reached build/migrate/swap" \
   || ok "PIN failure → nothing else runs"
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" provenance)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" provenance)"
 { grep -qE '^(migrate|swap|build)' <<<"$T"; } && bad "a provenance failure still proceeded" \
   || ok "SOURCE CUSTODY: a hostile stale/shared-checkout source refuses before the lock"
 grep -q '^prove-self' <<<"$T" && ok "self-provenance is asserted on every pinned run" \
@@ -174,7 +205,7 @@ if [ -n "$REAL" ]; then
 fi
 
 # ── 3c · RECOVERY CUSTODY — established and proved before ANYTHING crosses ──
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
 R="$(step_index "$T" recovery-tag)"; M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
 [ -n "$R" ] && [ "$R" -lt "$M" ] && [ "$M" -lt "$S" ] \
   && ok "ORDER: build → capture + recovery tag → migrate → swap" \
@@ -182,23 +213,23 @@ R="$(step_index "$T" recovery-tag)"; M="$(step_index "$T" migrate)"; S="$(step_i
 grep -q '^recovery-tag abc1234 pre=sha256:PREACT' <<<"$T" \
   && ok "the PRE-ACT live reader identity is captured and pinned by the recovery tag" \
   || bad "the pre-act reader identity is not pinned"
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" recovery-tag)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" recovery-tag)"
 { grep -qE '^(migrate|swap)' <<<"$T"; } \
   && bad "an unestablished recovery tag still migrated or swapped" \
   || ok "recovery-tag failure REFUSES before migration AND before the swap"
 [ "$(code "$T")" != "0" ] && ok "recovery-tag failure exits non-zero" || bad "recovery-tag failure exited 0"
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" no-reader)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" no-reader)"
 { grep -qE '^(migrate|swap)' <<<"$T"; } && bad "proceeded with no live reader captured" \
   || ok "no capturable live reader → refuses before migration and before the swap"
 
 # ⭐ NO SHARED ROLE TAG IS TOUCHED BEFORE THE SWAP — so a pre-swap refusal cannot
 # leave deployment metadata falsely describing production.
 for step in recovery-tag migrate no-reader; do
-  T="$(trace "$RUNBOOK" abc1234 "$FIVE" "$step")"
+  T="$(trace "$RUNBOOK" abc1234 "$PROVED" "$step")"
   grep -q '^tag ' <<<"$T" && bad "$step refusal moved the shared role tags" \
     || ok "$step refusal leaves the shared :current/:previous role tags untouched"
 done
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
 Tg="$(step_index "$T" tag)"; V="$(step_index "$T" colab)"
 [ -n "$Tg" ] && [ "$V" -lt "$Tg" ] \
   && ok "shared role tags are written only AFTER a verified, gated success" \
@@ -294,19 +325,19 @@ custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
 
 # ── 3d · LATE FAILURES MAY NOT DECLARE COMPLETION ──────────────────────────
 for step in swap verify-running colab; do
-  T="$(trace "$RUNBOOK" abc1234 "$FIVE" "$step")"
+  T="$(trace "$RUNBOOK" abc1234 "$PROVED" "$step")"
   [ "$(code "$T")" != "0" ] && ok "$step failure → non-zero" || bad "$step failure exited 0"
 done
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" colab)"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" colab)"
 grep -q '^colab' <<<"$T" && ok "the Co-Lab gate is actually invoked" || bad "Co-Lab is never invoked"
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
 grep -q '^colab' <<<"$T" && ok "the happy path reaches the Co-Lab gate" || bad "happy path skipped Co-Lab"
 
 # ⭐ COMPLETION IS REACHED BY THE HAPPY PATH ALONE. Asserted on stdout, because
 # "act complete" is the only claim an operator reads as authorisation.
 complete_says() { # $1 failstep -> prints "yes"/"no"
   local out
-  out="$(PENDING="$FIVE" FAILSTEP="$1" TRACEFILE=/dev/null RB_PINNED=1 bash -c '
+  out="$(PENDING="$PROVED" FAILSTEP="$1" TRACEFILE=/dev/null RB_PINNED=1 bash -c '
     source "$1" >/dev/null 2>&1; set +e
     rb_pin_and_reexec() { return 0; }; rb_prove_self_provenance() { return 0; }
     rb_live_reader_image_id() { echo sha256:PREACT; }
@@ -330,7 +361,7 @@ for step in build migrate recovery-tag swap verify-running colab; do
     || bad "$step failure declared the act complete"
 done
 for step in swap verify-running colab; do
-  out="$(PENDING="$FIVE" FAILSTEP="$step" bash -c '
+  out="$(PENDING="$PROVED" FAILSTEP="$step" bash -c '
     source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "test"' _ "$RUNBOOK" 2>&1)"
   grep -q 'RECOVERY REQUIRED' <<<"$out" || bad "recovery statement missing for $step"
 done
@@ -358,7 +389,7 @@ mutated = body.replace(mig.group(0) + swap.group(0), swap.group(0) + mig.group(0
 assert mutated != body, 'mutation did not apply'
 open(sys.argv[2], 'w').write(src[:m.start()] + mutated + src[m.end():])
 MUTPY
-T="$(trace "$MUT" abc1234 "$FIVE" "")"
+T="$(trace "$MUT" abc1234 "$PROVED" "")"
 M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
 if [ -n "$M" ] && [ -n "$S" ] && [ "$S" -lt "$M" ]; then
   ok "DISCRIMINATION: swap-before-migrate mutant is DETECTED by this harness"
