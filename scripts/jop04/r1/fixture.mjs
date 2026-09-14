@@ -125,6 +125,18 @@ export const DOMAIN_ASTRAL = '\u{1D49C}';           // 𝒜
 export const MARK_ASTRAL_STANDALONE = 'ASTRAL_STANDALONE';
 export const MARK_ASTRAL_EMBEDDED = 'ASTRAL_EMBEDDED';
 
+// R1e · the CONTENT side of the same law. The astral vectors above exercise only the SYMBOL's
+// edges; a repair that fixed just those (`[...symbol][0]`) would still read the characters
+// ADJACENT TO THE OCCURRENCE as code units. Here the symbol is an ordinary BMP letter and the
+// surrogate pair sits in the CONTENT, immediately beside it:
+//   𝒜Ƶ   content[i-1] is the LOW surrogate of 𝒜  → misread as non-word → left wrongly accepted
+//   Ƶ𝒜   content[j]   is the HIGH surrogate of 𝒜 → misread as non-word → right wrongly accepted
+// Either way the symbol matches as a FRAGMENT of a longer word-constituent run.
+export const DOMAIN_BMP = '\u01B5';                  // Ƶ · a BMP Unicode letter
+export const MARK_BMP_STANDALONE = 'BMP_STANDALONE';
+export const MARK_BMP_ASTRAL_LEFT = 'BMP_ASTRAL_LEFT';
+export const MARK_BMP_ASTRAL_RIGHT = 'BMP_ASTRAL_RIGHT';
+
 export function buildSymbolDomainFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jop04-r1c-'));
   const g = (args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env: ENV });
@@ -137,6 +149,9 @@ export function buildSymbolDomainFixture() {
     'int b = p->next;      /* DASH-LEADING  — a symbol that looks like an option */',
     `int c = ${DOMAIN_ASTRAL};          /* ${MARK_ASTRAL_STANDALONE} — non-word neighbours both sides */`,
     `int d = x${DOMAIN_ASTRAL};         /* ${MARK_ASTRAL_EMBEDDED} — a word constituent sits to its left */`,
+    `int e = ${DOMAIN_BMP};          /* ${MARK_BMP_STANDALONE} — non-word neighbours both sides */`,
+    `int f = ${DOMAIN_ASTRAL}${DOMAIN_BMP};         /* ${MARK_BMP_ASTRAL_LEFT} — a LETTER to its left, stored as a surrogate pair */`,
+    `int g = ${DOMAIN_BMP}${DOMAIN_ASTRAL};         /* ${MARK_BMP_ASTRAL_RIGHT} — a LETTER to its right, stored as a surrogate pair */`,
     '',
   ].join('\n'));
   g(['add', '-A']);

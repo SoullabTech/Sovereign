@@ -31,6 +31,7 @@ import {
   C_ORDINARY, C_GLOB, C_MAGIC,
   buildSymbolDomainFixture, DOMAIN_WORD_NEIGHBOUR, DOMAIN_DASH_LEADING, DOMAIN_ABSENT,
   DOMAIN_ASTRAL, MARK_ASTRAL_STANDALONE, MARK_ASTRAL_EMBEDDED,
+  DOMAIN_BMP, MARK_BMP_STANDALONE, MARK_BMP_ASTRAL_LEFT, MARK_BMP_ASTRAL_RIGHT,
 } from './fixture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -318,7 +319,31 @@ try {
         : t.breach('the astral symbol was not found standing alone — the domain was narrowed');
       !embedded
         ? t.conform('the astral symbol is NOT found as a fragment of a longer word-constituent run')
-        : t.breach('matched as a FRAGMENT — the edge code point was misread as a UTF-16 half, so the policy misapplied its own rule');
+        : t.breach('matched as a FRAGMENT — the SYMBOL edge code point was misread as a UTF-16 half');
+    }
+
+    // ⭐ R1e · THE CONTENT SIDE OF THE SAME LAW.
+    // The arms above exercise only the SYMBOL's edges. The policy also indexes the characters
+    // ADJACENT TO THE OCCURRENCE, so a repair that fixed only `[...symbol][0]` would pass them
+    // while still reading content neighbours as code units. Here the symbol is an ordinary BMP
+    // letter and the surrogate pair sits in the CONTENT beside it.
+    const b = attempt(() => runCapability('repo.locate_symbol', { symbol: DOMAIN_BMP }, dfx.root));
+    if (!b.ok) t.breach(`BMP symbol THREW: ${String(b.error.message).split('\n')[0].slice(0, 55)}`);
+    else {
+      const hit = records(b.value).join('\n');
+      const standalone = hit.includes(MARK_BMP_STANDALONE);
+      const astralLeft = hit.includes(MARK_BMP_ASTRAL_LEFT);
+      const astralRight = hit.includes(MARK_BMP_ASTRAL_RIGHT);
+      t.note(`BMP symbol · standalone=${standalone} · astral-left=${astralLeft} · astral-right=${astralRight}`);
+      standalone
+        ? t.conform('the BMP symbol is FOUND standing alone — the domain is not narrowed')
+        : t.breach('the BMP symbol was not found standing alone — the domain was narrowed');
+      !astralLeft
+        ? t.conform('an astral LETTER immediately to the LEFT correctly blocks the boundary')
+        : t.breach('matched with an astral letter to its left — content[i-1] was the LOW SURROGATE, misread as non-word');
+      !astralRight
+        ? t.conform('an astral LETTER immediately to the RIGHT correctly blocks the boundary')
+        : t.breach('matched with an astral letter to its right — content[j] was the HIGH SURROGATE, misread as non-word');
     }
   } finally { dfx.cleanup(); }
 }
