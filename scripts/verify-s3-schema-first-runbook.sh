@@ -21,6 +21,24 @@ BEFORE="$(sha256sum "$RUNBOOK" | cut -c1-16)"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/s3-runbook-proof.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
+# ⭐ A STAND-IN PRODUCTION RUNTIME ROOT. The runbook now REFUSES to load without a
+# verified one, so the harness must build a real one: the operational files and a
+# git worktree whose top is the root itself.
+FAKE_ROOT="$TMP/prod-root"
+mkdir -p "$FAKE_ROOT"
+: > "$FAKE_ROOT/.env.production"
+: > "$FAKE_ROOT/docker-compose.production.yml"
+git -C "$FAKE_ROOT" init -q 2>/dev/null
+export RB_PRODUCTION_ROOT="$FAKE_ROOT"
+export PROJECT_DIR="$FAKE_ROOT"
+
+# A LOOKALIKE: same shape, different identity. It must not be accepted.
+LOOKALIKE="$TMP/lookalike"
+mkdir -p "$LOOKALIKE"
+: > "$LOOKALIKE/.env.production"
+: > "$LOOKALIKE/docker-compose.production.yml"
+git -C "$LOOKALIKE" init -q 2>/dev/null
+
 PASS=0; FAIL=0
 ok()  { echo "  ok:   $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
@@ -168,6 +186,62 @@ T="$(trace "$RUNBOOK" "" "$PROVED" "")"
 { grep -q '^materialize' <<<"$T" || grep -q '^lock' <<<"$T"; } \
   && bad "ran without a named candidate SHA" \
   || ok "no SHA → refuses before the lock; ⛔ no DEPLOY_ALLOW_HEAD escape"
+
+# ── 3a · RUNTIME ROOT CUSTODY (DEPLOYMENT-SAFETY-02B) ──────────────────────
+# ⭐⭐ THE GAP THAT LET THE FIRST ACT THROUGH. The harness stubbed the lock and
+# never asked WHERE it landed, so a lock taken in a throwaway directory passed
+# every check. That omission is now lethal.
+
+# The runbook is run as a SUBPROCESS here: a refusal must happen at load time,
+# before any helper is sourced, so it cannot be observed by sourcing it.
+root_refuses() { # $1 label  $2 PROJECT_DIR value ("" = unset)
+  local out rc
+  if [ -z "$2" ]; then
+    out="$(env -u PROJECT_DIR RB_PRODUCTION_ROOT="$FAKE_ROOT" bash "$RUNBOOK" abc1234 2>&1)"; rc=$?
+  else
+    out="$(PROJECT_DIR="$2" RB_PRODUCTION_ROOT="$FAKE_ROOT" bash "$RUNBOOK" abc1234 2>&1)"; rc=$?
+  fi
+  if [ "$rc" = "0" ]; then
+    bad "RUNTIME ROOT: $1 was ACCEPTED"
+  elif grep -q 'acquired' <<<"$out"; then
+    bad "RUNTIME ROOT: $1 refused, but a deploy lock was taken first"
+  else
+    ok "RUNTIME ROOT: $1 refuses before any helper is sourced or lock taken"
+  fi
+}
+root_refuses "PROJECT_DIR unset"                    ""
+root_refuses "PROJECT_DIR = a pinned temp worktree" "$TMP"
+root_refuses "PROJECT_DIR = a LOOKALIKE dir with the right files" "$LOOKALIKE"
+root_refuses "PROJECT_DIR = a nonexistent path"     "$TMP/does-not-exist"
+
+# ⭐ And the GOOD case: the lock must resolve INTO the production runtime root.
+LOCKPATH="$(PROJECT_DIR="$FAKE_ROOT" RB_PRODUCTION_ROOT="$FAKE_ROOT" bash -c '
+  source "$1" >/dev/null 2>&1; echo "$DEPLOY_LOCK_FILE"' _ "$RUNBOOK" 2>/dev/null)"
+[ "$LOCKPATH" = "$FAKE_ROOT/.deploy.lock" ] \
+  && ok "RUNTIME ROOT: the deploy-lane lock resolves to the production root's .deploy.lock" \
+  || bad "the lock resolves to '${LOCKPATH:-none}', not the production root"
+case "$LOCKPATH" in
+  "$TMP"/prod-root/*) ok "the lock path is INSIDE the verified runtime root" ;;
+  *) bad "the lock path is outside the verified runtime root" ;;
+esac
+
+# ⛔ The runbook must not reintroduce a location-derived default.
+grep -qE 'PROJECT_DIR="\$\{PROJECT_DIR:-' "$RUNBOOK" \
+  && bad "PROJECT_DIR still has a fallback default" \
+  || ok "PROJECT_DIR has NO fallback — it is supplied or the act refuses"
+
+# ⭐ RECOVERY CARRIES THE SAME CUSTODY. `rb_recover` reads the runtime compose and
+# env straight from PROJECT_DIR, so a recovery launched from a temp worktree would
+# have operated on the wrong root. The load-time assertion covers it.
+out="$(PROJECT_DIR="$TMP" RB_PRODUCTION_ROOT="$FAKE_ROOT" bash "$RUNBOOK" recover abc1234 2>&1)"; rc=$?
+{ [ "$rc" != "0" ] && ! grep -q 'acquired' <<<"$out"; } \
+  && ok "RUNTIME ROOT: recover from a temp root refuses before doing anything" \
+  || bad "recover accepted a temp runtime root"
+
+# ⛔ No stale count may survive in prose: the messages derive from the array.
+grep -qi 'five-file\|(five files)' "$RUNBOOK" \
+  && bad "a stale five-file claim survives in the runbook's prose" \
+  || ok "no stale five-file claim survives — messages derive from the governed array"
 
 # ── 3b · SELF-PINNING: the runbook must be the CANDIDATE'S ─────────────────
 T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$PROVED" "")"

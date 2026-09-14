@@ -8,7 +8,7 @@
 # ⛔⛔ THIS IS NOT A NEW DEPLOYMENT PATH AND MUST NEVER BECOME ONE.
 # `scripts/deploy-production.sh` is unchanged and still orders swap → migrate.
 # This runbook exists for ONE act, over ONE pending set, and REFUSES to run
-# against any other: the five expected filenames are hardcoded below and the
+# against any other: the expected filenames are hardcoded below and the
 # pending set must match them exactly. A sixth pending file stops it dead.
 # ⭐ That refusal is what keeps a one-off safe set from being promoted into an
 # unproven universal deployment law.
@@ -88,8 +88,95 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="${PROJECT_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
-export PROJECT_DIR
+
+RB_RED='\033[0;31m'; RB_GREEN='\033[0;32m'; RB_YELLOW='\033[1;33m'; RB_NC='\033[0m'
+rb_info() { echo -e "[RUNBOOK] $1"; }
+rb_ok()   { echo -e "${RB_GREEN}[RUNBOOK OK]${RB_NC} $1"; }
+rb_warn() { echo -e "${RB_YELLOW}[RUNBOOK]${RB_NC} $1"; }
+rb_stop() { echo -e "${RB_RED}[RUNBOOK STOP]${RB_NC} $1"; }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUNTIME ROOT CUSTODY (DEPLOYMENT-SAFETY-02B)
+# ═══════════════════════════════════════════════════════════════════════════════
+# ⭐⭐ TWO ROOTS, DELIBERATELY DIFFERENT, AND THE FIRST ACT CONFLATED THEM.
+#
+#   CODE / DEPLOYMENT STRUCTURE   the immutable candidate snapshot
+#   OPERATIONAL RUNTIME ROOT      /home/soullab/MAIA-SOVEREIGN
+#
+# The bootstrap worktree that gets the runbook onto disk is the CANDIDATE root.
+# It is NOT the runtime root — but `PROJECT_DIR` used to default to
+# `$SCRIPT_DIR/..`, so running from that worktree silently substituted one for
+# the other. One substitution corrupted three independent things:
+#
+#   .deploy.lock        → a lock in a throwaway dir: ⛔ NO MUTUAL EXCLUSION
+#   .env.production     → absent, so compose parsed with no operational env
+#   runtime project dir → wrong bind/runtime root
+#
+# ⚠️ The build failure that exposed this was the SMALL symptom. Had
+# `.env.production` happened to be present, the act would have migrated and
+# swapped OUTSIDE the deploy lane, silently.
+#
+# ⛔ THE LOCK PATH IS FROZEN WHEN `deploy-lock.sh` IS SOURCED, not when the lock
+# is acquired. So this must run BEFORE any helper is sourced — correcting
+# `PROJECT_DIR` afterwards would be too late.
+#
+# ⛔ PRESENCE PROVES SHAPE, NOT IDENTITY. Another directory holding a
+# `.env.production` and a compose file would pass a shape test. `PROJECT_DIR`
+# must therefore be supplied explicitly and match the production root by
+# canonical path — never inferred, never defaulted.
+RB_PRODUCTION_ROOT="${RB_PRODUCTION_ROOT:-/home/soullab/MAIA-SOVEREIGN}"
+
+rb_require_production_root() {
+  if [ -z "${PROJECT_DIR:-}" ]; then
+    rb_stop "PROJECT_DIR is not set. ⛔ This act names its runtime root or does nothing."
+    rb_warn "It is NOT inferred from the runbook's location: the runbook runs from a"
+    rb_warn "candidate worktree, which is not the production runtime root."
+    rb_warn "    PROJECT_DIR=$RB_PRODUCTION_ROOT $0 <SHA>"
+    return 2
+  fi
+
+  local canon expect
+  canon="$(cd "$PROJECT_DIR" 2>/dev/null && pwd -P)" || {
+    rb_stop "PROJECT_DIR '$PROJECT_DIR' is not a directory."; return 2; }
+  expect="$(cd "$RB_PRODUCTION_ROOT" 2>/dev/null && pwd -P)" || {
+    rb_stop "The production runtime root '$RB_PRODUCTION_ROOT' does not exist on this host."
+    rb_warn "⛔ This act runs on the production host or not at all."
+    return 2; }
+
+  # ⭐ IDENTITY FIRST. A lookalike directory fails here, before any shape test.
+  if [ "$canon" != "$expect" ]; then
+    rb_stop "PROJECT_DIR is not the production runtime root."
+    rb_warn "  given:    $canon"
+    rb_warn "  required: $expect"
+    rb_warn "⛔ Refusing before any deployment helper is sourced, so the deploy-lane"
+    rb_warn "   lock cannot be taken anywhere but the production lane."
+    return 2
+  fi
+
+  # Shape, second: identity does not guarantee the operational files are there.
+  local f
+  for f in .env.production docker-compose.production.yml; do
+    [ -f "$canon/$f" ] || { rb_stop "The production runtime root has no $f."; return 2; }
+  done
+
+  # And it must be the production git worktree, not a directory that resembles one.
+  local top
+  top="$(git -C "$canon" rev-parse --show-toplevel 2>/dev/null || true)"
+  top="${top:+$(cd "$top" && pwd -P)}"
+  if [ "$top" != "$canon" ]; then
+    rb_stop "The production runtime root is not the top of its git worktree (saw '${top:-none}')."
+    return 2
+  fi
+
+  PROJECT_DIR="$canon"
+  export PROJECT_DIR
+  rb_ok "Runtime root verified: $PROJECT_DIR"
+  return 0
+}
+
+if ! rb_require_production_root; then
+  return 2 2>/dev/null || exit 2
+fi
 
 # shellcheck source=deploy-lock.sh
 source "$SCRIPT_DIR/deploy-lock.sh"
@@ -98,11 +185,13 @@ source "$SCRIPT_DIR/deploy-context.sh"
 # shellcheck source=deploy-tag.sh
 source "$SCRIPT_DIR/deploy-tag.sh"
 
-RB_RED='\033[0;31m'; RB_GREEN='\033[0;32m'; RB_YELLOW='\033[1;33m'; RB_NC='\033[0m'
-rb_info() { echo -e "[RUNBOOK] $1"; }
-rb_ok()   { echo -e "${RB_GREEN}[RUNBOOK OK]${RB_NC} $1"; }
-rb_warn() { echo -e "${RB_YELLOW}[RUNBOOK]${RB_NC} $1"; }
-rb_stop() { echo -e "${RB_RED}[RUNBOOK STOP]${RB_NC} $1"; }
+# ⭐ THE LOCK LANDED IN THE PRODUCTION LANE — asserted, not assumed. This is the
+# property the first act lost, and the one its witness never checked.
+if [ "${DEPLOY_LOCK_FILE:-}" != "$PROJECT_DIR/.deploy.lock" ]; then
+  rb_stop "Deploy lane lock resolves to '${DEPLOY_LOCK_FILE:-none}', not $PROJECT_DIR/.deploy.lock."
+  rb_warn "⛔ A lock outside the production lane excludes nothing."
+  return 2 2>/dev/null || exit 2
+fi
 
 # ⭐ THE ONE HONEST STATEMENT FOR EVERY FAILURE PAST THE SWAP BOUNDARY.
 # ⛔ It does NOT claim the old reader is still live — `up -d` can fail after doing
@@ -111,7 +200,7 @@ rb_recovery_required() {
   rb_stop "RECOVERY REQUIRED — $1"
   rb_warn "⛔ THIS ACT DID NOT COMPLETE. Nothing here declares it complete."
   rb_warn "Established before the boundary was crossed:"
-  rb_warn "  · the five-file migration set applied successfully;"
+  rb_warn "  · the exact proved migration set applied successfully;"
   rb_warn "  · that schema is the proved-compatible SUPERSET (census §3), so the"
   rb_warn "    previous reader is safe against it and NO schema rollback is implied;"
   rb_warn "  · ${MAIA_IMAGE_REPO:-maia-sovereign}:previous was PROVED to be the pre-act reader."
@@ -359,7 +448,7 @@ s3_schema_first_main() {
     rb_warn "   needs its own census and its own ruling. Nothing was changed."
     return 3
   fi
-  rb_ok "Pending set matches the proved five-file set"
+  rb_ok "Pending set matches the exact proved act scope (${#RB_EXPECTED_PENDING[@]} files)"
 
   # ── BUILD (no swap) ────────────────────────────────────────────────────────
   export APP_VERSION="$(node -p "require('$MAIA_BUILD_CONTEXT/package.json').version" 2>/dev/null || echo '1.0.0')"
@@ -387,7 +476,7 @@ s3_schema_first_main() {
   rb_establish_recovery_tag "$GIT_COMMIT" "$pre_reader" || return 1
 
   # ── MIGRATE — from the SAME snapshot, BEFORE any swap ──────────────────────
-  rb_info "Migrating from the candidate snapshot (five files)"
+  rb_info "Migrating the exact proved act scope from the candidate snapshot (${#RB_EXPECTED_PENDING[@]} files)"
   if ! deploy_ctx_compose --profile migrate run --rm migrate; then
     rb_stop "MIGRATIONS FAILED — the candidate reader NEVER became live."
     rb_warn "The current reader is untouched and still serving. Nothing was swapped."
