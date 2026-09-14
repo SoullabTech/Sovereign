@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # DRIVER-01 — Mac orchestration and evidence custody. One command per declared batch.
 #
-#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01] [--ledger DIR]
+#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02] [--ledger DIR]
 #   e.g.   scripts/witness/k00-driver-batch.sh CALIBRATION 3
 #          scripts/witness/k00-driver-batch.sh STAGE-A 30
 #          scripts/witness/k00-driver-batch.sh W4-AUTO 3 --w4 500
@@ -27,10 +27,14 @@ XDEST="${K00_XCODE_DEST:-00008140-00163D9922E0801C}"                 # xcodebuil
 # installed-app lookup, container listing, journal pull, custody reference, driver bundle selection and ledger invocation.
 # There is no default bundle: an unknown subject is refused here, never resolved to .k00. Historical p5b0 / phase-a
 # behaviour is unchanged (same bundle, same label, same driver env). The K00 (R1) container is never addressed by vpio-01.
+# VPIO-02B (founder ruling 2026-09-14): a fourth subject row, vpio-02 → .vpio02 / "VoiceKernel VPIO-02"; the same $BID
+# propagates through every installed-app lookup, container listing, journal pull, custody line, driver selection and
+# ledger invocation. No reinstall is added to the batch. The .vpio01 container is never addressed by vpio-02.
 case "$SUBJECT" in
   p5b0|phase-a) BID="life.soullab.voicekernel.k00";    ICON="VoiceKernel K00";;
   vpio-01)      BID="life.soullab.voicekernel.vpio01"; ICON="VoiceKernel VPIO-01";;
-  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01); no default bundle — refusing" >&2; exit 2;;
+  vpio-02)      BID="life.soullab.voicekernel.vpio02"; ICON="VoiceKernel VPIO-02";;
+  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01|vpio-02); no default bundle — refusing" >&2; exit 2;;
 esac
 PROJ="$ROOT/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj"
 DD="$ROOT/ios/VoiceKernelDriver/.derived"

@@ -932,15 +932,15 @@ describe('KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject
     const r = W('scripts/witness/k00-reinstall.sh'); const rx = execLines(r);
     for (const [k, v] of Object.entries({ VPIO_BID: VPIO.bundle, VPIO_UUID: VPIO.uuid, VPIO_DYLIB_SHA: VPIO.dylib, VPIO_EXEC_SHA: VPIO.exec, VPIO_MANIFEST_SHA: VPIO.manifest })) expect(rx).toContain(`${k}="${v}"`);
     expect(rx).toContain('VPIO_MANIFEST_FILES=7');
-    expect(rx).toMatch(/vpio-01\)\s+BID="\$VPIO_BID";;/); expect(rx).toMatch(/\*\) echo "unknown subject '\$SUBJECT'[^\n]*exit 2;;/);
+    expect(rx).toMatch(/vpio-01\)\s+BID="\$VPIO_BID";/); expect(rx).toMatch(/\*\) echo "unknown subject '\$SUBJECT'[^\n]*exit 2;;/);   // VPIO-02B: the case line now also selects PIN_* (asserted in the VPIO-02B block)
     const install = rx.indexOf('devicectl device install app');
     expect(install).toBeGreaterThan(0);
     for (const before of ['uuid-expectation-conflicts-with-pin', 'dylib-sha-expectation-conflicts-with-pin', 'manifest-file-required', 'manifest-sha', 'manifest-file-count', 'executable-sha', 'bundle-id',
-                          'device info apps', 'absence NOT established', 'PRESENT — $VPIO_BID is already installed', 'K00_EXEC_AUTHORITY', 'exit 3', 'exit 4']) {
+                          'device info apps', 'absence NOT established', 'PRESENT — $PIN_BID is already installed', 'K00_EXEC_AUTHORITY', 'exit 3', 'exit 4']) {
       expect(rx.indexOf(before)).toBeGreaterThan(-1); expect(rx.indexOf(before)).toBeLessThan(install);
     }
     expect(rx).toMatch(/APPS_RC=0; APPS="\$\(xcrun devicectl device info apps --device "\$DEV" 2>&1\)" \|\| APPS_RC=\$\?/);   // set -e cannot turn an unreadable listing into a silent exit
-    expect(rx).toMatch(/if \[ \$APPS_RC -ne 0 \]; then ABSENCE="UNREADABLE/); expect(rx).toMatch(/elif grep -q "\$VPIO_BID" <<<"\$APPS"; then ABSENCE="PRESENT/);
+    expect(rx).toMatch(/if \[ \$APPS_RC -ne 0 \]; then ABSENCE="UNREADABLE/); expect(rx).toMatch(/elif grep -q "\$PIN_BID" <<<"\$APPS"; then ABSENCE="PRESENT/);   // VPIO-02B: the declared subject's own pin
     expect(rx).toMatch(/if \[ "\$ABSENCE" != "ABSENT" \]; then/);
     const rxNoProse = r.split('\n').filter((l) => !/^\s*(#|echo\b)/.test(l)).join('\n');           // echo prose is not a verb (C21)
     expect(rxNoProse).not.toMatch(/uninstall/);                                                // NO uninstall verb exists in executable lines
@@ -954,7 +954,7 @@ describe('KERNEL-00 · VPIO-01B — witness preparation: instrument-only subject
   });
   it('the ledger\'s offline synthetic VPIO self-test passes (exit 0) — and the VPIO subject rejects a 13-step engine journal', () => {
     const out = execFileSync('python3', ['scripts/witness/k00-ledger.py', '--selftest'], { cwd: process.cwd() }).toString('utf8');
-    expect(out).toMatch(/selftest: 13\/13 expectations met/);
+    expect(out).toMatch(/selftest: 34\/34 expectations met/);   // 13 VPIO-01B + 21 VPIO-02B expectations (the VPIO-02B block names the new ones)
     expect(out).toMatch(/engine 13-step journal under --subject vpio-01 is a mismatch: SUBJECT-MISMATCH/);
     expect(out).toMatch(/vpio gen-1 listen, full 11-step trace, ioRunning: gen-1 listen/);
   });
@@ -1044,9 +1044,129 @@ describe('KERNEL-00 · VPIO-02 — the format probe lifecycle: initialize → re
     expect(yml).toMatch(/CFBundleDisplayName: VoiceKernel VPIO-02$/m);
     const ymlExec = yml.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');   // prose is not identity (the C21 lesson)
     expect(ymlExec).not.toMatch(/vpio01|VPIO-01/);
-    // the VPIO-01 witness instrument is untouched by this subject (instrument plumbing for vpio-02 is later witness work)
-    for (const p of ['scripts/witness/k00-ledger.py', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-reinstall.sh', 'ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift']) {
-      expect(histRaw('de3efd3fb', p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
-    }
+    // VPIO-02B (founder ruling 2026-09-14): the instrument now carries the vpio-02 row; its delta against de3efd3fb is
+    // pinned to exactly the four authorized files in the VPIO-02B block below, and the organism is pinned to ac12dedf4 there.
+  });
+});
+
+describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row lives in the instrument only; the organism is frozen at ac12dedf4; no device act', () => {
+  const W = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
+  const execLines = (s: string) => s.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  const ORGANISM = 'ac12dedf4';        // VPIO-02 / FORMAT-RESOLUTION-01 · VPIO-02 MAC-COMPILE-01 GREEN
+  const INSTRUMENT_BASE = 'de3efd3fb'; // VPIO-01B instrument · DRIVER-COMPILE-01 GREEN
+  const VPIO02 = { bundle: 'life.soullab.voicekernel.vpio02', label: 'VoiceKernel VPIO-02', uuid: 'B346F448-A2A8-30DB-9683-B732A80D7899',
+                   dylib: 'e963a23cd17fd12e273671023b01c74ea5fbc4e8a7fb22168a0cee2562bd66ec',
+                   exec: '9fe56504131e0b023162c62a6bd60541053b14262c9d3075a15a08dbe6c7805a',
+                   manifest: '1459283c175e243c90459b2724c2be7362cf6dd4c95c191bd15c443ec8b98410' };
+  const VPIO01 = { bundle: 'life.soullab.voicekernel.vpio01', uuid: 'E8074AD1-D179-3267-A15C-142D033A9665',
+                   dylib: '6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d',
+                   exec: 'e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac',
+                   manifest: '4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed' };
+  const VPIO02_STEPS = ['unit_created', 'io_enabled', 'vp_properties_set', 'format_probe_initialize_begin', 'format_probe_initialize_return',
+                        'input_format_read', 'format_probe_uninitialize_return', 'formats_set', 'callbacks_armed',
+                        'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate'];
+  const tracked = (paths: string[]) => execFileSync('git', ['ls-files', '--', ...paths], { cwd: process.cwd() }).toString('utf8').split('\n').filter(Boolean).sort();
+  const INSTRUMENT = ['ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift', 'scripts/witness/k00-driver-batch.sh', 'scripts/witness/k00-ledger.py', 'scripts/witness/k00-reinstall.sh'];
+  it('the organism is byte-identical to ac12dedf4: every tracked file under ios/VoiceKernel and ios/VoiceKernelHarness equals its historical bytes; no file added or removed', () => {
+    const roots = ['ios/VoiceKernel', 'ios/VoiceKernelHarness'];
+    const listed = histList(ORGANISM, roots).sort();
+    expect(listed.length).toBeGreaterThan(10);
+    expect(tracked(roots)).toEqual(listed);
+    for (const p of listed) expect(histRaw(ORGANISM, p).equals(readFileSync(join(process.cwd(), p)))).toBe(true);
+  });
+  it('the instrument moved only in the four authorized files relative to de3efd3fb (scripts/witness · ios/VoiceKernelDriver); nothing added or removed under those roots', () => {
+    const roots = ['scripts/witness', 'ios/VoiceKernelDriver'];
+    const listed = histList(INSTRUMENT_BASE, roots).sort();
+    expect(tracked(roots)).toEqual(listed);
+    const moved = listed.filter((p) => !histRaw(INSTRUMENT_BASE, p).equals(readFileSync(join(process.cwd(), p))));
+    expect(moved.sort()).toEqual(INSTRUMENT);
+  });
+  it('the four-subject table is identical across ledger · driver · batch · reinstall: vpio-02 → .vpio02 · "VoiceKernel VPIO-02" · ioRunning; the three historical rows unchanged; no default bundle; the driver still passes the app under test nothing', () => {
+    const l = W('scripts/witness/k00-ledger.py');
+    expect(l).toMatch(/'vpio-02': \{'bundle': 'life\.soullab\.voicekernel\.vpio02', 'label': 'VoiceKernel VPIO-02', 'running': 'ioRunning',\s+'refusal_terminal': None\}/);
+    expect(l).toMatch(/'vpio-01': \{'bundle': 'life\.soullab\.voicekernel\.vpio01', 'label': 'VoiceKernel VPIO-01', 'running': 'ioRunning',\s+'refusal_terminal': None\}/);
+    expect(l).toContain("STEPS = {'p5b0': P5B0_STEPS, 'phase-a': PHASE_A_STEPS, 'vpio-01': VPIO01_STEPS, 'vpio-02': VPIO02_STEPS}");
+    expect(l).toContain("choices=sorted(SUBJECTS)");
+    const t = stripComments(W('ios/VoiceKernelDriver/DriverUITests/K00DriverTests.swift'));
+    expect(t).toMatch(/"vpio-02": Subject\(key: "vpio-02", bundleID: "life\.soullab\.voicekernel\.vpio02", iconLabel: "VoiceKernel VPIO-02"\)/);
+    expect(t).toMatch(/"vpio-01": Subject\(key: "vpio-01", bundleID: "life\.soullab\.voicekernel\.vpio01", iconLabel: "VoiceKernel VPIO-01"\)/);
+    expect((t.match(/Subject\(key:/g) ?? []).length).toBe(4);
+    expect(t).toMatch(/env\["K00_SUBJECT"\] \?\? "p5b0"/);
+    expect(t).not.toMatch(/launchArguments|launchEnvironment|UserDefaults|dlopen|NSClassFromString/);
+    const bx = execLines(W('scripts/witness/k00-driver-batch.sh'));
+    expect(bx).toMatch(/vpio-02\)\s+BID="life\.soullab\.voicekernel\.vpio02"; ICON="VoiceKernel VPIO-02";;/);
+    expect(bx).toMatch(/vpio-01\)\s+BID="life\.soullab\.voicekernel\.vpio01"; ICON="VoiceKernel VPIO-01";;/);
+    expect((bx.match(/life\.soullab\.voicekernel\.k00/g) ?? []).length).toBe(1);
+    expect((bx.match(/life\.soullab\.voicekernel\.vpio02/g) ?? []).length).toBe(1);   // named once: the subject row; every use is $BID
+    expect(bx).not.toMatch(/install app|uninstall/);                                          // no reinstall is added to the batch
+    const rx = execLines(W('scripts/witness/k00-reinstall.sh'));
+    expect(rx).toMatch(/vpio-02\)\s+BID="\$VPIO02_BID"; PIN_BID="\$VPIO02_BID"; PIN_UUID="\$VPIO02_UUID"; PIN_DYLIB_SHA="\$VPIO02_DYLIB_SHA"; PIN_EXEC_SHA="\$VPIO02_EXEC_SHA"; PIN_MANIFEST_SHA="\$VPIO02_MANIFEST_SHA"; PIN_MANIFEST_FILES="\$VPIO02_MANIFEST_FILES";;/);
+    expect(rx).toMatch(/vpio-01\)\s+BID="\$VPIO_BID";\s+PIN_BID="\$VPIO_BID";\s+PIN_UUID="\$VPIO_UUID";/);
+    // the unknown-subject refusal names the closed set identically everywhere
+    for (const src of [l, t, bx, rx]) expect(src).toMatch(/p5b0[ |]+phase-a[ |]+vpio-01[ |]+vpio-02/);
+  });
+  it('the ledger VPIO02_STEPS list is exactly the fourteen seams, in order, and equals the AudioGraph.swift enum order of the frozen subject', () => {
+    const l = W('scripts/witness/k00-ledger.py');
+    const m = l.match(/VPIO02_STEPS = \[([^\]]+)\]/)!;
+    const steps = [...m[1].matchAll(/'([a-z_]+)'/g)].map((x) => x[1]);
+    expect(steps).toEqual(VPIO02_STEPS);
+    const g = histBody(ORGANISM, 'ios/VoiceKernel/Sources/VoiceKernel/AudioGraph.swift');
+    expect([...g.matchAll(/case \w+ = "([a-z_]+)"/g)].map((x) => x[1])).toEqual(VPIO02_STEPS);
+    // VPIO-01's frozen 11-step list is untouched
+    expect(l).toContain("VPIO01_STEPS = ['unit_created', 'io_enabled', 'vp_properties_set', 'input_format_read', 'formats_set', 'callbacks_armed',\n                'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate']");
+  });
+  it('the reinstall pins the VPIO-02 identity in its own constants (the VPIO-01 pins unchanged), selects PIN_* by subject, refuses a conflicting K00_EXPECT_*, and every refusal precedes the one install verb; the .vpio01 id appears in no executable line but its own pin', () => {
+    const r = W('scripts/witness/k00-reinstall.sh'); const rx = execLines(r);
+    for (const [k, v] of Object.entries({ VPIO02_BID: VPIO02.bundle, VPIO02_UUID: VPIO02.uuid, VPIO02_DYLIB_SHA: VPIO02.dylib, VPIO02_EXEC_SHA: VPIO02.exec, VPIO02_MANIFEST_SHA: VPIO02.manifest })) expect(rx).toContain(`${k}="${v}"`);
+    expect(rx).toContain('VPIO02_MANIFEST_FILES=7');
+    for (const [k, v] of Object.entries({ VPIO_BID: VPIO01.bundle, VPIO_UUID: VPIO01.uuid, VPIO_DYLIB_SHA: VPIO01.dylib, VPIO_EXEC_SHA: VPIO01.exec, VPIO_MANIFEST_SHA: VPIO01.manifest })) expect(rx).toContain(`${k}="${v}"`);
+    expect(rx).toContain('VPIO_MANIFEST_FILES=7');
+    // the pin block and the just-in-time block are keyed on the selected pin, never on a subject-name comparison
+    expect(rx).not.toMatch(/"\$SUBJECT" = "vpio-01"|"\$SUBJECT" = "vpio-02"/);
+    expect((rx.match(/if \[ -n "\$PIN_BID" \]; then/g) ?? []).length).toBe(2);
+    for (const use of ['[ "$EXPECT" != "$PIN_UUID" ]', '[ "$EXPECT_SHA" != "$PIN_DYLIB_SHA" ]', 'EXPECT="$PIN_UUID"; EXPECT_SHA="$PIN_DYLIB_SHA"', '[ "$MAN_SELF_SHA" = "$PIN_MANIFEST_SHA" ]',
+                       '= "$PIN_MANIFEST_FILES" ]', '[ "$EXEC_SHA" = "$PIN_EXEC_SHA" ]', '[ "$PRODUCT_BID" = "$PIN_BID" ]', 'grep -q "$PIN_BID" <<<"$APPS"']) expect(rx).toContain(use);
+    const install = rx.indexOf('devicectl device install app');
+    for (const before of ['uuid-expectation-conflicts-with-pin', 'dylib-sha-expectation-conflicts-with-pin', 'manifest-file-required', 'manifest-sha', 'manifest-file-count', 'executable-sha', 'bundle-id',
+                          'device info apps', 'absence NOT established', 'PRESENT — $PIN_BID is already installed', 'K00_EXEC_AUTHORITY', 'exit 3', 'exit 4']) expect(rx.indexOf(before)).toBeLessThan(install);
+    expect((rx.match(/devicectl device install app/g) ?? []).length).toBe(1);
+    const noProse = r.split('\n').filter((l) => !/^\s*(#|echo\b)/.test(l)).join('\n');
+    expect(noProse).not.toMatch(/uninstall/);
+    // .vpio01 / .vpio02 literals: each exactly once, on its own constant line; every other use goes through $PIN_BID / $BID
+    expect((rx.match(/life\.soullab\.voicekernel\.vpio01/g) ?? []).length).toBe(1);
+    expect((rx.match(/life\.soullab\.voicekernel\.vpio02/g) ?? []).length).toBe(1);
+    expect(rx).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(\b(grep|cat|git)\b|==|-f )/);
+  });
+  it('the ledger self-test passes 34/34, naming the VPIO-02 full trace, the lawful refusal prefixes, out-of-order/missing-seam refusals, and every cross-subject mismatch', () => {
+    const out = execFileSync('python3', ['scripts/witness/k00-ledger.py', '--selftest'], { cwd: process.cwd() }).toString('utf8');
+    expect(out).toMatch(/selftest: 34\/34 expectations met/);
+    for (const line of ['vpio-02 gen-1 listen, full 14-step trace, ioRunning: gen-1 listen',
+                        'vpio-02 gen-1 §3 refusal after format_probe_uninitialize_return → recovery: failure then recovery',
+                        'vpio-02 gen-1 §3 refusal then degraded (the O6 shape): failure then degradation',
+                        'vpio-02 refusal prefix out of order is not the subject: SUBJECT-MISMATCH',
+                        'vpio-02 read BEFORE the probe initialize is not the subject: SUBJECT-MISMATCH',
+                        'vpio-02 with a missing probe seam is not the subject (never synthesized): SUBJECT-MISMATCH',
+                        'engine 13-step journal under --subject vpio-02 is a mismatch: SUBJECT-MISMATCH',
+                        'engine 14-step Phase-A journal under --subject vpio-02 is a mismatch (same count, different seams): SUBJECT-MISMATCH',
+                        'VPIO-01 full 11-step journal under --subject vpio-02 is a mismatch: SUBJECT-MISMATCH',
+                        'VPIO-01 step-4 refusal (the 0/30 shape) under --subject vpio-02 is a mismatch: SUBJECT-MISMATCH',
+                        'VPIO-02 full 14-step journal under --subject vpio-01 is a mismatch: SUBJECT-MISMATCH',
+                        'VPIO-02 step-7 refusal under --subject vpio-01 is a mismatch: SUBJECT-MISMATCH',
+                        'shared-head refusal (3 steps) qualifies under vpio-01 — trace-indistinguishable, custody decides: failure then recovery',
+                        'shared-head refusal (3 steps) qualifies under vpio-02 — trace-indistinguishable, custody decides: failure then recovery']) expect(out).toContain(line);
+    expect(out).not.toMatch(/^FAIL/m);
+  });
+  it('corpus regression: the VPIO-01 N=30 population reads 30 × failure then degradation under vpio-01 and 30 × SUBJECT-MISMATCH under vpio-02; every engine-era journal under vpio-02 reads SUBJECT-MISMATCH or DRIVER/INFRASTRUCTURE FAILURE', () => {
+    const all = tracked([':(glob)docs/programme/VOICE-2026/driver-ledger/**/kernel00-*.jsonl']);
+    const vpio01 = all.filter((p) => p.includes('/VPIO-01-20260914T200542Z/journals/'));
+    expect(vpio01.length).toBe(30);
+    const classes = (subject: string, files: string[]) =>
+      execFileSync('python3', ['scripts/witness/k00-ledger.py', '--subject', subject, ...files], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 })
+        .toString('utf8').split('\n').filter(Boolean).map((row) => row.match(/\*\*([^*]+)\*\*/)![1]);
+    expect(classes('vpio-01', vpio01)).toEqual(Array(30).fill('failure then degradation'));
+    expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
+    const engine = all.filter((p) => !vpio01.includes(p));
+    expect(engine.length).toBeGreaterThan(400);
+    expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
   });
 });
