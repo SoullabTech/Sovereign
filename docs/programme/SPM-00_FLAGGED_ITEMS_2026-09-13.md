@@ -135,7 +135,13 @@ relational intelligence, and governance.
 
 ```text
 F1  BASIS gap                       CONFIRMED · SPM · after stabilization
-F2  S5 ratification mismatch        ⚠️ FOUNDER RULING NEEDED · nothing changed on either side
+    ⚠️ RESTATED 2026-09-14 (v0.5 §5): BASIS must be capable of citing a MEMBER ADOPTION /
+    RATIFICATION ACT whose object may itself be a model-originated artifact; the artifact's
+    model origin remains separately traceable. ⛔ The v0.4 widening (*BASIS cites model
+    artifacts*) is WITHDRAWN — a draft is provenance of the WORDING, not evidence the claim
+    about the person is true.
+F2  S5 ratification mismatch        ✅ RULED 2026-09-14 — MIXED STANDING; not wholesale ratification
+                                    nothing changed on either side; header restatement owed
 F3  refusal re-derivability         REQUIREMENT SHARPENED · solution open · no mechanism proposed
 F4  relational tempo invariant      EXTERNAL · owner unassigned · open
 ```

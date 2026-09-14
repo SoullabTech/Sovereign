@@ -4,7 +4,15 @@
 **Supersedes:** v0.3 + addendum, preserved unedited. **New version, not an addendum: operative
 meaning changes** (charter §6) — the consume column is answered, STATUS semantics settle, and a new
 constraint enters.
-**Status:** ⛔ **DESIGN REVISION. No schema · no migration · no runtime change · no ledger repair · no
+**Status:** ⛔ **SUPERSEDED BY v0.5 — WITHHELD FROM STABILIZATION** (founder ruling 2026-09-14),
+preserved unedited. 🔴 **What v0.5 withdraws:** *(i)* `ORIGIN = member authored` for unchanged
+adopted MAIA language — **false**, since if MAIA wrote it the member did not write it; *(ii)* the F1
+widening *BASIS must cite model-originated artifacts* — **a draft is not evidence the claim is
+true**; *(iii)* `superseded` still listed in STATUS while called derived. ⛔ No old dependency
+reopened — integrating G2 exposed a NEW distinction between authorship/provenance and member
+adoption/representation.
+
+**Original status line:** ⛔ **DESIGN REVISION. No schema · no migration · no runtime change · no ledger repair · no
 merge or deploy.**
 
 ---
