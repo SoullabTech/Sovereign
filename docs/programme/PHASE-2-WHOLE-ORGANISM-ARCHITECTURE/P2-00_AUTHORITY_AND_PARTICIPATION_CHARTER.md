@@ -8,7 +8,14 @@ TYPE        CONSTITUTIONAL SEMANTICS — ⛔ not component placement, ⛔ not im
 STATE       DRAFTED · ⛔ NOT RATIFIED
 ```
 
-> ⚠️⚠️ **AMENDED TWICE — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` AND
+> ⚠️⚠️ **AMENDED THREE TIMES — read Amendments 1, 2 and 3 plus `P2-00_FD-REGISTER_REVIEW.md`
+> with this file.** Amendment 3 closes FD-5 · FD-14 · FD-17 · FD-18 · FD-19 · FD-20, redefines
+> `EXISTS` to say *present in a named system state or evidentiary locus* (reserving `SUBJECT` for
+> what something is about), and reclassifies FD-12 as a deferred authority-allocation decision.
+> The register review finds **two ratification blockers: FD-4 and FD-11a**, in both cases because
+> a primitive's own text defers part of its meaning.
+
+> ⚠️ **AMENDED TWICE — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` AND
 > `P2-00_AMENDMENT-2_REFERENTIAL_DEFINITIONS.md` with this file.** Amendment 2 defines the six
 > referents the predicates depend on, removes `TURN` as a constitutional primitive, and records
 > the founder decisions on FD-13 and FD-15.
