@@ -62,3 +62,29 @@ Section / first · second · passive
 ⛔ **No repair.** The causal candidate — `revealToken` not threaded to
 `renderProposalEvidence` — remains **the explanation to verify afterward, not the
 evidence.** Five cells outstanding.
+
+---
+
+## ⭐ HOW A CELL IS READ — the viewport-independent discriminator
+
+⛔ Without a procedure, `LOCUS-ADDRESSED` / `SECTION-ADDRESSED` is a distinction a later
+reader cannot reproduce. This is the test.
+
+**Watch where §23's opening line lands, not where the brackets land.**
+
+```
+SECTION-ADDRESSED   §23's opening line PINNED AT THE TOP of the scroller
+                    → revealWithin(shell, 'start') · the section's top edge
+                      is the target; everything below is what the window fits
+
+LOCUS-ADDRESSED     [, fixated] CENTRED, §23's opening above the fold or
+                    off-screen entirely
+                    → 'center' on the locus node
+```
+
+⭐ **The two are distinguishable at any window size**, because one pins the *section's start
+edge* and the other pins the *change's midpoint*. Resizing moves what is visible; it does
+not move which edge is being held.
+
+⛔ **"Is the change visible?" is retired as a test.** It decided the first cell wrongly and
+would have passed the same defect on a taller monitor.
