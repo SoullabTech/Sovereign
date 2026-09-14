@@ -53,6 +53,8 @@ import {
   sectionEngine,
   fetchWriteState,
   markableRange,
+  roomOrientation,
+  proposalSelector,
   type WriteState,
   type WriteMount,
 } from '@/lib/writersStudio/writeStateClient';
@@ -301,6 +303,14 @@ function CanvasRoom() {
     () => (searchParams ? requestedProposalFocus(searchParams) : null),
     [searchParams]);
 
+  /* ⭐ ONE SELECTOR, chosen once. ⛔ Chain+version wins wherever both appear;
+     the legacy selector KEEPS reaching its own server resolution while the
+     cutover is staged — which is the half of 01A's standing that 6fc919f7d
+     silently stopped honouring. */
+  const selector = useMemo(
+    () => proposalSelector(proposalFocus, proposalId),
+    [proposalFocus, proposalId]);
+
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
   const [writePhase, setWritePhase] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -347,9 +357,35 @@ function CanvasRoom() {
    * ⛔ The target comes from the SERVER's resolution of the proposal against
    * the current Work, never from coordinates carried in the URL.
    */
-  const proposalTarget = proposed.mount.state === 'ready'
-    && proposed.mount.preview.state === 'acceptable'
-    ? proposed.mount.preview.change : null;
+  const writeMount = chooseMount(writePhase, writeState);
+  /* ⭐ ONE READER for the two mounts that run the section engine. See
+     `sectionEngine` for why this is not six inline disjunctions. */
+  const engine = sectionEngine(writeMount);
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     ⭐⭐ CUTOVER-01A.2 · ONE SERVER-RESOLVED TARGET OWNS ORIENTATION.
+
+     ⚠️ FOUNDER REVIEW OF 6fc919f7d, DEFECT. The room took its bearings from
+     `proposed.mount.preview` — the OLD proposal object — while the new
+     chain/version target lived only at `sectionEngine(writeMount)?.target` and
+     fed comparison and the proposal-work renderer. So a lawful
+     `?proposalChain=C&proposalVersion=V` could mount proposal work against the
+     right section while room-level orientation stayed null: in Section view the
+     writer is left wherever they were, and the proposal surface for the real
+     target has nothing to render into until they happen to arrive.
+
+         the system knows what it is asking about,
+         but does not bring the writer to the evidence
+
+     ⛔ That is a founder-witnessed failure recreated in a new identity
+     vocabulary. Orientation now reads the SAME server-resolved target the mount
+     does — whichever selector produced it — and never a second proposal object.
+
+     ⭐ AND IT IS GATED ON A MARKABLE RANGE, which is the 01A law applied to
+     movement rather than to marking: no exact place, no mark, no "show me
+     where" — and no arrival either. Moving a writer to a section we cannot
+     point inside would be motion without evidence. */
+  const proposalTarget = roomOrientation(engine?.target);
 
   /** Performs the decision. Returns whether the writer was actually moved. */
   const moveToProposal = useCallback((): boolean => {
@@ -401,7 +437,7 @@ function CanvasRoom() {
          the proposal id and nothing else, and takes the resolved authority back
          from the server. It never decides that a proposal makes a section
          read-only. */
-      const r = await fetchWriteState(id, (url) => apiFetch(url), proposalFocus);
+      const r = await fetchWriteState(id, (url) => apiFetch(url), selector);
       if (cancelled) return;
       setWritePhase(r.phase);
       setWriteState(r.state);
@@ -409,7 +445,7 @@ function CanvasRoom() {
     return () => { cancelled = true; };
     /* The proposal is part of what the write state RESOLVES, so a change to
        it re-asks the server rather than being reinterpreted here. */
-  }, [manuscript?.id, proposalFocus]);
+  }, [manuscript?.id, selector]);
 
   /* WS2-NAV-01 — the member act that makes a Work navigable.
 
@@ -433,10 +469,10 @@ function CanvasRoom() {
        proposal id it re-reads a DIFFERENT question — the room would drop out of
        proposal work on the next conversion or draft creation, silently, and the
        target section would quietly regain a manuscript editor. */
-    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), proposalFocus);
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), selector);
     setWritePhase(refreshed.phase);
     setWriteState(refreshed.state);
-  }, [manuscript?.id, proposalFocus]);
+  }, [manuscript?.id, selector]);
 
   const onConfirmSectionBreaks = useCallback(async () => {
     const id = manuscript?.id;
@@ -455,11 +491,6 @@ function CanvasRoom() {
     await refreshWriteState();
     setConfirming(false);
   }, [manuscript?.id, confirming, refreshWriteState]);
-
-  const writeMount = chooseMount(writePhase, writeState);
-  /* ⭐ ONE READER for the two mounts that run the section engine. See
-     `sectionEngine` for why this is not six inline disjunctions. */
-  const engine = sectionEngine(writeMount);
 
   /**
    * ⭐⭐ ONE COMPUTATION, TWO SURFACES. The Work marks the locus; the panel

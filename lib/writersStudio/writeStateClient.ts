@@ -15,6 +15,7 @@
 import type { SectionAuthority } from './sectionAuthority';
 /* ⛔ The param names come from the one identity contract — never inlined. */
 import {
+  CANVAS_PROPOSAL_PARAM,
   CANVAS_PROPOSAL_CHAIN_PARAM,
   CANVAS_PROPOSAL_VERSION_PARAM,
 } from '@/app/writers-studio/canvasIdentity';
@@ -45,6 +46,30 @@ export type ProposalWorkTarget = LegacyProposalWorkTarget | ChainProposalWorkTar
 export function markableRange(t: ProposalWorkTarget): SpacedRange | null {
   if ('location' in t) return t.location.located ? t.location.range : null;
   return t.range;
+}
+
+/**
+ * ⭐⭐ WHERE THE ROOM MAY TAKE THE WRITER — the orientation law, in ONE place.
+ *
+ * ⚠️ THIS FUNCTION EXISTS BECAUSE A MUTANT SURVIVED. The first 01A.2 witness
+ * proved the rule against its OWN reimplementation of it, so a Canvas that
+ * oriented on an unlocated target — fabricating a range to move by — passed
+ * every obligation. A witness holding a private copy of the law tests the copy.
+ *
+ * ⛔ GATED ON A MARKABLE RANGE. This is the 01A law applied to MOVEMENT rather
+ * than to marking: no exact place, no mark, no "show me where" — and no arrival
+ * either. Taking a writer to a section we cannot point inside is motion without
+ * evidence, and it is worse than staying put because it looks like knowledge.
+ *
+ * ⭐ It reads whichever target the server resolved — legacy or chain/version —
+ * so the room can never take its bearings from a second proposal object.
+ */
+export function roomOrientation(
+  target: ProposalWorkTarget | null | undefined,
+): { readonly sectionId: string; readonly range: SpacedRange } | null {
+  if (!target) return null;
+  const range = markableRange(target);
+  return range ? { sectionId: target.sectionId, range } : null;
 }
 
 export interface WriteStateRow {
@@ -151,23 +176,58 @@ export function chooseMount(
   }
 }
 
+/**
+ * ⭐⭐ CUTOVER-01A.2 · ONE TAGGED SELECTOR, TOTAL AND EXCLUSIVE.
+ *
+ * ⚠️ FOUNDER REVIEW OF 6fc919f7d, DEFECT. 01A's own standing said *`proposal=`
+ * keeps its own resolution untouched; the new pair wins wherever both appear.*
+ * The first half stopped being true the moment this function took only
+ * `{ chainId, versionId }`: a legacy `?proposal=<id>` URL still loaded the old
+ * panel, but every write-state read then carried NO selector at all, so the
+ * legacy path silently lost its `proposal_work` mount and authority while its
+ * routes and UI remained live.
+ *
+ *     keeping an old route PRESENT is not the same as
+ *     keeping its semantics REACHABLE
+ *
+ * ⛔ Parallel nullable arguments are how that happened — two optional
+ * parameters can both be absent, both be present, or disagree, and the type
+ * says nothing. A tagged union cannot be half-supplied, and there is exactly
+ * one query form per kind. ⛔ No translation, no adapter, and the two forms are
+ * NEVER sent together.
+ */
+export type ProposalSelector =
+  | { readonly kind: 'chain_version'; readonly chainId: string; readonly versionId: string }
+  | { readonly kind: 'legacy'; readonly proposalId: string };
+
+/**
+ * ⭐ Chain+version wins wherever both appear — the 01A precedence rule, in the
+ * one place that decides it rather than at each call site.
+ */
+export function proposalSelector(
+  focus: { chainId: string; versionId: string } | null,
+  legacyProposalId: string | null,
+): ProposalSelector | null {
+  if (focus) return { kind: 'chain_version', chainId: focus.chainId, versionId: focus.versionId };
+  if (legacyProposalId) return { kind: 'legacy', proposalId: legacyProposalId };
+  return null;
+}
+
 /** GET the resolved state. A 404 is `no_draft`, not an error. */
 export async function fetchWriteState(
   manuscriptId: string,
   fetcher: (url: string) => Promise<Response>,
-  /**
-   * ⛔ PW-2 · SELECTORS ONLY. The server resolves everything they imply.
-   * ⭐ CUTOVER-01A: chain + EXACT version, and BOTH are required — a chain
-   * alone would let the room display whatever is newest and call it the thing
-   * the writer was sent to.
-   */
-  focus?: { chainId: string; versionId: string } | null,
+  /** ⛔ PW-2 · A SELECTOR ONLY. The server resolves everything it implies. */
+  selector?: ProposalSelector | null,
 ): Promise<{ phase: 'ready' | 'error'; state: WriteState | null }> {
   try {
-    const q = focus
-      ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(focus.chainId)}`
-        + `&${CANVAS_PROPOSAL_VERSION_PARAM}=${encodeURIComponent(focus.versionId)}`
-      : '';
+    /* ⛔ EXACTLY ONE FORM. A request carrying both would ask the server to
+       choose, and precedence is the client's own rule to apply once. */
+    const q = !selector ? ''
+      : selector.kind === 'chain_version'
+        ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(selector.chainId)}`
+          + `&${CANVAS_PROPOSAL_VERSION_PARAM}=${encodeURIComponent(selector.versionId)}`
+        : `?${CANVAS_PROPOSAL_PARAM}=${encodeURIComponent(selector.proposalId)}`;
     const res = await fetcher(
       `/api/sovereign/manuscripts/${manuscriptId}/write-state${q}`);
     if (res.status === 404) return { phase: 'ready', state: { mode: 'no_draft' } };
