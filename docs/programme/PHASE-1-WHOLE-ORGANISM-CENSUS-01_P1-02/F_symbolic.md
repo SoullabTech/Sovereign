@@ -139,24 +139,23 @@ UPDATED WHERE    not found in this path (read-only per turn)
 
 ```text
 POST /api/sovereign/app/maia/list
-  → route.ts:695   getAstrologyContextForUser(effectiveUserId)   [inside Promise.all :552]
-  → route.ts:726   const astrologyContext: AstrologyContext | null
-  → route.ts:729   contextDetail capped at 3000 chars
-  → route.ts:732   astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + contextHeader + detail
-  → route.ts:1419  astrologyAddendum passed into generation
+  → :695   getAstrologyContextForUser(effectiveUserId)   [inside Promise.all :552]
+  → :726   const astrologyContext: AstrologyContext | null
+  → :729   contextDetail capped at 3000 chars
+  → :732   astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\n\n' + contextHeader + detail
+  → :1419  passed into generation   (also :1235 meta · :1290 shadow legacyAddenda)
 ```
 
 ⭐ This is the **live conversational route** named by the session anchor as the route that
 receives member traffic. Astrology is not a side surface; it is in the ordinary turn.
 
-**MEMBER AUTHORITY** — the member supplies birth data; `hasBirthData` (:73) gates the detail.
-⛔ No opt-out flag for astrological context was found on this path — unlike
-`conversational_recall_enabled` / `episodic_recall_enabled`, which exist at route.ts:122 for the
-memory blocks. **The member can withhold birth data; no evidence was found that they can consent
-to holding it and decline its use in the prompt.**
+**MEMBER AUTHORITY** — the member supplies birth data; `hasBirthData` (:73) gates detail volume.
+⛔ **No opt-out for astrological context was found on this path** — unlike
+`conversational_recall_enabled` / `episodic_recall_enabled` at route.ts:122. The member can
+withhold birth data; no evidence was found that they can hold it and decline its prompt use.
 
-**MAIA AUTHORITY** — KNOW: yes, ~3,250 chars/turn. SAY: constrained by the prompt wrapper.
-CONCLUDE: **constrained only by that same wrapper.**
+**MAIA AUTHORITY** — KNOW: yes, ~3,250 chars/turn. SAY: constrained by the wrapper.
+CONCLUDE: constrained **only** by that same wrapper.
 
 **GOVERNANCE GATE** — ⭐ **FOUND, and it is the only real one in this domain.**
 
@@ -170,21 +169,20 @@ explicitly:
 > have actually told you. … when a lens conflicts with their lived experience, their experience
 > wins."
 
-It is **canon-bound**: `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md:245` (Invariant 13, Claim-Type
-Floor) names it — *"Operationalized as the deployed `SYMBOLIC_LENS_BOUNDARY` wrapper"* — and
-Invariant 13 enumerates the traditions it governs, including I Ching and Tarot, and adds a Tier-2
-hard refusal for consequential forecasts (`:246`).
+**Canon-bound**: `MAIA_SOVEREIGNTY_INVARIANTS.md:245` (Invariant 13, Claim-Type Floor) names it —
+*"Operationalized as the deployed `SYMBOLIC_LENS_BOUNDARY` wrapper"* — enumerating the traditions
+it governs (I Ching and Tarot included) and adding a Tier-2 hard refusal for consequential
+forecasts (`:246`).
 
-⚠️ **Three properties of this gate, recorded without repair:**
+⚠️ **Three properties, recorded without repair:**
 
-1. **It is applied at exactly two call sites**, both in this one file: `:646` (Wu Xing) and
-   `:732` (astrology). ⛔ Grep across `lib app components` returns **no third application**.
-   Invariant 13 names I Ching and Tarot; the wrapper does not reach them (§3.3, §3.4).
-2. **It is a model-compliance instruction, not a structural refusal.** Nothing measures whether
-   the model obeyed it. No test, no falsifier, no post-generation check was found.
-   `grep -rln SYMBOLIC_LENS_BOUNDARY` over `*.test.ts` returns nothing.
-3. **Its declared scope exceeds its wiring.** Its own first line claims to govern "astrology,
-   Mayan, Chinese/Wu Xing, elements, cycles, archetypes" — six families. It is attached to two.
+1. **Applied at exactly two call sites**, both in this one file: `:646` (Wu Xing) and `:732`
+   (astrology). ⛔ Grep across `lib app components` returns **no third application** — it does not
+   reach the I Ching or Tarot that Invariant 13 names (§3.3, §3.4).
+2. **A model-compliance instruction, not a structural refusal.** Nothing measures obedience; no
+   test, falsifier or post-generation check found (`grep` over `*.test.ts` → nothing).
+3. **Declared scope exceeds its wiring** — its first line claims six families ("astrology, Mayan,
+   Chinese/Wu Xing, elements, cycles, archetypes"); it is attached to two.
 
 ⛔ Per constraint 6, finding this gate does not make the path governed beyond what the gate
 covers; finding the gap does not authorize closing it.
@@ -230,16 +228,14 @@ POST /api/sovereign/app/maia/list
 
 **MAIA AUTHORITY — the three powers, separated by construction:**
 
-- **KNOW** — yes, bounded: the member's own un-archived readings, last `DEFAULT_LIMIT` within
-  `DEFAULT_WINDOW_DAYS` (loader header :39-41).
-- **SAY** — gated. The loader header (:50) records a block-level discipline line, and the lane
-  record confirms it is *"pinned in every block"*:
-  `JARVIS-MEMORY-ORGANISM-PASS1-DIVINATION-01.md:73` — *"Do NOT raise a reading unprompted…
-  answer from the record when the member refers to a reading."*
-- **CONCLUDE** — ⭐⭐ **structurally refused.** Loader header :48-49: *"Does NOT re-interpret the
-  cast, synthesize across readings, or rank by salience."* The text it carries is **house corpus
-  text copied at write time** from `lib/divination/iching/hexagrams.ts` (`soulInterpretation` /
-  `guidance`) — explicitly *"NOT model-generated, NOT the member's words"* (:30-33).
+- **KNOW** — bounded: the member's own un-archived readings, last `DEFAULT_LIMIT` within
+  `DEFAULT_WINDOW_DAYS` (header :39-41).
+- **SAY** — gated. A block-level discipline line is *"pinned in every block"* (lane record :73):
+  *"Do NOT raise a reading unprompted… answer from the record when the member refers to a reading."*
+- **CONCLUDE** — ⭐⭐ **structurally refused.** Header :48-49 — *"Does NOT re-interpret the cast,
+  synthesize across readings, or rank by salience."* The text carried is **house corpus text
+  copied at write time** from `lib/divination/iching/hexagrams.ts` (`soulInterpretation` /
+  `guidance`), explicitly *"NOT model-generated, NOT the member's words"* (:30-33).
 
 ⭐ **The three-block split is the governance.** Header :34-36: the member's words, the computed
 cast and house-authored corpus text *"do not share an author"*; one merged block *"would collapse
@@ -262,21 +258,16 @@ separately in `lib/maia/canonical-turn/producerRegistry.ts:196-215` with its own
 
 **CURRENT STATUS** — `WIRED-BUT-UNOBSERVED`, and the reason is unusually well documented.
 
-⚠️ A **dated production witness exists** (founder-run 2026-09-03, lane record §6, lines 88-103)
-— and **it recorded absence, not participation**:
+⚠️ A **dated production witness exists** (founder-run 2026-09-03, lane record §6, :88-103) — and
+**it recorded absence, not participation**: `divination_iching_readings` held **5 rows all-time**
+for the censused member, newest `2026-06-11`; the record's own note states that on today's data
+`[MAIA] divination-block` *"would report `candidateCount: 0`… That is the window working, not a
+defect."* Acceptance 9 (*member asks about a prior reading → MAIA answers from it*) is marked
+**"production witness only. Not claimable from BUILD."** (:76) and is **not shown discharged**.
 
-- `divination_iching_readings` held **5 rows all-time** for the censused member, newest
-  `2026-06-11`.
-- The lane record's own note (line ~105): *"all five existing readings are older than 60 days, so
-  on today's production data `[MAIA] divination-block` would report `candidateCount: 0`… That is
-  the window working, not a defect."*
-- Acceptance 9 (*member asks about a prior reading → MAIA answers from it*) is marked
-  **"production witness only. Not claimable from BUILD."** (:76) and the record does not show it
-  discharged.
-
-⭐⭐ **So the calibration binds in the strict direction:** a dated production record exists, a
+⭐⭐ **The calibration binds in the strict direction:** a dated production record exists, a
 complete path is traced, and the witness says the block produced **nothing**. ⛔ That is not
-`LIVE`. It is a traced wire with a witness of zero output.
+`LIVE`; it is a traced wire with a witness of zero output.
 
 ⚠️ **A separate witnessed defect is recorded in that same census and is preserved here without
 repair:** at 22:42 production, MAIA said *"I don't have the I Ching reading in front of me"*
@@ -302,11 +293,10 @@ F-08  app/api/studio/changes/[id]/interpret/route.ts  (186 ln)  PRACTITIONER-fac
 
 ```text
 POST /api/changes/[id]/interpret
-  → :47  getMemberIdFromRequest(request)     — authenticated; 401 if absent (:48-49)
-  → :56  SELECT * FROM studio_changes WHERE id = $1 AND member_id = $2   — member-scoped
-  → :12  getLLMProvider()  with INTERPRETATION_SYSTEM_PROMPT (:17-40)
-  → :15  getHexagram() from lib/iching/lookup
-  → :159 UPDATE studio_changes …            — the model's conclusion is PERSISTED
+  → :47   getMemberIdFromRequest(request)   — authenticated; 401 if absent (:48-49)
+  → :56   SELECT * FROM studio_changes WHERE id = $1 AND member_id = $2   — member-scoped
+  → :12   getLLMProvider() with INTERPRETATION_SYSTEM_PROMPT (:17-40)  · :15 getHexagram()
+  → :159  UPDATE studio_changes …          — the model's conclusion is PERSISTED
 ```
 
 **MAIA AUTHORITY — CONCLUDE: yes, and instructed to.** The system prompt (`:17-40`, identical in
@@ -330,9 +320,8 @@ the same repository:**
 ```
 
 Set beside `SYMBOLIC_LENS_BOUNDARY` (route.ts:283), which requires MAIA to *"frame it explicitly
-as a traditional association"* and forbids announcing *"you are entering / this means / your chart
-shows"* as fact — and beside Invariant 13's Tier-1 rule that a lens may be offered **only** as
-*"this tradition associates…"* (`MAIA_SOVEREIGNTY_INVARIANTS.md:245`, which names I Ching
+as a traditional association"*, and beside Invariant 13's Tier-1 rule that a lens may be offered
+**only** as *"this tradition associates…"* (`MAIA_SOVEREIGNTY_INVARIANTS.md:245`, naming I Ching
 explicitly) — **these two files instruct the precise inverse.** *Speak from within it* is an
 instruction **not** to frame it as a traditional association.
 
@@ -355,10 +344,9 @@ grep -n "SYMBOLIC_LENS\|lens\|tradition\|not a prediction\|refuse"
   they gate *who may invoke*, never *what may be claimed*. Per the instrument's preserved
   distinctions: authentication establishes `PARTICIPATES`, not `HAS AUTHORITY`.
 
-**PERSISTED** — `:159 UPDATE studio_changes`. ⚠️ The conclusion is not ephemeral: it is written
-back to the member's record. ⛔ No provenance column distinguishing *model-authored conclusion*
-from *house corpus text* was found on this path — the exact separation F-06 was built to preserve
-(§3.2) is absent here.
+**PERSISTED** — `:159 UPDATE studio_changes`. ⚠️ The conclusion is written back to the member's
+record. ⛔ No provenance column distinguishing *model-authored conclusion* from *house corpus text*
+was found — the exact separation F-06 was built to preserve (§3.2) is absent here.
 
 **F-09 — the mentor routes** (`mentor/route.ts`, 222 ln, plus `/chat`) sit on the same substrate
 but carry their **own inline restraint** at `:32` — *"You never diagnose, prescribe, or claim
@@ -410,22 +398,15 @@ authentication — the oracle is available to all."* ⭐ The tarot route carries
 its openness is undeclared rather than declared.
 
 **CONCLUDE** — the spread definitions are forecast-shaped by construction:
+`spreads.ts:27,31` *"Past/Present/Future … timeline reading"* · `:45-46` position `Future` —
+*"Likely outcome based on current trajectory"* · `:291` *"Best possible outcome"* · `:295`
+`Near Future` · `:315` `Outcome`.
 
-```text
-lib/divination/tarot/spreads.ts:27   "Three Card Spread - Past/Present/Future"
-                              :31   "Classic past, present, and future timeline reading"
-                              :45-46 position "Future" — "Likely outcome based on current trajectory"
-                              :291   "Best possible outcome, conscious goals"
-                              :295   position "Near Future"
-                              :315   position "Outcome"
-```
-
-⚠️ Invariant 13 Tier 2 (`MAIA_SOVEREIGNTY_INVARIANTS.md:246`) names **Tarot explicitly** among
-the sources that may not forecast consequential outcomes. ⭐ A `Likely outcome based on current
-trajectory` position is a forecast **slot in the data structure**, not merely a possible model
-output. ⛔ Whether any given draw crosses the Tier-2 line is a claim-type judgement this census
-does not make; what is recorded is that **no mechanism was found that could make that judgement**
-on this path.
+⚠️ Invariant 13 Tier 2 (`:246`) names **Tarot explicitly** among sources that may not forecast
+consequential outcomes. ⭐ A *"Likely outcome based on current trajectory"* position is a forecast
+**slot in the data structure**, not merely a possible model output. ⛔ Whether a given draw crosses
+Tier 2 is a claim-type judgement this census does not make; what is recorded is that **no
+mechanism was found that could make that judgement** on this path.
 
 **CURRENT STATUS** — `WIRED-BUT-UNOBSERVED` · **UNAUTHENTICATED**.
 
@@ -759,18 +740,16 @@ vocabulary embedded in elemental objects.*
 **C-F1 · The I Ching interpretation prompt versus the symbolic lens boundary**
 
 ```text
-SIDE A   app/api/changes/[id]/interpret/route.ts:21, 40 (and the identical studio route)
+SIDE A   app/api/changes/[id]/interpret/route.ts:21,40 (+ identical studio route)
          "Do not explain the I Ching tradition — speak from within it."
          "Speak as if the hexagram itself is addressing the person."
-
-SIDE B   app/api/sovereign/app/maia/list/route.ts:283
-         "…frame it explicitly as a traditional association…"
-         "Do not lead with a lens or announce 'you are entering / this means' as fact"
-         docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md:245 — Tier 1 names I Ching explicitly:
-         may be offered "only as a lens: 'this tradition associates…'"
+SIDE B   app/api/sovereign/app/maia/list/route.ts:283 — "frame it explicitly as a
+         traditional association" / "Do not … announce 'you are entering / this means' as fact"
+         MAIA_SOVEREIGNTY_INVARIANTS.md:245 — Tier 1 names I Ching: only "this tradition
+         associates…"
 ```
 
-⛔ Not reconciled. Both are present at the subject. Side B is canon-bound; Side A is deployed on a
+⛔ Not reconciled. Both present at the subject. Side B is canon-bound; Side A is deployed on a
 member-authenticated, persisting route.
 
 **C-F2 · `safe_for_retrieval` — canon asserts a mechanism that code does not contain**
