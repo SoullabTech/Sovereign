@@ -75,8 +75,13 @@ mutate "M1 · ⭐⭐ the adapter sorts by authored_at and reconstructs predecess
 # There is no second head algorithm left to mutate, so this now corrupts the USE
 # of the pure headOf() into a clock-derived predecessor -- which is the defect
 # the old helper made possible, expressed at the only place it can still live.
-mutate "M2 · the candidate's predecessor is clock-derived instead of headOf()" \
-"s = s.replace('      supersedes: headOf(versions)?.id ?? null,',
+# RETARGETED TWICE. First it mutated a local head helper; that helper is gone.
+# Then it mutated the store's USE of the pure head function; that call is gone
+# too, because the store no longer asks what the head is. What is left to
+# corrupt is the one line that transports the AUTHORED predecessor -- so this
+# substitutes a clock-derived one, the original defect in its last hiding place.
+mutate "M2 · the authored predecessor is replaced by a clock-derived one" \
+"s = s.replace('      supersedes: input.supersedes,',
                '      supersedes: versions.length === 0 ? null : [...versions].sort((a, b) => a.authoredAt < b.authoredAt ? 1 : -1)[0].id,')"
 
 mutate "M3 · rationale hydrates with the truthiness idiom (\\'\\' becomes absent)" \
@@ -127,6 +132,14 @@ mutate "M10 · replacementText is spread-guarded, so a deletion ('') is lost" \
 # adapter and that collapse.
 mutate "M11 · a blanket catch converts EVERY database error into a domain refusal" \
 "s = s.replace('      throw e;', \"      return refuse('simultaneous_append');\")"
+
+# M12 IS THE DEFECT THE SECOND FOUNDER REVIEW FOUND, REPRODUCED EXACTLY: the
+# store ignores what the author said it succeeds and silently rebases onto
+# whatever is head when it acquires the row lock. It looks harmless -- the chain
+# stays linear and every version is preserved -- and it is not: the durable
+# record then claims B revised A when B was authored against v4.
+mutate "M12 · the store ignores input.supersedes and rebases onto the current head" \
+"s = s.replace('  appendVersion, validateChain,', '  appendVersion, headOf, validateChain,').replace('      supersedes: input.supersedes,', '      supersedes: headOf(versions)?.id ?? null,')"
 
 echo
 echo "  $KILLED killed · $SURVIVED survived"

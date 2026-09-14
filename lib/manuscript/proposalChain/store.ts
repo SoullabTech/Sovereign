@@ -56,7 +56,7 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import {
-  appendVersion, headOf, validateChain,
+  appendVersion, validateChain,
 } from './succession';
 import type {
   EditorialRulingRef, LocusIdentity, ProposalChain, ProposalVersion,
@@ -235,21 +235,33 @@ export async function readChain(
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * ⛔⛔ THERE IS NO LOCAL HEAD CALCULATION IN THIS FILE, AND THERE MUST NEVER BE.
+ * ⛔⛔ THIS FILE DOES NOT COMPUTE THE HEAD. IT DOES NOT EVEN ASK FOR IT.
  *
- * ⚠️ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. An earlier cut carried a local
- * head-id helper here — the `headOf()` algorithm reproduced inside the
- * persistence layer — under a comment asserting it "duplicates no logic". It
- * quite literally did. ⭐ THE PROOF WAS IN THE FALSIFIER: mutation `M2` could
- * mutate that helper ALONE, which means there were TWO INDEPENDENTLY
- * FALSIFIABLE ANSWERS to "what is the head?" — two implementations that
- * happened to agree.
+ * ⚠️ TWO FOUNDER REVIEWS ON 2026-09-14 CLOSED THIS IN TWO STEPS, and the second
+ * went further than the first:
  *
- * The law of this lane: *persistence TRANSPORTS the contract; it does not
- * implement succession again.* `headOf()` is imported and used directly below,
- * and `appendVersion()` remains the second check that the candidate really does
- * succeed the current head — redundancy INSIDE one pure authority, which is not
- * the same thing as a second algorithm in the store.
+ *   1  A local head-id helper here reproduced the pure head algorithm inside
+ *      the persistence layer, under a comment asserting it "duplicates no
+ *      logic". It quite literally did. ⭐ The proof was in the falsifier —
+ *      mutation `M2` could mutate that helper ALONE, which is only possible
+ *      when there are TWO INDEPENDENTLY FALSIFIABLE ANSWERS to "what is the
+ *      head?". Two implementations that happened to agree. Repaired by
+ *      importing the pure one.
+ *
+ *   2  ⭐⭐ BUT IMPORTING IT WAS STILL WRONG, because the QUESTION did not
+ *      belong here. A store that asks "what is the head?" in order to fill in
+ *      `supersedes` is SYNTHESIZING a succession fact the author never stated.
+ *      See `AppendInput.supersedes`.
+ *
+ * ⭐ SO THE STRONGEST FORM OF THE LANE'S LAW IS THE ABSENCE OF THE QUESTION:
+ *
+ *    authored act ── supersedes = v4 ──▶ adapter ──▶ appendVersion()
+ *                                                       │
+ *                              durable head still v4 ───┤ lawful
+ *                              durable head now  v5 ────┘ not_successor_of_head
+ *
+ * The database may determine whether a successor relationship is still lawful.
+ * ⛔ It must never determine what relationship the author meant.
  */
 
 /** ⛔ Never persisted. The database mints the real id. */
@@ -258,6 +270,33 @@ const PROVISIONAL_ID = '00000000-0000-0000-0000-000000000000';
 const refuse = (reason: AppendRefusal) => ({ outcome: 'refused' as const, reason });
 
 export interface AppendInput {
+  /**
+   * ⭐⭐ WHAT THIS FORMULATION SUCCEEDS — STATED BY THE AUTHOR, never searched
+   * for here. `null` only when the author means this to be the chain's root.
+   *
+   * ⛔ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. An earlier cut had the store
+   * synthesize this from the current head after taking the row lock, and that
+   * let LOCK ACQUISITION INVENT HISTORY. Two acts both authored against `v4`:
+   *
+   *     A takes the lock · reads v4 · store writes A.supersedes = v4 · commit
+   *     B takes the lock · reads v5 · store writes B.supersedes = A   · commit
+   *
+   * The durable record then says `v4 → A → B` — but B never revised A. B was
+   * authored against v4, and the machine's scheduling decided otherwise.
+   *
+   * ⚠️ And `23505` never fired, because `FOR UPDATE` had already serialized the
+   * two calls before they could compete for the successor slot. This file's own
+   * comment said retrying would make machine scheduling the ordering authority
+   * over two authored acts — while the synthesized predecessor made it so
+   * anyway, on the ordinary path.
+   *
+   * ⭐ THE EXISTING SUCCESSION FACT IS THE CONCURRENCY TOKEN. No CAS object is
+   * added — census §6.4 stands on that; what changes is that `supersedes`
+   * CROSSES THIS BOUNDARY rather than being discovered behind it. A stale
+   * authored successor is then refused by the pure `appendVersion` as
+   * `not_successor_of_head`, a refusal that already existed.
+   */
+  readonly supersedes: string | null;
   readonly author: VersionAuthor;
   readonly replacementText: string;
   readonly rationale?: string;
@@ -272,13 +311,14 @@ export interface AppendInput {
  *   1  lock the chain           FOR UPDATE · member_id in the predicate
  *   2  read every version       inside that lock
  *   3  validateChain            ⛔ corrupt rows REFUSE; they are never repaired
- *   4  headOf via appendVersion ⭐ succession decided by `supersedes`, in TS
+ *   4  appendVersion            ⭐ is the AUTHORED predecessor still the head?
  *   5  INSERT                   the one-successor index refuses a race loser
  *
  * ⛔ Step 4 is where a lesser adapter would ask the database "what is the
- * latest row" and get the answer from a clock. The candidate's predecessor is
- * computed by the already-proven `appendVersion`, which returns
- * `not_successor_of_head` for anything else.
+ * latest row". ⭐⭐ THIS ONE NEVER ASKS: the candidate's predecessor ARRIVES
+ * from the author (`AppendInput.supersedes`), and `appendVersion` decides only
+ * whether that stated relationship is still lawful — `not_successor_of_head`
+ * when the chain moved underneath it.
  *
  * ⛔ AND THERE IS NO `unchanged` OUTCOME. Re-recording an identical ruling is
  * not a new decision in the editorial-decision lane; here, two identical
@@ -313,7 +353,7 @@ export async function appendAuthoredVersion(
     const provisional: ProposalVersion = {
       id: PROVISIONAL_ID,
       chainId: chain.id,
-      supersedes: headOf(versions)?.id ?? null,
+      supersedes: input.supersedes,
       replacementText: input.replacementText,
       ...(input.rationale !== undefined ? { rationale: input.rationale } : {}),
       author: input.author,

@@ -198,14 +198,47 @@ re-recorded identically — right there, because nothing new was decided. ⛔ He
 the schema already admits consecutive same-author versions as legal. There is no
 `unchanged` in this adapter.
 
-### 6.4 ⛔ A second staleness mechanism
+### 6.4 ⛔ A second staleness mechanism — *and the conclusion was half wrong*
 
 The decision store carries `expectedCurrentEventId`, a CAS token tested before
-sameness. Succession's analogue is already structural: a candidate must supersede
-the head, `appendVersion` refuses `not_successor_of_head`, and the database's
-`proposal_versions_one_successor` index refuses the loser of a race. ⛔ Adding a
-token would be **a second thing to keep true**, and the first divergence would be
-invisible until it mattered.
+sameness. ⛔ **Adding one here would be a second thing to keep true**, and the
+first divergence would be invisible until it mattered. **That part stands.**
+
+⚠️ **BUT THE CONCLUSION DRAWN FROM IT DID NOT.** This section originally said the
+candidate *"must supersede the head"* and left it there — and the adapter
+therefore had the **store** find the head and fill `supersedes` in. ⛔ That is not
+"no second token"; that is **no token at all, and a synthesized fact in its
+place.** Founder review, second pass, 2026-09-14, merge blocker.
+
+⭐ **THE CORRECTED CONCLUSION:**
+
+> **`supersedes` itself crosses the adapter boundary.** It is the authored
+> succession fact AND the staleness token, because those were always the same
+> fact. The store transports it; the pure `appendVersion` decides whether the
+> stated relationship is still lawful and returns `not_successor_of_head` when
+> the chain moved underneath it.
+
+⛔ **What the original wording permitted, concretely.** Two acts authored while
+`v4` was the visible head, neither carrying `v4`:
+
+```
+A takes the row lock · reads v4 · store writes A.supersedes = v4 · commit
+B takes the row lock · reads v5 · store writes B.supersedes = A   · commit
+
+durable record:  v4 → A → B        but B never revised A.
+```
+
+⚠️ And `23505` never fires on that path, because `FOR UPDATE` serialized the two
+calls **before** they could compete for the successor slot. So the file's own
+comment — *retrying would make machine scheduling the ordering authority over two
+authored acts* — was true in principle while the synthesized predecessor made it
+so anyway, on the ordinary path. **Witnessed by F18; reproduced by M12.**
+
+⭐⭐ **And this removes the head question from persistence entirely** — not just
+a local reimplementation of it, and not just the call to the pure one:
+
+> The database may determine whether a successor relationship is still lawful.
+> ⛔ It must never determine what relationship the author meant.
 
 ### 6.5 ⛔ The truthiness spread, for `rationale`
 
@@ -282,8 +315,10 @@ reconciled, and it is the only place.
 ruling was explicit are capabilities and not API design.
 
 ```
-openChain(memberId, locus, governedBy?)        → ProposalChain          (query)
-appendAuthoredVersion(memberId, chainId, …)    → AppendResult           (transaction)
+openChain(memberId, { locus, governedBy? })    → ProposalChain          (query)
+appendAuthoredVersion(memberId, chainId, {
+  supersedes,                                  ⭐ AUTHORED, never synthesized
+  author, replacementText, rationale? })       → AppendResult           (transaction)
 readChain(memberId, chainId)                   → StoredChain | null     (query ×2)
 ```
 

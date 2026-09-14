@@ -78,13 +78,17 @@ async function main() {
      already been caught by once. */
   const L = await locus();
   const chain = await openChain(MEMBER, { locus: L });
+  /* ⭐ EVERY APPEND STATES WHAT IT SUCCEEDS. The caller is the authoring layer
+     and it knows; the store is never asked to work it out. */
+  let prev: string | null = null;
   for (const [author, text] of [
     ['maia', 'f1'], ['maia', 'f2'], ['member', 'f3'], ['member', 'f4'],
   ] as const) {
     const r = await appendAuthoredVersion(MEMBER, chain.id, {
-      author, replacementText: text,
+      supersedes: prev, author, replacementText: text,
     });
     if (r.outcome !== 'appended') { bad('F1 · append', r.reason); return finish(); }
+    prev = r.version.id;
   }
   const stored = await readChain(MEMBER, chain.id);
   if (!stored) { bad('F1 · readChain', 'null'); return finish(); }
@@ -107,8 +111,10 @@ async function main() {
     : ok('F3 · NULL rationale hydrates as ABSENT — the key is not on the object');
 
   const withRat = await appendAuthoredVersion(MEMBER, chain.id, {
-    author: 'member', replacementText: 'f5', rationale: 'tighter, and it lands',
+    supersedes: prev, author: 'member', replacementText: 'f5',
+    rationale: 'tighter, and it lands',
   });
+  if (withRat.outcome === 'appended') prev = withRat.version.id;
   eq('F4 · a substantive rationale survives unchanged',
     withRat.outcome === 'appended' ? withRat.version.rationale : withRat,
     'tighter, and it lands');
@@ -164,7 +170,7 @@ async function main() {
 
   /* ── F9 · append to another member's chain refuses. ─────────────────────── */
   const foreignAppend = await appendAuthoredVersion(OTHER, chain.id, {
-    author: 'maia', replacementText: 'intruder',
+    supersedes: prev, author: 'maia', replacementText: 'intruder',
   });
   eq('F9 · append to another member\'s chain refuses',
     foreignAppend.outcome === 'refused' ? foreignAppend.reason : 'APPENDED',
@@ -205,9 +211,9 @@ async function main() {
      `t4`, the OLDEST row; the newest is `t1`. A clock-based head would make
      the new version supersede `t1` and branch the chain. */
   const onto = await appendAuthoredVersion(MEMBER, tc.id, {
-    author: 'member', replacementText: 't5',
+    supersedes: ids[3], author: 'member', replacementText: 't5',
   });
-  eq('F14 · ⭐ an append supersedes the STRUCTURAL head, not the newest row',
+  eq('F14 · ⭐ the AUTHORED predecessor is written verbatim, clock notwithstanding',
     onto.outcome === 'appended' ? onto.version.supersedes : onto,
     ids[3]);
   const tcAfter = await readChain(MEMBER, tc.id);
@@ -219,6 +225,7 @@ async function main() {
      The schema admits `formulation = ''` deliberately. M10 (spread-guarding
      `replacementText`) SURVIVED the first run because nothing stored one. */
   const del = await appendAuthoredVersion(MEMBER, tc.id, {
+    supersedes: onto.outcome === 'appended' ? onto.version.id : null,
     author: 'member', replacementText: '',
   });
   eq('F15 · an empty replacementText round-trips as \'\', never as absent',
@@ -296,7 +303,7 @@ async function main() {
          FOR EACH ROW EXECUTE FUNCTION ${FAULT}()`);
     try {
       returned = await appendAuthoredVersion(MEMBER, chain.id, {
-        author: 'maia', replacementText: 'must not be swallowed',
+        supersedes: prev, author: 'maia', replacementText: 'must not be swallowed',
       });
     } catch (e) { escaped = e; }
   } finally {
@@ -317,6 +324,45 @@ async function main() {
   eq('F17b · and nothing was written by the failed append',
     afterFault!.versions.some((x) => x.replacementText === 'must not be swallowed'),
     false);
+
+  /* ── F18 · ⭐⭐ AN AUTHORED SUCCESSOR RELATIONSHIP IS NEVER SILENTLY REBASED.
+     ⛔ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. Two acts are authored while
+     the same version is the visible head. Both name it. The first lands; the
+     second is now stale.
+
+     ⛔ THE SECOND MUST REFUSE, not be quietly re-parented onto the first.
+     Before the repair the store synthesized `supersedes` from whatever was head
+     when it acquired the row lock, so the durable record would have read
+     `v4 → A → B` — and B never revised A. ⭐ Machine lock acquisition would
+     have invented the succession relation, and `23505` could never catch it
+     because `FOR UPDATE` had already serialized the two calls before they could
+     compete for the successor slot.
+
+     ⚠️ Sequential submission proves the SEMANTICS; simultaneity is not needed.
+     An authored successor relationship must survive scheduling unchanged. */
+  const fork = await openChain(MEMBER, { locus: await locus('two acts') });
+  const v4 = await appendAuthoredVersion(MEMBER, fork.id, {
+    supersedes: null, author: 'maia', replacementText: 'v4',
+  });
+  const v4id = v4.outcome === 'appended' ? v4.version.id : null;
+
+  const actA = await appendAuthoredVersion(MEMBER, fork.id, {
+    supersedes: v4id, author: 'member', replacementText: 'A — Kelly, against v4',
+  });
+  const actB = await appendAuthoredVersion(MEMBER, fork.id, {
+    supersedes: v4id, author: 'maia', replacementText: 'B — MAIA, also against v4',
+  });
+
+  eq('F18 · the first act against the head lands',
+    actA.outcome === 'appended' ? 'appended' : actA, 'appended');
+  eq('F18b · ⭐ the second act, authored against the SAME predecessor, REFUSES',
+    actB.outcome === 'refused' ? actB.reason : 'APPENDED — SILENTLY REBASED',
+    'not_successor_of_head');
+
+  const forkBack = await readChain(MEMBER, fork.id);
+  eq('F18c · ⛔ and B is ABSENT — the record never says B revised A',
+    lineage(forkBack!.versions).map((v) => v.replacementText),
+    ['v4', 'A — Kelly, against v4']);
 
   /* ── F12 · the stored chain is a VALID chain by the pure contract's own
      judgement — the round-trip closing on itself. ─────────────────────────── */

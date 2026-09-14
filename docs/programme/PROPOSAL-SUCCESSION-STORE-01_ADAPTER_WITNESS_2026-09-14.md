@@ -13,10 +13,10 @@
 
 ```
 witness      scripts/witness/proposal-succession-store-witness.ts
-             23 passed · 0 failed
+             26 passed · 0 failed
 
 falsifiers   scripts/witness/proposal-succession-store-mutations.sh
-             11 killed · 0 survived
+             12 killed · 0 survived
 
 pure         lib/manuscript/proposalChain/__tests__/succession.test.ts
              31 passed · 0 failed
@@ -158,6 +158,9 @@ F15   an empty replacementText round-trips as '' — a deletion is a formulation
 F16   ⭐ an empty rationale ON DISK is reported, never absented away
 F17   ⭐⭐ a non-23505 database error ESCAPES the adapter
 F17b  and nothing was written by the failed append
+F18   the first act against the head lands
+F18b  ⭐⭐ the second act, authored against the SAME predecessor, REFUSES
+F18c  ⛔ and B is ABSENT — the record never says B revised A
 ```
 
 ⚠️ **F1's fixture is deliberately `maia · maia · member · member`.** An
@@ -241,7 +244,7 @@ census                COMPLETE
 adapter               BUILT
 head authority        ⭐ SINGLE — the pure `headOf()`, imported
 failure propagation   ⭐ WITNESSED — F17 · F17b
-witness               23 passed · 0 failed
+witness               26 passed · 0 failed
 falsifiers            11 killed · 0 survived
 
 authorization         ⛔ NO       acceptance          ⛔ NO
