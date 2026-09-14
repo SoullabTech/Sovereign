@@ -1,0 +1,4 @@
+# reinstall 20260914T194611Z — REFUSED (first-install precondition: life.soullab.voicekernel.vpio01 PRESENT — life.soullab.voicekernel.vpio01 is already installed)
+custody gate: MATCH × all fields (uuid · dylib sha · executable sha · manifest sha · file set · bundle id)
+installed-app state read at 2026-09-14T19:46:11Z: PRESENT — life.soullab.voicekernel.vpio01 is already installed
+verdict: NO install · NO uninstall · NO overwrite · NO sample · the device is untouched · return for ruling
