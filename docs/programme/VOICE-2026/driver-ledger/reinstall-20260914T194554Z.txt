@@ -1,0 +1,24 @@
+# reinstall 20260914T194554Z
+## subject: vpio-01 · bundle: life.soullab.voicekernel.vpio01
+## custody gate: bundle id life.soullab.voicekernel.vpio01 · executable SHA-256 e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac · manifest self SHA-256 4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed (7 files) — MATCH; installed-app state at first install: ABSENT; authority supplied at invocation: yes
+## custody gate: expected E8074AD1-D179-3267-A15C-142D033A9665 — product reads E8074AD1-D179-3267-A15C-142D033A9665 — MATCH
+## custody gate: dylib SHA-256 expected 6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d — product reads 6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d — MATCH
+## custody gate: manifest /private/tmp/vpio-01b-driver-compile-record/docs/programme/VOICE-2026/KERNEL-00_VPIO-01_MAC-COMPILE-02_2026-09-14.manifest.sha256 (7 files) — every file hashes identically, file set identical — MATCH
+## dylib uuid (local product, BEFORE install)
+UUID: E8074AD1-D179-3267-A15C-142D033A9665 (arm64) /private/tmp/vpio-mac-compile-02-85e5e7154-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## codesign
+Identifier=life.soullab.voicekernel.vpio01
+TeamIdentifier=ZVK2X646Z2
+## install
+15:45:55  Acquired tunnel connection to device.
+15:45:55  Enabling developer disk image services.
+15:45:55  Acquired usage assertion.
+App installed:
+• bundleID: life.soullab.voicekernel.vpio01
+• installationURL: file:///private/var/containers/Bundle/Application/6A2E406B-D1B8-43A4-92F3-29D50333AF19/VoiceKernelHarness.app/
+• launchServicesIdentifier: unknown
+• databaseUUID: 42158240-DA3F-491F-8B75-F106CD31316A
+• databaseSequenceNumber: 6720
+• options: 
+## post-install processes (harness must be absent)
+(no VoiceKernelHarness process)
