@@ -850,3 +850,227 @@ ROW ID P3-F-36 · DOMAIN F · NAMED OBJECT alchemical stage vocabulary — `nigr
   LADDER  NOT DETERMINED BY SOURCE RECORD [⭐ the finding is the LOCATION: alchemy is not an independent symbolic system at this subject, it is vocabulary embedded in elemental objects]
   GOVERNANCE GATE  NOT DETERMINED BY SOURCE RECORD  ·  GOVERNING SOURCE  NONE LOCATED
   SOURCE RECORD  F §7; §10
+
+---
+
+## Contradictions carried forward (verbatim, both sides, unreconciled)
+
+⛔ Every contradiction in the three source records is carried. ⛔ None is resolved, ranked, or
+reduced to one side. Quoted fragments are the source records' own words.
+
+**CONTRA-1 · A default-OFF flag that one of its two callers does not consult** (D §8; rows P3-D-01, P3-D-02)
+· A: `pfiMindEntrypoint.ts:14` — *"MAIA_PFI_MIND=true: Enable PFI mind entrypoint (default: OFF)"*, `isPFIMindEnabled()` at :247, consulted at `maiaService.ts:2916`.
+· B: `fieldOrchestrator.ts:161-165` sets `pfi: true` unconditionally and calls `generatePFIMindState`, reached from `maiaService.ts:1521` and `:1946` with no flag check.
+
+**CONTRA-2 · The substrate map says "no live consumer"; the import graph says otherwise** (D §8; row P3-D-10)
+· A: `substrateMap.ts:383-391` — *"Resonant field memory … consumers: [] … Service preserved; no live consumer wired"*; `:230` also marks CoherenceFieldService *"unmapped"*.
+· B: `CoherenceFieldService` is imported at `MemoryPalaceOrchestrator.ts:14`, called at `:75,:188,:249`, and reaches the prompt at `oracle/conversation/route.ts:2787`. (For `QuantumFieldMemory`, side A holds.)
+
+**CONTRA-3 · "DORMANT" as a label on an object that is on the canonical path** (D §8; rows P3-D-07, P3-D-11)
+· A: `fieldMonitorTelemetry.ts:165` — *"Field Intelligence (activates DORMANT talkModeFieldIntelligence …)"*.
+· B: `analyzeFieldIntelligence` is dynamically imported and used at `maiaService.ts:1082-1112`, producing a prompt block on the canonical member path.
+
+**CONTRA-4 · "The ONLY file that knows how the field engines connect"** (D §8; row P3-D-01)
+· A: `fieldOrchestrator.ts:3` asserts sole-seam status.
+· B: at least four other seams connect field engines into cognition — `maiaService.ts:1082`, `maiaService.ts:2838`, `oracle/conversation/route.ts:853`, `:902`, `voice/stream-conversation/route.ts:82`.
+
+**CONTRA-5 · `persistentFieldStates` is not persistent** (D §8; row P3-D-12)
+· A: `QuantumFieldMemory.ts:2-6` — *"maintaining persistent field states"*; field named `persistentFieldStates` at `:91`.
+· B: `:91` is `new Map()`; the file's only import is `crypto`; no `query`/`INSERT`/`SELECT` in 810 lines.
+
+**CONTRA-6 · Two `calculate_decayed_confidence` definitions and one TS helper** (D §8; ⚠️ Domain B/C substrate, recorded because D was tasked to verify it)
+· A (SQL, both copies identical): baseline:711-737 and 20251231_memory_architecture_enhancements.sql:178-214 — ⭐ **no confirmed-memory bonus of any kind**; the SQL function is what runs in retrieval.
+· B (TypeScript): `lib/memory/confidenceDecay.ts:78-79` — `effectiveHalfLife = confirmedByUser ? halfLifeDays * 1.5 : halfLifeDays`.
+· ⚠️ D also disconfirms one detail of the anchor's claim: *"the SQL confirmation term caps at 0.0225"* is **NOT confirmed** — no confirmation term of any form exists in either SQL copy. Both sides preserved.
+
+**C-E1 · Phase is 1–3, and phase is 1–12** (E §9; rows P3-E-05, P3-E-11)
+· `spiralogic-core.ts:17` — `export type Phase = 1 | 2 | 3`, a 12-**cell** grid of 4 elements × 3 phases.
+· `20260213200001_member_spiral_state.sql:19` — `phase INTEGER CHECK BETWEEN 1 AND 12`; `conductor.ts:24-28` normalizes to 1..12. The conductor writes the former into the latter.
+
+**C-E2 · And phase is `Intelligence | Intention | Goal`** (E §9; row P3-E-04) — `maiaService.ts:1134-1137`, a third vocabulary on the canonical lane, computed and deliberately not appended. Both stand alongside C-E1.
+
+**C-E3 · The canonical route both "does not track Spiralogic phase" and injects a phase** (E §9; row P3-E-04)
+· `maiaService.ts:1727/:1737/:2275` state in code that the route has no phase and default to 1.
+· `maiaService.ts:1098` computes `Phase detected: …` for the same route's prompt. ⛔ "the two statements are made by the same file about the same turn and are recorded as they stand."
+
+**C-E4 · CLAUDE.md's "8 voices" vs. the code** (E §5.2, §9; row P3-E-12)
+· Anchor: *"MythicAtlas + MaiaVoice + ShadowAgent + Fire/Water/Earth/Air/Aether"*.
+· Code: MythicAtlas + MaiaVoice + **WisdomRouter** + up to six elemental rows in which `shadow` is an ELEMENT VALUE, not a separate ShadowAgent.
+
+**C-E5 · "spiralogicReference imported only by soulPortrait/schema" vs. zero importers** (E §2, §9; row P3-E-01) — at the subject `lib/soulPortrait/schema.ts:19` is a **comment**, not an import. The subject reading governs E's record; both preserved.
+
+**C-E6 · `member_spiral_state` is the anti-regression continuity substrate, and has no writer** (E §9; row P3-E-05) — migration `:1-5` *"prevents treating returning members like new people"* and CLAUDE.md documents a live wire into `oracle/conversation/route.ts`; that route refuses at `:446-453`.
+
+**C-E7 · R16 strips inferred developmental state from shaping; the member API returns it unstripped** (E §9; rows P3-E-08, P3-E-10) — `developmentalStateAdmission.ts:31-39,:61` vs `app/api/members/spiral-state/route.ts:28-29`. "Two different boundaries, one field class." ⛔ not adjudicated.
+
+**C-E8 · `spiral-constellation.ts` implements the S-16 cross-spiral shape against a nonexistent Prisma model** (E §9; row P3-E-17) — code present and route-exposed; `prisma.spiralProcess` has no declared model among 53.
+
+**C-F1 · The I Ching interpretation prompt versus the symbolic lens boundary** (F §8; rows P3-F-07, P3-F-08, P3-F-31)
+· A: `app/api/changes/[id]/interpret/route.ts:21,40` (+ identical studio route) — *"Do not explain the I Ching tradition — speak from within it." / "Speak as if the hexagram itself is addressing the person."*
+· B: `.../maia/list/route.ts:283` — *"frame it explicitly as a traditional association"* / *"Do not … announce 'you are entering / this means' as fact"*; `MAIA_SOVEREIGNTY_INVARIANTS.md:245` Tier 1 names I Ching: only *"this tradition associates…"*.
+· ⛔ Side B is canon-bound; Side A is deployed on a member-authenticated, persisting route.
+
+**C-F2 · `safe_for_retrieval` — canon asserts a mechanism that code does not contain** (F §8; row P3-F-32) — `CORPUS_DISCIPLINE_PROTOCOL_v1.0.md:104` *"indexed but never retrieved"* vs zero occurrences in code or SQL. ⛔ "not resolved by deciding which is 'really' true."
+
+**C-F3 · P1-01 slice 05 versus the code on tarot** (F §8; row P3-F-03) — P1-01: tarot named in three canon docs, **zero files**. Subject: 1,901 ln across 5 files plus a live route. The re-read governs F's record; both recorded.
+
+**C-F4 · `SYMBOLIC_LENS_BOUNDARY`'s declared scope versus its wiring** (F §8; row P3-F-31) — declared over six families at `:282`; applied at two call sites (`:646`, `:732`). Archetypes, cycles, and the I Ching / Tarot that Invariant 13 adds are not reached.
+
+**C-F5 · The oracle/conversation route's traffic** (F §8; row P3-F-24) — CLAUDE.md: *"receives ~zero live traffic."* Code: `oracle/conversation/route.ts:30` imports `evaluateEncounter`; `OracleConversation.tsx:9723` renders `SacredPassageBlock`. ⛔ the anchor may not settle this by assertion.
+
+**C-F6 · Two objects named `PersonalOracleAgent`** (F §8; row P3-F-23) — `lib/agents/…` (consumes `lib/knowledge`, unreached from `app/`) vs `app/api/_backend/src/agents/…` (reached from two routes; declared sovereignty-violating and retired at `app/api/maia/chat/route.ts:7,26`). ⛔ Not merged.
+
+**⚠️ X-DEF-1 · CROSS-RECORD, OBSERVED DURING NORMALIZATION — the same module, two opposite surfacing findings.** ⛔ Not reconciled, ⛔ neither side dropped, ⛔ no source code re-read to settle it (rows P3-D-07 and P3-E-04 are both kept).
+· D_field.md §2 D-OBJ-7: *"SURFACED WHERE ⭐ INTO THE PROMPT as a labelled block: maiaService.ts:1094-1110 '🎯 TALK MODE FIELD INTELLIGENCE (Reference Context)' …"*, and D §6 answer 4 lists it as traced path (c), at CONTRIBUTES.
+· E_spiralogic_elemental.md §3.3: *"SURFACED WHERE ⛔ NOWHERE. grep -n fieldAwareness → exactly 1079, 1094, 1198. :1198 // Note: fieldAwareness intentionally NOT appended"*.
+· ⚠️ Both records also carry the suppression line internally (D cites `:1198` as "the block is suppressed on early turns"). ⛔ P1-03 does not decide whether these are two descriptions of one object or two different objects.
+
+**⚠️ X-DEF-2 · CROSS-RECORD, OBSERVED DURING NORMALIZATION — the status of `app/api/oracle/conversation/route.ts`.** ⛔ Not reconciled (rows P3-D-09, P3-D-10, P3-E-05, P3-E-10, P3-E-16, P3-F-24 all depend on it).
+· D_field.md §3 heading: *"CAPABILITY RECORDS — Families B and C (other cognition paths)"*, treating that route as the second cognition path and tracing D-OBJ-9/D-OBJ-10 through it to the prompt.
+· E_spiralogic_elemental.md §1 Q2: that route carries *"an unconditional HTTP 410 at `:446-453`"*, in a block *"the file itself labels `// Unreachable below` (`:455`)"*.
+· F_symbolic.md C-F5 preserves a third statement about the same route (*"~zero live traffic"*, anchor) without settling it.
+
+---
+
+## Fields NOT DETERMINED BY SOURCE RECORD
+
+111 rows × 11 fields. `NOT DETERMINED BY SOURCE RECORD` appears **197 times**.
+
+- **LADDER — 105 of 111 rows.** Only six positions were established by a source record and none was invented: `CONTRIBUTES` ×3 (P3-D-01, P3-D-07, P3-D-10) and `HAS AUTHORITY` ×1 (P3-D-06), all from D §6 answer 4; `PARTICIPATES` ×2 (P3-F-07, P3-F-08), from F §3.3's sentence *"authentication establishes PARTICIPATES, not HAS AUTHORITY"*. ⭐ **Domain E assigns no ladder position anywhere** — it uses a *vocabulary vs executable* axis and asks in Q1 whether *EXISTS ≠ PARTICIPATES* even holds at its scale; ⛔ so no E row carries one, including rows whose value demonstrably reaches a prompt.
+- **GOVERNING SOURCE — 97 of 111 rows are `NONE LOCATED`.** The located ones: `MAIA_SOVEREIGNTY_INVARIANTS.md:241-252` (Invariant 13) for P3-F-14, P3-F-28, P3-F-31 and, as a governing source with no implementation, P3-F-34 and P3-F-27; `docs/canon/FIS_FIELD_STATE_PRIMITIVE.md` self-declaring no runtime authority (P3-D-43); `CORPUS_DISCIPLINE_PROTOCOL_v1.0.md` asserting an absent mechanism (P3-F-32); Refusal R16 quoted in-file, with no external ratified source (P3-E-10); P1-01's ratified backing for the `registration/` grammar (P3-E-29); the loader header's cited pdc-1 contract (P3-F-06); the 12-phase documents, which "carry no status" (P3-E-28).
+- **COVERAGE — 0 rows blank (INF-5 satisfied).** 63 rows carry `NOT APPLICABLE`, 14 carry `NOT DETERMINED BY SOURCE RECORD` outright, and the remaining 34 name a family and then state which other families the record did not determine. ⭐ The recurring gap is **tier coverage**: several canonical-lane rows name FAST/CORE/DEEP explicitly (P3-D-01, P3-E-02, P3-E-03) while others reach `getMaiaResponse` at a line the record did not attribute to a tier.
+- **GOVERNANCE GATE — 22 rows** are `NOT DETERMINED BY SOURCE RECORD` (the record did not examine the gate), which is ⛔ **not** the same as the 38 rows where the record looked and found none.
+- **STATUS — 9 rows** carry no status word because the source deliberately withheld one: P3-D-29, P3-D-32, P3-D-33, P3-D-34, P3-D-37, P3-D-40, P3-E-26, P3-E-29, P3-F-36. ⛔ None was given one here.
+
+---
+
+## Rows where GOVERNANCE GATE is NONE FOUND (count and list)
+
+**38 rows carry an outright `NONE FOUND`.** A further **5** carry a *qualified* NONE FOUND, and are listed separately rather than folded in — ⛔ the two are not the same finding.
+
+```text
+OUTRIGHT — the record looked and found no gate of any kind (38)
+  DOMAIN D (27)  P3-D-01 · 03 · 04 · 07 · 08 · 10 · 11 · 12 · 13 · 14 · 15 · 16 · 17 · 18 ·
+                 19 · 20 · 21 · 22 · 23 · 24 · 25 · 26 · 27 · 28 · 34 · 37 · 40
+  DOMAIN E (5)   P3-E-01 · 02 · 08 · 16 · 25
+  DOMAIN F (6)   P3-F-07 · 08 · 11 · 12 · 24 · 29
+
+QUALIFIED — a gate exists for one aspect and NONE FOUND for another; both halves kept (5)
+  P3-E-03  Sanctuary gates the FieldContext; NONE FOUND on the element computation itself
+  P3-F-16  auth + member scoping present; claim-type gate NONE FOUND
+  P3-F-21  route gates not determined; NONE FOUND for member consent to practitioner-visible
+           chart derivation
+  P3-F-31  the wrapper IS a gate; NONE FOUND governing the wrapper itself (who may edit it,
+           what must apply it)
+  P3-F-34  a governing source exists (Invariant 13 Tier 2); NONE FOUND implementing it
+```
+
+⭐ Three of the outright entries are the highest-consequence ones the source records named:
+**P3-D-37** (a `Coherence: N%` readout inside the component mounted on the member surface `/maia`),
+**P3-E-16** (element + phase → clinical modality, fully specified and one optional argument from
+firing), and **P3-F-07** (a member-facing, authenticated, persisting route whose prompt instructs
+the model to conclude about the person). ⛔ Naming them is not ranking them for repair.
+
+---
+
+## Vocabulary collisions carried forward (same word, different objects, both named)
+
+⭐⭐ **This is the centre of this slice.** Domain D enumerated 40 objects precisely because the
+words do not pick out objects. ⛔ No row in this register was merged with another because they
+share a word, and ⛔ the enumeration is never collapsed back into "field".
+
+**"field" — seven unrelated semantic families** (D §5.1), at least 19 distinct code/table objects:
+1 prompt-context assembly `FieldContext` (`lib/field/fieldOrchestrator.ts:36` → P3-D-01) · 2 safety/realm classification `FieldRoutingDecision` (`panconsciousFieldRouter.ts:17` → P3-D-05/06) · 3 consciousness-simulation substrate `ConsciousnessField` (`ConsciousnessFieldEngine.ts` → P3-D-13) · 4 project workspace `field_ideas`/`field_kanban_cards` (`app/fields/[field]` → P3-D-29) · 5 interest/affinity commons `living_field_affinities` (`app/maia/living-field` → P3-D-30) · 6 experiment shelf "Field Lab" (`app/maia/field-lab` → P3-D-31) · 7 voice conversation surface "MAIA Field" (`app/field/layout.tsx:11` → P3-D-32). Plus `practice_field*` (P3-D-33), `wisdom_field*` (P3-D-34), `field_records` (P3-D-27), `field_state_snapshots` (P3-D-46), `relationship_field_state`, `studio_field_signals`, `community_field_state`, `member_field_note_*` — each a further distinct object.
+⭐ **The sharpest instance:** `lib/field-protocol/` (P3-D-27) and `lib/fieldProtocol/` (P3-D-26) are **two different directories with no shared code, differing only in casing**.
+⭐ **And one unresolved same-name pair inside the live system:** D-OBJ-1's `FieldContext` (P3-D-01, ungated) and D-OBJ-9's `fieldContextAdapter` (P3-D-09, gated by `MAIA_FIELD_CONTEXT_ENABLED`) are **both called "field context"**, run on different routes, and are gated differently. D's Q-D2 states plainly: *"Is this one capability with two implementations, or two capabilities that share a name? ⛔ A worker may not choose."*
+
+**"coherence" — six distinct quantities, none convertible into another** (D §5.2):
+1 `FieldContext.pfi.coherence` (number, `fieldOrchestrator.ts:40` → P3-D-02) · 2 `FieldContext.unified.coherenceLevel` (**string**, `:47` → P3-D-04) · 3 `coherenceScore` (0–1, persisted, `CoherenceFieldService.ts:80`, thresholded at `MemoryPalaceOrchestrator.ts:255` → P3-D-10) · 4 `fci` Field Coherence Index (0–1, external/fallback → P3-D-35) · 5 somatic/breath coherence (protocol outcome → P3-D-36) · 6 `rhythmCoherence` (0–1, `OracleConversation.tsx:1748,10753` → P3-D-37).
+⛔ *"A sentence of the form 'MAIA's coherence is X' is unevaluable at the subject."* ⚠️ A seventh, unrelated reading exists adjacent to #6: `setCoherenceLevel(… || 0.85)` at `OracleConversation.tsx:6147`, which D found "resolves to the 0.85 literal on every turn."
+
+**"resonance" — five objects, including one exact class-name duplication** (D §5.3):
+`ResonanceFieldOrchestrator` at `lib/field/…:97` (783 ln, P3-D-19) and `ResonanceFieldOrchestrator` at `lib/oracle/…:40` (629 ln, P3-D-20) — **identical class name, different files, different bodies, neither reachable** · `ResonanceFieldGenerator` (`lib/maia/resonance-field-system.ts`, P3-D-03), the only one the canonical path actually uses · `ResonanceEngine` (`lib/resonanceEngine.ts:25`, P3-D-40), an elemental probability engine unrelated to all three · `resonance_events` (baseline:15843), a table.
+
+**"phase" — three incompatible vocabularies and a fourth trap** (E §7.1, §8.2):
+`Phase = 1 | 2 | 3` (`spiralogic-core.ts:17`, a 12-cell grid) · `phase INTEGER 1..12` (`member_spiral_state.sql:19`, a 12-valued scalar) · `Intelligence | Intention | Goal` (`maiaService.ts:1134-1137`, a triad) · ⭐ and `SpiralogicPhase` in `lib/spiralogic/PhaseDetector.ts:8`, which is **an ELEMENT NAME, not a phase at all** (P3-E-19). ⛔ *"P1-04 cannot evaluate 'MAIA assigns a phase' until the referent is named."*
+
+**"element" — two live detectors and three persistence substrates** (E §12 Q8, Q9): `ConversationElementalTracker` (in-memory, P3-E-02) and `ElementalOracleBridge` (per-message, P3-E-03) can disagree on the same turn and both reach the same prompt by different routes, with nothing reconciling them; and `member_spiral_state` (P3-E-05), `bead_events.spiralogic_element` (P3-E-25) and Prisma `ElementalState`/`ElementalEvolution` (P3-E-26) are three substrates for one concept.
+
+**"Corpus Callosum" — two lanes** writing differently-named agent rows: `corpusCallosumService` (P3-E-12) and `maiaOrchestrator` (P3-E-13). **"voices"** names three service-level voices plus up to six elemental rows in which `shadow` is an element value, against an anchor naming eight (C-E4).
+
+**`PersonalOracleAgent` — two objects, one name** (F §3.9, C-F6; P3-F-23): `lib/agents/PersonalOracleAgent.ts` (consumes `lib/knowledge`, unreached from `app/`) vs `app/api/_backend/src/agents/PersonalOracleAgent` (reached from two routes, declared retired as sovereignty-violating). ⭐ F calls this *"a vocabulary collision of exactly the kind the hard census rule targets."* The same name also appears as a value-importer of P3-D-14 and a consumer of P3-E-19 — ⛔ which of the two objects those citations mean is **NOT DETERMINED BY SOURCE RECORD**.
+
+**"I Ching" — two independent corpora** (F §10; P3-F-01, P3-F-02): `lib/iching/` (1,925 ln) and `lib/divination/iching/` (2,687 ln) — different hexagram data files, different casting modules, **no shared import**, and ⛔ no artifact declaring which is canonical. F-07/F-08 use the former; F-10 and the recall lineage the latter.
+
+**Words that name no object at all** (D §5.4; P3-D-41, P3-D-42): `RFI` → **0 code objects**; `UFI` → one comment that explicitly excludes it. ⭐ *"'RFI is built' and 'RFI is not built' were both unevaluable. Once the referent is demanded, the question dissolves — there is no referent in code."*
+
+**Names that assert governance, capability or persistence they do not carry** — recorded as collisions between a name and its object, ⛔ not as repairs: `lib/symbolic/symbolicAuthorityContracts` · `crossDomainGovernance` · `promptIngressGovernance`, reachable only from a debug route and a dev panel (P3-F-20) · `QuantumFieldPersistence`, whose *"name asserts persistence"* (P3-D-17) · `persistentFieldStates`, an in-process `Map` (CONTRA-5) · `archetypeEvolutionEngine`, which names itself the engine that recognises a soul's signature and has zero importers (P3-F-19) · `member_spiral_state`, the anti-regression continuity substrate with no reachable writer (C-E6).
+
+---
+
+## The CONCLUDE inventory (from domain F — restated, NOT extended)
+
+⭐ F's primary axis is that **KNOW, SAY and CONCLUDE are not degrees of the same thing**: *"A
+system can KNOW enormously and CONCLUDE nothing (the divination recall loader). A system can KNOW
+almost nothing and CONCLUDE heavily (the interpretation routes) — a single hexagram number plus
+one sentence of member context is sufficient input to generate `warnings`, `timing`, and where
+this is heading."*
+
+**Which systems can produce a statement about a member** — ⚠️ F gives three overlapping
+enumerations and ⛔ this register reproduces all three rather than reconciling them into one:
+```text
+(i)  F §2 classification table, marked "concluding":
+       F-07 · F-08 · F-09 · F-11 · F-16 · F-29                                    → 6
+(ii) F §4 "Where a concluding-capable system has no refusal surface" (GATE: NONE FOUND):
+       F-07 · F-08 · F-11 · F-12 · F-16 · F-29                                    → 6
+       (⚠️ includes F-12 runes, which table (i) classifies "interpretive · member-facing";
+        ⚠️ omits F-09 mentor, which table (i) marks concluding and which carries its own
+        inline restraint at mentor/route.ts:32)
+(iii) F §6 summary sentence: "Six systems can produce a statement about a member's situation
+       or trajectory. One of them refuses to (F-06, by construction and by test). The other
+       five have no mechanism that could refuse."
+```
+⛔ The arithmetic of (iii) against (i) and (ii) is not settled here. ⛔ No system was added to or
+removed from any list.
+
+**The one that refuses structurally — P3-F-06** (`divinationRecallLoader`): *"Does NOT re-interpret
+the cast, synthesize across readings, or rank by salience."* The text it carries is house corpus
+copied at write time — *"NOT model-generated, NOT the member's words"* — and the member's words,
+the computed cast and the house text are kept in **three separate blocks** because they *"do not
+share an author"*; one merged block *"would collapse three authorships into one scalar."*
+⭐ F records the correlation without drawing the inference: *"the one system that structurally
+cannot conclude is the only one carrying tests, a producer registry, a Sanctuary gate and a dated
+production witness."* ⛔ The inference is P1-04's, and it is not made here.
+
+**The ones with no refusal mechanism** — P3-F-07 (member-facing, authenticated, **persists** the
+conclusion at `:159` with no author-class column) · P3-F-08 (same prompt, practitioner-facing,
+persists) · P3-F-11 (tarot, **unauthenticated**, forecast-shaped spread positions) · P3-F-12
+(runes, unauthenticated) · P3-F-16 (archetypal narrative — auth only; its "not prediction"
+disclaimer is a **comment addressed to developers**, not an instruction in the model's prompt) ·
+P3-F-29 (soul portrait). ⛔ *"Authentication establishes PARTICIPATES, not HAS AUTHORITY"* — the
+gates that exist on these paths gate **who may invoke**, never **what may be claimed**.
+
+**Constrained by an instruction rather than a mechanism** — P3-F-14 and P3-F-28: CONCLUDE is
+constrained *"only by that same wrapper"* (`SYMBOLIC_LENS_BOUNDARY`, P3-F-31), which is ⚠️ *"a
+model-compliance instruction, not a structural refusal. Nothing measures obedience; no test,
+falsifier or post-generation check found."*
+
+**Named but unimplemented** — P3-F-34: Invariant 13's Tier-2 hard refusal for consequential
+forecasts *"regardless of source"* has ⛔ no implementing code anywhere in Domain F, while
+`spreads.ts:45-46` defines a `Future` position as *"Likely outcome based on current trajectory"* —
+⭐ *"a forecast slot in the data structure, not merely a possible model output."*
+
+**Concluding-shaped and unreachable** — P3-F-18 `ArchetypeDetector` (component-only) and P3-F-19
+`archetypeEvolutionEngine` (zero importers), whose interfaces *"promise `confidence` scores about
+a person"*. ⛔ Per F's domain warning, this proves an elaborate file exists: *"Size, fidelity to
+tradition, and internal consistency are not evidence of governance."*
+
+```text
+P1-03 · SLICE D · E · F · COMPLETE
+111 rows · D 46 · E 29 · F 36 · 0 rows without a COVERAGE value (INF-5)
+38 outright GOVERNANCE GATE: NONE FOUND · 5 qualified · 97 GOVERNING SOURCE: NONE LOCATED
+6 LADDER positions carried · 105 NOT DETERMINED · 0 assigned
+20 contradictions carried forward, including 2 observed BETWEEN source records
+⛔ NO STATUS UPGRADED · NO CONTRADICTION RESOLVED · NO ROW MERGED ON A SHARED WORD
+⛔ NO SOURCE CODE READ · NO CAPABILITY ADDED · RESTATEMENT ONLY
+```
