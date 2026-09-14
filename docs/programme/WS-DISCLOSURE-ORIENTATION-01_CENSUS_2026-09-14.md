@@ -25,6 +25,25 @@ and asserting C now would be a claim about a surface that does not exist.
 **The heading question stays PARKED.** The evidence does not prove we need that ruling:
 the defect is integration, not substrate absence.
 
+### ⭐⭐ This is a PROTOCOL DISCONTINUITY, not weak wording
+
+```text
+server reaches BODY_AUTHORITY_REQUIRED
+        ↓
+authorization opportunity exists
+        ↓
+member-facing continuation
+        ∅
+```
+
+⚠️ **There is presently no member authorization surface to improve. The client protocol
+does not represent the pause.** ⛔ The next lane must not begin from *"the consent dialog
+needs better copy"* — that is already one abstraction past the finding.
+
+⭐ And the pause being a **successful protocol state rather than a refusal** is what makes
+§2 consequential: the server can pause correctly while the client has no semantic
+category for the pause, so the discontinuity presents as silence rather than as an error.
+
 ---
 
 ## 1 · The actual pause contract
@@ -142,6 +161,14 @@ the safe answer.** ⛔ Finding `section()` confers no authority to use `unit()`.
 ⚠️ `labelsFor` is a capability removal, not an instruction — *"Every function here takes
 an id and CANNOT return it."* That property is real and is why the substrate is a
 candidate at all. ⛔ It is not evidence the member receives or understands the output.
+
+⭐⭐ **THE SAFE CONCLUSION, STATED SO IT CANNOT BE ROUNDED UP:**
+
+> `section()` demonstrates that **non-authored orientation is possible.**
+> It does **not** establish that `labelsFor` is an **authorized presentation object.**
+
+⛔ Those are different claims. The first is a substrate fact this census establishes. The
+second would be a design ruling, and nothing here makes it.
 
 ---
 
