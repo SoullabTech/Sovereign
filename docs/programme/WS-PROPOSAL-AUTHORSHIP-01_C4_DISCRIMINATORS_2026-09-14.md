@@ -565,9 +565,11 @@ P1     ⛔ FORMALLY EXHAUSTED (§3e) — E2 = UNSURE · habit-memory ≠ instanc
 P2     ⭐ ELECTED — the only lawful path. Cost recorded at the moment of choosing:
        the investigation now concerns a NEWLY SPECIFIED ACT, not the inherited one.
        ⭐ P2 does not repair missing provenance. It creates new provenance.
-NEXT   predeclare a new away-condition → seal a NEW Whole / first cell under it
-       → then O1 against THAT cell. ⛔ Old seal untouched throughout.
-RUNTIME ⛔ UNTOUCHED until the P2 away-condition is predeclared and ratified
+       predeclaration `…_P2_NEW_CELL_PREDECLARATION_2026-09-14.md` — Section 1 / position 0
+       structural endpoint · pre-press screenshot as the act-condition record
+NEXT   ratify the P2 predeclaration → seal the NEW cell → THEN O1
+       ⚠️ O1's attachment point OPEN — R-a own runtime / R-b re-scope / R-c amend
+RUNTIME ⛔ UNTOUCHED until the P2 predeclaration is pinned
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 
