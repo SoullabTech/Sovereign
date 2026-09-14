@@ -105,6 +105,38 @@ CLOSING   ✅ finished behaviour in its final witnessed environment (this record
 
 ---
 
+## 3a · PR base — determined by founder ruling, not by diff size
+
+⚠️ **`clean-main-no-secrets` was REFUSED as base.** `0bd2b657` is not its ancestor; merge-base
+`e1c6f527`, candidate **245 ahead / 53 behind**, and a PR there would have presented
+**259 files · +56,264 / −315** instead of the sealed eleven paths — ⛔ *manufacturing* a candidate
+rather than presenting one.
+
+```text
+BASE   claude/proposal-authorization-integration
+WHY    the active Writer's Studio INTEGRATION SPINE — contains 0bd2b657 plus the runtime-port,
+       succession, S3 and subsequent editorial-workspace history
+DIFF   11 files · +615 / −25          merge-base 0bd2b657   candidate ahead 1 · base ahead 54
+```
+
+⭐ **Worth recording precisely:** `0bd2b657` is the merge-base with **all ten** branches that
+contain it, so **every one of them would have shown the same 11-file diff.** ⛔ Diff cleanliness
+therefore discriminated nothing. The base was chosen on **integration lineage**, which is the only
+criterion that actually distinguished them.
+
+### ⚠️ Predicted merge conflicts — disclosed at open, not discovered at merge
+
+```text
+The base has advanced 54 commits since 0bd2b657 and OVERLAPS THE REPAIR ON FOUR PATHS.
+Git currently predicts MERGE CONFLICTS.
+
+⭐ This does not invalidate opening the PR.
+⛔ Reconciliation is a LATER INTEGRATION ACT and MUST NOT ALTER 4df4e91d merely to make the
+   PR green.
+```
+
+---
+
 ## 4 · Standing
 
 ```text
@@ -115,8 +147,11 @@ CUSTODY         ✅ sealed · independently JARVIS-VERIFIED
 CLOSING WITNESS ✅ SEALED — all readings PASS, FR-W5 invariant set intact
 HISTORICAL FAIL ⭐ REMAINS SEALED — this is a NEW witness, never a rewrite
 
-PR              ⭐ NOW THE NEXT AUTHORIZED ACT — ⛔ not opened
-MERGE           ⛔ not authorized
+PR              ✅ OPENED — #1296
+                head  fix/c10-whole-exact-return-01 @ 4df4e91d  (unrebased, unamended)
+                base  claude/proposal-authorization-integration
+                diff  11 files · +615 / −25
+MERGE           ⛔ NOT AUTHORIZED
 F1 RENAME       ⛔ separate micro-lane, untouched
 ```
 
