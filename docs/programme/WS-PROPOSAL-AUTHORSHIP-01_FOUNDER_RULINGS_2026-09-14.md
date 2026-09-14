@@ -240,7 +240,7 @@ row. So `Section / first` was not necessarily a *cold* first asked return in the
 `Whole / first` was. ⛔ The matrix therefore does **not** establish that the defect is
 Whole-view-specific rather than first-ever-invocation-specific. Both readings survive it.
 
-The disposition choices the charter allows:
+The disposition choices the charter allowed:
 
 ```text
 A  FALSIFIED → bounded repair, then close WS-PROPOSAL-INTERACTION-01
@@ -248,8 +248,59 @@ B  NOT FALSIFIED → close on the row, carrying Whole / first as a recorded know
 C  ONE ADDITIONAL CELL → a cold Section / first, to separate the two surviving readings
 ```
 
-⭐ C is the only option that buys new information, and it is one observation wide. ⛔ Jarvis
-recommends nothing here beyond naming that; the choice is the founder's.
+---
+
+## ⭐⭐ GATE A RULING (founder, 2026-09-14) — **DISPOSITION C**
+
+> The matrix leaves a real ambiguity that is **cheap to eliminate**: was `Whole / first` a
+> **Whole-view** defect, or simply a **first-ever invocation** defect? One clean observation
+> answers that.
+
+```text
+RUN EXACTLY ONE COLD Section / first ASKED-RETURN OBSERVATION.
+
+PURPOSE  distinguish Whole-view-specific failure
+         from first-ever-invocation failure.
+```
+
+### The cold procedure — genuinely cold
+
+```text
+1. Fresh page / runtime state.
+2. Enter Section view WITHOUT invoking SHOW CHANGE anywhere first.
+3. Scroll well away from the proposal locus.
+4. Invoke SHOW CHANGE once.
+5. Classify ONLY:  LOCUS-ADDRESSED   or   SECTION-ADDRESSED
+6. Stop.
+```
+
+⛔ Step 2 is the whole point of the observation. Any prior `SHOW CHANGE` in the runtime — in either
+view — **destroys the coldness** and the observation is void, not merely weakened.
+
+### Interpretation, predeclared
+
+```text
+PASS   cold invocation works in Section
+       → Whole / first failure is NOT explained merely by being first-ever
+       → evidence points toward a WHOLE-SPECIFIC defect
+
+FAIL   the same defect appears on a cold Section first invocation
+       → evidence points toward FIRST-INVOCATION / INIT behaviour rather than Whole alone
+```
+
+⭐ Predeclared before the run, so neither outcome can be reinterpreted after it lands.
+
+### ⛔ This is a SEVENTH observation, not a replacement cell
+
+```text
+⛔ DO NOT rerun the six-cell walk.
+The six-cell matrix stays exactly as sealed — 5 PASS · 1 FAIL.
+This is an explicitly DIAGNOSTIC observation appended to it, and it
+REPLACES NO CELL and REVISES NO SEAL.
+```
+
+⭐ Why it is worth taking: it **changes the shape of any bounded repair**, rather than merely
+adding another PASS.
 
 ---
 
@@ -269,7 +320,8 @@ time.* The honest repair is to date it, never to edit it.
 ## Roadmap standing (precise)
 
 ```text
-LANE STATUS                        ⏳ OPEN · AT GATE A DISPOSITION
+LANE STATUS                        ⏳ OPEN · GATE A — DISPOSITION C RULED
+                                   ⛔ ONE COLD Section / first OBSERVATION OWED
                                    ⛔ walk COMPLETE — do NOT rerun it
 Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
                                    Whole / first          SECTION-ADDRESSED — FAIL  [SEALED]
@@ -278,7 +330,8 @@ Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1
                                    Section / first        PASS  [FOUNDER-READ]
                                    Section / second       PASS  [FOUNDER-READ]
                                    Section / passive      PASS  [FOUNDER-READ]
-                                   NEXT → Gate A disposition (founder act, not more UI testing)
+                                   Gate A disposition = C (ruled 2026-09-14)
+                                   NEXT → seventh observation: COLD Section / first
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
