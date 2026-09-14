@@ -216,6 +216,57 @@ exists.
 
 ---
 
+## ⚠️ ATTEMPT 1 — ABORTED, NOT CLASSIFIED (2026-09-14)
+
+```text
+P2 attempt 1   ⛔ ABORTED CONSTRUCTION — no cell produced
+REASON         WRONG ROUTE STATE — the loaded `s=` was not the founder's live route
+PRESS          one SHOW CHANGE click occurred · ⭐ DELIBERATELY NOT CLASSIFIED
+DISPOSITION    no seal · no INVALID cell · nothing entered the record to be discarded
+NEXT           reload the correct route and restart the authorized construction CLEANLY
+```
+
+```text
+founder's live route   s=605afab8…      ⭐ CANONICAL for this lane
+route actually loaded  s=1613add4…      ⛔ wrong
+                       (m= and proposal= identical in both)
+```
+
+⭐ **Not classifying was the right call.** An act performed outside its predeclared construction is
+not a weak observation — it is **not an observation of that cell at all.** Recording it as
+`INVALID` would have implied the cell was attempted; it wasn't.
+
+### ⚠️ Provenance correction
+
+⛔ **Jarvis supplied no URL.** This session has no reach to `localhost:3100` and produced no route.
+The canonical route above is **founder-supplied and founder-held**; the divergent one did not
+originate here. ⭐ Recorded so the lane's record never reads as though the agent routed the walk.
+
+### ⭐⭐ THE DEFECT IS IN THE PREDECLARATION, NOT IN THE OPERATOR
+
+The pinned construction named **view · proposal · act · code · schema · instrumentation**.
+⛔ **It never named the ROUTE.** So an unpinned variable was free to differ, and did.
+
+⚠️ And `s=` is not cosmetic. The census established that **the route's `s=` is read once into the
+section-writing state** — a different `s=` is a different section in that state, which is exactly
+the kind of variable this construction exists to hold fixed.
+
+```text
+REPAIR — binding on every P2 / P2-B / O1 construction from here:
+
+  PRECONDITION · ROUTE
+    Load EXACTLY the canonical route:
+      /writers-studio/canvas?m=a3ae67fd…&proposal=a734677d…&s=605afab8…
+    ⛔ Any divergence in m=, proposal= or s= ABORTS the construction.
+    ⭐ Verify the route BEFORE Phase A, not after the press.
+```
+
+⭐ **A construction is only as controlled as its least-specified variable.** This lane has spent
+the day naming variables that looked identical and were not — across views, schema objects, time,
+and the record. ⭐ **This is the fifth: across ROUTE STATE.**
+
+---
+
 ## Authorized sequence
 
 ```text
@@ -269,6 +320,8 @@ O1        ✅ frozen · R-a · SEPARATE FRESH RUNTIME (step 5-6)
 R-c       ⛔ REJECTED
 OLD FAIL  ⭐ SEALED · UNTOUCHED
 
-RUNTIME   ⭐ UNBLOCKED — may be touched ONLY for steps 1-6, in that order
+ATTEMPT 1 ⛔ ABORTED — wrong `s=` route state · press NOT classified
+ROUTE     ⭐ NOW A PINNED PRECONDITION — s=605afab8… canonical; divergence ABORTS
+RUNTIME   ⭐ UNBLOCKED — steps 1-6 in order, ⛔ on the canonical route ONLY
 EDIT      ⛔ none          C4  ⛔ unresolved
 ```
