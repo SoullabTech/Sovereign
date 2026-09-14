@@ -87,3 +87,59 @@ Each candidate implies a **different bounded correction** (read after initialize
 F-W1 **SPENT · FAIL (entry axis; row "about the same / worse", decisively worse than A/B/C/R1)** · the substantive lower-path question **UNMEASURED** (the unit was never initialized or started) · the failure is a **deterministic precondition refusal at trace step 4 of 11**, candidate causes in §6 as inference only · evidence IN CUSTODY on this lane · ledger row classes reproduced here · **NO next act opened**: no correction, no rebuild, no second batch, no top-up, no reinstall, no threshold change; VPIO launch outside the batch NOT AUTHORIZED; K00-11/12/13/15 NOT AUTHORIZED; KERNEL-00 NOT accepted; KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED; JOP-04 UNTOUCHED; historical K00/R1 UNTOUCHED.
 
 **Returned to the founder for adjudication:** (a) F-W1 outcome as read above; (b) whether the deterministic step-4 refusal is ruled a *subject design defect* (a bounded correction to the precondition's read placement/source as a new subject with its own compile and witness) or a *substrate finding* (the lower path closed on this evidence); (c) whether, under (a), the §3 precondition may lawfully be sourced from the authority's session read or moved after initialize — either amends where the guard reads, never whether it guards.
+
+
+## 9. FOUNDER ADJUDICATION (2026-09-14) — F-W1 FAIL ACCEPTED · VPIO-01 CLOSED as a subject · lower path NOT CLOSED · defect ruled a SUBJECT DESIGN DEFECT → new subject VPIO-02 / FORMAT-RESOLUTION-01
+
+Record `1740cdb08` accepted as written. Adjudication (founder, substance verbatim where quoted):
+
+```text
+VPIO-01 F-W1        valid rows 30 · gen-1 takes 0 · infrastructure 0
+classification      about-the-same / WORSE
+adjudication        FAIL · K00-04 entry axis
+F-W1                SPENT
+
+VPIO-01 subject     CLOSED · FAILED
+VPIO lower path     NOT CLOSED
+substrate capability UNMEASURED   (initialize · start · callbacks · health window never reached)
+```
+
+*"The 0/30 result is not softened because the subject refused before `start()`. That is what the authorized subject actually did. But it also does not establish that Voice Processing I/O cannot start or listen."*
+
+**Ruling on the defect — subject design defect, not a substrate finding.** The falsified assumption is narrower than the guard: *a raw, not-yet-initialized VPIO unit's Input scope / element 1 stream-format read is already a truthful hardware-format witness suitable for the inherited §3 guard.* Thirty identical `0 Hz / 1 ch` reads beside an active session reporting built-in mic at 48 kHz retire that assumption. **The §3 law stands** — an invalid format must still be refused before the unit enters physical operation; *we amend where the guard earns its evidence, not whether the guard exists.* Header support (installed SDK, founder-read): `AudioUnitInitialize` documents that after successful initialization the unit's input/output formats are valid and supported; `AudioUnitUninitialize` is the defined transition before changing major state such as I/O formats. That names the next falsifiable seam; it is not a guarantee that the post-initialize read becomes 48 kHz.
+
+**Sourcing the guard from `AVAudioSession` — HELD** (crosses the settled ownership boundary; conflates the session's sample-rate fact with the unit's stream-format fact; the authority projection carries no hardware channel-count fact; a smaller substrate-local test exists).
+
+**Next subject: VPIO-02 / FORMAT-RESOLUTION-01.** Lawful correction, exactly:
+
+```text
+create VPIO unit → enable input/output → set/read VP properties
+→ PROBE AudioUnitInitialize
+→ read Input scope / element 1 stream format
+→ PROBE AudioUnitUninitialize
+→ §3 requireValid()
+→ only if valid: set client formats from that observed rate · read MaximumFramesPerSlice · arm callbacks · final AudioUnitInitialize · AudioOutputUnitStart
+```
+
+Load-bearing: (1) the probe initialization never starts the unit — no `AudioOutputUnitStart`, no callbacks armed, no physiology claimed; (2) uninitialize happens before the guard can throw and before any reconfiguration — a bad post-initialize format leaves an *uninitialized* unit behind. Probe initialize fails → return its exact OSStatus. Post-initialize format still invalid → refuse and return it. NOT authorized in that subject: session-derived rate · hard-coded 48 kHz · alternate scope · engine fallback · retry · second correction.
+
+**Trace vocabulary (14 steps, probe visible):** `unit_created · io_enabled · vp_properties_set · format_probe_initialize_begin · format_probe_initialize_return · input_format_read · format_probe_uninitialize_return · formats_set · callbacks_armed · initialize_begin · initialize_return · start_begin · start_return · is_running_immediate`. A post-probe invalid-format refusal terminates truthfully after `… format_probe_initialize_return · input_format_read · format_probe_uninitialize_return · graph_start_refused`. *No result may be described as having "started" merely because the probe initialized.*
+
+**Bounded implementation envelope (AUTHORIZED after this record is committed separately):** `AudioGraph.swift` (probe initialize/read/uninitialize lifecycle · §3 guard repositioning · VPIO-02 trace vocabulary) · `PureLogicTests.swift` (new trace/order assertions) · the source gate (pin probe lifecycle · pin uninitialize-before-refusal/reconfiguration · preserve every sovereignty/recovery/threshold law) · `VoiceKernelHarness/project.yml` (custody identity only: `life.soullab.voicekernel.vpio02` · `VoiceKernel VPIO-02`) · plan/adjudication records. **Byte-identical unless the compiler mechanically proves otherwise and returns it as a blocker (no expansion pre-authorized):** `VoiceKernel.swift` · `AudioSessionAuthority.swift` · `HealthSupervisor.swift` · `RecoveryPolicy.swift` · `KernelState.swift` · `StateProjection.swift` · `Journal.swift` · `Replay.swift` · harness behavioural Swift. Distinct `.vpio02` bundle REQUIRED; the installed `.vpio01` artifact is frozen evidence — never overwritten or uninstalled to make room.
+
+**Sequence:** 1 record this adjudication · 2 gate read · 3 commit record separately · 4 implement bounded VPIO-02 · 5 run/read gate · 6 commit, name the exact SHA · 7 STOP. MAC-COMPILE for the new SHA NOT authorized by this ruling; install and witness HELD.
+
+**Acceptance standing:** the VPIO-01 population is immutable evidence and can never become a VPIO-02 row. A VPIO-02 physiological witness, if it comes, is a new subject and a fresh population under the SAME F-W1 matrix (≥ 24/30 · ≥ 23/29 · ≥ 23/28 clear · ≤ 16/29 same/worse · between INDETERMINATE · > 2 infra characterize only) — never a friendlier one, never a top-up or rerun.
+
+```text
+VPIO-01                     CLOSED · F-W1 FAIL · 0/30
+VPIO-02 FORMAT-RESOLUTION   SOURCE IMPLEMENTATION AUTHORIZED
+MAC-COMPILE VPIO-02         HELD
+device / install            HELD
+new physiological sample    HELD
+KERNEL-00                   NOT ACCEPTED
+KERNEL-01 · BENCH-01 · BRIDGE-01 · MIGRATE-01   CLOSED
+JOP-04 · historical K00/R1  UNTOUCHED
+```
+
+*"The first lower-path subject failed legitimately, but it failed on an inherited guard placed against a lifecycle state that the witness falsified. We correct that seam as a new subject; we do not declare the lower substrate incapable without ever initializing or starting it."*
