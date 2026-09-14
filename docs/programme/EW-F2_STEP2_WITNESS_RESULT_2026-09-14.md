@@ -1,6 +1,17 @@
 # EW-F2 · Step 2 — proposal work mode · witness result
 
 **Status** EVIDENCE PRESENTED. Closure is a founder act and is not asserted here.
+
+⛔ **RUNTIME CUSTODY FOR `localhost:3100` IS UNKNOWN**, pending founder-side
+measurement. Every runtime row below is qualified by that: it records what the
+browser showed, not that the browser was serving a known commit. Custody does
+not block branch-local repair or falsification; it DOES block any acceptance,
+merge or deployment claim resting on that runtime. ⚠️ It must not be inferred
+from branch names, from process assumptions, or from a screenshot.
+
+⭐ The database rows and the `mrp_*` constraint failures below are NOT subject to
+that qualification — they were read directly from `maia_focus_witness` and do
+not depend on which code the dev server was running.
 **Database** `maia_focus_witness` only. Production untouched; `maia_consciousness` untouched.
 **Proposal** `a734677d-bba9-4981-83ae-8b00d67d1a22` · base v40 · `inspection_only` ·
 `", fixated"` in §23 · fixture, **not** an editorial recommendation.
