@@ -515,6 +515,23 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(lcExec).not.toMatch(/log show --archive/);                                // the superseded spelling never runs
     expect(lcExec).toMatch(/log show --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$OUT\/device\.logarchive"/); // options first, archive last, as documented
     expect(lcExec).not.toMatch(/log show[^\n]*--(info|debug)/);                          // read level stays default until ruled
+    // C-D13 (2026-09-14): `log show --style json` emits ONE array then a trailer banner; the reader decodes one value and
+    // records the residue verbatim, refusing anything but the documented banner. The calibrate script delegates to it.
+    expect(lcExec).toMatch(/k00-log-window-read\.py "\$OUT\/window\.json"/);
+    expect(lcExec).not.toMatch(/json\.load\(/);
+    const wr = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-window-read.py'), 'utf8');
+    expect(wr).toMatch(/JSONDecoder\(\)\.raw_decode\(s\)/);
+    expect(wr).toMatch(/window-trailer\.txt/);
+    expect(wr).toMatch(/residue is NOT the documented trailer banner/);
+    const wrExec = wr.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');                // prose stripped (C21): the header names the tool it never runs
+    expect(wrExec).not.toMatch(/subprocess|os\.system|xcrun|log collect|log show/);          // pure function on files: no device act, no log(1)
+    expect(wr).toMatch(/NOT PRESENT IN THE DEFAULT-LEVEL WINDOW/);                        // absence scoped to its object of evidence (A2)
+    const rr = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-window-reread.sh'), 'utf8');
+    const rrExec = rr.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
+    expect(rrExec).not.toMatch(/sudo|xcrun|devicectl|\blog (collect|show|config)\b|sysdiagnose/);   // offline only
+    expect(rrExec).toMatch(/--expect-sha "\$EXP"/);                                          // custody verified before reading
+    expect(rrExec).not.toMatch(/>>? *"?\$CAL\/CALIBRATION\.md/);                            // a produced record is never edited
+    expect(rr).toMatch(/REC="\$CAL\/WINDOW-READ-\$STAMP\.md"/);
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).

@@ -88,43 +88,8 @@ log show --start "$T0_LOCAL" --end "$T1_LOCAL" --style json "$OUT/device.logarch
 say "## show rc=$SRC · window.json $(du -sh "$OUT/window.json" | cut -f1) · window $((T1_EPOCH-T0_EPOCH+7)) s"
 # E. what was observed + time alignment to the journal (post-hoc filtering by known process names; no predicate was given to the tool)
 J="$(ls "$CALDIR"/journals/kernel00-*.jsonl 2>/dev/null | head -1)"
-python3 - "$OUT/window.json" "$J" "$OUT" <<'PY' | tee -a "$REC"
-import json,sys,collections,os,re
-W,J,OUT=sys.argv[1:4]
-try: ents=json.load(open(W))
-except Exception as e: print("## window.json unreadable:",e); sys.exit(0)
-print(f"## entries in window: {len(ents)}")
-procs=collections.Counter(e.get('processImagePath','?').split('/')[-1] for e in ents); subs=collections.Counter(e.get('subsystem','') for e in ents)
-print("## top processes:", procs.most_common(15)); print("## top subsystems:", subs.most_common(15))
-AUD={'VoiceKernelHarness','mediaserverd','coreaudiod','audiomxd','runningboardd','SpringBoard','bluetoothd','audioclocksyncd'}
-aud=[e for e in ents if e.get('processImagePath','').split('/')[-1] in AUD]
-with open(os.path.join(OUT,'window-audio.jsonl'),'w') as f:
-    for e in aud: f.write(json.dumps({k:e.get(k) for k in ('timestamp','machTimestamp','processImagePath','processID','subsystem','category','eventMessage')})+'\n')
-print(f"## audio-related entries kept (window-audio.jsonl): {len(aud)} · per process: {collections.Counter(e.get('processImagePath','').split('/')[-1] for e in aud).most_common()}")
-h=[e for e in aud if e.get('processImagePath','').endswith('VoiceKernelHarness')]
-print(f"## harness-process entries: {len(h)}" + (f" · first: {h[0]['timestamp']} · last: {h[-1]['timestamp']}" if h else " — NO harness entries: alignment falls back to the export epoch (±1 s)"))
-if not J or not os.path.exists(J): print("## no journal pulled for the LOG-CAL sample; alignment not demonstrable"); sys.exit(0)
-rs=[json.loads(l) for l in open(J)]; mono=lambda ev,**kw: next((r['timeMonotonicMs'] for r in rs if r['event']==ev and all(r['evidence'].get(k)==v for k,v in kw.items())),None)
-anchors={'app_lifecycle':mono('app_lifecycle'),'session_activated':mono('session_activated'),'start_begin':mono('graph_start_trace',step='start_begin'),'start_return':mono('graph_start_trace',step='start_return'),'graph_started':mono('graph_started'),'engine_configuration_changed':mono('engine_configuration_changed'),'first_input_callback':mono('first_input_callback')}
-print("## journal monotonic ms:", anchors)
-from datetime import datetime
-def wall(ts): return datetime.strptime(ts[:26], '%Y-%m-%d %H:%M:%S.%f').timestamp()
-cands=[e for e in h if re.search(r'activ|AVAudioSession|audio', e.get('eventMessage',''), re.I)]
-print(f"## harness entries mentioning audio/activation: {len(cands)}"); 
-for e in cands[:12]: print("   ", e['timestamp'], e.get('subsystem'), e.get('eventMessage','')[:140])
-if h and anchors['session_activated'] and anchors['app_lifecycle']:
-    off_launch = wall(h[0]['timestamp']) - anchors['app_lifecycle']/1000.0
-    print(f"## alignment anchor A (first harness log entry ↔ app_lifecycle): mono→wall offset {off_launch:.3f} s (first entry precedes didBecomeActive by an unknown launch interval; upper bound only)")
-    if cands:
-        off_act = wall(cands[0]['timestamp']) - anchors['session_activated']/1000.0
-        print(f"## alignment anchor B (first activation-like harness entry ↔ session_activated): offset {off_act:.3f} s · A−B = {(off_launch-off_act)*1000:.0f} ms")
-        for k in ('start_begin','start_return','graph_started','engine_configuration_changed','first_input_callback'):
-            if anchors[k]: print(f"   {k}: wall ≈ {datetime.fromtimestamp(anchors[k]/1000.0+off_act).strftime('%H:%M:%S.%f')[:-3]}")
-        lo=anchors['start_begin']/1000.0+off_act-0.05; hi=(anchors['first_input_callback'] or anchors['engine_configuration_changed'] or anchors['start_return'])/1000.0+off_act+0.25
-        win=[e for e in aud if lo<=wall(e['timestamp'])<=hi]
-        print(f"## audio-daemon/harness entries inside the aligned start window [{datetime.fromtimestamp(lo).strftime('%H:%M:%S.%f')[:-3]} … {datetime.fromtimestamp(hi).strftime('%H:%M:%S.%f')[:-3]}]: {len(win)}")
-        for e in win[:40]: print("   ", e['timestamp'][11:23], e.get('processImagePath','').split('/')[-1], e.get('subsystem',''), (e.get('eventMessage') or '')[:120])
-PY
+# C-D13: `log show --style json` emits ONE array then a trailer banner; the reader decodes one value and records the residue verbatim.
+python3 scripts/witness/k00-log-window-read.py "$OUT/window.json" "${J:--}" "$OUT" | tee -a "$REC"
 say "## configuration changed by this run: NONE issued (no log config, no profile, no debugger); daemon identity before/after is in $CALDIR/daemons/"
 say "## custody: window.json sha256 $(shasum -a 256 "$OUT/window.json" | cut -d' ' -f1) · archive left on the Mac at $OUT/device.logarchive (not committed)"
 echo "calibration record: $REC"
