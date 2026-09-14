@@ -1,13 +1,11 @@
 # P1-02 · DOMAIN I — MEMBER / PRACTITIONER ORGANISM
 
 ```text
-LANE      PHASE-1-WHOLE-ORGANISM-CENSUS-01
-STEP      P1-02 · PARALLEL ORGANISM CENSUS
+LANE      PHASE-1-WHOLE-ORGANISM-CENSUS-01 · STEP P1-02 · PARALLEL ORGANISM CENSUS
 DOMAIN    I · member · MAIA · practitioner · practitioner-facing surfaces ·
-          member-private material · explicit sharing gestures · derived visibility
+          member-private material · sharing gestures · derived visibility
 SUBJECT   1a5554300e855d3581085849301a39cbb10ab385
-TYPE      RECORD ONLY — evidence, never rulings
-AUTHORITY READ / TRACE / CLASSIFY
+TYPE      RECORD ONLY — evidence, never rulings · AUTHORITY: READ / TRACE / CLASSIFY
 BOUND BY  D-P1-08 · P1-GOV-ACCESS-01 · constraints 1–8 · LIVE calibration
 ```
 
@@ -20,8 +18,8 @@ BOUND BY  D-P1-08 · P1-GOV-ACCESS-01 · constraints 1–8 · LIVE calibration
 below is a claim about the subject.
 
 **CONTENT DISCIPLINE.** Paths, field names, column names, route shapes and authorization
-predicates only. No member content, no excerpt from any member-authored object, no
-credential, no identifier of any real person.
+predicates only. No member content, no excerpt from any member-authored object, no credential,
+no identifier of any real person.
 
 ---
 
@@ -88,16 +86,16 @@ Relevant declared rules, verbatim from the matrix:Relevant declared rules, verba
 
 | Gate | Location | Authority source |
 |---|---|---|
-| `requireFounder()` | `lib/founder/founderAuth.ts:49-60` | `FOUNDER_MEMBER_IDS` env allowlist, checked against `session.memberId` |
-| `requireLabAccess()` | `lib/access/labAccess.ts` | union of `FOUNDER_MEMBER_IDS` and `LAB_ACCESS_MEMBER_IDS`; fails closed |
-| `requireCircleAccess()` | `lib/circles/circleAccess.ts:63` | founder allowlist ∪ `CIRCLE_ACCESS_MEMBER_IDS`; the file states the cohort var is **not yet constituted** (`:23-36`) |
+| `requireFounder()` | `lib/founder/founderAuth.ts:49-60` | `FOUNDER_MEMBER_IDS` env allowlist vs `session.memberId` |
+| `requireLabAccess()` | `lib/access/labAccess.ts` | founder ∪ `LAB_ACCESS_MEMBER_IDS`; fails closed |
+| `requireCircleAccess()` | `lib/circles/circleAccess.ts:63` | founder ∪ `CIRCLE_ACCESS_MEMBER_IDS`; the file states the cohort var is **not yet constituted** (`:23-36`) |
 | `getCurrentPractitioner()` / `requirePractitioner()` | `lib/auth/getCurrentPractitioner.ts:27-66`, `:74-98` | session member id → `SELECT … FROM practitioners WHERE member_id = $1 AND status = 'active'` |
-| `getAuthoredField()` | `lib/practiceField/programAuthoringService.ts`, via `app/api/practitioner/programs/route.ts:33-45` | "field holder" = member who authored a practice field |
+| `getAuthoredField()` | via `app/api/practitioner/programs/route.ts:33-45` | "field holder" = member who authored a practice field |
 
-⛔ There is **no** `requireSupervisor()`, no `requireFacilitator()`, and no gate anywhere
-that asks *"is this practitioner in relationship with this member?"* at a page or route
-boundary. The only function in the tree that asks that question is
-`authorizePractitionerClientRelationship()` in `lib/coachField/identity.ts` — and §3.1 shows
+⛔ There is **no** `requireSupervisor()`, no `requireFacilitator()`, and **no gate anywhere that
+asks whether a practitioner is in relationship with a particular member** at a page or route
+boundary. The only function in the tree that asks that is
+`authorizePractitionerClientRelationship()` (`lib/coachField/identity.ts`) — and CAP-I-09 shows
 it has no route callers.
 
 ---
@@ -106,21 +104,14 @@ it has no route callers.
 
 ### CAP-I-01 · Practitioner reads a member's Living Field threads
 
-```text
-CAPABILITY        A practitioner opens /studio/fields/<memberId> and reads the titles,
-                  authorship class, phase and dates of that member's field-note threads,
-                  plus the member's real name and username.
-DECLARED WHERE    config/accessMatrix.ts:485 ({ prefix: '/studio', minTier: 'free' })
-COMPUTED WHERE    n/a — direct read
-PERSISTED WHERE   member_field_note_threads
-                  (database/migrations/20260626000001_member_field_note_threads.sql:40)
-LOADED WHERE      app/studio/fields/[memberId]/page.tsx:63-77 (getFieldEvidence)
-                  app/studio/fields/[memberId]/page.tsx:79-85 (getMember)
-SURFACED WHERE    app/studio/fields/[memberId]/page.tsx:134-205
-UPDATED WHERE     member sets the flag TRUE at save time
-                  (app/api/maia/vision-studio/field-note/route.ts:107-130)
-                  member withdraws it (app/api/now-what/field-note/[id]/route.ts:132-139)
-```
+**CAPABILITY** a practitioner opens `/studio/fields/<memberId>` and reads that member's
+field-note thread titles, authorship class, phase and dates, plus the member's real name and
+username. **DECLARED** `config/accessMatrix.ts:485` (`{prefix:'/studio', minTier:'free'}`).
+**PERSISTED** `member_field_note_threads` (`20260626000001_member_field_note_threads.sql:40`).
+**LOADED** `app/studio/fields/[memberId]/page.tsx:63-77` (threads), `:79-85` (member row).
+**SURFACED** `:134-205`. **UPDATED** member sets the flag at save
+(`app/api/maia/vision-studio/field-note/route.ts:107-130`) or withdraws it
+(`app/api/now-what/field-note/[id]/route.ts:132-139`).
 
 **CANONICAL CALL PATH** — `GET /studio/fields/<memberId>` → middleware `checkAccess`
 (`/studio` prefix, tier `free`, **no role**) → `getCurrentSession()` (`:94`) → inline
@@ -129,28 +120,27 @@ rows ⇒ `redirect('/studio')` (`:109`) → `SELECT … FROM member_field_note_t
 member_id = $1 AND released_at IS NULL AND can_be_shown_to_practitioner = TRUE` (`:65-73`)
 → render (`:134-205`).
 
-**MEMBER AUTHORITY** — the per-thread boolean `can_be_shown_to_practitioner`.
+**MEMBER AUTHORITY** — the per-thread boolean `can_be_shown_to_practitioner`,
 **DEFAULT `false`** (`20260626000001_member_field_note_threads.sql:40`; baseline
-`0001_baseline_2026-09-01.sql:12389` `DEFAULT false NOT NULL`). ⚠️ That migration's own
-comment calls the capability **DEFERRED** and the flag *"held FALSE, no path"* (`:8,40,96`)
-— but **Vision Studio supplies a path**: `app/api/maia/vision-studio/field-note/route.ts:107-130`
-binds the column to a per-thread `shareWithPractitioner` boolean from the request body
-(`:36`), intent stated at `:11-15`. Withdrawal exists: `PATCH app/api/now-what/field-note/[id]/route.ts:132-139`,
-ownership enforced inside the mutation by the `member_id` predicate (`:107-113`), idempotent
-(`:122-129`), ledgered by `20260730000002_practitioner_visibility_withdrawn_event.sql`.
+`0001_baseline_2026-09-01.sql:12389` `DEFAULT false NOT NULL`). ⚠️ That migration's own comment
+calls the capability **DEFERRED** and the flag *"held FALSE, no path"* (`:8,40,96`) — but
+**Vision Studio supplies a path**: `app/api/maia/vision-studio/field-note/route.ts:107-130`
+binds the column to a per-thread `shareWithPractitioner` boolean from the request body (`:36`),
+intent stated at `:11-15`. Withdrawal exists
+(`app/api/now-what/field-note/[id]/route.ts:132-139`): ownership enforced **inside** the
+mutation by the `member_id` predicate (`:107-113`), idempotent (`:122-129`), ledgered by
+`20260730000002_practitioner_visibility_withdrawn_event.sql`.
 
-**PRACTITIONER AUTHORITY** — read-only; may not write, withdraw, or reach a FALSE-flag
-thread. **⛔ But practitioner identity is the ONLY thing checked.**
+**PRACTITIONER AUTHORITY** — read-only; may not write, withdraw, or reach a FALSE-flag thread.
+**⛔ But practitioner identity is the ONLY thing checked.** **MAIA AUTHORITY** — none here.
+**SYSTEM AUTHORITY** — `released_at IS NULL` (`:68`) silently excludes released threads.
 
 ⭐⭐ **THE STRUCTURAL FINDING.** The gate at `:104-107` asks *"is the viewer an active
 practitioner?"*, never *"is this practitioner this member's practitioner?"* No
-`practitioner_clients`, `relationship_spaces` or `coach_client_*` predicate appears on the
-page; `memberId` is a free URL segment. **Any member holding an `active` row in
-`practitioners` can read the shared field of any member whose id they supply.** The consent
-column limits *which threads*, never *which practitioner*.
-
-**MAIA AUTHORITY** — none here. **SYSTEM AUTHORITY** — `released_at IS NULL` (`:68`) silently
-excludes released threads.
+`practitioner_clients`, `relationship_spaces` or `coach_client_*` predicate appears on the page;
+`memberId` is a free URL segment. **Any member holding an `active` row in `practitioners` can
+read the shared field of any member whose id they supply.** The consent column limits *which
+threads*, never *which practitioner*.
 
 **GOVERNANCE GATE — ⛔ NONE FOUND.** The page header (`:9-11`) asserts *"This is the consented
 facilitator view."* That is a source comment, not a ruled source. P1-01 §2 established that
@@ -160,10 +150,9 @@ artifact shaped like one disclaims itself
 to an unlocated *"consent architecture"*. Per constraint 6 the flag's existence does not make
 the visibility governed, and *"consented"* is an assertion the corpus does not back.
 
-**FAILURE MODE** — unauthenticated → sign-in message (`:95-101`); non-practitioner →
-redirect (`:109`); unknown memberId → 404 (`:117`). ⚠️ A **known** memberId with zero shared
-threads renders the member's **name** and *"has not yet carried anything"* (`:142,165-168`)
-— see CAP-I-07.
+**FAILURE MODE** — unauthenticated → sign-in message (`:95-101`); non-practitioner → redirect
+(`:109`); unknown memberId → 404 (`:117`). ⚠️ A **known** memberId with zero shared threads
+renders the member's **name** and *"has not yet carried anything"* (`:142,165-168`) — CAP-I-07.
 
 **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.** Complete path traced from a real entry point.
 No dated runtime or production witness exists in-repo: the predecessor census records
@@ -176,19 +165,14 @@ EVIDENCE INPUT ONLY**).
 `app/api/maia/vision-studio/field-note/route.ts:11-15,36,107-130`;
 `app/api/now-what/field-note/[id]/route.ts:107-139`.
 
----
-
 ### CAP-I-02 · Any caller lists supervision sessions and reads clinical transcripts
 
-```text
-CAPABILITY        List clinical supervision sessions for an arbitrary practitionerId and
-                  read the transcript segments of an arbitrary sessionId.
-DECLARED WHERE    config/accessMatrix.ts:578 ({ prefix: '/api/supervision', minTier: 'free' })
-PERSISTED WHERE   supervision session + transcript tables via lib/supervision/SupervisionStore.ts
-LOADED WHERE      app/api/supervision/sessions/route.ts:15-45
-                  app/api/supervision/transcript/list/route.ts:34-45
-SURFACED WHERE    app/supervision/** ; lib/supervision/ClinicalSupervisionEngine.ts
-```
+**CAPABILITY** list supervision sessions for an arbitrary `practitionerId` and read transcript
+segments for an arbitrary `sessionId`. **DECLARED** `config/accessMatrix.ts:578`
+(`{prefix:'/api/supervision', minTier:'free'}`). **PERSISTED** session + transcript tables via
+`lib/supervision/SupervisionStore.ts`. **LOADED** `app/api/supervision/sessions/route.ts:15-45`;
+`app/api/supervision/transcript/list/route.ts:34-45`. **SURFACED** `app/supervision/**`;
+`lib/supervision/ClinicalSupervisionEngine.ts`.
 
 **CANONICAL CALL PATH** — `GET /api/supervision/sessions?practitionerId=…&caseId=…` →
 middleware `checkAccess` (matched rule: tier `free`, **no `rolesAnyOf`**) → handler →
@@ -202,16 +186,15 @@ middleware `checkAccess` (matched rule: tier `free`, **no `rolesAnyOf`**) → ha
 `requirePractitioner`, `getCurrentPractitioner`, `requireMemberId`, `getCurrentSession` or
 `getMemberIdFromRequest`. Grepped: zero matches in either route.
 
-**MEMBER AUTHORITY** — ⛔ **NONE FOUND.** No consent column, flag or gesture is consulted.
-The subject of a supervision transcript is a client whose speech is captured; nothing on the
-path asks them anything.
+**MEMBER AUTHORITY** — ⛔ **NONE FOUND.** No consent column, flag or gesture is consulted. The
+subject of a supervision transcript is a client whose speech is captured; nothing on the path
+asks them anything. **PRACTITIONER AUTHORITY** — asserted by query parameter, verified by
+nothing. **SYSTEM AUTHORITY** — total.
 
-**PRACTITIONER AUTHORITY** — asserted by query parameter, verified by nothing.
-
-**SYSTEM AUTHORITY** — total. ⚠️ Both route headers assert *"HIPAA compliant"*
-(`sessions/route.ts:5`; `transcript/list/route.ts:7`). Recorded verbatim as a **source-comment
-claim about storage location**; it says nothing about the authorization this census finds
-absent, and ⛔ this census does not adjudicate it.
+⚠️ Both route headers assert *"HIPAA compliant"* (`sessions/route.ts:5`;
+`transcript/list/route.ts:7`). Recorded verbatim as a **source-comment claim about storage
+location**; it says nothing about the authorization this census finds absent, and ⛔ this
+census does not adjudicate it.
 
 **GOVERNANCE GATE — ⛔ NONE FOUND.** P1-01 recorded *"Governance of the supervision stream —
 who may open it, on what consent, with what client knowledge"* as **UNLOCATED**. The code is
@@ -233,19 +216,13 @@ upload}/route.ts` (11 routes).
 (`sessions`, `transcript/list`, `insights/list`, `session/start`) and none carries one. The
 remaining seven were **not** individually read; their status is **UNKNOWN**, not "the same".
 
----
-
 ### CAP-I-03 · Caseload — practitioner identity asserted by query parameter
 
-```text
-CAPABILITY        List a practitioner's cases, case memories, case notes, captures,
-                  patterns and consultations.
-DECLARED WHERE    config/accessMatrix.ts:470 — { prefix: '/caseload', … }
-                  ⚠️ that prefix does NOT match '/api/caseload/...'
-PERSISTED WHERE   lib/caseload/CaseStore.ts, CaseMemoryService.ts, CasePatternService.ts
-LOADED WHERE      app/api/caseload/list/route.ts:29-70 (+ 8 sibling routes)
-SURFACED WHERE    app/caseload/**, app/studio/caseload/**, app/model-studio/caseload/**
-```
+**CAPABILITY** list a practitioner's cases, case memories, notes, captures, patterns,
+consultations. **DECLARED** `config/accessMatrix.ts:470` — ⚠️ prefix `/caseload`, which does
+**not** match `/api/caseload/*`. **PERSISTED** `lib/caseload/{CaseStore,CaseMemoryService,
+CasePatternService}.ts`. **LOADED** `app/api/caseload/list/route.ts:29-70` + 8 siblings.
+**SURFACED** `app/caseload/**`, `app/studio/caseload/**`, `app/model-studio/caseload/**`.
 
 **CANONICAL CALL PATH** — `GET /api/caseload/list?memberId=…` → middleware: **no matrix rule
 matches `/api/caseload/*`**, so in the default permissive mode it passes as `unmapped` →
@@ -275,17 +252,13 @@ is never asked.
 `app/api/caseload/[caseId]/memories/list/route.ts:36`;
 `app/api/caseload/[caseId]/notes/route.ts:47`; `config/accessMatrix.ts:470,727-729`.
 
----
-
 ### CAP-I-04 · Becoming a practitioner — unauthenticated, self-asserted memberId
 
-```text
-CAPABILITY        Create a practitioners row for an arbitrary memberId and set
-                  members.is_practitioner = true for that member.
-DECLARED WHERE    config/accessMatrix.ts:534 ({ exact: '/api/practitioners/create', minTier: 'pro' })
-PERSISTED WHERE   practitioners ; members.is_practitioner ; practitioner_themes
-LOADED/WRITTEN    app/api/practitioners/create/route.ts:43-165
-```
+**CAPABILITY** create a `practitioners` row for an arbitrary `memberId` and set that member's
+`members.is_practitioner = true`. **DECLARED** `config/accessMatrix.ts:534`
+(`{exact:'/api/practitioners/create', minTier:'pro'}`, **no role**). **PERSISTED**
+`practitioners`, `members.is_practitioner`, `practitioner_themes`. **WRITTEN**
+`app/api/practitioners/create/route.ts:43-165`.
 
 **CANONICAL CALL PATH** — `POST /api/practitioners/create` with body
 `{ memberId, practiceName, slug, email, portalType?, enabledModules?, consultantProfile? }`
@@ -320,19 +293,13 @@ mode exists.
 prefixes `PORTAL-`, `SOULLAB-`, `PRO-` (`:16`, `:35`). Whether any client flow requires it
 before calling `create` is **UNKNOWN** — the `create` route does not.
 
----
-
 ### CAP-I-05 · Practitioner ⇄ client messaging, digest and prep
 
-```text
-CAPABILITY        A practitioner reads the message thread a client sent them, a
-                  since-last-session digest, session prep, and emergency contact info.
-LOADED WHERE      app/api/practitioner/clients/[clientId]/{messages,digest,prep,emergency,
-                  policy,spiralogic-report}/route.ts
-                  lib/practitioner/messages.ts ; lib/practitioner/sessionPrep.ts
-PERSISTED WHERE   practitioner_clients ; practitioner_sessions ; message tables ;
-                  spiralogic_reports
-```
+**CAPABILITY** a practitioner reads the message thread a client sent them, a since-last-session
+digest, session prep, emergency contacts and generated reports. **LOADED**
+`app/api/practitioner/clients/[clientId]/{messages,digest,prep,emergency,policy,
+spiralogic-report}/route.ts`; `lib/practitioner/{messages,sessionPrep}.ts`. **PERSISTED**
+`practitioner_clients`, `practitioner_sessions`, message tables, `spiralogic_reports`.
 
 **AUTHORIZATION** — `requireMemberId()` from `lib/auth/session`
 (`digest/route.ts:15,30` · `messages/route.ts:15` · `spiralogic-report/route.ts:16,28`). The
@@ -361,27 +328,14 @@ refuses re-pointing and unlinking (`20260802000002…:333-347`), `ON DELETE SET 
 
 **GOVERNANCE GATE — ⛔ NONE FOUND.**  **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
----
-
-### CAP-I-06**CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
-
----
-
 ### CAP-I-06 · Studio CRM surface (≈76 routes)
 
-```text
-CAPABILITY        The practitioner Studio: clients, notes, encounters, moments,
-                  transcripts, field, protocols, observations, inquiry responses.
-AUTHORIZATION     getCurrentPractitioner(request) at the top of each handler
-                  (76 files matched; lib/auth/getCurrentPractitioner.ts:27-66)
-SCOPING           identity.practitionerId, server-derived, used in the WHERE clause
-                  (e.g. app/api/studio/clients/route.ts:27-32)
-```
-
-⭐ This family is the **best-behaved** practitioner surface in the tree: identity is derived
-server-side from the session and never accepted from the caller, matching the discipline
-`lib/coachField/practitionerProjection.ts:26-31` describes but cannot enforce from where it
-sits.
+**CAPABILITY** the practitioner Studio: clients, notes, encounters, moments, transcripts,
+field, protocols, observations, inquiry responses. **AUTHORIZATION** `getCurrentPractitioner(request)`
+at the top of each handler (76 files matched; `lib/auth/getCurrentPractitioner.ts:27-66`).
+**SCOPING** `identity.practitionerId`, server-derived, used in the `WHERE` clause (e.g.
+`app/api/studio/clients/route.ts:27-32`). ⭐ The **best-behaved** practitioner surface in the
+tree: identity is never accepted from the caller.
 
 **WHAT DATA** — practitioner-authored records *about* clients: `practitioner_clients`
 (`name`, `email`, `phone`, `birth_*`, `internal_notes`, `tier`, `tags`, `key_placements`,
@@ -404,59 +358,55 @@ hold client-supplied answers; no consent column, no client view, no withdrawal.
 
 **GOVERNANCE GATE — ⛔ NONE FOUND.**  **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`.**
 
----
-
 ### CAP-I-07 · DERIVED / INFERRED VISIBILITY
 
 ⛔ **Recorded only. No repair proposed, no mechanism designed, no programme opened (F9,
 D-P1-08).**
 
-**D-1 · Member existence and real name, no consent predicate, no relationship.**
+**D-1 · Member existence and real name — no consent predicate, no relationship.**
 `app/studio/fields/[memberId]/page.tsx:79-85` runs `SELECT id, name, username FROM members
-WHERE id = $1` — no consent column, no relationship join. Name renders at `:142,159,166,199`.
-A practitioner supplying an id learns that it resolves to a real member, and that member's name.
+WHERE id = $1`. Name renders at `:142,159,166,199`. Supplying an id reveals that it resolves
+to a real member, and that member's name.
 
-**D-2 · An existence oracle over the *absence* of shared material.** Three outcomes are
-distinguishable: unknown id → `notFound()` (`:117`); known id + zero shared threads → the
-member's name plus *"has not yet carried anything from a Vision Studio session"* (`:165-168`);
-known id + ≥1 thread → the threads. So *"exists and has shared nothing"* is readable, and is
-distinct from *"no such member"*.
+**D-2 · An existence oracle over the *absence* of shared material.** Three distinguishable
+outcomes: unknown id → `notFound()` (`:117`); known id + zero shared threads → the member's
+name plus *"has not yet carried anything from a Vision Studio session"* (`:165-168`); known id
++ ≥1 thread → the threads. *"Exists and has shared nothing"* is readable, and distinct from
+*"no such member"*.
 
 **D-3 · Counts, phase counts, ordering.** `totalThreads` (`:132,148`), `orderedPhases.length`
-as *"N phases active"* (`:149`), a per-phase count badge (`:177`), ordering `created_at ASC`
-within phase (`:70-72`). The counted set is consent-filtered — ⚠️ but they are counts over a
-filtered set whose complement the practitioner cannot see, and they move on withdrawal (D-4).
+as *"N phases active"* (`:149`), per-phase count badge (`:177`), ordering `created_at ASC`
+within phase (`:70-72`). The counted set is consent-filtered — ⚠️ but the practitioner cannot
+see its complement, and the counts move on withdrawal (D-4).
 
 **D-4 · Withdrawal is silent, hence inferable by difference.** The PATCH flips the flag
 (`app/api/now-what/field-note/[id]/route.ts:132-139`); **no practitioner notification writer
-was found**. The thread simply leaves the result set; a practitioner who saw the page before
-and after observes a count decrease and a missing title. The act is recorded in
-`member_field_note_events` (`20260730000002…`) — a **member-side** ledger; no practitioner
-read of it was found.
+was found**. The thread leaves the result set; a practitioner who saw the page before and after
+observes a count decrease and a missing title. The act is recorded in `member_field_note_events`
+(`20260730000002…`) — a **member-side** ledger; no practitioner read of it was found.
 
 **D-5 · Authorship class disclosed per thread.** `t.authorship` renders `member-authored` vs
-`member-confirmed` (`:183`) — i.e. whether the member wrote it or MAIA proposed and the
-member kept it. Dates at `:184`.
+`member-confirmed` (`:183`) — whether the member wrote it or MAIA proposed and the member kept
+it. Dates at `:184`.
 
 **D-6 · A truncated member identifier is echoed to the practitioner.** `:157-160` renders
 `/maia/vision-studio?fieldContext=` plus the first 8 characters of the member's uuid.
 
 **D-7 · Relationship-space state flows member-ward only.**
-`app/api/sovereign/app/maia/list/route.ts:800-820` injects practice-field context into
-**MAIA's** prompt for the member, gated on `status='active' AND consent_status='accepted'`
-(`:806`) and `!isSanctuary` (`:801`); `app/api/member/portal/route.ts:19-42` shows the member
-their own spaces. ⭐ **No reverse path was found** — no traced practitioner route reports
-member acceptance, activity or latency back. Recorded as an absence found by search, ⛔ not a
-proof of absence.
+`app/api/sovereign/app/maia/list/route.ts:800-820` injects practice-field context into **MAIA's**
+prompt for the member, gated on `status='active' AND consent_status='accepted'` (`:806`) and
+`!isSanctuary` (`:801`); `app/api/member/portal/route.ts:19-42` shows the member their own
+spaces. ⭐ **No reverse path was found.** Recorded as an absence found by search, ⛔ not a proof
+of absence.
 
 **D-8 · Program positions are structurally unreadable by the practitioner.**
 `app/api/practitioner/programs/route.ts:11-15`: *"This surface writes the CURRICULUM only.
 Member positions are a different jurisdiction entirely: no route here reads, counts, or
 aggregates them, and none may be added (catalog spec §8 — the absence is the feature)."*
 Verified: it imports only `getAuthoredField`, `listPrograms`, `createProgram` (`:19-24`) and
-never touches `programPositionService`. ⭐ The one **enforced-by-construction**
-non-visibility in the domain. ⛔ Still **GOVERNANCE GATE: NONE FOUND** — *"catalog spec §8"*
-is a spec reference and P1-01 located no ruling binding it.
+never touches `programPositionService`. ⭐ The one **enforced-by-construction** non-visibility
+here. ⛔ Still **GOVERNANCE GATE: NONE FOUND** — *"catalog spec §8"* is a spec reference and
+P1-01 located no ruling binding it.
 
 **GOVERNANCE GATE for all of D-1…D-8 — ⛔ NONE FOUND.**
 P1-01 slice 08 §3 recorded: *"No document read in this slice addresses whether a practitioner
@@ -468,20 +418,14 @@ per constraint 6, discovering the mechanisms does not govern them.
 **CURRENT STATUS — `WIRED-BUT-UNOBSERVED`** for D-1…D-6; **`OBSERVATION-ONLY`** is not used,
 because these are live render paths, not instrumentation.
 
----
-
 ### CAP-I-08 · `lib/relationship/scope.ts` — the explicit access model that nothing calls
 
-```text
-CAPABILITY        A typed member/practitioner read-scope and verb model:
-                  ReadScope, Role, resolveReadScope, canRead, requiresCommitmentContext,
-                  isOfferable, developIntoWisdom, removeIdentifiers,
-                  wisdomMayCiteMemberMaterial (returns never), maySystemDraw,
-                  admitsToCommitment, practitionerMay, offersDoNothing,
-                  ScopeViolation, Unruled
-DECLARED WHERE    lib/relationship/scope.ts:50-420
-CONSUMERS         lib/relationship/__tests__/scope.test.ts — and nothing else
-```
+**CAPABILITY** a typed member/practitioner read-scope and verb model: `ReadScope`, `Role`,
+`resolveReadScope`, `canRead`, `requiresCommitmentContext`, `isOfferable`, `developIntoWisdom`,
+`removeIdentifiers`, `wisdomMayCiteMemberMaterial` (returns `never`), `maySystemDraw`,
+`admitsToCommitment`, `practitionerMay`, `offersDoNothing`, `ScopeViolation`, `Unruled`
+(`lib/relationship/scope.ts:50-420`). **CONSUMERS** `lib/relationship/__tests__/scope.test.ts`
+— and nothing else.
 
 Grepped each exported symbol (`resolveReadScope`, `practitionerMay`, `admitsToCommitment`,
 `maySystemDraw`, `ScopeViolation`) across `lib/`, `app/`, `scripts/`, `tests/`, `__tests__`:
@@ -501,8 +445,6 @@ ruling cites it.
 **CURRENT STATUS — `ORPHANED`.** The code exists; its declared consumer (any route or page
 that reads member material for a practitioner) does not import it. ⛔ Not `DORMANT`: CAP-I-01
 performs the very act this module models, and does so without it.
-
----
 
 ### CAP-I-09 · `lib/coachField/` — the second access model that nothing calls
 
@@ -536,27 +478,22 @@ model is built around has no surface.
 **CURRENT STATUS — `DORMANT`** (verification-script-reachable only). The `practitioner_clients`
 relationship substrate it reads **is** live (CAP-I-05/06); the projection over it is not.
 
----
-
 ### CAP-I-10 · Practitioner observation atoms inside member memory
 
-```text
-CAPABILITY        A facilitator-authored observation stored in the MEMBER's own memory
-                  store and surfaced into MAIA's prompt as a separate authorship section.
-DECLARED WHERE    database/migrations/20260624000001_practitioner_observation_provenance.sql
-PERSISTED WHERE   member_memory_atoms.source_type = 'practitioner_observation',
-                  member_memory_atoms.facilitator_id (FK → members(id) ON DELETE SET NULL, :13-14),
-                  member_memory_atoms.epistemological_status
-                  ∈ observed | reported | inferred | provisional | claimed (:17-26)
-LOADED WHERE      lib/maia/memoryAtomsLoader.ts:171,186,202,296-311
-SURFACED WHERE    lib/maia/memoryAtomsLoader.ts:442-447 — projectAtomSections() splits into
-                  '# MEMBER-PLACED PORTFOLIO' and '# PRACTITIONER OBSERVATIONS'
-GUARDED BY        PRACTITIONER_ATTRIBUTION_GUARD (memoryAtomsLoader.ts:186):
-                  "(source_type <> 'practitioner_observation' OR facilitator_id IS NOT NULL)"
-                  mirrored in lib/workbench/sources/keep.ts:86
-                  and excluded from Book Studio mirrors (lib/bookStudio/mirrorSources.ts:160-161)
-WRITE REFUSED AT  lib/psyche/portfolio.ts:386-392 — keepSource() throws for this source_type
-```
+**CAPABILITY** a facilitator-authored observation stored in the **member's own** memory store
+and surfaced into MAIA's prompt as a separate authorship section.
+**DECLARED** `database/migrations/20260624000001_practitioner_observation_provenance.sql`.
+**PERSISTED** `member_memory_atoms.source_type = 'practitioner_observation'`;
+`.facilitator_id` (FK → `members(id) ON DELETE SET NULL`, `:13-14`);
+`.epistemological_status ∈ observed|reported|inferred|provisional|claimed` (`:17-26`).
+**LOADED** `lib/maia/memoryAtomsLoader.ts:171,186,202,296-311`.
+**SURFACED** `:442-447` — `projectAtomSections()` splits `# MEMBER-PLACED PORTFOLIO` from
+`# PRACTITIONER OBSERVATIONS`.
+**GUARDED** `PRACTITIONER_ATTRIBUTION_GUARD` (`:186`)
+`"(source_type <> 'practitioner_observation' OR facilitator_id IS NOT NULL)"`, mirrored at
+`lib/workbench/sources/keep.ts:86` and excluded from Book Studio mirrors
+(`lib/bookStudio/mirrorSources.ts:160-161`).
+**WRITE REFUSED** `lib/psyche/portfolio.ts:386-392` — `keepSource()` throws for this source type.
 
 ⭐ **The direction is practitioner → member**, inverse of every other capability here: an
 observation is written into the member's memory and reaches MAIA's cognition about that
@@ -581,21 +518,15 @@ intent"* about the `witnessed` register. Per D-P1-06 and constraint 6 a migratio
 **CURRENT STATUS — `ORPHANED`.** Schema, read guards, loader projection, refusal path and
 member-side disposal all exist; the declared producer does not.
 
----
-
 ### CAP-I-11 · Relationship spaces — the object P1-01 found ungoverned
 
-```text
-PERSISTED WHERE   relationship_spaces (invite_token, participant_member_id, status,
-                  consent_status, practitioner_display_name, practice_display_name,
-                  relationship_type, created_from)
-CREATED WHERE     app/api/practitioner/practice-field/invite/route.ts:72-100
-CONSUMED WHERE    app/api/join/[token]/route.ts:29 ; app/api/join/[token]/accept/route.ts:26,50
-                  app/api/relationship-spaces/[spaceId]/consent/route.ts:27,52
-                  app/api/relationship-spaces/[spaceId]/threshold/route.ts:25
-MEMBER-FACING     app/api/member/portal/route.ts:19-42 ; app/maia/portal/page.tsx:26,86,142
-MAIA-FACING       app/api/sovereign/app/maia/list/route.ts:800-820
-```
+**PERSISTED** `relationship_spaces` (`invite_token`, `participant_member_id`, `status`,
+`consent_status`, `practitioner_display_name`, `practice_display_name`, `relationship_type`,
+`created_from`). **CREATED** `app/api/practitioner/practice-field/invite/route.ts:72-100`.
+**CONSUMED** `app/api/join/[token]/route.ts:29`; `…/accept/route.ts:26,50`;
+`app/api/relationship-spaces/[spaceId]/{consent:27,52 · threshold:25}/route.ts`.
+**MEMBER-FACING** `app/api/member/portal/route.ts:19-42`; `app/maia/portal/page.tsx:26,86,142`.
+**MAIA-FACING** `app/api/sovereign/app/maia/list/route.ts:800-820`.
 
 **Data flow, as traced:** practitioner creates a space and emails an invite token → member
 opens `/join/<token>` → accepts → `consent_status` moves → MAIA's prompt for that member gains
@@ -625,8 +556,6 @@ practitioner's own practice field
 of 2026-08-09 requiring an authenticated, attributable actor). **It is the only located
 founder ruling binding a practitioner-side surface in this domain, and it governs the
 practitioner's own material — ⛔ not practitioner visibility of member material.**
-
----
 
 ### CAP-I-12 · `app/api/_backend/**` — vendored legacy backend with a facilitator dashboard
 
@@ -688,26 +617,23 @@ defaults is scored as adequate or inadequate — only recorded.
 
 ### Q3 · Derived / inferred visibility
 
-Traced and reported in full at **CAP-I-07 (D-1 … D-8)**. Summary of what a practitioner can
-infer without reading any member-private content:
+Traced in full at **CAP-I-07 (D-1 … D-8)**. Without reading any member-private content, a
+practitioner can infer: the **existence** of a member from an id (D-1, D-2); that member's
+**real name and username**, with no predicate (D-1); that a member has **shared nothing** —
+distinguishable from *"no such member"* (D-2); **counts** of shared threads and active phases,
+and per-phase counts (D-3); **ordering** and per-thread dates (D-3, D-5); **withdrawal by
+difference** — silent removal from a previously observed list (D-4); **authorship class**,
+member-authored vs MAIA-proposed-and-kept (D-5); a **truncated member identifier** echoed into
+a shareable URL (D-6).
 
-- **existence** of a member from an id (D-1, D-2)
-- the member's **real name and username**, with no predicate (D-1)
-- that a member has **shared nothing** — distinguishable from *"no such member"* (D-2)
-- **counts** of shared threads and of active phases; per-phase counts (D-3)
-- **ordering** by `created_at` within phase, and per-thread dates (D-3, D-5)
-- **withdrawal by difference** — silent removal from a previously observed list (D-4)
-- **authorship class** — member-authored vs MAIA-proposed-and-kept (D-5)
-- a **truncated member identifier** echoed into a shareable URL (D-6)
+**Not found:** practitioner-facing notification of member activity — searched
+`notify.*practitioner` / `practitioner.*notif`; all hits concern the practitioner's own
+schedule/booking/Stripe (`lib/notifications/SessionNotificationService.ts:779-830`;
+`lib/stellium/settings.ts:387`). No practitioner-facing latency or presence surface. No reverse
+read of `relationship_spaces` consent state (D-7). No practitioner read of program positions
+(D-8).
 
-Not found: practitioner-facing notification of member activity (searched
-`notify.*practitioner` / `practitioner.*notif` — all hits are session/booking/Stripe
-notifications to the practitioner about the practitioner's own schedule, e.g.
-`lib/notifications/SessionNotificationService.ts:779-830`, `lib/stellium/settings.ts:387`);
-no practitioner-facing latency or presence surface; no reverse read of `relationship_spaces`
-consent state (D-7); no practitioner read of program positions (D-8).
-
-⛔ **Recorded only.** No model designed, no mechanism proposed, no threshold invented, no
+⛔ **Recorded only.** No model designed, no mechanism proposed, no threshold invented, and no
 k-anonymity rule imported from `CIRCLE_FIELD_DOCTRINE.md:72-79` (which governs Circle theme
 surfacing, not this).
 
@@ -770,10 +696,10 @@ without deciding**, which is a different fact, recorded as such.
 | CAP-I-11 relationship spaces | ⛔ **NONE FOUND** | ⭐ one adjacent ruling exists — founder 2026-08-09 on **containment attribution** (`practice-field/[id]/containment/route.ts:9-14`) — and it does **not** govern practitioner visibility of member material |
 | CAP-I-12 `_backend` facilitator dashboard | ⛔ **NONE FOUND** | none |
 
-⭐⭐ **Twelve capabilities, twelve `NONE FOUND`.** Per constraint 6, this is what
-**P1-GOV-ACCESS-01** looks like from the implementation side: the absence is not weakened by
-any of it. The one located founder ruling that touches a practitioner surface governs the
-practitioner's own material, in the opposite direction.
+⭐⭐ **Twelve capabilities, twelve `NONE FOUND`.** Per constraint 6 this is what
+**P1-GOV-ACCESS-01** looks like from the implementation side: the absence is weakened by none
+of it. The one located founder ruling touching a practitioner surface governs the
+practitioner's **own** material, in the opposite direction.
 
 ---
 
@@ -823,32 +749,28 @@ is therefore NOT authoritative."* ⛔ Per the vocabulary rule no finding attache
 
 ## 5 · Unlocated governance
 
-- ⛔ **A ruled model of what a practitioner may see of a member.** Re-confirmed at the code
-  level: no gate, guard, test or config file cites one. **P1-GOV-ACCESS-01.**
+- ⛔ **A ruled model of what a practitioner may see of a member.** Re-confirmed at code level:
+  no gate, guard, test or config cites one. **P1-GOV-ACCESS-01.**
 - ⛔ **"The consent architecture"** — deferred to at
-  `docs/product/NOW_WHAT_NAVIGATION_AND_ARRIVAL_ARCHITECTURE_2026-08-03.md:142`. Searched for
-  a code artifact bearing that name: none. Still **UNLOCATED**.
+  `NOW_WHAT_NAVIGATION_AND_ARRIVAL_ARCHITECTURE_2026-08-03.md:142`; no code artifact bears the
+  name. **UNLOCATED.**
 - ⛔ **Supervision-stream governance** — who may start, stream, read or retain a clinical
-  supervision transcript, and on whose consent. No code gate, no ruled source.
-- ⛔ **Governance of `relationship_spaces`** — live object, member consent column, excluded
-  from the Relationship Room Constitution's jurisdiction by a non-deciding instrument,
-  claimed by nothing.
-- ⛔ **Authority to create a practitioner.** `POST /api/practitioners/create` has no gate; no
-  ruling naming who may become a practitioner was located.
-- ⛔ **Whether facilitator and practitioner are one authority.** The code uses both words for
-  one actor without deciding (Q4). Unlocated in documents, undecided in code.
-- ⛔ **Derived / inferred visibility.** No rule on counts, ordering, timestamps, presence,
+  transcript, on whose consent. No code gate, no ruled source.
+- ⛔ **Governance of `relationship_spaces`** — live, member-consent-bearing, excluded by a
+  non-deciding instrument, claimed by nothing.
+- ⛔ **Authority to create a practitioner.** `POST /api/practitioners/create` has no gate and
+  no located ruling.
+- ⛔ **Whether facilitator and practitioner are one authority.** Unlocated in documents,
+  undecided in code (Q4).
+- ⛔ **Derived / inferred visibility** — no rule on counts, ordering, timestamps, presence,
   existence oracles or withdrawal-by-difference. **Recorded only (F9 / D-P1-08).**
-- ⛔ **A member-facing statement of what their practitioner can see.** Searched member-facing
-  surfaces (`app/now-what/{home,field,questions}/page.tsx`, `app/maia/portal/page.tsx`); the
-  member sees their own per-item sharing state (`app/api/now-what/home/route.ts:95`
-  `sharedWithCoach`; `WithdrawVisibility` rendered at `app/now-what/field/page.tsx:142` and
-  `app/now-what/questions/page.tsx:136`) — ⛔ but no statement of **who** the practitioner is
-  for that member, or **what else** they can see. Still **UNLOCATED**.
-- ⚠️ `docs/architecture/CAPABILITY_ACCESS_MODEL_PROPOSAL.md` — named by P1-01 as unread.
-  **Not read in this domain either** (this is a code census). Status **UNKNOWN**.
-
----
+- ⛔ **A member-facing statement of what their practitioner can see.** The member sees their own
+  per-item sharing state (`app/api/now-what/home/route.ts:95` `sharedWithCoach`;
+  `WithdrawVisibility` at `app/now-what/field/page.tsx:142` and
+  `app/now-what/questions/page.tsx:136`) — ⛔ but no statement of **who** their practitioner is
+  or **what else** that person can see. **UNLOCATED.**
+- ⚠️ `docs/architecture/CAPABILITY_ACCESS_MODEL_PROPOSAL.md` — named unread by P1-01, and not
+  read here either (this is a code census). **UNKNOWN.**
 
 ## 6 · Named-but-unverified artifacts
 
