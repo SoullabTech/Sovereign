@@ -5,6 +5,7 @@
 **Authorized by** founder act, 2026-09-14
 **Base** `9827a7e0f` (W4-0) → `575810287` (W5-4)
 **Branch** `claude/w4-1-editorial-discourse-contract`
+**Sealed by** `W4-1.1 · CONTRACT SEAL`, founder act 2026-09-14
 **Class** contract · record · falsifiers. ⛔ No schema, no producer registry
 edit, no `getMaiaResponse` change, no `openThread()` change, no route, no Canvas.
 
@@ -15,6 +16,14 @@ edit, no `getMaiaResponse` change, no `openThread()` change, no route, no Canvas
 > not manufacture them.
 
 ---
+
+⚠️ **Sections 1–4 record W4-1 AS FIRST WRITTEN (`7a3e394b3`).** Four of their
+claims were superseded by the seal below and are kept rather than edited — *a
+record is a reading at a time; the honest repair is to date it.* Superseded:
+`admitEditorialOutcome` (split into envelope + input), the "no text parameter"
+law (withdrawn by the founder as too strong), the flat `EditorialRecord`, and
+`editorialPosture(boolean)`. Tallies of `40/0` and `12 killed` are the pre-seal
+run; the current run is **54/0 · 16 killed**.
 
 ## 1. What landed
 
@@ -215,3 +224,171 @@ The W5-4 `Z4` label overstates its coverage (it reads two files while claiming
 the codebase). The claim is true at `575810287`; the repair is owed the next time
 that witness is touched. ⛔ Not done in W4-1, which touches no witness but its
 own.
+
+
+---
+
+# W4-1.1 — CONTRACT SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `7a3e394b3`.
+Same branch. Contract · tests · mutants · record only. ⛔ Still no schema,
+registry, service, `openThread`, route or Canvas.
+
+> **The correction that governs the seal.** Preserving authorship is not enough.
+> Canonical cognition must receive the relationships the authors actually
+> created — what a Direction referred to, what a Version succeeded, and which
+> semantic act was explicitly declared. Otherwise provenance survives while
+> meaning quietly loses its edges.
+
+## A · the tool geometry is now ENCODED, not asserted
+
+`EDITORIAL_TOOL_NAME` existed; nothing enforced it. `admitEditorialOutcome`
+received an arbitrary object, so `not_through_tool` meant roughly *"not an
+object"* rather than *"MAIA did not answer through the required tool"*. It could
+not tell zero tool calls from the wrong tool from two `editorial_outcome` calls.
+
+Split into two functions:
+
+```
+model completion blocks
+        ↓
+admitEditorialToolEnvelope(blocks)
+    zero editorial_outcome calls        → not_through_tool
+    exactly one, and nothing else       → inspect its input
+    two editorial_outcome calls         → malformed   ⛔ never take-first
+    editorial_outcome + another tool    → malformed
+    some other tool only                → malformed
+        ↓
+admitEditorialToolInput(input)          the object schema
+```
+
+⭐ **And the founder's correction to their own earlier ruling is adopted
+verbatim.** *"The admitter cannot see prose"* was too strong: the envelope
+parser **must** see the block geometry in order to prove text blocks carry zero
+weight. The law is not that prose is invisible —
+
+> Prose may arrive; prose carries **zero authority** to create a semantic
+> editorial act.
+
+— which is stronger and actually falsifiable. `W4-C11b` was **rewritten, not
+deleted**, and now pins the split: the envelope takes `readonly StructuredBlock[]`,
+the outcome builder takes only a tool input, and nothing anywhere reads a text
+block's contents for meaning. ⛔ No vendor termination vocabulary is consulted.
+
+## B · the authored relationships now survive
+
+`EditorialRecord` was `{ kind, author, text, refersTo? }` — one shape for four
+objects, re-flattening ontology W5 spent several acts separating. It admitted a
+member-authored Insight, a turn carrying `refersTo`, a Version carrying
+`refersTo`; and the renderer **dropped `refersTo` entirely** while a Version
+carried neither its identity nor its `supersedes`. So
+
+```
+Direction D · "That one, but softer." · refersTo = V1
+```
+
+reached cognition as `[the writer directed] That one, but softer.` — the exact
+authored reference gone — and `V1 → V2 → V3` arrived as three unlabelled strings.
+
+Replaced by four discriminated records: `InsightRecord` (`author: 'maia'` as a
+literal, so a member-authored Insight is not a value to reject but a shape that
+cannot be written) · `DirectionRecord` (`refersTo`) · `VersionRecord` (`id` +
+`supersedes`) · `TurnRecord` (`turnIndex`, and ⛔ no `refersTo`, no `supersedes`).
+`renderRecord()` carries the relationships into the block: *"about V1"*,
+*"proposed wording V2, succeeding V1"*.
+
+## C · no invented chronology
+
+`history: EditorialRecord[]` quietly handed the **caller** authority to establish
+one cross-object sequence, which W5 expressly ruled does not exist.
+`EditorialParticipationInput` now carries four collections by their own order
+laws — turns by `turn_index`, versions by `lineageOrder()` from `supersedes`
+alone, insights and directions with no order law claimed — and each is rendered
+under its own heading so a block never reads as one chronological stream.
+⛔ No record carries an `authoredAt`, which is the strongest available form of
+the ban; `W4-C14b` pins its absence.
+
+`lineageOrder()` appends an unreachable version rather than dropping it: ⛔
+omitting it would silently delete an authored formulation to make a list tidy.
+
+## D · Sanctuary
+
+`editorialPosture(true)` pre-authorized an act that does not exist, on the word
+of a caller, with nothing verifying a member act. **The parameter is removed** —
+*a parameter is not a signal; it is a place a future caller can assert consent
+that was never given.* `editorialPosture.length === 0` is pinned, and
+`member_act` no longer appears anywhere in the module.
+
+## E · string states
+
+```
+reply              nonblank                  (`' '` was admitted)
+rationale          absent OR nonblank        (`''` was admitted)
+replacementText    any string, INCLUDING ''  — a deletion is a formulation
+```
+
+The first two aligned the pure contract with what `proposal_versions` can
+actually accept; the third is explicitly preserved.
+
+## Evidence
+
+**54 passed · 0 failed** · **16 killed · 0 survived · 0 crashed · 0 stale**.
+
+New discriminators: `W4-C13` (plain object, no tool call) · `W4-C14` +
+`W4-C14b`/`c` (two calls, right-plus-other, other-only) · `W4-C15` (Direction's
+reference survives) · `W4-C16` + `W4-C16b` (Version identity and succession
+survive; order from `supersedes`, not from the array).
+
+New mutants: `M-W4-TAKE-FIRST-TOOL` · `M-W4-TEXT-AS-OUTCOME` ·
+`M-W4-DROP-REFERENCE` · `M-W4-FLAT-CHRONOLOGY`. `M-W4-PROSE-PROPOSAL` stays —
+it protects persistence planning from a `reply_only` outcome, while
+`M-W4-TEXT-AS-OUTCOME` attacks outcome **admission**; different layers.
+
+Repo gates: typecheck *no regressions* · no-supabase clean · scoped jest
+`23 failed · 3060 passed` — the same four held pre-existing red obligations.
+
+## Three instrument findings from the seal
+
+### 1 ⚠️ A mutant was reported KILLED while judging nothing
+
+After the seal, `M-W4-UTTERANCE-AS-HISTORY` referenced `input.history`, which no
+longer exists — so the **test suite failed to compile**. jest exits 1 either
+way, and the harness read that as a kill *with zero obligations*.
+
+> A mutant that does not compile has judged nothing, and a kill with no named
+> obligation is a kill for the wrong reason.
+
+Repaired on both sides: the harness now classifies `Test suite failed to run`
+— and any `rc=1` with **no named obligation** — as **CRASHED**, and the operator
+is re-aimed at the sealed implementation.
+
+### 2 ⚠️ Two operators went STALE and were reported as such
+
+`M-W4-MERGE-GENERIC-HISTORY` and `M-W4-MIXED-PRODUCER` anchored on code the seal
+replaced. Both exited 3 and were reported **STALE**, not passed — the
+classification working as intended — and both are re-aimed.
+
+### 3 ⚠️ A helper block was lost in an edit, and the falsifiers caught it
+
+Splicing the new envelope documentation over the old comment deleted
+`SECTION_SCOPED_KEYS` / `sectionScoped` / `unknownKey` along with it. Thirteen
+obligations went red immediately with `ReferenceError: sectionScoped is not
+defined`. Restored. ⛔ Recorded because the near-miss is the point: the
+`additionalProperties` enforcement added an hour earlier would have vanished
+silently if these laws had been documented rather than executed.
+
+## Standing after the seal
+
+```
+W4-1 five founder rulings               ✅ encoded
+W4-1 envelope geometry                  ✅ SEALED
+W4-1 relational history fidelity        ✅ SEALED
+W4-1 Sanctuary boundary                 ✅ SEALED
+W4-1 string-state alignment             ✅ SEALED
+
+W4 schema refinement                    ⛔ HELD
+W4 producer registry                    ⛔ HELD
+W4 canonical service seam               ⛔ HELD
+W4 route / runtime · Canvas             ⛔
+production                              UNTOUCHED
+```

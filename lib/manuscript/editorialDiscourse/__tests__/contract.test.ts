@@ -19,9 +19,11 @@ import {
   EDITORIAL_HISTORY_AUTHORITY, FORBIDDEN_FOR_EDITORIAL_TURNS,
   editorialHistory, editorialTurnIdentity,
   MEMBER_ACT_KINDS, memberActPlan,
-  EDITORIAL_TOOL_NAME, editorialToolSchema, admitEditorialOutcome,
+  EDITORIAL_TOOL_NAME, editorialToolSchema,
+  admitEditorialToolEnvelope, admitEditorialToolInput, lineageOrder, renderRecord,
   maiaOutcomePlan, onVersionRefusal, withdrawalEffect, editorialPosture,
-  type EditorialRecord, type EditorialInvocation,
+  type EditorialInvocation, type TurnRecord, type VersionRecord,
+  type InsightRecord, type DirectionRecord,
 } from '../contract';
 import { PRODUCER_IDS } from '@/lib/maia/canonical-turn/producerRegistry';
 
@@ -85,88 +87,131 @@ describe('A3 · a thread has one subject: anchor XOR chain', () => {
    C1 · PARTITION BY AUTHORSHIP
    ══════════════════════════════════════════════════════════════════════════ */
 
-const HISTORY: readonly EditorialRecord[] = [
-  { kind: 'insight', author: 'maia', text: 'The paragraph turns twice on "fixated".' },
-  { kind: 'turn', author: 'member', text: 'Why?' },
-  { kind: 'turn', author: 'maia', text: 'Because the repetition carries the emotional turn.' },
-  { kind: 'direction', author: 'member', text: 'Try it less absolute.', refersTo: null },
-  { kind: 'version', author: 'maia', text: 'He stayed there, held by the river.' },
-  { kind: 'version', author: 'member', text: 'He stayed by the river.' },
+const INSIGHTS: readonly InsightRecord[] = [
+  { kind: 'insight', id: 'I1', author: 'maia',
+    observation: 'The paragraph turns twice on "fixated".' },
 ];
+const DIRECTIONS: readonly DirectionRecord[] = [
+  { kind: 'direction', id: 'D1', author: 'member',
+    instruction: 'That one, but softer.', refersTo: 'V1' },
+];
+const VERSIONS: readonly VersionRecord[] = [
+  { kind: 'version', id: 'V2', author: 'member', wording: 'He stayed by the river.',
+    supersedes: 'V1' },
+  { kind: 'version', id: 'V1', author: 'maia', wording: 'He stayed there, held by the river.',
+    supersedes: null },
+];
+const TURNS: readonly TurnRecord[] = [
+  { kind: 'turn', turnIndex: 0, author: 'member', body: 'Why?' },
+  { kind: 'turn', turnIndex: 1, author: 'maia',
+    body: 'Because the repetition carries the emotional turn.' },
+];
+const PARTICIPATION = {
+  locus: { chainId: 'C1', originalText: 'He was there, fixated, and the river ran on.' },
+  turns: TURNS, versions: VERSIONS, insights: INSIGHTS, directions: DIRECTIONS,
+  declaredAct: 'discourse' as const,
+};
 
 describe('C1 · editorial participation partitions by authorship', () => {
-  const blocks = editorialCandidates({
-    locus: { chainId: 'C1', originalText: 'He was there, fixated, and the river ran on.' },
-    history: HISTORY,
-    declaredAct: 'discourse',
-  });
+  const blocks = editorialCandidates(PARTICIPATION);
+  const member = () => blocks.find((b) => b.producerId === 'member.writer_editorial_history')!;
+  const maia = () => blocks.find((b) => b.producerId === 'system.writer_editorial_history')!;
 
   it('W4-C2 · ⭐⭐ one mixed member+system producer is unrepresentable', () => {
-    /* Every record lands in the producer whose declared authorship is its own —
-       and `authoredBy` is a per-producer CONSTANT, so no block can hold both. */
-    for (const r of HISTORY) {
-      const id = producerForRecord(r);
-      expect(EDITORIAL_PRODUCERS[id].authoredBy)
+    for (const r of [...INSIGHTS, ...DIRECTIONS, ...VERSIONS, ...TURNS]) {
+      expect(EDITORIAL_PRODUCERS[producerForRecord(r)].authoredBy)
         .toBe(r.author === 'member' ? 'member' : 'system');
     }
-    const member = blocks.find((b) => b.producerId === 'member.writer_editorial_history')!;
-    const maia = blocks.find((b) => b.producerId === 'system.writer_editorial_history')!;
-    /* ⛔ No member text in the system block, and none of hers in theirs. */
-    expect(member.text).toContain('Try it less absolute.');
-    expect(member.text).not.toContain('held by the river');
-    expect(maia.text).toContain('held by the river');
-    expect(maia.text).not.toContain('Try it less absolute.');
+    expect(member().text).toContain('That one, but softer.');
+    expect(member().text).not.toContain('held by the river');
+    expect(maia().text).toContain('held by the river');
+    expect(maia().text).not.toContain('That one, but softer.');
   });
 
   it('W4-C2b · ⭐ object kinds stay visibly labelled inside a block', () => {
-    const maia = blocks.find((b) => b.producerId === 'system.writer_editorial_history')!;
-    /* Sharing provenance axes does not make an Insight a turn. */
-    expect(maia.text).toContain('MAIA noticed');
-    expect(maia.text).toContain('MAIA said');
-    expect(maia.text).toContain('MAIA proposed wording');
-    const member = blocks.find((b) => b.producerId === 'member.writer_editorial_history')!;
-    expect(member.text).toContain('the writer directed');
-    expect(member.text).toContain('the writer said');
+    expect(maia().text).toContain('MAIA noticed');
+    expect(maia().text).toContain('MAIA said');
+    expect(maia().text).toContain('MAIA proposed wording');
+    expect(member().text).toContain('the writer directed');
+    expect(member().text).toContain('the writer said');
+  });
+
+  it('W4-C15 · ⭐⭐ a Direction\'s explicit reference SURVIVES into participation', () => {
+    /* ⚠️ W4-1.1. The first cut dropped `refersTo` entirely, so
+       `Direction D · refersTo = V1` reached cognition as bare prose and the
+       authored reference vanished. Authorship survived; the relationship did not. */
+    expect(member().text).toContain('about V1');
+    expect(renderRecord(DIRECTIONS[0])).toContain('about V1');
+  });
+
+  it('W4-C16 · ⭐⭐ a Version carries its identity AND what it succeeded', () => {
+    expect(maia().text).toContain('proposed wording V1');
+    expect(maia().text).toContain('the first');
+    expect(member().text).toContain('proposed wording V2');
+    expect(member().text).toContain('succeeding V1');
+  });
+
+  it('W4-C16b · ⭐ succession order comes from `supersedes`, never from the array', () => {
+    /* VERSIONS is deliberately given V2-before-V1. */
+    expect(lineageOrder(VERSIONS).map((v) => v.id)).toEqual(['V1', 'V2']);
+    /* ⛔ and an unreachable version is APPENDED, never dropped */
+    const orphan: VersionRecord = {
+      kind: 'version', id: 'V9', author: 'maia', wording: 'x', supersedes: 'GONE',
+    };
+    expect(lineageOrder([...VERSIONS, orphan]).map((v) => v.id)).toEqual(['V1', 'V2', 'V9']);
+  });
+
+  it('⭐ discourse is ordered by turn_index, not by arrival', () => {
+    const shuffled = editorialCandidates({
+      ...PARTICIPATION,
+      turns: [
+        { kind: 'turn', turnIndex: 2, author: 'member', body: 'third' },
+        { kind: 'turn', turnIndex: 0, author: 'member', body: 'first' },
+      ],
+    });
+    const m = shuffled.find((b) => b.producerId === 'member.writer_editorial_history')!;
+    expect(m.text.indexOf('first')).toBeLessThan(m.text.indexOf('third'));
   });
 
   it('W4-C3 · ⭐⭐ the declared-act producer carries the KIND and nothing else', () => {
     /* ⚠️ A MUTANT SURVIVED THE FIRST WRITING OF THIS OBLIGATION. It asserted an
        ABSENCE — that the current utterance is not in the block — while the
-       ruling is stronger: the producer *carries ONLY the member-declared kind*,
-       ⛔ not a second copy of their words. `M-W4-UTTERANCE-AS-HISTORY` copied
-       the HISTORY into the block and satisfied the absence test completely.
-
-       ⭐ Re-asserted as the whole assignment. A block whose exact text is the
-       declaration cannot also be carrying prose, whatever the prose is. */
-    const b = editorialCandidates({
-      locus: { chainId: 'C1', originalText: 'x' }, history: HISTORY, declaredAct: 'discourse',
-    });
-    const act = b.find((x) => x.producerId === 'member.writer_editorial_act')!;
+       ruling is stronger: the producer *carries ONLY the member-declared kind*.
+       ⭐ Re-asserted as the whole assignment. */
+    const act = blocks.find((x) => x.producerId === 'member.writer_editorial_act')!;
     expect(act.text).toBe("[The writer's declared act] discourse");
-    expect(b.find((x) => x.producerId === 'member.writer_editorial_act')!.itemCount)
-      .toBeUndefined();
+    expect(act.itemCount).toBeUndefined();
   });
 
   it('W4-C3b · ⭐⭐ the current utterance cannot reach participation AT ALL', () => {
-    /* ⛔ Structural, not a filter: `EditorialParticipationInput` has no field
-       for it. The live sentence is `CanonicalTurn.encounter.input`, and a
-       function that cannot receive it cannot duplicate it. */
     const utterance = 'Could we make this less absolute?';
-    const b = editorialCandidates({
-      locus: { chainId: 'C1', originalText: 'x' }, history: HISTORY, declaredAct: 'discourse',
-    });
-    for (const block of b) expect(block.text).not.toContain(utterance);
+    for (const block of blocks) expect(block.text).not.toContain(utterance);
     expect(CONTRACT).toMatch(/export interface EditorialParticipationInput/);
     const iface = CONTRACT.slice(
       CONTRACT.indexOf('export interface EditorialParticipationInput'),
-      CONTRACT.indexOf('const line ='));
+      CONTRACT.indexOf('export function lineageOrder'));
     expect(iface.length).toBeGreaterThan(40);
-    expect(iface).not.toMatch(/utterance|currentText|ask\b|input:/);
+    expect(iface).not.toMatch(/utterance|currentText/);
+  });
+
+  it('W4-C14b · ⭐⭐ no flat cross-object history is accepted as ordering authority', () => {
+    /* ⛔ W5 ruled no global chronology exists across Insight, Direction, Version
+       and discourse. A flat array would hand the CALLER authority to establish
+       one, and there is nowhere to put one: the input has four collections and
+       no record carries an `authoredAt`. */
+    const iface = CONTRACT.slice(
+      CONTRACT.indexOf('export interface EditorialParticipationInput'),
+      CONTRACT.indexOf('export function lineageOrder'));
+    expect(iface).toMatch(/turns:/);
+    expect(iface).toMatch(/versions:/);
+    expect(iface).not.toMatch(/history:/);
+    expect(CONTRACT).not.toMatch(/authoredAt/);
   });
 
   it('⛔ a producer with nothing to carry does not participate', () => {
     const empty = editorialCandidates({
-      locus: { chainId: 'C1', originalText: 'x' }, history: [], declaredAct: 'direction',
+      locus: { chainId: 'C1', originalText: 'x' },
+      turns: [], versions: [], insights: [], directions: [], declaredAct: 'direction',
     });
     expect(empty.map((b) => b.producerId)).toEqual([
       'retrieved.writer_editorial_locus', 'member.writer_editorial_act',
@@ -179,7 +224,6 @@ describe('C1 · editorial participation partitions by authorship', () => {
   });
 
   it('⛔ [SOURCE] declared, NOT registered — the producer registry is untouched', () => {
-    /* anti-vacuity: the registry really has producers */
     expect(PRODUCER_IDS.length).toBeGreaterThan(30);
     for (const id of EDITORIAL_PRODUCER_IDS) {
       expect(PRODUCER_IDS as readonly string[]).not.toContain(id);
@@ -194,17 +238,21 @@ describe('C1 · editorial participation partitions by authorship', () => {
 describe('D · ask_turns is the authoritative editorial conversation', () => {
   it('W4-C4 · ⭐⭐ a generic conversation history offered alongside is IGNORED', () => {
     const h = editorialHistory(
-      [{ speaker: 'author', body: 'Why?' }, { speaker: 'maia', body: 'Because.' }],
+      [{ turnIndex: 0, speaker: 'author', body: 'Why?' },
+       { turnIndex: 1, speaker: 'maia', body: 'Because.' }],
       [{ role: 'user', content: 'a Studio chat turn' },
        { role: 'assistant', content: 'a Focus turn' }],
     );
-    expect(h.map((r) => r.text)).toEqual(['Why?', 'Because.']);
+    expect(h.map((r) => r.body)).toEqual(['Why?', 'Because.']);
+    /* ⭐ and the record's OWN index survives — the only order discourse has */
+    expect(h.map((r) => r.turnIndex)).toEqual([0, 1]);
     expect(JSON.stringify(h)).not.toContain('Studio chat');
     expect(JSON.stringify(h)).not.toContain('Focus turn');
   });
 
   it('W4-C4b · authorship survives the mapping', () => {
-    const h = editorialHistory([{ speaker: 'author', body: 'a' }, { speaker: 'maia', body: 'b' }]);
+    const h = editorialHistory([{ turnIndex: 0, speaker: 'author', body: 'a' },
+                                { turnIndex: 1, speaker: 'maia', body: 'b' }]);
     expect(h.map((r) => r.author)).toEqual(['member', 'maia']);
   });
 
@@ -281,16 +329,77 @@ describe('F · a Direction is declared by the member, never classified', () => {
    G · MAIA'S OUTCOME
    ══════════════════════════════════════════════════════════════════════════ */
 
+const CALL = (input: unknown, name = EDITORIAL_TOOL_NAME) =>
+  ({ type: 'tool_use' as const, id: 't1', name, input });
+const TEXT = (text: string) => ({ type: 'text' as const, text });
+
+describe('A · the tool geometry, on the blocks that actually arrived', () => {
+  it('W4-C13 · ⭐⭐ a plain object presented without a tool call is not an answer', () => {
+    expect(admitEditorialToolEnvelope([TEXT('{"kind":"reply_only","reply":"r"}')]))
+      .toEqual({ ok: false, reason: 'not_through_tool' });
+    expect(admitEditorialToolEnvelope([])).toEqual({ ok: false, reason: 'not_through_tool' });
+  });
+
+  it('W4-C14 · ⭐⭐ two editorial_outcome calls are MALFORMED — never take-first', () => {
+    const r = admitEditorialToolEnvelope([
+      CALL({ kind: 'reply_only', reply: 'first' }),
+      CALL({ kind: 'reply_only', reply: 'second' }),
+    ]);
+    expect(r).toEqual({ ok: false, reason: 'malformed' });
+    expect(JSON.stringify(r)).not.toContain('first');
+  });
+
+  it('W4-C14b · ⛔ the right tool beside another tool is also malformed', () => {
+    expect(admitEditorialToolEnvelope([
+      CALL({ kind: 'reply_only', reply: 'r' }),
+      CALL({ anything: true }, 'some_other_tool'),
+    ])).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  it('W4-C14c · ⛔ some other tool alone is malformed, not "no tool"', () => {
+    expect(admitEditorialToolEnvelope([CALL({ x: 1 }, 'revision_outcome')]))
+      .toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  it('⭐⭐ prose may ARRIVE; prose carries zero authority to create an act', () => {
+    /* ⭐ The corrected law. Text blocks are VISIBLE to the envelope parser —
+       that visibility is how their zero weight is proved — and are never
+       promoted, merged, or used to repair a malformed input. */
+    const withProse = admitEditorialToolEnvelope([
+      TEXT("Try: 'He stayed there, held by the river.'"),
+      CALL({ kind: 'reply_only', reply: 'I would leave this alone.' }),
+      TEXT('Another stray thought.'),
+    ]);
+    expect(withProse).toEqual({
+      ok: true, outcome: { kind: 'reply_only', reply: 'I would leave this alone.' } });
+    /* ⛔ and a text block cannot REPAIR a malformed tool input */
+    expect(admitEditorialToolEnvelope([
+      TEXT('{"kind":"reply_only","reply":"rescued"}'),
+      CALL({ kind: 'reply_only' }),
+    ])).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  it('⛔ no vendor termination vocabulary is consulted', () => {
+    expect(CONTRACT).not.toMatch(/stopReason|stop_reason|end_turn|max_tokens/);
+  });
+
+  it('⛔ `not_through_tool` is unreachable once a tool call exists', () => {
+    expect(admitEditorialToolEnvelope([CALL('not an object')]))
+      .toEqual({ ok: false, reason: 'malformed' });
+    expect(admitEditorialToolInput(null)).toEqual({ ok: false, reason: 'malformed' });
+  });
+});
+
 describe('G · one reply, at most one candidate formulation', () => {
   it('W4-C7 · ⭐⭐ reply_only creates no ProposalVersion', () => {
-    const a = admitEditorialOutcome({ kind: 'reply_only', reply: 'I would leave this alone.' });
+    const a = admitEditorialToolInput({ kind: 'reply_only', reply: 'I would leave this alone.' });
     expect(a.ok).toBe(true);
     const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
     expect(plan.atomic.map((w) => w.write)).toEqual(['append_maia_turn']);
   });
 
   it('W4-C8 · ⭐ reply_with_proposal permits exactly ONE candidate', () => {
-    const a = admitEditorialOutcome({
+    const a = admitEditorialToolInput({
       kind: 'reply_with_proposal', reply: 'The repetition is doing the work.',
       proposal: { replacementText: 'He stayed there, held by the river.', rationale: 'Quieter.' },
     });
@@ -300,14 +409,14 @@ describe('G · one reply, at most one candidate formulation', () => {
   });
 
   it('W4-C8b · ⛔ an array of proposals is refused — the substrate has no branch', () => {
-    expect(admitEditorialOutcome({
+    expect(admitEditorialToolInput({
       kind: 'reply_with_proposal', reply: 'Three options:',
       proposal: [{ replacementText: 'a' }, { replacementText: 'b' }],
     })).toEqual({ ok: false, reason: 'multiple_proposals' });
   });
 
   it('W4-C9 · ⭐⭐ the candidate carries the INVOCATION predecessor, unchanged', () => {
-    const a = admitEditorialOutcome({
+    const a = admitEditorialToolInput({
       kind: 'reply_with_proposal', reply: 'r', proposal: { replacementText: 'w' } });
     const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
     const v = plan.atomic.find((w) => w.write === 'append_maia_version')!;
@@ -315,7 +424,7 @@ describe('G · one reply, at most one candidate formulation', () => {
   });
 
   it('W4-C9b · a zero-version chain authors a root', () => {
-    const a = admitEditorialOutcome({
+    const a = admitEditorialToolInput({
       kind: 'reply_with_proposal', reply: 'r', proposal: { replacementText: 'w' } });
     const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome,
       { ...INVOCATION, authoredAgainstVersionId: null });
@@ -340,7 +449,7 @@ describe('G · one reply, at most one candidate formulation', () => {
   });
 
   it('W4-C11 · ⭐⭐ prose containing quoted wording is NOT a ProposalVersion', () => {
-    const a = admitEditorialOutcome({
+    const a = admitEditorialToolInput({
       kind: 'reply_only',
       reply: "Try: 'He stayed there, held by the river.' — that keeps the image.",
     });
@@ -350,19 +459,34 @@ describe('G · one reply, at most one candidate formulation', () => {
     expect(JSON.stringify(plan)).not.toContain('append_maia_version');
   });
 
-  it('W4-C11b · ⛔ [SOURCE] the admitter cannot see prose — there is no text parameter', () => {
-    expect(CONTRACT).toMatch(/export function admitEditorialOutcome\(envelope: unknown\)/);
-    expect(CONTRACT).not.toMatch(/admitEditorialOutcome\([^)]*text/);
-    /* and nothing anywhere extracts quoted wording */
-    expect(CONTRACT).not.toMatch(/\/\["']\.\*\?\["']\/|match\(\/.*\['"\]/);
+  it('W4-C11b · ⭐⭐ [SOURCE] prose is visible to the ENVELOPE and reaches no outcome', () => {
+    /* ⚠️ THIS OBLIGATION WAS REWRITTEN, NOT DELETED. It used to assert *"the
+       admitter cannot see prose — there is no text parameter"*, and the founder
+       withdrew that law as TOO STRONG (2026-09-14): the envelope parser must see
+       the block geometry in order to PROVE that text blocks carry zero weight.
+       A law stated as blindness cannot be falsified; a law stated as authority
+       can.
+
+           Prose may arrive; prose carries ZERO AUTHORITY
+           to create a semantic editorial act.
+
+       ⭐ So the split is the obligation: the ENVELOPE sees blocks, and the
+       function that builds the semantic outcome receives only a tool input. */
+    expect(CONTRACT).toMatch(
+      /export function admitEditorialToolEnvelope\(\s*blocks: readonly StructuredBlock\[\],\s*\)/);
+    expect(CONTRACT).toMatch(/export function admitEditorialToolInput\(input: unknown\)/);
+    /* ⛔ the outcome builder never receives a block, a text, or a completion */
+    expect(CONTRACT).not.toMatch(/admitEditorialToolInput\([^)]*(blocks|text|completion)/);
+    /* ⛔ and nothing anywhere reads a text block's contents for meaning */
+    expect(CONTRACT).not.toMatch(/b\.text|\.type === 'text'/);
   });
 
   it('W4-C12 · ⭐⭐ an RC-GEN-01 section outcome cannot narrow into this one', () => {
-    expect(admitEditorialOutcome({
+    expect(admitEditorialToolInput({
       kind: 'proposals',
       proposals: [{ sectionId: 's1', proposedText: 'whole section', reason: 'r' }],
     })).toEqual({ ok: false, reason: 'section_scoped_outcome' });
-    expect(admitEditorialOutcome({
+    expect(admitEditorialToolInput({
       kind: 'reply_with_proposal', reply: 'r',
       proposal: { sectionId: 's1', replacementText: 'w' },
     })).toEqual({ ok: false, reason: 'section_scoped_outcome' });
@@ -374,17 +498,41 @@ describe('G · one reply, at most one candidate formulation', () => {
     expect(EDITORIAL_TOOL_NAME).toBe('editorial_outcome');
   });
 
-  it('⛔ prose is not an answer — a bare string or a text block is refused', () => {
-    expect(admitEditorialOutcome('Because the repetition carries it.'))
-      .toEqual({ ok: false, reason: 'not_through_tool' });
-    expect(admitEditorialOutcome(null)).toEqual({ ok: false, reason: 'not_through_tool' });
-    expect(admitEditorialOutcome({ kind: 'reply_only' })).toEqual({ ok: false, reason: 'malformed' });
-    expect(admitEditorialOutcome({ kind: 'something_else', reply: 'r' }))
+  it('⛔ a malformed input is malformed — `not_through_tool` belongs to the envelope', () => {
+    /* ⚠️ REWRITTEN WITH W4-1.1. This used to expect `not_through_tool` from a
+       bare string, which is what the pre-seal admitter returned — and that was
+       the defect: `not_through_tool` meant roughly *"not an object"* rather than
+       *"MAIA did not answer through the required tool"*. The tool question is
+       now answered one layer up, where the blocks are. */
+    expect(admitEditorialToolInput('Because the repetition carries it.'))
+      .toEqual({ ok: false, reason: 'malformed' });
+    expect(admitEditorialToolInput(null)).toEqual({ ok: false, reason: 'malformed' });
+    expect(admitEditorialToolInput({ kind: 'reply_only' }))
+      .toEqual({ ok: false, reason: 'malformed' });
+    expect(admitEditorialToolInput({ kind: 'something_else', reply: 'r' }))
       .toEqual({ ok: false, reason: 'malformed' });
   });
 
+  it('E · ⭐ a blank reply is not a reply; rationale is absent OR nonblank', () => {
+    expect(admitEditorialToolInput({ kind: 'reply_only', reply: '   ' }))
+      .toEqual({ ok: false, reason: 'malformed' });
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_proposal', reply: 'r',
+      proposal: { replacementText: 'w', rationale: '' },
+    })).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  it('E · ⭐⭐ an EMPTY replacementText stays lawful — a deletion is a formulation', () => {
+    const a = admitEditorialToolInput({
+      kind: 'reply_with_proposal', reply: 'Cut it.', proposal: { replacementText: '' } });
+    expect(a.ok).toBe(true);
+    const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
+    const v = plan.atomic.find((w) => w.write === 'append_maia_version')!;
+    expect('replacementText' in v && v.replacementText).toBe('');
+  });
+
   it('⛔ a proposal riding along with reply_only is a contradiction, not a bonus', () => {
-    expect(admitEditorialOutcome({
+    expect(admitEditorialToolInput({
       kind: 'reply_only', reply: 'r', proposal: { replacementText: 'w' },
     })).toEqual({ ok: false, reason: 'malformed' });
   });
@@ -420,16 +568,22 @@ describe('lifecycle · withdrawal removes bindings, never authored acts', () => 
 
   it('⭐ ordering: member turn before cognition; MAIA persists only after admission', () => {
     expect(memberActPlan({ act: 'discourse', text: 'x', refersTo: null }).beforeCognition).toBe(true);
-    const a = admitEditorialOutcome({ kind: 'reply_only', reply: 'r' });
+    const a = admitEditorialToolInput({ kind: 'reply_only', reply: 'r' });
     expect(maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION)
       .afterAdmission).toBe(true);
   });
 });
 
 describe('sanctuary · ordinary, because no act exists to make it otherwise', () => {
-  it('⛔ no posture is fabricated where the surface supplies no act', () => {
-    expect(editorialPosture(false))
-      .toEqual({ sanctuary: false, source: 'ordinary_no_act_available' });
-    expect(editorialPosture(true)).toEqual({ sanctuary: true, source: 'member_act' });
+  it('⛔⛔ there is no parameter — a caller cannot assert a Sanctuary act', () => {
+    /* ⚠️ W4-1.1. The first cut took a boolean and turned `true` into
+       `{ sanctuary: true, source: 'member_act' }`, pre-authorizing an act that
+       does not exist on the word of a caller. A parameter is not a signal; it
+       is a place a future caller can assert consent that was never given. */
+    expect(editorialPosture()).toEqual({
+      sanctuary: false, source: 'ordinary_no_act_available' });
+    expect(editorialPosture.length).toBe(0);
+    expect(CONTRACT).toMatch(/export function editorialPosture\(\): \{/);
+    expect(CONTRACT).not.toMatch(/member_act/);
   });
 });

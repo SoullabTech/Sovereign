@@ -40,6 +40,7 @@
  */
 
 import type { AskAnchor } from '../ask/anchor';
+import type { StructuredBlock } from '@/lib/ai/structured/types';
 import type { AuthoredBy, Authority, ParticipationClass } from '@/lib/maia/canonical-turn';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -184,23 +185,78 @@ export interface EditorialCandidateBlock {
 }
 
 /**
- * ⭐⭐ THE OBJECT KINDS STAY VISIBLE INSIDE A HISTORY BLOCK.
+ * ⭐⭐ THE OBJECT KINDS STAY VISIBLE INSIDE A HISTORY BLOCK — AND SO DO THE
+ * RELATIONSHIPS THE AUTHORS CREATED.
  *
  * Partitioning by authorship does NOT license flattening. Two records may share
  * a block because their canonical provenance axes agree; they do not thereby
  * become the same object.
  *
  *     Direction  ≠  turn  ≠  ProposalVersion  ≠  Insight
+ *
+ * ⚠️ W4-1.1, FOUNDER REVIEW OF 7a3e394b3. The first cut carried
+ * `{ kind, author, text, refersTo? }` — one shape for four objects — and it
+ * re-flattened ontology W5 spent several acts separating. It admitted a
+ * member-authored Insight, a turn carrying `refersTo`, a Version carrying
+ * `refersTo`; and the renderer DROPPED `refersTo` entirely while a Version
+ * carried neither its identity nor its `supersedes`. So this durable fact
+ *
+ *     Direction D · "That one, but softer." · refersTo = V1
+ *
+ * reached cognition as `[the writer directed] That one, but softer.` — the exact
+ * authored reference gone — and `V1 → V2 → V3` arrived as three unlabelled
+ * strings. ⭐⭐ THE GOVERNING SENTENCE WAS BEING VIOLATED QUIETLY: *authorship
+ * survived, but the authored relationships did not.*
+ *
+ *     Preserving authorship is not enough. Canonical cognition must receive the
+ *     relationships the authors actually created.
  */
 export type EditorialObjectKind = 'insight' | 'direction' | 'version' | 'turn';
 
-export interface EditorialRecord {
-  readonly kind: EditorialObjectKind;
-  readonly author: 'member' | 'maia';
-  readonly text: string;
-  /** Present on a Direction that named an earlier formulation. ⛔ Never inferred. */
-  readonly refersTo?: string | null;
+/**
+ * ⭐ MAIA noticed something. ⛔ `author` is a LITERAL, so a member-authored
+ * Insight is not a value to reject — it is a shape that cannot be written.
+ */
+export interface InsightRecord {
+  readonly kind: 'insight';
+  readonly id: string;
+  readonly author: 'maia';
+  readonly observation: string;
 }
+
+/** ⭐ An instruction, carrying the formulation it was explicitly ABOUT. */
+export interface DirectionRecord {
+  readonly kind: 'direction';
+  readonly id: string;
+  readonly author: 'member' | 'maia';
+  readonly instruction: string;
+  /** ⛔⛔ A REFERENCE, NEVER A SUCCESSION — and it must SURVIVE into cognition. */
+  readonly refersTo: string | null;
+}
+
+/** ⭐ Candidate wording, carrying its identity and what it succeeded. */
+export interface VersionRecord {
+  readonly kind: 'version';
+  readonly id: string;
+  readonly author: 'member' | 'maia';
+  readonly wording: string;
+  /** ⛔ The authored predecessor. `null` only for the chain's root. */
+  readonly supersedes: string | null;
+}
+
+/**
+ * ⭐ One thing said. ⛔ NO `refersTo` AND NO `supersedes` — a turn that could
+ * carry either would let discourse assert a relationship nobody authored.
+ */
+export interface TurnRecord {
+  readonly kind: 'turn';
+  readonly turnIndex: number;
+  readonly author: 'member' | 'maia';
+  readonly body: string;
+}
+
+export type EditorialRecord =
+  | InsightRecord | DirectionRecord | VersionRecord | TurnRecord;
 
 /** Which producer an editorial record belongs to. ⛔ Authorship decides, alone. */
 export function producerForRecord(r: EditorialRecord): EditorialProducerId {
@@ -217,17 +273,86 @@ export const KIND_LABEL: Record<EditorialObjectKind, string> = {
   turn: 'said',
 };
 
+/**
+ * ⭐⭐ W4-1.1 · THE COLLECTIONS ARRIVE BY THEIR LAWFUL STRUCTURES.
+ *
+ * ⛔ NOT ONE FLAT `EditorialRecord[]`. A single array quietly hands the CALLER
+ * authority to establish one cross-object sequence, and W5 expressly ruled that
+ * no global chronology exists across Insight, Direction, Version and discourse
+ * turns. A contract that accepts a flat array and prints it in caller order has
+ * reintroduced the timeline by accepting one.
+ *
+ *     turns      ordered by `turn_index`      — the record's own order
+ *     versions   ordered STRUCTURALLY         — by `supersedes`, never a clock
+ *     insights   no order law exists          — presentation order only
+ *     directions no order law exists          — presentation order only
+ *
+ * ⛔ And nothing here reads an `authoredAt`: there is no such field on any of
+ * these records, which is the strongest available form of the ban.
+ */
 export interface EditorialParticipationInput {
   /** The chain's immutable locus — the writer's own wording, retrieved. */
   readonly locus: { readonly chainId: string; readonly originalText: string };
-  /** Everything already authored in this exchange. ⛔ NOT the current utterance. */
-  readonly history: readonly EditorialRecord[];
+  /** ⭐ Discourse, by the record's own index. ⛔ NOT the current utterance. */
+  readonly turns: readonly TurnRecord[];
+  /** ⭐ Candidate wording. Ordered structurally below, never as given. */
+  readonly versions: readonly VersionRecord[];
+  readonly insights: readonly InsightRecord[];
+  readonly directions: readonly DirectionRecord[];
   /** ⭐ The member-DECLARED kind of the act being performed right now. */
   readonly declaredAct: MemberActKind;
 }
 
-const line = (r: EditorialRecord): string =>
-  `- [${r.author === 'member' ? 'the writer' : 'MAIA'} ${KIND_LABEL[r.kind]}] ${r.text}`;
+/**
+ * ⭐ SUCCESSION ORDER, FROM `supersedes` ALONE.
+ *
+ * ⛔ Not by a clock and not as handed over. A version whose predecessor is not
+ * present stays in the tail rather than being dropped: ⛔ omitting it would
+ * silently delete an authored formulation to make a list look tidy.
+ */
+export function lineageOrder(
+  versions: readonly VersionRecord[],
+): readonly VersionRecord[] {
+  const byPredecessor = new Map<string | null, VersionRecord>();
+  for (const v of versions) byPredecessor.set(v.supersedes, v);
+  const ordered: VersionRecord[] = [];
+  const seen = new Set<string>();
+  let cursor: string | null = null;
+  for (;;) {
+    const next: VersionRecord | undefined = byPredecessor.get(cursor);
+    if (!next || seen.has(next.id)) break;
+    ordered.push(next);
+    seen.add(next.id);
+    cursor = next.id;
+  }
+  /* ⛔ Anything the chain could not reach is APPENDED, never discarded. */
+  for (const v of versions) if (!seen.has(v.id)) ordered.push(v);
+  return ordered;
+}
+
+/**
+ * ⭐⭐ ONE RECORD, RENDERED WITH ITS RELATIONSHIP INTACT.
+ *
+ * ⛔ The relationship is not decoration. A later Direction referring explicitly
+ * to V1 reaches MAIA without the structural fact needed to know what V1 IS,
+ * unless the Version carried its own identity when it arrived.
+ */
+export function renderRecord(r: EditorialRecord): string {
+  const who = r.author === 'member' ? 'the writer' : 'MAIA';
+  switch (r.kind) {
+    case 'insight':
+      return `- [${who} ${KIND_LABEL.insight}] ${r.observation}`;
+    case 'direction':
+      return `- [${who} ${KIND_LABEL.direction}`
+        + `${r.refersTo !== null ? `, about ${r.refersTo}` : ''}] ${r.instruction}`;
+    case 'version':
+      return `- [${who} ${KIND_LABEL.version} ${r.id}`
+        + `${r.supersedes !== null ? `, succeeding ${r.supersedes}` : ', the first'}]`
+        + ` ${r.wording}`;
+    case 'turn':
+      return `- [${who} ${KIND_LABEL.turn}] ${r.body}`;
+  }
+}
 
 /**
  * Partition the editorial exchange into canonical candidates.
@@ -240,6 +365,9 @@ const line = (r: EditorialRecord): string =>
  * ⛔ AND A BLOCK IS OMITTED RATHER THAN EMPTIED. A producer with nothing to
  * carry does not participate; an empty block would tell MIPA something
  * participated and tell MAIA nothing.
+ *
+ * ⭐ Each collection is rendered UNDER ITS OWN HEADING inside the block, so the
+ * block never reads as one chronological stream of four different kinds of act.
  */
 export function editorialCandidates(
   input: EditorialParticipationInput,
@@ -254,25 +382,35 @@ export function editorialCandidates(
     },
   ];
 
-  const member = input.history.filter((r) => r.author === 'member');
-  const maia = input.history.filter((r) => r.author === 'maia');
+  const side = (author: 'member' | 'maia') => {
+    /* ⭐ Each collection in ITS OWN order law — and never merged into one. */
+    const turns = input.turns.filter((t) => t.author === author)
+      .slice().sort((a, b) => a.turnIndex - b.turnIndex);
+    const versions = lineageOrder(input.versions).filter((v) => v.author === author);
+    const insights = input.insights.filter((i) => i.author === author);
+    const directions = input.directions.filter((d) => d.author === author);
+    return { turns, versions, insights, directions,
+             count: turns.length + versions.length + insights.length + directions.length };
+  };
 
-  if (member.length > 0) {
-    blocks.push({
-      producerId: 'member.writer_editorial_history',
-      itemCount: member.length,
-      text: '[What the writer has said and done in this exchange]\n'
-        + member.map(line).join('\n'),
-    });
-  }
-  if (maia.length > 0) {
-    blocks.push({
-      producerId: 'system.writer_editorial_history',
-      itemCount: maia.length,
-      text: '[What you have said and done in this exchange]\n'
-        + maia.map(line).join('\n'),
-    });
-  }
+  const compose = (
+    producerId: EditorialProducerId, heading: string,
+    s: ReturnType<typeof side>,
+  ) => {
+    if (s.count === 0) return;
+    const parts = [heading];
+    if (s.insights.length) parts.push('Observations:', ...s.insights.map(renderRecord));
+    if (s.directions.length) parts.push('Directions:', ...s.directions.map(renderRecord));
+    if (s.versions.length) parts.push('Candidate wording, in succession:',
+      ...s.versions.map(renderRecord));
+    if (s.turns.length) parts.push('Said, in order:', ...s.turns.map(renderRecord));
+    blocks.push({ producerId, itemCount: s.count, text: parts.join('\n') });
+  };
+
+  compose('member.writer_editorial_history',
+    '[What the writer has said and done in this exchange]', side('member'));
+  compose('system.writer_editorial_history',
+    '[What you have said and done in this exchange]', side('maia'));
 
   blocks.push({
     producerId: 'member.writer_editorial_act',
@@ -315,6 +453,8 @@ export const FORBIDDEN_FOR_EDITORIAL_TURNS = [
 ] as const;
 
 export interface AskTurnRecord {
+  /** ⭐ `ask_turns.turn_index` — minted in the INSERT, and the only order. */
+  readonly turnIndex: number;
   readonly speaker: 'author' | 'maia';
   readonly body: string;
 }
@@ -331,12 +471,16 @@ export interface AskTurnRecord {
 export function editorialHistory(
   askTurns: readonly AskTurnRecord[],
   genericConversation: readonly { role: string; content: string }[] = [],
-): readonly EditorialRecord[] {
+): readonly TurnRecord[] {
   void genericConversation;
   return askTurns.map((t) => ({
     kind: 'turn' as const,
+    /* ⭐ THE RECORD'S OWN INDEX, carried forward. ⛔ Not a position in whatever
+       array arrived — the turn store mints `turn_index` inside its INSERT, and
+       that is the only order discourse has. */
+    turnIndex: t.turnIndex,
     author: t.speaker === 'author' ? ('member' as const) : ('maia' as const),
-    text: t.body,
+    body: t.body,
   }));
 }
 
@@ -490,7 +634,15 @@ export type EditorialOutcome =
     };
 
 export type OutcomeRefusal =
-  /** ⛔ No tool envelope. Text blocks carry zero evidentiary weight. */
+  /**
+   * ⛔ MAIA DID NOT ANSWER THROUGH THE REQUIRED TOOL.
+   *
+   * ⚠️ W4-1.1, FOUNDER REVIEW OF 7a3e394b3. This used to mean roughly *"not an
+   * object"*: `admitEditorialOutcome` received an arbitrary value and could not
+   * distinguish zero tool calls, the wrong tool, two `editorial_outcome` calls,
+   * or the right tool beside an unexpected second one. The structured-envelope
+   * law was ASSERTED and not encoded. `admitEditorialToolEnvelope` encodes it.
+   */
   | 'not_through_tool'
   /** The envelope does not match the declared geometry. ⛔ Never repaired. */
   | 'malformed'
@@ -503,18 +655,6 @@ export type OutcomeAdmission =
   | { readonly ok: true; readonly outcome: EditorialOutcome }
   | { readonly ok: false; readonly reason: OutcomeRefusal };
 
-/**
- * Admit one structured outcome.
- *
- * ⛔⛔ `text` IS NOT A PARAMETER, AND THAT IS THE WHOLE OF W4-C11. A function
- * that could see MAIA's prose is a function that could be asked to look in it
- * for quoted wording, and then the SYSTEM would be deciding which of her words
- * were a candidate formulation. The envelope is the only channel.
- *
- * ⛔ AND RC-GEN-01's SHAPE IS REFUSED BY NAME rather than adapted. `sectionId` /
- * `proposedText` / `proposals[]` arriving here is a different object, and
- * narrowing it into this one would be the translation layer the ruling forbids.
- */
 /** ⛔ The RC-GEN-01 geometry, by name, at whatever depth it appears. */
 const SECTION_SCOPED_KEYS = ['proposals', 'sectionId', 'proposedText'] as const;
 /** ⭐ `additionalProperties: false` is a RUNTIME obligation, not decoration. */
@@ -526,9 +666,72 @@ const sectionScoped = (o: Record<string, unknown>): boolean =>
 const unknownKey = (o: Record<string, unknown>, allowed: readonly string[]): boolean =>
   Object.keys(o).some((k) => !allowed.includes(k));
 
-export function admitEditorialOutcome(envelope: unknown): OutcomeAdmission {
-  if (!envelope || typeof envelope !== 'object') return { ok: false, reason: 'not_through_tool' };
-  const r = envelope as Record<string, unknown>;
+/**
+ * ⭐⭐ W4-1.1 · A · THE TOOL GEOMETRY, ENFORCED ON THE BLOCKS THAT ARRIVED.
+ *
+ * `toolChoice` asks a provider for a tool call. It does not GUARANTEE the
+ * geometry, and a caller that assumes it does will one day take the first of two
+ * answers and call it the answer.
+ *
+ *     zero editorial_outcome calls        → not_through_tool
+ *     exactly one, and nothing else       → inspect its input
+ *     two editorial_outcome calls         → malformed   ⛔ never take-first
+ *     editorial_outcome + another tool    → malformed
+ *     some other tool only                → malformed
+ *
+ * ⭐⭐ AND THE CORRECTED LAW (founder, 2026-09-14). *"The admitter cannot see
+ * prose"* was too strong: the envelope parser MUST see the block geometry in
+ * order to prove that text blocks have zero weight. The law is not that prose is
+ * invisible —
+ *
+ *     Prose may arrive; prose carries ZERO AUTHORITY
+ *     to create a semantic editorial act.
+ *
+ * — which is both stronger and actually falsifiable. Text blocks are visible
+ * here, counted by nothing, and ⛔ never promoted into the outcome, never merged
+ * with one, and never used to repair a malformed tool input.
+ *
+ * ⛔ NO VENDOR TERMINATION VOCABULARY. Nothing reads `stopReason`: the semantic
+ * fact is the structured block that arrived, and a provider's word for how it
+ * stopped is not evidence about what it said.
+ */
+export function admitEditorialToolEnvelope(
+  blocks: readonly StructuredBlock[],
+): OutcomeAdmission {
+  const calls = blocks.filter(
+    (b): b is Extract<StructuredBlock, { type: 'tool_use' }> => b.type === 'tool_use');
+
+  /* ⛔ Text-only is not an answer under a forced tool contract. It is the shape
+     a model produces when it DECLINED the contract, and admitting it would let
+     prose become a proposal. */
+  if (calls.length === 0) return { ok: false, reason: 'not_through_tool' };
+
+  const named = calls.filter((c) => c.name === EDITORIAL_TOOL_NAME);
+  if (named.length === 0) return { ok: false, reason: 'malformed' };
+  /* ⛔ TWO ANSWERS ARE NOT AN ANSWER, and neither is one answer beside an
+     unexpected second tool. Choosing among them is a resolver, and a resolver
+     that silently picks has decided something nobody authorized it to decide. */
+  if (named.length > 1 || calls.length > named.length) {
+    return { ok: false, reason: 'malformed' };
+  }
+
+  return admitEditorialToolInput(named[0].input);
+}
+
+/**
+ * Admit one structured outcome's INPUT — the object schema, enforced.
+ *
+ * ⛔ RC-GEN-01's SHAPE IS REFUSED BY NAME rather than adapted. `sectionId` /
+ * `proposedText` / `proposals[]` arriving here is a different object, and
+ * narrowing it into this one would be the translation layer the ruling forbids.
+ *
+ * ⛔ AND `not_through_tool` IS NOT REACHABLE FROM HERE. By the time this runs,
+ * the envelope has already proved a tool call happened; a non-object input is
+ * `malformed`, which is what it actually is.
+ */
+export function admitEditorialToolInput(input: unknown): OutcomeAdmission {
+  if (!input || typeof input !== 'object') return { ok: false, reason: 'malformed' };
+  const r = input as Record<string, unknown>;
 
   /* ⛔ The RC-GEN-01 geometry, named and refused before anything else is read. */
   if (sectionScoped(r)) return { ok: false, reason: 'section_scoped_outcome' };
@@ -553,7 +756,11 @@ export function admitEditorialOutcome(envelope: unknown): OutcomeAdmission {
     return { ok: false, reason: 'malformed' };
   }
 
-  if (typeof r.reply !== 'string' || r.reply.length === 0) return { ok: false, reason: 'malformed' };
+  /* ⭐ E · A BLANK REPLY IS NOT A REPLY. `' '` used to be admitted, which let the
+     pure contract accept a state the durable act could only refuse. */
+  if (typeof r.reply !== 'string' || r.reply.trim().length === 0) {
+    return { ok: false, reason: 'malformed' };
+  }
 
   if (r.kind === 'reply_only') {
     /* ⛔ A proposal riding along with `reply_only` is a contradiction, not a
@@ -566,9 +773,15 @@ export function admitEditorialOutcome(envelope: unknown): OutcomeAdmission {
     const p = r.proposal as Record<string, unknown> | undefined;
     if (!p || typeof p !== 'object') return { ok: false, reason: 'malformed' };
     if (typeof p.replacementText !== 'string') return { ok: false, reason: 'malformed' };
-    if (p.rationale !== undefined && typeof p.rationale !== 'string') {
+    /* ⭐ E · RATIONALE IS ABSENT **OR** NONBLANK — the shape `proposal_versions`
+       already enforces (`rationale IS NULL OR length(btrim(rationale)) > 0`).
+       ⛔ `''` was admitted here and could only ever be refused downstream. */
+    if (p.rationale !== undefined
+        && (typeof p.rationale !== 'string' || p.rationale.trim().length === 0)) {
       return { ok: false, reason: 'malformed' };
     }
+    /* ⭐ AND `replacementText: ''` STAYS LAWFUL. A deletion is a formulation —
+       the same reason `hydrateVersion` reads `formulation` verbatim. */
     return {
       ok: true,
       outcome: {
@@ -723,15 +936,24 @@ export function withdrawalEffect(): {
  * this contract does not fabricate one. ⛔ A posture invented to look complete
  * would be a consent record nobody gave.
  *
+ * ⚠️ W4-1.1, FOUNDER REVIEW. The first cut took a boolean and turned `true`
+ * into `{ sanctuary: true, source: 'member_act' }` — **pre-authorizing an act
+ * that does not exist**, on the word of a caller, with nothing verifying a
+ * member act anywhere. The ruling was narrower: *current Studio supplies no
+ * Sanctuary act → ordinary; future explicit Sanctuary support → a separate
+ * product act.* ⛔ A parameter is not a signal; it is a place a future caller
+ * can assert consent that was never given.
+ *
+ * ⭐ So there is no parameter. When Writer's Studio Sanctuary is actually
+ * designed, that act may amend this contract with a real verified signal.
+ *
  * ⭐ And because D removes generic conversation persistence for editorial turns,
  * canonical MAIA does not create a second retention path merely by being
  * canonical. ⛔ NO NEW AMBIENT WRITER MEMORY IS AUTHORIZED HERE.
  */
-export function editorialPosture(surfaceSuppliesSanctuaryAct: boolean): {
-  readonly sanctuary: boolean;
-  readonly source: 'member_act' | 'ordinary_no_act_available';
+export function editorialPosture(): {
+  readonly sanctuary: false;
+  readonly source: 'ordinary_no_act_available';
 } {
-  return surfaceSuppliesSanctuaryAct
-    ? { sanctuary: true, source: 'member_act' }
-    : { sanctuary: false, source: 'ordinary_no_act_available' };
+  return { sanctuary: false, source: 'ordinary_no_act_available' };
 }

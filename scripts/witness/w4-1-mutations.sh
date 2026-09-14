@@ -54,11 +54,21 @@ for m in "$ROOT"/scripts/witness/w4-1-mutations/*.py; do
     echo "  CRASHED  $name (transform failed rc=$trc)"; crashed=$((crashed+1)); continue
   fi
   out="$(timeout 300 npx jest "$SUITE" 2>&1)"; rc=$?
+  n="$(echo "$out" | grep -cE '^\s+●.*›')"
   if [ "$rc" -eq 0 ]; then
     echo "  SURVIVED $name"; survived=$((survived+1))
-  elif [ "$rc" -eq 1 ]; then
-    n="$(echo "$out" | grep -cE '^\s+●.*›')"
+  elif echo "$out" | grep -q 'Test suite failed to run'; then
+    # ⛔ A SUITE THAT DID NOT COMPILE JUDGED NOTHING. jest exits 1 either way, so
+    # a mutant that breaks the build would otherwise be reported as killed with
+    # zero obligations — killed for the wrong reason, which is the shape this
+    # programme keeps refusing. `M-W4-UTTERANCE-AS-HISTORY` did exactly that
+    # after the W4-1.1 seal changed the participation input.
+    echo "  CRASHED  $name (test suite failed to run — judged nothing)"
+    crashed=$((crashed+1))
+  elif [ "$rc" -eq 1 ] && [ "$n" -gt 0 ]; then
     echo "  killed   $name  ($n obligation/s)"; killed=$((killed+1))
+  elif [ "$rc" -eq 1 ]; then
+    echo "  CRASHED  $name (rc=1 with no named obligation)"; crashed=$((crashed+1))
   else
     echo "  CRASHED  $name (rc=$rc)"; crashed=$((crashed+1))
   fi
