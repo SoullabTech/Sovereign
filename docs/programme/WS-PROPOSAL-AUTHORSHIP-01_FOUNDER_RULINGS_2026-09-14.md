@@ -179,17 +179,22 @@ it is not adjusted to fit what was observed.
 ### ⭐ NEXT CELL — `Whole / passive scroll` · EXPECTED: **MUST STAY PUT**
 
 ```text
-⛔ DO NOT invoke SHOW CHANGE again.
-From the Whole-manuscript state, manually scroll AWAY from the revealed locus,
-then LEAVE THE CANVAS ALONE.
+1. Stay in Whole manuscript.
+2. Manually scroll WELL AWAY from the visible change locus.
+3. ⛔ Do NOT press SHOW CHANGE.
+4. Leave the canvas alone LONG ENOUGH to see whether anything repositions it.
 ```
+
+⛔ **The cell must not be contaminated by another navigation act.** A second asked return inside
+this cell would make the two properties inseparable again.
 
 ```text
 PASS   canvas remains where you manually left it
 FAIL   canvas autonomously returns / repositions toward the proposal locus
 ```
 
-⛔ Classify **only the observed behaviour.** No inference about mechanism from this cell.
+⛔ Classify **only the observed behaviour.** No inference about mechanism from this cell —
+⭐ **and on FAIL, no diagnosis.** The runtime observation is sealed first; cause is a separate act.
 
 **What it tests, and why it is not a repeat of the first two.** The asked-return cells ask whether
 navigation **arrives**. This cell asks whether ordinary user scrolling **remains sovereign** — or
