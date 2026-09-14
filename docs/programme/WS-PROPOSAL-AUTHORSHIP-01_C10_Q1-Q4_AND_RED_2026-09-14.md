@@ -129,8 +129,9 @@ REPAIR    ⛔ NOT IMPLEMENTED · ⛔ still not authorized by this seal alone
 MUTANT    owed AFTER green, not now
 C10       boundary unchanged      FR-W5 fully governing      OLD FAIL sealed · untouched
 
-OPEN      ⚠️ F1 — the ORIGINATING COMPLAINT ("Show Change doesn't open") remains
-             carried, not disposed. ⭐ This is the natural moment to answer it.
+F1        ✅ DISPOSED — wrong NAME, not wrong behaviour · label GO TO CHANGE
+             `…_F1_RULING_2026-09-14.md` · code in a separate micro-lane
+OPEN      ⚠️ PENDING-INTENT design ruling — member act vs machinery caused by the request
 ```
 
 > ⭐ The RED proves the capability is **absent**. It does not yet prove any particular repair is
