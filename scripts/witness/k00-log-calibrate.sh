@@ -14,14 +14,17 @@ REC="$OUT/CALIBRATION.md"; say(){ echo "$*" | tee -a "$REC"; }
 say "# unified-log calibration — $STAMP (instrument validation only; the sample is stratum LOG-CAL, never counted)"
 PROBE="$(ls -d "$ROOT"/log-probe-* 2>/dev/null | sort | tail -1)"
 [ -n "$PROBE" ] || { say "## STOP — no k00-log-probe.sh output under $ROOT; discovery (step A/B) must precede calibration"; exit 5; }
-DEVOPT="$(grep -oE -- '--device-udid|--device-name|--device\b' "$PROBE/log-collect-help.txt" | head -1 || true)"
+if grep -qE -- '--device-udid' "$PROBE/log-collect-help.txt"; then DEVOPT="--device-udid"; elif grep -qE -- '--device-name' "$PROBE/log-collect-help.txt"; then DEVOPT="--device-name"; elif grep -qE -- '--device\b' "$PROBE/log-collect-help.txt"; then DEVOPT="--device"; else DEVOPT=""; fi
 grep -qE -- '--start' "$PROBE/log-collect-help.txt" && WINOPT="--start" || { grep -qE -- '--last' "$PROBE/log-collect-help.txt" && WINOPT="--last"; } || WINOPT=""
-grep -qE -- '--archive' "$PROBE/log-show-help.txt" && grep -qE -- '--start' "$PROBE/log-show-help.txt" && SHOWOK=1 || SHOWOK=0
-say "## gate: probe $PROBE · collect device option: ${DEVOPT:-NONE} · collect window option: ${WINOPT:-NONE} · show --archive/--start: $SHOWOK"
+# Condition 3 (founder ruling 2026-09-14): the collected archive must be readable back by the installed `log show`. The frozen
+# spelling `--archive` was wrong — the installed tool documents the archive as a POSITIONAL argument
+# (`usage: log show [options] <archive>`); the requirement is unchanged, only the CLI grammar is corrected.
+grep -qE 'usage: log show \[options\] <archive>' "$PROBE/log-show-help.txt" && grep -qE -- '--start' "$PROBE/log-show-help.txt" && SHOWOK=1 || SHOWOK=0
+say "## gate: probe $PROBE · collect device option: ${DEVOPT:-NONE} · collect window option: ${WINOPT:-NONE} · show <archive> positional + --start: $SHOWOK"
 [ -n "$DEVOPT" ] && [ -n "$WINOPT" ] && [ "$SHOWOK" = 1 ] || { say "## STOP — the installed log(1) does not document the required options; mechanism returned for ruling, nothing captured"; exit 5; }
-[ "$DEVOPT" = "--device" ] && DEVVAL="$UDID" || DEVVAL="$UDID"
+[ "$DEVOPT" = "--device-udid" ] || { say "## STOP — only --device-udid targets R1 unambiguously; installed help offers ${DEVOPT}; mechanism returned for ruling"; exit 5; }; DEVVAL="$UDID"
 # C. read-only posture, recorded before anything runs
-say "## commands this run will issue (verbatim): log collect $DEVOPT $DEVVAL $WINOPT <T0-5s> --output $OUT/device.logarchive · log show --archive … --start <T0> --end <T1> --style json"
+say "## commands this run will issue (verbatim): log collect $DEVOPT $DEVVAL $WINOPT <T0-5s> --output $OUT/device.logarchive · log show --start <T0> --end <T1> --style json $OUT/device.logarchive (ruling 2: default level only, no --info/--debug on the first read)"
 say "## never issued: log config · sysdiagnose · any debugger/profile/level change"
 # one bounded sample via the existing batch (its own daemon snapshots before/after apply)
 T0_EPOCH=$(date +%s); T0_LOCAL="$(date -r $((T0_EPOCH-5)) "+%Y-%m-%d %H:%M:%S")"; T0_ISO="$(date -u -r $T0_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
@@ -37,7 +40,9 @@ CMD=(log collect "$DEVOPT" "$DEVVAL" "$WINOPT" "$T0_LOCAL" --output "$OUT/device
 say "## collect: ${CMD[*]}"; CT0=$(date +%s); "${CMD[@]}" > "$OUT/collect-stdout.txt" 2>&1; CRC=$?; CT1=$(date +%s)
 say "## collect rc=$CRC · $((CT1-CT0)) s · archive size: $(du -sh "$OUT/device.logarchive" 2>/dev/null | cut -f1 || echo none)"; tail -5 "$OUT/collect-stdout.txt" | tee -a "$REC"
 [ $CRC -eq 0 ] && [ -d "$OUT/device.logarchive" ] || { say "## STOP — collect did not produce an archive; mechanism returned for ruling"; exit 6; }
-log show --archive "$OUT/device.logarchive" --start "$T0_LOCAL" --end "$T1_LOCAL" --style json > "$OUT/window.json" 2> "$OUT/show-stderr.txt"; SRC=$?
+# Ruling 1 precision: follow the help grammar literally — `log show [options] <archive>`, options first, archive last.
+# Ruling 2: first read at DEFAULT level only (no --info, no --debug); escalation, if any, is a separately recorded re-read.
+log show --start "$T0_LOCAL" --end "$T1_LOCAL" --style json "$OUT/device.logarchive" > "$OUT/window.json" 2> "$OUT/show-stderr.txt"; SRC=$?
 say "## show rc=$SRC · window.json $(du -sh "$OUT/window.json" | cut -f1) · window $((T1_EPOCH-T0_EPOCH+7)) s"
 # E. what was observed + time alignment to the journal (post-hoc filtering by known process names; no predicate was given to the tool)
 J="$(ls "$CALDIR"/journals/kernel00-*.jsonl 2>/dev/null | head -1)"

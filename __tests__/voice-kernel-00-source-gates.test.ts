@@ -497,6 +497,10 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(lcExec).not.toMatch(/log config|sysdiagnose|lldb|devicectl device process/);   // `--mode L` is the driver's Mode L, not a logging mode
     expect(lc.indexOf('STOP — the installed log(1) does not document')).toBeLessThan(lc.indexOf('log collect "$DEVOPT"'));
     expect(lc).toMatch(/LOG-CAL 1 --mode L --subject phase-a/);                    // exactly one bounded sample, its own stratum
+    expect(lc).toMatch(/usage: log show \\\[options\\\] <archive>/);                    // condition 3 in the installed grammar (positional archive), founder ruling 2026-09-14
+    expect(lcExec).not.toMatch(/log show --archive/);                                // the superseded spelling never runs
+    expect(lcExec).toMatch(/log show --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$OUT\/device\.logarchive"/); // options first, archive last, as documented
+    expect(lcExec).not.toMatch(/log show[^\n]*--(info|debug)/);                          // read level stays default until ruled
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
