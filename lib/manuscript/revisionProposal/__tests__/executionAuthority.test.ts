@@ -106,7 +106,15 @@ describe('refusal 1 · the control is absent, not disabled', () => {
        your manuscript". A consent surface may not contradict itself, and the
        sentence a reader skims was the false one. The claim now follows the
        authority. */
-    expect(PANEL).toMatch(/isInspectionOnly\(preview\) \? 'It describes ' : 'This will make '/);
+    /* ⛔ RESTATED AFTER THE COPY WAS RETIRED. The contradiction was "This will
+       make 1 change to the manuscript" above "It cannot be applied". The first
+       repair made the verb follow the authority; the founder then retired the
+       sentence entirely as machine-state language. The PROPERTY is unchanged
+       and is what this asserts: no claim of effect anywhere in the panel, and
+       the inspection statement present. */
+    expect(PANEL).not.toMatch(/will make/i);
+    expect(PANEL).not.toMatch(/change(s)? to the manuscript/i);
+    expect(PANEL).toMatch(/cannot be applied to your\s+manuscript/);
   });
 });
 

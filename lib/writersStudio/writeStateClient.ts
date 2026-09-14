@@ -13,7 +13,64 @@
  */
 
 import type { SectionAuthority } from './sectionAuthority';
-import type { ProposalWorkTarget } from '@/lib/manuscript/revisionProposal/proposalWork';
+/* ⛔ The param names come from the one identity contract — never inlined. */
+import {
+  CANVAS_PROPOSAL_PARAM,
+  CANVAS_PROPOSAL_CHAIN_PARAM,
+  CANVAS_PROPOSAL_VERSION_PARAM,
+} from '@/app/writers-studio/canvasIdentity';
+/* ⭐⭐ CUTOVER-01A · THE ROOM'S TARGET IS NOW THE CHAIN PROJECTION.
+   It carries `location`, which may be unavailable — and an unavailable
+   location NEVER means the proposal work is unavailable. The mount survives;
+   only the mark is withheld. */
+import type { ProposalWorkTarget as ChainProposalWorkTarget } from '@/lib/manuscript/proposalChain/proposalWorkTarget';
+import type { ProposalWorkTarget as LegacyProposalWorkTarget } from '@/lib/manuscript/revisionProposal/proposalWork';
+import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
+
+/**
+ * ⭐ The wire genuinely carries EITHER while the cutover is staged: `proposal=`
+ * still resolves the legacy target, the new chain+version pair resolves the
+ * projection. ⛔ Typing this as only the new shape would be a lie about the
+ * response, and the room would narrow on a fact the server never promised.
+ */
+export type ProposalWorkTarget = LegacyProposalWorkTarget | ChainProposalWorkTarget;
+
+/**
+ * ⭐⭐ THE ONE PLACE THE ROOM ASKS "MAY I MARK THIS?".
+ *
+ * ⛔ `null` NEVER means the proposal work is gone — the mount is already
+ * decided by then. It means only that this exact place cannot be truthfully
+ * marked in the Work as it stands, so nothing is drawn and no "show me where"
+ * is offered. The conversation continues either way.
+ */
+export function markableRange(t: ProposalWorkTarget): SpacedRange | null {
+  if ('location' in t) return t.location.located ? t.location.range : null;
+  return t.range;
+}
+
+/**
+ * ⭐⭐ WHERE THE ROOM MAY TAKE THE WRITER — the orientation law, in ONE place.
+ *
+ * ⚠️ THIS FUNCTION EXISTS BECAUSE A MUTANT SURVIVED. The first 01A.2 witness
+ * proved the rule against its OWN reimplementation of it, so a Canvas that
+ * oriented on an unlocated target — fabricating a range to move by — passed
+ * every obligation. A witness holding a private copy of the law tests the copy.
+ *
+ * ⛔ GATED ON A MARKABLE RANGE. This is the 01A law applied to MOVEMENT rather
+ * than to marking: no exact place, no mark, no "show me where" — and no arrival
+ * either. Taking a writer to a section we cannot point inside is motion without
+ * evidence, and it is worse than staying put because it looks like knowledge.
+ *
+ * ⭐ It reads whichever target the server resolved — legacy or chain/version —
+ * so the room can never take its bearings from a second proposal object.
+ */
+export function roomOrientation(
+  target: ProposalWorkTarget | null | undefined,
+): { readonly sectionId: string; readonly range: SpacedRange } | null {
+  if (!target) return null;
+  const range = markableRange(target);
+  return range ? { sectionId: target.sectionId, range } : null;
+}
 
 export interface WriteStateRow {
   id: string;
@@ -39,10 +96,23 @@ export interface WriteStateSection {
 export type WriteState =
   | { mode: 'section_aware'; version: number; rows: WriteStateRow[]; sections: WriteStateSection[] }
   /**
-   * ⭐ A GENUINE MOUNT BOUNDARY, not a visual variant of the editor: the
-   * PERSISTENCE AUTHORITY over one section has changed. `target` is present
-   * exactly when the mode is this one, so the room cannot enter proposal work
-   * without knowing what is being worked.
+   * ⭐ A GENUINE MOUNT BOUNDARY, not a visual variant of the editor. `target`
+   * is present exactly when the mode is this one, so the room cannot enter
+   * proposal work without knowing what is being worked.
+   *
+   * ⚠️ CORRECTED BY FOUNDER RULING, 2026-09-14. This said the mode meant *the
+   * PERSISTENCE AUTHORITY over one section has changed*. That is no longer
+   * always true, and leaving the sentence would have made the type description
+   * assert a fact the server had stopped guaranteeing.
+   *
+   *     mode: 'proposal_work'   proposal-work context is MOUNTED
+   *     SectionAuthority        whether persistence authority actually moved
+   *
+   * They coincide when the location is located. When it is unavailable the
+   * conversation is still mounted and every section keeps the authority it had
+   * — because a system that failed to establish the place has no basis to
+   * withhold the writer's own Work there. ⛔ Two facts, read from two fields;
+   * never infer the second from the first.
    */
   | { mode: 'proposal_work'; version: number; rows: WriteStateRow[];
       sections: WriteStateSection[]; target: ProposalWorkTarget }
@@ -106,15 +176,86 @@ export function chooseMount(
   }
 }
 
+/**
+ * ⭐⭐ CUTOVER-01A.2 · ONE TAGGED SELECTOR, TOTAL AND EXCLUSIVE.
+ *
+ * ⚠️ FOUNDER REVIEW OF 6fc919f7d, DEFECT. 01A's own standing said *`proposal=`
+ * keeps its own resolution untouched; the new pair wins wherever both appear.*
+ * The first half stopped being true the moment this function took only
+ * `{ chainId, versionId }`: a legacy `?proposal=<id>` URL still loaded the old
+ * panel, but every write-state read then carried NO selector at all, so the
+ * legacy path silently lost its `proposal_work` mount and authority while its
+ * routes and UI remained live.
+ *
+ *     keeping an old route PRESENT is not the same as
+ *     keeping its semantics REACHABLE
+ *
+ * ⛔ Parallel nullable arguments are how that happened — two optional
+ * parameters can both be absent, both be present, or disagree, and the type
+ * says nothing. A tagged union cannot be half-supplied, and there is exactly
+ * one query form per kind. ⛔ No translation, no adapter, and the two forms are
+ * NEVER sent together.
+ */
+export type ProposalSelector =
+  | { readonly kind: 'chain_version'; readonly chainId: string; readonly versionId: string }
+  | { readonly kind: 'legacy'; readonly proposalId: string };
+
+/**
+ * ⭐ Chain+version wins wherever both appear — the 01A precedence rule, in the
+ * one place that decides it rather than at each call site.
+ */
+export function proposalSelector(
+  focus: { chainId: string; versionId: string } | null,
+  legacyProposalId: string | null,
+): ProposalSelector | null {
+  if (focus) return { kind: 'chain_version', chainId: focus.chainId, versionId: focus.versionId };
+  if (legacyProposalId) return { kind: 'legacy', proposalId: legacyProposalId };
+  return null;
+}
+
+/**
+ * ⭐⭐ WHICH LEGACY PANEL THIS VISIT MAY MOUNT — and usually none.
+ *
+ * ⚠️ FOUNDER REVIEW OF 45cb0ec33, AND THE MOST SERIOUS OF THE THREE. 01A.2
+ * chose precedence once for `fetchWriteState`, and that was mistaken for
+ * choosing it once for the ROOM. With both identities in the URL the Canvas
+ * still read the raw legacy parameter for its preview hook, so:
+ *
+ *     Work · mount · orientation   →  chain C, version V
+ *     decision panel               →  legacy proposal OLD
+ *
+ * ⛔ That is not a visual disagreement. The old panel carries its own Accept
+ * Changes against `/revision-proposal/OLD/accept`, so the writer could be shown
+ * one proposal in the manuscript while the decision surface was able to act on
+ * a different one.
+ *
+ *     Choosing one proposal identity for the Work is insufficient if another
+ *     proposal identity still owns the decision panel.
+ *     ⭐ ONE VISIT GETS ONE PROPOSAL SUBJECT, EVERYWHERE.
+ *
+ * ⛔ This removes nothing: a `legacy` selector still yields its id, so the
+ * staged old path stays fully reachable on its own URL. It only stops the old
+ * panel from riding along beside a chain/version visit.
+ */
+export function legacyProposalFor(selector: ProposalSelector | null): string | null {
+  return selector && selector.kind === 'legacy' ? selector.proposalId : null;
+}
+
 /** GET the resolved state. A 404 is `no_draft`, not an error. */
 export async function fetchWriteState(
   manuscriptId: string,
   fetcher: (url: string) => Promise<Response>,
   /** ⛔ PW-2 · A SELECTOR ONLY. The server resolves everything it implies. */
-  proposalId?: string | null,
+  selector?: ProposalSelector | null,
 ): Promise<{ phase: 'ready' | 'error'; state: WriteState | null }> {
   try {
-    const q = proposalId ? `?proposal=${encodeURIComponent(proposalId)}` : '';
+    /* ⛔ EXACTLY ONE FORM. A request carrying both would ask the server to
+       choose, and precedence is the client's own rule to apply once. */
+    const q = !selector ? ''
+      : selector.kind === 'chain_version'
+        ? `?${CANVAS_PROPOSAL_CHAIN_PARAM}=${encodeURIComponent(selector.chainId)}`
+          + `&${CANVAS_PROPOSAL_VERSION_PARAM}=${encodeURIComponent(selector.versionId)}`
+        : `?${CANVAS_PROPOSAL_PARAM}=${encodeURIComponent(selector.proposalId)}`;
     const res = await fetcher(
       `/api/sovereign/manuscripts/${manuscriptId}/write-state${q}`);
     if (res.status === 404) return { phase: 'ready', state: { mode: 'no_draft' } };

@@ -86,31 +86,14 @@ export type AcceptOutcome =
   | { readonly outcome: 'refused'; readonly reason: ProposalRefusal };
 
 /**
- * ⭐ Occurrences of `needle`, counted without overlap.
+ * ⚠️ MOVED 2026-09-14. `occurrences` and `applyExactlyOnce` are NEUTRAL WORK
+ * LAW and now live in `@/lib/manuscript/exactText`. They were never part of
+ * this module's authority ontology — they answer whether exact characters
+ * occur exactly once, which is true regardless of who may change them.
  *
- * ⛔ NOT `indexOf`. "Found" is not "identified".
+ * ⛔ Re-exported here ONLY so consumers this lane has not ported keep working.
+ * ⛔ THE AUTHORITY VOCABULARY DOES NOT TRAVEL WITH THEM: nothing in the neutral
+ * module knows about `ExecutionAuthority` or `inspection_only`, and this
+ * re-export must not become a reason to keep reaching for this file.
  */
-export function occurrences(haystack: string, needle: string): number {
-  if (needle.length === 0) return 0;
-  let n = 0;
-  let i = haystack.indexOf(needle);
-  while (i !== -1) { n += 1; i = haystack.indexOf(needle, i + needle.length); }
-  return n;
-}
-
-export type ExactMatch =
-  | { readonly ok: true; readonly applied: string }
-  | { readonly ok: false; readonly reason: 'expected_text_absent' | 'expected_text_ambiguous' };
-
-/**
- * ⭐ THE EXACT-ONCE GUARD, pure — the one place that decides whether a proposal
- * still names something, so the law is falsifiable without a database.
- */
-export function applyExactlyOnce(
-  body: string, expected: string, replacement: string,
-): ExactMatch {
-  const n = occurrences(body, expected);
-  if (n === 0) return { ok: false, reason: 'expected_text_absent' };
-  if (n > 1) return { ok: false, reason: 'expected_text_ambiguous' };
-  return { ok: true, applied: body.replace(expected, replacement) };
-}
+export { occurrences, applyExactlyOnce, type ExactMatch } from '@/lib/manuscript/exactText';

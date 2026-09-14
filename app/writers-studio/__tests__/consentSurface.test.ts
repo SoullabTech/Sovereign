@@ -206,7 +206,23 @@ describe('F1-4 — ⭐⭐ the panel carries NO manuscript prose', () => {
     for (const f of [/change\.removed/, /change\.contextBefore/, /change\.contextAfter/]) {
       expect(src).not.toMatch(f);
     }
-    expect(src).toMatch(/Remove one exact passage/);
+    /* ⛔ RETIRED COPY, RESTATED AS THE PROPERTY. "Remove one exact passage"
+       was a machine-state sentence, and the founder's reading of what it
+       produced was "all I see is fixated crossed out. I don't know what is
+       going on." The panel now shows the affected SENTENCE, current and as it
+       would read — which is prose, and is exactly what F1-4 once forbade.
+
+       ⚠️ THAT NARROWING IS DELIBERATE AND FOUNDER-RULED. F1-4 was written
+       against a 140-code-point window cut mid-word, standing in for a Work the
+       writer could not see. The Work now renders the full section with the
+       locus marked; this is one sentence beside it. What F1-4 still forbids —
+       and what this asserts — is the panel reaching into the CHANGE payload
+       for prose, or deriving a locus of its own. */
+    expect(src).toMatch(/comparison\.current/);
+    expect(src).toMatch(/comparison\.wouldRead/);
+    expect(src).not.toMatch(/change\.(body|text|prose)/);
+    /* The comparison arrives already computed. The panel never searches. */
+    expect(src).not.toMatch(/indexOf|slice\(|sentenceComparison\(/);
   });
 
   it('⭐ so the consent channel carries LESS of the Work than before', () => {
@@ -271,7 +287,7 @@ describe('F1-1 · F1-5 · F1-6 — orientation, once, and never the Work', () =>
   it('⭐ `Show change` returns attention when the WRITER asks', () => {
     expect(CODE(CANVAS)).toMatch(/const showProposedChange = useCallback/);
     expect(CODE(SURFACE)).toMatch(/onShowChange\?\.\(\)/);
-    expect(CODE(SURFACE)).toMatch(/Show change/);
+    expect(CODE(SURFACE)).toMatch(/Show me where/);
   });
 
   it('⛔ F1-6 · navigation moves the writer and never the manuscript', () => {

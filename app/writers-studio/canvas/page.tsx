@@ -34,6 +34,7 @@ import {
   type ManuscriptResolution,
 } from '../canvasIdentity';
 import { proposalMove } from '@/lib/writersStudio/placeInWork';
+import { sentenceComparison } from '@/lib/writersStudio/proposalSentence';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
@@ -56,6 +57,10 @@ import {
   chooseMount,
   sectionEngine,
   fetchWriteState,
+  markableRange,
+  roomOrientation,
+  proposalSelector,
+  legacyProposalFor,
   type WriteState,
   type WriteMount,
 } from '@/lib/writersStudio/writeStateClient';
@@ -90,8 +95,10 @@ const PROPOSAL_MARK = 'A' as const;
 import FocusSetPanel, { FocusSetRefused } from '../field/FocusSetPanel';
 import { resolveFocusSet, type FocusSet } from '../field/focusSet';
 import { requestedOrigin } from '../workWithThis';
-import { requestedProposalId } from '../canvasIdentity';
+import { requestedProposalId, requestedProposalFocus, CANVAS_PROPOSAL_VERSION_PARAM } from '../canvasIdentity';
 import ProposedChange from '../ProposedChange';
+import { EditorialWorkspace } from '../EditorialWorkspace';
+import { workspaceSubject } from '@/lib/writersStudio/editorialWorkspace';
 import { useProposedChange } from '../useProposedChange';
 import { TREATMENTS, resolve as resolveMark } from '../field/fieldTreatments';
 import StructureReview from './StructureReview';
@@ -294,8 +301,30 @@ function CanvasRoom() {
   /* ⭐ EDITORIAL-WRITE-01A — one proposal, pointed at by id, shown beside the
      Work it would change. ⛔ Nothing appears unless the URL names one AND the
      server serves it; the routes 404 unless the write flag is constituted. */
-  const proposalId = searchParams ? requestedProposalId(searchParams) : null;
-  const proposed = useProposedChange(proposalId);
+  /* ⛔ THE RAW URL PARAMETER, and it governs nothing on its own. */
+  const rawLegacyProposalId = searchParams ? requestedProposalId(searchParams) : null;
+
+  /* ⭐⭐ CUTOVER-01A — the room names a CHAIN and the EXACT VERSION it is
+     showing. ⛔ Both or neither: a chain alone would let the room display
+     whatever is newest and call it the thing the writer was sent to. */
+  const proposalFocus = useMemo(
+    () => (searchParams ? requestedProposalFocus(searchParams) : null),
+    [searchParams]);
+
+  /* ⭐ ONE SELECTOR, chosen once. ⛔ Chain+version wins wherever both appear;
+     the legacy selector KEEPS reaching its own server resolution while the
+     cutover is staged — which is the half of 01A's standing that 6fc919f7d
+     silently stopped honouring. */
+  const selector = useMemo(
+    () => proposalSelector(proposalFocus, rawLegacyProposalId),
+    [proposalFocus, rawLegacyProposalId]);
+
+  /* ⭐⭐ CUTOVER-01A.3 · THE WHOLE ROOM TAKES ONE SUBJECT, NOT JUST THE WORK.
+     The legacy preview is fetched only when the selector actually resolved to
+     the legacy path — so a visit naming chain+version never mounts the old
+     panel, and never exposes its Accept Changes against a different proposal.
+     ⛔ The hook call stays unconditional; only its ARGUMENT is governed. */
+  const proposed = useProposedChange(legacyProposalFor(selector));
 
   /* ── WS2-04B: which engine may write this draft. Resolved by the server in
      one response; the room never assembles it from parts. */
@@ -349,9 +378,51 @@ function CanvasRoom() {
    * ⛔ The target comes from the SERVER's resolution of the proposal against
    * the current Work, never from coordinates carried in the URL.
    */
-  const proposalTarget = proposed.mount.state === 'ready'
-    && proposed.mount.preview.state === 'acceptable'
-    ? proposed.mount.preview.change : null;
+  const writeMount = chooseMount(writePhase, writeState);
+  /* ⭐ ONE READER for the two mounts that run the section engine. See
+     `sectionEngine` for why this is not six inline disjunctions. */
+  const engine = sectionEngine(writeMount);
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     ⭐⭐ CUTOVER-01A.2 · ONE SERVER-RESOLVED TARGET OWNS ORIENTATION.
+
+     ⚠️ FOUNDER REVIEW OF 6fc919f7d, DEFECT. The room took its bearings from
+     `proposed.mount.preview` — the OLD proposal object — while the new
+     chain/version target lived only at `sectionEngine(writeMount)?.target` and
+     fed comparison and the proposal-work renderer. So a lawful
+     `?proposalChain=C&proposalVersion=V` could mount proposal work against the
+     right section while room-level orientation stayed null: in Section view the
+     writer is left wherever they were, and the proposal surface for the real
+     target has nothing to render into until they happen to arrive.
+
+         the system knows what it is asking about,
+         but does not bring the writer to the evidence
+
+     ⛔ That is a founder-witnessed failure recreated in a new identity
+     vocabulary. Orientation now reads the SAME server-resolved target the mount
+     does — whichever selector produced it — and never a second proposal object.
+
+     ⭐ AND IT IS GATED ON A MARKABLE RANGE, which is the 01A law applied to
+     movement rather than to marking: no exact place, no mark, no "show me
+     where" — and no arrival either. Moving a writer to a section we cannot
+     point inside would be motion without evidence. */
+  const proposalTarget = roomOrientation(engine?.target);
+
+  /* ⭐⭐ W3 · THE WORKSPACE SUBJECT COMES FROM THE RESOLVED TARGET.
+     ⛔ Not from `?proposalChain=…`. The URL selector was resolved by the server
+     against THIS manuscript — including the 01A.1 Work-namespace binding — and
+     mounting from the raw parameters would let that defect reappear one layer
+     above the mount, where the binding cannot see it. */
+  const subject = workspaceSubject(engine?.target);
+
+  /* Moves the room's subject to a newly authored version. ⭐ Set, never rebuild:
+     every other parameter of the visit survives (the EW-F1 lesson). */
+  const focusVersion = useCallback((versionId: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set(CANVAS_PROPOSAL_VERSION_PARAM, versionId);
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+    setRefocus((n) => n + 1);
+  }, []);
 
   /** Performs the decision. Returns whether the writer was actually moved. */
   const moveToProposal = useCallback((): boolean => {
@@ -381,6 +452,8 @@ function CanvasRoom() {
    * chosen to read elsewhere.
    */
   const [revealToken, setRevealToken] = useState(0);
+  const [refocus, setRefocus] = useState(0);
+
   const showProposedChange = useCallback(() => {
     /* A new act owns its own result; never let an older refusal describe it. */
     setShowChangeNotice(null);
@@ -428,7 +501,7 @@ function CanvasRoom() {
          the proposal id and nothing else, and takes the resolved authority back
          from the server. It never decides that a proposal makes a section
          read-only. */
-      const r = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
+      const r = await fetchWriteState(id, (url) => apiFetch(url), selector);
       if (cancelled) return;
       setWritePhase(r.phase);
       setWriteState(r.state);
@@ -436,7 +509,7 @@ function CanvasRoom() {
     return () => { cancelled = true; };
     /* The proposal is part of what the write state RESOLVES, so a change to
        it re-asks the server rather than being reinterpreted here. */
-  }, [manuscript?.id, proposalId]);
+  }, [manuscript?.id, selector, refocus]);
 
   /* WS2-NAV-01 — the member act that makes a Work navigable.
 
@@ -460,10 +533,10 @@ function CanvasRoom() {
        proposal id it re-reads a DIFFERENT question — the room would drop out of
        proposal work on the next conversion or draft creation, silently, and the
        target section would quietly regain a manuscript editor. */
-    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), proposalId);
+    const refreshed = await fetchWriteState(id, (url) => apiFetch(url), selector);
     setWritePhase(refreshed.phase);
     setWriteState(refreshed.state);
-  }, [manuscript?.id, proposalId]);
+  }, [manuscript?.id, selector]);
 
   const onConfirmSectionBreaks = useCallback(async () => {
     const id = manuscript?.id;
@@ -483,10 +556,25 @@ function CanvasRoom() {
     setConfirming(false);
   }, [manuscript?.id, confirming, refreshWriteState]);
 
-  const writeMount = chooseMount(writePhase, writeState);
-  /* ⭐ ONE READER for the two mounts that run the section engine. See
-     `sectionEngine` for why this is not six inline disjunctions. */
-  const engine = sectionEngine(writeMount);
+  /**
+   * ⭐⭐ ONE COMPUTATION, TWO SURFACES. The Work marks the locus; the panel
+   * shows the affected sentence. Both are `(body, range, replacement)` from the
+   * SAME server-resolved target, so there cannot be one locus in the Work and
+   * another in the panel — the founder's law, kept by construction rather than
+   * by two implementations agreeing.
+   */
+  const proposalComparison = useMemo(() => {
+    const t = engine?.target;
+    if (!t) return null;
+    const section = engine?.sections.find((x) => x.id === t.sectionId);
+    if (!section) return null;
+    /* ⛔ No range, no comparison — and that is NOT the conversation ending.
+       The formulation is still mounted and still discussable; what we decline
+       to do is point at a place in the Work we could not find. */
+    const range = markableRange(t);
+    if (!range) return null;
+    return sentenceComparison(section.body, range, t.replacementText);
+  }, [engine]);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
      a section can be seen still saving while the next opens. */
   const witnessDelayMs =
@@ -943,8 +1031,17 @@ function CanvasRoom() {
               onClose={() => undefined}
             />
           ) : (
-            proposed.mount.state === 'ready' ? (
+            subject?.kind === 'chain' ? (
+              <EditorialWorkspace
+                chainId={subject.chainId}
+                versionId={subject.versionId}
+                apiFetch={apiFetch}
+                onFocusVersion={focusVersion}
+                onWorkChanged={refreshWriteState}
+              />
+            ) : proposed.mount.state === 'ready' ? (
               <ProposedChange
+                comparison={proposalComparison}
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
@@ -1359,8 +1456,17 @@ function CanvasRoom() {
                 onClose={() => dismiss('conversation')}
               />
             ) : (
-              proposed.mount.state === 'ready' ? (
+              subject?.kind === 'chain' ? (
+              <EditorialWorkspace
+                chainId={subject.chainId}
+                versionId={subject.versionId}
+                apiFetch={apiFetch}
+                onFocusVersion={focusVersion}
+                onWorkChanged={refreshWriteState}
+              />
+            ) : proposed.mount.state === 'ready' ? (
               <ProposedChange
+                comparison={proposalComparison}
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
@@ -1603,10 +1709,12 @@ function FieldBody({
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
               if (!section) return null;
+              const range = markableRange(target);
+              if (!range) return null;   /* ⛔ no mark, never a guessed one */
               return (
                 <ProposalEvidenceInWork
                   body={section.body}
-                  range={target.range}
+                  range={range}
                   replacementText={target.replacementText}
                   onWorkWithChange={onWorkWithChange}
                   locusKey={proposalLocusKey(target.sectionId, target.range)}
@@ -1618,11 +1726,13 @@ function FieldBody({
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
               if (!section) return null;
+              const range = markableRange(target);
+              if (!range) return null;   /* ⛔ no mark, never a guessed one */
               return (
                 <ProposalWorkSurface
                   revealToken={revealToken}
                   body={section.body}
-                  range={target.range}
+                  range={range}
                   replacementText={target.replacementText}
                   sectionLabel={target.sectionLabel}
                 />

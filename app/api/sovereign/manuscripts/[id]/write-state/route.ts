@@ -17,7 +17,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { resolveDraftWriteState } from '@/lib/manuscript/sections/saveSection';
 import { navigableRows } from '@/lib/writersStudio/outlineRows';
-import { resolveProposalWork } from '@/lib/manuscript/revisionProposal/proposalWork';
+import {
+  resolveProposalWork,
+  type ProposalWorkTarget as LegacyProposalWorkTarget,
+} from '@/lib/manuscript/revisionProposal/proposalWork';
+import {
+  readProposalWorkTarget,
+  type ProposalWorkTarget as ChainProposalWorkTarget,
+} from '@/lib/manuscript/proposalChain/proposalWorkTarget';
+/* ⛔ The param NAMES are never inlined here — the producer's spelling and the
+   consumer's live in one contract, because a link is not a binding. */
+import { requestedProposalFocus } from '@/app/writers-studio/canvasIdentity';
 import {
   authorityFromProjectability,
   type SectionAuthority,
@@ -55,8 +65,48 @@ export async function GET(
          member. A browser that names a proposal it does not own, or one that
          can no longer be accepted, gets the ordinary section state back and is
          told nothing about why. */
-      const target = await resolveProposalWork(
-        memberId, req.nextUrl.searchParams.get('proposal'));
+      /* ══════════════════════════════════════════════════════════════════
+         ⭐⭐ CUTOVER-01A · THE MOUNT NO LONGER ASKS WHETHER THE CHANGE COULD
+         BE ACCEPTED.
+
+         `resolveProposalWork` below returns null unless the old preview reads
+         `acceptable`, and a null target means NO PROPOSAL-WORK MOUNT. That is
+         R6 rebuilt one layer up: the Work moving underneath a formulation
+         ended the conversation about it.
+
+             not executable → no mount → the conversation disappears
+
+         The chain+version read replaces that. On a readable chain the mount
+         ALWAYS survives; only the LOCATION may be unavailable, and that says
+         nothing except *we cannot truthfully mark this place right now*.
+
+         ⛔ NO ADAPTER. `proposal=` names a different object and keeps its own
+         resolution, untouched, while the cutover is staged. The new pair wins
+         wherever both appear; nothing translates between them.
+
+         ⛔ AND NO AUTHORIZATION IS READ HERE — not the table, not
+         `readAuthorizationStatus`. Consent/execution location and
+         conversation/presentation location are different facts that happen to
+         agree while the Work is unchanged.
+         ══════════════════════════════════════════════════════════════════ */
+      const focus = requestedProposalFocus(req.nextUrl.searchParams);
+
+      let target: LegacyProposalWorkTarget | ChainProposalWorkTarget | null = null;
+      if (focus) {
+        /* ⭐ Located against the sections THIS RESPONSE IS RETURNING — never a
+           second read that could disagree with the one the writer receives. */
+        const r = await readProposalWorkTarget(
+          memberId, id, focus.chainId, focus.versionId, state.sections);
+        /* ⛔ A refusal is silent, exactly as PW-2 already required: unknown,
+           another member's, corrupt, foreign-version — and ⭐ a chain belonging
+           to a DIFFERENT Work of the same writer — all return the ordinary
+           section state and disclose nothing. The room is never told "that
+           chain belongs to another manuscript". */
+        target = r.ok ? r.target : null;
+      } else {
+        target = await resolveProposalWork(
+          memberId, req.nextUrl.searchParams.get('proposal'));
+      }
 
       /* ⭐ PW-3 · SUSPENSION IS SCOPED TO THE TARGET. Every other section keeps
          exactly the authority it already had. The boundary is never wider than
@@ -65,8 +115,27 @@ export async function GET(
          PROJECTABILITY and stays one; the authority is resolved beside it, so
          the room never renders "cannot be edited" over a section the writer is
          actively working. */
+      /* ⭐⭐ CUTOVER-01A · SUSPENSION FOLLOWS THE LOCATED PLACE, NOT THE MOUNT.
+
+         ⚠️ FLAGGED FOR FOUNDER REVIEW — the ruling did not settle this, and
+         the choice is visible rather than buried. Suspension (PW-3) exists to
+         stop the writer editing the EXACT place a proposal is pointed at.
+         Where no place could be located there is nothing to protect, and
+         holding a section closed on the strength of a fact we FAILED to
+         establish would withhold the writer's own Work to protect a mark we
+         could not draw. So an unlocated target mounts the conversation and
+         leaves every section exactly the authority it already had.
+
+         ⭐ This is also the NO-CHANGE reading: under the retired mount an
+         unlocatable proposal produced no target at all, so these sections were
+         never suspended. Nothing becomes more closed than it was. */
+      const suspendsAt =
+        target && (!('location' in target) || target.location.located)
+          ? target.sectionId
+          : null;
+
       const authorityOf = (s: { id: string; editable: boolean }): SectionAuthority =>
-        target && target.sectionId === s.id
+        suspendsAt === s.id
           ? 'proposal_work'
           : authorityFromProjectability(s.editable);
 

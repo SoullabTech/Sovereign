@@ -257,6 +257,11 @@ export default function ProposalWorkSurface(
         {body.slice(b)}
       </div>
 
+      {/* ⛔ THE COMPARISON LIVES IN THE PANEL, NOT HERE. Founder's layout:
+          the Work renders the full section once with the locus marked; the
+          panel shows only the affected sentence, current and as it would read.
+          A "would read" block here would put a second rendering of the prose
+          in the surface whose whole obligation is to render it once. */}
       {/* ⭐ PW-5 · AND IT SAYS WHAT IS TRUE. "Cannot be edited" would be the one
           sentence most likely to mislead here: the writer IS working — on the
           proposal, not on the manuscript. */}
