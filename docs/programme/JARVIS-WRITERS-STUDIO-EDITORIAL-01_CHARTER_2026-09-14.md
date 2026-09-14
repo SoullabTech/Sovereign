@@ -430,3 +430,91 @@ writer placed there, or three MAIA suspects? The existing shell law
 (`assertShellPromisesNothing`) refuses a promised count for exactly this reason.
 The affordance must not let MAIA's confidence borrow the authority of the
 writer's declaration.
+
+---
+
+## Two tracks (founder, 2026-09-14)
+
+```
+TRACK A — EDITORIAL AUTHORITY        TRACK B — WORK CONTINUITY
+  proposal succession                  Materials already exists
+        ↓                                    ↓
+  revise loop                          relationship context available to MAIA
+        ↓                                    ↓
+  exact authorization                  explicit material disclosure
+        ↓                                    ↓
+  coordinated changes                  relevant retrieval into Ask
+                                             ↓
+                                       provenance visible in conversation
+
+                    ↓  MAIA KNOWS THE WORK  ↓
+```
+
+⛔ **Track B does not block succession.** ⚠️ But it must be available before the
+conversational editing experience is frozen — otherwise we design MAIA as though
+the manuscript were the entirety of the writer's creative world. It isn't.
+
+### ⭐⭐ The door already open: material disclosure is the S3 body gate
+
+⛔ **Do not build a second disclosure mechanism.** S3 already has one, witnessed
+at Step 7: an act-scoped authorization with disclosed/withheld scopes, a
+`BODY_AUTHORIZED` outcome, section-scoped receipts sharing one `request_ref`,
+partial authorization refusing as `BODY_SCOPE_INCOMPLETE` with **nothing**
+crossed, and a real sixth state when the consent substrate is unavailable.
+
+A material is another scope in that same grammar. Building a parallel
+"AI context" toggle beside it would be two objects in one table, in a new
+material — the error the naming ruling exists to prevent.
+
+⭐ And for *which context she used*, CMT-01 already carries `authoredBy` ·
+`participationClass` · `authority` through the canonical turn. Relational versus
+source context is a participation question, not a new field.
+
+### ⚠️ The one tension the law leaves open
+
+Does the **relationship sentence** cross with the bringing, or does it need its
+own disclosure?
+
+```
+the law          "neither implies the other" → the sentence needs its own crossing
+the progression  MAIA reads the member's sentence FIRST → it crosses early
+```
+
+Both are in the same ruling. The sentence is authored **in** the Studio, **for**
+this Work — which argues it is already Studio content. It is also a declaration
+about the writer's inner relationship to a source, which argues it is not.
+
+⛔ **Unresolved, and owed before Track B's second step.** Getting it wrong in the
+permissive direction is how *"MAIA reads your sentences by default"* becomes
+stealth memory — the thing Sanctuary Mode exists to make impossible.
+
+### Materials returns to the rail
+
+```
+WORK                MAIA              TOOLS / OUTPUT
+  Home                Conversations     Export
+  Manuscript          Insights
+  Materials  ←
+  Structure
+  Notes
+  Versions
+```
+
+⚠️ The pared-down mockup **accidentally simplified away a real concept.**
+⛔ `Materials` shows the member's real count or no count — the shell law, again.
+
+⭐ **And it is not an attachment bin.** Its identity is *what belongs with this
+Work*. The navigation label can stay "Materials" while the empty state and
+interior language carry the concept.
+
+### The research criterion this adds
+
+⛔ Not *"does the system support references?"*
+
+> **Does the system understand WHY something belongs to this particular creative
+> work — and can that understanding participate in intelligent editorial
+> dialogue without taking authorship away from the writer?**
+
+Most writing software stores resources. ⭐ Understanding the writer's
+relationship to them is the distinctive thing, and it is not another sidebar
+destination.

@@ -41,6 +41,80 @@ MAIA reads the Work
 > deep editorial collaboration unusually fluid, contextual, intelligible, and
 > safe.**
 
+## ⭐⭐ The disclosure law
+
+**Ratified founder, 2026-09-14.**
+
+> **Bringing establishes belonging. Disclosure establishes readability.
+> Neither implies the other.**
+
+```
+THE THING
+    │  member brings it
+    ▼
+BELONGING TO THIS WORK          relationship_sentence · maybe / not_now / belongs
+    │
+    │  ⛔ A SECOND, SEPARATE CROSSING
+    ▼
+AVAILABLE TO MAIA
+```
+
+A writer may reasonably say *"this book by Rilke deeply informs this
+manuscript"* without thereby saying *"send its contents into the model context
+every time I speak with MAIA."* ⛔ These must not collapse into one consent
+event — and the stakes rise the moment Materials holds private notes, interview
+transcripts, client material, unpublished sources, or things merely named
+off-platform.
+
+### The order MAIA reads in
+
+```
+the member's sentence     what this material means to this Work
+        ↓
+material identity         what it is
+        ↓
+material content          only when authorized, and only when relevant
+```
+
+⭐ *"Rilke gives me permission to approach transformation as something lived
+rather than explained"* may be **more useful editorially than twenty pages of
+Rilke.** It says how the writer is RELATING to the source.
+
+### Two epistemic objects, and MAIA says which she is using
+
+```
+RELATIONAL CONTEXT    what the writer says belongs, and why
+SOURCE CONTEXT        what the material itself contains
+```
+
+⛔ MAIA may not say *"Rilke says…"* unless she has authorized access to the
+source. She may always say *"you described Rilke as…"*, because that is the
+writer's own sentence.
+
+⭐ What this buys is not merely safety. It lets her read the Work **through the
+writer's declared field of meaning**:
+
+> *"You described Rilke as helping you approach transformation as something
+> lived rather than explained. This paragraph moves back toward explaining the
+> idea. I wonder if that's why it feels different from the passages around it."*
+
+That is a developmental editor who has spent time getting to know the writer —
+not stylistic inference wearing a warmer voice.
+
+### ⛔ And the person experiences relationship, not configuration
+
+```
+NOT THIS                          THIS
+  ☑ Include in AI context           "What does this bring to your work?"
+  ☑ Vectorize                       …and later, at the moment of need:
+  ☑ Enable semantic retrieval       "This may help me understand what you're
+                                     working through here. Read it with
+                                     this section?"
+```
+
+The architecture can do all of those things. ⛔ Turning a beautiful idea into
+settings management is how it stops being one.
+
 ## The scales — and the UI adapts to them
 
 Grammar and mechanics · sentence craft · paragraph craft · context · voice ·
