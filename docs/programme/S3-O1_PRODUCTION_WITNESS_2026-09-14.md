@@ -140,9 +140,11 @@ Routed to `docs/programme/S3-O1_PRODUCTION_OBSERVATIONS_2026-09-14.md`. None reo
 completed act; none is repaired here.
 
 1. The swap recreated **nine** containers, not one.
-2. The ledger holds **529** rows against **480** migration files.
-3. Each migration file's own `BEGIN`/`COMMIT` fights the runner's, leaving the trailing
-   `DO` block outside any transaction.
+2. The ledger holds **529** rows against **480** migration files — **52** of them naming no
+   current file (⛔ not `529−480`; see the observations record for the arithmetic).
+3. Each migration file's own `BEGIN`/`COMMIT` overrides the runner's, so the trailing `DO`
+   runs outside the runner's intended explicit transaction, in its own autocommit
+   transaction; and the ledger insert's failure semantics differ from the DDL's.
 
 ---
 

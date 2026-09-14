@@ -46,8 +46,20 @@ is closed to those.
 ```
 
 Mechanically explained by `scripts/run-sql-migrations.sh`: `applied_before` counts **rows in
-`schema_migrations`**, `total` counts **files on disk** in the deployed snapshot. The
-difference — 49 — is ledger rows whose files no longer exist in the tree.
+`schema_migrations`** and is measured **before** the apply loop, while `total` counts **files
+on disk** in the deployed snapshot. The two are different populations, so the difference is
+**not** `529 − 480`:
+
+```text
+  529   ledger filenames, pre-act
+− 477   current files already represented  (480 on disk − 3 pending)
+─────
+   52   ledger filenames with no current migration file
+```
+
+⚠️ An earlier draft of this record said **49**, taking `529 − 480` and thereby assuming every
+file on disk was already in the ledger — the exact assumption this observation exists to
+question. The correct count is **52**.
 
 The runner keys set-membership on filename, so absent files are simply never considered.
 Nothing is at risk today. ⚠️ But the count printed as a reassurance (`X already applied,
@@ -76,8 +88,13 @@ Three distinct consequences, all visible in the O1 output:
 **(a) The file's own `BEGIN`/`COMMIT` overrides the runner's.** Each S3 migration opens its
 own transaction, so the runner's `BEGIN` warns *"there is already a transaction in
 progress"*, the **file's** `COMMIT` is what actually commits, and the runner's trailing
-`COMMIT` warns *"there is no transaction in progress"*. Anything after the file's `COMMIT` —
-here the `DO` block raising the applied notice — runs **outside any transaction**.
+`COMMIT` warns *"there is no transaction in progress"*.
+
+⚠️ Anything after the file's `COMMIT` — here the `DO` block raising the applied notice — runs
+**outside the runner's intended explicit migration transaction**, in its own autocommit
+transaction. ⛔ Not *"outside any transaction"*: psql autocommits, so such a statement is
+committed as its own transaction. The finding is the boundary, not the absence — **the file
+can commit its DDL before every statement in it has completed under one atomic boundary.**
 
 **(b) The ledger insert is a separate invocation.** It is a new psql session entirely. A
 crash, a network loss, or a failure between the DDL commit and the ledger insert leaves the
@@ -85,9 +102,15 @@ crash, a network loss, or a failure between the DDL commit and the ledger insert
 are written idempotently (`IF EXISTS` / `IF NOT EXISTS`), so it would survive; a
 non-idempotent migration would not.
 
-**(c) The ledger insert's failure is unobserved.** It carries no `ON_ERROR_STOP` and no
-`||` handler, and `applied_now` is incremented regardless. A failed ledger write is silent
-and the run still reports success.
+**(c) The ledger insert's failure semantics differ from the DDL's.** It carries no
+`ON_ERROR_STOP` and no `||` handler, and `applied_now` is incremented regardless.
+
+⚠️ Stated precisely: a **server-side SQL error** in the ledger `INSERT` is not protected by
+`ON_ERROR_STOP`, so psql can finish normally rather than converting that error into the
+script-failing exit status (`3`) the DDL invocation relies on. ⛔ This is narrower than *"a
+failed ledger write is silent"* — fatal psql or connection errors are a different class and
+can still terminate the shell. The asymmetry is the finding: **the two invocations that must
+agree do not fail the same way.**
 
 ⚠️ Also noted, harmless: the failure-path `ROLLBACK` is issued in a **new** psql session.
 The failed session has already ended and its transaction was rolled back by disconnect, so
