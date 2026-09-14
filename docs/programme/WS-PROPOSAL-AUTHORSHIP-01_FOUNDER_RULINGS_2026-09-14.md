@@ -290,6 +290,65 @@ FAIL   the same defect appears on a cold Section first invocation
 
 ⭐ Predeclared before the run, so neither outcome can be reinterpreted after it lands.
 
+### ✅ SEVENTH OBSERVATION — RESULT (founder-read, 2026-09-14)
+
+```text
+COLD Section / first asked return  →  LOCUS-ADDRESSED  —  PASS
+```
+
+```text
+EVIDENCE CLASS   FOUNDER-READ. Coldness (no prior SHOW CHANGE in the runtime, either view)
+                 is ASSERTED BY THE FOUNDER and accepted as the condition of the reading.
+                 ⛔ Jarvis observed nothing; this session has no reach to the running UI.
+```
+
+**Reading, per the predeclared interpretation — no more, no less:**
+
+```text
+✅ ESTABLISHED   "first-ever invocation" alone does NOT explain the Whole / first failure.
+                 A cold first invocation succeeds in Section view.
+→ POINTS TOWARD  a WHOLE-SPECIFIC defect.
+```
+
+⚠️ ⛔ **What it does not establish.** *Points toward* is the predeclared wording and it is kept.
+A view-independent initialization defect that happens to be **masked** in Section view remains
+consistent with this result. The observation **eliminated one explanation**; it did not confirm the
+other.
+
+---
+
+## ⭐⭐ GATE A CLOSE (2026-09-14)
+
+```text
+SIX-CELL MATRIX     5 PASS · 1 FAIL · SEALED
+SEVENTH DIAGNOSTIC  PASS — LOCUS-ADDRESSED (cold Section / first)
+GATE A DISPOSITION  ⭐ FALSIFIED AT ONE CELL — Whole / first asked return
+```
+
+**Falsified, narrowly and precisely.** The walk did what it was built to do: it found a real defect,
+bounded it to one cell, and then bought the one observation that told us what shape it has.
+
+```text
+POSITIONAL SOVEREIGNTY   ✅ HOLDS — passive scroll PASSES in BOTH views.
+                            The reveal-guard split (automatic vs voluntary acts) survives runtime.
+ASKED RETURN             ✅ HOLDS everywhere EXCEPT the Whole-view first asked return.
+```
+
+### The bounded repair this indicates — ⛔ INDICATED, NOT AUTHORIZED
+
+```text
+SCOPE     the Whole-view first asked return, and nothing else
+⛔ NOT    a surface redesign · not a SHOW CHANGE rename (charter F1 unchanged)
+⛔ NOT    reintroducing detached excerpts or duplicate Current/Proposed panels (census §5)
+```
+
+⛔ **No repair is written, scoped in code, or authorized by this close.** It requires a founder act,
+and the subject is not in this checkout. ⛔ It belongs to the **interaction lane**
+(`WS-PROPOSAL-INTERACTION-01`) — ⭐ **Gate A closing authorizes NOTHING at Gate B or Gate C.**
+That is the whole purpose of FR-W4.
+
+---
+
 ### ⛔ This is a SEVENTH observation, not a replacement cell
 
 ```text
@@ -320,8 +379,8 @@ time.* The honest repair is to date it, never to edit it.
 ## Roadmap standing (precise)
 
 ```text
-LANE STATUS                        ⏳ OPEN · GATE A — DISPOSITION C RULED
-                                   ⛔ ONE COLD Section / first OBSERVATION OWED
+LANE STATUS                        ⏳ OPEN · GATE A CLOSED — bounded repair INDICATED
+                                   ⛔ repair NOT authorized · founder act required
                                    ⛔ walk COMPLETE — do NOT rerun it
 Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
                                    Whole / first          SECTION-ADDRESSED — FAIL  [SEALED]
@@ -330,8 +389,9 @@ Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1
                                    Section / first        PASS  [FOUNDER-READ]
                                    Section / second       PASS  [FOUNDER-READ]
                                    Section / passive      PASS  [FOUNDER-READ]
-                                   Gate A disposition = C (ruled 2026-09-14)
-                                   NEXT → seventh observation: COLD Section / first
+                                   7th COLD Section / first LOCUS-ADDRESSED — PASS [FOUNDER-READ]
+                                   Gate A = CLOSED · FALSIFIED AT Whole / first only
+                                   NEXT → founder act: authorize (or decline) the bounded repair
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
