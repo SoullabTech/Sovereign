@@ -461,3 +461,80 @@ PRODUCTION                  UNTOUCHED
 ```
 
 Stop for authorization.
+
+---
+
+# ADDENDUM 3 · THE PLACEHOLDER, AND ONE ASSUMED PREMISE CLOSED
+
+## The placeholder is my defect, not the operator's
+
+Three invocations now have failed on a literal placeholder — `THE_REAL_MERGE_SHA`,
+`THE_REAL_SHA`, `CANONICAL_MERGE_SHA`. ⭐ **Every one failed safely**: git refused
+the reference before creating anything, and no production action occurred. ⛔ But
+handing over a command that must be edited before it is run is a defect in the
+handover, and repeating it three times is evidence, not bad luck.
+
+**Fix: a command with nothing to substitute.** After the merge, the canonical tip
+*is* the merge commit, so the host can resolve it — explicitly, and printing what
+it resolved.
+
+**Step 1 — read only, confirms what would run. Changes nothing:**
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin clean-main-no-secrets && git log -1 --format="candidate %H%n%s" origin/clean-main-no-secrets'
+```
+
+**Step 2 — the act. Paste and run; nothing to edit:**
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin clean-main-no-secrets && SHA=$(git rev-parse origin/clean-main-no-secrets) && echo "candidate: $SHA" && WT=$(mktemp -d) && git worktree add --detach "$WT" "$SHA" && "$WT/scripts/s3-schema-first-runbook.sh" "$SHA"; RC=$?; git worktree remove --force "$WT" >/dev/null 2>&1; exit $RC'
+```
+
+**Recovery, if a late failure occurs — also nothing to edit:**
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && SHA=$(git rev-parse origin/clean-main-no-secrets) && WT=$(mktemp -d) && git worktree add --detach "$WT" "$SHA" && "$WT/scripts/s3-schema-first-runbook.sh" recover "$SHA"; RC=$?; git worktree remove --force "$WT" >/dev/null 2>&1; exit $RC'
+```
+
+⚠️ **The tradeoff, stated rather than buried.** This names the canonical tip at
+that instant rather than a SHA typed by hand. If someone pushed to canonical
+between the merge and the run, the act would resolve *their* commit. Three things
+bound that: the resolved SHA is **echoed before anything happens**; step 1 lets it
+be read first; and ⭐ the act-scope check refuses any pending set that is not
+exactly the proved five, so a tip carrying a sixth migration stops the act. ⛔ If
+the founder prefers to name the SHA by hand, substitute the literal — the runbook
+requires an explicit argument either way.
+
+## One assumed premise, now asserted
+
+⭐ **Recovery retags `:prod` because that is the alias compose gives the service —
+and until now the runbook assumed that rather than checking it.** If someone
+changed the maia service to consume a different tag, recovery would silently
+restore the wrong alias: **the same defect class as the general rollback
+primitive, arriving from the other side.**
+
+Three new checks read the real compose file:
+
+```text
+compose gives the maia service maia-sovereign:prod — the alias recovery retags
+the maia service uses that alias by anchor, not a second literal
+recovery retags exactly that alias
+```
+
+**Witness: 61 passed · 0 failed.**
+
+## Standing
+
+```text
+recovery-custody repair     ✅ LANDED (5ac590f4)
+recovery premise            ✅ ASSERTED, no longer assumed
+witness                     ✅ 61 / 0 · both discrimination cases intact
+production command          ✅ nothing to substitute
+general rollback primitive  ⚠️ ROUTED OUT · lane not opened
+deploy-production.sh        UNCHANGED
+S3                          untouched
+
+MERGE                       ⏸ HOLD — awaiting authorization
+SCHEMA DEPLOY               ⛔ NOT AUTHORIZED
+PRODUCTION                  UNTOUCHED
+```

@@ -250,6 +250,22 @@ grep -q 'RC=0' <<<"$RT" \
   && bad "a recovery that left :prod on the candidate reported SUCCESS" \
   || ok "DISCRIMINATION: recovery that leaves :prod on the candidate is DETECTED as failed"
 
+# ⭐ THE PREMISE OF RECOVERY, ASSERTED RATHER THAN ASSUMED. Recovery retags
+# :prod because that is the alias compose gives the maia service. If someone
+# changed the service to consume a different tag, recovery would silently restore
+# the wrong alias — the SAME defect class as the general rollback primitive,
+# arriving from the other side. So the premise is checked against the real file.
+COMPOSE="$SCRIPT_DIR/../docker-compose.production.yml"
+ALIAS="$(sed -n 's/^x-maia-image: &maia_image \(.*\)$/\1/p' "$COMPOSE" | head -1)"
+[ "$ALIAS" = "maia-sovereign:prod" ] \
+  && ok "compose gives the maia service $ALIAS — the alias recovery retags" \
+  || bad "the maia service consumes '${ALIAS:-unknown}', not maia-sovereign:prod — recovery targets the wrong alias"
+grep -qE '^\s+image: \*maia_image' "$COMPOSE" \
+  && ok "the maia service uses that alias by anchor, not a second literal" \
+  || bad "the maia service does not use the x-maia-image anchor"
+grep -q 'MAIA_IMAGE_REPO:-maia-sovereign}:prod' "$RUNBOOK" \
+  && ok "recovery retags exactly that alias" || bad "recovery does not name the compose alias"
+
 # The act must not send the operator to the defective general primitive.
 OUT="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK" 2>&1)"
 grep -q 'runbook.sh recover' <<<"$OUT" \
