@@ -391,3 +391,32 @@ Founder ruling: the compile established *symbol exists + Swift overlay exists in
 **MAC-COMPILE-02 (VPIO) AUTHORIZED on exactly `85e5e7154`** — `swift build` · `swift test` · VPIO source gate · `xcodegen generate` · unsigned iOS build · signed iOS build; artifact identity (dylib UUID · dylib SHA-256 · app manifest · codesign/bundle identity) recorded only if the build actually produces it; any red step → STOP and return the exact defect, no opportunistic second correction inside the same compile act.
 
 **Standing:** `5ca7851a8` NOT a future compile subject · `85e5e7154` = compile subject · F-W1 UNSPENT · install / device act / N=30 NOT AUTHORIZED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
+
+### 12.9 MAC-COMPILE-02 (VPIO) — GREEN on exactly `85e5e7154` · signed artifact built · custody recorded · NOTHING DOWNSTREAM OPENS
+
+**Record:** `KERNEL-00_VPIO-01_MAC-COMPILE-02_2026-09-14.md` (founder, 1 145 lines, six-step outputs verbatim) + `…MAC-COMPILE-02_2026-09-14.manifest.sha256` (7 files); record commit `e616b564f` on `feature/vpio-mac-compile-02-record-20260914`, cherry-picked here as `8329cc0a6`. **Verified in this session:** the manifest file hashes to `4710d9a6…` (= the recorded `manifest_sha256`); its dylib and executable lines equal the recorded `dylib_sha256` / `executable_sha256`.
+
+| step | result |
+|---|---|
+| `swift build` | PASS |
+| `swift test` | PASS 27/27 |
+| VPIO source gate | PASS 45/45 |
+| `xcodegen generate` | PASS |
+| unsigned iOS build | PASS |
+| signed iOS build | **PASS** — `** BUILD SUCCEEDED **`; only the pre-existing unused-`try?` warning, unchanged |
+
+**C-V1 exercised by the iOS compiler: `import CoreAudio` resolved `UnsafeMutableAudioBufferListPointer`. No other defect surfaced — the G1–G8/G10/G11 vocabulary and the G9 correction compile as written.**
+
+**Signed artifact identity (first VPIO build; custody = UUID + SHA + manifest, never a tree hash):**
+
+```
+dylib UUID          E8074AD1-D179-3267-A15C-142D033A9665
+dylib SHA-256       6efe33b1b25fdb4dc4376abfb248e6c530e59f492ebc876314619fd1bef64b3d
+executable SHA-256  e43dec667e1e8ba727d7253f39199be3a34333c804c220b41233945d42a1a4ac
+manifest SHA-256    4710d9a68f5b6bb9de8ef64b143f8dd9b688476b3a7f3ee0257b3922b7a60bed  (7 files)
+bundle              life.soullab.voicekernel.vpio01   (application-identifier ZVK2X646Z2.…)
+```
+
+Two pre-signed-build command-construction attempts (a BSD `awk` incompatibility; a shell-resolution exit) are preserved in the record as operator/instruction defects; neither invoked the signed build or touched source. **Nothing installed, launched, or sampled.**
+
+**Standing after §12.9 — compile success opens nothing (founder rule, §12.6 / §12.8):** VPIO-01 source `85e5e7154` COMPILE GREEN · MAC-COMPILE-02 CLOSED · signed artifact BUILT, custody RECORDED · **install NOT AUTHORIZED · device act NOT AUTHORIZED · N=30 NOT AUTHORIZED · F-W1 UNSPENT** (pinned: 24/30 · 23/29 · 23/28 clear improvement; ≤ 16/29 about the same; between INDETERMINATE) · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. What a first VPIO witness would still need before any device act, none of it authorized: the instrument plumbing named in census §6 (driver bundle id, `k00-driver-batch.sh` / `k00-reinstall.sh` subject handling, ledger `SUBJECTS` + `ioRunning` reads); proof that `life.soullab.voicekernel.vpio01` is not installed before any first install; a reinstall expecting exactly `E8074AD1-…` + the dylib SHA + the 7-file manifest; the historical K00/R1 container untouched. The next act is a founder ruling.
