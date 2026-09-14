@@ -355,3 +355,29 @@ The header also confirms the VPIO semantics the source already uses: bus 0 outpu
 - Gate: one new obligation pins the read position (after `formats_set`, before `SetInputCallback` / `AddPropertyListener`), both refusals, the exact-capacity allocation, the evidence key, the absence of `8_192` / `8192` / any `min(frames…)` truncation, and the `kAudio_ParamError` refusal lexically before `AudioUnitRender`. **45/45** (jest), read before the commit.
 
 **Standing after §12.6:** VPIO-01 source at **`5ca7851a8`** = the MAC-COMPILE subject (founder: *"Then MAC-COMPILE is AUTHORIZED on exactly that new SHA"*), sequence `swift build` · `swift test` · repo VPIO source gate · `xcodegen generate` · unsigned iOS build · signed iOS build · artifact identity (UUID · dylib SHA-256 · manifest) recorded. A compiler rejection of Swift importer syntax is evidence, returned as a bounded compile-era source defect, never a licence to reach for another API. **Even a fully green MAC-COMPILE opens nothing downstream:** install NOT AUTHORIZED · device act NOT AUTHORIZED · N=30 NOT AUTHORIZED · F-W1 UNSPENT · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. ⛔ `a991d09a4` and `0f535e705` are NOT compile subjects (they carry the G9 approximation).
+
+### 12.7 MAC-COMPILE-01 (VPIO) — RED on `5ca7851a8` at the unsigned iOS build · C-V1 named, NOT corrected · founder ruling required
+
+**Record:** `KERNEL-00_VPIO-01_MAC-COMPILE-01_2026-09-14.md` (founder, 922 lines, six-step outputs verbatim; record commit `7f098d686` on `feature/vpio-mac-compile-01-record-20260914`, cherry-picked here as `6f835f7d0` — the Mac's pre-push policy refuses `claude/*`, not bypassed).
+
+| step | result |
+|---|---|
+| `swift build` | PASS |
+| `swift test` | PASS 27/27 (macOS pure-logic targets; the trace/RouteComparison tests follow the subject) |
+| repo source gate | PASS 45/45 (one non-evidentiary Jest setup miss first, recorded, then the valid run) |
+| `xcodegen generate` | PASS |
+| unsigned iOS build | **FAIL** — `AudioGraph.swift:361:23: error: cannot find 'UnsafeMutableAudioBufferListPointer' in scope` (RC 65, `** BUILD FAILED **`) |
+| signed device build | NOT RUN (stopped lawfully) |
+| artifact identity | NONE (no executable, no dylib, no UUID, no SHA, no manifest, no codesign) |
+
+No install, launch, phone act or sample. **`5ca7851a8` is not a compile-green VPIO subject.**
+
+**C-V1 — module visibility, compile-era, bounded.** The installed SDK contains `UnsafeMutableAudioBufferListPointer`; its Swift declaration lives in the `CoreAudio` module (`CoreAudio.swiftinterface`), which the subject never imports (`import Foundation` · `import AudioToolbox` only). Every other Audio Toolbox and CoreAudio C type the file uses (`AudioBufferList` · `AudioBuffer` · `AudioStreamBasicDescription` · `AudioTimeStamp` · the render-callback types) resolved — the compiler named exactly one symbol. This is the class §12.6 predeclared: *a compiler rejection of Swift importer syntax is evidence and comes back as a bounded compile-era source defect; it does not license reaching for another API.* It is not a G8 error: the founder's header read verified the name; what was not verified was which Swift module exports it.
+
+**The exact correction, named for ruling, NOT WRITTEN:**
+
+- `AudioGraph.swift`: add `import CoreAudio` beside `import AudioToolbox`. One line; no other token changes; `UnsafeMutableAudioBufferListPointer(ioData)` at line 361 stays as written. (The alternative — walking `ioData.pointee.mBuffers` by hand — is exactly the "nearby API" substitution F-V7 forbids and is NOT proposed.)
+- Source gate: the VPIO block pins `AudioGraph.swift`'s import set as exactly `['AudioToolbox', 'Foundation']` (line 505) and forbids `AudioToolbox` in every other file; it would become `['AudioToolbox', 'CoreAudio', 'Foundation']` with `CoreAudio` forbidden everywhere else — the plan §3 second source pin (*only the substrate names the lower audio stack*) unchanged in meaning, one module wider in spelling.
+- Kernel · harness · tests · thresholds · trace vocabulary: untouched.
+
+**Standing:** MAC-COMPILE-01 (VPIO) RED · CLOSED on `5ca7851a8` · C-V1 NAMED · correction NOT AUTHORIZED, NOT WRITTEN · any correction = a new SHA that earns its own MAC-COMPILE · F-W1 UNSPENT · install / device act / N=30 NOT AUTHORIZED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
