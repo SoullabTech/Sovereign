@@ -81,7 +81,7 @@ async function invoke(c: Client, ref: string, actId: string, digest: string, out
 
 const counts = async (c: Client) => ({
   turns: Number((await c.query('SELECT count(*) n FROM ask_turns WHERE thread_id=$1',[TH])).rows[0].n),
-  props: Number((await c.query('SELECT count(*) n FROM manuscript_revision_proposals WHERE thread_id=$1',[TH])).rows[0].n),
+  props: Number((await c.query('SELECT count(*) n FROM manuscript_revision_offers WHERE thread_id=$1',[TH])).rows[0].n),
 });
 
 async function main() {
@@ -155,15 +155,15 @@ async function main() {
   check(recN.kind === 'recovered' && recN.outcome.kind === 'no_change',
         'a lawful no_change recovers positively, from the receipt not from absence');
 
-  await c.query(`DELETE FROM manuscript_revision_proposals WHERE ref_probe IS NULL AND thread_id=$1 AND produced_in_turn_index=(
+  await c.query(`DELETE FROM manuscript_revision_offers WHERE ref_probe IS NULL AND thread_id=$1 AND produced_in_turn_index=(
                    SELECT produced_in_turn_index FROM pending_ask_claims WHERE ref=$2)`, [TH, ref1])
-    .catch(async () => { await c.query(`DELETE FROM manuscript_revision_proposals WHERE thread_id=$1 AND produced_in_turn_index=(
+    .catch(async () => { await c.query(`DELETE FROM manuscript_revision_offers WHERE thread_id=$1 AND produced_in_turn_index=(
                    SELECT produced_in_turn_index FROM pending_ask_claims WHERE ref=$2)`, [TH, ref1]); });
   const corrupt1 = await recoverAct(tx(c), ref1);
   check(corrupt1.kind === 'corrupt', '⭐ proposals receipt + missing proposal -> HARD RECOVERY FAILURE');
   check(!(corrupt1.kind === 'recovered'), '⛔ never downgraded to no_change');
 
-  await c.query(`INSERT INTO manuscript_revision_proposals
+  await c.query(`INSERT INTO manuscript_revision_offers
       (manuscript_id,draft_id,section_id,member_id,thread_id,produced_in_turn_index,
        proposed_text,reason,based_on,read_state,coverage,origin,authority,producer,input_fingerprint)
      SELECT $1,$2,$3,$4,$5,produced_in_turn_index,'smuggled','r','{}','{}','{}','work','{}','p','f'

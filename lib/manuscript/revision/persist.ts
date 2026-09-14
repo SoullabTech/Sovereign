@@ -58,7 +58,7 @@ const APPEND_TURN = `
   RETURNING turn_index`;
 
 const INSERT_PROPOSAL = `
-  INSERT INTO manuscript_revision_proposals
+  INSERT INTO manuscript_revision_offers
     (manuscript_id, draft_id, section_id, member_id,
      thread_id, produced_in_turn_index,
      proposed_text, reason, based_on, read_state, coverage,

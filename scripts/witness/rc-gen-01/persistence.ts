@@ -68,7 +68,7 @@ async function inTransaction<T>(c: Client, fn: () => Promise<T>): Promise<{ ok: 
 
 const counts = async (c: Client) => ({
   turns: Number((await c.query('SELECT count(*) n FROM ask_turns WHERE thread_id=$1', [TH])).rows[0].n),
-  proposals: Number((await c.query('SELECT count(*) n FROM manuscript_revision_proposals WHERE thread_id=$1', [TH])).rows[0].n),
+  proposals: Number((await c.query('SELECT count(*) n FROM manuscript_revision_offers WHERE thread_id=$1', [TH])).rows[0].n),
 });
 
 async function main() {
@@ -84,7 +84,7 @@ async function main() {
     const r = await c.query(
       `SELECT p.proposed_text, p.section_id, p.producer, p.authority, p.origin,
               p.thread_id, p.produced_in_turn_index, t.speaker
-         FROM manuscript_revision_proposals p
+         FROM manuscript_revision_offers p
          JOIN ask_turns t ON t.thread_id = p.thread_id AND t.turn_index = p.produced_in_turn_index
         WHERE p.id = $1`, [b1.value.proposalIds[0]]);
     const row = r.rows[0];
@@ -121,7 +121,7 @@ async function main() {
   console.log('\n─── B3 · a proposal cannot survive without a real producer turn');
   const b3 = await inTransaction(c, async () => {
     await c.query(
-      `INSERT INTO manuscript_revision_proposals
+      `INSERT INTO manuscript_revision_offers
          (manuscript_id,draft_id,section_id,member_id,thread_id,produced_in_turn_index,
           proposed_text,reason,based_on,read_state,coverage,origin,authority,producer,input_fingerprint)
        VALUES ($1,$2,$3,$4,$5,4242,'orphan','r','{}','{}','{}','work','{}','p','f')`,
@@ -133,7 +133,7 @@ async function main() {
   const authorIdx = bodies.rows.findIndex((r: any) => r.speaker === 'author');
   const b3b = await inTransaction(c, async () => {
     await c.query(
-      `INSERT INTO manuscript_revision_proposals
+      `INSERT INTO manuscript_revision_offers
          (manuscript_id,draft_id,section_id,member_id,thread_id,produced_in_turn_index,
           proposed_text,reason,based_on,read_state,coverage,origin,authority,producer,input_fingerprint)
        VALUES ($1,$2,$3,$4,$5,$6,'wrong speaker','r','{}','{}','{}','work','{}','p','f')`,
@@ -159,7 +159,7 @@ async function main() {
   console.log('\n─── B6 · a proposal is recoverable by its actual producer turn');
   if (b1.ok) {
     const rec = await c.query(
-      `SELECT id FROM manuscript_revision_proposals
+      `SELECT id FROM manuscript_revision_offers
         WHERE thread_id=$1 AND produced_in_turn_index=$2`, [TH, b1.value.producerTurnIndex]);
     check(rec.rows.length === 1 && rec.rows[0].id === b1.value.proposalIds[0],
           '⭐ recoverable by (thread_id, produced_in_turn_index) — the path 3C will need');

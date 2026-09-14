@@ -77,7 +77,7 @@ export async function recoverAct(
 
   const proposals = await client.query<{ section_id: string; proposed_text: string; reason: string }>(
     `SELECT section_id, proposed_text, reason
-       FROM manuscript_revision_proposals
+       FROM manuscript_revision_offers
       WHERE thread_id = $1 AND produced_in_turn_index = $2
       ORDER BY created_at, id`,
     [row.thread_id, row.produced_in_turn_index]);
