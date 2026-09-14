@@ -84,3 +84,34 @@ P1-04   🟢 RUNNING — MAP 3 · MAP 1+2 · MAP 4 workers · acceptance gate FI
 P1-05   ⏸ CLOSED — opens only on four frozen, passing maps
 AUTH-EXPOSURE-01   🟠 independent
 ```
+
+---
+
+## 6 · ⭐⭐ Check 4's scope — TEXTUAL **and** VISUAL compression (founder, 2026-09-14)
+
+⛔ Check 4 is **not** a node-text check. A map can satisfy checks 1–3 perfectly — every edge
+`SYN`-tagged, every unknown handled, every scope label exact — and still strengthen a claim
+through **structure**.
+
+Check 4 therefore evaluates **all** of:
+
+```text
+node text          the label against its source row
+HEADINGS           ⛔ "Unauthorized Decision Paths"
+LEGENDS            ⛔ a key that renders NONE LOCATED as a failure state
+GROUPING LABELS    ⛔ DECIDES + NONE LOCATED collected under "Authority Failures"
+VISUAL PROXIMITY   ⛔ arrangement that implies a relation no edge asserts
+ORDERING           ⛔ a sequence that implies causation or severity
+```
+
+⭐ **Every one of those examples can be true of each individual node and false of the map.** The
+nodes say *effect observed, authorization not located*; the region label says *failure*; and a
+reader takes the region label away with them.
+
+### The operative question, applied at every altitude
+
+> **Does the rendered artifact say more than its source rows said?**
+
+⛔ If a heading, legend, grouping or arrangement carries a claim no row carries, **check 4 FAILS**
+— even where every node is individually correct. ⭐ *Especially then, because that is the failure
+mode the other three checks are blind to.*
