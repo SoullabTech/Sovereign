@@ -129,7 +129,14 @@ two different REQUESTS  ·  one ACT
 ### H2 · `git.log` DECLARES `format` and never uses it
 
 The schema accepts `format`; the handler hardcodes `--pretty=format:"%H %an %ad %s"` and **never
-reads `args.format`.** So `{format:'a'}` and `{format:'b'}` are **different requests denoting one
+~~reads `args.format`.**~~ ⭐ **SUPERSEDED BY D2 (RATIFIED 2026-09-14 · A · SCHEMA WRONG).** `format`
+is **not an authorized caller term**, so `{format:'a'}` and `{format:'b'}` are **NOT an equivalence
+pair — they are two INADMISSIBLE requests**, each carrying an undeclared argument. ⛔ A canonicalizer
+must **refuse** such an invocation, never normalize or silently erase the field: *accept + ignore*
+would preserve the exact false affordance D2 closes (D2.6 · D2-F6). The original wording is kept
+below as the hazard as it was understood before the ruling.
+Pre-D2 reading: the handler hardcodes `--pretty=format:"%H %an %ad %s"` and never
+reads `args.format`, so `{format:'a'}` and `{format:'b'}` were read as **different requests denoting one
 act**.
 
 - Binding it **over-distinguishes** — a decision for one would not cover the other though the act is
@@ -206,7 +213,10 @@ same act, second occurrence        → SAME act / DIFFERENT occurrence
 
 ```text
 git.rev_parse {}          vs  git.rev_parse { ref: 'HEAD' }      → SAME act      (H1)
-git.log { format: 'a' }   vs  git.log { format: 'b' }            → SAME act      (H2)
+git.log { format: 'a' }   vs  git.log { format: 'b' }            ⛔ SUPERSEDED BY D2 —
+                                                                 both INADMISSIBLE, not an
+                                                                 equivalence pair; refuse, do
+                                                                 not normalize (D2.6 · D2-F6)
 verify.file_exists './a/../b'  vs  verify.file_exists 'b'        → SAME act      (§5)
 repo.grep { max_results: 200 } vs repo.grep {}                    → SAME act      (H1)
 git.rev_parse { ref: 'HEAD' }  vs  git.rev_parse { ref: 'HEAD~1' } → DIFFERENT
@@ -288,6 +298,8 @@ TWO IDENTITIES        act ≠ occurrence · newRunId adequate for occurrence onl
 CANONICALIZATION      HOST-SIDE · caller may not name its own act
 HAZARD H1             handler-applied defaults — a digest would bind {} and perform HEAD
 HAZARD H2             git.log declares `format`, never uses it
+                      ⭐ DISPOSED BY D2 — the field is NOT AUTHORIZED; the repair is removal
+                      from the public language, not consumption (F-E disposed with it)
 JOINT FINDING         act identity is NOT derivable from the declared schema
 PATH IDENTITY         resolved-check / unresolved-handler split · prefix containment · realpath undecided
 VERSIONING            canonicalization rules need their own identity
