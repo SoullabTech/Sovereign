@@ -119,11 +119,24 @@ describe('⭐⭐ the guard is resolved from the WORK, never copied from the chai
     expect(resolveGuard(CHAIN, twice)).toEqual({ ok: false, reason: 'expected_text_ambiguous' });
   });
 
-  test('a reading of another Work or another section refuses', () => {
+  test('a reading of another Work, DRAFT or section refuses', () => {
     expect(resolveGuard(CHAIN, { ...READING, workId: 'w2' }))
       .toEqual({ ok: false, reason: 'work_mismatch' });
+    /* ⚠️ The draft check was MISSING until the 2026-09-14 review. The contract
+       admitted right-Work · WRONG-DRAFT · right-section, and only the single
+       current caller's construction hid it. A contract that is true because of
+       who calls it is not true. */
+    expect(resolveGuard(CHAIN, { ...READING, draftId: 'd9' }))
+      .toEqual({ ok: false, reason: 'draft_mismatch' });
     expect(resolveGuard(CHAIN, { ...READING, sectionId: 's9' }))
       .toEqual({ ok: false, reason: 'section_mismatch' });
+  });
+
+  test('⛔ and the draft is checked BEFORE a section that would also mismatch', () => {
+    /* Both wrong: the refusal must name the draft, so a caller is told the
+       nearest true thing rather than a downstream consequence of it. */
+    expect(resolveGuard(CHAIN, { ...READING, draftId: 'd9', sectionId: 's9' }))
+      .toEqual({ ok: false, reason: 'draft_mismatch' });
   });
 });
 

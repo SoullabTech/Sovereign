@@ -296,6 +296,50 @@ async function main() {
   eq('E13 · ⛔ no second manuscript UPDATE path',
     /UPDATE\s+manuscript_draft_sections|UPDATE\s+manuscript_working_drafts/i.test(ex), false);
 
+  /* ── I1 · ⭐⭐ ONE AUTHORIZATION ACT HAS ONE IDENTITY AND ONE TIME.
+     ⚠️ FOUNDER REVIEW: the first cut handed `authorize()` a provisional all-zero
+     id and `new Date()`, then inserted neither — so the object the pure act said
+     it created was NOT the object persisted. The guard travelled faithfully
+     while identity and time were silently replaced.
+
+     ⭐ Both are now minted once, inside the transaction, and the store THROWS if
+     the durable row disagrees with the act. This asserts the replacement would
+     be VISIBLE, not merely that the database returned an id. */
+  const wI = await makeWork(M); const cI = await makeChain(M, wI);
+  const vI = await addVersion(cI, 'maia', ', quieter', null);
+  const aI = await authorizeVersion(M, cI, vI);
+  if (!aI.ok) { bad('I1 · authorize', aI.reason); return finish(); }
+  const rowI = await query<{ id: string; authorized_at: Date }>(
+    `SELECT id, authorized_at FROM manuscript_revision_authorizations WHERE id=$1`,
+    [aI.authorization.id]);
+  eq('I1 · ⭐ the returned authorization IS the durable row — same id, same moment',
+    [rowI.rows.length, rowI.rows[0]?.id === aI.authorization.id,
+      rowI.rows[0]?.authorized_at.toISOString() === aI.authorization.authorizedAt],
+    [1, true, true]);
+  eq('I1b · ⛔ and no provisional all-zero identity survives anywhere',
+    aI.authorization.id === '00000000-0000-0000-0000-000000000000', false);
+  const zeroes = await query<{ n: string }>(
+    `SELECT count(*)::text AS n FROM manuscript_revision_authorizations
+      WHERE id = '00000000-0000-0000-0000-000000000000'`);
+  eq('I1c · ⛔ and none was ever written', zeroes.rows[0].n, '0');
+
+  /* ── D1 · ⛔ NOT WITNESSED HERE, AND THE REASON IS THE POINT.
+     `draft_mismatch` is covered by the CONTRACT's falsifiers
+     (`authorization.test.ts`), not by this seam — and it cannot be, twice over:
+
+       1  the chain is IMMUTABLE, so its `draft_id` cannot be retargeted after
+          creation. The first attempt at this fixture did exactly that and the
+          `proposal_chains_immutable` trigger refused it, crashing the witness —
+          the substrate being right again.
+       2  `readWorkAtTarget` reads USING `chain.locus.draftId`, so the reading it
+          builds can never disagree with the locus it was built from.
+
+     ⭐ THAT IS PRECISELY WHY THE CONTRACT HAD TO BE FIXED INDEPENDENTLY. The
+     gap was invisible from here because one caller happened to construct
+     readings correctly; a contract that is true because of who calls it is not
+     true. ⛔ Do not "add a seam test for draft_mismatch" by weakening either
+     property above to make one possible.
+
   /* ── R1-LIMIT · ⚠️ A SOURCE ASSERTION, LABELLED AS ONE.
      The authorizing Work read must happen on the TRANSACTION CLIENT, so the
      draft version and the section body beneath it are one held state.
@@ -366,9 +410,15 @@ async function main() {
      draft read and the authorization INSERT, so the persisted binding names ONE
      coherent observed Work state.
 
-     ⭐ Determinism without sleep-and-hope: the witness takes the draft's row
-     lock FIRST, starts `authorizeVersion` (which blocks on its own FOR UPDATE),
-     moves the Work to v42, and commits. If the seam holds a lock across its
+     ⚠️ THE EVIDENCE CLASS, STATED EXACTLY: this is a SCHEDULING RENDEZVOUS, not
+     a deterministic one. The witness takes the draft's row lock FIRST, starts
+     `authorizeVersion` (which blocks on its own FOR UPDATE), waits a fixed
+     250ms for it to reach that lock, moves the Work to v42, and commits.
+     ⛔ An earlier comment here called this "determinism without sleep-and-hope"
+     while using `setTimeout` — it is sleep-and-hope, and it should be described
+     as what it is. It DOES discriminate (mutation `R2`, dropping FOR UPDATE, is
+     killed by it), and it would become deterministic only by observing the
+     blocked state itself in `pg_locks` / `pg_stat_activity` rather than waiting. If the seam holds a lock across its
      reads, it then observes 42 and binds 42. ⛔ Without the lock it would read
      41 immediately and bind a version that was already gone — a permission
      recording a Work state that had ceased to exist before the row was
@@ -402,4 +452,22 @@ function finish(): void {
   console.log(`\n  ${pass} passed · ${fail} failed`);
   void closePool().then(() => process.exit(fail === 0 ? 0 : 1));
 }
-main().catch((e) => { console.error(e); void closePool().then(() => process.exit(1)); });
+/**
+ * ⭐ A THROWN FIDELITY ERROR IS A NAMED FAILURE, NOT A CRASH.
+ *
+ * ⚠️ `authorizeVersion` THROWS when the durable row disagrees with the act that
+ * created it — which is the guard working. But it fires on the FIRST
+ * authorization, so the witness aborted before printing anything, and the
+ * mutation harness classified the kill as CRASHED. ⛔ A guard whose success
+ * looks like the instrument breaking teaches the next reader the wrong lesson.
+ */
+main().catch((e) => {
+  const msg = String((e as Error)?.message ?? e);
+  if (/was not persisted as the act that created it|could not be read truthfully/.test(msg)) {
+    bad('FIDELITY · the durable row disagreed with the act that created it', msg);
+    finish();
+    return;
+  }
+  console.error(e);
+  void closePool().then(() => process.exit(1));
+});

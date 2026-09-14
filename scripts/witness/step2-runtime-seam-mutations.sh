@@ -65,6 +65,12 @@ mutate "R4 · the store hydrates rows itself again, bypassing the contract" "$ST
 mutate "R5 · execution refuses early instead of reaching the write" "$EXEC" \
 "s = s.replace(\"    if (auth.acceptedAt !== null) return no('already_spent');\", \"    if (auth.acceptedAt !== null) return no('already_spent');\n    if (process.env.NODE_ENV !== 'never') return no('stale_base');\")"
 
+# ⚠️ THE DOLLARS ARE ESCAPED. Inside a bash double-quoted string `$1` is a
+# POSITIONAL PARAMETER, and under `set -u` an unbound one aborts the harness —
+# which is how the first R6 killed the whole run instead of the mutant.
+mutate "R6 · the minted identity and time are replaced by database defaults" "$STORE" \
+"s = s.replace('(id, member_id, proposal_chain_id', '(member_id, proposal_chain_id').replace('VALUES (\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10)', 'VALUES (\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8)').replace('[mintedId, memberId,', '[memberId,').replace(', mintedAt]);', ']);').replace(', authorized_at)', ')')"
+
 echo
 echo "  $KILLED killed · $SURVIVED survived"
 [ "$SURVIVED" -eq 0 ] || exit 1

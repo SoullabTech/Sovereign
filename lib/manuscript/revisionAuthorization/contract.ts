@@ -200,6 +200,18 @@ export interface WorkStateReading {
 export type GuardRefusal =
   /** The reading names a different Work than the chain it is being bound to. */
   | 'work_mismatch'
+  /**
+   * ⭐ The reading names a different DRAFT.
+   *
+   * ⚠️ FOUNDER REVIEW, 2026-09-14. `draftId` is on the locus AND on the durable
+   * binding, and `resolveGuard` checked Work and section but NOT draft — so the
+   * contract admitted a proof whose binding said *right Work · WRONG DRAFT ·
+   * right section*. ⛔ The server seam could not exploit it, because
+   * `readWorkAtTarget` reads using `chain.locus.draftId` — which made the
+   * CONTRACT WEAKER THAN THE ONE CALLER THAT HAPPENED TO CALL IT CORRECTLY.
+   * A contract must be independently true.
+   */
+  | 'draft_mismatch'
   /** The reading names a different section than the chain's locus. */
   | 'section_mismatch'
   /** The Work no longer contains the characters this chain was opened against. */
@@ -310,6 +322,8 @@ export function resolveGuard(
     return { ok: false, reason: 'malformed' };
   }
   if (reading.workId !== chain.locus.workId) return { ok: false, reason: 'work_mismatch' };
+  /* ⭐ The draft, checked here and not merely by the caller's construction. */
+  if (reading.draftId !== chain.locus.draftId) return { ok: false, reason: 'draft_mismatch' };
   if (reading.sectionId !== chain.locus.targetSectionId) {
     return { ok: false, reason: 'section_mismatch' };
   }

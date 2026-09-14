@@ -239,11 +239,32 @@ export async function authorizeVersion(
         : 'malformed');
     }
 
-    /* 6 · The pure act. */
+    /* 6 · ⭐⭐ ONE IDENTITY AND ONE TIME, MINTED BEFORE THE ACT.
+           ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut passed a provisional
+           all-zero id and `new Date()` into `authorize()`, then inserted
+           NEITHER — letting `gen_random_uuid()` and `now()` supply their own.
+           So the object the pure act said was created WAS NOT the object
+           persisted:
+
+               pure authorization id  ≠  durable authorization id
+               pure authorizedAt      ≠  durable authorizedAt
+
+           The guard travelled faithfully and these were silently replaced,
+           which is the Step 1 adapter rule again: persistence may MOVE a proven
+           fact across the boundary; it may not SUBSTITUTE a different one.
+
+           ⭐ Minted from PostgreSQL inside this transaction, so the clock is the
+           database's — the same clock every neighbouring row is stamped by —
+           and both values are used in the act AND in the INSERT. */
+    const minted = await tx.query<{ id: string; at: Date }>(
+      `SELECT gen_random_uuid() AS id, now() AS at`);
+    const mintedId = minted.rows[0].id;
+    const mintedAt = minted.rows[0].at.toISOString();
+
     const authorized = authorize({
-      id: '00000000-0000-0000-0000-000000000000',   // the server mints the real id
+      id: mintedId,
       memberId, chain, versions: [version], versionId: version.id,
-      proof: guard.proof, authorizedAt: new Date().toISOString(),
+      proof: guard.proof, authorizedAt: mintedAt,
     });
     if (!authorized.ok) return no('malformed');
     const g = authorized.authorization.guard;
@@ -253,13 +274,25 @@ export async function authorizeVersion(
            ⭐ On the SAME client, inside the draft lock. */
     const ins = await tx.query<AuthRow>(
       `INSERT INTO manuscript_revision_authorizations
-         (member_id, proposal_chain_id, proposal_version_id, work_id, draft_id,
-          base_version, target_section_id, expected_text)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         (id, member_id, proposal_chain_id, proposal_version_id, work_id, draft_id,
+          base_version, target_section_id, expected_text, authorized_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING ${AUTH_COLUMNS}`,
-      [memberId, chain.id, version.id, g.workId, g.draftId, g.baseVersion,
-        g.targetSectionId, g.expectedText]);
-    return { ok: true as const, authorization: hydrateAuthorizationRow(ins.rows[0]) };
+      [mintedId, memberId, chain.id, version.id, g.workId, g.draftId, g.baseVersion,
+        g.targetSectionId, g.expectedText, mintedAt]);
+    const durable = hydrateAuthorizationRow(ins.rows[0]);
+
+    /* ⭐⭐ AND THE TWO MUST BE THE SAME AUTHORIZATION, NOT MERELY
+       EQUIVALENT-LOOKING FACTS. If any field the pure act determined differs
+       from what came back, the boundary substituted something, and a
+       substitution that nobody notices is exactly the failure this check
+       exists for. ⛔ It THROWS: a persistence layer that cannot round-trip the
+       act it just performed is not in a state to report a domain outcome. */
+    if (JSON.stringify(durable) !== JSON.stringify(authorized.authorization)) {
+      throw new Error(
+        `authorization ${mintedId} was not persisted as the act that created it`);
+    }
+    return { ok: true as const, authorization: durable };
   });
   /* ⛔ NO BLANKET `catch`. A database that cannot answer must say so — the
      `catch { return refuse('write_failed') }` of the retired store turned
