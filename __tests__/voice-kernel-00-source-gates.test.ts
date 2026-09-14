@@ -588,6 +588,14 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(al).toMatch(/SEAM_FIELDS = \('F1_aurio_start_ms', 'F2_iounit_post_ms', 'F3_iounit_post_vs_start_return_ms', 'F4_first_callback_vs_start_return_ms', 'F5_iounit_posts_in_seam', 'F6_order_signature'\)/);
     expect(sl).toMatch(/TAKE = 'gen-1 listen'/); expect(sl).toMatch(/classes from the kernel ledger, never from the log/);
     expect(readFileSync(join(process.cwd(), 'docs', 'programme', 'VOICE-2026', 'PASS2_SEAM_EXPERIMENT_PROTOCOL_2026-09-14.md'), 'utf8')).toMatch(/N = \*\*30 per block\*\*/);
+    // Founder corrections (protocol §10): F5 on its FULL declared window (distinct from the at/after-start posts feeding F2/F3),
+    // alignment refuses > 2 ms anchor disagreement, block-drift wording (never "observer effect" as a finding), missingness frozen.
+    expect(al).toMatch(/ALIGN_TOLERANCE_MS = 2\b/); expect(al).toMatch(/BOUNDARY_TOLERANCE_MS = 1\b/);
+    expect(al).toMatch(/UNREADABLE: synchronous anchors disagree/);
+    expect(al).toMatch(/posts_in_seam = \[e for e in seam if is_post\(e\)\]/); expect(al).toMatch(/'F5_iounit_posts_in_seam': len\(posts_in_seam\)/);
+    expect(al).toMatch(/posts_at_start = \[e for e in seam if is_post\(e\) and rel\(e\) >= -BOUNDARY_TOLERANCE_MS\]/);
+    expect(sl).toMatch(/block-drift comparison/); expect(sl).toMatch(/no block difference detected/); expect(sl).toMatch(/missingness is frozen evidence/);
+    expect(sl).not.toMatch(/observer\/drift/); expect(sl).toMatch(/pre-start_return evidence/);
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).

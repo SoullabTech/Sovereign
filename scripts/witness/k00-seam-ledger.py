@@ -4,7 +4,7 @@
 # class the kernel ledger already assigned (take = gen-1 listen; miss = the other three audio classes; infra/precondition rows
 # are not samples). Comparison statistics are the predeclared ones only. No device act, no log(1), no subprocess.
 #   usage: k00-seam-ledger.py <LOGGED ledger dir> <unifiedlog dir>            → SEAM-LEDGER.md beside the unifiedlog dir
-#          k00-seam-ledger.py --compare <LOGGED ledger dir> <CONTROL ledger dir> → observer/drift comparison (protocol §6)
+#          k00-seam-ledger.py --compare <LOGGED ledger dir> <CONTROL ledger dir> → block-drift comparison (CONTROL = no log(1) invocation) (protocol §6)
 import json, sys, os, re, collections, statistics, hashlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from k00_log_align import seam_fields, SEAM_FIELDS
@@ -32,8 +32,8 @@ if sys.argv[1] == '--compare':
         w = [r['wall_s'] for r in R.values() if r['wall_s']]
         return t, m, i, (statistics.median(w) if w else None)
     lt, lm, li, lw = tally(L); ct, cm, ci, cw = tally(C)
-    print(f"## observer/drift comparison (protocol §6): LOGGED takes {lt} · misses {lm} · infra {li} · median driver wall {lw} s  ‖  CONTROL takes {ct} · misses {cm} · infra {ci} · median wall {cw} s")
-    print(f"## take rate LOGGED {lt}/{lt+lm} vs CONTROL {ct}/{ct+cm} · Fisher exact two-sided p = {fisher(lt, lm, ct, cm) if (lt+lm and ct+cm) else 'n/a'} (predeclared: p ≥ 0.05 → no observer/drift effect claimed; p < 0.05 → reported, never attributed)")
+    print(f"## block-drift comparison (protocol §6; CONTROL = no log(1) invocation; NOT an observer-effect control under D-L1): LOGGED takes {lt} · misses {lm} · infra {li} · median driver wall {lw} s  ‖  CONTROL takes {ct} · misses {cm} · infra {ci} · median wall {cw} s")
+    print(f"## take rate LOGGED {lt}/{lt+lm} vs CONTROL {ct}/{ct+cm} · Fisher exact two-sided p = {fisher(lt, lm, ct, cm) if (lt+lm and ct+cm) else 'n/a'} (predeclared: p ≥ 0.05 → no block difference detected — not proof of no drift, not an observer-effect finding; p < 0.05 → block/time difference detected, reported without attribution)")
     sys.exit(0)
 LD, UD = sys.argv[1:3]; R = rows_of(LD); out = []
 say = lambda *a: (print(*a), out.append(' '.join(str(x) for x in a)))
@@ -55,7 +55,7 @@ say(f"readable seams: takes {len(T)} · misses {len(M)} · unreadable/unobservab
 for k in SEAM_FIELDS[:5]:
     a = [f[k] for f in T.values() if f[k] is not None]; b = [f[k] for f in M.values() if f[k] is not None]
     fmt = lambda v: f"{statistics.median(v):.0f} · {min(v)}…{max(v)} · n={len(v)}" if v else "absent"
-    say(f"- {k}: takes {fmt(a)} ‖ misses {fmt(b)} ‖ AUC {auc(a, b)} · absent-in {len(T)-len(a)} takes / {len(M)-len(b)} misses")
+    say(f"- {k}: takes {fmt(a)} ‖ misses {fmt(b)} ‖ AUC {auc(a, b)} · absent-in {len(T)-len(a)} takes / {len(M)-len(b)} misses (missingness is frozen evidence, §6)")
 say(f"- F6_order_signature: takes {dict(collections.Counter(f['F6_order_signature'] for f in T.values()))} ‖ misses {dict(collections.Counter(f['F6_order_signature'] for f in M.values()))}")
-say("\n## reading rule (protocol §7): a separation here is a CLIENT-SIDE CORRELATING SIGNATURE, never daemon causation and not mechanism; no separation = the currently observable seam is exhausted without touching the organism.")
+say("\n## reading rules (protocol §7): a separation here is a CLIENT-SIDE CORRELATING SIGNATURE, never daemon causation and not mechanism; no separation = the currently observable seam is exhausted without touching the organism. F4 and the callback element of F6 are DOWNSTREAM CONTEXT: the localization claim (a signature INSIDE engine.start()) must rest on pre-start_return evidence — F1/F2/F3 and the pre-return ordering in F6; F5 only insofar as the differing posts occur before start_return. AUC is descriptive: near 0 or 1 = separation, 0.5 = none; no post-hoc test, no composite score.")
 open(os.path.join(UD, 'SEAM-LEDGER.md'), 'w').write('\n'.join(out) + '\n'); print(f"seam ledger: {os.path.join(UD, 'SEAM-LEDGER.md')}")

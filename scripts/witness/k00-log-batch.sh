@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # KERNEL-00 hidden-state census · PASS 2 · SEAM EXPERIMENT block runner (protocol: docs/programme/VOICE-2026/PASS2_SEAM_EXPERIMENT_PROTOCOL_2026-09-14.md).
 # Two blocks, each ONE ordinary driver batch (Mode L · subject as declared · cold-launch law unchanged · N fixed):
-#   --block control : the driver batch and nothing else (no log(1) at all).
+#   --block control : the driver batch and nothing else — CONTROL = no log(1) invocation; a same-session block-drift/stability
+#                     control, NOT an observer-effect control (D-L1: the collect happens after all sampling).
 #   --block logged  : the driver batch, then — AFTER the last sample — ONE `log collect` of the block's window (root, founder-gated),
 #                     then per-sample `log show` at DEFAULT level over each sample's recorded wall window (offline), the corrected
 #                     reader per sample, and the seam ledger. The collect happens after sampling: nothing external runs on the device
@@ -33,7 +34,7 @@ say "## driver batch (verbatim): scripts/witness/k00-driver-batch.sh $LABEL-$BL 
 T1_EPOCH=$(date +%s)
 say "## driver batch rc=$BRC · ledger $LD/ledger.md · rows $(grep -c '^| ' "$LD/ledger.md" 2>/dev/null || echo 0) · block T1: $(date -u -r $T1_EPOCH +%Y-%m-%dT%H:%M:%SZ)"
 [ -f "$LD/sample-timing.tsv" ] || { say "## STOP — no sample-timing.tsv: the batch recorded no per-sample windows; a logged block cannot be read (control block: rows stand)"; [ "$BLOCK" = control ] && exit 0 || exit 7; }
-[ "$BLOCK" = control ] && { say "## control block complete — no log(1) was invoked"; echo "block record: $REC"; exit 0; }
+[ "$BLOCK" = control ] && { say "## CONTROL block complete — no log(1) invocation (block-drift control under D-L1, not an observer-effect control)"; echo "block record: $REC"; exit 0; }
 UD="$LEDGER_ROOT/unifiedlog-$LABEL-$STAMP"; mkdir -p "$UD"
 UDID="00008140-00163D9922E0801C"
 say "## collect (ONE, after the last sample): sudo log collect --device-udid $UDID --start $T0_LOCAL --output $UD/device.logarchive"
