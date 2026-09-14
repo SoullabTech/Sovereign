@@ -35,11 +35,27 @@ C=$(n_derived "$SYM"); echo "      symbol='$SYM'  files=$C"
 echo
 
 echo "D6-F1 · metacharacter authority — caller punctuation becomes a match PROGRAM"
+# ⭐ SOURCE MEMBERSHIP, NOT GLOBAL ZERO (the D5 witness correction, applied here after this
+#    probe failed at its own sealed commit — see the ruling record §"Fourth occurrence").
+#    The first version asserted the tree contained ZERO literal occurrences of '$META'. Committing
+#    a document that discusses the probe put the literal in the tree and broke the assertion. The
+#    relationship that actually carries the finding is contamination-proof:
+#      the DEFINING SOURCE does not contain the caller string literally,
+#      yet the DERIVED search reaches it — so the caller's '.*' ran as a program.
+DEFINING_SOURCE="scripts/builder/routing-eligibility.mjs"
+SRC_LITERAL=$(G grep -c --fixed-strings "$META" -- "$DEFINING_SOURCE" 2>/dev/null | wc -l | tr -d ' ')
 M=$(n_derived "$META"); L=$(n_literal "$META")
-printf "      symbol='%s'  derived_files=%s   literal_occurrences_in_tree=%s\n" "$META" "$M" "$L"
-[ "$L" -eq 0 ] && [ "$M" -gt 0 ] \
-  && ok "a string present in ZERO files as text returns $M files — '.*' was executed, not sought" \
-  || bad "metacharacter did not demonstrate program authority in this tree"
+DERIVED_HITS_SRC=$(derived "$META" | grep -cx "$DEFINING_SOURCE" || true)
+printf "      symbol='%s'\n" "$META"
+printf "      derived search reaches %s ? %s\n" "$DEFINING_SOURCE" \
+  "$( [ "$DERIVED_HITS_SRC" -gt 0 ] && echo yes || echo no )"
+printf "      that file contains the caller string LITERALLY ? %s\n" \
+  "$( [ "$SRC_LITERAL" -gt 0 ] && echo yes || echo no )"
+printf "      (tree-wide, for context only: derived_files=%s  literal_files=%s — either MAY grow\n" "$M" "$L"
+printf "       as documentation discusses the probe; neither is asserted)\n"
+[ "$DERIVED_HITS_SRC" -gt 0 ] && [ "$SRC_LITERAL" -eq 0 ] \
+  && ok "the derived search reaches a file that does NOT contain that text — '.*' was executed, not sought" \
+  || bad "metacharacter did not demonstrate program authority against the defining source"
 echo
 
 echo "D6-F3 / D6-F2 · caller text escapes the host's boundary policy"

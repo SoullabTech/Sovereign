@@ -170,6 +170,32 @@ D6-F2     …and the refusal comes from a REGEX PARSER acting as validator — t
 ⛔ These are **the defect D6 names, not predictions**. The repair they argue for is **owed and
 unauthorized**; D6 authorizes no handler change. ⛔ **Handlers touched: 0.**
 
+### ⚠️ Fourth occurrence of the self-contamination species — mine, one commit after naming it
+
+The first version of this witness asserted that `declare.*Eligibility` occurred **literally zero
+times** in the tree. Committing this ruling — a document that discusses the probe — put the literal
+into the tree, and the sealed-SHA rerun at `45cf8a33` returned **3 passed · 1 failed.**
+
+⛔ **I wrote that assertion in the commit immediately after recording, in this same programme, that
+prose-scanning global-zero assertions are a standing hazard rather than an incident.** Naming a
+hazard is not the same as being immune to it, and the D5 correction was evidently not yet a habit.
+**Recorded as a failure of mine, not as a property of the tree.**
+
+The repair is the D5 discipline, applied here — **source membership, never global zero**:
+
+```text
+was   the tree contains ZERO literal occurrences of 'declare.*Eligibility'
+now   the DEFINING SOURCE scripts/builder/routing-eligibility.mjs does not contain that string
+      literally, yet the DERIVED search REACHES it → the caller's '.*' ran as a program
+```
+
+Tree-wide totals are still printed — `derived_files` and `literal_files` — but **explicitly as
+context, asserted by nothing.** Either may grow as documentation discusses the probe. Rerun after the
+repair: **4 passed · 0 failed**, with `literal_files=2` printed and correct.
+
+> ⭐ The finding itself never depended on global zero. It depends on a file that the derived search
+> reaches and the literal text does not — a relationship no amount of documentation can disturb.
+
 ---
 
 ## Record-only corrections travelling with D6
