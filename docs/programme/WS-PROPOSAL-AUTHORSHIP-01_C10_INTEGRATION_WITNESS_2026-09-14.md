@@ -99,16 +99,63 @@ An F1 lane that opened assuming `SHOW CHANGE` would be repairing a defect the ba
 addressed — the lane's own recurring error, *acting on a premise that was true when recorded and is
 false now*.
 
-## 5 · Standing
+## 5 · ⭐⭐ FAST-FORWARD EXECUTED — PR #1296 now presents the witnessed integration
+
+```text
+fix/c10-whole-exact-return-01     4df4e91d5 → 181fbaa2c   ⭐ FAST-FORWARD ONLY
+⛔ no merge commit · no rebase · no amend · no force-push · no additional edits
+```
+
+⭐ Verified as a fast-forward **before** pushing (`4df4e91d` already an ancestor of `181fbaa2c`),
+so git moved the ref without creating anything.
+
+### All six post-push conditions — JARVIS-VERIFIED from the remote
+
+```text
+origin/fix/c10-whole-exact-return-01              181fbaa2c…   ✅
+PR #1296 head                                     181fbaa2c…   ✅
+origin/fix/c10-whole-exact-return-01-integration  181fbaa2c…   ✅
+4df4e91d remains ancestor                         YES          ✅
+sealed digest 2e8e3e42…                           unchanged    ✅
+PR diff vs integration base        12 files · +700 / −30       ✅ expected
+```
+
+```text
+mergeable_state   dirty  →  ⭐ unstable     (the conflict banner is CLEARED)
+commits on PR     1 → 4
+```
+
+⭐ **The fast-forward introduced no bytes beyond the witnessed head**, which is exactly why it was
+the clean move: the public review object advanced only onto bytes that had already earned their
+own runtime witness.
+
+### ⚠️ ONE CONSEQUENCE — the PR BODY is now stale in one respect
+
+```text
+The body still reads:
+  "Sealed candidate: 4df4e91d… This PR presents that candidate as sealed."
+
+⛔ TRUE WHEN WRITTEN · FALSE NOW. The head is 181fbaa2c, the INTEGRATION candidate.
+```
+
+⭐ `4df4e91d` is still sealed, still an ancestor, still byte-identical — ⛔ but the PR no longer
+*presents* it. The body's evidence chain also names five records and now omits the integration
+witness sealed here.
+
+⛔ **Not edited.** *"No additional edits"* was the boundary, and a PR description is a public
+record: correcting it is its own small act needing its own word. ⭐ Flagged rather than left to be
+discovered — a record that was true when written and is false now is exactly what this lane
+corrects in place rather than tolerates.
+
+## 6 · Standing
 
 ```text
 4df4e91d        🔒 SEALED REPAIR · unchanged · ancestor
 181fbaa2c       🔒 SEALED INTEGRATION CANDIDATE · 2/2 witness PASS
-PR #1296 head   4df4e91d — ⛔ UNMOVED
+PR #1296 head   ⭐ 181fbaa2c — FAST-FORWARDED · conflict banner CLEARED
 
-NEXT AUTHORIZED ACT   ⭐ fast-forward fix/c10-whole-exact-return-01 → 181fbaa2c
-                      ⭐ introduces NO bytes beyond the witnessed head
-                      ⛔ awaiting the founder's word
+OWED            ⚠️ PR body correction — it still presents 4df4e91d (§5)
+NEXT            ⛔ nothing authorized — PR merge remains unauthorized
 
 PR MERGE  ⛔       F1 ⛔ — ⚠️ and its premise has moved (§4)
 CI-GATE LANE ⛔ separate, preserved
