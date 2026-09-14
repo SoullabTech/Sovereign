@@ -1,0 +1,3 @@
+$ log-show-help.txt log help show
+scripts/witness/k00-log-probe.sh: line 12: log-show-help.txt: command not found
+[rc=127]

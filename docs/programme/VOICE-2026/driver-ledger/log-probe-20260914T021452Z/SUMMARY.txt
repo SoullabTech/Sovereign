@@ -1,0 +1,14 @@
+# unified-log capture discovery — 20260914T021452Z (help pages only; nothing captured, nothing configured)
+## log collect documents a device option?
+NONE FOUND
+## log collect documents a time window?
+NONE FOUND
+## log show documents --archive / --start / --end / --style?
+NONE FOUND
+## log stream documents a device option?
+NONE FOUND (stream is a live stream; collect is preferred as a bounded, after-the-fact read)
+## what log collect says it does (verbatim OVERVIEW/DESCRIPTION lines)
+1:$ log-collect-help.txt log help collect
+2:scripts/witness/k00-log-probe.sh: line 12: log-collect-help.txt: command not found
+## read-only assessment (documentation-based; the calibration records daemon identity before/after as the empirical check)
+log collect reads the device's persisted log store into a .logarchive on the Mac; the help text is the authority for whether any option alters device logging. Any option that changes levels/modes lives under 'log config', which this instrument never calls.

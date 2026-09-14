@@ -1,0 +1,49 @@
+# unified-log capture discovery — 20260914T121147Z (help pages only; nothing captured, nothing configured)
+## log collect documents a device option?
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/log-collect-help.txt:9:    --device                      Collect logs from first device found
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/log-collect-help.txt:10:    --device-name <name>          Collect logs from device with the given name
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/log-collect-help.txt:11:    --device-udid <UDID>          Collect logs from device with the given UDID
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/log-collect-help.txt:32:    log collect --device
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/log-collect-help.txt:33:    log collect --device-name "Ed’s iPhone" --last 1h
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/man-log.txt:15:	 [--device | --device-name name | --device-udid UDID]
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/man-log.txt:87:		  --device	   Collect system logs from paired device
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/man-log.txt:90:		  --device-name name
+docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T121147Z/man-log.txt:94:		  --device-udid UDID
+## log collect documents a time window?
+12:    --last <num>[m|h|d]           Collect logs starting <num>[m|h|d] ago
+15:    --start <time>                Collect logs starting at the given time
+33:    log collect --device-name "Ed’s iPhone" --last 1h
+36:    log collect --start "2016-04-12" --output /Users/test --size 20m
+37:    log collect --start "2016-04-12 06:30:00"
+## log show documents --archive / --start / --end / --style?
+17:    --end <date>                  Display events up to the given end date
+20:    --predicate <predicate>       Filter events using the given predicate
+23:    --start <date>                Display events from the given start date
+24:    --style <style>               Output format (valid: default, syslog, json, ndjson, compact)
+## log stream documents a device option?
+NONE FOUND (stream is a live stream; collect is preferred as a bounded, after-the-fact read)
+## what log collect says it does (verbatim OVERVIEW/DESCRIPTION lines)
+1:$ log help collect
+2:usage: log collect [<options>]
+5:    Collect the system logs into a .logarchive that can be viewed with
+9:    --device                      Collect logs from first device found
+10:    --device-name <name>          Collect logs from device with the given name
+11:    --device-udid <UDID>          Collect logs from device with the given UDID
+12:    --last <num>[m|h|d]           Collect logs starting <num>[m|h|d] ago
+13:    --output <path>               Output log archive to the given path
+14:    --size <num>[k|m]             Limit log collection to the given size
+15:    --start <time>                Collect logs starting at the given time
+16:    --predicate <predicate>       Collect logs using a given predicate
+19:    If an output path is not specified, system_logs.logarchive will be created
+21:    `system_logs.logarchive` will be created in the specified directory. If the
+22:    path contains the extension .logarchive, a new logarchive will be created
+25:    Specifying a predicate for log collection will impact the performance and
+32:    log collect --device
+33:    log collect --device-name "Ed’s iPhone" --last 1h
+34:    log collect --output ~/mylogs.logarchive
+35:    log collect --output /tmp
+36:    log collect --start "2016-04-12" --output /Users/test --size 20m
+37:    log collect --start "2016-04-12 06:30:00"
+38:    log collect --predicate 'process!="kernel"'
+## read-only assessment (documentation-based; the calibration records daemon identity before/after as the empirical check)
+log collect reads the device's persisted log store into a .logarchive on the Mac; the help text is the authority for whether any option alters device logging. Any option that changes levels/modes lives under 'log config', which this instrument never calls.

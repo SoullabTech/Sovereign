@@ -1,0 +1,3 @@
+$ log-collect-help.txt log help collect
+scripts/witness/k00-log-probe.sh: line 12: log-collect-help.txt: command not found
+[rc=127]

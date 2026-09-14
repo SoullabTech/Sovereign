@@ -1,0 +1,1 @@
+log: Must be root to collect logs from attached device
