@@ -532,6 +532,17 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(rrExec).toMatch(/--expect-sha "\$EXP"/);                                          // custody verified before reading
     expect(rrExec).not.toMatch(/>>? *"?\$CAL\/CALIBRATION\.md/);                            // a produced record is never edited
     expect(rr).toMatch(/REC="\$CAL\/WINDOW-READ-\$STAMP\.md"/);
+    // C-D14 (2026-09-14): alignment anchors are exact framework lines from the sample's own pid, never a loose regex that can
+    // match an XPC "activating connection" line from a stray harness pid; posted anchors pick the nearest candidate.
+    const al = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00_log_align.py'), 'utf8');
+    const alExec = al.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+    expect(alExec).not.toMatch(/subprocess|os\.system|xcrun|log collect|log show/);
+    expect(al).toMatch(/Activated session 0x/); expect(al).toMatch(/start, was running/); expect(al).toMatch(/iounit configuration changed > posting notification/);
+    expect(al).toMatch(/the last harness pid that activated an audio session/);
+    expect(wrExec).toMatch(/from k00_log_align import align/);
+    expect(wrExec).not.toMatch(/activ\|AVAudioSession\|audio/);                          // the loose anchor regex is gone
+    expect(wrExec).toMatch(/--expect-archive/); expect(wr).toMatch(/named\.endswith\(want\)/);   // ruling step 4: the banner must name THIS calibration's archive
+    expect(rrExec).toMatch(/--expect-archive "\$CAL\/device\.logarchive"/);
     const a = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-container-archive.sh'), 'utf8');
     // archive mode only; deletion is a separate, later, founder-gated act. Scan executable lines only (comments and
     // echo/log prose stripped — the C21 lesson: a prose ban must never read as the banned behaviour returning).
