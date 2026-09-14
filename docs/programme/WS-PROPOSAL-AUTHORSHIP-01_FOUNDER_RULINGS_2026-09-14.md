@@ -92,6 +92,23 @@ It begins with:
 ⭐ Only **afterward** may it be asked whether any existing substrate **legitimately fits** that
 object. Fit is tested against a defined requirement; it is never the starting premise.
 
+### ⭐⭐ FR-W3a (founder, same day) — the ordering generalizes to Gate B's second step
+
+⚠️ **"Version identity as the authorization unit" is NOT shorthand for extending an existing
+field.** `base_version` and `resulting_version` identify **manuscript states**; neither identifies
+**a particular state of a proposal**. The referent does not exist in the live system.
+
+```text
+✅ REQUIREMENT FIRST  →  SUBSTRATE FIT SECOND
+⛔ AVAILABLE FIELD    →  INVENTED SEMANTICS
+```
+
+So Gate B's first job is to **define what a proposal version is, and what lifecycle makes it the
+thing being authorized.** Only afterward may existing substrate be tested for fit.
+
+⭐ This is FR-W3 one layer up: the same trap, a different candidate. `decision_chain_id` is the
+column form of it; an existing version field is the identity form.
+
 ---
 
 ## FR-W4 · THREE INDEPENDENT GATES — they are not one state
@@ -131,9 +148,12 @@ reconciled while A is open; **no combination of B and C closes A.**
 
 ```text
 Writer's Studio interaction lane   ⏳ AWAITING the six browser observations
+                                   Whole / first = SECTION-ADDRESSED — FAIL (recorded)
+                                   NEXT OBSERVATION → Whole / second: scroll well away,
+                                   `SHOW CHANGE`, report LOCUS-ADDRESSED or SECTION-ADDRESSED
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
-Step-3 design                      ⛔ NOT OPENED
+Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
 Step-3 schema                      ⛔ EXPLICITLY UNAUTHORIZED (FR-W1)
 Step-3 code                        ⛔ EXPLICITLY UNAUTHORIZED
 ```
