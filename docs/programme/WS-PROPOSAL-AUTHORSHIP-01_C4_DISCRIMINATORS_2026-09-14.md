@@ -281,6 +281,68 @@ turns out to be about a different act.
 
 ---
 
+## 3b · P1 RECOVERY RULE (founder, frozen 2026-09-14)
+
+```text
+Recover the historical gesture as evidence ABOUT the sealed cell.
+⛔ DO NOT RETROFIT the recovered procedure INTO the old seal.
+
+If recovered from:
+  originating transcript   → CONTEMPORANEOUS RECORD
+  screenshot sequence      → CONTEMPORANEOUS VISUAL EVIDENCE
+  founder recollection     → FOUNDER RECOLLECTION · stated as such
+
+In every case:
+  Whole / first FAIL remains HISTORICALLY SEALED.
+  ⭐ Recovery adds provenance; it does not REWRITE provenance.
+```
+
+⚠️ **This matters most for recollection.** A clear founder memory can legitimately unblock O1 —
+⛔ but it must never later read as though the gesture had been **documented contemporaneously**.
+The evidence class travels with the fact, permanently.
+
+### Decision tree
+
+```text
+P1 · transcript / visual evidence found
+      → recover exact gesture → classify provenance
+      → ✅ O1 may be spent against the HISTORICAL FAIL
+
+P1 · only founder recollection available
+      → record the EXACT recollection + its evidence class
+      → ✅ O1 may be spent, with that provenance EXPLICIT
+
+P1 · cannot recover the gesture
+      → ⛔ historical O1 remains BLOCKED
+      → founder may KNOWINGLY choose P2
+
+P2    → predeclare a new away-condition
+      → seal a NEW Whole / first cell
+      → ⛔ historical FAIL remains UNTOUCHED
+      → the investigation now concerns the NEWLY SPECIFIED ACT, not the inherited one
+```
+
+```text
+⭐⭐ P2 DOES NOT REPAIR MISSING PROVENANCE. IT CREATES NEW PROVENANCE.
+```
+
+### P1 recovery attempts — status
+
+```text
+FOUNDER   prior-context trail checked. Contains Writer's Studio and SHOW CHANGE references;
+          ⛔ does NOT contain the exact away-condition. Cannot supply P1 without inventing it.
+
+JARVIS    this session's own transcript searched (53 lines carry the classification).
+          ⛔ EXHAUSTED — the EARLIEST mention already reads "Whole / first is ALREADY RECORDED
+          as SECTION-ADDRESSED — FAIL". ⭐ The cell entered this session as an INHERITED SEAL;
+          the originating gesture was never in this conversation to begin with.
+```
+
+⛔ **Remaining P1 sources are outside both:** the originating session's own transcript, a
+screenshot sequence from that walk, or founder recollection stated as such.
+
+---
+
 ## 4 · Standing
 
 ```text
@@ -292,8 +354,11 @@ O1     ✅ RATIFIED AS AMENDED · FROZEN
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-NEXT   ⛔ BLOCKED — recover the sealed witness's away-condition (P1), or knowingly
-       take P2 and record its cost. RUNTIME: do not touch yet.
+P1     NEXT LAWFUL ACT — two sources exhausted (founder context · this transcript);
+       remaining: originating session transcript · screenshot sequence · recollection
+P2     available ONLY as an explicit change of evidential object
+NEXT   ⛔ BLOCKED until P1 succeeds or is FORMALLY EXHAUSTED
+RUNTIME ⛔ UNTOUCHED — no reason to touch it until then
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 
