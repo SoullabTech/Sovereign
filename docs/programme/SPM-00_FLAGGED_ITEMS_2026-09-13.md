@@ -144,6 +144,16 @@ F2  S5 ratification mismatch        ✅ RULED 2026-09-14 — MIXED STANDING; not
                                     nothing changed on either side; header restatement owed
 F3  refusal re-derivability         REQUIREMENT SHARPENED · solution open · no mechanism proposed
 F4  relational tempo invariant      EXTERNAL · owner unassigned · open
+F5  erasure trace                   ⭐ OWED BEFORE IMPLEMENTATION · opened 2026-09-14 by SPM-02
+    A referential-structure discrepancy, ⛔ NOT a defect and ⛔ NOT proof of failed erasure:
+    `developmental_memories.user_id` is TEXT with no foreign key, so no cascade can reach it,
+    while atoms and interpretive_ledger both cascade from members(id).
+    THE TRACE OWED:
+      member deletion -> erasure orchestration -> developmental_memories -> export/deletion manifest
+    ⭐ WHY BEFORE IMPLEMENTATION: a new SPM layer could otherwise be designed around an assumed
+    deletion boundary that is not actually true.
+    ⛔ Does NOT reopen SPM-02 (the census answered its question). It is a dependency of the
+    SUBSTRATE-FALSIFIER / IMPLEMENTATION gate, and of nothing earlier.
 
 ⭐ 2026-09-14 — SPM-01 STABILIZED AT v0.5 (founder ruling; record
    docs/programme/SPM-01_STABILIZATION_RULING_2026-09-14.md).

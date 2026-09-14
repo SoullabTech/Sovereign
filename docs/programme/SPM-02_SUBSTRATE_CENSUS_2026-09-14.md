@@ -227,3 +227,63 @@ Anamnesis · relationship memory · episodes.
 
 > ⭐ **The reusable conclusion: SPM's `ORIGIN` and `STATUS` axes are genuinely new. They are not
 > hiding in the substrate under other names — the names that look like them mean something else.**
+
+---
+
+# ADDENDUM — 2026-09-14 · CENSUS CLOSED
+
+**Founder act.** ⭐ **Clarification only** (charter §6 shape): it states what the run already
+established and ⛔ **changes no finding and no classification.**
+
+## A1 · ⭐⭐ The restraint on the conclusion — the load-bearing correction
+
+> ⛔ ***"`ORIGIN` and `STATUS` are genuinely new axes" does NOT imply new tables, new columns, or
+> even a new claim object.***
+> It means only that **the existing semantics cannot truthfully carry those axes.** ⭐ **How they
+> should be represented remains an implementation/design question, and is therefore correctly
+> UNOPENED.**
+
+⚠️ The census's own closing sentence could be misread as implying storage. **It does not.** *A census
+that discovers a semantic absence has not thereby chosen a representation for it.*
+
+## A2 · ⭐ One precision on the strength of the absence
+
+The census established that the distinction is **NOT ENCODED IN THE SUBSTRATE.** ⛔ It did **not**
+establish that MAIA never makes the distinction conversationally or at prompt level — that was never
+inspected. **Substrate absence, not behavioural absence.**
+
+## A3 · ⭐⭐ `ANALOGOUS-BUT-DIFFERENT` is an ANTI-COLLAPSE OPERATOR
+
+Not merely census vocabulary: ⭐ **it prevents SEMANTIC RESEMBLANCE from being mistaken for
+ARCHITECTURAL COMPLIANCE.** The run falsified five tempting equivalences, and this is the reusable
+output:
+
+```text
+source_type          ≠  ORIGIN
+atom status          ≠  STATUS
+confidence           ≠  BASIS
+persistence          ≠  adoption
+member association   ≠  member authorship
+```
+
+## A4 · Composition vs construction — now sharp
+
+⭐ **Much of the supporting machinery is COMPOSITIONAL** — storing human material · retention and
+recall · lifecycle/circulation controls · confidence-like quantities · domain provenance · export ·
+deletion infrastructure.
+
+⭐⭐ **The epistemic custody layer is CONSTRUCTION.** The system lacks the layer that answers:
+***what kind of epistemic act made this proposition about this human admissible?*** ⛔ That is not a
+cosmetic extension of `source_type`.
+
+## A5 · Standing
+
+```text
+SPM-02  CENSUS CLOSED — it answered its question
+```
+
+⛔ **The erasure trace is NOT folded back in.** It leaves as a routed dependency (register **F5**),
+because ⭐ *a census that keeps absorbing what it discovered stops being a census.*
+
+> ⭐ **SPM was not invented to formalize something the code already happened to contain. The census
+> found the exact absence SPM claims matters.**
