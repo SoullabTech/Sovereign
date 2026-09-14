@@ -21,6 +21,39 @@ BEFORE="$(sha256sum "$RUNBOOK" | cut -c1-16)"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/s3-runbook-proof.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
+# ⭐ A STAND-IN PRODUCTION RUNTIME ROOT. The runbook now REFUSES to load without a
+# verified one, so the harness must build a real one: the operational files and a
+# git worktree whose top is the root itself.
+FAKE_ROOT="$TMP/prod-root"
+mkdir -p "$FAKE_ROOT"
+: > "$FAKE_ROOT/.env.production"
+: > "$FAKE_ROOT/docker-compose.production.yml"
+git -C "$FAKE_ROOT" init -q 2>/dev/null
+export PROJECT_DIR="$FAKE_ROOT"
+
+# ⭐⭐ THE TEST SEAM LIVES HERE, NOT IN PRODUCTION AUTHORITY. The runbook's
+# production root is a non-overridable literal, so the harness cannot point it at
+# a fixture with an environment variable — and must not be able to. It mutates a
+# DISPOSABLE COPY instead. Every functional check below runs against that copy;
+# the STATIC checks and the digest run against the real file.
+RUNBOOK_UT="$TMP/runbook-under-test.sh"
+sed 's|^readonly RB_PRODUCTION_ROOT=.*|readonly RB_PRODUCTION_ROOT="'"$FAKE_ROOT"'"|' \
+  "$RUNBOOK" > "$RUNBOOK_UT"
+chmod +x "$RUNBOOK_UT"
+if cmp -s "$RUNBOOK" "$RUNBOOK_UT"; then
+  echo "  FAIL: the root literal could not be rewritten — the harness is not testing what it thinks"
+  exit 1
+fi
+# The copy must resolve its siblings.
+for sib in "$SCRIPT_DIR"/*.sh; do ln -sf "$sib" "$TMP/$(basename "$sib")"; done
+
+# A LOOKALIKE: same shape, different identity. It must not be accepted.
+LOOKALIKE="$TMP/lookalike"
+mkdir -p "$LOOKALIKE"
+: > "$LOOKALIKE/.env.production"
+: > "$LOOKALIKE/docker-compose.production.yml"
+git -C "$LOOKALIKE" init -q 2>/dev/null
+
 PASS=0; FAIL=0
 ok()  { echo "  ok:   $1"; PASS=$((PASS + 1)); }
 bad() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
@@ -99,7 +132,7 @@ echo "O1 RUNBOOK — falsification harness"
 echo ""
 
 # ── 1 · HAPPY PATH: order, custody, one SHA throughout ──────────────────────
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "")"
 M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"; B="$(step_index "$T" build)"
 [ -n "$M" ] && [ -n "$S" ] && [ "$M" -lt "$S" ] \
   && ok "MIGRATE strictly precedes SWAP" || bad "migrate does not precede swap ($M vs $S)"
@@ -116,21 +149,21 @@ grep -q "^verify-running abc1234" <<<"$T" \
   && ok "the running container is verified against the SAME named SHA" || bad "running verify uses another SHA"
 
 # ── 2 · FAILURE PATHS ──────────────────────────────────────────────────────
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" migrate)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" migrate)"
 grep -q '^swap' <<<"$T" && bad "migration failure still swapped the reader" \
   || ok "migration failure → candidate reader NEVER becomes live"
 [ "$(code "$T")" != "0" ] && ok "migration failure exits non-zero" || bad "migration failure exited 0"
 
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" build)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" build)"
 { grep -q '^migrate' <<<"$T" || grep -q '^swap' <<<"$T"; } \
   && bad "build failure still migrated or swapped" \
   || ok "build failure → no migration and no swap"
 
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" swap)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" swap)"
 grep -q '^migrate' <<<"$T" && [ "$(code "$T")" != "0" ] \
   && ok "swap failure → non-zero, after a migration that already succeeded" || bad "swap failure path wrong"
 
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" verify-running)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" verify-running)"
 [ "$(code "$T")" != "0" ] && ok "post-swap provenance failure → non-zero" || bad "provenance failure exited 0"
 
 # ── 3 · ACT SCOPE — exactly the proved three, and nothing else ─────────────
@@ -138,7 +171,7 @@ T="$(trace "$RUNBOOK" abc1234 "$PROVED" verify-running)"
 # in both directions. A guard that only rejects "more" is half a guard — the first
 # production invocation was stopped by a set SMALLER than expected.
 scope_refuses() { # $1 label  $2 pending set
-  local T; T="$(trace "$RUNBOOK" abc1234 "$2" "")"
+  local T; T="$(trace "$RUNBOOK_UT" abc1234 "$2" "")"
   if grep -qE '^(build|migrate|swap|recovery-tag)' <<<"$T"; then
     bad "ACT SCOPE: $1 did not stop the act"
   else
@@ -164,22 +197,114 @@ EXPECTED_IN_RUNBOOK="$(sed -n '/^RB_EXPECTED_PENDING=(/,/^)/p' "$RUNBOOK" | sed 
 grep -qE '20260121_trusted_colleagues|20260122_transcript_encryption' <<<"$EXPECTED_IN_RUNBOOK" \
   && bad "an already-applied January filename is still in the act scope" \
   || ok "neither already-applied January filename remains in the act scope"
-T="$(trace "$RUNBOOK" "" "$PROVED" "")"
+T="$(trace "$RUNBOOK_UT" "" "$PROVED" "")"
 { grep -q '^materialize' <<<"$T" || grep -q '^lock' <<<"$T"; } \
   && bad "ran without a named candidate SHA" \
   || ok "no SHA → refuses before the lock; ⛔ no DEPLOY_ALLOW_HEAD escape"
 
+# ── 3a · RUNTIME ROOT CUSTODY (DEPLOYMENT-SAFETY-02B) ──────────────────────
+# ⭐⭐ THE GAP THAT LET THE FIRST ACT THROUGH. The harness stubbed the lock and
+# never asked WHERE it landed, so a lock taken in a throwaway directory passed
+# every check. That omission is now lethal.
+
+# The runbook is run as a SUBPROCESS here: a refusal must happen at load time,
+# before any helper is sourced, so it cannot be observed by sourcing it.
+root_refuses() { # $1 label  $2 PROJECT_DIR value ("" = unset)
+  local out rc
+  if [ -z "$2" ]; then
+    out="$(env -u PROJECT_DIR bash "$RUNBOOK_UT" abc1234 2>&1)"; rc=$?
+  else
+    out="$(PROJECT_DIR="$2" bash "$RUNBOOK_UT" abc1234 2>&1)"; rc=$?
+  fi
+  # ⭐ THE DISCRIMINATOR IS THE GUARD'S OWN VERDICT, NEVER THE EXIT CODE. A run
+  # can pass the root guard and still exit non-zero further down — which is
+  # exactly how the pre-repair form would have slipped through a code-only check.
+  if grep -q 'Runtime root verified' <<<"$out"; then
+    bad "RUNTIME ROOT: $1 PASSED the root guard"
+  elif grep -q 'acquired' <<<"$out"; then
+    bad "RUNTIME ROOT: $1 refused, but a deploy lock was taken first"
+  elif [ "$rc" = "0" ]; then
+    bad "RUNTIME ROOT: $1 was ACCEPTED"
+  else
+    ok "RUNTIME ROOT: $1 refuses before any helper is sourced or lock taken"
+  fi
+}
+root_refuses "PROJECT_DIR unset"                    ""
+root_refuses "PROJECT_DIR = a pinned temp worktree" "$TMP"
+root_refuses "PROJECT_DIR = a LOOKALIKE dir with the right files" "$LOOKALIKE"
+root_refuses "PROJECT_DIR = a nonexistent path"     "$TMP/does-not-exist"
+
+# ⭐ And the GOOD case: the lock must resolve INTO the production runtime root.
+LOCKPATH="$(PROJECT_DIR="$FAKE_ROOT" bash -c '
+  source "$1" >/dev/null 2>&1; echo "$DEPLOY_LOCK_FILE"' _ "$RUNBOOK_UT" 2>/dev/null)"
+[ "$LOCKPATH" = "$FAKE_ROOT/.deploy.lock" ] \
+  && ok "RUNTIME ROOT: the deploy-lane lock resolves to the production root's .deploy.lock" \
+  || bad "the lock resolves to '${LOCKPATH:-none}', not the production root"
+case "$LOCKPATH" in
+  "$TMP"/prod-root/*) ok "the lock path is INSIDE the verified runtime root" ;;
+  *) bad "the lock path is outside the verified runtime root" ;;
+esac
+
+# ⛔⛔ THE HOSTILE OVERRIDE — the defect this repair exists to close.
+# The copy's literal is FAKE_ROOT; the caller tries to redirect it to a lookalike
+# through the environment. If the env could redefine the root, this would pass.
+OUT="$(RB_PRODUCTION_ROOT="$LOOKALIKE" PROJECT_DIR="$LOOKALIKE" bash "$RUNBOOK_UT" abc1234 2>&1)"
+if grep -q 'Runtime root verified' <<<"$OUT"; then
+  bad "RUNTIME ROOT: an environment override REDEFINED the production root"
+elif grep -q 'not the production runtime root' <<<"$OUT"; then
+  ok "RUNTIME ROOT: an environment override CANNOT redefine the production root"
+else
+  bad "RUNTIME ROOT: the override case refused for an unexpected reason — not proof"
+fi
+
+# ⭐⭐ DISCRIMINATION: the PRE-REPAIR `${RB_PRODUCTION_ROOT:-…}` form, restored on a
+# throwaway copy, MUST be caught by the check above. Without this the check could
+# be green against the very defect it was written for.
+VULN="$TMP/vulnerable.sh"
+sed 's|^readonly RB_PRODUCTION_ROOT=.*|RB_PRODUCTION_ROOT="${RB_PRODUCTION_ROOT:-'"$FAKE_ROOT"'}"|' \
+  "$RUNBOOK" > "$VULN"; chmod +x "$VULN"
+OUT="$(RB_PRODUCTION_ROOT="$LOOKALIKE" PROJECT_DIR="$LOOKALIKE" bash "$VULN" abc1234 2>&1)"
+grep -q 'Runtime root verified' <<<"$OUT" \
+  && ok "DISCRIMINATION: the pre-repair overridable form IS detected as accepting a lookalike" \
+  || bad "the pre-repair overridable form was not detected — this check proves nothing"
+
+# ⭐ And production authority carries the real literal, with no env-derived form.
+grep -qE '^readonly RB_PRODUCTION_ROOT="/home/soullab/MAIA-SOVEREIGN"$' "$RUNBOOK" \
+  && ok "the production root is a readonly LITERAL in the real runbook" \
+  || bad "the real runbook does not declare the production root as a readonly literal"
+grep -qE 'RB_PRODUCTION_ROOT="\$\{RB_PRODUCTION_ROOT' "$RUNBOOK" \
+  && bad "the real runbook still derives its production root from the environment" \
+  || ok "the real runbook derives NOTHING about its root from the environment"
+
+# ⛔ The runbook must not reintroduce a location-derived default.
+grep -qE 'PROJECT_DIR="\$\{PROJECT_DIR:-' "$RUNBOOK" \
+  && bad "PROJECT_DIR still has a fallback default" \
+  || ok "PROJECT_DIR has NO fallback — it is supplied or the act refuses"
+
+# ⭐ RECOVERY CARRIES THE SAME CUSTODY. `rb_recover` reads the runtime compose and
+# env straight from PROJECT_DIR, so a recovery launched from a temp worktree would
+# have operated on the wrong root. The load-time assertion covers it.
+out="$(PROJECT_DIR="$TMP" bash "$RUNBOOK_UT" recover abc1234 2>&1)"; rc=$?
+{ [ "$rc" != "0" ] && ! grep -q 'acquired' <<<"$out"; } \
+  && ok "RUNTIME ROOT: recover from a temp root refuses before doing anything" \
+  || bad "recover accepted a temp runtime root"
+
+# ⛔ No stale count may survive in prose: the messages derive from the array.
+grep -qi 'five-file\|(five files)' "$RUNBOOK" \
+  && bad "a stale five-file claim survives in the runbook's prose" \
+  || ok "no stale five-file claim survives — messages derive from the governed array"
+
 # ── 3b · SELF-PINNING: the runbook must be the CANDIDATE'S ─────────────────
-T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$PROVED" "")"
+T="$(RB_UNPINNED=1 trace "$RUNBOOK_UT" abc1234 "$PROVED" "")"
 I="$(step_index "$T" pin)"; L="$(step_index "$T" lock)"
 [ -n "$I" ] && { [ -z "$L" ] || [ "$I" -lt "$L" ]; } \
   && ok "PIN: an unpinned invocation re-execs from the candidate BEFORE the lock" \
   || bad "an unpinned invocation proceeded without pinning itself"
-T="$(RB_UNPINNED=1 trace "$RUNBOOK" abc1234 "$PROVED" pin)"
+T="$(RB_UNPINNED=1 trace "$RUNBOOK_UT" abc1234 "$PROVED" pin)"
 { grep -qE '^(migrate|swap|build)' <<<"$T"; } \
   && bad "a failed pin still reached build/migrate/swap" \
   || ok "PIN failure → nothing else runs"
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" provenance)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" provenance)"
 { grep -qE '^(migrate|swap|build)' <<<"$T"; } && bad "a provenance failure still proceeded" \
   || ok "SOURCE CUSTODY: a hostile stale/shared-checkout source refuses before the lock"
 grep -q '^prove-self' <<<"$T" && ok "self-provenance is asserted on every pinned run" \
@@ -191,7 +316,7 @@ REAL="$(cd "$SCRIPT_DIR/.." && git rev-parse HEAD 2>/dev/null)"
 if [ -n "$REAL" ]; then
   OUT="$(RB_PIN_REPO="$SCRIPT_DIR/.." bash -c '
     source "$1" >/dev/null 2>&1; set +e
-    rb_prove_self_provenance "$2"; echo "RC=$?"' _ "$RUNBOOK" "$REAL" 2>&1)"
+    rb_prove_self_provenance "$2"; echo "RC=$?"' _ "$RUNBOOK_UT" "$REAL" 2>&1)"
   # ⛔ Deliberately NOT scored either way: a working copy with uncommitted edits
   # legitimately fails its own HEAD, so a pass here would prove nothing. The
   # discriminating case is the negative one below.
@@ -199,13 +324,13 @@ if [ -n "$REAL" ]; then
     *) bad "REAL provenance check did not run" ;; esac
   OUT="$(RB_PIN_REPO="$SCRIPT_DIR/.." bash -c '
     source "$1" >/dev/null 2>&1; set +e
-    rb_prove_self_provenance "0000000000000000000000000000000000000000"; echo "RC=$?"' _ "$RUNBOOK" 2>&1)"
+    rb_prove_self_provenance "0000000000000000000000000000000000000000"; echo "RC=$?"' _ "$RUNBOOK_UT" 2>&1)"
   case "$OUT" in *"RC=0"*) bad "provenance accepted a commit that is not this tree's HEAD" ;;
     *) ok "REAL provenance check REFUSES a SHA that is not the running tree's commit" ;; esac
 fi
 
 # ── 3c · RECOVERY CUSTODY — established and proved before ANYTHING crosses ──
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "")"
 R="$(step_index "$T" recovery-tag)"; M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
 [ -n "$R" ] && [ "$R" -lt "$M" ] && [ "$M" -lt "$S" ] \
   && ok "ORDER: build → capture + recovery tag → migrate → swap" \
@@ -213,23 +338,23 @@ R="$(step_index "$T" recovery-tag)"; M="$(step_index "$T" migrate)"; S="$(step_i
 grep -q '^recovery-tag abc1234 pre=sha256:PREACT' <<<"$T" \
   && ok "the PRE-ACT live reader identity is captured and pinned by the recovery tag" \
   || bad "the pre-act reader identity is not pinned"
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" recovery-tag)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" recovery-tag)"
 { grep -qE '^(migrate|swap)' <<<"$T"; } \
   && bad "an unestablished recovery tag still migrated or swapped" \
   || ok "recovery-tag failure REFUSES before migration AND before the swap"
 [ "$(code "$T")" != "0" ] && ok "recovery-tag failure exits non-zero" || bad "recovery-tag failure exited 0"
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" no-reader)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" no-reader)"
 { grep -qE '^(migrate|swap)' <<<"$T"; } && bad "proceeded with no live reader captured" \
   || ok "no capturable live reader → refuses before migration and before the swap"
 
 # ⭐ NO SHARED ROLE TAG IS TOUCHED BEFORE THE SWAP — so a pre-swap refusal cannot
 # leave deployment metadata falsely describing production.
 for step in recovery-tag migrate no-reader; do
-  T="$(trace "$RUNBOOK" abc1234 "$PROVED" "$step")"
+  T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "$step")"
   grep -q '^tag ' <<<"$T" && bad "$step refusal moved the shared role tags" \
     || ok "$step refusal leaves the shared :current/:previous role tags untouched"
 done
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "")"
 Tg="$(step_index "$T" tag)"; V="$(step_index "$T" colab)"
 [ -n "$Tg" ] && [ "$V" -lt "$Tg" ] \
   && ok "shared role tags are written only AFTER a verified, gated success" \
@@ -265,7 +390,7 @@ recover_run() { # $1 script  $2 mode  -> prints trace then RC=<n>
   ' _ "$1"
   cat "$RTRACE"
 }
-RT="$(recover_run "$RUNBOOK" honest)"
+RT="$(recover_run "$RUNBOOK_UT" honest)"
 grep -q 'tag .*:prod' <<<"$RT" \
   && ok "RECOVERY retags the captured image onto :prod — the alias compose consumes" \
   || bad "recovery never retags :prod"
@@ -276,7 +401,7 @@ grep -q 'RC=0' <<<"$RT" && ok "RECOVERY confirms the restored commit and that th
 # ⭐⭐ DISCRIMINATION: a recovery that only moves :current/:previous and leaves
 # :prod on the candidate — i.e. exactly what `deploy-production.sh rollback`
 # does — MUST be detected as a FAILED recovery.
-RT="$(recover_run "$RUNBOOK" only-role-tags)"
+RT="$(recover_run "$RUNBOOK_UT" only-role-tags)"
 grep -q 'RC=0' <<<"$RT" \
   && bad "a recovery that left :prod on the candidate reported SUCCESS" \
   || ok "DISCRIMINATION: recovery that leaves :prod on the candidate is DETECTED as failed"
@@ -298,7 +423,7 @@ grep -q 'MAIA_IMAGE_REPO:-maia-sovereign}:prod' "$RUNBOOK" \
   && ok "recovery retags exactly that alias" || bad "recovery does not name the compose alias"
 
 # The act must not send the operator to the defective general primitive.
-OUT="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK" 2>&1)"
+OUT="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK_UT" 2>&1)"
 grep -q 'runbook.sh recover' <<<"$OUT" \
   && ok "the recovery instruction names the act's own operation" || bad "no act-owned recovery instruction"
 grep -qE 'NOT ./scripts/deploy-production.sh rollback|NOT \./scripts/deploy-production\.sh rollback' <<<"$OUT" \
@@ -311,7 +436,7 @@ custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
     source "$1" >/dev/null 2>&1; set +e
     rb_image_id() { case "$1" in *:prod) echo CAND;; *:previous) echo "$PREV";; *:current) echo "$CUR";; *) echo "$SHAT";; esac; }
     PREV="$2" CUR="$3" SHAT="$4" rb_prove_rollback_custody abc1234 sha256:PREACT >/dev/null 2>&1; echo $?' \
-    _ "$RUNBOOK" "$1" "$2" "$3"
+    _ "$RUNBOOK_UT" "$1" "$2" "$3"
 }
 [ "$(PREV=x custody_real sha256:PREACT CAND CAND)" = "0" ] \
   && ok "REAL custody proof accepts truthful :previous/:current/:<sha>" || bad "truthful tags were refused"
@@ -325,12 +450,12 @@ custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
 
 # ── 3d · LATE FAILURES MAY NOT DECLARE COMPLETION ──────────────────────────
 for step in swap verify-running colab; do
-  T="$(trace "$RUNBOOK" abc1234 "$PROVED" "$step")"
+  T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "$step")"
   [ "$(code "$T")" != "0" ] && ok "$step failure → non-zero" || bad "$step failure exited 0"
 done
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" colab)"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" colab)"
 grep -q '^colab' <<<"$T" && ok "the Co-Lab gate is actually invoked" || bad "Co-Lab is never invoked"
-T="$(trace "$RUNBOOK" abc1234 "$PROVED" "")"
+T="$(trace "$RUNBOOK_UT" abc1234 "$PROVED" "")"
 grep -q '^colab' <<<"$T" && ok "the happy path reaches the Co-Lab gate" || bad "happy path skipped Co-Lab"
 
 # ⭐ COMPLETION IS REACHED BY THE HAPPY PATH ALONE. Asserted on stdout, because
@@ -351,7 +476,7 @@ complete_says() { # $1 failstep -> prints "yes"/"no"
     rb_pending_set() { printf "%s" "$PENDING"; }; sleep() { :; }
     deploy_ctx_compose() { case "$*" in build*) [ "$FAILSTEP" = build ] && return 1;; *migrate*) [ "$FAILSTEP" = migrate ] && return 1;; up\ -d*) [ "$FAILSTEP" = swap ] && return 1;; esac; return 0; }
     docker() { case "$*" in *colab*) [ "$FAILSTEP" = colab ] && return 1;; esac; return 0; }
-    s3_schema_first_main abc1234' _ "$RUNBOOK" 2>&1)"
+    s3_schema_first_main abc1234' _ "$RUNBOOK_UT" 2>&1)"
   grep -q "act complete" <<<"$out" && echo yes || echo no
 }
 [ "$(complete_says "")" = "yes" ] && ok "the happy path DOES declare the act complete" || bad "happy path never declares completion"
@@ -362,10 +487,10 @@ for step in build migrate recovery-tag swap verify-running colab; do
 done
 for step in swap verify-running colab; do
   out="$(PENDING="$PROVED" FAILSTEP="$step" bash -c '
-    source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "test"' _ "$RUNBOOK" 2>&1)"
+    source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "test"' _ "$RUNBOOK_UT" 2>&1)"
   grep -q 'RECOVERY REQUIRED' <<<"$out" || bad "recovery statement missing for $step"
 done
-out="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK" 2>&1)"
+out="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK_UT" 2>&1)"
 grep -qi 'old reader remains live\|current reader remains live' <<<"$out" \
   && bad "the recovery statement CLAIMS the old reader is still live" \
   || ok "the recovery statement does NOT claim the old reader is still live"
@@ -376,7 +501,7 @@ grep -q 'UNKNOWN to this script' <<<"$out" \
 # ── 4 · DISCRIMINATION — swap-before-migrate must be DETECTED ──────────────
 MUT="$TMP/mutant.sh"
 for sib in "$SCRIPT_DIR"/*.sh; do ln -sf "$sib" "$TMP/$(basename "$sib")"; done
-python3 - "$RUNBOOK" "$MUT" <<'MUTPY'
+python3 - "$RUNBOOK_UT" "$MUT" <<'MUTPY'
 import re, sys
 src = open(sys.argv[1]).read()
 m = re.search(r'^s3_schema_first_main\(\) \{.*?^\}', src, re.S | re.M)
