@@ -2,7 +2,13 @@
 
 **Date:** 2026-09-13 · **Programme:** `SPM-00` · **Authorized by:** founder ruling 2026-09-13.
 **Supersedes:** v0.2 (`…_v0.2_2026-09-13.md`), preserved unedited; v0.1 before it.
-**Status:** ⛔ **NOT STABLE.** Stabilization conditions in §6. No schema · no storage · no migration ·
+**Status:** ⛔ **SUPERSEDED BY v0.4** (`SPM-01_BOUNDARY_SPECIFICATION_v0.4_2026-09-14.md`) —
+preserved unedited. v0.4 is a **new version, not an addendum**, because operative meaning changed:
+the consume column is answered (G1), `superseded` becomes derived rather than stored (M1), `stale`
+is refused (M2), and a new constraint enters (G2). ⛔ v0.3's formation gate, non-formation record,
+ORIGIN set and prohibitions are **unchanged** and remain current here.
+
+**Original status line:** ⛔ **NOT STABLE.** Stabilization conditions in §6. No schema · no storage · no migration ·
 no implementation · no canon.
 
 **What v0.3 changes:** the object gains a **pre-claim formation boundary**. The rights matrix, origin

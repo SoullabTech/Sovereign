@@ -47,7 +47,35 @@ ratification.**
 
 **Owner:** founder. **Disposition:** record the mismatch exactly; change nothing on either side.
 
-⚠️ **Blocking condition, stated precisely (founder, 2026-09-13):** F2 **does not block SPM-01
+⭐⭐ **RULED 2026-09-14 — MIXED STANDING; ⛔ NOT WHOLESALE RATIFICATION.** The F2 question as posed
+(*does Kelly ratify S5?*) proved **too coarse: S5 is itself a mixed-standing artifact.** Its header
+says `CANON-CANDIDATE` and reserves ratification — while **§2 is titled *"Constitutional ground
+(ratified sentences)"* and contains four already-ratified laws**, its typed provenance object is
+explicitly a *candidate shape*, and RC1 / RC3 / RC6 are named candidates.
+
+⚠️ **Founder-supplied evidence, ⛔ not verified by this lane:** a 2026-07-18 founder-authored
+implementation commit states it *"implements the ratified S5 charter + constitution"*; a later
+same-day commit records the memory constitution in platform knowledge as five Live,
+production-verified facts. **Recorded as cited, not as read.**
+
+```text
+S5 §2 constitutional ground            RATIFIED
+Implemented S5 Foundation              STANDING / ACCEPTED — enforcement remains
+Candidate typed provenance shape       CANDIDATE
+RC1 / RC3 / RC6 and other extensions   CANDIDATE
+Unbuilt object-map targets             CANDIDATE
+WHOLE PAPER                            ⭐ MIXED STANDING
+```
+
+**Owed:** the header should eventually read **`MIXED STANDING — RATIFIED CORE · LIVE FOUNDATION ·
+CANDIDATE EXTENSIONS`** rather than `CANON-CANDIDATE`. ⛔ **Do NOT move the whole paper into canon**
+— that would silently ratify candidate schema and candidate principles its own text kept open. ⛔
+**Do NOT weaken any enforcement** — that would erase founder-authorized, production-verified
+constitutional infrastructure.
+
+> ⭐ **F2 closes as a STANDING-RECORD DEFECT, not as "yes, ratify everything."**
+
+⚠️ **Blocking condition, superseded by the above (recorded 2026-09-13):** F2 **does not block SPM-01
 stabilization** — ⛔ **unless some pending ruling turns out to depend on S5 having *canonical*
 rather than *candidate* standing.** If M1/M2 or G1/G2 come back resting on S5's authority level,
 F2 becomes blocking at that moment and not before.
