@@ -127,21 +127,117 @@ or explicitly refuse before an interactive paint, ⭐ **STOP.** At that point th
 cancellation mechanism becomes mandatory and needs its own bounded design. ⛔ Do not build that
 complexity pre-emptively while the synchronous renderer may eliminate the hazard entirely.
 
-### ⚠️⚠️ OWED DECISION — what REFUSED looks like to the member
+### ⭐⭐ REFUSAL RULING (founder, 2026-09-14) — inline, local, specific to the act
 
-⛔ **Not decided here, and it must be decided before implementation.**
-
-```text
-On REFUSE, per §4, the viewport does NOT move at all.
-So the member presses GO TO CHANGE and NOTHING VISIBLY HAPPENS.
-```
-
-⭐⭐ **That is indistinguishable from the originating complaint — "it doesn't open."** A refusal
-that is silent to the member re-creates F1's symptom behind a correctly-named control.
+The hazard: on REFUSE the viewport does not move at all, so the member presses `GO TO CHANGE` and
+**nothing visibly happens** — ⛔ indistinguishable from the originating complaint. Ruled:
 
 ```text
-⭐ "Explicit refusal" must mean EXPLICIT TO THE MEMBER, not merely explicit in the state machine.
+GO TO CHANGE · REFUSAL
+
+If the exact proposal locus cannot be addressed:
+  • viewport does NOT move          • proposal state does NOT change
+  • view does NOT change            • manuscript state does NOT change
+
+  • the proposal panel states, INLINE, beneath GO TO CHANGE:
+
+      "I can't locate the exact passage in the manuscript right now.
+       Nothing has moved."
+
+  • announced as a STATUS for assistive technology
+  • GO TO CHANGE remains a MEMBER ACT — ⛔ never converted into shell fallback
 ```
+
+⭐ `ProposedChange` already has an established pattern for member-facing refusal copy rather than
+silent failure. ⛔ No toast, modal, or Whole-surface notification system is needed.
+
+### Why that copy — what it must NOT say
+
+```text
+⛔ "This change could not be made."   → that language belongs to AUTHORIZATION / WRITE refusal
+                                        in this surface; using it collapses NAVIGATION failure
+                                        with MANUSCRIPT MUTATION
+⛔ "Section not found." · "Locus unresolved." · "Navigation failed."
+                                      → implementation truths, ⛔ not MEMBER truths
+⛔ "Try again."                        → the Studio has a discipline against offering a gesture
+                                        guaranteed to refuse. ⭐ Automatic retry is OPTIMISM
+                                        MASQUERADING AS HELP.
+```
+
+⭐ The copy says exactly the two things the member needs:
+
+```text
+1  WHAT could not be honoured   — locating the exact passage
+2  WHAT DID NOT HAPPEN          — nothing moved
+```
+
+⭐⭐ **The second sentence is load-bearing precisely because the repair refuses the old shell
+fallback.** Without it a member could reasonably wonder whether the button did something
+off-screen.
+
+### ⚠️ One wording check, not an objection
+
+⛔ *"right now"* implies the condition is **transient**. If a refusal can arise from stale or
+missing proposal state, a retry would fail identically — and the phrase would promise a transience
+the system cannot back, which is the same claim-discipline problem the copy rules otherwise avoid.
+⭐ Worth confirming against the actual refusal conditions before the copy is frozen; ⛔ not changed
+here.
+
+### ⭐ Keep the refusal WITH THE ISSUER
+
+⛔ **Explicitly rejected:** `WholeManuscriptSurface`'s existing bottom `role="status"` seam. ⭐ That
+status belongs to the **manuscript surface**; this refusal belongs to the **proposal request.**
+
+```text
+⭐ THE OBJECT THAT ISSUED THE ACT SHOULD REPORT WHETHER THAT ACT WAS FULFILLED.
+
+ProposedChange  issues request A
+      ↓
+Whole observer  fulfil A  OR  refuse A(reason)
+      ↓
+ProposedChange  presents the result of A
+```
+
+⭐ The Whole surface may **discover** the refusal; ⛔ it must not become the **narrator** of why
+`GO TO CHANGE` failed. **Discovery and narration stay separate** — the source-provenance rule
+again, now on the return path.
+
+### Refusal state obeys REQUEST IDENTITY
+
+```text
+ISSUE A → clear any prior return-refusal
+        → A fulfilled → no refusal shown
+        → A refused   → show refusal FOR A
+
+ISSUE B → clear A's refusal IMMEDIATELY → adjudicate B independently
+
+A WITHDRAWN BY B → ⛔ DO NOT show A as "failed"
+```
+
+```text
+⭐⭐ WITHDRAWAL IS NOT REFUSAL. The member changed their mind.
+⭐ Same carrier law again: a refusal belongs to ONE ACT, not to the control forever.
+```
+
+### Visual weight
+
+⭐ Use the panel's existing **quiet textual vocabulary**, ⛔ not an alarming error treatment. This
+is **a refusal to pretend success, not manuscript damage.** The acceptance refusal uses a warm error
+colour because an attempted *authorization* failed; navigation refusal should read as ordinary
+quiet metadata unless the design system has a specific refusal tone.
+
+```text
+⭐ THE KEY IS VISIBILITY, NOT ALARM.
+```
+
+```text
+REFUSAL UX  ✅ inline in ProposedChange     TOAST ⛔  MODAL ⛔  SHELL MOVE ⛔
+                                            MODE CHANGE ⛔  AUTO RETRY ⛔  WRITE LANGUAGE ⛔
+```
+
+> ⭐⭐ **Explicit refusal means the member is told, AT THE PLACE THEY MADE THE REQUEST, that the
+> exact request could not be honoured — and the interface must not COUNTERFEIT PARTIAL SUCCESS to
+> avoid saying so.**
 
 ## 6 · Observer state machine — the completion invariant in executable form
 
@@ -179,6 +275,16 @@ F4  same section, WRONG locusKey                 → wrong node cannot satisfy t
 F5  one request, later rerenders                 → no repeat reveal
 F6  fulfilled locus evicts then remounts         → no late reveal
 F7  request A superseded by B before fulfilment  → only B may reveal
+
+F8  target mounts, exact locus absent  → zero reveal · request REFUSED ·
+                                        member-facing inline status emitted ·
+                                        copy says the exact passage could not be located ·
+                                        ⛔ no shell fallback
+F9  refused A → new request B succeeds  → A's refusal CLEARS when B is issued ·
+                                        B reveals exact locus · ⛔ stale refusal absent
+F10 A superseded by member request B    → A = WITHDRAWN · ⛔ NO refusal message for A
+                                        ⭐ prevents the UI accusing the system of failure
+                                          when the member simply changed intent
 
 MUTANT  "try locus; if absent consume on shell"  → ⭐ MUST FAIL
 ```
@@ -229,6 +335,10 @@ jumpTo              unchanged as ordinary section-navigation carrier
 automatic arrival   unchanged
 shell fallback      ⛔ PROHIBITED
 
-⚠️ OWED BEFORE CODE  what REFUSED looks like to the member (§5)
-CODE                ⛔ NOT YET
+REFUSAL UX          ✅ RULED — inline in ProposedChange · issuer narrates · quiet, not alarming
+                    ⭐ withdrawal is not refusal · refusal belongs to one act
+⚠️ CHECK BEFORE FREEZE  does "right now" promise a transience the refusal conditions can back?
+
+DESIGN              ⭐ COMPLETE — GREEN phase may be authorized
+CODE                ⛔ NOT YET WRITTEN
 ```
