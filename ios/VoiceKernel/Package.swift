@@ -6,7 +6,7 @@
 // (docs/programme/VOICE-2026/ARCH-01/06_KERNEL-00_ACCEPTANCE_LAW.md).
 //
 // This package contains ONLY: VoiceKernel (actor), AudioSessionAuthority,
-// the duplex native audio graph, HealthSupervisor, RecoveryPolicy,
+// the duplex Voice-Processing I/O substrate (Audio Toolbox), HealthSupervisor, RecoveryPolicy,
 // StateProjection, the flight recorder, replay, and fault injection.
 // No STT. No TTS. No LLM. No Web audio. No canonical MAIA. No legacy voice
 // components. No network egress. No dependencies.
@@ -27,7 +27,9 @@ let package = Package(
         .target(
             name: "VoiceKernel",
             dependencies: [],
-            path: "Sources/VoiceKernel"
+            path: "Sources/VoiceKernel",
+            // VPIO-01: the substrate drives the Voice-Processing I/O audio unit directly.
+            linkerSettings: [.linkedFramework("AudioToolbox")]
         ),
         .testTarget(
             name: "VoiceKernelTests",

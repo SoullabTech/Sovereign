@@ -334,67 +334,41 @@ final class ConfigurationChangeSeamTests: XCTestCase {
 
 }
 
-// PRE-WITNESS-04 §2.1 (founder amendment 1) — the classifier is generation-scoped
-// and one-shot: exactly one expected VP-associated change per VP-enabled start,
-// on unchanged ports, with no interruption/reset in progress. Nothing else.
-final class ConfigurationChangeClassifierTests: XCTestCase {
+// VPIO-01 (founder ruling 2026-09-14, plan §11 item 3) — the one pure operation
+// kept from the retired engine classifier: port identity. Data source is
+// evidence, never identity (PRE-WITNESS-04 amendment 1). Nothing else lives here.
+final class RouteComparisonTests: XCTestCase {
     private let builtIn = RouteState(output: "builtInSpeaker", input: "builtInMic", inputDataSource: "-")
     private let builtInBottom = RouteState(output: "builtInSpeaker", input: "builtInMic", inputDataSource: "Bottom")
     private let hfp = RouteState(output: "bluetoothHFP", input: "bluetoothHFP")
 
-    private func input(vp: Bool = true, pending: Bool = true, ordinal: Int = 1,
-                       start: RouteState? = nil, now: RouteState? = nil, suspended: Bool = false)
-        -> ConfigurationChangeClassifier.Input {
-        .init(voiceProcessing: vp, expectationPending: pending, ordinalInGeneration: ordinal,
-              routeAtStart: start ?? builtIn, routeNow: now ?? builtInBottom, suspended: suspended)
-    }
-
-    func testTheOneExpectedChangeAfterAVPStartIsClassifiedAsVPReconfiguration() {
-        // Run 3a shape: VP on · first change · same ports · data source `-` → `Bottom` (evidence, not identity).
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input()), .voiceProcessingReconfiguration)
-    }
-
     func testDataSourceAlternationDoesNotChangeRouteIdentity() {
-        XCTAssertTrue(ConfigurationChangeClassifier.samePorts(builtIn, builtInBottom))
-        XCTAssertFalse(ConfigurationChangeClassifier.samePorts(builtIn, hfp))
-        XCTAssertFalse(ConfigurationChangeClassifier.samePorts(nil, builtIn))
+        XCTAssertTrue(RouteComparison.samePorts(builtIn, builtInBottom))
     }
-
-    func testSecondChangeInTheSameGenerationIsNotVP() {
-        // The expectation is consumed on the first match; a later same-route change is ordinary.
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: false, ordinal: 2)), .routeConfigurationChange)
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: true, ordinal: 2)), .routeConfigurationChange)
+    func testDifferentPortsAreADifferentRoute() {
+        XCTAssertFalse(RouteComparison.samePorts(builtIn, hfp))
     }
-
-    func testRealRouteChangeIsNeverVP() {
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(now: hfp)), .routeConfigurationChange)
-    }
-
-    func testVoiceProcessingOffIsNeverVP() {
-        // Run 3b: with VP off no change arrived at all; if one did, it is not the VP one.
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(vp: false)), .routeConfigurationChange)
-    }
-
-    func testRetiredExpectationAndSuspensionAreNeverVP() {
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(pending: false)), .routeConfigurationChange)
-        XCTAssertEqual(ConfigurationChangeClassifier.classify(input(suspended: true)), .routeConfigurationChange)
+    func testAMissingBaselineIsNeverTheSameRoute() {
+        // No successfully started generation → no baseline → never "same"; the kernel's
+        // eligibility guard refuses the act anyway, this keeps the helper honest on its own.
+        XCTAssertFalse(RouteComparison.samePorts(nil, builtIn))
+        XCTAssertFalse(RouteComparison.samePorts(builtIn, nil))
     }
 }
 
-// PRE-WITNESS-05 Phase A — the startup-seam trace is a closed, ordered set of
-// observation steps. The kernel journals them as `graph_start_trace`; the
-// device trace (VP ON vs VP OFF) is what names the first divergent seam.
+// The startup-seam trace is a closed, ordered set of observation steps. The
+// kernel journals them as `graph_start_trace` (Phase-A lineage; VPIO vocabulary).
 final class StartTraceTests: XCTestCase {
-    // P5-B0: `input_format_before_vp` is deliberately absent — the pre-VP read is the
-    // removed candidate cause. The set is 13 steps on this subject.
-    func testTheTraceNamesExactlyTheTwelveSeamsPlusEngineCreatedWithNoPreVPFormatRead() {
+    // VPIO-01: eleven Voice-Processing I/O seams, in the order the calls happen.
+    // No engine seam (vp_enable / attach / connect / tap / observer / prepare) exists
+    // on this subject; the precondition read (`input_format_read`) precedes any callback.
+    func testTheTraceNamesExactlyTheElevenVPIOSeamsInOrder() {
         let steps = AudioGraph.StartTraceStep.allCases.map(\.rawValue)
-        XCTAssertFalse(steps.contains("input_format_before_vp"), "P5-B0 removed the pre-VP read; the seam must not exist")
         XCTAssertEqual(steps, [
-            "engine_created", "vp_enable_begin", "vp_enable_return",
-            "output_connected", "input_format_after_vp", "input_tap_installed", "render_tap_installed",
-            "observer_installed", "prepare_begin", "prepare_return", "start_begin", "start_return",
+            "unit_created", "io_enabled", "vp_properties_set", "input_format_read", "formats_set",
+            "callbacks_armed", "initialize_begin", "initialize_return", "start_begin", "start_return",
             "is_running_immediate",
-        ], "the set is closed and ordered as the calls happen; a reorder here is a reorder in the graph")
+        ], "the set is closed and ordered as the calls happen; a reorder here is a reorder in the substrate")
+        XCTAssertLessThan(steps.firstIndex(of: "input_format_read")!, steps.firstIndex(of: "callbacks_armed")!)
     }
 }

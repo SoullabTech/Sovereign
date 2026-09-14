@@ -1,27 +1,42 @@
-// KERNEL-00 · the duplex native audio graph.
+// KERNEL-00 / VPIO-01 · the duplex physical I/O substrate on the lower
+// Voice Processing I/O path.
 //
-// One AVAudioEngine per generation: input node with voice processing enabled
-// (echo cancellation / AGC at the audio layer — research §3.1, §20.1) and an
-// AVAudioPlayerNode for output. Input exists while output renders (duplex
-// physiology, K00-06). The graph owns NO session state: it never touches
-// AVAudioSession. It reports observations stamped with its generation so the
-// kernel can drop anything stale (K00-09).
+// One Voice-Processing I/O audio unit per generation (Audio Toolbox
+// kAudioUnitType_Output / kAudioUnitSubType_VoiceProcessingIO — research
+// §20.1, SURVEY-01 §2). Input is PULLED inside the unit's input callback
+// (AudioUnitRender into an app-owned buffer) and reported as generation-
+// stamped observations; output is FILLED inside the unit's render callback
+// from the one scheduled stream. Duplex physiology (K00-06) is a property of
+// the unit itself: input and output are the same instance.
+//
+// The substrate owns NO session state: it never names AVAudioSession. The
+// hardware sample rate, category, mode, activation, route and output override
+// are AudioSessionAuthority's; this file only READS the hardware format the
+// unit reports and adapts its client format to it (VPIO-01 plan §3).
 //
 // Output has identity: `schedule` returns an OutputStreamID; `cancel` stops
-// rendering for that identity (VOICE-10, ruled F3). KERNEL-00 renders one
-// stream at a time.
+// rendering for that identity — the next render callback emits silence
+// (VOICE-10, ruled F3). One stream at a time.
 //
-// PRE-WITNESS-01: a tap on the player node observes what is actually rendered
-// (P5) — cumulative frames and the monotonic time of the last non-silent
-// buffer — so `cancel(handle) → last rendered frame` is measured rather than
-// inferred from a function call's duration. The synthetic output stall (P6)
-// freezes THIS observation seam, so supervisor, snapshot and journal agree.
+// P5: cancel → last rendered non-silent frame is measured INSIDE the render
+// callback (the callback is the render; there is no separate tap). P6: the
+// synthetic stall freezes the render-observation seam, stamped synthetic.
 //
-// Realtime note: both taps run on the audio thread. They do arithmetic and
-// hand small value structs on; the kernel hops to its actor. Bounded and
-// adequate for KERNEL-00; a lock-free ring is a KERNEL-01 refinement.
+// The stream-format property listener is an OBSERVATION seam
+// (`onFormatChanged`), never an act: the kernel journals it and the
+// HealthSupervisor's existing windows decide (VPIO-01A census §5; founder
+// ruling plan §11). There is no configuration-change classifier on this
+// subject.
+//
+// Realtime note: both callbacks run on the audio thread. They do arithmetic,
+// take a short lock for stream bookkeeping and hand small value structs on;
+// the kernel hops to its actor. Bounded and adequate for KERNEL-00; a
+// lock-free ring is a KERNEL-01 refinement.
+//
+// Every Audio Toolbox property and call below is a documented, SDK-present
+// name (founder header check, iPhoneOS 26.2); none is guessed.
 import Foundation
-import AVFoundation
+import AudioToolbox
 
 public struct RenderStats: Sendable, Equatable {
     public var streamId: OutputStreamID
@@ -31,28 +46,32 @@ public struct RenderStats: Sendable, Equatable {
     public var synthetic: Bool
 }
 
-/// PRE-WITNESS-02 §3.1: the only way `start` refuses. A Swift error thrown
-/// BEFORE any input tap exists, so the invalid `installTap` call is
-/// unreachable rather than caught. There is no NSException machinery in this
-/// package; the source gate asserts that.
+/// The only ways `start` refuses. Swift errors thrown BEFORE any callback is
+/// armed, so an invalid configuration is unreachable rather than caught.
+/// There is no NSException machinery in this package; the source gate
+/// asserts that.
 public enum AudioGraphError: Error, CustomStringConvertible, Equatable {
     case invalidInputFormat(sampleRate: Double, channels: Int)
+    case unitUnavailable
+    case unitError(step: String, status: Int32)
     public var description: String {
         switch self {
         case .invalidInputFormat(let sr, let ch): return "invalidInputFormat(sampleRate: \(sr), channels: \(ch))"
+        case .unitUnavailable: return "unitUnavailable"
+        case .unitError(let step, let status): return "unitError(step: \(step), status: \(status))"
         }
     }
 }
 
-/// The input node's format as observed at one instant, in plain numbers so it
-/// can be journalled (§3.4) and validated (§3.1) without AVFoundation.
+/// The hardware input format as observed at one instant, in plain numbers so
+/// it can be journalled and validated without Audio Toolbox.
 public struct InputFormatObservation: Sendable, Equatable {
     public var sampleRate: Double
     public var channels: Int
     public init(sampleRate: Double, channels: Int) { self.sampleRate = sampleRate; self.channels = channels }
 
-    /// Pure precondition (§3.1): a format the hardware has not yet resolved
-    /// (0 Hz, 0 channels — the witnessed 2026-09-11 state) is invalid.
+    /// Pure precondition (PRE-WITNESS-02 §3.1): a format the hardware has not
+    /// yet resolved (0 Hz, 0 channels) is invalid.
     public var isValid: Bool { sampleRate > 0 && channels > 0 }
 
     /// Throws `AudioGraphError.invalidInputFormat` unless `isValid`.
@@ -61,15 +80,34 @@ public struct InputFormatObservation: Sendable, Equatable {
     }
 }
 
+/// Known PCM for output: mono float samples at a sample rate. Substrate-owned
+/// value type — the kernel never sees an Audio Toolbox or AVFoundation buffer.
+public struct PCMBuffer: Sendable, Equatable {
+    public var samples: [Float]
+    public var sampleRate: Double
+    public var frameCount: Int { samples.count }
+    public init(samples: [Float], sampleRate: Double) { self.samples = samples; self.sampleRate = sampleRate }
+}
+
+// C entry points for the unit. They capture nothing; the instance travels as refCon.
+private let vpioInputProc: AURenderCallback = { refCon, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, _ in
+    Unmanaged<AudioGraph>.fromOpaque(refCon).takeUnretainedValue()
+        .pullInput(ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames)
+}
+private let vpioRenderProc: AURenderCallback = { refCon, _, _, _, inNumberFrames, ioData in
+    Unmanaged<AudioGraph>.fromOpaque(refCon).takeUnretainedValue().render(frames: inNumberFrames, into: ioData)
+}
+private let vpioFormatListener: AudioUnitPropertyListenerProc = { refCon, _, _, scope, element in
+    Unmanaged<AudioGraph>.fromOpaque(refCon).takeUnretainedValue().formatPropertyChanged(scope: scope, element: element)
+}
+
 public final class AudioGraph: @unchecked Sendable {
     public let generation: Int
-    private let engine = AVAudioEngine()
-    private let player = AVAudioPlayerNode()
-    private var inputTapInstalled = false
-    private var renderTapInstalled = false
-    private var configObserver: NSObjectProtocol?
+    private var unit: AudioUnit?
+    private var listenerInstalled = false
     private let lock = NSLock()
     private var activeStream: OutputStreamID?
+    private var activeSamples: [Float] = []
     private var activeFrames: Int64 = 0
     private var renderedFramesForActive: Int64 = 0
     private var lastNonSilentAtMs: Int64?
@@ -77,43 +115,42 @@ public final class AudioGraph: @unchecked Sendable {
     private var lastInputFormat: InputFormatObservation?   // §3.4
     private var startedAtMs: Int64?                        // §3.4 generation age
     private var clock: () -> Int64 = MonotonicClock.nowMs
-
-    /// The format every output buffer must be in. Mono 48 kHz float; the mixer
-    /// converts to the hardware format.
-    public let outputFormat: AVAudioFormat
+    private var inputScratch: [Float] = Array(repeating: 0, count: 8_192)
     private let silencePeak: Float = 1e-7
 
-    public var onInput: ((InputObservation) -> Void)?
-    public var onStreamComplete: ((OutputStreamID, Int) -> Void)?          // (stream, generation)
-    public var onConfigurationChange: ((Int) -> Void)?                       // generation
+    /// The sample rate every output buffer must be in: the hardware rate the
+    /// unit reported at start (mono float). Set by `start`; 48 kHz until then.
+    public private(set) var outputSampleRate: Double = 48_000
 
-    public init(generation: Int) {
-        self.generation = generation
-        self.outputFormat = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+    public var onInput: ((InputObservation) -> Void)?
+    public var onStreamComplete: ((OutputStreamID, Int) -> Void)?             // (stream, generation)
+    /// Observation only: the unit's hardware input stream format changed.
+    public var onFormatChanged: ((Int, InputFormatObservation) -> Void)?    // (generation, format now)
+
+    public init(generation: Int) { self.generation = generation }
+
+    /// The unit's running property — EVIDENCE only (journalled as `ioRunning`).
+    /// It never earns physical health; only input callbacks do (plan §5).
+    public var isRunning: Bool {
+        guard let u = unit else { return false }
+        var running: UInt32 = 0
+        var size = UInt32(MemoryLayout<UInt32>.size)
+        let st = AudioUnitGetProperty(u, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0, &running, &size)
+        return st == noErr && running != 0
     }
 
-    public var isRunning: Bool { engine.isRunning }
-
-    /// PRE-WITNESS-05 Phase A — the closed set of startup seams the trace names.
-    /// Observation only: no call in `start` is reordered or added-as-mutation.
-    /// The kernel journals each step as `graph_start_trace`.
-    ///
-    /// P5-B0 (removal control, founder-selected 2026-09-12): the Phase-A read of the
-    /// input node's format BEFORE `setVoiceProcessingEnabled` — and only that read —
-    /// is REMOVED. The seam `input_format_before_vp` therefore no longer exists on
-    /// this subject and is absent from the set (13 steps). Everything else in
-    /// `start` is byte-for-byte the Phase-A subject `4596b9bdb`.
+    /// VPIO-01 startup seams — the closed, ordered set the kernel journals as
+    /// `graph_start_trace`. Observation steps only; each names the call that
+    /// just happened. Eleven steps on this subject.
     public enum StartTraceStep: String, CaseIterable, Sendable {
-        case engineCreated = "engine_created"
-        case vpEnableBegin = "vp_enable_begin"
-        case vpEnableReturn = "vp_enable_return"
-        case outputConnected = "output_connected"
-        case inputFormatAfterVP = "input_format_after_vp"
-        case inputTapInstalled = "input_tap_installed"
-        case renderTapInstalled = "render_tap_installed"
-        case observerInstalled = "observer_installed"
-        case prepareBegin = "prepare_begin"
-        case prepareReturn = "prepare_return"
+        case unitCreated = "unit_created"
+        case ioEnabled = "io_enabled"
+        case vpPropertiesSet = "vp_properties_set"
+        case inputFormatRead = "input_format_read"
+        case formatsSet = "formats_set"
+        case callbacksArmed = "callbacks_armed"
+        case initializeBegin = "initialize_begin"
+        case initializeReturn = "initialize_return"
         case startBegin = "start_begin"
         case startReturn = "start_return"
         case isRunningImmediate = "is_running_immediate"
@@ -123,88 +160,121 @@ public final class AudioGraph: @unchecked Sendable {
                       trace: (StartTraceStep, [String: String]) -> Void = { _, _ in }) throws {
         self.clock = clock
         let t0 = clock()
-        let input = engine.inputNode
-        trace(.engineCreated, ["voiceProcessingRequested": String(voiceProcessing)])
-        // P5-B0: no read of the input node's format happens here. The Phase-A
-        // `input.outputFormat(forBus: 0)` that preceded `setVoiceProcessingEnabled`
-        // is the one candidate cause under test; the first touch of the input
-        // format on this subject is `input_format_after_vp` below, as in 35b0f61d0.
-        // Must be set before the engine starts; global to both IO nodes (SURVEY-01 §2).
-        trace(.vpEnableBegin, [:])
+        var desc = AudioComponentDescription(componentType: kAudioUnitType_Output,
+                                             componentSubType: kAudioUnitSubType_VoiceProcessingIO,
+                                             componentManufacturer: kAudioUnitManufacturer_Apple,
+                                             componentFlags: 0, componentFlagsMask: 0)
+        guard let component = AudioComponentFindNext(nil, &desc) else {
+            trace(.unitCreated, ["outcome": "error", "error": "unitUnavailable"])
+            throw AudioGraphError.unitUnavailable
+        }
+        var created: AudioUnit?
+        let newStatus = AudioComponentInstanceNew(component, &created)
+        guard newStatus == noErr, let u = created else {
+            trace(.unitCreated, ["outcome": "error", "status": String(newStatus)])
+            throw AudioGraphError.unitError(step: "unit_created", status: newStatus)
+        }
+        unit = u
+        trace(.unitCreated, ["voiceProcessingRequested": String(voiceProcessing)])
+
+        // Input on element 1, output on element 0 — both explicitly enabled.
+        var one: UInt32 = 1
+        let inEnable = AudioUnitSetProperty(u, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &one, UInt32(MemoryLayout<UInt32>.size))
+        let outEnable = AudioUnitSetProperty(u, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &one, UInt32(MemoryLayout<UInt32>.size))
+        trace(.ioEnabled, ["inputStatus": String(inEnable), "outputStatus": String(outEnable)])
+        try Self.check(inEnable, step: "io_enabled")
+        try Self.check(outEnable, step: "io_enabled")
+
+        // The unit IS the voice processor: VP on/off is its bypass property.
+        // AGC is read back as evidence, never set (plan §3: a policy, not a right).
         let vpT = clock()
-        do {
-            try input.setVoiceProcessingEnabled(voiceProcessing)
-        } catch {
-            trace(.vpEnableReturn, ["outcome": "error", "error": "\(error)", "elapsedMs": String(clock() - vpT)])
-            throw error
-        }
-        trace(.vpEnableReturn, ["outcome": "ok", "elapsedMs": String(clock() - vpT),
-                                "readBack": String(input.isVoiceProcessingEnabled)])
+        var bypass: UInt32 = voiceProcessing ? 0 : 1
+        let bypassStatus = AudioUnitSetProperty(u, kAUVoiceIOProperty_BypassVoiceProcessing, kAudioUnitScope_Global, 0, &bypass, UInt32(MemoryLayout<UInt32>.size))
+        var bypassBack: UInt32 = 0, agcBack: UInt32 = 0
+        var u32Size = UInt32(MemoryLayout<UInt32>.size)
+        let bypassRead = AudioUnitGetProperty(u, kAUVoiceIOProperty_BypassVoiceProcessing, kAudioUnitScope_Global, 0, &bypassBack, &u32Size)
+        u32Size = UInt32(MemoryLayout<UInt32>.size)
+        let agcRead = AudioUnitGetProperty(u, kAUVoiceIOProperty_VoiceProcessingEnableAGC, kAudioUnitScope_Global, 0, &agcBack, &u32Size)
+        trace(.vpPropertiesSet, ["bypassRequested": String(bypass), "status": String(bypassStatus),
+                                 "bypassReadBack": bypassRead == noErr ? String(bypassBack) : "-",
+                                 "agcReadBack": agcRead == noErr ? String(agcBack) : "-",
+                                 "elapsedMs": String(clock() - vpT)])
+        try Self.check(bypassStatus, step: "vp_properties_set")
 
-        engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: outputFormat)
-        trace(.outputConnected, [:])
+        // §3.1 precondition: the hardware input format is read BEFORE any
+        // callback is armed. If the hardware has not resolved it, `start`
+        // refuses here and nothing below is reached.
+        let hw = readHardwareInputFormat(u)
+        trace(.inputFormatRead, ["sampleRate": String(hw.sampleRate), "channels": String(hw.channels)])
+        lock.lock(); lastInputFormat = hw; lock.unlock()
+        try hw.requireValid()
 
-        let inFormat = input.outputFormat(forBus: 0)
-        trace(.inputFormatAfterVP, ["sampleRate": String(inFormat.sampleRate), "channels": String(inFormat.channelCount)])
-        // §3.1 precondition: validated BEFORE the tap. If the hardware format
-        // is unresolved this throws and `installTap` below is never reached.
-        let observed = InputFormatObservation(sampleRate: inFormat.sampleRate, channels: Int(inFormat.channelCount))
-        lock.lock(); lastInputFormat = observed; lock.unlock()
-        try observed.requireValid()
-        let gen = generation
-        input.installTap(onBus: 0, bufferSize: 1024, format: inFormat) { [weak self] buffer, _ in
-            guard let self = self else { return }
-            let (frames, rms, peak) = Self.measure(buffer)
-            self.onInput?(InputObservation(generation: gen, timeMs: clock(), frames: frames, rms: rms, peak: peak))
-        }
-        inputTapInstalled = true
-        trace(.inputTapInstalled, [:])
+        // Client formats: mono float at the hardware rate, non-interleaved, on
+        // the input element's output scope and the output element's input scope.
+        var client = Self.clientFormat(sampleRate: hw.sampleRate)
+        let asbdSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        let inFmt = AudioUnitSetProperty(u, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &client, asbdSize)
+        let outFmt = AudioUnitSetProperty(u, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &client, asbdSize)
+        outputSampleRate = hw.sampleRate
+        trace(.formatsSet, ["clientSampleRate": String(hw.sampleRate), "inputStatus": String(inFmt), "outputStatus": String(outFmt)])
+        try Self.check(inFmt, step: "formats_set")
+        try Self.check(outFmt, step: "formats_set")
 
-        // Render observation (P5): what the player node actually emits.
-        player.installTap(onBus: 0, bufferSize: 1024, format: outputFormat) { [weak self] buffer, _ in
-            guard let self = self else { return }
-            let (frames, _, peak) = Self.measure(buffer)
-            let now = clock()
-            self.lock.lock()
-            if self.activeStream != nil {
-                self.renderedFramesForActive = min(self.activeFrames, self.renderedFramesForActive + Int64(frames))
-            }
-            if peak > self.silencePeak { self.lastNonSilentAtMs = now }
-            self.lock.unlock()
-        }
-        renderTapInstalled = true
-        trace(.renderTapInstalled, [:])
+        // Callbacks: pull input on element 1, fill output on element 0, observe
+        // the hardware input format property. Armed only after the precondition.
+        let refCon = Unmanaged.passUnretained(self).toOpaque()
+        var inputCb = AURenderCallbackStruct(inputProc: vpioInputProc, inputProcRefCon: refCon)
+        var renderCb = AURenderCallbackStruct(inputProc: vpioRenderProc, inputProcRefCon: refCon)
+        let cbSize = UInt32(MemoryLayout<AURenderCallbackStruct>.size)
+        let inCb = AudioUnitSetProperty(u, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 1, &inputCb, cbSize)
+        let outCb = AudioUnitSetProperty(u, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &renderCb, cbSize)
+        let lst = AudioUnitAddPropertyListener(u, kAudioUnitProperty_StreamFormat, vpioFormatListener, refCon)
+        listenerInstalled = (lst == noErr)
+        trace(.callbacksArmed, ["inputCallbackStatus": String(inCb), "renderCallbackStatus": String(outCb), "listenerStatus": String(lst)])
+        try Self.check(inCb, step: "callbacks_armed")
+        try Self.check(outCb, step: "callbacks_armed")
 
-        configObserver = NotificationCenter.default.addObserver(
-            forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
-            guard let self = self else { return }
-            self.onConfigurationChange?(self.generation)
-        }
-        trace(.observerInstalled, [:])
+        trace(.initializeBegin, [:])
+        let iT = clock()
+        let initStatus = AudioUnitInitialize(u)
+        trace(.initializeReturn, ["outcome": initStatus == noErr ? "ok" : "error", "status": String(initStatus), "elapsedMs": String(clock() - iT)])
+        try Self.check(initStatus, step: "initialize_return")
 
-        trace(.prepareBegin, [:])
-        let pT = clock()
-        engine.prepare()
-        trace(.prepareReturn, ["elapsedMs": String(clock() - pT)])
         trace(.startBegin, [:])
         let sT = clock()
-        do {
-            try engine.start()
-        } catch {
-            trace(.startReturn, ["outcome": "error", "error": "\(error)", "elapsedMs": String(clock() - sT)])
-            throw error
-        }
-        trace(.startReturn, ["outcome": "ok", "elapsedMs": String(clock() - sT), "totalMs": String(clock() - t0)])
+        let startStatus = AudioOutputUnitStart(u)
+        trace(.startReturn, ["outcome": startStatus == noErr ? "ok" : "error", "status": String(startStatus),
+                             "elapsedMs": String(clock() - sT), "totalMs": String(clock() - t0)])
+        try Self.check(startStatus, step: "start_return")
         lock.lock(); startedAtMs = clock(); lock.unlock()
-        trace(.isRunningImmediate, ["engineRunning": String(engine.isRunning)])
+        trace(.isRunningImmediate, ["ioRunning": String(isRunning)])
     }
 
-    /// §3.4 seam evidence: the input node's format as the engine reports it
-    /// right now (a query, never a mutation; it cannot raise).
+    private static func check(_ status: OSStatus, step: String) throws {
+        guard status == noErr else { throw AudioGraphError.unitError(step: step, status: status) }
+    }
+
+    private static func clientFormat(sampleRate: Double) -> AudioStreamBasicDescription {
+        AudioStreamBasicDescription(mSampleRate: sampleRate, mFormatID: kAudioFormatLinearPCM,
+                                    mFormatFlags: kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved,
+                                    mBytesPerPacket: 4, mFramesPerPacket: 1, mBytesPerFrame: 4,
+                                    mChannelsPerFrame: 1, mBitsPerChannel: 32, mReserved: 0)
+    }
+
+    /// The hardware input format as the unit reports it (input element,
+    /// input scope) — a query, never a mutation.
+    private func readHardwareInputFormat(_ u: AudioUnit) -> InputFormatObservation {
+        var asbd = AudioStreamBasicDescription()
+        var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
+        let st = AudioUnitGetProperty(u, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size)
+        guard st == noErr else { return InputFormatObservation(sampleRate: 0, channels: 0) }
+        return InputFormatObservation(sampleRate: asbd.mSampleRate, channels: Int(asbd.mChannelsPerFrame))
+    }
+
+    /// §3.4 seam evidence: the hardware input format right now (a query).
     public func currentInputFormat() -> InputFormatObservation {
-        let f = engine.inputNode.outputFormat(forBus: 0)
-        return InputFormatObservation(sampleRate: f.sampleRate, channels: Int(f.channelCount))
+        guard let u = unit else { return lastInputFormat ?? InputFormatObservation(sampleRate: 0, channels: 0) }
+        return readHardwareInputFormat(u)
     }
 
     /// The format observed by the last `start` attempt (valid or refused).
@@ -213,7 +283,7 @@ public final class AudioGraph: @unchecked Sendable {
         return lastInputFormat
     }
 
-    /// Milliseconds since this generation's engine started; nil if it never did.
+    /// Milliseconds since this generation's unit started; nil if it never did.
     public func ageMs(now: Int64) -> Int64? {
         lock.lock(); defer { lock.unlock() }
         guard let s = startedAtMs else { return nil }
@@ -221,60 +291,122 @@ public final class AudioGraph: @unchecked Sendable {
     }
 
     public func stop() {
-        if let o = configObserver { NotificationCenter.default.removeObserver(o); configObserver = nil }
-        if inputTapInstalled { engine.inputNode.removeTap(onBus: 0); inputTapInstalled = false }
-        if renderTapInstalled { player.removeTap(onBus: 0); renderTapInstalled = false }
-        player.stop()
-        engine.stop()
-        lock.lock(); activeStream = nil; frozen = nil; lock.unlock()
+        if let u = unit {
+            if listenerInstalled {
+                AudioUnitRemovePropertyListenerWithUserData(u, kAudioUnitProperty_StreamFormat, vpioFormatListener,
+                                                            Unmanaged.passUnretained(self).toOpaque())
+                listenerInstalled = false
+            }
+            AudioOutputUnitStop(u)
+            AudioUnitUninitialize(u)
+            AudioComponentInstanceDispose(u)
+            unit = nil
+        }
+        lock.lock(); activeStream = nil; activeSamples = []; frozen = nil; lock.unlock()
     }
 
-    private static func measure(_ buffer: AVAudioPCMBuffer) -> (Int, Float, Float) {
-        let frames = Int(buffer.frameLength)
-        var peak: Float = 0
-        var sumSq: Float = 0
-        if let ch = buffer.floatChannelData, buffer.format.channelCount > 0 {
-            let p = ch[0]
+    // MARK: audio-thread entry points
+
+    fileprivate func pullInput(_ flags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, _ ts: UnsafePointer<AudioTimeStamp>,
+                               _ bus: UInt32, _ frames: UInt32) -> OSStatus {
+        guard let u = unit else { return noErr }
+        let n = Int(min(frames, UInt32(inputScratch.count)))
+        var status: OSStatus = noErr
+        var observation: InputObservation?
+        let gen = generation
+        let now = clock()
+        inputScratch.withUnsafeMutableBufferPointer { p in
+            var abl = AudioBufferList(mNumberBuffers: 1,
+                                      mBuffers: AudioBuffer(mNumberChannels: 1, mDataByteSize: UInt32(n * 4),
+                                                            mData: UnsafeMutableRawPointer(p.baseAddress)))
+            status = AudioUnitRender(u, flags, ts, bus, UInt32(n), &abl)
+            if status == noErr, let base = p.baseAddress {
+                let (rms, peak) = Self.measure(base, n)
+                observation = InputObservation(generation: gen, timeMs: now, frames: n, rms: rms, peak: peak)
+            }
+        }
+        if let o = observation { onInput?(o) }
+        return status
+    }
+
+    fileprivate func render(frames: UInt32, into ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+        guard let ioData = ioData else { return noErr }
+        let buffers = UnsafeMutableAudioBufferListPointer(ioData)
+        let n = Int(frames)
+        var completed: OutputStreamID?
+        var nonSilent = false
+        lock.lock()
+        let id = activeStream
+        let pos = Int(renderedFramesForActive)
+        let total = activeSamples.count
+        for buf in buffers {
+            guard let raw = buf.mData else { continue }
+            let out = raw.assumingMemoryBound(to: Float.self)
+            let count = min(n, Int(buf.mDataByteSize) / 4)
             var i = 0
-            while i < frames {
-                let v = p[i]
-                let a = abs(v)
-                if a > peak { peak = a }
-                sumSq += v * v
+            while i < count {
+                let idx = pos + i
+                if id != nil, idx < total {
+                    let v = activeSamples[idx]
+                    out[i] = v
+                    if abs(v) > silencePeak { nonSilent = true }
+                } else {
+                    out[i] = 0
+                }
                 i += 1
             }
         }
+        if id != nil {
+            let next = min(total, pos + n)
+            renderedFramesForActive = Int64(next)
+            if next >= total { completed = id; activeStream = nil }
+        }
+        if nonSilent { lastNonSilentAtMs = clock() }
+        lock.unlock()
+        if let c = completed { onStreamComplete?(c, generation) }
+        return noErr
+    }
+
+    fileprivate func formatPropertyChanged(scope: AudioUnitScope, element: AudioUnitElement) {
+        // Only the hardware input side (input scope, element 1) is the seam the
+        // kernel observes; everything else is the unit's own bookkeeping.
+        guard scope == kAudioUnitScope_Input, element == 1, let u = unit else { return }
+        onFormatChanged?(generation, readHardwareInputFormat(u))
+    }
+
+    private static func measure(_ p: UnsafeMutablePointer<Float>, _ frames: Int) -> (Float, Float) {
+        var peak: Float = 0
+        var sumSq: Float = 0
+        var i = 0
+        while i < frames {
+            let v = p[i]
+            let a = abs(v)
+            if a > peak { peak = a }
+            sumSq += v * v
+            i += 1
+        }
         let rms = frames > 0 ? (sumSq / Float(frames)).squareRoot() : 0
-        return (frames, rms, peak)
+        return (rms, peak)
     }
 
     // MARK: output with identity
 
     /// Schedule PCM for rendering under a new stream identity. Returns the
-    /// number of frames scheduled. Completion fires when the data has been
-    /// RENDERED (not merely consumed) — `.dataRendered`.
-    public func schedule(_ buffer: AVAudioPCMBuffer, as id: OutputStreamID) -> Int64 {
-        let frames = Int64(buffer.frameLength)
+    /// number of frames scheduled. Completion fires when the render callback
+    /// has actually emitted the last frame.
+    public func schedule(_ buffer: PCMBuffer, as id: OutputStreamID) -> Int64 {
+        let frames = Int64(buffer.frameCount)
         lock.lock()
         activeStream = id
+        activeSamples = buffer.samples
         activeFrames = frames
         renderedFramesForActive = 0
         lock.unlock()
-        let gen = generation
-        player.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataRendered) { [weak self] _ in
-            guard let self = self else { return }
-            self.lock.lock()
-            let still = (self.activeStream == id)
-            if still { self.activeStream = nil }
-            self.lock.unlock()
-            if still { self.onStreamComplete?(id, gen) }
-        }
-        if !player.isPlaying { player.play() }
         return frames
     }
 
-    /// Render progress for the active stream, from the render tap. Under a
-    /// synthetic stall (P6) the frozen value is returned and marked so.
+    /// Render progress for the active stream, from the render callback. Under
+    /// a synthetic stall (P6) the frozen value is returned and marked so.
     public func renderStats() -> RenderStats? {
         lock.lock(); defer { lock.unlock() }
         if let f = frozen { return f }
@@ -298,7 +430,7 @@ public final class AudioGraph: @unchecked Sendable {
         if !on { frozen = nil }
     }
 
-    /// Time of the last non-silent buffer the player node emitted (P5).
+    /// Time of the last non-silent buffer the render callback emitted (P5).
     public func lastNonSilentRenderedAtMs() -> Int64? {
         lock.lock(); defer { lock.unlock() }
         return lastNonSilentAtMs
@@ -306,33 +438,34 @@ public final class AudioGraph: @unchecked Sendable {
 
     /// Cancel the identified stream. Returns frames rendered at cancel, or nil
     /// if the id is not the active stream (already complete / never scheduled).
+    /// The next render callback emits silence; a late completion is impossible
+    /// because `activeStream` is already nil.
     public func cancel(_ id: OutputStreamID) -> Int64? {
-        lock.lock()
-        guard activeStream == id else { lock.unlock(); return nil }
+        lock.lock(); defer { lock.unlock() }
+        guard activeStream == id else { return nil }
         let rendered = renderedFramesForActive
         activeStream = nil
-        lock.unlock()
-        player.stop()   // drops the scheduled buffers; `activeStream` is already nil so a late completion is ignored
+        activeSamples = []
         return rendered
     }
 
     // MARK: known PCM (harness only — there is no synthesizer in KERNEL-00)
 
-    public func makeTone(frequencyHz: Double, seconds: Double, amplitude: Float = 0.2) -> AVAudioPCMBuffer? {
-        let sr = outputFormat.sampleRate
-        let n = AVAudioFrameCount(seconds * sr)
-        guard let buf = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: n), let ch = buf.floatChannelData else { return nil }
-        buf.frameLength = n
-        let p = ch[0]
+    public func makeTone(frequencyHz: Double, seconds: Double, amplitude: Float = 0.2) -> PCMBuffer? {
+        let sr = outputSampleRate
+        let total = Int(seconds * sr)
+        guard total > 0 else { return nil }
+        var samples = [Float](repeating: 0, count: total)
         let twoPiF = 2.0 * Double.pi * frequencyHz
         let fadeFrames = Int(sr * 0.01)
-        let total = Int(n)
         for i in 0..<total {
             var v = Float(sin(twoPiF * Double(i) / sr)) * amplitude
-            if i < fadeFrames { v *= Float(i) / Float(fadeFrames) }
-            if i > total - fadeFrames { v *= Float(total - i) / Float(fadeFrames) }
-            p[i] = v
+            if fadeFrames > 0 {
+                if i < fadeFrames { v *= Float(i) / Float(fadeFrames) }
+                if i > total - fadeFrames { v *= Float(total - i) / Float(fadeFrames) }
+            }
+            samples[i] = v
         }
-        return buf
+        return PCMBuffer(samples: samples, sampleRate: sr)
     }
 }

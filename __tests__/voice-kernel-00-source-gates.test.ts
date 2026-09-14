@@ -12,15 +12,31 @@
  *   causal parent seq (P8), and the harness reaches the journal only through
  *   the actor (MAC-COMPILE-01 C2).
  *
+ * GATE BY HISTORY (founder ruling 2026-09-14, VPIO-01 plan §11 item 5).
+ *   Two subjects now exist. The ENGINE subject (`AVAudioEngine`, P5-B0
+ *   `24a6fcfa1`, Phase-A `4596b9bdb`) is FROZEN: every assertion that
+ *   describes it reads the file bytes from the immutable commit in the local
+ *   git object database, never the working tree. The VPIO subject (working
+ *   tree) is asserted semantically. The files the substitution may not touch
+ *   (authority · supervisor · policy · state · projection · journal · replay ·
+ *   harness) are pinned byte-identical to `24a6fcfa1`. No VPIO tree hash is
+ *   pre-invented: artifact custody is UUID + SHA + manifest at MAC-COMPILE.
+ *
  * These scan source shape after stripping comments — a file must never fail
  * a gate because its own prose documents the behaviour the gate forbids.
  */
+import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const PKG = join(process.cwd(), 'ios', 'VoiceKernel');
 const HARNESS = join(process.cwd(), 'ios', 'VoiceKernelHarness');
+const KSRC = 'ios/VoiceKernel/Sources/VoiceKernel';
+
+// The frozen engine subjects, by immutable commit. Never a branch name.
+const P5B0 = '24a6fcfa1';     // P5-B0 · MAC-COMPILE-07 · dylib CC0D3604-… · the app under test for DRIVER-01 stages A/B/C
+const PHASE_A = '4596b9bdb';  // Phase A · MAC-COMPILE-06 · dylib 11A057AA-… · reproduced as R1 (64EEC026-…)
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -40,6 +56,15 @@ const swift = files.filter((f) => f.endsWith('.swift'));
 const bodies = new Map(swift.map((f) => [f, stripComments(readFileSync(f, 'utf8'))]));
 const rel = (f: string) => f.replace(process.cwd() + '/', '');
 
+// History readers: bytes of a path at an immutable commit, from the local object database.
+const histRaw = (sha: string, path: string): Buffer =>
+  execFileSync('git', ['show', `${sha}:${path}`], { cwd: process.cwd(), maxBuffer: 64 * 1024 * 1024 });
+const histBody = (sha: string, path: string): string => stripComments(histRaw(sha, path).toString('utf8'));
+const histList = (sha: string, paths: string[]): string[] =>
+  execFileSync('git', ['ls-tree', '-r', '--name-only', sha, '--', ...paths], { cwd: process.cwd() })
+    .toString('utf8').split('\n').filter(Boolean);
+const K = (name: string) => histBody(P5B0, `${KSRC}/${name}`);   // engine-subject kernel file at P5-B0
+
 describe('KERNEL-00 · K00-01 / VOICE-01 — one hardware sovereign', () => {
   const mutators = [
     /AVAudioSession\.sharedInstance\(\)/,
@@ -56,6 +81,8 @@ describe('KERNEL-00 · K00-01 / VOICE-01 — one hardware sovereign', () => {
     for (const [f, body] of bodies) {
       if (f.endsWith('AudioSessionAuthority.swift')) continue;
       for (const m of mutators) if (m.test(body)) offenders.push(`${rel(f)} :: ${m}`);
+      // VPIO-01 plan §3 second source pin: nothing but the authority even NAMES the session.
+      if (/AVAudioSession/.test(body)) offenders.push(`${rel(f)} :: names AVAudioSession`);
     }
     expect(offenders).toEqual([]);
   });
@@ -100,6 +127,9 @@ describe('KERNEL-00 · K00-16 — nothing else is in the build', () => {
     [/whisper|Whisper|kokoro|Kokoro|openai|OpenAI|Anthropic|anthropic|claude/, 'models / providers'],
     [/isListening\b/, 'the giant boolean (VOICE-07)'],
     [/\bVAD\b|VoiceActivity|turnCommitted|TurnCoordinator/, 'turn layer — belongs to KERNEL-01'],
+    // VPIO-01 (founder ruling 2026-09-14): one VPIO build, one substrate — the engine subject is frozen in history,
+    // never a second substrate or a runtime choice in this tree.
+    [/AVAudioEngine\b|AVAudioPlayerNode|AVAudioPCMBuffer|installTap\(|AVAudioEngineConfigurationChange/, 'the frozen engine substrate (VPIO-01 F-V2)'],
   ];
   it('no forbidden symbol appears in kernel or harness source', () => {
     const offenders: string[] = [];
@@ -108,25 +138,29 @@ describe('KERNEL-00 · K00-16 — nothing else is in the build', () => {
     }
     expect(offenders).toEqual([]);
   });
-  it('the package has no dependencies and the harness is not a member of ios/App', () => {
+  it('the package has no dependencies and the harness is not a member of ios/App; the VPIO subject carries its own bundle id', () => {
     const pkg = stripComments(readFileSync(join(PKG, 'Package.swift'), 'utf8'));
     expect(pkg).toMatch(/dependencies: \[\]/);
+    expect(pkg).toMatch(/\.linkedFramework\("AudioToolbox"\)/);
+    expect(pkg).not.toMatch(/\.package\(/);
     // YAML comments are prose; the gate reads the spec, not the explanation.
     const yml = readFileSync(join(HARNESS, 'project.yml'), 'utf8').replace(/^\s*#.*$/gm, '');
     expect(yml).not.toMatch(/Pods|Podfile|ios\/App\b|capacitor/i);
-    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.k00/);
+    // frozen exactly by the founder (VPIO-01 plan §8 item 3 / census §6): a distinct custody identity, never the K00 id.
+    expect(yml).toMatch(/PRODUCT_BUNDLE_IDENTIFIER: life\.soullab\.voicekernel\.vpio01$/m);
+    expect(yml).not.toMatch(/life\.soullab\.voicekernel\.k00\b/);
   });
 });
 
 describe('KERNEL-00 · VOICE-10 — output has identity and a cancellable lifetime', () => {
-  it('the graph schedules only under an OutputStreamID and exposes cancel(id)', () => {
+  it('the substrate schedules only under an OutputStreamID and exposes cancel(id)', () => {
     const f = swift.find((p) => p.endsWith('AudioGraph.swift'))!;
     const body = bodies.get(f)!;
-    expect(body).toMatch(/func schedule\(_ buffer: AVAudioPCMBuffer, as id: OutputStreamID\)/);
+    expect(body).toMatch(/func schedule\(_ buffer: PCMBuffer, as id: OutputStreamID\)/);
     expect(body).toMatch(/func cancel\(_ id: OutputStreamID\)/);
-    expect(body).toMatch(/completionCallbackType: \.dataRendered/);
-    // No bare play path that bypasses identity.
+    // No bare play path that bypasses identity; one stream at a time is the render callback's contract.
     expect(body).not.toMatch(/func play\(/);
+    expect(body).toMatch(/func makeTone\([^)]*\) -> PCMBuffer\?/);
   });
   it('the kernel journals every cancel and measures cancel → silence at the render seam (P5)', () => {
     const f = swift.find((p) => p.endsWith('VoiceKernel.swift'))!;
@@ -137,9 +171,11 @@ describe('KERNEL-00 · VOICE-10 — output has identity and a cancellable lifeti
     // The retired metric — a function call's duration — may not come back.
     expect(body).not.toMatch(/cancelLatencyMs/);
     const g = bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
-    expect(g).toMatch(/player\.installTap\(onBus: 0/);
+    // VPIO: the render seam IS the render callback; the last non-silent frame is measured where it is rendered.
+    expect(g).toMatch(/func render\(/);
     expect(g).toMatch(/func lastNonSilentRenderedAtMs\(\)/);
     expect(g).toMatch(/func setSyntheticStall\(_ on: Bool\)/);
+    expect(g).toMatch(/func renderStats\(\)/);
   });
 });
 
@@ -147,8 +183,8 @@ describe('KERNEL-00 · VOICE-06 / -15 / -16 — one recovery owner, bounded, jou
   it('only HealthSupervisor verdicts reach requestRecovery, and the schedule is the ratified one', () => {
     const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
     const calls = k.match(/(?<!func )requestRecovery\(faultClass:/g) ?? [];
-    // evaluate() has three verdict arms + the rebuild-failed path + (PRE-WITNESS-03 B,
-    // founder-authorized) the configuration-change path; nothing else may call it.
+    // evaluate() has three verdict arms + the rebuild-failed path + (PRE-WITNESS-03 B, founder-authorized; VPIO-01
+    // plan §11 item 4: now sourced from the authority's route_changed observation) the configuration-change path.
     expect(calls.length).toBeLessThanOrEqual(5);
     const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
     expect(r).toMatch(/budgetPerWindow: Int = 3/);
@@ -184,23 +220,28 @@ describe('KERNEL-00 · PRE-WITNESS-01 — causal, longitudinal, replayable recor
 });
 
 describe('KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not exception handling', () => {
-  // K00-W1: `installTap` was reached with a 0 Hz input format. The repair is a
-  // Swift-level validity check that makes the invalid call unreachable.
-  it('a validity check lexically precedes every input-node installTap(onBus: 0 (§3.1)', () => {
+  // K00-W1: on the engine subject `installTap` was reached with a 0 Hz input format. The repair is a
+  // Swift-level validity check that makes the invalid call unreachable. On the VPIO subject the same
+  // precondition guards the arming of every callback and the property listener (plan §2 / census §4).
+  it('a `try …requireValid()` lexically precedes every callback/listener arming in start() (§3.1)', () => {
     const f = swift.find((p) => p.endsWith('AudioGraph.swift'))!;
     const body = bodies.get(f)!;
-    const taps = [...body.matchAll(/(\w+)\.installTap\(onBus: 0/g)];
-    expect(taps.length).toBeGreaterThan(0);
-    const inputTaps = taps.filter((m) => m[1] !== 'player');
-    expect(inputTaps.length).toBeGreaterThan(0);
-    for (const m of inputTaps) {
-      const before = body.slice(0, m.index!);
+    const start = body.slice(body.indexOf('public func start(voiceProcessing'), body.indexOf('private static func check('));
+    expect(start.length).toBeGreaterThan(0);
+    const arms = [...start.matchAll(/kAudioOutputUnitProperty_SetInputCallback|kAudioUnitProperty_SetRenderCallback|AudioUnitAddPropertyListener\(/g)];
+    expect(arms.length).toBe(3);
+    for (const m of arms) {
+      const before = start.slice(0, m.index!);
       const guardAt = before.lastIndexOf('.requireValid()');
       expect(guardAt).toBeGreaterThan(-1);
-      // the guard is a `try` — a refused format leaves `start` before the tap
+      // the guard is a `try` — a refused format leaves `start` before any callback exists
       const guardLine = before.slice(before.lastIndexOf('\n', guardAt) + 1, guardAt);
       expect(guardLine).toMatch(/\btry \w+$/);
     }
+    // the hardware format is read from the unit (Input scope, element 1) BEFORE the guard, and the guard precedes initialize/start
+    expect(start.indexOf('readHardwareInputFormat(u)')).toBeLessThan(start.indexOf('.requireValid()'));
+    expect(start.indexOf('.requireValid()')).toBeLessThan(start.indexOf('AudioUnitInitialize(u)'));
+    expect(start.indexOf('AudioUnitInitialize(u)')).toBeLessThan(start.indexOf('AudioOutputUnitStart(u)'));
     // the pure precondition itself: rate > 0 AND channels > 0
     expect(body).toMatch(/var isValid: Bool \{ sampleRate > 0 && channels > 0 \}/);
     expect(body).toMatch(/case invalidInputFormat\(sampleRate: Double, channels: Int\)/);
@@ -215,20 +256,28 @@ describe('KERNEL-00 · PRE-WITNESS-02 — the entry seam is a precondition, not 
     expect(objc).toEqual([]);
     expect(offenders).toEqual([]);
   });
-  it('a refused build and every configuration change journal the observed input format and generation age (§3.4)', () => {
+  it('a refused build and every format change journal the observed input format and generation age (§3.4)', () => {
     const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
     expect(k).toMatch(/"graph_start_refused"/);
     expect(k).toMatch(/inputSampleRate/);
     expect(k).toMatch(/inputChannels/);
     expect(k).toMatch(/generationAgeMs/);
-    // the config-change observation carries the format at the instant iOS posted it
-    const cc = k.slice(k.indexOf('func handleConfigurationChange'), k.indexOf('"engine_configuration_changed"'));
-    expect(cc).toMatch(/currentInputFormat\(\)/);
+    // the format-change observation carries the format at the instant the unit posted it, plus the format at start
+    const fc = k.slice(k.indexOf('func handleFormatChanged'), k.indexOf('"io_format_changed"'));
+    expect(fc).toMatch(/formatEvidence\(now\)/);
+    expect(fc).toMatch(/inputFormatAtStart\(\)/);
+    expect(fc).toMatch(/generationAgeMs/);
   });
 });
 
-describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-guarded, bounded, never a direct rebuild', () => {
-  const k = () => bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ENGINE SUBJECT — FROZEN IN HISTORY. Every block below reads `24a6fcfa1` (P5-B0) from the git object database.
+// These are the assertions the engine subject passed at MAC-COMPILE-07; they now prove the frozen subject is
+// still the frozen subject, and never describe the working tree.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+describe('KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-03 — the configuration-change seam is exit-guarded, bounded, never a direct rebuild', () => {
+  const k = () => K('VoiceKernel.swift');
   const handler = () => {
     const body = k();
     const start = body.indexOf('func handleConfigurationChange');
@@ -243,8 +292,7 @@ describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-
   it('B: a configuration change reaches the graph only through the existing RecoveryPolicy as its own fault class', () => {
     expect(handler()).toMatch(/requestRecovery\(faultClass: "configuration_change"/);
     expect(handler()).toMatch(/"recovery_requested", cause: "configuration_change"/);
-    // no new budget: RecoveryPolicy is untouched by this plan
-    const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
+    const r = K('RecoveryPolicy.swift');
     expect(r).toMatch(/budgetPerWindow: Int = 3/);
     expect(r).not.toMatch(/configuration_change/);
   });
@@ -253,12 +301,12 @@ describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-
     const guardAt = h.indexOf('guard inConversation else');
     expect(guardAt).toBeGreaterThan(-1);
     expect(h.slice(guardAt, guardAt + 400)).toMatch(/"stale_callback_dropped", cause: "not_in_conversation"/);
-    // the exit guard precedes every other act in the handler
     expect(guardAt).toBeLessThan(h.indexOf('"engine_configuration_changed"'));
     expect(guardAt).toBeLessThan(h.indexOf('requestRecovery('));
   });
-  it('C: voice processing is a journalled, pre-Enter-only kernel command; the harness only projects it', () => {
-    const body = k();
+  it('C: voice processing is a journalled, pre-Enter-only kernel command; the harness only projects it (ACTIVE — unchanged files)', () => {
+    // These files are byte-pinned to 24a6fcfa1 below, so the working-tree read and the history read are the same bytes.
+    const body = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
     const fn = body.slice(body.indexOf('func setVoiceProcessing'), body.indexOf('func setMicEnabled'));
     expect(fn).toMatch(/guard !inConversation else/);
     expect(fn).toMatch(/"command_refused"/);
@@ -273,8 +321,8 @@ describe('KERNEL-00 · PRE-WITNESS-03 — the configuration-change seam is exit-
   });
 });
 
-describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified one-shot, deferred, and decided by the supervisor', () => {
-  const k = () => bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+describe('KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-04 — the expected VP change is classified one-shot, deferred, and decided by the supervisor', () => {
+  const k = () => K('VoiceKernel.swift');
   const handler = () => {
     const body = k();
     const start = body.indexOf('func handleConfigurationChange');
@@ -282,12 +330,11 @@ describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified o
     return body.slice(start, next === -1 ? undefined : next);
   };
   it('C: classification is a pure, generation-scoped, one-shot function over ports (data source is evidence, not identity)', () => {
-    const c = bodies.get(swift.find((p) => p.endsWith('ConfigurationChange.swift'))!)!;
+    const c = K('ConfigurationChange.swift');
     expect(c).toMatch(/case voiceProcessingReconfiguration = "voice_processing_reconfiguration"/);
     expect(c).toMatch(/i\.voiceProcessing, i\.expectationPending, i\.ordinalInGeneration == 1, !i\.suspended/);
     expect(c).toMatch(/a\.output == b\.output && a\.input == b\.input/);
     expect(c).not.toMatch(/inputDataSource ==/);
-    // no timer, no threshold, no budget lives in the classifier
     expect(c).not.toMatch(/Task\.sleep|DispatchQueue|Timer|Ms\b.*=\s*\d/);
   });
   it('B: the deferred branch consumes the expectation and touches neither the graph nor the recovery policy', () => {
@@ -297,7 +344,6 @@ describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified o
     expect(deferred).toMatch(/vpExpectationPending = false/);
     expect(deferred).toMatch(/"configuration_change_deferred", cause: cls\.rawValue, causeSeq: obs/);
     expect(deferred).not.toMatch(/rebuildGraph\(|requestRecovery\(|startGraph\(|Task \{|sleep/);
-    // the other branch is PRE-WITNESS-03's bounded path, unchanged
     const other = h.slice(h.indexOf('case .routeConfigurationChange:'));
     expect(other).toMatch(/requestRecovery\(faultClass: "configuration_change"/);
   });
@@ -307,16 +353,15 @@ describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified o
     expect(body).toMatch(/"vp_expectation_retired", cause: "generation_healthy"/);
     expect((body.match(/vpExpectationPending = true/g) ?? []).length).toBe(0);
   });
-  it('no new fault class, budget, timer or threshold: RecoveryPolicy and HealthSupervisor are byte-pinned and the caller set is closed', () => {
+  it('no new fault class, budget, timer or threshold: the caller set is closed and Replay names the deferral as an automatic act', () => {
     const classes = [...k().matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
     expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
-    const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
+    const r = K('RecoveryPolicy.swift');
     expect(r).toMatch(/budgetPerWindow: Int = 3/); expect(r).toMatch(/windowMs: Int64 = 60_000/);
     expect(r).toMatch(/backoffMs: \[Int64\] = \[500, 1_000, 2_000\]/);
-    const h = bodies.get(swift.find((p) => p.endsWith('HealthSupervisor.swift'))!)!;
+    const h = K('HealthSupervisor.swift');
     expect(h).toMatch(/entryWindowMs: Int64 = 1_500/); expect(h).toMatch(/deadInputMs: Int64 = 2_000/);
-    const rep = bodies.get(swift.find((p) => p.endsWith('Replay.swift'))!)!;
-    expect(rep).toMatch(/"configuration_change_deferred"/);
+    expect(K('Replay.swift')).toMatch(/"configuration_change_deferred"/);
   });
   it('§2.3: the observation and the samples carry the provenance that proves why C fired', () => {
     const body = k();
@@ -328,8 +373,8 @@ describe('KERNEL-00 · PRE-WITNESS-04 — the expected VP change is classified o
   });
 });
 
-describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating startup order unchanged, added calls read-only, no new timer', () => {
-  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+describe('KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1 / 4596b9bdb) · PRE-WITNESS-05 Phase A — instrumentation only: mutating startup order unchanged, added calls read-only, no new timer', () => {
+  const graph = () => K('AudioGraph.swift');
   const startBody = () => {
     const g = graph();
     const a = g.indexOf('public func start(voiceProcessing');
@@ -350,21 +395,17 @@ describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating
       expect(m!.index).toBeGreaterThan(last);
       last = m!.index;
     }
-    // each mutating call appears exactly once (no duplicated start/tap/prepare)
     for (const re of [/setVoiceProcessingEnabled\(/g, /engine\.prepare\(\)/g, /engine\.start\(\)/g, /input\.installTap\(/g, /player\.installTap\(/g]) {
       expect((body.match(re) ?? []).length).toBe(1);
     }
   });
   it('ADDED calls are observation/read-only or journal instrumentation only; NO new timer · mutation · recovery act · configuration act', () => {
     const body = startBody();
-    // forbidden anywhere in start(): timers, sleeps, session/config mutation, stops/resets, recovery
     expect(body).not.toMatch(/Task\.sleep|Timer|DispatchQueue|usleep|sleep\(/);
     expect(body).not.toMatch(/AVAudioSession|setActive|setCategory|setPreferred|overrideOutput/);
     expect(body).not.toMatch(/engine\.stop\(|engine\.reset\(|disconnect|detach\(|removeTap|requestRecovery|rebuildGraph/);
-    // the added reads are exactly these (P5-B0: the pre-VP format read is gone — see the P5-B0 block)
     expect(body).toMatch(/String\(input\.isVoiceProcessingEnabled\)/);
     expect(body).toMatch(/trace\(\.isRunningImmediate, \["engineRunning": String\(engine\.isRunning\)\]\)/);
-    // every trace step is emitted in the graph, and the enum is closed at 13 (14 minus the removed seam)
     const steps = [...graph().matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
     expect(steps.length).toBe(13);
     for (const st of steps) {
@@ -373,23 +414,29 @@ describe('KERNEL-00 · PRE-WITNESS-05 Phase A — instrumentation only: mutating
     }
   });
   it('the kernel observes isRunning on the EXISTING tick only (no new timer) and journals the first callback per generation', () => {
-    const k = bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+    const k = K('VoiceKernel.swift');
     const tick = k.slice(k.indexOf('private func tick()'), k.indexOf('private func evaluate()') === -1 ? undefined : k.indexOf('private func evaluate()'));
     expect(tick).toMatch(/"engine_running_observed"/);
     expect(tick).toMatch(/msSinceStartReturn/);
     expect(tick).toMatch(/if ms >= 1_000 \{ runningObservationDone = true \}/);
     expect((k.match(/"engine_running_observed"/g) ?? []).length).toBe(1);
-    expect((k.match(/Task\.sleep\(/g) ?? []).length).toBe(3);   // tick · recovery backoff · re-enter delay — unchanged
+    expect((k.match(/Task\.sleep\(/g) ?? []).length).toBe(3);
     expect(k).toMatch(/"first_input_callback"/);
     expect(k).toMatch(/"graph_start_trace"/);
-    // caller set still closed; policy untouched
     const classes = [...k.matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
     expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
   });
+  it('the Phase-A subject 4596b9bdb (reproduced as R1) carries the 14-step trace WITH input_format_before_vp — the shape the ledger reads', () => {
+    const g = histBody(PHASE_A, `${KSRC}/AudioGraph.swift`);
+    const steps = [...g.matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
+    expect(steps.length).toBe(14);
+    expect(steps).toContain('input_format_before_vp');
+    expect(steps.indexOf('input_format_before_vp')).toBeLessThan(steps.indexOf('vp_enable_begin'));
+  });
 });
 
-describe('KERNEL-00 · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP input-format read is gone and NOTHING else moved', () => {
-  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+describe('KERNEL-00 · ENGINE SUBJECT (history 24a6fcfa1) · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP input-format read is gone and NOTHING else moved', () => {
+  const graph = () => K('AudioGraph.swift');
   const startBody = () => {
     const g = graph();
     return g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('public func stop()'));
@@ -410,9 +457,9 @@ describe('KERNEL-00 · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP inpu
     expect(reads[0]).toBeLessThan(body.indexOf('.requireValid()'));
     expect(body).toMatch(/trace\(\.inputFormatAfterVP/);
   });
-  it('the seam input_format_before_vp does not exist in any non-test kernel or harness source (comments stripped; the XCTest negative assertion is excluded by scope)', () => {
-    for (const f of swift.filter((p) => !p.includes('/Tests/'))) {
-      expect(bodies.get(f)!).not.toMatch(/input_format_before_vp|inputFormatBeforeVP/);
+  it('the seam input_format_before_vp does not exist in any non-test kernel or harness source of the subject', () => {
+    for (const p of histList(P5B0, ['ios/VoiceKernel/Sources', 'ios/VoiceKernelHarness/Harness']).filter((p) => p.endsWith('.swift'))) {
+      expect(histBody(P5B0, p)).not.toMatch(/input_format_before_vp|inputFormatBeforeVP/);
     }
   });
   it('all other Phase-A reads are KEPT: VP read-back, isRunning immediate, elapsed-ms timing, after-VP format', () => {
@@ -424,22 +471,171 @@ describe('KERNEL-00 · PRE-WITNESS-05 P5-B0 — removal control: the pre-VP inpu
   });
 });
 
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// VPIO SUBJECT — ACTIVE (working tree). Founder ruling 2026-09-14: bounded implementation exactly against
+// VPIO-01 plan §11 / VPIO-01A census §4–§5. IMPLEMENTED, NOT COMPILED: MAC-COMPILE is a separate founder act.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+describe('KERNEL-00 · VPIO-01 — the substrate is the one file\'s interior; the invariant substrate is byte-identical', () => {
+  const UNTOUCHABLE = [
+    `${KSRC}/AudioSessionAuthority.swift`, `${KSRC}/HealthSupervisor.swift`, `${KSRC}/RecoveryPolicy.swift`,
+    `${KSRC}/KernelState.swift`, `${KSRC}/StateProjection.swift`, `${KSRC}/Journal.swift`, `${KSRC}/Replay.swift`,
+    'ios/VoiceKernelHarness/Harness/HarnessModel.swift', 'ios/VoiceKernelHarness/Harness/HarnessView.swift',
+    'ios/VoiceKernelHarness/Harness/VoiceKernelHarnessApp.swift', 'ios/VoiceKernelHarness/Harness/Info.plist',
+  ];
+  const graph = () => bodies.get(swift.find((p) => p.endsWith('AudioGraph.swift'))!)!;
+  const kernel = () => bodies.get(swift.find((p) => p.endsWith('VoiceKernel.swift'))!)!;
+  it('authority · supervisor · policy · state · projection · journal · replay · harness are byte-identical to 24a6fcfa1 (plan §1)', () => {
+    const moved: string[] = [];
+    for (const p of UNTOUCHABLE) {
+      if (!histRaw(P5B0, p).equals(readFileSync(join(process.cwd(), p)))) moved.push(p);
+    }
+    expect(moved).toEqual([]);
+  });
+  it('the substitution is confined: ConfigurationChange.swift is gone, RouteComparison.swift is pure, and only AudioGraph.swift links Audio Toolbox', () => {
+    expect(existsSync(join(PKG, 'Sources', 'VoiceKernel', 'ConfigurationChange.swift'))).toBe(false);
+    const rc = bodies.get(swift.find((p) => p.endsWith('RouteComparison.swift'))!)!;
+    expect(rc).toMatch(/public static func samePorts\(_ a: RouteState\?, _ b: RouteState\?\) -> Bool/);
+    expect(rc).toMatch(/guard let a = a, let b = b else \{ return false \}/);
+    expect(rc).toMatch(/return a\.output == b\.output && a\.input == b\.input/);
+    expect(rc).not.toMatch(/import (?!Foundation\b)|AVAudio|AudioToolbox|Task|Timer|DispatchQueue|requestRecovery|rebuildGraph|inputDataSource/);
+    for (const [f, body] of bodies) {
+      const imports = (body.match(/^import \w+/gm) ?? []).map((s) => s.replace('import ', ''));
+      if (f.endsWith('AudioGraph.swift')) {
+        expect(imports.sort()).toEqual(['AudioToolbox', 'Foundation']);
+      } else {
+        expect(imports).not.toContain('AudioToolbox');
+        if (f.endsWith('VoiceKernel.swift')) expect(imports).not.toContain('AVFoundation');
+      }
+    }
+  });
+  it('the substrate drives the Voice-Processing I/O unit: VPIO subtype, both I/O elements enabled, VP = bypass property, format read from (Input scope, el 1) before arming, client formats on (Output,1)/(Input,0), pull input + render callback + property listener, initialize before start', () => {
+    const g = graph();
+    const start = g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
+    const order = [
+      /kAudioUnitSubType_VoiceProcessingIO/, /kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1,/, /kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0,/,
+      /kAUVoiceIOProperty_BypassVoiceProcessing/, /readHardwareInputFormat\(u\)/, /\.requireValid\(\)/,
+      /kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,/, /kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,/,
+      /kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, 1,/, /kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0,/,
+      /AudioUnitAddPropertyListener\(u, kAudioUnitProperty_StreamFormat, vpioFormatListener,/,
+      /AudioUnitInitialize\(u\)/, /AudioOutputUnitStart\(u\)/,
+    ];
+    let last = -1;
+    for (const re of order) {
+      const m = re.exec(start);
+      expect(m).not.toBeNull();
+      expect(m!.index).toBeGreaterThan(last);
+      last = m!.index;
+    }
+    for (const re of [/AudioUnitInitialize\(u\)/g, /AudioOutputUnitStart\(u\)/g, /AudioUnitAddPropertyListener\(/g]) expect((start.match(re) ?? []).length).toBe(1);
+    // the hardware read is the documented property on the input element's input scope
+    expect(g).toMatch(/kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size\)/);
+    // input is pulled by AudioUnitRender into an app-owned buffer; output is filled from the one scheduled stream
+    expect(g).toMatch(/AudioUnitRender\(u, flags, ts, bus, UInt32\(n\), &abl\)/);
+    expect(g).toMatch(/func pullInput\(/); expect(g).toMatch(/func render\(/); expect(g).toMatch(/func formatPropertyChanged\(/);
+    // ioRunning = the unit's running property, read only (evidence, never health)
+    expect(g).toMatch(/AudioUnitGetProperty\(u, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0, &running, &size\)/);
+    expect(g).not.toMatch(/AudioUnitSetProperty\([^\n]*kAudioOutputUnitProperty_IsRunning/);
+    // teardown releases the unit in the documented order and removes the listener
+    const stop = g.slice(g.indexOf('public func stop()'), g.indexOf('fileprivate func pullInput'));
+    for (const s of ['AudioUnitRemovePropertyListenerWithUserData', 'AudioOutputUnitStop(u)', 'AudioUnitUninitialize(u)', 'AudioComponentInstanceDispose(u)']) expect(stop).toContain(s);
+    expect(stop.indexOf('AudioOutputUnitStop(u)')).toBeLessThan(stop.indexOf('AudioUnitUninitialize(u)'));
+    expect(stop.indexOf('AudioUnitUninitialize(u)')).toBeLessThan(stop.indexOf('AudioComponentInstanceDispose(u)'));
+    // no timer · sleep · session act · recovery knowledge anywhere in the substrate (F-V5: no realtime mutation of policy)
+    expect(g).not.toMatch(/Task\.sleep|Timer\b|DispatchQueue|usleep|sleep\(|requestRecovery|rebuildGraph|RecoveryPolicy|HealthSupervisor/);
+  });
+  it('the start trace names exactly the eleven VPIO seams, in order, and every step is emitted', () => {
+    const g = graph();
+    const steps = [...g.matchAll(/case \w+ = "([a-z_]+)"/g)].map((m) => m[1]);
+    expect(steps).toEqual(['unit_created', 'io_enabled', 'vp_properties_set', 'input_format_read', 'formats_set', 'callbacks_armed',
+                           'initialize_begin', 'initialize_return', 'start_begin', 'start_return', 'is_running_immediate']);
+    const start = g.slice(g.indexOf('public func start(voiceProcessing'), g.indexOf('private static func check('));
+    for (const st of steps) {
+      const c = st.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase()).replace('Vp', 'VP').replace('Io', 'IO');
+      expect(start).toContain(`trace(.${c}`);
+    }
+    expect(start).toMatch(/trace\(\.isRunningImmediate, \["ioRunning": String\(isRunning\)\]\)/);
+    // the engine seams may not survive under new names
+    expect(g).not.toMatch(/vp_enable_begin|vp_enable_return|engine_created|prepare_begin|input_format_after_vp|input_format_before_vp/);
+  });
+  it('truthful vocabulary (census §3): ioRunning / io_running_observed / io_format_changed present; every engine-meaning record and field absent from the kernel', () => {
+    const k = kernel();
+    for (const s of ['"ioRunning"', '"io_running_observed"', '"io_format_changed"', '"graph_start_trace"', '"first_input_callback"', '"graph_started"', '"graph_start_refused"', '"route_observed"']) expect(k).toContain(s);
+    expect(k).not.toMatch(/engineRunning|engine_running_observed|engine_configuration_changed|configuration_change_deferred|voice_processing_reconfiguration|vp_expectation_retired|vpExpectationPending|vpReconfigurationExpected|vpExpectationConsumed|ConfigurationChangeClassifier|callbacksSinceChange|configChangeOrdinal|configurationChangeOrdinalInGeneration|onConfigurationChange|handleConfigurationChange|AVAudioEngineConfigurationChange|"classification"/);
+    expect(graph()).not.toMatch(/engineRunning|onConfigurationChange/);
+    // io_running_observed on the EXISTING tick only, once, through 1000 ms; the ratified sleep count is unchanged
+    const tick = k.slice(k.indexOf('private func tick()'), k.indexOf('private func evaluate()'));
+    expect(tick).toMatch(/"io_running_observed", cause: "tick"/);
+    expect(tick).toMatch(/if ms >= 1_000 \{ runningObservationDone = true \}/);
+    expect((k.match(/"io_running_observed"/g) ?? []).length).toBe(1);
+    expect((k.match(/Task\.sleep\(/g) ?? []).length).toBe(3);
+    // graph_started carries the running read as evidence, never an expectation
+    const started = k.slice(k.indexOf('var started = ['), k.indexOf('"graph_started"'));
+    expect(started).toMatch(/"ioRunning": String\(ag\.isRunning\)/);
+    expect(started).not.toMatch(/vpReconfigurationExpected|engineRunning/);
+    // the physiology samples carry ioRunning
+    const sample = k.slice(k.indexOf('"input_health_sample"'), k.indexOf('"output_render_sample"'));
+    expect(sample).toMatch(/"ioRunning"/); expect(sample).not.toMatch(/engineRunning|callbacksSinceChange/);
+    // Replay is untouched: the retired deferral stays in its automatic-act vocabulary for historical journals; the kernel never emits it
+    expect(bodies.get(swift.find((p) => p.endsWith('Replay.swift'))!)!).toMatch(/"configuration_change_deferred"/);
+  });
+  it('io_format_changed is an observation, never an act: exit guard first, generation guard, no graph or policy call in the handler', () => {
+    const k = kernel();
+    const a = k.indexOf('private func handleFormatChanged(generation gen: Int, format now: InputFormatObservation)');
+    expect(a).toBeGreaterThan(-1);
+    const h = k.slice(a, k.indexOf('private func handleSession', a));
+    const guardAt = h.indexOf('guard inConversation else');
+    expect(guardAt).toBeGreaterThan(-1);
+    expect(h.slice(guardAt, guardAt + 400)).toMatch(/"stale_callback_dropped", cause: "not_in_conversation"/);
+    expect(h).toMatch(/guard gen == snap\.generation else/);
+    expect(guardAt).toBeLessThan(h.indexOf('guard gen == snap.generation'));
+    expect(h).toMatch(/journal\("VoiceIO", "io_format_changed", cause: "unit_property_listener", evidence: ev\)/);
+    expect(h).not.toMatch(/rebuildGraph\(|requestRecovery\(|startGraph\(|Task \{|sleep|graph\?\.stop|substrateStarted =|routeAtStart =|vpExpectation/);
+    // the seam is wired from the substrate's listener, generation-stamped
+    expect(k).toMatch(/ag\.onFormatChanged = \{ \[weak self\] gen, fmt in Task \{ await self\?\.handleFormatChanged\(generation: gen, format: fmt\) \} \}/);
+  });
+  it('route recovery is sourced from the authority\'s route_changed observation, guarded for eligibility, same ports = evidence only, through the existing policy only (plan §11 item 4 / census §5)', () => {
+    const k = kernel();
+    const a = k.indexOf('case .routeChanged(_, let route):');
+    expect(a).toBeGreaterThan(-1);
+    const br = k.slice(a, k.indexOf('case .mediaServicesReset:', a));
+    expect(br).toMatch(/let eligible = inConversation && !suspended && substrateStarted && routeAtStart != nil && snap\.floor != \.degraded/);
+    expect(br).toMatch(/let portsChanged = !RouteComparison\.samePorts\(routeAtStart, route\)/);
+    expect(br).toMatch(/if eligible && portsChanged \{/);
+    expect(br).toMatch(/journal\("VoiceKernel", "recovery_requested", cause: "session_route_change", causeSeq: observationSeq, evidence: ev\)/);
+    expect(br).toMatch(/requestRecovery\(faultClass: "configuration_change", causeSeq: req\)/);
+    expect(br).toMatch(/"route_observed", cause: portsChanged \? "route_change_not_eligible" : "same_ports"/);
+    expect(br).not.toMatch(/rebuildGraph\(|startGraph\(|graph\?\.stop|Task \{|sleep/);
+    expect(k).not.toMatch(/rebuildGraph\(cause: "route_recovery"/);
+    // the eligibility facts are set only by a successful start and cleared on every teardown
+    expect(k).toMatch(/routeAtStart = snap\.route\n\s*substrateStarted = true/);
+    expect((k.match(/substrateStarted = false; routeAtStart = nil/g) ?? []).length).toBeGreaterThanOrEqual(5);
+    // the caller set is closed at the same five classes; the policy and the supervisor are byte-pinned above
+    const classes = [...k.matchAll(/requestRecovery\(faultClass: "([a-z_]+)"/g)].map((m) => m[1]).sort();
+    expect(classes).toEqual(['configuration_change', 'entry_timeout', 'graph_rebuild_failed', 'input_dead', 'output_stalled']);
+    const r = bodies.get(swift.find((p) => p.endsWith('RecoveryPolicy.swift'))!)!;
+    expect(r).not.toMatch(/configuration_change|session_route_change/);
+  });
+  it('the pure-logic tests follow the subject: RouteComparisonTests present, the classifier tests gone, the eleven-seam trace pinned', () => {
+    const t = bodies.get(swift.find((p) => p.endsWith('PureLogicTests.swift'))!)!;
+    expect(t).toMatch(/final class RouteComparisonTests: XCTestCase/);
+    expect(t).not.toMatch(/ConfigurationChangeClassifier/);
+    expect(t).toMatch(/func testTheTraceNamesExactlyTheElevenVPIOSeamsInOrder\(\)/);
+  });
+});
+
 describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', () => {
   const DRIVER = join(process.cwd(), 'ios', 'VoiceKernelDriver');
-  const treeHash = (paths: string[]) => {
-    const files: string[] = [];
-    const walk = (p: string) => {
-      if (statSync(p).isFile()) { files.push(p); return; }
-      for (const e of readdirSync(p)) walk(join(p, e));
-    };
-    for (const p of paths) walk(p);
+  // The same hash the working-tree pin used through MAC-COMPILE-07 … PHASE-A-REPRO-01, now computed from the
+  // immutable commit: repo-relative path · NUL · bytes · NUL, sorted by path.
+  const histTreeHash = (sha: string, paths: string[]) => {
     const h = createHash('sha256');
-    for (const f of files.sort()) { h.update(f.replace(process.cwd() + '/', '')); h.update('\0'); h.update(readFileSync(f)); h.update('\0'); }
+    for (const p of histList(sha, paths).sort()) { h.update(p); h.update('\0'); h.update(histRaw(sha, p)); h.update('\0'); }
     return h.digest('hex');
   };
-  it('the kernel and harness trees are byte-pinned at the P5-B0 subject 24a6fcfa1 (the app under test is never rebuilt for the driver)', () => {
-    expect(treeHash([join(PKG, 'Sources'), join(PKG, 'Tests'), join(PKG, 'Package.swift')])).toBe('3f746769236d7ee68b38bafa7dfa278032063c833c24d88b9d1ad343fe1c16a2');
-    expect(treeHash([join(HARNESS, 'Harness'), join(HARNESS, 'project.yml')])).toBe('3e718a09a23e6f5598e62162222310b3ee088ec6471f0e9656b9c16a9f00185c');
+  it('the engine subject 24a6fcfa1 (the app under test for stages A/B/C) is still byte-identical in history to the pinned tree hashes', () => {
+    expect(histTreeHash(P5B0, ['ios/VoiceKernel/Sources', 'ios/VoiceKernel/Tests', 'ios/VoiceKernel/Package.swift'])).toBe('3f746769236d7ee68b38bafa7dfa278032063c833c24d88b9d1ad343fe1c16a2');
+    expect(histTreeHash(P5B0, ['ios/VoiceKernelHarness/Harness', 'ios/VoiceKernelHarness/project.yml'])).toBe('3e718a09a23e6f5598e62162222310b3ee088ec6471f0e9656b9c16a9f00185c');
   });
   it('the driver is an external instrument: XCTest only, no VoiceKernel, no launch args/env on the app under test, no UserDefaults, no debugger hooks', () => {
     const t = stripComments(readFileSync(join(DRIVER, 'DriverUITests', 'K00DriverTests.swift'), 'utf8'));   // prose bans are not code (the C21 lesson)
@@ -447,6 +643,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(t).not.toMatch(/import VoiceKernel|VoiceKernel\.|AudioGraph|HealthSupervisor|RecoveryPolicy|AudioSessionAuthority|FlightRecorder/);
     expect(t).not.toMatch(/launchArguments|launchEnvironment|UserDefaults|dlopen|NSClassFromString/);
     expect(t).toMatch(/XCUIApplication\(bundleIdentifier: Self\.harnessBundleID\)/);
+    // the driver still names the ENGINE subject's bundle id: VPIO instrument plumbing is later witness work (census §6), not this implementation
     expect(t).toMatch(/"life\.soullab\.voicekernel\.k00"/);
     // control vocabulary is the harness's VISIBLE labels only
     for (const l of ['Enter conversation', 'Leave', 'Export journal', 'Voice processing: ON (default)', 'Voice processing: OFF (control run)']) expect(t).toContain(`"${l}"`);
