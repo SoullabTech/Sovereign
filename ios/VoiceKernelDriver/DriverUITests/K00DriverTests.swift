@@ -18,13 +18,25 @@ import XCTest
 //   K00_VP     on | off        (the harness's own visible toggle; default on)
 //   K00_HOLD_S seconds to hold in conversation before Export (default 15)
 //   K00_W4_MS  W4 target: milliseconds between Enter and Leave (default 500)
+//   K00_SUBJECT p5b0 | phase-a | vpio-01   (default p5b0) — VPIO-01B (founder ruling 2026-09-14): selects which
+//              installed bundle the DRIVER addresses and which Home Screen label it looks for. The subject
+//              configures the driver only; the app under test still receives no launch arguments, no launch
+//              environment, no hooks — the harness never learns the subject. An unknown value is a
+//              DRIVER/INFRASTRUCTURE FAILURE before any launch; it never falls through to the K00 bundle.
 final class K00DriverTests: XCTestCase {
 
-    static let harnessBundleID = "life.soullab.voicekernel.k00"
-    static let harnessIconLabel = "VoiceKernel K00"   // CFBundleDisplayName of the harness
+    /// The explicit subject table (VPIO-01B). Historical p5b0 / phase-a share the K00 bundle and label.
+    struct Subject { let key: String; let bundleID: String; let iconLabel: String }
+    static let subjects: [String: Subject] = [
+        "p5b0":    Subject(key: "p5b0",    bundleID: "life.soullab.voicekernel.k00",    iconLabel: "VoiceKernel K00"),
+        "phase-a": Subject(key: "phase-a", bundleID: "life.soullab.voicekernel.k00",    iconLabel: "VoiceKernel K00"),
+        "vpio-01": Subject(key: "vpio-01", bundleID: "life.soullab.voicekernel.vpio01", iconLabel: "VoiceKernel VPIO-01"),
+    ]
     static let springboardBundleID = "com.apple.springboard"
+    struct DriverError: Error, CustomStringConvertible { let description: String }
 
-    private var harness: XCUIApplication { XCUIApplication(bundleIdentifier: Self.harnessBundleID) }
+    private var subject: Subject!
+    private var harness: XCUIApplication { XCUIApplication(bundleIdentifier: subject.bundleID) }
     private var springboard: XCUIApplication { XCUIApplication(bundleIdentifier: Self.springboardBundleID) }
 
     private var env: [String: String] { ProcessInfo.processInfo.environment }
@@ -35,6 +47,11 @@ final class K00DriverTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false
+        let key = env["K00_SUBJECT"] ?? "p5b0"
+        guard let s = Self.subjects[key] else {
+            throw DriverError(description: "DRIVER/INFRASTRUCTURE FAILURE: unknown subject '\(key)' (p5b0 | phase-a | vpio-01); no launch attempted")
+        }
+        subject = s
     }
 
     // MARK: - Samples
@@ -99,9 +116,9 @@ final class K00DriverTests: XCTestCase {
             XCUIDevice.shared.press(.home)
             let sb = springboard
             sb.activate()
-            let matches = sb.icons.matching(NSPredicate(format: "label == %@", Self.harnessIconLabel))
+            let matches = sb.icons.matching(NSPredicate(format: "label == %@", subject.iconLabel))
             guard matches.firstMatch.waitForExistence(timeout: 5) else {
-                return driverFail("icon '\(Self.harnessIconLabel)' not found on the current Home Screen page")
+                return driverFail("icon '\(subject.iconLabel)' not found on the current Home Screen page")
             }
             // CALIBRATION-01/-03: SpringBoard can expose several elements with this label (a page icon, the
             // App Library entry, a Spotlight suggestion); the first match had a zero frame and tap() refused it.
@@ -109,7 +126,7 @@ final class K00DriverTests: XCTestCase {
             let all = matches.allElementsBoundByIndex
             guard let icon = all.first(where: { $0.isHittable }) else {
                 let frames = all.map { "\($0.frame)" }.joined(separator: " · ")
-                return driverFail("icon '\(Self.harnessIconLabel)' present \(all.count)× but none hittable (frames \(frames)) — not on the visible Home Screen page")
+                return driverFail("icon '\(subject.iconLabel)' present \(all.count)× but none hittable (frames \(frames)) — not on the visible Home Screen page")
             }
             icon.tap()
         }

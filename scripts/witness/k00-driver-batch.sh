@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # DRIVER-01 — Mac orchestration and evidence custody. One command per declared batch.
 #
-#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a] [--ledger DIR]
+#   usage: scripts/witness/k00-driver-batch.sh <stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01] [--ledger DIR]
 #   e.g.   scripts/witness/k00-driver-batch.sh CALIBRATION 3
 #          scripts/witness/k00-driver-batch.sh STAGE-A 30
 #          scripts/witness/k00-driver-batch.sh W4-AUTO 3 --w4 500
@@ -23,7 +23,15 @@ while [ $# -gt 0 ]; do case "$1" in
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 DEV="${K00_DEVICE:-A0736AC8-793B-516F-AC72-C076DB6CEE38}"          # devicectl id
 XDEST="${K00_XCODE_DEST:-00008140-00163D9922E0801C}"                 # xcodebuild destination id (NOT the devicectl id)
-BID="life.soullab.voicekernel.k00"
+# VPIO-01B (founder ruling 2026-09-14): the bundle identifier is DERIVED from the declared subject and used for every
+# installed-app lookup, container listing, journal pull, custody reference, driver bundle selection and ledger invocation.
+# There is no default bundle: an unknown subject is refused here, never resolved to .k00. Historical p5b0 / phase-a
+# behaviour is unchanged (same bundle, same label, same driver env). The K00 (R1) container is never addressed by vpio-01.
+case "$SUBJECT" in
+  p5b0|phase-a) BID="life.soullab.voicekernel.k00";    ICON="VoiceKernel K00";;
+  vpio-01)      BID="life.soullab.voicekernel.vpio01"; ICON="VoiceKernel VPIO-01";;
+  *) echo "unknown subject '$SUBJECT' (p5b0|phase-a|vpio-01); no default bundle — refusing" >&2; exit 2;;
+esac
 PROJ="$ROOT/ios/VoiceKernelDriver/VoiceKernelDriver.xcodeproj"
 DD="$ROOT/ios/VoiceKernelDriver/.derived"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -46,6 +54,9 @@ LABEL="AUTOMATED-COLD-$([ "$MODE" = "L" ] && echo LAUNCH || echo ICON)"
 TEST="$([ -n "$W4" ] && echo testW4Sample || echo testOneSample)"
 
 log(){ echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LEDGER_DIR/batch.log"; }
+# Cold precondition: NO VoiceKernelHarness process of ANY bundle may be alive before a sample (both harness bundles share the
+# executable name; a K00 harness alive during a vpio-01 sample would be a second audio-session owner). Stricter than the
+# subject, never looser; the subject-scoped custody references are the container/apps/ledger calls that carry $BID.
 harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/null | grep -qi VoiceKernelHarness; }
 # PASS-2 daemon identity witness (founder ruling 2026-09-14): Mac-side snapshot of the audio daemons' process rows, taken
 # immediately BEFORE each sample and AFTER its export. External witness state only — this reads the same process
@@ -92,14 +103,14 @@ pull_journal(){ xcrun devicectl device copy from --device "$DEV" --domain-type a
 DIAG_FLAGS=""
 if xcodebuild -help 2>&1 | grep -q -- '-collect-test-diagnostics'; then DIAG_FLAGS="-collect-test-diagnostics never"; fi
 run_test(){ # $1 = test method
-  TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" \
+  TEST_RUNNER_K00_MODE="$MODE" TEST_RUNNER_K00_VP="$VP" TEST_RUNNER_K00_HOLD_S="$HOLD" TEST_RUNNER_K00_W4_MS="${W4:-500}" TEST_RUNNER_K00_SUBJECT="$SUBJECT" \
   xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination "id=$XDEST" $DIAG_FLAGS -only-testing:"DriverUITests/K00DriverTests/$1" 2>&1
 }
 # Name the failure the runner actually reported, so the ledger row carries the signature and not only rc.
 failure_signature(){ # $1 = sample log
   if grep -q 'Timed out while enabling automation mode' "$1"; then echo "runner could not enable automation mode on the device (Settings → Developer → Enable UI Automation / device locked or passcode prompt)"; return; fi
   if grep -q 'DRIVER/INFRASTRUCTURE FAILURE: ' "$1"; then grep -o 'DRIVER/INFRASTRUCTURE FAILURE: [^"]*' "$1" | head -1 | sed 's/^DRIVER\/INFRASTRUCTURE FAILURE: //'; return; fi
-  if grep -qE 'Failed to not hittable: Icon|none hittable' "$1"; then echo "Mode I: icon 'VoiceKernel K00' present in the SpringBoard hierarchy but not hittable (zero frame) — not on the visible Home Screen page"; return; fi
+  if grep -qE 'Failed to not hittable: Icon|none hittable' "$1"; then echo "Mode I: icon '$ICON' present in the SpringBoard hierarchy but not hittable (zero frame) — not on the visible Home Screen page"; return; fi
   if grep -q 'error: -\[DriverUITests' "$1"; then grep -o 'error: -\[DriverUITests[^\n]*' "$1" | head -1 | cut -c1-220; return; fi
   echo "no new journal in tmp/ after the invocation"
 }
@@ -107,7 +118,7 @@ failure_signature(){ # $1 = sample log
 {
   echo "# DRIVER-01 batch — $STRATUM — $STAMP"
   echo
-  echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · device=$DEV · xcodeDest=$XDEST"
+  echo "stratum=$LABEL · N=$N · vp=$VP · mode=$MODE · hold=${HOLD}s · w4=${W4:-off} · subject=$SUBJECT · bundle=$BID · device=$DEV · xcodeDest=$XDEST"
   echo "installed harness identity (the app under test is NOT rebuilt by this batch):"
   echo '```'
   xcrun devicectl device info apps --device "$DEV" 2>/dev/null | grep -i "$BID" || echo "(devicectl apps listing unavailable)"
