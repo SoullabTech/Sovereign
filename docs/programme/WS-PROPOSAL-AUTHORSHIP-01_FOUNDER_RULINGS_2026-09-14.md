@@ -450,9 +450,11 @@ time.* The honest repair is to date it, never to edit it.
 ```text
 LANE STATUS                        ⏳ OPEN · BOUNDED REPAIR AUTHORIZED (FR-W5)
                                    SCOPE  Whole / first asked return ONLY
-                                   CENSUS INSTRUMENT ISSUED — C1…C10, read-only
-                                   `…_WHOLE-FIRST-RETURN_CENSUS_2026-09-14.md`
-                                   NEXT   run census (founder-side) → adjudicate → repair
+                                   CENSUS ✅ RUN + ADJUDICATED — C1-C3/C5-C9 established,
+                                   ⛔ C4 UNRESOLVED, C10 boundary named
+                                   `…_WHOLE-FIRST-RETURN_CENSUS_RESULT_2026-09-14.md`
+                                   NEXT   resolve Whole/second discrepancy · rule which
+                                          reading of that invariant governs · ⛔ NO CODE EDIT
                                    ⛔ census BEFORE implementation · mechanism not inferred
                                    ⛔ walk COMPLETE — do NOT rerun it
 Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
