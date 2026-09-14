@@ -284,3 +284,75 @@ PRODUCTION                  UNTOUCHED — no write in this act
 ```
 
 Stop for authorization.
+
+---
+
+# CORRECTION · THE BOOTSTRAP COMMAND WAS WRONG
+
+The founder ran the command exactly as given. Result:
+
+```text
+bash: line 1: scripts/s3-schema-first-runbook.sh: No such file or directory
+```
+
+⭐ **Nothing was written, and the failure was loud — which is the designed
+behaviour — but the command itself was my error and is corrected here.**
+
+**Why it failed, plainly:** the runbook lives only on
+`chore/s3-class-b-phase-20260913`. ⛔ It is **not on `clean-main-no-secrets`**, so
+the shared checkout has no copy to bootstrap from. And `git fetch` updates refs,
+never the working tree — the very fact G1 was repaired for, applied here to the
+bootstrap step I had not thought through.
+
+⚠️ **The sequencing fact underneath it:** *the runbook that performs the
+post-merge act lives inside the thing being merged.* Fetching is not enough; a
+copy must reach disk.
+
+## The corrected command — bootstrap from the object store, not the checkout
+
+⭐ Materialize the candidate as a worktree and run the runbook **from inside it**,
+so every helper it sources is present and is the candidate's:
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin clean-main-no-secrets && SHA=THE_REAL_SHA && WT=$(mktemp -d) && git worktree add --detach "$WT" "$SHA" && "$WT/scripts/s3-schema-first-runbook.sh" "$SHA"; RC=$?; git worktree remove --force "$WT"; exit $RC'
+```
+
+⭐ This is **belt and braces, not a replacement for the pin**: the runbook still
+re-execs into its own disposable worktree and still hash-proves itself and its
+helpers against the named commit. The outer worktree only solves *getting a copy
+on disk*. ⛔ It weakens nothing.
+
+Verified mechanically here: a worktree at `5928e852` carries the runbook, and
+invoking it **with no SHA refuses with exit 2 and touches nothing** — so the
+bootstrap path is exercisable without any production action.
+
+## ⛔ ONE THING THIS DOES NOT DECIDE — WHICH SHA
+
+Two orders are lawful and they are **not** the same act:
+
+**(A) Merge first, then run.** The SHA is the merge commit on
+`clean-main-no-secrets`. ⭐ This is what "merge the proved candidate and deploy its
+schema as one act" means.
+
+**(B) Run the branch head without merging.** ⛔ `5928e852` is **not** the proved S3
+candidate — `6ec5ff1d` is; the branch has since added the DEPLOYMENT-SAFETY-01
+and -02 work. Deploying the branch head would put production on a non-canonical
+commit, and merge would still be owed afterwards.
+
+⛔ **Not chosen here.** Naming the difference is the act; picking between them is
+the founder's.
+
+**Both branch heads carry all five migration files** — verified: the two
+divergence files and the three S3 files are present at `5928e852`, and the two
+divergence files are already on canonical.
+
+## Standing — unchanged by this correction
+
+```text
+runbook + witness           ✅ 48 / 0
+bootstrap command           ✅ CORRECTED (worktree, not checkout)
+candidate SHA               ⛔ NOT CHOSEN — (A) merge-first or (B) branch head
+MERGE                       ⏸ HOLD
+SCHEMA DEPLOY               ⛔ NOT AUTHORIZED
+PRODUCTION                  UNTOUCHED — the failed invocation wrote nothing
+```
