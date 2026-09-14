@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { patternRecencyWeight } from '@/lib/patterns/patternRecencyWeight';
+import {
+  PATTERN_LEDGER_PRACTITIONER_READ_CONTAINED,
+  PATTERN_LEDGER_CONTAINMENT,
+} from '@/lib/studio/containment/inferenceContainment';
 
 export async function GET(
   req: NextRequest,
@@ -17,6 +21,19 @@ export async function GET(
   const { id: clientId } = await params;
   if (!clientId) {
     return NextResponse.json({ error: 'Missing client id' }, { status: 400 });
+  }
+
+  // ── CONTAINED (Practitioner Inference Containment, 2026-08-06) ───────────
+  // pattern_ledger holds system-INFERRED claims about the member, including
+  // status='emerging' rows the member has never been offered. Surfacing them
+  // here puts the practitioner upstream of the member's own recognition.
+  //
+  // Fail closed BEFORE the read: no query runs, no scores are computed, and the
+  // data is left intact for investigation and for the coming authority ruling.
+  // ⛔ Do not re-open by filtering statuses or hiding scores — the claim itself
+  //    is what may not cross. Only a member-declared crossing re-opens this.
+  if (PATTERN_LEDGER_PRACTITIONER_READ_CONTAINED) {
+    return NextResponse.json({ patterns: [], containment: PATTERN_LEDGER_CONTAINMENT });
   }
 
   try {
