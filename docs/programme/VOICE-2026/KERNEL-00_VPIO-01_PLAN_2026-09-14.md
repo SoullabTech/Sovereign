@@ -661,3 +661,50 @@ Full text in `KERNEL-00_VPIO-01_F-W1_WITNESS_2026-09-14.md` §9. Falsified assum
 **Gate (jest 53/53, was 49/49):** K00-16 custody pin → `life.soullab.voicekernel.vpio02` (and no `vpio01` in the harness spec's executable lines) · PW-02 ordering reshaped (probe initialize < read < probe uninitialize < guard < real initialize < start) · VPIO block: 14-step vocabulary, two `AudioUnitInitialize(u)` + one `AudioUnitUninitialize(u)` in `start()`, ordered anchors on the trace emissions · VPIO-01B "organism frozen at `85e5e7154`" pin **restructured into the founder's envelope pin** (relative to `85e5e7154` exactly the three envelope files moved, no file added) · **new VPIO-02 block (4 obligations):** probe lifecycle order + inert probe window + OSStatus checks before read/guard + unchanged pure precondition · read still (Input scope, element 1), client format from the observed rate, no fixed/session rate in `start()` or the read helper, the zero sentinel refused not substituted, exactly one read / two initializes / one uninitialize, no loop · the three probe seams traced with outcome/status/elapsed and the read stamped `afterProbeInitialize` · custody identity `.vpio02` / `VoiceKernel VPIO-02`, instrument byte-identical to `de3efd3fb`. Two first-draft assertions of mine were over-broad (the pre-existing `outputSampleRate` default `48_000` field, my own `.vpio01` comment in `project.yml`, and the read helper's zero sentinel all matched prohibitions written too wide — the C21 shape) and were narrowed to what the ruling forbids; the Swift and the yml were not changed to satisfy the gate.
 
 **Standing:** VPIO-02 source IMPLEMENTED at this commit, **NOT COMPILED** (no toolchain here) · **MAC-COMPILE HELD** (a separate founder act on exactly this SHA) · install HELD (`.vpio01` frozen on the device; `.vpio02` never installed; the historical K00/R1 untouched) · witness HELD · F-W1 matrix unchanged · VPIO-01 CLOSED · KERNEL-00 NOT ACCEPTED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. Sequence step 7: STOP.
+
+### 13.12 FOUNDER RULING (2026-09-14) — VPIO-02 / MAC-COMPILE-01 OPEN on exactly `ac12dedf4b7b4efc9855c08bb4285a704e7039f1` · Mac act · NOT YET EXECUTED
+
+**Ruling (founder, verbatim in substance):** MAC-COMPILE-01 is open on exactly `ac12dedf4`. The founder independently verified the envelope (four files moved against `3810b9ac5`; nine invariant kernel files, `Package.swift` and the harness Swift byte-identical to `85e5e7154`; the VPIO-01B instrument byte-identical to `de3efd3fb`). Toolchain of record for this act: Xcode 26.3 (17C529) · Swift 6.2.4 · XcodeGen 2.46.0 · iPhoneOS SDK 26.2. **Stop at the first RED.** No correction and no edit inside the authorized act — a RED is returned as the exact defect, and any correction is a new SHA and a fresh compile authorization. The stale doc comment at `AudioGraph.swift` line 160 ("Eleven steps on this subject", two lines under the corrected "VPIO-02 startup seams (14; …)") is **preserved in this subject rather than changing the SHA inside the authorized act**; it is a comment, compiles to nothing, and is recorded here so its later correction is a deliberate act. The `xcodegen` worktree footprint (`Harness/Info.plist` rewritten from `project.yml`) is recorded, never committed. **GREEN opens nothing:** VPIO-02 instrument plumbing (`vpio-02` subject row · `.vpio02` identity pin · 14-step trace in the ledger) HELD · install NOT AUTHORIZED (`.vpio01` frozen on the device; `.vpio02` never installed; historical K00/R1 untouched) · launch · sample · N=30 NOT AUTHORIZED · F-W1 matrix unchanged for any later VPIO-02 witness.
+
+**Pinned sequence (the MAC-COMPILE-02 recipe, §13.5-era paths renamed for this subject; run on the Mac Studio, this session has no toolchain):**
+
+```bash
+# 0. fresh detached worktree at exactly the subject; DerivedData OUTSIDE the worktree (C-D10)
+cd /Users/soullab/MAIA-SOVEREIGN
+git fetch origin claude/voice-2026-census-01
+test "$(git rev-parse ac12dedf4b7b4efc9855c08bb4285a704e7039f1)" = "ac12dedf4b7b4efc9855c08bb4285a704e7039f1"
+test ! -e /private/tmp/vpio02-mac-compile-01-ac12dedf4   # pre-existing path = STOP, never reuse
+git worktree add --detach /private/tmp/vpio02-mac-compile-01-ac12dedf4 ac12dedf4b7b4efc9855c08bb4285a704e7039f1
+cd /private/tmp/vpio02-mac-compile-01-ac12dedf4 && git rev-parse HEAD && git status --porcelain   # must print the SHA and nothing else
+ln -s /Users/soullab/MAIA-SOVEREIGN/node_modules node_modules                                   # gate deps only; no install
+
+# 1. swift build
+( cd ios/VoiceKernel && xcrun swift build )
+# 2. swift test
+( cd ios/VoiceKernel && xcrun swift test )
+# 3. source gate — read the count before anything else; expected 53/53
+npx jest --config jest.config.js __tests__/voice-kernel-00-source-gates.test.ts
+# 4. xcodegen (rewrites Harness/Info.plist in the worktree — footprint recorded, never committed)
+( cd ios/VoiceKernelHarness && xcodegen generate )
+# 5. unsigned generic-iOS build
+( cd ios/VoiceKernelHarness && xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness \
+    -destination 'generic/platform=iOS' -derivedDataPath /private/tmp/vpio02-mac-compile-01-ac12dedf4-derived \
+    CODE_SIGNING_ALLOWED=NO build )
+# 6. signed build against the paired iPhone (Xcode destination id, NEVER the devicectl id)
+( cd ios/VoiceKernelHarness && xcodebuild -project VoiceKernelHarness.xcodeproj -scheme VoiceKernelHarness \
+    -destination id=00008140-00163D9922E0801C -derivedDataPath /private/tmp/vpio02-mac-compile-01-ac12dedf4-derived \
+    DEVELOPMENT_TEAM=ZVK2X646Z2 CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates build )
+# 7. custody identity — ONLY if 1–6 are all green (the MAC-COMPILE-02 fields, same order)
+P=/private/tmp/vpio02-mac-compile-01-ac12dedf4-derived/Build/Products/Debug-iphoneos/VoiceKernelHarness.app
+dwarfdump --uuid "$P/VoiceKernelHarness.debug.dylib"
+shasum -a 256 "$P/VoiceKernelHarness.debug.dylib" "$P/VoiceKernelHarness"
+( cd "$P" && find . -type f | LC_ALL=C sort | xargs shasum -a 256 ) > KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.manifest.sha256
+shasum -a 256 KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.manifest.sha256
+/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' -c 'Print CFBundleDisplayName' "$P/Info.plist"   # must read .vpio02 / VoiceKernel VPIO-02
+codesign -dv "$P" 2>&1 | grep -E 'Identifier|Authority|TeamIdentifier'
+git status --porcelain   # post-compile footprint, recorded verbatim
+```
+
+**Record owed (founder, on a `feature/*` branch, cherry-picked here with `-x`):** `docs/programme/VOICE-2026/KERNEL-00_VPIO-02_MAC-COMPILE-01_2026-09-14.md` — every step's command and output verbatim, in order, ending at the first RED or at the custody block; the manifest file beside it if produced. Expected shape on green: `swift test` count (27 + 0 on this envelope unless the Fourteen-seams test adds one — the record states the actual number, never this estimate) · gate `53/53` · one known `try?` warning · a **new** dylib UUID (never `E8074AD1-…`; a match would be an evidence anomaly to record, not an identity) · bundle `life.soullab.voicekernel.vpio02`.
+
+**Standing after this ruling:** VPIO-02 source `ac12dedf4` · **MAC-COMPILE-01 OPEN, NOT EXECUTED** · instrument plumbing HELD · install / launch / sample / N=30 NOT AUTHORIZED · F-W1 UNSPENT for VPIO-02 · VPIO-01 CLOSED (population immutable) · KERNEL-00 NOT ACCEPTED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED · WS transport lane NOT GRANTED.
