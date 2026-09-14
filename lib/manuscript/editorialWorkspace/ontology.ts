@@ -78,8 +78,22 @@ export function isAuthorizableContent(v: unknown): v is ProposalVersion {
   /* ⛔ An object carrying the brand is refused OUTRIGHT, even if it also
      happens to look like a version. A thing that is both is a conversion. */
   if ('__notAuthorizable' in r) return false;
-  return typeof r.id === 'string' && typeof r.chainId === 'string'
-    && typeof r.replacementText === 'string';
+  /* ⭐⭐ THE WHOLE SHAPE, because the signature CLAIMS the whole shape.
+     ⚠️ The first writing checked three fields and told TypeScript the value was
+     a complete `ProposalVersion`. `{ id, chainId, replacementText }` narrowed,
+     and `supersedes`, `author` and `authoredAt` were then readable as present
+     when they were not. Nothing exploitable reached authorization — this helper
+     is contract evidence, not the membrane — ⛔ but an unsound predicate is the
+     same weakness this programme has refused every time a caller happened to
+     behave correctly. */
+  if (typeof r.id !== 'string' || typeof r.chainId !== 'string') return false;
+  if (!(r.supersedes === null || typeof r.supersedes === 'string')) return false;
+  if (typeof r.replacementText !== 'string') return false;
+  if (r.author !== 'maia' && r.author !== 'member') return false;
+  if (typeof r.authoredAt !== 'string') return false;
+  /* ⛔ Two states, as the ontology has it: absent, or a string. */
+  if ('rationale' in r && typeof r.rationale !== 'string') return false;
+  return true;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -153,7 +167,14 @@ export interface EditorialInsight extends NotAuthorizable {
  * it is decided.
  *
  * ⭐ AND IT MAY REFER BACKWARD FREELY — see `refersTo`. ⛔ A conversational
- * reference is NOT a succession: a later candidate still supersedes the head.
+ * reference is NOT a succession: a later candidate carries THE PREDECESSOR THE
+ * AUTHOR ACTED AGAINST, and persistence judges whether that predecessor is
+ * still lawful.
+ *
+ * ⚠️ AN EARLIER WORDING HERE SAID *"a later candidate still supersedes the
+ * head"*. ⛔ Withdrawn: it contradicted `successionPredecessor` below and would
+ * have had a schema designer recreate head synthesis from the paragraph above
+ * the function that forbids it.
  */
 export interface EditorialDirection extends NotAuthorizable {
   readonly id: string;
@@ -165,9 +186,10 @@ export interface EditorialDirection extends NotAuthorizable {
   /**
    * ⭐ An earlier formulation this instruction is ABOUT, if any.
    * ⛔⛔ A REFERENCE, NOT A SUPERSESSION. Referring to v1 does not make the
-   * next candidate succeed v1 — the authorizable lineage stays linear and the
-   * next candidate still supersedes the head. This field is the whole reason
-   * the conversation can range freely without branching authorizable history.
+   * next candidate succeed v1: the candidate carries whichever predecessor its
+   * AUTHOR ACTED AGAINST, and the store decides whether that is still lawful.
+   * ⭐ This field is the whole reason the conversation can range freely without
+   * branching authorizable history.
    */
   readonly refersTo: string | null;
   readonly authoredAt: string;
@@ -203,6 +225,37 @@ export interface EditorialDirection extends NotAuthorizable {
  * ⛔ And `AskAnchor` is left alone. Whether chain membership is an ANCHOR or an
  * EDITORIAL-PARENT relationship is the contract's question, and forcing it into
  * the union because that is the quickest migration would answer it by accident.
+ */
+/**
+ * ⭐⭐ W5-2 CRITERION — SAME MEMBER IS NOT ENOUGH. SAME WORK, PROVEN BY THE
+ * DATABASE.
+ *
+ * ⛔ FOUNDER FINDING, carried forward and NOT implemented here. A relation
+ * proving only `thread.member_id = chain.member_id` would still admit:
+ *
+ *     Kelly's thread about Work X  ──▶  Kelly's proposal chain about Work Y
+ *
+ * ⭐ That is the 01A.1 wrong-Work substitution again, this time in persistence
+ * rather than in the room. We removed it from the mount; conversation identity
+ * must not reopen it underneath.
+ *
+ *     same member
+ *     AND thread.manuscript_id = chain.work_id
+ *     AND exact chain identity
+ *
+ * ⛔ All three proven by the DATABASE, never by application code.
+ *
+ * ⚠️ The physical form is W5-2's to adjudicate and is deliberately not decided
+ * here. The founder's current preference, recorded as a criterion rather than a
+ * ruling: a nullable `ask_threads.proposal_chain_id` with a composite
+ * relationship over `(member_id, manuscript_id, proposal_chain_id)` →
+ * `(member_id, work_id, id)` — because the thread then OWNS the relationship,
+ * its existing freeze makes it immutable, deleting the thread removes it
+ * naturally, the chain is untouched, there is no separately deletable row that
+ * could leave a live conversation mysteriously unbound, and `AskAnchor` stays
+ * exactly what it is. A separate binding relation could still satisfy the
+ * contract, but it must carry enough identity to prove the same Work and needs
+ * extra lifecycle machinery the column gets for free.
  */
 export interface DiscourseBinding {
   readonly threadId: string;

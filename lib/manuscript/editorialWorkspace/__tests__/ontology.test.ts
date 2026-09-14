@@ -50,14 +50,48 @@ describe('W5-1 · ⛔ the negative law — only candidate wording is authorizabl
     expect(isAuthorizableContent(turn)).toBe(false);
   });
 
+  it('⭐⭐ THE PREDICATE IS TRUTHFUL — an incomplete version does NOT narrow', () => {
+    /* ⚠️ The first writing checked id, chainId and replacementText and then told
+       TypeScript the value was a COMPLETE ProposalVersion. Nothing exploitable
+       reached authorization - this helper is evidence, not the membrane - but an
+       unsound predicate is the weakness this programme refuses every time a
+       caller happens to behave correctly. */
+    expect(isAuthorizableContent({
+      id: 'v', chainId: 'c', replacementText: 'words' })).toBe(false);
+    /* each required field, absent in turn */
+    const complete = { id: 'v', chainId: 'c', supersedes: null,
+      replacementText: 'w', author: 'maia', authoredAt: 't' };
+    expect(isAuthorizableContent(complete)).toBe(true);
+    for (const k of ['id', 'chainId', 'supersedes', 'replacementText',
+      'author', 'authoredAt']) {
+      const { [k]: _gone, ...missing } = complete as Record<string, unknown>;
+      expect(isAuthorizableContent(missing)).toBe(false);
+    }
+    /* ⛔ author is a closed vocabulary, not any string */
+    expect(isAuthorizableContent({ ...complete, author: 'editor' })).toBe(false);
+    /* ⛔ supersedes is a version id or null — never undefined, never a number */
+    expect(isAuthorizableContent({ ...complete, supersedes: 7 })).toBe(false);
+    /* ⭐ rationale keeps its two states: absent, or a string */
+    expect(isAuthorizableContent({ ...complete, rationale: 'because' })).toBe(true);
+    expect(isAuthorizableContent({ ...complete, rationale: null })).toBe(false);
+  });
+
   it('⛔ THE CONVENIENCE ADAPTER — an object wearing both shapes is REFUSED', () => {
     /* The realistic attack is not a bare Insight. It is a helper that "just
        adds the fields authorizeVersion needs". Carrying the brand disqualifies
        it outright, because a thing that is both IS a conversion. */
-    const laundered = { ...insight, replacementText: 'some wording', supersedes: null };
+    /* ⭐ Laundered into the COMPLETE shape, so only the brand disqualifies it —
+       which is the point: a thing that is both IS a conversion. */
+    const laundered = { ...insight, supersedes: null, replacementText: 'some wording',
+      authoredAt: insight.authoredAt };
     expect(isAuthorizableContent(laundered)).toBe(false);
-    const launderedDirection = { ...direction, replacementText: direction.instruction };
+    const launderedDirection = { ...direction, supersedes: null,
+      replacementText: direction.instruction, authoredAt: direction.authoredAt };
     expect(isAuthorizableContent(launderedDirection)).toBe(false);
+    /* ⛔ and stripping the brand is the only way through — stated, so the
+       persistence separation is understood as the real protection */
+    const { __notAuthorizable: _b, ...stripped } = laundered;
+    expect(isAuthorizableContent(stripped)).toBe(true);
   });
 
   it('⛔ neither Insight nor Direction carries wording, a range or an operation', () => {
@@ -103,6 +137,19 @@ describe('W5-1 · Insight', () => {
 });
 
 describe('W5-1 · Direction', () => {
+  it('⛔ the Direction prose no longer CLAIMS the candidate supersedes the head', () => {
+    /* ⚠️ Residue: the function was corrected in W5-1.1 while two paragraphs
+       above it still said "a later candidate still supersedes the head". W5-2 is
+       where prose becomes columns, so a schema designer must not read head
+       synthesis from the text above the function that forbids it.
+       ⛔ NOT a global ban on the word — the surrounding explanation legitimately
+       uses it to describe what is forbidden. The positive sentence is asserted
+       instead. */
+    expect(PROSE).not.toMatch(/candidate still supersedes the head/);
+    expect(PROSE).toMatch(/PREDECESSOR THE\s*\n?\s*\*?\s*AUTHOR ACTED AGAINST/);
+    expect(PROSE).toMatch(/persistence judges whether that predecessor is\s*\n?\s*\*?\s*still lawful/);
+  });
+
   it('⭐ may refer backward — and ⛔ a reference is NEVER a succession', () => {
     expect(direction.refersTo).toBe('v1');
     /* the next candidate supersedes what the AUTHOR ACTED AGAINST, whatever
@@ -192,6 +239,18 @@ describe('W5-1 · Discourse — reuse, bound provably', () => {
   it('⛔ and the lineage never obliges the member to keep the conversation', () => {
     expect(DISCOURSE_DELETION.lineageRetentionObligesThreadRetention).toBe(false);
     expect(DISCOURSE_DELETION.threadDeletionMayRemoveBinding).toBe(true);
+  });
+
+  it('⭐⭐ W5-2 CRITERION recorded: same Work, proven by the database', () => {
+    /* ⛔ A relation proving only same-member would admit Kelly's thread about
+       Work X bound to Kelly's chain about Work Y - the 01A.1 wrong-Work
+       substitution, reopened in persistence. Recorded as a criterion; NOT
+       implemented here. */
+    expect(PROSE).toMatch(/SAME MEMBER IS NOT ENOUGH/);
+    expect(PROSE).toMatch(/thread\.manuscript_id = chain\.work_id/);
+    expect(PROSE).toMatch(/proven by the DATABASE, never by application code/i);
+    /* ⛔ and it is still a criterion, not a decision */
+    expect(PROSE).toMatch(/physical form is W5-2's to adjudicate/);
   });
 
   it('⭐⭐ two freezes, two moments — no equality, no copying, no synchronising', () => {
