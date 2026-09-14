@@ -275,3 +275,102 @@ authorization rows exist anywhere.** If `maia_focus_witness` carries the EW-F1a
 constraints — and the EW-F1a witness says something did — then that database has
 executed `20260913000002` and `20260913000003`, and the shape of the repair
 changes.
+
+---
+
+# Addendum 2 — the focus-witness row: THREE ATTEMPTS, STILL UNREAD
+
+⛔ **FOUNDER RULING, 2026-09-14: `maia_focus_witness` STILL UNREAD. No census
+claim may be made from any of the runs below.**
+
+## Two distinct failure modes, kept apart because they fail differently
+
+```
+attempt 1   psql "$MAIA_FOCUS_WITNESS_URL" -f /tmp/mig-state.sql
+            env var UNSET → psql defaulted to database "soullab" → FATAL
+            never connected · failed LOUDLY · no output to misread
+
+attempt 2   FW=$(… WHERE datname ~ 'focus|witness' … ORDER BY 1 LIMIT 1)
+            CONNECTED — to maia_07a_witness
+            failed QUIETLY · produced a complete, clean-looking 82-line census
+            of the WRONG database
+```
+
+⭐⭐ **ATTEMPT 2 IS THE DANGEROUS ONE, AND IT IS THE INSTRUMENT'S DEFECT, NOT THE
+OPERATOR'S.** The regex `focus|witness` matched `maia_07a_witness`; `ORDER BY 1
+LIMIT 1` then chose one of **24 local databases** and said nothing about having
+chosen. The three real candidates sat three rows further down:
+
+```
+maia_focus_witness
+maia_focus_witness_20260910
+maia_focus_witness_c44238e51
+```
+
+⛔ **A NAME MATCH IS NOT IDENTIFICATION** — the same error this whole census
+exists to prevent (§3 classifies from the table, never from the filename), and I
+wrote it into my own helper. Had that output been accepted as "the focus witness
+row", the matrix would have carried a **false entry that looked clean**.
+
+⚠️ **Loud failure is cheap; quiet failure is what costs.** Attempt 1 produced one
+line of error and nothing to misread. Attempt 2 produced eighty-two lines of
+correct-looking evidence about something nobody asked about.
+
+## The procedure that actually names its target (founder)
+
+⭐ Stricter than mine in three ways that matter: `-X` ignores any `psqlrc`,
+`-Atc` **proves the target before the read**, and `ON_ERROR_STOP=1` refuses to
+continue past a failure.
+
+```bash
+psql -X "postgresql://soullab@localhost:5432/maia_focus_witness" \
+  -Atc "SELECT current_database(), current_user;"
+```
+
+⛔ **The first field must read `maia_focus_witness` or nothing proceeds.**
+
+Then the file itself, before psql is allowed to read it:
+
+```
+line count       > 0            ⛔ not an exact number — see addendum 1
+SHAPE VERDICT    present
+mutating SQL     0
+```
+
+Then the read:
+
+```bash
+psql -X "postgresql://soullab@localhost:5432/maia_focus_witness" \
+  -v ON_ERROR_STOP=1 -f /tmp/mig-state.sql > /tmp/mig-state-focus.txt 2>&1
+```
+
+⛔ **AND IF THAT DATABASE IS ABSENT, NOTHING IS CREATED.** The object of this
+census is the historical witness that already existed; a fresh database of the
+same name would answer a question nobody asked, in a way indistinguishable from
+an answer.
+
+## ⭐ An extra row, recorded honestly under its own name
+
+Attempt 2's output is valid evidence — **about `maia_07a_witness`**, the
+BUILD-07A evidence witness (PostgreSQL 17.7, Homebrew, aarch64):
+
+```
+maia_07a_witness    all four migrations ABSENT · all three tables ABSENT
+                    shape ABSENT · accepted_rows: table ABSENT
+```
+
+⚠️ It is entered under that name, and it is **not** the focus-witness row.
+
+## ⛔ The row still owed, and why it is the decisive one
+
+The EW-F1a witness reports `mrp_inspection_only_never_accepted` and
+`mrp_execution_authority_vocabulary` **refusing by name** — so
+`20260913000002` and `20260913000003` executed **somewhere**. Nothing read so
+far carries them: not production, not the walk database, not `focus_witness`
+(container-local), not `maia_07a_witness`.
+
+⛔ **If the three `maia_focus_witness*` databases do not carry them either, the
+honest matrix entry is `UNLOCATED`, not a guess** — and the question becomes
+which of the 24 local databases ran them. The list itself is suggestive
+(`maia_i05_shadow_321cb1536`, `maia_containment_walk_95e7f5fdf`,
+`maia_cutover_test`, `maia_bring_forward`), ⛔ but suggestive is not read.
