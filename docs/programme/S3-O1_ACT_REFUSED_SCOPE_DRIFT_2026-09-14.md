@@ -137,3 +137,100 @@ PRODUCTION                   unchanged BY THIS ACT
 ```
 
 Stop for ruling.
+
+---
+
+# CORRECTION · §2's INFERENCE IS REFUTED — NOTHING WAS APPLIED
+
+**Founder's read-only ledger query, 2026-09-14:**
+
+```text
+newest applied_at in schema_migrations
+  20260909000001_context_disclosure_receipts.sql   2026-09-09 23:59:24+00
+  … then 2026-09-07, 2026-09-06 …
+```
+
+⭐⭐ **Nothing has been applied to production since 2026-09-09.** So the two
+divergence files were **not** applied between the preflight and the act, and §2's
+inference — *"whatever applied the two ran from a pre-merge tree"* — is **WRONG
+and withdrawn**. ⛔ No unauthorized act occurred. Production's ledger has been
+stable for five days.
+
+## What that leaves
+
+The runbook computes *candidate tree* ∖ *ledger*, sorting **both sides in the same
+shell on the same host**, and reported three. So the two files **are** in the
+ledger — with an `applied_at` older than 2026-09-06, or NULL (the query's
+`NULLS LAST` would hide those beyond the top twelve either way).
+
+⭐ **Which means there was never a ledger/schema divergence at all — only a bad
+read.** The DEPLOYMENT-SAFETY-02 census §1 had already *predicted* this: every
+object of both migrations is present in the 2026-09-01 baseline, and that baseline
+is documented as a snapshot of production. Objects present in production on
+2026-09-01 are entirely consistent with ledger rows applied before then.
+
+⚠️ **The defect is mine, and it is a reasoning defect before it is a shell one.**
+I had a repository-derived prediction and a single production read that
+contradicted it, and I carried both forward instead of reconciling them. The
+census even wrote the falsifier for one direction — *"any false → that object is
+genuinely missing"* — and never asked the other: **if all six objects are present,
+why would the ledger rows be absent?** That question would have caught this before
+the runbook had to.
+
+⚠️ **Mechanism of the bad read: NOT ESTABLISHED.** The preflight `comm` sorted its
+two inputs on **different machines** (tree on minisforum, ledger piped to the Mac
+Studio), which is the kind of thing that corrupts `comm`. ⛔ But that is a
+hypothesis, and the obvious test **did not support it**: on this Linux host the
+migration-name ordering is byte-identical under `C` and `en_US.UTF-8`. BSD `sort`
+may still differ from GNU `sort`; that is untested and stays untested rather than
+asserted. ⭐ **What matters for the act is settled regardless of the mechanism:
+the runbook's reading is the trustworthy one, because both of its sorts run in one
+shell on one host.**
+
+## The one query that closes it — sort-free, no `comm`, no ordering
+
+```bash
+ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab -d maia_consciousness -c "
+  SELECT filename, applied_at FROM schema_migrations
+   WHERE filename IN (
+     '"'"'20260121_trusted_colleagues.sql'"'"',
+     '"'"'20260122_transcript_encryption.sql'"'"');"'
+```
+
+```text
+two rows returned   → they were always applied. No divergence ever existed.
+                      The true pending set is the THREE S3 migrations. → Q1 only.
+fewer than two      → they really are absent, and the runbook's comm is the thing
+                      to distrust. ⛔ That would be a defect in the act's own
+                      scope check and stops everything until understood.
+```
+
+Also worth one line, to bound it:
+
+```bash
+ssh soullab@minisforum 'docker exec maia-postgres psql -U soullab -d maia_consciousness -tAc "
+  SELECT count(*) FROM schema_migrations WHERE filename LIKE '"'"'20260913%'"'"';"'
+```
+
+Expect `0` — the S3 schema is still absent, which the refusal already implies.
+
+## Standing, corrected
+
+```text
+O1 PRODUCTION ACT        ⛔ REFUSED · NOTHING CHANGED        (unchanged)
+production ledger        ✅ STABLE since 2026-09-09 — NOT changed since preflight
+"two files pending"      ❌ WITHDRAWN — a bad read, not a fact about production
+unauthorized act         ❌ NONE — §2's inference refuted by timestamps
+ledger/schema divergence ❌ LIKELY NEVER EXISTED — pending confirmation above
+true pending set         three S3 migrations (pending the confirming query)
+
+Q2 (what applied them)   ✅ ANSWERED: nothing did
+Q1 (is 3 authorized)     ⏸ now the ONLY open question
+SCHEMA DEPLOY            ⏸ HELD
+PRODUCTION               UNTOUCHED
+```
+
+⛔ `RB_EXPECTED_PENDING` still must not be narrowed to make the act pass. If the
+confirming query returns both rows, the three-file set becomes the *correct* law
+and changing it is a governed act with its own witness run — ⛔ not a convenience
+edit.
