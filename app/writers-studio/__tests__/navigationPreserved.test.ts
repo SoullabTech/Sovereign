@@ -64,12 +64,92 @@ describe('the navigation mechanism the integration must not touch', () => {
     expect(src).not.toMatch(/scrollIntoView/);
   });
 
-  it('WholeManuscriptSurface reaches the destination with exactly one unscoped call', () => {
-    const src = read('WholeManuscriptSurface.tsx');
-    const calls = src.match(/revealWithin\(/g) ?? [];
-    expect(calls).toHaveLength(1);
-    expect(src).toContain("revealWithin(node, 'start');");
+  /**
+   * ── ⭐⭐ AMENDED 2026-09-14 UNDER FR-W5, BY THE LANE THAT OWNS IT ─────────
+   *
+   * This assertion previously read `toHaveLength(1)` over the WHOLE FILE. That
+   * count was never the law — it was a PROXY for the law, valid only while the
+   * surface had exactly one reason to move the viewport.
+   *
+   * ⛔ THE PROXY COLLAPSED TWO DIFFERENT OBJECTS:
+   *
+   *     number of `revealWithin` CALL SITES
+   *     number of NAVIGATION SEMANTICS
+   *
+   * FR-W5 (founder, 2026-09-14) authorized a second, differently sourced
+   * viewport act — voluntary proposal return to an exact locus — so the global
+   * count can no longer govern the file. ⭐ The behavioural invariant is not
+   * relaxed; its ACTUAL JURISDICTION is recovered and stated per mechanism.
+   *
+   * ⛔ AND A GLOBAL `toHaveLength(2)` WOULD BE ALMOST AS WEAK AS THE OLD ONE:
+   * it would count acts without saying which act is which. The assertions below
+   * are scoped to the two mechanisms so the anti-collapse law is the thing
+   * being tested:
+   *
+   *     jumpTo            ≠  proposalReturn
+   *     shell navigation  ≠  exact-locus return
+   *
+   * ⭐ Comments are stripped before scanning — this lane's C21 scar: a source
+   * scan must never read prose describing a behaviour as the behaviour.
+   */
+  const bareSrc = (f: string) =>
+    read(f).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*/g, '');
+
+  /** The effect body between a guard and its dependency array. */
+  const effectBody = (src: string, guard: string, deps: string) => {
+    const a = src.indexOf(guard);
+    const b = src.indexOf(deps, a);
+    expect(a).toBeGreaterThan(-1);
+    expect(b).toBeGreaterThan(a);
+    return src.slice(a, b);
+  };
+
+  it('A · ordinary Whole navigation still reveals the section shell, once', () => {
+    const src = bareSrc('WholeManuscriptSurface.tsx');
+    const jump = effectBody(src, 'if (!pendingScroll) return;', '}, [pendingScroll');
+
+    /* the carried mechanism, unchanged and still literal */
+    expect(jump).toContain("revealWithin(node, 'start');");
+    expect((jump.match(/revealWithin\(/g) ?? [])).toHaveLength(1);
+    expect(jump).toContain('shells.current.get(pendingScroll)');
+
+    /* ⛔ no proposal-locus semantics leak into ordinary navigation */
+    expect(jump).not.toContain('proposalLoci');
+    expect(jump).not.toContain('proposalReturn');
+    expect(jump).not.toContain('locusKey');
+
     expect(src).not.toMatch(/scrollIntoView/);
+  });
+
+  it('B · voluntary proposal return addresses the exact registered locus, once', () => {
+    const src = bareSrc('WholeManuscriptSurface.tsx');
+    const ret = effectBody(src, 'if (!proposalReturn) return;', '}, [proposalReturn');
+
+    /* the exact locus, taken from the registry the renderer fills */
+    expect(ret).toContain('proposalLoci.current.get(proposalReturn.locusKey)');
+    expect(ret).toContain("revealWithin(locus, 'center', 'smooth');");
+    expect((ret.match(/revealWithin\(/g) ?? [])).toHaveLength(1);
+
+    /* ⛔⛔ THE SECTION SHELL CAN NEVER DISCHARGE THIS REQUEST. The shell may
+       make the destination mountable; it may not stand in for the locus. */
+    expect(ret).not.toContain('shells.current');
+    expect(ret).not.toMatch(/revealWithin\(node/);
+
+    /* ⛔ absence of the exact locus stays a refusal, never a fallback */
+    expect(ret).toMatch(/status: 'refused'/);
+  });
+
+  it('⭐ the two mechanisms are distinct carriers, not one call site reused', () => {
+    const src = bareSrc('WholeManuscriptSurface.tsx');
+    const jump = effectBody(src, 'if (!pendingScroll) return;', '}, [pendingScroll');
+    const ret = effectBody(src, 'if (!proposalReturn) return;', '}, [proposalReturn');
+
+    /* neither effect body contains the other: two acts, two mechanisms */
+    expect(jump.includes(ret)).toBe(false);
+    expect(ret.includes(jump)).toBe(false);
+
+    /* and the whole surface still moves the writer ONLY through these two */
+    expect((src.match(/revealWithin\(/g) ?? [])).toHaveLength(2);
   });
 
   /**

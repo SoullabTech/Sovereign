@@ -45,7 +45,7 @@
  */
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 import { revealWithin } from './revealWithin';
 import type { SpacedRange } from '@/lib/manuscript/sections/coordinateSpace';
@@ -80,6 +80,11 @@ function units(body: string, range: SpacedRange): { a: number; b: number } {
   const a = bounds[Math.max(0, Math.min(range.start, last))];
   const b = bounds[Math.max(0, Math.min(range.end, last))];
   return { a, b: Math.max(a, b) };
+}
+
+/** Exact identity of one proposal locus within one section. */
+export function proposalLocusKey(sectionId: string, range: { space: string; start: number; end: number }): string {
+  return `${sectionId}:${range.space}:${range.start}:${range.end}`;
 }
 
 const PROSE = {
@@ -287,13 +292,19 @@ export default function ProposalWorkSurface(
  * work happens, and the door is taken only when the member asks — PW-11.
  */
 export function ProposalEvidenceInWork(
-  { body, range, replacementText, onWorkWithChange }: {
+  { body, range, replacementText, onWorkWithChange, locusKey, onLocusNode }: {
     body: string;
     range: SpacedRange;
     replacementText: string;
     onWorkWithChange?: () => void;
+    /** C10 · registration only; the evidence surface does not own navigation. */
+    locusKey?: string;
+    onLocusNode?: (locusKey: string, node: HTMLSpanElement | null) => void;
   },
 ) {
+  const register = useCallback((node: HTMLSpanElement | null) => {
+    if (locusKey) onLocusNode?.(locusKey, node);
+  }, [locusKey, onLocusNode]);
   if (range.space !== 'projected_section_body') return null;
   const { a, b } = units(body, range);
 
@@ -304,7 +315,7 @@ export function ProposalEvidenceInWork(
           beside the removal, so the proposed STATE is legible here too. */}
       <div style={{ ...PROSE, color: INK.primary }}>
         {body.slice(0, a)}
-        <Locus leaving={body.slice(a, b)} arriving={replacementText} />
+        <Locus innerRef={register} leaving={body.slice(a, b)} arriving={replacementText} />
         {body.slice(b)}
       </div>
 

@@ -45,7 +45,12 @@ import type { CurrentManuscript } from '../useCurrentManuscript';
 import { loadRevisions, type RevisionSummary } from '../../press/manuscript/workingDraftClient';
 import Worktable from './Worktable';
 import SectionWritingSession, { type ManuscriptSession } from './SectionWritingSession';
-import { WholeManuscriptSurface, type WholeManuscriptSurfaceHandle } from './WholeManuscriptSurface';
+import {
+  WholeManuscriptSurface,
+  type WholeManuscriptSurfaceHandle,
+  type WholeProposalReturnRequest,
+  type WholeProposalReturnResult,
+} from './WholeManuscriptSurface';
 import { placeForMode } from '@/lib/writersStudio/manuscriptViewPlace';
 import SectionWritingSurface from './SectionWritingSurface';
 import {
@@ -70,7 +75,7 @@ import { parseTreatment } from '../field/fieldTreatments';
 import { useHeldFocus } from '../field/useHeldFocus';
 import FocusStrip from '../field/FocusStrip';
 import FocusOverlay from '../field/FocusOverlay';
-import ProposalWorkSurface, { ProposalEvidenceInWork } from './ProposalWorkSurface';
+import ProposalWorkSurface, { ProposalEvidenceInWork, proposalLocusKey } from './ProposalWorkSurface';
 import { focusPaint } from '../field/focusPaint';
 import { codePointBoundaries } from '@/lib/manuscript/draftSections';
 
@@ -332,6 +337,12 @@ function CanvasRoom() {
      single-editor seam and says nothing about where a Whole reader is. */
   const [session, setSession] = useState<ManuscriptSession | null>(null);
   const [jumpTo, setJumpTo] = useState<string | null>(null);
+  /* C10 · a Whole exact-locus return keeps its source identity instead of
+     collapsing into the ordinary section-navigation carrier. */
+  const [wholeProposalReturn, setWholeProposalReturn] = useState<WholeProposalReturnRequest | null>(null);
+  const activeWholeProposalReturn = useRef<number | null>(null);
+  const proposalReturnSeq = useRef(0);
+  const [showChangeNotice, setShowChangeNotice] = useState<string | null>(null);
 
   /**
    * ⭐⭐ EW-F1 / F1-1 · A PROPOSAL MOVES THE VIEW TO THE EVIDENCE IT NAMES.
@@ -444,9 +455,35 @@ function CanvasRoom() {
   const [refocus, setRefocus] = useState(0);
 
   const showProposedChange = useCallback(() => {
+    /* A new act owns its own result; never let an older refusal describe it. */
+    setShowChangeNotice(null);
+
+    if (session?.view === 'whole' && proposalTarget) {
+      const requestId = ++proposalReturnSeq.current;
+      activeWholeProposalReturn.current = requestId;
+      setWholeProposalReturn({
+        requestId,
+        sectionId: proposalTarget.sectionId,
+        locusKey: proposalLocusKey(proposalTarget.sectionId, proposalTarget.range),
+      });
+      return;
+    }
+
     moveToProposal();
     setRevealToken((n) => n + 1);
-  }, [moveToProposal]);
+  }, [moveToProposal, proposalTarget, session?.view]);
+
+  const onWholeProposalReturnResult = useCallback((result: WholeProposalReturnResult) => {
+    /* A superseded request is WITHDRAWN, not a failure. Ignore its late result. */
+    if (activeWholeProposalReturn.current !== result.requestId) return;
+    activeWholeProposalReturn.current = null;
+    setWholeProposalReturn(null);
+    setShowChangeNotice(
+      result.status === 'refused'
+        ? 'I can’t locate the exact passage in the manuscript. Nothing has moved.'
+        : null,
+    );
+  }, []);
   useEffect(() => {
     if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
     if (!moveToProposal()) return;
@@ -1009,6 +1046,7 @@ function CanvasRoom() {
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
                 onShowChange={showProposedChange}
+                showChangeNotice={showChangeNotice}
               />
             ) : (
               <MaiaColumn context={workContext} />
@@ -1031,6 +1069,8 @@ function CanvasRoom() {
             onWriting={setWriting}
             onSession={setSession}
             jumpTo={jumpTo}
+            proposalReturn={wholeProposalReturn}
+            onProposalReturnResult={onWholeProposalReturnResult}
             onJumpHandled={() => setJumpTo(null)}
             listPhase={listPhase}
             resolution={resolution}
@@ -1370,6 +1410,8 @@ function CanvasRoom() {
               onWriting={setWriting}
               onSession={setSession}
               jumpTo={jumpTo}
+              proposalReturn={wholeProposalReturn}
+              onProposalReturnResult={onWholeProposalReturnResult}
               onJumpHandled={() => setJumpTo(null)}
               listPhase={listPhase}
               resolution={resolution}
@@ -1429,6 +1471,7 @@ function CanvasRoom() {
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
                 onShowChange={showProposedChange}
+                showChangeNotice={showChangeNotice}
               />
             ) : (
               <MaiaColumn context={workContext} />
@@ -1472,6 +1515,8 @@ function FieldBody({
   onWriting,
   onSession,
   jumpTo,
+  proposalReturn,
+  onProposalReturnResult,
   onJumpHandled,
   renderSectionOverlay,
   revealToken,
@@ -1492,6 +1537,8 @@ function FieldBody({
   /** WS-WHOLE-MANUSCRIPT-01 — the view mode and observed place, for the rail. */
   onSession?: (s: ManuscriptSession | null) => void;
   jumpTo?: string | null;
+  proposalReturn?: WholeProposalReturnRequest | null;
+  onProposalReturnResult?: (result: WholeProposalReturnResult) => void;
   onJumpHandled?: () => void;
   /** Presentation only — see WholeManuscriptSurface's seam. */
   revealToken: number;
@@ -1648,6 +1695,8 @@ function FieldBody({
             manuscriptId={manuscript.id}
             onCheckpointed={onCheckpointed}
             jumpTo={jumpTo}
+            proposalReturn={proposalReturn}
+            onProposalReturnResult={onProposalReturnResult}
             onJumpHandled={onJumpHandled}
             /* ⛔ PW-6 · REAL PROSE, NOT A MIRROR. And ⛔ PW-3: this is offered
                for ONE section id — the one the server resolved — so no other
@@ -1656,7 +1705,7 @@ function FieldBody({
                surface; Whole view gets evidence and a door. Both are built from
                the SAME server-resolved target, so the two views cannot disagree
                about what is proposed or where. */
-            renderProposalEvidence={target ? (sectionId, onWorkWithChange) => {
+            renderProposalEvidence={target ? (sectionId, onWorkWithChange, registerLocus) => {
               if (sectionId !== target.sectionId) return null;
               const section = engineMount.sections.find((x) => x.id === sectionId);
               if (!section) return null;
@@ -1668,6 +1717,8 @@ function FieldBody({
                   range={range}
                   replacementText={target.replacementText}
                   onWorkWithChange={onWorkWithChange}
+                  locusKey={proposalLocusKey(target.sectionId, range)}
+                  onLocusNode={registerLocus}
                 />
               );
             } : undefined}
@@ -1749,6 +1800,8 @@ function SectionSurfaceBridge({
   manuscriptId,
   onCheckpointed,
   jumpTo,
+  proposalReturn,
+  onProposalReturnResult,
   onJumpHandled,
   renderSectionOverlay,
   renderProposalWork,
@@ -1760,11 +1813,16 @@ function SectionSurfaceBridge({
   manuscriptId: string;
   onCheckpointed?: () => void;
   jumpTo?: string | null;
+  proposalReturn?: WholeProposalReturnRequest | null;
+  onProposalReturnResult?: (result: WholeProposalReturnResult) => void;
   onJumpHandled?: () => void;
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
   renderProposalWork?: (sectionId: string) => React.ReactNode;
   renderProposalEvidence?: (
-    sectionId: string, onWorkWithChange: () => void) => React.ReactNode;
+    sectionId: string,
+    onWorkWithChange: () => void,
+    registerLocus: (locusKey: string, node: HTMLSpanElement | null) => void,
+  ) => React.ReactNode;
 }) {
   const { writing, view, changeView } = session;
   const whole = useRef<WholeManuscriptSurfaceHandle | null>(null);
@@ -1823,6 +1881,8 @@ function SectionSurfaceBridge({
           writing={writing}
           initialOpenAt={session.wholeOpensAt}
           jumpTo={jumpTo}
+          proposalReturn={proposalReturn}
+          onProposalReturnResult={onProposalReturnResult}
           onJumpHandled={onJumpHandled}
           onPlaceChange={session.onWholePlace}
           renderSectionOverlay={renderSectionOverlay}
@@ -1837,9 +1897,10 @@ function SectionSurfaceBridge({
              member clicks it, through the room's ONE view-change seam — which
              captures every mounted editor before leaving Whole. A proposal
              never moves the writer between modes on its own. */
-          renderProposalEvidence={(sectionId) => renderProposalEvidence?.(
+          renderProposalEvidence={(sectionId, registerLocus) => renderProposalEvidence?.(
             sectionId,
             () => changeView('section', () => whole.current?.captureMountedBeforeLeave()),
+            registerLocus,
           )}
         />
       ) : (

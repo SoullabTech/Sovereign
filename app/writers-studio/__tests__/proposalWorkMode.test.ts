@@ -455,16 +455,22 @@ describe('SC-1 … SC-7 · voluntary return to the change', () => {
 
   it('⭐⭐ SC-5 · the press reveals the LOCUS, not merely the section shell', () => {
     /**
-     * ⛔ THE SHIPPED SHAPE, PINNED: automatic reveal spent → writer scrolls
-     * away → Show change → section top visible → locus still below the fold.
-     *
-     * `moveToProposal` alone only opens the section. The press must also carry
-     * the token that moves the viewport to the marked range.
+     * C10 makes the already-real view split explicit rather than collapsing
+     * both acts back into `jumpTo`: Whole carries an exact-locus request;
+     * Section keeps the existing move + reveal nonce path.
      */
-    const show = ROOM.match(/const showProposedChange = useCallback\([\s\S]*?\}, \[moveToProposal\]\);/);
-    expect(show).not.toBeNull();
-    expect(show![0]).toContain('moveToProposal()');
-    expect(show![0]).toContain('setRevealToken');
+    const from = ROOM.indexOf('const showProposedChange = useCallback');
+    const to = ROOM.indexOf('useEffect(() => {', from);
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+    const show = ROOM.slice(from, to);
+    expect(show).toContain("session?.view === 'whole'");
+    expect(show).toContain('setWholeProposalReturn');
+    expect(show).toContain('proposalLocusKey');
+    expect(show.indexOf('setWholeProposalReturn')).toBeLessThan(show.indexOf('return;'));
+    expect(show).toContain('moveToProposal()');
+    expect(show).toContain('setRevealToken');
+    expect(show).not.toContain('setJumpTo');
   });
 
   it('SC-6 · every reveal goes through the room\'s seam', () => {
@@ -473,8 +479,11 @@ describe('SC-1 … SC-7 · voluntary return to the change', () => {
   });
 
   it('SC-7 · viewport only — no write, no mode change, no proposal mutation', () => {
-    const show = ROOM.match(/const showProposedChange = useCallback\([\s\S]*?\}, \[moveToProposal\]\);/);
-    expect(show![0]).not.toMatch(/save|apiFetch|accept|changeView|setWriteState/i);
+    const from = ROOM.indexOf('const showProposedChange = useCallback');
+    const to = ROOM.indexOf('useEffect(() => {', from);
+    const show = ROOM.slice(from, to);
+    expect(show).not.toMatch(/save|apiFetch|accept|changeView|setWriteState/i);
+    expect(show).not.toContain('setJumpTo');
     /* ⭐ AND IT DOES NOT NAVIGATE TO WHERE THE WRITER ALREADY IS. Calling
        `goToSection` on the active section would run the capture seam for no
        reason — the writer's own prose written back because they asked to LOOK

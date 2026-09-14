@@ -86,7 +86,7 @@ const WHY: Record<string, string> = {
 };
 
 export default function ProposedChange(
-  { preview, comparison, onAccepted, onDismiss, onShowChange }: {
+  { preview, comparison, onAccepted, onDismiss, onShowChange, showChangeNotice }: {
     /**
      * ⭐⭐ THE AFFECTED SENTENCE, CURRENT AND AS IT WOULD READ.
      *
@@ -123,6 +123,8 @@ export default function ProposedChange(
      * when THEY ask.
      */
     onShowChange?: () => void;
+    /** C10 · result of this proposal panel's own orientation request. */
+    showChangeNotice?: string | null;
   },
 ) {
   const [state, setState] = useState<'idle' | 'accepting' | 'accepted' | 'refused'>('idle');
@@ -227,6 +229,11 @@ export default function ProposedChange(
       <button type="button" onClick={() => onShowChange?.()} style={{ ...quiet, marginTop: 14 }}>
         Show me where
       </button>
+      {showChangeNotice && (
+        <p role="status" data-show-change-notice style={{ ...line, marginTop: 10, opacity: 0.8 }}>
+          {showChangeNotice}
+        </p>
+      )}
 
 
       {/* ⭐⭐ THE MISSING WHY IS SAID, NOT LEFT TO BE ASSUMED.
