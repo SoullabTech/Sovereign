@@ -133,19 +133,60 @@ proposal history move behind disclosure, available and not oppressive.
 
 ```
 W1  the thread replaces the card          lineage · authorship · rationale · read-only
-W2  ⭐ the composer                        the writer authors, asks, directs
+W2  ⭐ FORMULATION COMPOSER                the writer authors the next candidate WORDING
                                           appendAuthoredVersion reaches the UI at last
+                                          ⛔ questions and directions unavailable until W5
 W3  the manuscript participates           locus reveal · highlight · per-version preview
                                           one interface, not two surfaces
-W4  MAIA answers inside the object        canonical turn path — ⛔ never a side channel
+
 W5  Insight · Direction · Discourse        the three missing objects; "I would keep this"
-                                          becomes sayable
+                                          becomes sayable          ← SCHEMA ACT
+W4  MAIA answers inside the object        canonical turn — lawful ONLY once W5 exists
+
 W6  comparison and the decision            Keep original · Revise · Adopt this version
 W7  retire ProposedChange.tsx              only after the replacement is witnessed
 ```
 
-W1–W3 need no new schema. **W5 is the schema act** and takes its own authorized lane and
-branch — the 2026-09-07 branch-gate defect is controlling.
+⭐⭐ **CORRECTION 1 (founder, 2026-09-14) — W2 IS A FORMULATION COMPOSER, NOT A REPLY BOX.**
+The first charter said *"authors, asks, directs"*, and those three verbs contradict §3 of this
+same document. Before W5:
+
+```
+    writer authors wording     ✅  ProposalVersion
+    writer asks a question     ⛔  Discourse has no home
+    writer gives direction     ⛔  Direction has no home
+```
+
+So W2 lets the writer say *"No — I'd write it this way"* and create a `member` version. It must
+**not** present as a generic box where *"why do you think this is repetitive?"* or *"give me a
+gentler version"* could land in `replacementText`. ⭐ That still crosses the threshold that
+matters — the system becomes **reciprocal authorship** rather than delivery — without falsely
+calling reciprocal authorship *discourse*.
+
+⛔ **And succession is the writer's act, not the UI's.** The store refuses a stale predecessor
+with `not_successor_of_head`. No surface may synthesise succession after the fact or auto-retry
+against a newer head.
+
+⭐⭐ **CORRECTION 2 (founder) — W5 PRECEDES W4.** Until the missing objects exist, a question
+and MAIA's answer have no durable home in this editorial object, so W4-first forces one of two
+things the charter already forbids: storing MAIA's conversation **somewhere else** (a side
+channel) or forcing question-and-answer into a `ProposalVersion` (succession corruption).
+**W5 is the substrate that makes W4 lawful.** It does not block W1–W3.
+
+W1–W3 need no new schema. **W5 takes its own authorized lane and branch** — the 2026-09-07
+branch-gate defect is controlling.
+
+⭐ **AND W1 IS BUILT MULTI-VERSION FROM DAY ONE.** The data we happen to hold today is mostly
+one version per chain; **the contract is already multi-version** — `readProposalWork()` returns
+the whole lineage and Step 1 exists precisely to preserve `MAIA v1 → member v2 → MAIA v3`.
+⛔ The absence of UI-generated succession must not become a one-version UI architecture. W1 is
+designed and witnessed against a real interleaved chain even though the first product visit may
+encounter one version.
+
+⛔ **THE FOURTH COLUMN MAY NOT BE FAKED WHILE W5 IS MISSING.** *"I recommend no change"* must
+never be represented as `ProposalVersion(replacementText = the original text)` merely to satisfy
+the schema we have. Until W5 lands that editorial act is **unrepresentable — and that is
+preferable to a false representation.**
 
 ---
 
