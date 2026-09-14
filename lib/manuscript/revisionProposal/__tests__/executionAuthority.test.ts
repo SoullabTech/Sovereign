@@ -99,6 +99,15 @@ describe('refusal 1 · the control is absent, not disabled', () => {
     expect(PANEL).toMatch(/isInspectionOnly\(preview\)/);
     expect(PANEL).toMatch(/for inspection/i);
   });
+
+  it('⭐ and never asserts an effect the same panel denies', () => {
+    /* FOUNDER-CAUGHT IN THE FIRST INSPECTION-ONLY WITNESS: "This will make 1
+       change to the manuscript" sat directly above "It cannot be applied to
+       your manuscript". A consent surface may not contradict itself, and the
+       sentence a reader skims was the false one. The claim now follows the
+       authority. */
+    expect(PANEL).toMatch(/isInspectionOnly\(preview\) \? 'It describes ' : 'This will make '/);
+  });
 });
 
 describe('refusal 3 · the schema', () => {

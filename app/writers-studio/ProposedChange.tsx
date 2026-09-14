@@ -175,7 +175,18 @@ export default function ProposedChange(
       </button>
 
       <p style={{ ...line, marginTop: 18 }}>
-        This will make {change.changeCount} change
+        {/* ⭐⭐ FOUNDER-CAUGHT IN THE FIRST INSPECTION-ONLY WITNESS. This read
+            "This WILL make 1 change to the manuscript" directly above "This
+            proposal is for inspection. It cannot be applied" — two adjacent
+            sentences in a consent surface contradicting each other, and the
+            skimmed one was the false one.
+
+            ⛔ A panel that asks for consent may not assert an effect the same
+            panel then denies. The sentence now follows the authority: an
+            inspection-only proposal DESCRIBES a change; only one that may
+            cross says it will make one. */}
+        {isInspectionOnly(preview) ? 'It describes ' : 'This will make '}
+        {change.changeCount} change
         {change.changeCount === 1 ? '' : 's'} to the manuscript.
       </p>
 
