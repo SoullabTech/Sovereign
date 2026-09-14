@@ -6,14 +6,45 @@
 # (b) a start/last window on `log collect`, (c) --archive and --start on `log show`. Never calls `log config`,
 # never `sysdiagnose`, never changes a level/mode, never attaches anything. Only `log collect` (read the device's
 # persisted log store into an archive on the Mac) and `log show` (read that archive) are invoked.
-#   usage: scripts/witness/k00-log-calibrate.sh [<ledger-root>]
+#   usage: K00_EXEC_AUTHORITY="<founder authorization, verbatim>" [K00_LOG_SUDO=1] scripts/witness/k00-log-calibrate.sh --probe <probe-dir> [<ledger-root>]
+# AUTH-1/2/3 (founder, 2026-09-14): attribution ≠ authority · no self-ratification · authority is an input, never a discovery.
+#   EVIDENCE  — the probe is named explicitly (--probe); its sealed capture-time manifest is verified mechanically: seal == manifest,
+#               manifest hashes == files, criterion id == expected, criterion revision is an ancestor of the probe's execution HEAD.
+#               None of that authorizes anything; it establishes only that the evidence post-dates and targets the criterion.
+#   AUTHORITY — K00_EXEC_AUTHORITY must be supplied at invocation by someone with jurisdiction. It is recorded verbatim and never read
+#               from, compared against, or satisfied by repository state. Root (K00_LOG_SUDO=1) is a further, separate jurisdiction.
 set -uo pipefail
-ROOT="${1:-docs/programme/VOICE-2026/driver-ledger}"; STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/unifiedlog-cal-$STAMP"; mkdir -p "$OUT"   # C-D12: never `log-cal-<stamp>` — on a case-insensitive volume that IS the batch's `LOG-CAL-<stamp>`
+PROBE=""; ROOT="docs/programme/VOICE-2026/driver-ledger"
+while [ $# -gt 0 ]; do case "$1" in --probe) PROBE="$2"; shift 2;; *) ROOT="$1"; shift;; esac; done
+STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/unifiedlog-cal-$STAMP"; mkdir -p "$OUT"   # C-D12: never `log-cal-<stamp>` — on a case-insensitive volume that IS the batch's `LOG-CAL-<stamp>`
+CRITERION_ID="PASS2-COND3-POSITIONAL-ARCHIVE"; CRITERION_REV="09c1bd251"
 UDID="${K00_UDID:-00008140-00163D9922E0801C}"      # the Xcode destination id = device UDID (never the devicectl CoreDevice id)
 REC="$OUT/CALIBRATION.md"; say(){ echo "$*" | tee -a "$REC"; }
 say "# unified-log calibration — $STAMP (instrument validation only; the sample is stratum LOG-CAL, never counted)"
-PROBE="$(ls -d "$ROOT"/log-probe-* 2>/dev/null | sort | tail -1)"
-[ -n "$PROBE" ] || { say "## STOP — no k00-log-probe.sh output under $ROOT; discovery (step A/B) must precede calibration"; exit 5; }
+# AUTHORITY (separate input, never discovered): refuse without it; record it verbatim; compare it to nothing in the repo.
+[ -n "${K00_EXEC_AUTHORITY:-}" ] || { say "## STOP — no execution authority supplied (K00_EXEC_AUTHORITY unset). Authority is an input from someone with jurisdiction, not something this instrument or the repository can produce."; exit 4; }
+say "## execution authority (verbatim, supplied at invocation): $K00_EXEC_AUTHORITY"
+# EVIDENCE (explicit witness, mechanically verified — never 'newest'):
+[ -n "$PROBE" ] && [ -d "$PROBE" ] || { say "## STOP — no explicit --probe <dir> supplied; a probe is named, never discovered"; exit 5; }
+[ -f "$PROBE/manifest.json" ] && [ -f "$PROBE/SEAL.sha256" ] || { say "## STOP — probe $PROBE carries no sealed capture-time manifest (pre-provenance probe); it is not a valid witness"; exit 5; }
+PV="$(python3 - "$PROBE" "$CRITERION_ID" "$CRITERION_REV" <<'PY'
+import hashlib,json,os,subprocess,sys
+p,cid,crev=sys.argv[1:4]
+seal=open(os.path.join(p,'SEAL.sha256')).read().split()[0]
+mbytes=open(os.path.join(p,'manifest.json'),'rb').read()
+ok=[]
+ok.append(("seal == manifest", hashlib.sha256(mbytes).hexdigest()==seal))
+m=json.loads(mbytes)
+ok.append(("manifest hashes == files", all(hashlib.sha256(open(os.path.join(p,f),'rb').read()).hexdigest()==h for f,h in m['files'].items())))
+ok.append(("criterion id == expected", m.get('criterionId')==cid and m.get('criterionRevision')==crev))
+anc=subprocess.run(['git','merge-base','--is-ancestor',crev,m.get('executionHead','')],capture_output=True).returncode==0
+ok.append(("criterion revision is ancestor of probe execution HEAD", anc and m.get('criterionIsAncestorOfHead') is True))
+for k,v in ok: print(f"{'PASS' if v else 'FAIL'} · {k}")
+sys.exit(0 if all(v for _,v in ok) else 1)
+PY
+)"; PVRC=$?
+say "## witness verification of $PROBE:"; say "$PV"
+[ $PVRC -eq 0 ] || { say "## STOP — the named probe is not a valid post-amendment witness; nothing captured"; exit 5; }
 if grep -qE -- '--device-udid' "$PROBE/log-collect-help.txt"; then DEVOPT="--device-udid"; elif grep -qE -- '--device-name' "$PROBE/log-collect-help.txt"; then DEVOPT="--device-name"; elif grep -qE -- '--device\b' "$PROBE/log-collect-help.txt"; then DEVOPT="--device"; else DEVOPT=""; fi
 grep -qE -- '--start' "$PROBE/log-collect-help.txt" && WINOPT="--start" || { grep -qE -- '--last' "$PROBE/log-collect-help.txt" && WINOPT="--last"; } || WINOPT=""
 # Condition 3 (founder ruling 2026-09-14): the collected archive must be readable back by the installed `log show`. The frozen

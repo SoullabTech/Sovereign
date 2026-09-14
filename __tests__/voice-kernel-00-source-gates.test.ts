@@ -502,6 +502,14 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(lc.indexOf('did not yield an audio sample')).toBeLessThan(lc.indexOf('log collect "$DEVOPT"'));  // no collect without a real sample
     expect(lcExec).toMatch(/K00_LOG_SUDO/); expect((lcExec.match(/\bsudo\b/g) || []).length).toBeLessThanOrEqual(3); // root only on the collect, only by founder act
     expect(lcExec).not.toMatch(/sudo (xcrun|log show|log config|scripts)/);
+    // AUTH-1/2/3 (founder ruling 2026-09-14): evidence is NAMED and mechanically verified; authority is a SEPARATE INPUT.
+    expect(lcExec).not.toMatch(/ls -d[^\n]*log-probe[^\n]*tail -1/);                       // no 'newest probe' discovery of evidence
+    expect(lc).toMatch(/--probe\) PROBE="\$2"/);                                              // explicit witness only
+    expect(lc.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(lc.indexOf('k00-driver-batch.sh LOG-CAL'));  // authority required before any device act
+    expect(lcExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(grep|cat|git|==|-f )/);            // authority is never read from or compared against the repo
+    for (const k of ['seal == manifest', 'manifest hashes == files', 'criterion id == expected', 'criterion revision is ancestor of probe execution HEAD']) expect(lc).toContain(k);
+    expect(lp).toMatch(/manifest\.json/); expect(lp).toMatch(/SEAL\.sha256/); expect(lp).toMatch(/merge-base --is-ancestor "\$CRITERION_REV" HEAD/);  // capture-time provenance, sealed in the same execution
+    expect(lp).toMatch(/It authorizes nothing/);
     expect(lc).toMatch(/usage: log show \\\[options\\\] <archive>/);                    // condition 3 in the installed grammar (positional archive), founder ruling 2026-09-14
     expect(lcExec).not.toMatch(/log show --archive/);                                // the superseded spelling never runs
     expect(lcExec).toMatch(/log show --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$OUT\/device\.logarchive"/); // options first, archive last, as documented
