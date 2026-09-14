@@ -459,10 +459,24 @@ step, the exact error this section just closed.
 
 ```text
 So E2 must first answer:  did the founder PERSONALLY perform that scroll and that press?
-  YES → recollection may bridge, as FOUNDER RECOLLECTION
+  YES → recollection may bridge, as FOUNDER RECOLLECTION, recorded exactly as remembered
+        and attached to the recovered contemporaneous protocol
   NO  → ⛔ E2 is CLOSED TOO, P1 is FORMALLY EXHAUSTED, and P2 becomes the only lawful path
   UNSURE → ⛔ treat as NO. An uncertain memory of an act is not evidence of the act.
 ```
+
+```text
+⛔ DISQUALIFIER — remembering that the RESULT was `SECTION-ADDRESSED — FAIL` IS NOT ENOUGH.
+   The recollection must be of PERFORMING THE SCROLL AND THE PRESS.
+   ⭐ Report-memory and act-memory are DIFFERENT OBJECTS.
+```
+
+⭐ Photographic evidence cannot substitute either: the surviving screenshots show the Writer's
+Studio surface and `SHOW CHANGE`, ⛔ but establish neither **who operated the interface** nor
+whether the preceding scroll-away gesture occurred.
+
+⛔ **No further retrieval and no runtime observation can substitute for this distinction.**
+It is the one question with no external check on it, which is exactly why its threshold is strict.
 
 ---
 
