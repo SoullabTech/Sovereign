@@ -205,6 +205,63 @@ says *I am hiding tools*; the canvas widening says *I am giving the Work more
 room*. A restrained 200–300ms settle, no theatre, just enough continuity that
 the nervous system understands nothing was lost.
 
+## ⭐⭐ Succession scope
+
+**Ratified founder, 2026-09-14.** Semantic only — ⛔ it authorizes no schema and
+no migration. It answers the question that was owed before `CREATE TABLE`.
+
+> **A succession chain belongs to one locus. An editorial ruling may govern
+> multiple locus-scoped succession chains.**
+
+> **One proposal version = one authored formulation for one exact target in the
+> Work.** A higher-order editorial judgment may coordinate several such targets
+> without becoming their wording history.
+
+```
+EDITORIAL RULING
+  "Keep the first occurrence, make the second a callback,
+   strengthen the final return."
+        │
+        ├──────────────┬──────────────┐
+        ▼              ▼              ▼
+     LOCUS A         LOCUS B        LOCUS C
+   A1 → A2 → A3    B1 → B2 → B3    C1 → C2
+```
+
+Each locus keeps its own target and expected state · authored succession history
+· member/MAIA provenance · stale-state refusal · terminal staged version ·
+eventual exact authorization.
+
+⭐ **Why the separation is load-bearing.** The member must be able to say
+
+```
+A3   use this
+B3   no, keep mine
+C2   revise again
+```
+
+⛔ without the system pretending one multi-location object has a single
+acceptance state.
+
+### And when coordinated change sets arrive
+
+```
+CHANGE SET
+  ├── A3   authorized
+  ├── B    unchanged
+  └── C4   authorized
+```
+
+⛔ **The set coordinates application. It does not replace succession.**
+
+### The boundary
+
+> **An editorial ruling may influence or govern proposal work at several loci,
+> but it is not itself executable authority.**
+
+That keeps four things apart that a single table would merge: **judgment ·
+wording · authorization · mutation.**
+
 ## The scales — and the UI adapts to them
 
 Grammar and mechanics · sentence craft · paragraph craft · context · voice ·

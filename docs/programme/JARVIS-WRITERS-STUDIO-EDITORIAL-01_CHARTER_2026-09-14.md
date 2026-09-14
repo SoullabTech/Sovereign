@@ -150,7 +150,19 @@ not the design template.
 - **v35 / v36.** System acceptance REAL, authorial ratification UNRESOLVED.
   Outside this charter and unchanged by it.
 
-## ⭐ The open design question, owed before the first `CREATE TABLE`
+## ✅ ANSWERED · succession scope (founder, 2026-09-14)
+
+> **A succession chain belongs to one locus. An editorial ruling may govern
+> multiple locus-scoped succession chains** — and is not itself executable
+> authority.
+
+Full ruling in `docs/canon/WRITERS_STUDIO_EDITORIAL_OBJECTIVE.md`. ⛔ Semantic
+only; no schema or migration authorized. ⭐ **Step 1 now has no conceptual
+question ahead of it.** What remains is lane discipline: derive the substrate
+from the ruling, open the separately authorized schema lane when required, and
+refuse to let the eventual table redefine the ontology.
+
+## The question as it stood, kept for the record
 
 > **Does a succession chain belong to a single locus, or can one editorial
 > ruling own several?**
