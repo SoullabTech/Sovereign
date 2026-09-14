@@ -219,11 +219,15 @@ time.* The honest repair is to date it, never to edit it.
 ## Roadmap standing (precise)
 
 ```text
+LANE STATUS                        ⏳ OPEN · HELD AT WHOLE / PASSIVE SCROLL
+                                   ⛔ pinning a procedure does NOT satisfy a witness
 Writer's Studio interaction lane   ⏳ GATE A OPEN — six-cell browser witness in progress
-                                   Whole / first  = SECTION-ADDRESSED — FAIL  [sealed]
-                                   Whole / second = LOCUS-ADDRESSED   — PASS  [2026-09-14]
-                                   Whole / passive scroll  = [NEXT] must stay put
-                                   Section row (×3)        = [owed]
+                                   Whole / first          SECTION-ADDRESSED — FAIL  [SEALED]
+                                   Whole / second         LOCUS-ADDRESSED   — PASS  [SEALED]
+                                   Whole / passive scroll OWED ← CURRENT POSITION
+                                   Section / first        OWED
+                                   Section / second       OWED
+                                   Section / passive      OWED
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
@@ -231,6 +235,16 @@ Step-3 schema                      ⛔ EXPLICITLY UNAUTHORIZED (FR-W1)
 Step-3 code                        ⛔ EXPLICITLY UNAUTHORIZED
 ```
 
+### ⛔ Lane closure is NOT decided here
+
+⚠️ *"That is exactly where this lane stops"* was written of the **census**, and must not be read as
+lane closure. Correcting it in place:
+
+```text
+✅ The CENSUS stops there.          The LANE is OPEN, held at Whole / passive scroll.
+```
+
+Only after the witness procedure's **remaining cells** and the **resulting Gate A disposition** are
+complete is it decided whether this lane closes or hands something forward to Gate B.
+
 > ⭐⭐ **The census established the QUESTIONS the future system must answer — not the answers.**
->
-> That is exactly where this lane stops.
