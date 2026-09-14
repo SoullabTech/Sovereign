@@ -139,7 +139,16 @@ is a founder ruling, not an implementation detail:
 ### KEEP — *can MAIA say "I would keep this" without manufacturing a ProposalVersion?*
 
 ⭐ **Yes, and only through Insight.** It requires exactly one property: an Insight that can
-exist with **no Suggestion beneath it**. Nothing else in the design needs to move.
+exist with **no Suggestion beneath it**.
+
+⭐⭐ **AND THE SUBSTRATE ALREADY ADMITS IT — measured, not assumed.** `validateChain` opens
+with `if (versions.length === 0) return yes(versions)`, so **a chain with zero versions is
+lawful today**. The `no_root` refusal governs a chain that HAS versions and no root, which is a
+different thing. So the KEEP case needs **no change to succession law at all**.
+
+⚠️ One surface consequence, named and not solved: the Canvas requires BOTH `proposalChain` and
+`proposalVersion`, so a zero-version chain cannot be focused in the room as it stands. That is
+a W5/W6 surface question, not an ontology one.
 
 ⛔ **THE FALSIFIER STANDS.** `ProposalVersion(replacementText = the original text)` is not a
 recommendation to keep; it is a candidate replacement that happens to be identical, and it is
@@ -156,10 +165,29 @@ authorizeVersion(memberId, chainId, versionId)
     → proposal_versions       WHERE id = $1 AND chain_id = $2
 ```
 
-⛔ It reaches **exactly two tables** and reads a version's `formulation`. An Insight, a
-Direction or an `ask_turn` is not a row in `proposal_versions` and cannot become one, so none
-of the three is reachable **as long as they are not stored there.** ⭐ That is the whole of the
-protection, and it is why the rule is the design's load-bearing sentence:
+⚠️ **CORRECTED BY FOUNDER REVIEW, 2026-09-14. The first writing said it *"reaches exactly two
+tables"*, and that is simply false.** Measured at this tip, the authorizing and executing path
+touches **six**:
+
+```
+proposal_chains                      ownership + locus
+proposal_versions                    ⭐ the candidate wording
+manuscript_working_drafts            current-Work proof, FOR UPDATE
+manuscript_draft_sections            the projected body
+manuscript_sections                  heading, for the projection
+manuscript_revision_authorizations   the permission ledger
+```
+
+⛔ **The conclusion survives; the proof was lazy and is replaced by a narrower, stronger one.**
+The other five participate in ownership, current-Work proof, execution binding and permission
+persistence — ⭐ **none of them supplies editorial CONTENT.**
+
+> **The only authorizable editorial content identity is one exact `proposal_version`.** No
+> Insight, Direction or discourse turn can become the candidate wording unless it is first
+> illegitimately converted into a `proposal_version`.
+
+⭐ That is the invariant we actually care about, and it is why the rule is the design's
+load-bearing sentence:
 
 > **Only candidate wording can ever become authorizable manuscript text.**
 
