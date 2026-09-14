@@ -86,7 +86,23 @@ const WHY: Record<string, string> = {
 };
 
 export default function ProposedChange(
-  { preview, onAccepted, onDismiss, onShowChange }: {
+  { preview, comparison, onAccepted, onDismiss, onShowChange }: {
+    /**
+     * ⭐⭐ THE AFFECTED SENTENCE, CURRENT AND AS IT WOULD READ.
+     *
+     * ⛔ DERIVED IN THE ROOM FROM THE SAME resolved body + range + replacement
+     * that governs the in-place mark, never searched for again here. The
+     * founder's law: "there cannot be one locus in the Work and another in the
+     * panel." One computation, two surfaces.
+     *
+     * ⚠️ THIS IS A NARROWING OF EW-F1, NOT A REVERSAL. That rule — no
+     * manuscript prose in the panel — was written against a 140-code-point
+     * window cut mid-word, standing in for a Work the writer could not see.
+     * The Work now renders the full section with the locus marked; this is one
+     * sentence beside it, and the founder ruled it back in because the
+     * comparison aid was what got lost.
+     */
+    comparison?: { current: string; wouldRead: string } | null;
     preview: ProposalPreview;
     onAccepted?: (version: number) => void;
     /**
@@ -162,32 +178,66 @@ export default function ProposedChange(
   const { change } = preview;
   return (
     <section style={wrap}>
-      <h2 style={title}>Proposed change</h2>
+      {/* ⭐⭐ NO AUTHOR IS NAMED, BECAUSE THIS PROPOSAL HAS NONE.
+          FOUNDER-CAUGHT, AND LOAD-BEARING. A first draft of this repair read
+          `MAIA · CHANGE` and "She's suggesting a change here". MAIA did not
+          author `, fixated` — it was staged mechanically as a witness fixture.
+          Attributing it to her would create FALSE PROVENANCE at the exact
+          surface whose job is making authorship legible.
+
+          ⭐ When a proposal version carries `author = maia`, this header can
+          truthfully become `MAIA · CHANGE` and her own words can carry the
+          proposition. Until then it says what is true: a proposal exists, and
+          nobody has signed it. */}
+      <h2 style={title}>
+        Proposed change{isInspectionOnly(preview) ? ' · inspection' : ''}
+      </h2>
       <p style={{ ...line, opacity: 0.8 }}>{change.sectionLabel}</p>
 
-      {/* ⭐ What kind of change, not what it says. The passage itself is
-          marked in the manuscript beside this, where the writer can read it
-          at reading width with everything they authored around it. */}
-      <p style={{ ...line, marginTop: 16 }}>Remove one exact passage.</p>
+      {/* ⭐⭐ HER WORDS, NOT AN OPERATION NAME.
+
+          FOUNDER-CAUGHT: "all I see is fixated crossed out. I don't know what
+          is going on." This read "Remove one exact passage. / It describes 1
+          change." — an authorization receipt masquerading as an editorial
+          relationship. It told the writer which operation was staged and never
+          what was being proposed or by whom.
+
+          ⛔ AND STILL NO MANUSCRIPT PROSE HERE. EW-F1 put the passage in the
+          Work, at reading width, with everything the writer authored around
+          it. That holds: this panel says what is being asked; the Work shows
+          what is changing. */}
+      {/* ⛔ RETIRED: "Remove one exact passage." and "It describes 1 change to
+          the manuscript." Machine-state sentences — they named the operation
+          staged and never what was being proposed. The founder's reading of the
+          result: "all I see is fixated crossed out. I don't know what is going
+          on." */}
+      <p style={{ ...line, marginTop: 16 }}>
+        This proposal removes a short phrase from {change.sectionLabel}.
+      </p>
+
+      {comparison && (
+        <div style={{ marginTop: 16 }}>
+          <p style={{ ...line, opacity: 0.6, marginTop: 10 }}>Current</p>
+          <p style={{ ...line, marginTop: 4 }}>{comparison.current}</p>
+          <p style={{ ...line, opacity: 0.6, marginTop: 14 }}>Would read</p>
+          <p style={{ ...line, marginTop: 4 }}>{comparison.wouldRead}</p>
+        </div>
+      )}
 
       <button type="button" onClick={() => onShowChange?.()} style={{ ...quiet, marginTop: 14 }}>
-        Show change
+        Show me where
       </button>
 
-      <p style={{ ...line, marginTop: 18 }}>
-        {/* ⭐⭐ FOUNDER-CAUGHT IN THE FIRST INSPECTION-ONLY WITNESS. This read
-            "This WILL make 1 change to the manuscript" directly above "This
-            proposal is for inspection. It cannot be applied" — two adjacent
-            sentences in a consent surface contradicting each other, and the
-            skimmed one was the false one.
 
-            ⛔ A panel that asks for consent may not assert an effect the same
-            panel then denies. The sentence now follows the authority: an
-            inspection-only proposal DESCRIBES a change; only one that may
-            cross says it will make one. */}
-        {isInspectionOnly(preview) ? 'It describes ' : 'This will make '}
-        {change.changeCount} change
-        {change.changeCount === 1 ? '' : 's'} to the manuscript.
+      {/* ⭐⭐ THE MISSING WHY IS SAID, NOT LEFT TO BE ASSUMED.
+          A rationale is AUTHORED content and needs the succession chain to
+          record who wrote it. Until that exists, inventing one would be putting
+          words in her mouth — the one thing that must not happen in a surface
+          whose entire job is telling the writer truthfully what is being asked.
+          So the absence is stated. ⛔ Do not replace this with generated
+          reasoning before step 3. */}
+      <p style={{ ...line, opacity: 0.7, marginTop: 18 }}>
+        No rationale is attached to this proposal.
       </p>
 
       {/* ⭐⭐ EW-F1a · SAY WHAT THIS PROPOSAL IS FOR, rather than showing a dead

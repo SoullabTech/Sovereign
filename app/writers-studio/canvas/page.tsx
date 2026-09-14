@@ -34,6 +34,7 @@ import {
   type ManuscriptResolution,
 } from '../canvasIdentity';
 import { proposalMove } from '@/lib/writersStudio/placeInWork';
+import { sentenceComparison } from '@/lib/writersStudio/proposalSentence';
 import { UNTITLED_EXPRESSION } from '../shellIdentity';
 import { useLivingWorks } from '../useLivingWorks';
 import { resolveWorkContext, currentWork, mintStudioConversationId } from '../workContext';
@@ -370,6 +371,7 @@ function CanvasRoom() {
    * chosen to read elsewhere.
    */
   const [revealToken, setRevealToken] = useState(0);
+
   const showProposedChange = useCallback(() => {
     moveToProposal();
     setRevealToken((n) => n + 1);
@@ -450,6 +452,21 @@ function CanvasRoom() {
   /* ⭐ ONE READER for the two mounts that run the section engine. See
      `sectionEngine` for why this is not six inline disjunctions. */
   const engine = sectionEngine(writeMount);
+
+  /**
+   * ⭐⭐ ONE COMPUTATION, TWO SURFACES. The Work marks the locus; the panel
+   * shows the affected sentence. Both are `(body, range, replacement)` from the
+   * SAME server-resolved target, so there cannot be one locus in the Work and
+   * another in the panel — the founder's law, kept by construction rather than
+   * by two implementations agreeing.
+   */
+  const proposalComparison = useMemo(() => {
+    const t = engine?.target;
+    if (!t) return null;
+    const section = engine?.sections.find((x) => x.id === t.sectionId);
+    if (!section) return null;
+    return sentenceComparison(section.body, t.range, t.replacementText);
+  }, [engine]);
   /* Development only, and only when a witness asks: holds the save RESPONSE so
      a section can be seen still saving while the next opens. */
   const witnessDelayMs =
@@ -908,6 +925,7 @@ function CanvasRoom() {
           ) : (
             proposed.mount.state === 'ready' ? (
               <ProposedChange
+                comparison={proposalComparison}
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}
@@ -1319,6 +1337,7 @@ function CanvasRoom() {
             ) : (
               proposed.mount.state === 'ready' ? (
               <ProposedChange
+                comparison={proposalComparison}
                 preview={proposed.mount.preview}
                 onAccepted={proposed.accepted}
                 onDismiss={proposed.dismiss}

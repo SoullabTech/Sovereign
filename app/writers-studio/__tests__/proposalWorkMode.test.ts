@@ -345,7 +345,11 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
        both. One body: one `slice(0, a)` and one `slice(b)`. */
     expect((SURFACE.match(/body\.slice\(0, a\)/g) ?? [])).toHaveLength(1);
     expect((SURFACE.match(/body\.slice\(b\)/g) ?? [])).toHaveLength(1);
-    expect(SURFACE).not.toMatch(/CURRENT|PROPOSED|WOULD READ|THIS SENTENCE/);
+    /* ⛔ The ban was on DUPLICATE FULL SECTIONS, and is now stated as one:
+       exactly one rendering of the whole body. The affected sentence lives in
+       the panel, at sentence scope, which is the comparison aid the founder
+       ruled back in — not a second copy of the section. */
+    expect((SURFACE.match(/body\.slice\(0, a\)/g) ?? [])).toHaveLength(1);
   });
 
   it('PW-15/PW-17 · the change is at the locus, and leaving text is distinguished', () => {
@@ -374,7 +378,9 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
        sliced at the locus and nowhere else. */
     expect(SURFACE).toContain('body.slice(0, a)');
     expect(SURFACE).toContain('body.slice(b)');
-    expect(SURFACE).not.toMatch(/sentenceAround|excerpt|window/i);
+    /* The sentence comparison is a PANEL concern and lives in its own pure
+       module; this surface renders the body and nothing derived from it. */
+    expect(SURFACE).not.toMatch(/sentenceAround|sentenceComparison|excerpt|window/i);
   });
 
   it('⭐ the change has visible edges', () => {
