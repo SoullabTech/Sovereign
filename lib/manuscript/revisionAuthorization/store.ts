@@ -275,11 +275,17 @@ export async function authorizeVersion(
     const ins = await tx.query<AuthRow>(
       `INSERT INTO manuscript_revision_authorizations
          (id, member_id, proposal_chain_id, proposal_version_id, work_id, draft_id,
-          base_version, target_section_id, expected_text, authorized_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          base_version, target_section_id, expected_text, operation, authorized_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING ${AUTH_COLUMNS}`,
+      /* ⭐ `g.operation` is PERSISTED, not left to the column default.
+         ⚠️ Founder merge-checklist item: the pure act determines the operation,
+         and the adapter was letting a SECOND source (the DB default) supply the
+         same value. The fidelity guard below made that safe — it would throw if
+         they disagreed — but safety by agreement between two sources is not the
+         same as one source. The binding fact travels whole. */
       [mintedId, memberId, chain.id, version.id, g.workId, g.draftId, g.baseVersion,
-        g.targetSectionId, g.expectedText, mintedAt]);
+        g.targetSectionId, g.expectedText, g.operation, mintedAt]);
     const durable = hydrateAuthorizationRow(ins.rows[0]);
 
     /* ⭐⭐ AND THE TWO MUST BE THE SAME AUTHORIZATION, NOT MERELY

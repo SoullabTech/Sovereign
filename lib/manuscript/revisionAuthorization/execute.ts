@@ -42,6 +42,7 @@
 import { transaction, type TransactionClient } from '@/lib/db/postgres';
 import { saveSectionInTransaction, splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import { applyExactlyOnce } from '@/lib/manuscript/exactText';
+import { evaluateExecutionFit } from './executionFit';
 import { AUTH_COLUMNS, hydrateAuthorizationRow } from './store';
 import type { RevisionAuthorization } from './contract';
 
@@ -113,8 +114,6 @@ export async function executeAuthorization(
         WHERE id = $1 AND manuscript_id = $2 AND member_id = $3 FOR UPDATE`,
       [auth.guard.draftId, auth.guard.workId, memberId]);
     if (d.rows.length === 0) return no('draft_not_found');
-    /* ⛔ DEFENCE IN DEPTH, not the law. Step 6 is what authorizes the write. */
-    if (Number(d.rows[0].version) !== auth.guard.baseVersion) return no('stale_base');
 
     /* 5 · The target, read inside the lock, through the SAME projection the
            writing surface uses. */
@@ -128,7 +127,20 @@ export async function executeAuthorization(
     const split = splitStoredSection(s.rows[0].text, s.rows[0].heading);
     if (!split) return no('section_not_projectable');
 
-    /* 6 · 7 · ⭐⭐ THE LAW, and the replacement it produces. */
+    /* 6 · ⭐⭐ THE SAME WORK-FIT LAW THE STATUS SURFACE CONSUMES.
+           CS-3's successor: a surface that claims this is executable and the
+           boundary that executes it must ask ONE question, or the member
+           authorizes something that does not happen — or something else. */
+    const fit = evaluateExecutionFit(auth.guard, {
+      workId: auth.guard.workId, draftId: auth.guard.draftId,
+      version: Number(d.rows[0].version),
+      sectionId: auth.guard.targetSectionId, textAtTarget: split.body,
+    });
+    if (!fit.fits) {
+      return no(fit.reason === 'different_place' ? 'section_not_found' : fit.reason);
+    }
+
+    /* 7 · The replacement the fit permits. */
     const applied = applyExactlyOnce(split.body, auth.guard.expectedText, replacement);
     if (!applied.ok) return no(applied.reason);
 
