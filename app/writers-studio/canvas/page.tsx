@@ -354,7 +354,20 @@ function CanvasRoom() {
   }, [proposalTarget, session?.view, writing]);
 
   const jumpedFor = useRef<string | null>(null);
-  const showProposedChange = useCallback(() => { moveToProposal(); }, [moveToProposal]);
+  /**
+   * ⭐ EW-F2-R1 · `Show change` is an ACT, counted, not a flag.
+   *
+   * ⛔ `moveToProposal()` alone was the defect: it moves the writer to the
+   * SECTION, and the locus reveal was spent on first arrival — so the second
+   * press returned them to the top of the section and never to the change.
+   * The count gives the surface a REASON to reveal that is distinct from the
+   * locus changing, which is the only thing it could see before.
+   */
+  const [locusRequest, setLocusRequest] = useState(0);
+  const showProposedChange = useCallback(() => {
+    moveToProposal();
+    setLocusRequest((n) => n + 1);
+  }, [moveToProposal]);
   useEffect(() => {
     if (!proposalTarget || jumpedFor.current === proposalTarget.sectionId) return;
     if (!moveToProposal()) return;
@@ -924,6 +937,7 @@ function CanvasRoom() {
             onCheckpointed={() => setHistoryKey((k) => k + 1)}
             onWriteAuthorityChanged={refreshWriteState}
             renderSectionOverlay={renderSectionOverlay}
+            locusRequest={locusRequest}
           />
         }
       />
@@ -1261,6 +1275,7 @@ function CanvasRoom() {
               onMeta={setDraftMeta}
               onCheckpointed={() => setHistoryKey((k) => k + 1)}
               onWriteAuthorityChanged={refreshWriteState}
+              locusRequest={locusRequest}
             />
           </div>
         </main>
@@ -1347,6 +1362,7 @@ function FieldBody({
   jumpTo,
   onJumpHandled,
   renderSectionOverlay,
+  locusRequest,
 }: {
   listPhase: 'loading' | 'ready' | 'unauthorized' | 'error';
   resolution: ManuscriptResolution<CurrentManuscript>;
@@ -1367,6 +1383,11 @@ function FieldBody({
   onJumpHandled?: () => void;
   /** Presentation only — see WholeManuscriptSurface's seam. */
   renderSectionOverlay?: (sectionId: string, body: string) => React.ReactNode;
+  /**
+   * ⭐ EW-F2-R1 · how many times the writer has ASKED to see the change.
+   * Orientation authority only: it moves attention and can reach no write path.
+   */
+  locusRequest?: number;
 }) {
   if (listPhase === 'loading') {
     return <StudioText role="metadata">opening…</StudioText>;
@@ -1537,6 +1558,8 @@ function FieldBody({
                   range={target.range}
                   replacementText={target.replacementText}
                   onWorkWithChange={onWorkWithChange}
+                  sectionLabel={target.sectionLabel}
+                  revealRequest={locusRequest}
                 />
               );
             } : undefined}
@@ -1550,6 +1573,7 @@ function FieldBody({
                   range={target.range}
                   replacementText={target.replacementText}
                   sectionLabel={target.sectionLabel}
+                  revealRequest={locusRequest}
                 />
               );
             } : undefined}

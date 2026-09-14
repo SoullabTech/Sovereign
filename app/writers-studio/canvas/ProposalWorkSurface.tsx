@@ -60,6 +60,14 @@ export interface ProposalWorkSurfaceProps {
   /** Staged authored content. Empty string for a deletion. */
   replacementText: string;
   sectionLabel: string;
+  /**
+   * ⭐ EW-F2-R1 · THE WRITER'S EXPLICIT ASK, as a monotonic count.
+   *
+   * ⛔ NOT a boolean. "Show me the change" is an ACT, and an act that happens
+   * twice is two acts — a flag can only say that one has happened, which is the
+   * shape that made the second press do nothing.
+   */
+  revealRequest?: number;
 }
 
 /**
@@ -147,42 +155,65 @@ function Locus(
 }
 
 /**
- * ⭐ PW-16 · THE LOCUS COMES INTO VIEW, ONCE.
+ * ⭐ PW-16 / EW-F2-R1 · THE LOCUS COMES INTO VIEW — ONCE PER REASON TO REVEAL.
  *
- * Orientation authority, not manuscript authority — the same distinction the
- * proposal jump makes. ONCE, keyed on the locus, so a writer who then reads
- * elsewhere in the section is not dragged back: being moved around your own
- * manuscript is its own kind of dispossession.
+ * ── ⛔ THE DEFECT THIS REPLACES, STATED AS A PROPERTY ──────────────────────
  *
- * ⛔ THROUGH `revealWithin`, NEVER `scrollIntoView`. The first build used the
- * DOM call and broke a ban this room already carries: `scrollIntoView` scrolls
- * EVERY scrollable ancestor, the document included, and founder-witnessed on
- * 2026-09-11 that threw the Studio header and the left rail off the top of the
+ * This hook used to spend itself on the locus key alone. That guard is right
+ * and stays: a writer who reads elsewhere must not be dragged back, because
+ * being moved around your own manuscript is its own kind of dispossession.
+ *
+ * ⛔ BUT IT WAS ANSWERING TWO QUESTIONS WITH ONE ANSWER. Automatic arrival and
+ * `Show change` are two authorities:
+ *
+ *     AUTOMATIC ARRIVAL   reveal once · never drag the writer back
+ *     SHOW CHANGE         an explicit act · every invocation · no limit
+ *
+ * Spent on the locus, the second was silently suppressed by a guard built for
+ * the first — so `Show change` returned the writer to the SECTION (the shell
+ * scroll still ran) and never again to the CHANGE. On a 1,334-character section
+ * with the locus a thousand characters down, that is the founder's own report:
+ * *"that is better yet I still don't know what was changed."*
+ *
+ * ⭐ THE FIX IS NOT A SECOND GUARD. It is naming the reason. A reveal is spent
+ * against `locus#request`, so a new locus reveals, a new ask reveals, and a
+ * re-render that is neither does nothing. The writer asking is now A REASON —
+ * which is exactly what it was not before.
+ *
+ * ⛔ THROUGH `revealWithin`, NEVER `scrollIntoView` — unchanged. The DOM call
+ * scrolls EVERY scrollable ancestor including the document, founder-witnessed
+ * 2026-09-11 throwing the Studio header and the left rail off the top of the
  * screen. `revealWithin` moves the nearest scroller and nothing else.
  *
- * ⚠️ And my own PW-16 obligation asserted `scrollIntoView` BY NAME, so it
- * pinned the violation rather than the property. The property is that opening a
- * proposal reveals the locus without moving the room around it.
+ * ⚠️ AND THE OBLIGATION THAT MISSED THIS asserted a `useCallback`, an
+ * `onShowChange?.()` and the string `Show change` — wiring, never arrival. That
+ * is the same lesson `845b814df2` recorded one layer down about naming an API
+ * instead of a property: a callback can be wired correctly while the act it
+ * names still fails.
  */
-function useBringIntoView(key: string) {
+function useLocusReveal(key: string, revealRequest = 0) {
   const ref = useRef<HTMLSpanElement | null>(null);
-  const done = useRef<string | null>(null);
+  const shown = useRef<string | null>(null);
+  /* ⭐ The locus AND the ask. Either changing is a reason; neither changing is
+     not. On remount this ref resets, which is correct: a surface that has just
+     come back has not yet shown the writer anything. */
+  const token = `${key}#${revealRequest}`;
   useEffect(() => {
-    if (done.current === key || !ref.current) return;
-    done.current = key;
+    if (shown.current === token || !ref.current) return;
+    shown.current = token;
     revealWithin(ref.current, 'center', 'smooth');
-  }, [key]);
+  }, [token]);
   return ref;
 }
 
 export default function ProposalWorkSurface(
-  { body, range, replacementText, sectionLabel }: ProposalWorkSurfaceProps,
+  { body, range, replacementText, sectionLabel, revealRequest }: ProposalWorkSurfaceProps,
 ) {
   /* ⛔ A surface that cannot state the space it was handed refuses to draw.
      There is no default coordinate space anywhere in this system. */
   const ok = range.space === 'projected_section_body';
   const { a, b } = units(body, ok ? range : { ...range, start: 0, end: 0 });
-  const locus = useBringIntoView(`${sectionLabel}:${a}:${b}`);
+  const locus = useLocusReveal(`${sectionLabel}:${a}:${b}`, revealRequest);
   if (!ok) return null;
 
   return (
@@ -241,15 +272,23 @@ export default function ProposalWorkSurface(
  * work happens, and the door is taken only when the member asks — PW-11.
  */
 export function ProposalEvidenceInWork(
-  { body, range, replacementText, onWorkWithChange }: {
+  { body, range, replacementText, onWorkWithChange, sectionLabel = '', revealRequest }: {
     body: string;
     range: SpacedRange;
     replacementText: string;
     onWorkWithChange?: () => void;
+    sectionLabel?: string;
+    revealRequest?: number;
   },
 ) {
-  if (range.space !== 'projected_section_body') return null;
-  const { a, b } = units(body, range);
+  const ok = range.space === 'projected_section_body';
+  const { a, b } = units(body, ok ? range : { ...range, start: 0, end: 0 });
+  /* ⭐⭐ WHOLE VIEW HAD NO LOCUS REVEAL AT ALL. The jump moved the SECTION SHELL
+     to its start and stopped there, so in this view `Show change` could never
+     reach the change even once. ⛔ Hooks run before the space refusal below:
+     a conditional return above a hook is a hook-order violation. */
+  const locus = useLocusReveal(`${sectionLabel}:${a}:${b}`, revealRequest);
+  if (!ok) return null;
 
   return (
     <div>
@@ -258,7 +297,7 @@ export function ProposalEvidenceInWork(
           beside the removal, so the proposed STATE is legible here too. */}
       <div style={{ ...PROSE, color: INK.primary }}>
         {body.slice(0, a)}
-        <Locus leaving={body.slice(a, b)} arriving={replacementText} />
+        <Locus leaving={body.slice(a, b)} arriving={replacementText} innerRef={locus} />
         {body.slice(b)}
       </div>
 

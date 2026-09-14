@@ -223,7 +223,22 @@ describe('PW-6 · proposed state is real prose, not a textarea mirror', () => {
   });
 
   it('⛔ and a range in any other coordinate space refuses to draw', () => {
-    expect(WORK_SURFACE).toMatch(/range\.space !== 'projected_section_body'/);
+    /**
+     * ⛔ THIS USED TO PIN ONE SPELLING — `range.space !== '...'` — and it broke
+     * when the refusal had to move BELOW a hook, because a conditional return
+     * above a hook is a hook-order violation. The refusal did not weaken; the
+     * assertion was describing a line rather than a property.
+     *
+     * ⭐ The property is that the space is CHECKED and a mismatch DRAWS
+     * NOTHING. Both renderers are required to do it, and the behavioural proof
+     * that a foreign space renders no locus lives in
+     * `canvas/__tests__/proposalLocusReveal.test.ts`.
+     */
+    expect(WORK_SURFACE).toMatch(/range\.space (!==|===) 'projected_section_body'/);
+    /* Two renderers, two refusals — neither may draw on an unstated space. */
+    expect((WORK_SURFACE.match(/'projected_section_body'/g) ?? []).length)
+      .toBeGreaterThanOrEqual(2);
+    expect(WORK_SURFACE).toMatch(/if \(!ok\) return null;/);
   });
 });
 
@@ -355,7 +370,7 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
     expect(WORK_SURFACE).toMatch(/REMOVED = \{[\s\S]*?background:/);
   });
 
-  it('PW-16 · opening the proposal brings the locus into view ONCE', () => {
+  it('PW-16 · the locus is revealed once per REASON to reveal, through the seam', () => {
     /* ⛔ THIS ASSERTION USED TO PIN THE VIOLATION. It required `scrollIntoView`
        by name — a call this room has banned since 2026-09-11, because it
        scrolls every scrollable ancestor including the document and threw the
@@ -364,9 +379,24 @@ describe('PW-14 … PW-19 · the system performs the comparison', () => {
        which moves the nearest scroller and nothing else. */
     expect(WORK_SURFACE).toContain('revealWithin(');
     expect(WORK_SURFACE).not.toContain('scrollIntoView');
-    /* Keyed and spent, so a writer reading elsewhere is not dragged back. */
-    expect(WORK_SURFACE).toMatch(/done\.current === key/);
-    expect(WORK_SURFACE).toMatch(/done\.current = key/);
+
+    /**
+     * ⭐⭐ AND THEN IT MISSED THE NEXT ONE. `done.current === key` spent the
+     * reveal on the LOCUS ALONE, so `Show change` — an explicit, repeatable
+     * writer act — was suppressed by a guard built to stop INVOLUNTARY
+     * dragging. The button fired, the section scrolled, the change was never
+     * reached. Founder-witnessed 2026-09-13 on dd7059b4.
+     *
+     * ⛔ THE SPEND MUST NAME THE REASON, not the locus. Asserted here as
+     * structure; asserted as BEHAVIOUR — every explicit request reveals, a bare
+     * re-render does not — in `canvas/__tests__/proposalLocusReveal.test.ts`,
+     * which is the obligation that can actually fail for the right cause.
+     */
+    expect(WORK_SURFACE).toMatch(/const token = `\$\{key\}#\$\{revealRequest\}`/);
+    expect(WORK_SURFACE).toMatch(/shown\.current === token/);
+    expect(WORK_SURFACE).toMatch(/shown\.current = token/);
+    /* ⛔ Spending on the locus alone must not reappear under a new name. */
+    expect(WORK_SURFACE).not.toMatch(/const token = key;/);
   });
 
   it('PW-19 · the surrounding prose stays in normal reading flow', () => {
