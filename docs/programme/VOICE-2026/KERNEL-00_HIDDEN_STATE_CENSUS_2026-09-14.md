@@ -330,3 +330,33 @@ Standing: `--info` read EXECUTED · question ANSWERED NO · `audiomxd` startup a
 **Instrument (gate-pinned, shim-exercised, NOT run):** `scripts/witness/k00-log-window-debug.sh <unifiedlog-cal-dir> <LOG-CAL-dir>` — the info script's sibling: refuses without `K00_EXEC_AUTHORITY` (exit 4) and without the archive (exit 2); reproduces the window from `CALIBRATION.md`; issues only `log show --debug --start … --end … --style json <archive>` (pinned: `--debug` alone, executable lines free of `--info`, `sudo`, collect, `xcrun`, `devicectl`, `log config`, batch) → `window-debug.json` (gitignored); reader with `--suffix debug` → `window-debug-trailer.txt` / `window-debug-audio.jsonl` (default and info outputs pinned untouched), absence labelled `DEBUG-LEVEL`; writes `WINDOW-DEBUG-<stamp>.md`. One thing not established from the help pages already read: whether `log show --debug` alone also includes info-level messages. The entry count of the debug window against 135,896 (info) will show it; either way the interval count answers the question.
 
 Standing: DEFAULT complete · seam 0 · INFO complete · seam 0 · DEBUG AUTHORIZED, one offline read, NOT RUN · new sample NOT AUTHORIZED · logged batch NOT OPENED · matched no-log control NOT OPENED · organism UNTOUCHED · VoiceKernel/harness FROZEN.
+
+### 7.17 The last rung EXECUTED — `--debug` re-read (founder, offline, `WINDOW-DEBUG-20260914T132714Z`) → seam count 0 → THE VISIBILITY LADDER STOPS
+
+**Invocation (founder, disposable worktree `/private/tmp/voice-debug-01` at `f04dba799`; evidence by absolute path):** authority string supplied at invocation and recorded verbatim. Window reproduced from `CALIBRATION.md`: local `08:43:23 → 08:44:12` (identical to the default and info reads). Command: `log show --debug --start … --end … --style json <archive>` (`--debug` alone) → `window-debug.json` 150,435,406 bytes, sha256 `71f7523d…b3a43`, stderr 0, rc 0. Reader: one JSON value + the 142-char banner naming this calibration's archive (MATCH) · rc 0 · absence labelled `DEBUG-LEVEL` (C-D15 in effect). No `--info`, no sample, no collect, no sudo, no device act, no `log config`.
+
+**The three reads side by side (same archive, same window, same anchors):**
+
+| | default | `--info` | `--debug` (alone) |
+|---|---|---|---|
+| entries in window | 129,201 | 135,896 | 129,351 |
+| delta vs default | — | +6,695 | **+150** |
+| audio subset | 7,023 | 8,148 | **7,023** |
+| `audiomxd`, whole window | 14 | 14 | **14** |
+| **`audiomxd`, activation−150 ms → first callback+50 ms** | **0** | **0** | **0** |
+| `audioaccessoryd` in that interval | 44 | 47 | 44 |
+| `mediaserverd` / `coreaudiod` | not present | not present | not present |
+| alignment | 0 ms | 0 ms | 0 ms |
+| entries inside `engine.start()` (151 ms) | 209 | 209 | 209 |
+
+**Answer to the ruled question — *does `--debug` expose `audiomxd` activity during the aligned session-activation → first-input-callback interval that neither default nor `--info` exposed?* — NO.** Per the founder's ruling the visibility ladder STOPS here. **Finding, in the founder's words:** *`audiomxd` startup activity was not observable in this archive at default, info, or debug read levels.* This does not mean `audiomxd` did nothing; only that this unified-log archive does not expose its startup work through the three documented read levels. No invented level, no configuration change.
+
+**Two facts the numbers settle.** (a) `--debug` alone does NOT include info-level messages: it added 150 entries where `--info` added 6,695, and its audio subset is byte-for-byte the default one. The three reads are therefore default, default+info and default+debug, whose union covers every persisted level; the 14 `audiomxd` entries are the same set in all three, so **the archive holds exactly 14 `audiomxd` entries in this window at any level, all at teardown**. (b) `audioaccessoryd` is the only audio daemon that logs at the seam, and only route/category/Bluetooth reactions. Background, not established from this evidence and stated as such: the unified logging system persists info- and debug-level messages to the on-device store only where a subsystem's own configuration says so; this archive was collected with no configuration change, so what these reads show is what the device chose to persist by default. Whether `audiomxd` would speak under a logging profile is unknown and, by ruling, not to be asked of this lane.
+
+**C-D16 (wording, this session):** the debug script's first record line, derived from the info script by substitution, described itself as `no --debug`; the produced `WINDOW-DEBUG-20260914T132714Z.md` carries that line and is preserved unedited (the command line two lines below it is correct and verbatim). Script corrected to `no --info`; pinned.
+
+**Owed (founder):** custody of `WINDOW-DEBUG-20260914T132714Z.md` · `window-debug-audio.jsonl` · `window-debug-trailer.txt` · `show-debug-stderr.txt` on `feature/k00-driver-ledger` (`window-debug.json` gitignored) → cherry-pick here. Both disposable worktrees (`voice-info-01`, `voice-debug-01`) are housekeeping.
+
+**Where Pass 2 stands after the ladder.** The external instrument is validated (PASS) and characterized: it aligns to the journal at 0 ms, resolves the client side of `engine.start()` at millisecond scale, and cannot see `audiomxd` at the seam through any documented read level of an unconfigured archive. What remains of the Pass-2 opening (§7): a logged batch (takes AND misses under the same instrument) and a matched no-log control — both NOT OPENED, both founder decisions; their value now rests on the client-side seam the instrument can see (the ordering of `Starting AURemoteIO` · `iounit configuration changed` · `start_return` on a miss versus a take), not on daemon visibility. Nothing here authorizes them.
+
+Standing: DEFAULT · INFO · DEBUG complete, seam 0 at all three · LADDER STOPPED (founder rule applied) · finding recorded in the founder's words · logged batch NOT OPENED · matched no-log control NOT OPENED · new sample NOT AUTHORIZED · organism UNTOUCHED · VoiceKernel/harness FROZEN.

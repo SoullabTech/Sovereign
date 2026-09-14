@@ -15,7 +15,7 @@ T1_ISO=$(grep -o '## T1 (after export): [0-9T:-]*Z' "$CAL/CALIBRATION.md" | head
 [ -n "$T0_LOCAL" ] && [ -n "$T1_ISO" ] || { echo "STOP — CALIBRATION.md does not record the collect --start and T1; the window cannot be reproduced exactly"; exit 2; }
 T1_EPOCH=$(date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "$T1_ISO" +%s 2>/dev/null) || { echo "STOP — cannot parse T1 $T1_ISO"; exit 2; }
 T1_LOCAL="$(date -r $((T1_EPOCH+2)) "+%Y-%m-%d %H:%M:%S")"   # exactly what k00-log-calibrate.sh used: T1 + 2 s, Mac local clock
-say "# unified-log --debug re-read — $STAMP · archive $ARCH · window (local) $T0_LOCAL → $T1_LOCAL (reproduced from CALIBRATION.md) · offline · no device act · no collect · no sudo · no --debug"
+say "# unified-log --debug re-read — $STAMP · archive $ARCH · window (local) $T0_LOCAL → $T1_LOCAL (reproduced from CALIBRATION.md) · offline · no device act · no collect · no sudo · no --info"
 say "## execution authority (verbatim, supplied at invocation): $K00_EXEC_AUTHORITY"
 say "## question (founder ruling, last rung): does --debug expose audiomxd activity during the aligned session-activation → first-input-callback interval that neither default nor --info exposed?"
 # Ruling 1 grammar: options first, archive last. Ladder: --debug ALONE (never combined with --info, by ruling); the reader labels absence DEBUG-LEVEL.
