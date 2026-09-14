@@ -356,3 +356,108 @@ MERGE                       ⏸ HOLD
 SCHEMA DEPLOY               ⛔ NOT AUTHORIZED
 PRODUCTION                  UNTOUCHED — the failed invocation wrote nothing
 ```
+
+---
+
+# ADDENDUM 2 · RECOVERY-CUSTODY REPAIR (founder inspection, 2026-09-14)
+
+⭐ **The defect was real and verified in code before repairing.** `cmd_rollback`
+retags `:previous → :current` and restarts, while the compose service is
+`image: maia-sovereign:prod` (`x-maia-image`), which it never touches — so the
+advertised recovery could restart the **candidate**. The general primitive is
+recorded as a separate routed-out finding
+(`ROLLBACK_IMAGE_ALIAS_MISMATCH_FINDING_2026-09-14.md`) and ⛔ **not repaired here.**
+
+## What changed — the act now owns its recovery
+
+```text
+build → verify image → CAPTURE pre-act reader → PIN + VERIFY o1-recovery-<sha>
+      → MIGRATE → SWAP → verify → Co-Lab → (advisory role tags) → complete
+```
+
+- **Capture + pin before anything crosses.** The pre-act reader's image id is
+  tagged `maia-sovereign:o1-recovery-<sha>` and the tag is **verified** to resolve
+  to that exact image. ⛔ Failure refuses before migration *and* before the swap.
+- **Recovery is an operation, not an instruction to trust:**
+  `scripts/s3-schema-first-runbook.sh recover <SHA>` retags the pinned image onto
+  **`:prod`**, restarts `maia`, then verifies the running `GIT_COMMIT` against the
+  commit the recovery image itself reports, and that the container is running.
+  ⭐ Self-describing — no side file to go stale, and it runs standalone without the
+  pin, because in an emergency the act is to restore an image already proved.
+- **The late-failure message now names the act's own operation and explicitly
+  warns the operator OFF `deploy-production.sh rollback`.**
+- ⭐ **Shared role tags moved to AFTER a verified, gated success.** Before the swap
+  they were shared metadata a refusal might leave half-moved; after success they
+  describe reality. Since recovery no longer depends on them, a problem there is
+  reported as **advisory** and does not fail a completed act. ⛔ This satisfies
+  *"do not leave shared role tags falsely describing deployment state on a
+  pre-swap refusal"* **structurally** — they are never touched pre-swap at all.
+
+## Witness — **58 passed · 0 failed**
+
+New propositions:
+
+```text
+ORDER        build → capture + recovery tag → migrate → swap
+             recovery-tag failure refuses before migration AND before the swap
+             no capturable live reader → same refusal
+ROLE TAGS    every pre-swap refusal leaves :current/:previous untouched
+             they are written only AFTER a verified, gated success
+RECOVERY ⭐   retags the captured image onto :prod
+             restarts maia
+             confirms the restored commit and that the reader is running
+⭐⭐ DISCRIM   a recovery that only moves :current/:previous and leaves :prod on
+             the candidate — exactly what the general primitive does — is
+             DETECTED as a FAILED recovery
+INSTRUCTION  names the act's own operation; rules out the general rollback
+```
+
+The recovery operation is exercised **for real** against stubbed docker, so what
+is proved is *"recovery retags `:prod` and confirms"*, ⛔ not *"a message mentions
+rollback"*.
+
+⚠️ **Two shell defects this pass produced and fixed, worth recording because both
+are the same species:** `"${VAR:-<this act's SHA>}"` — bash resumes quoting rules
+inside `${…:-word}`, so the apostrophe opened a single quote and swallowed the
+rest of the file; and `"…THIS ACT'"'"'S…"` — the `'"'"'` idiom escapes a quote
+inside **single** quotes and corrupts a **double**-quoted string. ⭐ Both were
+caught by `bash -n` before anything ran.
+
+## The final production command — canonical first (ruling A)
+
+```text
+1. merge the authorized branch state to canonical
+2. capture the resulting canonical SHA
+3. fetch canonical on minisforum
+4. bootstrap the runbook from a detached worktree at THAT SHA
+5. invoke the runbook with THAT SAME SHA
+```
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && git fetch origin clean-main-no-secrets && SHA=CANONICAL_MERGE_SHA && WT=$(mktemp -d) && git worktree add --detach "$WT" "$SHA" && "$WT/scripts/s3-schema-first-runbook.sh" "$SHA"; RC=$?; git worktree remove --force "$WT"; exit $RC'
+```
+
+Recovery, if a late failure occurs:
+
+```bash
+ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN && WT=$(mktemp -d) && git worktree add --detach "$WT" CANONICAL_MERGE_SHA && "$WT/scripts/s3-schema-first-runbook.sh" recover CANONICAL_MERGE_SHA; RC=$?; git worktree remove --force "$WT"; exit $RC'
+```
+
+⛔ `CANONICAL_MERGE_SHA` is a name to substitute, not a literal. ⛔ No branch-head
+deployment.
+
+## Standing
+
+```text
+actual recovery execution   ✅ PROVED — retags :prod, restarts, confirms
+general rollback primitive  ⚠️ ROUTED OUT · lane not opened
+witness                     ✅ 58 / 0 · both discrimination cases intact
+deploy-production.sh        UNCHANGED · neighbours 14/0 · 27/0 · 25/0
+S3                          untouched
+
+MERGE                       ⏸ HOLD — awaiting authorization
+SCHEMA DEPLOY               ⛔ NOT AUTHORIZED
+PRODUCTION                  UNTOUCHED
+```
+
+Stop for authorization.

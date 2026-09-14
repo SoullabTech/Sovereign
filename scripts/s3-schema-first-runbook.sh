@@ -35,8 +35,26 @@
 #
 # ── ORDER ─────────────────────────────────────────────────────────────────────
 #   pin → prove self → lock → materialize <SHA> → assert pending set
-#       → BUILD → verify image → MIGRATE (fail closed)
-#       → PROVE ROLLBACK CUSTODY → SWAP → verify running → Co-Lab → complete
+#       → BUILD → verify image → CAPTURE pre-act reader → ESTABLISH + VERIFY
+#         a dedicated single-use RECOVERY TAG → MIGRATE (fail closed)
+#       → SWAP → verify running → Co-Lab → advisory role tags → complete
+#
+# ── RECOVERY IS THIS ACT'S OWN, NOT THE GENERAL PRIMITIVE'S ───────────────────
+# ⛔⛔ `deploy-production.sh rollback` MUST NOT be this act's recovery path.
+# It retags `:previous → :current` and then runs compose — but the compose
+# service is `image: maia-sovereign:prod` (x-maia-image), which it never touches.
+# So it can restart the CANDIDATE again while reporting a rollback. Recorded as a
+# separate routed-out finding; ⛔ NOT repaired here.
+# ⭐ Instead this act captures the pre-act reader's IMAGE ID before anything
+# crosses, pins it under its own single-use tag, verifies that tag BEFORE the
+# swap, and recovers by retagging that image to `:prod` — the alias compose
+# actually consumes — then restarting and verifying commit and health.
+# ⛔ It never depends on `:current` / `:previous` as recovery authority, and it
+# touches NO shared role tag before the swap, so a pre-swap refusal cannot leave
+# deployment metadata falsely describing production.
+#
+#   Recovery, at any time after the act:
+#     scripts/s3-schema-first-runbook.sh recover <SHA>
 #
 # ⭐ Build precedes migrate deliberately: a build failure must cost no schema
 # change at all. Building is not swapping — no container is replaced until the
@@ -100,8 +118,11 @@ rb_recovery_required() {
   rb_warn "⛔ The live reader's state is UNKNOWN to this script — read it, do not assume it:"
   rb_warn "    docker ps --filter name=maia-sovereign"
   rb_warn "    docker exec maia-sovereign printenv GIT_COMMIT"
-  rb_warn "Then decide deliberately. To restore the previous reader:"
-  rb_warn "    ./scripts/deploy-production.sh rollback"
+  rb_warn "Then recover with THIS ACT'S OWN operation, which retags the pinned"
+  rb_warn "pre-act image onto :prod — the alias compose actually consumes:"
+  rb_warn "    scripts/s3-schema-first-runbook.sh recover ${RB_ACT_SHA:-THE_ACT_SHA}"
+  rb_warn "⛔ NOT ./scripts/deploy-production.sh rollback — it retags :current/:previous"
+  rb_warn "   and never touches :prod, so it can restart the candidate again."
 }
 
 # ⭐ THE ACT'S SCOPE, AS DATA. Sorted exactly as the runner's glob encounters it.
@@ -174,8 +195,80 @@ rb_prove_self_provenance() {
   return 0
 }
 
+RB_RECOVERY_TAG_PREFIX="o1-recovery"
+rb_recovery_tag() { echo "${MAIA_IMAGE_REPO:-maia-sovereign}:${RB_RECOVERY_TAG_PREFIX}-$1"; }
+
 rb_image_id() { "${DEPLOY_DOCKER_BIN:-docker}" image inspect "$1" --format '{{.Id}}' 2>/dev/null; }
 rb_live_reader_image_id() { "${DEPLOY_DOCKER_BIN:-docker}" inspect maia-sovereign --format '{{.Image}}' 2>/dev/null; }
+
+# ⭐ The commit the recovery image itself reports. Self-describing: no side file
+# to go stale, and `recover` works standalone long after this process is gone.
+rb_image_commit() {
+  "${DEPLOY_DOCKER_BIN:-docker}" image inspect "$1" \
+    --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+    | sed -n 's/^GIT_COMMIT=//p' | head -1
+}
+
+# ⭐ ESTABLISHED AND VERIFIED BEFORE ANYTHING CROSSES. ⛔ No shared role tag is
+# touched here, so refusing costs production nothing and leaves no false metadata.
+rb_establish_recovery_tag() {
+  local sha="$1" pre="$2" tag got
+  tag="$(rb_recovery_tag "$sha")"
+  if ! "${DEPLOY_DOCKER_BIN:-docker}" tag "$pre" "$tag"; then
+    rb_stop "Could not establish the recovery tag $tag."
+    rb_warn "⛔ Refusing BEFORE migration and BEFORE the swap. Nothing was changed."
+    return 1
+  fi
+  got="$(rb_image_id "$tag")"
+  if [ "$got" != "$pre" ]; then
+    rb_stop "RECOVERY TAG IS NOT TRUTHFUL: $tag is ${got:-none}, the pre-act reader is ${pre:-none}."
+    rb_warn "⛔ Refusing BEFORE migration and BEFORE the swap. Nothing was changed."
+    return 1
+  fi
+  rb_ok "Recovery image pinned and verified: $tag == the pre-act reader"
+  return 0
+}
+
+# ⭐⭐ THE RECOVERY OPERATION ITSELF — mechanical, not an instruction to trust.
+# Retags the captured pre-act image onto `:prod`, the alias compose consumes,
+# restarts `maia`, and verifies the running commit and health.
+rb_recover() {
+  local sha="${1:-}" tag id want
+  [ -n "$sha" ] || { rb_stop "recover needs the act's SHA."; return 2; }
+  tag="$(rb_recovery_tag "$sha")"
+  id="$(rb_image_id "$tag")"
+  if [ -z "$id" ]; then
+    rb_stop "No recovery image $tag. ⛔ This act cannot recover what it never pinned."
+    return 1
+  fi
+  want="$(rb_image_commit "$tag")"
+  rb_info "Restoring the pre-act reader (${want:-unknown}) onto ${MAIA_IMAGE_REPO:-maia-sovereign}:prod"
+
+  "${DEPLOY_DOCKER_BIN:-docker}" tag "$tag" "${MAIA_IMAGE_REPO:-maia-sovereign}:prod" || {
+    rb_stop "Could not retag the recovery image onto :prod."; return 1; }
+  if [ "$(rb_image_id "${MAIA_IMAGE_REPO:-maia-sovereign}:prod")" != "$id" ]; then
+    rb_stop ":prod does not resolve to the recovery image after retagging."; return 1
+  fi
+
+  "${DEPLOY_DOCKER_BIN:-docker}" compose -f "$PROJECT_DIR/docker-compose.production.yml" \
+      --env-file "$PROJECT_DIR/.env.production" up -d maia || {
+    rb_stop "Restart failed after retagging :prod."; return 1; }
+  sleep 10
+
+  local running
+  running="$("${DEPLOY_DOCKER_BIN:-docker}" exec maia-sovereign printenv GIT_COMMIT 2>/dev/null)"
+  if [ -n "$want" ] && [ "$running" != "$want" ]; then
+    rb_stop "RECOVERY NOT CONFIRMED: running commit is ${running:-none}, expected $want."
+    return 1
+  fi
+  if ! "${DEPLOY_DOCKER_BIN:-docker}" ps --filter name=maia-sovereign --filter status=running \
+        --format '{{.Names}}' | grep -q maia-sovereign; then
+    rb_stop "RECOVERY NOT CONFIRMED: maia-sovereign is not running."
+    return 1
+  fi
+  rb_ok "Recovered: the pre-act reader ${want:-(unknown commit)} is live and running"
+  return 0
+}
 
 # ⭐ ROLLBACK CUSTODY, PROVED — never inferred from tag_images_for_rollback's exit
 # code, whose three `docker tag` calls each end in `|| true`.
@@ -205,6 +298,13 @@ rb_prove_rollback_custody() {
 
 s3_schema_first_main() {
   local sha="${1:-}"
+
+  # ⭐ Recovery runs standalone and deliberately does NOT require the pin: in an
+  # emergency the act is to restore an image that was already captured and proved.
+  if [ "$sha" = "recover" ]; then
+    rb_recover "${2:-}"
+    return $?
+  fi
 
   if [ -z "$sha" ]; then
     rb_stop "This act names its candidate SHA or does nothing. ⛔ No DEPLOY_ALLOW_HEAD."
@@ -255,6 +355,18 @@ s3_schema_first_main() {
   fi
   deploy_ctx_verify_image "$GIT_COMMIT" "${MAIA_IMAGE_REPO:-maia-sovereign}:prod" || return 1
 
+  # ── RECOVERY CUSTODY — established and proved BEFORE anything crosses ──────
+  local pre_reader
+  pre_reader="$(rb_live_reader_image_id)"
+  if [ -z "$pre_reader" ]; then
+    rb_stop "No live reader to capture. This act assumes a running production reader."
+    rb_warn "⛔ Refusing before migration and before the swap. Nothing was changed."
+    return 1
+  fi
+  export RB_ACT_SHA="$GIT_COMMIT"
+  rb_ok "Pre-act live reader captured"
+  rb_establish_recovery_tag "$GIT_COMMIT" "$pre_reader" || return 1
+
   # ── MIGRATE — from the SAME snapshot, BEFORE any swap ──────────────────────
   rb_info "Migrating from the candidate snapshot (five files)"
   if ! deploy_ctx_compose --profile migrate run --rm migrate; then
@@ -265,17 +377,6 @@ s3_schema_first_main() {
     return 1
   fi
   rb_ok "Migrations applied — schema is ready for the candidate reader"
-
-  # ── ROLLBACK CUSTODY — proved BEFORE the swap boundary ────────────────────
-  local pre_reader
-  pre_reader="$(rb_live_reader_image_id)"
-  if [ -z "$pre_reader" ]; then
-    rb_stop "No live reader to capture. This act assumes a running production reader."
-    return 1
-  fi
-  rb_ok "Pre-act live reader captured"
-  tag_images_for_rollback "$GIT_COMMIT" >/dev/null 2>&1 || true
-  rb_prove_rollback_custody "$GIT_COMMIT" "$pre_reader" || return 1
 
   # ── SWAP — only now ───────────────────────────────────────────────────────
   rb_info "Swapping the reader"
@@ -298,6 +399,18 @@ s3_schema_first_main() {
     return 1
   fi
   rb_ok "Co-Lab release gate passed"
+
+  # ── SHARED ROLE TAGS — AFTER success, and ADVISORY ────────────────────────
+  # ⭐ Moved here deliberately. Before the swap they would be shared metadata this
+  # act might have to leave half-moved on a refusal; after a verified success they
+  # describe reality. ⛔ This act's recovery never depended on them — the pinned
+  # recovery tag is the authority — so a problem here is reported, not fatal.
+  tag_images_for_rollback "$GIT_COMMIT" >/dev/null 2>&1 || true
+  if ! rb_prove_rollback_custody "$GIT_COMMIT" "$pre_reader"; then
+    rb_warn "⚠️ ADVISORY: the SHARED :current/:previous role tags are not truthful."
+    rb_warn "   The act itself is complete and its own recovery tag is unaffected."
+    rb_warn "   See the routed-out finding on the general rollback primitive."
+  fi
 
   rb_ok "S3 schema-first act complete for $GIT_COMMIT"
   return 0

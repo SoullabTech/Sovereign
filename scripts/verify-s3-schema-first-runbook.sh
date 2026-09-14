@@ -44,6 +44,7 @@ trace() {
     rb_pin_and_reexec() { echo "pin $1" >> "$TRACEFILE"; [ "$FAILSTEP" = pin ] && return 2; echo "reexec $1" >> "$TRACEFILE"; return 0; }
     rb_prove_self_provenance() { echo "prove-self $1" >> "$TRACEFILE"; [ "$FAILSTEP" = provenance ] && return 2; return 0; }
     rb_live_reader_image_id() { [ "$FAILSTEP" = no-reader ] && return 0; echo "sha256:PREACT"; }
+    rb_establish_recovery_tag() { echo "recovery-tag $1 pre=$2" >> "$TRACEFILE"; [ "$FAILSTEP" = recovery-tag ] && return 1; return 0; }
     rb_prove_rollback_custody() { echo "rollback-custody $1 pre=$2" >> "$TRACEFILE"; [ "$FAILSTEP" = custody ] && return 1; return 0; }
     tag_images_for_rollback() { echo "tag $1" >> "$TRACEFILE"; }
     acquire_deploy_lock() { echo "lock $2" >> "$TRACEFILE"; }
@@ -172,21 +173,90 @@ if [ -n "$REAL" ]; then
     *) ok "REAL provenance check REFUSES a SHA that is not the running tree's commit" ;; esac
 fi
 
-# ── 3c · ROLLBACK CUSTODY — proved before the swap boundary ────────────────
+# ── 3c · RECOVERY CUSTODY — established and proved before ANYTHING crosses ──
 T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
-C="$(step_index "$T" rollback-custody)"; M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
-[ -n "$C" ] && [ "$M" -lt "$C" ] && [ "$C" -lt "$S" ] \
-  && ok "ORDER: build → migrate → rollback custody → swap" || bad "rollback custody is not between migrate and swap"
-grep -q '^rollback-custody abc1234 pre=sha256:PREACT' <<<"$T" \
-  && ok "the PRE-ACT live reader identity is captured and passed to the custody proof" \
-  || bad "the pre-act reader identity is not captured"
-T="$(trace "$RUNBOOK" abc1234 "$FIVE" custody)"
-grep -q '^swap' <<<"$T" && bad "an unprovable rollback target still crossed the swap" \
-  || ok "rollback-custody failure REFUSES before the swap"
-[ "$(code "$T")" != "0" ] && ok "rollback-custody failure exits non-zero" || bad "custody failure exited 0"
+R="$(step_index "$T" recovery-tag)"; M="$(step_index "$T" migrate)"; S="$(step_index "$T" swap)"
+[ -n "$R" ] && [ "$R" -lt "$M" ] && [ "$M" -lt "$S" ] \
+  && ok "ORDER: build → capture + recovery tag → migrate → swap" \
+  || bad "the recovery tag is not established before migration"
+grep -q '^recovery-tag abc1234 pre=sha256:PREACT' <<<"$T" \
+  && ok "the PRE-ACT live reader identity is captured and pinned by the recovery tag" \
+  || bad "the pre-act reader identity is not pinned"
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" recovery-tag)"
+{ grep -qE '^(migrate|swap)' <<<"$T"; } \
+  && bad "an unestablished recovery tag still migrated or swapped" \
+  || ok "recovery-tag failure REFUSES before migration AND before the swap"
+[ "$(code "$T")" != "0" ] && ok "recovery-tag failure exits non-zero" || bad "recovery-tag failure exited 0"
 T="$(trace "$RUNBOOK" abc1234 "$FIVE" no-reader)"
-grep -q '^swap' <<<"$T" && bad "swapped with no live reader captured" \
-  || ok "no capturable live reader → refuses before the swap"
+{ grep -qE '^(migrate|swap)' <<<"$T"; } && bad "proceeded with no live reader captured" \
+  || ok "no capturable live reader → refuses before migration and before the swap"
+
+# ⭐ NO SHARED ROLE TAG IS TOUCHED BEFORE THE SWAP — so a pre-swap refusal cannot
+# leave deployment metadata falsely describing production.
+for step in recovery-tag migrate no-reader; do
+  T="$(trace "$RUNBOOK" abc1234 "$FIVE" "$step")"
+  grep -q '^tag ' <<<"$T" && bad "$step refusal moved the shared role tags" \
+    || ok "$step refusal leaves the shared :current/:previous role tags untouched"
+done
+T="$(trace "$RUNBOOK" abc1234 "$FIVE" "")"
+Tg="$(step_index "$T" tag)"; V="$(step_index "$T" colab)"
+[ -n "$Tg" ] && [ "$V" -lt "$Tg" ] \
+  && ok "shared role tags are written only AFTER a verified, gated success" \
+  || bad "shared role tags are written before the act is verified"
+
+# ── 3c2 · THE RECOVERY OPERATION ITSELF ────────────────────────────────────
+# Exercised for REAL against stubbed docker, so the proposition proved is
+# "recovery retags :prod and confirms", not "a message mentions rollback".
+recover_run() { # $1 script  $2 mode  -> prints trace then RC=<n>
+  RTRACE="$TMP/rtrace"; : > "$RTRACE"
+  MODE="$2" RTRACE="$RTRACE" bash -c '
+    source "$1" >/dev/null 2>&1; set +e
+    PROJECT_DIR=/proj
+    PROD=CANDIDATE
+    rb_image_id() { case "$1" in *o1-recovery-*) echo PREACT;; *:prod) echo "$PROD";; *) echo "";; esac; }
+    rb_image_commit() { echo preact-commit; }
+    sleep() { :; }
+    docker() {
+      case "$1 $2" in
+        "tag "*) echo "tag $2 -> $3" >> "$RTRACE"
+                 case "$3" in *:prod) [ "$MODE" = only-role-tags ] || PROD=PREACT;; esac
+                 case "$MODE" in only-role-tags) : ;; esac ;;
+      esac
+      case "$*" in
+        tag*) case "$MODE" in only-role-tags) PROD=CANDIDATE;; esac ;;
+        compose*) echo "restart" >> "$RTRACE" ;;
+        *printenv*) [ "$PROD" = PREACT ] && echo preact-commit || echo candidate-commit ;;
+        *ps*) echo maia-sovereign ;;
+      esac
+      return 0
+    }
+    rb_recover abc1234 >/dev/null 2>&1; echo "RC=$?" >> "$RTRACE"
+  ' _ "$1"
+  cat "$RTRACE"
+}
+RT="$(recover_run "$RUNBOOK" honest)"
+grep -q 'tag .*:prod' <<<"$RT" \
+  && ok "RECOVERY retags the captured image onto :prod — the alias compose consumes" \
+  || bad "recovery never retags :prod"
+grep -q '^restart' <<<"$RT" && ok "RECOVERY restarts maia after retagging" || bad "recovery does not restart"
+grep -q 'RC=0' <<<"$RT" && ok "RECOVERY confirms the restored commit and that the reader is running" \
+  || bad "recovery did not confirm restoration"
+
+# ⭐⭐ DISCRIMINATION: a recovery that only moves :current/:previous and leaves
+# :prod on the candidate — i.e. exactly what `deploy-production.sh rollback`
+# does — MUST be detected as a FAILED recovery.
+RT="$(recover_run "$RUNBOOK" only-role-tags)"
+grep -q 'RC=0' <<<"$RT" \
+  && bad "a recovery that left :prod on the candidate reported SUCCESS" \
+  || ok "DISCRIMINATION: recovery that leaves :prod on the candidate is DETECTED as failed"
+
+# The act must not send the operator to the defective general primitive.
+OUT="$(bash -c 'source "$1" >/dev/null 2>&1; set +e; rb_recovery_required "t"' _ "$RUNBOOK" 2>&1)"
+grep -q 'runbook.sh recover' <<<"$OUT" \
+  && ok "the recovery instruction names the act's own operation" || bad "no act-owned recovery instruction"
+grep -qE 'NOT ./scripts/deploy-production.sh rollback|NOT \./scripts/deploy-production\.sh rollback' <<<"$OUT" \
+  && ok "the defective general rollback primitive is explicitly ruled out" \
+  || bad "the operator is not warned off deploy-production.sh rollback"
 
 # ⭐ The custody proof is exercised for REAL against stubbed image ids.
 custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
@@ -199,7 +269,7 @@ custody_real() { # $1 previous-id $2 current-id $3 sha-id -> rc
 [ "$(PREV=x custody_real sha256:PREACT CAND CAND)" = "0" ] \
   && ok "REAL custody proof accepts truthful :previous/:current/:<sha>" || bad "truthful tags were refused"
 [ "$(custody_real sha256:SOMETHING_ELSE CAND CAND)" != "0" ] \
-  && ok "REAL custody proof REFUSES an untruthful :previous (the |\| true tagging defect)" \
+  && ok "REAL custody proof REFUSES an untruthful :previous — the suppressed-tagging defect" \
   || bad "an untruthful :previous was accepted"
 [ "$(custody_real sha256:PREACT STALE CAND)" != "0" ] \
   && ok "REAL custody proof REFUSES an untruthful :current" || bad "an untruthful :current was accepted"
@@ -224,7 +294,8 @@ complete_says() { # $1 failstep -> prints "yes"/"no"
     source "$1" >/dev/null 2>&1; set +e
     rb_pin_and_reexec() { return 0; }; rb_prove_self_provenance() { return 0; }
     rb_live_reader_image_id() { echo sha256:PREACT; }
-    rb_prove_rollback_custody() { [ "$FAILSTEP" = custody ] && return 1; return 0; }
+    rb_establish_recovery_tag() { [ "$FAILSTEP" = recovery-tag ] && return 1; return 0; }
+    rb_prove_rollback_custody() { return 0; }
     tag_images_for_rollback() { :; }; acquire_deploy_lock() { :; }
     deploy_ctx_assert_and_materialize() { export GIT_COMMIT="$1" MAIA_BUILD_CONTEXT=/s DEPLOY_COMPOSE_FILE=/s/c.yml; }
     deploy_ctx_refuse_env_collision() { return 0; }; deploy_ctx_refuse_compose_runtime_override() { return 0; }
@@ -237,7 +308,7 @@ complete_says() { # $1 failstep -> prints "yes"/"no"
   grep -q "act complete" <<<"$out" && echo yes || echo no
 }
 [ "$(complete_says "")" = "yes" ] && ok "the happy path DOES declare the act complete" || bad "happy path never declares completion"
-for step in build migrate custody swap verify-running colab; do
+for step in build migrate recovery-tag swap verify-running colab; do
   [ "$(complete_says "$step")" = "no" ] \
     && ok "$step failure CANNOT declare the act complete" \
     || bad "$step failure declared the act complete"
