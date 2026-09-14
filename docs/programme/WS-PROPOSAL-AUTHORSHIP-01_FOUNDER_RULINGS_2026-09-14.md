@@ -349,6 +349,75 @@ That is the whole purpose of FR-W4.
 
 ---
 
+## ⭐⭐ FR-W5 · FOUNDER RULING — BOUNDED REPAIR **AUTHORIZED** (2026-09-14)
+
+> ⭐ The evidence is narrow enough that this is **not an invitation to "improve" the interaction
+> generally.** Fix the one thing the walk actually falsified.
+
+```text
+AUTHORIZED   bounded repair of Whole / first asked return ONLY.
+
+PURPOSE      make the FIRST asked return in Whole view expose the EXACT proposal locus.
+
+NOT AUTHORIZED
+  surface redesign                      SHOW CHANGE rename
+  detached excerpts                     duplicate proposal panels
+  changes to Section-view behaviour     changes to voluntary-scroll sovereignty
+  Gate B work                           Gate C work
+
+⛔ REPAIR MUST BE CENSUSED BEFORE IMPLEMENTATION.
+   MECHANISM IS NOT INFERRED FROM THE WITNESS.
+```
+
+### The invariant set the witness now protects
+
+```text
+MUST PRESERVE — each of these is a SEALED PASS, not an assumption
+  Whole / second asked return            PASS
+  Section / first asked return           PASS
+  Section / second asked return          PASS
+  passive-scroll sovereignty, BOTH views PASS
+  existing surface shape
+  existing SHOW CHANGE semantics
+  no detached excerpt · no duplicate proposal panel
+```
+
+⭐⭐ **This is what makes the repair bounded rather than merely small.** A change that fixes the
+first asked return and disturbs any line above has **not** discharged FR-W5 — it has traded a known
+defect for an unmeasured one.
+
+### ⛔ Why the census comes first
+
+The seventh observation **points toward** a Whole-path problem; it does **not** prove the mechanism
+(recorded above: a view-independent init defect masked in Section view remains consistent).
+
+```text
+⛔ WRONG   witness → inferred mechanism → repair
+✅ RIGHT   witness → CENSUS OF THE ACTUAL WHOLE-VIEW RETURN PATH → smallest repair → witness
+```
+
+⭐ Same discipline as FR-W3/FR-W3a one layer down: **requirement first, substrate second.** Here:
+**observed failure first, mechanism second** — and the mechanism is *read*, never deduced from the
+symptom.
+
+### ⚠️ Operational note — the census cannot be run from this checkout
+
+⛔ The subject is **not present here** (charter §0, unchanged at `dd7059b4`). The Whole-view return
+path, its components and its tests live on the Mac Studio runtime. The repair census is therefore a
+**founder-side read**, like every observation in this lane.
+
+### The targeted witness that closes the repair
+
+```text
+ONE COLD Whole / first asked return  →  expect LOCUS-ADDRESSED
+plus RE-CONFIRMATION of the invariant set above
+```
+
+⛔ **A new cell, never a rewrite.** The sealed `Whole / first = SECTION-ADDRESSED — FAIL` stands as
+the before-state. ⭐ *A witness is a reading at a time.*
+
+---
+
 ### ⛔ This is a SEVENTH observation, not a replacement cell
 
 ```text
@@ -379,8 +448,10 @@ time.* The honest repair is to date it, never to edit it.
 ## Roadmap standing (precise)
 
 ```text
-LANE STATUS                        ⏳ OPEN · GATE A CLOSED — bounded repair INDICATED
-                                   ⛔ repair NOT authorized · founder act required
+LANE STATUS                        ⏳ OPEN · BOUNDED REPAIR AUTHORIZED (FR-W5)
+                                   SCOPE  Whole / first asked return ONLY
+                                   NEXT   census → smallest repair → targeted witness
+                                   ⛔ census BEFORE implementation · mechanism not inferred
                                    ⛔ walk COMPLETE — do NOT rerun it
 Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
                                    Whole / first          SECTION-ADDRESSED — FAIL  [SEALED]
@@ -391,7 +462,7 @@ Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1
                                    Section / passive      PASS  [FOUNDER-READ]
                                    7th COLD Section / first LOCUS-ADDRESSED — PASS [FOUNDER-READ]
                                    Gate A = CLOSED · FALSIFIED AT Whole / first only
-                                   NEXT → founder act: authorize (or decline) the bounded repair
+                                   Gate A close → FR-W5 bounded repair AUTHORIZED
 Proposal authorship census         ✅ COMPLETE
 Step-3 intent                      ✅ BOUNDED — we know WHICH QUESTIONS must be answered
 Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
