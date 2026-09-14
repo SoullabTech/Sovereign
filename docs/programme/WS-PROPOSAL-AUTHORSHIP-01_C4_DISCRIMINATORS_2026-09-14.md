@@ -208,17 +208,92 @@ virtualization-settle family **before** the asked-return datum is spent.
 
 ---
 
+## 3a · ⛔⛔ O1 SPEND BLOCKED — the sealed away-condition is not recoverable
+
+⭐ Found **before** contaminating O1, which is the point of freezing a procedure before running it.
+
+```text
+⛔ The durable record does NOT preserve the exact away-condition of the sealed
+   `Whole / first = SECTION-ADDRESSED — FAIL`.
+```
+
+### Verified against the record, not assumed
+
+```text
+"well away" appears ONCE in the rulings record — in the COLD SECTION / FIRST
+diagnostic procedure (a different act, a different cell).
+
+`Whole / first` appears 15 times — ⭐ ALWAYS AS A RESULT, NEVER WITH A PROCEDURE.
+```
+
+⚠️ **And the asymmetry is explainable, which makes it worse rather than better:**
+
+```text
+Whole / second   away-condition IS recoverable — from this record's OWN HISTORY
+                 (045e7498: "scroll well away, SHOW CHANGE")
+Whole / first    ⛔ NOT recoverable — it entered as an ALREADY-SEALED PRIOR WITNESS,
+                 carried in as a verdict with no procedure attached
+```
+
+⭐ The one cell the repair is scoped to is the one cell whose gesture was never written down.
+
+### ⛔ What is NOT enough
+
+```text
+⛔ copying the passive-scroll procedure
+⛔ copying the cold-Section procedure
+⛔ reconstructing what "probably happened"
+```
+
+⛔ Any of those would violate the rule O1 itself carries — **no substituted navigation act for
+convenience** — and would do it in the one place where the substitution is invisible in the result.
+
+### ⭐⭐ FOURTH INSTANCE of the family
+
+```text
+C1  same control, same handler        different return mechanism     — across VIEWS
+F6  same table name                   different object               — across SCHEMA
+—   same movement function            different act                 — across TIME
+⭐  SAME WORDING NEARBY               DIFFERENT HISTORICAL ACT       — across THE RECORD
+```
+
+> **Neighbouring procedures are evidence about their own cells. They are not authority to
+> reconstruct a missing one.**
+
+### The two lawful ways forward — ⛔ they are NOT equivalent
+
+```text
+P1  RECOVER    the original founder gesture from a stronger source — the originating
+               session's transcript, a screenshot sequence, or the founder's direct
+               recollection stated as such.
+               → O1 then bears DIRECTLY on the sealed FAIL. This is the path O1 was frozen for.
+
+P2  RE-SEAL    declare an away-condition explicitly, seal a NEW cold Whole / first cell under
+               it, then run O1 against THAT cell.
+               ⚠️ This CHANGES THE QUESTION. O1 would then adjudicate the new cell, and the
+               sealed historical FAIL would become a cell whose conditions are unknown —
+               ⛔ still sealed, but no longer the thing under investigation.
+```
+
+⛔ **Not chosen here.** P2 is legitimate but must be taken knowingly, and its cost recorded at the
+moment of choosing — not discovered later when the repair is adjudicated against evidence that
+turns out to be about a different act.
+
+---
+
 ## 4 · Standing
 
 ```text
 LANE   OPEN · FR-W5 authorized
 C4     ⛔ UNRESOLVED
-O1     ✅ RATIFIED AS AMENDED · FROZEN · not yet spent
+O1     ✅ RATIFIED AS AMENDED · FROZEN
+       ⛔ SPEND NOT PERMITTED — sealed away-condition unrecoverable (§3a)
        ⛔ Jarvis's original draft NOT frozen verbatim
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-NEXT   reproduce the sealed witness's away-condition exactly → spend O1 ONCE
+NEXT   ⛔ BLOCKED — recover the sealed witness's away-condition (P1), or knowingly
+       take P2 and record its cost. RUNTIME: do not touch yet.
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 
