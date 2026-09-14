@@ -1165,7 +1165,16 @@ describe('KERNEL-00 · VPIO-02B — witness preparation: the fourth subject row 
         .toString('utf8').split('\n').filter(Boolean).map((row) => row.match(/\*\*([^*]+)\*\*/)![1]);
     expect(classes('vpio-01', vpio01)).toEqual(Array(30).fill('failure then degradation'));
     expect(classes('vpio-02', vpio01)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
-    const engine = all.filter((p) => !vpio01.includes(p));
+    // C-D19 (2026-09-14): the VPIO-02 F-W1 population (VPIO-02-20260914T223500Z) is its own tracked population; "engine-era" is
+    // every journal outside BOTH VPIO directories, never "everything that is not VPIO-01". The VPIO-02 rows are pinned to the
+    // ledger as produced (29 × gen-1 listen · 1 × failure then recovery under vpio-02; 30 × SUBJECT-MISMATCH under vpio-01).
+    const vpio02 = all.filter((p) => p.includes('/VPIO-02-20260914T223500Z/journals/'));
+    expect(vpio02.length).toBe(30);
+    const c02 = classes('vpio-02', vpio02);
+    expect(c02.filter((c) => c === 'gen-1 listen').length).toBe(29);
+    expect(c02.filter((c) => c === 'failure then recovery').length).toBe(1);
+    expect(classes('vpio-01', vpio02)).toEqual(Array(30).fill('SUBJECT-MISMATCH'));
+    const engine = all.filter((p) => !vpio01.includes(p) && !vpio02.includes(p));
     expect(engine.length).toBeGreaterThan(400);
     expect(new Set(classes('vpio-02', engine))).toEqual(new Set(['SUBJECT-MISMATCH', 'DRIVER/INFRASTRUCTURE FAILURE']));
   });
