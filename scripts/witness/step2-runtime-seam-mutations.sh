@@ -9,7 +9,20 @@ EXEC="$ROOT/lib/manuscript/revisionAuthorization/execute.ts"
 BK="$(mktemp -d)"; cp "$STORE" "$BK/store.ts"; cp "$EXEC" "$BK/execute.ts"
 restore() { cp "$BK/store.ts" "$STORE"; cp "$BK/execute.ts" "$EXEC"; rm -rf "$BK"; }
 trap restore EXIT
-KILLED=0; SURVIVED=0
+KILLED=0; SURVIVED=0; CRASHED=0
+
+# ⭐ A .py OPERATOR — the form every new harness in this lane uses.
+# ⛔ The transform is NOT a bash string: `$1` is a positional parameter under
+# `set -u`, a backtick is command substitution, and an unbalanced quote produces
+# a silent no-op. This lane has paid for all three. A file pays for none.
+mutate_py() { # $1 label  $2 operator path (repo-relative)
+  cp "$BK/store.ts" "$STORE"; cp "$BK/execute.ts" "$EXEC"
+  if ! (cd "$ROOT" && python3 "$2" 2>&1); then
+    printf '  ⛔ STALE  %s\n     -> the operator no longer matches the source it mutates\n' "$1"
+    CRASHED=$((CRASHED+1)); return
+  fi
+  judge "$1"
+}
 
 mutate() { # $1 label  $2 file  $3 transform
   cp "$BK/store.ts" "$STORE"; cp "$BK/execute.ts" "$EXEC"
@@ -22,6 +35,10 @@ if s == before: sys.stderr.write("NO-OP\n"); sys.exit(3)
 open(path, 'w').write(s)
 PY
   then printf '  ⛔ NO-OP  %s\n' "$1"; SURVIVED=$((SURVIVED+1)); return; fi
+  judge "$1"
+}
+
+judge() { # $1 label — run the witness against whatever is now on disk
   bash "$ROOT/scripts/witness/step2-rebuild-db.sh" >/dev/null 2>&1
   local out; out="$(cd "$ROOT" && npx tsx scripts/witness/step2-runtime-seam-witness.ts 2>/dev/null)"
   # ⛔ A mutation that makes the witness CRASH is not a kill. The first harness
@@ -29,7 +46,12 @@ PY
   # "no FAIL lines" is true both when the witness passed and when it never ran.
   if ! printf '%s' "$out" | grep -q 'passed ·'; then
     printf '  ⛔ CRASHED  %s\n     -> the witness never completed; this proves nothing either way\n' "$1"
-    SURVIVED=$((SURVIVED+1)); return
+    # ⛔ ITS OWN COUNTER. Folding a crash into SURVIVED was conservatively safe
+    # and actively misleading: a survivor is a witness that JUDGED and let the
+    # mutant through; a crash is a witness that never judged at all. The two
+    # demand different repairs — one is a missing obligation, the other a broken
+    # instrument — and a summary that cannot tell them apart hides which.
+    CRASHED=$((CRASHED+1)); return
   fi
   if printf '%s' "$out" | grep -q '^  FAIL'; then
     printf '  KILLED  %s\n' "$1"
@@ -65,12 +87,16 @@ mutate "R4 · the store hydrates rows itself again, bypassing the contract" "$ST
 mutate "R5 · execution refuses early instead of reaching the write" "$EXEC" \
 "s = s.replace(\"    if (auth.acceptedAt !== null) return no('already_spent');\", \"    if (auth.acceptedAt !== null) return no('already_spent');\n    if (process.env.NODE_ENV !== 'never') return no('stale_base');\")"
 
-# ⚠️ THE DOLLARS ARE ESCAPED. Inside a bash double-quoted string `$1` is a
-# POSITIONAL PARAMETER, and under `set -u` an unbound one aborts the harness —
-# which is how the first R6 killed the whole run instead of the mutant.
-mutate "R6 · the minted identity and time are replaced by database defaults" "$STORE" \
-"s = s.replace('(id, member_id, proposal_chain_id', '(member_id, proposal_chain_id').replace('VALUES (\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10)', 'VALUES (\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8)').replace('[mintedId, memberId,', '[memberId,').replace(', mintedAt]);', ']);').replace(', authorized_at)', ')')"
+# ⚠️ R6 WAS AN INSTRUMENT DEFECT UNTIL 2026-09-14 (founder-diagnosed). Its bash
+# transform still targeted the pre-`operation` ten-parameter INSERT, so it built
+# 9 columns against 11 placeholders — invalid SQL, a crashed witness, and an
+# obligation that was UNPROVEN rather than discharged for as long as it looked
+# like a passing harness. It now lives in a file, and every replacement asserts.
+mutate_py "R6 · the minted identity and time are replaced by database defaults" \
+  "scripts/witness/step2-runtime-seam-mutations/R6.py"
 
 echo
-echo "  $KILLED killed · $SURVIVED survived"
-[ "$SURVIVED" -eq 0 ] || exit 1
+echo "  $KILLED killed · $SURVIVED survived · $CRASHED crashed"
+# ⛔ A crash fails the harness exactly as a survivor does. An obligation that was
+# never judged is not an obligation that passed.
+[ "$SURVIVED" -eq 0 ] && [ "$CRASHED" -eq 0 ] || exit 1
