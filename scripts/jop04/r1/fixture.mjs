@@ -97,3 +97,37 @@ export function buildNonRepo() {
   fs.writeFileSync(path.join(root, 'plain.txt'), `${MANY_TOKEN}\n`);
   return { root, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
+
+// ── R1c · SYMBOL DOMAIN FIXTURE ────────────────────────────────────────────────────────
+// ⭐ A SEPARATE repository, deliberately NOT the pinned fixture. The D2.3 pin is an exact
+//    byte value over git.log output, so ANY change to buildFixture()'s commits would move
+//    the commit SHAs and break a sealed pin this act is not authorized to re-seal.
+//    New boundaries therefore get their own subject rather than disturbing the pinned one.
+//
+// D6 permits ARBITRARY literal symbol strings and forbids an accidental lexical grammar.
+// These vectors are legitimate symbols from real languages that a word-character grammar,
+// or an argv parser, mishandles:
+//   x+foo      `+foo` sits with a WORD character on its left — a word-boundary rule reports
+//              it ABSENT although it is present. A confident wrong answer, not an error.
+//   p->next    `->next` begins with '-', so an unguarded argv position consumes it as an
+//              OPTION rather than seeking it.
+export const DOMAIN_WORD_NEIGHBOUR = '+foo';   // present in the tree, left neighbour is a word char
+export const DOMAIN_DASH_LEADING = '->next';   // a real symbol that looks like an option
+export const DOMAIN_ABSENT = '@@no_such_symbol@@';
+
+export function buildSymbolDomainFixture() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jop04-r1c-'));
+  const g = (args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env: ENV });
+  g(['init', '-q', '-b', 'main']);
+  g(['config', 'user.name', 'R1c Fixture']);
+  g(['config', 'user.email', 'fixture@example.invalid']);
+  fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'src', 'domain.c'), [
+    'int a = x+foo;        /* WORD-NEIGHBOUR — left of the symbol is a word character */',
+    'int b = p->next;      /* DASH-LEADING  — a symbol that looks like an option */',
+    '',
+  ].join('\n'));
+  g(['add', '-A']);
+  g(['commit', '-q', '-m', 'r1c: symbol-domain vectors'], ENV);
+  return { root, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
+}

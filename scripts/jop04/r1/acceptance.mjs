@@ -29,6 +29,7 @@ import {
   buildFixture, buildNonRepo, LITERAL_GLOB_FILE, LITERAL_MAGIC_FILE, ORDINARY_FILE,
   SYMBOL, LOOKALIKE, EMBED_LEFT, EMBED_RIGHT, BRE_PATTERN, MANY_TOKEN, MANY_COUNT,
   C_ORDINARY, C_GLOB, C_MAGIC,
+  buildSymbolDomainFixture, DOMAIN_WORD_NEIGHBOUR, DOMAIN_DASH_LEADING, DOMAIN_ABSENT,
 } from './fixture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -42,17 +43,21 @@ const CF = require(path.join(REPO, 'jarvis-desktop/src/capability-form.js'));
 // ⛔ `post` is written out in full, NOT computed by inverting `pre`. A mechanically inverted
 //    postcondition would encode "whatever pre was not", which is a restatement of the defect
 //    rather than a statement of the law. The acceptance state is: every boundary GREEN.
-const BOUNDARY_IDS = ['D4', 'D1', 'D5', 'D6', 'F-D', 'F-D.5', 'D3', 'D3/D4', 'D2.6', 'D2.3', 'H1-effective', 'check.run', 'verify.*'];
+const BOUNDARY_IDS = ['D4', 'D1', 'D5', 'D6', 'D6-domain', 'role-separation', 'D4-admission', 'F-D', 'F-D.5', 'D3', 'D3/D4', 'D2.6', 'D2.3', 'H1-effective', 'check.run', 'verify.*'];
 const PHASE_TARGETS = {
   pre: {
     'D4': 'RED', 'D1': 'RED', 'D5': 'RED', 'D6': 'RED', 'F-D': 'RED', 'F-D.5': 'GREEN',
     'D3': 'RED', 'D3/D4': 'RED', 'D2.6': 'RED', 'D2.3': 'GREEN', 'H1-effective': 'GREEN',
     'check.run': 'GREEN', 'verify.*': 'GREEN',
+    // R1c: all three were RED at the unrepaired subject too — no seam existed, the same
+    // spelling-based path test applied, and the derived matcher imported a grammar.
+    'D6-domain': 'RED', 'role-separation': 'RED', 'D4-admission': 'RED',
   },
   post: {
     'D4': 'GREEN', 'D1': 'GREEN', 'D5': 'GREEN', 'D6': 'GREEN', 'F-D': 'GREEN', 'F-D.5': 'GREEN',
     'D3': 'GREEN', 'D3/D4': 'GREEN', 'D2.6': 'GREEN', 'D2.3': 'GREEN', 'H1-effective': 'GREEN',
     'check.run': 'GREEN', 'verify.*': 'GREEN',
+    'D6-domain': 'GREEN', 'role-separation': 'GREEN', 'D4-admission': 'GREEN',
   },
 };
 const pi = process.argv.indexOf('--phase');
@@ -250,6 +255,91 @@ try {
       ? t.conform("identical semantics under ambient 'extended' and 'basic' (D6.4)")
       : t.breach('ambient grep.patternType changed what the same symbol invocation means (D6.4)');
   } finally { fxB.cleanup(); }
+}
+
+// ── 4b · R1c · D6 FULL SYMBOL DOMAIN ───────────────────────────────────────────────────
+// D6 permits ARBITRARY literal symbol strings and forbids an accidental identifier grammar.
+// ⛔ Removing the caller's REGEX authority is not the same as narrowing the caller's DOMAIN.
+{
+  const t = B('D6-domain', 'any literal string the schema admits is SOUGHT — no word-character grammar, no argv grammar');
+  const dfx = buildSymbolDomainFixture();
+  try {
+    // ARM 1 · a legitimate symbol whose LEFT NEIGHBOUR is a word character. A word-boundary
+    //         rule reports it absent although it is present — a confident WRONG ANSWER.
+    const w = attempt(() => runCapability('repo.locate_symbol', { symbol: DOMAIN_WORD_NEIGHBOUR }, dfx.root));
+    if (!w.ok) t.breach(`'${DOMAIN_WORD_NEIGHBOUR}' THREW: ${String(w.error.message).split('\n')[0].slice(0, 55)}`);
+    else records(w.value).length > 0
+      ? t.conform(`'${DOMAIN_WORD_NEIGHBOUR}' found despite a word character on its left`)
+      : t.breach(`'${DOMAIN_WORD_NEIGHBOUR}' reported ABSENT although it is present — an imported word-character grammar, and a confident wrong answer rather than an error`);
+
+    // ARM 2 · a legitimate symbol that BEGINS WITH '-'. Caller text is a term to be sought,
+    //         never a position in the tool's own option grammar.
+    const d = attempt(() => runCapability('repo.locate_symbol', { symbol: DOMAIN_DASH_LEADING }, dfx.root));
+    if (!d.ok) t.breach(`'${DOMAIN_DASH_LEADING}' THREW — caller text was consumed as an OPTION, not sought: ${String(d.error.message).split('\n')[0].slice(0, 50)}`);
+    else records(d.value).length > 0
+      ? t.conform(`'${DOMAIN_DASH_LEADING}' sought literally, not parsed as an option`)
+      : t.breach(`'${DOMAIN_DASH_LEADING}' reported absent although it is present`);
+
+    // ARM 3 · CONTROL — widening the domain must not resurrect absence-as-failure (F-D).
+    const a = attempt(() => runCapability('repo.locate_symbol', { symbol: DOMAIN_ABSENT }, dfx.root));
+    (a.ok && records(a.value).length === 0)
+      ? t.conform('a genuinely absent symbol still returns success with zero records')
+      : t.breach('absence handling regressed while widening the domain');
+  } finally { dfx.cleanup(); }
+}
+
+// ── 4c · R1c · ROLE SEPARATION (D5 · D6 · D1) ──────────────────────────────────────────
+// ⭐ A caller term's ROLE comes from the capability contract, never from how the value is
+//    SPELLED. A GREP_PATTERN or a SYMBOL that happens to contain '../' is not a PATH.
+//    Inference-by-characters is the architecture the rulings superseded.
+// ⛔ And this must NOT become permission to drop containment: the control arm requires a
+//    real PATH field to keep refusing an escape.
+{
+  const t = B('role-separation', 'role is contract-assigned; a PATTERN or SYMBOL is never adjudicated as a PATH by spelling — while real PATH containment holds');
+  const ESCAPEY = '../x';
+  for (const [cap, args, role] of [
+    ['repo.grep', { pattern: ESCAPEY }, 'GREP_PATTERN'],
+    ['repo.locate_symbol', { symbol: ESCAPEY }, 'SYMBOL'],
+  ]) {
+    const r = attempt(() => runCapability(cap, args, fx.root));
+    if (r.ok) t.conform(`${cap} admitted '${ESCAPEY}' as a ${role} (${records(r.value).length} records)`);
+    else /resolves outside cwd/.test(String(r.error.message))
+      ? t.breach(`${cap} refused '${ESCAPEY}' as a PATH — the ${role} was adjudicated by its SPELLING`)
+      : t.breach(`${cap} threw for another reason: ${String(r.error.message).split('\n')[0].slice(0, 55)}`);
+  }
+  // CONTROL — containment for an actual PATH field must survive.
+  const guard = attempt(() => runCapability('verify.file_exists', { path: '../../../etc/passwd' }, fx.root));
+  (!guard.ok && /outside cwd/.test(String(guard.error.message)))
+    ? t.conform('a real PATH field still refuses an escape — containment intact')
+    : t.breach('PATH containment was LOST — role separation must not be bought by dropping containment');
+}
+
+// ── 4d · R1c · D4 ADMISSION CORRESPONDENCE ─────────────────────────────────────────────
+// The seam must describe INVOCATIONS, not requests execution would refuse. Admissibility is
+// one judgement: whatever runCapability() refuses, describeInvocation() must refuse too.
+{
+  const t = B('D4-admission', 'describeInvocation admits exactly what runCapability admits — it never describes a request execution would refuse');
+  const describe = reg.describeInvocation;
+  if (typeof describe !== 'function') t.breach('no observation seam exists');
+  else {
+    const CASES = [
+      ['repo.grep', { pattern: MANY_TOKEN, max_results: 999 }, 'above max'],
+      ['repo.grep', { pattern: MANY_TOKEN, max_results: 0 }, 'below min'],
+      ['repo.grep', { pattern: 123 }, 'wrong type'],
+      ['git.log', { max_count: 0 }, 'below min'],
+      ['repo.grep', { pattern: MANY_TOKEN }, 'VALID — must be admitted by both'],
+    ];
+    const bad = [];
+    for (const [cap, args, why] of CASES) {
+      const described = attempt(() => describe(cap, args)).ok;
+      const executed = attempt(() => runCapability(cap, args, fx.root)).ok;
+      t.note(`${cap} ${JSON.stringify(args)} (${why}) · describe=${described ? 'admits' : 'refuses'} · execute=${executed ? 'admits' : 'refuses'}`);
+      if (described !== executed) bad.push(`${cap} ${why}`);
+    }
+    bad.length === 0
+      ? t.conform(`admissibility agrees across all ${CASES.length} cases`)
+      : t.breach(`described an invocation execution would refuse: ${bad.join(', ')}`);
+  }
 }
 
 // ── 5 · F-D ARM 2 · valid absence ───────────────────────────────────────────────────────
