@@ -846,3 +846,84 @@ Notes on the string: the two apostrophes in *instrument's* are carried by the `'
 **Authority ledger.** The one FIRST-INSTALL-02 authority is **SPENT** (one invocation, exit 0). AUTH-1/2/3 held: the string was an invocation input on the Mac, never read from the repo, never reconstructed here; this record explains the act and authorizes nothing.
 
 **Standing after §13.17:** VPIO-02 INSTALLED · launch NOT AUTHORIZED · driver test / journal pull NOT AUTHORIZED · sample NOT AUTHORIZED · N=30 NOT AUTHORIZED · F-W1 UNSPENT · `.vpio01` FROZEN · K00/R1 UNTOUCHED · organism frozen at `ac12dedf4` · instrument at `08483cfe4` · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED. **Next decision point = a separate founder ruling on whether a VPIO-02 F-W1 N=30 witness opens (its shape would mirror §13.8: read-only preflight naming container `E3B88028-…` and no harness process, then one `k00-driver-batch.sh VPIO-02 30 --vp on --mode L --hold 15 --subject vpio-02`, no reinstall inside, no top-up) — proposed for the founder's consideration, NOT opened.**
+
+## §13.18 — VPIO-02 F-W1 / N=30 OPEN (founder ruling 2026-09-14) — one governed population, no pilot · preflight PINNED · invocation PINNED · EXECUTION IS A MAC ACT · evidence OWED for F-W1 adjudication
+
+**Ruling (founder, verbatim substance):** "Your §13.17 reading stands, including the correction about the authority string: the transcript proves the 1,861-byte count, not the bytes themselves; byte identity rests on the founder-side attestation already recorded. That does not alter the FIRST-INSTALL-02 verdict." — **No pilot**: as with VPIO-01, no separate first-sample or calibration act; *sample 1 of the governed N=30 is the first physiological VPIO-02 observation* (a pilot would create an outcome outside the predeclared F-W1 population and invite outcome-conditioned intervention). "This is the decisive test we have been working toward: does the corrected VPIO-02 subject actually cross the entry boundary and reliably become listening?"
+
+**Authorized subject (verbatim):**
+
+```text
+source organism     ac12dedf4b7b4efc9855c08bb4285a704e7039f1
+instrument          08483cfe4f6c3e98198805337ced99bae92ce911
+bundle              life.soullab.voicekernel.vpio02
+installed container E3B88028-A10F-46B1-AB27-CF0A1F83FB78
+
+stratum             AUTOMATED-COLD-LAUNCH · VPIO-02
+mode                L
+voice processing    ON
+hold                15 s
+population          N = 30
+```
+
+**One read-only preflight before sample 1 (ruling):** read the installed-app state and verify `.vpio02` still resolves to the FIRST-INSTALL-02 container `E3B88028-A10F-46B1-AB27-CF0A1F83FB78`; read the process list and verify no `VoiceKernelHarness` process is running. Unreadable / different / any harness process present → **STOP before sample 1**; do not normalize with terminate-only, reinstall, overwrite, or another read intended to repair the state. Once sample 1 begins, the qualified driver's ordinary per-sample cold/termination rules govern.
+
+**F-W1 exactly frozen (ruling, verbatim):**
+
+```text
+30 valid   ≥24 takes    CLEAR IMPROVEMENT
+29 valid   ≥23 takes    CLEAR IMPROVEMENT
+28 valid   ≥23 takes    CLEAR IMPROVEMENT
+
+proportion ≤16/29       ABOUT SAME / WORSE
+between                 INDETERMINATE
+>2 infrastructure       CHARACTERIZE ONLY
+```
+
+Clear improvement additionally requires one-sided Fisher `p < .05` against each historical engine stratum independently: A 14/29 · B 15/28 · C 16/29 · R1 13/30. VPIO-01's `0/30` remains a closed failed population — not pooled, not substituted, not an additional threshold.
+
+**Execution-authority input (recorded as the ruling received; an invocation input at the founder's Mac, never reconstructed from this record; 1 534 bytes, one apostrophe):**
+
+```text
+FOUNDER-AUTH: VPIO-02 F-W1 only; execute exactly one N=30 AUTOMATED-COLD-LAUNCH entry-axis batch on the VPIO-02 artifact installed by FIRST-INSTALL-02, using the VPIO-02B witness instrument at 08483cfe4f6c3e98198805337ced99bae92ce911, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing ON, hold 15 seconds, with no reinstall inside the batch. Sample 1 is the first physiological VPIO-02 observation; no separate pilot or calibration sample is authorized. Before sample 1 perform only the read-only custody preflight: verify the installed VPIO-02 bundle is still the FIRST-INSTALL-02 installation at bundle container E3B88028-A10F-46B1-AB27-CF0A1F83FB78 and verify no VoiceKernelHarness process is running. If custody is unreadable or different, or a harness process is already running, STOP before sampling and return; do not normalize the state with terminate-only, reinstall, overwrite, or another corrective device act. After sample 1 begins, the qualified driver's normal per-sample cold and termination rules govern. Finish the declared 30 invocations unless the instrument itself aborts. No top-up, no automatic rerun, no source change, no reinstall, no threshold change, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. Return the completed evidence for F-W1 reading and founder adjudication. No outcome from this batch authorizes any subsequent act.
+```
+
+The batch instrument at `08483cfe4` does not mechanically consume `K00_EXEC_AUTHORITY` (as in §13.8 for `de3efd3fb`); the string travels as the founder's invocation input and this section is its record.
+
+**Instrument verified against the ruling (read only, this container; `k00-driver-batch.sh` · `k00-ledger.py` · `ios/VoiceKernelDriver` byte-identical to `08483cfe4` at HEAD):** usage `<stratum> <N> [--vp on|off] [--mode I|L] [--hold S] [--w4 MS] [--subject p5b0|phase-a|vpio-01|vpio-02] [--ledger DIR]` (line 4) accepts every ruled argument; `--subject vpio-02` derives `BID=life.soullab.voicekernel.vpio02` / `ICON="VoiceKernel VPIO-02"` by the closed case (line 36; unknown subject refused, no default bundle); `k00-reinstall` / `install app` appear nowhere in the batch (0 matches); device id defaults to `A0736AC8-793B-516F-AC72-C076DB6CEE38` (line 24, `K00_DEVICE` override unused); ledger dir `driver-ledger/VPIO-02-<stamp>`; rows classified under the vpio-02 subject rule (exact 14-step trace or exact ordered proper prefix + gen-1 refusal; running key `ioRunning`); one batch per device (lock, exit 5 on contention).
+
+⚠️ **Same instrument behaviour as §13.8, named, not changed:** the batch's per-sample precondition (lines 143–146) runs the driver's `testTerminateOnly` when a `VoiceKernelHarness` process is present — at sample 1 as at any other. The ruling forbids normalizing a pre-existing process before sample 1. Therefore the **preflight is a separate read-only act immediately before the batch, and the batch is invoked only on a clean preflight**. If, despite a clean preflight, sample 1's log reads `harness process present — attempting terminate-only via driver`, that is a process that appeared between the two acts; it is returned for ruling with the ledger, never absorbed.
+
+**Pinned preflight (Mac Studio, read-only; cwd = the driver-compile worktree at exactly `08483cfe4`, the same worktree FIRST-INSTALL-02 ran from; listing options as in §13.8, read from the recorded probe page `devicectl-probe-20260913T163025Z/device-info-apps-help.txt` — `--bundle-id`, `--json-output` — and `info processes --json-output` already used by the batch; nothing guessed; `.vpio01` is never named in any verb):**
+
+```bash
+cd /private/tmp/vpio02b-driver-compile-08483cfe4 \
+&& git rev-parse HEAD \
+&& git diff --quiet 08483cfe4f6c3e98198805337ced99bae92ce911 -- scripts/witness/k00-driver-batch.sh scripts/witness/k00-ledger.py ios/VoiceKernelDriver \
+&& echo "instrument identical to 08483cfe4" \
+&& DEV=A0736AC8-793B-516F-AC72-C076DB6CEE38 \
+&& PF="docs/programme/VOICE-2026/driver-ledger/VPIO-02-preflight-$(date -u +%Y%m%dT%H%M%SZ)" && mkdir -p "$PF" \
+&& xcrun devicectl device info apps --device "$DEV" --bundle-id life.soullab.voicekernel.vpio02 --json-output "$PF/apps.json" \
+&& echo "container E3B88028 lines: $(grep -c E3B88028-A10F-46B1-AB27-CF0A1F83FB78 "$PF/apps.json")" \
+&& xcrun devicectl device info processes --device "$DEV" --json-output "$PF/processes.json" >/dev/null \
+&& echo "harness processes: $(grep -ci VoiceKernelHarness "$PF/processes.json")"
+```
+
+Predeclared reading: `git rev-parse HEAD` = `08483cfe4f6c3e98198805337ced99bae92ce911` AND `instrument identical to 08483cfe4` AND `container E3B88028 lines: ≥1` AND `harness processes: 0` → proceed to the batch at once. Any other reading (a different HEAD · a dirty instrument · 0 container lines · a non-zero process count · a failed listing, which stops the chain before its echo) → **STOP, no batch; the preflight directory is the evidence, returned for ruling.** The preflight directory is committed beside the ledger.
+
+**Pinned batch invocation (same shell, immediately after a clean preflight; the authority string in full — the one apostrophe in "driver's" is spliced as `'"'"'` so the shell delivers the exact 1 534 bytes; this quoting was round-tripped through a shell parser here):**
+
+```bash
+K00_EXEC_AUTHORITY='FOUNDER-AUTH: VPIO-02 F-W1 only; execute exactly one N=30 AUTOMATED-COLD-LAUNCH entry-axis batch on the VPIO-02 artifact installed by FIRST-INSTALL-02, using the VPIO-02B witness instrument at 08483cfe4f6c3e98198805337ced99bae92ce911, subject vpio-02, bundle life.soullab.voicekernel.vpio02, Mode L, voice processing ON, hold 15 seconds, with no reinstall inside the batch. Sample 1 is the first physiological VPIO-02 observation; no separate pilot or calibration sample is authorized. Before sample 1 perform only the read-only custody preflight: verify the installed VPIO-02 bundle is still the FIRST-INSTALL-02 installation at bundle container E3B88028-A10F-46B1-AB27-CF0A1F83FB78 and verify no VoiceKernelHarness process is running. If custody is unreadable or different, or a harness process is already running, STOP before sampling and return; do not normalize the state with terminate-only, reinstall, overwrite, or another corrective device act. After sample 1 begins, the qualified driver'"'"'s normal per-sample cold and termination rules govern. Finish the declared 30 invocations unless the instrument itself aborts. No top-up, no automatic rerun, no source change, no reinstall, no threshold change, no route-change act, no interruption act, no media-services-reset act, no endurance act, no unified-log experiment, no mutation of the frozen .vpio01 artifact, and no historical K00/R1 mutation. Return the completed evidence for F-W1 reading and founder adjudication. No outcome from this batch authorizes any subsequent act.' \
+scripts/witness/k00-driver-batch.sh VPIO-02 30 \
+  --vp on \
+  --mode L \
+  --hold 15 \
+  --subject vpio-02
+```
+
+**Sequence (ruling):** 1 record this ruling + exact preflight/invocation (this section) → 2 gate/read → 3 commit + push record-only → 4 the one read-only preflight (Mac) → 5 if clean, exactly one N=30 batch (Mac) → 6 return complete evidence → 7 STOP for adjudication. Steps 4–7 are founder acts on the Mac; this session has no device.
+
+**Owed from the Mac:** the ledger directory `driver-ledger/VPIO-02-<stamp>/` complete (ledger · 30 sample logs · `journals/` · `daemons/` · `sample-timing.tsv`) plus the preflight directory, committed on a `feature/*` branch → cherry-picked here with `-x` → every journal hash / cold / 14-step (or lawful prefix + gen-1 refusal) / VP-ON / `ioRunning` re-verified in this session → F-W1 read against the pinned table → returned for founder adjudication. **No outcome authorizes the next act.**
+
+**Standing after this section:** VPIO-02 F-W1 / N=30 OPEN after this record pin, one batch, NOT YET EXECUTED · preflight + invocation PINNED · instrument unchanged at `08483cfe4` · organism unchanged at `ac12dedf4` · separate pilot NOT AUTHORIZED · reinstall NOT AUTHORIZED · route / interruption / reset / endurance / unified-log acts NOT AUTHORIZED · `.vpio01` FROZEN · historical K00/R1 UNTOUCHED · K00-11/12/13/15 NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED · KERNEL-01 / BENCH-01 / BRIDGE-01 / MIGRATE-01 CLOSED · JOP-04 UNTOUCHED.
