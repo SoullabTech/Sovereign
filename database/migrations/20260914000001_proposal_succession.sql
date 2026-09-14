@@ -75,6 +75,17 @@ CREATE TABLE IF NOT EXISTS proposal_chains (
   -- If "this existing chain later came under ruling R17" is ever needed, that
   -- relationship must earn its own lifecycle semantics as an event or object.
   -- ⛔ It is not smuggled in here as a mutable nullable column.
+  --
+  -- ⛔⛔ THE STANDING INTERPRETATION, for whatever reads this next:
+  --
+  --   This column identifies the governing decision LINEAGE. It does not, by
+  --   itself, prove which decision EVENT was current when the chain opened.
+  --
+  -- An editorial decision chain acquires successor events. So an adapter must
+  -- NOT resolve this to the chain's latest event and present that as "the
+  -- ruling that governed this proposal". If exact-event provenance is ever
+  -- needed, that is a contract-level decision — ⛔ never something inferred
+  -- from timestamps at the persistence boundary.
   decision_chain_id  uuid,
 
   opened_at    timestamptz NOT NULL DEFAULT now()

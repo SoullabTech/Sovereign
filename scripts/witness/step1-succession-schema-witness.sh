@@ -171,12 +171,17 @@ refuses "9d · a governing ruling cannot be cleared" \
   "UPDATE proposal_chains SET decision_chain_id=NULL WHERE id='$C';" "append-only"
 refuses "9e · a chain cannot be deleted" \
   "DELETE FROM proposal_chains WHERE id='$C';" "append-only"
-# ⛔ And the refusals left the row as it was — a trigger that raised after
-# writing would pass every test above.
+# ⛔ And the refusal LEFT NOTHING BEHIND — a trigger that raised after writing
+# would pass every test above.
+#
+# ⚠️ LABEL CORRECTED, founder review: this reads back `member_id` ALONE, so it
+# must not claim the whole row. The other columns are each established by the
+# five refusals above, and a failed statement in PostgreSQL is atomic — so the
+# honest claim is the narrow one this query actually makes.
 STILL=$(q "SELECT member_id::text FROM proposal_chains WHERE id='$C';")
 [ "$STILL" = "$M" ] \
-  && ok "9f · after five refused mutations the chain is byte-for-byte its original member" \
-  || bad "9f · chain unchanged after refusals" "member_id is now '$STILL'"
+  && ok "9f · after the refused mutations the chain still belongs to its original member" \
+  || bad "9f · chain still belongs to its original member" "member_id is now '$STILL'"
 
 # 10 · A RULING CANNOT BECOME WORDING OR AUTHORITY.
 #

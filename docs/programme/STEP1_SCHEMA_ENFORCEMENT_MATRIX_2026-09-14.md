@@ -160,9 +160,23 @@ witness      scripts/witness/step1-succession-schema-witness.sh
 falsifiers   scripts/witness/step1-succession-schema-mutations.sh
              9 killed · 0 survived
 
-pure         __tests__/proposalSuccession.test.ts
+pure         lib/manuscript/proposalChain/__tests__/succession.test.ts
              31 passed · 0 failed
 ```
+
+⚠️ **The path above was wrong in the first draft of this record** (it named a
+`__tests__/proposalSuccession.test.ts` that does not exist). Corrected so the
+next session can reproduce the evidence rather than hunt for it.
+
+### Independently reproduced on PostgreSQL 14.19
+
+⭐ Founder re-ran the whole database lane on the Mac Studio against **PG 14.19**,
+not the PG 16 of the run of record: **23 passed · 0 failed** and **9 killed ·
+0 survived**. The cycle mutation, the chain-immutability mutation, the rationale
+mutation, the branch/root protections and the absence assertions all behaved as
+claimed. ⛔ **So none of this rests on a PG16-only behaviour** — which matters,
+because the partial unique indexes were chosen over `UNIQUE NULLS NOT DISTINCT`
+precisely to avoid a version floor.
 
 ⭐ **`M8 · chain immutability reverts to locus-only` — the merge blocker itself,
 run as a mutation — is killed by `9b`, `9c`, `9d`, `9e` and `9f`, and by none of
@@ -176,16 +190,56 @@ kill. Three no-op mutations were written in this programme before anyone
 noticed; a mutation that changes no behaviour is a green light with nothing
 behind it.
 
+⚠️ **`9f`'s label was corrected** — it reads back `member_id` alone, so it now
+claims exactly that, not the whole row. The other columns are each established
+by the five refusals above it, and a failed statement in PostgreSQL is atomic.
+
+---
+
+## ⛔ Addendum 2 — the standing interpretation of `decision_chain_id`
+
+**Founder, 2026-09-14, carried forward as an integration constraint.** The
+column references the governing decision **lineage**, not an exact
+`editorial_decision_events.event_index`. That is faithful to the ratified
+contract and ⛔ **this schema lane is not reopened for it.**
+
+⛔ **But integration must not silently do this:**
+
+```
+stored decision_chain_id
+        ↓
+look up latest decision event
+        ↓
+present latest event as
+"the ruling that governed this proposal"
+```
+
+An editorial decision chain can itself acquire successor events. So the standing
+interpretation is:
+
+> **`decision_chain_id` identifies the governing decision lineage. It does not,
+> by itself, prove which decision event was current when the proposal chain
+> opened.**
+
+⛔ If exact-event provenance later proves necessary, that is a **contract-level
+decision**, not something an adapter infers from timestamps.
+
 ---
 
 ## Standing
 
 ```
-matrix          COMPLETE (+ addendum 1)
+matrix          COMPLETE (+ addenda 1, 2)
 migration       AUTHORED — database/migrations/20260914000001_proposal_succession.sql
 witness         RUN — 23 passed · 0 failed, disposable cluster
 falsifiers      RUN — 9 killed · 0 survived
-merge           ⛔ HELD — founder act
+PG 14.19        REPRODUCED — 23 passed · 0 failed · 9 killed · 0 survived
+lane            ⭐ CLOSED AS PASS — founder ruling, 2026-09-14
+merge           AUTHORIZED into `claude/s3-implementation` ONLY
+                ⛔ NOT the canonical production branch — the 2026-09-07
+                branch-gate law stands: making this migration deployable by
+                canonicalization is a SEPARATE production-schema authorization
+                act, and ordinary programme integration must never become it
 integration     OUT OF SCOPE — no route, UI, generation path or manuscript write
 production      UNTOUCHED — ⛔ this migration has NOT been applied anywhere real
 ```
