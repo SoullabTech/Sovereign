@@ -232,3 +232,19 @@ shasum -a 256 *.xctestrun Debug-iphoneos/DriverUITests-Runner.app/PlugIns/Driver
 Expected: `1` · `0` · five hashes. Record `KERNEL-00_VPIO-02_K00-05-06_DRIVER-COMPILE-01_2026-09-14.md` (transcript + log + hashes) on a `feature/*` branch → cherry-picked here. Only `DriverUITests` is expected to differ from the VPIO-02B products (`6d669e39…`); the xctestrun, XCTRunner and DriverHost hashes may match `7105c95e…` / `6fa0f967…` / `57793876…` — a match is consistency evidence, never identity.
 
 **Standing after §9.2:** instrument `8b111709b` COMPILED (driver-only) · custody record OWED · organism `ac12dedf4` FROZEN · installed `.vpio02` UNTOUCHED · **K00-05/06 device witness NOT AUTHORIZED** (a separate founder ruling would name: the installed artifact, the exact batch invocation `k00-driver-batch.sh K00-0506 10 --act output --cancel-at 1000 --settle 2 --vp on --mode L --subject vpio-02`, the read-only preflight, N = 10, the authority string) · route/interruption/reset/endurance NOT AUTHORIZED · KERNEL-00 NOT ACCEPTED. **STOP.**
+
+### 9.3 DRIVER-COMPILE-01 (K00-05/06 instrument) CUSTODY PINNED from the founder transcript (2026-09-14) — CLOSED · STOP
+
+Readings (founder, Mac, `…-derived-run2/Build/Products`): `TEST BUILD SUCCEEDED` count **1** · `devicectl|test-without-building|install app` count **0** · hashes:
+
+| product | SHA-256 | vs VPIO-02B (`08483cfe4`) |
+|---|---|---|
+| `DriverUITests_iphoneos26.2-arm64.xctestrun` | `7105c95ed047091bfc823c5d704f5dd8cc98257c9fde43927c69d83789657739` | identical (`7105c95e…`) |
+| `DriverUITests.xctest/DriverUITests` | `ab573914a8bfa5c0d29e8965c68138df10aa0407ac7e6c838af4ca954566d90e` | **moved** (was `6d669e39…`) — the one bundle carrying `testOutputSample` |
+| `DriverUITests-Runner.app/DriverUITests-Runner` | `6fa0f96700913280d0bb3ddd3b400d69bc2ea66592d97c4760a753d2dd701f41` | identical (`6fa0f967…`) |
+| `DriverHost.app/DriverHost` | `5779387686f49134baeee76cfc77f9d2bebd53e56cb59279b163b8dc640d479b` | identical (`57793876…`) |
+| `k0506-build-for-testing-8b111709b.log` | `680fe1e9248803df065c96e03bf0580fd32c5d46fb266b0afffa225da2fe579f` | — |
+
+Exactly the predicted shape: the instrument delta reaches one product. Matches are consistency evidence, never identity. The log file itself (hash pinned above) is still owed to the repository on a `feature/*` branch when convenient; its absence blocks nothing, because the transcript readings are recorded here and the log's hash is fixed.
+
+**DRIVER-COMPILE-01 (K00-05/06) CLOSED.** The ruling's sequence (record → implement → self-test → gate → instrument SHA → driver-only compile → compile custody → STOP) is complete. **STOP.** Nothing downstream is opened: K00-05/06 device witness NOT AUTHORIZED · `.vpio02` untouched · organism frozen · KERNEL-00 NOT ACCEPTED.
