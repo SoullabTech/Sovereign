@@ -30,7 +30,7 @@ cell is awarded on what was aimed at, never on what was seen.
 | | first asked return | second asked return | passive scroll |
 |---|---|---|---|
 | **Section view** | — | — | — |
-| **Whole view** | ⛔ **SECTION-ADDRESSED** | — | — |
+| **Whole view** | ⛔ **SECTION-ADDRESSED** | ⛔ **SECTION-ADDRESSED** | — |
 
 ### Whole / first — ⛔ FAIL against the predeclared criterion
 
@@ -51,13 +51,40 @@ too weak: had the window been a little taller, the same defect would have presen
 pass. *An acceptance criterion that a wider monitor can satisfy is not an acceptance
 criterion.*
 
+### Whole / second — ⛔ FAIL
+
+```
+SHOW CHANGE returned to the §23 region / section start.
+[, fixated] sat near the BOTTOM of the manuscript pane, not centred.
+Visible only because the viewport is tall enough.
+```
+
+⭐ **THE DEFECT IS REPEATABLE, NOT A ONE-TIME ARRIVAL EFFECT.** One fail is an event; two
+fails on the same gesture make it a property of the path.
+
+⚠️ **But two cells do NOT yet discriminate the CAUSE, and must not be read as though they
+did.** Both candidate explanations predict exactly this pair:
+
+```
+(a) Whole view has no locus reveal wired at all
+(b) a locus reveal exists but is spent by the one-shot arrival guard
+```
+
+⛔ Nothing observed so far separates them. The census reading — `revealToken` threaded to
+`renderProposalWork` and not to `renderProposalEvidence`, favouring (a) — remains **the
+explanation to verify after the walk, never the evidence.**
+
 ## Still owed
 
 ```
-Whole  / second    scroll several screens away · press again · same behaviour?
 Whole  / passive   scroll normally · leave alone · must stay put
 Section / first · second · passive
 ```
+
+⭐ **`Whole / passive` is the negative control and matters more now, not less.** Two fails
+on the asked-for return say the writer cannot get back. If the passive cell also fails, the
+system both refuses to return on request AND returns uninvited — the two halves of the law
+broken in opposite directions.
 
 ⛔ **No repair.** The causal candidate — `revealToken` not threaded to
 `renderProposalEvidence` — remains **the explanation to verify afterward, not the
