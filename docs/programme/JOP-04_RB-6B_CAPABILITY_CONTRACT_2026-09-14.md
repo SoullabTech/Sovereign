@@ -8,7 +8,59 @@
 
 ---
 
-## 0 · ⭐⭐ Two findings that change the "accepted language" column
+## 0a · ⭐ RATIFIED REFINEMENTS (founder, 2026-09-14)
+
+**The `PATTERN` role SPLITS. There is no single pattern language.**
+
+```text
+GREP_PATTERN   consumed by git grep          repo.grep.pattern · repo.locate_symbol.symbol
+JS_REGEX       consumed by new RegExp(·)     verify.count_matches.pattern
+```
+
+⛔ Calling both `PATTERN` would hide a real semantic difference. **The role taxonomy is now TEN:**
+`PATH · PATHSPEC · REF · GREP_PATTERN · JS_REGEX · SYMBOL · ENUM · COUNT/LIMIT · BOOLEAN · FREE TEXT`.
+
+**`SYMBOL` is currently misnamed.** Its present runtime semantics are `GREP_PATTERN_FRAGMENT` —
+the value can alter the surrounding pattern. ⛔ **Do not silently fix that by escaping it until D6
+says a literal identifier is the intended act.**
+
+**F-B's ambientness must eventually be ELIMINATED**, not merely declared: the contract should
+explicitly choose the grep language. ⛔ Which one is **D5**; that it must be chosen is ratified.
+
+> ⭐ **`same registry request + different environment = potentially different meaning` violates the
+> whole goal of canonical execution.**
+
+### ⭐ Decision order — FROZEN
+
+```text
+D4  omission / authorship semantics     ← FIRST · establishes the model the rest live inside
+D1  pathspec language
+D5  grep pattern language
+D6  symbol language
+D2  git.log.format
+D3  max_results
+```
+
+### ⚠️ Evidence-class correction on F-B — two halves, only one proven
+
+```text
+PROVEN (source)      no -E / -F / -P flag is pinned, so the language is NOT fixed by the registry
+⛔ UNOBSERVED        what grep.patternType EFFECTIVELY resolves to in the bound environment
+```
+
+⛔ **A single successful `git grep` would not establish the accepted language** — it would show one
+outcome under one unread configuration. Establishing the second half needs the effective config read
+directly, with its origin:
+
+```bash
+git -C <bound-root> config --show-origin --get grep.patternType
+```
+
+⭐ **The latent defect stands either way.** Even if the value is unset everywhere today — making
+current behaviour BRE — **the ambientness is the finding**, and it is proven from source. The runtime
+read would establish only *what the language happens to be right now*.
+
+## 0b · ⭐⭐ Two findings that change the "accepted language" column
 
 ### F-A · The PATTERN role covers **two different regex languages**
 
@@ -163,16 +215,22 @@ type. ⛔ **A sanitizer must not decide this accidentally.**
 behaves as though the field does not exist reads as **unfinished**, not vestigial. ⛔ **A lean is not
 authority to choose.**
 
-### D4 · ⭐⭐ Omission semantics — **a constitutional question, not a technical one**
+### D4 · ⭐⭐ Omission semantics — **FIRST. A constitutional question, not a technical one**
 
 For all eight hidden defaults:
 
 ```text
-READING 1   {} means "the requester asked for HEAD"
-            → canonical form materializes the default · {} ≡ {ref:'HEAD'}
+MODEL A — REQUESTER DEFAULT
+  requester says {} · the contract defines omission ≡ HEAD
+  → canonicalization may legitimately produce { ref: 'HEAD' },
+    because HEAD is part of the meaning of the request itself
 
-READING 2   {} means "the requester did not specify; the HOST chose"
-            → these are DIFFERENT acts, with different authorship
+MODEL B — HOST DEFAULT
+  requester says {} · the HOST chooses HEAD
+  → canonicalization MUST preserve the split:
+        caller terms:  {}
+        host terms:    { ref: 'HEAD' }
+    otherwise a host decision is rewritten as though the caller supplied it
 ```
 
 ⭐ **Under RB-6B's own law — *the caller may request; the host decides* — a default supplied by the
@@ -208,9 +266,15 @@ NEW FINDINGS
   F-B   grep language is AMBIENT (grep.patternType) — a milder check.run species
   F-C   SYMBOL is de facto a grep pattern fragment, interpolated unescaped
 
-OPEN DECISIONS              D1 magic pathspec · D2 format · D3 max_results
-                            D4 ⭐ omission semantics (constitutional)
-                            D5 pattern language · D6 symbol language
+RATIFIED                    PATTERN splits → GREP_PATTERN + JS_REGEX (taxonomy now 10)
+                            SYMBOL currently = GREP_PATTERN_FRAGMENT
+                            F-B ambientness must be ELIMINATED, not just declared
+
+DECISION ORDER (frozen)     D4 → D1 → D5 → D6 → D2 → D3
+                            ⭐ D4 establishes the model the rest live inside
+
+F-B EVIDENCE                absence of pinning PROVEN from source
+                            effective grep.patternType ⛔ UNOBSERVED
 
 NOTHING REPAIRED · NO HANDLER TOUCHED · RB-6B IMPLEMENTATION BLOCKED
 ```
