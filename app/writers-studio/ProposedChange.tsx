@@ -86,7 +86,7 @@ const WHY: Record<string, string> = {
 };
 
 export default function ProposedChange(
-  { preview, onAccepted, onDismiss, onShowChange }: {
+  { preview, onAccepted, onDismiss, onShowChange, showChangeNotice }: {
     preview: ProposalPreview;
     onAccepted?: (version: number) => void;
     /**
@@ -107,6 +107,8 @@ export default function ProposedChange(
      * when THEY ask.
      */
     onShowChange?: () => void;
+    /** C10 · result of this proposal panel's own orientation request. */
+    showChangeNotice?: string | null;
   },
 ) {
   const [state, setState] = useState<'idle' | 'accepting' | 'accepted' | 'refused'>('idle');
@@ -173,6 +175,11 @@ export default function ProposedChange(
       <button type="button" onClick={() => onShowChange?.()} style={{ ...quiet, marginTop: 14 }}>
         Show change
       </button>
+      {showChangeNotice && (
+        <p role="status" data-show-change-notice style={{ ...line, marginTop: 10, opacity: 0.8 }}>
+          {showChangeNotice}
+        </p>
+      )}
 
       <p style={{ ...line, marginTop: 18 }}>
         {/* ⭐⭐ FOUNDER-CAUGHT IN THE FIRST INSPECTION-ONLY WITNESS. This read

@@ -65,6 +65,18 @@ const NOTE_MS = 2400;
  */
 const ESTIMATED_SECTION_HEIGHT = 320;
 
+/** C10 · one voluntary request to return to an exact proposal locus in Whole. */
+export interface WholeProposalReturnRequest {
+  requestId: number;
+  sectionId: string;
+  locusKey: string;
+}
+
+export interface WholeProposalReturnResult {
+  requestId: number;
+  status: 'fulfilled' | 'refused';
+}
+
 export interface WholeManuscriptSurfaceProps {
   writing: SectionWriting;
   /**
@@ -89,6 +101,9 @@ export interface WholeManuscriptSurfaceProps {
    * the defect this separation repairs.
    */
   jumpTo?: string | null;
+  /** C10 · exact-locus return, deliberately distinct from ordinary `jumpTo`. */
+  proposalReturn?: WholeProposalReturnRequest | null;
+  onProposalReturnResult?: (result: WholeProposalReturnResult) => void;
   /** Cleared once the jump has been honoured, so the same request cannot repeat. */
   onJumpHandled?: () => void;
   /**
@@ -125,7 +140,10 @@ export interface WholeManuscriptSurfaceProps {
    * true about a section a proposal owns and offers a door; it is not a second
    * editing authority.
    */
-  renderProposalEvidence?: (sectionId: string) => React.ReactNode;
+  renderProposalEvidence?: (
+    sectionId: string,
+    registerLocus: (locusKey: string, node: HTMLSpanElement | null) => void,
+  ) => React.ReactNode;
 }
 
 /** What the parent may ask of a mounted surface. */
@@ -147,8 +165,8 @@ export interface WholeManuscriptSurfaceHandle {
 export const WholeManuscriptSurface = forwardRef<
   WholeManuscriptSurfaceHandle, WholeManuscriptSurfaceProps
 >(function WholeManuscriptSurface({
-  writing, initialOpenAt, jumpTo, onJumpHandled, onPlaceChange, renderSectionOverlay,
-  renderProposalEvidence,
+  writing, initialOpenAt, jumpTo, proposalReturn, onProposalReturnResult,
+  onJumpHandled, onPlaceChange, renderSectionOverlay, renderProposalEvidence,
 }, handleRef) {
   const sections = writing.sections;
   const indexOfId = useMemo(() => {
@@ -189,6 +207,14 @@ export const WholeManuscriptSurface = forwardRef<
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
+
+  /* C10 · renderer-owned exact loci, registered only while mounted. */
+  const proposalLoci = useRef(new Map<string, HTMLSpanElement>());
+  const registerProposalLocus = useCallback((locusKey: string, node: HTMLSpanElement | null) => {
+    if (node) proposalLoci.current.set(locusKey, node);
+    else proposalLoci.current.delete(locusKey);
+  }, []);
+  const handledProposalReturn = useRef<number | null>(null);
 
   const windowInput: WindowInput = useMemo(() => ({
     total: sections.length,
@@ -292,6 +318,40 @@ export const WholeManuscriptSurface = forwardRef<
        window change would re-jump while the writer scrolls away. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jumpTo, indexOfId]);
+
+  /**
+   * C10 · exact-locus voluntary return.
+   * The request survives only the mount transition needed to create its locus.
+   * It either fulfills in layout or explicitly refuses; the section shell can
+   * make the target mountable but can never discharge this request.
+   */
+  useLayoutEffect(() => {
+    if (!proposalReturn) return;
+    if (handledProposalReturn.current === proposalReturn.requestId) return;
+
+    const i = indexOfId.get(proposalReturn.sectionId);
+    if (i === undefined) {
+      handledProposalReturn.current = proposalReturn.requestId;
+      onProposalReturnResult?.({ requestId: proposalReturn.requestId, status: 'refused' });
+      return;
+    }
+
+    const locus = proposalLoci.current.get(proposalReturn.locusKey);
+    if (locus) {
+      revealWithin(locus, 'center', 'smooth');
+      handledProposalReturn.current = proposalReturn.requestId;
+      onProposalReturnResult?.({ requestId: proposalReturn.requestId, status: 'fulfilled' });
+      return;
+    }
+
+    if (!mounted.has(i)) {
+      commitWindow({ first: i, last: i });
+      return;
+    }
+
+    handledProposalReturn.current = proposalReturn.requestId;
+    onProposalReturnResult?.({ requestId: proposalReturn.requestId, status: 'refused' });
+  }, [proposalReturn, mounted, indexOfId, commitWindow, onProposalReturnResult]);
 
   /* useLayoutEffect: the destination has just mounted, and scrolling after a
      paint would show the writer the wrong part of their book first. */
@@ -408,7 +468,7 @@ export const WholeManuscriptSurface = forwardRef<
                 wherever the section appears. */}
             {!isMounted ? null
              : section.authority === 'proposal_work'
-             ? (renderProposalEvidence?.(section.id) ?? null)
+             ? (renderProposalEvidence?.(section.id, registerProposalLocus) ?? null)
              : ownsManuscriptWrite(section.authority) ? (
               /* The editor and its mark share one origin. `position: relative`
                  only when a room actually draws — an unused seam changes
