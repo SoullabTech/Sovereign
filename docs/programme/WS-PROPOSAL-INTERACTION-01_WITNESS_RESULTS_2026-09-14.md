@@ -162,3 +162,32 @@ not move which edge is being held.
 
 ⛔ **"Is the change visible?" is retired as a test.** It decided the first cell wrongly and
 would have passed the same defect on a taller monitor.
+
+---
+
+## ⭐ HOW A SECTION CELL IS READ — judge the RESTING POSITION
+
+⛔ The edge-pinning discriminator above reads a target of `'start'`. Section's target is
+`'center'`, and it is **animated**, so the test is different in kind: **not which edge is
+pinned, but where the motion comes to rest.**
+
+Procedure — all three Section cells:
+
+```
+1. press SHOW CHANGE
+2. hands OFF the mouse / trackpad
+3. wait until all motion has visibly stopped  (~1s is enough)
+4. only then judge
+```
+
+```
+LOCUS-ADDRESSED — PASS    [, fixated] settles around the CENTRE of the manuscript pane
+NOT LOCUS-ADDRESSED — FAIL  the animation settles anywhere else
+```
+
+⛔ **No frame before the motion stops is evidence of anything.** An animated reveal passes
+through every intermediate position on its way to the target; judging one of them measures
+the observer's timing, not the product's behaviour.
+
+⚠️ Applies to Section only. Whole is instant, has no intermediate frames, and its three
+recorded cells are unaffected.
