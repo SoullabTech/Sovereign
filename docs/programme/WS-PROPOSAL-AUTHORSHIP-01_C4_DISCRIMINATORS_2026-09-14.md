@@ -480,23 +480,85 @@ It is the one question with no external check on it, which is exactly why its th
 
 ---
 
+## 3e · ✅ E2 ANSWERED — P1 CLOSES · O1 MAY BE SPENT
+
+### The recollection, recorded verbatim
+
+```text
+FOUNDER, 2026-09-14, asked whether he personally performed the scroll-away and the press
+for the historical Whole / first observation:
+
+    "I did scroll well away, many times"
+```
+
+```text
+EVIDENCE CLASS   ⭐ FOUNDER RECOLLECTION — permanently.
+                 ⛔ NOT a contemporaneous act record.
+                 ⛔ NOT transcript evidence.
+                 ⛔ NOT documented historical procedure.
+ATTACHED TO      the recovered CONTEMPORANEOUS PROTOCOL (§3c):
+                 "scroll well away → SHOW CHANGE → observe where it lands"
+```
+
+### Why it qualifies
+
+```text
+✅ It is ACT-MEMORY, not REPORT-MEMORY — it remembers PERFORMING the gesture,
+   not merely that the result was SECTION-ADDRESSED — FAIL.
+   That is the disqualifier the E2 branch was built around, and it is cleared.
+```
+
+### ⚠️ The residual — recorded, not smoothed
+
+```text
+The recollection is HABITUAL / REPEATED  ("many times")
+⛔ not INSTANCE-SPECIFIC to the single sealed Whole / first cell.
+```
+
+⭐ So what P1 establishes is: **the founder's practice during that walk was to scroll well away,
+and he remembers doing it.** ⛔ It does not establish an independent memory of that one press in
+isolation — and no source now can.
+
+⚠️ **Jarvis names this rather than banking it.** Under the founder's own YES/NO/UNSURE rule the
+answer is YES and P1 closes; ⛔ if the founder prefers the stricter reading — *instance-specific
+recollection only* — E2 reverts to closed and P2 becomes the path. That ruling is his, and taking
+it later costs nothing that taking it now would save.
+
+### P1 disposition
+
+```text
+P1 · CLOSED SUFFICIENTLY TO PERMIT O1
+
+  away-condition          MANUAL SCROLL WELL AWAY from the proposal locus
+  protocol provenance     CONTEMPORANEOUS (originating session, §3c)
+  performance provenance  FOUNDER RECOLLECTION, habitual (§3e)
+  ⛔ the sealed Whole / first FAIL remains HISTORICALLY SEALED — recovery added
+     provenance; it did not rewrite it
+```
+
+⭐ O1 Phase A step 5 is therefore concrete: reproduce **a manual scroll well away from the
+proposal locus** — the same gesture class, now named by evidence rather than borrowed from a
+neighbouring cell.
+
+---
+
 ## 4 · Standing
 
 ```text
 LANE   OPEN · FR-W5 authorized
 C4     ⛔ UNRESOLVED
-O1     ✅ RATIFIED AS AMENDED · FROZEN
-       ⛔ SPEND NOT PERMITTED — sealed away-condition unrecoverable (§3a)
+O1     ✅ RATIFIED AS AMENDED · FROZEN · ⭐ SPEND NOW PERMITTED (P1 closed §3e)
        ⛔ Jarvis's original draft NOT frozen verbatim
 O2     ⛔ unconstructible on present corpus
 O3     ⛔ frozen · unspent · unconstructible
 EDIT   ⛔ none
-P1     ⚠️ REDUCED TO E2 — protocol recovered; performance unproved; E1 ⛔ EXHAUSTED (§3d)
-       ⚠️ E2's own availability UNESTABLISHED — did the founder personally perform it?
-       ⛔ if not (or unsure), P1 is formally exhausted and P2 is the only lawful path
-P2     available ONLY as an explicit change of evidential object
-NEXT   ⛔ BLOCKED until P1 succeeds or is FORMALLY EXHAUSTED
-RUNTIME ⛔ UNTOUCHED — no reason to touch it until then
+P1     ✅ CLOSED (§3e) — protocol CONTEMPORANEOUS · performance FOUNDER RECOLLECTION
+       ⚠️ recollection is HABITUAL, not instance-specific — residual recorded, not smoothed
+       away-condition = MANUAL SCROLL WELL AWAY from the proposal locus
+P2     ⛔ not needed — available only if the founder takes the stricter reading of §3e
+NEXT   ⭐ SPEND O1 ONCE — Phase A arrival custody · away-condition = manual scroll well away
+       · Phase B one press · three readings · then STOP
+RUNTIME ⭐ may be touched ONLY for the frozen O1 procedure
 Gate B CLOSED        Gate C CLOSED (blocked by F6′)
 ```
 
