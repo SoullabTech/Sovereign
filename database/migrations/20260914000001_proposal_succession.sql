@@ -19,9 +19,9 @@
 --
 -- ROLLBACK:
 --   DROP TRIGGER IF EXISTS proposal_versions_immutable ON proposal_versions;
---   DROP TRIGGER IF EXISTS proposal_chains_locus_immutable ON proposal_chains;
+--   DROP TRIGGER IF EXISTS proposal_chains_immutable ON proposal_chains;
 --   DROP FUNCTION IF EXISTS refuse_proposal_version_mutation();
---   DROP FUNCTION IF EXISTS refuse_proposal_chain_locus_mutation();
+--   DROP FUNCTION IF EXISTS refuse_proposal_chain_mutation();
 --   DROP TABLE IF EXISTS proposal_versions;
 --   DROP TABLE IF EXISTS proposal_chains;
 
@@ -56,14 +56,25 @@ CREATE TABLE IF NOT EXISTS proposal_chains (
   -- replace the text cannot change what text may be replaced.
   expected_text      text NOT NULL CHECK (length(expected_text) > 0),
 
-  -- ⭐ A REFERENCE TO A GOVERNING RULING, and nothing more.
+  -- ⭐ A REFERENCE TO A GOVERNING RULING, and nothing more. Present at chain
+  -- creation when one is known. ⛔ IMMUTABLE thereafter, like every other
+  -- column here.
   --
-  -- ⛔ DELIBERATELY NOT A FOREIGN KEY, and this is the #10 acceptance fact.
-  -- One ruling may govern several chains; it is not executable authority and
-  -- it is not wording. An FK would create a lifecycle path between a ruling and
-  -- authored formulations — exactly the coupling that would let altering or
-  -- deleting a ruling reach into wording history. There is no path from here
-  -- into `proposal_versions` at all.
+  -- ⚠️ CORRECTED AFTER REVIEW. An earlier draft claimed "no FK" WAS acceptance
+  -- fact 10 and added a lifecycle rule — that a ruling may come to govern a
+  -- chain later, and may be set or cleared. ⛔ That rule is in neither the
+  -- contract nor the census, which say the chain does not evolve. The table had
+  -- invented ontology, which is the one thing this lane was told not to do.
+  --
+  -- ⭐ THE ESSENTIAL FACT IS "NO CASCADE OR OWNERSHIP PATH", not "no FK". A
+  -- RESTRICT / NO ACTION foreign key does not let a ruling's deletion mutate
+  -- wording; it prevents the referenced row from disappearing. A bare uuid is
+  -- chosen here only because the decision substrate has no single-row chain
+  -- identity to reference — ⛔ not because foreign keys are dangerous.
+  --
+  -- If "this existing chain later came under ruling R17" is ever needed, that
+  -- relationship must earn its own lifecycle semantics as an event or object.
+  -- ⛔ It is not smuggled in here as a mutable nullable column.
   decision_chain_id  uuid,
 
   opened_at    timestamptz NOT NULL DEFAULT now()
@@ -80,7 +91,11 @@ CREATE INDEX IF NOT EXISTS proposal_chains_target_idx
 
 CREATE TABLE IF NOT EXISTS proposal_versions (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  chain_id    uuid NOT NULL REFERENCES proposal_chains(id) ON DELETE CASCADE,
+
+  -- ⛔ RESTRICT, not CASCADE. The chain is immutable and undeletable (trigger
+  -- below), so no delete should ever reach here — but if that trigger is one
+  -- day dropped, RESTRICT still refuses to take authored formulations with it.
+  chain_id    uuid NOT NULL REFERENCES proposal_chains(id) ON DELETE RESTRICT,
 
   -- ⭐ WHO WROTE THIS FORMULATION — explicit, never inferred from position.
   -- ⛔ No 'system', no 'unknown'. A version nobody authored is not a version,
@@ -96,7 +111,10 @@ CREATE TABLE IF NOT EXISTS proposal_versions (
   -- ⛔ NEVER a home for the writer's DIRECTION between versions — that would
   -- attribute the member's instruction to MAIA's reasoning. DIRECTION-HOME
   -- remains OPEN; see the contract.
-  rationale   text,
+  -- ⛔ TWO STATES, NOT THREE. The ontology says a rationale is ABSENT or
+  -- AUTHORED; without this check persistence would also admit '', a third
+  -- durable state the contract has no word for.
+  rationale   text CHECK (rationale IS NULL OR length(btrim(rationale)) > 0),
 
   -- ⭐⭐ SUCCESSION IS CARRIED BY THE SUCCESSOR. NULL only for the root.
   -- ⛔ There is no `superseded_by` column and there must never be one: it is
@@ -105,7 +123,14 @@ CREATE TABLE IF NOT EXISTS proposal_versions (
   -- with the first.
   supersedes  uuid,
 
-  created_at  timestamptz NOT NULL DEFAULT now(),
+  -- ⭐ THE CONTRACT'S `authoredAt`, carrying its name rather than being mapped
+  -- to one. `DEFAULT now()` is correct because a version is persisted AT the
+  -- authoring act: there is no draft-then-save step for a formulation, so
+  -- persistence time and authorship time coincide by construction.
+  -- ⛔ This is provenance, NEVER ordering authority — `supersedes` owns order,
+  -- and the pure tests prove a chain whose timestamps disagree with its
+  -- succession is still ordered by its succession.
+  authored_at timestamptz NOT NULL DEFAULT now(),
 
   -- #3 · A PREDECESSOR FROM ANOTHER CHAIN IS UNREPRESENTABLE, not merely
   -- refused: the composite FK below requires the predecessor to share this
@@ -141,7 +166,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS proposal_versions_one_root
   WHERE supersedes IS NULL;
 
 CREATE INDEX IF NOT EXISTS proposal_versions_chain_idx
-  ON proposal_versions (chain_id, created_at);
+  ON proposal_versions (chain_id, authored_at);
 
 -- ══════════════════════════════════════════════════════════════════════════
 -- #7 · AN AUTHORED VERSION IS FINISHED.
@@ -169,29 +194,41 @@ CREATE TRIGGER proposal_versions_immutable
   FOR EACH ROW EXECUTE FUNCTION refuse_proposal_version_mutation();
 
 -- ══════════════════════════════════════════════════════════════════════════
--- #9 · A CHAIN CANNOT SILENTLY ACQUIRE A SECOND LOCUS.
+-- #9 · THE CHAIN IS IMMUTABLE ONCE CREATED — THE WHOLE ROW.
 --
--- ⛔ Only the locus is frozen. `decision_chain_id` may still be set or cleared
--- — a ruling can come to govern a chain that began without one — because that
--- is a RELATIONSHIP, not the identity of the place.
+-- ⛔ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. An earlier version of this
+-- trigger froze only the five locus columns, which left two rewrites possible:
+--
+--   UPDATE proposal_chains SET member_id = <someone else>
+--   UPDATE proposal_chains SET decision_chain_id = <another ruling, or NULL>
+--
+-- ⭐⭐ THE FIRST IS SEVERE. `proposal_versions.author = 'member'` does not name
+-- an individual — the person is established by `proposal_chains.member_id`. So
+-- Kelly could author v2 and the chain could afterwards be rewritten to belong
+-- to someone else, and the durable record would read as though it always had.
+-- That is the exact provenance property Step 1 exists to establish, defeated
+-- one level above the versions the witness was busy proving.
+--
+-- ⚠️ And the witness did not catch it — it ASSERTED the second rewrite as a
+-- feature. The instrument pinned the defect.
+--
+-- The census says it plainly: "The chain does not evolve. Only the versions
+-- do." Following the append-only pattern of `editorial_decision_events`, the
+-- whole row is refused.
 -- ══════════════════════════════════════════════════════════════════════════
 
-CREATE OR REPLACE FUNCTION refuse_proposal_chain_locus_mutation()
+CREATE OR REPLACE FUNCTION refuse_proposal_chain_mutation()
 RETURNS trigger AS $$
 BEGIN
-  IF (NEW.work_id, NEW.draft_id, NEW.base_version, NEW.target_section_id, NEW.expected_text)
-     IS DISTINCT FROM
-     (OLD.work_id, OLD.draft_id, OLD.base_version, OLD.target_section_id, OLD.expected_text)
-  THEN
-    RAISE EXCEPTION
-      'proposal_chains.locus is immutable: a chain whose locus changed is a new proposal against a new state of the Work'
-      USING ERRCODE = 'check_violation';
-  END IF;
-  RETURN NEW;
+  RAISE EXCEPTION
+    'proposal_chains is append-only: the chain does not evolve, only its versions do (attempted %)',
+    TG_OP
+    USING ERRCODE = 'check_violation';
 END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS proposal_chains_locus_immutable ON proposal_chains;
-CREATE TRIGGER proposal_chains_locus_immutable
-  BEFORE UPDATE ON proposal_chains
-  FOR EACH ROW EXECUTE FUNCTION refuse_proposal_chain_locus_mutation();
+DROP TRIGGER IF EXISTS proposal_chains_immutable ON proposal_chains;
+CREATE TRIGGER proposal_chains_immutable
+  BEFORE UPDATE OR DELETE ON proposal_chains
+  FOR EACH ROW EXECUTE FUNCTION refuse_proposal_chain_mutation();

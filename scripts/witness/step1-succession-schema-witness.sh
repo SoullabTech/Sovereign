@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# STEP 1 · schema lane — the eleven acceptance facts, against a real database.
+# STEP 1 · schema lane — the acceptance facts, against a real database.
 #
 # ⛔ DISPOSABLE CLUSTER ONLY. It refuses any database whose name does not
 # contain `witness`, for the same reason the EW-F2 staging script does: a
@@ -27,8 +27,19 @@ refuses() { # $1 label  $2 sql  $3 expected fragment
 }
 
 M=11111111-1111-1111-1111-111111111111
+# ⭐ A SECOND MEMBER, so "rewritten to belong to someone else" is a rewrite the
+# database would otherwise ACCEPT. ⛔ Without it the refusal in 9b would be
+# indistinguishable from a foreign-key failure, and the test would prove
+# nothing about the trigger.
+M2=55555555-5555-5555-5555-555555555555
 run "TRUNCATE proposal_versions, proposal_chains RESTART IDENTITY CASCADE;" >/dev/null 2>&1 || true
 run "DELETE FROM proposal_versions; DELETE FROM proposal_chains;" >/dev/null
+run "INSERT INTO members (id) VALUES ('$M2') ON CONFLICT DO NOTHING;" >/dev/null 2>&1 || true
+if [ "$(q "SELECT count(*) FROM members WHERE id='$M2';")" != "1" ]; then
+  echo "REFUSED · fixture precondition: a second member could not be created,"
+  echo "          so 9b could not discriminate a trigger refusal from an FK failure."
+  exit 2
+fi
 
 echo "── STEP 1 · schema acceptance ───────────────────────────────"
 
@@ -42,7 +53,7 @@ V1=$(run "INSERT INTO proposal_versions (chain_id, author, formulation) VALUES (
 V2=$(run "INSERT INTO proposal_versions (chain_id, author, formulation, supersedes) VALUES ('$C','member','f2','$V1') RETURNING id;")
 V3=$(run "INSERT INTO proposal_versions (chain_id, author, formulation, supersedes) VALUES ('$C','maia','f3','$V2') RETURNING id;")
 V4=$(run "INSERT INTO proposal_versions (chain_id, author, formulation, supersedes) VALUES ('$C','member','f4','$V3') RETURNING id;")
-GOT=$(q "SELECT string_agg(author || ':' || formulation, ' ' ORDER BY created_at, id) FROM proposal_versions WHERE chain_id='$C';")
+GOT=$(q "SELECT string_agg(author || ':' || formulation, ' ' ORDER BY authored_at, id) FROM proposal_versions WHERE chain_id='$C';")
 [ "$(q "SELECT count(*) FROM proposal_versions WHERE chain_id='$C';")" = "4" ] \
   && ok "1 · four formulations persist, none lost  [$GOT]" \
   || bad "1 · four formulations persist" "$GOT"
@@ -136,23 +147,55 @@ if [ "$HEAD" = "f4" ]; then
   esac
 else bad "8 · head derived" "got '$HEAD'"; fi
 
-# 9 · second locus
-refuses "9 · a chain cannot acquire a second locus" \
-  "UPDATE proposal_chains SET target_section_id=gen_random_uuid() WHERE id='$C';" \
-  "locus is immutable"
-G=$(q "UPDATE proposal_chains SET decision_chain_id=gen_random_uuid() WHERE id='$C'; SELECT 'ok';")
-[ "$G" = "ok" ] && ok "9b · but a ruling may come to govern a chain (relationship, not identity)" \
-                || bad "9b · governing ruling settable" "$G"
+# 9 · THE CHAIN IS IMMUTABLE — THE WHOLE ROW.
+#
+# ⛔ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. This block previously asserted
+# only the locus, and then ASSERTED THE `decision_chain_id` REWRITE AS A
+# FEATURE ("9b · but a ruling may come to govern a chain"). That sentence was
+# invented ontology — it is in neither the contract nor the census — and the
+# instrument was holding it in place. ⭐ THE WITNESS PINNED THE DEFECT.
+#
+# ⭐⭐ 9b IS THE SEVERE ONE. `proposal_versions.author = 'member'` does not name
+# an individual; the person is `proposal_chains.member_id`. A rewritable
+# member_id means Kelly could author v2 and the chain could afterwards be made
+# to belong to someone else, with the durable record reading as though it
+# always had — the exact provenance property this step exists to establish,
+# defeated one level above the versions.
+refuses "9a · a chain cannot acquire a second locus" \
+  "UPDATE proposal_chains SET target_section_id=gen_random_uuid() WHERE id='$C';" "append-only"
+refuses "9b · a chain cannot be rewritten to belong to another member" \
+  "UPDATE proposal_chains SET member_id='$M2' WHERE id='$C';" "append-only"
+refuses "9c · a governing ruling cannot be rewritten" \
+  "UPDATE proposal_chains SET decision_chain_id=gen_random_uuid() WHERE id='$C';" "append-only"
+refuses "9d · a governing ruling cannot be cleared" \
+  "UPDATE proposal_chains SET decision_chain_id=NULL WHERE id='$C';" "append-only"
+refuses "9e · a chain cannot be deleted" \
+  "DELETE FROM proposal_chains WHERE id='$C';" "append-only"
+# ⛔ And the refusals left the row as it was — a trigger that raised after
+# writing would pass every test above.
+STILL=$(q "SELECT member_id::text FROM proposal_chains WHERE id='$C';")
+[ "$STILL" = "$M" ] \
+  && ok "9f · after five refused mutations the chain is byte-for-byte its original member" \
+  || bad "9f · chain unchanged after refusals" "member_id is now '$STILL'"
 
-# 10 · a ruling cannot become wording or authority
-FK=$(q "SELECT count(*) FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage k ON k.constraint_name=tc.constraint_name
-        WHERE tc.constraint_type='FOREIGN KEY' AND k.column_name='decision_chain_id';")
+# 10 · A RULING CANNOT BECOME WORDING OR AUTHORITY.
+#
+# ⚠️ SOFTENED AFTER FOUNDER REVIEW. The earlier form asserted "no FK on
+# decision_chain_id" and called THAT the acceptance fact. ⭐ THE ESSENTIAL FACT
+# IS "NO CASCADE OR OWNERSHIP PATH" — a RESTRICT / NO ACTION foreign key does
+# not let a ruling's deletion reach into a writer's wording; it only prevents
+# the ruling from disappearing. So the test now asserts the property rather
+# than today's implementation of it: no *cascading* delete rule into the
+# column, and no reference to a ruling anywhere on a version.
+CASCADES=$(q "SELECT count(*) FROM information_schema.referential_constraints rc
+              JOIN information_schema.key_column_usage k ON k.constraint_name=rc.constraint_name
+              WHERE k.column_name='decision_chain_id'
+                AND rc.delete_rule IN ('CASCADE','SET NULL','SET DEFAULT');")
 VC=$(q "SELECT count(*) FROM information_schema.columns WHERE table_name='proposal_versions'
         AND column_name LIKE '%decision%';")
-[ "$FK" = "0" ] && [ "$VC" = "0" ] \
-  && ok "10 · no lifecycle path from a ruling into wording (no FK, no column on versions)" \
-  || bad "10 · ruling isolation" "fk=$FK versionCols=$VC"
+[ "$CASCADES" = "0" ] && [ "$VC" = "0" ] \
+  && ok "10 · no cascade or ownership path from a ruling into wording" \
+  || bad "10 · ruling isolation" "cascadingDeleteRules=$CASCADES versionCols=$VC"
 
 # 11 · nothing here can change manuscript state
 WRITE=$(q "SELECT count(*) FROM information_schema.columns WHERE table_name IN ('proposal_versions','proposal_chains')
@@ -165,6 +208,28 @@ REFS=$(q "SELECT count(*) FROM information_schema.table_constraints tc
 [ "$WRITE" = "0" ] && [ "$REFS" = "0" ] \
   && ok "11 · no accept/execute/authorize column, and no FK into any manuscript table" \
   || bad "11 · no write capability" "cols=$WRITE manuscriptFKs=$REFS"
+
+# 12 · A RATIONALE HAS EXACTLY TWO DURABLE STATES: ABSENT, or AUTHORED.
+#
+# ⭐ The contract's `rationale?: string` has no word for '' — a rationale that
+# is present and says nothing. Without the CHECK, persistence would admit it as
+# a third state, and a reader would have to guess whether the author declined
+# to give a reason or gave an empty one.
+refuses "12a · an empty rationale refuses" \
+  "INSERT INTO proposal_versions (chain_id, author, formulation, rationale, supersedes)
+   VALUES ('$C','maia','x','','$V4');" "rationale"
+refuses "12b · a whitespace-only rationale refuses" \
+  "INSERT INTO proposal_versions (chain_id, author, formulation, rationale, supersedes)
+   VALUES ('$C','maia','x','   ','$V4');" "rationale"
+V5=$(run "INSERT INTO proposal_versions (chain_id, author, formulation, supersedes)
+          VALUES ('$C','maia','f5','$V4') RETURNING id;")
+V6=$(run "INSERT INTO proposal_versions (chain_id, author, formulation, rationale, supersedes)
+          VALUES ('$C','member','f6','tighter','$V5') RETURNING id;")
+STATES=$(q "SELECT string_agg(coalesce(rationale,'<absent>'), '|' ORDER BY formulation)
+            FROM proposal_versions WHERE id IN ('$V5','$V6');")
+[ "$STATES" = "<absent>|tighter" ] \
+  && ok "12c · and both admitted states persist as themselves  [$STATES]" \
+  || bad "12c · absent and authored rationale" "got '$STATES'"
 
 echo
 echo "  $PASS passed · $FAIL failed"
