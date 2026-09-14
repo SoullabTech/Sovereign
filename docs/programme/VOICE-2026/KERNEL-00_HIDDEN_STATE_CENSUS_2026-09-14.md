@@ -172,3 +172,7 @@ Run from `/private/tmp/voice-pass2-6801` at `09c1bd251` (the worktree had been c
 
 Standing: calibration NOT ACHIEVED · mechanism returned for ruling (root) · no archive · no device configuration · R1 HOLD.
 
+### 7.7 Daemon identity — what the device actually runs (read from the first snapshot's JSON; ruling A2 pending)
+
+Both 121709Z snapshots read `UNOBSERVABLE: listing succeeded, neither mediaserverd nor coreaudiod row present`. Founder-read JSON (`daemons/sample-1-before.json`, 333 distinct executables including `SpringBoard`, `powerd`, `CommCenter`, `AudioConverterService`): **neither `mediaserverd` nor `coreaudiod` exists anywhere in the listing**; the audio daemons present are `/usr/libexec/audiomxd` (pid 55561 at 12:17:16Z), `audioclocksyncd`, `audioaccessoryd`, `audioanalyticsd`. The listing sees system daemons; the ruled names are simply not what this device (iOS 26) runs — the audio server role is carried by `audiomxd`. Schema: `{"executable": "file:///…", "processIdentifier": N}`, **no start time** → identity is PID only; a restart between samples reads as a PID change. Instrument (implemented, shim-tested, gate-pinned, pending ruling A2 to be *used* as witness): the snapshot now uses the documented `--json-output` (the table text truncates paths), records `mediaserverd`/`coreaudiod` as `NOT PRESENT` on every sample (the ruled names are never silently dropped), and records `audiomxd`/`audioclocksyncd`/`audioaccessoryd` by PID. Not a substitution made by the instrument: the substitution is the founder's to rule.
+

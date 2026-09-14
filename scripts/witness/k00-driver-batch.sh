@@ -52,15 +52,27 @@ harness_present(){ xcrun devicectl device info processes --device "$DEV" 2>/dev/
 # listing the precondition already reads; it never launches, signals, terminates, attaches to or reconfigures any
 # daemon. If the listing fails or shows neither daemon the snapshot records UNOBSERVABLE; no other mechanism is substituted.
 daemon_snapshot(){ # $1 = sample index · $2 = before|after
-  mkdir -p "$LEDGER_DIR/daemons"; local out="$LEDGER_DIR/daemons/sample-$1-$2.txt" rc raw
-  raw="$(xcrun devicectl device info processes --device "$DEV" 2>&1)"; rc=$?
+  # Calibration 121709Z (founder-read JSON): the listing's documented JSON carries {executable: file:///…, processIdentifier: N} and NO
+  # start time; the table text truncates paths. On this device (iOS 26) neither mediaserverd nor coreaudiod exists under those
+  # names — the audio server role is carried by audiomxd (with audioclocksyncd / audioaccessoryd). Ruling A2 pending: the ruled names
+  # are recorded NOT PRESENT every time (never silently dropped) and the observed daemons are recorded by PID. Identity = PID only.
+  mkdir -p "$LEDGER_DIR/daemons"; local out="$LEDGER_DIR/daemons/sample-$1-$2.txt" js="$LEDGER_DIR/daemons/sample-$1-$2.json" rc
+  xcrun devicectl device info processes --device "$DEV" --json-output "$js" >/dev/null 2>&1; rc=$?
   { echo "# daemon snapshot sample $1 $2 — $(date -u +%Y-%m-%dT%H:%M:%SZ) — listing rc=$rc"
-    if [ $rc -ne 0 ]; then echo "UNOBSERVABLE: listing failed (rc=$rc)"; echo "$raw" | tail -3
-    else local m; m="$(grep -E 'mediaserverd|coreaudiod' <<<"$raw" || true)"
-      if [ -z "$m" ]; then echo "UNOBSERVABLE: listing succeeded, neither mediaserverd nor coreaudiod row present"; else echo "$m"; fi
+    if [ $rc -ne 0 ] || [ ! -s "$js" ]; then echo "UNOBSERVABLE: listing failed (rc=$rc)"
+    else python3 - "$js" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1])); s=json.dumps(d)
+import re
+rows=re.findall(r'\{"executable": "file://([^"]+)", "processIdentifier": (\d+)\}', s)
+want=['mediaserverd','coreaudiod','audiomxd','audioclocksyncd','audioaccessoryd']
+for w in want:
+    hits=[(p,pid) for p,pid in rows if p.rsplit('/',1)[-1]==w]
+    print(f"{w}: " + (" · ".join(f"pid {pid} {p}" for p,pid in hits) if hits else "NOT PRESENT"))
+print(f"(processes listed: {len(rows)})")
+PY
     fi
   } > "$out"
-  [ "$1" = 1 ] && [ "$2" = before ] && xcrun devicectl device info processes --device "$DEV" --json-output "$LEDGER_DIR/daemons/sample-1-before.json" >/dev/null 2>&1 || true
 }
 # C-D5 (Stage B attempt 2, 20260912T191955Z): the container listing can FAIL ("The system failed to get a list of files
 # on the remote device"). The old list_journals swallowed that failure and returned an EMPTY listing, which the batch then
