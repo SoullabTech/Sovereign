@@ -8,6 +8,15 @@ TYPE        CONSTITUTIONAL SEMANTICS — ⛔ not component placement, ⛔ not im
 STATE       DRAFTED · ⛔ NOT RATIFIED
 ```
 
+> ⚠️⚠️ **AMENDED — read `P2-00_AMENDMENT-1_EXISTS_AND_CONSEQUENTIAL.md` with this file.**
+> Founder review 2026-09-14 withheld ratification and authorized one bounded amendment: the
+> primitive set was missing two terms the ruling itself depends on. Amendment 1 adds **`EXISTS`**
+> (KIND 5, ontological standing) and **`CONSEQUENTIAL`** (KIND 6, scope predicate), declares
+> **six semantic kinds**, and corrects §3.1's `MUST NOT COLLAPSE INTO` to name `EXISTS`.
+> ⛔ Nothing below is rewritten; §4's FD-1 and FD-2 are addressed by Amendment 1 §5 and remain
+> open as ratification items. The four-kind classification in §2 is **superseded by Amendment 1
+> §1**, which preserves it and adds two kinds rather than folding them in.
+
 > ⭐ **This instrument authors. It does not discover.**
 > ⛔ No definition below acquires legitimacy because the current implementation resembles it.
 > ⛔ No current implementation acquires standing because removing it would be inconvenient.
