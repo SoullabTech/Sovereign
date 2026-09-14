@@ -52,8 +52,9 @@ aud = [e for e in ents if name(e) in AUD]
 with open(os.path.join(OUT, f'window{suffix}-audio.jsonl'), 'w') as f:
     for e in aud: f.write(json.dumps({k: e.get(k) for k in ('timestamp', 'machTimestamp', 'processImagePath', 'processID', 'subsystem', 'category', 'eventMessage')}) + '\n')
 print(f"## audio-related entries kept (window{suffix}-audio.jsonl): {len(aud)} · per process: {collections.Counter(name(e) for e in aud).most_common()}")
+LEVEL = (suffix[1:].upper() + '-LEVEL') if suffix else 'DEFAULT-LEVEL'   # A2: absence is scoped to the level actually read (C-D15)
 for p in ('mediaserverd', 'coreaudiod'):
-    print(f"## {p}: " + ("PRESENT — witnessed by log entries" if any(name(e) == p for e in ents) else "NOT PRESENT IN THE DEFAULT-LEVEL WINDOW"))
+    print(f"## {p}: " + ("PRESENT — witnessed by log entries" if any(name(e) == p for e in ents) else f"NOT PRESENT IN THE {LEVEL} WINDOW"))
 h = [e for e in aud if name(e) == 'VoiceKernelHarness']
 print(f"## harness-process entries: {len(h)}" + (f" · first: {h[0]['timestamp']} · last: {h[-1]['timestamp']}" if h else " — NO harness entries at default level: alignment falls back to the export epoch (±1 s)"))
 if not J or J == '-' or not os.path.exists(J): print("## no journal supplied; alignment not demonstrable"); sys.exit(0)

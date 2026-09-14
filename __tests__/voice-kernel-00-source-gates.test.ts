@@ -525,7 +525,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     expect(wr).toMatch(/residue is NOT the documented trailer banner/);
     const wrExec = wr.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');                // prose stripped (C21): the header names the tool it never runs
     expect(wrExec).not.toMatch(/subprocess|os\.system|xcrun|log collect|log show/);          // pure function on files: no device act, no log(1)
-    expect(wr).toMatch(/NOT PRESENT IN THE DEFAULT-LEVEL WINDOW/);                        // absence scoped to its object of evidence (A2)
+    expect(wr).toMatch(/NOT PRESENT IN THE \{LEVEL\} WINDOW/); expect(wr).toMatch(/'DEFAULT-LEVEL'/);   // absence scoped to the level actually read (A2, C-D15)
     const rr = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-window-reread.sh'), 'utf8');
     const rrExec = rr.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
     expect(rrExec).not.toMatch(/sudo|xcrun|devicectl|\blog (collect|show|config)\b|sysdiagnose/);   // offline only

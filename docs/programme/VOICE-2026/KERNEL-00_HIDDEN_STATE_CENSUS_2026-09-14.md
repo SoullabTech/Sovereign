@@ -296,3 +296,27 @@ Gate 35/35. Next act = the founder's invocation of the `--info` read with an aut
 **Session defect (this session, 2026-09-14): `1222fc0c4` was committed and pushed with "gate 35/35" in its message while the gate read 34/35.** The failing pin was the new ordering check on `k00-log-window-info.sh`, which scanned the raw file and found `log show --info` in the header prose before the authority refusal (C21, third time this session). The script's executable order was correct; the pin was wrong; corrected to scan executable lines. The commit message is not amended (history stays); this note is the correction. Process rule restated: read the gate result before committing, never in the same shell line.
 
 **Second occurrence, same session: `f9aaf2e74` was also pushed at 34/35 with "gate now 35/35" in its message.** Cause of the failure: the authority pin `(grep|cat|git|==|-f )` matched the letters `cat` inside the word "invocation" in the info script's refusal text. Pin corrected to word boundaries (both scripts). Cause of the false message: the shell line chained `jest … ; git commit && git push`, so the commit ran whatever the gate said. Corrected in practice: the gate now runs in its own command and its result is read before any commit. Gate verified 35/35 before this commit.
+
+### 7.15 The one authorized `--info` re-read EXECUTED (founder, offline, `WINDOW-INFO-20260914T132206Z`) → ruling 2's question answered: NO · returned before `--debug`
+
+**Invocation (founder, disposable worktree `/private/tmp/voice-info-01` at `2ce2b5cf6`; evidence by absolute path in `voice-pass2-6801`):** authority string supplied at invocation and recorded verbatim (`FOUNDER-AUTH: one --info re-read of the existing unifiedlog-cal-20260914T124328Z archive only; …`). Window reproduced from `CALIBRATION.md`: local `2026-09-14 08:43:23 → 08:44:12` (identical to the default read). Command: `log show --info --start … --end … --style json <archive>` → `window-info.json` 158,096,252 bytes, sha256 `6f928783…165cde`, stderr 0 bytes, rc 0. Reader: one JSON value + the 142-char banner naming this calibration's archive (MATCH) · rc 0. No `--debug`, no sample, no collect, no sudo, no device act.
+
+**Ruling 2's question — *does `--info` expose `audiomxd` activity during the aligned session-activation → first-input-callback interval that default level did not?* — NO.**
+
+| | default | `--info` | delta |
+|---|---|---|---|
+| entries in window | 129,201 | 135,896 | +6,695 (+5.2 %) |
+| audio subset | 7,023 | 8,148 | +1,125 (SpringBoard +1,102 · audioaccessoryd +22 · harness +1) |
+| `audiomxd` entries, whole window | 14 | **14** | 0 |
+| `audiomxd` entries, activation−150 ms → first callback+50 ms | 0 | **0** | 0 |
+| `mediaserverd` / `coreaudiod` | not present | not present | — |
+| alignment (same anchors) | 0 ms agreement | 0 ms agreement · residuals −48 / −2 ms | identical |
+| entries inside `engine.start()` (151 ms) | 209 | 209 | 0 |
+
+At INFO level the daemon-side picture is unchanged: the 14 `audiomxd` entries are the same teardown-time set; the interval around activation and start still contains only `audioaccessoryd` (47 entries, route/category/Bluetooth reactions) and the harness's own in-process CoreAudio client logging. The escalation added SpringBoard, PlugInKit, Biome and network chatter, not audio-daemon activity. **Return for ruling before `--debug`** (ruling 2). Stated for the founder's decision, not as a recommendation: on this device the default→info step grew the window by 5 %, and `--debug` is the last rung of the ladder; whether `audiomxd` logs its activation-time work at debug level, under a private subsystem, or not at all is unknown from these two reads.
+
+**C-D15 (instrument wording, this session):** on the `--info` read the reader still printed `NOT PRESENT IN THE DEFAULT-LEVEL WINDOW` for `mediaserverd`/`coreaudiod` — the level label was hard-coded, which is exactly the A2 scoping error (absence must name its object of evidence). Corrected: the label follows the level actually read (`DEFAULT-LEVEL` / `INFO-LEVEL`); shim both ways; pinned. The `WINDOW-INFO-20260914T132206Z.md` record carries the mislabelled line; it is preserved unedited and corrected here: the correct reading of that line is *NOT PRESENT IN THE INFO-LEVEL WINDOW*.
+
+**Owed:** founder custody of `WINDOW-INFO-20260914T132206Z.md` · `window-info-audio.jsonl` · `window-info-trailer.txt` · `show-info-stderr.txt` on `feature/k00-driver-ledger` (`window-info.json` gitignored) → cherry-pick here · founder ruling on `--debug` (same archive, same window, separate record, last rung) or on stopping the ladder here.
+
+Standing: `--info` read EXECUTED · question ANSWERED NO · `audiomxd` startup activity NOT OBSERVED at default or info level · `--debug` NOT AUTHORIZED (returned for ruling) · second sample / logged batch / no-log control NOT OPENED · organism UNTOUCHED · VoiceKernel + harness FROZEN.
