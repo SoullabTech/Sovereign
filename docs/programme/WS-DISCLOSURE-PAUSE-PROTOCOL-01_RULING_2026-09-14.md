@@ -30,8 +30,9 @@ anchored on, and `Section N` is derivable from it by array position alone — **
 read, no heading, no title, no prose, not one authored character.**
 
 ⚠️ **WITH ONE SCOPE AMENDMENT, and it is material.** The discontinuity is **wider than the
-census named**. The census found one unrepresented outcome. The route emits **six**
-protocol outcomes at HTTP 200, and the client type represents **none** of them (§1).
+census named**. The census found one unrepresented outcome. The developmental disclosure
+path has **six named HTTP-200 CONTROL outcomes, in addition to the ordinary answered-turn
+success path**, and the client type represents none of the six (§1).
 ⛔ This is not a new lane — it is the same discontinuity at its true size, and defining it
 is exactly this lane's remit. ⭐ But the next lane must be scoped to six, not to one.
 
@@ -39,7 +40,25 @@ is exactly this lane's remit. ⭐ But the next lane must be scoped to six, not t
 
 ## 1 · Q1 — What is the protocol object?
 
-### The six outcomes the route already emits at HTTP 200
+### ⭐⭐ The client contract is THREE-PART, not a list of six
+
+⚠️ **Ordinary success is not one of the six.** An answered turn returns a `thread` and
+carries **no** `result` control value at all. Collapsing the six into "the outcomes"
+would erase the baseline they are named against.
+
+```text
+ORDINARY ANSWERED TURN      thread present · no `result` · the existing path
+        +
+SIX NAMED CONTROL OUTCOMES  HTTP 200 · `result` present · listed below
+        +
+NON-200 REFUSALS / ERRORS   400 · 404 · 409 · 413 · 422 · 500 · 503
+```
+
+⭐ The discriminator is therefore **the presence and value of `result`**, not the status
+code and not the presence of a thread — `ALREADY_COMPLETED` has a thread, and so does an
+ordinary answer.
+
+### The six named control outcomes, all at HTTP 200
 
 | `result` | carries | today's client reading |
 |---|---|---|
@@ -280,6 +299,29 @@ client set cannot spend the member's single act.
 ⭐ **Six of ten are already law in the substrate. Four are client-side, and all four are
 the same omission**: the client has no vocabulary for the protocol the server speaks.
 
+### ⭐⭐ Two further invariants, from the scope amendment
+
+```text
+P11  A recovered completed execution must remain recognizably a RECOVERY.
+     Client presentation may not transform ALREADY_COMPLETED into evidence
+     that MAIA reasoned again, that authority was consumed again, or that a
+     new answer was produced.
+
+P12  HTTP 200 is TRANSPORT SUCCESS, NOT PROTOCOL EQUIVALENCE.
+     The client must discriminate the server's semantic outcome before
+     deciding what to clear, render, preserve, resume, or ask of the member.
+```
+
+⭐⭐ **P12 names the defect family.** Every client-side failure in this ruling is one
+mistake made six times: *the transport succeeded, therefore the answer arrived.* P1, P2
+and P9 are consequences of it — the draft is cleared, the pane blanks, a recovery reads as
+cognition — and each would recur in any future outcome added to this path.
+
+⚠️ **P11 is the reason the widening matters.** A design scoped only to the missing
+authorization surface would repair the five outcomes that fail *visibly* and leave the one
+that fails *silently* exactly as it is. ⛔ The five are a gap; **`ALREADY_COMPLETED` is a
+falsehood**, and it is the only one a member could act on without knowing they had.
+
 ---
 
 ## 8 · What this ruling does NOT authorize
@@ -314,10 +356,15 @@ Q4 draft                            LOAD-BEARING · the continuation requires it
 Q5 replay                           four kinds pinned · P8/P9 hold in substrate
 Q6 continuation                     five fields · identities only
 
-scope amendment                     the discontinuity is SIX outcomes, not one
+scope amendment                     ordinary answered turn
+                                    + SIX named HTTP-200 control outcomes
+                                    + non-200 refusals
                                     ALREADY_COMPLETED renders and misreports
 
 S3 authority law                    UNTOUCHED · outcome C did not arise
+P11 recovery stays a recovery        PINNED · client obligation
+P12 200 ≠ protocol equivalence        PINNED · the defect family
+
 heading question                    PARKED · further from critical path
 Fork C                              UNANSWERED · needs a real surface
 
