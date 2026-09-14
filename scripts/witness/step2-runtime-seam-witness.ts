@@ -12,7 +12,7 @@
  * has begun, proving both the Work and the receipt rolled back. ⛔ Not source
  * inspection.
  */
-import { query, closePool } from '@/lib/db/postgres';
+import { query, closePool, transaction as transactionRaw } from '@/lib/db/postgres';
 import { authorizeVersion, readAuthorization } from '@/lib/manuscript/revisionAuthorization/store';
 import { executeAuthorization } from '@/lib/manuscript/revisionAuthorization/execute';
 
@@ -174,6 +174,42 @@ async function main() {
   eq('E1b · ⛔ and the Work was not touched',
     [await bodyOf(w.sectionId), await versionOf(w.draftId)], [BODY, 41]);
 
+  /* ── E1c · ⭐⭐ A2 · IT REFUSES BEFORE ASKING ANYTHING ABOUT THE WORK.
+     ⚠️ FOUNDER REVIEW: E1b proves the Work was not WRITTEN, which is not the
+     law. A read leaves the Work unchanged too, so E1b cannot discriminate the
+     ordering. ⛔ Absence of mutation is not evidence of absence of reading.
+
+     ⭐ So the Work read is made IMPOSSIBLE, and an unknown authorization is
+     then executed. If the seam inspected the Work first, the injected database
+     error would surface instead of the refusal — which is precisely the leak
+     A2 exists to prevent: a refusal about authority that varies with manuscript
+     state tells the caller something about a manuscript they cannot see.
+
+     ⛔ CRASH-SAFE: the trigger is dropped unconditionally afterwards. */
+  /* ⚠️ AND THE MECHANISM MATTERS. The first cut used `REVOKE SELECT`, which a
+     SUPERUSER CONNECTION IGNORES — so E1c passed while proving nothing, and the
+     mutation that moves the Work read ahead of the authorization lookup
+     SURVIVED. ⛔ Renaming the table is privilege-independent: no connection, at
+     any level, can read a relation that is not there under that name. */
+  let e1c: unknown = null; let e1cErr: unknown = null;
+  const hide = () => query(
+    `ALTER TABLE IF EXISTS manuscript_working_drafts
+       RENAME TO manuscript_working_drafts__witness_hidden`);
+  const unhide = () => query(
+    `ALTER TABLE IF EXISTS manuscript_working_drafts__witness_hidden
+       RENAME TO manuscript_working_drafts`);
+  await unhide();          // ⛔ crash-safe: an interrupted earlier run is undone first
+  try {
+    await hide();
+    try { e1c = await executeAuthorization(M, await uuid()); }
+    catch (e) { e1cErr = e; }
+  } finally {
+    await unhide();
+  }
+  eq('E1c · ⭐⭐ an unknown authorization refuses even when the Work CANNOT be read',
+    (e1c as { reason?: string })?.reason ?? `THREW ${String(e1cErr).slice(0, 60)}`,
+    'authorization_unknown');
+
   /* ── E4 · stale base refuses, and the permission stays unspent. ────────── */
   await query(`UPDATE manuscript_working_drafts SET version=99 WHERE id=$1`, [w.draftId]);
   const e4 = await executeAuthorization(M, a.authorization.id);
@@ -212,21 +248,23 @@ async function main() {
     await query(`DROP TRIGGER IF EXISTS witness_write_fault_t ON manuscript_draft_sections`);
   }
   const afterE11 = await readAuthorization(M, a.authorization.id);
+  /* ⚠️ FOUNDER REVIEW: the first cut accepted `thrown || refusedNotThrown`, so a
+     mutant that refused EARLY — `stale_base`, say — would leave the Work whole
+     and the permission unspent and PASS, without ever reaching the injected
+     fault. ⛔ In a fault-injection test, ANY returned outcome is a failure: the
+     point is to prove the path was spent far enough to MEET the fault. */
   const thrown = (e11err as { code?: string })?.code === '57P01';
-  const refusedNotThrown = !thrown && e11ret !== null;
-  if ((thrown || refusedNotThrown) && afterE11!.acceptedAt === null
+  if (thrown && e11ret === null && afterE11!.acceptedAt === null
       && await bodyOf(w.sectionId) === BODY && await versionOf(w.draftId) === 41) {
-    ok(`E11 · ⭐⭐ a failed write leaves the Work WHOLE and the permission UNSPENT  [${
-      thrown ? 'propagated 57P01' : 'refused'}]`);
+    ok('E11 · ⭐⭐ the injected 57P01 REACHED execution and PROPAGATED — Work whole, permission UNSPENT');
   } else {
-    bad('E11 · failed write rolls back both sides',
-      `thrown=${thrown} receipt=${afterE11!.acceptedAt} body=${
-        (await bodyOf(w.sectionId)).slice(0, 20)} version=${await versionOf(w.draftId)}`);
+    bad('E11 · the injected fault must be reached and propagated',
+      `code=${(e11err as { code?: string })?.code ?? 'none'} returned=${
+        JSON.stringify(e11ret)} receipt=${afterE11!.acceptedAt} version=${
+        await versionOf(w.draftId)}`);
   }
-  eq('E11b · ⛔ and a failure was NOT collapsed into a tidy domain refusal',
-    refusedNotThrown && (e11ret as { reason?: string })?.reason === 'write_refused'
-      ? 'COLLAPSED' : 'propagated-or-refused-truthfully',
-    'propagated-or-refused-truthfully');
+  eq('E11b · ⛔ and nothing was returned — a refusal here would mean the fault was never met',
+    e11ret, null);
 
   /* ── E2 · E3 · E7 · E8 · E12 · the lawful execution. ───────────────────── */
   const done = await executeAuthorization(M, a.authorization.id);
@@ -257,6 +295,105 @@ async function main() {
     [ex.includes('saveSectionInTransaction'), /\bsaveSection\s*\(/.test(ex)], [true, false]);
   eq('E13 · ⛔ no second manuscript UPDATE path',
     /UPDATE\s+manuscript_draft_sections|UPDATE\s+manuscript_working_drafts/i.test(ex), false);
+
+  /* ── R1-LIMIT · ⚠️ A SOURCE ASSERTION, LABELLED AS ONE.
+     The authorizing Work read must happen on the TRANSACTION CLIENT, so the
+     draft version and the section body beneath it are one held state.
+     ⛔ THIS IS NOT A BEHAVIOURAL TEST AND MUST NOT BE READ AS ONE. Forcing a
+     competing commit into the gap between those two reads needs a pause point
+     INSIDE the function, and adding one would be test-shaped production code —
+     a worse defect than the one it would catch. The mutation `R1` (swap
+     `tx.query` for the pool `query`) therefore SURVIVES the behavioural suite,
+     and that survival is recorded rather than hidden.
+     ⚠️ The real serialization guarantee is that the writer path takes the same
+     draft row lock before touching sections; CONCURRENT-WORK proves that lock
+     is taken. What this assertion adds is only that BOTH reads sit under it. */
+  const storeSrc = require('fs').readFileSync(
+    require('path').join(__dirname, '../../lib/manuscript/revisionAuthorization/store.ts'),
+    'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const readFn = storeSrc.slice(storeSrc.indexOf('async function readWorkAtTarget'));
+  eq('R1-LIMIT · ⚠️ SOURCE-LEVEL — both authorizing reads use the transaction client',
+    [/await tx\.query</.test(readFn), /await query</.test(readFn)], [true, false]);
+
+  /* ── H1 · ⭐⭐ A DURABLE ROW THE CONTRACT REFUSES MUST THROW, NOT RENDER.
+     ⚠️ The store translates columns; the CONTRACT decides whether the result is
+     an authorization. That claim was unfalsifiable while `mra_receipt_whole`
+     made a half receipt unwritable — the mutation that restores a second
+     hydrator SURVIVED for exactly that reason.
+
+     ⭐ So the CHECK is lifted for one write. A row with `accepted_at` set and
+     `resulting_version` null must make the read THROW. ⛔ The first cut's own
+     hydrator turned that null into `0` via `Number(null)` and returned a
+     confident lie: an authorization claiming the Work moved to version zero.
+
+     ⛔ CRASH-SAFE: the constraint is re-added in `finally` AND unconditionally
+     before the drop. */
+  const CHK = 'mra_receipt_whole';
+  const addChk = () => query(
+    `ALTER TABLE manuscript_revision_authorizations ADD CONSTRAINT ${CHK}
+       CHECK ((accepted_at IS NULL) = (resulting_version IS NULL)) NOT VALID`);
+  await query(`ALTER TABLE manuscript_revision_authorizations
+                 DROP CONSTRAINT IF EXISTS ${CHK}`);
+  await addChk();
+  let h1: unknown = 'NOTHING THROWN';
+  const wH = await makeWork(M); const cH = await makeChain(M, wH);
+  const vH = await addVersion(cH, 'maia', 'x', null);
+  const aH = await authorizeVersion(M, cH, vH);
+  try {
+    await query(`ALTER TABLE manuscript_revision_authorizations DROP CONSTRAINT ${CHK}`);
+    await query(`UPDATE manuscript_revision_authorizations
+                    SET accepted_at = now() WHERE id = $1`,
+      [aH.ok ? aH.authorization.id : null]);
+    try { await readAuthorization(M, aH.ok ? aH.authorization.id : ''); }
+    catch (e) { h1 = (e as Error).message; }
+  } finally {
+    /* ⚠️ THE ROW IS NOT RESTORED, AND THAT IS THE SUBSTRATE BEING RIGHT. The
+       first cut's cleanup did `SET accepted_at = NULL` — un-spending a
+       receipt — and `mra_identity_immutable` refused it, crashing the witness.
+       A permission that has been spent is finished; the witness does not get an
+       exception. ⛔ So the half-receipt row is LEFT in the disposable database,
+       and the CHECK is re-added `NOT VALID` so it governs every future write
+       without validating the specimen we deliberately made. */
+    await query(`ALTER TABLE manuscript_revision_authorizations
+                   DROP CONSTRAINT IF EXISTS ${CHK}`);
+    await addChk();
+  }
+  eq('H1 · ⭐⭐ a half-receipt row THROWS — it is never rendered as an authorization',
+    typeof h1 === 'string' && h1.includes('could not be read truthfully'), true);
+
+  /* ── CONCURRENT-WORK · ⭐⭐ THE RACE, PROVEN RATHER THAN COMMENTED. ───────
+     A competing save must not be able to interleave between the authoritative
+     draft read and the authorization INSERT, so the persisted binding names ONE
+     coherent observed Work state.
+
+     ⭐ Determinism without sleep-and-hope: the witness takes the draft's row
+     lock FIRST, starts `authorizeVersion` (which blocks on its own FOR UPDATE),
+     moves the Work to v42, and commits. If the seam holds a lock across its
+     reads, it then observes 42 and binds 42. ⛔ Without the lock it would read
+     41 immediately and bind a version that was already gone — a permission
+     recording a Work state that had ceased to exist before the row was
+     written. */
+  const wRace = await makeWork(M);
+  const cRace = await makeChain(M, wRace);
+  const vRace = await addVersion(cRace, 'maia', ', calmer', null);
+  let racePromise!: Promise<Awaited<ReturnType<typeof authorizeVersion>>>;
+
+  await transactionRaw(async (tx) => {
+    await tx.query(`SELECT id FROM manuscript_working_drafts WHERE id=$1 FOR UPDATE`,
+      [wRace.draftId]);
+    racePromise = authorizeVersion(M, cRace, vRace);
+    await new Promise((r) => setTimeout(r, 250));   // let it reach and block on the lock
+    await tx.query(`UPDATE manuscript_working_drafts SET version=42 WHERE id=$1`,
+      [wRace.draftId]);
+  });
+  const raced = await racePromise;
+  eq('CONCURRENT-WORK · ⭐⭐ a competing save cannot interleave — the binding names v42, the state actually observed',
+    raced.ok ? raced.authorization.guard.baseVersion : raced, 42);
+  const persisted = await query<{ base_version: string }>(
+    `SELECT base_version FROM manuscript_revision_authorizations WHERE proposal_chain_id=$1`,
+    [cRace]);
+  eq('CONCURRENT-WORK-2 · ⛔ and the DURABLE row agrees — no stale version was written',
+    Number(persisted.rows[0].base_version), 42);
 
   finish();
 }

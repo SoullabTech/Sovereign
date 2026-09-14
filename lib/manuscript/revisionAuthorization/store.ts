@@ -38,10 +38,10 @@
  * existence of the row IS the permission.
  */
 
-import { query, transaction } from '@/lib/db/postgres';
+import { query, transaction, type TransactionClient } from '@/lib/db/postgres';
 import { splitStoredSection } from '@/lib/manuscript/sections/saveSection';
 import {
-  authorize, resolveGuard,
+  authorize, hydrateAuthorization, resolveGuard,
   type RevisionAuthorization, type WorkStateReading,
 } from './contract';
 import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
@@ -62,24 +62,53 @@ export const AUTH_COLUMNS = `id, member_id, proposal_chain_id, proposal_version_
   work_id, draft_id, base_version, target_section_id, expected_text, operation,
   authorized_at, accepted_at, resulting_version`;
 
+/**
+ * ⭐⭐ THERE IS ONE DURABLE AUTHORIZATION HYDRATOR, AND IT IS NOT THIS FUNCTION.
+ *
+ * ⚠️ FOUNDER REVIEW, 2026-09-14, BLOCKER. The first cut implemented a SECOND
+ * hydrator here and asserted a `RevisionAuthorization` directly, bypassing the
+ * contract's runtime law. It did not preserve the refusals:
+ *
+ *     accepted_at non-null · resulting_version null
+ *       → contract REFUSES · this turned `null` into `0` via `Number(null)`
+ *
+ *     accepted_at null · resulting_version 42
+ *       → contract REFUSES · this returned an UNSPENT authorization and
+ *         silently discarded the contradictory receipt
+ *
+ * ⛔ The CHECK makes both unrepresentable TODAY. That is not the point: we
+ * deliberately established three laws — type · runtime hydration · database —
+ * and the adapter was bypassing the middle one. A validation implementation
+ * that exists in two places is one that can drift.
+ *
+ * ⭐ So this translates snake_case columns into the plain stored shape and
+ * NOTHING ELSE. The contract decides whether that shape is an authorization.
+ *
+ * ⛔ AND A ROW THAT FAILS IT THROWS. Corrupted or unanswerable persistence is
+ * not a member-facing domain refusal — a durable record we cannot read
+ * truthfully must not be quietly rendered as something we can.
+ */
 export const hydrateAuthorizationRow = (r: AuthRow): RevisionAuthorization => {
-  const identity = {
+  const plain = {
     id: r.id, memberId: r.member_id,
     proposalChainId: r.proposal_chain_id, proposalVersionId: r.proposal_version_id,
-    guard: Object.freeze({
+    guard: {
       workId: r.work_id, draftId: r.draft_id, baseVersion: Number(r.base_version),
       targetSectionId: r.target_section_id, expectedText: r.expected_text,
       operation: r.operation,
-    }),
+    },
     authorizedAt: r.authorized_at.toISOString(),
+    acceptedAt: r.accepted_at === null ? null : r.accepted_at.toISOString(),
+    /* ⛔ `null` stays `null`. It is NOT coerced through `Number()`, which is how
+       a half receipt became `0` in the first cut. */
+    resultingVersion: r.resulting_version === null ? null : Number(r.resulting_version),
   };
-  /* ⭐ The receipt is rebuilt as ONE OF THE TWO LAWFUL SHAPES, never as two
-     independent fields. `mra_receipt_whole` makes the half state unwritable;
-     this makes it unrepresentable on the way back out. */
-  return r.accepted_at === null
-    ? { ...identity, acceptedAt: null, resultingVersion: null }
-    : { ...identity, acceptedAt: r.accepted_at.toISOString(),
-        resultingVersion: Number(r.resulting_version) };
+  const hydrated = hydrateAuthorization(plain);
+  if (!hydrated) {
+    throw new Error(
+      `authorization ${r.id} could not be read truthfully from its durable row`);
+  }
+  return hydrated;
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -134,88 +163,107 @@ export async function authorizeVersion(
 ): Promise<AuthorizeVersionResult> {
   if (!memberId || !chainId || !versionId) return no('malformed');
 
-  /* 1 · ⭐ THE CHAIN, PROVEN TO BE THIS MEMBER'S IN THE SAME STATEMENT.
-         A foreign chain returns zero rows and is reported exactly as an absent
-         one — a distinguishable response would let a caller enumerate other
-         members' chains by their refusal shapes alone. */
-  const c = await query<{
-    id: string; member_id: string; work_id: string; draft_id: string;
-    base_version: number | string; target_section_id: string;
-    expected_text: string; decision_chain_id: string | null; opened_at: Date;
-  }>(
-    `SELECT id, member_id, work_id, draft_id, base_version, target_section_id,
-            expected_text, decision_chain_id, opened_at
-       FROM proposal_chains WHERE id = $1 AND member_id = $2`,
-    [chainId, memberId]);
-  if (c.rows.length === 0) return no('chain_unknown');
-  const row = c.rows[0];
-  const chain: ProposalChain = {
-    id: row.id, memberId: row.member_id,
-    locus: {
-      workId: row.work_id, draftId: row.draft_id,
-      baseVersion: Number(row.base_version),
-      targetSectionId: row.target_section_id, expectedText: row.expected_text,
-    },
-    ...(row.decision_chain_id !== null
-      ? { governedBy: { decisionChainId: row.decision_chain_id } } : {}),
-    openedAt: row.opened_at.toISOString(),
-  };
+  return transaction(async (tx: TransactionClient) => {
+    /* 1 · ⭐ THE CHAIN, PROVEN TO BE THIS MEMBER'S IN THE SAME STATEMENT, and
+           collapsed FIRST. A foreign chain returns zero rows and is reported
+           exactly as an absent one — a distinguishable response would let a
+           caller enumerate other members' chains by their refusal shapes. */
+    const c = await tx.query<{
+      id: string; member_id: string; work_id: string; draft_id: string;
+      base_version: number | string; target_section_id: string;
+      expected_text: string; decision_chain_id: string | null; opened_at: Date;
+    }>(
+      `SELECT id, member_id, work_id, draft_id, base_version, target_section_id,
+              expected_text, decision_chain_id, opened_at
+         FROM proposal_chains WHERE id = $1 AND member_id = $2`,
+      [chainId, memberId]);
+    if (c.rows.length === 0) return no('chain_unknown');
+    const row = c.rows[0];
+    const chain: ProposalChain = {
+      id: row.id, memberId: row.member_id,
+      locus: {
+        workId: row.work_id, draftId: row.draft_id,
+        baseVersion: Number(row.base_version),
+        targetSectionId: row.target_section_id, expectedText: row.expected_text,
+      },
+      ...(row.decision_chain_id !== null
+        ? { governedBy: { decisionChainId: row.decision_chain_id } } : {}),
+      openedAt: row.opened_at.toISOString(),
+    };
 
-  /* 2 · ⛔⛔ THE EXACT VERSION THE MEMBER NAMED. There is no ORDER BY, no LIMIT
-         1, and no head lookup anywhere in this function. A writer may authorize
-         MAIA's v2 after writing a v4 they abandoned, and the record must be
-         able to say so. */
-  const v = await query<{
-    id: string; chain_id: string; author: 'maia' | 'member'; formulation: string;
-    rationale: string | null; supersedes: string | null; authored_at: Date;
-  }>(
-    `SELECT id, chain_id, author, formulation, rationale, supersedes, authored_at
-       FROM proposal_versions WHERE id = $1 AND chain_id = $2`,
-    [versionId, chainId]);
-  if (v.rows.length === 0) return no('version_unknown');
-  const vr = v.rows[0];
-  const version: ProposalVersion = {
-    id: vr.id, chainId: vr.chain_id, supersedes: vr.supersedes,
-    replacementText: vr.formulation,
-    ...(vr.rationale !== null ? { rationale: vr.rationale } : {}),
-    author: vr.author, authoredAt: vr.authored_at.toISOString(),
-  };
+    /* 2 · ⛔⛔ THE EXACT VERSION THE MEMBER NAMED. No ORDER BY, no LIMIT 1, no
+           head lookup anywhere in this function. A writer may authorize MAIA's
+           v2 after writing a v4 they abandoned, and the record must say so. */
+    const v = await tx.query<{
+      id: string; chain_id: string; author: 'maia' | 'member'; formulation: string;
+      rationale: string | null; supersedes: string | null; authored_at: Date;
+    }>(
+      `SELECT id, chain_id, author, formulation, rationale, supersedes, authored_at
+         FROM proposal_versions WHERE id = $1 AND chain_id = $2`,
+      [versionId, chainId]);
+    if (v.rows.length === 0) return no('version_unknown');
+    const vr = v.rows[0];
+    const version: ProposalVersion = {
+      id: vr.id, chainId: vr.chain_id, supersedes: vr.supersedes,
+      replacementText: vr.formulation,
+      ...(vr.rationale !== null ? { rationale: vr.rationale } : {}),
+      author: vr.author, authoredAt: vr.authored_at.toISOString(),
+    };
 
-  /* 3 · ⭐⭐ THE AUTHORITATIVE WORK READ — BY THE SERVER, FROM THE DATABASE.
-         ⛔ The caller supplied no version, no expected text and no section
-         body. `base_version` below comes from the DRAFT as it is right now, not
-         from `chain.locus.baseVersion`, which is where this proposal STARTED. */
-  const reading = await readWorkAtTarget(memberId, chain);
-  if (!reading.ok) return no(reading.reason);
+    /* 3 · 4 · ⭐⭐ ONE COHERENT WORK STATE, HELD UNTIL THE PERMISSION EXISTS.
+           ⚠️ FOUNDER REVIEW, BLOCKER. The first cut issued separate pool
+           queries: draft version from statement A, section body from statement
+           B, INSERT in statement C, with nothing joining them. Under READ
+           COMMITTED a concurrent save committing between A and B produces
 
-  /* 4 · The proof is minted from that reading and from nothing else. */
-  const guard = resolveGuard(chain, reading.reading);
-  if (!guard.ok) {
-    return no(guard.reason === 'expected_text_absent' ? 'expected_text_absent'
-      : guard.reason === 'expected_text_ambiguous' ? 'expected_text_ambiguous'
-      : 'malformed');
-  }
+               WorkStateReading { version: 41, textAtTarget: <state from 42> }
 
-  /* 5 · The pure act. */
-  const authorized = authorize({
-    id: '00000000-0000-0000-0000-000000000000',   // replaced by the server-minted id
-    memberId, chain, versions: [version], versionId: version.id,
-    proof: guard.proof, authorizedAt: new Date().toISOString(),
+           — a Work state that NEVER EXISTED. The server was reading the Work,
+           and still synthesizing one state out of two committed moments, which
+           violates this lane's sentence as surely as trusting the caller would.
+
+           ⭐ THE LOCK IS NOT AUTHORIZATION AND NOT A MANUSCRIPT WRITE. It
+           establishes that the state the permission records was a real coherent
+           state, and remains so until the record exists.
+
+               A proof of a current Work state must be minted from ONE current
+               Work state — never a collage of reads. */
+    const reading = await readWorkAtTarget(tx, memberId, chain);
+    if (!reading.ok) return no(reading.reason);
+
+    /* 5 · The proof is minted from that reading and from nothing else. */
+    const guard = resolveGuard(chain, reading.reading);
+    if (!guard.ok) {
+      return no(guard.reason === 'expected_text_absent' ? 'expected_text_absent'
+        : guard.reason === 'expected_text_ambiguous' ? 'expected_text_ambiguous'
+        : 'malformed');
+    }
+
+    /* 6 · The pure act. */
+    const authorized = authorize({
+      id: '00000000-0000-0000-0000-000000000000',   // the server mints the real id
+      memberId, chain, versions: [version], versionId: version.id,
+      proof: guard.proof, authorizedAt: new Date().toISOString(),
+    });
+    if (!authorized.ok) return no('malformed');
+    const g = authorized.authorization.guard;
+
+    /* 7 · ⛔ NO REPLACEMENT WORDING IS PERSISTED. The row names the version; the
+           wording stays on the version, immutably, where its author put it.
+           ⭐ On the SAME client, inside the draft lock. */
+    const ins = await tx.query<AuthRow>(
+      `INSERT INTO manuscript_revision_authorizations
+         (member_id, proposal_chain_id, proposal_version_id, work_id, draft_id,
+          base_version, target_section_id, expected_text)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING ${AUTH_COLUMNS}`,
+      [memberId, chain.id, version.id, g.workId, g.draftId, g.baseVersion,
+        g.targetSectionId, g.expectedText]);
+    return { ok: true as const, authorization: hydrateAuthorizationRow(ins.rows[0]) };
   });
-  if (!authorized.ok) return no('malformed');
-  const g = authorized.authorization.guard;
-
-  /* 6 · ⛔ NO REPLACEMENT WORDING IS PERSISTED. The row names the version; the
-         wording stays on the version, immutably, where its author put it. */
-  const ins = await query<AuthRow>(
-    `INSERT INTO manuscript_revision_authorizations
-       (member_id, proposal_chain_id, proposal_version_id, work_id, draft_id,
-        base_version, target_section_id, expected_text)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-     RETURNING ${AUTH_COLUMNS}`,
-    [memberId, chain.id, version.id, g.workId, g.draftId, g.baseVersion,
-      g.targetSectionId, g.expectedText]);
-  return { ok: true, authorization: hydrateAuthorizationRow(ins.rows[0]) };
+  /* ⛔ NO BLANKET `catch`. A database that cannot answer must say so — the
+     `catch { return refuse('write_failed') }` of the retired store turned
+     unavailability into a domain refusal, the shape of the open S3 finding. */
 }
 
 /** ⛔ Scoped to the member. Another's authorization reads as absent. */
@@ -250,15 +298,18 @@ type ReadResult =
  * that substitution.
  */
 async function readWorkAtTarget(
-  memberId: string, chain: ProposalChain,
+  tx: TransactionClient, memberId: string, chain: ProposalChain,
 ): Promise<ReadResult> {
-  const d = await query<{ id: string; version: string }>(
+  /* ⭐ FOR UPDATE. The draft row is held from here until the authorization
+     exists, so the version below and the section body beneath it are ONE
+     committed state and cannot drift apart underneath the proof. */
+  const d = await tx.query<{ id: string; version: string }>(
     `SELECT id, version FROM manuscript_working_drafts
-      WHERE id = $1 AND manuscript_id = $2 AND member_id = $3`,
+      WHERE id = $1 AND manuscript_id = $2 AND member_id = $3 FOR UPDATE`,
     [chain.locus.draftId, chain.locus.workId, memberId]);
   if (d.rows.length === 0) return { ok: false, reason: 'work_unreadable' };
 
-  const s = await query<{ id: string; text: string; heading: string | null }>(
+  const s = await tx.query<{ id: string; text: string; heading: string | null }>(
     `SELECT s.id, s.text, ms.heading
        FROM manuscript_draft_sections s
        LEFT JOIN manuscript_sections ms ON ms.id = s.source_section_id
@@ -281,4 +332,6 @@ async function readWorkAtTarget(
   };
 }
 
-export { transaction };
+/* ⚠️ `export { transaction }` stood here with no consumer. ⛔ A domain store
+   exposes ACTS, not its database machinery — re-exporting the transaction
+   primitive invites a caller to assemble an authorization out of parts. */
