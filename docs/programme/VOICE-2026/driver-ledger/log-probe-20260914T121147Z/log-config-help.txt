@@ -1,0 +1,26 @@
+$ log help config
+usage: log config [options] --mode <modes>
+   or: log config [options] --status
+   or: log config [options] --reset
+
+description:
+    Read or configure settings for the logging system. Configuration
+    can act system-wide; or on a subsystem, category, or process level.
+
+options:
+    --category <name>             Get/set settings for a given category
+    --mode <modes>                Enable given modes
+    --process <pid> | <name>      Get/set settings for a given process
+    --reset                       Reset settings to defaults
+    --status                      Show current settings
+    --subsystem <name>            Get/set settings for a given subsystem
+
+modes:
+    Modes can be specified as a comma-separated list of key:value pairs.
+    Valid keys and their values are:
+
+    level                         off | default | info | debug
+    persist                       off | default | info | debug
+    stream                        live | default
+
+[rc=64]

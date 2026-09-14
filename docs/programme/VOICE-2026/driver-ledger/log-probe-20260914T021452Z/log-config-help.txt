@@ -1,0 +1,3 @@
+$ log-config-help.txt log help config
+scripts/witness/k00-log-probe.sh: line 12: log-config-help.txt: command not found
+[rc=127]

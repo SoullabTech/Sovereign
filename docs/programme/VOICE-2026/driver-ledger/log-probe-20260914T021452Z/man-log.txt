@@ -1,0 +1,3 @@
+$ man-log.txt sh -c MANPAGER=cat man log 2>/dev/null | col -b
+scripts/witness/k00-log-probe.sh: line 12: man-log.txt: command not found
+[rc=127]

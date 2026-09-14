@@ -1,0 +1,40 @@
+$ log help collect
+usage: log collect [<options>]
+
+description:
+    Collect the system logs into a .logarchive that can be viewed with
+    `log show` or Console.app.
+
+options:
+    --device                      Collect logs from first device found
+    --device-name <name>          Collect logs from device with the given name
+    --device-udid <UDID>          Collect logs from device with the given UDID
+    --last <num>[m|h|d]           Collect logs starting <num>[m|h|d] ago
+    --output <path>               Output log archive to the given path
+    --size <num>[k|m]             Limit log collection to the given size
+    --start <time>                Collect logs starting at the given time
+    --predicate <predicate>       Collect logs using a given predicate
+
+notes:
+    If an output path is not specified, system_logs.logarchive will be created
+    in the current directory. If the output path is a directory, a file named
+    `system_logs.logarchive` will be created in the specified directory. If the
+    path contains the extension .logarchive, a new logarchive will be created
+    with that name at the specified path.
+
+    Specifying a predicate for log collection will impact the performance and
+    memory usage of the operation.
+
+valid time formats:
+    'Y-M-D H:m:s+zzzz', 'Y-M-D H:m:s', 'Y-M-D', '@unixtime'
+
+examples:
+    log collect --device
+    log collect --device-name "Ed’s iPhone" --last 1h
+    log collect --output ~/mylogs.logarchive
+    log collect --output /tmp
+    log collect --start "2016-04-12" --output /Users/test --size 20m
+    log collect --start "2016-04-12 06:30:00"
+    log collect --predicate 'process!="kernel"'
+
+[rc=64]

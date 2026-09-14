@@ -1,0 +1,3 @@
+$ devicectl-sysdiagnose-help.txt xcrun devicectl device sysdiagnose --help
+scripts/witness/k00-log-probe.sh: line 12: devicectl-sysdiagnose-help.txt: command not found
+[rc=127]
