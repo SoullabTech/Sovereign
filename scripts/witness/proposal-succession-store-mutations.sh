@@ -71,13 +71,13 @@ mutate "M1 · ⭐⭐ the adapter sorts by authored_at and reconstructs predecess
     versions: byTime.map((x, i) => ({ ...x, supersedes: i === 0 ? null : byTime[i - 1].id })),
   };''')"
 
-mutate "M2 · the head is taken as the newest row instead of from supersedes" \
-"s = s.replace('''  if (versions.length === 0) return null;
-  const superseded = new Set(
-    versions.map((v) => v.supersedes).filter((x): x is string => x !== null));
-  return versions.find((v) => !superseded.has(v.id))?.id ?? null;''',
-'''  if (versions.length === 0) return null;
-  return [...versions].sort((a, b) => a.authoredAt < b.authoredAt ? 1 : -1)[0].id;''')"
+# RETARGETED after the founder review removed the store's local head helper.
+# There is no second head algorithm left to mutate, so this now corrupts the USE
+# of the pure headOf() into a clock-derived predecessor -- which is the defect
+# the old helper made possible, expressed at the only place it can still live.
+mutate "M2 · the candidate's predecessor is clock-derived instead of headOf()" \
+"s = s.replace('      supersedes: headOf(versions)?.id ?? null,',
+               '      supersedes: versions.length === 0 ? null : [...versions].sort((a, b) => a.authoredAt < b.authoredAt ? 1 : -1)[0].id,')"
 
 mutate "M3 · rationale hydrates with the truthiness idiom (\\'\\' becomes absent)" \
 "s = s.replace(\"...(r.rationale !== null ? { rationale: r.rationale } : {}),\",
@@ -119,6 +119,14 @@ export async function updateVersionText(chainId: string, versionId: string, text
 
 mutate "M10 · replacementText is spread-guarded, so a deletion ('') is lost" \
 "s = s.replace('  replacementText: r.formulation,', '  replacementText: r.formulation || undefined as never,')"
+
+# M11 IS THE S3 `unreachable` DEFECT, REPRODUCED HERE ON PURPOSE. A blanket
+# catch turns every database exception -- unavailability included -- into one
+# domain refusal, and the caller can no longer tell "the rule said no" from
+# "the database could not answer". F17 is the only thing standing between this
+# adapter and that collapse.
+mutate "M11 · a blanket catch converts EVERY database error into a domain refusal" \
+"s = s.replace('      throw e;', \"      return refuse('simultaneous_append');\")"
 
 echo
 echo "  $KILLED killed · $SURVIVED survived"

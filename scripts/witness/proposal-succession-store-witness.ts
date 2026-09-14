@@ -263,6 +263,61 @@ async function main() {
     await addCheck();
   }
 
+  /* ── F17 · ⭐⭐ A NON-23505 DATABASE ERROR CROSSES THE ADAPTER AS FAILURE.
+     ⛔ FOUNDER REVIEW, 2026-09-14: the census made this distinction
+     load-bearing and the implementation honours it, but no assertion
+     DEMONSTRATED it — it was left to source inspection. After what this
+     programme learned from the S3 `unreachable` collapse, that is not good
+     enough: there, a real provider failure surfaced as one word with no cause
+     because an error was captured and then discarded one layer down.
+
+     So: a fault that raises a KNOWN NON-23505 SQLSTATE on insert. The adapter
+     must let it ESCAPE. ⛔ It must NOT come back as `chain_unknown`,
+     `chain_corrupt` or `simultaneous_append` — a domain refusal would tell the
+     caller a RULE said no when in fact the DATABASE could not answer.
+
+     ⛔ CRASH-SAFE, the F16 discipline: dropped in `finally`, and dropped
+     unconditionally before creation, so an interrupted earlier run cannot leave
+     this database carrying the fault. */
+  const FAULT = 'proposal_versions_witness_fault';
+  const dropFault = () =>
+    query(`DROP TRIGGER IF EXISTS ${FAULT} ON proposal_versions`);
+  await dropFault();
+  await query(
+    `CREATE OR REPLACE FUNCTION ${FAULT}() RETURNS trigger AS $fn$
+     BEGIN
+       RAISE EXCEPTION 'witness fault injection' USING ERRCODE = '57P01';
+     END; $fn$ LANGUAGE plpgsql`);
+  let escaped: unknown = 'NOTHING THROWN';
+  let returned: unknown = null;
+  try {
+    await query(
+      `CREATE TRIGGER ${FAULT} BEFORE INSERT ON proposal_versions
+         FOR EACH ROW EXECUTE FUNCTION ${FAULT}()`);
+    try {
+      returned = await appendAuthoredVersion(MEMBER, chain.id, {
+        author: 'maia', replacementText: 'must not be swallowed',
+      });
+    } catch (e) { escaped = e; }
+  } finally {
+    await dropFault();
+    await query(`DROP FUNCTION IF EXISTS ${FAULT}()`);
+  }
+
+  const code = (escaped as { code?: string })?.code;
+  code === '57P01'
+    ? ok('F17 · ⭐ a non-23505 database error ESCAPES the adapter  [57P01]')
+    : bad('F17 · a non-23505 database error escapes',
+        returned !== null
+          ? `it was COLLAPSED INTO A DOMAIN REFUSAL: ${JSON.stringify(returned)}`
+          : `thrown, but not the injected fault: ${String(escaped)}`);
+
+  /* ⭐ And the transaction rolled back — a failed append leaves no partial row. */
+  const afterFault = await readChain(MEMBER, chain.id);
+  eq('F17b · and nothing was written by the failed append',
+    afterFault!.versions.some((x) => x.replacementText === 'must not be swallowed'),
+    false);
+
   /* ── F12 · the stored chain is a VALID chain by the pure contract's own
      judgement — the round-trip closing on itself. ─────────────────────────── */
   const v = validateChain(after!.chain, after!.versions);

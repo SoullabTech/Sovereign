@@ -56,7 +56,7 @@
 
 import { query, transaction } from '@/lib/db/postgres';
 import {
-  appendVersion, validateChain,
+  appendVersion, headOf, validateChain,
 } from './succession';
 import type {
   EditorialRulingRef, LocusIdentity, ProposalChain, ProposalVersion,
@@ -235,19 +235,22 @@ export async function readChain(
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * ⭐ The head's id, or `null` when the chain is empty — read from `supersedes`,
- * never from a clock and never from a stored flag.
+ * ⛔⛔ THERE IS NO LOCAL HEAD CALCULATION IN THIS FILE, AND THERE MUST NEVER BE.
  *
- * ⚠️ It duplicates no logic: `headOf` is imported by `appendVersion`, and this
- * exists only because the candidate must NAME its predecessor before the pure
- * function can judge it. The judgement remains `appendVersion`'s.
+ * ⚠️ FOUNDER REVIEW, 2026-09-14, MERGE BLOCKER. An earlier cut carried a local
+ * head-id helper here — the `headOf()` algorithm reproduced inside the
+ * persistence layer — under a comment asserting it "duplicates no logic". It
+ * quite literally did. ⭐ THE PROOF WAS IN THE FALSIFIER: mutation `M2` could
+ * mutate that helper ALONE, which means there were TWO INDEPENDENTLY
+ * FALSIFIABLE ANSWERS to "what is the head?" — two implementations that
+ * happened to agree.
+ *
+ * The law of this lane: *persistence TRANSPORTS the contract; it does not
+ * implement succession again.* `headOf()` is imported and used directly below,
+ * and `appendVersion()` remains the second check that the candidate really does
+ * succeed the current head — redundancy INSIDE one pure authority, which is not
+ * the same thing as a second algorithm in the store.
  */
-function headIdOf(versions: readonly ProposalVersion[]): string | null {
-  if (versions.length === 0) return null;
-  const superseded = new Set(
-    versions.map((v) => v.supersedes).filter((x): x is string => x !== null));
-  return versions.find((v) => !superseded.has(v.id))?.id ?? null;
-}
 
 /** ⛔ Never persisted. The database mints the real id. */
 const PROVISIONAL_ID = '00000000-0000-0000-0000-000000000000';
@@ -310,7 +313,7 @@ export async function appendAuthoredVersion(
     const provisional: ProposalVersion = {
       id: PROVISIONAL_ID,
       chainId: chain.id,
-      supersedes: headIdOf(versions),
+      supersedes: headOf(versions)?.id ?? null,
       replacementText: input.replacementText,
       ...(input.rationale !== undefined ? { rationale: input.rationale } : {}),
       author: input.author,
