@@ -174,8 +174,10 @@ CLASS-B FREEZE       INTACT @ 2255b60d · verified by diff, typecheck and matrix
 M1 · M2 · M2b · M3   CANDIDATE · non-canonical branch · AMENDED per review
 GUARDS               7 / 7
 GESTURE VALUE        ⭐ RULED `authorize_sections` · M2b landed
-W-A DB CONCURRENCY   OWED — independent connections racing one act
-W-B CRASH/RECOVERY   OWED · SIX cases (expanded by the review):
+W-A DB CONCURRENCY   ⭐ DISCHARGED 2026-09-13 · witness b68eb10d
+                     8 connections · 1 claim · 7 losers · 1 consumption row
+                     foreign + expired produced NO ROW AT ALL
+W-B CRASH/RECOVERY   ⭐ DISCHARGED 2026-09-13 · all six PASS:
                      1 claimed · died · no completion → interrupted, zero crossings
                      2 completed · response lost → same completion identity
                      3 completed · outcome deleted → completion fact survives
@@ -185,5 +187,8 @@ W-B CRASH/RECOVERY   OWED · SIX cases (expanded by the review):
                        unclaimed cannot falsely report completion recorded
 ROUTE INTEGRATION    ⛔ NOT AUTHORIZED
 MERGE                ⛔ NOT AUTHORIZED — merge is schema-deploy authorization
+DISPOSITIONS         S3-M_PHASE_DISPOSITIONS_2026-09-14.md — substrate
+                     typecheck allowance TAKEN · insertOne finding HANDED ON ·
+                     conflict logging = named route-integration obligation
 PRODUCTION           UNTOUCHED
 ```

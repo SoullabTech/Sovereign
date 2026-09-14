@@ -171,7 +171,7 @@
     "jarvis:proof": "node scripts/builder/__tests__/session-proof.mjs && node scripts/builder/__tests__/rate-proof.mjs && node scripts/builder/__tests__/incident-scenario-proof.mjs && node scripts/builder/__tests__/work-unit-proof.mjs && node scripts/builder/__tests__/run-check-proof.mjs && node scripts/builder/__tests__/delegate-workspace-convergence-proof.mjs && node scripts/builder/__tests__/session-liveness-authority-proof.mjs && node scripts/builder/__tests__/claude-adapter-governance-proof.mjs",
     "typecheck:s3-constitutional": "tsc -p tsconfig.s3-constitutional.json",
     "matrix:s3-constitutional": "tsx tests/constitutional/s3/matrix.ts",
-    "typecheck:s3-substrate": "tsc -p tsconfig.s3-substrate.json",
+    "typecheck:s3-substrate": "node scripts/typecheck-s3-substrate.mjs",
     "guards:s3-substrate": "tsx tests/constitutional/s3-substrate/guards.ts"
   },
   "dependencies": {
