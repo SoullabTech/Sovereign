@@ -89,6 +89,17 @@ PROVEN (source)      no -E / -F / -P flag is pinned, so the language is NOT fixe
 ⛔ UNOBSERVED        what grep.patternType EFFECTIVELY resolves to in the bound environment
 ```
 
+> ⚠️ **SUPERSEDED IN PLACE 2026-09-14 — the second half is now OBSERVED.** Kept verbatim above
+> because it was true when written. `grep.patternType` was read with its origin at all four scopes
+> and is **UNSET everywhere**, so the effective language is git's built-in **BRE** — *in that one
+> environment, on that one day*. The ambientness is unchanged and remains the finding. Two further
+> runtime facts were measured that the contract did not have: the handler-derived `\b<symbol>\b` in
+> `repo.locate_symbol` **matches nothing under `--fixed-strings`**, and a present symbol is then
+> indistinguishable from an absent one — which the two handlers additionally disagree about (one
+> returns ZERO-RESULT, the other throws). See
+> `docs/programme/JOP-04_D5_GREP_PATTERN_LANGUAGE_DECISION_PACKET_2026-09-14.md` (finding **F-D**)
+> and `scripts/jop04/d5-grep-language-evidence.sh`.
+
 ⛔ **A single successful `git grep` would not establish the accepted language** — it would show one
 outcome under one unread configuration. Establishing the second half needs the effective config read
 directly, with its origin:
