@@ -183,3 +183,64 @@ PRODUCTION               UNTOUCHED
 ⚠️ **This is the fourth deployment lane.** Per the founder's standing line: no
 fifth unless the next act discovers an actual falsifier. The goal is to close S3
 and return to Writer's Studio.
+
+---
+
+# CORRECTION · THE IDENTITY WAS STILL CONFIGURABLE (founder review, pre-admission)
+
+⭐⭐ **The first DS-02B cut wrote the root as `${RB_PRODUCTION_ROOT:-…}` — so the
+caller could redefine what "the production root" means:**
+
+```bash
+RB_PRODUCTION_ROOT=/tmp/lookalike PROJECT_DIR=/tmp/lookalike  scripts/…runbook.sh
+```
+
+⛔ A guard whose whole purpose is *identity cannot be manufactured by an
+environment variable* was itself manufacturable by an environment variable. ⛔ And
+I used that very seam in my own witness to build a fixture root — **the test seam
+was living inside production authority.**
+
+## The repair
+
+```bash
+readonly RB_PRODUCTION_ROOT="/home/soullab/MAIA-SOVEREIGN"
+```
+
+No `${…:-…}`, no override. `readonly` with a literal makes an exported value
+inert — bash overwrites it at the assignment (verified directly).
+
+**The harness now mutates a DISPOSABLE COPY** whose literal points at a fixture
+root. Functional checks run against that copy; ⭐ the STATIC checks and the digest
+guard run against the real file, so production authority carries no test seam.
+
+## ⚠️ AND THE PROBE EXPOSED A WEAKNESS IN MY OWN ASSERTION
+
+Checking discrimination directly showed the pre-repair form **accepted** the
+lookalike (`Runtime root verified`) and *still exited non-zero later* — so a
+check written as *"refused ⇔ non-zero exit"* would have passed it.
+
+⭐ **The exit code was never the discriminator. The guard's own verdict is.**
+Every runtime-root assertion now keys on `Runtime root verified` / `not the
+production runtime root`, never on `$?`.
+
+## Witness — **80 passed · 0 failed**
+
+```text
+RUNTIME ROOT
+  unset · temp worktree · lookalike · nonexistent · recover-from-temp   refuse
+  the lock resolves to the production root's .deploy.lock
+  an environment override CANNOT redefine the production root
+  the production root is a readonly LITERAL in the real runbook
+  the real runbook derives NOTHING about its root from the environment
+
+⭐⭐ DISCRIMINATION
+  the pre-repair overridable form IS detected as accepting a lookalike
+  swap-before-migrate mutant                       DETECTED
+  recovery leaving :prod on the candidate          DETECTED
+```
+
+Neighbours: 14/0 · 27/0 · 25/0. ⛔ Untouched: the four helpers,
+`deploy-production.sh`, S3 code, every migration, the CLAUDE.md anchor.
+
+⚠️ **Head moved** — the authorized head for #1288 is superseded by this correction.
+The new head needs inspection before the protected merge gate is renewed.

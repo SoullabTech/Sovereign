@@ -124,7 +124,15 @@ rb_stop() { echo -e "${RB_RED}[RUNBOOK STOP]${RB_NC} $1"; }
 # `.env.production` and a compose file would pass a shape test. `PROJECT_DIR`
 # must therefore be supplied explicitly and match the production root by
 # canonical path — never inferred, never defaulted.
-RB_PRODUCTION_ROOT="${RB_PRODUCTION_ROOT:-/home/soullab/MAIA-SOVEREIGN}"
+# ⛔⛔ NOT OVERRIDABLE, AND THAT IS THE WHOLE POINT. An earlier cut wrote this as
+# `${RB_PRODUCTION_ROOT:-…}`, which let the caller redefine what "the production
+# root" means — so `RB_PRODUCTION_ROOT=/tmp/lookalike PROJECT_DIR=/tmp/lookalike`
+# would have satisfied a guard whose entire purpose is that identity cannot be
+# manufactured by an environment variable. `readonly` with a literal makes the
+# export inert: bash overwrites it at this assignment.
+# ⛔ A harness that needs a different root mutates a DISPOSABLE COPY of this file.
+# The test seam does not live in production authority.
+readonly RB_PRODUCTION_ROOT="/home/soullab/MAIA-SOVEREIGN"
 
 rb_require_production_root() {
   if [ -z "${PROJECT_DIR:-}" ]; then
