@@ -1,0 +1,16 @@
+# unified-log capture discovery — 20260914T123612Z (help pages only; nothing captured, nothing configured)
+## provenance: execution HEAD 06d80f16d1085f8c2248d48fdd459671e2a1762f · criterion PASS2-COND3-POSITIONAL-ARCHIVE@09c1bd251 · criterion is ancestor of HEAD: yes
+## 1. log collect documents a device-targeting option?
+11:    --device-udid <UDID>          Collect logs from device with the given UDID
+## 2. log collect documents a bounded start window?
+12:    --last <num>[m|h|d]           Collect logs starting <num>[m|h|d] ago
+15:    --start <time>                Collect logs starting at the given time
+33:    log collect --device-name "Ed’s iPhone" --last 1h
+36:    log collect --start "2016-04-12" --output /Users/test --size 20m
+37:    log collect --start "2016-04-12 06:30:00"
+## 3. log show documents archive replay (positional <archive>, the corrected grammar)?
+2:usage: log show [options] <archive>
+## log show read-level flags (for the separately ruled escalation ladder)
+12:    --[no-]debug                  Control whether "Debug" events are shown
+13:    --[no-]info                   Control whether "Info" events are shown
+## read-only assessment: the help text is the authority; any option that changes levels/modes lives under 'log config', never invoked here.

@@ -1,0 +1,44 @@
+$ xcrun devicectl device sysdiagnose --help
+OVERVIEW: Gather a sysdiagnose for a device.
+
+This command gathers a sysdiagnose for the indicated device. If you also want
+to gather a sysdiagnose for the host and additional Core Device information,
+please use `devicectl diagnose` instead.
+
+USAGE: devicectl device sysdiagnose --device <uuid|ecid|serial_number|udid|name|dns_name> [--destination <destination>] [--gather-full-logs] [--dry-run-only] [--verbose] [--quiet] [--timeout <seconds>] [--json-output <path>] [--log-output <path>]
+
+DEVICE OPTIONS:
+  -d, --device <uuid|ecid|serial_number|udid|name|dns_name>
+                          The identifier, ECID, serial number, UDID,
+                          user-provided name, or DNS name of the device.
+
+COMMAND OPTIONS:
+  --destination <destination>
+                          Where to place the device's sysdiagnose. By default
+                          the sysdiagnose will be placed in a unique temporary
+                          directory.
+  --gather-full-logs      When running the command, tell sysdiagnose to gather
+                          full logs. Since this can result in significantly
+                          larger sysdiagnose files, this is off by default.
+  --dry-run-only          When running the command, tell sysdiagnose to whether
+                          or not to collect diagnostics. This is used for
+                          testing.
+
+OUTPUT OPTIONS:
+  -v, --verbose           If given, provide more logging output than normal.
+  -q, --quiet             If given, output will include only errors.
+  -t, --timeout <seconds> The overall command timeout in seconds. If this limit
+                          is exceeded the command is abandoned as a failure.
+  -j, --json-output <path>
+                          An optional path to write a JSON file with command
+                          results.
+        Note: JSON output to a user-provided file on disk is the ONLY supported
+        interface for scripts/programs to consume command output.
+  -l, --log-output <path> An optional path to write all logging otherwise
+                          passed to stdout/stderr.
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
+[rc=0]
