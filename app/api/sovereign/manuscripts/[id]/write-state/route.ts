@@ -96,10 +96,12 @@ export async function GET(
         /* ⭐ Located against the sections THIS RESPONSE IS RETURNING — never a
            second read that could disagree with the one the writer receives. */
         const r = await readProposalWorkTarget(
-          memberId, focus.chainId, focus.versionId, state.sections);
+          memberId, id, focus.chainId, focus.versionId, state.sections);
         /* ⛔ A refusal is silent, exactly as PW-2 already required: unknown,
-           another member's, corrupt, and foreign-version all return the
-           ordinary section state and disclose nothing. */
+           another member's, corrupt, foreign-version — and ⭐ a chain belonging
+           to a DIFFERENT Work of the same writer — all return the ordinary
+           section state and disclose nothing. The room is never told "that
+           chain belongs to another manuscript". */
         target = r.ok ? r.target : null;
       } else {
         target = await resolveProposalWork(

@@ -96,7 +96,7 @@ async function main() {
   const S = () => sectionsOf(w.workId, M);
 
   /* ── C1 · chain + version · NO authorization anywhere ──────────────────── */
-  const c1 = await readProposalWorkTarget(M, chain, v2, await S());
+  const c1 = await readProposalWorkTarget(M, w.workId, chain, v2, await S());
   eq('C1 · ⭐ proposal work mounts with NO authorization in existence',
     c1.ok ? [c1.target.chainId === chain, c1.target.versionId === v2,
       c1.target.location.located] : c1, [true, true, true]);
@@ -110,7 +110,7 @@ async function main() {
   const a = await authorizeVersion(M, chain, v2);
   if (!a.ok) { bad('C2 · authorize', a.reason); return finish(); }
   await query(`UPDATE manuscript_working_drafts SET version=99 WHERE id=$1`, [w.draftId]);
-  const c2 = await readProposalWorkTarget(M, chain, v2, await S());
+  const c2 = await readProposalWorkTarget(M, w.workId, chain, v2, await S());
   eq('C2 · ⭐ authorization STALE → proposal work STILL mounts, still located',
     c2.ok ? [true, c2.target.location.located] : c2, [true, true]);
   await query(`UPDATE manuscript_working_drafts SET version=41 WHERE id=$1`, [w.draftId]);
@@ -121,7 +121,7 @@ async function main() {
   const spentRow = await query<{ accepted_at: string | null }>(
     `SELECT accepted_at FROM manuscript_revision_authorizations WHERE id=$1`,
     [a.authorization.id]);
-  const c3 = await readProposalWorkTarget(M, chain, v2, await S());
+  const c3 = await readProposalWorkTarget(M, w.workId, chain, v2, await S());
   eq('C3 · ⭐ authorization SPENT → proposal work STILL mounts',
     [spentRow.rows[0]?.accepted_at !== null, c3.ok], [true, true]);
   /* ⭐ And note WHAT the spend did: the wording it applied is now IN the Work,
@@ -136,7 +136,7 @@ async function main() {
   const wa = await makeWork(M, 'a, fixated, b, fixated, c');
   const ca = await makeChain(M, wa);
   const va = await addVersion(ca, 'maia', ', steady', null);
-  const c5 = await readProposalWorkTarget(M, ca, va, await sectionsOf(wa.workId, M));
+  const c5 = await readProposalWorkTarget(M, wa.workId, ca, va, await sectionsOf(wa.workId, M));
   eq('C5 · ⭐ expected text AMBIGUOUS → mounts, NO guessed range',
     c5.ok ? [true, c5.target.location.located,
       (c5.target.location as { reason?: string }).reason]
@@ -147,15 +147,15 @@ async function main() {
   const cb = await makeChain(M, wb);
   const vb = await addVersion(cb, 'maia', ', steady', null);
   const secs = await sectionsOf(wb.workId, M);
-  const c6 = await readProposalWorkTarget(M, cb, vb, secs);
+  const c6 = await readProposalWorkTarget(M, wb.workId, cb, vb, secs);
   const loc = c6.ok && c6.target.location.located ? c6.target.location.range : null;
   eq('C6 · ⭐⭐ occurs ONCE → projected_section_body, at THAT exact locus',
     loc ? [loc.space, [...secs[0].body].slice(loc.start, loc.end).join('')] : c6,
     ['projected_section_body', ', fixated']);
 
   /* ── C7 · focused v2 while v3 is head → v2's wording, never the head's ─── */
-  const c7 = await readProposalWorkTarget(M, chain, v2, await S());
-  const c7h = await readProposalWorkTarget(M, chain, v3, await S());
+  const c7 = await readProposalWorkTarget(M, w.workId, chain, v2, await S());
+  const c7h = await readProposalWorkTarget(M, w.workId, chain, v3, await S());
   eq('C7 · ⭐⭐ the FOCUSED version renders, never silently the head',
     [c7.ok && c7.target.replacementText, c7.ok && c7.target.versionId === v2,
       c7h.ok && c7h.target.replacementText],
@@ -164,17 +164,35 @@ async function main() {
   /* ── C8 · foreign chain ≡ missing chain, no leak ───────────────────────── */
   const wf = await makeWork(M2); const cf = await makeChain(M2, wf);
   const vf = await addVersion(cf, 'maia', ', steady', null);
-  const foreign = await readProposalWorkTarget(M, cf, vf, await S());
+  const foreign = await readProposalWorkTarget(M, w.workId, cf, vf, await S());
   const missing = await readProposalWorkTarget(
-    M, '00000000-0000-0000-0000-000000000000', vf, await S());
+    M, w.workId, '00000000-0000-0000-0000-000000000000', vf, await S());
   eq('C8 · ⛔ foreign chain ≡ missing chain — indistinguishable, nothing leaks',
     [foreign, missing], [{ ok: false, reason: 'chain_unknown' },
       { ok: false, reason: 'chain_unknown' }]);
 
   /* ── C9 · version foreign to the chain REFUSES, never re-focuses ───────── */
-  const c9 = await readProposalWorkTarget(M, chain, vb, await S());
+  const c9 = await readProposalWorkTarget(M, w.workId, chain, vb, await S());
   eq('C9 · ⛔ a version foreign to the chain REFUSES; no other version is focused',
     c9, { ok: false, reason: 'version_unknown' });
+
+  /* ══ C11 · ⭐⭐ SAME MEMBER · WRONG WORK ═════════════════════════════════
+     The second cutover law: a proposal may lose its place in the Work without
+     losing its place in the conversation, but it may NOT migrate into a
+     DIFFERENT Work merely because both belong to the same writer.
+
+     ⚠️ `cb` is a real chain of THIS member, against manuscript `wb`. Asked for
+     while the room displays manuscript `w`, it must refuse — and refuse
+     BEFORE any target exists, so `wb`'s wording is never even assembled. */
+  const c11 = await readProposalWorkTarget(M, w.workId, cb, vb, await S());
+  eq('C11 · ⭐⭐ a valid own-chain from ANOTHER Work refuses — no target at all',
+    c11, { ok: false, reason: 'wrong_work' });
+  /* ⛔ And the room is told nothing that distinguishes it from any other
+     unresolvable selector: the route collapses every refusal to the ordinary
+     section state. A refusal is not an occasion to disclose. */
+  eq('C11b · ⛔ nothing from the other Work is transported',
+    JSON.stringify(c11).includes(', steady') || JSON.stringify(c11).includes(wb.sectionId),
+    false);
 
   /* ══ C10 · SOURCE-LEVEL ═══════════════════════════════════════════════════
      ⚠️ Labelled, not disguised. The route needs a verified session and neither

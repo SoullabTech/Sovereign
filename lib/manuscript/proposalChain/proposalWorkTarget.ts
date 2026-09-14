@@ -172,7 +172,7 @@ export function projectProposalWork(
 
 export type ProposalWorkTargetResult =
   | { readonly ok: true; readonly target: ProposalWorkTarget }
-  | { readonly ok: false; readonly reason: ProposalWorkRefusal };
+  | { readonly ok: false; readonly reason: ProposalWorkRefusal | 'wrong_work' };
 
 /**
  * The cutover read: chain + EXACT version, projected against a Work state the
@@ -182,15 +182,44 @@ export type ProposalWorkTargetResult =
  * when no version is named, and that default is a reading convenience the
  * writing room must not inherit — the room should know which authored
  * formulation it is displaying.
+ *
+ * ⭐⭐ `expectedWorkId` IS ALSO REQUIRED, AND IT IS THE SECOND CUTOVER LAW
+ * (founder, 2026-09-14):
+ *
+ *     A proposal may remain discussable after losing its place in the Work;
+ *     it may not migrate into a DIFFERENT Work merely because both belong to
+ *     the same writer.
+ *
+ * ⛔ FOUND BY FOUNDER REVIEW OF 672ada8be, WHICH BOUND MEMBER AND CHAIN AND
+ * NOT THE WORK. Member ownership and chain membership both held, so a chain
+ * authored against manuscript Y resolved `ok` while the room displayed
+ * manuscript X. Y's section was simply not among X's sections, so the location
+ * read `section_unreadable` — a truthful-looking answer to the wrong question —
+ * and Y's `replacementText` travelled into X's room. No cross-member
+ * disclosure, but an IDENTITY SUBSTITUTION, and the same family as every
+ * Canvas identity defect this contract already carries:
+ *
+ *     a valid identity is not enough; it must be valid IN THIS NAMESPACE.
+ *
+ * ⚠️ Note what made it quiet: the wrong-Work case produced a *plausible*
+ * unavailable location rather than an error. An unavailable location is the
+ * honest answer when the wording has moved; it is NOT an answer to "is this
+ * chain even about this Work?", and letting the first stand in for the second
+ * is how the substitution stayed invisible.
  */
 export async function readProposalWorkTarget(
   memberId: string,
+  expectedWorkId: string,
   chainId: string,
   versionId: string,
   sections: readonly ProjectedSection[],
 ): Promise<ProposalWorkTargetResult> {
   const r = await readProposalWork(memberId, chainId, versionId);
   if (!r.ok) return { ok: false, reason: r.reason };
+  /* ⛔ THE NAMESPACE BINDING, BEFORE ANY TARGET EXISTS. Checked here rather
+     than after projection, so no wording from another Work is ever assembled,
+     let alone returned. */
+  if (r.work.chain.locus.workId !== expectedWorkId) return { ok: false, reason: 'wrong_work' };
   const focused = r.work.focused;
   /* Unreachable while a version is named — `readProposalWork` refuses first.
      ⛔ Kept as a refusal rather than an assertion: a null focus must never

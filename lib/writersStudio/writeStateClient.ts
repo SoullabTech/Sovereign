@@ -71,10 +71,23 @@ export interface WriteStateSection {
 export type WriteState =
   | { mode: 'section_aware'; version: number; rows: WriteStateRow[]; sections: WriteStateSection[] }
   /**
-   * ⭐ A GENUINE MOUNT BOUNDARY, not a visual variant of the editor: the
-   * PERSISTENCE AUTHORITY over one section has changed. `target` is present
-   * exactly when the mode is this one, so the room cannot enter proposal work
-   * without knowing what is being worked.
+   * ⭐ A GENUINE MOUNT BOUNDARY, not a visual variant of the editor. `target`
+   * is present exactly when the mode is this one, so the room cannot enter
+   * proposal work without knowing what is being worked.
+   *
+   * ⚠️ CORRECTED BY FOUNDER RULING, 2026-09-14. This said the mode meant *the
+   * PERSISTENCE AUTHORITY over one section has changed*. That is no longer
+   * always true, and leaving the sentence would have made the type description
+   * assert a fact the server had stopped guaranteeing.
+   *
+   *     mode: 'proposal_work'   proposal-work context is MOUNTED
+   *     SectionAuthority        whether persistence authority actually moved
+   *
+   * They coincide when the location is located. When it is unavailable the
+   * conversation is still mounted and every section keeps the authority it had
+   * — because a system that failed to establish the place has no basis to
+   * withhold the writer's own Work there. ⛔ Two facts, read from two fields;
+   * never infer the second from the first.
    */
   | { mode: 'proposal_work'; version: number; rows: WriteStateRow[];
       sections: WriteStateSection[]; target: ProposalWorkTarget }
