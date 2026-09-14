@@ -1,0 +1,28 @@
+{
+ "captureTimestamp": "20260914T123612Z",
+ "criterionId": "PASS2-COND3-POSITIONAL-ARCHIVE",
+ "criterionIsAncestorOfHead": true,
+ "criterionRevision": "09c1bd251",
+ "executionHead": "06d80f16d1085f8c2248d48fdd459671e2a1762f",
+ "files": {
+  "SUMMARY.txt": "86941a94dbf676cdf76205650e4f7bd7e80a915751a483b3fd7aaf8eb15e58d2",
+  "devicectl-sysdiagnose-help.txt": "b85b53085ed74d7ca91d6e4c2dffad4ef37bfefd5f4cca55fdfc250c335a08e5",
+  "log-collect-help.txt": "f7817310a4107dca64245e267c23ef9ae3d8b741b549c5da41f4a8b92f9a5711",
+  "log-config-help.txt": "bea0dcf986185415c515a638d6d57f4a80f6c02c4a0d0018d2a54bc29683870d",
+  "log-help.txt": "842e10cf9dfd328dab13603b4fecdfe350ffaf0e1bd13faaf70d6a3b708a62ec",
+  "log-show-help.txt": "c48f20d85cf81e6a7e2f22a75c8dce4fb5a4c0cf9352ff145057db33d02d192d",
+  "log-stream-help.txt": "2ca4fabc194652e9d43c849b233007899d353ab7d1a74a624f10eb2e2c987a59",
+  "man-log.txt": "279fda5654031ecd4e0f35c4d04cd9dcf12b019863fbd587ab9a0fd20beb8a79",
+  "versions.txt": "6bb3745ce8b215a74613bece9b512b5f346b116fdaa48e7e232cef344d25e7bd"
+ },
+ "instrument": "k00-log-probe.sh",
+ "tool": [
+  "ProductName:\t\tmacOS",
+  "ProductVersion:\t\t15.7.8",
+  "BuildVersion:\t\t24G806",
+  "Xcode 26.3",
+  "Build version 17C529",
+  "/usr/bin/log",
+  "b4d2481e4fda1c2cf3c3301312deffe0785e013bbc5b7e693950fb92ddc43c3c  /usr/bin/log"
+ ]
+}

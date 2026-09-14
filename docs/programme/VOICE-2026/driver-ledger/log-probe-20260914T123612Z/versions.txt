@@ -1,0 +1,7 @@
+ProductName:		macOS
+ProductVersion:		15.7.8
+BuildVersion:		24G806
+Xcode 26.3
+Build version 17C529
+/usr/bin/log
+b4d2481e4fda1c2cf3c3301312deffe0785e013bbc5b7e693950fb92ddc43c3c  /usr/bin/log
