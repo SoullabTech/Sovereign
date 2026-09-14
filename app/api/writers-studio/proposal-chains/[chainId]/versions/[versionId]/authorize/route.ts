@@ -50,12 +50,17 @@ export async function POST(
     return NextResponse.json({ authorized: false, reason: r.reason }, { status });
   }
 
-  /* ⛔ THE AUTHORIZATION'S ID AND ITS BINDING — no wording is echoed. The member
-     reads their Work from the Work, and the formulation from the version. */
+  /* ⛔⛔ THE ID AND THE MOMENT. NOTHING ELSE.
+     ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut returned `binding:
+     r.authorization.guard` under a comment saying "no wording is echoed" —
+     and `guard.expectedText` IS manuscript prose. The comment and the payload
+     said opposite things, and the payload is what ships.
+     ⭐ A caller that needs to know WHERE the change is asks
+     `GET …/revision-authorizations/:id`, which carries a server-derived
+     locator and still no prose. */
   return NextResponse.json({
     authorized: true,
     authorizationId: r.authorization.id,
     authorizedAt: r.authorization.authorizedAt,
-    binding: r.authorization.guard,
   }, { status: 201 });
 }

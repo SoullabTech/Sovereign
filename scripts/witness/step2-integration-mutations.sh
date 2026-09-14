@@ -8,12 +8,25 @@ PW="$ROOT/lib/manuscript/proposalChain/proposalWork.ts"
 ST="$ROOT/lib/manuscript/revisionAuthorization/status.ts"
 FIT="$ROOT/lib/manuscript/revisionAuthorization/executionFit.ts"
 BK="$(mktemp -d)"; cp "$PW" "$BK/pw"; cp "$ST" "$BK/st"; cp "$FIT" "$BK/fit"
-restore() { cp "$BK/pw" "$PW"; cp "$BK/st" "$ST"; cp "$BK/fit" "$FIT"; rm -rf "$BK"; }
+restore() { cp "$BK/pw" "$PW"; cp "$BK/st" "$ST"; cp "$BK/fit" "$FIT";
+  [ -f "$BK/authrt" ] && cp "$BK/authrt" "$ROOT/app/api/writers-studio/proposal-chains/[chainId]/versions/[versionId]/authorize/route.ts";
+  [ -f "$BK/statusrt" ] && cp "$BK/statusrt" "$ROOT/app/api/writers-studio/revision-authorizations/[authorizationId]/route.ts";
+  rm -rf "$BK"; }
 trap restore EXIT
 KILLED=0; SURVIVED=0
 
+# ⚠️ TRANSFORMS MOVED OUT OF BASH STRINGS. Three separate defects came from
+# quoting them inline: `$1` in SQL expanding as a POSITIONAL PARAMETER under
+# `set -u`, a backtick reading as COMMAND SUBSTITUTION, and an unbalanced quote
+# silently turning a mutation into a no-op. A transform is python; it belongs in
+# a python file.
+mutate_file() { # $1 label  $2 target  $3 transform .py
+  mutate "$1" "$2" "$(cat "$ROOT/scripts/witness/step2-mutations/$3")"
+}
+
 mutate() { # $1 label  $2 file  $3 transform
   cp "$BK/pw" "$PW"; cp "$BK/st" "$ST"; cp "$BK/fit" "$FIT"
+  [ -f "$BK/authrt" ] && cp "$BK/authrt" "$ROOT/app/api/writers-studio/proposal-chains/[chainId]/versions/[versionId]/authorize/route.ts"
   if ! python3 - "$2" "$3" <<'PY'
 import sys
 path, t = sys.argv[1], sys.argv[2]
@@ -40,15 +53,10 @@ PY
 echo "── STEP 2 · integration falsification ───────────────────────"
 
 # ⭐⭐ THE ONE THAT MATTERS: R6's collapse, reintroduced.
-mutate "N1 · proposal work is gated on the authorization fitting (R6 collapse)" "$PW" \
-"s = s.replace('import { lineage, validateChain }', 'import { readAuthorizationStatus } from \\\"@/lib/manuscript/revisionAuthorization/status\\\";\nimport { lineage, validateChain }').replace('  const ordered = lineage(versions);', '''  const anyAuth = await query<{ id: string }>(
-    'SELECT id FROM manuscript_revision_authorizations WHERE proposal_chain_id = \$1 LIMIT 1',
-    [chainId]);
-  if (anyAuth.rows[0]) {
-    const st = await readAuthorizationStatus(memberId, anyAuth.rows[0].id);
-    if (st && st.state !== 'executable') return { ok: false, reason: 'chain_unknown' };
-  }
-  const ordered = lineage(versions);''')"
+# ⚠️ REWRITTEN: the first N1 inserted a `query<>` call, but proposalWork no
+# longer imports `query` — the mutant did not compile and the harness reported
+# CRASHED. A mutation must be a WORKING known-bad implementation.
+mutate_file "N1 · proposal work is gated on the authorization fitting (R6 collapse)" "$PW" "N1.py"
 
 mutate "N2 · the status surface stops consuming the shared fit law (CS-3)" "$ST" \
 "s = s.replace('  const fit = evaluateExecutionFit(g, {', '  const fit = { fits: true } as const; void evaluateExecutionFit; void ({')"
@@ -62,12 +70,23 @@ mutate "N4 · the fit law stops checking the base version" "$FIT" \
 mutate "N5 · proposal work leaks an executability field" "$PW" \
 "s = s.replace('  return { ok: true, work: { chain, versions: ordered, focused } };', '  return { ok: true, work: { chain, versions: ordered, focused, executable: true } as never };')"
 
-mutate "N6 · the status read distinguishes foreign from unknown" "$ST" \
-"s = s.replace('  if (a.rows.length === 0) return null;', '''  if (a.rows.length === 0) {
-    const anywhere = await query('SELECT 1 FROM manuscript_revision_authorizations WHERE id = \$1', [authorizationId]);
-    if (anywhere.rows.length > 0) return { state: 'work_unreadable' } as never;
-    return null;
-  }''')"
+# ⚠️ REWRITTEN for the transactional status read: the first N6 called the pool
+# `query`, which status.ts no longer imports.
+mutate_file "N6 · the status read distinguishes foreign from unknown" "$ST" "N6.py"
+
+AUTH_RT="$ROOT/app/api/writers-studio/proposal-chains/[chainId]/versions/[versionId]/authorize/route.ts"
+cp "$AUTH_RT" "$BK/authrt"
+
+mutate "N7 · the authorize transport leaks the binding again" "$AUTH_RT" \
+"s = s.replace('    authorizedAt: r.authorization.authorizedAt,', '    authorizedAt: r.authorization.authorizedAt,\\n    binding: r.authorization.guard,')"
+
+mutate "N8 · the status read leaves the transaction (collage possible)" "$ST" \
+"s = s.replace('WHERE id = \$1 AND manuscript_id = \$2 AND member_id = \$3 FOR SHARE', 'WHERE id = \$1 AND manuscript_id = \$2 AND member_id = \$3')"
+
+mutate_file "N9 · the consent transport stops naming a place" "$ST" "N9.py"
+
+mutate "N10 · proposalWork hydrates rows itself again (second adapter)" "$PW" \
+"s = s.replace('  const stored = await readChain(memberId, chainId);', '  const stored = await readChain(memberId, chainId); const _sql = %s;' % repr('SELECT x FROM proposal_chains'))"
 
 echo
 echo "  $KILLED killed · $SURVIVED survived"

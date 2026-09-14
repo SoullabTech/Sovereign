@@ -17,9 +17,27 @@
  *
  * ⛔ AND IT CARRIES NO AUTHORITY FIELD. No `executionAuthority`, no
  * `inspection_only`, no `mayAccept`. Those have no successor in any spelling.
+ *
+ * ── ⛔ AND IT OWNS NO SQL ─────────────────────────────────────────────────
+ *
+ * ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut issued its own
+ * `SELECT … FROM proposal_chains` / `proposal_versions` and hydrated
+ * `ProposalChain` and `ProposalVersion` itself — A SECOND IMPLEMENTATION OF A
+ * PERSISTENCE BOUNDARY STEP 1 HAD ALREADY REVIEWED. It agreed with
+ * `proposalChain/store.ts` on the day it was written, which is exactly what
+ * this programme has learned not to accept: a later hydration correction would
+ * have landed on one read path and not the other.
+ *
+ *     store          durable facts
+ *     proposalWork   collaborative READ SEMANTICS — validate · lineage ·
+ *                    focus · discussion
+ *
+ * ⛔ It consumes `readChain()`. A source gate pins the absence of direct table
+ * access here — not because SQL is forbidden in this layer, but because these
+ * two objects already have one adapter.
  */
 
-import { query } from '@/lib/db/postgres';
+import { readChain } from './store';
 import { lineage, validateChain } from './succession';
 import type { ProposalChain, ProposalVersion } from './contract';
 
@@ -57,40 +75,12 @@ export type ProposalWorkResult =
 export async function readProposalWork(
   memberId: string, chainId: string, focusVersionId?: string,
 ): Promise<ProposalWorkResult> {
-  const c = await query<{
-    id: string; member_id: string; work_id: string; draft_id: string;
-    base_version: number | string; target_section_id: string;
-    expected_text: string; decision_chain_id: string | null; opened_at: Date;
-  }>(
-    `SELECT id, member_id, work_id, draft_id, base_version, target_section_id,
-            expected_text, decision_chain_id, opened_at
-       FROM proposal_chains WHERE id = $1 AND member_id = $2`,
-    [chainId, memberId]);
-  if (c.rows.length === 0) return { ok: false, reason: 'chain_unknown' };
-  const r = c.rows[0];
-  const chain: ProposalChain = {
-    id: r.id, memberId: r.member_id,
-    locus: {
-      workId: r.work_id, draftId: r.draft_id, baseVersion: Number(r.base_version),
-      targetSectionId: r.target_section_id, expectedText: r.expected_text,
-    },
-    ...(r.decision_chain_id !== null
-      ? { governedBy: { decisionChainId: r.decision_chain_id } } : {}),
-    openedAt: r.opened_at.toISOString(),
-  };
-
-  const v = await query<{
-    id: string; chain_id: string; author: 'maia' | 'member'; formulation: string;
-    rationale: string | null; supersedes: string | null; authored_at: Date;
-  }>(
-    `SELECT id, chain_id, author, formulation, rationale, supersedes, authored_at
-       FROM proposal_versions WHERE chain_id = $1 ORDER BY id`, [chainId]);
-  const versions: ProposalVersion[] = v.rows.map((x) => ({
-    id: x.id, chainId: x.chain_id, supersedes: x.supersedes,
-    replacementText: x.formulation,
-    ...(x.rationale !== null ? { rationale: x.rationale } : {}),
-    author: x.author, authoredAt: x.authored_at.toISOString(),
-  }));
+  /* ⭐ THE STEP-1 ADAPTER, and only it. `readChain` already collapses "absent"
+     and "another member's" into one `null`, which is the convention this read
+     inherits rather than re-implements. */
+  const stored = await readChain(memberId, chainId);
+  if (!stored) return { ok: false, reason: 'chain_unknown' };
+  const { chain, versions } = stored;
 
   /* ⛔ Corrupt succession REFUSES. A read that quietly worked around it would
      show the writer a history nobody authored. */

@@ -14,6 +14,13 @@ import { authorizeVersion } from '@/lib/manuscript/revisionAuthorization/store';
 import { executeAuthorization } from '@/lib/manuscript/revisionAuthorization/execute';
 import { readAuthorizationStatus } from '@/lib/manuscript/revisionAuthorization/status';
 import { readProposalWork } from '@/lib/manuscript/proposalChain/proposalWork';
+import { transaction as transactionRaw } from '@/lib/db/postgres';
+
+/** ⛔ Comments stripped BEFORE any source scan — the C21 class: a prose ban that
+ *  matches the comment documenting it. */
+const codeOf = (rel: string) => require('fs')
+  .readFileSync(require('path').join(__dirname, '../..', rel), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 const url = process.env.DATABASE_URL ?? '';
 const dbName = url.split('?')[0].split('/').pop() ?? '';
@@ -130,14 +137,46 @@ async function main() {
       absentWork.ok === false && absentWork.reason, foreignAuth, absentAuth],
     ['chain_unknown', 'chain_unknown', null, null]);
 
-  /* ── I-8 · CS-5 · ⛔ NOTHING COMPUTES AN ALTERNATIVE. ──────────────────── */
-  const srcs = ['../../lib/manuscript/proposalChain/proposalWork.ts',
-    '../../lib/manuscript/revisionAuthorization/status.ts',
-    '../../lib/manuscript/revisionAuthorization/executionFit.ts']
-    .map((f) => require('fs').readFileSync(require('path').join(__dirname, f), 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, ''));
-  eq('I-8 · ⛔ no read model relocates, widens or regenerates a change',
-    srcs.filter((s) => /replace\(|indexOf\(|slice\(|fuzzy|nearest/i.test(s)).length, 0);
+  /* ── I-8 · CS-5 · ⛔ NOTHING COMPUTES AN ALTERNATIVE — ASSERTED BEHAVIOURALLY.
+     ⚠️ THE FIRST DRAFT BANNED A MECHANISM AND CAUGHT A LEGITIMATE USE. It
+     scanned for `replace(|indexOf(|slice(` and went red the moment the status
+     read gained a LOCATOR — which uses `indexOf` to find where the exact
+     expected text already is, having first established it occurs exactly once.
+     ⛔ Locating is not relocating. A ban on an API is not a statement about
+     behaviour, and this programme has been caught by that shape before.
+
+     ⭐ So the law is asserted on what the read DOES: when the exact characters
+     are absent or ambiguous, it must produce NO locator and NO alternative —
+     never a nearest match, never a widened span. */
+  const wA = await makeWork(M, 'He was there and the river ran on.');
+  const cA = await makeChain(M, wA);
+  const vA = await addVersion(cA, 'maia', 'x', null);
+  /* The Work no longer holds the expected text, so no authorization can even be
+     created — the absence is refused at the earlier boundary too. */
+  const noAuth = await authorizeVersion(M, cA, vA);
+  eq('I-8 · ⭐ text absent → no authorization, and therefore no locator to widen',
+    noAuth.ok === false ? noAuth.reason : 'AUTHORIZED', 'expected_text_absent');
+
+  /* And an authorization whose Work LATER becomes ambiguous reports the
+     ambiguity and offers no locator — ⛔ never "the first one". */
+  const wB = await makeWork(M); const cB = await makeChain(M, wB);
+  const vB = await addVersion(cB, 'maia', ', firmer', null);
+  const aB = await authorizeVersion(M, cB, vB);
+  await query(`UPDATE manuscript_draft_sections SET text=$2 WHERE id=$1`,
+    [wB.sectionId, 'a, fixated b, fixated c']);
+  await query(`UPDATE manuscript_working_drafts SET version=41 WHERE id=$1`, [wB.draftId]);
+  const ambiguous = await readAuthorizationStatus(M, aB.ok ? aB.authorization.id : '');
+  eq('I-8b · ⭐⭐ ambiguous → reported as ambiguous, with NO locator offered',
+    [ambiguous?.state, (ambiguous as { reason?: string })?.reason,
+      'locator' in (ambiguous ?? {})],
+    ['no_longer_fits', 'expected_text_ambiguous', false]);
+
+  /* ⛔ The narrow source ban that remains is about REGENERATION, not location. */
+  const readModels = ['lib/manuscript/proposalChain/proposalWork.ts',
+    'lib/manuscript/revisionAuthorization/status.ts',
+    'lib/manuscript/revisionAuthorization/executionFit.ts'].map(codeOf);
+  eq('I-8c · ⛔ and no read model fuzzy-matches, approximates or regenerates',
+    readModels.filter((c) => /fuzzy|nearest|approximate|similar|bestMatch/i.test(c)).length, 0);
 
   /* ── I-9 · F1-4 · WHERE THE NO-PROSE LAW APPLIES, AND WHERE IT DOES NOT.
      ⚠️ THE FIRST DRAFT ASSERTED THIS OVER THE READ MODEL AND FAILED — correctly.
@@ -163,6 +202,78 @@ async function main() {
   eq('I-9b · ⭐ and the read MODEL does carry the binding, deliberately — it is the law execution consumes',
     (spent as { authorization?: { guard?: { expectedText?: string } } })
       ?.authorization?.guard?.expectedText, ', fixated');
+
+  /* ── I-9A · ⛔ THE AUTHORIZE TRANSPORT CARRIES NO BINDING AT ALL.
+     ⚠️ The first cut returned `binding: r.authorization.guard` under a comment
+     saying "no wording is echoed" — and `guard.expectedText` IS prose. The
+     comment and the payload said opposite things, and the payload ships. */
+  const authPayload = codeOf(
+    'app/api/writers-studio/proposal-chains/[chainId]/versions/[versionId]/authorize/route.ts');
+  const authBody = authPayload.slice(authPayload.indexOf('NextResponse.json({\n    authorized: true'));
+  eq('I-9A · ⚠️ SOURCE-LEVEL — the authorize payload emits no binding and no prose',
+    ['binding', 'guard', 'expectedText', 'replacementText'].filter((t) => authBody.includes(t)),
+    []);
+
+  /* ── I-9B · ⭐⭐ AND THE CONSENT TRANSPORT NAMES AN EXACT PLACE.
+     F1-4 is BOTH halves: coordinates and a label, not one manuscript character.
+     The range is SERVER-DERIVED — the browser never searches the Work. */
+  const wL = await makeWork(M); const cL = await makeChain(M, wL);
+  const vL = await addVersion(cL, 'maia', ', calmer', null);
+  const aL = await authorizeVersion(M, cL, vL);
+  if (!aL.ok) { bad('I-9B · authorize', aL.reason); return finish(); }
+  const st = await readAuthorizationStatus(M, aL.authorization.id);
+  const loc = (st as { locator?: Record<string, unknown> })?.locator;
+  /* BODY = 'He was there, fixated, …' — ', fixated' begins at code point 12. */
+  eq('I-9B · ⭐ executable names section · label · projected-body code-point range',
+    [st?.state, loc?.sectionId === wL.sectionId, loc?.range, loc?.operation, loc?.changeCount],
+    ['executable', true,
+      { space: 'projected_section_body', start: 12, end: 21 },
+      'replace_exact_text', 1]);
+  eq('I-9B2 · ⛔ and the locator carries not one character of the Work',
+    ['fixated', 'river', 'calmer', 'expectedText', 'replacementText']
+      .filter((t) => JSON.stringify(loc).includes(t)), []);
+
+  /* ── I-STORE-ONE · ⭐ ONE ADAPTER FOR THE STEP-1 OBJECTS.
+     ⛔ Not because SQL is forbidden in a read model, but because these two
+     objects already have one reviewed adapter, and a later hydration correction
+     must not land on one read path and not the other. */
+  const pwCode = codeOf('lib/manuscript/proposalChain/proposalWork.ts');
+  eq('I-STORE-ONE · ⭐ proposalWork consumes readChain and hydrates no rows itself',
+    [/FROM proposal_chains|FROM proposal_versions/.test(pwCode), pwCode.includes('readChain(')],
+    [false, true]);
+
+  /* ── I-STATUS-RACE · ⭐⭐ STATUS NEVER EVALUATES A COLLAGE.
+     ⚠️ EVIDENCE CLASS, STATED EXACTLY: a SCHEDULING RENDEZVOUS, not a
+     deterministic one — the witness waits a fixed 250ms for the status read to
+     reach the draft lock. ⛔ No test hook is added to production to make it
+     prettier.
+
+     The witness holds the draft row, starts the status read (which blocks on
+     its own FOR SHARE), then moves the Work to v99 AND rewrites the section so
+     the expected text is gone, and commits. A coherent read sees ONE of those
+     states. A collage could report `executable` from the old version with the
+     new body, or `stale_base` computed against a body it never saw. */
+  const wR = await makeWork(M); const cR = await makeChain(M, wR);
+  const vR = await addVersion(cR, 'maia', ', slower', null);
+  const aR = await authorizeVersion(M, cR, vR);
+  if (!aR.ok) { bad('I-STATUS-RACE · authorize', aR.reason); return finish(); }
+  let racePromise!: Promise<Awaited<ReturnType<typeof readAuthorizationStatus>>>;
+  await transactionRaw(async (tx) => {
+    await tx.query('SELECT id FROM manuscript_working_drafts WHERE id=$1 FOR UPDATE',
+      [wR.draftId]);
+    racePromise = readAuthorizationStatus(M, aR.authorization!.id);
+    await new Promise((r) => setTimeout(r, 250));
+    await tx.query('UPDATE manuscript_working_drafts SET version=99 WHERE id=$1', [wR.draftId]);
+    await tx.query('UPDATE manuscript_draft_sections SET text=$2 WHERE id=$1',
+      [wR.sectionId, 'He was there and the river ran on.']);
+  });
+  const raced = await racePromise;
+  /* ⭐ The competing write commits first, so the coherent read observes v99 AND
+     the new body — one state. `stale_base` is checked before the text, so that
+     is the truthful answer. ⛔ `executable` would mean it read the old version
+     with the new body, or the new version with the old one. */
+  eq('I-STATUS-RACE · ⭐⭐ a competing write cannot interleave — one observed state, not a collage',
+    [raced?.state, (raced as { reason?: string })?.reason], ['no_longer_fits', 'stale_base']);
 
   /* ── I-10 · ⛔ THE RETIRED VOCABULARY HAS NO SUCCESSOR, IN ANY SPELLING. ── */
   const newSurface = [
