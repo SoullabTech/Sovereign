@@ -295,3 +295,69 @@ yours to set. There is no way to declare one here yet, so nothing is measured."*
 The mockup fills that slot in. ⛔ Keep the posture: the goal is the writer's to
 set, and progress measures what THEY asked to measure — never what the system
 would prefer they do.
+
+---
+
+## Appendix · "what inspires this writing" — door census (2026-09-14)
+
+**The founder asked for an opening section capturing the writers, books,
+subjects and ideas behind the Work — to remind the writer and to educate MAIA
+about the nature of their work.**
+
+⭐⭐ **It exists.** `MaterialsDrawer`, the Work Continuity Layer's first slice
+(`docs/design/author-studio/WORK_MATERIALS_GATHERING_DESIGN_2026-08-05.md`,
+walks M1–M7), on `living_work_materials`. ⛔ Nothing needs inventing.
+
+### The ratified design already answers the request
+
+> *A material is a BELONGING, not a thing: the member's sentence renders first,
+> the thing's name second, its home stated plainly. Bringing is the member's
+> gesture — **the crossing is the consent event** — and un-belonging removes the
+> relationship, never the thing.*
+
+**The member's sentence renders FIRST.** That is precisely "remind them and
+educate MAIA about the nature of their work" — not a metadata field about an
+influence, but the writer saying in their own words why it belongs to this book.
+
+### And the schema is already open enough
+
+```sql
+living_work_materials
+  material_type          TEXT   -- no CHECK: a writer, a book, a subject, an idea
+  material_id            TEXT   -- not a FK: it can name something off-platform
+  relationship_sentence  TEXT   -- the member's own words
+  declared_by · declared_at
+  UNIQUE (living_work_id, material_type, material_id)
+
+living_work_material_considerations
+  state TEXT CHECK (state IN ('maybe', 'not_now'))   -- neither asserts belonging
+```
+
+⭐ `material_type` and `material_id` are TEXT by design, so **Rilke, a book not
+in the platform, "grief", or an idea are all expressible without a migration.**
+And `considerations` already holds the honest middle ground — *maybe* and *not
+now* — for something circling the Work without belonging to it yet.
+
+### What is actually missing — three things, none of them a new object
+
+1. **Only `manuscript` materials are produced today.** Walk M1 deliberately took
+   platform-native things first. The other types need a way to be brought, not a
+   schema.
+2. ⭐⭐ **MAIA cannot read materials.** This is the whole of the founder's second
+   reason — *educate MAIA about the nature of their work* — and it is the gap.
+   The S3 developmental Ask reads the manuscript; it does not read what the
+   writer said feeds it. ⛔ A material is a member declaration, so reading it is
+   a disclosure question, not a convenience: it belongs on the same authority
+   footing as the rest of the Ask.
+3. **The rail the founder approved has no Materials on it.** The full mockup
+   carried `Materials · 0`; the approved rail crop drops it and `Goals`. ⚠️ The
+   thing being asked for would have nowhere to live.
+
+### Placement
+
+The founder's instinct — left lane, with a presence at top or bottom — matches
+where it already is. ⛔ And the shell's existing law governs it:
+`assertShellPromisesNothing` refuses a count on a destination that is not
+actionable, because shipping `24` and `12` to a member "as if they were their
+own materials and notes" is exactly the failure it was written against. **A
+Materials count in the rail must be the writer's real count or absent.**
