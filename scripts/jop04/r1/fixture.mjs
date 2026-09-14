@@ -115,6 +115,16 @@ export const DOMAIN_WORD_NEIGHBOUR = '+foo';   // present in the tree, left neig
 export const DOMAIN_DASH_LEADING = '->next';   // a real symbol that looks like an option
 export const DOMAIN_ABSENT = '@@no_such_symbol@@';
 
+// R1d · a NON-BMP (astral) Unicode letter. U+1D49C is a Unicode Letter, so it is a word
+// constituent — but in UTF-16 it is TWO code units, and `symbol[0]` returns a lone high
+// surrogate that no \p{L} test will match. A boundary policy that indexes code UNITS
+// therefore misclassifies its own stated notion of a word constituent at the symbol's edges.
+// ⛔ The character is only a falsifier for code-unit indexing; the law is general —
+//    Unicode classification must operate on CODE POINTS, never on UTF-16 halves.
+export const DOMAIN_ASTRAL = '\u{1D49C}';           // 𝒜
+export const MARK_ASTRAL_STANDALONE = 'ASTRAL_STANDALONE';
+export const MARK_ASTRAL_EMBEDDED = 'ASTRAL_EMBEDDED';
+
 export function buildSymbolDomainFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jop04-r1c-'));
   const g = (args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env: ENV });
@@ -125,6 +135,8 @@ export function buildSymbolDomainFixture() {
   fs.writeFileSync(path.join(root, 'src', 'domain.c'), [
     'int a = x+foo;        /* WORD-NEIGHBOUR — left of the symbol is a word character */',
     'int b = p->next;      /* DASH-LEADING  — a symbol that looks like an option */',
+    `int c = ${DOMAIN_ASTRAL};          /* ${MARK_ASTRAL_STANDALONE} — non-word neighbours both sides */`,
+    `int d = x${DOMAIN_ASTRAL};         /* ${MARK_ASTRAL_EMBEDDED} — a word constituent sits to its left */`,
     '',
   ].join('\n'));
   g(['add', '-A']);

@@ -30,6 +30,7 @@ import {
   SYMBOL, LOOKALIKE, EMBED_LEFT, EMBED_RIGHT, BRE_PATTERN, MANY_TOKEN, MANY_COUNT,
   C_ORDINARY, C_GLOB, C_MAGIC,
   buildSymbolDomainFixture, DOMAIN_WORD_NEIGHBOUR, DOMAIN_DASH_LEADING, DOMAIN_ABSENT,
+  DOMAIN_ASTRAL, MARK_ASTRAL_STANDALONE, MARK_ASTRAL_EMBEDDED,
 } from './fixture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -43,7 +44,7 @@ const CF = require(path.join(REPO, 'jarvis-desktop/src/capability-form.js'));
 // ⛔ `post` is written out in full, NOT computed by inverting `pre`. A mechanically inverted
 //    postcondition would encode "whatever pre was not", which is a restatement of the defect
 //    rather than a statement of the law. The acceptance state is: every boundary GREEN.
-const BOUNDARY_IDS = ['D4', 'D1', 'D5', 'D6', 'D6-domain', 'role-separation', 'D4-admission', 'F-D', 'F-D.5', 'D3', 'D3/D4', 'D2.6', 'D2.3', 'H1-effective', 'check.run', 'verify.*'];
+const BOUNDARY_IDS = ['D4', 'D1', 'D5', 'D6', 'D6-domain', 'D6-unicode', 'role-separation', 'D4-admission', 'D3-numeric', 'F-D', 'F-D.5', 'D3', 'D3/D4', 'D2.6', 'D2.3', 'H1-effective', 'check.run', 'verify.*'];
 const PHASE_TARGETS = {
   pre: {
     'D4': 'RED', 'D1': 'RED', 'D5': 'RED', 'D6': 'RED', 'F-D': 'RED', 'F-D.5': 'GREEN',
@@ -52,12 +53,16 @@ const PHASE_TARGETS = {
     // R1c: all three were RED at the unrepaired subject too — no seam existed, the same
     // spelling-based path test applied, and the derived matcher imported a grammar.
     'D6-domain': 'RED', 'role-separation': 'RED', 'D4-admission': 'RED',
+    // R1d: at the unrepaired subject neither law was implemented at all — no host boundary
+    // policy existed, and no seam existed to agree or disagree with the executor.
+    'D6-unicode': 'RED', 'D3-numeric': 'RED',
   },
   post: {
     'D4': 'GREEN', 'D1': 'GREEN', 'D5': 'GREEN', 'D6': 'GREEN', 'F-D': 'GREEN', 'F-D.5': 'GREEN',
     'D3': 'GREEN', 'D3/D4': 'GREEN', 'D2.6': 'GREEN', 'D2.3': 'GREEN', 'H1-effective': 'GREEN',
     'check.run': 'GREEN', 'verify.*': 'GREEN',
     'D6-domain': 'GREEN', 'role-separation': 'GREEN', 'D4-admission': 'GREEN',
+    'D6-unicode': 'GREEN', 'D3-numeric': 'GREEN',
   },
 };
 const pi = process.argv.indexOf('--phase');
@@ -288,6 +293,36 @@ try {
   } finally { dfx.cleanup(); }
 }
 
+// ── 4b-ii · R1d · D6 UNICODE EDGE ──────────────────────────────────────────────────────
+// The whole-symbol policy is host-authored — so its OWN stated notion of a word constituent
+// must be applied correctly. A policy that classifies Unicode with \p{L} but indexes UTF-16
+// CODE UNITS misreads its own rule at the symbol's edges: `symbol[0]` on an astral letter is
+// a lone high surrogate, which no letter test matches.
+// ⛔ The consequence is a REAL misclassification, not a cosmetic one: an astral symbol whose
+//    edge is wrongly read as non-word becomes boundary-satisfied unconditionally, so it
+//    matches as a FRAGMENT of a longer word-constituent run.
+// ⛔ An ASCII-only replacement is not admissible — that would narrow the domain D6 protects.
+{
+  const t = B('D6-unicode', 'word-constituent classification operates on CODE POINTS, never on UTF-16 halves');
+  const dfx = buildSymbolDomainFixture();
+  try {
+    const r = attempt(() => runCapability('repo.locate_symbol', { symbol: DOMAIN_ASTRAL }, dfx.root));
+    if (!r.ok) t.breach(`astral symbol THREW: ${String(r.error.message).split('\n')[0].slice(0, 55)}`);
+    else {
+      const hit = records(r.value).join('\n');
+      const standalone = hit.includes(MARK_ASTRAL_STANDALONE);
+      const embedded = hit.includes(MARK_ASTRAL_EMBEDDED);
+      t.note(`standalone matched=${standalone} · embedded matched=${embedded}`);
+      standalone
+        ? t.conform('the astral symbol is FOUND standing alone — the domain is not narrowed')
+        : t.breach('the astral symbol was not found standing alone — the domain was narrowed');
+      !embedded
+        ? t.conform('the astral symbol is NOT found as a fragment of a longer word-constituent run')
+        : t.breach('matched as a FRAGMENT — the edge code point was misread as a UTF-16 half, so the policy misapplied its own rule');
+    }
+  } finally { dfx.cleanup(); }
+}
+
 // ── 4c · R1c · ROLE SEPARATION (D5 · D6 · D1) ──────────────────────────────────────────
 // ⭐ A caller term's ROLE comes from the capability contract, never from how the value is
 //    SPELLED. A GREP_PATTERN or a SYMBOL that happens to contain '../' is not a PATH.
@@ -340,6 +375,42 @@ try {
       ? t.conform(`admissibility agrees across all ${CASES.length} cases`)
       : t.breach(`described an invocation execution would refuse: ${bad.join(', ')}`);
   }
+}
+
+// ── 4e · R1d · D3 NUMERIC DOMAIN ───────────────────────────────────────────────────────
+// D3 ratified `CALLER RANGE integer 1…200`. A bound check alone admits values the domain
+// excludes, and JavaScript then silently coerces them at the slice — so the RECORD and the
+// ACT disagree again: caller_terms and effective_terms say 1.5 while execution behaves as 1,
+// and NaN becomes an effective bound of 0 while serializing as null.
+// ⛔ Not input hygiene: it is the D4 correspondence law failing on a numeric domain.
+{
+  const t = B('D3-numeric', 'max_results is an INTEGER in 1…200 — both seams admit exactly the ratified domain');
+  const describe = reg.describeInvocation;
+  const CASES = [
+    [1, true, 'lower bound'], [200, true, 'upper bound'],
+    [1.5, false, 'fractional — coerced by slice() to 1'],
+    [Number.NaN, false, 'NaN — coerced by slice() to 0, serializes as null'],
+  ];
+  const bad = [];
+  for (const [value, shouldAdmit, why] of CASES) {
+    const described = typeof describe === 'function' && attempt(() => describe('repo.grep', { pattern: MANY_TOKEN, max_results: value })).ok;
+    const executed = attempt(() => runCapability('repo.grep', { pattern: MANY_TOKEN, max_results: value }, fx.root)).ok;
+    t.note(`max_results=${String(value).padEnd(4)} (${why}) · describe=${described ? 'admits' : 'refuses'} · execute=${executed ? 'admits' : 'refuses'} · required=${shouldAdmit ? 'admit' : 'refuse'}`);
+    if (described !== shouldAdmit || executed !== shouldAdmit) bad.push(`${value}`);
+  }
+  bad.length === 0
+    ? t.conform('both seams admit exactly the ratified integer domain')
+    : t.breach(`the ratified domain is not enforced for: ${bad.join(', ')}`);
+
+  // The Desktop boundary claims to mirror the registry; it may not admit what the
+  // authoritative boundary refuses.
+  const man = CF.buildManifest(CAPABILITIES);
+  const st = CF.validateSubmission({ manifest: man, capabilityName: 'repo.grep', mode: 'structured', rawValues: { pattern: MANY_TOKEN, max_results: '1.5' } });
+  const adv = CF.validateSubmission({ manifest: man, capabilityName: 'repo.grep', mode: 'advanced', advancedText: '{"pattern":"' + MANY_TOKEN + '","max_results":1.5}' });
+  !st.ok ? t.conform('structured submission refuses a fractional max_results')
+         : t.breach('structured submission ADMITS 1.5 — a local validator admitting what the authoritative boundary refuses');
+  !adv.ok ? t.conform('advanced submission refuses a fractional max_results')
+          : t.breach('advanced submission ADMITS 1.5');
 }
 
 // ── 5 · F-D ARM 2 · valid absence ───────────────────────────────────────────────────────
