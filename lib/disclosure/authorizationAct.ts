@@ -20,7 +20,7 @@
  * establish the disclosure boundary and mint `may_cross`.
  */
 
-import { query, queryWithExpectedRefusal } from '@/lib/db/postgres';
+import { query, queryWithExpectedRefusal, type TransactionClient } from '@/lib/db/postgres';
 
 /** Opaque. ⛔ Carries no meaning a client could read or forge. */
 export type ActRef = string;
@@ -207,6 +207,81 @@ export async function recordCompletion(
 
   const row = outcome.result.rows[0];
   if (!row) return { kind: 'no_consumption' };
+  return {
+    kind: row.was_completed ? 'already' : 'recorded',
+    completedAt: row.completed_at,
+    completionRef: row.completion_ref,
+  };
+}
+
+/**
+ * ⛔ THE COMPLETION WAS NOT RECORDED, AND THE CALLER MUST NOT CONTINUE.
+ *
+ * ⭐ It is an ERROR rather than a returned value on purpose. In the atomic
+ * post-cognition path the only lawful response to `conflict` or
+ * `no_consumption` is to abort everything the completion was supposed to
+ * account for; a return value can be dropped, and RI-X2 is what dropping one
+ * looks like.
+ *
+ * ⛔ The message carries no act reference and no completion identity: it travels
+ * through the transaction helper's rollback log.
+ */
+export class CompletionNotRecorded extends Error {
+  constructor(readonly outcome: 'conflict' | 'no_consumption') {
+    super(`[S3] completion not recorded (${outcome})`);
+    this.name = 'CompletionNotRecorded';
+  }
+}
+
+/**
+ * Record the completion INSIDE the transaction that persisted the outcome.
+ *
+ * ⭐ Same statement, same semantics, same trigger. What changes is what the two
+ * unsuccessful outcomes mean here: inside this transaction there is nothing to
+ * continue to, so `conflict` and `no_consumption` are not reported, they ABORT.
+ *
+ *   `recorded` / `already` → returned; the transaction may commit.
+ *   `conflict`             → the trigger refused a second, different completion.
+ *   `no_consumption`       → there is no claimed opportunity to complete.
+ *
+ * ⚠️ A refused statement leaves the transaction in an aborted state, so the
+ * refusal cannot be handled and stepped past — which is the correct shape, not a
+ * limitation to work around. ⛔ `queryWithExpectedRefusal` is deliberately NOT
+ * used: it is a pool-level helper, it would run outside this transaction, and
+ * the conflict is classified here without ever logging SQL or parameters
+ * because `TransactionClient` logs nothing.
+ */
+export async function recordCompletionWithClient(
+  client: TransactionClient, ref: ActRef, completionRef: string,
+): Promise<Extract<CompletionOutcome, { kind: 'recorded' | 'already' }>> {
+  let result;
+  try {
+    result = await client.query<{
+      completed_at: Date; completion_ref: string; was_completed: boolean;
+    }>(
+      `WITH prior AS (
+         SELECT act_id, completed_at IS NOT NULL AS was_completed
+           FROM ask_authorization_consumptions WHERE act_id = $1
+       ), upd AS (
+         UPDATE ask_authorization_consumptions
+            SET completed_at = COALESCE(completed_at, NOW()), completion_ref = $2
+          WHERE act_id = $1
+        RETURNING act_id, completed_at, completion_ref
+       )
+       SELECT upd.completed_at, upd.completion_ref, prior.was_completed
+         FROM upd JOIN prior USING (act_id)`,
+      [ref, completionRef],
+    );
+  } catch (err: any) {
+    const message = typeof err?.message === 'string' ? err.message : '';
+    if (message.includes(COMPLETION_CONFLICT)) {
+      throw new CompletionNotRecorded('conflict');
+    }
+    throw err;
+  }
+
+  const row = result.rows[0];
+  if (!row) throw new CompletionNotRecorded('no_consumption');
   return {
     kind: row.was_completed ? 'already' : 'recorded',
     completedAt: row.completed_at,

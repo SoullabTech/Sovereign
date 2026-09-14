@@ -201,7 +201,10 @@ const G10: Guard = {
   law: 'the completion identity is the persisted turn, never the answer text',
   run() {
     const src = stripTs(read(ROUTE));
-    const m = /recordCompletion\s*\(([^)]*)\)/.exec(src);
+    /* ⭐ The transaction-aware form is the only one on this path since the
+       RI-X1/RI-X2 repair. Both names are matched: the law is about what the
+       completion identity IS, and a rename must not retire it. */
+    const m = /recordCompletion(?:WithClient)?\s*\(([^)]*)\)/.exec(src);
     if (!m) return refuse('G10: recordCompletion is never called');
     if (/answer|outcome\./i.test(m[1]!))
       refuse('G10: a completion identity derived from the answer is transient text, not an execution');
@@ -223,7 +226,62 @@ const G11: Guard = {
   },
 };
 
-const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11];
+/**
+ * ⭐⭐ THE RI-X1 / RI-X2 REPAIR, AS A PROPERTY OF THE PROGRAM.
+ *
+ * The turn, the confirmations and the completion are one fact. Written in
+ * sequence they left two windows in which a durable canonical outcome existed
+ * while the authority substrate could not see it — a retry then reported
+ * `INTERRUPTED` over a completed execution (RI-X1), and a receipt confirmation
+ * that returned `false` was ignored into an HTTP 200 (RI-X2).
+ *
+ * ⛔ THIS GUARDS ATOMICITY, NEVER AUTHORITY. The transaction begins after the
+ * body has already crossed; the claim remains the `ON CONFLICT DO NOTHING`
+ * insert, which happened long before it.
+ */
+const G12: Guard = {
+  id: 'G12',
+  law: 'the turn, the confirmations and the completion commit together or not at all',
+  run() {
+    const src = stripTs(read(ROUTE));
+
+    /* The swallowing forms must be unreachable from this route: a boolean that
+       can be dropped is what RI-X2 was. */
+    if (/\bconfirmDisclosureCrossed\s*\(/.test(src))
+      refuse('G12: the boolean confirmation form is reachable and its result can be ignored');
+    if (/[^a-zA-Z]recordCompletion\s*\(/.test(src))
+      refuse('G12: the pool-level completion form is reachable outside the transaction');
+    if (/appendTurnWithClient/.test(src) === false)
+      refuse('G12: the MAIA turn is not persisted on a transaction client');
+
+    const tx = src.indexOf('transaction(');
+    if (tx < 0) refuse('G12: there is no transaction around the post-cognition tail');
+    for (const symbol of [
+      'appendTurnWithClient', 'confirmDisclosureCrossedWithClient', 'recordCompletionWithClient',
+    ]) {
+      const at = src.indexOf(symbol, tx);
+      if (at < 0) refuse(`G12: ${symbol} is not inside the transaction`);
+    }
+
+    /* ⭐ And the two failure modes must be UNIGNORABLE BY TYPE, not by
+       discipline: neither may hand the caller a value it can drop. */
+    const receipts = stripTs(read('lib/disclosure/contextDisclosureReceipt.ts'));
+    if (!/confirmDisclosureCrossedWithClient[\s\S]{0,400}?Promise<void>/.test(receipts))
+      refuse('G12: the transactional confirmation returns a value the caller can ignore');
+
+    const claimant = stripTs(read(CLAIMANT));
+    if (!/class CompletionNotRecorded extends Error/.test(claimant))
+      refuse('G12: an unrecorded completion is not an error and can be stepped past');
+    const body = /recordCompletionWithClient[\s\S]*?\n}/.exec(claimant);
+    if (!body) refuse('G12: the transactional completion could not be located');
+    if (!/throw new CompletionNotRecorded\('conflict'\)/.test(body![0]))
+      refuse('G12: a conflicting completion does not abort');
+    if (!/throw new CompletionNotRecorded\('no_consumption'\)/.test(body![0]))
+      refuse('G12: a missing consumption does not abort');
+  },
+};
+
+const GUARDS: readonly Guard[] = [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12];
 
 let failed = 0;
 console.log('S3 M-PHASE SUBSTRATE GUARDS\n⛔ not part of the frozen Class-B suite\n');

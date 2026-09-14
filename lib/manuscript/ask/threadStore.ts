@@ -16,7 +16,7 @@
  * turn fails loudly at the row rather than quietly at the type.
  */
 
-import { query } from '@/lib/db/postgres';
+import { query, type TransactionClient } from '@/lib/db/postgres';
 import type { AskAnchor } from './anchor';
 import type { StalenessState } from './staleness';
 
@@ -141,15 +141,33 @@ export async function openThread(input: {
  * key on (thread_id, turn_index) then refuses the loser rather than letting a
  * turn overwrite another turn's slot.
  */
-export async function appendTurn(input: {
+export interface AppendTurnInput {
   threadId: string;
   memberId: string;
   speaker: 'author' | 'maia';
   body: string;
   staleness: StalenessState;
   answerProvenance?: unknown | null;
-}): Promise<number> {
-  const r = await query(
+}
+
+/**
+ * The same append, executed on a caller-supplied client.
+ *
+ * ⭐ IT EXISTS SO A TURN CAN BE PERSISTED IN THE SAME TRANSACTION AS THE
+ * CONFIRMATIONS AND THE COMPLETION THAT DEPEND ON IT. Under S3 those three facts
+ * are one fact: a persisted turn whose crossings are unconfirmed, or whose
+ * completion is unrecorded, is a canonical result that the authority substrate
+ * cannot see — and a later retry then truthfully reports `interrupted` while an
+ * outcome exists, which the frozen law forbids.
+ *
+ * ⛔ THE TRANSACTION SUPPLIES ATOMICITY, NEVER AUTHORITY. `transaction()` is a
+ * plain BEGIN at READ COMMITTED with no row lock; the claim was and remains the
+ * `ON CONFLICT DO NOTHING` insert that happened before any body was read.
+ */
+export async function appendTurnWithClient(
+  client: TransactionClient, input: AppendTurnInput,
+): Promise<number> {
+  const r = await client.query(
     `INSERT INTO ask_turns (thread_id, turn_index, speaker, body, staleness, answer_provenance)
      SELECT t.id,
             COALESCE((SELECT MAX(turn_index) + 1 FROM ask_turns WHERE thread_id = t.id), 0),
@@ -163,6 +181,11 @@ export async function appendTurn(input: {
      input.memberId]);
   if (r.rows.length === 0) throw new Error('thread_not_found');
   return Number(r.rows[0].turn_index);
+}
+
+/** The ordinary, non-transactional append. Identical statement, pool client. */
+export async function appendTurn(input: AppendTurnInput): Promise<number> {
+  return appendTurnWithClient({ query }, input);
 }
 
 /** Load one thread with its turns, scoped to its owner in the SQL. */

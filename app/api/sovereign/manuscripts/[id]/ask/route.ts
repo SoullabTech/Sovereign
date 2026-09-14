@@ -34,6 +34,12 @@
  * disclosure boundary that returned `may_cross`.
  * ⛔ No other branch loads body. ⛔ A client's account of what it needs never
  * widens what crosses.
+ *
+ * ⭐ AND AFTER COGNITION, THE THREE RECORDS ARE ONE RECORD. The persisted turn,
+ * the confirmation of every crossing, and the completion of the consumed
+ * opportunity commit in a single transaction or not at all. ⛔ That transaction
+ * supplies ATOMICITY, NEVER AUTHORITY — it opens after the body has already
+ * crossed, and the claim it accounts for was won long before it.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -46,7 +52,7 @@ import { computeStaleness, frozenSideFor } from '@/lib/manuscript/ask/staleness'
 import { canonicalFingerprint } from '@/lib/manuscript/structure/canonicalFingerprint';
 import { askMaia } from '@/lib/manuscript/ask/askReader';
 import {
-  openThread, appendTurn, loadThread, threadsOnAnchor,
+  openThread, appendTurn, appendTurnWithClient, loadThread, threadsOnAnchor,
 } from '@/lib/manuscript/ask/threadStore';
 import { isHeldRetry, historyFor } from '@/lib/manuscript/ask/retry';
 import { checkObservationAnchor, selectObservation } from '@/lib/manuscript/ask/developmentalAnchor';
@@ -58,10 +64,11 @@ import { askMaiaDevelopmental } from '@/lib/manuscript/ask/developmentalAskReade
 import { loadRevisionContent, loadLiveWork } from '@/lib/manuscript/development/capture';
 import { requirementOf, sectionIdsOf } from '@/lib/manuscript/development/evidenceRef';
 import { deriveBodyRequirement, authorizationCovers } from '@/lib/manuscript/ask/bodyRequirement';
-import { mintAct, claimAct, recordCompletion } from '@/lib/disclosure/authorizationAct';
+import { mintAct, claimAct, recordCompletionWithClient } from '@/lib/disclosure/authorizationAct';
 import { establishDisclosureBoundary, mayCrossBoundary } from '@/lib/disclosure/disclosureBoundary';
-import { confirmDisclosureCrossed } from '@/lib/disclosure/contextDisclosureReceipt';
+import { confirmDisclosureCrossedWithClient } from '@/lib/disclosure/contextDisclosureReceipt';
 import { TurnPosture } from '@/lib/sanctuary/turnPosture';
+import { transaction } from '@/lib/db/postgres';
 import { randomUUID } from 'node:crypto';
 
 /** How long one authorization opportunity stays claimable. Continuity hygiene — ⛔ never authority. */
@@ -657,15 +664,42 @@ async function developmentalTurn(input: {
 }
 
 /**
- * The answer, the persisted turn, the confirmations, and the completion — in
- * that order, because each is evidence for the next.
+ * The answer, then — ATOMICALLY — the persisted turn, the confirmations, and the
+ * completion.
  *
  * ⭐⭐ THE COMPLETION IDENTITY IS THE PERSISTED TURN, never "the model returned
  * text". W-B's law is that a retry recovers the SAME completed execution, so
- * there must BE a completed execution object to recover. If cognition succeeded
- * and the turn did not persist, S3 completion is NOT recorded — the act stays
- * consumed-and-incomplete, which is `interrupted`, which needs a fresh member
- * act. ⛔ Transient text is not a completion.
+ * there must BE a completed execution object to recover. ⛔ Transient text is not
+ * a completion.
+ *
+ * ⭐⭐ AND THE THREE FACTS ARE ONE FACT. Written in sequence they had two windows
+ * in which a durable canonical outcome existed while the authority substrate
+ * could not see it:
+ *
+ *   RI-X1 — turn persisted, completion absent. A later retry reported
+ *           `INTERRUPTED` while a canonical result existed. That is the frozen
+ *           Ruling 6 violation: incompletion is not resumable by replay, but
+ *           COMPLETION must be recoverable, and this made a completed execution
+ *           unrecoverable and indistinguishable from an interrupted one.
+ *   RI-X2 — a receipt confirmation returned `false` and the route continued to
+ *           200. A crossing that may have occurred and was not confirmed was
+ *           answered as an ordinary success.
+ *
+ * ⭐ Now all three commit together or none of them do. A receipt confirmation
+ * failure THROWS rather than returning `false`, and `conflict` or
+ * `no_consumption` THROW rather than being read as completion — neither can be
+ * ignored, because neither is a value.
+ *
+ * ⛔⛔ THE TRANSACTION SUPPLIES ATOMICITY, NEVER AUTHORITY. It begins AFTER the
+ * body has already crossed. The authority was the `ON CONFLICT DO NOTHING`
+ * claim and the `may_cross` boundaries, both of which happened earlier and
+ * neither of which this transaction can grant, withhold, or restore.
+ *
+ * ⛔ AND IT DOES NOT UNDO A CROSSING. On rollback the receipts stay `attempted`
+ * — permanently, truthfully — the act stays consumed-and-incomplete, and the
+ * member is told the answer was not recorded. ⛔ The answer text is NOT returned:
+ * a result delivered outside an accountable completion is exactly the outcome
+ * the record is supposed to stand for.
  */
 async function answerFrom(
   ctx: ReturnType<typeof assembleDevelopmentalContext>,
@@ -685,18 +719,41 @@ async function answerFrom(
       { status: 502 });
   }
 
-  const turnIndex = await appendTurn({
-    threadId: o.liveThreadId, memberId: o.memberId, speaker: 'maia', body: outcome.answer,
-    staleness: o.staleness, answerProvenance: outcome.provenance,
-  });
+  try {
+    await transaction(async (client) => {
+      const turnIndex = await appendTurnWithClient(client, {
+        threadId: o.liveThreadId, memberId: o.memberId, speaker: 'maia', body: outcome.answer,
+        staleness: o.staleness, answerProvenance: outcome.provenance,
+      });
 
-  /* The crossing is confirmed only now, against the turn that exists. */
-  for (const disclosureId of o.crossed) await confirmDisclosureCrossed(disclosureId);
+      /* The crossings are confirmed against the turn that now exists — and a
+         confirmation that finds no receipt aborts all of this. */
+      for (const disclosureId of o.crossed) {
+        await confirmDisclosureCrossedWithClient(client, disclosureId);
+      }
 
-  if (o.pendingAskRef) {
-    /* ⭐ The canonical completed execution: the append-only turn, whose UPDATE the
-       database refuses. ⛔ Not the answer text. */
-    await recordCompletion(o.pendingAskRef, `${o.liveThreadId}:${turnIndex}`);
+      if (o.pendingAskRef) {
+        /* ⭐ The canonical completed execution: the append-only turn, whose UPDATE
+           the database refuses. ⛔ Not the answer text. */
+        await recordCompletionWithClient(
+          client, o.pendingAskRef, `${o.liveThreadId}:${turnIndex}`);
+      }
+    });
+  } catch {
+    /* ⛔ LOUD, AND CONTENT-FREE. The transaction helper has already logged the
+       error itself; this line names the lane so the anomaly is findable.
+       ⛔ No act reference, no completion identity, no prose. */
+    console.error('[S3] post-cognition tail rolled back — the answer was not recorded');
+
+    /* ⛔ NOTHING WAS COMMITTED. The question stands, the receipts stay
+       `attempted`, and a consumed act stays interrupted — which is what it is.
+       ⛔ No answer text: it has no accountable completion to be delivered under. */
+    return NextResponse.json({
+      threadId: o.liveThreadId,
+      refusal: 'answer_not_recorded',
+      staleness: o.staleness,
+      location: ctx.location,
+    }, { status: 500 });
   }
 
   const thread = await loadThread(o.liveThreadId, o.memberId);
