@@ -1717,7 +1717,7 @@ function FieldBody({
                   range={range}
                   replacementText={target.replacementText}
                   onWorkWithChange={onWorkWithChange}
-                  locusKey={proposalLocusKey(target.sectionId, target.range)}
+                  locusKey={proposalLocusKey(target.sectionId, range)}
                   onLocusNode={registerLocus}
                 />
               );
