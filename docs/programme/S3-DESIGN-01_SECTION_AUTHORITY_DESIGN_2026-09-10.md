@@ -791,6 +791,24 @@ set, receive the explicit member act, establish a fresh boundary, and mint
 > **One explicit member authorization act may cause AT MOST ONE completed
 > authored-body crossing and AT MOST ONE completed-crossing receipt.**
 
+### ⚠️ AMENDED IN PLACE — founder, 2026-09-13 · see §15 Ruling 5
+
+⛔ **The word `receipt` in the sentence above is WRONG, and the substrate census
+proved it by colliding with §10.7 step 6.** The amended law:
+
+> **One explicit member authorization act may be CONSUMED at most once. One
+> successful consumption may produce ONE disclosure receipt for EACH
+> independently authorized section.**
+
+```text
+member act   → consumption        1 : ≤1
+consumption  → section receipts   1 : N
+```
+
+⭐ **Superseded, NOT deleted.** The original sentence conflated *permission to
+execute the member act* with *evidence that particular boundaries were crossed*.
+⛔ Two different things must never both be called `receipt`.
+
 ```text
 BODY_AUTHORITY_REQUIRED
         ↓  member authorizes
@@ -1253,6 +1271,138 @@ implement it.*
 
 ---
 
+## 15 · FOUNDER RULINGS — 2026-09-13
+
+Opened on `S3_PENDING_ASK_REF_SUBSTRATE_CENSUS_2026-09-13.md`, which closed the
+representation question and surfaced two items it was not entitled to decide.
+
+### Ruling 5 — CONSUMPTION AND DISCLOSURE RECEIPTS ARE DIFFERENT CARDINALITIES
+
+```text
+MEMBER ACT
+   │
+   └── 1 pendingAskRef
+           │
+           └── 0..1 consumption claim
+                    │
+                    ├── disclosure receipt: section A
+                    ├── disclosure receipt: section B
+                    └── ...
+```
+
+⛔ **`pendingAskRef` is NOT 1:N with receipts.** That would confuse permission to
+execute the member act with evidence that particular disclosure boundaries were
+crossed. The ref is 1:≤1 with a **consumption**; the consumption is 1:N with
+**section disclosure receipts**.
+
+⭐ **TERMINOLOGY CORRECTION OWED AND TAKEN**: §10.6a's "receipt" is amended in
+place above to **consumption**. ⛔ No implementation may proceed while two
+different objects are both called `receipt`.
+
+### Ruling 6 — COMPLETED OUTCOME RECOVERABLE, NEVER AUTHORITATIVE
+
+The OAuth precedent answers *"was it consumed?"* and leaves *"what did it
+become?"* unknown. That is insufficient under the lost-response case.
+
+```text
+pendingAskRef
+    status: pending | claimed | completed
+    member_act_identity
+    completion_ref?      ← canonical result identity, NEVER authored prose
+```
+
+> ⭐⭐ **`completion_ref` is evidence of what already happened. It can never
+> grant permission for something to happen.**
+
+Replay has exactly three lawful outcomes, and no fourth:
+
+| state | replay behaviour |
+|---|---|
+| `pending` | atomically claim, then execute |
+| `completed` | return/recover the existing canonical outcome |
+| `claimed` but incomplete | ⛔ **do not cross again** — recover a canonical result if one exists, else surface an interrupted/incomplete state |
+
+⛔ **A new HTTP request cannot renew the original member authority.** Not by
+request-id comparison. Not by prose comparison. Not by "it looks like the same
+question". Not because the first response was lost on the network.
+
+#### ⭐ QUALIFICATION — founder, 2026-09-13 · THE SCOPE OF THE INCOMPLETION LAW
+
+The law is **not** *"incomplete work can never be continued by any mechanism."*
+It is narrower, and the narrowness is deliberate:
+
+> **Incompletion is not resumable BY REPLAY OF THE MEMBER ACT.**
+
+```text
+member replay
+  claimed + incomplete   →  STOP / interrupted · a fresh member act is required
+
+privileged recovery protocol (⛔ NOT DESIGNED HERE, separately governed)
+  may inspect · may reconcile · may continue from a durable execution record
+  ⛔ may NEVER reinterpret a replay as authorization
+  ⛔ may NEVER mint new MEMBER authority
+```
+
+⭐ S3 forecloses the replay path, not the existence of operator repair,
+deterministic continuation, or reconciliation. **The prohibition is on a
+mechanism that turns a retry into consent — not on recovery as such.**
+
+### Ruling 7 — REUSE THE LAW, NOT THE OBJECT
+
+The census found the right **pattern family** in `context_disclosure_receipts`:
+
+```text
+opaque identity
++ database-enforced uniqueness
++ atomic winner
++ idempotent observation
++ authority kept separate from observation
+```
+
+⛔ **Do not clone that table. Do not widen its `boundary` CHECK.** Its semantics
+are downstream and section-specific. The new substrate inherits the law.
+
+### The revised sequence
+
+```text
+7  pendingAskRef substrate census        ✅ CLOSED 2026-09-13
+8  falsifier specification               ✅ DELIVERED 2026-09-13
+9  S3-F8 witness · the intended RED   ✅ SPENT 2026-09-13 · ESTABLISHED
+10 CLASS B · author · build the defeat candidates · prove the suite lethal
+11 only then the real primitive / state-transition implementation
+```
+
+### ⭐ DIRECTION FOR STEP 10 — recorded, ⛔ NOT OPENED
+
+⛔ **The first implementation artifact is NOT a table schema.** It is the state
+transition law, and the forbidden transitions written beside it:
+
+```text
+PENDING
+   │ atomic claim
+   ▼
+CLAIMED
+   │ canonical completion recorded
+   ▼
+COMPLETED
+
+FORBIDDEN
+  CLAIMED   → CLAIMED      via replay
+  COMPLETED → CLAIMED      via replay
+  COMPLETED → new result   via retry
+  request_id → authority
+  prose      → identity
+  client assertion → section authority
+```
+
+⭐ Then S3-F1–F7 / F9 / F10 attack candidate implementations **of that machine**.
+*The lane is no longer guessing what `pendingAskRef` should look like; it is
+establishing what no implementation of it will ever be allowed to mean.*
+
+⛔ Storage design remains CLOSED. This paragraph is direction, not authorization.
+
+---
+
 ## Standing
 
 ```text
@@ -1269,9 +1419,29 @@ P1 CLAIM (§13)            "No authored BODY characters required by the Ask
                           body-disclosure authority."
                           ⛔ NOT "no authored characters" — that is false
 
-NEXT ACT                  pendingAskRef SUBSTRATE CENSUS · READ-ONLY
-                          decisive question: can two concurrent or replayed
-                          ACT 3 requests both get past consumption?
+SUBSTRATE CENSUS          ✅ CLOSED 2026-09-13 — no existing object enforces
+                          §10.6a; a dedicated opaque ref is JUSTIFIED and
+                          NOT YET IMPLEMENTED
+
+FALSIFIER SPECIFICATION   ✅ DELIVERED 2026-09-13 · S3-F1…S3-F10
+                          Class A / Class B split RATIFIED (founder)
+
+S3-F8 WITNESS             ✅ SPENT · EXPECTED RED ESTABLISHED at 833ec87f
+                          canonical defect REPRODUCED
+
+TRANSITION LAW            ⭐ TYPED · RULED · FROZEN @ 2255b60d
+CLASS B                   B-i · B-ii · B-iii CLOSED · lethality + discrimination
+                          established · freeze TAKEN
+B-iv                      AUTHORIZED · durable transition substrate census
+                          COMPLETE (read-only)
+B-iv DESIGN               ⭐ OPEN · DRAFTED — S3-B-IV_DESIGN_2026-09-13.md
+                          thesis: atomic claim + durable completion, keyed by
+                          FIRST-CLASS ACT IDENTITY · request id = correlation only
+                          two shapes competed · V2 RECOMMENDED, not taken
+NEXT ACT                  founder ruling on one/two tables
+                          then W-A real concurrent DB claim · W-B crash/recovery
+                          ⛔ migration NOT AUTHORIZED
+STORAGE DESIGN            CLOSED · §15 direction: transition law before schema
 
 FALSIFIER AUTHORING       AUTHORIZED — after the representation is grounded,
                           BEFORE repair implementation

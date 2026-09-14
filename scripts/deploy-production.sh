@@ -56,6 +56,68 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# MIGRATIONS - fail closed
+# ═══════════════════════════════════════════════════════════════════════════════
+# DEPLOYMENT-SAFETY-01 (founder ruling 2026-09-14). The migration runner already
+# exits non-zero on the first failing file; both deploy paths used to catch that
+# with `if ! …; then log_warn …; fi` and carry on to "Deployment complete!".
+#
+# That swallow broke the migrations README's own rule — *schema and reader ship
+# together* — IN THE FAILURE DIRECTION: the schema could fail while the reader
+# continued toward production, and the operator was told the deploy succeeded.
+# A green deploy was not evidence that any migration ran.
+#
+#   migration success  →  deployment may continue
+#   migration failure  →  deployment STOPS, non-zero, no success message
+#
+# ⚠️ WHAT THIS CANNOT DO, STATED PLAINLY. Migrations run AFTER the container
+# swap (build → swap → provenance verify → migrate), so by the time a failure is
+# visible the reader is already live. Propagation makes the deploy fail closed
+# and routes the operator to rollback; it cannot retroactively prevent the swap.
+# Whether migrate should precede the swap is a deploy-ORDERING question, not a
+# propagation one, and is deliberately NOT decided here.
+#
+# ⛔ NOT CHANGED: migration discovery, selection, ordering, the ledger, manifests,
+# or any migration file.
+run_migrations_or_abort() {
+    local phase="$1"   # the command whose deploy this is, for the operator
+
+    log_info "Running database migrations..."
+    if deploy_ctx_compose --profile migrate run --rm migrate; then
+        log_success "Migrations applied"
+        return 0
+    fi
+
+    echo ""
+    log_error "════════════════════════════════════════════════════════════════"
+    log_error "⛔ DATABASE MIGRATIONS FAILED — DEPLOYMENT ABORTED"
+    log_error "════════════════════════════════════════════════════════════════"
+    log_error ""
+    log_error "The runner stops at the FIRST failing file, so every later migration"
+    log_error "is unapplied too. This deploy is NOT complete and is NOT reported as"
+    log_error "complete. Smoke checks are skipped deliberately: passing them would"
+    log_error "only prove the reader starts, not that its schema exists."
+    log_error ""
+    log_error "⚠️  The container swap already happened — the reader is live against"
+    log_error "    a schema that did not finish migrating. Decide deliberately:"
+    log_error ""
+    log_error "  1. What failed, and what is unapplied:"
+    log_error "     docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
+    log_error "       -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
+    log_error ""
+    log_error "  2. Roll the reader back to the previous image:"
+    log_error "     ./scripts/deploy-production.sh rollback"
+    log_error ""
+    log_error "  3. Or fix the migration and re-run migrations only:"
+    log_error "     ./scripts/deploy-production.sh migrate"
+    log_error ""
+    log_error "════════════════════════════════════════════════════════════════"
+    echo ""
+    log_error "$phase aborted: migrations did not succeed."
+    exit 1
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # ALERT - Send alert to developer via /api/build/alert
 # ═══════════════════════════════════════════════════════════════════════════════
 send_alert() {
@@ -473,27 +535,7 @@ cmd_deploy() {
     fi
 
     # Run migrations
-    log_info "Running database migrations..."
-    if ! deploy_ctx_compose --profile migrate run --rm migrate; then
-        echo ""
-        log_warn "════════════════════════════════════════════════════════════════"
-        log_warn "⚠️  DATABASE MIGRATIONS FAILED"
-        log_warn "════════════════════════════════════════════════════════════════"
-        log_warn ""
-        log_warn "Recovery steps:"
-        log_warn "  1. Check what's missing:"
-        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
-        log_warn "       -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
-        log_warn ""
-        log_warn "  2. Re-run migrations:"
-        log_warn "     ./scripts/deploy-production.sh migrate"
-        log_warn ""
-        log_warn "  3. Verify required tables exist:"
-        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness -c '\\dt *comms*'"
-        log_warn ""
-        log_warn "════════════════════════════════════════════════════════════════"
-        echo ""
-    fi
+    run_migrations_or_abort "Deployment"
 
     log_success "Deployment complete!"
     echo ""
@@ -581,27 +623,7 @@ cmd_update() {
         exit 1
     fi
 
-    log_info "Running migrations..."
-    if ! deploy_ctx_compose --profile migrate run --rm migrate; then
-        echo ""
-        log_warn "════════════════════════════════════════════════════════════════"
-        log_warn "⚠️  DATABASE MIGRATIONS FAILED"
-        log_warn "════════════════════════════════════════════════════════════════"
-        log_warn ""
-        log_warn "Recovery steps:"
-        log_warn "  1. Check what's missing:"
-        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
-        log_warn "       -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
-        log_warn ""
-        log_warn "  2. Re-run migrations:"
-        log_warn "     ./scripts/deploy-production.sh migrate"
-        log_warn ""
-        log_warn "  3. Verify required tables exist:"
-        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness -c '\\dt *comms*'"
-        log_warn ""
-        log_warn "════════════════════════════════════════════════════════════════"
-        echo ""
-    fi
+    run_migrations_or_abort "Update"
 
     log_success "Update complete!"
     cmd_status
