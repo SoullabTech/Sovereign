@@ -662,11 +662,10 @@ repair list.
 | Tier-2 consequential-forecast refusal | `MAIA_SOVEREIGNTY_INVARIANTS.md:246` | ⛔ no implementing mechanism found |
 | I Ching ↔ Spiralogic elemental alignment table | P1-01 05:67 citing S-2:53-59 | ⛔ no code binding found (⚠️ Domain E may hold the elemental half) |
 
-⭐ **`facetToHexagram` is the sharpest case.** P1-01 (05:347) already asked after its
-**provenance** — who authored the 15-entry seed map and against what source. This census answers a
-prior question: **there is no seed map in code to have provenance.** The map exists only as
-illustrative TypeScript inside a canon markdown file. ⛔ Its provenance remains `UNKNOWN`, and the
-question is now *upstream* of provenance.
+⭐ **`facetToHexagram` is the sharpest case.** P1-01 (05:347) asked after its **provenance**.
+This census answers a prior question: **there is no seed map in code to have provenance** — it
+exists only as illustrative TypeScript inside a canon markdown file. ⛔ Provenance remains
+`UNKNOWN`, and the question is now *upstream* of provenance.
 
 ⚠️ **Tarot is NOT on this list** — see §3.4. P1-01's hypothesis that tarot is documentation-only
 is **falsified**: 1,901 lines across 5 files plus a live route.
@@ -677,18 +676,18 @@ is **falsified**: 1,901 lines across 5 files plus a live route.
 
 ### Reachable from a real member turn (path traced)
 
-| System | Entry point | KNOW | SAY | CONCLUDE |
+| System | Entry | KNOW | SAY | CONCLUDE |
 |---|---|---|---|---|
-| F-14 astrology + F-28 Mayan | `/api/sovereign/app/maia/list` :695 | ✅ | ✅ gated :732 | ⚠️ gated by prompt only |
+| F-14 astrology + F-28 Mayan | `/api/sovereign/app/maia/list` :695 | ✅ | ✅ gated :732 | ⚠️ prompt-gated only |
 | F-06 divination recall | same route :1103 | ✅ | ✅ gated | ⛔ **structurally refused** |
-| F-24 sacred texts | `/api/oracle/conversation` :30 + component :9723 | ✅ | ✅ | — |
+| F-24 sacred texts | `/api/oracle/conversation` :30 → component :9723 | ✅ | ✅ | — |
 
 ### Reachable from a member-authenticated non-turn route
 
 | System | Entry | CONCLUDE | Gate |
 |---|---|---|---|
-| F-07 I Ching interpret | `/api/changes/[id]/interpret` | ✅ **yes, instructed** | **NONE FOUND** |
-| F-10 I Ching cast+persist | `/api/oracle/iching` :71 | ⛔ no (house corpus copied) | member scoping |
+| F-07 I Ching interpret | `/api/changes/[id]/interpret` | ✅ **instructed** | **NONE FOUND** |
+| F-10 I Ching cast+persist | `/api/oracle/iching` :71 | ⛔ no (house corpus) | member scoping |
 | F-16 archetypal narrative | `/api/astrology/narrative` | ✅ yes | auth only |
 
 ### Reachable with NO authentication
@@ -757,29 +756,21 @@ member-authenticated, persisting route.
 Canon (`CORPUS_DISCIPLINE_PROTOCOL_v1.0.md:104`): *"indexed but never retrieved."*
 Code: zero occurrences. ⛔ Preserved; ⛔ not resolved by deciding which is "really" true.
 
-**C-F3 · P1-01 slice 05 versus the code on tarot**
+**C-F3 · P1-01 slice 05 versus the code on tarot** — P1-01: tarot named in three canon docs,
+**zero files**. Subject: 1,901 ln + a live route. ⛔ Per constraint 7 the predecessor claim is
+evidence-input only and the re-read governs; both recorded.
 
-P1-01: tarot named in three canon docs, **zero files**. Subject: 1,901 ln + a live route.
-⛔ Per constraint 7, the predecessor claim is evidence-input only; the re-read at the subject
-governs. Both recorded.
+**C-F4 · `SYMBOLIC_LENS_BOUNDARY`'s declared scope versus its wiring** — declared (`:282`) over
+six families; applied at two call sites (`:646`, `:732`). Archetypes, cycles, and the I Ching /
+Tarot that Invariant 13 adds are not reached. ⛔ Both stated.
 
-**C-F4 · `SYMBOLIC_LENS_BOUNDARY`'s declared scope versus its wiring**
-
-Declared (`:282`): governs "astrology, Mayan, Chinese/Wu Xing, elements, cycles, archetypes."
-Applied: two call sites (`:646`, `:732`). Archetypes, cycles and the I Ching/Tarot that
-Invariant 13 adds are not reached. ⛔ Both stated.
-
-**C-F5 · The oracle/conversation route's traffic**
-
-`CLAUDE.md` (session anchor): the route *"receives ~zero live traffic."*
+**C-F5 · The oracle/conversation route's traffic** — `CLAUDE.md`: *"receives ~zero live traffic."*
 Code: `app/api/oracle/conversation/route.ts:30` imports `evaluateEncounter`;
-`components/OracleConversation.tsx:9723` renders `SacredPassageBlock`.
-⛔ Per D-P1-06 the anchor may not settle this by assertion. Status stays `WIRED-BUT-UNOBSERVED`.
+`components/OracleConversation.tsx:9723` renders `SacredPassageBlock`. ⛔ Per D-P1-06 the anchor
+may not settle this by assertion; status stays `WIRED-BUT-UNOBSERVED`.
 
-**C-F6 · Two objects named `PersonalOracleAgent`**
-
-`lib/agents/PersonalOracleAgent.ts` (consumes `lib/knowledge`, unreached from `app/`) versus
-`app/api/_backend/src/agents/PersonalOracleAgent` (reached from two routes; declared
+**C-F6 · Two objects named `PersonalOracleAgent`** — `lib/agents/…` (consumes `lib/knowledge`,
+unreached from `app/`) vs `app/api/_backend/src/agents/…` (reached from two routes; declared
 sovereignty-violating and retired at `app/api/maia/chat/route.ts:7,26`). ⛔ Not merged.
 
 ---
