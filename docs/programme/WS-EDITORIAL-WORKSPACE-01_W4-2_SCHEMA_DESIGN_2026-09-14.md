@@ -682,3 +682,165 @@ protected migration               ⛔
 production                        UNTOUCHED
 maia_focus_witness                FROZEN
 ```
+
+---
+
+# W4-2.2 — PROTECTED SCHEMA PREFLIGHT
+
+**Authorized by** founder act, 2026-09-14. ⛔ **READ ONLY.**
+**Instrument** `scripts/witness/w4-2-2-protected-preflight.sql`
+
+---
+
+## 16. ⛔ RESULT: **NOT RUN.** This session cannot reach the protected database.
+
+That is the result, stated first, because it is the only honest thing this act
+can report about production.
+
+```
+ssh                     absent — no ssh binary exists in this container
+DATABASE_URL / PG*      unset
+.env files present      .env.android.template · .env.docker.template · .env.example
+                        (templates only; no DSN)
+soullab.life:443        reachable — and it is the PUBLIC HTTPS SURFACE,
+                        which serves no SQL
+```
+
+⛔ **And it will not be reached by another route.** Driving the preflight through
+an application endpoint would be a runtime act against production wearing a
+read's name, and no act authorizes it. `NOT RUN` is a first-class result — the
+same standing as `NOT WITNESSED` in the S3 lane, and for the same reason: *a
+preflight that did not run has measured nothing, and a number produced any other
+way is not that number.*
+
+⛔ **Every cell of the decision table below is therefore UNKNOWN**, not zero, not
+"probably fine". The founder runs the instrument; this act delivers the
+instrument and its falsification.
+
+## 17. The decision table, unfilled
+
+```
+W5-3 protected substrate         UNKNOWN
+ledger: 20260914000005           UNKNOWN
+XOR violations                   UNKNOWN
+editorial+reading collisions     UNKNOWN
+existing editorial threads       UNKNOWN
+
+ask_threads     size / est rows  UNKNOWN
+ask_turns       size / est rows  UNKNOWN
+directions      size / est rows  UNKNOWN
+versions        size / est rows  UNKNOWN
+required UNIQUE already present  UNKNOWN
+INVALID indexes present          UNKNOWN
+
+unique strategy
+  A ordinary build               NOT EARNED
+  B concurrent lane              NOT DETERMINED
+```
+
+## 18. The instrument, and why it is shaped this way
+
+**Read-only is structural, not promised.** The whole run is inside
+`BEGIN READ ONLY`, so a write added later by anyone is refused by the server.
+Proved on the disposable database:
+
+```
+BEGIN READ ONLY; INSERT …   → ERROR: cannot execute INSERT in a read-only transaction
+BEGIN READ ONLY; ALTER …    → ERROR: cannot execute ALTER TABLE in a read-only transaction
+```
+
+**Identity and ledger first, invariants only where the substrate exists.**
+`20260914000005` is custody-held and may be genuinely unexecuted on the
+protected database. A query against `proposal_chain_id` would then error — or,
+under a careless reader, be reported as *"0 violations"*.
+
+> ⛔ **An absent schema is `NOT MEASURABLE`. It is never zero.**
+
+**The ledger is a claim; the catalogue is the fact.** §2 and §3 are read
+separately and their disagreement is itself reported — the 2026-09-07 drift is
+exactly a case where they diverged.
+
+**Sizing and integrity use different instruments,** per the founder's
+correction: `pg_total_relation_size` + `reltuples` + `last_analyze` decide the
+lock strategy; exact `COUNT(*)` answers only the integrity questions. And
+`reltuples = -1` is reported as **`NEVER ANALYZED`** rather than as an estimate:
+unknown is not empty.
+
+**Drift is checked, not assumed.** §6 lists every unique index on the four
+targets, plus any `INVALID` index — the residue a failed `CONCURRENTLY` leaves.
+
+## 19. Falsification — both branches, on real databases
+
+| branch | database | result |
+|---|---|---|
+| substrate **PRESENT** | `w5_witness` (migrations through `…005`) | §4 measured: `xor 0 · collisions 0 · editorial 0 · total 0` |
+| substrate **ABSENT** | `runtime_witness` (stops at `…004`) | §4 reported **NOT MEASURABLE** on all three, and still reported the measurable total |
+
+⭐ The absent branch is the one that mattered, and it behaves correctly: it does
+**not** print zeros.
+
+### Two defects the falsification found in the instrument itself
+
+1. ⚠️ **It died on an absent ledger.** `schema_migrations` does not exist on the
+   disposable databases (they are built by applying files directly), and
+   `ON_ERROR_STOP on` killed the run at §2 — *an instrument that dies on an
+   absent thing has reported nothing about the database it was pointed at.*
+   Gated, for the same reason §4 is gated.
+2. ⚠️ **`n/a` for an absent column read like an error.** The step-2 stub
+   `ask_threads` has no `anchor` column at all, and the instrument printed
+   `n/a`. Now `COLUMN ABSENT` — the distinction between *nullable*, *not null*
+   and *not there* has to survive into the output, or the reader supplies the
+   missing one themselves.
+
+### ⭐ And one W4-2 finding confirmed on a real database
+
+§6 on `w5_witness` shows `proposal_chain_directions` carrying **only**
+`proposal_chain_directions_pkey (id)` — no `(proposal_chain_id, id)` unique of
+any kind, while `proposal_versions` carries `proposal_versions_chain_id_id_key`.
+The B4 gap named in §2.2 is not a reading of the source; it is observable in a
+built database.
+
+## 20. How to run it
+
+```bash
+psql "$PROTECTED_DATABASE_URL" -X -f scripts/witness/w4-2-2-protected-preflight.sql
+```
+
+⛔ Nothing in it writes, repairs, or creates. If it finds a violating row it
+**reports** it — *a preflight that fixed what it found would destroy the evidence
+it exists to gather.*
+
+## 21. What a clean preflight would earn — and what it would not
+
+```
+protected read              ✅ this act
+unique-lock strategy ruling ✅ earned by the result
+right to DESIGN W4-S1/S2    ✅ earned by the result
+
+migration implementation    ⛔
+migration execution         ⛔
+canonical merge             ⛔
+deployment                  ⛔
+data repair                 ⛔
+```
+
+⛔ The W5-3 witness fixture stays untouched until the successor migration
+actually exists.
+
+## 22. Standing
+
+```
+W4-2   semantic schema design    ✅ CLOSED · f210df118
+W4-2.1 migration phasing         ✅ CLOSED · 46a44928e
+W4-2.2 preflight INSTRUMENT      ✅ built · falsified on both branches
+W4-2.2 preflight RESULT          ⛔ NOT RUN — this session cannot reach production
+
+unique-target strategy           ⏸ undecided — waits on the result
+executable W4 migrations         ⛔ HELD
+producer registration            ⛔ HELD
+canonical service seam           ⛔ HELD
+route / Canvas                   ⛔
+
+production mutation              ⛔
+maia_focus_witness               FROZEN
+```
