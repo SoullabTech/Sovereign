@@ -70,7 +70,24 @@ Replaced: **`AudioGraph.swift`, the one file**, and only its interior. The lower
 
 **Not replaced, not touched:** everything in §1. **Not added:** no second substrate behind a protocol selected at runtime, no selector on the harness, no fallback from unit to engine or back inside a build — two substrates in one build is a §6 refusal (K00-16 in spirit: one organism, one physical substrate, one subject).
 
-**Kernel diff budget** (a gate pin at implementation): `VoiceKernel.swift` changes only at the two buffer-typed seams and the trace-step type name; `ConfigurationChange.swift` is retained unchanged in source (its `voice_processing_reconfiguration` class is engine-specific and will read **absent** on VPIO journals, never manufactured — §5); `Package.swift` gains the Audio Toolbox link for the substrate target only. Any other kernel line changed = disguised redesign = refusal.
+**Kernel diff budget** (a gate pin at implementation). ⚠️ **CORRECTED BY FOUNDER ACT, 2026-09-14 — the first wording forbade two changes this same plan requires, so a gate built from it would have had to violate one sentence or the other.** `VoiceKernel.swift` may change at, and only at:
+
+1. the two buffer-typed seams;
+2. the trace-step type name / vocabulary;
+3. ⭐ **the six existing `engineRunning` evidence-key occurrences**, which become `ioRunning` — **vocabulary only**. ⛔ No control flow, condition, threshold or health meaning may change at those sites. Verified present at `VoiceKernel.swift` lines **326** (`graph_started`), **427** (`input_health_sample`), **499** (the configuration-change observation), **516** (`configuration_change_deferred`), **602** (`engine_running_observed`), **625** (the `input_dead` recovery evidence). ⚠️ A seventh occurrence lives in `AudioGraph.swift:200` and disappears with that file's interior; it is not part of this budget. ⛔ **Record NAMES such as `engine_running_observed` are NOT renamed** — they are replay-compatibility identifiers. It is the evidence KEY that must stop lying about which substrate produced the reading.
+4. ⭐ **`vpExpectationPending` becomes permanently `false` on this subject** — see the VP-expectation ruling below.
+
+`ConfigurationChange.swift` and `ConfigurationChangeClassifier.swift` are retained **byte-identical**; `Package.swift` gains the Audio Toolbox link for the substrate target only. Any other kernel line changed = disguised redesign = refusal.
+
+**⛔ THE VP-EXPECTATION RULING (founder act, 2026-09-14).** §5 says VPIO-01 has no `AVAudioEngineConfigurationChange`, therefore no `voice_processing_reconfiguration` and no `configuration_change_deferred` — *"absent, never manufactured"*. ⚠️ **But the unchanged kernel can still manufacture exactly that class.** `VoiceKernel.swift:322` sets
+
+```
+vpExpectationPending = snap.voiceProcessingEnabled
+```
+
+for **every** generation. A raw unit's stream-format property listener still calls the retained `onConfigurationChange` seam, so the first callback on an unchanged route could be classified through the old **engine-specific** expectation and journalled as `voice_processing_reconfiguration → configuration_change_deferred`. That would violate the plan's own never-manufactured rule.
+
+⭐ **So exactly one subject-specific adaptation is permitted**: on the VPIO subject, `vpExpectationPending = false` (or the mechanically equivalent compile-time form). ⛔ **No new selector. No runtime engine/VPIO choice. One VPIO build, one substrate.** The old branch may remain in source and becomes unreachable on this subject; the classifier is untouched.
 
 ---
 
@@ -98,7 +115,7 @@ Replaced: **`AudioGraph.swift`, the one file**, and only its interior. The lower
 | K00-08 stalled output **≤ 1000 ms** | unchanged supervisor; synthetic stall freezes the render-observation seam, stamped `synthetic` (P6) | D |
 | K00-09 generation-safe recovery | unchanged; every callback carries its unit's generation; stale dropped | D |
 | K00-10 bounded recovery **3 / class / 60 s at 500 · 1000 · 2000** | unchanged policy | D |
-| K00-11 route change survives | route change arrives from the authority's `routeChanged` observation (not from an engine notification); rebuild under a new generation, session untouched; speaker ↔ receiver and every admitted Bluetooth topology; unsupported = platform capability | D — needs the phone (see §7) |
+| K00-11 route change survives | ⚠️ **corrected 2026-09-14** — the architecture uses **two** facts, not one: `AudioSessionAuthority.routeChanged` updates route identity, AND the **VPIO stream-format property observation** reaches the retained `onConfigurationChange` seam, so the classifier sees the route changed and the existing bounded `configuration_change` recovery runs. ⭐ That is the closest lower-path analogue of the engine architecture and needs **no new recovery law**. ⛔ Do **not** amend `handleSession(.routeChanged)` into a new direct rebuild path merely to make earlier prose true. Session untouched; speaker ↔ receiver and every admitted Bluetooth topology; unsupported = platform capability | D — needs the phone (see §7) |
 | K00-12 interruption survives | authority's interruption events; health suspended; re-activation stamped; rebuild | D — needs the phone |
 | K00-13 media-services reset survives | authority's reset event → re-activation + rebuild (first exercised on device in Stage B, O7; the silent-limbo reading there is a K00-13 falsifier candidate to watch) | D — needs the phone |
 | K00-14 background / lock policy explicit | unchanged (HOLD policy, `UIBackgroundModes: audio`), journalled | D |
@@ -127,7 +144,7 @@ Replaced: **`AudioGraph.swift`, the one file**, and only its interior. The lower
 
 **The running proxy.** The engine subject's journals carry `engineRunning` (from `engine.isRunning`) on `graph_started`, `engine_running_observed` and the samples. Runs 4–6 and the census showed that key reading `true` at `start_return` and the organism never listening (O5, M-b). On VPIO-01 the equivalent read is the unit's running property. Rule, unchanged from the law and made explicit here: **no running read earns `inputFlow = healthy`; only callbacks do.** Evidence-key rule: VPIO journals carry the read under a key that names what it is — `ioRunning` — and never carry `engineRunning` (absent, not aliased). The ledger classifier (`k00-ledger.py`) and the census tools read `engineRunning` for the M-a/M-b shape; on the VPIO subject they read absent, and a subject-aware field mapping is added in the C-D7 pattern (declared subject decides the key; existing rows unchanged). This is the one journal-vocabulary change the plan proposes, and it is proposed so that a field cannot mean two things across subjects.
 
-**What VPIO-01 will not have:** an `AVAudioEngineConfigurationChange`; therefore no `voice_processing_reconfiguration` classification, no `configuration_change_deferred`, no VP expectation. Those records read **absent** on the new subject. Their absence is recorded, never treated as "the problem went away": the entry axis is judged on K00-04 alone.
+**What VPIO-01 will not have:** an `AVAudioEngineConfigurationChange`; therefore no `voice_processing_reconfiguration` classification, no `configuration_change_deferred`, no VP expectation. Those records read **absent** on the new subject. ⚠️ **And that absence is MADE true, not assumed**: the unchanged kernel sets a VP expectation every generation and would classify a stream-format callback through it, so §2's ruling pins `vpExpectationPending = false` on this subject. ⛔ Without that one adaptation this sentence would be a hope rather than a property. Their absence is recorded, never treated as "the problem went away": the entry axis is judged on K00-04 alone.
 
 ---
 
@@ -183,7 +200,7 @@ Founder read `2637e1692` against the plan, the ratified acceptance law, research
 2. **F-W1 pinned** (§6 above, verbatim in substance; 24/30 is a consequence of the rule, recomputed here, not a chosen threshold).
 3. **Distinct bundle identifier RULED YES; old-container purge REMOVED from the VPIO sequence** (§7 above).
 
-Accepted as written: the substitution boundary (`AudioGraph.swift` interior replaced; `VoiceKernel.swift` only the two buffer-typed seams + trace-step type/vocabulary; package/build configuration = Audio Toolbox link + VPIO bundle identity; authority · supervisor · policy · projection · journal · replay byte-identical); the fail-closed rule (*any kernel change outside that budget is evidence that this is not the substrate substitution we authorized*); `ioRunning` never aliased to `engineRunning`; the manual-witness limitation (the first VPIO experiment qualifies K00-04 only; it cannot discharge K00-11/12/13/15 and therefore cannot accept KERNEL-00 — a 30/30 entry result earns consideration of the remaining witness, never KERNEL-01).
+Accepted as written, ⚠️ **with the diff budget as corrected on 2026-09-14** (the six `engineRunning` → `ioRunning` evidence-key substitutions and the permanently-false VPIO VP expectation are **admitted deltas**, not violations): the substitution boundary (`AudioGraph.swift` interior replaced; `VoiceKernel.swift` only the two buffer-typed seams + trace-step type/vocabulary + those two admitted adaptations; package/build configuration = Audio Toolbox link + VPIO bundle identity; authority · supervisor · policy · projection · journal · replay byte-identical); the fail-closed rule (*any kernel change outside that budget is evidence that this is not the substrate substitution we authorized*); `ioRunning` never aliased to `engineRunning`; the manual-witness limitation (the first VPIO experiment qualifies K00-04 only; it cannot discharge K00-11/12/13/15 and therefore cannot accept KERNEL-00 — a 30/30 entry result earns consideration of the remaining witness, never KERNEL-01).
 
 **Standing:** VPIO-01 PLAN/CENSUS ACCEPTED · law trigger reconciled (record only) · F-W1 matrix PINNED · distinct bundle id RULED YES · old K00/R1 container purge REMOVED · **VPIO implementation HELD · MAC-COMPILE HELD · device install NOT AUTHORIZED · N = 30 VPIO witness NOT AUTHORIZED** · KERNEL-01 · BENCH-01 · BRIDGE-01 · MIGRATE-01 CLOSED · AVAudioEngine subject FROZEN · SEAM-01 CLOSED · JOP-04 UNTOUCHED. Next act: founder adjudication of bounded VPIO implementation against this pinned plan.
 
@@ -192,4 +209,25 @@ Accepted as written: the substitution boundary (`AudioGraph.swift` interior repl
 ## 9. Implementation HOLD (founder, 2026-09-14) → VPIO-01A semantic-boundary census
 
 Founder read `cfe3984a4`: record pins ACCEPTED; superseded §5 wording stays in place; `below → above` editorial fixed. **Implementation HELD**: §0 was an API-reference census, not a semantic-dependency census — `VoiceKernel.swift` still carries the engine subject's configuration-change semantics (`vpExpectationPending`, the classifier call, `engine_configuration_changed` / `configuration_change_deferred` / `voice_processing_reconfiguration`, six `engineRunning` sites, and a `routeChanged` branch that delegates rebuild to the engine notification), continuing into `ConfigurationChange.swift`, `Replay.swift`, the pure tests and the repo gate. Following §2's budget literally would force manufactured engine-shaped records, a budget breach, or knowingly incomplete route recovery — none admissible. **The census is `KERNEL-00_VPIO-01A_SEMANTIC_CENSUS_2026-09-14.md`**; its §4 supersedes §2's diff budget and its §5 defines route recovery under VPIO without a second authority. Bundle id frozen exactly (§7 above); instrument plumbing recorded as later witness work.
+
+---
+
+## 10. CONCURRENT RECORD DIVERGENCE (2026-09-14, ~15:52Z) — UNRESOLVED, founder ruling required
+
+Two records of the implementation boundary now exist in this document and contradict each other. Neither is applied; no source moved. Both are preserved verbatim; nothing was rewritten.
+
+| | **Record A — `ebd9eef5d`** (another session, author "Claude", founder-attributed "CORRECTED BY FOUNDER ACT"; edits §2, §4 K00-11 row, §5, §8, and the acceptance law's note/§5 layout) | **Record B — `986225ae9` + VPIO-01A census §4/§5** (this session, from the founder's HOLD ruling that opened VPIO-01A) |
+|---|---|---|
+| `engineRunning` → `ioRunning` (six kernel sites) | admitted, vocabulary only | same |
+| record name `engine_running_observed` | **NOT renamed** (replay-compatibility identifier) | proposed `io_running_observed` (founder's call; census §3) |
+| `onConfigurationChange` seam | **retained**; the VPIO stream-format property listener is wired into it | **retired** (no such event on VPIO); replaced by `onFormatChanged` → observation `io_format_changed`, never an act |
+| `ConfigurationChangeClassifier` | **retained byte-identical**; `vpExpectationPending = false` permanently so the VP class is unreachable; the route class still classifies the format callback | **removed from the VPIO tree** with its tests (recommended; `samePorts` kept as a pure helper); engine semantics not translated |
+| K00-11 route recovery | via the retained seam: the format observation reaches the classifier, "sees the route changed", existing `configuration_change` recovery; *do not amend `handleSession(.routeChanged)`* | via the authority's own `route_changed` observation: `handleSession(.routeChanged)` becomes record + `recovery_requested` (cause `session_route_change`, existing class `configuration_change`, existing policy) — no new class/budget/timer/threshold |
+| acceptance-law superseded §5 sentence | moved into the amendment note | the founder's instruction to this session was "keep it exactly where it is"; the merge carries Record A's layout unedited |
+
+**What the two agree on:** one VPIO build, one substrate, no selector; the six-site key rename; authority · supervisor · policy · projection · journal · replay byte-identical; thresholds unchanged; implementation, MAC-COMPILE, install and N = 30 all HELD.
+
+**What this session observes about Record A, for the founder's reading, not as an adjudication:** (1) the founder's HOLD ruling that opened VPIO-01A named "wire the property listener into `onConfigurationChange` so the kernel interprets a VPIO observation through an engine-specific classifier" as option A and called it inadmissible; Record A adopts that wiring with the VP class disabled. (2) With `vpExpectationPending = false`, the classifier returns `routeConfigurationChange` for *every* format callback, including one on an unchanged route (the classifier's route class is its default when the VP expectation is absent — `ConfigurationChange.swift`, pinned by `ConfigurationChangeClassifierTests` "pending: false → routeConfigurationChange"), so a benign format observation would request recovery through the budget on the very first callback; whether that is intended is a question for the founder, not a finding. (3) Record A's stream-format observation would be journalled as `engine_configuration_changed` with cause `os_configuration_change` unless the record name is also changed, which Record A does not admit.
+
+**Rule applied here (AUTH-1/2/3):** attribution explains a record; it does not authorize this session to prefer it or to erase it. Both stand until the founder rules which boundary governs; the census remains read-only and no implementation is authorized under either.
 
