@@ -8,7 +8,15 @@ TYPE        CONSTITUTIONAL SEMANTICS — ⛔ not component placement, ⛔ not im
 STATE       DRAFTED · ⛔ NOT RATIFIED
 ```
 
-> ⚠️⚠️ **AMENDED THREE TIMES — read Amendments 1, 2 and 3 plus `P2-00_FD-REGISTER_REVIEW.md`
+> ⚠️⚠️ **ZERO RATIFICATION BLOCKERS REMAIN.** `FD-4` (`DECIDES` — open question versus
+> execution) and `FD-11a` (`GOVERNING SOURCE` — finite termination in the constitution or in
+> competent personal authority) are **DECIDED** in
+> `P2-00_BLOCKING-DECISIONS_FD-4_FD-11a_FD-8.md`, which also **retires `FD-8` as superseded**.
+> That record governs §3.7's decided exclusion and discharges §3.9's deferred terminus; ⛔ neither
+> section is rewritten. Ratification itself is prepared and **unsigned** in
+> `P2-00_RATIFICATION_RECORD.md`.
+
+> ⚠️ **AMENDED THREE TIMES — read Amendments 1, 2 and 3 plus `P2-00_FD-REGISTER_REVIEW.md`
 > with this file.** Amendment 3 closes FD-5 · FD-14 · FD-17 · FD-18 · FD-19 · FD-20, redefines
 > `EXISTS` to say *present in a named system state or evidentiary locus* (reserving `SUBJECT` for
 > what something is about), and reclassifies FD-12 as a deferred authority-allocation decision.
