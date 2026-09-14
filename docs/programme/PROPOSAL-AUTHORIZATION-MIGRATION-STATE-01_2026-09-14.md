@@ -2,7 +2,8 @@
 
 **Sublane of** `PROPOSAL-AUTHORIZATION-SEPARATION-01`, branch
 `claude/proposal-authorization-separation`, from `a6f573537`.
-**Status** READ-ONLY CENSUS. ⛔ Nothing mutated. No DDL, no DML, no repair, no
+**Status** READ-ONLY CENSUS. ⭐ **PRODUCTION READ 2026-09-14T13:24:37Z** (addendum 1).
+**Status** ⛔ Nothing mutated. No DDL, no DML, no repair, no
 retirement, no rename, no forward migration.
 
 **Instrument** `scripts/witness/proposal-authorization-migration-state.sql` —
@@ -18,9 +19,14 @@ retirement, no rename, no forward migration.
 fresh replay              ✓        FAIL      FAIL       —      collaborative   n/a
 walk · maia_consciousness ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
 fw   · focus_witness      ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
-production                   ⛔ U N R E A C H A B L E   F R O M   T H I S   S E S S I O N
-maia_focus_witness (Mac)     ⛔ U N R E A C H A B L E   F R O M   T H I S   S E S S I O N
+production                ABSENT   ABSENT    ABSENT   ABSENT      ABSENT       n/a
+maia_focus_witness (Mac)     ⛔ U N R E A D   —   the one row still owed
 ```
+
+⭐⭐ **PRODUCTION READ 2026-09-14T13:24:37Z** by the founder, this instrument
+unmodified, through `docker exec maia-postgres psql -U soullab
+maia_consciousness`. See addendum 1 for the verbatim result and the two
+instrument defects that run exposed.
 
 ⭐ **THE HEADLINE: in both databases this session can actually read, the
 collision has never been reached — and each stops immediately before it.**
@@ -156,3 +162,116 @@ executed any of the four**, and the repository's own precedent applies directly:
 letting the bad state land and repairing it after.* ⛔ **If either has executed
 them — especially if §8 reports accepted rows — that path closes and the ruling
 is a different one.** Neither branch is chosen here.
+
+---
+
+# Addendum 1 — production, read 2026-09-14T13:24:37Z
+
+**Founder-run, this instrument unmodified.** PostgreSQL 16.13 (Debian),
+`maia_consciousness` on `maia-postgres`.
+
+```
+1a  ledger shape        schema_migrations (filename, applied_at, checksum)
+
+1b  20260910000004_manuscript_revision_proposals          ABSENT
+    20260913000002_manuscript_revision_proposals          ABSENT
+    20260913000003_revision_proposal_execution_authority  ABSENT
+    20260914000001_proposal_succession                    ABSENT
+
+2   manuscript_revision_proposals  ABSENT
+    proposal_chains                ABSENT
+    proposal_versions              ABSENT
+
+3   collaborative_markers 0 · authorization_markers 0 · columns 0 · ABSENT
+
+4·5·6  no constraints, no indexes, no triggers   (0 rows each)
+7      all three ABSENT
+8      accepted_rows: table ABSENT
+```
+
+⭐⭐ **NOT ONE OF THE FOUR MIGRATIONS HAS EXECUTED IN PRODUCTION, AND NEITHER
+ONTOLOGY EXISTS THERE.** No `manuscript_revision_proposals` in any shape, no
+succession tables, and therefore **no authorization-shaped rows and no accepted
+authorizations anywhere in production.**
+
+⚠️ **The `20260914000001_proposal_succession` ABSENT is the expected and correct
+reading, not a finding** — Step 1's migration was landed on a programme branch
+under an explicitly non-production authorization and was never deployed. ⭐ **It
+says so, and production agrees.**
+
+---
+
+## ⚠️ TWO INSTRUMENT DEFECTS THIS RUN EXPOSED — BOTH MINE
+
+### ⛔⛔ The read-only guard passed vacuously on a file that did not exist
+
+The first attempt ran `git fetch` / `git show` from `~`, which is not a
+repository. Both failed — **and the shell redirect still created
+`/tmp/mig-state.sql`, empty.** The safety check then reported:
+
+```
+grep -icE '^\s*(insert|update|delete|alter|...)' /tmp/mig-state.sql   →   0
+```
+
+⭐ **`0` on an empty file is indistinguishable from `0` on a safe script.** The
+guard that existed to prove the file only reads instead proved nothing, and
+`psql` went on to execute an empty file against production — harmless by luck,
+not by design.
+
+⛔ **This is the `IF NOT EXISTS` class exactly** — Finding 0 of the identity
+census. A guard written to answer *"does this contain something forbidden?"*
+cannot answer *"is there anything here at all?"*, and silence from an absent
+subject reads as a pass.
+
+**Repair: the check is POSITIVE.** Two assertions that a script actually
+arrived, before the one that it only reads:
+
+```
+wc -l < /tmp/mig-state.sql          non-zero
+grep -c 'SHAPE VERDICT' …           1
+grep -icE '(insert|update|…)' …     0
+```
+
+### ⚠️ And the line-count expectation I published was STALE
+
+I told the founder to expect `145` lines and to stop if any of the three checks
+differed. The real file is **167** — it grew when the ledger discovery was
+repaired, and I quoted the pre-repair number.
+
+⛔ **A gate I supplied would have blocked a correct run.** The founder proceeded,
+rightly: the two load-bearing checks (`SHAPE VERDICT` present, mutating
+statements `0`) both held. ⭐ **But an exact expected line count is the wrong
+assertion for a file under active repair** — it fails on every legitimate edit
+and teaches whoever runs it to ignore the gate. The record keeps `non-zero`, not
+a number.
+
+---
+
+## ⛔ Standing after addendum 1
+
+```
+production              ⭐ READ — all four migrations ABSENT · both ontologies
+                        ABSENT · no accepted authorization rows
+walk · maia_consciousness  READ — ABSENT, stops one migration short
+fw   · focus_witness       READ — ABSENT, and NOT the EW-F1a witness database
+maia_focus_witness (Mac)   ⛔ UNREAD — the one row still owed
+
+migration ruling        ⛔ STILL BLOCKED on that row
+retirement / rename /
+amendment / forward
+migration               ⛔ NONE AUTHORIZED, NONE PERFORMED
+production              UNTOUCHED — the run wrote nothing
+```
+
+⭐ **Three of four rows now agree, and they agree in the direction that keeps
+every repair strategy open**: no protected database has executed any of the
+four, so the repository's own precedent applies — *correcting the executable
+migration history before it can execute is safer than letting the bad state land
+and repairing it afterwards.*
+
+⛔ **The ruling is still not made here.** One environment is unread, and the
+question it answers is the decisive one: **§8, whether any accepted
+authorization rows exist anywhere.** If `maia_focus_witness` carries the EW-F1a
+constraints — and the EW-F1a witness says something did — then that database has
+executed `20260913000002` and `20260913000003`, and the shape of the repair
+changes.
