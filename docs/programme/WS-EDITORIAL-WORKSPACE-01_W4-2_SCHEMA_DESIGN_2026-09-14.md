@@ -43,18 +43,30 @@ ALTER TABLE ask_threads
 ALTER TABLE ask_threads VALIDATE CONSTRAINT ask_threads_one_subject;
 ```
 
-⭐ **`NOT VALID` then `VALIDATE` is deliberate.** `ask_threads` is a live
-production table; a plain `ADD CONSTRAINT` takes `ACCESS EXCLUSIVE` for the
-length of a full scan. Split, the scan runs under a weaker lock. ⛔ And the
-`VALIDATE` is not optional: a constraint left `NOT VALID` is enforced for new
-rows and **silently unenforced as an invariant over the existing ones**, which
-is the shape of a guarantee that reads true and is not.
+⚠️⚠️ **THE LOCK CLAIM THAT WAS HERE WAS WRONG, AND IS CORRECTED IN §8.** It
+said *"split, the scan runs under a weaker lock"*, which is true **across
+transactions** and false **across mere statements** — PostgreSQL holds a table
+lock until the transaction that took it ends. The two statements as written
+above are a single phase and buy nothing. See **W4-2.1 · §8**, which replaces
+this shape with two migration files.
 
-⭐ **Every existing row already satisfies it** — `anchor NOT NULL` held until
-now and `proposal_chain_id` has no backfill — so `VALIDATE` is expected to pass
-on the first attempt. ⛔ **If it does not, that is a finding, not an obstacle**:
-a row carrying both subjects would mean something wrote one, and the migration
-must stop rather than repair it.
+⭐ What remains true: the `VALIDATE` is **not optional**. A constraint left
+`NOT VALID` is enforced for new rows and **silently unenforced as an invariant
+over the existing ones** — the shape of a guarantee that reads true and is not.
+
+⚠️ **CLAIM NARROWED BY W4-2.1 (founder, 2026-09-14).** This paragraph first
+said *"every existing row already satisfies it… so VALIDATE is expected to
+pass"*, reasoning from the absence of a backfill. ⛔ **No backfill does not prove
+no row.** The probe in §3b falsified the stronger inference within the hour, on
+the first database it was pointed at. The durable statement is:
+
+> No production runtime currently writes `proposal_chain_id`, so **no
+> runtime-created violating row is known**. Existing protected rows remain
+> **unproved until preflight**. Validation is the authority and may refuse.
+
+⛔ **If it refuses, that is a finding, not an obstacle**: a row carrying both
+subjects means something wrote one, and the migration must stop rather than
+repair it.
 
 ⛔ **No backfill invents a subject.** A historical thread's absent
 `proposal_chain_id` is the evidence that it predates the editorial object — the
@@ -481,4 +493,192 @@ canonical / schema landing      ⛔
 protected migration             ⛔
 production                      UNTOUCHED
 maia_focus_witness              FROZEN
+```
+
+---
+
+# W4-2.1 — MIGRATION PHASING SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `f210df118`.
+Same branch. ⛔ **Record / design only. No executable SQL.**
+
+> The database design is right; the way we acquire that database state on a live
+> table is not yet fully designed.
+
+---
+
+## 8. The lock claim, corrected — with evidence
+
+⚠️ **§1.1 was wrong.** PostgreSQL retains a table lock acquired earlier in a
+transaction until that transaction ends, so `NOT VALID` followed by `VALIDATE`
+**in the same transaction** never reaches the weaker-lock window.
+
+Measured on the disposable witness database (`pg_locks`, rolled back):
+
+```
+same transaction · DROP NOT NULL → ADD … NOT VALID → look at the locks
+    AccessExclusiveLock   granted        ← still held; VALIDATE gains nothing
+
+separate transaction · VALIDATE alone
+    ShareUpdateExclusiveLock granted     ← the intended window
+```
+
+⭐ **This is not a subtlety about SQL style. It is the whole reason the phasing
+must be two migration *files*, not two statements.**
+
+## 9. The two runners, read rather than assumed
+
+| runner | shape | consequence |
+|---|---|---|
+| `scripts/run-sql-migrations.sh:79` | `psql -c "BEGIN;" -f "$f" -c "COMMIT;"` | **force-wraps the whole file in one transaction** |
+| `scripts/apply-migrations.sh:~110` | `\i '<file>'` inside one advisory-locked psql script | executes the file **as written**; transactions are whatever the file declares |
+
+Existing migrations (`20260901000001`, `20260914000005`) each open with their own
+`BEGIN;`, which under the first runner nests inside the wrapper and is a no-op
+warning. ⭐ **So a single file cannot deliver two lock phases under both runners
+without depending on that nesting** — and the dependency is worse than it looks:
+under `run-sql-migrations.sh` an in-file `COMMIT;` would end the *runner's* wrapper
+transaction, so the file would be committing a transaction it did not open.
+
+⛔ **And a single file has a second, decisive failure mode**: `schema_migrations`
+records a **filename**, once, after the whole file succeeds. If phase 2 refused,
+phase 1 would already be committed and **nothing would be ledgered** — a live
+table left altered with no record that it was, and a retry re-running phase 1
+against its own result. *That is the un-ledgered half-file, and it is the reason
+the phasing is files rather than statements.*
+
+## 10. The lawful shape — two migration files
+
+```
+W4-S1 · subject preparation                        ← short ACCESS EXCLUSIVE
+    ALTER COLUMN anchor DROP NOT NULL
+    ADD CONSTRAINT ask_threads_one_subject            … NOT VALID
+    ADD CONSTRAINT ask_threads_editorial_has_no_reading … NOT VALID
+    COMMIT                                          ← the lock is released HERE
+                                                      and ledgered HERE
+
+W4-S2 · validation + binding substrate             ← a NEW transaction
+    VALIDATE CONSTRAINT ask_threads_one_subject
+    VALIDATE CONSTRAINT ask_threads_editorial_has_no_reading
+    the four supporting UNIQUE targets (§11)
+    editorial_turn_bindings + trigger + partial unique indexes
+```
+
+⭐ **The safe intermediate state is the point.** If S2 refuses — an old
+two-subject row, or anything else — the database rests at:
+
+```
+anchor                    nullable
+both CHECKs               present and ENFORCED ON NEW ROWS
+the violating row         still visible, unrepaired, findable
+runtime                   still creates no editorial threads
+S1                        recorded in schema_migrations
+S2                        not recorded — retryable once the row is ruled on
+```
+
+⛔ Nothing has been destroyed and nothing is un-ledgered. That is strictly
+better than a half-applied file, and it is why the phases are split even though
+S1 alone buys no new guarantee.
+
+⚠️ **S1 must be written idempotently anyway** (`DROP NOT NULL` already is;
+the two `ADD CONSTRAINT`s need an `IF NOT EXISTS`-equivalent guard, since
+PostgreSQL has none for `ADD CONSTRAINT`), because a runner that fails *after*
+the file succeeds but *before* the ledger write would re-run it.
+
+## 11. The four supporting UNIQUE targets — lock strategy is an OPEN RULING
+
+Measured: `ALTER TABLE … ADD CONSTRAINT … UNIQUE` takes **`AccessExclusiveLock`
++ `ShareLock`** and builds the index under them. Two of the four targets are on
+live tables — `ask_threads` and `ask_turns`, the latter growing with every turn
+anyone has ever spoken.
+
+**Option A — ordinary unique build**, accepted **only after** protected preflight
+proves the tables are small enough that the build is a blip.
+
+**Option B — `CREATE UNIQUE INDEX CONCURRENTLY`**, then attach it via
+`ADD CONSTRAINT … USING INDEX`.
+
+⛔⛔ **Option B is not merely unprecedented here; it is structurally
+incompatible with one of the two runners.** Measured:
+
+```
+BEGIN; CREATE UNIQUE INDEX CONCURRENTLY … ;
+  → ERROR: CREATE INDEX CONCURRENTLY cannot run inside a transaction block
+```
+
+and `run-sql-migrations.sh` **force-wraps every file** in `BEGIN;`/`COMMIT;`.
+So B would require either abandoning that runner for this migration, or a file
+that deliberately commits a transaction it did not open. ⭐ Both are **custody
+decisions, not implementation details**, and neither is taken here.
+
+⭐ Also: `grep -rl CONCURRENTLY database/migrations/` returns **nothing** — this
+repository has no concurrent-index precedent at all, and a failed CIC leaves an
+`INVALID` index requiring its own recovery path.
+
+⛔ **This design does not choose.** The protected-database size census decides
+whether B's machinery is warranted, and that census has not been run.
+
+## 12. Protected preflight — owed, and unread
+
+Before S1 is authorized, read on the protected database:
+
+```
+1  SELECT count(*) FROM ask_threads;
+2  SELECT count(*) FROM ask_turns;
+3  SELECT count(*) FROM ask_threads
+    WHERE anchor IS NOT NULL AND proposal_chain_id IS NOT NULL;   ← must be 0
+4  SELECT count(*) FROM ask_threads
+    WHERE proposal_chain_id IS NOT NULL AND reading_identity IS NOT NULL;
+5  SELECT count(*) FROM ask_threads WHERE proposal_chain_id IS NOT NULL;
+```
+
+⛔ **Every one of these is UNREAD.** (3) is the XOR question and (5) is the
+rollback question — a non-zero (5) means rollback is already a decision about a
+member's record, not a schema operation (§4). (1) and (2) decide §11.
+
+⚠️ And they must be read on the **protected** database. The probe in §3b read
+a witness database and found a violating row **there**; that says nothing about
+production either way, and must not be reported as if it did.
+
+## 13. The W5-3 witness fixture — successor treatment, not laundering
+
+When W4 schema lands in the witness database, the W5-3 schema witness's
+chain-bound fixture becomes `anchor = NULL, proposal_chain_id = C`, **and the
+inverse obligation is added in the same act**:
+
+```
+anchor IS NOT NULL AND proposal_chain_id IS NOT NULL   → REFUSED
+```
+
+⭐ That is a **successor-schema adaptation**, not retroactive evidence
+laundering: git preserves the original W5-3 witness at `303212ae7`, and the new
+obligation is strictly stronger than the one it replaces. ⛔ **Do not repair it
+before the migration exists** — a witness edited in advance of the schema it
+describes is a witness describing a schema nobody has.
+
+## 14. Left open by founder ruling
+
+`initiated_by = 'maia'` on an editorial thread stays **undecided and
+unconstrained**. W4 v1 begins discourse with a member act, and the column's
+broader existing vocabulary causes no false relationship by merely remaining
+available. ⭐ It is decided at the route act, ⛔ not narrowed prematurely in
+schema.
+
+## 15. Standing after the phasing seal
+
+```
+W4-2 semantic schema design       ✅ PASS · f210df118
+W4-2.1 migration phasing          ✅ SEALED — two files, lock strategy OPEN
+
+protected preflight (§12)         ⛔ OWED — every query unread
+unique-target lock ruling (§11)   ⛔ OPEN — decided by the size census
+executable W4 migration           ⛔ HELD
+producer registration             ⛔ HELD
+canonical service seam            ⛔ HELD
+route / Canvas                    ⛔
+
+canonical landing                 ⛔
+protected migration               ⛔
+production                        UNTOUCHED
+maia_focus_witness                FROZEN
 ```
