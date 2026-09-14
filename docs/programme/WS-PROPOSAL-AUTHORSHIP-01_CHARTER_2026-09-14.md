@@ -217,8 +217,12 @@ SUBJECT           377d811d (Mac Studio runtime) — NOT present in this checkout
 EVIDENCE          founder-read; Jarvis verified only the absence
 JARVIS CORRECTION recorded §2 — the ordinary-writing-path shape was wrong
 AMENDMENTS        A1 authorship ≠ authority · A2 runtime schema is evidence, not authority
-NEXT              ⭐ CENSUS AUTHORIZED — six owed items against the running subject
-                  ⛔ design NOT open · schema NOT authorized · code NOT authorized
+CENSUS            ✅ COMPLETE — `…_CENSUS_2026-09-14.md` (6165512a)
+RULINGS           FR-W1 F6′ is a hard precondition · FR-W2 three acts may not collapse
+                  FR-W3 decision_chain_id neutral · FR-W4 three independent gates
+                  `…_FOUNDER_RULINGS_2026-09-14.md`
+NEXT              ⏳ GATE A — six browser observations (interaction witness, still open)
+                  ⛔ design NOT open · schema BLOCKED BY F6′ · code NOT authorized
 CODE              NONE
 ```
 
