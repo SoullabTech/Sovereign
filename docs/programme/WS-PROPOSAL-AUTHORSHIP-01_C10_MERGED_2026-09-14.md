@@ -61,13 +61,63 @@ BASE DEBT        ⚠️ 4 inherited failures (proposalWorkMode · consentSurface
                  the base alone, deliberately not repaired here.
 ```
 
-## Standing
+## ⭐⭐ LANE CLOSED (founder, 2026-09-14)
 
 ```text
-WS-PROPOSAL-AUTHORSHIP-01 · C10   ✅ CLOSED — merged to canonical
-WATCH                              ✅ auto-unsubscribed on merge
-Gate B (authorship / succession)   ⛔ CLOSED · Gate C ⛔ blocked by F6′
-CI-GATE LANE · F1 LANE             ⛔ open, unopened, each needing its own act
+WS-PROPOSAL-AUTHORSHIP-01 / C10
+
+STATUS        ✅ CLOSED
+REPAIR        4df4e91d   🔒 preserved in history
+INTEGRATION   181fbaa2c  🔒 preserved in history
+MERGED AS     7c136532c
+WATCH         ✅ ended
+EVIDENCE      ✅ intact and still reproducible
+```
+
+⭐ **The closing condition was met, not declared:** #1296 merged, both sealed objects remain
+reachable, and the evidence chain survived integration intact.
+
+### ⛔ Nothing remaining belongs inside C10 — carried forward as SUBJECTS, not loose ends
+
+```text
+NEXT LANE     CI-GATE-BASE-COVERAGE-01
+SUBJECT       six green PR checks can coexist with NO canonical typecheck
+EVIDENCE      #1296 demonstrated the defect IN PRACTICE
+BOUNDARY      workflow / gate architecture ONLY — ⛔ no C10 reopening
+
+SEPARATE      F1 · the control-label premise has MOVED ("Show me where")
+SEPARATE DEBT four inherited base-red tests
+```
+
+⭐ `CI-GATE-BASE-COVERAGE-01` is **no longer a census hypothesis.** #1296 supplied the
+discriminating example the gate's own historical warning describes — **green UI, absent
+typecheck.**
+
+---
+
+## ⭐⭐ THE CLOSURE LESSON
+
+```text
+A SEALED OBJECT SURVIVES INTEGRATION WHEN HISTORY IS ADDED AROUND IT
+RATHER THAN REWRITTEN THROUGH IT.
+```
+
+⭐ Every custody refusal in this lane — no rebase, no amend, no force-push, merge commit over
+rewrite, fast-forward over reconstruction — was in service of that one sentence. ⛔ And it is
+checkable, not rhetorical: `4df4e91d` is reachable from canonical and its digest still reads
+`2e8e3e42…`.
+
+---
+
+## Standing at close
+
+```text
+C10                                ✅ CLOSED
+Gate B (authorship / succession)   ⛔ CLOSED / NOT OPENED — requirement precedes object (FR-W3a)
+Gate C (schema authorization)      ⛔ BLOCKED BY F6′ — ledger reconciliation still owed
+CI-GATE-BASE-COVERAGE-01           ⭐ NEXT LANE — not opened here
+F1 control label                   ⛔ separate, premise moved
+base debt (4 tests)                ⛔ separate, named not absorbed
 ```
 
 > ⭐⭐ **A voluntary return is not complete because Whole reached the right section. It completes
