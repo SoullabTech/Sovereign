@@ -8,8 +8,10 @@
 set -uo pipefail
 ROOT="${1:-docs/programme/VOICE-2026/driver-ledger}"; STAMP="$(date -u +%Y%m%dT%H%M%SZ)"; OUT="$ROOT/log-probe-$STAMP"; mkdir -p "$OUT"
 { sw_vers; xcodebuild -version 2>/dev/null; which log; } > "$OUT/versions.txt" 2>&1
-capture(){ # $1 = file · rest = command; help pages only
-  { echo "\$ $*"; "$@"; echo "[rc=$?]"; } > "$OUT/$1" 2>&1
+capture(){ # $1 = file · rest = command; help pages only. C-D11: the filename is shifted off before executing —
+  # the first run (20260914T021452Z) executed the filename itself and reported NONE FOUND about a tool it never invoked.
+  local f="$1"; shift
+  { echo "\$ $*"; "$@"; echo "[rc=$?]"; } > "$OUT/$f" 2>&1
 }
 capture log-help.txt log help
 capture log-collect-help.txt log help collect

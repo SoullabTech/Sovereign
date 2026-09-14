@@ -147,3 +147,8 @@ Conclusion: none of the four bookkeeping fields is antecedent state, and none ri
 - **Held until the calibration is read:** any logged batch, any matched no-log control, any predicate. The founder decides both on the calibration record.
 
 Standing after pass 2 implementation: bookkeeping READ (no signal) · daemon witness IMPLEMENTED (gate 35/35) · log discovery + calibration IMPLEMENTED, fail-closed, NOT RUN · no code in the organism · device R1 HOLD.
+
+### 7.4 First discovery run INVALID — C-D11 (this session's instrument defect), repaired and shim-tested
+
+Founder ran `k00-log-probe.sh` from a fresh detached worktree `/private/tmp/voice-pass2-6801` at `680144940` (the earlier worktree was left untouched: its untracked R1 evidence made Git refuse the checkout, which is custody protection working). Output `log-probe-20260914T021452Z` reported `NONE FOUND` for every question — **invalid as tool evidence**: the `capture()` helper never shifted its filename argument, so every "capture" executed the filename (`log-collect-help.txt: command not found`) and never invoked `log(1)` at all. Founder correctly stopped; the fail-closed calibration was not run; no device act, no `log config`, no sysdiagnose, R1 evidence untouched. Repair (instrument only): `local f="$1"; shift` before the command runs; gate pins the shift; shim-tested here with a fake `log` on PATH — the probe now records `$ log help collect` and finds the shim's documented `--device-udid` / `--start` / `--archive` lines. The invalid probe directory stays on the Mac as a record of the defect if the founder commits it; it is never read by the calibration because a re-run writes a newer directory and the calibration reads the newest.
+

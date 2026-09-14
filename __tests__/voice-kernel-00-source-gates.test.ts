@@ -491,6 +491,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     const lp = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-probe.sh'), 'utf8');
     const lpExec = lp.split('\n').filter((l) => !/^\s*(#|echo\b|\{?\s*echo\b)/.test(l)).join('\n');   // prose in echo lines never reads as a capture (C21)
     expect(lpExec).not.toMatch(/\blog (collect|show|stream|config)\b(?! *--help)/);   // help pages only (`log help x`), no capture
+    expect(lp).toMatch(/local f="\$1"; shift/);                                   // C-D11: the filename is shifted off before the command runs
     const lc = readFileSync(join(process.cwd(), 'scripts', 'witness', 'k00-log-calibrate.sh'), 'utf8');
     const lcExec = lc.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
     expect(lcExec).not.toMatch(/log config|sysdiagnose|lldb|devicectl device process/);   // `--mode L` is the driver's Mode L, not a logging mode
