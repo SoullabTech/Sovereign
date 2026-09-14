@@ -36,8 +36,7 @@ never reached did not hold.*
 
 ```
 PW-1   §23 mounts no manuscript-writing control            WITNESSED, both views
-PW-3   exactly one section suspended                       WITNESSED (caret in a
-                                                           neighbouring section)
+PW-3   exactly one section suspended                       WITNESSED — server census
 PW-5   the reason is stated, not inferred                  WITNESSED
 PW-8   stated in Whole view too                            WITNESSED
 PW-9   Whole view locates the exact range                  WITNESSED
@@ -89,7 +88,21 @@ instruments.**
 caret appear". The Studio's editors are transparent and borderless by design, so
 a writable section and a suspended one are pixel-identical; a screenshot cannot
 carry that answer. Repaired with `scripts/witness/ew-f2-authority-census.ts`,
-which asks the server the same two questions the route asks.
+which asks the server the same two questions the route asks, in the same order:
+
+```
+sections           174
+manuscript_write   173
+proposal_work        1   position 22 · §23 · 605afab8-9edf-4c3a-832a-fc46eff071ca
+
+PW-3 · exactly 1 section suspended: PASS
+PW-3 · and it is the section the server resolved: PASS
+NOTHING WAS WRITTEN.
+```
+
+⭐ The caret proved ONE section writable. This proves the other 173 are, and that
+the single suspended one is the section the server resolved — which is the
+obligation as stated, rather than a sample consistent with it.
 
 ---
 
