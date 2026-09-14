@@ -1,0 +1,140 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/voice-seam-01/ios/VoiceKernelDriver/.derived/Build/Products/DriverUITests_iphoneos26.2-arm64.xctestrun -destination id=00008140-00163D9922E0801C -collect-test-diagnostics never "-only-testing:DriverUITests/K00DriverTests/testOneSample"
+
+2026-09-14 10:06:49.451 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 10:06:49.454 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 10:06:49.551 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, arch:arm64e, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+{ platform:iOS, arch:arm64, id:00008140-00163D9922E0801C, name:Kelly Nezat’s iPhone }
+2026-09-14 10:06:49.796 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 10:06:51.938202-0400 DriverUITests-Runner[63918:14202880] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-09-14 10:06:52.414.
+Test Suite 'DriverUITests.xctest' started at 2026-09-14 10:06:52.415.
+Test Suite 'K00DriverTests' started at 2026-09-14 10:06:52.415.
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' started.
+    t =     0.00s Start Test at 2026-09-14 10:06:52.417
+    t =     0.02s Set Up
+    t =     0.03s Open life.soullab.voicekernel.k00
+    t =     0.03s     Launch life.soullab.voicekernel.k00
+    t =     0.11s         Setting up automation session
+    t =     0.19s         Wait for life.soullab.voicekernel.k00 to idle
+2026-09-14 10:06:52.638 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =     1.30s Wait for life.soullab.voicekernel.k00 to become Running Foreground
+    t =     1.30s Waiting 10.0s for "Enter conversation" Button to exist
+    t =     2.32s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     2.32s         Checking existence of `"Enter conversation" Button`
+    t =     2.52s Checking existence of `"Voice processing: ON (default)" Button`
+    t =     2.58s Checking existence of `"Voice processing: OFF (control run)" Button`
+    t =     2.92s Waiting 3.0s for "Voice processing: ON (default)" Button to exist
+    t =     3.95s     Checking `Expect predicate `existsNoRetry == 1` for object "Voice processing: ON (default)" Button`
+    t =     3.95s         Checking existence of `"Voice processing: ON (default)" Button`
+    t =     4.02s Waiting 5.0s for "Enter conversation" Button to exist
+    t =     5.03s     Checking `Expect predicate `existsNoRetry == 1` for object "Enter conversation" Button`
+    t =     5.04s         Checking existence of `"Enter conversation" Button`
+    t =     5.10s Tap "Enter conversation" Button
+    t =     5.10s     Wait for life.soullab.voicekernel.k00 to idle
+    t =     5.11s     Find the "Enter conversation" Button
+    t =     5.15s     Check for interrupting elements affecting "Enter conversation" Button
+    t =     5.19s     Synthesize event
+    t =     5.49s     Wait for life.soullab.voicekernel.k00 to idle
+2026-09-14 10:07:00.134 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+    t =    20.50s Waiting 5.0s for "Export journal" Button to exist
+    t =    21.54s     Checking `Expect predicate `existsNoRetry == 1` for object "Export journal" Button`
+    t =    21.54s         Checking existence of `"Export journal" Button`
+    t =    21.57s Tap "Export journal" Button
+    t =    21.57s     Wait for life.soullab.voicekernel.k00 to idle
+    t =    21.58s     Find the "Export journal" Button
+    t =    21.60s     Check for interrupting elements affecting "Export journal" Button
+    t =    21.65s         Wait for com.apple.springboard to idle
+    t =    22.48s     Found 1 interrupting element:
+    t =    22.48s         Find the "NotificationShortLookView" BannerNotification
+    t =    22.51s "NotificationShortLookView" BannerNotification from Application 'com.apple.springboard'
+    t =    22.51s     Invoking UI interruption monitors for "NotificationShortLookView" BannerNotification from Application 'com.apple.springboard'
+    t =    22.51s         Find the "NotificationShortLookView" BannerNotification
+    t =    22.54s Default interruption handler ignoring non-alert type element "NotificationShortLookView" BannerNotification.
+    t =    22.54s         Find the "NotificationShortLookView" BannerNotification
+    t =    22.57s         Default interruption handler waiting for banner notification to expire/automatically dismiss
+    t =    22.57s             Waiting 15.0s for "NotificationShortLookView" BannerNotification to not exist
+    t =    23.60s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    23.60s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    23.66s                     Capturing element debug description
+    t =    23.67s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    23.76s                         Find: Descendants matching type BannerNotification
+    t =    23.76s                         Find: Identity Binding
+    t =    23.77s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    23.84s                         Find: Descendants matching type BannerNotification
+    t =    23.84s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    24.63s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    24.63s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    24.69s                     Capturing element debug description
+    t =    24.69s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    24.79s                         Find: Descendants matching type BannerNotification
+    t =    24.79s                         Find: Identity Binding
+    t =    24.80s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    24.88s                         Find: Descendants matching type BannerNotification
+    t =    24.88s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    25.58s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    25.58s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    25.64s                     Capturing element debug description
+    t =    25.64s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    25.71s                         Find: Descendants matching type BannerNotification
+    t =    25.71s                         Find: Identity Binding
+    t =    25.71s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    25.79s                         Find: Descendants matching type BannerNotification
+    t =    25.80s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    26.59s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    26.59s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    26.64s                     Capturing element debug description
+    t =    26.64s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    26.72s                         Find: Descendants matching type BannerNotification
+    t =    26.72s                         Find: Identity Binding
+    t =    26.73s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    26.80s                         Find: Descendants matching type BannerNotification
+    t =    26.81s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    27.60s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    27.61s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    27.66s                     Capturing element debug description
+    t =    27.66s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    27.74s                         Find: Descendants matching type BannerNotification
+    t =    27.75s                         Find: Identity Binding
+    t =    27.75s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    27.82s                         Find: Descendants matching type BannerNotification
+    t =    27.83s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    28.63s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    28.64s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    28.69s                     Capturing element debug description
+    t =    28.69s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    28.78s                         Find: Descendants matching type BannerNotification
+    t =    28.79s                         Find: Identity Binding
+    t =    28.79s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    28.86s                         Find: Descendants matching type BannerNotification
+    t =    28.87s                         Requesting snapshot of accessibility hierarchy for app with pid 60237
+    t =    29.67s                 Checking `Expect predicate `existsNoRetry == 0` for object "NotificationShortLookView" BannerNotification`
+    t =    29.67s                     Checking existence of `"NotificationShortLookView" BannerNotification`
+    t =    29.72s         Verifying handling...
+    t =    29.80s Confirmed successful handling of interrupting element
+    t =    29.80s     Synthesize event
+    t =    30.12s     Wait for life.soullab.voicekernel.k00 to idle
+    t =    32.33s Terminate life.soullab.voicekernel.k00:63919
+    t =    33.39s Wait for life.soullab.voicekernel.k00 to become Not Running
+    t =    33.39s Tear Down
+Test Case '-[DriverUITests.K00DriverTests testOneSample]' passed (33.478 seconds).
+Test Suite 'K00DriverTests' passed at 2026-09-14 10:07:25.897.
+	 Executed 1 test, with 0 failures (0 unexpected) in 33.478 (33.482) seconds
+Test Suite 'DriverUITests.xctest' passed at 2026-09-14 10:07:25.898.
+	 Executed 1 test, with 0 failures (0 unexpected) in 33.478 (33.483) seconds
+Test Suite 'Selected tests' passed at 2026-09-14 10:07:25.907.
+	 Executed 1 test, with 0 failures (0 unexpected) in 33.478 (33.492) seconds
+2026-09-14 10:07:26.005 xcodebuild[99824:29164401] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+2026-09-14 10:07:26.224 xcodebuild[99824:29164401] [MT] IDETestOperationsObserverDebug: 36.427 elapsed -- Testing started completed.
+2026-09-14 10:07:26.224 xcodebuild[99824:29164401] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-14 10:07:26.224 xcodebuild[99824:29164401] [MT] IDETestOperationsObserverDebug: 36.427 sec, +36.427 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/soullab/Library/Developer/Xcode/DerivedData/VoiceKernelDriver-dvvhhfuemgiferdocuaspqcbzwxq/Logs/Test/Test-DriverUITests-2026.09.14_10-06-49--0400.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
