@@ -450,7 +450,9 @@ time.* The honest repair is to date it, never to edit it.
 ```text
 LANE STATUS                        ⏳ OPEN · BOUNDED REPAIR AUTHORIZED (FR-W5)
                                    SCOPE  Whole / first asked return ONLY
-                                   NEXT   census → smallest repair → targeted witness
+                                   CENSUS INSTRUMENT ISSUED — C1…C10, read-only
+                                   `…_WHOLE-FIRST-RETURN_CENSUS_2026-09-14.md`
+                                   NEXT   run census (founder-side) → adjudicate → repair
                                    ⛔ census BEFORE implementation · mechanism not inferred
                                    ⛔ walk COMPLETE — do NOT rerun it
 Writer's Studio interaction lane   ✅ SIX-CELL WITNESS COMPLETE — 5 PASS · 1 FAIL
