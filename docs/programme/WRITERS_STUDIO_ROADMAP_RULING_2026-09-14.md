@@ -80,3 +80,84 @@ scoped and already half-ruled. It is not a new lane; it is the last act of this 
 
 > *The foundation is approaching the point where it should disappear from the writer's
 > awareness. That is not the same as being finished, and the six cells are still unrun.*
+
+---
+
+# AMENDMENT — founder, same day
+
+## Step 3 is the HINGE, not the first product phase
+
+⭐ **Step 3 is the last planned place where a foundational law is knowingly reopened.**
+After it, architecture becomes **reactive** — changed only when the lived writer journey
+exposes something the existing constitution genuinely cannot express.
+
+⛔ That is a firmer boundary than "architecture mostly done." *Mostly done* is a
+description; *this is the last planned reopening* is a rule that can be violated.
+
+## The boundary being reopened, stated exactly
+
+```
+EW-01A today            browser may authorize
+                        browser may NOT supply the mutation
+
+Step 3 introduces       browser MAY supply writer-authored candidate text
+```
+
+⭐ **Candidate text is not authority.** Reopening the boundary does not weaken `/accept`
+into *"send me some text and I'll mutate the manuscript."* It allows a writer-authored
+candidate to travel **while the server independently retains the exact authorization
+envelope the writer witnessed.**
+
+```
+PROPOSAL VERSION
+  replacement_text          └─ may originate with the writer
+
+AUTHORIZATION
+  expected_text
+  target / locus
+  base Work state
+  proposal identity + version
+                            └─ NEVER derived from writer-supplied replacement text
+```
+
+## ⭐⭐ New requirement: version identity becomes indispensable
+
+Once the writer can edit MAIA's proposal, the thing authorized **can no longer be
+"proposal X."** It must become:
+
+> **this exact candidate version, for this exact proposal, against this exact base state,
+> at this exact locus.**
+
+⛔ **Otherwise editing the candidate could accidentally mutate the scope of the
+authorization** — the failure the naming ruling's separation exists to make unreachable,
+arriving instead through version ambiguity.
+
+## Tightened sequence
+
+```
+CURRENT   WS-PROPOSAL-INTERACTION witness
+              ↓ record all six observations
+              ↓ bounded EW-F2 repair ONLY if behaviour falsifies
+              ↓ close interaction lane
+STEP 3    separate the two proposal objects
+          + staged-version succession
+          + per-version authorship
+          + deliberately reopen candidate transport
+          + preserve server-owned authorization
+              ↓ revise / adopt / reject loop
+THEN      experience-first Writer's Studio integration
+```
+
+## Standing at this moment
+
+```
+PREDECLARATION     ✓        Section / first    —
+runtime custody    ✓        Section / second   —
+witness auth       ✓        Section / passive  —
+acceptable state   ✓        Whole   / first    —
+                            Whole   / second   —
+                            Whole   / passive  —
+```
+
+⛔ **Six empty cells. The walk is the only work owed.** No Step 3 implementation, no
+competitive research, no further roadmap expansion until those six observations exist.
