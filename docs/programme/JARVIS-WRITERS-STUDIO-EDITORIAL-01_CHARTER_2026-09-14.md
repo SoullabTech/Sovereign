@@ -228,3 +228,70 @@ whole book    centre = a MAP of the Work with the pattern drawn across it
 the scale of the question being asked.**
 
 ⛔ Not a decision. The research lane tests it against the eleven scenarios.
+
+### Adoption ruling (founder, 2026-09-14): *"adopt as much as possible"*
+
+```
+ADOPT
+  Outline / Full manuscript toggle in the Manuscript column
+  Section N of 174, with prev/next, in the canvas header
+  Saved 2m ago · the overflow menu
+  the MAIA panel structure — tabs, card, triad, human verbs
+  the bottom bar — book · writing progress · your goal · a quote
+                   (founder-endorsed after the engagement-mechanic flag)
+
+HOLD
+  Share — there is no sharing model. An inert control that implies a
+          capability is "declaration is not liveness" in the surface.
+```
+
+### 🔴 DEFECT THE MOCKUP EXPOSED · section numbering disagrees with itself
+
+```
+StructuredOutline.tsx:198   {s.position}.              → "22."
+ManuscriptOutline.tsx:192   {s.position}.              → "22."
+preview.ts:136              Section ${position + 1}    → "Section 23"
+```
+
+The outline shows **22**, the MAIA panel says **Section 23**, for the same
+section, on the same screen, today. The outline is 0-indexed because position 0
+is real (`0. Untitled section`); the panel is 1-indexed because that is how a
+writer counts.
+
+⛔ **Settle this before a third place shows a number.** `Section N of 174` in
+the canvas header would make it three disagreeing counters. ⚠️ And the Work's
+own printed pagination (`-- 34 of 216 --`) is a FOURTH number, from the source
+document — a section index and a page number are different facts and must not be
+made to look alike.
+
+### Four changes to the mockup, and why
+
+1. **The left toggle collides with the centre's.** The canvas already has
+   `Section / Whole manuscript`; the column's `Outline / Full manuscript` reads
+   as the same choice made twice. ⭐ The column's real job in the mockup is
+   GROUPING — Parts versus a flat list (WS2-05A structure, already built). Name
+   it that and the collision disappears: **the centre decides the view, the
+   column decides the grouping.**
+2. **`Saved 2m ago` must be able to say the other two things.** The save queue
+   has three real states, and `hasUnsavedWork()` already exists. A warm label
+   that reads "Saved" while a save is in flight is a small lie in the one place
+   a writer checks when they are anxious.
+3. **`Try this` is only honest after step 1.** The word promises reversibility.
+   If it writes, it is wrong; if it stages a version the writer can discard, it
+   is exactly right — and staged versions are what succession creates. ⭐ An
+   example of language and architecture having to land together.
+4. **`Ask MAIA why` sits beside a visible `Why this matters`.** Two whys, one
+   answered. If the button opens conversation, call it that — *Talk about this*.
+
+### One addition the ladder requires
+
+The card shows a title and a leaf. It does not show **which of the four kinds**
+this is. INSIGHT · DIRECTION · SUGGESTION · CHANGE differ in what they ask of
+the writer and in whether they can ever cross into the Work, and that difference
+must be visible — ⚠️ more visible as the language gets warmer, not less.
+
+⭐ **The room already holds the honest version of the goal slot**: *"A goal is
+yours to set. There is no way to declare one here yet, so nothing is measured."*
+The mockup fills that slot in. ⛔ Keep the posture: the goal is the writer's to
+set, and progress measures what THEY asked to measure — never what the system
+would prefer they do.
