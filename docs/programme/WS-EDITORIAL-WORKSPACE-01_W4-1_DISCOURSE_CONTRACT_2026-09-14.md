@@ -5,7 +5,8 @@
 **Authorized by** founder act, 2026-09-14
 **Base** `9827a7e0f` (W4-0) → `575810287` (W5-4)
 **Branch** `claude/w4-1-editorial-discourse-contract`
-**Sealed by** `W4-1.1 · CONTRACT SEAL`, founder act 2026-09-14
+**Sealed by** `W4-1.1 · CONTRACT SEAL` and `W4-1.2 · RELATIONAL SEAL`,
+founder acts 2026-09-14
 **Class** contract · record · falsifiers. ⛔ No schema, no producer registry
 edit, no `getMaiaResponse` change, no `openThread()` change, no route, no Canvas.
 
@@ -23,7 +24,8 @@ record is a reading at a time; the honest repair is to date it.* Superseded:
 `admitEditorialOutcome` (split into envelope + input), the "no text parameter"
 law (withdrawn by the founder as too strong), the flat `EditorialRecord`, and
 `editorialPosture(boolean)`. Tallies of `40/0` and `12 killed` are the pre-seal
-run; the current run is **54/0 · 16 killed**.
+run; the W4-1.1 run was `54/0 · 16 killed`; the current run is
+**62/0 · 20 killed**.
 
 ## 1. What landed
 
@@ -388,6 +390,149 @@ W4-1 string-state alignment             ✅ SEALED
 
 W4 schema refinement                    ⛔ HELD
 W4 producer registry                    ⛔ HELD
+W4 canonical service seam               ⛔ HELD
+W4 route / runtime · Canvas             ⛔
+production                              UNTOUCHED
+```
+
+
+---
+
+# W4-1.2 — RELATIONAL SEAL
+
+**Authorized by** founder act, 2026-09-14, on source inspection of `4885beeba`.
+Same branch. Contract · tests · mutants · record only. ⛔ Still no schema,
+registry, service, thread store, route or Canvas.
+
+> **The sentence over this seal.** Partitioning provenance must not partition
+> away relationship. MAIA needs to know not only who authored each thing, but
+> which turn it belonged to and which formulation it succeeded — while
+> succession itself remains owned by the one subsystem that already knows how to
+> judge it.
+
+## 1 · discourse order survived the record and was lost at the renderer
+
+`TurnRecord` carried `turnIndex`; `renderRecord()` dropped it. Because C1
+correctly puts the writer's turns and MAIA's in **separate producers**, this
+
+```
+turn 0 writer · turn 1 MAIA · turn 2 writer · turn 3 MAIA
+```
+
+reached cognition as two lists with **nothing left that reconstructs the
+interleaving**. ⭐ And that is not the forbidden cross-object chronology:
+`ask_turns.turn_index` is the discourse object's **own** structural order and is
+expressly authoritative. Rendering now carries it —
+`[turn 2 · the writer said] …` — so the provenance partition survives *and* the
+conversation survives.
+
+## 2 · the turn↔act bindings were ruled and then disappeared
+
+The contract said a Direction and its turn are one act with two representations,
+and that the relationship needs its own binding object — and then participation
+had **no binding input at all**. MAIA would receive turn 4 *"Try it less
+absolute."* and Direction D7 *"Try it less absolute."* without the fact that
+**D7 was the act performed by turn 4**. ⛔ Identical text is not that fact.
+
+`TurnBinding` is now an explicit input (`{kind:'direction', turnIndex, directionId}` /
+`{kind:'version', turnIndex, versionId}`), rendered as *", in turn N"*. ⭐ It
+stays a **relationship object**, never a field on the Direction or the Version —
+which is what lets withdrawal delete the binding while the authored act stands,
+the impossible-lifecycle reasoning honoured in the shape rather than only in a
+comment. ⛔ Never inferred from equal text, adjacency or time; an unbound act
+simply says nothing about a turn.
+
+## 3 · `lineageOrder()` was a second succession resolver, and weaker
+
+Step 1 owns `validateChain()` / `lineage()`. The seal added an independent
+resolver — the class this programme already removed from
+`proposalChain/store.ts`, where a local head helper *"duplicated no logic"* and
+quite literally did. And the duplicate was **weaker on corrupt input**, which is
+the worse half:
+
+```
+V1 root · V2 supersedes V1 · V3 supersedes V1        ← a branch
+
+validateChain()   refuses — `branched`
+lineageOrder()    picked one successor, APPENDED the other as "unreachable"
+```
+
+It manufactured a plausible presentation of an invalid history, and
+*"anything the chain could not reach is APPENDED, never discarded"* was the
+wrong recovery law for ProposalVersions entirely.
+
+Removed. `versions` now arrive **already ordered** from the Step-1 read, and
+`versionsAreStructural()` only **guards** that the supplied order agrees with the
+links — exactly W1's `not_structural`, and ⛔ a guard is not a second
+implementation. `editorialCandidates()` became a **result**: a corrupt
+succession refuses as `versions_not_structural` and renders nothing. ⭐ The
+deleted resolver is preserved as the mutant `M-W4-BRANCH-LINEARIZE`.
+
+## 4 · MAIA could not author a Direction
+
+The clearest internal contradiction in the seal: the governing sentence says she
+may author one, W5 permits `Direction.author = maia`, W5-4 built
+`createMaiaDirection()` — and the envelope offered only `reply_only` and
+`reply_with_proposal`. So *"Let me try this less abstractly first"* had two
+outcomes and one was forbidden: leave it as discourse and no Direction ever
+exists, or infer one from her prose.
+
+Added `reply_with_direction` → `[append_maia_turn, create_maia_direction,
+bind_turn_to_direction]`, atomically. ⛔ Nothing reads `reply` for it; the
+instruction is her own words verbatim, the member-side law unchanged.
+
+⭐ **One semantic adjunct per turn.** `reply_only` · `reply_with_direction` ·
+`reply_with_proposal`, and a Direction beside a proposal refuses as
+`multiple_adjuncts` — checked before the kind is dispatched, so neither branch
+can quietly honour the other's field. *"Direction and formulation
+simultaneously"* earns its own contract extension rather than arriving through
+optional-field combinatorics.
+
+## Evidence
+
+**62 passed · 0 failed** · **20 killed · 0 survived · 0 crashed · 0 stale**.
+
+New: `W4-C17` (interleaving survives the partition) · `W4-C18` + `W4-C18b`
+(bindings explicit, and a relationship object not a field) · `W4-C19` +
+`W4-C19b` (branch refuses; W4 owns no resolver) · `W4-C20` … `W4-C20d` (MAIA's
+declared Direction; the same sentence as `reply_only` authors nothing; one
+adjunct; blank instruction refused and absent `refersTo` is `null`, not a guess).
+
+New mutants: `M-W4-DROP-TURN-INDEX` · `M-W4-DROP-TURN-BINDING` ·
+`M-W4-BRANCH-LINEARIZE` · `M-W4-INFER-MAIA-DIRECTION` — the last being the exact
+MAIA-side twin of `M-W4-INFER-DIRECTION`, so the anti-classification law is now
+falsified on **both** sides of the exchange.
+
+Repo gates: typecheck *no regressions* · no-supabase clean · scoped jest
+`23 failed · 3068 passed` — the same four held pre-existing red obligations.
+
+## One instrument finding
+
+⚠️ **`M-W4-DROP-REFERENCE` went STALE twice**, and the second time was my repair
+being wrong rather than the seal moving: the operator stores its anchors as
+single-line Python reprs, and my first re-aim edited a triple-quoted form that
+does not exist in that file. It was reported **STALE** both times — never
+passed — and the rewrite now verifies the anchor is present in the contract
+before the harness runs.
+
+⭐ And the re-aim is deliberately **narrow**: the operator drops only `refersTo`
+and leaves the producing-turn clause intact. A mutant that removed both would be
+killed by either obligation and prove neither.
+
+## Standing after the relational seal
+
+```
+W4-1 core                               ✅
+W4-1.1 envelope/ontology/posture        ✅ 4885beeba
+W4-1.2 relational seal                  ✅
+
+discourse interleaving fidelity         ✅ SEALED
+turn↔authored-act provenance            ✅ SEALED
+single succession authority             ✅ SEALED
+MAIA Direction act                      ✅ SEALED
+
+W4 schema design                        ⛔ HELD
+W4 producer registration                ⛔ HELD
 W4 canonical service seam               ⛔ HELD
 W4 route / runtime · Canvas             ⛔
 production                              UNTOUCHED

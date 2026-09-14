@@ -258,6 +258,37 @@ export interface TurnRecord {
 export type EditorialRecord =
   | InsightRecord | DirectionRecord | VersionRecord | TurnRecord;
 
+/**
+ * ⭐⭐ W4-1.2 · WHICH TURN PERFORMED WHICH AUTHORED ACT.
+ *
+ * The contract already says a Direction and its turn are ONE act with two
+ * durable representations, and the same for a MAIA reply and the wording
+ * authored in it. ⛔ But the relationship was ruled and then disappeared before
+ * cognition: MAIA would receive turn 4 *"Try it less absolute."* and Direction
+ * D7 *"Try it less absolute."* without the fact that **D7 was the act performed
+ * by turn 4** — and identical text is not that fact.
+ *
+ * ⭐ IT STAYS A RELATIONSHIP OBJECT, never a field mutated onto the Direction or
+ * the Version. That is what lets withdrawal delete the binding while the
+ * authored act stands — the impossible-lifecycle reasoning, honoured in the
+ * shape rather than only in a comment.
+ *
+ * ⛔ AND IT IS AN EXPLICIT INPUT. Never inferred from equal text, never from
+ * adjacency, never from a timestamp.
+ */
+export type TurnBinding =
+  | { readonly kind: 'direction'; readonly turnIndex: number; readonly directionId: string }
+  | { readonly kind: 'version'; readonly turnIndex: number; readonly versionId: string };
+
+/** The turn that performed this act, if the binding was supplied. */
+export function producingTurn(
+  bindings: readonly TurnBinding[], kind: 'direction' | 'version', id: string,
+): number | null {
+  const b = bindings.find((x) => x.kind === kind
+    && (x.kind === 'direction' ? x.directionId : x.versionId) === id);
+  return b ? b.turnIndex : null;
+}
+
 /** Which producer an editorial record belongs to. ⛔ Authorship decides, alone. */
 export function producerForRecord(r: EditorialRecord): EditorialProducerId {
   return r.author === 'member'
@@ -295,39 +326,67 @@ export interface EditorialParticipationInput {
   readonly locus: { readonly chainId: string; readonly originalText: string };
   /** ⭐ Discourse, by the record's own index. ⛔ NOT the current utterance. */
   readonly turns: readonly TurnRecord[];
-  /** ⭐ Candidate wording. Ordered structurally below, never as given. */
+  /**
+   * ⭐ Candidate wording, ALREADY IN SUCCESSION ORDER — supplied by the
+   * Step-1 read, never resolved here. ⛔ An order that disagrees with the links
+   * REFUSES; it is not repaired and it is not rendered.
+   */
   readonly versions: readonly VersionRecord[];
   readonly insights: readonly InsightRecord[];
   readonly directions: readonly DirectionRecord[];
+  /** ⭐ Which turn performed which authored act. ⛔ Explicit, never inferred. */
+  readonly bindings: readonly TurnBinding[];
   /** ⭐ The member-DECLARED kind of the act being performed right now. */
   readonly declaredAct: MemberActKind;
 }
 
+export type ParticipationRefusal =
+  /** ⛔ The supplied version order does not agree with `supersedes`. */
+  | 'versions_not_structural';
+
+export type ParticipationResult =
+  | { readonly ok: true; readonly blocks: readonly EditorialCandidateBlock[] }
+  | { readonly ok: false; readonly reason: ParticipationRefusal };
+
 /**
- * ⭐ SUCCESSION ORDER, FROM `supersedes` ALONE.
+ * ⭐⭐ W4-1.2 · W4 DOES NOT RESOLVE SUCCESSION. IT GUARDS THE SUPPLIED ORDER.
  *
- * ⛔ Not by a clock and not as handed over. A version whose predecessor is not
- * present stays in the tail rather than being dropped: ⛔ omitting it would
- * silently delete an authored formulation to make a list look tidy.
+ * ⚠️ FOUNDER REVIEW OF 4885beeba, AND THE MOST ARCHITECTURAL OF THE FOUR. The
+ * seal added `lineageOrder()`, which resolved succession from `supersedes`
+ * itself — A SECOND INDEPENDENTLY FALSIFIABLE ANSWER to a question Step 1
+ * already owns (`validateChain` / `lineage`). That is a class this programme
+ * removed once already, in `proposalChain/store.ts`, where a local head helper
+ * "duplicated no logic" and quite literally did.
+ *
+ * ⛔ AND THE DUPLICATE WAS WEAKER ON CORRUPT INPUT, which is the worse half:
+ *
+ *     V1 root · V2 supersedes V1 · V3 supersedes V1        ← a branch
+ *
+ *     validateChain()   refuses — `branched`
+ *     lineageOrder()    let a Map pick one successor, then APPENDED the other
+ *                       as "unreachable"
+ *
+ * So it manufactured a plausible presentation of an invalid history, and the
+ * comment *"anything the chain could not reach is APPENDED, never discarded"*
+ * was the wrong recovery law for ProposalVersions entirely. ⭐ A corrupt
+ * succession must be REFUSED, not made displayable.
+ *
+ *     Succession stays owned by the one subsystem that already knows how to
+ *     judge it.
+ *
+ * ⭐ So the runtime supplies the already-validated, structurally ordered read
+ * (`readProposalWork` → `lineage()`), and this guard only refuses an order that
+ * does not agree with the links — exactly what W1's `not_structural` does, and
+ * for the same reason: ⛔ a guard is not a second implementation.
  */
-export function lineageOrder(
+export function versionsAreStructural(
   versions: readonly VersionRecord[],
-): readonly VersionRecord[] {
-  const byPredecessor = new Map<string | null, VersionRecord>();
-  for (const v of versions) byPredecessor.set(v.supersedes, v);
-  const ordered: VersionRecord[] = [];
-  const seen = new Set<string>();
-  let cursor: string | null = null;
-  for (;;) {
-    const next: VersionRecord | undefined = byPredecessor.get(cursor);
-    if (!next || seen.has(next.id)) break;
-    ordered.push(next);
-    seen.add(next.id);
-    cursor = next.id;
+): boolean {
+  for (let i = 0; i < versions.length; i += 1) {
+    const expected = i === 0 ? null : versions[i - 1].id;
+    if (versions[i].supersedes !== expected) return false;
   }
-  /* ⛔ Anything the chain could not reach is APPENDED, never discarded. */
-  for (const v of versions) if (!seen.has(v.id)) ordered.push(v);
-  return ordered;
+  return true;
 }
 
 /**
@@ -337,20 +396,38 @@ export function lineageOrder(
  * to V1 reaches MAIA without the structural fact needed to know what V1 IS,
  * unless the Version carried its own identity when it arrived.
  */
-export function renderRecord(r: EditorialRecord): string {
+export function renderRecord(
+  r: EditorialRecord, bindings: readonly TurnBinding[] = [],
+): string {
   const who = r.author === 'member' ? 'the writer' : 'MAIA';
+  /** ⭐ `, in turn N` — the producing turn, when one was supplied. */
+  const inTurn = (kind: 'direction' | 'version', id: string) => {
+    const t = producingTurn(bindings, kind, id);
+    return t === null ? '' : `, in turn ${t}`;
+  };
   switch (r.kind) {
     case 'insight':
       return `- [${who} ${KIND_LABEL.insight}] ${r.observation}`;
     case 'direction':
       return `- [${who} ${KIND_LABEL.direction}`
-        + `${r.refersTo !== null ? `, about ${r.refersTo}` : ''}] ${r.instruction}`;
+        + `${r.refersTo !== null ? `, about ${r.refersTo}` : ''}`
+        + `${inTurn('direction', r.id)}] ${r.instruction}`;
     case 'version':
       return `- [${who} ${KIND_LABEL.version} ${r.id}`
-        + `${r.supersedes !== null ? `, succeeding ${r.supersedes}` : ', the first'}]`
+        + `${r.supersedes !== null ? `, succeeding ${r.supersedes}` : ', the first'}`
+        + `${inTurn('version', r.id)}]`
         + ` ${r.wording}`;
     case 'turn':
-      return `- [${who} ${KIND_LABEL.turn}] ${r.body}`;
+      /* ⭐⭐ W4-1.2 · THE INDEX TRAVELS. C1 correctly puts the writer's turns and
+         MAIA's into SEPARATE producers, and without the index that partition
+         also erases the conversation: `0 writer · 1 MAIA · 2 writer · 3 MAIA`
+         arrives as two lists with nothing left that reconstructs the
+         interleaving. ⛔ This is NOT the forbidden cross-object chronology —
+         `ask_turns.turn_index` is the discourse object's OWN structural order
+         and is expressly authoritative.
+
+             Partitioning provenance must not partition away relationship. */
+      return `- [turn ${r.turnIndex} · ${who} ${KIND_LABEL.turn}] ${r.body}`;
   }
 }
 
@@ -371,7 +448,13 @@ export function renderRecord(r: EditorialRecord): string {
  */
 export function editorialCandidates(
   input: EditorialParticipationInput,
-): readonly EditorialCandidateBlock[] {
+): ParticipationResult {
+  /* ⛔ A CORRUPT SUCCESSION IS REFUSED BEFORE ANYTHING IS RENDERED. Showing a
+     writer a history nobody authored is worse than showing them nothing. */
+  if (!versionsAreStructural(input.versions)) {
+    return { ok: false, reason: 'versions_not_structural' };
+  }
+
   const blocks: EditorialCandidateBlock[] = [
     {
       producerId: 'retrieved.writer_editorial_locus',
@@ -383,15 +466,19 @@ export function editorialCandidates(
   ];
 
   const side = (author: 'member' | 'maia') => {
-    /* ⭐ Each collection in ITS OWN order law — and never merged into one. */
+    /* ⭐ Each collection in ITS OWN order law — and never merged into one.
+       ⛔ `versions` keeps the order it ARRIVED in; filtering by author preserves
+       relative succession and resolves nothing. */
     const turns = input.turns.filter((t) => t.author === author)
       .slice().sort((a, b) => a.turnIndex - b.turnIndex);
-    const versions = lineageOrder(input.versions).filter((v) => v.author === author);
+    const versions = input.versions.filter((v) => v.author === author);
     const insights = input.insights.filter((i) => i.author === author);
     const directions = input.directions.filter((d) => d.author === author);
     return { turns, versions, insights, directions,
              count: turns.length + versions.length + insights.length + directions.length };
   };
+
+  const render = (r: EditorialRecord) => renderRecord(r, input.bindings);
 
   const compose = (
     producerId: EditorialProducerId, heading: string,
@@ -399,11 +486,11 @@ export function editorialCandidates(
   ) => {
     if (s.count === 0) return;
     const parts = [heading];
-    if (s.insights.length) parts.push('Observations:', ...s.insights.map(renderRecord));
-    if (s.directions.length) parts.push('Directions:', ...s.directions.map(renderRecord));
+    if (s.insights.length) parts.push('Observations:', ...s.insights.map(render));
+    if (s.directions.length) parts.push('Directions:', ...s.directions.map(render));
     if (s.versions.length) parts.push('Candidate wording, in succession:',
-      ...s.versions.map(renderRecord));
-    if (s.turns.length) parts.push('Said, in order:', ...s.turns.map(renderRecord));
+      ...s.versions.map(render));
+    if (s.turns.length) parts.push('Said, in order:', ...s.turns.map(render));
     blocks.push({ producerId, itemCount: s.count, text: parts.join('\n') });
   };
 
@@ -419,7 +506,7 @@ export function editorialCandidates(
     text: `[The writer's declared act] ${input.declaredAct}`,
   });
 
-  return blocks;
+  return { ok: true, blocks };
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -598,12 +685,31 @@ export const editorialToolSchema: Record<string, unknown> = {
   additionalProperties: false,
   required: ['kind', 'reply'],
   properties: {
-    kind: { type: 'string', enum: ['reply_only', 'reply_with_proposal'] },
+    kind: {
+      type: 'string',
+      enum: ['reply_only', 'reply_with_direction', 'reply_with_proposal'],
+    },
     reply: {
       type: 'string',
       description: 'What you are saying to the writer. Always required. '
         + 'If you would leave the passage as it stands, say so here and use reply_only — '
         + 'that is a complete answer.',
+    },
+    direction: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['instruction'],
+      description: 'Required only when kind is reply_with_direction. '
+        + 'How you are steering this exchange — NOT candidate wording. '
+        + 'AT MOST ONE, and never together with a proposal.',
+      properties: {
+        instruction: { type: 'string', description: 'The instruction, in your words.' },
+        refersTo: {
+          type: ['string', 'null'],
+          description: 'An earlier formulation this instruction is about, by id. '
+            + 'null when you are not referring to one.',
+        },
+      },
     },
     proposal: {
       type: 'object',
@@ -624,6 +730,33 @@ export const editorialToolSchema: Record<string, unknown> = {
 
 export type EditorialOutcome =
   | { readonly kind: 'reply_only'; readonly reply: string }
+  /**
+   * ⭐⭐ W4-1.2 · MAIA AUTHORS A DIRECTION EXPLICITLY.
+   *
+   * ⚠️ FOUNDER REVIEW OF 4885beeba, and the clearest internal contradiction in
+   * it. The governing sentence says *MAIA may author a reply, a Direction, or
+   * candidate wording only through explicit acts*; W5 permits
+   * `Direction.author = member | maia`; W5-4 built `createMaiaDirection()`.
+   * And the envelope offered only `reply_only` and `reply_with_proposal` — so
+   * when she said *"Let me try this less abstractly first"* the system had two
+   * options, and one of them was forbidden:
+   *
+   *     leave it as discourse             → no Direction ever exists
+   *     infer a Direction from her prose  → ⛔ the system authors her act
+   *
+   * ⭐ THE MEMBER-SIDE ANTI-CLASSIFICATION LAW GETS ITS EXACT TWIN: she declares
+   * the act through the structured envelope, exactly as the member declares
+   * theirs through a closed discriminant. ⛔ Nothing reads `reply` for it.
+   */
+  | {
+      readonly kind: 'reply_with_direction';
+      readonly reply: string;
+      readonly direction: {
+        readonly instruction: string;
+        /** ⛔ A reference she NAMED. `null` is not "work it out". */
+        readonly refersTo: string | null;
+      };
+    }
   | {
       readonly kind: 'reply_with_proposal';
       readonly reply: string;
@@ -649,7 +782,13 @@ export type OutcomeRefusal =
   /** ⛔ More than one candidate — a substrate with no branch cannot hold siblings. */
   | 'multiple_proposals'
   /** ⛔ A section-scoped outcome. RC-GEN-01's shape is not this one. */
-  | 'section_scoped_outcome';
+  | 'section_scoped_outcome'
+  /**
+   * ⛔⛔ ONE SEMANTIC ADJUNCT PER TURN (founder, W4-1.2). A Direction AND a
+   * formulation in the same turn is not forbidden forever — it is not earned
+   * yet, and it must not arrive through optional-field combinatorics.
+   */
+  | 'multiple_adjuncts';
 
 export type OutcomeAdmission =
   | { readonly ok: true; readonly outcome: EditorialOutcome }
@@ -658,8 +797,9 @@ export type OutcomeAdmission =
 /** ⛔ The RC-GEN-01 geometry, by name, at whatever depth it appears. */
 const SECTION_SCOPED_KEYS = ['proposals', 'sectionId', 'proposedText'] as const;
 /** ⭐ `additionalProperties: false` is a RUNTIME obligation, not decoration. */
-const ENVELOPE_KEYS = ['kind', 'reply', 'proposal'] as const;
+const ENVELOPE_KEYS = ['kind', 'reply', 'proposal', 'direction'] as const;
 const PROPOSAL_KEYS = ['replacementText', 'rationale'] as const;
+const DIRECTION_KEYS = ['instruction', 'refersTo'] as const;
 
 const sectionScoped = (o: Record<string, unknown>): boolean =>
   SECTION_SCOPED_KEYS.some((k) => k in o);
@@ -762,14 +902,50 @@ export function admitEditorialToolInput(input: unknown): OutcomeAdmission {
     return { ok: false, reason: 'malformed' };
   }
 
+  /* ⛔⛔ ONE ADJUNCT. Checked before the kind is dispatched, so neither branch
+     can quietly honour the other's field. */
+  if ('proposal' in r && 'direction' in r) {
+    return { ok: false, reason: 'multiple_adjuncts' };
+  }
+
   if (r.kind === 'reply_only') {
-    /* ⛔ A proposal riding along with `reply_only` is a contradiction, not a
+    /* ⛔ An adjunct riding along with `reply_only` is a contradiction, not a
        bonus. Refused rather than silently dropped or silently honoured. */
-    if ('proposal' in r) return { ok: false, reason: 'malformed' };
+    if ('proposal' in r || 'direction' in r) return { ok: false, reason: 'malformed' };
     return { ok: true, outcome: { kind: 'reply_only', reply: r.reply } };
   }
 
+  if (r.kind === 'reply_with_direction') {
+    if ('proposal' in r) return { ok: false, reason: 'multiple_adjuncts' };
+    const d = r.direction as Record<string, unknown> | undefined;
+    if (!d || typeof d !== 'object' || Array.isArray(d)) {
+      return { ok: false, reason: 'malformed' };
+    }
+    if (unknownKey(d, DIRECTION_KEYS)) return { ok: false, reason: 'malformed' };
+    /* ⭐ Blank is not an instruction — the shape `proposal_chain_directions`
+       already enforces (`length(btrim(instruction)) > 0`). */
+    if (typeof d.instruction !== 'string' || d.instruction.trim().length === 0) {
+      return { ok: false, reason: 'malformed' };
+    }
+    /* ⛔ ABSENT AND `null` ARE THE SAME THING HERE, and both mean *no reference*
+       — never "choose one". A non-string, non-null value is malformed. */
+    const refersTo = d.refersTo === undefined || d.refersTo === null
+      ? null
+      : typeof d.refersTo === 'string' && d.refersTo.length > 0
+        ? d.refersTo
+        : undefined;
+    if (refersTo === undefined) return { ok: false, reason: 'malformed' };
+    return {
+      ok: true,
+      outcome: {
+        kind: 'reply_with_direction', reply: r.reply,
+        direction: { instruction: d.instruction, refersTo },
+      },
+    };
+  }
+
   if (r.kind === 'reply_with_proposal') {
+    if ('direction' in r) return { ok: false, reason: 'multiple_adjuncts' };
     const p = r.proposal as Record<string, unknown> | undefined;
     if (!p || typeof p !== 'object') return { ok: false, reason: 'malformed' };
     if (typeof p.replacementText !== 'string') return { ok: false, reason: 'malformed' };
@@ -828,6 +1004,12 @@ export type MaiaDurableWrite =
       /** ⭐ THE INVOCATION'S PREDECESSOR, unchanged. */
       readonly supersedes: string | null;
     }
+  | {
+      readonly write: 'create_maia_direction';
+      readonly instruction: string;
+      readonly refersTo: string | null;
+    }
+  | { readonly write: 'bind_turn_to_direction' }
   | { readonly write: 'bind_turn_to_version' };
 
 export interface MaiaOutcomePlan {
@@ -855,6 +1037,23 @@ export function maiaOutcomePlan(
   const turn: MaiaDurableWrite = { write: 'append_maia_turn', body: outcome.reply };
   if (outcome.kind === 'reply_only') {
     return { atomic: [turn], afterAdmission: true };
+  }
+  /* ⭐⭐ HER DIRECTION IS ONE ACT WITH TWO REPRESENTATIONS, exactly as the
+     member's is — the turn, the Direction, and the binding that says the one
+     performed the other. ⛔ And atomically: a Direction with no turn would be a
+     steering act nobody is recorded as having spoken. */
+  if (outcome.kind === 'reply_with_direction') {
+    return {
+      atomic: [
+        turn,
+        { write: 'create_maia_direction',
+          /* ⭐ HER OWN WORDS, verbatim — the member-side law, unchanged. */
+          instruction: outcome.direction.instruction,
+          refersTo: outcome.direction.refersTo },
+        { write: 'bind_turn_to_direction' },
+      ],
+      afterAdmission: true,
+    };
   }
   return {
     atomic: [

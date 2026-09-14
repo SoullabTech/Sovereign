@@ -20,10 +20,11 @@ import {
   editorialHistory, editorialTurnIdentity,
   MEMBER_ACT_KINDS, memberActPlan,
   EDITORIAL_TOOL_NAME, editorialToolSchema,
-  admitEditorialToolEnvelope, admitEditorialToolInput, lineageOrder, renderRecord,
+  admitEditorialToolEnvelope, admitEditorialToolInput, versionsAreStructural,
+  renderRecord, producingTurn,
   maiaOutcomePlan, onVersionRefusal, withdrawalEffect, editorialPosture,
   type EditorialInvocation, type TurnRecord, type VersionRecord,
-  type InsightRecord, type DirectionRecord,
+  type InsightRecord, type DirectionRecord, type TurnBinding,
 } from '../contract';
 import { PRODUCER_IDS } from '@/lib/maia/canonical-turn/producerRegistry';
 
@@ -106,14 +107,25 @@ const TURNS: readonly TurnRecord[] = [
   { kind: 'turn', turnIndex: 1, author: 'maia',
     body: 'Because the repetition carries the emotional turn.' },
 ];
+/** ⭐ Supplied ALREADY IN SUCCESSION ORDER by the Step-1 read. */
+const ORDERED: readonly VersionRecord[] = [VERSIONS[1], VERSIONS[0]];
+const BINDINGS: readonly TurnBinding[] = [
+  { kind: 'direction', turnIndex: 2, directionId: 'D1' },
+  { kind: 'version', turnIndex: 3, versionId: 'V2' },
+];
 const PARTICIPATION = {
   locus: { chainId: 'C1', originalText: 'He was there, fixated, and the river ran on.' },
-  turns: TURNS, versions: VERSIONS, insights: INSIGHTS, directions: DIRECTIONS,
-  declaredAct: 'discourse' as const,
+  turns: TURNS, versions: ORDERED, insights: INSIGHTS, directions: DIRECTIONS,
+  bindings: BINDINGS, declaredAct: 'discourse' as const,
+};
+const ok = (r: ReturnType<typeof editorialCandidates>) => {
+  expect(r.ok).toBe(true);
+  return (r as { ok: true; blocks: readonly { producerId: string; text: string;
+    itemCount?: number }[] }).blocks;
 };
 
 describe('C1 · editorial participation partitions by authorship', () => {
-  const blocks = editorialCandidates(PARTICIPATION);
+  const blocks = ok(editorialCandidates(PARTICIPATION));
   const member = () => blocks.find((b) => b.producerId === 'member.writer_editorial_history')!;
   const maia = () => blocks.find((b) => b.producerId === 'system.writer_editorial_history')!;
 
@@ -151,24 +163,82 @@ describe('C1 · editorial participation partitions by authorship', () => {
     expect(member().text).toContain('succeeding V1');
   });
 
-  it('W4-C16b · ⭐ succession order comes from `supersedes`, never from the array', () => {
-    /* VERSIONS is deliberately given V2-before-V1. */
-    expect(lineageOrder(VERSIONS).map((v) => v.id)).toEqual(['V1', 'V2']);
-    /* ⛔ and an unreachable version is APPENDED, never dropped */
-    const orphan: VersionRecord = {
-      kind: 'version', id: 'V9', author: 'maia', wording: 'x', supersedes: 'GONE',
-    };
-    expect(lineageOrder([...VERSIONS, orphan]).map((v) => v.id)).toEqual(['V1', 'V2', 'V9']);
+  it('W4-C19 · ⭐⭐ a corrupt or BRANCHED succession REFUSES — it is not linearized', () => {
+    /* ⚠️ W4-1.2. The seal's `lineageOrder()` was a SECOND succession resolver,
+       and weaker than the one Step 1 owns: given a branch it let a Map pick one
+       successor and appended the other as "unreachable", manufacturing a
+       plausible presentation of an invalid history. ⭐ W4 now GUARDS the order
+       the Step-1 read supplies and refuses one that disagrees with the links. */
+    const branch: readonly VersionRecord[] = [
+      { kind: 'version', id: 'V1', author: 'maia', wording: 'a', supersedes: null },
+      { kind: 'version', id: 'V2', author: 'member', wording: 'b', supersedes: 'V1' },
+      { kind: 'version', id: 'V3', author: 'maia', wording: 'c', supersedes: 'V1' },
+    ];
+    expect(versionsAreStructural(branch)).toBe(false);
+    expect(editorialCandidates({ ...PARTICIPATION, versions: branch }))
+      .toEqual({ ok: false, reason: 'versions_not_structural' });
+    /* ⛔ and an unreachable version refuses too — never appended as a tail */
+    expect(editorialCandidates({ ...PARTICIPATION, versions: [
+      ...ORDERED,
+      { kind: 'version', id: 'V9', author: 'maia', wording: 'x', supersedes: 'GONE' },
+    ] })).toEqual({ ok: false, reason: 'versions_not_structural' });
+  });
+
+  it('W4-C19b · ⛔ [SOURCE] W4 owns no succession resolver', () => {
+    expect(CONTRACT).toMatch(/export function versionsAreStructural/);
+    expect(CONTRACT).not.toMatch(/lineageOrder|function lineage\b|headOf/);
+    /* a guard reads the order; it never builds one */
+    expect(CONTRACT).not.toMatch(/new Map<string \| null, VersionRecord>/);
+  });
+
+  it('W4-C17 · ⭐⭐ cross-author discourse order SURVIVES the producer partition', () => {
+    /* ⚠️ W4-1.2. `turnIndex` was carried on the record and DROPPED by the
+       renderer, so `0 writer · 1 MAIA · 2 writer · 3 MAIA` reached cognition as
+       two lists with nothing left that reconstructs the interleaving. That is
+       not the forbidden cross-object chronology: `ask_turns.turn_index` is the
+       discourse object's OWN structural order and is authoritative. */
+    const b = ok(editorialCandidates({ ...PARTICIPATION, turns: [
+      { kind: 'turn', turnIndex: 0, author: 'member', body: 'alpha' },
+      { kind: 'turn', turnIndex: 1, author: 'maia', body: 'beta' },
+      { kind: 'turn', turnIndex: 2, author: 'member', body: 'gamma' },
+      { kind: 'turn', turnIndex: 3, author: 'maia', body: 'delta' },
+    ] }));
+    const m = b.find((x) => x.producerId === 'member.writer_editorial_history')!;
+    const s2 = b.find((x) => x.producerId === 'system.writer_editorial_history')!;
+    expect(m.text).toContain('[turn 0 · the writer said] alpha');
+    expect(m.text).toContain('[turn 2 · the writer said] gamma');
+    expect(s2.text).toContain('[turn 1 · MAIA said] beta');
+    expect(s2.text).toContain('[turn 3 · MAIA said] delta');
+  });
+
+  it('W4-C18 · ⭐⭐ turn↔act bindings are EXPLICIT inputs and reach cognition', () => {
+    /* ⛔ Never inferred from equal text, adjacency or time. */
+    expect(member().text).toContain('in turn 2');
+    expect(member().text).toContain('in turn 3');
+    expect(producingTurn(BINDINGS, 'direction', 'D1')).toBe(2);
+    expect(producingTurn(BINDINGS, 'version', 'V2')).toBe(3);
+    /* an unbound act simply says nothing about a turn — ⛔ never guesses one */
+    expect(producingTurn(BINDINGS, 'version', 'V1')).toBeNull();
+    expect(renderRecord(VERSIONS[1], BINDINGS)).not.toContain('in turn');
+  });
+
+  it('W4-C18b · ⛔ the binding is a RELATIONSHIP OBJECT, not a field on the act', () => {
+    /* So withdrawal can delete the binding while the authored act stands. */
+    for (const r of [...DIRECTIONS, ...VERSIONS]) {
+      expect(Object.keys(r)).not.toContain('turnIndex');
+      expect(Object.keys(r)).not.toContain('producingTurn');
+    }
+    expect(CONTRACT).toMatch(/export type TurnBinding =/);
   });
 
   it('⭐ discourse is ordered by turn_index, not by arrival', () => {
-    const shuffled = editorialCandidates({
+    const shuffled = ok(editorialCandidates({
       ...PARTICIPATION,
       turns: [
         { kind: 'turn', turnIndex: 2, author: 'member', body: 'third' },
         { kind: 'turn', turnIndex: 0, author: 'member', body: 'first' },
       ],
-    });
+    }));
     const m = shuffled.find((b) => b.producerId === 'member.writer_editorial_history')!;
     expect(m.text.indexOf('first')).toBeLessThan(m.text.indexOf('third'));
   });
@@ -189,7 +259,7 @@ describe('C1 · editorial participation partitions by authorship', () => {
     expect(CONTRACT).toMatch(/export interface EditorialParticipationInput/);
     const iface = CONTRACT.slice(
       CONTRACT.indexOf('export interface EditorialParticipationInput'),
-      CONTRACT.indexOf('export function lineageOrder'));
+      CONTRACT.indexOf('export type ParticipationRefusal'));
     expect(iface.length).toBeGreaterThan(40);
     expect(iface).not.toMatch(/utterance|currentText/);
   });
@@ -201,7 +271,7 @@ describe('C1 · editorial participation partitions by authorship', () => {
        no record carries an `authoredAt`. */
     const iface = CONTRACT.slice(
       CONTRACT.indexOf('export interface EditorialParticipationInput'),
-      CONTRACT.indexOf('export function lineageOrder'));
+      CONTRACT.indexOf('export type ParticipationRefusal'));
     expect(iface).toMatch(/turns:/);
     expect(iface).toMatch(/versions:/);
     expect(iface).not.toMatch(/history:/);
@@ -211,9 +281,10 @@ describe('C1 · editorial participation partitions by authorship', () => {
   it('⛔ a producer with nothing to carry does not participate', () => {
     const empty = editorialCandidates({
       locus: { chainId: 'C1', originalText: 'x' },
-      turns: [], versions: [], insights: [], directions: [], declaredAct: 'direction',
+      turns: [], versions: [], insights: [], directions: [], bindings: [],
+      declaredAct: 'direction',
     });
-    expect(empty.map((b) => b.producerId)).toEqual([
+    expect(ok(empty).map((b) => b.producerId)).toEqual([
       'retrieved.writer_editorial_locus', 'member.writer_editorial_act',
     ]);
   });
@@ -513,6 +584,64 @@ describe('G · one reply, at most one candidate formulation', () => {
       .toEqual({ ok: false, reason: 'malformed' });
   });
 
+  it('W4-C20 · ⭐⭐ MAIA authors a Direction through the ENVELOPE, never from prose', () => {
+    const a = admitEditorialToolInput({
+      kind: 'reply_with_direction',
+      reply: 'Let me try this less abstractly first.',
+      direction: { instruction: 'Work the concrete image before the argument.',
+                   refersTo: 'V1' },
+    });
+    expect(a.ok).toBe(true);
+    const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
+    expect(plan.atomic.map((w) => w.write)).toEqual([
+      'append_maia_turn', 'create_maia_direction', 'bind_turn_to_direction',
+    ]);
+    const d = plan.atomic.find((w) => w.write === 'create_maia_direction')!;
+    /* ⭐ HER OWN WORDS, verbatim — the member-side law, unchanged. */
+    expect('instruction' in d && d.instruction)
+      .toBe('Work the concrete image before the argument.');
+    expect('refersTo' in d && d.refersTo).toBe('V1');
+    /* ⛔ and NO ProposalVersion */
+    expect(JSON.stringify(plan)).not.toContain('append_maia_version');
+  });
+
+  it('W4-C20b · ⭐⭐ the same sentence as reply_only authors NOTHING', () => {
+    /* ⛔ The member-side anti-classification law, exact twin. Identical prose,
+       a different declared act — and the system may not close the gap. */
+    const a = admitEditorialToolInput({
+      kind: 'reply_only', reply: 'Let me try this less abstractly first.' });
+    const plan = maiaOutcomePlan((a as { ok: true; outcome: never }).outcome, INVOCATION);
+    expect(plan.atomic.map((w) => w.write)).toEqual(['append_maia_turn']);
+  });
+
+  it('W4-C20c · ⛔ ONE semantic adjunct per turn', () => {
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_direction', reply: 'r',
+      direction: { instruction: 'i' }, proposal: { replacementText: 'w' },
+    })).toEqual({ ok: false, reason: 'multiple_adjuncts' });
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_proposal', reply: 'r',
+      proposal: { replacementText: 'w' }, direction: { instruction: 'i' },
+    })).toEqual({ ok: false, reason: 'multiple_adjuncts' });
+    expect(admitEditorialToolInput({
+      kind: 'reply_only', reply: 'r', direction: { instruction: 'i' },
+    })).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  it('W4-C20d · ⛔ a blank instruction is refused; absent refersTo is null, not a guess', () => {
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_direction', reply: 'r', direction: { instruction: '  ' },
+    })).toEqual({ ok: false, reason: 'malformed' });
+    const a = admitEditorialToolInput({
+      kind: 'reply_with_direction', reply: 'r', direction: { instruction: 'i' } });
+    expect((a as { ok: true; outcome: { direction: { refersTo: unknown } } })
+      .outcome.direction.refersTo).toBeNull();
+    expect(admitEditorialToolInput({
+      kind: 'reply_with_direction', reply: 'r',
+      direction: { instruction: 'i', refersTo: 7 },
+    })).toEqual({ ok: false, reason: 'malformed' });
+  });
+
   it('E · ⭐ a blank reply is not a reply; rationale is absent OR nonblank', () => {
     expect(admitEditorialToolInput({ kind: 'reply_only', reply: '   ' }))
       .toEqual({ ok: false, reason: 'malformed' });
@@ -543,7 +672,11 @@ describe('G · one reply, at most one candidate formulation', () => {
     expect(props.proposal.type).toBe('object');
     expect(JSON.stringify(editorialToolSchema)).not.toContain('sectionId');
     expect(JSON.stringify(editorialToolSchema)).not.toContain('proposedText');
-    expect((props.kind.enum as string[])).toEqual(['reply_only', 'reply_with_proposal']);
+    expect((props.kind.enum as string[]))
+      .toEqual(['reply_only', 'reply_with_direction', 'reply_with_proposal']);
+    /* ⛔ and the Direction adjunct is an OBJECT, not an array — one per turn */
+    expect(props.direction.type).toBe('object');
+    expect(props.direction.additionalProperties).toBe(false);
   });
 });
 
