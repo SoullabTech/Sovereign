@@ -1,170 +1,226 @@
 #!/usr/bin/env node
-// JOP-04 · R1 ACCEPTANCE INSTRUMENT — the judge.
+// JOP-04 · R1a ACCEPTANCE INSTRUMENT — the judge.
 //
-// AUTHORITY ORDER (standing rule):
-//   sealed semantic rulings → R0 reconciliation → current capability contract → current substrate.
-//   Earlier DESCRIPTION-ONLY census/contract artifacts remain historical evidence and do NOT
-//   regain implementation authority where later rulings supersede them.
+// AUTHORITY ORDER: sealed semantic rulings → R0 reconciliation → current capability contract →
+//   current substrate. Earlier DESCRIPTION-ONLY census/contract artifacts remain historical
+//   evidence and do NOT regain implementation authority where later rulings supersede them.
 //
-// ⛔ CONTAINS NO REPAIR. It judges; it does not fix.
-// ⭐ ONE TEST PER FALSIFIABLE BOUNDARY, not one per ruling — several rulings may share a witness.
-// ⭐ Every behavioural arm runs against a HERMETIC GIT FIXTURE, never against this repository.
+// ⛔ CONTAINS NO REPAIR. ⛔ READ-ONLY AND FAIL-CLOSED: it never creates or rewrites sealed custody.
+//    A missing or changed pin is a HARD FAILURE, never a re-baseline — a judge that can mint its
+//    own baseline from the thing it judges is fail-open.
+// ⭐ One test per falsifiable boundary. Every behavioural arm runs against a HERMETIC fixture.
 //
-// Usage: node scripts/jop04/r1/acceptance.mjs [--json]
+// Usage: node scripts/jop04/r1/acceptance.mjs [--json <external-path>]
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { buildFixture, buildNonRepo, LITERAL_GLOB_FILE, SYMBOL, LOOKALIKE, BRE_PATTERN, MANY_TOKEN, MANY_COUNT, ORDINARY_COMMIT, LITERAL_COMMIT } from './fixture.mjs';
+import {
+  buildFixture, buildNonRepo, LITERAL_GLOB_FILE, LITERAL_MAGIC_FILE, ORDINARY_FILE,
+  SYMBOL, LOOKALIKE, EMBED_LEFT, EMBED_RIGHT, BRE_PATTERN, MANY_TOKEN, MANY_COUNT,
+  C_ORDINARY, C_GLOB, C_MAGIC,
+} from './fixture.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const require = createRequire(import.meta.url);
 const reg = await import(path.join(REPO, 'scripts/builder/deterministic.mjs'));
 const { CAPABILITIES, runCapability } = reg;
+const CF = require(path.join(REPO, 'jarvis-desktop/src/capability-form.js'));
 
-// ── result model ───────────────────────────────────────────────────────────────────────
-// Each boundary declares its PREDECLARED colour. A boundary is CONFORMING when it behaves
-// as the ratified law requires. Pre-repair, obligations are expected NONCONFORMING (RED) and
-// protected invariants CONFORMING (GREEN). The instrument never "fails" on a predeclared RED.
+const PIN_GITLOG = path.join(HERE, 'pinned-gitlog-output.json');
+const PIN_SCOPE = path.join(HERE, 'pinned-out-of-scope.json');
+
 const results = [];
 const B = (id, law, predeclared) => {
   const r = { id, law, predeclared, actual: null, detail: [] };
   results.push(r);
   return {
-    conform: (m) => { r.actual = 'GREEN'; r.detail.push(`✔ ${m}`); },
-    breach:  (m) => { r.actual = 'RED';   r.detail.push(`✘ ${m}`); },
+    conform: (m) => { if (r.actual !== 'RED') r.actual = 'GREEN'; r.detail.push(`✔ ${m}`); },
+    breach:  (m) => { r.actual = 'RED'; r.detail.push(`✘ ${m}`); },
     note:    (m) => r.detail.push(`  ${m}`),
   };
 };
-const records = (out) => (out?.stdout ?? '').split('\n').map(s => s.trim()).filter(Boolean);
-const files = (out) => [...new Set(records(out).map(l => l.split('\0')[0].replace(/^\.\//, '')))];
-// stdio 'pipe' keeps the DELIBERATE failure arms from leaking git's stderr into the report.
+const records = (o) => (o?.stdout ?? '').split('\n').map(s => s.trim()).filter(Boolean);
+const paths = (o) => [...new Set(records(o).map(l => l.split('\0')[0].replace(/^\.\//, '')))];
 const attempt = (fn) => { try { return { ok: true, value: fn() }; } catch (e) { return { ok: false, error: e }; } };
+const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
+
+// ⛔ FAIL-CLOSED CUSTODY GATE — before any judging happens.
+for (const [p, what] of [[PIN_GITLOG, 'D2.3 git.log output pin'], [PIN_SCOPE, 'out-of-scope shape pin']]) {
+  if (!fs.existsSync(p)) {
+    console.error(`⛔ SEALED CUSTODY MISSING: ${what} (${path.relative(REPO, p)})`);
+    console.error('   The acceptance run is READ-ONLY. It will not manufacture a baseline from the');
+    console.error('   subject it is judging. Restore the sealed pin, or re-seal under a custody ruling');
+    console.error('   with: node scripts/jop04/r1/seal-pins.mjs');
+    process.exit(2);
+  }
+}
 
 const fx = buildFixture();
 const nonRepo = buildNonRepo();
+const H1_DEFAULTS = [
+  ['git.rev_parse', 'ref', 'HEAD'], ['git.show_stat', 'ref', 'HEAD'],
+  ['git.diff_stat', 'ref1', 'HEAD~1'], ['git.diff_stat', 'ref2', 'HEAD'],
+  ['git.branch_contains', 'commit', 'HEAD'], ['repo.grep', 'max_results', 200],
+  ['inventory.migrations', 'dir', 'database/migrations'], ['inventory.routes', 'dir', 'app'],
+];
+// (capability, omittedArgs, explicitArgs) — 7 invocation pairs covering all 8 defaults.
+const PAIRS = [
+  ['git.rev_parse', {}, { ref: 'HEAD' }],
+  ['git.show_stat', {}, { ref: 'HEAD' }],
+  ['git.diff_stat', {}, { ref1: 'HEAD~1', ref2: 'HEAD' }],
+  ['git.branch_contains', { branch: 'main' }, { branch: 'main', commit: 'HEAD' }],
+  ['repo.grep', { pattern: MANY_TOKEN }, { pattern: MANY_TOKEN, max_results: 200 }],
+  ['inventory.migrations', {}, { dir: 'database/migrations' }],
+  ['inventory.routes', {}, { dir: 'app' }],
+];
 
 try {
-// ── 1 · D4 — the authorship seam (pure observation, no execution) ───────────────────────
-// The law, not the mechanism: a pure read-only structure must distinguish caller_terms from
-// host_terms for every host-applied default. ⛔ No permit, authority object, digest, receipt
-// or RB-6B decision shape is prescribed — only that the distinction be observable.
+// ── 1 · D4 — the authorship seam, bound to EFFECTIVE EXECUTION ──────────────────────────
 {
-  const t = B('D4', 'caller omission preserved · host default recorded separately with source=host_default', 'RED');
-  const H1_DEFAULTS = [
-    ['git.rev_parse', 'ref', 'HEAD'], ['git.show_stat', 'ref', 'HEAD'],
-    ['git.diff_stat', 'ref1', 'HEAD~1'], ['git.diff_stat', 'ref2', 'HEAD'],
-    ['git.branch_contains', 'commit', 'HEAD'], ['repo.grep', 'max_results', 200],
-    ['inventory.migrations', 'dir', 'database/migrations'], ['inventory.routes', 'dir', 'app'],
-  ];
+  const t = B('D4', 'caller omission preserved · host default recorded with source=host_default · the described plan corresponds to the act performed', 'RED');
   const describe = reg.describeInvocation;
   if (typeof describe !== 'function') {
-    t.breach('no pure observation seam exists: scripts/builder/deterministic.mjs exports no describeInvocation()');
+    t.breach('no pure observation seam: deterministic.mjs exports no describeInvocation()');
     t.note('required minimum: describeInvocation(name, args) → { caller_terms, host_terms, effective_terms }');
     t.note(`the same law must hold for all ${H1_DEFAULTS.length} host-applied defaults — one boundary, not eight concepts`);
   } else {
     const bad = [];
     for (const [cap, field, dflt] of H1_DEFAULTS) {
-      const omitted = describe(cap, {});
-      const explicit = describe(cap, { [field]: dflt });
-      const okOmitted = omitted?.caller_terms?.[field] === undefined
-        && omitted?.host_terms?.[field]?.value === dflt
-        && omitted?.host_terms?.[field]?.source === 'host_default';
-      const okExplicit = explicit?.caller_terms?.[field] === dflt
-        && explicit?.host_terms?.[field] === undefined;
-      if (!okOmitted || !okExplicit) bad.push(`${cap}.${field}`);
+      const om = attempt(() => describe(cap, {})).value;
+      const ex = attempt(() => describe(cap, { [field]: dflt })).value;
+      const okOm = om?.caller_terms?.[field] === undefined
+        && om?.host_terms?.[field]?.value === dflt
+        && om?.host_terms?.[field]?.source === 'host_default'
+        && om?.effective_terms?.[field] === dflt;          // ⭐ effective_terms is VERIFIED, not just required
+      const okEx = ex?.caller_terms?.[field] === dflt
+        && ex?.host_terms?.[field] === undefined
+        && ex?.effective_terms?.[field] === dflt;
+      if (!okOm || !okEx) bad.push(`${cap}.${field}`);
     }
-    bad.length === 0
-      ? t.conform(`all ${H1_DEFAULTS.length} host-applied defaults keep caller absence and host authorship distinct`)
-      : t.breach(`authorship collapsed for: ${bad.join(', ')}`);
+    bad.length === 0 ? t.conform(`all ${H1_DEFAULTS.length} defaults keep caller absence and host authorship distinct, with effective_terms agreeing`)
+                     : t.breach(`authorship or effective_terms wrong for: ${bad.join(', ')}`);
   }
+  // ⭐ CORRESPONDENCE — the described plan must match the act actually performed. Without this a
+  //    beautiful, truthful-LOOKING describeInvocation() could sit beside handlers that still
+  //    derive defaults independently, and the judge would certify documentation, not execution.
+  const diverged = [];
+  for (const [cap, a, b] of PAIRS) {
+    const ra = attempt(() => runCapability(cap, a, fx.root));
+    const rb = attempt(() => runCapability(cap, b, fx.root));
+    const same = ra.ok === rb.ok && (!ra.ok || ra.value.stdout === rb.value.stdout);
+    if (!same) diverged.push(cap);
+  }
+  diverged.length === 0
+    ? t.conform(`execution(omitted) == execution(explicit effective default) for all ${PAIRS.length} pairs — the plan corresponds to the act`)
+    : t.breach(`execution diverged for: ${diverged.join(', ')} — described plan ≠ act performed`);
 }
 
-// ── 2 · D1 — literal path identity, table-driven over all five PATH fields ──────────────
+// ── 2 · D1 — literal identity: selection injection AND namespace annexation ─────────────
 {
-  const t = B('D1', 'PATH fields carry literal identity; glob/magic spelling is never selection authority', 'RED');
-  // ⭐ Each arm needs a discriminator appropriate to WHAT THAT CAPABILITY RETURNS.
-  //    Path-listing capabilities return FILENAMES; commit capabilities return COMMITS. Using the
-  //    filename discriminator on git.log/git.file_history made those two arms pass vacuously in
-  //    the first pre-repair run — a known defect reading GREEN. Corrected here.
-  const LEAK_FILE = /app\/a\.ts|app\/b\.ts/;                    // ordinary files: reachable only by glob
-  const LEAK_COMMIT = new RegExp(ORDINARY_COMMIT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const CASES = [
-    ['repo.find_file', { pattern: LITERAL_GLOB_FILE }, LEAK_FILE, 'filenames'],
-    ['inventory.migrations', { dir: LITERAL_GLOB_FILE }, LEAK_FILE, 'filenames'],
-    ['inventory.routes', { dir: LITERAL_GLOB_FILE }, LEAK_FILE, 'filenames'],
-    ['git.log', { path: LITERAL_GLOB_FILE }, LEAK_COMMIT, 'commits'],
-    ['git.file_history', { file: LITERAL_GLOB_FILE }, LEAK_COMMIT, 'commits'],
+  const t = B('D1', 'PATH fields carry literal identity — glob spelling is not selection authority, magic spelling is not namespace authority', 'RED');
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const LEAK_FILE_GLOB = /(^|\s|\0)app\/a\.ts|app\/b\.ts/;
+  const LEAK_COMMIT_GLOB = new RegExp(esc(C_ORDINARY));
+  const VECTORS = [
+    { name: 'wildcard', subject: LITERAL_GLOB_FILE, commit: C_GLOB, leakFile: LEAK_FILE_GLOB, leakCommit: LEAK_COMMIT_GLOB },
+    // ⛔ magic: ':(literal)app/a.ts' as a PATHSPEC denotes the ORDINARY file app/a.ts.
+    { name: 'magic', subject: LITERAL_MAGIC_FILE, commit: C_MAGIC, leakFile: new RegExp(`(^|\\s|\\0)${esc(ORDINARY_FILE)}$`, 'm'), leakCommit: LEAK_COMMIT_GLOB },
   ];
-  const breaches = [];
-  for (const [cap, args, leakRe, kind] of CASES) {
-    const r = attempt(() => runCapability(cap, args, fx.root));
-    if (!r.ok) { breaches.push(`${cap} threw: ${String(r.error.message).split('\n')[0]}`); continue; }
-    const out = r.value.stdout || '';
-    // Positive control: the arm must actually be able to see the literal subject at all.
-    const sees = kind === 'filenames' ? out.includes(LITERAL_GLOB_FILE) : out.includes(LITERAL_COMMIT);
-    if (!sees) { breaches.push(`${cap} did not reach the literal subject at all — arm is not discriminating`); continue; }
-    if (leakRe.test(out)) breaches.push(`${cap} also matched the ORDINARY ${kind} — the spelling acted as SELECTION`);
-    else t.note(`${cap} · literal identity held (${kind})`);
+  const FIELDS = [
+    ['repo.find_file', (s) => ({ pattern: s }), 'paths'],
+    ['inventory.migrations', (s) => ({ dir: s }), 'paths'],
+    ['inventory.routes', (s) => ({ dir: s }), 'paths'],
+    ['git.log', (s) => ({ path: s }), 'commits'],
+    ['git.file_history', (s) => ({ file: s }), 'commits'],
+  ];
+  for (const v of VECTORS) {
+    for (const [cap, mk, kind] of FIELDS) {
+      const r = attempt(() => runCapability(cap, mk(v.subject), fx.root));
+      if (!r.ok) { t.breach(`${cap} · ${v.name} threw: ${String(r.error.message).split('\n')[0].slice(0, 55)}`); continue; }
+      const out = r.value.stdout || '';
+      // POSITIVE CONTROL: the arm must reach its literal subject, or it is not discriminating.
+      const sees = kind === 'paths' ? paths(r.value).includes(v.subject) : out.includes(v.commit);
+      if (!sees) { t.breach(`${cap} · ${v.name} did not reach the literal subject — REJECTED it instead (D1 forbids that too)`); continue; }
+      const leak = kind === 'paths' ? v.leakFile.test(paths(r.value).join('\n')) : v.leakCommit.test(out);
+      leak ? t.breach(`${cap} · ${v.name} ALSO matched the ordinary ${kind} — the spelling acted as ${v.name === 'magic' ? 'NAMESPACE AUTHORITY' : 'SELECTION'}`)
+           : t.note(`${cap} · ${v.name} · literal identity held (${kind})`);
+    }
   }
-  breaches.length === 0
-    ? t.conform('all five PATH fields treated the wildcard-looking name as an identity')
-    : breaches.forEach(b => t.breach(b));
+  if (results.at(-1).actual !== 'RED') t.conform('both vectors literal across all five PATH fields');
 }
 
-// ── 3 · D5 — BRE is pinned by the contract; ambient config cannot change meaning ────────
+// ── 3 · D5 — BRE pinned by contract; ambient dialect has no authority ───────────────────
 {
   const t = B('D5', 'repo.grep.pattern is POSIX BRE; ambient grep.patternType has no authority', 'RED');
-  t.note(`fixture declares grep.patternType=${execFileSync('git', ['-C', fx.root, 'config', '--get', 'grep.patternType'], { encoding: 'utf8' }).trim()}`);
+  t.note(`fixture ambient dialect = ${execFileSync('git', ['-C', fx.root, 'config', '--get', 'grep.patternType'], { encoding: 'utf8' }).trim()}`);
   const r = attempt(() => runCapability('repo.grep', { pattern: BRE_PATTERN }, fx.root));
-  if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0]}`);
+  if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0].slice(0, 60)}`);
   else {
-    const f = files(r.value);
-    const alternated = f.includes('app/a.ts') && f.includes('app/b.ts');   // BRE: ZEBRA or QUAGGA
-    alternated
-      ? t.conform(`'${BRE_PATTERN}' alternated under a fixture whose ambient dialect is 'extended' — the contract won`)
+    const f = paths(r.value);
+    (f.includes('app/a.ts') && f.includes('app/b.ts'))
+      ? t.conform(`'${BRE_PATTERN}' alternated despite an 'extended' ambient dialect — the contract won`)
       : t.breach(`'${BRE_PATTERN}' did not alternate (matched ${JSON.stringify(f)}) — the AMBIENT dialect decided the meaning`);
   }
 }
 
-// ── 4 · D6 + F-D — the three-arm witness (one boundary, two opposite bad repairs) ───────
+// ── 4 · D6 — literal AND whole-symbol AND ambient-independent ───────────────────────────
 {
-  const t = B('D6', 'ARM 1 · punctuation in symbol is sought literally and cannot author matcher syntax', 'RED');
+  const t = B('D6', 'symbol is sought literally, as a WHOLE symbol, with no authority from ambient matcher config', 'RED');
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: SYMBOL }, fx.root));
-  if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0]}`);
+  if (!r.ok) t.breach(`threw: ${String(r.error.message).split('\n')[0].slice(0, 60)}`);
   else {
     const hit = records(r.value).join('\n');
-    const literalFound = hit.includes(SYMBOL);
-    const lookalikeMatched = hit.includes(LOOKALIKE);
-    t.note(`literal '${SYMBOL}' found=${literalFound} · lookalike '${LOOKALIKE}' also matched=${lookalikeMatched}`);
-    (literalFound && !lookalikeMatched)
-      ? t.conform("only the literal whole-symbol occurrence qualified — '.' was sought, not executed")
-      : t.breach(lookalikeMatched
-          ? `'${LOOKALIKE}' matched: the caller's '.' authored matcher syntax`
-          : `the literal symbol was not found`);
+    const has = (s) => hit.includes(s);
+    // The subject line is the only one containing SYMBOL without an adjacent word character.
+    const subjectFound = /SUBJECT/.test(hit);
+    const controls = [
+      ['regex-authority', LOOKALIKE, /regexControl/.test(hit)],
+      ['left boundary (substring)', EMBED_LEFT, /leftControl/.test(hit)],
+      ['right boundary (substring)', EMBED_RIGHT, /rightControl/.test(hit)],
+    ];
+    subjectFound ? t.note('subject line found') : t.breach('the literal whole-symbol occurrence was not found');
+    for (const [why, text, matched] of controls) {
+      matched ? t.breach(`${why}: '${text}' matched — that is ${why === 'regex-authority' ? "the caller's '.' authoring matcher syntax" : 'raw substring search, not whole-symbol lookup'}`)
+              : t.note(`${why} control held ('${text}' not matched)`);
+    }
+    if (subjectFound && controls.every(([, , m]) => !m)) t.conform('literal, whole-symbol, and no regex authority');
   }
+  // ⭐ D6.4 — ambient independence: the same invocation across two ambient dialects.
+  const fxB = buildFixture({ patternType: 'basic' });
+  try {
+    const a = attempt(() => runCapability('repo.locate_symbol', { symbol: SYMBOL }, fx.root));
+    const b = attempt(() => runCapability('repo.locate_symbol', { symbol: SYMBOL }, fxB.root));
+    const norm = (x) => x.ok ? records(x.value).map(l => l.split('\0').slice(1).join('\0')).join('\n') : `THREW:${String(x.error.message).split('\n')[0]}`;
+    norm(a) === norm(b)
+      ? t.conform("identical semantics under ambient 'extended' and 'basic' (D6.4)")
+      : t.breach('ambient grep.patternType changed what the same symbol invocation means (D6.4)');
+  } finally { fxB.cleanup(); }
 }
+
+// ── 5 · F-D ARM 2 · valid absence ───────────────────────────────────────────────────────
 {
   const t = B('F-D', 'ARM 2 · a valid search finding nothing SUCCEEDS with zero records', 'RED');
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: 'ZZ_DEFINITELY_ABSENT_SYMBOL' }, fx.root));
-  if (!r.ok) t.breach(`ordinary absence THREW (${String(r.error.message).split('\n')[0].slice(0, 60)}…) — absence collapsed into failure`);
-  else records(r.value).length === 0
-    ? t.conform('absence returned success with zero records')
-    : t.breach(`expected zero records, got ${records(r.value).length}`);
+  if (!r.ok) t.breach(`ordinary absence THREW — absence collapsed into failure`);
+  else records(r.value).length === 0 ? t.conform('absence returned success with zero records')
+                                     : t.breach(`expected zero records, got ${records(r.value).length}`);
 }
+
+// ── 6 · F-D.5 ARM 3 · genuine failure ───────────────────────────────────────────────────
 {
   const t = B('F-D.5', 'ARM 3 · a GENUINE execution failure propagates and is NEVER normalized to zero', 'GREEN');
   t.note('invoked against a directory that is not a git repository');
   const r = attempt(() => runCapability('repo.locate_symbol', { symbol: MANY_TOKEN }, nonRepo.root));
-  r.ok
-    ? t.breach(`a non-repository returned success (${records(r.value).length} records) — a broad catch swallowed a real failure`)
-    : t.conform(`genuine failure propagated: ${String(r.error.message).split('\n')[0].slice(0, 70)}`);
+  r.ok ? t.breach(`a non-repository returned success (${records(r.value).length} records) — a broad catch swallowed a real failure`)
+       : t.conform('genuine failure propagated');
 }
 
-// ── 5 · D3 — global bound + prefix law ──────────────────────────────────────────────────
+// ── 7 · D3 — global bound + prefix law ──────────────────────────────────────────────────
 {
   const t = B('D3', 'max_results is a GLOBAL bound; results(N) is a prefix of results(M) for N<M', 'RED');
   const one = attempt(() => runCapability('repo.grep', { pattern: MANY_TOKEN, max_results: 1 }, fx.root));
@@ -172,121 +228,114 @@ try {
   if (!one.ok || !three.ok) t.breach('repo.grep threw while bounded');
   else {
     const r1 = records(one.value), r3 = records(three.value);
-    t.note(`max_results=1 → ${r1.length} records · max_results=3 → ${r3.length} · fixture contains ${MANY_COUNT} matching lines`);
+    t.note(`max_results=1 → ${r1.length} · =3 → ${r3.length} · fixture holds ${MANY_COUNT} matching lines`);
     const bounded = r1.length <= 1 && r3.length <= 3;
     const prefix = r1.every((l, i) => l === r3[i]);
-    bounded && prefix
-      ? t.conform('the bound is honoured globally and the smaller result is a prefix of the larger')
-      : t.breach(bounded ? 'bounded, but the smaller result is not a prefix of the larger' : `the bound was ignored (1→${r1.length}, 3→${r3.length})`);
+    bounded && prefix ? t.conform('bound honoured globally; smaller result is a prefix of the larger')
+                      : t.breach(bounded ? 'bounded, but not a prefix' : `the bound was ignored (1→${r1.length}, 3→${r3.length})`);
   }
 }
 
-// ── 6 · D3/D4 — authorship of 200 survives identical effective output ───────────────────
+// ── 8 · D3/D4 — authorship of 200 survives identical effective output ───────────────────
 {
   const t = B('D3/D4', 'omitted → host 200 · explicit 200 → caller 200 · identical execution does not collapse identity', 'RED');
   const describe = reg.describeInvocation;
-  if (typeof describe !== 'function') {
-    t.breach('no observation seam: identical effective output cannot be distinguished from identical authorship');
-  } else {
+  if (typeof describe !== 'function') t.breach('no observation seam: identical output cannot be distinguished from identical authorship');
+  else {
     const om = describe('repo.grep', { pattern: MANY_TOKEN });
     const ex = describe('repo.grep', { pattern: MANY_TOKEN, max_results: 200 });
-    const okOm = om?.caller_terms?.max_results === undefined && om?.host_terms?.max_results?.value === 200 && om?.host_terms?.max_results?.source === 'host_default';
-    const okEx = ex?.caller_terms?.max_results === 200 && ex?.host_terms?.max_results === undefined;
-    (okOm && okEx) ? t.conform('the two invocations remain distinguishable by authorship')
+    const okOm = om?.caller_terms?.max_results === undefined && om?.host_terms?.max_results?.value === 200
+      && om?.host_terms?.max_results?.source === 'host_default' && om?.effective_terms?.max_results === 200;
+    const okEx = ex?.caller_terms?.max_results === 200 && ex?.host_terms?.max_results === undefined
+      && ex?.effective_terms?.max_results === 200;
+    (okOm && okEx) ? t.conform('the two invocations remain distinguishable by authorship while effective terms agree')
                    : t.breach('authorship of 200 is not distinguishable between omission and explicit supply');
   }
 }
 
-// ── 7 · D2.6 — `format` is REFUSED AT ADMISSION, at both layers that exist today ────────
+// ── 9 · D2.6 — `format` REFUSED at admission, and NOT SOLICITED at all ──────────────────
 {
-  const t = B('D2.6', 'git.log { format } is REFUSED — not stripped, not ignored, not canonicalized to {}', 'RED');
+  const t = B('D2.6', 'git.log { format } is refused at every admission layer AND is not solicited by the form', 'RED');
   const r = attempt(() => runCapability('git.log', { format: '%H' }, fx.root));
-  if (r.ok) t.breach(`runCapability ACCEPTED an unauthorized format (returned ${records(r.value).length} records)`);
-  else t.conform(`runCapability refused: ${String(r.error.message).split('\n')[0].slice(0, 60)}`);
+  r.ok ? t.breach(`runCapability ACCEPTED an unauthorized format (${records(r.value).length} records)`)
+       : t.conform('runCapability refused');
 
-  const CF = require(path.join(REPO, 'jarvis-desktop/src/capability-form.js'));
   const man = CF.buildManifest(CAPABILITIES);
   const entry = man.find(e => e.name === 'git.log');
+  // ⭐ ENFORCED, not noted. A repair could leave the manifest visibly soliciting `format` and
+  //    special-case refusal later — that is D2-F2, and the accept-then-erase shape D2.6 closes.
   const solicits = !!entry?.args?.some(a => a.name === 'format');
-  const sub = CF.validateSubmission({ manifest: man, capabilityName: 'git.log', mode: 'structured', rawValues: { format: '%H' } });
-  t.note(`the Desktop form solicits a format field: ${solicits}`);
-  sub.ok
-    ? t.breach('validateSubmission ACCEPTED format — the form layer admits an unauthorized term')
-    : t.conform('validateSubmission refused format');
-  // ⭐ The form is a faithful schema lens, so removing `format` from the authoritative registry
-  //    should remove the ordinary affordance with no second UI repair — but ADVANCED JSON
-  //    submission must still reject it as an unexpected argument.
-  const adv = CF.validateSubmission({ manifest: man, capabilityName: 'git.log', mode: 'advanced', rawJson: '{"format":"%H"}' });
-  adv.ok ? t.breach('advanced JSON submission ACCEPTED format') : t.conform('advanced JSON submission refused format');
+  solicits ? t.breach('the Desktop manifest still SOLICITS a format field (D2-F2)')
+           : t.conform('the manifest does not solicit format');
+
+  const structured = CF.validateSubmission({ manifest: man, capabilityName: 'git.log', mode: 'structured', rawValues: { format: '%H' } });
+  structured.ok ? t.breach('structured submission ACCEPTED format — silently discarding stale or malicious structured input reproduces accept-and-erase')
+                : t.conform('structured submission refused format');
+
+  // ⚠️ The R1 instrument passed `rawJson`; validateSubmission reads `advancedText`, so it was
+  //    submitting BLANK advanced input and reporting RED for the wrong reason. Corrected.
+  const advanced = CF.validateSubmission({ manifest: man, capabilityName: 'git.log', mode: 'advanced', advancedText: '{"format":"%H"}' });
+  advanced.ok ? t.breach('advanced submission ACCEPTED format')
+              : t.conform('advanced submission refused format');
 }
 
-// ── 8 · D2.3 — the existing observable git.log output is PINNED ─────────────────────────
+// ── 10 · D2.3 — the existing observable git.log output is PINNED (read-only) ────────────
 {
   const t = B('D2.3', 'removing `format` may not redesign git.log output: fields, order, dates, quoting, record order', 'GREEN');
-  const pinPath = path.join(HERE, 'pinned-gitlog-output.json');
-  const r = attempt(() => runCapability('git.log', { max_count: 3 }, fx.root));
-  if (!r.ok) { t.breach(`git.log threw: ${String(r.error.message).split('\n')[0]}`); }
-  else if (!fs.existsSync(pinPath)) {
-    fs.writeFileSync(pinPath, JSON.stringify({
-      _note: 'Captured from the UNREPAIRED subject against the hermetic fixture. This is the D2.3 pin.',
-      capability: 'git.log', args: { max_count: 3 }, stdout: r.value.stdout, exit_code: r.value.exit_code,
-    }, null, 2) + '\n');
-    t.note('PIN CREATED from the unrepaired subject — this run establishes the baseline');
-    t.conform('observable output captured and frozen');
-  } else {
-    const pin = JSON.parse(fs.readFileSync(pinPath, 'utf8'));
-    pin.stdout === r.value.stdout && pin.exit_code === r.value.exit_code
-      ? t.conform('observable output byte-identical to the pin')
-      : t.breach('observable git.log output CHANGED against the pin');
-  }
+  const pin = JSON.parse(fs.readFileSync(PIN_GITLOG, 'utf8'));
+  const r = attempt(() => runCapability('git.log', pin.args, fx.root));
+  if (!r.ok) t.breach(`git.log threw: ${String(r.error.message).split('\n')[0]}`);
+  else (pin.stdout === r.value.stdout && pin.exit_code === r.value.exit_code)
+    ? t.conform('observable output byte-identical to the sealed pin')
+    : t.breach('observable git.log output CHANGED against the sealed pin');
 }
 
-// ── 9 · H1 effective behaviour — adding authorship truth changes no current result ───────
+// ── 11 · H1 effective behaviour — unchanged for all eight defaults ──────────────────────
 {
-  const t = B('H1-effective', 'omitted and default-equivalent valid calls still produce the same effective result', 'GREEN');
-  const pairs = [
-    ['git.rev_parse', {}, { ref: 'HEAD' }],
-    ['inventory.routes', {}, { dir: 'app' }],
-    ['inventory.migrations', {}, { dir: 'database/migrations' }],
-  ];
+  const t = B('H1-effective', 'adding authorship truth alters no current effective result, across all eight defaults', 'GREEN');
   const bad = [];
-  for (const [cap, a, b] of pairs) {
+  for (const [cap, a, b] of PAIRS) {
     const ra = attempt(() => runCapability(cap, a, fx.root)), rb = attempt(() => runCapability(cap, b, fx.root));
-    if (!ra.ok || !rb.ok || ra.value.stdout !== rb.value.stdout) bad.push(cap);
+    if (ra.ok !== rb.ok || (ra.ok && ra.value.stdout !== rb.value.stdout)) bad.push(cap);
   }
-  bad.length === 0 ? t.conform(`effective equivalence preserved for ${pairs.length} default-bearing capabilities`)
+  bad.length === 0 ? t.conform(`effective equivalence preserved across ${PAIRS.length} pairs covering all ${H1_DEFAULTS.length} defaults`)
                    : t.breach(`effective result diverged for: ${bad.join(', ')}`);
 }
 
-// ── 10 · out-of-scope boundaries must remain untouched ──────────────────────────────────
+// ── 12 · out-of-scope boundaries — UNCHANGED, not merely still named the same ───────────
 {
-  const t = B('check.run', 'check.run is OUT OF SCOPE and untouched', 'GREEN');
+  const t = B('check.run', 'check.run is OUT OF SCOPE: its declaration AND handler are unchanged', 'GREEN');
+  const pin = JSON.parse(fs.readFileSync(PIN_SCOPE, 'utf8'));
+  // ⛔ Deliberately NOT executed: running it would itself cross the delegated-execution boundary.
+  //    Out of jurisdiction means UNCHANGED, so the shape is source-pinned. This is the one place
+  //    source pinning is the right instrument rather than a behavioural one.
   const spec = CAPABILITIES['check.run'];
-  const shape = spec?.args?.test_type;
-  (shape?.type === 'enum' && Array.isArray(shape.enum) && shape.enum.join(',') === 'typecheck,test,lint')
-    ? t.conform('check.run declaration unchanged (enum typecheck,test,lint)')
-    : t.breach('check.run declaration changed — R1 crossed a boundary it was told to stay out of');
+  const argsDigest = sha(JSON.stringify(spec?.args ?? null));
+  const handlerDigest = sha(String(spec?.handler ?? ''));
+  t.note(`args ${argsDigest} · handler ${handlerDigest}`);
+  (argsDigest === pin['check.run'].args && handlerDigest === pin['check.run'].handler)
+    ? t.conform('check.run declaration and handler byte-identical to the sealed pin')
+    : t.breach('check.run CHANGED — R1 crossed a boundary it was told to stay out of');
 }
 {
   const t = B('verify.*', 'unrelated verify.* behaviour is untouched', 'GREEN');
+  const pin = JSON.parse(fs.readFileSync(PIN_SCOPE, 'utf8'));
+  const drift = ['verify.file_exists', 'verify.sha256', 'verify.count_matches']
+    .filter(n => sha(String(CAPABILITIES[n]?.handler ?? '')) !== pin[n].handler);
   const fileOk = attempt(() => runCapability('verify.file_exists', { path: 'many.txt' }, fx.root));
-  const shaOk = attempt(() => runCapability('verify.sha256', { path: 'many.txt' }, fx.root));
   const cnt = attempt(() => runCapability('verify.count_matches', { pattern: MANY_TOKEN, file: 'many.txt' }, fx.root));
-  const counted = cnt.ok && /(^|\D)12(\D|$)/.test(cnt.value.stdout || '');
-  (fileOk.ok && shaOk.ok && cnt.ok && counted)
-    ? t.conform(`verify.file_exists · verify.sha256 · verify.count_matches all behave (count=${MANY_COUNT})`)
-    : t.breach(`verify.* behaviour changed (exists=${fileOk.ok} sha=${shaOk.ok} count=${cnt.ok}/${counted})`);
+  const counted = cnt.ok && new RegExp(`(^|\\D)${MANY_COUNT}(\\D|$)`).test(cnt.value.stdout || '');
+  (drift.length === 0 && fileOk.ok && counted)
+    ? t.conform(`three verify.* handlers source-pinned and behaving (count=${MANY_COUNT})`)
+    : t.breach(drift.length ? `handler source changed: ${drift.join(', ')}` : 'verify.* behaviour changed');
 }
 
-} finally {
-  fx.cleanup();
-  nonRepo.cleanup();
-}
+} finally { fx.cleanup(); nonRepo.cleanup(); }
 
 // ── report ──────────────────────────────────────────────────────────────────────────────
 const pad = (s, n) => String(s).padEnd(n);
-console.log('JOP-04 · R1 ACCEPTANCE INSTRUMENT — pre-repair run');
-console.log(`subject: ${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()}   fixture: hermetic, deterministic\n`);
+console.log('JOP-04 · R1a ACCEPTANCE INSTRUMENT');
+console.log(`subject: ${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim()}   fixture: hermetic, deterministic   custody: read-only\n`);
 for (const r of results) {
   const match = r.actual === r.predeclared;
   console.log(`${match ? '  ' : '⚠️'} ${pad(r.id, 14)} predeclared ${pad(r.predeclared, 6)} actual ${pad(r.actual ?? '—', 6)} ${match ? '' : '← MISMATCH'}`);
@@ -294,13 +343,19 @@ for (const r of results) {
   for (const d of r.detail) console.log(`     ${d}`);
 }
 const mismatches = results.filter(r => r.actual !== r.predeclared);
-const red = results.filter(r => r.actual === 'RED').length;
-const green = results.filter(r => r.actual === 'GREEN').length;
-console.log(`\n---- ${red} RED · ${green} GREEN · ${mismatches.length} mismatch(es) against the predeclared matrix ----`);
+console.log(`\n---- ${results.filter(r => r.actual === 'RED').length} RED · ${results.filter(r => r.actual === 'GREEN').length} GREEN · ${mismatches.length} mismatch(es) against the predeclared matrix ----`);
 if (mismatches.length) {
   console.log('⚠️  A mismatch is a finding about the INSTRUMENT or the SPEC, never a licence to change the product:');
-  console.log('    protected invariant RED  → the instrument widened its jurisdiction; fix the instrument');
-  console.log('    known defect GREEN       → the witness cannot judge that repair; strengthen the instrument');
+  console.log('    protected invariant RED → the instrument widened its jurisdiction; fix the instrument');
+  console.log('    known defect GREEN      → the witness cannot judge that repair; strengthen the instrument');
 }
-if (process.argv.includes('--json')) fs.writeFileSync(path.join(HERE, 'unrepaired-matrix.json'), JSON.stringify(results, null, 2) + '\n');
+const ji = process.argv.indexOf('--json');
+if (ji > -1) {
+  const dest = process.argv[ji + 1];
+  if (!dest || path.resolve(dest).startsWith(HERE)) {
+    console.error('⛔ --json requires an EXTERNAL destination. The judge never writes into its own sealed directory.');
+    process.exit(2);
+  }
+  fs.writeFileSync(dest, JSON.stringify(results, null, 2) + '\n');
+}
 process.exit(mismatches.length === 0 ? 0 : 1);

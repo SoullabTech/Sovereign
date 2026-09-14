@@ -1,9 +1,9 @@
 {
-  "_note": "Captured from the UNREPAIRED subject against the hermetic fixture. This is the D2.3 pin.",
+  "_note": "D2.3 pin — captured from the UNREPAIRED subject against the hermetic fixture.",
   "capability": "git.log",
   "args": {
     "max_count": 3
   },
-  "stdout": "\"fb39b70ca3dbe387376795ab2ad8a5fe115e3edd R1 Fixture 2020-01-03 fixture: repetition and a migrations directory\"\n\"332b36e6a34bc9febdd9abd9da94f1bb80d47b4c R1 Fixture 2020-01-02 fixture: punctuation-bearing symbol and a regex lookalike\"\n\"b41f0ae50e685f9628bda2fdc4accf68d98b9d1b R1 Fixture 2020-01-01 fixture: the file literally named app-star-ts, alone\"",
+  "stdout": "\"3fac9c2fe3167a241f54b8e774d2bf48e30b55ef R1 Fixture 2020-01-05 fixture: repetition and a migrations directory\"\n\"f371a2f48d621c2c1d85a49305bc482e99634c29 R1 Fixture 2020-01-04 fixture: symbol, lookalike and embedded-literal controls\"\n\"a1bcb6a9b48f493cf6678f11ce7b616996e309a9 R1 Fixture 2020-01-03 fixture: the magic-named literal subject, alone\"",
   "exit_code": 0
 }

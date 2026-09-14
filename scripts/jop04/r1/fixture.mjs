@@ -1,11 +1,9 @@
-// JOP-04 R1 · hermetic Git fixture.
+// JOP-04 R1/R1a · hermetic Git fixture.
 //
-// ⭐ R1 REQUIREMENT, not a suggestion: D1 · D2.3 · D3 · D5 · D6 are NEVER exercised against the
-//    JOP repository. A deterministic temporary repository is built with fixed authors, dates,
-//    filenames and contents, so that
-//        instrument prose changes · new commits · new matching documentation · history growth
-//    cannot change the behavioural fixture being judged. This retires the self-documentation
-//    species (five incidents) by construction rather than by discipline.
+// ⭐ R1 REQUIREMENT: D1 · D2.3 · D3 · D5 · D6 are NEVER exercised against the JOP repository.
+//    Deterministic authors, dates, filenames and contents mean instrument prose, new commits and
+//    new documentation cannot move the behaviour being judged. The self-documentation species
+//    (five incidents) is retired by construction, not by discipline.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -20,16 +18,30 @@ const ENV = {
 };
 const at = (iso) => ({ ...ENV, GIT_AUTHOR_DATE: iso, GIT_COMMITTER_DATE: iso });
 
-export const LITERAL_GLOB_FILE = 'app/*.ts';   // a real file whose NAME looks like a glob
-export const SYMBOL = 'alpha.beta';            // punctuation-bearing literal symbol
-export const LOOKALIKE = 'alphaXbeta';         // matches `alpha.beta` only if '.' is regex syntax
-export const BRE_PATTERN = 'ZEBRA\\|QUAGGA';   // BRE alternation · ERE/fixed: literal 'ZEBRA|QUAGGA'
-export const MANY_TOKEN = 'REPETEND';          // appears on many lines, for the D3 prefix law
-export const MANY_COUNT = 12;
-export const ORDINARY_COMMIT = 'fixture: ordinary files app/a.ts and app/b.ts';
-export const LITERAL_COMMIT = 'fixture: the file literally named app-star-ts, alone';
+// ── D1 subjects ────────────────────────────────────────────────────────────────────────
+// TWO literal subjects, because D1 forbids BOTH selection injection AND namespace annexation.
+export const LITERAL_GLOB_FILE = 'app/*.ts';               // wildcard-looking NAME
+export const LITERAL_MAGIC_FILE = ':(literal)app/a.ts';    // git-MAGIC-looking NAME
+export const ORDINARY_FILE = 'app/a.ts';                   // the control the magic form would annex
 
-export function buildFixture() {
+// ── D6 subjects ────────────────────────────────────────────────────────────────────────
+export const SYMBOL = 'alpha.beta';
+export const LOOKALIKE = 'alphaXbeta';                     // matches only if '.' is regex syntax
+export const EMBED_LEFT = 'prefixalpha.beta';              // matches only if search is substring
+export const EMBED_RIGHT = 'alpha.betaSuffix';             // matches only if search is substring
+
+// ── other subjects ─────────────────────────────────────────────────────────────────────
+export const BRE_PATTERN = 'ZEBRA\\|QUAGGA';               // BRE alternation · ERE/fixed: literal
+export const MANY_TOKEN = 'REPETEND';
+export const MANY_COUNT = 12;
+
+export const C_ORDINARY = 'fixture: ordinary files app/a.ts and app/b.ts';
+export const C_GLOB     = 'fixture: the wildcard-named literal subject, alone';
+export const C_MAGIC    = 'fixture: the magic-named literal subject, alone';
+export const C_SYMBOL   = 'fixture: symbol, lookalike and embedded-literal controls';
+export const C_BULK     = 'fixture: repetition and a migrations directory';
+
+export function buildFixture({ patternType = 'extended' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jop04-r1-'));
   const g = (args, env = ENV) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env });
   const w = (rel, body) => {
@@ -41,35 +53,40 @@ export function buildFixture() {
   g(['init', '-q', '-b', 'main']);
   g(['config', 'user.name', 'R1 Fixture']);
   g(['config', 'user.email', 'fixture@example.invalid']);
-  // ⭐ D5: the fixture repository deliberately declares a NON-BRE ambient dialect.
-  g(['config', 'grep.patternType', 'extended']);
+  // ⭐ D5/D6.4: the fixture repo deliberately declares an ambient dialect. Varying it must not
+  //    change what a contract-pinned capability means.
+  g(['config', 'grep.patternType', patternType]);
 
-  // --- commit 1 : ORDINARY files only -----------------------------------------------
-  // ⭐ The literal wildcard-named file gets its OWN commit (below). Commit-level capabilities
-  //    (git.log, git.file_history) report COMMITS, not filenames, so if both lived in one
-  //    commit the output could not discriminate literal identity from glob selection — and the
-  //    D1 arms for those two capabilities would pass vacuously. Found in the first pre-repair
-  //    run: a known defect showing GREEN means the witness cannot judge that repair.
-  w('app/a.ts', `export const a = 1;\n// ${LOOKALIKE} is not the symbol\nZEBRA\n`);
+  // commit 1 — ordinary files only (the controls)
+  w(ORDINARY_FILE, `export const a = 1;\n// ${LOOKALIKE} is not the symbol\nZEBRA\n`);
   w('app/b.ts', `export const b = 2;\nQUAGGA\n`);
-  g(['add', '-A']);
-  g(['commit', '-q', '-m', ORDINARY_COMMIT], at('2020-01-01T00:00:00+00:00'));
+  g(['add', '-A']); g(['commit', '-q', '-m', C_ORDINARY], at('2020-01-01T00:00:00+00:00'));
 
-  // --- commit 1b : the literal wildcard-named file, ALONE ------------------------------
-  w(LITERAL_GLOB_FILE, `// a real file literally named app/*.ts\nexport const literalGlobFile = true;\n`);
-  g(['add', '-A']);
-  g(['commit', '-q', '-m', LITERAL_COMMIT], at('2020-01-01T12:00:00+00:00'));
+  // commit 2 — the wildcard-named literal subject, ALONE so commit-returning capabilities discriminate
+  w(LITERAL_GLOB_FILE, `// a real file literally named app/*.ts\nexport const wildcardNamed = true;\n`);
+  g(['add', '-A']); g(['commit', '-q', '-m', C_GLOB], at('2020-01-02T00:00:00+00:00'));
 
-  // --- commit 2 : the symbol fixture --------------------------------------------------
-  w('src/sym.ts', `export const ${SYMBOL.replace('.', '_')} = 0;\nconst holder = { ${SYMBOL} };\n// ${LOOKALIKE}\n`);
-  g(['add', '-A']);
-  g(['commit', '-q', '-m', 'fixture: punctuation-bearing symbol and a regex lookalike'], at('2020-01-02T00:00:00+00:00'));
+  // commit 3 — the MAGIC-named literal subject, ALONE.
+  // ⛔ Under git pathspec magic, ':(literal)app/a.ts' denotes the ORDINARY file app/a.ts.
+  //    Under literal identity it denotes THIS file. That is namespace annexation, and a repair
+  //    that special-cases only globbing passes the wildcard arm and fails here.
+  w(LITERAL_MAGIC_FILE, `// a real file literally named :(literal)app/a.ts\nexport const magicNamed = true;\n`);
+  g(['add', '-A']); g(['commit', '-q', '-m', C_MAGIC], at('2020-01-03T00:00:00+00:00'));
 
-  // --- commit 3 : repetition for the D3 prefix law + a migrations dir -------------------
+  // commit 4 — D6 subjects, one per line so each control is separately observable
+  w('src/sym.ts', [
+    `const target = { ${SYMBOL} };            // SUBJECT — the literal whole symbol`,
+    `const regexControl = ${LOOKALIKE};       // must NOT match: '.' as regex syntax`,
+    `const leftControl = ${EMBED_LEFT};       // must NOT match: substring on the left`,
+    `const rightControl = ${EMBED_RIGHT};     // must NOT match: substring on the right`,
+    '',
+  ].join('\n'));
+  g(['add', '-A']); g(['commit', '-q', '-m', C_SYMBOL], at('2020-01-04T00:00:00+00:00'));
+
+  // commit 5 — repetition + a migrations dir for the default-bearing inventory capabilities
   w('many.txt', Array.from({ length: MANY_COUNT }, (_, i) => `line ${i} ${MANY_TOKEN}`).join('\n') + '\n');
   w('database/migrations/0001_init.sql', '-- fixture migration\n');
-  g(['add', '-A']);
-  g(['commit', '-q', '-m', 'fixture: repetition and a migrations directory'], at('2020-01-03T00:00:00+00:00'));
+  g(['add', '-A']); g(['commit', '-q', '-m', C_BULK], at('2020-01-05T00:00:00+00:00'));
 
   return { root, cleanup: () => fs.rmSync(root, { recursive: true, force: true }) };
 }
