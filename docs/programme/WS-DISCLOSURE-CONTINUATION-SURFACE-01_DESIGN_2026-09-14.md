@@ -332,6 +332,107 @@ design that numbers the array produces confident wrong ordinals. **The array is 
 
 ---
 
+## 7a · D-1 DISPOSITION — founder ruling, 2026-09-14
+
+```text
+D-1 disposition
+
+✅ server-derived ordinal presentation to the member AUTHORIZED
+⛔ full frozen topology transport               REJECTED
+⛔ client numbering of sections[]                REJECTED
+⛔ heading / title route                         REMAINS PARKED
+⛔ labelsFor()                                   REMAINS OUTSIDE the pause protocol
+
+S4 remains BLOCKED until the transport is implemented and witnessed.
+The ruling authorizes the protocol amendment; it does not pretend the
+surface can already render it.
+```
+
+### The ruling
+
+> **The server MAY present to the member the non-authored ordinal position of each section
+> whose identity is already legitimately present in the disclosure opportunity.**
+>
+> That presentation: does not grant authority · does not consume authority · does not read
+> Work body · does not expose authored headings or titles · does not widen the requested
+> section set · does not expose topology outside that set.
+
+⭐⭐ **This is the act the prior ruling did NOT perform.** `WS-DISCLOSURE-PAUSE-PROTOCOL-01`
+established that `"Section N"` is lawfully *derivable*; it did not thereby authorize
+sending it to the member. **Destination is part of the act** — orientation carried to the
+model and orientation carried to the member are different disclosures, and only the second
+is ruled here.
+
+### Minimum sufficient orientation
+
+⛔ The whole `sectionTopology` is REFUSED as transport: it would expose identities for
+sections **outside the requested disclosure scope**, merely so the browser could perform a
+calculation the server already performs. *Convenience is not a disclosure basis.*
+
+### Semantic payload — shape frozen, field name NOT frozen
+
+```text
+for each required section:
+
+  { sectionRef : <existing section identity>,
+    ordinal    : <1-based position in frozen sectionTopology> }
+```
+
+### T1–T7 · transport invariants
+
+```text
+T1  ordinal is derived SERVER-SIDE from the SAME frozen reading governing
+    the paused Ask.
+T2  ordinal is derived ONLY for ids already in bodyReq.sections.
+T3  no full topology crosses to the client.
+T4  no authored title, heading, kind, structureContext field, or
+    labelsFor() dependency participates.
+T5  failure to locate a required section in frozen topology is a server
+    inconsistency/REFUSAL — never ordinal 0, "unknown", array position,
+    UUID ordering, or best effort.
+T6  BODY_AUTHORITY_REQUIRED and BODY_SCOPE_INCOMPLETE use the SAME
+    derivation wherever they identify required scope.
+T7  the section identity remains the PROTOCOL identity; ordinal is
+    PRESENTATION METADATA, never authority identity.
+```
+
+⭐⭐ **T5 is D-2 restated at the transport boundary.** D-2 said a client that numbers the
+array manufactures plausible falsehoods; **T5 says the server may not do the same thing by
+a different route.** ⛔ `indexOf === -1` is a refusal, not a rendering problem — *a system
+that cannot locate a section it is asking permission to read does not yet know what it is
+asking for.*
+
+⭐ **T7 keeps the census's three objects apart under load.** Identity travels as authority;
+ordinal travels as presentation. ⛔ An ordinal must never be accepted back as a section
+reference — the continuation carries `authorizes[]` of IDENTITIES, never positions.
+
+### ⚠️ One consequence this design must state explicitly
+
+**Ordinals are WHOLE-WORK positions, never renumbered within the requested set.** A
+non-contiguous scope therefore reads:
+
+```text
+"Sections 2, 5 and 9 of your draft"     ✅ whole-Work positions
+"Sections 1, 2 and 3"                   ⛔ subset renumbering — a different, false claim
+```
+
+⛔ Renumbering would tell the author their book has a shape it does not have. ⭐ §2.1's
+copy assumed contiguity by example; **the rule is positional fidelity, and the example was
+never the rule.**
+
+### Standing of the surface lane after this ruling
+
+```text
+WS-DISCLOSURE-CONTINUATION-SURFACE-01     OPEN · BLOCKED AT D-1
+```
+
+⛔ **Not closed, not resumed.** The design is valid through the collision, 11/12 is the
+correct result, and **S4 stays legitimately unearned until the transport exists and is
+witnessed.** ⛔ This record is NOT rewritten as though the field already existed — a design
+that discovered a boundary must not be edited to look like one that never met it.
+
+---
+
 ## 8 · Standing
 
 ```text
@@ -343,12 +444,15 @@ draft custody for all seven              ✅ · locked while an opportunity is o
 acceptance matrix                         11 / 12 · S4 BLOCKED
 Fork C witness                            PREDECLARED · UNRUNNABLE pending D-1
 
-D-1 orientation transport                 ⛔ STOPPED — founder ruling required
-D-2 lexicographic sections[]              ⚠️ RECORDED — do not number the array
+D-1 orientation transport                 ✅ RULED §7a · derived ordinal only
+D-2 lexicographic sections[]              ⚠️ RECORDED · restated as T5 at the server
+S4                                        ⛔ STILL BLOCKED until transport is witnessed
+lane standing                             OPEN · BLOCKED AT D-1
 
 S3 authority law                          UNTOUCHED
 heading question                          STILL PARKED
 implementation                            ⛔ NOT OPEN
 ```
 
-⛔ Nothing is authorized by this record. The next act is a founder ruling on **D-1**.
+⛔ Nothing is implemented by this record. D-1 is ruled (§7a); the next act is a **separate
+founder act** opening a bounded transport lane. ⛔ No transport code is authored here.
