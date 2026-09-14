@@ -1,0 +1,22 @@
+# reinstall 20260914T011754Z
+## custody gate: expected 64EEC026-5F56-3706-BD2A-C5A6A20FC08B — product reads 64EEC026-5F56-3706-BD2A-C5A6A20FC08B — MATCH
+## custody gate: dylib SHA-256 expected 283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f — product reads 283dd24e9834875bac64537f1c414308666f0ca02b0ea3081fbd36b90f8d950f — MATCH
+## custody gate: manifest /private/tmp/voice-repro-a0d8/docs/programme/VOICE-2026/driver-ledger/phase-a-repro-01/manifest-20260913T173346Z.sha256 (7 files) — every file hashes identically, file set identical — MATCH
+## dylib uuid (local product, BEFORE install)
+UUID: 64EEC026-5F56-3706-BD2A-C5A6A20FC08B (arm64) /private/tmp/phase-a-repro-01/.derived-phase-a-repro-01/Build/Products/Debug-iphoneos/VoiceKernelHarness.app/VoiceKernelHarness.debug.dylib
+## codesign
+Identifier=life.soullab.voicekernel.k00
+TeamIdentifier=ZVK2X646Z2
+## install
+21:17:54  Acquired tunnel connection to device.
+21:17:54  Enabling developer disk image services.
+21:17:55  Acquired usage assertion.
+App installed:
+? bundleID: life.soullab.voicekernel.k00
+? installationURL: file:///private/var/containers/Bundle/Application/0B07D423-97E7-4196-BC1C-C69C96F994BE/VoiceKernelHarness.app/
+? launchServicesIdentifier: unknown
+? databaseUUID: 42158240-DA3F-491F-8B75-F106CD31316A
+? databaseSequenceNumber: 5960
+? options: 
+## post-install processes (harness must be absent)
+(no VoiceKernelHarness process)
