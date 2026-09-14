@@ -124,6 +124,42 @@ CREATE INDEX IF NOT EXISTS idx_mra_unspent
   ON manuscript_revision_authorizations (member_id, id) WHERE accepted_at IS NULL;
 
 -- ══════════════════════════════════════════════════════════════════════════
+-- ⭐⭐ CUTOVER-01B.0 · AT MOST ONE UNSPENT PERMISSION PER NATURAL IDENTITY.
+--
+-- Founder ruling, 2026-09-14:
+--
+--     For one member, one exact proposal version, and one current bound Work
+--     version, there is at most one unspent authorization. Repeating that
+--     authorizing act returns that same durable permission. A later Work
+--     version may earn a new authorization.
+--
+-- ⛔ THIS IS NOT "one authorization per proposal version". That would be wrong:
+-- a Work that has legitimately advanced supports a NEW execution binding, and
+-- forbidding it would make an advanced Work unauthorizable forever.
+--
+--     same version + same Work version + both unspent   -> impossible twice
+--     same version + LATER Work version                 -> lawful
+--     spent historical row + new unspent row            -> lawful
+--
+-- ⭐ WHY THESE FOUR COLUMNS AND NO MORE. The chain is immutable and already
+-- owns work_id, draft_id, target_section_id and expected_text, so adding them
+-- would widen the key without narrowing anything. `base_version` is the one
+-- fact that is NOT the chain's: it is THIS binding's Work version, read at
+-- authorizing time — never the chain's historical `locus.baseVersion`.
+--
+-- ⛔ PARTIAL ON `accepted_at IS NULL`. Spending an authorization must remove it
+-- from the uniqueness set: history accumulates, permissions do not.
+--
+-- ⚠️ This amends a migration that has NEVER EXECUTED ON ANY PROTECTED
+-- DATABASE. It is lawful here for that reason alone, and it authorizes
+-- migration nowhere.
+-- ══════════════════════════════════════════════════════════════════════════
+CREATE UNIQUE INDEX IF NOT EXISTS uq_mra_one_unspent_permission
+  ON manuscript_revision_authorizations
+     (member_id, proposal_chain_id, proposal_version_id, base_version)
+  WHERE accepted_at IS NULL;
+
+-- ══════════════════════════════════════════════════════════════════════════
 -- ⭐⭐ ONE LEGITIMATE LIFECYCLE TRANSITION, AND ONLY ONE.
 --
 -- ⛔ THIS IS NOT A BLANKET APPEND-ONLY TRIGGER, and the difference matters.

@@ -239,7 +239,59 @@ export async function authorizeVersion(
         : 'malformed');
     }
 
-    /* 6 · ⭐⭐ ONE IDENTITY AND ONE TIME, MINTED BEFORE THE ACT.
+    /* ══════════════════════════════════════════════════════════════════════
+       6 · ⭐⭐ THE SAME PERMISSION, RECOVERED — NOT A SECOND ONE MINTED.
+
+       Founder ruling, CUTOVER-01B.0:
+
+           For one member, one exact proposal version, and one current bound
+           Work version, there is at most one unspent authorization. Repeating
+           that authorizing act returns that same durable permission.
+
+       ⛔ WHY IT IS HERE AND NOT EARLIER. Searching by chain + version BEFORE
+       reading the Work would let a stale unspent authorization at v41 defeat a
+       legitimate new one at v42 — the permission would be recovered from a Work
+       state that is no longer the Work. The natural identity is only complete
+       once `guard.baseVersion` exists, so the lookup cannot precede the guard.
+
+       ⛔ AND NO CALLER-SUPPLIED IDEMPOTENCY TOKEN. A browser-minted key would be
+       a second assertion channel into a seam whose whole discipline is that the
+       caller asserts nothing. The permission already HAS a natural identity;
+       we look it up rather than letting anyone name it.
+
+       ⭐ THE SERIALIZER IS THE DRAFT LOCK WE ALREADY HOLD. `readWorkAtTarget`
+       took `FOR UPDATE` on the draft row at step 3 and has not released it, so
+       a concurrent authorizing call is queued behind it and sees this row
+       committed. ⛔ NO LOCK IS TAKEN ON THE AUTHORIZATION ROW: execution locks
+       authorization → draft, and adding the reverse order here would build a
+       lock-order cycle to solve a race the draft lock already settles.
+
+       ⭐ The unique index is the floor, not the mechanism. If it ever rejects a
+       write, that is a defect report, not a control path — a caller must never
+       meet a raw 23505 where a permission was owed.
+       ══════════════════════════════════════════════════════════════════════ */
+    const existing = await tx.query<AuthRow>(
+      `SELECT ${AUTH_COLUMNS} FROM manuscript_revision_authorizations
+        WHERE member_id = $1 AND proposal_chain_id = $2
+          AND proposal_version_id = $3 AND base_version = $4
+          AND accepted_at IS NULL`,
+      /* ⭐ THE WORK VERSION THIS BINDING IS AGAINST. ⛔ Read from the coherent
+         reading that minted the proof — `resolveGuard` sets
+         `binding.baseVersion = reading.version` and nothing else — because the
+         proof deliberately exposes no `.binding`, and reaching for one would be
+         attacking the unforgeability this contract exists to hold.
+         ⛔ And NEVER `chain.locus.baseVersion`: that is the chain's historical
+         base, not this permission's current binding. */
+      [memberId, chain.id, version.id, reading.reading.version]);
+    if (existing.rows.length > 0) {
+      /* ⭐ Through the canonical hydrator, like every other durable read — and
+         returned WHOLE: same id, same authorizedAt. ⛔ `authorize()` is NOT
+         called again: the act already happened, and re-performing it would mint
+         an identity the record does not carry. */
+      return { ok: true as const, authorization: hydrateAuthorizationRow(existing.rows[0]) };
+    }
+
+    /* 7 · ⭐⭐ ONE IDENTITY AND ONE TIME, MINTED BEFORE THE ACT.
            ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut passed a provisional
            all-zero id and `new Date()` into `authorize()`, then inserted
            NEITHER — letting `gen_random_uuid()` and `now()` supply their own.
@@ -269,7 +321,7 @@ export async function authorizeVersion(
     if (!authorized.ok) return no('malformed');
     const g = authorized.authorization.guard;
 
-    /* 7 · ⛔ NO REPLACEMENT WORDING IS PERSISTED. The row names the version; the
+    /* 8 · ⛔ NO REPLACEMENT WORDING IS PERSISTED. The row names the version; the
            wording stays on the version, immutably, where its author put it.
            ⭐ On the SAME client, inside the draft lock. */
     const ins = await tx.query<AuthRow>(

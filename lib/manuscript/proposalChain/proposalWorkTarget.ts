@@ -206,6 +206,13 @@ export type ProposalWorkTargetResult =
  * honest answer when the wording has moved; it is NOT an answer to "is this
  * chain even about this Work?", and letting the first stand in for the second
  * is how the substitution stayed invisible.
+ *
+ * ⚠️ PRECISION, FOUNDER 2026-09-14 — an earlier draft of this comment claimed
+ * the check runs "before the other Work's wording is ever assembled". That is
+ * too strong: `readProposalWork()` has already hydrated the chain's versions by
+ * the time we get here. ⭐ THE PROVED PROPERTY IS NARROWER AND IS THE ONE THAT
+ * MATTERS: no wrong-Work target or wording CROSSES INTO THIS ROOM. Same
+ * authenticated member, nothing projected, nothing returned.
  */
 export async function readProposalWorkTarget(
   memberId: string,
@@ -216,9 +223,11 @@ export async function readProposalWorkTarget(
 ): Promise<ProposalWorkTargetResult> {
   const r = await readProposalWork(memberId, chainId, versionId);
   if (!r.ok) return { ok: false, reason: r.reason };
-  /* ⛔ THE NAMESPACE BINDING, BEFORE ANY TARGET EXISTS. Checked here rather
-     than after projection, so no wording from another Work is ever assembled,
-     let alone returned. */
+  /* ⛔ THE NAMESPACE BINDING, BEFORE ANY TARGET EXISTS. Checked before
+     projection, so no wrong-Work target or wording crosses into the room. The
+     chain's own versions are already hydrated at this point — see the
+     precision note above; the boundary this holds is the room's, not the
+     read's. */
   if (r.work.chain.locus.workId !== expectedWorkId) return { ok: false, reason: 'wrong_work' };
   const focused = r.work.focused;
   /* Unreachable while a version is named — `readProposalWork` refuses first.
