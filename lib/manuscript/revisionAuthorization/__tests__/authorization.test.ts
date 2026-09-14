@@ -6,8 +6,8 @@
  * it is a test that fails when the absence ends.
  */
 import {
-  authorize, guardStillHolds, occurrences, recordExecution, resolveGuard,
-  type ExecutionGuard, type WorkStateReading,
+  authorize, guardStillHolds, hydrateAuthorization, occurrences, recordExecution,
+  resolveGuard, type ResolvedGuardProof, type WorkStateReading,
 } from '../contract';
 import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
 
@@ -42,16 +42,16 @@ const READING: WorkStateReading = {
   textAtTarget: 'He was there, fixated, and the river ran.',
 };
 
-const guardOf = (r = READING): ExecutionGuard => {
+const proofOf = (r = READING): ResolvedGuardProof => {
   const g = resolveGuard(CHAIN, r);
   if (!g.ok) throw new Error(`fixture guard failed: ${g.reason}`);
-  return g.guard;
+  return g.proof;
 };
 
 const authOf = (versionId = 'v2') => {
   const a = authorize({
     id: 'a1', memberId: 'm1', chain: CHAIN, versions: VERSIONS,
-    versionId, guard: guardOf(), authorizedAt: '2026-09-14T11:00:00.000Z',
+    versionId, proof: proofOf(), authorizedAt: '2026-09-14T11:00:00.000Z',
   });
   if (!a.ok) throw new Error(`fixture authorize failed: ${a.reason}`);
   return a.authorization;
@@ -83,7 +83,7 @@ describe('⛔ what an authorization CANNOT carry', () => {
 
 describe('⭐⭐ the guard is resolved from the WORK, never copied from the chain', () => {
   test('the guard carries the READING\'s version, not the chain\'s baseVersion', () => {
-    const g = guardOf();
+    const g = authOf().guard;
     expect(g.baseVersion).toBe(41);
     expect(CHAIN.locus.baseVersion).toBe(40);
   });
@@ -95,14 +95,14 @@ describe('⭐⭐ the guard is resolved from the WORK, never copied from the chai
        current authority. That is exactly the defect the guard exists to make
        impossible, and it had crept into its own falsifier. */
 
-    // @ts-expect-error — a structurally identical literal is NOT an ExecutionGuard
-    const compileTime: ExecutionGuard = { ...CHAIN.locus, operation: 'delete_exact_text' };
+    // @ts-expect-error — a structurally identical literal is NOT a ResolvedGuardProof
+    const compileTime: ResolvedGuardProof = { ...CHAIN.locus, operation: 'delete_exact_text' };
     expect(compileTime).toBeDefined();
 
     const forged = { ...CHAIN.locus, operation: 'delete_exact_text' as const };
     const a = authorize({
       id: 'a2', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
-      guard: forged as unknown as ExecutionGuard,
+      proof: forged as unknown as ResolvedGuardProof,
       authorizedAt: '2026-09-14T11:00:00.000Z',
     });
     expect(a).toEqual({ ok: false, reason: 'malformed' });
@@ -141,7 +141,7 @@ describe('⭐ an authorization names ONE EXACT VERSION', () => {
     const foreign: ProposalVersion = { ...v('vx', 'maia', null, 'x'), chainId: 'other' };
     const r = authorize({
       id: 'a3', memberId: 'm1', chain: CHAIN, versions: [...VERSIONS, foreign],
-      versionId: 'vx', guard: guardOf(), authorizedAt: '2026-09-14T11:00:00.000Z',
+      versionId: 'vx', proof: proofOf(), authorizedAt: '2026-09-14T11:00:00.000Z',
     });
     expect(r).toEqual({ ok: false, reason: 'version_foreign_to_chain' });
   });
@@ -149,11 +149,11 @@ describe('⭐ an authorization names ONE EXACT VERSION', () => {
   test('an unknown version refuses, and another member\'s chain is chain_unknown', () => {
     expect(authorize({
       id: 'a4', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'nope',
-      guard: guardOf(), authorizedAt: 'x',
+      proof: proofOf(), authorizedAt: 'x',
     })).toEqual({ ok: false, reason: 'version_unknown' });
     expect(authorize({
       id: 'a5', memberId: 'OTHER', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
-      guard: guardOf(), authorizedAt: 'x',
+      proof: proofOf(), authorizedAt: 'x',
     })).toEqual({ ok: false, reason: 'chain_unknown' });
   });
 });
@@ -179,7 +179,7 @@ describe('⭐ the execution receipt', () => {
 
 describe('⭐⭐ RULING 6 · discussable and executable are independent', () => {
   test('the guard lapses when the Work moves', () => {
-    const g = guardOf();
+    const g = authOf().guard;
     expect(guardStillHolds(g, READING)).toBe(true);
     expect(guardStillHolds(g, { ...READING, version: 42 })).toBe(false);
     expect(guardStillHolds(g, { ...READING, textAtTarget: 'nothing here' })).toBe(false);
@@ -195,5 +195,50 @@ describe('occurrences', () => {
   test('counts without overlap and refuses the empty needle', () => {
     expect(occurrences('aaaa', 'aa')).toBe(2);
     expect(occurrences('abc', '')).toBe(0);
+  });
+});
+
+describe('⭐⭐ the proof is ephemeral; the binding is durable', () => {
+  test('the durable authorization round-trips through plain data intact', () => {
+    const original = authOf('v3');
+    /* ⭐ THE ACTUAL ROUND TRIP — a database gives back plain data, nothing more. */
+    const asStored = JSON.parse(JSON.stringify(original));
+    const rehydrated = hydrateAuthorization(asStored);
+    expect(rehydrated).toEqual(original);
+    /* ⛔ And no second reading of the Work was required to get here. */
+    expect(rehydrated!.guard.baseVersion).toBe(41);
+    expect(rehydrated!.guard.expectedText).toBe(', fixated');
+  });
+
+  test('⛔ the proof itself does not survive serialization, by design', () => {
+    const p = proofOf();
+    /* A proof with a toJSON could be reconstituted from a literal, and a proof
+       that can be reconstituted from a literal is not a proof. */
+    expect((p as unknown as { toJSON?: unknown }).toJSON).toBeUndefined();
+    expect(JSON.parse(JSON.stringify(p)) instanceof Object).toBe(true);
+    expect(authorize({
+      id: 'aX', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
+      proof: JSON.parse(JSON.stringify(p)) as ResolvedGuardProof, authorizedAt: 't',
+    })).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  test('⛔⛔ the hydrator cannot manufacture a proof — a stored row cannot authorize', () => {
+    const stored = JSON.parse(JSON.stringify(authOf()));
+    const rehydrated = hydrateAuthorization(stored)!;
+    /* The binding is back. There is no route from it to a new authorizing act. */
+    expect(authorize({
+      id: 'aY', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v4',
+      proof: rehydrated.guard as unknown as ResolvedGuardProof, authorizedAt: 't',
+    })).toEqual({ ok: false, reason: 'malformed' });
+
+    const surface = Object.keys(require('../contract'));
+    expect(surface.filter((k) => /proof/i.test(k) && k !== 'resolveGuard')).toEqual([]);
+  });
+
+  test('a malformed or half-accepted row hydrates as null, never as a partial fact', () => {
+    const ok = JSON.parse(JSON.stringify(authOf()));
+    expect(hydrateAuthorization({ ...ok, guard: { ...ok.guard, baseVersion: 'x' } })).toBeNull();
+    expect(hydrateAuthorization({ ...ok, acceptedAt: 't', resultingVersion: null })).toBeNull();
+    expect(hydrateAuthorization({ ...ok, guard: undefined })).toBeNull();
   });
 });

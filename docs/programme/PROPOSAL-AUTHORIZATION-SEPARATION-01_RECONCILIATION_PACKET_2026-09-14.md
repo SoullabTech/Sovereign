@@ -113,9 +113,9 @@ would rewrite the thing we are reading.
 
 | object | what it is | proposed identity | status |
 |---|---|---|---|
-| **candidate / MAIA offer** | born from a MAIA turn · producer + turn index · input fingerprint · candidate derivation · frozen authored output · **declinable** | `manuscript_revision_candidates` | ⛔ needs its own naming act |
+| **MAIA revision offer** | born from a MAIA turn · producer + turn index · input fingerprint · frozen authored output · **declinable** | `manuscript_revision_offers` | ⭐ **RATIFIED · addendum 1** |
 | **collaborative proposal** | `MAIA v1 → Kelly v2 → MAIA v3 …` | `proposal_chains` · `proposal_versions` | ⭐ **BUILT · Step 1 · unchanged** |
-| **authorization** | one member act permitting one exact version | `revision_authorizations` | ⛔ needs the naming act + schema |
+| **authorization** | one member act permitting one exact version | `manuscript_revision_authorizations` | ⭐ **RATIFIED · addendum 1** |
 
 ⭐⭐ **`manuscript_revision_proposals` is retired as a canonical name for
 either.** It has carried two incompatible ontologies inside one executable
@@ -124,9 +124,14 @@ discarded ontology from the name.
 
 ⚠️ **The September-10 object is NOT the collaborative proposal we built.** Its
 creation semantics say what it is: *born from a MAIA turn, with producer
-provenance and an input fingerprint, frozen, and declinable.* **That is a
-candidate.** ⭐ This is what dissolves the apparent two-competing-implementations
-problem — there were never two proposals, there were a candidate and a proposal.
+provenance and an input fingerprint, frozen, and declinable.* **That is an
+OFFER.** ⭐ This is what dissolves the apparent two-competing-implementations
+problem — there were never two proposals, there were an offer and a proposal.
+
+⚠️ **This packet first called it a "candidate" and was corrected** — see
+addendum 1. `revision_candidate` already denotes the MEMBER's unfinished
+candidate, and reusing the word would have created the next category collision
+immediately.
 
 ## B5 · The repair, as options — ⛔ NOT CHOSEN HERE
 
@@ -153,9 +158,7 @@ OPTION 3 · SUPERSET TABLE
   and the meaning does not.
 ```
 
-⛔ **Option 3 is excluded. Options 1 and 2 are for the founder.** ⭐ Option 2
-sits better with the evidence-preservation ruling already made for
-`maia_focus_witness`, but that is an argument, not a decision.
+⭐⭐ **OPTION 2 SELECTED — founder ruling, 2026-09-14. See addendum 1.**
 
 ## B6 · ⭐⭐ THE ACCEPTANCE TEST — deliberately severe
 
@@ -207,4 +210,131 @@ production                        UNTOUCHED
 maia_focus_witness                ⛔ FROZEN AS EVIDENCE
 
 DIRECTION-HOME                    OPEN — blocks Step 4, not Step 2
+```
+
+---
+
+# Addendum 1 — the naming act, Option 2, and the dependency census
+
+**Founder rulings, 2026-09-14.**
+
+## ⭐ 1 · The naming act — RATIFIED
+
+```
+MAIA REVISION OFFER
+  semantic type     RevisionOffer
+  table             manuscript_revision_offers
+
+COLLABORATIVE PROPOSAL
+  semantic types    ProposalChain · ProposalVersion
+  tables            proposal_chains · proposal_versions      ⭐ UNCHANGED
+
+MEMBER AUTHORIZATION
+  semantic type     RevisionAuthorization
+  table             manuscript_revision_authorizations
+```
+
+⛔ **`manuscript_revision_proposals` is retired as canonical vocabulary
+entirely** — for either object, not awarded to a winner.
+
+⚠️ **CORRECTION TO THIS PACKET: "candidate" was the wrong word, and the packet
+used it.** A distinct `revision_candidate` ontology already exists in this
+programme — **the member's** unfinished candidate, with stable identity and
+append-only member-authored revisions, from which the September-10 object can
+itself be derived. ⛔ Giving both things candidate vocabulary would have created
+the next category collision immediately, inside the very act meant to end one.
+
+⭐ **`offer` earns the name from the lifecycle**: produced by an exact MAIA turn ·
+carries MAIA-authored proposed text · records what she read · records why she
+offered it · frozen after creation · **the member may decline it** · confers no
+authority over the Work. *That is an offer into the relationship* — neither the
+writer's candidate nor, once succession begins, the collaborative proposal.
+
+## ⭐ 2 · Option 2 SELECTED — retire + replace
+
+⛔ **Not amended in place.** Option 1 could repair bootstrap, but it leaves the
+same filename meaning different things across repository history — obscuring
+precisely the evidence this census spent itself recovering.
+
+```
+RETIRED · NON-EXECUTABLE · PRESERVED AS EVIDENCE
+  20260910000004_manuscript_revision_proposals.sql
+  20260913000002_manuscript_revision_proposals.sql
+  20260913000003_revision_proposal_execution_authority.sql
+
+ACTIVE
+  RevisionOffer schema                      new
+  20260914000001_proposal_succession.sql    ⭐ NOT RETIRED · unchanged
+  RevisionAuthorization schema              new
+```
+
+**The retirement record must state, plainly:**
+
+> *Retired before first protected execution because the active migration
+> sequence contains two incompatible ontologies under one table name and cannot
+> bootstrap to completion. Their schema effect exists historically in the frozen
+> local `maia_focus_witness`, outside its migration ledger; that witness is not
+> reconciled.*
+
+⛔ **The exact historical SQL stays recoverable, under a clearly non-executable
+evidence location — not anywhere a migration runner could plausibly discover
+later — and the retirement record carries the hash of each retired file.**
+
+## ⭐⭐ 3 · The retirement dependency census — READ-ONLY, and it sorts cleanly
+
+**⛔ No later migration would be stranded.** Only four migrations mention the
+table, three are the retiring set, and the fourth —
+`20260914000001_proposal_succession.sql` — mentions it **once, in a comment**
+(line 44, explaining why the locus carries no foreign keys). ⭐ **Nothing
+executable downstream depends on it.**
+
+**Every code dependent addresses exactly ONE ontology. None addresses both** —
+so each moves wholesale, and no file needs splitting:
+
+| dependent | markers | ontology |
+|---|---|---|
+| `scripts/witness/rc-r1/01-proposal-schema-falsifiers.sql` | offer 16 · authz 0 | **OFFER** |
+| `scripts/witness/rc-gen-01/persistence.ts` | offer 17 · authz 0 | **OFFER** |
+| `scripts/witness/rc-gen-01/idempotency.ts` | offer 3 · authz 0 | **OFFER** |
+| `lib/manuscript/revision/persist.ts` | offer 14 · authz 0 | **OFFER** |
+| `lib/manuscript/revision/recovery.ts` | offer 6 · authz 0 | **OFFER** |
+| `lib/manuscript/revisionProposal/store.ts` | offer 0 · authz 14 | **AUTHORIZATION** |
+| `scripts/witness/ew-f2-stage-proposal.ts` | offer 0 · authz 3 | **AUTHORIZATION** |
+| `scripts/witness/editorial-write-01-propose-o26.ts` | offer 0 · authz 2 | **AUTHORIZATION** |
+| `lib/manuscript/proposalChain/contract.ts` | 0 · 0 | comment only |
+
+**Filename dependencies** — only three places name the retiring files:
+
+```
+scripts/witness/proposal-authorization-migration-state.sql   all three (this census)
+lib/manuscript/revisionProposal/__tests__/revisionProposal.test.ts        …13000002
+lib/manuscript/revisionProposal/__tests__/executionAuthority.test.ts      …13000003
+```
+
+⚠️ **Two of those are tests asserting properties of the retiring migrations.**
+They are not collateral damage to delete quietly — they encode EW-F1a's
+obligations, and the schema lane must say where each obligation lands in the new
+objects or that it is deliberately dropped.
+
+⛔ **And this census's own instrument names all three filenames.** It is the
+record of the defect and should keep naming them; a state census that stopped
+mentioning the retired files would lose the ability to detect an environment
+that had applied them.
+
+---
+
+# ⛔ Standing after addendum 1
+
+```
+naming act              ⭐ RATIFIED
+option                  ⭐ 2 · retire + replace
+proof / binding         ⭐ REPAIRED — 21 falsifiers · 0 failed
+dependency census       ⭐ COMPLETE — no later migration stranded
+
+migration file move     ⛔ HOLD
+new SQL                 ⛔ HOLD
+schema mutation         ⛔ HOLD
+route · UI              ⛔ HOLD
+production              UNTOUCHED
+maia_focus_witness      FROZEN
 ```

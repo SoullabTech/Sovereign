@@ -52,7 +52,7 @@ import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalCh
 export type AuthorizationOperation = 'delete_exact_text';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   ⭐⭐ THE EXECUTION GUARD — UNFORGEABLE ON PURPOSE.
+   ⭐⭐ TWO OBJECTS, NOT ONE: THE PROOF AND THE FACT IT ESTABLISHED.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /**
@@ -60,45 +60,65 @@ export type AuthorizationOperation = 'delete_exact_text';
  *
  *     ProposalChain.locus   historical / conversational address —
  *                           "what place was this proposal about?"
- *     ExecutionGuard        execution-effective authority —
+ *     the execution binding execution-effective authority —
  *                           "what exact Work state may this member act change?"
  *
  * ⚠️ THEY MAY CONTAIN IDENTICAL VALUES WHEN THE WORK HAS NOT MOVED, AND THAT IS
- * EXACTLY THE DANGER. Equal values are not one fact, and a guard assembled by
+ * EXACTLY THE DANGER. Equal values are not one fact, and a binding assembled by
  * copying a chain's locus is stale authority wearing current clothes.
  *
- * ⭐ So a guard is NOT an interface an object literal can satisfy. It is a class
- * with a private member and no exported constructor: the only way to obtain one
- * is `resolveGuard()`, which requires the Work state to be READ AT THE TIME OF
- * THE AUTHORIZING ACT. A `LocusIdentity` therefore cannot be passed where a
- * guard is required — not "must not", CANNOT.
+ * ── ⭐⭐ AND THAT IS WHY THIS IS TWO TYPES, NOT ONE ────────────────────────
  *
- * ⚠️ Same device as `BoundEvidence` (`lib/manuscript/development/bind.ts`), and
- * for the same reason: a proof that can be reconstituted from a literal is not
- * a proof.
+ * ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut stored the BRANDED CLASS inside
+ * `RevisionAuthorization`, which made a durable authorization impossible to
+ * hydrate truthfully. After a round trip through PostgreSQL you hold plain
+ * data, the private class identity is gone, and every remaining option is bad:
+ *
+ *     fabricate a proof                       ⛔ forge it
+ *     re-resolve against the CURRENT Work     ⛔ rewrite historical authority
+ *     cast the plain row back to the proof    ⛔ defeat the guarantee
+ *
+ * ⭐ So the proof and the durable fact separate:
+ *
+ *     ResolvedGuardProof   ephemeral · branded · obtainable ONLY by reading
+ *                          the Work at the authorizing act
+ *              │
+ *              ▼
+ *     ExecutionBinding     durable · plain data · survives serialization
+ *
+ * **Unforgeability belongs to CREATION. Durability belongs to the RESULTING
+ * FACT.** The proof establishes that the authorizing act really read the Work;
+ * the binding records what that act established. ⛔ A hydrator can reconstruct
+ * the second and must never be able to manufacture the first.
  */
-class Guard {
-  private readonly resolved = true as const;
-  constructor(
-    readonly workId: string,
-    readonly draftId: string,
-    /** ⭐ The version of the Work READ FOR THIS ACT. ⛔ Never the chain's. */
-    readonly baseVersion: number,
-    readonly targetSectionId: string,
-    /** ⭐⭐ The exact characters this permission may replace, read now. */
-    readonly expectedText: string,
-    readonly operation: AuthorizationOperation,
-  ) {}
-  toJSON() {
-    return {
-      workId: this.workId, draftId: this.draftId, baseVersion: this.baseVersion,
-      targetSectionId: this.targetSectionId, expectedText: this.expectedText,
-      operation: this.operation,
-    };
-  }
+
+/** ⭐ The durable fact. Plain data, by design — it has to survive a database. */
+export interface ExecutionBinding {
+  readonly workId: string;
+  readonly draftId: string;
+  /** ⭐ The version of the Work READ FOR THIS ACT. ⛔ Never the chain's. */
+  readonly baseVersion: number;
+  readonly targetSectionId: string;
+  /** ⭐⭐ The exact characters this permission may replace, as read then. */
+  readonly expectedText: string;
+  readonly operation: AuthorizationOperation;
 }
 
-export type ExecutionGuard = Guard;
+/**
+ * ⭐ The ephemeral proof. A class with a private member and no exported
+ * constructor — the `BoundEvidence` device (`lib/manuscript/development/
+ * bind.ts`) — so the only way to hold one is `resolveGuard()`.
+ *
+ * ⛔ IT IS NEVER PERSISTED AND HAS NO `toJSON`. What gets stored is its
+ * `binding`; a proof that could be serialized and read back would be a proof
+ * that can be reconstituted from a literal, which is not a proof.
+ */
+class Proof {
+  private readonly resolvedFromTheWork = true as const;
+  constructor(readonly binding: ExecutionBinding) {}
+}
+
+export type ResolvedGuardProof = Proof;
 
 /** What the authorizing act read from the Work. ⛔ Not from the proposal. */
 export interface WorkStateReading {
@@ -122,7 +142,7 @@ export type GuardRefusal =
   | 'malformed';
 
 export type GuardResult =
-  | { readonly ok: true; readonly guard: ExecutionGuard }
+  | { readonly ok: true; readonly proof: ResolvedGuardProof }
   | { readonly ok: false; readonly reason: GuardRefusal };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -145,8 +165,13 @@ export interface RevisionAuthorization {
   readonly proposalChainId: string;
   readonly proposalVersionId: string;
 
-  /** ⭐ The execution-effective binding, obtainable only from `resolveGuard`. */
-  readonly guard: ExecutionGuard;
+  /**
+   * ⭐ The execution-effective binding — DURABLE PLAIN DATA.
+   * ⛔ Obtainable only by presenting a `ResolvedGuardProof` to `authorize()`,
+   * so the fact cannot exist without the reading that established it — but the
+   * fact itself survives a database, which the proof deliberately does not.
+   */
+  readonly guard: ExecutionBinding;
 
   readonly authorizedAt: string;
 
@@ -217,11 +242,14 @@ export function resolveGuard(
   if (n > 1) return { ok: false, reason: 'expected_text_ambiguous' };
   return {
     ok: true,
-    guard: new Guard(
-      reading.workId, reading.draftId,
+    proof: new Proof({
+      workId: reading.workId, draftId: reading.draftId,
       /* ⭐ THE READING'S VERSION. ⛔ NOT `chain.locus.baseVersion`. */
-      reading.version,
-      reading.sectionId, chain.locus.expectedText, 'delete_exact_text'),
+      baseVersion: reading.version,
+      targetSectionId: reading.sectionId,
+      expectedText: chain.locus.expectedText,
+      operation: 'delete_exact_text',
+    }),
   };
 }
 
@@ -238,19 +266,21 @@ export function authorize(
     readonly chain: ProposalChain;
     readonly versions: readonly ProposalVersion[];
     readonly versionId: string;
-    readonly guard: ExecutionGuard;
+    /** ⛔ The PROOF, not a binding. A caller holding only plain data cannot act. */
+    readonly proof: ResolvedGuardProof;
     readonly authorizedAt: string;
   },
 ): AuthorizeResult {
-  const { chain, versions, versionId, guard } = input;
+  const { chain, versions, versionId, proof } = input;
 
   /* ⛔⛔ THE FORGERY CHECK, AT RUNTIME TOO.
      The class's private member makes a literal unassignable at COMPILE time —
-     but a `as unknown as ExecutionGuard` cast erases to nothing, and the first
-     draft of this function accepted one. ⚠️ A comment claiming "not must not,
-     CANNOT" while the runtime said otherwise is the gap this programme keeps
-     finding: `instanceof` is what makes the sentence true in both places. */
-  if (!(guard instanceof Guard)) return { ok: false, reason: 'malformed' };
+     but a `as unknown as ResolvedGuardProof` cast erases to nothing, and the
+     first draft of this function accepted one. ⚠️ A comment claiming "not must
+     not, CANNOT" while the runtime said otherwise is the gap this programme
+     keeps finding: `instanceof` is what makes the sentence true in both. */
+  if (!(proof instanceof Proof)) return { ok: false, reason: 'malformed' };
+  const guard = proof.binding;
 
   if (chain.memberId !== input.memberId) return { ok: false, reason: 'chain_unknown' };
 
@@ -284,7 +314,7 @@ export function authorize(
  * questions and nothing in this module answers the first.
  */
 export function guardStillHolds(
-  guard: ExecutionGuard, reading: WorkStateReading,
+  guard: ExecutionBinding, reading: WorkStateReading,
 ): boolean {
   return reading.workId === guard.workId
     && reading.draftId === guard.draftId
@@ -321,4 +351,69 @@ export interface ProposalWorkability {
   readonly discussable: boolean;
   /** Could an authorization execute against the Work right now? */
   readonly executable: boolean;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ⭐⭐ THE DURABLE HYDRATOR — AND WHAT IT DELIBERATELY CANNOT DO.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** The authorization exactly as a row carries it. ⛔ Plain data throughout. */
+export interface StoredAuthorization {
+  readonly id: string;
+  readonly memberId: string;
+  readonly proposalChainId: string;
+  readonly proposalVersionId: string;
+  readonly guard: ExecutionBinding;
+  readonly authorizedAt: string;
+  readonly acceptedAt: string | null;
+  readonly resultingVersion: number | null;
+}
+
+const isBinding = (b: unknown): b is ExecutionBinding => {
+  if (typeof b !== 'object' || b === null) return false;
+  const x = b as Record<string, unknown>;
+  return typeof x.workId === 'string' && typeof x.draftId === 'string'
+    && Number.isInteger(x.baseVersion) && typeof x.targetSectionId === 'string'
+    && typeof x.expectedText === 'string' && x.operation === 'delete_exact_text';
+};
+
+/**
+ * ⭐ REBUILD A DURABLE AUTHORIZATION FROM PLAIN DATA — and nothing more.
+ *
+ * ⛔⛔ THIS FUNCTION CANNOT MANUFACTURE A `ResolvedGuardProof`, AND THAT IS THE
+ * WHOLE POINT. It returns the authorization with its `ExecutionBinding` — the
+ * fact the original act established — and no way to perform a NEW authorizing
+ * act. A hydrator that could mint a proof would let a row read out of a
+ * database stand in for having read the Work.
+ *
+ * ⛔ And it does NOT re-resolve against the current Work. `guardStillHolds()`
+ * answers whether the binding is still executable; ⭐ that is a different
+ * question from what the member authorized, and conflating them would let a
+ * later Work state silently rewrite historical authority.
+ */
+export function hydrateAuthorization(
+  row: unknown,
+): RevisionAuthorization | null {
+  if (typeof row !== 'object' || row === null) return null;
+  const r = row as Record<string, unknown>;
+  if (typeof r.id !== 'string' || typeof r.memberId !== 'string') return null;
+  if (typeof r.proposalChainId !== 'string' || typeof r.proposalVersionId !== 'string') return null;
+  if (typeof r.authorizedAt !== 'string') return null;
+  if (!isBinding(r.guard)) return null;
+
+  const acceptedAt = r.acceptedAt ?? null;
+  const resultingVersion = r.resultingVersion ?? null;
+  if (acceptedAt !== null && typeof acceptedAt !== 'string') return null;
+  if (resultingVersion !== null && !Number.isInteger(resultingVersion)) return null;
+  /* ⛔ The receipt is whole or absent — the `mrp_acceptance_whole` law, in the
+     contract rather than only in a CHECK a different lane owns. */
+  if ((acceptedAt === null) !== (resultingVersion === null)) return null;
+
+  return {
+    id: r.id, memberId: r.memberId,
+    proposalChainId: r.proposalChainId, proposalVersionId: r.proposalVersionId,
+    guard: r.guard, authorizedAt: r.authorizedAt,
+    acceptedAt: acceptedAt as string | null,
+    resultingVersion: resultingVersion as number | null,
+  };
 }
