@@ -7,7 +7,8 @@
  */
 import {
   authorize, guardStillHolds, hydrateAuthorization, occurrences, recordExecution,
-  resolveGuard, type ResolvedGuardProof, type WorkStateReading,
+  resolveGuard, type ResolvedGuardProof, type RevisionAuthorization,
+  type WorkStateReading,
 } from '../contract';
 import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
 
@@ -96,10 +97,10 @@ describe('⭐⭐ the guard is resolved from the WORK, never copied from the chai
        impossible, and it had crept into its own falsifier. */
 
     // @ts-expect-error — a structurally identical literal is NOT a ResolvedGuardProof
-    const compileTime: ResolvedGuardProof = { ...CHAIN.locus, operation: 'delete_exact_text' };
+    const compileTime: ResolvedGuardProof = { ...CHAIN.locus, operation: 'replace_exact_text' };
     expect(compileTime).toBeDefined();
 
-    const forged = { ...CHAIN.locus, operation: 'delete_exact_text' as const };
+    const forged = { ...CHAIN.locus, operation: 'replace_exact_text' as const };
     const a = authorize({
       id: 'a2', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
       proof: forged as unknown as ResolvedGuardProof,
@@ -240,5 +241,118 @@ describe('⭐⭐ the proof is ephemeral; the binding is durable', () => {
     expect(hydrateAuthorization({ ...ok, guard: { ...ok.guard, baseVersion: 'x' } })).toBeNull();
     expect(hydrateAuthorization({ ...ok, acceptedAt: 't', resultingVersion: null })).toBeNull();
     expect(hydrateAuthorization({ ...ok, guard: undefined })).toBeNull();
+  });
+});
+
+describe('⛔⛔ the proof cannot be forged OR tampered with — the runtime claim', () => {
+  /* ⚠️ FOUNDER REVIEW: the first implementation held the binding ON the proof
+     as a `readonly` field and checked `instanceof`. All three attacks below
+     SUCCEEDED against it, while the file's comment claimed they could not.
+     Issuance is now a module-private WeakMap. */
+
+  test('P1 · mutating a legitimate proof after resolve cannot alter its binding', () => {
+    const proof = proofOf();
+    /* ⭐ The attack either THROWS (frozen) or silently does nothing. Both are
+       passes; what must never happen is that it takes effect. The first draft
+       of this test assumed silence and failed on the throw — the implementation
+       was stronger than its own falsifier. */
+    const attack = (f: () => void) => { try { f(); } catch { /* frozen */ } };
+    attack(() => {
+      (proof as unknown as Record<string, unknown>).binding =
+        { ...READING, baseVersion: 999, expectedText: 'something else' };
+    });
+    attack(() => Object.assign(proof as object, { baseVersion: 999 }));
+
+    const a = authorize({
+      id: 'p1', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
+      proof, authorizedAt: 't',
+    });
+    expect(a.ok).toBe(true);
+    if (!a.ok) return;
+    expect(a.authorization.guard.baseVersion).toBe(41);
+    expect(a.authorization.guard.expectedText).toBe(', fixated');
+  });
+
+  test('P2 · Object.create(getPrototypeOf(realProof)) cannot authorize', () => {
+    const real = proofOf();
+    const forged = Object.create(Object.getPrototypeOf(real));
+    forged.binding = {
+      workId: 'w1', draftId: 'd1', baseVersion: 999, targetSectionId: 's1',
+      expectedText: 'whatever I like', operation: 'replace_exact_text',
+    };
+    /* ⭐ It passes `instanceof` — which is exactly why `instanceof` was the
+       wrong test — and it is still refused, because the mint never saw it. */
+    expect(forged instanceof (real as object).constructor).toBe(true);
+    expect(authorize({
+      id: 'p2', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
+      proof: forged as ResolvedGuardProof, authorizedAt: 't',
+    })).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  test('P3 · attacking the proof AFTER authorization cannot alter authorization.guard', () => {
+    const proof = proofOf();
+    const a = authorize({
+      id: 'p3', memberId: 'm1', chain: CHAIN, versions: VERSIONS, versionId: 'v2',
+      proof, authorizedAt: 't',
+    });
+    if (!a.ok) throw new Error('fixture');
+    const before = { ...a.authorization.guard };
+
+    const attack = (f: () => void) => { try { f(); } catch { /* frozen */ } };
+    attack(() => {
+      (proof as unknown as Record<string, unknown>).binding = { baseVersion: 999 };
+    });
+    attack(() => {
+      (a.authorization.guard as unknown as Record<string, unknown>).baseVersion = 999;
+    });
+
+    expect({ ...a.authorization.guard }).toEqual(before);
+    expect(a.authorization.guard.baseVersion).toBe(41);
+  });
+
+  test('⛔ and the proof exposes no binding to read in the first place', () => {
+    const proof = proofOf();
+    expect((proof as unknown as { binding?: unknown }).binding).toBeUndefined();
+    /* ⭐ Nothing reflective reaches the binding: not own keys, not JSON. */
+    expect(Object.keys(proof as object)).toEqual([]);
+    expect(JSON.stringify(proof)).toBe('{}');
+    expect(Object.isFrozen(proof)).toBe(true);
+  });
+});
+
+describe('⭐ replace_exact_text — the honest primitive', () => {
+  test('the guard names a REPLACEMENT, because the fixtures are replacements', () => {
+    expect(authOf('v2').guard.operation).toBe('replace_exact_text');
+    /* v2 is ", steady" — a replacement, which the old vocabulary called a delete. */
+    expect(VERSIONS.find((x) => x.id === 'v2')!.replacementText).toBe(', steady');
+  });
+
+  test('⭐ a deletion is the ordinary special case, not a second operation', () => {
+    /* v3's replacementText is '' — still replace_exact_text. */
+    expect(authOf('v3').guard.operation).toBe('replace_exact_text');
+    expect(VERSIONS.find((x) => x.id === 'v3')!.replacementText).toBe('');
+  });
+
+  test('⛔ the vocabulary stays closed — no insert/move/merge/split', () => {
+    const src = require('fs').readFileSync(
+      require('path').join(__dirname, '../contract.ts'), 'utf8');
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const banned of ['insert_', 'move_', 'merge_', 'split_', 'reorder_', 'rename_']) {
+      expect(code).not.toContain(banned);
+    }
+  });
+});
+
+describe('⭐⭐ the receipt is whole or absent BY TYPE', () => {
+  test('a half-written receipt does not typecheck', () => {
+    // @ts-expect-error — acceptedAt without resultingVersion is unrepresentable
+    const half: RevisionAuthorization = { ...authOf(), acceptedAt: 't', resultingVersion: null };
+    expect(half).toBeDefined();
+  });
+
+  test('and a half-written row hydrates as null at runtime too', () => {
+    const ok = JSON.parse(JSON.stringify(authOf()));
+    expect(hydrateAuthorization({ ...ok, acceptedAt: 't' })).toBeNull();
+    expect(hydrateAuthorization({ ...ok, resultingVersion: 42 })).toBeNull();
   });
 });

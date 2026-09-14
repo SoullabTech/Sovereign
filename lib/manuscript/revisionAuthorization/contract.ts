@@ -4,8 +4,14 @@
  * ⭐⭐ THE THREE-OBJECT RULING, 2026-09-14:
  *
  *     MAIA OFFER  ──▶  COLLABORATIVE PROPOSAL  ──▶  AUTHORIZATION  ──▶  guarded
- *     (candidate)      (proposal_chains /            (this file)          mutation
+ *     RevisionOffer    (proposal_chains /            (this file)          mutation
  *                       proposal_versions)
+ *
+ * ⚠️ The first draft of this header glossed the offer as "(candidate)". ⛔ WRONG,
+ * and corrected by founder act: `revision_candidate` already denotes the
+ * MEMBER's unfinished candidate, from which an offer may itself be derived.
+ * Reusing the word would have created the next category collision inside the
+ * act meant to end one.
  *
  * Three acts. ⛔ The database must make it impossible to mistake one for
  * another, and this file is the third.
@@ -48,8 +54,25 @@
 
 import type { ProposalChain, ProposalVersion } from '@/lib/manuscript/proposalChain/contract';
 
-/** ⛔ ONE operation, inherited deliberately. The vocabulary is earned. */
-export type AuthorizationOperation = 'delete_exact_text';
+/**
+ * ⛔ ONE operation. The vocabulary is earned from manuscript work, never
+ * invented ahead of it.
+ *
+ * ⚠️ IT WAS `delete_exact_text`, INHERITED FROM EDITORIAL-WRITE-01, AND THE
+ * FIXTURES MADE IT FALSE. This contract authorizes `v2 = ", steady"` and
+ * `v4 = ", still"` — those are not deletions, and the guard was calling them
+ * one. A legacy fact carried into a substrate that had outgrown it.
+ *
+ * ⭐ `replace_exact_text` is the honest primitive, and a deletion is its
+ * ordinary special case rather than a second thing:
+ *
+ *     replace_exact_text(", fixated", ", steady")     a replacement
+ *     replace_exact_text(", fixated", "")             a deletion
+ *
+ * ⛔ Insertion, move, merge, split, reorder and rename remain UNOPENED. A
+ * one-value union is a door somebody opens on purpose.
+ */
+export type AuthorizationOperation = 'replace_exact_text';
 
 /* ══════════════════════════════════════════════════════════════════════════
    ⭐⭐ TWO OBJECTS, NOT ONE: THE PROOF AND THE FACT IT ESTABLISHED.
@@ -105,17 +128,60 @@ export interface ExecutionBinding {
 }
 
 /**
- * ⭐ The ephemeral proof. A class with a private member and no exported
- * constructor — the `BoundEvidence` device (`lib/manuscript/development/
- * bind.ts`) — so the only way to hold one is `resolveGuard()`.
+ * ⭐ The ephemeral proof.
  *
- * ⛔ IT IS NEVER PERSISTED AND HAS NO `toJSON`. What gets stored is its
- * `binding`; a proof that could be serialized and read back would be a proof
- * that can be reconstituted from a literal, which is not a proof.
+ * ⛔⛔ ISSUANCE IS A MODULE-PRIVATE `WeakMap`, NOT PROTOTYPE IDENTITY.
+ *
+ * ⚠️ FOUNDER REVIEW, 2026-09-14. The first cut was a class holding a `readonly
+ * binding`, checked with `instanceof`, under a comment claiming *"the only way
+ * to obtain one is `resolveGuard()`"*. ⛔ THAT SENTENCE WAS FALSE AT RUNTIME,
+ * three ways:
+ *
+ *     1  `readonly` does not exist at runtime. A legitimate proof could be
+ *        edited after resolution:
+ *            (proof as any).binding.baseVersion = 999
+ *
+ *     2  the authorization received THE SAME OBJECT REFERENCE, so a caller
+ *        could authorize correctly and then mutate the proof afterwards,
+ *        changing the authorization it had already created
+ *
+ *     3  `instanceof` is not a mint. Given any real proof:
+ *            Object.create(Object.getPrototypeOf(realProof))
+ *        passes it
+ *
+ * ⭐ So the binding does not live ON the proof. It lives in a `WeakMap` this
+ * module closes over. No external code can add an entry; `Object.create` yields
+ * an object the map has never heard of; a cast yields nothing. And both the
+ * proof and the binding are frozen, so the value the map holds cannot be
+ * edited through any reference a caller retains.
+ *
+ * ⛔ IT IS NEVER PERSISTED, has no `toJSON`, and exposes no `.binding`. A proof
+ * that could be serialized and read back would be reconstitutable from a
+ * literal, which is not a proof.
  */
 class Proof {
-  private readonly resolvedFromTheWork = true as const;
-  constructor(readonly binding: ExecutionBinding) {}
+  /* ⛔ A `#private` field, not `private`. TypeScript's `private` is erased and
+     the property is a real own key at runtime — `Object.keys(proof)` would
+     return `['nominal']`, which is harmless but makes "the proof exposes
+     nothing" false as written. A `#` field is invisible to `Object.keys`,
+     `JSON.stringify` and every reflective read. */
+  readonly #nominal = true;
+  /** ⛔ Exists only so the field is not dead. It reveals nothing. */
+  get isProof(): true { return this.#nominal; }
+}
+
+/** ⛔ Module-private. The ONLY register of legitimate proofs. */
+const proofBindings = new WeakMap<object, Readonly<ExecutionBinding>>();
+
+/** ⛔ Not exported. The only mint. */
+function mintProof(binding: ExecutionBinding): Proof {
+  const proof = new Proof();
+  /* ⛔ Frozen, so nothing can be hung on the proof later and mistaken for its
+     contents. `Object.freeze` returns `Readonly<T>`, which erases the private
+     member from the type — so the freeze is a statement, not the return. */
+  Object.freeze(proof);
+  proofBindings.set(proof, Object.freeze({ ...binding }));
+  return proof;
 }
 
 export type ResolvedGuardProof = Proof;
@@ -157,7 +223,7 @@ export type GuardResult =
  * version — the Step 1 law arriving one layer up: *the system must not infer the
  * author's relation from current state.*
  */
-export interface RevisionAuthorization {
+export interface AuthorizationIdentity {
   readonly id: string;
   readonly memberId: string;
 
@@ -174,14 +240,26 @@ export interface RevisionAuthorization {
   readonly guard: ExecutionBinding;
 
   readonly authorizedAt: string;
-
-  /**
-   * ⭐ THE EXECUTION RECEIPT, written together or not at all.
-   * ⛔ Absent means "not yet executed", never "executed, details pending".
-   */
-  readonly acceptedAt: string | null;
-  readonly resultingVersion: number | null;
 }
+
+/**
+ * ⭐⭐ THE EXECUTION RECEIPT — WHOLE OR ABSENT, BY TYPE.
+ *
+ * ⚠️ The first cut declared `acceptedAt: string | null` and
+ * `resultingVersion: number | null` side by side, which ADMITS
+ * `{ acceptedAt: 't', resultingVersion: null }` at compile time. The hydrator
+ * refused it and a CHECK will refuse it, but ⛔ the PURE CONTRACT admitted the
+ * invalid state — and this contract is what the table is derived from.
+ *
+ * ⭐ A union makes the half-written receipt unrepresentable. Type law, runtime
+ * law, and eventually database law — the same three-place discipline used
+ * everywhere else in this programme.
+ */
+export type ExecutionReceipt =
+  | { readonly acceptedAt: null; readonly resultingVersion: null }
+  | { readonly acceptedAt: string; readonly resultingVersion: number };
+
+export type RevisionAuthorization = AuthorizationIdentity & ExecutionReceipt;
 
 export type AuthorizationRefusal =
   /** The version does not belong to the chain being authorized. */
@@ -242,13 +320,13 @@ export function resolveGuard(
   if (n > 1) return { ok: false, reason: 'expected_text_ambiguous' };
   return {
     ok: true,
-    proof: new Proof({
+    proof: mintProof({
       workId: reading.workId, draftId: reading.draftId,
       /* ⭐ THE READING'S VERSION. ⛔ NOT `chain.locus.baseVersion`. */
       baseVersion: reading.version,
       targetSectionId: reading.sectionId,
       expectedText: chain.locus.expectedText,
-      operation: 'delete_exact_text',
+      operation: 'replace_exact_text',
     }),
   };
 }
@@ -273,14 +351,11 @@ export function authorize(
 ): AuthorizeResult {
   const { chain, versions, versionId, proof } = input;
 
-  /* ⛔⛔ THE FORGERY CHECK, AT RUNTIME TOO.
-     The class's private member makes a literal unassignable at COMPILE time —
-     but a `as unknown as ResolvedGuardProof` cast erases to nothing, and the
-     first draft of this function accepted one. ⚠️ A comment claiming "not must
-     not, CANNOT" while the runtime said otherwise is the gap this programme
-     keeps finding: `instanceof` is what makes the sentence true in both. */
-  if (!(proof instanceof Proof)) return { ok: false, reason: 'malformed' };
-  const guard = proof.binding;
+  /* ⛔⛔ THE MINT IS ASKED, NOT THE PROTOTYPE. A cast, a literal, an
+     `Object.create` of a real proof's prototype and a mutated clone are all
+     objects this map has never heard of. */
+  const minted = proofBindings.get(proof as object);
+  if (!minted) return { ok: false, reason: 'malformed' };
 
   if (chain.memberId !== input.memberId) return { ok: false, reason: 'chain_unknown' };
 
@@ -291,7 +366,8 @@ export function authorize(
   /* ⛔ The guard must be about the same place this chain is about. It may carry
      a DIFFERENT baseVersion — that is the point of resolving it — but not a
      different Work or target. */
-  if (guard.workId !== chain.locus.workId || guard.targetSectionId !== chain.locus.targetSectionId) {
+  if (minted.workId !== chain.locus.workId
+      || minted.targetSectionId !== chain.locus.targetSectionId) {
     return { ok: false, reason: 'malformed' };
   }
 
@@ -300,7 +376,11 @@ export function authorize(
     authorization: {
       id: input.id, memberId: input.memberId,
       proposalChainId: chain.id, proposalVersionId: version.id,
-      guard, authorizedAt: input.authorizedAt,
+      /* ⭐ A FRESH FROZEN VALUE, never a shared reference into the proof's
+         internals. The authorization receives THE FACT, not a window onto the
+         thing that established it. */
+      guard: Object.freeze({ ...minted }),
+      authorizedAt: input.authorizedAt,
       acceptedAt: null, resultingVersion: null,
     },
   };
@@ -358,23 +438,14 @@ export interface ProposalWorkability {
    ══════════════════════════════════════════════════════════════════════════ */
 
 /** The authorization exactly as a row carries it. ⛔ Plain data throughout. */
-export interface StoredAuthorization {
-  readonly id: string;
-  readonly memberId: string;
-  readonly proposalChainId: string;
-  readonly proposalVersionId: string;
-  readonly guard: ExecutionBinding;
-  readonly authorizedAt: string;
-  readonly acceptedAt: string | null;
-  readonly resultingVersion: number | null;
-}
+export type StoredAuthorization = RevisionAuthorization;
 
 const isBinding = (b: unknown): b is ExecutionBinding => {
   if (typeof b !== 'object' || b === null) return false;
   const x = b as Record<string, unknown>;
   return typeof x.workId === 'string' && typeof x.draftId === 'string'
     && Number.isInteger(x.baseVersion) && typeof x.targetSectionId === 'string'
-    && typeof x.expectedText === 'string' && x.operation === 'delete_exact_text';
+    && typeof x.expectedText === 'string' && x.operation === 'replace_exact_text';
 };
 
 /**
@@ -405,15 +476,23 @@ export function hydrateAuthorization(
   const resultingVersion = r.resultingVersion ?? null;
   if (acceptedAt !== null && typeof acceptedAt !== 'string') return null;
   if (resultingVersion !== null && !Number.isInteger(resultingVersion)) return null;
-  /* ⛔ The receipt is whole or absent — the `mrp_acceptance_whole` law, in the
-     contract rather than only in a CHECK a different lane owns. */
-  if ((acceptedAt === null) !== (resultingVersion === null)) return null;
 
-  return {
+  const identity = {
     id: r.id, memberId: r.memberId,
     proposalChainId: r.proposalChainId, proposalVersionId: r.proposalVersionId,
-    guard: r.guard, authorizedAt: r.authorizedAt,
-    acceptedAt: acceptedAt as string | null,
-    resultingVersion: resultingVersion as number | null,
+    guard: Object.freeze({ ...r.guard }), authorizedAt: r.authorizedAt,
   };
+
+  /* ⭐⭐ THE RECEIPT IS REBUILT AS ONE OF THE TWO LAWFUL SHAPES, NEVER AS TWO
+     INDEPENDENT FIELDS. A half-written receipt matches neither branch and the
+     row is refused — the union doing at the boundary exactly what it does in
+     the type. ⛔ `null` here means "not executed", never "executed, details
+     pending". */
+  if (acceptedAt === null && resultingVersion === null) {
+    return { ...identity, acceptedAt: null, resultingVersion: null };
+  }
+  if (typeof acceptedAt === 'string' && typeof resultingVersion === 'number') {
+    return { ...identity, acceptedAt, resultingVersion };
+  }
+  return null;
 }

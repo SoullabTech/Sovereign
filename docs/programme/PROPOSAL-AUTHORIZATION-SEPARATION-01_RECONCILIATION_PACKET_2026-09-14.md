@@ -64,7 +64,7 @@ cannot be any of those.
 ## B1 · What is being repaired, and why "add a migration at the end" cannot
 
 ```
-20260910000004   creates ontology A (candidate)        applies
+20260910000004   creates ontology A (the OFFER)         applies
 20260913000002   IF NOT EXISTS skips · then ERROR      FAILS
                  column "work_id" does not exist
                  → runner stops · each migration its own transaction
@@ -137,7 +137,7 @@ immediately.
 
 ```
 OPTION 1 · AMEND IN PLACE
-  rewrite 20260910000004 to create the candidate table under its own name;
+  rewrite 20260910000004 to create the offer table under its own name;
   rewrite 20260913000002/00003 to create the authorization table under its own
   name. No file is deleted; the collision simply never occurs on replay.
   ⚠️ changes the meaning of already-distributed filenames.
@@ -164,8 +164,13 @@ OPTION 3 · SUPERSET TABLE
 
 > **From a blank database, can the complete active migration set run to
 > completion with zero collisions, leaving exactly the three intended objects —
-> candidate, collaborative proposal, authorization — with no table carrying two
+> OFFER, collaborative proposal, authorization — with no table carrying two
 > lifecycles?**
+
+⚠️ **This test said "candidate" until the naming act corrected it.** ⛔ The
+acceptance law must not reintroduce the category collision the naming act
+exists to end — the schema lane reads B6 as its law, and would have inherited
+the wrong word from the sentence that judges it.
 
 Mechanically, and each part is a separate failure:
 
@@ -175,7 +180,7 @@ Mechanically, and each part is a separate failure:
       how this defect stayed quiet, so it is a FAILURE here, not noise
 
 2  exactly three objects, each with ONE lifecycle:
-     candidate        producer provenance · frozen · declinable
+     offer            producer provenance · frozen · declinable
      proposal chain   append-only succession
      authorization    exact version + guard + single-use receipt
 
@@ -201,7 +206,7 @@ catches that and `2` does not.
 A · authorization contract        BUILT · 17 falsifiers · 0 failed
 B · reconciliation plan           DESIGNED · options presented, none chosen
 
-naming act                        ⛔ OWED — candidate + authorization identities
+naming act                        ⭐ RATIFIED — offer + authorization identities
 migration edit                    ⛔ NOT AUTHORIZED
 SQL / schema mutation             ⛔ NOT AUTHORIZED
 route · UI · generation           ⛔ NONE
