@@ -549,7 +549,7 @@ describe('KERNEL-00 · DRIVER-01 — automate the witness, not the organism', ()
     const wiExec = wi.split('\n').filter((l) => !/^\s*#/.test(l) && !/^\s*say /.test(l)).join('\n');
     expect(wiExec).toMatch(/log show --info --start "\$T0_LOCAL" --end "\$T1_LOCAL" --style json "\$ARCH"/);   // options first, archive last
     expect(wiExec).not.toMatch(/--debug|sudo|log collect|xcrun|devicectl|log config|sysdiagnose|k00-driver-batch/);
-    expect(wi.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(wi.indexOf('log show --info'));
+    expect(wiExec.indexOf('K00_EXEC_AUTHORITY unset')).toBeLessThan(wiExec.indexOf('log show --info'));   // executable order (the header prose names the command first — C21)
     expect(wiExec).not.toMatch(/K00_EXEC_AUTHORITY[^\n]*(grep|cat|git|==|-f )/);
     expect(wiExec).toMatch(/--suffix info/); expect(wiExec).toMatch(/W="\$CAL\/window-info\.json"/);
     expect(wiExec).not.toMatch(/> *"?\$CAL\/window\.json|window-audio\.jsonl/);                         // the default-level read is never overwritten
