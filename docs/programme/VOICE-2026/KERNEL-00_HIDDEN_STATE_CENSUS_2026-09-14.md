@@ -205,3 +205,38 @@ Standing: A YES (one collect only) · A2 YES (absence scoped) · A3 YES (string 
 
 C: custody `2e78688a6` on `feature/k00-driver-ledger` (three probe directories + `log-cal-20260914T121709Z`), cherry-picked here. D: worktree at `06d80f16d`. E: probe executed on HEAD `06d80f16d1085f8c2248d48fdd459671e2a1762f`; criterion `PASS2-COND3-POSITIONAL-ARCHIVE@09c1bd251` is an ancestor (`yes`); from the installed help: `--device-udid <UDID>` (line 11) · `--start <time>` / `--last` (12, 15) · `usage: log show [options] <archive>` (line 2) · `--[no-]info` / `--[no-]debug` documented for the separately ruled escalation ladder; manifest sealed `da30b4848a4548e290418cbd202b3d624583ea0b3602fe59e6542a0b355ed334`. Provenance note (founder): the remote command runner initially refused direct execution; the 46-line script was inspected as help-page-only and invoked as `bash scripts/witness/k00-log-probe.sh`. No device act; calibration sample UNSPENT. **The evidence question is answered. The authority question is answered separately by the founder's string at invocation. Neither answered the other.**
 
+
+### 7.11 LOG-CAL calibration `unifiedlog-cal-20260914T124328Z` — EXECUTED (founder invocation, 2026-09-14) · mechanism PASS · verdict INCOMPLETE (parser defect, this session's instrument)
+
+**Invocation (founder, from `/private/tmp/voice-pass2-6801` at `06d80f16d`):** `K00_EXEC_AUTHORITY="FOUNDER-AUTH: one LOG-CAL calibration only; explicitly named sealed post-amendment probe; root authorized only for log collect; default-level archive read only; no --info, no --debug, no batch, no organism change." K00_LOG_SUDO=1 bash scripts/witness/k00-log-calibrate.sh --probe docs/programme/VOICE-2026/driver-ledger/log-probe-20260914T123612Z`. Authority recorded verbatim by the instrument (AUTH-3: an input). Witness verification PASS ×4 (seal == manifest · hashes == files · criterion id · ancestry). Gate read from the sealed probe: `--device-udid` · `--start` · positional `<archive>`.
+
+**The corrected sequence of §7.8/§7.9 has now been exercised once end to end:** fresh sealed post-amendment probe (`123612Z`) → gate accepted it mechanically → one explicitly authorized calibration → this custody record. Whether that satisfies the condition for promoting AUTH-1/2/3 to a reusable house rule is the founder's judgment, not this record's.
+
+**The six ruled fields (§7 opening), answered as far as the run reached:**
+
+| # | field | result |
+|---|---|---|
+| 1 | exact command | `sudo log collect --device-udid 00008140-00163D9922E0801C --start 2026-09-14 08:43:23 --output …/unifiedlog-cal-20260914T124328Z/device.logarchive` · `log show --start <T0> --end <T1> --style json …/device.logarchive` (default level; options first, archive last per ruling 1). `sudo` appeared exactly once, on the collect (ruling A held mechanically). |
+| 2 | processes / subsystems observed | **NOT READ** — the enumeration step never ran (see defect). |
+| 3 | output size / rate | archive **291 MB** collected in **185 s**; default-level `--style json` replay of the **49 s** window = **149 MB** (`show rc=0`), i.e. roughly 3 MB of JSON per second of device time at DEFAULT level. Escalation (`--info`, `--debug`) can only be larger. |
+| 4 | configuration changed | **NONE issued** (no `log config`, no profile, no debugger, no level change). Daemon identity before/after the sample is in `LOG-CAL-20260914T124328Z/daemons/` (files owed with the custody commit; not yet read here). |
+| 5 | sample completed normally | **YES** — batch rc=0; ledger row `AUTOMATED-COLD-LAUNCH · 1 · L · K00-6dbc2752 (kernel00-K00-6dbc2752-1789389844.jsonl) · 54 records · sha256 c32d05d9…dfa18 · gen-1 listen · cold=True · isRunningImmediate=true · graphStartedRunning=true`. Stratum LOG-CAL, **never counted**; its audio outcome is irrelevant to the calibration and is not physiological evidence of anything. |
+| 6 | time-alignment demonstration | **NOT DEMONSTRATED** — anchors A/B are computed from the parsed window; parsing failed first. The window itself was correctly constructed: T0 `12:43:28Z` (collect from T0−5 s, local `08:43:23`), T1 `12:44:10Z` after export. |
+
+**Classification (founder's reading, adopted):**
+
+```
+COLLECTION MECHANISM       PASS   (root-scoped collect returned an archive; rc=0; owner soullab)
+ARCHIVE REPLAY             PASS   (log show rc=0 on the positional archive; default level)
+DEFAULT-LEVEL READ         PRODUCED DATA (149 MB; content uninterpreted)
+CALIBRATION PARSER         FAIL   ("Extra data: line 3996225 column 3 (char 150211740)")
+LOG-CAL VERDICT            INCOMPLETE
+```
+
+**Defect C-D13 (instrument, this session; CANDIDATE until the file shape is read):** step E does `json.load(open(window.json))`, i.e. it assumes `log show --style json` emits exactly one JSON document. Python reports extra data beginning at character 150,211,740 of a ~149 MiB file — the first document ends with several megabytes still to follow, so **the file is not a single JSON document**. What follows it is not known from the error alone (a second array, a trailing non-JSON line, and a truncated/multi-segment emission are all consistent with it). The distinction the founder drew is the load-bearing one: *we have not learned that default-level logs are insufficient; we have learned that the calibration cannot yet read the default-level output it successfully obtained.* Nothing about the device, the daemon or the physiology is implied.
+
+**Ruling adopted (founder recommendation, 2026-09-14):** no `--info`, no rerun of the device sample, no parser change yet. Next act = **read-only inspection of the existing `window.json`** (custody-verified against sha256 `72871a24cb256b82337f17edc99bcebc6fce58d6e6fbfe9412d5e47dd9bddf37` before reading): head, the bytes either side of the parse boundary, tail, top-level bracket counts, and `show-stderr.txt`. Only after the shape is on record may the parser be repaired (as C-D13, offline, against this same file — no new sample, no new collect) and step E re-run to produce fields 2 and 6. The 291 MB archive stays on the Mac uncommitted (gitignored); `window.json` likewise; both hashes are custody.
+
+**Owed:** founder custody commit of `LOG-CAL-20260914T124328Z` (ledger · journal · daemons · logs) and `unifiedlog-cal-20260914T124328Z` (`CALIBRATION.md` · `collect-stdout.txt` · `show-stderr.txt`; archive and `window.json` excluded by `.gitignore`) on `feature/k00-driver-ledger`, cherry-picked here · shape inspection output · then a C-D13 ruling.
+
+Standing: LOG-CAL EXECUTED · MECHANISM PASS · REPLAY PASS · PARSER FAIL (C-D13 candidate) · VERDICT INCOMPLETE · fields 2 and 6 OWED · escalation NOT AUTHORIZED · second sample NOT AUTHORIZED · logged batch / no-log control NOT OPENED · organism UNTOUCHED.
