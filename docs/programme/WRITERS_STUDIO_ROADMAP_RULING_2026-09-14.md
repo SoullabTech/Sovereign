@@ -161,3 +161,45 @@ acceptable state   ✓        Whole   / first    —
 
 ⛔ **Six empty cells. The walk is the only work owed.** No Step 3 implementation, no
 competitive research, no further roadmap expansion until those six observations exist.
+
+---
+
+# CORRECTION — the sequence above is too linear
+
+**Founder, same day.** ⚠️ **This corrects the tightened sequence in the amendment above,
+which is left standing rather than edited away.**
+
+The amendment encoded:
+
+```
+interaction → authorship → Step 3
+```
+
+⛔ **Wrong.** Lanes 2 and 3 are **parallel investigations of different dimensions of the
+same future capability**, not stages of one queue.
+
+```
+             ┌─ LANE 2 · INTERACTION ──── six-cell runtime witness
+current work ┤
+             └─ LANE 3 · AUTHORSHIP ───── census / constitutional evidence
+```
+
+| | Lane 2 · `WS-PROPOSAL-INTERACTION-01` | Lane 3 · `WS-PROPOSAL-AUTHORSHIP-01` |
+|---|---|---|
+| **Question** | when the writer asks to see a proposed change, does the interface navigate to the change itself — repeatably, without later hijacking scrolling? | what authorship, acceptance, authority and succession distinctions exist in law and substrate, and what can the system truthfully prove? |
+| **Standing** | witness running · 1 of 6 cells | census complete · DESIGN ⛔ · SCHEMA ⛔ · CODE ⛔ |
+| **Contributes to Step 3** | writer-requested navigation · repeatability · non-seizure of attention · viewport-independent locus orientation | wording authorship · acceptance act · execution authority · version-specific authorization · successor provenance |
+
+⛔ **Neither lane may smuggle findings into the other.** Lane 3's census findings — the F6′
+ledger gap, the three-act gap, `decision_chain_id` carrying no semantics in practice — have
+**no bearing on the next observation**, and Lane 2's browser behaviour establishes nothing
+about authorship.
+
+⭐ **Step 3 must later respect what BOTH establish.** That is the sense in which it is the
+hinge: not the end of one queue, but the point where two independent lines of evidence have
+to hold at once.
+
+⚠️ **Provenance note:** the Lane 3 census was produced by another session. This session has
+neither seen nor written it, and must not reason from it as though it had.
+
+⛔ **Owed now, and only this:** Lane 2 · **Whole / second**.
