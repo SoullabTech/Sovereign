@@ -13,7 +13,14 @@ authority over any of them. Measured, not asserted.
 
 Merge-base of the two active lanes: `e1c6f527`.
 
-## 2. The contested set is EMPTY
+## 2. The contested set is EMPTY — ⛔ SUPERSEDED BY §8 (same day)
+
+> This section's headline claim is WRONG and is kept verbatim as the state at the
+> time it was written. The intersection below filtered `__tests__/` out of both
+> diffs before intersecting, which hid the one real collision. The unfiltered
+> measurement is in §8. The file-count and `app/`-touch findings in this section
+> are unaffected and still hold.
+
 
 ```
 editorial lane non-doc, non-test files    215
@@ -175,3 +182,92 @@ preserves all four as distinct.
 - This ruling is handed to **`claude/proposal-authorization-integration`** (at `ab416cc5b`,
   W2 landed), which implements it. It is not implemented here.
 - This document is a conductor record. It is not a lane and carries no code.
+
+---
+
+# 8. CORRECTED COLLISION FINDING — CAPABILITY-BASED COORDINATION (2026-09-14)
+
+> **CURRENT FILE COLLISION: effectively none except one existing test.
+> PROSPECTIVE SEMANTIC COLLISION: one narrow Whole-view voluntary-return seam.
+> Coordination is therefore capability-based, not branch-wide or file-wide.**
+
+## 8.1 The true contested set
+
+Unfiltered intersection, `e1c6f527` → `ab416cc5b` ∩ `e1c6f527` → `19c957d4f`:
+
+```
+lib/manuscript/development/__tests__/evidenceCannotAct.test.ts
+```
+
+Exactly one file. §2 reported zero because it filtered `__tests__/` out of both
+diffs before intersecting — the filter hid the only real collision. Reconcile this
+test separately; it is not part of the seam below.
+
+## 8.2 The prospective seam, measured
+
+C10 names its implementation subject as `ProposalEvidenceInWork` ↕
+`WholeManuscriptSurface` / `renderProposalEvidence`. Presence at each tip:
+
+| File | Editorial `ab416cc5b` | C10 `19c957d4f` | Status |
+|---|---|---|---|
+| `app/writers-studio/canvas/ProposalWorkSurface.tsx` | present | **ABSENT** | Editorial object; C10 behavioural dependency |
+| `app/writers-studio/canvas/WholeManuscriptSurface.tsx` | present | present | **Narrow convergence seam** |
+| `app/writers-studio/canvas/page.tsx` | present | present, unchanged by C10 | Shared only if the proof demands it |
+
+The absence of `ProposalWorkSurface.tsx` at the C10 tip independently confirms that
+lane's own plan: half its intended seam is not in its checkout.
+
+## 8.3 No broad mutual freeze
+
+Neither lane stops. Editorial keeps advancing workspace, succession, composer,
+lineage, authorship and conversational work. C10 keeps doing bounded proof work.
+There is no physical reason to serialise the programme.
+
+## 8.4 C10 must not build against its stale half-seam — load-bearing
+
+Once RED earns implementation, C10 **must not invent local substitutes** for
+`ProposalEvidenceInWork` or `renderProposalEvidence`. That would create two
+Whole-return architectures. **The editorial branch is the authoritative substrate
+for the repair.**
+
+## 8.5 Ownership: objects vs invariant
+
+```
+EDITORIAL LANE owns          C10 owns
+  ProposalEvidenceInWork       voluntary Whole-return completion semantics
+  proposal/version selection   pending-until-locus-exists
+  the reveal act the UI emits  consume exactly once
+  workspace composition        never passive-trigger
+```
+
+C10's jurisdiction is exactly one behaviour: *a voluntary Whole-view return remains
+pending until the exact proposal locus has actually been addressed.* It does **not**
+own the editorial panel, proposal wording, version succession, the composer,
+automatic arrival, Section behaviour, passive-scroll semantics, visual redesign, or
+general virtualisation.
+
+**This prevents file ownership from becoming ontology ownership.**
+
+## 8.6 The RED transfers before the repair does
+
+```
+Q1–Q4 read → capability falsifier → untouched-source RED for the right reason → STOP
+```
+
+On acceptance the conductor transfers the **requirement + lethal witness** into the
+editorial substrate. The smallest implementation is then made against the real
+proposal-work code, never against a half-present checkout.
+
+## 8.7 Integration is one tiny convergence act
+
+Expected surface: `WholeManuscriptSurface.tsx`, `ProposalWorkSurface.tsx`, and
+`page.tsx` **only if** act/pending plumbing genuinely requires it. Containing
+`revealToken` does not by itself authorise touching `page.tsx`: if the invariant can
+be satisfied without altering that producer, leave it untouched.
+**The implementation earns every file it touches.**
+
+## 8.8 ⛔ Do not merge the `bold-bohr` branch into the editorial branch
+
+That branch carries a large bounded-cognition history and migrations unrelated to
+this repair. The transferable unit is **C10's accepted invariant + falsifier +
+smallest implementation patch** — never the branch ancestry.
