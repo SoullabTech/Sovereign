@@ -138,3 +138,58 @@ The member should never meet `proposal_work`, `execution_authority`,
 `expected_text`, a coordinate space, or a succession chain.
 
 > *notice → understand → discuss → explore → revise → refine → decide → apply*
+
+
+---
+
+## Appendix · what the interaction research must answer
+
+**Ratified 2026-09-14.** ⛔ The lane answers SCENARIOS, not *"what features do
+other editors have?"* A feature survey produces a pile of buttons; a scenario
+survey produces an interaction model.
+
+```
+tiny grammar correction
+awkward sentence
+paragraph restructuring
+chapter-level problem
+three similar stories across the book
+recurring metaphor whose meaning evolves
+contradiction between distant chapters
+structural relocation
+source / factual uncertainty
+the writer disagrees with MAIA and teaches her why
+repeated MAIA/writer revisions before final approval
+```
+
+⭐ **Visual and interaction craft belongs at the BEGINNING of that work, not
+after.** The three-story case is partly spatial: the writer must perceive the
+occurrences, their distance through the book, their differing roles, and their
+own progress through them. ⛔ That cannot be solved by better button labels once
+the interaction model has hardened.
+
+The experiential target, against which every candidate is measured:
+
+> *MAIA noticed something. Here it is in your Work. Here's what she means.
+> Here's why it may matter. Want to work on it together?*
+
+Everything complicated happens underneath that sentence.
+
+---
+
+## What is kept from the witness build, and what is not
+
+```
+KEPT — the membrane
+  exact locus · Work-state binding · inspection-only authority · provenance
+  atomic acceptance · stale-state refusal · server-owned section authority
+  the Current → Would read computation
+
+NOT KEPT as the UX template
+  the Proposed Change card
+  system-shaped language
+  one-card-fits-all editing
+  forms standing in for conversation
+```
+
+⛔ **The panel is frozen at `e5b363995`.** No further polish pending the research.
