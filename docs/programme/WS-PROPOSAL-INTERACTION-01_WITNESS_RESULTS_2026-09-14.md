@@ -29,7 +29,7 @@ cell is awarded on what was aimed at, never on what was seen.
 
 | | first asked return | second asked return | passive scroll |
 |---|---|---|---|
-| **Section view** | — | — | — |
+| **Section view** | ✅ **LOCUS-ADDRESSED** | ✅ **LOCUS-ADDRESSED** | ✅ **STAYS PUT** |
 | **Whole view** | ⛔ **SECTION-ADDRESSED** | ⛔ **SECTION-ADDRESSED** | ✅ **STAYS PUT** |
 
 ### Whole / first — ⛔ FAIL against the predeclared criterion
@@ -191,3 +191,70 @@ the observer's timing, not the product's behaviour.
 
 ⚠️ Applies to Section only. Whole is instant, has no intermediate frames, and its three
 recorded cells are unaffected.
+
+
+---
+
+# WALK COMPLETE — 6/6 cells
+
+```
+Whole   / first     SECTION-ADDRESSED   FAIL
+Whole   / second    SECTION-ADDRESSED   FAIL
+Whole   / passive   STAYS PUT           PASS
+
+Section / first     LOCUS-ADDRESSED     PASS   (settled)
+Section / second    LOCUS-ADDRESSED     PASS   (settled)
+Section / passive   STAYS PUT           PASS
+```
+
+⭐ The ambiguous Section frame was a **smooth-scroll measurement artefact**, not a product
+defect. Holding it as unmeasured rather than recording a FAIL was the difference between a
+true matrix and a false one.
+
+# CAUSAL VERIFICATION — run after the walk, as ruled
+
+Every `revealWithin` call reachable from the canvas at `0bd2b6578`:
+
+```
+ProposalWorkSurface.tsx:193    revealWithin(ref.current, 'center', 'smooth')   automatic
+ProposalWorkSurface.tsx:213    revealWithin(ref.current, 'center', 'smooth')   voluntary
+WholeManuscriptSurface.tsx:302 revealWithin(node, 'start')                     SECTION SHELL
+StructureReview / StructuredOutline / StudioConversation                       unrelated
+```
+
+```
+page.tsx:1572   renderProposalWork      → revealToken  ✅
+page.tsx:1553   renderProposalEvidence  → (nothing)    ⛔
+
+ProposalEvidenceInWork({ body, range, replacementText, onWorkWithChange })
+                                        no token · no ref · no reveal
+```
+
+⭐⭐ **CONFIRMED, and stronger than the hypothesis: Whole view has NO locus reveal at all.**
+The only movement available to a proposal jump there is the section-shell `'start'` scroll.
+
+That single fact explains all six cells:
+
+| cell | why |
+|---|---|
+| Whole first/second | the shell scroll is the **only** path — so section-addressed, always |
+| Whole passive | nothing re-fires; the jump runs only when `jumpTo` changes |
+| Section first/second | two call sites, the voluntary one keyed to `revealToken` |
+| Section passive | the automatic reveal is keyed and spent |
+
+⛔ **Hypothesis (b) is RETIRED, not merely disfavoured.** There is no spent guard in Whole
+because there is no guard in Whole — there is no reveal to spend.
+
+## ⚠️ A constraint the obvious repair would violate
+
+`__tests__/navigationPreserved.test.ts:71` **asserts** `revealWithin(node, 'start')` on the
+whole-manuscript shell. That `'start'` is a **deliberate, pinned obligation** — outline and
+rail navigation ("take me to §23") legitimately wants the section's start.
+
+⛔ **So the repair must ADD a locus reveal for the proposal case. It must NOT retarget the
+existing shell reveal to `'center'`** — that would satisfy this lane by breaking outline
+navigation, and `navigationPreserved` would go red for exactly the right reason.
+
+⛔ **Not authorized here. Not implemented.** The repair belongs to the lane, in the lane's
+own shape (`revealToken`, required, reaching the Whole-view renderer), with a behavioural
+obligation of its own.
