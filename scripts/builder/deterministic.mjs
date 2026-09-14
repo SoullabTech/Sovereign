@@ -31,6 +31,65 @@ function eff(name, args, field) {
 // so the mechanism neutralizes pathspec interpretation rather than rejecting the spelling.
 const LITERAL = '--literal-pathspecs';
 
+// ── ARGUMENT ROLE (D1 · D5 · D6) ───────────────────────────────────────────────────────
+// ⭐ A term's ROLE is assigned by the capability contract. It is NEVER read off the value.
+//    Path containment applies to the arguments that ARE paths — not to every string whose
+//    characters happen to look path-like. `repo.grep.pattern` and `repo.locate_symbol.symbol`
+//    are a GREP_PATTERN and a SYMBOL even when they contain '../', and must be adjudicated
+//    as such. ⛔ Inference-by-characters is the architecture the rulings superseded.
+//
+// ⛔ This narrows WHICH arguments are path-adjudicated. It does NOT weaken containment for
+//    the arguments that are paths: every entry below keeps exactly the behaviour it had.
+// ⭐ Declared OUTSIDE the args schemas on purpose — the schema objects stay byte-identical,
+//    so no out-of-scope capability's declaration is disturbed by this correction.
+const PATH_ROLE_ARGUMENTS = Object.freeze({
+  'git.log':              ['path'],
+  'git.file_history':     ['file'],
+  'repo.find_file':       ['pattern'],   // D1: reclassified PATH (literal identity)
+  'inventory.migrations': ['dir'],
+  'inventory.routes':     ['dir'],
+  'verify.file_exists':   ['path'],
+  'verify.sha256':        ['path'],
+  'verify.count_matches': ['file'],      // `pattern` here is a JS_REGEX, never a path
+});
+
+// ── WHOLE-SYMBOL POLICY (D6) ───────────────────────────────────────────────────────────
+// Host-authored, applied by US to candidate lines — never delegated to a matcher flag, so no
+// underlying tool grammar can narrow the caller's admitted domain.
+//
+// A literal occurrence is a WHOLE symbol unless it would be a FRAGMENT of a longer run of
+// word constituents: the boundary fails only when the adjacent character AND the symbol's own
+// edge character are both word constituents.
+//
+// ⭐ Derived from the symbol's OWN characters — no punctuation allowlist, no special case for
+//    '+', '-', '.', '*'. And no symbol is excluded from the domain: one whose edge is not a
+//    word constituent is always boundary-satisfied on that side, which is exactly why `+foo`
+//    is findable inside `x+foo` while `alpha.beta` is still not found inside `prefixalpha.beta`.
+const WORD_CONSTITUENT = /[\p{L}\p{N}_]/u;
+const isWordChar = (ch) => ch !== undefined && WORD_CONSTITUENT.test(ch);
+
+function occursAsWholeSymbol(content, symbol) {
+  if (symbol === '') return false;
+  const leftEdgeIsWord = isWordChar(symbol[0]);
+  const rightEdgeIsWord = isWordChar(symbol[symbol.length - 1]);
+  let from = 0;
+  for (;;) {
+    const i = content.indexOf(symbol, from);
+    if (i === -1) return false;
+    const j = i + symbol.length;
+    const leftOk = i === 0 || !(leftEdgeIsWord && isWordChar(content[i - 1]));
+    const rightOk = j === content.length || !(rightEdgeIsWord && isWordChar(content[j]));
+    if (leftOk && rightOk) return true;
+    from = i + 1;
+  }
+}
+
+/** git grep --null emits `path\0line\0content` per record. */
+function recordContent(record) {
+  const parts = record.split('\0');
+  return parts.length >= 3 ? parts.slice(2).join('\0') : '';
+}
+
 // ── D3 · GLOBAL RESULT BOUND ───────────────────────────────────────────────────────────
 // `max_results` bounds the number of RESULT RECORDS returned by the INVOCATION — not per
 // file, not a scan budget. It TRUNCATES the capability's existing ordered stream, so
@@ -168,15 +227,25 @@ export const CAPABILITIES = {
       symbol: { type: 'string', required: true, maxLength: 1000 }
     },
     handler: (args, cwd) => {
-      // D6: the caller supplies a LITERAL symbol. `--fixed-strings` means caller punctuation
-      // is SOUGHT, never executed as matcher syntax, and pins the flavour so ambient matcher
-      // configuration has no authority. `--word-regexp` is the HOST-AUTHORED whole-symbol
-      // policy — the caller never has to know it exists, and cannot cancel or widen it.
-      // ⛔ No identifier grammar is invented: any string the schema admits is searched as-is.
-      const cmd = ['grep', '--fixed-strings', '--word-regexp', '-r', '--line-number', '--null', args.symbol, '.'];
+      // D6: the caller supplies a LITERAL symbol.
+      //   `--fixed-strings`  caller punctuation is SOUGHT, never executed as matcher syntax,
+      //                      and the flavour is pinned so ambient config has no authority.
+      //   `-e <symbol> --`   the symbol occupies a VALUE position, never an option position,
+      //                      so a leading '-' is sought rather than parsed. General: no
+      //                      character is special-cased.
+      // ⛔ NO matcher flag decides what counts as a whole symbol. `--word-regexp` was removed
+      //    because it imports git's word-character grammar and thereby NARROWS the caller's
+      //    admitted domain — reporting a present symbol like `+foo` as ABSENT, which is a
+      //    confident wrong answer rather than an error. The whole-symbol policy is applied
+      //    HERE, by the host, over literal candidates.
+      const cmd = ['grep', '--fixed-strings', '-r', '--line-number', '--null', '-e', args.symbol, '--', '.'];
       try {
         const output = execFileSync('git', cmd, { cwd, encoding: 'utf8' });
-        return { exit_code: 0, stdout: output.trim() };
+        const whole = output
+          .split('\n')
+          .filter((record) => record !== '')
+          .filter((record) => occursAsWholeSymbol(recordContent(record), args.symbol));
+        return { exit_code: 0, stdout: whole.join('\n') };
       } catch (err) {
         // F-D: absence is an ANSWER, not a failure to answer. git represents "no matches"
         // with status 1; that is transport, not public meaning. ⛔ NARROW BY CONSTRUCTION —
@@ -285,17 +354,10 @@ export function describeInvocation(name, args = {}) {
   if (!capability) {
     throw new Error(`Unknown capability: ${name}`);
   }
-  // An inadmissible request is not an invocation, and will not be described as one.
-  for (const argName in args) {
-    if (!capability.args[argName]) {
-      throw new Error(`Unexpected argument: ${argName}`);
-    }
-  }
-  for (const argName in capability.args) {
-    if (capability.args[argName].required && (args[argName] === undefined || args[argName] === null)) {
-      throw new Error(`Missing required argument: ${argName}`);
-    }
-  }
+  // ⭐ ONE admission judgment, shared with runCapability(). An inadmissible request is not an
+  //    invocation and will not be described as one: a record that disagreed with the executor
+  //    about what an act even IS could not ground act identity.
+  validateSchema(name, args);
 
   const caller_terms = {};
   for (const argName in capability.args) {
@@ -317,12 +379,15 @@ export function describeInvocation(name, args = {}) {
   return { capability: name, caller_terms, host_terms, effective_terms };
 }
 
-export function runCapability(name, args, cwd) {
-  if (!CAPABILITIES[name]) {
+// ── SCHEMA ADMISSION (D4) ──────────────────────────────────────────────────────────────
+// The single judgement of whether a request is an admissible invocation. Both the observation
+// seam and the executor consume it, so they cannot disagree about what an act is.
+// ⛔ Schema admission ONLY — it confers no execution permission and decides no authority.
+export function validateSchema(name, args) {
+  const capability = CAPABILITIES[name];
+  if (!capability) {
     throw new Error(`Unknown capability: ${name}`);
   }
-
-  const capability = CAPABILITIES[name];
   const validatedArgs = {};
 
   // Validate arguments against schema
@@ -370,11 +435,24 @@ export function runCapability(name, args, cwd) {
     }
   }
 
-  // Validate paths are within cwd
-  for (const argName in capability.args) {
-    const argSchema = capability.args[argName];
-    if (argSchema.type === 'string' && argSchema.maxLength && args[argName]) {
-      const value = args[argName];
+  return validatedArgs;
+}
+
+export function runCapability(name, args, cwd) {
+  const capability = CAPABILITIES[name];
+  if (!capability) {
+    throw new Error(`Unknown capability: ${name}`);
+  }
+
+  const validatedArgs = validateSchema(name, args);
+
+  // Validate paths are within cwd.
+  // ⭐ Applied to the arguments the CONTRACT declares to be paths, never to every string whose
+  //    characters look path-like. Unchanged behaviour for every path argument; a GREP_PATTERN
+  //    or a SYMBOL is simply no longer adjudicated as a path because of how it is spelled.
+  for (const argName of PATH_ROLE_ARGUMENTS[name] || []) {
+    const value = args[argName];
+    if (typeof value === 'string' && value) {
       if (value.startsWith('/') || value.includes('../') || value.includes('..\\')) {
         const fullPath = resolve(cwd, value);
         if (!fullPath.startsWith(cwd)) {
