@@ -306,3 +306,304 @@ P3-C-14 · lib/coachField/practitionerProjection.ts [Band VII] · ART lib/coachF
   EXISTS [SYN-1]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
   INF-6 EXISTS established · ⛔ careful in-file reasoning about authority is not authority standing
   BASIS "CALLERS ⛔ NONE FOUND"; "the module that reasons most carefully about what a practitioner may know **is dormant**, while the live practitioner read (C-6) gates on a linkage row." · "Reasoning stated in-file; ⛔ unreachable … GOVERNING SOURCE NONE LOCATED"
+
+# NODES — DOMAIN D · FIELD INTELLIGENCE
+
+P3-D-01 · D-OBJ-1 `FieldContext` seam — buildFieldContext / formatFieldAddendum · ART lib/field/fieldOrchestrator.ts:36-62,154,161-165,234-242; lib/sovereign/maiaService.ts:1521,1534,1946,1962   [EWLA]
+  CONTRIBUTES [SYN-1 — explicit]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "(a)–(d) **CONTRIBUTE** to what MAIA says … (a)–(d) sit at CONTRIBUTES" — paths (a) `maiaService.ts:1521 → :1534` FAST and (b) `:1946 → :1962` CORE · "P1-D-GOV-01 The canonical field seam (D-OBJ-1) has no governance gate of any kind"
+P3-D-02 · D-OBJ-2 PFI mind state `generatePFIMindState` · ART lib/sovereign/pfiMindEntrypoint.ts:94,247,254; lib/field/fieldOrchestrator.ts:16-20; maiaService.ts:2916   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion; via path (b) only, path (a) is flag-blocked]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE Into D-OBJ-1's FieldContext.pfi { element, coherence, fieldWorkSafe, realm, deepWorkRecommended } → prompt." · gate "PARTIAL / DEFEATED IN ONE PATH"
+P3-D-03 · D-OBJ-3 `ResonanceFieldGenerator` · ART lib/maia/resonance-field-system.ts (657 L); invoked from lib/field/fieldOrchestrator.ts:21   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE FieldContext.resonance → \"[Field Intelligence]\" prompt JSON." · "GOVERNANCE GATE ⛔ NONE FOUND"
+P3-D-04 · D-OBJ-4 `UnifiedElementalFieldCalculator` · ART lib/consciousness/field/UnifiedElementalFieldCalculator.ts (517 L); fieldOrchestrator.ts:22-24,161-165   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE FieldContext.unified → prompt JSON (D-OBJ-1:44-49)" · "GOVERNANCE GATE ⛔ NONE FOUND"
+P3-D-05 · D-OBJ-5 `routePanconsciousField` → FieldRoutingDecision · ART lib/field/panconsciousFieldRouter.ts:5-30; lib/sovereign/maiaService.ts:2207,2216
+  UNKNOWN — AMBIGUOUS [SYN-4]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "the record expressly places the position on the enforcement object, not the classifier"; D-OBJ-5's own output is "attached to `(meta as any).fieldRouting` (:2216)" · "P1-D-GOV-02 … no ratified document authorizing realm-based refusal was located"
+P3-D-06 · D-OBJ-6 `enforceFieldSafety` → FieldSafetyDecision · ART lib/field/enforceFieldSafety.ts:25; lib/field/fieldSafetyCopy.ts (189 L); maiaService.ts:2830-2860, esp. :2838,:2848   [EWLA]  ⭐⭐ THE SHARPEST INF-6 TEST IN SLICE 05
+  DECIDES [SYN-1 — explicit]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "(e) is categorically different: it **DECIDES**, and its text **replaces** MAIA's." · "SURFACED WHERE ⭐⭐ DIRECTLY AS MAIA'S ANSWER ON REFUSAL. maiaService.ts:2848 — `const text = fieldSafety.message ?? …` returned before the turn reaches a model." · "P1-D-GOV-02 … **No ratified source authorizing realm-based refusal was located.** The in-source \"H2\"/\"W2\" commentary is a citation, not a located source."
+  ⚠️ CARRIED, ⛔ NOT CARRIED FORWARD AS STANDING: the record itself wrote "(e) is the only object in Domain D at HAS AUTHORITY" — ⛔ derived from the effect it had just described; quoted here as evidence per INF-6 / Amendment 3 §2
+P3-D-07 · D-OBJ-7 `analyzeFieldIntelligence` (Talk Mode field intelligence) · ART lib/maia/talkModeFieldIntelligence.ts:27,287,327; maiaService.ts:1079-1114,1094-1110,1198
+  UNKNOWN — RECORDS DISAGREE (X-DEF-1) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS D assigns "(c) … CONTRIBUTES"; E states "SURFACED WHERE ⛔ NOWHERE." ⛔ Not derived across · "GOVERNANCE GATE ⛔ NONE FOUND"
+P3-D-08 · D-OBJ-8 `logFieldOrchestratorTelemetry` + field_orchestrator_telemetry · ART lib/field/fieldOrchestratorTelemetry.ts:45,91; app/api/admin/command-center/{overview,field-engines}/route.ts; maiaService.ts:1537,1965
+  UNKNOWN — SILENT [SYN-4]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "SURFACED WHERE Admin Command Center only. ⛔ Not member-facing." · "P1-D-GOV-04 … no consent gate traced and no member read path"
+P3-D-09 · D-OBJ-9 `getFieldContext` / `buildFieldContextPromptBlock` (vault-backed) · ART lib/maia/fieldContextAdapter.ts:1-40,100-128; app/api/oracle/conversation/route.ts:127,853
+  UNKNOWN — RECORDS DISAGREE (X-DEF-2) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS D treats that route as "the second cognition path"; E records "an unconditional HTTP 410 at `:446-453`". ⛔ Not derived across · ⭐ the gate itself is "PRESENT AND NAMED: … `MAIA_FIELD_CONTEXT_ENABLED === 'true'`" — INF-3: selection authorizes nothing
+P3-D-10 · D-OBJ-10 `coherenceFieldService` + coherence_field_readings · ART lib/consciousness/memory/CoherenceFieldService.ts:80,125,402; oracle/conversation/route.ts:902,2787
+  UNKNOWN — RECORDS DISAGREE twice (X-DEF-2 route status; CONTRA-2) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS D assigns "(d) … CONTRIBUTES" via `route.ts:2787`; against it `substrateMap.ts:383-391` "consumers: [] … Service preserved; no live consumer wired" · "P1-D-GOV-03 … No source ruling that a computed coherence score may confer an award was located"
+P3-D-11 · D-OBJ-11 `fireAndForgetFieldMonitor` + field_monitor_turns · ART lib/consciousness/fieldMonitorTelemetry.ts:29,165 (575 L); app/api/voice/stream-conversation/route.ts:82
+  UNKNOWN — SILENT [SYN-4]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "CALL PATH app/api/voice/stream-conversation/route.ts:82 … ⭐ the VOICE path, not the canonical text path." · P1-D-GOV-04
+P3-D-12 · D-OBJ-12 `QuantumFieldMemory` · ART lib/consciousness/memory/QuantumFieldMemory.ts (810 L); app/api/maia/enhanced-consciousness/route.ts:22 (0 in-repo callers)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "**DORMANT** (module resolvable; no reachable entry point)"
+P3-D-13 · D-OBJ-13 `ConsciousnessField` engine · ART lib/consciousness/field/ConsciousnessFieldEngine.ts (466 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "value-importers `app/api/maia/memory-enhanced-response/route.ts` (0 callers) and `route.enhanced.backup.ts` … DORMANT"
+P3-D-14 · D-OBJ-14 `MAIAFieldInterface` · ART lib/consciousness/field/MAIAFieldInterface.ts (575 L); lib/agents/PersonalOracleAgent.ts:42
+  UNKNOWN — AMBIGUOUS [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "DORMANT (PersonalOracleAgent reachability → Domain A)"; "⛔ which of the two objects those citations mean is NOT DETERMINED BY SOURCE RECORD" (C-F6)
+P3-D-15 · D-OBJ-15 `ElementalFieldIntegration` · ART lib/consciousness/field/ElementalFieldIntegration.ts (870 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "6 importers, all inside the same dormant cluster or 0-caller routes … DORMANT"
+P3-D-16 · D-OBJ-16 `ElementalInterferenceMonitor` · ART lib/consciousness/field/ElementalInterferenceMonitor.ts (584 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "2 importers, both intra-cluster … DORMANT"
+P3-D-17 · D-OBJ-17 `QuantumFieldPersistence` · ART lib/consciousness/field/QuantumFieldPersistence.ts (434 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "only importers are the two 0-caller routes … DORMANT"
+P3-D-18 · D-OBJ-18 `EnhancedMAIAFieldIntegration` · ART lib/consciousness/memory/EnhancedMAIAFieldIntegration.ts (1096 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "3 importers: `spiral-aware-response.ts`, `enhanced-consciousness/route.ts` (0 callers), backup file … DORMANT"
+P3-D-19 · D-OBJ-19 `ResonanceFieldOrchestrator` (A) lib/field · ART lib/field/ResonanceFieldOrchestrator.ts:97,779 (783 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⛔ **0 external importers** — `getResonanceOrchestrator()` (`:779`) is never called outside the file … **ORPHANED**"
+P3-D-20 · D-OBJ-20 `ResonanceFieldOrchestrator` (B) lib/oracle · ART lib/oracle/ResonanceFieldOrchestrator.ts:40 (629 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "imported only by `lib/oracle/HybridSystemToggle.ts:7,43,49`, which itself has **0 importers**, and by a test … **ORPHANED**"
+P3-D-21 · D-OBJ-21 `MaiaFieldOrchestrator` · ART lib/maia/MaiaFieldOrchestrator.ts (571 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "only `lib/integration/MaiaCrystalBridge.ts:11,83`, which has 1 importer … DORMANT"
+P3-D-22 · D-OBJ-22 `FieldIntelligenceSystem` / `RelationalField` · ART lib/field-intelligence-system.ts (690 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "4 value importers, all within the dormant `maia-consciousness-lattice` cluster … DORMANT"
+P3-D-23 · D-OBJ-23 `MAIAFieldAwareness` · ART lib/maia-field-intelligence-integration.ts (559 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "single importer `lib/maia-consciousness-lattice.ts:10`, itself with no route consumer … DORMANT"
+P3-D-24 · D-OBJ-24 `FieldCoherenceTensor` + `fieldIntegrityValidation` · ART lib/field/fieldCoherenceTensor.ts (388 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⛔ **type-only import** by `fieldIntegrityValidation.ts:13`; that file has **0 importers** … **ORPHANED**"
+P3-D-25 · D-OBJ-25 `FieldAnalytics` · ART lib/field/FieldAnalytics.ts (277 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⛔ **0 importers** … **ORPHANED**"
+P3-D-26 · D-OBJ-26 `ParallelFieldProcessor` + fieldProtocol/{validation,storage} · ART lib/fieldProtocol/ (1657 L)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "4 importers … — no route reached … DORMANT"
+P3-D-27 · D-OBJ-27 `FieldRecordsService` / `FieldRecordsRepo` + field_records · ART lib/field-protocol/ (1061 L); app/api/field/records/route.ts:14,57
+  UNKNOWN — AMBIGUOUS [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "**PARTIAL** — repo path WIRED-BUT-UNOBSERVED; service layer ORPHANED"
+P3-D-28 · D-OBJ-28 `neuropodEligibility`, `energyState` · ART lib/field/ (564 L total)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "`neuropodEligibility` **0 importers**; `energyState` 1 … ORPHANED / DORMANT" (⛔ the pair is kept as the record kept it)
+P3-D-31 · D-OBJ-31 "Field Lab" experiment shelf · ART app/maia/field-lab/** (page.tsx:1-24 anti-gamification invariant), lib/maia/fieldLab/shelf.ts
+  UNKNOWN — SILENT [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "Experiment shelf; header … an explicit anti-gamification invariant | Yes (`/maia/field-lab`) | NO"
+P3-D-32 · D-OBJ-32 `/field/*` voice-first conversation surface · ART app/field/layout.tsx:11 (title "MAIA Field"), app/field/talk/
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "naming collision only"
+P3-D-34 · D-OBJ-34 "Wisdom Field" circles + `WISDOM_FIELD_MOVES` · ART schema (9 `wisdom_field*` tables); `WISDOM_FIELD_MOVES` consumed at lib/sovereign/maiaService.ts:1083,1091
+  UNKNOWN [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "`WISDOM_FIELD_MOVES` consumed at `maiaService.ts:1083,1091`"; "those lines are inside D-OBJ-7's Talk-Mode assembly, which E records as \"SURFACED WHERE ⛔ NOWHERE\"" — its only traced consumption sits inside the block whose surfacing is disputed (X-DEF-1)
+P3-D-35 · D-OBJ-35 Field Coherence Index dashboard + /api/field-analytics/report · ART app/labtools/field-analytics/page.tsx:81-95,231-286; app/api/field-analytics/report/route.ts:19,70-76
+  UNKNOWN — SILENT on cognition [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "⛔ **NO — gated.** … the file states \"⛔ Lab Tools is NOT a member surface.\"" · §4.3 "renders `0.5 → \"50%\"` … with nothing distinguishing the fallback from a measurement" · "P1-D-GOV-05 … whether it reaches this object is a scope question a worker may not answer"
+P3-D-36 · D-OBJ-36 `/labtools/coherence` breath/HRV tool · ART app/labtools/coherence/page.tsx + lib/somatic/*
+  UNKNOWN — SILENT [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "NO (lab-gated) | shows a **somatic** shift, unrelated to any other \"coherence\" here" (the gate found is `requireLabAccess()`, an access gate)
+P3-D-37 · D-OBJ-37 `rhythmCoherence` overlay in the member conversation component · ART components/OracleConversation.tsx:1569,1745,10734-10753 (:10753 renders `Coherence: N%`); mounted app/maia/page.tsx:17, app/field/talk/page.tsx:20
+  UNKNOWN — the record expressly withholds the determination [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "⛔ This record does not assert that a member sees it, and does not assert the code is unauthorized. It records what the code does." · "⛔ NONE FOUND"; P1-D-GOV-05's scope question "is a P1-04 question, not a worker's"
+P3-D-38 · D-OBJ-38 `/labtools/relational-field` · ART app/labtools/relational-field/page.tsx (header "Not analysis. Perception.")
+  UNKNOWN — SILENT [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "NO (lab-gated) | NO"
+P3-D-39 · D-OBJ-39 `/api/maia/field` "field perception bundle" · ART app/api/maia/field/route.ts
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⚠️ **0 in-repo callers** — ORPHANED by its own header's determination" (a self-only access gate is recorded, not an authorization)
+P3-D-40 · D-OBJ-40 `ResonanceEngine` + `resonanceHysteresis`, `resonance-map` · ART lib/resonanceEngine.ts:25 (140 L), lib/resonanceHysteresis.ts (213 L), lib/resonance-map.ts (373 L)
+  UNKNOWN — the record withheld a status word [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⚠️ 13 importers, but **11 import only the `Element` type**"
+P3-D-41 · `RFI` (named term) · ART ⛔ NO CODE OBJECT — named at docs/specs/COHERENCE_FIELD_WIRE_UP_SPEC_2026-05-24.md:70 and in CLAUDE.md Cat 1
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "**Finding: at the census subject, neither RFI nor UFI names any code object.**"
+P3-D-42 · `UFI` (named term) · ART ⛔ NO CODE OBJECT — one comment, lib/orientation/spiralOrientation.ts:31
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "exactly ONE hit, a comment … \" *   UFI = field assembly (not used here)\""
+P3-D-43 · `FIS Field State Primitive` · ART docs/canon/FIS_FIELD_STATE_PRIMITIVE.md
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS self-declared "interface target — no runtime authority yet"; "nearest artifact … does NOT match its six-dimension shape" · ⭐ the canon document is located and itself declares no runtime authority
+P3-D-44 · `COLLECTIVE_FIELD_SERVICE_URL` service on :3010 · ART app/api/field-analytics/report/route.ts:19 — the variable appears in exactly one file repo-wide
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "**That variable appears nowhere else in the repository**"
+P3-D-45 · `maia-mcp/server.ts` (`get_member_field`) · ART named only by the header of app/api/maia/field/route.ts
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS named only by a route header "which itself records the artifact as absent from this repository"
+P3-D-46 · table `field_state_snapshots` · ART database/baseline/…sql:9969
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "table exists; ⛔ no writer or reader traced in lib/** or app/**"
+
+# NODES — DOMAIN E · SPIRALOGIC / ELEMENTAL
+
+⚠️ E assigns no ladder position anywhere; every position below is criterion-based or an `EXISTS`
+drawn from E's own explicit non-participation determination.
+
+P3-E-01 · `SPIRALOGIC_REFERENCE` constant · ART lib/maia/spiralogicReference.ts:2 (8-line file, one export)
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] (UG-E7) · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "SURFACED WHERE NONE … CURRENT STATUS ORPHANED (vocabulary)"; "⭐ **Zero importers**"
+P3-E-02 · `ConversationElementalTracker` → context.summary → system prompt · ART lib/consciousness/conversation-elemental-tracker.ts:18,45,253; maiaService.ts:1773,1781,1785; maiaVoice.ts:277,861   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE ⭐ the PROMPT. maiaService.ts:1781 sets context.summary = `Conversation: ${dominantElement} element, N turns` → lib/sovereign/maiaVoice.ts:277 \"Previous conversation context: ${context.summary}\""; "a member-derived elemental label reaching MAIA's system prompt on every CORE and DEEP turn" · "GOVERNANCE GATE ⭐ NONE FOUND. No env flag, no consent check, no Sanctuary branch at the injection site."
+P3-E-03 · `ElementalOracleBridge` → elementalResult.dominant → [Field Intelligence] · ART lib/bridges/elemental-oracle-bridge.ts:205,328,373-387; maiaService.ts:1957,1962,1970   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion, CORE only]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE ⭐ CORE only: maiaService.ts:1957 element: elementalResult?.dominant → … → maiaService.ts:1962 adaptivePrompt += \"\\n\\n[Field Intelligence]\\n{json}\"" · "⛔ No gate on the element computation itself"; the Sanctuary gate on the FieldContext is recorded and is not an authorization
+P3-E-04 · Talk-mode `fieldAwareness` block · ART lib/sovereign/maiaService.ts:1079,1084-1094,1198 — `grep -n fieldAwareness` returns exactly 1079, 1094, 1198
+  UNKNOWN — RECORDS DISAGREE (X-DEF-1) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS E: "SURFACED WHERE ⛔ NOWHERE. … :1198 // Note: fieldAwareness intentionally NOT appended" vs D: "SURFACED WHERE ⭐ INTO THE PROMPT as a labelled block". ⛔ Not derived across · the env flag and mode condition "select the computation (INF-3: selection authorizes nothing)"
+P3-E-05 · `member_spiral_state` substrate + `upsertSpiralState` · ART database/migrations/20260213200001_member_spiral_state.sql; lib/consciousness/spiralStatePersistence.ts:59,76,96,148; sole writer call site oracle/conversation/route.ts:1611
+  UNKNOWN — AMBIGUOUS + RECORDS DISAGREE (X-DEF-2) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS E: the sole writer sits "BELOW the unconditional 410 at :446-453"; D treats the same route as "the second cognition path" · UG-E3: "no ratified definition of what integer 1..12 denotes"
+P3-E-06 · reader 1 — Living Field encounter/refine context · ART lib/maia/living-field/encounterContext.ts:126,196-198; encounter/route.ts:19; refine/route.ts:9   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "⭐ **renders it into the prompt**: `:196-198` `Spiral state: element=…, phase=…, motion=…` inside `gatheredMaterial`" (⛔ not the disputed route) · ⚠️ carried, not resolved: E §12 Q5 — "Rows written before the oracle lane's retirement are being read today as if current."
+P3-E-08 · reader 3 — `GET /api/members/spiral-state` · ART app/api/members/spiral-state/route.ts:15,24-30; client components/consciousness/ContinuityView.tsx:143
+  UNKNOWN — a disclosure route; no participation position in cognition stated [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "returns `currentElement`, `phase`, `motion`, ⚠️ `relationalPhase`, ⚠️ `autonomyStreak` to the authenticated member" · "the two inferred fields are returned with no admission step equivalent to R16" (UG-E4)
+P3-E-10 · `admitPersistedStateForShaping` — Refusal R16 · ART lib/relational/developmentalStateAdmission.ts:5-8,:31-39; sole caller oracle/conversation/route.ts:1711
+  UNKNOWN — RECORDS DISAGREE (X-DEF-2) [SYN-3]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS E: "SOLE CALLER app/api/oracle/conversation/route.ts:1711 — ⛔ BELOW THE 410"; D treats that route as a live cognition path. ⛔ Not derived across · ⭐ asymmetry recorded: "Refusal R16, law quoted in-file at :5-8; ⛔ no external ratified document cited by E" — a named, tested refusal whose ratified source is not located
+P3-E-12 · Corpus Callosum trace — corpusCallosumService + agent_runs / integration_passes · ART lib/services/corpusCallosumService.ts:111,172,229,317; maiaService.ts:3948,3967,4022
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] (UG-E6) · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "CURRENT STATUS WIRED-BUT-UNOBSERVED (write); ⛔ **NOT participating in cognition**" and "LOADED WHERE ⛔ NOT loaded back into any turn. No reader of agent_runs feeds cognition." · the Sanctuary refusal is a gate, ⛔ not an authorization; `CORPUS_CALLOSUM_ENABLED` is config selection (INF-3)
+P3-E-15 · `VoiceDistinctionScorer.scoreFirewallIntegrity` · ART lib/spiralogic/VoiceDistinctionScorer.ts; maiaService.ts:99,4001-4005,4015
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "\"observability-only collapse detector … No behavior / prompt / schema impact\", and its result is emitted only as a `console.log`"
+P3-E-16 · per-phase modality selection — FRAMEWORK_REGISTRY + chooseFrameworksForCell · ART lib/consciousness/spiralogic-core.ts:1314-1592; call sites oracle/conversation/route.ts:846 and app/api/maia/spiralogic/route.ts:89, BOTH without opts
+  EXISTS [SYN-1]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "Both non-test call sites pass **no opts** … so `enabledApplied` defaults to `[]` (`:1579`) and **no applied modality can ever be selected**." ⭐ independent of X-DEF-2: it holds at BOTH call sites · "⭐ NONE FOUND — no consent gate, no disclosure, no refusal surface on modality selection; the empty default is a code default, ⛔ not a gate" (UG-E1, named by P1-01 the highest-consequence unlocated gap) · ⚠️ "its inertness is not a ruling that it is safe"
+P3-E-18 · `CrossSpiralPatternRecognizer` + `TriadicPhaseDetector` · ART lib/spiralogic/CrossSpiralPatternRecognizer.ts, TriadicPhaseDetector.ts — 1 importer each, types only
+  EXISTS [SYN-1] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "1 importer each, `lib/ain/AINSpiralogicBridge.ts:22,23` (types only) … DORMANT / orphaned as recorded"
+P3-E-25 · `bead_events.spiralogic_element` → `getConsciousnessPolicy` · ART database/baseline/…sql:5863; read at lib/sovereign/maiaService.ts:443-506,455-461, logged :801
+  UNKNOWN — AMBIGUOUS [SYN-4]   AUTH NONE LOCATED [SYN-1] (UG-E5)   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "READ by lib/sovereign/maiaService.ts:455-461 (getConsciousnessPolicy, 30-day window) → policy.dominantElement logged :801 and carried into awareness-level guidance" — ⛔ "carried into awareness-level guidance" names neither a prompt nor a member surface
+P3-E-28 · the S-16 12-phase document vocabulary · ART docs/MAIA_12_PHASE_AWARENESS_SYSTEM.md:47; docs/CANONICAL_SPIRALOGIC_12_PHASE_REFERENCE.md:107,108,162
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⛔ **0 code hits** for four of them" · "the naming documents carry no status" (UG-E7)
+P3-E-29 · `lib/spiralogic/registration/` — the chart-to-elemental grammar · ART lib/spiralogic/registration/ (6 files + test), self-contained
+  UNKNOWN — the record determines backing, not participation [SYN-4]   AUTH ⭐ GOVERNED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "the one chart-to-elemental grammar with ratified backing"; "the only Spiralogic artifact E found with ratified backing (P1-01; UG-E7)" · ⭐ Amendment 3 §2's third coherent combination: PARTICIPATION UNKNOWN + AUTHORITY GOVERNED. ⛔ Not a hole to be filled · ⛔ the record does not say WHAT the ratified backing governs
+
+# NODES — DOMAIN F · SYMBOLIC SYSTEMS
+
+⛔ `KNOW / SAY / CONCLUDE` are NOT ladder positions (Amendment 3 §3). Where F established only an
+F-power, PARTICIPATION is `UNKNOWN` and the F-power is carried in BASIS.
+
+P3-F-03 · F-03 `lib/divination/tarot/` · ART major-arcana.ts 364 · minor-arcana.ts 533 · spreads.ts 574 (:27,:291,:315) · drawing.ts 410
+  UNKNOWN — F-POWER ONLY [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS ⚠️ CONCLUDE forecast-shaped BY DATA STRUCTURE: "a `Future` position defined as \"Likely outcome based on current trajectory\" is a forecast SLOT, not merely a possible output" · "MAIA_SOVEREIGNTY_INVARIANTS.md:246 names Tarot in Tier 2 — ⛔ no implementing mechanism found"
+P3-F-06 · F-06 `divinationRecallLoader` · ART lib/maia/divinationRecallLoader.ts:30-49,:73; app/api/sovereign/app/maia/list/route.ts:143,1103,1105-1111; producerRegistry.ts:196-215   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "SURFACED WHERE route.ts:1105-1111 — three separate addenda + [MAIA] divination-block marker"; "A member's own durable I Ching readings are made available to the ordinary `/list` conversation." · "the loader header's declared authority chain … ⛔ no P1-01 governing source named" · ⭐ gates are multiple, structural and TESTED — ⛔ a gate is not an authorization · ⚠️ INF-1 HELD: "a dated production record exists, a complete path is traced, and the witness says the block produced **nothing**. ⛔ That is not `LIVE`" · F-POWER: KNOW bounded · SAY gated · ⭐⭐ CONCLUDE "structurally refused"
+P3-F-07 · F-07 `POST /api/changes/[id]/interpret` · ART app/api/changes/[id]/interpret/route.ts:17-40 (INTERPRETATION_SYSTEM_PROMPT), :47-49 auth, :56 member-scoped SELECT, :159 UPDATE studio_changes   [EWLA]
+  ⭐ PARTICIPATES [SYN-1 — explicit]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 PARTICIPATES established · HAS AUTHORITY not established — ⭐ the record says so in the same sentence · INF-6 prevents promotion
+  BASIS "Per the instrument's preserved distinctions: authentication establishes `PARTICIPATES`, not `HAS AUTHORITY`." · "**GOVERNANCE GATE** — ⭐ **`NONE FOUND`** … they gate *who may invoke*, never *what may be claimed*" · F-POWER: ⭐⭐ CONCLUDE "yes, and instructed to" (`reading`·`guidance`·`warnings`·`timing`·`relatingReading`), PERSISTED at `:159` with no author-class column. ⛔ None of that is a ladder position
+P3-F-08 · F-08 `POST /api/studio/changes/[id]/interpret` · ART app/api/studio/changes/[id]/interpret/route.ts (186 ln) — the same INTERPRETATION_SYSTEM_PROMPT (:17-40, identical in both files)   [EWLA]
+  PARTICIPATES [SYN-1 — explicit, same F §3.3 sentence]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 PARTICIPATES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "authentication establishes `PARTICIPATES`, not `HAS AUTHORITY`" · "⭐ NONE FOUND (identical grep result to P3-F-07: no lens, no tradition-framing, no refusal, no test)" · F-POWER: CONCLUDE yes-and-instructed, persisted
+P3-F-09 · F-09 `app/api/studio/changes/[id]/mentor/` (+ /chat) · ART mentor/route.ts (222 ln) :32
+  UNKNOWN — F-POWER ONLY [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "interpretive · concluding | WIRED-BUT-UNOBSERVED"; the only restraint is inline at `:32` — "You never diagnose, prescribe, or claim authority over the person's process" · "⛔ Not `SYMBOLIC_LENS_BOUNDARY`, not canon-bound"
+P3-F-10 · F-10 `app/api/oracle/iching/route.ts` · ART app/api/oracle/iching/route.ts:71 (member scoping)
+  UNKNOWN — SILENT on participation in a turn [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "computational · memory-bearing · member-facing | WIRED-BUT-UNOBSERVED"; its written readings are what F-06 later recalls · F-POWER: ⛔ CONCLUDE: NO — house corpus text
+P3-F-11 · F-11 `POST /api/oracle/tarot` — UNAUTHENTICATED · ART app/api/oracle/tarot/route.ts:4-48 (111 ln) — grep for auth/member/session/SYMBOLIC_LENS returns ZERO matches
+  UNKNOWN — F-POWER ONLY [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "interpretive · **concluding** · member-facing | WIRED-BUT-UNOBSERVED · **UNAUTHENTICATED**" · "⭐ NONE FOUND on both axes — no authentication, no member scoping, no symbolic-lens wrapper"; "⛔ no mechanism was found that COULD make the Tier-2 claim-type judgement on this path"
+P3-F-12 · F-12 `POST /api/oracle/runes` — UNAUTHENTICATED · ART app/api/oracle/runes/route.ts (180 ln) — same shape, same zero auth matches
+  UNKNOWN — F-POWER ONLY, and ⚠️ F's two enumerations disagree about it [SYN-3] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS F §2 classifies it "interpretive · member-facing" (⛔ not concluding); F §4's no-refusal-surface list includes it. ⛔ Not reconciled
+P3-F-13 · F-13 `app/api/iching/cast/`, `/search/`, `/hexagram/[number]/` · ART app/api/iching/cast/route.ts:8
+  UNKNOWN — SILENT [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "\"Does not require authentication — the oracle is available to all\""; "not classified concluding by F" — openness is DECLARED; a claim-type gate is not determined
+P3-F-14 · F-14 `maiaAstrologyContextService` in the live member turn · ART lib/services/maiaAstrologyContextService.ts (1,205 ln); app/api/sovereign/app/maia/list/route.ts:109,552,695,726-738,732,1419   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion]   AUTH ⭐ GOVERNED [SYN-1]
+  SCOPE OF GOVERNANCE — UNKNOWN. The located source is quoted as naming the WRAPPER, ⛔ not this service's act: "MAIA_SOVEREIGNTY_INVARIANTS.md:241-252 — Invariant 13 (Claim-Type Floor) names the wrapper as its operationalization" · ⛔ GOVERNED ACT not inferred
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established for the act · INF-6 prevents promotion
+  BASIS "Natal chart, current transits, Mayan profile and \"cosmic weather\" are computed per member and **injected into the prompt of the ordinary conversational route**"; "→ :1419 passed into generation"; "⭐ This is the **live conversational route** … Astrology is not a side surface; it is in the ordinary turn." · ⚠️ carried: the wrapper is "a model-compliance instruction, ⛔ not a structural refusal; nothing measures obedience and no test or falsifier exists." GOVERNED names a located authorization, ⛔ not an enforced one
+P3-F-16 · F-16 `lib/story/archetypalNarrativeService.ts` · ART lib/story/archetypalNarrativeService.ts:1-9,:5; app/api/astrology/narrative/route.ts:13,59
+  UNKNOWN — F-POWER ONLY [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "interpretive · **concluding**"; "the disclaimer at `:5` is a COMMENT addressed to developers, ⛔ not an instruction in the model's prompt" · "claim-type gate NONE FOUND — no `SYMBOLIC_LENS_BOUNDARY`, no Invariant-13 check in route or service" · F-POWER: ⭐ CONCLUDE yes — a narrative about this member's journey
+P3-F-21 · F-21 `lib/stellium/` · ART lib/stellium/** incl. chartAnalysis.ts (431 ln); 63 importers incl. lib/practitioner/sessionPrep.ts, lib/maia/context/buildMaiaContext.ts
+  UNKNOWN — a possible second symbolic entry into MAIA context, expressly NOT traced [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "flagged by F as a POSSIBLE second symbolic entry into MAIA context, ⛔ NOT traced to a turn (Domain A/B territory)" · "⭐ NONE FOUND for member consent to practitioner-visible chart derivation … ⛔ Existing visibility is not treated as legitimate merely because it exists."
+P3-F-24 · F-24 `lib/wisdom/sacredTexts/` + `SacredEncounterService` · ART lib/wisdom/sacredTexts/** incl. SacredEncounterService.ts:170 `evaluateEncounter`; oracle/conversation/route.ts:30; components/OracleConversation.tsx:65,9723   [EWLA]
+  DECIDES [SYN-1 — the record's own verb, in ordinary prose]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "`evaluateEncounter` (`SacredEncounterService.ts:170`) returns `EncounterResult | null` — it **decides whether a sacred passage meets the member**." · "⛔ `grep` for `consent|optIn|enabled` … returns **no match**. … The only found control is the null return of `evaluateEncounter` itself — i.e. **the system's own judgement is the gate**." · ⚠️ SCOPE OF THE ASSIGNMENT: the quoted sentence is about what the function does when it runs; X-DEF-2 disputes the reachability of the route that imports it, ⛔ NOT resolved here
+P3-F-27 · F-27 `chineseAstrology.ts`, `types/daYun.ts`, `types/vedic.ts`, BaZi · ART lib/astrology/chineseAstrology.ts + type modules; BaZi tables via migration 20260130000001
+  UNKNOWN — SILENT [SYN-4]   AUTH NONE LOCATED for an implementing binding [SYN-1] · ⭐ a governing TEXT is located
+  SCOPE OF GOVERNANCE — UNKNOWN · BASIS "MAIA_SOVEREIGNTY_INVARIANTS.md:245 names Vedic; no implementing binding located" (C-F4) — ⭐ the mirror image of EWLA: authority located without effect
+P3-F-28 · F-28 `mayanAstrology` (via F-14) · ART lib/astrology/mayanAstrology, computed inside maiaAstrologyContextService and carried in the same addendum at route.ts:732   [EWLA]
+  CONTRIBUTES [SYN-2 — criterion, inside F-14's addendum]   AUTH GOVERNED [SYN-1]
+  SCOPE OF GOVERNANCE — UNKNOWN. Located source quoted as naming the wrapper and the tradition: "`SYMBOLIC_LENS_BOUNDARY` at route.ts:732"; "MAIA_SOVEREIGNTY_INVARIANTS.md:245 (Invariant 13 names Mayan)" · ⛔ GOVERNED ACT not inferred
+  INF-6 CONTRIBUTES established · HAS AUTHORITY not established for the act · INF-6 prevents promotion
+  BASIS "computed inside maiaAstrologyContextService and carried in the same addendum at route.ts:732", traced ":732 → :1419 passed into generation" · F-POWER: CONCLUDE wrapper-constrained only
+P3-F-29 · F-29 `lib/soulPortrait/generator/` · ART lib/soulPortrait/generator/**, both importing lib/astrology
+  UNKNOWN — F-POWER ONLY [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "interpretive · **concluding** | WIRED-BUT-UNOBSERVED"; "no turn path traced" · "⭐ NONE FOUND (F §4 list)"
+P3-F-31 · `SYMBOLIC_LENS_BOUNDARY` (the wrapper itself) · ART app/api/sovereign/app/maia/list/route.ts:282-283 — an inline `const` prompt string; applied at exactly two call sites, :646 (Wu Xing) and :732 (astrology)
+  CONTRIBUTES [SYN-2 — criterion; the wrapper's own text is prepended into the prompt]   AUTH GOVERNED [SYN-1]
+  SCOPE OF GOVERNANCE — UNKNOWN, and the slice says why in its own words: "⛔ NONE FOUND governing the wrapper itself: no artifact states who may edit it or requires new symbolic paths to apply it" — while "MAIA_SOVEREIGNTY_INVARIANTS.md:245-246 (Invariant 13, Claim-Type Floor)" "names the wrapper as its operationalization". ⛔ Both carried, ⛔ neither resolved
+  BASIS "→ :732 astrologyAddendum = SYMBOLIC_LENS_BOUNDARY + '\\n\\n' + contextHeader + detail → :1419 passed into generation" · ⚠️ it is "a model-compliance instruction, ⛔ not a structural refusal", ⛔ NOT CI-GATED · ⭐ "being a gate is not a position on the participation axis above CONTRIBUTES, and is not authority over the paths it does not reach (C-F4)"
+P3-F-32 · `safe_for_retrieval` · ART ⛔ ZERO matches in lib/ database/ app/ (*.ts, *.sql); every occurrence is prose in docs/canon/CORPUS_DISCIPLINE_PROTOCOL_v1.0.md
+  UNKNOWN — NOT A PARTICIPATION QUESTION (no code object) [SYN-4]   AUTH NONE LOCATED for an implementation [SYN-1] · a governing text is located
+  SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⭐⭐ `safe_for_retrieval` HAS NO IMPLEMENTATION … **Verified at the census subject**"; the cited text "asserts a mechanism the code does not contain" (C-F2)
+P3-F-33 · `facetToHexagram` seed map · ART ⛔ zero matches in lib/ app/ components/ database/ — exists only as illustrative TypeScript inside docs/canon/ICHING_STRUCTURAL_ENGINE.md:134
+  UNKNOWN — NOT A PARTICIPATION QUESTION [SYN-4] · AUTH NONE LOCATED [SYN-1] · SCOPE OF GOVERNANCE — UNKNOWN · BASIS "there is no seed map in code TO have provenance"
+P3-F-34 · Invariant 13 Tier-2 consequential-forecast refusal · ART MAIA_SOVEREIGNTY_INVARIANTS.md:246 — hard refusal for forecasts of death, illness, marriage, legal/financial outcomes "regardless of source"
+  UNKNOWN — NOT A PARTICIPATION QUESTION (canon prose; a required refusal, not a capability) [SYN-4]
+  AUTH ⭐ GOVERNING TEXT LOCATED · IMPLEMENTATION NONE FOUND [SYN-1] — ⛔ carried verbatim as the slice wrote it, ⛔ NOT collapsed into GOVERNED or NONE LOCATED
+  SCOPE OF GOVERNANCE — UNKNOWN · BASIS "⛔ no implementing code found anywhere in Domain F"; "the governing source exists; the implementation does not"
+
+# NODES — DOMAIN G · MODEL / PROVIDER / ORCHESTRATION
+
+P3-G-01 · `generateText(req: TextRequest)` — declared "main gateway for ALL text generation" · ART lib/ai/modelService.ts:71-76 (declared), :83-193 (branching), :10,52-58   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "CANONICAL CALL PATH | app/api/sovereign/app/maia/list/route.ts:89,1364-1365 → getMaiaResponse() … → generateText() at maiaService.ts:1561 (FAST)" · "SYSTEM AUTHORITY | Total, via process environment… an unrecognized value falls through every branch to the local Ollama call at :187." · "GOVERNANCE GATE | NONE FOUND at runtime"; "Provider admission as declared in that file has no runtime expression."
+P3-G-02 · `generateTextWithSovereignty` / degradedResult() / DEGRADED_TEXT — DEGRADING · ART lib/ai/sovereignRouter.ts:134-140, :15-17, :50-61; exits :77,:85,:117,:125   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · CONTRIBUTES · DECIDES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "Routes a plain-text request under an explicit inference mode and decides what happens when a provider fails." · "The degraded string is returned as MAIA's turn, not as an error"; "the seam emits text in MAIA's first person without any MAIA cognition having run." · ⛔ PERSISTENCE — UNKNOWN: "The emitting seam makes a persistence claim it does not itself discharge" · "GOVERNANCE GATE | NONE FOUND. The mode string is passed through from modelService.ts:10 unvalidated" (INF-3)
+P3-G-03 · `generateWithClaude` / `selectClaudeModel` · ART lib/ai/claudeClient.ts:114, :50-86, :13-16, :176-186   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · KNOWS · DECIDES [SYN-2]  ⛔⛔ CONSIDERS EXPLICITLY NOT ASSIGNED   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion · ⭐ KNOWS WITHOUT CONSIDERS: "At the subject, selectClaudeModel() never reads an awareness level."
+  BASIS "The awareness level appears in this file exclusively inside a log string — consciousnessPolicy?.awarenessLevel → awarenessLog (:136-140)." · "SELECTION RULE, AS READ | forceOpus → Opus (:70-72); … everything else → Sonnet (:85)" · "GOVERNANCE GATE | NONE FOUND. meta is an untyped Record<string, unknown> (:91); forceOpus / forceSonnet / reasoningMode are read straight from it with no provenance check on who set them." · ⚠️ C-4: ADR-001 is located and Accepted but the code no longer implements it and "No superseding ADR or ruling was located"
+P3-G-04 · `runStructured` + `resolveStructuredMode()` + EXTERNAL_AUTHORIZED — REFUSING · ART lib/ai/structured/router.ts:65-73,:93-105,:116-131; lib/ai/structured/policy.ts:38-52   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "5 non-test callers: maiaReader.ts:51,738 · askReader.ts:22,232 · developmentalAskReader.ts:33,206 · developmentalReader/read.ts:26,123 · developmentalReading/classify.ts:23,209." · "FAILURE MODE | ⭐ REFUSES. … 'THE FAILURE STOPS HERE. No second provider, no local text path, no degraded template.'" · ⭐ the nearest authorization language in domain G sits here — "the platform owns whether the provider is authorized (policy.ts:9-13)" — and the register records "GOVERNING SOURCE NONE LOCATED (the rule is stated in the module)". ⛔ Per INF-4 a module stating its own rule is implementation evidence, not a located authorization
+P3-G-05 · `isLocalHealthy` / `callLocalInference` (maia-local-inference) · ART lib/ai/localInferenceClient.ts:34,:51,:16-26 (45 s breaker), :60,:80
+  EXISTS [SYN-1] · PARTICIPATES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "maia-local-inference | http://maia-local-inference:8080 | Selected at sovereignRouter.ts:80,120" · ⛔ DECIDES UNKNOWN — the record states the breaker is "tripped on health failure (:45) and on generate failure (:91)" but does not establish that this object determines the turn's outcome · ⭐ "No model is named on the sovereign text path." · "GOVERNANCE GATE NONE FOUND."
+P3-G-06 · `localModelClient` (Ollama / DeepSeek) at modelService.ts:187 — LOCAL FALLBACK · ART lib/ai/localModelClient.ts:9,12,21-22,56; lib/ai/modelService.ts:180-193   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · CONTRIBUTES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 EFFECT established (CONTRIBUTES · answer-producing, member-facing) · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "modelService.ts:187 — the unconditional terminal branch of the legacy path." · "TEMPLATE ENGINE | localModelClient.ts:56 returns model: 'template-engine' under the consciousness_engine provider — a fourth answer-producing path that is not a model at all." · ⛔ DECIDES NOT ASSIGNED — the record places the selection at P3-G-01 · "No drift event is emitted at all." · "GOVERNANCE GATE NONE FOUND."
+P3-G-07 · `kimiClient` + its two triggers (Moonshot / Kimi) · ART lib/ai/kimiClient.ts:11-13,68,96; lib/ai/modelService.ts:126-151
+  EXISTS [SYN-1] · PARTICIPATES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "CALL PATH | modelService.ts:127-151. Two independent triggers: TEXT_MODEL_PROVIDER === 'moonshot' or req.meta?.useKimi — i.e. a per-request meta flag from any caller selects a third-party cloud provider." · ⛔ DECIDES NOT ASSIGNED; declared scope and trigger disagree (C-6) · "GOVERNANCE GATE | NONE FOUND, at any layer. moonshot appears in no tier of scripts/provider-policy.json"
+P3-G-08 · `generateWithMultipleEngines` / OrchestrationType · ART lib/ai/multiEngineOrchestrator.ts; gate + result shape at lib/ai/modelService.ts:58,94-123   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · CONTRIBUTES [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 EFFECT established (CONTRIBUTES · the text of a conversational TextResult) · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "CALL PATH | modelService.ts:94-123, gated by ENABLE_MULTI_ENGINE … AND (TEXT_MODEL_PROVIDER === 'multi_engine' OR req.meta?.useMultiEngine)." · "RESULT SHAPE | text: consensus || primaryResponse (:113), model: `orchestration:${type}` (:116) — ⭐ the model field records an orchestration label, not a model." · ⛔ DECIDES UNKNOWN — "reading `consensus || primaryResponse` as a decision would be interpretation, not restatement" · "GOVERNANCE GATE NONE FOUND."
+P3-G-09 · MODEL_REGISTRY / selectOptimalModel / getModelFallbackChain; minimumBloomLevel? · ART lib/ai/modelRegistry.ts:1 (@ts-nocheck), :6,:31,:40,:202,:254
+  EXISTS [SYN-1]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "⭐ No importer exists. A tree-wide grep for modelRegistry outside the file itself returns one hit, a prose comment" · ⭐⭐ NON-MONOTONIC, RECORDED: the file declares "minimumBloomLevel? — 'Developmental gate (if applicable)' (:31) — i.e. a model gate keyed to a developmental attribute of a person, declared as a type field", and "no evaluator and no importer found". ⛔ A declared gate that decides nothing is EXISTS and nothing above it · "GOVERNANCE GATE NONE FOUND."
+P3-G-10 · scripts/anthropic-import-allowlist.json and the 60 files it enumerates · ART scripts/anthropic-import-allowlist.json; .githooks/pre-commit:43   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES [SYN-2]   AUTH NONE LOCATED at runtime [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "MEMBER-FACING ENTRIES | Includes 7 HTTP route handlers"; verbatim allowlist rows: "app/api/maia/living-field/[fieldKey]/encounter/route.ts ('Cognitive surface, pins Sonnet') · .../refine/route.ts ('pins Haiku')" — each pins its own model · ⭐ seven entries "shipped AFTER this guard landed (2026-05-20) without being allowlisted — their lanes did not exercise preflight/pre-commit, so the guard never fired." · "Build/commit-time only (G-13). NONE FOUND at runtime — nothing prevents these files executing." (INF-2)
+P3-G-12 · scripts/check-provider-governance.ts + scripts/provider-policy.json · ART check-provider-governance.ts:32,34-40,48,111; package.json:45,109,111; .githooks/pre-commit:39   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES (commit / CI lane) [SYN-2]   AUTH UNKNOWN [SYN-4]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established (commit admission) · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "Exit 1 on any hit outside the allowlist (:111); exit 2 if the policy file is missing (:48)." · ⚠️ scope verbatim: "BUILD-TIME, NOT RUNTIME. It prevents new source surfaces. It has no effect on a running container." (INF-2) · ⭐ "'or other cloud AI providers' has no mechanical expression anywhere in the repository." · authority: the human policy it names, "docs/canon/PROVIDER_GOVERNANCE.md", is "NOT READ in this census. … its content, status and ratification are UNKNOWN here."
+P3-G-13 · scripts/check-no-direct-anthropic.ts · ART :32-34 (self-declared authority), :69,:125,:196; package.json:42,111; .githooks/pre-commit:43; ⛔ absent from ci:sovereignty   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES (commit lane) [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established (commit admission) · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "Any importer not in approved ∪ operational ∪ grandfathered fails with exit 1 (:125, :196)." · verbatim: "SELF-DECLARED AUTHORITY :32-34 cites CLAUDE.md — MAIA Sovereignty section and two docs/orientation/ documents. It cites no canon document, and no canon document names it." · "Verified to exist; its governing source is UNLOCATED."
+P3-G-14 · `emitDriftEvent` / DriftEventType (incl. 'silent_fallback') · ART lib/sovereignty/driftAlarm.ts:39-45,79,113,120-138; call sites lib/ai/sovereignRouter.ts:105 and lib/maia/fieldContextAdapter.ts:101,118,127
+  EXISTS [SYN-1] · PARTICIPATES · CONTRIBUTES (operator / practitioner surface) [SYN-2]  ⛔⛔ CONTRIBUTES-TO-MEMBER EXPLICITLY NOT ASSIGNED   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "AUDIENCE | ⭐ Operator/practitioner, never the member. Nothing in this path reaches a member surface." · "Always writes console.warn with { kind:'drift_alarm', … }; then, if TELEGRAM_BOT_TOKEN and PRACTITIONER_TELEGRAM_CHAT_ID are set … fires a Telegram message." · ⭐ coverage of the four degraded exits is nil by construction: "the one emitDriftEvent('silent_fallback', …) at :105 is on none of them." · "GOVERNANCE GATE NONE FOUND."
+P3-G-15 · ReaderProvenance / ReaderIdentity / readerIdentity(model) · ART lib/manuscript/structure/readerProvenance.ts:12-21,24; developmentalReader/read.ts:104-106; proposalStore.ts:179-180,206
+  EXISTS [SYN-1] · PARTICIPATES · KNOWS · CONTRIBUTES (stored record) [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  BASIS "PERSISTED WHERE | proposalStore.ts:179-180 stamps frozenAt at the write; read back at :206 from row.reader_provenance." · "⭐ An identity of the reading, not of MAIA: provider + model + a SHA-256 over system prompt and tool contract together + a reader version. It is the only object traced in this domain that binds who read to what was produced." · ⛔ IDENTITY ACROSS PROVIDER CHANGE — UNKNOWN by construction: "provider is the string literal type 'anthropic' … A different provider is not representable in this record." ⛔ that is not an establishment of identity discontinuity
+P3-G-16 · scripts/deploy-lock.sh (acquire_deploy_lock()), exporter of DEPLOY_LANE_TOKEN · ART deploy-lock.sh:67,88-121,152,185; entry points deploy-production.sh:452,555,640,746; pre-deploy-gate.sh:234   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES (deploy lane) [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "exclusive non-blocking flock -n on fd 9 … never queues, refuses with exit 1 and prints the holder's pid= started= user= entry= target= target_sha=." · ⭐ the closest call in domain G, both texts kept — FOR: "Acquiring the lock is the grant of build authority." AGAINST: "a tripwire against the QUIET bypass, not a forgery-proof credential"; "GOVERNING SOURCE NONE LOCATED; docs/ops/DEPLOY_LANE_TOKEN.md is named but NOT READ." ⛔ A mechanism that conveys a token is not a located authorization of itself
+P3-G-17 · Dockerfile deploy-lane tripwire + deploy_ctx_materialize / _verify_image / _verify_running · ART Dockerfile:20-21,23-42; scripts/deploy-context.sh:190,238-239,375-389; scripts/pre-deploy-gate.sh:228-265   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES (deploy lane) [SYN-2]   AUTH NONE LOCATED [SYN-1]   SCOPE OF GOVERNANCE — UNKNOWN
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "PRE-DEPLOY GATE | … deploy-maia sequence at :228-265: lock → materialize → gates → build → verify image → tag_images_for_rollback → swap → verify running." · "TRIPWIRE | Dockerfile:23-42 — ARG DEPLOY_LANE_TOKEN=''; a build with it empty prints '🛑 OUT-OF-LANE BUILD REFUSED' and exit 1" · the file "states its own limit: 'a tripwire against the QUIET bypass, not a forgery-proof credential' (:20-21)"; "docs/ops/IMMUTABLE_SHA_DEPLOY.md and docs/ops/COLAB_RELEASE_GATE.md are named but NOT READ"
+P3-G-18 · run_migrations_or_abort / cmd_migrate / the compose migrate service · ART scripts/deploy-production.sh:61,73-78,82-118,448-546,552-633; docker-compose.production.yml:529-537   [EWLA]
+  EXISTS [SYN-1] · PARTICIPATES · DECIDES (deploy lane) [SYN-2]   AUTH SPLIT [SYN-1/SYN-4] — two halves, kept separate
+  SCOPE OF GOVERNANCE — UNKNOWN. FAIL-CLOSED BEHAVIOUR — UNKNOWN: "Attributed in-file to DEPLOYMENT-SAFETY-01, founder ruling 2026-09-14 (:61)"; "⛔ The ruling document itself was not located or read, so an attribution is recorded, not a located authorization." MIGRATION SELECTION — NONE LOCATED: "SEPARATE MIGRATION GATE | ⭐⭐ NONE FOUND … no SHA argument, no migration selection, no per-migration authorization."
+  INF-6 DECIDES established · HAS AUTHORITY not established · INF-6 prevents promotion
+  BASIS "ORDER, AS READ | deploy (:448-546): lock → materialize → build → swap → provenance verify → migrate (:538) → success (:540) → smoke (:546)." · "Migration failure now aborts — run_migrations_or_abort prints '⛔ DATABASE MIGRATIONS FAILED — DEPLOYMENT ABORTED' and exit 1 (:93, :117)." · ⭐ verbatim: "It applies whatever migration files are present, in bulk."
